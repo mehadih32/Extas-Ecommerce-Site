@@ -342,6 +342,20 @@
         "apiVersion": "API ভার্সন — খালি রাখলে দোকান যেটা দিয়ে বানানো সেটাই",
         "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য"
       }
+    },
+    "googleSearchConsole": {
+      "name": "Google Search Console",
+      "desc": "দোকানের প্রপার্টি দেখায় আর Google-কে সাইটম্যাপ পাঠায় (ওয়েবসাইট → SEO)। চাবি দিয়ে টেস্ট পাস না হওয়া পর্যন্ত কিছু পাঠানো হয় না",
+      "fields": {
+        "serviceAccountJson": "সার্ভিস অ্যাকাউন্টের চাবি (Google Cloud থেকে পুরো JSON ফাইল; এর ই-মেইল প্রপার্টিতে ইউজার হিসেবে যোগ করুন)"
+      }
+    },
+    "bingWebmaster": {
+      "name": "Bing Webmaster Tools",
+      "desc": "দোকানের সাইট দেখায় আর Bing-কে সাইটম্যাপ পাঠায় (ওয়েবসাইট → SEO)। চাবি দিয়ে টেস্ট পাস না হওয়া পর্যন্ত কিছু পাঠানো হয় না",
+      "fields": {
+        "apiKey": "API চাবি (Bing Webmaster → Settings → API access)"
+      }
     }
   },
   "errors": {

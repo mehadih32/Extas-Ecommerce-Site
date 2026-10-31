@@ -8,3 +8,7 @@
 .adm2 .seo-over{color:var(--bad);font-weight:600}
 /* PR 228: the sitemap index's address stands alone on its line (no text around it), so it is a 44 px tap at every width. */
 .adm2 .seo-addr{display:inline-flex;align-items:center;min-height:44px}
+/* PR 233: a search engine's "connect" link in its table cell is a 44 px tap at every width; where the table is a table
+   (768 px up) it takes the cell's own padding, so the row keeps its height. */
+.adm2 .seo-cell-link{display:inline-flex;align-items:center;min-height:44px}
+@media (min-width:768px){.adm2 .a2-tbl td>.seo-cell-link{margin:-11px 0}}

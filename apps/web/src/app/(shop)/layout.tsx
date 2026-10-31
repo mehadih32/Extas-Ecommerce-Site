@@ -3,6 +3,9 @@
 // never load any of it.
 // S11 · PR 586: the hash forwarder, first in the page: a demo `#/…` link moves on to its live address before anything
 // else draws (lib/seo/hash-forward, `seo.hashLinks`).
+// S11 · PR 233: every shop page carries the Search Console and Bing verification codes as their meta tags
+// (lib/seo/verification, `seo.verification`; none while no code is set).
+import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import '../../fonts/shop.css';
@@ -10,6 +13,7 @@ import './shop.css';
 import './shop-app.css';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { hashRulesFor, hashScript } from '@/lib/seo/hash-forward';
+import { verificationMetadata } from '@/lib/seo/verification';
 import { BengaliFontWarm } from '@/components/shop/BengaliFontWarm';
 import { BENGALI_FONT_COOKIE, bengaliFontFaces, bengaliFontUrls, shopThemeFontPreloads } from '@/lib/shop/font-preload';
 import { hrefIn } from '@/lib/shop/lang';
@@ -17,6 +21,13 @@ import { sweepCss } from '@/lib/shop/sweep';
 
 /** How long the "Bengali fonts are cached" cookie lasts: the files are immutable, so a year (technical, not a policy). */
 const BENGALI_FONT_COOKIE_AGE = 31_536_000; // hardcode-ok: technical cookie lifetime in seconds (one year)
+
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await shopContext();
+  const { 'seo.verification': codes } = await readPageSettings(['seo.verification'] as const, c.storeId);
+  const verification = verificationMetadata(codes);
+  return verification ? { verification } : {};
+}
 
 export default async function ShopLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const c = await shopContext();

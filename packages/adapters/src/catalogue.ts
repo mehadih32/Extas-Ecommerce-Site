@@ -227,6 +227,29 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
+  // S11 · PR 233 — Google Search Console (a service account's JSON key; its e-mail added as a user of the property) and
+  // Bing Webmaster Tools (the API key). The mock (no property, nothing sent) serves until the Test (listing the
+  // properties) passes. Both may be on together: they are two engines, not two of one.
+  {
+    id: 'googleSearchConsole',
+    kind: 'SEARCH_CONSOLE',
+    provider: 'googleSearchConsole',
+    adapter: true,
+    secrets: [{ field: 'serviceAccountJson' }],
+    config: [],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  {
+    id: 'bingWebmaster',
+    kind: 'SEARCH_CONSOLE',
+    provider: 'bingWebmaster',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }],
+    config: [],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
 ];
 
 export function findConnection(id: string): ConnectionDeclaration | undefined {

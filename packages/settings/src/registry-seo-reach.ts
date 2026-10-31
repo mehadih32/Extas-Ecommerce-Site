@@ -45,6 +45,10 @@
 // product photo that has none (from the product's name, the photo's colour and kind), as each photo is added while
 // `autoApply` is on, or all at once from Website › SEO. A description the owner typed is never changed. Bengali is
 // never written: a Bengali page builds it from the dictionary. `maxLength` is the longest one (cut at a whole word).
+//
+// PR 233 (`seo.verification`): the codes Google Search Console and Bing Webmaster Tools give to prove the shop is the
+// owner's ("HTML tag" verification). Owner data: empty as shipped; each code the owner pastes is carried by every shop
+// page as its meta tag. They are not secrets (every visitor's page shows them); the API keys live in the vault.
 import { z } from 'zod';
 import { setting } from './define';
 import { categorySlugSchema } from './registry-storefront';
@@ -201,6 +205,25 @@ export const seoAltTextSchema = z
 export type SeoAltText = z.output<typeof seoAltTextSchema>;
 export const SEO_ALT_TEXT_DEFAULT: SeoAltText = { autoApply: true, maxLength: 125 };
 
+/** The limits of the verification codes (the admin screen shows the same). */
+export const SEO_VERIFICATION_LIMITS = { entries: 5, length: 100 } as const;
+/** A verification code as the engines give it (letters, digits, `_`, `-`; never a quote or a space). */
+export const SEO_VERIFICATION_CODE = /^[A-Za-z0-9_-]{8,100}$/;
+const verificationCodes = z
+  .array(z.string().trim().max(SEO_VERIFICATION_LIMITS.length).regex(SEO_VERIFICATION_CODE))
+  .max(SEO_VERIFICATION_LIMITS.entries)
+  .refine((l) => new Set(l).size === l.length, { message: 'the same code twice' });
+export const seoVerificationSchema = z
+  .object({
+    /** Google Search Console's codes (`<meta name="google-site-verification">`). */
+    google: verificationCodes,
+    /** Bing Webmaster Tools' codes (`<meta name="msvalidate.01">`). */
+    bing: verificationCodes,
+  })
+  .strict();
+export type SeoVerification = z.output<typeof seoVerificationSchema>;
+export const SEO_VERIFICATION_DEFAULT: SeoVerification = { google: [], bing: [] };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -278,5 +301,15 @@ export const seoReachSettings = {
     labelKey: 'seo.altText.label',
     helpKey: 'seo.altText.help',
     sortOrder: 47,
+  }),
+  // ---- PR 233 · Search Console and Bing: the verification codes ----
+  'seo.verification': setting({
+    ...base,
+    version: V2,
+    schema: seoVerificationSchema,
+    default: SEO_VERIFICATION_DEFAULT,
+    labelKey: 'seo.verification.label',
+    helpKey: 'seo.verification.help',
+    sortOrder: 48,
   }),
 };

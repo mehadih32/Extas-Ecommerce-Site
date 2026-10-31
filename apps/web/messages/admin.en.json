@@ -342,6 +342,20 @@
         "apiVersion": "API version — leave empty for the one the shop was built with",
         "baseUrl": "Address — only for a test server"
       }
+    },
+    "googleSearchConsole": {
+      "name": "Google Search Console",
+      "desc": "Lists the shop's properties and hands Google the sitemap (Website → SEO). Until the key is in and the test passes, nothing is sent",
+      "fields": {
+        "serviceAccountJson": "Service account key (the whole JSON file from Google Cloud; add its e-mail as a user of the property)"
+      }
+    },
+    "bingWebmaster": {
+      "name": "Bing Webmaster Tools",
+      "desc": "Lists the shop's sites and hands Bing the sitemap (Website → SEO). Until the key is in and the test passes, nothing is sent",
+      "fields": {
+        "apiKey": "API key (Bing Webmaster → Settings → API access)"
+      }
     }
   },
   "errors": {
