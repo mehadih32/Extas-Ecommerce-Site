@@ -2201,6 +2201,7 @@
     "date": "2026-10-20",
     "note": "Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas. 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop; a failure after a deploy rolls back by itself; report in `docs/reports/smoke/latest/`. 23 Oct: the nightly run checks out the live commit's checks (`last-good-deploy.json`), so a check merged before its deploy can't fail the live version",
     "github": [
+     "#72, 31 Oct",
      "#71, 31 Oct",
      "#67, 31 Oct",
      "#66, 31 Oct",
@@ -2225,16 +2226,21 @@
      "docs/reports/smoke/latest/",
      "last-good-deploy.json",
      "infra/deploy/deploy-order.sh",
-     "<EXTAS_ROOT>/private/smoke-admin"
+     "<EXTAS_ROOT>/private/smoke-admin",
+     "server-setup.yml",
+     "deploy-order.sh"
     ],
     "names": [
      "OSDISK_RESET_MAX_PCT",
      "DISK_STORE_MIN_FREE_GB",
-     "SMOKE_PRIVATE_OUT"
+     "SMOKE_PRIVATE_OUT",
+     "extas-vm-deploy-",
+     "extas-vm-setup-<run id>"
     ],
     "tests": [
      "20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop",
-     "admin smoke pictures go only to the server's root-only `<EXTAS_ROOT>/private/smoke-admin` (`SMOKE_PRIVATE_OUT`), never Git (ci fails on one"
+     "admin smoke pictures go only to the server's root-only `<EXTAS_ROOT>/private/smoke-admin` (`SMOKE_PRIVATE_OUT`), never Git (ci fails on one",
+     "the smoke test opens four more admin pages (Website › SEO › Redirects & 404 and Collection pages, Orders › Returns › Receive & QC, Products › New product) (#72)"
     ]
    },
    "updates": [
@@ -2286,6 +2292,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 1):** deploy, server setup, ERP acceptance and smoke each have their own concurrency group (runs by hand none), so nothing cancels a waiting deploy, setup or restore; `infra/deploy/deploy-order.sh` skips a commit that is behind the live one; a rollback's record has no target of its own and a second rollback is refused; the image store reset never runs on Docker Hub's rate limit, a full disk or a store at `OSDISK_RESET_MAX_PCT` (90), and a deploy follows a reset; the disk guard checks containerd's and Docker's folders (`DISK_STORE_MIN_FREE_GB`, 20); admin smoke pictures go only to the server's root-only `<EXTAS_ROOT>/private/smoke-admin` (`SMOKE_PRIVATE_OUT`), never Git (ci fails on one; those committed are removed) (#71)"
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** `deploy.yml` and `server-setup.yml` use one concurrency group per run (`extas-vm-deploy-` / `extas-vm-setup-<run id>`), so a newer commit's waiting deploy or a waiting rollback is never cancelled (the one runner still runs one job at a time and `deploy-order.sh` skips an older commit); the smoke test opens four more admin pages (Website › SEO › Redirects & 404 and Collection pages, Orders › Returns › Receive & QC, Products › New product) (#72)"
     }
    ],
    "mentions": [
@@ -3001,6 +3014,7 @@
     "date": "2026-10-20",
     "note": "pnpm workspace, Next.js 16 App Router + TypeScript strict + Tailwind 4; Bengali status page at `/status`.",
     "github": [
+     "#72, 31 Oct",
      "#64, 31 Oct",
      "#47, 24 Oct",
      "#35, 24 Oct",
@@ -3015,21 +3029,25 @@
      "/admin/delivery",
      "/admin/delivery/zones",
      "/admin/help",
-     "/admin/settings/look"
+     "/admin/settings/look",
+     "/api/health"
     ],
     "settings": [
      "dashboard.read",
      "help.read",
      "admin.shell",
-     "admin.dashboard"
+     "admin.dashboard",
+     "system.stagingHost"
     ],
     "code": [
      "#/admin",
-     "PUT /api/admin/look"
+     "PUT /api/admin/look",
+     "apps/web/src/lib/status-host.ts"
     ],
     "names": [
      "pnpm admin:design",
-     "0042_admin_prefs"
+     "0042_admin_prefs",
+     "{\"ok\":true}"
     ],
     "tests": []
    },
@@ -3061,6 +3079,13 @@
      "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
      "text": "**PR 12 (S00, the app and the admin shell)** — Updated 31 Oct 2026 (CN-032): the browser's own translation is off site-wide; `app/global-error.tsx` replaces a blank page, clears this site's cache and stored values once by itself and reloads, then offers Start fresh and Try again; `/fresh-start` (`/api/fresh-start`, POST, soft or full) clears only this site's data in this browser, keeping the preview gate's cookie."
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** `/status` and the health detail (the commit, the blue/green colour) only on the preview host (`system.stagingHost`, decided on the request's Host header, never X-Forwarded-Host) and the server's own internal addresses; a store's own domain or any other public host gets 404 on `/status` and a bare `{\"ok\":true}` from `/api/health` (`apps/web/src/lib/status-host.ts`) (#72)"
     }
    ],
    "mentions": [],
@@ -8283,6 +8308,7 @@
     "date": "2026-10-24",
     "note": "the four-layer cache (new `@extas/cache`; registry v53 `registry-cache.ts`; no migration): the browser keeps hashed files a year; Cloudflare files, and category and product pages only with `cache.pages.cdn` (off); the server page cache for category and product pages (`cache.pages` {server on, cdn off, 5 / 5 minutes}); Redis carries the clear to every process; stock shown kept `cache.stockDisplaySeconds` 15 s while the bag and the checkout read live stock; `cache.tuning` {1000 pages, repeat 2 s, stats 7 days}. A price or stock change clears that product, its categories and Cloudflare at once; a setting clears every page; a new product its categories (and the sitemap tag); bag, checkout, account, admin and API never cached (proxy headers, Caddy `cache_headers`, `/api/internal/*` 404 from outside). Cloudflare purge adapter on its mock until the owner's token passes (Keys & connections); admin Settings › System › Cache (`/admin/settings/system/cache`, permission `system.cache`): the layers, hit counts, the times, \"Clear all\" with a confirmation and a reason (audited); the deploy clears the new app's cache (CACHE_HOOK_TOKEN, best effort); guide `cache.md`",
     "github": [
+     "#72, 31 Oct",
      "#45, 24 Oct"
     ]
    },
@@ -8304,7 +8330,9 @@
      "cache.md"
     ],
     "names": [
-     "cache_headers"
+     "cache_headers",
+     "gated_cache",
+     "Cache-Control: private, no-store"
     ],
     "tests": []
    },
@@ -8322,6 +8350,13 @@
      "source": "Scope added to existing PRs (V2.1 final · 20 Oct — pre-code demo work finished; blueprint V2.1 final; no new PR numbers)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
      "text": "**Server admin pages in the demo (CN-001; sample numbers, labelled)** — `#/admin/server` → PR 423 / 601 / 603 / 604; `#/admin/cache` → PR 602; `#/admin/images` → PR 22 / 24 / 88; `#/admin/speed` → PR 234; `#/admin/integrations` (\"Keys & connections\") → PR 493 / 500; `#/admin/backup` now shows Blob + Drive → PR 8 / 395 / 507. Checks: 120 route/modal checks 0 fails + 19 flows."
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** a host behind the preview password never lets Cloudflare keep a page: the Caddyfile's `gated_cache` (the staging block and a locked extra host) sends `Cache-Control: private, no-store` and CDN no-store on every answer but Next's hashed files, whatever `cache.pages.cdn` says; an opened main domain keeps the app's own headers (#72)"
     }
    ],
    "mentions": [
@@ -10759,6 +10794,7 @@
     "date": "2026-10-23",
     "note": "order placement `POST /api/checkout/orders` in one transaction: idempotent order key, bag locked, stock held and converted, order number under the store's lock (`checkout.order.numberPrefix`, `numberStart` 1001), set saving split over its pieces, wallet debit, consent, placed event, prepaid payment INITIATED on the mock; money that moved refused with PRICE_CHANGED (SIM-F-003 test); unclear address or unset charge = order flagged + call task; the order stays in its first state only (CN-022); mock pay page `/checkout/pay/<n>` (`POST /api/checkout/payments`): fail kept with flag and one call task, Try again = new payment for the same order (SIM-F-026 test); checkout draft capture `POST /api/checkout/draft` (`checkout.capture.enabled` off); delivery note (`checkout.note.*`); migration `0007_checkout`; 24 Oct (follow-up 50): the go-live guard — the test page's paid and fail answer only while `payments.testPayments` is on and no real gateway is connected (else TEST_PAYMENT_OFF); with a gateway \"Pay\" opens it (PR 170); otherwise \"online payment is not open right now\"",
     "github": [
+     "#72, 31 Oct",
      "#71, 31 Oct",
      "#41, 24 Oct",
      "#28, 23 Oct"
@@ -10772,7 +10808,8 @@
      "checkout.order.numberPrefix",
      "checkout.capture.enabled",
      "checkout.note.*",
-     "payments.testPayments"
+     "payments.testPayments",
+     "addressResolution.fingerprint"
     ],
     "code": [
      "POST /api/checkout/orders",
@@ -10783,7 +10820,8 @@
      "numberStart",
      "0007_checkout",
      "redeemCoupon",
-     "PRICE_CHANGED"
+     "PRICE_CHANGED",
+     "replayOf"
     ],
     "tests": [
      "money that moved refused with PRICE_CHANGED (SIM-F-003 test)",
@@ -10805,6 +10843,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 1):** the coupon is redeemed inside the order's own transaction (`redeemCoupon` locks the coupon row: usage limit, per-customer by phone and by signed-in customer, start and end), so two orders at once cannot both pass a limit of 1; a refused code rolls the order back with `PRICE_CHANGED` and the fresh bag; the quote passes the phone, so a per-customer limit shows in the bag; a payment retry asks for what is due now (#71)"
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** an order key replays only the checkout it placed: `replayOf` (the first look and the same-moment retry) returns the stored order only when the page's fingerprint equals the stored `addressResolution.fingerprint`, otherwise IDEMPOTENCY; the checkout form then drops the key and asks him to press Confirm again; a retry of the same checkout still gets its own order back (#72)"
     }
    ],
    "mentions": [
@@ -11040,6 +11085,7 @@
     "date": "2026-10-23",
     "note": "`/account/login` (+ `/bn/…`): the one-time SMS code (`account.code.limits` 6 digits, 10 min, 5 tries, resend 60 s, 5 per phone and 20 per IP an hour; `account.code.text`), salted hashes only, on the mock SMS sender until the key (never shown on production); an optional own password with the code on a new device (`account.login`), log out; follow-up 18",
     "github": [
+     "#72, 31 Oct",
      "#34, 23 Oct"
     ]
    },
@@ -11054,7 +11100,9 @@
      "account.login"
     ],
     "code": [],
-    "names": [],
+    "names": [
+     "attempts < maxTries"
+    ],
     "tests": []
    },
    "updates": [
@@ -11064,6 +11112,13 @@
      "source": "Register row",
      "sourceLink": "../MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137",
      "text": "**Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-039 (a guest-order account has the phone number as its password) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4."
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** a code try is taken before the compare in one conditional update (`attempts < maxTries`, not used, not expired, RETURNING attempts), so a burst of parallel guesses never gets more than the set tries; the tries left come from that row (#72)"
     }
    ],
    "mentions": [],
@@ -11607,6 +11662,7 @@
     "date": "2026-10-23",
     "note": "no order is ever held over an address (SIM-F-030): placed like any other, flagged with one call task (the weightiest reason); a landmark-only line gets ADDRESS_CHECK (`checkout.address.check`, on, word list editable); the call queue backend and `GET /api/admin/orders/calls` (`orders.read`); SIM-F-003 and SIM-F-030 tests on PostgreSQL",
     "github": [
+     "#72, 31 Oct",
      "#71, 31 Oct",
      "#35, 24 Oct"
     ]
@@ -11626,7 +11682,8 @@
     ],
     "names": [
      "AREA_SET",
-     "CHARGE_FIXED"
+     "CHARGE_FIXED",
+     "PAYMENT_DUE"
     ],
     "tests": [
      "SIM-F-003 and SIM-F-030 tests on PostgreSQL **Updated 31 Oct (review round 1):** order command **Set delivery area** (`packages/orders/src/delivery-area.ts`, `POST /api/admin/orders/:id/delivery-area`, `orders.edit`, a reason from `orders.edit.reasons`): staff pick one of the store's switched-on bands, the charge is the band's own (0 under Smart Rules free delivery), never typed"
@@ -11646,6 +11703,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 1):** order command **Set delivery area** (`packages/orders/src/delivery-area.ts`, `POST /api/admin/orders/:id/delivery-area`, `orders.edit`, a reason from `orders.edit.reasons`): staff pick one of the store's switched-on bands, the charge is the band's own (0 under Smart Rules free delivery), never typed; total and amount to collect recomputed, the charge fixed, ADDRESS_UNCLEAR / CHARGE_NOT_SET cleared, the address call closed (`AREA_SET`), the ERP order resent, timeline and audit; never automatic; refused `CHARGE_FIXED` once the checkout fixed the charge; under More actions only on such orders (#71)"
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** \"Set delivery area\" prices the band with the order's own facts: the Smart Rules' payment method from the order's own payment (mapped back exactly as the checkout does), the customer, the source (website) and the code this order redeemed (counted as unlocked, not checked again); an order paid ahead gets the prepaid free-delivery reward; on a non-COD order past PLACED a band that would make money due is refused (`PAYMENT_DUE`), the place alone can still be set; before confirm, confirm itself waits for the money (#72)"
     }
    ],
    "mentions": [],
@@ -17066,6 +17130,7 @@
     "date": "2026-10-20",
     "note": "global reservation on the one shared stock pool (A4.4): a cart hold counts against the pool of every store at once, so two stores can never sell the same last piece; `holdCart` / `releaseCart` / `convertCart` / `releaseOrderHolds`; the hold is local and never pushed to the ERP; `available = onHand − reserved` kept per pool; hold length from `inventory.reservation.holdMinutes` / `holdMinutesSignedIn` (Bhandari B03: 15 / 20), converted holds kept `convertedHoldHours`; `holdSummary` on the PR 205 panel. Storefront and checkout callers arrive with S04",
     "github": [
+     "#72, 31 Oct",
      "#71, 31 Oct",
      "#17 (commit `1c8a4d6`), 20 Oct 11:17 (Dhaka)"
     ]
@@ -17073,7 +17138,8 @@
    "builtFacts": {
     "routes": [],
     "settings": [
-     "inventory.reservation.holdMinutes"
+     "inventory.reservation.holdMinutes",
+     "inventory.reservation.unpaidHoldHours"
     ],
     "code": [],
     "names": [
@@ -17104,6 +17170,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 1):** `sweepReservations` renews (by `convertedHoldHours`) a converted hold whose order is still open (PLACED, AWAITING_ADVANCE, ON_HOLD, CONFIRMED, PROCESSING, PACKED) and not yet with the ERP, never releases it; the result counts `ordersRenewed` (#71)"
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** an unpaid order's hold ends: an order PLACED with PAYMENT_PENDING / PAYMENT_FAILED, or AWAITING_ADVANCE (counted from its latest advance request), is renewed only up to `inventory.reservation.unpaidHoldHours` (registry v121, 24, 0 = keep while open), then its hold ends like any other; the order itself is never changed or cancelled; the sweep renews an open order's hold half its time before expiry and releases a hold only once it is really past its time, so a piece never sells twice (#72)"
     }
    ],
    "mentions": [
@@ -17885,6 +17958,7 @@
     "date": "2026-10-20",
     "note": "rules engine `@extas/rules`: one rule = kind (delivery · exchange · setTier · discount · festive · payment · policy · fulfilment), typed params (int, money, percent, hours, text, datetime, bool), scope (applies to / except), conditions, actions, priority, stackable, active window and status (DRAFT · ACTIVE · PAUSED · ENDED); `evaluate` / `quote` is pure and deterministic, a broken rule is skipped and reported, never guessed; nothing deleted (rules archived, every version kept); jobs `rules.endExpired`, `rules.checkConflicts` for the BullMQ worker; schema: SmartRule draft / params / scope / text / placements / owner-OK columns (migration `0003_smart_rules`); permissions `rules.read`, `rules.write`, `rules.publish`, `rules.approve`; settings registry v13 (`packages/settings/src/registry-rules.ts`, 16 keys); CLI `rules sample` loads 7 made-up sample rules and 3 notices, money rules as drafts",
     "github": [
+     "#72, 31 Oct",
      "#71, 31 Oct",
      "#19, 20 Oct"
     ]
@@ -17908,7 +17982,8 @@
      "evaluate",
      "quote",
      "0003_smart_rules",
-     "rules sample"
+     "rules sample",
+     "floorMinorOf"
     ],
     "tests": []
    },
@@ -17919,6 +17994,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 1):** a percent cut is floored and rounded up to `checkout.money.roundingStepMinor` (৳0.01 / ৳1 / ৳5 / ৳10, default ৳1; registry v120), never above the base, so every total is an amount a rider can collect (quote, discount-was, the simulator, the prepaid % reward) (#71)"
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** the selling-price floor (`floorMinorOf`) rounds up to `checkout.money.roundingStepMinor` too, so a cut held at the floor leaves a total a rider can collect and the owner's margin always holds (quote and the discount \"was\" price; the catalogue's own price check unchanged) (#72)"
     }
    ],
    "mentions": [],
@@ -26481,6 +26563,7 @@
     "date": "2026-10-31",
     "note": "security headers, CSP, CSRF and rate limits end to end (CN-031 lane B; settings v73 `registry-web-security.ts`): one cross-site check in front of every API call in the proxy (`lib/security/same-origin.ts`; only signed webhooks, gateway callbacks, the ERP's signed calls, the internal deploy hook and policy reports pass without it, each with its own proof tested), per-address request limits per kind (sign-in, checkout, shop changes, reports, webhooks; observe as shipped, enforce answers 429 with Retry-After; admin calls never counted), Content-Security-Policy on every shop and admin page from settings (report-only as shipped; `/api/security/csp-report` keeps only path and origin); Caddy `geolocation=(self)` (the checkout's location share had been switched off), the short policy always on, `X-Permitted-Cross-Domain-Policies none`; the Next proxy body limit raised to 200 MB for media uploads (each route keeps its own limit); a route-review test keeps every door listed. 31 Oct (follow-up, CN-031 lane B): the report-only CSP logged \"script-src stopped eval\" on /admin/rules, /admin/combos and /combos/build-your-own — Zod 4's one-time `new Function` probe; `apps/web/src/instrumentation-client.ts` sets Zod jitless before hydration (same answers, no eval), a test beside it; Chromium: no `new Function` on those pages, console clean at 4 widths, so the CSP can be enforced",
     "github": [
+     "#72, 31 Oct",
      "#69, 31 Oct",
      "#68, 31 Oct"
     ]
@@ -26498,7 +26581,10 @@
     "names": [
      "geolocation=(self)",
      "X-Permitted-Cross-Domain-Policies none",
-     "new Function"
+     "new Function",
+     "CADDY_BODY_MAX_MB",
+     "CADDY_UPLOAD_MAX_MB",
+     "body_limits"
     ],
     "tests": [
      "only signed webhooks, gateway callbacks, the ERP's signed calls, the internal deploy hook and policy reports pass without it, each with its own proof tested), per-address request limits per kind (sign-in, checkout, shop changes, reports, webhooks",
@@ -26506,7 +26592,15 @@
      "`apps/web/src/instrumentation-client.ts` sets Zod jitless before hydration (same answers, no eval), a test beside it"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** Caddy answers 413 to a request body above server.conf `CADDY_BODY_MAX_MB` (25) and, on the admin's file uploads, `CADDY_UPLOAD_MAX_MB` (30), before Next's proxy holds it in memory (`body_limits`, imported by every public host) (#72)"
+    }
+   ],
    "mentions": [],
    "blueprint": [
     {
@@ -27562,6 +27656,7 @@
     "date": "2026-10-31",
     "note": "restoring production (CN-030, CN-031 lane C; migration `0063_restore_requests`; permission `system.restore`): Settings › System › Backups › Restore: step 1 restores a backup (Blob, the server's disk or Drive; newest, one picked, or a minute) into the check copy (`extas-pg-restore`), never the live database (`system.backup`); step 2 puts exactly that backup and minute on the live shop, only for the newest check copy that passed within `RESTORE_STAGING_VALID_H` (24), with RESTORE typed and the owner's PIN; the old data is kept (the old data folder, or `extas_before_restore_<time>`), the shop's containers start again, Telegram tells the owner; `RestoreRequest` (one open at a time), `extas-restore request`, `--backup`, `--confirm RESTORE`; audited `backups.restore.*`",
     "github": [
+     "#72, 31 Oct",
      "#71, 31 Oct",
      "#69, 31 Oct"
     ]
@@ -27573,7 +27668,9 @@
      "system.backup",
      "backups.restore.*"
     ],
-    "code": [],
+    "code": [
+     "state/last-good-deploy.json"
+    ],
     "names": [
      "0063_restore_requests",
      "extas-pg-restore",
@@ -27600,6 +27697,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 1):** the room (the restored copy plus 5%) is checked before anything stops; a trap over the swap moves the live data folder back (the half-copied one set aside, never deleted), starts the database and the stopped containers and writes the failure in words (#71)"
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** after the swap the restored database is migrated with the live version's migrate image (`state/last-good-deploy.json` .migrate, the same one-shot run as a deploy) before the shop's containers start again; a failed migration undoes the swap; INT, TERM and HUP exit into the undo trap, so a cancelled or timed-out run puts the live database back too (#72)"
     }
    ],
    "mentions": [],
@@ -27902,6 +28006,7 @@
     "date": "2026-10-31",
     "note": "first-week watch on the main domain (CN-031 lane C; setting v77 `golive.firstWeek`, off; 7 days, smoke every 6 hours, daily check 21:00): started on the go-live page (`POST /api/admin/go-live/first-week`, `system.golive`, audited); `extas-first-week` (hourly timer) sends the daily Telegram check (server, all pages, last night's backup) at the set time and one end message; `smoke.yml` runs hourly and only when due; the texts in server.conf `FIRST_WEEK_*`",
     "github": [
+     "#72, 31 Oct",
      "#71, 31 Oct",
      "#69, 31 Oct"
     ]
@@ -27915,7 +28020,8 @@
     "code": [
      "POST /api/admin/go-live/first-week",
      "smoke.yml",
-     "state/smoke.json"
+     "state/smoke.json",
+     "smoke.sh"
     ],
     "names": [
      "extas-first-week",
@@ -27924,7 +28030,10 @@
      "main",
      "EXTAS_EXTRA_HOSTS",
      "host",
-     "EXTAS_MAIN_OPEN=yes"
+     "EXTAS_MAIN_OPEN=yes",
+     "staging",
+     "extra",
+     "SMOKE_HOST_KIND"
     ],
     "tests": [
      "`smoke.yml` has a `host` input and the first-week runs test the main domain"
@@ -27937,6 +28046,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 1):** `SMOKE_HOST` picks the host (empty = staging, `main` = the first of `EXTAS_EXTRA_HOSTS`, or exactly one host the server serves); `smoke.yml` has a `host` input and the first-week runs test the main domain; the preview login is left out only for an extra host while `EXTAS_MAIN_OPEN=yes`; `state/smoke.json` names the host (#71)"
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 31 Oct (review round 2):** a smoke check may name its `host` (`staging` or `extra`); `smoke.sh` passes `SMOKE_HOST_KIND`, and the preview's noindex check is staging only, so the first-week smoke on the main domain no longer fails on it and sends no false alert (#72)"
     }
    ],
    "mentions": [],
