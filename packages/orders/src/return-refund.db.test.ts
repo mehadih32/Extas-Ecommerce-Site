@@ -3,7 +3,8 @@
 // the paid amount, the way it came, linked to its payment, no person named, nothing paid out); the same step again
 // keeps the one request; a Cash on Delivery parcel that comes back asks nothing; a delivery corrected to returned asks
 // it too; the owner's "keep the delivery charge" rule takes the charge off. Review R3: a re-ship exchange on a refused
-// prepaid parcel cuts its open refund request by what the new parcel uses (M1); a delivery-charge advance is kept by default and asked back only when
+// prepaid parcel cuts its open refund request by what the new parcel uses (M1); a partly delivered prepaid parcel asks
+// back what was paid above the kept part (M2); a delivery-charge advance is kept by default and asked back only when
 // the owner says so, and an "our fault" refusal asks everything (M3, minor 2). Every value is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -100,6 +101,26 @@ describe.skipIf(!HAS_TEST_DB)('gate F-041 · a returned paid parcel asks its ref
     expect(await db().refund.findMany({ where: { orderId: b.o.orderId } })).toMatchObject([{ status: 'APPROVED' }]);
     expect(await db().exchange.findUniqueOrThrow({ where: { id: exB.exchangeId } })).toMatchObject({ status: 'REQUESTED', newOrderId: null });
     f.overrides.delete('orders.exchange.charge');
+  });
+
+  it('review R3 (M2): a partly delivered prepaid parcel asks back what was paid above the kept part, a request only', async () => {
+    f.overrides.set('payments.refunds', RULES);
+    const o = await f.place('rr-partial', { lines: [{ variantId: f.v.skyM }, { variantId: f.v.whiteM }], payment: { method: 'mobile', option: 'bkash' }, pay: true });
+    const r = { storeId: f.S, orderId: o.orderId };
+    await confirmOrder(d(), f.staff, o.orderId);
+    await orderStep(d(), r, by, 'pack');
+    await db().shipment.create({ data: { storeId: f.S, orderId: o.orderId, courierAccountId: courierId, status: 'PENDING_PICKUP', idempotencyKey: randomUUID(), bookedAt: f.clock.now } });
+    await orderStep(d(), r, by, 'handover');
+    await orderStep(d(), r, by, 'courierPickedUp');
+    const order = await db().order.findUniqueOrThrow({ where: { id: o.orderId }, include: { items: { orderBy: { createdAt: 'asc' } } } });
+    expect(order.paidMinor).toBe(order.totalMinor);
+    const [kept, back] = order.items;
+    const res = await orderStep(d(), r, by, 'partiallyDelivered', { keptItemIds: [kept!.id] });
+    expect(res.refundRequestIds).toHaveLength(1);
+    const lineSum = kept!.lineTotalMinor + back!.lineTotalMinor;
+    const keptValue = Math.round(((order.totalMinor - order.deliveryChargeMinor) * kept!.lineTotalMinor) / lineSum) + order.deliveryChargeMinor;
+    expect(await db().refund.findMany({ where: { orderId: o.orderId } })).toMatchObject([{ status: 'REQUESTED', source: 'RTO', method: 'original', amountMinor: order.paidMinor - keptValue, requestedById: null, approvedById: null, completedAt: null, idempotencyKey: `rto-partial:${o.orderId}` }]);
+    expect(await db().walletEntry.count({ where: { orderId: o.orderId } })).toBe(0);
   });
 
   it('review R3 (M3): a delivery-charge advance is kept on a refusal unless the owner says to ask it back; our fault asks all', async () => {

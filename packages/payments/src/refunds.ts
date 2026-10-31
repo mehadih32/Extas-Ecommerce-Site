@@ -25,8 +25,9 @@ import { Prisma } from '@extas/db/client';
 import { z } from 'zod';
 import { allow, KEY, nowOf, parse, setting, TX, UUID, type PaymentsDeps, type Tx, type Who } from './context';
 import { PaymentsError } from './errors';
-import { CASH_OUTCOMES } from './cod-match';
-import { HELD_REFUND_STATES, MANUAL_REFUND_SOURCES, refundAllowed, refundedPaymentState, refundMove, refundRoom, REFUND_METHODS, REFUND_STATES, rtoRefundAmount, rtoRefundSplit, type RefundMethod, type RefundSource, type RefundState } from './refund-pure';
+import { CASH_OUTCOMES, doorSplit, partialKeptValue } from './cod-match';
+import { HELD_REFUND_STATES, MANUAL_REFUND_SOURCES, partialRefundSplit, refundAllowed, refundedPaymentState, refundMove, refundRoom, REFUND_METHODS, REFUND_STATES, rtoRefundAmount, rtoRefundSplit, type RefundMethod, type RefundSource, type RefundState } from './refund-pure';
+import { setRulesFor } from './set-split';
 import { auditMoney, postWalletEntry } from './wallet';
 
 /** The timeline's event types of a refund. */
@@ -235,6 +236,26 @@ export async function requestReturnRefund(tx: Tx, deps: Pick<PaymentsDeps, 'sett
   const keptAdvance = rules.rtoAdvance !== 'ASK' && !opts.ourFault;
   const from = keptAdvance ? paid.filter((p) => p.purpose !== 'ADVANCE_DELIVERY_CHARGE') : paid;
   return askReturn(tx, storeId, o, split, `rto:${orderId}`, from.length === 1 ? from[0]!.id : null);
+}
+
+/**
+ * Review R3 (M2) — the refund a partly delivered paid parcel owes for the pieces that came back: the money in above what
+ * the kept part is worth (the same figure the door asks, `partialKeptValue`; a split set priced by its rule). Asked by
+ * the system once per order in the order service's `partiallyDelivered` step, as a REQUEST only (a person approves it),
+ * never more than the order has left to refund. Returns the refund ids (none when nothing was paid above it).
+ */
+export async function requestPartialReturnRefund(tx: Tx, deps: Pick<PaymentsDeps, 'settings' | 'door'>, storeId: number, orderId: string, keptItemIds: readonly string[]): Promise<string[]> {
+  const o = await tx.order.findFirst({ where: { id: orderId, storeId }, select: { ...ORDER, totalMinor: true, items: { where: { status: 'ACTIVE' }, select: { id: true, lineTotalMinor: true, unitPriceMinor: true, quantity: true, comboId: true, comboGroupKey: true } } } });
+  if (!o) throw new PaymentsError('NOT_FOUND', 'no such order', ['orderId']);
+  if (o.paidMinor + o.walletAppliedMinor <= 0) return [];
+  const kept = keptItemIds.filter((id) => o.items.some((i) => i.id === id));
+  // a fixed set the rider split anyway is priced pro rata here (the door record flags it for a person)
+  const rules = await setRulesFor(tx, deps, storeId, o.items.flatMap((i) => (i.comboId ? [i.comboId] : [])));
+  const split = doorSplit(o.items, kept, rules);
+  const extra = split.chargeUnderFreeLimit && o.deliveryChargeMinor === 0 && deps.door?.keptChargeMinor ? await deps.door.keptChargeMinor(storeId, orderId, kept) : 0;
+  const keptValueMinor = partialKeptValue({ totalMinor: o.totalMinor, deliveryChargeMinor: o.deliveryChargeMinor, lines: o.items }, kept, { ownPriceIds: split.ownPriceIds, extraChargeMinor: extra });
+  const paid = await tx.payment.findMany({ where: { storeId, orderId, status: 'PAID' }, select: { id: true } });
+  return askReturn(tx, storeId, o, partialRefundSplit({ ...o, keptValueMinor }), `rto-partial:${orderId}`, paid.length === 1 ? paid[0]!.id : null);
 }
 
 /** The system's return refund requests (the way it came, then the wallet part), each capped by the order's room. */

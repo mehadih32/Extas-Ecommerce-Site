@@ -403,6 +403,36 @@
       "none": "Nothing yet.",
       "empty": "No combo activity in these days yet. Views, picks and sales show here as customers use the combo pages.",
       "salesOrders": "{n} delivered orders"
+    },
+    "split": {
+      "title": "When only some pieces of a set stay",
+      "intro": "A Fixed set is kept or returned whole: the rider delivers it whole, and a partial delivery or a return of one piece is refused. A Flexible set may split; you choose what the kept pieces cost. Only the rider's expected amount changes, on a door record a person approves — nothing is charged by itself.",
+      "more": "Set returns: Fixed or Flexible",
+      "on": "Use Fixed and Flexible sets",
+      "offNote": "Off: a kept piece costs its share of the set price, and every set may split.",
+      "defaultMode": "Sets without their own choice",
+      "priceRule": "Price of the kept pieces (flexible sets)",
+      "charge": "Delivery charge when the kept part falls under the free-delivery limit",
+      "chargeHint": "Only for an order that had free delivery. The charge is the order's delivery band charge.",
+      "ownerOnly": "This decides money at the door: only the owner (or someone with the set-price permission) changes it.",
+      "saved": "Saved",
+      "modes": {
+        "FIXED": "Fixed set — kept or returned whole",
+        "FLEXIBLE": "Flexible — pieces may stay on their own"
+      },
+      "rules": {
+        "PRO_RATA": "Their share of the set price",
+        "OWN_PRICE": "Each piece at its own price (the set saving is lost)"
+      },
+      "setLabel": "If only some pieces stay",
+      "setLabelOf": "If only some pieces of {name} stay",
+      "setChoice": {
+        "default": "Shop default ({what})",
+        "FIXED": "Fixed set — whole only",
+        "PRO_RATA": "Flexible — share of the set price",
+        "OWN_PRICE": "Flexible — each at its own price"
+      },
+      "toast": "{name}: saved"
     }
   }
 }

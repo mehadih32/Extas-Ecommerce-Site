@@ -72,6 +72,8 @@ export * from './zone-match';
 export * from './zones';
 export * from './fulfil-pure';
 export * from './fulfil';
+// CN-018 (4) — the parcel's Fixed sets for the sticker and the booking note.
+export * from './set-line';
 export * from './handover';
 export * from './picking-pure';
 export * from './picking';

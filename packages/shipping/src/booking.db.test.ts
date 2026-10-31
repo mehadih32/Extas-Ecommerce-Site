@@ -146,6 +146,31 @@ describe.skipIf(!HAS_TEST_DB)('PR 176 · booking and tracking with Steadfast (Po
     }
   });
 
+  it('CN-018 (4): a Fixed set tells the rider "deliver whole" first in the booking note, only with the owner\'s setting on', async () => {
+    const combo = await db().combo.create({ data: { storeId: f.S, slug: 'bk-fixed-pair', nameEn: 'Eid pair', nameBn: 'ঈদ জোড়া', type: 'FIXED_SET', pieceCount: 2, splitMode: 'FIXED' } });
+    const mark = async (orderId: string) => db().orderItem.updateMany({ where: { orderId }, data: { comboId: combo.id, comboGroupKey: `g-${orderId}` } });
+    const off = await confirmed('set-off');
+    await mark(off.orderId);
+    expect((await book([off.orderId])).results[0]).toMatchObject({ outcome: 'booked' });
+    expect((await shipments(off.orderId))[0]!.bookingNote ?? '').not.toContain('Eid pair');
+    f.overrides.set('combos.split', { enabled: true, defaultMode: 'FLEXIBLE', priceRule: 'PRO_RATA', chargeUnderFreeLimit: false });
+    try {
+      const on = await confirmed('set-on');
+      await mark(on.orderId);
+      expect((await book([on.orderId])).results[0]).toMatchObject({ outcome: 'booked' });
+      const note = (await shipments(on.orderId))[0]!.bookingNote!;
+      expect(note.startsWith('Set Eid pair: deliver whole')).toBe(true);
+      // the set's own Flexible: no line
+      await db().combo.update({ where: { id: combo.id }, data: { splitMode: 'FLEXIBLE' } });
+      const flex = await confirmed('set-flex');
+      await mark(flex.orderId);
+      expect((await book([flex.orderId])).results[0]).toMatchObject({ outcome: 'booked' });
+      expect((await shipments(flex.orderId))[0]!.bookingNote ?? '').not.toContain('Eid pair');
+    } finally {
+      f.overrides.delete('combos.split');
+    }
+  });
+
   it('SIM-F-029: the parcel weighs its pieces (2.1 kg sent as 2100 g); an unknown piece weight is never guessed', async () => {
     await db().productVariant.update({ where: { id: f.v.skyM }, data: { weightGrams: 700 } });
     await db().productVariant.update({ where: { id: f.v.linenM }, data: { weightGrams: null } });

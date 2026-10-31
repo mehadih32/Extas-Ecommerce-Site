@@ -208,7 +208,8 @@
         "reprint": "REPRINT {n}",
         "page": "{n}/{of}",
         "continued": "Continued on the next sticker",
-        "practice": "PRACTICE: not a real parcel"
+        "practice": "PRACTICE: not a real parcel",
+        "setWhole": "SET {name}: deliver whole — no single piece kept or returned"
       },
       "sample": {
         "order": "SAMPLE-1",

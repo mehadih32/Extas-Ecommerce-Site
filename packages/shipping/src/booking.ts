@@ -38,7 +38,8 @@ import type { Prisma } from '@extas/db/client';
 import { assertBookable, isInventoryError } from '@extas/inventory';
 import { bookWith, DELIVERY_TARGET_SELECT, deliveryTarget, dueOf, isOrdersError, openReviewIds, staffBy, viewWhere, type OrdersDeps } from '@extas/orders';
 import { bookableCourier, courierApi } from './accounts';
-import type { CourierBookingSettings } from '@extas/settings';
+import { lookup, messages, type CourierBookingSettings } from '@extas/settings';
+import { fixedSetNoteLines, fixedSetsOf } from './set-line';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Tx, type Who } from './context';
 import { isShippingError, ShippingError } from './errors';
 import { noteCourierCharge } from './charge-mismatch';
@@ -161,7 +162,7 @@ const ORDER_SELECT = {
   areaId: true,
   note: true,
   ...DELIVERY_TARGET_SELECT,
-  items: { where: { status: 'ACTIVE' }, select: { productName: true, colourName: true, sizeLabel: true, quantity: true, lineTotalMinor: true, variantId: true }, orderBy: { createdAt: 'asc' } },
+  items: { where: { status: 'ACTIVE' }, select: { productName: true, colourName: true, sizeLabel: true, quantity: true, lineTotalMinor: true, variantId: true, comboId: true }, orderBy: { createdAt: 'asc' } },
 } as const satisfies Prisma.OrderSelect;
 
 interface Courier {
@@ -173,7 +174,7 @@ interface Courier {
 type Db = ShippingDeps['db'] | Tx;
 
 /** The parcel's facts from the order row (read again under the order's lock before anything is written). */
-async function prepare(db: Db, storeId: number, courier: Courier, orderId: string, cfg: CourierBookingSettings, today: string, zoneRule: 'whenRequired' | 'always') {
+async function prepare(db: Db, settings: ShippingDeps['settings'], storeId: number, courier: Courier, orderId: string, cfg: CourierBookingSettings, today: string, zoneRule: 'whenRequired' | 'always') {
   const o = await db.order.findFirst({ where: { id: orderId, storeId, archivedAt: null }, select: ORDER_SELECT });
   if (!o) return { skip: skipped(orderId, null, 'NOT_FOUND') } as const;
   const target = deliveryTarget(o);
@@ -199,7 +200,8 @@ async function prepare(db: Db, storeId: number, courier: Courier, orderId: strin
     zone,
     target,
     receiver: { name: target.name!, phone: courierPhone(target.phone)!, address: target.address! },
-    note: bookingNoteOf({ customerNote: o.note, gift: target.gift, giftLine: cfg.giftNote[cfg.noteLang] }),
+    // CN-018 (4): a Fixed set is delivered whole — the rider reads it in the note (nothing while `combos.split` is off)
+    note: bookingNoteOf({ customerNote: o.note, gift: target.gift, giftLine: cfg.giftNote[cfg.noteLang], setLines: fixedSetNoteLines(await fixedSetsOf(db, { settings }, storeId, o.items), lookup(messages[cfg.noteLang], 'combos.split.riderLine') ?? '', cfg.noteLang) }),
   } as const;
 }
 
@@ -215,7 +217,7 @@ async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: 
   const [cfg, timeZone, zones] = await Promise.all([setting(deps, who.storeId, 'delivery.courier.booking'), setting(deps, who.storeId, 'store.timeZone'), setting(deps, who.storeId, 'delivery.courier.zoneSync')]);
   const today = localDay(nowOf(deps), timeZone);
   // a quick look first (no lock): most refusals need no transaction
-  const first = await prepare(deps.db, who.storeId, courier, orderId, cfg, today, zones.unmapped);
+  const first = await prepare(deps.db, deps.settings, who.storeId, courier, orderId, cfg, today, zones.unmapped);
   if (first.skip) {
     if (first.skip.code === 'AREA_UNMAPPED' || first.skip.code === 'AREA_UNKNOWN') await noteAreaHeld(deps, who, courier.id, first.skip);
     return first.skip;
@@ -229,7 +231,7 @@ async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: 
       // PR 182 (SIM-F-010): a required packing photo that is missing waits (the owner may waive it for one order)
       await assertPackingPhoto(deps, tx, who.storeId, orderId);
       // the row as it is under the lock: an edit that raced this press is what goes to the courier, or the reason why not
-      const p = await prepare(tx, who.storeId, courier, orderId, cfg, today, zones.unmapped);
+      const p = await prepare(tx, deps.settings, who.storeId, courier, orderId, cfg, today, zones.unmapped);
       if (p.skip) throw new Skip(p.skip);
       const attempt = (await tx.shipment.count({ where: { storeId: who.storeId, orderId } })) + 1;
       const merchantRef = `${locked.number}-${attempt}`;

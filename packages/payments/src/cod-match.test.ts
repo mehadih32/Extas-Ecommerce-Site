@@ -3,7 +3,7 @@
 // and the courier's CSV read with the owner's column names.
 import { registry } from '@extas/settings';
 import { describe, expect, it } from 'vitest';
-import { amountMinor, doorExpectation, doorVariance, matchLine, parseCsv, parseStatement, type DoorFacts, type LineContext, type StatementLine } from './cod-match';
+import { amountMinor, doorExpectation, doorSplit, doorVariance, matchLine, parseCsv, parseStatement, splitSets, type DoorFacts, type LineContext, type StatementLine } from './cod-match';
 
 const facts = (x: Partial<DoorFacts> = {}): DoorFacts => ({
   paymentMethod: 'COD',
@@ -160,5 +160,34 @@ describe('PR 166 · the courier CSV file', () => {
     expect(parseStatement('Parcel,Money\nCN-1,10\n', format)).toEqual({ ok: false, problems: ['no consignment column', 'no COD amount column'] });
     expect(parseStatement('cn,cod\n,10\nCN-2,ten\n', format)).toEqual({ ok: false, problems: ['line 1: no consignment', 'line 2: the COD amount is not a number'] });
     expect(parseStatement('cn,cod\n', format)).toEqual({ ok: false, problems: ['the file has no lines'] });
+  });
+});
+
+describe('CN-018 (4) · a split set at the door (follow-up 330)', () => {
+  const lines = [
+    { id: 'a', lineTotalMinor: 80_000, unitPriceMinor: 100_000, quantity: 1, comboId: 'set', comboGroupKey: 'g1' },
+    { id: 'b', lineTotalMinor: 80_000, unitPriceMinor: 100_000, quantity: 1, comboId: 'set', comboGroupKey: 'g1' },
+    { id: 'c', lineTotalMinor: 50_000, unitPriceMinor: 50_000, quantity: 1, comboId: null, comboGroupKey: null },
+  ];
+  const f = facts({ totalMinor: 216_000, lines });
+  const rule = (mode: 'FIXED' | 'FLEXIBLE', priceRule: 'PRO_RATA' | 'OWN_PRICE' = 'PRO_RATA', chargeUnderFreeLimit = false) => new Map([['set', { mode, priceRule, chargeUnderFreeLimit }]]);
+
+  it('finds only the sets a partial splits', () => {
+    expect(splitSets(lines, ['a', 'c'])).toEqual([{ groupKey: 'g1', comboId: 'set', keptIds: ['a'], returnedIds: ['b'] }]);
+    expect(splitSets(lines, ['a', 'b'])).toEqual([]);
+    expect(splitSets(lines, ['c'])).toEqual([]);
+  });
+
+  it('a fixed set split is named; a flexible one on its own price lists its kept pieces; no rule = pro rata', () => {
+    expect(doorSplit(lines, ['a'], rule('FIXED')).fixed).toHaveLength(1);
+    expect(doorSplit(lines, ['a'], rule('FLEXIBLE', 'OWN_PRICE', true))).toEqual({ fixed: [], ownPriceIds: ['a'], chargeUnderFreeLimit: true });
+    expect(doorSplit(lines, ['a'], new Map())).toEqual({ fixed: [], ownPriceIds: [], chargeUnderFreeLimit: false });
+  });
+
+  it('prices the kept piece pro rata, at its own price, and with the charge the kept part owes — never above the due', () => {
+    expect(doorExpectation('PARTIAL', f, ['a']).expectedMinor).toBe(86_000);
+    expect(doorExpectation('PARTIAL', f, ['a'], { ownPriceIds: ['a'] }).expectedMinor).toBe(106_000);
+    expect(doorExpectation('PARTIAL', facts({ totalMinor: 210_000, deliveryChargeMinor: 0, lines }), ['a'], { extraChargeMinor: 6_000 }).expectedMinor).toBe(86_000);
+    expect(doorExpectation('PARTIAL', facts({ totalMinor: 216_000, paidMinor: 150_000, lines }), ['a'], { ownPriceIds: ['a'] }).expectedMinor).toBe(0);
   });
 });

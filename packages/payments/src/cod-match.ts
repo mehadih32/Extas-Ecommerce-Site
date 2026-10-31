@@ -14,7 +14,76 @@ export const CASH_OUTCOMES: readonly CodOutcome[] = ['DELIVERED', 'PARTIAL', 'RE
 
 export interface DoorFacts extends Pick<MoneyFacts, 'paymentMethod' | 'totalMinor' | 'walletAppliedMinor' | 'paidMinor'> {
   deliveryChargeMinor: number;
-  lines: { id: string; lineTotalMinor: number }[];
+  /** CN-018 (4): a set's pieces carry their own price (`unitPriceMinor` × `quantity`) and the set in the bag (`comboGroupKey`). */
+  lines: DoorLine[];
+}
+
+export interface DoorLine {
+  id: string;
+  lineTotalMinor: number;
+  unitPriceMinor?: number;
+  quantity?: number;
+  comboId?: string | null;
+  comboGroupKey?: string | null;
+}
+
+/** CN-018 (4): how one set splits (from `combos.split` and the set's own choice; @extas/settings `setSplitOf`). */
+export interface DoorSetRule {
+  mode: 'FIXED' | 'FLEXIBLE';
+  priceRule: 'PRO_RATA' | 'OWN_PRICE';
+  chargeUnderFreeLimit: boolean;
+}
+
+/** One set in the parcel that a partial delivery splits: some of its pieces stay, the others come back. */
+export interface SplitSet {
+  groupKey: string;
+  comboId: string;
+  keptIds: string[];
+  returnedIds: string[];
+}
+
+/** The sets a partial delivery splits (a set kept or returned whole is not split). */
+export function splitSets(lines: readonly DoorLine[], keptItemIds: readonly string[]): SplitSet[] {
+  const groups = new Map<string, SplitSet>();
+  for (const l of lines) {
+    if (!l.comboId || !l.comboGroupKey) continue;
+    const g = groups.get(l.comboGroupKey) ?? { groupKey: l.comboGroupKey, comboId: l.comboId, keptIds: [], returnedIds: [] };
+    (keptItemIds.includes(l.id) ? g.keptIds : g.returnedIds).push(l.id);
+    groups.set(l.comboGroupKey, g);
+  }
+  return [...groups.values()].filter((g) => g.keptIds.length > 0 && g.returnedIds.length > 0);
+}
+
+/** What the owner's set rules say about a partial delivery: the fixed sets it would split (refused), and how to price it. */
+export interface DoorSplit {
+  /** The split sets that are Fixed: such a partial delivery is refused (a fixed set never splits). */
+  fixed: SplitSet[];
+  /** Kept lines priced at their own price (a split flexible set on OWN_PRICE). */
+  ownPriceIds: string[];
+  /** A split flexible set asks the delivery charge when the kept part falls under the free-delivery limit. */
+  chargeUnderFreeLimit: boolean;
+}
+
+/** The split sets against their rules (`rules` by combo id; a set without a rule splits pro rata as before). */
+export function doorSplit(lines: readonly DoorLine[], keptItemIds: readonly string[], rules: ReadonlyMap<string, DoorSetRule>): DoorSplit {
+  const out: DoorSplit = { fixed: [], ownPriceIds: [], chargeUnderFreeLimit: false };
+  for (const s of splitSets(lines, keptItemIds)) {
+    const r = rules.get(s.comboId);
+    if (!r) continue;
+    if (r.mode === 'FIXED') out.fixed.push(s);
+    else {
+      if (r.priceRule === 'OWN_PRICE') out.ownPriceIds.push(...s.keptIds);
+      if (r.chargeUnderFreeLimit) out.chargeUnderFreeLimit = true;
+    }
+  }
+  return out;
+}
+
+/** CN-018 (4) pricing of a partial delivery: kept lines at their own price, and a delivery charge the kept part owes. */
+export interface PartialPricing {
+  ownPriceIds?: readonly string[];
+  /** The delivery charge a free-delivery order's kept part owes (it fell under the free-delivery limit). */
+  extraChargeMinor?: number;
 }
 
 export interface DoorExpectation {
@@ -28,23 +97,36 @@ const NONE = 0;
 const owed = (expectedMinor: number, expectedChargeMinor = NONE): DoorExpectation => ({ expectedMinor, expectedChargeMinor });
 
 /**
+ * What the kept part of a partial delivery is worth: the kept pieces' share of the goods (pro rata to the line totals,
+ * after every discount; a split flexible set on OWN_PRICE weighs its own price) plus the delivery charge (and the charge a
+ * free-delivery order's kept part owes). The door asks this less what is paid; a prepaid order gets back what was paid
+ * above it (review R3 M2, `partialRefundSplit` in refund-pure.ts).
+ */
+export function partialKeptValue(f: Pick<DoorFacts, 'totalMinor' | 'deliveryChargeMinor' | 'lines'>, keptItemIds: readonly string[], pricing: PartialPricing = {}): number {
+  const lineSum = f.lines.reduce((s, l) => s + l.lineTotalMinor, 0);
+  const own = new Set(pricing.ownPriceIds ?? []);
+  const weigh = (l: DoorLine) => (own.has(l.id) && l.unitPriceMinor !== undefined ? l.unitPriceMinor * (l.quantity ?? 1) : l.lineTotalMinor);
+  const kept = f.lines.filter((l) => keptItemIds.includes(l.id)).reduce((s, l) => s + weigh(l), 0);
+  const goods = Math.max(0, f.totalMinor - f.deliveryChargeMinor);
+  return (lineSum > 0 ? Math.round((goods * kept) / lineSum) : 0) + f.deliveryChargeMinor + Math.max(0, pricing.extraChargeMinor ?? 0);
+}
+
+/**
  * What the rider should collect for an outcome. Never more than the amount due: a paid customer is never asked again
  * (SIM-F-001). A partial delivery collects the kept pieces' share of the goods (pro rata to the line totals, after every
- * discount) plus the delivery charge, less what is already paid; the owner's set-split price rule (P5) replaces the
- * pro-rata share when it comes (follow-up 330).
+ * discount) plus the delivery charge, less what is already paid. ~~the owner's set-split price rule (P5) replaces the
+ * pro-rata share when it comes (follow-up 330).~~ CN-018 (4), follow-up 330: a kept piece of a split flexible set on
+ * OWN_PRICE weighs its own price instead of its share of the set price (`pricing.ownPriceIds`; any order-wide discount
+ * still applies pro rata), and `pricing.extraChargeMinor` adds the delivery charge a free-delivery order's kept part owes.
  */
-export function doorExpectation(outcome: CodOutcome, f: DoorFacts, keptItemIds: readonly string[] = []): DoorExpectation {
+export function doorExpectation(outcome: CodOutcome, f: DoorFacts, keptItemIds: readonly string[] = [], pricing: PartialPricing = {}): DoorExpectation {
   const due = codToCollect(f);
   switch (outcome) {
     case 'DELIVERED':
       return owed(due);
     case 'PARTIAL': {
       if (due === NONE) return owed(NONE);
-      const lineSum = f.lines.reduce((s, l) => s + l.lineTotalMinor, 0);
-      const kept = f.lines.filter((l) => keptItemIds.includes(l.id)).reduce((s, l) => s + l.lineTotalMinor, 0);
-      const goods = Math.max(0, f.totalMinor - f.deliveryChargeMinor);
-      const value = (lineSum > 0 ? Math.round((goods * kept) / lineSum) : 0) + f.deliveryChargeMinor;
-      return owed(Math.min(due, Math.max(0, value - f.walletAppliedMinor - f.paidMinor)));
+      return owed(Math.min(due, Math.max(0, partialKeptValue(f, keptItemIds, pricing) - f.walletAppliedMinor - f.paidMinor)));
     }
     case 'RETURNED_CHARGE_PAID':
       return owed(NONE, Math.min(due, f.deliveryChargeMinor));

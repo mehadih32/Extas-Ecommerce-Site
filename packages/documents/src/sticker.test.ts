@@ -92,6 +92,16 @@ describe('the courier sticker', () => {
     expect(plain.calls.some((c) => c.includes('·') && c.includes('Bogura'))).toBe(false);
   });
 
+  it('CN-018 (4): a Fixed set says "deliver whole" before the pieces; none without one', async () => {
+    const engine = boxText();
+    await stickerPages(sampleSticker({ fixedSets: ['Eid pair'] }), SAMPLE_WORDS, LAYOUT, engine);
+    expect(engine.calls.indexOf('SET Eid pair: deliver whole')).toBeGreaterThan(-1);
+    expect(engine.calls.indexOf('SET Eid pair: deliver whole')).toBeLessThan(engine.calls.indexOf(SAMPLE_WORDS.items));
+    const plain = boxText();
+    await stickerPages(sampleSticker(), SAMPLE_WORDS, LAYOUT, plain);
+    expect(plain.calls.some((c) => c.startsWith('SET '))).toBe(false);
+  });
+
   it('SIM-F-007: a gift shows who it is from and the day, under the receiver', async () => {
     const engine = boxText();
     await stickerPages(sampleSticker({ gift: { from: 'Ayesha', deliverAfter: '2026-10-30', note: 'Happy Eid' } }), SAMPLE_WORDS, LAYOUT, engine);

@@ -79,6 +79,7 @@ export const SAMPLE_WORDS: StickerWords = {
   page: '{n}/{of}',
   continued: 'Continued on the next sticker',
   practice: 'PRACTICE: not a real parcel',
+  setWhole: 'SET {name}: deliver whole',
 };
 
 export function sampleSticker(over: Partial<StickerInput> = {}): StickerInput {

@@ -5,7 +5,7 @@
 // Never here: moving money, a refund payout, a COD, price or discount change, or blocking anyone (CLAUDE.md rule 6). A
 // paid order's cancel records a refund REQUEST for the owner (F-041), nothing more; so does a paid parcel that comes
 // back (gate F-041: the `returned` and `deliveryCorrected` steps, @extas/payments requestReturnRefund).
-import { requestReturnRefund } from '@extas/payments';
+import { requestPartialReturnRefund, requestReturnRefund } from '@extas/payments';
 import { z } from 'zod';
 import { allow, parse, setting, type OrdersDeps, type Tx, type Who } from './context';
 import { OrdersError } from './errors';
@@ -375,7 +375,8 @@ export const stepInput = z
  * it returns goes on the step's timeline event.
  * Gate F-041 (follow-up 420): a parcel of a paid order that comes back — `returned`, or a delivery corrected to returned
  * — asks its refund in the same transaction (what was paid online, by the owner's RTO rule, and the wallet part), once,
- * as a REQUEST that waits for the owner's approval on Money › Refunds & wallet. Nothing is paid here.
+ * as a REQUEST that waits for the owner's approval on Money › Refunds & wallet. Nothing is paid here. Review R3: a
+ * partial delivery of a paid order asks back what was paid above the kept part the same way (M2).
  */
 export async function orderStep(
   deps: OrdersDeps,
@@ -404,9 +405,14 @@ export async function orderStep(
       const returnId = step === 'returned' || step === 'partiallyDelivered' ? await openCourierReturn(deps, tx, o, { step, refusalKey: refusal?.key ?? null, keptItemIds: d.keptItemIds ?? [], chargePaidMinor: d.chargePaidMinor ?? 0, now }) : null;
       // PR 182: the packing step's own checks and records under the order's lock (the SKU scan, the photo, the weight)
       const more = (await opts.also?.(tx, o, now)) ?? {};
-      // review R3 (minor 2): a refusal for one of the owner's "our fault" reasons asks everything back (a request only)
+      // review R3: a refusal for one of the owner's "our fault" reasons asks everything back (minor 2); a partly delivered
+      // paid parcel asks back what was paid above the kept part (M2) — requests only, a person approves them
       const refundRequestIds =
-        step === 'returned' || step === 'deliveryCorrected' ? await requestReturnRefund(tx, deps, o.storeId, o.id, { ourFault: await ourFaultRefusal(deps, o.storeId, refusal?.key ?? null) }) : [];
+        step === 'returned' || step === 'deliveryCorrected'
+          ? await requestReturnRefund(tx, deps, o.storeId, o.id, { ourFault: await ourFaultRefusal(deps, o.storeId, refusal?.key ?? null) })
+          : step === 'partiallyDelivered'
+            ? await requestPartialReturnRefund(tx, deps, o.storeId, o.id, d.keptItemIds ?? [])
+            : [];
       const eventData = { ...(d.keptItemIds ? { keptItemIds: d.keptItemIds } : {}), ...(refusal ? { refusal: { en: refusal.en, bn: refusal.bn } } : {}), ...(returnId ? { returnId } : {}), ...(refundRequestIds.length ? { refundRequestIds } : {}), ...(opts.eventData ?? {}), ...more };
       // PR 184: a pick-up the courier reports before anyone pressed "Handed over" is the hand-over
       const handed = step === 'courierPickedUp' && from !== 'HANDED_OVER' ? { handedOverAt: d.at ?? now } : {};

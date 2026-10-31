@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import type { AutoRuleView, CategoryOption, ComboView, ProductOption, ShopTemplates } from '@extas/combos';
+import type { ComboSplitSettings } from '@extas/settings';
 import { isArchivedState } from '@extas/combos/pure';
 import { t, type Dict } from '@/lib/i18n';
 import { ComboEditor } from './ComboEditor';
@@ -39,6 +40,8 @@ export interface CombosScreenProps {
   here: string;
   /** PR 99 — "What customers can combine" (drawn by the server from Smart Rules). */
   tiers?: ReactNode;
+  /** CN-018 (4) — the store's set-split setting (`combos.split`), on the fixed tab. */
+  split?: ComboSplitSettings | null;
   /** PR 104 — the combo report (drawn by the server). */
   report?: ReactNode;
   /** The Combos pages' tabs (desktop), drawn under the head. */
@@ -109,7 +112,7 @@ export function CombosScreen(props: CombosScreenProps) {
     );
   else if (tab === 'report') body = props.report ?? null;
   else if (tab === 'fixed')
-    body = <FixedTab dict={d} lang={lang} fmt={fmt} symbol={symbol} combos={combos} hexes={hexes} photos={props.photos} perms={props.perms} onChange={upsert} onEdit={(c) => setEditing({ combo: c })} say={say} tiers={props.tiers} />;
+    body = <FixedTab dict={d} lang={lang} fmt={fmt} symbol={symbol} combos={combos} hexes={hexes} photos={props.photos} perms={props.perms} onChange={upsert} onEdit={(c) => setEditing({ combo: c })} say={say} tiers={props.tiers} split={props.split ?? null} />;
   else
     body = (
       <RulesTab

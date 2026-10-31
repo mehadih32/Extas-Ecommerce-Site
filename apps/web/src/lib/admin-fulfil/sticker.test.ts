@@ -22,10 +22,18 @@ const parcel = (over: Partial<StickerParcel> = {}): StickerParcel => ({
   gift: null,
   note: null,
   reprint: null,
+  fixedSets: [],
   ...over,
 });
 
 describe('PR 179 · the sticker from a parcel and the owner\'s settings', () => {
+  it('CN-018 (4): a Fixed set is named in the sticker\'s language', () => {
+    const p = parcel({ fixedSets: [{ nameEn: 'Eid pair', nameBn: 'ঈদ জোড়া' }, { nameEn: 'Polo duo', nameBn: null }] });
+    expect(stickerInput(p, ctx()).fixedSets).toEqual(['Eid pair', 'Polo duo']);
+    expect(stickerInput(p, ctx({ layout: { ...layout, lang: 'bn' } })).fixedSets).toEqual(['ঈদ জোড়া', 'Polo duo']);
+    for (const lang of ['en', 'bn'] as const) expect(stickerWords(lang).setWhole).toContain('{name}');
+  });
+
   it('writes the amount to collect as the shop writes money, in Western digits', () => {
     expect(stickerInput(parcel(), ctx()).collect).toBe('৳1,580');
     expect(stickerInput(parcel({ collectMinor: 0 }), ctx()).collect).toBeNull();

@@ -1,0 +1,9 @@
+{
+  "combos": {
+    "split": {
+      "label": "When only some pieces of a set stay",
+      "help": "Each set is a Fixed set (kept or returned whole: the rider delivers it whole, and a partial delivery or a return of one piece is refused) or Flexible (pieces may stay on their own). For a flexible set, the kept pieces cost their share of the set price, or each its own price; and you choose whether a free-delivery order owes the delivery charge when the kept part falls under the free-delivery limit. Off until switched on: until then a kept piece costs its share of the set price.",
+      "riderLine": "Set {name}: deliver whole — no single piece is kept or returned"
+    }
+  }
+}

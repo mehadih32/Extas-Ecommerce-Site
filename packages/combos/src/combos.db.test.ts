@@ -7,7 +7,7 @@ import { createTestDatabase, HAS_TEST_DB, type TestDatabase } from '@extas/auth/
 import { seedSample } from '@extas/seed';
 import { registry, type Key, type Value } from '@extas/settings';
 import { createAutoRule, getAutoRule, listAutoRules, previewAutoRule, setAutoRuleActive, setAutoRuleDates, setAutoRuleOptions, setAutoRuleUpsell, setShopTemplates, updateAutoRule } from './auto-rules';
-import { createCombo, getCombo, listCombos, setComboActive, setComboFlags, setComboPrice, updateCombo } from './combos-service';
+import { createCombo, getCombo, listCombos, setComboActive, setComboFlags, setComboPrice, setComboSplit, setSplitOptions, splitOptions, updateCombo } from './combos-service';
 import type { CombosDeps, SettingsReader, Who } from './context';
 import { seedSampleCombos } from './sample';
 import { listSetTiers, liveSetTiers } from './set-tiers';
@@ -162,6 +162,22 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       const back = await setComboActive(deps(), as('publisher'), ids.pair!, true);
       expect(back).toMatchObject({ state: 'live', slug: 'test-polo-pair' });
       expect(await t.prisma.auditLog.count({ where: { entityType: 'Combo', entityId: ids.pair! } })).toBeGreaterThanOrEqual(6);
+    });
+
+    it('CN-018 (4): Fixed or Flexible per set and the store’s default are the owner’s money decision; audited', async () => {
+      expect(await splitOptions(deps(), as('reader'))).toEqual({ enabled: false, defaultMode: 'FLEXIBLE', priceRule: 'PRO_RATA', chargeUnderFreeLimit: false });
+      expect(await code(setSplitOptions(deps(), as('writer'), { enabled: true }))).toBe('OWNER_OK_REQUIRED');
+      expect(await code(setComboSplit(deps(), as('writer'), ids.pair!, { splitMode: 'FIXED', splitPriceRule: null }))).toBe('OWNER_OK_REQUIRED');
+      expect(await code(setSplitOptions(deps(), as('owner'), { priceRule: 'HALF' }))).toBe('INVALID_INPUT');
+      expect(await setSplitOptions(deps(), as('owner'), { enabled: true, chargeUnderFreeLimit: true })).toMatchObject({ enabled: true, chargeUnderFreeLimit: true, defaultMode: 'FLEXIBLE' });
+      expect(await t.prisma.auditLog.count({ where: { action: 'combos.split.save' } })).toBe(1);
+      // a fixed set keeps no price rule of its own; a flexible one does; null goes back to the store's default
+      expect(await setComboSplit(deps(), as('owner'), ids.pair!, { splitMode: 'FIXED', splitPriceRule: 'OWN_PRICE' })).toMatchObject({ splitMode: 'FIXED', splitPriceRule: null });
+      expect(await setComboSplit(deps(), as('owner'), ids.pair!, { splitMode: 'FLEXIBLE', splitPriceRule: 'OWN_PRICE' })).toMatchObject({ splitMode: 'FLEXIBLE', splitPriceRule: 'OWN_PRICE' });
+      expect(await code(setComboSplit(deps(), as('owner'), ids.pair!, { splitMode: 'HALF', splitPriceRule: null }))).toBe('INVALID_INPUT');
+      expect(await setComboSplit(deps(), as('owner'), ids.pair!, { splitMode: null, splitPriceRule: null })).toMatchObject({ splitMode: null, splitPriceRule: null });
+      expect(await t.prisma.auditLog.count({ where: { action: 'combo.split', entityId: ids.pair! } })).toBe(3);
+      overrides.delete('combos.split');
     });
 
     it('an end date that passed ends it; turning it on again clears the past end', async () => {

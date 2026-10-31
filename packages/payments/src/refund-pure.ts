@@ -87,6 +87,19 @@ export function rtoRefundSplit(
   return { originalMinor: Math.max(0, paid - keep), walletMinor: Math.max(0, wallet - Math.max(0, keep - paid)) };
 }
 
+/**
+ * Review R3 (M2) — what a partly delivered paid parcel gives back for the pieces that came back: the money in (online and
+ * wallet) above what the kept part is worth (`partialKeptValue`, the same figure the door asks). The wallet part goes
+ * back to the wallet first, the rest the way it came. A REQUEST only; a person approves it.
+ */
+export function partialRefundSplit(o: { paidMinor: number; walletAppliedMinor: number; keptValueMinor: number }): { originalMinor: number; walletMinor: number } {
+  const paid = Math.max(0, o.paidMinor);
+  const wallet = Math.max(0, o.walletAppliedMinor);
+  const over = Math.max(0, paid + wallet - Math.max(0, o.keptValueMinor));
+  const walletMinor = Math.min(wallet, over);
+  return { originalMinor: over - walletMinor, walletMinor };
+}
+
 /** A payment's state from the refunds paid out of it (derived, never set by hand: §6.5.3). */
 export function refundedPaymentState(receivedMinor: number, refundedMinor: number): 'PAID' | 'PARTIALLY_REFUNDED' | 'REFUNDED' {
   if (refundedMinor <= 0) return 'PAID';

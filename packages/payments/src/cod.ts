@@ -21,7 +21,8 @@ import { createHash } from 'node:crypto';
 import { Prisma } from '@extas/db/client';
 import { z } from 'zod';
 import { allow, KEY, nowOf, parse, setting, TX, UUID, type Db, type PaymentsDeps, type Who } from './context';
-import { CASH_OUTCOMES, COD_OUTCOMES, courierStatus, doorExpectation, doorVariance, FINAL_OUTCOMES, matchLine, parseStatement, type CodOutcome, type LineContext, type StatementLine } from './cod-match';
+import { CASH_OUTCOMES, COD_OUTCOMES, courierStatus, doorExpectation, doorSplit, doorVariance, FINAL_OUTCOMES, matchLine, parseStatement, type CodOutcome, type LineContext, type PartialPricing, type StatementLine } from './cod-match';
+import { setRulesFor } from './set-split';
 import { PaymentsError } from './errors';
 import { codToCollect, type DoorVariance, type LineMismatch } from './pure';
 
@@ -141,7 +142,7 @@ export async function recordDoorOutcome(deps: PaymentsDeps, who: Who, orderId: s
       if (!rows.length) throw new PaymentsError('NOT_FOUND', 'no such order', ['orderId']);
       const o = await tx.order.findUniqueOrThrow({
         where: { id: orderId },
-        select: { id: true, number: true, status: true, paymentMethod: true, totalMinor: true, walletAppliedMinor: true, paidMinor: true, deliveryChargeMinor: true, items: { where: { status: 'ACTIVE' }, select: { id: true, lineTotalMinor: true } } }, // review R1 (m1): a line an edit took out is not in the parcel
+        select: { id: true, number: true, status: true, paymentMethod: true, totalMinor: true, walletAppliedMinor: true, paidMinor: true, deliveryChargeMinor: true, items: { where: { status: 'ACTIVE' }, select: { id: true, lineTotalMinor: true, unitPriceMinor: true, quantity: true, comboId: true, comboGroupKey: true } } }, // review R1 (m1): a line an edit took out is not in the parcel
       });
       if (o.status === 'CANCELLED') throw new PaymentsError('ORDER_CLOSED', 'the order is cancelled');
       if (d.shipmentId) {
@@ -159,7 +160,16 @@ export async function recordDoorOutcome(deps: PaymentsDeps, who: Who, orderId: s
       });
       if (closed) throw new PaymentsError('ALREADY_RECORDED', 'this parcel already has its closing door outcome', [], { collectionId: closed.id, outcome: closed.outcome });
 
-      const exp = doorExpectation(d.outcome, { ...o, lines: o.items }, kept);
+      // CN-018 (4): a fixed set is never split; a split flexible set is priced by its rule (follow-up 330)
+      let pricing: PartialPricing = {};
+      if (d.outcome === 'PARTIAL') {
+        const rules = await setRulesFor(tx, deps, storeId, o.items.flatMap((i) => (i.comboId ? [i.comboId] : [])));
+        const split = doorSplit(o.items, kept, rules);
+        if (split.fixed.length) throw new PaymentsError('SET_FIXED', 'a fixed set is kept or returned whole', ['keptItemIds'], { sets: [...new Set(split.fixed.map((s) => rules.get(s.comboId)?.name ?? s.comboId))] });
+        const extra = split.chargeUnderFreeLimit && o.deliveryChargeMinor === 0 && deps.door?.keptChargeMinor ? await deps.door.keptChargeMinor(storeId, orderId, kept) : 0;
+        pricing = { ownPriceIds: split.ownPriceIds, extraChargeMinor: extra };
+      }
+      const exp = doorExpectation(d.outcome, { ...o, lines: o.items }, kept, pricing);
       const due = codToCollect(o);
       const variance = doorVariance(d.outcome, exp, d, due, cod.toleranceMinor);
       const state = d.outcome === 'PARTIAL' && cod.partialNeedsApproval ? 'PENDING_APPROVAL' : 'RECORDED';

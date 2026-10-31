@@ -205,8 +205,10 @@ export const NOTE_MAX = 500;
  * The note the rider reads (SIM-F-007): for a gift, the owner's gift line with the sender, the day and the gift note;
  * then the customer's own delivery note. Never the sender's contact.
  */
-export function bookingNoteOf(o: { customerNote: string | null; gift: { senderName: string | null; note: string | null; deliverAfter: string | null } | null; giftLine: string }): string | null {
+export function bookingNoteOf(o: { customerNote: string | null; gift: { senderName: string | null; note: string | null; deliverAfter: string | null } | null; giftLine: string; setLines?: readonly string[] }): string | null {
   const lines: string[] = [];
+  // CN-018 (4): a Fixed set's "deliver whole" first, so a cut note never loses it
+  for (const l of o.setLines ?? []) if (l.trim()) lines.push(l.trim());
   if (o.gift) lines.push(fillTemplate(o.giftLine, { sender: o.gift.senderName, date: o.gift.deliverAfter, note: o.gift.note }));
   if (o.customerNote?.trim()) lines.push(o.customerNote.trim());
   const text = lines.filter(Boolean).join(' | ');

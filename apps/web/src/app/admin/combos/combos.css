@@ -336,3 +336,8 @@
 @media (min-width: 1600px) {
   .cb-kpis { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 }
+/* CN-018 (4) — "When only some pieces of a set stay": the fold, its card, and the set's select on each combo card. */
+.cb-more { margin-top: 16px; }
+.cb-more > summary { display: flex; align-items: center; min-height: var(--ad-tap); cursor: pointer; font-weight: 600; font-size: var(--ad-fs-small); }
+.cb-split { padding: 14px 16px; display: grid; gap: 4px; }
+.cb-split-sel { width: auto; max-width: 62%; min-height: var(--ad-tap); }

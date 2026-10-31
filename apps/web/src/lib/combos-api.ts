@@ -14,6 +14,9 @@
 //   POST  /api/admin/combos/:id/flags       {autoApply?, sameColour?}
 //   POST  /api/admin/combos/:id/active      {on} switch on, or off to the archive (combos.publish)
 //   POST  /api/admin/combos/:id/photo       PR 575 · make the set photo from the piece photos
+//   POST  /api/admin/combos/:id/split       CN-018 (4) {splitMode, splitPriceRule} Fixed / Flexible and its rule (combos.prices)
+//   GET   /api/admin/combos/split           CN-018 (4) the store's set-split setting (`combos.split`)
+//   POST  /api/admin/combos/split           {enabled?, defaultMode?, priceRule?, chargeUnderFreeLimit?} (combos.prices)
 //   PR 571 · auto colour-pair rules
 //   GET   /api/admin/combos/rules                  the rules (with counts and their first pair)
 //   POST  /api/admin/combos/rules                  {rule} a new rule (a draft; its pairs are made)
@@ -137,6 +140,12 @@ export async function combosRoute(request: Request, deps: AdminDeps | null, path
     if (m === 'POST') return handle(request, deps, 'combos.publish', async (x) => ({ settings: await cb.setBuilderOptions(x.deps, x.who, (await body(request)) as Partial<SetBuilderSettings>) }));
     return notAllowed();
   }
+  if (a === 'split') {
+    if (path.length > 1) return notFound();
+    if (m === 'GET') return handle(request, deps, 'combos.read', async (x) => ({ split: await cb.splitOptions(x.deps, x.who) }));
+    if (m === 'POST') return handle(request, deps, 'combos.prices', async (x) => ({ split: await cb.setSplitOptions(x.deps, x.who, await body(request)) }));
+    return notAllowed();
+  }
   if (a === 'tiers') {
     if (path.length > 1) return notFound();
     if (m === 'GET') return handle(request, deps, 'combos.read', async (x) => ({ tiers: await cb.listSetTiers(x.deps, x.who) }));
@@ -181,6 +190,7 @@ export async function combosRoute(request: Request, deps: AdminDeps | null, path
       if (typeof bd.on !== 'boolean') return fail(400, 'INVALID_INPUT', ['on']);
       return { combo: await cb.setComboActive(x.deps, x.who, a, bd.on) };
     });
+  if (b === 'split') return m === 'POST' ? handle(request, deps, 'combos.prices', async (x) => ({ combo: await cb.setComboSplit(x.deps, x.who, a, await body(request)) })) : notAllowed();
   if (b === 'photo')
     return handle(request, deps, 'combos.write', async (x) => {
       const photo = await cb.makeSetPhoto(x.deps, x.who, a);

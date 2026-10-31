@@ -17,6 +17,7 @@
 // Nothing changes a price, a discount or COD, and nobody is blocked (CLAUDE.md rule 6).
 import { z } from 'zod';
 import { isV6 } from '@extas/inventory';
+import { setRulesFor } from '@extas/payments';
 import { allow, nowOf, parse, setting, type Db, type OrdersDeps, type Tx, type Who } from './context';
 import { OrdersError } from './errors';
 import { OPEN_EXCHANGE, paidPerPiece } from './exchange';
@@ -208,6 +209,26 @@ async function openedBy(db: Db, storeId: number, key: string, orderId: string): 
 }
 
 /**
+ * CN-018 (4): a Fixed set is returned whole or not at all — a return of the customer's own choice that takes back only
+ * some of its pieces (or only some of a piece's quantity) is refused. A fault of ours (a wrong or damaged piece) may
+ * always come back on its own. Nothing is read while the owner's `combos.split` is off.
+ */
+async function refuseFixedSplit(tx: Tx, deps: OrdersDeps, storeId: number, orderId: string, back: readonly { item: { id: string; quantity: number }; quantity: number }[]): Promise<void> {
+  const set = await tx.orderItem.findMany({ where: { storeId, orderId, status: 'ACTIVE', comboId: { not: null }, comboGroupKey: { not: null } }, select: { id: true, quantity: true, comboId: true, comboGroupKey: true } });
+  if (!set.length) return;
+  const rules = await setRulesFor(tx, deps, storeId, set.map((l) => l.comboId!));
+  const whole = new Map(back.map((b) => [b.item.id, b.quantity >= b.item.quantity]));
+  const split = new Set<string>();
+  for (const key of new Set(set.map((l) => l.comboGroupKey!))) {
+    const group = set.filter((l) => l.comboGroupKey === key);
+    const rule = rules.get(group[0]!.comboId!);
+    if (rule?.mode !== 'FIXED' || !group.some((l) => whole.has(l.id))) continue;
+    if (!group.every((l) => whole.get(l.id) === true)) split.add(rule.name);
+  }
+  if (split.size) throw new OrdersError('SET_FIXED', 'a fixed set is returned whole or not at all', ['items'], { sets: [...split] });
+}
+
+/**
  * Opens a return after receipt (EXPECTED) — only when the policy allows that reason, inside the window from the
  * delivered mark, for pieces not already coming back. Needs `returns.decide`. An `idempotencyKey` makes a repeated
  * press answer with the same return.
@@ -248,6 +269,7 @@ export async function openReturn(deps: OrdersDeps, who: Who, orderId: string, in
           if (quantity > left) throw new OrdersError('RETURN_LIMIT', 'these pieces are already coming back (a return or an open exchange)', [item.id], { left });
           lines.push({ item, quantity });
         }
+        if (!ourFault) await refuseFixedSplit(tx, deps, o.storeId, o.id, lines);
         const refundDueMinor = lines.reduce((s, l) => s + paidPerPiece(l.item) * l.quantity, 0);
         const ret = await tx.returnRecord.create({
           data: {

@@ -36,6 +36,15 @@ export interface CourierChargeHooks {
   statementCharges?(storeId: number, lines: { shipmentId: string; chargeMinor: number | null }[]): Promise<unknown>;
 }
 
+/** CN-018 (4): what the order side knows about a partial delivery's kept part (follow-up 330). */
+export interface DoorHooks {
+  /**
+   * The delivery charge a free-delivery order owes when only `keptItemIds` stay: its band's charge when the whole order
+   * was free and the kept part alone falls under the free-delivery limit, else 0. Read only; nothing is written.
+   */
+  keptChargeMinor?(storeId: number, orderId: string, keptItemIds: readonly string[]): Promise<number>;
+}
+
 export interface PaymentsDeps {
   db: PrismaClient;
   settings: SettingsReader;
@@ -46,6 +55,8 @@ export interface PaymentsDeps {
   courier?: CourierChargeHooks;
   /** PR 170: the payment gateways (none: nothing goes through a gateway here). */
   gateways?: GatewayResolver;
+  /** CN-018 (4): the kept part's delivery charge (none: a split never adds a delivery charge). */
+  door?: DoorHooks;
 }
 
 /** A staff member (or the system, `staffUserId: null`) acting in one store. */

@@ -3,7 +3,7 @@
 // state. Every value is made up.
 import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
-import { HELD_REFUND_STATES, OWED_REFUND_STATES, REFUND_STATES, refundAllowed, refundedPaymentState, refundMove, refundRoom, rtoRefundAmount, rtoRefundSplit, type RefundRules } from './refund-pure';
+import { HELD_REFUND_STATES, OWED_REFUND_STATES, REFUND_STATES, refundAllowed, refundedPaymentState, refundMove, refundRoom, rtoRefundAmount, rtoRefundSplit, partialRefundSplit, type RefundRules } from './refund-pure';
 
 const RULES: RefundRules = registry['payments.refunds'].default;
 
@@ -57,6 +57,12 @@ describe('PR 172 · refund rules', () => {
     expect(rtoRefundSplit({ ...RULES, rtoAdvance: undefined as unknown as 'KEEP' }, o).originalMinor).toBe(0);
     // KEEP with the wallet: what the online money cannot cover comes off the wallet part
     expect(rtoRefundSplit({ ...RULES, rtoDeliveryCharge: 'KEEP' }, { paidMinor: 5_000, walletAppliedMinor: 20_000, deliveryChargeMinor: 10_000, advanceMinor: 0, ourFault: false })).toEqual({ originalMinor: 0, walletMinor: 15_000 });
+  });
+
+  it('review R3 (M2) — a partial delivery gives back what came in above the kept part, the wallet part first', () => {
+    expect(partialRefundSplit({ paidMinor: 300_000, walletAppliedMinor: 0, keptValueMinor: 110_000 })).toEqual({ originalMinor: 190_000, walletMinor: 0 });
+    expect(partialRefundSplit({ paidMinor: 100_000, walletAppliedMinor: 50_000, keptValueMinor: 60_000 })).toEqual({ originalMinor: 40_000, walletMinor: 50_000 });
+    expect(partialRefundSplit({ paidMinor: 12_000, walletAppliedMinor: 0, keptValueMinor: 60_000 })).toEqual({ originalMinor: 0, walletMinor: 0 });
   });
 
   it('the payment state from its paid-out refunds (derived, never set by hand)', () => {
