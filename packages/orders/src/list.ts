@@ -41,7 +41,8 @@ export function viewWhere(view: OrderView, openReviewOrderIds: string[]): Prisma
     case 'toConfirm':
       return { status: 'PLACED', cancelRequestedAt: null, id: { notIn: openReviewOrderIds }, OR: [{ paymentMethod: 'COD' }, { paymentMethod: null }] };
     case 'prepaid':
-      return { status: 'PLACED', cancelRequestedAt: null, id: { notIn: openReviewOrderIds }, paymentMethod: { in: [...PREPAID_METHODS] } };
+      // review R1 (M3): only prepaid orders whose payment came in (a pending or failed payment waits in its own list)
+      return { status: 'PLACED', cancelRequestedAt: null, id: { notIn: openReviewOrderIds }, paymentMethod: { in: [...PREPAID_METHODS] }, NOT: { flags: { hasSome: ['PAYMENT_PENDING', 'PAYMENT_FAILED'] } } };
     case 'readyToBook':
       return {
         status: { in: ['CONFIRMED', 'PROCESSING', 'PACKED'] },

@@ -94,4 +94,4 @@ export function whyText(w: SkipWhy | { failed: string }): { key: string; status?
 }
 
 /** The codes the bar and the results have short words for. */
-export const BULK_WHY = ['CANCEL_REQUESTED', 'IN_REVIEW', 'CANCEL_PENDING', 'BOOKED', 'NOT_BOOKED', 'NO_CANCEL_PENDING', 'NO_CANCEL_REQUEST', 'ADVANCE_SHORT', 'ILLEGAL_TRANSITION', 'STALE', 'REASON_REQUIRED', 'FORBIDDEN', 'UNAUTHENTICATED', 'NOT_FOUND', 'network'] as const;
+export const BULK_WHY = ['CANCEL_REQUESTED', 'IN_REVIEW', 'CANCEL_PENDING', 'BOOKED', 'NOT_BOOKED', 'NO_CANCEL_PENDING', 'NO_CANCEL_REQUEST', 'ADVANCE_SHORT', 'PAYMENT_DUE', 'ILLEGAL_TRANSITION', 'STALE', 'REASON_REQUIRED', 'FORBIDDEN', 'UNAUTHENTICATED', 'NOT_FOUND', 'network'] as const;

@@ -178,6 +178,13 @@ describe('the guards', () => {
     expect(plan('recordAdvance', order('AWAITING_ADVANCE', { advanceRequiredMinor: 50_000, paidMinor: 20_000 }))).toMatchObject({ ok: false, code: 'ADVANCE_SHORT' });
     expect(plan('recordAdvance', order('AWAITING_ADVANCE', { advanceRequiredMinor: 50_000, paidMinor: 50_000 }))).toMatchObject({ ok: true, to: 'PLACED' });
   });
+
+  it('review R1 (M3): an order paid ahead whose payment has not come in is never confirmed', () => {
+    expect(plan('confirm', order('PLACED', { paymentDue: true }))).toMatchObject({ ok: false, code: 'PAYMENT_DUE' });
+    expect(plan('confirm', order('PLACED', { paymentDue: false }))).toMatchObject({ ok: true, to: 'CONFIRMED' });
+    // the team can still hold or cancel it
+    expect(plan('cancel', order('PLACED', { paymentDue: true }))).toMatchObject({ ok: true });
+  });
 });
 
 describe('PR 142 · the team\'s edit (SIM-F-004: never once booked)', () => {

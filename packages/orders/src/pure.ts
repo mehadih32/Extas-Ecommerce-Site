@@ -186,6 +186,11 @@ export interface MachineOrder {
   advanceRequiredMinor: number | null;
   /** PR 525: an open true-delivery check (the courier said delivered; the shop's records say it came back). */
   deliveryCheckOpen?: boolean;
+  /**
+   * Review R1 (M3): an order paid ahead (wallet, card, online) with money still due — its payment has not come in, so
+   * it is neither confirmed nor shipped (the rider would collect what the books say was paid ahead).
+   */
+  paymentDue?: boolean;
 }
 
 /** Why a command is refused. Stable codes; the admin and the shop turn them into words. */
@@ -208,6 +213,8 @@ export type RefusalCode =
   | 'IN_REVIEW'
   /** The advance is not paid in full yet. */
   | 'ADVANCE_SHORT'
+  /** Review R1 (M3): a prepaid order whose payment has not come in yet. */
+  | 'PAYMENT_DUE'
   /** PR 525: no open true-delivery check: a delivered order stays delivered. */
   | 'NO_DELIVERY_CHECK';
 
@@ -233,6 +240,7 @@ function guard(c: OrderCommand, o: MachineOrder): RefusalCode | null {
     case 'confirm':
       if (o.cancelRequested) return 'CANCEL_REQUESTED';
       if (o.inReview) return 'IN_REVIEW';
+      if (o.paymentDue) return 'PAYMENT_DUE';
       return null;
     case 'cancel':
       if (o.cancelPending) return 'CANCEL_PENDING';
