@@ -29,12 +29,17 @@ on:
 
 # R1 ops review (M1): GitHub keeps ONE pending run per concurrency group and a newer one cancels it. ~~One group
 # `extas-vm` for every VM workflow~~ let a nightly smoke or ERP acceptance run cancel a waiting deploy, server setup or
-# restore. Now each kind has its own group: a newer deploy replaces only an older waiting deploy (the newest commit
-# wins, which is wanted). One job at a time on the VM comes from the runner itself: infra/bootstrap/install-runner.sh
-# registers exactly one runner (`extas-vm`, --replace), a runner runs one job at a time, and GitHub's runner queue
-# never cancels a waiting job. infra/tests/run.sh fails when a VM workflow joins a shared group again.
+# restore. ~~Now each kind has its own group: a newer deploy replaces only an older waiting deploy (the newest commit
+# wins, which is wanted).~~ R2 ops review (M1): even one group per kind cancelled a newer commit's waiting deploy when
+# an older commit's ci finished last (the queue follows ci's finish order, not commit order), so main HEAD stayed
+# undeployed, and the next ci-triggered deploy cancelled a waiting "Go back to the previous version". Now every run is
+# its own group (extas-vm-deploy-<run id>): no deploy or rollback is ever cancelled; an older commit's run that waited
+# is skipped in seconds by infra/deploy/deploy-order.sh. One job at a time on the VM comes from the runner itself:
+# infra/bootstrap/install-runner.sh registers exactly one runner (`extas-vm`, --replace), a runner runs one job at a
+# time, and GitHub's runner queue never cancels a waiting job. infra/tests/run.sh fails when a VM workflow joins a
+# shared group again.
 concurrency:
-  group: extas-vm-deploy
+  group: extas-vm-deploy-${{ github.run_id }}
   cancel-in-progress: false
 
 permissions:
