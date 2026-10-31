@@ -1,0 +1,65 @@
+{
+  "moneyFees": {
+    "metaTitle": "Costs & fees",
+    "title": "Costs & fees",
+    "sub": "Your own cost figures that the profit numbers use: payment gateway fees, packaging, the USD rate and the courier rates. Empty until you enter them; nothing here charges anyone.",
+    "save": "Save",
+    "confirm": "Yes, save",
+    "saved": "Saved.",
+    "badAmount": "Write the amount as a number, for example 25.",
+    "readOnly": "You can see these figures. Changing them needs the \"Costs\" permission.",
+    "fees": {
+      "title": "Payment gateway fees",
+      "sub": "What each gateway keeps of a payment: a share in % and a fixed amount. A gateway not listed has no known fee.",
+      "none": "No gateway fee entered yet.",
+      "provider": "Gateway (as in Keys & connections, e.g. bkash)",
+      "percent": "Share (%)",
+      "fixed": "Fixed per payment",
+      "add": "Add a gateway",
+      "bad": "Check each row: the gateway in small letters, a share from 0 to 20 %, a fixed amount as a number."
+    },
+    "pack": {
+      "title": "Packaging per order",
+      "sub": "What packing one order costs (box, bag, tape, tag). Leave empty if not known.",
+      "field": "Cost per order",
+      "rto": "The costs of a returned parcel (courier charge, packaging, handling) are on",
+      "rtoLink": "Delivery → Couriers"
+    },
+    "usd": {
+      "title": "USD rate",
+      "sub": "How many {currency} one US dollar costs, for the AI costs paid in dollars. A new rate counts from now; the old ones stay for their days.",
+      "now": "Now: 1 USD = {rate} {currency} (since {from})",
+      "none": "No rate entered yet.",
+      "before": "Before: {list}",
+      "field": "1 USD in {currency}",
+      "save": "Save new rate"
+    },
+    "cards": {
+      "title": "Courier rates",
+      "sub": "What each courier charges per delivery band and weight band, the COD fee and the return charge. A rate is ended, never changed; enter the new one after it.",
+      "noCourier": "No courier account yet (Delivery → Couriers).",
+      "none": "No rate yet.",
+      "band": "{from}–{to} g · since {since}",
+      "codShow": "COD {pct}%",
+      "retShow": "return {amount}",
+      "end": "End",
+      "endSure": "Yes, end now",
+      "courier": "Courier",
+      "zone": "Delivery band",
+      "from": "Weight from (g)",
+      "to": "Weight to (g)",
+      "charge": "Charge",
+      "cod": "COD fee (%)",
+      "ret": "Return charge",
+      "add": "Add rate"
+    },
+    "err": {
+      "INVALID_INPUT": "Something is not filled in right. Check the numbers.",
+      "VERSION_CONFLICT": "Someone else saved this a moment ago. Open the page again and check.",
+      "CONFLICT": "This rate has ended already.",
+      "forbidden": "You do not have the permission for this.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    }
+  }
+}

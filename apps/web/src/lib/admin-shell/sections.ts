@@ -246,6 +246,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'costs', pages: [{ href: '/admin/money/costs', perm: 'books.read', keys: ['moneyCosts'] }] },
       // S16 · PR 344: Money → Expenses — quick entry on the owner's own heads, through the cost lines of PR 618.
       { id: 'expenses', pages: [{ href: '/admin/money/expenses', perm: 'books.read', keys: ['moneyExpenses'] }] },
+      // S16 · PR 345: Money → Costs & fees — gateway fees, packaging, the USD rate, courier rates (owner data).
+      { id: 'fees', pages: [{ href: '/admin/money/fees', perm: 'books.read', keys: ['moneyFees'] }] },
       // S16 · PR 343: Money → Cost ledger — every paid call's cost row, prepaid balances, export.
       { id: 'ledger', pages: [{ href: '/admin/money/cost-ledger', perm: 'books.read', keys: ['moneyCostLedger'] }] },
     ],
