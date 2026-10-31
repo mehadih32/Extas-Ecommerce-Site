@@ -2,11 +2,14 @@
 # home, a category and a product page on a phone over slow 4G, and an admin page on a desktop as the read-only check
 # account (infra/deploy/vitals-lab.sh, tools/vitals-lab.mjs). The result stays on the server (state/vitals-lab.json);
 # the admin shows it on Website → SEO and Server and judges it against `seo.vitals.targets`. Nothing is committed.
+# PR 417: an hourly check measures once when "Measure now" on Reports › Site health › Speed was pressed after the last
+# run (vitals-lab.sh asked); it ends at once otherwise.
 name: vitals-monthly
 
 on:
   schedule:
     - cron: "0 21 1 * *"   # 03:00 in Dhaka on the 2nd of each month, after the backup and before the smoke test
+    - cron: "41 * * * *"   # PR 417: every hour, only when Measure now was pressed
   workflow_dispatch:
 
 permissions:
@@ -35,6 +38,7 @@ jobs:
       - name: Measure the pages (phone over 4G, admin on a desktop)
         env:
           LIVE: ${{ steps.live.outputs.sha }}
+          MODE: ${{ github.event.schedule == '41 * * * *' && 'asked' || 'now' }}
         run: |
           live="$LIVE"
-          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/vitals-lab.sh "$live"
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/vitals-lab.sh "$live" "$MODE"

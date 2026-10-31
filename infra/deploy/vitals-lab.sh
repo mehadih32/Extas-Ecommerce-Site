@@ -4,7 +4,9 @@
 # (tools/vitals-lab.mjs, through Cloudflare with the preview login). The result goes to state/vitals-lab.json; the
 # admin (Website → SEO "Real visitors' speed", Server → Speed) reads it, judges it against `seo.vitals.targets` and
 # keeps each run once as SpeedMeasurement rows (source "lab").
-#   sudo infra/deploy/vitals-lab.sh [<commit sha>]
+#   sudo infra/deploy/vitals-lab.sh [<commit sha>] [now|asked]
+# PR 417: `asked` (the hourly check) measures only when "Measure now" on Reports › Site health › Speed was pressed after
+# the last run (speed-settings.env, speed-lib.sh); otherwise it says so and ends at once (exit 0). `now` is the default.
 # The check account gets a fresh password and two-step seed the same way as the smoke test (smoke.sh); they stay in a
 # root-only temporary file and are gone when this ends. Exit 0 = the run finished (missing a target is not a failure:
 # the admin shows it in red).
@@ -15,9 +17,28 @@ CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../config/server.conf
 . "$CONF"
 SHA="${1:-}"
+MODE="${2:-now}"
 R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
 IMG="extas-smoke:$SMOKE_PLAYWRIGHT_VERSION"
 log() { echo "[vitals-lab $(date +%H:%M:%S)] $*"; }
+
+case "$MODE" in
+  now) ;;
+  asked)
+    # shellcheck source=speed-lib.sh
+    . "$HERE/speed-lib.sh"
+    VITALS_REQUESTED=""
+    if [ -f "$SEC/speed-settings.env" ]; then
+      # shellcheck disable=SC1091
+      . "$SEC/speed-settings.env"
+    fi
+    last="$(stat -c %Y "$STATE/vitals-lab.json" 2>/dev/null || echo 0)"
+    if ! speed_asked "$VITALS_REQUESTED" "$last" >/dev/null; then
+      log "not asked (Measure now was not pressed after the last run)"
+      exit 0
+    fi ;;
+  *) echo "usage: vitals-lab.sh [<commit sha>] [now|asked]" >&2; exit 2 ;;
+esac
 
 work="$(mktemp -d "$SEC/.vitals.XXXXXX")"
 trap 'rm -rf "$work"' EXIT

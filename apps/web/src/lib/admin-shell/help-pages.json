@@ -66,6 +66,7 @@
     { "id": "reports/health", "route": "/admin/reports/health" },
     { "id": "reports/health-problems", "route": "/admin/reports/health/problems" },
     { "id": "reports/health-problem", "route": "/admin/reports/health/problems/[id]" },
+    { "id": "reports/health-speed", "route": "/admin/reports/health/speed" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "reports/fraud", "route": "/admin/reports/fraud" },
     { "id": "reports/stopped", "route": "/admin/reports/stopped" },

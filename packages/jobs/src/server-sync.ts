@@ -22,6 +22,8 @@
 //                  is on and LIVE (its Test passed) and the pair still reads; empty otherwise, so the server goes back to
 //                  its automatic certificate (infra/server/bin/extas-origin-cert checks the pair again and gives it to
 //                  Caddy).
+//   speed-settings.env     PR 417: the last "Measure now" press on Reports › Site health › Speed (VITALS_REQUESTED),
+//                          for infra/deploy/vitals-lab.sh in its hourly "asked" check.
 //   journeys-settings.env  PR 414: when the saved browser journeys run (Reports › Site health; infra/deploy/journeys.sh),
 //                  and the last "Run now"; from the settings alone.
 //
@@ -262,7 +264,21 @@ export const journeysSettingsPart: ServerFilePart = {
   },
 };
 
-export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart, firstWeekPart, journeysSettingsPart];
+/**
+ * PR 417 (REP-07c): "Measure now" on Reports › Site health › Speed, for infra/deploy/vitals-lab.sh (asked). Built from
+ * the setting alone: VITALS_REQUESTED is the press in seconds since 1970 (empty when never pressed).
+ */
+export const speedSettingsPart: ServerFilePart = {
+  file: 'speed-settings.env',
+  watch: async (ctx) => (await settingOr(ctx, 'health.speed', registry['health.speed'].default)).runRequestedAt,
+  async build(ctx) {
+    const s = await settingOr(ctx, 'health.speed', registry['health.speed'].default);
+    const asked = s.runRequestedAt ? Math.floor(Date.parse(s.runRequestedAt) / 1000) : NaN;
+    return envLines({ VITALS_REQUESTED: Number.isFinite(asked) ? String(asked) : '' });
+  },
+};
+
+export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart, firstWeekPart, journeysSettingsPart, speedSettingsPart];
 
 export interface SyncResult {
   fingerprint: string;

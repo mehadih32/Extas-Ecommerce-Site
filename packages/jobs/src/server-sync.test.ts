@@ -2,7 +2,7 @@
 // server; values are shell-safe; an unchanged fingerprint reads nothing from the vault.
 import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
-import { envLines, journeysSettingsPart, serverSync, shellValue, type PartContext, type SyncDeps } from './server-sync';
+import { envLines, journeysSettingsPart, serverSync, shellValue, speedSettingsPart, type PartContext, type SyncDeps } from './server-sync';
 
 type Row = { id: string; kind: string; provider: string; mode: string; enabled: boolean; config: unknown; storeId: number | null; archivedAt: Date | null; createdAt: Date };
 
@@ -46,7 +46,7 @@ describe('server sync (PR 392)', () => {
   it('no vault key on the server: everything empty, nothing read', async () => {
     const { d } = deps([tg()], { 'telegram.botToken': TOKEN });
     const noVault = (await serverSync({ ...d, vault: null })).files!;
-    expect({ ...noVault, 'backup-settings.env': undefined, 'journeys-settings.env': undefined }).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '', 'backup-settings.env': undefined, 'origin-cert.pem': '', 'origin-key.pem': '', 'first-week.env': '', 'journeys-settings.env': undefined });
+    expect({ ...noVault, 'backup-settings.env': undefined, 'journeys-settings.env': undefined }).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '', 'backup-settings.env': undefined, 'origin-cert.pem': '', 'origin-key.pem': '', 'first-week.env': '', 'journeys-settings.env': undefined, 'speed-settings.env': "VITALS_REQUESTED=''\n" });
     // PR 507: the backup settings need no key, so they are there before the vault is
     expect(noVault['backup-settings.env']).toContain("BACKUP_TIME='02:30'\n");
     // PR 414: the journeys' schedule too (off as it ships)
@@ -111,5 +111,14 @@ describe('server sync (PR 392)', () => {
     expect(shellValue(`a'b; rm -rf /`)).toBe(`'a'\\''b; rm -rf /'`);
     expect(() => shellValue('a\nb')).toThrow(/line break/);
     expect(() => envLines({ 'bad-name': 'x' })).toThrow(/not an env name/);
+  });
+
+  it('PR 417: "Measure now" on the Speed page as seconds; a new press changes the fingerprint', async () => {
+    const ctx = (v?: unknown) => ({ db: null, vault: null, connections: [], secret: async () => null, ...(v ? { settings: { value: async (k: string) => (k === 'health.speed' ? v : undefined) } } : {}) }) as unknown as PartContext;
+    expect(await speedSettingsPart.build(ctx())).toBe("VITALS_REQUESTED=''\n");
+    const set = { months: 12, runRequestedAt: '2026-10-31T10:00:00.000Z' };
+    expect(await speedSettingsPart.build(ctx(set))).toBe(`VITALS_REQUESTED='${Date.parse(set.runRequestedAt) / 1000}'\n`);
+    expect(await speedSettingsPart.watch!(ctx(set))).not.toEqual(await speedSettingsPart.watch!(ctx({ ...set, runRequestedAt: '2026-10-31T11:00:00.000Z' })));
+    expect(await speedSettingsPart.watch!(ctx(set))).toEqual(await speedSettingsPart.watch!(ctx({ ...set, months: 6 })));
   });
 });

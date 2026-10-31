@@ -14,7 +14,8 @@ export interface JourneysRunTexts {
   err: Record<string, string>;
 }
 
-export function JourneysRun({ url, texts: x, waiting }: { url: string; texts: JourneysRunTexts; waiting: boolean }) {
+/** PR 417: also "Measure now" on the Speed page (`testId` names its button and status). */
+export function JourneysRun({ url, texts: x, waiting, testId = 'journeys-run' }: { url: string; texts: JourneysRunTexts; waiting: boolean; testId?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
@@ -35,10 +36,10 @@ export function JourneysRun({ url, texts: x, waiting }: { url: string; texts: Jo
 
   return (
     <div className="a2-gap8">
-      <button type="button" className="a2-btn pri" disabled={busy || waiting} onClick={run} data-testid="journeys-run">
+      <button type="button" className="a2-btn pri" disabled={busy || waiting} onClick={run} data-testid={testId}>
         {busy ? x.running : x.run}
       </button>
-      <span className={`a2-sm${said?.bad ? '' : ' a2-mute'}`} role="status" aria-live="polite" data-testid="journeys-run-status">
+      <span className={`a2-sm${said?.bad ? '' : ' a2-mute'}`} role="status" aria-live="polite" data-testid={`${testId}-status`}>
         {said?.text ?? (waiting ? x.waiting : '')}
       </span>
     </div>

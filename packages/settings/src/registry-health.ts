@@ -47,6 +47,12 @@
 // - `text`: text cut off, form text under 16 px on the phone.
 // - `images`: a picture that did not load.
 // - `taps`: a button too small on the phone, two on top of each other, or one covered by something else.
+//
+// PR 417 (§5 REP-07c, registry version 112): `health.speed`, Reports › Site health › Speed. The targets stay in
+// `seo.vitals` (Website › SEO); this holds only the page's own numbers.
+// - `months`: how many months the monthly table shows (real visitors' 75th percentile, and the lab run of that month).
+// - `runRequestedAt`: set by "Measure now" (the time it was pressed); the server's hourly check (vitals-monthly.yml,
+//   infra/deploy/vitals-lab.sh asked) measures once when it is newer than the last lab run. Never typed in by hand.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -55,6 +61,7 @@ const V414 = 82;
 const V423 = 83;
 const V415 = 110;
 const V416 = 111;
+const V417 = 112;
 
 export const healthHubSchema = z
   .object({
@@ -114,6 +121,14 @@ export const healthUiChecksSchema = z
   })
   .strict();
 export type HealthUiChecksSettings = z.output<typeof healthUiChecksSchema>;
+export const healthSpeedSchema = z
+  .object({
+    months: z.int().min(1).max(36),
+    runRequestedAt: z.iso.datetime({ offset: true }).nullable(),
+  })
+  .strict();
+export type HealthSpeedSettings = z.output<typeof healthSpeedSchema>;
+
 /** PR 416: the families of UI checks, in the order the server file lists them. */
 export const UI_CHECK_FAMILIES = ['layout', 'text', 'images', 'taps'] as const;
 
@@ -182,5 +197,18 @@ export const healthSettings = {
     isPublic: false,
     sortOrder: 954,
     version: V416,
+  }),
+  'health.speed': setting({
+    scope: 'installation',
+    schema: healthSpeedSchema,
+    default: { months: 12, runRequestedAt: null },
+    valueType: 'JSON',
+    group: 'system',
+    labelKey: 'health.speed.label',
+    helpKey: 'health.speed.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 955,
+    version: V417,
   }),
 };
