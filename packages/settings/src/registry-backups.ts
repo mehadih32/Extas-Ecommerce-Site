@@ -18,6 +18,11 @@
 // - `backups.gate`: what "ready for real orders" asks of the backups on Settings → System → Backups (CN-031 gate): the
 //   last copy in Blob and in Drive no older than `freshHours`, and a restore drill of each that passed within
 //   `drillDays`.
+// S19 · PR 393 (version 77, CN-031) — the go-live checklist on Settings → System → Go-live:
+// - `golive.checks`: how fresh the automatic checks must be — the last smoke test of every page (hours) and the
+//   server's own health check (minutes).
+// - `golive.signoff`: the items a person confirms (the QA gate, the staging acceptance list, real phones, the journey
+//   simulation …): who confirmed each and when. Empty by default; nothing is confirmed for anyone.
 // Nothing here moves money, changes a price or is the owner's data. Deleting an old copy in Drive moves it to the
 // Drive's own bin; the newest checked copies always stay.
 import { z } from 'zod';
@@ -74,6 +79,16 @@ export type BackupsBlob = z.output<typeof backupsBlobSchema>;
 
 export const backupsGateSchema = z.object({ freshHours: z.int().min(6).max(168), drillDays: z.int().min(1).max(92) }).strict();
 export type BackupsGate = z.output<typeof backupsGateSchema>;
+
+export const goLiveChecksSchema = z.object({ smokeHours: z.int().min(1).max(168), healthMinutes: z.int().min(2).max(1440) }).strict();
+export type GoLiveChecks = z.output<typeof goLiveChecksSchema>;
+
+/** One confirmed item: when, and by which staff user (null: an account since removed). */
+export const goLiveSignoffSchema = z.record(
+  z.string().regex(/^[a-z][A-Za-z0-9]{1,40}$/),
+  z.object({ at: z.iso.datetime({ offset: true }), by: z.string().max(64).nullable() }).strict(),
+);
+export type GoLiveSignoff = z.output<typeof goLiveSignoffSchema>;
 
 export const backupsSettings = {
   'backups.drive': setting({
@@ -134,5 +149,25 @@ export const backupsSettings = {
     labelKey: 'backups.gate.label',
     helpKey: 'backups.gate.help',
     sortOrder: 955,
+  }),
+  'golive.checks': setting({
+    ...base,
+    version: V391,
+    schema: goLiveChecksSchema,
+    default: { smokeHours: 36, healthMinutes: 30 },
+    valueType: 'JSON',
+    labelKey: 'golive.checks.label',
+    helpKey: 'golive.checks.help',
+    sortOrder: 960,
+  }),
+  'golive.signoff': setting({
+    ...base,
+    version: V391,
+    schema: goLiveSignoffSchema,
+    default: {},
+    valueType: 'JSON',
+    labelKey: 'golive.signoff.label',
+    helpKey: 'golive.signoff.help',
+    sortOrder: 961,
   }),
 };

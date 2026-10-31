@@ -71,7 +71,8 @@
     "backups": "ব্যাকআপ",
     "security": "লগইন ও নিরাপত্তা",
     "edge": "Cloudflare সুরক্ষা",
-    "health": "সাইটের অবস্থা"
+    "health": "সাইটের অবস্থা",
+    "golive": "চালুর আগে"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

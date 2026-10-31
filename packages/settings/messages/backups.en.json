@@ -24,5 +24,15 @@
       "label": "Backups ready for real orders",
       "help": "What \"ready\" asks of the backups: the last copy in Blob and in Drive no older than these hours, and a restore drill of each that passed within these days."
     }
+  },
+  "golive": {
+    "checks": {
+      "label": "Go-live: how fresh the automatic checks must be",
+      "help": "The last smoke test of every page no older than these hours, and the server's own health check no older than these minutes, for the go-live checklist."
+    },
+    "signoff": {
+      "label": "Go-live: the items a person confirmed",
+      "help": "Who confirmed each go-live item that a person checks (the QA gate, the staging acceptance list, real phones …) and when. Changed only on Settings → System → Go-live."
+    }
   }
 }

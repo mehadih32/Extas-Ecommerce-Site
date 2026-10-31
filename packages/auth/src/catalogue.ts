@@ -117,6 +117,9 @@ export const PERMISSIONS = {
   // S19 · PR 396 — put a backup on the live shop (Settings → System → Backups › Restore): only the newest check copy
   // that passed, with RESTORE typed and the owner's PIN. The old data is kept on the server, never deleted.
   'system.restore': { group: 'system' },
+  // S19 · PR 393 (CN-031) — Settings → System → Go-live: confirm the items a person checks before real orders (the QA
+  // gate, the staging acceptance list, real phones …). Only a record of who checked what; nothing is switched by it.
+  'system.golive': { group: 'system' },
   // S04 · PR 136 — open the invoice of any order of the store (its customer's name, phone and address are on it), to
   // print or send it. Not a `.read` key on purpose: the read-only smoke check account never gets customers' details.
   // The order screens of S05 add their own keys.
