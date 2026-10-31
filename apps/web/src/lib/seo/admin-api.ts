@@ -36,6 +36,9 @@ export const SEO_KEYS = [
   'seo.notFound',
   'seo.urlPolicy',
   'seo.hashLinks',
+  // PR 227: Website › SEO › Collection pages
+  'category.seo',
+  'seo.filterPages',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 

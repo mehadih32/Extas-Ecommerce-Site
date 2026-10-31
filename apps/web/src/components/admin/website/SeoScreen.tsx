@@ -39,10 +39,20 @@ export function useSeoSave<V>(d: Dict, key: string, initial: V, version: number)
   const [ver, setVer] = useState(version);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
-  const save = async () => {
+  // a card that is not re-mounted when the page refreshes (PR 227) takes the new saved value and version here
+  const [seen, setSeen] = useState(version);
+  if (version !== seen) {
+    setSeen(version);
+    setVer(version);
+    setValue(initial);
+  }
+  // `saveValue(v)` saves the given value at once (a card that edits one row of a larger record); `save()` saves the
+  // value as it stands
+  const saveValue = async (next: V) => {
+    setValue(next);
     setBusy(true);
     setNote(null);
-    const a = await call("PUT", "/api/admin/seo", { key, value, version: ver });
+    const a = await call("PUT", "/api/admin/seo", { key, value: next, version: ver });
     setBusy(false);
     if (a.status === 200 && a.data.ok) {
       const values = a.data.values as Record<string, V>;
@@ -57,7 +67,8 @@ export function useSeoSave<V>(d: Dict, key: string, initial: V, version: number)
     if (a.data.error === "STALE") router.refresh();
     setNote({ ok: false, text: errorText((d.seo ?? {}) as Dict, a) });
   };
-  return { value, setValue, busy, note, save };
+  const save = () => saveValue(value);
+  return { value, setValue, busy, note, save, saveValue };
 }
 
 export function SeoSaveRow({ d, canWrite, busy, note, onSave, testId }: { d: Dict; canWrite: boolean; busy: boolean; note: { ok: boolean; text: string } | null; onSave(): void; testId: string }) {

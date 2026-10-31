@@ -1,6 +1,6 @@
 // S11 · PR 220 — GET/PUT /api/admin/seo on a real PostgreSQL: the SEO settings with their versions and the shop's
 // address, read with seo.read and saved with seo.manage through the settings resolver (a stale version is 409, a wrong
-// value 400, an unchanged one writes nothing), with an audit row.
+// value 400, an unchanged one writes nothing), with an audit row. PR 227: a collection's own words and the named filter pages.
 // PR 221 — the AI drafts: refused while AI or the drafts are off; "Draft" writes (on the practice writer) only for
 // pages without their own text, at most `batchMax`, never twice for a page with a draft waiting; accepting fills only
 // empty fields (the product page then shows it), discarding keeps the row; each decision is taken once.
@@ -10,7 +10,7 @@ import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { productSeoTexts } from '@extas/catalogue';
-import { INSTALLATION, messages, prismaBackend, registry, SEO_AI_DRAFTS_DEFAULT, SEO_INDEXING_DEFAULT, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
+import { INSTALLATION, messages, prismaBackend, registry, SEO_AI_DRAFTS_DEFAULT, SEO_FILTER_PAGES_DEFAULT, SEO_INDEXING_DEFAULT, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import { createVault } from '@extas/vault';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
@@ -94,6 +94,31 @@ describe.skipIf(!HAS_TEST_DB)('Website › SEO settings on PostgreSQL (PR 220)',
     // the same value again writes nothing
     expect((await seoSettingsRoute(call('PUT', '/api/admin/seo', { cookie: owner, body: { key: 'seo.indexing', value: next } }), deps)).status).toBe(200);
     expect(await t.prisma.auditLog.count({ where: { action: 'seo.settings' } })).toBe(1);
+  });
+
+  it('PR 227: a collection\'s own words and the named filter pages save here; half a field or a twin row is refused', async () => {
+    const put = (key: string, value: unknown, version?: number) => seoSettingsRoute(call('PUT', '/api/admin/seo', { cookie: owner, body: { key, value, ...(version === undefined ? {} : { version }) } }), deps);
+    const got = (await (await seoSettingsRoute(call('GET', '/api/admin/seo', { cookie: reader }), deps)).json()) as { values: Record<string, unknown>; versions: Record<string, number> };
+    expect(got.values['category.seo']).toBeNull();
+    expect(got.values['seo.filterPages']).toEqual(SEO_FILTER_PAGES_DEFAULT);
+    const words = { 'sample-shirts': { title: { en: 'Shirts for men', bn: 'ছেলেদের শার্ট' }, text: { en: 'Cotton shirts.', bn: 'সুতির শার্ট।' } } };
+    expect((await put('category.seo', { 'sample-shirts': { title: { en: 'Shirts for men', bn: '' } } })).status).toBe(400);
+    expect((await put('category.seo', words, got.versions['category.seo'])).status).toBe(200);
+    expect(await deps.resolver.value('category.seo', { storeId: MOTHER_STORE_ID })).toEqual(words);
+    const row = { category: 'sample-shirts', filter: 'colour', value: 'navy', label: { en: 'Navy shirts', bn: 'নেভি শার্ট' } };
+    expect((await put('seo.filterPages', { ...SEO_FILTER_PAGES_DEFAULT, pages: [row, { ...row, value: 'NAVY' }] })).status).toBe(400);
+    expect((await put('seo.filterPages', { ...SEO_FILTER_PAGES_DEFAULT, pages: [{ ...row, value: 'navy?sort=new' }] })).status).toBe(400);
+    const on = { ...SEO_FILTER_PAGES_DEFAULT, enabled: true, pages: [row] };
+    expect((await put('seo.filterPages', on, got.versions['seo.filterPages'])).status).toBe(200);
+    expect(await deps.resolver.value('seo.filterPages', { storeId: MOTHER_STORE_ID })).toEqual(on);
+    // a reader sees them, cannot change them
+    const forbidden = await seoSettingsRoute(call('PUT', '/api/admin/seo', { cookie: reader, body: { key: 'seo.filterPages', value: SEO_FILTER_PAGES_DEFAULT } }), deps);
+    expect(forbidden.status).toBe(403);
+    const audit = await t.prisma.auditLog.findMany({ where: { action: 'seo.settings', entityId: { in: ['category.seo', 'seo.filterPages'] } } });
+    expect(audit.map((a) => a.entityId).sort()).toEqual(['category.seo', 'seo.filterPages']);
+    // back to as shipped, so the drafts below see a shop without its own words
+    await deps.resolver.set('category.seo', null, storeTarget(MOTHER_STORE_ID), { actorId: null, reason: 'test' });
+    await deps.resolver.set('seo.filterPages', SEO_FILTER_PAGES_DEFAULT, storeTarget(MOTHER_STORE_ID), { actorId: null, reason: 'test' });
   });
 
   describe('AI drafts (PR 221)', () => {
