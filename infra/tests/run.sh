@@ -1187,6 +1187,45 @@ check "setup: the OS-disk step runs right after Docker, not critical" "$(grep -A
 for k in LV_CONTAINERD_GB CONTAINERD_ROOT DOCKER_BUILD_CACHE_KEEP_GB DEPLOY_KEEP_WEB_IMAGES DEPLOY_KEEP_MIGRATE_IMAGES DISK_ROOT_MIN_FREE_GB JOURNAL_MAX_USE_MB RUNNER_DIR RUNNER_DIAG_KEEP_DAYS DISK_SNAPSHOT_PCT DISK_SNAPSHOT_KEEP TMP_KEEP_DAYS; do
   grep -q "^$k=" ../config/server.conf || { echo "FAIL server.conf has no $k"; fail=1; }
 done
+# R1 ops review (M4, M5, minor 2): extas-monitor with stand-ins for docker, curl, df and mountpoint — a fast 500, a
+# stuck worker (restarted once), stuck WAL archiving, a failed WAL push, a failed smoke test, a failed vault sync and
+# an old Blob "ok" each alert; a healthy server alerts nothing.
+TM="$(mktemp -d)"; mkdir -p "$TM/bin" "$TM/root/state" "$TM/root/config/secrets" "$TM/nvme"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_NVME_MOUNT=%s\nDISK_SNAPSHOT_PCT=101\n' "$TM/root" "$TM/nvme"; } > "$TM/conf"
+cat > "$TM/bin/docker" <<'FAKE'
+#!/usr/bin/env bash
+echo "docker $*" >> "$FAKE_LOG"
+case "$1" in
+  inspect) echo healthy ;;
+  ps) case "$*" in *health=unhealthy*) [ -z "${FAKE_SICK:-}" ] || echo "$FAKE_SICK" ;; esac ;;
+  exec) echo "${FAKE_WAL_STUCK:-false}" ;;
+esac
+exit 0
+FAKE
+printf '#!/usr/bin/env bash\necho "${FAKE_SITE:-200 0.05}"\n' > "$TM/bin/curl"
+printf '#!/usr/bin/env bash\necho "Mounted Use%%"\necho "/ 10%%"\n' > "$TM/bin/df"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$TM/bin/mountpoint"
+chmod +x "$TM/bin/"*
+mon() { env PATH="$TM/bin:$PATH" EXTAS_CONFIG_FILE="$TM/conf" FAKE_LOG="$TM/docker.log" "$@" bash ../server/bin/extas-monitor >/dev/null 2>&1; }
+mon
+# (The NVMe line depends on the machine the tests run on: /run/extas/nvme-missing.)
+check "monitor (M5): a healthy server alerts nothing" "$(cat "$TM/root/logs/alerts.log" 2>/dev/null | grep -vc 'NVMe' || true):$(grep -c '^docker restart' "$TM/docker.log" || true)" "0:0"
+echo '{"kind":"wal","target":"blob","result":"fail","detail":"push failed"}' > "$TM/root/state/backup-wal-blob.json"
+echo '{"ok":false,"problems":["/bag: console error"]}' > "$TM/root/state/smoke.json"
+echo '{"result":"fail","detail":"the sync run failed"}' > "$TM/root/state/vault-sync.json"
+echo '{"result":"ok","detail":"x"}' > "$TM/root/state/backup-daily-blob.json"; touch -d '30 hours ago' "$TM/root/state/backup-daily-blob.json"
+mon FAKE_SITE="500 0.02" FAKE_SICK=extas-app-blue-worker-1 FAKE_WAL_STUCK=true
+A="$TM/root/logs/alerts.log"
+check "monitor (M5): a fast 500, a stuck worker, a failed WAL push, a failed smoke test and vault sync each alert" \
+  "$(grep -c 'HTTP 500' "$A"):$(grep -c 'worker আটকে আছে (extas-app-blue-worker-1)' "$A"):$(grep -c 'WAL কপি Blob-এ যাচ্ছে না' "$A"):$(grep -c 'পেজ-পরীক্ষা ব্যর্থ: /bag: console error' "$A"):$(grep -c 'vault sync' "$A")" "1:1:1:1:1"
+check "monitor (M4, minor 2): stuck WAL archiving and an old Blob ok alert" "$(grep -c 'WAL আর্কাইভ আটকে গেছে' "$A"):$(grep -c 'blob ব্যাকআপ 26 ঘণ্টার বেশি পুরনো' "$A")" "1:1"
+check "monitor (M5): the stuck worker is restarted once, not every minute" "$(grep -c '^docker restart -t 60 extas-app-blue-worker-1$' "$TM/docker.log")" "1"
+mon FAKE_SITE="500 0.02" FAKE_SICK=extas-app-blue-worker-1 FAKE_WAL_STUCK=true
+check "monitor (M5): the next minute neither repeats the alert nor restarts again" "$(grep -c 'HTTP 500' "$A"):$(grep -c '^docker restart' "$TM/docker.log")" "1:1"
+rm -f "$TM/root/state/smoke.json" "$TM/root/state/vault-sync.json" "$TM/root/state/backup-wal-blob.json" "$TM/root/state/backup-daily-blob.json"
+mon
+check "monitor (M5): each one says fixed when it clears" "$(grep -c 'ঠিক হয়েছে' "$A")" "7"
+rm -rf "$TM"
 check "monitor: a snapshot of what fills / (folders, big files, deleted files held open) once / passes DISK_SNAPSHOT_PCT" \
   "$(grep -q 'DISK_SNAPSHOT_PCT' ../server/bin/extas-monitor && grep -q "(deleted)" ../server/bin/extas-monitor && grep -q 'DISK_SNAPSHOT_KEEP' ../server/bin/extas-monitor && echo yes)" "yes"
 check "osdisk: the top-10 folders list survives sort's broken pipe under set -e (failed on the server 31 Oct)" \

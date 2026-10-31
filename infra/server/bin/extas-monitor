@@ -99,13 +99,36 @@ done
 apps="$(docker ps --filter name=extas-app --format '{{.Names}}' | wc -l)"
 SVC_JSON+="{\"name\":\"app replicas\",\"state\":\"$apps running\"}]"
 
+# R1 ops review (M5): the background worker. Docker marks it unhealthy when its heartbeat stops (infra/stack/app.yml)
+# but never restarts an unhealthy container, so a stuck worker stayed stuck in silence. It is restarted once per
+# MONITOR_REPEAT_MIN, and the alert stays until it is healthy again.
+sick_workers=()
+while read -r w; do
+  [ -n "$w" ] || continue
+  sick_workers+=("$w")
+  wf="$STATE/alerts/restarted-$w"
+  if [ ! -f "$wf" ] || [ $(( $(date +%s) - $(cat "$wf" 2>/dev/null || echo 0) )) -ge $((MONITOR_REPEAT_MIN * 60)) ]; then
+    docker restart -t 60 "$w" >/dev/null 2>&1 || true
+    date +%s > "$wf"
+  fi
+done < <(docker ps --filter name=extas-app- --filter health=unhealthy --format '{{.Names}}' 2>/dev/null | grep -- '-worker-' || true)
+alert worker "$([ "${#sick_workers[@]}" -gt 0 ] && echo 1 || echo 0)" "ব্যাকগ্রাউন্ড কাজের worker আটকে আছে (${sick_workers[*]:-}); একবার আবার চালু করা হয়েছে"
+
+# R1 ops review (M4): WAL archiving. The latest attempt failed and nothing was archived for 10 minutes: pg_wal grows on
+# the database disk and the point-in-time copies stop.
+wal_stuck="$(docker exec -u postgres extas-postgres sh -c 'PATH="$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1):$PATH"; psql -qtAX -U extas -d extas -c "SELECT (last_failed_time IS NOT NULL AND last_failed_time > coalesce(last_archived_time, to_timestamp(0)) AND now() - coalesce(last_archived_time, stats_reset) > make_interval(mins => 10))::text FROM pg_stat_archiver"' </dev/null 2>/dev/null || true)"
+alert wal_archive "$([ "$wal_stuck" = true ] && echo 1 || echo 0)" "ডাটাবেসের WAL আর্কাইভ আটকে গেছে: ডিস্ক ভরে যাবে, মিনিট ধরে ফেরানো বন্ধ"
+
 # Per-service RAM/CPU against its limit (for PR 423)
 STATS_JSON="$(docker stats --no-stream --format '{"name":"{{.Name}}","cpu":"{{.CPUPerc}}","mem":"{{.MemUsage}}","mem_pct":"{{.MemPerc}}"}' 2>/dev/null | paste -sd, -)"
 
-# Site speed (Caddy's internal port, bound to 127.0.0.1 only)
-ms="$(curl -s -o /dev/null -m 10 -w '%{time_total}' http://127.0.0.1:8080/ 2>/dev/null | awk '{printf "%d", $1*1000}')"
+# Site speed (Caddy's internal port, bound to 127.0.0.1 only). R1 ops review (M5): and its answer — every app copy
+# answering 500 fast (a broken database login, a bad setting) used to pass as a fast site.
+read -r site_code site_s < <(curl -s -o /dev/null -m 10 -w '%{http_code} %{time_total}\n' http://127.0.0.1:8080/ 2>/dev/null || echo "000 0")
+ms="$(awk -v s="${site_s:-0}" 'BEGIN{printf "%d", s*1000}')"
 [ -n "$ms" ] && [ "$ms" -gt 0 ] || ms=99999
 alert slow "$([ "${ms:-99999}" -gt "$MONITOR_SLOW_MS" ] && echo 1 || echo 0)" "সাইট ধীর (${ms} ms)"
+alert site_error "$(case "${site_code:-000}" in 2??|3??) echo 0 ;; *) echo 1 ;; esac)" "সাইট ঠিকমতো খুলছে না (HTTP ${site_code:-000})"
 
 # Backups: the daily local backup must be fresh; a failed Blob/Drive upload alerts (an unconnected one does not)
 BQ=""; [ "${BACKUP_TELEGRAM_FAIL:-yes}" = no ] && BQ=1
@@ -120,12 +143,22 @@ fi
 for t in blob drive; do
   f="$STATE/backup-daily-$t.json"
   QUIET="$BQ" alert "backup_$t" "$(grep -q '"result":"fail"' "$f" 2>/dev/null && echo 1 || echo 0)" "$t ব্যাকআপ ব্যর্থ হয়েছে"
+  # R1 ops review (minor 2): an "ok" that is too old means the night's copy never ran or stopped half way.
+  old=0
+  if grep -q '"result":"ok"' "$f" 2>/dev/null && [ $(( ($(date +%s) - $(stat -c %Y "$f")) / 3600 )) -gt "$MONITOR_BACKUP_MAX_AGE_H" ]; then old=1; fi
+  QUIET="$BQ" alert "backup_${t}_old" "$old" "$t ব্যাকআপ ${MONITOR_BACKUP_MAX_AGE_H} ঘণ্টার বেশি পুরনো"
 done
+# R1 ops review (M5): the WAL push to Blob (point-in-time restore off the server)
+QUIET="$BQ" alert backup_wal "$(grep -q '"result":"fail"' "$STATE/backup-wal-blob.json" 2>/dev/null && echo 1 || echo 0)" "WAL কপি Blob-এ যাচ্ছে না"
 # PR 385: the Blob copies are locked, and a delete from this server is refused (extas-backup lock-check)
 QUIET="$BQ" alert backup_lock "$(grep -q '"result":"fail"' "$STATE/backup-lock-blob.json" 2>/dev/null && echo 1 || echo 0)" "ব্যাকআপ লক কাজ করছে না: এই সার্ভার থেকে ব্লবের ব্যাকআপ মোছা যায়"
 [ -f "$STATE/restore-test.json" ] && QUIET="$BQ" alert restore_test "$(grep -q '"result":"fail"' "$STATE/restore-test.json" && echo 1 || echo 0)" "ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ"
 # PR 507: the monthly drill as a whole (one copy failing is enough, even when the last one passed).
 [ -f "$STATE/restore-drill.json" ] && QUIET="$BQ" alert restore_drill "$(jq -e '.result == "fail"' "$STATE/restore-drill.json" >/dev/null 2>&1 && echo 1 || echo 0)" "মাসিক ফেরানোর মহড়া ব্যর্থ: $(jq -r '.detail' "$STATE/restore-drill.json" 2>/dev/null | cut -c1-300)"
+
+# R1 ops review (M5): the nightly smoke test of every page and the vault sync, which the owner never reads on GitHub.
+alert smoke "$(jq -e '.ok == false' "$STATE/smoke.json" >/dev/null 2>&1 && echo 1 || echo 0)" "রাতের পেজ-পরীক্ষা ব্যর্থ: $(jq -r '(.problems // [])[:3] | join("; ")' "$STATE/smoke.json" 2>/dev/null | cut -c1-300)"
+alert vault_sync "$(jq -e '.result == "fail"' "$STATE/vault-sync.json" >/dev/null 2>&1 && echo 1 || echo 0)" "চাবি সার্ভারে আসছে না (vault sync): $(jq -r '.detail // ""' "$STATE/vault-sync.json" 2>/dev/null | cut -c1-200)"
 
 load="$(cut -d' ' -f1 /proc/loadavg)"
 mem_used_pct="$(free | awk '/^Mem:/{printf "%d", ($3/$2)*100}')"
