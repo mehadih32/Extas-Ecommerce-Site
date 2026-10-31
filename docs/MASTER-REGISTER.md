@@ -671,6 +671,18 @@ the server.*
 >
 > **(5) Where it is written.** `docs/LAUNCH-TRACK.md` (the three lanes and the After-launch priority order), CLAUDE.md rule 10 and "Run without stopping".
 
+> **CN-032 · 31 Oct 2026 (owner: a page must never go blank in one browser because of what that browser saved; no "cookie problem" now, later or after a handover).** No new PR numbers; the total stays 621 (615 active, 6 parked).
+>
+> **(1) The cause.** In the owner's everyday browser the admin went blank after loading and the sign-in did nothing, while another browser worked. Two things in one browser can do that: data this browser saved for the site earlier (cookies, stored values, cached files from an older version), and the browser's own page translation, which rewrites the page's text behind React's back so the next update breaks the page.
+>
+> **(2) The fix, for every page.** The browser's own translation is off on the whole site (`translate="no"` and `<meta name="google" content="notranslate">`): the shop has its Bengali pages and the admin its বাং switch. A last safety net (`app/global-error.tsx`) replaces any blank page: once per two minutes in a tab it clears this site's cache and stored values by itself (the sign-in stays) and opens the page again; if the page still fails it shows **Start fresh** and **Try again** in Bengali and English with a short error id.
+>
+> **(3) Start fresh.** `/fresh-start` (`/bn/fresh-start`, `?to=admin` opens the admin sign-in afterwards) has one button that clears only this site's data in this browser: its cache and stored values (`Clear-Site-Data`) and every cookie the site set, on every path it used, except the preview gate's. Other sites, passwords and tabs in the browser stay as they are; the old shop's cookies on the main domain are never touched. POST only (`/api/fresh-start`), so a link can never sign anyone out.
+>
+> **(4) Handover.** Nothing here depends on a host, a domain or an owner: a new installation has the same safety net and page.
+>
+> **(5) Where it is written.** An updated line on PR 12 (CN-032).
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |
@@ -805,6 +817,7 @@ the server.*
 - **PR 611–614** — Updated 30 Oct 2026 (CN-029): these four also carry the rework of PR 184–191, 525 and 526 to the new rules, behind `erp.model`; the old flow keeps working until the switch-over.
 - **PR 395, 507** — Updated 31 Oct 2026 (CN-030): Google Drive backup is one click with the owner's own Google client ("TVs and Limited Input devices", scope `drive.file`, device-code sign-in, no redirect, no service account), the same way as the Extas ERP; the Backups screen shows account, folder, free space, client, Disconnect and "Change the Google client (advanced)" with the PIN; secrets only in the vault; one connection per store.
 - **PR 391, 396** — Updated 31 Oct 2026 (CN-030): going live with Drive means pressing Connect Google Drive and entering the code at google.com/device; restore is one click from the list of backups in the connected Drive, with the typed confirmation and the PIN, staging first.
+- **PR 12 (S00, the app and the admin shell)** — Updated 31 Oct 2026 (CN-032): the browser's own translation is off site-wide; `app/global-error.tsx` replaces a blank page, clears this site's cache and stored values once by itself and reloads, then offers Start fresh and Try again; `/fresh-start` (`/api/fresh-start`, POST, soft or full) clears only this site's data in this browser, keeping the preview gate's cookie.
 - **PR 184–191, 525, 526 (S08)** — Updated 30 Oct 2026 (CN-029, built in PR 612–614): on `erp.model` v6 the shop's quality check, restock, write-off and credit-due paths never run (each is a per-store switch `returns.legacy.shopQc`, `.restock`, `.writeOff`, `.creditDue`, on while v5, for PR 619 to turn off; nothing deleted); no return opens after delivery; an exchange is approved through the ERP within 72 hours of the courier's "delivered" (PR 614) and completes or cancels from the ERP's own answer, never by the shop's QC; the courier's hand-back is a return list (PR 612). The v5 flow is unchanged until the switch-over.
 
 **The 12 that moved:** page builder and the label dictionary S08 → S02 · category SEO S10 → S11 ·
