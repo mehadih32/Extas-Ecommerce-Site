@@ -95,6 +95,9 @@
   পাতার গাইড: [খরচ](pages/money/costs.md)।
 - **খরচের হিসাব (PR 344)** — পাতা: **টাকা › খরচের হিসাব** (`/admin/money/expenses`); দেখতে `books.read`, লিখতে
   `fixedcosts.write`। খাত শুরুতে নেই (মালিক নিজে দেন)। পাতার গাইড: [খরচের হিসাব](pages/money/expenses.md)।
+- **খরচ ও ফি (PR 345)** — পাতা: **টাকা › খরচ ও ফি** (`/admin/money/fees`); দেখতে `books.read`, রাখতে `costs.write`।
+  গেটওয়ের ফি (`costs.gatewayFees`) আর প্রতি অর্ডারে প্যাকেজিং (`costs.packaging`): **খালি** (মালিকের অঙ্ক)।
+  পাতার গাইড: [খরচ ও ফি](pages/money/fees.md)।
 - **খরচের খাতা (PR 343)** — পাতা: **টাকা › খরচের খাতা** (`/admin/money/cost-ledger`); দেখতে `books.read`, টপ-আপ আর
   কম-সীমা লিখতে `costs.write`। কয়টা সারি দেখাবে আর এক্সপোর্টে কত (`costs.ledger`): **50** আর **20,000**। কম-সীমা শুরুতে নেই।
   পাতার গাইড: [খরচের খাতা](pages/money/cost-ledger.md)।
