@@ -58,3 +58,6 @@
 .adm2 .rf-form{display:grid;gap:8px;max-width:520px;padding:10px;border-radius:10px;background:var(--sf);border:1px solid var(--ln2)}
 .adm2 .rf-form .a2-chkl{min-height:44px}
 .adm2 .rf-views .a2-view{min-width:44px;justify-content:center}
+.adm2 .rf-pick{border:0;padding:0;margin:0;min-width:0;display:flex;flex-wrap:wrap;gap:0 16px}
+.adm2 .rf-pick legend{padding:0;margin-bottom:4px;width:100%}
+.adm2 .rf-row > .a2-pill{justify-self:start}

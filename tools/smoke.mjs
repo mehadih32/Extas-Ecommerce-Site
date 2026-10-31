@@ -79,6 +79,15 @@ export function discovered(hrefs, take) {
 }
 
 /**
+ * Gate F-054 (follow-up of PR 171) — a found page opened at one of its tabs (smoke.json `adminDiscover[].query`, such as
+ * `tab=wallet` for a customer's Wallet tab): the found path with that query, or the path itself without one.
+ */
+export function withQuery(path, query) {
+  const q = typeof query === "string" ? query.replace(/^\?/, "").trim() : "";
+  return q ? `${path}?${q}` : path;
+}
+
+/**
  * PR 155 (CN-022) — a page that shows the KPI pair (smoke.json `figures`) must show each figure once, in its own
  * element, with a value: "Sales" and "Ordered value" side by side, never one standing in for the other.
  * `found[i]` is what the browser found for `selectors[i]`: one { label, value } per matching element.
@@ -557,9 +566,11 @@ export async function runSmoke(opts) {
               .$$eval(d.selector, (els) => els.map((e) => e.getAttribute("href") ?? ""))
               .catch(() => [])
           : [];
-        for (const path of discovered(hrefs, d.take))
+        for (const found of discovered(hrefs, d.take)) {
+          const path = withQuery(found, d.query);
           if (!seen.has(path))
             rows.push(await visit(page, opts.base, ignore, path, vp.name, opts));
+        }
       }
       // The extra checks once (they test the server, not the screen size).
       if (vp === config.viewports[0])

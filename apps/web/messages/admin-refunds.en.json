@@ -203,6 +203,68 @@
         "lateAfterHours": "Late by at least (hours)",
         "lateHelp": "Rule only. 0: any time after the promise."
       }
+    },
+    "wallet": {
+      "title": "Wallet · {name}",
+      "main": "main profile",
+      "merged": "merged profile",
+      "balance": "Balance",
+      "drift": "The balance and the ledger differ: the ledger adds up to {ledger}. Tell the owner; nothing is hidden.",
+      "closed": "This wallet is not active. Nothing can be added or taken.",
+      "none": "No wallet yet. It opens with the first credit.",
+      "lines": "Ledger, newest first",
+      "noLines": "No lines yet.",
+      "more": "The newest {n} lines are shown. The older ones stay in the ledger.",
+      "reason": {
+        "ORDER": "Spent on an order",
+        "REVIEW_REWARD": "Review reward",
+        "EXCHANGE_CREDIT": "Exchange credit",
+        "REFUND": "Refund",
+        "APOLOGY": "Apology credit",
+        "MANUAL_CREDIT": "Added by hand",
+        "MANUAL_DEBIT": "Taken by hand",
+        "OFFER": "Offer credit",
+        "CORRECTION": "Correction"
+      },
+      "by": "by {name}",
+      "byShop": "by the shop itself",
+      "byGone": "by a team member",
+      "order": "Order {n}",
+      "reversed": "Put right",
+      "reverses": "Puts right an earlier line",
+      "after": "Balance after: {amount}",
+      "adjust": {
+        "title": "Add or take money by hand",
+        "sub": "For a promise made on the phone, or to fix a mistake. Every line keeps its reason and your name, and can be put right later.",
+        "off": "Changing a wallet by hand is off. The owner can switch it on under Money › Refunds & wallet › More options.",
+        "offLink": "Open the money rules",
+        "noPerm": "Changing a wallet needs the wallet permission. Ask the owner.",
+        "max": "Largest single line: {amount}",
+        "noMax": "No limit on a single line.",
+        "open": "Add or take money",
+        "direction": "What to do",
+        "credit": "Add to the wallet",
+        "debit": "Take from the wallet",
+        "amount": "Amount",
+        "kind": "Kind",
+        "manual": "By hand",
+        "offer": "Offer credit",
+        "note": "Reason (kept in the ledger)",
+        "sure": "I checked the amount: {amount}",
+        "go": "Save the line",
+        "done": "Saved in the ledger."
+      },
+      "reverse": {
+        "btn": "Put right",
+        "what": "A new line the other way, {amount}, cancels this one. The first line stays in the ledger.",
+        "sure": "I checked: put right {amount}",
+        "go": "Put it right",
+        "done": "Put right with a new line."
+      },
+      "apology": {
+        "title": "His late orders: apology credit",
+        "off": "The apology credit is off. The owner can switch it on under Money › Refunds & wallet › More options."
+      }
     }
   }
 }

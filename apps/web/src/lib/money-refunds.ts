@@ -230,3 +230,81 @@ export async function saveMoneyCard(deps: RefundsDeps, who: RefundsWho, input: u
   return cardsOf({ ...values, [key]: next } as Values, digits);
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Gate F-054 (follow-up of PR 171): one customer's wallets on his own page (Customers › the customer › Wallet)
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** One ledger line as the customer's Wallet tab shows it. */
+export interface WalletLine extends pay.WalletEntryRow {
+  /** The person who wrote it (null: the shop by itself, or someone no longer listed). */
+  by: string | null;
+  orderNumber: string | null;
+  /** A person may put it right with a reversal (a reward, apology, offer or a hand entry, not yet reversed). */
+  reversible: boolean;
+}
+
+export interface CustomerWalletBox {
+  customerId: string;
+  walletId: string | null;
+  status: string | null;
+  balanceMinor: number;
+  ledgerMinor: number;
+  drift: boolean;
+  more: boolean;
+  entries: WalletLine[];
+}
+
+export interface CustomerWalletView {
+  /** One box per profile (the main one first, then his merged profiles), in the order asked. */
+  wallets: CustomerWalletBox[];
+  can: { wallet: boolean; apology: boolean; settings: boolean };
+  /** The owner's switch for a person's own credit or debit, and its largest single entry (minor units). */
+  manual: Value<'payments.wallet.manual'>;
+  /** His late orders still without the apology credit (empty while the credit is off). */
+  apology: { enabled: boolean; mode: string; rows: pay.ApologyCandidate[] };
+}
+
+/** The ledger lines a profile's box shows (the newest; the full history stays in the ledger). */
+const WALLET_LINES = 30; // hardcode-ok: one screenful of ledger lines per profile; `more` says when there are older ones
+
+/** A customer's wallets and the tools beside them (`payments.view`; the tools check their own permission again). */
+export async function customerWallets(deps: RefundsDeps, who: RefundsWho, customerIds: readonly string[]): Promise<CustomerWalletView> {
+  const held = await requirePermission(deps.db, who.actor, 'payments.view', { storeId: S });
+  const pw: pay.Who = { actor: who.actor, storeId: S, ctx: who.ctx };
+  const ids = [...new Set(customerIds)];
+  const [{ values }, views, apology] = await Promise.all([
+    valuesOf(deps),
+    Promise.all(ids.map((id) => pay.walletOf(deps.payments, pw, id, { limit: WALLET_LINES }))),
+    pay.apologyCandidates(deps.payments, pw, { customerIds: ids, limit: 20 }), // hardcode-ok: one customer's late orders; more than a handful is not expected
+  ]);
+  const found = views.filter((v): v is pay.WalletView => !!v);
+  const entries = found.flatMap((v) => v.entries);
+  const staffIds = [...new Set(entries.map((e) => e.actorId).filter((x): x is string => !!x))];
+  const orderIds = [...new Set(entries.map((e) => e.orderId).filter((x): x is string => !!x))];
+  const [staff, orders] = await Promise.all([
+    staffIds.length ? deps.db.staffUser.findMany({ where: { id: { in: staffIds } }, select: { id: true, displayName: true } }) : [],
+    orderIds.length ? deps.db.order.findMany({ where: { id: { in: orderIds }, storeId: S }, select: { id: true, number: true } }) : [],
+  ]);
+  const name = new Map(staff.map((s) => [s.id, s.displayName]));
+  const number = new Map(orders.map((o) => [o.id, o.number]));
+  return {
+    wallets: found.map((v) => ({
+      customerId: v.customerId,
+      walletId: v.walletId,
+      status: v.status,
+      balanceMinor: v.balanceMinor,
+      ledgerMinor: v.ledgerMinor,
+      drift: v.drift,
+      more: v.more,
+      entries: v.entries.map((e) => ({
+        ...e,
+        by: e.actorId ? (name.get(e.actorId) ?? null) : null,
+        orderNumber: e.orderId ? (number.get(e.orderId) ?? null) : null,
+        reversible: pay.REVERSIBLE_REASONS.has(e.reason) && !e.reversedBy && !e.reversesEntryId,
+      })),
+    })),
+    can: { wallet: held.has('payments.wallet'), apology: held.has('payments.apology'), settings: held.has('settings.write') },
+    manual: values.walletManual,
+    apology: { enabled: apology.enabled, mode: values.apology.mode, rows: apology.rows },
+  };
+}

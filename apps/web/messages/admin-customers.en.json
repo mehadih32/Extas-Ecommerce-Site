@@ -159,7 +159,8 @@
         "overview": "Overview",
         "orders": "Orders",
         "exchanges": "Exchanges",
-        "support": "Support"
+        "support": "Support",
+        "wallet": "Wallet"
       },
       "kpi": {
         "orders": "Orders",
@@ -230,7 +231,8 @@
         "title": "Wallet",
         "balance": "{v}",
         "none": "No wallet yet.",
-        "profile": "{name}"
+        "profile": "{name}",
+        "open": "Open the wallet"
       },
       "looks": {
         "title": "Who looked at this customer",

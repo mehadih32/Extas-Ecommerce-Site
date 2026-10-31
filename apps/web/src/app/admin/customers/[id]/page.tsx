@@ -6,6 +6,11 @@
 // `payments.view`), "Who looked at this customer" (with `audit.read`) and the note that the address lives only inside an
 // order. A merged profile's address opens its survivor's page. "Merge with…" (with `customers.merge`) finds the other
 // profile by phone and opens both side by side in To review. Reading needs `customers.read`; every open is logged.
+// Gate F-054 (follow-up of PR 171): with `payments.view` a Wallet tab — each profile's balance and ledger (who wrote each
+// line, its order, the balance after), a person's own credit or debit with its reason (`payments.wallet`, only while the
+// owner's `payments.wallet.manual` is on, within its largest line), one line put right with a new line the other way,
+// and his late orders' apology credit (`payments.apology`, while `payments.wallet.apology` is on). The payments API
+// checks each permission and rule again and audits it; no line is ever changed or removed.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -13,6 +18,8 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import * as pay from '@extas/payments';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { ApologyGive } from '@/components/admin/money/RefundActions';
+import { WalletAdjust, WalletReverse } from '@/components/admin/money/WalletTools';
 import { sourceLabel } from '@/components/admin/customers/CustomerList';
 import { MergeWith, PhoneButtons } from '@/components/admin/customers/CustomerTools';
 import { initials } from '@/components/admin/customers/PairCard';
@@ -27,11 +34,14 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { customersDeps } from '@/lib/customers-api';
 import { t, type Dict } from '@/lib/i18n';
+import { customerWallets } from '@/lib/money-refunds';
+import { flatWords, refundWords } from '@/lib/money-words';
 import { paymentsDeps } from '@/lib/payments-api';
+import '../../money/money.css';
 
 export const dynamic = 'force-dynamic';
 
-const TABS = ['overview', 'orders', 'exchanges', 'support'] as const;
+const TABS = ['overview', 'orders', 'wallet', 'exchanges', 'support'] as const;
 /** The logged actions' icons in "Who looked at this customer". */
 const LOOK_ICON: Record<string, 'eye' | 'file' | 'phone'> = { 'profile.open': 'eye', 'phone.copy': 'file', 'phone.call': 'phone' };
 type Tab = (typeof TABS)[number];
@@ -123,14 +133,16 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   if (sv.redirectedFrom) redirect(`/admin/customers/${sv.id}?from=${encodeURIComponent(sv.redirectedFrom)}`);
   await cu.logAccess(access.deps.db, MOTHER_STORE_ID, sv.id, who.actor.staffUserId, 'profile.open');
 
-  const tab: Tab = (TABS as readonly string[]).includes(one(sp.tab)) ? (one(sp.tab) as Tab) : 'overview';
+  const canWallet = perms.has('payments.view');
+  // the Wallet tab only for a person who may see money (gate F-054)
+  const tabs = TABS.filter((x) => x !== 'wallet' || canWallet);
+  const tab: Tab = (tabs as readonly string[]).includes(one(sp.tab)) ? (one(sp.tab) as Tab) : 'overview';
   const page = Math.max(1, Math.trunc(Number(one(sp.page)) || 1));
   const from = one(sp.from);
-  const canWallet = perms.has('payments.view');
   const profiles = [sv.customer, ...sv.members];
   // the owner's "0 lines" hides the "Who looked" card (the log itself is always written)
   const { accessLogShown } = (await access.deps.resolver.value('customers.profile', { storeId: MOTHER_STORE_ID })) as { accessLogShown: number };
-  const [orders, exchanges, support, looks, wallets, currency] = await Promise.all([
+  const [orders, exchanges, support, looks, wallets, currency, ledger] = await Promise.all([
     cu.customerOrders(cd, who, sv.id, tab === 'orders' ? { page } : {}),
     tab === 'overview' || tab === 'exchanges' ? cu.customerExchanges(cd, who, sv.id) : Promise.resolve([]),
     tab === 'support' ? cu.customerSupport(cd, who, sv.id) : Promise.resolve([]),
@@ -139,6 +151,9 @@ export default async function CustomerPage({ params, searchParams }: { params: P
       ? paymentsDeps(access.deps).then((pd) => Promise.all(profiles.map((p) => pay.walletOf(pd, { ...who }, p.id, { limit: 1 }).then((w) => ({ p, w }))))) // hardcode-ok: only the balance is shown, so the fewest ledger lines are read
       : Promise.resolve(null),
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
+    tab === 'wallet'
+      ? paymentsDeps(access.deps).then((pd) => customerWallets({ db: access.deps.db, resolver: access.deps.resolver, payments: pd }, { actor: access.guard.actor, ctx: access.guard.ctx }, profiles.map((p) => p.id)))
+      : Promise.resolve(null),
   ]);
   const money = moneyOf(currency, view.locale);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
@@ -311,6 +326,119 @@ export default async function CustomerPage({ params, searchParams }: { params: P
     </Card>
   );
 
+  // gate F-054: the Wallet tab (each profile's ledger, the hand entry, a line put right, his late orders' apology)
+  const mw = refundWords(view.lang);
+  const wt = (k: string, vars?: Record<string, string | number>) => t({ mw } as Dict, `mw.${k}`, vars);
+  const ww = { ...flatWords((mw as { w: unknown }).w), ...flatWords((mw as { wallet: unknown }).wallet, 'wallet.') };
+  const amount = (minor: number) => formatMoney(minor, money);
+  const nameOf = new Map(profiles.map((p) => [p.id, p.name ?? t(d, 'cus.side.noName')]));
+  const walletTab = ledger ? (
+    <>
+      {ledger.wallets.map((b, i) => {
+        const active = b.status === null || b.status === 'ACTIVE';
+        return (
+          <Card key={b.customerId} title={wt('wallet.title', { name: nameOf.get(b.customerId) ?? '' })} testId="cw-box" right={<span className="a2-pill line">{wt(i === 0 ? 'wallet.main' : 'wallet.merged')}</span>}>
+            <div className="a2-rule" data-testid="cw-balance" data-minor={b.balanceMinor}>
+              <span>{wt('wallet.balance')}</span>
+              <b>{amount(b.balanceMinor)}</b>
+            </div>
+            {b.drift ? (
+              <p className="a2-xs bk-warn a2-mt6" role="alert" data-testid="cw-drift">
+                {wt('wallet.drift', { ledger: amount(b.ledgerMinor) })}
+              </p>
+            ) : null}
+            {!active ? <p className="a2-xs bk-warn a2-mt6">{wt('wallet.closed')}</p> : null}
+            {!b.walletId ? (
+              <p className="a2-sm a2-mute a2-mt6">{wt('wallet.none')}</p>
+            ) : (
+              <>
+                <h3 className="a2-lbl a2-mt12">{wt('wallet.lines')}</h3>
+                {b.entries.length ? (
+                  <ul className="rf-rows" data-testid="cw-lines">
+                    {b.entries.map((e) => (
+                      <li key={e.id} className="rf-row" data-testid="cw-line" data-entry={e.id} data-reason={e.reason} data-direction={e.direction}>
+                        <div className="rf-top">
+                          <b className="rf-amt">{`${e.direction === 'CREDIT' ? '+' : '−'}${amount(e.amountMinor)}`}</b>
+                          <span className={`a2-pill ${e.direction === 'CREDIT' ? 'ok' : 'line'}`}>{wt(`wallet.reason.${e.reason}`)}</span>
+                        </div>
+                        <div className="rf-facts a2-xs">
+                          <span>{stamp.format(e.createdAt)}</span>
+                          <span>{e.by ? wt('wallet.by', { name: e.by }) : e.actorId ? wt('wallet.byGone') : wt('wallet.byShop')}</span>
+                          {e.orderId && e.orderNumber ? (
+                            sv.viewer.orders ? (
+                              <Link href={`/admin/orders/${e.orderId}`}>{wt('wallet.order', { n: e.orderNumber })}</Link>
+                            ) : (
+                              <span>{wt('wallet.order', { n: e.orderNumber })}</span>
+                            )
+                          ) : null}
+                          <span className="a2-mute">{wt('wallet.after', { amount: amount(e.balanceAfterMinor) })}</span>
+                        </div>
+                        {e.note ? <p className="a2-xs a2-mute">{e.note}</p> : null}
+                        {e.reversedBy ? <span className="a2-pill line" data-testid="cw-reversed">{wt('wallet.reversed')}</span> : null}
+                        {e.reversesEntryId ? <span className="a2-xs a2-mute">{wt('wallet.reverses')}</span> : null}
+                        {e.reversible && active && ledger.can.wallet ? <WalletReverse w={ww} entryId={e.id} amount={amount(e.amountMinor)} testId={`cw-rev-${e.id.slice(-8)}`} /> : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="a2-sm a2-mute">{wt('wallet.noLines')}</p>
+                )}
+                {b.more ? <p className="a2-xs a2-mute a2-mt6">{wt('wallet.more', { n: b.entries.length })}</p> : null}
+              </>
+            )}
+          </Card>
+        );
+      })}
+      <Card title={wt('wallet.adjust.title')} testId="cw-adjust">
+        <p className="a2-xs a2-mute">{wt('wallet.adjust.sub')}</p>
+        {!ledger.can.wallet ? (
+          <p className="a2-sm a2-mt6">{wt('wallet.adjust.noPerm')}</p>
+        ) : !ledger.manual.enabled ? (
+          <>
+            <p className="a2-sm a2-mt6" data-testid="cw-adjust-off">
+              {wt('wallet.adjust.off')}
+            </p>
+            {ledger.can.settings ? (
+              <Link className="a2-btn sm a2-mt12" href="/admin/money/refunds?view=all">
+                {wt('wallet.adjust.offLink')}
+              </Link>
+            ) : null}
+          </>
+        ) : ledger.wallets[0] && ledger.wallets[0].status !== null && ledger.wallets[0].status !== 'ACTIVE' ? (
+          <p className="a2-sm a2-mt6">{wt('wallet.closed')}</p>
+        ) : (
+          <>
+            <p className="a2-xs a2-mt6">{ledger.manual.maxMinor === null ? wt('wallet.adjust.noMax') : wt('wallet.adjust.max', { amount: amount(ledger.manual.maxMinor) })}</p>
+            <WalletAdjust w={ww} customerId={sv.id} digits={money.digits} currency={currency} testId="cw-add" />
+          </>
+        )}
+      </Card>
+      <Card title={wt('wallet.apology.title')} testId="cw-apology">
+        {!ledger.apology.enabled ? (
+          <p className="a2-sm a2-mute">{wt('wallet.apology.off')}</p>
+        ) : ledger.apology.rows.length ? (
+          <ul className="rf-rows">
+            {ledger.apology.rows.map((r) => (
+              <li key={r.orderId} className="rf-row" data-testid="cw-late" data-order={r.orderId}>
+                <div className="rf-top">
+                  {sv.viewer.orders ? <Link href={`/admin/orders/${r.orderId}`}>{wt('wallet.order', { n: r.number })}</Link> : <b>{wt('wallet.order', { n: r.number })}</b>}
+                  <span className="a2-pill warn">{wt('apology.late', { h: r.lateHours })}</span>
+                </div>
+                <div className="rf-facts a2-xs">
+                  {r.deliveredAt ? <span>{wt('apology.delivered', { at: when.format(r.deliveredAt) })}</span> : null}
+                  <span>{r.ruleMinor === null ? (ledger.apology.mode === 'RULE' ? wt('apology.ruleUnset') : '') : wt('apology.rule', { amount: amount(r.ruleMinor) })}</span>
+                </div>
+                {ledger.can.apology ? <ApologyGive w={ww} orderId={r.orderId} mode={ledger.apology.mode} ruleAmount={r.ruleMinor === null ? null : amount(r.ruleMinor)} digits={money.digits} currency={currency} testId={`cw-apo-${r.orderId.slice(-8)}`} /> : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="a2-sm a2-mute">{wt('apology.none')}</p>
+        )}
+      </Card>
+    </>
+  ) : null;
+
   const side = (
     <>
       <Card title={t(d, 'cus.profile.consent.title')} testId="cus-consent">
@@ -338,6 +466,11 @@ export default async function CustomerPage({ params, searchParams }: { params: P
           ) : (
             <p className="a2-sm a2-mute">{t(d, 'cus.profile.wallet.none')}</p>
           )}
+          {tab !== 'wallet' ? (
+            <Link className="a2-btn sm a2-mt12" href={tabHref('wallet')} data-testid="cus-wallet-open">
+              {t(d, 'cus.profile.wallet.open')}
+            </Link>
+          ) : null}
         </Card>
       ) : null}
       {looks ? (
@@ -386,7 +519,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
         </div>
       ) : null}
       <nav className="a2-views a2-mt12" aria-label={t(d, 'cus.profile.tabsAria')} data-testid="cus-tabs">
-        {TABS.map((x) => (
+        {tabs.map((x) => (
           <Link key={x} className={`a2-view${x === tab ? ' on' : ''}`} href={tabHref(x)} aria-current={x === tab ? 'page' : undefined} scroll={false} data-tab={x}>
             {t(d, `cus.profile.tab.${x}`)}
           </Link>
@@ -405,6 +538,8 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             </>
           ) : tab === 'orders' ? (
             orderCard(true)
+          ) : tab === 'wallet' && walletTab ? (
+            walletTab
           ) : tab === 'exchanges' ? (
             exchangeCard
           ) : (

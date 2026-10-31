@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { ApologyGive, RefundActions, type Words } from '@/components/admin/money/RefundActions';
+import { ApologyGive, RefundActions } from '@/components/admin/money/RefundActions';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -19,11 +19,10 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { t, type Dict } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
 import { REFUND_VIEWS, refundsView, type MoneyCardKey } from '@/lib/money-refunds';
+import { flatWords as flat, refundWords } from '@/lib/money-words';
 import { paymentsDeps } from '@/lib/payments-api';
-import bn from '../../../../../messages/admin-refunds.bn.json';
-import en from '../../../../../messages/admin-refunds.en.json';
 import '../../settings-cards.css';
 import '../money.css';
 
@@ -38,18 +37,7 @@ const SOURCES = ['RTO', 'RIDER_OVERCHARGE', 'OUR_MISTAKE', 'OTHER'] as const;
 type Search = Promise<Record<string, string | string[] | undefined>>;
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, moneyRefunds: (view.lang === 'bn' ? bn : en).moneyRefunds as unknown as Dict } };
-}
-
-/** A nested words object as flat `a.b` keys, for a client component (no function crosses from the server). */
-function flat(d: unknown, prefix = ''): Words {
-  if (!d || typeof d !== 'object') return {};
-  const out: Words = {};
-  for (const [k, v] of Object.entries(d as Record<string, unknown>)) {
-    if (typeof v === 'string') out[`${prefix}${k}`] = v;
-    else Object.assign(out, flat(v, `${prefix}${k}.`));
-  }
-  return out;
+  return { ...view, dict: { ...view.dict, moneyRefunds: refundWords(view.lang) } };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -79,7 +67,7 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
   const money = moneyOf(currency, view.locale);
   const amount = (minor: number) => formatMoney(minor, money);
   const at = (x: Date | string | null) => (x ? dateTime(new Date(x).toISOString(), view.locale, view.timeZone) : '');
-  const w = flat((view.lang === 'bn' ? bn : en).moneyRefunds.w);
+  const w = flat((refundWords(view.lang) as { w: unknown }).w);
   const someone = c('row.someone');
 
   const cardTexts = (k: MoneyCardKey): FieldsCardTexts => ({

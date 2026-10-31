@@ -2,7 +2,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { adminLinks, adminPaths, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, rowsFile, shotDir, totpCode } from './smoke.mjs';
+import { adminLinks, adminPaths, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, rowsFile, shotDir, totpCode, withQuery } from './smoke.mjs';
 
 it('PR 6: an extra check passes on the expected value or answer, and says what it saw otherwise', () => {
   const page = { pr: 6, what: 'worker fresh', page: '/admin/server', selector: '[data-worker-state]', attribute: 'data-worker-state', equals: 'ok' };
@@ -194,4 +194,11 @@ it('PR 418: rows.json keeps each page and screen with its picture, at most ten s
   expect(f.rows[1].problems).toHaveLength(10);
   expect(f.rows[1].problems[0]).toHaveLength(300);
   expect(f.rows[1].screenshot).toBeNull();
+});
+
+it('gate F-054: a found page can be opened at one of its tabs', () => {
+  expect(withQuery('/admin/customers/a1', 'tab=wallet')).toBe('/admin/customers/a1?tab=wallet');
+  expect(withQuery('/admin/customers/a1', '?tab=wallet')).toBe('/admin/customers/a1?tab=wallet');
+  expect(withQuery('/admin/customers/a1', undefined)).toBe('/admin/customers/a1');
+  expect(withQuery('/admin/customers/a1', '  ')).toBe('/admin/customers/a1');
 });
