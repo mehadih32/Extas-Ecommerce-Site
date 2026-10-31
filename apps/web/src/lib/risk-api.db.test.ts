@@ -5,7 +5,8 @@
 // a stale screen, a band that does not exist, a hold reason not on the list and a partial ask without its percent refused
 // with nothing written). PR 162: the blocklist listed, undone and switched through the API, each with its permission
 // and its audit row; the switch never offers a cancel. PR 163: the repeat refusers read, their terms chosen and ended
-// (`risk.refuser.terms`) and the switch saved, each audited. Every value is a made-up test value.
+// (`risk.refuser.terms`) and the switch saved, each audited. PR 164: the fraud report read (`risk.report`) with its card,
+// the card saved (`settings.write`, audited), a stale or out-of-range card refused. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -167,5 +168,23 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect(await api('PUT', ['refusers'], { body: { value: { enabled: true, minRefused: 2 } } })).toMatchObject({ status: 200, body: { value: { enabled: true, minRefused: 2 } } });
     expect(await deps.resolver.value('risk.refusers', { storeId: f.S })).toEqual({ enabled: true, minRefused: 2 });
     for (const action of ['risk.refuser.terms', 'risk.refuser.end', 'risk.refusers.save']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBe(1);
+  });
+
+  it('PR 164: the fraud report and its card; the card saved with settings.write, a stale or out-of-range card refused', async () => {
+    const got = await api('GET', ['report'], { body: undefined });
+    expect(got.status).toBe(200);
+    expect(got.body.report).toMatchObject({ caught: { any: { orders: expect.any(Number) } }, rto: { real: { parcels: 0, knownMinor: 0 } }, cut: { orders: false, parcels: false } });
+    const card = got.body.cards.report as { key: string; value: Record<string, number>; version: string };
+    expect(card).toMatchObject({ key: 'report', value: { days: 30, maxRows: 5_000 } });
+    expect((await api('GET', ['report'], { cookie: reader })).status).toBe(403);
+    expect((await api('GET', ['report', 'x'])).status).toBe(404);
+    expect((await api('POST', ['report'], { body: {} })).status).toBe(405);
+    expect(await api('PUT', ['report'], { body: { key: 'report', value: { days: 0, maxRows: 5_000 }, version: card.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['days'] } });
+    expect((await api('PUT', ['report'], { cookie: reader, body: { key: 'report', value: card.value, version: card.version } })).status).toBe(403);
+    const put = await api('PUT', ['report'], { body: { key: 'report', value: { days: 7, maxRows: 1_000 }, version: card.version } });
+    expect(put).toMatchObject({ status: 200, body: { cards: { report: { value: { days: 7, maxRows: 1_000 } } } } });
+    expect(await deps.resolver.value('risk.report', { storeId: f.S })).toEqual({ days: 7, maxRows: 1_000 });
+    expect(await api('PUT', ['report'], { body: { key: 'report', value: { days: 9, maxRows: 1_000 }, version: card.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'risk.report.save' } })).toBe(1);
   });
 });

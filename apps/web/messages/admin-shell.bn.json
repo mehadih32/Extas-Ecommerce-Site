@@ -41,7 +41,8 @@
         "tracking": "ট্র্যাকিং"
       },
       "reports": {
-        "health": "সাইটের অবস্থা"
+        "health": "সাইটের অবস্থা",
+        "fraud": "ফ্রড ও RTO"
       },
       "settings": {
         "store": "দোকানের তথ্য",

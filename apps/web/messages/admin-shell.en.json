@@ -41,7 +41,8 @@
         "tracking": "Tracking"
       },
       "reports": {
-        "health": "Site health"
+        "health": "Site health",
+        "fraud": "Fraud & RTO"
       },
       "settings": {
         "store": "Store details",

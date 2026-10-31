@@ -1,11 +1,11 @@
 // S06 after launch (CN-031 lane A, registry versions 100–109). PR 162 (v100): the blocklist switch — in the registry,
 // labelled in both languages, off as shipped, only "mark" or "hold" (never a cancel), and the hold reason it uses on the
 // shipped hold-reason list. PR 163 (v101): repeat refusers — off, the number of refusals unset until the owner sets it,
-// and the terms only the advance request's kinds or nothing.
+// and the terms only the advance request's kinds or nothing. PR 164 (v102): the fraud report's default days and size.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { REFUSER_TERMS, riskBlocklistSchema, riskRefusersSchema, riskS06Settings } from '../src/registry-risk-s06';
+import { REFUSER_TERMS, riskBlocklistSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
 
 describe('S06 risk settings (v100–109)', () => {
   it('PR 162: the blocklist is in the registry at version 100, labelled in English and Bengali, off as shipped', () => {
@@ -48,5 +48,22 @@ describe('S06 risk settings (v100–109)', () => {
     expect(riskRefusersSchema.safeParse({ enabled: true, minRefused: 0 }).success).toBe(false);
     expect(riskRefusersSchema.safeParse({ enabled: true, minRefused: 2.5 }).success).toBe(false);
     expect(REFUSER_TERMS).toEqual(['none', 'delivery', 'full', 'codOff']);
+  });
+
+  it('PR 164: the fraud report at version 102, labelled in both languages, 30 days and 5,000 rows as shipped', () => {
+    const spec = riskS06Settings['risk.report'];
+    expect(registry['risk.report']).toBe(spec);
+    expect(spec.version).toBe(102);
+    expect(spec.isOwnerData).toBe(false);
+    for (const lang of ['en', 'bn'] as const) {
+      expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+      expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+    }
+    expect(spec.default).toEqual({ days: 30, maxRows: 5_000 });
+    expect(riskReportSchema.safeParse({ days: 0, maxRows: 5_000 }).success).toBe(false);
+    expect(riskReportSchema.safeParse({ days: 400, maxRows: 5_000 }).success).toBe(false);
+    expect(riskReportSchema.safeParse({ days: 7, maxRows: 99 }).success).toBe(false);
+    expect(riskReportSchema.safeParse({ days: 7, maxRows: 20_001 }).success).toBe(false);
+    expect(riskReportSchema.safeParse({ days: 7, maxRows: 100, extra: 1 }).success).toBe(false);
   });
 });

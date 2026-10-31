@@ -1,0 +1,36 @@
+/* S06 · PR 164 — Reports › Fraud & RTO: the period bar, the read-only tables and the cost book's groups (the shell's tokens only). */
+.adm2 .fr-period{align-items:flex-end;margin-bottom:6px}
+.adm2 .fr-day{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--mute);flex:0 1 180px;min-width:0}
+.adm2 .fr-day .a2-inp{width:100%}
+.adm2 .fr-showing{margin:0 0 4px}
+.adm2 .fr-tw{overflow-x:auto;max-width:100%;border:1px solid var(--ln);border-radius:9px}
+.adm2 .fr-tbl tbody tr{cursor:default}
+.adm2 .fr-tbl tbody tr:hover td{background:none}
+.adm2 .fr-tbl th[scope=row]{font-size:13.5px;font-weight:500;text-align:left;padding:10px 12px;border-bottom:1px solid var(--ln2);color:var(--ink);background:none;position:static;white-space:normal;overflow-wrap:anywhere}
+.adm2 .fr-tbl tr:last-child th[scope=row]{border-bottom:0}
+.adm2 .fr-tbl .fr-n{text-align:right;white-space:nowrap}
+.adm2 .fr-tbl tr.fr-total th,.adm2 .fr-tbl tr.fr-total td{font-weight:650;background:var(--sf2)}
+.adm2 .fr-tbl tr.fr-unknown th{color:var(--mute);font-style:italic}
+.adm2 .fr-inc{color:var(--warn);font-size:12px;font-weight:500}
+.adm2 .fr-sum{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:0 0 auto}
+.adm2 .fr-sum b{font-size:24px;font-weight:650;letter-spacing:-.02em}
+.adm2 .fr-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.adm2 .fr-group{min-width:0}
+.adm2 .fr-gh{font-size:13.5px;font-weight:650;margin:0 0 8px}
+@media (max-width:900px){
+  .adm2 .fr-groups{grid-template-columns:minmax(0,1fr)}
+}
+/* phone: the shell turns each row into a card (shell.css); the row's name spans the card, each figure carries its label */
+@media (max-width:767px){
+  .adm2 .fr-tw{border:0;border-radius:0;overflow:visible}
+  .adm2 .fr-tbl th[scope=row]{grid-column:1/-1;padding:0;border:0;font-weight:600}
+  .adm2 .fr-tbl tr.fr-total{background:var(--sf2)}
+  .adm2 .fr-tbl tr.fr-total th,.adm2 .fr-tbl tr.fr-total td{background:none}
+  .adm2 .fr-tbl tbody tr{cursor:default}
+}
+@media (max-width:600px){
+  .adm2 .fr-day{flex:1 1 40%}
+  .adm2 .fr-period .a2-btn{flex:1 1 100%}
+  .adm2 .fr-sum{align-items:flex-start}
+  .adm2 .fr-sum b{font-size:20px}
+}

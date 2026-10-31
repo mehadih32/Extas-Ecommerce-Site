@@ -1,0 +1,115 @@
+{
+  "frd": {
+    "metaTitle": "Fraud & RTO",
+    "title": "Fraud & RTO",
+    "sub": "What the risk steps caught, what turned out wrong, and what refused parcels cost you, in taka.",
+    "period": {
+      "from": "From",
+      "to": "To",
+      "go": "Show",
+      "showing": "Orders placed, and parcels that came back, from {from} to {to}.",
+      "bad": "The end date was before the start date, so the last {days} days are shown."
+    },
+    "kpi": {
+      "caught": "Caught by a risk step",
+      "caughtFoot": "{n} stopped before the courier",
+      "wrong": "Caught, yet delivered",
+      "wrongFoot": "{rate} of the caught orders that reached the door",
+      "wrongNone": "No caught order reached the door yet",
+      "missed": "Refused, never caught",
+      "missedFoot": "Refused at the door with no risk step on them",
+      "saved": "Cost probably saved",
+      "savedFoot": "Up to {upTo}. An estimate, not money that moved",
+      "savedUpOnly": "At most this much. An estimate, not money that moved",
+      "savedNoCost": "Enter the RTO costs to see this estimate",
+      "savedNone": "No order was stopped in this period"
+    },
+    "caught": {
+      "h": "What the risk steps caught",
+      "d": "Orders placed in the period, by the step that caught them, and what became of each. An order two steps caught counts in both rows and once in “Any step”."
+    },
+    "col": {
+      "step": "Step",
+      "orders": "Orders",
+      "delivered": "Delivered",
+      "refused": "Refused",
+      "cancelled": "Cancelled",
+      "open": "Still open"
+    },
+    "catch": {
+      "watch": "Watch mark (risk level)",
+      "blocklist": "Blocklist",
+      "refuser": "Repeat refuser terms",
+      "review": "Review (risk or duplicate rules)",
+      "advance": "Advance asked",
+      "any": "Any step"
+    },
+    "advancePaid": "{n} of them paid the advance that was asked.",
+    "caughtNote": "“Stopped” means cancelled before the courier had it, for a risk reason: declined after review, a duplicate, the advance not paid, or the number's owner never ordered. A customer's own cancel is not counted.",
+    "rto": {
+      "h": "What refused parcels cost (RTO)",
+      "d": "Real parcels that came back in the period: the courier's charge out and back, plus your packaging, handling and (if you count it) ad share. Practice parcels never count.",
+      "totalFoot": "on {n} returned parcels",
+      "floor": "{n} parcels miss a cost you have not entered yet ({parts}), so the real figure is higher than this.",
+      "missingPart": "{part}: {n}",
+      "part": {
+        "forward": "courier charge out",
+        "return": "courier charge back",
+        "packaging": "packaging",
+        "handling": "handling",
+        "adShare": "ad share"
+      },
+      "by": {
+        "district": "By district",
+        "campaign": "By campaign",
+        "product": "By product",
+        "courier": "By courier",
+        "reason": "By reason"
+      },
+      "none": {
+        "district": "No district known",
+        "campaign": "No campaign",
+        "product": "No product",
+        "courier": "No courier",
+        "reason": "No reason recorded"
+      },
+      "col": {
+        "name": "Name",
+        "parcels": "Parcels",
+        "cost": "Cost"
+      },
+      "empty": "No real parcel came back in this period.",
+      "incomplete": "a cost is missing",
+      "productNote": "A parcel with several products counts under each, its cost split evenly, so the product rows still add up to the total."
+    },
+    "estimateNote": "The saved cost is an estimate: the stopped orders times the average real cost of a returned parcel in this period (only parcels whose cost is complete), times the share of caught orders that were refused once they reached the door. “Up to” assumes every stopped order would have come back.",
+    "cut": {
+      "orders": "More than {n} caught orders in this period: the figures cover the newest {n}. Pick a shorter period, or raise the limit below.",
+      "parcels": "More than {n} returned parcels in this period: the cost book covers the newest {n}. Pick a shorter period, or raise the limit below."
+    },
+    "card": {
+      "h": "Report settings",
+      "d": "How many days the report shows when no dates are picked, and the most orders and parcels one report reads.",
+      "days": "Days shown by default",
+      "daysHelp": "1 to 366 days, today included (default: 30).",
+      "maxRows": "Most orders and parcels one report reads",
+      "maxRowsHelp": "100 to 20,000 (default: 5,000). Past it the page says the figures are cut short."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "discard": "Discard",
+    "unsaved": "Unsaved changes",
+    "readOnly": "Only someone who may change settings can change this.",
+    "pairHelp": "",
+    "err": {
+      "STALE": "Someone else changed these settings in the meantime. The card shows theirs now; change it again if you need to.",
+      "INVALID_INPUT": "Please check: {fields}.",
+      "FORBIDDEN": "You may not change these settings.",
+      "forbidden": "You may not change these settings.",
+      "unauthorized": "Please sign in again.",
+      "network": "No connection. Nothing was saved; try again.",
+      "other": "Something went wrong. Nothing was saved; try again."
+    }
+  }
+}

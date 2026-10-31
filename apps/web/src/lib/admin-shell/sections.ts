@@ -276,6 +276,12 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/server', perm: 'system.read', keys: ['server'] },
         ],
       },
+      // S06 · PR 164 — Fraud & RTO: what the risk steps caught, what was wrong, the cost probably saved, the RTO cost book.
+      {
+        id: 'fraud',
+        guide: 'analytics',
+        pages: [{ href: '/admin/reports/fraud', perm: 'risk.report', keys: ['reportsFraud'] }],
+      },
     ],
   },
   { id: 'ai', icon: 'spark', group: 'business', base: '/admin/ai', tabs: [], ownerOnly: true, guide: 'ai' },
