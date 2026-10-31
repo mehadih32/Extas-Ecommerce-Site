@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-31 22:42 (Asia/Dhaka)
+# Smoke test · 2026-11-01 02:32 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (260টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `0be4a0df90ec` · after deploy · result **PASS** (260 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `684e993d832c` · after deploy · result **PASS** (260 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -72,7 +72,7 @@ Site: https://new.extas.com.bd · commit `0be4a0df90ec` · after deploy · resul
 | `/admin/stock` | phone | 200 | `/admin/stock` | ok | — |
 | `/admin/support` | phone | 200 | `/admin/support` | ok | — |
 | `/admin/website/seo` | phone | 200 | `/admin/website/seo` | ok | — |
-| `/admin?home=1` | phone | 200 | `/admin` | ok | — |
+| `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/admin/products/queue` | phone | 200 | `/admin/products/queue` | ok | — |
 | `/admin/products/import` | phone | 200 | `/admin/products/import` | ok | — |
 | `/admin/products/audit` | phone | 200 | `/admin/products/audit` | ok | — |
@@ -135,7 +135,7 @@ Site: https://new.extas.com.bd · commit `0be4a0df90ec` · after deploy · resul
 | `/admin/website/seo/bengali` | phone | 200 | `/admin/website/seo/bengali` | ok | — |
 | `/admin/marketing/tracking` | phone | 200 | `/admin/marketing/tracking` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
-| `/admin?home=1` | phone | 200 | `/admin` | ok | — |
+| `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
 | `/bn` | desktop | 200 | `/bn` | ok | [picture](bn-desktop.jpg) |
 | `/checkout` | desktop | 200 | `/checkout` | ok | [picture](checkout-desktop.jpg) |
@@ -202,7 +202,7 @@ Site: https://new.extas.com.bd · commit `0be4a0df90ec` · after deploy · resul
 | `/admin/stock` | desktop | 200 | `/admin/stock` | ok | — |
 | `/admin/support` | desktop | 200 | `/admin/support` | ok | — |
 | `/admin/website/seo` | desktop | 200 | `/admin/website/seo` | ok | — |
-| `/admin?home=1` | desktop | 200 | `/admin` | ok | — |
+| `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 | `/admin/products/queue` | desktop | 200 | `/admin/products/queue` | ok | — |
 | `/admin/products/import` | desktop | 200 | `/admin/products/import` | ok | — |
 | `/admin/products/audit` | desktop | 200 | `/admin/products/audit` | ok | — |
@@ -265,6 +265,6 @@ Site: https://new.extas.com.bd · commit `0be4a0df90ec` · after deploy · resul
 | `/admin/website/seo/bengali` | desktop | 200 | `/admin/website/seo/bengali` | ok | — |
 | `/admin/marketing/tracking` | desktop | 200 | `/admin/marketing/tracking` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
-| `/admin?home=1` | desktop | 200 | `/admin` | ok | — |
+| `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
 Database (PR 139): ok: 30 tables append-only; the app connects as extas_app.
