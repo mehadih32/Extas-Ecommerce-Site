@@ -50,10 +50,28 @@
 	respond @internal 404
 }
 
+# R2 security review (m1, PR 378): no request body bigger than the server.conf limits reaches the app. Next's proxy
+# holds a whole body in memory (up to its 200 MB, apps/web/next.config.ts) before a route can refuse it, so a few dozen
+# large anonymous POSTs could run an app copy out of memory. Caddy answers 413 instead: CADDY_UPLOAD_MAX_MB on the
+# admin's file uploads (media library, product photos, packing photo, support files), CADDY_BODY_MAX_MB everywhere else.
+# The numbers come from the container's environment (compose.yml, stack.env); the fallbacks are server.conf's defaults,
+# so a Caddy started before the setup wrote them still loads.
+(body_limits) {
+	@upload_body path /api/admin/media /api/admin/media/* /api/admin/packing/orders/* /api/admin/support /api/admin/support/*
+	request_body @upload_body {
+		max_size {$CADDY_UPLOAD_MAX_MB:30}MB
+	}
+	@capped_body not path /api/admin/media /api/admin/media/* /api/admin/packing/orders/* /api/admin/support /api/admin/support/*
+	request_body @capped_body {
+		max_size {$CADDY_BODY_MAX_MB:25}MB
+	}
+}
+
 # PR 403: what every public host shares — the headers, the cache rules, compression, the certificate and the log.
 (extas_site) {
 	import security_headers
 	import cache_headers
+	import body_limits
 	encode zstd gzip
 	# PR 397: sites/tls.caddy (infra/server/bin/extas-origin-cert) names the Cloudflare Origin certificate once its pair
 	# is in the vault and checked, else Caddy's automatic certificate (Let's Encrypt, Caddy's own as the fallback).
