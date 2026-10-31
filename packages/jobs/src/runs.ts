@@ -28,6 +28,30 @@ export interface AttemptInput {
   queueJobId?: string | null;
   /** How old a worker's heartbeat may be before its RUNNING attempts count as lost. */
   staleSeconds: number;
+  /**
+   * R1 ops review (M10): the longest one attempt may run (`jobs.attemptTimeoutSeconds`; 0 = no limit). A job that never
+   * returns (a courier, payment or ERP call with no socket timeout) used to hold one of the worker's slots for good while
+   * its lock and the heartbeat stayed fresh; now the attempt fails with TIMED_OUT and the normal retry runs.
+   */
+  timeoutSeconds?: number;
+}
+
+/** The outcome of `run`, or a TIMED_OUT failure once `seconds` passed (0 or less: no limit). Never throws. */
+export async function withDeadline(run: () => Promise<JobOutcome>, seconds: number | undefined): Promise<JobOutcome> {
+  const attempt = run().catch((e: unknown): JobOutcome => ({ ok: false, error: errorLine(e), stats: {} }));
+  if (!seconds || seconds <= 0) return attempt;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<JobOutcome>((resolve) => {
+    timer = setTimeout(
+      () => resolve({ ok: false, error: `TIMED_OUT: the job did not finish within ${seconds} seconds (jobs.attemptTimeoutSeconds); it is tried again`, stats: {} }),
+      seconds * 1000,
+    );
+  });
+  try {
+    return await Promise.race([attempt, late]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export type AttemptResult =
@@ -112,12 +136,7 @@ export async function runAttempt(deps: JobDeps, input: AttemptInput): Promise<At
   const c = await claim(deps, { ...input, payload }, storeId);
   if (!c.go) return { kind: 'skipped', runId: c.runId, reason: c.reason };
 
-  let outcome: JobOutcome;
-  try {
-    outcome = await input.def.run(deps, payload);
-  } catch (e) {
-    outcome = { ok: false, error: errorLine(e), stats: {} };
-  }
+  const outcome = await withDeadline(() => input.def.run(deps, payload), input.timeoutSeconds);
   const now = nowOf(deps);
   // The row is closed only while it is still RUNNING: when this worker was given up as lost meanwhile (its row says
   // WORKER_LOST and another attempt took over), a late finish never rewrites that history.

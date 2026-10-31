@@ -10,6 +10,7 @@ import { paymentsPlanner } from './payments';
 import { RETURNS_ERP_JOB, returnsErpPlanner } from './returns-erp';
 import { searchPlanner, searchRunKey } from './search';
 import { errorLine, MAX_ERROR } from './context';
+import { withDeadline } from './runs';
 import { LeaderLock, type LockStore } from './leader';
 import { dueRuns, runKey, seriesKey, slotOf, type TimetableEntry } from './scheduler';
 
@@ -256,7 +257,7 @@ describe('PR 6 · one scheduler leader', () => {
   });
   it('every jobs setting is an installation setting in the system group, never owner data', () => {
     const keys = Object.keys(registry).filter((k) => k.startsWith('jobs.'));
-    expect(keys.length).toBe(14);
+    expect(keys.length).toBe(15); // R1 ops review (M10): + jobs.attemptTimeoutSeconds
     for (const k of keys) {
       const s = registry[k as keyof typeof registry];
       expect([k, s.scope, s.group, s.isOwnerData]).toEqual([k, 'installation', 'system', false]);
@@ -276,5 +277,28 @@ describe('CN-028 · PR 612–614 · the returns turn with the ERP', () => {
     const planned = await returnsErpPlanner(deps, at);
     expect(planned.map((p) => p.key)).toEqual([`orders.returns.erp/2/${slotOf(at.getTime(), 3_600_000)}`]);
     expect(planned[0]!.payload).toEqual({ storeId: 2 });
+  });
+});
+
+describe('R1 ops review (M10) · one attempt has a deadline', () => {
+  it('a job that never returns fails with TIMED_OUT after the setting, and frees its slot', async () => {
+    const r = await withDeadline(() => new Promise(() => {}), 0.05);
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.error).toMatch(/^TIMED_OUT: .*0\.05 seconds \(jobs\.attemptTimeoutSeconds\)/);
+  });
+  it('a job that finishes in time keeps its own outcome; a throw is a failure, never an exception', async () => {
+    expect(await withDeadline(async () => ({ ok: true, stats: { n: 1 } }), 5)).toEqual({ ok: true, stats: { n: 1 } });
+    const thrown = await withDeadline(async () => { throw new Error('courier down'); }, 5);
+    expect(thrown).toEqual({ ok: false, error: 'courier down', stats: {} });
+  });
+  it('0 means no limit', async () => {
+    const slow = withDeadline(() => new Promise((res) => setTimeout(() => res({ ok: true, stats: {} }), 30)), 0);
+    expect(await slow).toEqual({ ok: true, stats: {} });
+  });
+  it('the setting exists, with a default and 0 allowed', () => {
+    const d = registry['jobs.attemptTimeoutSeconds'];
+    expect(d.default).toBe(1800);
+    expect(d.schema.safeParse(0).success).toBe(true);
+    expect(d.schema.safeParse(-1).success).toBe(false);
   });
 });
