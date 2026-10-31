@@ -88,7 +88,8 @@
     "healthSpeed": "Speed",
     "healthSmoke": "Smoke runs",
     "healthHistory": "Run history",
-    "healthFixes": "Fixes to approve"
+    "healthFixes": "Fixes to approve",
+    "aiAudit": "Checklist audit"
   },
   "login": {
     "metaTitle": "Admin sign-in",

@@ -52,7 +52,10 @@
         "ok": "The home page answered in {ms} ms."
       },
       "audit": {
-        "notYet": "Not running yet. The site audit's checklist runner fills this line."
+        "notYet": "No checklist audit yet. Start one on AI › Checklist audit.",
+        "failed": "{failed} of {chosen} checklist groups failed. {first}",
+        "ok": "All {chosen} checklist groups passed.",
+        "okAgents": "{passed} checklist groups passed, none failed; {agents} wait for the audit agents."
       },
       "smoke": {
         "never": "No smoke test has run yet.",
@@ -352,7 +355,8 @@
       "firstWeek": "first week",
       "scheduled": "on schedule",
       "runNow": "Run now",
-      "other": "{kind}"
+      "other": "{kind}",
+      "audit": "checklist audit"
     },
     "ok": "Passed",
     "fail": "Failed",
@@ -575,6 +579,95 @@
       "proposalsHelp": "Off: nothing is proposed and nothing waits. On: every proposal waits here for your OK.",
       "expireDays": "Days before an undecided proposal expires",
       "expireDaysHelp": "0 = never. An expired one changes nothing and can be proposed again."
+    }
+  },
+  "aud": {
+    "metaTitle": "Checklist audit",
+    "title": "Checklist audit",
+    "sub": "The full e-commerce checklist, group by group, and the runner that checks it on the live preview.",
+    "rule": "An audit only checks and reports. Any fix waits for your OK on Fixes to approve; nothing is changed by itself.",
+    "off": "The schedule is off. An audit runs only when someone presses \"Run now\".",
+    "agentsMock": "The audit agents (AI) are a practice copy until the AI key is on Keys & connections: groups that no script covers wait for them.",
+    "fixesLink": "Fixes to approve",
+    "kpi": {
+      "points": "Checklist points",
+      "pointsFoot": "in {groups} groups",
+      "last": "Last audit",
+      "lastNone": "None yet",
+      "ok": "Passed",
+      "fail": "Failed",
+      "failed": "Groups failed",
+      "failedFoot": "in the last audit",
+      "agents": "Wait for agents",
+      "agentsFoot": "{asked} agents asked"
+    },
+    "run": {
+      "run": "Run now",
+      "running": "Asking…",
+      "asked": "Asked. The server starts the audit within the hour.",
+      "waiting": "Asked. The server starts the audit within the hour.",
+      "noPerm": "Only someone who can change settings can start an audit."
+    },
+    "groupsH": "The checklist",
+    "col": {
+      "group": "Group",
+      "points": "Points",
+      "marks": "Last QA round",
+      "result": "Last audit"
+    },
+    "marks": "{pass} pass · {fail} fail · {other} other",
+    "result": {
+      "pass": "Passed",
+      "fail": "Failed",
+      "agents": "Waits for agents",
+      "notChosen": "Not chosen",
+      "none": "—"
+    },
+    "showPoints": "Show the {n} points",
+    "mark": {
+      "pass": "pass",
+      "fail": "fail",
+      "ownerData": "your data",
+      "decision": "your decision",
+      "notRun": "not run",
+      "notTestable": "real device or backend"
+    },
+    "problemsH": "Problems in the last audit",
+    "runsH": "Audits kept",
+    "runsNone": "No audit has run yet.",
+    "runLine": "{at} · {kind} · {passed} passed, {failed} failed, {agents} wait for agents",
+    "kind": {
+      "scheduled": "on schedule",
+      "run now": "\"Run now\""
+    },
+    "card": {
+      "h": "The runner",
+      "d": "When the checklist is audited, which groups, how many agents, and whether the report goes to your Telegram. The server reads a change within a few minutes.",
+      "readOnly": "Only someone who can change settings can change this.",
+      "enabled": "Audit on a schedule",
+      "enabledHelp": "Off: only \"Run now\" starts an audit.",
+      "every": "How often",
+      "daily": "Every day",
+      "weekly": "Every week",
+      "weekday": "Day of the week (weekly)",
+      "hour": "Hour (0-23, the shop's time)",
+      "hourHelp": "A quiet hour is best; an audit takes about half an hour.",
+      "groups": "Groups to audit (all ticked = all)",
+      "agents": "Audit agents (1-3)",
+      "agentsHelp": "How many agents judge the points no script covers. A practice copy until the AI key is there.",
+      "telegram": "Send the report to Telegram",
+      "telegramHelp": "The result and the problem list, after every audit.",
+      "keepRuns": "Audits kept for comparison",
+      "keepRunsHelp": "From 1 to 52."
+    },
+    "day": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "7": "Sunday"
     }
   }
 }

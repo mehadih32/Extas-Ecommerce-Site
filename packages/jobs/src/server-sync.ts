@@ -298,7 +298,31 @@ export const runAlertsPart: ServerFilePart = {
   },
 };
 
-export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart, firstWeekPart, journeysSettingsPart, speedSettingsPart, runAlertsPart];
+/**
+ * PR 570 (B7.3): the checklist audit's schedule, groups and agents, for infra/deploy/audit.sh (AI › Checklist audit).
+ * Built from the setting alone. AUDIT_REQUESTED is the "Run now" press in seconds since 1970 (empty when never pressed).
+ */
+export const auditSettingsPart: ServerFilePart = {
+  file: 'audit-settings.env',
+  watch: async (ctx) => settingOr(ctx, 'health.audit', registry['health.audit'].default),
+  async build(ctx) {
+    const a = await settingOr(ctx, 'health.audit', registry['health.audit'].default);
+    const asked = a.runRequestedAt ? Math.floor(Date.parse(a.runRequestedAt) / 1000) : NaN;
+    return envLines({
+      AUDIT_ON: yesNo(a.enabled),
+      AUDIT_EVERY: a.every,
+      AUDIT_HOUR: String(a.hour),
+      AUDIT_WEEKDAY: String(a.weekday),
+      AUDIT_GROUPS: a.groups.join(','),
+      AUDIT_AGENTS: String(a.agents),
+      AUDIT_TELEGRAM: yesNo(a.telegram),
+      AUDIT_KEEP: String(a.keepRuns),
+      AUDIT_REQUESTED: Number.isFinite(asked) ? String(asked) : '',
+    });
+  },
+};
+
+export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart, firstWeekPart, journeysSettingsPart, speedSettingsPart, runAlertsPart, auditSettingsPart];
 
 export interface SyncResult {
   fingerprint: string;

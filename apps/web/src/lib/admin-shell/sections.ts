@@ -310,7 +310,16 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
     ],
   },
-  { id: 'ai', icon: 'spark', group: 'business', base: '/admin/ai', tabs: [], ownerOnly: true, guide: 'ai' },
+  {
+    id: 'ai',
+    icon: 'spark',
+    group: 'business',
+    base: '/admin/ai',
+    // S21 · PR 570 — B7.3 / AIC-05 Checklist audit: the e-commerce checklist in the backend and its runner (owner only).
+    tabs: [{ id: 'audit', guide: 'ai', pages: [{ href: '/admin/ai/audit', perm: 'health.read', keys: ['aiAudit'] }] }],
+    ownerOnly: true,
+    guide: 'ai',
+  },
   {
     id: 'settings',
     icon: 'sliders',

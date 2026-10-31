@@ -41,6 +41,8 @@ if [ -f "$SEC/journeys-settings.env" ]; then
   . "$SEC/journeys-settings.env"
 fi
 [[ "$JOURNEYS_KEEP" =~ ^[0-9]+$ ]] && [ "$JOURNEYS_KEEP" -ge 1 ] || JOURNEYS_KEEP=1
+# PR 570: the checklist audit (audit.sh) runs the journeys with every UI check on, whatever the owner's UI switches.
+[[ "${AUDIT_UI:-}" =~ ^[a-z,]+$ ]] && JOURNEYS_UI="$AUDIT_UI"
 
 now="$(date +%s)"
 last="$(stat -c %Y "$STATE/journeys.json" 2>/dev/null || echo 0)"

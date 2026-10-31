@@ -1,5 +1,5 @@
 // S21 · PR 419 — the run history's words for a run's kind ("after deploy", "nightly", …) as the tools write them.
-const KINDS: Record<string, string> = { 'after deploy': 'deploy', nightly: 'nightly', 'first-week': 'firstWeek', scheduled: 'scheduled', 'run now': 'runNow' };
+const KINDS: Record<string, string> = { 'after deploy': 'deploy', nightly: 'nightly', 'first-week': 'firstWeek', scheduled: 'scheduled', 'run now': 'runNow', audit: 'audit' };
 
 /** The message key under `hst.kind` for a kind (`other` keeps the tool's own word). */
 export const kindKey = (kind: string): string => KINDS[kind] ?? 'other';

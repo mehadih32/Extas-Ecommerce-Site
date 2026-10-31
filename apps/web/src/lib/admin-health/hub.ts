@@ -64,6 +64,18 @@ export interface JourneysResult {
   ui?: { kinds?: string[]; issues?: number } | null;
 }
 
+/** PR 570: audit.json (infra/deploy/audit.sh, tools/audit-report.mjs): the last checklist audit's summary. */
+export interface AuditResult {
+  ok?: boolean;
+  at?: string;
+  chosen?: number;
+  points?: number;
+  passedGroups?: number;
+  failedGroups?: number;
+  agentGroups?: number;
+  problems?: string[];
+}
+
 export interface HubInput {
   now: Date;
   limits: HealthHubSettings;
@@ -76,6 +88,8 @@ export interface HubInput {
   /** PR 414: the last journeys run and their schedule. */
   journeys: StateFile<JourneysResult> | null;
   schedule: HealthJourneysSettings;
+  /** PR 570: the last checklist audit (none yet: grey). */
+  audit?: StateFile<AuditResult> | null;
 }
 
 /** PR 423: the open customer problems (lib/admin-problems/service.ts `openProblemCounts`). */
@@ -100,6 +114,8 @@ export const SERVER_PAGE = '/admin/server';
 export const SPEED_PAGE = '/admin/reports/health/speed';
 /** PR 418: the smoke line opens Reports › Site health › Smoke runs. */
 export const SMOKE_PAGE = '/admin/reports/health/smoke';
+/** PR 570: the checklist audit's page (AI section). */
+export const AUDIT_PAGE = '/admin/ai/audit';
 
 const minutesSince = (now: Date, t: Date) => Math.max(0, Math.floor((now.getTime() - t.getTime()) / 60_000));
 const iso = (f: StateFile<unknown> | null) => (f ? f.writtenAt.toISOString() : null);
@@ -167,13 +183,23 @@ function problemsLine(i: HubInput): HubLine {
   return { ...base, state: 'ok', reason: open ? 'minor' : 'none', vars: { open } };
 }
 
+/** PR 570: the last checklist audit — red when a chosen group failed, green when none did (some may wait for the agents). */
+function auditLine(i: HubInput): HubLine {
+  const a = i.audit ?? null;
+  const base = { id: 'audit' as const, at: iso(a), href: AUDIT_PAGE };
+  if (!a) return { ...base, state: 'off', reason: 'notYet', vars: {} };
+  const r = a.data;
+  if (!r.ok) return { ...base, state: 'bad', reason: 'failed', vars: { failed: r.failedGroups ?? 0, chosen: r.chosen ?? 0, first: (r.problems?.[0] ?? '').slice(0, 160) } };
+  return { ...base, state: 'ok', reason: r.agentGroups ? 'okAgents' : 'ok', vars: { passed: r.passedGroups ?? 0, chosen: r.chosen ?? 0, agents: r.agentGroups ?? 0 } };
+}
+
 /** The six lines, in the hub's order. The site audit (PR 570) is grey until it reports. */
 export function hubLines(i: HubInput): HubLine[] {
   return [
     problemsLine(i),
     serverLine(i),
     speedLine(i),
-    { id: 'audit', state: 'off', reason: 'notYet', vars: {}, at: null, href: null },
+    auditLine(i),
     smokeLine(i),
     journeysLine(i),
   ];

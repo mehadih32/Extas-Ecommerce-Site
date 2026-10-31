@@ -17,7 +17,7 @@ import { workerStatus } from '@extas/jobs';
 import { healthHubSchema, healthJourneysSchema, healthUiChecksSchema, INSTALLATION, type HealthHubSettings, type HealthJourneysSettings, type HealthUiChecksSettings } from '@extas/settings';
 import { openProblemCounts } from '../admin-problems/service';
 import type { AppResolver } from '../settings';
-import { hubLines, hubOverall, runAsked, type HubLine, type HubLineState, type JourneysResult, type K6Baseline, type MonitorHealth, type SmokeResult, type StateFile } from './hub';
+import { hubLines, hubOverall, runAsked, type AuditResult, type HubLine, type HubLineState, type JourneysResult, type K6Baseline, type MonitorHealth, type SmokeResult, type StateFile } from './hub';
 
 export interface HealthDeps {
   db: PrismaClient;
@@ -145,7 +145,7 @@ export async function hubView(deps: HealthDeps, who: HealthWho): Promise<HubView
   await requirePermission(deps.db, who.actor, 'health.read', { storeId: S });
   const now = deps.now?.() ?? new Date();
   const dir = deps.stateDir === undefined ? process.env.EXTAS_STATE_DIR || null : deps.stateDir;
-  const [limits, schedule, uiChecks, health, smoke, k6, journeys, runs, worker, connected, problems] = await Promise.all([
+  const [limits, schedule, uiChecks, health, smoke, k6, journeys, runs, worker, connected, problems, audit] = await Promise.all([
     deps.resolver.value('health.hub'),
     deps.resolver.value('health.journeys'),
     deps.resolver.value('health.uiChecks'),
@@ -157,8 +157,10 @@ export async function hubView(deps: HealthDeps, who: HealthWho): Promise<HubView
     workerStatus({ db: deps.db, settings: deps.resolver, now: () => now }),
     dir ? stat(dir).then(() => true, () => false) : Promise.resolve(false),
     openProblemCounts(deps),
+    // PR 570: the last checklist audit (infra/deploy/audit.sh)
+    stateFile<AuditResult>(dir, 'audit.json'),
   ]);
-  const lines = hubLines({ now, limits, health, smoke, k6, worker: worker.state, journeys, schedule, problems });
+  const lines = hubLines({ now, limits, health, smoke, k6, worker: worker.state, journeys, schedule, problems, audit });
   return {
     overall: hubOverall(lines),
     lines,
