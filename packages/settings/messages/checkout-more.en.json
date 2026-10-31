@@ -17,6 +17,12 @@
     "advance": {
       "label": "Checkout advance (Parameter for Checkout)",
       "help": "The one switch of the advance-payment checkout mode and the most layers its panel takes. Off: every customer sees the checkout as before. On: a customer one of your layers flags — and only once he has filled in his name, phone and address — sees bKash, Nagad and card without Cash on Delivery, with one plain line saying what to pay now (the delivery charge, a part or the full amount, as his layer asks); he never sees a score or a reason. The order waits for that advance and comes back to the queue once it is paid; it is never cancelled or blocked by itself. No price, charge or discount changes. The layers are set on Orders › Risk rules › Checkout advance."
+    },
+    "money": {
+      "roundingStepMinor": {
+        "label": "Rounding of percentage cuts",
+        "help": "A percentage off (a percent code, the reward for paying ahead) is rounded to this step, in the customer's favour, so every total is an amount a rider can collect. 1 taka (whole taka) by default; 5 or 10 taka round further; \"not rounded\" keeps paisa."
+      }
     }
   },
   "orders": {

@@ -185,6 +185,22 @@ export const checkoutMoreSettings = {
     helpKey: 'thanks.look.help',
     sortOrder: 963,
   }),
+  // Review R1 (M5, registry version 120): a percentage cut (a percent code, the prepaid reward's percent) is rounded to
+  // this step of money, in the customer's favour, so every total is an amount a rider can collect (100 = whole taka;
+  // 1 = not rounded). The options are fixed steps; the owner picks one.
+  'checkout.money.roundingStepMinor': setting({
+    schema: z.union([z.literal(1), z.literal(100), z.literal(500), z.literal(1000)]),
+    default: 100,
+    scope: 'store',
+    valueType: 'INT',
+    group: 'checkout',
+    labelKey: 'checkout.money.roundingStepMinor.label',
+    helpKey: 'checkout.money.roundingStepMinor.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 965,
+    version: 120,
+  }),
   'checkout.gift': setting({
     ...json,
     group: 'checkout',

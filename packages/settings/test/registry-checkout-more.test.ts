@@ -9,7 +9,8 @@ describe('checkout-more settings (v34)', () => {
   it('every key is in the registry at version 34, never owner data, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(checkoutMoreSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(34);
+      // review R1 (M5): the percent-cut rounding came later (registry version 120)
+      expect(spec.version, key).toBe(key === 'checkout.money.roundingStepMinor' ? 120 : 34);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {
@@ -53,5 +54,12 @@ describe('checkout-more settings (v34)', () => {
     expect(giftSchema.safeParse({ ...d, advance: { ...d.advance, type: 'half' } }).success).toBe(false);
     expect(giftSchema.safeParse({ ...d, advance: { ...d.advance, percent: 101 } }).success).toBe(false);
     expect(giftSchema.safeParse({ ...d, noteMaxChars: 0, deliverAfterMaxDays: 0 }).success).toBe(true);
+  });
+
+  it('review R1 (M5): percentage cuts round to whole taka by default; the owner picks one of the fixed steps', () => {
+    const r = registry['checkout.money.roundingStepMinor'];
+    expect(r.default).toBe(100);
+    for (const ok of [1, 100, 500, 1000]) expect(r.schema.safeParse(ok).success).toBe(true);
+    for (const bad of [0, 50, 99, 101, 1.5]) expect(r.schema.safeParse(bad).success).toBe(false);
   });
 });
