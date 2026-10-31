@@ -1,4 +1,4 @@
-// Review R1 (security m2) — PR 292: the WhatsApp webhook reads a body only up to their limit. A
+// Review R1 (security m2) — PR 292 / PR 426: the WhatsApp and Messenger webhooks read a body only up to their limit. A
 // chunked body has no Content-Length, so the header check alone never stops it: the body is read as a stream and a
 // longer one is 413 before anything is verified or recorded. The deps and the limit are made up here.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -17,8 +17,18 @@ vi.mock('@extas/messages', async (importOriginal) => ({
     return { status: 200, code: 'OK' };
   },
 }));
+vi.mock('@/lib/support-connect', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/support-connect')>()),
+  messengerWebhookMaxBytes: async () => 64,
+  supportConnections: async () => ({}),
+  receiveMessengerWebhook: async (_deps: unknown, input: { rawBody: string }) => {
+    seen.messenger.push(input.rawBody);
+    return { status: 200, code: 'OK' };
+  },
+}));
 
 const whatsapp = await import('@/app/api/whatsapp/webhook/route');
+const messenger = await import('@/app/api/messenger/webhook/route');
 
 /** A POST whose body comes in chunks, with no Content-Length (like a chunked upload). */
 function chunked(path: string, chunks: string[]): Request {
@@ -39,6 +49,7 @@ beforeEach(() => {
 
 describe.each([
   ['whatsapp', whatsapp.POST, '/api/whatsapp/webhook'],
+  ['messenger', messenger.POST, '/api/messenger/webhook'],
 ] as const)('%s webhook body limit', (name, POST, path) => {
   it('refuses a chunked body over the limit with 413, before it is verified', async () => {
     const r = await POST(chunked(path, ['x'.repeat(40), 'y'.repeat(40)]));
