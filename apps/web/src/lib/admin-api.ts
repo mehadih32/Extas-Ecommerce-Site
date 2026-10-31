@@ -52,8 +52,9 @@ import {
   type AdminDeps,
 } from './admin-auth';
 import { adminSettingsResponse } from './settings';
+import { noteBotSignals } from './security/bot-check';
 
-const str = (v: unknown) => (typeof v === 'string' ? v : '');
+const str =(v: unknown) => (typeof v === 'string' ? v : '');
 const isResponse = (v: unknown): v is Response => v instanceof Response;
 
 function loginAnswer(r: LoginResult, now: Date): Response {
@@ -84,6 +85,8 @@ export async function loginHandler(request: Request, deps: AdminDeps | null): Pr
   if (!sameOrigin(request)) return fail(403, 'cross-site-request');
   try {
     const b = await body(request);
+    // PR 379: the quiet bot check on the staff sign-in (a note in the security log, never a refusal)
+    await noteBotSignals({ db: deps.db, settings: deps.resolver }, { form: 'adminSignIn', sent: b.human, storeId: null, ip: requestContext(request).ip ?? null });
     const r = await loginStaff(await staffDeps(deps), { email: str(b.email), password: str(b.password) }, requestContext(request));
     return loginAnswer(r, nowOf(deps));
   } catch (e) {

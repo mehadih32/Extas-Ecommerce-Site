@@ -3,8 +3,9 @@
 // it → the person's own password when the first one must be changed → the page they came for. Passwords live only in
 // this form's memory and are cleared as soon as they are used.
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { t, type Dict } from '@/lib/i18n';
+import { humanSignals, watchHumanInput } from '@/lib/security/human-signals';
 import { call, errorText, type Answer } from './api';
 import { EmailField, emailMissingAt } from './EmailField';
 
@@ -16,6 +17,7 @@ interface Task {
 export function LoginForm({ dict, next, initialStep, locale, timeZone, disabled }: { dict: Dict; next: string; initialStep: 'login' | 'password'; locale: string; timeZone: string; disabled: boolean }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(initialStep);
+  useEffect(() => watchHumanInput(), []); // PR 379: the quiet bot check (counts only)
   const [email, setEmail] = useState('');
   const [emailLeft, setEmailLeft] = useState(false);
   const [password, setPassword] = useState('');
@@ -78,7 +80,7 @@ export function LoginForm({ dict, next, initialStep, locale, timeZone, disabled 
     }
     const used = password;
     setPassword('');
-    await answer(await call('POST', '/api/admin/auth/login', { email: email.trim(), password: used }), used);
+    await answer(await call('POST', '/api/admin/auth/login', { email: email.trim(), password: used, human: humanSignals() }), used);
   });
   const onCode = run(async () => {
     const used = code.trim();

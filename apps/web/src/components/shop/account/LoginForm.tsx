@@ -6,6 +6,7 @@
 // message the shop on WhatsApp if nothing arrives — the code itself is never shown on the page.
 import { useEffect, useRef, useState } from 'react';
 import { phoneNormalizeBD } from '@/lib/phone-bd';
+import { humanSignals, watchHumanInput } from '@/lib/security/human-signals';
 import { Icon, WaGlyph } from '../Icon';
 
 export type LoginWords = Record<string, string>;
@@ -15,7 +16,8 @@ type Step = { kind: 'phone' } | { kind: 'code'; phone: string; length: number; m
 const fill = (t: string, v: Record<string, string | number>) => t.replace(/\{(\w+)\}/g, (m, k: string) => (k in v ? String(v[k]) : m));
 
 async function post(action: string, payload: Record<string, unknown>): Promise<{ status: number; data: Record<string, unknown> }> {
-  const res = await fetch(`/api/account/${action}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+  // PR 379: the quiet bot check's signals ride along (counts only; nothing is shown or asked)
+  const res = await fetch(`/api/account/${action}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...payload, human: humanSignals() }) });
   let data: Record<string, unknown> = {};
   try {
     data = (await res.json()) as Record<string, unknown>;
@@ -45,6 +47,7 @@ export function LoginForm({ words, lang, next, wa, passwordOn }: { words: LoginW
   useEffect(() => {
     if (step.kind === 'code') codeRef.current?.focus();
   }, [step.kind]);
+  useEffect(() => watchHumanInput(), []);
 
   const refusal = (data: Record<string, unknown>, status: number): { text: string; field: 'phone' | 'code' | 'password' | null } => {
     const code = String(data.error ?? '');

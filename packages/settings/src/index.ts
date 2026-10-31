@@ -72,4 +72,6 @@ export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).
 export * from './registry-web-security';
+// S18 · PR 379 — the quiet bot check (registry-bot-check.ts, version 74).
+export * from './registry-bot-check';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

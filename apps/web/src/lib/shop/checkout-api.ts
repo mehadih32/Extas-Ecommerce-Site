@@ -11,6 +11,7 @@ import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
+import { noteBotSignals } from '../security/bot-check';
 
 /** The largest request body the checkout takes (the delivery details, a note, the choices). */
 export const CHECKOUT_BODY_MAX = 8_192;
@@ -174,15 +175,18 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
   const stop = guard(request, deps, ['POST']);
   if (stop || !deps) return stop!;
   try {
-    const b = await body(request);
+    // PR 379: the page's quiet bot signals travel beside the order, never inside it (the order's own form is strict)
+    const { human, ...b } = await body(request);
     const [{ visitor }, customerId] = await Promise.all([bagOfRequest(request, deps), customerOf(request, deps)]);
     if (!visitor) return fail(409, 'EMPTY');
     // PR 159: the device id this browser already has, or a new random one while the owner keeps device ids
     const capture = await deps.checkout.settings.value('risk.capture', { storeId: deps.storeId });
     const had = readCookie(request, DEVICE_COOKIE);
     const device = capture.device ? (had && visitorIdSchema.safeParse(had).success ? had : crypto.randomUUID()) : null;
-    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip: requestContext(request).ip ?? null, deviceId: device, input: b });
+    const ip = requestContext(request).ip ?? null;
+    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip, deviceId: device, input: b });
     if (!r.replay) {
+      await noteBotSignals({ db: deps.checkout.db, settings: deps.checkout.settings }, { form: 'checkout', sent: human, storeId: deps.storeId, ip });
       await linkToIdentity(deps, r.orderId);
       await screenForDuplicates(deps, r.orderId);
       await checkTwoSizes(deps, r.orderId);

@@ -67,6 +67,7 @@ import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
 import { webSecuritySettings } from './registry-web-security';
+import { botCheckSettings } from './registry-bot-check';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1268,6 +1269,8 @@ export const registry = {
   ...seoReachSettings,
   // ---- S18 · PR 378 · the page protection policy (report only by default), the outside addresses pages may use, the per-address request limits (observe by default) (registry-web-security.ts, version 73). ----
   ...webSecuritySettings,
+  // ---- S18 · PR 379 · the quiet bot check on sign-in and checkout: observe only, a note in the security log, never a refusal (registry-bot-check.ts, version 74). ----
+  ...botCheckSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
