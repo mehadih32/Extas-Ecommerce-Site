@@ -92,6 +92,21 @@ describe.skipIf(!HAS_TEST_DB)('PR 130 · signing in (SIM-F-039)', () => {
     expect(await code(verifyCode(f.deps(), { storeId: f.A, phone: P, code: second }))).toBe('WRONG_CODE');
   });
 
+  it('review R2 (security m2): parallel guesses are compared at most maxTries times between them; then the code is worn out', async () => {
+    f.advance(61_000);
+    await requestCode(f.deps(), { storeId: f.A, phone: P, purpose: 'LOGIN', ...SHOP });
+    const good = f.lastCode(P)!;
+    const bad = good === '000000' ? '111111' : '000000';
+    const answers = await Promise.all(Array.from({ length: 20 }, () => data(verifyCode(f.deps(), { storeId: f.A, phone: P, code: bad }))));
+    // each try taken has its own count: 4, 3, 2, 1 left once each, and the rest (with the fifth try) none left
+    const left = answers.map((a) => (a as { left: number }).left).sort((x, y) => y - x);
+    expect(left).toEqual([4, 3, 2, 1, ...Array(16).fill(0)]);
+    const ch = await f.t.prisma.otpChallenge.findFirstOrThrow({ where: { phone: P, consumedAt: null }, orderBy: { createdAt: 'desc' } });
+    expect(ch.attempts).toBe(5);
+    // the right code now finds no try left
+    expect(await code(verifyCode(f.deps(), { storeId: f.A, phone: P, code: good }))).toBe('WRONG_CODE');
+  });
+
   it('rate limits: a wait between codes, so many per number and per address in an hour', async () => {
     f.overrides.set('account.code.limits', { length: 6, minutes: 10, maxTries: 5, resendSeconds: 60, perPhoneHour: 3, perIpHour: 4 });
     await requestCode(f.deps(), { storeId: f.A, phone: P, purpose: 'LOGIN', ...SHOP, ip: '192.0.2.20' });
