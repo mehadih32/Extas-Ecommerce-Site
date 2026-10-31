@@ -81,6 +81,7 @@
       },
       "money": {
         "books": "Books",
+        "overview": "Overview",
         "match": "Match",
         "differences": "Differences",
         "closes": "Closes",

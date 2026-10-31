@@ -81,6 +81,7 @@
       },
       "money": {
         "books": "হিসাবের খাতা",
+        "overview": "সারসংক্ষেপ",
         "match": "মেলানো",
         "differences": "গরমিল",
         "closes": "হিসাব বন্ধ",

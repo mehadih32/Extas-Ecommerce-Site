@@ -108,7 +108,9 @@ describe('the 14 sections', () => {
     expect(sectionHome(sectionById('money')!, OWNER)).toBe('/admin/money/books');
     expect(sectionHome(sectionById('money')!, viewer(['customers.read']))).toBe('/admin/money');
     // PR 285: the Customers section's front page is All customers
-    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);
+    // ~~expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);~~
+    // PR 342: /admin/money is Money → Overview now, so Money has no placeholder left.
+    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'reports', 'ai', 'settings']);
     expect(sectionHome(sectionById('customers')!, viewer(['customers.read']))).toBe('/admin/customers');
   });
 
