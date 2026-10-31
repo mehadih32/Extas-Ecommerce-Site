@@ -8386,19 +8386,21 @@ model ExpenseHead {
 
 /// @stage S16 · B3.8; PR 504 — a retail expense the owner enters (packaging, salary share, office, misc).
 model RetailExpense {
-  id          String      @id @default(uuid(7)) @db.Uuid
-  storeId     Int
-  store       Store       @relation(fields: [storeId], references: [id])
-  headId      String      @db.Uuid
-  head        ExpenseHead @relation(fields: [headId], references: [id])
-  amountMinor Int
-  date        DateTime    @db.Date
-  note        String?
-  enteredById String?     @db.Uuid
-  erpPushId   String?     @db.Uuid
-  archivedAt  DateTime?   @db.Timestamptz(3)
-  createdAt   DateTime    @default(now()) @db.Timestamptz(3)
-  updatedAt   DateTime    @updatedAt @db.Timestamptz(3)
+  id             String      @id @default(uuid(7)) @db.Uuid
+  storeId        Int
+  store          Store       @relation(fields: [storeId], references: [id])
+  headId         String      @db.Uuid
+  head           ExpenseHead @relation(fields: [headId], references: [id])
+  amountMinor    Int
+  date           DateTime    @db.Date
+  note           String?
+  enteredById    String?     @db.Uuid
+  erpPushId      String?     @db.Uuid
+  /// PR 344 follow-up (0070): the receipt's photo or PDF in the media library (MediaAsset.id, folder "expense-receipts").
+  receiptMediaId String?     @db.Uuid
+  archivedAt     DateTime?   @db.Timestamptz(3)
+  createdAt      DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime    @updatedAt @db.Timestamptz(3)
 
   @@index([storeId, date])
 }

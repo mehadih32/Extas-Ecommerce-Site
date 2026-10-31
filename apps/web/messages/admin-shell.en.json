@@ -87,6 +87,7 @@
         "closes": "Closes",
         "daily": "Daily summary",
         "costs": "Costs",
+        "expenses": "Expenses",
         "ledger": "Cost ledger"
       }
     },

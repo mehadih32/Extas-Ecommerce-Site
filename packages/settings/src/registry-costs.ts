@@ -18,6 +18,14 @@ export const costLedgerSchema = z
   .strict();
 export type CostLedgerSettings = z.output<typeof costLedgerSchema>;
 
+/**
+ * PR 344 follow-up (MNY-04; registry version 90, lane C's new range) — a photo or PDF of the receipt on an expense
+ * (Money → Expenses): off as shipped; the largest file in MB when on. The file is checked by its contents (a picture or
+ * a PDF only) and kept in the media library's "expense-receipts" folder.
+ */
+export const expenseReceiptsSchema = z.object({ enabled: z.boolean(), maxMb: z.int().min(1).max(20) }).strict();
+export type ExpenseReceiptSettings = z.output<typeof expenseReceiptsSchema>;
+
 export const costsSettings = {
   'costs.ledger': setting({
     ...base,
@@ -27,5 +35,16 @@ export const costsSettings = {
     labelKey: 'costs.ledger.label',
     helpKey: 'costs.ledger.help',
     sortOrder: 300,
+  }),
+  // ---- PR 344 follow-up · the receipt photo on an expense (Money → Expenses), version 90 ----
+  'costs.receipts': setting({
+    ...base,
+    version: 90,
+    schema: expenseReceiptsSchema,
+    default: { enabled: false, maxMb: 5 },
+    valueType: 'JSON',
+    labelKey: 'costs.receipts.label',
+    helpKey: 'costs.receipts.help',
+    sortOrder: 330,
   }),
 };
