@@ -19,6 +19,10 @@
     "uiChecks": {
       "label": "Site health: UI checks in the saved journeys",
       "help": "After every step of the saved journeys, on the phone and the desktop screen: a broken layout, cut-off text, pictures that did not load, and buttons that cannot be pressed. Each finding fails its step and shows in the run. Off as it ships; nothing in the shop is changed."
+    },
+    "speed": {
+      "label": "Site health: the Speed page",
+      "help": "How many months Reports › Site health › Speed shows, and the last \"Measure now\" press (the server measures once within the hour). The targets are on Website › SEO."
     }
   }
 }

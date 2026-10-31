@@ -96,6 +96,8 @@ export const JOURNEY_PERIOD_HOURS: Record<HealthJourneysSettings['every'], numbe
 export const NO_ANSWER_MS = 99_999;
 
 export const SERVER_PAGE = '/admin/server';
+/** PR 417: the speed line opens Reports › Site health › Speed. */
+export const SPEED_PAGE = '/admin/reports/health/speed';
 
 const minutesSince = (now: Date, t: Date) => Math.max(0, Math.floor((now.getTime() - t.getTime()) / 60_000));
 const iso = (f: StateFile<unknown> | null) => (f ? f.writtenAt.toISOString() : null);
@@ -116,7 +118,7 @@ function serverLine(i: HubInput): HubLine {
 
 function speedLine(i: HubInput): HubLine {
   const note = typeof i.k6?.data.p95_ms === 'number' ? { key: 'k6', vars: { p95: Math.round(i.k6.data.p95_ms) } } : undefined;
-  const base = { id: 'speed' as const, at: iso(i.health), href: null, ...(note ? { note } : {}) };
+  const base = { id: 'speed' as const, at: iso(i.health), href: SPEED_PAGE, ...(note ? { note } : {}) };
   const ms = i.health?.data.site_ms;
   if (!i.health || typeof ms !== 'number') return { ...base, state: 'off', reason: 'noReport', vars: {} };
   if (minutesSince(i.now, i.health.writtenAt) > i.limits.monitorStaleMinutes) return { ...base, state: 'warn', reason: 'late', vars: { min: minutesSince(i.now, i.health.writtenAt) } };

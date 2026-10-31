@@ -165,5 +165,94 @@
       "taps": "Buttons that cannot be pressed",
       "tapsHelp": "Too small for a finger on the phone, two on top of each other, or covered by something."
     }
+  },
+  "spd": {
+    "metaTitle": "Speed — Site health",
+    "title": "Speed",
+    "sub": "How fast the shop is for real visitors and in the monthly check on a phone over 4G, against your targets.",
+    "kpi": {
+      "lab": "Monthly check",
+      "labOk": "Every page within target",
+      "labMiss": "Some pages miss a target",
+      "labNone": "Not measured yet",
+      "lcp": "Real visitors: loading (LCP, phone)",
+      "inp": "Real visitors: response to a tap (INP, phone)",
+      "none": "No readings yet",
+      "span": "Last {days} days · {n} visits",
+      "target": "target {v}"
+    },
+    "labH": "The latest monthly check",
+    "labD": "The home, a category and a product page on a phone over slow 4G, and an admin page on a desktop, measured from the server.",
+    "labWhen": "Measured {when} ({profile})",
+    "labNone": "No check yet. It runs on the 2nd of each month, or press Measure now.",
+    "col": {
+      "page": "Page",
+      "lcp": "Loading (LCP)",
+      "cls": "Layout shift (CLS)",
+      "ttfb": "Server answer (TTFB)",
+      "kb": "Page weight",
+      "load": "Admin load",
+      "result": "Result",
+      "metric": "Measure",
+      "phone": "Phone",
+      "desktop": "Desktop",
+      "target": "Target",
+      "month": "Month",
+      "inp": "Tap response (INP)",
+      "lab": "Monthly check"
+    },
+    "kind": {
+      "home": "Home",
+      "category": "Category",
+      "product": "Product",
+      "admin": "Admin",
+      "combo": "Set",
+      "help": "Help page",
+      "search": "Search",
+      "checkout": "Checkout",
+      "account": "Account",
+      "other": "Other"
+    },
+    "pass": "Within target",
+    "misses": "Misses: {list}",
+    "kb": "{n} KB",
+    "run": "Measure now",
+    "running": "Asking…",
+    "asked": "Asked. The server measures within the hour; this page shows it when it is done.",
+    "waiting": "Waiting for the server to measure.",
+    "noPerm": "Measuring now needs the settings permission.",
+    "err": {
+      "INVALID_INPUT": "That did not work. Please try again.",
+      "forbidden": "You do not have permission to do this.",
+      "unauthorized": "Your sign-in has ended — please sign in again.",
+      "network": "No connection. Please try again.",
+      "other": "That did not work. Please try again."
+    },
+    "realH": "Real visitors",
+    "realD": "The 75th percentile of the last {days} days: three in four visits were at least this fast. From {n} visits.",
+    "realNone": "No real visitor readings in the last {days} days yet.",
+    "m": {
+      "LCP": "loading",
+      "CLS": "layout shift",
+      "INP": "response to a tap",
+      "TTFB": "server answer",
+      "FCP": "first paint"
+    },
+    "monthsH": "Month by month",
+    "monthsD": "Real visitors on a phone (75th percentile) and that month's check. Red misses the target.",
+    "noMonth": "—",
+    "labMonthOk": "Passed",
+    "labMonthMiss": "Missed",
+    "labMonthNone": "Not run",
+    "targetsH": "Targets",
+    "targetsD": "The targets are kept with the speed settings on Website › SEO: loading {lcp}, layout shift {cls}, tap response {inp}, server answer {ttfb}, category page weight {kb}, admin load {admin}.",
+    "targetsLink": "Change the targets",
+    "card": {
+      "h": "This page",
+      "d": "How many months the month-by-month table shows.",
+      "months": "Months shown",
+      "readOnly": "You can see this; changing it needs the settings permission."
+    },
+    "visits": "{n} visits"
   }
 }

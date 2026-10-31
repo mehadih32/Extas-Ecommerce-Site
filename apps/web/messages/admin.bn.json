@@ -84,7 +84,8 @@
     "healthProblems": "কাস্টমারের সমস্যা",
     "seoBengali": "বাংলা পাতা",
     "adsTracking": "ট্র্যাকিং",
-    "manual": "সাইট ম্যানুয়াল"
+    "manual": "সাইট ম্যানুয়াল",
+    "healthSpeed": "গতি"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

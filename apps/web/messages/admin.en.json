@@ -84,7 +84,8 @@
     "healthProblems": "Customer problems",
     "seoBengali": "Bengali pages",
     "adsTracking": "Tracking",
-    "manual": "Site manual"
+    "manual": "Site manual",
+    "healthSpeed": "Speed"
   },
   "login": {
     "metaTitle": "Admin sign-in",

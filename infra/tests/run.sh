@@ -644,6 +644,21 @@ check "speed lab: the preview host and the commit" "$(grep -c 'BASE=https://new.
 check "speed lab: no sign-in file is left behind" "$(find "$T/root/config/secrets" -mindepth 1 -name '.vitals*' | wc -l)" "0"
 rc=0; vl FAKE_PAGES='[]' >/dev/null 2>&1 || rc=$?
 check "speed lab: a run that measured nothing fails and keeps the last result" "$rc:$(jq -r '.pages[0].kind' "$T/root/state/vitals-lab.json")" "1:home"
+# PR 417: the hourly "asked" check measures only after a Measure now press newer than the last run.
+vla() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" SMOKE_IMAGE_UID="$(id -u)" FAKE_LOG="$T/docker.log" FAKE_SEEN="$T/seen.env" \
+  "$@" bash ../deploy/vitals-lab.sh 0123456789abcdef0123 asked; }
+touch -d '2026-10-31 06:00 UTC' "$T/root/state/vitals-lab.json"
+n0="$(wc -l < "$T/docker.log")"
+rc=0; vla FAKE_PAGES='[{"path":"/","kind":"home","lcpMs":1700}]' >/dev/null || rc=$?
+check "speed lab (417): asked but never pressed → nothing runs" "$rc:$(( $(wc -l < "$T/docker.log") - n0 )):$(jq -r '.pages[0].lcpMs' "$T/root/state/vitals-lab.json")" "0:0:1800"
+printf "VITALS_REQUESTED='%s'\n" "$(date -d '2026-10-31 05:00 UTC' +%s)" > "$T/root/config/secrets/speed-settings.env"
+rc=0; vla FAKE_PAGES='[{"path":"/","kind":"home","lcpMs":1700}]' >/dev/null || rc=$?
+check "speed lab (417): a press older than the last run → nothing runs" "$rc:$(jq -r '.pages[0].lcpMs' "$T/root/state/vitals-lab.json")" "0:1800"
+printf "VITALS_REQUESTED='%s'\n" "$(date -d '2026-10-31 07:00 UTC' +%s)" > "$T/root/config/secrets/speed-settings.env"
+rc=0; vla FAKE_PAGES='[{"path":"/","kind":"home","lcpMs":1700}]' >/dev/null || rc=$?
+check "speed lab (417): a newer press → one run, its numbers kept" "$rc:$(jq -r '.pages[0].lcpMs' "$T/root/state/vitals-lab.json")" "0:1700"
+rc=0; env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" bash ../deploy/vitals-lab.sh 0123456789abcdef0123 sometimes >/dev/null 2>&1 || rc=$?
+check "speed lab (417): an unknown mode is refused" "$rc" "2"
 rm -rf "$T"
 
 # Docs on the server (PR 594, CN-011): docs-sync.sh copies README.md + docs/ of a checkout to $EXTAS_ROOT/docs/<sha12>/
@@ -1705,6 +1720,12 @@ check "journeys (414): weekly on Friday, Saturday after Friday's run → not due
 check "journeys (414): weekly on Friday, the next Friday after the hour → due" "$(jdue yes weekly 6 5 '' '2026-11-06 06:01' '2026-10-30 06:03'):$(jdue yes weekly 6 5 '' '2026-11-06 05:59' '2026-10-30 06:03')" "scheduled:no"
 check "journeys (414): weekly on Saturday (today), before the hour, last ran a week ago at it → not due" "$(jdue yes weekly 6 6 '' '2026-10-31 05:00' '2026-10-24 06:01')" "no"
 check "journeys (414): a bad schedule value never runs" "$(jdue yes monthly 6 5 '' '2026-10-31 07:00' 0):$(jdue yes daily 24 5 '' '2026-10-31 07:00' 0):$(jdue yes weekly 6 8 '' '2026-10-31 07:00' 0):$(jdue no daily 6 5 'x; rm -rf /' '2026-10-31 07:00' 0)" "no:no:no:no"
+# PR 417: "Measure now" on the Speed page asks for one lab run, newer than the last one only.
+sasked() { ( . ../deploy/speed-lib.sh; speed_asked "$1" "$2" || echo "no" ); }
+check "speed (417): never pressed → not asked" "$(sasked '' 1761900000)" "no"
+check "speed (417): a press after the last run → asked; before it → not" "$(sasked 1761900600 1761900000):$(sasked 1761899000 1761900000)" "asked:no"
+check "speed (417): no run yet and pressed → asked; a malformed press never runs" "$(sasked 1761900600 0):$(sasked 'x; rm -rf /' 0)" "asked:no"
+check "speed (417): the hourly check runs the lab script in its asked mode" "$(grep -c "41 \* \* \* \*" ../../.github/workflows/vitals-monthly.yml):$(grep -c 'vitals-lab.sh "$live" "$MODE"' ../../.github/workflows/vitals-monthly.yml)" "2:1"
 JK="$T/jkeep"; mkdir -p "$JK"
 for s in 20261027-060101 20261028-060101 20261029-060101 20261030-060101; do echo '{}' > "$JK/$s.json"; done
 echo keep > "$JK/notes.txt"
