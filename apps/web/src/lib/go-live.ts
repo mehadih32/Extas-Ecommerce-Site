@@ -31,6 +31,8 @@ export interface GoLiveContext {
   ownerData?: readonly { name: string; missing: readonly string[]; bands: number | null }[];
   /** PR 400: the kinds that must be live, and the switched-on connections with their mode and last test. */
   connections?: { kinds: readonly string[]; on: readonly { kind: string; provider: string; mode: string; lastTestOk: boolean | null }[] };
+  /** PR 401: search engines let in (Website → SEO, `seo.indexing.searchEngines`); it only counts on a primary domain. */
+  searchEngines?: boolean;
 }
 
 export interface GoLiveResult {
@@ -155,6 +157,19 @@ export const GO_LIVE: readonly GoLiveItem[] = [
       };
     },
   },
+  // PR 401 — on go-live day the main domain is opened to search engines: the switch is on and there is a store primary
+  // domain for it to count on (the preview host always stays out, PR 220). Search Console and the sitemap are a person's
+  // check (the connection of PR 233 lists the property once it is built).
+  {
+    key: 'indexing',
+    pr: 401,
+    kind: 'auto',
+    check: ({ searchEngines, primaryHosts = [] }) => ({
+      ok: searchEngines === true && primaryHosts.length > 0,
+      vars: { hosts: primaryHosts.join(', ') || '—', on: searchEngines === true ? 'on' : 'off' },
+    }),
+  },
+  { key: 'searchConsole', pr: 401, kind: 'signoff' },
   { key: 'runbook', pr: 398, kind: 'signoff' },
   { key: 'qaGate', pr: 393, kind: 'signoff' },
   { key: 'acceptance', pr: 393, kind: 'signoff' },

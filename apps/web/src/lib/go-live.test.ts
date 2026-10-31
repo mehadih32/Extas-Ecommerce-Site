@@ -23,6 +23,7 @@ function ctx(over: Partial<GoLiveContext> = {}): GoLiveContext {
     originCert: { at: ago(3), mode: 'origin', active: true, names: ['example.test', '*.example.test'], daysLeft: 5400, error: null },
     primaryHosts: ['example.test'],
     ownerData: [{ name: 'Main', missing: [], bands: 2 }],
+    searchEngines: true,
     connections: { kinds: ['PAYMENT', 'COURIER', 'SMS'], on: [{ kind: 'PAYMENT', provider: 'bkash', mode: 'LIVE', lastTestOk: true }, { kind: 'COURIER', provider: 'steadfast', mode: 'LIVE', lastTestOk: true }, { kind: 'SMS', provider: 'bulkSmsBd', mode: 'LIVE', lastTestOk: true }] },
     ...over,
   };
@@ -63,7 +64,8 @@ describe('go-live checklist (PR 393)', () => {
     expect(open(ctx({ originCert: { mode: 'origin', active: true, names: ['*.example.test'], daysLeft: 12 } }))).toEqual(['originCert']);
     const r = goLiveChecks(ctx({ primaryHosts: ['example.test', 'shop.other.test'] })).items.find((i) => i.key === 'originCert');
     expect(r).toMatchObject({ ok: false, vars: { missing: 'shop.other.test', days: 5400 } });
-    expect(open(ctx({ primaryHosts: [] }))).toEqual([]);
+    // no main domain yet: the certificate has nothing more to cover (only the indexing line waits for one, PR 401)
+    expect(open(ctx({ primaryHosts: [] }))).toEqual(['indexing']);
     expect(open(ctx({ signoff: { ...ctx().signoff, sslStrict: undefined as never } }))).toEqual(['sslStrict']);
   });
 
@@ -82,6 +84,13 @@ describe('go-live checklist (PR 393)', () => {
       expect(goLiveChecks(ctx({ connections: sms(over) })).items.find((i) => i.key === 'connections')).toMatchObject({ ok: false, vars: { missing: 'SMS', live: 'bkash, steadfast' } });
     }
     expect(open(ctx({ connections: { kinds: ['COURIER', 'SMS'], on: on.slice(1) } }))).toEqual([]);
+  });
+
+  it('PR 401: indexing — the switch on and a main domain for it to count on; Search Console is a sign-off', () => {
+    expect(open(ctx({ searchEngines: false }))).toEqual(['indexing']);
+    expect(open(ctx({ primaryHosts: [] }))).toEqual(['indexing']);
+    expect(goLiveChecks(ctx({ searchEngines: false })).items.find((i) => i.key === 'indexing')?.vars).toEqual({ hosts: 'example.test', on: 'off' });
+    expect(SIGNOFF_KEYS).toContain('searchConsole');
   });
 
   it('PR 398: the runbook is a sign-off, and its file exists', () => {
