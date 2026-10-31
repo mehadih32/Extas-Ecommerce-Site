@@ -54,6 +54,10 @@
 // Vitals) as they load, kept only as daily counts (never a visitor), and read back as the 75th percentile of the last
 // `days` days against the targets; `share` is how many visits in a hundred report. A monthly lab run (a phone over 4G)
 // is judged against the same targets. On as shipped, every visit, 28 days, the targets of PR 10.
+//
+// PR 236 (`seo.hreflang`; Blueprint C12.1, GOOGLE-TRAFFIC-PLAN §1.2): a page and its Bengali twin name each other
+// (en, bn and x-default) in the HTML head only, one method, as the plan chose. `inSitemaps` also writes the pairs in
+// the sitemaps (the way PR 228 first shipped them, kept as a switch): off as shipped.
 import { z } from 'zod';
 import { setting } from './define';
 import { categorySlugSchema } from './registry-storefront';
@@ -268,6 +272,15 @@ export const seoVitalsSchema = z
 export type SeoVitals = z.output<typeof seoVitalsSchema>;
 export const SEO_VITALS_DEFAULT: SeoVitals = { collect: true, share: 100, days: 28, targets: { lcpMs: 2500, clsThousandths: 100, inpMs: 200, ttfbMs: 600, categoryKb: 1024, adminMs: 1000 } };
 
+export const seoHreflangSchema = z
+  .object({
+    /** Also write each page's language pair in the sitemaps (off: the HTML head only). */
+    inSitemaps: z.boolean(),
+  })
+  .strict();
+export type SeoHreflang = z.output<typeof seoHreflangSchema>;
+export const SEO_HREFLANG_DEFAULT: SeoHreflang = { inSitemaps: false };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -365,5 +378,15 @@ export const seoReachSettings = {
     labelKey: 'seo.vitals.label',
     helpKey: 'seo.vitals.help',
     sortOrder: 49,
+  }),
+  // ---- PR 236 · the language pairs (hreflang) ----
+  'seo.hreflang': setting({
+    ...base,
+    version: V2,
+    schema: seoHreflangSchema,
+    default: SEO_HREFLANG_DEFAULT,
+    labelKey: 'seo.hreflang.label',
+    helpKey: 'seo.hreflang.help',
+    sortOrder: 50,
   }),
 };

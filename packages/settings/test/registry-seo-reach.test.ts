@@ -7,10 +7,11 @@
 // PR 232: photo descriptions are written as shipped (answer 9), at most 125 letters.
 // PR 233: no verification code as shipped (owner data); a code is one word, never a quote that could break the tag.
 // PR 234: speed reported by every visit as shipped, read over 28 days against PR 10's targets.
+// PR 236: the language pairs live in the HTML head only as shipped; the sitemaps carry them only when switched on.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { seoReachSettings, SEO_ALT_TEXT_DEFAULT, SEO_VERIFICATION_DEFAULT, SEO_VITALS_DEFAULT, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
+import { seoReachSettings, SEO_ALT_TEXT_DEFAULT, SEO_HREFLANG_DEFAULT, SEO_VERIFICATION_DEFAULT, SEO_VITALS_DEFAULT, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
 
 describe('lane A SEO settings (v71–72)', () => {
   it('every key is in the registry at version 71, labelled in English and Bengali, its default valid', () => {
@@ -117,5 +118,12 @@ describe('lane A SEO settings (v71–72)', () => {
     expect(s.safeParse({ ...SEO_VITALS_DEFAULT, days: 91 }).success).toBe(false);
     expect(s.safeParse({ ...SEO_VITALS_DEFAULT, targets: { ...SEO_VITALS_DEFAULT.targets, lcpMs: 100 } }).success).toBe(false);
     expect(s.safeParse({ ...SEO_VITALS_DEFAULT, targets: { ...SEO_VITALS_DEFAULT.targets, fid: 100 } }).success).toBe(false);
+  });
+
+  it('PR 236: the language pairs are in the HTML head only as shipped (v72)', () => {
+    expect(SEO_HREFLANG_DEFAULT).toEqual({ inSitemaps: false });
+    expect(registry['seo.hreflang'].version).toBe(72);
+    expect(registry['seo.hreflang'].schema.safeParse({ inSitemaps: 'yes' }).success).toBe(false);
+    expect(registry['seo.hreflang'].schema.safeParse({ inSitemaps: true, codes: ['en-BD'] }).success).toBe(false);
   });
 });

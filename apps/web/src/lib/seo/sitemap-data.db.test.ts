@@ -127,7 +127,11 @@ describe.skipIf(!HAS_TEST_DB)('sitemaps on PostgreSQL (PR 228)', () => {
     const cols = await (await sitemapResponse('collections-1.xml')).text();
     expect(cols).toContain('<loc>https://shop.example.test/collections/sm-polos?colour=navy</loc>');
     expect(cols).toContain('<loc>https://shop.example.test/bn/collections/sm-polos</loc>');
-    expect(cols).toContain('hreflang="x-default" href="https://shop.example.test/collections/sm-polos"');
+    // PR 236: the pairs are in the pages' heads only, unless the owner switches them on for the sitemaps too
+    expect(cols).not.toContain('hreflang=');
+    await set('seo.hreflang', { inSitemaps: true });
+    expect(await (await sitemapResponse('collections-1.xml')).text()).toContain('hreflang="x-default" href="https://shop.example.test/collections/sm-polos"');
+    await set('seo.hreflang', { inSitemaps: false });
     expect((await sitemapResponse('collections-2.xml')).status).toBe(404);
     expect((await sitemapResponse('orders-1.xml')).status).toBe(404);
     await set('seo.sitemaps', { ...SEO_SITEMAPS_DEFAULT, enabled: false });

@@ -30,6 +30,8 @@ const KEYS = [
   'seo.urlPolicy',
   'seo.filterPages',
   'seo.sitemaps',
+  // PR 236: whether the files also name the language pairs
+  'seo.hreflang',
   'category.page',
   'category.newIn',
   'combos.landing',

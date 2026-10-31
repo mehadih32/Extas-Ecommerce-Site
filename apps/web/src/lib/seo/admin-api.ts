@@ -49,6 +49,8 @@ export const SEO_KEYS = [
   'seo.verification',
   // PR 234: real visitors' speed
   'seo.vitals',
+  // PR 236: the language pairs (hreflang)
+  'seo.hreflang',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 

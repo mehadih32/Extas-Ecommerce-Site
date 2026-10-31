@@ -3,7 +3,8 @@
 // how many Bengali pages are ready (PR 220); the search titles and descriptions of every kind of page and the AI drafts
 // (PR 221); which data for search engines (structured data) the pages carry (PR 222); the pages that stay when a
 // product or collection cannot be bought (PR 527, "Pages that stay"); the sitemaps (PR 228); robots.txt and the AI
-// robots (PR 229); the photo descriptions (PR 232); Search Console and Bing (PR 233); real visitors' speed (PR 234).
+// robots (PR 229); the photo descriptions (PR 232); Search Console and Bing (PR 233); real visitors' speed (PR 234);
+// the language pairs (PR 236, hreflang).
 // Seeing needs `seo.read` (the
 // read-only check account has it); saving needs `seo.manage`.
 // Guide: docs/admin-guide/pages/website/seo.md.
@@ -20,6 +21,7 @@ import { RobotsCard } from "@/components/admin/website/RobotsCard";
 import { AltTextCard } from "@/components/admin/website/AltTextCard";
 import { SearchEnginesCard } from "@/components/admin/website/SearchEnginesCard";
 import { VitalsCard } from "@/components/admin/website/VitalsCard";
+import { HreflangCard } from "@/components/admin/website/HreflangCard";
 import { PageHead, SectionTabs, ShellState } from "@/components/admin/shell/ShellParts";
 import { ShellIcon } from "@/components/admin/shell/ShellIcon";
 import { formatNumber } from "@/components/admin/products/model";
@@ -37,6 +39,7 @@ import { missingAlt } from "@/lib/seo/alt-text-data";
 import { searchEngineState } from "@/lib/seo/search-engines";
 import { SITEMAP_INDEX } from "@/lib/seo/sitemap";
 import { labReport, vitalsReport } from "@/lib/seo/vitals-data";
+import { hreflangTags, languagePairs } from "@/lib/seo/hreflang";
 import { shopContextFor } from "@/lib/shop/context";
 import bn from "../../../../../messages/admin-seo.bn.json";
 import en from "../../../../../messages/admin-seo.en.json";
@@ -93,6 +96,10 @@ export default async function SeoPage() {
   // PR 233: the shop's own address (the store's primary domain) is what Search Console and Bing verify
   const primarySite = snap.site.primary ? `https://${snap.site.primary}/` : null;
   const primarySitemap = snap.site.primary ? new URL(SITEMAP_INDEX, `https://${snap.site.primary}`).toString() : null;
+  // PR 236: every Bengali-ready page and whether it names its pair; the tags of the first one (else the home page)
+  const pairs = languagePairs({ bengaliOn: snap.site.bengaliOn, ready: shopEn.s["language.bengali.readyPages"], policy: idx, productPathPrefix: shopEn.s["naming.productPathPrefix"] });
+  const shopHost = snap.site.primary ?? snap.site.staging;
+  const tags = hreflangTags(shopHost ? new URL(`https://${shopHost}`) : null, pairs.find((p) => p.named)?.path ?? "/", idx.xDefault);
   const altExample = altTextFor({ name: en.at.sampleName, colour: en.at.sampleColour, role: "FRONT" }, (k, v) => shopEn.t(k, v), snap.values["seo.altText"].maxLength) ?? "";
 
   return (
@@ -176,6 +183,9 @@ export default async function SeoPage() {
       </div>
       <div className="a2-mt12">
         <VitalsCard d={d} value={snap.values["seo.vitals"]} defaults={snap.defaults["seo.vitals"]} limits={SEO_VITALS_LIMITS} version={snap.versions["seo.vitals"]} canWrite={canWrite} report={vReport} lab={vLab} locale={view.locale} timeZone={view.timeZone} />
+      </div>
+      <div className="a2-mt12">
+        <HreflangCard d={d} value={snap.values["seo.hreflang"]} defaults={snap.defaults["seo.hreflang"]} version={snap.versions["seo.hreflang"]} canWrite={canWrite} bengaliOn={snap.site.bengaliOn} pairs={pairs} tags={tags} xDefault={idx.xDefault === "en"} locale={view.locale} />
       </div>
       <div className="a2-mt12">
         <SearchEnginesCard d={d} value={snap.values["seo.verification"]} limits={SEO_VERIFICATION_LIMITS} version={snap.versions["seo.verification"]} canWrite={canWrite} engines={engines} site={primarySite} sitemap={primarySitemap} />
