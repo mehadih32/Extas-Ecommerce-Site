@@ -1,6 +1,6 @@
-# Server report — 2026-10-31 13:31 +06
+# Server report — 2026-10-31 14:50 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `d632bae17181b4c14cbe7a623dccc151ef71b706`. Overall: **NEEDS ATTENTION**.
+Run by `infra/server/setup.sh` (S0A) from commit `42b8f00d33e033cc597bc35618692fe2d73bf683`. Overall: **NEEDS ATTENTION**.
 
 ## Machine
 
@@ -16,24 +16,26 @@ Run by `infra/server/setup.sh` (S0A) from commit `d632bae17181b4c14cbe7a623dccc1
 ### Disks
 
 ```
-NAME              SIZE TYPE FSTYPE      MOUNTPOINTS              MODEL
-nvme0n1           128G disk                                      MSFT NVMe Accelerator v1.0
-├─nvme0n1p1       127G part ext4        /tmp/tmp.74CoW7UNbi
-│                                       /
-├─nvme0n1p14        4M part
-├─nvme0n1p15      106M part vfat        /boot/efi
-└─nvme0n1p16      913M part ext4        /boot
-nvme0n2             1T disk LVM2_member                          MSFT NVMe Accelerator v1.0
-├─extas-base       10G lvm  ext4        /srv/extas
-├─extas-postgres  250G lvm  ext4        /srv/extas/data/postgres
-├─extas-redis      20G lvm  ext4        /srv/extas/data/redis
-├─extas-search     30G lvm  ext4        /srv/extas/data/search
-├─extas-media     100G lvm  ext4        /srv/extas/data/media
-├─extas-backup    150G lvm  ext4        /srv/extas/backups
-├─extas-logs       30G lvm  ext4        /srv/extas/logs
-├─extas-docker    200G lvm  ext4        /var/lib/docker
-└─extas-swap       16G lvm  swap        [SWAP]
-nvme1n1           440G disk ext4        /mnt/nvme                Microsoft NVMe Direct Disk v2
+NAME                SIZE TYPE FSTYPE      MOUNTPOINTS                            MODEL
+nvme0n1             128G disk                                                    MSFT NVMe Accelerator v1.0
+├─nvme0n1p1         127G part ext4        /tmp/tmp.74CoW7UNbi
+│                                         /
+├─nvme0n1p14          4M part
+├─nvme0n1p15        106M part vfat        /boot/efi
+└─nvme0n1p16        913M part ext4        /boot
+nvme0n2               1T disk LVM2_member                                        MSFT NVMe Accelerator v1.0
+├─extas-base         10G lvm  ext4        /srv/extas
+├─extas-postgres    250G lvm  ext4        /srv/extas/data/postgres
+├─extas-redis        20G lvm  ext4        /srv/extas/data/redis
+├─extas-search       30G lvm  ext4        /srv/extas/data/search
+├─extas-media       100G lvm  ext4        /srv/extas/data/media
+├─extas-backup      150G lvm  ext4        /srv/extas/backups
+├─extas-logs         30G lvm  ext4        /srv/extas/logs
+├─extas-docker      200G lvm  ext4        /var/lib/docker
+├─extas-swap         16G lvm  swap        [SWAP]
+└─extas-containerd  120G lvm  ext4        /tmp/tmp.74CoW7UNbi/var/lib/containerd
+                                          /var/lib/containerd
+nvme1n1             440G disk ext4        /mnt/nvme                              Microsoft NVMe Direct Disk v2
 ```
 
 ## Steps
@@ -44,28 +46,27 @@ nvme1n1           440G disk ext4        /mnt/nvme                Microsoft NVMe 
 | PR 2 · OS updates | OK | Ubuntu 24.04 up to date |
 | PR 3 · hardening | OK | SSH key-only, root login off, fail2ban on, security updates on (reboot 04:30), UFW 22/80/443, Asia/Dhaka, host extas-vm |
 | PR 601 · NVMe | OK | /dev/nvme1n1 mounted at /mnt/nvme, 433 GB free; unit runs at every boot before Docker |
-| PR 3 · data disk | OK | /dev/nvme0n2 → VG extas: 8 volumes + 16 GB swap mounted, 217.97g free for growth |
+| PR 3 · data disk | OK | /dev/nvme0n2 → VG extas: 8 volumes + 16 GB swap mounted, 97.97g free for growth |
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
 | PR 4 · Docker | OK | Docker version 29.9.2, compose 5.6.1; logs rotated; build cache ≤ 40 GB; starts after NVMe + data disk |
-| PR 4 · OS disk | OK | / 4% used, 119 GB free (a deploy needs 15); containerd store: moved to LV extas/containerd (120G, 13 GB copied); the old copy on / removed; build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
+| PR 4 · OS disk | OK | / 4% used, 119 GB free (a deploy needs 15); containerd store: on its own volume (15G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
 | PR 620 · client address | INFO | Cloudflare's ranges written for Caddy; checked live after the reload |
-| PR 620 · client address | OK | live: CF-Connecting-IP believed from Cloudflare's ranges only (trusted_proxies in Caddy's running configuration) |
-| stack | FAIL | step failed (see the workflow log) |
+| PR 5–7 · stack | FAIL | compose up failed:  Container extas-postgres Error dependency postgres failed to start dependency failed to start: container extas-postgres is unhealthy  |
 | run stopped | FAIL | later steps depend on 'stack' |
 
 ## OS disk (/) — before this run
 
 ```
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/root       123G   18G  106G  15% /
+/dev/root       123G  4.3G  119G   4% /
 ```
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 13.7 GB |  |
-| `/var/lib/docker` | 0.0 GB | own volume here (145M used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (15G used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (146M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
@@ -79,16 +80,16 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 Largest folders on the OS disk:
 
-- `/var` 14.3 GB
-- `/var/lib` 14.0 GB
-- `/var/lib/containerd` 13.7 GB
 - `/usr` 2.1 GB
 - `/home` 1.2 GB
 - `/home/ghrunner` 1.2 GB
 - `/home/ghrunner/actions-runner` 1.2 GB
 - `/usr/lib` 1.2 GB
+- `/var` 0.6 GB
 - `/usr/bin` 0.4 GB
 - `/usr/lib/x86_64-linux-gnu` 0.4 GB
+- `/usr/share` 0.3 GB
+- `/var/lib` 0.3 GB
 
 Docker image store: overlayfs (driver-type=io.containerd.snapshotter.v1 ); Docker folder: /var/lib/docker.
 
@@ -96,13 +97,13 @@ Docker image store: overlayfs (driver-type=io.containerd.snapshotter.v1 ); Docke
 
 ```
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/root       123G  4.4G  119G   4% /
+/dev/root       123G  4.2G  119G   4% /
 ```
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (14G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (145M used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (15G used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (146M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
