@@ -3,19 +3,20 @@
 // how many Bengali pages are ready (PR 220); the search titles and descriptions of every kind of page and the AI drafts
 // (PR 221); which data for search engines (structured data) the pages carry (PR 222); the pages that stay when a
 // product or collection cannot be bought (PR 527, "Pages that stay"); the sitemaps (PR 228); robots.txt and the AI
-// robots (PR 229). Seeing needs `seo.read` (the
+// robots (PR 229); the photo descriptions (PR 232). Seeing needs `seo.read` (the
 // read-only check account has it); saving needs `seo.manage`.
 // Guide: docs/admin-guide/pages/website/seo.md.
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { MOTHER_STORE_ID } from "@extas/db/client";
-import { namingTokens, SEO_PAGE_TYPES, SEO_ROBOTS_LIMITS, SEO_SITEMAP_LIMITS, SEO_TEMPLATE_PAGES, SEO_TEMPLATE_TOKENS } from "@extas/settings";
+import { namingTokens, SEO_ALT_TEXT_LIMITS, SEO_PAGE_TYPES, SEO_ROBOTS_LIMITS, SEO_SITEMAP_LIMITS, SEO_TEMPLATE_PAGES, SEO_TEMPLATE_TOKENS } from "@extas/settings";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import { IndexingCard, StructuredDataCard } from "@/components/admin/website/SeoScreen";
 import { AiDraftsCard, TitlesCard } from "@/components/admin/website/SeoTexts";
 import { UrlPolicyCard } from "@/components/admin/website/UrlPolicyCard";
 import { SitemapsCard } from "@/components/admin/website/SitemapsCard";
 import { RobotsCard } from "@/components/admin/website/RobotsCard";
+import { AltTextCard } from "@/components/admin/website/AltTextCard";
 import { PageHead, SectionTabs, ShellState } from "@/components/admin/shell/ShellParts";
 import { ShellIcon } from "@/components/admin/shell/ShellIcon";
 import { formatNumber } from "@/components/admin/products/model";
@@ -28,6 +29,9 @@ import { seoSnapshot } from "@/lib/seo/admin-api";
 import { draftState } from "@/lib/seo/drafts";
 import { sitemapsState } from "@/lib/seo/sitemap-admin";
 import { robotsTxt } from "@/lib/seo/robots";
+import { altTextFor } from "@/lib/seo/alt-text";
+import { missingAlt } from "@/lib/seo/alt-text-data";
+import { shopContextFor } from "@/lib/shop/context";
 import bn from "../../../../../messages/admin-seo.bn.json";
 import en from "../../../../../messages/admin-seo.en.json";
 import "../../settings/settings.css";
@@ -69,7 +73,7 @@ export default async function SeoPage() {
         <ShellState view={view} kind="denied" permission="seo.read" />
       </div>
     );
-  const [snap, drafts, sitemaps] = await Promise.all([seoSnapshot(deps, MOTHER_STORE_ID), draftState(deps, MOTHER_STORE_ID), sitemapsState(MOTHER_STORE_ID)]);
+  const [snap, drafts, sitemaps, altMissing, shopEn] = await Promise.all([seoSnapshot(deps, MOTHER_STORE_ID), draftState(deps, MOTHER_STORE_ID), sitemapsState(MOTHER_STORE_ID), missingAlt(deps.db, MOTHER_STORE_ID), shopContextFor(MOTHER_STORE_ID, "en")]);
   const d = view.dict;
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `seo.${k}`, vars);
   const canWrite = access.guard.permissions?.has("seo.manage") ?? false;
@@ -77,6 +81,8 @@ export default async function SeoPage() {
   const open = idx.searchEngines && snap.site.primary !== null;
   // PR 229: what /robots.txt answers on the shop's own domain
   const robots = robotsTxt(snap.values["seo.robots"], { open, searchListed: idx.pages.search, sitemap: snap.values["seo.sitemaps"].enabled ? sitemaps.index : null });
+  // PR 232: a description as the shop writes it, in the shop's English words (always English: that one goes live)
+  const altExample = altTextFor({ name: en.at.sampleName, colour: en.at.sampleColour, role: "FRONT" }, (k, v) => shopEn.t(k, v), snap.values["seo.altText"].maxLength) ?? "";
 
   return (
     <div className="a2-z" data-testid="seo-page">
@@ -156,6 +162,9 @@ export default async function SeoPage() {
       </div>
       <div className="a2-mt12">
         <RobotsCard d={d} value={snap.values["seo.robots"]} defaults={snap.defaults["seo.robots"]} limits={SEO_ROBOTS_LIMITS} version={snap.versions["seo.robots"]} canWrite={canWrite} preview={robots} />
+      </div>
+      <div className="a2-mt12">
+        <AltTextCard d={d} value={snap.values["seo.altText"]} defaults={snap.defaults["seo.altText"]} limits={SEO_ALT_TEXT_LIMITS} version={snap.versions["seo.altText"]} canWrite={canWrite} missing={altMissing} example={altExample} locale={view.locale} />
       </div>
       <div className="a2-mt12">
         <AiDraftsCard d={d} value={snap.values["seo.aiDrafts"]} defaults={snap.defaults["seo.aiDrafts"]} version={snap.versions["seo.aiDrafts"]} canWrite={canWrite} initial={drafts} />

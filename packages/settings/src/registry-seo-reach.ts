@@ -40,6 +40,11 @@
 // keeps every robot out while the shop is closed to search engines; once open, robots read everything but the admin,
 // the API and a customer's own pages, plus the owner's extra paths. `aiCrawlers` on (as shipped) lets the AI robots in
 // with everyone else; off, each robot named in `aiBots` is kept out of the whole shop.
+//
+// PR 232 (`seo.altText`; App. answers #9 "auto-apply for alt text"): the shop writes the English description of each
+// product photo that has none (from the product's name, the photo's colour and kind), as each photo is added while
+// `autoApply` is on, or all at once from Website › SEO. A description the owner typed is never changed. Bengali is
+// never written: a Bengali page builds it from the dictionary. `maxLength` is the longest one (cut at a whole word).
 import { z } from 'zod';
 import { setting } from './define';
 import { categorySlugSchema } from './registry-storefront';
@@ -183,6 +188,19 @@ export const seoRobotsSchema = z
 export type SeoRobots = z.output<typeof seoRobotsSchema>;
 export const SEO_ROBOTS_DEFAULT: SeoRobots = { aiCrawlers: true, aiBots: [...SEO_AI_BOTS_DEFAULT], disallow: [] };
 
+/** The limits of the photo descriptions (the admin screen shows the same). */
+export const SEO_ALT_TEXT_LIMITS = { maxLength: { min: 40, max: 250 } } as const;
+export const seoAltTextSchema = z
+  .object({
+    /** Write a photo's description as it is added to a product (when it has none). */
+    autoApply: z.boolean(),
+    /** The longest description, in letters. */
+    maxLength: z.number().int().min(SEO_ALT_TEXT_LIMITS.maxLength.min).max(SEO_ALT_TEXT_LIMITS.maxLength.max),
+  })
+  .strict();
+export type SeoAltText = z.output<typeof seoAltTextSchema>;
+export const SEO_ALT_TEXT_DEFAULT: SeoAltText = { autoApply: true, maxLength: 125 };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -250,5 +268,15 @@ export const seoReachSettings = {
     labelKey: 'seo.robots.label',
     helpKey: 'seo.robots.help',
     sortOrder: 46,
+  }),
+  // ---- PR 232 · the photo descriptions (alt text) ----
+  'seo.altText': setting({
+    ...base,
+    version: V2,
+    schema: seoAltTextSchema,
+    default: SEO_ALT_TEXT_DEFAULT,
+    labelKey: 'seo.altText.label',
+    helpKey: 'seo.altText.help',
+    sortOrder: 47,
   }),
 };

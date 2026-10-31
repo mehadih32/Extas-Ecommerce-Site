@@ -42,6 +42,10 @@
     "robots": {
       "label": "Robots and AI assistants",
       "help": "What /robots.txt tells robots. While the shop is closed to search engines every robot is kept out. Once open, robots read the shop except the admin and a customer's own pages (bag, checkout, account), plus any paths you add. AI robots (ChatGPT, Claude, Perplexity, Google's AI) may read it as shipped, so AI assistants can name the shop; switch them off to keep the listed ones out."
+    },
+    "altText": {
+      "label": "Photo descriptions",
+      "help": "The shop writes the English description (alt text) of each product photo that has none; Bengali comes from the dictionary."
     }
   },
   "defaults": {

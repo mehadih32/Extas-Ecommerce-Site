@@ -4,10 +4,11 @@
 // PR 227: no filtered page is listed as shipped; a named one has one filter, one value, two names, and no twin.
 // PR 228: the sitemaps answer as shipped, kept an hour, 5,000 addresses a file (never over the engines' 50,000).
 // PR 229: AI robots may read the shop as shipped (answer 56); the four named, no extra paths.
+// PR 232: photo descriptions are written as shipped (answer 9), at most 125 letters.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { seoReachSettings, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
+import { seoReachSettings, SEO_ALT_TEXT_DEFAULT, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
 
 describe('lane A SEO settings (v71–72)', () => {
   it('every key is in the registry at version 71, labelled in English and Bengali, its default valid', () => {
@@ -84,5 +85,14 @@ describe('lane A SEO settings (v71–72)', () => {
     expect(r.safeParse({ ...SEO_ROBOTS_DEFAULT, disallow: ['/drafts/', '/*?ref=*'] }).success).toBe(true);
     expect(r.safeParse({ ...SEO_ROBOTS_DEFAULT, disallow: ['drafts'] }).success).toBe(false);
     expect(r.safeParse({ ...SEO_ROBOTS_DEFAULT, disallow: ['/a\nUser-agent: *'] }).success).toBe(false);
+  });
+
+  it('PR 232: photo descriptions written as shipped, at most 125 letters, the length within its limits (v72)', () => {
+    expect(SEO_ALT_TEXT_DEFAULT).toEqual({ autoApply: true, maxLength: 125 });
+    expect(registry['seo.altText'].version).toBe(72);
+    const a = registry['seo.altText'].schema;
+    expect(a.safeParse({ ...SEO_ALT_TEXT_DEFAULT, maxLength: 39 }).success).toBe(false);
+    expect(a.safeParse({ ...SEO_ALT_TEXT_DEFAULT, maxLength: 251 }).success).toBe(false);
+    expect(a.safeParse({ ...SEO_ALT_TEXT_DEFAULT, extra: 1 }).success).toBe(false);
   });
 });

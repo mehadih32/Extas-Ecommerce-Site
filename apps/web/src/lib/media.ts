@@ -29,6 +29,7 @@ import {
 import { createVault, type Vault } from '@extas/vault';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { settingsResolver } from './settings';
+import { autoAltAfterAttach } from './seo/alt-text-data';
 
 const holder = globalThis as unknown as { __mediaDeps?: MediaDeps; __mediaVault?: Pick<Vault, 'get'> | null };
 
@@ -222,7 +223,10 @@ export async function productPhotosHandler(request: Request, admin: AdminDeps | 
         sortOrder: typeof b.sortOrder === 'number' ? b.sortOrder : undefined,
         isPrimary: b.isPrimary === true,
       };
-      return json({ ok: true, ...(await attachToProduct(media, g.actor, input, g.ctx)) });
+      const attached = await attachToProduct(media, g.actor, input, g.ctx);
+      // PR 232: the photo's description, written while seo.altText.autoApply is on (never fails the add)
+      await autoAltAfterAttach(storeId, productId);
+      return json({ ok: true, ...attached });
     }
     if (b.action === 'detach') {
       if (!isUuid(b.productMediaId)) return fail(400, 'INVALID_INPUT', ['productMediaId']);

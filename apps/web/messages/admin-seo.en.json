@@ -416,5 +416,23 @@
     "pathsHint": "One path per line, each starting with /, at most {n}. The admin and a customer's own pages are always kept out.",
     "now": "What robots.txt says now",
     "nowHint": "On the shop's own address. While the shop is closed to search engines every robot is kept out."
+  },
+  "at": {
+    "title": "Photo descriptions",
+    "desc": "The words search engines and screen readers get for each product photo (alt text). The shop writes them from the product's name, the photo's colour and the kind of photo.",
+    "missing": "Product photos with no description:",
+    "missingHint": "\"Write them now\" writes each one. A description typed in Media is never changed.",
+    "none": "Every product photo has a description.",
+    "fill": "Write them now",
+    "filling": "Writing…",
+    "filled": "{n} descriptions written.",
+    "example": "How the shop writes one",
+    "sampleName": "Oxford shirt",
+    "sampleColour": "Navy",
+    "bengali": "The English one goes live at once. A Bengali page builds its own from the Bengali words of the dictionary, so nothing is written in Bengali.",
+    "auto": "Write a description as each photo is added",
+    "autoHint": "On: a photo added to a product gets its description at once, if it has none.",
+    "max": "Longest description (letters)",
+    "maxHint": "Default {v} ({min} to {max}). A longer one is cut at a whole word."
   }
 }

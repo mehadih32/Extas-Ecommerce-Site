@@ -49,9 +49,10 @@ describe('<ResponsiveImage> (PR 24)', () => {
     expect(html).toBe('<span role="img" aria-label="Navy polo" style="display:block;aspect-ratio:4 / 5;background-color:#142050" data-media-pending=""></span>');
   });
 
-  it('alt text in the page language, the other language next, then the fallback', () => {
+  it('alt text in the page language, else the fallback in that language (PR 232: never the other language)', () => {
     expect(altFor(image(), 'bn', 'x')).toBe('নেভি পোলো, সামনের দিক');
-    expect(altFor({ altBn: null, altEn: 'Navy polo' }, 'bn', 'x')).toBe('Navy polo');
+    expect(altFor({ altBn: null, altEn: 'Navy polo' }, 'bn', 'x')).toBe('x');
+    expect(altFor({ altBn: 'নেভি পোলো', altEn: ' ' }, 'en', 'fallback')).toBe('fallback');
     expect(altFor({ altBn: null, altEn: null }, 'en', 'fallback')).toBe('fallback');
   });
 });

@@ -54,5 +54,7 @@ export function ResponsiveImage({ image, slot, sizes, alt, priority = false, cla
 
 /** The alt text for the page language, falling back to the other language, then to the caller's text. */
 export function altFor(image: Pick<ImageSource, 'altBn' | 'altEn'>, lang: 'bn' | 'en', fallback: string): string {
-  return (lang === 'bn' ? (image.altBn ?? image.altEn) : (image.altEn ?? image.altBn)) ?? fallback;
+  // PR 232: the page's own language, else the caller's words in that language; ~~then the other language~~ (the shop
+  // writes English descriptions, and a Bengali page must not read them out in English)
+  return (lang === 'bn' ? image.altBn : image.altEn)?.trim() || fallback;
 }
