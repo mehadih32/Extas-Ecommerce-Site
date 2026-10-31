@@ -19,7 +19,7 @@
 // ERP link, and goes only with its own key.
 import { z } from 'zod';
 import { AuthError, can } from '@extas/auth';
-import { InventoryError, isV6, openLinkIdOf, returnsV6Path, sendReturnList, withReturnListLock, type ReturnListSendResult } from '@extas/inventory';
+import { InventoryError, isV6, openLinkIdOf, returnsV6Path, sendReturnList, storeDate, withReturnListLock, type ReturnListSendResult } from '@extas/inventory';
 import { nowOf, parse, setting, TX, type Db, type OrdersDeps, type OrdersPermission, type Tx, type Who } from './context';
 import { erpPathRefusal, OrdersError } from './errors';
 import { requireV6 } from './legacy';
@@ -482,7 +482,9 @@ export async function handbackDesk(deps: OrdersDeps, who: Who, opts: { recent?: 
   const v6 = await isV6(deps, who.storeId);
   const [accounts, photo] = await Promise.all([deps.db.courierAccount.findMany({ where: { storeId: who.storeId, enabled: true }, select: { providerKey: true }, orderBy: { providerKey: 'asc' } }), setting(deps, who.storeId, 'returns.handback.photo')]);
   const couriers = [...new Set(accounts.map((a) => a.providerKey.toUpperCase()).filter((k) => /^[A-Z0-9_]{2,20}$/.test(k))), HAND_COURIER];
-  const base = { model: v6 ? ('v6' as const) : ('v5' as const), couriers, photoRequired: photo, today: ymd(nowOf(deps)) };
+  // review R1 (m4): "today" is the store's own day (its time zone), not the UTC one — 00:00–05:59 in Dhaka is today there
+  const zone = (await deps.db.store.findUnique({ where: { id: who.storeId }, select: { timezone: true } }))?.timezone ?? 'UTC';
+  const base = { model: v6 ? ('v6' as const) : ('v5' as const), couriers, photoRequired: photo, today: storeDate(nowOf(deps), zone) };
   if (!v6) return { ...base, open: [], recent: [] };
   const include = { parcels: { orderBy: { scannedAt: 'asc' as const } } };
   const [open, recent] = await Promise.all([
