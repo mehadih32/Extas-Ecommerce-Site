@@ -66,7 +66,13 @@
     "AI_OFF": "AI drafts are off. Turn on AI for the shop and \"Offer AI drafts\" first.",
     "AI_UNAVAILABLE": "The AI writer could not be reached. Try again later.",
     "DECIDED": "Someone already decided this draft. The list shows what is still waiting.",
-    "NOT_FOUND": "This draft no longer exists."
+    "NOT_FOUND": "This draft no longer exists.",
+    "LIVE_PAGE": "That old link is a page the shop has (a live product or category). Change the page's own link instead.",
+    "OWN_PAGE": "That address is the shop's own page (home, bag, checkout, account, search, the sets) and can never forward.",
+    "SELF": "A link cannot forward to itself.",
+    "TOO_LONG": "The link is too long.",
+    "EMPTY": "The list has no lines.",
+    "TOO_MANY": "The list is too long: at most {fields} lines at a time."
   },
   "titles": {
     "title": "Search titles and descriptions",
@@ -165,5 +171,128 @@
       "website": "The website's name on the home page"
     },
     "never": "A star rating is never sent until real reviews exist, and never a price the page does not show."
+  },
+  "rd": {
+    "metaTitle": "Redirects & 404 · Admin",
+    "title": "Redirects & 404",
+    "sub": "Old links send people to the right page with a permanent redirect. The WordPress map switches on at go-live.",
+    "where": "Website › SEO › Redirects & 404",
+    "saving": "Saving…",
+    "checking": "Checking…",
+    "on": "on",
+    "off": "off",
+    "kpi": {
+      "on": "Redirects on",
+      "onSub": "{off} switched off",
+      "wp": "WordPress map",
+      "wpLive": "Live: old shop links forward",
+      "wpWaiting": "Waiting for go-live day",
+      "nf": "Open 404s",
+      "nfSub": "{fixed} fixed · {ignored} set aside",
+      "code": "Redirect code",
+      "codeSub": "Set in Catalogue › Names & links"
+    },
+    "safe": {
+      "title": "Nothing is deleted.",
+      "text": "A redirect is only switched off. An old link never takes over the home page, the bag, the checkout or a page the shop has."
+    },
+    "list": {
+      "title": "Old links that forward",
+      "desc": "Renamed products and categories, links typed in by hand, combos with their colours in another order and the WordPress map.",
+      "viewsAria": "Kinds of redirect",
+      "search": "Old or new link",
+      "searchAria": "Search the redirects",
+      "go": "Search",
+      "empty": "No redirects here",
+      "emptySearch": "No redirect matches",
+      "emptyBody": "A redirect is made when a product or category gets a new link, or when you add one here.",
+      "more": "Showing the first {n}. Search to find others."
+    },
+    "view": {
+      "all": "All",
+      "wordpress": "WordPress map",
+      "renamed": "Renamed",
+      "manual": "Added by hand",
+      "combo": "Combo colour order",
+      "off": "Off"
+    },
+    "kind": {
+      "wordpress": "WordPress 301",
+      "renamed": "Renamed",
+      "manual": "By hand",
+      "combo": "Colour order"
+    },
+    "col": {
+      "from": "From",
+      "to": "To",
+      "kind": "Kind",
+      "hits": "Hits",
+      "on": "On",
+      "keepUntil": "Kept at least until {d}"
+    },
+    "add": {
+      "title": "Add a redirect",
+      "desc": "An old address and the page it should open. Pointing at an old link follows it to its end.",
+      "from": "Old link",
+      "fromPh": "/old-page",
+      "to": "Send it to",
+      "toPh": "/p/essential-pique-polo",
+      "toHint": "The new page's address on this shop, starting with /.",
+      "save": "Add redirect",
+      "done": "Added: {from} → {to}"
+    },
+    "imp": {
+      "title": "Import a list of old links",
+      "desc": "Paste or choose a file: one line per link, the old address then the new one. First press Check; only the lines that pass are written. Imported links are kept at least {months} months.",
+      "kind": "What the list is",
+      "text": "The list",
+      "textPh": "/product/polo-shirt-navy-l/,/p/essential-pique-polo",
+      "textHint": "Comma, semicolon or tab between the two. A full address is cut to its path. A heading line and lines starting with # are skipped.",
+      "file": "Or choose a file (.csv or .txt)",
+      "check": "Check",
+      "commit": "Import {n} links",
+      "done": "{n} links imported.",
+      "line": "Line {n}:",
+      "st": {
+        "ok": "new",
+        "update": "changes an existing one",
+        "same": "already there",
+        "empty": "a link is missing",
+        "self": "points at itself",
+        "own": "the shop's own page",
+        "live": "a live page",
+        "twice": "twice in the list",
+        "long": "too long"
+      }
+    },
+    "nf": {
+      "title": "404 report",
+      "desc": "Links people opened that have no page. Send each to the right page, or set it aside.",
+      "seen": "Visits: {n} · last {d}",
+      "from": "from {r}",
+      "suggest": "Suggested: {label} ({path}, {pct}% match)",
+      "noSuggest": "No close page found.",
+      "fix": "Fix",
+      "save": "Save redirect",
+      "ignore": "Set aside",
+      "sendTo": "Send {path} to",
+      "empty": "No open 404s.",
+      "off": "The 404 counter is off (More options)."
+    },
+    "wp": {
+      "title": "WordPress 301 map",
+      "desc": "{n} old shop links are in the map.",
+      "live": "WordPress map live",
+      "liveHint": "Off by default. Turn it on on go-live day, when the main domain points at this shop; then every old link forwards to its new page."
+    },
+    "opt": {
+      "keep": "Keep imported links at least (months)",
+      "shown": "Rows shown per list",
+      "record": "Count 404s",
+      "recordHint": "On by default. Counts every shop address that has no page.",
+      "maxRows": "Different addresses kept at most",
+      "percent": "Suggest a page from this match (%)",
+      "default": "Default: {v}"
+    }
   }
 }

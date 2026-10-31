@@ -65,6 +65,7 @@ import { returnsV6Settings } from './registry-returns-v6';
 import { switchoverSettings } from './registry-switchover';
 import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
+import { seoReachSettings } from './registry-seo-reach';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1262,6 +1263,8 @@ export const registry = {
   ...booksSummarySettings,
   // ---- CN-028 · PR 619, 621 (CN-029 Phase 2, Prohori) · the switch-over and the ERP link page: how fresh the dry run must be, orders still waiting in the old form, the page's list length; the demo ERP the acceptance suite runs against (registry-switchover.ts, version 70). ----
   ...switchoverSettings,
+  // ---- S11 · CN-031 lane A · PR 235 · redirects and the 404 report (registry-seo-reach.ts, version 71; later lane-A PRs add theirs). ----
+  ...seoReachSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

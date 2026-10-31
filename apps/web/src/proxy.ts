@@ -9,10 +9,15 @@
 // S11 · PR 220: a public page asked for with capital letters moves permanently to its lower-case address (Blueprint
 // C12.1: one address per page, lower case; the query is kept). The slash-free form is Next's own rule (a trailing
 // slash is sent on to the address without it, permanently). No redirect by the browser's language, ever.
+// S11 · PR 235: an old address in the redirect table (a renamed product or category, a link typed in by hand, a combo's
+// colours in another order, the WordPress map once it is live) forwards permanently to its page, before any page draws
+// (lib/seo/redirect-table: the table is kept in this process, so the proxy never waits on the database).
 import { NextResponse, type NextRequest } from 'next/server';
 import { shopCacheHeaders } from './lib/cache-policy';
 import { lowerCaseTarget } from './lib/seo/indexing';
+import { countRedirectHit, forwardOf, redirectTable } from './lib/seo/redirect-table';
 import { isShopPath, LANG_HEADER, PATH_HEADER, splitLang, THEME_HEADER } from './lib/shop/lang';
+import { shopStoreId } from './lib/shop/store-id';
 
 /** A permanent move (HTTP's own code for it; search engines carry the page's rank over). */
 const PERMANENT = 301;
@@ -24,7 +29,7 @@ function withCacheHeaders(res: NextResponse, req: NextRequest): NextResponse {
   return res;
 }
 
-export function proxy(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
   if (!isShopPath(pathname)) return NextResponse.next();
   const lower = lowerCaseTarget(pathname);
@@ -32,6 +37,13 @@ export function proxy(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = lower;
     return NextResponse.redirect(url, PERMANENT);
+  }
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    const fwd = forwardOf(await redirectTable(shopStoreId()), pathname, req.nextUrl.search);
+    if (fwd) {
+      countRedirectHit(fwd.id);
+      return NextResponse.redirect(new URL(fwd.location, req.nextUrl), fwd.status);
+    }
   }
   const { lang, path } = splitLang(pathname);
   if (!isShopPath(path)) return NextResponse.next(); // /bn/admin is not the admin

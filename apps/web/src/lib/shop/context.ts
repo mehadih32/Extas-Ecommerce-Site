@@ -4,13 +4,14 @@
 // defaults are used and the categories are empty, so a page always draws — never a guess at the owner's data.
 import { cache } from 'react';
 import { headers } from 'next/headers';
-import { getPrisma, MOTHER_STORE_ID } from '@extas/db/client';
+import { getPrisma } from '@extas/db/client';
 import { registry, type Key, type Value } from '@extas/settings';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import { shopT, type ShopT, type Vars } from './dict';
 import { formatMoney, isShopLang, LANG_HEADER, PATH_HEADER, THEME_HEADER, toBnDigits, type ShopLang } from './lang';
 import { SIGNUP_LIST_LIVE, type Flags, type ShopCategory } from './shell-model';
 import { shopTheme, todayIn, type ShopTheme } from './theme';
+import { shopStoreId } from './store-id';
 import { bulkTrial, tryBulkOn } from './try-bulk';
 import { tryContactNumber } from './try-contact';
 
@@ -74,11 +75,8 @@ export function defaultShopSettings(): ShopSettings {
   return Object.fromEntries(KEYS.map((k) => [k, registry[k].default])) as ShopSettings;
 }
 
-/** The store the shop serves: the mother store, or another one the server names (technical, like the DB address). */
-export function shopStoreId(): number {
-  const n = Number.parseInt(process.env.SHOP_STORE_ID ?? '', 10);
-  return Number.isInteger(n) && n > 0 ? n : MOTHER_STORE_ID;
-}
+/** The store the shop serves: the mother store, or another one the server names (lib/shop/store-id, PR 235). */
+export { shopStoreId };
 
 async function readSettings(storeId: number): Promise<{ values: ShopSettings; live: boolean }> {
   const resolver = settingsResolver();

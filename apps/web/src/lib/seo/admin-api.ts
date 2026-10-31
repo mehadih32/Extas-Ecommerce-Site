@@ -15,12 +15,14 @@ import { audit } from '@extas/auth';
 import { registry, SettingsError, storeTarget, type Key } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { decideDraft, draftState, makeDrafts, SeoDraftError } from './drafts';
+import { forgetRedirectTable } from './redirect-table';
 import { primaryDomain } from './site';
 
 /** The settings the SEO page shows and saves (each PR adds its own). */
 // PR 221: the page templates, the product templates and lengths of Names & links (PR 590) shown here with them, and the
 // AI drafts switch.
 // PR 222: which structured data the pages carry.
+// PR 235: the redirects (the WordPress map's switch) and the 404 report, saved from the Redirects & 404 page.
 export const SEO_KEYS = [
   'seo.indexing',
   'seo.titles',
@@ -30,6 +32,8 @@ export const SEO_KEYS = [
   'naming.metaDescriptionMaxChars',
   'seo.aiDrafts',
   'seo.structuredData',
+  'seo.redirects',
+  'seo.notFound',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 
@@ -107,6 +111,7 @@ export async function seoSettingsRoute(request: Request, deps: AdminDeps | null)
     if (JSON.stringify(parsed.data) !== JSON.stringify(before.value)) {
       await d.resolver.set(key, parsed.data as never, storeTarget(MOTHER_STORE_ID), { actorId, reason: `Website › SEO: ${key}` });
       await audit(d.db, g.actor, { storeId: MOTHER_STORE_ID, action: 'seo.settings', entityType: 'Setting', entityId: key, before: { [key]: before.value }, after: { [key]: parsed.data } }, { source: 'admin-api', ...g.ctx });
+      if (key === 'seo.redirects') forgetRedirectTable(MOTHER_STORE_ID);
     }
     return json({ ok: true, ...(await seoSnapshot(d, MOTHER_STORE_ID)) });
   } catch (e) {

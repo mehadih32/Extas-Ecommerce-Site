@@ -64,7 +64,9 @@
     "supportSettings": "সাপোর্ট সেটিংস",
     "booksDaily": "দৈনিক হিসাব",
     "moneyCosts": "খরচ",
-    "erpLink": "ERP সংযোগ"
+    "erpLink": "ERP সংযোগ",
+    "seoRedirects": "রিডাইরেক্ট আর 404",
+    "seo": "সার্চের সেটিং"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

@@ -14,6 +14,14 @@
     "aiDrafts": {
       "label": "AI drafts",
       "help": "Off. On (and with AI on for the whole shop), the AI writes a title and a description for products and categories that have none of their own, from the page's own facts only. Nothing goes on a page until someone accepts the draft here; an accepted draft fills only what is empty and never replaces text someone typed. \"At most\": how many pages one press drafts. Until an AI provider is connected, a practice writer drafts from the facts alone."
+    },
+    "redirects": {
+      "label": "Redirects",
+      "help": "Old links forward to their new page permanently (the status code is the one set in Catalogue › Names & links, 301 as shipped): a renamed product or category, a link typed in by hand, a combo asked for with its colours in another order. The old shop's links (the WordPress map, imported on go-live day) forward only while \"WordPress map live\" is on. An imported old link is kept at least this many months; nothing is ever deleted, a link is only switched off. \"Rows shown\": how many rows each list of the page shows."
+    },
+    "notFound": {
+      "label": "404 report",
+      "help": "Counts the shop addresses that have no page: which address, how often, the last time and the site the visitor came from (without anything after \"?\"). At most this many different addresses are kept, so a scan cannot fill the database. A suggestion (the closest live page) is offered when this share of the address's words match its link."
     }
   },
   "defaults": {
