@@ -43,6 +43,7 @@
         "health": "Site health"
       },
       "settings": {
+        "store": "Store details",
         "keys": "Keys & connections",
         "erp": "ERP link",
         "security": "Sign-in & security",

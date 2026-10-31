@@ -248,6 +248,7 @@
       "/admin/settings/erp-link",
       "/admin/settings/security",
       "/admin/settings/privacy",
+      "/admin/settings/store",
       "/admin/orders/risk-rules",
       "/pay/0",
       "/bn/pay/0",

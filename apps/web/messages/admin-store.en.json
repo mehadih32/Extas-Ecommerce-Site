@@ -1,0 +1,47 @@
+{
+  "stp": {
+    "metaTitle": "Store details",
+    "title": "Store details",
+    "sub": "The shop's legal numbers. The shop prints each one only when it is filled in; nothing made up ever shows.",
+    "kpi": {
+      "filled": "Legal numbers filled in",
+      "of": "{n} of {total}",
+      "ready": "Ready for go-live",
+      "notReady": "Needed before go-live"
+    },
+    "missing": "Still missing before go-live: {list}.",
+    "legal": {
+      "h": "Legal numbers",
+      "d": "Printed in the footer on one line with the copyright, on every invoice and on the help page. Leave a box empty until you have the number: the shop then leaves that line out.",
+      "registeredName": "Registered business name",
+      "registeredNameHelp": "As on the trade licence.",
+      "tradeLicence": "Trade licence number",
+      "dbid": "DBID (Digital Business ID)",
+      "dbidHelp": "From the e-CAB / Ministry of Commerce registration.",
+      "bin": "VAT BIN",
+      "binHelp": "Printed on invoices when you are VAT registered."
+    },
+    "names": {
+      "registeredName": "registered name",
+      "tradeLicence": "trade licence",
+      "dbid": "DBID",
+      "bin": "VAT BIN"
+    },
+    "err": {
+      "STALE": "Someone else changed this card; it shows their values now.",
+      "INVALID_INPUT": "Some values are not right: {fields}",
+      "PLACEHOLDER": "Type the real number, not a stand-in like [number], TBD or xxx ({fields}). Leave the box empty until you have it.",
+      "forbidden": "You do not have permission to change this.",
+      "unauthorized": "Your sign-in has ended — please sign in again.",
+      "network": "No connection. Please try again.",
+      "other": "That did not save. Please try again."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "discard": "Discard",
+    "unsaved": "Not saved yet",
+    "readOnly": "You can see these details; changing them needs the settings permission.",
+    "pairHelp": "Write both languages."
+  }
+}
