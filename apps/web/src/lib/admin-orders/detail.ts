@@ -428,6 +428,42 @@ export function reviewSpecs(view: AdminView, alertId: string, number: string, ma
 
 /** PR 162: where the order screen's "Add to blocklist" sends (the risk API; it checks `risk.block` again). */
 const BLOCKLIST_URL = '/api/admin/risk/blocklist';
+/** PR 522: where "One parcel" sends (the risk API; it checks `orders.merge` again and finds the orders itself). */
+const BUNDLE_URL = '/api/admin/risk/bundle';
+
+/** PR 522: the order numbers a bundling line names. */
+function bundleNumbers(data: unknown): string {
+  const w = (data as { with?: { number?: string }[] } | null)?.with;
+  return Array.isArray(w) ? w.flatMap((m) => (typeof m?.number === 'string' ? [m.number] : [])).join(', ') : '';
+}
+
+/** PR 522: the timeline words of a proposal or a grouping: the orders, and "by itself" when the owner's setting did it. */
+function bundleSummary(view: AdminView, data: unknown): string | null {
+  const numbers = bundleNumbers(data);
+  const auto = (data as { auto?: boolean } | null)?.auto === true;
+  return [numbers ? t(view.dict, 'orders.ev.bundleWith', { numbers }) : null, auto ? t(view.dict, 'orders.ev.bundleAuto') : null].filter(Boolean).join(' · ') || null;
+}
+
+/** PR 522: "One parcel" on an order the bundling marked (`orders.merge`); null when it is not marked or may not. */
+export function bundleSpec(view: AdminView, o: { id: string; number: string; flags: string[]; orderGroupId: string | null; status: OrderState }, numbers: string, perms: ReadonlySet<string>): CommandSpec | null {
+  if (!o.flags.includes(od.BUNDLE_FLAG) || o.orderGroupId || !od.BUNDLEABLE.includes(o.status) || !perms.has('orders.merge')) return null;
+  const d = view.dict;
+  return {
+    id: 'bundle',
+    label: t(d, 'orders.cmd.bundle.label'),
+    url: BUNDLE_URL,
+    version: null,
+    fixed: { orderId: o.id },
+    title: t(d, 'orders.cmd.bundle.title', { n: o.number }),
+    icon: 'box',
+    tone: 'pri',
+    effects: [t(d, 'orders.eff.bundleWith', { numbers }), t(d, 'orders.eff.bundleMoney'), t(d, 'orders.eff.bundleNever')],
+    fields: [{ name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.bundleNote'), maxLength: 2000 }],
+    ok: t(d, 'orders.cmd.bundle.ok'),
+    okTone: 'pri',
+    done: t(d, 'orders.cmd.bundle.done', { n: o.number }),
+  };
+}
 
 const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.cancel': 'bad',
@@ -437,6 +473,7 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'delivery.checkOpened': 'warn',
   'order.deliveryCorrected': 'bad',
   'return.reason': 'warn',
+  'order.bundleProposal': 'mute',
   'order.hold': 'warn',
   'order.cancelAfterBooking': 'warn',
   'order.requestCancel': 'warn',
@@ -569,6 +606,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const check = await openCheckOf(deps, who.storeId, o.id);
   // PR 526: why the parcel came back (its reason and the rider's note), once it did
   const back = await returnReasonOf(deps, who.storeId, o.id);
+  // PR 522: the other orders in this order's parcel (a bundle or a merge)
+  const mates = o.orderGroupId ? await od.parcelMates(deps, who.storeId, o.id) : null;
   // PR 521: each review explained (a reading aid: if one cannot be read, the card still shows everything else)
   const explained = perms.has('orders.risk.read')
     ? await Promise.all(detail.reviews.map((r) => od.alertSummary(deps, who, r.id).catch(() => null)))
@@ -681,6 +720,11 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
         ]
       : [{ label: t(d, 'orders.courier.booking'), value: t(d, `orders.ship.${shipState}`) }],
   };
+  // PR 522 (and the merge of PR 145): the other orders in this order's parcel, and the parcel's note
+  if (mates?.orders.length) {
+    courier.rows.push({ label: t(d, 'orders.courier.together'), value: mates.orders.map((m) => m.number).join(', '), strong: true });
+    if (mates.note) courier.rows.push({ label: t(d, 'orders.courier.parcelNote'), value: mates.note });
+  }
 
   const moneyRows = [
     ...detail.payments.map((p) => ({ title: t(d, 'orders.money.payment', { amount: m(p.amountMinor), method: p.method }), sub: t(d, `orders.money.pst.${p.status}`), at: dt.format(p.createdAt), tone: (p.status === 'PAID' ? 'ok' : 'line') as Tone })),
@@ -722,7 +766,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || e.type === od.REFUSER_EVENT || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
       const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
-      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : ruled);
+      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : ruled);
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })
@@ -743,6 +787,13 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     const signs = check.signals.map((sg) => t(d, `orders.check.sig.${sg}`)).join(' · ');
     const collected = check.collectedMinor !== null ? m(check.collectedMinor) : null;
     bands.push({ id: 'deliveryCheck', kind: 'bad', text: t(d, 'orders.band.deliveryCheck', { courier: x?.shipment?.courierName ?? t(d, 'orders.courier.theCourier'), signs }), specs: deliveryCheckSpecs(view, check.id, o.number, perms, reasons, collected) });
+  }
+  // PR 522: the same person's other open orders to this address, proposed as one parcel (the newest proposal's orders)
+  const proposal = o.flags.includes(od.BUNDLE_FLAG) && !o.orderGroupId ? [...detail.timeline].reverse().find((e) => e.type === od.BUNDLE_PROPOSED_EVENT) : undefined;
+  if (proposal) {
+    const numbers = bundleNumbers(proposal.data);
+    const spec = bundleSpec(view, o, numbers, perms);
+    bands.push({ id: 'bundle', kind: 'stale', text: t(d, 'orders.band.bundle', { numbers }), specs: spec ? [spec] : [] });
   }
   if (back && !back.reasonKey) {
     const asked = returnReasonSpecs(view, back.shipmentId, o.number, perms, reasons, back.riderNote);

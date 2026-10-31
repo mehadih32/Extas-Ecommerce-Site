@@ -76,6 +76,10 @@
     "report": {
       "label": "Fraud report",
       "help": "How many days Reports › Fraud & RTO shows when no dates are picked (30 as shipped), and the most orders and returned parcels one report reads (5,000 as shipped; past it the page says the figures are cut short). The report only reads: it never blocks anyone, cancels an order or moves money."
+    },
+    "bundling": {
+      "label": "One parcel for one person's orders",
+      "help": "When on, a new order looks for the same person's other open orders (the same identity or number) to the same address, placed within the hours you set, not yet with the courier. \"Propose\" (as shipped) marks the order so a person presses \"One parcel\"; \"Group\" puts them in one parcel by itself. Each order keeps its lines, prices, charges and payments; nothing is cancelled or blocked. Until you set the hours, nothing happens. Off as shipped."
     }
   },
   "defaults": {

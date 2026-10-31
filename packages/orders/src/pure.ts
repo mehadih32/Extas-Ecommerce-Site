@@ -92,6 +92,9 @@ export const ORDER_COMMANDS = [
   'blocklistMatch',
   // PR 163: a repeat refuser's terms written on his new order as a proposal (the status stays; the ask is a person's)
   'refuserTerms',
+  // PR 522: the same person's other open orders to the same address proposed as one parcel (the status stays; a person
+  // presses "One parcel", or the owner's "group" makes it)
+  'bundleProposal',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
@@ -165,6 +168,8 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   blocklistMatch: OPEN_STATES,
   // PR 163: written when it lands while it is open
   refuserTerms: OPEN_STATES,
+  // PR 522: proposed when it lands, while it can still share a parcel (not with a courier)
+  bundleProposal: ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD'],
   // PR 542: "Send again" on an order waiting for its advance
   advanceResend: ['AWAITING_ADVANCE'],
   // PR 541 (SIM-F-014, F-002): a courier is booked for a confirmed order not yet handed over (the status stays; S08's

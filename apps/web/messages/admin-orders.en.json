@@ -162,7 +162,8 @@
       "twoSizesOther": "2 sizes — for someone else",
       "riskWatch": "Watch",
       "blocklist": "Blocklist",
-      "refuser": "Repeat refuser"
+      "refuser": "Repeat refuser",
+      "bundle": "One parcel?"
     },
     "page": {
       "all": "All orders",
@@ -255,7 +256,8 @@
       "pickReason": "Pick a reason",
       "band": "Delivery band (its charge from Delivery)",
       "blockWhy": "Why (required)",
-      "blockWhyPh": "What happened, so the next person knows"
+      "blockWhyPh": "What happened, so the next person knows",
+      "bundleNote": "Note for the packers (optional)"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -273,7 +275,7 @@
       "REASON_REQUIRED": "Pick a reason from the list (and write the note “Other” needs).",
       "INVALID_INPUT": "Something in the form is not right. Check it and try again.",
       "NOT_FOUND": "This order (or note, or review) was not found.",
-      "NOT_MERGEABLE": "These two orders cannot go in one parcel (one is booked, finished or another customer's).",
+      "NOT_MERGEABLE": "These orders cannot go in one parcel (one is booked, finished or another customer's, or there is no other open order to join).",
       "IDEMPOTENCY_MISMATCH": "This was sent twice with different details. Close the box and try again.",
       "FORBIDDEN": "You don't have the permission for this.",
       "UNAUTHENTICATED": "You are signed out. Sign in again.",
@@ -412,6 +414,12 @@
         "title": "Add the number of {n} to the blocklist",
         "ok": "Add to blocklist",
         "done": "The number of {n} is on the blocklist"
+      },
+      "bundle": {
+        "label": "One parcel",
+        "title": "Send order {n} in one parcel",
+        "ok": "Make one parcel",
+        "done": "Order {n} now goes in one parcel with the others"
       }
     },
     "eff": {
@@ -448,7 +456,10 @@
       "riskLevels": "Your risk levels may then add a watch mark, a hold or a call; nothing is blocked or asked by itself",
       "blockList": "{phone} goes on the blocklist with your reason, your name and the time",
       "blockNext": "Only while the owner has the blocklist switched on, a new order from it is marked or held for a person",
-      "blockNever": "This order is not changed or cancelled, and the customer is not told"
+      "blockNever": "This order is not changed or cancelled, and the customer is not told",
+      "bundleWith": "The same person's other open orders to this address (now: {numbers}) go in the same parcel as this order",
+      "bundleMoney": "Each order keeps its own lines, prices, charges and payments",
+      "bundleNever": "Nothing is cancelled or held, and the customer is not told"
     },
     "review": {
       "title": "Duplicate review",
@@ -552,7 +563,9 @@
       },
       "whyBack": "Why it came back",
       "noReason": "Not recorded yet",
-      "riderNote": "Rider's note"
+      "riderNote": "Rider's note",
+      "together": "One parcel with",
+      "parcelNote": "Parcel note"
     },
     "money": {
       "title": "Payments & refunds",
@@ -665,7 +678,11 @@
       "order_refuserTerms": "Repeat refuser: the owner's terms",
       "refuserCount": "{n} refusals when chosen",
       "refuserWhy": "because: {why}",
-      "refuserProposal": "a proposal — a person sends it"
+      "refuserProposal": "a proposal — a person sends it",
+      "order_bundleProposal": "One parcel proposed",
+      "order_bundled": "Put in one parcel",
+      "bundleWith": "with {numbers}",
+      "bundleAuto": "by the owner's setting"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
@@ -675,7 +692,8 @@
       "locked": "Booked with {courier} · {tracking}: the parcel is locked. To change it, cancel after booking.",
       "twoSize": "{product}: {sizes} on one order — ask which size the customer wants before packing.",
       "deliveryCheck": "{courier} says delivered, but our records say it came back: {signs}. Check with the courier and the customer, then record what really happened.",
-      "returnReason": "The parcel came back from {courier}. Ask the rider or the customer why, and record it — the reports and the customer's history count it."
+      "returnReason": "The parcel came back from {courier}. Ask the rider or the customer why, and record it — the reports and the customer's history count it.",
+      "bundle": "The same person has other open orders to this address: {numbers}. Send them in one parcel?"
     },
     "items": {
       "title": "Items",
@@ -1090,6 +1108,36 @@
           "UNAUTHENTICATED": "You are signed out. Sign in again.",
           "network": "No connection. Nothing was changed — try again.",
           "other": "It did not work. Nothing was changed — try again."
+        }
+      },
+      "bd": {
+        "h": "One parcel for one person's orders",
+        "d": "When on, a new order looks for the same person's other open orders (the same identity or number) to the same address, placed within the hours you set and not yet with the courier. Each order keeps its lines, prices, charges and payments; nothing is cancelled or blocked.",
+        "enabled": "Look for orders to send together",
+        "windowHours": "Hours back an earlier order still joins",
+        "windowHoursHelp": "1 to 168 hours. Empty until you set it: nothing happens until then.",
+        "action": "What happens",
+        "actionHelp": "Propose: the order is marked and a person presses \"One parcel\". Group: they go in one parcel by themselves, with a note naming every order.",
+        "act": {
+          "propose": "Propose (a person presses \"One parcel\")",
+          "group": "Group by itself"
+        },
+        "maxOrders": "Most orders in one parcel",
+        "maxOrdersHelp": "2 to 20 (default: 5).",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "discard": "Discard",
+        "unsaved": "Unsaved changes",
+        "readOnly": "Only someone who may change the risk rules can change this.",
+        "err": {
+          "STALE": "Someone else changed this in the meantime. The card shows theirs now; change it again if you need to.",
+          "INVALID_INPUT": "Please check: {fields}.",
+          "FORBIDDEN": "You may not change the risk rules.",
+          "forbidden": "You may not change the risk rules.",
+          "unauthorized": "Please sign in again.",
+          "network": "No connection. Nothing was saved; try again.",
+          "other": "Something went wrong. Nothing was saved; try again."
         }
       }
     },

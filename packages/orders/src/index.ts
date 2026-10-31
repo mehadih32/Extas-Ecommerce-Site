@@ -91,6 +91,8 @@ export * from './blocklist';
 // S06 · PR 163: repeat refusers, the owner's terms per case; a new order gets them as a proposal (refusers.ts).
 export * from './refusers';
 export * from './identity-family';
+// S06 · PR 522: one person's open orders to one address in one parcel — proposed or grouped (bundling.ts).
+export * from './bundling';
 export * from './advance-request';
 export * from './advance-settings';
 export * from './booking';

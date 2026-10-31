@@ -17,11 +17,13 @@ import { AdvanceRequestCard } from '@/components/admin/orders/AdvanceRequestCard
 import { BlocklistCard } from '@/components/admin/orders/BlocklistCard';
 import { RefusersCard } from '@/components/admin/orders/RefusersCard';
 import { RiskLevels } from '@/components/admin/orders/RiskLevels';
+import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { advanceCardScreen, advanceCardTexts } from '@/lib/admin-orders/advance-card';
 import { blocklistCardScreen, blocklistCardTexts } from '@/lib/admin-orders/blocklist-card';
+import { bundlingCard } from '@/lib/admin-orders/bundling-api';
 import { refusersCardScreen, refusersCardTexts } from '@/lib/admin-orders/refusers-card';
 import { levelsScreen, levelsTexts } from '@/lib/admin-orders/risk-levels';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -54,8 +56,34 @@ export default async function RiskRulesPage() {
   const who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const held = access.guard.permissions;
   const canEdit = held?.has('risk.rules.write') ?? false;
-  const [data, adv, bl, rf] = await Promise.all([riskLevels(readDeps(access.deps), who), advanceSettings(readDeps(access.deps), who), blocklist(readDeps(access.deps), who), refusers(readDeps(access.deps), who)]);
+  const [data, adv, bl, rf, bd] = await Promise.all([
+    riskLevels(readDeps(access.deps), who),
+    advanceSettings(readDeps(access.deps), who),
+    blocklist(readDeps(access.deps), who),
+    refusers(readDeps(access.deps), who),
+    bundlingCard(access.deps, MOTHER_STORE_ID),
+  ]);
   const d = view.dict;
+  // PR 522: one parcel for one person's orders (the setting `risk.bundling`, off as shipped)
+  const bw = (k: string) => t(d, `orders.rr.bd.${k}`);
+  const bdTexts: FieldsCardTexts = {
+    h: bw('h'),
+    d: bw('d'),
+    save: bw('save'),
+    saving: bw('saving'),
+    saved: bw('saved'),
+    discard: bw('discard'),
+    unsaved: bw('unsaved'),
+    readOnly: bw('readOnly'),
+    pairHelp: '',
+    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'FORBIDDEN', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, bw(`err.${c}`)])),
+  };
+  const bdFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: bw('enabled') },
+    { kind: 'number', path: 'windowHours', label: bw('windowHours'), help: bw('windowHoursHelp'), min: 1, max: 168 },
+    { kind: 'select', path: 'action', label: bw('action'), help: bw('actionHelp'), options: ['propose', 'group'].map((a) => ({ value: a, label: bw(`act.${a}`) })) },
+    { kind: 'number', path: 'maxOrders', label: bw('maxOrders'), help: bw('maxOrdersHelp'), min: 2, max: 20 },
+  ];
   return (
     <div className="a2-z" data-testid="risk-rules">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'orders.page.riskRules')} sub={t(d, 'orders.rr.sub')} />
@@ -64,6 +92,9 @@ export default async function RiskRulesPage() {
       <AdvanceRequestCard screen={advanceCardScreen(adv)} texts={advanceCardTexts(view, adv.providers)} canEdit={canEdit} />
       <BlocklistCard screen={blocklistCardScreen(view, bl)} texts={blocklistCardTexts(view)} canEdit={canEdit} canBlock={held?.has('risk.block') ?? false} canUnblock={held?.has('risk.unblock') ?? false} />
       <RefusersCard screen={refusersCardScreen(view, rf)} texts={refusersCardTexts(view)} canEdit={canEdit} canDecide={held?.has('risk.refuser.terms') ?? false} />
+      <div className="a2-mt12">
+        <FieldsCard url="/api/admin/risk/bundling" screen={{ key: bd.key, value: bd.value, version: bd.version }} fields={bdFields} texts={bdTexts} canEdit={canEdit} testId="risk-bundling" />
+      </div>
       <p className="a2-xs a2-mute a2-mt12">{t(d, 'orders.rr.later')}</p>
     </div>
   );

@@ -2,10 +2,11 @@
 // labelled in both languages, off as shipped, only "mark" or "hold" (never a cancel), and the hold reason it uses on the
 // shipped hold-reason list. PR 163 (v101): repeat refusers — off, the number of refusals unset until the owner sets it,
 // and the terms only the advance request's kinds or nothing. PR 164 (v102): the fraud report's default days and size.
+// PR 522 (v103): one parcel for one person's orders — off, the window unset, a proposal unless the owner says group.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { REFUSER_TERMS, riskBlocklistSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
+import { REFUSER_TERMS, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
 
 describe('S06 risk settings (v100–109)', () => {
   it('PR 162: the blocklist is in the registry at version 100, labelled in English and Bengali, off as shipped', () => {
@@ -65,5 +66,21 @@ describe('S06 risk settings (v100–109)', () => {
     expect(riskReportSchema.safeParse({ days: 7, maxRows: 99 }).success).toBe(false);
     expect(riskReportSchema.safeParse({ days: 7, maxRows: 20_001 }).success).toBe(false);
     expect(riskReportSchema.safeParse({ days: 7, maxRows: 100, extra: 1 }).success).toBe(false);
+  });
+
+  it('PR 522: one parcel for one person at version 103, labelled in both languages, off and the window unset as shipped', () => {
+    const spec = riskS06Settings['risk.bundling'];
+    expect(registry['risk.bundling']).toBe(spec);
+    expect(spec.version).toBe(103);
+    expect(spec.isOwnerData).toBe(false);
+    for (const lang of ['en', 'bn'] as const) {
+      expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+      expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+    }
+    expect(spec.default).toEqual({ enabled: false, windowHours: null, action: 'propose', maxOrders: 5 });
+    expect(riskBundlingSchema.safeParse({ enabled: true, windowHours: 24, action: 'group', maxOrders: 3 }).success).toBe(true);
+    expect(riskBundlingSchema.safeParse({ enabled: true, windowHours: 0, action: 'group', maxOrders: 3 }).success).toBe(false);
+    expect(riskBundlingSchema.safeParse({ enabled: true, windowHours: 24, action: 'cancel', maxOrders: 3 }).success).toBe(false);
+    expect(riskBundlingSchema.safeParse({ enabled: true, windowHours: 24, action: 'group', maxOrders: 1 }).success).toBe(false);
   });
 });
