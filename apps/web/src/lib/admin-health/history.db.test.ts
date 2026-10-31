@@ -161,6 +161,12 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Site health › Run history on Postgr
     const oldest = (await one(rows[2]!.id)).r;
     expect(oldest.previous).toMatchObject({ ok: true });
     expect(oldest.findings.every((f) => f.isNew)).toBe(true);
+    // PR 422: failed runs in a row, and what the run says (by rules)
+    expect([r.streak, middle.streak, oldest.streak]).toEqual([3, 2, 1]);
+    expect(r.said.headline).toMatchObject({ key: 'headFailed', vars: { urgent: 1 } });
+    expect(r.said.causes.map((c) => c.key)).toContain('streak');
+    expect(middle.said.causes.map((c) => c.key)).not.toContain('streak');
+    expect((await one(rows[0]!.id)).r.said).toEqual(r.said);
     expect((await one('00000000-0000-7000-8000-000000000000')).status).toBe(404);
     expect((await one('nope')).status).toBe(404);
   });

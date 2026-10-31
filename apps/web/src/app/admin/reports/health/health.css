@@ -40,3 +40,5 @@
 /* PR 420 — Fixes to approve: a skill's first lines, and the proposal text. */
 .adm2 .hs-pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink2)}
 .adm2 .hs-fix{white-space:pre-wrap;overflow-wrap:anywhere}
+/* PR 422 — What this run says: the likely causes as a short list. */
+.adm2 .hs-said{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
