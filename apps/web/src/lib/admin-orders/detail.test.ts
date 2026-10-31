@@ -12,7 +12,7 @@ import type { AdminView } from '../admin-page';
 import { t, type Dict } from '../i18n';
 import { COMMAND_PATHS, KNOWN_ERRORS, commandUrl, errorKey, newKey, refundRequestsOf, send } from './commands';
 import { editBody } from '../orders-api';
-import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, returnReasonSpecs, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
+import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, rebookSpecs, returnReasonSpecs, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
 import { flagChips } from './list';
 import { invoiceHref } from './model';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec } from './spec';
@@ -154,6 +154,21 @@ describe('which buttons an order shows', () => {
       expect(s!.fields[0]).toMatchObject({ name: 'reasonKey', required: true, options: [{ value: '' }, { value: 'did-not-like', label: lang === 'en' ? "Didn't like it" : 'পছন্দ হয়নি' }, { value: 'other', noteRequired: true }] });
       expect(s!.fields[1]).toMatchObject({ name: 'note', noteFor: 'reasonKey', value: 'refused at the door' });
       for (const w of [s!.label, s!.title, s!.ok, s!.done, ...s!.effects]) expect(w, lang).not.toMatch(/orders\.(retReason|check)\./);
+    }
+  });
+
+  it('gate F-004 · re-book a stale parcel: behind delivery.book, says how the old one was cancelled, moves no money', () => {
+    const stale = { shipmentId: ID, courierAccountId: ID, consignmentId: 'MOCK-SF-1', why: 'COD_CHANGED' as const, bookedCodMinor: 245_000, dueMinor: 195_000 };
+    expect(rebookSpecs(view('en'), stale, 'EX-1', 'Steadfast', '৳1,950', new Set(['delivery.parcels']))).toEqual([]);
+    for (const lang of ['en', 'bn'] as const) {
+      const [s, ...rest] = rebookSpecs(view(lang), stale, 'EX-1', 'Steadfast', '৳1,950', new Set(['delivery.book']));
+      expect(rest).toEqual([]);
+      expect(s).toMatchObject({ id: 'rebook', url: `/api/admin/delivery/parcels/${ID}/rebook`, version: null });
+      expect(s!.fields.map((f) => f.name)).toEqual(['cancelledVia', 'courierRef', 'note']);
+      expect(s!.fields[0]).toMatchObject({ required: true, options: [{ value: '' }, { value: 'panel' }, { value: 'phone' }] });
+      expect(s!.effects.join(' ')).toContain('MOCK-SF-1');
+      expect(s!.effects.join(' ')).toContain('৳1,950');
+      for (const w of [s!.label, s!.title, s!.ok, s!.done, ...s!.effects, ...s!.fields.map((f) => f.label)]) expect(w, lang).not.toMatch(/orders\.rebook\./);
     }
   });
 });

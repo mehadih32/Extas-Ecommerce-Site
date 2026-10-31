@@ -69,6 +69,9 @@ export const KNOWN_ERRORS = [
   'NOT_RETURNED',
   // PR 162: "Add to blocklist" for a number listed already
   'ALREADY_LISTED',
+  // gate F-004: a re-booking of a parcel that still matches its order, or a courier switched off
+  'NOT_STALE',
+  'COURIER_OFF',
   'FORBIDDEN',
   'UNAUTHENTICATED',
   'network',

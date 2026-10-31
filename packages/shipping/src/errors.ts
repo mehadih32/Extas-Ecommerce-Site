@@ -58,7 +58,15 @@ export type ShippingErrorCode =
   /** PR 183: this line has an open packing card already (one card per line at a time). */
   | 'ISSUE_OPEN'
   /** PR 183: this packing card is decided already. */
-  | 'ISSUE_DECIDED';
+  | 'ISSUE_DECIDED'
+  /** Gate F-004: the parcel still matches its order, or has left us, so there is nothing to re-book. */
+  | 'NOT_STALE'
+  /** Gate F-004: a re-booking waits — a cancel is waiting for the courier's answer. */
+  | 'CANCEL_PENDING'
+  /** Gate F-004: a re-booking waits — the customer asked to cancel. */
+  | 'CANCEL_REQUESTED'
+  /** Gate F-004: a re-booking waits — the order has an open review. */
+  | 'IN_REVIEW';
 
 export class ShippingError extends Error {
   readonly code: ShippingErrorCode;

@@ -347,7 +347,9 @@
       "ALREADY_RESOLVED": "Someone has resolved this check already. Reload to see it.",
       "ORDER_REFUSED": "The order cannot move now (for example a cancel is waiting). Sort that out first.",
       "NOT_RETURNED": "This parcel did not come back, so it takes no return reason.",
-      "ALREADY_LISTED": "This number is on the blocklist already."
+      "ALREADY_LISTED": "This number is on the blocklist already.",
+      "NOT_STALE": "This parcel already matches the order, or it has left the shop. Read the page again.",
+      "COURIER_OFF": "This courier account is switched off. Switch it on, or book with another courier."
     },
     "cmd": {
       "confirm": {
@@ -619,7 +621,8 @@
       "cancelOutcome": "Cancel answer",
       "outcome": {
         "CONFIRMED": "Cancelled by the courier",
-        "REFUSED": "The courier could not cancel"
+        "REFUSED": "The courier could not cancel",
+        "REBOOKED": "Closed and booked again"
       },
       "booking": "Booking",
       "theCourier": "the courier",
@@ -787,7 +790,8 @@
         "duplicateHold": "The duplicate check",
         "levelHold": "The risk level",
         "blocklistHold": "The blocklist"
-      }
+      },
+      "shipment_rebook": "Parcel booked again (its amount or receiver had changed)"
     },
     "band": {
       "newCustomer": "A new customer — no earlier order anywhere in the shop. Call once before confirming; nothing is held or asked in advance.",
@@ -801,7 +805,9 @@
       "returnReason": "The parcel came back from {courier}. Ask the rider or the customer why, and record it — the reports and the customer's history count it.",
       "bundle": "The same person has other open orders to this address: {numbers}. Send them in one parcel?",
       "blockProposal": "This number has {n} rejections ({refused} refused at the door, {declined} cancelled) and is proposed for the blocklist. A person decides; the order goes on as usual.",
-      "holdProposed": "The engine wants to hold this order ({rule}: {reason}). Nothing was held: you decide."
+      "holdProposed": "The engine wants to hold this order ({rule}: {reason}). Nothing was held: you decide.",
+      "codStale": "{courier} will collect {booked}, but the order now owes {due}. The sticker will not print until the parcel is booked again.",
+      "receiverStale": "The receiver {courier} has is not the order’s receiver any more. The sticker will not print until the parcel is booked again."
     },
     "items": {
       "title": "Items",
@@ -1409,6 +1415,23 @@
       "eff": {
         "saved": "The reason and the rider's note are kept on the return, the timeline and the customer's history."
       }
+    },
+    "rebook": {
+      "label": "Re-book the courier",
+      "title": "Re-book order #{n} with {courier}",
+      "eff": {
+        "old": "The old parcel {consignment} is closed as cancelled here. Cancel it with the courier first: in its panel or by phone.",
+        "new": "The order is booked again with {courier}, to collect {due}.",
+        "fail": "If the courier does not take the new parcel, the order waits in Ready to book.",
+        "noMoney": "No money moves, and the order itself is not cancelled."
+      },
+      "via": "How did you cancel the old parcel with the courier?",
+      "viaPick": "Pick one",
+      "viaPanel": "In the courier’s panel",
+      "viaPhone": "By phone with the courier",
+      "ref": "The courier’s reference, or who you spoke to (optional)",
+      "ok": "Re-book",
+      "done": "Order #{n} booked again"
     }
   }
 }
