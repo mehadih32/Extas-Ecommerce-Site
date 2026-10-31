@@ -1984,6 +1984,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-033",
+   "date": "31 Oct",
+   "title": "the shop follows the ERP's retail decisions of 30 Oct 2026",
+   "text": "No new PR numbers; the total stays 621 (615 active, 6 parked). The Extas ERP recorded three decisions on 30 Oct 2026 (its `CLAUDE.md`, \"retail leftovers\" and \"retail loss rule\"); a read-only check of the shop against the ERP's code found three places where the shop still expects the older contract. The ERP is not changed; the shop follows it, and each older behaviour stays behind its own switch (nothing deleted).",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [
@@ -12973,7 +12982,15 @@
      "Store isolation tested"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 610** — Updated 31 Oct 2026 (CN-033): `erp.orders.bGradeOpen` (off as shipped): while off no B-grade replacement is asked for before sending, and a `422` naming `bGradeSkus` holds the order with `B_GRADE_CLOSED` and an admin message instead of failing it; it goes again when the switch is on."
+    }
+   ],
    "mentions": [
     199,
     200
@@ -16679,6 +16696,13 @@
      "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
      "text": "**PR 611–614** — Updated 30 Oct 2026 (CN-029): these four also carry the rework of PR 184–191, 525 and 526 to the new rules, behind `erp.model`; the old flow keeps working until the switch-over."
+    },
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 614** — Updated 31 Oct 2026 (CN-033): a refused exchange parcel keeps its new piece on a deadline (`WAITING_RETURN`): billed in full the night after the deadline, credited if it comes back later and is approved; the risk list says \"new piece not back\". The practice ERP follows this rule, its old \"cancelled, no bill\" behind a practice-ERP switch."
     }
    ],
    "mentions": [
@@ -27207,6 +27231,13 @@
      "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
      "text": "**PR 619** — Updated 30 Oct 2026 (CN-029): the switch date, opening balance and moved-orders list are kept per store; a handover pack replaces the store's ERP keys (the new owner types their own) and starts the store's own ledgers."
+    },
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 619** — Updated 31 Oct 2026 (CN-033): `erp.switchOver.mode` per store — `fresh-start` (as shipped: owner, PIN, dry run and a typed date; no moved orders, opening balance 0, no switch transfer, no cost-of-goods backfill) or `erp-list` (the earlier steps, kept for an ERP that offers `GET /switch-over` and `GET /cost-of-goods`)."
     }
    ],
    "mentions": [],
@@ -27262,7 +27293,15 @@
      "settings v70 `erp.acceptance.*`): `runErpAcceptance` (@extas/adapters, 21 checks of `docs/erp/site-changes-v6.md` §4: contract, catalogue, orders, deliveries, return lists, checks, Return stock, exchanges, summaries, fixed costs, account, the retired v5 calls, switch-over, cost of goods, signed site calls) on the practice ERP in CI with its own actions driven"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-621",
+     "text": "**PR 621** — Updated 31 Oct 2026 (CN-033): `switchOver.read` and `costOfGoods.read` say \"not built in the ERP (decision 30 Oct 2026)\" on fresh-start; `exchanges.refused` expects \"not billed, not cancelled\" after the refusal and, on the practice ERP, the bill after the deadline and the credit after a late approved return; the B-grade line of `orders.billAtShipment` is sent only while `erp.orders.bGradeOpen` is on."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "ERP-এর সব নিয়ম আর খাতার মহড়া প্রতিটা রিলিজের আগে আর প্রতি রাতে পরীক্ষা হয়; ডেমো চাবি না থাকলে অপেক্ষা করে, কিছু আটকায় না",
