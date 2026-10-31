@@ -86,7 +86,10 @@ GitHub → Actions → **restore** → *Run workflow*. It runs `infra/server/bin
    Wait for his written "OK".
 4. **Replace the live database:** `mode = production`, the same `from` and `at`, `confirm = RESTORE`, and `owner_ok` =
    where his OK is (for example "chat, 2 Nov 14:05"). The workflow stops the shop, moves the live data aside to
-   `data/postgres/pgdata.before-restore-<time>` (kept, never deleted), puts the restored copy in, and starts the shop.
+   `data/postgres/pgdata.before-restore-<time>` (kept, never deleted), puts the restored copy in, ~~and starts the
+   shop~~ brings it to the live version's schema with that version's migrate image (the deploy's own migrate step, R2 ops
+   M3), and only then starts the shop. If that migration fails, or the run is cancelled or times out half way, the live
+   database goes back and the shop starts again on it; the result says why (R2 ops M4).
 5. **Run `deploy.yml`.** Its smoke test opens every page as a customer and as admin; a failure rolls back by itself.
 6. **Product photos**, if they were damaged too: `extas-restore media --from blob` restores into a folder for checking;
    `--into live` copies only the missing photos back (it never overwrites or deletes). This one is not in the workflow

@@ -625,8 +625,17 @@ case "$1" in
       *pg_dump*) echo "dump of the database" ;;
       *pg_is_in_recovery*) echo t ;;
       *information_schema.tables*) echo 42 ;;
+      *"FROM pg_database WHERE datname = 'extas_before_restore_"*) echo 1 ;;
     esac ;;
-  run) echo fake-container ;;
+  # R2 ops review (M3, M4): the restore's migrate run is logged, can fail (FAKE_MIGRATE_FAIL) or get the restore a
+  # signal while it runs (FAKE_SIGNAL, sent to the extas-restore process that started it)
+  run|start|stop) [ -z "${FAKE_DOCKER_RUN_LOG:-}" ] || echo "$*" >> "$FAKE_DOCKER_RUN_LOG"
+    if [ "$1" = run ] && [[ $* == *extas-restore-migrate-* ]]; then
+      [ -z "${FAKE_SIGNAL:-}" ] || kill -"$FAKE_SIGNAL" "$PPID"
+      [ -z "${FAKE_MIGRATE_FAIL:-}" ] || exit 1
+    fi
+    [ "$1" = run ] && echo fake-container ;;
+  ps) [ -z "${FAKE_PS:-}" ] || printf '%s\n' $FAKE_PS ;;
 esac
 exit 0
 FAKE
@@ -826,6 +835,37 @@ rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$R5" production local "$SB" 
 check "restore (M9): no room for the restored copy: refused, the live data folder untouched" \
   "$rc:$(cat "$BR/data/postgres/pgdata/marker"):$(ls -d "$BR/data/postgres/pgdata."* 2>/dev/null | wc -l):$(jq -r .detail "$BR/state/restore-production.json" | grep -c 'not enough room on the database disk')" "1:live again:0:1"
 rm -f "$T/df-used"
+# R2 ops review (M3): after the swap and before the shop starts again, the restored database is migrated to the live
+# version's schema with its own migrate image (as deploy.sh migrate_db: only the direct connection string, through a
+# root-only file that is removed); a failed migration puts the live database back and starts the shop again.
+echo '{"migrate":"extas-migrate:live1","sha":"x"}' > "$BR/state/last-good-deploy.json"
+printf 'DATABASE_DIRECT_URL=postgresql://extas:pw@extas-postgres:5432/extas\nSESSION_SECRET=s\n' > "$BR/config/secrets/app.env"
+R6=0190a3c4-0000-7000-8000-0000000000b6; R7=0190a3c4-0000-7000-8000-0000000000b7; R8=0190a3c4-0000-7000-8000-0000000000b8
+MENV=(FAKE_DOCKER_RUN_LOG="$T/docker-run.log" FAKE_PS="extas-app-blue extas-worker-blue")
+rm -rf "$BR/data/postgres"; mkdir -p "$BR/data/postgres/pgdata"; echo "live m3" > "$BR/data/postgres/pgdata/marker"; : > "$T/docker-run.log"
+rc=0; "${BENV[@]}" "${MENV[@]}" bash "$B/extas-restore" request "$R6" production local "$SB" - "$R1" >/dev/null 2>&1 || rc=$?
+check "restore (R2 M3): production migrates the restored database with the live migrate image, before the shop starts" \
+  "$rc:$(grep -c '^run --rm --name extas-restore-migrate-[0-9]* --network extas --env-file .* extas-migrate:live1$' "$T/docker-run.log"):$(grep -oE '^(run --rm --name extas-restore-migrate|start extas-app-blue)' "$T/docker-run.log" | tr '\n' ' '):$(jq -r .detail "$BR/state/restore-production.json" | grep -c "migrated to the live version's schema")" \
+  "0:1:run --rm --name extas-restore-migrate start extas-app-blue :1"
+check "restore (R2 M3): the migrate env file is gone" "$(find "$BR/config/secrets" -name '.restore-migrate.*' | wc -l)" "0"
+rm -rf "$BR/data/postgres"; mkdir -p "$BR/data/postgres/pgdata"; echo "live m3" > "$BR/data/postgres/pgdata/marker"; : > "$T/docker-run.log"
+rc=0; "${BENV[@]}" "${MENV[@]}" FAKE_MIGRATE_FAIL=1 bash "$B/extas-restore" request "$R7" production local "$SB" - "$R1" >/dev/null 2>&1 || rc=$?
+check "restore (R2 M3): a failed migration puts the live data folder back, starts the shop and says why" \
+  "$([ "$rc" -ne 0 ] && echo failed):$(cat "$BR/data/postgres/pgdata/marker"):$(ls -d "$BR/data/postgres/pgdata.before-restore-"* 2>/dev/null | wc -l):$(ls -d "$BR/data/postgres/pgdata.failed-restore-"* 2>/dev/null | wc -l):$(grep -c '^start extas-app-blue$' "$T/docker-run.log"):$(jq -r .result "$BR/state/restore-production.json"):$(jq -r .detail "$BR/state/restore-production.json" | grep -c "could not bring the restored database to the live version's schema.*live database was put back")" \
+  "failed:live m3:0:1:1:fail:1"
+# R2 ops review (M4): a run cancelled or stopped half way (the runner's INT then TERM; systemd's TERM) undoes the swap
+# too; before, the EXIT trap saw $? = 0 on TERM (and never ran on INT) and left the shop down.
+rm -rf "$BR/data/postgres"; mkdir -p "$BR/data/postgres/pgdata"; echo "live m4" > "$BR/data/postgres/pgdata/marker"; : > "$T/docker-run.log"
+rc=0; "${BENV[@]}" "${MENV[@]}" FAKE_SIGNAL=TERM bash "$B/extas-restore" request "$R8" production local "$SB" - "$R1" >/dev/null 2>&1 || rc=$?
+check "restore (R2 M4): TERM half way puts the live data folder back, starts the shop and says so" \
+  "$([ "$rc" -ne 0 ] && echo failed):$(cat "$BR/data/postgres/pgdata/marker"):$(ls -d "$BR/data/postgres/pgdata.before-restore-"* 2>/dev/null | wc -l):$(grep -c '^start extas-app-blue$' "$T/docker-run.log"):$(jq -r .detail "$BR/state/restore-production.json" | grep -c 'was stopped (TERM) (exit 143); the live database was put back')" \
+  "failed:live m4:0:1:1"
+rm -rf "$BR/data/postgres"; mkdir -p "$BR/data/postgres/pgdata"; echo "live m4" > "$BR/data/postgres/pgdata/marker"
+rc=0; "${BENV[@]}" "${MENV[@]}" FAKE_SIGNAL=HUP bash "$B/extas-restore" request "$R8" production local "$SB" - "$R1" >/dev/null 2>&1 || rc=$?
+check "restore (R2 M4): HUP half way undoes it too" \
+  "$([ "$rc" -ne 0 ] && echo failed):$(cat "$BR/data/postgres/pgdata/marker"):$(jq -r .detail "$BR/state/restore-production.json" | grep -c 'was stopped (HUP) (exit 129)')" "failed:live m4:1"
+check "restore (R2 M4): INT, TERM and HUP exit non-zero into the undo, and the undo ignores a second signal" \
+  "$(grep -cE "^trap 'why=\"was (cancelled \(INT\)\"; exit 130' INT|stopped \(TERM\)\"; exit 143' TERM|stopped \(HUP\)\"; exit 129' HUP)$" "$B/extas-restore"):$(grep -c "^  trap '' INT TERM HUP$" "$B/extas-restore")" "3:1"
 rm -rf "$BR/data/postgres"
 D1=0190a3c4-0000-7000-8000-0000000000c1; D2=0190a3c4-0000-7000-8000-0000000000c2
 "${BENV[@]}" bash "$B/extas-restore" request "$D1" staging drive "$A" - - >/dev/null 2>&1 || true
@@ -834,6 +874,12 @@ rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$D2" production drive "$A" -
 check "restore request: a Drive backup by its stamp, then on the live shop under a new name, the names swapped" \
   "$rc:$(jq -r .backup "$BR/state/requests/$D1.json"):$(grep -c 'pg_restore -U extas -d extas_restore_' "$T/docker-exec.log"):$(grep -c 'ALTER DATABASE extas RENAME TO extas_before_restore_.*; ALTER DATABASE extas_restore_.* RENAME TO extas;' "$T/docker-exec.log")" \
   "0:$A:1:1"
+# R2 ops review (M3): a Drive dump whose migration fails is renamed back; the restored copy stays beside it
+D3=0190a3c4-0000-7000-8000-0000000000c3; : > "$T/docker-exec.log"
+rc=0; "${BENV[@]}" "${MENV[@]}" FAKE_MIGRATE_FAIL=1 bash "$B/extas-restore" request "$D3" production drive "$A" - "$D1" >/dev/null 2>&1 || rc=$?
+check "restore (R2 M3): a Drive dump whose migration fails is renamed back, the restored copy kept" \
+  "$([ "$rc" -ne 0 ] && echo failed):$(grep -c 'ALTER DATABASE extas RENAME TO extas_failed_restore_.*; ALTER DATABASE extas_before_restore_.* RENAME TO extas;' "$T/docker-exec.log"):$(jq -r .result "$BR/state/restore-production.json")" "failed:1:fail"
+rm -f "$BR/state/last-good-deploy.json"
 rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$R2" production ftp - - - >/dev/null 2>&1 || rc=$?
 check "restore request: a copy, stamp or minute it does not know is refused" \
   "$rc:$(jq -r '.ok|tostring' "$BR/state/requests/$R2.json"):$("${BENV[@]}" bash "$B/extas-restore" request "$R2" staging local '../x' - - >/dev/null 2>&1; echo $?):$("${BENV[@]}" bash "$B/extas-restore" request "$R2" staging local - 'now; rm' - >/dev/null 2>&1; echo $?)" "2:false:2:2"
