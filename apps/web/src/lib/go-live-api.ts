@@ -4,6 +4,8 @@
 //                                       (system.read)
 //   POST  /api/admin/go-live/signoff    {key, done} confirm an item a person checks, or take the confirmation back
 //                                       (system.golive); audited as `golive.signoff`
+//   POST  /api/admin/go-live/first-week {on} PR 402: start the first-week watch (from now) or stop it (system.golive);
+//                                       audited as `golive.firstWeek`
 // It only reports and records confirmations: nothing is switched, opened or blocked by it.
 import { audit } from '@extas/auth';
 import { INSTALLATION } from '@extas/settings';
@@ -88,19 +90,44 @@ export async function goLiveNow(deps: Deps) {
   const people = ids.length
     ? await deps.db.staffUser.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })
     : [];
-  return { ...result, people: Object.fromEntries(people.map((p) => [p.id, p.displayName])) as Record<string, string> };
+  const fw = await deps.resolver.value('golive.firstWeek');
+  const started = fw.startedAt ? Date.parse(fw.startedAt) : Number.NaN;
+  const until = Number.isFinite(started) ? new Date(started + fw.days * 86_400_000).toISOString() : null;
+  const nowMs = (deps.now ? deps.now() : new Date()).getTime();
+  const firstWeek = {
+    enabled: fw.enabled,
+    startedAt: fw.startedAt,
+    until,
+    days: fw.days,
+    dailyTime: fw.dailyTime,
+    smokeEveryHours: fw.smokeEveryHours,
+    running: fw.enabled && until !== null && nowMs < Date.parse(until),
+  };
+  return { ...result, firstWeek, people: Object.fromEntries(people.map((p) => [p.id, p.displayName])) as Record<string, string> };
 }
 
 export async function goLiveRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
   const where = path.join('/');
-  if (where !== '' && where !== 'signoff') return fail(404, 'not-found');
-  if ((where === '' && m !== 'GET') || (where === 'signoff' && m !== 'POST')) return fail(405, 'method-not-allowed');
+  if (where !== '' && where !== 'signoff' && where !== 'first-week') return fail(404, 'not-found');
+  if ((where === '' && m !== 'GET') || (where !== '' && m !== 'POST')) return fail(405, 'method-not-allowed');
   const g = await guardAdmin(request, deps, { permission: where === '' ? 'system.read' : 'system.golive' });
   if (g instanceof Response) return g;
   try {
     if (where === '') return json({ ok: true, ...(await goLiveNow(deps!)) });
     const b = await body(request);
+    if (where === 'first-week') {
+      if (typeof b.on !== 'boolean') return json({ ok: false, error: 'golive.INVALID_INPUT', details: ['on: true or false'] }, { status: 400 });
+      const before = await deps!.resolver.value('golive.firstWeek');
+      const at = (deps!.now ? deps!.now() : new Date()).toISOString();
+      // Starting again starts a new watch from now; stopping keeps the start for the record.
+      const next = b.on ? { ...before, enabled: true, startedAt: before.enabled ? before.startedAt : at } : { ...before, enabled: false };
+      if (JSON.stringify(next) !== JSON.stringify(before)) {
+        await deps!.resolver.set('golive.firstWeek', next, INSTALLATION, { actorId: g.actor.staffUserId ?? null, reason: 'Settings › System › Go-live' });
+        await audit(deps!.db, g.actor, { action: 'golive.firstWeek', entityType: 'Setting', entityId: 'golive.firstWeek', before, after: next, storeId: null }, g.ctx);
+      }
+      return json({ ok: true, ...(await goLiveNow(deps!)) });
+    }
     const key = typeof b.key === 'string' ? b.key : '';
     if (!SIGNOFF_KEYS.includes(key) || typeof b.done !== 'boolean') {
       return json({ ok: false, error: 'golive.INVALID_INPUT', details: [`key: ${SIGNOFF_KEYS.join(', ')}; done: true or false`] }, { status: 400 });

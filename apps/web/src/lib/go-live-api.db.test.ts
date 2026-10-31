@@ -1,4 +1,4 @@
-// S19 · PR 393, 397, 399, 400, 401 — Settings → System → Go-live on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL):
+// S19 · PR 393, 397, 399, 400, 401, 402 — Settings → System → Go-live on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL):
 // the list from the database and the server's files, the owner's own data checked per store that goes live (the mother
 // store; a draft store is not asked), a delivery band counted, a sign-off recorded with who and audited, and refused
 // without its permission. Every value is made up.
@@ -121,5 +121,21 @@ describe.skipIf(!HAS_TEST_DB)('go-live checklist API on PostgreSQL (PR 393, 397,
     expect(await t.prisma.auditLog.count({ where: { action: 'golive.signoff' } })).toBe(1);
     await post({ key: 'runbook', done: false });
     expect(item((await get()).body.items, 'runbook').ok).toBe(false);
+  });
+
+  it('PR 402: the first-week watch starts from now, keeps its start when pressed again, stops, and is audited', async () => {
+    const fw = (on: unknown, cookie = owner) => goLiveRoute(call('POST', '/api/admin/go-live/first-week', { cookie, body: { on } }), deps, ['first-week']);
+    type Fw = { firstWeek: { enabled: boolean; startedAt: string | null; until: string | null; running: boolean } };
+    expect((await get()).body).toMatchObject({ firstWeek: { enabled: false, startedAt: null, running: false } });
+    expect((await fw(true, reader)).status).toBe(403);
+    expect((await fw('yes')).status).toBe(400);
+    const a = ((await (await fw(true)).json()) as Fw).firstWeek;
+    expect(a).toMatchObject({ enabled: true, running: true });
+    expect(Date.parse(a.until!) - Date.parse(a.startedAt!)).toBe(7 * 86_400_000);
+    const again = ((await (await fw(true)).json()) as Fw).firstWeek;
+    expect(again.startedAt).toBe(a.startedAt);
+    const off = ((await (await fw(false)).json()) as Fw).firstWeek;
+    expect(off).toMatchObject({ enabled: false, running: false, startedAt: a.startedAt });
+    expect(await t.prisma.auditLog.count({ where: { action: 'golive.firstWeek' } })).toBe(2);
   });
 });

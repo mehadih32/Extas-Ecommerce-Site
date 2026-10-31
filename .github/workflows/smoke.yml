@@ -10,19 +10,51 @@ name: smoke
 on:
   schedule:
     - cron: "30 21 * * *"   # 03:30 in Dhaka, after the 02:30 backup
+    # S19 · PR 402: every hour, but it runs only while the first-week watch says the test is due again
+    # (state/first-week.json `smokeDue`, infra/server/bin/extas-first-week); otherwise only the `due` job runs.
+    - cron: "40 * * * *"
   workflow_dispatch:
 
-concurrency:
-  group: extas-vm
-  cancel-in-progress: false
+# No workflow-wide concurrency: only the smoke job joins the VM's queue (group extas-vm), and only when it is due.
+# GitHub keeps one pending run per group, so an hourly run that is not due must never enter it: it would cancel a
+# pending deploy, server setup, restore or ERP acceptance run.
 
 permissions:
   contents: write
 
 jobs:
+  # PR 402: the nightly run and a run by hand always go; an hourly one only when the first-week watch asks for it.
+  # This job has no concurrency group: it only reads one state file (a few seconds on the runner) and never joins
+  # or cancels anything in the extas-vm queue.
+  due:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.due.outputs.run }}
+      kind: ${{ steps.due.outputs.kind }}
+    steps:
+      - name: Is this run due?
+        id: due
+        env:
+          EVENT: ${{ github.event_name }}
+          CRON: ${{ github.event.schedule }}
+        run: |
+          kind=nightly; run=yes
+          if [ "$EVENT" = schedule ] && [ "$CRON" != "30 21 * * *" ]; then
+            kind=first-week
+            [ "$(sudo jq -r '(.active == true and .smokeDue == true) | tostring' /srv/extas/state/first-week.json 2>/dev/null || echo false)" = true ] || run=no
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"; echo "kind=$kind" >> "$GITHUB_OUTPUT"
+          echo "smoke test: $kind, due: $run"
+
   smoke:
+    needs: due
+    if: needs.due.outputs.run == 'yes'
     runs-on: [self-hosted, extas-vm]
     timeout-minutes: 30
+    concurrency:
+      group: extas-vm
+      cancel-in-progress: false
     steps:
       # The checks come from the version that is live, not from the newest main: a check merged before its deploy
       # finished would otherwise test a page that does not have it yet and report a false failure.
@@ -42,14 +74,16 @@ jobs:
         continue-on-error: true
         env:
           LIVE: ${{ steps.live.outputs.sha }}
+          KIND: ${{ needs.due.outputs.kind }}
         run: |
           live="$LIVE"
-          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/smoke.sh "$RUNNER_TEMP/smoke" "nightly" "$live"
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/smoke.sh "$RUNNER_TEMP/smoke" "$KIND" "$live"
 
       - name: Commit the smoke report
         if: always()
         env:
           RESULT: ${{ steps.smoke.outcome }}
+          KIND: ${{ needs.due.outputs.kind }}
         run: |
           set -eu
           smoke="$RUNNER_TEMP/smoke"
@@ -63,7 +97,7 @@ jobs:
             rm -rf docs/reports/smoke/latest && mkdir -p docs/reports/smoke && cp -r "$smoke" docs/reports/smoke/latest
             git add -A docs/reports/smoke/latest
             if git diff --cached --quiet; then exit 0; fi
-            git commit -q -m "smoke report: nightly ${RESULT} [skip ci]"
+            git commit -q -m "smoke report: ${KIND} ${RESULT} [skip ci]"
             if git push -q origin HEAD:main; then exit 0; fi
             sleep $((i * 2))
           done

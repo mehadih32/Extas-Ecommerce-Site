@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# S19 · PR 402 — the first-week watch on the main domain, every hour (extas-first-week.timer, 11-monitor.sh).
+# It runs only while Settings → System → Go-live → "First-week watch" is on: the vault sync writes
+# config/secrets/first-week.env (FIRST_WEEK_START, FIRST_WEEK_UNTIL, FIRST_WEEK_DAILY_TIME, FIRST_WEEK_SMOKE_H, from the
+# setting `golive.firstWeek`); empty = off. While it runs it
+#   - sends the owner one daily check on Telegram at FIRST_WEEK_DAILY_TIME (local time): the server's health, the last
+#     smoke test of every page and the night's backups, from the state files the other scripts write;
+#   - says when the smoke test is due again (older than FIRST_WEEK_SMOKE_H hours): state/first-week.json `smokeDue`,
+#     which the hourly smoke workflow (smoke.yml) reads, so every page is checked several times a day that week;
+#   - says once when the week is over (the nightly smoke test and the usual alerts go on as always).
+# It only reads and reports; nothing is switched, stopped or rolled back here.
+set -euo pipefail
+CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
+# shellcheck source=../../config/server.conf
+. "$CONF"
+R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"; OUT="$STATE/first-week.json"
+mkdir -p "$STATE" "$R/logs"
+
+tg() {
+  echo "$(date -Is) $1" >> "$R/logs/alerts.log" 2>/dev/null || true
+  [ -f "$SEC/telegram.env" ] || return 0
+  # shellcheck disable=SC1091
+  ( . "$SEC/telegram.env"
+    [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] || exit 0
+    curl -fsS -m 10 "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+      --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=$1" >/dev/null 2>&1 ) || true
+}
+prev() { jq -r "${1} // \"\"" "$OUT" 2>/dev/null || true; }
+write() { # write <active> <smokeDue> <day> <total> <lastDaily> <ended>
+  jq -n --arg at "$(date -Is)" --argjson active "$1" --argjson due "$2" --arg day "$3" --arg total "$4" \
+    --arg start "${FIRST_WEEK_START:-}" --arg until "${FIRST_WEEK_UNTIL:-}" --arg last "$5" --arg ended "$6" \
+    '{at:$at, active:$active, smokeDue:$due, start:(if $start=="" then null else $start end),
+      until:(if $until=="" then null else $until end), day:(if $day=="" then null else ($day|tonumber) end),
+      days:(if $total=="" then null else ($total|tonumber) end), lastDaily:(if $last=="" then null else $last end),
+      endedFor:(if $ended=="" then null else $ended end)}' > "$OUT.tmp"
+  mv "$OUT.tmp" "$OUT"
+}
+
+FIRST_WEEK_START=""; FIRST_WEEK_UNTIL=""; FIRST_WEEK_DAILY_TIME=""; FIRST_WEEK_SMOKE_H=""
+# shellcheck disable=SC1091
+[ -s "$SEC/first-week.env" ] && . "$SEC/first-week.env"
+if [ -z "$FIRST_WEEK_START" ] || [ -z "$FIRST_WEEK_UNTIL" ]; then
+  write false false "" "" "" ""; exit 0
+fi
+now_s="$(date +%s)"; start_s="$(date -d "$FIRST_WEEK_START" +%s)"; until_s="$(date -d "$FIRST_WEEK_UNTIL" +%s)"
+total=$(( (until_s - start_s + 86399) / 86400 ))
+if [ "$now_s" -ge "$until_s" ]; then
+  # Over: said once per watch.
+  if [ "$(prev .endedFor)" != "$FIRST_WEEK_UNTIL" ]; then tg "$FIRST_WEEK_END_TEXT"; fi
+  write false false "" "$total" "$(prev .lastDaily)" "$FIRST_WEEK_UNTIL"; exit 0
+fi
+day=$(( (now_s - start_s) / 86400 + 1 ))
+
+# The smoke test is due when the last one is older than FIRST_WEEK_SMOKE_H hours (or there is none).
+due=true
+smoke_at="$(jq -r '.at // ""' "$STATE/smoke.json" 2>/dev/null || true)"
+if [ -n "$smoke_at" ] && [ $(( now_s - $(date -d "$smoke_at" +%s 2>/dev/null || echo 0) )) -lt $(( ${FIRST_WEEK_SMOKE_H:-6} * 3600 )) ]; then due=false; fi
+
+# The daily check: once a local day, at or after the daily time.
+last="$(prev .lastDaily)"; today="$(date +%F)"
+if [ "$(date +%H:%M)" \> "${FIRST_WEEK_DAILY_TIME:-21:00}" ] || [ "$(date +%H:%M)" = "${FIRST_WEEK_DAILY_TIME:-21:00}" ]; then
+  if [ "$last" != "$today" ]; then
+    problems="$(jq -r '(.problems // []) | join(", ")' "$STATE/health.json" 2>/dev/null || echo "?")"
+    health="$FIRST_WEEK_OK"; [ -n "$problems" ] && health="$FIRST_WEEK_PROBLEM: $problems"
+    smoke="$(jq -r --arg ok "$FIRST_WEEK_PASS" --arg bad "$FIRST_WEEK_FAIL" --arg pages "$FIRST_WEEK_PAGES" \
+      'if .ok == true then "\($ok) — \(.pages // 0) \($pages)" else "\($bad) — \(.failed // 0)/\(.pages // 0) \($pages)" end' \
+      "$STATE/smoke.json" 2>/dev/null || echo "$FIRST_WEEK_NONE")"
+    backups=""
+    for w in local blob drive; do
+      backups="$backups${backups:+ · }$w: $(jq -r '.result // "?"' "$STATE/backup-daily-$w.json" 2>/dev/null || echo "?")"
+    done
+    # shellcheck disable=SC2059
+    tg "$(printf "$FIRST_WEEK_DAILY_TITLE" "$day" "$total")
+$FIRST_WEEK_L_HEALTH: $health
+$FIRST_WEEK_L_SMOKE: $smoke
+$FIRST_WEEK_L_BACKUP: $backups"
+    last="$today"
+  fi
+fi
+write true "$due" "$day" "$total" "$last" ""

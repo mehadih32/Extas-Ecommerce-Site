@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminNotice } from "@/components/admin/AdminFrame";
-import { GoLiveList } from "@/components/admin/settings/GoLiveScreen";
+import { FirstWeekCard, GoLiveList } from "@/components/admin/settings/GoLiveScreen";
 import {
   PageHead,
   SectionTabs,
@@ -92,6 +92,14 @@ export default async function GoLivePage() {
         locale={view.locale}
         timeZone={view.timeZone}
         initial={now}
+        canSign={canSign}
+      />
+
+      <FirstWeekCard
+        d={d}
+        locale={view.locale}
+        timeZone={view.timeZone}
+        initial={now.firstWeek}
         canSign={canSign}
       />
     </div>

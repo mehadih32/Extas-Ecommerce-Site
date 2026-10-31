@@ -38,6 +38,10 @@
       "label": "Go-live: the connections that must be live",
       "help": "The kinds of connection (payment, courier, SMS …) that need at least one connection moved from practice to live by a passing test in Keys & connections before real orders. A shop without online payment takes PAYMENT off this list."
     },
+    "firstWeek": {
+      "label": "Go-live: the first-week watch",
+      "help": "Off until it is started on Settings → System → Go-live. For this many days the server sends a daily check on Telegram at the daily time (health, the smoke test of every page, the night's backups) and runs the smoke test again whenever the last one is older than these hours."
+    },
     "signoff": {
       "label": "Go-live: the items a person confirmed",
       "help": "Who confirmed each go-live item that a person checks (the QA gate, the staging acceptance list, real phones …) and when. Changed only on Settings → System → Go-live."

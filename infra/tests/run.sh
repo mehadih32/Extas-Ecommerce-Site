@@ -1326,4 +1326,37 @@ check "origin cert (397): --no-reload (the server setup) writes without reloadin
   "$(jq -r .mode "$ST"):$(grep -c 'caddy reload' "$T/docker.log")" "origin:5"
 rm -rf "$T"
 
+# S19 · PR 402 — extas-first-week: nothing while off; inside the week one daily check on Telegram (health, smoke test,
+# backups) per local day after the daily time, the smoke test due when the last one is old; the end said once.
+T="$(mktemp -d)"; mkdir -p "$T/root/config/secrets" "$T/root/state" "$T/bin"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/server.conf"
+printf '#!/bin/sh\necho "$*" >> "$FAKE_CURL"\n' > "$T/bin/curl"; chmod +x "$T/bin/curl"
+printf "TELEGRAM_BOT_TOKEN='1:x'\nTELEGRAM_CHAT_ID='-1'\n" > "$T/root/config/secrets/telegram.env"
+FENV=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_CURL="$T/curl.log")
+S="$T/root/config/secrets"; ST="$T/root/state"
+"${FENV[@]}" "$B/extas-first-week"
+check "first week (402): off — nothing sent, not active" "$(jq -r '.active|tostring' "$ST/first-week.json"):$([ -f "$T/curl.log" ] && echo sent || echo none)" "false:none"
+fw() { printf "FIRST_WEEK_START='%s'\nFIRST_WEEK_UNTIL='%s'\nFIRST_WEEK_DAILY_TIME='%s'\nFIRST_WEEK_SMOKE_H='6'\n" "$(date -u -d "$1" +%FT%TZ)" "$(date -u -d "$2" +%FT%TZ)" "$3" > "$S/first-week.env"; }
+fw '2 days ago' '5 days' '00:00'
+printf '{"problems":["disk 91%%"]}\n' > "$ST/health.json"
+printf '{"ok":true,"at":"%s","pages":40,"failed":0}\n' "$(date -Is -d '2 hours ago')" > "$ST/smoke.json"
+printf '{"result":"ok"}\n' > "$ST/backup-daily-local.json"
+"${FENV[@]}" "$B/extas-first-week"
+check "first week (402): day 3 of 7, the daily check sent with health, smoke and backups; smoke not yet due" \
+  "$(jq -r '[.active, .day, .days, .smokeDue] | map(tostring) | join(" ")' "$ST/first-week.json"):$(grep -c 'sendMessage' "$T/curl.log"):$(grep -c 'disk 91%' "$T/curl.log"):$(grep -c 'local: ok' "$T/curl.log")" \
+  "true 3 7 false:1:1:1"
+"${FENV[@]}" "$B/extas-first-week"
+check "first week (402): the daily check goes once a day" "$(grep -c 'sendMessage' "$T/curl.log")" "1"
+printf '{"ok":false,"at":"%s","pages":40,"failed":2}\n' "$(date -Is -d '7 hours ago')" > "$ST/smoke.json"
+"${FENV[@]}" "$B/extas-first-week"
+check "first week (402): an old smoke test is due again" "$(jq -r '.smokeDue|tostring' "$ST/first-week.json")" "true"
+fw '2 days ago' '5 days' '23:59'; jq '.lastDaily = null' "$ST/first-week.json" > "$ST/x" && mv "$ST/x" "$ST/first-week.json"
+"${FENV[@]}" "$B/extas-first-week"
+check "first week (402): nothing before the daily time" "$(grep -c 'sendMessage' "$T/curl.log")" "1"
+fw '8 days ago' '1 hour ago' '00:00'
+"${FENV[@]}" "$B/extas-first-week"; "${FENV[@]}" "$B/extas-first-week"
+check "first week (402): over — said once, not active, no smoke due" \
+  "$(grep -c 'নজরদারি শেষ' "$T/curl.log"):$(jq -r '[.active, .smokeDue] | map(tostring) | join(" ")' "$ST/first-week.json")" "1:false false"
+rm -rf "$T"
+
 exit $fail

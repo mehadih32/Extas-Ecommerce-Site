@@ -94,6 +94,20 @@
       "how": "The last full server setup run must pass every step (Blueprint A2.9.16): {fail} failed ({failed}). Run the \"Server setup\" workflow again after the fix; the report is in docs/reports/server/latest.md."
     }
   },
+  "firstWeek": {
+    "title": "First-week watch",
+    "sub": "After the switch: for {days} days a daily check on Telegram at {time}, and the smoke test of every page every {hours} hours.",
+    "state": {
+      "off": "Off",
+      "running": "Running",
+      "over": "Over"
+    },
+    "offText": "Start it on go-live day, right after the switch.",
+    "runningText": "From {from} until {until}.",
+    "lastText": "The last watch ran from {from} until {until}.",
+    "start": "Start the first week",
+    "stop": "Stop"
+  },
   "errors": {
     "golive": {
       "INVALID_INPUT": "Not an item that can be confirmed here."
