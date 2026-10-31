@@ -28,6 +28,7 @@ import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { InventoryError, resetOrderUnits } from '@extas/inventory';
+import { refundRoomOf } from '@extas/payments';
 import { resendErp } from './addon';
 import { OTHER_KEY } from './commands';
 import { allow, nowOf, parse, setting, UUID, type OrdersDeps, type Tx, type Who } from './context';
@@ -202,7 +203,8 @@ export async function applyEdit(deps: OrdersDeps, tx: Tx, o: LockedOrder, c: Edi
   if (removedMinor) Object.assign(data, { subtotalMinor: m.subtotalMinor - removedMinor, totalMinor, codAmountMinor });
   // a paid order: what is now paid beyond its total is owed back — a REQUEST for the owner, never a payout
   const inMinor = m.paidMinor + m.walletAppliedMinor;
-  const owedMinor = Math.max(0, inMinor - totalMinor) - Math.max(0, inMinor - m.totalMinor);
+  // review R1 (M4): never more than the order has left to refund (other requests may already cover part of it)
+  const owedMinor = Math.min(Math.max(0, inMinor - totalMinor) - Math.max(0, inMinor - m.totalMinor), removedMinor ? await refundRoomOf(tx, o.storeId, o.id) : 0);
   const refundRequestIds: string[] = [];
   if (owedMinor > 0) {
     const r = await tx.refund.create({
