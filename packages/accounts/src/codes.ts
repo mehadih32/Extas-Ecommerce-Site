@@ -157,10 +157,15 @@ export async function verifyCode(
   });
   if (!ch || ch.expiresAt <= now) throw wrong(0, 'no open code for this number (used or too old)');
   if (ch.attempts >= limits.maxTries) throw wrong(0, 'too many wrong tries on this code');
-  if (!matches(ch.codeHash, code)) {
-    const r = await deps.db.otpChallenge.updateMany({ where: { id: ch.id, attempts: { lt: limits.maxTries } }, data: { attempts: { increment: 1 } } });
-    throw wrong(r.count === 1 ? Math.max(0, limits.maxTries - ch.attempts - 1) : 0, 'the code is not right');
-  }
+  // Review R2 (security m2): a try is taken before the code is compared, in one conditional UPDATE, so parallel guesses
+  // can never be compared more than `maxTries` times between them (each one that is compared holds its own try).
+  const took = await deps.db.$queryRaw<{ attempts: number }[]>`
+    UPDATE "OtpChallenge" SET "attempts" = "attempts" + 1, "updatedAt" = ${now}
+     WHERE "id" = ${ch.id}::uuid AND "consumedAt" IS NULL AND "expiresAt" > ${now} AND "attempts" < ${limits.maxTries}
+    RETURNING "attempts"`;
+  const tried = took[0]?.attempts;
+  if (tried === undefined) throw wrong(0, 'too many wrong tries on this code (or it was used)');
+  if (!matches(ch.codeHash, code)) throw wrong(Math.max(0, limits.maxTries - tried), 'the code is not right');
   const used = await deps.db.otpChallenge.updateMany({ where: { id: ch.id, consumedAt: null }, data: { consumedAt: now } });
   if (used.count !== 1) throw wrong(0, 'the code was used already');
   const customer = await deps.db.customer.findUnique({ where: { storeId_phone: { storeId, phone: phone.e164 } }, select: { id: true, archivedAt: true, erasedAt: true } });
