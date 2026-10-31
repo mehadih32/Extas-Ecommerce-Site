@@ -41,6 +41,8 @@ export const SEO_KEYS = [
   'seo.filterPages',
   // PR 228: the sitemaps
   'seo.sitemaps',
+  // PR 229: robots.txt and the AI robots
+  'seo.robots',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 

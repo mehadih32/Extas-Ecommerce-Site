@@ -35,6 +35,11 @@
 // from the catalogue and kept `cacheMinutes` (a new product shows within that time; the admin can make them at once).
 // Never more than `maxUrls` addresses in all. On as shipped: the sitemaps only list what the pages themselves let
 // search engines list, and nothing is listed until the owner opens the shop to search engines (`seo.indexing`).
+//
+// PR 229 (`seo.robots`; App. answers #56 "AI crawlers default on so AI assistants can rank the shop"): /robots.txt
+// keeps every robot out while the shop is closed to search engines; once open, robots read everything but the admin,
+// the API and a customer's own pages, plus the owner's extra paths. `aiCrawlers` on (as shipped) lets the AI robots in
+// with everyone else; off, each robot named in `aiBots` is kept out of the whole shop.
 import { z } from 'zod';
 import { setting } from './define';
 import { categorySlugSchema } from './registry-storefront';
@@ -155,6 +160,29 @@ export const seoSitemapsSchema = z
 export type SeoSitemaps = z.output<typeof seoSitemapsSchema>;
 export const SEO_SITEMAPS_DEFAULT: SeoSitemaps = { enabled: true, cacheMinutes: 60, perFile: 5000, maxUrls: 50000 };
 
+/** The AI robots named in robots.txt when the AI switch is off (App. answers #56). */
+export const SEO_AI_BOTS_DEFAULT = ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended'] as const;
+/** The limits of the robots lists (the admin screen shows the same). */
+export const SEO_ROBOTS_LIMITS = { bots: 30, botName: 60, paths: 50, path: 200 } as const;
+
+export const seoRobotsSchema = z
+  .object({
+    /** AI robots may read the shop like any other robot. */
+    aiCrawlers: z.boolean(),
+    /** The AI robots kept out when `aiCrawlers` is off (their user-agent names). */
+    aiBots: z
+      .array(z.string().trim().min(1).max(SEO_ROBOTS_LIMITS.botName).regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/))
+      .max(SEO_ROBOTS_LIMITS.bots)
+      .refine((l) => new Set(l.map((b) => b.toLowerCase())).size === l.length, { message: 'the same robot twice' }),
+    /** More paths no robot reads (each starts with `/`; `*` and `$` as search engines read them). */
+    disallow: z
+      .array(z.string().trim().max(SEO_ROBOTS_LIMITS.path).regex(/^\/[A-Za-z0-9/._~*$?=&%-]*$/))
+      .max(SEO_ROBOTS_LIMITS.paths),
+  })
+  .strict();
+export type SeoRobots = z.output<typeof seoRobotsSchema>;
+export const SEO_ROBOTS_DEFAULT: SeoRobots = { aiCrawlers: true, aiBots: [...SEO_AI_BOTS_DEFAULT], disallow: [] };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -212,5 +240,15 @@ export const seoReachSettings = {
     labelKey: 'seo.sitemaps.label',
     helpKey: 'seo.sitemaps.help',
     sortOrder: 45,
+  }),
+  // ---- PR 229 · robots.txt and the AI robots ----
+  'seo.robots': setting({
+    ...base,
+    version: V2,
+    schema: seoRobotsSchema,
+    default: SEO_ROBOTS_DEFAULT,
+    labelKey: 'seo.robots.label',
+    helpKey: 'seo.robots.help',
+    sortOrder: 46,
   }),
 };

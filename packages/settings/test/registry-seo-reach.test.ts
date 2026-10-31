@@ -3,10 +3,11 @@
 // PR 527: no page that was on the shop answers 404; what is shipped keeps today's listing (sold out and retired listed).
 // PR 227: no filtered page is listed as shipped; a named one has one filter, one value, two names, and no twin.
 // PR 228: the sitemaps answer as shipped, kept an hour, 5,000 addresses a file (never over the engines' 50,000).
+// PR 229: AI robots may read the shop as shipped (answer 56); the four named, no extra paths.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { seoReachSettings, SEO_FILTER_PAGES_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
+import { seoReachSettings, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
 
 describe('lane A SEO settings (v71–72)', () => {
   it('every key is in the registry at version 71, labelled in English and Bengali, its default valid', () => {
@@ -71,5 +72,17 @@ describe('lane A SEO settings (v71–72)', () => {
     expect(m.safeParse({ ...SEO_SITEMAPS_DEFAULT, cacheMinutes: 1 }).success).toBe(false);
     expect(m.safeParse({ ...SEO_SITEMAPS_DEFAULT, maxUrls: 10 }).success).toBe(false);
     expect(m.safeParse({ ...SEO_SITEMAPS_DEFAULT, extra: 1 }).success).toBe(false);
+  });
+
+  it('PR 229: AI robots welcome as shipped, the four named; robot names and paths are checked (v72)', () => {
+    expect(SEO_ROBOTS_DEFAULT).toEqual({ aiCrawlers: true, aiBots: ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended'], disallow: [] });
+    expect(registry['seo.robots'].version).toBe(72);
+    const r = registry['seo.robots'].schema;
+    expect(r.safeParse({ ...SEO_ROBOTS_DEFAULT, aiBots: ['GPTBot', 'gptbot'] }).success).toBe(false);
+    expect(r.safeParse({ ...SEO_ROBOTS_DEFAULT, aiBots: ['Bad Bot'] }).success).toBe(false);
+    expect(r.safeParse({ ...SEO_ROBOTS_DEFAULT, aiBots: ['Bot\nDisallow: /'] }).success).toBe(false);
+    expect(r.safeParse({ ...SEO_ROBOTS_DEFAULT, disallow: ['/drafts/', '/*?ref=*'] }).success).toBe(true);
+    expect(r.safeParse({ ...SEO_ROBOTS_DEFAULT, disallow: ['drafts'] }).success).toBe(false);
+    expect(r.safeParse({ ...SEO_ROBOTS_DEFAULT, disallow: ['/a\nUser-agent: *'] }).success).toBe(false);
   });
 });

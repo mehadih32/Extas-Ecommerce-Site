@@ -404,5 +404,17 @@
       "maxUrls": "Addresses in all files",
       "maxUrlsHint": "Default: {v} ({min} to {max})."
     }
+  },
+  "rb": {
+    "title": "Robots and AI assistants",
+    "desc": "What /robots.txt tells the robots that read the shop: search engines and AI assistants.",
+    "ai": "AI assistants may read the shop",
+    "aiHint": "On: ChatGPT, Claude, Perplexity and Google's AI can read the shop and name it in their answers. Off: the robots listed below are kept out.",
+    "bots": "AI robots kept out when the switch is off",
+    "botsHint": "One name per line, at most {n}. Shipped with: {v}.",
+    "paths": "More paths no robot reads",
+    "pathsHint": "One path per line, each starting with /, at most {n}. The admin and a customer's own pages are always kept out.",
+    "now": "What robots.txt says now",
+    "nowHint": "On the shop's own address. While the shop is closed to search engines every robot is kept out."
   }
 }
