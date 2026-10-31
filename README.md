@@ -532,6 +532,7 @@ API: `GET /api/admin/integrations`, `POST /api/admin/integrations/[id]` (save / 
 | `/admin` — Dashboard (DSH-01) | greeting, date, store; **Delivered sales** (M1, provisional) and **Ordered value** (final) for today / 7 / 30 days through `@extas/metrics` with ▲/▼ and a small line (PR 155, follow-up 90; `metrics.read`); **Needs you now** from the real queues (`GET /api/admin/dashboard/queues`); a role with a start page (`admin.startPages`, PR 495, empty) opens there instead; `?home=1` always shows the Dashboard |
 | unbuilt sections | `/admin/orders`, `/admin/customers`, `/admin/messages`, `/admin/support`, `/admin/website`, `/admin/money`, `/admin/reports`, `/admin/ai`, `/admin/settings`: an honest placeholder with the coming pages and links to what exists |
 | states (SH-07) | not found (HTTP 404), no permission (names the permission), error with retry and an error id, all inside the shell |
+| blank-page safety net (CN-032) | browser translation off site-wide; any page that would go blank shows a Bengali/English screen instead, which first clears this site's cache and stored values by itself (sign-in kept) and reloads once; then **Start fresh** / **Try again**. `/fresh-start` (`/bn/fresh-start?to=admin`) clears only this site's data in this browser, preview cookie kept (`POST /api/fresh-start`, soft or full) |
 | moved | `/admin/delivery` → `/admin/delivery/zones` (308); every other URL kept |
 
 Permissions `dashboard.read`, `metrics.read`, `help.read`. Settings registry v33 (`registry-admin-shell.ts`): `admin.shell`,

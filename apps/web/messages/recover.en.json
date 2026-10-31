@@ -1,0 +1,13 @@
+{
+  "title": "This page could not open in this browser",
+  "body": "Something this browser saved earlier got in the way. We tried once to clear it by itself.",
+  "fresh": "Start fresh",
+  "freshNote": "Clears only this site's saved data in this browser (nothing else in your browser). You sign in again after it.",
+  "retry": "Try again",
+  "detail": "For the team",
+  "pageTitle": "Start fresh",
+  "pageBody": "If a page of this site will not open in this browser, or goes blank, press the button. Only this site's saved data in this browser is cleared: your other sites, passwords and tabs stay as they are.",
+  "working": "Clearing…",
+  "done": "Done. Opening the site again…",
+  "failed": "Could not clear it. Please try again."
+}
