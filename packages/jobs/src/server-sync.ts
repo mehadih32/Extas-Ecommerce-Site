@@ -16,6 +16,8 @@
 //                  PR 391: also the owner's Azure storage account for rclone (the Azure Blob connection's account,
 //                  its key and endpoint) and the backups' own container (`backups.blob.container`); Blob and Drive
 //                  are each written on their own, so one connected without the other still backs up.
+//   first-week.env PR 402: the first-week watch (`golive.firstWeek`) for extas-first-week: its start, its end, the daily
+//                  check's time and how often the smoke test runs again; empty while it is off.
 //   origin-cert.pem, origin-key.pem  PR 397: the Cloudflare Origin certificate and its key, only while that connection
 //                  is on and LIVE (its Test passed) and the pair still reads; empty otherwise, so the server goes back to
 //                  its automatic certificate (infra/server/bin/extas-origin-cert checks the pair again and gives it to
@@ -217,7 +219,24 @@ async function originPair(ctx: PartContext): Promise<{ cert: string; key: string
 export const originCertPart: ServerFilePart = { file: 'origin-cert.pem', build: async (ctx) => (await originPair(ctx))?.cert ?? '' };
 export const originKeyPart: ServerFilePart = { file: 'origin-key.pem', build: async (ctx) => (await originPair(ctx))?.key ?? '' };
 
-export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart];
+/** PR 402: the first-week watch, from its setting alone (no key). */
+export const firstWeekPart: ServerFilePart = {
+  file: 'first-week.env',
+  watch: async (ctx) => settingOr(ctx, 'golive.firstWeek', registry['golive.firstWeek'].default),
+  async build(ctx) {
+    const w = await settingOr(ctx, 'golive.firstWeek', registry['golive.firstWeek'].default);
+    const start = w.enabled && w.startedAt ? Date.parse(w.startedAt) : Number.NaN;
+    if (!Number.isFinite(start)) return '';
+    return envLines({
+      FIRST_WEEK_START: new Date(start).toISOString(),
+      FIRST_WEEK_UNTIL: new Date(start + w.days * 86_400_000).toISOString(),
+      FIRST_WEEK_DAILY_TIME: w.dailyTime,
+      FIRST_WEEK_SMOKE_H: String(w.smokeEveryHours),
+    });
+  },
+};
+
+export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart, firstWeekPart];
 
 export interface SyncResult {
   fingerprint: string;

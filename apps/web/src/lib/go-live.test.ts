@@ -122,6 +122,8 @@ describe('go-live checklist (PR 393)', () => {
     expect((await goLiveRoute(req('GET'), null, ['x'])).status).toBe(404);
     expect((await goLiveRoute(req('POST'), null, [])).status).toBe(405);
     expect((await goLiveRoute(req('GET'), null, ['signoff'])).status).toBe(405);
+    expect((await goLiveRoute(req('GET'), null, ['first-week'])).status).toBe(405);
+    expect((await goLiveRoute(req('POST'), null, ['first-week'])).status).toBe(503);
     expect((await goLiveRoute(req('GET'), null, [])).status).toBe(503);
     expect((await goLiveRoute(req('POST'), null, ['signoff'])).status).toBe(503);
   });

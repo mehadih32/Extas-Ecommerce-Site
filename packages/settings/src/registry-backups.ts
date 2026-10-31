@@ -108,6 +108,22 @@ export const GO_LIVE_CONNECTION_KINDS = ['PAYMENT', 'COURIER', 'SMS', 'WHATSAPP'
 export const goLiveConnectionsSchema = z.object({ kinds: z.array(z.enum(GO_LIVE_CONNECTION_KINDS)).max(GO_LIVE_CONNECTION_KINDS.length) }).strict();
 export type GoLiveConnections = z.output<typeof goLiveConnectionsSchema>;
 
+/**
+ * PR 402: the first-week watch after go-live — off until someone starts it on Settings → System → Go-live (the start
+ * time is recorded then). While it runs the server sends a daily check on Telegram at `dailyTime` and runs the smoke
+ * test of every page again whenever the last one is older than `smokeEveryHours` (infra/server/bin/extas-first-week).
+ */
+export const goLiveFirstWeekSchema = z
+  .object({
+    enabled: z.boolean(),
+    startedAt: z.iso.datetime({ offset: true }).nullable(),
+    days: z.int().min(1).max(60),
+    smokeEveryHours: z.int().min(1).max(24),
+    dailyTime: clock,
+  })
+  .strict();
+export type GoLiveFirstWeek = z.output<typeof goLiveFirstWeekSchema>;
+
 /** One confirmed item: when, and by which staff user (null: an account since removed). */
 export const goLiveSignoffSchema = z.record(
   z.string().regex(/^[a-z][A-Za-z0-9]{1,40}$/),
@@ -204,6 +220,16 @@ export const backupsSettings = {
     labelKey: 'golive.connections.label',
     helpKey: 'golive.connections.help',
     sortOrder: 963,
+  }),
+  'golive.firstWeek': setting({
+    ...base,
+    version: V391,
+    schema: goLiveFirstWeekSchema,
+    default: { enabled: false, startedAt: null, days: 7, smokeEveryHours: 6, dailyTime: '21:00' },
+    valueType: 'JSON',
+    labelKey: 'golive.firstWeek.label',
+    helpKey: 'golive.firstWeek.help',
+    sortOrder: 964,
   }),
   'golive.signoff': setting({
     ...base,

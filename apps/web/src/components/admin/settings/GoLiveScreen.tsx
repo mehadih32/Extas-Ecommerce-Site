@@ -17,6 +17,16 @@ export interface GoLiveView {
   total: number;
   items: GoLiveResult[];
   people: Record<string, string>;
+  /** PR 402: the first-week watch after go-live. */
+  firstWeek: {
+    enabled: boolean;
+    startedAt: string | null;
+    until: string | null;
+    days: number;
+    dailyTime: string;
+    smokeEveryHours: number;
+    running: boolean;
+  };
 }
 
 const API = "/api/admin/go-live";
@@ -136,6 +146,99 @@ export function GoLiveList({
       {!canSign ? (
         <p className="a2-xs a2-mute a2-mt12">{local(d, "readOnly")}</p>
       ) : null}
+    </section>
+  );
+}
+
+/**
+ * PR 402 — the first-week watch after go-live: started here (from now), it has the server send a daily check on
+ * Telegram and run the smoke test of every page again every few hours, for `days` days; stopped here too.
+ */
+export function FirstWeekCard({
+  d,
+  locale,
+  timeZone,
+  initial,
+  canSign,
+}: {
+  d: Dict;
+  locale: string;
+  timeZone: string;
+  initial: GoLiveView["firstWeek"];
+  canSign: boolean;
+}) {
+  const router = useRouter();
+  const [fw, setFw] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const when = (iso: string) => dateTime(iso, locale, timeZone);
+  const state = fw.running ? "running" : fw.enabled ? "over" : "off";
+
+  const toggle = async () => {
+    setBusy(true);
+    setNote(null);
+    const a = await call("POST", `${API}/first-week`, { on: !fw.running });
+    setBusy(false);
+    if (a.status === 200 && a.data.ok) {
+      setFw((a.data as unknown as GoLiveView).firstWeek);
+      router.refresh();
+      return;
+    }
+    setNote(errorText((d.golive ?? {}) as Dict, a));
+  };
+
+  return (
+    <section
+      className="a2-card a2-mt12"
+      aria-labelledby="gl-fw"
+      data-testid="gl-first-week"
+      data-state={state}
+    >
+      <div className="a2-ch">
+        <div>
+          <h2 className="a2-h3" id="gl-fw">
+            {local(d, "firstWeek.title")}
+          </h2>
+          <div className="a2-cs">
+            {local(d, "firstWeek.sub", {
+              days: fw.days,
+              time: fw.dailyTime,
+              hours: fw.smokeEveryHours,
+            })}
+          </div>
+        </div>
+        <span className={`a2-pill ${fw.running ? "ok" : "line"}`}>
+          {local(d, `firstWeek.state.${state}`)}
+        </span>
+      </div>
+      {note ? (
+        <div className="a2-note bad" role="alert">
+          <ShellIcon name="alert" size={15} />
+          <span>{note}</span>
+        </div>
+      ) : null}
+      <div className="a2-rule">
+        <span className="a2-xs a2-mute">
+          {fw.startedAt && fw.until
+            ? local(d, fw.running ? "firstWeek.runningText" : "firstWeek.lastText", {
+                from: when(fw.startedAt),
+                until: when(fw.until),
+              })
+            : local(d, "firstWeek.offText")}
+        </span>
+        {canSign ? (
+          <button
+            type="button"
+            className={`a2-btn sm${fw.running ? " ghost" : ""}`}
+            onClick={toggle}
+            disabled={busy}
+            aria-busy={busy || undefined}
+            data-testid="gl-first-week-toggle"
+          >
+            {local(d, fw.running ? "firstWeek.stop" : "firstWeek.start")}
+          </button>
+        ) : null}
+      </div>
     </section>
   );
 }

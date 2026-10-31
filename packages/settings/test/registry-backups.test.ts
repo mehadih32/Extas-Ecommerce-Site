@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { backupsBlobSchema, backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings, goLiveChecksSchema, goLiveConnectionsSchema, goLiveOwnerDataSchema, goLiveSignoffSchema } from '../src/registry-backups';
+import { backupsBlobSchema, backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings, goLiveChecksSchema, goLiveConnectionsSchema, goLiveFirstWeekSchema, goLiveOwnerDataSchema, goLiveSignoffSchema } from '../src/registry-backups';
 
 describe('backups settings (v75–77)', () => {
   it('every key is in the registry, labelled in English and Bengali, its default valid, not owner data', () => {
@@ -47,6 +47,9 @@ describe('backups settings (v75–77)', () => {
     // PR 400: payment, courier and SMS by default; only real connection kinds
     expect(backupsSettings['golive.connections'].default).toEqual({ kinds: ['PAYMENT', 'COURIER', 'SMS'] });
     expect(goLiveConnectionsSchema.safeParse({ kinds: ['FAX'] }).success).toBe(false);
+    // PR 402: the first-week watch is off and has no start until someone starts it
+    expect(backupsSettings['golive.firstWeek'].default).toEqual({ enabled: false, startedAt: null, days: 7, smokeEveryHours: 6, dailyTime: '21:00' });
+    expect(goLiveFirstWeekSchema.safeParse({ ...backupsSettings['golive.firstWeek'].default, dailyTime: '9pm' }).success).toBe(false);
     expect(goLiveSignoffSchema.safeParse({ qaGate: { at: '2026-10-31T10:00:00.000Z', by: 'u1' } }).success).toBe(true);
     expect(goLiveSignoffSchema.safeParse({ qaGate: { at: 'yesterday', by: 'u1' } }).success).toBe(false);
     expect(goLiveSignoffSchema.safeParse({ 'a b': { at: '2026-10-31T10:00:00.000Z', by: null } }).success).toBe(false);

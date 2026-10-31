@@ -1,6 +1,7 @@
 // S19 · PR 392 — the vault's keys for the server's scripts: only a LIVE, switched-on Telegram connection reaches the
 // server; values are shell-safe; an unchanged fingerprint reads nothing from the vault.
 import { describe, expect, it } from 'vitest';
+import { registry } from '@extas/settings';
 import { envLines, serverSync, shellValue, type SyncDeps } from './server-sync';
 
 type Row = { id: string; kind: string; provider: string; mode: string; enabled: boolean; config: unknown; storeId: number | null; archivedAt: Date | null; createdAt: Date };
@@ -45,9 +46,21 @@ describe('server sync (PR 392)', () => {
   it('no vault key on the server: everything empty, nothing read', async () => {
     const { d } = deps([tg()], { 'telegram.botToken': TOKEN });
     const noVault = (await serverSync({ ...d, vault: null })).files!;
-    expect({ ...noVault, 'backup-settings.env': undefined }).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '', 'backup-settings.env': undefined, 'origin-cert.pem': '', 'origin-key.pem': '' });
+    expect({ ...noVault, 'backup-settings.env': undefined }).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '', 'backup-settings.env': undefined, 'origin-cert.pem': '', 'origin-key.pem': '', 'first-week.env': '' });
     // PR 507: the backup settings need no key, so they are there before the vault is
     expect(noVault['backup-settings.env']).toContain("BACKUP_TIME='02:30'\n");
+  });
+
+  it('PR 402: the first-week watch reaches the server only once started, with its end worked out', async () => {
+    const { d } = deps([], {});
+    const at = (fw: unknown) => serverSync({ ...d, settings: { value: async (k: string) => (k === 'golive.firstWeek' ? fw : registry[k as keyof typeof registry].default) } });
+    const base = { enabled: true, startedAt: '2026-11-05T15:00:00.000Z', days: 7, smokeEveryHours: 4, dailyTime: '20:30' };
+    expect((await at(base)).files?.['first-week.env']).toBe(
+      "FIRST_WEEK_START='2026-11-05T15:00:00.000Z'\nFIRST_WEEK_UNTIL='2026-11-12T15:00:00.000Z'\nFIRST_WEEK_DAILY_TIME='20:30'\nFIRST_WEEK_SMOKE_H='4'\n",
+    );
+    expect((await at({ ...base, enabled: false })).files?.['first-week.env']).toBe('');
+    expect((await at({ ...base, startedAt: null })).files?.['first-week.env']).toBe('');
+    expect((await at(base)).fingerprint).not.toBe((await at({ ...base, days: 8 })).fingerprint);
   });
 
   it('the same fingerprint again reads nothing from the vault; a change reads again', async () => {

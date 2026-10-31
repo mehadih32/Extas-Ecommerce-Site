@@ -6,8 +6,11 @@ step_monitor() {
   install -m 0755 "$EXTAS_REPO_DIR/infra/server/bin/extas-vault-sync" /usr/local/sbin/extas-vault-sync
   timer_unit extas-monitor "EXTAS health check and alerts" "/usr/local/sbin/extas-monitor" "*-*-* *:*:00"
   timer_unit extas-vault-sync "EXTAS vault keys for the server scripts" "/usr/local/sbin/extas-vault-sync" "*-*-* *:0/${VAULT_SYNC_EVERY_MIN}:15"
+  # S19 · PR 402: the first-week watch (does nothing until it is switched on in Settings → System → Go-live).
+  install -m 0755 "$EXTAS_REPO_DIR/infra/server/bin/extas-first-week" /usr/local/sbin/extas-first-week
+  timer_unit extas-first-week "EXTAS first-week watch after go-live" "/usr/local/sbin/extas-first-week" "*-*-* *:05:00"
   systemctl daemon-reload
-  systemctl enable --now extas-monitor.timer extas-vault-sync.timer >/dev/null 2>&1
+  systemctl enable --now extas-monitor.timer extas-vault-sync.timer extas-first-week.timer >/dev/null 2>&1
   /usr/local/sbin/extas-vault-sync >/dev/null 2>&1 || true
   /usr/local/sbin/extas-monitor || true
   local tg="not connected — alerts go to the log until the Telegram bot is added in Keys & connections"

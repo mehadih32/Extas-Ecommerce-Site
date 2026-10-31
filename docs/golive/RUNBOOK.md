@@ -37,7 +37,7 @@ week PR 402.
 | 6 | Open `https://extas.com.bd` on a phone and a desktop: home, a category, a product, the bag, checkout; an old address redirects to its new page (PR 587). | Steps 5 and 4 back. |
 | 7 | The smoke test runs against the main domain (Actions → Smoke test); it must pass (CN-016). | See section 2. |
 | 8 | One real cash-on-delivery order by the team, then cancelled in the admin (no money moves). Then Website → SEO → let search engines in, and in Search Console verify the main domain and submit `/sitemap.xml` (PR 401; go-live lines "Main domain open to search engines" and "Search Console on the main domain"). Now add the main domain to Keys & connections → Cloudflare and press **Send to Cloudflare** (Settings → Sign-in & security → Cloudflare protection); before this step it refuses the main domain, which was still the old shop (PR 386). | Switch search engines off again (the main domain then answers `noindex`). |
-| 9 | Merges may start again. The first-week watch begins (PR 402). | — |
+| 9 | Merges may start again. **Settings → System → Go-live → Start the first week** (PR 402): a daily check on Telegram and the smoke test of every page every few hours, for the days of `golive.firstWeek`. | Stop it on the same card. |
 
 ## 2. When something goes wrong — rollback, smallest step first
 Decide within **30 minutes** of the problem being seen; a slow decision costs more orders than a quick rollback.
