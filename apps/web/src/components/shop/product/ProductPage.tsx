@@ -57,6 +57,8 @@ import { Bold } from './Bold';
 import { PdpBuy, PdpDeskBar, PdpPhoneBar, type BuyLinks } from './PdpBuy';
 import { PdpColour } from './PdpColour';
 import { PdpDetails, type DetailBlockView } from './PdpDetails';
+import { ghostListed, retiredForGood } from '@/lib/seo/url-policy';
+import { PdpAlternatives } from './PdpAlternatives';
 import { PdpEffects } from './PdpEffects';
 import { FinderCard, FinderPopup } from './PdpFinder';
 import { PdpGallery } from './PdpGallery';
@@ -107,6 +109,8 @@ const KEYS = [
   'policy.returns.afterDelivery',
   // PR 102: the matching set offer above the buttons
   'combos.pdpOffer',
+  // PR 527: a page that cannot be bought keeps its rank and shows what can be bought now
+  'seo.urlPolicy',
 ] as const;
 
 export type ProductSearch = Record<string, string | string[] | undefined>;
@@ -152,7 +156,9 @@ export async function productMetadata(c: ShopContext, search: ProductSearch): Pr
   const body = (c.lang === 'bn' && data.descriptionBn?.trim()) || data.descriptionEn?.trim() || null;
   const tokens = { ...(c.storeName ? { shop: c.storeName } : {}), ...(colourName ? { name: title, colour: colourName, colours: colourName } : {}) };
   const texts = await productPageTexts(c.storeId, data.id, c.lang, tokens, body);
-  return shopMetadata(c, `${prefix.replace(/^\/+|\/+$/g, '')}/${data.slug}`, title, { path, index: !one(search[TEMPLATE_QUERY]), ...(texts ? { seo: { texts } } : {}) });
+  // PR 527: a sold-out, taken-off or archived page stays listed while its switch says so (both on as shipped)
+  const index = !one(search[TEMPLATE_QUERY]) && ghostListed(data.reason, set['seo.urlPolicy']);
+  return shopMetadata(c, `${prefix.replace(/^\/+|\/+$/g, '')}/${data.slug}`, title, { path, index, ...(texts ? { seo: { texts } } : {}) });
 }
 
 /** Every word of the page (`pdp.*` as they are, Find My Size's as `finder.*`, with the owner's own), {slots} left open
@@ -424,6 +430,8 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
               variants: ldVariants,
               // PR 222: the struck price the page shows (the honest-price rule), never one it does not
               wasPrice: sd.wasPrice,
+              // PR 527: archived for good is "discontinued", only sold out is "out of stock"
+              retired: retiredForGood(data.reason),
             })
           : null,
       ]}
@@ -539,6 +547,15 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
             </div>
           </div>
         </div>
+        {!m.onSale && set['seo.urlPolicy'].alternatives ? (
+          <PdpAlternatives
+            c={c}
+            productId={m.productId}
+            category={cat ? { slug: cat.slug, name: categoryName(cat, lang) } : null}
+            max={set['seo.urlPolicy'].alternativesMax}
+            speed={rows.pairSpeed}
+          />
+        ) : null}
         <PdpReviews c={c} set={revSet} data={reviewData} name={m.name} qa={set['pdp.qa'].on} />
         <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} />
         <PdpRows

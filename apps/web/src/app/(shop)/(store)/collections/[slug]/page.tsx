@@ -10,6 +10,8 @@
 //   the desktop keeps the active filters as removable chips over the grid.
 // What the shopper chose lives in the address (lib/shop/category-model), so the server draws exactly that page and a
 // filtered page can be shared; such a page stays out of search engines (its clean address is the canonical one).
+// S11 · PR 527: a collection archived after it had products on the shop answers with its resting page
+// (components/shop/category/CatResting, `seo.urlPolicy.retiredCategoryPage`), never "page not found".
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
@@ -17,6 +19,7 @@ import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
 import { CardDeskMount } from '@/components/shop/CardDeskMount';
 import { CatFaq, CatSeoText } from '@/components/shop/category/CatInfo';
 import { CatListing, type ListingRow } from '@/components/shop/category/CatListing';
+import { CatResting } from '@/components/shop/category/CatResting';
 import { JsonLd } from '@/components/shop/JsonLd';
 import { categoryData, productName, type ShopCard } from '@/lib/shop/catalogue';
 import { isRefined, paragraphs, parseState, placeSoldOut, queryOf, type CatState, type SearchParams } from '@/lib/shop/category-model';
@@ -24,13 +27,14 @@ import { readPageSettings, shopContext, type ShopContext } from '@/lib/shop/cont
 import { productPath } from '@/lib/shop/home-model';
 import { hrefIn } from '@/lib/shop/lang';
 import { categoryDraftTexts } from '@/lib/seo/page-texts';
+import { restingCategory } from '@/lib/seo/url-policy';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { ROUTES } from '@/lib/shop/routes';
 import { categoryName, requirementsMet } from '@/lib/shop/shell-model';
 import { breadcrumbLd, itemListLd, type LdCrumb } from '@/lib/shop/structured-data';
 import './category.css';
 
-const KEYS = ['category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData'] as const;
+const KEYS = ['category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy'] as const;
 
 /** The "New in" page's own link name, from the routing table (`/collections/new-in`). */
 const NEW_IN = ROUTES.newIn.split('/').pop()!;
@@ -54,13 +58,19 @@ async function page(props: Props) {
   return { c, slug, set, state, data, defaultSort: sorts[0]! };
 }
 
+/** PR 527: the collection's resting page when it has none of its own (switch on, a past on the shop), else null. */
+const restingFor = cache(async (storeId: number, slug: string, on: boolean) => (on ? restingCategory(storeId, slug) : null));
+
 function titleOf(c: ShopContext, data: NonNullable<Awaited<ReturnType<typeof page>>['data']>): string {
   return data.head ? categoryName(data.head, c.lang) : c.t('cat.newIn');
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { c, slug, set, state, data, defaultSort } = await page(props);
-  if (!data) return {};
+  if (!data) {
+    const rest = await restingFor(c.storeId, slug, set['seo.urlPolicy'].retiredCategoryPage);
+    return rest ? shopMetadata(c, `collections/${slug}`, categoryName(rest, c.lang), { index: set['seo.urlPolicy'].retiredIndexed }) : {};
+  }
   const seo = set['category.seo']?.[slug];
   const name = titleOf(c, data);
   // PR 221: the owner's own words first, then an AI draft someone accepted, then the category template (`seo.titles`)
@@ -82,7 +92,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function CategoryPage(props: Props) {
   const [{ c, slug, set, state: asked, data, defaultSort }, sp] = await Promise.all([page(props), props.searchParams]);
-  if (!data) notFound();
+  if (!data) {
+    const rest = await restingFor(c.storeId, slug, set['seo.urlPolicy'].retiredCategoryPage);
+    if (!rest) notFound();
+    return <CatResting c={c} cat={rest} max={set['seo.urlPolicy'].alternativesMax} />;
+  }
   const t = c.t;
   const pg = set['category.page'];
   const name = titleOf(c, data);

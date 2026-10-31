@@ -294,5 +294,19 @@
       "percent": "Suggest a page from this match (%)",
       "default": "Default: {v}"
     }
+  },
+  "up": {
+    "title": "Pages that stay",
+    "desc": "A product or collection that was on the shop never shows \"page not found\". Its page stays, honestly says it cannot be bought now, and sends people on.",
+    "alternatives": "\"Available now\" on pages that cannot be bought",
+    "alternativesHint": "A sold-out, taken-off or archived product page shows products from its category that can be bought now.",
+    "max": "How many products the row shows",
+    "maxHint": "2 to 12. Default: {v}.",
+    "soldOutIndexed": "Sold-out pages stay in search",
+    "soldOutIndexedHint": "The page keeps its place in Google until the restock; then it is a normal page again by itself.",
+    "retiredIndexed": "Taken-off and archived pages stay in search",
+    "retiredIndexedHint": "Also the resting page of an archived collection. Off: such pages ask search engines not to list them; their links are still followed.",
+    "retiredCategoryPage": "Archived collections keep a resting page",
+    "retiredCategoryPageHint": "A collection archived after it had products on the shop shows a short page with the live collections. A hidden collection is your choice and stays closed. Off: \"page not found\" as before."
   }
 }

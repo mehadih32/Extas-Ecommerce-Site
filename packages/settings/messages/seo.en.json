@@ -22,6 +22,10 @@
     "notFound": {
       "label": "404 report",
       "help": "Counts the shop addresses that have no page: which address, how often, the last time and the site the visitor came from (without anything after \"?\"). At most this many different addresses are kept, so a scan cannot fill the database. A suggestion (the closest live page) is offered when this share of the address's words match its link."
+    },
+    "urlPolicy": {
+      "label": "Pages that stay",
+      "help": "A product, category or page that was on the shop never answers \"page not found\". A sold-out product page stays: it says so honestly, takes \"tell me when it is back\" and, with \"Available now\" on, shows that many products from its category that can be bought. A product taken off or archived the same. A category archived after it had products on the shop answers with a short resting page that sends people to the live collections. Each kind can stay listed in search engines (both on as shipped, so the page keeps its rank); a restock makes the page a normal one again by itself."
     }
   },
   "defaults": {
