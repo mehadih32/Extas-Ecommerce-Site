@@ -33,7 +33,7 @@
 import { createHash } from 'node:crypto';
 import type { PrismaClient } from '@extas/db/client';
 import { CERT_LABEL, inspectOriginCert, KEY_LABEL, normalizePem, ORIGIN_CERT_PROVIDER } from '@extas/adapters';
-import { registry } from '@extas/settings';
+import { registry, UI_CHECK_FAMILIES } from '@extas/settings';
 import type { Vault } from '@extas/vault';
 
 type Db = Pick<PrismaClient, 'integration'>;
@@ -244,9 +244,11 @@ export const firstWeekPart: ServerFilePart = {
  */
 export const journeysSettingsPart: ServerFilePart = {
   file: 'journeys-settings.env',
-  watch: async (ctx) => settingOr(ctx, 'health.journeys', registry['health.journeys'].default),
+  watch: async (ctx) => [await settingOr(ctx, 'health.journeys', registry['health.journeys'].default), await settingOr(ctx, 'health.uiChecks', registry['health.uiChecks'].default)],
   async build(ctx) {
     const j = await settingOr(ctx, 'health.journeys', registry['health.journeys'].default);
+    // PR 416: the UI checks the owner switched on (empty when off)
+    const ui = await settingOr(ctx, 'health.uiChecks', registry['health.uiChecks'].default);
     const asked = j.runRequestedAt ? Math.floor(Date.parse(j.runRequestedAt) / 1000) : NaN;
     return envLines({
       JOURNEYS_ON: yesNo(j.enabled),
@@ -255,6 +257,7 @@ export const journeysSettingsPart: ServerFilePart = {
       JOURNEYS_WEEKDAY: String(j.weekday),
       JOURNEYS_KEEP: String(j.keepRuns),
       JOURNEYS_REQUESTED: Number.isFinite(asked) ? String(asked) : '',
+      JOURNEYS_UI: ui.enabled ? UI_CHECK_FAMILIES.filter((k) => ui[k]).join(',') : '',
     });
   },
 };

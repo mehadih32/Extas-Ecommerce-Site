@@ -123,7 +123,9 @@
         "unauthorized": "Your sign-in has ended — please sign in again.",
         "network": "No connection. Please try again.",
         "other": "That did not work. Please try again."
-      }
+      },
+      "uiOff": "UI checks off",
+      "uiLine": "UI: {issues} finding(s)"
     },
     "jcard": {
       "h": "When the saved journeys run",
@@ -149,6 +151,19 @@
         "6": "Saturday",
         "7": "Sunday"
       }
+    },
+    "ucard": {
+      "h": "UI checks in the journeys",
+      "d": "After every step of the saved journeys, on the phone and the desktop screen, the page is also measured the way the device gate measures it before every release. Each finding fails its step.",
+      "enabled": "Check how the pages look in every run",
+      "enabledHelp": "Off: the journeys only check that every page opens and works.",
+      "layout": "Broken layout",
+      "layoutHelp": "Wider than the screen, sideways scrolling, something sticking out, a squeezed tab.",
+      "text": "Cut-off text",
+      "textHelp": "Text cut short; on the phone also form text under 16 px (the iPhone zooms in).",
+      "images": "Pictures that did not load",
+      "taps": "Buttons that cannot be pressed",
+      "tapsHelp": "Too small for a finger on the phone, two on top of each other, or covered by something."
     }
   }
 }

@@ -15,3 +15,5 @@
   .adm2 .hl-open{order:1;margin-left:auto;height:32px}
 }
 .adm2 .hl-first{overflow-wrap:anywhere;min-width:160px}
+/* PR 416 — the UI findings under a kept run's line. */
+.adm2 td .hl-meta{display:block}

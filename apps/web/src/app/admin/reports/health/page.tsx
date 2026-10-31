@@ -89,6 +89,15 @@ export default async function HealthHubPage() {
     { kind: 'select', path: 'weekday', label: s('jcard.weekday'), numeric: true, options: Array.from({ length: 7 }, (_, i) => ({ value: String(i + 1), label: s(`jcard.day.${i + 1}`) })) },
     { kind: 'number', path: 'keepRuns', label: s('jcard.keepRuns'), help: s('jcard.keepRunsHelp'), min: 1, max: 200 },
   ];
+  // PR 416: the UI checks in the journeys' runs
+  const uTexts: FieldsCardTexts = { ...texts, h: s('ucard.h'), d: s('ucard.d'), readOnly: s('jcard.readOnly') };
+  const uFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('ucard.enabled'), help: s('ucard.enabledHelp') },
+    { kind: 'switch', path: 'layout', label: s('ucard.layout'), help: s('ucard.layoutHelp') },
+    { kind: 'switch', path: 'text', label: s('ucard.text'), help: s('ucard.textHelp') },
+    { kind: 'switch', path: 'images', label: s('ucard.images') },
+    { kind: 'switch', path: 'taps', label: s('ucard.taps'), help: s('ucard.tapsHelp') },
+  ];
   const runTexts = {
     run: s('j.run'),
     running: s('j.running'),
@@ -174,7 +183,12 @@ export default async function HealthHubPage() {
                     <td>
                       <span className={`a2-pill ${r.ok ? 'ok' : 'bad'}`}>{s(r.ok ? 'j.runPass' : 'j.runFail')}</span>
                     </td>
-                    <td className="a2-sm">{s('j.runLine', words({ journeys: r.journeys, steps: r.steps, failed: r.failed }))}</td>
+                    <td className="a2-sm">
+                      {s('j.runLine', words({ journeys: r.journeys, steps: r.steps, failed: r.failed }))}
+                      <span className="hl-meta" data-testid="journeys-run-ui">
+                        {r.ui === null ? s('j.uiOff') : s('j.uiLine', words({ issues: r.ui }))}
+                      </span>
+                    </td>
                     <td className="a2-sm hl-first">{r.first}</td>
                   </tr>
                 ))}
@@ -187,6 +201,8 @@ export default async function HealthHubPage() {
       </section>
 
       <FieldsCard url={API} screen={{ key: v.cards.journeys.key, value: v.cards.journeys.value, version: v.cards.journeys.version }} fields={jFields} texts={jTexts} canEdit={canEdit} testId="journeys-schedule" />
+
+      <FieldsCard url={API} screen={{ key: v.cards.uiChecks.key, value: v.cards.uiChecks.value, version: v.cards.uiChecks.version }} fields={uFields} texts={uTexts} canEdit={canEdit} testId="journeys-ui" />
 
       <FieldsCard url={API} screen={{ key: v.cards.hub.key, value: v.cards.hub.value, version: v.cards.hub.version }} fields={fields} texts={texts} canEdit={canEdit} testId="health-limits" />
     </div>

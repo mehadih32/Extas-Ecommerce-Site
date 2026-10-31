@@ -39,6 +39,14 @@
 // - `onUrgent`: a line when a problem becomes Urgent (new, or judged Urgent after more visitors).
 // - `spikeVisitors` / `spikeMinutes`: a line when one problem hit this many visitors within these minutes.
 // - `repeatHours`: at most one line per problem within these hours, however often it happens.
+//
+// PR 416 (B7.3, registry version 111): `health.uiChecks`, UI checks at the phone and desktop widths of the saved
+// journeys' runs (tools/journeys.mjs, the device gate's own measures). Off as it ships; synced to the server as
+// JOURNEYS_UI in journeys-settings.env. Each switch is one family of findings:
+// - `layout`: wider than the screen, sideways scrolling, something sticking out, a squeezed tab label.
+// - `text`: text cut off, form text under 16 px on the phone.
+// - `images`: a picture that did not load.
+// - `taps`: a button too small on the phone, two on top of each other, or one covered by something else.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -46,6 +54,7 @@ const V = 81;
 const V414 = 82;
 const V423 = 83;
 const V415 = 110;
+const V416 = 111;
 
 export const healthHubSchema = z
   .object({
@@ -94,6 +103,19 @@ export const healthAlertsSchema = z
   })
   .strict();
 export type HealthAlertsSettings = z.output<typeof healthAlertsSchema>;
+
+export const healthUiChecksSchema = z
+  .object({
+    enabled: z.boolean(),
+    layout: z.boolean(),
+    text: z.boolean(),
+    images: z.boolean(),
+    taps: z.boolean(),
+  })
+  .strict();
+export type HealthUiChecksSettings = z.output<typeof healthUiChecksSchema>;
+/** PR 416: the families of UI checks, in the order the server file lists them. */
+export const UI_CHECK_FAMILIES = ['layout', 'text', 'images', 'taps'] as const;
 
 export const healthSettings = {
   'health.hub': setting({
@@ -147,5 +169,18 @@ export const healthSettings = {
     isPublic: false,
     sortOrder: 953,
     version: V415,
+  }),
+  'health.uiChecks': setting({
+    scope: 'installation',
+    schema: healthUiChecksSchema,
+    default: { enabled: false, layout: true, text: true, images: true, taps: true },
+    valueType: 'JSON',
+    group: 'system',
+    labelKey: 'health.uiChecks.label',
+    helpKey: 'health.uiChecks.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 954,
+    version: V416,
   }),
 };

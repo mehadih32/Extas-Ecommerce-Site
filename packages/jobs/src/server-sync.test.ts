@@ -62,12 +62,23 @@ describe('server sync (PR 392)', () => {
       "JOURNEYS_WEEKDAY='5'",
       "JOURNEYS_KEEP='30'",
       "JOURNEYS_REQUESTED=''",
+      "JOURNEYS_UI=''",
     ]);
     const set = { enabled: true, every: 'weekly', hour: 22, weekday: 1, keepRuns: 5, runRequestedAt: '2026-10-31T10:00:00.000Z' };
     const env = await journeysSettingsPart.build(ctx(set));
     expect(env).toContain("JOURNEYS_ON='yes'\nJOURNEYS_EVERY='weekly'\nJOURNEYS_HOUR='22'\nJOURNEYS_WEEKDAY='1'\nJOURNEYS_KEEP='5'\n");
     expect(env).toContain(`JOURNEYS_REQUESTED='${Date.parse(set.runRequestedAt) / 1000}'\n`);
-    expect(await journeysSettingsPart.watch!(ctx(set))).toEqual(set);
+    expect(await journeysSettingsPart.watch!(ctx(set))).toEqual([set, registry['health.uiChecks'].default]);
+  });
+
+  it('PR 416: the UI checks the owner switched on go to the journeys file; off or none chosen is empty', async () => {
+    const ctx = (ui: unknown) => ({ db: null, vault: null, connections: [], secret: async () => null, settings: { value: async (k: string) => (k === 'health.uiChecks' ? ui : undefined) } }) as unknown as PartContext;
+    const on = { enabled: true, layout: true, text: false, images: true, taps: true };
+    expect(await journeysSettingsPart.build(ctx(on))).toContain("JOURNEYS_UI='layout,images,taps'\n");
+    expect(await journeysSettingsPart.build(ctx({ ...on, enabled: false }))).toContain("JOURNEYS_UI=''\n");
+    expect(await journeysSettingsPart.build(ctx({ enabled: true, layout: false, text: false, images: false, taps: false }))).toContain("JOURNEYS_UI=''\n");
+    const before = await journeysSettingsPart.watch!(ctx(on));
+    expect(await journeysSettingsPart.watch!(ctx({ ...on, text: true }))).not.toEqual(before);
   });
 
   it('PR 402: the first-week watch reaches the server only once started, with its end worked out', async () => {
