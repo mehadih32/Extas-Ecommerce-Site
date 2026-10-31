@@ -26,6 +26,10 @@
     "urlPolicy": {
       "label": "Pages that stay",
       "help": "A product, category or page that was on the shop never answers \"page not found\". A sold-out product page stays: it says so honestly, takes \"tell me when it is back\" and, with \"Available now\" on, shows that many products from its category that can be bought. A product taken off or archived the same. A category archived after it had products on the shop answers with a short resting page that sends people to the live collections. Each kind can stay listed in search engines (both on as shipped, so the page keeps its rank); a restock makes the page a normal one again by itself."
+    },
+    "hashLinks": {
+      "label": "Old demo links",
+      "help": "Links to the approved demo (an address with \"#/\" in it, such as …/#/p/essential-pique-polo) were shared while the shop was being built. On: a shop page opened with such a link moves on to the live page at once (a Bengali page stays Bengali). Off: the \"#/\" part is ignored and the page opens as it is."
     }
   },
   "defaults": {

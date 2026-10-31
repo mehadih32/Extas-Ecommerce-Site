@@ -215,7 +215,7 @@ export default async function RedirectsPage(props: Props) {
             )}
           </SeoCard>
           <WordpressCard key={`wp-${snap.values["seo.redirects"].keepMonths}-${snap.values["seo.redirects"].listShown}`} d={d} value={snap.values["seo.redirects"]} version={snap.versions["seo.redirects"]} canWrite={canWrite} rows={snap.wordpress.rows} />
-          <RedirectOptions key={`opt-${snap.versions["seo.redirects"]}-${snap.versions["seo.notFound"]}`} d={d} values={snap.values} versions={snap.versions} defaults={snap.defaults} canWrite={canWrite} />
+          <RedirectOptions key={`opt-${snap.versions["seo.redirects"]}-${snap.versions["seo.notFound"]}-${snap.versions["seo.hashLinks"]}`} d={d} values={snap.values} versions={snap.versions} defaults={snap.defaults} canWrite={canWrite} />
         </div>
       </div>
     </div>

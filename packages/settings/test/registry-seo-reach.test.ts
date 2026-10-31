@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { seoReachSettings, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
+import { seoReachSettings, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
 
 describe('lane A SEO settings (v71–72)', () => {
   it('every key is in the registry at version 71, labelled in English and Bengali, its default valid', () => {
@@ -36,5 +36,11 @@ describe('lane A SEO settings (v71–72)', () => {
     const u = registry['seo.urlPolicy'].schema;
     expect(u.safeParse({ ...SEO_URL_POLICY_DEFAULT, alternativesMax: 1 }).success).toBe(false);
     expect(u.safeParse({ ...SEO_URL_POLICY_DEFAULT, alternativesMax: 13 }).success).toBe(false);
+  });
+
+  it('PR 586: old demo #/ links are forwarded as shipped (a switch, v72)', () => {
+    expect(SEO_HASH_LINKS_DEFAULT).toEqual({ forward: true });
+    expect(registry['seo.hashLinks'].version).toBe(72);
+    expect(registry['seo.hashLinks'].schema.safeParse({ forward: true, extra: 1 }).success).toBe(false);
   });
 });
