@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import dict from "../../../messages/status.bn.json";
 import { t } from "@/lib/i18n";
 import { dateTime, num } from "@/lib/format";
 import { buildStatus, runtimeState, type Backup } from "@/lib/status";
 import { displaySettings } from "@/lib/settings";
+import { pageShowsDetail } from "@/lib/status-host";
 import type { DisplayOptions } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +42,8 @@ function backupLabel(
 }
 
 export default async function StatusPage() {
+  // Review R1 m4 / R2 (security): only on the preview host and the server's own checks; anywhere else, no such page
+  if (!(await pageShowsDetail())) notFound();
   const s = buildStatus;
   // Locale and time zone through the settings resolver (PR 492) when the database answers, else the environment.
   const [{ deploy, health, backups, smoke }, d] = await Promise.all([
