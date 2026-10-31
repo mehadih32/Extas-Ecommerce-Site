@@ -435,6 +435,27 @@
       "streak": "This test has failed {n} times in a row: the problem is not going away by itself.",
       "same": "The same problems as the run before: nothing new broke.",
       "few": "Problems on {pages} pages; see the list below."
+    },
+    "alerts": {
+      "h": "Telegram when a test fails",
+      "d": "A line to you on Telegram when the smoke test or the saved journeys fail, again while it keeps failing, and one when it passes again. It uses the bot on Keys & connections; until that is connected, the lines are only kept in the server's alert log. The server reads a change within a few minutes.",
+      "readOnly": "Only someone who can change settings can change this.",
+      "enabled": "Send a line when a test fails",
+      "enabledHelp": "Off: nothing is sent; the runs are still kept here.",
+      "smoke": "The smoke test",
+      "smokeHelp": "After every deploy and every night.",
+      "journeys": "The saved journeys",
+      "journeysHelp": "On their own schedule, or when someone presses \"Run now\".",
+      "repeatHours": "While it keeps failing, again at most every (hours)",
+      "repeatHoursHelp": "From 1 to 168 (a week). The line says how long it has been failing.",
+      "recovered": "A line when it passes again",
+      "recoveredHelp": "Only after a line said it failed.",
+      "toldH": "What the server last said",
+      "toldNone": "{tool}: nothing yet.",
+      "toldFailing": "{tool}: failing since {since}; last line {told}.",
+      "toldFailingQuiet": "{tool}: failing since {since}; no line sent (switched off).",
+      "toldOk": "{tool}: passing.",
+      "toldOkLast": "{tool}: passing; last line {told}."
     }
   },
   "fxg": {

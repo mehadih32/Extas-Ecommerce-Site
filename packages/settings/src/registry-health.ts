@@ -60,6 +60,15 @@
 // - `proposals`: agents (and the audit runner) may file fix proposals and new skills at all. Off: every proposal is
 //   refused and nothing waits. Approving is always a person's step; there is no automatic approval.
 // - `expireDays`: a proposal nobody decided within these days expires (it can be filed again); 0 = never.
+//
+// PR 424 (B7.3, registry version 114): `health.runAlerts`, a Telegram line to the owner when the smoke test or the
+// saved journeys fail (Reports › Site health › Run history). Off as it ships; synced to the server as run-alerts.env,
+// read by run_alert in infra/deploy/smoke-lib.sh right after each run. The owner's bot is the one on Keys &
+// connections (PR 392); until it is connected every line is only written to the server's alert log.
+// - `enabled`: the lines on or off.
+// - `smoke` / `journeys`: which test's failures send a line.
+// - `repeatHours`: while a test keeps failing, the line comes again at most once within these hours.
+// - `recovered`: one line when a test that was said to fail passes again.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -70,6 +79,7 @@ const V415 = 110;
 const V416 = 111;
 const V417 = 112;
 const V420 = 113;
+const V424 = 114;
 
 export const healthHubSchema = z
   .object({
@@ -143,6 +153,16 @@ export const healthFixGateSchema = z
   })
   .strict();
 export type HealthFixGateSettings = z.output<typeof healthFixGateSchema>;
+export const healthRunAlertsSchema = z
+  .object({
+    enabled: z.boolean(),
+    smoke: z.boolean(),
+    journeys: z.boolean(),
+    repeatHours: z.int().min(1).max(168),
+    recovered: z.boolean(),
+  })
+  .strict();
+export type HealthRunAlertsSettings = z.output<typeof healthRunAlertsSchema>;
 
 /** PR 416: the families of UI checks, in the order the server file lists them. */
 export const UI_CHECK_FAMILIES = ['layout', 'text', 'images', 'taps'] as const;
@@ -238,5 +258,18 @@ export const healthSettings = {
     isPublic: false,
     sortOrder: 956,
     version: V420,
+  }),
+  'health.runAlerts': setting({
+    scope: 'installation',
+    schema: healthRunAlertsSchema,
+    default: { enabled: false, smoke: true, journeys: true, repeatHours: 24, recovered: true },
+    valueType: 'JSON',
+    group: 'system',
+    labelKey: 'health.runAlerts.label',
+    helpKey: 'health.runAlerts.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 957,
+    version: V424,
   }),
 };

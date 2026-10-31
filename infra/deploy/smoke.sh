@@ -16,6 +16,8 @@
 # 4. PR 418: the newest run after a deploy and the newest other run (nightly, first week) stay on the server with each
 #    page's result and storefront picture for Reports › Site health › Smoke runs (state/smoke-runs/, smoke-lib.sh).
 # 5. PR 419: and every run goes into the run history (SiteAuditRun, run_history in smoke-lib.sh).
+# 6. PR 424: a failed run (and the first pass after it) is a Telegram line to the owner when he switched it on
+#    (run_alert in smoke-lib.sh; Reports › Site health › Run history).
 # Exit 0 = every page passed. No password, seed or connection string is printed or kept.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -133,5 +135,6 @@ smoke_keep "$OUT" "$STATE/smoke-runs" "$(smoke_slot "$KIND")" || log "no result 
 if [ -f "$STATE/smoke-runs/$(smoke_slot "$KIND")/result.json" ]; then
   log "$(run_history smoke "$STATE/smoke-runs/$(smoke_slot "$KIND")" "$mig" "$work/db.env")"
 fi
+log "$(run_alert smoke "$STATE/smoke.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log")"
 log "$(jq -r 'if .ok then "PASS: \(.pages) page views" else "FAIL: \(.problems | join("; "))" end' "$STATE/smoke.json")"
 exit "$rc"

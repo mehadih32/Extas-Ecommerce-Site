@@ -2,28 +2,34 @@
 // saved-journeys run, newest first, with what passed and failed and how many findings; by tool and by result, a page
 // at a time; each run opens with its findings compared with the run before (history/[id]). Seeing needs `health.read`.
 // Old runs are kept; nothing here deletes or changes one (lib/admin-health/history.ts).
+// PR 424: the "Telegram when a test fails" card (`health.runAlerts`, `settings.write`; lib/admin-health/run-alerts.ts)
+// and what the server last said about each test.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { RUN_TOOLS } from '@extas/jobs';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { historyView, type HistoryRow } from '@/lib/admin-health/history';
+import { runAlertsView, type RunAlertState } from '@/lib/admin-health/run-alerts';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import hbn from '../../../../../../messages/admin-health.bn.json';
 import hen from '../../../../../../messages/admin-health.en.json';
+import '../../../settings-cards.css';
 import '../health.css';
 import { kindKey } from './kinds';
 
 export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/reports/health/history';
+const ALERTS_API = '/api/admin/health/run-alerts';
 const KEY = 'healthHistory';
 
 function withScreen(view: AdminView): AdminView {
@@ -52,7 +58,11 @@ export default async function RunHistoryPage({ searchParams }: { searchParams: P
         <ShellState view={view} kind="denied" permission="health.read" />
       </div>
     );
-  const v = await historyView({ db: access.deps.db, now: access.deps.now }, { actor: access.guard.actor, ctx: access.guard.ctx }, { tool: one(q.tool), result: one(q.result), page: one(q.page) });
+  const who = { actor: access.guard.actor, ctx: access.guard.ctx };
+  const [v, alerts] = await Promise.all([
+    historyView({ db: access.deps.db, now: access.deps.now }, who, { tool: one(q.tool), result: one(q.result), page: one(q.page) }),
+    runAlertsView({ db: access.deps.db, resolver: access.deps.resolver }, who),
+  ]);
   const s = (k: string, vars?: Record<string, string | number>) => t(d, `hst.${k}`, vars);
   const num = (n: number) => formatNumber(n, view.locale);
   const kind = (k: string) => s(`kind.${kindKey(k)}`, { kind: k });
@@ -66,7 +76,34 @@ export default async function RunHistoryPage({ searchParams }: { searchParams: P
     const qs = p.toString();
     return qs ? `${HERE}?${qs}` : HERE;
   };
-  const when = (r: HistoryRow) => r.at || new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone, numberingSystem: 'latn' }).format(new Date(r.startedAt));
+  const stamp = (iso: string) => new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone, numberingSystem: 'latn' }).format(new Date(iso));
+  const when = (r: HistoryRow) => r.at || stamp(r.startedAt);
+  const a = (k: string, vars?: Record<string, string | number>) => s(`alerts.${k}`, vars);
+  const alertTexts: FieldsCardTexts = {
+    h: a('h'),
+    d: a('d'),
+    save: t(d, 'hlt.save'),
+    saving: t(d, 'hlt.saving'),
+    saved: t(d, 'hlt.saved'),
+    discard: t(d, 'hlt.discard'),
+    unsaved: t(d, 'hlt.unsaved'),
+    readOnly: a('readOnly'),
+    pairHelp: t(d, 'hlt.pairHelp'),
+    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, t(d, `hlt.err.${c}`)])),
+  };
+  const alertFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: a('enabled'), help: a('enabledHelp') },
+    { kind: 'switch', path: 'smoke', label: a('smoke'), help: a('smokeHelp') },
+    { kind: 'switch', path: 'journeys', label: a('journeys'), help: a('journeysHelp') },
+    { kind: 'number', path: 'repeatHours', label: a('repeatHours'), help: a('repeatHoursHelp'), min: 1, max: 168 },
+    { kind: 'switch', path: 'recovered', label: a('recovered'), help: a('recoveredHelp') },
+  ];
+  const told = (tool: (typeof RUN_TOOLS)[number], st: RunAlertState | null) => {
+    const vars = { tool: s(`tool.${tool}`), since: st?.since ? stamp(st.since) : '', told: st?.told ? stamp(st.told) : '' };
+    if (!st) return a('toldNone', vars);
+    if (st.failing) return a(st.told ? 'toldFailing' : 'toldFailingQuiet', vars);
+    return a(st.told ? 'toldOkLast' : 'toldOk', vars);
+  };
 
   return (
     <div className="a2-z" data-testid="history-page">
@@ -187,6 +224,22 @@ export default async function RunHistoryPage({ searchParams }: { searchParams: P
           ) : null}
         </nav>
       ) : null}
+
+      <div className="a2-mt12">
+        <FieldsCard url={ALERTS_API} screen={{ key: alerts.cards.runAlerts.key, value: alerts.cards.runAlerts.value, version: alerts.cards.runAlerts.version }} fields={alertFields} texts={alertTexts} canEdit={alerts.canEdit} testId="history-alerts-card" />
+      </div>
+      <section className="a2-sc a2-mt12" aria-labelledby="history-told-h" data-testid="history-alerts-told" data-on={String(alerts.settings.enabled)}>
+        <h2 id="history-told-h" className="a2-h3">
+          {a('toldH')}
+        </h2>
+        <ul className="hs-said a2-sm">
+          {RUN_TOOLS.map((tool) => (
+            <li key={tool} data-tool={tool} data-failing={String(alerts.told[tool]?.failing ?? false)}>
+              {told(tool, alerts.told[tool])}
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

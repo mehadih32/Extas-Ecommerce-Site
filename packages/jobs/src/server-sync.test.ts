@@ -2,7 +2,7 @@
 // server; values are shell-safe; an unchanged fingerprint reads nothing from the vault.
 import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
-import { envLines, journeysSettingsPart, serverSync, shellValue, speedSettingsPart, type PartContext, type SyncDeps } from './server-sync';
+import { envLines, journeysSettingsPart, runAlertsPart, serverSync, shellValue, speedSettingsPart, type PartContext, type SyncDeps } from './server-sync';
 
 type Row = { id: string; kind: string; provider: string; mode: string; enabled: boolean; config: unknown; storeId: number | null; archivedAt: Date | null; createdAt: Date };
 
@@ -46,11 +46,13 @@ describe('server sync (PR 392)', () => {
   it('no vault key on the server: everything empty, nothing read', async () => {
     const { d } = deps([tg()], { 'telegram.botToken': TOKEN });
     const noVault = (await serverSync({ ...d, vault: null })).files!;
-    expect({ ...noVault, 'backup-settings.env': undefined, 'journeys-settings.env': undefined }).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '', 'backup-settings.env': undefined, 'origin-cert.pem': '', 'origin-key.pem': '', 'first-week.env': '', 'journeys-settings.env': undefined, 'speed-settings.env': "VITALS_REQUESTED=''\n" });
+    expect({ ...noVault, 'backup-settings.env': undefined, 'journeys-settings.env': undefined, 'run-alerts.env': undefined }).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '', 'backup-settings.env': undefined, 'origin-cert.pem': '', 'origin-key.pem': '', 'first-week.env': '', 'journeys-settings.env': undefined, 'speed-settings.env': "VITALS_REQUESTED=''\n", 'run-alerts.env': undefined });
     // PR 507: the backup settings need no key, so they are there before the vault is
     expect(noVault['backup-settings.env']).toContain("BACKUP_TIME='02:30'\n");
     // PR 414: the journeys' schedule too (off as it ships)
     expect(noVault['journeys-settings.env']).toContain("JOURNEYS_ON='no'\n");
+    // PR 424: and the run alerts (off as they ship)
+    expect(noVault['run-alerts.env']).toContain("RUN_ALERTS_ON='no'\n");
   });
 
   it('PR 414: the journeys file from the setting; "Run now" as seconds, and a new press changes the fingerprint', async () => {
@@ -120,5 +122,13 @@ describe('server sync (PR 392)', () => {
     expect(await speedSettingsPart.build(ctx(set))).toBe(`VITALS_REQUESTED='${Date.parse(set.runRequestedAt) / 1000}'\n`);
     expect(await speedSettingsPart.watch!(ctx(set))).not.toEqual(await speedSettingsPart.watch!(ctx({ ...set, runRequestedAt: '2026-10-31T11:00:00.000Z' })));
     expect(await speedSettingsPart.watch!(ctx(set))).toEqual(await speedSettingsPart.watch!(ctx({ ...set, months: 6 })));
+  });
+
+  it('PR 424: "Telegram when a test fails" from its setting, off as it ships; a change changes the fingerprint', async () => {
+    const ctx = (v?: unknown) => ({ db: null, vault: null, connections: [], secret: async () => null, ...(v ? { settings: { value: async (k: string) => (k === 'health.runAlerts' ? v : undefined) } } : {}) }) as unknown as PartContext;
+    expect(await runAlertsPart.build(ctx())).toBe("RUN_ALERTS_ON='no'\nRUN_ALERTS_SMOKE='yes'\nRUN_ALERTS_JOURNEYS='yes'\nRUN_ALERTS_REPEAT_H='24'\nRUN_ALERTS_RECOVERED='yes'\n");
+    const on = { ...registry['health.runAlerts'].default, enabled: true, journeys: false, repeatHours: 6 };
+    expect(await runAlertsPart.build(ctx(on))).toBe("RUN_ALERTS_ON='yes'\nRUN_ALERTS_SMOKE='yes'\nRUN_ALERTS_JOURNEYS='no'\nRUN_ALERTS_REPEAT_H='6'\nRUN_ALERTS_RECOVERED='yes'\n");
+    expect(await runAlertsPart.watch!(ctx(on))).not.toEqual(await runAlertsPart.watch!(ctx({ ...on, recovered: false })));
   });
 });

@@ -278,7 +278,27 @@ export const speedSettingsPart: ServerFilePart = {
   },
 };
 
-export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart, firstWeekPart, journeysSettingsPart, speedSettingsPart];
+/**
+ * PR 424 (B7.3): "Telegram when a test fails" on Reports › Site health › Run history, for run_alert in
+ * infra/deploy/smoke-lib.sh (after each smoke test and journeys run). Built from the setting alone; the bot itself is
+ * telegram.env.
+ */
+export const runAlertsPart: ServerFilePart = {
+  file: 'run-alerts.env',
+  watch: async (ctx) => settingOr(ctx, 'health.runAlerts', registry['health.runAlerts'].default),
+  async build(ctx) {
+    const a = await settingOr(ctx, 'health.runAlerts', registry['health.runAlerts'].default);
+    return envLines({
+      RUN_ALERTS_ON: yesNo(a.enabled),
+      RUN_ALERTS_SMOKE: yesNo(a.smoke),
+      RUN_ALERTS_JOURNEYS: yesNo(a.journeys),
+      RUN_ALERTS_REPEAT_H: String(a.repeatHours),
+      RUN_ALERTS_RECOVERED: yesNo(a.recovered),
+    });
+  },
+};
+
+export const defaultParts: ServerFilePart[] = [telegramPart, backupPart, backupKeyPart, backupSettingsPart, originCertPart, originKeyPart, firstWeekPart, journeysSettingsPart, speedSettingsPart, runAlertsPart];
 
 export interface SyncResult {
   fingerprint: string;
