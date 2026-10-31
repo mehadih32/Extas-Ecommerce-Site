@@ -56,7 +56,8 @@
       "form_stuck": "A form field was refused again and again",
       "rage_click": "Rage clicks (many quick clicks on one spot)",
       "broken_image": "A picture did not load",
-      "slow_load": "A page loaded slowly"
+      "slow_load": "A page loaded slowly",
+      "server_error": "A shop call broke on the server"
     },
     "step": {
       "landing": "Home page",
@@ -132,6 +133,21 @@
         "other": "That did not save. Please try again."
       },
       "notFound": "This problem is not there."
+    },
+    "alerts": {
+      "h": "Telegram alerts",
+      "d": "A line to the owner's Telegram (Keys & connections) when a customer problem needs him now. Nothing in the shop is blocked or changed.",
+      "enabled": "Send Telegram alerts for customer problems",
+      "enabledHelp": "Off: nothing is sent. Until the Telegram bot is connected, the lines go to the practice copy.",
+      "onUrgent": "Send a line when a problem becomes Urgent",
+      "spikeVisitors": "Sudden rise: one problem hits this many visitors",
+      "spikeMinutes": "… within this many minutes",
+      "repeatHours": "At most one line per problem within (hours)",
+      "readOnly": "You can see the alert settings; changing them needs the settings permission."
+    },
+    "alert": {
+      "urgent": "{store}: urgent customer problem: {kind} ({step}, {where}). {visitors} visitor(s) in the last day. See Reports › Site health › Customer problems.",
+      "spike": "{store}: sudden rise: {kind} ({step}, {where}) hit {visitors} visitors in {minutes} minutes. See Reports › Site health › Customer problems."
     }
   }
 }

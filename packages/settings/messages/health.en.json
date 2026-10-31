@@ -11,6 +11,10 @@
     "problems": {
       "label": "Site health: the customer problem recorder",
       "help": "The shop's pages report what goes wrong for a visitor — a script error, a failed or slow call to the shop's server, a page that failed, the error screen, a form field refused again and again, rage clicks, broken pictures and slow loads — never a name, phone, address or payment detail (visitor ids are random). The same cause becomes one problem on Reports › Site health › Customer problems. The numbers decide what is slow, what counts as a rage click or a stuck form, how many reports one page may send, when a problem is Urgent, how many days the lists show, and what is a short glitch."
+    },
+    "alerts": {
+      "label": "Site health: Telegram alerts for customer problems",
+      "help": "A line to the owner's Telegram (Keys & connections) when a customer problem needs him now: when a problem becomes Urgent, or when one problem hit this many visitors within these minutes. At most one line per problem within the hours set. Off as it ships; nothing is blocked or changed in the shop."
     }
   }
 }
