@@ -634,6 +634,7 @@ cat > "$T/bin/docker" <<'FAKE'
 #!/usr/bin/env bash
 # stand-in for `docker exec -i extas-postgres psql …`: logs the arguments and the SQL, answers like the database would
 echo "ARGS $*" >> "$FAKE_LOG"
+if [ "$1" = inspect ]; then case "$*" in *Config.Env*) printf 'POSTGRES_PASSWORD=ownerpw\nPATH=/usr/bin:/bin\n' ;; *) echo 'postgres:17 running since 2026-10-31' ;; esac; exit 0; fi
 sql="$(cat)"; printf 'SQL %s\n' "$sql" >> "$FAKE_LOG"
 case "$sql" in
   *extas_append_only*) [ -n "${FAKE_GUARDS:-}" ] && echo "$FAKE_GUARDS" || exit 2 ;;
@@ -677,7 +678,11 @@ check "app role: app.env the same after the second run" "$(cmp -s "$T/app.env.sw
 guards() { PATH="$T/bin:$PATH" FAKE_LOG="$T/docker.log" bash -c '. ../deploy/app-role.sh; app_role_guards'; }
 check "app role: guards ok passes through" "$(FAKE_GUARDS='ok: 14 tables append-only' guards)" "ok: 14 tables append-only"
 check "app role: a guard problem passes through" "$(FAKE_GUARDS='problem: guard off or app role may change AuditLog' guards)" "problem: guard off or app role may change AuditLog"
-check "app role: an unreadable database is a problem" "$(guards)" "problem: the append-only check could not read the database"
+check "app role: an unreadable database is a problem" "$(guards | cut -c1-60)" "problem: the append-only check could not read the database ("
+check "app role: the problem says why (image, PATH) and never shows the password" "$(g="$(guards)"; case "$g" in *postgres:17*PATH=/usr/bin:/bin*) echo why ;; esac; grep -c ownerpw <<<"$g" || true)" "why
+0"
+check "pg_exec: the tool runs from PostgreSQL's own folder, whatever PATH the exec gets (31 Oct: the /usr/bin wrapper answered)" "$(grep -c "ARGS exec -i extas-postgres sh -c for d in /usr/lib/postgresql/\*/bin; do \[ -x \"\$d/psql\" \] && PATH=\"\$d:\$PATH\"; done; export PATH; exec \"\$@\" pg psql -qtAX" "$T/docker.log")" "$(grep -c '^ARGS exec -i' "$T/docker.log")"
+check "pg_exec: no call site runs psql through docker exec directly" "$(grep -rn 'docker exec[^|]*extas-postgres psql' ../deploy ../server/steps | grep -v ':[0-9]*:\s*#' | grep -c . || true)" "0"
 rm -rf "$T"
 
 # Follow-up 82 (PR 6): a rollback starts the previous good version's worker too. The record names each version's

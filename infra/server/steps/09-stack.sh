@@ -5,6 +5,8 @@
 STACK_DIR_REPO="$EXTAS_REPO_DIR/infra/stack"
 # shellcheck source=../../deploy/caddy-live.sh
 . "$EXTAS_REPO_DIR/infra/deploy/caddy-live.sh"
+# shellcheck source=../../deploy/pg-exec.sh
+. "$EXTAS_REPO_DIR/infra/deploy/pg-exec.sh"
 
 write_stack_env() {
   local s="$EXTAS_SECRETS_DIR"
@@ -245,22 +247,37 @@ compose() {
     --env-file "$EXTAS_ROOT/config/profile.env" --env-file "$EXTAS_ROOT/config/stack.env" "$@"
 }
 
+# PR 5 follow-up (31 Oct): the database's own tools must run inside its container before anything else uses them. When
+# they do not (a container left on a store that moved under it), it restarts once, from the image as it is now, and the
+# report says why; the data lives on its own volume, so a restart loses nothing.
+ensure_pg_tools() {
+  pg_exec psql -qtAX -U extas -d extas -c 'SELECT 1' </dev/null >/dev/null 2>&1 && return 0
+  local why
+  why="$(pg_exec_diag)"
+  report WARN "PR 5 · PostgreSQL tools" "psql did not run in the container ($why); restarting it once"
+  docker restart -t 60 "$PG_CONTAINER" >/dev/null 2>&1 || true
+  compose up -d --wait --wait-timeout 300 >/dev/null 2>&1 || true
+  pg_exec psql -qtAX -U extas -d extas -c 'SELECT 1' </dev/null >/dev/null 2>&1 && return 0
+  report FAIL "PR 5 · PostgreSQL tools" "psql still does not run in the container after a restart: $(pg_exec_diag)"
+  return 1
+}
+
 ensure_pg_temp_tablespace() {
   local sub
-  docker exec extas-postgres psql -qtAX -U extas -d extas -c \
+  pg_exec psql -qtAX -U extas -d extas -c \
     "SELECT 1 FROM pg_tablespace WHERE spcname='nvme_temp'" | grep -q 1 \
-    || docker exec extas-postgres psql -qX -U extas -d extas -c "CREATE TABLESPACE nvme_temp LOCATION '/nvme/pgtemp'" >/dev/null
+    || pg_exec psql -qX -U extas -d extas -c "CREATE TABLESPACE nvme_temp LOCATION '/nvme/pgtemp'" >/dev/null
   sub="$(find "$EXTAS_NVME_MOUNT/pgtemp" -mindepth 1 -maxdepth 1 -name 'PG_*' -printf '%f\n' | head -1)"
   if [ -n "$sub" ]; then
     echo "$sub" | write_file /etc/extas/pgtemp.subdir 0644 >/dev/null
   else
     # The disk was wiped under a running server and the version folder is gone: recreate the tablespace.
-    docker exec extas-postgres psql -qX -U extas -d extas -c "DROP TABLESPACE IF EXISTS nvme_temp" >/dev/null 2>&1 || true
-    docker exec extas-postgres psql -qX -U extas -d extas -c "CREATE TABLESPACE nvme_temp LOCATION '/nvme/pgtemp'" >/dev/null
+    pg_exec psql -qX -U extas -d extas -c "DROP TABLESPACE IF EXISTS nvme_temp" >/dev/null 2>&1 || true
+    pg_exec psql -qX -U extas -d extas -c "CREATE TABLESPACE nvme_temp LOCATION '/nvme/pgtemp'" >/dev/null
     find "$EXTAS_NVME_MOUNT/pgtemp" -mindepth 1 -maxdepth 1 -name 'PG_*' -printf '%f\n' | head -1 | write_file /etc/extas/pgtemp.subdir 0644 >/dev/null
   fi
-  docker exec extas-postgres psql -qX -U extas -d extas -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements" >/dev/null
-  docker exec extas-postgres psql -qX -U extas -d extas -c "CREATE EXTENSION IF NOT EXISTS pg_trgm" >/dev/null
+  pg_exec psql -qX -U extas -d extas -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements" >/dev/null
+  pg_exec psql -qX -U extas -d extas -c "CREATE EXTENSION IF NOT EXISTS pg_trgm" >/dev/null
 }
 
 step_stack() {
@@ -287,6 +304,7 @@ step_stack() {
   local caddy_rc=0
   caddy_apply || caddy_rc=$?
   touch "$EXTAS_STATE_DIR/stack.started"
+  ensure_pg_tools || return 1
   ensure_pg_temp_tablespace
   # PR 139: the app's own role keeps its login in step with the generated password (also after a restore: a dump
   # carries no passwords). The switch of the app's URLs happens in the deploy, right after the migrations.
@@ -302,9 +320,9 @@ step_stack() {
     report INFO "PR 139 · app database role" "waits for the next deploy (migration 0010_append_only)"
   fi
   local ver up
-  ver="$(docker exec extas-postgres psql -qtAX -U extas -d extas -c 'SHOW server_version')"
+  ver="$(pg_exec psql -qtAX -U extas -d extas -c 'SHOW server_version')"
   up="$(compose ps --format '{{.Service}}:{{.Health}}' | tr '\n' ' ')"
-  report OK "PR 5 · PostgreSQL" "v$ver, shared_buffers $(docker exec extas-postgres psql -qtAX -U extas -c 'SHOW shared_buffers'), temp on NVMe, WAL archive on, slow log > ${PROFILE_PG_SLOW_MS} ms, PgBouncer (transaction pool)"
+  report OK "PR 5 · PostgreSQL" "v$ver, shared_buffers $(pg_exec psql -qtAX -U extas -c 'SHOW shared_buffers'), temp on NVMe, WAL archive on, slow log > ${PROFILE_PG_SLOW_MS} ms, PgBouncer (transaction pool)"
   report OK "PR 6 · Redis" "cache (LRU, NVMe) + queue (no eviction, AOF on data disk)"
   [ "$caddy_rc" = 0 ] && report OK "PR 7 · Caddy" "$EXTAS_STAGING_HOST, auto HTTPS, HTTP/3, password + noindex"
   report INFO "stack health" "$up"
