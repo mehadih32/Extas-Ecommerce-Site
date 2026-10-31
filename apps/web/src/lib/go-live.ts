@@ -6,7 +6,7 @@
 //     list of docs/golive/ACCEPTANCE.md, real phones, the journey simulation of CN-013 …); who and when is kept in
 //     `golive.signoff`;
 //   - `owner`: the owner's own step (PR 399, 403), shown so nothing is forgotten, done by him.
-// Later PRs add their items to GO_LIVE (394 the server, 397 the certificate, 398 the runbook, 400 the connections,
+// Later PRs add their items to GO_LIVE (394 the server, 397 the certificate, 398 the runbook — added; 400 the connections,
 // 401 indexing, 402 the first week). One pure function evaluates the list; it only reports: nothing is switched,
 // opened or blocked by it.
 import { certCovers } from '@extas/adapters';
@@ -119,6 +119,8 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     },
   },
   { key: 'sslStrict', pr: 397, kind: 'signoff' },
+  // PR 398 — docs/golive/RUNBOOK.md read, and the rollback rehearsed on staging (back one version and forward again).
+  { key: 'runbook', pr: 398, kind: 'signoff' },
   { key: 'qaGate', pr: 393, kind: 'signoff' },
   { key: 'acceptance', pr: 393, kind: 'signoff' },
   { key: 'realPhones', pr: 393, kind: 'signoff' },

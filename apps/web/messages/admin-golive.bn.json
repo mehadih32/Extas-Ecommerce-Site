@@ -49,6 +49,10 @@
       "title": "Cloudflare-এর SSL/TLS মোড Full (strict)",
       "how": "উপরের লাইন হয়ে গেলে: Cloudflare → SSL/TLS → Overview → Full (strict), staging আর মূল ডোমেইন দুটোতেই। তারপর দোকান খুলে দেখুন; 526 এরর এলে সার্টিফিকেট মেলেনি — Full-এ ফিরিয়ে দিয়ে উপরের লাইন দেখুন।"
     },
+    "runbook": {
+      "title": "চালুর রানবুক পড়া, ফেরানোর মহড়া হয়েছে",
+      "how": "docs/golive/RUNBOOK.md পড়ুন (ডোমেইন বদলের প্রতিটা ধাপ, আর প্রতিটা কীভাবে ফেরানো যায়)। staging-এ Deploy workflow একবার \"Go back to the previous version\" দিয়ে আর একবার ছাড়া চালান, কত সময় লাগল লিখে রাখুন। তারপর নিশ্চিত করুন।"
+    },
     "qaGate": {
       "title": "QA গেট সবুজ (ব্লুপ্রিন্ট পরিশিষ্ট C)",
       "how": "staging-এর বিল্ডে CI-তে ফোন, ট্যাবলেট আর ডেস্কটপে ডিভাইস গেট 0 ব্যর্থ, journey আর Lighthouse বাজেট পাস; স্ক্রিনশট দেখা হয়েছে।"

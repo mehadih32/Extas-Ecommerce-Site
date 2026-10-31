@@ -49,6 +49,10 @@
       "title": "Cloudflare SSL/TLS mode is Full (strict)",
       "how": "Once the line above is done: Cloudflare → SSL/TLS → Overview → Full (strict), for the staging and the main domain. Open the shop afterwards; an error 526 means the certificate does not fit — set it back to Full and check the line above."
     },
+    "runbook": {
+      "title": "Go-live runbook read, rollback rehearsed",
+      "how": "Read docs/golive/RUNBOOK.md (the switch minute by minute, and how each step is undone). On staging, run the Deploy workflow once with \"Go back to the previous version\" and once without, and note how long it took. Then confirm."
+    },
     "qaGate": {
       "title": "QA gate green (Blueprint Appendix C)",
       "how": "The device gate at 0 failures on phones, tablets and desktop, the journeys and the Lighthouse budget pass in CI for the build on staging; the screenshots were looked at."
