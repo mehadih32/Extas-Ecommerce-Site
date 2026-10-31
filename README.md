@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৮১টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৫টা PR-এর মধ্যে ২৯১টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,18 +36,18 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। ERP-এর সাথে টাকার হিসাব মেলানোর খাতা (S16: ERP অ্যাকাউন্ট, প্রতিদিনের মিল, মাস বন্ধ, ERP-তে দিনের হিসাব পাঠানো, মাসের স্থির খরচ) আর ERP দিয়ে ফেরত ও বদলের নতুন ব্যবস্থা (S08) তৈরি। ERP থেকে স্টাইল কোড ধরে পণ্য আনা (S01 শেষ) আর ERP-র সই করা প্রশ্নের উত্তর (S18) তৈরি। প্রতিটা দোকানের নিজের ERP সংযোগের পাতা, নতুন ERP চুক্তিতে যাওয়ার ব্যবস্থা আর পুরো ERP-র শেষ পরীক্ষা (S19) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৮১টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। ERP-এর সাথে টাকার হিসাব মেলানোর খাতা (S16: ERP অ্যাকাউন্ট, প্রতিদিনের মিল, মাস বন্ধ, ERP-তে দিনের হিসাব পাঠানো, মাসের স্থির খরচ) আর ERP দিয়ে ফেরত ও বদলের নতুন ব্যবস্থা (S08) তৈরি। ERP থেকে স্টাইল কোড ধরে পণ্য আনা (S01 শেষ) আর ERP-র সই করা প্রশ্নের উত্তর (S18) তৈরি। প্রতিটা দোকানের নিজের ERP সংযোগের পাতা, নতুন ERP চুক্তিতে যাওয়ার ব্যবস্থা আর পুরো ERP-র শেষ পরীক্ষা (S19) তৈরি। পুরোনো লিংক ঠিক পাতায় পাঠানো আর ৪০৪-এর তালিকা, বিক্রি শেষ হওয়া পণ্যের পাতা না হারানো, ডেমোর # লিংক আসল পাতায় নেওয়া (S11); নিরাপত্তার পাহারা, বট ধরার নীরব ব্যবস্থা, অ্যাডমিনের সাইন-ইন নিয়ম আর প্যাকেজের দুর্বলতা খোঁজা (S18); টেলিগ্রাম সতর্কবার্তা, এক ক্লিকে Google Drive ব্যাকআপ আর প্রতি মাসে ব্যাকআপ ফিরিয়ে দেখা (S19) তৈরি। মোট ৬১৫টা PR-এর মধ্যে ২৯১টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 259/305** · 46 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 21/21** · **S07 8/10** · **S08 21/26** (wave 3) · **S11 3/22** (wave 5) · **S16 4/22** (wave 6) · **S18 1/14** · **S19 2/17** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 1/13** (wave 4) · total **281/615** active PRs |
+| Launch | **Launch 269/305** · 36 PRs left before real orders; the build follows [the Launch list](docs/LAUNCH-TRACK.md) first, then the After-launch list by itself (CN-027) |
+| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 19/33** (wave 2) · **S04 41/41** · **S05 21/21** · **S07 8/10** · **S08 21/26** (wave 3) · **S11 6/22** (wave 5) · **S16 4/22** (wave 6) · **S18 5/14** · **S19 5/17** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 1/13** (wave 4) · total **291/615** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups) |
 | Last deploy | 31 Oct 2026, 12:53 (Dhaka) · commit `19d1245` (#61 whole-ERP qa-gate fixes for PR [616](docs/stages/S16.md#pr-616), 619, 610, 614, 621, plus #62 system-disk care for PR [4](docs/stages/S0A.md#pr-4)) · **success**, smoke test 220 pages OK |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
-| Waiting on the owner | 7 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17, 18, 19 and 20); none stops the build ([table below](#what-waits-on-the-owner)). 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
+| Waiting on the owner | 8 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17, 18, 19, 20 and 21); none stops the build ([table below](#what-waits-on-the-owner)). 21 asks whether an outside security expert (a cost) checks the site before real money (PR [381](docs/stages/S18.md#pr-381)); 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
-| Last update | 30 Oct 2026 |
+| Last update | 31 Oct 2026 |
 
 The truth for these numbers is the **Progress** line and the **Build status** table of
 [`docs/MASTER-REGISTER.md`](docs/MASTER-REGISTER.md#build-status). Keep the "Stages" row above identical to it.
@@ -72,15 +72,15 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564), [611–614](docs/stages/S08.md) | 21 / 26 | In progress |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md), [607–608](docs/stages/S09.md) | 19 / 19 | **Done** |
 | [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 12 / 12 | **Done** |
-| [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 3 / 22 | In progress |
+| [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 6 / 22 | In progress |
 | [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 0 / 22 | Not started |
 | [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 0 / 35 | Not started |
 | [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 7 / 24 | In progress |
 | [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 0 / 48 | Not started |
 | [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 4 / 22 | In progress |
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 0 / 24 | Not started |
-| [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620) | 1 / 14 | In progress |
-| [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587), [619](docs/stages/S19.md#pr-619), [621](docs/stages/S19.md#pr-621) | 2 / 17 | In progress |
+| [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620) | 5 / 14 | In progress |
+| [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587), [619](docs/stages/S19.md#pr-619), [621](docs/stages/S19.md#pr-621) | 5 / 17 | In progress |
 | [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 1 / 9 | In progress |
 | [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 0 / 14 | In progress (PR 594 readme-guard) |
 | [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538) | 1 / 13 | In progress |
@@ -89,7 +89,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **281 / 615 active** | 6 parked |
+| | **Total** | | **621 PRs** | **291 / 615 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -110,6 +110,7 @@ in the backend later (CN-009).
 | 18 | Free-delivery limit for a set: count the set price or the pieces' own prices (today: the pieces' prices); a money decision (follow-up 39) | Open — default: unchanged |
 | 19 | COD limit: add the band's delivery charge the customer pays (follow-up 121) | Open — default: unchanged |
 | 20 | Two orders of one customer sent as one parcel: should the system propose giving back the second delivery charge (a refund request he approves)? (PR 145) | Open — default: both orders keep their charges, nothing is given back |
+| 21 | Before real money: should an outside security expert check the site (it costs money), or is our own separate review plus the automated scans enough? (PR 381) | Open — default: our own review (`docs/security/REVIEW.md`) and the nightly dependency scan; nothing stops |
 | Sim 1–9 | The nine questions of the 50-order simulation (prepaid reward, risky customers, delivery-day and Day-1 messages, sets, exchange charge, Eid pre-order, rider overcharge, apology credit, coupons) | Answered (CN-018); questions 3 and 9 decided in CN-019 (Messages control centre) |
 | 16 | Who receives low-stock alerts, and from how many pieces | Owner data, not a question: set in the backend; default 2 pieces, shown in the admin, no message sent |
 | 5 | The admin login e-mail | Answered (CN-009/CN-010): the owner account is opened on the server by `owner-account.yml`; he reads the first password with `extas-owner-login` ([steps in Bengali](docs/owner/OWNER-LOGIN.md)); never committed |
@@ -303,16 +304,22 @@ OS disk 128 GB; a separate **1 TB data disk** in LVM; a **440 GB local NVMe** th
   pushes WAL to Blob. `prune` keeps the retention. Blob and Drive say "not connected" until their keys are in the
   vault; local backups run regardless. Product photos go in too (a full archive every
   `BACKUP_MEDIA_FULL_EVERY_DAYS`, only changes in between, a checksum list; `BACKUP_MEDIA="no"` switches it off), and
-  a dated docs bundle (README, blueprint, register, all of docs/, with the commit hash; CN-011).
+  a dated docs bundle (README, blueprint, register, all of docs/, with the commit hash; CN-011). **Since 31 Oct (PR 8
+  follow-up, the backup disk had reached 100%):** each archived WAL segment is gzipped and kept on the disk only
+  `BACKUP_KEEP_LOCAL_WAL_DAYS`; each base backup carries the WAL it needs (`-X stream`); before each backup the disk is
+  pruned until `BACKUP_MIN_FREE_PCT` is free (oldest WAL, then oldest base, never the newest); a failed day names its
+  step and leaves no half-written folder; every PostgreSQL tool runs as the server's own version. The times, days kept
+  and free share are set in the admin (Settings › System › Backups, PR 507) and reach the timers at once.
 - **`extas-restore`** (PR 8) — `test` restores the newest base backup + WAL into a throwaway PostgreSQL on the NVMe
-  and checks it (run after every setup; monthly by timer later, PR 395/507). `--from local|blob|drive
+  and checks it (run after every setup; ~~monthly by timer later, PR 395/507~~ `drill` every month since PR 507: the
+  server's own copy, then Blob's and Drive's, each into a throw-away database). `--from local|blob|drive
   [--at "YYYY-MM-DD HH:MM"] [--target staging|production]` — production needs the typed word RESTORE and keeps the old
   data. The test also restores one sample photo (checksum) and unpacks the newest docs bundle (commit must match).
   `media --from local|blob|drive [--into live]` brings all photos back; into live it only adds missing ones. Last
   test: 336 tables restored, matching live.
 - **`extas-monitor`** (PR 9) — every minute: disks (alert at 80%), services, NVMe, backups, speed → writes
   `state/health.json` (read by the status page now, by the admin Server page later). Sends to Telegram once the bot
-  key is in Keys & connections; until then to the log.
+  key is in Keys & connections (PR 392: `extas-vault-sync` hands the key to the server); until then to the log.
 - **`extas-profile`** (PR 604), **`extas-nvme-prepare`** (PR 601), **`extas-find-data-disk`** (finds the 1 TB disk
   safely), **`extas-preview-login`** (the owner reads the preview password; CN-007).
 
@@ -1542,7 +1549,7 @@ who-did-what log `ConversationEvent` is append-only at the database); settings r
 
 Still planned in S22: register PRs 426–436, 538.
 
-### S11 · SEO engine — In progress (3/22)
+### S11 · SEO engine — In progress (6/22)
 
 > **বাংলায়:** দোকানের ঠিকানার নিয়ম, প্রতিটা পাতার সার্চের শিরোনাম আর বিবরণ, আর Google-এর জন্য পাতার তথ্য (দাম, স্টক, পথ, দোকানের পরিচয়) তৈরি। আপনি চালু না করা পর্যন্ত Google-এ দোকান আসে না, AI খসড়াও বন্ধ।
 
@@ -1572,7 +1579,43 @@ Built (PR [220](docs/stages/S11.md#pr-220), 221, 222; 29 Oct; not deployed yet):
 - **Tests:** settings (registry), the URL and indexing rules, the title templates, the structured data, the practice
   AI writer, and DB tests for the SEO API and the AI drafts.
 
-Planned — see register PRs 223–238, 527, 586, 588: [S11](docs/MASTER-REGISTER.md#s11--seo-engine--pr-220238).
+**Built (PR [235](docs/stages/S11.md#pr-235), 527, 586; 31 Oct, CN-031 lane A; not deployed yet): old links never die.**
+
+> নতুন (PR 235, 527, 586): পুরোনো বা ভুল লিংক ঠিক পাতায় যায় (WordPress-এর লিংক চালুর দিনে), না-পাওয়া পাতার তালিকা এক ক্লিকে ঠিক; বিক্রি শেষ বা সরানো পণ্যের পাতা থেকে যায়, পাশে "এখন পাওয়া যাচ্ছে"; ডেমোর পুরোনো # লিংক নিজে আসল পাতায় চলে যায়।
+
+- **Redirects (PR 235):** the proxy forwards every enabled Redirect row with `naming.redirectStatusCode` (301 as shipped),
+  for the `/bn` twins too, the query kept; never the home page or a private family; the table is re-read every 30 s.
+  WordPress map rows forward only while `seo.redirects.wordpressMapLive` is on (off; switched on go-live day, PR 587).
+  Import by paste or file with a dry check first. No chains: a new target that is itself redirected is followed to its
+  end and older rows are repointed. A target is never another site. A redirect is only switched off, never deleted. A
+  combo asked for with its colours in another order forwards to the real combo.
+- **404 report (PR 235):** path, count, last seen and the referring page (origin and path only), capped at
+  `seo.notFound.maxRows`; the closest live product or category is suggested; **Fix** saves a redirect, **Set aside** hides
+  the row. Migration `0058_seo_redirects` (`NotFoundHit.ignoredAt`).
+- **Pages that stay (PR 527):** a sold-out, taken-off or archived product page keeps answering 200 and shows "Available
+  now" (in-stock products of its category first, then the shop's best-ranked, never itself; up to
+  `seo.urlPolicy.alternativesMax`, 4). A restock makes it a normal page again. Sold-out and retired pages stay listed for
+  search engines (both switches on, so ranks are kept); an archived product's offer is schema.org `Discontinued`, a
+  sold-out one `OutOfStock`. An archived collection that once had a product on the shop shows a resting page (its
+  parent, New in, live collections, what can be bought now); a hidden or never-public one still says "page not found",
+  so no unreleased name shows. A guard test: the web app never deletes a product, category or redirect.
+- **Demo links (PR 586):** a tiny script first in every shop page turns an old demo `#/…` link (product, category,
+  combo, sets, bag, checkout, account, order, journal, size guide, admin …) into its live address with
+  `location.replace`, so Back never returns to the dead link; the query is kept, a Bengali page stays Bengali, an
+  anchor such as `#top` is left alone, an unknown `#/` route goes to the same path, and it never sends anyone to
+  another site. The tests run the shipped script against every route of `docs/demo/src/02-core.js`.
+- **Admin:** Website › SEO › **Redirects & 404** (`/admin/website/seo/redirects`, `seo.read`; changes need
+  `seo.manage`) and the **Pages that stay** card on Website › SEO; the hash switch under More options. Guides:
+  [`docs/admin-guide/pages/website/redirects.md`](docs/admin-guide/pages/website/redirects.md),
+  [`docs/admin-guide/seo.md`](docs/admin-guide/seo.md).
+- **Settings:** registry v71 / v72 (`registry-seo-reach.ts`): `seo.redirects` (`wordpressMapLive` off, `keepMonths` 12),
+  `seo.notFound`, `seo.urlPolicy` (`alternatives`, `alternativesMax` 4, `soldOutIndexed`, `retiredIndexed`,
+  `retiredCategoryPage`, all on), `seo.hashLinks.forward` (on).
+- **Tests:** `apps/web/src/lib/seo/redirects.test.ts`, `redirects-admin.db.test.ts`, `url-policy.test.ts`,
+  `hash-forward.test.ts`, `packages/settings/test/registry-seo-reach.test.ts`; checked in a real browser at 390, 768,
+  1366 and 1920 px in English and Bengali.
+
+Planned — see register PRs 223–234, 236–238, 588: [S11](docs/MASTER-REGISTER.md#s11--seo-engine--pr-220238).
 
 ### S12 · Content & blog — Not started
 
@@ -1763,9 +1806,49 @@ Planned — see register PRs 481–490: [Blueprint Appendix A](docs/BLUEPRINT.md
 Planned — see register PRs 356–377, 511–512: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604) and
 [A4](docs/BLUEPRINT.md#a4-multi-store--three-stores-one-server-one-codebase).
 
-### S18 · Compliance, security, manual — In progress (1/14)
+### S18 · Compliance, security, manual — In progress (5/14)
 
-Planned — see register PRs 378–390: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+Planned — see register PRs 382–390: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+
+**Built (PR [378](docs/stages/S18.md#pr-378), 379, 380, 381; 31 Oct, CN-031 lane B; not deployed yet): the shop's
+safety layer.**
+
+> নতুন (PR 378–381): অন্য সাইট থেকে লুকিয়ে অনুরোধ পাঠানো বন্ধ, প্রতি ঠিকানায় অনুরোধের সীমা (আপাতত শুধু লিখে রাখে), পাতার নিরাপত্তা নিয়ম; কোনো ক্যাপচা ছাড়াই নীরবে বট ধরা (কাউকে আটকায় না); অ্যাডমিনের সাইন-ইন ও নিরাপত্তার পাতা (2FA, সেশনের সময়, ঠিকানার তালিকা, নতুন ডিভাইসে সতর্কবার্তা); প্রতিদিন প্যাকেজের দুর্বলতা খোঁজা আর আসল টাকার আগে নিরাপত্তা রিভিউ।
+
+- **Cross-site check and request limits (PR 378):** one CSRF check in front of every API call in the proxy
+  (`apps/web/src/lib/security/same-origin.ts`); only signed webhooks, payment callbacks, the ERP's signed calls, the
+  internal deploy hook and the browser's policy reports pass without it, each with its own proof checked in the
+  handler (a route-review test keeps every door listed). Per-address limits per kind (sign-in, checkout, shop changes,
+  reports, webhooks): **observe** as shipped (a log line, never a refusal, because mobile networks share addresses);
+  enforce answers 429 with Retry-After; admin calls are never counted.
+- **Page protection policy (PR 378):** Content-Security-Policy on every shop and admin page from settings (report-only
+  as shipped; outside sources per kind; the media origin allowed); `/api/security/csp-report` keeps only path and
+  origin. Caddy: `geolocation=(self)` (the checkout's location share had been switched off by `geolocation=()`), the
+  short policy always on (`object-src 'none'`, `base-uri`, `frame-ancestors`), `X-Permitted-Cross-Domain-Policies none`.
+  The Next proxy accepts request bodies up to 200 MB so media uploads pass; each route still enforces its own limit.
+- **Quiet bot check (PR 379):** no box to tick, no challenge page. The customer sign-in, the staff sign-in and the
+  checkout send a few counts (time since the form appeared, keys / taps / clicks, the browser's automation flag; nothing
+  typed, nothing personal); the server scores them per form. Observe (default) writes a `bot.signal` security event;
+  off scores nothing. There is no blocking mode: the sign-in and the order always go on.
+- **Settings › Sign-in & security (PR 380)** (`/admin/settings/security`, `security.read`; changes `security.write`):
+  2FA required (off; the owner decides, with an advice note), idle and total session limits, the wrong-password pause,
+  login alerts; the optional admin address list (off; cannot be switched on without the address it is saved from;
+  break-glass `EXTAS_ADMIN_ALLOWLIST_OFF=1` on the server), enforced at every admin request, sign-in and 2FA; the shop
+  protection modes of PR 378/379; your own signed-in devices with "log out everywhere else"; the latest security events
+  (addresses only as a short mark). New-device staff sign-ins show in the notifications drawer. Guide:
+  [`docs/admin-guide/pages/settings/security.md`](docs/admin-guide/pages/settings/security.md).
+- **Dependency scan and review (PR 381):** `tools/dep-audit.mjs` (pnpm audit: what ships fails at high, the build tools
+  at critical); an advisory that cannot be fixed yet is accepted in `tools/dep-audit.json` only with a reason and an
+  end date at most 90 days on (then the build fails again). CI job `deps`, needed by `web` (no deploy over a finding),
+  and every night. Accepted today: deepmerge-ts (Prisma CLI) and tinypool (vitest 3, test runner only), until
+  2027-01-29. [`docs/security/REVIEW.md`](docs/security/REVIEW.md): the review the payment gateways' live keys wait for
+  (checks, list R1–R14, findings, sign-off; checklist SC11, SC12). An outside expert is the owner's choice (BLOCKED 21).
+- **Settings:** registry v73 (`registry-web-security.ts`), v74 (`registry-bot-check.ts`), v78
+  (`registry-admin-access.ts`: `security.adminIpAllowlist`, `security.newLoginNoteDays`, `security.eventsListSize`).
+- **Tests:** `apps/web/src/lib/security/*.test.ts` (CSP, reports, the gate, route review, bot check),
+  `packages/auth/test/ip-allow.test.ts`, `apps/web/src/lib/admin-security/api.db.test.ts`, the checkout DB test (an
+  automated-looking order still goes through and gets its note), `tools/dep-audit.test.mjs`; the security page checked
+  in a real browser at 390, 768, 1366 and 1920 px.
 
 **Built (PR 620, After launch): signed calls from the ERP to the shop** (CN-028, docs/erp/site-changes-v6.md §2.7; no
 migration).
@@ -1794,9 +1877,9 @@ migration).
   2.10.2). Tests: `packages/adapters/test/erp-site-calls.test.ts`,
   `packages/inventory/test/erp-site-calls.db.test.ts`, `apps/web/src/lib/erp-site-api.db.test.ts`.
 
-### S19 · Deploy, backup, go-live — In progress (2/17)
+### S19 · Deploy, backup, go-live — In progress (5/17)
 
-Planned — see register PRs 391–403, 507, 587 (backup settings and monthly restore drills, WordPress migration on
+Planned — see register PRs 391, 393, 394, 396–403, 587 (~~backup settings and monthly restore drills,~~ built in PR 507; WordPress migration on
 go-live day): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
 **Built (PR 619): the switch-over to the ERP model and each store's own ERP link** (CN-028, CN-029 Phase 2; migration
@@ -1853,6 +1936,38 @@ go-live day): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604
   (both reported, never a stop). Report: `docs/reports/erp-acceptance/latest/`.
 - **Settings** (v70): `erp.acceptance.demoBaseUrl` https://demo.extasbd.com, `.timeoutSeconds` 20, `.demoWrites` off.
 
+**Built (PR [392](docs/stages/S19.md#pr-392), 395, 507; 31 Oct, CN-030, CN-031 lane C; not deployed yet): alerts and
+backups from the admin.**
+
+> নতুন (PR 392, 395, 507): টেলিগ্রামে সার্ভারের সতর্কবার্তা (চাবি বসালে চালু); এক ক্লিকে নিজের Google Drive-এ ব্যাকআপ; ব্যাকআপের সময়, কত দিন রাখবে, এখনই ব্যাকআপ — সব অ্যাডমিন থেকে; প্রতি মাসে প্রতিটা ব্যাকআপ আলাদা জায়গায় ফিরিয়ে দেখা হয়, আসল ডাটাবেস ছোঁয়া হয় না।
+
+- **Telegram (PR 392):** the bot token in the vault, the chat id on the connection (Keys & connections). The mock keeps
+  alerts until the Test (getMe + getChat, sends nothing) passes; no answer ever carries the token. The server's scripts
+  get their keys from the vault: `infra/server/bin/extas-vault-sync` (every `VAULT_SYNC_EVERY_MIN` minutes, through
+  `packages/jobs` `server-sync`) writes `telegram.env` (0600) only while the connection is live; an unchanged key
+  decrypts nothing; `state/vault-sync.json` carries names, never values. A newly connected bot says hello once.
+- **Google Drive in one click (PR 395, CN-030):** **Settings › System › Backups** (`/admin/settings/system/backups`):
+  the owner's own Google client of type "TVs and Limited Input devices" (client ID and secret); **Connect Google
+  Drive** shows Google's code for google.com/device (Copy, Open) and waits for Allow, then makes the folder "Extas
+  E-commerce Backups" (found again on a reconnect). Scope `drive.file` only; no redirect address, no service account.
+  The secret, the refresh token and the backup key live only in the vault. Disconnect, connecting over a live
+  connection and changing the client need the owner's PIN; each is audited without a value and told on Telegram.
+  Each upload is checked (`rclone check --one-way`, then a CHECKED marker); Drive keeps the newest `backups.drive.keepCopies`
+  (3) checked copies; restore takes the newest checked one.
+- **Backup settings and the restore drill (PR 507):** on the same page: the nightly time, the days the server's disk,
+  Blob and Drive keep, WAL days, the free share the backup disk keeps; the monthly drill (on, day 1–28, time, Blob,
+  Drive); Telegram on failure (on) and on success (off). The defaults are the server's own; a change reaches the
+  server's timers at once (`backup-settings.env`). `extas-restore drill` restores the server's own copy, then Blob's and
+  Drive's, each into a throw-away database, never the live one. **Back up now** and **Run the restore drill now**
+  (permission `system.backup`, one open of each kind; migration `0062_backup_requests`). Nothing restores production
+  here (PR 396).
+- **Settings:** registry v75 (`backups.drive`), v76 (`backups.plan`, `backups.drill`, `backups.alerts`). Guide:
+  [`docs/admin-guide/pages/settings/backups.md`](docs/admin-guide/pages/settings/backups.md),
+  [`docs/admin-guide/backup.md`](docs/admin-guide/backup.md).
+- **Tests:** `packages/adapters/test/telegram.test.ts`, `packages/jobs/src/server-sync.test.ts`, `backups.test.ts` (a
+  fake Google: code, Allow, Deny, expiry, reconnect, revoked), `backup-requests.test.ts`,
+  `apps/web/src/lib/backups-api.test.ts`, `infra/tests/run.sh` (the drill of each copy, requests, timers).
+
 ### S26 · Installation, documentation & distribution — Parked
 
 Parked — register PRs 513–518, built only when the owner hands the system to someone else:
@@ -1873,6 +1988,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #68 | PR [235](docs/stages/S11.md#pr-235), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [378](docs/stages/S18.md#pr-378), [379](docs/stages/S18.md#pr-379), [380](docs/stages/S18.md#pr-380), [381](docs/stages/S18.md#pr-381), [392](docs/stages/S19.md#pr-392), [395](docs/stages/S19.md#pr-395), [507](docs/stages/S19.md#pr-507) (+ PR [8](docs/stages/S0A.md#pr-8) follow-up, CN-033) | 31 Oct | CN-031 lane batch 1 (three builders). **Old links never die:** a redirect manager with a 404 report and one-click fixes (the old WordPress links wait behind a go-live switch, a redirect never points to another site); a sold-out or archived product page stays and shows "Available now", an archived collection gets a resting page; old demo `#/…` links move on to their live page. **Safety:** one cross-site check in front of every API call, request limits per address (watching only for now), the page protection policy (report-only), a quiet bot check with no CAPTCHA that never blocks anyone, Settings › Sign-in & security (2FA required switch, session limits, an optional admin address list, new-device alerts, log out everywhere else), a daily dependency scan in CI and the security review the live payment keys wait for. **Alerts and backups:** Telegram alerts once the bot key is tested; Google Drive backups in one click with the owner's own Google client; backup times and days kept from the admin, "Back up now", and a monthly drill that restores each copy into a throw-away database. **PR [8](docs/stages/S0A.md#pr-8) follow-up:** the backup disk can no longer fill up (compressed WAL with its own window, base backups that carry their WAL, room made first). **CN-033:** the shop follows the ERP's 30 Oct retail decisions (PR [610](docs/stages/S05.md#pr-610), 614, 619, 621). Review fixes folded in: the hash forwarder and redirect targets never leave the site, the proxy takes media uploads up to 200 MB, base backups use `-X stream`. Not deployed yet |
 | #67 | PR [4](docs/stages/S0A.md#pr-4) follow-up | 31 Oct | The first repair found every image of the stack broken and could not download them again, because Docker's own records pointed at files that were gone, so the site went down. Server setup now asks Docker Hub first: when it answers and downloads still fail, the whole broken image store is moved aside (kept two days, then removed), Docker starts empty, and every image is downloaded or built again. The shop's data lives in the server's own folders and is not touched. |
 | #66 | PR [4](docs/stages/S0A.md#pr-4) follow-up | 31 Oct | The deploys still rolled back: inside the running database container some basic programs were missing. The clean-up that removed the old copy of Docker's image store had, through a shared view of the system disk, reached the new store and deleted files there. The clean-up now works only in a private view and checks it is on the system disk before removing anything. Server setup now checks every stack container and image: a broken container is stopped and made again, a broken downloaded image is downloaded again, a broken image built on the server is built again. The data is in the server's own folders, so nothing is lost. |
 | #65 | PR [5](docs/stages/S0A.md#pr-5) follow-up | 31 Oct | Three deploys in a row (#63, CN-031, #64) were rolled back by the smoke test: after Docker's image store moved to the data disk, `docker exec extas-postgres psql` found Debian's /usr/bin wrapper instead of PostgreSQL's own tool, so the append-only check read nothing. Every server script now runs PostgreSQL's tools from their own folder inside the container (`infra/deploy/pg-exec.sh`), the check says why it could not read (image, PATH, never the password), and server setup restarts the database container once when its tools cannot run. |

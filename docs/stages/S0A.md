@@ -235,7 +235,8 @@
 **Details**
 
 - **Status:** Live · 2026-10-20
-  - Build status row: daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive "not connected" until keys. 20 Oct: product photos (full every `BACKUP_MEDIA_FULL_EVERY_DAYS`, diffs between, checksums) and a dated docs bundle with the commit hash in every backup; the restore test checks one sample photo and the docs bundle (CN-011)
+  - Build status row: daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive "not connected" until keys. 20 Oct: product photos (full every `BACKUP_MEDIA_FULL_EVERY_DAYS`, diffs between, checksums) and a dated docs bundle with the commit hash in every backup; the restore test checks one sample photo and the docs bundle (CN-011). 31 Oct (follow-up, the backup disk reached 100%): archived WAL gzipped and kept only `BACKUP_KEEP_LOCAL_WAL_DAYS`, each base backup carries its own WAL (`-X stream`), room made before each backup down to `BACKUP_MIN_FREE_PCT` free (never the newest), a failed day names its step and leaves no half-written folder, the server's own PostgreSQL tools first on PATH in every backup and restore call
+  - GitHub pull request #67, 31 Oct
   - GitHub pull request #20, 20 Oct
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
 - **What it does (original scope):** Nightly encrypted backup of database, uploads and configuration to **Google Drive**, with one-command restore.
@@ -247,7 +248,7 @@
   - **20 Oct** · [Scope added to existing PRs (V2.1 final · 20 Oct — pre-code demo work finished; blueprint V2.1 final; no new PR numbers)](../MASTER-REGISTER.md#how-this-reached-621): **Server admin pages in the demo (CN-001; sample numbers, labelled)** — `#/admin/server` → PR 423 / 601 / 603 / 604; `#/admin/cache` → PR 602; `#/admin/images` → PR 22 / 24 / 88; `#/admin/speed` → PR 234; `#/admin/integrations` ("Keys & connections") → PR 493 / 500; `#/admin/backup` now shows Blob + Drive → PR 8 / 395 / 507. Checks: 120 route/modal checks 0 fails + 19 flows.
   - **20 Oct 13:03** · [Scope added to existing PRs (owner, CN-011; no new PR numbers)](../MASTER-REGISTER.md#how-this-reached-621): **PR 8 (nightly backup and restore)** — every backup carries a dated docs bundle (`README.md`, `docs/BLUEPRINT.md`, `docs/MASTER-REGISTER.md` and all of `docs/`, with the commit hash), so a restore brings back that version's documentation; the restore test checks the bundle comes back and its commit matches.
 - **What was built** (from the Build status row):
-  - Names in the code: `BACKUP_MEDIA_FULL_EVERY_DAYS`
+  - Names in the code: `BACKUP_MEDIA_FULL_EVERY_DAYS`, `BACKUP_KEEP_LOCAL_WAL_DAYS`, `-X stream`, `BACKUP_MIN_FREE_PCT`
   - Tests: daily base + dump + config, WAL every minute, one-command restore, restore test
   - Tests: the restore test checks one sample photo and the docs bundle (CN-011)
 - **Owning agent:** Prohori
