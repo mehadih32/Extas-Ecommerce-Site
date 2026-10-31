@@ -89,6 +89,19 @@ jobs:
           docker run --rm -e EXTAS_STAGING_HOST=example.test -e "EXTAS_EXTRA_HOSTS=shop.example.test www.example.test" \
             -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+          # PR 397: both certificate choices of sites/tls.caddy (infra/server/bin/extas-origin-cert) — the automatic one,
+          # and a Cloudflare Origin pair (a throwaway one here). The steps below run without the file (the glob's empty case).
+          printf 'tls {\n\tissuer acme\n\tissuer internal\n}\n' > /tmp/sites/tls.caddy
+          docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+          mkdir -p /tmp/sites/origin
+          openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -days 30 -subj /CN=example.test \
+            -addext subjectAltName=DNS:example.test -keyout /tmp/sites/origin/key.pem -out /tmp/sites/origin/cert.pem 2>/dev/null
+          chmod 0644 /tmp/sites/origin/key.pem
+          printf 'tls /etc/caddy/sites/origin/cert.pem /etc/caddy/sites/origin/key.pem\n' > /tmp/sites/tls.caddy
+          docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+          rm -rf /tmp/sites/tls.caddy /tmp/sites/origin
       - name: Deploy script and app compose are valid
         run: |
           shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/pg-exec.sh infra/deploy/caddy-live.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh infra/deploy/erp-acceptance.sh infra/deploy/disk-tidy.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh

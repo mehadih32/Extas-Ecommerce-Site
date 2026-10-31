@@ -17,7 +17,10 @@ type Deps = Pick<AdminDeps, 'db' | 'resolver' | 'now'>;
 /** The checklist now, and the names of the people who confirmed items. */
 export async function goLiveNow(deps: Deps) {
   const [state, checks, signoff] = await Promise.all([runtimeState(), deps.resolver.value('golive.checks'), deps.resolver.value('golive.signoff')]);
-  const gate = await backupGateNow(deps, state);
+  const [gate, domains] = await Promise.all([
+    backupGateNow(deps, state),
+    deps.db.storeDomain.findMany({ where: { isPrimaryHost: true, archivedAt: null }, select: { hostname: true } }),
+  ]);
   const result = goLiveChecks({
     now: deps.now ? deps.now() : new Date(),
     checks,
@@ -26,6 +29,8 @@ export async function goLiveNow(deps: Deps) {
     health: state.health,
     backups: { ready: gate.ready, todo: gate.checks.filter((c) => !c.ok).length },
     serverSetup: state.serverSetup,
+    originCert: state.originCert,
+    primaryHosts: domains.map((d) => d.hostname),
   });
   const ids = [...new Set(result.items.map((i) => i.by).filter((v): v is string => Boolean(v)))];
   const people = ids.length

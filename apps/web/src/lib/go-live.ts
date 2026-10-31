@@ -9,13 +9,14 @@
 // Later PRs add their items to GO_LIVE (394 the server, 397 the certificate, 398 the runbook, 400 the connections,
 // 401 indexing, 402 the first week). One pure function evaluates the list; it only reports: nothing is switched,
 // opened or blocked by it.
-import type { Health, ServerSetup, Smoke } from './status';
+import { certCovers } from '@extas/adapters';
+import type { Health, OriginCert, ServerSetup, Smoke } from './status';
 
 export type GoLiveKind = 'auto' | 'signoff' | 'owner';
 
 export interface GoLiveContext {
   now: Date;
-  checks: { smokeHours: number; healthMinutes: number };
+  checks: { smokeHours: number; healthMinutes: number; certDays?: number };
   signoff: Record<string, { at: string; by: string | null }>;
   smoke: Smoke | null;
   health: Health | null;
@@ -23,6 +24,9 @@ export interface GoLiveContext {
   backups: { ready: boolean; todo: number };
   /** PR 394: the last full server setup run (infra/server/setup.sh → state/server-setup.json). */
   serverSetup?: ServerSetup | null;
+  /** PR 397: the certificate Caddy shows Cloudflare (state/origin-cert.json), and the stores' main domains. */
+  originCert?: OriginCert | null;
+  primaryHosts?: readonly string[];
 }
 
 export interface GoLiveResult {
@@ -94,6 +98,27 @@ export const GO_LIVE: readonly GoLiveItem[] = [
       },
     }),
   },
+  // PR 397 — the Cloudflare Origin certificate is what the server shows (not the automatic one), with days to spare, and
+  // it covers every store's main domain; then a person sets and confirms "Full (strict)" in Cloudflare.
+  {
+    key: 'originCert',
+    pr: 397,
+    kind: 'auto',
+    check: ({ originCert: o, primaryHosts = [], checks }) => {
+      const missing = primaryHosts.filter((h) => !certCovers(o?.names ?? [], h));
+      return {
+        ok: o?.active === true && (o.daysLeft ?? -1) >= (checks.certDays ?? 30) && missing.length === 0,
+        at: o?.at,
+        vars: {
+          names: (o?.names ?? []).join(', ') || '—',
+          days: o?.daysLeft ?? 0,
+          missing: missing.join(', ') || '—',
+          error: o?.error ?? '—',
+        },
+      };
+    },
+  },
+  { key: 'sslStrict', pr: 397, kind: 'signoff' },
   { key: 'qaGate', pr: 393, kind: 'signoff' },
   { key: 'acceptance', pr: 393, kind: 'signoff' },
   { key: 'realPhones', pr: 393, kind: 'signoff' },

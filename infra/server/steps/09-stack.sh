@@ -239,6 +239,13 @@ CONF
       | write_file "$d/auth.caddy" 0600 >/dev/null
   fi
   write_caddy_client_ip "$d"
+  # PR 397: tls.caddy — the Cloudflare Origin certificate when its checked pair is in the vault (extas-vault-sync
+  # brings it and runs the same script again), else Caddy's automatic certificate. The Caddy reload follows below.
+  install -m 0755 "$EXTAS_REPO_DIR/infra/server/bin/extas-origin-cert" /usr/local/sbin/extas-origin-cert
+  if ! /usr/local/sbin/extas-origin-cert apply --no-reload >/dev/null 2>&1; then
+    [ -f "$d/tls.caddy" ] || printf 'tls {\n\tissuer acme\n\tissuer internal\n}\n' | write_file "$d/tls.caddy" 0644 >/dev/null
+    report WARN "PR 397 · origin certificate" "could not be checked; the automatic certificate serves"
+  fi
   # The upstream belongs to deploy.yml once the app exists; until then the static page.
   if [ ! -f "$d/upstream.caddy" ]; then
     printf 'root * /srv/www\nfile_server\n' | write_file "$d/upstream.caddy" 0644 >/dev/null

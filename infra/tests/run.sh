@@ -1279,4 +1279,51 @@ check "vault sync (507): new backup settings go onto the timers (a drop-in each)
 check "vault sync (507): the drill switched off stops its timer" "$(grep -c '^disable --now extas-restore-test.timer$' "$T/systemctl.log")" "1"
 rm -rf "$T"
 
+# S19 · PR 397 — extas-origin-cert: a checked pair goes to Caddy (tls.caddy names it, the key 0600) and the state says
+# so; a key of another certificate, a host it does not cover, an end too near, or a pair Caddy refuses leave the
+# automatic certificate; no pair at all is the automatic one; the state never holds a key.
+T="$(mktemp -d)"; mkdir -p "$T/root/config/secrets" "$T/root/state" "$T/bin"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_STAGING_HOST=new.extas.test\n' "$T/root"; } > "$T/server.conf"
+cat > "$T/bin/docker" <<'FAKE'
+#!/usr/bin/env bash
+echo "$*" >> "$FAKE_LOG"
+case "$1" in
+  inspect) exit 0 ;;
+  exec) [ -z "${FAKE_RELOAD_FAILS:-}" ] ;;
+esac
+FAKE
+chmod +x "$T/bin/docker"
+mk() { # mk <name> <days> <san>
+  openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -days "$2" -subj "/CN=$1" \
+    -addext "subjectAltName=$3" -keyout "$T/$1.key" -out "$T/$1.pem" >/dev/null 2>&1
+}
+mk good 5475 "DNS:extas.test,DNS:*.extas.test"; mk other 5475 "DNS:*.extas.test"; mk elsewhere 5475 "DNS:shop.example"; mk soon 3 "DNS:*.extas.test"
+OENV=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_LOG="$T/docker.log")
+S="$T/root/config/secrets"; ST="$T/root/state/origin-cert.json"; TLS="$T/root/config/caddy/sites/tls.caddy"
+"${OENV[@]}" "$B/extas-origin-cert" apply >/dev/null
+check "origin cert (397): no pair — the automatic certificate, Caddy reloaded once" \
+  "$(jq -r '.mode + " " + (.active|tostring)' "$ST"):$(grep -c 'issuer acme' "$TLS"):$(grep -c 'caddy reload' "$T/docker.log")" "auto false:1:1"
+cp "$T/good.pem" "$S/origin-cert.pem"; cp "$T/good.key" "$S/origin-key.pem"
+"${OENV[@]}" "$B/extas-origin-cert" apply >/dev/null
+check "origin cert (397): a checked pair goes to Caddy, the key root-only, the state names what it covers" \
+  "$(jq -r '[.mode, (.names|join(" ")), (.daysLeft > 5000|tostring), (.error|tostring)] | join(" ")' "$ST"):$(grep -c 'tls /etc/caddy/sites/origin/cert.pem /etc/caddy/sites/origin/key.pem' "$TLS"):$(stat -c %a "$T/root/config/caddy/sites/origin/key.pem"):$(grep -c 'PRIVATE' "$ST")" \
+  "origin extas.test *.extas.test true null:1:600:0"
+"${OENV[@]}" "$B/extas-origin-cert" apply >/dev/null
+check "origin cert (397): nothing changed, no second reload" "$(grep -c 'caddy reload' "$T/docker.log")" "2"
+for bad in "other.pem good.key|does not belong" "elsewhere.pem elsewhere.key|does not cover new.extas.test" "soon.pem soon.key|less than 7 days"; do
+  pair="${bad%%|*}"; want="${bad#*|}"
+  cp "$T/${pair%% *}" "$S/origin-cert.pem"; cp "$T/${pair##* }" "$S/origin-key.pem"
+  "${OENV[@]}" "$B/extas-origin-cert" apply >/dev/null
+  check "origin cert (397): $want — the automatic certificate stays" \
+    "$(jq -r .mode "$ST"):$(jq -r .error "$ST" | grep -c "$want"):$(grep -c 'issuer acme' "$TLS"):$([ -d "$T/root/config/caddy/sites/origin" ] && echo left || echo gone)" "auto:1:1:gone"
+done
+cp "$T/good.pem" "$S/origin-cert.pem"; cp "$T/good.key" "$S/origin-key.pem"
+"${OENV[@]}" FAKE_RELOAD_FAILS=1 "$B/extas-origin-cert" apply >/dev/null
+check "origin cert (397): a pair Caddy refuses goes back to the automatic certificate at once" \
+  "$(jq -r .mode "$ST"):$(jq -r .error "$ST" | grep -c 'Caddy refused'):$(grep -c 'issuer acme' "$TLS")" "auto:1:1"
+"${OENV[@]}" "$B/extas-origin-cert" apply --no-reload >/dev/null
+check "origin cert (397): --no-reload (the server setup) writes without reloading" \
+  "$(jq -r .mode "$ST"):$(grep -c 'caddy reload' "$T/docker.log")" "origin:5"
+rm -rf "$T"
+
 exit $fail

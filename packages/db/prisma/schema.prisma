@@ -991,6 +991,9 @@ enum IntegrationKind {
   MAPS
   SEARCH_CONSOLE
   OTHER
+  /// S19 · PR 397: a certificate the server shows (the Cloudflare Origin certificate), its own kind so it never stands
+  /// in for the CDN (cache purge) or any other one-per-kind connection.
+  CERTIFICATE
 }
 
 enum AdapterMode {

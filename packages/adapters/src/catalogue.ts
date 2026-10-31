@@ -92,6 +92,19 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
+  // S19 · PR 397 — the Cloudflare Origin certificate and its private key (Cloudflare → SSL/TLS → Origin Server), so
+  // Cloudflare's SSL/TLS mode can be "Full (strict)". The Test reads the pair itself (no network); until one passes the
+  // server keeps its automatic certificate. Its own kind: it never stands in for the CDN connection above.
+  {
+    id: 'cloudflareOrigin',
+    kind: 'CERTIFICATE',
+    provider: 'cloudflareOrigin',
+    adapter: true,
+    secrets: [{ field: 'certificate' }, { field: 'privateKey' }],
+    config: [],
+    exclusive: true,
+    targetMode: 'LIVE',
+  },
   {
     id: 's3',
     kind: 'STORAGE',

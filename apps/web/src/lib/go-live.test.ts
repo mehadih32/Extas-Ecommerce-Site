@@ -18,6 +18,8 @@ function ctx(over: Partial<GoLiveContext> = {}): GoLiveContext {
     health: { at: ago(2), problems: [] },
     backups: { ready: true, todo: 0 },
     serverSetup: { at: ago(600), full: true, passed: true, counts: { ok: 13, fail: 0, warn: 1 }, steps: [] },
+    originCert: { at: ago(3), mode: 'origin', active: true, names: ['example.test', '*.example.test'], daysLeft: 5400, error: null },
+    primaryHosts: ['example.test'],
     ...over,
   };
 }
@@ -49,6 +51,16 @@ describe('go-live checklist (PR 393)', () => {
     const failed = { full: true, passed: false, counts: { ok: 11, fail: 2, warn: 0 }, steps: [{ step: 'backup', status: 'FAIL', detail: '' }, { step: 'monitor', status: 'FAIL', detail: '' }, { step: 'docker', status: 'OK', detail: '' }] };
     const r = goLiveChecks(ctx({ serverSetup: failed })).items.find((i) => i.key === 'server');
     expect(r).toMatchObject({ ok: false, vars: { steps: 3, fail: 2, warn: 0, failed: 'backup, monitor' } });
+  });
+
+  it('PR 397: the origin certificate — in use, with days to spare, covering every main domain', () => {
+    expect(open(ctx({ originCert: null }))).toEqual(['originCert']);
+    expect(open(ctx({ originCert: { mode: 'auto', active: false, error: 'the certificate does not cover new.example.test' } }))).toEqual(['originCert']);
+    expect(open(ctx({ originCert: { mode: 'origin', active: true, names: ['*.example.test'], daysLeft: 12 } }))).toEqual(['originCert']);
+    const r = goLiveChecks(ctx({ primaryHosts: ['example.test', 'shop.other.test'] })).items.find((i) => i.key === 'originCert');
+    expect(r).toMatchObject({ ok: false, vars: { missing: 'shop.other.test', days: 5400 } });
+    expect(open(ctx({ primaryHosts: [] }))).toEqual([]);
+    expect(open(ctx({ signoff: { ...ctx().signoff, sslStrict: undefined as never } }))).toEqual(['sslStrict']);
   });
 
   it('sign-offs: done only when confirmed, with who and when; nothing is confirmed on a new installation', () => {

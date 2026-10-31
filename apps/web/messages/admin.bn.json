@@ -234,6 +234,14 @@
         "botToken": "বট টোকেন (@BotFather থেকে)"
       }
     },
+    "cloudflareOrigin": {
+      "name": "Cloudflare অরিজিন সার্টিফিকেট",
+      "desc": "সার্ভার Cloudflare-কে যে সার্টিফিকেট দেখায়, যাতে SSL/TLS মোড Full (strict) রাখা যায়। পরীক্ষায় পাস না করা পর্যন্ত সার্ভার নিজের স্বয়ংক্রিয় সার্টিফিকেটই চালায়",
+      "fields": {
+        "certificate": "অরিজিন সার্টিফিকেট (Cloudflare → SSL/TLS → Origin Server → Create certificate; BEGIN থেকে END পুরোটা)",
+        "privateKey": "প্রাইভেট কী (সার্টিফিকেট বানানোর সময় একবারই দেখায়)"
+      }
+    },
     "s3": {
       "name": "S3-ধরনের স্টোরেজ",
       "desc": "AWS S3, Cloudflare R2, Backblaze B2 — Azure-এর বদলে ছবি ও মিডিয়া রাখার জায়গা",

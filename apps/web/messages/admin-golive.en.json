@@ -40,6 +40,15 @@
       "ok": "all backup checks pass",
       "how": "{todo} backup check(s) to do — open Settings → System → Backups."
     },
+    "originCert": {
+      "title": "Cloudflare Origin certificate on the server",
+      "ok": "covers {names}; {days} days left",
+      "how": "Make an Origin certificate in Cloudflare (SSL/TLS → Origin Server → Create certificate, for the main domain and *. of it) and paste the certificate and its private key into Keys & connections → Cloudflare origin certificate. Now: {error}. Main domains not covered: {missing}."
+    },
+    "sslStrict": {
+      "title": "Cloudflare SSL/TLS mode is Full (strict)",
+      "how": "Once the line above is done: Cloudflare → SSL/TLS → Overview → Full (strict), for the staging and the main domain. Open the shop afterwards; an error 526 means the certificate does not fit — set it back to Full and check the line above."
+    },
     "qaGate": {
       "title": "QA gate green (Blueprint Appendix C)",
       "how": "The device gate at 0 failures on phones, tablets and desktop, the journeys and the Lighthouse budget pass in CI for the build on staging; the screenshots were looked at."
