@@ -474,6 +474,8 @@ export interface ErpReturnRow {
   claim: boolean;
   countDiffers: boolean;
   exchange: boolean;
+  /** CN-033: an exchange whose parcel the customer refused: the ERP waits for the NEW piece (a deadline, no delivery day). */
+  newPiece: boolean;
   note: string | null;
   at: string | null;
 }
@@ -518,6 +520,7 @@ const blankRow = (key: string, externalOrderId: string): ErpReturnRow => ({
   claim: false,
   countDiffers: false,
   exchange: false,
+  newPiece: false,
   note: null,
   at: null,
 });
@@ -726,6 +729,7 @@ export async function returnsErpOverview(deps: OrdersDeps, who: Who, input: unkn
         daysLeft: due ? daysBetween(c.today, due) : null,
         valueMinor: x.valueAtRiskMinor === null ? null : Number(x.valueAtRiskMinor),
         exchange: true,
+        newPiece: !!x.deadline && !x.newDeliveredAt,
         note: x.newExternalOrderId,
         claim: !!x.lateReturnMarkedAt,
         at: x.createdAt.toISOString(),

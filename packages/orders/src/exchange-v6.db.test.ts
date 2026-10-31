@@ -7,8 +7,9 @@
 // never reach store B. qa-gate (30 Oct): the window counts from the courier's result as PR 611 sent it to the ERP; a
 // refusal never locks the line; two approvals or two late-return presses do the thing once; a refusal while waiting
 // for stock stops the retries; an account hold never pauses an exchange; only the lines the customer kept are
-// exchanged; the exchange parcel's result goes by PR 611 and its cancel by PR 610's relay. Every value is a made-up
-// test value.
+// exchanged; the exchange parcel's result goes by PR 611 and its cancel by PR 610's relay. CN-033 · PR 614 + 621: a
+// refused exchange parcel waits for its new piece ("new piece not back"), is billed at the deadline and credited when
+// it comes back late and approved; the shop's case ends CANCELLED. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { erpCheckoutPaused, noteHold, storeDate } from '@extas/inventory';
@@ -24,6 +25,7 @@ import {
   openExchange,
   openHandbackList,
   refuseExchange,
+  returnsErpOverview,
   runErpReturns,
   scanHandbackParcel,
   syncErpExchanges,
@@ -403,14 +405,60 @@ describe.skipIf(!HAS_TEST_DB)('PR 614 · an exchange through the ERP (PostgreSQL
     expect(erp().orders.get(r.newExternalOrderId)!.status).toBe('CANCELLED');
   });
 
-  it('the customer refuses the exchange parcel: the ERP cancels the exchange, and so does the shop', async () => {
+  it('the earlier rule (an ERP before CN-033, `refusedExchange = cancel`): the refused parcel cancels the exchange at once, and the shop`s case', async () => {
+    erp().refusedExchange = 'cancel';
+    try {
+      const { o, exchangeId } = await opened('xv-refused-old');
+      const r = await approveExchangeV6(d(), f.staff, exchangeId);
+      await f.courierResult(r.newOrderId!, 'RETURNED');
+      await syncErpExchanges(d(), f.S);
+      expect(await db().erpExchangeLink.findFirstOrThrow({ where: { exchangeId } })).toMatchObject({ erpStatus: 'CANCELLED' });
+      expect((await db().exchange.findUniqueOrThrow({ where: { id: exchangeId } })).status).toBe('CANCELLED');
+      expect((await db().order.findUniqueOrThrow({ where: { id: o.orderId } })).status).toBe('DELIVERED');
+    } finally {
+      erp().refusedExchange = 'bill-at-deadline';
+    }
+  });
+
+  it('CN-033: the customer refuses the exchange parcel: watched as "new piece not back", billed the night after the deadline, credited when back late and approved; the shop`s case ends CANCELLED', async () => {
     const { o, exchangeId } = await opened('xv-refused');
     const r = await approveExchangeV6(d(), f.staff, exchangeId);
     await f.courierResult(r.newOrderId!, 'RETURNED');
     await syncErpExchanges(d(), f.S);
-    expect(await db().erpExchangeLink.findFirstOrThrow({ where: { exchangeId } })).toMatchObject({ erpStatus: 'CANCELLED' });
-    expect((await db().exchange.findUniqueOrThrow({ where: { id: exchangeId } })).status).toBe('CANCELLED');
+    const link = () => db().erpExchangeLink.findFirstOrThrow({ where: { exchangeId } });
+    const status = async () => (await db().exchange.findUniqueOrThrow({ where: { id: exchangeId } })).status;
+    const ext = r.newExternalOrderId!;
+    const net = () => erp().ledger.filter((l) => l.externalOrderId === ext).reduce((s, l) => s + l.amount, 0);
+    // right after the refusal: neither billed nor cancelled; the new piece is at risk
+    expect(await link()).toMatchObject({ erpStatus: 'WAITING_RETURN', newDeliveredAt: null, finishedAt: null });
+    expect(await status()).not.toBe('CANCELLED');
+    expect((await exchangeWatch(d(), f.staff)).rows.find((x) => x.exchangeId === exchangeId)).toMatchObject({ piece: 'NEW', erpStatus: 'WAITING_RETURN', daysLeft: 4, late: false });
+    expect((await returnsErpOverview(d(), f.staff, { tab: 'exchanges' })).rows.find((x) => x.note === ext)).toMatchObject({ state: 'WAITING_RETURN', newPiece: true });
+    expect(net()).toBe(0);
+    // not back by the deadline: late on the risk list, billed in full the night after; the case is closed (CANCELLED)
+    const start = f.clock.now;
+    f.clock.now = new Date(start.getTime() + 5 * 24 * HOUR);
+    expect((await exchangeWatch(d(), f.staff)).rows.find((x) => x.exchangeId === exchangeId)).toMatchObject({ piece: 'NEW', late: true });
+    const night = erp().runNight().filter((e) => e.data.externalOrderId === ext);
+    expect(night).toEqual([expect.objectContaining({ type: 'exchange.billed', data: expect.objectContaining({ reason: 'DEADLINE_PASSED' }) })]);
+    const billed = net();
+    expect(billed).toBeGreaterThan(0);
+    await syncErpExchanges(d(), f.S);
+    expect(await link()).toMatchObject({ erpStatus: 'BILLED', finishedAt: expect.any(Date) });
+    expect(await status()).toBe('CANCELLED');
+    // the new piece comes back later and is approved in the ERP: credited in full, net nothing
+    const lineId = erp().orders.get(ext)!.lines[0]!.lineId;
+    const list = await openHandbackList(d(), f.staff, { courier: 'hand', handedBackAt: storeDate(f.clock.now, 'Asia/Dhaka') });
+    await scanHandbackParcel(d(), f.staff, list.id, { code: r.newOrderNumber!, receivedCount: 1, unexpected: true, note: 'the refused exchange parcel came back late' });
+    expect((await closeHandbackList(d(), f.staff, list.id)).parcels[0]).toMatchObject({ result: 'IN_RETURN_STOCK' });
+    const [, credited] = erp().decidePiece(ext, lineId, 'APPROVED');
+    expect(credited).toMatchObject({ type: 'exchange.credited', data: { reason: 'LATE_RETURN', amount: billed } });
+    expect(net()).toBe(0);
+    await syncErpExchanges(d(), f.S);
+    expect(await link()).toMatchObject({ erpStatus: 'CREDITED' });
+    expect(await status()).toBe('CANCELLED');
     expect((await db().order.findUniqueOrThrow({ where: { id: o.orderId } })).status).toBe('DELIVERED');
+    f.clock.now = start;
   });
 
   it('the old piece not back in 4 days: late on the risk list, billed the night after; a late return is marked by hand', async () => {
