@@ -44,6 +44,7 @@
       },
       "settings": {
         "store": "Store details",
+        "policies": "Policies & texts",
         "keys": "Keys & connections",
         "erp": "ERP link",
         "security": "Sign-in & security",

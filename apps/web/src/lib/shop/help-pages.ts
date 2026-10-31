@@ -122,7 +122,23 @@ export interface HelpModel {
   soon: boolean;
 }
 
-const own = (l: { en: string; bn: string } | null | undefined, lang: ShopLang) => (l ? (lang === 'bn' ? l.bn : l.en) : null);
+const own = (l: { en: string; bn: string } | null | undefined, lang: ShopLang) => (l ? (lang === 'bn' ? l.bn : l.en) || null : null);
+
+/**
+ * PR 384 (SET-03) — the owner's words with every text run through `fill` (lib/rules-public `policyFiller`): his
+ * `{rule-key.param}` tokens become the live rules' values, and a line that cannot be filled is left out. A text left
+ * empty counts as not written, so the page falls back to its own title or says "Coming soon".
+ */
+export function fillPagesText(text: PagesTextSettings, fill: (s: string) => string): PagesTextSettings {
+  if (!text) return text;
+  const pair = (p: { en: string; bn: string } | null | undefined) => (p ? { en: fill(p.en).trim(), bn: fill(p.bn).trim() } : null);
+  const pages: NonNullable<PagesTextSettings>['pages'] = {};
+  for (const slug of HELP_SLUGS) {
+    const w = text.pages[slug];
+    if (w) pages[slug] = { title: pair(w.title), lede: pair(w.lede), body: pair(w.body) };
+  }
+  return { pages, faq: text.faq.map((x) => ({ ...x, q: pair(x.q)!, a: pair(x.a)! })) };
+}
 
 export function helpModel(input: { slug: HelpSlug; set: PagesHelpSettings; text: PagesTextSettings; lang: ShopLang; t: ShopT; rules: readonly RuleWords[]; facts: HelpFacts }): HelpModel {
   const { slug, set, lang, t, facts } = input;
@@ -136,7 +152,10 @@ export function helpModel(input: { slug: HelpSlug; set: PagesHelpSettings; text:
   const sections: HelpModel['sections'] = [];
   const live = input.rules.filter((r) => r.short || r.full);
   if (slug === 'faq') {
-    for (const x of input.text?.faq ?? []) if (x.on) qa.push({ id: `own-${x.id}`, q: own(x.q, lang)!, a: textBlocks(own(x.a, lang)) });
+    for (const x of input.text?.faq ?? []) {
+      const q = own(x.q, lang);
+      if (x.on && q) qa.push({ id: `own-${x.id}`, q, a: textBlocks(own(x.a, lang)) });
+    }
     for (const r of live) if (r.short) qa.push({ id: `rule-${r.key}`, q: r.short, a: ruleBlocks(r.full ?? r.short) });
   } else for (const r of live) sections.push({ id: `rule-${r.key}`, title: r.short, blocks: ruleBlocks(r.full) });
   const body = textBlocks(own(words?.body, lang));

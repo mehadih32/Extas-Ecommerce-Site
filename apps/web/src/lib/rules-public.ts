@@ -40,3 +40,6 @@ export const liveDiscountFor = (input: { storeId: number; variantId: string }) =
 /** PR 62 — the live free-delivery limit, as the bag's engine sees it for this piece; null: no live rule backs one. */
 export const liveFreeOverMinor = (input: { storeId: number; variantId: string }) =>
   safe<number | null>(null, async (d) => (await rl.quoteCart(d, { storeId: input.storeId, lines: [{ variantId: input.variantId, quantity: 1 }] })).delivery.freeOverMinor);
+
+/** PR 384 — fills the owner's policy texts from the live rules; without them, every line holding a token is left out. */
+export const policyFiller = (input: { storeId: number; locale?: string }) => safe<(text: string) => string>(rl.withoutPolicyTokens, (d) => rl.policyFillerFor(d, input));

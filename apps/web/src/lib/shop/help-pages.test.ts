@@ -3,7 +3,7 @@
 import { shopMoreSettings, type PagesTextSettings } from '@extas/settings';
 import { describe, expect, it } from 'vitest';
 import { shopT } from './dict';
-import { HELP_SLUGS, helpModel, helpTopics, isHelpSlug, textBlocks, type HelpFacts, type RuleWords } from './help-pages';
+import { fillPagesText, HELP_SLUGS, helpModel, helpTopics, isHelpSlug, textBlocks, type HelpFacts, type RuleWords } from './help-pages';
 import { BUILT_INSIDE, comingSoon } from './routes';
 
 const set = shopMoreSettings['pages.help'].default;
@@ -105,5 +105,31 @@ describe('a help page', () => {
       expect(isHelpSlug(s)).toBe(false);
       expect(comingSoon(`/help/${s}`, '/p/')).toBe('help');
     }
+  });
+});
+
+describe('the owner`s policy words filled from the rules (PR 384)', () => {
+  // a stand-in filler: `{exchange.windowHours}` is live at 72, any other token line is left out
+  const fill = (t: string) =>
+    t
+      .split('\n')
+      .map((l) => l.replace('{exchange.windowHours}', '72'))
+      .filter((l) => !/\{[^}]*\}/.test(l))
+      .join('\n');
+  const text: PagesTextSettings = {
+    pages: {
+      exchange: { title: { en: '{gone.title}', bn: '{gone.title}' }, lede: null, body: { en: 'Within {exchange.windowHours} hours.\nCharge {delivery.charge}.', bn: '{exchange.windowHours} ঘণ্টার মধ্যে।' } },
+    },
+    faq: [{ id: 'q1', on: true, q: { en: '{gone.q}', bn: '{gone.q}' }, a: { en: 'A', bn: 'উ' } }],
+  };
+
+  it('fills the tokens, leaves out a line that cannot be filled, and falls back to the page title', () => {
+    const filled = fillPagesText(text, fill);
+    const m = model('exchange', { text: filled });
+    expect(m.title).toBe(shopT('en')('help.exchange'));
+    expect(m.sections).toEqual([{ id: 'own', title: null, blocks: [{ kind: 'p', text: 'Within 72 hours.' }] }]);
+    expect(model('exchange', { text: filled, lang: 'bn' }).sections[0]!.blocks).toEqual([{ kind: 'p', text: '72 ঘণ্টার মধ্যে।' }]);
+    expect(model('faq', { text: filled }).qa).toEqual([]);
+    expect(fillPagesText(null, fill)).toBeNull();
   });
 });

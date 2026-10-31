@@ -12,6 +12,7 @@
 //                    (PR 609: quoteCart and discountWasFor give each line its selling-price floor, so no offer goes
 //                    below the buying price + `catalogue.floor.minMarginPercent`; off while that is empty)
 //   liveNotices      the notices and pop-ups for one place, filled in, with the pop-up limits
+//   policyFillerFor  PR 384: fills the owner's policy texts from the live rules (`{rule-key.param}`)
 import { checkCoupon, type CouponCheck } from './coupons-service';
 import { cached } from './cache';
 import { nowOf, setting, textContext, type RulesDeps } from './context';
@@ -22,7 +23,7 @@ import { inScope, resolutionOrder } from './match';
 import { isLive, TEXT_SLOTS, type Rule, type TextSlot } from './model';
 import { capSchema, ctaSchema, placementSchema, timingSchema } from './notices-model';
 import { renderNotice } from './notices-service';
-import { langOf, ruleText, type Resolved } from './text';
+import { fillPolicyText, langOf, ruleText, type Resolved } from './text';
 import { discountWasPrice, setWasPrice, type DiscountWasReason, type WasSource } from './was-price';
 
 export interface PublicRuleText {
@@ -69,6 +70,18 @@ export async function ruleTextFor(deps: RulesDeps, input: { storeId: number; key
   if (!rule) return null;
   const r = ruleText(rule, input.slot, await ctxFor(deps, input.storeId, input.locale), { others: othersByKey(rules), runtime: input.runtime });
   return r?.ok ? r.text : null;
+}
+
+/**
+ * PR 384 — fills the owner's policy texts (help pages) from the live rules: `{rule-key.param}` becomes the rule's
+ * value in the asked language; a line that cannot be filled is left out (text.ts `fillPolicyText`).
+ */
+export async function policyFillerFor(deps: RulesDeps, input: { storeId: number; locale?: string }): Promise<(text: string) => string> {
+  const now = nowOf(deps);
+  const rules = (await cachedActiveRules(deps, input.storeId)).filter((r) => isLive(r, now));
+  const ctx = await ctxFor(deps, input.storeId, input.locale);
+  const others = othersByKey(rules);
+  return (text) => fillPolicyText(text, others, ctx);
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

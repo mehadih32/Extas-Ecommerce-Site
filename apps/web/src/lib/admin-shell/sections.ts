@@ -261,6 +261,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     tabs: [
       // S18 · PR 383 — SET-01 Store details: the legal numbers (name, logo, contacts and social links join with their PR).
       { id: 'store', guide: 'settings', pages: [{ href: '/admin/settings/store', perm: 'settings.read', keys: ['store'] }] },
+      // S18 · PR 384 — SET-03 Policies & texts: the help pages' switches, rules and the owner's words.
+      { id: 'policies', guide: 'settings', pages: [{ href: '/admin/settings/policies', perm: 'settings.read', keys: ['policies'] }] },
       { id: 'keys', guide: 'integrations', pages: [{ href: '/admin/integrations', perm: 'vault.read', keys: ['integrations'] }] },
       // CN-029 · PR 619: Settings → ERP link — one store's own ERP link, its keys, the switch-over to contract v6.
       { id: 'erp', guide: 'integrations', pages: [{ href: '/admin/settings/erp-link', perm: 'vault.read', keys: ['erpLink'] }] },

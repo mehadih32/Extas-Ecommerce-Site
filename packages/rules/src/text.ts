@@ -216,3 +216,59 @@ export function literalsIn(text: string, currency: string): Literal[] {
 
 /** The unit family of a param type, for comparing with literals. */
 export const unitOf = (t: ParamType): LiteralUnit | null => (t === 'hours' ? 'hours' : t === 'money' ? 'money' : null);
+
+// ---------------------------------------------------------------------------------------------------------------
+// The owner's policy texts (PR 384, SET-03 Policies & texts)
+// ---------------------------------------------------------------------------------------------------------------
+//
+// The help pages' own words (terms, exchange, delivery, privacy) quote the rules' numbers as `{rule-key.param}`
+// ("Exchange within {exchange.windowHours} hours"), so a policy never states a window or a charge a second time. Only
+// that form counts: a bare `{word}` names nothing here. A line whose token cannot be filled (the rule is not live, the
+// value is not set, or the token names nothing) is left out, so no customer ever reads a raw token or a stale number.
+
+/** A lookup over other rules only (`{rule-key.param}`). */
+export function policyLookup(others: ReadonlyMap<string, WindowedParams>): Lookup {
+  const inner = ruleLookup({ params: [] }, { others });
+  return (ref) => (ref.rule ? inner(ref) : undefined);
+}
+
+/** One line filled from the rules, or null when a token in it cannot be filled. */
+export function fillPolicyLine(line: string, others: ReadonlyMap<string, WindowedParams>, ctx: TextContext): string | null {
+  if (!tokensIn(line).length) return line;
+  const r = render(line, policyLookup(others), ctx);
+  return r.missing.length || r.unknown.length ? null : r.text;
+}
+
+/** A whole text filled line by line; the lines that cannot be filled are left out. */
+export function fillPolicyText(text: string, others: ReadonlyMap<string, WindowedParams>, ctx: TextContext): string {
+  return text
+    .split('\n')
+    .map((l) => fillPolicyLine(l, others, ctx))
+    .filter((l): l is string => l !== null)
+    .join('\n');
+}
+
+/** The same text with every line that holds a token left out (no rules to read: no database, or too slow). */
+export const withoutPolicyTokens = (text: string): string =>
+  text
+    .split('\n')
+    .filter((l) => !tokensIn(l).length)
+    .join('\n');
+
+export type PolicyTokenState = 'ok' | 'notLive' | 'notSet' | 'unknown';
+
+/**
+ * Where a token of the owner's text stands, for the admin: 'unknown' names no rule or no value of it (refused on
+ * save), 'notLive' names a rule that is not live now, 'notSet' a value that is empty (the line is hidden until then).
+ */
+export function policyTokenState(ref: TokenRef, all: ReadonlyMap<string, WindowedParams>, live: ReadonlySet<string>): PolicyTokenState {
+  if (!ref.rule) return 'unknown';
+  const r = all.get(ref.rule);
+  if (!r) return 'unknown';
+  const p = r.params.find((x) => x.key === ref.key);
+  const inWindow = (WINDOW_TOKENS as readonly string[]).includes(ref.key);
+  if (!p && !inWindow) return 'unknown';
+  if (!live.has(ref.rule)) return 'notLive';
+  const v = p ? p.value : (r as Record<string, unknown>)[ref.key];
+  return v === null || v === undefined ? 'notSet' : 'ok';
+}

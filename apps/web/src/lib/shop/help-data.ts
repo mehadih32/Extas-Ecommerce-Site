@@ -2,9 +2,9 @@
 // (lib/rules-public: without a database, or when it is slow, a rule simply says nothing and its page may say
 // "Coming soon"). Every page is worked out, so the help centre lists only the pages that have something to say.
 import type { HelpSlug, PagesHelpSettings } from '@extas/settings';
-import { placeTexts, ruleText } from '../rules-public';
+import { placeTexts, policyFiller, ruleText } from '../rules-public';
 import { readPageSettings, type ShopContext } from './context';
-import { HELP_SLUGS, helpModel, type HelpFacts, type HelpModel, type RuleWords } from './help-pages';
+import { fillPagesText, HELP_SLUGS, helpModel, type HelpFacts, type HelpModel, type RuleWords } from './help-pages';
 
 export interface HelpData {
   set: PagesHelpSettings;
@@ -43,7 +43,8 @@ export async function loadHelp(c: ShopContext): Promise<HelpData> {
       return [...onFaq, ...listed.filter((r) => !onFaq.some((x) => x.key === r.key))];
     }),
   );
-  const text = s['pages.text'];
+  // PR 384: the owner's `{rule-key.param}` tokens read the live rules; a line that cannot be filled is left out
+  const text = fillPagesText(s['pages.text'], await policyFiller({ storeId: c.storeId, locale: c.lang }));
   const models = Object.fromEntries(HELP_SLUGS.map((slug, i) => [slug, helpModel({ slug, set, text, lang: c.lang, t: c.t, rules: rules[i]!, facts })])) as Record<HelpSlug, HelpModel>;
   return { set, models, facts };
 }

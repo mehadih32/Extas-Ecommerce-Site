@@ -1,0 +1,94 @@
+{
+  "pol": {
+    "metaTitle": "Policies & texts",
+    "title": "Policies & texts",
+    "sub": "The help pages that carry your policies: terms, exchange, delivery, privacy and more. Numbers come from Smart Rules, so a window or a charge is never written twice.",
+    "kpi": {
+      "shows": "Pages showing on the shop",
+      "of": "{n} of {total}",
+      "showsFoot": "The rest say \"Coming soon\"",
+      "allShow": "Every page has something to say",
+      "own": "Pages with your own words",
+      "ownFoot": "Empty pages read only their rules",
+      "tokens": "Rule numbers in your words",
+      "tokensNone": "None used",
+      "tokensOk": "All filled from live rules",
+      "tokensHidden": "{n} line(s) hidden until their rule is live"
+    },
+    "pages": {
+      "aria": "Help pages",
+      "faq": "Questions",
+      "delivery": "Delivery",
+      "exchange": "Exchange & returns",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "story": "Our story",
+      "contact": "Contact"
+    },
+    "now": {
+      "h": "On the shop now",
+      "shows": "Shows",
+      "soon": "Coming soon",
+      "off": "Switched off",
+      "rules": "Rules this page reads",
+      "noRules": "No rules: the page says only your words.",
+      "live": "Live",
+      "notLive": "Not live",
+      "gone": "Rule not found",
+      "open": "Open on the shop",
+      "openRules": "Smart Rules",
+      "tokens": "Rule numbers in your words on this page",
+      "state": {
+        "ok": "Filled",
+        "notLive": "Hidden: rule not live",
+        "notSet": "Hidden: value not set",
+        "unknown": "Names nothing"
+      }
+    },
+    "card": {
+      "h": "{page}: settings and your words",
+      "d": "Switch the page, pick the rules it reads, and write your own words in both languages. Leave the words empty to show only the rules.",
+      "on": "Show this page",
+      "onHelp": "Off: the page says \"Coming soon\".",
+      "rules": "Smart Rules this page reads (their texts, in order)",
+      "details": "Store details under the page",
+      "detailsHelp": "Contact: e-mail and hotline. Legal: registered name, address, trade licence and DBID (from Store details).",
+      "d_none": "None",
+      "d_contact": "Contact details",
+      "d_legal": "Legal details",
+      "title": { "en": "Title (English)", "bn": "Title (Bengali)" },
+      "titleHelp": "Empty: the shop's own title for this page.",
+      "lede": { "en": "Line under the title (English)", "bn": "Line under the title (Bengali)" },
+      "body": { "en": "Your words (English)", "bn": "Your words (Bengali)" },
+      "bodyHelp": "An empty line starts a new paragraph, \"## \" a heading, \"- \" a list line. Quote a rule's number as {exchange.windowHours}: see the list below."
+    },
+    "values": {
+      "h": "Rule numbers you can quote",
+      "d": "Copy a token into your words. The shop writes the rule's value in its place, and leaves the line out while the rule is not live.",
+      "token": "Token",
+      "rule": "Rule",
+      "what": "Value",
+      "now": "Now",
+      "none": "No Smart Rules yet. Add one in Smart Rules, then quote its numbers here.",
+      "notLive": "not live",
+      "empty": "not set"
+    },
+    "err": {
+      "STALE": "Someone else changed this page; it shows their version now.",
+      "INVALID_INPUT": "Some values are not right: {fields}",
+      "PLACEHOLDER": "Your words still hold a stand-in like [number] or TBD ({fields}). Write the real words, or quote a rule's number.",
+      "UNKNOWN_TOKEN": "These tokens name no rule value: {fields}. Use a token from the list below.",
+      "forbidden": "You do not have permission to change this.",
+      "unauthorized": "Your sign-in has ended — please sign in again.",
+      "network": "No connection. Please try again.",
+      "other": "That did not save. Please try again."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "discard": "Discard",
+    "unsaved": "Not saved yet",
+    "readOnly": "You can see these pages; changing them needs the settings permission.",
+    "pairHelp": "Write both languages, or leave both empty."
+  }
+}

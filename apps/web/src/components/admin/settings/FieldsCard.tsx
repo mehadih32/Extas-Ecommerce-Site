@@ -17,7 +17,8 @@ export type FieldsCardField =
   | { kind: 'number'; path: string; label: string; help?: string; min: number; max: number }
   | { kind: 'text'; path: string; label: string; help?: string; max: number }
   | { kind: 'checks'; path: string; label: string; options: { value: string; label: string }[] }
-  | { kind: 'pair'; path: string; label: { en: string; bn: string }; help?: string; max: number };
+  // PR 384: `rows` makes a taller box for a long text (a policy page's words)
+  | { kind: 'pair'; path: string; label: { en: string; bn: string }; help?: string; max: number; rows?: number };
 
 export interface FieldsCardTexts {
   h: string;
@@ -153,14 +154,16 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: {
       const next = { en: p?.en ?? '', bn: p?.bn ?? '', [lang]: text };
       edit(f.path, next.en.trim() || next.bn.trim() ? next : null);
     };
+    // a long text (`rows`) takes the card's full width and grows to its rows instead of the one-line box height
+    const tall = f.rows ? { height: 'auto', padding: '8px 12px', lineHeight: 1.5 } : undefined;
     return (
-      <div className="a2-fld" key={f.path}>
+      <div className={`a2-fld${f.rows ? ' full' : ''}`} key={f.path}>
         {(['en', 'bn'] as const).map((lang) => (
           <span key={lang} className="a2-stack" style={{ gap: 4 }}>
             <label className="a2-lbl" htmlFor={`${fid}-${lang}`}>
               {f.label[lang]}
             </label>
-            <textarea id={`${fid}-${lang}`} className="a2-inp" rows={2} maxLength={f.max} value={p?.[lang] ?? ''} disabled={off} onChange={(e) => set(lang, e.target.value)} data-testid={`${testId}-${f.path}-${lang}`} />
+            <textarea id={`${fid}-${lang}`} className="a2-inp" rows={f.rows ?? 2} style={tall} maxLength={f.max} value={p?.[lang] ?? ''} disabled={off} onChange={(e) => set(lang, e.target.value)} data-testid={`${testId}-${f.path}-${lang}`} />
           </span>
         ))}
         {help}
