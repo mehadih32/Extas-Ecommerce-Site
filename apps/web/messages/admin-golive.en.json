@@ -54,6 +54,11 @@
       "ok": "{stores} store(s): every field filled in",
       "how": "The owner types his own details in Settings → Store details for each store that goes live (contact, legal numbers …; the list is the setting golive.ownerData) and switches on at least one delivery band with his charge (Delivery). Still empty: {missing}."
     },
+    "connections": {
+      "title": "Payment, courier and SMS connections live",
+      "ok": "live: {live}",
+      "how": "In Keys & connections, enter each provider's keys and press Save and test; a passing test moves it from practice to live. Still on practice: {missing} (the list is the setting golive.connections). Live now: {live}."
+    },
     "runbook": {
       "title": "Go-live runbook read, rollback rehearsed",
       "how": "Read docs/golive/RUNBOOK.md (the switch minute by minute, and how each step is undone). On staging, run the Deploy workflow once with \"Go back to the previous version\" and once without, and note how long it took. Then confirm."

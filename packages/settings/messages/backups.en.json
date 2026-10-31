@@ -34,6 +34,10 @@
       "label": "Go-live: the owner's own data every live store needs",
       "help": "The store settings (contact, legal …) that must be filled in for every store that goes live, and whether each needs a delivery band switched on. Only which fields; the owner types the values in Settings → Store details."
     },
+    "connections": {
+      "label": "Go-live: the connections that must be live",
+      "help": "The kinds of connection (payment, courier, SMS …) that need at least one connection moved from practice to live by a passing test in Keys & connections before real orders. A shop without online payment takes PAYMENT off this list."
+    },
     "signoff": {
       "label": "Go-live: the items a person confirmed",
       "help": "Who confirmed each go-live item that a person checks (the QA gate, the staging acceptance list, real phones …) and when. Changed only on Settings → System → Go-live."

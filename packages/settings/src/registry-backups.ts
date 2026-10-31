@@ -103,6 +103,11 @@ export const goLiveOwnerDataSchema = z
   .strict();
 export type GoLiveOwnerData = z.output<typeof goLiveOwnerDataSchema>;
 
+/** PR 400: the kinds of connection that must be live (moved from mock after a passing test) before real orders. */
+export const GO_LIVE_CONNECTION_KINDS = ['PAYMENT', 'COURIER', 'SMS', 'WHATSAPP', 'EMAIL', 'ERP', 'STORAGE', 'TELEGRAM', 'GOOGLE_DRIVE', 'CDN', 'CERTIFICATE'] as const;
+export const goLiveConnectionsSchema = z.object({ kinds: z.array(z.enum(GO_LIVE_CONNECTION_KINDS)).max(GO_LIVE_CONNECTION_KINDS.length) }).strict();
+export type GoLiveConnections = z.output<typeof goLiveConnectionsSchema>;
+
 /** One confirmed item: when, and by which staff user (null: an account since removed). */
 export const goLiveSignoffSchema = z.record(
   z.string().regex(/^[a-z][A-Za-z0-9]{1,40}$/),
@@ -189,6 +194,16 @@ export const backupsSettings = {
     labelKey: 'golive.ownerData.label',
     helpKey: 'golive.ownerData.help',
     sortOrder: 962,
+  }),
+  'golive.connections': setting({
+    ...base,
+    version: V391,
+    schema: goLiveConnectionsSchema,
+    default: { kinds: ['PAYMENT', 'COURIER', 'SMS'] },
+    valueType: 'JSON',
+    labelKey: 'golive.connections.label',
+    helpKey: 'golive.connections.help',
+    sortOrder: 963,
   }),
   'golive.signoff': setting({
     ...base,

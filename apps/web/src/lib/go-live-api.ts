@@ -58,10 +58,16 @@ async function ownerDataNow(deps: Deps) {
 /** The checklist now, and the names of the people who confirmed items. */
 export async function goLiveNow(deps: Deps) {
   const [state, checks, signoff] = await Promise.all([runtimeState(), deps.resolver.value('golive.checks'), deps.resolver.value('golive.signoff')]);
-  const [gate, domains, ownerData] = await Promise.all([
+  const wanted = await deps.resolver.value('golive.connections');
+  const [gate, domains, ownerData, on] = await Promise.all([
     backupGateNow(deps, state),
     deps.db.storeDomain.findMany({ where: { isPrimaryHost: true, archivedAt: null }, select: { hostname: true } }),
     ownerDataNow(deps),
+    // PR 400: the switched-on connections of the kinds that must be live (any store's or the installation's)
+    deps.db.integration.findMany({
+      where: { enabled: true, archivedAt: null, kind: { in: [...wanted.kinds] } },
+      select: { kind: true, provider: true, mode: true, lastTestOk: true },
+    }),
   ]);
   const result = goLiveChecks({
     now: deps.now ? deps.now() : new Date(),
@@ -74,6 +80,7 @@ export async function goLiveNow(deps: Deps) {
     originCert: state.originCert,
     primaryHosts: domains.map((d) => d.hostname),
     ownerData,
+    connections: { kinds: wanted.kinds, on },
   });
   const ids = [...new Set(result.items.map((i) => i.by).filter((v): v is string => Boolean(v)))];
   const people = ids.length

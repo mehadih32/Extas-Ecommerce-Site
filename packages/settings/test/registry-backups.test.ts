@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { backupsBlobSchema, backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings, goLiveChecksSchema, goLiveOwnerDataSchema, goLiveSignoffSchema } from '../src/registry-backups';
+import { backupsBlobSchema, backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings, goLiveChecksSchema, goLiveConnectionsSchema, goLiveOwnerDataSchema, goLiveSignoffSchema } from '../src/registry-backups';
 
 describe('backups settings (v75–77)', () => {
   it('every key is in the registry, labelled in English and Bengali, its default valid, not owner data', () => {
@@ -44,6 +44,9 @@ describe('backups settings (v75–77)', () => {
     // PR 399: names of the owner's fields, never a value of his
     expect(backupsSettings['golive.ownerData'].default.keys.every((k) => k in registry && registry[k as keyof typeof registry].isOwnerData)).toBe(true);
     expect(goLiveOwnerDataSchema.safeParse({ keys: ['orders.exchange.charge'], deliveryBand: true }).success).toBe(false);
+    // PR 400: payment, courier and SMS by default; only real connection kinds
+    expect(backupsSettings['golive.connections'].default).toEqual({ kinds: ['PAYMENT', 'COURIER', 'SMS'] });
+    expect(goLiveConnectionsSchema.safeParse({ kinds: ['FAX'] }).success).toBe(false);
     expect(goLiveSignoffSchema.safeParse({ qaGate: { at: '2026-10-31T10:00:00.000Z', by: 'u1' } }).success).toBe(true);
     expect(goLiveSignoffSchema.safeParse({ qaGate: { at: 'yesterday', by: 'u1' } }).success).toBe(false);
     expect(goLiveSignoffSchema.safeParse({ 'a b': { at: '2026-10-31T10:00:00.000Z', by: null } }).success).toBe(false);
