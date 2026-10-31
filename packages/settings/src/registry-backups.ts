@@ -90,6 +90,19 @@ export const goLiveChecksSchema = z
   .strict();
 export type GoLiveChecks = z.output<typeof goLiveChecksSchema>;
 
+/**
+ * PR 399: what of the owner's own data (PR 509) must be filled in for every store that goes live — store settings of the
+ * owner-data groups (contact, legal …) — and whether each store needs a delivery band switched on. Only names of
+ * settings, never a value: the values are typed in by the owner (Settings → Store details).
+ */
+export const goLiveOwnerDataSchema = z
+  .object({
+    keys: z.array(z.string().regex(/^(contact|legal|social|payment)\.[A-Za-z][A-Za-z0-9.]{1,60}$/)).max(30),
+    deliveryBand: z.boolean(),
+  })
+  .strict();
+export type GoLiveOwnerData = z.output<typeof goLiveOwnerDataSchema>;
+
 /** One confirmed item: when, and by which staff user (null: an account since removed). */
 export const goLiveSignoffSchema = z.record(
   z.string().regex(/^[a-z][A-Za-z0-9]{1,40}$/),
@@ -166,6 +179,16 @@ export const backupsSettings = {
     labelKey: 'golive.checks.label',
     helpKey: 'golive.checks.help',
     sortOrder: 960,
+  }),
+  'golive.ownerData': setting({
+    ...base,
+    version: V391,
+    schema: goLiveOwnerDataSchema,
+    default: { keys: ['contact.phone', 'contact.address', 'legal.registeredName', 'legal.tradeLicence'], deliveryBand: true },
+    valueType: 'JSON',
+    labelKey: 'golive.ownerData.label',
+    helpKey: 'golive.ownerData.help',
+    sortOrder: 962,
   }),
   'golive.signoff': setting({
     ...base,

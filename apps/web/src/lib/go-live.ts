@@ -27,6 +27,8 @@ export interface GoLiveContext {
   /** PR 397: the certificate Caddy shows Cloudflare (state/origin-cert.json), and the stores' main domains. */
   originCert?: OriginCert | null;
   primaryHosts?: readonly string[];
+  /** PR 399: each store that goes live, the owner's fields still empty there, and its switched-on delivery bands. */
+  ownerData?: readonly { name: string; missing: readonly string[]; bands: number | null }[];
 }
 
 export interface GoLiveResult {
@@ -119,6 +121,22 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     },
   },
   { key: 'sslStrict', pr: 397, kind: 'signoff' },
+  // PR 399 — the owner's own data (PR 509) on every store that goes live: the fields of `golive.ownerData` filled in,
+  // and a delivery band switched on (its charge is his; 0 = free delivery is a choice, not a gap). Named, never shown.
+  {
+    key: 'ownerData',
+    pr: 399,
+    kind: 'auto',
+    check: ({ ownerData = [] }) => {
+      const gaps = ownerData
+        .map((s) => ({ name: s.name, gaps: [...s.missing, ...(s.bands === 0 ? ['delivery band'] : [])] }))
+        .filter((s) => s.gaps.length);
+      return {
+        ok: ownerData.length > 0 && gaps.length === 0,
+        vars: { stores: ownerData.length, missing: gaps.map((s) => (s.name.trim() ? `${s.name}: ` : '') + s.gaps.join(', ')).join('; ') || '—' },
+      };
+    },
+  },
   // PR 398 — docs/golive/RUNBOOK.md read, and the rollback rehearsed on staging (back one version and forward again).
   { key: 'runbook', pr: 398, kind: 'signoff' },
   { key: 'qaGate', pr: 393, kind: 'signoff' },

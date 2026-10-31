@@ -49,6 +49,11 @@
       "title": "Cloudflare SSL/TLS mode is Full (strict)",
       "how": "Once the line above is done: Cloudflare → SSL/TLS → Overview → Full (strict), for the staging and the main domain. Open the shop afterwards; an error 526 means the certificate does not fit — set it back to Full and check the line above."
     },
+    "ownerData": {
+      "title": "The owner's own data on every live store",
+      "ok": "{stores} store(s): every field filled in",
+      "how": "The owner types his own details in Settings → Store details for each store that goes live (contact, legal numbers …; the list is the setting golive.ownerData) and switches on at least one delivery band with his charge (Delivery). Still empty: {missing}."
+    },
     "runbook": {
       "title": "Go-live runbook read, rollback rehearsed",
       "how": "Read docs/golive/RUNBOOK.md (the switch minute by minute, and how each step is undone). On staging, run the Deploy workflow once with \"Go back to the previous version\" and once without, and note how long it took. Then confirm."

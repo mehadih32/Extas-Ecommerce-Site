@@ -30,6 +30,10 @@
       "label": "Go-live: how fresh the automatic checks must be",
       "help": "The last smoke test of every page no older than these hours, and the server's own health check no older than these minutes, for the go-live checklist. PR 397: the Cloudflare Origin certificate must still have at least these days (30)."
     },
+    "ownerData": {
+      "label": "Go-live: the owner's own data every live store needs",
+      "help": "The store settings (contact, legal …) that must be filled in for every store that goes live, and whether each needs a delivery band switched on. Only which fields; the owner types the values in Settings → Store details."
+    },
     "signoff": {
       "label": "Go-live: the items a person confirmed",
       "help": "Who confirmed each go-live item that a person checks (the QA gate, the staging acceptance list, real phones …) and when. Changed only on Settings → System → Go-live."
