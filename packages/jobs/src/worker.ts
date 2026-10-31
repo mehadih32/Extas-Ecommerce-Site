@@ -77,7 +77,7 @@ export async function startWorker(opts: WorkerOptions): Promise<RunningWorker> {
   const prefix = opts.prefix ?? 'extas';
   const read = async () => {
     const s = deps.settings;
-    const [concurrency, lockS, everyS, staleS, leaderS, tickS, enabled, keepCompleted, keepFailed, policy] = await Promise.all([
+    const [concurrency, lockS, everyS, staleS, leaderS, tickS, enabled, keepCompleted, keepFailed, policy, timeoutS] = await Promise.all([
       s.value('jobs.concurrency'),
       s.value('jobs.lockSeconds'),
       s.value('jobs.heartbeat.everySeconds'),
@@ -88,8 +88,9 @@ export async function startWorker(opts: WorkerOptions): Promise<RunningWorker> {
       s.value('jobs.queue.keepCompleted'),
       s.value('jobs.queue.keepFailed'),
       retryPolicyOf(s),
+      s.value('jobs.attemptTimeoutSeconds'),
     ]);
-    return { concurrency, lockS, everyS, staleS, leaderS, tickS, enabled, keepCompleted, keepFailed, policy };
+    return { concurrency, lockS, everyS, staleS, leaderS, tickS, enabled, keepCompleted, keepFailed, policy, timeoutS };
   };
   let cfg = await read();
 
@@ -136,6 +137,7 @@ export async function startWorker(opts: WorkerOptions): Promise<RunningWorker> {
         workerKey: identity.workerKey,
         queueJobId: job.id ?? null,
         staleSeconds: cfg.staleS,
+        timeoutSeconds: cfg.timeoutS,
       });
       if (r.kind === 'failed') throw new Error(r.error);
       return { kind: r.kind, runId: r.runId };

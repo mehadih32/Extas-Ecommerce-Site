@@ -34,6 +34,10 @@
       "label": "Job lock (seconds)",
       "help": "A running job keeps its lock while its worker is alive. If the worker stops in the middle of a job, another worker runs it again after this many seconds; nothing is done twice."
     },
+    "attemptTimeoutSeconds": {
+      "label": "Longest time one try may run (seconds)",
+      "help": "A job that has not finished after this long (an outside service that never answers) is stopped as failed and tried again later, so it never blocks the worker. 0 = no limit."
+    },
     "retry": {
       "maxAttempts": {
         "label": "Tries per job",

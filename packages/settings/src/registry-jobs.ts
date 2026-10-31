@@ -76,6 +76,19 @@ export const jobsSettings = {
     helpKey: 'jobs.lockSeconds.help',
     sortOrder: 260,
   }),
+  // R1 ops review (M10): a job that never returns (an outside call with no timeout of its own) held a worker slot for
+  // good while its lock and the heartbeat stayed fresh. After this long the attempt fails and is tried again; 0 = no
+  // limit. Registry version 86.
+  'jobs.attemptTimeoutSeconds': setting({
+    ...base,
+    version: 86,
+    schema: z.int().min(0).max(86_400),
+    default: 1800,
+    valueType: 'INT',
+    labelKey: 'jobs.attemptTimeoutSeconds.label',
+    helpKey: 'jobs.attemptTimeoutSeconds.help',
+    sortOrder: 265,
+  }),
   'jobs.retry.maxAttempts': setting({
     ...base,
     schema: z.int().min(1).max(20),
