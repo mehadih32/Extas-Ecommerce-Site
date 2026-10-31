@@ -89,7 +89,8 @@
         "costs": "Costs",
         "expenses": "Expenses",
         "fees": "Costs & fees",
-        "ledger": "Cost ledger"
+        "ledger": "Cost ledger",
+        "monthEnd": "Month-end"
       }
     },
     "purpose": {

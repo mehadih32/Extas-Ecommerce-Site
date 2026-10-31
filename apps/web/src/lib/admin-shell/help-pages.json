@@ -54,6 +54,7 @@
     { "id": "money/cost-ledger", "route": "/admin/money/cost-ledger" },
     { "id": "money/expenses", "route": "/admin/money/expenses" },
     { "id": "money/fees", "route": "/admin/money/fees" },
+    { "id": "money/month-end", "route": "/admin/money/month-end" },
     { "id": "money/books-account", "route": "/admin/money/books" },
     { "id": "money/books-match", "route": "/admin/money/books/match" },
     { "id": "money/books-differences", "route": "/admin/money/books/differences" },

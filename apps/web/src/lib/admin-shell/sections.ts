@@ -250,6 +250,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'fees', pages: [{ href: '/admin/money/fees', perm: 'books.read', keys: ['moneyFees'] }] },
       // S16 · PR 343: Money → Cost ledger — every paid call's cost row, prepaid balances, export.
       { id: 'ledger', pages: [{ href: '/admin/money/cost-ledger', perm: 'books.read', keys: ['moneyCostLedger'] }] },
+      // S16 · PR 346: Money → Month-end — the close sheet of a month (read-only; sending and closing stay on Books).
+      { id: 'monthEnd', pages: [{ href: '/admin/money/month-end', perm: 'books.read', keys: ['moneyMonthEnd'] }] },
     ],
   },
   {

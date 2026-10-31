@@ -41,4 +41,6 @@
 /* PR 343 — Money → Cost ledger: the second line under a row's name (when, what for; the last top-up). */
 .adm2 .cl-sub{display:block;margin-top:2px;overflow-wrap:anywhere}
 /* PR 344 — Money → Expenses: "More options" opens like a card heading, a finger-sized row. */
+/* PR 346 — Month-end: the month's name between the earlier and later buttons. */
+.adm2 .me-month{display:inline-flex;align-items:center;min-height:44px;padding:0 6px}
 .adm2 .ex-sum{cursor:pointer;min-height:44px;display:flex;align-items:center}

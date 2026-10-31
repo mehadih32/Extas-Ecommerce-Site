@@ -98,6 +98,8 @@
 - **খরচ ও ফি (PR 345)** — পাতা: **টাকা › খরচ ও ফি** (`/admin/money/fees`); দেখতে `books.read`, রাখতে `costs.write`।
   গেটওয়ের ফি (`costs.gatewayFees`) আর প্রতি অর্ডারে প্যাকেজিং (`costs.packaging`): **খালি** (মালিকের অঙ্ক)।
   পাতার গাইড: [খরচ ও ফি](pages/money/fees.md)।
+- **মাসের শেষ (PR 346)** — পাতা: **টাকা › মাসের শেষ** (`/admin/money/month-end`); দেখতে `books.read`, শুধু দেখায়।
+  পাতার গাইড: [মাসের শেষ](pages/money/month-end.md)।
 - **খরচের খাতা (PR 343)** — পাতা: **টাকা › খরচের খাতা** (`/admin/money/cost-ledger`); দেখতে `books.read`, টপ-আপ আর
   কম-সীমা লিখতে `costs.write`। কয়টা সারি দেখাবে আর এক্সপোর্টে কত (`costs.ledger`): **50** আর **20,000**। কম-সীমা শুরুতে নেই।
   পাতার গাইড: [খরচের খাতা](pages/money/cost-ledger.md)।
