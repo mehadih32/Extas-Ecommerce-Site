@@ -1,0 +1,10 @@
+{
+  "delivery": {
+    "promise": {
+      "districts": {
+        "label": "Delivery promise per district",
+        "help": "A district's own delivery time in hours, used instead of its band's at checkout, on the thank-you page, on the order page and for the late flag. A district with no row keeps its band's time. Off until switched on."
+      }
+    }
+  }
+}

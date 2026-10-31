@@ -11,20 +11,34 @@
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { holidaySchema, stickerLatinSchema, storeTarget } from '@extas/settings';
+import { districtPromiseSchema, holidaySchema, stickerLatinSchema, storeTarget } from '@extas/settings';
 import type { ZodType } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
 /** The keys this page saves (one card each). */
-export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin'] as const;
+export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin', 'delivery.promise.districts'] as const;
 export type DeliverySettingKey = (typeof DELIVERY_SETTING_KEYS)[number];
 
 /** Each card's schema, its line in the settings change log and its audit action. */
 const CARDS: Record<DeliverySettingKey, { schema: ZodType<Record<string, unknown>>; reason: string; action: string }> = {
   'delivery.holiday': { schema: holidaySchema, reason: 'Delivery › Delivery settings › Holiday mode', action: 'delivery.holiday.save' },
   'delivery.sticker.latin': { schema: stickerLatinSchema, reason: 'Delivery › Delivery settings › Sticker address in Latin letters', action: 'delivery.sticker.latin.save' },
+  'delivery.promise.districts': { schema: districtPromiseSchema, reason: 'Delivery › Delivery settings › Delivery promise per district', action: 'delivery.promise.districts.save' },
 };
+
+/** A district of the gazetteer, for the promise card's picker (its code is what a row names). */
+export interface DeliveryDistrictOption {
+  code: string;
+  nameEn: string;
+  nameBn: string | null;
+}
+
+/** The gazetteer's districts, by English name. */
+export async function deliveryDistrictOptions(deps: Pick<Deps, 'db'>): Promise<DeliveryDistrictOption[]> {
+  const rows = await deps.db.geoArea.findMany({ where: { level: 'DISTRICT', archivedAt: null, code: { not: null } }, select: { code: true, nameEn: true, nameBn: true }, orderBy: { nameEn: 'asc' } });
+  return rows.map((d) => ({ code: d.code!, nameEn: d.nameEn, nameBn: d.nameBn }));
+}
 const isKey = (k: unknown): k is DeliverySettingKey => typeof k === 'string' && (DELIVERY_SETTING_KEYS as readonly string[]).includes(k);
 
 export interface DeliverySettingCard {
@@ -75,6 +89,10 @@ export async function saveDeliverySetting(deps: Deps, who: Who, input: unknown):
   if (input.version !== versionOf(before)) throw new DeliverySettingsError('STALE', 409);
   const ok = card.schema.safeParse(input.value);
   if (!ok.success) throw new DeliverySettingsError('INVALID_INPUT', 400, [...new Set(ok.error.issues.map((i) => String(i.path[0] ?? 'value')))]);
+  if (key === 'delivery.promise.districts') {
+    const known = new Set((await deliveryDistrictOptions(deps)).map((d) => d.code));
+    if ((ok.data as { rows: { district: string }[] }).rows.some((r) => !known.has(r.district))) throw new DeliverySettingsError('INVALID_INPUT', 400, ['rows']);
+  }
   if (versionOf(ok.data) !== versionOf(before)) {
     await deps.resolver.set(key, ok.data as never, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: card.reason });
     await audit(deps.db, who.actor, { storeId: S, action: card.action, entityType: 'Setting', entityId: key, before: { ...before }, after: { ...ok.data } }, who.ctx);

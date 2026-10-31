@@ -41,3 +41,5 @@ export * from './phone';
 export * from './phone-area';
 // SIM-F-048 (PR 179 follow-up): a Bengali address in Latin letters for the sticker's second line.
 export * from './latin';
+// SIM-F-048 · PR 550 follow-up — the delivery promise per district (promise.ts, `delivery.promise.districts`, off).
+export * from './promise';

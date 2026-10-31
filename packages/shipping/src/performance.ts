@@ -7,6 +7,7 @@
 import { requirePermission, type PermissionKey } from '@extas/auth';
 import { z } from 'zod';
 import { checkStoreId, parse, setting, type ShippingDeps, type Who } from './context';
+import { orderPromises, promiseDueBy } from '@extas/delivery/promise';
 import { lateParcelIds } from './parcels';
 import { groupPerf, perfLine, type ExceptionStatus, type PerfLine, type PerfParcel } from './performance-pure';
 import { EXCEPTION_STATUSES } from './pure';
@@ -75,7 +76,7 @@ export async function courierPerformance(deps: Pick<ShippingDeps, 'db' | 'settin
         deliveredAt: true,
         courierAccountId: true,
         courierAccount: { select: { name: true } },
-        order: { select: { placedAt: true, addressUnclear: true, areaId: true, deliveryBand: { select: { key: true, nameEn: true, nameBn: true, hoursMax: true } } } },
+        order: { select: { id: true, placedAt: true, addressUnclear: true, areaId: true, deliveryBand: { select: { key: true, nameEn: true, nameBn: true, hoursMin: true, hoursMax: true } } } },
       },
       orderBy: { id: 'asc' },
       take: PERFORMANCE_MAX_PARCELS + 1,
@@ -85,6 +86,8 @@ export async function courierPerformance(deps: Pick<ShippingDeps, 'db' | 'settin
   const cut = parcels.length > PERFORMANCE_MAX_PARCELS;
   const rows = cut ? parcels.slice(0, PERFORMANCE_MAX_PARCELS) : parcels;
   const ids = rows.map((p) => p.id);
+  // review R3 (customer M2/M3): on time against the promise the checkout gave (district hours, the holiday break, Eid)
+  const promises = await orderPromises(deps, storeId, rows.map((p) => ({ id: p.order.id, placedAt: p.order.placedAt, areaId: p.order.areaId, band: p.order.deliveryBand })));
   const [events, refusals, districts] = await Promise.all([
     ids.length ? deps.db.shipmentEvent.findMany({ where: { storeId, shipmentId: { in: ids }, status: { in: [...EXCEPTION_STATUSES] } }, select: { shipmentId: true, status: true }, distinct: ['shipmentId', 'status'] }) : [],
     ids.length ? deps.db.returnRecord.findMany({ where: { storeId, shipmentId: { in: ids }, kind: { in: [...REFUSED_KINDS] }, ourFault: false }, select: { shipmentId: true } }) : [],
@@ -105,9 +108,9 @@ export async function courierPerformance(deps: Pick<ShippingDeps, 'db' | 'settin
       zoneName: band ? (bn && band.nameBn) || band.nameEn : null,
       district: d ? (bn && d.nameBn) || d.nameEn : null,
       status: p.status,
-      placedAt: p.order.placedAt,
+      placedAt: promises.get(p.order.id)?.from ?? p.order.placedAt,
       deliveredAt: p.deliveredAt,
-      hoursMax: band?.hoursMax ?? null,
+      hoursMax: promiseDueBy(promises.get(p.order.id)) ? (promises.get(p.order.id)?.hoursMax ?? null) : null,
       addressUnclear: p.order.addressUnclear,
       refused: refused.has(p.id),
       exceptions: exceptionsOf.get(p.id) ?? [],
@@ -137,23 +140,23 @@ async function lateNow(deps: Pick<ShippingDeps, 'db' | 'settings' | 'now'>, stor
     take
       ? deps.db.shipment.findMany({
           where,
-          select: { id: true, orderId: true, status: true, courierAccount: { select: { name: true } }, order: { select: { number: true, placedAt: true, deliveryBand: { select: { hoursMax: true } } } } },
+          select: { id: true, orderId: true, status: true, courierAccount: { select: { name: true } }, order: { select: { id: true, number: true, placedAt: true, areaId: true, deliveryBand: { select: { key: true, hoursMin: true, hoursMax: true } } } } },
           orderBy: [{ order: { placedAt: 'asc' } }, { id: 'asc' }],
           take,
         })
       : [],
   ]);
+  const promises = await orderPromises(deps, storeId, list.map((s) => ({ id: s.order.id, placedAt: s.order.placedAt, areaId: s.order.areaId, band: s.order.deliveryBand })));
   return {
     count,
     rows: list.map((s) => {
-      const h = s.order.deliveryBand?.hoursMax ?? null;
       return {
         shipmentId: s.id,
         orderId: s.orderId,
         orderNumber: s.order.number,
         courier: s.courierAccount.name,
         status: s.status,
-        dueBy: h ? new Date(s.order.placedAt.getTime() + h * 3_600_000) : null,
+        dueBy: promiseDueBy(promises.get(s.order.id)),
       };
     }),
   };

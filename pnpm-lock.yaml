@@ -576,6 +576,9 @@ importers:
       '@extas/db':
         specifier: workspace:*
         version: link:../db
+      '@extas/rules':
+        specifier: workspace:*
+        version: link:../rules
       '@extas/settings':
         specifier: workspace:*
         version: link:../settings
@@ -972,6 +975,9 @@ importers:
       '@extas/db':
         specifier: workspace:*
         version: link:../db
+      '@extas/delivery':
+        specifier: workspace:*
+        version: link:../delivery
       '@extas/metrics':
         specifier: workspace:*
         version: link:../metrics

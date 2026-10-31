@@ -2,10 +2,12 @@
 // get either the band (with its charge when the band is on) or the question to ask. Reads only: no person, no audit.
 // The answer carries the owner's figures for the band and the place's name — nothing about any customer.
 import { z } from 'zod';
+import type { DistrictPromiseSettings } from '@extas/settings';
 import type { BandMap, BandRole, BandRow } from './bands';
 import { allow, assertStore, loadBandMap, type DeliveryDeps, type Who } from './context';
 import { DeliveryError } from './errors';
 import { placeView, type PlaceView } from './bands-admin';
+import { districtHours } from './promise';
 import { resolveAddress, type AskReason, type Resolution, type ResolverOptions } from './resolver';
 
 /** A band as the customer sees it: the charge only while the band is on (an off band has no charge yet). */
@@ -86,8 +88,17 @@ export async function resolveLine(deps: DeliveryDeps, storeId: number, input: un
   await assertStore(deps, storeId);
   const opts = await resolverOptions(deps, storeId);
   const data = parseLineInput(input, opts.maxChars);
-  const map = await loadBandMap(deps, storeId);
-  return viewOf(map, resolveAddress(map, data.line, opts, { savedAreaId: data.savedAreaId, confirmed: data.confirmed }));
+  const [map, promise] = await Promise.all([loadBandMap(deps, storeId), deps.settings.value('delivery.promise.districts', { storeId })]);
+  return withDistrictPromise(map, promise, viewOf(map, resolveAddress(map, data.line, opts, { savedAreaId: data.savedAreaId, confirmed: data.confirmed })));
+}
+
+/** SIM-F-048: a settled place in a district with its own promise shows that district's hours (off as shipped). */
+export function withDistrictPromise(map: BandMap, promise: DistrictPromiseSettings, view: ResolveView): ResolveView {
+  if (view.status !== 'resolved' || !view.area || !promise.enabled) return view;
+  const g = map.gazetteer;
+  const e = g.get(view.area.id);
+  const district = e ? (g.district(e)?.code ?? null) : null;
+  return { ...view, band: districtHours(promise, district, view.band) };
 }
 
 /** The admin's "Try an address" box: the same read, as the owner (needs `delivery.read`). */

@@ -15,10 +15,13 @@
 // PR 136: the invoice adds each line's stored unit price, its stored saving and its SKU — read, never worked out again;
 // and a staff member the caller has checked (the `orders.read` permission) reads any placed order of the store.
 // PR 565: `freeDelivery` — a free order shows no band and no band promise (@extas/delivery bandExempt).
+// SIM-F-048 (PR 550 follow-up): the band's hours are the district's own when the owner set them
+// (`delivery.promise.districts`, off) — the thank-you page, the order page and its late flag read them from here.
 // PR 605: `gift` — a gift order thanks the sender by his name; the name, phone and address are the receiver's; the
 // invoice hides the prices when the sender asked for it.
 import type { OrderAccountKind } from '@extas/accounts';
 import { bandExempt } from '@extas/delivery/exempt';
+import { districtHours, districtPromises, orderPromises } from '@extas/delivery/promise';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { CHECKOUT_PAY_PURPOSES } from './advance';
 import type { CheckoutDeps } from './context';
@@ -121,7 +124,7 @@ const ACCOUNT_KINDS: readonly OrderAccountKind[] = ['created', 'existing', 'sign
  * member with `orders.read` asks (the invoice for the shop's own use): any placed order of this store.
  */
 export async function orderReceipt(
-  deps: Pick<CheckoutDeps, 'db'>,
+  deps: Pick<CheckoutDeps, 'db'> & { settings?: CheckoutDeps['settings'] },
   req: { storeId: number; visitorId: string | null; number: string; customerId?: string | null; staff?: boolean },
 ): Promise<Receipt | null> {
   const o = await deps.db.order.findUnique({
@@ -145,6 +148,7 @@ export async function orderReceipt(
     select: { id: true, product: { select: { nameBn: true } }, colour: { select: { key: true, hex: true, nameEn: true, nameBn: true } } },
   });
   const byId = new Map(variants.map((v) => [v.id, v]));
+  const promise = deps.settings && o.deliveryBand && o.areaId ? await districtPromises({ db: deps.db, settings: deps.settings }, req.storeId, [o.areaId]) : null;
   const lines: ReceiptLine[] = o.items.map((i) => {
     const v = i.variantId ? byId.get(i.variantId) : undefined;
     return {
@@ -198,7 +202,7 @@ export async function orderReceipt(
     address: o.shippingAddressText,
     note: o.note?.trim() || null,
     placedAt: o.placedAt.toISOString(),
-    band: o.deliveryBand,
+    band: o.deliveryBand && promise ? districtHours(promise.config, o.areaId ? promise.districtOf.get(o.areaId) : null, o.deliveryBand) : o.deliveryBand,
     addressUnclear: o.addressUnclear,
     chargeFixed: o.chargeFixed,
     freeDelivery: bandExempt(o.addressResolution),
@@ -226,4 +230,16 @@ export async function receiptEta(deps: Pick<CheckoutDeps, 'db' | 'settings' | 'n
   const band = typeof res?.band === 'string' ? res.band : (o.deliveryBand?.key ?? null);
   const eta = await checkoutEta(deps, storeId, { place: band ? { band, areaId: o.areaId } : null, locale: lang === 'bn' ? 'bn-BD' : 'en-BD', at: o.placedAt });
   return eta.lines;
+}
+
+/**
+ * Review R3 (customer M3) — the promise his order page counts "late" against: the same clock as the courier's late flag
+ * (@extas/delivery orderPromises) — the district's hours, from the shop's first day back for an order placed during the
+ * holiday break; none ("may arrive after Eid") past its place's Eid date. Null: no such order, or no band.
+ */
+export async function receiptPromise(deps: Pick<CheckoutDeps, 'db' | 'settings'>, storeId: number, number: string): Promise<{ from: string; hoursMax: number | null; afterEid: boolean } | null> {
+  const o = await deps.db.order.findUnique({ where: { storeId_number: { storeId, number } }, select: { id: true, placedAt: true, areaId: true, deliveryBand: { select: { key: true, hoursMin: true, hoursMax: true } } } });
+  if (!o?.deliveryBand) return null;
+  const p = (await orderPromises(deps, storeId, [{ id: o.id, placedAt: o.placedAt, areaId: o.areaId, band: o.deliveryBand }])).get(o.id);
+  return p ? { from: p.from.toISOString(), hoursMax: p.afterEid ? null : p.hoursMax, afterEid: p.afterEid } : null;
 }

@@ -1,7 +1,8 @@
 'use client';
 // S20 · PR 407 — one settings card inside its section (CN-018: settings sit where they are used), first for Orders ›
 // Packing & print › Invoices, then Support › Support settings (PR 425). The card is drawn from a plain list of its
-// fields (switch, choice, number, text, ticks, a text in both languages; PR 193: a calendar day) — words and choices come from the page, so no
+// fields (switch, choice, number, text, ticks, a text in both languages; PR 193: a calendar day; SIM-F-048: a list of
+// rows, each a choice and numbers, with add and remove) — words and choices come from the page, so no
 // function crosses from the server page. Saved whole to the page's own API (`url`: GET answers `{cards}`, PUT takes
 // `{key, value, version}`) with the card's version: a card changed by someone else in between is read again and said
 // so. A person without the page's write permission sees it locked.
@@ -20,7 +21,14 @@ export type FieldsCardField =
   | { kind: 'date'; path: string; label: string; help?: string }
   | { kind: 'checks'; path: string; label: string; options: { value: string; label: string }[] }
   // PR 384: `rows` makes a taller box for a long text (a policy page's words)
-  | { kind: 'pair'; path: string; label: { en: string; bn: string }; help?: string; max: number; rows?: number };
+  | { kind: 'pair'; path: string; label: { en: string; bn: string }; help?: string; max: number; rows?: number }
+  // SIM-F-048 (PR 550 follow-up): a list of rows (at most `max`); a choice column takes each value once across the rows
+  | { kind: 'rows'; path: string; label: string; help?: string; max: number; add: string; remove: string; empty: string; columns: FieldsCardColumn[] };
+
+/** One column of a `rows` field: a choice (each value once across the rows), or a whole number (empty = null when `optional`). */
+export type FieldsCardColumn =
+  | { kind: 'select'; key: string; label: string; pick: string; options: { value: string; label: string }[] }
+  | { kind: 'number'; key: string; label: string; min: number; max: number; optional?: boolean };
 
 export interface FieldsCardTexts {
   h: string;
@@ -158,6 +166,81 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: {
               <span>{o.label}</span>
             </label>
           ))}
+        </div>
+      );
+    }
+    if (f.kind === 'rows') {
+      const rows = (Array.isArray(draft[f.path]) ? draft[f.path] : []) as Json[];
+      const put = (next: Json[]) => edit(f.path, next);
+      const blank = Object.fromEntries(f.columns.map((c) => [c.key, c.kind === 'select' ? '' : null]));
+      return (
+        <div className="a2-fld full" role="group" aria-labelledby={`${fid}-l`} key={f.path} data-testid={`${testId}-${f.path}`}>
+          <span className="a2-lbl" id={`${fid}-l`}>
+            {f.label}
+          </span>
+          {help}
+          {rows.length ? null : <span className="a2-xs a2-mute">{f.empty}</span>}
+          {rows.map((r, i) => (
+            <div className="a2-fg" style={{ alignItems: 'end' }} key={i} data-testid={`${testId}-${f.path}-row`}>
+              {f.columns.map((c) => {
+                const cid = `${fid}-${i}-${c.key}`;
+                const set = (v: unknown) => put(rows.map((x, j) => (j === i ? { ...x, [c.key]: v } : x)));
+                if (c.kind === 'select') {
+                  const used = new Set(rows.filter((_, j) => j !== i).map((x) => String(x[c.key] ?? '')));
+                  return (
+                    <div className="a2-fld" key={c.key}>
+                      <label className="a2-lbl" htmlFor={cid}>
+                        {c.label}
+                      </label>
+                      <select id={cid} className="a2-sel" value={String(r[c.key] ?? '')} disabled={off} onChange={(e) => set(e.target.value)} data-testid={`${testId}-${f.path}-${c.key}`}>
+                        <option value="">{c.pick}</option>
+                        {c.options
+                          .filter((o) => !used.has(o.value))
+                          .map((o) => (
+                            <option key={o.value} value={o.value}>
+                              {o.label}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="a2-fld" key={c.key}>
+                    <label className="a2-lbl" htmlFor={cid}>
+                      {c.label}
+                    </label>
+                    <input
+                      id={cid}
+                      className="a2-inp"
+                      type="number"
+                      inputMode="numeric"
+                      min={c.min}
+                      max={c.max}
+                      value={r[c.key] == null ? '' : String(r[c.key])}
+                      disabled={off}
+                      onChange={(e) => set(e.target.value === '' ? (c.optional ? null : '') : Number(e.target.value))}
+                      data-testid={`${testId}-${f.path}-${c.key}`}
+                    />
+                  </div>
+                );
+              })}
+              {canEdit ? (
+                <div className="a2-fld" style={{ justifyContent: 'flex-end' }}>
+                  <button type="button" className="a2-btn" disabled={off} onClick={() => put(rows.filter((_, j) => j !== i))} data-testid={`${testId}-${f.path}-remove`}>
+                    {f.remove}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ))}
+          {canEdit && rows.length < f.max ? (
+            <span>
+              <button type="button" className="a2-btn" disabled={off} onClick={() => put([...rows, blank])} data-testid={`${testId}-${f.path}-add`}>
+                {f.add}
+              </button>
+            </span>
+          ) : null}
         </div>
       );
     }

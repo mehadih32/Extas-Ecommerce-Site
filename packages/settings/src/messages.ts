@@ -165,6 +165,9 @@ import chargeMismatchEn from '../messages/charge-mismatch.en.json';
 // SIM-F-048 · PR 179 follow-up — the sticker's Latin address line (registry v96).
 import stickerLatinBn from '../messages/sticker-latin.bn.json';
 import stickerLatinEn from '../messages/sticker-latin.en.json';
+// SIM-F-048 · PR 550 follow-up — the delivery promise per district (registry v97).
+import districtPromiseBn from '../messages/district-promise.bn.json';
+import districtPromiseEn from '../messages/district-promise.en.json';
 import trackingEn from '../messages/tracking.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
@@ -246,6 +249,9 @@ messages.bn = mergeMessages(messages.bn, chargeMismatchBn);
 // SIM-F-048 · PR 179 follow-up (registry v96): the sticker's Latin address line.
 messages.en = mergeMessages(messages.en, stickerLatinEn);
 messages.bn = mergeMessages(messages.bn, stickerLatinBn);
+// SIM-F-048 · PR 550 follow-up (registry v97): the delivery promise per district.
+messages.en = mergeMessages(messages.en, districtPromiseEn);
+messages.bn = mergeMessages(messages.bn, districtPromiseBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

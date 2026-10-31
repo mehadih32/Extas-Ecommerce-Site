@@ -8,7 +8,7 @@ import type { BandMap } from './bands';
 import { assertStore, loadBandMap, type DeliveryDeps } from './context';
 import { DeliveryError } from './errors';
 import { resolveAddress, type Resolution } from './resolver';
-import { bandOut, parseLineInput, resolverOptions, viewOf, type BandOut, type ResolveView } from './resolve-service';
+import { bandOut, parseLineInput, resolverOptions, viewOf, withDistrictPromise, type BandOut, type ResolveView } from './resolve-service';
 
 declare const resolved: unique symbol;
 
@@ -59,9 +59,10 @@ export async function quoteLine(deps: DeliveryDeps, storeId: number, input: unkn
   await assertStore(deps, storeId);
   const opts = await resolverOptions(deps, storeId);
   const data = parseLineInput(input, opts.maxChars);
-  const map = await loadBandMap(deps, storeId);
+  const [map, promise] = await Promise.all([loadBandMap(deps, storeId), deps.settings.value('delivery.promise.districts', { storeId })]);
   const res = resolveAddress(map, data.line, opts, { savedAreaId: data.savedAreaId, confirmed: data.confirmed });
-  const read = viewOf(map, res);
+  // SIM-F-048: the district's own promise, when the owner set one (off as shipped)
+  const read = withDistrictPromise(map, promise, viewOf(map, res));
   const area = resolvedAreaOf(storeId, res);
   return area ? { status: 'resolved', read, area, quote: quoteDelivery(map, storeId, area) } : { status: 'ask', read };
 }

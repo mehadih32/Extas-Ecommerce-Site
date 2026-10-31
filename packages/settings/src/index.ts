@@ -85,6 +85,8 @@ export * from './registry-holiday';
 export * from './registry-charge-mismatch';
 // SIM-F-048 · PR 179 follow-up — the sticker's Latin address line (registry-sticker-latin.ts, version 96).
 export * from './registry-sticker-latin';
+// SIM-F-048 · PR 550 follow-up — the delivery promise per district (registry-district-promise.ts, version 97).
+export * from './registry-district-promise';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

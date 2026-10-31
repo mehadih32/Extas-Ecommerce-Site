@@ -1,7 +1,8 @@
 // S08 · PR 193 — Delivery › Delivery settings (demo 97t-adm2-delivery.js /admin/delivery/settings; docs/ADMIN-ARCHITECTURE.md:
 // settings inside their section): first the holiday mode card (Blueprint B1.14) — the switch, the break's first and
 // last day, how many days before the notice shows, and the words of the notice and of the checkout's "ships from …";
-// then the sticker's Latin address line (SIM-F-048, PR 179 follow-up).
+// then the sticker's Latin address line (SIM-F-048, PR 179 follow-up) and the delivery promise per district (SIM-F-048,
+// PR 550 follow-up).
 // Seeing needs `delivery.read`; saving `delivery.charges` (the API checks again). Off as shipped. The demo's other
 // cards (stuck hours, book after packing, the suggestion rule, the exact-amount line, trial at delivery) join with
 // their PRs. Guide: docs/admin-guide/pages/delivery/settings.md.
@@ -16,7 +17,7 @@ import { withEta } from '@/lib/admin-eta';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { deliverySettingCards } from '@/lib/delivery-settings-api';
+import { deliveryDistrictOptions, deliverySettingCards } from '@/lib/delivery-settings-api';
 import { t } from '@/lib/i18n';
 import '../../settings-cards.css';
 
@@ -44,7 +45,7 @@ export default async function DeliverySettingsPage() {
         <ShellState view={view} kind="denied" permission="delivery.read" />
       </div>
     );
-  const cards = await deliverySettingCards({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx });
+  const [cards, districts] = await Promise.all([deliverySettingCards({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx }), deliveryDistrictOptions(access.deps)]);
   const canEdit = access.guard.permissions?.has('delivery.charges') ?? false;
   const h = (k: string) => t(d, `eta.holiday.${k}`);
   const texts: FieldsCardTexts = {
@@ -72,6 +73,27 @@ export default async function DeliverySettingsPage() {
   const c = cards['delivery.holiday'];
   const sk = (k: string) => t(d, `eta.sticker.${k}`);
   const latin = cards['delivery.sticker.latin'];
+  const pk = (k: string) => t(d, `eta.promise.${k}`);
+  const promise = cards['delivery.promise.districts'];
+  const bn = view.lang === 'bn';
+  const promiseFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: pk('enabled'), help: pk('enabledHelp') },
+    {
+      kind: 'rows',
+      path: 'rows',
+      label: pk('rows'),
+      help: pk('rowsHelp'),
+      max: 80,
+      add: pk('add'),
+      remove: pk('remove'),
+      empty: pk('empty'),
+      columns: [
+        { kind: 'select', key: 'district', label: pk('district'), pick: pk('pick'), options: districts.map((o) => ({ value: o.code, label: (bn ? o.nameBn : null) ?? o.nameEn })) },
+        { kind: 'number', key: 'hoursMin', label: pk('hoursMin'), min: 1, max: 1440, optional: true },
+        { kind: 'number', key: 'hoursMax', label: pk('hoursMax'), min: 1, max: 1440 },
+      ],
+    },
+  ];
   return (
     <div className="a2-z" data-testid="delivery-settings">
       <PageHead view={view} place={locateKey(KEY)} title={h('title')} sub={h('sub')} />
@@ -85,6 +107,7 @@ export default async function DeliverySettingsPage() {
         canEdit={canEdit}
         testId="delivery-sticker-latin"
       />
+      <FieldsCard url={API} screen={{ key: promise.key, value: promise.value, version: promise.version }} fields={promiseFields} texts={{ ...texts, h: pk('h'), d: pk('d') }} canEdit={canEdit} testId="delivery-promise" />
     </div>
   );
 }

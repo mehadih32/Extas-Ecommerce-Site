@@ -24,6 +24,9 @@
 // not approved), only when there is one.
 // S08 · PR 186: "Exchange size" / "Report a problem" under each piece he may still exchange, and his exchanges on the
 // order (demo 60-account.js ord_line, ord_exchanges), while the owner has the account's exchange on.
+// Review R3 (M3): the delivered step says what the checkout said ("ships from …" for an order placed in the holiday
+// break, "may arrive after Eid") instead of the hours, and the late flag counts on the courier's own promise clock
+// (from the first day back; never late after Eid).
 import '../bag/bag.css';
 import './account.css';
 import './exchange.css';
@@ -145,6 +148,8 @@ export async function OrderPage({
   invoiceNo = null,
   review = null,
   extras = null,
+  eta = [],
+  promise = null,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -157,6 +162,10 @@ export async function OrderPage({
   review?: OrderReviewBox | null;
   /** Follow-ups 260, 261 and PR 150: the edit card, the two-size question and "What happened" (null: none of them). */
   extras?: OrderExtras | null;
+  /** Review R3 (M3): the checkout's delivery line for this order (empty: the usual hours promise). */
+  eta?: string[];
+  /** Review R3 (M3): the promise the late flag counts against (null: the band's hours from the placing). */
+  promise?: { from: string; hoursMax: number | null; afterEid: boolean } | null;
 }) {
   const t = c.t;
   const words = checkoutWords(c);
@@ -164,8 +173,10 @@ export async function OrderPage({
   const m = c.money;
   const status = r.status as OrderState;
   const view = { status, track: trackOf(status, { placedAt: r.placedAt, ...r.times }) };
-  const late = lateOf({ status, placedAt: r.placedAt, hoursMax: r.addressUnclear ? null : r.band?.hoursMax }, opts.late, new Date());
+  const clock = promise ? { placedAt: promise.from, hoursMax: promise.hoursMax } : { placedAt: r.placedAt, hoursMax: r.band?.hoursMax };
+  const late = lateOf({ status, placedAt: clock.placedAt, hoursMax: r.addressUnclear ? null : clock.hoursMax }, opts.late, new Date());
   const hours = r.band && !r.addressUnclear ? hoursOf(r.band, c.num) : null;
+  const etaLine = eta.length && !r.addressUnclear ? eta.join(' ') : null;
   const news = courierNewsOf(r.shipment, status, opts.courier);
   const units = r.lines.reduce((s, l) => s + l.quantity, 0);
   // PR 186: the new pieces of his exchanges are drawn too
@@ -312,7 +323,7 @@ export async function OrderPage({
                 {late.late ? <LateTag c={c} /> : null}
               </div>
             </div>
-            <OrderTrack c={c} track={view.track} late={late} hours={hours} lateWa={lateWa} />
+            <OrderTrack c={c} track={view.track} late={late} hours={hours} eta={etaLine} lateWa={lateWa} />
             {news ? (
               <div className={`ord-news mt16${news === 'out' ? '' : ' warn'}`} role="status" data-testid="order-courier-news" data-news={news}>
                 <span className="ord-news-i">

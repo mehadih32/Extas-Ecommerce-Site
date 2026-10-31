@@ -595,6 +595,22 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
   });
 
   describe('PR 126 · the thank-you page\'s receipt', () => {
+    it("SIM-F-048: a district with its own promise — the checkout and the receipt show its hours, the charge stays the band's", async () => {
+      const dhaka = await f.t.prisma.geoArea.findFirstOrThrow({ where: { level: 'DISTRICT', nameEn: 'Dhaka' }, select: { code: true } });
+      f.overrides.set('delivery.promise.districts', { enabled: true, rows: [{ district: dhaka.code!, hoursMin: 6, hoursMax: 12 }] });
+      try {
+        const s = await shown('ty-district');
+        expect(s.q.delivery).toMatchObject({ state: 'found', band: { hoursMin: 6, hoursMax: 12 } });
+        const r = await s.place();
+        const rc = await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number });
+        expect(rc).toMatchObject({ band: { hoursMin: 6, hoursMax: 12 }, deliveryMinor: 8_000 });
+        // without the settings reader (the invoice's call) the band's own hours stand
+        expect((await orderReceipt({ db: f.t.prisma }, { storeId: f.S, visitorId: s.visitorId, number: r.number }))!.band).toMatchObject({ hoursMin: 24, hoursMax: 48 });
+      } finally {
+        f.overrides.delete('delivery.promise.districts');
+      }
+    });
+
     it('Cash on Delivery: the number, the band\'s promise, the lines and what is due at the door — for his browser only', async () => {
       const s = await shown('ty-cod');
       const r = await s.place();
