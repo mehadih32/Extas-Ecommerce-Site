@@ -102,6 +102,8 @@ export const ORDER_COMMANDS = [
   // PR 540: the gate turned an engine's hold into a proposal (a mark and a timeline line); "Let it go" clears it
   'holdProposed',
   'holdProposalDecided',
+  // PR 545: a customer with no history anywhere gets one call (a mark, a call task, a timeline line; the status stays)
+  'newCustomer',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
@@ -184,6 +186,8 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   // PR 540: proposed while open; decided (let go) while open
   holdProposed: OPEN_STATES,
   holdProposalDecided: OPEN_STATES,
+  // PR 545: marked when it lands, while it is open
+  newCustomer: OPEN_STATES,
   // PR 542: "Send again" on an order waiting for its advance
   advanceResend: ['AWAITING_ADVANCE'],
   // PR 541 (SIM-F-014, F-002): a courier is booked for a confirmed order not yet handed over (the status stays; S08's

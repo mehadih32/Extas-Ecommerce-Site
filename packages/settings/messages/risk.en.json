@@ -100,6 +100,14 @@
     "learning": {
       "label": "Learn from the team's decisions",
       "help": "Every decision a person takes on what the engine stopped or proposed is kept with its note. When on, Reports › Decisions & learning shows, per rule and per person, how often people let the engine's stop go or kept it and how the orders let go ended; a rule decided often enough that people mostly let go (or mostly keep) gets a suggestion, and an open review shows what people did with ones like it. It only suggests: no rule changes by itself. Also how many days it reads, the fewest decisions before it says anything, the share for a suggestion and the most decisions one report reads. Off as shipped."
+    },
+    "newCustomer": {
+      "label": "Call a new customer once",
+      "help": "When on, a customer with no earlier order anywhere in the shop — not by this number in any form, the account, or the same person under another number — gets one call on the first order (Orders › Calls to make), a \"New customer\" mark and a timeline line. Never a hold, a decline or an advance, and it adds nothing to the risk score. Prepaid orders get the call only when \"prepaid\" is on. Off as shipped."
+    },
+    "callOutcomes": {
+      "label": "Call outcomes",
+      "help": "What a person records after a call on Orders › Calls to make, each with its English and Bengali words and whether it closes the call; the others keep the call in the list for the next try. Recording a call never changes the order."
     }
   },
   "defaults": {

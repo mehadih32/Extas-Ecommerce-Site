@@ -1,0 +1,52 @@
+{
+  "cl": {
+    "metaTitle": "Calls to make",
+    "title": "Calls to make",
+    "sub": "{n} calls waiting · the longest wait first",
+    "subNone": "No call is waiting",
+    "subClosed": "Calls already made, newest first",
+    "statusAria": "Waiting or made",
+    "reasonAria": "Calls by reason",
+    "all": "All reasons",
+    "open": "Waiting",
+    "closed": "Made",
+    "empty": "Nothing here. A call lands in this list when an order needs a person to phone the customer.",
+    "noOrder": "No order",
+    "waiting": "Waiting {age}",
+    "tried": "Tried · {outcome}",
+    "closedAt": "{outcome} · {at}",
+    "notes": "Notes",
+    "openOrder": "Open order",
+    "more": "Show more",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "discard": "Discard",
+    "unsaved": "Unsaved changes",
+    "cardReadOnly": "Changing this needs the risk rules permission.",
+    "pairHelp": "Write each outcome's name in both English and Bengali.",
+    "err": {
+      "STALE": "Someone saved this card while you were looking. It has been loaded again — check it and save once more.",
+      "INVALID_INPUT": "Something here is not valid. Check the marked field.",
+      "FORBIDDEN": "You do not have permission to change this.",
+      "forbidden": "You do not have permission to change this.",
+      "unauthorized": "Your sign-in ended. Sign in again.",
+      "network": "No connection. Try again.",
+      "other": "It could not be saved. Try again."
+    },
+    "nc": {
+      "h": "New customer: one call",
+      "d": "A customer with no earlier order anywhere in the shop — not by this number, the account or the same person under another number — gets one call on the first order. Never a hold, a decline or an advance; it adds nothing to the risk score.",
+      "enabled": "Call a new customer once",
+      "prepaid": "Prepaid orders too",
+      "prepaidHelp": "Off: only orders paid at the door get the call (a paid order needs no call)."
+    },
+    "oc": {
+      "h": "Call outcomes",
+      "d": "What a person can record after a call. Rename them in both languages, and tick the ones that close the call.",
+      "en": "{name} — in English",
+      "bn": "{name} — in Bengali",
+      "done": "These close the call (the others keep it for the next try)"
+    }
+  }
+}

@@ -1,5 +1,35 @@
 {
   "orders": {
+    "call": {
+      "reason": {
+        "ADDRESS_UNCLEAR": "Address unclear",
+        "CHARGE_NOT_SET": "Delivery charge not set",
+        "ADDRESS_CHECK": "Check the address",
+        "PAYMENT_FAILED": "Payment failed",
+        "HOLD_REVIEW": "On hold too long",
+        "ADVANCE_OVERDUE": "Advance overdue",
+        "DUPLICATE_CHECK": "Another order running",
+        "ADDRESS_CHANGED": "Address changed",
+        "TWO_SIZE": "Two sizes of one piece",
+        "SELF_CONFIRM_NO_REPLY": "No reply to the WhatsApp",
+        "SELF_CONFIRM_CHANGE": "Wants to change the order",
+        "SELF_CONFIRM_CANCEL": "Wants to cancel",
+        "PACKING_ISSUE": "Packing problem",
+        "NEW_CUSTOMER": "New customer"
+      },
+      "record": {
+        "label": "Record call",
+        "title": "What did the call find?",
+        "sub": "{number} · {name} · {phone}",
+        "outcome": "Outcome",
+        "note": "Note (optional)",
+        "notePh": "What the customer said",
+        "ok": "Save",
+        "done": "Saved",
+        "closes": "These outcomes close the call: {list}. Any other keeps it in the list for the next try.",
+        "nothingElse": "Nothing else changes: confirm, hold or cancel the order from its own page."
+      }
+    },
     "learn": {
       "rule": {
         "dup": "Duplicate check (older reviews)",
@@ -181,7 +211,8 @@
       "bundle": "One parcel?",
       "blockProposal": "Proposed for blocklist",
       "goodCustomer": "Good customer",
-      "holdProposed": "Hold proposed"
+      "holdProposed": "Hold proposed",
+      "newCustomer": "New customer"
     },
     "page": {
       "all": "All orders",
@@ -747,6 +778,10 @@
       },
       "order_holdProposed": "Hold proposed",
       "order_holdProposalDecided": "Proposed hold let go",
+      "order_newCustomer": "New customer: one call",
+      "newCustomer": "no earlier order anywhere in the shop — a call, never a hold",
+      "order_callOutcome": "Call recorded",
+      "callOutcome": "{reason}: {outcome}",
       "holdProposed": "{rule} wanted to hold it: {reason}",
       "gateRule": {
         "duplicateHold": "The duplicate check",
@@ -755,6 +790,7 @@
       }
     },
     "band": {
+      "newCustomer": "A new customer — no earlier order anywhere in the shop. Call once before confirming; nothing is held or asked in advance.",
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
       "cancelRequest": "The customer asked to cancel: “{why}” · {age}",
       "hold": "On hold: {reason} · {age}",

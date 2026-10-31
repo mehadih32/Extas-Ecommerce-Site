@@ -5,6 +5,7 @@
 // keys allow, each with its "what will happen" lines and the fields it needs. Nothing moves money, changes a price, a
 // discount or COD, or blocks anyone; a paid order's cancel says it records a refund REQUEST for the owner, nothing more.
 import type { PermissionKey } from '@extas/auth';
+import type { CallOutcomes } from '@extas/settings';
 import * as od from '@extas/orders';
 import { openCheckOf, returnReasonOf } from '@extas/shipping';
 import { targetOf, type OrderCommand, type OrderState } from '@extas/orders/pure';
@@ -17,6 +18,7 @@ import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
 import { alertExplainView, duplicateCheckSummary, type AlertExplainView } from './alert';
 import { learnedLine } from '../admin-reports/learning-view';
+import { outcomeLabel, reasonLabel, recordSpec } from './calls-view';
 import { identitySummary } from './identity';
 import { blocklistSummary } from './blocklist-card';
 import { refuserSummary } from './refusers-card';
@@ -460,6 +462,13 @@ export function goodCustomerLine(view: AdminView, data: unknown): string | null 
   return t(view.dict, 'orders.ev.goodCustomer', { skipped: t(view.dict, `orders.ev.gcSkip.${x.skipped}`), delivered: String(x.delivered ?? 0), refused: String(x.refused ?? 0) });
 }
 
+/** PR 545: a recorded call's line — its reason and the outcome's name from the owner's list (by its code when gone). */
+export function callOutcomeLine(view: AdminView, data: unknown, outcomes: CallOutcomes): string | null {
+  const x = (data ?? {}) as { reason?: unknown; outcome?: unknown };
+  if (typeof x.reason !== 'string' || typeof x.outcome !== 'string') return null;
+  return t(view.dict, 'orders.ev.callOutcome', { reason: reasonLabel(view.dict, x.reason), outcome: outcomeLabel(outcomes, x.outcome, view.lang === 'bn' ? 'bn' : 'en') });
+}
+
 /** PR 540: where "Hold" and "Let it go" send (the risk API; it checks `orders.hold` again). */
 const HOLD_PROPOSAL_URL = '/api/admin/risk/hold-proposals';
 
@@ -561,6 +570,8 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.goodCustomer': 'mute',
   'order.holdProposed': 'warn',
   'order.holdProposalDecided': 'mute',
+  'order.newCustomer': 'warn',
+  'order.callOutcome': 'mute',
   'order.hold': 'warn',
   'order.cancelAfterBooking': 'warn',
   'order.requestCancel': 'warn',
@@ -679,7 +690,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const editable = detail.allowed.includes('edit') && perms.has('orders.edit');
   // PR 146: the two-size question, while it is open and the order may still change
   const askTwoSize = o.flags.includes('TWO_SIZES') && detail.allowed.includes('twoSizeAnswer') && perms.has('orders.edit');
-  const [extras, history, reasons, names, matchedRows, noteMax, choices] = await Promise.all([
+  // PR 545: the owner's call outcomes (a recorded call's line, and "Record call" on the new-customer band)
+  const [extras, history, reasons, names, matchedRows, noteMax, choices, outcomes] = await Promise.all([
     od.listExtras(deps, who, [o.id]),
     od.orderHistory(deps, who, o.id, HISTORY_SHOWN),
     od.reasonLists(deps, who.storeId),
@@ -687,6 +699,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     od.orderNumbers(deps, who, matchedIds),
     deps.settings.value('orders.notes.maxChars', { storeId: who.storeId }) as Promise<number>,
     editable ? od.editChoices(deps, who, o.id) : Promise.resolve(null),
+    deps.settings.value('orders.callOutcomes', { storeId: who.storeId }) as Promise<CallOutcomes>,
   ]);
   const twoSize = askTwoSize ? await od.twoSizeQuestions(deps, who, o.id) : [];
   // PR 525: an open true-delivery check (the courier said delivered, our records say it came back)
@@ -854,10 +867,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const named = t(d, key);
       // PR 521: when the duplicate rules ran, their line replaces the bare reason code
       const ruled = e.type === 'order.duplicateCheck' ? duplicateCheckSummary(view, e.data) : null;
-      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || e.type === od.REFUSER_EVENT || e.type === od.GOOD_CUSTOMER_EVENT || e.type === od.HOLD_PROPOSED_EVENT || e.type === od.HOLD_DECIDED_EVENT || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
+      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || e.type === od.REFUSER_EVENT || e.type === od.GOOD_CUSTOMER_EVENT || e.type === od.HOLD_PROPOSED_EVENT || e.type === od.HOLD_DECIDED_EVENT || e.type === od.NEW_CUSTOMER_EVENT || e.type === od.CALL_OUTCOME_EVENT || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
       const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
-      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : e.type === od.BLOCK_PROPOSAL_EVENT ? proposalLine(view, e.data) : e.type === od.GOOD_CUSTOMER_EVENT ? goodCustomerLine(view, e.data) : e.type === od.HOLD_PROPOSED_EVENT ? holdProposedLine(view, e.data, holdName) : ruled);
+      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : e.type === od.BLOCK_PROPOSAL_EVENT ? proposalLine(view, e.data) : e.type === od.GOOD_CUSTOMER_EVENT ? goodCustomerLine(view, e.data) : e.type === od.HOLD_PROPOSED_EVENT ? holdProposedLine(view, e.data, holdName) : e.type === od.NEW_CUSTOMER_EVENT ? t(d, 'orders.ev.newCustomer') : e.type === od.CALL_OUTCOME_EVENT ? callOutcomeLine(view, e.data, outcomes) : ruled);
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })
@@ -894,6 +907,12 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     bands.push({ id: 'blockProposal', kind: 'stale', text: t(d, 'orders.band.blockProposal', { n: String(open.rejections), refused: String(open.refused), declined: String(open.declined) }), specs: proposalSpecs(view, open.id, o.number, perms) });
   }
   // PR 540: the gate turned the engine's hold into a proposal; a person holds it or lets it go
+  // PR 545: a customer with no earlier order anywhere: while his call is open, the band and "Record call"
+  const newCall = o.flags.includes(od.NEW_CUSTOMER_FLAG) ? await od.openCallOf(deps, who.storeId, o.id, od.NEW_CUSTOMER_REASON) : null;
+  if (newCall) {
+    const spec = perms.has('orders.confirm') ? recordSpec(d, { taskId: newCall.taskId, number: o.number, name: o.customerName, phone: o.phone, reason: od.NEW_CUSTOMER_REASON }, outcomes, view.lang === 'bn' ? 'bn' : 'en') : null;
+    bands.push({ id: 'newCustomer', kind: 'stale', text: t(d, 'orders.band.newCustomer'), specs: spec ? [spec] : [] });
+  }
   const holdProp = o.flags.includes(od.HOLD_PROPOSED_FLAG) ? await od.holdProposalOf(deps, who.storeId, o.id) : null;
   if (holdProp) bands.push({ id: 'holdProposed', kind: 'stale', text: t(d, 'orders.band.holdProposed', { rule: t(d, `orders.ev.gateRule.${holdProp.rule}`), reason: holdName.get(holdProp.reasonKey) ?? holdProp.reasonKey }), specs: holdProposalSpecs(view, o.id, o.number, perms) });
   if (back && !back.reasonKey) {

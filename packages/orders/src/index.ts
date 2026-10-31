@@ -102,6 +102,8 @@ export * from './stop-report';
 export * from './approval-gate';
 // S06 · PR 543: the decision learning loop (learning.ts).
 export * from './learning';
+// S06 · PR 545: the new-customer verification queue (new-customer.ts; the call is recorded in calls.ts).
+export * from './new-customer';
 export * from './advance-request';
 export * from './advance-settings';
 export * from './booking';

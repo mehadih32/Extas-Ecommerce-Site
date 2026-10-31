@@ -55,6 +55,12 @@
 // often people let the engine's stop go or kept it, and how the orders let go ended; a rule decided at least
 // `minDecisions` times that people let go (or kept) at least `suggestPercent` of the time gets a suggestion for the
 // owner, and an open review shows what people did with ones like it. It suggests only: no rule changes by itself.
+// PR 545 (`risk.newCustomer`, `orders.callOutcomes`, version 109): the new-customer verification queue. While the switch
+// is on, a customer with no earlier order anywhere in the shop (the number in any of its forms, the account, the identity
+// and the identities merged into it) gets one call task (NEW_CUSTOMER), a "New customer" mark and a timeline line on the
+// first order — never a hold, a decline or an advance, and nothing on the risk score. A prepaid order gets no call unless
+// `prepaid` is on (SIM-F-020). The call outcomes are what a person records on Orders › Calls to make: each with its words
+// and whether it closes the call (the others keep the task for the next try). Off as shipped.
 import { z } from 'zod';
 import { setting } from './define';
 import { ORDER_CANCEL_CODES } from './registry-orders';
@@ -76,6 +82,8 @@ const V524R = 106;
 const V540 = 107;
 /** PR 543's version. */
 const V543 = 108;
+// PR 545: the new-customer call and the call outcomes
+const V545 = 109;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
 
@@ -220,6 +228,43 @@ export const riskLearningSchema = z
 export type RiskLearning = z.output<typeof riskLearningSchema>;
 export const RISK_LEARNING_DEFAULT: RiskLearning = { enabled: false, days: 90, minDecisions: 10, suggestPercent: 80, maxRows: 5000 }; // hardcode-ok: registry default (the owner changes it in the learning card)
 
+export const riskNewCustomerSchema = z
+  .object({
+    /** A customer with no earlier order anywhere in the shop gets a call task (NEW_CUSTOMER) and the "New customer" mark. */
+    enabled: z.boolean(),
+    /** Prepaid orders get the call too (off: only orders paid at the door, SIM-F-020). */
+    prepaid: z.boolean(),
+  })
+  .strict();
+export type RiskNewCustomer = z.output<typeof riskNewCustomerSchema>;
+export const RISK_NEW_CUSTOMER_DEFAULT: RiskNewCustomer = { enabled: false, prepaid: false };
+
+/** A call outcome's code: capitals, digits and _ (the call queue, `risk.history.noAnswerOutcomes`). */
+export const CALL_OUTCOME_KEY = /^[A-Z][A-Z0-9_]{1,39}$/;
+export const callOutcomesSchema = z
+  .array(
+    z
+      .object({
+        key: z.string().regex(CALL_OUTCOME_KEY),
+        en: z.string().trim().min(1).max(60),
+        bn: z.string().trim().min(1).max(60),
+        /** The outcome closes the call task; off, the task stays in the queue for the next try. */
+        done: z.boolean(),
+      })
+      .strict(),
+  )
+  .min(1)
+  .max(20)
+  .refine((xs) => new Set(xs.map((x) => x.key)).size === xs.length, { message: 'each outcome once' });
+export type CallOutcomes = z.output<typeof callOutcomesSchema>;
+export const CALL_OUTCOMES_DEFAULT: CallOutcomes = [
+  { key: 'SPOKE_OK', en: 'Spoke — all fine', bn: 'কথা হয়েছে — সব ঠিক', done: true },
+  { key: 'NO_ANSWER', en: 'No answer', bn: 'ফোন ধরেনি', done: false },
+  { key: 'CALL_LATER', en: 'Asked to call later', bn: 'পরে ফোন করতে বলেছে', done: false },
+  { key: 'WRONG_NUMBER', en: 'Wrong number', bn: 'ভুল নম্বর', done: true },
+  { key: 'NOT_ORDERED', en: 'Says he did not order', bn: 'বলছে অর্ডার করেনি', done: true },
+];
+
 export const riskS06Settings = {
   'risk.blocklist': setting({
     ...base,
@@ -309,5 +354,25 @@ export const riskS06Settings = {
     labelKey: 'risk.learning.label',
     helpKey: 'risk.learning.help',
     sortOrder: 338,
+  }),
+  'risk.newCustomer': setting({
+    ...base,
+    version: V545,
+    schema: riskNewCustomerSchema,
+    default: RISK_NEW_CUSTOMER_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.newCustomer.label',
+    helpKey: 'risk.newCustomer.help',
+    sortOrder: 339,
+  }),
+  'orders.callOutcomes': setting({
+    ...base,
+    version: V545,
+    schema: callOutcomesSchema,
+    default: CALL_OUTCOMES_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.callOutcomes.label',
+    helpKey: 'risk.callOutcomes.help',
+    sortOrder: 340,
   }),
 };

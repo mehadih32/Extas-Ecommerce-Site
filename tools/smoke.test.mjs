@@ -67,6 +67,28 @@ it('follow-up 200: every adminDiscover entry names a built admin page, a selecto
   expect(discovered(['/admin/orders/a1?x=1', '/admin/orders/a1', 'https://evil.test/admin/orders/b', '/admin/orders/b2'], 1)).toEqual(['/admin/orders/a1']);
 });
 
+/** Review R3 (admin M2): admin pages the smoke test does not open on their own, each with why. */
+const SMOKE_SKIP = {
+  '/admin/login': 'the sign-in page: the smoke test signs in through it, and a signed-in visit only sends it on',
+};
+
+it('review R3 (admin M2): every static admin page is opened by the smoke test, or is on the skip list with a reason', async () => {
+  const { readdirSync } = await import('node:fs');
+  const config = JSON.parse(readFileSync(new URL('../docs/qa/smoke.json', import.meta.url), 'utf8'));
+  const listed = new Set(config.admin.map((p) => p.split('?')[0]));
+  const root = new URL('../apps/web/src/app/admin/', import.meta.url);
+  const pages = readdirSync(root, { recursive: true })
+    .map((f) => String(f).split(/[\\/]/).join('/'))
+    .filter((f) => /(^|\/)page\.tsx$/.test(f) && !f.includes('['))
+    .map((f) => `/admin/${f.replace(/(^|\/)page\.tsx$/, '')}`.replace(/\/\([^)]*\)/g, '').replace(/\/$/, ''));
+  expect(pages.length).toBeGreaterThan(50);
+  for (const p of pages) expect(listed.has(p) || p in SMOKE_SKIP, `${p} is in neither docs/qa/smoke.json admin nor SMOKE_SKIP`).toBe(true);
+  for (const [p, why] of Object.entries(SMOKE_SKIP)) {
+    expect(pages, p).toContain(p);
+    expect(why.length, p).toBeGreaterThan(10);
+  }
+});
+
 it('PR 155: Sales and Ordered value each show once, with a label and a figure, and never as the same figure', () => {
   const sel = ['[data-testid=cb-kpi-ordered]', '[data-testid=cb-kpi-sales]'];
   const ok = [[{ label: 'Ordered value', value: '৳0' }], [{ label: 'Sales (delivered)', value: '৳0' }]];

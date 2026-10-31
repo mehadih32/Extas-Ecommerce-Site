@@ -26,6 +26,8 @@
     "bnShort": "বাং"
   },
   "nav": {
+    "ordersConfirm": "কনফার্ম বাকি",
+    "ordersCalls": "যাদের ফোন করতে হবে",
     "products": "প্রোডাক্ট",
     "publishQueue": "চালুর অপেক্ষায়",
     "server": "সার্ভার",

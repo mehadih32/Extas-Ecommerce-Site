@@ -156,6 +156,8 @@ export function flagChips(view: AdminView, r: od.OrderRow, labels: ListLabels): 
   if (r.flags.includes(od.GOOD_CUSTOMER_FLAG)) out.push({ label: t(d, 'orders.flag.goodCustomer'), tone: 'ok' });
   // PR 540: the gate turned the engine's hold into a proposal (a person holds it or lets it go)
   if (r.flags.includes(od.HOLD_PROPOSED_FLAG) && od.HOLDABLE_PROPOSALS.includes(r.status)) out.push({ label: t(d, 'orders.flag.holdProposed'), tone: 'warn' });
+  // PR 545: a customer with no earlier order anywhere: one call (never a hold)
+  if (r.flags.includes(od.NEW_CUSTOMER_FLAG)) out.push({ label: t(d, 'orders.flag.newCustomer'), tone: 'info' });
   if (r.orderGroupId) out.push({ label: t(d, 'orders.flag.merged'), tone: 'info' });
   for (const f of r.internalFlags) out.push({ label: labels.flags.get(f) ?? f, tone: 'gold' });
   if (r.source !== 'WEBSITE') out.push({ label: t(d, `orders.source.${r.source}`), tone: 'line' });

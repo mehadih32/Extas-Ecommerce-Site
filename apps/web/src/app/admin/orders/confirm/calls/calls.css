@@ -1,0 +1,20 @@
+/* S06 · PR 545 — Orders › To confirm › Calls to make: the reason chips (they wrap), one card per call (the reason and its
+   wait, the order and who to phone, the notes, the actions). The shell's tokens only; the order number and the phone
+   take a full tap. */
+.adm2 .cl-reasons{flex-wrap:wrap;margin-top:8px}
+.adm2 .cl-list{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.adm2 .cl-row{margin:0;display:flex;flex-direction:column;gap:8px}
+.adm2 .cl-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.adm2 .cl-state.warn{color:var(--warn);font-weight:600}
+.adm2 .cl-state.mute{color:var(--mute)}
+.adm2 .cl-state.ok{color:var(--ok)}
+.adm2 .cl-who{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.adm2 .cl-num{display:inline-flex;align-items:center;min-height:44px;min-width:44px;font-weight:600;white-space:nowrap}
+.adm2 .cl-name{font-weight:600}
+.adm2 .cl-tel{white-space:nowrap}
+.adm2 .cl-notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px}
+.adm2 .cl-acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:767px){
+  .adm2 .cl-acts{justify-content:stretch}
+  .adm2 .cl-acts>*{flex:1 1 auto}
+}
