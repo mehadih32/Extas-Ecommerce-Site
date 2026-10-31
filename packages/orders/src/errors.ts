@@ -33,6 +33,8 @@ export type OrdersErrorCode =
   | 'COD_LIMIT'
   /** PR 142: the edit changes nothing (every field is as stored). */
   | 'NOTHING_CHANGED'
+  /** Review R1 (M2): the checkout fixed this order's delivery charge; only its place may still be set. */
+  | 'CHARGE_FIXED'
   /** PR 142: the phone is not a Bangladeshi mobile number (`data.reason`: empty, prefix, length). */
   | 'BAD_PHONE'
   /** PR 142: a size is changed only to another size (or colour) of the same piece. */
@@ -133,6 +135,7 @@ export class OrdersError extends Error {
       case 'CANCEL_NOT_ALLOWED':
       case 'ADVANCE_SHORT':
       case 'PAYMENT_DUE':
+      case 'CHARGE_FIXED':
       case 'NOT_MERGEABLE':
       case 'ADD_ON_CLOSED':
       case 'ADD_ON_LIMIT':

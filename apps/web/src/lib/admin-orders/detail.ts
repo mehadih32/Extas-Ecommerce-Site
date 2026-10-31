@@ -34,6 +34,7 @@ export const COMMAND_PERM: Readonly<Record<CommandId, PermissionKey>> = {
   notes: 'orders.notes',
   edit: 'orders.edit',
   twoSize: 'orders.edit',
+  deliveryArea: 'orders.edit',
   riskAssess: 'orders.risk.decide',
   advanceRequest: 'orders.advance.request',
   advanceResend: 'orders.advance.request',
@@ -53,6 +54,7 @@ export const DO_PERM: Readonly<Record<string, PermissionKey>> = {
   flags: 'orders.notes',
   edit: 'orders.edit',
   phone: 'orders.edit',
+  deliveryArea: 'orders.edit',
   riskAssess: 'orders.risk.decide',
   advanceRequest: 'orders.advance.request',
   advanceResend: 'orders.advance.request',
@@ -190,6 +192,8 @@ export interface EditStart {
   note: string | null;
   lines: { id: string; label: string; size: string | null; colour: string | null }[];
   choices: od.EditChoice[];
+  /** Review R1 (M2): the store's switched-on bands, offered only while the checkout left the charge unsettled. */
+  bands?: { id: string; label: string }[];
 }
 
 /** PR 142 — "Edit items & address" and "Correct phone (logged)" (demo V12.3 a2o-edit, a2o-phone): one route, two dialogs. */
@@ -239,6 +243,17 @@ export function editSpecs(view: AdminView, o: { id: string; number: string; vers
       ],
     }),
     base('phone', { icon: 'phone', effects: [t(d, 'orders.eff.editLog'), t(d, 'orders.eff.phoneNext')], fields: [phone, reason('wrong-phone'), channel, note] }),
+    // review R1 (M2): "Set delivery area" — the band (its own charge from Delivery) of an address the checkout could not settle
+    ...(start.bands?.length
+      ? [
+          base('deliveryArea', {
+            icon: 'truck',
+            url: commandUrl(o.id, 'deliveryArea'),
+            effects: [t(d, 'orders.eff.areaCharge'), t(d, 'orders.eff.areaCall'), t(d, 'orders.eff.editLog')],
+            fields: [{ name: 'bandId', kind: 'select', label: t(d, 'orders.dlg.band'), options: start.bands.map((b) => ({ value: b.id, label: b.label })), required: true }, reason('address-detail'), channel, note],
+          }),
+        ]
+      : []),
   ];
 }
 
@@ -586,6 +601,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
         note: o.note,
         lines: detail.items.filter((i) => i.status === 'ACTIVE').map((i) => ({ id: i.id, label: `${i.productName} × ${formatNumber(i.quantity, view.locale)}`, size: i.sizeLabel, colour: i.colourName })),
         choices,
+        // review R1 (M2): an address or charge the checkout could not settle — the team sets the band after the call
+        ...((detail.order as unknown as { chargeFixed?: boolean }).chargeFixed === false
+          ? { bands: (await deps.db.deliveryBand.findMany({ where: { storeId: who.storeId, enabled: true, archivedAt: null }, orderBy: [{ sortOrder: 'asc' }, { key: 'asc' }], select: { id: true, nameEn: true, nameBn: true, chargeMinor: true } })).map((b) => ({ id: b.id, label: `${view.locale.startsWith('bn') && b.nameBn ? b.nameBn : b.nameEn} · ${m(b.chargeMinor)}` })) }
+          : {}),
       }
     : null;
   const specs = commandSpecs(view, { ...o, paidMinor: detail.money.paidMinor + detail.money.walletAppliedMinor }, detail.allowed, perms, reasons, editStart);
