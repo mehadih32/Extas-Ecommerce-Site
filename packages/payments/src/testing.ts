@@ -59,9 +59,11 @@ export async function setUpPayments(label: string): Promise<PaymentsFixture> {
   const [A, B] = await seedSampleStores(t.prisma);
   await syncAuth(t.prisma);
   const overrides = new Map<string, unknown>();
+  // as on the staging host and CI's sample store: the practice gateway answers (test payments ship off, review R1 B1)
+  const baseline = new Map<string, unknown>([['payments.testPayments', true]]);
   const settings: SettingsReader = {
     async value<K extends Key>(key: K): Promise<Value<K>> {
-      return (overrides.has(key) ? overrides.get(key) : registry[key].default) as Value<K>;
+      return (overrides.has(key) ? overrides.get(key) : baseline.has(key) ? baseline.get(key) : registry[key].default) as Value<K>;
     },
   };
   const clock = { now: new Date('2026-10-24T06:00:00Z') };

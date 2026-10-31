@@ -10,6 +10,7 @@
 // reward falls back to the amount or the percentage. The page shows it next to each prepaid option; switching back to
 // Cash on Delivery takes it away.
 import type { CARD_TYPES, MOBILE_WALLETS, Value } from '@extas/settings';
+import { percentCut } from '@extas/rules/pure';
 import { z } from 'zod';
 import { setting, type CheckoutDeps } from './context';
 import { PAY_METHODS, type PayMethod } from './pure';
@@ -65,12 +66,14 @@ export interface PaySettings {
     amountMinor: number | null;
     percent: number | null;
     maxMinor: number | null;
+    /** Review R1 (M5): `checkout.money.roundingStepMinor`. */
+    roundingStepMinor?: number;
   };
 }
 
-export async function paySettings(deps: Pick<CheckoutDeps, 'settings'>, storeId: number): Promise<PaySettings> {
+export async function paySettings(deps: Pick<CheckoutDeps, 'settings' | 'paymentMode'>, storeId: number): Promise<PaySettings> {
   const s = <K extends Parameters<typeof setting>[2]>(k: K) => setting(deps, storeId, k);
-  const [cod, mobileOn, mobile, cardOn, card, online, enabled, type, fallback, amountMinor, percent, maxMinor] = await Promise.all([
+  const [cod, mobileOn, mobile, cardOn, card, online, enabled, type, fallback, amountMinor, percent, maxMinor, testOn] = await Promise.all([
     s('payment.cod.enabled'),
     s('checkout.pay.mobile.enabled'),
     s('checkout.pay.mobile.list'),
@@ -83,13 +86,26 @@ export async function paySettings(deps: Pick<CheckoutDeps, 'settings'>, storeId:
     s('checkout.prepaidReward.amountMinor'),
     s('checkout.prepaidReward.percent'),
     s('checkout.prepaidReward.maxMinor'),
+    s('payments.testPayments'),
   ]);
+  const roundingStepMinor = await s('checkout.money.roundingStepMinor');
+  // Review R1 (security B1): while test payments are off, a method whose gateway is still the practice one is never
+  // offered — on a live shop nobody can reach the practice "paid" button. A gateway that cannot be read counts as practice.
+  const real = async (provider: string) => {
+    if (testOn) return true;
+    try {
+      return deps.paymentMode ? (await deps.paymentMode(storeId, provider)) !== 'MOCK' : false;
+    } catch {
+      return false;
+    }
+  };
+  const keep = async <T extends string>(list: readonly T[]) => (await Promise.all(list.map(async (x) => ((await real(x)) ? [x] : [])))).flat();
   return {
     cod: cod === true,
-    mobile: mobileOn ? [...mobile] : [],
-    card: cardOn ? [...card] : [],
-    online,
-    reward: { enabled: enabled === true, type, fallback, amountMinor, percent, maxMinor },
+    mobile: mobileOn ? await keep(mobile) : [],
+    card: cardOn ? await keep(card) : [],
+    online: online && (await real('online')),
+    reward: { enabled: enabled === true, type, fallback, amountMinor, percent, maxMinor, roundingStepMinor },
   };
 }
 
@@ -121,7 +137,8 @@ export function rewardOf(r: PaySettings['reward'], o: { itemsMinor: number; deli
   if (kind === 'amount') return r.amountMinor ? { kind, amountMinor: Math.min(r.amountMinor, o.itemsMinor) } : null;
   if (kind === 'percent') {
     if (!r.percent) return null;
-    const off = Math.floor((o.itemsMinor * r.percent) / 100);
+    // review R1 (M5): rounded up to the store's step, so the total stays an amount a rider can collect
+    const off = percentCut(o.itemsMinor, r.percent, r.roundingStepMinor ?? 1);
     const capped = r.maxMinor ? Math.min(off, r.maxMinor) : off;
     return capped > 0 ? { kind, amountMinor: capped } : null;
   }

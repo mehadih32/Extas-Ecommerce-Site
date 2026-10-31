@@ -95,6 +95,20 @@ describe.skipIf(!HAS_TEST_DB)('PR 170 · payment callbacks, the sweep and SIM-F-
     expect(await code(startPayment(f.deps({ gateways: mockGateways }), { storeId: f.A, paymentId: p.id, callbackBaseUrl: BASE }))).toBe('NOT_OPEN');
   });
 
+  it('review R1 (security B1): with test payments off the practice gateway’s callback is refused — nobody forges "paid"', async () => {
+    const { o, p } = await prepaid('G-3010');
+    f.overrides.set('payments.testPayments', false);
+    try {
+      const r = await receiveCallback(f.deps({ gateways: mockGateways }), { provider: 'bkash', params: mockCallback('bkash', BASE, p.id, 'success') });
+      expect(r).toMatchObject({ code: 'INVALID', paymentId: null });
+      expect(await f.t.prisma.webhookEvent.findUniqueOrThrow({ where: { id: r.eventId! } })).toMatchObject({ signatureValid: false, status: 'IGNORED', error: 'practice gateway off' });
+      expect(await paymentOf(p.id)).toMatchObject({ status: 'INITIATED' });
+      expect((await orderOf(o.id)).paidMinor).toBe(0);
+    } finally {
+      f.overrides.delete('payments.testPayments');
+    }
+  });
+
   it('a repeated callback is one payment; a forged one is stored and never processed', async () => {
     const { o, p } = await prepaid('G-3002');
     const d = f.deps({ gateways: mockGateways });
@@ -167,7 +181,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 170 · payment callbacks, the sweep and SIM-F-
     const { o, p } = await prepaid('G-3007');
     await startPayment(d, { storeId: f.A, paymentId: p.id, callbackBaseUrl: BASE });
     g.s.confirm = new Error('socket hang up');
-    const r = await receiveCallback(d, { provider: 'bkash', params: g.params(p.id, 'TR-7', 'success') });
+    // review R1 (security m1): a gateway payment id of another session is refused before the gateway is asked
+    expect(await receiveCallback(d, { provider: 'bkash', params: g.params(p.id, 'TR-7', 'success') })).toMatchObject({ code: 'INVALID' });
+    const r = await receiveCallback(d, { provider: 'bkash', params: g.params(p.id, `TR-${p.id.slice(-6)}`, 'success') });
     expect(r).toMatchObject({ code: 'PENDING', status: 'PENDING' });
     expect(await f.t.prisma.webhookEvent.findUniqueOrThrow({ where: { id: r.eventId! } })).toMatchObject({ status: 'FAILED', error: expect.stringContaining('GATEWAY_ERROR') });
     // too early for the sweep
