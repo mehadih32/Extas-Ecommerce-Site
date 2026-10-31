@@ -16,6 +16,7 @@ import { ageText, flagChips, phoneText, statusChips, type Chip } from './list';
 import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
 import { alertExplainView, duplicateCheckSummary, type AlertExplainView } from './alert';
+import { learnedLine } from '../admin-reports/learning-view';
 import { identitySummary } from './identity';
 import { blocklistSummary } from './blocklist-card';
 import { refuserSummary } from './refusers-card';
@@ -96,6 +97,8 @@ export interface ReviewCard {
   specs: CommandSpec[];
   /** PR 521: why the alert fired, what matched, what the riders wrote, his history and the options (one click opens it). */
   explain: AlertExplainView | null;
+  /** PR 543: what the team did with reviews like this one (the learning on), or null. */
+  learned: string | null;
 }
 
 export interface OrderDetailView {
@@ -693,6 +696,9 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const explained = perms.has('orders.risk.read')
     ? await Promise.all(detail.reviews.map((r) => od.alertSummary(deps, who, r.id).catch(() => null)))
     : detail.reviews.map(() => null);
+  // PR 543: what the team did with reviews like the open ones (nothing when the learning is off)
+  const openReviews = perms.has('orders.risk.read') ? detail.reviews.filter((r) => r.status === 'OPEN') : [];
+  const learned = openReviews.length ? await od.learnedHints(deps, who.storeId, openReviews.map((r) => ({ alertId: r.id, kind: r.risk ? ('risk' as const) : ('duplicate' as const), summary: { section: r.section, rules: r.rules } }))) : new Map<string, od.LearnHint>();
   const x = extras[o.id];
   const holdName = new Map(reasons.hold.map((r) => [r.key, nameOf(view, r)]));
   const cancelName = new Map(reasons.cancel.map((r) => [r.key, nameOf(view, r)]));
@@ -829,6 +835,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       at: dt.format(r.createdAt),
       specs: r.status === 'OPEN' ? reviewSpecs(view, r.id, o.number, matched, perms, reasons, paidText, r.risk) : [],
       explain: sum ? alertExplainView(view, sum, { money: (minor) => m(minor), date: (at) => dt.format(at) }) : null,
+      learned: r.status === 'OPEN' ? learnedLine(d, learned.get(r.id), (n) => formatNumber(n, view.locale)) : null,
     };
   });
 

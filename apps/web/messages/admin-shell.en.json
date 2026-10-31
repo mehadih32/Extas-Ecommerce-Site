@@ -43,7 +43,8 @@
       "reports": {
         "health": "Site health",
         "fraud": "Fraud & RTO",
-        "stopped": "Stopped by the engine"
+        "stopped": "Stopped by the engine",
+        "learning": "Decisions & learning"
       },
       "settings": {
         "store": "Store details",

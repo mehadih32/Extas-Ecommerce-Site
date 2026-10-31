@@ -290,6 +290,12 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         guide: 'analytics',
         pages: [{ href: '/admin/reports/stopped', perm: 'risk.report', keys: ['reportsStopped'] }],
       },
+      // S06 · PR 543 — Decisions & learning: the team's decisions on the engine's stops, per rule and per person, and what they suggest.
+      {
+        id: 'learning',
+        guide: 'analytics',
+        pages: [{ href: '/admin/reports/learning', perm: 'risk.report', keys: ['reportsLearning'] }],
+      },
     ],
   },
   { id: 'ai', icon: 'spark', group: 'business', base: '/admin/ai', tabs: [], ownerOnly: true, guide: 'ai' },

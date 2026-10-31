@@ -18,6 +18,7 @@ import { holdWith } from './commands';
 import { BUNDLE_FLAG, BUNDLEABLE } from './bundling';
 import { isOrdersError, OrdersError } from './errors';
 import type { OrderState } from './pure';
+import { recordDecision } from './learning';
 import { execute, staffBy, type By } from './service';
 
 /** The order flag of a proposed hold (the team's screens show it, never the customer). */
@@ -98,6 +99,8 @@ export async function decideHoldProposal(deps: OrdersDeps, who: Who, orderId: st
       also: async (tx, o) => {
         const row = await tx.order.findUniqueOrThrow({ where: { id: o.id }, select: { flags: true } });
         await tx.order.update({ where: { id: o.id }, data: { flags: row.flags.filter((f) => f !== HOLD_PROPOSED_FLAG) } });
+        // PR 543: the decision log the learning reads
+        await recordDecision(tx, by, { storeId: ref.storeId, kind: 'holdProposal', decision: 'hold', orderId, note: d.note });
         return { proposal: p.rule };
       },
     });
@@ -109,6 +112,7 @@ export async function decideHoldProposal(deps: OrdersDeps, who: Who, orderId: st
     effect: async (tx, o) => {
       const row = await tx.order.findUniqueOrThrow({ where: { id: o.id }, select: { flags: true } });
       const flags = row.flags.filter((f) => f !== HOLD_PROPOSED_FLAG);
+      await recordDecision(tx, by, { storeId: ref.storeId, kind: 'holdProposal', decision: 'dismiss', orderId, note: d.note });
       return { data: { flags }, reasonCode: 'dismiss', message: d.note, eventData: { decision: 'dismiss', rule: p.rule }, audit: { before: { flags: row.flags }, after: { flags } } };
     },
   });

@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { REFUSER_TERMS, riskApprovalSchema, riskGoodCustomerSchema, riskStopReportSchema, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
+import { REFUSER_TERMS, riskApprovalSchema, riskLearningSchema, riskGoodCustomerSchema, riskStopReportSchema, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
 
 describe('S06 risk settings (v100–109)', () => {
   it('PR 162: the blocklist is in the registry at version 100, labelled in English and Bengali, off as shipped', () => {
@@ -132,5 +132,19 @@ describe('S06 risk settings (v100–109)', () => {
     expect(spec.default).toEqual({ gate: false, maxRows: 100 });
     expect(riskApprovalSchema.safeParse({ gate: true, maxRows: 50 }).success).toBe(true);
     expect(riskApprovalSchema.safeParse({ gate: true, maxRows: 5 }).success).toBe(false);
+  });
+
+  it('PR 543: the decision learning loop (108), labelled in both languages, off as shipped', () => {
+    const spec = riskS06Settings['risk.learning'];
+    expect(registry['risk.learning']).toBe(spec);
+    expect(spec.version).toBe(108);
+    expect(spec.isOwnerData).toBe(false);
+    for (const lang of ['en', 'bn'] as const) {
+      expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+      expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+    }
+    expect(spec.default).toEqual({ enabled: false, days: 90, minDecisions: 10, suggestPercent: 80, maxRows: 5000 });
+    expect(riskLearningSchema.safeParse({ ...spec.default, enabled: true, suggestPercent: 100 }).success).toBe(true);
+    for (const bad of [{ days: 6 }, { minDecisions: 2 }, { suggestPercent: 49 }, { maxRows: 99 }, { extra: 1 }]) expect(riskLearningSchema.safeParse({ ...spec.default, ...bad }).success, JSON.stringify(bad)).toBe(false);
   });
 });
