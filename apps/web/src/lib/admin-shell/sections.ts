@@ -249,7 +249,17 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     group: 'business',
     base: '/admin/reports',
     guide: 'analytics',
-    tabs: [{ id: 'health', guide: 'server', pages: [{ href: '/admin/server', perm: 'system.read', keys: ['server'] }] }],
+    // S21 · PR 413 — REP-07 the Site health hub first; the Server page (REP-07b) beside it.
+    tabs: [
+      {
+        id: 'health',
+        guide: 'server',
+        pages: [
+          { href: '/admin/reports/health', perm: 'health.read', keys: ['health'] },
+          { href: '/admin/server', perm: 'system.read', keys: ['server'] },
+        ],
+      },
+    ],
   },
   { id: 'ai', icon: 'spark', group: 'business', base: '/admin/ai', tabs: [], ownerOnly: true, guide: 'ai' },
   {

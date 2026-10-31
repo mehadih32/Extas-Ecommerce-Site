@@ -286,6 +286,9 @@ export const PERMISSIONS = {
   'support.reply': { group: 'support' },
   'support.assign': { group: 'support' },
   'support.settings': { group: 'support' },
+  // S21 · PR 413 (REP-07) — Reports › Site health: see the hub's status lines (customer problems, the server, speed, the
+  // site audit, the smoke test). Seeing only; no customer's name, phone or address is on these pages (CN-015).
+  'health.read': { group: 'health' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

@@ -55,6 +55,7 @@
     { "id": "money/books-closes", "route": "/admin/money/books/closes" },
     { "id": "money/books-daily", "route": "/admin/money/books/daily" },
     { "id": "money/costs", "route": "/admin/money/costs" },
+    { "id": "reports/health", "route": "/admin/reports/health" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "settings/store", "route": "/admin/settings/store" },
     { "id": "settings/policies", "route": "/admin/settings/policies" },

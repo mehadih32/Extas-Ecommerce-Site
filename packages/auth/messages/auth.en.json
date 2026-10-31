@@ -28,7 +28,8 @@
     "customers": "Customers",
     "seo": "Website and SEO",
     "books": "Books and the ERP account",
-    "support": "Support"
+    "support": "Support",
+    "health": "Site health"
   },
   "permissions": {
     "settings": {
@@ -238,6 +239,9 @@
       "reply": "Reply, write internal notes, take a conversation, mark it solved",
       "assign": "Give a conversation to someone else",
       "settings": "Change Support settings"
+    },
+    "health": {
+      "read": "See Site health: customer problems, the server, speed, the site audit and the smoke test (no customer's details)"
     }
   },
   "totp": {

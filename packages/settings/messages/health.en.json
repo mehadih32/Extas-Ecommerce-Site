@@ -1,0 +1,8 @@
+{
+  "health": {
+    "hub": {
+      "label": "Site health: when a line turns yellow",
+      "help": "The Site health page shows one line each for customer problems, the server, speed, the site audit and the smoke test. A line turns yellow when the server's health check is later than these minutes, the home page answers slower than these milliseconds, or the last smoke test is older than these hours. It only changes how the lines are judged, nothing on the server."
+    }
+  }
+}

@@ -73,6 +73,7 @@ import { adminAccessSettings } from './registry-admin-access';
 import { erpRetailSettings } from './registry-erp-retail';
 import { privacySettings } from './registry-privacy';
 import { edgeSettings } from './registry-edge';
+import { healthSettings } from './registry-health';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1286,6 +1287,8 @@ export const registry = {
   ...privacySettings,
   // ---- S18 · PR 386 · the shop's own rules at Cloudflare, limited to its host names; sent by hand (registry-edge.ts, version 80). ----
   ...edgeSettings,
+  // ---- S21 · PR 413 · the Site health hub: when a status line turns yellow (registry-health.ts, version 81). ----
+  ...healthSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
