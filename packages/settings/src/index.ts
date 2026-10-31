@@ -70,6 +70,8 @@ export * from './registry-returns-v6';
 export * from './registry-switchover';
 // S19 · PR 395, 507 — the backups (registry-backups.ts, versions 75–76).
 export * from './registry-backups';
+// CN-033 — the shop follows the ERP's retail decisions of 30 Oct 2026 (registry-erp-retail.ts, version 72).
+export * from './registry-erp-retail';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

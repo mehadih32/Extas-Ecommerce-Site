@@ -70,6 +70,7 @@ import { seoReachSettings } from './registry-seo-reach';
 import { webSecuritySettings } from './registry-web-security';
 import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
+import { erpRetailSettings } from './registry-erp-retail';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1277,6 +1278,8 @@ export const registry = {
   ...adminAccessSettings,
   // ---- S19 · PR 395, 507 (CN-030) · the backups: the Drive folder and copies kept, the schedule, retention, alerts and the monthly restore drill (registry-backups.ts, versions 75–76). ----
   ...backupsSettings,
+  // ---- CN-033 · PR 610, 614, 619, 621 · the shop follows the ERP's retail decisions of 30 Oct 2026: the switch-over way (fresh start or the ERP's list) (registry-erp-retail.ts, version 72). ----
+  ...erpRetailSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

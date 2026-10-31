@@ -91,7 +91,9 @@
         "backfill": "Days filled from the ERP's cost of goods",
         "queuedV5": "Old order messages still waiting",
         "legacy": "Old return switches to turn off",
-        "noneWord": "None"
+        "noneWord": "None",
+        "mode": "The way",
+        "freshNote": "Not on a fresh start: moved orders, the one transfer, and days filled from the ERP's cost of goods."
       },
       "kind": {
         "NOT_OUT": "Not sent out yet",
@@ -110,7 +112,23 @@
       "confirmDate": "Type the ERP's switch date",
       "pin": "Owner's PIN",
       "goDone": "The store has switched.",
-      "ownerOnly": "Only the owner can switch a store."
+      "ownerOnly": "Only the owner can switch a store.",
+      "subFresh": "This store switches as a fresh start (the ERP's decision of 30 Oct 2026: it does not move old website orders and has no cost of goods for the days before). On the switch day the store moves to the new contract with nothing carried over: no moved orders, an opening balance of 0, no transfer, no days filled before. Customer payments and ad spend stop going to the ERP, and the old return switches turn off (never deleted). First a dry run, then the owner switches with his PIN.",
+      "dryRunWarnFresh": "Asks the ERP only who it is and shows what the switch would do today. Nothing changes.",
+      "confirmDateFresh": "Type the switch date shown above",
+      "mode": {
+        "now": "How this store switches:",
+        "fresh-start": "Fresh start",
+        "erp-list": "The ERP's list",
+        "fresh-startHint": "No moved orders, opening balance 0, no transfer, no days filled before. The switch date is the day of the dry run. This is the way that works with the ERP today.",
+        "erp-listHint": "The earlier way: the ERP sends its list of moved old orders, the opening balance, the one transfer and the cost of goods. Use it only if the ERP offers those.",
+        "field": "The way",
+        "change": "Change the way",
+        "busy": "Saving…",
+        "send": "Save",
+        "warn": "Only the owner, and only before the switch. Run the dry run again afterwards: a dry run of the other way does not count.",
+        "done": "Saved."
+      }
     },
     "blocker": {
       "NO_OWN_CONNECTION": "This store's own ERP keys are not saved yet (above).",

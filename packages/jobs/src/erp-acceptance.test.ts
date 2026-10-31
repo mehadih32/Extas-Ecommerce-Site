@@ -3,18 +3,19 @@
 // `erp.acceptance.demoWrites` is on; the report page carries a Bengali line for the owner and never the key.
 // qa-gate B2: the vault is opened only when the demo key is listed, and a database that cannot be read (down, or its
 // tables not the ones this version knows) is "not run" with a reason, never a failure.
+// CN-033: the switch-over reads the ERP does not build are "not built in the ERP" on a fresh start (`erp.switchOver.mode`).
 import { describe, expect, it } from 'vitest';
 import { ERP_ACCEPTANCE_DEMO_KEY, MockErpWorld, seedAcceptanceStyle } from '@extas/adapters';
 import { demoAcceptancePage, errorLine, runDemoAcceptance, type DemoAcceptanceDeps } from './erp-acceptance';
 
 const T0 = new Date('2026-10-30T04:00:00Z');
 
-function deps(o: { key: string | null; writes?: boolean; vault?: boolean; revoked?: boolean }, w = new MockErpWorld()) {
+function deps(o: { key: string | null; writes?: boolean; vault?: boolean; revoked?: boolean; mode?: string }, w = new MockErpWorld()) {
   w.now = () => T0;
   const asked: string[] = [];
   const listed: string[] = [];
   const calls: string[] = [];
-  const values: Record<string, unknown> = { 'erp.acceptance.demoBaseUrl': 'https://demo.example.test', 'erp.acceptance.timeoutSeconds': 5, 'erp.acceptance.demoWrites': o.writes ?? false };
+  const values: Record<string, unknown> = { 'erp.acceptance.demoBaseUrl': 'https://demo.example.test', 'erp.acceptance.timeoutSeconds': 5, 'erp.acceptance.demoWrites': o.writes ?? false, 'erp.switchOver.mode': o.mode };
   const d: DemoAcceptanceDeps = {
     settings: { value: async (k) => values[k] },
     vault:
@@ -113,8 +114,27 @@ describe('PR 621 · the acceptance run against the demo ERP', () => {
     const o = await runDemoAcceptance(deps({ key: w.defaultKey, writes: true }, w).d);
     if (o.state !== 'RAN') throw new Error('expected a run');
     expect(o.report.failed).toBe(0);
-    expect(o.report.results.filter((r) => r.status === 'SKIP').every((r) => r.kind === 'driver')).toBe(true);
+    expect(o.report.results.filter((r) => r.status === 'SKIP').every((r) => r.kind === 'driver' || r.note?.startsWith('not built in the ERP'))).toBe(true);
     expect(w.v6().orders.size).toBeGreaterThan(0);
+  });
+
+  it('CN-033: as it ships (a fresh start) the switch-over reads are "not built in the ERP" and never asked; the ERP`s list reads them', async () => {
+    const w = new MockErpWorld();
+    seedAcceptanceStyle({ world: w });
+    for (const mode of [undefined, 'fresh-start']) {
+      const x = deps({ key: w.defaultKey, mode }, w);
+      const o = await runDemoAcceptance(x.d);
+      if (o.state !== 'RAN') throw new Error('expected a run');
+      const s = Object.fromEntries(o.report.results.map((r) => [r.id, r]));
+      for (const id of ['switchOver.read', 'costOfGoods.read']) expect([id, s[id]!.status, s[id]!.note]).toEqual([id, 'SKIP', expect.stringContaining('not built in the ERP (decision 30 Oct 2026)')]);
+      expect(x.calls.some((u) => /switch-over|cost-of-goods/.test(u))).toBe(false);
+      expect([o.report.failed, o.report.unreachable]).toEqual([0, false]);
+    }
+    const list = deps({ key: w.defaultKey, mode: 'erp-list' }, w);
+    const o = await runDemoAcceptance(list.d);
+    if (o.state !== 'RAN') throw new Error('expected a run');
+    expect(o.report.results.find((r) => r.id === 'switchOver.read')!.status).toBe('PASS');
+    expect(list.calls.some((u) => u.includes('/switch-over'))).toBe(true);
   });
 
   it('a refused demo key and an unreachable demo ERP are reported for the owner and fail no check', async () => {

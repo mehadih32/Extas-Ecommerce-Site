@@ -110,6 +110,25 @@ describe('PR 621 · the ERP v6 acceptance checks against the practice ERP', () =
     expect([s['contract.health']!.status, s['catalog.styleImport']!.status]).toEqual(['PASS', 'PASS']);
   });
 
+  it('CN-033 · a fresh start: the switch-over list and the cost of goods are "not built in the ERP", never asked, never an outage', async () => {
+    const asked: string[] = [];
+    const { api, now } = demoWith((url) => {
+      if (/\/(switch-over|cost-of-goods)/.test(url)) asked.push(url);
+      return noV6Reads(url);
+    });
+    for (const target of ['demo', 'practice']) {
+      const r = await runErpAcceptance(api, { target, runId: `FS-${target}`, writes: false, driver: null, timeoutMs: 2000, now, switchOver: 'fresh-start', only: ['contract.health', 'switchOver.read', 'costOfGoods.read'] });
+      const s = byId(r);
+      for (const id of ['switchOver.read', 'costOfGoods.read']) expect([id, s[id]!.status, s[id]!.note]).toEqual([id, 'SKIP', 'not built in the ERP (decision 30 Oct 2026); this shop switches as a fresh start']);
+      expect([s['contract.health']!.status, r.failed, r.unreachable]).toEqual(['PASS', 0, false]);
+    }
+    expect(asked).toEqual([]);
+    // The ERP's list (the earlier way) still reads them, as before.
+    const r = await runErpAcceptance(api, { target: 'demo', runId: 'FS-list', writes: false, driver: null, timeoutMs: 2000, now, switchOver: 'erp-list', only: ['switchOver.read'] });
+    expect(byId(r)['switchOver.read']).toMatchObject({ status: 'SKIP', note: expect.stringMatching(/could not be reached/) });
+    expect(asked.length).toBeGreaterThan(0);
+  });
+
   it('qa-gate B1: the practice ERP stays the hard gate: the same outage fails the run', async () => {
     const { w, now } = practice();
     seedAcceptanceStyle({ world: w });

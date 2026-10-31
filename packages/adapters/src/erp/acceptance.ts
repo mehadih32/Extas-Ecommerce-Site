@@ -21,6 +21,10 @@
 //   says `unreachable`, the same in every check (the first call, the catalogue read, a refusal a check waits for).
 //   Only a wrong figure or an answer that breaks the contract (BAD_RESPONSE) fails the run. Against the practice ERP
 //   in CI every error stays a FAIL: that run is the hard gate.
+// - CN-033 (1): the ERP decided on 30 Oct 2026 not to build the switch-over list (`GET /switch-over`) nor
+//   `GET /cost-of-goods`. With `switchOver: 'fresh-start'` (the shop's `erp.switchOver.mode` as it ships) those two
+//   checks are SKIP "not built in the ERP" and never asked, on every target; `erp-list` (the default here, the
+//   earlier way) reads them as before.
 import { verifyErpRequest, signErpRequest } from './signature';
 import { identifyPartial, type PracticeErpV6 } from './mock-erp-v6';
 import type { MockErpWorld } from './mock-erp';
@@ -85,6 +89,9 @@ export interface AcceptanceOptions {
   /** Only these check ids (all when absent). */
   only?: readonly string[];
   now?: () => Date;
+  /** How the shop switches (`erp.switchOver.mode`, CN-033): on a fresh start the ERP's switch-over reads are not
+   *  built, so their checks are SKIP and never called. Absent: `erp-list` (the checks as first written). */
+  switchOver?: 'fresh-start' | 'erp-list';
 }
 
 /** The test list, in the order of §4. */
@@ -121,6 +128,9 @@ const OUTAGE: ReadonlySet<ErpErrorCode> = new Set<ErpErrorCode>(['TIMEOUT', 'NET
 export const isErpOutage = (e: unknown): e is ErpError => e instanceof ErpError && OUTAGE.has(e.code);
 /** The target whose outages are SKIP; every other target (the practice ERP in CI) stays the hard gate. */
 const SOFT_TARGET = 'demo';
+/** CN-033: the checks of the switch-over reads the ERP does not build, and why they are SKIP on a fresh start. */
+const NOT_BUILT_ON_FRESH_START: ReadonlySet<string> = new Set(['switchOver.read', 'costOfGoods.read']);
+const NOT_BUILT_NOTE = 'not built in the ERP (decision 30 Oct 2026); this shop switches as a fresh start';
 const outageNote = (x: ErpError) => `the demo ERP could not be reached or does not have this call yet (${x.code}${x.status ? ` ${x.status}` : ''})`;
 
 const minor = (text: string | number | null | undefined): number => Math.round(Number(text ?? 0) * 100);
@@ -672,8 +682,10 @@ export async function runErpAcceptance(api: ErpApi, opts: AcceptanceOptions): Pr
     return report(!refused, refused);
   }
   if (c.d) seedAcceptanceStyle(c.d);
+  const fresh = opts.switchOver === 'fresh-start';
   try {
-    c.switched = (await c.api.v6.switchOver({ timeoutMs: opts.timeoutMs })).status === 'DONE' || Boolean(c.d?.v6.switched);
+    // A fresh start never asks for the switch-over list (CN-033): only the practice ERP's own switch counts.
+    c.switched = (!fresh && (await c.api.v6.switchOver({ timeoutMs: opts.timeoutMs })).status === 'DONE') || Boolean(c.d?.v6.switched);
   } catch {
     c.switched = false;
   }
@@ -684,6 +696,10 @@ export async function runErpAcceptance(api: ErpApi, opts: AcceptanceOptions): Pr
     c.fxError = e;
   }
   for (const ch of list) {
+    if (fresh && NOT_BUILT_ON_FRESH_START.has(ch.id)) {
+      done(ch, 'SKIP', NOT_BUILT_NOTE);
+      continue;
+    }
     if (ch.kind === 'write' && !opts.writes) {
       done(ch, 'SKIP', 'writes to this ERP are off');
       continue;

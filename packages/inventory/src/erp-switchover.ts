@@ -25,6 +25,16 @@
 // From then the retired v5 calls (customer payments, ad spend, returns, shipment events, a delivered or returned status)
 // are never sent (PR 607, `retiredInV6`).
 //
+// CN-033 (1), the ERP's decision of 30 Oct 2026: the ERP does not build the switch-over list (`GET /switch-over`) nor
+// `GET /cost-of-goods`, because the website never sent real orders to the live ERP through the old link. So each store
+// switches one of two ways (`erp.switchOver.mode`, per store, the owner's choice on the ERP link page):
+//   - `fresh-start` (as it ships): the ERP is asked only who it is (health: one store = one ERP company); the switch
+//     date is the store's day of the dry run (or the date a stopped switch already kept on the link), typed back by
+//     the owner with his PIN; steps 3, 7, 8 and 9 do not run (no moved orders, no transfer, no bills of moved orders,
+//     no days filled before: those days are simply not sent) and the opening balance is 0; every other step as above;
+//   - `erp-list`: the steps above as written, for an ERP that offers those calls.
+// A dry run of one way never counts for the other (the way is in the fingerprint).
+//
 // A dry run does steps' reading only and keeps its report; nothing else changes. A new link epoch (a handover to a new
 // owner, or a wrong opening balance: follow-up 555) ends the open link — owner and PIN — and the next switch-over books
 // the new opening items on the new link. No secret is read, written or logged here (the web layer revokes a handover's
@@ -32,6 +42,7 @@
 import { createHash } from 'node:crypto';
 import type { Prisma } from '@extas/db/client';
 import { isOwner, requirePermission } from '@extas/auth';
+import { ERP_SWITCH_MODES, type ErpSwitchMode } from '@extas/settings';
 import { minorOf, type ErpSummaryIncompleteKey, type ErpSwitchOrderKind, type ErpSwitchOver } from '@extas/erp-types';
 import { toErpError, type ErpApi, type ErpDocument } from '@extas/adapters';
 import { logChange, nowOf, setting, TX, type InventoryDeps, type Who } from './context';
@@ -136,6 +147,8 @@ const LEGACY_KEYS = ['returns.legacy.shopQc', 'returns.legacy.restock', 'returns
 const BACKFILL_UNKNOWN: readonly ErpSummaryIncompleteKey[] = ['sales', 'income', 'deliveries', 'returnLosses'];
 /** A v5 order document taken out of the relay at the switch (follow-up 530): kept FAILED with this text, never sent. */
 export const SWITCH_V5_ORDER = 'SWITCH_V5_ORDER';
+/** A step of the ERP's list that a fresh start does not run (CN-033), as the switch's report says it. */
+export const NOT_ON_FRESH_START = 'not on a fresh start';
 
 export interface SwitchOrderPlan {
   externalOrderId: string;
@@ -151,6 +164,8 @@ export interface SwitchOrderPlan {
 export interface SwitchPlan {
   storeId: number;
   model: 'v5' | 'v6';
+  /** How this store switches (`erp.switchOver.mode`, CN-033): a fresh start, or the ERP's list. */
+  mode: ErpSwitchMode;
   today: string;
   /** The store's own ERP connection (Integration.storeId = the store), or null. */
   integrationId: string | null;
@@ -177,8 +192,8 @@ export interface SwitchPlan {
 
 const firstOfMonth = (d: string) => `${d.slice(0, 7)}-01`;
 
-function fingerprintOf(p: Pick<SwitchPlan, 'switchDate' | 'status' | 'openingBalanceMinor' | 'transferMinor' | 'transferReference' | 'orders' | 'backfill'>): string {
-  const body = { s: p.status, d: p.switchDate, o: p.openingBalanceMinor, t: p.transferMinor, r: p.transferReference, b: p.backfill, l: p.orders.map((x) => ({ ...x, orderId: null })) };
+function fingerprintOf(p: Pick<SwitchPlan, 'mode' | 'switchDate' | 'status' | 'openingBalanceMinor' | 'transferMinor' | 'transferReference' | 'orders' | 'backfill'>): string {
+  const body = { m: p.mode, s: p.status, d: p.switchDate, o: p.openingBalanceMinor, t: p.transferMinor, r: p.transferReference, b: p.backfill, l: p.orders.map((x) => ({ ...x, orderId: null })) };
   return createHash('sha256').update(stableJson(body)).digest('hex');
 }
 
@@ -199,12 +214,13 @@ const errText = (e: unknown) => {
 /** What the switch of this store would do now (reads the ERP and the shop; changes nothing). */
 export async function switchOverPlan(deps: InventoryDeps, storeId: number): Promise<SwitchPlan> {
   const db = deps.db;
-  const [model, timeZone, store, queuedAction, legacy] = await Promise.all([
+  const [model, timeZone, store, queuedAction, legacy, mode] = await Promise.all([
     erpModelOf(deps, storeId),
     setting(deps, storeId, 'store.timeZone'),
     db.store.findUnique({ where: { id: storeId }, select: { currency: true, archivedAt: true } }),
     setting(deps, storeId, 'erp.switchOver.queuedV5Orders'),
     Promise.all(LEGACY_KEYS.map(async (k) => [k, await setting(deps, storeId, k)] as const)),
+    setting(deps, storeId, 'erp.switchOver.mode'),
   ]);
   if (!store || store.archivedAt) throw new SwitchError('NOT_FOUND', 'no such store', ['storeId']);
   const digits = currencyDigits(store.currency);
@@ -220,6 +236,7 @@ export async function switchOverPlan(deps: InventoryDeps, storeId: number): Prom
   const plan: SwitchPlan = {
     storeId,
     model,
+    mode,
     today,
     integrationId: null,
     erpCompanyId: null,
@@ -251,7 +268,8 @@ export async function switchOverPlan(deps: InventoryDeps, storeId: number): Prom
       const health = await own.api.health();
       plan.erpCompanyId = health.companyId ?? null;
       if (plan.erpCompanyId && (await companyHeldElsewhere(db, storeId, plan.erpCompanyId)) != null) blockers.add('SHARED_COMPANY');
-      answer = await own.api.v6!.switchOver();
+      // A fresh start never asks for the ERP's list (CN-033: the ERP does not build it).
+      if (mode === 'erp-list') answer = await own.api.v6!.switchOver();
     } catch (e) {
       blockers.add('ERP_UNREACHABLE');
       detail = errText(e);
@@ -317,6 +335,13 @@ export async function switchOverPlan(deps: InventoryDeps, storeId: number): Prom
         }
       }
     }
+  }
+  if (mode === 'fresh-start') {
+    // The store's own day, or the date a switch that stopped part-way already kept (it goes on with that date).
+    plan.switchDate = linkRow?.switchDate ? dayText(linkRow.switchDate) : today;
+    plan.openingBalanceMinor = 0;
+    if (today < plan.switchDate) blockers.add('BEFORE_SWITCH_DATE');
+    if (linkRow?.openingImportedAt && minorOf(linkRow.openingBalanceMinor ?? 0n) !== 0) blockers.add('OPENING_DIFFERS');
   }
   plan.blockers = SWITCH_BLOCKERS.filter((b) => blockers.has(b));
   plan.detail = detail;
@@ -512,7 +537,7 @@ export async function runSwitchOver(deps: SwitchOverDeps, who: Who, input: { pin
   const storeId = who.storeId;
   const plan = await switchOverPlan(deps, storeId);
   if (plan.blockers.length) throw new SwitchError('SWITCH_BLOCKED', 'the switch cannot go yet', plan.blockers);
-  if (input.confirmDate !== plan.switchDate) throw new SwitchError('CONFIRM_DATE', "type the ERP's switch date to switch", [plan.switchDate ?? '']);
+  if (input.confirmDate !== plan.switchDate) throw new SwitchError('CONFIRM_DATE', plan.mode === 'fresh-start' ? 'type the switch date to switch' : "type the ERP's switch date to switch", [plan.switchDate ?? '']);
   const link = await linkForRun(deps, plan);
   if (!link) throw new SwitchError('NO_LINK', 'the store has no ERP link of its own yet');
   const now = nowOf(deps);
@@ -525,7 +550,8 @@ export async function runSwitchOver(deps: SwitchOverDeps, who: Who, input: { pin
   const [timeZone, store] = await Promise.all([setting(deps, storeId, 'store.timeZone'), deps.db.store.findUniqueOrThrow({ where: { id: storeId }, select: { currency: true } })]);
   const digits = currencyDigits(store.currency);
   const actorId = who.actor.staffUserId ?? null;
-  const reason = `PR 619 switch-over to ERP contract v6 on ${switchDate}`;
+  const fresh = plan.mode === 'fresh-start';
+  const reason = `PR 619 switch-over to ERP contract v6 on ${switchDate}${fresh ? ' (fresh start, CN-033)' : ''}`;
   const steps: SwitchStep[] = [];
   const step = (name: string, done: SwitchStep['done']) => steps.push({ step: name, done });
 
@@ -536,33 +562,33 @@ export async function runSwitchOver(deps: SwitchOverDeps, who: Who, input: { pin
   step('queuedV5.held', held);
   // 2. The switch date on the link.
   step('link.switchDate', (await deps.db.erpStoreLink.updateMany({ where: { id: link.id, storeId, switchDate: null }, data: { switchDate: dateOfDay(switchDate) } })).count > 0);
-  // 3. The moved orders.
-  step('movedOrders', await bookMovedOrders(deps, plan, link.id, timeZone, digits));
+  // 3. The moved orders (none on a fresh start).
+  step('movedOrders', fresh ? NOT_ON_FRESH_START : await bookMovedOrders(deps, plan, link.id, timeZone, digits));
   // 4. The contract: v6, with the owner's written OK (he is here, with his PIN).
   if (plan.model !== 'v6') await deps.writer.set('erp.model', 'v6', { level: 'store', storeId }, { actorId, reason, ownerApproved: true });
   step('erp.model', plan.model === 'v6' ? 'already v6' : 'v6');
   // 5. The old shop-side return paths off for this store (switches, never deleted).
   for (const key of plan.legacyOn) await deps.writer.set(key, false, { level: 'store', storeId }, { actorId, reason });
   step('returns.legacy.off', plan.legacyOn.length);
-  // 6. The opening balance, once for the link.
+  // 6. The opening balance, once for the link (0 on a fresh start: the lifetime check starts there).
   const linkRow = await deps.db.erpStoreLink.findUniqueOrThrow({ where: { id: link.id }, select: { openingImportedAt: true } });
   if (!linkRow.openingImportedAt) await importOpeningBalance(deps, { storeId, amountMinor: plan.openingBalanceMinor ?? 0, date: switchDate });
   step('openingBalance', plan.openingBalanceMinor ?? 0);
-  // 7. The one transfer.
-  if (plan.transferMinor !== 0) await recordSwitchTransfer(deps, { storeId, switchDate, amountMinor: plan.transferMinor, reference: plan.transferReference });
-  step('switchTransfer', plan.transferMinor);
-  // 8. The OUT bills and their pieces.
+  // 7. The one transfer (none on a fresh start).
+  if (!fresh && plan.transferMinor !== 0) await recordSwitchTransfer(deps, { storeId, switchDate, amountMinor: plan.transferMinor, reference: plan.transferReference });
+  step('switchTransfer', fresh ? NOT_ON_FRESH_START : plan.transferMinor);
+  // 8. The OUT bills and their pieces (no moved order on a fresh start: the nightly sync takes every bill from here).
   const books = await storeErpLink(deps.db, storeId);
   if (!books || books.id !== link.id) throw new SwitchError('NO_LINK', "the store's ERP link changed during the switch");
-  step('bills', await syncBills(deps, books, timeZone));
-  step('pipeline', (await syncPipeline(deps, books, timeZone)).pieces);
-  // 9. The month before the switch, filled backwards.
+  step('bills', fresh ? NOT_ON_FRESH_START : await syncBills(deps, books, timeZone));
+  step('pipeline', fresh ? NOT_ON_FRESH_START : (await syncPipeline(deps, books, timeZone)).pieces);
+  // 9. The month before the switch, filled backwards (not on a fresh start: those days are simply not sent).
   let filled = 0;
-  const target = await booksTarget(deps, storeId);
+  const target = fresh ? null : await booksTarget(deps, storeId);
   if (plan.backfill && target && target.link.id === link.id) {
     for (const [day, goods] of Object.entries(plan.backfill.goodsMinor)) if (await recordBackfillDay(deps, target, day, goods)) filled++;
   }
-  step('backfill', filled);
+  step('backfill', fresh ? NOT_ON_FRESH_START : filled);
   // 10. The waiting v5 orders: sent again as v6 orders, or kept for a person.
   let resent = 0;
   const failed: string[] = [];
@@ -588,6 +614,24 @@ export async function runSwitchOver(deps: SwitchOverDeps, who: Who, input: { pin
     return r;
   }, TX);
   return { ...runView(row), steps };
+}
+
+/**
+ * The way this store switches (`erp.switchOver.mode`, CN-033): an owner only, before the switch. A dry run of the
+ * other way does not count afterwards (the way is in its fingerprint). Answers the way now kept.
+ */
+export async function setSwitchOverMode(deps: SwitchOverDeps, who: Who, mode: unknown): Promise<{ mode: ErpSwitchMode }> {
+  await requireOwner(deps, who);
+  if (typeof mode !== 'string' || !(ERP_SWITCH_MODES as readonly string[]).includes(mode)) throw new SwitchError('INVALID_INPUT', `the way is one of ${ERP_SWITCH_MODES.join(', ')}`, ['mode']);
+  const storeId = who.storeId;
+  const open = await deps.db.erpStoreLink.findFirst({ where: { storeId, endedAt: null }, orderBy: { epoch: 'desc' }, select: { id: true, switchedAt: true } });
+  if (open?.switchedAt) throw new SwitchError('SWITCH_BLOCKED', 'this store has switched already', ['ALREADY_SWITCHED']);
+  const before = await setting(deps, storeId, 'erp.switchOver.mode');
+  if (before !== mode) {
+    await deps.writer.set('erp.switchOver.mode', mode, { level: 'store', storeId }, { actorId: who.actor.staffUserId ?? null, reason: 'CN-033 the way this store switches to ERP contract v6' });
+    await logChange(deps.db, who, { action: 'erp.switchOver.mode', entityType: 'Store', entityId: String(storeId), before: { mode: before }, after: { mode }, storeId });
+  }
+  return { mode: mode as ErpSwitchMode };
 }
 
 /**
@@ -654,7 +698,7 @@ export interface ErpLinkPage {
   };
   balance: { shopMinor: number | null; erpMinor: number | null; checkedAt: Date | null; onHold: boolean };
   books: { lastClose: { date: string; result: string } | null; openDifferences: number };
-  switchOver: { lastDryRun: (SwitchRunView & { plan: unknown }) | null; lastSwitch: SwitchRunView | null; dryRunMaxHours: number };
+  switchOver: { lastDryRun: (SwitchRunView & { plan: unknown }) | null; lastSwitch: SwitchRunView | null; dryRunMaxHours: number; mode: ErpSwitchMode };
 }
 
 const FINAL_EXCHANGE = ['SETTLED', 'BILLED', 'CREDITED', 'CANCELLED'];
@@ -664,7 +708,7 @@ export async function erpLinkState(deps: InventoryDeps, who: Who): Promise<ErpLi
   await requirePermission(deps.db, who.actor, 'vault.read', { storeId: who.storeId });
   const db = deps.db;
   const storeId = who.storeId;
-  const [model, shown, maxHours, timeZone] = await Promise.all([erpModelOf(deps, storeId), setting(deps, null, 'erp.link.listShown'), setting(deps, null, 'erp.switchOver.dryRunMaxHours'), setting(deps, storeId, 'store.timeZone')]);
+  const [model, shown, maxHours, timeZone, mode] = await Promise.all([erpModelOf(deps, storeId), setting(deps, null, 'erp.link.listShown'), setting(deps, null, 'erp.switchOver.dryRunMaxHours'), setting(deps, storeId, 'store.timeZone'), setting(deps, storeId, 'erp.switchOver.mode')]);
   const l = await db.erpStoreLink.findFirst({ where: { storeId, endedAt: null }, orderBy: { epoch: 'desc' } });
   const pushLast = async (types: string[]) => (await db.erpPush.aggregate({ where: { storeId, documentType: { in: types }, status: 'SENT' }, _max: { sentAt: true } }))._max.sentAt;
   const [orders, shipments, deliveries, heldRows, waiting, held, failedN] = await Promise.all([
@@ -705,7 +749,7 @@ export async function erpLinkState(deps: InventoryDeps, who: Who): Promise<ErpLi
     queues: { ordersWaiting: waiting, ordersHeld: held, ordersFailed: failedN, heldAtSwitch, exchangesOpen: 0, summariesWaiting: 0 },
     balance: { shopMinor: null, erpMinor: null, checkedAt: null, onHold: false },
     books: { lastClose: null, openDifferences: 0 },
-    switchOver: { lastDryRun: null, lastSwitch: null, dryRunMaxHours: maxHours },
+    switchOver: { lastDryRun: null, lastSwitch: null, dryRunMaxHours: maxHours, mode },
   };
   if (!l) return state;
   const linkId = l.id;

@@ -210,6 +210,14 @@ describe.skipIf(!HAS_TEST_DB)('PR 619 · the ERP link page per store (PostgreSQL
     expect(blocked.body.details).toContain('NO_OWN_CONNECTION');
     for (const s of [A, B]) expect(await deps.resolver.value('erp.model', { storeId: s })).toBeNull();
     expect((await page('POST', B, owner, { action: 'unknown' })).status).toBe(400);
+    // CN-033: the way a store switches is the owner's, per store; it ships as a fresh start.
+    expect((await page('GET', B, owner)).body.state.switchOver.mode).toBe('fresh-start');
+    expect(await page('POST', A, readerA, { action: 'setMode', mode: 'erp-list' })).toMatchObject({ status: 403, body: { error: 'OWNER_ONLY' } });
+    expect(await page('POST', B, owner, { action: 'setMode', mode: 'nonsense' })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['mode'] } });
+    const chosen = await page('POST', B, owner, { action: 'setMode', mode: 'erp-list' });
+    expect([chosen.status, chosen.body.result, chosen.body.state.switchOver.mode]).toEqual([200, { mode: 'erp-list' }, 'erp-list']);
+    expect([await deps.resolver.value('erp.switchOver.mode', { storeId: B }), await deps.resolver.value('erp.switchOver.mode', { storeId: A })]).toEqual(['erp-list', 'fresh-start']);
+    expect((await page('POST', B, owner, { action: 'setMode', mode: 'fresh-start' })).body.state.switchOver.mode).toBe('fresh-start');
     expect(await page('POST', B, owner, { action: 'sendHeld', orderId: 'no-such-order' })).toMatchObject({ status: 404, body: { error: 'NOT_FOUND' } });
   });
 

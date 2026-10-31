@@ -9,6 +9,8 @@
 //   API key, webhook secret and signing secret are saved in the vault under this store id only.
 // - POST /api/admin/erp-link?storeId=N   {action}:
 //   - `dryRun` (`vault.write`): what the switch-over would do, read from the ERP's list; nothing else changes.
+//   - `setMode` {mode: fresh-start | erp-list} (an owner, before the switch; CN-033): the way this store switches
+//     (`erp.switchOver.mode`, `setSwitchOverMode`). A fresh start (as it ships) never asks the ERP for its list.
 //   - `switch` {pin, confirmDate} (an owner, with his books PIN and the ERP's switch date typed back): the switch-over
 //     to contract v6 (`runSwitchOver`, @extas/inventory erp-switchover.ts). `erp.model` is written with the owner's
 //     written OK (`ownerApproved`), which only this action gives. A v5 order waiting at the switch goes again as a v6
@@ -166,6 +168,9 @@ export async function erpLinkHandler(request: Request, deps: AdminDeps | null): 
         break;
       case 'switch':
         result = await inv.runSwitchOver(await switchDeps(d), who, { pin: b.pin, confirmDate: b.confirmDate });
+        break;
+      case 'setMode':
+        result = await inv.setSwitchOverMode(await switchDeps(d), who, b.mode);
         break;
       case 'newLink':
         result = await inv.startNewErpLink(await inventoryDeps(d), who, { pin: b.pin, reason: b.reason, note: b.note }, { revokeKeys: (id) => revokeStoreErpKeys(d, who, id) });

@@ -9,6 +9,8 @@
 // - a v5 order document still waiting at the switch is sent again as v6, or kept for a person (follow-up 530);
 // - store A's switch, keys and books never touch store B (CN-029 §16);
 // - a wrong opening balance is put right by a new link epoch, never by a correction (follow-up 555).
+// CN-033: this is the way of the ERP's list (`erp.switchOver.mode` = erp-list, kept whole); the fresh start, as it
+// ships, has its own file (erp-switchover-fresh.db.test.ts).
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { HAS_TEST_DB } from '@extas/auth/testing';
@@ -79,6 +81,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 619 on PostgreSQL: the switch-over to the ERP 
     keysPerson = await f.staff(['vault.read', 'vault.write'], null, 'keys');
     f.setV6(f.storeA, false);
     f.setV6(f.storeB, false);
+    for (const s of [f.storeA, f.storeB]) f.overrides.set(`erp.switchOver.mode@${s}`, 'erp-list');
   });
   afterAll(async () => {
     globalThis.fetch = realFetch;

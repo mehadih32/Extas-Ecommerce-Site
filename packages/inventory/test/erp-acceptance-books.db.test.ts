@@ -128,6 +128,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 621 · ERP v6 acceptance drills of the books (
     keysPerson = await f.staff(['vault.read', 'vault.write'], null, 'accept-keys');
     // Store A still speaks v5 until its switch; store B is v6 from the start and only watches.
     f.setV6(f.storeA, false);
+    // CN-033: the switch day of the ERP's list (moved orders and the one transfer); the fresh start has its own drills.
+    f.overrides.set(`erp.switchOver.mode@${f.storeA}`, 'erp-list');
     for (const s of [f.storeA, f.storeB]) f.world.v6(f.company(s)).holdDays = 10_000;
     const inner = globalThis.fetch;
     globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
