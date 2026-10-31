@@ -140,7 +140,7 @@ export async function recordDoorOutcome(deps: PaymentsDeps, who: Who, orderId: s
       if (!rows.length) throw new PaymentsError('NOT_FOUND', 'no such order', ['orderId']);
       const o = await tx.order.findUniqueOrThrow({
         where: { id: orderId },
-        select: { id: true, number: true, status: true, paymentMethod: true, totalMinor: true, walletAppliedMinor: true, paidMinor: true, deliveryChargeMinor: true, items: { select: { id: true, lineTotalMinor: true } } },
+        select: { id: true, number: true, status: true, paymentMethod: true, totalMinor: true, walletAppliedMinor: true, paidMinor: true, deliveryChargeMinor: true, items: { where: { status: 'ACTIVE' }, select: { id: true, lineTotalMinor: true } } }, // review R1 (m1): a line an edit took out is not in the parcel
       });
       if (o.status === 'CANCELLED') throw new PaymentsError('ORDER_CLOSED', 'the order is cancelled');
       if (d.shipmentId) {
