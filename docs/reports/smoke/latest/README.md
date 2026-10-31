@@ -1,8 +1,8 @@
-# Smoke test · 2026-10-31 14:23 (Asia/Dhaka)
+# Smoke test · 2026-10-31 15:04 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (224টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `f1266bbd545b` · after deploy · result **PASS** (224 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `42b8f00d33e0` · after deploy · result **PASS** (224 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -231,4 +231,4 @@ Site: https://new.extas.com.bd · commit `f1266bbd545b` · after deploy · resul
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | [picture](admin-combos-tab-report-desktop.jpg) |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
-Database (PR 139): problem: the append-only check could not read the database; the app connects as extas_app.
+Database (PR 139): problem: the append-only check could not read the database (postgres:17 running since 2026-10-31T07:30:36.575859967Z; PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/17/bin; sh: 1: tr: not found exec PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/17/bin ); the app connects as extas_app.
