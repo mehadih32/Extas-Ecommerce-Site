@@ -16,13 +16,18 @@
 // and every page (the shop's and the admin's) gets the page protection policy the settings say.
 // S11 · PR 588: the Bengali translation gate — while the owner chose `english` (`language.bengali.gate`), a Bengali
 // content page not marked ready goes to its English twin for now (lib/seo/bengali-gate).
+// PR 84 follow-up (review R1): when Next sends the /bn rewrite on as a second request (the server's own address differs
+// from the rewritten one, e.g. bound to 127.0.0.1), the proxy runs again on the English path and used to overwrite the
+// language with English: every /bn page drew in English. The rewrite now carries this process's random mark, and a
+// request with it keeps the Bengali language and path it was given (a browser cannot know the mark).
 import { NextResponse, type NextRequest } from 'next/server';
 import { shopCacheHeaders } from './lib/cache-policy';
 import { apiGate, pageCspHeader } from './lib/security/edge-gate';
 import { bengaliGateSends } from './lib/seo/bengali-gate';
 import { lowerCaseTarget } from './lib/seo/indexing';
 import { countRedirectHit, forwardOf, redirectTable } from './lib/seo/redirect-table';
-import { isShopPath, LANG_HEADER, PATH_HEADER, splitLang, THEME_HEADER } from './lib/shop/lang';
+import { isShopPath, LANG_HEADER, PATH_HEADER, REWRITE_MARK_HEADER, THEME_HEADER } from './lib/shop/lang';
+import { requestLang, rewriteMark } from './lib/shop/rewrite-mark';
 import { shopStoreId } from './lib/shop/store-id';
 
 /** A permanent move (HTTP's own code for it; search engines carry the page's rank over). */
@@ -70,7 +75,7 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(new URL(fwd.location, req.nextUrl), fwd.status);
     }
   }
-  const { lang, path } = splitLang(pathname);
+  const { lang, path } = requestLang(pathname, req.headers);
   if (!isShopPath(path)) return NextResponse.next(); // /bn/admin is not the admin
   // PR 588: a Bengali page not marked ready goes to its English twin while the owner chose so (temporary, never cached)
   if (lang === 'bn' && (req.method === 'GET' || req.method === 'HEAD') && (await bengaliGateSends(shopStoreId(), path))) {
@@ -84,7 +89,9 @@ export async function proxy(req: NextRequest) {
   const theme = searchParams.get('theme');
   if (theme && /^[a-z]{1,20}$/.test(theme)) h.set(THEME_HEADER, theme);
   else h.delete(THEME_HEADER);
-  if (lang === 'bn') {
+  h.delete(REWRITE_MARK_HEADER);
+  if (lang === 'bn' && pathname !== path) {
+    h.set(REWRITE_MARK_HEADER, rewriteMark());
     const url = req.nextUrl.clone();
     url.pathname = path;
     return withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h } }), req));
