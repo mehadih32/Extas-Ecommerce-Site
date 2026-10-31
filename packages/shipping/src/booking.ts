@@ -10,6 +10,13 @@
 //   line and "deliver on or after" in the rider's note; a gift is not booked before its booking day (SIM-F-007).
 // - The amount to collect is the order's live amount due when it is booked (`dueOf`); after booking the order service
 //   refuses every edit and add-on (SIM-F-004, decision D5), so the parcel and the order never differ.
+// - Go-live gate F-004 (follow-up of PR 176): money can still come in after booking (a payment recorded by hand, a
+//   gateway's late answer), and then the courier would collect the old amount. `staleParcelOf` finds such a parcel
+//   while it is still with us (its sticker refuses to print: COD_CHANGED, or RECEIVER_CHANGED); `rebookParcel` is the
+//   one-press fix: after a person cancelled the old consignment with the courier (its panel or a phone call, said on
+//   the form, since no courier here can be cancelled through its API), the old parcel is closed as CANCELLED
+//   (outcome REBOOKED, who, when, the courier's reference) and the order is booked again with the same courier at the
+//   live amount due. If the new booking does not go through, the order simply waits in Ready to book again.
 // - The weight is the pieces' own weights, or none when a piece has no weight (SIM-F-029; never guessed), with the
 //   courier's own zone ids when the area is mapped (PR 554), and the goods' value recorded for a claim.
 // - PR 554: the zone ids come from the area's pair with this courier, or the nearest pair above it (zones.ts `pairFor`).
@@ -35,6 +42,7 @@ import type { CourierBookingSettings } from '@extas/settings';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Tx, type Who } from './context';
 import { isShippingError, ShippingError } from './errors';
 import { applyEventsIn } from './events';
+import { bookedReceiver, STILL_WITH_US, stickerProblem } from './fulfil-pure';
 import { assertPackingPhoto } from './packing';
 import { addDays, bookingNoteOf, courierPhone, giftBooking, localDay, parcelDescription, parcelWeight, type BookingOutcomeKind, type ParcelLine } from './pure';
 import { zoneNeedOf } from './zone-match';
@@ -374,4 +382,108 @@ export async function retryBooking(deps: ShippingDeps, who: Who, shipmentId: str
     await fail(deps, who, s.id, s.bookingError!);
   }
   return bookOne(deps, who, { id: account.id, ...conn }, s.orderId);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Gate F-004: a parcel whose amount or receiver went stale after booking, and its one-press re-booking
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** Why a booked parcel no longer matches its order. */
+export type StaleWhy = 'COD_CHANGED' | 'RECEIVER_CHANGED';
+
+export interface StaleParcel {
+  shipmentId: string;
+  courierAccountId: string;
+  consignmentId: string | null;
+  why: StaleWhy;
+  /** What the courier was told to collect. */
+  bookedCodMinor: number;
+  /** What the order owes now. */
+  dueMinor: number;
+}
+
+const STALE_SELECT = {
+  id: true,
+  orderId: true,
+  status: true,
+  consignmentId: true,
+  codAmountMinor: true,
+  receiver: true,
+  courierAccountId: true,
+  order: { select: { id: true, number: true, status: true, archivedAt: true, handedOverAt: true, cancelPending: true, cancelRequestedAt: true, totalMinor: true, walletAppliedMinor: true, paidMinor: true, ...DELIVERY_TARGET_SELECT } },
+} as const satisfies Prisma.ShipmentSelect;
+
+function staleOf(s: Prisma.ShipmentGetPayload<{ select: typeof STALE_SELECT }>): StaleParcel | null {
+  const problem = stickerProblem({ status: s.status, consignmentId: s.consignmentId, codAmountMinor: s.codAmountMinor, receiver: bookedReceiver(s.receiver), order: s.order, target: deliveryTarget(s.order), handedOver: !!s.order.handedOverAt });
+  if (s.order.archivedAt || (problem !== 'COD_CHANGED' && problem !== 'RECEIVER_CHANGED')) return null;
+  return { shipmentId: s.id, courierAccountId: s.courierAccountId, consignmentId: s.consignmentId, why: problem, bookedCodMinor: s.codAmountMinor, dueMinor: dueOf(s.order) };
+}
+
+/** The order's booked parcel, still with us, whose amount or receiver no longer matches the order (or null). */
+export async function staleParcelOf(db: ShippingDeps['db'], storeId: number, orderId: string): Promise<StaleParcel | null> {
+  const s = await db.shipment.findFirst({
+    where: { storeId, orderId, status: { in: [...STILL_WITH_US] }, consignmentId: { not: null }, order: { archivedAt: null, handedOverAt: null } },
+    orderBy: { createdAt: 'desc' },
+    select: STALE_SELECT,
+  });
+  return s ? staleOf(s) : null;
+}
+
+export const rebookInput = z
+  .object({
+    /** How the person cancelled the old consignment with the courier (there is no cancel through any courier's API). */
+    cancelledVia: z.enum(['panel', 'phone']),
+    /** The courier's reference for the cancel, or the person they spoke to. */
+    courierRef: z.string().trim().max(120).optional(),
+    note: z.string().trim().max(500).optional(),
+  })
+  .strict();
+
+export interface RebookResult {
+  /** The old parcel, now CANCELLED (outcome REBOOKED). */
+  cancelledShipmentId: string;
+  /** The new booking: booked, or why not (the order is then in Ready to book again). */
+  booking: BookingOutcome;
+}
+
+/** Gate F-004: closes a stale parcel the courier no longer holds and books the order again at its live amount due. */
+export async function rebookParcel(deps: ShippingDeps, who: Who, shipmentId: string, input: unknown): Promise<RebookResult> {
+  await allow(deps, who, 'delivery.book');
+  const d = parse(rebookInput, input, 're-booking');
+  const s = await deps.db.shipment.findFirst({ where: { id: shipmentId, storeId: who.storeId }, select: STALE_SELECT });
+  if (!s) throw new ShippingError('NOT_FOUND', 'no such parcel', ['shipmentId']);
+  const stale = staleOf(s);
+  if (!stale) throw new ShippingError('NOT_STALE', 'this parcel still matches its order (or it has left us), so there is nothing to re-book', ['shipmentId'], { status: s.status });
+  // the order must be one the service would book again; otherwise the old parcel stays as it is
+  if (s.order.cancelPending) throw new ShippingError('CANCEL_PENDING', 'a cancel is waiting for the courier', ['shipmentId']);
+  if (s.order.cancelRequestedAt) throw new ShippingError('CANCEL_REQUESTED', 'the customer asked to cancel: answer that first', ['shipmentId']);
+  const reviews = await openReviewIds(ordersDeps(deps), who.storeId);
+  if (reviews.includes(s.orderId)) throw new ShippingError('IN_REVIEW', 'the order waits for a review', ['shipmentId']);
+  const account = await bookableCourier(deps.db, who.storeId, s.courierAccountId);
+  const conn = await courierApi(deps, who.storeId, account.providerKey);
+  const now = nowOf(deps);
+  await deps.db.$transaction(async (tx) => {
+    // only while it is still with us and still the order's live parcel: a pickup or another press in between wins
+    const closed = await tx.shipment.updateMany({
+      where: { id: s.id, storeId: who.storeId, status: { in: [...STILL_WITH_US] } },
+      data: { status: 'CANCELLED', cancelOutcome: 'REBOOKED', cancelConfirmedById: who.actor.staffUserId, cancelConfirmedAt: now, cancelRef: d.courierRef || null },
+    });
+    if (closed.count !== 1) throw new ShippingError('NOT_STALE', 'the parcel moved on meanwhile', ['shipmentId']);
+    await tx.orderEvent.create({
+      data: {
+        storeId: who.storeId,
+        orderId: s.orderId,
+        type: 'shipment.rebook',
+        message: d.note || null,
+        reasonCode: stale.why,
+        data: { shipmentId: s.id, consignmentId: s.consignmentId, why: stale.why, bookedCodMinor: stale.bookedCodMinor, dueMinor: stale.dueMinor, cancelledVia: d.cancelledVia, courierRef: d.courierRef || null },
+        actorType: who.actor.staffUserId ? 'STAFF' : 'SYSTEM',
+        actorId: who.actor.staffUserId,
+        source: 'admin',
+      },
+    });
+    await logChange(tx, who, 'shipment.rebook', 'Shipment', s.id, { status: s.status, codAmountMinor: s.codAmountMinor }, { status: 'CANCELLED', cancelOutcome: 'REBOOKED', dueMinor: stale.dueMinor, cancelledVia: d.cancelledVia, courierRef: d.courierRef || null });
+  }, TX);
+  const booking = await bookOne(deps, who, { id: account.id, ...conn }, s.orderId);
+  return { cancelledShipmentId: s.id, booking };
 }

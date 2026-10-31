@@ -26,6 +26,10 @@
 //   POST  /api/admin/delivery/parcels/:id/retry            a failed booking, or one without an answer: asks the courier
 //                                                          for the shop's reference first, never books twice (delivery.book)
 //   POST  /api/admin/delivery/parcels/:id/track            reads the parcel from its courier now (delivery.parcels)
+//   POST  /api/admin/delivery/parcels/:id/rebook           gate F-004: {cancelledVia: panel|phone, courierRef?, note?} a
+//                                                          parcel whose amount or receiver went stale, cancelled with the
+//                                                          courier by a person, closed here and booked again at the live
+//                                                          amount due (delivery.book)
 // PR 554 — the courier zone sync (DLV-05 "Sync zones"):
 //   GET   /api/admin/delivery/couriers/:id/zones?tab=&q=&page=&limit=
 //                                                          the courier page: counts, the last run, one tab of rows —
@@ -166,6 +170,10 @@ export async function parcelsRoute(request: Request, deps: AdminDeps | null, pat
   if (action === 'retry') {
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'delivery.book', async (x) => ({ result: await sh.retryBooking(x.deps, x.who, id) }));
+  }
+  if (action === 'rebook') {
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'delivery.book', async (x) => ({ result: await sh.rebookParcel(x.deps, x.who, id, await body(request)) }));
   }
   if (action === 'track') {
     if (m !== 'POST') return notAllowed();

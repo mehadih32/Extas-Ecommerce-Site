@@ -7,7 +7,7 @@
 import type { PermissionKey } from '@extas/auth';
 import type { CallOutcomes } from '@extas/settings';
 import * as od from '@extas/orders';
-import { openCheckOf, returnReasonOf } from '@extas/shipping';
+import { openCheckOf, returnReasonOf, staleParcelOf, type StaleParcel } from '@extas/shipping';
 import { targetOf, type OrderCommand, type OrderState } from '@extas/orders/pure';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import type { AdminView } from '../admin-page';
@@ -405,6 +405,36 @@ export function returnReasonSpecs(view: AdminView, shipmentId: string, number: s
   ];
 }
 
+/**
+ * Gate F-004 (follow-up of PR 176): "Re-book the courier" on a parcel whose amount or receiver went stale after booking
+ * (`delivery.book`). The person says how the old consignment was cancelled with the courier; the old parcel is closed and
+ * the order booked again at the amount due now. Nothing moves money; the order itself is not cancelled.
+ */
+export function rebookSpecs(view: AdminView, stale: StaleParcel, number: string, courier: string, due: string, perms: ReadonlySet<string>): CommandSpec[] {
+  if (!perms.has('delivery.book')) return [];
+  const d = view.dict;
+  const tt = (k: string, vars: Record<string, string> = {}) => t(d, `orders.rebook.${k}`, { n: number, courier, due, consignment: stale.consignmentId ?? '', ...vars });
+  return [
+    {
+      id: 'rebook',
+      label: tt('label'),
+      tone: 'pri',
+      url: `/api/admin/delivery/parcels/${stale.shipmentId}/rebook`,
+      version: null,
+      title: tt('title'),
+      effects: [tt('eff.old'), tt('eff.new'), tt('eff.fail'), tt('eff.noMoney')],
+      fields: [
+        { name: 'cancelledVia', kind: 'select', label: tt('via'), required: true, options: [{ value: '', label: tt('viaPick') }, { value: 'panel', label: tt('viaPanel') }, { value: 'phone', label: tt('viaPhone') }] },
+        { name: 'courierRef', kind: 'text', label: tt('ref'), maxLength: 120 },
+        { name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), maxLength: 500 },
+      ],
+      ok: tt('ok'),
+      okTone: 'pri',
+      done: tt('done'),
+    },
+  ];
+}
+
 export function reviewSpecs(view: AdminView, alertId: string, number: string, matched: { id: string; number: string }[], perms: ReadonlySet<string>, reasons: od.ReasonLists, paid: string | null, risk = false): CommandSpec[] {
   if (!perms.has('orders.risk.decide')) return [];
   const d = view.dict;
@@ -708,6 +738,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const back = await returnReasonOf(deps, who.storeId, o.id);
   // PR 522: the other orders in this order's parcel (a bundle or a merge)
   const mates = o.orderGroupId ? await od.parcelMates(deps, who.storeId, o.id) : null;
+  // gate F-004: a booked parcel still with us whose amount or receiver no longer matches the order
+  const stale = o.booked ? await staleParcelOf(deps.db, who.storeId, o.id) : null;
   // PR 521: each review explained (a reading aid: if one cannot be read, the card still shows everything else)
   const explained = perms.has('orders.risk.read')
     ? await Promise.all(detail.reviews.map((r) => od.alertSummary(deps, who, r.id).catch(() => null)))
@@ -867,7 +899,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const named = t(d, key);
       // PR 521: when the duplicate rules ran, their line replaces the bare reason code
       const ruled = e.type === 'order.duplicateCheck' ? duplicateCheckSummary(view, e.data) : null;
-      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || e.type === od.REFUSER_EVENT || e.type === od.GOOD_CUSTOMER_EVENT || e.type === od.HOLD_PROPOSED_EVENT || e.type === od.HOLD_DECIDED_EVENT || e.type === od.NEW_CUSTOMER_EVENT || e.type === od.CALL_OUTCOME_EVENT || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
+      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || e.type === od.REFUSER_EVENT || e.type === od.GOOD_CUSTOMER_EVENT || e.type === od.HOLD_PROPOSED_EVENT || e.type === od.HOLD_DECIDED_EVENT || e.type === od.NEW_CUSTOMER_EVENT || e.type === od.CALL_OUTCOME_EVENT || e.type === 'shipment.rebook' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
       const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
       const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : e.type === od.BLOCK_PROPOSAL_EVENT ? proposalLine(view, e.data) : e.type === od.GOOD_CUSTOMER_EVENT ? goodCustomerLine(view, e.data) : e.type === od.HOLD_PROPOSED_EVENT ? holdProposedLine(view, e.data, holdName) : e.type === od.NEW_CUSTOMER_EVENT ? t(d, 'orders.ev.newCustomer') : e.type === od.CALL_OUTCOME_EVENT ? callOutcomeLine(view, e.data, outcomes) : ruled);
@@ -918,6 +950,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   if (back && !back.reasonKey) {
     const asked = returnReasonSpecs(view, back.shipmentId, o.number, perms, reasons, back.riderNote);
     if (asked.length) bands.push({ id: 'returnReason', kind: 'stale', text: t(d, 'orders.band.returnReason', { courier: x?.shipment?.courierName ?? t(d, 'orders.courier.theCourier') }), specs: asked });
+  }
+  if (stale) {
+    const courierName = x?.shipment?.courierName ?? t(d, 'orders.courier.theCourier');
+    bands.push({ id: 'parcelStale', kind: 'bad', text: t(d, `orders.band.${stale.why === 'COD_CHANGED' ? 'codStale' : 'receiverStale'}`, { courier: courierName, booked: m(stale.bookedCodMinor), due: m(stale.dueMinor) }), specs: rebookSpecs(view, stale, o.number, courierName, m(stale.dueMinor), perms) });
   }
   if (o.booked && !o.cancelPending && od.OPEN_STATES.includes(o.status)) bands.push({ id: 'locked', kind: 'locked', text: t(d, 'orders.band.locked', { courier: x?.shipment?.courierName ?? '', tracking: ship?.trackingCode ?? '' }), specs: [] });
 
