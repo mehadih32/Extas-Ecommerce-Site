@@ -210,7 +210,8 @@ export type CodeState =
   | { state: 'notForItems'; code: string }
   | { state: 'refused'; code: string; reason: CodeRefusal };
 
-export type CodeRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'MEMBERS_ONLY' | 'GUESTS_ONLY' | 'RULE_NOT_LIVE' | 'REFERRAL';
+// PR 213 follow-up (SIM-F-050): FIRST_ORDER_ONLY, a first-order code for a number that ordered before
+export type CodeRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'MEMBERS_ONLY' | 'GUESTS_ONLY' | 'FIRST_ORDER_ONLY' | 'RULE_NOT_LIVE' | 'REFERRAL';
 
 /** The quote's facts about the code, in the shape the pure rule reads. */
 export interface CodeFacts {

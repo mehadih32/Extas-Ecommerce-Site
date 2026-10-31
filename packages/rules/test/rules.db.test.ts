@@ -482,6 +482,38 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
     for (const c of [open, members, guests]) await setCouponEnabled(deps(), as(owner), c.id, { enabled: false });
   });
 
+  it('PR 213 follow-up, SIM-F-050: a first-order code reads his order history by phone — logged in or not; the order being placed and cancelled ones do not count', async () => {
+    const rule = await createRule(deps(), as(writer), { templateId: 'coupon', key: 'first-order-coupon' });
+    await saveDraft(deps(), as(writer), rule.id, { content: withValues(rule.live!, { amountOff: 10000, minOrder: 10000 }, { status: 'ACTIVE' }) });
+    await publishRule(deps(), as(owner), rule.id);
+    const welcome = await createCoupon(deps(), as(writer), { code: 'sample-welcome', ruleId: rule.id, audience: 'FIRST_ORDER' });
+    expect(welcome.audience).toBe('FIRST_ORDER');
+    await setCouponEnabled(deps(), as(owner), welcome.id, { enabled: true });
+    const repeat = '+8801711000501';
+    const fresh = '+8801711000502';
+    const cancelledOnly = '+8801711000503';
+    const placed = (num: string, phone: string, status: 'DELIVERED' | 'CANCELLED' | 'PLACED') =>
+      t.prisma.order.create({ data: { storeId: A, number: num, source: 'WEBSITE', currency: 'BDT', placedAt: clock, paymentMethod: 'COD', subtotalMinor: 100000, totalMinor: 100000, idempotencyKey: `idem-${num}`, phone, status } });
+    await placed('S-5001', repeat, 'DELIVERED');
+    await placed('S-5002', cancelledOnly, 'CANCELLED');
+    const check = (phone: string | null) => checkCoupon(t.prisma, { storeId: A, code: 'SAMPLE-WELCOME', phone, customerId: null, now: clock });
+    // the WELCOME100 case: he bought before and is not logged in — refused, in words that say why
+    expect(await check(repeat)).toMatchObject({ ok: false, reason: 'FIRST_ORDER_ONLY' });
+    expect((await check(fresh)).ok).toBe(true);
+    expect((await check(cancelledOnly)).ok).toBe(true);
+    // the bag before his number is known lets it through; placing checks again with the number
+    expect((await check(null)).ok).toBe(true);
+    const q = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 1 }], couponCode: 'sample-welcome', phone: repeat });
+    expect(q.coupon).toMatchObject({ ok: false, reason: 'FIRST_ORDER_ONLY' });
+    // redeeming inside the new order's own transaction: that order itself is not "an earlier order"
+    const mine = await placed('S-5003', fresh, 'PLACED');
+    const r = await t.prisma.$transaction((tx) => redeemCoupon(tx, { storeId: A, code: 'SAMPLE-WELCOME', orderId: mine.id, phone: fresh, discountMinor: 10000, now: clock }));
+    expect(r.replayed).toBe(false);
+    const again = await placed('S-5004', fresh, 'PLACED');
+    expect(await code(t.prisma.$transaction((tx) => redeemCoupon(tx, { storeId: A, code: 'SAMPLE-WELCOME', orderId: again.id, phone: fresh, discountMinor: 10000, now: clock })))).toBe('COUPON_NOT_USABLE');
+    await setCouponEnabled(deps(), as(owner), welcome.id, { enabled: false });
+  });
+
   it('PR 213: the struck "was" price shows only when switched on, from the MRP or the real history', async () => {
     const d = await createRule(deps(), as(writer), { templateId: 'discount', key: 'polo-sale' });
     await saveDraft(deps(), as(writer), d.id, { content: withValues(d.live!, { percentOff: 20 }, { status: 'ACTIVE', startsAt: '2026-10-15T00:00:00.000Z', endsAt: '2026-10-31T00:00:00.000Z', scope: { include: [{ type: 'category', id: ids.polos! }], exclude: [] } }) });

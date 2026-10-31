@@ -56,9 +56,13 @@ describe('PR 107 · the bag speaks both languages', () => {
     expect(bn.sort()).toEqual(en.sort());
   });
   it('each code refusal the engine can give has its own words (SIM-F-009: members-only says so)', () => {
-    for (const r of ['UNKNOWN', 'OFF', 'NOT_STARTED', 'ENDED', 'USED_UP', 'PER_CUSTOMER', 'MEMBERS_ONLY', 'GUESTS_ONLY', 'RULE_NOT_LIVE', 'REFERRAL']) {
+    for (const r of ['UNKNOWN', 'OFF', 'NOT_STARTED', 'ENDED', 'USED_UP', 'PER_CUSTOMER', 'MEMBERS_ONLY', 'GUESTS_ONLY', 'FIRST_ORDER_ONLY', 'RULE_NOT_LIVE', 'REFERRAL']) {
       for (const lang of ['en', 'bn'] as const) expect(shopT(lang).has(`bag.code.r.${r}`), `${lang} ${r}`).toBe(true);
     }
     expect(shopT('en')('bag.code.r.MEMBERS_ONLY', { code: 'VIP' })).toBe('The code VIP is for members. Log in to use it.');
+    // PR 213 follow-up (SIM-F-050): "guests only" checks only the log-in, so it never claims "new customers"; the
+    // first-order code (order history by phone) is the one that says so
+    for (const lang of ['en', 'bn'] as const) expect(shopT(lang)('bag.code.r.GUESTS_ONLY', { code: 'X' })).not.toMatch(/new customer|নতুন ক্রেতা/i);
+    expect(shopT('en')('bag.code.r.FIRST_ORDER_ONLY', { code: 'WELCOME100' })).toMatch(/first order/);
   });
 });

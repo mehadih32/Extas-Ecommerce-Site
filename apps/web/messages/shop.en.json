@@ -874,7 +874,8 @@
         "USED_UP": "The code {code} has been used up.",
         "PER_CUSTOMER": "You have already used the code {code}.",
         "MEMBERS_ONLY": "The code {code} is for members. Log in to use it.",
-        "GUESTS_ONLY": "The code {code} is for new customers only.",
+        "GUESTS_ONLY": "The code {code} works only without logging in.",
+        "FIRST_ORDER_ONLY": "The code {code} is for a first order only. This number has ordered before.",
         "RULE_NOT_LIVE": "The offer behind {code} is not running now.",
         "REFERRAL": "{code} is an invite code. Invite codes are not taken in the bag yet."
       }
