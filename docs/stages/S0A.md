@@ -114,6 +114,7 @@
 
 - **Status:** Live · 2026-10-20
   - Build status row: Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas. 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop; a failure after a deploy rolls back by itself; report in `docs/reports/smoke/latest/`. 23 Oct: the nightly run checks out the live commit's checks (`last-good-deploy.json`), so a check merged before its deploy can't fail the live version
+  - GitHub pull request #72, 31 Oct
   - GitHub pull request #71, 31 Oct
   - GitHub pull request #67, 31 Oct
   - GitHub pull request #66, 31 Oct
@@ -135,11 +136,13 @@
   - **20 Oct 14:15** · [Scope added to existing PRs (owner, urgent admin sign-in bug; no new PR numbers)](../MASTER-REGISTER.md#how-this-reached-621): **PR 4 (deploy)** — an end-to-end check "log in → the admin loads" (`tools/admin-login-e2e.sh` + `.mjs`) runs in CI on the production images against a fresh installation (the migrate image's own command, the first owner with a generated password, a real browser opening every admin menu page); deploy.yml runs only after CI passed, so every deploy has passed it.
   - **23 Oct** · [Register row](../MASTER-REGISTER.md#s0a--server-foundation--pr-110): **Updated 23 Oct 2026 (CN-016):** after every deploy and every night a Playwright smoke test signs in with a check account and opens every built storefront and admin page; any failure rolls the deploy back; screenshots in `docs/reports/smoke/latest/`.
   - **31 Oct** · [Build status](../MASTER-REGISTER.md#build-status): **Updated 31 Oct (review round 1):** deploy, server setup, ERP acceptance and smoke each have their own concurrency group (runs by hand none), so nothing cancels a waiting deploy, setup or restore; `infra/deploy/deploy-order.sh` skips a commit that is behind the live one; a rollback's record has no target of its own and a second rollback is refused; the image store reset never runs on Docker Hub's rate limit, a full disk or a store at `OSDISK_RESET_MAX_PCT` (90), and a deploy follows a reset; the disk guard checks containerd's and Docker's folders (`DISK_STORE_MIN_FREE_GB`, 20); admin smoke pictures go only to the server's root-only `<EXTAS_ROOT>/private/smoke-admin` (`SMOKE_PRIVATE_OUT`), never Git (ci fails on one; those committed are removed) (#71)
+  - **31 Oct** · [Build status](../MASTER-REGISTER.md#build-status): **Updated 31 Oct (review round 2):** `deploy.yml` and `server-setup.yml` use one concurrency group per run (`extas-vm-deploy-` / `extas-vm-setup-<run id>`), so a newer commit's waiting deploy or a waiting rollback is never cancelled (the one runner still runs one job at a time and `deploy-order.sh` skips an older commit); the smoke test opens four more admin pages (Website › SEO › Redirects & 404 and Collection pages, Orders › Returns › Receive & QC, Products › New product) (#72)
 - **What was built** (from the Build status row):
-  - Code and files: `infra/deploy/deploy.sh`, `deploy.yml`, `infra/deploy/smoke.sh`, `smoke.yml`, `docs/reports/smoke/latest/`, `last-good-deploy.json`, `infra/deploy/deploy-order.sh`, `<EXTAS_ROOT>/private/smoke-admin`
-  - Names in the code: `OSDISK_RESET_MAX_PCT`, `DISK_STORE_MIN_FREE_GB`, `SMOKE_PRIVATE_OUT`
+  - Code and files: `infra/deploy/deploy.sh`, `deploy.yml`, `infra/deploy/smoke.sh`, `smoke.yml`, `docs/reports/smoke/latest/`, `last-good-deploy.json`, `infra/deploy/deploy-order.sh`, `<EXTAS_ROOT>/private/smoke-admin`, `server-setup.yml`, `deploy-order.sh`
+  - Names in the code: `OSDISK_RESET_MAX_PCT`, `DISK_STORE_MIN_FREE_GB`, `SMOKE_PRIVATE_OUT`, `extas-vm-deploy-`, `extas-vm-setup-<run id>`
   - Tests: 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop
   - Tests: admin smoke pictures go only to the server's root-only `<EXTAS_ROOT>/private/smoke-admin` (`SMOKE_PRIVATE_OUT`), never Git (ci fails on one
+  - Tests: the smoke test opens four more admin pages (Website › SEO › Redirects & 404 and Collection pages, Orders › Returns › Receive & QC, Products › New product) (#72)
 - **Owning agent:** Prohori
 - **Mentions:** [PR 604](#pr-604), [PR 601](#pr-601)
 - **Links:** [Register section](../MASTER-REGISTER.md#s0a--server-foundation--pr-110) · [README feature section](../../README.md#s0a--server-foundation--done-1212-live) · [↑ PR list](#prs-in-this-stage)
