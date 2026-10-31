@@ -25,6 +25,7 @@ fi
 printf '%s {\n' "$*"
 printf '\timport extas_site\n'
 if [ "$open" != yes ]; then
+  printf '\timport gated_cache\n'   # R2 security review (m3): Cloudflare never keeps a page of a locked host
   printf '\theader X-Robots-Tag "noindex, nofollow"\n'
   printf '\trespond /robots.txt "User-agent: *\nDisallow: /\n" 200\n'
   printf '\timport /etc/caddy/sites/auth.caddy\n'
