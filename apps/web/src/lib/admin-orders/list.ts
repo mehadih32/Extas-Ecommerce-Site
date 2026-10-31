@@ -152,6 +152,8 @@ export function flagChips(view: AdminView, r: od.OrderRow, labels: ListLabels): 
   if (r.flags.includes(od.BUNDLE_FLAG) && !r.orderGroupId) out.push({ label: t(d, 'orders.flag.bundle'), tone: 'info' });
   // PR 523: the number was proposed for the blocklist (a person decides; the order goes on)
   if (r.flags.includes(od.BLOCK_PROPOSED_FLAG) && !r.flags.includes(od.BLOCKLIST_FLAG)) out.push({ label: t(d, 'orders.flag.blockProposal'), tone: 'warn' });
+  // PR 524: the good-customer override kept the engine from holding it (a review may still wait for a person)
+  if (r.flags.includes(od.GOOD_CUSTOMER_FLAG)) out.push({ label: t(d, 'orders.flag.goodCustomer'), tone: 'ok' });
   if (r.orderGroupId) out.push({ label: t(d, 'orders.flag.merged'), tone: 'info' });
   for (const f of r.internalFlags) out.push({ label: labels.flags.get(f) ?? f, tone: 'gold' });
   if (r.source !== 'WEBSITE') out.push({ label: t(d, `orders.source.${r.source}`), tone: 'line' });

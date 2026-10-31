@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { REFUSER_TERMS, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
+import { REFUSER_TERMS, riskGoodCustomerSchema, riskStopReportSchema, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
 
 describe('S06 risk settings (v100–109)', () => {
   it('PR 162: the blocklist is in the registry at version 100, labelled in English and Bengali, off as shipped', () => {
@@ -99,5 +99,24 @@ describe('S06 risk settings (v100–109)', () => {
     // "the phone's owner never ordered" is never a rejection, and a code counts once
     expect(riskBlockProposalSchema.safeParse({ enabled: true, minRejections: 3, cancelCodes: ['NOT_ORDERED'] }).success).toBe(false);
     expect(riskBlockProposalSchema.safeParse({ enabled: true, minRejections: 3, cancelCodes: ['RISK_DECLINED', 'RISK_DECLINED'] }).success).toBe(false);
+  });
+
+  it('PR 524: good customers (105) and the stop report (106), labelled in both languages, off and unset as shipped', () => {
+    for (const [key, version] of [['risk.goodCustomer', 105], ['risk.stopReport', 106]] as const) {
+      const spec = riskS06Settings[key];
+      expect(registry[key]).toBe(spec);
+      expect(spec.version).toBe(version);
+      expect(spec.isOwnerData).toBe(false);
+      for (const lang of ['en', 'bn'] as const) {
+        expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+        expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+      }
+    }
+    expect(riskS06Settings['risk.goodCustomer'].default).toEqual({ enabled: false, minDelivered: null, maxRefused: 0 });
+    expect(riskS06Settings['risk.stopReport'].default).toEqual({ days: 7, warnWrongPercent: null, minStops: 5, maxRows: 500 });
+    expect(riskGoodCustomerSchema.safeParse({ enabled: true, minDelivered: 3, maxRefused: 0 }).success).toBe(true);
+    expect(riskGoodCustomerSchema.safeParse({ enabled: true, minDelivered: 0, maxRefused: 0 }).success).toBe(false);
+    expect(riskStopReportSchema.safeParse({ days: 7, warnWrongPercent: 30, minStops: 5, maxRows: 500 }).success).toBe(true);
+    expect(riskStopReportSchema.safeParse({ days: 0, warnWrongPercent: 30, minStops: 5, maxRows: 500 }).success).toBe(false);
   });
 });

@@ -9,8 +9,10 @@
 // the card saved (`settings.write`, audited), a stale or out-of-range card refused. PR 522: the one-parcel card off as
 // shipped, saved (an emptied hours box is "not set"), stale refused; "One parcel" groups one person's orders
 // (`orders.merge`), audited. PR 523: the proposal card off as shipped and saved (an emptied number is "not set"); a
-// proposal decided through the API (`risk.block`): "Not now" and "Block", each audited, decided twice refused. Every value
-// is a made-up test value.
+// proposal decided through the API (`risk.block`): "Not now" and "Block", each audited, decided twice refused. PR 524:
+// the good-customer card off and unset as shipped, saved (an emptied number is "not set"), audited; the stop report read
+// (`risk.report`) with its card, the card saved (`settings.write`, an emptied warning is "never"), stale refused. Every
+// value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -254,5 +256,34 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect(await api('POST', ['blocklist', 'proposals', p.proposalId], { body: { decision: 'dismiss', reason: 'changed my mind' } })).toMatchObject({ status: 409, body: { error: 'NOTHING_CHANGED' } });
     expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: next.orderId }, select: { status: true } })).toEqual({ status: 'PLACED' });
     for (const action of ['risk.blockProposal.save', 'risk.blockProposal.block']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBeGreaterThanOrEqual(1);
+  });
+
+  it('PR 524: the good-customer card and the stop report with its card; a reader is refused; each save audited', async () => {
+    const got = await api('GET', ['good-customer']);
+    const card = got.body.cards.goodCustomer as { key: string; value: Record<string, unknown>; version: string };
+    expect(card).toMatchObject({ key: 'goodCustomer', value: { enabled: false, minDelivered: null, maxRefused: 0 } });
+    expect((await api('GET', ['good-customer'], { cookie: reader })).status).toBe(403);
+    expect((await api('GET', ['good-customer', 'x'])).status).toBe(404);
+    expect(await api('PUT', ['good-customer'], { body: { key: 'goodCustomer', value: { ...card.value, maxRefused: 99 }, version: card.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['maxRefused'] } });
+    const put = await api('PUT', ['good-customer'], { body: { key: 'goodCustomer', value: { ...card.value, enabled: true, minDelivered: '' }, version: card.version } });
+    expect(put).toMatchObject({ status: 200, body: { cards: { goodCustomer: { value: { enabled: true, minDelivered: null } } } } });
+    expect(await api('PUT', ['good-customer'], { body: { key: 'goodCustomer', value: card.value, version: card.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    expect(await deps.resolver.value('risk.goodCustomer', { storeId: f.S })).toEqual({ enabled: true, minDelivered: null, maxRefused: 0 });
+
+    const rep = await api('GET', ['stopped']);
+    expect(rep.status).toBe(200);
+    expect(rep.body.report).toMatchObject({ days: 7, warnWrongPercent: null, minStops: 5, cut: false });
+    expect(rep.body.report.rules).toHaveLength(od.STOP_RULES.length);
+    const sc = rep.body.cards.stopReport as { key: string; value: Record<string, unknown>; version: string };
+    expect((await api('GET', ['stopped'], { cookie: reader })).status).toBe(403);
+    expect((await api('POST', ['stopped'], { body: {} })).status).toBe(405);
+    expect(await api('PUT', ['stopped'], { body: { key: 'stopReport', value: { ...sc.value, days: 400 }, version: sc.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['days'] } });
+    const saved = await api('PUT', ['stopped'], { body: { key: 'stopReport', value: { ...sc.value, warnWrongPercent: 40 }, version: sc.version } });
+    expect(saved).toMatchObject({ status: 200, body: { cards: { stopReport: { value: { warnWrongPercent: 40 } } } } });
+    const now = saved.body.cards.stopReport as typeof sc;
+    expect(await api('PUT', ['stopped'], { body: { key: 'stopReport', value: { ...now.value, warnWrongPercent: '' }, version: now.version } })).toMatchObject({ status: 200, body: { cards: { stopReport: { value: { warnWrongPercent: null } } } } });
+    // a screen read before the last save (the share 40) is stale
+    expect(await api('PUT', ['stopped'], { body: { key: 'stopReport', value: now.value, version: now.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    for (const action of ['risk.goodCustomer.save', 'risk.stopReport.save']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBeGreaterThanOrEqual(1);
   });
 });

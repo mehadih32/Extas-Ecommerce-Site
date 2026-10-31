@@ -1,0 +1,98 @@
+{
+  "stp": {
+    "metaTitle": "Stopped by the engine",
+    "title": "Stopped by the engine",
+    "sub": "Every order the risk engine stopped by itself, how sure the rule was and what became of it, so a wrong rule shows within days.",
+    "showing": "Stops from {from} to {to} (the last {days} days).",
+    "kpi": {
+      "stops": "Stopped by the engine",
+      "stopsFoot": "{n} of them have ended",
+      "wrong": "Stopped, yet delivered",
+      "wrongFoot": "{rate} of the stops that ended",
+      "wrongNone": "No stop has ended yet",
+      "flagged": "Rules to check",
+      "flaggedFoot": "Delivered all the same {pct} of the time or more, over at least {n} ended stops",
+      "flaggedOff": "Set a warning share in the card below to flag rules",
+      "spared": "Good customers spared",
+      "sparedFoot": "Orders the good-customer override kept from a hold or an automatic advance request"
+    },
+    "rules": {
+      "h": "By rule",
+      "d": "Each rule's stops and how they ended. The wrong rate is the share delivered all the same, out of the stops that ended."
+    },
+    "col": {
+      "rule": "Rule",
+      "stops": "Stops",
+      "delivered": "Delivered",
+      "refused": "Refused",
+      "cancelled": "Cancelled",
+      "open": "Still open",
+      "wrong": "Wrong rate",
+      "order": "Order",
+      "why": "What fired",
+      "sure": "How sure",
+      "when": "When",
+      "outcome": "What became of it"
+    },
+    "rule": {
+      "duplicateReview": "Review opened (duplicate or risk rules)",
+      "duplicateHold": "Held by the duplicate check",
+      "levelHold": "Held by a risk level",
+      "blocklistHold": "Held by the blocklist",
+      "advance": "Advance asked by itself"
+    },
+    "flag": "Check this rule",
+    "outcome": {
+      "delivered": "Delivered",
+      "refused": "Refused",
+      "cancelled": "Cancelled",
+      "open": "Still open"
+    },
+    "why": {
+      "level": "Level {band}",
+      "checkout": "At checkout",
+      "duplicate": "A look-alike order",
+      "levelAsk": "A risk level's ask, sent by itself",
+      "refuserAsk": "A repeat refuser's terms, sent by itself"
+    },
+    "sure": {
+      "pct": "{n}% sure",
+      "score": "Score {n}"
+    },
+    "list": {
+      "h": "Every stop",
+      "d": "Newest first. Open an order to see its timeline.",
+      "empty": "The engine stopped no order in these days."
+    },
+    "cut": "More stops than the report lists: only the newest {n} are listed and counted. Raise the most rows in the card below.",
+    "note": "The report only reads. To change a rule or the good-customer override, go to Orders › Risk rules.",
+    "rulesLink": "Open Risk rules",
+    "card": {
+      "h": "Report settings",
+      "d": "How many days the report shows, when a rule is flagged, and how many stops it lists.",
+      "days": "Days the report shows",
+      "daysHelp": "1 to 92, today included. A week as shipped.",
+      "warn": "Flag a rule when this share (%) was delivered all the same",
+      "warnHelp": "1 to 100. Empty: never flag. Example: 40 flags a rule when 4 in 10 of its ended stops were delivered anyway.",
+      "minStops": "Fewest ended stops before a rule can be flagged",
+      "minStopsHelp": "1 to 1,000. Keeps one unlucky order from flagging a rule.",
+      "maxRows": "Most stops one report lists",
+      "maxRowsHelp": "10 to 5,000."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "discard": "Discard",
+    "unsaved": "There are unsaved changes",
+    "readOnly": "Only someone allowed to change settings can change this.",
+    "err": {
+      "STALE": "Someone else changed this meanwhile. The card now shows theirs; change it again if needed.",
+      "INVALID_INPUT": "Check: {fields}.",
+      "FORBIDDEN": "You cannot change settings.",
+      "forbidden": "You cannot change settings.",
+      "unauthorized": "Sign in again.",
+      "network": "No connection. Nothing was saved; try again.",
+      "other": "Something went wrong. Nothing was saved; try again."
+    }
+  }
+}

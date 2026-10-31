@@ -282,6 +282,12 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         guide: 'analytics',
         pages: [{ href: '/admin/reports/fraud', perm: 'risk.report', keys: ['reportsFraud'] }],
       },
+      // S06 · PR 524 — Stopped by the engine: every order the engine stopped by itself, its rule and what became of it.
+      {
+        id: 'stopped',
+        guide: 'analytics',
+        pages: [{ href: '/admin/reports/stopped', perm: 'risk.report', keys: ['reportsStopped'] }],
+      },
     ],
   },
   { id: 'ai', icon: 'spark', group: 'business', base: '/admin/ai', tabs: [], ownerOnly: true, guide: 'ai' },

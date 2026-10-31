@@ -1,0 +1,12 @@
+/* S06 · PR 524 — Reports › Stopped by the engine: the flag beside a rule, the stop list's order link (tap size) and the
+   link to the risk rules. The tables reuse the Fraud & RTO page's (fraud.css); the shell's tokens only. */
+.adm2 .stp-flag{margin-left:8px;vertical-align:middle;gap:4px;display:inline-flex;align-items:center}
+.adm2 .fr-tbl tr.stp-flagged th[scope=row]{color:var(--ink)}
+.adm2 .stp-list td{font-size:13.5px;padding:10px 12px;vertical-align:top}
+.adm2 .stp-list .a2-pill{white-space:nowrap}
+.adm2 .stp-order{display:inline-flex;align-items:center;min-height:44px;min-width:44px;white-space:nowrap;font-weight:600}
+.adm2 .stp-link{padding:9px 0;font-weight:600}
+@media (max-width:767px){
+  .adm2 .stp-flag{margin:4px 0 0;display:flex;width:max-content}
+  .adm2 .stp-list td{padding:0}
+}
