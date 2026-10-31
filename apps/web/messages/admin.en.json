@@ -211,7 +211,12 @@
     },
     "telegram": {
       "name": "Telegram (AI 360 channel)",
-      "desc": "Server and backup alerts"
+      "desc": "Server and backup alerts. Until the bot token and the chat are in and the test passes, alerts stay on the server",
+      "fields": {
+        "chatId": "Chat ID — where the alerts go (a number like -1001234567890, or @channelname)",
+        "baseUrl": "Address — only for a test server",
+        "botToken": "Bot token (from @BotFather)"
+      }
     },
     "s3": {
       "name": "S3-compatible storage",

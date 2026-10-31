@@ -11,6 +11,7 @@ import { emailAdapters } from './email';
 import { paymentAdapters } from './payment';
 import { keyedCourierAdapters } from './courier';
 import { cdnAdapters } from './cdn';
+import { telegramAdapters } from './telegram';
 
 export * from './define';
 export * from './connections';
@@ -31,6 +32,8 @@ export * from './payment';
 export * from './courier';
 // PR 602 — the CDN (Cloudflare): dropping what it keeps; the mock until the owner types its token.
 export * from './cdn';
+// S19 · PR 392 — Telegram alerts to the owner's bot: the mock until the token and the chat are entered and tested.
+export * from './telegram';
 // S11 · PR 221 — the AI writer (search titles and descriptions): the practice writer until an AI provider is connected
 // (not in `allAdapters` until then; see ai-writer/index.ts).
 export * from './ai-writer';
@@ -40,4 +43,4 @@ export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAda
 
 // PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 291: the SMS
 // gateway too (its key and Test button); PR 292 the WhatsApp Business Platform; the mock senders are not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters] as const;
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...telegramAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters] as const;

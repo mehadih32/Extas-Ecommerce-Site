@@ -5,7 +5,7 @@
 //   passing test moves the connection out of MOCK. Their secret fields must be exactly the adapter's `secrets`
 //   (checked by test/catalogue.test.ts).
 // - `adapter: false` rows are integrations the blueprint needs whose adapter comes with a later PR (Google Drive
-//   backup PR 8/395, ~~Cloudflare PR 602~~ built, Telegram PR 9). They show as "not connected" with no button: nothing pretends
+//   backup PR 8/395, ~~Cloudflare PR 602~~ built, ~~Telegram PR 9~~ built with PR 392). They show as "not connected" with no button: nothing pretends
 //   to work before its code exists.
 // - Labels are keys into the admin messages files (apps/web/messages/admin.<lang>.json → `connections.<id>.…`).
 // - Adding a provider = one entry here + its labels in both messages files.
@@ -63,7 +63,18 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
-  { id: 'telegram', kind: 'TELEGRAM', provider: 'telegram', adapter: false, secrets: [], config: [], exclusive: false, targetMode: 'LIVE' },
+  // S19 · PR 392 — Telegram alerts: the bot's token (from @BotFather) and the chat the alerts go to. The mock keeps them
+  // in the process until the Test (the bot reads itself and the chat) passes; the server's own alerts use the same bot.
+  {
+    id: 'telegram',
+    kind: 'TELEGRAM',
+    provider: 'telegram',
+    adapter: true,
+    secrets: [{ field: 'botToken' }],
+    config: [{ field: 'chatId' }, { field: 'baseUrl', optional: true }],
+    exclusive: true,
+    targetMode: 'LIVE',
+  },
   {
     id: 's3',
     kind: 'STORAGE',

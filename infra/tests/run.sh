@@ -1070,4 +1070,50 @@ check "osdisk image check: a stale view of / with the volume inside is taken dow
   "$rc:$(grep -c "^umount -l /tmp/tmp.AbC123$T/var/lib/containerd\$" "$T/osd.log"):$(grep -c '^umount -l /tmp/tmp.AbC123$' "$T/osd.log")" "0:1:1"
 rm -rf "$T"
 
+# S19 · PR 392 — extas-vault-sync with a stand-in `docker` that plays the migrate image's CLI: the files it returns are
+# installed 0600 only when they changed, the fingerprint goes back on the next run, a newly connected bot says hello
+# once (stand-in curl), no value is ever in the state file, and a version without the CLI is "waiting".
+T="$(mktemp -d)"; mkdir -p "$T/root/config/secrets" "$T/root/state" "$T/bin"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/server.conf"
+printf 'DATABASE_DIRECT_URL=postgresql://extas:pw@extas-postgres:5432/extas\nVAULT_MASTER_KEY=%s\n' "$(printf 'k%.0s' $(seq 1 64))" > "$T/root/config/secrets/app.env"
+echo '{"migrate":"extas-migrate:abc"}' > "$T/root/state/last-good-deploy.json"
+cat > "$T/bin/docker" <<'FAKE'
+#!/usr/bin/env bash
+# stand-in for docker: the image exists; `run … test -f` answers $FAKE_HAS_CLI; the CLI run writes $FAKE_FILES
+echo "$*" >> "$FAKE_LOG"
+case "$1" in
+  image) exit 0 ;;
+  images) exit 0 ;;
+  run)
+    case "$*" in
+      *" test -f "*) [ "${FAKE_HAS_CLI:-yes}" = yes ] ;;
+      *server-sync-cli.ts*)
+        envf="$(sed -n 's/.*--env-file \([^ ]*\).*/\1/p' <<<"$*")"; out="$(sed -n 's/.* -v \([^:]*\):\/out.*/\1/p' <<<"$*")"
+        grep -h '^SYNC_PREVIOUS=' "$envf" >> "$FAKE_LOG"
+        prev="$(sed -n 's/^SYNC_PREVIOUS=//p' "$envf")"
+        if [ "$prev" = "$FAKE_FP" ]; then echo "{\"fingerprint\":\"$FAKE_FP\",\"changed\":false,\"files\":[]}" > "$out/result.json"; exit 0; fi
+        mkdir -p "$out/files"; printf '%b' "$FAKE_TG" > "$out/files/telegram.env"; printf 'x' > "$out/files/../escape"
+        echo "{\"fingerprint\":\"$FAKE_FP\",\"changed\":true,\"files\":[\"telegram.env\",\"../escape\"]}" > "$out/result.json" ;;
+    esac ;;
+esac
+FAKE
+printf '#!/bin/sh\necho "$*" >> "$FAKE_CURL"\n' > "$T/bin/curl"; printf '#!/bin/sh\nexit 0\n' > "$T/bin/chown"
+chmod +x "$T/bin/"*
+VENV=(env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/server.conf" FAKE_LOG="$T/docker.log" FAKE_CURL="$T/curl.log")
+S="$T/root/config/secrets"
+rc=0; "${VENV[@]}" FAKE_FP=fp1 FAKE_TG="TELEGRAM_BOT_TOKEN='123:abc'\nTELEGRAM_CHAT_ID='-1001'\n" "$B/extas-vault-sync" || rc=$?
+check "vault sync: the bot lands in telegram.env, root-only" "$rc:$(stat -c %a "$S/telegram.env"):$(grep -c "TELEGRAM_CHAT_ID='-1001'" "$S/telegram.env")" "0:600:1"
+check "vault sync: a name that is a path is never written" "$([ -e "$S/../escape" ] || [ -e "$S/escape" ] && echo written || echo no)" "no"
+check "vault sync: the state names the file, never a value" "$(jq -r '.result + " " + (.changed|join(",")) + " " + .fingerprint' "$T/root/state/vault-sync.json"):$(grep -c '123:abc' "$T/root/state/vault-sync.json")" "ok telegram.env fp1:0"
+check "vault sync: a new bot says hello once" "$(grep -c 'sendMessage' "$T/curl.log")" "1"
+check "vault sync: no secret in the docker command line" "$(grep -c 'VAULT_MASTER_KEY\|123:abc\|pw@' "$T/docker.log")" "0"
+"${VENV[@]}" FAKE_FP=fp1 FAKE_TG="x" "$B/extas-vault-sync"
+check "vault sync: the last fingerprint goes back and nothing changes" "$(tail -1 "$T/docker.log" | grep -c 'SYNC_PREVIOUS=fp1'):$(jq -r .detail "$T/root/state/vault-sync.json"):$(grep -c 'sendMessage' "$T/curl.log")" "1:unchanged:1"
+"${VENV[@]}" FAKE_FP=fp2 FAKE_TG="" "$B/extas-vault-sync"
+check "vault sync: a disconnected bot empties the file" "$(wc -c < "$S/telegram.env"):$(jq -r '.changed|join(",")' "$T/root/state/vault-sync.json")" "0:telegram.env"
+check "vault sync: no work folder left behind" "$(find "$S" -name '.vault-sync.*' | wc -l)" "0"
+rc=0; "${VENV[@]}" FAKE_HAS_CLI=no "$B/extas-vault-sync" || rc=$?
+check "vault sync: a version without the CLI is waiting, not a failure" "$rc:$(jq -r .result "$T/root/state/vault-sync.json")" "0:waiting"
+rm -rf "$T"
+
 exit $fail
