@@ -188,7 +188,9 @@
       "rules": {
         "read": "See every fraud and duplicate rule with its switch (the risk rules list)",
         "write": "Switch a fraud or duplicate rule on or off (the rule only marks and proposes; nothing is blocked)"
-      }
+      },
+      "block": "List a phone number on the blocklist with a reason (typed, or from an order). A listed number's new order is only marked or held for a person when the owner turns it on; nothing is cancelled and the customer is never told",
+      "unblock": "Undo a blocklist listing with a reason (the line is kept with who undid it and why)"
     },
     "fulfilment": {
       "print": "Print a booked parcel's courier sticker (it shows the receiver's name, phone and address) and a sample sticker",

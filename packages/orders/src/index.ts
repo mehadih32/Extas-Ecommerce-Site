@@ -86,6 +86,8 @@ export * from './duplicate-rules';
 export * from './alert-summary';
 export * from './rule-switches';
 export * from './risk-levels';
+// S06 · PR 162: the blocklist with reasons and an undo; a listed number's new order marked or held (blocklist.ts).
+export * from './blocklist';
 export * from './advance-request';
 export * from './advance-settings';
 export * from './booking';

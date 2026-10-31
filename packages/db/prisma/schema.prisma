@@ -298,6 +298,7 @@ model Store {
   aiCitations             AiCitation[]
   speedMeasurements       SpeedMeasurement[]
   webVitalDays            WebVitalDay[]
+  riskBlocks              RiskBlock[]
   internalLinkRules       InternalLinkRule[]
   seoIssues               SeoIssue[]
   blogCategories          BlogCategory[]
@@ -3467,6 +3468,33 @@ model CourierZoneSync {
 
   @@index([courierAccountId, createdAt])
   @@index([storeId, status])
+}
+
+/// @stage S06 · PR 162 — the blocklist: a phone number a person put on it, with the reason, who and when; "Undo" keeps
+/// the row (who undid it, when and why). Never deleted. While `risk.blocklist` is on, a new order from a listed number
+/// (or its identity) is marked, or held for a person, never cancelled.
+model RiskBlock {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store     @relation(fields: [storeId], references: [id])
+  /// The number in its one stored form (the BD phone helper).
+  phone       String
+  /// The identity the number belonged to when it was listed (PR 519), when the graph knew it.
+  clusterId   String?   @db.Uuid
+  /// The order it was listed from, when it was.
+  orderId     String?   @db.Uuid
+  reason      String
+  blockedById String?   @db.Uuid
+  blockedAt   DateTime  @default(now()) @db.Timestamptz(3)
+  undoneAt    DateTime? @db.Timestamptz(3)
+  undoneById  String?   @db.Uuid
+  undoReason  String?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, phone])
+  @@index([storeId, clusterId])
+  @@index([storeId, blockedAt])
 }
 
 /// @stage S06 · PR 519 — one identity built from phone, name, address, IP and device (a customer who changes his number

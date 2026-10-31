@@ -3,7 +3,8 @@
 // rule as the settings ship it; a switch saved through the real settings resolver (its change log), the version refusing
 // a stale screen, an unknown rule refused with nothing written. PR 161: the levels read and saved whole (off as they ship;
 // a stale screen, a band that does not exist, a hold reason not on the list and a partial ask without its percent refused
-// with nothing written). Every value is a made-up test value.
+// with nothing written). PR 162: the blocklist listed, undone and switched through the API, each with its permission
+// and its audit row; the switch never offers a cancel. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -61,7 +62,7 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect((await api('GET', ['rules'], { cookie: reader })).status).toBe(403);
     expect((await api('PUT', ['rules'], { cookie: reader, body: { switches: { 'risk.score': true } } })).status).toBe(403);
     expect((await api('PUT', ['rules'], { origin: 'https://evil.example.test', body: { switches: { 'risk.score': true } } })).status).toBe(403);
-    expect((await api('GET', ['blocklist'])).status).toBe(404);
+    expect((await api('GET', ['matrix'])).status).toBe(404);
     expect((await api('GET', ['rules', 'x'])).status).toBe(404);
     expect((await api('POST', ['rules'], { body: {} })).status).toBe(405);
   });
@@ -119,5 +120,31 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect(await api('PUT', ['advance'], { body: { version: got.body.version, value: got.body.value } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
     expect((await api('PUT', ['advance'], { body: { value: { ...value, provider: 'paypal' } } })).body).toMatchObject({ error: 'INVALID_INPUT' });
     expect(await f.t.prisma.auditLog.count({ where: { action: 'orders.advanceRequest.save' } })).toBe(1);
+  });
+
+  it('PR 162: the blocklist listed and undone with a reason, its switch saved (off as shipped, never a cancel); a reader is refused', async () => {
+    const got = await api('GET', ['blocklist']);
+    expect(got).toMatchObject({ status: 200, body: { value: { enabled: false, onOrder: 'mark' }, active: [], undone: [] } });
+    expect((await api('GET', ['blocklist'], { cookie: reader })).status).toBe(403);
+    expect((await api('POST', ['blocklist'], { cookie: reader, body: { phone: '01700000601', reason: 'refused three parcels' } })).status).toBe(403);
+    expect((await api('POST', ['blocklist'], { origin: 'https://evil.example.test', body: { phone: '01700000601', reason: 'refused three parcels' } })).status).toBe(403);
+    expect((await api('POST', ['blocklist'], { body: { phone: '01700000601', reason: 'no' } })).body).toMatchObject({ error: 'INVALID_INPUT' });
+    const listed = await api('POST', ['blocklist'], { body: { phone: '01700000601', reason: 'refused three parcels' } });
+    expect(listed).toMatchObject({ status: 200, body: { active: [{ phone: '+8801700000601', reason: 'refused three parcels', blockedBy: 'Sample owner' }] } });
+    expect(await api('POST', ['blocklist'], { body: { phone: '+8801700000601', reason: 'listed twice by mistake' } })).toMatchObject({ status: 409, body: { error: 'ALREADY_LISTED' } });
+    const id = listed.body.active[0].id as string;
+    expect((await api('POST', ['blocklist', id, 'unblock'], { cookie: reader, body: { reason: 'paid in advance now' } })).status).toBe(403);
+    const undone = await api('POST', ['blocklist', id, 'unblock'], { body: { reason: 'paid in advance now' } });
+    expect(undone).toMatchObject({ status: 200, body: { active: [], undone: [{ id, undoReason: 'paid in advance now', undoneBy: 'Sample owner' }] } });
+    expect((await api('POST', ['blocklist', 'not-an-id', 'unblock'], { body: { reason: 'paid in advance now' } })).status).toBe(404);
+    expect((await api('GET', ['blocklist', id])).status).toBe(404);
+    expect((await api('DELETE', ['blocklist'])).status).toBe(405);
+    expect((await api('PUT', ['blocklist'], { body: { value: { ...got.body.value, enabled: true, onOrder: 'cancel' } } })).body).toMatchObject({ error: 'INVALID_INPUT' });
+    expect((await api('PUT', ['blocklist'], { cookie: reader, body: { value: got.body.value } })).status).toBe(403);
+    const put = await api('PUT', ['blocklist'], { body: { value: { ...got.body.value, enabled: true, onOrder: 'hold' } } });
+    expect(put).toMatchObject({ status: 200, body: { value: { enabled: true, onOrder: 'hold' } } });
+    expect(await deps.resolver.value('risk.blocklist', { storeId: f.S })).toMatchObject({ enabled: true, onOrder: 'hold' });
+    for (const action of ['risk.block', 'risk.unblock', 'risk.blocklist.save']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBe(1);
+    expect(await f.t.prisma.riskBlock.count()).toBe(1);
   });
 });

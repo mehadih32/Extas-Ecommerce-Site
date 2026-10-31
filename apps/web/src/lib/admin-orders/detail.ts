@@ -17,6 +17,7 @@ import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
 import { alertExplainView, duplicateCheckSummary, type AlertExplainView } from './alert';
 import { identitySummary } from './identity';
+import { blocklistSummary } from './blocklist-card';
 import { levelSummary, riskSummary } from './risk';
 import { advanceBand, advanceSpecs, advanceSummary } from './advance';
 
@@ -260,7 +261,7 @@ export function editSpecs(view: AdminView, o: { id: string; number: string; vers
 /** Every command button of one order: the primary ones, the bands', the "More actions" menu. */
 export function commandSpecs(
   view: AdminView,
-  o: { id: string; number: string; version: number; status: OrderState; holdFromStatus: OrderState | null; cancelRequested: boolean; cancelPending: boolean; booked: boolean; internalFlags: string[]; paidMinor: number; currency: string },
+  o: { id: string; number: string; version: number; status: OrderState; holdFromStatus: OrderState | null; cancelRequested: boolean; cancelPending: boolean; booked: boolean; internalFlags: string[]; paidMinor: number; currency: string; phone?: string | null },
   allowed: readonly OrderCommand[],
   perms: ReadonlySet<string>,
   reasons: od.ReasonLists,
@@ -320,6 +321,15 @@ export function commandSpecs(
     more.push(base('cancelAfterBooking', 'cancelAfterBooking', { icon: 'uturn', tone: 'bad', effects: [t(d, 'orders.eff.cabParcel'), t(d, 'orders.eff.cabPending'), t(d, 'orders.eff.cabNext')], fields: [{ name: 'reasonCode', kind: 'select', label: t(d, 'orders.dlg.reason'), options: opts(reasons.cancel), value: reasons.cancel.some((r) => r.key === 'CUSTOMER_CHANGE_AFTER_BOOKING') ? 'CUSTOMER_CHANGE_AFTER_BOOKING' : undefined }, note(false, 'reasonCode')], okTone: 'badf' }));
   if (has('setFlags') && may(perms, 'flags') && reasons.flags.length)
     more.push(base('flags', 'flags', { icon: 'flag', fields: [{ name: 'flags', kind: 'checks', label: t(d, 'orders.dlg.flags'), options: reasons.flags.map((f) => ({ value: f.key, label: nameOf(view, f) })), value: o.internalFlags }] }));
+  // PR 162: list this order's number on the blocklist with a reason (`risk.block`); this order itself is not touched
+  if (o.phone && perms.has('risk.block'))
+    more.push({
+      ...base('flags', 'blockNumber', { icon: 'shield', effects: [t(d, 'orders.eff.blockList', { phone: phoneText(o.phone) || o.phone }), t(d, 'orders.eff.blockNext'), t(d, 'orders.eff.blockNever')] }),
+      url: BLOCKLIST_URL,
+      version: null,
+      fixed: { orderId: o.id },
+      fields: [{ name: 'reason', kind: 'textarea', label: t(d, 'orders.dlg.blockWhy'), required: true, maxLength: od.BLOCK_REASON_MAX, placeholder: t(d, 'orders.dlg.blockWhyPh') }],
+    });
   return { primary, more, courier, request };
 }
 
@@ -415,6 +425,9 @@ export function reviewSpecs(view: AdminView, alertId: string, number: string, ma
   return out;
 }
 
+/** PR 162: where the order screen's "Add to blocklist" sends (the risk API; it checks `risk.block` again). */
+const BLOCKLIST_URL = '/api/admin/risk/blocklist';
+
 const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.cancel': 'bad',
   'order.courierCancelConfirmed': 'bad',
@@ -429,6 +442,7 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.duplicateCheck': 'warn',
   'order.riskSection': 'warn',
   'order.riskLevel': 'warn',
+  'order.blocklistMatch': 'bad',
   'order.awaitAdvance': 'warn',
   'order.advanceResend': 'mute',
   'order.identityLinked': 'mute',
@@ -703,10 +717,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const named = t(d, key);
       // PR 521: when the duplicate rules ran, their line replaces the bare reason code
       const ruled = e.type === 'order.duplicateCheck' ? duplicateCheckSummary(view, e.data) : null;
-      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
+      const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
       const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
-      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : ruled);
+      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : ruled);
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })

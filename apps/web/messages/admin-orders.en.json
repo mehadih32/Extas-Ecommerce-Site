@@ -160,7 +160,8 @@
       "merged": "One parcel",
       "twoSizes": "2 sizes — check",
       "twoSizesOther": "2 sizes — for someone else",
-      "riskWatch": "Watch"
+      "riskWatch": "Watch",
+      "blocklist": "Blocklist"
     },
     "page": {
       "all": "All orders",
@@ -251,7 +252,9 @@
       "lineTo": "Change to {size}",
       "lineRemove": "Take this piece out",
       "pickReason": "Pick a reason",
-      "band": "Delivery band (its charge from Delivery)"
+      "band": "Delivery band (its charge from Delivery)",
+      "blockWhy": "Why (required)",
+      "blockWhyPh": "What happened, so the next person knows"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -289,7 +292,8 @@
       "NO_CHANNEL": "Tick at least one way: SMS, WhatsApp or a call.",
       "ALREADY_RESOLVED": "Someone has resolved this check already. Reload to see it.",
       "ORDER_REFUSED": "The order cannot move now (for example a cancel is waiting). Sort that out first.",
-      "NOT_RETURNED": "This parcel did not come back, so it takes no return reason."
+      "NOT_RETURNED": "This parcel did not come back, so it takes no return reason.",
+      "ALREADY_LISTED": "This number is on the blocklist already."
     },
     "cmd": {
       "confirm": {
@@ -401,6 +405,12 @@
         "title": "Send the pay link again for {n}",
         "ok": "Send again",
         "done": "The pay link is sent again for {n}"
+      },
+      "blockNumber": {
+        "label": "Add number to blocklist",
+        "title": "Add the number of {n} to the blocklist",
+        "ok": "Add to blocklist",
+        "done": "The number of {n} is on the blocklist"
       }
     },
     "eff": {
@@ -434,7 +444,10 @@
       "riskAssess": "A new score with today's risk rules; the earlier one stays on the order's record",
       "riskInforms": "Nothing is blocked, held or asked in advance",
       "reviewDecline": "Cancelled with the reason \"Declined after risk review\" — never a block",
-      "riskLevels": "Your risk levels may then add a watch mark, a hold or a call; nothing is blocked or asked by itself"
+      "riskLevels": "Your risk levels may then add a watch mark, a hold or a call; nothing is blocked or asked by itself",
+      "blockList": "{phone} goes on the blocklist with your reason, your name and the time",
+      "blockNext": "Only while the owner has the blocklist switched on, a new order from it is marked or held for a person",
+      "blockNever": "This order is not changed or cancelled, and the customer is not told"
     },
     "review": {
       "title": "Duplicate review",
@@ -642,7 +655,12 @@
       "exchange_waived": "Exchange charge waived",
       "exchange_claimed": "\"Your mistake\" claim recorded",
       "exchange_claimAccepted": "Claim approved — no charge",
-      "exchange_claimRefused": "Claim refused"
+      "exchange_claimRefused": "Claim refused",
+      "order_blocklistMatch": "Number on the blocklist",
+      "blocklistWhy": "listed because: {why}",
+      "blocklistIdentity": "the same person under another number",
+      "blocklistHeld": "held for a person to decide",
+      "blocklistNotHeld": "not held (check the hold reason) — marked only"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
@@ -929,7 +947,7 @@
       "readOnly": "You can see these rules. Changing them needs the permission to change the risk rules.",
       "noBands": "No risk bands are set yet.",
       "never": "Never by itself: blocking anyone, changing COD, a price or a charge. Asking for money only with “Send the proposal by itself” on.",
-      "later": "Coming with their own steps: the risk matrix, rule switches, duplicate rules, the blocklist and protection & learning.",
+      "later": "Coming with their own steps: the risk matrix, rule switches, duplicate rules and protection & learning.",
       "err": {
         "STALE": "Someone else changed these rules. They have been loaded again — check and save once more.",
         "INVALID_INPUT": "Something is not right. Check the percent (1–99) and try again.",
@@ -964,6 +982,53 @@
         },
         "words": "The words are in Messages › Templates (“Advance request with pay link”).",
         "noChannel": "Tick at least one way while “Send the proposal by itself” is on."
+      },
+      "bl": {
+        "h": "Blocklist",
+        "d": "Numbers a person listed, each with the reason, who and when. Undo keeps the line with who undid it and why. Off until you switch it on.",
+        "master": "Act on listed numbers",
+        "masterHelp": "When on, a new order from a listed number, or from the same person under another number, gets what you choose below.",
+        "offNote": "Off — the list is kept, but nothing happens to orders. You can fill the list now and switch on later.",
+        "onOrder": "What a listed number's new order gets",
+        "on": {
+          "mark": "A \"Blocklist\" mark for the team (the order goes on as usual)",
+          "hold": "Hold the order until a person decides"
+        },
+        "reasonHelp": "From your hold reasons. The team sees it on the order.",
+        "never": "Never by itself: cancelling an order, telling the customer, changing COD, a price or a charge. A person decides every case.",
+        "addH": "Add a number",
+        "phone": "Phone number",
+        "phonePh": "01XXXXXXXXX",
+        "why": "Why",
+        "whyPh": "What happened, so the next person knows",
+        "whyHelp": "At least {min} letters.",
+        "add": "Add to blocklist",
+        "adding": "Adding…",
+        "added": "Added to the blocklist.",
+        "activeH": "On the list ({n})",
+        "none": "No number is on the list.",
+        "by": "by {who}, {when}",
+        "fromOrder": "from order {n}",
+        "identity": "the same person is recognised under another number",
+        "undo": "Undo",
+        "undoWhy": "Why undo it",
+        "undoOk": "Undo the listing",
+        "undone": "Undone. The line is kept below.",
+        "undoneH": "Undone ({n})",
+        "undoneBy": "undone by {who}, {when}: {why}",
+        "cancel": "Cancel",
+        "readOnly": "You can see the list. Changing the switch needs the permission to change the risk rules.",
+        "noBlock": "Adding a number needs the \"List a number on the blocklist\" permission.",
+        "err": {
+          "INVALID_INPUT": "Check the number (a Bangladeshi mobile number) and write the reason in a sentence.",
+          "ALREADY_LISTED": "This number is on the list already.",
+          "NOTHING_CHANGED": "This listing was undone already. The list has been loaded again.",
+          "NOT_FOUND": "This listing is not here any more. The list has been loaded again.",
+          "FORBIDDEN": "You don't have the permission for this.",
+          "UNAUTHENTICATED": "You are signed out. Sign in again.",
+          "network": "No connection. Nothing was changed — try again.",
+          "other": "It did not work. Nothing was changed — try again."
+        }
       }
     },
     "adv": {

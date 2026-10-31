@@ -1,0 +1,18 @@
+/* S06 · PR 162 — the Blocklist card of Orders › Risk rules: one line per listed number (the number, the reason, who and
+   when, the order it came from) with "Undo" at its end; on a phone the button goes under the line, full width, and the
+   undo reason opens under it. Every button keeps the device gate's 44 px. */
+.adm2 .a2-bl-list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.adm2 .a2-bl-row{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border:1px solid var(--ln);border-radius:var(--r);min-width:0}
+.adm2 .a2-bl-row.is-undone{opacity:.8}
+.adm2 .a2-bl-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;overflow-wrap:anywhere}
+.adm2 .a2-bl-phone{font-variant-numeric:tabular-nums;font-size:14px}
+.adm2 .a2-bl-row>.a2-btn{flex:none;min-height:44px;display:inline-flex;align-items:center;gap:6px}
+.adm2 .a2-bl-undo{flex:0 1 280px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.adm2 .a2-bl-undo .a2-gap8{display:flex;gap:8px;flex-wrap:wrap}
+.adm2 .a2-bl-undo .a2-btn{min-height:44px}
+@media (max-width:767px){
+  .adm2 .a2-bl-row{flex-direction:column;align-items:stretch}
+  .adm2 .a2-bl-row>.a2-btn{width:100%;justify-content:center}
+  .adm2 .a2-bl-undo{flex:none}
+  .adm2 .a2-bl-undo .a2-btn{flex:1}
+}
