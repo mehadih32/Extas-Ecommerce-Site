@@ -404,29 +404,45 @@ export interface SweepResult {
  * At most `inventory.reservation.batchSize` holds of each kind per run; the next run takes the rest.
  */
 export async function sweepReservations(deps: InventoryDeps): Promise<SweepResult> {
-  const [abandonMin, batch, kinds] = await Promise.all([setting(deps, null, 'inventory.reservation.abandonMinutes'), setting(deps, null, 'inventory.reservation.batchSize'), sellableKinds(deps)]);
+  const [abandonMin, batch, kinds, hours] = await Promise.all([
+    setting(deps, null, 'inventory.reservation.abandonMinutes'),
+    setting(deps, null, 'inventory.reservation.batchSize'),
+    sellableKinds(deps),
+    setting(deps, null, 'inventory.reservation.convertedHoldHours'),
+  ]);
   const now = nowOf(deps);
   const cutoff = new Date(now.getTime() - abandonMin * 60_000);
   const db = deps.db;
   const expired = await db.stockReservation.findMany({ where: { status: 'ACTIVE', releasedAt: null, expiresAt: { lte: now } }, select: { id: true, variantId: true }, take: batch, orderBy: { expiresAt: 'asc' } });
-  const due = await db.stockReservation.findMany({ where: { status: 'CONVERTED', releasedAt: null, expiresAt: { lte: now } }, select: { id: true, variantId: true, storeId: true, orderId: true }, take: batch, orderBy: { expiresAt: 'asc' } });
+  // Review R2 (m1): an order hold is looked at half its time before it runs out, so an open order's hold is renewed
+  // while it still counts — it never lapses between its expiry and the next sweep (a gap where the piece sells twice).
+  const ahead = new Date(now.getTime() + Math.floor((hours * 3_600_000) / 2));
+  const due = await db.stockReservation.findMany({ where: { status: 'CONVERTED', releasedAt: null, expiresAt: { lte: ahead } }, select: { id: true, variantId: true, storeId: true, orderId: true, expiresAt: true }, take: batch, orderBy: { expiresAt: 'asc' } });
   // Review R1 (M1): an order still open and not yet taken by the ERP keeps its pieces — its hold is renewed, never let go,
   // so a piece is not sold twice while the order waits for a call, an advance or a hold reason. Let go: a cancelled or
   // finished order, an order the ERP accepted (its own `reserved` counts it from then), a hold with no order.
-  const keep = await stillOpen(db, due);
-  const timedOut = due.filter((h) => !keep.has(h.id));
-  const renew = due.filter((h) => keep.has(h.id));
+  // Review R2 (M1): an order waiting for its money is kept at most `inventory.reservation.unpaidHoldHours` (0 = for ever).
+  const keep = await stillOpen(deps, due, now, hours);
+  const timedOut = due.filter((h) => !keep.has(h.id) && h.expiresAt.getTime() <= now.getTime());
+  const renew = due.filter((h) => {
+    const until = keep.get(h.id);
+    return until !== undefined && until.getTime() > h.expiresAt.getTime();
+  });
   const activeCarts = await db.stockReservation.findMany({ where: { status: 'ACTIVE', releasedAt: null, expiresAt: { gt: now }, cartId: { not: null } }, select: { cartId: true }, distinct: ['cartId'], take: batch });
   const idle = activeCarts.length
     ? await db.cart.findMany({ where: { id: { in: activeCarts.map((c) => c.cartId!) }, OR: [{ lastActivityAt: { lt: cutoff } }, { status: { not: 'ACTIVE' } }] }, select: { id: true } })
     : [];
   const abandoned = idle.length ? await db.stockReservation.findMany({ where: { status: 'ACTIVE', releasedAt: null, expiresAt: { gt: now }, cartId: { in: idle.map((c) => c.id) } }, select: { id: true, variantId: true }, take: batch }) : [];
-  if (renew.length) {
-    const hours = await setting(deps, null, 'inventory.reservation.convertedHoldHours');
-    await db.stockReservation.updateMany({ where: { id: { in: renew.map((h) => h.id) }, status: 'CONVERTED', releasedAt: null }, data: { expiresAt: new Date(now.getTime() + hours * 3_600_000) } });
+  // A renewed hold still counts (it is renewed before it runs out), so the pools' numbers do not change.
+  const byUntil = new Map<number, string[]>();
+  for (const h of renew) {
+    const t = keep.get(h.id)!.getTime();
+    byUntil.set(t, [...(byUntil.get(t) ?? []), h.id]);
   }
+  for (const [t, ids] of byUntil) await db.stockReservation.updateMany({ where: { id: { in: ids }, status: 'CONVERTED', releasedAt: null }, data: { expiresAt: new Date(t) } });
+  const renewed = renew.length ? { ordersRenewed: renew.length } : {};
   const all = [...expired, ...timedOut, ...abandoned];
-  if (!all.length) return { expired: 0, abandoned: 0, ordersTimedOut: 0, rowsChanged: 0, ...(renew.length ? { ordersRenewed: renew.length } : {}) };
+  if (!all.length) return { expired: 0, abandoned: 0, ordersTimedOut: 0, rowsChanged: 0, ...renewed };
 
   const retries = await setting(deps, null, 'inventory.reservation.lockRetries');
   return withLockRetry(retries, () =>
@@ -434,28 +450,59 @@ export async function sweepReservations(deps: InventoryDeps): Promise<SweepResul
       const variants = await tx.productVariant.findMany({ where: { id: { in: [...new Set(all.map((h) => h.variantId))] } }, select: { sku: true } });
       const rows = await lockPools(tx, variants.map((v) => v.sku));
       const e = expired.length ? (await tx.stockReservation.updateMany({ where: { id: { in: expired.map((h) => h.id) }, status: 'ACTIVE', releasedAt: null, expiresAt: { lte: now } }, data: { status: 'EXPIRED', releasedAt: now } })).count : 0;
-      const o = timedOut.length ? (await tx.stockReservation.updateMany({ where: { id: { in: timedOut.map((h) => h.id) }, status: 'CONVERTED', releasedAt: null }, data: { releasedAt: now } })).count : 0;
+      const o = timedOut.length ? (await tx.stockReservation.updateMany({ where: { id: { in: timedOut.map((h) => h.id) }, status: 'CONVERTED', releasedAt: null, expiresAt: { lte: now } }, data: { releasedAt: now } })).count : 0;
       const a = abandoned.length ? (await tx.stockReservation.updateMany({ where: { id: { in: abandoned.map((h) => h.id) }, status: 'ACTIVE', releasedAt: null }, data: { status: 'RELEASED', releasedAt: now } })).count : 0;
       const r = await refreshPools(tx, rows, now, kinds);
-      return { expired: e, abandoned: a, ordersTimedOut: o, rowsChanged: r.rowsChanged, ...(renew.length ? { ordersRenewed: renew.length } : {}) };
+      return { expired: e, abandoned: a, ordersTimedOut: o, rowsChanged: r.rowsChanged, ...renewed };
     }, TX),
   );
 }
 
 /** Order states whose pieces are still the shop's to keep (not cancelled, not finished, not with the courier). */
 const OPEN_ORDER_STATES = ['PLACED', 'AWAITING_ADVANCE', 'ON_HOLD', 'CONFIRMED', 'PROCESSING', 'PACKED'] as const;
+/** The order's flags that say its online payment has not come in (the payments service's PAYMENT_FLAGS). */
+const UNPAID_FLAGS = ['PAYMENT_PENDING', 'PAYMENT_FAILED'];
 
-/** Review R1 (M1): of these order holds, the ones whose order is still open and whose ERP push was not accepted yet. */
-async function stillOpen(db: InventoryDeps['db'], holds: { id: string; storeId: number; orderId: string | null }[]): Promise<Set<string>> {
+/**
+ * Review R1 (M1): of these order holds, the ones whose order is still open and whose ERP push was not accepted yet,
+ * each with the time its hold is renewed to (`convertedHoldHours` from now).
+ * Review R2 (M1): an order waiting for its money — placed and its online payment not in (PAYMENT_PENDING /
+ * PAYMENT_FAILED), or waiting for an advance — keeps its pieces at most `inventory.reservation.unpaidHoldHours` from
+ * when it started waiting (0 = for ever): the renewal stops there and the hold then ends like any other. Nothing about
+ * the order changes: it is never cancelled here. If he pays later, confirming holds the pieces again or says they are gone.
+ */
+async function stillOpen(deps: InventoryDeps, holds: { id: string; storeId: number; orderId: string | null }[], now: Date, hours: number): Promise<Map<string, Date>> {
+  const db = deps.db;
   const ids = [...new Set(holds.map((h) => h.orderId).filter((x): x is string => x !== null))];
-  if (!ids.length) return new Set();
-  const [orders, pushes] = await Promise.all([
-    db.order.findMany({ where: { id: { in: ids }, status: { in: [...OPEN_ORDER_STATES] } }, select: { id: true } }),
+  if (!ids.length) return new Map();
+  const [orders, pushes, unpaidHours] = await Promise.all([
+    db.order.findMany({ where: { id: { in: ids }, status: { in: [...OPEN_ORDER_STATES] } }, select: { id: true, status: true, flags: true, placedAt: true } }),
     db.erpPush.findMany({ where: { documentType: 'order.create', status: 'SENT', referenceId: { in: ids } }, select: { referenceId: true } }),
+    setting(deps, null, 'inventory.reservation.unpaidHoldHours'),
   ]);
-  const open = new Set(orders.map((o) => o.id));
-  for (const p of pushes) open.delete(p.referenceId);
-  return new Set(holds.filter((h) => h.orderId !== null && open.has(h.orderId)).map((h) => h.id));
+  const sent = new Set(pushes.map((p) => p.referenceId));
+  const renewTo = new Date(now.getTime() + hours * 3_600_000);
+  const unpaid = orders.filter((o) => !sent.has(o.id) && (o.status === 'AWAITING_ADVANCE' || (o.status === 'PLACED' && o.flags.some((f) => UNPAID_FLAGS.includes(f)))));
+  // waiting for an advance: since the team asked for it (the latest `order.awaitAdvance`), else since the order came in
+  const asked = new Map<string, number>();
+  const waiting = unpaid.filter((o) => o.status === 'AWAITING_ADVANCE').map((o) => o.id);
+  if (unpaidHours > 0 && waiting.length) {
+    const evs = await db.orderEvent.findMany({ where: { orderId: { in: waiting }, type: 'order.awaitAdvance' }, select: { orderId: true, createdAt: true } });
+    for (const e of evs) asked.set(e.orderId, Math.max(asked.get(e.orderId) ?? 0, e.createdAt.getTime()));
+  }
+  const until = new Map<string, Date>();
+  for (const o of orders) if (!sent.has(o.id)) until.set(o.id, renewTo);
+  if (unpaidHours > 0) {
+    for (const o of unpaid) {
+      const since = Math.max(o.placedAt.getTime(), asked.get(o.id) ?? 0);
+      const limit = since + unpaidHours * 3_600_000;
+      if (limit <= now.getTime()) until.delete(o.id);
+      else until.set(o.id, new Date(Math.min(renewTo.getTime(), limit)));
+    }
+  }
+  const out = new Map<string, Date>();
+  for (const h of holds) if (h.orderId !== null && until.has(h.orderId)) out.set(h.id, until.get(h.orderId)!);
+  return out;
 }
 
 /**

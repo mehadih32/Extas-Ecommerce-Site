@@ -141,6 +141,10 @@
         "label": "An order's hold lasts at most (hours)",
         "help": "After an order is placed its pieces stay held until the ERP's stock shows the order. If the ERP never shows it, the hold ends after this many hours."
       },
+      "unpaidHoldHours": {
+        "label": "An unpaid order keeps its pieces at most (hours)",
+        "help": "An order whose online payment or advance has not come in keeps its pieces held this many hours from when it started waiting. Then the pieces go back on sale; the order itself stays as it is. 0 = keep them while the order is open."
+      },
       "maxUnitsPerLine": {
         "label": "Most pieces of one variant held for one bag",
         "help": "A bag cannot hold more pieces than this of one colour and size."

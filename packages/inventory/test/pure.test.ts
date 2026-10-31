@@ -109,10 +109,14 @@ describe('S09 settings', () => {
   });
   it('every S09 key is at registry version 10, (PR 197–207) 11 or (PR 196 webhooks) 22, and its default passes its own schema', () => {
     for (const [key, s] of Object.entries(inventorySettings)) {
-      expect([10, 11, 22], key).toContain(s.version);
+      // review R2 (M1): the unpaid order's hold limit came later (registry version 121)
+      expect(key === 'inventory.reservation.unpaidHoldHours' ? [121] : [10, 11, 22], key).toContain(s.version);
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
     }
     expect(inventorySettings['inventory.reservation.holdMinutes'].version).toBe(11);
+    // review R2 (M1): its default is the order hold's default; 0 keeps the pieces while the order is open
+    expect(inventorySettings['inventory.reservation.unpaidHoldHours'].default).toBe(inventorySettings['inventory.reservation.convertedHoldHours'].default);
+    expect(inventorySettings['inventory.reservation.unpaidHoldHours'].schema.safeParse(0).success).toBe(true);
     expect(Object.entries(inventorySettings).filter(([, s]) => s.version === 22).map(([k]) => k).sort()).toEqual(['erp.webhook.batchSize', 'erp.webhook.dedupeHours', 'erp.webhook.enabled', 'erp.webhook.maxBodyKb']);
   });
 });
