@@ -679,6 +679,28 @@ rc=0; ds 'x; rm -rf /' >/dev/null 2>&1 || rc=$?
 check "docs: anything but a commit hash is refused" "$rc:$(readlink "$DD/current")" "2:aaaaaaaaaaaa"
 rm -rf "$T"
 
+# The Site manual in one file (PR 390): docs-sync.sh makes docs/MANUAL.md in the copy from the page guides — chapters in
+# the sidebar's order, overview then pages in help-pages.json order, headings moved down, guide links as plain text,
+# writers' notes dropped — and never in the checkout; a checkout without guides gets none (above: still 5 files).
+T="$(mktemp -d)"; DD="$T/root/docs"; R="$T/repo"
+mkdir -p "$R/docs/admin-guide/pages/orders" "$R/docs/admin-guide/pages/help" "$R/apps/web/src/lib/admin-shell" "$R/packages/settings/src" "$T/root"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+echo readme > "$R/README.md"; echo bp > "$R/docs/BLUEPRINT.md"
+printf "export const ADMIN_SECTIONS = [\n  'orders',\n  'help',\n] as const;\n" > "$R/packages/settings/src/registry-admin-shell.ts"
+echo '{"pages":[{"id":"orders/confirm","route":"/admin/orders/confirm"},{"id":"orders/all","route":"/admin/orders"},{"id":"help/manual","route":"/admin/help"}]}' > "$R/apps/web/src/lib/admin-shell/help-pages.json"
+printf '# অর্ডার — সেকশনের সারকথা\n\nসব অর্ডার। [কনফার্ম](confirm.md)\n' > "$R/docs/admin-guide/pages/orders/index.md"
+printf '# কনফার্ম বাকি\n\n## এটা কী\nকল-তালিকা\n<!-- writer note -->\n' > "$R/docs/admin-guide/pages/orders/confirm.md"
+printf '# সব অর্ডার\n\n## এটা কী\nতালিকা, দেখুন [কী](../../keys.md#a)\n' > "$R/docs/admin-guide/pages/orders/all.md"
+printf '# সাহায্য — সেকশনের সারকথা\n\nগাইড\n' > "$R/docs/admin-guide/pages/help/index.md"
+printf '# সাহায্য আর ম্যানুয়াল\n\n## এটা কী\nতালিকা\n' > "$R/docs/admin-guide/pages/help/manual.md"
+env EXTAS_CONFIG_FILE="$T/conf" bash ../deploy/docs-sync.sh dddddddddddd4444444444444444444444444444 "$R" >/dev/null
+M="$DD/current/docs/MANUAL.md"
+check "manual: made in the copy, not in the checkout" "$([ -f "$M" ] && echo yes):$([ -e "$R/docs/MANUAL.md" ] && echo bad || echo clean):$(stat -c %a "$M")" "yes:clean:644"
+check "manual: chapters in the sidebar order, pages in the table's order" "$(grep -E '^#{2,3} ' "$M" | tr '\n' '|')" "## সূচি · Contents|## 1. অর্ডার|### কনফার্ম বাকি|### সব অর্ডার|## 2. সাহায্য|### সাহায্য আর ম্যানুয়াল|"
+check "manual: the six parts move down, links become text, notes go" "$(grep -c '^#### এটা কী$' "$M"):$(grep -c '\.md' "$M"):$(grep -c 'writer note' "$M"):$(grep -c '^সব অর্ডার। কনফার্ম$' "$M"):$(grep -c 'দেখুন কী$' "$M")" "3:0:0:1:1"
+check "manual: names the commit" "$(grep -c 'Commit `dddddddddddd`' "$M")" "1"
+rm -rf "$T"
+
 # Backups (PR 8): extas-backup daily, prune and extas-restore test / media with stand-ins for docker, rclone, chown and
 # sleep (no server, no database; real tar and gpg). The product photos on the local disk are in every daily backup —
 # a full archive, then diffs since it — on the data disk, in Blob and encrypted on Drive; the restore test brings one
