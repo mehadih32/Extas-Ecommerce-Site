@@ -42,6 +42,18 @@ const V = 50;
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'delivery', version: V } as const;
 const V56 = 56;
 const base56 = { ...base, version: V56 } as const;
+/** PR 178 (lane C's range): the courier choice by the real cost. */
+const V178 = 91;
+
+/**
+ * PR 178 (`delivery.courier.selection`) — the courier picked by the real cost of the parcel: each courier's own rate
+ * card for the parcel's delivery band and weight (and its COD fee when `codFee` is on). Off by default: then the first
+ * courier is offered as before. On: the packing screen offers the cheapest courier first with every courier's cost, and
+ * "Book with the cheapest" books each ticked order with its own cheapest. It changes the shop's cost only — never the
+ * charge the customer pays (PR 550) — and a person still presses Book.
+ */
+export const courierSelectionSchema = z.object({ enabled: z.boolean(), codFee: z.boolean() }).strict();
+export type CourierSelectionSettings = z.output<typeof courierSelectionSchema>;
 
 /**
  * PR 175 (SIM-F-027) — the RTO cost book. `count`: which parts of a returned parcel's cost are counted (the courier's
@@ -264,6 +276,16 @@ export const shippingSettings = {
     labelKey: 'delivery.picking.list.label',
     helpKey: 'delivery.picking.list.help',
     sortOrder: 914,
+  }),
+  'delivery.courier.selection': setting({
+    ...base,
+    version: V178,
+    valueType: 'JSON',
+    schema: courierSelectionSchema,
+    default: { enabled: false, codFee: true },
+    labelKey: 'delivery.courier.selection.label',
+    helpKey: 'delivery.courier.selection.help',
+    sortOrder: 904,
   }),
 };
 

@@ -1,12 +1,12 @@
 // S08 · PR 175–177 (registry v50): every courier key at version 50, never owner data, labelled in both languages, its
-// default valid; the owner's figures ship empty. PR 554 (v56): the courier zone sync.
+// default valid; the owner's figures ship empty. PR 554 (v56): the courier zone sync. PR 178 (v91): the courier by real cost.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { courierBookingSchema, courierTrackingSchema, courierZoneSyncSchema, GIFT_NOTE_TOKENS, handoverSheetSchema, pickingListSchema, rtoCostSchema, shippingSettings, stickerQueueSchema } from '../src/registry-shipping';
+import { courierBookingSchema, courierSelectionSchema, courierTrackingSchema, courierZoneSyncSchema, GIFT_NOTE_TOKENS, handoverSheetSchema, pickingListSchema, rtoCostSchema, shippingSettings, stickerQueueSchema } from '../src/registry-shipping';
 
 /** The registry version each key arrived at. */
-const SINCE: Record<string, number> = { 'delivery.courier.zoneSync': 56, 'delivery.sticker.layout': 56, 'delivery.sticker.exactAmount': 56, 'delivery.sticker.queue': 56, 'delivery.handover.sheet': 59, 'delivery.picking.list': 56 };
+const SINCE: Record<string, number> = { 'delivery.courier.zoneSync': 56, 'delivery.sticker.layout': 56, 'delivery.sticker.exactAmount': 56, 'delivery.sticker.queue': 56, 'delivery.handover.sheet': 59, 'delivery.picking.list': 56, 'delivery.courier.selection': 91 };
 
 describe('courier shipping settings (v50)', () => {
   it('every key is in the registry at its version (50; PR 554, 179: 56) in the Delivery group, labelled in English and Bengali, its default valid', () => {
@@ -64,5 +64,11 @@ describe('courier shipping settings (v50)', () => {
     const d = shippingSettings['delivery.picking.list'].default;
     expect(d).toEqual({ paper: 'a4', dpi: 150, lang: 'en', markShortages: true });
     expect(pickingListSchema.safeParse({ ...d, lang: 'fr' }).success).toBe(false);
+  });
+
+  it('PR 178: the courier by real cost is off, counting the COD fee once switched on', () => {
+    expect(shippingSettings['delivery.courier.selection'].default).toEqual({ enabled: false, codFee: true });
+    expect(courierSelectionSchema.safeParse({ enabled: true }).success).toBe(false);
+    expect(courierSelectionSchema.safeParse({ enabled: true, codFee: false, extra: 1 }).success).toBe(false);
   });
 });
