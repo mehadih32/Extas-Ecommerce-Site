@@ -14,6 +14,16 @@
     "noGuide": "This section has no page guides yet. They arrive with its pages.",
     "shot": "picture of the page with numbered marks",
     "taken": "Picture taken {at} by the nightly check.",
+    "searchLabel": "Search the manual",
+    "searchPh": "Search: courier, refund, backup, password…",
+    "searchGo": "Search",
+    "found": "{n} places in the manual for “{q}”",
+    "tooShort": "Type at least {n} letters to search.",
+    "nothing": "Nothing found. Try another word, or a shorter one (in Bengali or English).",
+    "newH": "What's new",
+    "newSub": "The newest parts of the shop and its back end, newest first. Each one also has its page guide in the manual.",
+    "newNone": "Nothing is listed yet.",
+    "pr": "PR {n}",
     "noDocs": "The guide files are not on this server yet. They are copied with every deploy."
   }
 }
