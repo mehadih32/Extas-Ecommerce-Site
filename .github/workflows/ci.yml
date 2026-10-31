@@ -86,10 +86,15 @@ jobs:
           bash infra/stack/caddy/client-ip-block.sh infra/config/cloudflare-ips.txt > /tmp/sites/client-ip.caddy
           docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
-          # PR 362: with extra host names (the main domain on go-live day, a store's own domain) as server setup writes them.
-          docker run --rm -e EXTAS_STAGING_HOST=example.test -e "EXTAS_EXTRA_HOSTS=shop.example.test www.example.test" \
-            -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
-            -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+          # PR 362 / PR 403: with extra host names (the main domain on go-live day, a store's own domain) as server setup
+          # writes them (sites/hosts.caddy): locked (EXTAS_MAIN_OPEN=no, as shipped) and opened (the go-live day step).
+          for open in no yes; do
+            bash infra/stack/caddy/hosts-block.sh "$open" shop.example.test www.example.test > /tmp/sites/hosts.caddy
+            docker run --rm -e EXTAS_STAGING_HOST=example.test -e "EXTAS_EXTRA_HOSTS=shop.example.test www.example.test" \
+              -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+              -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+          done
+          rm -f /tmp/sites/hosts.caddy
           # PR 397: both certificate choices of sites/tls.caddy (infra/server/bin/extas-origin-cert) — the automatic one,
           # and a Cloudflare Origin pair (a throwaway one here). The steps below run without the file (the glob's empty case).
           printf 'tls {\n\tissuer acme\n\tissuer internal\n}\n' > /tmp/sites/tls.caddy
