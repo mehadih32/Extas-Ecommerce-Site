@@ -310,5 +310,66 @@
     "retiredIndexedHint": "Also the resting page of an archived collection. Off: such pages ask search engines not to list them; their links are still followed.",
     "retiredCategoryPage": "Archived collections keep a resting page",
     "retiredCategoryPageHint": "A collection archived after it had products on the shop shows a short page with the live collections. A hidden collection is your choice and stays closed. Off: \"page not found\" as before."
+  },
+  "cs": {
+    "metaTitle": "Collection pages · SEO · Admin",
+    "title": "Collection pages",
+    "sub": "What search engines read for each collection and sub-collection, and the few filtered pages they may list.",
+    "rule": {
+      "title": "Only the pages that earn visits.",
+      "text": "A filtered page (a size, a colour, a price) normally points to its clean collection page, so Google does not see hundreds of near-copies. Name only the filtered pages people really search for."
+    },
+    "texts": {
+      "title": "Words for search engines",
+      "desc": "Pick a collection or sub-collection and write its own search title, search line, heading and the text under its products, in both languages. An empty field uses the shop's template.",
+      "none": "There are no collections yet. Add them in Catalogue › Categories first.",
+      "pick": "Collection",
+      "has": "has its own words"
+    },
+    "f": {
+      "title": "Search title",
+      "titleHint": "Shown as the blue line on Google. Up to {n} characters.",
+      "meta": "Search line",
+      "metaHint": "The grey line under the title on Google. Up to {n} characters.",
+      "heading": "Page heading",
+      "headingHint": "The heading above the text at the bottom of the collection page. Up to {n} characters.",
+      "text": "Text under the products",
+      "textHint": "A short text at the bottom of the page, about the collection. Up to {n} characters."
+    },
+    "half": "Write \"{field}\" in both languages, or leave it empty in both.",
+    "lang": {
+      "en": "English",
+      "bn": "Bengali"
+    },
+    "fp": {
+      "title": "Filter pages in search engines",
+      "desc": "The few filtered pages that may appear on Google as pages of their own, such as navy polos or polos in XL. Every other filter combination points to the clean collection page.",
+      "enabled": "List the named filter pages",
+      "enabledHint": "Off: every filtered page points to its collection page.",
+      "min": "Fewest styles on a listed page",
+      "minHint": "A named page with fewer styles than this is not listed (a thin page hurts the shop). Default: {v}.",
+      "max": "Most named pages",
+      "maxHint": "Default: {v}.",
+      "none": "No filter pages named yet.",
+      "remove": "Remove",
+      "addTitle": "Name a filter page",
+      "cat": "Collection",
+      "filter": "Filter",
+      "value": "Value",
+      "valueHint": "Exactly as it shows in the page address, capitals too, for example navy, XL or slim.",
+      "label": {
+        "en": "Page name (English)",
+        "bn": "Page name (Bengali)"
+      },
+      "add": "Add to the list",
+      "addHint": "Then press Save. The page name becomes its title and heading.",
+      "kind": {
+        "size": "Size",
+        "colour": "Colour",
+        "fit": "Fit"
+      },
+      "twin": "This collection already has a page for this filter and value.",
+      "full": "The list is full. Raise \"Most named pages\" or remove a page first."
+    }
   }
 }

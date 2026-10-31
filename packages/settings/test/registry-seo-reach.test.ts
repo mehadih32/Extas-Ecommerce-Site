@@ -1,10 +1,11 @@
 // S11 · CN-031 lane A (registry v71–72): every key at its version, labelled in both languages, its default valid, nothing
 // owner data. PR 235: the WordPress map is off until go-live day, old links are kept 12 months, the 404 report counts.
 // PR 527: no page that was on the shop answers 404; what is shipped keeps today's listing (sold out and retired listed).
+// PR 227: no filtered page is listed as shipped; a named one has one filter, one value, two names, and no twin.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { seoReachSettings, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
+import { seoReachSettings, SEO_FILTER_PAGES_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
 
 describe('lane A SEO settings (v71–72)', () => {
   it('every key is in the registry at version 71, labelled in English and Bengali, its default valid', () => {
@@ -42,5 +43,22 @@ describe('lane A SEO settings (v71–72)', () => {
     expect(SEO_HASH_LINKS_DEFAULT).toEqual({ forward: true });
     expect(registry['seo.hashLinks'].version).toBe(72);
     expect(registry['seo.hashLinks'].schema.safeParse({ forward: true, extra: 1 }).success).toBe(false);
+  });
+
+  it('PR 227: filter pages are off and empty as shipped (v72); a row needs both names, a clean value, no twin', () => {
+    expect(SEO_FILTER_PAGES_DEFAULT).toEqual({ enabled: false, minProducts: 4, maxPages: 50, pages: [] });
+    expect(registry['seo.filterPages'].version).toBe(72);
+    expect(registry['seo.filterPages'].isOwnerData).toBe(false);
+    const f = registry['seo.filterPages'].schema;
+    const row = { category: 'polos', filter: 'colour', value: 'navy', label: { en: 'Navy polos', bn: 'নেভি পোলো' } };
+    expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, enabled: true, pages: [row] }).success).toBe(true);
+    expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, pages: [row, { ...row, value: 'NAVY' }] }).success).toBe(false);
+    expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, pages: [row, { ...row, filter: 'size', value: 'XL' }] }).success).toBe(true);
+    expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, maxPages: 1, pages: [row, { ...row, value: 'black' }] }).success).toBe(false);
+    expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, pages: [{ ...row, filter: 'price' }] }).success).toBe(false);
+    expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, pages: [{ ...row, value: 'navy&sort=new' }] }).success).toBe(false);
+    expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, pages: [{ ...row, label: { en: 'Navy polos', bn: '' } }] }).success).toBe(false);
+    expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, minProducts: 0 }).success).toBe(false);
+    expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, maxPages: 501 }).success).toBe(false);
   });
 });

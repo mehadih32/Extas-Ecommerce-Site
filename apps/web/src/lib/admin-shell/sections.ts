@@ -213,7 +213,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     group: 'grow',
     base: '/admin/website',
     guide: 'site',
-    // PR 235: Redirects & 404 is the SEO tab's second page (demo WEB-04a).
+    // PR 235: Redirects & 404 is the SEO tab's second page (demo WEB-04a). PR 227: Collection pages is the third.
     tabs: [
       {
         id: 'seo',
@@ -221,6 +221,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         pages: [
           { href: '/admin/website/seo', perm: 'seo.read', keys: ['seo'] },
           { href: '/admin/website/seo/redirects', perm: 'seo.read', keys: ['seoRedirects'] },
+          { href: '/admin/website/seo/categories', perm: 'seo.read', keys: ['seoCategories'] },
         ],
       },
     ],

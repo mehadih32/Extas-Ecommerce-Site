@@ -158,19 +158,22 @@ export const categoryNewInSchema = z
   })
   .strict();
 
+/** The longest each of a category's own SEO fields may be (the admin's Collection pages screen shows the same, PR 227). */
+export const CATEGORY_SEO_MAX = { title: 70, meta: 170, heading: 120, text: 4000 } as const;
+
 export const categorySeoSchema = z
   .record(
     categorySlugSchema,
     z
       .object({
         /** The browser tab and search result title (else the category's name). */
-        title: localizedTextSchema(70).optional(),
+        title: localizedTextSchema(CATEGORY_SEO_MAX.title).optional(),
         /** The search result's line. */
-        meta: localizedTextSchema(170).optional(),
+        meta: localizedTextSchema(CATEGORY_SEO_MAX.meta).optional(),
         /** The heading over the text block (else "{name} for men in Bangladesh" from the dictionary). */
-        heading: localizedTextSchema(120).optional(),
+        heading: localizedTextSchema(CATEGORY_SEO_MAX.heading).optional(),
         /** The text block under the grid; a blank line starts a new paragraph. No text, no block. */
-        text: localizedTextSchema(4000).optional(),
+        text: localizedTextSchema(CATEGORY_SEO_MAX.text).optional(),
       })
       .strict(),
   )

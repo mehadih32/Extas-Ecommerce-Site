@@ -21,8 +21,18 @@
 // PR 586 (`seo.hashLinks`; Blueprint C12.2): links to the approved demo (`…/#/p/<product>`, `#/c/<category>` …) were
 // shared while the shop was built. A browser never sends what follows `#`, so a tiny script in every shop page sends
 // such a link on to its live address (lib/seo/hash-forward). On as shipped; off, the `#/…` part is simply ignored.
+//
+// PR 227 (`seo.filterPages`; Blueprint C12.1, App. answers #7 "indexed only where it genuinely earns traffic"): a
+// filtered collection page (`/collections/polos?colour=navy`) is never a page of its own for search engines, except the
+// few the owner names here because people search for them ("navy polo", "polo size XL"): one filter on one collection,
+// with its own title words. Such a page is listed (and named in the sitemap) only while the switch is on and it shows at
+// least `minProducts` styles; every other combination keeps pointing to the clean collection page. At most `maxPages`
+// rows. Off and empty as shipped. A collection's or sub-collection's own SEO words (title, search line, heading, text)
+// are `category.seo` (PR 45), edited on the same admin page.
 import { z } from 'zod';
 import { setting } from './define';
+import { categorySlugSchema } from './registry-storefront';
+import { localizedTextSchema } from './schemas';
 
 const V = 71;
 const V2 = 72;
@@ -81,6 +91,46 @@ export const seoHashLinksSchema = z
 export type SeoHashLinks = z.output<typeof seoHashLinksSchema>;
 export const SEO_HASH_LINKS_DEFAULT: SeoHashLinks = { forward: true };
 
+/** The filters a listed filter page may use (one of them, one value). */
+export const SEO_FILTER_KINDS = ['size', 'colour', 'fit'] as const;
+export type SeoFilterKind = (typeof SEO_FILTER_KINDS)[number];
+
+/** The limits of a filter page row and of the policy (the admin screen shows the same). */
+export const SEO_FILTER_LIMITS = { value: 40, label: 80, minProducts: { min: 1, max: 100 }, maxPages: { min: 1, max: 500 } } as const;
+
+export const seoFilterPageSchema = z
+  .object({
+    /** The collection (or sub-collection) slug. */
+    category: categorySlugSchema,
+    filter: z.enum(SEO_FILTER_KINDS),
+    /** The filter's value as the address carries it (`navy`, `XL`, `slim`). */
+    value: z
+      .string()
+      .trim()
+      .max(SEO_FILTER_LIMITS.value)
+      .regex(/^[A-Za-z0-9][A-Za-z0-9 ._-]*$/),
+    /** The page's own name in both languages ("Navy polos"), used for its title and heading. */
+    label: localizedTextSchema(SEO_FILTER_LIMITS.label),
+  })
+  .strict();
+export type SeoFilterPage = z.output<typeof seoFilterPageSchema>;
+
+export const seoFilterPagesSchema = z
+  .object({
+    /** List the named filter pages. */
+    enabled: z.boolean(),
+    /** A named filter page is listed only while it shows at least this many styles. */
+    minProducts: z.int().min(SEO_FILTER_LIMITS.minProducts.min).max(SEO_FILTER_LIMITS.minProducts.max),
+    /** At most this many named pages. */
+    maxPages: z.int().min(SEO_FILTER_LIMITS.maxPages.min).max(SEO_FILTER_LIMITS.maxPages.max),
+    pages: z.array(seoFilterPageSchema).max(SEO_FILTER_LIMITS.maxPages.max),
+  })
+  .strict()
+  .refine((v) => v.pages.length <= v.maxPages, { message: 'more pages than maxPages', path: ['pages'] })
+  .refine((v) => new Set(v.pages.map((p) => `${p.category}|${p.filter}|${p.value.toLowerCase()}`)).size === v.pages.length, { message: 'the same page twice', path: ['pages'] });
+export type SeoFilterPages = z.output<typeof seoFilterPagesSchema>;
+export const SEO_FILTER_PAGES_DEFAULT: SeoFilterPages = { enabled: false, minProducts: 4, maxPages: 50, pages: [] };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -118,5 +168,15 @@ export const seoReachSettings = {
     labelKey: 'seo.hashLinks.label',
     helpKey: 'seo.hashLinks.help',
     sortOrder: 43,
+  }),
+  // ---- PR 227 · the filter pages that may be listed ----
+  'seo.filterPages': setting({
+    ...base,
+    version: V2,
+    schema: seoFilterPagesSchema,
+    default: SEO_FILTER_PAGES_DEFAULT,
+    labelKey: 'seo.filterPages.label',
+    helpKey: 'seo.filterPages.help',
+    sortOrder: 44,
   }),
 };

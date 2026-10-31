@@ -30,6 +30,10 @@
     "hashLinks": {
       "label": "Old demo links",
       "help": "Links to the approved demo (an address with \"#/\" in it, such as …/#/p/essential-pique-polo) were shared while the shop was being built. On: a shop page opened with such a link moves on to the live page at once (a Bengali page stays Bengali). Off: the \"#/\" part is ignored and the page opens as it is."
+    },
+    "filterPages": {
+      "label": "Filter pages in search engines",
+      "help": "A filtered collection page (for example the polos in navy) is normally not a page of its own for search engines: it points to the clean collection page. Name here only the few that people really search for: one filter (size, colour or fit) on one collection, with its own name in both languages. Such a page is listed only while the switch is on and it shows at least the set number of styles. Off and empty as shipped."
     }
   },
   "defaults": {

@@ -12,6 +12,8 @@
 // filtered page can be shared; such a page stays out of search engines (its clean address is the canonical one).
 // S11 · PR 527: a collection archived after it had products on the shop answers with its resting page
 // (components/shop/category/CatResting, `seo.urlPolicy.retiredCategoryPage`), never "page not found".
+// S11 · PR 227: a filter page the owner named (`seo.filterPages`) is the one exception to "a filtered page stays out":
+// listed under its own name and address while it shows enough styles (lib/seo/filter-pages).
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
@@ -28,13 +30,14 @@ import { productPath } from '@/lib/shop/home-model';
 import { hrefIn } from '@/lib/shop/lang';
 import { categoryDraftTexts } from '@/lib/seo/page-texts';
 import { restingCategory } from '@/lib/seo/url-policy';
+import { filterPageListed, filterPagePath, filterPageStyles, namedFilterPage, singleFilter } from '@/lib/seo/filter-pages';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { ROUTES } from '@/lib/shop/routes';
 import { categoryName, requirementsMet } from '@/lib/shop/shell-model';
 import { breadcrumbLd, itemListLd, type LdCrumb } from '@/lib/shop/structured-data';
 import './category.css';
 
-const KEYS = ['category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy'] as const;
+const KEYS = ['category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages'] as const;
 
 /** The "New in" page's own link name, from the routing table (`/collections/new-in`). */
 const NEW_IN = ROUTES.newIn.split('/').pop()!;
@@ -78,6 +81,18 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const shown = set['category.page'].soldOut === 'hide' ? data.items.filter((i) => i.inStock).length : data.items.length;
   const count = shown === 1 ? c.t('cat.style') : c.t('cat.styles', { n: c.num(shown) });
   const intro = (data.head ? (c.lang === 'bn' && data.head.introBn) || data.head.introEn : c.t('cat.newInBlurb')) || '';
+  // PR 227: a filter page the owner named (`seo.filterPages`: one size, colour or fit) is a page of its own while it
+  // shows enough styles, with its own name and address
+  const named = data.unavailable ? null : namedFilterPage(set['seo.filterPages'], slug, singleFilter(state, defaultSort));
+  if (named) {
+    const styles = filterPageStyles(data.items, state, set['category.page'].soldOut === 'hide');
+    const label = named.label[c.lang] || named.label.en;
+    return shopMetadata(c, `collections/${slug}`, label, {
+      path: filterPagePath(named),
+      index: filterPageListed(set['seo.filterPages'], styles),
+      seo: { kind: 'category', tokens: { name: label, count: styles ? (styles === 1 ? c.t('cat.style') : c.t('cat.styles', { n: c.num(styles) })) : '', intro: intro.replace(/\s+/g, ' ').trim() } },
+    });
+  }
   // a filtered, sorted or later page, or one the catalogue could not fill, is not a page of its own for search engines
   // (PR 220: its clean address is the canonical one)
   return shopMetadata(c, `collections/${slug}`, name, {
@@ -100,6 +115,9 @@ export default async function CategoryPage(props: Props) {
   const t = c.t;
   const pg = set['category.page'];
   const name = titleOf(c, data);
+  // PR 227: a filter page the owner named carries its own name as the heading (the breadcrumb keeps the collection)
+  const named = data.unavailable ? null : namedFilterPage(set['seo.filterPages'], slug, singleFilter(asked, defaultSort));
+  const heading = named ? named.label[c.lang] || named.label.en : name;
   const basePath = hrefIn(c.lang, `/collections/${slug}`);
 
   // sold-out styles left out altogether are not counted anywhere on the page
@@ -128,7 +146,7 @@ export default async function CategoryPage(props: Props) {
           <span aria-current="page">{name}</span>
         </nav>
       ) : null}
-      <h1 className="h1">{name}</h1>
+      <h1 className="h1">{heading}</h1>
       <p className="text2">{[empty ? null : plural(rows.length, 'cat.style', 'cat.styles'), blurb?.trim() || null].filter(Boolean).join(' · ')}</p>
     </div>
   );
