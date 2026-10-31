@@ -243,7 +243,13 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     return exportCsv(request, deps, m);
   }
   if (a === 'calls') {
-    if (path.length > 1) return notFound();
+    // PR 545: a person records what the call found (orders.confirm); nothing else changes
+    if (path.length === 2) {
+      if (!isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['taskId']));
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'orders.confirm', async (x) => ({ result: await od.recordCall(x.deps, x.who, b, await body(request)) }));
+    }
+    if (path.length > 2) return notFound();
     if (m !== 'GET') return notAllowed();
     return handle(request, deps, 'orders.read', async (x) => ({ ...(await od.callQueue(x.deps, x.who, query(x.url, ['reason', 'status', 'cursor', 'limit']))) }));
   }

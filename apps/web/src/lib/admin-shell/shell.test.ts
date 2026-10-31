@@ -184,13 +184,16 @@ describe('page guides (PR 594, CN-026)', () => {
     expect(routeScore('/admin/orders/confirm', '/admin/orders/confirm')).toBe(3);
     expect(routeScore('/admin/orders', '/admin/orders/abc')).toBeNull();
     expect(guidePlace('/admin/orders/confirm')).toEqual({ section: 'orders', page: 'orders/confirm' });
+    // PR 545: Calls to make is the To confirm tab's second page, with its own guide
+    expect(guidePlace('/admin/orders/confirm/calls?reason=NEW_CUSTOMER')).toEqual({ section: 'orders', page: 'orders/calls' });
+    expect(locate('/admin/orders/confirm/calls')?.page?.keys).toEqual(['ordersCalls']);
     expect(guidePlace('/admin/orders/1f0c?tab=x')).toEqual({ section: 'orders', page: 'orders/order' });
     expect(guidePlace('/admin/stock/counts/')).toEqual({ section: 'products', page: 'products/stock-counts' });
     expect(guidePlace('/admin')).toEqual({ section: 'dashboard', page: 'dashboard/home' });
     expect(guidePlace('/admin/customers')).toEqual({ section: 'customers', page: 'customers/all' });
     expect(guidePlace('/admin/customers/review')).toEqual({ section: 'customers', page: 'customers/review' });
     expect(guidePlace('/admin/marketing')?.page ?? null).toBeNull();
-    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm', 'orders/risk-rules', 'orders/checkout-advance', 'orders/print', 'orders/picking', 'orders/handover', 'orders/invoices', 'orders/returns', 'orders/returns-qc', 'orders/returns-refused', 'orders/returns-handback', 'orders/returns-erp', 'orders/pack', 'orders/digest']);
+    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm', 'orders/risk-rules', 'orders/checkout-advance', 'orders/print', 'orders/picking', 'orders/handover', 'orders/invoices', 'orders/returns', 'orders/returns-qc', 'orders/returns-refused', 'orders/returns-handback', 'orders/returns-erp', 'orders/pack', 'orders/digest', 'orders/calls']);
     expect(guidePlace('/admin/orders/risk-rules/checkout')?.page).toBe('orders/checkout-advance');
     // PR 179: Packing & print's print run, a fixed path under /admin/orders that beats an order's [id]
     expect(guidePlace('/admin/orders/packing/print')).toEqual({ section: 'orders', page: 'orders/print' });

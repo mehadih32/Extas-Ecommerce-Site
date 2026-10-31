@@ -26,6 +26,8 @@
     "bnShort": "বাং"
   },
   "nav": {
+    "ordersConfirm": "To confirm",
+    "ordersCalls": "Calls to make",
     "products": "Products",
     "publishQueue": "Ready to publish",
     "server": "Server",

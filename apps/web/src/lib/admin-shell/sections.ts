@@ -58,7 +58,11 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'orders',
     tabs: [
       { id: 'all', pages: [{ href: '/admin/orders', perm: 'orders.read', keys: ['orders', 'order'] }] },
-      { id: 'confirm', pages: [{ href: '/admin/orders/confirm', perm: 'orders.confirm', keys: ['ordersConfirm'] }] },
+      // S06 · PR 545: Calls to make — the call tasks the shop's steps left (a new customer among them), worked by a person
+      { id: 'confirm', pages: [
+        { href: '/admin/orders/confirm', perm: 'orders.confirm', keys: ['ordersConfirm'] },
+        { href: '/admin/orders/confirm/calls', perm: 'orders.confirm', keys: ['ordersCalls'] },
+      ] },
       // S06 · PR 540: Today's digest — what came in, what the engine saw, and what waits for a person's OK (the gate's card)
       { id: 'digest', more: true, pages: [{ href: '/admin/orders/digest', perm: 'orders.read', keys: ['ordersDigest'] }] },
       // S06 · PR 161: ORD-06 Risk rules (its Levels section first; the matrix and the rule switches join with their PRs);

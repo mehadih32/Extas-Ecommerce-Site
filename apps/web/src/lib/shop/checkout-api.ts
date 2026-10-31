@@ -6,7 +6,7 @@ import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, payAction, payView, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
-import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, linkIdentity, refuserTermsOnOrder, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
+import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, linkIdentity, newCustomerOnOrder, refuserTermsOnOrder, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -138,6 +138,19 @@ async function scoreRisk(deps: CheckoutApiDeps, orderId: string): Promise<void> 
 }
 
 /**
+ * S06 · PR 545 — the new-customer call the moment the order lands (off until the owner turns `risk.newCustomer` on): a
+ * customer with no earlier order anywhere gets one call task and a mark for the team. Never holds, declines or asks an
+ * advance; a problem is logged and the order stays placed.
+ */
+async function checkNewCustomer(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+  try {
+    await newCustomerOnOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
+  } catch (e) {
+    console.warn(`new customer: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+}
+
+/**
  * S06 · PR 162 — the blocklist the moment the order lands (off until the owner turns `risk.blocklist` on): a listed
  * number, or the same identity, is marked for the team, or held for a person. Never fails, cancels or tells the customer.
  */
@@ -247,6 +260,7 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
       await checkRefuserTerms(deps, r.orderId);
       await checkBlockProposal(deps, r.orderId);
       await sectionRisk(deps, r.orderId);
+      await checkNewCustomer(deps, r.orderId);
       await waitForAdvance(deps, r.orderId);
       await checkBundling(deps, r.orderId);
       // PR 257: the purchase goes to the ad platforms from the server while tracking is on (quiet, never stops the order)
