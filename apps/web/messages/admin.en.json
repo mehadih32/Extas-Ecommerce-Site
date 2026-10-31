@@ -68,7 +68,9 @@
     "seoRedirects": "Redirects & 404",
     "seo": "Search settings",
     "cache": "Cache",
-    "backups": "Backups"
+    "backups": "Backups",
+    "security": "Sign-in & security",
+    "edge": "Cloudflare protection"
   },
   "login": {
     "metaTitle": "Admin sign-in",

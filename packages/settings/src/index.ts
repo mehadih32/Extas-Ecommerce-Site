@@ -82,6 +82,8 @@ export * from './registry-bot-check';
 export * from './registry-admin-access';
 // S18 · PR 382 — customers' erasure requests (registry-privacy.ts, version 79).
 export * from './registry-privacy';
+// S18 · PR 386 — the shop's protection at Cloudflare (registry-edge.ts, version 80).
+export * from './registry-edge';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

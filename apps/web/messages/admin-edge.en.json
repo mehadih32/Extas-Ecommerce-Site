@@ -1,0 +1,114 @@
+{
+  "edg": {
+    "metaTitle": "Cloudflare protection",
+    "title": "Cloudflare protection",
+    "sub": "The shop's own rules at Cloudflare, in front of the server. Cloudflare's DDoS protection is always on; these rules add to it. Every rule covers only the shop's addresses.",
+    "kpi": {
+      "link": "Cloudflare connection",
+      "mock": "Practising",
+      "mockFoot": "Nothing is sent until the token is in Keys & connections",
+      "live": "Connected",
+      "liveFoot": "Rules go to your Cloudflare zone",
+      "rules": "Rules in the plan",
+      "rulesFoot": "Limited to the shop's addresses",
+      "state": "At Cloudflare",
+      "inLine": "As planned",
+      "differ": "{n} differ",
+      "differFoot": "Press \"Send to Cloudflare\"",
+      "unread": "Could not read",
+      "noRules": "No rules yet"
+    },
+    "ddos": "Cloudflare's DDoS protection is always on for the whole zone and needs nothing here. Customers are never shown a challenge or a waiting page.",
+    "hosts": {
+      "connection": "Every rule covers only: {list}.",
+      "staging": "Practising with the staging address: {list}. With the Cloudflare token, the host names of the connection are used.",
+      "none": "No address yet, so no rule can be made: add the shop's host names in Keys & connections → Cloudflare."
+    },
+    "readError": "Cloudflare did not answer: {why}",
+    "table": {
+      "h": "The rules",
+      "rule": "Rule",
+      "does": "What it does",
+      "state": "At Cloudflare"
+    },
+    "rule": {
+      "extas-shield": "Security level, browser check and SSL",
+      "extas-probes": "Robot addresses refused",
+      "extas-admin": "Check on the admin sign-in page",
+      "extas-admin-login": "Admin sign-in tries limited"
+    },
+    "does": {
+      "extas-shield": "Sets the security level and the browser check for the shop's addresses, and SSL Full (strict) to the server.",
+      "extas-probes": "Refuses addresses robots try on every site (like /wp-login.php). The shop has none of them.",
+      "extas-admin": "Cloudflare checks the visitor on the admin sign-in page only. Never on the shop.",
+      "extas-admin-login": "Above the limit, Cloudflare refuses that address for 10 seconds."
+    },
+    "st": {
+      "ok": "As planned",
+      "missing": "Not there yet",
+      "changed": "Different",
+      "extra": "Not in the plan any more"
+    },
+    "send": {
+      "h": "Send to Cloudflare",
+      "d": "Writes the saved plan's rules to Cloudflare. Only the shop's own rules change; every other rule in the zone stays as it is.",
+      "send": "Send to Cloudflare",
+      "sending": "Sending…",
+      "sent": "Sent.",
+      "last": "Last sent {at}. Changed: {what}.",
+      "never": "Not sent yet.",
+      "nothing": "nothing needed changing",
+      "noPerm": "Sending needs the security permission.",
+      "err": {
+        "NO_HOST": "There is no shop address yet: add the host names in Keys & connections → Cloudflare.",
+        "SEND_FAILED": "Cloudflare did not take the rules. Check the token's rights in Keys & connections, then try again.",
+        "forbidden": "You do not have permission to send these rules.",
+        "unauthorized": "Your sign-in has ended — please sign in again.",
+        "network": "No connection. Please try again.",
+        "other": "That did not work. Please try again."
+      },
+      "phase": {
+        "config": "the settings rule",
+        "custom": "the refusal rules",
+        "rate": "the sign-in limit"
+      }
+    },
+    "card": {
+      "h": "The plan",
+      "d": "Saved here first; nothing changes at Cloudflare until you press \"Send to Cloudflare\".",
+      "securityLevel": "Security level",
+      "securityLevelHelp": "How strict Cloudflare is with doubtful visitors. \"I'm under attack\" is never offered: it shows every customer a waiting page.",
+      "lvl_essentially_off": "Essentially off",
+      "lvl_low": "Low",
+      "lvl_medium": "Medium (recommended)",
+      "lvl_high": "High",
+      "browserCheck": "Browser check",
+      "browserCheckHelp": "Refuses requests with a forged or missing browser header. A real customer never notices.",
+      "sslStrict": "SSL Full (strict) to the server",
+      "sslStrictHelp": "Cloudflare checks the server's Origin certificate on every request.",
+      "blockProbes": "Refuse robot addresses",
+      "probePaths": "Addresses to refuse (beginnings, separated by commas)",
+      "probePathsHelp": "Each starts with /. The shop never uses them.",
+      "adminChallenge": "Check visitors on the admin sign-in page",
+      "adminChallengeHelp": "Off by default. Only the admin sign-in page, never the shop.",
+      "adminLoginPer10s": "Admin sign-in tries per 10 seconds from one address (0 = off)",
+      "adminLoginPer10sHelp": "Above this, Cloudflare refuses that address for 10 seconds. Only the owner can change it."
+    },
+    "err": {
+      "STALE": "Someone else changed this plan; it shows their values now.",
+      "INVALID_INPUT": "Some values are not right: {fields}",
+      "OWNER_ONLY": "Only the owner can change the sign-in limit.",
+      "forbidden": "You do not have permission to change this.",
+      "unauthorized": "Your sign-in has ended — please sign in again.",
+      "network": "No connection. Please try again.",
+      "other": "That did not save. Please try again."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved. Press \"Send to Cloudflare\" to use it.",
+    "discard": "Discard",
+    "unsaved": "Not saved yet",
+    "readOnly": "You can see the plan; changing it needs the settings permission.",
+    "pairHelp": "Write both languages."
+  }
+}

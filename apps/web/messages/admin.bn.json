@@ -68,7 +68,9 @@
     "seoRedirects": "রিডাইরেক্ট আর 404",
     "seo": "সার্চের সেটিং",
     "cache": "ক্যাশ",
-    "backups": "ব্যাকআপ"
+    "backups": "ব্যাকআপ",
+    "security": "লগইন ও নিরাপত্তা",
+    "edge": "Cloudflare সুরক্ষা"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

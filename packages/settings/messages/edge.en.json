@@ -1,0 +1,8 @@
+{
+  "edge": {
+    "shield": {
+      "label": "Cloudflare protection for the shop",
+      "help": "The shop's own rules at Cloudflare: the security level, the browser check, SSL Full (strict), refusing the addresses robots try, and — off by default — a challenge on the admin sign-in page and a limit on admin sign-in tries (owner only). Every rule is limited to the shop's host names. Nothing is sent until someone presses \"Send to Cloudflare\"."
+    }
+  }
+}
