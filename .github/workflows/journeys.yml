@@ -1,0 +1,87 @@
+# S21 · PR 414 (B7.3) — the saved browser journeys against the preview host, ON the VM through the self-hosted runner
+# (CN-003). Every hour the server checks whether a run is due: the owner's schedule (Reports › Site health: hourly,
+# daily or weekly, off as it ships) or a "Run now" press there (infra/deploy/journeys.sh, journeys-lib.sh). A run walks
+# docs/qa/journeys.json with tools/journeys.mjs (a customer signed out — never adding to the bag, never ordering — then
+# the admin, an accountant and the warehouse as the read-only check account, on a phone and a desktop screen). The
+# result shows on Reports › Site health (state/journeys.json, the runs kept in state/journeys/). The report and the
+# pictures of failed steps are committed to docs/reports/journeys/latest/ with [skip ci] only when a run fails, or
+# passes after a failure (ci.yml ignores the folder), so a passing schedule adds no commits. By hand: "now" runs at once.
+name: journeys
+
+on:
+  schedule:
+    - cron: "5 * * * *"   # every hour; the server decides whether a run is due
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "due (follow the schedule) or now (run at once)"
+        required: false
+        default: "now"
+
+# Its own group: a queued hourly check must never replace a deploy or server job waiting in the extas-vm group (GitHub
+# keeps one pending run per group). The VM's single runner still takes one job at a time.
+concurrency:
+  group: extas-journeys
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  journeys:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 30
+    steps:
+      # The journeys come from the version that is live, not from the newest main (as in smoke.yml).
+      - name: Find the live version
+        id: live
+        run: |
+          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          if printf '%s' "$live" | grep -Eq '^[0-9a-f]{40}$'; then echo "sha=$live" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.live.outputs.sha || github.sha }}
+
+      - name: Saved journeys (when due)
+        id: journeys
+        continue-on-error: true
+        env:
+          LIVE: ${{ steps.live.outputs.sha }}
+          ASKED: ${{ github.event.inputs.mode }}
+        run: |
+          live="$LIVE"
+          MODE="due"; [ "$ASKED" = "now" ] && MODE="now"
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/journeys.sh "$RUNNER_TEMP/journeys" "$MODE" "$live"
+
+      - name: Commit the journeys report (a failure, or a pass after one)
+        if: always()
+        env:
+          RESULT: ${{ steps.journeys.outcome }}
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/journeys"
+          [ -f "$out/result.json" ] || { echo "no run this hour"; exit 0; }
+          sudo chown -R "$(id -u):$(id -g)" "$out"
+          now_ok="$(jq -r '.ok' "$out/result.json")"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            was_ok="$(jq -r '.ok' docs/reports/journeys/latest/result.json 2>/dev/null || echo none)"
+            if [ "$now_ok" = true ] && [ "$was_ok" = true ]; then echo "passed again; nothing to commit"; exit 0; fi
+            rm -rf docs/reports/journeys/latest && mkdir -p docs/reports/journeys && cp -r "$out" docs/reports/journeys/latest
+            git add -A docs/reports/journeys/latest
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "journeys report: ${RESULT} [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail when a journey failed
+        if: steps.journeys.outcome == 'failure'
+        run: |
+          echo "A saved journey failed. See Reports › Site health, or docs/reports/journeys/latest/README.md."
+          exit 1

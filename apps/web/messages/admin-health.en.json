@@ -2,7 +2,7 @@
   "hlt": {
     "metaTitle": "Site health",
     "title": "Site health",
-    "sub": "One line each for customer problems, the server, speed, the site audit and the smoke test. Green is fine, yellow needs a look, red is wrong, grey has nothing to judge yet.",
+    "sub": "One line each for customer problems, the server, speed, the site audit, the smoke test and the saved journeys. Green is fine, yellow needs a look, red is wrong, grey has nothing to judge yet.",
     "overall": {
       "ok": "Everything is fine",
       "warn": "Something needs a look",
@@ -24,7 +24,8 @@
       "server": "Server",
       "speed": "Speed",
       "audit": "Site audit",
-      "smoke": "Smoke test"
+      "smoke": "Smoke test",
+      "journeys": "Saved journeys"
     },
     "line": {
       "problems": {
@@ -53,10 +54,19 @@
         "failed": "{failed} of {pages} page views failed: {first}",
         "late": "The last smoke test is {h} hours old (it runs after every deploy and every night).",
         "ok": "All {pages} page views passed."
+      },
+      "journeys": {
+        "scheduleOff": "Not scheduled (off). Press Run now below, or switch the schedule on.",
+        "never": "Scheduled; no run yet. The server starts the first one within the hour.",
+        "failed": "{failed} of {journeys} journeys failed: {first}",
+        "late": "The last run is {h} hours old; it should have run again by now.",
+        "ok": "All {journeys} journeys passed ({steps} steps).",
+        "okSkipped": "All {journeys} journeys passed ({steps} steps; {skipped} skipped because the shop has nothing to open there yet)."
       }
     },
     "note": {
-      "k6": "First load measurement (k6): 95% of requests within {p95} ms."
+      "k6": "First load measurement (k6): 95% of requests within {p95} ms.",
+      "asked": "Run now was pressed; the server starts it within the hour."
     },
     "card": {
       "h": "When a line turns yellow",
@@ -82,6 +92,58 @@
     "discard": "Discard",
     "unsaved": "Not saved yet",
     "readOnly": "You can see these limits; changing them needs the settings permission.",
-    "pairHelp": "Write both languages."
+    "pairHelp": "Write both languages.",
+    "j": {
+      "h": "Saved journeys",
+      "d": "A customer, the admin, an accountant and the warehouse, walked in a real browser on a phone and a desktop screen. The customer never puts anything in the bag and never orders. Plain browser steps; AI is not needed.",
+      "run": "Run now",
+      "running": "Asking…",
+      "asked": "Asked. The server starts the run within the hour; this page shows it when it is done.",
+      "waiting": "Waiting for the server to start the run you asked for.",
+      "noPerm": "Running them needs the settings permission.",
+      "runsH": "Recent runs",
+      "runsNone": "No run kept yet.",
+      "runPass": "Passed",
+      "runFail": "Failed",
+      "runLine": "{journeys} journeys · {steps} steps · {failed} failed",
+      "col": {
+        "when": "When",
+        "result": "Result",
+        "what": "What ran",
+        "first": "First problem"
+      },
+      "err": {
+        "INVALID_INPUT": "That did not work. Please try again.",
+        "forbidden": "You do not have permission to do this.",
+        "unauthorized": "Your sign-in has ended — please sign in again.",
+        "network": "No connection. Please try again.",
+        "other": "That did not work. Please try again."
+      }
+    },
+    "jcard": {
+      "h": "When the saved journeys run",
+      "d": "The server checks every hour and starts a run when one is due. Off as it ships.",
+      "enabled": "Run on a schedule",
+      "enabledHelp": "Off: they run only when someone presses Run now.",
+      "every": "How often",
+      "hourly": "Every hour",
+      "daily": "Every day",
+      "weekly": "Every week",
+      "hour": "At (server time)",
+      "hourHelp": "For daily and weekly runs.",
+      "weekday": "On (weekly runs)",
+      "keepRuns": "Runs kept for comparison",
+      "keepRunsHelp": "Older runs are removed from the server.",
+      "readOnly": "You can see the schedule; changing it needs the settings permission.",
+      "day": {
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday",
+        "7": "Sunday"
+      }
+    }
   }
 }

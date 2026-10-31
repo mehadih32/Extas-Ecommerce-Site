@@ -11,7 +11,8 @@
   "ignoreRequests": [],
   "checks": [
     { "pr": 384, "what": "the Policies & texts page counts the help pages that show on the shop", "page": "/admin/settings/policies", "selector": "[data-testid=pol-kpi-shows]", "attribute": "data-testid", "equals": "pol-kpi-shows" },
-    { "pr": 413, "what": "the Site health hub shows its five status lines", "page": "/admin/reports/health", "selector": "[data-testid=health-lines]", "attribute": "data-testid", "equals": "health-lines" },
+    { "pr": 414, "what": "the Site health hub shows the saved journeys card (Run now and the recent runs)", "page": "/admin/reports/health", "selector": "[data-testid=journeys-card]", "attribute": "data-testid", "equals": "journeys-card" },
+    { "pr": 413, "what": "the Site health hub shows its status lines", "page": "/admin/reports/health", "selector": "[data-testid=health-lines]", "attribute": "data-testid", "equals": "health-lines" },
     { "pr": 386, "what": "the Cloudflare protection page counts the shop's rules in the plan", "page": "/admin/settings/security/edge", "selector": "[data-testid=edge-kpi-rules]", "attribute": "data-testid", "equals": "edge-kpi-rules" },
     { "pr": 383, "what": "the Store details page reads the legal numbers and says how many are filled in", "page": "/admin/settings/store", "selector": "[data-testid=store-kpi-legal]", "attribute": "data-testid", "equals": "store-kpi-legal" },
     { "pr": 382, "what": "the Privacy & data page reads its settings and shows how long orders keep the internet address and location", "page": "/admin/settings/privacy", "selector": "[data-testid=privacy-kpi-days]", "attribute": "data-testid", "equals": "privacy-kpi-days" },

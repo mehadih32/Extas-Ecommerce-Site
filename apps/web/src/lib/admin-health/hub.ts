@@ -2,10 +2,12 @@
 // the site audit and the smoke test, from what the server wrote (its state files) and the worker's heartbeat. Pure: no
 // file, no database, no clock of its own. Each line says green (ok), yellow (warn), red (bad) or grey (off: nothing
 // to judge yet), with a reason the page turns into words (messages/admin-health.<lang>.json `hlt.line.<id>.<reason>`).
+// PR 414: a sixth line, the saved browser journeys (journeys.json from infra/deploy/journeys.sh), judged against their
+// own schedule (`health.journeys`).
 import type { WorkerState } from '@extas/jobs';
-import type { HealthHubSettings } from '@extas/settings';
+import type { HealthHubSettings, HealthJourneysSettings } from '@extas/settings';
 
-export const HUB_LINE_IDS = ['problems', 'server', 'speed', 'audit', 'smoke'] as const;
+export const HUB_LINE_IDS = ['problems', 'server', 'speed', 'audit', 'smoke', 'journeys'] as const;
 export type HubLineId = (typeof HUB_LINE_IDS)[number];
 export type HubLineState = 'ok' | 'warn' | 'bad' | 'off';
 
@@ -48,6 +50,18 @@ export interface K6Baseline {
   rps?: number;
 }
 
+/** journeys.json and each run in journeys/ (infra/deploy/journeys.sh, PR 414): one run's summary. */
+export interface JourneysResult {
+  ok?: boolean;
+  kind?: string;
+  /** Journeys × screens that ran, and how many of them failed. */
+  journeys?: number;
+  failed?: number;
+  steps?: number;
+  skipped?: number;
+  problems?: string[];
+}
+
 export interface HubInput {
   now: Date;
   limits: HealthHubSettings;
@@ -55,7 +69,13 @@ export interface HubInput {
   smoke: StateFile<SmokeResult> | null;
   k6: StateFile<K6Baseline> | null;
   worker: WorkerState;
+  /** PR 414: the last journeys run and their schedule. */
+  journeys: StateFile<JourneysResult> | null;
+  schedule: HealthJourneysSettings;
 }
+
+/** The hours between two scheduled journey runs; a run older than two of them is late. */
+export const JOURNEY_PERIOD_HOURS: Record<HealthJourneysSettings['every'], number> = { hourly: 1, daily: 24, weekly: 168 };
 
 /** The monitor's own mark for "the home page did not answer" (extas-monitor). */
 export const NO_ANSWER_MS = 99_999;
@@ -100,7 +120,24 @@ function smokeLine(i: HubInput): HubLine {
   return { ...base, state: 'ok', reason: 'ok', vars: { pages: s.pages ?? 0 } };
 }
 
-/** The five lines, in the hub's order. Problems (PR 423) and the site audit (PR 570) are grey until they report. */
+/** True while a "Run now" press is newer than the last run (the server has not started it yet). */
+export function runAsked(i: Pick<HubInput, 'journeys' | 'schedule'>): boolean {
+  const asked = i.schedule.runRequestedAt ? Date.parse(i.schedule.runRequestedAt) : NaN;
+  return Number.isFinite(asked) && (!i.journeys || asked > i.journeys.writtenAt.getTime());
+}
+
+function journeysLine(i: HubInput): HubLine {
+  const note = runAsked(i) ? { note: { key: 'asked', vars: {} } } : {};
+  const base = { id: 'journeys' as const, at: iso(i.journeys), href: null, ...note };
+  if (!i.journeys) return { ...base, state: 'off', reason: i.schedule.enabled ? 'never' : 'scheduleOff', vars: {} };
+  const r = i.journeys.data;
+  if (!r.ok) return { ...base, state: 'bad', reason: 'failed', vars: { failed: r.failed ?? 0, journeys: r.journeys ?? 0, first: (r.problems?.[0] ?? '').slice(0, 160) } };
+  const h = Math.floor(minutesSince(i.now, i.journeys.writtenAt) / 60);
+  if (i.schedule.enabled && h > 2 * JOURNEY_PERIOD_HOURS[i.schedule.every]) return { ...base, state: 'warn', reason: 'late', vars: { h } };
+  return { ...base, state: 'ok', reason: r.skipped ? 'okSkipped' : 'ok', vars: { journeys: r.journeys ?? 0, steps: r.steps ?? 0, skipped: r.skipped ?? 0 } };
+}
+
+/** The six lines, in the hub's order. Problems (PR 423) and the site audit (PR 570) are grey until they report. */
 export function hubLines(i: HubInput): HubLine[] {
   return [
     { id: 'problems', state: 'off', reason: 'notYet', vars: {}, at: null, href: null },
@@ -108,6 +145,7 @@ export function hubLines(i: HubInput): HubLine[] {
     speedLine(i),
     { id: 'audit', state: 'off', reason: 'notYet', vars: {}, at: null, href: null },
     smokeLine(i),
+    journeysLine(i),
   ];
 }
 

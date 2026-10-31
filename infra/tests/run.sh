@@ -1316,6 +1316,37 @@ check "vault sync (507): new backup settings go onto the timers (a drop-in each)
   "$(grep -c '^OnCalendar=\*-\*-\* 01:15:00$' "$T/systemd/extas-backup-daily.timer.d/schedule.conf"):$(grep -c '^OnCalendar=\*-\*-09 04:05:00$' "$T/systemd/extas-restore-test.timer.d/schedule.conf"):$(grep -c '^enable --now extas-restore-test.timer$' "$T/systemctl.log")" "1:1:1"
 "${VENV[@]}" FAKE_FP=fp4 FAKE_TG="" FAKE_SETTINGS="BACKUP_DRILL_ON='no'\n" "$B/extas-vault-sync"
 check "vault sync (507): the drill switched off stops its timer" "$(grep -c '^disable --now extas-restore-test.timer$' "$T/systemctl.log")" "1"
+# PR 414: the saved journeys — when they are due (Asia/Dhaka, fixed times), and how many runs are kept.
+jdue() { # jdue <on> <every> <hour> <weekday> <requested> <now as "YYYY-mm-dd HH:MM" Dhaka> <last as the same, or 0>
+  (
+    # shellcheck source=../deploy/journeys-lib.sh
+    . ../deploy/journeys-lib.sh
+    JOURNEYS_ON="$1" JOURNEYS_EVERY="$2" JOURNEYS_HOUR="$3" JOURNEYS_WEEKDAY="$4" JOURNEYS_REQUESTED="$5"
+    now="$(TZ=Asia/Dhaka date -d "$6" +%s)"
+    last=0; [ "$7" = 0 ] || last="$(TZ=Asia/Dhaka date -d "$7" +%s)"
+    journeys_due "$now" "$last" Asia/Dhaka || echo "no"
+  )
+}
+# 2026-10-31 is a Saturday (6); Friday is 5.
+check "journeys (414): off and never pressed → not due" "$(jdue no daily 6 5 '' '2026-10-31 07:10' 0)" "no"
+check "journeys (414): a press newer than the last run is due even when off" "$(jdue no daily 6 5 "$(TZ=Asia/Dhaka date -d '2026-10-31 07:00' +%s)" '2026-10-31 07:10' '2026-10-31 06:05')" "asked"
+check "journeys (414): a press older than the last run is not" "$(jdue no daily 6 5 "$(TZ=Asia/Dhaka date -d '2026-10-31 06:00' +%s)" '2026-10-31 07:10' '2026-10-31 06:05')" "no"
+check "journeys (414): daily, first run ever → due" "$(jdue yes daily 6 5 '' '2026-10-31 05:10' 0)" "scheduled"
+check "journeys (414): daily, before today's hour and ran yesterday after it → not due" "$(jdue yes daily 6 5 '' '2026-10-31 05:10' '2026-10-30 06:04')" "no"
+check "journeys (414): daily, past today's hour and last ran yesterday → due" "$(jdue yes daily 6 5 '' '2026-10-31 06:02' '2026-10-30 06:04')" "scheduled"
+check "journeys (414): daily, a missed hour is made up once" "$(jdue yes daily 6 5 '' '2026-10-31 09:02' '2026-10-30 06:04'):$(jdue yes daily 6 5 '' '2026-10-31 10:02' '2026-10-31 09:05')" "scheduled:no"
+check "journeys (414): hourly, once per clock hour" "$(jdue yes hourly 6 5 '' '2026-10-31 10:02' '2026-10-31 09:05'):$(jdue yes hourly 6 5 '' '2026-10-31 10:40' '2026-10-31 10:03')" "scheduled:no"
+check "journeys (414): weekly on Friday, Saturday after Friday's run → not due" "$(jdue yes weekly 6 5 '' '2026-10-31 07:00' '2026-10-30 06:03')" "no"
+check "journeys (414): weekly on Friday, the next Friday after the hour → due" "$(jdue yes weekly 6 5 '' '2026-11-06 06:01' '2026-10-30 06:03'):$(jdue yes weekly 6 5 '' '2026-11-06 05:59' '2026-10-30 06:03')" "scheduled:no"
+check "journeys (414): weekly on Saturday (today), before the hour, last ran a week ago at it → not due" "$(jdue yes weekly 6 6 '' '2026-10-31 05:00' '2026-10-24 06:01')" "no"
+check "journeys (414): a bad schedule value never runs" "$(jdue yes monthly 6 5 '' '2026-10-31 07:00' 0):$(jdue yes daily 24 5 '' '2026-10-31 07:00' 0):$(jdue yes weekly 6 8 '' '2026-10-31 07:00' 0):$(jdue no daily 6 5 'x; rm -rf /' '2026-10-31 07:00' 0)" "no:no:no:no"
+JK="$T/jkeep"; mkdir -p "$JK"
+for s in 20261027-060101 20261028-060101 20261029-060101 20261030-060101; do echo '{}' > "$JK/$s.json"; done
+echo keep > "$JK/notes.txt"
+( . ../deploy/journeys-lib.sh; journeys_keep "$JK" 2 )
+check "journeys (414): the newest runs are kept, older ones removed, other files left alone" "$(find "$JK" -type f -printf '%f\n' | sort | tr '\n' ' ')" "20261029-060101.json 20261030-060101.json notes.txt "
+check "journeys (414): the hourly check runs the script with the live checks and commits a report only on a change" \
+  "$(grep -c 'bash infra/deploy/journeys.sh "$RUNNER_TEMP/journeys" "$MODE" "$live"' ../../.github/workflows/journeys.yml):$(grep -c 'docs/reports/journeys/' ../../.github/workflows/ci.yml)" "1:1"
 rm -rf "$T"
 
 # S19 · PR 397 — extas-origin-cert: a checked pair goes to Caddy (tls.caddy names it, the key 0600) and the state says

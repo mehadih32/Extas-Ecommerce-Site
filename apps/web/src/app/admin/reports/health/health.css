@@ -1,4 +1,4 @@
-/* S21 · PR 413 — Reports › Site health: the five status lines (the shell's tokens only). */
+/* S21 · PR 413 — Reports › Site health: the status lines (the shell's tokens only); PR 414: the journeys' runs. */
 .adm2 .hl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .adm2 .hl-lines{list-style:none;margin:0;padding:0}
 .adm2 .hl-line{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-top:1px solid var(--ln2)}
@@ -14,3 +14,4 @@
   .adm2 .hl-body{flex-basis:100%;order:2}
   .adm2 .hl-open{order:1;margin-left:auto;height:32px}
 }
+.adm2 .hl-first{overflow-wrap:anywhere;min-width:160px}

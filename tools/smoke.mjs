@@ -194,8 +194,8 @@ export function totpCode(secret, time = Date.now()) {
 const slug = (path, screen) =>
   `${(path.replace(/^\//, "").replace(/[^a-z0-9]+/gi, "-") || "home").replace(/-+$/, "")}-${screen}.jpg`;
 
-/** Watches one page for console errors, page errors and failed requests while `fn` runs. */
-async function watched(page, base, ignore, fn) {
+/** Watches one page for console errors, page errors and failed requests while `fn` runs (PR 414: the journeys too). */
+export async function watched(page, base, ignore, fn) {
   const found = [];
   const onConsole = (m) => {
     if (m.type() !== "error") return;
@@ -346,8 +346,10 @@ async function visit(page, base, ignore, path, screen, out) {
   };
 }
 
-/** Answers the preview login once and returns the browser state holding its cookie, or null when none was set. */
-/** The preview login's cookie (PR 234: the monthly lab run passes the preview login the same way). */
+/**
+ * Answers the preview login once and returns the browser state holding its cookie, or null when none was set.
+ * PR 234: the monthly lab run passes the preview login the same way.
+ */
 export async function previewCookie(browser, base, httpCredentials) {
   const ctx = await browser.newContext({ httpCredentials });
   try {

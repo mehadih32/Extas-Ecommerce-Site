@@ -2,7 +2,7 @@
 // server; values are shell-safe; an unchanged fingerprint reads nothing from the vault.
 import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
-import { envLines, serverSync, shellValue, type SyncDeps } from './server-sync';
+import { envLines, journeysSettingsPart, serverSync, shellValue, type PartContext, type SyncDeps } from './server-sync';
 
 type Row = { id: string; kind: string; provider: string; mode: string; enabled: boolean; config: unknown; storeId: number | null; archivedAt: Date | null; createdAt: Date };
 
@@ -46,9 +46,28 @@ describe('server sync (PR 392)', () => {
   it('no vault key on the server: everything empty, nothing read', async () => {
     const { d } = deps([tg()], { 'telegram.botToken': TOKEN });
     const noVault = (await serverSync({ ...d, vault: null })).files!;
-    expect({ ...noVault, 'backup-settings.env': undefined }).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '', 'backup-settings.env': undefined, 'origin-cert.pem': '', 'origin-key.pem': '', 'first-week.env': '' });
+    expect({ ...noVault, 'backup-settings.env': undefined, 'journeys-settings.env': undefined }).toEqual({ 'telegram.env': '', 'backup.env': '', 'backup.key': '', 'backup-settings.env': undefined, 'origin-cert.pem': '', 'origin-key.pem': '', 'first-week.env': '', 'journeys-settings.env': undefined });
     // PR 507: the backup settings need no key, so they are there before the vault is
     expect(noVault['backup-settings.env']).toContain("BACKUP_TIME='02:30'\n");
+    // PR 414: the journeys' schedule too (off as it ships)
+    expect(noVault['journeys-settings.env']).toContain("JOURNEYS_ON='no'\n");
+  });
+
+  it('PR 414: the journeys file from the setting; "Run now" as seconds, and a new press changes the fingerprint', async () => {
+    const ctx = (v?: unknown) => ({ db: null, vault: null, connections: [], secret: async () => null, ...(v ? { settings: { value: async (k: string) => (k === 'health.journeys' ? v : undefined) } } : {}) }) as unknown as PartContext;
+    expect((await journeysSettingsPart.build(ctx())).split('\n').filter(Boolean)).toEqual([
+      "JOURNEYS_ON='no'",
+      "JOURNEYS_EVERY='daily'",
+      "JOURNEYS_HOUR='6'",
+      "JOURNEYS_WEEKDAY='5'",
+      "JOURNEYS_KEEP='30'",
+      "JOURNEYS_REQUESTED=''",
+    ]);
+    const set = { enabled: true, every: 'weekly', hour: 22, weekday: 1, keepRuns: 5, runRequestedAt: '2026-10-31T10:00:00.000Z' };
+    const env = await journeysSettingsPart.build(ctx(set));
+    expect(env).toContain("JOURNEYS_ON='yes'\nJOURNEYS_EVERY='weekly'\nJOURNEYS_HOUR='22'\nJOURNEYS_WEEKDAY='1'\nJOURNEYS_KEEP='5'\n");
+    expect(env).toContain(`JOURNEYS_REQUESTED='${Date.parse(set.runRequestedAt) / 1000}'\n`);
+    expect(await journeysSettingsPart.watch!(ctx(set))).toEqual(set);
   });
 
   it('PR 402: the first-week watch reaches the server only once started, with its end worked out', async () => {
