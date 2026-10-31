@@ -4913,6 +4913,11 @@ enum DeliveryCheckOutcome {
 }
 
 /// @stage S08 · PR 564 — the courier resolved a different location than the band charged: recorded, nothing changed.
+/// PR 564 (SIM-F-003; Blueprint §60.13): the courier's own charge (`source`: its booking answer, a tracking read or its
+/// COD statement) fits exactly one band's rate card at the parcel's weight, and that band (`courierBandKey`) is not the
+/// one the customer paid for. One row per parcel, written once: the shop's charge of both bands when it was seen, the
+/// gap (`differenceMinor`, + the customer paid less, − more; 0 on a free delivery). The order, its charge and the
+/// customer are never touched or messaged; the monthly count and total are on Reports › Delivery & RTO.
 /// @append-only
 model ChargeMismatch {
   id                  String   @id @default(uuid(7)) @db.Uuid
@@ -4923,6 +4928,15 @@ model ChargeMismatch {
   courierResolvedArea String?
   differenceMinor     Int
   createdAt           DateTime @default(now()) @db.Timestamptz(3)
+  shipmentId          String?  @unique @db.Uuid
+  courierAccountId    String?  @db.Uuid
+  courierBandKey      String?
+  chargedBandMinor    Int?
+  courierBandMinor    Int?
+  freeDelivery        Boolean  @default(false)
+  courierChargeMinor  Int?
+  weightGrams         Int?
+  source              String?
 
   @@index([storeId, createdAt])
 }

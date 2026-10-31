@@ -12,7 +12,8 @@
 //   simulation plan §6.3: a charge-paid return marked delivered, a partial, a parcel we do not know, a double
 //   deduction, a late settlement), the days each payment took, and the payout's `receivedAs`. The same file twice is
 //   one settlement. A matched line makes its money RECONCILED; nothing is paid, claimed or messaged here (PR 564: flag,
-//   change nothing). `resolveLine` marks a checked mismatch resolved with a note.
+//   change nothing). Each known parcel's charge then goes to the charge mismatch log (`deps.courier`, a record only).
+//   `resolveLine` marks a checked mismatch resolved with a note.
 // - `codPosition` (`payments.view`): cash in transit — collected by the riders and not yet paid to us, and still out on
 //   the road — per courier, the days to settle per courier, the delivered parcels missing from every statement, and the
 //   open mismatches by reason.
@@ -373,8 +374,11 @@ export async function importSettlement(deps: PaymentsDeps, who: Who, input: unkn
   const receivedAt = d.receivedAt ?? now;
   const totalCod = lines.reduce((s, l) => s + l.codMinor, 0);
   const charges = lines.reduce((s, l) => s + l.chargeMinor, 0);
+  // PR 564: the parcels this statement names with the charge each line shows, for the charge mismatch log
+  const charged: { shipmentId: string; chargeMinor: number | null }[] = [];
   try {
     const id = await deps.db.$transaction(async (tx) => {
+      charged.length = 0;
       const s = await tx.courierSettlement.create({
         data: {
           storeId,
@@ -445,12 +449,15 @@ export async function importSettlement(deps: PaymentsDeps, who: Who, input: unkn
           },
           select: { id: true },
         });
+        if (sh && !ctx.alreadySettled) charged.push({ shipmentId: sh.id, chargeMinor: l.chargeMinor || null });
         if (sh && !ctx.alreadySettled) settled.add(sh.id);
         if (ok && door) await tx.codCollection.update({ where: { id: door.id }, data: { moneyStatus: 'RECONCILED', settlementLineId: line.id } });
       }
       await audit(tx, who, 'settlement.import', 'CourierSettlement', s.id, undefined, { courierAccountId: account.id, reference: d.reference, lines: lines.length, totalCodMinor: totalCod, chargesMinor: charges, receivedAs: d.receivedAs ?? null, fileHash });
       return s.id;
     }, TX);
+    // PR 564: a record only, after the statement is stored; it never fails the import
+    if (charged.length && deps.courier?.statementCharges) await deps.courier.statementCharges(storeId, charged).catch(() => null);
     return summary(deps.db, id, false);
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {

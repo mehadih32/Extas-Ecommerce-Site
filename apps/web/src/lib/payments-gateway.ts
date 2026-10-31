@@ -5,6 +5,7 @@
 // uses. The admin API (payments-api.ts) and the checkout's payment route use these.
 import { createConnections, paymentAdapters, type Connections } from '@extas/adapters';
 import { recordAdvance } from '@extas/orders';
+import { noteStatementCharges } from '@extas/shipping';
 import { connectionGateways, type GatewayResolver, type PaymentsDeps } from '@extas/payments';
 import { adminDeps, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
@@ -48,6 +49,8 @@ export async function paymentsServiceDeps(deps: AdminDeps): Promise<PaymentsDeps
         await recordAdvance(od, { storeId, orderId }, { actorType: by.actorId ? 'STAFF' : 'SYSTEM', actorId: by.actorId, source: by.source });
       },
     },
+    // PR 564: a statement's charges go to the charge mismatch log (record only, off until the owner's switch)
+    courier: { statementCharges: (storeId, lines) => noteStatementCharges({ db: deps.db, settings: deps.resolver, now: deps.now }, storeId, lines) },
   };
 }
 

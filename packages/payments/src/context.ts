@@ -30,12 +30,20 @@ export interface OrderHooks {
  */
 export type GatewayResolver = (storeId: number, provider: string) => Promise<{ api: PaymentGateway; mode: Mode }>;
 
+/** PR 564 — what the delivery side does with the charges a courier's statement shows (the charge mismatch log). */
+export interface CourierChargeHooks {
+  /** Called after a statement is stored, with each known parcel and the charge its line shows; a record only. */
+  statementCharges?(storeId: number, lines: { shipmentId: string; chargeMinor: number | null }[]): Promise<unknown>;
+}
+
 export interface PaymentsDeps {
   db: PrismaClient;
   settings: SettingsReader;
   /** Clock, for tests. */
   now?: () => Date;
   orders?: OrderHooks;
+  /** PR 564: the charge mismatch log (none: the statement's charges are only stored on its lines). */
+  courier?: CourierChargeHooks;
   /** PR 170: the payment gateways (none: nothing goes through a gateway here). */
   gateways?: GatewayResolver;
 }

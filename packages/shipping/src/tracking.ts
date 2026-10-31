@@ -11,6 +11,7 @@
 // PR 148 follow-up (SIM-F-053): each run writes a parcel past its promise on its order's timeline once (`noteLateParcels`).
 import type { CourierApi } from '@extas/adapters';
 import { courierApi } from './accounts';
+import { noteCourierCharge } from './charge-mismatch';
 import { allow, nowOf, setting, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
 import { noteLateParcels } from './parcels';
@@ -39,6 +40,8 @@ export interface Read extends Applied {
 async function readOne(deps: ShippingDeps, storeId: number, api: CourierApi, s: Tracked): Promise<Read> {
   const events = await api.track({ consignmentId: s.consignmentId, trackingCode: s.trackingCode, merchantRef: s.merchantRef, lastRawStatus: s.providerStatus });
   const applied = await applyEvents(deps, { storeId, shipmentId: s.id }, events, 'poll');
+  // PR 564: a charge in the courier's read may show it read another band — recorded only, never in the way of tracking
+  if (events.some((e) => e.chargeMinor !== null)) await noteCourierCharge(deps, { storeId, shipmentId: s.id }, 'tracking').catch(() => null);
   return { ...applied, order: await syncOrder(deps, { storeId, shipmentId: s.id }) };
 }
 

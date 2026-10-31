@@ -16,6 +16,7 @@
     { "pr": 524, "what": "review R3 (admin M2): Reports › Stopped orders draws its numbers", "page": "/admin/reports/stopped", "selector": "[data-testid=stopped-kpis]", "attribute": "data-testid", "equals": "stopped-kpis" },
     { "pr": 84, "what": "a Bengali page draws in Bengali (<html lang=\"bn\">), also when Next sends the /bn rewrite on as a second request (review R1)", "page": "/bn/bag", "selector": "html", "attribute": "lang", "equals": "bn" },
     { "pr": 192, "what": "Reports › Delivery & RTO shows its four numbers (success, on time, refused, late now)", "page": "/admin/reports/delivery", "selector": "[data-testid=delivery-kpis]", "attribute": "data-testid", "equals": "delivery-kpis" },
+    { "pr": 564, "what": "Reports › Delivery & RTO shows the charge mismatch log card with its switch state", "page": "/admin/reports/delivery", "selector": "[data-testid=mismatch-log]", "attribute": "data-testid", "equals": "mismatch-log" },
     { "pr": 192, "what": "Support › Rider issues shows its list (empty or not)", "page": "/admin/support/rider-issues", "selector": "[data-testid=rider-list]", "attribute": "data-testid", "equals": "rider-list" },
     { "pr": 192, "what": "the courier claims answer with their totals (read-only)", "request": { "method": "GET", "path": "/api/admin/delivery/claims" }, "status": 200, "field": "open" },
     { "pr": 192, "what": "the rider issues answer with their counts (read-only)", "request": { "method": "GET", "path": "/api/admin/support/rider-issues" }, "status": 200, "field": "counts" },

@@ -5,6 +5,8 @@
 // the owner switches it on; the shop's own returned parcels only, never sample rows; a part not entered is named).
 // `?days=7|30|90` (default 30), `?by=` the book's dimension. Seeing needs `reports.read`; the book's switch needs
 // `settings.write` (the API checks again). The fraud report of REP-06 is PR 164's.
+// PR 564: the charge mismatch log — the parcels a courier charged as another band than the customer paid for, per month
+// (cases, paid less, paid more) and the latest cases; a record only, behind its own switch (off as shipped).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -32,6 +34,8 @@ const HERE = '/admin/reports/delivery';
 const PERIODS = [7, 30, 90] as const;
 const DISTRICTS_SHOWN = 15;
 const LATE_SHOWN = 20;
+const MISMATCH_MONTHS = 6;
+const MISMATCH_SHOWN = 10;
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = withCourierReport(await adminView());
@@ -60,17 +64,20 @@ export default async function DeliveryReportPage({ searchParams }: { searchParam
   const from = new Date(to.getTime() - days * 86_400_000);
   const lang = view.lang === 'bn' ? 'bn' : 'en';
   const at = { storeId: MOTHER_STORE_ID };
-  const [perf, book, bookSwitch, currency] = await Promise.all([
+  const [perf, book, bookSwitch, currency, mis, misSwitch] = await Promise.all([
     sh.courierPerformance(sd, who, { from, to, lang, lateRows: LATE_SHOWN }),
     sh.rtoReport(sd, who, { from, to, lang }),
     access.deps.resolver.value('delivery.courier.rtoBook', at),
     access.deps.resolver.value('store.currency', at),
+    sh.chargeMismatchReport(sd, who, { months: MISMATCH_MONTHS, recent: MISMATCH_SHOWN, lang }),
+    access.deps.resolver.value('delivery.chargeMismatch', at),
   ]);
   const canSwitch = access.guard.permissions?.has('settings.write') ?? false;
   const money = moneyOf(currency, view.locale);
   const m = (minor: number) => formatMoney(minor, money);
   const n = (x: number) => new Intl.NumberFormat(view.locale, { numberingSystem: 'latn' }).format(x);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, dateStyle: 'medium', timeStyle: 'short', numberingSystem: 'latn' });
+  const monthName = new Intl.DateTimeFormat(view.locale, { timeZone: 'UTC', month: 'long', year: 'numeric', numberingSystem: 'latn' });
   const href = (o: { days?: number; by?: string }) => `${HERE}?days=${o.days ?? days}&by=${o.by ?? by}`;
   const tot = perf.total;
   const moreDistricts = perf.byDistrict.length > DISTRICTS_SHOWN;
@@ -229,6 +236,78 @@ export default async function DeliveryReportPage({ searchParams }: { searchParam
             )}
           </>
         )}
+      </section>
+      <section className="a2-card a2-mt12" data-testid="mismatch-log" data-on={mis.enabled ? 'yes' : 'no'}>
+        <div className="a2-ch">
+          <div>
+            <h2 className="a2-h3">
+              {c('mismatch.title')} <span className={`a2-pill ${mis.enabled ? 'ok' : 'line'}`}>{mis.enabled ? c('mismatch.on') : c('mismatch.offPill')}</span>
+            </h2>
+            <div className="a2-cs">{c('mismatch.sub')}</div>
+          </div>
+          {canSwitch ? <SwitchButton dict={d as Dict} url="/api/admin/delivery/claims/settings" settingKey="delivery.chargeMismatch" before={{ ...misSwitch }} label={mis.enabled ? c('mismatch.turnOff') : c('mismatch.turnOn')} tone={mis.enabled ? '' : 'pri'} testId="mismatch-switch" /> : null}
+        </div>
+        {!mis.enabled ? <p className="a2-sm a2-mute a2-mt6">{c('mismatch.off')}</p> : null}
+        {mis.enabled || mis.months.some((x) => x.cases) ? (
+          <>
+            <p className="a2-sm a2-mt12" data-testid="mismatch-month">
+              <b>{c('mismatch.thisMonth', { n: n(mis.months[0]!.cases), under: m(mis.months[0]!.underMinor), over: m(mis.months[0]!.overMinor) })}</b>
+            </p>
+            <div className="a2-tblw">
+              <table className="a2-tbl" data-testid="mismatch-table">
+                <thead>
+                  <tr>
+                    <th>{c('mismatch.month')}</th>
+                    <th className="r">{c('mismatch.cases')}</th>
+                    <th className="r">{c('mismatch.under')}</th>
+                    <th className="r">{c('mismatch.over')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mis.months.map((x) => (
+                    <tr key={x.month} data-testid="mismatch-row">
+                      <td className="a2-tdh">
+                        <b>{monthName.format(new Date(`${x.month}-15T00:00:00Z`))}</b>
+                      </td>
+                      <td className="r" data-l={c('mismatch.cases')}>
+                        {n(x.cases)}
+                      </td>
+                      <td className="r" data-l={c('mismatch.under')}>
+                        {m(x.underMinor)}
+                      </td>
+                      <td className="r" data-l={c('mismatch.over')}>
+                        {m(x.overMinor)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <h3 className="a2-h3 a2-mt12">{c('mismatch.recent')}</h3>
+            {mis.recent.length ? (
+              <ul className="cr-rows">
+                {mis.recent.map((r) => (
+                  <li key={r.id} data-testid="mismatch-case">
+                    <div>
+                      <Link className="cr-link" href={orderHref(r.orderId)}>
+                        {r.orderNumber}
+                      </Link>
+                      <span className="a2-xs a2-mute a2-blk">
+                        {r.courier} · {c('mismatch.row', { paid: r.chargedBand, read: r.courierBand })}
+                        {r.courierChargeMinor !== null ? ` · ${c('mismatch.charge', { charge: m(r.courierChargeMinor) })}` : ''}
+                        {r.source ? ` ${c(`mismatch.source.${r.source}`)}` : ''} · {when.format(r.at)}
+                      </span>
+                    </div>
+                    <span className={`a2-pill ${r.freeDelivery ? 'line' : 'warn'}`}>{r.freeDelivery ? c('mismatch.free') : c('mismatch.gap', { gap: m(r.gapMinor) })}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="a2-sm a2-mute a2-mt6">{c('mismatch.none')}</p>
+            )}
+            <p className="a2-xs a2-mute a2-mt6">{c('mismatch.cards')}</p>
+          </>
+        ) : null}
       </section>
     </div>
   );

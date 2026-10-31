@@ -159,6 +159,9 @@ import trackingBn from '../messages/tracking.bn.json';
 // S08 · PR 193 — holiday mode (registry v94).
 import holidayBn from '../messages/holiday.bn.json';
 import holidayEn from '../messages/holiday.en.json';
+// S08 · PR 564 — the charge mismatch log (registry v95).
+import chargeMismatchBn from '../messages/charge-mismatch.bn.json';
+import chargeMismatchEn from '../messages/charge-mismatch.en.json';
 import trackingEn from '../messages/tracking.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
@@ -234,6 +237,9 @@ messages.bn = mergeMessages(messages.bn, trackingBn);
 // S08 · PR 193 (registry v94): holiday mode.
 messages.en = mergeMessages(messages.en, holidayEn);
 messages.bn = mergeMessages(messages.bn, holidayBn);
+// S08 · PR 564 (registry v95): the charge mismatch log.
+messages.en = mergeMessages(messages.en, chargeMismatchEn);
+messages.bn = mergeMessages(messages.bn, chargeMismatchBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

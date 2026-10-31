@@ -1,0 +1,8 @@
+{
+  "delivery": {
+    "chargeMismatch": {
+      "label": "Charge mismatch log",
+      "help": "When a courier's own charge shows it read the parcel's place as another band than the one the customer paid for, the case and the gap are written down. Nothing on the order changes and nobody is messaged. Reports › Delivery & RTO shows the cases and their total each month. Off until switched on."
+    }
+  }
+}
