@@ -11,7 +11,7 @@
 //   EXTAS_WORKER_HEALTH_FILE   where the heartbeat file for the container's health check goes (optional)
 // SIGTERM / SIGINT stop it cleanly: running jobs finish, the leader lock is let go, the heartbeat row says "stopped".
 import { hostname } from 'node:os';
-import { allAdapters, courierAdapters, createConnections, messageAdapters, paymentAdapters, type CdnPurger } from '@extas/adapters';
+import { allAdapters, courierAdapters, createConnections, messageAdapters, paymentAdapters, type CdnPurger, type Storage } from '@extas/adapters';
 import { createCacheRuntime, dayIn, SHOP_PATHS } from '@extas/cache';
 import { connectionGateways } from '@extas/payments';
 import { getPrisma } from '@extas/db/client';
@@ -29,6 +29,9 @@ import { paymentsPlanner } from './payments';
 import { searchPlanner } from './search';
 import { webhookPlanner } from './webhooks';
 import { startWorker } from './worker';
+
+/** The storage adapter of each provider a library file can sit in (as @extas/media ADAPTER_OF). */
+const STORAGE_ADAPTER: Record<string, string | undefined> = { LOCAL_DISK: 'localDisk', AZURE_BLOB: 'azureBlob', S3_COMPATIBLE: 's3' };
 
 async function main(): Promise<void> {
   const redisUrl = process.env.REDIS_QUEUE_URL;
@@ -54,6 +57,15 @@ async function main(): Promise<void> {
     messages: { sender: sendersFrom(senders) },
     payments: { gateways: connectionGateways(gateways) },
     couriers: { connections: couriers },
+    // review R3 (M1): a voice-address recording past its days is overwritten with nothing where it is kept
+    voice: {
+      async wipe(storeId, file) {
+        const adapter = STORAGE_ADAPTER[file.storage];
+        if (!adapter) return;
+        const c = await connections.use<Storage>('STORAGE', { storeId, provider: adapter });
+        await c.api.put(file.storageKey, new Uint8Array(0), file.mimeType);
+      },
+    },
   };
   // PR 602: a change the worker makes (the ERP's stock, a price) is cleared from every web process's page cache over
   // Redis and, while Cloudflare keeps pages, at Cloudflare (the mock until the owner's token passes its test)

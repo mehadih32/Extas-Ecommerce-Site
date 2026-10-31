@@ -8,7 +8,7 @@ import { checkoutQuote } from '@extas/checkout';
 import { setUpCheckout, type CheckoutFixture } from '@extas/checkout/testing';
 import { checkoutFlag, recordAdvance, systemBy } from '@extas/orders';
 import { BAG_COOKIE, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
-import { callMeHandler, draftHandler, paymentHandler, placeHandler, quoteHandler, type CheckoutApiDeps } from './checkout-api';
+import { callMeHandler, draftHandler, paymentHandler, voiceHandler, placeHandler, quoteHandler, type CheckoutApiDeps } from './checkout-api';
 
 const ORIGIN = 'https://shop.example.test';
 const FORM = { name: 'Test Customer', phone: '01700000125', address: 'House 4, Road 5, Dhanmondi, Dhaka 1209' };
@@ -210,6 +210,35 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
       expect(await f.t.prisma.message.count({ where: { conversationId: conv.id } })).toBe(1);
     } finally {
       f.overrides.delete('checkout.callMe');
+    }
+  });
+
+  it('CN-020 (4) · SIM-F-047: the address mic saves one recording for this bag, its words back; off as shipped', async () => {
+    const p = await page('api-voice');
+    const kept: number[] = [];
+    const wired = (): CheckoutApiDeps => ({ ...deps(), voice: () => ({ keep: async (_s, body) => (kept.push(body.byteLength), randomUUID()), transcribe: async () => ({ text: null, confidence: null }) }) });
+    const send = async (fields: Record<string, string | Blob>, o: { cookie?: string; site?: string } = { cookie: p.cookie }) => {
+      const form = new FormData();
+      for (const [k, v] of Object.entries(fields)) form.set(k, v);
+      const r = new Request(`${ORIGIN}/api/checkout/voice`, { method: 'POST', headers: { 'sec-fetch-site': o.site ?? 'same-origin', ...(o.cookie ? { cookie: o.cookie } : {}) }, body: form });
+      return read(await voiceHandler(r, wired()));
+    };
+    const audio = new Blob([new Uint8Array([26, 69, 223, 163, 9, 9])], { type: 'audio/webm' });
+    expect(await send({ transcript: 'House 4' })).toMatchObject({ status: 200, body: { ok: false, error: 'NOT_OPEN' } });
+    f.overrides.set('checkout.voice', { enabled: true, speechLang: 'bn-BD', minConfidence: 0.6, keepRecording: true, maxSeconds: 30, maxKb: 64, maxPerHour: 10 });
+    try {
+      expect(await send({ transcript: 'House 4' }, { cookie: p.cookie, site: 'cross-site' })).toMatchObject({ status: 403 });
+      expect(await send({ transcript: 'House 4' }, {})).toMatchObject({ status: 400, body: { error: 'NO_BAG' } });
+      expect(await send({ durationMs: '1200' })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+      const phone = await send({ transcript: 'House 4, Road 5', confidence: '0.83', durationMs: '3100', audio });
+      expect(phone).toMatchObject({ status: 200, body: { ok: true, transcript: 'House 4, Road 5', confidence: 0.83, engine: 'BROWSER', low: false, kept: true } });
+      expect(kept).toEqual([6]);
+      // no words from the phone: the server's speech connection (here hearing nothing) — unsure, the team listens
+      expect(await send({ audio })).toMatchObject({ status: 200, body: { ok: true, transcript: null, engine: 'SERVER', low: true } });
+      const row = await f.t.prisma.checkoutVoice.findUniqueOrThrow({ where: { id: phone.body.id as string } });
+      expect(row).toMatchObject({ visitorId: p.visitorId, storeId: f.S, durationMs: 3100 });
+    } finally {
+      f.overrides.delete('checkout.voice');
     }
   });
 });

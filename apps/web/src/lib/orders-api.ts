@@ -21,6 +21,8 @@
 //   POST  /api/admin/orders/export                            {view?, status?, q?, payment?, source?, ids?} PR 151: the
 //                                                             list's orders (or the ticked ones) as a CSV file
 //                                                             (orders.export; personal columns with orders.exportPersonal)
+//   GET   /api/admin/orders/:id/voice                         CN-020 (4): the recording of the address the customer
+//                                                             spoke at checkout, to play (orders.read)
 //   GET   /api/admin/orders/:id                               one order: lines, money, shipment, payments, refund
 //                                                             requests, reviews, notes, timeline, the commands open now
 //   POST  /api/admin/orders/:id/confirm                       {version?} (orders.confirm)
@@ -74,6 +76,8 @@ import { partialBoxView, savePartialDelivery } from '@extas/shipping';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
 import { shippingFail } from './shipping-api';
+import { mediaDeps } from './media';
+import { VOICE_FOLDER } from './shop/voice';
 
 interface Ctx {
   deps: od.OrdersDeps;
@@ -264,6 +268,11 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     if (m !== 'GET') return notAllowed();
     return handle(request, deps, 'orders.read', async (x) => ({ ...(await od.getOrder(x.deps, x.who, id)) }));
   }
+  if (b === 'voice') {
+    if (path.length > 2) return notFound();
+    if (m !== 'GET') return notAllowed();
+    return voiceRecording(request, deps, id);
+  }
   if (b === 'notes') {
     if (!c) {
       if (m === 'GET') return handle(request, deps, 'orders.read', async (x) => ({ notes: await od.listNotes(x.deps, x.who, id, { archived: x.url.searchParams.get('archived') === '1' }) }));
@@ -356,5 +365,30 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
       return run('orders.lines', (x, _i, o) => od.removeLine(x.deps, x.who, id, c, o));
     default:
       return notFound();
+  }
+}
+
+/** CN-020 (4): the order's newest kept recording of the spoken address, as the file itself (orders.read). */
+async function voiceRecording(request: Request, deps: AdminDeps | null, orderId: string): Promise<Response> {
+  const storeId = storeIdOf(new URL(request.url));
+  if (storeId === null) return fail(400, 'invalid-store-id');
+  const g = await guardAdmin(request, deps, { permission: 'orders.read', storeId });
+  if (g instanceof Response) return g;
+  // review R3 (admin minor 3): a storage error is a shaped answer, never a bare 500
+  try {
+    const v = await deps!.db.checkoutVoice.findFirst({ where: { storeId, orderId, assetId: { not: null } }, orderBy: { createdAt: 'desc' }, select: { assetId: true } });
+    // review R3 (M1): a recording archived (wiped by the privacy clean-up or an erasure) is not played
+    const asset = v?.assetId ? await deps!.db.mediaAsset.findFirst({ where: { id: v.assetId, storeId, folder: VOICE_FOLDER, archivedAt: null }, select: { storage: true, storageKey: true, mimeType: true } }) : null;
+    if (!asset) return fail(404, 'NOT_FOUND', ['voice']);
+    const media = mediaDeps();
+    if (!media) return fail(503, 'database-not-configured');
+    const got = await (await media.storage(storeId, asset.storage as Parameters<typeof media.storage>[1])).get(asset.storageKey);
+    if (!got?.body.byteLength) return fail(404, 'NOT_FOUND', ['voice']);
+    return new Response(new Uint8Array(got.body), {
+      status: 200,
+      headers: { 'content-type': asset.mimeType, 'content-disposition': 'inline; filename="address-voice"', 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'x-robots-tag': 'noindex' },
+    });
+  } catch (e) {
+    return errorResponse(e);
   }
 }

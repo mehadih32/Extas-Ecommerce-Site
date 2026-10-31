@@ -22,6 +22,11 @@ export interface JobDeps {
   payments?: { gateways: GatewayResolver };
   /** PR 176: the courier connections (each courier its practice world until its keys pass), or none — no tracking job. */
   couriers?: { connections: Pick<Connections, 'use'> };
+  /**
+   * Review R3 (M1): wipes a voice-address recording's file in its storage (the file is overwritten with nothing; the
+   * library row is archived), or none — the purge then only unlinks and archives it.
+   */
+  voice?: { wipe(storeId: number, file: { storage: string; storageKey: string; mimeType: string }): Promise<void> };
   /** Clock, for tests. */
   now?: () => Date;
 }

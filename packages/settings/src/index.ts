@@ -91,6 +91,8 @@ export * from './registry-district-promise';
 export * from './registry-combo-split';
 // CN-020 (3) — "Call me" when someone struggles at checkout (registry-call-me.ts, version 99).
 export * from './registry-call-me';
+// CN-020 (4) — the voice address at checkout (registry-voice-address.ts, version 140).
+export * from './registry-voice-address';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

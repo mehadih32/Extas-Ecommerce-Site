@@ -1,8 +1,9 @@
 // S06 · PR 159 on a real PostgreSQL (a throwaway database with the real migrations; skipped without
 // TEST_DATABASE_ADMIN_URL): the purge clears the IP, the device id and the shared point of the orders past the owner's
 // days (or past the day stored on the order), and nothing else — the order, its money and its other fields stay; a
-// second run clears nothing more; a shorter rule reaches older orders too; the job runs through the catalogue. Every
-// value is a made-up test value.
+// second run clears nothing more; a shorter rule reaches older orders too; the job runs through the catalogue. Review
+// R3 (M1): voice-address recordings past their days are wiped for abandoned checkouts and finished orders only, the
+// library row archived (never deleted), the order and its audit kept, each wipe audited. Every value is made up.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -10,7 +11,7 @@ import type { InventoryDeps, SettingsReader } from '@extas/inventory';
 import { registry, type Key, type Value } from '@extas/settings';
 import { jobDefinition } from './catalogue';
 import type { JobDeps } from './context';
-import { PII_PURGE_JOB, piiPlanner, purgeOrderPii } from './pii';
+import { PII_PURGE_JOB, piiPlanner, purgeOrderPii, purgeVoice } from './pii';
 
 const D = 86_400_000;
 const NOW = new Date('2026-10-24T06:00:00Z');
@@ -90,6 +91,40 @@ describe.skipIf(!HAS_TEST_DB)('PR 159 · the 180-day purge on PostgreSQL', () =>
     expect(left.has(oldIp.id) || left.has(dueDevice.id)).toBe(false);
     for (const x of [freshDevice, phone, name]) expect(left.has(x.id)).toBe(true);
     expect((await purgeOrderPii(t.prisma, storeId, NOW, 180)).links).toBe(0);
+  });
+
+  it('review R3 (M1): wipes old recordings of abandoned checkouts and finished orders only; archives, never deletes', async () => {
+    const asset = () =>
+      t.prisma.mediaAsset.create({ data: { storeId, kind: 'AUDIO', storage: 'LOCAL_DISK', storageKey: `voice/${randomUUID()}.webm`, mimeType: 'audio/webm', bytes: BigInt(100), checksumSha256: randomUUID(), folder: 'voice' }, select: { id: true, storageKey: true } });
+    const voice = async (agoDays: number, orderId: string | null) => {
+      const a = await asset();
+      const v = await t.prisma.checkoutVoice.create({ data: { storeId, visitorId: randomUUID(), orderId, assetId: a.id, transcript: 'House 1, Road 2, Mirpur', engine: 'BROWSER', lang: 'bn-BD', createdAt: new Date(NOW.getTime() - agoDays * D) }, select: { id: true } });
+      return { v, a };
+    };
+    const delivered = await order(40, null);
+    await t.prisma.order.update({ where: { id: delivered.id }, data: { status: 'DELIVERED', ip: null, deviceId: null, gpsLat: null, gpsLng: null, piiExpiresAt: null } });
+    const open = await order(40, null);
+    await t.prisma.order.update({ where: { id: open.id }, data: { status: 'IN_TRANSIT', ip: null, deviceId: null, gpsLat: null, gpsLng: null, piiExpiresAt: null } });
+    const abandoned = await voice(31, null);
+    const finished = await voice(31, delivered.id);
+    const stillOpen = await voice(31, open.id);
+    const fresh = await voice(5, null);
+    const wiped: string[] = [];
+    const r = await purgeVoice({ db: t.prisma, voice: { wipe: async (_s, f) => void wiped.push(f.storageKey) } }, storeId, NOW, 30);
+    expect(r).toMatchObject({ wiped: 2, files: 2 });
+    expect(wiped.sort()).toEqual([abandoned.a.storageKey, finished.a.storageKey].sort());
+    const v = (id: string) => t.prisma.checkoutVoice.findUniqueOrThrow({ where: { id }, select: { assetId: true, transcript: true, orderId: true } });
+    expect(await v(abandoned.v.id)).toEqual({ assetId: null, transcript: null, orderId: null });
+    expect(await v(finished.v.id)).toEqual({ assetId: null, transcript: 'House 1, Road 2, Mirpur', orderId: delivered.id });
+    expect((await v(stillOpen.v.id)).assetId).toBe(stillOpen.a.id);
+    expect((await v(fresh.v.id)).assetId).toBe(fresh.a.id);
+    // the library rows stay, archived; the order stays; each wipe is audited
+    expect(await t.prisma.mediaAsset.findUniqueOrThrow({ where: { id: finished.a.id } })).toMatchObject({ archivedAt: NOW });
+    expect(await t.prisma.mediaAsset.findUniqueOrThrow({ where: { id: fresh.a.id } })).toMatchObject({ archivedAt: null });
+    expect(await t.prisma.order.count({ where: { id: delivered.id } })).toBe(1);
+    expect(await t.prisma.auditLog.count({ where: { action: 'checkout.voice.purge', entityId: { in: [abandoned.v.id, finished.v.id] } } })).toBe(2);
+    // a second run wipes nothing more
+    expect((await purgeVoice({ db: t.prisma }, storeId, NOW, 30)).wiped).toBe(0);
   });
 
   it('runs as a job from the catalogue with the owner\'s days, and the planner plans one run per store and slot', async () => {

@@ -1,0 +1,8 @@
+{
+  "checkout": {
+    "voice": {
+      "label": "Voice address at checkout",
+      "help": "A mic in the address box turns spoken Bengali into words. The order is marked “voice-entered” and keeps the recording; an unclear reading is flagged “voice — please call” so the team calls only for those. Off until switched on. The customer is told before he speaks that his voice is recorded and for how many days. “Keep recordings for (days)” (30): after that the recording is wiped by the privacy clean-up once the checkout is finished or was left; the order and its history stay."
+    }
+  }
+}

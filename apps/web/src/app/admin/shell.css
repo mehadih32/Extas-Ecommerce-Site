@@ -570,6 +570,9 @@
 .adm2 a.a2-prow{color:inherit;text-decoration:none}
 .adm2 a.a2-prow:hover b{color:var(--g)}
 .adm2 .a2-ohist{margin-top:12px;border-top:1px solid var(--ln2);padding-top:10px}
+/* CN-020 (4): the address the customer spoke at checkout, under his details (words, how sure, the recording). */
+.adm2 .a2-ovoice{margin-top:12px;border-top:1px solid var(--ln2);padding-top:10px;display:grid;gap:6px}
+.adm2 .a2-ovoice-play{width:100%;max-width:420px;min-height:44px}
 .adm2 .a2-mt12{margin-top:12px}
 .adm2 .a2-blk{display:block}
 .adm2 .a2-oflags{margin:0 0 14px}

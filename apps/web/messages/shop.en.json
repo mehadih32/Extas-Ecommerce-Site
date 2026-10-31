@@ -440,6 +440,21 @@
       "many": "We already have your request. We will call you on {phone}.",
       "keep": "You can keep going with your order meanwhile.",
       "error": "That did not go through. Please try again."
+    },
+    "voice": {
+      "say": "Say your address",
+      "stop": "Stop",
+      "sending": "Writing it down…",
+      "left": "{s} s left",
+      "done": "Written from your voice. Please check the words above.",
+      "low": "Written from your voice. Please check it; our team may call to confirm the address.",
+      "none": "We kept your voice. Please also type the area and district; our team will listen.",
+      "noneTyped": "We could not read it. Please type the address.",
+      "off": "This browser cannot take voice. Please type the address.",
+      "denied": "Allow the microphone to say your address, or type it.",
+      "error": "That did not go through. Please try again or type the address.",
+      "consentKept": "Your voice is recorded to write your address, read by a speech service, and kept for {days} days.",
+      "consent": "Your voice is used only to write your address (read by a speech service) and is not kept."
     }
   },
   "notFound": {

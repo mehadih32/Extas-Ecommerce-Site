@@ -113,6 +113,22 @@ export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o:
     </Card>,
     <Card key="customer" testId="order-customer" title={t(d, 'orders.cust.title')}>
       <Kv rows={o.customer} />
+      {o.voice ? (
+        <div className="a2-ovoice" data-testid="order-voice">
+          <div className="a2-xs a2-mute a2-b">
+            {t(d, 'orders.voice.title')} · <span className={`a2-pill ${o.voice.low ? 'warn' : 'info'}`}>{t(d, o.voice.low ? 'orders.flag.voiceCall' : 'orders.flag.voice')}</span>
+          </div>
+          <p className="a2-sm">{o.voice.words}</p>
+          <div className="a2-xs a2-mute">{o.voice.sure}</div>
+          {o.voice.audio ? (
+            <audio controls preload="none" src={o.voice.audio} className="a2-ovoice-play" data-testid="order-voice-play">
+              {t(d, 'orders.voice.play')}
+            </audio>
+          ) : (
+            <div className="a2-xs a2-mute">{t(d, 'orders.voice.notKept')}</div>
+          )}
+        </div>
+      ) : null}
       {o.history.recent.length ? (
         <div className="a2-ohist" data-testid="order-history">
           <div className="a2-xs a2-mute a2-b">{t(d, 'orders.hist.recent')}</div>

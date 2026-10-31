@@ -3,7 +3,7 @@
 // customer chose (the finished address line, the band he picked, the payment method …) and the server prices it again
 // with the engines; the answer is the checkout as the page draws it.
 import { findBag, visitorIdSchema } from '@extas/cart';
-import { captureDraft, checkoutQuote, CheckoutError, payAction, payView, placeOrder, viewOf, type CheckoutDeps, type PlaceNext } from '@extas/checkout';
+import { captureDraft, checkoutQuote, CheckoutError, payAction, payView, placeOrder, saveVoiceAddress, viewOf, type CheckoutDeps, type PlaceNext, type VoiceHooks } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
 import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, linkIdentity, newCustomerOnOrder, refuserTermsOnOrder, placeInSection, screenOrder, twoSizeCheck } from '@extas/orders';
@@ -28,6 +28,8 @@ export interface CheckoutApiDeps {
   payments?: () => Promise<PaymentsDeps | null>;
   /** PR 170 — our callback address for a provider on this request's host. */
   callbackBase?: (request: Request, provider: string, lang: string) => string;
+  /** CN-020 (4): where voice recordings are kept and the speech-to-text connection; none: nothing kept or read. */
+  voice?: () => VoiceHooks | null;
 }
 
 const customerOf = (request: Request, d: CheckoutApiDeps) => (d.customerOf ? d.customerOf(request) : Promise.resolve(null));
@@ -352,6 +354,59 @@ export async function callMeHandler(request: Request, deps: CheckoutApiDeps | nu
   } catch (e) {
     // switched off meanwhile, or already asked today: calm states of the shop (200, as PR 610's pause), not failures
     if (isSupportError(e)) return json({ ok: false, error: e.code }, { status: e.code === 'CALLBACK_OFF' || e.code === 'TOO_MANY' ? 200 : e.status });
+    return refusal(e);
+  }
+}
+
+const KB = 1024;
+/** The form fields beside the recording (a few short words). */
+const FORM_OVERHEAD = 16 * KB;
+
+/**
+ * POST /api/checkout/voice — CN-020 (4), SIM-F-047: one recording from the address box's mic (multipart: `audio`, and
+ * `transcript` with `confidence` when the phone read it itself; `durationMs`). Saved for this browser's bag; the words
+ * come back for the box, and whether the reading was unsure. Off as shipped: a calm `NOT_OPEN` (200). Same site only,
+ * at most the owner's `maxKb`.
+ */
+export async function voiceHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {
+  if (request.method.toUpperCase() !== 'POST') return fail(405, 'method-not-allowed');
+  if (!deps) return fail(503, 'database-not-configured');
+  if (!sameOrigin(request)) return fail(403, 'cross-site-request');
+  try {
+    const cfg = await deps.checkout.settings.value('checkout.voice', { storeId: deps.storeId });
+    if (!cfg.enabled) return json({ ok: false, error: 'NOT_OPEN' });
+    if (Number(request.headers.get('content-length') ?? '0') > cfg.maxKb * KB + FORM_OVERHEAD) return fail(413, 'TOO_LARGE', [`max:${cfg.maxKb}`]);
+    const { visitor } = await bagOfRequest(request, deps);
+    if (!visitor) return fail(400, 'NO_BAG');
+    let form: FormData;
+    try {
+      form = await request.formData();
+    } catch {
+      return fail(400, 'INVALID_INPUT', ['audio']);
+    }
+    const text = (k: string) => {
+      const v = form.get(k);
+      return typeof v === 'string' && v.trim() ? v.trim() : undefined;
+    };
+    const num = (k: string) => {
+      const v = Number(text(k));
+      return text(k) !== undefined && Number.isFinite(v) ? v : undefined;
+    };
+    const file = form.get('audio');
+    const audio = file instanceof File && file.size > 0 ? { body: new Uint8Array(await file.arrayBuffer()), contentType: file.type || 'application/octet-stream' } : undefined;
+    const confidence = num('confidence');
+    const durationMs = num('durationMs');
+    const r = await saveVoiceAddress(deps.checkout, deps.voice?.() ?? null, {
+      storeId: deps.storeId,
+      visitorId: visitor,
+      ...(text('transcript') ? { transcript: text('transcript') } : {}),
+      ...(confidence !== undefined ? { confidence } : {}),
+      ...(durationMs !== undefined ? { durationMs: Math.round(durationMs) } : {}),
+      ...(audio ? { audio } : {}),
+    });
+    return json({ ok: true, ...r });
+  } catch (e) {
+    if (e instanceof CheckoutError && e.code === 'NOT_OPEN') return json({ ok: false, error: e.code });
     return refusal(e);
   }
 }

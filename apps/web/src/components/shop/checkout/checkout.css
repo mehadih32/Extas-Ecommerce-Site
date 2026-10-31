@@ -502,3 +502,10 @@
 .shop .co-callme-err { color: var(--sale, rgb(176, 42, 42)); }
 .shop .co-callme-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .shop .co-callme-row .btn { min-height: 44px; flex: 1 1 140px; justify-content: center; }
+/* CN-020 (4) · SIM-F-047 — "Say your address" under the address box (checkout.voice, off as shipped). */
+.shop .co-voice { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; }
+.shop .co-voice .co-voice-btn { min-height: 44px; gap: 8px; padding: 8px 14px; }
+.shop .co-voice .co-voice-btn.on { border-color: var(--sale, rgb(176, 42, 42)); color: var(--sale, rgb(176, 42, 42)) !important; }
+.shop .co-voice .co-voice-left { font-variant-numeric: tabular-nums; font-size: 13px; }
+.shop .co-voice .co-voice-note { flex: 1 1 200px; }
+.shop .co-voice .co-voice-consent { flex: 1 1 100%; }

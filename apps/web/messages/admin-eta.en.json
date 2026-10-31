@@ -129,6 +129,30 @@
       "add": "Add a district",
       "remove": "Remove",
       "empty": "No district has its own time yet."
+    },
+    "voice": {
+      "h": "Voice address at checkout",
+      "d": "A mic under the address box: the customer says his address in Bengali and it is written for him. The order is marked “Voice-entered” and keeps the recording; an unsure reading is marked “Voice — please call” and gets a call task. Phones with their own speech engine (Chrome on Android) read it themselves; others send the recording to “Speech to text” in Keys & connections (until its key is in, the team listens).",
+      "enabled": "Show the mic in the address box",
+      "enabledHelp": "Off as it ships. The browser asks for the microphone only after the customer taps.",
+      "speechLang": "Speech language",
+      "speechLangHelp": "A language code the speech engines know, e.g. bn-BD (Bengali) or en-US.",
+      "minConfidence": "Call when the reading is less sure than",
+      "minConfidenceHelp": "Below this the order is marked “Voice — please call”. No reading at all always asks for a call.",
+      "conf": {
+        "03": "30% (call rarely)",
+        "05": "50%",
+        "06": "60% (as shipped)",
+        "07": "70%",
+        "08": "80%",
+        "09": "90% (call often)"
+      },
+      "keepRecording": "Keep the recording with the order",
+      "keepRecordingHelp": "The team can play it on the order page. Off: only the words are kept.",
+      "maxSeconds": "Longest recording (seconds)",
+      "maxKb": "Largest recording taken (KB)",
+      "maxPerHour": "Recordings one browser may send an hour",
+      "maxPerHourHelp": "Stops one browser filling the storage."
     }
   }
 }

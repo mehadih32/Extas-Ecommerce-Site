@@ -213,7 +213,9 @@
       "goodCustomer": "Good customer",
       "holdProposed": "Hold proposed",
       "newCustomer": "New customer",
-      "preorder": "Eid pre-order"
+      "preorder": "Eid pre-order",
+      "voice": "Voice-entered",
+      "voiceCall": "Voice — please call"
     },
     "page": {
       "all": "All orders",
@@ -1433,6 +1435,14 @@
       "ref": "The courier’s reference, or who you spoke to (optional)",
       "ok": "Re-book",
       "done": "Order #{n} booked again"
+    },
+    "voice": {
+      "title": "Spoken at checkout",
+      "none": "No words were read — listen to the recording.",
+      "unknown": "How sure: not said",
+      "sure": "How sure: {p}",
+      "play": "Play the recording",
+      "notKept": "The recording was not kept (the owner's switch)."
     }
   }
 }

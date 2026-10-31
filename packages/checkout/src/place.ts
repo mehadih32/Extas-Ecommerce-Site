@@ -51,6 +51,7 @@ import { checkGift, storeToday } from './gift';
 import { paymentInputSchema, isPrepaid, type PaymentChoice } from './payment';
 import { checkForm, fieldOrder, phoneNormalizeBD, type FieldProblem } from './pure';
 import { checkoutQuote, viewOf, WALLET_ACTIVE, type CheckoutQuote } from './quote';
+import { isLow } from './voice';
 
 const TEXT_MAX = 2_000;
 
@@ -85,6 +86,8 @@ export const placeInputSchema = z
     gift: giftInputSchema.nullable().optional(),
     /** PR 159: the point the customer shared by tapping "Share my location" (kept rounded, only while the owner's button is on). */
     gps: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).strict().nullable().optional(),
+    /** CN-020 (4): the address was spoken into the mic (the recording saved by POST /api/checkout/voice). */
+    voice: z.object({ id: z.uuid() }).strict().nullable().optional(),
     /** The fingerprint of the money the page showed (CheckoutView.fingerprint). */
     fingerprint: z.string().regex(/^[0-9a-f]{64}$/),
   })
@@ -146,9 +149,13 @@ export const ORDER_FLAGS = {
   giftAdvance: 'GIFT_ADVANCE',
   /** PR 193: an Eid pre-order — placed past its place's order-by date with the owner's pre-order on; ships after Eid. */
   preorder: 'EID_PREORDER',
+  /** CN-020 (4): the address was spoken into the checkout's mic; the recording is kept with the order. */
+  voiceEntered: 'VOICE_ENTERED',
+  /** CN-020 (4): the voice reading was unsure (or nothing was heard): "voice — please call". */
+  voiceCall: 'VOICE_CALL',
 } as const;
 /** Why the team calls (CallTask.reason). */
-export const CALL_REASONS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', addressCheck: 'ADDRESS_CHECK', paymentFailed: PAYMENT_CALL_REASON, giftAdvance: 'GIFT_ADVANCE' } as const;
+export const CALL_REASONS = { addressUnclear: 'ADDRESS_UNCLEAR', chargeNotSet: 'CHARGE_NOT_SET', addressCheck: 'ADDRESS_CHECK', paymentFailed: PAYMENT_CALL_REASON, giftAdvance: 'GIFT_ADVANCE', voiceCall: 'VOICE_CALL' } as const;
 /** What the order's events are called (the payment's own are the payments service's). */
 export const ORDER_EVENTS = { placed: 'order.placed', paid: PAYMENT_EVENTS.paid, failed: PAYMENT_EVENTS.failed, retry: PAYMENT_EVENTS.retry } as const;
 /** Where the order came from (OrderEvent.source, ConsentRecord.source). */
@@ -322,6 +329,10 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
     d.gift ? s('store.timeZone') : Promise.resolve(null),
     s('risk.capture'),
   ]);
+  // CN-020 (4): the recording he made on this page (his own, this store's, not on an order yet), while the mic is on
+  const voiceCfg = d.voice ? await s('checkout.voice') : null;
+  const voice = d.voice && voiceCfg?.enabled ? await deps.db.checkoutVoice.findFirst({ where: { id: d.voice.id, storeId, visitorId, orderId: null }, select: { id: true, transcript: true, confidence: true, engine: true } }) : null;
+  const voiceLow = voice ? isLow(voice.transcript, voice.confidence, voiceCfg!.minConfidence) : false;
   const check = checkForm(d.form, { nameMin, addressMin }, fieldOrder(order));
   if (!check.ok) throw new CheckoutError('FORM', 'a field is not finished', [check.field], { field: check.field, problem: check.problem satisfies FieldProblem });
   const note = noteOn ? (d.note ?? '').trim() : '';
@@ -391,6 +402,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   // PR 193: an Eid pre-order, its advance taken like PR 560's (the order service's AWAITING_ADVANCE)
   const preorder = adv !== null && q.preorder;
   if (preorder) flags.push(ORDER_FLAGS.preorder);
+  if (voice) flags.push(ORDER_FLAGS.voiceEntered);
+  if (voiceLow) flags.push(ORDER_FLAGS.voiceCall);
   const consent = consentOf(cs, d.consent ?? null);
   const discountMinor = q.bag.summary.offers.reduce((a, o) => a + o.amountMinor, 0) + t.rewardMinor;
   // Review R1 (B1): the code the order uses is redeemed in the order's own transaction (its limits hold under load)
@@ -532,6 +545,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
             ...(adv ? { advance: { kind: adv.kind, amountMinor: adv.amountMinor } } : {}),
             // PR 193: an Eid pre-order (the reason the advance was asked; no risk layer involved)
             ...(preorder ? { preorder: true } : {}),
+            // CN-020 (4): the address was spoken (who read it, how sure; the recording is on the CheckoutVoice row)
+            ...(voice ? { voice: { engine: voice.engine, confidence: voice.confidence, low: voiceLow } } : {}),
           },
         },
       });
@@ -560,8 +575,12 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           data: { storeId, orderId: o.id, method: payMethod, provider: choice!.option ?? choice!.method, purpose: adv ? ADVANCE_PURPOSE[adv.kind] : 'ORDER', status: 'INITIATED', amountMinor: adv ? adv.amountMinor : t.dueMinor, currency, idempotencyKey: `${d.idempotencyKey}:pay:1`, attempt: 1, statusAt: now },
         });
       }
-      const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : noDetail ? CALL_REASONS.addressCheck : giftPart ? CALL_REASONS.giftAdvance : null;
+      const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : noDetail ? CALL_REASONS.addressCheck : giftPart ? CALL_REASONS.giftAdvance : voiceLow ? CALL_REASONS.voiceCall : null;
       if (reason) await tx.callTask.create({ data: { storeId, orderId: o.id, customerId: ownerId, reason } });
+      if (voice) {
+        const linked = await tx.checkoutVoice.updateMany({ where: { id: voice.id, storeId, orderId: null }, data: { orderId: o.id } });
+        if (linked.count !== 1) throw new CheckoutError('INVALID_INPUT', 'the recording went into another order', ['voice']);
+      }
       await tx.checkoutDraft.updateMany({ where: { storeId, visitorId, convertedOrderId: null }, data: { convertedOrderId: o.id, cartId, lastStep: 'placed', lastActivityAt: now } });
       await tx.idempotencyKey.update({
         where: { scope_key: { scope, key: d.idempotencyKey } },
