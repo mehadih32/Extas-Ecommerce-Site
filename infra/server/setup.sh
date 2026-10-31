@@ -25,6 +25,7 @@ nvme      step_nvme      1
 datadisk  step_datadisk  1
 kernel    step_kernel    0
 docker    step_docker    1
+osdisk    step_osdisk    0
 profile   step_profile   1
 stack     step_stack     1
 backup    step_backup    0

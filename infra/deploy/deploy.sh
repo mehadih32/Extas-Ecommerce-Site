@@ -315,12 +315,10 @@ cache_hook "$NEW"
 record ok "$NEW live"
 rm -f "$SEC/.app.env.before-role" "$SEC/.app-connections.env.before-role"
 # Keep the newest images; older ones only take disk space. Never removed, however many failed builds came after
-# them: the live version's and the rollback target's app and worker images (follow-up 82, images.sh).
-needed="$(mktemp)"
-needed_images "$STATE/last-good-deploy.json" "$STATE/last-deploy.json" > "$needed"
-docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-web | images_to_remove 5 "$needed" \
-  | xargs -r docker rmi >/dev/null 2>&1 || true
-docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-migrate | images_to_remove 3 "$needed" \
-  | xargs -r docker rmi >/dev/null 2>&1 || true
-rm -f "$needed"
+# them: the live version's and the rollback target's app and worker images (follow-up 82, images.sh). Then (PR 4
+# follow-up, 31 Oct) the untagged layers and the build cache above DOCKER_BUILD_CACHE_KEEP_GB go too (disk-tidy.sh), so
+# two builds per deploy never fill the disk again.
+# shellcheck source=disk-tidy.sh
+. "$HERE/disk-tidy.sh"
+tidy_docker "$STATE" || true
 log "done: $IMAGE on $NEW"

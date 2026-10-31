@@ -825,4 +825,155 @@ check "caddy cache: hashed files keep a year at Cloudflare" "$(grep -c '@hashed_
 check "caddy cache: the internal addresses answer 404 from outside" "$(grep -c '^	respond @internal 404$' "$CF")" "1"
 check "setup: the cache hook token is made on the server" "$(grep -c 'gen_secret "$s/app.env" CACHE_HOOK_TOKEN 48' ../server/steps/09-stack.sh)" "1"
 
+
+# PR 4 follow-up (31 Oct): / reached 97% and the deploy's build killed the runner twice. disk-tidy.sh cleans up (never a
+# tagged image a deploy record needs, untagged images only, the build cache above its setting, old runner logs, apt,
+# the journal); the deploy refuses to build when / still has too little free space, and its report says why in words.
+T="$(mktemp -d)"
+mkdir -p "$T/bin" "$T/root/state" "$T/runner/_diag"
+printf 'EXTAS_ROOT=%s\nDOCKER_BUILD_CACHE_KEEP_GB=40\nDEPLOY_KEEP_WEB_IMAGES=1\nDEPLOY_KEEP_MIGRATE_IMAGES=1\nDISK_ROOT_MIN_FREE_GB=15\nJOURNAL_MAX_USE_MB=512\nRUNNER_DIR=%s\nRUNNER_DIAG_KEEP_DAYS=7\n' \
+  "$T/root" "$T/runner" > "$T/conf"
+cat > "$T/bin/docker" <<'FAKE'
+#!/usr/bin/env bash
+# stand-in for docker in disk-tidy.sh: the image list comes from FAKE_LIST; `builder prune --help` names the new flag
+echo "ARGS $*" >> "$FAKE_LOG"
+case "$1 ${2:-}" in
+  "images --format") grep "^${*: -1}:" "$FAKE_LIST" ;;
+  "builder prune") case "$*" in *--help*) [ -n "${FAKE_OLD_DOCKER:-}" ] && echo "--keep-storage" || echo "--max-used-space --keep-storage" ;; esac ;;
+esac
+exit 0
+FAKE
+printf '#!/usr/bin/env bash\necho "Filesystem 1G-blocks Used Available Capacity Mounted"\necho "/dev/root 125G 100G ${FAKE_FREE}G 80%% /"\n' > "$T/bin/df"
+printf '#!/usr/bin/env bash\necho "ARGS $(basename "$0") $*" >> "$FAKE_LOG"\n' > "$T/bin/apt-get"
+cp "$T/bin/apt-get" "$T/bin/journalctl"
+chmod +x "$T/bin/"*
+printf 'extas-web:new3 2026-10-31\nextas-web:live 2026-10-30\nextas-web:prev 2026-10-29\nextas-web:old 2026-10-01\nextas-migrate:live 2026-10-30\nextas-migrate:prev 2026-10-29\nextas-migrate:old 2026-10-01\n' > "$T/list"
+echo '{"image":"extas-web:live","previous":"extas-web:prev","worker_image":"extas-migrate:live","previous_worker":"extas-migrate:prev"}' > "$T/root/state/last-good-deploy.json"
+touch -d '10 days ago' "$T/runner/_diag/Worker_old.log"; touch "$T/runner/_diag/Worker_now.log"
+tidy() { PATH="$T/bin:$PATH" FAKE_LOG="$T/docker.log" FAKE_LIST="$T/list" EXTAS_CONFIG_FILE="$T/conf" bash ../deploy/disk-tidy.sh "$@"; }
+rc=0; out="$(FAKE_FREE=20 tidy --guard "$T/disk.json")" || rc=$?
+check "disk tidy: enough free space passes the guard" "$rc:$(jq -c . "$T/disk.json")" \
+  '0:{"ok":true,"mode":"guard","free_gb_before":20,"free_gb":20,"min_free_gb":15}'
+check "disk tidy: old extas images go, never the live, previous or rollback ones" "$(sed -n 's/^ARGS rmi //p' "$T/docker.log" | paste -sd' ')" \
+  "extas-web:old extas-migrate:old"
+check "disk tidy: untagged images only (no -a), the build cache down to its setting" \
+  "$(grep -c '^ARGS image prune -f$' "$T/docker.log"):$(grep -c '^ARGS builder prune -af --max-used-space 40gb$' "$T/docker.log"):$(grep -c 'prune -a ' "$T/docker.log" || true)" "1:1:0"
+check "disk tidy: runner logs past their days, the apt cache, the journal over its cap" \
+  "$([ -e "$T/runner/_diag/Worker_old.log" ] && echo kept || echo gone):$([ -e "$T/runner/_diag/Worker_now.log" ] && echo kept || echo gone):$(grep -c '^ARGS apt-get clean$' "$T/docker.log"):$(grep -c '^ARGS journalctl --vacuum-size=512M$' "$T/docker.log")" \
+  "gone:kept:1:1"
+rc=0; out="$(FAKE_FREE=3 tidy --guard "$T/disk.json")" || rc=$?
+check "disk tidy: too little free space fails the guard, with the setting named" \
+  "$rc:$(jq -r '.ok' "$T/disk.json"):$(grep -c '::error::.*only 3 GB free.*DISK_ROOT_MIN_FREE_GB' <<<"$out")" "1:false:1"
+rc=0; FAKE_FREE=3 tidy --tidy >/dev/null || rc=$?
+check "disk tidy: a rollback only tidies, never stops on it" "$rc" "0"
+: > "$T/docker.log"; FAKE_OLD_DOCKER=1 FAKE_FREE=20 tidy --tidy >/dev/null
+check "disk tidy: an older Docker gets --keep-storage" "$(grep -c '^ARGS builder prune -af --keep-storage 40gb$' "$T/docker.log")" "1"
+check "disk tidy: a wrong mode is refused" "$(FAKE_FREE=20 tidy --all >/dev/null 2>&1; echo $?)" "2"
+# The deploy report says it in words; the disk line shows in every report where the check ran.
+printf 'EXTAS_ROOT=%s\nEXTAS_TIMEZONE=Asia/Dhaka\nEXTAS_STAGING_HOST=example.test\n' "$T" > "$T/rconf"
+echo '{"ok":false,"mode":"guard","free_gb_before":2,"free_gb":3,"min_free_gb":15}' > "$T/disk.json"
+env EXTAS_CONFIG_FILE="$T/rconf" DEPLOY_JSON="$T/none.json" SHA=aaaabbbbccccdddd RUN_ID=50 CHECKOUT=success DISK=failure \
+  DISK_JSON="$T/disk.json" BUILD=skipped DEPLOY=skipped NOW=1760947200 bash ../deploy/deploy-report.sh "$T/out"
+check "report: a full main disk in words, nothing built" \
+  "$(grep -c '| Result | \*\*FAILED\*\* |' "$T/out/deploy-latest.md"):$(grep -c "main disk (/) was too full to build: 3 GB free after the clean-up, at least 15 GB needed" "$T/out/deploy-latest.md"):$(grep -c '| Main disk (/) | TOO FULL — 3 GB free' "$T/out/deploy-latest.md")" "1:1:1"
+echo '{"ok":true,"mode":"guard","free_gb_before":20,"free_gb":60,"min_free_gb":15}' > "$T/disk.json"
+echo '{"result":"ok","detail":"green live","sha":"aaaabbbbccccdddd","migration":"ok","run":"51","color":"green"}' > "$T/dep.json"
+env EXTAS_CONFIG_FILE="$T/rconf" DEPLOY_JSON="$T/dep.json" SHA=aaaabbbbccccdddd RUN_ID=51 CHECKOUT=success DISK=success \
+  DISK_JSON="$T/disk.json" BUILD=success DEPLOY=success NOW=1760947200 bash ../deploy/deploy-report.sh "$T/out"
+check "report: the free space on / after the clean-up" \
+  "$(grep -c '\*\*OK\*\*' "$T/out/deploy-latest.md"):$(grep -c '| Main disk (/) | 60 GB free after the clean-up (was 20 GB), at least 15 GB needed |' "$T/out/deploy-latest.md")" "1:1"
+# The deploy: the check runs before the docs copy and the build; a deploy tidies after the switch; the report gets it.
+W=../../.github/workflows/deploy.yml
+check "workflows: the disk check runs before the docs copy and the build, and the report reads it" \
+  "$(awk '/- name: Free space on the main disk/{d=NR} /- name: Copy the docs/{c=NR} /- name: Build the images/{b=NR} END{print (d && c && b && d<c && c<b) ? "first" : "wrong"}' "$W"):$(grep -c 'bash infra/deploy/disk-tidy.sh "$mode" "$RUNNER_TEMP/disk.json"' "$W"):$(grep -c 'DISK: ${{ steps.disk.outcome }}' "$W"):$(grep -c 'DISK_JSON="$RUNNER_TEMP/disk.json"' "$W")" "first:1:1:1"
+check "deploy: the clean-up after the switch keeps the records' images (disk-tidy.sh)" \
+  "$(awk '/^record ok "\$NEW live"/{r=NR} /^tidy_docker "\$STATE" \|\| true$/{t=NR} END{print (r && t && r<t) ? "after" : "wrong"}' ../deploy/deploy.sh):$(grep -c 'docker rmi' ../deploy/deploy.sh)" "after:0"
+# Docker: BuildKit's own garbage collection from the setting (the file is valid JSON); containerd and Docker start only
+# with containerd's store mounted; setup runs the OS-disk step right after Docker.
+check "docker: daemon.json keeps the build cache under the setting" \
+  "$(bash -c '. ../server/steps/07-docker.sh; docker_daemon_conf ",
+  \"builder\": { \"gc\": { \"enabled\": true, \"defaultKeepStorage\": \"40GB\" } }"' | jq -r '[.["live-restore"], .builder.gc.enabled, .builder.gc.defaultKeepStorage] | map(tostring) | join(" ")'):$(grep -c 'dockerd --validate --config-file' ../server/steps/07-docker.sh):$(grep -c 'for key in defaultMaxUsedSpace defaultKeepStorage; do' ../server/steps/07-docker.sh):$(grep -c '\\"$key\\": \\"${DOCKER_BUILD_CACHE_KEEP_GB}GB\\"' ../server/steps/07-docker.sh)" \
+  "true true 40GB:1:1:1"
+check "docker: containerd and Docker wait for containerd's store" \
+  "$(grep -c '^RequiresMountsFor=.* /var/lib/docker \$CONTAINERD_ROOT$' ../server/steps/07-docker.sh):$(grep -c '^RequiresMountsFor=\$CONTAINERD_ROOT$' ../server/steps/07-docker.sh)" "1:1"
+check "setup: the OS-disk step runs right after Docker, not critical" "$(grep -A1 '^docker    step_docker' ../server/setup.sh | tail -1 | tr -s ' ')" "osdisk step_osdisk 0"
+for k in LV_CONTAINERD_GB CONTAINERD_ROOT DOCKER_BUILD_CACHE_KEEP_GB DEPLOY_KEEP_WEB_IMAGES DEPLOY_KEEP_MIGRATE_IMAGES DISK_ROOT_MIN_FREE_GB JOURNAL_MAX_USE_MB RUNNER_DIR RUNNER_DIAG_KEEP_DAYS; do
+  grep -q "^$k=" ../config/server.conf || { echo "FAIL server.conf has no $k"; fail=1; }
+done
+check "osdisk: the volume leaves room in the VG (218 GB free when it came)" "$(bash -c '. ../config/server.conf; echo $(( LV_CONTAINERD_GB < 200 ))')" "1"
+
+# The move of containerd's store (steps/13-osdisk.sh) with stand-ins for every system command (no disk, no Docker):
+# the order of the steps, the checks before anything is removed, and every failure puts things back with Docker running.
+sed -e "s#^EXTAS_ROOT=.*#EXTAS_ROOT=\"$T/root\"#" -e "s#^CONTAINERD_ROOT=.*#CONTAINERD_ROOT=\"$T/var/lib/containerd\"#" \
+  ../config/server.conf > "$T/sconf"
+mkdir -p "$T/var/lib/containerd"
+cat > "$T/stubs.sh" <<'STUBS'
+# stand-ins as shell functions: every call is logged in order; the store is "mounted" while $T/mounted exists
+L="$T/osd.log"; STORE="$CONTAINERD_ROOT"
+mountpoint() { [ "${*: -1}" = "$STORE" ] && [ -f "$T/mounted" ]; }
+du() { printf '%s\t%s\n' "${FAKE_DU_KB:-1048576}" "${*: -1}"; }
+vgs() { echo "  218.00"; }
+lvcreate() { echo "lvcreate $*" >> "$L"; }
+blkid() { case "$*" in *TYPE*) echo ext4 ;; *UUID*) echo uuid-cd ;; esac; }
+mkfs.ext4() { echo "mkfs $*" >> "$L"; }
+mount() { echo "mount $*" >> "$L"; [ "${*: -1}" != "$STORE" ] || touch "$T/mounted"; [ "${*: -1}" != "$STORE" ] || [ -z "${FAIL_MOUNT:-}" ]; }
+umount() { echo "umount $*" >> "$L"; [ "${*: -1}" != "$STORE" ] || rm -f "$T/mounted"; }
+rsync() { local n; n=$(( $(cat "$T/rsyncs" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$T/rsyncs"; echo "rsync$n $*" >> "$L"; [ "$n" != "${FAIL_RSYNC:-0}" ]; }
+systemctl() { echo "systemctl $*" >> "$L"; [ "$1" != is-active ] || echo active; }
+sleep() { :; }
+docker() {
+  echo "docker $*" >> "$L"
+  case "$1 ${2:-}" in
+    "ps -q") echo cid1; echo cid2 ;;
+    "images --format") if [ -f "$T/mounted" ] && [ -n "${LOSE_IMAGE:-}" ]; then echo extas-web:live; else printf 'extas-web:live\npostgres:17\n'; fi ;;
+    "inspect -f") case "$3" in
+        *StartedAt*) if [ -f "$T/restarted" ]; then date -u -d '+1 minute' +%Y-%m-%dT%H:%M:%SZ; else echo 2026-10-20T00:00:00Z; fi ;;
+        *Status*) echo running ;; *Name*) echo /extas-postgres ;; esac ;;
+    "restart -t") [ -n "${RESTART_FAILS:-}" ] || touch "$T/restarted" ;;
+    "run --rm") [ -z "${FAIL_RUN:-}" ] ;;
+  esac
+}
+STUBS
+osd() { # osd <function> [env…]: one run in its own shell; prints the return code
+  ( for kv in "${@:2}"; do export "${kv?}"; done
+    export EXTAS_FSTAB="$T/fstab" EXTAS_CONFIG_FILE="$T/sconf" REPORT_FILE="$T/report" T
+    # shellcheck source=../server/lib.sh
+    . ../server/lib.sh; . ../server/steps/13-osdisk.sh; . "$T/stubs.sh"
+    rc=0; "$1" 2>/dev/null || rc=$?; echo "$rc" )
+}
+reset_osd() { rm -f "$T/mounted" "$T/rsyncs" "$T/restarted" "$T/root/state/containerd-moved.at"; : > "$T/osd.log"; : > "$T/fstab"; : > "$T/report"; }
+mkdir -p "$T/root/state"; reset_osd
+rc="$(osd containerd_to_lv)"
+order="$(awk '/^rsync1 /{a=NR} /^systemctl stop docker.socket docker.service containerd.service/{b=NR} /^rsync2 /{c=NR} /^mount \/dev\/extas\/containerd .*var\/lib\/containerd$/{d=NR} /^systemctl start containerd.service docker.socket docker.service/{if(!e)e=NR} /^docker run --rm --network none --entrypoint test extas-web:live -d \//{f=NR}
+  END{print (a<b && b<c && c<d && d<e && e<f) ? "in order" : "wrong " a" "b" "c" "d" "e" "f}' "$T/osd.log")"
+check "osdisk move: copy, stop, final copy, mount, start, then the live image starts from the new store" "$rc:$order" "0:in order"
+check "osdisk move: the volume is made once, in VG extas, with the size from server.conf" "$(grep -c '^lvcreate -q -y -L 120G -n containerd extas$' "$T/osd.log")" "1"
+check "osdisk move: copied with hard links, ACLs, xattrs and numeric owners, one file system" "$(grep -c '^rsync[12] -aHAX --numeric-ids -x --delete ' "$T/osd.log")" "2"
+check "osdisk move: the mount comes back at boot only after the checks passed" "$(cat "$T/fstab")" "UUID=uuid-cd $T/var/lib/containerd ext4 defaults,noatime,nofail,x-systemd.device-timeout=60s 0 2"
+check "osdisk move: nothing is removed during the move" "$(grep -cE '^docker (rmi|restart)|rm -rf' "$T/osd.log" || true):$([ -f "$T/root/state/containerd-moved.at" ] && echo marked)" "0:marked"
+# A store that is already a volume is left alone
+: > "$T/osd.log"
+check "osdisk move: a second run changes nothing" "$(osd containerd_to_lv):$(grep -c 'systemctl stop\|rsync' "$T/osd.log" || true)" "0:0"
+# Failures: everything back as it was, Docker and containerd started again, no boot entry, FAIL in the report
+for case in "FAIL_RSYNC=2:final copy failed" "LOSE_IMAGE=1:images missing on the new store: postgres:17" "FAIL_RUN=1:the live image extas-web:live does not start" "FAIL_MOUNT=1:the volume did not mount"; do
+  reset_osd
+  rc="$(osd containerd_to_lv "${case%%:*}")"
+  back="$(awk '/^systemctl stop docker.socket/{s=NR} /^systemctl start containerd.service docker.socket docker.service/{t=NR} END{print (t>s) ? "started" : "left stopped"}' "$T/osd.log")"
+  check "osdisk move fails (${case%%:*}): put back, Docker started, no boot entry" \
+    "$rc:$back:$([ -f "$T/mounted" ] && echo mounted || echo old-store):$(wc -c < "$T/fstab"):$(grep -c "| FAIL | ${case#*:}" "$T/report")" "1:started:old-store:0:1"
+done
+reset_osd; rc="$(osd containerd_to_lv FAKE_DU_KB=200000000)"
+check "osdisk move: a store bigger than the volume is never moved" "$rc:$(grep -c 'systemctl stop\|lvcreate' "$T/osd.log" || true):$(grep -c 'raise it in infra/config/server.conf' "$T/report")" "1:0:1"
+# The old copy goes only after every container that ran from it restarted
+reset_osd; touch "$T/mounted"; date -u +%s > "$T/root/state/containerd-moved.at"
+rc="$(osd containerd_old_copy_cleanup)"
+check "osdisk old copy: the containers restart first, then the copy is removed" \
+  "$rc:$(awk '/^docker restart -t 30 cid1 cid2$/{r=NR} /^mount --bind \/ /{b=NR} END{print (r && b && r<b) ? "restart, then remove" : "wrong"}' "$T/osd.log"):$([ -f "$T/root/state/containerd-moved.at" ] && echo kept || echo "done")" \
+  "0:restart, then remove:done"
+reset_osd; touch "$T/mounted"; date -u +%s > "$T/root/state/containerd-moved.at"
+rc="$(osd containerd_old_copy_cleanup RESTART_FAILS=1)"
+check "osdisk old copy: kept while a container still runs from it" \
+  "$rc:$(grep -c '^mount --bind' "$T/osd.log" || true):$([ -f "$T/root/state/containerd-moved.at" ] && echo kept):$(grep -c '| FAIL | still running from the old copy: extas-postgres' "$T/report")" "1:0:kept:1"
+rm -rf "$T"
+
 exit $fail

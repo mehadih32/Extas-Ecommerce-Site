@@ -13,7 +13,8 @@
 # HEALTH_JSON (file with deploy.sh public-health's line), NOW (epoch seconds, for tests); DOCS (the docs-sync step's
 # outcome, PR 594) with DOCS_JSON (default $EXTAS_ROOT/state/docs-latest.json, used only when it is this commit's);
 # SMOKE and SMOKE_ROLLBACK (the smoke test's and its rollback's outcomes, CN-016) with SMOKE_JSON (default
-# $EXTAS_ROOT/state/smoke.json, smoke.sh's result).
+# $EXTAS_ROOT/state/smoke.json, smoke.sh's result); DISK (the main-disk check's outcome, PR 4 follow-up 31 Oct) with
+# DISK_JSON (disk-tidy.sh's numbers).
 set -euo pipefail
 OUT="${1:?usage: deploy-report.sh <out-dir>}"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
@@ -50,6 +51,9 @@ kind="deploy"; [ "${ROLLBACK:-false}" = true ] && kind="rollback"
 result="OK"; failed=""
 if [ "${CHECKOUT:-success}" != success ]; then
   result="FAILED"; failed="Getting the code onto the server failed, so nothing was built. The live site was not touched."
+elif [ "${DISK:-success}" = failure ]; then
+  result="FAILED"
+  failed="The server's main disk (/) was too full to build: $(jq -r '"\(.free_gb) GB free after the clean-up, at least \(.min_free_gb) GB needed"' "${DISK_JSON:-/nonexistent}" 2>/dev/null || echo "the check failed") (DISK_ROOT_MIN_FREE_GB). Nothing was built and the live site was not touched. server-setup moves Docker's store to the data disk and lists what fills / in docs/reports/server/latest.md."
 elif [ "${BUILD:-success}" = failure ]; then
   result="FAILED"; failed="Building the new version on the server failed (the app or the migrate image did not build). The live site was not touched."
 elif [ "${DEPLOY:-success}" != success ]; then
@@ -78,6 +82,13 @@ case "${DOCS:-}" in
     else docs="copied, but its record is missing"; fi ;;
   failure) docs="FAILED — the server keeps the previous copy${dsha:+ (\`${dsha:0:12}\`)}" ;;
 esac
+
+# PR 4 follow-up (31 Oct): free space on / before the build (disk-tidy.sh --guard), when the check ran
+disk=""
+if [ -n "${DISK:-}" ] && [ -s "${DISK_JSON:-}" ] && jq -e . "$DISK_JSON" >/dev/null 2>&1; then
+  disk="$(jq -r '"\(.free_gb) GB free after the clean-up (was \(.free_gb_before) GB), at least \(.min_free_gb) GB needed"' "$DISK_JSON")"
+  [ "$DISK" = failure ] && disk="TOO FULL — $disk"
+fi
 
 # CN-016: the smoke test (every built page, signed out and as the admin, phone and desktop). A failure rolled back.
 smoke=""; smoke_short="—"
@@ -134,6 +145,7 @@ fi
   echo "| Health check on $HOST | $health |"
   [ -n "$smoke" ] && echo "| Smoke test (every page) | $smoke |"
   [ -n "$docs" ] && echo "| Docs on the server | $docs |"
+  [ -n "$disk" ] && echo "| Main disk (/) | $disk |"
   [ -n "$failed" ] && echo "| What failed | $failed |"
   [ -n "$REC" ] && [ -n "$(field .color)" ] && [ "$result" = OK ] && echo "| Live colour | $(clean "$(field .color)") |"
   [ -n "${RUN_URL:-}" ] && echo "| Run log | ${RUN_URL} |"
