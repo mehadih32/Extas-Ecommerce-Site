@@ -9,10 +9,26 @@
 //                                              needs the PIN (vault.write)
 //   POST  /api/admin/backups/drive/poll        has the owner pressed Allow? (vault.write)
 //   POST  /api/admin/backups/drive/disconnect  {pin} Google forgets the access, the token is revoked (vault.write)
+//   PUT   /api/admin/backups/settings          PR 507 {plan?, drill?, alerts?, drive?} the backup settings; each part
+//                                              whole, checked against its setting (system.backup)
+//   POST  /api/admin/backups/request           PR 507 {kind: BACKUP|RESTORE_DRILL, source?} the server runs it within
+//                                              a few minutes; one open request of each kind (system.backup)
 // Every action is in the audit log without a value; the owner hears about a new connection or a disconnect on Telegram.
 import { createConnections, sendOwnerAlert, telegramAdapters } from '@extas/adapters';
 import { audit, verifyOwnerPin, type Actor, type RequestContext } from '@extas/auth';
-import { BackupError, disconnectDrive, driveBackups, driveView, pollDriveConnect, setDriveClient, startDriveConnect, type BackupDeps } from '@extas/jobs';
+import {
+  BackupError,
+  backupRequests,
+  disconnectDrive,
+  driveBackups,
+  driveView,
+  pollDriveConnect,
+  requestBackup,
+  setDriveClient,
+  startDriveConnect,
+  type BackupDeps,
+} from '@extas/jobs';
+import { INSTALLATION, registry } from '@extas/settings';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import bn from '../../messages/admin-backups.bn.json';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
@@ -23,7 +39,7 @@ const PIN_MAX_DIGITS = 12;
 
 function backupFail(e: unknown): Response {
   if (e instanceof BackupError) {
-    const status = e.code === 'INVALID_INPUT' ? 400 : e.code === 'GOOGLE' ? 502 : 409;
+    const status = e.code === 'INVALID_INPUT' ? 400 : e.code === 'GOOGLE' ? 502 : 409; // BUSY, NO_CLIENT …: 409
     return json({ ok: false, error: `backups.${e.code}`, ...(e.code === 'INVALID_INPUT' ? { details: [e.message] } : { message: e.message }) }, { status });
   }
   return errorResponse(e);
@@ -60,25 +76,82 @@ async function alertOwner(deps: AdminDeps, key: 'clientChanged' | 'connected' | 
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 
+/** PR 507: the backup settings this page changes, by the body's field. */
+const SETTINGS = { drive: 'backups.drive', plan: 'backups.plan', drill: 'backups.drill', alerts: 'backups.alerts' } as const;
+type SettingField = keyof typeof SETTINGS;
+
+async function settingsNow(deps: AdminDeps) {
+  const [drive, plan, drill, alerts] = await Promise.all([
+    deps.resolver.value('backups.drive'),
+    deps.resolver.value('backups.plan'),
+    deps.resolver.value('backups.drill'),
+    deps.resolver.value('backups.alerts'),
+  ]);
+  return { drive, plan, drill, alerts };
+}
+
 /** Every Backups admin route. */
 export async function backupsRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
   const where = path.join('/');
   const reads = ['', 'drive/list'];
-  const writes = ['drive/client', 'drive/connect', 'drive/poll', 'drive/disconnect'];
-  if (![...reads, ...writes].includes(where)) return fail(404, 'not-found');
-  if ((reads.includes(where) && m !== 'GET') || (writes.includes(where) && m !== 'POST')) return fail(405, 'method-not-allowed');
-  const g = await guardAdmin(request, deps, { permission: m === 'GET' ? 'system.read' : 'vault.write' });
+  const writes = ['drive/client', 'drive/connect', 'drive/poll', 'drive/disconnect', 'request'];
+  const puts = ['settings'];
+  if (![...reads, ...writes, ...puts].includes(where)) return fail(404, 'not-found');
+  if ((reads.includes(where) && m !== 'GET') || (writes.includes(where) && m !== 'POST') || (puts.includes(where) && m !== 'PUT')) {
+    return fail(405, 'method-not-allowed');
+  }
+  const permission = m === 'GET' ? 'system.read' : where === 'settings' || where === 'request' ? 'system.backup' : 'vault.write';
+  const g = await guardAdmin(request, deps, { permission });
   if (g instanceof Response) return g;
-  if (!deps!.vault) return fail(503, 'VAULT_NOT_CONFIGURED');
-  const d: BackupDeps = { db: deps!.db, vault: deps!.vault, now: deps!.now };
+  // The Drive needs the vault; the backup settings and the requests do not (PR 507).
+  if (!deps!.vault && where.startsWith('drive')) return fail(503, 'VAULT_NOT_CONFIGURED');
+  const d = { db: deps!.db, vault: deps!.vault, now: deps!.now } as BackupDeps;
   const w = { actorId: g.actor.staffUserId ?? null };
   const log = (action: string, after: Record<string, unknown>) =>
     audit(deps!.db, g.actor, { action, entityType: 'Integration', entityId: 'googleDrive', before: null, after, storeId: null }, g.ctx);
   try {
     if (where === '') {
-      const [drive, state, folder] = await Promise.all([driveView(d), runtimeState(), deps!.resolver.value('backups.drive')]);
-      return json({ ok: true, drive, server: state.backups, restoreTest: state.restoreTest, settings: { drive: folder } });
+      const [drive, state, settings, requests] = await Promise.all([deps!.vault ? driveView(d) : null, runtimeState(), settingsNow(deps!), backupRequests(deps!.db)]);
+      return json({ ok: true, drive, server: state.backups, restoreTest: state.restoreTest, drill: state.drill, settings, requests });
+    }
+    if (where === 'settings') {
+      const b = await body(request);
+      const before = await settingsNow(deps!);
+      const fields = (Object.keys(SETTINGS) as SettingField[]).filter((f) => b[f] !== undefined);
+      if (!fields.length) throw new BackupError('INVALID_INPUT', 'nothing to save');
+      const problems: string[] = [];
+      for (const f of fields) {
+        const r = registry[SETTINGS[f]].schema.safeParse(b[f]);
+        if (!r.success) problems.push(...r.error.issues.map((i) => `${f}.${i.path.join('.')}: ${i.message}`));
+      }
+      if (problems.length) return json({ ok: false, error: 'backups.INVALID_INPUT', details: problems }, { status: 400 });
+      const changed = fields.filter((f) => JSON.stringify(b[f]) !== JSON.stringify(before[f]));
+      for (const f of changed) {
+        await deps!.resolver.set(SETTINGS[f], b[f] as never, INSTALLATION, { actorId: g.actor.staffUserId ?? null, reason: 'Settings › System › Backups' });
+      }
+      if (changed.length) {
+        await audit(
+          deps!.db,
+          g.actor,
+          {
+            action: 'backups.settings',
+            entityType: 'Setting',
+            entityId: 'backups',
+            before: Object.fromEntries(changed.map((f) => [f, before[f]])),
+            after: Object.fromEntries(changed.map((f) => [f, b[f]])),
+            storeId: null,
+          },
+          g.ctx,
+        );
+      }
+      return json({ ok: true, changed, settings: await settingsNow(deps!) });
+    }
+    if (where === 'request') {
+      const b = await body(request);
+      const r = await requestBackup(deps!.db, { kind: b.kind, source: b.source, actorId: g.actor.staffUserId ?? null });
+      await audit(deps!.db, g.actor, { action: `backups.request.${r.kind.toLowerCase()}`, entityType: 'BackupRequest', entityId: r.id, before: null, after: { kind: r.kind, source: r.source }, storeId: null }, g.ctx);
+      return json({ ok: true, request: r });
     }
     if (where === 'drive/list') return json({ ok: true, ...(await driveBackups(d, w)) });
     const b = await body(request);

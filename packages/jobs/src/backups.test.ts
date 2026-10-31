@@ -163,7 +163,7 @@ describe('one-click Google Drive (PR 395, CN-030)', () => {
     let files = (await serverSync(w.syncDeps)).files!;
     expect(files['backup.env']).toBe('');
     await connect(w);
-    files = (await serverSync({ ...w.syncDeps, settings: { value: async () => ({ folderName: 'X', keepCopies: 5 }) } })).files!;
+    files = (await serverSync({ ...w.syncDeps, settings: { value: async (k: string) => (k === 'backups.drive' ? { folderName: 'X', keepCopies: 5 } : undefined) } })).files!;
     const env = files['backup.env']!;
     const folderId = (await driveView(w.deps)).folderId!;
     expect(env).toContain("RCLONE_CONFIG_DRIVE_TYPE='drive'");

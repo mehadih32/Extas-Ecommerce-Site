@@ -4,7 +4,11 @@
 #                          the local disk + a dated bundle of the repository's docs, staged on NVMe, kept on the data
 #                          disk, uploaded to Azure Blob and (encrypted) to Google Drive
 #   extas-backup wal     — push archived WAL segments to Blob (every minute)
-#   extas-backup prune   — retention from the config (later from the admin, PR 507)
+#   extas-backup prune   — retention from the admin's backup settings (PR 507), server.conf until they arrive
+#   extas-backup schedule — the nightly time and the monthly restore drill from those settings onto the timers (PR 507)
+#   extas-backup request <id> BACKUP|RESTORE_DRILL [all|local|blob|drive]
+#                        — a backup or a drill asked for in the admin (PR 507), started by extas-vault-sync; writes
+#                          state/requests/<id>.json for the vault sync to hand back
 # The backup disk must never fill up (31 Oct 2026: /srv/extas/backups reached 100% and every daily backup failed):
 #   - archived WAL is gzip-compressed by PostgreSQL's archive_command (09-stack.sh) and kept here only for
 #     BACKUP_KEEP_LOCAL_WAL_DAYS; each base backup carries the WAL it needs itself (-X stream), so an older base backup
@@ -31,6 +35,35 @@ MEDIA="$R/data/media"
 # The repository's docs as the server has them: the copy deploy.yml makes on every deploy (PR 594, CN-011).
 DOCS="$R/docs/current"
 mkdir -p "$LOCAL/base" "$LOCAL/dump" "$LOCAL/config" "$LOCAL/media" "$LOCAL/docs" "$STATE"
+
+# PR 507: the backup settings of Settings → System → Backups (the vault sync writes them); they win over server.conf.
+# Only the known names, each checked, so a broken file can never set anything else.
+load_backup_settings() {
+  local f="$SEC/backup-settings.env" k v
+  [ -f "$f" ] || return 0
+  while IFS='=' read -r k v; do
+    v="${v#\'}"; v="${v%\'}"
+    case "$k" in
+      BACKUP_TIME|BACKUP_DRILL_TIME) [[ "$v" =~ ^([01][0-9]|2[0-3]):[0-5][0-9]$ ]] || continue ;;
+      BACKUP_KEEP_LOCAL_DAYS|BACKUP_KEEP_BLOB_DAYS|BACKUP_KEEP_DRIVE_DAYS|BACKUP_KEEP_LOCAL_WAL_DAYS|BACKUP_MIN_FREE_PCT|BACKUP_DRILL_DAY)
+        [[ "$v" =~ ^[0-9]{1,4}$ ]] || continue ;;
+      BACKUP_DRILL_ON|BACKUP_DRILL_BLOB|BACKUP_DRILL_DRIVE|BACKUP_TELEGRAM_FAIL|BACKUP_TELEGRAM_OK) [[ "$v" =~ ^(yes|no)$ ]] || continue ;;
+      *) continue ;;
+    esac
+    printf -v "$k" '%s' "$v"
+  done < "$f"
+}
+load_backup_settings
+# A Telegram line to the owner (telegram.env from the vault sync, PR 392); without the bot it goes to the log only.
+tg() {
+  echo "$(date -Is) $1" >> "$R/logs/alerts.log" 2>/dev/null || true
+  [ -f "$SEC/telegram.env" ] || return 0
+  # shellcheck disable=SC1091
+  ( . "$SEC/telegram.env"
+    [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] || exit 0
+    curl -fsS -m 10 "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+      --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=$1" >/dev/null 2>&1 ) || true
+}
 
 # Remotes come from env written by the app's vault sync (PR 493/507): RCLONE_CONFIG_BLOB_* / RCLONE_CONFIG_DRIVE_*.
 [ -f "$SEC/backup.env" ] && set -a && . "$SEC/backup.env" && set +a
@@ -236,6 +269,8 @@ daily() {
   else status daily drive off "not connected — add the key in Keys & connections"; fi
   rm -rf "$work"
   prune_files
+  # PR 507: a good night on Telegram only when the owner asked for it (a failure always comes from extas-monitor).
+  if [ $rc -eq 0 ] && [ "${BACKUP_TELEGRAM_OK:-no}" = yes ]; then tg "${BACKUP_TELEGRAM_OK_TEXT:-backup ok}"; fi
   exit $rc
 }
 
@@ -313,9 +348,53 @@ prune() {
   status prune local ok "kept ${BACKUP_KEEP_LOCAL_DAYS} days locally"
 }
 
+# schedule: the nightly time and the monthly drill from the settings onto the systemd timers (a drop-in each, so
+# 10-backup.sh's own units stay as they are). Drill off: its timer is stopped. Run by extas-vault-sync when the
+# settings file changed, and by server setup.
+schedule() {
+  local dir="${EXTAS_SYSTEMD_DIR:-/etc/systemd/system}" day
+  day="$(printf '%02d' "$((10#${BACKUP_DRILL_DAY:-1}))")"
+  mkdir -p "$dir/extas-backup-daily.timer.d" "$dir/extas-restore-test.timer.d"
+  printf '[Timer]\nOnCalendar=\nOnCalendar=*-*-* %s:00\n' "$BACKUP_TIME" > "$dir/extas-backup-daily.timer.d/schedule.conf"
+  printf '[Timer]\nOnCalendar=\nOnCalendar=*-*-%s %s:00\n' "$day" "${BACKUP_DRILL_TIME:-03:30}" > "$dir/extas-restore-test.timer.d/schedule.conf"
+  systemctl daemon-reload >/dev/null 2>&1 || true
+  systemctl restart extas-backup-daily.timer >/dev/null 2>&1 || true
+  if [ "${BACKUP_DRILL_ON:-yes}" = yes ]; then
+    systemctl enable --now extas-restore-test.timer >/dev/null 2>&1 || true
+    systemctl restart extas-restore-test.timer >/dev/null 2>&1 || true
+  else
+    systemctl disable --now extas-restore-test.timer >/dev/null 2>&1 || true
+  fi
+  echo "nightly backup $BACKUP_TIME; restore drill $([ "${BACKUP_DRILL_ON:-yes}" = yes ] && echo "day $day at ${BACKUP_DRILL_TIME:-03:30}" || echo off)"
+}
+
+# request <id> <kind> [source]: one request from the admin, run now; its outcome for the vault sync to hand back.
+request() {
+  local id="${1:-}" kind="${2:-}" src="${3:-all}" out rc=0 detail
+  [[ "$id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] || { echo "request: not an id" >&2; exit 2; }
+  mkdir -p "$STATE/requests"
+  out="$STATE/requests/$id.json"
+  case "$kind" in
+    BACKUP)
+      bash "$0" daily >/dev/null 2>&1 || rc=$?
+      detail="$(for t in local blob drive; do jq -r --arg t "$t" '"\($t): \(.result) — \(.detail)"' "$STATE/backup-daily-$t.json" 2>/dev/null; done | paste -sd ';' -)" ;;
+    RESTORE_DRILL)
+      [[ "$src" =~ ^(all|local|blob|drive)$ ]] || { echo "request: source all, local, blob or drive" >&2; exit 2; }
+      bash "$(dirname "$0")/extas-restore" drill --only "$src" >/dev/null 2>&1 || rc=$?
+      detail="$(jq -r '.detail' "$STATE/restore-drill.json" 2>/dev/null || echo 'the drill wrote no result')" ;;
+    *) echo "request: BACKUP or RESTORE_DRILL" >&2; exit 2 ;;
+  esac
+  jq -n --arg id "$id" --argjson ok "$([ $rc -eq 0 ] && echo true || echo false)" --arg detail "${detail:-exit $rc}" \
+    '{id:$id,ok:$ok,detail:$detail}' > "$out.tmp"
+  mv "$out.tmp" "$out"
+  exit $rc
+}
+
 case "${1:-}" in
   daily) daily ;;
   wal) wal ;;
   prune) prune ;;
-  *) echo "usage: extas-backup daily|wal|prune" >&2; exit 2 ;;
+  schedule) schedule ;;
+  request) shift; request "$@" ;;
+  *) echo "usage: extas-backup daily|wal|prune|schedule|request <id> <kind> [source]" >&2; exit 2 ;;
 esac

@@ -3,6 +3,18 @@
     "drive": {
       "label": "Google Drive: the backup folder and how many copies it keeps",
       "help": "The folder Connect Google Drive makes in your own Drive, and how many of the newest backups that were checked whole Drive keeps (older ones go to the Drive's bin). 0 keeps them by age instead."
+    },
+    "plan": {
+      "label": "The nightly backup: when, and how long each copy is kept",
+      "help": "The time of the nightly backup, the days the server's disk, Azure Blob and Google Drive keep (Drive by days only when its number of copies is 0), the days archived WAL stays on the disk for a restore to any minute, and the free share the backup disk keeps (the oldest copies go first, never the newest)."
+    },
+    "drill": {
+      "label": "The monthly restore drill",
+      "help": "Once a month the server restores its newest backup into a throw-away database and checks it (tables, a sample photo, the docs), never the live one; with Blob and Drive on, their copies too. The result is shown on the Backups page."
+    },
+    "alerts": {
+      "label": "Telegram for backups",
+      "help": "A Telegram message when a backup or a restore drill fails (recommended on), and when it went well (off: no message on a good night)."
     }
   }
 }

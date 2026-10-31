@@ -4,11 +4,19 @@
 // client "TVs and Limited Input devices", the code for google.com/device, scope drive.file only, the newest
 // `backups.drive.keepCopies` checked copies kept), Azure Blob's card, and the last nightly runs. Seeing needs
 // `system.read`; connecting, disconnecting and the client need `vault.write`, and the risky ones the owner's PIN.
+// PR 507: "Back up now" and "Run the restore drill now" with the last requests, the last drill (each copy), and the
+// backup settings card (time, days kept, Drive copies, the monthly drill, Telegram); both need `system.backup`.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { driveView } from "@extas/jobs";
+import { backupRequests, driveView } from "@extas/jobs";
+import { registry } from "@extas/settings";
 import { AdminNotice } from "@/components/admin/AdminFrame";
+import {
+  BackupSettingsCard,
+  RequestsCard,
+  type BackupSettings,
+} from "@/components/admin/settings/BackupPlanScreen";
 import { DriveCard } from "@/components/admin/settings/BackupsScreen";
 import {
   PageHead,
@@ -73,15 +81,30 @@ export default async function BackupsPage() {
   const c = (k: string, vars?: Record<string, string | number>) =>
     t(d, `backups.${k}`, vars);
   const vault = access.deps.vault;
-  const [state, drive, settings] = await Promise.all([
-    runtimeState(),
-    vault
-      ? driveView({ db: access.deps.db, vault, now: access.deps.now })
-      : Promise.resolve(null),
-    access.deps.resolver.value("backups.drive"),
-  ]);
+  const r = access.deps.resolver;
+  const [state, drive, settings, plan, drill, alerts, requests] =
+    await Promise.all([
+      runtimeState(),
+      vault
+        ? driveView({ db: access.deps.db, vault, now: access.deps.now })
+        : Promise.resolve(null),
+      r.value("backups.drive"),
+      r.value("backups.plan"),
+      r.value("backups.drill"),
+      r.value("backups.alerts"),
+      backupRequests(access.deps.db, 10),
+    ]);
   const canWrite =
     Boolean(vault) && (access.guard.permissions?.has("vault.write") ?? false);
+  const canBackup = access.guard.permissions?.has("system.backup") ?? false;
+  const values: BackupSettings = { drive: settings, plan, drill, alerts };
+  const defaults: BackupSettings = {
+    drive: registry["backups.drive"].default,
+    plan: registry["backups.plan"].default,
+    drill: registry["backups.drill"].default,
+    alerts: registry["backups.alerts"].default,
+  };
+  const lastDrill = state.drill;
   const when = (iso?: string) =>
     iso ? dateTime(iso, view.locale, view.timeZone) : c("kpi.never");
   const result = (b: Backup | null) =>
@@ -115,9 +138,11 @@ export default async function BackupsPage() {
     ],
     [
       "test",
-      result(state.restoreTest),
-      state.restoreTest?.at ? when(state.restoreTest.at) : c("kpi.testSub"),
-      state.restoreTest?.result,
+      result(lastDrill ?? state.restoreTest),
+      (lastDrill ?? state.restoreTest)?.at
+        ? when((lastDrill ?? state.restoreTest)!.at)
+        : c("kpi.testSub"),
+      (lastDrill ?? state.restoreTest)?.result,
     ],
   ];
 
@@ -254,6 +279,53 @@ export default async function BackupsPage() {
           <p className="a2-sm a2-mute">{c("server.none")}</p>
         )}
       </section>
+
+      <div className="a2-row a2-r21 a2-mt12">
+        <div>
+          <BackupSettingsCard
+            d={d}
+            values={values}
+            defaults={defaults}
+            canWrite={canBackup}
+          />
+        </div>
+        <div>
+          <RequestsCard
+            d={d}
+            locale={view.locale}
+            timeZone={view.timeZone}
+            initial={requests}
+            canRun={canBackup}
+          />
+          <section
+            className="a2-card a2-mt12"
+            aria-labelledby="bk-drill"
+            data-testid="bk-drill"
+          >
+            <div className="a2-ch">
+              <div>
+                <h2 className="a2-h3" id="bk-drill">
+                  {c("drillBox.title")}
+                </h2>
+                <div className="a2-cs">
+                  {lastDrill?.at ? when(lastDrill.at) : c("drillBox.none")}
+                </div>
+              </div>
+            </div>
+            {(lastDrill?.runs ?? []).map((run) => (
+              <div key={run.from} className="a2-rule">
+                <span>
+                  <b className="a2-blk">{c(`drillBox.from.${run.from}`)}</b>
+                  <span className="a2-xs a2-mute">{run.detail}</span>
+                </span>
+                <span className={`a2-pill ${PILL[run.result] ?? "line"}`}>
+                  {c(`drillBox.result.${run.result}`)}
+                </span>
+              </div>
+            ))}
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

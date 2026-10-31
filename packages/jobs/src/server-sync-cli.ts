@@ -2,12 +2,15 @@
 // run by infra/server/bin/extas-vault-sync in the live version's migrate image. It reads DATABASE_URL, VAULT_MASTER_KEY
 // and SYNC_PREVIOUS (the server's last fingerprint), and writes <dir>/result.json ({fingerprint, changed, files}) and,
 // when something changed, <dir>/files/<name> (0600) for each part. It prints file names only, never a value.
+// PR 507: it also reads <dir>/done.json (the requests the server finished: [{id, ok, detail}]) and SYNC_STALE_H, and
+// puts the backups and drills asked for in the admin into result.json `requests` ([{id, kind, source}], now RUNNING).
 // Exit 0: done (changed or not); 1: the database could not be read; 2: wrong use.
-import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { disconnectPrisma, getPrisma } from '@extas/db/client';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import { createVault } from '@extas/vault';
+import { serverRequests, type FinishedRequest } from './backup-requests';
 import { serverSync } from './server-sync';
 
 async function main(argv: string[]): Promise<number> {
@@ -28,6 +31,15 @@ async function main(argv: string[]): Promise<number> {
     const resolver = new SettingsResolver(prismaBackend(db), registry);
     const settings = { value: (key: string) => resolver.value(key as never) as Promise<unknown> };
     const r = await serverSync({ db, vault, settings }, { previous: process.env.SYNC_PREVIOUS || null });
+    const doneFile = join(out, 'done.json');
+    let finished: FinishedRequest[] = [];
+    try {
+      finished = existsSync(doneFile) ? (JSON.parse(readFileSync(doneFile, 'utf8')) as FinishedRequest[]) : [];
+    } catch {
+      console.error('server sync: done.json does not read; no request finished this run');
+    }
+    const staleHours = Number(process.env.SYNC_STALE_H) > 0 ? Number(process.env.SYNC_STALE_H) : 12;
+    const req = await serverRequests(db, { finished: Array.isArray(finished) ? finished : [], staleHours });
     mkdirSync(join(out, 'files'), { recursive: true, mode: 0o700 });
     const names = r.files ? Object.keys(r.files) : [];
     for (const name of names) {
@@ -35,7 +47,10 @@ async function main(argv: string[]): Promise<number> {
       writeFileSync(f, r.files![name]!, { mode: 0o600 });
       chmodSync(f, 0o600);
     }
-    writeFileSync(join(out, 'result.json'), `${JSON.stringify({ fingerprint: r.fingerprint, changed: r.files !== null, files: names, vault: Boolean(vault) })}\n`);
+    writeFileSync(
+      join(out, 'result.json'),
+      `${JSON.stringify({ fingerprint: r.fingerprint, changed: r.files !== null, files: names, vault: Boolean(vault), requests: req.taken, finished: req.finished, stale: req.stale })}\n`,
+    );
     console.log(r.files ? `server sync: ${names.length} file(s): ${names.join(', ')}` : 'server sync: unchanged');
     return 0;
   } catch (e) {

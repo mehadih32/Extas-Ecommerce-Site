@@ -11,3 +11,4 @@ const run = async (request: Request, ctx: Ctx) => backupsRoute(request, adminDep
 
 export const GET = run;
 export const POST = run;
+export const PUT = run;

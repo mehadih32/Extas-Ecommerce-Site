@@ -31,6 +31,8 @@ export * from './payments';
 // S19 · PR 392, 395 — the vault's keys for the server's scripts and the one-click Google Drive of the backups.
 export * from './server-sync';
 export * from './backups';
+// S19 · PR 507 — "Back up now" and "Run the restore drill now", run by the server's vault sync.
+export * from './backup-requests';
 export * from './courier';
 export * from './invoices';
 export * from './returns-erp';

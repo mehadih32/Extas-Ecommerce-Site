@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { backupsDriveSchema, backupsSettings } from '../src/registry-backups';
+import { backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings } from '../src/registry-backups';
 
 describe('backups settings (v75–76)', () => {
   it('every key is in the registry, labelled in English and Bengali, its default valid, not owner data', () => {
@@ -24,5 +24,14 @@ describe('backups settings (v75–76)', () => {
     expect(backupsDriveSchema.safeParse({ folderName: 'a/b', keepCopies: 3 }).success).toBe(false);
     expect(backupsDriveSchema.safeParse({ folderName: 'X', keepCopies: -1 }).success).toBe(false);
     expect(backupsDriveSchema.safeParse({ folderName: 'X', keepCopies: 0 }).success).toBe(true);
+  });
+
+  it('PR 507: the plan, the drill and the alerts are the server\'s own defaults; a bad time or day is refused', () => {
+    expect(backupsSettings['backups.plan'].default).toEqual({ dailyTime: '02:30', keepLocalDays: 7, keepBlobDays: 35, keepDriveDays: 30, keepLocalWalDays: 2, minFreePct: 20 });
+    expect(backupsSettings['backups.drill'].default).toEqual({ enabled: true, dayOfMonth: 1, time: '03:30', blob: true, drive: true });
+    expect(backupsSettings['backups.alerts'].default).toEqual({ telegramOnFail: true, telegramOnSuccess: false });
+    expect(backupsPlanSchema.safeParse({ ...backupsSettings['backups.plan'].default, dailyTime: '24:00' }).success).toBe(false);
+    expect(backupsPlanSchema.safeParse({ ...backupsSettings['backups.plan'].default, keepLocalDays: 0 }).success).toBe(false);
+    expect(backupsDrillSchema.safeParse({ ...backupsSettings['backups.drill'].default, dayOfMonth: 31 }).success).toBe(false);
   });
 });

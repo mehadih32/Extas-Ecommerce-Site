@@ -110,7 +110,8 @@
       "NOT_CONNECTED": "Google Drive is not connected, or Google ended the access. Press Connect Google Drive.",
       "NO_SIGN_IN": "No sign-in is waiting. Press Connect Google Drive.",
       "INVALID_INPUT": "Please check: {fields}",
-      "GOOGLE": "Google said: {message}"
+      "GOOGLE": "Google said: {message}",
+      "BUSY": "One is already waiting or running. Wait for it to finish (this list shows it)."
     },
     "PIN_REQUIRED": "Type the owner's PIN.",
     "WRONG_PIN": "That PIN is not right.",
@@ -127,5 +128,81 @@
     "connected": "{store}: Google Drive is connected ({account}) — the nightly backup now goes to the folder \"{folder}\".",
     "yourAccount": "your account",
     "disconnected": "{store}: the Google Drive connection was ended — no backup goes to Drive until it is connected again."
+  },
+  "requests": {
+    "title": "Back up or test now",
+    "sub": "The server starts it within a few minutes and writes back here what happened. A drill restores into a throw-away database, never the live one.",
+    "BACKUP": "Back up now",
+    "RESTORE_DRILL": "Run the restore drill now",
+    "asking": "Asking the server…",
+    "asked": "Asked. The server starts it within a few minutes; this list shows the outcome.",
+    "readOnly": "You can see the requests. Asking for one needs the \"Backups\" permission.",
+    "what": "What",
+    "when": "Asked",
+    "status": "Status",
+    "detail": "What the server said",
+    "none": "Nothing asked yet. The nightly backup and the monthly drill run by themselves.",
+    "kind": {
+      "BACKUP": "Backup",
+      "RESTORE_DRILL": "Restore drill"
+    },
+    "state": {
+      "QUEUED": "Waiting for the server",
+      "RUNNING": "Running",
+      "SUCCEEDED": "Done",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled"
+    }
+  },
+  "drillBox": {
+    "title": "Last restore drill",
+    "none": "No drill yet. The first runs on the drill day, or press \"Run the restore drill now\".",
+    "from": {
+      "local": "Server disk",
+      "blob": "Azure Blob",
+      "drive": "Google Drive"
+    },
+    "result": {
+      "ok": "Restored and checked",
+      "fail": "Failed",
+      "off": "Not tested"
+    }
+  },
+  "plan": {
+    "where": "Backup settings",
+    "title": "When, how long, and the monthly drill",
+    "desc": "The server reads these within a few minutes; the next backup and drill use them.",
+    "dailyTime": "Nightly backup at",
+    "keepLocalDays": "Days the server's disk keeps",
+    "keepBlobDays": "Days Azure Blob keeps",
+    "keepCopies": "Checked copies Google Drive keeps",
+    "keepCopiesHint": "0 = by days instead",
+    "keepDriveDays": "Days Google Drive keeps",
+    "drillTitle": "Monthly restore drill",
+    "drillOn": "Run the restore drill every month",
+    "drillOnHint": "Recommended: it proves the shop can be brought back from a backup",
+    "drillDay": "Day of the month (1–28)",
+    "drillTime": "At",
+    "drillBlob": "Also restore the Azure Blob copy",
+    "drillDrive": "Also restore the Google Drive copy",
+    "alertsTitle": "Telegram",
+    "tgFail": "Telegram when a backup or a drill fails",
+    "tgFailHint": "Recommended on; off, it shows only here and on the Server page",
+    "tgOk": "Telegram when it went well too",
+    "more": "More options",
+    "keepLocalWalDays": "Days of WAL on the server's disk",
+    "keepLocalWalHint": "for a restore to any minute of those days",
+    "minFreePct": "Free share the backup disk keeps (%)",
+    "minFreeHint": "the oldest copies go first, never the newest",
+    "folderName": "Name of the Drive folder",
+    "folderHint": "used the next time Google Drive is connected",
+    "default": "default: {v}",
+    "on": "on",
+    "off": "off",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved. The server uses it within a few minutes.",
+    "unchanged": "Nothing changed.",
+    "readOnly": "You can see the settings. Changing them needs the \"Backups\" permission."
   }
 }
