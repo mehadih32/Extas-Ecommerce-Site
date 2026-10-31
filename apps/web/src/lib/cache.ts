@@ -30,6 +30,7 @@ import {
   type ProxyCachePolicy,
 } from "./cache-policy";
 import { BN_PREFIX } from "./shop/lang";
+import { SITEMAP_INDEX } from "./seo/sitemap";
 import { onSettingsChanged, settingsResolver } from "./settings";
 
 const G = globalThis as unknown as {
@@ -41,7 +42,7 @@ const G = globalThis as unknown as {
 export const SHOP_PATHS = {
   categoryPrefix: CATEGORY_PREFIX,
   langPrefixes: [BN_PREFIX],
-  sitemap: null,
+  sitemap: SITEMAP_INDEX,
 } as const;
 
 const timeZone = () => process.env.EXTAS_TIMEZONE || process.env.TZ || "UTC";

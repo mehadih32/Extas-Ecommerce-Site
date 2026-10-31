@@ -39,6 +39,8 @@ export const SEO_KEYS = [
   // PR 227: Website › SEO › Collection pages
   'category.seo',
   'seo.filterPages',
+  // PR 228: the sitemaps
+  'seo.sitemaps',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 

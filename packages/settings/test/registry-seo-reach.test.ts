@@ -2,10 +2,11 @@
 // owner data. PR 235: the WordPress map is off until go-live day, old links are kept 12 months, the 404 report counts.
 // PR 527: no page that was on the shop answers 404; what is shipped keeps today's listing (sold out and retired listed).
 // PR 227: no filtered page is listed as shipped; a named one has one filter, one value, two names, and no twin.
+// PR 228: the sitemaps answer as shipped, kept an hour, 5,000 addresses a file (never over the engines' 50,000).
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { seoReachSettings, SEO_FILTER_PAGES_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
+import { seoReachSettings, SEO_FILTER_PAGES_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
 
 describe('lane A SEO settings (v71–72)', () => {
   it('every key is in the registry at version 71, labelled in English and Bengali, its default valid', () => {
@@ -60,5 +61,15 @@ describe('lane A SEO settings (v71–72)', () => {
     expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, pages: [{ ...row, label: { en: 'Navy polos', bn: '' } }] }).success).toBe(false);
     expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, minProducts: 0 }).success).toBe(false);
     expect(f.safeParse({ ...SEO_FILTER_PAGES_DEFAULT, maxPages: 501 }).success).toBe(false);
+  });
+
+  it('PR 228: the sitemaps are on, kept 60 minutes, 5,000 a file, 50,000 in all (v72); a file never over 50,000', () => {
+    expect(SEO_SITEMAPS_DEFAULT).toEqual({ enabled: true, cacheMinutes: 60, perFile: 5000, maxUrls: 50000 });
+    expect(registry['seo.sitemaps'].version).toBe(72);
+    const m = registry['seo.sitemaps'].schema;
+    expect(m.safeParse({ ...SEO_SITEMAPS_DEFAULT, perFile: 50001 }).success).toBe(false);
+    expect(m.safeParse({ ...SEO_SITEMAPS_DEFAULT, cacheMinutes: 1 }).success).toBe(false);
+    expect(m.safeParse({ ...SEO_SITEMAPS_DEFAULT, maxUrls: 10 }).success).toBe(false);
+    expect(m.safeParse({ ...SEO_SITEMAPS_DEFAULT, extra: 1 }).success).toBe(false);
   });
 });

@@ -85,7 +85,7 @@ export const config = {
   // Static files and the framework's own paths never reach the proxy. PR 378: the API (for the cross-site check and
   // the request limits) and the admin's pages (for the page protection policy) do.
   matcher: [
-    '/((?!_next/|admin|api/|erp-api/|status|media/|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)',
+    '/((?!_next/|admin|api/|erp-api/|status|media/|favicon\\.ico|robots\\.txt|sitemap\\.xml|sitemaps/).*)',
     '/api/:path*',
     '/erp-api/:path*',
     '/admin',

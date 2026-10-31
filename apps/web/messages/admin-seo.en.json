@@ -371,5 +371,38 @@
       "twin": "This collection already has a page for this filter and value.",
       "full": "The list is full. Raise \"Most named pages\" or remove a page first."
     }
+  },
+  "sm": {
+    "title": "Sitemaps",
+    "desc": "The list of the shop's pages that search engines read: one file per kind, made from the catalogue by itself. It holds only pages that may be listed.",
+    "index": "Sitemap address:",
+    "noAddress": "the shop has no address yet",
+    "off": "switched off",
+    "madeAt": "Made {when} · {n} addresses in all",
+    "col": {
+      "file": "File",
+      "kind": "Kind",
+      "urls": "Addresses"
+    },
+    "kind": {
+      "pages": "Pages (home, help, sets)",
+      "collections": "Collections and filter pages",
+      "products": "Products",
+      "combos": "Sets and pair lists"
+    },
+    "twins": "A page whose Bengali version is marked ready counts twice: English and Bengali.",
+    "make": "Make the sitemaps now",
+    "making": "Making…",
+    "madeNow": "The sitemaps were made again from the catalogue.",
+    "enabled": "Answer the sitemaps",
+    "enabledHint": "Off: /sitemap.xml answers \"not found\".",
+    "f": {
+      "cacheMinutes": "Keep a made sitemap for (minutes)",
+      "cacheMinutesHint": "A new product shows within this time. Default: {v} ({min} to {max}).",
+      "perFile": "Addresses in one file",
+      "perFileHint": "A longer list is split into more files. Default: {v} ({min} to {max}).",
+      "maxUrls": "Addresses in all files",
+      "maxUrlsHint": "Default: {v} ({min} to {max})."
+    }
   }
 }
