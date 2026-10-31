@@ -8,11 +8,17 @@
 // number, or whose identity, is on the list is marked for the team (the `blocklistMatch` command: a flag and a timeline
 // line naming the listing), and with "hold" also held with the owner's hold reason, for a person to decide. Nothing here
 // cancels an order, tells the customer, moves money or changes COD, a price or a charge (CLAUDE.md rule 6).
+//
+// PR 523: the register also holds what we know about the person — the numbers, the names and addresses given, every
+// product ordered with its date — written when the number is listed (block-proposal.ts). The proposals that fill it
+// (`risk.blockProposal`) are decided here: "Block" lists the number with the proposal's facts, "Not now" keeps it off
+// with a reason; both need `risk.block`, and both are audited. A person always decides.
 import { audit } from '@extas/auth';
 import type { Prisma } from '@extas/db/client';
 import { phoneNormalizeBD } from '@extas/delivery';
 import { RISK_BLOCK_REASON_LIMITS, riskBlocklistSchema, storeTarget, type RiskBlocklist } from '@extas/settings';
 import { z } from 'zod';
+import { blockProposalRows, registerFactsOf, personOrders, registerFacts, type BlockProposalRow, type RegisterFacts } from './block-proposal';
 import { allow, nowOf, parse, setting, TX, UUID, type OrdersDeps, type Who } from './context';
 import { holdWith } from './commands';
 import { clusterFamily, clusterOfOrder } from './identity-family';
@@ -39,6 +45,8 @@ export interface BlockRow {
   undoneAt: string | null;
   undoneBy: string | null;
   undoReason: string | null;
+  /** PR 523: what the register holds about the person (null for a listing made before it). */
+  facts: RegisterFacts | null;
 }
 
 export interface BlocklistView {
@@ -46,6 +54,9 @@ export interface BlocklistView {
   active: BlockRow[];
   undone: BlockRow[];
   holdReasons: { key: string; en: string; bn: string }[];
+  /** PR 523: numbers proposed for the list (a person blocks or says "Not now"), and the newest decided ones. */
+  proposals: BlockProposalRow[];
+  decidedProposals: BlockProposalRow[];
   /** The shortest and longest reason a person may give (the form and the undo say so before sending). */
   reasonLimits: { min: number; max: number };
 }
@@ -57,6 +68,7 @@ const reasonSchema = z.string().trim().min(RISK_BLOCK_REASON_LIMITS.min).max(RIS
 export const blockInput = z.object({ phone: z.string().trim().min(1).max(40).optional(), orderId: z.string().regex(UUID).optional(), reason: reasonSchema }).strict();
 export const unblockInput = z.object({ reason: reasonSchema }).strict();
 export const saveBlocklistInput = z.object({ value: z.unknown() }).strict();
+export const decideProposalInput = z.object({ decision: z.enum(['block', 'dismiss']), reason: reasonSchema }).strict();
 
 async function staffNames(deps: OrdersDeps, ids: (string | null)[]): Promise<Map<string, string>> {
   const want = [...new Set(ids.filter((x): x is string => !!x))];
@@ -66,11 +78,12 @@ async function staffNames(deps: OrdersDeps, ids: (string | null)[]): Promise<Map
 }
 
 async function viewOf(deps: OrdersDeps, storeId: number): Promise<BlocklistView> {
-  const [value, reasons, active, undone] = await Promise.all([
+  const [value, reasons, active, undone, proposals] = await Promise.all([
     setting(deps, storeId, 'risk.blocklist'),
     setting(deps, storeId, 'orders.hold.reasons'),
     deps.db.riskBlock.findMany({ where: { storeId, undoneAt: null }, orderBy: [{ blockedAt: 'desc' }, { id: 'desc' }] }),
     deps.db.riskBlock.findMany({ where: { storeId, undoneAt: { not: null } }, orderBy: [{ undoneAt: 'desc' }, { id: 'desc' }], take: UNDONE_SHOWN }),
+    blockProposalRows(deps, storeId),
   ]);
   const all = [...active, ...undone];
   const [names, orders] = await Promise.all([
@@ -90,8 +103,24 @@ async function viewOf(deps: OrdersDeps, storeId: number): Promise<BlocklistView>
     undoneAt: r.undoneAt?.toISOString() ?? null,
     undoneBy: r.undoneById ? (names.get(r.undoneById) ?? null) : null,
     undoReason: r.undoReason,
+    facts: r.facts === null ? null : registerFactsOf(r.facts),
   });
-  return { value, active: active.map(row), undone: undone.map(row), holdReasons: reasons.map((r) => ({ key: r.key, en: r.en, bn: r.bn })), reasonLimits: { ...RISK_BLOCK_REASON_LIMITS } };
+  return {
+    value,
+    active: active.map(row),
+    undone: undone.map(row),
+    holdReasons: reasons.map((r) => ({ key: r.key, en: r.en, bn: r.bn })),
+    proposals: proposals.open,
+    decidedProposals: proposals.decided,
+    reasonLimits: { ...RISK_BLOCK_REASON_LIMITS },
+  };
+}
+
+/** PR 523: what the register holds about the person behind a number (and the order's identity, when listed from one). */
+async function factsFor(deps: OrdersDeps, storeId: number, phone: string, clusterId: string | null): Promise<RegisterFacts> {
+  const family = clusterId ? await clusterFamily(deps.db, storeId, clusterId) : [];
+  const take = (await setting(deps, storeId, 'risk.history')).orders;
+  return registerFacts(deps.db, await personOrders(deps.db, storeId, phone, family, take));
 }
 
 /** The list and its switch (`risk.rules.read`). */
@@ -116,12 +145,23 @@ export async function blockNumber(deps: OrdersDeps, who: Who, input: unknown): P
   const phone = p?.ok ? p.e164 : null;
   if (!phone) throw new OrdersError('INVALID_INPUT', 'a Bangladeshi mobile number is needed', ['phone']);
   const now = nowOf(deps);
+  const clusterId = orderId ? await clusterOfOrder(deps.db, who.storeId, orderId) : null;
+  // PR 523: what the register holds about the person, written with the listing
+  const facts = await factsFor(deps, who.storeId, phone, clusterId);
   const row = await deps.db.$transaction(async (tx) => {
     // one number at a time per shop, so two people listing it at the same moment make one line
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`risk-blocklist:${who.storeId}:${phone}`}, 0))`;
     if (await tx.riskBlock.findFirst({ where: { storeId: who.storeId, phone, undoneAt: null }, select: { id: true } })) throw new OrdersError('ALREADY_LISTED', 'this number is on the blocklist already', ['phone']);
-    const clusterId = orderId ? await clusterOfOrder(tx, who.storeId, orderId) : null;
-    return tx.riskBlock.create({ data: { storeId: who.storeId, phone, clusterId, orderId, reason: d.reason, blockedById: who.actor.staffUserId ?? null, blockedAt: now } });
+    const made = await tx.riskBlock.create({ data: { storeId: who.storeId, phone, clusterId, orderId, reason: d.reason, facts: facts as unknown as Prisma.InputJsonValue, blockedById: who.actor.staffUserId ?? null, blockedAt: now } });
+    // PR 523: an open proposal for the number is answered by this listing
+    const open = await tx.riskBlockProposal.findFirst({ where: { storeId: who.storeId, phone, state: 'PROPOSED' }, select: { id: true, rejections: true } });
+    if (open) {
+      await tx.riskBlockProposal.update({
+        where: { id: open.id },
+        data: { state: 'BLOCKED', blockId: made.id, decidedById: who.actor.staffUserId ?? null, decidedAt: now, decisionReason: d.reason, rejectionsAtDecision: open.rejections, version: { increment: 1 } },
+      });
+    }
+    return made;
   }, TX);
   await audit(deps.db, who.actor, { storeId: who.storeId, action: 'risk.block', entityType: 'RiskBlock', entityId: row.id, before: null, after: { phone, orderId, reason: d.reason, identity: !!row.clusterId } }, { source: 'admin-api', ...who.ctx });
   return viewOf(deps, who.storeId);
@@ -139,6 +179,41 @@ export async function unblockNumber(deps: OrdersDeps, who: Who, id: string, inpu
     throw exists ? new OrdersError('NOTHING_CHANGED', 'this listing was undone already', ['id']) : new OrdersError('NOT_FOUND', 'no such listing', ['id']);
   }
   await audit(deps.db, who.actor, { storeId: who.storeId, action: 'risk.unblock', entityType: 'RiskBlock', entityId: id, before: { active: true }, after: { active: false, reason: d.reason } }, { source: 'admin-api', ...who.ctx });
+  return viewOf(deps, who.storeId);
+}
+
+/**
+ * PR 523: a person decides a proposal (`risk.block`): "block" lists the number with the proposal's facts and the reason;
+ * "dismiss" ("Not now") keeps it off with the reason, until a new rejection proposes it again. Decided already is
+ * NOTHING_CHANGED; a number listed meanwhile is ALREADY_LISTED (the proposal stays for a person to dismiss).
+ */
+export async function decideBlockProposal(deps: OrdersDeps, who: Who, id: string, input: unknown): Promise<BlocklistView> {
+  await allow(deps, who, 'risk.block');
+  if (!UUID.test(id)) throw new OrdersError('NOT_FOUND', 'no such proposal', ['id']);
+  const d = parse(decideProposalInput, input, 'decision');
+  const now = nowOf(deps);
+  const by = who.actor.staffUserId ?? null;
+  const out = await deps.db.$transaction(async (tx) => {
+    const p = await tx.riskBlockProposal.findFirst({ where: { storeId: who.storeId, id } });
+    if (!p) throw new OrdersError('NOT_FOUND', 'no such proposal', ['id']);
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`risk-blocklist:${who.storeId}:${p.phone}`}, 0))`;
+    const fresh = await tx.riskBlockProposal.findUniqueOrThrow({ where: { id } });
+    if (fresh.state !== 'PROPOSED') throw new OrdersError('NOTHING_CHANGED', 'this proposal was decided already', ['id']);
+    const decided = { decidedById: by, decidedAt: now, decisionReason: d.reason, rejectionsAtDecision: fresh.rejections, version: { increment: 1 } };
+    if (d.decision === 'dismiss') {
+      await tx.riskBlockProposal.update({ where: { id }, data: { state: 'DISMISSED', ...decided } });
+      return { blockId: null, phone: fresh.phone, rejections: fresh.rejections };
+    }
+    if (await tx.riskBlock.findFirst({ where: { storeId: who.storeId, phone: fresh.phone, undoneAt: null }, select: { id: true } })) throw new OrdersError('ALREADY_LISTED', 'this number is on the blocklist already', ['phone']);
+    const made = await tx.riskBlock.create({
+      data: { storeId: who.storeId, phone: fresh.phone, clusterId: fresh.clusterId, orderId: fresh.lastOrderId, reason: d.reason, facts: fresh.facts as Prisma.InputJsonValue, blockedById: by, blockedAt: now },
+    });
+    await tx.riskBlockProposal.update({ where: { id }, data: { state: 'BLOCKED', blockId: made.id, ...decided } });
+    return { blockId: made.id, phone: fresh.phone, rejections: fresh.rejections };
+  }, TX);
+  const ctx = { source: 'admin-api', ...who.ctx };
+  if (out.blockId) await audit(deps.db, who.actor, { storeId: who.storeId, action: 'risk.block', entityType: 'RiskBlock', entityId: out.blockId, before: null, after: { phone: out.phone, proposalId: id, reason: d.reason } }, ctx);
+  await audit(deps.db, who.actor, { storeId: who.storeId, action: `risk.blockProposal.${d.decision}`, entityType: 'RiskBlockProposal', entityId: id, before: { state: 'PROPOSED' }, after: { state: out.blockId ? 'BLOCKED' : 'DISMISSED', reason: d.reason, rejections: out.rejections } }, ctx);
   return viewOf(deps, who.storeId);
 }
 

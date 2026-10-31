@@ -19,6 +19,10 @@
 //                                   ALREADY_LISTED
 //   PUT   /api/admin/risk/blocklist {value} the switch, what a match gets, the hold reason (risk.rules.write)
 //   POST  /api/admin/risk/blocklist/<id>/unblock {reason} undoes a listing, the row kept (risk.unblock)
+//   POST  /api/admin/risk/blocklist/proposals/<id> PR 523: {decision: block | dismiss, reason} a person decides a number
+//                                   proposed for the list (risk.block); decided already is 409 NOTHING_CHANGED
+//   GET   /api/admin/risk/block-proposal PR 523: the proposal's card (risk.rules.read); PUT {key, value, version} saves
+//                                   it (risk.rules.write) — lib/admin-orders/block-proposal-api.ts
 //   GET   /api/admin/risk/refusers  PR 163: the repeat refusers (from the owner's number of refusals), their terms, the
 //                                   ended ones, the switch (risk.rules.read)
 //   PUT   /api/admin/risk/refusers  {value} the switch and the number of refusals (risk.rules.write)
@@ -35,6 +39,7 @@
 import * as od from '@extas/orders';
 import { body, fail, type AdminDeps } from './admin-auth';
 import { fraudReportRoute } from './admin-reports/fraud-api';
+import { blockProposalSettingsRoute } from './admin-orders/block-proposal-api';
 import { bundleRoute, bundlingSettingsRoute } from './admin-orders/bundling-api';
 import { handle } from './orders-api';
 
@@ -61,6 +66,10 @@ export async function riskRoute(request: Request, deps: AdminDeps | null, path: 
       if (m === 'PUT') return handle(request, deps, 'risk.rules.write', async (x) => ({ ...(await od.saveBlocklist({ ...x.deps, settings: deps!.resolver }, x.who, await body(request))) }));
       return notAllowed();
     }
+    if (path.length === 3 && path[1] === 'proposals') {
+      if (m === 'POST') return handle(request, deps, 'risk.block', async (x) => ({ ...(await od.decideBlockProposal(x.deps, x.who, path[2]!, await body(request))) }));
+      return notAllowed();
+    }
     if (path.length === 3 && path[2] === 'unblock') {
       if (m === 'POST') return handle(request, deps, 'risk.unblock', async (x) => ({ ...(await od.unblockNumber(x.deps, x.who, path[1]!, await body(request))) }));
       return notAllowed();
@@ -85,6 +94,7 @@ export async function riskRoute(request: Request, deps: AdminDeps | null, path: 
   }
   if (path[0] === 'report') return fraudReportRoute(request, deps, path);
   if (path[0] === 'bundling') return bundlingSettingsRoute(request, deps, path);
+  if (path[0] === 'block-proposal') return blockProposalSettingsRoute(request, deps, path);
   if (path[0] === 'bundle') return bundleRoute(request, deps, path);
   if (path[0] !== 'rules' || path.length > 1) return notFound();
   if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.riskRules(x.deps, x.who)) }));

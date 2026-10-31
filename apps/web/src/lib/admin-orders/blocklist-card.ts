@@ -3,7 +3,10 @@
 // way, the dates in the shop's time zone) and handed to the client card; the API checks every value again. Listing a
 // number never cancels an order or tells the customer: while the switch is on, a listed number's new order is marked,
 // or held for a person to decide.
-import type { BlocklistView, BlockRow } from '@extas/orders';
+// PR 523: the numbers proposed for the list (a person blocks one or says "Not now", each with a reason), the newest decided
+// proposals, and "What we know" on every listing and proposal: the numbers, names and addresses given, and every product
+// ordered with its date.
+import type { BlocklistView, BlockProposalRow, BlockRow, RegisterFacts } from '@extas/orders';
 import type { RiskBlocklist, RiskBlocklistEffect } from '@extas/settings';
 import type { AdminView } from '../admin-page';
 import { t } from '../i18n';
@@ -54,6 +57,27 @@ export interface BlocklistCardTexts {
   readOnly: string;
   noBlock: string;
   err: Record<string, string>;
+  /** PR 523 */
+  propH: string;
+  propD: string;
+  propNone: string;
+  propFrom: string;
+  propBlock: string;
+  propBlockWhy: string;
+  propBlockOk: string;
+  propBlocked: string;
+  propDismiss: string;
+  propDismissWhy: string;
+  propDismissOk: string;
+  propDismissed: string;
+  propNoBlock: string;
+  decidedH: string;
+  factsH: string;
+  factsPhones: string;
+  factsNames: string;
+  factsAddresses: string;
+  factsOrders: string;
+  factsNone: string;
 }
 
 
@@ -103,7 +127,49 @@ export function blocklistCardTexts(view: AdminView): BlocklistCardTexts {
     readOnly: k('readOnly'),
     noBlock: k('noBlock'),
     err: Object.fromEntries(ERRORS.map((e) => [e, k(`err.${e}`)])),
+    propH: k('propH', { n: '{n}' }),
+    propD: k('propD'),
+    propNone: k('propNone'),
+    propFrom: k('propFrom', { n: '{n}' }),
+    propBlock: k('propBlock'),
+    propBlockWhy: k('propBlockWhy'),
+    propBlockOk: k('propBlockOk'),
+    propBlocked: k('propBlocked'),
+    propDismiss: k('propDismiss'),
+    propDismissWhy: k('propDismissWhy'),
+    propDismissOk: k('propDismissOk'),
+    propDismissed: k('propDismissed'),
+    propNoBlock: k('propNoBlock'),
+    decidedH: k('decidedH', { n: '{n}' }),
+    factsH: k('factsH'),
+    factsPhones: k('factsPhones'),
+    factsNames: k('factsNames'),
+    factsAddresses: k('factsAddresses'),
+    factsOrders: k('factsOrders'),
+    factsNone: k('factsNone'),
   };
+}
+
+/** PR 523: "What we know", in the admin's language (the phones the local way, each order's date, status and products). */
+export interface FactsScreen {
+  phones: string[];
+  names: string[];
+  addresses: string[];
+  orders: { key: string; head: string; products: string }[];
+}
+
+/** PR 523: one number proposed for the list, or one decided. */
+export interface ProposalScreen {
+  id: string;
+  phone: string;
+  counts: string;
+  order: { number: string; href: string } | null;
+  identity: boolean;
+  when: string;
+  /** The reason the Block box starts with (the counts; a person edits it). */
+  draft: string;
+  facts: FactsScreen;
+  decided: string | null;
 }
 
 export interface BlocklistRowScreen {
@@ -117,6 +183,8 @@ export interface BlocklistRowScreen {
   undoneWho: string | null;
   undoneWhen: string | null;
   undoReason: string | null;
+  /** PR 523: null for a listing made before the register kept details. */
+  facts: FactsScreen | null;
 }
 
 export interface BlocklistCardScreen {
@@ -124,6 +192,8 @@ export interface BlocklistCardScreen {
   reasons: { key: string; name: string }[];
   active: BlocklistRowScreen[];
   undone: BlocklistRowScreen[];
+  proposals: ProposalScreen[];
+  decided: ProposalScreen[];
   /** The shortest and longest reason (the API checks them again). */
   reasonLimits: { min: number; max: number };
 }
@@ -133,6 +203,29 @@ export function blocklistCardScreen(view: AdminView, v: BlocklistView): Blocklis
   const bn = view.lang === 'bn';
   const dt = new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone, numberingSystem: 'latn' });
   const someone = t(view.dict, 'orders.who.staff');
+  const day = new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeZone: view.timeZone, numberingSystem: 'latn' });
+  const facts = (f: RegisterFacts): FactsScreen => ({
+    phones: f.phones.map((p) => phoneText(p) || p),
+    names: f.names,
+    addresses: f.addresses,
+    orders: f.orders.map((o) => ({
+      key: o.number,
+      head: `${day.format(new Date(o.placedAt))} · ${o.number} · ${t(view.dict, `orders.st.${o.status}`)}`,
+      products: o.lines.map((l) => `${l.name}${[l.colour, l.size].filter(Boolean).length ? ` (${[l.colour, l.size].filter(Boolean).join(', ')})` : ''} ×${l.qty}`).join(', '),
+    })),
+  });
+  const counts = (p: BlockProposalRow) => t(view.dict, 'orders.rr.bl.propCounts', { n: String(p.rejections), refused: String(p.refused), declined: String(p.declined) });
+  const proposal = (p: BlockProposalRow): ProposalScreen => ({
+    id: p.id,
+    phone: phoneText(p.phone) || p.phone,
+    counts: counts(p),
+    order: p.lastOrderId && p.lastOrderNumber ? { number: p.lastOrderNumber, href: orderHref(p.lastOrderId) } : null,
+    identity: p.identity,
+    when: dt.format(new Date(p.proposedAt)),
+    draft: counts(p),
+    facts: facts(p.facts),
+    decided: p.state === 'PROPOSED' ? null : t(view.dict, 'orders.rr.bl.decidedBy', { state: t(view.dict, `orders.rr.bl.st.${p.state}`), who: p.decidedBy ?? someone, when: p.decidedAt ? dt.format(new Date(p.decidedAt)) : '', why: p.decisionReason ?? '' }),
+  });
   const row = (r: BlockRow): BlocklistRowScreen => ({
     id: r.id,
     phone: phoneText(r.phone) || r.phone,
@@ -144,8 +237,17 @@ export function blocklistCardScreen(view: AdminView, v: BlocklistView): Blocklis
     undoneWho: r.undoneAt ? (r.undoneBy ?? someone) : null,
     undoneWhen: r.undoneAt ? dt.format(new Date(r.undoneAt)) : null,
     undoReason: r.undoReason,
+    facts: r.facts ? facts(r.facts) : null,
   });
-  return { value: v.value, reasons: v.holdReasons.map((r) => ({ key: r.key, name: bn ? r.bn : r.en })), active: v.active.map(row), undone: v.undone.map(row), reasonLimits: v.reasonLimits };
+  return {
+    value: v.value,
+    reasons: v.holdReasons.map((r) => ({ key: r.key, name: bn ? r.bn : r.en })),
+    active: v.active.map(row),
+    undone: v.undone.map(row),
+    proposals: v.proposals.map(proposal),
+    decided: v.decidedProposals.map(proposal),
+    reasonLimits: v.reasonLimits,
+  };
 }
 
 

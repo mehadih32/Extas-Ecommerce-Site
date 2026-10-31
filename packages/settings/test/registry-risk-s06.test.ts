@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { REFUSER_TERMS, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
+import { REFUSER_TERMS, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
 
 describe('S06 risk settings (v100–109)', () => {
   it('PR 162: the blocklist is in the registry at version 100, labelled in English and Bengali, off as shipped', () => {
@@ -82,5 +82,22 @@ describe('S06 risk settings (v100–109)', () => {
     expect(riskBundlingSchema.safeParse({ enabled: true, windowHours: 0, action: 'group', maxOrders: 3 }).success).toBe(false);
     expect(riskBundlingSchema.safeParse({ enabled: true, windowHours: 24, action: 'cancel', maxOrders: 3 }).success).toBe(false);
     expect(riskBundlingSchema.safeParse({ enabled: true, windowHours: 24, action: 'group', maxOrders: 1 }).success).toBe(false);
+  });
+
+  it('PR 523: the blocklist proposal at version 104, labelled in both languages, off and the number unset as shipped', () => {
+    const spec = riskS06Settings['risk.blockProposal'];
+    expect(registry['risk.blockProposal']).toBe(spec);
+    expect(spec.version).toBe(104);
+    expect(spec.isOwnerData).toBe(false);
+    for (const lang of ['en', 'bn'] as const) {
+      expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+      expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+    }
+    expect(spec.default).toEqual({ enabled: false, minRejections: null, cancelCodes: ['RISK_DECLINED'] });
+    expect(riskBlockProposalSchema.safeParse({ enabled: true, minRejections: 3, cancelCodes: ['RISK_DECLINED', 'ADVANCE_NOT_PAID'] }).success).toBe(true);
+    expect(riskBlockProposalSchema.safeParse({ enabled: true, minRejections: 0, cancelCodes: [] }).success).toBe(false);
+    // "the phone's owner never ordered" is never a rejection, and a code counts once
+    expect(riskBlockProposalSchema.safeParse({ enabled: true, minRejections: 3, cancelCodes: ['NOT_ORDERED'] }).success).toBe(false);
+    expect(riskBlockProposalSchema.safeParse({ enabled: true, minRejections: 3, cancelCodes: ['RISK_DECLINED', 'RISK_DECLINED'] }).success).toBe(false);
   });
 });

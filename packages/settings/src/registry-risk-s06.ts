@@ -23,8 +23,16 @@
 // (as shipped) marks the newest order for a person to press "One parcel"; "group" groups them by itself. Each order
 // keeps its lines, prices, charges and payments; nothing is cancelled or blocked. The window is empty until the owner
 // sets it (nothing happens until then). Off as shipped.
+//
+// PR 523 (`risk.blockProposal`, version 104): the proposal that fills the blocklist. When a new order lands from a
+// person (the number, or the same identity under other numbers) with at least the owner's number of rejections —
+// parcels refused at the door (not the shop's fault, never a try-on) plus orders cancelled with one of the owner's
+// cancel codes — the number is *proposed* for the blocklist with what we know (the names and addresses given, every
+// product ordered with its date). A person blocks it or says "not now" with a reason; nothing is ever blocked by
+// itself, the order is never held or cancelled. The number is empty until the owner sets it. Off as shipped.
 import { z } from 'zod';
 import { setting } from './define';
+import { ORDER_CANCEL_CODES } from './registry-orders';
 import { dictionaryKeySchema } from './schemas';
 
 const V = 100;
@@ -34,6 +42,8 @@ const V163 = 101;
 const V164 = 102;
 /** PR 522's version. */
 const V522 = 103;
+/** PR 523's version. */
+const V523 = 104;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
 
@@ -103,6 +113,25 @@ export const riskBundlingSchema = z
 export type RiskBundling = z.output<typeof riskBundlingSchema>;
 export const RISK_BUNDLING_DEFAULT: RiskBundling = { enabled: false, windowHours: null, action: 'propose', maxOrders: 5 };
 
+/** The cancel codes that may count as a rejection ("the phone's owner never ordered" never counts: someone else used it). */
+export const BLOCK_PROPOSAL_CANCEL_CODES = ORDER_CANCEL_CODES.filter((c) => c !== 'NOT_ORDERED');
+
+export const riskBlockProposalSchema = z
+  .object({
+    /** A new order from a person with enough rejections proposes the number for the blocklist (off: nothing is proposed). */
+    enabled: z.boolean(),
+    /** Rejections (refused parcels plus counted cancels) that propose a number; null until the owner sets it. */
+    minRejections: z.int().min(1).max(50).nullable(),
+    /** The cancel codes that count as a rejection (the team declined the order); refused parcels always count. */
+    cancelCodes: z
+      .array(z.enum(ORDER_CANCEL_CODES).refine((c) => c !== 'NOT_ORDERED', { message: 'never a rejection' }))
+      .max(BLOCK_PROPOSAL_CANCEL_CODES.length)
+      .refine((l) => new Set(l).size === l.length, { message: 'every code once' }),
+  })
+  .strict();
+export type RiskBlockProposal = z.output<typeof riskBlockProposalSchema>;
+export const RISK_BLOCK_PROPOSAL_DEFAULT: RiskBlockProposal = { enabled: false, minRejections: null, cancelCodes: ['RISK_DECLINED'] };
+
 export const riskS06Settings = {
   'risk.blocklist': setting({
     ...base,
@@ -142,5 +171,15 @@ export const riskS06Settings = {
     labelKey: 'risk.bundling.label',
     helpKey: 'risk.bundling.help',
     sortOrder: 333,
+  }),
+  'risk.blockProposal': setting({
+    ...base,
+    version: V523,
+    schema: riskBlockProposalSchema,
+    default: RISK_BLOCK_PROPOSAL_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.blockProposal.label',
+    helpKey: 'risk.blockProposal.help',
+    sortOrder: 334,
   }),
 };

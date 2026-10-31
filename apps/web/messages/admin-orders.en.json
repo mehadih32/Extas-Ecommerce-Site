@@ -163,7 +163,8 @@
       "riskWatch": "Watch",
       "blocklist": "Blocklist",
       "refuser": "Repeat refuser",
-      "bundle": "One parcel?"
+      "bundle": "One parcel?",
+      "blockProposal": "Proposed for blocklist"
     },
     "page": {
       "all": "All orders",
@@ -257,7 +258,8 @@
       "band": "Delivery band (its charge from Delivery)",
       "blockWhy": "Why (required)",
       "blockWhyPh": "What happened, so the next person knows",
-      "bundleNote": "Note for the packers (optional)"
+      "bundleNote": "Note for the packers (optional)",
+      "propWhy": "Reason (the next person reads it)"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -420,6 +422,18 @@
         "title": "Send order {n} in one parcel",
         "ok": "Make one parcel",
         "done": "Order {n} now goes in one parcel with the others"
+      },
+      "propBlock": {
+        "label": "Block the number",
+        "title": "Put the number of order {n} on the blocklist",
+        "ok": "Put on the blocklist",
+        "done": "The number of order {n} is on the blocklist"
+      },
+      "propDismiss": {
+        "label": "Not now",
+        "title": "Keep the number of order {n} off the blocklist",
+        "ok": "Keep it off",
+        "done": "The number of order {n} stays off the blocklist"
       }
     },
     "eff": {
@@ -459,7 +473,11 @@
       "blockNever": "This order is not changed or cancelled, and the customer is not told",
       "bundleWith": "The same person's other open orders to this address (now: {numbers}) go in the same parcel as this order",
       "bundleMoney": "Each order keeps its own lines, prices, charges and payments",
-      "bundleNever": "Nothing is cancelled or held, and the customer is not told"
+      "bundleNever": "Nothing is cancelled or held, and the customer is not told",
+      "propBlock": "The number goes on the blocklist with your reason and what we know (names, addresses, products with dates)",
+      "propBlockNext": "What its new orders get is the blocklist switch's choice (a mark, or a hold for a person)",
+      "propNever": "This order is not cancelled or held, and the customer is told nothing",
+      "propDismiss": "The number stays off the list; it is asked again only after a new rejection"
     },
     "review": {
       "title": "Duplicate review",
@@ -682,7 +700,9 @@
       "order_bundleProposal": "One parcel proposed",
       "order_bundled": "Put in one parcel",
       "bundleWith": "with {numbers}",
-      "bundleAuto": "by the owner's setting"
+      "bundleAuto": "by the owner's setting",
+      "order_blockProposal": "Proposed for the blocklist",
+      "blockProposal": "{n} rejections: {refused} refused, {declined} cancelled"
     },
     "band": {
       "cancelPending": "Cancel asked · waiting for the courier — phone {courier}, then record what they said.",
@@ -693,7 +713,8 @@
       "twoSize": "{product}: {sizes} on one order — ask which size the customer wants before packing.",
       "deliveryCheck": "{courier} says delivered, but our records say it came back: {signs}. Check with the courier and the customer, then record what really happened.",
       "returnReason": "The parcel came back from {courier}. Ask the rider or the customer why, and record it — the reports and the customer's history count it.",
-      "bundle": "The same person has other open orders to this address: {numbers}. Send them in one parcel?"
+      "bundle": "The same person has other open orders to this address: {numbers}. Send them in one parcel?",
+      "blockProposal": "This number has {n} rejections ({refused} refused at the door, {declined} cancelled) and is proposed for the blocklist. A person decides; the order goes on as usual."
     },
     "items": {
       "title": "Items",
@@ -1045,13 +1066,40 @@
         "err": {
           "INVALID_INPUT": "Check the number (a Bangladeshi mobile number) and write the reason in a sentence.",
           "ALREADY_LISTED": "This number is on the list already.",
-          "NOTHING_CHANGED": "This listing was undone already. The list has been loaded again.",
+          "NOTHING_CHANGED": "This was done already. The list has been loaded again.",
           "NOT_FOUND": "This listing is not here any more. The list has been loaded again.",
           "FORBIDDEN": "You don't have the permission for this.",
           "UNAUTHENTICATED": "You are signed out. Sign in again.",
           "network": "No connection. Nothing was changed — try again.",
           "other": "It did not work. Nothing was changed — try again."
-        }
+        },
+        "propH": "Proposed for the blocklist ({n})",
+        "propD": "Numbers with at least your number of rejections (refused at the door, or cancelled for the reasons you count). Nothing is blocked by itself: a person blocks it or says \"Not now\".",
+        "propNone": "No number is proposed now.",
+        "propCounts": "{n} rejections: {refused} refused at the door, {declined} cancelled",
+        "propFrom": "proposed with order {n}",
+        "propBlock": "Block",
+        "propBlockWhy": "Why block it (the next person reads this)",
+        "propBlockOk": "Put on the blocklist",
+        "propBlocked": "Put on the blocklist. It is in the list above.",
+        "propDismiss": "Not now",
+        "propDismissWhy": "Why not now",
+        "propDismissOk": "Keep it off the list",
+        "propDismissed": "Kept off the list. It is asked again only after a new rejection.",
+        "propNoBlock": "Deciding needs the \"List a number on the blocklist\" permission.",
+        "decidedH": "Decided proposals ({n})",
+        "decidedBy": "{state} by {who}, {when}: {why}",
+        "st": {
+          "BLOCKED": "Blocked",
+          "DISMISSED": "Not now",
+          "PROPOSED": "Proposed"
+        },
+        "factsH": "What we know",
+        "factsPhones": "Numbers",
+        "factsNames": "Names given",
+        "factsAddresses": "Addresses given",
+        "factsOrders": "Orders and products",
+        "factsNone": "Nothing recorded (listed before the register kept details)."
       },
       "rf": {
         "h": "Repeat refusers",
@@ -1136,6 +1184,29 @@
           "FORBIDDEN": "You may not change the risk rules.",
           "forbidden": "You may not change the risk rules.",
           "unauthorized": "Please sign in again.",
+          "network": "No connection. Nothing was saved; try again.",
+          "other": "Something went wrong. Nothing was saved; try again."
+        }
+      },
+      "bp": {
+        "h": "Propose numbers for the blocklist",
+        "d": "When on, a new order from a person (the number, or the same person under another number) with at least the rejections you set proposes the number for the blocklist, with what we know. A person decides in the Blocklist card above; nothing is blocked by itself and the order goes on as usual.",
+        "enabled": "Propose numbers",
+        "minRejections": "Rejections that propose a number",
+        "minRejectionsHelp": "1 to 50. Parcels refused at the door count (never your \"our fault\" reasons or a try-on). Empty until you set it: nothing is proposed until then.",
+        "cancelCodes": "Cancels that count as a rejection",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "discard": "Discard",
+        "unsaved": "There are unsaved changes",
+        "readOnly": "Only someone allowed to change the risk rules can change this.",
+        "err": {
+          "STALE": "Someone else changed this meanwhile. The card now shows theirs; change it again if needed.",
+          "INVALID_INPUT": "Check: {fields}.",
+          "FORBIDDEN": "You cannot change the risk rules.",
+          "forbidden": "You cannot change the risk rules.",
+          "unauthorized": "Sign in again.",
           "network": "No connection. Nothing was saved; try again.",
           "other": "Something went wrong. Nothing was saved; try again."
         }

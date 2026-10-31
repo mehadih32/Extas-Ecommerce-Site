@@ -93,6 +93,8 @@ export * from './refusers';
 export * from './identity-family';
 // S06 · PR 522: one person's open orders to one address in one parcel — proposed or grouped (bundling.ts).
 export * from './bundling';
+// S06 · PR 523: the proposal that fills the blocklist, and what the register holds (block-proposal.ts).
+export * from './block-proposal';
 export * from './advance-request';
 export * from './advance-settings';
 export * from './booking';

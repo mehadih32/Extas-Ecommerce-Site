@@ -1,7 +1,10 @@
 /* S06 · PR 162 — the Blocklist card of Orders › Risk rules: one line per listed number (the number, the reason, who and
    when, the order it came from) with "Undo" at its end; on a phone the button goes under the line, full width, and the
    undo reason opens under it. Every button keeps the device gate's 44 px. PR 163: the Repeat refusers card uses the same
-   rows, and its "terms for another number" form keeps its buttons in one row. */
+   rows, and its "terms for another number" form keeps its buttons in one row. PR 523: a proposed number has "Not now"
+   and "Block" side by side at its end (full width under the line on a phone), and "What we know" folds open under any
+   line: the numbers, names, addresses, and each order with its date and products. A fold's summary and an order link keep the
+   device gate's tap sizes (44 px; 32 px for a link in a line of text). */
 .adm2 .a2-bl-list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
 .adm2 .a2-bl-row{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border:1px solid var(--ln);border-radius:var(--r);min-width:0}
 .adm2 .a2-bl-row.is-undone{opacity:.8}
@@ -11,11 +14,20 @@
 .adm2 .a2-bl-undo{flex:0 1 280px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .adm2 .a2-bl-undo .a2-gap8{display:flex;gap:8px;flex-wrap:wrap}
 .adm2 .a2-bl-undo .a2-btn{min-height:44px}
+.adm2 .a2-bl-row>.a2-gap8{flex:none;display:flex;gap:8px;flex-wrap:wrap}
+.adm2 .a2-bl-row>.a2-gap8 .a2-btn{min-height:44px;display:inline-flex;align-items:center;gap:6px}
+.adm2 .a2-bl-facts{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:6px 0 0}
+.adm2 .a2-bl-facts dd{margin:0;min-width:0}
+.adm2 details.a2-more-opts>summary{cursor:pointer;color:var(--ink2);list-style-position:inside;padding:12px 0;line-height:20px}
+.adm2 .a2-bl-main a{padding:9px 0}
+.adm2 .a2-bl-orders{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .adm2 .a2-rf-other .a2-gap8{display:flex;gap:8px;flex-wrap:wrap}
 .adm2 .a2-rf-other .a2-btn{min-height:44px}
 @media (max-width:767px){
   .adm2 .a2-bl-row{flex-direction:column;align-items:stretch}
   .adm2 .a2-bl-row>.a2-btn{width:100%;justify-content:center}
   .adm2 .a2-bl-undo{flex:none}
+  .adm2 .a2-bl-row>.a2-gap8 .a2-btn{flex:1;justify-content:center}
+  .adm2 .a2-bl-facts{grid-template-columns:1fr}
   .adm2 .a2-bl-undo .a2-btn{flex:1}
 }
