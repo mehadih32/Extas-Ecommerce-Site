@@ -1,0 +1,10 @@
+{
+  "language": {
+    "bengali": {
+      "gate": {
+        "label": "Bengali pages that are not ready yet",
+        "help": "A Bengali page is listed by search engines, named in the sitemap and given the language links only once it is marked ready on Website › SEO › Bengali pages. Here you choose what a visitor sees on a Bengali page that is not ready yet: the page in Bengali, kept out of search engines (as it ships), or the English page instead until it is ready. The bag, checkout, account and search pages are never sent anywhere by it."
+      }
+    }
+  }
+}

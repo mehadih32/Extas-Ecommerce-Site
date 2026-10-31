@@ -1,0 +1,21 @@
+/* S11 · PR 588 — Website › SEO › Bengali pages: the coverage bars and the page list (the shell's tokens only). */
+.adm2 .bg-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.adm2 .bg-kinds{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.adm2 .bg-kinds li{display:grid;grid-template-columns:140px 1fr auto;align-items:center;gap:12px}
+.adm2 .bg-kname{font-weight:600;color:var(--ink)}
+.adm2 .bg-bar{display:block;height:8px;border-radius:4px;background:var(--ln2);overflow:hidden}
+.adm2 .bg-bar i{display:block;height:100%;background:var(--g)}
+.adm2 .bg-name{min-width:200px}
+.adm2 .bg-path{overflow-wrap:anywhere}
+.adm2 .bg-err{color:var(--bad);margin-top:4px}
+.adm2 .bg-act{display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px}
+.adm2 .bg-pager{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+@media (max-width:600px){
+  .adm2 .bg-kinds li{grid-template-columns:1fr auto}
+  .adm2 .bg-bar{grid-column:1 / -1;order:3}
+}
+/* A kind's name opens its list, so it is a 44 px tap at every width (the rows lose their gap instead); a one-word
+   filter ("All", "সব") is still a 44 px wide tap. */
+.adm2 .bg-kinds{row-gap:0}
+.adm2 .bg-kname{display:flex;align-items:center;min-height:44px}
+.adm2 .bg-views .a2-view{min-width:44px;justify-content:center}

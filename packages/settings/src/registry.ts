@@ -76,6 +76,7 @@ import { privacySettings } from './registry-privacy';
 import { edgeSettings } from './registry-edge';
 import { healthSettings } from './registry-health';
 import { supportChannelSettings } from './registry-support-channels';
+import { bengaliSettings } from './registry-bengali';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1296,6 +1297,8 @@ export const registry = {
   ...supportChannelSettings,
   // ---- S16 · PR 343 · the cost ledger: the rows listed and the export's size (registry-costs.ts, version 77). ----
   ...costsSettings,
+  // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
+  ...bengaliSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

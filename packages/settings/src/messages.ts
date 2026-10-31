@@ -151,6 +151,8 @@ import healthEn from '../messages/health.en.json';
 // S16 · PR 343 — the cost ledger (registry v77).
 import costsBn from '../messages/costs.bn.json';
 import costsEn from '../messages/costs.en.json';
+import bengaliGateBn from '../messages/bengali-gate.bn.json';
+import bengaliGateEn from '../messages/bengali-gate.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -213,6 +215,9 @@ messages.en = mergeMessages(messages.en, healthEn);
 messages.bn = mergeMessages(messages.bn, healthBn);
 messages.en = mergeMessages(messages.en, costsEn);
 messages.bn = mergeMessages(messages.bn, costsBn);
+// S11 · PR 588 — the Bengali translation gate (registry-bengali.ts).
+messages.en = mergeMessages(messages.en, bengaliGateEn);
+messages.bn = mergeMessages(messages.bn, bengaliGateBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {
