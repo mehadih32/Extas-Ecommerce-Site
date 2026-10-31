@@ -17,6 +17,7 @@ import {
   BILLED_AT_MISSING,
   checkErpOrders,
   createWarehouse,
+  decideErpLine,
   enqueueErpDelivery,
   enqueueErpShipment,
   enqueueOrderPush,
@@ -358,6 +359,49 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
     expect(await hold()).toBe('held');
     expect((await syncHealth(deps(), { actor: SYSTEM, storeId: storeA })).noShopPrice).toMatchObject({ count: 0, skus: [] });
     expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(0);
+  });
+
+  it('CN-033 · PR 610: B grade closed (as it ships) — not sold, no B replacement, a 422 naming bGradeSkus waits HELD (never FAILED) and goes again once the switch is on', async () => {
+    const xl = await createSize(catDeps(), { actor: SYSTEM, storeId: storeA }, { label: 'XL' });
+    const tee = await t.prisma.product.findFirstOrThrow({ where: { storeId: storeA, erpStyleCode: 'TEE' }, select: { id: true } });
+    const navy = await t.prisma.productVariant.findFirstOrThrow({ where: { storeId: storeA, sku: 'TEE-NAVY-M' }, select: { colourId: true } });
+    const v = await createVariant(catDeps(), { actor: SYSTEM, storeId: storeA }, { sku: 'TEE-NAVY-XL-B', productId: tee.id, colourId: navy.colourId!, sizeId: xl.id, barcode: 'BC-TEE-XL-B' });
+    await t.prisma.productVariant.update({ where: { id: v.id }, data: { grade: 'B' } });
+    world.setVariant({ sku: 'TEE-NAVY-XL-B', barcode: 'BC-TEE-XL-B', styleCode: 'TEE', shopPrice: 400, grade: 'B' });
+    world.setStock('TEE-NAVY-XL-B', 'SAMPLE-WH-1', { onHand: 6 });
+    const loc = await t.prisma.inventoryLocation.findFirstOrThrow({ where: { warehouse: { code: 'WH-A' } }, orderBy: { createdAt: 'asc' }, select: { id: true } });
+    await t.prisma.stockLevel.create({ data: { variantId: v.id, locationId: loc.id, onHand: 6, available: 6, erpUpdatedAt: clock } });
+    const cart = async () => (await t.prisma.cart.create({ data: { storeId: storeA, visitorId: `sample-${randomUUID()}`, lastActivityAt: clock } })).id;
+    const hold = async () => holdCart(deps(), { storeId: storeA, cartId: await cart(), lines: [{ variantId: v.id, quantity: 1 }] }).then(() => 'held', (e: { code?: string; details?: string[] }) => `${e.code}:${(e.details ?? []).join(',')}`);
+    // Not sold while B grade is closed (a v6 store, `erp.orders.bGradeOpen` off as it ships).
+    expect(registry['erp.orders.bGradeOpen'].default).toBe(false);
+    expect(await hold()).toBe('OUT_OF_STOCK:TEE-NAVY-XL-B:0');
+    // A replacement with a B-grade piece is never asked for (named B, or a SKU whose variant is B grade).
+    for (const input of [{ sku: 'POLO-NAVY-M', grade: 'B' as const }, { sku: 'TEE-NAVY-XL-B' }]) {
+      await expect(decideErpLine(deps(), { actor: SYSTEM, storeId: storeA }, { orderId: randomUUID(), lineId: 'SAMPLE-1-1', action: 'REPLACE', ...input })).rejects.toMatchObject({ code: 'B_GRADE_CLOSED', details: [input.sku] });
+    }
+    // An order with a B-grade piece that was already in a bag: the ERP answers 422 naming it; it waits HELD with the reason.
+    const o = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }, { sku: 'TEE-NAVY-XL-B', unit: 450 }]);
+    await enqueueOrderPush(deps(), o.input);
+    expect(await relayErpPushes(deps(), { storeId: storeA })).toMatchObject({ held: 1, failed: 0 });
+    const row = await pushOf(storeA, o.orderId);
+    expect([row.status, row.heldReason, row.responseStatus]).toEqual(['HELD', 'B_GRADE_CLOSED', 422]);
+    const eo = (await erpOrderOf(t.prisma, { storeId: storeA, orderId: o.orderId }))!;
+    expect([eo.refusal, eo.refusalDetails]).toEqual(['B_GRADE_CLOSED', { bGradeSkus: ['TEE-NAVY-XL-B'] }]);
+    expect((await erpOrderView(deps(), { actor: SYSTEM, storeId: storeA }, o.orderId))?.held?.reason).toBe('B_GRADE_CLOSED');
+    // While the switch is off it never goes again, however long it waits.
+    clock = new Date(clock.getTime() + (registry['erp.orders.refusedRetryMinutes'].default + 1) * 60_000);
+    expect((await checkErpOrders(deps(), { storeId: storeA })).woken).toBe(0);
+    // The ERP opens B grade and the owner turns the switch on: it sells, and the order goes again by itself (a new key).
+    world.v6().bGradeOpen = true;
+    overrides.set(`erp.orders.bGradeOpen@${storeA}`, true);
+    expect(await hold()).toBe('held');
+    expect((await checkErpOrders(deps(), { storeId: storeA })).woken).toBe(1);
+    expect((await pushOf(storeA, o.orderId)).keyRound).toBe(1);
+    expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(1);
+    expect((await erpOrderLinesOf(t.prisma, eo.id)).map((l) => [l.sku, l.grade])).toEqual([['POLO-NAVY-M', 'A'], ['TEE-NAVY-XL-B', 'B']]);
+    overrides.delete(`erp.orders.bGradeOpen@${storeA}`);
+    world.v6().bGradeOpen = false;
   });
 
   let short = { orderId: '', ext: '' };

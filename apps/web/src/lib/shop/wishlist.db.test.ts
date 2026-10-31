@@ -133,6 +133,25 @@ describe.skipIf(!HAS_TEST_DB)('the wishlist API on PostgreSQL (PR 71)', () => {
     expect(await wishRows(deps(), visitor)).toEqual([expect.objectContaining({ productId: p.id, variantId })]);
   });
 
+  it('PR 610: on v6 a B-grade piece counts 0 until the ERP opens B-grade lines (erp.orders.bGradeOpen), as the bag refuses it', async () => {
+    const ids = live.flatMap((p) => p.variants.map((v) => v.id));
+    const before = await sellableReader(t.prisma, settings, S)(ids);
+    const id = ids.find((x) => (before.get(x) ?? 0) > 0)!;
+    expect(id).toBeTruthy();
+    await t.prisma.productVariant.update({ where: { id }, data: { grade: 'B' } });
+    try {
+      expect((await sellableReader(t.prisma, settings, S)([id])).get(id)).toBe(before.get(id)); // v5: nothing changes
+      overrides.set('erp.model', 'v6');
+      expect((await sellableReader(t.prisma, settings, S)([id])).get(id)).toBe(0);
+      overrides.set('erp.orders.bGradeOpen', true);
+      expect((await sellableReader(t.prisma, settings, S)([id])).get(id)).toBe(before.get(id));
+    } finally {
+      overrides.delete('erp.model');
+      overrides.delete('erp.orders.bGradeOpen');
+      await t.prisma.productVariant.update({ where: { id }, data: { grade: 'A' } });
+    }
+  });
+
   it('follow-up 71 · at sign-in the browser`s hearts join the account: once each, up to the limit, nothing dropped', async () => {
     const customer = await t.prisma.customer.create({ data: { storeId: S, phone: '+8801700000071' }, select: { id: true } });
     const signed = (): WishDeps => ({ ...deps(), customerOf: async () => customer.id });

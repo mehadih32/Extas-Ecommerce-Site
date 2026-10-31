@@ -3,7 +3,7 @@
 // (`inventory.sellableLocationKinds`). Given to the catalogue's back-in-stock request (it may not import the
 // inventory) and used by the wishlist page to say which saved sizes can go straight into the bag.
 import type { PrismaClient } from '@extas/db/client';
-import { sellableUnits } from '@extas/inventory';
+import { bGradeClosed, sellableUnits } from '@extas/inventory';
 import type { Key, Value } from '@extas/settings';
 
 interface Reader {
@@ -19,11 +19,13 @@ export function sellableReader(db: PrismaClient, settings: Reader, storeId: numb
   return async (variantIds) => {
     const ids = [...new Set(variantIds)];
     if (!ids.length) return new Map();
-    const [kinds, rows] = await Promise.all([
+    const [kinds, closed, rows] = await Promise.all([
       settings.value('inventory.sellableLocationKinds', { storeId }),
-      db.productVariant.findMany({ where: { storeId, id: { in: ids } }, select: { id: true, inStock: true, stockLevels: levels } }),
+      bGradeClosed({ settings }, storeId),
+      db.productVariant.findMany({ where: { storeId, id: { in: ids } }, select: { id: true, inStock: true, grade: true, stockLevels: levels } }),
     ]);
     const k = new Set(kinds);
-    return new Map(rows.map((v) => [v.id, v.inStock ? sellableUnits(v.stockLevels, k) : 0]));
+    // PR 610: a B-grade piece is not sold (0) while the ERP takes no B-grade line, as on the product page
+    return new Map(rows.map((v) => [v.id, v.inStock && !(closed && v.grade === 'B') ? sellableUnits(v.stockLevels, k) : 0]));
   };
 }

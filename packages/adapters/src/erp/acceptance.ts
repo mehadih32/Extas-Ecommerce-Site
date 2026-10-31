@@ -25,6 +25,8 @@
 //   `GET /cost-of-goods`. With `switchOver: 'fresh-start'` (the shop's `erp.switchOver.mode` as it ships) those two
 //   checks are SKIP "not built in the ERP" and never asked, on every target; `erp-list` (the default here, the
 //   earlier way) reads them as before.
+// - CN-033 (2): B-grade order lines answer 422 at the ERP until its own release, so `orders.billAtShipment` sends its
+//   B-grade line only with `bGradeOpen: true` (the shop's `erp.orders.bGradeOpen`, off as it ships).
 import { verifyErpRequest, signErpRequest } from './signature';
 import { identifyPartial, type PracticeErpV6 } from './mock-erp-v6';
 import type { MockErpWorld } from './mock-erp';
@@ -92,6 +94,8 @@ export interface AcceptanceOptions {
   /** How the shop switches (`erp.switchOver.mode`, CN-033): on a fresh start the ERP's switch-over reads are not
    *  built, so their checks are SKIP and never called. Absent: `erp-list` (the checks as first written). */
   switchOver?: 'fresh-start' | 'erp-list';
+  /** B-grade order lines are open (`erp.orders.bGradeOpen`, CN-033): only then does an order check send a B line. */
+  bGradeOpen?: boolean;
 }
 
 /** The test list, in the order of §4. */
@@ -284,7 +288,8 @@ const CHECKS: Record<string, (c: Ctx) => Promise<string | null | void>> = {
   async 'orders.billAtShipment'(c) {
     const fx = fixture(c);
     const [a1] = fx.a;
-    const b = fx.b;
+    // CN-033: a B-grade line only while B grade is open (the ERP answers 422 until its own release).
+    const b = c.o.bGradeOpen ? fx.b : null;
     const id = ext(c, 'BILL');
     const before = await balance(c);
     const items = [line(`${id}-1`, a1!.sku, 1190), ...(b ? [line(`${id}-2`, b.sku, 600, { grade: 'B' })] : [])];
@@ -299,7 +304,8 @@ const CHECKS: Record<string, (c: Ctx) => Promise<string | null | void>> = {
     expectEq('billed once at erpTotal when the shipment is recorded', await balance(c), before + want);
     const back = await c.api.v6.order(id, call(c));
     expectTrue('the order reads back billed', back.billedAt != null);
-    return b ? null : 'no B-grade SKU with stock: the order had one A-grade line';
+    if (b) return null;
+    return c.o.bGradeOpen ? 'no B-grade SKU with stock: the order had one A-grade line' : 'B grade is closed (erp.orders.bGradeOpen off): the order had one A-grade line';
   },
 
   async 'orders.cancelNeverBilled'(c) {

@@ -12,7 +12,8 @@
       "ACCOUNT_ON_HOLD": "Waiting: the ERP account is on hold. It goes by itself when the ERP releases the account.",
       "INSUFFICIENT_STOCK": "Waiting: the ERP is short of stock. It goes again by itself when the stock is there.",
       "NO_SHOP_PRICE": "Waiting: a SKU has no shop price at the ERP yet. That SKU is not sold until it has one.",
-      "LINE_WAITING": "Waiting: a line is short. The shipment goes once the line is decided or filled."
+      "LINE_WAITING": "Waiting: a line is short. The shipment goes once the line is decided or filled.",
+      "B_GRADE_CLOSED": "Waiting: the ERP does not take B-grade pieces yet. This order goes again by itself once B grade is open (the ERP switch \"B-grade pieces are open at the ERP\")."
     },
     "hold": {
       "on": "The ERP account is on hold: new orders wait and checkout is paused until the ERP releases it.",
@@ -90,7 +91,8 @@
       "NOT_FOUND": "This order is not at the ERP.",
       "NOT_ACTIVE": "The box cannot be saved now.",
       "network": "No connection. Try again.",
-      "other": "It did not work. Try again."
+      "other": "It did not work. Try again.",
+      "B_GRADE_CLOSED": "B-grade pieces are not open at the ERP yet. Choose an A-grade SKU."
     }
   }
 }

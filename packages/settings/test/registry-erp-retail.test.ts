@@ -27,4 +27,9 @@ describe('the ERP retail decisions (CN-033, v72)', () => {
     expect(s.schema.safeParse('erp-list').success).toBe(true);
     expect(s.schema.safeParse('moved-orders').success).toBe(false);
   });
+
+  it('PR 610: B-grade order lines are closed per store until the ERP opens them (on = the earlier behaviour)', () => {
+    const s = erpRetailSettings['erp.orders.bGradeOpen'];
+    expect([s.scope, s.default, s.valueType]).toEqual(['store', false, 'BOOLEAN']);
+  });
 });
