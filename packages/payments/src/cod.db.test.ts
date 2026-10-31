@@ -172,7 +172,15 @@ describe.skipIf(!HAS_TEST_DB)('PR 166 · Cash on Delivery after the door', () =>
       ].join('\n');
       const input = { courierAccountId: c.id, reference: 'STM-0001', csv, receivedAs: 'BANK', receivedAccountRef: 'Sample bank ••01' };
       expect(await code(importSettlement(f.deps(), f.viewer, input))).toBe('FORBIDDEN');
-      const s = await importSettlement(f.deps(), f.staff, input);
+      // PR 564: each known parcel's charge goes to the charge mismatch log once the statement is stored (not the
+      // unknown parcel, not the same parcel's second line, never again on a replay)
+      const seen: { storeId: number; shipmentId: string; chargeMinor: number | null }[] = [];
+      const hooked = f.deps({ courier: { statementCharges: async (storeId, lines) => void seen.push(...lines.map((l) => ({ storeId, ...l }))) } });
+      const s = await importSettlement(hooked, f.staff, input);
+      expect(seen.map((x) => x.chargeMinor)).toEqual([6_000, 6_000, 6_000, 12_000, 6_000]);
+      expect(seen[0]).toEqual({ storeId: f.staff.storeId, shipmentId: s1.id, chargeMinor: 6_000 });
+      expect(await importSettlement(hooked, f.staff, input)).toMatchObject({ replay: true });
+      expect(seen).toHaveLength(5);
       expect(s).toMatchObject({ replay: false, matched: 1, late: 1, mismatched: 5, receivedAs: 'BANK', totalCodMinor: 1_241_000, chargesMinor: 48_000, netMinor: 1_193_000 });
       expect(s.reasons).toEqual({ RETURN_AS_DELIVERED: 1, PARTIAL_DELIVERY: 1, UNKNOWN_PARCEL: 1, DOUBLE_CHARGE: 1, DOUBLE_LINE: 1 });
       expect(s.lines.map((l) => [l.consignmentId, l.matchState, l.reasonCode, l.settleDays])).toEqual([

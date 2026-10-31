@@ -41,6 +41,32 @@
       "none": "No parcel came back in this period.",
       "productNote": "A parcel with several products shares its cost by pieces."
     },
+    "mismatch": {
+      "title": "Charge mismatch log",
+      "sub": "Parcels the courier charged as another band than the one the customer paid for. Only written down: nothing on the order changes and nobody is messaged.",
+      "off": "Off. When on, each courier charge (at booking, in tracking or on a COD statement) is checked against that courier's rate cards on Delivery › Couriers.",
+      "on": "On",
+      "offPill": "Off",
+      "turnOn": "Switch the log on",
+      "turnOff": "Switch it off",
+      "month": "Month",
+      "cases": "Cases",
+      "under": "Paid less",
+      "over": "Paid more",
+      "thisMonth": "{n} cases this month · the customers paid {under} less and {over} more than the courier's band",
+      "recent": "Latest cases",
+      "row": "Paid for {paid} · courier read {read}",
+      "gap": "Gap {gap}",
+      "free": "Free delivery: no gap",
+      "charge": "Courier charged {charge}",
+      "source": {
+        "booking": "at booking",
+        "tracking": "in tracking",
+        "statement": "on its statement"
+      },
+      "none": "No case in these months.",
+      "cards": "A case needs the courier's rate cards for every band (Delivery › Couriers)."
+    },
     "source": { "WEBSITE": "Website", "LANDING_PAGE": "Landing page", "MESSENGER": "Messenger", "WHATSAPP": "WhatsApp", "LIVE_CHAT": "Live chat", "PHONE": "Phone", "TELEGRAM": "Telegram", "ADMIN": "Admin", "SHOWROOM": "Showroom", "IMPORT": "Import" },
     "status": { "IN_REVIEW": "In review", "PENDING_PICKUP": "Waiting for pickup", "PICKED_UP": "Picked up", "IN_TRANSIT": "On the way", "OUT_FOR_DELIVERY": "Out for delivery", "ATTEMPT_FAILED": "Try failed", "ADDRESS_PROBLEM": "Address problem", "LOST": "Lost", "DAMAGED": "Damaged", "RETURNING": "Coming back" },
     "claims": {

@@ -8,6 +8,6 @@
 .adm2 .cr-rows > li{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-start;justify-content:space-between;padding:10px 12px;border:1px solid var(--ln2);border-radius:10px;background:var(--sf2)}
 .adm2 .cr-rows > li > div{min-width:0;flex:1 1 220px;overflow-wrap:anywhere}
 .adm2 .cr-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
-.adm2 .cr-link{display:inline-flex;align-items:center;min-height:44px;font-weight:600}
+.adm2 .cr-link{display:inline-flex;align-items:center;min-height:44px;min-width:44px;font-weight:600}
 .adm2 .cr-warn{color:var(--warn);font-weight:600}
 .adm2 details.a2-more-opts>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--ink2)}

@@ -94,6 +94,12 @@ describe.skipIf(!HAS_TEST_DB)('courier claims and rider issues API on PostgreSQL
 
     const book = await claims('POST', ['settings'], { cookie: owner, body: { key: 'delivery.courier.rtoBook', before: { enabled: false }, value: { enabled: true } } });
     expect(book.status).toBe(200);
+    // PR 564: the charge mismatch log's switch, saved the same way; it takes nothing but on/off
+    const log = await claims('POST', ['settings'], { cookie: owner, body: { key: 'delivery.chargeMismatch', before: { enabled: false }, value: { enabled: true } } });
+    expect(log.status).toBe(200);
+    expect(await deps.resolver.value('delivery.chargeMismatch', { storeId: A })).toEqual({ enabled: true });
+    const extra = await claims('POST', ['settings'], { cookie: owner, body: { key: 'delivery.chargeMismatch', before: { enabled: true }, value: { enabled: true, correct: true } } });
+    expect(extra.status).toBe(400);
 
     const before = await deps.resolver.value('support.riderIssues', { storeId: A });
     expect(before).toMatchObject({ enabled: false, refundAsk: false });
@@ -102,8 +108,8 @@ describe.skipIf(!HAS_TEST_DB)('courier claims and rider issues API on PostgreSQL
     const bad = await rider('POST', ['settings'], { cookie: owner, body: { before: { ...before, enabled: true }, value: { ...before, enabled: true, maxPhotos: 99 } } });
     expect(bad.status).toBe(400);
 
-    const audits = await t.prisma.auditLog.findMany({ where: { action: 'setting.save', entityId: { in: ['delivery.courier.claims', 'delivery.courier.rtoBook', 'support.riderIssues'] } } });
-    expect(audits).toHaveLength(3);
+    const audits = await t.prisma.auditLog.findMany({ where: { action: 'setting.save', entityId: { in: ['delivery.courier.claims', 'delivery.courier.rtoBook', 'delivery.chargeMismatch', 'support.riderIssues'] } } });
+    expect(audits).toHaveLength(4);
   });
 
   it('with the switches on: an unknown parcel or order number is named, never guessed', async () => {

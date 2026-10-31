@@ -22,14 +22,15 @@
 //   POST  /api/admin/support/rider-issues/:id/refund                  {method} ask the refund of the exact extra — only while
 //                                                                     `refundAsk` is on (payments.refunds.request)
 // The owner's switches, saved with the value as read (a stale save is refused) and audited:
-//   POST  /api/admin/delivery/claims/settings                         {key: delivery.courier.claims | delivery.courier.rtoBook,
+//   POST  /api/admin/delivery/claims/settings                         {key: delivery.courier.claims | delivery.courier.rtoBook
+//                                                                     | delivery.chargeMismatch (PR 564),
 //                                                                     value, before} (settings.write)
 //   POST  /api/admin/support/rider-issues/settings                    {value, before} support.riderIssues (support.settings)
 import { audit, type PermissionKey } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { storeGeneratedFile, type MediaDeps } from '@extas/media';
 import * as pay from '@extas/payments';
-import { courierClaimsSchema, riderIssuesSchema, rtoBookSchema, storeTarget } from '@extas/settings';
+import { chargeMismatchSchema, courierClaimsSchema, riderIssuesSchema, rtoBookSchema, storeTarget } from '@extas/settings';
 import { cleanFileName, sniffFile } from '@extas/support';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { mediaDeps } from './media';
@@ -78,6 +79,8 @@ const notFound = () => Promise.resolve(fail(404, 'not-found'));
 const SWITCHES = {
   'delivery.courier.claims': { schema: courierClaimsSchema, reason: 'Delivery › Couriers › Claims' },
   'delivery.courier.rtoBook': { schema: rtoBookSchema, reason: 'Reports › Delivery & RTO' },
+  // PR 564: the charge mismatch log (record only)
+  'delivery.chargeMismatch': { schema: chargeMismatchSchema, reason: 'Reports › Delivery & RTO · charge mismatch log' },
   'support.riderIssues': { schema: riderIssuesSchema, reason: 'Support › Rider issues' },
 } as const;
 type SwitchKey = keyof typeof SWITCHES;
@@ -106,7 +109,7 @@ export async function claimsRoute(request: Request, deps: AdminDeps | null, path
   const [id, action] = path;
   if (id === 'settings' && path.length === 1) {
     if (m !== 'POST') return notAllowed();
-    return handle(request, deps, 'settings.write', (x) => saveSwitch(request, x, ['delivery.courier.claims', 'delivery.courier.rtoBook']));
+    return handle(request, deps, 'settings.write', (x) => saveSwitch(request, x, ['delivery.courier.claims', 'delivery.courier.rtoBook', 'delivery.chargeMismatch']));
   }
   if (id === undefined) {
     if (m === 'GET') {

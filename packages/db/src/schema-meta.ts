@@ -227,6 +227,8 @@ export const APPEND_ONLY_LOCKED = [
   // CN-028 · PR 619 (migration 0057_erp_switchover): every dry run, switch and new link epoch, and the ERP's list of moved orders.
   'ErpSwitchRun',
   'ErpSwitchOrder',
+  // S08 · PR 564 (migration 0072_charge_mismatch): each recorded charge mismatch, written once per parcel.
+  'ChargeMismatch',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';
@@ -268,7 +270,6 @@ export const APPEND_ONLY_OPEN: Readonly<Record<string, string>> = {
   ComboTemplateScore: NOT_BUILT,
   SetBuilderAdd: 'a visitor`s tapped set adds (cart and picks, PR 98), kept for the report until the bag retention rule clears them',
   DuplicateNoticeEvent: NOT_BUILT,
-  ChargeMismatch: NOT_BUILT,
   LocalStockIntake: NOT_BUILT,
   SmartRuleSimulation: NOT_BUILT,
   BlogPostReview: NOT_BUILT,

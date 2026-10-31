@@ -81,6 +81,8 @@ export * from './registry-costs';
 export * from './registry-courier-report';
 // S08 · PR 193 — holiday mode (registry-holiday.ts, version 94).
 export * from './registry-holiday';
+// S08 · PR 564 — the charge mismatch log (registry-charge-mismatch.ts, version 95).
+export * from './registry-charge-mismatch';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

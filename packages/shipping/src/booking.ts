@@ -41,6 +41,7 @@ import { bookableCourier, courierApi } from './accounts';
 import type { CourierBookingSettings } from '@extas/settings';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Tx, type Who } from './context';
 import { isShippingError, ShippingError } from './errors';
+import { noteCourierCharge } from './charge-mismatch';
 import { applyEventsIn } from './events';
 import { bookedReceiver, STILL_WITH_US, stickerProblem } from './fulfil-pure';
 import { assertPackingPhoto } from './packing';
@@ -338,6 +339,8 @@ async function complete(deps: ShippingDeps, who: Who, shipmentId: string, a: { c
     await applyEventsIn(tx, { storeId: who.storeId, shipmentId }, [{ providerEventId: `booking:${a.consignmentId ?? s.merchantRef}`, status, rawStatus: a.rawStatus ?? 'booked', occurredAt: now, note: null, reasonKey: null, codCollectedMinor: null, chargeMinor: null }], 'booking', { now, actorId: who.actor.staffUserId });
     await logChange(tx, who, 'shipment.booked', 'Shipment', shipmentId, null, { consignmentId: a.consignmentId, status });
   }, TX);
+  // PR 564: the courier's charge at booking may show it read another band — recorded only, never in the way of a booking
+  if (a.chargeMinor !== null) await noteCourierCharge(deps, { storeId: who.storeId, shipmentId }, 'booking').catch(() => null);
 }
 
 /** The courier refused: the parcel is BOOKING_FAILED with its reason, and the order is ready to book again. */
