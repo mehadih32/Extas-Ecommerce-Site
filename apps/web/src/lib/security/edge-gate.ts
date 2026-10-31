@@ -26,6 +26,8 @@ export interface ExemptRoute {
 export const CSP_REPORT_PATH = '/api/security/csp-report';
 /** PR 423 (CN-015): the shop's pages report a visitor's problems here (same-site, counted like the policy reports). */
 export const PROBLEMS_REPORT_PATH = '/api/problems';
+/** PR 257: the shop's tracking beacon (a product page seen, the checkout opened), counted like the problem reports. */
+export const TRACKING_BEACON_PATH = '/api/shop/track';
 
 /** Every exempt prefix. Adding one needs its proof in the handler (lib/security/route-review.test.ts checks it). */
 export const EXEMPT_ROUTES: readonly ExemptRoute[] = [
@@ -54,7 +56,7 @@ const ADMIN_SIGN_IN = ['/api/admin/auth/login', '/api/admin/auth/2fa', '/api/adm
 
 /** Which limit a call counts against, or null when it is not counted. */
 export function rateBucketOf(method: string, path: string): RateBucket | null {
-  if (path === CSP_REPORT_PATH || path === PROBLEMS_REPORT_PATH) return 'report';
+  if (path === CSP_REPORT_PATH || path === PROBLEMS_REPORT_PATH || path === TRACKING_BEACON_PATH) return 'report';
   if (exemptOf(path)) return path.startsWith('/api/internal/') ? null : 'webhook';
   if (path === VITALS_REPORT_PATH) return 'report';
   if (isSafeMethod(method)) return null;

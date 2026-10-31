@@ -37,7 +37,8 @@
         "couriers": "কুরিয়ার"
       },
       "marketing": {
-        "rules": "স্মার্ট নিয়ম"
+        "rules": "স্মার্ট নিয়ম",
+        "tracking": "ট্র্যাকিং"
       },
       "reports": {
         "health": "সাইটের অবস্থা"

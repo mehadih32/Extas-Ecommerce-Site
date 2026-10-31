@@ -80,7 +80,8 @@
     "health": "সাইটের অবস্থা",
     "golive": "চালুর আগে",
     "healthProblems": "কাস্টমারের সমস্যা",
-    "seoBengali": "বাংলা পাতা"
+    "seoBengali": "বাংলা পাতা",
+    "adsTracking": "ট্র্যাকিং"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",
@@ -361,6 +362,36 @@
       "desc": "দোকানের সাইট দেখায় আর Bing-কে সাইটম্যাপ পাঠায় (ওয়েবসাইট → SEO)। চাবি দিয়ে টেস্ট পাস না হওয়া পর্যন্ত কিছু পাঠানো হয় না",
       "fields": {
         "apiKey": "API চাবি (Bing Webmaster → Settings → API access)"
+      }
+    },
+    "metaConversions": {
+      "name": "Meta Conversions API (ফেসবুক আর ইনস্টাগ্রাম বিজ্ঞাপন)",
+      "desc": "দোকানের ইভেন্ট (প্রোডাক্ট দেখা, ব্যাগে রাখা, চেকআউট, অর্ডার) সার্ভার থেকে Meta-তে পাঠায়, মার্কেটিং › ট্র্যাকিং-এর জন্য। কী দেওয়া আর টেস্ট (পিক্সেল পড়া) পাস না করা পর্যন্ত অনুশীলনের কপি: তার আগে কিছুই যায় না।",
+      "fields": {
+        "accessToken": "অ্যাক্সেস টোকেন (Events Manager → পিক্সেল → Settings → Conversions API → Generate access token)",
+        "pixelId": "পিক্সেল (ডেটাসেট) আইডি (Events Manager → পিক্সেল → Settings)",
+        "testEventCode": "টেস্ট ইভেন্ট কোড — চাইলে; Events Manager → Test events থেকে। এটা থাকলে টেস্ট ইভেন্ট সেখানে দেখা যায়",
+        "apiVersion": "API ভার্সন — খালি রাখুন, দোকান যেটায় বানানো সেটাই চলবে",
+        "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য"
+      }
+    },
+    "googleAnalytics": {
+      "name": "Google Analytics 4 (Measurement Protocol)",
+      "desc": "দোকানের ইভেন্ট সার্ভার থেকে Google Analytics-এ পাঠায়, যেটা Google Ads নিয়ে নিতে পারে, মার্কেটিং › ট্র্যাকিং-এর জন্য। কী দেওয়া আর টেস্ট পাস না করা পর্যন্ত অনুশীলনের কপি।",
+      "fields": {
+        "apiSecret": "API সিক্রেট (Admin → Data streams → ওয়েব স্ট্রিম → Measurement Protocol API secrets → Create)",
+        "measurementId": "মেজারমেন্ট আইডি (Admin → Data streams → ওয়েব স্ট্রিম), যেমন G-ABC123XYZ",
+        "baseUrl": "ঠিকানা — খালি রাখুন; শুধু EU ঠিকানা বা টেস্ট সার্ভারের জন্য"
+      }
+    },
+    "tiktokEvents": {
+      "name": "TikTok Events API",
+      "desc": "দোকানের ইভেন্ট সার্ভার থেকে TikTok-এ পাঠায়, মার্কেটিং › ট্র্যাকিং-এর জন্য। কী দেওয়া আর টেস্ট (একটা টেস্ট ইভেন্ট) পাস না করা পর্যন্ত অনুশীলনের কপি।",
+      "fields": {
+        "accessToken": "অ্যাক্সেস টোকেন (Events Manager → পিক্সেল → Settings → Events API → Generate access token)",
+        "pixelCode": "পিক্সেল কোড (Events Manager → পিক্সেল)",
+        "testEventCode": "টেস্ট ইভেন্ট কোড — টেস্টের জন্য লাগবে; Events Manager → পিক্সেল → Test events থেকে",
+        "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য"
       }
     }
   },

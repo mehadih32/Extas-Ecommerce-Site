@@ -58,6 +58,7 @@ describe('request kinds', () => {
     expect(rateBucketOf('GET', '/api/bag/lines')).toBeNull();
     expect(rateBucketOf('POST', '/api/security/csp-report')).toBe('report');
     expect(rateBucketOf('POST', '/api/problems')).toBe('report'); // PR 423: the customer problem recorder
+    expect(rateBucketOf('POST', '/api/shop/track')).toBe('report'); // PR 257: the tracking beacon
     expect(rateBucketOf('POST', '/api/erp/webhook')).toBe('webhook');
     expect(rateBucketOf('GET', '/api/whatsapp/webhook')).toBe('webhook');
     expect(rateBucketOf('POST', '/api/messenger/webhook')).toBe('webhook');

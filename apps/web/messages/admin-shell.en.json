@@ -37,7 +37,8 @@
         "couriers": "Couriers"
       },
       "marketing": {
-        "rules": "Smart Rules"
+        "rules": "Smart Rules",
+        "tracking": "Tracking"
       },
       "reports": {
         "health": "Site health"

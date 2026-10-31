@@ -400,6 +400,7 @@ model Store {
   siteAuditFindings       SiteAuditFinding[]
   customerProblems        CustomerProblem[]
   problemRecords          ProblemRecord[]
+  trackedEvents           TrackedEvent[]
   supportChannels         SupportChannel[]
   supportContacts         SupportContact[]
   conversations           Conversation[]
@@ -9079,6 +9080,44 @@ model ProblemRecord {
 
   @@index([storeId, createdAt])
   @@index([problemId, createdAt])
+}
+
+/// @stage S13 · PR 257 (Blueprint C6.2) — one shopper event the shop sends to the ad platforms from its own server
+/// (Marketing › Tracking): a product seen, an item put in the bag, the checkout opened, an order placed. Recorded only
+/// while `ads.tracking` is on, for the events and platforms the owner ticked. `eventId` is the id a browser pixel would
+/// send with the same event, so each platform counts it once (a purchase's id is its order number). Never a name,
+/// address or raw phone or e-mail: `userData` holds only sha256 hashes (and the platform cookies and browser name),
+/// and the customer hashes only while the owner allows matching. `deliveries` is per platform: { state: sent | mock |
+/// failed | waiting, at, attempts, error? }. Never deleted.
+model TrackedEvent {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  storeId    Int
+  store      Store    @relation(fields: [storeId], references: [id])
+  /// The id shared with a browser pixel (dedup); unique per store.
+  eventId    String
+  /// view · addToBag · checkout · purchase (lib/tracking/model.ts).
+  name       String
+  /// A test event from the admin's "Send test event" (the platforms' test mode; never counted in reports).
+  test       Boolean  @default(false)
+  /// The shop page the event happened on: its full address without the query.
+  url        String?
+  valueMinor Int?
+  currency   String?
+  /// [{ id, sku, name, category, colour, size, quantity, priceMinor }]
+  items      Json     @default("[]")
+  orderId    String?  @db.Uuid
+  /// { em?, ph?, phPlus?, ext?, fbp?, fbc?, ttp?, gaClientId?, ua? } — hashes, the platforms' cookies and the browser name.
+  userData   Json     @default("{}")
+  deliveries Json     @default("{}")
+  /// Some ticked platform still waits for it (a failure is tried again up to the owner's number of attempts).
+  pending    Boolean  @default(true)
+  occurredAt DateTime @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, eventId])
+  @@index([storeId, occurredAt])
+  @@index([pending, occurredAt])
 }
 
 /// @stage S21 · PR 594 — a PR of the register, generated from docs/MASTER-REGISTER.md on every build.

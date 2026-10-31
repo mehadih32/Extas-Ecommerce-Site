@@ -7,6 +7,7 @@
 // S11 · PR 233: every shop page carries the Search Console and Bing verification codes as their meta tags
 // (lib/seo/verification, `seo.verification`; none while no code is set).
 // S11 · PR 234: while `seo.vitals.collect` is on, the page reports its speed (components/shop/VitalsReporter).
+// S13 · PR 257: the tracking beacon (components/shop/TrackingBeacon) while `ads.tracking` is on with a page event ticked.
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -19,8 +20,10 @@ import { verificationMetadata } from '@/lib/seo/verification';
 import { BengaliFontWarm } from '@/components/shop/BengaliFontWarm';
 import { ProblemProbe } from '@/components/shop/ProblemProbe';
 import { VitalsReporter } from '@/components/shop/VitalsReporter';
+import { TrackingBeacon } from '@/components/shop/TrackingBeacon';
 import { BENGALI_FONT_COOKIE, bengaliFontFaces, bengaliFontUrls, shopThemeFontPreloads } from '@/lib/shop/font-preload';
 import { hrefIn } from '@/lib/shop/lang';
+import { ROUTES } from '@/lib/shop/routes';
 import { sweepCss } from '@/lib/shop/sweep';
 
 /** How long the "Bengali fonts are cached" cookie lasts: the files are immutable, so a year (technical, not a policy). */
@@ -39,7 +42,10 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
     'seo.hashLinks': hashLinks,
     'health.problems': problems,
     'seo.vitals': vitals,
-  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals'] as const, c.storeId);
+    'ads.tracking': tracking,
+  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking'] as const, c.storeId);
+  const trackView = tracking.on && tracking.events.view;
+  const trackCheckout = tracking.on && tracking.events.checkout;
   // The Bengali shop switched off: its addresses lead to the English twin.
   if (c.lang === 'bn' && !c.s['language.bengali.enabled']) redirect(hrefIn('en', c.path));
   // The first screen's faces start loading with the page, so they are in before the first paint (the demo's type).
@@ -69,6 +75,7 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
           cfg={{ storeId: c.storeId, slowRequestMs: problems.slowRequestMs, slowLoadMs: problems.slowLoadMs, rageClicks: problems.rageClicks, formErrorRepeats: problems.formErrorRepeats, maxPerPage: problems.maxPerPage }}
         />
       ) : null}
+      {trackView || trackCheckout ? <TrackingBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'], checkoutPath: ROUTES.checkout, view: trackView, checkout: trackCheckout }} /> : null}
       {children}
       {vitals.collect ? <VitalsReporter share={vitals.share} /> : null}
     </div>

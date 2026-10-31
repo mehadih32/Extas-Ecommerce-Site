@@ -47,6 +47,7 @@
     { "id": "messages/templates", "route": "/admin/messages/templates" },
     { "id": "marketing/rules", "route": "/admin/rules" },
     { "id": "marketing/notices", "route": "/admin/rules/notices" },
+    { "id": "marketing/tracking", "route": "/admin/marketing/tracking" },
     { "id": "website/seo", "route": "/admin/website/seo" },
     { "id": "website/redirects", "route": "/admin/website/seo/redirects" },
     { "id": "website/seo-categories", "route": "/admin/website/seo/categories" },

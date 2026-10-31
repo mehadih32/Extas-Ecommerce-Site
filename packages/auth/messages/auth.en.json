@@ -29,7 +29,8 @@
     "seo": "Website and SEO",
     "books": "Books and the ERP account",
     "support": "Support",
-    "health": "Site health"
+    "health": "Site health",
+    "ads": "Ads and tracking"
   },
   "permissions": {
     "settings": {
@@ -250,6 +251,12 @@
       "problems": {
         "manage": "Set a customer problem's status (fixing, fixed with how, could not fix with why, needs the owner)",
         "approve": "Give the owner's go-ahead on a customer problem that needs his permission or his check"
+      }
+    },
+    "ads": {
+      "tracking": {
+        "read": "See Marketing › Tracking: what the shop's server sent to the ad platforms (no customer's details)",
+        "manage": "Switch server-side tracking on or off, choose its events and platforms, allow customer matching and send a test event"
       }
     }
   },

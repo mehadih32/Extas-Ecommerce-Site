@@ -92,6 +92,8 @@ export * from './registry-edge';
 export * from './registry-health';
 // S11 · PR 588 — the Bengali translation gate (registry-bengali.ts, version 84).
 export * from './registry-bengali';
+// S13 · PR 257 — server-side event tracking (registry-tracking.ts, version 85).
+export * from './registry-tracking';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
