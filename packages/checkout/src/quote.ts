@@ -29,6 +29,7 @@ import { z } from 'zod';
 import { advanceAmountOf, detailsFinished, KIND_OF, type AdvanceFlag, type AdvanceView, type CheckoutDetails } from './advance';
 import { giftAdvanceOf } from './gift';
 import { choosePayment, isPrepaid, openMethods, paymentInputSchema, paySettings, rewardOf, rulesPaymentMethod, type PaymentInput, type PaymentView } from './payment';
+import { phoneNormalizeBD } from './pure';
 
 /** PR 560: the details the page sends with a quote once typed (the longest name or number any form takes). */
 export const detailsInputSchema = z.object({ name: z.string().max(500), phone: z.string().max(40) }).strict();
@@ -249,9 +250,12 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
   // the band the customer pays as (a sub-area folded into the city is the city): rules on `delivery.band` see it
   const charged = address.status === 'resolved' ? address.line.quote.band : null;
   const bandCodLimit = charged ? (map.bandById(charged.id)?.codLimitMinor ?? null) : null;
+  // Review R1 (B1): the phone he typed (cleaned), so a code's per-customer limit holds for a guest at quote time too
+  const typed = phoneNormalizeBD(details?.phone ?? input.address?.phone ?? '');
+  const phone = typed.ok ? typed.e164 : null;
   const priceBag = (method: string | null) =>
     input.cartId
-      ? bagView(deps, { storeId: input.storeId, cartId: input.cartId, lang: input.lang, customerId: input.customerId ?? null, bandKey: charged?.key ?? null, paymentMethod: method })
+      ? bagView(deps, { storeId: input.storeId, cartId: input.cartId, lang: input.lang, customerId: input.customerId ?? null, bandKey: charged?.key ?? null, paymentMethod: method, phone })
       : Promise.resolve(emptyBag());
 
   // The choice, first as asked (Cash on Delivery while the owner's switch allows it), then checked against the rules

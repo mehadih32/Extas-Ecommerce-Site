@@ -196,6 +196,8 @@ export async function bagView(
     /** The checkout (S04) knows more than the bag: the band the address was read as and the payment chosen, for rules on them. */
     bandKey?: string | null;
     paymentMethod?: string | null;
+    /** Review R1 (B1): the checkout's phone (E.164), so a code's per-customer limit is checked for a guest too. */
+    phone?: string | null;
   },
 ): Promise<BagView> {
   checkStoreId(input.storeId);
@@ -309,6 +311,7 @@ export async function bagView(
     lines: [...loose.map((r) => ({ id: r.id, variantId: r.variantId, quantity: r.quantity })), ...setPieces.map((r) => ({ id: r.id, variantId: r.variantId, quantity: r.quantity, comboId: r.comboGroupKey }))],
     couponCode: cart.couponCode,
     customerId: input.customerId ?? null,
+    phone: input.phone ?? null,
     bandKey: input.bandKey ?? null,
     paymentMethod: input.paymentMethod ?? null,
     locale: localeOf(input.lang),

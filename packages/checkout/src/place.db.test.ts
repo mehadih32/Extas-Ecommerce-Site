@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { defaultSecurityPolicy, loginCustomer } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { findBag } from '@extas/cart';
+import { findBag, setBagCode } from '@extas/cart';
 import { noteHold, openErpLink } from '@extas/inventory';
 import { captureDraft, checkoutPaused, payAction, payView, placeOrder, type PlaceInput } from './place';
 import { checkoutQuote, viewOf, type CheckoutRequest } from './quote';
@@ -44,12 +44,14 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
   });
 
   /** A visitor's bag, the quote his page shows, and the order he places from it. */
-  async function shown(name: string, opts: { quantity?: number; line?: string; confirmed?: { bandId: string; areaId?: string | null } | null; payment?: PlaceInput['payment']; useWallet?: boolean; customerId?: string } = {}) {
+  async function shown(name: string, opts: { quantity?: number; line?: string; confirmed?: { bandId: string; areaId?: string | null } | null; payment?: PlaceInput['payment']; useWallet?: boolean; customerId?: string; code?: string; phone?: string } = {}) {
     const bag = await f.bag(name, [{ variantId: shirt().id, quantity: opts.quantity }]);
+    if (opts.code) await setBagCode(f.deps(), { storeId: f.S, cartId: bag.cartId, code: opts.code });
     const line = opts.line ?? FORM.address;
-    const req: CheckoutRequest = { storeId: f.S, cartId: bag.cartId, lang: 'en', customerId: opts.customerId ?? null, address: { line, confirmed: opts.confirmed ?? null }, payment: opts.payment ?? null, useWallet: opts.useWallet };
+    const phone = opts.phone ?? FORM.phone;
+    const req: CheckoutRequest = { storeId: f.S, cartId: bag.cartId, lang: 'en', customerId: opts.customerId ?? null, address: { line, confirmed: opts.confirmed ?? null }, payment: opts.payment ?? null, useWallet: opts.useWallet, details: { name: FORM.name, phone } };
     const q = await checkoutQuote(f.deps(), req);
-    const input: PlaceInput = { idempotencyKey: randomUUID(), lang: 'en', form: { ...FORM, address: line }, confirmed: opts.confirmed ?? null, payment: opts.payment ?? null, useWallet: opts.useWallet, fingerprint: q.fingerprint };
+    const input: PlaceInput = { idempotencyKey: randomUUID(), lang: 'en', form: { ...FORM, phone, address: line }, confirmed: opts.confirmed ?? null, payment: opts.payment ?? null, useWallet: opts.useWallet, fingerprint: q.fingerprint };
     return { ...bag, q, input, place: (more: Partial<PlaceInput> = {}) => placeOrder(f.deps(), { storeId: f.S, visitorId: bag.visitorId, customerId: opts.customerId ?? null, ip: '192.0.2.125', input: { ...input, ...more } }) };
   }
   const orderOf = (id: string) => f.t.prisma.order.findUniqueOrThrow({ where: { id }, include: { items: true, events: true, payments: true } });
@@ -78,6 +80,61 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       expect(await code(bad.place({ gps: { lat: 123, lng: 0 } }))).toBe('INVALID_INPUT');
       const odd = await placeOrder(f.deps(), { storeId: f.S, visitorId: bad.visitorId, customerId: null, ip: null, deviceId: 'not-a-device', input: bad.input });
       expect((await f.t.prisma.order.findUniqueOrThrow({ where: { id: odd.orderId }, select: { deviceId: true, piiExpiresAt: true } }))).toEqual({ deviceId: null, piiExpiresAt: null });
+    });
+  });
+
+  describe('review R1 B1 · the code is redeemed in the order’s own transaction', () => {
+    it('a code with one use in all: the first order redeems it; the next is refused with the checkout as it is now', async () => {
+      await f.coupon('TEST-ONCE', 10_000, { usageLimit: 1 });
+      const a = await shown('code-once-a', { code: 'test-once' });
+      const b = await shown('code-once-b', { code: 'test-once', phone: '01800000125' });
+      expect(a.q.bag.summary.offers.find((o) => o.code)).toMatchObject({ code: 'TEST-ONCE', amountMinor: 10_000 });
+      expect(b.q.bag.summary.offers.find((o) => o.code)).toMatchObject({ code: 'TEST-ONCE' });
+      const placed = await a.place();
+      const o = await orderOf(placed.orderId);
+      expect(o.couponCode).toBe('TEST-ONCE');
+      expect(await f.t.prisma.coupon.findFirstOrThrow({ where: { storeId: f.S, code: 'TEST-ONCE' }, select: { usedCount: true } })).toEqual({ usedCount: 1 });
+      expect(await f.t.prisma.couponRedemption.findMany({ where: { orderId: placed.orderId }, select: { phone: true, discountMinor: true } })).toEqual([{ phone: '+8801700000125', discountMinor: 10_000 }]);
+      // the second bag was quoted with the code; placing it now finds it used up: nothing is stored
+      const before = await f.t.prisma.order.count();
+      let err: { code?: string; extra?: { view?: { code?: unknown } } } = {};
+      try {
+        await b.place();
+      } catch (e) {
+        err = e as typeof err;
+      }
+      expect(err.code).toBe('PRICE_CHANGED');
+      expect(await f.t.prisma.order.count()).toBe(before);
+      // the checkout he sees now: the code refused, the price without it — and that order goes through
+      const again = await checkoutQuote(f.deps(), { storeId: f.S, cartId: b.cartId, lang: 'en', address: { line: FORM.address, confirmed: null }, details: { name: FORM.name, phone: '01800000125' } });
+      expect(again.bag.summary.offers.some((x) => x.code)).toBe(false);
+      const r = await b.place({ idempotencyKey: randomUUID(), fingerprint: again.fingerprint });
+      expect((await orderOf(r.orderId)).couponCode).toBeNull();
+    });
+
+    it('one use per customer: a guest is counted by his phone, at the quote and at the order', async () => {
+      await f.coupon('TEST-MINE', 5_000, { perCustomerLimit: 1 });
+      await (await shown('code-mine-a', { code: 'test-mine' })).place();
+      // the same phone again: the quote already says the code is used (no discount), and the order has none
+      const again = await shown('code-mine-b', { code: 'test-mine' });
+      expect(again.q.bag.summary.offers.some((x) => x.code)).toBe(false);
+      expect((await orderOf((await again.place()).orderId)).couponCode).toBeNull();
+      // another phone may use it
+      const other = await shown('code-mine-c', { code: 'test-mine', phone: '01900000125' });
+      expect(other.q.bag.summary.offers.find((x) => x.code)).toMatchObject({ code: 'TEST-MINE' });
+      expect((await orderOf((await other.place()).orderId)).couponCode).toBe('TEST-MINE');
+      expect(await f.t.prisma.coupon.findFirstOrThrow({ where: { storeId: f.S, code: 'TEST-MINE' }, select: { usedCount: true } })).toEqual({ usedCount: 2 });
+    });
+
+    it('two orders at the same moment on the last use: exactly one gets the code', async () => {
+      await f.coupon('TEST-RACE', 5_000, { usageLimit: 1 });
+      const a = await shown('code-race-a', { code: 'test-race', phone: '01600000125' });
+      const b = await shown('code-race-b', { code: 'test-race', phone: '01500000125' });
+      const results = await Promise.allSettled([a.place(), b.place()]);
+      expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+      const refused = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
+      expect((refused.reason as { code?: string }).code).toBe('PRICE_CHANGED');
+      expect(await f.t.prisma.couponRedemption.count({ where: { coupon: { code: 'TEST-RACE' } } })).toBe(1);
     });
   });
 

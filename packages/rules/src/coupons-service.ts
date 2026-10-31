@@ -180,8 +180,12 @@ export async function checkCoupon(db: Db, input: { storeId: number; code: string
  */
 export async function redeemCoupon(tx: Tx, input: { storeId: number; code: string; orderId: string; phone?: string | null; customerId?: string | null; discountMinor: number; now: Date }): Promise<{ redemptionId: string; replayed: boolean }> {
   const code = normaliseCode(input.code);
-  const c = await tx.coupon.findUnique({ where: { storeId_code: { storeId: input.storeId, code } } });
-  if (!c) throw new RulesError('COUPON_NOT_USABLE', 'no such coupon', ['UNKNOWN']);
+  const found = await tx.coupon.findUnique({ where: { storeId_code: { storeId: input.storeId, code } }, select: { id: true } });
+  if (!found) throw new RulesError('COUPON_NOT_USABLE', 'no such coupon', ['UNKNOWN']);
+  // Review R1 (B1): two orders redeeming the same code wait for each other here, so the per-customer count below is read
+  // after the other order's redemption is in (the use count itself is also guarded by the conditional update).
+  await tx.$queryRaw(Prisma.sql`SELECT 1 FROM "Coupon" WHERE "id" = ${found.id}::uuid FOR UPDATE`);
+  const c = await tx.coupon.findUniqueOrThrow({ where: { id: found.id } });
   const again = await tx.couponRedemption.findUnique({ where: { couponId_orderId: { couponId: c.id, orderId: input.orderId } } });
   if (again) return { redemptionId: again.id, replayed: true };
   const check = await checkCoupon(tx, input);
