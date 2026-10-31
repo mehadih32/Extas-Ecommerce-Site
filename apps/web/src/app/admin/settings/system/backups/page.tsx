@@ -8,10 +8,12 @@
 // backup settings card (time, days kept, Drive copies, the monthly drill, Telegram); both need `system.backup`.
 // PR 391: the go-live checks card ("ready for real orders": each place connected, its last copy fresh, its restore
 // drill passed, Telegram on), and Azure Blob's card says whether Blob is connected and the backups' container.
+// PR 396: the Restore card — a backup into the check copy first (system.backup), then the same backup on the live shop
+// with RESTORE typed and the owner's PIN (system.restore), and the last restore of the live shop.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { backupRequests, driveView } from "@extas/jobs";
+import { backupRequests, driveView, restoreRequests } from "@extas/jobs";
 import { registry } from "@extas/settings";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import {
@@ -20,6 +22,7 @@ import {
   type BackupSettings,
 } from "@/components/admin/settings/BackupPlanScreen";
 import { DriveCard } from "@/components/admin/settings/BackupsScreen";
+import { RestoreCard } from "@/components/admin/settings/RestoreScreen";
 import {
   PageHead,
   SectionTabs,
@@ -85,7 +88,18 @@ export default async function BackupsPage() {
     t(d, `backups.${k}`, vars);
   const vault = access.deps.vault;
   const r = access.deps.resolver;
-  const [state, drive, settings, plan, drill, alerts, blob, gateSet, requests] =
+  const [
+    state,
+    drive,
+    settings,
+    plan,
+    drill,
+    alerts,
+    blob,
+    gateSet,
+    requests,
+    restores,
+  ] =
     await Promise.all([
       runtimeState(),
       vault
@@ -98,12 +112,16 @@ export default async function BackupsPage() {
       r.value("backups.blob"),
       r.value("backups.gate"),
       backupRequests(access.deps.db, 10),
+      restoreRequests(access.deps.db),
     ]);
   const gate = await backupGateNow(access.deps, state);
   const blobLive = gate.checks.find((x) => x.key === "blobLive")?.ok ?? false;
   const canWrite =
     Boolean(vault) && (access.guard.permissions?.has("vault.write") ?? false);
   const canBackup = access.guard.permissions?.has("system.backup") ?? false;
+  const canRestore = access.guard.permissions?.has("system.restore") ?? false;
+  const live = (key: string) =>
+    gate.checks.find((x) => x.key === key)?.ok ?? false;
   const values: BackupSettings = {
     drive: settings,
     plan,
@@ -398,6 +416,19 @@ export default async function BackupsPage() {
             ))}
           </section>
         </div>
+      </div>
+
+      <div className="a2-mt12">
+        <RestoreCard
+          d={d}
+          locale={view.locale}
+          timeZone={view.timeZone}
+          initial={restores}
+          lastLive={state.restore.production}
+          canStage={canBackup}
+          canRestore={canRestore}
+          connected={{ blob: blobLive, drive: live("driveLive") }}
+        />
       </div>
     </div>
   );

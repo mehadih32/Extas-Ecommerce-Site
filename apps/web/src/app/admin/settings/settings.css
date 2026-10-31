@@ -34,3 +34,5 @@
 .adm2 .a2-ckb input{width:18px;height:18px;flex:none}
 .adm2 .a2-up svg{transform:rotate(180deg)}
 .adm2 .a2-sch>div.a2-lyctl{flex:none;display:flex;gap:4px}
+/* PR 391/396 (Backups): a status pill at the end of a rule row keeps its own width (the row's spans grow). */
+.adm2 .a2-rule>.a2-pill{flex:none}

@@ -13,6 +13,11 @@
 //                                              whole, checked against its setting (system.backup)
 //   POST  /api/admin/backups/request           PR 507 {kind: BACKUP|RESTORE_DRILL, source?} the server runs it within
 //                                              a few minutes; one open request of each kind (system.backup)
+//   POST  /api/admin/backups/restore/staging   PR 396 {source?, backup?, pointInTime?} a backup into the check copy,
+//                                              never the live database (system.backup)
+//   POST  /api/admin/backups/restore/production PR 396 {stagingOfId, confirm: "RESTORE", pin} the same backup on the
+//                                              live shop: only the newest check copy that passed; the owner's PIN
+//                                              (system.restore); the owner hears about it on Telegram
 // Every action is in the audit log without a value; the owner hears about a new connection or a disconnect on Telegram.
 import { createConnections, sendOwnerAlert, telegramAdapters } from '@extas/adapters';
 import { audit, verifyOwnerPin, type Actor, type RequestContext } from '@extas/auth';
@@ -24,6 +29,9 @@ import {
   driveView,
   pollDriveConnect,
   requestBackup,
+  requestProductionRestore,
+  requestStagingRestore,
+  restoreRequests,
   setDriveClient,
   startDriveConnect,
   type BackupDeps,
@@ -61,7 +69,7 @@ async function pinCheck(deps: AdminDeps, actor: Actor, ctx: RequestContext, pin:
 }
 
 /** A Telegram line to the owner, in Bengali (the owner's language), from messages/admin-backups.bn.json `alerts.*`. */
-async function alertOwner(deps: AdminDeps, key: 'clientChanged' | 'connected' | 'disconnected', vars: Record<string, string> = {}): Promise<void> {
+async function alertOwner(deps: AdminDeps, key: 'clientChanged' | 'connected' | 'disconnected' | 'restoreAsked', vars: Record<string, string> = {}): Promise<void> {
   try {
     const [testS, cacheS, store] = await Promise.all([
       deps.resolver.value('system.integrationTestTimeoutSeconds'),
@@ -129,13 +137,20 @@ export async function backupsRoute(request: Request, deps: AdminDeps | null, pat
   const m = request.method.toUpperCase();
   const where = path.join('/');
   const reads = ['', 'drive/list'];
-  const writes = ['drive/client', 'drive/connect', 'drive/poll', 'drive/disconnect', 'request'];
+  const writes = ['drive/client', 'drive/connect', 'drive/poll', 'drive/disconnect', 'request', 'restore/staging', 'restore/production'];
   const puts = ['settings'];
   if (![...reads, ...writes, ...puts].includes(where)) return fail(404, 'not-found');
   if ((reads.includes(where) && m !== 'GET') || (writes.includes(where) && m !== 'POST') || (puts.includes(where) && m !== 'PUT')) {
     return fail(405, 'method-not-allowed');
   }
-  const permission = m === 'GET' ? 'system.read' : where === 'settings' || where === 'request' ? 'system.backup' : 'vault.write';
+  const permission =
+    m === 'GET'
+      ? 'system.read'
+      : where === 'restore/production'
+        ? 'system.restore'
+        : where === 'settings' || where === 'request' || where === 'restore/staging'
+          ? 'system.backup'
+          : 'vault.write';
   const g = await guardAdmin(request, deps, { permission });
   if (g instanceof Response) return g;
   // The Drive needs the vault; the backup settings and the requests do not (PR 507).
@@ -146,9 +161,15 @@ export async function backupsRoute(request: Request, deps: AdminDeps | null, pat
     audit(deps!.db, g.actor, { action, entityType: 'Integration', entityId: 'googleDrive', before: null, after, storeId: null }, g.ctx);
   try {
     if (where === '') {
-      const [drive, state, settings, requests] = await Promise.all([deps!.vault ? driveView(d) : null, runtimeState(), settingsNow(deps!), backupRequests(deps!.db)]);
+      const [drive, state, settings, requests, restores] = await Promise.all([
+        deps!.vault ? driveView(d) : null,
+        runtimeState(),
+        settingsNow(deps!),
+        backupRequests(deps!.db),
+        restoreRequests(deps!.db),
+      ]);
       const gate = await backupGateNow(deps!, state);
-      return json({ ok: true, drive, server: state.backups, restoreTest: state.restoreTest, drill: state.drill, settings, requests, gate });
+      return json({ ok: true, drive, server: state.backups, restoreTest: state.restoreTest, drill: state.drill, settings, requests, gate, restores, restore: state.restore });
     }
     if (where === 'settings') {
       const b = await body(request);
@@ -187,6 +208,20 @@ export async function backupsRoute(request: Request, deps: AdminDeps | null, pat
       const r = await requestBackup(deps!.db, { kind: b.kind, source: b.source, actorId: g.actor.staffUserId ?? null });
       await audit(deps!.db, g.actor, { action: `backups.request.${r.kind.toLowerCase()}`, entityType: 'BackupRequest', entityId: r.id, before: null, after: { kind: r.kind, source: r.source }, storeId: null }, g.ctx);
       return json({ ok: true, request: r });
+    }
+    if (where === 'restore/staging') {
+      const b = await body(request);
+      const r = await requestStagingRestore(deps!.db, { source: b.source, backup: b.backup, pointInTime: b.pointInTime, actorId: w.actorId, now: deps!.now?.() });
+      await audit(deps!.db, g.actor, { action: 'backups.restore.staging', entityType: 'RestoreRequest', entityId: r.id, before: null, after: { source: r.source, backup: r.backup, pointInTime: r.pointInTime }, storeId: null }, g.ctx);
+      return json({ ok: true, restore: r });
+    }
+    if (where === 'restore/production') {
+      const b = await body(request);
+      await pinCheck(deps!, g.actor, g.ctx, b.pin, 'backups.restore.production');
+      const r = await requestProductionRestore(deps!.db, { stagingOfId: b.stagingOfId, confirm: b.confirm, actorId: w.actorId });
+      await audit(deps!.db, g.actor, { action: 'backups.restore.production', entityType: 'RestoreRequest', entityId: r.id, before: null, after: { source: r.source, backup: r.backup, pointInTime: r.pointInTime, stagingOfId: r.stagingOfId }, storeId: null }, g.ctx);
+      await alertOwner(deps!, 'restoreAsked', { backup: r.backup ?? '' });
+      return json({ ok: true, restore: r });
     }
     if (where === 'drive/list') return json({ ok: true, ...(await driveBackups(d, w)) });
     const b = await body(request);

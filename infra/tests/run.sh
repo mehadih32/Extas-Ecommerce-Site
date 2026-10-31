@@ -644,6 +644,60 @@ check "request: a drill from the admin writes its outcome for the vault sync" \
   "$rc:$(jq -r '.ok|tostring' "$BR/state/requests/$RQ.json"):$(jq -r .detail "$BR/state/requests/$RQ.json" | grep -c '^local: ok')" "0:true:1"
 rc=0; "${BENV[@]}" bash "$B/extas-backup" request "../x" BACKUP >/dev/null 2>&1 || rc=$?
 check "request: a bad id or kind is refused" "$rc:$("${BENV[@]}" bash "$B/extas-backup" request "$RQ" DROP >/dev/null 2>&1; echo $?)" "2:2"
+# PR 396: restores asked for in the admin. Staging restores into the check copy and keeps proof of the backup it used;
+# production runs only for that very staging request, copy, backup and minute, recently, keeps the old data and starts
+# the shop again; a Drive dump goes in under a new name and the names are swapped.
+R1=0190a3c4-0000-7000-8000-0000000000b1; R2=0190a3c4-0000-7000-8000-0000000000b2; R3=0190a3c4-0000-7000-8000-0000000000b3
+rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$R1" staging local - - - >/dev/null 2>&1 || rc=$?
+SB="$(jq -r .backup "$BR/state/restore-staging.json")"
+check "restore request: staging from the server's copy, the backup it used kept as proof" \
+  "$rc:$(jq -r '.ok|tostring' "$BR/state/requests/$R1.json"):$(jq -r .backup "$BR/state/requests/$R1.json"):$(jq -r '.id + " " + (.ok|tostring) + " " + .from' "$BR/state/restore-staging.json")" \
+  "0:true:$SB:$R1 true local"
+check "restore request: the staging backup is a real stamp" "$(grep -cE '^[0-9]{8}-[0-9]{4}$' <<<"$SB")" "1"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$R2" production local "$SB" - "$R2" >/dev/null 2>&1 || rc=$?
+check "restore request: production for another staging request is refused" \
+  "$rc:$(jq -r '.ok|tostring' "$BR/state/requests/$R2.json"):$(jq -r .result "$BR/state/restore-production.json"):$(jq -r .detail "$BR/state/requests/$R2.json" | grep -c 'restore it to staging first')" "1:false:refused:1"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$R2" production local "$A" - "$R1" >/dev/null 2>&1 || rc=$?
+check "restore request: production of another backup than the checked one is refused" "$rc:$(jq -r '.ok|tostring' "$BR/state/requests/$R2.json")" "1:false"
+cp "$BR/state/restore-staging.json" "$T/staging.json"
+jq '.finishedAt = "2026-01-01T00:00:00+06:00"' "$T/staging.json" > "$BR/state/restore-staging.json"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$R2" production local "$SB" - "$R1" >/dev/null 2>&1 || rc=$?
+check "restore request: a check copy older than RESTORE_STAGING_VALID_H is refused" "$rc:$(jq -r '.ok|tostring' "$BR/state/requests/$R2.json")" "1:false"
+cp "$T/staging.json" "$BR/state/restore-staging.json"
+mkdir -p "$BR/data/postgres/pgdata"; echo "live before" > "$BR/data/postgres/pgdata/marker"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$R3" production local "$SB" - "$R1" >/dev/null 2>&1 || rc=$?
+check "restore request: production after its staging passed — the backup in place, the old data folder kept" \
+  "$rc:$(jq -r '.ok|tostring' "$BR/state/requests/$R3.json"):$(jq -r '.result + " " + .backup' "$BR/state/restore-production.json"):$(cat "$BR/data/postgres/pgdata.before-restore-"*/marker):$([ -e "$BR/data/postgres/pgdata/marker" ] && echo old || echo new):$(grep -c '^restore_command' "$BR/data/postgres/pgdata/postgresql.auto.conf")" \
+  "0:true:ok $SB:live before:new:0"
+check "restore request: production says where the old data is" "$(jq -r .detail "$BR/state/restore-production.json" | grep -c 'previous data folder is kept at')" "1"
+rm -rf "$BR/data/postgres"
+D1=0190a3c4-0000-7000-8000-0000000000c1; D2=0190a3c4-0000-7000-8000-0000000000c2
+"${BENV[@]}" bash "$B/extas-restore" request "$D1" staging drive "$A" - - >/dev/null 2>&1 || true
+: > "$T/docker-exec.log"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$D2" production drive "$A" - "$D1" >/dev/null 2>&1 || rc=$?
+check "restore request: a Drive backup by its stamp, then on the live shop under a new name, the names swapped" \
+  "$rc:$(jq -r .backup "$BR/state/requests/$D1.json"):$(grep -c 'pg_restore -U extas -d extas_restore_' "$T/docker-exec.log"):$(grep -c 'ALTER DATABASE extas RENAME TO extas_before_restore_.*; ALTER DATABASE extas_restore_.* RENAME TO extas;' "$T/docker-exec.log")" \
+  "0:$A:1:1"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$R2" production ftp - - - >/dev/null 2>&1 || rc=$?
+check "restore request: a copy, stamp or minute it does not know is refused" \
+  "$rc:$(jq -r '.ok|tostring' "$BR/state/requests/$R2.json"):$("${BENV[@]}" bash "$B/extas-restore" request "$R2" staging local '../x' - - >/dev/null 2>&1; echo $?):$("${BENV[@]}" bash "$B/extas-restore" request "$R2" staging local - 'now; rm' - >/dev/null 2>&1; echo $?)" "2:false:2:2"
+NOWZ="$(date -u +%Y-%m-%dT%H:%M:00Z)"
+rc=0; "${BENV[@]}" bash "$B/extas-restore" request "$R1" staging blob - "$NOWZ" - >/dev/null 2>&1 || rc=$?
+check "restore request: staging to a minute (UTC from the admin), the minute kept with the proof" "$rc:$(jq -r '.at + " " + .from' "$BR/state/restore-staging.json")" "0:$NOWZ blob"
+# One restore at a time (PR 396): while another holds state/restore.lock, a test or a staging restore waits at most
+# RESTORE_LOCK_WAIT_S, then gives up without touching the check copy (no docker call) and says why; the drill's and a
+# request's own runs share the lock of the run that started them (the drill and request checks above).
+{ cat "$T/server.conf"; echo 'RESTORE_LOCK_WAIT_S=1'; } > "$T/server-lock.conf"
+cp "$BR/state/restore-staging.json" "$T/staging.json"; : > "$T/docker-exec.log"
+exec 8>"$BR/state/restore.lock"; flock 8
+rc=0; "${BENV[@]}" EXTAS_CONFIG_FILE="$T/server-lock.conf" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
+rq=0; "${BENV[@]}" EXTAS_CONFIG_FILE="$T/server-lock.conf" bash "$B/extas-restore" request "$R3" staging local - - - >/dev/null 2>&1 || rq=$?
+check "restore lock: a second run gives up after the wait, no docker call, the reason written for the admin" \
+  "$rc:$(jq -r .result "$BR/state/restore-test.json"):$(jq -r .detail "$BR/state/restore-test.json" | grep -c 'another restore, restore test or drill was still running'):$rq:$(jq -r '.ok|tostring' "$BR/state/requests/$R3.json"):$(wc -l < "$T/docker-exec.log"):$(cmp -s "$T/staging.json" "$BR/state/restore-staging.json" && echo kept)" \
+  "1:fail:1:1:false:0:kept"
+exec 8>&-
+rc=0; "${BENV[@]}" EXTAS_CONFIG_FILE="$T/server-lock.conf" bash "$B/extas-restore" test >/dev/null 2>&1 || rc=$?
+check "restore lock: free again, the next test runs" "$rc:$(jq -r .result "$BR/state/restore-test.json")" "0:ok"
 # Every photo back, from each copy: deleted photos stay deleted, every checksum is checked, the live folder untouched
 for from in local blob drive; do
   rm -rf "$T/nvme/scratch"
@@ -1196,6 +1250,12 @@ check "vault sync (507): a finished request goes back once and is moved aside" \
   "$(tail -1 "$T/done.log" | grep -c "\"id\":\"$I1\",\"ok\":true"):$([ -f "$T/root/state/requests/reported/$I1.json" ] && echo moved)" "1:moved"
 check "vault sync (507): a taken drill starts in its own unit, nothing else does" \
   "$(grep -c "^--no-block --collect --unit extas-request-0190a3c4 .*/extas-backup request $I2 RESTORE_DRILL blob$" "$T/run.log"):$(wc -l < "$T/run.log"):$(jq -r .detail "$T/root/state/vault-sync.json")" "1:1:no file changed; started 1 request(s)"
+# PR 396: a restore goes to extas-restore with its backup, minute and staging request ("-" for none)
+I4=0190a3c4-0000-7000-8000-000000000004; I5=0190a3c4-0000-7000-8000-000000000005
+: > "$T/run.log"
+"${VENV[@]}" FAKE_FP=fp2 FAKE_TG="" FAKE_REQ="[{\"id\":\"$I4\",\"kind\":\"RESTORE_STAGING\",\"source\":\"blob\",\"backup\":null,\"at\":\"2026-10-31T01:15:00.000Z\",\"stagingOf\":null},{\"id\":\"$I5\",\"kind\":\"RESTORE_PRODUCTION\",\"source\":\"drive\",\"backup\":\"20261031-0230\",\"at\":null,\"stagingOf\":\"$I4\"},{\"id\":\"$I3\",\"kind\":\"RESTORE_STAGING\",\"source\":\"ftp\"}]" "$B/extas-vault-sync"
+check "vault sync (396): restores start in their own units with what to restore, a bad copy never does" \
+  "$(grep -c "extas-restore request $I4 staging blob - 2026-10-31T01:15:00.000Z -$" "$T/run.log"):$(grep -c "extas-restore request $I5 production drive 20261031-0230 - $I4$" "$T/run.log"):$(wc -l < "$T/run.log")" "1:1:2"
 "${VENV[@]}" FAKE_FP=fp2 FAKE_TG="" FAKE_RUN_FAILS=1 FAKE_REQ="[{\"id\":\"$I3\",\"kind\":\"BACKUP\",\"source\":null}]" "$B/extas-vault-sync"
 check "vault sync (507): a request that cannot start is reported failed" "$(jq -r '.ok|tostring' "$T/root/state/requests/$I3.json")" "false"
 "${VENV[@]}" FAKE_FP=fp3 FAKE_TG="" FAKE_SETTINGS="BACKUP_TIME='01:15'\nBACKUP_DRILL_ON='yes'\nBACKUP_DRILL_DAY='9'\nBACKUP_DRILL_TIME='04:05'\nBACKUP_TIME='\$(touch /tmp/x)'\n" "$B/extas-vault-sync"
