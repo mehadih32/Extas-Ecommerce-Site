@@ -38,6 +38,10 @@
     "sitemaps": {
       "label": "Sitemaps",
       "help": "The list of the shop's pages that search engines read at /sitemap.xml: one file per kind (pages, collections, products, sets), each split when it grows long. Made from the catalogue on request and kept for the set minutes, so a new product appears within that time. It lists only pages that may be listed, and only the Bengali pages marked ready."
+    },
+    "robots": {
+      "label": "Robots and AI assistants",
+      "help": "What /robots.txt tells robots. While the shop is closed to search engines every robot is kept out. Once open, robots read the shop except the admin and a customer's own pages (bag, checkout, account), plus any paths you add. AI robots (ChatGPT, Claude, Perplexity, Google's AI) may read it as shipped, so AI assistants can name the shop; switch them off to keep the listed ones out."
     }
   },
   "defaults": {
