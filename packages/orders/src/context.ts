@@ -55,6 +55,9 @@ export const ORDER_PERMISSIONS = [
   // S06 · PR 544: the risk rules list and its switches
   'risk.rules.read',
   'risk.rules.write',
+  // S06 · PR 162: the blocklist (list a number, undo a listing)
+  'risk.block',
+  'risk.unblock',
   // S06 · PR 542: "Request advance" from the order
   'orders.advance.request',
   // S08 · PR 185: exchanges and returns (ORD-05)

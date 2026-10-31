@@ -148,6 +148,10 @@ export const PERMISSIONS = {
   // off. A rule only marks and proposes; switching it never blocks anyone, moves money or changes COD, a price or a charge.
   'risk.rules.read': { group: 'orders' },
   'risk.rules.write': { group: 'orders' },
+  // S06 · PR 162 — the blocklist: list a phone number with a reason (owner, manager and customer-facing staff, answer 3),
+  // and undo a listing with a reason. Listing never cancels an order or tells the customer; a person decides.
+  'risk.block': { group: 'orders' },
+  'risk.unblock': { group: 'orders' },
   // S06 · PR 542 — ask a customer for an advance from the order ("Request advance"): the pay link, its SMS/WhatsApp and a
   // call task. The order waits for the money; nothing moves money, changes COD, a price or a charge, or blocks anyone.
   'orders.advance.request': { group: 'orders' },

@@ -50,6 +50,7 @@ export * from './registry-shipping';
 export * from './registry-cache';
 export * from './registry-advance';
 export * from './registry-risk-levels';
+export * from './registry-risk-s06';
 export * from './registry-advance-request';
 export * from './registry-wallet';
 export * from './registry-courier-sync';

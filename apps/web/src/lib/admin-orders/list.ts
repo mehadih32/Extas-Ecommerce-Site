@@ -144,6 +144,8 @@ export function flagChips(view: AdminView, r: od.OrderRow, labels: ListLabels): 
   if (r.flags.includes('TWO_SIZES_OTHER')) out.push({ label: t(d, 'orders.flag.twoSizesOther'), tone: 'mute' });
   // PR 161: the watch mark a risk level put on the order
   if (r.flags.includes(od.RISK_WATCH_FLAG)) out.push({ label: t(d, 'orders.flag.riskWatch'), tone: 'warn' });
+  // PR 162: the number (or the same person) is on the blocklist; a person decides, nothing was cancelled
+  if (r.flags.includes(od.BLOCKLIST_FLAG)) out.push({ label: t(d, 'orders.flag.blocklist'), tone: 'bad' });
   if (r.orderGroupId) out.push({ label: t(d, 'orders.flag.merged'), tone: 'info' });
   for (const f of r.internalFlags) out.push({ label: labels.flags.get(f) ?? f, tone: 'gold' });
   if (r.source !== 'WEBSITE') out.push({ label: t(d, `orders.source.${r.source}`), tone: 'line' });

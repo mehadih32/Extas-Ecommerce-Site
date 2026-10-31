@@ -67,6 +67,8 @@ export const KNOWN_ERRORS = [
   'ORDER_REFUSED',
   // PR 526: a return reason on a parcel that did not come back
   'NOT_RETURNED',
+  // PR 162: "Add to blocklist" for a number listed already
+  'ALREADY_LISTED',
   'FORBIDDEN',
   'UNAUTHENTICATED',
   'network',

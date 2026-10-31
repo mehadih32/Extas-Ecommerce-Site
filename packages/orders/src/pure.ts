@@ -88,6 +88,8 @@ export const ORDER_COMMANDS = [
   // PR 161: the steps of the order's risk level written on it (a watch mark, a call task; the status stays — the level's
   // hold is its own `hold` command)
   'riskLevel',
+  // PR 162: a new order from a number on the blocklist marked for the team (the status stays; a hold is its own command)
+  'blocklistMatch',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
   'awaitAdvance',
   'recordAdvance',
@@ -157,6 +159,8 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   riskSection: OPEN_STATES,
   // PR 161: written after a score that put the order in a level with steps, while it is open
   riskLevel: OPEN_STATES,
+  // PR 162: marked when it lands while it is open
+  blocklistMatch: OPEN_STATES,
   // PR 542: "Send again" on an order waiting for its advance
   advanceResend: ['AWAITING_ADVANCE'],
   // PR 541 (SIM-F-014, F-002): a courier is booked for a confirmed order not yet handed over (the status stays; S08's

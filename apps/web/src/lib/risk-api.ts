@@ -13,7 +13,13 @@
 //   GET   /api/admin/risk/advance   PR 542: the advance request card — auto (off as it ships), the ways ticked first, the
 //                                   payment service of the pay link, whether the levels are on, the version (risk.rules.read)
 //   PUT   /api/admin/risk/advance   {value, version?} saves it whole; a stale version is 409 STALE (risk.rules.write)
-// A switch only decides whether a rule marks and proposes: nothing here blocks anyone, decides an order, moves money or
+//   GET   /api/admin/risk/blocklist PR 162: the listed numbers (reason, who, when), the newest undone ones, the switch
+//                                   (risk.rules.read)
+//   POST  /api/admin/risk/blocklist {phone | orderId, reason} lists a number (risk.block); listed already is 409
+//                                   ALREADY_LISTED
+//   PUT   /api/admin/risk/blocklist {value} the switch, what a match gets, the hold reason (risk.rules.write)
+//   POST  /api/admin/risk/blocklist/<id>/unblock {reason} undoes a listing, the row kept (risk.unblock)
+// A switch only decides whether a rule marks and proposes (the blocklist: marks or holds for a person): nothing here cancels, decides an order, moves money or
 // changes COD, a price or a charge. The screen is Orders → Risk rules (ORD-06, /admin/orders/risk-rules).
 import * as od from '@extas/orders';
 import { body, fail, type AdminDeps } from './admin-auth';
@@ -34,6 +40,19 @@ export async function riskRoute(request: Request, deps: AdminDeps | null, path: 
     if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.advanceSettings(x.deps, x.who)) }));
     if (m === 'PUT') return handle(request, deps, 'risk.rules.write', async (x) => ({ ...(await od.saveAdvanceSettings({ ...x.deps, settings: deps!.resolver }, x.who, await body(request))) }));
     return notAllowed();
+  }
+  if (path[0] === 'blocklist') {
+    if (path.length === 1) {
+      if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.blocklist(x.deps, x.who)) }));
+      if (m === 'POST') return handle(request, deps, 'risk.block', async (x) => ({ ...(await od.blockNumber(x.deps, x.who, await body(request))) }));
+      if (m === 'PUT') return handle(request, deps, 'risk.rules.write', async (x) => ({ ...(await od.saveBlocklist({ ...x.deps, settings: deps!.resolver }, x.who, await body(request))) }));
+      return notAllowed();
+    }
+    if (path.length === 3 && path[2] === 'unblock') {
+      if (m === 'POST') return handle(request, deps, 'risk.unblock', async (x) => ({ ...(await od.unblockNumber(x.deps, x.who, path[1]!, await body(request))) }));
+      return notAllowed();
+    }
+    return notFound();
   }
   if (path[0] !== 'rules' || path.length > 1) return notFound();
   if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.riskRules(x.deps, x.who)) }));

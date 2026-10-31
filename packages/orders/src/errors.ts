@@ -109,7 +109,9 @@ export type OrdersErrorCode =
   /** PR 612: the parcel is not expected back (`data.why`: NO_RETURN_OPEN, ALREADY_ON_LIST, NOT_FOUND); take it with a note. */
   | 'NOT_EXPECTED'
   /** PR 612, 614: the order was never sent to the store's ERP on contract v6 (`data.orderNumber`). */
-  | 'NOT_IN_ERP';
+  | 'NOT_IN_ERP'
+  /** PR 162: this number is on the blocklist already (one listing at a time; undo it first to list it again). */
+  | 'ALREADY_LISTED';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
