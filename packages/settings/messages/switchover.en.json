@@ -8,6 +8,10 @@
       "queuedV5Orders": {
         "label": "Orders still waiting in the old form at the switch",
         "help": "An order that never reached the ERP before the switch: send it again in the new form (one line per piece), like any new order, or keep it for a person to send from the ERP link page."
+      },
+      "mode": {
+        "label": "How this store switches to the new ERP contract",
+        "help": "Fresh start (as it ships): the ERP does not move old website orders and has no cost of goods for the days before, so the store starts clean on the switch day: no moved orders, an opening balance of 0, no transfer, no days filled before. The owner, his PIN, a dry run and the date typed back stay. The ERP's list: the earlier way, for an ERP that sends the moved orders and the cost of goods."
       }
     },
     "link": {

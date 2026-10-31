@@ -3,7 +3,8 @@
 // the API key, webhook secret and signing secret go to the vault under this store id only), what was last synced each
 // way, the last daily summary the ERP accepted, what is waiting (orders, v5 orders kept at the switch, exchanges,
 // summaries), the balance Retail owes by the shop's books and by the ERP's, the books match state, the switch-over to
-// contract v6 (a dry run first, then the owner with his PIN and the ERP's date typed back), the "ERP asks the shop" card
+// contract v6 (a dry run first, then the owner with his PIN and the switch date typed back; CN-033: the way, a fresh
+// start as it ships or the ERP's list, chosen by the owner per store), the "ERP asks the shop" card
 // (moved here from Keys & connections, Bhandari follow-up 524) and, for the owner, "Start a new link". Seeing needs
 // `vault.read` in that store; the dry run and sending a held order `vault.write`; the switch and a new link the owner.
 // Words: messages/admin-erp-link.*.json (`erpLink.*`); the forms are the Books pages' (`bk.*`).
@@ -89,6 +90,10 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
   const dryFresh = v.dryRunFresh;
   const switched = s.model === 'v6' && Boolean(s.link?.switchedAt);
   const kindCount = (k: (typeof KINDS)[number]) => (plan?.orders ?? []).filter((o) => o.kind === k).length;
+  // CN-033: the way the store switches now, and the way the last dry run saw (a report from before CN-033 is the ERP's list).
+  const mode = s.switchOver.mode;
+  const fresh = mode === 'fresh-start';
+  const planFresh = plan?.mode === 'fresh-start';
 
   const picker =
     v.stores.length > 1 ? (
@@ -237,7 +242,30 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
           </p>
         ) : (
           <>
-            <p className="a2-sm a2-mute a2-mt6">{e('switch.sub')}</p>
+            <p className="a2-sm a2-mute a2-mt6">{e(fresh ? 'switch.subFresh' : 'switch.sub')}</p>
+            <div className="a2-mt12" data-testid="erp-link-mode" data-mode={mode}>
+              <p className="a2-sm">
+                {e('switch.mode.now')} <span className={`a2-pill ${fresh ? 'ok' : 'line'}`}>{e(`switch.mode.${mode}`)}</span>
+              </p>
+              <p className="a2-xs a2-mute a2-mt6">{e(`switch.mode.${mode}Hint`)}</p>
+              {v.owner ? (
+                <div className="a2-mt6">
+                  <BooksForm
+                    dict={bd}
+                    url={api}
+                    body={{ action: 'setMode' }}
+                    fields={[{ name: 'mode', label: e('switch.mode.field'), kind: 'select', value: mode, options: (['fresh-start', 'erp-list'] as const).map((x) => ({ value: x, label: e(`switch.mode.${x}`) })) }]}
+                    label={e('switch.mode.change')}
+                    busyLabel={e('switch.mode.busy')}
+                    sendLabel={e('switch.mode.send')}
+                    warn={e('switch.mode.warn')}
+                    done={e('switch.mode.done')}
+                    tone="ghost"
+                    testId="erp-link-mode-set"
+                  />
+                </div>
+              ) : null}
+            </div>
             <div className="a2-mt12" data-testid="erp-link-dry">
               <p className="a2-sm">{dry ? e('switch.lastDry', { at: at(dry.createdAt) }) : e('switch.noDry')}</p>
               {dry ? (
@@ -260,33 +288,45 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
               ) : null}
               {dry && dry.ok && !dryFresh ? <p className="a2-xs a2-note a2-mt6">{e('switch.stale', { h: n(s.switchOver.dryRunMaxHours) })}</p> : null}
               {plan ? (
-                <ul className="a2-stack a2-mt12" data-testid="erp-link-report">
+                <ul className="a2-stack a2-mt12" data-testid="erp-link-report" data-mode={planFresh ? 'fresh-start' : 'erp-list'}>
                   <li className="a2-between a2-sm" style={{ gap: 8 }}>
                     <span>{e('switch.report.switchDate')}</span>
                     <b>{day(plan.switchDate)}</b>
+                  </li>
+                  <li className="a2-between a2-sm" style={{ gap: 8, flexWrap: 'wrap' }}>
+                    <span>{e('switch.report.mode')}</span>
+                    <b>{e(`switch.mode.${planFresh ? 'fresh-start' : 'erp-list'}`)}</b>
                   </li>
                   <li className="a2-between a2-sm" style={{ gap: 8 }}>
                     <span>{e('switch.report.opening')}</span>
                     <b className="a2-num">{m(plan.openingBalanceMinor)}</b>
                   </li>
-                  <li className="a2-between a2-sm" style={{ gap: 8 }}>
-                    <span>{e('switch.report.transfer')}</span>
-                    <b className="a2-num">{m(plan.transferMinor ?? 0)}</b>
-                  </li>
-                  <li className="a2-sm">
-                    <span>{e('switch.report.orders')}</span>
-                    <div className="a2-gap8 a2-mt6" style={{ flexWrap: 'wrap' }}>
-                      {KINDS.map((k) => (
-                        <span key={k} className="a2-pill line">
-                          {e(`switch.kind.${k}`)} · {n(kindCount(k))}
-                        </span>
-                      ))}
-                    </div>
-                  </li>
-                  <li className="a2-between a2-sm" style={{ gap: 8 }}>
-                    <span>{e('switch.report.backfill')}</span>
-                    <b>{n(Object.keys(plan.backfill?.goodsMinor ?? {}).length)}</b>
-                  </li>
+                  {planFresh ? (
+                    <li className="a2-xs a2-note" data-testid="erp-link-fresh-note">
+                      {e('switch.report.freshNote')}
+                    </li>
+                  ) : (
+                    <>
+                      <li className="a2-between a2-sm" style={{ gap: 8 }}>
+                        <span>{e('switch.report.transfer')}</span>
+                        <b className="a2-num">{m(plan.transferMinor ?? 0)}</b>
+                      </li>
+                      <li className="a2-sm">
+                        <span>{e('switch.report.orders')}</span>
+                        <div className="a2-gap8 a2-mt6" style={{ flexWrap: 'wrap' }}>
+                          {KINDS.map((k) => (
+                            <span key={k} className="a2-pill line">
+                              {e(`switch.kind.${k}`)} · {n(kindCount(k))}
+                            </span>
+                          ))}
+                        </div>
+                      </li>
+                      <li className="a2-between a2-sm" style={{ gap: 8 }}>
+                        <span>{e('switch.report.backfill')}</span>
+                        <b>{n(Object.keys(plan.backfill?.goodsMinor ?? {}).length)}</b>
+                      </li>
+                    </>
+                  )}
                   <li className="a2-between a2-sm" style={{ gap: 8, flexWrap: 'wrap' }}>
                     <span>{e('switch.report.queuedV5')}</span>
                     <b>{plan.queuedV5?.count ? `${n(plan.queuedV5.count)} · ${e(`switch.action.${plan.queuedV5.action}`)}` : e('switch.report.noneWord')}</b>
@@ -299,7 +339,7 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
               ) : null}
               {canWrite ? (
                 <div className="a2-mt12">
-                  <BooksForm dict={bd} url={api} body={{ action: 'dryRun' }} fields={[]} label={e('switch.dryRun')} busyLabel={e('switch.dryRunBusy')} sendLabel={e('switch.dryRunSend')} warn={e('switch.dryRunWarn')} done={e('switch.dryRunDone')} tone="ghost" testId="erp-link-dryrun" />
+                  <BooksForm dict={bd} url={api} body={{ action: 'dryRun' }} fields={[]} label={e('switch.dryRun')} busyLabel={e('switch.dryRunBusy')} sendLabel={e('switch.dryRunSend')} warn={e(fresh ? 'switch.dryRunWarnFresh' : 'switch.dryRunWarn')} done={e('switch.dryRunDone')} tone="ghost" testId="erp-link-dryrun" />
                 </div>
               ) : null}
             </div>
@@ -311,7 +351,7 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
                     url={api}
                     body={{ action: 'switch' }}
                     fields={[
-                      { name: 'confirmDate', label: e('switch.confirmDate'), kind: 'date', min: 10 },
+                      { name: 'confirmDate', label: e(planFresh ? 'switch.confirmDateFresh' : 'switch.confirmDate'), kind: 'date', min: 10 },
                       { name: 'pin', label: e('switch.pin'), kind: 'pin', min: 4 },
                     ]}
                     label={e('switch.go')}
