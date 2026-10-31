@@ -1966,6 +1966,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-031",
+   "date": "31 Oct",
+   "title": "owner: finish the whole Launch list in one run, never sit idle, three builders, lighter reviews, then everything else by priority",
+   "text": "No new PR numbers; the total stays 621 (615 active, 6 parked).",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [

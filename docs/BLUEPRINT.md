@@ -1122,6 +1122,18 @@ to read code or open GitHub.
 >
 > **(5) Where it is written.** Updated lines on PR 391, 395, 396 and 507 (CN-030).
 
+> **CN-031 · 31 Oct 2026 (owner: finish the whole Launch list in one run, never sit idle, three builders, lighter reviews, then everything else by priority).** No new PR numbers; the total stays 621 (615 active, 6 parked).
+>
+> **(1) One run to go-live.** The 46 PRs still open on the Launch list (`docs/LAUNCH-TRACK.md`) are built in one continuous run, in three independent lanes, until every Launch row is merged and live and the go-live gate of CN-013 is met. Only then does the After-launch list start, in the priority order of `docs/LAUNCH-TRACK.md` § "After launch: priority order (CN-031)" (this replaces the stage order of CN-027 for After launch; inside a stage the PR number order stays).
+>
+> **(2) Never idle.** A session never stops between PRs and never ends its turn to wait for the owner. If something needs him, it goes into `BLOCKED.md` with a short Bengali question and the next PR starts at once. When a usage limit is near, the session writes the exact point into `PROGRESS.md` and schedules its own continuation for the moment the limit resets (and a short check-in every 30 minutes until Launch is done), so that the build restarts without the owner. Any session that finds `PROGRESS.md` untouched for more than 30 minutes while work is open starts the next PR.
+>
+> **(3) Three builders, not five.** The five-builder exception of CN-029 ends with PR 607–621. The remaining work is mostly independent in three lanes (A: reach and growth, B: safety and health, C: money and go-live), plus the independent reviewer `qa-gate`. Shared files keep one owner; each lane reserves its migration numbers first.
+>
+> **(4) Lighter reviews, same quality.** Every PR still gets tests first, its own diff review, and every automatic gate (typecheck, lint, hardcode guard, tests on PostgreSQL, device gate, smoke). `qa-gate` reviews a lane's PRs in batches of about five, not one by one. The whole-site review (fresh reviewers, at most 3 rounds until a round finds none) runs once, at the end of Launch, and then once at the end of each After-launch stage group, not after every PR.
+>
+> **(5) Where it is written.** `docs/LAUNCH-TRACK.md` (the three lanes and the After-launch priority order), CLAUDE.md rule 10 and "Run without stopping".
+
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.
 

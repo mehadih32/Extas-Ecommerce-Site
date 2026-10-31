@@ -42,7 +42,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
    Then it gets built.
 9. **Quality is ours.** Type checks, tests, the Lighthouse budget, the device gate (0 fails) and the journeys must
    pass before a merge. You create the PR, test it and merge it yourself (A1.1 rule 3).
-10. **2–3 agents in parallel at most**, each on its own git worktree. **Exception (owner, 30 Oct 2026, CN-029): the run PR 607–621 uses five builders in parallel** (Bhandari, Sawdagor, Gyani, Pherot, Hisabi) after Phase 0 has written the shared base; see `docs/RETAIL-ERP-MODEL.md` §15. S0A and S00 (including the full Prisma schema skeleton) run with one agent alone
+10. **2–3 agents in parallel at most**, each on its own git worktree. The five-builder exception of CN-029 (PR 607–621) is over. **From 31 Oct 2026 (CN-031): three builders in parallel plus the reviewer `qa-gate`**, in the lanes of `docs/LAUNCH-TRACK.md`. S0A and S00 (including the full Prisma schema skeleton) run with one agent alone
     before parallel work starts. Shared files (Prisma schema, design tokens, routing table) have one
     owner (A1.4).
 
@@ -75,6 +75,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   show it in chat, and **carry straight on** to the next wave.
 - Blocked on the owner? Add it to `BLOCKED.md` and move to the next PR. Never sit idle.
 - **Resume without the owner and without waste:** on every new or resumed session read `PROGRESS.md` and continue the exact next step. Read only the register rows and blueprint sections that step needs, not whole files. Never ask the owner to restart or re-explain anything.
+- **Never idle (owner, 31 Oct 2026, CN-031):** a session never stops between PRs and never waits for the owner. After a PR, the next one starts at once. Before a usage limit hits, write the exact point in `PROGRESS.md` and schedule your own continuation for the reset time, plus a check-in every 30 minutes until Launch is done; a session that finds `PROGRESS.md` untouched for 30 minutes while work is open starts the next PR. Launch first (one run), then the After-launch priority order in `docs/LAUNCH-TRACK.md`.
 - **Usage limit reached:** stop cleanly, with `PROGRESS.md` holding the exact point. When the limit resets, continue from
   there by yourself (the project's auto-continue is on).
 - The only real stops are the hard-rule items (money, prices, deleting data, anything irreversible) and the go-live

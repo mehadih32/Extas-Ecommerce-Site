@@ -678,6 +678,33 @@ Built automatically right after the Launch list, in the existing order: E3 waves
 
 </details>
 
+## After launch: priority order (CN-031)
+
+Once every Launch row is merged and live, the build carries straight on with these stage groups, in this order, one after the other, never waiting. Inside a stage the PR number order stays. After each group a short whole-site review runs (CN-031 § 4).
+
+| Order | Stages | Why first | Left |
+|---:|---|---|---:|
+| 1 | S07 payments (2), S08 courier, returns, exchange (5), S06 fraud and location (14) | Money in and out, parcels and the duplicate / fake COD losses | 21 |
+| 2 | S18 compliance (5), S21 site health (11), S16 finance (13), S20 fulfilment and documents (8) | The site stays safe, the books close, daily packing and invoices run | 37 |
+| 3 | S22 support (11), S14 CRM (17) | Customers get answers, repeat buyers are known | 28 |
+| 4 | S13 marketing and ads (34), S11 SEO (8), S12 content and blog (22) | Cheaper traffic and more orders | 64 |
+| 5 | S02 storefront extras (13) | Page builder, more templates, polish | 13 |
+| 6 | S17 multi-store (23) | The second and third shop on the same stock | 23 |
+| 7 | S15 AI control room (48) | AI agents and skills, always off until the owner turns them on | 48 |
+| 8 | S23 social studio (7), S25 video studio (10), S24 photoshoot studio (38) | Creative studios | 55 |
+
+Total 289 (as of 31 Oct 2026); the table above is the order, the "Left" counts move as PRs are built.
+
+## Launch lanes (CN-031)
+
+The 46 open Launch rows are built by three builders at the same time on their own git worktrees; `qa-gate` reviews in batches.
+
+| Lane | Rows | Notes |
+|---|---|---|
+| A · reach and growth | 426; 227, 228, 229, 232, 233, 234, 235, 236, 527, 586, 588; 257 | Redirects and permanent URLs (235, 527, 586) first, because the main-domain switch needs them |
+| B · safety and health | 378–386; 362; 413, 414, 423 | Security before the go-live checks that depend on it |
+| C · money and go-live | 342–346; 391–403, 507; then 587 after the gate | Drive backup (CN-030) and Telegram alerts early; 399 and 403 are the owner's steps, written as BLOCKED items without stopping the lane |
+
 ## Why these are After launch
 
 - **CN-022 Q1:** AI agents and skills (S15), full ads control (S13 except server-side purchase events), the studios (S23, S24, S25) are not go-live gates.
