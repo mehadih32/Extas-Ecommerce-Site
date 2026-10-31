@@ -256,6 +256,9 @@ export const sampleCatalogue: SampleData = parseSample(sampleJson, 'data/sample-
 /** The SKU of a sample variant: always starts with SAMPLE-, so a sample row can never pass for a real one. */
 export const sampleSku = (code: string, colour: string, size: string) => `SAMPLE-${code}-${colour}-${size}`.toUpperCase();
 
+/** Store settings the sample store starts with (never the owner's values: only switches for trying the shop). */
+export const SAMPLE_STORE_SETTINGS: readonly (readonly [string, boolean])[] = [['payments.testPayments', true]];
+
 export const SAMPLE_TABLES = [
   'Store',
   'Brand',
@@ -737,6 +740,14 @@ async function seedSampleTx(
 
   // --- PR 425 · the sample support conversations (natural keys: the channel, the contact, the conversation's code) ---
   if (s.support) await seedSupportTx(tx, storeId, s.support, { phone: s.customer.phone, number: s.order.number }, made);
+
+  // --- review R1 (security B1): test payments ship off; the sample store (CI's seeded app, the preview) switches them on
+  // so the checkout's practice gateway can be tried there. Only when the setting is known and the store has no value.
+  for (const [key, value] of SAMPLE_STORE_SETTINGS) {
+    const known = await tx.settingDefinition.findUnique({ where: { key }, select: { key: true } });
+    const has = await tx.storeSettingValue.findUnique({ where: { storeId_key: { storeId, key } }, select: { id: true } });
+    if (known && !has) await tx.storeSettingValue.create({ data: { storeId, key, value } });
+  }
 
   // --- the marker: this store is the sample store ---
   const recordedBefore = await tx.defaultPackApplication.findFirst({ where: { storeId, packKey: SAMPLE_PACK_KEY, version: s.version } });

@@ -25,6 +25,10 @@ describe('payment choice (PR 120)', () => {
 
 describe('prepaid reward (CN-018 (1), SIM-F-042)', () => {
   const order = { itemsMinor: 200_000, deliveryFree: false, chargeMinor: 8_000 };
+  it('review R1 (M5): a percent reward is rounded up to the store’s step, so the total stays collectable', () => {
+    expect(rewardOf(reward({ type: 'percent', percent: 3 }), { itemsMinor: 149_900, deliveryFree: false, chargeMinor: 8_000 })).toEqual({ kind: 'percent', amountMinor: 4_497 });
+    expect(rewardOf(reward({ type: 'percent', percent: 3, roundingStepMinor: 100 }), { itemsMinor: 149_900, deliveryFree: false, chargeMinor: 8_000 })).toEqual({ kind: 'percent', amountMinor: 4_500 });
+  });
   it('is nothing while off or unset', () => {
     expect(rewardOf(reward({ enabled: false, amountMinor: 5_000 }), order)).toBeNull();
     expect(rewardOf(reward({ type: null }), order)).toBeNull();

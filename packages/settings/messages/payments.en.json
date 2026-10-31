@@ -24,7 +24,7 @@
     },
     "testPayments": {
       "label": "Test payment buttons",
-      "help": "The test payment page (\"Pay\" and \"Make it fail (test)\") lets you try the checkout without money. The buttons work only while this is on and the payment service is still in practice mode: once its real keys are in, they never work. Switch this off on the live shop."
+      "help": "The test payment page (\"Pay\" and \"Make it fail (test)\") lets you try the checkout without money. Off by default. While it is off, a payment method whose service is still in practice mode is not offered at the checkout, and the practice service's answers are refused. The buttons work only while this is on and the payment service is still in practice mode: once its real keys are in, they never work. Switch it on only on the staging site; the go-live checklist checks it is off."
     }
   },
   "defaults": {

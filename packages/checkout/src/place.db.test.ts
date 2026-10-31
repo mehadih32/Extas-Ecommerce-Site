@@ -364,7 +364,7 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       const r = await s.place();
       const who = { storeId: f.S, visitorId: s.visitorId };
       const act = (deps: ReturnType<typeof f.deps>, action: string) => code(payAction(deps, { ...who, input: { number: r.number, action } }));
-      // on staging (the default): the test page, no gateway
+      // on staging (test payments switched on there; they ship off): the test page, no gateway
       expect(await payView(f.deps(), { ...who, number: r.number })).toMatchObject({ test: true, gateway: false });
       // a real gateway connected (sandbox or live): only its own answer pays the order
       const live = { ...f.deps(), paymentMode: async () => 'LIVE' as const };
@@ -378,6 +378,14 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       try {
         expect(await payView(f.deps(), { ...who, number: r.number })).toMatchObject({ test: false, gateway: false });
         expect(await act(f.deps(), 'approve')).toBe('TEST_PAYMENT_OFF');
+        // review R1 B1: and the checkout offers no method that still runs on the practice gateway
+        const fresh = await f.bag('practice-off', [{ variantId: shirt().id }]);
+        const q = await checkoutQuote(f.deps(), { storeId: f.S, cartId: fresh.cartId, lang: 'en', address: { line: FORM.address, confirmed: null }, payment: { method: 'mobile', option: 'bkash' } });
+        expect([q.pay.mobile, q.pay.card, q.pay.online]).toEqual([[], [], false]);
+        expect(q.pay.chosen?.method).toBe('cod');
+        // a wallet whose real gateway is live is still offered
+        const realBkash = { ...f.deps(), paymentMode: async (_s: number, p: string) => (p === 'bkash' ? ('LIVE' as const) : ('MOCK' as const)) };
+        expect((await checkoutQuote(realBkash, { storeId: f.S, cartId: fresh.cartId, lang: 'en', address: { line: FORM.address, confirmed: null } })).pay.mobile).toEqual(['bkash']);
       } finally {
         f.overrides.delete('payments.testPayments');
       }

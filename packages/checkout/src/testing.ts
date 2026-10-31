@@ -8,7 +8,7 @@ import { addItem, openBag, type CartDeps } from '@extas/cart';
 import { productFacts, type ProductFact } from '@extas/combos';
 import { forgetGazetteer, importGazetteer } from '@extas/delivery';
 import { sampleGazetteerRows } from '@extas/delivery/sample';
-import { bustAll, getRule, publishRule, saveDraft } from '@extas/rules';
+import { bustAll, createCoupon, createRule, getRule, publishRule, saveDraft, setCouponEnabled } from '@extas/rules';
 import { seedSampleRules } from '@extas/rules/sample';
 import { seedSample } from '@extas/seed';
 import { registry, type Key, type Value } from '@extas/settings';
@@ -29,6 +29,8 @@ export interface CheckoutFixture {
   priceBand: (key: string, chargeMinor: number, hours?: [number, number]) => Promise<string>;
   /** Switches a sample Smart Rule on (the owner's OK, as in the admin); `off` takes it back. */
   switchRule: (key: string, on?: boolean) => Promise<void>;
+  /** A live coupon rule taking `amountOffMinor` off, and its code switched on with these limits (as in the admin). */
+  coupon: (code: string, amountOffMinor: number, limits?: { usageLimit?: number; perCustomerLimit?: number }) => Promise<void>;
 }
 
 export async function setUpCheckout(label: string): Promise<CheckoutFixture> {
@@ -38,9 +40,11 @@ export async function setUpCheckout(label: string): Promise<CheckoutFixture> {
   await importGazetteer(t.prisma, sampleGazetteerRows(), { source: 'sample' });
   forgetGazetteer();
   const overrides = new Map<string, unknown>([['rules.public.cacheSeconds', 0]]);
+  // as on the staging host and CI's sample store: the practice gateway answers (test payments ship off, review R1 B1)
+  const baseline = new Map<string, unknown>([['payments.testPayments', true]]);
   const settings: SettingsReader = {
     async value<K extends Key>(key: K): Promise<Value<K>> {
-      return (overrides.has(key) ? overrides.get(key) : registry[key].default) as Value<K>;
+      return (overrides.has(key) ? overrides.get(key) : baseline.has(key) ? baseline.get(key) : registry[key].default) as Value<K>;
     },
   };
   const clock = { now: new Date('2026-10-23T06:00:00Z') };
@@ -86,6 +90,17 @@ export async function setUpCheckout(label: string): Promise<CheckoutFixture> {
       const r = await getRule(deps(), who, row.id);
       await saveDraft(deps(), who, r.id, { content: { ...(r.draft ?? r.live)!, status: on ? 'ACTIVE' : 'PAUSED' } });
       await publishRule(deps(), who, r.id);
+      bustAll();
+    },
+    async coupon(code, amountOffMinor, limits = {}) {
+      const who = { actor: owner, storeId: S };
+      const rule = await createRule(deps(), who, { templateId: 'coupon', key: `test-${code.toLowerCase()}` });
+      const live = rule.live!;
+      const content = { ...live, status: 'ACTIVE' as const, params: live.params.map((p) => (p.key === 'amountOff' ? { ...p, value: amountOffMinor } : p.key === 'minOrder' ? { ...p, value: 100 } : p)) };
+      await saveDraft(deps(), who, rule.id, { content });
+      await publishRule(deps(), who, rule.id);
+      const c = await createCoupon(deps(), who, { code, ruleId: rule.id, ...limits });
+      await setCouponEnabled(deps(), who, c.id, { enabled: true });
       bustAll();
     },
   };

@@ -149,7 +149,7 @@ export async function receiveCallback(deps: PaymentsDeps, req: { provider: strin
   const { provider, params } = req;
   const source = paymentSource(PROVIDER.test(provider) ? provider : 'unknown');
   const pid = params.pid ?? '';
-  const payment = UUID.test(pid) ? await deps.db.payment.findUnique({ where: { id: pid }, select: { id: true, storeId: true, provider: true, status: true, order: { select: { number: true } } } }) : null;
+  const payment = UUID.test(pid) ? await deps.db.payment.findUnique({ where: { id: pid }, select: { id: true, storeId: true, provider: true, providerRef: true, status: true, order: { select: { number: true } } } }) : null;
 
   const invalid = async (why: string): Promise<CallbackResult> => {
     const e = await deps.db.webhookEvent.upsert({
@@ -168,9 +168,15 @@ export async function receiveCallback(deps: PaymentsDeps, req: { provider: strin
   } catch (e) {
     return invalid(`no gateway: ${e instanceof Error ? e.message.slice(0, 100) : 'error'}`);
   }
+  // Whole-site review R1 (security B1): the practice gateway's signing key is public, so its callback counts only while
+  // the owner's test payments are on — on a live shop nobody can forge "paid" with it.
+  if (gw.mode === 'MOCK' && !(await setting(deps, payment.storeId, 'payments.testPayments'))) return invalid('practice gateway off');
   const read: CallbackRead = gw.api.readCallback({ params });
   if (!read.ok) return invalid(`signature ${read.reason}`);
   if (read.paymentId !== payment.id) return invalid('signature for another payment');
+  // R1 (security m1): the gateway's own payment id must be the one this payment's session opened (a signed callback
+  // URL of one order is never replayed with another order's gateway payment).
+  if (payment.providerRef && read.providerRef && read.providerRef !== payment.providerRef) return invalid('gateway payment of another session');
 
   const now = () => nowOf(deps);
   const base = { paymentId: payment.id, number: payment.order?.number ?? null };

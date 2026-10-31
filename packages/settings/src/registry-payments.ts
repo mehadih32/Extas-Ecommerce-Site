@@ -18,6 +18,9 @@
 // a longer wait, with a call for the team if he wants one (off). The test payment page's buttons (practice money)
 // run only while this switch is on *and* the payment's gateway is still on its practice mode (the go-live guard,
 // follow-up 50: they can never run once real keys are in); switch it off on the live shop.
+// Whole-site review R1 (security B1, registry version 120): test payments ship OFF. A method whose gateway is still
+// the practice one is not offered at the checkout while it is off, and the practice gateway's callback is refused; the
+// staging host and CI's sample store switch it on (the sample seed), and the go-live checklist checks it is off.
 //
 // Nothing here moves money, refunds anything, or changes a price, a charge, a discount or Cash on Delivery (CLAUDE.md
 // rule 6): these settings only say what may be recorded and how a difference is named.
@@ -170,8 +173,9 @@ export const paymentSettings = {
   }),
   'payments.testPayments': setting({
     ...base,
+    version: 120,
     schema: z.boolean(),
-    default: true,
+    default: false,
     valueType: 'BOOLEAN',
     labelKey: 'payments.testPayments.label',
     helpKey: 'payments.testPayments.help',
