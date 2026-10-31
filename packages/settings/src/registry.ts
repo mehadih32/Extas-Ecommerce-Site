@@ -77,6 +77,7 @@ import { edgeSettings } from './registry-edge';
 import { healthSettings } from './registry-health';
 import { supportChannelSettings } from './registry-support-channels';
 import { bengaliSettings } from './registry-bengali';
+import { trackingSettings } from './registry-tracking';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1299,6 +1300,8 @@ export const registry = {
   ...costsSettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
+  // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----
+  ...trackingSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

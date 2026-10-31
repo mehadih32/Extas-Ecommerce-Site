@@ -304,6 +304,11 @@ export const PERMISSIONS = {
   // here blocks anyone or changes the shop.
   'health.problems.manage': { group: 'health' },
   'health.problems.approve': { group: 'health' },
+  // S13 · PR 257 (Blueprint C6.2) — Marketing › Tracking: see what the shop's server sent to the ad platforms
+  // (`ads.tracking.read`); switch it on, tick the events and platforms, allow customer matching and send a test event
+  // (`ads.tracking.manage`). Keys are typed on Keys & connections (`vault.write`), never here. No money moves.
+  'ads.tracking.read': { group: 'ads' },
+  'ads.tracking.manage': { group: 'ads' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

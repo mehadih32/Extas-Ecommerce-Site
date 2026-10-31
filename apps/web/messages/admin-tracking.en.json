@@ -1,0 +1,98 @@
+{
+  "trk": {
+    "metaTitle": "Tracking — Marketing",
+    "title": "Tracking",
+    "sub": "What the shop's server tells the ad platforms: a product seen, put in the bag, the checkout opened, an order placed. Each platform counts an event once.",
+    "off": "Tracking is off. Nothing is recorded or sent. Switch it on in the card at the bottom.",
+    "noPlatform": "Tracking is on but no platform is ticked: events are recorded here and sent nowhere. Tick the platforms in the card at the bottom.",
+    "platformsH": "Platforms",
+    "platform": {
+      "meta": "Meta (Facebook, Instagram)",
+      "google": "Google Analytics 4",
+      "tiktok": "TikTok"
+    },
+    "ticked": "Ticked",
+    "notTicked": "Not ticked",
+    "mode": {
+      "MOCK": "Practice copy — nothing leaves the shop",
+      "LIVE": "Live",
+      "SANDBOX": "Platform's test system"
+    },
+    "lastTest": "Last connection test: {when} — {result}",
+    "testOk": "passed",
+    "testBad": "failed",
+    "noTest": "No key yet.",
+    "keysLink": "Keys & connections",
+    "days": "Last {n} days",
+    "kpi": {
+      "view": "Products seen",
+      "addToBag": "Put in the bag",
+      "checkout": "Checkouts opened",
+      "purchase": "Orders placed",
+      "foot": "recorded, test events not counted"
+    },
+    "tableH": "Sent per platform",
+    "col": {
+      "event": "Event",
+      "when": "When",
+      "page": "Page",
+      "value": "Value",
+      "platforms": "Platforms"
+    },
+    "event": {
+      "view": "Product seen",
+      "addToBag": "Put in the bag",
+      "checkout": "Checkout opened",
+      "purchase": "Order placed"
+    },
+    "state": {
+      "sent": "sent",
+      "mock": "practice",
+      "failed": "failed",
+      "waiting": "waiting"
+    },
+    "cellNone": "—",
+    "waitingH": "Waiting to be sent",
+    "waitingLine": "{n} events wait for a platform (new ones, or failed ones with tries left). They are sent with the next event, or now:",
+    "sendNow": "Send waiting now",
+    "testH": "Send a test event",
+    "testLine": "Sends one sample event (your newest product) to every platform in its test mode. On a practice copy nothing leaves the shop; on a live one it shows under the platform's Test events and is never counted.",
+    "testEvent": "Event",
+    "sendTest": "Send test event",
+    "working": "Sending…",
+    "outcome": "{platform}: {sent} sent, {mock} to the practice copy, {failed} failed",
+    "outcomeErr": "{platform}: {error}",
+    "outcomeNone": "Nothing was waiting.",
+    "recentH": "Newest events",
+    "test": "test",
+    "none": "No event yet.",
+    "noManage": "You can see this page; changing it needs the \"Switch server-side tracking on or off\" permission.",
+    "card": {
+      "h": "Tracking settings",
+      "d": "Off as it ships. Keys are typed on Keys & connections, never here.",
+      "on": "Send events to the ad platforms from the server",
+      "onHelp": "Off: nothing is recorded or sent.",
+      "events": "Events",
+      "platforms": "Platforms",
+      "match": "Match customers (hashed phone and e-mail)",
+      "matchHelp": "The platforms match an event to a person by a one-way code (hash) of the phone and e-mail. The number itself never leaves the shop. Off: only the shop's own random visitor code goes.",
+      "attempts": "Tries for a failed send",
+      "attemptsHelp": "After this many failed tries an event is left as failed.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard",
+      "unsaved": "Not saved yet.",
+      "readOnly": "You can see these settings; changing them needs the manage permission.",
+      "pairHelp": "Fill in both languages."
+    },
+    "err": {
+      "STALE": "Someone changed this meanwhile; the page was read again. Try once more.",
+      "INVALID_INPUT": "Something in it is not right. Check the fields.",
+      "forbidden": "You do not have permission for this.",
+      "unauthorized": "Your sign-in ran out. Sign in again.",
+      "network": "No connection. Try again.",
+      "other": "It did not work. Try again."
+    }
+  }
+}

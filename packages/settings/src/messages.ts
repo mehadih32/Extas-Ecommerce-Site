@@ -153,6 +153,8 @@ import costsBn from '../messages/costs.bn.json';
 import costsEn from '../messages/costs.en.json';
 import bengaliGateBn from '../messages/bengali-gate.bn.json';
 import bengaliGateEn from '../messages/bengali-gate.en.json';
+import trackingBn from '../messages/tracking.bn.json';
+import trackingEn from '../messages/tracking.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -218,6 +220,9 @@ messages.bn = mergeMessages(messages.bn, costsBn);
 // S11 · PR 588 — the Bengali translation gate (registry-bengali.ts).
 messages.en = mergeMessages(messages.en, bengaliGateEn);
 messages.bn = mergeMessages(messages.bn, bengaliGateBn);
+// S13 · PR 257 — server-side event tracking (registry-tracking.ts).
+messages.en = mergeMessages(messages.en, trackingEn);
+messages.bn = mergeMessages(messages.bn, trackingBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

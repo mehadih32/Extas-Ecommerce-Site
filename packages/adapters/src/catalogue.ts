@@ -250,6 +250,38 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S13 · PR 257 — server-side event tracking (Marketing › Tracking): each ad platform's server API with its own key. The
+  // mock serves until the Test passes (Meta: reading the pixel; Google: its checking address; TikTok: one test event).
+  {
+    id: 'metaConversions',
+    kind: 'META',
+    provider: 'metaConversions',
+    adapter: true,
+    secrets: [{ field: 'accessToken' }],
+    config: [{ field: 'pixelId' }, { field: 'testEventCode', optional: true }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  {
+    id: 'googleAnalytics',
+    kind: 'GOOGLE',
+    provider: 'googleAnalytics',
+    adapter: true,
+    secrets: [{ field: 'apiSecret' }],
+    config: [{ field: 'measurementId' }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  {
+    id: 'tiktokEvents',
+    kind: 'TIKTOK',
+    provider: 'tiktokEvents',
+    adapter: true,
+    secrets: [{ field: 'accessToken' }],
+    config: [{ field: 'pixelCode' }, { field: 'testEventCode', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
 ];
 
 export function findConnection(id: string): ConnectionDeclaration | undefined {

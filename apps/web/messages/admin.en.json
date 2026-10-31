@@ -80,7 +80,8 @@
     "health": "Site health",
     "golive": "Go-live",
     "healthProblems": "Customer problems",
-    "seoBengali": "Bengali pages"
+    "seoBengali": "Bengali pages",
+    "adsTracking": "Tracking"
   },
   "login": {
     "metaTitle": "Admin sign-in",
@@ -361,6 +362,36 @@
       "desc": "Lists the shop's sites and hands Bing the sitemap (Website → SEO). Until the key is in and the test passes, nothing is sent",
       "fields": {
         "apiKey": "API key (Bing Webmaster → Settings → API access)"
+      }
+    },
+    "metaConversions": {
+      "name": "Meta Conversions API (Facebook and Instagram ads)",
+      "desc": "Sends the shop's events (product seen, put in the bag, checkout, order) from the server to Meta, for Marketing › Tracking. Mock until the key is in and the test (reading the pixel) passes: nothing is sent before that.",
+      "fields": {
+        "accessToken": "Access token (Events Manager → the pixel → Settings → Conversions API → Generate access token)",
+        "pixelId": "Pixel (dataset) ID (Events Manager → the pixel → Settings)",
+        "testEventCode": "Test event code — optional; from Events Manager → Test events. While it is set, test events show there",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
+    "googleAnalytics": {
+      "name": "Google Analytics 4 (Measurement Protocol)",
+      "desc": "Sends the shop's events from the server to Google Analytics, which Google Ads can import, for Marketing › Tracking. Mock until the key is in and the test passes.",
+      "fields": {
+        "apiSecret": "API secret (Admin → Data streams → the web stream → Measurement Protocol API secrets → Create)",
+        "measurementId": "Measurement ID (Admin → Data streams → the web stream), like G-ABC123XYZ",
+        "baseUrl": "Address — leave empty; for the EU address or a test server only"
+      }
+    },
+    "tiktokEvents": {
+      "name": "TikTok Events API",
+      "desc": "Sends the shop's events from the server to TikTok, for Marketing › Tracking. Mock until the key is in and the test (one test event) passes.",
+      "fields": {
+        "accessToken": "Access token (Events Manager → the pixel → Settings → Events API → Generate access token)",
+        "pixelCode": "Pixel code (Events Manager → the pixel)",
+        "testEventCode": "Test event code — needed for the test; from Events Manager → the pixel → Test events",
+        "baseUrl": "Address — only for a test server"
       }
     }
   },

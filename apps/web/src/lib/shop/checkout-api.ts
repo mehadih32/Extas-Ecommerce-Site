@@ -12,6 +12,7 @@ import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model'
 import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
 import { noteBotSignals } from '../security/bot-check';
+import { trackPurchase } from '../tracking/shop';
 
 /** The largest request body the checkout takes (the delivery details, a note, the choices). */
 export const CHECKOUT_BODY_MAX = 8_192;
@@ -193,6 +194,8 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
       await scoreRisk(deps, r.orderId);
       await sectionRisk(deps, r.orderId);
       await waitForAdvance(deps, r.orderId);
+      // PR 257: the purchase goes to the ad platforms from the server while tracking is on (quiet, never stops the order)
+      await trackPurchase(request, { storeId: deps.storeId, orderId: r.orderId });
     }
     const lang = langOf(b.lang);
     const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });

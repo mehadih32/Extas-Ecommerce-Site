@@ -1,0 +1,11 @@
+{
+  "groups": {
+    "ads": "Ads and tracking"
+  },
+  "ads": {
+    "tracking": {
+      "label": "Server-side event tracking",
+      "help": "The shop's own server tells the ad platforms what shoppers did — a product seen, an item put in the bag, the checkout opened, an order placed — with the value, category, size and colour, so the ads learn who buys. Off as it ships. Each platform stays on its practice copy (nothing leaves the shop) until its key is typed into Settings › Keys & connections and its test passes. A customer's phone and e-mail leave only as one-way codes (hashes), and only when you allow matching."
+    }
+  }
+}

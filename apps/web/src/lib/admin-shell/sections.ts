@@ -203,6 +203,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/rules/notices', perm: 'rules.read', keys: ['notices'] },
         ],
       },
+      // S13 · PR 257: server-side event tracking (the ad platforms' server APIs; mocks until their keys are in).
+      { id: 'tracking', pages: [{ href: '/admin/marketing/tracking', perm: 'ads.tracking.read', keys: ['adsTracking'] }] },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,

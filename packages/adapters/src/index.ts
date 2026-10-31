@@ -16,6 +16,7 @@ import { certificateAdapters } from './certificate';
 import { googleDriveAdapters } from './google-drive';
 import { liveMessengerAdapters, messengerAdapters } from './messenger';
 import { searchConsoleAdapters } from './search-console';
+import { adEventAdapters } from './ads';
 
 export * from './define';
 export * from './connections';
@@ -49,13 +50,16 @@ export * from './search-console';
 // S11 · PR 221 — the AI writer (search titles and descriptions): the practice writer until an AI provider is connected
 // (not in `allAdapters` until then; see ai-writer/index.ts).
 export * from './ai-writer';
+// S13 · PR 257 — the ad platforms' server event APIs (Meta Conversions API, Google Analytics 4, TikTok Events API):
+// mocks until their keys are in and their tests pass.
+export * from './ads';
 
 /** PR 148 — every message sender (SMS, WhatsApp, e-mail) for `createConnections` in the message engine. */
 export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAdapters] as const;
 
 // PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 291: the SMS
 // gateway too (its key and Test button); PR 292 the WhatsApp Business Platform; the mock senders are not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters] as const;
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters, ...adEventAdapters] as const;
 
 /** PR 426 — the Support inbox's channels (WhatsApp, Messenger) for `createConnections`: each falls back to its mock. */
 export const supportAdapters = [...whatsappAdapters, ...messengerAdapters] as const;

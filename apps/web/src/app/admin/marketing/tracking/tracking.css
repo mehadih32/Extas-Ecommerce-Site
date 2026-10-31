@@ -1,0 +1,22 @@
+/* S13 · PR 257 — Marketing › Tracking: the platform cards, the per-platform cells and the two action boxes (the shell's tokens only). */
+.adm2 .trk-pl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.adm2 .trk-pl li{display:flex;flex-direction:column;gap:8px;padding:14px}
+.adm2 .trk-pn{font-weight:600;color:var(--ink)}
+.adm2 .trk-pills{display:flex;flex-wrap:wrap;gap:6px}
+.adm2 .trk-cell{display:inline-flex;flex-wrap:wrap;gap:4px 10px}
+.adm2 .trk-st{white-space:nowrap}
+.adm2 .trk-st.sent{color:var(--g)}
+.adm2 .trk-st.failed{color:var(--bad)}
+.adm2 .trk-st.waiting,.adm2 .trk-st.mock{color:var(--mute)}
+.adm2 .trk-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.adm2 .trk-two > .a2-sc{margin:0}
+.adm2 .trk-act{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-top:10px}
+.adm2 .trk-pick{display:flex;flex-direction:column;gap:4px}
+.adm2 .trk-out{list-style:none;margin:0;padding:0;flex-basis:100%;display:grid;gap:4px}
+.adm2 .trk-out .bad{color:var(--bad)}
+.adm2 .trk-test{margin-left:6px}
+.adm2 .trk-nowrap{white-space:nowrap}
+.adm2 .trk-path{overflow-wrap:anywhere;min-width:120px}
+/* A platform card's "Keys & connections" link is a 44 px tap at every width; the negative margins take the card's gap
+   above and its padding below, so the card keeps its height. */
+.adm2 .trk-keys{display:flex;align-items:center;min-height:44px;margin:-8px 0 -14px}

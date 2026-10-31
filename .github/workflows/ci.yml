@@ -230,8 +230,12 @@ jobs:
         run: node tools/admin-guide-check.mjs
       - name: Lint
         run: pnpm lint
+      # The web app's type-check passed 4 GB of heap with Launch batch 3 (31 Oct); two packages at a time keep the
+      # runner's memory in bounds with the higher limit.
       - name: Type-check
-        run: pnpm typecheck
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: pnpm -r --workspace-concurrency=2 typecheck
 
   # PR 17 — every package's unit tests (and the tools' tests, with the web tests); no database here: the database tests
   # run in `db`.

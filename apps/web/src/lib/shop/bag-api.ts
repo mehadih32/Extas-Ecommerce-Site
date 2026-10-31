@@ -24,6 +24,7 @@ import {
 import { addBuiltSetToBag, addSetToBag, changeSetInBag, priceCell, priceSet, productFacts, recordColourPick, recordComboView, setSummary, type SlotChoice } from '@extas/combos';
 import { body, errorResponse, fail, isUuid, json, readCookie, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
+import { trackAddToBag } from '../tracking/shop';
 
 /** The largest request body the bag takes (a code, an id, a number). */
 export const BAG_BODY_MAX = 2_048;
@@ -80,7 +81,10 @@ export async function addLineHandler(request: Request, deps: BagApiDeps | null):
   try {
     const b = await body(request);
     const bag = (await bagOf(request, deps, true))!;
-    const r = await addItem(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, variantId: b.variantId as string, quantity: (b.quantity as number | undefined) ?? 1, source: (b.source as string | undefined) || undefined });
+    const quantity = (b.quantity as number | undefined) ?? 1;
+    const r = await addItem(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, variantId: b.variantId as string, quantity, source: (b.source as string | undefined) || undefined });
+    // PR 257: the ad platforms hear of it from the server while tracking is on (quiet, never stops the add)
+    if (r.added) await trackAddToBag(request, { storeId: deps.storeId, lineId: r.lineId, quantity });
     return answer(deps, bag, { ...r }, r.added ? 201 : 200);
   } catch (e) {
     return refusal(e);
