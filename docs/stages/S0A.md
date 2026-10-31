@@ -236,7 +236,7 @@
 
 - **Status:** Live · 2026-10-20
   - Build status row: daily base + dump + config, WAL every minute, one-command restore, restore test; Blob/Drive "not connected" until keys. 20 Oct: product photos (full every `BACKUP_MEDIA_FULL_EVERY_DAYS`, diffs between, checksums) and a dated docs bundle with the commit hash in every backup; the restore test checks one sample photo and the docs bundle (CN-011). 31 Oct (follow-up, the backup disk reached 100%): archived WAL gzipped and kept only `BACKUP_KEEP_LOCAL_WAL_DAYS`, each base backup carries its own WAL (`-X stream`), room made before each backup down to `BACKUP_MIN_FREE_PCT` free (never the newest), a failed day names its step and leaves no half-written folder, the server's own PostgreSQL tools first on PATH in every backup and restore call
-  - GitHub pull request #67, 31 Oct
+  - GitHub pull request #68, 31 Oct
   - GitHub pull request #20, 20 Oct
   - GitHub pull request #1 (commit `c96b258`), 20 Oct 02:38 (Dhaka)
 - **What it does (original scope):** Nightly encrypted backup of database, uploads and configuration to **Google Drive**, with one-command restore.
