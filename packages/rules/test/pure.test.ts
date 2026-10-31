@@ -570,6 +570,16 @@ describe('PR 609 · the selling-price floor holds every offer (catalogue.floor.m
     expect(floorMinorOf(76000, null)).toBeNull();
     expect(floorMinorOf(null, 20)).toBeNull();
   });
+  it('review R2 (m2): the floor rounds up to the store’s money step, so a cut held at it leaves a collectable total', () => {
+    // a buying price of 823 at 15 % is 946.45: whole taka gives 947, never 946 (the margin holds)
+    expect(floorMinorOf(82300, 15)).toBe(94645);
+    expect(floorMinorOf(82300, 15, 100)).toBe(94700);
+    expect(floorMinorOf(82300, 15, 1000)).toBe(95000);
+    expect(floorMinorOf(76000, 20, 100)).toBe(91200);
+    const q = quote([pct(40)], cart([line('a', 150000, 3, { floorMinor: floorMinorOf(82300, 15, 100) })]), { ...ENGINE, roundingStepMinor: 100 });
+    expect(q.lines[0]!.finalMinor).toBe(94700 * 3);
+    expect(q.totalMinor % 100).toBe(0);
+  });
   it('a discount stops at the floor; what it held back is told; no floor, no change', () => {
     const free = quote([pct(15)], cart([line('a', 100000)]), ENGINE);
     expect([free.discountMinor, free.floorHeld]).toEqual([15000, []]);

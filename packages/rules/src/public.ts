@@ -151,7 +151,7 @@ export async function quoteCart(
       return [];
     }
     const f = facts.get(v.productId)!;
-    return [{ id: l.id ?? `line-${i}`, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: l.quantity, productId: v.productId, categoryIds: f.categoryIds, collectionIds: f.collectionIds, freeDelivery: f.freeDelivery, comboId: l.comboId ?? null, floorMinor: floorMinorOf(v.shopPriceMinor, floorPercent) }];
+    return [{ id: l.id ?? `line-${i}`, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: l.quantity, productId: v.productId, categoryIds: f.categoryIds, collectionIds: f.collectionIds, freeDelivery: f.freeDelivery, comboId: l.comboId ?? null, floorMinor: floorMinorOf(v.shopPriceMinor, floorPercent, roundingStepMinor) }];
   });
   const redeemed = input.redeemedCoupon ?? null;
   const coupon: CouponCheck | null = redeemed
@@ -233,7 +233,7 @@ export async function discountWasFor(deps: RulesDeps, input: { storeId: number; 
   const f = (await scopeFacts(deps.db, input.storeId, [v.productId])).get(v.productId)!;
   const q = quote(
     rules.filter((r) => r.actions.some((a) => a.type === 'discount' && a.target === 'lines' && !a.requiresCoupon && !a.minSubtotalParam)),
-    { now, lines: [{ id: v.id, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: 1, ...f, floorMinor: floorMinorOf(v.shopPriceMinor, floorPercent) }], bandKey: null, paymentMethod: null, couponCode: null, couponRuleIds: [], customer: { loggedIn: false, deliveredOrders: null }, source: null, weekday: null, hour: null },
+    { now, lines: [{ id: v.id, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: 1, ...f, floorMinor: floorMinorOf(v.shopPriceMinor, floorPercent, roundingStepMinor) }], bandKey: null, paymentMethod: null, couponCode: null, couponRuleIds: [], customer: { loggedIn: false, deliveredOrders: null }, source: null, weekday: null, hour: null },
     { maxPercentOff, roundingStepMinor },
   );
   const line = q.lines[0]!;
