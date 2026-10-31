@@ -1,0 +1,28 @@
+{
+  "security": {
+    "csp": {
+      "mode": {
+        "label": "Page protection (Content-Security-Policy)",
+        "help": "Tells the browser what a page may load. Report only (the default) blocks nothing and only reports what would have been stopped; Enforce makes the browser block it; Off sends no policy. Turn on Enforce only after a week with no reports."
+      },
+      "extraSources": {
+        "label": "Outside addresses pages may load from",
+        "help": "The shop loads everything from itself. When you turn on an outside service (for example an ad pixel or a chat window), add its https address here under the kind it needs: scripts, styles, images, fonts, connections, frames, media or form posts."
+      }
+    },
+    "rateLimit": {
+      "mode": {
+        "label": "Request limits per address",
+        "help": "Counts how many requests one internet address sends each minute. Observe (the default) only writes a log line when an address goes over; Enforce asks it to try again in a minute; Off counts nothing. Many phones share one mobile-network address, so the limits are generous."
+      },
+      "perMinute": {
+        "label": "Requests a minute for one address",
+        "help": "How many requests one address may send a minute: sign-in and codes, checkout and pay links, other shop changes (bag, wishlist), the browser's problem reports, and webhooks from outside services."
+      },
+      "maxTracked": {
+        "label": "Addresses counted at once",
+        "help": "How many addresses each server copy keeps counting at the same time. Only a memory limit; the oldest counts are dropped first."
+      }
+    }
+  }
+}

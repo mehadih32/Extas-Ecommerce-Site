@@ -130,6 +130,9 @@ import booksSummaryEn from '../messages/books-summary.en.json';
 // CN-028 · PR 619, 621 (registry v70): the switch-over, the ERP link page and the acceptance suite.
 import switchoverBn from '../messages/switchover.bn.json';
 import switchoverEn from '../messages/switchover.en.json';
+// S18 · PR 378 (registry v73): the page protection policy and the per-address request limits.
+import webSecurityBn from '../messages/web-security.bn.json';
+import webSecurityEn from '../messages/web-security.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -174,6 +177,8 @@ messages.en = mergeMessages(messages.en, booksSummaryEn);
 messages.bn = mergeMessages(messages.bn, booksSummaryBn);
 messages.en = mergeMessages(messages.en, switchoverEn);
 messages.bn = mergeMessages(messages.bn, switchoverBn);
+messages.en = mergeMessages(messages.en, webSecurityEn);
+messages.bn = mergeMessages(messages.bn, webSecurityBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

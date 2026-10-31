@@ -12,8 +12,11 @@
 // S11 · PR 235: an old address in the redirect table (a renamed product or category, a link typed in by hand, a combo's
 // colours in another order, the WordPress map once it is live) forwards permanently to its page, before any page draws
 // (lib/seo/redirect-table: the table is kept in this process, so the proxy never waits on the database).
+// S18 · PR 378: every API call passes the cross-site check and the request limits first (lib/security/edge-gate.ts),
+// and every page (the shop's and the admin's) gets the page protection policy the settings say.
 import { NextResponse, type NextRequest } from 'next/server';
 import { shopCacheHeaders } from './lib/cache-policy';
+import { apiGate, pageCspHeader } from './lib/security/edge-gate';
 import { lowerCaseTarget } from './lib/seo/indexing';
 import { countRedirectHit, forwardOf, redirectTable } from './lib/seo/redirect-table';
 import { isShopPath, LANG_HEADER, PATH_HEADER, splitLang, THEME_HEADER } from './lib/shop/lang';
@@ -29,9 +32,26 @@ function withCacheHeaders(res: NextResponse, req: NextRequest): NextResponse {
   return res;
 }
 
+/** PR 378: the cross-site check and the request limits in front of every API call (lib/security/edge-gate.ts). */
+function gateApi(req: NextRequest): NextResponse {
+  const a = apiGate({ method: req.method, path: req.nextUrl.pathname, url: req.url, headers: req.headers });
+  if (a.kind === 'pass') return NextResponse.next();
+  const headers: Record<string, string> = { 'cache-control': 'no-store' };
+  if (a.retryAfterSeconds) headers['retry-after'] = String(a.retryAfterSeconds);
+  return NextResponse.json({ ok: false, error: a.error }, { status: a.status, headers });
+}
+
+/** PR 378: the page protection policy on every page (report only until the owner turns it on). */
+function withPageCsp(res: NextResponse): NextResponse {
+  const h = pageCspHeader();
+  if (h) res.headers.set(h.name, h.value);
+  return res;
+}
+
 export async function proxy(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
-  if (!isShopPath(pathname)) return NextResponse.next();
+  if (pathname.startsWith('/api/') || pathname.startsWith('/erp-api/')) return gateApi(req);
+  if (!isShopPath(pathname)) return withPageCsp(NextResponse.next());
   const lower = lowerCaseTarget(pathname);
   if (lower) {
     const url = req.nextUrl.clone();
@@ -56,12 +76,19 @@ export async function proxy(req: NextRequest) {
   if (lang === 'bn') {
     const url = req.nextUrl.clone();
     url.pathname = path;
-    return withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h } }), req);
+    return withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h } }), req));
   }
-  return withCacheHeaders(NextResponse.next({ request: { headers: h } }), req);
+  return withPageCsp(withCacheHeaders(NextResponse.next({ request: { headers: h } }), req));
 }
 
 export const config = {
-  // Static files and the framework's own paths never reach the proxy.
-  matcher: ['/((?!_next/|admin|api/|erp-api/|status|media/|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)'],
+  // Static files and the framework's own paths never reach the proxy. PR 378: the API (for the cross-site check and
+  // the request limits) and the admin's pages (for the page protection policy) do.
+  matcher: [
+    '/((?!_next/|admin|api/|erp-api/|status|media/|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)',
+    '/api/:path*',
+    '/erp-api/:path*',
+    '/admin',
+    '/admin/:path*',
+  ],
 };

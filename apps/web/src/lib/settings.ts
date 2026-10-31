@@ -17,11 +17,26 @@ export const settingsTimeoutMs = () => intEnv('SETTINGS_DB_TIMEOUT_MS', 1_500);
 /** After a failed read, how long the fallback is used before the database is tried again. */
 const retryAfterMs = () => intEnv('SETTINGS_DB_RETRY_MS', 30_000);
 
-const holder = globalThis as unknown as { __settingsResolver?: AppResolver; __settingsDownUntil?: number; __settingsChanged?: (change: SettingsChange) => void };
+const holder = globalThis as unknown as {
+  __settingsResolver?: AppResolver;
+  __settingsDownUntil?: number;
+  __settingsChanged?: (change: SettingsChange) => void;
+  __settingsListeners?: Set<(change: SettingsChange) => void>;
+};
 
 /** PR 602: who hears that a setting changed (the cache, lib/cache.ts, sets it when it starts). */
 export function onSettingsChanged(fn: (change: SettingsChange) => void): void {
   holder.__settingsChanged = fn;
+}
+
+/** PR 378: one more listener beside the cache's (the edge gate's policy, lib/security/edge-load.ts). */
+export function addSettingsListener(fn: (change: SettingsChange) => void): void {
+  (holder.__settingsListeners ??= new Set()).add(fn);
+}
+
+function settingsChanged(change: SettingsChange): void {
+  holder.__settingsChanged?.(change);
+  for (const fn of holder.__settingsListeners ?? []) fn(change);
 }
 
 export function settingsResolver(): AppResolver | null {
@@ -29,7 +44,7 @@ export function settingsResolver(): AppResolver | null {
   holder.__settingsResolver ??= new SettingsResolver(prismaBackend(getPrisma()), registry, {
     checkIntervalMs: intEnv('SETTINGS_CACHE_CHECK_MS', 2_000),
     onStale: (e) => console.warn(`settings: database unreachable, serving the last values (${errText(e)})`),
-    onChange: (c) => holder.__settingsChanged?.(c),
+    onChange: (c) => settingsChanged(c),
   });
   return holder.__settingsResolver;
 }

@@ -14,13 +14,20 @@
 	}
 }
 
+# PR 378 (B6.1 review): the checkout's "share my location" (GpsShare, PR 159) needs geolocation on this site itself, so
+# it is (self), not () — () switched the feature off in every browser. The short page policy is always on: no plugins,
+# no <base> tag, no framing by another site. The full policy (what scripts, images and connections a page may use) is
+# the app's, from the settings (`security.csp.mode`, report only by default; apps/web/src/lib/security/csp.ts).
 (security_headers) {
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		X-Frame-Options "SAMEORIGIN"
-		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(), usb=()"
+		X-Permitted-Cross-Domain-Policies "none"
+		# "?": only when the app sent no enforced policy of its own (that one already holds these three lines).
+		?Content-Security-Policy "object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
 		-Server
 	}
 }

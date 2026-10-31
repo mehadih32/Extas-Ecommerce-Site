@@ -22,6 +22,7 @@ import { isDeliveryError } from '@extas/delivery';
 import { isBooksError, isInventoryError } from '@extas/inventory';
 import { isRulesError } from '@extas/rules';
 import { createVault, type Vault } from '@extas/vault';
+import { sameOriginRequest } from './security/same-origin';
 import { settingsResolver, settingsTimeoutMs, withTimeout, type AppResolver } from './settings';
 
 /** Cookie names. `__Host-` makes the browser insist on Secure, Path=/ and no Domain (the cookie stays on this host). */
@@ -111,24 +112,13 @@ export function requestContext(request: Request): RequestContext {
   return { ip: ip || null, userAgent: h.get('user-agent'), source: 'admin-api' };
 }
 
-const SAFE = new Set(['GET', 'HEAD', 'OPTIONS']);
-
 /**
  * CSRF (Prohori R06 §2): a state change must come from this site. The browser's Fetch Metadata header decides when it
- * is there; otherwise the Origin header must name this host. A request with neither is refused.
+ * is there; otherwise the Origin header must name this host. A request with neither is refused. PR 378: the rule lives
+ * in lib/security/same-origin.ts, which the proxy also applies to every API call in front of the handlers.
  */
 export function sameOrigin(request: Request): boolean {
-  if (SAFE.has(request.method.toUpperCase())) return true;
-  const site = request.headers.get('sec-fetch-site');
-  if (site) return site === 'same-origin';
-  const origin = request.headers.get('origin');
-  if (!origin) return false;
-  try {
-    const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? new URL(request.url).host;
-    return new URL(origin).host === host;
-  } catch {
-    return false;
-  }
+  return sameOriginRequest(request.method, request.headers, request.url);
 }
 
 export interface Guarded {
