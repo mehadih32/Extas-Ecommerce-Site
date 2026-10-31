@@ -5,6 +5,8 @@
 // and weight; the return charge from the rate card) plus the owner's packaging, handling and ad share (settings
 // `delivery.courier.rtoCost`). A part the owner has not entered is named as missing, never counted as zero: the total
 // is then a floor, and the book says so. Read only; nothing moves money.
+// PR 164: the fraud report (fraud-report.ts) reads the same rows through `rtoRows`, each with its order's id, to sum
+// them by district, campaign, product, courier and reason.
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { allow, parse, setting, type ShippingDeps, type Who } from './context';
@@ -22,6 +24,8 @@ export const rtoQuery = z
 
 export interface RtoRow {
   shipmentId: string;
+  /** PR 164: the order the parcel carried (the fraud report groups by its district, campaign and products). */
+  orderId: string;
   orderNumber: string;
   courier: string;
   providerKey: string;
@@ -47,42 +51,43 @@ const SELECT = {
   id: true,
   courierAccountId: true,
   courierAccount: { select: { name: true, providerKey: true } },
-  order: { select: { number: true, deliveryBand: { select: { key: true } } } },
+  order: { select: { id: true, number: true, deliveryBand: { select: { key: true } } } },
   weightGrams: true,
   chargeMinor: true,
   returnedAt: true,
   mode: true,
 } as const;
 
-function summarise(rows: RtoRow[]): RtoSummary {
+/** The totals of some RTO rows: parcels, the known cost, how many miss a part and which. */
+export function summariseRto(rows: RtoRow[]): RtoSummary {
   const missing = Object.fromEntries(RTO_PARTS.map((p) => [p, 0])) as Record<RtoPart, number>;
   for (const r of rows) for (const p of r.cost.missing) missing[p] += 1;
   return { parcels: rows.length, knownMinor: rows.reduce((s, r) => s + r.cost.knownMinor, 0), incomplete: rows.filter((r) => !r.cost.complete).length, missing };
 }
 
-/** The RTO cost book for a period (by the day the parcel came back). */
-export async function rtoBook(deps: ShippingDeps, who: Who, query: unknown = {}): Promise<{ rows: RtoRow[]; real: RtoSummary; practice: RtoSummary | null }> {
-  await allow(deps, who, 'delivery.parcels');
-  const q = parse(rtoQuery, query, 'RTO cost query');
-  const withPractice = q.practice === true || q.practice === '1' || q.practice === 'true';
-  const cfg = await setting(deps, who.storeId, 'delivery.courier.rtoCost');
+/**
+ * The returned parcels of a period (by the day each came back) with their cost, newest first, at most `take`: the real
+ * ones (SANDBOX, LIVE) only, or with `practice` the practice ones too. No permission check: each caller checks its own.
+ */
+export async function rtoRows(deps: ShippingDeps, storeId: number, q: { from?: Date | undefined; to?: Date | undefined; practice: boolean; take: number }): Promise<RtoRow[]> {
+  const cfg = await setting(deps, storeId, 'delivery.courier.rtoCost');
   const where: Prisma.ShipmentWhereInput = {
-    storeId: who.storeId,
+    storeId,
     status: 'RETURNED',
     ...(q.from || q.to ? { returnedAt: { ...(q.from ? { gte: q.from } : {}), ...(q.to ? { lt: q.to } : {}) } } : {}),
     // a parcel with no mode was never booked through an adapter: not a known cost either
-    mode: withPractice ? { not: null } : { in: ['SANDBOX', 'LIVE'] },
+    mode: q.practice ? { not: null } : { in: ['SANDBOX', 'LIVE'] },
   };
-  const parcels = await deps.db.shipment.findMany({ where, select: SELECT, orderBy: [{ returnedAt: 'desc' }, { id: 'desc' }], take: q.limit });
+  const parcels = await deps.db.shipment.findMany({ where, select: SELECT, orderBy: [{ returnedAt: 'desc' }, { id: 'desc' }], take: q.take });
   const accountIds = [...new Set(parcels.map((p) => p.courierAccountId))];
   const cards = await deps.db.courierRateCard.findMany({
-    where: { storeId: who.storeId, courierAccountId: { in: accountIds } },
+    where: { storeId, courierAccountId: { in: accountIds } },
     select: { courierAccountId: true, zoneKey: true, weightFromGrams: true, weightToGrams: true, chargeMinor: true, returnChargeMinor: true, validFrom: true, validTo: true },
   });
   const cardsOf = new Map<string, RateCardRow[]>();
   for (const c of cards) cardsOf.set(c.courierAccountId, [...(cardsOf.get(c.courierAccountId) ?? []), c]);
 
-  const rows: RtoRow[] = parcels.map((p) => {
+  return parcels.map((p) => {
     const zoneKey = p.order.deliveryBand?.key ?? null;
     const card = rateFor(cardsOf.get(p.courierAccountId) ?? [], { zoneKey, weightGrams: p.weightGrams, at: p.returnedAt ?? new Date(0) });
     const cost = rtoCostOf(
@@ -98,6 +103,7 @@ export async function rtoBook(deps: ShippingDeps, who: Who, query: unknown = {})
     );
     return {
       shipmentId: p.id,
+      orderId: p.order.id,
       orderNumber: p.order.number,
       courier: p.courierAccount.name,
       providerKey: p.courierAccount.providerKey,
@@ -108,5 +114,13 @@ export async function rtoBook(deps: ShippingDeps, who: Who, query: unknown = {})
       cost,
     };
   });
-  return { rows, real: summarise(rows.filter((r) => !r.practice)), practice: withPractice ? summarise(rows.filter((r) => r.practice)) : null };
+}
+
+/** The RTO cost book for a period (by the day the parcel came back). */
+export async function rtoBook(deps: ShippingDeps, who: Who, query: unknown = {}): Promise<{ rows: RtoRow[]; real: RtoSummary; practice: RtoSummary | null }> {
+  await allow(deps, who, 'delivery.parcels');
+  const q = parse(rtoQuery, query, 'RTO cost query');
+  const withPractice = q.practice === true || q.practice === '1' || q.practice === 'true';
+  const rows = await rtoRows(deps, who.storeId, { from: q.from, to: q.to, practice: withPractice, take: q.limit });
+  return { rows, real: summariseRto(rows.filter((r) => !r.practice)), practice: withPractice ? summariseRto(rows.filter((r) => r.practice)) : null };
 }

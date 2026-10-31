@@ -193,7 +193,8 @@
       "unblock": "Undo a blocklist listing with a reason (the line is kept with who undid it and why)",
       "refuser": {
         "terms": "Choose a repeat refuser's terms (nothing, the delivery charge or the full amount first, or no cash on delivery) with a reason, and end them. The owner's decision per case: a new order only gets a proposal that a person sends; COD never changes by itself"
-      }
+      },
+      "report": "See the fraud report: what the risk steps caught, what turned out wrong, the cost they probably avoided, and what refused parcels cost by district, campaign, product, courier and reason (Reports › Fraud & RTO; reads only)"
     },
     "fulfilment": {
       "print": "Print a booked parcel's courier sticker (it shows the receiver's name, phone and address) and a sample sticker",

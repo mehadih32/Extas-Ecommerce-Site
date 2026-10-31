@@ -13,6 +13,10 @@
 // cash on delivery (`risk.refuser.terms`). While this switch is on, a new order from the number carries the terms as a
 // proposal on the order ("Request advance", PR 542): a person sends it, unless the owner turned on that request's own auto
 // option. Nothing here changes COD by itself; "End" undoes the terms with a reason. Off as shipped.
+//
+// PR 164 (`risk.report`, version 102): the fraud report on Reports › Fraud & RTO — how many days it shows when no dates
+// are picked, and the most orders and returned parcels one report reads (past it the page says it is cut short). A
+// report only reads; nothing here blocks anyone, cancels an order or moves money.
 import { z } from 'zod';
 import { setting } from './define';
 import { dictionaryKeySchema } from './schemas';
@@ -20,6 +24,8 @@ import { dictionaryKeySchema } from './schemas';
 const V = 100;
 /** PR 163's version. */
 const V163 = 101;
+/** PR 164's version. */
+const V164 = 102;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
 
@@ -57,6 +63,20 @@ export const riskRefusersSchema = z
 export type RiskRefusers = z.output<typeof riskRefusersSchema>;
 export const RISK_REFUSERS_DEFAULT: RiskRefusers = { enabled: false, minRefused: null };
 
+export const riskReportSchema = z
+  .object({
+    /** The days the fraud report shows when no dates are picked, today included. */
+    days: z.int().min(1).max(366),
+    /**
+     * The most orders, and the most returned parcels, one report reads; past it the report says it is cut short. At most
+     * 20,000, so one report's look-ups stay inside the database's limit of values per query.
+     */
+    maxRows: z.int().min(100).max(20_000),
+  })
+  .strict();
+export type RiskReport = z.output<typeof riskReportSchema>;
+export const RISK_REPORT_DEFAULT: RiskReport = { days: 30, maxRows: 5_000 };
+
 export const riskS06Settings = {
   'risk.blocklist': setting({
     ...base,
@@ -76,5 +96,15 @@ export const riskS06Settings = {
     labelKey: 'risk.refusers.label',
     helpKey: 'risk.refusers.help',
     sortOrder: 331,
+  }),
+  'risk.report': setting({
+    ...base,
+    version: V164,
+    schema: riskReportSchema,
+    default: RISK_REPORT_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.report.label',
+    helpKey: 'risk.report.help',
+    sortOrder: 332,
   }),
 };

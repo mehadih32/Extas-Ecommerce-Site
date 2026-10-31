@@ -50,6 +50,10 @@
 // order's lock; a booking waits for a required photo; the handover needs packed orders (follow-up 433) (packing.ts,
 // packing-pure.ts).
 //
+// S06 · PR 164: the fraud report (Reports › Fraud & RTO) — what the risk steps caught, what was wrong, what was missed,
+// the cost the stopped orders probably saved (an estimate), and the RTO cost book of real returned parcels in taka by
+// district, campaign, product, courier and reason (fraud-report.ts, fraud-report-pure.ts). Reads only.
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';
@@ -75,3 +79,5 @@ export * from './returns';
 export * from './packing-pure';
 export * from './packing';
 export * from './packing-issues';
+export * from './fraud-report-pure';
+export * from './fraud-report';

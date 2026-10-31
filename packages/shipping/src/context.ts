@@ -51,6 +51,10 @@ export type ShippingPermission = (typeof SHIPPING_PERMISSIONS)[number];
 export const FULFIL_PERMISSIONS = ['fulfilment.read', 'fulfilment.print', 'fulfilment.handover', 'fulfilment.pack', 'fulfilment.photoWaive'] as const;
 export type FulfilPermission = (typeof FULFIL_PERMISSIONS)[number];
 
+/** PR 164 — the fraud report with the RTO cost book (Reports › Fraud & RTO); it reads only. */
+export const REPORT_PERMISSIONS = ['risk.report'] as const;
+export type ReportPermission = (typeof REPORT_PERMISSIONS)[number];
+
 export const TX = { maxWait: 10_000, timeout: 30_000 } as const;
 
 export const nowOf = (deps: Pick<ShippingDeps, 'now'>): Date => deps.now?.() ?? new Date();
@@ -60,7 +64,7 @@ export function checkStoreId(storeId: number): void {
 }
 
 /** Checks the permission in that store (or `delivery.read`, the courier list) and that the store exists and is not archived. */
-export async function allow(deps: Pick<ShippingDeps, 'db'>, who: Who, permission: ShippingPermission | FulfilPermission | 'delivery.read'): Promise<void> {
+export async function allow(deps: Pick<ShippingDeps, 'db'>, who: Who, permission: ShippingPermission | FulfilPermission | ReportPermission | 'delivery.read'): Promise<void> {
   checkStoreId(who.storeId);
   await requirePermission(deps.db, who.actor, permission, { storeId: who.storeId });
   const store = await deps.db.store.findUnique({ where: { id: who.storeId }, select: { archivedAt: true } });

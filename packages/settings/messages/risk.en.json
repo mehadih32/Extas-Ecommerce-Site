@@ -72,6 +72,10 @@
     "refusers": {
       "label": "Repeat refusers",
       "help": "Numbers that refused parcels again and again (not our fault), from how many refusals you set. You choose per case what the number's new orders get: nothing, the delivery charge first, the full amount first, or no cash on delivery — with a reason, and you can end it any time. When on, the terms reach a new order as a proposal that a person sends. Nothing changes COD by itself. Off as shipped."
+    },
+    "report": {
+      "label": "Fraud report",
+      "help": "How many days Reports › Fraud & RTO shows when no dates are picked (30 as shipped), and the most orders and returned parcels one report reads (5,000 as shipped; past it the page says the figures are cut short). The report only reads: it never blocks anyone, cancels an order or moves money."
     }
   },
   "defaults": {

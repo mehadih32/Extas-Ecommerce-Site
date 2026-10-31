@@ -67,6 +67,7 @@
     { "id": "reports/health-problems", "route": "/admin/reports/health/problems" },
     { "id": "reports/health-problem", "route": "/admin/reports/health/problems/[id]" },
     { "id": "reports/server", "route": "/admin/server" },
+    { "id": "reports/fraud", "route": "/admin/reports/fraud" },
     { "id": "settings/store", "route": "/admin/settings/store" },
     { "id": "settings/policies", "route": "/admin/settings/policies" },
     { "id": "settings/keys", "route": "/admin/integrations" },

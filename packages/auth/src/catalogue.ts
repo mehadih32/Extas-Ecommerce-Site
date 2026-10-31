@@ -156,6 +156,9 @@ export const PERMISSIONS = {
   // full amount first, or no cash on delivery, and "End". The terms only become a proposal on a new order; a person sends
   // it. Touches COD, so only the owner holds it until he gives it to someone (CLAUDE.md rule 6).
   'risk.refuser.terms': { group: 'orders' },
+  // S06 · PR 164 — the fraud report (Reports › Fraud & RTO): what the risk steps caught, what was wrong, the cost they
+  // probably avoided, and the RTO cost book by district, campaign, product, courier and reason. Reads only.
+  'risk.report': { group: 'orders' },
   // S06 · PR 542 — ask a customer for an advance from the order ("Request advance"): the pay link, its SMS/WhatsApp and a
   // call task. The order waits for the money; nothing moves money, changes COD, a price or a charge, or blocks anyone.
   'orders.advance.request': { group: 'orders' },

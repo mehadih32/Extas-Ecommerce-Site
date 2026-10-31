@@ -1,11 +1,11 @@
 // The PostgreSQL tests' shared set-up (never imported by app code): the order fixture (a throwaway database with the
 // real migrations, the sample catalogue, orders placed through the real checkout), the order staff member given every
-// shipping permission too, a reader with only `delivery.read`, and the courier connection layer with no keys — so every
+// shipping permission (and the fraud report's) too, a reader with only `delivery.read`, and the courier connection layer with no keys — so every
 // courier runs on its practice world. Every value is a made-up test value.
 import { createConnections, courierAdapters, type CourierApi } from '@extas/adapters';
 import { createRole, SYSTEM, type Actor } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
-import { FULFIL_PERMISSIONS, SHIPPING_PERMISSIONS, type ShippingDeps, type Who } from './context';
+import { FULFIL_PERMISSIONS, REPORT_PERMISSIONS, SHIPPING_PERMISSIONS, type ShippingDeps, type Who } from './context';
 
 export interface ShippingFixture extends OrdersFixture {
   shippingDeps: () => ShippingDeps;
@@ -21,7 +21,7 @@ export interface ShippingFixture extends OrdersFixture {
 export async function setUpShipping(label: string): Promise<ShippingFixture> {
   const f = await setUpOrders(label);
   const p = f.t.prisma;
-  const role = await createRole(p, SYSTEM, { key: 'test-shipping', nameEn: 'shipping', nameBn: 'shipping', permissions: [...SHIPPING_PERMISSIONS, ...FULFIL_PERMISSIONS, 'delivery.read'] });
+  const role = await createRole(p, SYSTEM, { key: 'test-shipping', nameEn: 'shipping', nameBn: 'shipping', permissions: [...SHIPPING_PERMISSIONS, ...FULFIL_PERMISSIONS, ...REPORT_PERMISSIONS, 'delivery.read'] });
   await p.staffRoleAssignment.create({ data: { staffUserId: f.staffId, roleId: role.id, storeId: f.S } });
   const lookRole = await createRole(p, SYSTEM, { key: 'test-shipping-look', nameEn: 'look', nameBn: 'look', permissions: ['delivery.read'] });
   const l = await p.staffUser.create({ data: { email: 'looker@example.com', displayName: 'Looker', passwordHash: 'not-a-login' } });
