@@ -1,0 +1,16 @@
+/* S21 · PR 413 — Reports › Site health: the five status lines (the shell's tokens only). */
+.adm2 .hl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.adm2 .hl-lines{list-style:none;margin:0;padding:0}
+.adm2 .hl-line{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-top:1px solid var(--ln2)}
+.adm2 .hl-line:first-child{border-top:0;padding-top:4px}
+.adm2 .hl-line>.a2-pill{flex:none;margin-top:1px;min-width:78px;justify-content:flex-start}
+.adm2 .hl-body{flex:1;min-width:0}
+.adm2 .hl-name{font-weight:600;color:var(--ink)}
+.adm2 .hl-text{color:var(--ink2);margin-top:2px;overflow-wrap:anywhere}
+.adm2 .hl-meta{color:var(--mute);font-size:12.5px;margin-top:3px}
+.adm2 .hl-open{flex:none}
+@media (max-width:600px){
+  .adm2 .hl-line{flex-wrap:wrap;gap:8px 10px}
+  .adm2 .hl-body{flex-basis:100%;order:2}
+  .adm2 .hl-open{order:1;margin-left:auto;height:32px}
+}

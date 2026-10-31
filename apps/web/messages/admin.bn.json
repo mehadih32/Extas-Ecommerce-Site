@@ -70,7 +70,8 @@
     "cache": "ক্যাশ",
     "backups": "ব্যাকআপ",
     "security": "লগইন ও নিরাপত্তা",
-    "edge": "Cloudflare সুরক্ষা"
+    "edge": "Cloudflare সুরক্ষা",
+    "health": "সাইটের অবস্থা"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

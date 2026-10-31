@@ -70,7 +70,8 @@
     "cache": "Cache",
     "backups": "Backups",
     "security": "Sign-in & security",
-    "edge": "Cloudflare protection"
+    "edge": "Cloudflare protection",
+    "health": "Site health"
   },
   "login": {
     "metaTitle": "Admin sign-in",

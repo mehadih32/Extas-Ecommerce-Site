@@ -251,6 +251,7 @@
       "/admin/settings/store",
       "/admin/settings/policies",
       "/admin/settings/security/edge",
+      "/admin/reports/health",
       "/admin/orders/risk-rules",
       "/pay/0",
       "/bn/pay/0",

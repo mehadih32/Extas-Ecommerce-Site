@@ -1,0 +1,87 @@
+{
+  "hlt": {
+    "metaTitle": "Site health",
+    "title": "Site health",
+    "sub": "One line each for customer problems, the server, speed, the site audit and the smoke test. Green is fine, yellow needs a look, red is wrong, grey has nothing to judge yet.",
+    "overall": {
+      "ok": "Everything is fine",
+      "warn": "Something needs a look",
+      "bad": "Something is wrong",
+      "off": "Nothing reports yet"
+    },
+    "overallFoot": "{bad} red · {warn} yellow · {ok} green",
+    "noServer": "No server reports reach this copy of the shop (a developer machine), so the server, speed and smoke lines stay grey.",
+    "state": {
+      "ok": "Fine",
+      "warn": "Look",
+      "bad": "Problem",
+      "off": "Not yet"
+    },
+    "at": "Written {at}",
+    "open": "Open",
+    "name": {
+      "problems": "Customer problems",
+      "server": "Server",
+      "speed": "Speed",
+      "audit": "Site audit",
+      "smoke": "Smoke test"
+    },
+    "line": {
+      "problems": {
+        "notYet": "Not recording yet. The privacy-safe problem recorder comes next and fills this line."
+      },
+      "server": {
+        "noReport": "No report from the server's health check yet.",
+        "late": "The server's health check is {min} minutes late.",
+        "problems": "{n} problem now: {first}",
+        "worker": "The background worker has stopped (no heartbeat).",
+        "workerNever": "The background worker has not started yet.",
+        "ok": "Every service is up and the background worker is alive."
+      },
+      "speed": {
+        "noReport": "No speed reading from the server yet.",
+        "late": "The last speed reading is {min} minutes old.",
+        "noAnswer": "The home page did not answer the server's check.",
+        "slow": "The home page took {ms} ms (yellow above {limit} ms).",
+        "ok": "The home page answered in {ms} ms."
+      },
+      "audit": {
+        "notYet": "Not running yet. The site audit's checklist runner fills this line."
+      },
+      "smoke": {
+        "never": "No smoke test has run yet.",
+        "failed": "{failed} of {pages} page views failed: {first}",
+        "late": "The last smoke test is {h} hours old (it runs after every deploy and every night).",
+        "ok": "All {pages} page views passed."
+      }
+    },
+    "note": {
+      "k6": "First load measurement (k6): 95% of requests within {p95} ms."
+    },
+    "card": {
+      "h": "When a line turns yellow",
+      "d": "Only how the lines are judged; nothing on the server changes.",
+      "monitorStaleMinutes": "Server check late after (minutes)",
+      "monitorStaleMinutesHelp": "The server checks itself every minute.",
+      "siteSlowMs": "Home page slow above (milliseconds)",
+      "siteSlowMsHelp": "The server's own alert uses its own limit.",
+      "smokeStaleHours": "Smoke test late after (hours)",
+      "smokeStaleHoursHelp": "It runs after every deploy and every night."
+    },
+    "err": {
+      "STALE": "Someone else changed this; it shows their values now.",
+      "INVALID_INPUT": "Some values are not right: {fields}",
+      "forbidden": "You do not have permission to change this.",
+      "unauthorized": "Your sign-in has ended — please sign in again.",
+      "network": "No connection. Please try again.",
+      "other": "That did not save. Please try again."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "discard": "Discard",
+    "unsaved": "Not saved yet",
+    "readOnly": "You can see these limits; changing them needs the settings permission.",
+    "pairHelp": "Write both languages."
+  }
+}

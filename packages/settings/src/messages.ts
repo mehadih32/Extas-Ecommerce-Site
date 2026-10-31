@@ -146,6 +146,8 @@ import privacyBn from '../messages/privacy.bn.json';
 import privacyEn from '../messages/privacy.en.json';
 import edgeBn from '../messages/edge.bn.json';
 import edgeEn from '../messages/edge.en.json';
+import healthBn from '../messages/health.bn.json';
+import healthEn from '../messages/health.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -203,6 +205,9 @@ messages.bn = mergeMessages(messages.bn, privacyBn);
 // S18 · PR 386 — the shop's protection at Cloudflare (registry-edge.ts).
 messages.en = mergeMessages(messages.en, edgeEn);
 messages.bn = mergeMessages(messages.bn, edgeBn);
+// S21 · PR 413 — the Site health hub's limits (registry-health.ts).
+messages.en = mergeMessages(messages.en, healthEn);
+messages.bn = mergeMessages(messages.bn, healthBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {
