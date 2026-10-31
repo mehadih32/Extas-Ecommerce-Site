@@ -1,6 +1,6 @@
-# Server report — 2026-10-31 16:02 +06
+# Server report — 2026-10-31 16:18 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `502cd35a4f4fabadbcbe9ae9f5fb51352e524647`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `7301dfe4b22c12a051e75ba652d5a968b676b858`. Overall: **PASS**.
 
 ## Machine
 
@@ -32,7 +32,7 @@ nvme0n2               1T disk LVM2_member                          MSFT NVMe Acc
 ├─extas-logs         30G lvm  ext4        /srv/extas/logs
 ├─extas-docker      200G lvm  ext4        /var/lib/docker
 ├─extas-swap         16G lvm  swap        [SWAP]
-└─extas-containerd  120G lvm  ext4
+└─extas-containerd  120G lvm  ext4        /var/lib/containerd
 nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVMe Direct Disk v2
 ```
 
@@ -75,7 +75,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 | Folder | On the OS disk | Note |
 |---|---|---|
 | `/var/lib/containerd` | 0.0 GB | own volume here (16G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (140M used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (141M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
@@ -112,7 +112,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 | Folder | On the OS disk | Note |
 |---|---|---|
 | `/var/lib/containerd` | 0.0 GB | own volume here (16G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (140M used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (141M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
