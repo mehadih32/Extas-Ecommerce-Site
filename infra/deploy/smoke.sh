@@ -43,6 +43,10 @@ case "$HOST" in
 esac
 GATE=yes
 [ "$HOST" != "$EXTAS_STAGING_HOST" ] && [ "${EXTAS_MAIN_OPEN:-no}" = yes ] && GATE=no
+# R2 ops review (M2): which kind of host, for the checks that belong to one (smoke.json `host`): the preview-only
+# noindex check never runs on the main domain, where the first-week watch would fail on it every run.
+HOST_KIND=staging
+[ "$HOST" = "$EXTAS_STAGING_HOST" ] || HOST_KIND=extra
 
 work="$(mktemp -d "$SEC/.smoke.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
@@ -89,7 +93,7 @@ at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
 at_iso="$(date -Is)"
 rc=0
 timeout "$((SMOKE_TIMEOUT_MIN * 60))" docker run --rm --name "extas-smoke-$$" --ipc=host --env-file "$work/smoke.env" \
-  -e BASE="https://$HOST" -e SMOKE_OUT=/out -e SMOKE_PRIVATE_OUT=/private -e SMOKE_KIND="$KIND" -e SMOKE_ROLLS_BACK="${SMOKE_ROLLS_BACK:-0}" -e SMOKE_SHA="${SHA:0:12}" -e SMOKE_AT="$at ($EXTAS_TIMEZONE)" \
+  -e BASE="https://$HOST" -e SMOKE_HOST_KIND="$HOST_KIND" -e SMOKE_OUT=/out -e SMOKE_PRIVATE_OUT=/private -e SMOKE_KIND="$KIND" -e SMOKE_ROLLS_BACK="${SMOKE_ROLLS_BACK:-0}" -e SMOKE_SHA="${SHA:0:12}" -e SMOKE_AT="$at ($EXTAS_TIMEZONE)" \
   -v "$REPO/tools:/w/tools:ro" -v "$REPO/docs/qa:/w/docs/qa:ro" -v "$OUT:/out" -v "$PRIV:/private" \
   "$IMG" node /w/tools/smoke.mjs || rc=$?
 # Review R1 (security M1): an admin picture that still landed in the report folder (an older smoke.mjs) moves to the

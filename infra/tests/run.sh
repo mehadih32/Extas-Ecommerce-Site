@@ -497,6 +497,7 @@ check "smoke: the browser never gets the database or the vault key" "$(grep -cE 
 check "smoke: no sign-in file is left behind" "$(find "$T/root/config/secrets" -mindepth 1 -name '.smoke*' | wc -l)" "0"
 check "smoke: the live migrate image makes the account" "$(grep -c 'run .*extas-migrate:aaa sh -c' "$T/docker.log")" "1"
 check "smoke: the preview host" "$(grep -c 'BASE=https://new.extas.com.bd' "$T/docker.log")" "1"
+check "smoke (R2 M2): the preview host is a staging host for the host-only checks" "$(grep -c 'BASE=https://new.extas.com.bd -e SMOKE_HOST_KIND=staging ' "$T/docker.log")" "1"
 # Review R1 (security M1): the admin pictures go to the server's root-only private folder, never the report folder.
 check "smoke (M1): the browser gets a private folder for the admin pictures, root-only" \
   "$(grep -c -- '-e SMOKE_PRIVATE_OUT=/private .*-v '"$T"'/root/private/smoke-admin:/private ' "$T/docker.log"):$(stat -c %a "$T/root/private/smoke-admin")" "1:700"
@@ -515,11 +516,14 @@ check "smoke: a guard problem fails the run and says which table" "$rc:$(jq -c '
 # R1 ops review (M7, PR 402): the host. "main" is the first extra host, with the preview login while it is locked and
 # without once EXTAS_MAIN_OPEN=yes; any host the server does not serve is refused; no main domain yet → the staging host.
 : > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=main >/dev/null || true
-check "smoke (M7): no main domain yet, the staging host instead" "$(grep -c 'BASE=https://new.extas.com.bd' "$T/docker.log")" "1"
+check "smoke (M7): no main domain yet, the staging host instead" "$(grep -c 'BASE=https://new.extas.com.bd' "$T/docker.log"):$(grep -c 'SMOKE_HOST_KIND=staging ' "$T/docker.log")" "1:1"
 printf 'EXTAS_EXTRA_HOSTS="Shop.Example.TEST www.example.test"\n' >> "$T/conf"
 : > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=main >/dev/null || true
 check "smoke (M7): main = the first extra host, locked: with the preview login" \
   "$(grep -c 'BASE=https://shop.example.test ' "$T/docker.log"):$(grep -c '^SMOKE_HTTP_USER=extas$' "$T/seen.env"):$(jq -r .host "$T/root/state/smoke.json")" "1:1:shop.example.test"
+# R2 ops review (M2): on the main domain the preview-only checks (smoke.json `host: staging`, the noindex one) are left
+# out, so the first-week watch does not fail every run once search engines are let in (tools/smoke.test.mjs).
+check "smoke (R2 M2): the main domain is an extra host for the host-only checks" "$(grep -c 'BASE=https://shop.example.test -e SMOKE_HOST_KIND=extra ' "$T/docker.log")" "1"
 printf 'EXTAS_MAIN_OPEN="yes"\n' >> "$T/conf"
 : > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=www.example.test >/dev/null || true
 check "smoke (M7): an open extra host goes without the preview login; staging always with it" \
