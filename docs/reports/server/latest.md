@@ -1,6 +1,6 @@
-# Server report — 2026-10-31 18:51 +06
+# Server report — 2026-10-31 22:22 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `83e2defd79d0d1ebdb296c8b9d03e516a71fc610`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `0be4a0df90ec2e55142f8addbebb56fcbddf06a7`. Overall: **PASS**.
 
 ## Machine
 
@@ -48,7 +48,7 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
 | PR 4 · Docker | OK | Docker version 29.9.2, compose 5.6.1; logs rotated; build cache ≤ 40 GB; starts after NVMe + data disk |
-| PR 4 · OS disk | OK | / 4% used, 120 GB free (a deploy needs 15); containerd store: on its own volume (21G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
+| PR 4 · OS disk | OK | / 4% used, 120 GB free (a deploy needs 15); containerd store: on its own volume (24G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
 | PR 620 · client address | INFO | Cloudflare's ranges written for Caddy; checked live after the reload |
 | PR 620 · client address | OK | live: CF-Connecting-IP believed from Cloudflare's ranges only (trusted_proxies in Caddy's running configuration) |
@@ -75,8 +75,8 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (21G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (142M used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (24G used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (144M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
@@ -112,8 +112,8 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (21G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (142M used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (24G used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (144M used on it) |
 | `/home/ghrunner/actions-runner` | 1.2 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 0.5 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
