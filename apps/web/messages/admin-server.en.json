@@ -98,6 +98,19 @@
     "errors": {
       "WORKER_LOST": "The worker stopped in the middle of this job; it runs again.",
       "STALLED": "The job got stuck too many times and was given up."
+    },
+    "speed": {
+      "title": "Real visitors' speed",
+      "LCP": "Main picture shown (LCP), phone",
+      "INP": "Answer to a tap (INP), phone",
+      "CLS": "Page jumps (CLS), phone",
+      "sub": "75th percentile, last {days} days, {n} readings",
+      "lab": "Monthly check (phone, 4G)",
+      "labOk": "On target",
+      "labMiss": "Missed a target",
+      "labNone": "Not yet",
+      "labWhen": "Runs on the 2nd of each month",
+      "more": "Every number, the targets and the settings: Website › SEO › Real visitors' speed"
     }
   }
 }

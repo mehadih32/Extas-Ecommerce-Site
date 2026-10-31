@@ -344,7 +344,8 @@ async function visit(page, base, ignore, path, screen, out) {
 }
 
 /** Answers the preview login once and returns the browser state holding its cookie, or null when none was set. */
-async function previewCookie(browser, base, httpCredentials) {
+/** The preview login's cookie (PR 234: the monthly lab run passes the preview login the same way). */
+export async function previewCookie(browser, base, httpCredentials) {
   const ctx = await browser.newContext({ httpCredentials });
   try {
     await (await ctx.newPage()).goto(`${base}/`);

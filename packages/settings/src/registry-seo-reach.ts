@@ -49,6 +49,11 @@
 // PR 233 (`seo.verification`): the codes Google Search Console and Bing Webmaster Tools give to prove the shop is the
 // owner's ("HTML tag" verification). Owner data: empty as shipped; each code the owner pastes is carried by every shop
 // page as its meta tag. They are not secrets (every visitor's page shows them); the API keys live in the vault.
+//
+// PR 234 (`seo.vitals`; PR 10's targets, owner server spec 19 Oct): real visitors' pages report their speed (Core Web
+// Vitals) as they load, kept only as daily counts (never a visitor), and read back as the 75th percentile of the last
+// `days` days against the targets; `share` is how many visits in a hundred report. A monthly lab run (a phone over 4G)
+// is judged against the same targets. On as shipped, every visit, 28 days, the targets of PR 10.
 import { z } from 'zod';
 import { setting } from './define';
 import { categorySlugSchema } from './registry-storefront';
@@ -224,6 +229,45 @@ export const seoVerificationSchema = z
 export type SeoVerification = z.output<typeof seoVerificationSchema>;
 export const SEO_VERIFICATION_DEFAULT: SeoVerification = { google: [], bing: [] };
 
+/** The ranges of the speed settings (the admin screen shows the same). */
+export const SEO_VITALS_LIMITS = {
+  share: { min: 1, max: 100 },
+  days: { min: 7, max: 90 },
+  lcpMs: { min: 500, max: 10000 },
+  clsThousandths: { min: 10, max: 500 },
+  inpMs: { min: 50, max: 1000 },
+  ttfbMs: { min: 100, max: 3000 },
+  categoryKb: { min: 100, max: 10000 },
+  adminMs: { min: 200, max: 10000 },
+} as const;
+const vitalsInt = (k: keyof typeof SEO_VITALS_LIMITS) => z.number().int().min(SEO_VITALS_LIMITS[k].min).max(SEO_VITALS_LIMITS[k].max);
+export const seoVitalsSchema = z
+  .object({
+    /** Real visitors' pages report their speed. */
+    collect: z.boolean(),
+    /** How many visits in a hundred report. */
+    share: vitalsInt('share'),
+    /** The span the admin reads, in days. */
+    days: vitalsInt('days'),
+    /** PR 10's targets: the 75th percentile must stay under each. */
+    targets: z
+      .object({
+        lcpMs: vitalsInt('lcpMs'),
+        /** Layout shift × 1000 (0.1 = 100). */
+        clsThousandths: vitalsInt('clsThousandths'),
+        inpMs: vitalsInt('inpMs'),
+        ttfbMs: vitalsInt('ttfbMs'),
+        /** A category page's weight (lab), in kilobytes. */
+        categoryKb: vitalsInt('categoryKb'),
+        /** An admin page's load time (lab). */
+        adminMs: vitalsInt('adminMs'),
+      })
+      .strict(),
+  })
+  .strict();
+export type SeoVitals = z.output<typeof seoVitalsSchema>;
+export const SEO_VITALS_DEFAULT: SeoVitals = { collect: true, share: 100, days: 28, targets: { lcpMs: 2500, clsThousandths: 100, inpMs: 200, ttfbMs: 600, categoryKb: 1024, adminMs: 1000 } };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -311,5 +355,15 @@ export const seoReachSettings = {
     labelKey: 'seo.verification.label',
     helpKey: 'seo.verification.help',
     sortOrder: 48,
+  }),
+  // ---- PR 234 · real visitors' speed and the monthly measurement ----
+  'seo.vitals': setting({
+    ...base,
+    version: V2,
+    schema: seoVitalsSchema,
+    default: SEO_VITALS_DEFAULT,
+    labelKey: 'seo.vitals.label',
+    helpKey: 'seo.vitals.help',
+    sortOrder: 49,
   }),
 };

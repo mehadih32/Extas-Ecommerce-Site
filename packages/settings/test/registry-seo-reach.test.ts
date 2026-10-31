@@ -6,10 +6,11 @@
 // PR 229: AI robots may read the shop as shipped (answer 56); the four named, no extra paths.
 // PR 232: photo descriptions are written as shipped (answer 9), at most 125 letters.
 // PR 233: no verification code as shipped (owner data); a code is one word, never a quote that could break the tag.
+// PR 234: speed reported by every visit as shipped, read over 28 days against PR 10's targets.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { seoReachSettings, SEO_ALT_TEXT_DEFAULT, SEO_VERIFICATION_DEFAULT, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
+import { seoReachSettings, SEO_ALT_TEXT_DEFAULT, SEO_VERIFICATION_DEFAULT, SEO_VITALS_DEFAULT, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
 
 describe('lane A SEO settings (v71–72)', () => {
   it('every key is in the registry at version 71, labelled in English and Bengali, its default valid', () => {
@@ -106,5 +107,15 @@ describe('lane A SEO settings (v71–72)', () => {
     expect(v.safeParse({ google: ['short'], bing: [] }).success).toBe(false);
     expect(v.safeParse({ google: ['abcDEF123_-xyz7890', 'abcDEF123_-xyz7890'], bing: [] }).success).toBe(false);
     expect(v.safeParse({ google: Array.from({ length: 6 }, (_, i) => `code-number-${i}`), bing: [] }).success).toBe(false);
+  });
+
+  it("PR 234: every visit reports as shipped, 28 days, PR 10's targets (LCP 2.5 s, CLS 0.1, INP 200 ms, TTFB 600 ms, 1 MB, 1 s) (v72)", () => {
+    expect(SEO_VITALS_DEFAULT).toEqual({ collect: true, share: 100, days: 28, targets: { lcpMs: 2500, clsThousandths: 100, inpMs: 200, ttfbMs: 600, categoryKb: 1024, adminMs: 1000 } });
+    expect(registry['seo.vitals'].version).toBe(72);
+    const s = registry['seo.vitals'].schema;
+    expect(s.safeParse({ ...SEO_VITALS_DEFAULT, share: 0 }).success).toBe(false);
+    expect(s.safeParse({ ...SEO_VITALS_DEFAULT, days: 91 }).success).toBe(false);
+    expect(s.safeParse({ ...SEO_VITALS_DEFAULT, targets: { ...SEO_VITALS_DEFAULT.targets, lcpMs: 100 } }).success).toBe(false);
+    expect(s.safeParse({ ...SEO_VITALS_DEFAULT, targets: { ...SEO_VITALS_DEFAULT.targets, fid: 100 } }).success).toBe(false);
   });
 });

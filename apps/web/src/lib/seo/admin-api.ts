@@ -47,6 +47,8 @@ export const SEO_KEYS = [
   'seo.altText',
   // PR 233: the Search Console and Bing verification codes
   'seo.verification',
+  // PR 234: real visitors' speed
+  'seo.vitals',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 

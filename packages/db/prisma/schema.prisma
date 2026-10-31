@@ -297,6 +297,7 @@ model Store {
   searchConsoleMetrics    SearchConsoleMetric[]
   aiCitations             AiCitation[]
   speedMeasurements       SpeedMeasurement[]
+  webVitalDays            WebVitalDay[]
   internalLinkRules       InternalLinkRule[]
   seoIssues               SeoIssue[]
   blogCategories          BlogCategory[]
@@ -6386,6 +6387,31 @@ model SpeedMeasurement {
   createdAt  DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([storeId, measuredAt])
+}
+
+/// @stage S11 · PR 234 — real visitors' Core Web Vitals, one row per day, metric, kind of page and device: how many
+/// readings fell in each bucket (lib/seo/vitals BUCKETS), so the 75th percentile can be read for any span of days. Never a
+/// visitor, an address or a time of day; a row only ever grows.
+model WebVitalDay {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  /// The store's own day (its time zone).
+  day       DateTime @db.Date
+  /// LCP, CLS, INP, TTFB or FCP.
+  metric    String
+  /// home, category, product, combo, help, search, checkout, account or other.
+  pageKind  String
+  /// phone or desktop.
+  device    String
+  /// Readings per bucket, in the order of the metric's bucket limits (the last one is everything above).
+  buckets   Int[]
+  count     Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, day, metric, pageKind, device])
+  @@index([storeId, day])
 }
 
 /// @stage S11 · PR 231 — an internal-linking rule.

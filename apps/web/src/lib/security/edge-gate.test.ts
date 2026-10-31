@@ -54,6 +54,7 @@ describe('request kinds', () => {
     expect(rateBucketOf('POST', '/api/checkout/orders')).toBe('checkout');
     expect(rateBucketOf('POST', '/api/pay/link')).toBe('checkout');
     expect(rateBucketOf('PATCH', '/api/bag/lines/x')).toBe('shopWrite');
+    expect(rateBucketOf('POST', '/api/shop/vitals')).toBe('report'); // PR 234: the speed readings
     expect(rateBucketOf('GET', '/api/bag/lines')).toBeNull();
     expect(rateBucketOf('POST', '/api/security/csp-report')).toBe('report');
     expect(rateBucketOf('POST', '/api/erp/webhook')).toBe('webhook');

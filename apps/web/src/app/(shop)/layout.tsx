@@ -5,6 +5,7 @@
 // else draws (lib/seo/hash-forward, `seo.hashLinks`).
 // S11 · PR 233: every shop page carries the Search Console and Bing verification codes as their meta tags
 // (lib/seo/verification, `seo.verification`; none while no code is set).
+// S11 · PR 234: while `seo.vitals.collect` is on, the page reports its speed (components/shop/VitalsReporter).
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -15,6 +16,7 @@ import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { hashRulesFor, hashScript } from '@/lib/seo/hash-forward';
 import { verificationMetadata } from '@/lib/seo/verification';
 import { BengaliFontWarm } from '@/components/shop/BengaliFontWarm';
+import { VitalsReporter } from '@/components/shop/VitalsReporter';
 import { BENGALI_FONT_COOKIE, bengaliFontFaces, bengaliFontUrls, shopThemeFontPreloads } from '@/lib/shop/font-preload';
 import { hrefIn } from '@/lib/shop/lang';
 import { sweepCss } from '@/lib/shop/sweep';
@@ -31,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ShopLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const c = await shopContext();
-  const { 'seo.hashLinks': hashLinks } = await readPageSettings(['seo.hashLinks'] as const, c.storeId);
+  const { 'seo.hashLinks': hashLinks, 'seo.vitals': vitals } = await readPageSettings(['seo.hashLinks', 'seo.vitals'] as const, c.storeId);
   // The Bengali shop switched off: its addresses lead to the English twin.
   if (c.lang === 'bn' && !c.s['language.bengali.enabled']) redirect(hrefIn('en', c.path));
   // The first screen's faces start loading with the page, so they are in before the first paint (the demo's type).
@@ -57,6 +59,7 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
         <BengaliFontWarm urls={bengaliFontUrls()} cookie={BENGALI_FONT_COOKIE} maxAgeSeconds={BENGALI_FONT_COOKIE_AGE} />
       ) : null}
       {children}
+      {vitals.collect ? <VitalsReporter share={vitals.share} /> : null}
     </div>
   );
 }

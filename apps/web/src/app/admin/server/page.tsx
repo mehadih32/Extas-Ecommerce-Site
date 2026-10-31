@@ -4,7 +4,10 @@
 // next try (or that they were given up). Reading needs `system.read`. The page reads only the database (the worker's
 // own rows); it never talks to the queue, so it opens when Redis or the worker is down. The demo's other cards
 // (memory per service, disks, the NVMe unit, cache, alerts: PR 423, 601, 603, 604, 9) join this page with their PRs.
+// S11 · PR 234: real visitors' speed (the 75th percentile on a phone against PR 10's targets) and the newest monthly lab
+// run, in four numbers; the full card and its settings are on Website › SEO.
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { workerStatus, type WorkerState } from '@extas/jobs';
 import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
@@ -16,6 +19,10 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { t } from '@/lib/i18n';
+import { MOTHER_STORE_ID } from '@extas/db/client';
+import { formatVital } from '@/lib/seo/vitals';
+import { labReport, vitalsReport } from '@/lib/seo/vitals-data';
+import { readPageSettings } from '@/lib/shop/context';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +44,8 @@ export default async function ServerPage() {
   if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} />;
 
   const s = await workerStatus({ db: access.deps.db, settings: access.deps.resolver, now: access.deps.now });
+  const { 'seo.vitals': vitalsSet } = await readPageSettings(['seo.vitals'] as const, MOTHER_STORE_ID);
+  const [vitals, lab] = await Promise.all([vitalsReport(access.deps.db, MOTHER_STORE_ID, vitalsSet), labReport(access.deps.db, MOTHER_STORE_ID, vitalsSet)]);
   const d = view.dict;
   const now = new Date(s.checkedAt);
   const num = (n: number) => formatNumber(n, view.locale);
@@ -166,6 +175,30 @@ export default async function ServerPage() {
           )}
         </section>
       </div>
+
+      <section className="ad-card st-card" aria-labelledby="sv-speed" data-testid="server-speed">
+        <h2 id="sv-speed">{t(d, 'server.speed.title')}</h2>
+        <div className="pa-kpis">
+          {(['LCP', 'INP', 'CLS'] as const).map((m) => {
+            const c = vitals.overall[m].phone;
+            return (
+              <div key={m} className="pa-kpi" data-metric={m} data-ok={c.ok == null ? undefined : String(c.ok)}>
+                <div className={`pa-kpi-v${c.ok === false ? ' warn' : c.ok ? ' ok' : ''}`}>{c.p75 == null ? '—' : `${c.over ? '> ' : ''}${formatVital(m, c.p75, view.locale)}`}</div>
+                <div className="pa-kpi-l">{t(d, `server.speed.${m}`)}</div>
+                <div className="pa-kpi-s">{t(d, 'server.speed.sub', { days: num(vitals.days), n: num(c.count) })}</div>
+              </div>
+            );
+          })}
+          <div className="pa-kpi" data-lab={lab ? String(lab.ok) : 'none'}>
+            <div className={`pa-kpi-v${lab ? (lab.ok ? ' ok' : ' warn') : ''}`}>{t(d, lab ? (lab.ok ? 'server.speed.labOk' : 'server.speed.labMiss') : 'server.speed.labNone')}</div>
+            <div className="pa-kpi-l">{t(d, 'server.speed.lab')}</div>
+            <div className="pa-kpi-s">{lab ? when(lab.at) : t(d, 'server.speed.labWhen')}</div>
+          </div>
+        </div>
+        <p className="pa-empty">
+          <Link href="/admin/website/seo#a2s-seovt" className="sv-more">{t(d, 'server.speed.more')}</Link>
+        </p>
+      </section>
 
       <div className="ad-note">
         <Icon name="info" size={16} />

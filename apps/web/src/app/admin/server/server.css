@@ -4,3 +4,6 @@
 .st-st.s-DEAD_LETTERED { background: var(--ad-warn-bg); color: var(--ad-sale); }
 .st-st.s-DEAD_LETTERED::before { background: var(--ad-sale); }
 .sv-leader { margin-left: 8px; vertical-align: 1px; }
+/* PR 234: the speed card's "more on Website › SEO" link stands alone, so it is a 44 px tap at every width; the
+   negative margin sits inside the line's own padding, so the card looks as before. */
+.sv-more { display: inline-flex; align-items: center; min-height: 44px; margin: -12px 0; }
