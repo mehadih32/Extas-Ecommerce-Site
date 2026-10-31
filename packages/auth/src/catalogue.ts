@@ -315,6 +315,9 @@ export const PERMISSIONS = {
   // here blocks anyone or changes the shop.
   'health.problems.manage': { group: 'health' },
   'health.problems.approve': { group: 'health' },
+  // S21 · PR 418 (REP-07e) — Smoke runs: see the smoke test's pictures of admin pages, which can show customers' names
+  // (the Orders list). The shop's own pages and every result need only `health.read`.
+  'health.smoke.shots': { group: 'health' },
   // S13 · PR 257 (Blueprint C6.2) — Marketing › Tracking: see what the shop's server sent to the ad platforms
   // (`ads.tracking.read`); switch it on, tick the events and platforms, allow customer matching and send a test event
   // (`ads.tracking.manage`). Keys are typed on Keys & connections (`vault.write`), never here. No money moves.

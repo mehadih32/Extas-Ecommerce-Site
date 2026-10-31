@@ -2,7 +2,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { adminLinks, adminPaths, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, shotDir, totpCode } from './smoke.mjs';
+import { adminLinks, adminPaths, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, rowsFile, shotDir, totpCode } from './smoke.mjs';
 
 it('PR 6: an extra check passes on the expected value or answer, and says what it saw otherwise', () => {
   const page = { pr: 6, what: 'worker fresh', page: '/admin/server', selector: '[data-worker-state]', attribute: 'data-worker-state', equals: 'ok' };
@@ -179,4 +179,19 @@ it('PR 388: the manual\'s marks are fractions of the screen; a missing or off-sc
   expect(config.length).toBeGreaterThan(0);
   for (const s of config) expect(s).toMatchObject({ guide: expect.any(String), path: expect.stringMatching(/^\/admin/) });
   expect(readMarks('/nowhere/marks.json')).toEqual([]);
+});
+
+it('PR 418: rows.json keeps each page and screen with its picture, at most ten short problems, nothing else', () => {
+  const long = 'x'.repeat(400);
+  const rows = [
+    { path: '/', screen: 'phone', status: 200, landed: '/', ok: true, problems: [], screenshot: 'home-phone.jpg', marks: [{ a: 1 }] },
+    { path: '/admin/orders', screen: 'desktop', status: 500, landed: '/admin/orders', ok: false, problems: [long, ...Array.from({ length: 12 }, (_, i) => `p${i}`)], screenshot: null },
+  ];
+  const f = rowsFile({ rows }, { at: 'sample time', kind: 'nightly', sha: 'abc123', base: 'https://new.example.test' });
+  expect(f).toMatchObject({ at: 'sample time', kind: 'nightly', sha: 'abc123' });
+  expect(f).not.toHaveProperty('base');
+  expect(f.rows[0]).toEqual({ path: '/', screen: 'phone', status: 200, landed: '/', ok: true, problems: [], screenshot: 'home-phone.jpg' });
+  expect(f.rows[1].problems).toHaveLength(10);
+  expect(f.rows[1].problems[0]).toHaveLength(300);
+  expect(f.rows[1].screenshot).toBeNull();
 });

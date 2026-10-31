@@ -11,7 +11,7 @@
 // on the Server page).
 // S11 · PR 236: on the first screen, every storefront page that names a language pair (hreflang) is checked with its
 // twin (tools/hreflang-check.mjs): complete, absolute, itself included, and named back.
-// Writes <SMOKE_OUT>/result.json, README.md and one screenshot per storefront page and screen; admin pages' screenshots
+// Writes <SMOKE_OUT>/result.json, README.md, rows.json (PR 418) and one screenshot per storefront page and screen; admin pages' screenshots
 // go only to SMOKE_PRIVATE_OUT when it is set (kept on the server, never committed: review R1 security M1). Never
 // prints or stores a password.
 // S18 · PR 388 (B7.5): signed in, it also opens each page of docs/admin-guide/marks.json and writes where each marked
@@ -623,6 +623,28 @@ export async function runSmoke(opts) {
   };
 }
 
+/**
+ * PR 418 (REP-07e): every page × screen of the run for Reports › Site health › Smoke runs (rows.json beside result.json;
+ * smoke.sh keeps it on the server with the pictures). Only the path, the screen, the answer, pass or fail, at most ten
+ * problems each and the picture's file name: no page text, no password, no customer detail.
+ */
+export function rowsFile(result, meta) {
+  return {
+    at: meta.at,
+    kind: meta.kind,
+    sha: meta.sha,
+    rows: result.rows.map((r) => ({
+      path: r.path,
+      screen: r.screen,
+      status: r.status,
+      landed: r.landed,
+      ok: r.ok,
+      problems: r.problems.slice(0, 10).map((p) => String(p).slice(0, 300)),
+      screenshot: r.screenshot ?? null,
+    })),
+  };
+}
+
 /** The report file: Bengali summary first, then the table (docs/reports/smoke/latest/README.md). */
 export function reportMarkdown(result, meta) {
   const lines = [
@@ -701,6 +723,7 @@ async function main() {
       `${JSON.stringify({ ...meta, ok: result.ok, pages: result.pages, failed: result.failed, problems: result.problems }, null, 2)}\n`,
     );
     writeFileSync(join(out, "README.md"), reportMarkdown(result, meta));
+    writeFileSync(join(out, "rows.json"), `${JSON.stringify(rowsFile(result, meta))}\n`);
     // PR 388: the Site manual's pictures and where their marks sit, beside the pictures in the private folder (review
     // R1: never in the committed report folder).
     if (result.shots.length && privateOut)

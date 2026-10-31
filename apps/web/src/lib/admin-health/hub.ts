@@ -98,6 +98,8 @@ export const NO_ANSWER_MS = 99_999;
 export const SERVER_PAGE = '/admin/server';
 /** PR 417: the speed line opens Reports › Site health › Speed. */
 export const SPEED_PAGE = '/admin/reports/health/speed';
+/** PR 418: the smoke line opens Reports › Site health › Smoke runs. */
+export const SMOKE_PAGE = '/admin/reports/health/smoke';
 
 const minutesSince = (now: Date, t: Date) => Math.max(0, Math.floor((now.getTime() - t.getTime()) / 60_000));
 const iso = (f: StateFile<unknown> | null) => (f ? f.writtenAt.toISOString() : null);
@@ -128,7 +130,7 @@ function speedLine(i: HubInput): HubLine {
 }
 
 function smokeLine(i: HubInput): HubLine {
-  const base = { id: 'smoke' as const, at: iso(i.smoke), href: null };
+  const base = { id: 'smoke' as const, at: iso(i.smoke), href: SMOKE_PAGE };
   if (!i.smoke) return { ...base, state: 'off', reason: 'never', vars: {} };
   const s = i.smoke.data;
   if (!s.ok) return { ...base, state: 'bad', reason: 'failed', vars: { failed: s.failed ?? 0, pages: s.pages ?? 0, first: (s.problems?.[0] ?? '').slice(0, 160) } };

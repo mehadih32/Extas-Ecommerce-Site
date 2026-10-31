@@ -49,6 +49,7 @@ describe('PR 413 · the Site health hub', () => {
 
   it('judges the smoke test: never run, failed, late', () => {
     expect(pick(line({ ...base, smoke: null }, 'smoke'))).toEqual(['off', 'never']);
+    expect(line(base, 'smoke').href).toBe('/admin/reports/health/smoke');
     expect(line({ ...base, smoke: { data: { ok: false, pages: 30, failed: 1, problems: ['/checkout: console error'] }, writtenAt: ago(5) } }, 'smoke')).toMatchObject({ state: 'bad', vars: { failed: 1, pages: 30, first: '/checkout: console error' } });
     expect(line({ ...base, smoke: { ...base.smoke!, writtenAt: ago(31 * 60) } }, 'smoke')).toMatchObject({ state: 'warn', reason: 'late', vars: { h: 31 } });
   });

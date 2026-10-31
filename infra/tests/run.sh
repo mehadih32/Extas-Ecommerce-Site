@@ -1726,6 +1726,22 @@ check "speed (417): never pressed → not asked" "$(sasked '' 1761900000)" "no"
 check "speed (417): a press after the last run → asked; before it → not" "$(sasked 1761900600 1761900000):$(sasked 1761899000 1761900000)" "asked:no"
 check "speed (417): no run yet and pressed → asked; a malformed press never runs" "$(sasked 1761900600 0):$(sasked 'x; rm -rf /' 0)" "asked:no"
 check "speed (417): the hourly check runs the lab script in its asked mode" "$(grep -c "41 \* \* \* \*" ../../.github/workflows/vitals-monthly.yml):$(grep -c 'vitals-lab.sh "$live" "$MODE"' ../../.github/workflows/vitals-monthly.yml)" "2:1"
+# PR 418: the smoke test keeps its newest run of each kind (result, rows, pictures) for the Smoke runs page.
+sslot() { ( . ../deploy/smoke-lib.sh; smoke_slot "$1" ); }
+check "smoke runs (418): after a deploy → deploy; nightly and the rest → scheduled" "$(sslot 'after deploy'):$(sslot nightly):$(sslot first-week):$(sslot '')" "deploy:scheduled:scheduled:scheduled"
+SK="$T/skeep"; mkdir -p "$SK/out" "$SK/runs"
+echo '{"ok":true}' > "$SK/out/result.json"; echo '{"rows":[]}' > "$SK/out/rows.json"; echo jpg > "$SK/out/home-phone.jpg"
+echo '# report' > "$SK/out/README.md"; echo secret > "$SK/out/check.env"; ln -s /etc/passwd "$SK/out/link.jpg"
+( . ../deploy/smoke-lib.sh; smoke_keep "$SK/out" "$SK/runs" deploy )
+check "smoke runs (418): the result, rows and pictures are kept, nothing else, readable by the app" \
+  "$(find "$SK/runs/deploy" -type f -printf '%f:%m ' | tr ' ' '\n' | sort | tr '\n' ' ')" "home-phone.jpg:644 result.json:644 rows.json:644 "
+echo '{"ok":false}' > "$SK/out/result.json"; rm -f "$SK/out/home-phone.jpg"; echo jpg > "$SK/out/cart-phone.jpg"
+( . ../deploy/smoke-lib.sh; smoke_keep "$SK/out" "$SK/runs" deploy )
+check "smoke runs (418): a new run replaces its slot whole, the other slot and no leftovers stay" \
+  "$(cat "$SK/runs/deploy/result.json"):$(ls "$SK/runs/deploy" | tr '\n' ' '):$(find "$SK/runs" -mindepth 1 -maxdepth 1 | wc -l)" '{"ok":false}:cart-phone.jpg result.json rows.json :1'
+rm -f "$SK/out/result.json"
+check "smoke runs (418): a run without a result keeps the previous one" "$( ( . ../deploy/smoke-lib.sh; smoke_keep "$SK/out" "$SK/runs" deploy ) || echo kept):$(cat "$SK/runs/deploy/result.json")" 'kept:{"ok":false}'
+check "smoke runs (418): smoke.sh keeps each run after state/smoke.json" "$(grep -c 'smoke_keep "$OUT" "$STATE/smoke-runs" "$(smoke_slot "$KIND")"' ../deploy/smoke.sh)" "1"
 JK="$T/jkeep"; mkdir -p "$JK"
 for s in 20261027-060101 20261028-060101 20261029-060101 20261030-060101; do echo '{}' > "$JK/$s.json"; done
 echo keep > "$JK/notes.txt"

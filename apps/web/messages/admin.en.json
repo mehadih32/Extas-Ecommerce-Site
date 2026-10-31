@@ -85,7 +85,8 @@
     "seoBengali": "Bengali pages",
     "adsTracking": "Tracking",
     "manual": "Site manual",
-    "healthSpeed": "Speed"
+    "healthSpeed": "Speed",
+    "healthSmoke": "Smoke runs"
   },
   "login": {
     "metaTitle": "Admin sign-in",

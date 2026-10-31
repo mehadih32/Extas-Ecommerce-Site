@@ -257,6 +257,9 @@
       "problems": {
         "manage": "Set a customer problem's status (fixing, fixed with how, could not fix with why, needs the owner)",
         "approve": "Give the owner's go-ahead on a customer problem that needs his permission or his check"
+      },
+      "smoke": {
+        "shots": "See the smoke test's pictures of admin pages on Site health › Smoke runs (they can show customers' names)"
       }
     },
     "ads": {

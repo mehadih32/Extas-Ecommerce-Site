@@ -254,5 +254,64 @@
       "readOnly": "You can see this; changing it needs the settings permission."
     },
     "visits": "{n} visits"
+  },
+  "smk": {
+    "metaTitle": "Smoke runs — Site health",
+    "title": "Smoke runs",
+    "sub": "After every deploy and every night a real browser opens every built page on a phone and a desktop. Here is the newest run, page by page.",
+    "runs": {
+      "deploy": "After the last deploy",
+      "scheduled": "Last nightly run"
+    },
+    "runOk": "passed",
+    "runFail": "failed",
+    "runNone": "none yet",
+    "shows": {
+      "failed": "Failed pages ({n})",
+      "all": "All pages ({n})"
+    },
+    "kpi": {
+      "result": "Result",
+      "ok": "Every page passed",
+      "fail": "Some pages failed",
+      "resultFoot": "{when}",
+      "pages": "Pages checked",
+      "pagesFoot": "{views} page views on a phone and a desktop",
+      "failed": "Failed pages",
+      "failedFoot": "{views} failed page views",
+      "version": "Version",
+      "versionFoot": "{kind}"
+    },
+    "kind": {
+      "deploy": "after a deploy",
+      "nightly": "nightly",
+      "firstWeek": "first week",
+      "other": "{kind}"
+    },
+    "putBack": "A page failed after this deploy, so the previous version was put back automatically. Fix it before anything new.",
+    "problemsH": "What went wrong",
+    "problemsMore": "and {n} more in the list below",
+    "db": "Database: {guards}. The app connects as {role}.",
+    "listH": "Pages",
+    "col": {
+      "page": "Page",
+      "phone": "Phone",
+      "desktop": "Desktop"
+    },
+    "pass": "Passed",
+    "fail": "Failed",
+    "answer": "answered {status}",
+    "landed": "ended on {path}",
+    "picture": "Picture",
+    "noPicture": "No picture",
+    "hiddenPicture": "Hidden",
+    "screen": {
+      "phone": "Phone",
+      "desktop": "Desktop"
+    },
+    "none": "No smoke run is kept on the server yet. It runs after every deploy and every night; this page fills after the next one.",
+    "noneFailed": "No page failed in this run.",
+    "noRows": "This run is from before the page-by-page list; the next run fills it. Its summary is above.",
+    "adminShots": "Pictures of admin pages are hidden for you: they can show customers' names. Seeing them needs the permission health.smoke.shots (the owner adds it to a role)."
   }
 }

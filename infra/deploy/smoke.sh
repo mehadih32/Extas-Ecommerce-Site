@@ -13,6 +13,8 @@
 #    admin pages' screenshots carry customers' names, phones and addresses after go-live, so they go only to the
 #    server's root-only folder SMOKE_PRIVATE_DIR (default <EXTAS_ROOT>/private/smoke-admin, the last run's), never
 #    into <out-dir> or Git.
+# 4. PR 418: the newest run after a deploy and the newest other run (nightly, first week) stay on the server with each
+#    page's result and storefront picture for Reports › Site health › Smoke runs (state/smoke-runs/, smoke-lib.sh).
 # Exit 0 = every page passed. No password, seed or connection string is printed or kept.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -123,5 +125,8 @@ else
     '{at:$at, atText:$text, host:$host, kind:$kind, sha:$sha, ok:false, pages:0, failed:0, problems:["the smoke test did not finish (exit " + $rc + ")"]}' > "$STATE/smoke.json.tmp"
 fi
 chmod 0644 "$STATE/smoke.json.tmp" && mv "$STATE/smoke.json.tmp" "$STATE/smoke.json"
+# shellcheck source=smoke-lib.sh
+. "$HERE/smoke-lib.sh"
+smoke_keep "$OUT" "$STATE/smoke-runs" "$(smoke_slot "$KIND")" || log "no result to keep for the Smoke runs page"
 log "$(jq -r 'if .ok then "PASS: \(.pages) page views" else "FAIL: \(.problems | join("; "))" end' "$STATE/smoke.json")"
 exit "$rc"
