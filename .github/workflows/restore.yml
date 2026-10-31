@@ -1,0 +1,101 @@
+# PR 385 (B6.1, B6.2) — the break-glass restore, run by hand (workflow_dispatch) ON the VM through the self-hosted
+# runner (CN-003: no SSH from the cloud). The steps and when to use each are in docs/security/BREAK-GLASS-RESTORE.md.
+#   test        extas-restore test: the newest local backup restored into a throwaway database and checked
+#   staging     a restored copy (from local, Blob or Drive, optionally to a minute) left running as extas-pg-restore
+#               for checking; the live site is not touched
+#   production  replaces the live database with the restored copy (the old data is kept on the data disk, never
+#               deleted). Only with the owner's written OK (CLAUDE.md rule 6): `confirm` must be RESTORE and `owner_ok`
+#               must say where his OK is written; both are printed in the run log.
+# Nothing secret is in this file or the log: the inputs go to the scripts as environment variables, never into the
+# shell text, and the result is the restore's own one-line report.
+name: restore
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'test, staging or production'
+        type: choice
+        options: [test, staging, production]
+        default: test
+      from:
+        description: 'Where the backup comes from (staging and production): local, blob or drive'
+        type: choice
+        options: [blob, local, drive]
+        default: blob
+      at:
+        description: 'Optional: restore to this minute, "YYYY-MM-DD HH:MM" in the store''s time zone (local and blob only)'
+        required: false
+        default: ''
+      confirm:
+        description: 'production only: type RESTORE'
+        required: false
+        default: ''
+      owner_ok:
+        description: 'production only: where the owner''s written OK is (chat message, date and time)'
+        required: false
+        default: ''
+
+concurrency:
+  group: extas-vm
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  restore:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 120
+    env:
+      MODE: ${{ inputs.mode }}
+      FROM: ${{ inputs.from }}
+      AT: ${{ inputs.at }}
+      CONFIRM: ${{ inputs.confirm }}
+      OWNER_OK: ${{ inputs.owner_ok }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the request
+        run: |
+          set -eu
+          case "$MODE" in test|staging|production) ;; *) echo "::error::mode must be test, staging or production"; exit 1 ;; esac
+          case "$FROM" in local|blob|drive) ;; *) echo "::error::from must be local, blob or drive"; exit 1 ;; esac
+          if [ -n "$AT" ]; then
+            [[ "$AT" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}\ [0-9]{2}:[0-9]{2}$ ]] || { echo "::error::at must be YYYY-MM-DD HH:MM"; exit 1; }
+            [ "$FROM" != drive ] || { echo "::error::a Drive restore has no minute choice (the daily dump)"; exit 1; }
+          fi
+          if [ "$MODE" = production ]; then
+            [ "$CONFIRM" = RESTORE ] || { echo "::error::production needs confirm = RESTORE"; exit 1; }
+            [ -n "$(echo "$OWNER_OK" | tr -d '[:space:]')" ] || { echo "::error::production needs the owner's written OK (owner_ok)"; exit 1; }
+            echo "Production restore from $FROM ${AT:+to $AT }with the owner's OK: $OWNER_OK"
+          fi
+
+      - name: Restore
+        id: restore
+        run: |
+          set -eu
+          args=()
+          if [ "$MODE" = test ]; then args=(test)
+          else
+            args=(--from "$FROM" --target "$MODE")
+            [ -z "$AT" ] || args+=(--at "$AT")
+          fi
+          if [ "$MODE" = production ]; then
+            printf 'RESTORE\n' | sudo bash infra/server/bin/extas-restore "${args[@]}"
+          else
+            sudo bash infra/server/bin/extas-restore "${args[@]}"
+          fi
+
+      - name: Start the shop again after a production restore
+        if: inputs.mode == 'production' && steps.restore.outcome == 'success'
+        run: |
+          set -eu
+          for c in $(sudo docker ps -a --format '{{.Names}}' | grep -E '^extas-app|^extas-worker|^extas-jobs' || true); do sudo docker start "$c" >/dev/null; done
+          echo "The shop is starting. Run deploy.yml next: it runs the smoke test on every page."
+
+      - name: Report
+        if: always()
+        run: |
+          f=/srv/extas/state/restore-$([ "$MODE" = test ] && echo test || echo restore).json
+          { echo "### Restore ($MODE)"; echo; sudo cat "$f" 2>/dev/null || echo "no result file"; } >> "$GITHUB_STEP_SUMMARY"

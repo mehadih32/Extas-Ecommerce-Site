@@ -121,6 +121,8 @@ for t in blob drive; do
   f="$STATE/backup-daily-$t.json"
   QUIET="$BQ" alert "backup_$t" "$(grep -q '"result":"fail"' "$f" 2>/dev/null && echo 1 || echo 0)" "$t ব্যাকআপ ব্যর্থ হয়েছে"
 done
+# PR 385: the Blob copies are locked, and a delete from this server is refused (extas-backup lock-check)
+QUIET="$BQ" alert backup_lock "$(grep -q '"result":"fail"' "$STATE/backup-lock-blob.json" 2>/dev/null && echo 1 || echo 0)" "ব্যাকআপ লক কাজ করছে না: এই সার্ভার থেকে ব্লবের ব্যাকআপ মোছা যায়"
 [ -f "$STATE/restore-test.json" ] && QUIET="$BQ" alert restore_test "$(grep -q '"result":"fail"' "$STATE/restore-test.json" && echo 1 || echo 0)" "ব্যাকআপ ফেরানোর পরীক্ষা ব্যর্থ"
 # PR 507: the monthly drill as a whole (one copy failing is enough, even when the last one passed).
 [ -f "$STATE/restore-drill.json" ] && QUIET="$BQ" alert restore_drill "$(jq -e '.result == "fail"' "$STATE/restore-drill.json" >/dev/null 2>&1 && echo 1 || echo 0)" "মাসিক ফেরানোর মহড়া ব্যর্থ: $(jq -r '.detail' "$STATE/restore-drill.json" 2>/dev/null | cut -c1-300)"

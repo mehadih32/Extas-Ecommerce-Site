@@ -136,6 +136,7 @@ docs file (CN-011).
 | Path | What it is |
 |---|---|
 | [`security/REVIEW.md`](security/REVIEW.md) | The independent security review before real money flows: the automated checks (dependency audit `tools/dep-audit.mjs`, PR 381), the review list R1–R14, findings and the sign-off the payment gateways' live keys wait for |
+| [`security/BREAK-GLASS-RESTORE.md`](security/BREAK-GLASS-RESTORE.md) | The break-glass restore runbook (PR 385): locking the Blob backups (immutable, `extas-backup lock-check`), stopping an intrusion, restoring through `restore.yml` (test → staging → production with the owner's written OK), rebuilding on a fresh VM, practice |
 
 ## `stages/` — stage and PR pages (generated)
 

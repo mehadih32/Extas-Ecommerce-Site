@@ -446,6 +446,8 @@ Marks below are from **QA round R15** (build `proto/dist/qa-snap.html`, 2026-10-
 - [SC10] ✅ · **R15b ✅** · **R15c ✅** · **R15d ✅** Cookie / storage use is explained in the privacy policy. *(R15 wave 1: fixed — privacy page explains on-phone storage)*
 - [SC11] — Dependency vulnerability gate green: no high advisory in what ships, no critical in the build tools, every acceptance with a reason and an end date (`tools/dep-audit.mjs`, CI job `deps`; PR 381, added 31 Oct 2026).
 - [SC12] — The independent security review is signed off before the payment gateways' live keys are typed in (`docs/security/REVIEW.md`; PR 381, added 31 Oct 2026).
+- [SC13] — The Blob backups are locked: `extas-backup lock-check` is ok (a delete from the server is refused) and the server key cannot delete (`docs/security/BREAK-GLASS-RESTORE.md` §1; PR 385, added 31 Oct 2026).
+- [SC14] — The break-glass restore is practised before go-live: `restore.yml` test, then staging from Blob, with the result in `docs/reports/` (`docs/security/BREAK-GLASS-RESTORE.md` §3, §5; PR 385, added 31 Oct 2026).
 
 ## 21. Offline & slow network
 - [OF01] — · **R15b —** · **R15c —** · **R15d —** On a slow network the page shows content progressively (no long white screen). *(needs real network / server)*
