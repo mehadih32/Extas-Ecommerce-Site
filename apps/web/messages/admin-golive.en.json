@@ -55,6 +55,11 @@
     "simulation": {
       "title": "The real-life journey simulation passed on staging",
       "how": "The 70-order simulation of docs/qa/SIMULATION-PLAN.md rerun on the staging site, every finding fixed (CN-013)."
+    },
+    "server": {
+      "title": "Every server item of A2.9 in place",
+      "ok": "{steps} steps, none failed ({warn} warning(s))",
+      "how": "The last full server setup run must pass every step (Blueprint A2.9.16): {fail} failed ({failed}). Run the \"Server setup\" workflow again after the fix; the report is in docs/reports/server/latest.md."
     }
   },
   "errors": {

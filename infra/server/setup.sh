@@ -71,5 +71,11 @@ mkdir -p "$EXTAS_REPORT_DIR" 2>/dev/null || EXTAS_REPORT_DIR=/tmp
   cat "$REPORT_FILE.profile"
 } > "$EXTAS_REPORT_DIR/latest.md"
 cp "$EXTAS_REPORT_DIR/latest.md" "$EXTAS_REPORT_DIR/$(date +%Y-%m-%d-%H%M).md"
+# PR 394: the same report as data for the go-live checklist; a run of a few steps (--only) never replaces a full one.
+if [ -z "$ONLY" ]; then
+  report_json "$REPORT_FILE" "$EXTAS_STATE_DIR/server-setup.json" yes "${GITHUB_SHA:-local}" || true
+else
+  report_json "$REPORT_FILE" "$EXTAS_STATE_DIR/server-setup-partial.json" no "${GITHUB_SHA:-local}" || true
+fi
 echo "$EXTAS_REPORT_DIR/latest.md"
 exit $FAILED

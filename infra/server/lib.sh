@@ -21,6 +21,22 @@ report() {
   log "$status $step — $detail"
 }
 
+# report_json <report file> <out.json> <full: yes|no> <commit> — PR 394: the setup report as data for the admin's
+# go-live checklist (Settings → System → Go-live): every step's line, the counts, and whether the run was a full one
+# (every A2.9 step) and passed. Written atomically; nothing but the report's own words (no secrets, ever).
+report_json() {
+  local src="$1" out="$2" full="$3" commit="$4"
+  mkdir -p "$(dirname "$out")"
+  sed -n 's/^| \(.*\) | \(OK\|FAIL\|SKIP\|WARN\|INFO\) | \(.*\) |$/\1\t\2\t\3/p' "$src" \
+    | jq -R 'split("\t") | {step: .[0], status: .[1], detail: (.[2] | gsub("\\\\[|]"; "|"))}' \
+    | jq -s --arg at "$(date -Is)" --arg commit "$commit" --argjson full "$([ "$full" = yes ] && echo true || echo false)" \
+      '{at: $at, commit: $commit, full: $full,
+        counts: {ok: map(select(.status == "OK")) | length, fail: map(select(.status == "FAIL")) | length,
+                 warn: map(select(.status == "WARN")) | length},
+        steps: .} | .passed = (.full and .counts.fail == 0 and (.steps | length) > 0)' > "$out.tmp" \
+    && mv "$out.tmp" "$out"
+}
+
 need_root() { [ "$(id -u)" -eq 0 ] || die "run as root (sudo)"; }
 
 # write_file <path> <mode> — writes stdin to path only if the content differs; prints "changed" if it did

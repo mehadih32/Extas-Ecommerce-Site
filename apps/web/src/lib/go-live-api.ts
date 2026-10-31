@@ -25,6 +25,7 @@ export async function goLiveNow(deps: Deps) {
     smoke: state.smoke,
     health: state.health,
     backups: { ready: gate.ready, todo: gate.checks.filter((c) => !c.ok).length },
+    serverSetup: state.serverSetup,
   });
   const ids = [...new Set(result.items.map((i) => i.by).filter((v): v is string => Boolean(v)))];
   const people = ids.length
