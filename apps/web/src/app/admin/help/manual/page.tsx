@@ -5,6 +5,7 @@
 // what happens next), each with "Open this page" where the person may open it. The text is the same as the guide panel's
 // (docs/admin-guide/pages/, read from the server's copy of the docs: lib/admin-shell/manual.ts), so a new page brings
 // its chapter page with it. Reading needs `help.read` (everyone). Guide: docs/admin-guide/pages/help/site-manual.md.
+// PR 388: a page's picture with numbered marks, from the latest smoke run (lib/admin-shell/shots.ts).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -16,6 +17,7 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { manualAnchor, manualOutline, readChapter } from '@/lib/admin-shell/manual';
 import { locateKey } from '@/lib/admin-shell/sections';
+import { readShots } from '@/lib/admin-shell/shots';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-manual.bn.json';
 import en from '../../../../../messages/admin-manual.en.json';
@@ -75,8 +77,8 @@ export default async function ManualPage(props: Props) {
     outline.findIndex((c) => c.section === sp.c),
   );
   const current = outline[index]!;
-  const chapter = await readChapter(current.section, viewer);
-  const pages: ManualChapterPage[] = (chapter?.pages ?? []).map((p) => ({ id: p.id, anchor: manualAnchor(p.id), href: p.href, guide: chapter!.guides[p.id]! }));
+  const [chapter, book] = await Promise.all([readChapter(current.section, viewer), readShots()]);
+  const pages: ManualChapterPage[] = (chapter?.pages ?? []).map((p) => ({ id: p.id, anchor: manualAnchor(p.id), href: p.href, guide: chapter!.guides[p.id]!, shots: book.byGuide[p.id] ?? [] }));
   const prev = outline[index - 1];
   const next = outline[index + 1];
   const tt = (k: string) => t(d, `shell.guide.${k}`);
@@ -129,7 +131,7 @@ export default async function ManualPage(props: Props) {
             sectionName={secName(current.section)}
             overview={chapter?.overview ?? null}
             pages={pages}
-            texts={{ about: s('about'), open: s('open'), top: s('top'), boxes: { tip: tt('box.tip'), careful: tt('box.careful'), example: tt('box.example') } }}
+            texts={{ about: s('about'), open: s('open'), top: s('top'), shot: s('shot'), taken: book.at ? s('taken', { at: book.at }) : null, boxes: { tip: tt('box.tip'), careful: tt('box.careful'), example: tt('box.example') } }}
           />
           {!pages.length ? <p className="a2-card a2-man-none">{s('noGuide')}</p> : null}
           <div className="a2-man-pn">

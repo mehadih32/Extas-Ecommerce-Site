@@ -12,6 +12,8 @@
     "prev": "Previous chapter",
     "next": "Next chapter",
     "noGuide": "This section has no page guides yet. They arrive with its pages.",
+    "shot": "picture of the page with numbered marks",
+    "taken": "Picture taken {at} by the nightly check.",
     "noDocs": "The guide files are not on this server yet. They are copied with every deploy."
   }
 }

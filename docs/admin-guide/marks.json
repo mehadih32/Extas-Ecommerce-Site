@@ -1,0 +1,33 @@
+{
+  "$comment": "S18 · PR 388 (B7.5) — the Site manual's pictures: for a page guide (`guide`, docs/admin-guide/pages/<guide>.md), the admin address the smoke test opens (`path`) and the parts of the page that get a numbered mark (`marks`: a CSS selector of the page and its short Bengali name, the same name the guide's button list uses). tools/smoke.mjs opens each one on the phone and the computer screen after every deploy and every night, takes the picture and writes where each part sat (marks.json in docs/reports/smoke/latest/); the manual draws the numbers on the picture. A part that is not on the screen gets no number; nothing here fails the smoke test. Add a page by adding an entry.",
+  "shots": [
+    {
+      "guide": "help/manual",
+      "path": "/admin/help",
+      "marks": [
+        { "sel": ".a2-ph .a2-guide", "label": "এই পাতার গাইড" },
+        { "sel": "[data-testid=help-row]", "label": "সেকশনের সারি" },
+        { "sel": "[data-testid=help-row] .a2-guide", "label": "এই সেকশনে কী করা যায়" },
+        { "sel": "[data-testid=help-read]", "label": "ম্যানুয়ালে পড়ুন" }
+      ]
+    },
+    {
+      "guide": "help/site-manual",
+      "path": "/admin/help/manual?c=orders",
+      "marks": [
+        { "sel": "[data-testid=manual-toc]", "label": "সূচি" },
+        { "sel": "[data-testid=manual-chapter-title]", "label": "অধ্যায়ের নাম" },
+        { "sel": "[data-testid=manual-overview]", "label": "এই সেকশনের সারকথা" }
+      ]
+    },
+    {
+      "guide": "marketing/tracking",
+      "path": "/admin/marketing/tracking",
+      "marks": [
+        { "sel": "[data-testid=tracking-off]", "label": "বন্ধ থাকার নোটিশ" },
+        { "sel": "[data-testid=tracking-platforms]", "label": "প্ল্যাটফর্ম" },
+        { "sel": "[data-testid=tracking-table]", "label": "কী পাঠানো হলো" }
+      ]
+    }
+  ]
+}

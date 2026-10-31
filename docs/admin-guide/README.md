@@ -24,6 +24,7 @@
 | সেকশনের সারকথা (১৪টা সেকশন) | `pages/<সেকশন>/index.md` — যেমন [pages/orders/index.md](pages/orders/index.md) |
 | একটা পাতার গাইড | `pages/<সেকশন>/<পাতা>.md` — যেমন [pages/orders/all.md](pages/orders/all.md) |
 | কোন পাতার কোন গাইড | `apps/web/src/lib/admin-shell/help-pages.json` — প্রতিটা তৈরি পাতার ঠিকানা (route) আর তার গাইডের নাম `<সেকশন>/<পাতা>` |
+| ম্যানুয়ালের ছবি আর নম্বর (PR 388) | [marks.json](marks.json) — কোন পাতার ছবি নেওয়া হবে আর তার কোন অংশে নম্বর বসবে (CSS selector আর ছোট বাংলা নাম); রাতের স্মোক চেক ছবি তোলে |
 
 সেকশনের নাম মেনুর মতো: `dashboard`, `orders`, `products`, `customers`, `delivery`, `messages`, `support`, `marketing`,
 `website`, `money`, `reports`, `ai`, `settings`, `help`।

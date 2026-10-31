@@ -38,6 +38,21 @@
   .adm2 .a2-man-sec { padding: 14px 12px; }
   .adm2 .a2-man-pn .a2-btn { flex: 1 1 100%; justify-content: center; }
 }
+/* PR 388 — a page's picture with numbered marks: the computer picture on a wide screen, the phone one on a phone. */
+.adm2 .a2-man-shots { margin: 4px 0 14px; }
+.adm2 .a2-man-shot { margin: 0; }
+.adm2 .a2-man-shot.phone { max-width: 320px; }
+@media (min-width: 768px) { .adm2 .a2-man-shot.phone:not(.only) { display: none; } }
+@media (max-width: 767px) { .adm2 .a2-man-shot.desktop:not(.only) { display: none; } }
+.adm2 .a2-man-pic { position: relative; border: 1px solid var(--ln2); border-radius: 10px; overflow: hidden; background: var(--g0); }
+.adm2 .a2-man-pic img { display: block; width: 100%; height: auto; }
+.adm2 .a2-man-mk { position: absolute; border: 2px solid var(--bad); border-radius: 6px; box-shadow: 0 0 0 2px rgba(255, 255, 255, .7); pointer-events: none; }
+.adm2 .a2-man-mk b, .adm2 .a2-man-mkl b { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; border-radius: 11px; background: var(--bad); color: var(--sf); font: 650 12px/1 var(--a2-font, 'Instrument Sans', sans-serif); padding: 0 5px; }
+.adm2 .a2-man-mk b { position: absolute; left: -11px; top: -11px; }
+.adm2 .a2-man-shot figcaption { margin-top: 8px; font-size: 13.5px; }
+.adm2 .a2-man-mkl { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.adm2 .a2-man-mkl span { display: inline-flex; gap: 6px; align-items: center; }
+.adm2 .a2-man-shot small { display: block; margin-top: 4px; color: var(--mute); font-size: 12px; }
 @media print {
   .adm2 .a2-man { display: block; }
   .adm2 .a2-man-toc, .adm2 .a2-man-pn, .adm2 .a2-man-top, .adm2 [data-testid='manual-open'] { display: none; }

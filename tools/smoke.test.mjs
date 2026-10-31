@@ -2,7 +2,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { adminLinks, adminPaths, checkApplies, checkProblem, discovered, figureProblems, pageProblems, reportMarkdown, requestCounts, shotDir, totpCode } from './smoke.mjs';
+import { adminLinks, adminPaths, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, shotDir, totpCode } from './smoke.mjs';
 
 it('PR 6: an extra check passes on the expected value or answer, and says what it saw otherwise', () => {
   const page = { pr: 6, what: 'worker fresh', page: '/admin/server', selector: '[data-worker-state]', attribute: 'data-worker-state', equals: 'ok' };
@@ -164,4 +164,19 @@ it('review R1 (security M1): an admin page\'s picture never goes into the commit
     expect(shotDir(p, 'docs-out', null)).toBeNull();
   expect(shotDir('/admin/orders', 'docs-out', '/srv/state/smoke')).toBe('/srv/state/smoke');
   expect(shotDir('/administrator-tips', 'docs-out', null)).toBe('docs-out');
+});
+
+it('PR 388: the manual\'s marks are fractions of the screen; a missing or off-screen part is kept as not shown', () => {
+  const marks = [{ label: 'A' }, { label: 'B' }, { label: 'C' }, { label: 'D' }];
+  const boxes = [{ x: 136.6, y: 90, width: 273.2, height: 45 }, null, { x: 10, y: 1200, width: 50, height: 20 }, { x: 0, y: 0, width: 0, height: 10 }];
+  expect(markBoxes(marks, boxes, { width: 1366, height: 900 })).toEqual([
+    { n: 1, label: 'A', shown: true, x: 0.1, y: 0.1, w: 0.2, h: 0.05 },
+    { n: 2, label: 'B', shown: false },
+    { n: 3, label: 'C', shown: false, x: 0.0073, y: 1.3333, w: 0.0366, h: 0.0222 },
+    { n: 4, label: 'D', shown: false },
+  ]);
+  const config = readMarks();
+  expect(config.length).toBeGreaterThan(0);
+  for (const s of config) expect(s).toMatchObject({ guide: expect.any(String), path: expect.stringMatching(/^\/admin/) });
+  expect(readMarks('/nowhere/marks.json')).toEqual([]);
 });
