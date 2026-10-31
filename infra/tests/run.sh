@@ -280,6 +280,12 @@ check "caddy (a): the Caddyfile is copied in place, the mounted inode sees the n
 ) > "$T/out"
 check "hosts (362): extra hosts are lower case, once each, never the staging host; a bad name is left out and named" "$(cat "$T/out")" "shop.example.test www.example.test|ok.example.test|3||"
 check "hosts (362): server setup and the stack pass the cleaned extra hosts to Caddy" "$(grep -c 'EXTAS_EXTRA_HOSTS="$(site_extra_hosts "$EXTAS_STAGING_HOST"' ../server/steps/09-stack.sh):$(grep -c 'EXTAS_EXTRA_HOSTS: ${EXTAS_EXTRA_HOSTS:-}' ../stack/compose.yml):$(grep -c '^{$EXTAS_STAGING_HOST} {$' ../stack/caddy/Caddyfile):$(grep -c '^import /etc/caddy/sites/hosts\*\.caddy$' ../stack/caddy/Caddyfile)" "1:1:1:1"
+# R2 security review (m1, PR 378): the request body limits go server.conf → stack.env (a whole number of MB, else the
+# default) → the Caddy container → the Caddyfile, whose fallbacks are server.conf's defaults.
+check "body limit (R2 m1): server.conf → stack.env → compose → Caddyfile, every host" \
+  "$(bash -c '. ../config/server.conf; echo "$CADDY_BODY_MAX_MB/$CADDY_UPLOAD_MAX_MB"'):$(grep -c 'CADDY_BODY_MAX_MB=$(mb_or "${CADDY_BODY_MAX_MB:-}" 25)\|CADDY_UPLOAD_MAX_MB=$(mb_or "${CADDY_UPLOAD_MAX_MB:-}" 30)' ../server/steps/09-stack.sh):$(grep -c 'CADDY_BODY_MAX_MB: ${CADDY_BODY_MAX_MB:-25}\|CADDY_UPLOAD_MAX_MB: ${CADDY_UPLOAD_MAX_MB:-30}' ../stack/compose.yml):$(grep -c 'max_size {$CADDY_BODY_MAX_MB:25}MB\|max_size {$CADDY_UPLOAD_MAX_MB:30}MB' ../stack/caddy/Caddyfile):$(awk '/^\(extas_site\) \{$/{f=1} f&&/^\}$/{f=0} f' ../stack/caddy/Caddyfile | grep -c '^	import body_limits$')" "25/30:2:2:2:1"
+check "body limit (R2 m1): a limit that is not a whole number of MB from 1 to 1024 falls back to the default" \
+  "$(eval "$(sed -n '/^mb_or() {/p' ../server/steps/09-stack.sh)"; for v in 40 0 abc 1025 '5;rm' ''; do printf '%s ' "$(mb_or "$v" 25)"; done)" "40 25 25 25 25 25 "
 check "caddy (a): server setup copies the Caddyfile in place and never by rsync" "$(grep -c -- "--exclude /caddy/Caddyfile" ../server/steps/09-stack.sh):$(grep -c 'caddyfile_copy_inplace "$STACK_DIR_REPO/caddy/Caddyfile" "$EXTAS_ROOT/stack/caddy/Caddyfile"' ../server/steps/09-stack.sh):$(grep -c 'caddy reload.*|| true' ../server/steps/09-stack.sh):$(grep -c 'caddy_apply || caddy_rc=' ../server/steps/09-stack.sh)" "1:1:0:1"
 # S19 · PR 403: the staging host and the extra hosts (the main domain) are two site blocks. The staging block always has
 # the preview gate and noindex; the extra hosts' block (sites/hosts.caddy, hosts-block.sh) is locked the same way until
@@ -326,6 +332,64 @@ if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
   sleep 0.5; kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
   check "access log (caddy, m5): no query string, no pay link token, no Referer; the path stays" \
     "$(grep -c 'tok-secret\|typed-address\|Referer' "$T4/access.log" || true):$(jq -r .request.uri "$T4/access.log" 2>/dev/null | grep -v '^/$' | tr '\n' ' ')" "0:/pay/ /bn/pay/ /api/delivery/suggest /collections/new-in "
+  # R2 security review (m1): behind Caddy an app that reads every body (a stand-in on a local port). The body limits come
+  # from the container's environment (server.conf through stack.env): a bigger body gets 413 from Caddy, with or without
+  # a length; the admin uploads have their own larger limit.
+  bport=18497
+  cat > "$T4/app.py" <<'PY'
+import sys, http.server
+class H(http.server.BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+    def body(self):
+        n = 0
+        if self.headers.get("Transfer-Encoding", "").lower() == "chunked":
+            while True:
+                size = int(self.rfile.readline().strip() or b"0", 16)
+                if size == 0:
+                    self.rfile.readline()
+                    return n
+                n += len(self.rfile.read(size)); self.rfile.readline()
+        return len(self.rfile.read(int(self.headers.get("Content-Length") or 0)))
+    def answer(self, n):
+        b = ("app %d" % n).encode()
+        self.send_response(200)
+        self.send_header("Cache-Control", "public, max-age=600")
+        if not self.path.startswith("/_next/static/"):  # like Next: its hashed files carry Cache-Control only
+            self.send_header("CDN-Cache-Control", "public, max-age=600")
+        self.send_header("Content-Length", str(len(b)))
+        self.end_headers()
+        try:
+            self.wfile.write(b)
+        except OSError:
+            pass
+    def do_POST(self):
+        try:
+            self.answer(self.body())
+        except OSError:
+            pass
+    def do_GET(self):
+        self.answer(0)
+    def log_message(self, *a):
+        pass
+http.server.ThreadingHTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()
+PY
+  python3 -I "$T4/app.py" "$bport" 2>/dev/null & apid=$!
+  printf 'reverse_proxy 127.0.0.1:%s\n' "$bport" > "$T4/upstream.caddy"
+  for _ in $(seq 50); do curl -s -o /dev/null "127.0.0.1:$bport" && break; sleep 0.1; done
+  head -c 500000 /dev/zero > "$T4/b05"; head -c 1500000 /dev/zero > "$T4/b15"; head -c 2500000 /dev/zero > "$T4/b25"
+  edge_case() { # edge_case <open yes|no> → body codes | staging page headers | main page headers | hashed file headers
+    bash "$HB" "$1" "http://main.test:$port" | sed "s#/etc/caddy/sites#$T4#g" > "$T4/hosts.caddy"
+    EXTAS_STAGING_HOST="http://staging.test:$port" CADDY_BODY_MAX_MB=1 CADDY_UPLOAD_MAX_MB=2 \
+      "$CADDY" run --config "$T4/Caddyfile" --adapter caddyfile >"$T4/log" 2>&1 & cpid=$!
+    for _ in $(seq 50); do curl -s -o /dev/null "localhost:$port" && break; sleep 0.1; done
+    post() { curl -s -o /dev/null -w '%{http_code}' -u extas:gate-pw ${3:+-H 'Transfer-Encoding: chunked'} -H "Host: staging.test:$port" --data-binary @"$T4/$2" "http://127.0.0.1:$port$1"; }
+    cc() { curl -s -D - -o /dev/null -u extas:gate-pw -H "Host: $1" "http://127.0.0.1:$port$2" | tr -d '\r' | grep -iE '^(cache-control|cdn-cache-control|cloudflare-cdn-cache-control):' | tr 'A-Z' 'a-z' | sort | tr '\n' ';'; }
+    echo "$(post /api/x b05) $(post /api/x b15) $(post /api/x b15 chunked) $(post /api/admin/media b15) $(post /api/admin/support/t1/files b15 chunked) $(post /api/admin/media b25) | $(cc "staging.test:$port" /products/x) | $(cc "main.test:$port" /products/x) | $(cc "staging.test:$port" /_next/static/a.js)"
+    kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
+  }
+  check "body limit (caddy, R2 m1): 413 above the limit with or without a length; the admin uploads have their own" \
+    "$(edge_case no | cut -d'|' -f1)" "200 413 413 200 200 413 "
+  kill "$apid" 2>/dev/null || true; wait "$apid" 2>/dev/null || true
   rm -rf "$T4"
 elif [ -n "${CI:-}" ]; then
   check "main domain (caddy, 403): CI runs the live checks" "no Caddy binary (CADDY_BIN)" "a Caddy binary"

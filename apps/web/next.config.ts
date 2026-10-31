@@ -13,7 +13,8 @@ const config: NextConfig = {
   serverExternalPackages: ['sharp'],
   // PR 378: the proxy now sees /api (cross-site check, request limits); Next keeps only this much of a request body
   // there (10 MB by default), so it is the highest media upload the settings allow (media.upload.maxBytes, at most
-  // 200 MB). Each route still enforces its own setting.
+  // 200 MB). Each route still enforces its own setting. R2 security review (m1): Caddy refuses a bigger body before it
+  // gets here (infra/stack/caddy/Caddyfile `body_limits`, server.conf CADDY_BODY_MAX_MB / CADDY_UPLOAD_MAX_MB).
   experimental: { proxyClientMaxBodySize: '200mb' },
 };
 

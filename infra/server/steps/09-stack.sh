@@ -8,6 +8,10 @@ STACK_DIR_REPO="$EXTAS_REPO_DIR/infra/stack"
 # shellcheck source=../../deploy/pg-exec.sh
 . "$EXTAS_REPO_DIR/infra/deploy/pg-exec.sh"
 
+# R2 security review (m1): a body limit for Caddy is a whole number of MB (1–1024); anything else is the default, so a
+# typo in server.conf never stops Caddy from loading.
+mb_or() { if [[ ${1:-} =~ ^[1-9][0-9]{0,3}$ ]] && [ "$1" -le 1024 ]; then echo "$1"; else echo "$2"; fi; }
+
 write_stack_env() {
   local s="$EXTAS_SECRETS_DIR"
   gen_secret "$s/postgres.env" POSTGRES_PASSWORD 40
@@ -32,6 +36,8 @@ EXTAS_ROOT=$EXTAS_ROOT
 EXTAS_NVME_MOUNT=$EXTAS_NVME_MOUNT
 EXTAS_STAGING_HOST=$EXTAS_STAGING_HOST
 EXTAS_EXTRA_HOSTS="$(site_extra_hosts "$EXTAS_STAGING_HOST" "${EXTAS_EXTRA_HOSTS:-}")"
+CADDY_BODY_MAX_MB=$(mb_or "${CADDY_BODY_MAX_MB:-}" 25)
+CADDY_UPLOAD_MAX_MB=$(mb_or "${CADDY_UPLOAD_MAX_MB:-}" 30)
 IMG_POSTGRES=$IMG_POSTGRES
 IMG_REDIS=$IMG_REDIS
 IMG_MEILI=$IMG_MEILI
