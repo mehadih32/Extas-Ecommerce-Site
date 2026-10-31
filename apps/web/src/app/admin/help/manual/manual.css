@@ -1,0 +1,44 @@
+/* S18 · PR 387 — the Site manual: the contents beside the chapter on a computer, above it on a phone. */
+.adm2 .a2-man { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (min-width: 1024px) {
+  .adm2 .a2-man { grid-template-columns: 270px minmax(0, 1fr); }
+  .adm2 .a2-man-toc { position: sticky; top: 76px; max-height: calc(100vh - 96px); overflow: auto; }
+}
+.adm2 .a2-man-toc { padding: 10px 12px; }
+.adm2 .a2-man-toc summary { cursor: pointer; font-weight: 650; font-size: 14px; line-height: 20px; padding: 12px 2px; min-height: 44px; box-sizing: border-box; }
+.adm2 .a2-man-tocd { display: none; font-weight: 650; font-size: 14px; padding: 4px 2px 8px; }
+@media (min-width: 1024px) {
+  .adm2 .a2-man-tocd { display: block; }
+  .adm2 .a2-man-tocm { display: none; }
+}
+@media (max-width: 1023px) {
+  .adm2 .a2-man-toc:has(.a2-man-tocm:not([open])) .a2-man-tocl { display: none; }
+}
+.adm2 .a2-man-toc ol { list-style: none; margin: 0; padding: 0; }
+.adm2 .a2-man-toc ol > li > a { display: flex; gap: 10px; align-items: center; padding: 7px 6px; border-radius: 8px; color: var(--ink2); text-decoration: none; min-height: 44px; }
+.adm2 .a2-man-toc ol > li > a:hover { background: var(--g0); }
+.adm2 .a2-man-toc li.on > a { background: var(--g0); color: var(--ink); }
+.adm2 .a2-man-toc .n { flex: 0 0 24px; height: 24px; border-radius: 50%; background: var(--g1); color: var(--g); font-size: 12px; font-weight: 650; display: inline-flex; align-items: center; justify-content: center; }
+.adm2 .a2-man-tt { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.adm2 .a2-man-tt b { font-weight: 600; font-size: 13.5px; }
+.adm2 .a2-man-tt i { font-style: normal; font-size: 12px; color: var(--mute); }
+.adm2 .a2-man-toc ul { list-style: none; margin: 2px 0 6px 40px; padding: 0; font-size: 13px; }
+.adm2 .a2-man-toc ul a { display: flex; align-items: center; min-height: 44px; padding: 4px; color: var(--ink2); overflow-wrap: anywhere; }
+.adm2 .a2-man-main { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.adm2 .a2-man-chh h2 { font-size: 22px; font-weight: 650; margin: 6px 0 2px; }
+.adm2 .a2-man-chh p { margin: 0; color: var(--mute); font-size: 14px; }
+.adm2 .a2-man-ch { display: flex; flex-direction: column; gap: 12px; }
+.adm2 .a2-man-sec { padding: 16px 18px; scroll-margin-top: 80px; }
+.adm2 .a2-man-sec > h2, .adm2 .a2-man-ph h2 { font-size: 18px; font-weight: 650; margin: 0; color: var(--ink); }
+.adm2 .a2-man-ph { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 8px; }
+.adm2 .a2-man-top { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; margin-top: 2px; font-size: 13px; color: var(--g); }
+.adm2 .a2-man-none { padding: 14px 16px; color: var(--mute); }
+.adm2 .a2-man-pn { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 767px) {
+  .adm2 .a2-man-sec { padding: 14px 12px; }
+  .adm2 .a2-man-pn .a2-btn { flex: 1 1 100%; justify-content: center; }
+}
+@media print {
+  .adm2 .a2-man { display: block; }
+  .adm2 .a2-man-toc, .adm2 .a2-man-pn, .adm2 .a2-man-top, .adm2 [data-testid='manual-open'] { display: none; }
+}

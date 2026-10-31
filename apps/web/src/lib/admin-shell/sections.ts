@@ -344,7 +344,11 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     group: 'bottom',
     base: '/admin/help',
     guide: 'README',
-    tabs: [{ id: 'manual', pages: [{ href: '/admin/help', perm: 'help.read', keys: ['help'] }] }],
+    tabs: [
+      { id: 'manual', pages: [{ href: '/admin/help', perm: 'help.read', keys: ['help'] }] },
+      // S18 · PR 387 (B7.5, HLP-01) — the Site manual: every section as a chapter, every page guide in it.
+      { id: 'book', pages: [{ href: '/admin/help/manual', perm: 'help.read', keys: ['manual'] }] },
+    ],
   },
 ];
 

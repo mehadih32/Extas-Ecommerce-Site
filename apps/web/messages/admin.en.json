@@ -83,7 +83,8 @@
     "golive": "Go-live",
     "healthProblems": "Customer problems",
     "seoBengali": "Bengali pages",
-    "adsTracking": "Tracking"
+    "adsTracking": "Tracking",
+    "manual": "Site manual"
   },
   "login": {
     "metaTitle": "Admin sign-in",

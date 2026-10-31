@@ -2,6 +2,7 @@
 // (docs/admin-guide/, CN-014; the same guide opens from each page's "এই সেকশনে কী করা যায়" button), whether its new pages
 // are ready or still planned, and a link into it. The guides are read from the server's deployed copy of the docs
 // (GET /api/admin/help/<slug>). Reading needs `help.read`.
+// S18 · PR 387: each row also opens the section's chapter in the Site manual (/admin/help/manual).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -60,6 +61,10 @@ export default async function HelpPage() {
               </span>
               <span className={`a2-pill ${ready ? 'ok' : 'line'}`}>{ready ? t(d, 'help.built') : t(d, 'help.planned')}</span>
               <PlaceGuide view={view} place={place} overview />
+              {/* S18 · PR 387: the section's chapter in the Site manual. */}
+              <Link className="a2-btn" href={`/admin/help/manual?c=${sec.id}`} data-testid="help-read">
+                {t(d, 'help.read')}
+              </Link>
               <Link className="a2-btn" href={sectionHome(sec, viewer)}>
                 {t(d, 'help.open')}
               </Link>
