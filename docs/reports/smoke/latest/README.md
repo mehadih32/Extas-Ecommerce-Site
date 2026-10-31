@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-01 02:32 (Asia/Dhaka)
+# Smoke test · 2026-11-01 04:17 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (260টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (268টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `684e993d832c` · after deploy · result **PASS** (260 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `f5d916fafcae` · after deploy · result **PASS** (268 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -134,6 +134,10 @@ Site: https://new.extas.com.bd · commit `684e993d832c` · after deploy · resul
 | `/admin/reports/health/problems` | phone | 200 | `/admin/reports/health/problems` | ok | — |
 | `/admin/website/seo/bengali` | phone | 200 | `/admin/website/seo/bengali` | ok | — |
 | `/admin/marketing/tracking` | phone | 200 | `/admin/marketing/tracking` | ok | — |
+| `/admin/website/seo/redirects` | phone | 200 | `/admin/website/seo/redirects` | ok | — |
+| `/admin/website/seo/categories` | phone | 200 | `/admin/website/seo/categories` | ok | — |
+| `/admin/orders/returns/qc` | phone | 200 | `/admin/orders/returns/qc` | ok | — |
+| `/admin/products/new` | phone | 200 | `/admin/products/new` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -264,6 +268,10 @@ Site: https://new.extas.com.bd · commit `684e993d832c` · after deploy · resul
 | `/admin/reports/health/problems` | desktop | 200 | `/admin/reports/health/problems` | ok | — |
 | `/admin/website/seo/bengali` | desktop | 200 | `/admin/website/seo/bengali` | ok | — |
 | `/admin/marketing/tracking` | desktop | 200 | `/admin/marketing/tracking` | ok | — |
+| `/admin/website/seo/redirects` | desktop | 200 | `/admin/website/seo/redirects` | ok | — |
+| `/admin/website/seo/categories` | desktop | 200 | `/admin/website/seo/categories` | ok | — |
+| `/admin/orders/returns/qc` | desktop | 200 | `/admin/orders/returns/qc` | ok | — |
+| `/admin/products/new` | desktop | 200 | `/admin/products/new` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
