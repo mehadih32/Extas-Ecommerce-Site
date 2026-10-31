@@ -362,7 +362,8 @@ const convertInput = z.object({ storeId: z.int().min(1), cartId: z.uuid(), order
 
 /**
  * The order is confirmed (S04/S05): the bag's live holds become the order's (CONVERTED) and keep counting until the
- * ERP's own reservation shows the order, at most `inventory.reservation.convertedHoldHours`. A hold already past its
+ * ERP's own reservation shows the order, at most `inventory.reservation.convertedHoldHours` after the ERP took it (the
+ * sweep renews the hold of an order that is still open and not with the ERP yet: review R1 M1). A hold already past its
  * time is not brought back: checkout holds the bag again first. Can run inside the order's own transaction.
  */
 export async function convertCart(deps: InventoryDeps, input: z.input<typeof convertInput>, opts: { tx?: Tx } = {}): Promise<{ converted: number; units: number }> {
@@ -393,6 +394,8 @@ export interface SweepResult {
   ordersTimedOut: number;
   /** Pools whose `cartReserved` changed. */
   rowsChanged: number;
+  /** Review R1 (M1): order holds past their time whose order is still open and not with the ERP — renewed, not let go. */
+  ordersRenewed?: number;
 }
 
 /**
@@ -406,14 +409,24 @@ export async function sweepReservations(deps: InventoryDeps): Promise<SweepResul
   const cutoff = new Date(now.getTime() - abandonMin * 60_000);
   const db = deps.db;
   const expired = await db.stockReservation.findMany({ where: { status: 'ACTIVE', releasedAt: null, expiresAt: { lte: now } }, select: { id: true, variantId: true }, take: batch, orderBy: { expiresAt: 'asc' } });
-  const timedOut = await db.stockReservation.findMany({ where: { status: 'CONVERTED', releasedAt: null, expiresAt: { lte: now } }, select: { id: true, variantId: true }, take: batch, orderBy: { expiresAt: 'asc' } });
+  const due = await db.stockReservation.findMany({ where: { status: 'CONVERTED', releasedAt: null, expiresAt: { lte: now } }, select: { id: true, variantId: true, storeId: true, orderId: true }, take: batch, orderBy: { expiresAt: 'asc' } });
+  // Review R1 (M1): an order still open and not yet taken by the ERP keeps its pieces — its hold is renewed, never let go,
+  // so a piece is not sold twice while the order waits for a call, an advance or a hold reason. Let go: a cancelled or
+  // finished order, an order the ERP accepted (its own `reserved` counts it from then), a hold with no order.
+  const keep = await stillOpen(db, due);
+  const timedOut = due.filter((h) => !keep.has(h.id));
+  const renew = due.filter((h) => keep.has(h.id));
   const activeCarts = await db.stockReservation.findMany({ where: { status: 'ACTIVE', releasedAt: null, expiresAt: { gt: now }, cartId: { not: null } }, select: { cartId: true }, distinct: ['cartId'], take: batch });
   const idle = activeCarts.length
     ? await db.cart.findMany({ where: { id: { in: activeCarts.map((c) => c.cartId!) }, OR: [{ lastActivityAt: { lt: cutoff } }, { status: { not: 'ACTIVE' } }] }, select: { id: true } })
     : [];
   const abandoned = idle.length ? await db.stockReservation.findMany({ where: { status: 'ACTIVE', releasedAt: null, expiresAt: { gt: now }, cartId: { in: idle.map((c) => c.id) } }, select: { id: true, variantId: true }, take: batch }) : [];
+  if (renew.length) {
+    const hours = await setting(deps, null, 'inventory.reservation.convertedHoldHours');
+    await db.stockReservation.updateMany({ where: { id: { in: renew.map((h) => h.id) }, status: 'CONVERTED', releasedAt: null }, data: { expiresAt: new Date(now.getTime() + hours * 3_600_000) } });
+  }
   const all = [...expired, ...timedOut, ...abandoned];
-  if (!all.length) return { expired: 0, abandoned: 0, ordersTimedOut: 0, rowsChanged: 0 };
+  if (!all.length) return { expired: 0, abandoned: 0, ordersTimedOut: 0, rowsChanged: 0, ...(renew.length ? { ordersRenewed: renew.length } : {}) };
 
   const retries = await setting(deps, null, 'inventory.reservation.lockRetries');
   return withLockRetry(retries, () =>
@@ -424,9 +437,25 @@ export async function sweepReservations(deps: InventoryDeps): Promise<SweepResul
       const o = timedOut.length ? (await tx.stockReservation.updateMany({ where: { id: { in: timedOut.map((h) => h.id) }, status: 'CONVERTED', releasedAt: null }, data: { releasedAt: now } })).count : 0;
       const a = abandoned.length ? (await tx.stockReservation.updateMany({ where: { id: { in: abandoned.map((h) => h.id) }, status: 'ACTIVE', releasedAt: null }, data: { status: 'RELEASED', releasedAt: now } })).count : 0;
       const r = await refreshPools(tx, rows, now, kinds);
-      return { expired: e, abandoned: a, ordersTimedOut: o, rowsChanged: r.rowsChanged };
+      return { expired: e, abandoned: a, ordersTimedOut: o, rowsChanged: r.rowsChanged, ...(renew.length ? { ordersRenewed: renew.length } : {}) };
     }, TX),
   );
+}
+
+/** Order states whose pieces are still the shop's to keep (not cancelled, not finished, not with the courier). */
+const OPEN_ORDER_STATES = ['PLACED', 'AWAITING_ADVANCE', 'ON_HOLD', 'CONFIRMED', 'PROCESSING', 'PACKED'] as const;
+
+/** Review R1 (M1): of these order holds, the ones whose order is still open and whose ERP push was not accepted yet. */
+async function stillOpen(db: InventoryDeps['db'], holds: { id: string; storeId: number; orderId: string | null }[]): Promise<Set<string>> {
+  const ids = [...new Set(holds.map((h) => h.orderId).filter((x): x is string => x !== null))];
+  if (!ids.length) return new Set();
+  const [orders, pushes] = await Promise.all([
+    db.order.findMany({ where: { id: { in: ids }, status: { in: [...OPEN_ORDER_STATES] } }, select: { id: true } }),
+    db.erpPush.findMany({ where: { documentType: 'order.create', status: 'SENT', referenceId: { in: ids } }, select: { referenceId: true } }),
+  ]);
+  const open = new Set(orders.map((o) => o.id));
+  for (const p of pushes) open.delete(p.referenceId);
+  return new Set(holds.filter((h) => h.orderId !== null && open.has(h.orderId)).map((h) => h.id));
 }
 
 /**
