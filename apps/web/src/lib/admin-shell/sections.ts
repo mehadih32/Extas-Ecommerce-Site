@@ -267,7 +267,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // CN-029 · PR 619: Settings → ERP link — one store's own ERP link, its keys, the switch-over to contract v6.
       { id: 'erp', guide: 'integrations', pages: [{ href: '/admin/settings/erp-link', perm: 'vault.read', keys: ['erpLink'] }] },
       // S18 · PR 380 — SET-04d Sign-in & security (Team & roles' security page; People and Roles join with their PRs).
-      { id: 'security', guide: 'settings', pages: [{ href: '/admin/settings/security', perm: 'security.read', keys: ['security'] }] },
+      // S18 · PR 386 — Cloudflare protection, the security tab's second page.
+      { id: 'security', guide: 'settings', pages: [{ href: '/admin/settings/security', perm: 'security.read', keys: ['security'] }, { href: '/admin/settings/security/edge', perm: 'security.read', keys: ['edge'] }] },
       // S18 · PR 382 — SET-08d Privacy & data (the IP/GPS keeping period and its clean-up, customers' erasure requests).
       { id: 'privacy', guide: 'settings', pages: [{ href: '/admin/settings/privacy', perm: 'security.read', keys: ['privacy'] }] },
       // S02 · PR 602 — SET-08b Cache (System); S19 · PR 395 (CN-030) — Backups (the one-click Google Drive); Images,

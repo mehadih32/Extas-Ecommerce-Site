@@ -6,6 +6,20 @@
 // drop in this process and sends nothing anywhere (A1.3).
 import { z } from "zod";
 import { defineAdapter, requireSecret } from "../define";
+import {
+  mergeRules,
+  SHIELD_PHASE_IDS,
+  SHIELD_PHASES,
+  shieldDiff,
+  shieldRules,
+  writable,
+  type CfRule,
+  type EdgeShield,
+  type ShieldPhase,
+  type ShieldRules,
+} from "./shield";
+
+export * from "./shield";
 
 export const CLOUDFLARE_PROVIDER = "cloudflare";
 
@@ -47,7 +61,41 @@ export const mockCdnLog = {
   },
 };
 
-function mockPurger(provider: string): CdnPurger {
+// PR 386: the mock's Cloudflare rules (one zone per process), so the protection can be practised before the token is in.
+const S = globalThis as unknown as { __extasMockShield?: ShieldRules };
+const mockRules = (): ShieldRules => (S.__extasMockShield ??= { config: [], custom: [], rate: [] });
+
+/** The mock zone's rules (tests). */
+export const mockShieldLog = {
+  rules: (): ShieldRules => structuredClone(mockRules()),
+  clear: (): void => {
+    S.__extasMockShield = { config: [], custom: [], rate: [] };
+  },
+};
+
+function mockShield(): EdgeShield {
+  return {
+    hosts: null,
+    async read() {
+      return structuredClone(mockRules());
+    },
+    async apply(plan) {
+      const wanted = shieldRules(plan);
+      const now = mockRules();
+      const changed = SHIELD_PHASE_IDS.filter((ph) => phaseDiffers(now, wanted, ph));
+      for (const ph of changed) now[ph] = mergeRules(now[ph], wanted[ph]);
+      return { ok: true, changed };
+    },
+  };
+}
+
+/** Does one phase's set of shop rules differ from the plan's. */
+function phaseDiffers(current: ShieldRules, wanted: ShieldRules, ph: ShieldPhase): boolean {
+  const only = (r: ShieldRules): ShieldRules => ({ config: [], custom: [], rate: [], [ph]: r[ph] });
+  return shieldDiff(only(current), only(wanted)).length > 0;
+}
+
+function mockPurger(provider: string): CdnPurger & { shield: EdgeShield } {
   const keep = (c: MockCdnCall) => {
     const all = calls();
     all.push(c);
@@ -63,6 +111,7 @@ function mockPurger(provider: string): CdnPurger {
       keep({ at: new Date(), everything: true, paths: [] });
       return { ok: true, sent: 0 };
     },
+    shield: mockShield(),
   };
 }
 
@@ -110,21 +159,22 @@ interface ClientOptions {
 interface CfBody {
   success?: boolean;
   errors?: { code?: number; message?: string }[];
-  result?: { name?: string; status?: string };
+  result?: { name?: string; status?: string; rules?: CfRule[] };
 }
 
 /** The Cloudflare client: purge by address, purge everything, and read the zone (the Test button). */
 export function createCloudflareClient(
   o: ClientOptions,
-): CdnPurger & { zone(): Promise<{ ok: boolean; message: string }> } {
+): CdnPurger & { zone(): Promise<{ ok: boolean; message: string }>; shield: EdgeShield } {
   const doFetch = o.fetch ?? fetch;
   const base = o.baseUrl.replace(/\/+$/, "");
   const zone = `${base}/zones/${encodeURIComponent(o.zoneId)}`;
 
   async function call(
-    method: "GET" | "POST",
+    method: "GET" | "POST" | "PUT",
     url: string,
     body?: unknown,
+    absentOk = false,
   ): Promise<CfBody> {
     let res: Response;
     try {
@@ -147,6 +197,8 @@ export function createCloudflareClient(
     } catch {
       // not JSON: the status code speaks
     }
+    // PR 386: a phase with no rules yet has no entry point: Cloudflare answers 404
+    if (absentOk && res.status === 404) return { success: true };
     if (!res.ok || parsed.success === false) {
       const why = (parsed.errors ?? [])
         .map((e) => e.message)
@@ -195,7 +247,37 @@ export function createCloudflareClient(
         message: `Cloudflare: the key works for ${r.result?.name ?? "the zone"}`,
       };
     },
+    shield: liveShield(),
   };
+
+  // PR 386: the shop's rules in three phases' entry points; every rule that is not the shop's is written back as it was
+  function liveShield(): EdgeShield {
+    const entry = (ph: ShieldPhase) => `${zone}/rulesets/phases/${SHIELD_PHASES[ph]}/entrypoint`;
+    const readPhase = async (ph: ShieldPhase): Promise<CfRule[]> => (await call("GET", entry(ph), undefined, true)).result?.rules ?? [];
+    const readAll = async (): Promise<ShieldRules> => {
+      const [config, custom, rate] = await Promise.all(SHIELD_PHASE_IDS.map(readPhase));
+      return { config: config!, custom: custom!, rate: rate! };
+    };
+    return {
+      hosts: o.hosts,
+      read: readAll,
+      async apply(plan) {
+        try {
+          const wanted = shieldRules(plan);
+          const now = await readAll();
+          const changed: ShieldPhase[] = [];
+          for (const ph of SHIELD_PHASE_IDS) {
+            if (!phaseDiffers(now, wanted, ph)) continue;
+            await call("PUT", entry(ph), { rules: mergeRules(now[ph], wanted[ph]).map(writable) });
+            changed.push(ph);
+          }
+          return { ok: true, changed };
+        } catch (e) {
+          return { ok: false, error: e instanceof Error ? e.message : String(e) };
+        }
+      },
+    };
+  }
 }
 
 export const hostsOf = (s: string | undefined): string[] =>
@@ -205,7 +287,7 @@ export const hostsOf = (s: string | undefined): string[] =>
     .filter(Boolean);
 
 export const cloudflareAdapter = defineAdapter<
-  CdnPurger & { zone?: () => Promise<{ ok: boolean; message: string }> },
+  CdnPurger & { zone?: () => Promise<{ ok: boolean; message: string }>; shield?: EdgeShield },
   CloudflareConfig
 >({
   kind: "CDN",

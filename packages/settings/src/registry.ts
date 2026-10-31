@@ -72,6 +72,7 @@ import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
 import { erpRetailSettings } from './registry-erp-retail';
 import { privacySettings } from './registry-privacy';
+import { edgeSettings } from './registry-edge';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1283,6 +1284,8 @@ export const registry = {
   ...erpRetailSettings,
   // ---- S18 · PR 382 · customers' erasure requests (off by default; the owner carries one out), the requests listed (registry-privacy.ts, version 79). ----
   ...privacySettings,
+  // ---- S18 · PR 386 · the shop's own rules at Cloudflare, limited to its host names; sent by hand (registry-edge.ts, version 80). ----
+  ...edgeSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
