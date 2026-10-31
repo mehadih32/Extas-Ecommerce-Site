@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { backupsBlobSchema, backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings } from '../src/registry-backups';
+import { backupsBlobSchema, backupsDriveSchema, backupsDrillSchema, backupsPlanSchema, backupsSettings, goLiveSignoffSchema } from '../src/registry-backups';
 
 describe('backups settings (v75–77)', () => {
   it('every key is in the registry, labelled in English and Bengali, its default valid, not owner data', () => {
@@ -33,6 +33,14 @@ describe('backups settings (v75–77)', () => {
     expect(backupsPlanSchema.safeParse({ ...backupsSettings['backups.plan'].default, dailyTime: '24:00' }).success).toBe(false);
     expect(backupsPlanSchema.safeParse({ ...backupsSettings['backups.plan'].default, keepLocalDays: 0 }).success).toBe(false);
     expect(backupsDrillSchema.safeParse({ ...backupsSettings['backups.drill'].default, dayOfMonth: 31 }).success).toBe(false);
+  });
+
+  it('PR 393: the go-live checks have their hours and minutes; nothing is confirmed by default; a sign-off is checked', () => {
+    expect(backupsSettings['golive.checks'].default).toEqual({ smokeHours: 36, healthMinutes: 30 });
+    expect(backupsSettings['golive.signoff'].default).toEqual({});
+    expect(goLiveSignoffSchema.safeParse({ qaGate: { at: '2026-10-31T10:00:00.000Z', by: 'u1' } }).success).toBe(true);
+    expect(goLiveSignoffSchema.safeParse({ qaGate: { at: 'yesterday', by: 'u1' } }).success).toBe(false);
+    expect(goLiveSignoffSchema.safeParse({ 'a b': { at: '2026-10-31T10:00:00.000Z', by: null } }).success).toBe(false);
   });
 
   it('PR 391: the Blob container is the server\'s own default and an Azure name; the gate has its hours and days', () => {

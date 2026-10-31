@@ -71,7 +71,8 @@
     "backups": "Backups",
     "security": "Sign-in & security",
     "edge": "Cloudflare protection",
-    "health": "Site health"
+    "health": "Site health",
+    "golive": "Go-live"
   },
   "login": {
     "metaTitle": "Admin sign-in",

@@ -1,0 +1,69 @@
+{
+  "metaTitle": "Go-live · Admin",
+  "title": "Go-live checklist",
+  "sub": "Everything that must be true before real orders, in one list. Automatic items come from the server; the others are checked by a person and confirmed here.",
+  "safe": {
+    "title": "Only a list.",
+    "text": "Nothing here switches anything on or off, and the main domain is never switched from here. The backups have their own checks:",
+    "backups": "Backups"
+  },
+  "listTitle": "Before real orders",
+  "progress": "{done} of {total} done",
+  "ready": "Ready",
+  "notReady": "{n} still to do",
+  "ok": "Done",
+  "todo": "To do",
+  "confirm": "Confirm",
+  "undo": "Undo",
+  "someone": "a removed account",
+  "confirmedBy": "confirmed by {name}, {at}",
+  "lastAt": "last: {at}",
+  "readOnly": "You can see the list. Confirming an item needs the \"Go-live\" permission.",
+  "kind": {
+    "auto": "automatic",
+    "signoff": "a person checks",
+    "owner": "the owner's step"
+  },
+  "item": {
+    "smoke": {
+      "title": "Every page opens (smoke test)",
+      "ok": "{pages} pages, none failed",
+      "how": "The smoke test after every deploy and every night must pass, and be recent: {failed} page(s) failed or it has not run lately (the Server page has the list)."
+    },
+    "health": {
+      "title": "The server's health check is clean",
+      "ok": "no problem",
+      "how": "The server's own check reports {problems} problem(s), or has not run lately; the Server page says which."
+    },
+    "backups": {
+      "title": "Backups ready (Blob, Drive, restore drill, Telegram)",
+      "ok": "all backup checks pass",
+      "how": "{todo} backup check(s) to do — open Settings → System → Backups."
+    },
+    "qaGate": {
+      "title": "QA gate green (Blueprint Appendix C)",
+      "how": "The device gate at 0 failures on phones, tablets and desktop, the journeys and the Lighthouse budget pass in CI for the build on staging; the screenshots were looked at."
+    },
+    "acceptance": {
+      "title": "Staging acceptance list walked through",
+      "how": "Every line of docs/golive/ACCEPTANCE.md checked on the staging site as a customer and as admin."
+    },
+    "realPhones": {
+      "title": "Real iPhone and real Android",
+      "how": "The shop opened and one order placed on a real iPhone (Safari) and a real Android phone (Chrome)."
+    },
+    "simulation": {
+      "title": "The real-life journey simulation passed on staging",
+      "how": "The 70-order simulation of docs/qa/SIMULATION-PLAN.md rerun on the staging site, every finding fixed (CN-013)."
+    }
+  },
+  "errors": {
+    "golive": {
+      "INVALID_INPUT": "Not an item that can be confirmed here."
+    },
+    "FORBIDDEN": "You do not have the permission for this.",
+    "unauthorized": "Sign in again.",
+    "server-error": "Something went wrong on the server; try again in a moment.",
+    "network": "The server cannot be reached — check the connection and try again."
+  }
+}

@@ -289,6 +289,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         pages: [
           { href: '/admin/settings/system/cache', perm: 'system.read', keys: ['cache'] },
           { href: '/admin/settings/system/backups', perm: 'system.read', keys: ['backups'] },
+          // S19 · PR 393 (CN-031) — the go-live checklist.
+          { href: '/admin/settings/system/go-live', perm: 'system.read', keys: ['golive'] },
         ],
       },
       // PR 12 (CN-025): Settings → Admin look (the page designs, where the guide opens).
