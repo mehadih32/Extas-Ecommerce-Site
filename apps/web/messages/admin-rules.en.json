@@ -259,6 +259,13 @@
       "usageLimit": "Times it can be used",
       "perCustomer": "Times per customer",
       "noLimit": "Empty = no limit",
+      "audience": "Who can use it",
+      "aud": {
+        "ALL": "Everyone",
+        "GUESTS": "Only without logging in",
+        "MEMBERS": "Only logged-in members",
+        "FIRST_ORDER": "First order only (checked by phone number)"
+      },
       "add": "Add coupon",
       "none": "No coupons yet.",
       "used": "Used {n}",

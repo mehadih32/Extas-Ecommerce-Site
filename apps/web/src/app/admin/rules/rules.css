@@ -142,7 +142,7 @@
 .rl-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--ad-line2); }
 .rl-actions-2 { margin-top: 8px; padding-top: 0; border-top: 0; gap: 4px 16px; }
 .rl-dirty { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.rl-link { background: none; border: 0; padding: 8px 0; min-height: var(--ad-tap); color: var(--ad-brand); font: inherit; font-size: var(--ad-fs-small); font-weight: 600; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.rl-link { background: none; border: 0; padding: 8px 0; min-height: var(--ad-tap); min-width: var(--ad-tap); /* PR 213 follow-up: a short word ("Coupons", "কুপন") is still a whole tap */ color: var(--ad-brand); font: inherit; font-size: var(--ad-fs-small); font-weight: 600; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
 .rl-link:hover { text-decoration: underline; text-underline-offset: 2px; }
 .rl-link:disabled { color: var(--ad-muted); cursor: not-allowed; text-decoration: none; }
 .rl-done { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--rl-small-radius); background: var(--rl-code-bg); color: var(--rl-code-ink); font-size: var(--ad-fs-small); margin-top: 12px; }

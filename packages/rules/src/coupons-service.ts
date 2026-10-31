@@ -1,7 +1,9 @@
 // PR 213 — coupons. A coupon is a code that unlocks one discount rule that asks for a coupon (`requiresCoupon`): the
 // amount, the smallest order and the cap are the rule's values, so they are versioned, previewed and simulated with
 // it. The coupon itself holds only the code, its window, its limits (uses in all, uses per customer) and who may use it
-// (`audience`: everybody, guests only or signed-in members only; S04 PR 112, CN-018 answer 9, SIM-F-009).
+// (`audience`: everybody, guests only or signed-in members only; S04 PR 112, CN-018 answer 9, SIM-F-009). PR 213
+// follow-up (go-live gate SIM-F-050): "first order only", checked on his order history by phone number (and account), so
+// a repeat buyer who is not logged in no longer passes as new; "guests only" now says only what it checks (not logged in).
 // A coupon is made off. Switching it on or off changes what customers pay: that needs the owner's OK (`rules.approve`,
 // CLAUDE.md rule 6). Redeeming is part of placing an order (S04 calls `redeemCoupon` inside its transaction): the use
 // count can never pass the limit, even with two orders at the same moment, and one order redeems a coupon once.
@@ -9,16 +11,11 @@ import { Prisma } from '@extas/db/client';
 import { z } from 'zod';
 import { allow, found, holds, logChange, nowOf, parse, setting, type Db, type RulesDeps, type Tx, type Who } from './context';
 import { RulesError } from './errors';
-import { isLive } from './model';
+import { COUPON_AUDIENCES, couponAudienceOf, isLive, type CouponAudience } from './model';
 import { toRule } from './rows';
 
 type CouponRow = Prisma.CouponGetPayload<object>;
 
-/** Who may use a coupon: everybody (the default, so a public code works for guests), guests only, or members only. */
-export const COUPON_AUDIENCES = ['ALL', 'GUESTS', 'MEMBERS'] as const;
-export type CouponAudience = (typeof COUPON_AUDIENCES)[number];
-/** A stored audience, read safely: anything unknown is treated as open to everybody. */
-export const couponAudienceOf = (v: string | null | undefined): CouponAudience => ((COUPON_AUDIENCES as readonly string[]).includes(v ?? '') ? (v as CouponAudience) : 'ALL');
 
 export interface CouponView {
   id: string;
@@ -139,7 +136,10 @@ export async function archiveCoupon(deps: RulesDeps, who: Who, id: string, input
   return view(row);
 }
 
-export type CouponRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'MEMBERS_ONLY' | 'GUESTS_ONLY' | 'RULE_NOT_LIVE';
+export type CouponRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'MEMBERS_ONLY' | 'GUESTS_ONLY' | 'FIRST_ORDER_ONLY' | 'RULE_NOT_LIVE';
+
+/** PR 213 follow-up — the orders that do not make a buyer "not new": never placed, or cancelled. */
+const NOT_AN_ORDER = ['DRAFT', 'CANCELLED'] as const;
 
 export interface CouponCheck {
   ok: boolean;
@@ -150,8 +150,11 @@ export interface CouponCheck {
   code: string;
 }
 
-/** May this code be used now by this customer? (checkout, before the order; no permission: storefront server code) */
-export async function checkCoupon(db: Db, input: { storeId: number; code: string; phone?: string | null; customerId?: string | null; now: Date }): Promise<CouponCheck> {
+/**
+ * May this code be used now by this customer? (checkout, before the order; no permission: storefront server code)
+ * `orderId`: the order being placed (redeeming), left out of his order history.
+ */
+export async function checkCoupon(db: Db, input: { storeId: number; code: string; phone?: string | null; customerId?: string | null; orderId?: string | null; now: Date }): Promise<CouponCheck> {
   const code = normaliseCode(input.code);
   const no = (reason: CouponRefusal, c?: CouponRow): CouponCheck => ({ ok: false, reason, couponId: c?.id ?? null, ruleId: c?.ruleId ?? null, code });
   const c = await db.coupon.findUnique({ where: { storeId_code: { storeId: input.storeId, code } } });
@@ -164,6 +167,19 @@ export async function checkCoupon(db: Db, input: { storeId: number; code: string
   const audience = couponAudienceOf(c.audience);
   if (audience === 'MEMBERS' && !input.customerId) return no('MEMBERS_ONLY', c);
   if (audience === 'GUESTS' && input.customerId) return no('GUESTS_ONLY', c);
+  // PR 213 follow-up (SIM-F-050): a first-order code reads his order history by phone (and account), logged in or not.
+  // Before his number is known (the bag) it is let through; placing the order checks again with the number.
+  if (audience === 'FIRST_ORDER' && (input.phone || input.customerId)) {
+    const earlier = await db.order.count({
+      where: {
+        storeId: input.storeId,
+        status: { notIn: [...NOT_AN_ORDER] },
+        ...(input.orderId ? { id: { not: input.orderId } } : {}),
+        OR: [...(input.phone ? [{ phone: input.phone }] : []), ...(input.customerId ? [{ customerId: input.customerId }] : [])],
+      },
+    });
+    if (earlier > 0) return no('FIRST_ORDER_ONLY', c);
+  }
   if (c.perCustomerLimit !== null && (input.phone || input.customerId)) {
     const used = await db.couponRedemption.count({ where: { couponId: c.id, OR: [...(input.phone ? [{ phone: input.phone }] : []), ...(input.customerId ? [{ customerId: input.customerId }] : [])] } });
     if (used >= c.perCustomerLimit) return no('PER_CUSTOMER', c);

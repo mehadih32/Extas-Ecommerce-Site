@@ -317,3 +317,13 @@ export function windowsOverlap(a: Pick<RuleContent, 'startsAt' | 'endsAt'>, b: P
   const e2 = b.endsAt ? Date.parse(b.endsAt) : Infinity;
   return s1 < e2 && s2 < e1;
 }
+
+/**
+ * PR 213, 112 — who may use a coupon: everybody (the default, so a public code works for guests), guests only (not logged
+ * in), members only (logged in), or (PR 213 follow-up, SIM-F-050) a first order only: no earlier order on his phone
+ * number or account, cancelled ones aside. Here, without a database, so the admin's coupon sheet can list them.
+ */
+export const COUPON_AUDIENCES = ['ALL', 'GUESTS', 'MEMBERS', 'FIRST_ORDER'] as const;
+export type CouponAudience = (typeof COUPON_AUDIENCES)[number];
+/** A stored audience, read safely: anything unknown is treated as open to everybody. */
+export const couponAudienceOf = (v: string | null | undefined): CouponAudience => ((COUPON_AUDIENCES as readonly string[]).includes(v ?? '') ? (v as CouponAudience) : 'ALL');

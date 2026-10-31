@@ -4,7 +4,7 @@
 // with "bring back", trying the rule on past orders, and a discount's coupons. Each talks to /api/admin/rules itself.
 import { useEffect, useState, type FormEvent } from 'react';
 import type { CouponView, RulePreview, RuleView, SimulationResult, VersionView } from '@extas/rules';
-import { RULE_KINDS, type Param, type RuleContent, type RuleKind, type Target } from '@extas/rules/pure';
+import { COUPON_AUDIENCES, RULE_KINDS, type CouponAudience, type Param, type RuleContent, type RuleKind, type Target } from '@extas/rules/pure';
 import { call, type Answer } from '../api';
 import { Icon } from '../Icon';
 import { t, type Dict } from '@/lib/i18n';
@@ -511,6 +511,8 @@ export function CouponsSheet({ d, lang: _lang, onClose, view, name, perms }: Bas
   const [code, setCode] = useState('');
   const [usage, setUsage] = useState('');
   const [per, setPer] = useState('');
+  // PR 213 follow-up (SIM-F-050): who may use it (everyone as shipped; first order only checks his number's orders)
+  const [aud, setAud] = useState<CouponAudience>('ALL');
   const [err, setErr] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -526,7 +528,7 @@ export function CouponsSheet({ d, lang: _lang, onClose, view, name, perms }: Bas
     setBusy(true);
     setErr('');
     const num = (s: string) => (s.trim() ? Number(s) : undefined);
-    const a = await call('POST', `${RULES_API}/coupons`, { code: code.trim(), ruleId: view.id, ...(num(usage) ? { usageLimit: num(usage) } : {}), ...(num(per) ? { perCustomerLimit: num(per) } : {}) });
+    const a = await call('POST', `${RULES_API}/coupons`, { code: code.trim(), ruleId: view.id, ...(num(usage) ? { usageLimit: num(usage) } : {}), ...(num(per) ? { perCustomerLimit: num(per) } : {}), ...(aud !== 'ALL' ? { audience: aud } : {}) });
     setBusy(false);
     if (a.status !== 201 || !a.data.coupon) return setErr(refusal(d, a));
     setList((l) => [a.data.coupon as CouponView, ...(l ?? [])]);
@@ -565,6 +567,18 @@ export function CouponsSheet({ d, lang: _lang, onClose, view, name, perms }: Bas
             <input id="rl-c-per" className="ad-input" type="number" inputMode="numeric" min={1} value={per} placeholder={tt('coupons.noLimit')} onChange={(e) => setPer(e.target.value)} />
           </div>
           <div className="rl-wide">
+            <label className="ad-label" htmlFor="rl-c-aud">
+              {tt('coupons.audience')}
+            </label>
+            <select id="rl-c-aud" className="ad-input" value={aud} onChange={(e) => setAud(e.target.value as CouponAudience)} data-testid="rl-c-aud">
+              {COUPON_AUDIENCES.map((a) => (
+                <option key={a} value={a}>
+                  {tt(`coupons.aud.${a}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="rl-wide">
             <button type="submit" className="ad-btn ad-btn-primary ad-btn-sm" disabled={busy || !code.trim()}>
               {tt('coupons.add')}
             </button>
@@ -593,6 +607,7 @@ export function CouponsSheet({ d, lang: _lang, onClose, view, name, perms }: Bas
               <div className="ad-mini">
                 {c.enabled ? tt('coupons.on') : tt('coupons.off')} · {tt('coupons.used', { n: c.usedCount })}
                 {c.usageLimit ? ` ${tt('coupons.of', { n: c.usageLimit })}` : ''}
+                {c.audience !== 'ALL' ? ` · ${tt(`coupons.aud.${c.audience}`)}` : ''}
               </div>
             </div>
             {perms.publish ? (
