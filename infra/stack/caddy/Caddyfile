@@ -1,6 +1,6 @@
 # EXTAS Caddy (PR 7). Automatic HTTPS (Let's Encrypt, with Caddy's internal CA as a fallback so Cloudflare
 # "Full" always reaches us), HTTP/2 + HTTP/3, compression, security headers.
-# The host name is a setting (infra/config/server.conf → EXTAS_STAGING_HOST). The preview password and the
+# The host names are settings (infra/config/server.conf → EXTAS_STAGING_HOST, EXTAS_EXTRA_HOSTS). The preview password and the
 # upstream (static page → app, blue/green) are files in /srv/extas/config/caddy/sites written by the scripts.
 {
 	admin localhost:2019
@@ -50,7 +50,9 @@
 	respond @internal 404
 }
 
-{$EXTAS_STAGING_HOST} {
+# PR 362: the extra host names (server.conf EXTAS_EXTRA_HOSTS, cleaned by server setup) are served the same way, each
+# with its own automatic certificate; empty, only the staging host.
+{$EXTAS_STAGING_HOST} {$EXTAS_EXTRA_HOSTS} {
 	import security_headers
 	import cache_headers
 	encode zstd gzip

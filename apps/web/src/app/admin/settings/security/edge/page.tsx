@@ -89,7 +89,7 @@ export default async function EdgePage() {
     send: s('send.send'),
     sending: s('send.sending'),
     sent: s('send.sent'),
-    err: Object.fromEntries(['NO_HOST', 'SEND_FAILED', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, s(`send.err.${c}`)])),
+    err: Object.fromEntries(['NO_HOST', 'NOT_LIVE', 'SEND_FAILED', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, s(`send.err.${c}`)])),
   };
   const lastLine = v.lastSent ? s('send.last', { at: when(v.lastSent.at), what: v.lastSent.changed.length ? v.lastSent.changed.map((x) => s(`send.phase.${x}`)).join(', ') : s('send.nothing') }) : s('send.never');
   const rows = [...v.rules.map((r) => ({ ref: r.ref, st: diff.get(r.ref) ?? 'ok' })), ...extras.map((x) => ({ ref: x.ref, st: 'extra' as const }))];

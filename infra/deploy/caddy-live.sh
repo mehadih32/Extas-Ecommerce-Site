@@ -14,6 +14,21 @@
 
 CADDY_CONTAINER="${CADDY_CONTAINER:-extas-caddy}"
 
+# site_extra_hosts <staging host> <extra hosts> — PR 362: the extra host names Caddy serves next to the staging host,
+# lower case, space separated, each once and never the staging host again. A name that is not a plain host name
+# (letters, digits, dots and dashes, a dot inside) is left out and named on stderr, so one typo never stops Caddy.
+site_extra_hosts() {
+  local staging="${1,,}" h out=() seen=" "
+  for h in ${2//,/ }; do
+    h="${h,,}"
+    if ! [[ $h =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$ ]]; then echo "not a host name, left out: $h" >&2; continue; fi
+    [ "$h" = "$staging" ] && continue
+    case "$seen" in *" $h "*) continue ;; esac
+    seen+="$h "; out+=("$h")
+  done
+  echo "${out[*]}"
+}
+
 # caddyfile_copy_inplace <source> <target> — the target gets the source's content in its own inode (created when it
 # does not exist yet). Prints "changed" when the content changed.
 caddyfile_copy_inplace() {

@@ -252,6 +252,17 @@ T="$(mktemp -d)"
   echo "$a:$b:$([ "$(stat -c %i "$T/live")" = "$ino" ] && echo same-inode):$(cat "$T/live"):$c:$(cat "$T/fresh")"
 ) > "$T/out"
 check "caddy (a): the Caddyfile is copied in place, the mounted inode sees the new content" "$(cat "$T/out")" "changed::same-inode:new:changed:new"
+# PR 362: extra host names, cleaned for Caddy (a typo is left out and named, never stops Caddy)
+(
+  # shellcheck source=/dev/null
+  . ../deploy/caddy-live.sh
+  a="$(site_extra_hosts new.example.test "Shop.Example.TEST, www.example.test new.example.test shop.example.test" 2>/dev/null)"
+  b="$(site_extra_hosts new.example.test "bad_host.test x \"a.test\" ok.example.test" 2>"$T/err")"
+  c="$(site_extra_hosts new.example.test "")"
+  echo "$a|$b|$(wc -l < "$T/err")|$c|"
+) > "$T/out"
+check "hosts (362): extra hosts are lower case, once each, never the staging host; a bad name is left out and named" "$(cat "$T/out")" "shop.example.test www.example.test|ok.example.test|3||"
+check "hosts (362): server setup and the stack pass the cleaned extra hosts to Caddy" "$(grep -c 'EXTAS_EXTRA_HOSTS="$(site_extra_hosts "$EXTAS_STAGING_HOST"' ../server/steps/09-stack.sh):$(grep -c 'EXTAS_EXTRA_HOSTS: ${EXTAS_EXTRA_HOSTS:-}' ../stack/compose.yml):$(grep -c '^{$EXTAS_STAGING_HOST} {$EXTAS_EXTRA_HOSTS} {$' ../stack/caddy/Caddyfile)" "1:1:1"
 check "caddy (a): server setup copies the Caddyfile in place and never by rsync" "$(grep -c -- "--exclude /caddy/Caddyfile" ../server/steps/09-stack.sh):$(grep -c 'caddyfile_copy_inplace "$STACK_DIR_REPO/caddy/Caddyfile" "$EXTAS_ROOT/stack/caddy/Caddyfile"' ../server/steps/09-stack.sh):$(grep -c 'caddy reload.*|| true' ../server/steps/09-stack.sh):$(grep -c 'caddy_apply || caddy_rc=' ../server/steps/09-stack.sh)" "1:1:0:1"
 # (a)+(b) caddy_apply against a stand-in docker and compose: what the running Caddy reads, its reload, its live config.
 apply_case() { # apply_case <live sum ok|old> <recreate fixes yes|no> <reload rc> <live trusted yes|no>

@@ -125,6 +125,7 @@ services:
       - "127.0.0.1:8080:8080"   # internal health/bench port, never public
     environment:
       EXTAS_STAGING_HOST: ${EXTAS_STAGING_HOST}
+      EXTAS_EXTRA_HOSTS: ${EXTAS_EXTRA_HOSTS:-}
     mem_limit: ${CADDY_MEM_MB}m
     cpus: ${CADDY_CPUS}
     volumes:

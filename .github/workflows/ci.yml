@@ -85,6 +85,10 @@ jobs:
           bash infra/stack/caddy/client-ip-block.sh infra/config/cloudflare-ips.txt > /tmp/sites/client-ip.caddy
           docker run --rm -e EXTAS_STAGING_HOST=example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+          # PR 362: with extra host names (the main domain on go-live day, a store's own domain) as server setup writes them.
+          docker run --rm -e EXTAS_STAGING_HOST=example.test -e "EXTAS_EXTRA_HOSTS=shop.example.test www.example.test" \
+            -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Deploy script and app compose are valid
         run: |
           shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/pg-exec.sh infra/deploy/caddy-live.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/smoke.sh infra/deploy/erp-acceptance.sh infra/deploy/disk-tidy.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
