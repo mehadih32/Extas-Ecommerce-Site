@@ -7,11 +7,13 @@
 // PR 65: "Rate & review" under each line of a delivered order, for the customer whose account it is; what he writes
 // waits for the shop's check (`reviews.submit`, `reviews.photoReward`).
 // Follow-ups 260, 261 and S05 · PR 150: the edit card, the two-size question and "What happened" (lib/shop/account-order.ts).
+// Review R3 (M3): the delivery line as the checkout gave it ("ships from …" after the holiday, "may arrive after Eid")
+// and the late flag on the same promise clock as the courier's (`currentEta`, `currentPromise`).
 import type { Metadata } from 'next';
 import { OrderPage, OrderPrompt } from '@/components/shop/account/OrderPage';
 import { orderExtras } from '@/lib/shop/account-order';
 import { orderReviewBox } from '@/lib/shop/account-review';
-import { accountReceipt, checkoutSettings } from '@/lib/shop/checkout';
+import { accountReceipt, checkoutSettings, currentEta, currentPromise } from '@/lib/shop/checkout';
 import { invoiceNumber } from '@/lib/shop/invoice';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
@@ -34,7 +36,12 @@ export default async function Order({ params, searchParams }: { params: Promise<
     readPageSettings(['account.track.welcome', 'account.track.late', 'account.track.exactAmount', 'account.track.courier', 'account.invoice', 'account.history'] as const, c.storeId),
   ]);
   if (!receipt) return <OrderPrompt c={c} number={number} signedIn={signedIn} />;
-  const [review, extras] = await Promise.all([orderReviewBox(c, receipt.number), orderExtras(c, receipt.number, receipt.status, { timeline: track['account.history'].timeline })]);
+  const [review, extras, eta, promise] = await Promise.all([
+    orderReviewBox(c, receipt.number),
+    orderExtras(c, receipt.number, receipt.status, { timeline: track['account.history'].timeline }),
+    currentEta(c, receipt.number),
+    currentPromise(c, receipt.number),
+  ]);
   return (
     <OrderPage
       c={c}
@@ -45,6 +52,8 @@ export default async function Order({ params, searchParams }: { params: Promise<
       invoiceNo={track['account.invoice'].enabled ? invoiceNumber(track['account.invoice'].number, receipt.number) : null}
       review={review}
       extras={extras}
+      eta={eta}
+      promise={promise}
     />
   );
 }

@@ -11,7 +11,8 @@
     "./sample": "./src/sample.ts",
     "./settle": "./src/settle.ts",
     "./phone": "./src/phone.ts",
-    "./exempt": "./src/exempt.ts"
+    "./exempt": "./src/exempt.ts",
+    "./promise": "./src/promise.ts"
   },
   "scripts": {
     "gazetteer:import": "tsx src/cli.ts import",
@@ -24,6 +25,7 @@
   "dependencies": {
     "@extas/auth": "workspace:*",
     "@extas/db": "workspace:*",
+    "@extas/rules": "workspace:*",
     "@extas/settings": "workspace:*",
     "zod": "4.6.7"
   },

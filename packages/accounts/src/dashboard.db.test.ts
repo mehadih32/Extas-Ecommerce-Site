@@ -67,6 +67,19 @@ describe.skipIf(!HAS_TEST_DB)('PR 131 · My account', () => {
     // a delivered order is never late, nor one whose band promises no hours
     expect(four.find((c) => c.number === 'T-1001')?.late).toBe(false);
     expect(four.find((c) => c.number === 'T-1002')?.late).toBe(false);
+    // SIM-F-048: its district promises 120 hours (on): the same order is not late at four days, and late past five
+    const district = await f.t.prisma.geoArea.create({ data: { level: 'DISTRICT', code: 'TEST-D-048', nameEn: 'Test district' } });
+    const area = await f.t.prisma.geoArea.create({ data: { level: 'AREA', code: 'TEST-A-048', nameEn: 'Test area', parentId: district.id, ancestorIds: [district.id] } });
+    await f.t.prisma.order.updateMany({ where: { number: 'T-1135' }, data: { areaId: area.id } });
+    f.overrides.set('delivery.promise.districts', { enabled: true, rows: [{ district: 'TEST-D-048', hoursMin: 72, hoursMax: 120 }] });
+    try {
+      const own = await orderCards(f.deps(), { storeId: f.A, customerId: me.id, now: new Date('2026-10-24T06:00:00Z') });
+      expect(own.find((c) => c.number === 'T-1135')?.late).toBe(false);
+      const six = await orderCards(f.deps(), { storeId: f.A, customerId: me.id, now: new Date('2026-10-26T06:00:00Z') });
+      expect(six.find((c) => c.number === 'T-1135')?.late).toBe(true);
+    } finally {
+      f.overrides.delete('delivery.promise.districts');
+    }
     await f.t.prisma.order.updateMany({ where: { number: 'T-1135' }, data: { archivedAt: new Date() } });
   });
 

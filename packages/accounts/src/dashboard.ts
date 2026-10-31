@@ -5,6 +5,7 @@ import type { Prisma } from '@extas/db/client';
 import { checkStoreId, setting, type AccountsDeps } from './context';
 import { firstNameOf, lateOf, trackOf, type OrderState, type TrackView } from './pure';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
+import { orderPromises } from '@extas/delivery/promise';
 
 const ACTIVE_WALLET = 'ACTIVE';
 
@@ -115,6 +116,7 @@ export async function accountSummary(deps: AccountsDeps, input: { storeId: numbe
 
 /** What an order card reads of an order. */
 const CARD_SELECT = {
+  id: true,
   number: true,
   placedAt: true,
   status: true,
@@ -125,7 +127,8 @@ const CARD_SELECT = {
   cancelledAt: true,
   returnedAt: true,
   totalMinor: true,
-  deliveryBand: { select: { hoursMax: true } },
+  areaId: true,
+  deliveryBand: { select: { key: true, hoursMin: true, hoursMax: true } },
   items: { where: { status: 'ACTIVE' as const }, orderBy: { createdAt: 'asc' as const }, select: { productId: true, variantId: true, productName: true, colourName: true, quantity: true } },
 };
 
@@ -138,12 +141,20 @@ export async function cardsOf(deps: AccountsDeps, storeId: number, where: Prisma
   const rows = await deps.db.order.findMany({ where, orderBy: [{ placedAt: 'desc' }, { id: 'desc' }], skip: page.skip, take: page.take, select: CARD_SELECT });
   const shown = rows.flatMap((o) => o.items.slice(0, CARD_LINES));
   const colours = await lineColours(deps, storeId, shown);
+  // SIM-F-048: a district with its own promise is late against its own hours (`delivery.promise.districts`, off);
+  // review R3 (M3): one promise clock with the courier's late flag — counted from the shop's first day back for an
+  // order placed during the holiday break, none for "may arrive after Eid"
+  const promises = await orderPromises(deps, storeId, rows.map((o) => ({ id: o.id, placedAt: o.placedAt, areaId: o.areaId, band: o.deliveryBand })));
+  const promiseOf = (o: (typeof rows)[number]) => {
+    const p = promises.get(o.id);
+    return p && !p.afterEid ? { placedAt: p.from, hoursMax: p.hoursMax } : { placedAt: o.placedAt, hoursMax: null };
+  };
   return rows.map((o) => ({
     number: o.number,
     placedAt: o.placedAt.toISOString(),
     status: o.status,
     track: trackOf(o.status, o),
-    late: lateOf({ status: o.status, placedAt: o.placedAt, hoursMax: o.deliveryBand?.hoursMax }, lateRule, now).late,
+    late: lateOf({ status: o.status, ...promiseOf(o) }, lateRule, now).late,
     items: o.items.reduce((s, i) => s + i.quantity, 0),
     totalMinor: o.totalMinor,
     lines: o.items.slice(0, CARD_LINES).map((i) => ({ productId: i.productId, nameEn: i.productName, quantity: i.quantity, ...lineLook(colours, i) })),

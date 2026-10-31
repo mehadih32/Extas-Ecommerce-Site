@@ -2,12 +2,15 @@
 // skipped without TEST_DATABASE_ADMIN_URL): the order follows its parcel through the order service — picked up → in
 // transit (the pick-up is the hand-over), the courier's "out for delivery" once per trip on the timeline, delivered →
 // delivered, refused and back → returned, a partial only once a person named the kept pieces; a lost parcel never moves
-// the order; the late list (SIM-F-018); the catch-up of an order left behind. Every value is a made-up test value.
+// the order; the late list (SIM-F-018) on the checkout's own promise (review R3: district hours, the holiday break); the
+// catch-up of an order left behind. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MOCK_COURIER_PROVIDER, mockCourierWorld, type MockScenario } from '@extas/adapters';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { confirmOrder, getOrder } from '@extas/orders';
 import { ATTEMPT_FAILED_EVENT, bookOrders, LATE_EVENT, listParcels, noteLateParcels, OUT_FOR_DELIVERY_EVENT, syncLagging, syncOrder, trackParcel, trackParcels } from './index';
+import { districtCodesOf } from '@extas/delivery/promise';
+import { registry } from '@extas/settings';
 import { setUpShipping, type ShippingFixture } from './testing';
 
 describe.skipIf(!HAS_TEST_DB)('PR 184 · the order follows its parcel (PostgreSQL)', () => {
@@ -138,6 +141,37 @@ describe.skipIf(!HAS_TEST_DB)('PR 184 · the order follows its parcel (PostgreSQ
     }
     for (let i = 0; i < 3; i++) await read(o.shipmentId);
     expect((await late()).rows.map((r) => r.id)).not.toContain(o.shipmentId);
+  });
+
+  it("R3 (M2/M3): the late list keeps the checkout's promise — a district at 120 h is not late at 80 h; an order placed in the holiday break counts from the first day back", async () => {
+    const o = await booked('sy-district');
+    await read(o.shipmentId);
+    const order = await db().order.findUniqueOrThrow({ where: { id: o.orderId }, select: { areaId: true, placedAt: true } });
+    const district = (await districtCodesOf(db(), [order.areaId])).get(order.areaId!)!;
+    expect(district).toBeTruthy();
+    const late = async () => (await listParcels(f.shippingDeps(), f.shipper, { view: 'late' })).rows.map((r) => r.id);
+    const start = f.clock.now;
+    f.overrides.set('delivery.promise.districts', { enabled: true, rows: [{ district, hoursMin: 72, hoursMax: 120 }] });
+    try {
+      f.clock.now = new Date(order.placedAt.getTime() + 80 * 3_600_000);
+      expect(await late()).not.toContain(o.shipmentId);
+      expect((await noteLateParcels(f.shippingDeps(), f.S, 50)).noted).toBe(0);
+      f.clock.now = new Date(order.placedAt.getTime() + 121 * 3_600_000);
+      expect(await late()).toContain(o.shipmentId);
+    } finally {
+      f.overrides.delete('delivery.promise.districts');
+    }
+    // placed inside the holiday break: the band's hours count from the day after its last day
+    const day = (d: Date) => d.toISOString().slice(0, 10);
+    const to = new Date(order.placedAt.getTime() + 2 * 86_400_000);
+    f.overrides.set('delivery.holiday', { ...registry['delivery.holiday'].default, enabled: true, from: day(new Date(order.placedAt.getTime() - 86_400_000)), to: day(to) });
+    try {
+      f.clock.now = new Date(order.placedAt.getTime() + 60 * 3_600_000);
+      expect(await late()).not.toContain(o.shipmentId);
+    } finally {
+      f.overrides.delete('delivery.holiday');
+      f.clock.now = start;
+    }
   });
 
   it('the worker\'s run reads the due parcels and moves their orders', async () => {

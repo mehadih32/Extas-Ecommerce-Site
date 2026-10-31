@@ -114,6 +114,21 @@
       "d": "Prints a Bengali address again in Latin letters under it on the courier sticker, with the area and district in English, for riders and hub staff who read Latin letters faster. The Bengali address stays the one that counts.",
       "enabled": "Print the Latin line",
       "enabledHelp": "Only for addresses written in Bengali. An address already in Latin letters prints once."
+    },
+    "promise": {
+      "h": "Delivery promise per district",
+      "d": "A far district can promise its own delivery time instead of its band's: checkout, the thank-you page, the order page and the late flag use it. A district with no row keeps its band's time. The charge does not change.",
+      "enabled": "Use the districts' own times",
+      "enabledHelp": "Only districts listed below change.",
+      "rows": "Districts",
+      "rowsHelp": "Hours from when the order is placed; the longest is when an order counts as late.",
+      "district": "District",
+      "pick": "Choose a district",
+      "hoursMin": "Shortest (hours)",
+      "hoursMax": "Longest (hours)",
+      "add": "Add a district",
+      "remove": "Remove",
+      "empty": "No district has its own time yet."
     }
   }
 }

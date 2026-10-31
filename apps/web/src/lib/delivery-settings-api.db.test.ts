@@ -98,4 +98,19 @@ describe.skipIf(!HAS_TEST_DB)('Delivery settings API on PostgreSQL (PR 193 holid
     // the holiday card is untouched by it
     expect(ok.body.cards!['delivery.holiday']!.value).toMatchObject({ enabled: true, from: '2027-04-08' });
   });
+
+  it('SIM-F-048: the district promise card ships off with no rows; only a district the gazetteer knows is taken', async () => {
+    const card = (await api('GET', { cookie: owner })).body.cards!['delivery.promise.districts']!;
+    expect(card.value).toEqual({ enabled: false, rows: [] });
+    const district = await t.prisma.geoArea.findFirst({ where: { level: 'DISTRICT', code: { not: null } }, select: { code: true } });
+    const code = district?.code ?? (await t.prisma.geoArea.create({ data: { level: 'DISTRICT', code: 'TEST-D-048', nameEn: 'Test district' } })).code!;
+    const unknown = await api('PUT', { cookie: owner, body: { key: 'delivery.promise.districts', value: { enabled: true, rows: [{ district: 'NO-SUCH-DISTRICT', hoursMin: null, hoursMax: 120 }] }, version: card.version } });
+    expect(unknown).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['rows'] } });
+    const backwards = await api('PUT', { cookie: owner, body: { key: 'delivery.promise.districts', value: { enabled: true, rows: [{ district: code, hoursMin: 200, hoursMax: 120 }] }, version: card.version } });
+    expect(backwards.status).toBe(400);
+    const ok = await api('PUT', { cookie: owner, body: { key: 'delivery.promise.districts', value: { enabled: true, rows: [{ district: code, hoursMin: 72, hoursMax: 120 }] }, version: card.version } });
+    expect(ok.status).toBe(200);
+    expect(await deps.resolver.value('delivery.promise.districts', { storeId: MOTHER_STORE_ID })).toEqual({ enabled: true, rows: [{ district: code, hoursMin: 72, hoursMax: 120 }] });
+    expect(await t.prisma.auditLog.count({ where: { action: 'delivery.promise.districts.save' } })).toBe(1);
+  });
 });

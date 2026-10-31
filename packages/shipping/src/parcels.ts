@@ -6,8 +6,11 @@
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { allow, nowOf, parse, setting, type ShippingDeps, type Who } from './context';
+import { orderPromises, promiseDueBy } from '@extas/delivery/promise';
 import { ShippingError } from './errors';
 import { ACTIVE_STATES, EXCEPTION_STATUSES, type ShipmentStatus } from './pure';
+
+const HOUR_MS = 3_600_000;
 
 export const PARCEL_VIEWS = ['active', 'late', 'exceptions', 'failed', 'finished', 'all'] as const;
 export type ParcelView = (typeof PARCEL_VIEWS)[number];
@@ -60,23 +63,24 @@ const ROW_SELECT = {
 export type ParcelRow = Prisma.ShipmentGetPayload<{ select: typeof ROW_SELECT }>;
 
 /**
- * SIM-F-018 — the store's parcels still with the courier and past their promise (pure.ts `lateOf`, in SQL): the band's
- * most hours from placing, plus the grace hours; a band without hours or an address the shop could not settle is never
- * late.
+ * SIM-F-018 — the store's parcels still with the courier and past their promise, plus the grace hours: the promise the
+ * checkout gave (review R3, customer M2/M3: @extas/delivery `orderPromises` — the district's own hours, counted from
+ * the shop's first day back for an order placed during the holiday break, none for "may arrive after Eid"). A band
+ * without hours or an address the shop could not settle is never late.
  */
 export async function lateParcelIds(deps: Pick<ShippingDeps, 'db' | 'settings' | 'now'>, storeId: number): Promise<string[]> {
   const grace = (await setting(deps, storeId, 'account.track.late')).graceHours;
   const now = nowOf(deps);
-  const rows = await deps.db.$queryRaw<{ id: string }[]>`
-    SELECT s."id"::text AS id
-    FROM "Shipment" s
-    JOIN "Order" o ON o."id" = s."orderId"
-    JOIN "DeliveryBand" b ON b."id" = o."deliveryBandId"
-    WHERE s."storeId" = ${storeId} AND o."archivedAt" IS NULL
-      AND s."status"::text = ANY(${[...ACTIVE_STATES] as string[]})
-      AND b."hoursMax" > 0 AND o."addressUnclear" IS NOT TRUE
-      AND o."placedAt" + make_interval(hours => b."hoursMax" + ${grace}::int) < ${now}`;
-  return rows.map((r) => r.id);
+  const rows = await deps.db.shipment.findMany({
+    where: { storeId, status: { in: [...ACTIVE_STATES] }, order: { archivedAt: null, addressUnclear: false, deliveryBandId: { not: null } } },
+    select: { id: true, order: { select: { id: true, placedAt: true, areaId: true, deliveryBand: { select: { key: true, hoursMin: true, hoursMax: true } } } } },
+  });
+  const promises = await orderPromises(deps, storeId, rows.map((r) => ({ id: r.order.id, placedAt: r.order.placedAt, areaId: r.order.areaId, band: r.order.deliveryBand })));
+  const graceMs = Math.max(0, grace) * HOUR_MS;
+  return rows.filter((r) => {
+    const due = promiseDueBy(promises.get(r.order.id));
+    return !!due && due.getTime() + graceMs < now.getTime();
+  }).map((r) => r.id);
 }
 
 /** PR 148 follow-up (SIM-F-053) — the order's timeline type for a parcel past its promise (`@extas/messages` LATE_EVENT). */

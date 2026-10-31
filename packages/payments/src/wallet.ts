@@ -17,6 +17,7 @@
 // The checkout's own wallet debit (@extas/checkout place.ts) and the review reward (@extas/catalogue reviews.ts) write
 // the same ledger the same way; wallet.guard.test.ts keeps every other writer out.
 import { Prisma } from '@extas/db/client';
+import { orderPromises } from '@extas/delivery/promise';
 import { z } from 'zod';
 import { allow, KEY, nowOf, parse, setting, TX, UUID, type Db, type PaymentsDeps, type Tx, type Who } from './context';
 import { PaymentsError } from './errors';
@@ -288,8 +289,25 @@ const APOLOGY_ORDER = {
   deliveredAt: true,
   subtotalMinor: true,
   discountMinor: true,
-  deliveryBand: { select: { hoursMax: true } },
+  areaId: true,
+  deliveryBand: { select: { key: true, hoursMin: true, hoursMax: true } },
 } satisfies Prisma.OrderSelect;
+type ApologyOrder = Prisma.OrderGetPayload<{ select: typeof APOLOGY_ORDER }>;
+
+/**
+ * Review R3 (customer M2/M3): how late each order came against the promise the checkout gave it (@extas/delivery
+ * `orderPromises`: the district's own hours, counted from the shop's first day back after a holiday break, none for
+ * "may arrive after Eid"), the same clock as the courier's late flag.
+ */
+async function lateHoursFor(deps: Pick<PaymentsDeps, 'db' | 'settings'>, storeId: number, orders: readonly ApologyOrder[], now: Date): Promise<Map<string, number | null>> {
+  const promises = await orderPromises(deps, storeId, orders.map((o) => ({ id: o.id, placedAt: o.placedAt, areaId: o.areaId, band: o.deliveryBand })));
+  return new Map(
+    orders.map((o) => {
+      const p = promises.get(o.id);
+      return [o.id, p && !p.afterEid ? lateHoursOf({ placedAt: p.from, deliveredAt: o.deliveredAt, hoursMax: p.hoursMax }, now) : null];
+    }),
+  );
+}
 
 const goodsOf = (o: { subtotalMinor: number; discountMinor: number }) => Math.max(0, o.subtotalMinor - o.discountMinor);
 
@@ -326,7 +344,7 @@ export async function giveApology(deps: PaymentsDeps, who: Who, orderId: string,
     if (d.amountMinor === undefined || d.amountMinor === given.amountMinor) return { entryId: given.id, walletId: given.walletId, balanceAfterMinor: given.balanceAfterMinor, replay: true, orderId: o.id, number: o.number, customerId: o.customerId, amountMinor: given.amountMinor };
     throw new PaymentsError('ALREADY_RECORDED', 'this order has its apology credit already', [], { entryId: given.id, amountMinor: given.amountMinor });
   }
-  const lateHours = lateHoursOf({ placedAt: o.placedAt, deliveredAt: o.deliveredAt, hoursMax: o.deliveryBand?.hoursMax }, nowOf(deps));
+  const lateHours = (await lateHoursFor(deps, who.storeId, [o], nowOf(deps))).get(o.id) ?? null;
   const a = apologyAmount(rule, { goodsMinor: goodsOf(o), lateHours }, d.amountMinor);
   if (!a.ok) {
     if (a.code === 'INVALID_INPUT') throw new PaymentsError('INVALID_INPUT', rule.mode === 'RULE' ? 'the rule decides the amount' : 'give the amount', ['amountMinor']);
@@ -374,9 +392,10 @@ export async function apologyCandidates(deps: PaymentsDeps, who: Who, opts: { li
     (await deps.db.walletEntry.findMany({ where: { storeId: who.storeId, reason: 'APOLOGY', orderId: { in: orders.map((o) => o.id) } }, select: { orderId: true } })).map((e) => e.orderId!),
   );
   const rows: ApologyCandidate[] = [];
+  const lateOfOrder = await lateHoursFor(deps, who.storeId, orders.filter((o) => !given.has(o.id)), now);
   for (const o of orders) {
     if (given.has(o.id)) continue;
-    const lateHours = lateHoursOf({ placedAt: o.placedAt, deliveredAt: o.deliveredAt, hoursMax: o.deliveryBand?.hoursMax }, now);
+    const lateHours = lateOfOrder.get(o.id) ?? null;
     if (lateHours === null || lateHours <= 0 || (rule.mode === 'RULE' && lateHours < rule.lateAfterHours)) continue;
     const a = rule.mode === 'RULE' ? apologyAmount(rule, { goodsMinor: goodsOf(o), lateHours }) : null;
     rows.push({ orderId: o.id, number: o.number, customerId: o.customerId!, deliveredAt: o.deliveredAt, lateHours, ruleMinor: a && a.ok ? a.amountMinor : null });

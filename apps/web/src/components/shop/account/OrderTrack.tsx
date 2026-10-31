@@ -3,12 +3,13 @@
 // one carries the band's promise in hours. Past that promise (SIM-F-018) the step says when it was due and a box says
 // plainly that it is late and that we are chasing the courier, with WhatsApp to ask. The steps only show the stored
 // state; moving an order is the state machine's (S05, CN-022).
+// Review R3 (M3): `eta` — the checkout's own delivery line ("ships from …", "may arrive after Eid") in place of the hours.
 import { TRACK_STEPS, type LateView, type TrackView } from '@extas/accounts/pure';
 import type { ShopContext } from '@/lib/shop/context';
 import { dateText } from '@/lib/shop/account-view';
 import { Icon } from '../Icon';
 
-export function OrderTrack({ c, track, late, hours, lateWa }: { c: ShopContext; track: TrackView; late: LateView; hours: string | null; lateWa: string | null }) {
+export function OrderTrack({ c, track, late, hours, eta = null, lateWa }: { c: ShopContext; track: TrackView; late: LateView; hours: string | null; eta?: string | null; lateWa: string | null }) {
   const t = c.t;
   return (
     <>
@@ -27,8 +28,10 @@ export function OrderTrack({ c, track, late, hours, lateWa }: { c: ShopContext; 
               : step === 'delivered'
                 ? late.late && late.dueBy
                   ? t('account.track.dueBy', { date: dateText(c, late.dueBy, true) })
-                  : hours
-                    ? t('account.track.within', { hours })
+                  : eta
+                    ? eta
+                    : hours
+                      ? t('account.track.within', { hours })
                     : now
                       ? t('account.track.next')
                       : t('account.track.soon')
