@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { REFUSER_TERMS, riskGoodCustomerSchema, riskStopReportSchema, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
+import { REFUSER_TERMS, riskApprovalSchema, riskGoodCustomerSchema, riskStopReportSchema, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
 
 describe('S06 risk settings (v100–109)', () => {
   it('PR 162: the blocklist is in the registry at version 100, labelled in English and Bengali, off as shipped', () => {
@@ -118,5 +118,19 @@ describe('S06 risk settings (v100–109)', () => {
     expect(riskGoodCustomerSchema.safeParse({ enabled: true, minDelivered: 0, maxRefused: 0 }).success).toBe(false);
     expect(riskStopReportSchema.safeParse({ days: 7, warnWrongPercent: 30, minStops: 5, maxRows: 500 }).success).toBe(true);
     expect(riskStopReportSchema.safeParse({ days: 0, warnWrongPercent: 30, minStops: 5, maxRows: 500 }).success).toBe(false);
+  });
+
+  it('PR 540: the approval digest and gate (107), labelled in both languages, the gate off as shipped', () => {
+    const spec = riskS06Settings['risk.approval'];
+    expect(registry['risk.approval']).toBe(spec);
+    expect(spec.version).toBe(107);
+    expect(spec.isOwnerData).toBe(false);
+    for (const lang of ['en', 'bn'] as const) {
+      expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+      expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+    }
+    expect(spec.default).toEqual({ gate: false, maxRows: 100 });
+    expect(riskApprovalSchema.safeParse({ gate: true, maxRows: 50 }).success).toBe(true);
+    expect(riskApprovalSchema.safeParse({ gate: true, maxRows: 5 }).success).toBe(false);
   });
 });

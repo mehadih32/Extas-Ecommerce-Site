@@ -121,7 +121,8 @@ export async function bundleOnOrder(deps: OrdersDeps, ref: { storeId: number; or
   if (!cfg.enabled || cfg.windowHours === null) return null;
   const plan = await bundlePlan(deps, ref.storeId, ref.orderId, { windowHours: cfg.windowHours, maxOrders: cfg.maxOrders });
   if (!plan || !plan.with.length) return null;
-  if (cfg.action === 'group') {
+  // PR 540: with the gate on, "one parcel by itself" stays a proposal for a person
+  if (cfg.action === 'group' && !(await setting(deps, ref.storeId, 'risk.approval')).gate) {
     try {
       const g = await groupOrders(deps, ref.storeId, [ref.orderId, ...plan.with.map((m) => m.orderId)], by, null);
       return { action: 'group', groupId: g.groupId, with: plan.with };

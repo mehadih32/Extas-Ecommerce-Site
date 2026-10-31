@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { blockProposalRows, registerFactsOf, personOrders, registerFacts, type BlockProposalRow, type RegisterFacts } from './block-proposal';
 import { allow, nowOf, parse, setting, TX, UUID, type OrdersDeps, type Who } from './context';
 import { holdWith } from './commands';
+import { gateOn, proposeHold } from './approval-gate';
 import { clusterFamily, clusterOfOrder } from './identity-family';
 import { isOrdersError, OrdersError } from './errors';
 import type { SettingsWriter } from './rule-switches';
@@ -237,7 +238,7 @@ export async function saveBlocklist(deps: OrdersDeps & { settings: OrdersDeps['s
 export interface BlocklistMatch {
   blockId: string;
   via: 'phone' | 'identity';
-  hold: 'held' | 'NO_REASON' | 'NOT_HOLDABLE' | null;
+  hold: 'held' | 'NO_REASON' | 'NOT_HOLDABLE' | 'GATED' | null;
 }
 
 /**
@@ -263,7 +264,11 @@ export async function blocklistOnOrder(deps: OrdersDeps, ref: { storeId: number;
   if (cfg.onOrder === 'hold') {
     const reasons = await setting(deps, ref.storeId, 'orders.hold.reasons');
     if (!reasons.some((r) => r.key === cfg.holdReasonKey)) hold = 'NO_REASON';
-    else {
+    // PR 540: with the gate on the hold is only proposed; a person holds it or lets it go
+    else if (await gateOn(deps, ref.storeId)) {
+      await proposeHold(deps, ref, by, 'blocklistHold', cfg.holdReasonKey);
+      hold = 'GATED';
+    } else {
       try {
         await holdWith(deps, ref, by, cfg.holdReasonKey, undefined, { idempotencyKey: `blocklist-hold:${ref.orderId}` });
         hold = 'held';

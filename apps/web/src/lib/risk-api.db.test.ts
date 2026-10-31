@@ -11,8 +11,10 @@
 // (`orders.merge`), audited. PR 523: the proposal card off as shipped and saved (an emptied number is "not set"); a
 // proposal decided through the API (`risk.block`): "Not now" and "Block", each audited, decided twice refused. PR 524:
 // the good-customer card off and unset as shipped, saved (an emptied number is "not set"), audited; the stop report read
-// (`risk.report`) with its card, the card saved (`settings.write`, an emptied warning is "never"), stale refused. Every
-// value is a made-up test value.
+// (`risk.report`) with its card, the card saved (`settings.write`, an emptied warning is "never"), stale refused. PR 540:
+// the digest read by a reader of orders with the gate's card (off as shipped); the card saved (`risk.rules.write`,
+// audited), out of range and stale refused; a proposed hold decided through the API (`orders.hold`): "Let it go" and
+// "Hold", decided twice refused. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { setUpOrders, type OrdersFixture } from '@extas/orders/testing';
@@ -285,5 +287,49 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     // a screen read before the last save (the share 40) is stale
     expect(await api('PUT', ['stopped'], { body: { key: 'stopReport', value: now.value, version: now.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
     for (const action of ['risk.goodCustomer.save', 'risk.stopReport.save']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBeGreaterThanOrEqual(1);
+  });
+
+  it('PR 540: the digest with the gate card (a reader sees it, cannot save); the card audited; a proposed hold decided with orders.hold', async () => {
+    const got = await api('GET', ['digest']);
+    expect(got.status).toBe(200);
+    expect(got.body.digest).toMatchObject({ gate: false, holds: { rows: [], total: 0 } });
+    expect(typeof got.body.digest.placed).toBe('number');
+    const card = got.body.cards.approval as { key: string; value: Record<string, unknown>; version: string };
+    expect(card).toMatchObject({ key: 'approval', value: { gate: false, maxRows: 100 } });
+    expect((await api('GET', ['digest'], { cookie: reader })).status).toBe(200);
+    expect((await api('GET', ['digest'], { cookie: '' })).status).toBe(401);
+    const backwards = await riskRoute(call('GET', '/api/admin/risk/digest?from=2026-10-31T00:00:00Z&to=2026-10-30T00:00:00Z', { cookie: owner }), deps, ['digest']);
+    expect(backwards.status).toBe(400);
+    expect((await api('GET', ['digest', 'x'])).status).toBe(404);
+    expect((await api('POST', ['digest'], { body: {} })).status).toBe(405);
+    expect((await api('PUT', ['digest'], { cookie: reader, body: { key: 'approval', value: card.value, version: card.version } })).status).toBe(403);
+    expect(await api('PUT', ['digest'], { body: { key: 'approval', value: { ...card.value, maxRows: 5 }, version: card.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['maxRows'] } });
+    const put = await api('PUT', ['digest'], { body: { key: 'approval', value: { gate: true, maxRows: 50 }, version: card.version } });
+    expect(put).toMatchObject({ status: 200, body: { cards: { approval: { value: { gate: true, maxRows: 50 } } } } });
+    expect(await api('PUT', ['digest'], { body: { key: 'approval', value: card.value, version: card.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    expect(await deps.resolver.value('risk.approval', { storeId: f.S })).toEqual({ gate: true, maxRows: 50 });
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'risk.approval.save' } })).toBe(1);
+
+    // two proposed holds (as the gate leaves them), decided through the API; nothing is cancelled
+    const sd = { ...f.ordersDeps(), settings: deps.resolver };
+    const a = await f.place('api-hp-a', { phone: '01700000871' });
+    const b = await f.place('api-hp-b', { phone: '01700000872' });
+    await od.proposeHold(sd, { storeId: f.S, orderId: a.orderId }, od.systemBy('risk-levels'), 'levelHold', 'risk-check');
+    await od.proposeHold(sd, { storeId: f.S, orderId: b.orderId }, od.systemBy('risk-levels'), 'levelHold', 'risk-check');
+    const listed = await api('GET', ['digest']);
+    expect(listed.body.digest.holds.rows.map((r: { orderId: string }) => r.orderId).sort()).toEqual([a.orderId, b.orderId].sort());
+    expect((await api('POST', ['hold-proposals', a.orderId], { cookie: reader, body: { decision: 'hold', note: 'call first' } })).status).toBe(403);
+    expect((await api('GET', ['hold-proposals', a.orderId])).status).toBe(405);
+    expect((await api('POST', ['hold-proposals'], { body: {} })).status).toBe(404);
+    expect(await api('POST', ['hold-proposals', 'not-an-id'], { body: { decision: 'hold', note: 'x' } })).toMatchObject({ status: 404 });
+    expect(await api('POST', ['hold-proposals', a.orderId], { body: { decision: 'cancel', note: 'x' } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    expect(await api('POST', ['hold-proposals', a.orderId], { body: { decision: 'dismiss', note: 'known customer' } })).toMatchObject({ status: 200, body: { decision: 'dismiss' } });
+    expect(await api('POST', ['hold-proposals', b.orderId], { body: { decision: 'hold', note: 'call first' } })).toMatchObject({ status: 200, body: { decision: 'hold' } });
+    expect(await api('POST', ['hold-proposals', a.orderId], { body: { decision: 'hold', note: 'again' } })).toMatchObject({ status: 409, body: { error: 'NOTHING_CHANGED' } });
+    const rows = await f.t.prisma.order.findMany({ where: { id: { in: [a.orderId, b.orderId] } }, select: { id: true, status: true, flags: true, holdReasonCode: true } });
+    expect(rows.find((r) => r.id === a.orderId)).toMatchObject({ status: 'PLACED', holdReasonCode: null });
+    expect(rows.find((r) => r.id === b.orderId)).toMatchObject({ status: 'ON_HOLD', holdReasonCode: 'risk-check' });
+    for (const r of rows) expect(r.flags).not.toContain(od.HOLD_PROPOSED_FLAG);
+    expect((await api('GET', ['digest'])).body.digest.holds.total).toBe(0);
   });
 });

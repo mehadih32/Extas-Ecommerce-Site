@@ -59,6 +59,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     tabs: [
       { id: 'all', pages: [{ href: '/admin/orders', perm: 'orders.read', keys: ['orders', 'order'] }] },
       { id: 'confirm', pages: [{ href: '/admin/orders/confirm', perm: 'orders.confirm', keys: ['ordersConfirm'] }] },
+      // S06 · PR 540: Today's digest — what came in, what the engine saw, and what waits for a person's OK (the gate's card)
+      { id: 'digest', more: true, pages: [{ href: '/admin/orders/digest', perm: 'orders.read', keys: ['ordersDigest'] }] },
       // S06 · PR 161: ORD-06 Risk rules (its Levels section first; the matrix and the rule switches join with their PRs);
       // S04 · PR 558: its Checkout advance panel (the Parameter for Checkout) is the tab's second page
       { id: 'riskrules', more: true, pages: [

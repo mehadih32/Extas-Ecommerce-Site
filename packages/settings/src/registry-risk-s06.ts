@@ -39,6 +39,14 @@
 // days (a week as shipped) with its rule, how sure the rule was and what became of the order; a rule whose stopped
 // orders were delivered all the same at least `warnWrongPercent` of the time (over at least `minStops` stops) is
 // flagged, so a wrong rule is caught within days. The report only reads.
+//
+// PR 540 (`risk.approval`, version 107): the approval digest and the permission gate. The digest (Orders ›
+// Today's digest) reports a day's orders — how many moved on, are waiting, were held (by reason), cancelled (by
+// reason), have another order running and how many of those are duplicates — and lists what waits for a person's OK.
+// The gate (`gate`, off as shipped): when on, the engine acts on nothing by itself — the duplicate check's, a risk
+// level's and the blocklist's holds become proposed holds a person holds or lets go, "one parcel by itself" stays a
+// proposal, and no advance is asked by itself — whatever those switches say. `maxRows`: the most rows each waiting
+// list shows.
 import { z } from 'zod';
 import { setting } from './define';
 import { ORDER_CANCEL_CODES } from './registry-orders';
@@ -56,6 +64,8 @@ const V523 = 104;
 /** PR 524's versions. */
 const V524 = 105;
 const V524R = 106;
+/** PR 540's version. */
+const V540 = 107;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders', version: V } as const;
 
@@ -172,6 +182,17 @@ export const riskStopReportSchema = z
 export type RiskStopReport = z.output<typeof riskStopReportSchema>;
 export const RISK_STOP_REPORT_DEFAULT: RiskStopReport = { days: 7, warnWrongPercent: null, minStops: 5, maxRows: 500 };
 
+export const riskApprovalSchema = z
+  .object({
+    /** The engine acts on nothing by itself: its holds, its "one parcel by itself" and its advance requests wait for a person. */
+    gate: z.boolean(),
+    /** The most rows each waiting list of the digest shows. */
+    maxRows: z.int().min(10).max(500),
+  })
+  .strict();
+export type RiskApproval = z.output<typeof riskApprovalSchema>;
+export const RISK_APPROVAL_DEFAULT: RiskApproval = { gate: false, maxRows: 100 };
+
 export const riskS06Settings = {
   'risk.blocklist': setting({
     ...base,
@@ -241,5 +262,15 @@ export const riskS06Settings = {
     labelKey: 'risk.stopReport.label',
     helpKey: 'risk.stopReport.help',
     sortOrder: 336,
+  }),
+  'risk.approval': setting({
+    ...base,
+    version: V540,
+    schema: riskApprovalSchema,
+    default: RISK_APPROVAL_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.approval.label',
+    helpKey: 'risk.approval.help',
+    sortOrder: 337,
   }),
 };

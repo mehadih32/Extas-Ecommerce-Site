@@ -276,6 +276,8 @@ export async function autoAdvance(deps: OrdersDeps, r: { storeId: number; orderI
   if (ask === 'none' || !(ADVANCE_KINDS as readonly string[]).includes(ask)) return null;
   const cfg = await setting(deps, r.storeId, 'orders.advanceRequest');
   if (!cfg.auto) return null;
+  // PR 540: with the gate on nothing is asked by itself; the ask stays a proposal on the order
+  if ((await setting(deps, r.storeId, 'risk.approval')).gate) return 'GATED';
   const channels = ADVANCE_CHANNELS.filter((c) => cfg.channels[c]);
   try {
     return await requestAdvanceWith(deps, r, by, { kind: ask, channels }, { idempotencyKey: key });

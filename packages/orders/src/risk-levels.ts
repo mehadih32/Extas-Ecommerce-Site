@@ -27,6 +27,7 @@ import { levelPlanOf, type LevelPlan } from './pure';
 import type { SettingsWriter } from './rule-switches';
 import { execute, systemBy, type By, type CommandResult } from './service';
 import { GOOD_CUSTOMER_FLAG, goodCustomerOf, noteGoodCustomer } from './good-customer';
+import { gateOn, proposeHold } from './approval-gate';
 
 /** The order flag of a watched order (Order.flags; the team's screens show it, never the customer). */
 export const RISK_WATCH_FLAG = 'RISK_WATCH';
@@ -39,7 +40,7 @@ export const RISK_LEVEL_EVENT = 'order.riskLevel';
 export interface LevelApplied {
   plan: LevelPlan;
   /** The hold: done, or why not (no such hold reason on the owner's list, or the order could not be held now). */
-  hold: 'held' | 'NO_REASON' | 'NOT_HOLDABLE' | 'GOOD_CUSTOMER' | null;
+  hold: 'held' | 'NO_REASON' | 'NOT_HOLDABLE' | 'GOOD_CUSTOMER' | 'GATED' | null;
   callTaskId: string | null;
   command: CommandResult;
   /**
@@ -97,7 +98,11 @@ export async function applyRiskLevel(deps: OrdersDeps, ref: { storeId: number; o
   } else if (plan.hold) {
     const reasons = await setting(deps, ref.storeId, 'orders.hold.reasons');
     if (!reasons.some((r) => r.key === cfg.holdReasonKey)) hold = 'NO_REASON';
-    else {
+    // PR 540: with the gate on the hold is only proposed; a person holds it or lets it go
+    else if (await gateOn(deps, ref.storeId)) {
+      await proposeHold(deps, ref, by, 'levelHold', cfg.holdReasonKey);
+      hold = 'GATED';
+    } else {
       try {
         await holdWith(deps, ref, by, cfg.holdReasonKey, undefined, { idempotencyKey: `risk-level-hold:${opts.assessmentId}` });
         hold = 'held';

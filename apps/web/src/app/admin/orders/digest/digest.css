@@ -1,0 +1,15 @@
+/* S06 · PR 540 — Orders › Today's digest: the headline note, the two reason tables side by side, the waiting lists, the
+   order links (tap size) and the link to the risk rules. The tables and the day form reuse the Fraud & RTO page's
+   (fraud.css); the shell's tokens only. */
+.adm2 .dg-head{margin-top:12px;font-size:14.5px;line-height:1.5}
+.adm2 .dg-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.adm2 .dg-two>.a2-card{margin:0}
+.adm2 .dg-list{margin-top:16px;padding-top:12px;border-top:1px solid var(--ln)}
+.adm2 .dg-lh{font-size:15px;font-weight:600;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.adm2 .dg-tbl td{font-size:13.5px;padding:10px 12px;vertical-align:middle}
+.adm2 .dg-order{display:inline-flex;align-items:center;min-height:44px;min-width:44px;white-space:nowrap;font-weight:600}
+.adm2 .dg-link{padding:9px 0;font-weight:600}
+@media (max-width:767px){
+  .adm2 .dg-two{grid-template-columns:1fr}
+  .adm2 .dg-tbl td{padding:0}
+}
