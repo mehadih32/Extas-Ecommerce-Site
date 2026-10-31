@@ -35,13 +35,17 @@
       "extas-shield": "Security level, browser check and SSL",
       "extas-probes": "Robot addresses refused",
       "extas-admin": "Check on the admin sign-in page",
-      "extas-admin-login": "Admin sign-in tries limited"
+      "extas-admin-login": "Admin sign-in tries limited",
+      "extas-cache-pages": "Category and product pages kept",
+      "extas-cache-never": "Bag, checkout, account and admin never kept"
     },
     "does": {
       "extas-shield": "Sets the security level and the browser check for the shop's addresses, and SSL Full (strict) to the server.",
       "extas-probes": "Refuses addresses robots try on every site (like /wp-login.php). The shop has none of them.",
       "extas-admin": "Cloudflare checks the visitor on the admin sign-in page only. Never on the shop.",
-      "extas-admin-login": "Above the limit, Cloudflare refuses that address for 10 seconds."
+      "extas-admin-login": "Above the limit, Cloudflare refuses that address for 10 seconds.",
+      "extas-cache-pages": "Cloudflare keeps these pages as long as each page says (the minutes in Settings › System › Cache), and never a customer's own page. Only while \"Cloudflare keeps pages\" is on there.",
+      "extas-cache-never": "Cloudflare never keeps the bag, the checkout, the account, the admin or the API, whatever another rule says."
     },
     "st": {
       "ok": "As planned",
@@ -61,6 +65,7 @@
       "noPerm": "Sending needs the security permission.",
       "err": {
         "NO_HOST": "There is no shop address yet: add the host names in Keys & connections → Cloudflare.",
+        "NOT_LIVE": "These host names include the main domain or a store's primary domain, which is still the old shop until go-live. Remove them in Keys & connections → Cloudflare, or send again after go-live (Website → SEO → let search engines in).",
         "SEND_FAILED": "Cloudflare did not take the rules. Check the token's rights in Keys & connections, then try again.",
         "forbidden": "You do not have permission to send these rules.",
         "unauthorized": "Your sign-in has ended — please sign in again.",
@@ -70,7 +75,8 @@
       "phase": {
         "config": "the settings rule",
         "custom": "the refusal rules",
-        "rate": "the sign-in limit"
+        "rate": "the sign-in limit",
+        "cache": "the cache rules"
       }
     },
     "card": {

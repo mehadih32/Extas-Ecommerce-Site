@@ -13,6 +13,11 @@
 //                                               shop (B6.3: no challenge, no CAPTCHA for customers); off by default
 //   http_ratelimit              `extas-admin-login` refuses an address for a short while above N admin sign-in tries
 //                                               in 10 seconds (the free plan's window); off by default, owner only
+//   http_request_cache_settings `extas-cache-pages` (PR 362) lets Cloudflare keep the category and product pages, for
+//                                               as long as the page itself says (its CDN-Cache-Control, from the
+//                                               Cache settings); only while "Cloudflare keeps pages" is on
+//                                `extas-cache-never` (PR 362) the bag, the checkout, the account, the admin and the
+//                                               API are never kept, whatever any other rule says (last, so it wins)
 //
 // The security level is never "I'm under attack": that shows every customer a waiting page.
 export const SHIELD_REF_PREFIX = "extas-";
@@ -21,6 +26,7 @@ export const SHIELD_PHASES = {
   config: "http_config_settings",
   custom: "http_request_firewall_custom",
   rate: "http_ratelimit",
+  cache: "http_request_cache_settings",
 } as const;
 export type ShieldPhase = keyof typeof SHIELD_PHASES;
 export const SHIELD_PHASE_IDS = Object.keys(SHIELD_PHASES) as ShieldPhase[];
@@ -44,6 +50,12 @@ export interface ShieldPlan {
   adminChallenge: { path: string } | null;
   /** Admin sign-in tries per 10 seconds from one address; null: no rule. */
   adminLoginLimit: { path: string; per10s: number } | null;
+  /**
+   * PR 362: Cloudflare's cache for the shop's hosts. `pagePrefixes`: the address beginnings whose pages it may keep (the
+   * category and product pages, in every language; empty: none); `never`: the beginnings it never keeps. Null or
+   * absent: no cache rule.
+   */
+  cache?: { pagePrefixes: readonly string[]; never: readonly string[] } | null;
 }
 
 /** A Cloudflare ruleset rule, as the API reads and writes it (other fields are kept as they come). */
@@ -61,6 +73,9 @@ export interface CfRule {
 
 export type ShieldRules = Record<ShieldPhase, CfRule[]>;
 
+/** Every phase with no rule. */
+export const emptyRules = (): ShieldRules => ({ config: [], custom: [], rate: [], cache: [] });
+
 const SAFE = /^[A-Za-z0-9._~\-/]+$/;
 const quote = (s: string): string => {
   if (!SAFE.test(s)) throw new Error(`not a plain host or path: ${s}`);
@@ -72,7 +87,7 @@ export const isShopRule = (r: Pick<CfRule, "ref">): boolean => typeof r.ref === 
 
 /** The shop's rules per phase for a plan. No host: no rule at all (nothing can be limited to the shop). */
 export function shieldRules(plan: ShieldPlan): ShieldRules {
-  const out: ShieldRules = { config: [], custom: [], rate: [] };
+  const out = emptyRules();
   if (!plan.hosts.length) return out;
   const host = hostExpr(plan.hosts);
   out.config.push({
@@ -113,6 +128,25 @@ export function shieldRules(plan: ShieldPlan): ShieldRules {
       },
       enabled: true,
     });
+  const starts = (list: readonly string[]) => list.map((p) => `starts_with(http.request.uri.path, ${quote(p)})`).join(" or ");
+  if (plan.cache?.pagePrefixes.length)
+    out.cache.push({
+      ref: "extas-cache-pages",
+      description: "Shop: category and product pages kept as long as the page says (PR 362)",
+      expression: `${host} and (${starts(plan.cache.pagePrefixes)})`,
+      action: "set_cache_settings",
+      action_parameters: { cache: true, edge_ttl: { mode: "respect_origin" }, browser_ttl: { mode: "respect_origin" } },
+      enabled: true,
+    });
+  if (plan.cache?.never.length)
+    out.cache.push({
+      ref: "extas-cache-never",
+      description: "Shop: bag, checkout, account, admin and API never kept (PR 362)",
+      expression: `${host} and (${starts(plan.cache.never)})`,
+      action: "set_cache_settings",
+      action_parameters: { cache: false },
+      enabled: true,
+    });
   return out;
 }
 
@@ -132,11 +166,11 @@ export interface ShieldDifference {
 }
 
 /** How the shop's rules at Cloudflare differ from the plan's (other rules are not the shop's business). */
-export function shieldDiff(current: ShieldRules, wanted: ShieldRules): ShieldDifference[] {
+export function shieldDiff(current: Partial<ShieldRules>, wanted: Partial<ShieldRules>): ShieldDifference[] {
   const out: ShieldDifference[] = [];
   for (const phase of SHIELD_PHASE_IDS) {
-    const have = new Map(current[phase].filter(isShopRule).map((r) => [r.ref!, r]));
-    for (const w of wanted[phase]) {
+    const have = new Map((current[phase] ?? []).filter(isShopRule).map((r) => [r.ref!, r]));
+    for (const w of wanted[phase] ?? []) {
       const h = have.get(w.ref!);
       if (!h) out.push({ ref: w.ref!, kind: "missing" });
       else if (shape(h) !== shape(w)) out.push({ ref: w.ref!, kind: "changed" });
@@ -159,7 +193,7 @@ export type ShieldResult = { ok: true; changed: ShieldPhase[] } | { ok: false; e
 export interface EdgeShield {
   /** The host names the connection names (live only; the mock has none). */
   hosts: readonly string[] | null;
-  /** Every rule of the three phases at Cloudflare (the shop's and any other). */
+  /** Every rule of the shop's phases at Cloudflare (the shop's and any other). */
   read(): Promise<ShieldRules>;
   /** Writes the shop's rules for the plan into each phase that differs, keeping every other rule. */
   apply(plan: ShieldPlan): Promise<ShieldResult>;

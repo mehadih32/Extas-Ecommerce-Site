@@ -8,6 +8,16 @@
 //
 // Seeing needs `security.read`; saving the plan `settings.write`; sending it `security.write`. The sign-in limit
 // refuses people, so only the owner may set or change it (CLAUDE.md rule 6). Every save and send is audited.
+//
+// S17 · PR 362 (server spec §4): the same send also writes Cloudflare's cache rule for the shop's hosts, so no rule has to
+// be made by hand in Cloudflare's dashboard. The bag, the checkout, the account, the admin and the API are never kept;
+// while Settings › System › Cache has "Cloudflare keeps pages" on, the category and product pages may be kept for as
+// long as each page says (its CDN-Cache-Control: the Cache settings' minutes, or no-store for a visitor's own page).
+//
+// Before go-live (CN-003) the main domain is the old WordPress shop, which nothing may touch: "Send to Cloudflare" refuses
+// (409 NOT_LIVE) while its host names include a store's primary domain or the main domain (the staging host's parent and
+// its www.), until the go-live switch lets search engines in on the primary domain (Website → SEO, `seo.indexing`,
+// PR 401; runbook step 8). The staging host itself is always the shop's.
 import { createHash } from 'node:crypto';
 import { audit, isOwner, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { cdnAdapters, createConnections, SHIELD_PHASE_IDS, shieldDiff, shieldRules, type CdnPurger, type EdgeShield, type ShieldDifference, type ShieldPlan } from '@extas/adapters';
@@ -15,6 +25,8 @@ import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { EDGE_PROBE_PATH_LEN, EDGE_PROBE_PATHS_MAX, edgeShieldSchema, INSTALLATION, type EdgeShieldSettings } from '@extas/settings';
 import type { Vault } from '@extas/vault';
 import { ADMIN_LOGIN } from '../admin-nav';
+import { CATEGORY_PREFIX, NEVER_CACHED } from '../cache-policy';
+import { BN_PREFIX } from '../shop/lang';
 import type { AppResolver } from '../settings';
 
 export interface EdgeDeps {
@@ -57,7 +69,7 @@ export interface EdgeView {
 
 export class EdgePageError extends Error {
   constructor(
-    readonly code: 'INVALID_INPUT' | 'STALE' | 'OWNER_ONLY' | 'NO_HOST' | 'SEND_FAILED',
+    readonly code: 'INVALID_INPUT' | 'STALE' | 'OWNER_ONLY' | 'NO_HOST' | 'NOT_LIVE' | 'SEND_FAILED',
     readonly status: number,
     readonly details: string[] = [],
     readonly data: Record<string, unknown> = {},
@@ -90,7 +102,43 @@ async function hostsOf(deps: EdgeDeps, shield: EdgeShield | null): Promise<{ hos
   return staging ? { hosts: [staging.toLowerCase()], from: 'staging' } : { hosts: [], from: 'none' };
 }
 
-export function planOf(s: EdgeShieldSettings, hosts: readonly string[]): ShieldPlan {
+/**
+ * The host names that are not the shop's yet: a store's primary domain, or the main domain (the staging host's parent,
+ * e.g. new.extas.com.bd → extas.com.bd, and its www.), while the go-live switch is off. Never the staging host itself.
+ */
+export function hostsNotLiveYet(hosts: readonly string[], o: { live: boolean; stagingHost: string | null; primaryHosts: readonly string[] }): string[] {
+  if (o.live) return [];
+  const staging = o.stagingHost?.toLowerCase().replace(/\.$/, '') ?? '';
+  const parent = staging.includes('.') ? staging.slice(staging.indexOf('.') + 1) : '';
+  const guarded = new Set([...o.primaryHosts.map((h) => h.toLowerCase()), ...(parent.includes('.') ? [parent, `www.${parent}`] : [])]);
+  guarded.delete(staging);
+  return [...new Set(hosts.map((h) => h.toLowerCase().replace(/\.$/, '')))].filter((h) => guarded.has(h));
+}
+
+/** The go-live state for the guard: live once search engines are let in on the primary domain (PR 401; the mother store's value, as Website → SEO saves it). */
+export async function notLiveYet(deps: Pick<EdgeDeps, 'db' | 'resolver'>, hosts: readonly string[]): Promise<string[]> {
+  const [seo, staging, primary] = await Promise.all([
+    deps.resolver.value('seo.indexing', { storeId: S }),
+    deps.resolver.value('system.stagingHost'),
+    deps.db.storeDomain.findMany({ where: { isPrimaryHost: true, archivedAt: null }, select: { hostname: true } }),
+  ]);
+  return hostsNotLiveYet(hosts, { live: seo.searchEngines === true, stagingHost: staging || null, primaryHosts: primary.map((d) => d.hostname) });
+}
+
+/** Each address beginning, and the same in the Bengali half of the shop (`/bn/…`). */
+const inEveryLanguage = (list: readonly string[]): string[] => [...new Set([...list, ...list.map((p) => `${BN_PREFIX}${p}`)])];
+
+/** PR 362: Cloudflare's cache for the shop: never the shop's own pages; the category and product pages while it is on. */
+export async function cachePlanOf(deps: Pick<EdgeDeps, 'resolver'>): Promise<NonNullable<ShieldPlan['cache']>> {
+  const [pages, productPrefix] = await Promise.all([deps.resolver.value('cache.pages'), deps.resolver.value('naming.productPathPrefix', { storeId: S })]);
+  return {
+    // under the prefix, as the cache policy classifies them (`/p/…`, never `/privacy`)
+    pagePrefixes: pages.cdn ? inEveryLanguage([`${CATEGORY_PREFIX}/`, `${productPrefix.replace(/\/+$/, '')}/`]) : [],
+    never: inEveryLanguage(NEVER_CACHED),
+  };
+}
+
+export function planOf(s: EdgeShieldSettings, hosts: readonly string[], cache: ShieldPlan['cache'] = null): ShieldPlan {
   return {
     hosts,
     securityLevel: s.securityLevel,
@@ -99,6 +147,7 @@ export function planOf(s: EdgeShieldSettings, hosts: readonly string[]): ShieldP
     probePaths: s.blockProbes ? s.probePaths : [],
     adminChallenge: s.adminChallenge ? { path: ADMIN_LOGIN } : null,
     adminLoginLimit: s.adminLoginPer10s ? { path: ADMIN_LOGIN_API, per10s: s.adminLoginPer10s } : null,
+    cache,
   };
 }
 
@@ -108,7 +157,7 @@ export async function edgeView(deps: EdgeDeps, who: EdgeWho): Promise<EdgeView> 
   const s = await deps.resolver.value('edge.shield');
   const l = await link(deps);
   const h = await hostsOf(deps, l.shield);
-  const wanted = shieldRules(planOf(s, h.hosts));
+  const wanted = shieldRules(planOf(s, h.hosts, await cachePlanOf(deps)));
   const rules = SHIELD_PHASE_IDS.flatMap((phase) => wanted[phase].map((r) => ({ ref: r.ref!, phase, action: r.action })));
   let state: EdgeView['state'] = { error: null, differences: [] };
   if (l.shield) {
@@ -176,7 +225,10 @@ export async function sendEdge(deps: EdgeDeps, who: EdgeWho): Promise<EdgeView> 
   if (!l.shield) throw new EdgePageError('SEND_FAILED', 502, ['provider'], { message: `${l.provider} has no protection rules` });
   const h = await hostsOf(deps, l.shield);
   if (!h.hosts.length) throw new EdgePageError('NO_HOST', 400, ['hosts']);
-  const r = await l.shield.apply(planOf(s, h.hosts));
+  // the old shop on the main domain is never touched before go-live (CN-003)
+  const early = await notLiveYet(deps, h.hosts);
+  if (early.length) throw new EdgePageError('NOT_LIVE', 409, ['hosts'], { hosts: early });
+  const r = await l.shield.apply(planOf(s, h.hosts, await cachePlanOf(deps)));
   if (!r.ok) throw new EdgePageError('SEND_FAILED', 502, [], { message: r.error });
   await audit(deps.db, who.actor, { storeId: S, action: 'edge.shield.apply', entityType: 'Setting', entityId: 'edge.shield', after: { changed: r.changed, mode: l.mode, hosts: h.hosts } }, who.ctx);
   return edgeView(deps, who);

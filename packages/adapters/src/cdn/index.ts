@@ -7,6 +7,7 @@
 import { z } from "zod";
 import { defineAdapter, requireSecret } from "../define";
 import {
+  emptyRules,
   mergeRules,
   SHIELD_PHASE_IDS,
   SHIELD_PHASES,
@@ -63,13 +64,13 @@ export const mockCdnLog = {
 
 // PR 386: the mock's Cloudflare rules (one zone per process), so the protection can be practised before the token is in.
 const S = globalThis as unknown as { __extasMockShield?: ShieldRules };
-const mockRules = (): ShieldRules => (S.__extasMockShield ??= { config: [], custom: [], rate: [] });
+const mockRules = (): ShieldRules => (S.__extasMockShield = { ...emptyRules(), ...S.__extasMockShield });
 
 /** The mock zone's rules (tests). */
 export const mockShieldLog = {
   rules: (): ShieldRules => structuredClone(mockRules()),
   clear: (): void => {
-    S.__extasMockShield = { config: [], custom: [], rate: [] };
+    S.__extasMockShield = emptyRules();
   },
 };
 
@@ -91,7 +92,7 @@ function mockShield(): EdgeShield {
 
 /** Does one phase's set of shop rules differ from the plan's. */
 function phaseDiffers(current: ShieldRules, wanted: ShieldRules, ph: ShieldPhase): boolean {
-  const only = (r: ShieldRules): ShieldRules => ({ config: [], custom: [], rate: [], [ph]: r[ph] });
+  const only = (r: ShieldRules): ShieldRules => ({ ...emptyRules(), [ph]: r[ph] });
   return shieldDiff(only(current), only(wanted)).length > 0;
 }
 
@@ -250,13 +251,15 @@ export function createCloudflareClient(
     shield: liveShield(),
   };
 
-  // PR 386: the shop's rules in three phases' entry points; every rule that is not the shop's is written back as it was
+  // PR 386, 362: the shop's rules in its phases' entry points; every rule that is not the shop's is written back as it was
   function liveShield(): EdgeShield {
     const entry = (ph: ShieldPhase) => `${zone}/rulesets/phases/${SHIELD_PHASES[ph]}/entrypoint`;
     const readPhase = async (ph: ShieldPhase): Promise<CfRule[]> => (await call("GET", entry(ph), undefined, true)).result?.rules ?? [];
     const readAll = async (): Promise<ShieldRules> => {
-      const [config, custom, rate] = await Promise.all(SHIELD_PHASE_IDS.map(readPhase));
-      return { config: config!, custom: custom!, rate: rate! };
+      const read = await Promise.all(SHIELD_PHASE_IDS.map(readPhase));
+      const out = emptyRules();
+      SHIELD_PHASE_IDS.forEach((ph, i) => (out[ph] = read[i]!));
+      return out;
     };
     return {
       hosts: o.hosts,

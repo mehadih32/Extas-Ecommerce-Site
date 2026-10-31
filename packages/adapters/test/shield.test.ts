@@ -1,4 +1,4 @@
-// S18 · PR 386 — the shop's protection rules at Cloudflare: every rule is limited to the shop's host names, a rule that
+// S18 · PR 386, S17 · PR 362 — the shop's protection and cache rules at Cloudflare: every rule is limited to the shop's host names, a rule that
 // is not the shop's is never changed or dropped, the admin challenge is the sign-in page only, and the live client
 // writes only the phases that differ (a stand-in Cloudflare; sample host names and ids).
 import { describe, expect, it } from "vitest";
@@ -30,7 +30,7 @@ describe("PR 386 · the shop's rules", () => {
   });
 
   it("makes no rule without a host, and refuses a value that is not a plain host or path", () => {
-    expect(shieldRules({ ...plan, hosts: [] })).toEqual({ config: [], custom: [], rate: [] });
+    expect(shieldRules({ ...plan, hosts: [], cache: { pagePrefixes: ["/p"], never: ["/admin"] } })).toEqual({ config: [], custom: [], rate: [], cache: [] });
     expect(() => shieldRules({ ...plan, probePaths: ['/x" or true or "'] })).toThrow();
   });
 
@@ -43,6 +43,43 @@ describe("PR 386 · the shop's rules", () => {
       { ref: "extas-admin-login", kind: "extra" },
     ]);
     expect(shieldDiff({ config: [{ ...ours.config[0]!, id: "x", version: "2" }], custom: ours.custom, rate: [] }, ours)).toEqual([]);
+  });
+});
+
+describe("PR 362 · the shop's cache rules", () => {
+  const cache = { pagePrefixes: ["/collections", "/p", "/bn/collections", "/bn/p"], never: ["/bag", "/checkout", "/admin", "/api"] };
+
+  it("keeps product and category pages as long as each page says, and never the bag, checkout, account, admin or API", () => {
+    const r = shieldRules({ ...plan, cache });
+    expect(r.cache.map((x) => x.ref)).toEqual(["extas-cache-pages", "extas-cache-never"]);
+    for (const x of r.cache) expect(x.expression.startsWith('(http.host in {"new.example.com"}) and (')).toBe(true);
+    expect(r.cache[0]!.expression).toContain('starts_with(http.request.uri.path, "/bn/p")');
+    // no time of Cloudflare's own: the page's CDN-Cache-Control (the Cache settings' minutes, no-store for a visitor's own page)
+    expect(r.cache[0]!.action_parameters).toEqual({ cache: true, edge_ttl: { mode: "respect_origin" }, browser_ttl: { mode: "respect_origin" } });
+    // last, so it wins over any rule before it
+    expect(r.cache[1]!.action_parameters).toEqual({ cache: false });
+    expect(r.cache[1]!.expression).toContain('starts_with(http.request.uri.path, "/checkout")');
+  });
+
+  it("with Cloudflare's page keeping off, only the never-kept rule; no cache plan, no cache rule", () => {
+    expect(shieldRules({ ...plan, cache: { ...cache, pagePrefixes: [] } }).cache.map((x) => x.ref)).toEqual(["extas-cache-never"]);
+    expect(shieldRules(plan).cache).toEqual([]);
+  });
+
+  it("writes the cache phase with the others, and keeps another site's cache rule", async () => {
+    const other: CfRule = { id: "c1", ref: "old-site-cache", expression: '(http.host eq "old.example.com")', action: "set_cache_settings", action_parameters: { cache: true } };
+    const zone: Record<string, CfRule[] | undefined> = { http_request_cache_settings: [other] };
+    const fake: typeof fetch = async (input, init) => {
+      const phase = /phases\/([a-z_]+)\/entrypoint/.exec(String(input))?.[1] ?? "";
+      if (init?.method === "PUT") zone[phase] = (JSON.parse(String(init.body)) as { rules: CfRule[] }).rules;
+      const rules = zone[phase];
+      return rules ? new Response(JSON.stringify({ success: true, result: { rules } })) : new Response("{}", { status: 404 });
+    };
+    const c = createCloudflareClient({ baseUrl: "https://cf.example.test", zoneId: "a".repeat(32), hosts: ["new.example.com"], token: "sample-token", fetch: fake });
+    expect(await c.shield.apply({ ...plan, cache })).toEqual({ ok: true, changed: ["config", "custom", "cache"] });
+    expect(zone.http_request_cache_settings!.map((r) => r.ref)).toEqual(["old-site-cache", "extas-cache-pages", "extas-cache-never"]);
+    expect(await c.shield.apply({ ...plan, cache: { ...cache, pagePrefixes: [] } })).toEqual({ ok: true, changed: ["cache"] });
+    expect(zone.http_request_cache_settings!.map((r) => r.ref)).toEqual(["old-site-cache", "extas-cache-never"]);
   });
 });
 
@@ -65,7 +102,7 @@ describe("PR 386 · the Cloudflare client", () => {
     };
     const c = createCloudflareClient({ baseUrl: "https://cf.example.test", zoneId: "a".repeat(32), hosts: ["new.example.com"], token: "sample-token", fetch: fake });
     expect(c.shield.hosts).toEqual(["new.example.com"]);
-    expect(await c.shield.read()).toEqual({ config: [], custom: [theirs], rate: [] });
+    expect(await c.shield.read()).toEqual({ config: [], custom: [theirs], rate: [], cache: [] });
     expect(await c.shield.apply(plan)).toEqual({ ok: true, changed: ["config", "custom"] });
     expect(sent.map((x) => x.url.replace("https://cf.example.test/zones/" + "a".repeat(32), ""))).toEqual([
       "/rulesets/phases/http_config_settings/entrypoint",
