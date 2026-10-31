@@ -4,6 +4,12 @@
 // two-step seed, so what the server keeps is never older than the last run. Its e-mail comes from the server's
 // config, never from Git. It never takes over a person's account: an e-mail that belongs to someone with another role
 // is refused, and so is a paused check account (the owner paused it on purpose).
+//
+// S21 · PR 421 (B6.6, "the scheduled site auditor may never touch the database, stock, payments, accounting or
+// customer data; those are read-only to it"): the account is the auditor's only way in (the browser containers get no
+// database address and no database network, infra/tests checks it), and two guards keep it read-only even if someone
+// adds a permission to its role by hand: its role grants only the read keys (`permissionsFor`, rbac.ts), and its
+// sessions are refused every admin write before any permission is checked (`isCheckAccount`, the web's guardAdmin).
 import { randomBytes } from 'node:crypto';
 import type { PrismaClient } from '@extas/db/client';
 import { audit, SYSTEM, type RequestContext } from './audit';
@@ -16,8 +22,24 @@ import { base32Encode, newTotpSeed } from './totp';
 
 export const CHECK_ROLE_KEY = 'smoke-check';
 
-/** Read-only: the permissions that only let you see (`*.read`, and the few named `*.view`, e.g. `returns.view`). */
-export const CHECK_PERMISSIONS = PERMISSION_KEYS.filter((k) => k.endsWith('.read') || k.endsWith('.view'));
+/**
+ * Review R3 (admin M2): the report keys that only let you see, named without `.read` (the catalogue says "reads only"):
+ * the smoke test opens Reports › Fraud, Decision learning and Stopped orders with them. Their cards save with
+ * `settings.write`, which the check role never holds.
+ */
+export const CHECK_REPORT_READS = ['risk.report'] as const;
+
+/** Read-only: the permissions that only let you see (`*.read`, the few named `*.view`, e.g. `returns.view`, and the report reads above). */
+export const CHECK_PERMISSIONS = PERMISSION_KEYS.filter((k) => k.endsWith('.read') || k.endsWith('.view') || (CHECK_REPORT_READS as readonly string[]).includes(k));
+
+/**
+ * PR 421 (B6.6): this staff member signs in as the site auditor (holds the check role, even a paused or archived one):
+ * the admin refuses every write from its sessions.
+ */
+export async function isCheckAccount(db: Pick<PrismaClient, 'staffRoleAssignment'>, staffUserId: string): Promise<boolean> {
+  const a = await db.staffRoleAssignment.findFirst({ where: { staffUserId, revokedAt: null, role: { key: CHECK_ROLE_KEY } }, select: { id: true } });
+  return !!a;
+}
 
 export interface CheckAccount {
   staffUserId: string;

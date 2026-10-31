@@ -1,9 +1,13 @@
 // PR 16, 495 — what a staff member may do. A staff member holds roles (StaffRoleAssignment), each in one store or in
 // every store (storeId null); a role grants permissions (RolePermission). The owner role grants every permission in
 // the catalogue. Archived roles and revoked assignments grant nothing. Every admin action asks here, on the server.
+// PR 421 (B6.6): the site auditor's check role grants only the read keys, whatever else was added to it by hand.
 import { AuthError } from './errors';
 import { isPermissionKey, OWNER_ROLE_KEY, PERMISSION_KEYS, type PermissionKey } from './catalogue';
+import { CHECK_PERMISSIONS, CHECK_ROLE_KEY } from './check-account';
 import type { Actor, Db } from './audit';
+
+const CHECK_ONLY: ReadonlySet<string> = new Set(CHECK_PERMISSIONS);
 
 export interface Scope {
   /** The store the action touches. Omitted = an installation-wide action: only all-store roles count. */
@@ -25,7 +29,8 @@ export async function permissionsFor(db: Db, staffUserId: string, scope: Scope =
   const out = new Set<PermissionKey>();
   for (const { role } of rows) {
     if (role.key === OWNER_ROLE_KEY) return new Set(PERMISSION_KEYS);
-    for (const { permission } of role.permissions) if (isPermissionKey(permission.key)) out.add(permission.key);
+    const readOnly = role.key === CHECK_ROLE_KEY;
+    for (const { permission } of role.permissions) if (isPermissionKey(permission.key) && (!readOnly || CHECK_ONLY.has(permission.key))) out.add(permission.key);
   }
   return out;
 }
