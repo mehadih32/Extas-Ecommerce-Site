@@ -68,8 +68,8 @@ const FUNCTION_PROP = /\s[a-zA-Z]+=\{\s*(?:\([^()]*\)|[a-zA-Z_$][\w$]*)\s*=>/g;
 
 describe('the support pages hand no function to a client part', () => {
   const files = pages(APP);
-  it('finds the inbox, a conversation and the settings', () => {
-    expect(files.length).toBe(3);
+  it('finds the inbox, a conversation, the settings and the rider issues (PR 192)', () => {
+    expect(files.length).toBe(4);
   });
   it.each(files.map((f) => [f.slice(APP.length + 1), f]))('%s', (_name, file) => {
     expect(readFileSync(file, 'utf8').match(FUNCTION_PROP) ?? []).toEqual([]);

@@ -1,0 +1,13 @@
+/* S08 · PR 192 — Reports › Delivery & RTO, a courier's claims and Support › Rider issues: the period and dimension
+   links and the "More options" fold at tap size, the rate cells, the claim and complaint rows. Shell tokens only; rows wrap at phone width and the
+   tables scroll inside their own frame, never the page. */
+.adm2 .cr-tap{min-height:44px;min-width:44px;height:auto;justify-content:center}
+.adm2 .cr-rate{font-variant-numeric:tabular-nums;white-space:nowrap}
+.adm2 .cr-sub{display:block;font-size:12px;color:var(--mute)}
+.adm2 .cr-rows{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.adm2 .cr-rows > li{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-start;justify-content:space-between;padding:10px 12px;border:1px solid var(--ln2);border-radius:10px;background:var(--sf2)}
+.adm2 .cr-rows > li > div{min-width:0;flex:1 1 220px;overflow-wrap:anywhere}
+.adm2 .cr-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.adm2 .cr-link{display:inline-flex;align-items:center;min-height:44px;font-weight:600}
+.adm2 .cr-warn{color:var(--warn);font-weight:600}
+.adm2 details.a2-more-opts>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--ink2)}

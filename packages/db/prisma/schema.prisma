@@ -440,6 +440,8 @@ model Store {
   creativeExports         CreativeExport[]
   comboDailyStats         ComboDailyStat[]
   setBuilderAdds          SetBuilderAdd[]
+  courierClaims           CourierClaim[]
+  riderIssues             RiderIssue[]
 }
 
 enum StoreStatus {
@@ -4402,6 +4404,89 @@ model ShipmentEvent {
 
   @@unique([shipmentId, providerEventId])
   @@index([shipmentId, occurredAt])
+}
+
+/// @stage S08 · PR 192 (SIM-F-017, CN-018 (7)) — money the shop asks a courier for: a lost or damaged parcel (the declared
+/// value, else what staff type), the exact extra a rider took (from an approved rider issue), or other. A record only:
+/// raised, sent, then settled with what the courier paid (its statement) or rejected — never a payment, never deleted.
+model CourierClaim {
+  id               String            @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store             @relation(fields: [storeId], references: [id])
+  courierAccountId String            @db.Uuid
+  orderId          String            @db.Uuid
+  shipmentId       String?           @db.Uuid
+  kind             CourierClaimKind
+  status           CourierClaimState @default(OPEN)
+  claimedMinor     Int
+  settledMinor     Int?
+  courierRef       String?
+  note             String?
+  riderIssueId     String?           @db.Uuid
+  idempotencyKey   String
+  raisedById       String?           @db.Uuid
+  decidedById      String?           @db.Uuid
+  sentAt           DateTime?         @db.Timestamptz(3)
+  closedAt         DateTime?         @db.Timestamptz(3)
+  createdAt        DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, idempotencyKey])
+  @@index([storeId, status, createdAt])
+  @@index([courierAccountId, status])
+  @@index([shipmentId])
+}
+
+enum CourierClaimKind {
+  LOST
+  DAMAGED
+  RIDER_OVERCHARGE
+  OTHER
+}
+
+enum CourierClaimState {
+  OPEN
+  SENT
+  SETTLED
+  REJECTED
+}
+
+/// @stage S08 · PR 192 (CN-018 (7), SUP-02) — a customer says the rider took more than was due: what he paid, what the
+/// parcel asked (the sticker's amount, never typed), the extra, the proof (media library ids) and his words. A person
+/// approves or rejects it; approval opens the courier claim for the extra. A refund of the extra is only ever asked
+/// through the refunds' own approval (Refund, PR 172) while the owner's switch allows it. Never deleted.
+model RiderIssue {
+  id               String          @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store           @relation(fields: [storeId], references: [id])
+  orderId          String          @db.Uuid
+  shipmentId       String          @db.Uuid
+  courierAccountId String          @db.Uuid
+  chargedMinor     Int
+  dueMinor         Int
+  extraMinor       Int
+  proofMediaIds    String[]        @default([]) @db.Uuid
+  words            String
+  status           RiderIssueState @default(LOGGED)
+  decisionNote     String?
+  claimId          String?         @db.Uuid
+  refundId         String?         @db.Uuid
+  idempotencyKey   String
+  loggedById       String?         @db.Uuid
+  decidedById      String?         @db.Uuid
+  decidedAt        DateTime?       @db.Timestamptz(3)
+  createdAt        DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime        @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, idempotencyKey])
+  @@index([storeId, status, createdAt])
+  @@index([orderId])
+}
+
+enum RiderIssueState {
+  LOGGED
+  APPROVED
+  REJECTED
 }
 
 /// @stage S08 · PR 180 — a sticker / picking-list / handover print job (reprints reuse the stored consignment).

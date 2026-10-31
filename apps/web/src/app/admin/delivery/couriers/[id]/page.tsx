@@ -4,28 +4,35 @@
 // candidates, or any place found by name), the pairs (by name or by a person; a person can take one away), and the
 // pairs whose place the courier dropped (archived, never deleted; they come back when the courier lists the place
 // again). Seeing needs `delivery.read`; pairing and reading need `delivery.couriers` (the API checks again).
+// S08 · PR 192 — under the areas: the courier's performance by zone (30 days) and its claims (CourierCards).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import * as pay from '@extas/payments';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { CourierCards } from '@/components/admin/courier-report/CourierCards';
 import { Act, PlacePicker, ReadNow } from '@/components/admin/fulfil/Act';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import { withCourierReport } from '@/lib/admin-courier-report';
 import { withFulfil } from '@/lib/admin-fulfil/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
+import { paymentsDeps } from '@/lib/payments-api';
 import { shippingDeps } from '@/lib/shipping-api';
 
 export const dynamic = 'force-dynamic';
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+/** How many of the courier's claims the page lists (newest first). */
+const CLAIM_ROWS = 30;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -36,7 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function CourierPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Search }) {
   const deps = adminDeps();
   const [{ id }, sp, plain, access] = await Promise.all([params, searchParams, adminView(deps), pageAccess('delivery.read', deps, MOTHER_STORE_ID)]);
-  const view = withFulfil(plain);
+  const view = withCourierReport(withFulfil(plain));
   const d = view.dict;
   const here = `/admin/delivery/couriers/${id}`;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(here)}`);
@@ -62,6 +69,13 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
     throw e;
   }
   const can = access.guard.permissions?.has('delivery.couriers') ?? false;
+  const at = { storeId: MOTHER_STORE_ID };
+  const [claims, claimsSwitch, currency] = await Promise.all([
+    pay.listClaims(await paymentsDeps(access.deps), who, { courierAccountId: id, limit: CLAIM_ROWS }),
+    access.deps.resolver.value('delivery.courier.claims', at),
+    access.deps.resolver.value('store.currency', at),
+  ]);
+  const canClaim = { claim: access.guard.permissions?.has('delivery.claims') ?? false, settings: access.guard.permissions?.has('settings.write') ?? false };
   const fd: Dict = { ful: d.ful as Dict };
   const n = (x: number) => formatNumber(x, view.locale);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, dateStyle: 'medium', timeStyle: 'short' });
@@ -219,6 +233,19 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
           )}
         </>
       )}
+      <CourierCards
+        dict={d}
+        locale={view.locale}
+        timeZone={view.timeZone}
+        lang={view.lang === 'bn' ? 'bn' : 'en'}
+        courierId={id}
+        perfDeps={sd}
+        who={who}
+        claims={claims}
+        claimsSwitch={{ ...claimsSwitch }}
+        currency={currency}
+        can={canClaim}
+      />
     </div>
   );
 }

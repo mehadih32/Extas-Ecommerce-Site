@@ -44,7 +44,8 @@
         "health": "Site health",
         "fraud": "Fraud & RTO",
         "stopped": "Stopped by the engine",
-        "learning": "Decisions & learning"
+        "learning": "Decisions & learning",
+        "delivery": "Delivery & RTO"
       },
       "settings": {
         "store": "Store details",
@@ -83,7 +84,8 @@
       },
       "support": {
         "inbox": "Inbox",
-        "settings": "Support settings"
+        "settings": "Support settings",
+        "riderIssues": "Rider issues"
       },
       "money": {
         "books": "Books",
@@ -146,7 +148,7 @@
       "marketing": "ads coupon offer rule notice popup campaign",
       "website": "site page menu blog seo theme",
       "money": "finance profit cod refund payment",
-      "reports": "report analytics health server worker jobs",
+      "reports": "report analytics health server worker jobs delivery rto courier late",
       "ai": "ai agent automation",
       "settings": "setting keys connections integrations vault api erp link switch-over",
       "help": "guide manual help how"

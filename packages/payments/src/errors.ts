@@ -62,7 +62,17 @@ export type PaymentsErrorCode =
   /** PR 173: less than the smallest advance the owner set (`data.minMinor`). */
   | 'BELOW_MIN'
   /** PR 173: this order cannot take an advance (not Cash on Delivery, or past packing; `data.status`). */
-  | 'ADVANCE_NOT_ALLOWED';
+  | 'ADVANCE_NOT_ALLOWED'
+  /** PR 192: the owner's switch for this is off (`data.setting`: delivery.courier.claims, support.riderIssues …). */
+  | 'FEATURE_OFF'
+  /** PR 192: a rider issue needs at least one photo of proof (`support.riderIssues.proofRequired`). */
+  | 'PROOF_REQUIRED'
+  /** PR 192: the customer paid no more than the parcel asked (`data.dueMinor`): there is no extra to claim. */
+  | 'NO_EXTRA'
+  /** PR 192: this parcel already has an open claim of this kind, or an open rider issue (`data.id`). */
+  | 'ALREADY_OPEN'
+  /** PR 192: this parcel's records do not show it lost or damaged (`data.status`). */
+  | 'NOT_CLAIMABLE';
 
 export class PaymentsError extends Error {
   readonly code: PaymentsErrorCode;
@@ -94,6 +104,7 @@ export class PaymentsError extends Error {
       case 'NOT_OPEN':
       case 'TEST_PAYMENTS_OFF':
       case 'SAME_PERSON':
+      case 'ALREADY_OPEN':
         return 409;
       case 'GATEWAY_ERROR':
         return 502;

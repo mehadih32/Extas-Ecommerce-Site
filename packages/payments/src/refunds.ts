@@ -4,7 +4,7 @@
 //
 // - `requestRefund` (`payments.refunds.request`): a person asks for a refund on an order — an RTO of a prepaid parcel
 //   (the amount from the owner's rule when none is typed), the exact extra the rider took (never more than the door
-//   records show he over-collected), our mistake, other — within the owner's rules (`payments.refunds`: B3.6, no
+//   records or an approved rider issue (PR 192) show he over-collected), our mistake, other — within the owner's rules (`payments.refunds`: B3.6, no
 //   refunds after the customer received the goods except the listed sources) and never more than the order's money not
 //   yet held by another refund. To the wallet only while the owner allows it. One Idempotency-Key = one request. The
 //   cancel and edit requests of the order service (PR 144, 142) are the same records.
@@ -87,18 +87,22 @@ type OrderFacts = Prisma.OrderGetPayload<{ select: typeof ORDER }>;
 
 /** The order's money a refund may still give back, and what the rider over-collected (under the caller's order lock). */
 async function roomOf(tx: Tx, storeId: number, o: OrderFacts): Promise<{ roomMinor: number; overMinor: number; inMinor: number }> {
-  const [held, doors, overRefunds, usedMinor] = await Promise.all([
+  const [held, doors, overRefunds, riderIssues, usedMinor] = await Promise.all([
     tx.refund.aggregate({ where: { storeId, orderId: o.id, status: { in: [...HELD_REFUND_STATES] } }, _sum: { amountMinor: true } }),
     tx.codCollection.findMany({ where: { storeId, orderId: o.id, outcome: { in: [...CASH_OUTCOMES] }, state: { notIn: ['REJECTED', 'PENDING_APPROVAL'] } }, select: { expectedMinor: true, collectedMinor: true, chargeCollectedMinor: true } }),
     tx.refund.aggregate({ where: { storeId, orderId: o.id, source: 'RIDER_OVERCHARGE', status: { in: [...HELD_REFUND_STATES] } }, _sum: { amountMinor: true } }),
+    // PR 192 (CN-018 (7)): an approved rider issue is a door record too — the extra a person checked against its proof
+    tx.riderIssue.aggregate({ where: { storeId, orderId: o.id, status: 'APPROVED' }, _sum: { extraMinor: true } }),
     exchangeUsedMinor(tx, storeId, o),
   ]);
   let collectedMinor = 0;
-  let overMinor = 0;
+  let doorOverMinor = 0;
   for (const d of doors) {
     collectedMinor += d.collectedMinor + d.chargeCollectedMinor;
-    overMinor += Math.max(0, d.collectedMinor - d.expectedMinor);
+    doorOverMinor += Math.max(0, d.collectedMinor - d.expectedMinor);
   }
+  // the same extra may be in both records (the courier reported it and the customer complained): never counted twice
+  const overMinor = Math.max(doorOverMinor, riderIssues._sum.extraMinor ?? 0);
   return {
     roomMinor: Math.max(0, refundRoom({ paidMinor: o.paidMinor, walletAppliedMinor: o.walletAppliedMinor, collectedMinor, heldMinor: held._sum.amountMinor ?? 0 }) - usedMinor),
     overMinor: Math.max(0, overMinor - (overRefunds._sum.amountMinor ?? 0)),

@@ -41,3 +41,7 @@ export * from './wallet';
 export * from './refunds';
 export * from './advance';
 export * from './statements';
+// PR 192 (S08; CN-018 (7), SIM-F-017): courier claims (lost, damaged, a rider's extra) and rider issues — records and
+// requests only; a refund of a rider's extra still waits for the owner's approval (PR 172).
+export * from './claims';
+export * from './rider-issues';

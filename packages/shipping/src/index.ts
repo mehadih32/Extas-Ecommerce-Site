@@ -53,6 +53,10 @@
 // S06 · PR 164: the fraud report (Reports › Fraud & RTO) — what the risk steps caught, what was wrong, what was missed,
 // the cost the stopped orders probably saved (an estimate), and the RTO cost book of real returned parcels in taka by
 // district, campaign, product, courier and reason (fraud-report.ts, fraud-report-pure.ts). Reads only.
+// PR 192: the courier performance report — delivery success, on time against the zone band's promise (plus the
+// tracking grace), refused at the door, the exceptions, per courier, courier and zone, and district; the parcels past
+// their promise now (performance.ts, performance-pure.ts); the RTO cost book's groups by district, campaign, product,
+// courier and reason behind the owner's switch (rto.ts `rtoReport`). Records only.
 //
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
@@ -83,3 +87,6 @@ export * from './fraud-report-pure';
 export * from './fraud-report';
 // PR 178: the courier picked by the real cost of the parcel (the shop's cost only; booking stays a person's press).
 export * from './courier-choice';
+// PR 192: the courier performance report (on time, refused, by zone and district, late now) and the RTO cost book's groups.
+export * from './performance-pure';
+export * from './performance';
