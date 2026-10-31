@@ -48,6 +48,18 @@ jobs:
         with:
           ref: ${{ env.SHA }}
 
+      # PR 4 follow-up (31 Oct): / reached 97% and the build killed the runner twice. First the clean-up (build cache
+      # above DOCKER_BUILD_CACHE_KEEP_GB, untagged layers, old extas images but never the live or rollback ones, runner
+      # logs, apt cache, journal; infra/deploy/disk-tidy.sh), then the check: with less than DISK_ROOT_MIN_FREE_GB free on
+      # / nothing is built and the run fails here with the reason in the deploy report. A rollback builds nothing, so it
+      # only tidies and never stops on it.
+      - name: Free space on the main disk (clean up, then check)
+        id: disk
+        run: |
+          mode=--guard
+          if [ "${{ inputs.rollback }}" = true ]; then mode=--tidy; fi
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/disk-tidy.sh "$mode" "$RUNNER_TEMP/disk.json"
+
       # PR 594 (CN-011): README.md and the whole docs/ folder onto the server, one way (repo → server), stamped with the
       # commit: $EXTAS_ROOT/docs/<sha12>/ with a COMMIT file, `current` pointing at it, the newest DOCS_KEEP_VERSIONS
       # kept. The admin's register and Blueprint tabs read it (app.yml mounts it read-only), the backups bundle it.
@@ -119,6 +131,7 @@ jobs:
         if: always()
         env:
           CHECKOUT: ${{ steps.checkout.outcome }}
+          DISK: ${{ steps.disk.outcome }}
           BUILD: ${{ steps.build.outcome }}
           DEPLOY: ${{ steps.deploy.outcome }}
           DOCS: ${{ steps.docs.outcome }}
@@ -136,7 +149,7 @@ jobs:
           fi
           rec=(); [ -f "$RUNNER_TEMP/deploy-record.json" ] && rec=(DEPLOY_JSON="$RUNNER_TEMP/deploy-record.json")
           sudo env SHA="$SHA" RUN_ID="$GITHUB_RUN_ID" RUN_URL="$RUN_URL" ROLLBACK="$ROLLBACK" CHECKOUT="$CHECKOUT" \
-            BUILD="${BUILD:-skipped}" DEPLOY="${DEPLOY:-skipped}" DOCS="${DOCS:-}" HEALTH_JSON="$RUNNER_TEMP/health.json" \
+            DISK="${DISK:-}" DISK_JSON="$RUNNER_TEMP/disk.json" BUILD="${BUILD:-skipped}" DEPLOY="${DEPLOY:-skipped}" DOCS="${DOCS:-}" HEALTH_JSON="$RUNNER_TEMP/health.json" \
             SMOKE="${SMOKE:-}" SMOKE_ROLLBACK="${SMOKE_ROLLBACK:-}" "${rec[@]}" \
             bash infra/deploy/deploy-report.sh "$out"
           smoke="$RUNNER_TEMP/smoke"; [ -f "$smoke/README.md" ] && sudo chown -R "$(id -u):$(id -g)" "$smoke"
