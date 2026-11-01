@@ -5,10 +5,13 @@
 // - an order placed: the checkout (lib/shop/checkout-api.ts), after the order is saved (its id: `purchase-<number>`).
 // Each hook is quiet: while tracking is off it reads one cached setting and stops; it never throws, never slows the
 // answer (the send runs after it) and never changes the bag or the order.
+// PR 257 follow-up (go-live gate customer 360°): with no `_fbc` from a pixel, the Facebook click the visit came with
+// (kept by lib/tracking/attribution.ts while `ads.attribution` is on) is the event's `fbc`.
 import type { Prisma } from '@extas/db/client';
 import { fail, readCookie, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE } from '../shop/bag-model';
 import { ROUTES } from '../shop/routes';
+import { ATTRIBUTION_COOKIE, keptTouch } from './attribution';
 import { originOf, pageEvent, platformCookies, records, type StoredItem } from './model';
 import { recordEvent, trackingDeps, type Shopper, type TrackingDeps } from './service';
 
@@ -60,10 +63,16 @@ async function lineItems(deps: TrackingDeps, storeId: number, lines: readonly { 
   });
 }
 
-/** The shopper as far as this request tells: the bag's visitor id, the browser name, the platforms' cookies. */
-function shopperOf(request: Request, extra: Shopper = {}): Shopper {
+/** The shopper as far as this request tells: the bag's visitor id, the browser name, the platforms' cookies (the ad
+ *  click the visit came with as `fbc` when the pixel left none). */
+async function shopperOf(deps: TrackingDeps, request: Request, storeId: number, extra: Shopper = {}): Promise<Shopper> {
   const read = (n: string) => readCookie(request, n);
-  return { visitorId: read(BAG_COOKIE), userAgent: request.headers.get('user-agent'), cookies: platformCookies(read), ...extra };
+  const cookies = platformCookies(read);
+  if (!cookies.fbc) {
+    const fbc = (await keptTouch(read(ATTRIBUTION_COOKIE), storeId, deps.resolver))?.fbc;
+    if (fbc) cookies.fbc = fbc;
+  }
+  return { visitorId: read(BAG_COOKIE), userAgent: request.headers.get('user-agent'), cookies, ...extra };
 }
 
 /** The shop page a call came from (the Referer of the same site), without its query. */
@@ -91,7 +100,7 @@ export async function trackAddToBag(request: Request, o: { storeId: number; line
     if (!line) return;
     const items = await lineItems(deps, o.storeId, [{ ...line, quantity: o.quantity }]);
     if (!items.length) return;
-    await recordEvent(deps, { storeId: o.storeId, name: 'addToBag', url: pageOf(request), items, shopper: shopperOf(request) });
+    await recordEvent(deps, { storeId: o.storeId, name: 'addToBag', url: pageOf(request), items, shopper: await shopperOf(deps, request, o.storeId) });
   } catch (e) {
     quiet('add to bag', e);
   }
@@ -130,7 +139,7 @@ export async function trackPurchase(request: Request, o: { storeId: number; orde
       valueMinor: order.totalMinor,
       currency: order.currency,
       orderId: o.orderId,
-      shopper: shopperOf(request, { customerId: order.customerId, ...contact }),
+      shopper: await shopperOf(deps, request, o.storeId, { customerId: order.customerId, ...contact }),
     });
   } catch (e) {
     quiet('purchase', e);
@@ -176,7 +185,7 @@ export async function trackHandler(request: Request, storeId: number, deps: Trac
     const prefix = await deps.resolver.value('naming.productPathPrefix', { storeId });
     const page = pageEvent(b.path, prefix, ROUTES.checkout);
     if (!page || !records(s, page.name)) return noContent();
-    const shopper = shopperOf(request);
+    const shopper = await shopperOf(deps, request, storeId);
     const items = page.name === 'view' ? await viewItems(deps, storeId, page.slug) : await bagItems(deps, storeId, shopper.visitorId ?? null);
     if (!items) return noContent();
     const origin = originOf(request);

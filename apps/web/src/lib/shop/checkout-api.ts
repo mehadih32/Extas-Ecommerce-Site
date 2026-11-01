@@ -12,6 +12,7 @@ import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model'
 import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
 import { noteBotSignals } from '../security/bot-check';
+import { ATTRIBUTION_COOKIE, keptTouch, orderAttributionOf } from '../tracking/attribution';
 import { trackPurchase } from '../tracking/shop';
 import { isSupportError, requestCallBack } from '@extas/support';
 import { phoneNormalizeBD } from '../phone-bd';
@@ -253,7 +254,9 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     const had = readCookie(request, DEVICE_COOKIE);
     const device = capture.device ? (had && visitorIdSchema.safeParse(had).success ? had : crypto.randomUUID()) : null;
     const ip = requestContext(request).ip ?? null;
-    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip, deviceId: device, input: b });
+    // PR 257 follow-up: the campaign tags of the visit (the shop's own cookie, within the owner's days)
+    const attribution = orderAttributionOf(await keptTouch(readCookie(request, ATTRIBUTION_COOKIE), deps.storeId, deps.checkout.settings));
+    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip, deviceId: device, attribution, input: b });
     if (!r.replay) {
       await noteBotSignals({ db: deps.checkout.db, settings: deps.checkout.settings }, { form: 'checkout', sent: human, storeId: deps.storeId, ip });
       await linkToIdentity(deps, r.orderId);

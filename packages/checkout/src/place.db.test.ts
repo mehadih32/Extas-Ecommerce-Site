@@ -92,6 +92,20 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
     });
   });
 
+  describe('PR 257 follow-up (go-live gate customer 360°) · the order keeps where it came from', () => {
+    it('the campaign tags and the ad platform of the visit go on the order; the source and the money do not change', async () => {
+      const s = await shown('utm', { phone: '01800000257' });
+      const r = await placeOrder(f.deps(), { storeId: f.S, visitorId: s.visitorId, customerId: null, ip: null, attribution: { utmSource: 'facebook', utmMedium: 'paid_social', utmCampaign: 'Eid polo <b>', adPlatform: 'META', referrer: 'https://m.facebook.com/some/path?x=1' }, input: s.input });
+      const o = await f.t.prisma.order.findUniqueOrThrow({ where: { id: r.orderId }, select: { utmSource: true, utmMedium: true, utmCampaign: true, adPlatform: true, referrer: true, source: true, totalMinor: true } });
+      expect(o).toMatchObject({ utmSource: 'facebook', utmMedium: 'paid_social', utmCampaign: 'Eid polo b', adPlatform: 'META', referrer: 'https://m.facebook.com', source: 'WEBSITE' });
+      expect(o.totalMinor).toBe(s.q.totals.totalMinor);
+      // no visit tags: every field empty; an unknown platform is not kept
+      const n = await shown('utm-none', { phone: '01800000258' });
+      const r2 = await placeOrder(f.deps(), { storeId: f.S, visitorId: n.visitorId, customerId: null, ip: null, attribution: { adPlatform: 'MYSPACE' as never }, input: n.input });
+      expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: r2.orderId }, select: { utmSource: true, utmMedium: true, utmCampaign: true, adPlatform: true, referrer: true } })).toEqual({ utmSource: null, utmMedium: null, utmCampaign: null, adPlatform: null, referrer: null });
+    });
+  });
+
   describe('review R1 B1 · the code is redeemed in the order’s own transaction', () => {
     it('a code with one use in all: the first order redeems it; the next is refused with the checkout as it is now', async () => {
       await f.coupon('TEST-ONCE', 10_000, { usageLimit: 1 });

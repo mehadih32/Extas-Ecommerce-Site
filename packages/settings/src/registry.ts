@@ -87,6 +87,7 @@ import { healthSettings } from './registry-health';
 import { supportChannelSettings } from './registry-support-channels';
 import { bengaliSettings } from './registry-bengali';
 import { trackingSettings } from './registry-tracking';
+import { attributionSettings } from './registry-attribution';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1329,6 +1330,8 @@ export const registry = {
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----
   ...trackingSettings,
+  // ---- S13 · PR 257 follow-up · where an order came from: campaign tags and ad click ids kept on the order (registry-attribution.ts, version 230). ----
+  ...attributionSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
