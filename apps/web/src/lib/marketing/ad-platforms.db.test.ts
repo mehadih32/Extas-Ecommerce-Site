@@ -1,9 +1,10 @@
 // S13 · PR 259 — Marketing › Ad platforms on a real PostgreSQL: before the key a practice copy that is shown and never
 // saved; with a (stand-in) Meta account the account, campaigns and ad sets are kept, changed ones updated, ones Meta
 // no longer lists marked gone (never deleted); a platform refusal is said; tying to our own campaign needs the write
-// permission and is audited. A throwaway database (skipped without TEST_DATABASE_ADMIN_URL). Sample values.
+// permission and is audited. PR 260: TikTok is listed beside Meta, and its account is kept as its own (platform TIKTOK).
+// A throwaway database (skipped without TEST_DATABASE_ADMIN_URL). Sample values.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createConnections, defineAdapter, metaAdsAdapter, type AdsCampaignFacts, type AdsReader } from '@extas/adapters';
+import { createConnections, defineAdapter, metaAdsAdapter, tiktokAdsAdapter, type AdsCampaignFacts, type AdsReader } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -49,8 +50,17 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Ad platforms on PostgreSQL (PR 259)
     campaigns: async () => ({ ok: true, value: live.campaigns }),
     adSets: async () => ({ ok: true, value: live.campaigns.map((c) => ({ externalId: `${c.externalId}-a`, campaignExternalId: c.externalId, name: `${c.name} set`, status: 'ACTIVE', dailyBudgetMinor: null, targeting: { age_min: 20 } })) }),
   };
+  // PR 260: a stand-in TikTok advertiser (its budgets already in minor units, as the reader gives them)
+  const tiktokStandIn: AdsReader = {
+    provider: 'tiktokAds',
+    platform: 'tiktok',
+    practice: false,
+    account: async () => ({ ok: true, value: { externalId: '7012345678901234567', name: 'Sample TikTok ads', currency: 'BDT', status: 'STATUS_ENABLE' } }),
+    campaigns: async () => ({ ok: true, value: [camp('t1', 'Eid polo on TikTok', { status: 'CAMPAIGN_STATUS_ENABLE', objective: 'PRODUCT_SALES', dailyBudgetMinor: 50_000 })] }),
+    adSets: async () => ({ ok: true, value: [{ externalId: 't1-g', campaignExternalId: 't1', name: 'Dhaka 25–34', status: 'ENABLE', dailyBudgetMinor: null, targeting: { age_groups: ['AGE_25_34'] } }] }),
+  };
   const liveConnections = () =>
-    createConnections({ db: t.prisma, vault: { get: async () => null }, adapters: [defineAdapter({ ...metaAdsAdapter, mock: async () => standIn })], secretCacheMs: 0, testTimeoutMs: 1000 });
+    createConnections({ db: t.prisma, vault: { get: async () => null }, adapters: [defineAdapter({ ...metaAdsAdapter, mock: async () => standIn }), defineAdapter({ ...tiktokAdsAdapter, mock: async () => tiktokStandIn })], secretCacheMs: 0, testTimeoutMs: 1000 });
 
   const api = async (method: string, b?: unknown, cookie = owner, extra = {}) => {
     const res = await adPlatformsHandler(req(method, { body: b, cookie }), admin, extra);
@@ -84,7 +94,9 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Ad platforms on PostgreSQL (PR 259)
     expect((await api('GET', undefined, '')).status).toBe(401);
     const { status, a } = await api('GET', undefined, reader);
     expect(status).toBe(200);
-    expect(a.overview.platforms).toEqual([expect.objectContaining({ platform: 'meta', mode: 'MOCK', accounts: [], practice: expect.objectContaining({ campaigns: expect.arrayContaining([expect.objectContaining({ externalId: 'practice-1' })]) }) })]);
+    const practice = expect.objectContaining({ campaigns: expect.arrayContaining([expect.objectContaining({ externalId: 'practice-1' })]) });
+    expect(a.overview.platforms).toEqual([expect.objectContaining({ platform: 'meta', mode: 'MOCK', accounts: [], practice }), expect.objectContaining({ platform: 'tiktok', mode: 'MOCK', accounts: [], practice })]);
+    expect((await api('POST', { action: 'sync', platform: 'tiktok' })).a.outcome).toMatchObject({ platform: 'tiktok', practice: true });
     expect((await api('POST', { action: 'sync', platform: 'meta' }, reader)).status).toBe(403);
     const r = await api('POST', { action: 'sync', platform: 'meta' });
     expect(r.a.outcome).toMatchObject({ practice: true, campaigns: 2 });
@@ -138,5 +150,17 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Ad platforms on PostgreSQL (PR 259)
     expect((await t.prisma.adCampaign.findUniqueOrThrow({ where: { id: c1.id } })).campaignId).toBeNull();
     expect(await t.prisma.auditLog.count({ where: { action: 'marketing.adPlatforms.link' } })).toBe(2);
     expect((await api('POST', { action: 'nope' })).a.error).toBe('INVALID_INPUT');
+  });
+
+  it('TikTok (PR 260): its advertiser, campaigns and ad groups kept as its own account, beside Meta', async () => {
+    const r = await api('POST', { action: 'sync', platform: 'tiktok' }, owner, { connections: liveConnections() });
+    expect(r.status).toBe(200);
+    expect(r.a.outcome).toEqual({ platform: 'tiktok', practice: false, campaigns: 1, adSets: 1, gone: 0 });
+    expect(await t.prisma.adAccount.findFirst({ where: { platform: 'TIKTOK' } })).toMatchObject({ storeId: S, externalId: '7012345678901234567', name: 'Sample TikTok ads', currency: 'BDT' });
+    // Meta's account is untouched by a TikTok read
+    expect(await t.prisma.adCampaign.count({ where: { externalId: 'c1', archivedAt: null } })).toBe(1);
+    const [meta, tiktok] = r.a.overview.platforms;
+    expect(meta!.accounts.map((x) => x.externalId)).toEqual(['act_1234567']);
+    expect(tiktok!.accounts[0]!.campaigns.map((c) => [c.externalId, c.status, c.dailyBudgetMinor, c.adSets])).toEqual([['t1', 'CAMPAIGN_STATUS_ENABLE', 50_000, 1]]);
   });
 });

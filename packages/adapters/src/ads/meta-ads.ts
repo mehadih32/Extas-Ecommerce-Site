@@ -204,10 +204,3 @@ export const metaAdsAdapter = defineAdapter<CheckedReader, MetaAdsConfig>({
   },
   test: async (api, ctx) => (ctx.mode === 'MOCK' || !api.check ? { ok: true, message: 'mock Meta ads: a practice account, nothing is read from Meta' } : api.check()),
 });
-
-/** Each platform's ads reader connection (PR 260 and 261 add TikTok and Google). */
-export const ADS_READER_CONNECTION: Partial<Record<AdsPlatform, { kind: 'META' | 'GOOGLE' | 'TIKTOK'; provider: string }>> = {
-  meta: { kind: 'META', provider: META_ADS_PROVIDER },
-};
-
-export const adsReaderAdapters = [metaAdsAdapter] as const;
