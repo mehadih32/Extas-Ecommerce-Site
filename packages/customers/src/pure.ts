@@ -110,3 +110,6 @@ export type CustomerSort = (typeof CUSTOMER_SORTS)[number];
 
 /** PR 285 — the digits a number search needs (fewer would match half the shop). */
 export const PHONE_SEARCH_MIN_DIGITS = 4;
+
+// PR 287 — the segment conditions (no database), for the builder in the browser.
+export * from './segment-rules';

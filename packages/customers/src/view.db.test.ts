@@ -66,7 +66,7 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('the single customer view 
     expect(v.kpi.ordered).toMatchObject({ orders: 5, valueMinor: 27_000 });
     expect(v.history.orders).toBe(5);
     expect(v.history.delivered).toBe(3);
-    expect(v.viewer).toEqual({ fullPhone: true, orders: true, merge: true, audit: true });
+    expect(v.viewer).toEqual({ fullPhone: true, orders: true, merge: true, audit: true, segments: true });
   });
 
   it('a merged profile opens as its survivor; another store or an unknown id is nothing', async () => {

@@ -89,6 +89,7 @@ import { bengaliSettings } from './registry-bengali';
 import { trackingSettings } from './registry-tracking';
 import { attributionSettings } from './registry-attribution';
 import { contactFormSettings } from './registry-contact-form';
+import { crmSettings } from './registry-crm';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1335,6 +1336,8 @@ export const registry = {
   ...attributionSettings,
   // ---- S02 · PR 75 follow-up · the contact page's form into the Support inbox (registry-contact-form.ts, version 231). ----
   ...contactFormSettings,
+  // ---- S14 · CN-031 lane A · PR 287 onwards · CRM: saved segments (registry-crm.ts, versions 190–199). ----
+  ...crmSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

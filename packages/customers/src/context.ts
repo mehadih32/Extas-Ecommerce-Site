@@ -16,9 +16,14 @@ export interface SettingsReader {
   value<K extends Key>(key: K, opts?: { storeId?: number }): Promise<Value<K>>;
 }
 
+/** Writes a store's setting (the app's resolver; the pages' own settings cards, PR 287). */
+export interface SettingsWriter {
+  set<K extends Key>(key: K, value: Value<K>, target: { level: 'store'; storeId: number }, opts?: { actorId?: string | null; reason?: string | null }): Promise<unknown>;
+}
+
 export interface CustomersDeps {
   db: PrismaClient;
-  settings: SettingsReader;
+  settings: SettingsReader & Partial<SettingsWriter>;
   /** Clock, for tests. */
   now?: () => Date;
 }
@@ -31,7 +36,7 @@ export interface Who {
 }
 
 /** The customers permissions (packages/auth/src/catalogue.ts; BACKEND-ARCHITECTURE §5.5, §9.10). */
-export const CUSTOMER_PERMISSIONS = ['customers.read', 'customers.phone', 'customers.merge', 'customers.privacy'] as const satisfies readonly PermissionKey[];
+export const CUSTOMER_PERMISSIONS = ['customers.read', 'customers.phone', 'customers.merge', 'customers.privacy', 'customers.segments.write'] as const satisfies readonly PermissionKey[];
 export type CustomersPermission = (typeof CUSTOMER_PERMISSIONS)[number];
 
 /** What the person reading may see, from the keys they hold in the store. */
@@ -44,6 +49,8 @@ export interface Viewer {
   merge: boolean;
   /** `audit.read`: "Who looked at this customer". */
   audit: boolean;
+  /** PR 287 · `customers.segments.write`: save, change and archive segments. */
+  segments: boolean;
 }
 
 export const TX = { maxWait: 10_000, timeout: 30_000 } as const;
@@ -60,7 +67,7 @@ export async function allow(deps: CustomersDeps, who: Who, permission: Customers
   const held = await requirePermission(deps.db, who.actor, permission, { storeId: who.storeId });
   const store = await deps.db.store.findUnique({ where: { id: who.storeId }, select: { archivedAt: true } });
   if (!store || store.archivedAt) throw new CustomersError('NOT_FOUND', 'no such store', ['storeId']);
-  return { fullPhone: held.has('customers.phone'), orders: held.has('orders.read'), merge: held.has('customers.merge'), audit: held.has('audit.read') };
+  return { fullPhone: held.has('customers.phone'), orders: held.has('orders.read'), merge: held.has('customers.merge'), audit: held.has('audit.read'), segments: held.has('customers.segments.write') };
 }
 
 /** One setting for the store. */

@@ -11,12 +11,21 @@
 //
 // Reading needs `customers.read`; the numbers are masked without `customers.phone`. Nothing here is exported (PR 299).
 import { Prisma } from '@extas/db/client';
-import { customerFiguresSql, customerOrdersSql } from '@extas/metrics';
 import { historyOptions } from '@extas/orders';
 import { z } from 'zod';
 import { allow, nowOf, parse, setting, type CustomersDeps, type Viewer, type Who } from './context';
-import { CUSTOMER_SORTS, CUSTOMER_VIEWS, PHONE_SEARCH_MIN_DIGITS, phoneShown, type CustomerSort, type CustomerView, type PhoneShown } from './pure';
+import { peopleBaseSql, searchSql, viewWhere } from './people-sql';
+import { CUSTOMER_SORTS, CUSTOMER_VIEWS, phoneShown, type CustomerSort, type CustomerView, type PhoneShown } from './pure';
+import { segmentFilterSql } from './segments';
 import { maskOf } from './view';
+
+/** PR 287: a live saved segment of the store, with its SQL on `b`. */
+async function segmentOf(deps: CustomersDeps, storeId: number, id: string): Promise<{ id: string; name: string; sql: Prisma.Sql } | null> {
+  const sql = await segmentFilterSql(deps, storeId, id);
+  if (!sql) return null;
+  const row = await deps.db.segment.findFirst({ where: { id, storeId }, select: { id: true, name: true } });
+  return row ? { ...row, sql } : null;
+}
 
 const DAY_MS = 86_400_000;
 
@@ -27,6 +36,8 @@ export const listInput = z
     source: z.string().trim().max(60).optional(),
     sort: z.enum(CUSTOMER_SORTS).optional(),
     page: z.coerce.number().int().min(1).max(10_000).optional(),
+    /** PR 287: only the people of this saved segment (an archived, unreadable or other store's segment: nobody). */
+    segment: z.string().trim().max(40).optional(),
   })
   .strict();
 export type ListInput = z.input<typeof listInput>;
@@ -57,7 +68,9 @@ export interface CustomerList {
   counts: Partial<Record<CustomerView, number>>;
   views: CustomerView[];
   /** The query as read (defaults filled in). */
-  query: { view: CustomerView; q: string; source: string; sort: CustomerSort; page: number };
+  query: { view: CustomerView; q: string; source: string; sort: CustomerSort; page: number; segment: string };
+  /** PR 287: the saved segment the list is narrowed to (null: none, or it is not one this store keeps live). */
+  segment: { id: string; name: string } | null;
   pageSize: number;
   hasMore: boolean;
   /** Where people first came from, for the filter. */
@@ -102,58 +115,11 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
   const riskSince = new Date(nowOf(deps).getTime() - rules.atRiskDays * DAY_MS);
   const ourFault = [...hist.ourFault];
 
-  // every live profile under the person it belongs to (a merged profile under its survivor); orders carry E.164
-  const people = Prisma.sql`SELECT COALESCE(c."mergedIntoId", c."id")::text AS k, c."id" AS cid, c."phone" AS phone FROM "Customer" c WHERE c."storeId" = ${S} AND c."erasedAt" IS NULL`;
-  const refusal = Prisma.sql`COALESCE(
-      (SELECT e."reasonCode" FROM "OrderEvent" e WHERE e."storeId" = ${S} AND e."orderId" = o."id" AND e."type" = 'order.returned' AND e."reasonCode" IS NOT NULL ORDER BY e."createdAt" DESC, e."id" DESC LIMIT 1),
-      (SELECT r."reasonCode" FROM "ReturnRecord" r WHERE r."storeId" = ${S} AND r."orderId" = o."id" AND r."kind"::text = 'REFUSED_AT_DOOR' AND r."reasonCode" IS NOT NULL ORDER BY r."createdAt" DESC LIMIT 1),
-      '')`;
-  const base = Prisma.sql`
-    WITH fig AS (${customerFiguresSql(S, people)}),
-    own AS (${customerOrdersSql(S, people)}),
-    cnt AS (
-      SELECT own.k,
-             count(*) FILTER (WHERE o."status" = 'RETURNED' AND NOT (${refusal} = ANY(${ourFault}::text[]))) AS refused,
-             count(DISTINCT x."id") AS exchanges
-      FROM own JOIN "Order" o ON o."id" = own."id" AND o."archivedAt" IS NULL
-      LEFT JOIN "Exchange" x ON x."orderId" = o."id" AND x."storeId" = ${S}
-      GROUP BY own.k
-    ),
-    mem AS (SELECT c."mergedIntoId"::text AS k, count(*) AS n FROM "Customer" c WHERE c."storeId" = ${S} AND c."mergedIntoId" IS NOT NULL GROUP BY c."mergedIntoId"),
-    base AS (
-      SELECT r."id", r."name", r."phone", r."email", r."firstSource", r."createdAt", r."smsMarketingConsent", r."whatsappMarketingConsent", r."codPolicy",
-             COALESCE(mem.n, 0) AS members,
-             COALESCE(fig.ordered_orders, 0) AS orders, COALESCE(fig.ordered_value, 0) AS ordered_value,
-             COALESCE(fig.sales_orders, 0) AS delivered, COALESCE(fig.sales_value, 0) AS sales_value,
-             COALESCE(cnt.refused, 0) AS refused, COALESCE(cnt.exchanges, 0) AS exchanges, fig.last_at
-      FROM "Customer" r
-      LEFT JOIN fig ON fig.k = r."id"::text
-      LEFT JOIN cnt ON cnt.k = r."id"::text
-      LEFT JOIN mem ON mem.k = r."id"::text
-      WHERE r."storeId" = ${S} AND r."mergedIntoId" IS NULL AND r."erasedAt" IS NULL AND r."archivedAt" IS NULL
-        ${searchSql(S, q)} ${source ? Prisma.sql`AND r."firstSource" = ${source}` : Prisma.empty}
-    )`;
-
-  const viewSql = (v: CustomerView): Prisma.Sql => {
-    switch (v) {
-      case 'new':
-        return Prisma.sql`b.orders < ${rules.returningMinOrders}`;
-      case 'returning':
-        return Prisma.sql`b.orders >= ${rules.returningMinOrders}`;
-      case 'vip':
-        return Prisma.sql`b.sales_value >= ${rules.vipMinSalesMinor ?? 0}`;
-      case 'atrisk':
-        return Prisma.sql`b.delivered > 0 AND b.last_at < ${riskSince}`;
-      case 'refused':
-        return Prisma.sql`b.refused > 0`;
-      case 'exchanged':
-        return Prisma.sql`b.exchanges > 0`;
-      case 'nooffers':
-        return Prisma.sql`NOT (COALESCE(b."smsMarketingConsent", false) OR COALESCE(b."whatsappMarketingConsent", false))`;
-      default:
-        return Prisma.sql`TRUE`;
-    }
-  };
+  const base = peopleBaseSql(S, ourFault, Prisma.sql`${searchSql(S, q)} ${source ? Prisma.sql`AND r."firstSource" = ${source}` : Prisma.empty}`);
+  const segmentId = d.segment ?? '';
+  const seg = segmentId ? await segmentOf(deps, S, segmentId) : null;
+  const segSql = segmentId ? (seg?.sql ?? Prisma.sql`FALSE`) : Prisma.sql`TRUE`;
+  const viewSql = (v: CustomerView): Prisma.Sql => Prisma.sql`(${viewWhere(v, rules, riskSince)}) AND (${segSql})`;
   const order = {
     last: Prisma.sql`b.last_at DESC NULLS LAST, b."createdAt" DESC`,
     new: Prisma.sql`b."createdAt" DESC`,
@@ -192,21 +158,11 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
     })),
     counts: Object.fromEntries(views.map((v) => [v, num(c[v])])),
     views,
-    query: { view, q, source, sort, page },
+    query: { view, q, source, sort, page, segment: segmentId },
+    segment: seg ? { id: seg.id, name: seg.name } : null,
     pageSize: rules.pageSize,
     hasMore: rows.length > rules.pageSize,
     sources: sourceRows.map((r) => r.s),
     viewer,
   };
-}
-
-/** The search: a name or an e-mail, or (4 digits or more) any number of any of the person's profiles (also PR 620's ERP list). */
-export function searchSql(storeId: number, q: string): Prisma.Sql {
-  if (!q) return Prisma.empty;
-  const like = `%${q.replace(/[\\%_]/g, (ch) => `\\${ch}`)}%`;
-  const digits = q.replace(/\D/g, '');
-  const byDigits = digits.length >= PHONE_SEARCH_MIN_DIGITS ? Prisma.sql`OR regexp_replace(COALESCE(m."phone", '') || ' ' || COALESCE(m."whatsappNumber", ''), '[^0-9 ]', '', 'g') LIKE ${`%${digits.replace(/^0+/, '')}%`}` : Prisma.empty;
-  return Prisma.sql`AND EXISTS (
-      SELECT 1 FROM "Customer" m WHERE m."storeId" = ${storeId} AND (m."id" = r."id" OR m."mergedIntoId" = r."id")
-        AND (m."name" ILIKE ${like} OR m."email" ILIKE ${like} ${byDigits}))`;
 }

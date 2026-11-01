@@ -9,7 +9,7 @@
 // reads another store.
 import { Prisma, type PrismaClient } from '@extas/db/client';
 import { customerFiguresSql } from '@extas/metrics';
-import { searchSql } from './list';
+import { searchSql } from './people-sql';
 
 export interface ErpCustomerRow {
   id: string;

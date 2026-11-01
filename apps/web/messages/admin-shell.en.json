@@ -73,6 +73,7 @@
       },
       "customers": {
         "all": "All customers",
+        "segments": "Segments",
         "review": "To review"
       },
       "messages": {

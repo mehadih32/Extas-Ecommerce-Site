@@ -18,6 +18,10 @@
     "profile": {
       "label": "One customer's page",
       "help": "How many orders one customer's page lists before \"Older\"; how many exchanges and support conversations each of its lists shows; and how many lines of \"Who looked at this customer\" (every open of the page and every copy or call of the full number, with who and when) the owner sees there (0 hides the card; the full log stays). Nothing here changes what is recorded."
+    },
+    "segments": {
+      "label": "Saved segments",
+      "help": "Groups of customers by what they really did (orders, delivered spend, true delivery share, last order, a category or size bought, an area, where they first came from, offers consent, a refusal, an exchange), saved by name and used again in the Customers list and later in campaigns. \"On\": the Segments page counts and saves; off (as shipped): the page only says it is off. \"Most segments\": how many saved segments the store may keep (archived ones do not count). \"Most conditions\": how many conditions one segment joins with “and”. \"Shown in the builder\": how many matching customers the builder lists beside its live count. A segment never sends anything by itself, and nothing in it moves money or blocks anyone."
     }
   }
 }

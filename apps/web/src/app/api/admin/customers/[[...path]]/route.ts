@@ -11,3 +11,4 @@ const run = async (request: Request, ctx: Ctx) => customersRoute(request, adminD
 
 export const GET = run;
 export const POST = run;
+export const PUT = run;
