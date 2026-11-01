@@ -501,6 +501,12 @@ export function callOutcomeLine(view: AdminView, data: unknown, outcomes: CallOu
   return t(view.dict, 'orders.ev.callOutcome', { reason: reasonLabel(view.dict, x.reason), outcome: outcomeLabel(outcomes, x.outcome, view.lang === 'bn' ? 'bn' : 'en') });
 }
 
+/** PR 557: the earlier order's line when he took another size out of a new bag to exchange this parcel on arrival. */
+export function exchangeIntentLine(view: AdminView, data: unknown): string | null {
+  const x = (data ?? {}) as { size?: unknown };
+  return typeof x.size === 'string' && x.size ? t(view.dict, 'orders.ev.exchangeIntent', { size: x.size }) : null;
+}
+
 /** PR 540: where "Hold" and "Let it go" send (the risk API; it checks `orders.hold` again). */
 const HOLD_PROPOSAL_URL = '/api/admin/risk/hold-proposals';
 
@@ -604,6 +610,7 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.holdProposalDecided': 'mute',
   'order.newCustomer': 'warn',
   'order.callOutcome': 'mute',
+  'order.exchangeIntent': 'warn',
   'order.hold': 'warn',
   'order.cancelAfterBooking': 'warn',
   'order.requestCancel': 'warn',
@@ -904,7 +911,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || e.type === od.REFUSER_EVENT || e.type === od.GOOD_CUSTOMER_EVENT || e.type === od.HOLD_PROPOSED_EVENT || e.type === od.HOLD_DECIDED_EVENT || e.type === od.NEW_CUSTOMER_EVENT || e.type === od.CALL_OUTCOME_EVENT || e.type === 'shipment.rebook' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
       const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
-      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : e.type === od.BLOCK_PROPOSAL_EVENT ? proposalLine(view, e.data) : e.type === od.GOOD_CUSTOMER_EVENT ? goodCustomerLine(view, e.data) : e.type === od.HOLD_PROPOSED_EVENT ? holdProposedLine(view, e.data, holdName) : e.type === od.NEW_CUSTOMER_EVENT ? t(d, 'orders.ev.newCustomer') : e.type === od.CALL_OUTCOME_EVENT ? callOutcomeLine(view, e.data, outcomes) : ruled);
+      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : e.type === od.BLOCK_PROPOSAL_EVENT ? proposalLine(view, e.data) : e.type === od.GOOD_CUSTOMER_EVENT ? goodCustomerLine(view, e.data) : e.type === od.HOLD_PROPOSED_EVENT ? holdProposedLine(view, e.data, holdName) : e.type === od.NEW_CUSTOMER_EVENT ? t(d, 'orders.ev.newCustomer') : e.type === od.CALL_OUTCOME_EVENT ? callOutcomeLine(view, e.data, outcomes) : e.type === od.EXCHANGE_INTENT_EVENT ? exchangeIntentLine(view, e.data) : ruled);
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })

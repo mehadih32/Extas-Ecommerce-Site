@@ -111,7 +111,7 @@
     },
     "transitDuplicate": {
       "label": "Parcel already on its way",
-      "help": "When on, the moment a whole phone number is typed at checkout the shop looks for this customer's order that is already on its way (or any open order, if chosen) with the very piece in the bag — same product, colour and size. The checkout shows the piece, the earlier order's number and its tracking link, and two buttons: take it out, or \"No, I want another one\". The order's number and link show only when that order was placed from this browser or account; a match by the number alone shows nothing unless \"by the number alone\" is on (then without them). Every notice is kept with the campaign that brought the customer, for the report. Nothing is cancelled or blocked. Off as shipped."
+      "help": "When on, the moment a whole phone number is typed at checkout the shop looks for this customer's order that is already on its way (or any open order, if chosen) with the very piece in the bag — same product, colour and size. The checkout shows the piece, the earlier order's number and its tracking link, and two buttons: take it out, or \"No, I want another one\". The order's number and link show only when that order was placed from this browser or account; a match by the number alone shows nothing unless \"by the number alone\" is on (then without them). Every notice is kept with the campaign that brought the customer, for the report. Nothing is cancelled or blocked. With \"size exchange\" on, the same product and colour in another size already on its way offers an exchange on arrival instead of a second parcel. Off as shipped."
     }
   },
   "defaults": {

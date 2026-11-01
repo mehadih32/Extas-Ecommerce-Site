@@ -6,6 +6,9 @@
 // "it's already on its way — no need to order it again", and two buttons. "No need — take it out" takes the line out
 // through the bag's own Remove (its API, Undo and redraw); "No, I want another one" keeps it. Either answer is kept once
 // for the owner's report; closing the popup keeps the bag as it is. A failed check shows nothing: the form never waits.
+// PR 557: a notice of kind 'size' (the same product and colour in another size already on its way, owner's
+// `sizeExchange`) asks "not sure about the size?" instead, offers to exchange that parcel on arrival (with the exchange
+// policy's link) and its buttons say "exchange on arrival — take this out" / "no, I want both".
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { phoneNormalizeBD } from '@extas/checkout/pure';
 import { campaignOfVisit } from '@/lib/shop/campaign';
@@ -28,9 +31,12 @@ interface Notice {
   lineId: string;
   number: string | null;
   href: string | null;
+  kind?: 'same' | 'size';
+  had?: string | null;
+  want?: string | null;
 }
 
-export function TransitNotice({ phone, cfg, w, lang }: { phone: string; cfg: TransitConfig; w: (k: string, vars?: Record<string, string | number>) => string; lang: ShopLang }) {
+export function TransitNotice({ phone, cfg, w, lang, exchangeHref }: { phone: string; cfg: TransitConfig; w: (k: string, vars?: Record<string, string | number>) => string; lang: ShopLang; exchangeHref: string }) {
   const [queue, setQueue] = useState<Notice[]>([]);
   const asked = useRef(new Set<string>());
   const opener = useRef<HTMLElement | null>(null);
@@ -63,29 +69,43 @@ export function TransitNotice({ phone, cfg, w, lang }: { phone: string; cfg: Tra
   );
   if (!now) return null;
   const name = cfg.names[now.lineId] ?? '';
+  const size = now.kind === 'size';
+  const want = now.want ?? '';
+  const text = size
+    ? now.number && now.had
+      ? w('transit.sizeText', { number: now.number, had: now.had, want })
+      : w('transit.sizeTextAnon', { want })
+    : now.number
+      ? w('transit.text', { number: now.number })
+      : w('transit.textAnon');
   return (
-    <PdpModal title={w('transit.title')} closeLabel={w('transit.close')} onClose={next} opener={opener} className="co-tr" testId="co-transit">
+    <PdpModal title={w(size ? 'transit.sizeTitle' : 'transit.title')} closeLabel={w('transit.close')} onClose={next} opener={opener} className="co-tr" testId="co-transit">
       <div className="co-tr-it">
         <div className="co-tr-th">{cfg.thumbs[now.lineId]}</div>
         <div className="grow" style={{ minWidth: 0 }}>
           <div className="small bold">{name}</div>
-          {now.number ? <div className="xs muted">{w('transit.order', { number: now.number })}</div> : null}
+          {now.number ? <div className="xs muted">{size && now.had ? w('transit.sizeOrder', { had: now.had, number: now.number }) : w('transit.order', { number: now.number })}</div> : null}
         </div>
       </div>
-      <p className="small mt12" data-testid="co-transit-text">
-        {now.number ? w('transit.text', { number: now.number }) : w('transit.textAnon')}
+      <p className="small mt12" data-testid="co-transit-text" data-kind={size ? 'size' : 'same'}>
+        {text}
       </p>
       {now.href && now.number ? (
         <a className="link small co-tr-track" href={hrefIn(lang, now.href)} data-testid="co-transit-track">
           {w('transit.track', { number: now.number })}
         </a>
       ) : null}
+      {size ? (
+        <a className="link small co-tr-track" href={exchangeHref} data-testid="co-transit-how">
+          {w('transit.sizeHow')}
+        </a>
+      ) : null}
       <div className="co-tr-acts">
         <button type="button" className="btn btn-primary" onClick={() => answer(now, 'removed')} data-testid="co-transit-remove">
-          {w('transit.remove')}
+          {w(size ? 'transit.sizeRemove' : 'transit.remove')}
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => answer(now, 'kept')} data-testid="co-transit-keep">
-          {w('transit.keep')}
+          {w(size ? 'transit.sizeKeep' : 'transit.keep')}
         </button>
       </div>
     </PdpModal>

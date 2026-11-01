@@ -67,6 +67,8 @@
 // link and two buttons (take it out, or "I want another one"). The order's number and link only for an order tied to this
 // browser or account; a match by the number alone shows nothing unless `byPhoneAlone` is on (then without them). Every
 // firing is kept with its campaign; the report reads `reportDays`. Off as shipped.
+// PR 557 (`sizeExchange`, in the same setting, off as shipped): the same product and colour in another size already on its
+// way is a size worry, not forgetfulness — the notice offers an exchange on arrival instead of a second parcel.
 import { z } from 'zod';
 import { setting } from './define';
 import { ORDER_CANCEL_CODES } from './registry-orders';
@@ -282,12 +284,14 @@ export const checkoutTransitDuplicateSchema = z
     windowDays: z.number().int().min(1).max(120),
     /** A match by the number alone (not this browser or account) shows the notice too — without the order's number or link. */
     byPhoneAlone: z.boolean(),
+    /** PR 557: the same product and colour in another size already on its way offers an exchange on arrival instead. */
+    sizeExchange: z.boolean().default(false),
     /** The report's period (Orders › Risk rules). */
     reportDays: z.number().int().min(1).max(365),
   })
   .strict();
 export type CheckoutTransitDuplicate = z.output<typeof checkoutTransitDuplicateSchema>;
-export const CHECKOUT_TRANSIT_DUPLICATE_DEFAULT: CheckoutTransitDuplicate = { enabled: false, include: 'shipped', windowDays: 30, byPhoneAlone: false, reportDays: 30 }; // hardcode-ok: registry default (the owner changes it on Orders › Risk rules)
+export const CHECKOUT_TRANSIT_DUPLICATE_DEFAULT: CheckoutTransitDuplicate = { enabled: false, include: 'shipped', windowDays: 30, byPhoneAlone: false, sizeExchange: false, reportDays: 30 }; // hardcode-ok: registry default (the owner changes it on Orders › Risk rules)
 
 export const riskS06Settings = {
   'risk.blocklist': setting({

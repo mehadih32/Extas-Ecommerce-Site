@@ -4,11 +4,14 @@
 // typing the number learns nothing unless the owner allows the number alone, and then no number or link). SIM-F-015: the
 // customer is not the number alone — the same device with another number is found. A delivered or cancelled order, or
 // another size of the piece, is not a duplicate here. Each firing is kept once with its campaign; the answer is kept
-// once; the report counts by campaign. Past the look-up limit the check answers nothing. Every value is made up.
+// once; the report counts by campaign. Past the look-up limit the check answers nothing.
+// PR 557 (`sizeExchange`): the same product and colour in another size already on its way is a size notice (the earlier
+// size only for a tied order); another colour is not; the very same piece still wins. Taking it out puts
+// `order.exchangeIntent` on the earlier order's timeline once; keeping it puts nothing. Every value is made up.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { riskS06Settings } from '@extas/settings';
-import { transitDuplicateAnswer, transitDuplicateCheck, transitDuplicateReport, type TransitContext } from './index';
+import { EXCHANGE_INTENT_EVENT, transitDuplicateAnswer, transitDuplicateCheck, transitDuplicateReport, type TransitContext } from './index';
 import { setUpOrders, type OrdersFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -115,5 +118,80 @@ describe.skipIf(!HAS_TEST_DB)('PR 556 · the in-transit duplicate notice (Postgr
     expect((await check(from)).notices).toHaveLength(1);
     expect(await check(from)).toEqual({ enabled: true, notices: [] });
     f.overrides.delete('delivery.phoneFirst.rateLimit');
+  });
+});
+
+describe.skipIf(!HAS_TEST_DB)('PR 557 · another size on its way: exchange on arrival (PostgreSQL)', () => {
+  let f: OrdersFixture;
+  let earlier: { orderId: string; number: string; visitorId: string };
+  const PHONE = '01700000557';
+  const SIZE_ON = { ...ON, sizeExchange: true };
+  let sizes: Record<string, string>;
+  beforeAll(async () => {
+    f = await setUpOrders('transit-size');
+    earlier = await f.place('ts-earlier', { phone: PHONE, lines: [{ variantId: f.v.skyM }] });
+    await f.t.prisma.order.update({ where: { id: earlier.orderId }, data: { status: 'HANDED_OVER' } });
+    const vs = await f.t.prisma.productVariant.findMany({ where: { id: { in: [f.v.skyM, f.v.skyL] } }, select: { id: true, size: { select: { label: true } } } });
+    sizes = Object.fromEntries(vs.map((v) => [v.id, v.size!.label]));
+  });
+  afterAll(async () => {
+    await f?.t.drop();
+  });
+  const check = async (lines: { variantId: string }[], over: Partial<TransitContext> = {}) => {
+    const b = await f.bag(`ts-${Math.random().toString(36).slice(2, 8)}`, lines);
+    const ctx: TransitContext = { storeId: f.S, cartId: b.cartId, visitorId: earlier.visitorId, deviceId: null, customerId: null, ip: '192.0.2.57', ...over };
+    return { b, r: await transitDuplicateCheck(f.ordersDeps(), ctx, { phone: PHONE, campaign: { source: 'facebook', campaign: 'nov-size' } }) };
+  };
+  const intents = () => f.t.prisma.orderEvent.findMany({ where: { orderId: earlier.orderId, type: EXCHANGE_INTENT_EVENT } });
+
+  it('off as shipped (only the same piece): another size shows nothing', async () => {
+    f.overrides.set('checkout.transitDuplicate', ON);
+    expect((await check([{ variantId: f.v.skyL }])).r.notices).toEqual([]);
+  });
+
+  it('on: the same product and colour in another size is a size notice with both sizes, kept as differentSize', async () => {
+    f.overrides.set('checkout.transitDuplicate', SIZE_ON);
+    const { b, r } = await check([{ variantId: f.v.skyL }]);
+    expect(r.notices).toHaveLength(1);
+    const line = await f.t.prisma.cartItem.findFirstOrThrow({ where: { cartId: b.cartId, variantId: f.v.skyL } });
+    expect(r.notices[0]).toMatchObject({ kind: 'size', lineId: line.id, variantId: f.v.skyL, number: earlier.number, had: sizes[f.v.skyM], want: sizes[f.v.skyL] });
+    const row = await f.t.prisma.duplicateNoticeEvent.findUniqueOrThrow({ where: { id: r.notices[0]!.eventId } });
+    expect(row).toMatchObject({ existingOrderId: earlier.orderId, variantId: f.v.skyL, differentSize: true, action: 'shown', campaignRef: 'nov-size' });
+  });
+
+  it('another colour is not a size worry; the very same piece is still the "same" notice', async () => {
+    expect((await check([{ variantId: f.v.whiteM }])).r.notices).toEqual([]);
+    const same = await check([{ variantId: f.v.skyM }]);
+    expect(same.r.notices[0]).toMatchObject({ kind: 'same', had: null, want: null });
+  });
+
+  it('a match by the number alone (owner allows it) never shows the earlier size', async () => {
+    f.overrides.set('checkout.transitDuplicate', { ...SIZE_ON, byPhoneAlone: true });
+    const { r } = await check([{ variantId: f.v.skyL }], { visitorId: 'someone-else' });
+    expect(r.notices[0]).toMatchObject({ kind: 'size', number: null, href: null, had: null, want: sizes[f.v.skyL] });
+    f.overrides.set('checkout.transitDuplicate', SIZE_ON);
+  });
+
+  it('keeping it adds nothing to the earlier order; taking it out adds one exchange line with the wanted size', async () => {
+    const kept = await check([{ variantId: f.v.skyL }], { ip: '192.0.2.58' });
+    expect(await transitDuplicateAnswer(f.ordersDeps(), f.S, { eventId: kept.r.notices[0]!.eventId, action: 'kept' })).toEqual({ action: 'kept' });
+    expect(await intents()).toEqual([]);
+    // a new firing later (past the hour) taken out
+    f.clock.now = new Date(f.clock.now.getTime() + 7_200_000);
+    const later = await f.t.prisma.duplicateNoticeEvent.create({
+      data: { storeId: f.S, phone: '+8801700000557', existingOrderId: earlier.orderId, productId: null, variantId: f.v.skyL, differentSize: true, action: 'shown', createdAt: f.clock.now },
+    });
+    expect(await transitDuplicateAnswer(f.ordersDeps(), f.S, { eventId: later.id, action: 'removed' })).toEqual({ action: 'removed' });
+    expect(await transitDuplicateAnswer(f.ordersDeps(), f.S, { eventId: later.id, action: 'removed' })).toEqual({ action: 'removed' });
+    const ev = await intents();
+    expect(ev).toHaveLength(1);
+    expect(ev[0]).toMatchObject({ actorType: 'SYSTEM', data: { size: sizes[f.v.skyL], variantId: f.v.skyL, noticeId: later.id } });
+  });
+
+  it('the report counts the size notices of each campaign', async () => {
+    const rep = await transitDuplicateReport(f.ordersDeps(), f.staff);
+    const row = rep.rows.find((x) => x.campaign === 'nov-size');
+    expect(row?.size).toBeGreaterThanOrEqual(1);
+    expect(row!.size).toBeLessThanOrEqual(row!.shown);
   });
 });

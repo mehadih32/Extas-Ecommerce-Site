@@ -794,7 +794,9 @@
         "levelHold": "The risk level",
         "blocklistHold": "The blocklist"
       },
-      "shipment_rebook": "Parcel booked again (its amount or receiver had changed)"
+      "shipment_rebook": "Parcel booked again (its amount or receiver had changed)",
+      "order_exchangeIntent": "At checkout: may exchange on arrival",
+      "exchangeIntent": "Started another order in size {size}, took it out to exchange this parcel on arrival instead"
     },
     "band": {
       "newCustomer": "A new customer — no earlier order anywhere in the shop. Call once before confirming; nothing is held or asked in advance.",
@@ -1351,7 +1353,8 @@
           "campaign": "Campaign",
           "shown": "Shown",
           "removed": "Took it out",
-          "kept": "Wanted another"
+          "kept": "Wanted another",
+          "size": "Of them, another size"
         },
         "noCampaign": "No campaign",
         "none": "No notice in this period.",
@@ -1363,7 +1366,9 @@
           "unauthorized": "Sign in again.",
           "network": "No connection. Nothing was saved; try again.",
           "other": "Something went wrong. Nothing was saved; try again."
-        }
+        },
+        "sizeExchange": "Another size: offer an exchange on arrival",
+        "sizeExchangeHelp": "Off: only the very same piece shows the notice. On: the same product and colour in another size already on its way is a size worry — the notice offers to exchange that parcel when it arrives instead of sending a second one. Taking it out adds a line to the earlier order's timeline for the team."
       }
     },
     "adv": {

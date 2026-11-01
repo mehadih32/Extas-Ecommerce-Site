@@ -517,6 +517,7 @@
 .shop .co-tr-th { width: 64px; flex-shrink: 0; }
 .shop .co-tr-th .pimg-label { display: none; }
 .shop .co-tr-track { display: inline-flex; align-items: center; min-height: 44px; }
+.shop .co-tr-track + .co-tr-track { margin-left: 16px; } /* PR 557: tracking + how exchange works */
 .shop .co-tr-acts { display: flex; gap: 10px; margin-top: 14px; }
 .shop .co-tr-acts .btn { flex: 1 1 0; min-height: 44px; justify-content: center; }
 @media (max-width: 480px) { .shop .co-tr-acts { flex-direction: column; } }

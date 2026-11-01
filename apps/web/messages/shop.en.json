@@ -464,7 +464,14 @@
       "track": "Track order {number}",
       "remove": "No need — take it out",
       "keep": "No, I want another one",
-      "close": "Close"
+      "close": "Close",
+      "sizeTitle": "Not sure about the size?",
+      "sizeOrder": "Size {had} is in order {number}",
+      "sizeText": "Your order {number} with this piece in size {had} is already on its way. If you are not sure about the size, keep that parcel and exchange it for {want} when it arrives — one exchange instead of a second parcel.",
+      "sizeTextAnon": "An order with this piece in another size is already on its way to this number. Not sure about the size? Exchange it for {want} when it arrives — one exchange instead of a second parcel.",
+      "sizeHow": "How exchange works",
+      "sizeRemove": "Exchange on arrival — take this out",
+      "sizeKeep": "No, I want both"
     }
   },
   "notFound": {
