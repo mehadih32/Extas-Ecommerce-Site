@@ -12,6 +12,9 @@
 //   (`assertPackingPhoto`, called by booking.ts).
 // - Packing photos are kept for the owner's days, then archived by the daily sweep (`expirePackingPhotos`); never
 //   deleted.
+// - PR 410 (B1.3): each queue row says which documents its order already has — the sticker (printed how often), the
+//   invoice (issued, and its version after an edit), a picking list it was on, a handover sheet it was on (printed, or
+//   handed over) — read from what was printed and kept, never counted again.
 // Nothing here books, cancels or edits an order, or touches a parcel, its COD or a charge. No customer's details are
 // shown: order numbers, pieces, codes, the courier and the consignment id.
 import { z } from 'zod';
@@ -91,6 +94,17 @@ export interface PackQueueRow {
   openIssues: number;
   photos: number;
   placedAt: string;
+  /** PR 410 (B1.3): the documents the order already has. */
+  docs: PackDocs;
+}
+
+/** PR 410 — an order's documents: sticker prints, its invoice's version (null: none issued), picking lists it was on,
+ * and its handover sheet (none, printed, or handed over). */
+export interface PackDocs {
+  sticker: number;
+  invoice: number | null;
+  picking: number;
+  handover: 'none' | 'printed' | 'handed';
 }
 
 export interface PackQueue {
@@ -101,7 +115,9 @@ export interface PackQueue {
   more: number;
 }
 
-const rowOf = (o: QueueRow, issues: Map<string, number>, photos: Map<string, number>): PackQueueRow => ({
+const NO_DOCS: PackDocs = { sticker: 0, invoice: null, picking: 0, handover: 'none' };
+
+const rowOf = (o: QueueRow, issues: Map<string, number>, photos: Map<string, number>, docs: Map<string, PackDocs> = new Map()): PackQueueRow => ({
   orderId: o.id,
   orderNumber: o.number,
   status: o.status,
@@ -113,7 +129,36 @@ const rowOf = (o: QueueRow, issues: Map<string, number>, photos: Map<string, num
   openIssues: issues.get(o.id) ?? 0,
   photos: photos.get(o.id) ?? 0,
   placedAt: o.placedAt.toISOString(),
+  docs: { ...(docs.get(o.id) ?? NO_DOCS), sticker: o.shipments[0]?.labelPrintCount ?? 0 },
 });
+
+/** PR 410 — the documents each order has, from what was kept: invoices issued, picking lists printed, handover sheets. */
+export async function documentsOf(db: Db, storeId: number, orderIds: string[]): Promise<Map<string, PackDocs>> {
+  const out = new Map<string, PackDocs>();
+  if (!orderIds.length) return out;
+  const [invoices, lists, batches] = await Promise.all([
+    db.generatedDocument.groupBy({ by: ['orderId'], where: { storeId, kind: 'INVOICE', orderId: { in: orderIds } }, _max: { version: true } }),
+    db.printJob.findMany({ where: { storeId, kind: 'PICKING_LIST', orderIds: { hasSome: orderIds } }, select: { orderIds: true } }),
+    db.handoverBatch.findMany({ where: { storeId, orderIds: { hasSome: orderIds } }, select: { orderIds: true, handedOverAt: true, data: true } }),
+  ]);
+  const of = (id: string) => out.get(id) ?? out.set(id, { ...NO_DOCS }).get(id)!;
+  for (const r of invoices) if (r.orderId) of(r.orderId).invoice = r._max.version ?? 1;
+  const wanted = new Set(orderIds);
+  for (const l of lists) for (const id of l.orderIds) if (wanted.has(id)) of(id).picking += 1;
+  for (const b of batches) {
+    // a handed batch keeps the order numbers that went (`handedOver`; an older batch: all its lines); an open one was printed
+    const data = (b.data ?? {}) as { lines?: { orderId: string; orderNumber: string }[]; handedOver?: string[] };
+    const numbers = Array.isArray(data.handedOver) ? new Set(data.handedOver) : null;
+    const went = b.handedOverAt ? new Set((data.lines ?? []).filter((x) => !numbers || numbers.has(x.orderNumber)).map((x) => x.orderId)) : null;
+    for (const id of b.orderIds) {
+      if (!wanted.has(id)) continue;
+      const d = of(id);
+      const state = went ? (went.has(id) ? 'handed' : 'printed') : 'printed';
+      if (state === 'handed' || d.handover === 'none') d.handover = state;
+    }
+  }
+  return out;
+}
 
 async function countsBy(db: Db, storeId: number, orderIds: string[]): Promise<{ issues: Map<string, number>; photos: Map<string, number> }> {
   if (!orderIds.length) return { issues: new Map(), photos: new Map() };
@@ -133,8 +178,9 @@ export async function packingQueue(deps: ShippingDeps, who: Who, query: unknown 
   const [base, cfg] = await Promise.all([queueWhere(deps, who.storeId), setting(deps, who.storeId, 'fulfilment.packing.queue')]);
   const counts = Object.fromEntries(await Promise.all((Object.keys(STEP_WHERE) as PackStep[]).map(async (s) => [s, await deps.db.order.count({ where: { AND: [base, STEP_WHERE[s]] } })] as const))) as Record<PackStep, number>;
   const rows = await deps.db.order.findMany({ where: { AND: [base, STEP_WHERE[q.step]] }, select: QUEUE_SELECT, orderBy: [{ placedAt: 'asc' }, { id: 'asc' }], take: cfg.listMax });
-  const { issues, photos } = await countsBy(deps.db, who.storeId, rows.map((r) => r.id));
-  return { step: q.step, counts, rows: rows.map((r) => rowOf(r, issues, photos)), more: Math.max(0, counts[q.step] - rows.length) };
+  const ids = rows.map((r) => r.id);
+  const [{ issues, photos }, docs] = await Promise.all([countsBy(deps.db, who.storeId, ids), documentsOf(deps.db, who.storeId, ids)]);
+  return { step: q.step, counts, rows: rows.map((r) => rowOf(r, issues, photos, docs)), more: Math.max(0, counts[q.step] - rows.length) };
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

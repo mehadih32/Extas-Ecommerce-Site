@@ -11,7 +11,7 @@ import { createRole, SYSTEM } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { cancelOrder, confirmOrder, holdOrder } from '@extas/orders';
 import { fulfilmentSettings } from '@extas/settings';
-import { addPackingPhoto, bookOrders, checkPiece, expirePackingPhotos, handoverList, markPacked, packingOrder, packingQueue, printStickers, startPicking, startPickingAll, waivePackingPhoto } from './index';
+import { addPackingPhoto, bookOrders, checkPiece, documentsOf, expirePackingPhotos, handoverList, markPacked, packingOrder, packingQueue, printStickers, startPicking, startPickingAll, waivePackingPhoto } from './index';
 import { setUpShipping, type ShippingFixture } from './testing';
 import type { Who } from './context';
 
@@ -233,5 +233,29 @@ describe.skipIf(!HAS_TEST_DB)('PR 182 · the packing step (PostgreSQL)', () => {
     expect(await parcel()).toMatchObject({ problem: null });
     expect(await packingOrder(d(), packer, o.orderId)).toMatchObject({ step: 'ready', parcel: { shipmentId: s.id, courierName: 'Steadfast main', printCount: 1 } });
     expect((await packingQueue(d(), packer, { step: 'ready' })).rows.find((r) => r.orderId === o.orderId)).toMatchObject({ courierName: 'Steadfast main', consignmentId: s.consignmentId });
+  });
+
+  it('PR 410 (B1.3): each order\'s documents — sticker prints, the invoice\'s version, picking lists, its handover sheet printed or handed', async () => {
+    const a = await confirmed('docs-a');
+    const b = await confirmed('docs-b');
+    const c = await confirmed('docs-c');
+    const p = db();
+    await p.generatedDocument.create({ data: { storeId: f.S, kind: 'INVOICE', orderId: a.orderId, format: 'pdf', version: 1, number: 'INV-A' } });
+    await p.generatedDocument.create({ data: { storeId: f.S, kind: 'INVOICE', orderId: a.orderId, format: 'pdf', version: 2, number: 'INV-A' } });
+    await p.printJob.create({ data: { storeId: f.S, kind: 'PICKING_LIST', orderIds: [a.orderId, b.orderId], status: 'SUCCEEDED' } });
+    await p.printJob.create({ data: { storeId: f.S, kind: 'PICKING_LIST', orderIds: [a.orderId], status: 'SUCCEEDED' } });
+    const lines = [a, b].map((o) => ({ orderId: o.orderId, orderNumber: o.number, shipmentId: o.orderId, consignmentId: 'x', receiverName: null, collectMinor: 0, pieces: 1 }));
+    // a handed batch where only a went (b was left out), and an open batch with c
+    await p.handoverBatch.create({ data: { storeId: f.S, courierAccountId: courierId, orderIds: [a.orderId, b.orderId], handedOverAt: f.clock.now, data: { lines, handedOver: [a.number] } } });
+    await p.handoverBatch.create({ data: { storeId: f.S, courierAccountId: courierId, orderIds: [c.orderId], data: { lines: [] } } });
+    const docs = await documentsOf(p, f.S, [a.orderId, b.orderId, c.orderId]);
+    expect(docs.get(a.orderId)).toEqual({ sticker: 0, invoice: 2, picking: 2, handover: 'handed' });
+    expect(docs.get(b.orderId)).toEqual({ sticker: 0, invoice: null, picking: 1, handover: 'printed' });
+    expect(docs.get(c.orderId)).toEqual({ sticker: 0, invoice: null, picking: 0, handover: 'printed' });
+    expect((await documentsOf(p, f.S, [])).size).toBe(0);
+    // the queue carries them (the sticker count from the parcel)
+    const q = await packingQueue(d(), f.staff, { step: 'pick' });
+    expect(q.rows.find((r) => r.orderId === a.orderId)!.docs).toEqual({ sticker: 0, invoice: 2, picking: 2, handover: 'handed' });
+    expect(q.rows.find((r) => r.orderId === c.orderId)!.docs.handover).toBe('printed');
   });
 });
