@@ -7774,8 +7774,15 @@ model JourneyEnrollment {
   exitedAt    DateTime? @db.Timestamptz(3)
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 289 — what started it (the delivered order, the last order before the quiet spell, `joined`): one journey per
+  /// person per start, so a run that sees the same start again never enrols him twice.
+  triggerRef  String    @default("")
+  /// PR 289 — why it ended before the last step (NOT_MATCHED, ORDERED, NO_CONTACT, STOPPED, ERASED).
+  reason      String?
 
+  @@unique([journeyId, customerId, triggerRef])
   @@index([status, nextRunAt])
+  @@index([storeId, customerId])
 }
 
 /// @stage S14 · PR 296 — a rewards rule the owner sets.

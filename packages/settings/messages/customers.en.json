@@ -26,6 +26,10 @@
     "journey": {
       "label": "Customer journey view",
       "help": "The Journey tab on a customer's page: every touch of that person in order, newest first — each profile and where it came from, his visits to the site (grouped by browsing session), touches like an ad click or a chat start, every order with its channel and campaign and how it ended, exchanges, messages sent to him, support conversations, reviews, wallet credits and debits (only for those who may see money), consent changes, merges and staff notes. \"How he first came\" is the earliest touch with a source or a campaign. Off (as shipped): the tab says it is off. \"Kinds\": which touches are listed. \"Per page\": rows before \"Older\". Nothing new is stored and no phone number is shown in a row."
+    },
+    "journeys": {
+      "label": "Automations (customer journeys)",
+      "help": "Journeys that start on a trigger (days after a delivered order: the product-life reminder; days without an order; days after joining), then wait, check and send a message. Off as shipped; each message needs the customer's yes for offers."
     }
   }
 }

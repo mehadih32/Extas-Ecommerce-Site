@@ -20,6 +20,9 @@
 // template's words with their preview on the sample order in both languages, where each is used, the missing languages,
 // a default put back, and the auto-reply to a customer who writes on WhatsApp (off).
 //
+// PR 289: a customer journey's message (step `crmJourney`, queued by @extas/customers' automations) is sent here too:
+// an offer each time (his yes for offers, the quiet hours, the weekly cap per person, the stop line).
+//
 // `./pure` holds the rules without a database (tests, the admin screen's preview).
 import { setting, type MessagesDeps } from './context';
 import { planMessages, sendDue, type PlanResult, type SendRunResult } from './engine';

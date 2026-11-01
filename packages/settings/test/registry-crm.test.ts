@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
+import { CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
 
 describe('CRM settings (v190–199)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -36,5 +36,15 @@ describe('CRM settings (v190–199)', () => {
     expect(journeySettingsSchema.safeParse({ ...s.default, kinds: ['order', 'order'] }).success).toBe(false);
     expect(journeySettingsSchema.safeParse({ ...s.default, kinds: ['gps'] }).success).toBe(false);
   });
-});
 
+  it('PR 289: automations are off as shipped (v192), with limits and a stop line in both languages', () => {
+    const s = crmSettings['customers.journeys'];
+    expect(s.version).toBe(192);
+    expect(s.default.enabled).toBe(false);
+    expect(s.default.stopLine.bn).toBeTruthy();
+    expect(s.default.stopLine.en).toBeTruthy();
+    expect(journeysSettingsSchema.safeParse({ ...s.default, perCustomerPerWeek: 0 }).success).toBe(false);
+    expect(journeysSettingsSchema.safeParse({ ...s.default, stopLine: { bn: 'x'.repeat(121), en: '' } }).success).toBe(false);
+    expect(CRM_MESSAGE_STEP).toBe('crmJourney');
+  });
+});

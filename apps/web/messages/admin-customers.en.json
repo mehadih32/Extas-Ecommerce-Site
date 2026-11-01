@@ -496,6 +496,115 @@
           "merge": "Merges and splits",
           "note": "Staff notes"
         }
+      },
+      "automations": {
+        "title": "Automation settings",
+        "sub": "Off as shipped. Every journey is also saved off.",
+        "enabled": "Automations on",
+        "perCustomerPerWeek": "Most journey messages to one person in 7 days",
+        "catchUpDays": "Days back a start may reach when a journey is turned on",
+        "maxJourneys": "Most journeys kept",
+        "maxSteps": "Most steps in one journey",
+        "batchSize": "Most people moved in one run",
+        "stopLine": {
+          "bn": "Stop line (Bengali)",
+          "en": "Stop line (English)"
+        }
+      }
+    },
+    "auto": {
+      "title": "Automations",
+      "sub": "Customer journeys that run by themselves: a reminder when a product is likely used up, a win-back after a quiet spell, a welcome. Each one is off until you turn it on.",
+      "new": "New journey",
+      "own": "Journeys",
+      "offerNote": "Every journey message is an offer: it goes only to customers who said yes to offers on that channel, never in the quiet hours, and at most the weekly limit per person. The stop line is added.",
+      "offTitle": "Automations are off",
+      "offBody": "Turn them on under \"More options\" below (Automation settings). Nothing is sent until you also turn a journey on.",
+      "offAsk": "Automations are off. Someone with the right to build them can turn them on.",
+      "noneYet": "No journey yet. Press \"New journey\".",
+      "noneYetRead": "No journey yet.",
+      "ofMost": "{n} of at most {max} journeys",
+      "more": "More options (settings, archived: {n})",
+      "archived": "Archived journeys",
+      "noArchived": "Nothing archived.",
+      "restore": "Restore",
+      "on": "On",
+      "offWord": "Off",
+      "sent": "{n} sent",
+      "unreadable": "This journey cannot be read; open it and save it again.",
+      "stepsLine": "{steps} steps, {sends} messages",
+      "peopleLine": "{active} on the way, {done} finished, {exited} left",
+      "when": {
+        "delivered": "{n} days after delivery",
+        "noOrder": "after {n} days without an order",
+        "joined": "{n} days after joining"
+      },
+      "trigger": {
+        "delivered": "Days after a delivered order",
+        "noOrder": "Days without an order",
+        "joined": "Days after joining"
+      },
+      "triggerHelp": {
+        "delivered": "The product-life reminder: each delivered order starts it once, the chosen number of days after delivery.",
+        "noOrder": "The win-back: a customer whose last order is this many days old starts it once for that quiet spell.",
+        "joined": "The welcome: a new profile starts it once, this many days after it was made."
+      },
+      "kind": {
+        "wait": "Wait",
+        "check": "Check he still fits",
+        "send": "Send a message"
+      },
+      "add": {
+        "wait": "+ Wait",
+        "check": "+ Check",
+        "send": "+ Message"
+      },
+      "channel": {
+        "SMS": "SMS",
+        "WHATSAPP": "WhatsApp",
+        "EMAIL": "E-mail"
+      },
+      "turnOn": "Turn on",
+      "turnOff": "Turn off",
+      "onAsk": "Turn this journey on?",
+      "onEff1": "Customers who fit the start from now on (and from the last few days) join it.",
+      "onEff2": "Its messages go only to those who said yes to offers.",
+      "onYes": "Turn on",
+      "archive": "Archive",
+      "archiveAsk": "Archive this journey?",
+      "archiveEff1": "It goes off and everyone on it stops. Nothing is deleted.",
+      "archiveEff2": "You can restore it from \"More options\".",
+      "archiveYes": "Archive",
+      "b": {
+        "title": "Journey",
+        "newTitle": "New journey",
+        "sub": "What starts it, then each step in order.",
+        "name": "Name",
+        "namePh": "e.g. Polo reminder after 60 days",
+        "when": "What starts it",
+        "days": "Days",
+        "daysAfter": "days",
+        "daysWord": "days",
+        "category": "Category",
+        "anyCategory": "Any category",
+        "steps": "Steps, in order",
+        "kind": "Step",
+        "channel": "Channel",
+        "template": "Template",
+        "pickTemplate": "Pick a template",
+        "noTemplates": "No template on this channel yet (Messages › Templates)",
+        "up": "Move up",
+        "down": "Move down",
+        "remove": "Remove",
+        "most": "At most {n} steps.",
+        "exitOnOrder": "Leave the journey when he places a new order",
+        "offerNote": "Every message here is an offer: it needs the customer's yes for offers on that channel.",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved.",
+        "readOnly": "You can see this journey; changing it needs the right to build automations.",
+        "stepN": "step {n}",
+        "archivedNote": "This journey is archived. Restore it from the Automations page under \"More options\"."
       }
     }
   }

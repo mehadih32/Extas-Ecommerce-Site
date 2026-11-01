@@ -81,7 +81,8 @@
         "log": "Message log",
         "channels": "Channels & limits",
         "journey": "Order journey",
-        "templates": "Templates"
+        "templates": "Templates",
+        "automations": "Automations"
       },
       "website": {
         "seo": "SEO"

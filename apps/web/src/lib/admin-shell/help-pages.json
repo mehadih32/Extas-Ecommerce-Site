@@ -49,6 +49,8 @@
     { "id": "messages/channels", "route": "/admin/messages/channels" },
     { "id": "messages/consent", "route": "/admin/messages/consent" },
     { "id": "messages/journey", "route": "/admin/messages/journey" },
+    { "id": "messages/automations", "route": "/admin/messages/automations" },
+    { "id": "messages/automation", "route": "/admin/messages/automations/[id]" },
     { "id": "messages/templates", "route": "/admin/messages/templates" },
     { "id": "marketing/rules", "route": "/admin/rules" },
     { "id": "marketing/notices", "route": "/admin/rules/notices" },

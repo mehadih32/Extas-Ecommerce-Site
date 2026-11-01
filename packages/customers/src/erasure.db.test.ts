@@ -80,6 +80,10 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('erasure requests on Postg
     const onOrder = await voice(a1.id, moving, 'visitor-e382');
     const left = await voice(a2.id, null, 'visitor-e382');
     const someoneElse = await voice(a3.id, null, 'visitor-other');
+    // PR 289: he is on an automation with a message waiting to go
+    const j = await f.t.prisma.journey.create({ data: { storeId: f.S, name: 'Life', trigger: {}, steps: {}, enabled: true } });
+    await f.t.prisma.journeyEnrollment.create({ data: { storeId: f.S, journeyId: j.id, customerId: b, status: 'ACTIVE', triggerRef: 'x' } });
+    await f.t.prisma.notificationLog.create({ data: { storeId: f.S, customerId: a, channel: 'SMS', recipient: '+8801700003821', status: 'QUEUED', dedupeKey: 'crm:e382', step: 'crmJourney' } });
 
     const done = await carryOutErasure(d, owner, { requestId: r.id, confirm: ` ${WORD} `, expected: WORD });
     expect(done).toMatchObject({ profiles: 2, orders: 4, addresses: 1, voices: 2, request: { status: 'DONE' } });
@@ -97,6 +101,8 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('erasure requests on Postg
     expect(await p.customerAddress.findFirstOrThrow({ where: { customerId: b } })).toMatchObject({ name: '', phone: '', addressLine: '', archivedAt: expect.any(Date) });
     expect((await p.customerCredential.findUniqueOrThrow({ where: { customerId: a } })).passwordHash).toBe('!erased');
     expect(await p.auditLog.count({ where: { action: 'customer.erasure.done' } })).toBe(1);
+    expect(await p.journeyEnrollment.findFirstOrThrow({ where: { customerId: b } })).toMatchObject({ status: 'EXITED', reason: 'ERASED' });
+    expect(await p.notificationLog.findFirstOrThrow({ where: { dedupeKey: 'crm:e382' } })).toMatchObject({ status: 'SKIPPED', reason: 'ERASED', recipient: '' });
     await expect(carryOutErasure(d, owner, { requestId: r.id, confirm: WORD, expected: WORD })).rejects.toMatchObject({ code: 'NOT_WAITING' });
     await expect(requestErasure(d, f.manager, { customerId: a, reason: 'again' })).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });

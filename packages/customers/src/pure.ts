@@ -115,3 +115,4 @@ export const PHONE_SEARCH_MIN_DIGITS = 4;
 export * from './segment-rules';
 // PR 288 — the journey view's kinds of touch.
 export * from './journey-kinds';
+export * from './journey-rules';

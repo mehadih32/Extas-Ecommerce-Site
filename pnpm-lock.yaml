@@ -718,6 +718,9 @@ importers:
       '@extas/cache':
         specifier: workspace:*
         version: link:../cache
+      '@extas/customers':
+        specifier: workspace:*
+        version: link:../customers
       '@extas/db':
         specifier: workspace:*
         version: link:../db

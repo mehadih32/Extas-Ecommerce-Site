@@ -81,7 +81,8 @@
         "log": "মেসেজ লগ",
         "channels": "চ্যানেল আর সীমা",
         "journey": "অর্ডারের মেসেজ",
-        "templates": "টেমপ্লেট"
+        "templates": "টেমপ্লেট",
+        "automations": "অটো মেসেজ"
       },
       "website": {
         "seo": "SEO"

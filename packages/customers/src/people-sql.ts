@@ -8,11 +8,13 @@ import { PHONE_SEARCH_MIN_DIGITS, type CustomerView } from './pure';
  * The list's people as one SQL `WITH … base AS (…)`: one row `b` per person (the profile he stays under, never a merged
  * or erased or archived one) with his figures — orders, ordered_value, delivered, sales_value, refused (not the shop's
  * fault), exchanges, last_at, members — and the CTE `own (k, id)`, his orders, for conditions that look inside them
- * (PR 287's segments). `filter` is extra SQL on the profile `r`.
+ * (PR 287's segments). `filter` is extra SQL on the profile `r`; `only` (PR 289) narrows everything to these people
+ * (their survivor ids), so one person's figures are read without the whole store's.
  */
-export function peopleBaseSql(S: number, ourFault: readonly string[], filter: Prisma.Sql = Prisma.empty): Prisma.Sql {
+export function peopleBaseSql(S: number, ourFault: readonly string[], filter: Prisma.Sql = Prisma.empty, only: readonly string[] | null = null): Prisma.Sql {
+  const narrow = only ? Prisma.sql`AND COALESCE(c."mergedIntoId", c."id") = ANY(${[...only]}::uuid[])` : Prisma.empty;
   // every live profile under the person it belongs to (a merged profile under its survivor); orders carry E.164
-  const people = Prisma.sql`SELECT COALESCE(c."mergedIntoId", c."id")::text AS k, c."id" AS cid, c."phone" AS phone FROM "Customer" c WHERE c."storeId" = ${S} AND c."erasedAt" IS NULL`;
+  const people = Prisma.sql`SELECT COALESCE(c."mergedIntoId", c."id")::text AS k, c."id" AS cid, c."phone" AS phone FROM "Customer" c WHERE c."storeId" = ${S} AND c."erasedAt" IS NULL ${narrow}`;
   const refusal = Prisma.sql`COALESCE(
       (SELECT e."reasonCode" FROM "OrderEvent" e WHERE e."storeId" = ${S} AND e."orderId" = o."id" AND e."type" = 'order.returned' AND e."reasonCode" IS NOT NULL ORDER BY e."createdAt" DESC, e."id" DESC LIMIT 1),
       (SELECT r."reasonCode" FROM "ReturnRecord" r WHERE r."storeId" = ${S} AND r."orderId" = o."id" AND r."kind"::text = 'REFUSED_AT_DOOR' AND r."reasonCode" IS NOT NULL ORDER BY r."createdAt" DESC LIMIT 1),
@@ -40,6 +42,7 @@ export function peopleBaseSql(S: number, ourFault: readonly string[], filter: Pr
       LEFT JOIN cnt ON cnt.k = r."id"::text
       LEFT JOIN mem ON mem.k = r."id"::text
       WHERE r."storeId" = ${S} AND r."mergedIntoId" IS NULL AND r."erasedAt" IS NULL AND r."archivedAt" IS NULL
+        ${only ? Prisma.sql`AND r."id" = ANY(${[...only]}::uuid[])` : Prisma.empty}
         ${filter}
     )`;
 }

@@ -3,15 +3,17 @@
 // a switch per yes/no field, a box per number, ticks per list of choices — and Save (PUT /api/admin/customers/settings
 // with the whole value; the service checks it against the setting's schema and audits it). Words come from the page's
 // dictionary: `cus.set.<card>.<field>` and, for a choice, `cus.set.<card>.opt.<value>`. Without `customers.settings` the
-// card shows the values only.
+// card shows the values only. PR 289: `url` sends the whole value to another page's own settings route (Messages ›
+// Automations), and a `lang` field is one line of words in each language ({bn, en}).
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
 
-export type CrmField = { name: string; kind: 'bool' } | { name: string; kind: 'int' } | { name: string; kind: 'multi'; options: readonly string[] };
+export type CrmField = { name: string; kind: 'bool' } | { name: string; kind: 'int' } | { name: string; kind: 'multi'; options: readonly string[] } | { name: string; kind: 'lang'; max: number };
+const LANGS = ['bn', 'en'] as const;
 
-export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWrite }: { dict: Dict; settingKey: string; card: string; fields: readonly CrmField[]; value: Record<string, unknown>; canWrite: boolean }) {
+export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWrite, url }: { dict: Dict; settingKey: string; card: string; fields: readonly CrmField[]; value: Record<string, unknown>; canWrite: boolean; url?: string }) {
   const router = useRouter();
   const uid = useId();
   const [v, setV] = useState<Record<string, unknown>>(() => Object.fromEntries(fields.map((f) => [f.name, f.kind === 'int' ? String(value[f.name] ?? '') : value[f.name]])));
@@ -29,7 +31,7 @@ export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWr
     setBusy(true);
     setMsg(null);
     try {
-      const res = await fetch('/api/admin/customers/settings', { method: 'PUT', credentials: 'same-origin', cache: 'no-store', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key: settingKey, value: next }) });
+      const res = await fetch(url ?? '/api/admin/customers/settings', { method: 'PUT', credentials: 'same-origin', cache: 'no-store', headers: { 'content-type': 'application/json' }, body: JSON.stringify(url ? next : { key: settingKey, value: next }) });
       const data = (await res.json().catch(() => ({ ok: false }))) as { ok?: boolean; error?: string; details?: string[] };
       if (!data.ok) {
         setMsg({ ok: false, text: cusError(d, data.error, (data.details ?? []).join(', ')) });
@@ -55,6 +57,20 @@ export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWr
               <input type="checkbox" checked={!!v[f.name]} disabled={!canWrite} onChange={(e) => setV({ ...v, [f.name]: e.target.checked })} data-testid={`crm-${card}-${f.name}`} />
               <span>{label(f.name)}</span>
             </label>
+          ) : f.kind === 'lang' ? (
+            <span key={f.name} className="a2-stack" style={{ gap: 4 }}>
+              {LANGS.map((l) => {
+                const cur = (v[f.name] as Record<string, string> | undefined) ?? {};
+                return (
+                  <span key={l} className="a2-stack" style={{ gap: 4 }}>
+                    <label className="a2-xs a2-mute" htmlFor={`${uid}-${f.name}-${l}`}>
+                      {label(`${f.name}.${l}`)}
+                    </label>
+                    <input id={`${uid}-${f.name}-${l}`} className="a2-inp" maxLength={f.max} value={cur[l] ?? ''} disabled={!canWrite} onChange={(e) => setV({ ...v, [f.name]: { ...cur, [l]: e.target.value } })} />
+                  </span>
+                );
+              })}
+            </span>
           ) : f.kind === 'int' ? (
             <span key={f.name} className="a2-stack" style={{ gap: 4 }}>
               <label className="a2-xs a2-mute" htmlFor={`${uid}-${f.name}`}>

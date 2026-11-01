@@ -9,6 +9,7 @@ import { setUpCustomers, type CustomersFixture } from '@extas/customers/testing'
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
+import { automationsRoute } from './automations-api';
 import { customersRoute } from './customers-api';
 
 const HOST = 'admin.example.test';
@@ -160,5 +161,29 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect(j.body.journey.rows.some((r: { kind: string }) => r.kind === 'profile')).toBe(true);
     expect((await api('POST', 'settings', { body: {} })).status).toBe(405);
   });
-});
 
+  it('PR 289: Messages › Automations — off until its settings turn it on; a journey saved off, switched on, archived', async () => {
+    const auto = async (method: string, path: string, opts: { body?: unknown; cookie?: string } = {}) => {
+      const parts = path.split('/').filter(Boolean);
+      const res = await automationsRoute(call(method, `/api/admin/messages/automations/${parts.join('/')}`, { ...opts, cookie: opts.cookie ?? owner }), deps, parts);
+      return { status: res.status, body: (await res.json()) as Record<string, any> };
+    };
+    expect((await auto('GET', '', { cookie: reader })).status).toBe(403); // no messages.journey.read
+    expect((await auto('GET', '')).body).toMatchObject({ ok: true, screen: { enabled: false, canWrite: true, journeys: [] } });
+    await f.t.prisma.notificationTemplate.create({ data: { storeId: f.S, key: 'crm.api289', name: 'Reminder', channel: 'SMS', locale: 'en', body: 'Time for a new polo, {customerName}?' } });
+    const journey = { name: 'Reminder', trigger: { type: 'delivered', days: 60, category: null }, plan: { v: 1, exitOnOrder: true, steps: [{ kind: 'send', channel: 'SMS', template: 'crm.api289' }] } };
+    expect((await auto('POST', '', { body: journey })).body).toMatchObject({ ok: false, error: 'SWITCHED_OFF' });
+    expect((await auto('PUT', 'settings', { body: { enabled: true, perCustomerPerWeek: 0 } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    expect((await auto('PUT', 'settings', { body: { enabled: true } })).body).toMatchObject({ ok: true, screen: { enabled: true } });
+    const made = await auto('POST', '', { body: journey });
+    expect(made.status).toBe(201);
+    const id = made.body.editor.journey.id as string;
+    expect(made.body.editor.journey).toMatchObject({ enabled: false, name: 'Reminder' });
+    expect((await auto('GET', id)).body.editor.templates).toContainEqual({ key: 'crm.api289', channel: 'SMS' });
+    expect((await auto('POST', `${id}/switch`, { body: { enabled: true } })).body).toMatchObject({ ok: true, editor: { journey: { enabled: true } } });
+    expect((await auto('POST', `${id}/archive`, { body: { archived: true } })).body).toMatchObject({ ok: true, result: { archived: true } });
+    expect((await auto('GET', '')).body.screen.archived).toHaveLength(1);
+    expect((await auto('GET', '00000000-0000-7000-8000-000000000000')).status).toBe(404);
+    expect((await auto('DELETE', id)).status).toBe(405);
+  });
+});

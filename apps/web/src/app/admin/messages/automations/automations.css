@@ -1,0 +1,19 @@
+/* S14 · PR 289 — Messages › Automations and a journey's builder: the trigger line and the numbered steps (kind, its
+   fields, move and remove) wrap under themselves on a phone; the shell's tokens only. */
+.adm2 details.a2-more-opts>summary{cursor:pointer;color:var(--ink2);list-style-position:inside;padding:12px 0;line-height:20px}
+.adm2 .auto-line{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.adm2 .auto-line .a2-inp{width:90px}
+.adm2 .auto-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.adm2 .auto-step{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px;border:1px solid var(--ln2);border-radius:10px}
+.adm2 .auto-step .a2-inp{width:110px}
+.adm2 .auto-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--bg2);font-weight:650}
+.adm2 .auto-tools{display:inline-flex;gap:4px;margin-left:auto}
+.adm2 .auto-tools .a2-icb{min-width:44px;min-height:44px}
+.adm2 [data-testid=auto-builder] .a2-ckb,.adm2 [data-testid=crm-card-automations] .a2-ckb{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.adm2 .auto-list .a2-prow{min-height:44px}
+.adm2 .auto-list .a2-prs{margin-left:auto;font-weight:650;white-space:nowrap}
+@media (max-width:767px){
+  .adm2 .a2-crumb a{display:inline-flex;align-items:center;min-height:44px}
+  .adm2 .auto-step .a2-sel{flex:1 1 100%}
+  .adm2 .auto-step .a2-inp{flex:1 1 auto}
+}
