@@ -1917,4 +1917,69 @@ for f in smoke journeys vitals-lab; do
 done
 rm -rf "$T"
 
+# PR 414 follow-up (CN-013 phase 2, the owner's OK of 1 Nov 2026): gate-orders.sh places test orders only on the
+# preview host of server.conf (never one the shop sells on), gives the oracle the database address, a random token and
+# the run id in a root-only file gone afterwards, keeps the browser off the database network, and runs the clean-up
+# itself when the browser run ended without one. Docker is a stand-in.
+T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/root/config/secrets" "$T/root/state"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nDATABASE_URL=postgresql://pooled\nVAULT_MASTER_KEY=vk\n' > "$T/root/config/secrets/app.env"
+printf 'STAGING_PASSWORD=stpw\n' > "$T/root/config/secrets/staging.env"
+echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
+cat > "$T/bin/docker" <<'STUB'
+#!/usr/bin/env bash
+echo "docker $*" >> "$FAKE_LOG"
+[ "$1" = run ] || exit 0
+mnt=""; envf=""; prev=""
+for a in "$@"; do
+  [ "$prev" = -v ] && case "$a" in *:/out) mnt="${a%:/out}" ;; esac
+  [ "$prev" = --env-file ] && envf="$a"
+  prev="$a"
+done
+case "$*" in
+  *"test -x"*) exit 0 ;;
+  *"--serve"*) cp "$envf" "$T_DIR/oracle.env"; exit 0 ;;
+  *"--cleanup"*) echo '{"ok":true,"cancelled":2,"productsArchived":3}' > "$mnt/cleanup.json"; exit 0 ;;
+  *shop.mjs*)
+    cp "$envf" "$T_DIR/shop.env"
+    [ "$FAKE_SHOP" = crash ] && exit 3
+    printf '{"kind":"gate-orders","at":"x","ok":true,"scenarios":18,"passed":16,"failed":0,"skipped":2,"orders":30,"started":true,"cleanup":{"ok":%s}}\n' "$FAKE_CLEAN" > "$mnt/result.json"
+    echo "# Go-live gate" > "$mnt/README.md"; exit 0 ;;
+esac
+exit 0
+STUB
+chmod +x "$T/bin/docker"
+go() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" GATE_IMAGE_UID="$(id -u)" FAKE_LOG="$T/docker.log" T_DIR="$T" "$@"; }
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_STAGING_HOST=""\n' "$T/root"; } > "$T/conf-none"
+rc=0; go EXTAS_CONFIG_FILE="$T/conf-none" bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: no preview host in server.conf is refused before docker" "$rc:$(cat "$T/docker.log" 2>/dev/null | wc -l | tr -d ' ')" "2:0"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_EXTRA_HOSTS="www.example.test NEW.extas.com.bd"\n' "$T/root"; } > "$T/conf-live"
+rc=0; go EXTAS_CONFIG_FILE="$T/conf-live" bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: a preview host the shop sells on is refused" "$rc:$(cat "$T/docker.log" 2>/dev/null | wc -l | tr -d ' ')" "2:0"
+rc=0; go bash ../deploy/gate-orders.sh "$T/out" '1;rm -rf /' >/dev/null 2>&1 || rc=$?
+check "gate orders: only scenario numbers are taken" "$rc" "2"
+rc=0; go FAKE_CLEAN=true bash ../deploy/gate-orders.sh "$T/out" 1,5 >/dev/null 2>&1 || rc=$?
+check "gate orders: a finished run exits 0 and records it" "$rc:$(jq -c '{exit,ok,orders,cleanup}' "$T/root/state/gate-orders.json")" '0:{"exit":0,"ok":true,"orders":30,"cleanup":true}'
+check "gate orders: the oracle gets the direct database address, a token and the run id, nothing else" \
+  "$(cut -d= -f1 "$T/oracle.env" | sort | tr '\n' ' '):$(grep -c '^DATABASE_URL=postgresql://u:dbpw@h/d$' "$T/oracle.env")" "DATABASE_URL GATE_ORACLE_TOKEN GATE_RUN_ID :1"
+check "gate orders: the browser gets the token and the preview login, no database address" \
+  "$(cut -d= -f1 "$T/shop.env" | sort | tr '\n' ' '):$(grep -c 'DATABASE' "$T/shop.env")" "GATE_ORACLE_TOKEN SMOKE_HTTP_PASSWORD SMOKE_HTTP_USER :0"
+check "gate orders: the browser is on the run's own network only, on https of the preview host" \
+  "$(grep 'shop.mjs' "$T/docker.log" | grep -c -e '--network extas ' -e 'db\.env'):$(grep 'shop.mjs' "$T/docker.log" | grep -c -e '--network extas-gate-[0-9]* .*BASE=https://new.extas.com.bd ')" "0:1"
+check "gate orders: the live version's migrate image runs the oracle; no clean-up run after a finished run" \
+  "$(grep -c 'extas-migrate:aaa /repo/packages/jobs/node_modules/.bin/tsx oracle.ts --serve' "$T/docker.log"):$(grep -c -e '--cleanup' "$T/docker.log")" "1:0"
+check "gate orders: the secrets file is gone, the oracle and its network removed" \
+  "$(find "$T/root/config/secrets" -name '.gate-orders.*' | wc -l | tr -d ' '):$(grep -c -e 'rm -f extas-gate-oracle-' -e 'network rm extas-gate-' "$T/docker.log")" "0:2"
+: > "$T/docker.log"
+rc=0; go FAKE_CLEAN=false bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: a run without its full clean-up gets the server's clean-up and fails" \
+  "$rc:$(grep -c -e '--cleanup --out /out/cleanup.json' "$T/docker.log"):$(jq -c '[.ok, .cleanup.cancelled]' "$T/out/result.json"):$(grep -c '## Safety net' "$T/out/README.md")" "1:1:[false,2]:1"
+rc=0; go FAKE_SHOP=crash bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: a browser run that crashed still leaves a report and the clean-up" \
+  "$rc:$(jq -c '[.ok, .cleanup.ok]' "$T/out/result.json"):$(jq -r '.exit' "$T/root/state/gate-orders.json"):$(grep -c 'without a report (exit 3)' "$T/out/README.md")" "1:[false,true]:1:1"
+check "workflows: gate-orders is by hand only, on the VM, in its own lane" \
+  "$(grep -c '^  workflow_dispatch:' ../../.github/workflows/gate-orders.yml):$(grep -cE '^\s+(schedule|push|pull_request):' ../../.github/workflows/gate-orders.yml):$(grep -c 'runs-on: \[self-hosted, extas-vm\]' ../../.github/workflows/gate-orders.yml):$(grep -c 'group: extas-gate-orders' ../../.github/workflows/gate-orders.yml)" "1:0:1:1"
+check "workflows: gate-orders holds no secret" "$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/gate-orders.yml)" "0"
+rm -rf "$T"
+
 exit $fail
