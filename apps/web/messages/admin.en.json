@@ -468,6 +468,15 @@
         "baseUrl": "Address — only for a test server"
       }
     },
+    "tiktokAds": {
+      "name": "TikTok Business API (TikTok ad account, read only)",
+      "desc": "Reads the advertiser account, its campaigns and ad groups for Marketing › Ad platforms. Read only: it never pauses a campaign or changes a budget. A practice account until the token is in and the test (reading the advertiser) passes: nothing is read or saved before that.",
+      "fields": {
+        "accessToken": "Long-term access token of your TikTok for Business app with Ad Account Management read (TikTok API for Business → My apps → the app → advertiser authorisation)",
+        "advertiserId": "Advertiser ID (TikTok Ads Manager → the number under the account name), like 7012345678901234567",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
     "googleAnalytics": {
       "name": "Google Analytics 4 (Measurement Protocol)",
       "desc": "Sends the shop's events from the server to Google Analytics, which Google Ads can import, for Marketing › Tracking. Mock until the key is in and the test passes.",

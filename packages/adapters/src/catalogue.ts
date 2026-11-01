@@ -346,6 +346,18 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S13 · PR 260: TikTok's Business API, read only (the advertiser, its campaigns and ad groups for Marketing › Ad
+  // platforms); the mock is a practice account until the token is in and the test (reading the advertiser) passes.
+  {
+    id: 'tiktokAds',
+    kind: 'TIKTOK',
+    provider: 'tiktokAds',
+    adapter: true,
+    secrets: [{ field: 'accessToken' }],
+    config: [{ field: 'advertiserId' }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   {
     id: 'googleAnalytics',
     kind: 'GOOGLE',
