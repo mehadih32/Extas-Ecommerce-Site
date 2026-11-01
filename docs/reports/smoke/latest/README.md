@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-01 16:32 (Asia/Dhaka)
+# Smoke test · 2026-11-01 18:56 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (310টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (314টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `3843bb63837b` · after deploy · result **PASS** (310 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `ebef0ceda3b8` · after deploy · result **PASS** (314 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -40,6 +40,8 @@ Site: https://new.extas.com.bd · commit `3843bb63837b` · after deploy · resul
 | `/account` | phone | 200 | `/account` | ok | [picture](account-phone.jpg) |
 | `/bn/account` | phone | 200 | `/bn/account` | ok | [picture](bn-account-phone.jpg) |
 | `/account/profile` | phone | 200 | `/account/profile` | ok | [picture](account-profile-phone.jpg) |
+| `/account/wallet` | phone | 200 | `/account/wallet` | ok | [picture](account-wallet-phone.jpg) |
+| `/bn/account/wallet` | phone | 200 | `/bn/account/wallet` | ok | [picture](bn-account-wallet-phone.jpg) |
 | `/account/orders/0` | phone | 200 | `/account/orders/0` | ok | [picture](account-orders-0-phone.jpg) |
 | `/bn/account/orders/0` | phone | 200 | `/bn/account/orders/0` | ok | [picture](bn-account-orders-0-phone.jpg) |
 | `/combos` | phone | 200 | `/combos` | ok | [picture](combos-phone.jpg) |
@@ -158,7 +160,7 @@ Site: https://new.extas.com.bd · commit `3843bb63837b` · after deploy · resul
 | `/admin/support/rider-issues` | phone | 200 | `/admin/support/rider-issues` | ok | — |
 | `/admin/rules/eid` | phone | 200 | `/admin/rules/eid` | ok | — |
 | `/admin/delivery/settings` | phone | 200 | `/admin/delivery/settings` | ok | — |
-| `/admin/reports/health/history/01a1957d-01fc-76c2-bdac-d45f59bcd9db` | phone | 200 | `/admin/reports/health/history/01a1957d-01fc-76c2-bdac-d45f59bcd9db` | ok | — |
+| `/admin/reports/health/history/01a196af-7e96-7993-93e9-90094eab131f` | phone | 200 | `/admin/reports/health/history/01a196af-7e96-7993-93e9-90094eab131f` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -195,6 +197,8 @@ Site: https://new.extas.com.bd · commit `3843bb63837b` · after deploy · resul
 | `/account` | desktop | 200 | `/account` | ok | [picture](account-desktop.jpg) |
 | `/bn/account` | desktop | 200 | `/bn/account` | ok | [picture](bn-account-desktop.jpg) |
 | `/account/profile` | desktop | 200 | `/account/profile` | ok | [picture](account-profile-desktop.jpg) |
+| `/account/wallet` | desktop | 200 | `/account/wallet` | ok | [picture](account-wallet-desktop.jpg) |
+| `/bn/account/wallet` | desktop | 200 | `/bn/account/wallet` | ok | [picture](bn-account-wallet-desktop.jpg) |
 | `/account/orders/0` | desktop | 200 | `/account/orders/0` | ok | [picture](account-orders-0-desktop.jpg) |
 | `/bn/account/orders/0` | desktop | 200 | `/bn/account/orders/0` | ok | [picture](bn-account-orders-0-desktop.jpg) |
 | `/combos` | desktop | 200 | `/combos` | ok | [picture](combos-desktop.jpg) |
@@ -313,7 +317,7 @@ Site: https://new.extas.com.bd · commit `3843bb63837b` · after deploy · resul
 | `/admin/support/rider-issues` | desktop | 200 | `/admin/support/rider-issues` | ok | — |
 | `/admin/rules/eid` | desktop | 200 | `/admin/rules/eid` | ok | — |
 | `/admin/delivery/settings` | desktop | 200 | `/admin/delivery/settings` | ok | — |
-| `/admin/reports/health/history/01a1957d-01fc-76c2-bdac-d45f59bcd9db` | desktop | 200 | `/admin/reports/health/history/01a1957d-01fc-76c2-bdac-d45f59bcd9db` | ok | — |
+| `/admin/reports/health/history/01a196af-7e96-7993-93e9-90094eab131f` | desktop | 200 | `/admin/reports/health/history/01a196af-7e96-7993-93e9-90094eab131f` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
