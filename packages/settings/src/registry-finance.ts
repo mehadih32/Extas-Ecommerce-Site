@@ -17,6 +17,9 @@
 //          whose charge the courier has not reported yet is priced from the owner's rate card (Money → Costs & fees) by
 //          the order's delivery band and the parcel's weight, labelled an estimate; `codFee` also shows the rate card's
 //          COD fee of such a parcel as its own part. Read-only figures; nothing is charged and no price changes.
+//   v167 · PR 355 `reports.channels` — Money → Profit by channel (B3.10 Locked): the words that put an order in an ad
+//          platform's channel when the shop has no click id from the platform itself — the UTM mediums that mean a paid
+//          visit and each platform's UTM sources. Report rules only; nothing is charged, sent or changed.
 // Labels: messages/finance.<lang>.json.
 import { z } from 'zod';
 import { setting } from './define';
@@ -28,6 +31,7 @@ const V350_RATES = 163;
 const V351 = 164;
 const V352 = 165;
 const V354 = 166;
+const V355 = 167;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'books' } as const;
 
@@ -48,6 +52,19 @@ export type CostAllocationSettings = z.output<typeof costAllocationSchema>;
 /** PR 354 — whether a parcel without the courier's own charge is priced from the rate card (an estimate), and its COD fee shown apart. */
 export const courierEstimateSchema = z.object({ enabled: z.boolean(), codFee: z.boolean() }).strict();
 export type CourierEstimateSettings = z.output<typeof courierEstimateSchema>;
+
+/** PR 355 — the ad platforms a channel can be (the AdPlatform enum of the database). */
+export const AD_CHANNEL_PLATFORMS = ['META', 'GOOGLE', 'YOUTUBE', 'TIKTOK'] as const;
+const utmWord = z.string().trim().toLowerCase().min(1).max(40);
+/** PR 355 — the UTM words that put an order in an ad platform's channel (each platform once; lower case). */
+export const reportChannelsSchema = z
+  .object({
+    paidMediums: z.array(utmWord).max(30),
+    platforms: z.array(z.object({ platform: z.enum(AD_CHANNEL_PLATFORMS), sources: z.array(utmWord).max(30) }).strict()).max(AD_CHANNEL_PLATFORMS.length),
+  })
+  .strict()
+  .refine((v) => new Set(v.platforms.map((p) => p.platform)).size === v.platforms.length, { message: 'each platform once', path: ['platforms'] });
+export type ReportChannels = z.output<typeof reportChannelsSchema>;
 
 /** PR 350 — the VAT system's switch, and whether the delivery charge carries VAT too (the accountant decides). */
 export const vatSystemSchema = z.object({ enabled: z.boolean(), onDelivery: z.boolean() }).strict();
@@ -126,6 +143,24 @@ export const financeSettings = {
     labelKey: 'costs.courierEstimate.label',
     helpKey: 'costs.courierEstimate.help',
     sortOrder: 355,
+  }),
+  'reports.channels': setting({
+    ...base,
+    version: V355,
+    schema: reportChannelsSchema,
+    default: {
+      paidMediums: ['cpc', 'ppc', 'paid', 'paidsocial', 'paid_social', 'paid-social', 'ads'],
+      platforms: [
+        { platform: 'META', sources: ['facebook', 'fb', 'instagram', 'ig', 'meta'] },
+        { platform: 'GOOGLE', sources: ['google', 'adwords'] },
+        { platform: 'YOUTUBE', sources: ['youtube', 'yt'] },
+        { platform: 'TIKTOK', sources: ['tiktok'] },
+      ],
+    },
+    valueType: 'JSON',
+    labelKey: 'reports.channels.label',
+    helpKey: 'reports.channels.help',
+    sortOrder: 357,
   }),
   'vat.system': setting({
     ...base,

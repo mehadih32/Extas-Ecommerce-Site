@@ -34,5 +34,11 @@
       "label": "Team performance badges",
       "help": "Off as shipped. When on, Reports → Team shows what each person did in the week or month (orders confirmed, packed, handed to the courier, support replies), counted from the shop's own records, with a badge for the most in each and for reaching your own minimum (none set as shipped). Recognition only: nothing is paid or taken away."
     }
+  },
+  "reports": {
+    "channels": {
+      "label": "Profit by channel: UTM words",
+      "help": "The words that put an order in an ad platform’s channel on Money → Profit by channel when the platform itself did not tag the order: the UTM mediums that mean a paid visit (cpc, paid …) and each platform’s UTM sources (facebook, google …). Lower case. A report rule only."
+    }
   }
 }
