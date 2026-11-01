@@ -48,7 +48,8 @@
     },
     "staff": {
       "read": "See the staff list",
-      "manage": "Add staff, give or take roles, pause an account"
+      "manage": "Add staff, give or take roles, pause an account",
+      "performance": "See the team performance page (what each person did, badges) and set the badges"
     },
     "audit": {
       "read": "See the change history (who, when, from where)"

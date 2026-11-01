@@ -47,7 +47,8 @@
         "stopped": "Stopped by the engine",
         "learning": "Decisions & learning",
         "delivery": "Delivery & RTO",
-        "flags": "Flag outcomes"
+        "flags": "Flag outcomes",
+        "team": "Team"
       },
       "settings": {
         "store": "Store details",

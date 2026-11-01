@@ -99,6 +99,7 @@
     "buildFiles": "Blueprint & files",
     "buildFile": "Read a file",
     "healthSpeed": "Speed",
+    "reportsTeam": "Team",
     "healthSmoke": "Smoke runs",
     "healthHistory": "Run history",
     "healthFixes": "Fixes to approve",

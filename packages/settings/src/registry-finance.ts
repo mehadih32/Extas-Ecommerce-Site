@@ -10,6 +10,9 @@
 //   v164 · PR 351 `money.report` — the money report to the owner (B3.10, §59 answer 24: "report frequency set by the
 //          owner"; the recommended time 22:00): off as shipped; daily, weekly or monthly, at the owner's time, in his
 //          language, by Telegram. It only reads the figures of Money → Profit & loss; nothing moves money.
+//   v165 · PR 352 `team.badges` — team performance badges (B3.10, §59 answer 25: "build it, default off"): off as
+//          shipped; the work each person did, counted from the shop's own records, and badges for the most in a period
+//          and for reaching the owner's own minimums (none set as shipped). Never pay, never a penalty: recognition only.
 // Labels: messages/finance.<lang>.json.
 import { z } from 'zod';
 import { setting } from './define';
@@ -19,6 +22,7 @@ const V348 = 161;
 const V350 = 162;
 const V350_RATES = 163;
 const V351 = 164;
+const V352 = 165;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'books' } as const;
 
@@ -67,6 +71,21 @@ export const moneyReportSchema = z
   })
   .strict();
 export type MoneyReportSettings = z.output<typeof moneyReportSchema>;
+
+/** PR 352 — the measures a person's work is counted by (from records: order events, support replies). */
+export const TEAM_MEASURES = ['confirmed', 'packed', 'handedOver', 'replies'] as const;
+export type TeamMeasure = (typeof TEAM_MEASURES)[number];
+
+/** PR 352 — team performance badges: the period, the "most in the period" badge, and a minimum per measure (null = none). */
+export const teamBadgesSchema = z
+  .object({
+    enabled: z.boolean(),
+    period: z.enum(['week', 'month']),
+    top: z.boolean(),
+    mins: z.object({ confirmed: z.int().min(1).max(100_000).nullable(), packed: z.int().min(1).max(100_000).nullable(), handedOver: z.int().min(1).max(100_000).nullable(), replies: z.int().min(1).max(100_000).nullable() }).strict(),
+  })
+  .strict();
+export type TeamBadgesSettings = z.output<typeof teamBadgesSchema>;
 
 export const financeSettings = {
   'costs.report': setting({
@@ -121,5 +140,15 @@ export const financeSettings = {
     labelKey: 'money.report.label',
     helpKey: 'money.report.help',
     sortOrder: 380,
+  }),
+  'team.badges': setting({
+    ...base,
+    version: V352,
+    schema: teamBadgesSchema,
+    default: { enabled: false, period: 'week', top: true, mins: { confirmed: null, packed: null, handedOver: null, replies: null } },
+    valueType: 'JSON',
+    labelKey: 'team.badges.label',
+    helpKey: 'team.badges.help',
+    sortOrder: 390,
   }),
 };

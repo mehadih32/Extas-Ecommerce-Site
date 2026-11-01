@@ -343,6 +343,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         guide: 'analytics',
         pages: [{ href: '/admin/reports/flags', perm: 'risk.report', keys: ['reportsFlags'] }],
       },
+      // S16 · PR 352: Reports → Team — what each person did in the week or month, with badges (off as shipped).
+      { id: 'team', pages: [{ href: '/admin/reports/team', perm: 'staff.performance', keys: ['reportsTeam'] }] },
     ],
   },
   {

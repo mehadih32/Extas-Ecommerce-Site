@@ -24,5 +24,11 @@
       "label": "Money report to the owner",
       "help": "Off as shipped. When on, the Profit & loss figures of the day (or the last 7 days, or the last month) go to the owner by Telegram at the time set, in the language set. Weekly: on the weekday chosen; monthly: on the day of the month chosen (1–28), for the month before. A report missed at its time (the server was down) still goes later the same day, once."
     }
+  },
+  "team": {
+    "badges": {
+      "label": "Team performance badges",
+      "help": "Off as shipped. When on, Reports → Team shows what each person did in the week or month (orders confirmed, packed, handed to the courier, support replies), counted from the shop's own records, with a badge for the most in each and for reaching your own minimum (none set as shipped). Recognition only: nothing is paid or taken away."
+    }
   }
 }
