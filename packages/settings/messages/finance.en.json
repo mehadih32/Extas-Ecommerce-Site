@@ -3,6 +3,10 @@
     "report": {
       "label": "Costs report: longest period and day rows",
       "help": "The longest period one costs report on Money → Cost ledger → Costs report covers, in days (31–3,660), and the most days it lists one by one (7–1,000); a longer period is shown month by month."
+    },
+    "allocation": {
+      "label": "Per-order profit: ad spend share",
+      "help": "Whether each delivered order's profit carries a share of the ad spend, spread evenly over the orders delivered in the same month (or day). Always shown as an estimate; nothing is charged or changed."
     }
   }
 }

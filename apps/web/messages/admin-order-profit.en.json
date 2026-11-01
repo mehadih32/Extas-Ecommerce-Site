@@ -1,0 +1,32 @@
+{
+  "orderProfit": {
+    "title": "Profit on this order",
+    "sub": "After its own costs; only delivered orders have a profit",
+    "part": {
+      "sales": "Goods sold",
+      "deliveryCharge": "Delivery charge",
+      "productCost": "Product cost",
+      "courier": "Courier",
+      "paymentFees": "Payment fees",
+      "packaging": "Packaging",
+      "messages": "Messages and AI",
+      "ads": "Ad spend share"
+    },
+    "state": {
+      "missing": "not known yet",
+      "off": "switched off",
+      "estimated": "estimate"
+    },
+    "profit": "Profit",
+    "noProfit": "Not shown while the product cost is not known",
+    "status": {
+      "complete": "Every part known",
+      "estimated": "Includes an estimate",
+      "partial": "Some parts not known",
+      "notDelivered": "Not delivered"
+    },
+    "notDelivered": "The profit is counted when the order is delivered.",
+    "uncosted": "No cost from the ERP for: {skus}",
+    "never": "Shows only. Nothing here charges anyone or changes a price."
+  }
+}

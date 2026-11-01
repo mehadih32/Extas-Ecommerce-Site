@@ -32,3 +32,5 @@ export * from './customers';
 export * from './skus';
 // CN-028 · PR 617: the order side of Retail's daily summary to the ERP (delivered pieces on the delivered day).
 export * from './retail-day';
+// S16 · PR 348: `orderProfits` — one delivered order's profit after its own costs (order-profit.ts).
+export * from './order-profit';
