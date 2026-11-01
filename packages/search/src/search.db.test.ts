@@ -121,6 +121,17 @@ describe.skipIf(!HAS_TEST_DB)('search on PostgreSQL and the Meilisearch adapter 
     const caught = await ask('polo');
     expect(caught).toMatchObject({ engine: 'meilisearch', products: [ids['s-classic']] });
 
+    // a slip of a general word ("shrit" for shirt) is left out on Meilisearch as on PostgreSQL (gate-c360, 1 Nov 2026:
+    // "pollo shrit" found nothing on the server, where only an exactly written general word was dropped)
+    const slip = await ask('classic shrit');
+    expect(slip).toMatchObject({ engine: 'meilisearch', products: [ids['s-classic']], used: ['classic'], dropped: ['shrit'] });
+    deps = { ...deps, meili: null };
+    forgetSearchCache();
+    // (PostgreSQL also reads "shrit" as the start of the category's "shirts", one slip off, so it keeps the word)
+    expect(await ask('classic shrit')).toMatchObject({ engine: 'postgres', products: [ids['s-classic']] });
+    deps = withMeili;
+    forgetSearchCache();
+
     // the search server down: PostgreSQL answers, the shopper sees the same products
     fake.setDown(true);
     forgetSearchCache();

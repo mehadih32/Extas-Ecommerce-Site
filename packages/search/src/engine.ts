@@ -3,7 +3,11 @@
 // - Meilisearch, when the server has it (MEILI_URL and its key), the mode is 'auto' and its index is current — the
 //   index's version (written by the indexer, indexer.ts) equals the catalogue's version now (docs.ts). The query goes
 //   in with its phrases joined; when every word together finds nothing, again without the general words (match.ts
-//   step 4). Meilisearch's own typo and prefix rules are set from `search.match`, its synonyms from `search.words`.
+//   step 4: a general word or a slip of one, `isGeneral`, the same rule PostgreSQL drops by). Meilisearch's own typo
+//   and prefix rules are set from `search.match`, its synonyms from `search.words`.
+//   Fixed after the go-live gate (gate-c360, 1 Nov 2026): "pollo shrit" found nothing on the server while PostgreSQL
+//   found the polo, because only an exactly written general word was dropped here, so "shrit" (a slip of "shirt")
+//   stayed in the query and no product carries polo and shirt together.
 // - PostgreSQL otherwise — CI, a computer, a server without Meilisearch, an index still catching up after a change, or
 //   Meilisearch slow or down (`search.engine.timeoutMs`): the shop's own catalogue, read into a word list kept for
 //   `search.engine.cacheSeconds`, searched by match.ts.
@@ -11,7 +15,7 @@
 import type { PrismaClient } from '@extas/db/client';
 import type { Key, SearchEngineSettings, SearchMatchSettings, SearchWordsSettings, Value } from '@extas/settings';
 import { catalogueVersion, readDocTexts, toSearchDoc } from './docs';
-import { didYouMean, matchDocs, partialMatch, queryWords, vocabulary, wordLists, type SearchDoc, type WordLists } from './match';
+import { didYouMean, isGeneral, matchDocs, partialMatch, queryWords, vocabulary, wordLists, type SearchDoc, type WordLists } from './match';
 import { Meili, type MeiliConfig } from './meili';
 import { words } from './text';
 
@@ -146,7 +150,8 @@ export async function searchCatalogue(deps: SearchDeps, storeId: number, q: stri
     try {
       // the index must hold exactly what the word list holds, so both engines know the same products at any moment
       if (await meiliCurrent(deps, m, storeId, rules, list.version)) {
-        const general = (w: string) => list.lists.general.has(w);
+        // a general word or a slip of one (`search.match.oneTypoAt`), as PostgreSQL's step 4 drops them
+        const general = (w: string) => isGeneral(w, list.lists, rules.match);
         const r = await viaMeili(m, rules, storeId, ws, general);
         const known = new Set(list.docs.map((d) => d.id));
         answer = {
