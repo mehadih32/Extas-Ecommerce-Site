@@ -1,0 +1,8 @@
+{
+  "support": {
+    "context": {
+      "label": "Customer beside the chat",
+      "help": "On every chat, a card about the person writing: how many orders, how many were delivered, refused or returned, the risk score of the latest order, and the orders still on their way with where each one is now. Found from the chat's customer or, when none is linked, the chat's number. Counts and the risk score show only to people who may read customers. Nothing is sent and no order changes."
+    }
+  }
+}

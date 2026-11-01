@@ -119,3 +119,20 @@ export * from './segment-rules';
 // PR 288 — the journey view's kinds of touch.
 export * from './journey-kinds';
 export * from './journey-rules';
+
+/**
+ * PR 428 (B4.5): what a person's finished orders came to, in whole percents — delivered against refused at the door
+ * (a refusal the shop caused is never counted, SIM-F-044); returns after delivery are a share of the delivered ones.
+ * Null when nothing has finished yet (no ratio from nothing).
+ */
+export interface ChatRatios {
+  finished: number;
+  deliveredPct: number | null;
+  refusedPct: number | null;
+  returnedPct: number | null;
+}
+export function chatRatios(s: { delivered: number; refused: number; returns: number }): ChatRatios {
+  const finished = s.delivered + s.refused;
+  const pct = (x: number, of: number) => (of > 0 ? Math.round((x * 100) / of) : null);
+  return { finished, deliveredPct: pct(s.delivered, finished), refusedPct: pct(s.refused, finished), returnedPct: pct(Math.min(s.returns, s.delivered), s.delivered) };
+}
