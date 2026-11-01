@@ -171,5 +171,15 @@ describe.skipIf(!HAS_TEST_DB)('PR 407 · issuing invoices (PostgreSQL)', () => {
     } finally {
       f.overrides.delete('documents.invoice.print');
     }
+    // PR 409: the design is one more card, classic as shipped; an unknown design is refused
+    const design = view['documents.invoice.design'];
+    expect(design.value).toEqual({ design: 'classic' });
+    expect(await code(saveInvoiceSetting(w, owner, { key: 'documents.invoice.design', value: { design: 'neon' }, version: design.version }))).toBe('INVALID_INPUT');
+    try {
+      const d2 = await saveInvoiceSetting(w, owner, { key: 'documents.invoice.design', value: { design: 'cards' }, version: design.version });
+      expect(d2['documents.invoice.design'].value).toEqual({ design: 'cards' });
+    } finally {
+      f.overrides.delete('documents.invoice.design');
+    }
   });
 });

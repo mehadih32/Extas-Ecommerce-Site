@@ -15,6 +15,12 @@
     "printQuality": {
       "label": "Print quality",
       "help": "The shop's logo at the top of the picking list and the handover sheet (the same letterhead as the invoice), and the outer band in millimetres where a printer cannot reach and the print check wants no ink."
+    },
+    "invoice": {
+      "design": {
+        "label": "Invoice design",
+        "help": "How the printed invoice and its chat picture look: classic, minimal, bold brand header, receipt, two columns, dark accent or cards. Every design prints in black and white with nothing cut; the words and the parts on it stay the same."
+      }
     }
   }
 }

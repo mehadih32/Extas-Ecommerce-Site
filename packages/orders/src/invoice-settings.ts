@@ -2,19 +2,19 @@
 // Orders › Packing & print › Invoices: what the invoice says (`account.invoice`: its parts, number pattern, the owner's
 // note and footer, the download button — the same setting the customer's invoice page reads), how it prints
 // (`documents.invoice.print`), its chat picture and issuing (`documents.invoice.image`, `documents.invoice.issue`, under
-// "More options"). Read with `fulfilment.read`, saved one card at a time with `orders.invoiceSettings`, with the card's
+// "More options"); PR 409 its design (`documents.invoice.design`, one of seven). Read with `fulfilment.read`, saved one card at a time with `orders.invoiceSettings`, with the card's
 // version (a save in between is STALE) and an audit row. Saving never moves money or changes a price, COD or an order:
 // an invoice issued before keeps its number; a new pattern gives only the next invoices their numbers.
 import { createHash } from 'node:crypto';
 import { audit, requirePermission } from '@extas/auth';
-import { accountInvoiceSchema, invoiceImageSchema, invoiceIssueSchema, invoicePrintSchema, registry, storeTarget, type Key, type Value } from '@extas/settings';
+import { accountInvoiceSchema, invoiceDesignSchema, invoiceImageSchema, invoiceIssueSchema, invoicePrintSchema, registry, storeTarget, type Key, type Value } from '@extas/settings';
 import { z } from 'zod';
 import { checkStoreId, parse, setting, type OrdersDeps, type Who } from './context';
 import { OrdersError } from './errors';
 import type { SettingsWriter } from './rule-switches';
 
 /** The keys the invoice page edits, each one card. */
-export const INVOICE_SETTING_KEYS = ['account.invoice', 'documents.invoice.print', 'documents.invoice.image', 'documents.invoice.issue'] as const satisfies readonly Key[];
+export const INVOICE_SETTING_KEYS = ['account.invoice', 'documents.invoice.print', 'documents.invoice.image', 'documents.invoice.issue', 'documents.invoice.design'] as const satisfies readonly Key[];
 export type InvoiceSettingKey = (typeof INVOICE_SETTING_KEYS)[number];
 
 const SCHEMAS = {
@@ -22,6 +22,7 @@ const SCHEMAS = {
   'documents.invoice.print': invoicePrintSchema,
   'documents.invoice.image': invoiceImageSchema,
   'documents.invoice.issue': invoiceIssueSchema,
+  'documents.invoice.design': invoiceDesignSchema,
 } as const satisfies Record<InvoiceSettingKey, z.ZodType>;
 
 export interface InvoiceSettingCard<K extends InvoiceSettingKey = InvoiceSettingKey> {
@@ -42,8 +43,8 @@ async function card<K extends InvoiceSettingKey>(deps: Pick<OrdersDeps, 'setting
 }
 
 async function viewOf(deps: Pick<OrdersDeps, 'settings'>, storeId: number): Promise<InvoiceSettingsView> {
-  const [a, b, c, d] = await Promise.all([card(deps, storeId, 'account.invoice'), card(deps, storeId, 'documents.invoice.print'), card(deps, storeId, 'documents.invoice.image'), card(deps, storeId, 'documents.invoice.issue')]);
-  return { 'account.invoice': a, 'documents.invoice.print': b, 'documents.invoice.image': c, 'documents.invoice.issue': d };
+  const [a, b, c, d, e] = await Promise.all([card(deps, storeId, 'account.invoice'), card(deps, storeId, 'documents.invoice.print'), card(deps, storeId, 'documents.invoice.image'), card(deps, storeId, 'documents.invoice.issue'), card(deps, storeId, 'documents.invoice.design')]);
+  return { 'account.invoice': a, 'documents.invoice.print': b, 'documents.invoice.image': c, 'documents.invoice.issue': d, 'documents.invoice.design': e };
 }
 
 /** Every card's data (`fulfilment.read`). */

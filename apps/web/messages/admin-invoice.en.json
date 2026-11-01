@@ -137,6 +137,56 @@
         "perRun": "Most orders a run",
         "lookbackDays": "Look back (days)"
       }
+    },
+    "design": {
+      "h": "Invoice design",
+      "d": "How the printed invoice and its chat picture look. The words, the parts and the amounts stay the same in every design; each prints in black and white with nothing cut.",
+      "name": {
+        "classic": "Classic",
+        "minimal": "Minimal",
+        "brand": "Bold brand header",
+        "receipt": "Receipt",
+        "twoColumn": "Two columns",
+        "accent": "Dark accent",
+        "cards": "Cards"
+      },
+      "about": {
+        "classic": "The shop's name centred over a heavy line — the invoice as shipped.",
+        "minimal": "Everything on the left, thin lines, a little smaller.",
+        "brand": "The shop's name large, white on a black band.",
+        "receipt": "Smaller, the customer's details one under another — like a shop receipt.",
+        "twoColumn": "The shop's name on the left, its address and phone on the right.",
+        "accent": "A black band with the name, and the heading white on black.",
+        "cards": "The customer's details each in its own box."
+      },
+      "inUse": "in use",
+      "use": "Use this design",
+      "saving": "Saving…",
+      "saved": "Saved: {name} is now the invoice design.",
+      "stale": "Someone changed the design just now. Reload the page and choose again.",
+      "err": "Could not save. Try again.",
+      "previewAlt": "The latest invoice in the {name} design",
+      "noPreview": "No invoice to preview yet: the preview shows the latest order's invoice once there is one.",
+      "readOnly": "You can see the designs; changing them needs the invoice settings permission."
+    },
+    "words": {
+      "h": "Every word on the invoice",
+      "d": "Each word the invoice prints, in English and Bengali. Write your own in a box; leave it empty to keep the shop's word. Words in {curly brackets} are filled in when the invoice prints — keep them as they are.",
+      "search": "Search the words",
+      "shop": "Shop's word",
+      "own": {
+        "en": "Your English",
+        "bn": "Your Bengali"
+      },
+      "none": "No word matches.",
+      "save": "Save {n} words",
+      "saving": "Saving…",
+      "discard": "Discard changes",
+      "saved": "Saved {n} words. The next invoices print them.",
+      "stale": "Someone changed the words just now. Reload the page and make your change again.",
+      "invalid": "{n} words could not be saved: a {slot} that word does not have, or too long.",
+      "err": "Could not save. Try again.",
+      "readOnly": "You can see the words; changing them needs the invoice settings permission."
     }
   }
 }

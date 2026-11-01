@@ -8,11 +8,45 @@
 // the owner's note and the footer, and "n/of" at the foot of every page. Black-and-white safe: a mark is white on a
 // black box, nothing depends on colour. Nothing is cut or overlaps: every block is measured before it is placed.
 //
+// PR 409 (ORD-04d) — seven designs, each a set of choices on the same measured layout (so every one keeps the B2.4
+// rules): classic (the name centred over a heavy rule), minimal (left, hairline rules, a little smaller), brand (the name
+// large, white on a black band), receipt (smaller, everything one under another), two-column (the name left, the
+// shop's lines right), accent (a black band, the heading white on black too) and cards (each side of the customer in a
+// box). Black-and-white safe: a band is solid black with white letters, never a colour or a grey.
+//
 // Pure: data in (already in words), PDF or JPG bytes out. Nothing here reads the database or the settings.
 import sharp from 'sharp';
 import { code128Svg } from './code128';
 import { Sheet, type TextBlock, type TextEngine, type TextStyle } from './layout';
 import { writePdf, type PdfPage } from './pdf';
+
+/** PR 409 — the invoice designs, in the order the owner sees them. */
+export const INVOICE_DESIGNS = ['classic', 'minimal', 'brand', 'receipt', 'twoColumn', 'accent', 'cards'] as const;
+export type InvoiceDesign = (typeof INVOICE_DESIGNS)[number];
+
+interface DesignStyle {
+  /** The letterhead: centred, left, name left with the shop's lines right, or white on a black band. */
+  header: 'centre' | 'left' | 'split' | 'band';
+  /** The name's size against the classic one, and every other text's. */
+  brandScale: number;
+  scale: number;
+  /** The rules' weight against the classic one (1: heavy under the letterhead). */
+  heavy: boolean;
+  /** The customer's side: side by side, one under another, or each in a box. */
+  parties: 'side' | 'stack' | 'boxed';
+  /** The heading white on a black box. */
+  inverseHeading: boolean;
+}
+
+const DESIGNS: Record<InvoiceDesign, DesignStyle> = {
+  classic: { header: 'centre', brandScale: 1, scale: 1, heavy: true, parties: 'side', inverseHeading: false },
+  minimal: { header: 'left', brandScale: 0.9, scale: 0.95, heavy: false, parties: 'side', inverseHeading: false },
+  brand: { header: 'band', brandScale: 1.35, scale: 1, heavy: true, parties: 'side', inverseHeading: false },
+  receipt: { header: 'centre', brandScale: 0.9, scale: 0.9, heavy: false, parties: 'stack', inverseHeading: false },
+  twoColumn: { header: 'split', brandScale: 1.1, scale: 1, heavy: true, parties: 'side', inverseHeading: false },
+  accent: { header: 'band', brandScale: 1.1, scale: 1, heavy: true, parties: 'side', inverseHeading: true },
+  cards: { header: 'centre', brandScale: 1, scale: 1, heavy: false, parties: 'boxed', inverseHeading: false },
+};
 
 export interface InvoiceDocRow {
   no: string;
@@ -50,6 +84,8 @@ export interface InvoiceDocument {
   prices?: boolean;
   /** "{n}/{of}" at the foot of each page. */
   pageWords: string;
+  /** PR 409: the design (classic when none). */
+  design?: InvoiceDesign | null;
 }
 
 /** A sheet of paper (pages of a fixed size), a thermal roll (one page as long as the invoice), or a tall picture. */
@@ -80,31 +116,68 @@ export async function invoicePages(doc: InvoiceDocument, paper: InvoicePaper, dp
   const gap = measure.px(roll ? 1 : 1.5);
   const line = Math.max(1, Math.round(dpi / 100));
   const pad = Math.max(2, Math.round(measure.px(roll ? 0.6 : 1)));
-  const scale = roll && paper.widthMm < 70 ? 0.85 : 1;
+  const ds = DESIGNS[doc.design ?? 'classic'] ?? DESIGNS.classic;
+  const scale = (roll && paper.widthMm < 70 ? 0.85 : 1) * ds.scale;
   const SIZE = { brand: 15, head: 13, body: 9, small: 7.5 } as const;
   const st = (size: keyof typeof SIZE, o: Omit<TextStyle, 'sizePt'> = {}): TextStyle => ({ sizePt: Math.round(SIZE[size] * scale * 10) / 10, ...o });
   const shape = (text: string | null | undefined, style: TextStyle, width = w): Promise<TextBlock> => measure.shape(text ?? '', style, Math.max(1, width));
   const textPart = (b: TextBlock, x = m, width = w, align: TextStyle['align'] = 'left'): Part => ({ h: b.height, draw: (s, y) => s.place(b, x, y, width, align) });
   const space = (h: number): Part => ({ h, draw: () => undefined });
-  const rule = (weight = line): Part => ({ h: gap * 2, draw: (s, y) => s.line(m, y + gap, m + w, y + gap, weight) });
+  const rule = (weight = line): Part => ({ h: gap * 2, draw: (s, y) => s.line(m, y + gap, m + w, y + gap, ds.heavy ? weight : line) });
 
-  // ---- the letterhead (every page): the logo or the shop's name, then its own lines ----
+  // ---- the letterhead (every page): the logo or the shop's name, then its own lines (PR 409: in the design's way) ----
   const head: Part[] = [];
   const logo = doc.logo ? await measure.shapePicture(doc.logo, Math.min(w, measure.px(roll ? 50 : 60)), measure.px(roll ? 16 : 20)) : null;
-  if (logo && logo.height) head.push(textPart(logo, m, w, 'centre'));
-  else head.push(textPart(await shape(doc.brand, st('brand', { bold: true, align: 'centre' })), m, w, 'centre'));
-  for (const l of doc.shopLines.filter((x) => x.trim())) head.push(textPart(await shape(l, st('small', { align: 'centre' })), m, w, 'centre'));
+  const hasLogo = !!(logo && logo.height);
+  // a band carries the name only (a logo keeps its own colours on white: centred, as classic)
+  const look = narrow && ds.header === 'split' ? 'left' : ds.header === 'band' && hasLogo ? 'centre' : ds.header;
+  const brandStyle = (align: TextStyle['align'], inverse = false): TextStyle => ({ ...st('brand', { bold: true, align, inverse }), sizePt: Math.round(SIZE.brand * scale * ds.brandScale * 10) / 10 });
+  const lines = doc.shopLines.filter((x) => x.trim());
+  if (look === 'band') {
+    // the name white on a full-width black band, the shop's lines under it
+    const name = await shape(doc.brand, brandStyle('centre', true), w - 4 * pad);
+    const bandH = name.height + 4 * pad;
+    head.push({
+      h: bandH + gap,
+      draw: (s, y) => {
+        s.rect(m, y, w, bandH, { fill: true });
+        s.place(name, m + 2 * pad, y + 2 * pad, w - 4 * pad, 'centre');
+      },
+    });
+    for (const l of lines) head.push(textPart(await shape(l, st('small', { align: 'centre' })), m, w, 'centre'));
+  } else if (look === 'split') {
+    // the name (or logo) on the left half, the shop's lines on the right half, right-aligned
+    const half = Math.floor((w - measure.px(4)) / 2);
+    const left = hasLogo ? logo! : await shape(doc.brand, brandStyle('left'), half);
+    const right = await Promise.all(lines.map((l) => shape(l, st('small', { align: 'right' }), half)));
+    const rightH = right.reduce((n, b) => n + b.height, 0);
+    head.push({
+      h: Math.max(left.height, rightH),
+      draw: (s, y) => {
+        s.place(left, m, y, half);
+        let at = y;
+        for (const b of right) at += s.place(b, m + w - half, at, half, 'right');
+      },
+    });
+  } else {
+    const align: TextStyle['align'] = look === 'left' ? 'left' : 'centre';
+    if (hasLogo) head.push(textPart(logo, m, w, align));
+    else head.push(textPart(await shape(doc.brand, brandStyle(align)), m, w, align));
+    for (const l of lines) head.push(textPart(await shape(l, st('small', { align })), m, w, align));
+  }
   head.push(rule(line * 2));
 
   // ---- the heading, the stamp, number · order · date ----
   const body: Part[] = [];
   const stamp = doc.stamp ? await shape(doc.stamp, st('small', { bold: true, inverse: true }), measure.px(40)) : null;
   const headW = stamp ? w - stamp.width - 4 * pad : w;
-  const heading = await shape(doc.heading, st('head', { bold: true }), headW);
+  const heading = await shape(doc.heading, st('head', { bold: true, inverse: ds.inverseHeading }), headW - (ds.inverseHeading ? 4 * pad : 0));
+  const headingBox = ds.inverseHeading ? 2 * pad : 0;
   body.push({
-    h: Math.max(heading.height, stamp ? stamp.height + 2 * pad : 0),
+    h: Math.max(heading.height + 2 * headingBox, stamp ? stamp.height + 2 * pad : 0),
     draw: (s, y) => {
-      s.place(heading, m, y, headW);
+      if (ds.inverseHeading) s.rect(m, y, heading.width + 2 * headingBox, heading.height + 2 * headingBox, { fill: true });
+      s.place(heading, m + headingBox, y + headingBox, headW - 2 * headingBox);
       if (stamp) {
         const x = m + w - stamp.width - 2 * pad;
         s.rect(x - pad, y, stamp.width + 2 * pad, stamp.height + 2 * pad, { fill: true });
@@ -150,12 +223,13 @@ export async function invoicePages(doc: InvoiceDocument, paper: InvoicePaper, dp
   // ---- the customer's side: side by side on paper, one under another on a roll or a narrow sheet ----
   const parties = await Promise.all(
     doc.parties.map(async (p) => {
-      const cw = narrow ? w : Math.floor((w - (Math.min(doc.parties.length, 3) - 1) * measure.px(4)) / Math.min(doc.parties.length, 3));
+      const boxPad = ds.parties === 'boxed' ? 2 * pad : 0;
+      const cw = (narrow || ds.parties === 'stack' ? w : Math.floor((w - (Math.min(doc.parties.length, 3) - 1) * measure.px(4)) / Math.min(doc.parties.length, 3))) - 2 * boxPad;
       const blocks = [await shape(p.label, st('small', { bold: true }), cw), ...(p.strong ? [await shape(p.strong, st('body', { bold: true }), cw)] : []), ...(await Promise.all(p.lines.map((l) => shape(l, st('body'), cw))))];
-      return { cw, blocks, h: sum(blocks.map((b) => ({ h: b.height, draw: () => undefined }))) };
+      return { cw, boxPad, blocks, h: sum(blocks.map((b) => ({ h: b.height, draw: () => undefined }))) + 2 * boxPad };
     }),
   );
-  if (narrow) {
+  if (narrow || ds.parties === 'stack') {
     for (const p of parties) {
       for (const b of p.blocks) body.push(textPart(b));
       body.push(space(gap));
@@ -168,9 +242,11 @@ export async function invoicePages(doc: InvoiceDocument, paper: InvoicePaper, dp
         h: h + gap,
         draw: (s, y) =>
           group.forEach((g, k) => {
-            let at = y;
-            const x = m + k * (g.cw + measure.px(4));
-            for (const b of g.blocks) at += s.place(b, x, at, g.cw);
+            const x = m + k * (g.cw + 2 * g.boxPad + measure.px(4));
+            // cards: each side in a thin box
+            if (g.boxPad) s.rect(x, y, g.cw + 2 * g.boxPad, h, { stroke: line });
+            let at = y + g.boxPad;
+            for (const b of g.blocks) at += s.place(b, x + g.boxPad, at, g.cw);
           }),
       });
     }

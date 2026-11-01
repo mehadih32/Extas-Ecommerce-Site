@@ -11,11 +11,18 @@
 //   GET   /api/admin/invoices/settings   the page's settings cards with their versions (fulfilment.read)
 //   PUT   /api/admin/invoices/settings   {key, value, version} one card saved whole; a stale card is STALE
 //                                        (orders.invoiceSettings)
+//   GET   /api/admin/invoices/preview    ?design= PR 409: the latest issued invoice drawn in that design, as a picture
+//                                        (never saved or sent; orders.invoice)
+//   GET   /api/admin/invoices/words      PR 409: every word the invoice prints with the owner's own (fulfilment.read)
+//   PUT   /api/admin/invoices/words      {words: {key: {en?, bn?}}, version} the owner's words saved (an empty one goes
+//                                        back to the dictionary's; a stale list is STALE) (orders.invoiceSettings)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
 import { z } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
-import { INVOICE_FORMATS, INVOICE_LAYOUTS, invoiceFile } from './admin-invoices/print';
+import { INVOICE_DESIGNS } from '@extas/documents';
+import { INVOICE_FORMATS, INVOICE_LAYOUTS, invoiceFile, invoicePreview } from './admin-invoices/print';
+import { InvoiceWordsError, invoiceWords, saveInvoiceWords } from './admin-invoices/words';
 
 function storeIdOf(url: URL): number | null {
   const raw = url.searchParams.get('storeId');
@@ -43,9 +50,10 @@ export async function invoicesRoute(request: Request, deps: AdminDeps | null, pa
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
   const at = path.join('/');
-  const permission = at === '' ? 'fulfilment.read' : at === 'file' ? 'orders.invoice' : at === 'settings' ? (m === 'PUT' ? 'orders.invoiceSettings' : 'fulfilment.read') : null;
+  const permission =
+    at === '' ? 'fulfilment.read' : at === 'file' || at === 'preview' ? 'orders.invoice' : at === 'settings' || at === 'words' ? (m === 'PUT' ? 'orders.invoiceSettings' : 'fulfilment.read') : null;
   if (permission === null) return fail(404, 'not-found');
-  const allowed = at === 'file' ? ['POST'] : at === 'settings' ? ['GET', 'PUT'] : ['GET'];
+  const allowed = at === 'file' ? ['POST'] : at === 'settings' || at === 'words' ? ['GET', 'PUT'] : ['GET'];
   if (!allowed.includes(m)) return fail(405, 'method-not-allowed');
   const g = await guardAdmin(request, deps, { permission, storeId });
   if (g instanceof Response) return g;
@@ -61,6 +69,16 @@ export async function invoicesRoute(request: Request, deps: AdminDeps | null, pa
       if (m === 'GET') return json({ ok: true, cards: await od.invoiceSettings(sd, who) });
       return json({ ok: true, cards: await od.saveInvoiceSetting(sd, who, await body(request)) });
     }
+    if (at === 'words') {
+      const w = { actor: g.actor, ctx: g.ctx, storeId };
+      return json({ ok: true, ...(m === 'GET' ? await invoiceWords(d, w) : await saveInvoiceWords(d, w, await body(request))) });
+    }
+    if (at === 'preview') {
+      const design = INVOICE_DESIGNS.find((x) => x === url.searchParams.get('design'));
+      if (!design) return fail(400, 'INVALID_INPUT', ['design']);
+      const jpg = await invoicePreview(d, storeId, design);
+      return new Response(new Uint8Array(jpg), { status: 200, headers: { 'content-type': 'image/jpeg', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' } });
+    }
     const input = fileInput.safeParse(await body(request));
     if (!input.success) return fail(400, 'INVALID_INPUT', input.error.issues.map((i) => i.path.join('.') || '(input)'));
     const file = await invoiceFile(d, storeId, input.data);
@@ -69,6 +87,7 @@ export async function invoicesRoute(request: Request, deps: AdminDeps | null, pa
       headers: { 'content-type': file.contentType, 'content-disposition': `inline; filename="${file.fileName}"`, 'cache-control': 'no-store', 'x-robots-tag': 'noindex' },
     });
   } catch (e) {
+    if (e instanceof InvoiceWordsError) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}) }, { status: e.status });
     return invoicesFail(e);
   }
 }

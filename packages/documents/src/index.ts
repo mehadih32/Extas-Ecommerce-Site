@@ -20,5 +20,5 @@ export { mmToPt, mmToPx, writePdf, type PdfPage } from './pdf';
 export { FONT_FAMILIES, Sheet, overlaps, sharpText, tile, type TextBlock, type TextEngine, type TextStyle } from './layout';
 export { stickerPages, stickerPdf, type StickerInput, type StickerItem, type StickerLayout, type StickerWords } from './sticker';
 export { PAPER_MM, listPages, listPdf, type ListColumn, type ListDocument, type ListRow, type Paper } from './list';
-export { ROLL_MM, invoiceJpeg, invoicePages, invoicePdf, type InvoiceDocRow, type InvoiceDocument, type InvoicePaper } from './invoice';
+export { INVOICE_DESIGNS, ROLL_MM, invoiceJpeg, invoicePages, invoicePdf, type InvoiceDesign, type InvoiceDocRow, type InvoiceDocument, type InvoicePaper } from './invoice';
 export { pageQuality, printQuality, type PageQuality, type PrintProblem } from './quality';
