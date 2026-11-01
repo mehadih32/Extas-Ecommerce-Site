@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # S21 · PR 414 (B7.3) — the saved browser journeys against the preview host, on the VM (journeys.yml, every hour).
-#   sudo infra/deploy/journeys.sh <out-dir> [due|now] [<commit sha>]
+#   sudo infra/deploy/journeys.sh <out-dir> [due|now] [<commit sha>] [<group>]
 #   due  (the hourly check): runs only when a "Run now" press or the owner's schedule says so (journeys-lib.sh;
 #        Reports › Site health → journeys-settings.env); otherwise it says "not due" and ends at once (exit 0).
 #   now  (by hand from Actions): runs at once.
+#   <group> (PR 414 follow-up, CN-013 go-live gate phase 2; by hand only, with `now`): runs only the journeys of that
+#        group in docs/qa/journeys.json (go-live-gate) instead of the saved journeys. Its summary goes to
+#        state/journeys-<group>.json and its runs to state/journeys-<group>/, so the owner's Site health, the schedule
+#        (which reads state/journeys.json), the run history and the Telegram alert stay the saved journeys' own.
 # 1. The read-only check account gets a fresh password and two-step seed, exactly as for the smoke test (smoke.sh);
 #    they go to a root-only temporary file and are gone when this ends.
 # 2. The browser image of the smoke test (extas-smoke:<SMOKE_PLAYWRIGHT_VERSION>) walks docs/qa/journeys.json
@@ -28,10 +32,17 @@ CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 . "$HERE/journeys-lib.sh"
 # shellcheck source=smoke-lib.sh
 . "$HERE/smoke-lib.sh"
-OUT="${1:?usage: journeys.sh <out-dir> [due|now] [<commit sha>]}"
+OUT="${1:?usage: journeys.sh <out-dir> [due|now] [<commit sha>] [<group>]}"
 MODE="${2:-due}"
 SHA="${3:-}"
+GROUP="${4:-}"
 R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
+if ! journeys_group_ok "$GROUP" || { [ -n "$GROUP" ] && [ "$MODE" != now ]; }; then
+  echo "usage: journeys.sh <out-dir> now [<commit sha>] <group> (a group is a-z, 0-9 and -, and runs only by hand)" >&2
+  exit 2
+fi
+SUMMARY="$STATE/journeys.json"; RUNS="$STATE/journeys"
+if [ -n "$GROUP" ]; then SUMMARY="$STATE/journeys-$GROUP.json"; RUNS="$STATE/journeys-$GROUP"; fi
 IMG="extas-smoke:$SMOKE_PLAYWRIGHT_VERSION"
 log() { echo "[journeys $(date +%H:%M:%S)] $*"; }
 
@@ -58,7 +69,7 @@ esac
 
 work="$(mktemp -d "$SEC/.journeys.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
-mkdir -p "$OUT" "$STATE/journeys"
+mkdir -p "$OUT" "$RUNS"
 
 # The live version's migrate image holds the auth command (as in smoke.sh).
 mig="$(jq -r '.migrate // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)"
@@ -87,30 +98,34 @@ if ! docker image inspect "$IMG" >/dev/null 2>&1; then
   docker build -q -f "$HERE/smoke.Dockerfile" --build-arg PLAYWRIGHT_VERSION="$SMOKE_PLAYWRIGHT_VERSION" -t "$IMG" "$HERE" >/dev/null
 fi
 
-log "walking the saved journeys on https://$EXTAS_STAGING_HOST ($why)"
+log "walking the ${GROUP:+$GROUP }journeys on https://$EXTAS_STAGING_HOST ($why)"
 rm -rf "${OUT:?}"/*
 at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
 kind="$([ "$why" = scheduled ] && echo scheduled || echo "run now")"
 rc=0
 timeout "$((JOURNEYS_TIMEOUT_MIN * 60))" docker run --rm --name "extas-journeys-$$" --ipc=host --env-file "$work/journeys.env" \
-  -e BASE="https://$EXTAS_STAGING_HOST" -e JOURNEYS_UI="${JOURNEYS_UI:-}" -e JOURNEYS_OUT=/out -e JOURNEYS_KIND="$kind" -e JOURNEYS_SHA="${SHA:0:12}" -e JOURNEYS_AT="$at ($EXTAS_TIMEZONE)" \
+  -e BASE="https://$EXTAS_STAGING_HOST" -e JOURNEYS_UI="${JOURNEYS_UI:-}" -e JOURNEYS_GROUP="$GROUP" -e JOURNEYS_OUT=/out -e JOURNEYS_KIND="$kind" -e JOURNEYS_SHA="${SHA:0:12}" -e JOURNEYS_AT="$at ($EXTAS_TIMEZONE)" \
   -v "$REPO/tools:/w/tools:ro" -v "$REPO/docs/qa:/w/docs/qa:ro" -v "$OUT:/out" \
   "$IMG" node /w/tools/journeys.mjs || rc=$?
 
 if [ -f "$OUT/result.json" ]; then
-  jq -c --arg kind "$kind" '{at, kind: $kind, sha, ok, journeys, failed, steps, skipped, ui: (.ui // null), problems: (.problems[:20])}' "$OUT/result.json" > "$STATE/journeys.json.tmp"
+  jq -c --arg kind "$kind" '{at, kind: $kind, sha, ok, journeys, failed, steps, skipped, ui: (.ui // null), problems: (.problems[:20])}' "$OUT/result.json" > "$SUMMARY.tmp"
 else
   jq -cn --arg at "$at" --arg kind "$kind" --arg sha "${SHA:0:12}" --arg rc "$rc" \
-    '{at:$at, kind:$kind, sha:$sha, ok:false, journeys:0, failed:0, steps:0, skipped:0, problems:["the journeys did not finish (exit " + $rc + ")"]}' > "$STATE/journeys.json.tmp"
+    '{at:$at, kind:$kind, sha:$sha, ok:false, journeys:0, failed:0, steps:0, skipped:0, problems:["the journeys did not finish (exit " + $rc + ")"]}' > "$SUMMARY.tmp"
 fi
-chmod 0644 "$STATE/journeys.json.tmp"
-cp "$STATE/journeys.json.tmp" "$STATE/journeys/$(date -d "@$now" +%Y%m%d-%H%M%S).json"
-mv "$STATE/journeys.json.tmp" "$STATE/journeys.json"
-journeys_keep "$STATE/journeys" "$JOURNEYS_KEEP"
-# PR 419: every run in the history (Reports › Site health › Run history), with each failed step as a finding
-if [ -f "$OUT/result.json" ]; then
-  log "$(run_history journeys "$OUT" "$mig" "$work/db.env")"
+chmod 0644 "$SUMMARY.tmp"
+cp "$SUMMARY.tmp" "$RUNS/$(date -d "@$now" +%Y%m%d-%H%M%S).json"
+mv "$SUMMARY.tmp" "$SUMMARY"
+journeys_keep "$RUNS" "$JOURNEYS_KEEP"
+if [ -z "$GROUP" ]; then
+  # PR 419: every run in the history (Reports › Site health › Run history), with each failed step as a finding
+  if [ -f "$OUT/result.json" ]; then
+    log "$(run_history journeys "$OUT" "$mig" "$work/db.env")"
+  fi
+  log "$(run_alert journeys "$STATE/journeys.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log")"
+else
+  log "group $GROUP: kept apart (no run history, no Telegram line)"
 fi
-log "$(run_alert journeys "$STATE/journeys.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log")"
-log "$(jq -r 'if .ok then "PASS: \(.journeys) journeys, \(.steps) steps (\(.skipped) skipped)" else "FAIL: \(.problems | join("; "))" end' "$STATE/journeys.json")"
+log "$(jq -r 'if .ok then "PASS: \(.journeys) journeys, \(.steps) steps (\(.skipped) skipped)" else "FAIL: \(.problems | join("; "))" end' "$SUMMARY")"
 exit "$rc"

@@ -1,13 +1,13 @@
 // Tests for tools/journeys.mjs (PR 414; run with the web tests). The browser part runs on the VM (infra/deploy/journeys.sh).
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { journeyProblems, pickJourneys, reportMarkdown, stepLabel, summarise, UI_KINDS, uiFilter, uiKindsOf } from './journeys.mjs';
+import { journeyProblems, namesSwitch, pickJourneys, reportMarkdown, stepLabel, summarise, switchGate, switchValue, UI_KINDS, uiFilter, uiKindsOf } from './journeys.mjs';
 
 const saved = JSON.parse(readFileSync(new URL('../docs/qa/journeys.json', import.meta.url), 'utf8'));
 
 it('the saved journeys are well formed: four roles, two screens, every write only to prove it is refused', () => {
   expect(journeyProblems(saved)).toEqual([]);
-  expect(saved.journeys.map((j) => j.id)).toEqual(['customer', 'admin', 'accountant', 'warehouse']);
+  expect(pickJourneys(saved, '').map((j) => j.id)).toEqual(['customer', 'admin', 'accountant', 'warehouse']);
   expect(saved.screens.map((s) => s.width)).toEqual([390, 1366]);
   const writes = saved.journeys.flatMap((j) => j.steps).filter((s) => s.api && s.method !== 'GET');
   expect(writes.length).toBeGreaterThan(0);
@@ -44,6 +44,86 @@ it('names what is wrong with a journey file', () => {
 it('picks the journeys the owner chose; an unknown name is left out', () => {
   expect(pickJourneys(saved, '').map((j) => j.id)).toHaveLength(4);
   expect(pickJourneys(saved, ' admin, nobody ').map((j) => j.id)).toEqual(['admin']);
+});
+
+it('PR 414 follow-up: a group runs only when asked for; the schedule (no group) never runs the go-live gate', () => {
+  expect(pickJourneys(saved, '', '').some((j) => j.group)).toBe(false);
+  expect(pickJourneys(saved, undefined, undefined).map((j) => j.id)).toEqual(['customer', 'admin', 'accountant', 'warehouse']);
+  expect(pickJourneys(saved, '', 'go-live-gate').map((j) => j.id)).toEqual(['gate-shop', 'gate-admin']);
+  expect(pickJourneys(saved, 'gate-admin', ' go-live-gate ').map((j) => j.id)).toEqual(['gate-admin']);
+  expect(pickJourneys(saved, 'customer', 'go-live-gate')).toEqual([]);
+  expect(pickJourneys(saved, '', 'nobody')).toEqual([]);
+});
+
+it('PR 414 follow-up: the go-live gate reads only — signed out or the check account, no write, no bag, no order, every step names its finding', () => {
+  const gate = pickJourneys(saved, '', 'go-live-gate');
+  expect(gate.find((j) => j.id === 'gate-shop').signedIn).toBe(false);
+  expect(gate.find((j) => j.id === 'gate-admin').signedIn).toBe(true);
+  const steps = gate.flatMap((j) => j.steps);
+  expect(steps.every((s) => Array.isArray(s.sim) && s.sim.length > 0)).toBe(true);
+  expect(steps.some((s) => s.api || s.click)).toBe(false);
+  expect(JSON.stringify(steps)).not.toMatch(/add-to-bag|addToBag|place-order|co-submit|-save|\/api\//);
+  // every live check the gate can see: the findings it names
+  const named = new Set(steps.flatMap((s) => s.sim));
+  for (const f of ['F-011', 'F-013', 'F-019', 'F-020', 'F-023', 'F-025', 'F-041', 'F-046', 'F-047', 'F-048', 'F-051', 'F-052', 'F-053', 'F-054']) expect(named.has(f)).toBe(true);
+});
+
+it('PR 414 follow-up: names what is wrong with a group, a finding, a switch or a status', () => {
+  const bad = {
+    screens: [{ id: 'phone', width: 390, height: 844 }],
+    journeys: [
+      {
+        id: 'g',
+        group: 'Go Live!',
+        steps: [{ open: '/', sim: ['SIM-F-1'] }, { follow: 'a', status: 404 }, { open: '/', when: 'pdp buy' }, { open: '/x', status: 404, sim: 'F-023', unless: 'orders.bulkLane.enabled' }],
+      },
+    ],
+  };
+  expect(journeyProblems(bad)).toEqual([
+    'g: a group is a short name of a-z, 0-9 and -',
+    'g step 1: a finding is named F-### (SIM-F-###)',
+    'g step 2: only an open or api step expects a status',
+    'g step 3: a switch is a setting key with the path in its value',
+  ]);
+});
+
+it("PR 414 follow-up: a switch is a setting key and the path in its value; only true is on", () => {
+  const settings = [
+    { key: 'pdp.buy', value: { orderNow: true, callToOrder: false } },
+    { key: 'pdp.buy.extra', value: true },
+    { key: 'orders.bulkLane', value: { enabled: true } },
+    { key: 'rules.eid.enabled', value: false },
+    { key: 'vault.secret' },
+  ];
+  expect(switchValue(settings, 'pdp.buy.callToOrder')).toEqual({ found: true, on: false });
+  expect(switchValue(settings, 'pdp.buy.orderNow')).toEqual({ found: true, on: true });
+  expect(switchValue(settings, 'pdp.buy.extra')).toEqual({ found: true, on: true }); // the longest key wins
+  expect(switchValue(settings, 'orders.bulkLane.enabled')).toEqual({ found: true, on: true });
+  expect(switchValue(settings, 'orders.bulkLane')).toEqual({ found: true, on: false }); // an object is not "on"
+  expect(switchValue(settings, 'rules.eid.enabled')).toEqual({ found: true, on: false });
+  expect(switchValue(settings, 'pdp.buy.nothing.deeper')).toEqual({ found: true, on: false });
+  expect(switchValue(settings, 'vault.secret.enabled')).toEqual({ found: true, on: false }); // a hidden value reads off
+  expect(switchValue(settings, 'pdp.buyer')).toEqual({ found: false, on: false });
+  expect(switchValue(null, 'pdp.buy')).toEqual({ found: false, on: false });
+});
+
+it('PR 414 follow-up: when / unless skip a step by the switches; a switch that is no setting, or switches not read, fail it', () => {
+  const settings = [
+    { key: 'orders.bulkLane', value: { enabled: false } },
+    { key: 'rules.eid.enabled', value: true },
+    { key: 'delivery.holiday', value: { enabled: false } },
+  ];
+  expect(switchGate({ open: '/' }, null)).toBeNull();
+  expect(namesSwitch({ open: '/' })).toBe(false);
+  expect(namesSwitch({ open: '/', switches: { 'a.b': 'x' } })).toBe(true);
+  expect(switchGate({ open: '/bulk-order', unless: 'orders.bulkLane.enabled' }, settings)).toBeNull();
+  expect(switchGate({ open: '/bulk-order', when: 'orders.bulkLane.enabled' }, settings)).toEqual({ skip: 'switch orders.bulkLane.enabled is off' });
+  expect(switchGate({ open: '/', unless: ['rules.eid.enabled', 'delivery.holiday.enabled'] }, settings)).toEqual({ skip: 'switch rules.eid.enabled is on' });
+  expect(switchGate({ open: '/', when: ['rules.eid.enabled'] }, settings)).toBeNull();
+  expect(switchGate({ open: '/', switches: { 'nope.enabled': 'x' } }, settings)).toEqual({ problem: 'no such setting on this site: nope.enabled' });
+  expect(switchGate({ open: '/', when: 'rules.eid.enabled' }, null).problem).toMatch(/could not be read/);
+  expect(stepLabel({ open: '/bulk-order', status: 404, unless: 'orders.bulkLane.enabled', sim: ['F-023'] })).toBe('open /bulk-order → 404 (unless orders.bulkLane.enabled) · SIM-F-023');
+  expect(stepLabel({ open: '/', when: ['a.on', 'b.on'], sim: ['F-019', 'F-047'] })).toBe('open / (when a.on + b.on) · SIM-F-019, SIM-F-047');
 });
 
 it('summarises a run and writes its report: failed steps first, skipped steps counted', () => {
