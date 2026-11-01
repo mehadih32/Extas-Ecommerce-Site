@@ -19,7 +19,7 @@ import { BASIS_RULE, daysPeriod, nextDay } from './pure';
 export type PnlInputs = Omit<ProfitInputs, 'ads'>;
 
 /** The parts of the contribution a costed order can be missing (not known yet). */
-export const PNL_MAYBE_MISSING = ['courier', 'paymentFees', 'packaging'] as const satisfies readonly ProfitPart[];
+export const PNL_MAYBE_MISSING = ['courier', 'codFee', 'paymentFees', 'packaging'] as const satisfies readonly ProfitPart[];
 
 export interface PnlLine {
   key: string;
@@ -41,6 +41,8 @@ export interface Pnl {
   parts: Record<ProfitPart, number>;
   /** How many costed orders were missing each part. */
   missing: Record<(typeof PNL_MAYBE_MISSING)[number], number>;
+  /** PR 354: how many costed orders had a parcel priced from the rate card (`costs.courierEstimate`). */
+  estimatedCourier: number;
   /** PR 353: M4 over the costed orders — their Sales less the goods that came back. */
   netSalesMinor: number;
   grossProfitMinor: number;
@@ -57,7 +59,7 @@ export interface Pnl {
 
 const zeroParts = () => Object.fromEntries(PROFIT_PARTS.map((k) => [k, 0])) as Record<ProfitPart, number>;
 const grossOf = (p: Record<ProfitPart, number>) => p.sales - p.returns - p.productCost;
-const contributionOf = (p: Record<ProfitPart, number>) => grossOf(p) + p.deliveryCharge - p.courier - p.paymentFees - p.packaging - p.messages - p.returnLoss;
+const contributionOf = (p: Record<ProfitPart, number>) => grossOf(p) + p.deliveryCharge - p.courier - p.codFee - p.paymentFees - p.packaging - p.messages - p.returnLoss;
 
 /** Profit and loss of one store over the days `from`–`to` (the store's own days), fixed costs not included. */
 export async function profitAndLoss(db: Db, storeId: number, days: { from: string; to: string }, inputs: PnlInputs): Promise<Pnl> {
@@ -97,6 +99,7 @@ export async function profitAndLoss(db: Db, storeId: number, days: { from: strin
   let costedOrders = 0;
   let uncostedOrders = 0;
   let uncostedSales = 0;
+  let estimatedCourier = 0;
   const dayMap = new Map<string, { day: string; orders: number; salesMinor: number; grossProfitMinor: number; contributionMinor: number }>();
   for (const p of profits.values()) {
     const sales = p.parts.sales.minor ?? 0;
@@ -117,6 +120,7 @@ export async function profitAndLoss(db: Db, storeId: number, days: { from: strin
       if (v !== null) own[key] = v;
     }
     for (const key of PNL_MAYBE_MISSING) if (p.parts[key].state === 'missing') missing[key] += 1;
+    if (p.parts.courier.state === 'estimated') estimatedCourier += 1;
     for (const key of PROFIT_PARTS) parts[key] += own[key];
     day.salesMinor += own.sales;
     day.grossProfitMinor += grossOf(own);
@@ -134,6 +138,7 @@ export async function profitAndLoss(db: Db, storeId: number, days: { from: strin
     orderedMinor: k.ordered.valueMinor,
     parts,
     missing,
+    estimatedCourier,
     netSalesMinor: parts.sales - parts.returns,
     grossProfitMinor: grossOf(parts),
     contributionMinor: contributionOf(parts),

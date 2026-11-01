@@ -59,7 +59,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 349 · profit and loss on PostgreSQL', () => {
     expect(p.parts).toMatchObject({ sales: 180_000, productCost: 110_000, deliveryCharge: 6_000, messages: 35, courier: 0 });
     expect(p.grossProfitMinor).toBe(70_000);
     expect(p.contributionMinor).toBe(70_000 + 6_000 - 35);
-    expect(p.missing).toEqual({ courier: 0, paymentFees: 0, packaging: 2 });
+    expect(p.missing).toEqual({ courier: 0, codFee: 0, paymentFees: 0, packaging: 2 });
     expect(p.adsMinor).toBe(15_000);
     expect(p.adsImported).toBe(true);
     expect(p.otherCosts).toEqual([

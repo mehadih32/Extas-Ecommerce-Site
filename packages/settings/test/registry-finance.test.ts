@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { costReportSchema, financeSettings, moneyReportSchema, teamBadgesSchema, vatRatesSchema } from '../src/registry-finance';
+import { costReportSchema, courierEstimateSchema, financeSettings, moneyReportSchema, teamBadgesSchema, vatRatesSchema } from '../src/registry-finance';
 
 describe('finance settings (v160–169)', () => {
   it('every key is in the registry at a version 160–169, labelled in English and Bengali, its default valid', () => {
@@ -58,5 +58,11 @@ describe('finance settings (v160–169)', () => {
     expect(teamBadgesSchema.safeParse({ ...d, mins: { ...d.mins, confirmed: 0 } }).success).toBe(false);
     expect(teamBadgesSchema.safeParse({ ...d, mins: { ...d.mins, replies: 40 } }).success).toBe(true);
     expect(teamBadgesSchema.safeParse({ ...d, period: 'day' }).success).toBe(false);
+  });
+
+  it('PR 354: the courier estimate is off as shipped, COD fee apart off too; only the two switches', () => {
+    expect(financeSettings['costs.courierEstimate'].default).toEqual({ enabled: false, codFee: false });
+    expect(financeSettings['costs.courierEstimate'].version).toBe(166);
+    expect(courierEstimateSchema.safeParse({ enabled: true, codFee: false, extra: 1 }).success).toBe(false);
   });
 });

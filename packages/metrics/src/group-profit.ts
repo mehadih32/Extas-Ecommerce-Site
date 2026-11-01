@@ -149,10 +149,10 @@ function build(
     const goods = p.parts.sales.minor ?? 0;
     const sales = apportion(goods, mine.map((l) => Number(l.total)));
     const costed = p.parts.productCost.minor !== null;
-    const part = (k: 'deliveryCharge' | 'courier' | 'paymentFees' | 'packaging' | 'messages' | 'ads') => p.parts[k].minor;
+    const part = (k: 'deliveryCharge' | 'courier' | 'codFee' | 'paymentFees' | 'packaging' | 'messages' | 'ads') => p.parts[k].minor;
     const known = (k: Parameters<typeof part>[0]) => part(k) ?? 0;
-    const orderNet = known('deliveryCharge') - known('courier') - known('paymentFees') - known('packaging') - known('messages');
-    const missing = (['courier', 'paymentFees', 'packaging'] as const).some((k) => part(k) === null) || (p.parts.ads.state !== 'off' && part('ads') === null);
+    const orderNet = known('deliveryCharge') - known('courier') - known('codFee') - known('paymentFees') - known('packaging') - known('messages');
+    const missing = (['courier', 'codFee', 'paymentFees', 'packaging'] as const).some((k) => p.parts[k].state === 'missing') || (p.parts.ads.state !== 'off' && part('ads') === null);
     const back = new Map(p.returned.map((r) => [r.orderItemId, r]));
     const weights = sales.map((s, k) => Math.max(0, s - (back.get(mine[k]!.id)?.valueMinor ?? 0)));
     const netShares = apportion(orderNet, weights);

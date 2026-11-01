@@ -60,6 +60,13 @@
       "forbidden": "You do not have the permission for this.",
       "network": "No connection. Try again.",
       "other": "Something went wrong. Try again."
+    },
+    "estimate": {
+      "title": "Courier cost estimate in the profit",
+      "sub": "Off as shipped. When on, a real parcel whose charge the courier has not reported yet is priced from the courier rates below (the order’s delivery band and the parcel’s weight) in each order’s profit, marked as an estimate. Nothing is charged and no price changes.",
+      "on": "Estimate the courier charge from the rate card",
+      "codFee": "Show the COD fee apart",
+      "codFeeHow": "The rate card’s COD fee of an estimated parcel as its own line. A courier’s own reported charge already has it inside."
     }
   }
 }

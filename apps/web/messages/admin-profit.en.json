@@ -29,6 +29,9 @@
       "deliveryChargeHow": "The charge on each delivered order",
       "courier": "Courier",
       "courierHow": "The charge on each real parcel",
+      "codFee": "COD fee",
+      "codFeeHow": "The rate card’s COD fee of parcels priced from it (Money → Costs & fees)",
+      "courierEstimated": "{n} orders’ courier priced from your rate card (an estimate)",
       "paymentFees": "Payment fees",
       "paymentFeesHow": "Online payments at your fee figures (Money → Costs & fees)",
       "packaging": "Packaging",
@@ -53,6 +56,7 @@
     "uncosted": "{n} delivered order(s) worth {amount} have no ERP cost on a line, so they are left out of every profit line (never cost 0): {skus}",
     "missing": {
       "courier": "{n} order(s) have a parcel without its charge yet",
+      "codFee": "{n} orders: a COD fee not on the rate card",
       "paymentFees": "{n} order(s) have an online payment without a fee figure",
       "packaging": "{n} order(s) without a packaging cost: enter it on Money → Costs & fees"
     },
