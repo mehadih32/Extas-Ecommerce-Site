@@ -19,6 +19,10 @@
 //                 switch, put away; never deleted)
 //   livechat.ts   the site's own chat: a visitor's thread and messages (off as it ships: support.liveChat)
 //
+// PR 427: identity resolution.
+//   identity.ts   who wrote a message (resolveIdentity, in receiveMessage), the person's other chats (personOf), and
+//                 the team's corrections: set the number, unlink the customer, "not the same person"
+//
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
 export * from './channels';
@@ -33,3 +37,5 @@ export * from './livechat';
 export * from './callback';
 // PR 75 follow-up — the contact page's form: the message lands in the inbox.
 export * from './contact-form';
+// PR 427 — who is writing: one person across channels.
+export * from './identity';

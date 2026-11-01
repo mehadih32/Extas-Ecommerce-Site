@@ -96,6 +96,8 @@ export * from './registry-call-me';
 export * from './registry-voice-address';
 // S20 · PR 404 — what one print run prints (registry-print-run.ts, version 150).
 export * from './registry-print-run';
+// S22 · PR 427 — identity resolution in the Support inbox (registry-support-identity.ts, version 155).
+export * from './registry-support-identity';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

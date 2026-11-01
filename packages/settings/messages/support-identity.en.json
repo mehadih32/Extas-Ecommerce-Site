@@ -1,0 +1,8 @@
+{
+  "support": {
+    "identity": {
+      "label": "Who is writing",
+      "help": "When a message arrives, find the customer behind it: the number WhatsApp gives, or a Bangladeshi mobile number the customer types in the chat. The chat is then linked to the customer with that number, and the same person's chats on other channels show together. Off as shipped. An employee can always undo a link; a chat set by hand is never changed automatically again. Nothing is sent and no order changes."
+    }
+  }
+}

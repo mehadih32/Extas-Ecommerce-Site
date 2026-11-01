@@ -12,6 +12,7 @@ import type { Who } from './context';
 
 const A = '+8801700003821'; // hardcode-ok: made-up test numbers
 const B = '+8801700003822'; // hardcode-ok: made-up test numbers
+const OTHER = '+8801700003829'; // hardcode-ok: made-up test numbers
 const WORD = 'ERASE';
 
 describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('erasure requests on PostgreSQL (PR 382)', () => {
@@ -44,6 +45,10 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('erasure requests on Postg
     await order(null, A);
     await p.customerAddress.create({ data: { storeId: f.S, customerId: b, name: 'Rahim', phone: B, addressLine: 'House 1, Road 2' } });
     await p.customerCredential.create({ data: { storeId: f.S, customerId: a, passwordHash: 'x' } });
+    // PR 427: two Support inbox chat contacts of his — one linked to his profile, one only with his number
+    await p.supportContact.create({ data: { storeId: f.S, channelKind: 'messenger', externalId: 'psid-382', displayName: 'Rahim FB', phone: A, customerId: a } });
+    await p.supportContact.create({ data: { storeId: f.S, channelKind: 'livechat', externalId: 'visitor-382', displayName: 'Rahim', phone: B } });
+    await p.supportContact.create({ data: { storeId: f.S, channelKind: 'livechat', externalId: 'visitor-other', displayName: 'Someone else', phone: OTHER } });
   });
   afterAll(async () => f?.t.drop());
 
@@ -100,6 +105,8 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('erasure requests on Postg
     for (const o of orders) expect(o).toMatchObject({ phone: null, customerName: null, email: null, shippingAddressText: null, ip: null, totalMinor: 1_500 });
     expect(await p.customerAddress.findFirstOrThrow({ where: { customerId: b } })).toMatchObject({ name: '', phone: '', addressLine: '', archivedAt: expect.any(Date) });
     expect((await p.customerCredential.findUniqueOrThrow({ where: { customerId: a } })).passwordHash).toBe('!erased');
+    for (const externalId of ['psid-382', 'visitor-382']) expect(await p.supportContact.findFirstOrThrow({ where: { externalId } })).toMatchObject({ phone: null, displayName: null });
+    expect(await p.supportContact.findFirstOrThrow({ where: { externalId: 'visitor-other' } })).toMatchObject({ phone: OTHER, displayName: 'Someone else' });
     expect(await p.auditLog.count({ where: { action: 'customer.erasure.done' } })).toBe(1);
     expect(await p.journeyEnrollment.findFirstOrThrow({ where: { customerId: b } })).toMatchObject({ status: 'EXITED', reason: 'ERASED' });
     expect(await p.notificationLog.findFirstOrThrow({ where: { dedupeKey: 'crm:e382' } })).toMatchObject({ status: 'SKIPPED', reason: 'ERASED', recipient: '' });

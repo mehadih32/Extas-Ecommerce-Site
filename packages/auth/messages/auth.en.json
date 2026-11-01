@@ -276,6 +276,7 @@
       "reply": "Reply, write internal notes, take a conversation, mark it solved",
       "assign": "Give a conversation to someone else",
       "settings": "Change Support settings",
+      "identity": "Set who is writing a chat: its number, its customer, \"not the same person\" (never sends anything or changes an order)",
       "riderIssues": {
         "write": "Log a rider overcharge complaint with its proof",
         "decide": "Approve or reject a rider overcharge complaint (opens the courier claim)"

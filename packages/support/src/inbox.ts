@@ -8,6 +8,7 @@ import { actorPermissions } from '@extas/auth';
 import { z } from 'zod';
 import { allow, parse, setting, SupportError, type SupportDeps, type Who } from './context';
 import { maskPhone } from '@extas/customers/pure';
+import { personOf, type Person } from './identity';
 import { INBOX_VIEWS, type ConversationStatus, type InboxView } from './pure';
 import { inboxPhoneDigits } from './search-pure';
 
@@ -186,8 +187,10 @@ export interface Thread {
   createdAt: Date;
   messages: ThreadMessage[];
   events: ThreadEvent[];
-  /** What the person reading may do here. */
-  you: { id: string | null; reply: boolean; assign: boolean };
+  /** PR 427: the same person's other chats (other channels, earlier chats). */
+  person: Person;
+  /** What the person reading may do here (`identity`: set the number, unlink the customer, "not the same person"). */
+  you: { id: string | null; reply: boolean; assign: boolean; identity: boolean };
 }
 
 /** One conversation with every message, file, note and log line, oldest first. */
@@ -204,12 +207,13 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
     },
   });
   if (!c) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
-  const [shown, customer, order, names, perms] = await Promise.all([
+  const [shown, customer, order, names, perms, person] = await Promise.all([
     phoneShown(deps, who, held),
     c.customerId ? deps.db.customer.findFirst({ where: { id: c.customerId, storeId: who.storeId }, select: { id: true, name: true, orderCount: true } }) : null,
     c.orderId ? deps.db.order.findFirst({ where: { id: c.orderId, storeId: who.storeId }, select: { id: true, number: true, status: true } }) : null,
     staffNames(deps, [c.assignedToId]),
     actorPermissions(deps.db, who.actor, { storeId: who.storeId }),
+    personOf(deps.db, who.storeId, c.contactId, c.id),
   ]);
   return {
     id: c.id,
@@ -238,7 +242,8 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
       files: m.attachments.map((a) => ({ id: a.id, kind: a.kind, fileName: a.fileName, contentType: a.contentType, sizeBytes: a.sizeBytes, status: a.status, ready: !!a.assetId && !a.removedAt })),
     })),
     events: c.events.map((e) => ({ id: e.id, kind: e.kind, actor: { type: e.actorType, name: e.actorName }, data: (e.data as Record<string, unknown> | null) ?? null, at: e.createdAt })),
-    you: { id: who.actor.staffUserId, reply: perms.has('support.reply'), assign: perms.has('support.assign') },
+    person,
+    you: { id: who.actor.staffUserId, reply: perms.has('support.reply'), assign: perms.has('support.assign'), identity: perms.has('support.identity') },
   };
 }
 

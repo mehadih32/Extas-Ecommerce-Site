@@ -1,13 +1,15 @@
 // PR 425 — a customer's message arrives (B4.2: "the server attaches it to that customer's identity and conversation and
 // shows it in the Support Inbox"). A channel's connector (PR 426) calls `receiveMessage` from its webhook; nothing else
 // does. The same channel message twice is one message (its id is kept per conversation). A new person gets a contact
-// (matched to a customer by the exact number when the channel gives one; the full matching across channels is PR 427);
+// (matched to a customer by the exact number when the channel gives one; PR 427: with `support.identity` on, the number
+// from WhatsApp or from the chat's words, its customer and one person across channels — identity.ts);
 // a person's next message joins their conversation on that channel, and a solved one opens again. Files are recorded
 // with the channel's address and PENDING until they are copied to our storage (B4.8, with the connector). The log
 // records every arrival. Nothing here sends anything or changes an order.
 import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
-import { checkStoreId, nowOf, parse, SupportError, TX, type SupportDeps } from './context';
+import { checkStoreId, nowOf, parse, setting, SupportError, TX, type SupportDeps } from './context';
+import { resolveIdentity } from './identity';
 import { cleanFileName, PREVIEW_CHARS, previewOf, SUBJECT_CHARS } from './pure';
 
 // the database's MediaKind values
@@ -76,6 +78,7 @@ export async function receiveMessage(deps: SupportDeps, input: ReceiveInput): Pr
   if (!text && !d.message.files.length) throw new SupportError('EMPTY', 'a message needs words or a file', ['message']);
   const channel = await deps.db.supportChannel.findUnique({ where: { storeId_kind_externalId: { storeId: d.storeId, kind: d.channel.kind, externalId: d.channel.externalId } } });
   if (!channel || channel.archivedAt) throw new SupportError('NOT_FOUND', 'no such channel', ['channel']);
+  const identity = await setting(deps, d.storeId, 'support.identity');
 
   return deps.db.$transaction(async (tx) => {
     // one person on one channel at a time, so two messages arriving together never start two conversations
@@ -151,6 +154,8 @@ export async function receiveMessage(deps: SupportDeps, input: ReceiveInput): Pr
     const actor = { actorType: 'CUSTOMER' as const, actorName: contact.displayName };
     if (reopened) await tx.conversationEvent.create({ data: { storeId: d.storeId, conversationId: conv.id, kind: 'REOPENED', ...actor, data: { from: 'SOLVED' }, createdAt: at } });
     await tx.conversationEvent.create({ data: { storeId: d.storeId, conversationId: conv.id, kind: 'RECEIVED', ...actor, messageId: message.id, data: { files: d.message.files.length }, createdAt: at } });
+    // PR 427: who wrote it (off as it ships); its log lines come just after the message's own
+    await resolveIdentity(tx, { storeId: d.storeId, contactId: contact.id, conversationId: conv.id, text, at: new Date(at.getTime() + 1), rules: identity });
     return { conversationId: conv.id, messageId: message.id, started, reopened, duplicate: false };
   }, TX);
 }

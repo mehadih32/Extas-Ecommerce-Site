@@ -46,6 +46,12 @@
 .adm2 .sp-kv>span:nth-child(odd){color:var(--mute)}
 .adm2 .sp-kv>span:nth-child(even){overflow-wrap:anywhere}
 .adm2 .sp-acts{display:flex;flex-wrap:wrap;gap:8px}
+/* PR 427: the same person's other chats */
+.adm2 .sp-same{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.adm2 .sp-same-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-height:44px;padding:8px 10px;border:1px solid var(--ln);border-radius:9px;color:inherit;text-decoration:none;font-size:13px}
+.adm2 .sp-same-row:hover{border-color:var(--g6)}
+.adm2 .sp-same-row>span:first-child{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.adm2 .sp-same-row .a2-pill{margin-left:auto}
 @media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
   .adm2 .sp-file{min-height:44px}
   .adm2 .sp-chips .sp-file button{min-width:44px;min-height:44px}

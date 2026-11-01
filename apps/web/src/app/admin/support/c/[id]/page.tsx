@@ -3,6 +3,8 @@
 // in the note colour — with their files; the box to reply or write a note; beside it the state, who has it, the
 // customer and the linked order, and the who-did-what log. On a phone and a tablet "Conversation" and "Details & log"
 // are two tabs; on a computer they sit side by side. The order panel with the customer's history is PR 428.
+// PR 427: "Same person" — this person's other chats (other channels, earlier chats) and, with `support.identity`, the
+// chat's number set by hand, "Not this customer" and "Not the same person".
 //
 // `support.read` opens it; replying, notes, taking it and the state need `support.reply`, giving it to someone else
 // `support.assign` (the API checks again). Nothing here moves money or changes an order.
@@ -16,6 +18,7 @@ import { DetailGrid } from '@/components/admin/orders/OrderCommands';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { Composer, type ComposerTexts } from '@/components/admin/support/Composer';
+import { IdentityActions, type IdentityTexts } from '@/components/admin/support/IdentityActions';
 import { SideActions, type SideTexts } from '@/components/admin/support/SideActions';
 import { formatNumber } from '@/components/admin/products/model';
 import { printedAt } from '@/lib/admin-fulfil/handover';
@@ -101,6 +104,8 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const s = (k: string) => t(d, `sup.side.${k}`);
   const side: SideTexts = { state: s('state'), solve: s('solve'), wait: s('wait'), reopen: s('reopen'), owner: s('owner'), take: s('take'), letGo: s('letGo'), give: s('give'), giveGo: s('giveGo'), nobody: s('nobody'), saved: s('saved'), err: errs(d) };
   const connected = Object.keys(sd.channels ?? {}).includes(th.channel.kind) && th.channel.enabled;
+  const p = (k: string) => t(d, `sup.person.${k}`);
+  const identityTexts: IdentityTexts = { phone: p('phone'), phoneHelp: p('phoneHelp'), phoneSave: p('phoneSave'), unlink: p('unlink'), split: p('split'), saved: p('saved'), badPhone: p('badPhone'), err: errs(d) };
 
   const main = (
     <>
@@ -220,6 +225,45 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         <div className="a2-mt12">
           <SideActions base={`${API}/c/${th.id}`} version={th.version} status={th.status} assignedId={th.assignedTo?.id ?? null} me={th.you.id} canReply={th.you.reply} canAssign={th.you.assign} staff={staff} texts={side} />
         </div>
+      </section>
+      <section className="a2-card" aria-labelledby="sp-person" data-testid="support-person">
+        <h2 className="a2-h4" id="sp-person">
+          {p('h')}
+        </h2>
+        <p className="a2-xs a2-mute" style={{ margin: '4px 0 12px' }}>
+          {p('d')}
+        </p>
+        {th.person.chats.length ? (
+          <ul className="sp-same">
+            {th.person.chats.map((x) => (
+              <li key={x.id}>
+                <Link className="sp-same-row" href={`/admin/support/c/${x.id}`} data-testid="support-person-chat">
+                  <span>
+                    {kindName(d, x.channel.kind)} · {x.channel.name}
+                  </span>
+                  <span className="a2-xs a2-mute">
+                    {t(d, 'sup.th.ref', { ref: x.refCode })}
+                    {x.lastMessageAt ? ` · ${printedAt(x.lastMessageAt.toISOString(), view.timeZone)}` : ''}
+                  </span>
+                  <span className={`a2-pill ${statusTone(x.status)}`}>{t(d, `sup.status.${x.status}`)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="a2-sm a2-mute">{p('none')}</p>
+        )}
+        {th.person.contacts > 1 ? <p className="a2-xs a2-mute a2-mt6">{p('contacts').replace('{n}', n(th.person.contacts))}</p> : null}
+        {th.person.fixed ? (
+          <p className="a2-xs a2-mute a2-mt6" data-testid="support-person-fixed" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <ShellIcon name="lock" size={11} /> {p('fixed')}
+          </p>
+        ) : null}
+        {th.you.identity ? (
+          <div className="a2-mt12">
+            <IdentityActions url={`${API}/c/${th.id}/identity`} version={th.version} linked={!!th.customer} together={th.person.contacts > 1} texts={identityTexts} />
+          </div>
+        ) : null}
       </section>
       <section className="a2-card" aria-labelledby="sp-log" data-testid="support-log">
         <h2 className="a2-h4" id="sp-log">

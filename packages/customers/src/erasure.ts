@@ -9,7 +9,8 @@
 //     its saved addresses keep only the area (name, number and line cleared, archived); its sign-in is closed (the
 //     password replaced by a value nothing matches, every session revoked); his orders (and guest orders with his
 //     numbers) keep their lines, money, status and history but lose the name, number, e-mail, address text and the
-//     kept device facts; his unfinished checkouts and back-in-stock requests lose their contact details; the identity
+//     kept device facts; his unfinished checkouts and back-in-stock requests lose their contact details, and so do his
+//     Support inbox chat contacts (the number and name kept on them, PR 427); the identity
 //     graph's links of his orders go; the spoken address of his checkouts (CN-020 (4), PR 117: the CheckoutVoice rows of
 //     his orders and of the browsers they came from) loses its words and its recording, the recording's library row
 //     archived (review R3 M1). An audit row records who and when (never what was erased).
@@ -164,6 +165,9 @@ export async function carryOutErasure(deps: CustomersDeps, who: Who, input: unkn
     const contact = [...(phones.length ? [{ phone: { in: phones } }] : []), ...(emails.length ? [{ email: { in: emails } }] : []), { customerId: { in: ids } }];
     await tx.checkoutDraft.updateMany({ where: { storeId: who.storeId, OR: contact }, data: { phone: null, name: null, email: null, addressText: null } });
     await tx.backInStockRequest.updateMany({ where: { storeId: who.storeId, OR: contact }, data: { phone: null, email: null } });
+    // PR 427: the Support inbox's chat contacts of this person (linked to a profile, or with one of its numbers) lose
+    // the number and the name kept on them; the number found in a chat's words was kept there.
+    await tx.supportContact.updateMany({ where: { storeId: who.storeId, OR: [{ customerId: { in: ids } }, ...(phones.length ? [{ phone: { in: phones } }] : [])] }, data: { phone: null, displayName: null } });
 
     const request = await tx.customerErasureRequest.update({
       where: { id: req.id },

@@ -174,6 +174,9 @@ import districtPromiseEn from '../messages/district-promise.en.json';
 import comboSplitBn from '../messages/combo-split.bn.json';
 import printRunBn from '../messages/print-run.bn.json';
 import printRunEn from '../messages/print-run.en.json';
+// S22 · PR 427 — identity resolution in the Support inbox (registry v155).
+import supportIdentityBn from '../messages/support-identity.bn.json';
+import supportIdentityEn from '../messages/support-identity.en.json';
 import comboSplitEn from '../messages/combo-split.en.json';
 // CN-020 (3) — "Call me" at checkout (registry v99).
 import callMeBn from '../messages/call-me.bn.json';
@@ -293,6 +296,9 @@ messages.bn = mergeMessages(messages.bn, financeBn);
 // S20 · PR 404 (registry v150): what one print run prints.
 messages.en = mergeMessages(messages.en, printRunEn);
 messages.bn = mergeMessages(messages.bn, printRunBn);
+// S22 · PR 427 (registry v155): who is writing in the Support inbox.
+messages.en = mergeMessages(messages.en, supportIdentityEn);
+messages.bn = mergeMessages(messages.bn, supportIdentityBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

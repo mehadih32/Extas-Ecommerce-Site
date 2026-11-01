@@ -51,6 +51,8 @@ export const SUPPORT_ERROR_CODES = [
   'TOO_MANY',
   // PR 75 follow-up: the contact page's form is switched off
   'CONTACT_FORM_OFF',
+  // PR 427: the chat has no customer or no other chat to undo
+  'NOT_LINKED',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 
@@ -84,7 +86,7 @@ export interface Who {
 }
 
 /** The support permissions (packages/auth/src/catalogue.ts). */
-export const SUPPORT_PERMISSIONS = ['support.read', 'support.reply', 'support.assign', 'support.settings'] as const satisfies readonly PermissionKey[];
+export const SUPPORT_PERMISSIONS = ['support.read', 'support.reply', 'support.assign', 'support.settings', 'support.identity'] as const satisfies readonly PermissionKey[];
 export type SupportPermission = (typeof SUPPORT_PERMISSIONS)[number];
 
 export function checkStoreId(storeId: number): void {

@@ -10,6 +10,9 @@
 //   POST  /api/admin/support/c/:id/assign       {staffId|null, version?} take, let go or give (support.reply; another
 //                                               person: support.assign)
 //   POST  /api/admin/support/c/:id/status       {status: OPEN|WAITING|SOLVED, version?} (support.reply)
+//   POST  /api/admin/support/c/:id/identity     PR 427: {action: phone|unlink|split, phone?, version?} who is writing —
+//                                               set the chat's number (and so its customer), "not this customer", "not
+//                                               the same person"; audited (support.identity)
 //   POST  /api/admin/support/files              multipart `file` — one file for a reply, checked by its contents
 //                                               against Support settings; answers its id (support.reply)
 //   GET   /api/admin/support/files/:id          one file of a conversation, our stored copy (support.read)
@@ -61,6 +64,7 @@ function routeOf(path: string[], method: string): Route | null {
   if (a === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'c' && isUuid(b) && c === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'c' && isUuid(b) && (c === 'messages' || c === 'assign' || c === 'status')) return { perm: 'support.reply', methods: ['POST'] };
+  if (a === 'c' && isUuid(b) && c === 'identity') return { perm: 'support.identity', methods: ['POST'] };
   if (a === 'files' && b === undefined && c === undefined) return { perm: 'support.reply', methods: ['POST'] };
   if (a === 'files' && isUuid(b) && c === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'staff' && b === undefined) return { perm: 'support.read', methods: ['GET'] };
@@ -144,6 +148,13 @@ export async function supportRoute(request: Request, deps: AdminDeps | null, pat
       const input = { ...(await body(request)), conversationId: id };
       if (action === 'messages') return json({ ok: true, ...(await sp.replyToConversation(sd, who, input)) });
       if (action === 'assign') return json({ ok: true, ...(await sp.assignConversation(sd, who, input)) });
+      if (action === 'identity') {
+        const { action: what, ...rest } = input as { action?: unknown };
+        if (what === 'phone') return json({ ok: true, ...(await sp.setContactPhone(sd, who, rest)) });
+        if (what === 'unlink') return json({ ok: true, ...(await sp.unlinkContactCustomer(sd, who, rest)) });
+        if (what === 'split') return json({ ok: true, ...(await sp.splitContact(sd, who, rest)) });
+        return fail(400, 'INVALID_INPUT', ['action']);
+      }
       return json({ ok: true, ...(await sp.setConversationStatus(sd, who, input)) });
     }
     if (a === 'files') {

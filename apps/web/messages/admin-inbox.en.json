@@ -140,7 +140,17 @@
       "UNASSIGNED": "{name} let it go",
       "STATUS": "{name}: {from} → {to}",
       "REOPENED": "Opened again: the customer wrote",
-      "auto": "(by the inbox setting)"
+      "auto": "(by the inbox setting)",
+      "IDENTITY_PHONE": "Number taken from the chat",
+      "IDENTITY_CUSTOMER": "Linked to the customer with this number",
+      "IDENTITY_MERGED": "Same person as another chat ({n})",
+      "IDENTITY_UNLINKED": "{name}: not this customer",
+      "IDENTITY_SPLIT": "{name}: not the same person",
+      "id": {
+        "phoneChannel": "Number from the channel",
+        "phoneHand": "{name} set the number",
+        "customerHand": "{name} linked the customer"
+      }
     },
     "err": {
       "STALE": "Someone changed this conversation in between; it was read again.",
@@ -163,7 +173,8 @@
       "other": "Something went wrong. Try again.",
       "CALLBACK_OFF": "“Call me” at checkout is switched off.",
       "TOO_MANY": "This number asked for a call-back too often today.",
-      "CONTACT_FORM_OFF": "The contact page's form is switched off."
+      "CONTACT_FORM_OFF": "The contact page's form is switched off.",
+      "NOT_LINKED": "There is nothing to undo here."
     },
     "set": {
       "title": "Support settings",
@@ -272,7 +283,31 @@
         "idleSeconds": "Seconds without progress before it shows",
         "perPhonePerDay": "Call-backs one number may leave a day",
         "perPhonePerDayHelp": "Stops one number filling the inbox."
+      },
+      "identity": {
+        "h": "Who is writing",
+        "d": "When a message arrives, the inbox finds the customer behind it: the number WhatsApp gives, or a Bangladeshi mobile number the customer types in the chat. The chat is linked to the customer with that number, and the same person's chats on other channels show together. Nothing is sent and no order changes.",
+        "enabled": "Find who is writing",
+        "enabledHelp": "Off as it ships. Works on messages that arrive after it is switched on.",
+        "fromText": "Take the number from the chat's words",
+        "fromTextHelp": "For Messenger and the site's chat, where the channel gives no number: the first mobile number the customer types (Bengali or English digits).",
+        "autoLink": "Put the same person's chats together",
+        "autoLinkHelp": "The same number or the same customer on another channel is one person. Two different customers are never put together."
       }
+    },
+    "person": {
+      "h": "Same person",
+      "d": "This person's other chats, on other channels or earlier.",
+      "none": "No other chat of this person.",
+      "contacts": "Channel accounts: {n}",
+      "fixed": "Set by hand — the inbox will not change it.",
+      "phone": "Set the number",
+      "phoneHelp": "A Bangladeshi mobile number, Bengali or English digits. The customer with this number is linked.",
+      "phoneSave": "Save number",
+      "unlink": "Not this customer",
+      "split": "Not the same person",
+      "saved": "Saved.",
+      "badPhone": "This is not a Bangladeshi mobile number."
     }
   }
 }

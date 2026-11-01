@@ -3,6 +3,8 @@
 // uploaded (checked by its contents) and read back, a reply kept as NOT_SENT while no channel is connected, a note, a
 // stale press refused, take / status, the who-did-what log, a read-only person refused at the door, and the settings.
 // PR 426: the channels list (add, switch, rename, put away) and the live chat switched on making its channel.
+// PR 427: who is writing — the card switched on, a number typed in the site's chat links its customer and joins the
+// same person's other chat; set by hand, "not this customer", "not the same person" through the identity route.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
@@ -164,7 +166,7 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const r = await j('GET', ['settings']);
     const files = { enabled: true, maxPerMessage: 4, maxMb: 10, kinds: { image: true, video: true, pdf: true } };
     expect(r.body.cards['support.attachments'].value).toEqual(files);
-    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.channels', 'support.inbox', 'support.liveChat']);
+    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.channels', 'support.identity', 'support.inbox', 'support.liveChat']);
     const version = r.body.cards['support.attachments'].version as string;
     const saved = await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxPerMessage: 3 }, version } });
     expect(saved.status).toBe(200);
@@ -199,5 +201,38 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     expect(await t.prisma.supportChannel.findUniqueOrThrow({ where: { storeId_kind_externalId: { storeId, kind: 'livechat', externalId: 'site' } } })).toMatchObject({ name: 'Site chat', enabled: true });
     const after = (await j('GET', ['settings'])).body.cards['support.liveChat'];
     expect((await j('PUT', ['settings'], { body: { key: 'support.liveChat', value: { ...chat, enabled: false }, version: after.version } })).status).toBe(200);
+  });
+
+  it('PR 427: who is writing — switched on, a number in the chat links its customer; by hand through the identity route', async () => {
+    const cards = (await j('GET', ['settings'])).body.cards;
+    expect(cards['support.identity'].value).toEqual({ enabled: false, fromText: true, autoLink: true });
+    expect((await j('PUT', ['settings'], { body: { key: 'support.identity', value: { enabled: true, fromText: true, autoLink: true }, version: cards['support.identity'].version } })).status).toBe(200);
+    // hardcode-ok: a made-up customer number
+    const customer = await t.prisma.customer.create({ data: { storeId, phone: '+8801712000427', name: 'Sample buyer' } });
+    const resolver = deps.resolver;
+    const say = (contact: string, id: string, text: string) =>
+      receiveMessage({ db: t.prisma, settings: resolver }, { storeId, channel: { kind: 'livechat', externalId: 'sample-chat' }, contact: { externalId: contact, name: 'Sample visitor' }, message: { externalId: id, text } });
+    const first = await say('v-427a', 'm-427a', 'amar number 01712-000427');
+    const second = await say('v-427b', 'm-427b', 'ami abar, ০১৭১২০০০৪২৭');
+    const th = (await j('GET', ['c', second.conversationId])).body.thread;
+    expect(th.customer.id).toBe(customer.id);
+    expect(th.person.chats.map((c: { id: string }) => c.id)).toEqual([first.conversationId]);
+    expect(th.you.identity).toBe(true);
+    expect(th.events.map((e: { kind: string }) => e.kind)).toContain('IDENTITY_MERGED');
+
+    // a reader may not; a wrong number, an unknown action and a stale press are refused
+    expect((await api('POST', ['c', second.conversationId, 'identity'], { cookie: reader, body: { action: 'split' } })).status).toBe(403);
+    expect((await j('POST', ['c', second.conversationId, 'identity'], { body: { action: 'phone', phone: '12345' } })).body.error).toBe('INVALID_INPUT');
+    expect((await j('POST', ['c', second.conversationId, 'identity'], { body: { action: 'merge' } })).status).toBe(400);
+    expect((await j('POST', ['c', second.conversationId, 'identity'], { body: { action: 'split', version: 'old' } })).body.error).toBe('STALE');
+    const split = await j('POST', ['c', second.conversationId, 'identity'], { body: { action: 'split', version: th.version } });
+    expect(split.status).toBe(200);
+    expect((await j('GET', ['c', second.conversationId])).body.thread.person.chats).toEqual([]);
+    const un = await j('POST', ['c', second.conversationId, 'identity'], { body: { action: 'unlink', version: split.body.version } });
+    expect(un.body).toMatchObject({ ok: true, customerId: null });
+    expect((await j('POST', ['c', second.conversationId, 'identity'], { body: { action: 'unlink' } })).body.error).toBe('NOT_LINKED');
+    const phone = await j('POST', ['c', second.conversationId, 'identity'], { body: { action: 'phone', phone: '01712 000 427' } });
+    expect(phone.body).toMatchObject({ ok: true, customerId: customer.id });
+    expect(await t.prisma.auditLog.count({ where: { action: { startsWith: 'support.identity.' } } })).toBe(3);
   });
 });
