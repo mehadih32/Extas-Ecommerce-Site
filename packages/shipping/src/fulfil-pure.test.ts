@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bookedReceiver, handoverProblem, printOrder, stickerProblem, type StickerFacts } from './fulfil-pure';
+import { bookedReceiver, handoverProblem, printOrder, printPlacement, stickerProblem, type StickerFacts } from './fulfil-pure';
 
 const facts = (over: Partial<StickerFacts> = {}): StickerFacts => ({
   status: 'IN_REVIEW',
@@ -50,6 +50,14 @@ describe('PR 179 · packing order (B1.4)', () => {
     ];
     // Panjabi 5 pieces, Shirts 2; within Panjabi: sky 3, eid 2; the mixed order c goes with Panjabi (its biggest)
     expect(printOrder(parcels)).toEqual(['b', 'd', 'e', 'c', 'a']);
+    // PR 404: the queue preview's group of each parcel (the mixed order prints under its biggest category)
+    expect(printPlacement(parcels)).toEqual([
+      { key: 'b', group: 'Panjabi' },
+      { key: 'd', group: 'Panjabi' },
+      { key: 'e', group: 'Panjabi' },
+      { key: 'c', group: 'Panjabi' },
+      { key: 'a', group: 'Shirts' },
+    ]);
   });
 
   it('keeps order numbers in number order on a tie', () => {

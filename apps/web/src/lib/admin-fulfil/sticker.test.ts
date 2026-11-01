@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { shippingSettings } from '@extas/settings';
 import type { StickerParcel } from '@extas/shipping';
-import { sampleParcel, stickerInput, stickerSize, stickerWords, type StickerContext } from './sticker';
+import type { PdfPage } from '@extas/documents';
+import { printRunPages, sampleParcel, stickerInput, stickerSize, stickerWords, type StickerContext } from './sticker';
 import { fulfilDicts } from './i18n';
 
 const layout = shippingSettings['delivery.sticker.layout'].default;
@@ -10,6 +11,7 @@ const ctx = (over: Partial<StickerContext> = {}): StickerContext => ({ layout, e
 
 const parcel = (over: Partial<StickerParcel> = {}): StickerParcel => ({
   shipmentId: 's1',
+  orderId: 'o1',
   orderNumber: '1042',
   courierName: 'Practice courier',
   practice: true,
@@ -67,5 +69,37 @@ describe('PR 179 · the sticker from a parcel and the owner\'s settings', () => 
       expect(JSON.stringify(s)).not.toMatch(/ful\.sticker/);
       expect(s.collectMinor).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('PR 404 · a print run\'s pages in packing order', () => {
+  // a tiny page marked by its width, so the order of pages can be read back
+  const page = (w: number): PdfPage => ({ widthPt: w, heightPt: 10, image: { width: 1, height: 1, gray: Buffer.from([255]) } });
+  const parcels = [
+    { orderId: 'a', sticker: [page(1)] },
+    { orderId: 'b', sticker: [page(2), page(3)] },
+    { orderId: 'c', sticker: [page(4)] },
+  ];
+  const invoices = new Map([
+    ['a', [page(11)]],
+    ['b', [page(12)]],
+  ]);
+  const widths = (p: PdfPage[]) => p.map((x) => x.widthPt);
+
+  it('stickers only, each sticker then its invoice, or invoices only; a parcel with no invoice has none', async () => {
+    expect(widths(await printRunPages(parcels, invoices, 'sticker', layout))).toEqual([1, 2, 3, 4]);
+    expect(widths(await printRunPages(parcels, invoices, 'both', layout))).toEqual([1, 11, 2, 3, 12, 4]);
+    expect(widths(await printRunPages(parcels, invoices, 'invoice', layout))).toEqual([11, 12]);
+  });
+
+  it('on a sheet of four stickers the stickers stay tiled together and the invoices follow in the same order', async () => {
+    const real = { ...layout, size: 'a4x4' as const };
+    const one = async (w: number) => ({ widthPt: w, heightPt: w, image: { width: 4, height: 4, gray: Buffer.alloc(16, 0) } });
+    const tiledParcels = await Promise.all([1, 2, 3].map(async (n, i) => ({ orderId: ['a', 'b', 'c'][i]!, sticker: [await one(n)] })));
+    const out = await printRunPages(tiledParcels, invoices, 'both', real);
+    // one A4 sheet of stickers first, then invoice a, then invoice b
+    expect(out).toHaveLength(3);
+    expect(widths(out.slice(1))).toEqual([11, 12]);
+    expect(out[0]!.widthPt).toBeGreaterThan(500);
   });
 });

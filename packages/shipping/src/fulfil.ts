@@ -25,7 +25,7 @@ import { DELIVERY_TARGET_SELECT, deliveryTarget } from '@extas/orders';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
 import { fixedSetsOf, type FixedSetName } from './set-line';
-import { bookedReceiver, printOrder, STILL_WITH_US, stickerProblem, type StickerProblem } from './fulfil-pure';
+import { bookedReceiver, printPlacement, STILL_WITH_US, stickerProblem, type StickerProblem } from './fulfil-pure';
 
 export const PRINT_PARCEL_SELECT = {
   id: true,
@@ -68,10 +68,17 @@ export const printFacts = (s: PrintParcelRow) => ({ status: s.status, consignmen
 
 /** The parcels in packing order: categories and styles with the most pieces first (B1.4). */
 export async function inPrintOrder(db: ShippingDeps['db'], storeId: number, rows: readonly PrintParcelRow[]): Promise<PrintParcelRow[]> {
+  return (await placedInPrintOrder(db, storeId, rows)).map((x) => x.row);
+}
+
+/** PR 404 — the parcels in packing order, each with the category it is printed under (its English and Bengali name;
+ *  empty when its pieces have no category). */
+export async function placedInPrintOrder(db: ShippingDeps['db'], storeId: number, rows: readonly PrintParcelRow[]): Promise<{ row: PrintParcelRow; category: { en: string; bn: string | null } }[]> {
   const productIds = [...new Set(rows.flatMap((r) => r.order.items.map((i) => i.productId)).filter((x): x is string => !!x))];
-  const products = productIds.length ? await db.product.findMany({ where: { storeId, id: { in: productIds } }, select: { id: true, category: { select: { nameEn: true } } } }) : [];
+  const products = productIds.length ? await db.product.findMany({ where: { storeId, id: { in: productIds } }, select: { id: true, category: { select: { nameEn: true, nameBn: true } } } }) : [];
   const catOf = new Map(products.map((p) => [p.id, p.category?.nameEn ?? '']));
-  const order = printOrder(
+  const bnOf = new Map(products.filter((p) => p.category).map((p) => [p.category!.nameEn, p.category!.nameBn ?? null]));
+  const placed = printPlacement(
     rows.map((r) => ({
       key: r.id,
       orderNumber: r.order.number,
@@ -79,7 +86,7 @@ export async function inPrintOrder(db: ShippingDeps['db'], storeId: number, rows
     })),
   );
   const byId = new Map(rows.map((r) => [r.id, r]));
-  return order.map((id) => byId.get(id)!);
+  return placed.map((x) => ({ row: byId.get(x.key)!, category: { en: x.group, bn: bnOf.get(x.group) ?? null } }));
 }
 
 /** One parcel of the print run (no customer's details). */
@@ -96,9 +103,13 @@ export interface PrintRunRow {
   /** How often its sticker was printed (0: never). */
   printCount: number;
   problem: StickerProblem | null;
+  /** PR 404 (ORD-04a queue preview): the category group it prints under (empty: no category) and its pieces — style,
+   *  colour, size and how many; no price, no customer's details. */
+  category: { en: string; bn: string | null };
+  items: { name: string; colour: string | null; size: string | null; quantity: number }[];
 }
 
-const toRow = (s: PrintParcelRow): PrintRunRow => ({
+const toRow = (s: PrintParcelRow, category: PrintRunRow['category']): PrintRunRow => ({
   shipmentId: s.id,
   orderId: s.orderId,
   orderNumber: s.order.number,
@@ -109,6 +120,8 @@ const toRow = (s: PrintParcelRow): PrintRunRow => ({
   pieces: s.order.items.reduce((n, i) => n + i.quantity, 0),
   printCount: s.labelPrintCount,
   problem: problemOf(s),
+  category,
+  items: s.order.items.map((i) => ({ name: i.productName, colour: i.colourName, size: i.sizeLabel, quantity: i.quantity })),
 });
 
 /** Every booked parcel still with us, in packing order, with its print count and any reason it cannot be printed. */
@@ -118,12 +131,14 @@ export async function printRun(deps: ShippingDeps, who: Who): Promise<{ rows: Pr
     deps.db.shipment.findMany({ where: { storeId: who.storeId, status: { in: [...STILL_WITH_US] }, consignmentId: { not: null }, order: { archivedAt: null, handedOverAt: null } }, select: PRINT_PARCEL_SELECT, orderBy: { bookedAt: 'asc' } }),
     setting(deps, who.storeId, 'delivery.sticker.layout'),
   ]);
-  return { rows: (await inPrintOrder(deps.db, who.storeId, rows)).map(toRow), maxPerPdf: layout.maxPerPdf };
+  return { rows: (await placedInPrintOrder(deps.db, who.storeId, rows)).map((x) => toRow(x.row, x.category)), maxPerPdf: layout.maxPerPdf };
 }
 
 /** One sticker's data: what the courier has, in the order's words. Amounts in minor units; the caller formats them. */
 export interface StickerParcel {
   shipmentId: string;
+  /** PR 404: the order, so a print run can put its invoice after its sticker. */
+  orderId: string;
   orderNumber: string;
   courierName: string;
   practice: boolean;
@@ -150,6 +165,7 @@ const stickerOf = (s: PrintParcelRow, count: number, latin: ReadonlyMap<string, 
   const gift = booked.gift ?? deliveryTarget(s.order).gift;
   return {
     shipmentId: s.id,
+    orderId: s.orderId,
     orderNumber: s.order.number,
     courierName: s.courierAccount.name,
     practice: s.mode === 'MOCK',

@@ -94,6 +94,8 @@ export * from './registry-combo-split';
 export * from './registry-call-me';
 // CN-020 (4) — the voice address at checkout (registry-voice-address.ts, version 140).
 export * from './registry-voice-address';
+// S20 · PR 404 — what one print run prints (registry-print-run.ts, version 150).
+export * from './registry-print-run';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

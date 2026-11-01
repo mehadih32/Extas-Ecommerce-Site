@@ -89,13 +89,42 @@ export function stickerInput(p: StickerParcel, c: StickerContext): StickerInput 
 
 /** The stickers as one PDF, at the owner's size (four to an A4 sheet when he prints on paper). */
 export async function stickersPdf(inputs: readonly StickerInput[], layout: StickerLayoutSettings, title: string, engine: TextEngine = sharpText()): Promise<Buffer> {
+  return writePdf(await stickerSheets(inputs, layout, engine), { title });
+}
+
+/** PR 404 — the stickers' pages: one per sticker on a label printer, or tiled several to a sheet (e.g. 4 on an A4). */
+export async function stickerSheets(inputs: readonly StickerInput[], layout: StickerLayoutSettings, engine: TextEngine = sharpText()): Promise<PdfPage[]> {
+  const pages: PdfPage[] = [];
+  for (const input of inputs) pages.push(...(await oneSticker(input, layout, engine)));
+  return sheetsOf(pages, layout);
+}
+
+/** One parcel's sticker pages (usually one; two when its pieces carry on). */
+export async function oneSticker(input: StickerInput, layout: StickerLayoutSettings, engine: TextEngine = sharpText()): Promise<PdfPage[]> {
   const size = stickerSize(layout);
   const l: StickerLayout = { widthMm: size.widthMm, heightMm: size.heightMm, dpi: layout.dpi, scale: layout.scalePercent / 100, minScale: layout.minScalePercent / 100 };
-  const words = stickerWords(layout.lang);
-  let pages: PdfPage[] = [];
-  for (const input of inputs) pages.push(...(await stickerPages(input, words, l, engine)));
-  if (size.sheet) pages = await tile(pages, { ...size.sheet, dpi: layout.dpi });
-  return writePdf(pages, { title });
+  return stickerPages(input, stickerWords(layout.lang), l, engine);
+}
+
+/** Sticker pages placed on the owner's sheet when several share one, else as they are. */
+export async function sheetsOf(pages: PdfPage[], layout: StickerLayoutSettings): Promise<PdfPage[]> {
+  const size = stickerSize(layout);
+  return size.sheet ? tile(pages, { ...size.sheet, dpi: layout.dpi }) : pages;
+}
+
+/**
+ * PR 404 (ORD-04a) — a print run's pages in packing order: the stickers only, each parcel's sticker then its invoice
+ * (`both`), or only the invoices (`invoice`). On a sheet that holds several stickers (e.g. 4 on an A4) the stickers stay
+ * tiled together and the invoices follow in the same order, so no sheet is wasted on one sticker. A parcel without an
+ * invoice (the order gone, or the invoice switched off in between) just has none.
+ */
+export async function printRunPages(parcels: readonly { orderId: string; sticker: PdfPage[] }[], invoices: ReadonlyMap<string, PdfPage[]>, what: 'sticker' | 'both' | 'invoice', layout: StickerLayoutSettings): Promise<PdfPage[]> {
+  const inv = (orderId: string) => invoices.get(orderId) ?? [];
+  if (what === 'invoice') return parcels.flatMap((p) => inv(p.orderId));
+  const tiled = !!stickerSize(layout).sheet;
+  if (what === 'sticker') return sheetsOf(parcels.flatMap((p) => p.sticker), layout);
+  if (tiled) return [...(await sheetsOf(parcels.flatMap((p) => p.sticker), layout)), ...parcels.flatMap((p) => inv(p.orderId))];
+  return parcels.flatMap((p) => [...p.sticker, ...inv(p.orderId)]);
 }
 
 /** A sample parcel (made-up words from the messages file) to try the size and the printer. */
@@ -103,6 +132,7 @@ export function sampleParcel(dict: Dict, currency: string): StickerParcel {
   const s = (k: string) => t(dict, `ful.sticker.sample.${k}`);
   return {
     shipmentId: 'sample',
+    orderId: 'sample',
     orderNumber: s('order'),
     courierName: s('courier'),
     practice: true,

@@ -1,0 +1,8 @@
+{
+  "fulfilment": {
+    "printRun": {
+      "label": "What one print run prints",
+      "help": "Stickers only (as before), each parcel's sticker followed by its customer invoice, or the invoices only — always in packing order, as one PDF. An invoice in the run prints on paper or on the thermal roll, with the invoice's own paper and roll settings. Printing never books a parcel or changes a price, a charge or COD."
+    }
+  }
+}

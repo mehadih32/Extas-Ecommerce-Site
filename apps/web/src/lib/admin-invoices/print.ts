@@ -7,7 +7,7 @@
 import { orderReceipt } from '@extas/checkout';
 import { invoiceJpeg, invoicePdf, PAPER_MM, ROLL_MM, sharpText, type InvoiceDocument, type InvoicePaper } from '@extas/documents';
 import { invoiceOrders, issueInvoice, OrdersError } from '@extas/orders';
-import type { InvoicePrintSettings } from '@extas/settings';
+import type { InvoiceImageSettings, InvoicePrintSettings } from '@extas/settings';
 import type { AdminDeps } from '../admin-auth';
 import { mediaDeps } from '../media';
 import { shopContextFor, type ShopContext } from '../shop/context';
@@ -76,32 +76,48 @@ async function logoBytes(deps: AdminDeps, storeId: number, assetId: string | nul
   }
 }
 
+/** One order's printed invoice: the document, its kept number, and the order it belongs to. */
+export interface PrintedInvoice {
+  orderId: string;
+  number: string;
+  doc: InvoiceDocument;
+}
+
+/**
+ * PR 404 — the printed invoices of the asked orders (each issued first, so it carries its kept number) with the print
+ * settings, for one file of invoices or a print run that puts each parcel's invoice after its sticker. Unknown and draft
+ * orders are left out; the invoice switched off (`account.invoice.enabled`) → INVOICE_OFF.
+ */
+export async function printedInvoices(deps: AdminDeps, storeId: number, orderIds: readonly string[]): Promise<{ print: InvoicePrintSettings; image: InvoiceImageSettings; invoices: PrintedInvoice[] }> {
+  const v = <K extends 'documents.invoice.print' | 'documents.invoice.image' | 'brand.logo'>(k: K) => deps.resolver.value(k, { storeId });
+  const [print, image, logoRef] = await Promise.all([v('documents.invoice.print'), v('documents.invoice.image'), v('brand.logo')]);
+  const s = await readInvoiceSettings(storeId);
+  if (!s['account.invoice'].enabled) throw new OrdersError('INVOICE_OFF', 'the invoice is switched off');
+  const orders = await invoiceOrders(deps, storeId, [...orderIds], print.maxPerPdf);
+  const c = await shopContextFor(storeId, print.lang);
+  const logo = print.logo && orders.length ? await logoBytes(deps, storeId, logoRef) : null;
+  const invoices: PrintedInvoice[] = [];
+  for (const o of orders) {
+    const receipt = await orderReceipt(deps, { storeId, visitorId: null, number: o.number, staff: true });
+    if (!receipt) continue;
+    const issued = await issueInvoice({ db: deps.db, settings: deps.resolver, now: deps.now }, { storeId, orderId: o.id });
+    const view = invoiceViewFor(c, receipt, s, issued ? { number: issued.invoice.number, version: issued.invoice.version, issuedAt: issued.invoice.issuedAt } : null);
+    invoices.push({ orderId: o.id, number: view.invoiceNo, doc: invoiceDocument(view, c, { barcode: print.barcode, logo }) });
+  }
+  return { print, image, invoices };
+}
+
 /**
  * The invoices of the asked orders as one file: a PDF on paper or on the roll (each invoice on its own pages), or one
  * JPG picture (one order only). Unknown and draft orders are left out; none left → NOT_FOUND. The invoice switched
  * off (`account.invoice.enabled`) → INVOICE_OFF.
  */
 export async function invoiceFile(deps: AdminDeps, storeId: number, input: { orderIds: string[]; layout: InvoiceLayout; format: InvoiceFormat }): Promise<InvoiceFile> {
-  const v = <K extends 'documents.invoice.print' | 'documents.invoice.image' | 'brand.logo'>(k: K) => deps.resolver.value(k, { storeId });
-  const [print, image, logoRef] = await Promise.all([v('documents.invoice.print'), v('documents.invoice.image'), v('brand.logo')]);
   if (input.format === 'jpg' && input.orderIds.length !== 1) throw new OrdersError('INVALID_INPUT', 'a picture is made of one invoice', ['orderIds']);
-  const s = await readInvoiceSettings(storeId);
-  if (!s['account.invoice'].enabled) throw new OrdersError('INVOICE_OFF', 'the invoice is switched off');
-  const orders = await invoiceOrders(deps, storeId, input.orderIds, print.maxPerPdf);
-  if (!orders.length) throw new OrdersError('NOT_FOUND', 'no such order', ['orderIds']);
-  const c = await shopContextFor(storeId, print.lang);
-  const logo = print.logo ? await logoBytes(deps, storeId, logoRef) : null;
-  const docs: InvoiceDocument[] = [];
-  const numbers: string[] = [];
-  for (const o of orders) {
-    const receipt = await orderReceipt(deps, { storeId, visitorId: null, number: o.number, staff: true });
-    if (!receipt) continue;
-    const issued = await issueInvoice({ db: deps.db, settings: deps.resolver, now: deps.now }, { storeId, orderId: o.id });
-    const view = invoiceViewFor(c, receipt, s, issued ? { number: issued.invoice.number, version: issued.invoice.version, issuedAt: issued.invoice.issuedAt } : null);
-    docs.push(invoiceDocument(view, c, { barcode: print.barcode, logo }));
-    numbers.push(view.invoiceNo);
-  }
-  if (!docs.length) throw new OrdersError('NOT_FOUND', 'no such order', ['orderIds']);
+  const { print, image, invoices } = await printedInvoices(deps, storeId, input.orderIds);
+  if (!invoices.length) throw new OrdersError('NOT_FOUND', 'no such order', ['orderIds']);
+  const docs = invoices.map((i) => i.doc);
+  const numbers = invoices.map((i) => i.number);
   const stem = invoiceFileStem(numbers);
   const engine = sharpText();
   if (input.format === 'jpg') {

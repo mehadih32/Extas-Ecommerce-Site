@@ -1,0 +1,7 @@
+/* S20 · PR 404 — Orders › Packing & print: the print run's category heading rows (ORD-04a; demo V12.4 97s). Only the
+   admin shell's own tokens (shell.css) are used. */
+
+.pr-group td {
+  background: var(--sf2);
+  padding-block: 8px;
+}

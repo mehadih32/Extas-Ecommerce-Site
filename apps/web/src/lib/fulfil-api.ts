@@ -12,6 +12,10 @@
 //                                              same requestKey again is the same job (header x-print-replay: 1);
 //                                              refused as a whole with each parcel's reason (NOT_PRINTABLE: COD_CHANGED,
 //                                              RECEIVER_CHANGED, NOT_WITH_US …) (fulfilment.print)
+//                                              PR 404: `fulfilment.printRun` decides what the press prints — the
+//                                              stickers, each sticker then its invoice, or the invoices only (no
+//                                              sticker counted); an invoice needs `orders.invoice` too. `single: true`
+//                                              (a row's own Print / Reprint) is always the sticker.
 //   GET   /api/admin/packing/stickers/sample   a sample sticker at the owner's size, to try the printer (fulfilment.print)
 //   GET   /api/admin/packing/stickers/recent   the last prints (stickers and handover sheets) (fulfilment.read)
 //   GET   /api/admin/packing/handover          PR 180: per courier, the parcels waiting to be handed over, each with why
@@ -47,13 +51,16 @@
 //                                              orders.cancel; a paid order's refund only a request) (fulfilment.pack)
 //   POST  …/orders/{id}/issues/{issueId}/call  {note?} a call task for the customer; the card stays open (fulfilment.pack)
 import sharp from 'sharp';
+import { requirePermission } from '@extas/auth';
+import { invoicePages, sharpText, writePdf, type PdfPage, type TextEngine } from '@extas/documents';
 import { storeGeneratedFile } from '@extas/media';
 import { isOrdersError } from '@extas/orders';
 import * as sh from '@extas/shipping';
 import { body, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { handoverPdf, type Letterhead } from './admin-fulfil/handover';
 import { pickingPdf } from './admin-fulfil/picking';
-import { sampleParcel, stickerInput, stickersPdf, pdfName, type StickerContext } from './admin-fulfil/sticker';
+import { oneSticker, printRunPages, sampleParcel, stickerInput, stickersPdf, pdfName, type StickerContext } from './admin-fulfil/sticker';
+import { invoicePaper, printedInvoices, type InvoiceLayout } from './admin-invoices/print';
 import { fulfilDicts } from './admin-fulfil/i18n';
 import { mediaDeps } from './media';
 import { shippingDeps, shippingFail, storeIdOf } from './shipping-api';
@@ -120,13 +127,52 @@ export async function stickersRoute(request: Request, deps: AdminDeps | null, pa
   if (m === 'GET') return guarded(request, deps, 'fulfilment.read', async (x) => json({ ok: true, ...(await sh.printRun(x.deps, x.who)) }));
   if (m === 'POST')
     return guarded(request, deps, 'fulfilment.print', async (x) => {
-      const done = await sh.printStickers(x.deps, x.who, await body(request));
-      const parcels = done.parcels;
+      const input = await body(request);
+      // PR 404: what one press prints — the stickers (as before), each sticker then its invoice, or the invoices only
+      const run = await x.deps.settings.value('fulfilment.printRun', { storeId: x.who.storeId });
+      const what = isObj(input) && input.single === true ? 'sticker' : run.what;
+      if (what !== 'sticker') await requirePermission(x.admin.db, x.who.actor, 'orders.invoice', { storeId: x.who.storeId });
       const c = await stickerContext(x.deps, x.who.storeId);
+      if (what === 'invoice') return invoiceRun(x, input, run.invoiceLayout);
+      const { single: _single, ...press } = isObj(input) ? input : { single: undefined };
+      const done = await sh.printStickers(x.deps, x.who, isObj(input) ? press : input);
+      const parcels = done.parcels;
       const title = parcels.length === 1 ? `Sticker ${parcels[0]!.orderNumber}` : `Stickers ${parcels.length}`;
-      return pdf(await stickersPdf(parcels.map((p) => stickerInput(p, c)), c.layout, title), pdfName(title), { 'x-print-job': done.jobId, 'x-print-replay': done.replay ? '1' : '0' });
+      const headers = { 'x-print-job': done.jobId, 'x-print-replay': done.replay ? '1' : '0' };
+      if (what === 'sticker') return pdf(await stickersPdf(parcels.map((p) => stickerInput(p, c)), c.layout, title), pdfName(title), headers);
+      const engine = sharpText();
+      const stickers = [];
+      for (const p of parcels) stickers.push({ orderId: p.orderId, sticker: await oneSticker(stickerInput(p, c), c.layout, engine) });
+      const invoices = await invoicePagesOf(x.admin, x.who.storeId, parcels.map((p) => p.orderId), run.invoiceLayout, engine);
+      return pdf(writePdf(await printRunPages(stickers, invoices, 'both', c.layout), { title }), pdfName(title), headers);
     });
   return fail(405, 'method-not-allowed');
+}
+
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/** PR 404 — each order's invoice pages, on the invoice's own paper or roll (an order without one is left out). */
+async function invoicePagesOf(admin: AdminDeps, storeId: number, orderIds: string[], layout: InvoiceLayout, engine: TextEngine): Promise<Map<string, PdfPage[]>> {
+  const { print, invoices } = await printedInvoices(admin, storeId, orderIds);
+  const out = new Map<string, PdfPage[]>();
+  for (const inv of invoices) out.set(inv.orderId, await invoicePages(inv.doc, invoicePaper(print, layout), print.dpi, engine));
+  return out;
+}
+
+/** PR 404 — "invoices only": the asked parcels of the print run, in packing order, each order's invoice; no sticker is
+ *  printed or counted. A parcel no longer in the run is NOT_FOUND. */
+async function invoiceRun(x: Ctx, input: unknown, layout: InvoiceLayout): Promise<Response> {
+  const ids = isObj(input) && Array.isArray(input.shipmentIds) ? input.shipmentIds : null;
+  if (!ids || !ids.length || !ids.every((id) => typeof id === 'string' && isUuid(id))) return json({ ok: false, error: 'INVALID_INPUT', details: ['shipmentIds'] }, { status: 400 });
+  const asked = new Set(ids as string[]);
+  const rows = (await sh.printRun(x.deps, x.who)).rows.filter((r) => asked.has(r.shipmentId));
+  if (rows.length !== asked.size) return json({ ok: false, error: 'NOT_FOUND', details: [...asked].filter((id) => !rows.some((r) => r.shipmentId === id)) }, { status: 404 });
+  const engine = sharpText();
+  const invoices = await invoicePagesOf(x.admin, x.who.storeId, rows.map((r) => r.orderId), layout, engine);
+  const pages = await printRunPages(rows.map((r) => ({ orderId: r.orderId, sticker: [] })), invoices, 'invoice', (await stickerContext(x.deps, x.who.storeId)).layout);
+  if (!pages.length) return json({ ok: false, error: 'NOT_FOUND', details: ['invoices'] }, { status: 404 });
+  const title = rows.length === 1 ? `Invoice ${rows[0]!.orderNumber}` : `Invoices ${rows.length}`;
+  return pdf(writePdf(pages, { title }), pdfName(title));
 }
 
 /** PR 180 — `path` is what comes after /api/admin/packing/handover. */
