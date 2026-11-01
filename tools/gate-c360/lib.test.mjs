@@ -8,6 +8,7 @@ import {
   bengaliShare,
   campaignKept,
   COD_OFF,
+  fewStyles,
   gateLabel,
   gatePhone,
   hostGuard,
@@ -165,6 +166,13 @@ it('names an owner\'s switch, a planned PR and what is so by design in the words
   expect(planned(622)).toBe('planned in PR 622');
   expect(BY_DESIGN).toBe('by design — proposal in the final analysis');
   expect(COD_OFF).toBe("COD is off (owner's setting)");
+});
+
+// Live run 1 Nov, 22:20: a computer's "New in" of 3 styles has no filter rail on purpose (demo D-012), not a fault.
+it('names the few-styles rule when a computer\'s category shows no filter rail', () => {
+  expect(fewStyles(3)).toMatch(/^the category shows 3 style\(s\)/);
+  expect(fewStyles(3)).toMatch(/category\.page\.fewStyles/);
+  expect(fewStyles(3)).toMatch(/demo D-012/);
 });
 
 it('finds the campaign in the shop\'s own HttpOnly cookie, which page scripts cannot see', () => {

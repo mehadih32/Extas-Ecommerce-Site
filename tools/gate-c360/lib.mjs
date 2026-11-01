@@ -14,6 +14,11 @@ export const ownerOff = (key) => `off — the owner's switch (${key})`;
 export const planned = (pr) => `planned in PR ${pr}`;
 /** A step that is so on purpose today (the demo's behaviour); the change is a proposal for the owner. */
 export const BY_DESIGN = "by design — proposal in the final analysis";
+/**
+ * A computer's category of few styles with no filter on: the shop drops its filter rail on purpose (demo D-012,
+ * docs/owner/DESKTOP-REVIEW.md; `category.page.fewStyles`, CatListing.tsx). A SKIP naming why, never a FAIL.
+ */
+export const fewStyles = (n) => `the category shows ${n} style(s), no more than category.page.fewStyles: a computer drops the filter rail for so few, by design (demo D-012)`;
 
 /**
  * Whether an ad link's tags were kept, from the browser's cookie jar (`jar`: what the browser context holds, HttpOnly
