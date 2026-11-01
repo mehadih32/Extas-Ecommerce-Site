@@ -71,6 +71,7 @@
     { "id": "money/expenses", "route": "/admin/money/expenses" },
     { "id": "money/fees", "route": "/admin/money/fees" },
     { "id": "money/vat", "route": "/admin/money/vat" },
+    { "id": "reports/team", "route": "/admin/reports/team" },
     { "id": "money/month-end", "route": "/admin/money/month-end" },
     { "id": "money/books-account", "route": "/admin/money/books" },
     { "id": "money/books-match", "route": "/admin/money/books/match" },

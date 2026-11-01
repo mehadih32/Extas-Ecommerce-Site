@@ -1,0 +1,46 @@
+{
+  "reportsTeam": {
+    "metaTitle": "Team",
+    "title": "Team",
+    "sub": "What each person did in the week or month, counted from the shop's own records, with badges. Recognition only: nothing is paid or taken away.",
+    "off": "Team badges are off. Switch them on below to see what each person did.",
+    "thisWeek": "This week",
+    "lastWeek": "Last week",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "period": "{from} – {to}",
+    "none": "Nobody did any of this work in this period.",
+    "m": {
+      "confirmed": "Confirmed",
+      "packed": "Packed",
+      "handedOver": "To courier",
+      "replies": "Replies"
+    },
+    "badge": {
+      "top": "Most {measure}",
+      "min": "{measure}: minimum reached"
+    },
+    "card": {
+      "title": "Badge settings",
+      "sub": "Off as shipped. A minimum is your own number; empty = no minimum badge for it.",
+      "on": "Team badges on",
+      "period": "Period",
+      "week": "Week (Saturday to Friday)",
+      "month": "Month",
+      "top": "Badge for the most in each",
+      "min": "Minimum: {measure}",
+      "save": "Save",
+      "confirm": "Yes, save",
+      "saved": "Saved.",
+      "bad": "A minimum is a whole number from 1, or empty.",
+      "readOnly": "Changing these needs the team performance permission.",
+      "err": {
+        "INVALID_INPUT": "Something is not filled in right.",
+        "VERSION_CONFLICT": "Someone else saved this a moment ago. Open the page again and check.",
+        "forbidden": "You do not have the permission for this.",
+        "network": "No connection. Try again.",
+        "other": "Something went wrong. Try again."
+      }
+    }
+  }
+}

@@ -324,6 +324,9 @@ export const PERMISSIONS = {
   // S16 · PR 351 (B3.10, §59 answer 24) — the money report to the owner: switch it on or off and set how often, when and
   // in which language it goes (Money → Profit & loss). It only sends the figures; owner only until he gives it.
   'books.report': { group: 'books' },
+  // S16 · PR 352 (B3.10, §59 answer 25) — team performance badges: see what each person did and their badges on Reports →
+  // Team, and set the badges (period, minimums, on/off). Recognition only: nothing pays or penalises anyone; owner only.
+  'staff.performance': { group: 'staff' },
   // S22 · PR 425 — the support inbox (B4.4, B4.12): open the inbox and every conversation with its who-did-what log
   // (`support.read`); reply, write an internal note, take a conversation, mark it solved or open (`support.reply`);
   // give a conversation to someone else or take it back from them (`support.assign`); change Support settings

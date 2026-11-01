@@ -99,6 +99,7 @@
     "buildFiles": "ব্লুপ্রিন্ট আর ফাইল",
     "buildFile": "ফাইল পড়ুন",
     "healthSpeed": "গতি",
+    "reportsTeam": "টিম",
     "healthSmoke": "স্মোক টেস্ট",
     "healthHistory": "পরীক্ষার ইতিহাস",
     "healthFixes": "অনুমতির অপেক্ষায়",

@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { costReportSchema, financeSettings, moneyReportSchema, vatRatesSchema } from '../src/registry-finance';
+import { costReportSchema, financeSettings, moneyReportSchema, teamBadgesSchema, vatRatesSchema } from '../src/registry-finance';
 
 describe('finance settings (v160–169)', () => {
   it('every key is in the registry at a version 160–169, labelled in English and Bengali, its default valid', () => {
@@ -49,5 +49,14 @@ describe('finance settings (v160–169)', () => {
     expect(moneyReportSchema.safeParse({ ...d, weekday: 7 }).success).toBe(false);
     expect(moneyReportSchema.safeParse({ ...d, frequency: 'hourly' }).success).toBe(false);
     expect(moneyReportSchema.safeParse({ ...d, at: '06:05', frequency: 'monthly', monthDay: 28 }).success).toBe(true);
+  });
+
+  it('PR 352: team badges are off as shipped with no minimum set; a minimum is a whole number from 1', () => {
+    const d = financeSettings['team.badges'].default;
+    expect(d.enabled).toBe(false);
+    expect(Object.values(d.mins).every((m) => m === null)).toBe(true);
+    expect(teamBadgesSchema.safeParse({ ...d, mins: { ...d.mins, confirmed: 0 } }).success).toBe(false);
+    expect(teamBadgesSchema.safeParse({ ...d, mins: { ...d.mins, replies: 40 } }).success).toBe(true);
+    expect(teamBadgesSchema.safeParse({ ...d, period: 'day' }).success).toBe(false);
   });
 });
