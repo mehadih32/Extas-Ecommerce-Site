@@ -34,3 +34,5 @@ export * from './skus';
 export * from './retail-day';
 // S16 · PR 348: `orderProfits` — one delivered order's profit after its own costs (order-profit.ts).
 export * from './order-profit';
+// S16 · PR 349: `profitAndLoss` — a period's profit and loss built from the per-order profit (pnl.ts).
+export * from './pnl';
