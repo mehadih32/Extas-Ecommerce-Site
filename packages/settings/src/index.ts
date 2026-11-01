@@ -110,6 +110,8 @@ export * from './registry-support-tickets';
 export * from './registry-support-drafts';
 // S22 · PR 433 — follow-ups on chats without an order (registry-support-followup.ts, versions 183–184).
 export * from './registry-support-followup';
+// S22 · PR 434 — privacy inside support and the block list (registry-support-privacy.ts, versions 185–186).
+export * from './registry-support-privacy';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

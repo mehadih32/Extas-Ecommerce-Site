@@ -9586,6 +9586,11 @@ model SupportContact {
   /// PR 427: an employee set this chat's person by hand (a number or a customer linked or unlinked, "not the same
   /// person"); automatic matching never changes it again. `mergedIntoId` always names the person's first contact.
   identityFixedAt DateTime? @db.Timestamptz(3)
+  /// PR 434 (migration 0116): on the support block list since, by whom, why (B4.12). The messages are kept; the chats
+  /// leave the working views for "Blocked". Taken off: all three cleared (the log keeps both lines).
+  blockedAt       DateTime? @db.Timestamptz(3)
+  blockedById     String?   @db.Uuid
+  blockReason     String?
 
   conversations Conversation[]
 
@@ -9593,6 +9598,7 @@ model SupportContact {
   @@index([storeId, phone])
   @@index([storeId, customerId])
   @@index([storeId, mergedIntoId])
+  @@index([storeId, blockedAt])
 }
 
 /// @stage S22 · PR 425, 431 — a conversation with its assignment, SLA timers, the Meta reply window and the r= code.

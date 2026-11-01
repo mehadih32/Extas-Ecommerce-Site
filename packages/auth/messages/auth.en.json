@@ -287,7 +287,8 @@
       "riderIssues": {
         "write": "Log a rider overcharge complaint with its proof",
         "decide": "Approve or reject a rider overcharge complaint (opens the courier claim)"
-      }
+      },
+      "block": "Put a chat's person on the support block list or take them off (with a reason; their messages are kept in the Blocked view)"
     },
     "health": {
       "read": "See Site health: customer problems, the server, speed, the site audit and the smoke test (no customer's details)",

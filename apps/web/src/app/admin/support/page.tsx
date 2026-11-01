@@ -6,6 +6,8 @@
 // PR 431: the "Late" view (chats whose ticket timer ran out, the most late first) and each row's timer — the first
 // answer or the solution, due in or late by — while `support.tickets` opened a ticket.
 // PR 433: the "Follow-ups" view (chats with a follow-up waiting for a person) while `support.followUp` is on.
+// PR 434: the "Blocked" view (people on the support block list) while `support.blockList` is on; other employees'
+// chats left out under "own chats only" (`support.privacy`); numbers in previews masked when switched on.
 //
 // `support.read` opens it; a number is masked by `customers.phoneMask` (PR 284) unless the person holds
 // `customers.phone`. Nothing here sends anything, moves money or changes an order.
@@ -84,7 +86,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
       ) : null}
       <div className="a2-between a2-mt12" style={{ flexWrap: 'wrap', gap: 8 }}>
         <nav className="a2-seg" aria-label={t(d, 'sup.views.label')} style={{ flexWrap: 'wrap' }}>
-          {sp.INBOX_VIEWS.filter((v) => v !== 'followup' || box.followUps || current === 'followup').map((v) => (
+          {sp.INBOX_VIEWS.filter((v) => (v !== 'followup' || box.followUps || current === 'followup') && (v !== 'blocked' || box.blockList || current === 'blocked')).map((v) => (
             <Link key={v} className={v === current ? 'on' : undefined} href={link({ view: v, page: undefined })} scroll={false} aria-current={v === current ? 'page' : undefined} data-testid={`support-view-${v}`}>
               {t(d, `sup.views.${v}`)} · {n(box.counts[v])}
             </Link>

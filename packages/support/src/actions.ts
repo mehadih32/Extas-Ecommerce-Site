@@ -10,6 +10,7 @@ import { z } from 'zod';
 import type { OutgoingSupportMessage } from './channels';
 import { allow, nowOf, parse, setting, SupportError, TX, type Db, type SupportDeps, type Who } from './context';
 import { CONVERSATION_STATUSES, fileKindOf, PREVIEW_CHARS, previewOf, type ConversationStatus } from './pure';
+import { mayOpen, supportLens } from './privacy';
 import { ticketOnOwner, ticketOnReply, ticketOnStatus } from './tickets';
 
 type Tx = Prisma.TransactionClient;
@@ -65,7 +66,8 @@ export function replyToConversation(deps: SupportDeps, who: Who, input: unknown)
 
 /** The reply itself; `hook` (PR 429) adds its rows in the same transaction, so a card and its share are one change. */
 export async function sendReply(deps: SupportDeps, who: Who, input: unknown, hook?: ReplyHook): Promise<ReplyResult> {
-  await allow(deps, who, 'support.reply');
+  const held = await allow(deps, who, 'support.reply');
+  const lens = await supportLens(deps, who, held);
   const d = parse(replyInput, input, 'reply');
   const storeId = who.storeId;
   const [inbox, files] = await Promise.all([setting(deps, storeId, 'support.inbox'), setting(deps, storeId, 'support.attachments')]);
@@ -95,6 +97,9 @@ export async function sendReply(deps: SupportDeps, who: Who, input: unknown, hoo
   const now = nowOf(deps);
   const saved = await deps.db.$transaction(async (tx) => {
     const c = await lockConversation(tx, who, d.conversationId, d.version);
+    // PR 434: another employee's chat is not this person's to answer (own chats only); a blocked person gets no reply
+    if (!mayOpen(lens, who.actor.staffUserId, c.assignedToId)) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
+    if (lens.blockOn && c.contact.blockedAt && !d.note) throw new SupportError('BLOCKED', 'this person is on the support block list', ['conversationId']);
     const name = await nameOf(tx, who.actor.staffUserId);
     const m = await tx.message.create({
       data: {
@@ -202,11 +207,14 @@ export const assignInput = z.object({ conversationId: z.uuid(), staffId: z.uuid(
  */
 export async function assignConversation(deps: SupportDeps, who: Who, input: unknown): Promise<{ changed: boolean }> {
   const held = await allow(deps, who, 'support.reply');
+  const lens = await supportLens(deps, who, held);
   const d = parse(assignInput, input, 'assignment');
   const me = who.actor.staffUserId;
   const now = nowOf(deps);
   return deps.db.$transaction(async (tx) => {
     const c = await lockConversation(tx, who, d.conversationId, d.version);
+    // PR 434: own chats only — another employee's chat is not there for this person (not even "no change")
+    if (!mayOpen(lens, me, c.assignedToId)) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
     if (c.assignedToId === d.staffId) return { changed: false };
     const self = (d.staffId === me && !c.assignedToId) || (d.staffId === null && c.assignedToId === me);
     if (!self && !held.has('support.assign')) await allow(deps, who, 'support.assign');
@@ -241,11 +249,14 @@ export const statusInput = z.object({ conversationId: z.uuid(), status: z.enum(C
 
 /** Mark a conversation solved, waiting for the customer, or open again (`support.reply`). */
 export async function setConversationStatus(deps: SupportDeps, who: Who, input: unknown): Promise<{ changed: boolean; status: ConversationStatus }> {
-  await allow(deps, who, 'support.reply');
+  const held = await allow(deps, who, 'support.reply');
+  const lens = await supportLens(deps, who, held);
   const d = parse(statusInput, input, 'status');
   const now = nowOf(deps);
   return deps.db.$transaction(async (tx) => {
     const c = await lockConversation(tx, who, d.conversationId, d.version);
+    // PR 434: own chats only
+    if (!mayOpen(lens, who.actor.staffUserId, c.assignedToId)) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
     const from = c.status as ConversationStatus;
     if (from === d.status) return { changed: false, status: from };
     const name = await nameOf(tx, who.actor.staffUserId);

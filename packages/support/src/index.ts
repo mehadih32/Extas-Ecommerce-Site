@@ -44,6 +44,10 @@
 //                 order), the follow-up waiting on a chat (chatFollowUp) and a person's Send or Skip; followups-pure.ts:
 //                 the rules.
 //
+// PR 434: privacy and the block list.
+//   privacy.ts    the reader's lens (own chats only, numbers in messages masked, the block list on) and putting a chat's
+//                 person on the support block list or taking them off (support.block; nothing deleted)
+//
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
 export * from './channels';
@@ -72,3 +76,5 @@ export * from './drafts';
 // PR 433 — follow-ups on chats without an order (rule-capped; a person sends).
 export * from './followups-pure';
 export * from './followups';
+// PR 434 — privacy inside support and the support block list.
+export * from './privacy';

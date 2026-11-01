@@ -30,6 +30,7 @@ import { DetailGrid } from '@/components/admin/orders/OrderCommands';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { FollowUpCard, type FollowUpTexts } from '@/components/admin/support/FollowUpCard';
+import { BlockActions, type BlockTexts } from '@/components/admin/support/BlockActions';
 import { ChatBag, type ChatBagTexts } from '@/components/admin/support/ChatBag';
 import { Composer, type ComposerDraft, type ComposerProducts, type ComposerTexts } from '@/components/admin/support/Composer';
 import { CustomerContext } from '@/components/admin/support/CustomerContext';
@@ -57,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'sup.th.main')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-const ERR_CODES = ['CART_OFF', 'NO_COD', 'CHECKOUT', 'CHECKOUT_PRICE_CHANGED', 'CHECKOUT_OUT_OF_STOCK', 'CHECKOUT_EMPTY', 'CHECKOUT_FORM', 'CHECKOUT_NO_PAYMENT', 'CHECKOUT_PAUSED', 'CHECKOUT_CART_NOT_OPEN', 'CHECKOUT_IDEMPOTENCY', 'CATALOGUE_OFF', 'OUT_OF_STOCK', 'STALE', 'EMPTY', 'TOO_LONG', 'FILES_OFF', 'TOO_MANY_FILES', 'FILE_NOT_ALLOWED', 'TOO_LARGE', 'NOT_ASSIGNABLE', 'IDEMPOTENCY_MISMATCH', 'FOLLOW_UP_OFF', 'FOLLOW_UP_GONE', 'NOT_FOUND', 'INVALID_INPUT', 'FORBIDDEN', 'UNAUTHENTICATED', 'network', 'other'];
+const ERR_CODES = ['CART_OFF', 'NO_COD', 'CHECKOUT', 'CHECKOUT_PRICE_CHANGED', 'CHECKOUT_OUT_OF_STOCK', 'CHECKOUT_EMPTY', 'CHECKOUT_FORM', 'CHECKOUT_NO_PAYMENT', 'CHECKOUT_PAUSED', 'CHECKOUT_CART_NOT_OPEN', 'CHECKOUT_IDEMPOTENCY', 'CATALOGUE_OFF', 'OUT_OF_STOCK', 'STALE', 'EMPTY', 'TOO_LONG', 'FILES_OFF', 'TOO_MANY_FILES', 'FILE_NOT_ALLOWED', 'TOO_LARGE', 'NOT_ASSIGNABLE', 'IDEMPOTENCY_MISMATCH', 'FOLLOW_UP_OFF', 'FOLLOW_UP_GONE', 'BLOCK_OFF', 'BLOCKED', 'NOT_FOUND', 'INVALID_INPUT', 'FORBIDDEN', 'UNAUTHENTICATED', 'network', 'other'];
 const errs = (d: Dict) => Object.fromEntries(ERR_CODES.map((c) => [c, t(d, `sup.err.${c}`)]));
 const deliveryTone = (s: string | null) => (s === 'SENT' ? 'ok' : s === 'FAILED' ? 'bad' : s === 'NOT_SENT' ? 'warn' : 'line');
 const statusTone = (s: string) => (s === 'OPEN' ? 'warn' : s === 'SOLVED' ? 'ok' : 'info');
@@ -173,6 +174,9 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         err: errs(d),
       }
     : null;
+  // PR 434: the support block list (`support.block`, the list on)
+  const bk = (k: string) => t(d, `sup.block.${k}`);
+  const blockTexts: BlockTexts = { fold: bk('fold'), reason: bk('reason'), reasonHelp: bk('reasonHelp'), block: bk('block'), confirm: bk('confirm'), unblock: bk('unblock'), blocked: bk('blocked'), unblocked: bk('unblocked'), err: errs(d) };
   // PR 430: the chat's bag (orders from the chat on, and `support.order`)
   const bag = th.you.cart ? await sp.chatBag(chatOrderDeps(access.deps), who, th.id, view.lang) : null;
   const ck = (k: string) => t(d, `sup.cart.${k}`);
@@ -260,7 +264,12 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         )}
       </section>
       {follow && followTexts ? <FollowUpCard url={`${API}/c/${th.id}/followup`} id={follow.id} body={follow.body} version={th.version} maxChars={inbox.replyMaxChars} texts={followTexts} /> : null}
-      {th.you.reply ? (
+      {th.blocked ? (
+        <p className="a2-note warn" data-testid="support-blocked">
+          <ShellIcon name="lock" size={15} />
+          <span>{t(d, 'sup.block.note', { at: printedAt(th.blocked.at.toISOString(), view.timeZone), reason: th.blocked.reason ?? '' })}</span>
+        </p>
+      ) : th.you.reply ? (
         <Composer url={`${API}/c/${th.id}/messages`} filesUrl={`${API}/files`} version={th.version} maxChars={inbox.replyMaxChars} files={{ enabled: files.enabled && accept !== '', max: files.maxPerMessage, accept }} products={products} draft={draft} texts={composer} />
       ) : (
         <p className="a2-note">
@@ -358,6 +367,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <p className="a2-xs a2-mute a2-mt6" data-testid="support-person-fixed" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <ShellIcon name="lock" size={11} /> {p('fixed')}
           </p>
+        ) : null}
+        {th.you.block ? (
+          <div className="a2-mt12">
+            <BlockActions url={`${API}/c/${th.id}/block`} version={th.version} blocked={!!th.blocked} maxChars={sp.SUPPORT_BLOCK_REASON_MAX} texts={blockTexts} />
+          </div>
         ) : null}
         {th.you.identity ? (
           <div className="a2-mt12">

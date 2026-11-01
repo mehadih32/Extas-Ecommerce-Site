@@ -225,7 +225,7 @@ export async function lateChats(deps: Pick<SupportDeps, 'db' | 'settings' | 'now
   const mine: Prisma.ConversationWhereInput[] = [...(me ? [{ assignedToId: me }] : []), ...(held.has('support.assign') ? [{ assignedToId: null }] : [])];
   if (!mine.length) return [];
   const rows = await deps.db.conversation.findMany({
-    where: { storeId: who.storeId, status: 'OPEN', slaDueAt: { lt: now }, OR: mine },
+    where: { storeId: who.storeId, status: 'OPEN', slaDueAt: { lt: now }, OR: mine, ...((await setting(deps, who.storeId, 'support.blockList')).enabled ? { contact: { blockedAt: null } } : {}) },
     orderBy: { slaDueAt: 'asc' },
     take: LATE_NOTES_MOST,
     select: { id: true, refCode: true, assignedToId: true, contact: { select: { displayName: true } } },

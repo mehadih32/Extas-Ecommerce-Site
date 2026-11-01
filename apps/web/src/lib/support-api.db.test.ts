@@ -176,7 +176,7 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const r = await j('GET', ['settings']);
     const files = { enabled: true, maxPerMessage: 4, maxMb: 10, kinds: { image: true, video: true, pdf: true } };
     expect(r.body.cards['support.attachments'].value).toEqual(files);
-    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.draftKeywords', 'support.draftWords', 'support.drafts', 'support.followUp', 'support.followUpWords', 'support.identity', 'support.inbox', 'support.liveChat', 'support.tickets']);
+    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.blockList', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.draftKeywords', 'support.draftWords', 'support.drafts', 'support.followUp', 'support.followUpWords', 'support.identity', 'support.inbox', 'support.liveChat', 'support.privacy', 'support.tickets']);
     const version = r.body.cards['support.attachments'].version as string;
     const saved = await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxPerMessage: 3 }, version } });
     expect(saved.status).toBe(200);
@@ -382,5 +382,30 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     // put it back for the tests after this one
     const now = (await j('GET', ['settings'])).body.cards['support.followUp'];
     expect((await j('PUT', ['settings'], { body: { key: 'support.followUp', value: { ...now.value, enabled: false }, version: now.version } })).status).toBe(200);
+  });
+
+  it('PR 434: the block list — off, refused; on, the owner blocks a chat\'s person (in Blocked, no reply) and takes them off; a reader may not', async () => {
+    const got = await receiveMessage(
+      { db: t.prisma, settings: deps.resolver },
+      { storeId, channel: { kind: 'livechat', externalId: 'sample-chat' }, contact: { externalId: 'v-434', name: 'Sample rude visitor' }, message: { externalId: 'm-434', text: 'Sample: rude words' } },
+    );
+    const off = await j('POST', ['c', got.conversationId, 'block'], { body: { action: 'block', reason: 'Sample abuse' } });
+    expect([off.status, off.body.error]).toEqual([422, 'BLOCK_OFF']);
+    const cards = (await j('GET', ['settings'])).body.cards;
+    expect(cards['support.blockList'].value).toEqual({ enabled: false });
+    expect(cards['support.privacy'].value).toEqual({ ownChatsOnly: false, maskNumbersInText: false });
+    expect((await j('PUT', ['settings'], { body: { key: 'support.blockList', value: { enabled: true }, version: cards['support.blockList'].version } })).status).toBe(200);
+    expect((await j('POST', ['c', got.conversationId, 'block'], { cookie: reader, body: { action: 'block', reason: 'Sample' } })).status).toBe(403);
+    expect((await j('POST', ['c', got.conversationId, 'block'], { body: { action: 'nope' } })).status).toBe(400);
+    expect((await j('POST', ['c', got.conversationId, 'block'], { body: { action: 'block', reason: 'Sample abuse' } })).body).toEqual({ ok: true, blocked: true, contacts: 1 });
+    const box = (await j('GET', [], { query: '?view=blocked' })).body;
+    expect([box.blockList, box.rows.map((r: { id: string }) => r.id)]).toEqual([true, [got.conversationId]]);
+    const th = (await j('GET', ['c', got.conversationId])).body.thread;
+    expect(th.blocked).toMatchObject({ reason: 'Sample abuse' });
+    expect((await j('POST', ['c', got.conversationId, 'messages'], { body: { body: 'Sample', requestKey: 'sample-press-0434', version: th.version } })).body.error).toBe('BLOCKED');
+    expect((await j('POST', ['c', got.conversationId, 'block'], { body: { action: 'unblock' } })).body).toEqual({ ok: true, blocked: false, contacts: 1 });
+    expect((await j('GET', [], { query: '?view=blocked' })).body.rows).toEqual([]);
+    const now = (await j('GET', ['settings'])).body.cards['support.blockList'];
+    expect((await j('PUT', ['settings'], { body: { key: 'support.blockList', value: { enabled: false }, version: now.version } })).status).toBe(200);
   });
 });

@@ -14,6 +14,7 @@ import { INBOX_VIEWS, type ConversationStatus, type InboxView } from './pure';
 import { inboxPhoneDigits } from './search-pure';
 import { clocksOf, ticketOf, type TicketClock, type TicketView } from './tickets';
 import { sweepFollowUpsSoon, waitingFollowUpChats } from './followups';
+import { mayOpen, supportLens, visibleWhere } from './privacy';
 
 async function phoneShown(deps: Pick<SupportDeps, 'settings'>, who: Who, held: Set<string>): Promise<(p: string | null) => string | null> {
   if (held.has('customers.phone')) return (p) => p;
@@ -66,9 +67,17 @@ export interface Inbox {
   channels: { kind: string; name: string; enabled: boolean }[];
   /** PR 433: follow-ups are on (the "Follow-ups" view is shown). */
   followUps: boolean;
+  /** PR 434: the support block list is on (the "Blocked" view is shown). */
+  blockList: boolean;
 }
 
-function viewWhere(view: InboxView, me: string | null, now: Date, followIds: string[]): Prisma.ConversationWhereInput {
+function viewWhere(view: InboxView, me: string | null, now: Date, followIds: string[], blockOn: boolean): Prisma.ConversationWhereInput {
+  // PR 434: the blocked people's chats live only in their own view (while the list is on)
+  if (view === 'blocked') return blockOn ? { contact: { blockedAt: { not: null } } } : { id: { in: [] } };
+  return blockOn ? { AND: [{ contact: { blockedAt: null } }, workingWhere(view, me, now, followIds)] } : workingWhere(view, me, now, followIds);
+}
+
+function workingWhere(view: InboxView, me: string | null, now: Date, followIds: string[]): Prisma.ConversationWhereInput {
   // PR 433: a follow-up waits for a person (worked out by the sweep)
   if (view === 'followup') return { id: { in: followIds } };
   // PR 431: a timer that ran out, on a chat the team still owes an answer or a solution
@@ -94,6 +103,8 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings' | '
   const followIds = follow.enabled ? await waitingFollowUpChats(deps.db, storeId) : [];
   // PR 425 follow-up: Bengali digits, +880 and the leading 0 are read too (search-pure.ts)
   const digits = q.q ? inboxPhoneDigits(q.q) : '';
+  // PR 434: own chats only, numbers in messages masked, the block list
+  const lens = await supportLens(deps, who, held);
   const search: Prisma.ConversationWhereInput = q.q
     ? {
         OR: [
@@ -106,12 +117,12 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings' | '
       }
     : {};
   const chan: Prisma.ConversationWhereInput = q.channel ? { channel: { kind: q.channel } } : {};
-  const base: Prisma.ConversationWhereInput = { storeId, ...chan };
-  const where: Prisma.ConversationWhereInput = { AND: [base, search, viewWhere(q.view, me, now, followIds)] };
+  const base: Prisma.ConversationWhereInput = { storeId, ...chan, ...visibleWhere(lens, me) };
+  const where: Prisma.ConversationWhereInput = { AND: [base, search, viewWhere(q.view, me, now, followIds, lens.blockOn)] };
   // the oldest waiting customer first in the working views; the latest first in the others
   const working = q.view === 'open' || q.view === 'mine' || q.view === 'unassigned';
   const orderBy: Prisma.ConversationOrderByWithRelationInput[] = q.view === 'late' ? [{ slaDueAt: 'asc' }] : working ? [{ waitingSince: { sort: 'asc', nulls: 'last' } }, { lastMessageAt: { sort: 'desc', nulls: 'last' } }] : [{ lastMessageAt: { sort: 'desc', nulls: 'last' } }];
-  const counted = await Promise.all(INBOX_VIEWS.map((v) => deps.db.conversation.count({ where: { AND: [base, search, viewWhere(v, me, now, followIds)] } })));
+  const counted = await Promise.all(INBOX_VIEWS.map((v) => deps.db.conversation.count({ where: { AND: [base, search, viewWhere(v, me, now, followIds, lens.blockOn)] } })));
   const counts = Object.fromEntries(INBOX_VIEWS.map((v, i) => [v, counted[i]!])) as Record<InboxView, number>;
   const pages = Math.max(1, Math.ceil(counts[q.view] / pageSize));
   const page = Math.min(q.page, pages);
@@ -134,14 +145,15 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings' | '
     counts,
     channels,
     followUps: follow.enabled,
+    blockList: lens.blockOn,
     rows: rows.map((r) => ({
       id: r.id,
       refCode: r.refCode,
       status: r.status as ConversationStatus,
       channel: r.channel,
       contact: { name: r.contact.displayName, phone: shown(r.contact.phone) },
-      subject: r.subject,
-      lastPreview: r.lastPreview,
+      subject: lens.text(r.subject),
+      lastPreview: lens.text(r.lastPreview),
       lastDirection: r.lastDirection,
       lastMessageAt: r.lastMessageAt,
       waitingSince: r.waitingSince,
@@ -212,8 +224,10 @@ export interface Thread {
   context: ChatContext | null;
   /** PR 431: the chat's latest ticket (open, or the last solved), or null when it never had one. */
   ticket: TicketView | null;
+  /** PR 434: the chat's person is on the support block list (the list on): since when and why. */
+  blocked: { at: Date; reason: string | null } | null;
   /** What the person reading may do here (`identity`: set the number, unlink the customer, "not the same person"). */
-  you: { id: string | null; reply: boolean; assign: boolean; identity: boolean; catalogue: boolean; /** PR 430: the chat's bag and "Create order" (`support.cart` on and `support.order`). */ cart: boolean };
+  you: { id: string | null; reply: boolean; assign: boolean; identity: boolean; catalogue: boolean; /** PR 430: the chat's bag and "Create order" (`support.cart` on and `support.order`). */ cart: boolean; /** PR 434: put the person on the block list or take them off (`support.block`, the list on). */ block: boolean };
 }
 
 /** One conversation with every message, file, note and log line, oldest first. */
@@ -224,12 +238,16 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings' | 
     where: { id: conversationId, storeId: who.storeId },
     include: {
       channel: { select: { id: true, kind: true, name: true, enabled: true } },
-      contact: { select: { displayName: true, phone: true } },
+      contact: { select: { displayName: true, phone: true, blockedAt: true, blockReason: true } },
       messages: { orderBy: [{ sentAt: 'asc' }, { createdAt: 'asc' }], include: { attachments: { orderBy: { createdAt: 'asc' } } } },
       events: { orderBy: { createdAt: 'asc' } },
     },
   });
   if (!c) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
+  // PR 434: another employee's chat is not opened (own chats only)
+  const lens = await supportLens(deps, who, held);
+  if (!mayOpen(lens, who.actor.staffUserId, c.assignedToId)) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
+  const blocked = lens.blockOn && c.contact.blockedAt ? { at: c.contact.blockedAt, reason: c.contact.blockReason } : null;
   const [ctxOn, catOn, cartOn, shares] = await Promise.all([
     setting(deps, who.storeId, 'support.context'),
     setting(deps, who.storeId, 'support.catalogue'),
@@ -254,7 +272,7 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings' | 
     id: c.id,
     refCode: c.refCode,
     status: c.status as ConversationStatus,
-    subject: c.subject,
+    subject: lens.text(c.subject),
     version: c.updatedAt.toISOString(),
     channel: c.channel,
     contact: { name: c.contact.displayName, phone: shown(c.contact.phone) },
@@ -269,7 +287,7 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings' | 
       id: m.id,
       direction: (m.isInternalNote ? 'NOTE' : m.direction === 'IN' ? 'IN' : 'OUT') as ThreadMessage['direction'],
       sender: { type: m.senderType, name: m.senderName },
-      body: m.body,
+      body: lens.text(m.body),
       isNote: m.isInternalNote,
       status: m.status,
       failReason: m.failReason,
@@ -286,7 +304,8 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings' | 
     person,
     context,
     ticket,
-    you: { id: who.actor.staffUserId, reply: perms.has('support.reply'), assign: perms.has('support.assign'), identity: perms.has('support.identity'), catalogue: catOn.enabled && perms.has('support.reply'), cart: cartOn.enabled && perms.has('support.order') },
+    blocked,
+    you: { id: who.actor.staffUserId, block: lens.blockOn && perms.has('support.block'), reply: !blocked && perms.has('support.reply'), assign: perms.has('support.assign'), identity: perms.has('support.identity'), catalogue: catOn.enabled && perms.has('support.reply'), cart: cartOn.enabled && perms.has('support.order') },
   };
 }
 

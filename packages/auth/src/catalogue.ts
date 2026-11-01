@@ -362,6 +362,10 @@ export const PERMISSIONS = {
   // owner's Parameter for Checkout asks one). The order is priced and checked by the checkout's own engines and keeps the
   // chat's channel as its source; never changes a price, a discount, COD or a risk rule, and never moves money.
   'support.order': { group: 'support' },
+  // S22 · PR 434 — the support block list (B4.12): put a chat's person on it with a reason, or take them off. Blocking
+  // anyone is the owner's decision (CLAUDE.md rule 6): no role has this but the owner's, until he gives it; the list is
+  // off as it ships (`support.blockList`). Nothing is deleted; audited.
+  'support.block': { group: 'support' },
   // S08 · PR 192 (CN-018 (7), SUP-02) — Support › Rider issues: log a customer's overcharge complaint with its proof
   // (`support.riderIssues.write`); approve or reject one (`support.riderIssues.decide`, the owner and managers: approval
   // opens the courier claim for the exact extra). Asking the refund of the extra also needs `payments.refunds.request`,

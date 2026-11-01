@@ -20,6 +20,7 @@ import type { SupportIdentitySettings } from '@extas/settings';
 import { z } from 'zod';
 import { allow, logChange, nowOf, parse, SupportError, TX, type Db, type SupportDeps, type Who } from './context';
 import { e164Of, phonesInText } from './identity-pure';
+import { ownChat } from './privacy';
 
 type Tx = Prisma.TransactionClient;
 
@@ -243,8 +244,9 @@ async function touch(tx: Tx, conversationId: string, data: Prisma.ConversationUp
  * to this chat (a chat already linked to another customer moves to this one). The chat is then set by hand.
  */
 export async function setContactPhone(deps: SupportDeps, who: Who, input: unknown): Promise<IdentityChange> {
-  await allow(deps, who, 'support.identity');
+  const held = await allow(deps, who, 'support.identity');
   const d = parse(setPhoneInput, input, 'number');
+  await ownChat(deps, who, held, d.conversationId);
   const phone = e164Of(d.phone);
   if (!phone) throw new SupportError('INVALID_INPUT', 'not a Bangladeshi mobile number', ['phone']);
   const at = nowOf(deps);
@@ -266,8 +268,9 @@ export async function setContactPhone(deps: SupportDeps, who: Who, input: unknow
 
 /** This chat is not that customer (`support.identity`): the link goes from the contact and its chats that had it. */
 export async function unlinkContactCustomer(deps: SupportDeps, who: Who, input: unknown): Promise<IdentityChange> {
-  await allow(deps, who, 'support.identity');
+  const held = await allow(deps, who, 'support.identity');
   const d = parse(byHandInput, input, 'unlink');
+  await ownChat(deps, who, held, d.conversationId);
   const at = nowOf(deps);
   return deps.db.$transaction(async (tx) => {
     const { conv, contact } = await lockContact(tx, who, d.conversationId, d.version);
@@ -288,8 +291,9 @@ export async function unlinkContactCustomer(deps: SupportDeps, who: Who, input: 
  * separately when that is wrong too).
  */
 export async function splitContact(deps: SupportDeps, who: Who, input: unknown): Promise<IdentityChange> {
-  await allow(deps, who, 'support.identity');
+  const held = await allow(deps, who, 'support.identity');
   const d = parse(byHandInput, input, 'split');
+  await ownChat(deps, who, held, d.conversationId);
   const at = nowOf(deps);
   return deps.db.$transaction(async (tx) => {
     const { conv, contact } = await lockContact(tx, who, d.conversationId, d.version);
