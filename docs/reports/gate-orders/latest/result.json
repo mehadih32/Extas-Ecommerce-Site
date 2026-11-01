@@ -1,34 +1,2045 @@
 {
   "kind": "gate-orders",
-  "at": "2026-11-01 19:03",
-  "ok": false,
-  "scenarios": 0,
-  "passed": 0,
+  "at": "2026-11-01 22:13 (Asia/Dhaka)",
+  "sha": "0f6ac8a037d2",
+  "host": "new.extas.com.bd",
+  "scenarios": 18,
+  "passed": 16,
   "failed": 0,
-  "skipped": 0,
-  "orders": 0,
+  "skipped": 2,
+  "ok": true,
+  "orders": 26,
   "started": true,
-  "problems": [
-    "the browser run ended without a report (exit 1)"
+  "finished": true,
+  "providers": {
+    "live": []
+  },
+  "payment": {
+    "mockPay": "the run's own grant: its browser only, on the preview host, closed at the end",
+    "cod": "switched on for this run only (allow_cod, the owner's OK) and put back at the end"
+  },
+  "budget": {
+    "page": 2500,
+    "press": 600,
+    "source": "lighthouserc.json ci.assert.assertions"
+  },
+  "rows": [
+    {
+      "id": "1",
+      "title": "One item, cash on delivery, phone on 4G",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1022"
+      ],
+      "addresses": [
+        "dhk-dhanmondi"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 739,
+          "lcpMs": 684,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 822,
+          "lcpMs": 800,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 227,
+          "serverMs": 3
+        },
+        "checkoutOpen": {
+          "ms": 1162,
+          "lcpMs": 700
+        },
+        "submit": {
+          "ms": 1858,
+          "serverMs": 567,
+          "lcpMs": 676
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1022"
+        },
+        {
+          "id": "one line",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery",
+          "verdict": "PASS",
+          "detail": "COD"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "2",
+      "title": "Three items, low-end Android on slow 3G",
+      "device": "android-low",
+      "network": "slow-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1023"
+      ],
+      "addresses": [
+        "sub-tongi"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 10515,
+          "lcpMs": 8240,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 11279,
+          "lcpMs": 9108,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 2109,
+          "serverMs": 32
+        },
+        "checkoutOpen": {
+          "ms": 12423,
+          "lcpMs": 9012
+        },
+        "submit": {
+          "ms": 13993,
+          "serverMs": 22,
+          "lcpMs": 8676
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1023"
+        },
+        {
+          "id": "three lines",
+          "verdict": "PASS",
+          "detail": "3 lines"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "3",
+      "title": "Eight different items on a desktop",
+      "device": "desktop-1366",
+      "network": "wifi",
+      "verdict": "PASS",
+      "orders": [
+        "1024"
+      ],
+      "addresses": [
+        "out-chattogram"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 337,
+          "lcpMs": 308,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 1406,
+          "lcpMs": 1260,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 294,
+          "serverMs": 237
+        },
+        "checkoutOpen": {
+          "ms": 837,
+          "lcpMs": 724
+        },
+        "submit": {
+          "ms": 1135,
+          "serverMs": 323,
+          "lcpMs": 424
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1024"
+        },
+        {
+          "id": "eight lines",
+          "verdict": "PASS",
+          "detail": "8 lines"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "4",
+      "title": "The same item twice, and the last pieces of its stock",
+      "device": "iphone-se",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1025"
+      ],
+      "addresses": [
+        "out-rajshahi"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 2979,
+          "lcpMs": 2316,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3175,
+          "lcpMs": 2560,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 646,
+          "serverMs": 41
+        },
+        "checkoutOpen": {
+          "ms": 3467,
+          "lcpMs": 2524
+        },
+        "submit": {
+          "ms": 4185,
+          "serverMs": 23,
+          "lcpMs": 2396
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1025"
+        },
+        {
+          "id": "quantity 2 on one line",
+          "verdict": "PASS",
+          "detail": "[2]"
+        },
+        {
+          "id": "stock is 0 after the order",
+          "verdict": "PASS",
+          "detail": "0 left"
+        },
+        {
+          "id": "the next shopper is told it is sold out",
+          "verdict": "PASS",
+          "detail": "refused: the size shows as sold out on the product page"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "5",
+      "title": "Mock bKash, paid ahead (gate check 1)",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1026"
+      ],
+      "addresses": [
+        "out-khulna"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 756,
+          "lcpMs": 688,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 1024,
+          "lcpMs": 980,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 253,
+          "serverMs": 32
+        },
+        "checkoutOpen": {
+          "ms": 1246,
+          "lcpMs": 780
+        },
+        "submit": {
+          "ms": 1471,
+          "serverMs": 143,
+          "lcpMs": 700
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1026"
+        },
+        {
+          "id": "paid in full",
+          "verdict": "PASS",
+          "detail": "due 0"
+        },
+        {
+          "id": "thank-you page",
+          "verdict": "PASS",
+          "detail": "/checkout/thanks/1026"
+        },
+        {
+          "id": "collect 0 on the sticker",
+          "verdict": "PASS",
+          "detail": "0"
+        },
+        {
+          "id": "no message asks for money",
+          "verdict": "PASS",
+          "detail": ""
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "6",
+      "title": "Mock bKash fails, then the retry (gate check 21)",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1027"
+      ],
+      "addresses": [
+        "dhk-mirpur"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 750,
+          "lcpMs": 676,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 738,
+          "lcpMs": 664,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 214,
+          "serverMs": 9
+        },
+        "checkoutOpen": {
+          "ms": 1077,
+          "lcpMs": 656
+        },
+        "submit": {
+          "ms": 1284,
+          "serverMs": 30,
+          "lcpMs": 652
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1027"
+        },
+        {
+          "id": "the failure is shown with a retry",
+          "verdict": "PASS",
+          "detail": "failed: true, retry: true"
+        },
+        {
+          "id": "one order",
+          "verdict": "PASS",
+          "detail": "1 orders"
+        },
+        {
+          "id": "one paid payment",
+          "verdict": "PASS",
+          "detail": "1 paid of 2"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "7",
+      "title": "One customer, eight orders in a month, three cancelled",
+      "device": "android-low",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1028",
+        "1029",
+        "1030",
+        "1031",
+        "1032",
+        "1033",
+        "1034",
+        "1035"
+      ],
+      "addresses": [
+        "dhk-gulshan",
+        "out-barishal",
+        "sub-fatullah",
+        "out-sylhet",
+        "out-rangpur",
+        "out-mymensingh",
+        "dhk-uttara",
+        "out-coxs-bazar"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 974,
+          "lcpMs": 900,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 873,
+          "lcpMs": 848,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 233,
+          "serverMs": 11
+        },
+        "checkoutOpen": {
+          "ms": 1309,
+          "lcpMs": 748
+        },
+        "submit": {
+          "ms": 1797,
+          "serverMs": 436,
+          "lcpMs": 704
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "order 1",
+          "verdict": "PASS",
+          "detail": "order 1028"
+        },
+        {
+          "id": "order 2",
+          "verdict": "PASS",
+          "detail": "order 1029"
+        },
+        {
+          "id": "order 3",
+          "verdict": "PASS",
+          "detail": "order 1030"
+        },
+        {
+          "id": "order 4",
+          "verdict": "PASS",
+          "detail": "order 1031"
+        },
+        {
+          "id": "order 5",
+          "verdict": "PASS",
+          "detail": "order 1032"
+        },
+        {
+          "id": "order 6",
+          "verdict": "PASS",
+          "detail": "order 1033"
+        },
+        {
+          "id": "order 7",
+          "verdict": "PASS",
+          "detail": "order 1034"
+        },
+        {
+          "id": "order 8",
+          "verdict": "PASS",
+          "detail": "order 1035"
+        },
+        {
+          "id": "eight orders for the one number",
+          "verdict": "PASS",
+          "detail": "8 orders"
+        },
+        {
+          "id": "three cancelled",
+          "verdict": "PASS",
+          "detail": "CANCELLED, CANCELLED, CANCELLED (by customer, customer, customer)"
+        },
+        {
+          "id": "their stock came back",
+          "verdict": "PASS",
+          "detail": "39→40, 39→40, 39→40"
+        },
+        {
+          "id": "cancelled orders are not sales",
+          "verdict": "PASS",
+          "detail": "0 counted as sales, 0 test pieces in sales by SKU"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "8",
+      "title": "The Bengali checkout (/bn), Bengali digits in the phone",
+      "device": "android-mid",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1036"
+      ],
+      "addresses": [
+        "out-bogura-bn"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 2988,
+          "lcpMs": 2416,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3238,
+          "lcpMs": 2676,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 672,
+          "serverMs": 51
+        },
+        "checkoutOpen": {
+          "ms": 3903,
+          "lcpMs": 2584
+        },
+        "submit": {
+          "ms": 4603,
+          "serverMs": 14,
+          "lcpMs": 2476
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1036"
+        },
+        {
+          "id": "the order is in Bengali",
+          "verdict": "PASS",
+          "detail": "bn"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "9",
+      "title": "A wrong phone number and a missing address first, then corrected",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1037"
+      ],
+      "addresses": [
+        "out-cumilla"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 1168,
+          "lcpMs": 1108,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 1061,
+          "lcpMs": 996,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 244,
+          "serverMs": 32
+        },
+        "checkoutOpen": {
+          "ms": 1178,
+          "lcpMs": 784
+        },
+        "submit": {
+          "ms": 1423,
+          "serverMs": 131,
+          "lcpMs": 700
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "the wrong details are refused",
+          "verdict": "PASS",
+          "detail": "form ready 0, 0 order calls"
+        },
+        {
+          "id": "placed after the fix",
+          "verdict": "PASS",
+          "detail": "order 1037"
+        },
+        {
+          "id": "exactly one order",
+          "verdict": "PASS",
+          "detail": "1 orders"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "10",
+      "title": "Double-tap on Confirm, a reload mid-checkout and Back after it",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1038"
+      ],
+      "addresses": [
+        "dhk-mohammadpur-bn"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 820,
+          "lcpMs": 748,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 768,
+          "lcpMs": 724,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 216,
+          "serverMs": 11
+        },
+        "checkoutOpen": {
+          "ms": 1158,
+          "lcpMs": 704
+        },
+        "submit": {
+          "ms": 1337,
+          "serverMs": 4,
+          "lcpMs": 672
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1038"
+        },
+        {
+          "id": "exactly one order",
+          "verdict": "PASS",
+          "detail": "1 orders after a double tap, a reload (the details were kept) and Back"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "11",
+      "title": "The network drops while the order is sent, then he presses again",
+      "device": "android-mid",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1039"
+      ],
+      "addresses": [
+        "out-jashore"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 2983,
+          "lcpMs": 2328,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3190,
+          "lcpMs": 2576,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 625,
+          "serverMs": 23
+        },
+        "checkoutOpen": {
+          "ms": 3559,
+          "lcpMs": 2552
+        },
+        "submit": {
+          "ms": 4203,
+          "serverMs": 15,
+          "lcpMs": 2452
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "the lost answer leaves him on the checkout",
+          "verdict": "PASS",
+          "detail": "/checkout"
+        },
+        {
+          "id": "placed on the second press",
+          "verdict": "PASS",
+          "detail": "order 1039"
+        },
+        {
+          "id": "exactly one order",
+          "verdict": "PASS",
+          "detail": "1 orders"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "12",
+      "title": "A guest order, then signed in with the sign-in code (mock SMS)",
+      "device": "iphone",
+      "network": "wifi",
+      "verdict": "PASS",
+      "orders": [
+        "1040",
+        "1041"
+      ],
+      "addresses": [
+        "dhk-motijheel-mixed",
+        "out-kushtia"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 313,
+          "lcpMs": 296,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 301,
+          "lcpMs": 296,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 111,
+          "serverMs": 54
+        },
+        "checkoutOpen": {
+          "ms": 354,
+          "lcpMs": 228
+        },
+        "submit": {
+          "ms": 713,
+          "serverMs": 134,
+          "lcpMs": 204
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "guest order",
+          "verdict": "PASS",
+          "detail": "order 1040"
+        },
+        {
+          "id": "signed in with the code",
+          "verdict": "PASS",
+          "detail": "answer 200"
+        },
+        {
+          "id": "signed-in order",
+          "verdict": "PASS",
+          "detail": "order 1041"
+        },
+        {
+          "id": "both orders are the same customer's",
+          "verdict": "PASS",
+          "detail": "one customer"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "13",
+      "title": "Delivery inside Dhaka, a Dhaka suburb and outside Dhaka, with the owner's charges",
+      "device": "tablet",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1042",
+        "1043",
+        "1044"
+      ],
+      "addresses": [
+        "dhk-banani-long",
+        "sub-savar",
+        "out-patuakhali-mixed"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 724,
+          "lcpMs": 660,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 743,
+          "lcpMs": 684,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 215,
+          "serverMs": 9
+        },
+        "checkoutOpen": {
+          "ms": 1068,
+          "lcpMs": 680
+        },
+        "submit": {
+          "ms": 1263,
+          "serverMs": 6,
+          "lcpMs": 660
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "dhaka order",
+          "verdict": "PASS",
+          "detail": "order 1042"
+        },
+        {
+          "id": "dhaka charge",
+          "verdict": "SKIP",
+          "detail": "no delivery band is switched on yet (the owner's delivery charges): only the address round trip is checked"
+        },
+        {
+          "id": "suburb order",
+          "verdict": "PASS",
+          "detail": "order 1043"
+        },
+        {
+          "id": "suburb charge",
+          "verdict": "SKIP",
+          "detail": "no delivery band is switched on yet (the owner's delivery charges): only the address round trip is checked"
+        },
+        {
+          "id": "outside order",
+          "verdict": "PASS",
+          "detail": "order 1044"
+        },
+        {
+          "id": "outside charge",
+          "verdict": "SKIP",
+          "detail": "no delivery band is switched on yet (the owner's delivery charges): only the address round trip is checked"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "14",
+      "title": "A coupon the owner made (only one with no use limit; none is ever made)",
+      "device": "desktop-1920",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "coupon",
+          "verdict": "SKIP",
+          "detail": "the owner has no open coupon without a use limit: none is made by the run"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "15",
+      "title": "The admin adds a piece, records a payment and re-books (gate check 4)",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1045"
+      ],
+      "addresses": [
+        "dhk-khilgaon-pasted"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 762,
+          "lcpMs": 688,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 776,
+          "lcpMs": 732,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 209,
+          "serverMs": 5
+        },
+        "checkoutOpen": {
+          "ms": 1364,
+          "lcpMs": 908
+        },
+        "submit": {
+          "ms": 1322,
+          "serverMs": 11,
+          "lcpMs": 680
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1045"
+        },
+        {
+          "id": "the admin added a piece",
+          "verdict": "PASS",
+          "detail": "+75000"
+        },
+        {
+          "id": "booked",
+          "verdict": "PASS",
+          "detail": ""
+        },
+        {
+          "id": "re-booked at the new amount",
+          "verdict": "SKIP",
+          "detail": "recording payments by hand is off (owner's setting payments.manual)"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "16",
+      "title": "Partial delivery, a return and an exchange (on the mocks)",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "partial, return, exchange",
+          "verdict": "SKIP",
+          "detail": "each needs a delivered parcel: on the preview site that would count as a real sale and move the courier's cash, so it is proved on the practice courier in CI (packages/payments and packages/orders return, exchange and partial-delivery database tests) and not here"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "17",
+      "title": "Two shoppers race for the last piece",
+      "device": "android-mid",
+      "network": "wifi",
+      "verdict": "PASS",
+      "orders": [
+        "1046"
+      ],
+      "addresses": [
+        "dhk-rampura"
+      ],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "one shopper wins",
+          "verdict": "PASS",
+          "detail": "1 orders for the last piece"
+        },
+        {
+          "id": "the other is told clearly",
+          "verdict": "PASS",
+          "detail": "reached the checkout; reached the checkout; OUT_OF_STOCK, placed"
+        }
+      ],
+      "shot": null
+    },
+    {
+      "id": "18",
+      "title": "A 2.1 kg parcel, the courier's statement with a planted mismatch, and a gift (gate checks 24, 23, 7)",
+      "device": "desktop-1366",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1047"
+      ],
+      "addresses": [
+        "out-bhola-no-thana"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 714,
+          "lcpMs": 640,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 733,
+          "lcpMs": 660,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 218,
+          "serverMs": 4
+        },
+        "checkoutOpen": {
+          "ms": 1065,
+          "lcpMs": 672
+        },
+        "submit": {
+          "ms": 1261,
+          "serverMs": 9,
+          "lcpMs": 648
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "2.1 kg order",
+          "verdict": "PASS",
+          "detail": "order 1047"
+        },
+        {
+          "id": "the courier gets 2.1 kg",
+          "verdict": "PASS",
+          "detail": "2100 g"
+        },
+        {
+          "id": "the statement's mismatches are flagged",
+          "verdict": "PASS",
+          "detail": "2 of 2 lines"
+        }
+      ],
+      "shot": null
+    }
+  ],
+  "gateChecks": [
+    {
+      "id": "1",
+      "what": "A mock-bKash-paid order: no message asks for money and the sticker says collect 0",
+      "verdict": "PASS",
+      "detail": "rider collects 0, courier sent 0, sticker says 0; 22 journey messages filled, 0 would ask for money"
+    },
+    {
+      "id": "4",
+      "what": "Book, record a payment, re-book: the courier gets the new cash-on-delivery amount",
+      "verdict": "SKIP",
+      "detail": "recording payments by hand is off (owner's setting payments.manual)"
+    },
+    {
+      "id": "7",
+      "what": "Gift: sticker and receiver's details only while gift mode (checkout.gift) is on",
+      "verdict": "SKIP",
+      "detail": "gift mode is off (checkout.gift): no gift order, no gift sticker and no receiver's message — as it should be"
+    },
+    {
+      "id": "21",
+      "what": "bKash fails, then the retry: one order, one paid payment",
+      "verdict": "PASS",
+      "detail": "failure shown: true; 1 order, 1 paid payment, 1 failed try"
+    },
+    {
+      "id": "23",
+      "what": "The courier's statement with a planted mismatch is flagged",
+      "verdict": "PASS",
+      "detail": "our parcel: MISMATCH NOT_COLLECTED; a parcel we never booked: MISMATCH UNKNOWN_PARCEL"
+    },
+    {
+      "id": "24",
+      "what": "A 2.1 kg parcel follows its weight slab",
+      "verdict": "SKIP",
+      "detail": "no courier rate card is entered yet (owner data): the weight was sent right, the slab price is not checked"
+    }
+  ],
+  "addressRows": [
+    {
+      "number": "1022",
+      "addressId": "dhk-dhanmondi",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801400000162",
+          "address": "House 12, Road 7, Dhanmondi, Dhaka 1209"
+        },
+        "admin": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801400000162",
+          "address": "House 12, Road 7, Dhanmondi, Dhaka 1209"
+        },
+        "courier": {
+          "name": "GATE TEST Karim",
+          "phone": "01400000162",
+          "address": "House 12, Road 7, Dhanmondi, Dhaka 1209",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "GATE TEST Karim",
+          "phone": "01400000162",
+          "address": "House 12, Road 7, Dhanmondi, Dhaka 1209",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1023",
+      "addressId": "sub-tongi",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801500000263",
+          "address": "House 2, Station Road, Tongi, Gazipur 1710"
+        },
+        "admin": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801500000263",
+          "address": "House 2, Station Road, Tongi, Gazipur 1710"
+        },
+        "courier": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01500000263",
+          "address": "House 2, Station Road, Tongi, Gazipur 1710",
+          "codMinor": 150000,
+          "weightGrams": 2100
+        },
+        "sticker": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01500000263",
+          "address": "House 2, Station Road, Tongi, Gazipur 1710",
+          "collectMinor": 150000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1024",
+      "addressId": "out-chattogram",
+      "quirk": "",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801600000364",
+          "address": "House 3, Road 1, Panchlaish, Chattogram 4203"
+        },
+        "admin": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801600000364",
+          "address": "House 3, Road 1, Panchlaish, Chattogram 4203"
+        },
+        "courier": {
+          "name": "GATE TEST Sumon",
+          "phone": "01600000364",
+          "address": "House 3, Road 1, Panchlaish, Chattogram 4203",
+          "codMinor": 525000,
+          "weightGrams": 4100
+        },
+        "sticker": {
+          "name": "GATE TEST Sumon",
+          "phone": "01600000364",
+          "address": "House 3, Road 1, Panchlaish, Chattogram 4203",
+          "collectMinor": 525000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1025",
+      "addressId": "out-rajshahi",
+      "quirk": "",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801700000465",
+          "address": "Shaheb Bazar, Boalia, Rajshahi 6100"
+        },
+        "admin": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801700000465",
+          "address": "Shaheb Bazar, Boalia, Rajshahi 6100"
+        },
+        "courier": {
+          "name": "GATE TEST Farhana",
+          "phone": "01700000465",
+          "address": "Shaheb Bazar, Boalia, Rajshahi 6100",
+          "codMinor": 100000,
+          "weightGrams": 1400
+        },
+        "sticker": {
+          "name": "GATE TEST Farhana",
+          "phone": "01700000465",
+          "address": "Shaheb Bazar, Boalia, Rajshahi 6100",
+          "collectMinor": 100000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1026",
+      "addressId": "out-khulna",
+      "quirk": "",
+      "phoneFormat": "local",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801800000566",
+          "address": "House 11, Sonadanga, Khulna 9100"
+        },
+        "admin": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801800000566",
+          "address": "House 11, Sonadanga, Khulna 9100"
+        },
+        "courier": {
+          "name": "GATE TEST Jamal",
+          "phone": "01800000566",
+          "address": "House 11, Sonadanga, Khulna 9100",
+          "codMinor": 0,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Jamal",
+          "phone": "01800000566",
+          "address": "House 11, Sonadanga, Khulna 9100",
+          "collectMinor": 0,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1027",
+      "addressId": "dhk-mirpur",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801900000667",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
+        },
+        "admin": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801900000667",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
+        },
+        "courier": {
+          "name": "GATE TEST Ruma",
+          "phone": "01900000667",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka",
+          "codMinor": 0,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Ruma",
+          "phone": "01900000667",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka",
+          "collectMinor": 0,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1028",
+      "addressId": "dhk-gulshan",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "House 5, Road 90, Gulshan 2, Dhaka 1212"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "House 5, Road 90, Gulshan 2, Dhaka 1212"
+        },
+        "courier": {
+          "name": "GATE TEST Tanvir",
+          "phone": "01300000768",
+          "address": "House 5, Road 90, Gulshan 2, Dhaka 1212",
+          "codMinor": 75000,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Tanvir",
+          "phone": "01300000768",
+          "address": "House 5, Road 90, Gulshan 2, Dhaka 1212",
+          "collectMinor": 75000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1029",
+      "addressId": "out-barishal",
+      "quirk": "",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "Sadar Road, Barishal Kotwali, Barishal"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "Sadar Road, Barishal Kotwali, Barishal"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1030",
+      "addressId": "sub-fatullah",
+      "quirk": "",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "Fatullah Bazar, Fatullah, Narayanganj 1420"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "Fatullah Bazar, Fatullah, Narayanganj 1420"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1031",
+      "addressId": "out-sylhet",
+      "quirk": "",
+      "phoneFormat": "local",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "House 4, Jalalabad, Sylhet 3100"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "House 4, Jalalabad, Sylhet 3100"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1032",
+      "addressId": "out-rangpur",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "Jahaj Company More, Rangpur Kotwali, Rangpur"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "Jahaj Company More, Rangpur Kotwali, Rangpur"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1033",
+      "addressId": "out-mymensingh",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "Ganginarpar, Mymensingh Kotwali, Mymensingh 2200"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "Ganginarpar, Mymensingh Kotwali, Mymensingh 2200"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1034",
+      "addressId": "dhk-uttara",
+      "quirk": "",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1035",
+      "addressId": "out-coxs-bazar",
+      "quirk": "",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801300000768",
+          "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1036",
+      "addressId": "out-bogura-bn",
+      "quirk": "bengali",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "+8801400000869",
+          "address": "গাবতলী বাজার, গাবতলী, বগুড়া"
+        },
+        "admin": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "+8801400000869",
+          "address": "গাবতলী বাজার, গাবতলী, বগুড়া"
+        },
+        "courier": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "01400000869",
+          "address": "গাবতলী বাজার, গাবতলী, বগুড়া",
+          "codMinor": 149000,
+          "weightGrams": 1300
+        },
+        "sticker": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "01400000869",
+          "address": "গাবতলী বাজার, গাবতলী, বগুড়া",
+          "collectMinor": 149000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1037",
+      "addressId": "out-cumilla",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801500000970",
+          "address": "Kandirpar, Cumilla Adarsha Sadar, Cumilla"
+        },
+        "admin": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801500000970",
+          "address": "Kandirpar, Cumilla Adarsha Sadar, Cumilla"
+        },
+        "courier": {
+          "name": "GATE TEST Karim",
+          "phone": "01500000970",
+          "address": "Kandirpar, Cumilla Adarsha Sadar, Cumilla",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "GATE TEST Karim",
+          "phone": "01500000970",
+          "address": "Kandirpar, Cumilla Adarsha Sadar, Cumilla",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1038",
+      "addressId": "dhk-mohammadpur-bn",
+      "quirk": "bengali",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801600001071",
+          "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা"
+        },
+        "admin": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801600001071",
+          "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা"
+        },
+        "courier": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01600001071",
+          "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01600001071",
+          "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1039",
+      "addressId": "out-jashore",
+      "quirk": "",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801700001172",
+          "address": "Doratana More, Jashore Sadar, Jashore"
+        },
+        "admin": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801700001172",
+          "address": "Doratana More, Jashore Sadar, Jashore"
+        },
+        "courier": {
+          "name": "GATE TEST Sumon",
+          "phone": "01700001172",
+          "address": "Doratana More, Jashore Sadar, Jashore",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "GATE TEST Sumon",
+          "phone": "01700001172",
+          "address": "Doratana More, Jashore Sadar, Jashore",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1040",
+      "addressId": "dhk-motijheel-mixed",
+      "quirk": "mixed",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801800001273",
+          "address": "৪৫ নম্বর বিল্ডিং, Motijheel C/A, ঢাকা"
+        },
+        "admin": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801800001273",
+          "address": "৪৫ নম্বর বিল্ডিং, Motijheel C/A, ঢাকা"
+        },
+        "courier": {
+          "name": "GATE TEST Farhana",
+          "phone": "01800001273",
+          "address": "৪৫ নম্বর বিল্ডিং, Motijheel C/A, ঢাকা",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "GATE TEST Farhana",
+          "phone": "01800001273",
+          "address": "৪৫ নম্বর বিল্ডিং, Motijheel C/A, ঢাকা",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1041",
+      "addressId": "out-kushtia",
+      "quirk": "",
+      "phoneFormat": "local",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801800001273",
+          "address": "NS Road, Kushtia Sadar, Kushtia"
+        },
+        "admin": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801800001273",
+          "address": "NS Road, Kushtia Sadar, Kushtia"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1042",
+      "addressId": "dhk-banani-long",
+      "quirk": "long",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801900001374",
+          "address": "House 48, 3rd floor (opposite the green gate, beside the pharmacy, ask the guard for the GATE TEST parcel), Road 11, Block F, Banani, Dhaka 1213"
+        },
+        "admin": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801900001374",
+          "address": "House 48, 3rd floor (opposite the green gate, beside the pharmacy, ask the guard for the GATE TEST parcel), Road 11, Block F, Banani, Dhaka 1213"
+        },
+        "courier": {
+          "name": "GATE TEST Jamal",
+          "phone": "01900001374",
+          "address": "House 48, 3rd floor (opposite the green gate, beside the pharmacy, ask the guard for the GATE TEST parcel), Road 11, Block F, Banani, Dhaka 1213",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "GATE TEST Jamal",
+          "phone": "01900001374",
+          "address": "House 48, 3rd floor (opposite the green gate, beside the pharmacy, ask the guard for the GATE TEST parcel), Road 11, Block F, Banani, Dhaka 1213",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1043",
+      "addressId": "sub-savar",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801300001475",
+          "address": "House 14, Bank Colony, Savar, Dhaka 1340"
+        },
+        "admin": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801300001475",
+          "address": "House 14, Bank Colony, Savar, Dhaka 1340"
+        },
+        "courier": {
+          "name": "GATE TEST Ruma",
+          "phone": "01300001475",
+          "address": "House 14, Bank Colony, Savar, Dhaka 1340",
+          "codMinor": 75000,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Ruma",
+          "phone": "01300001475",
+          "address": "House 14, Bank Colony, Savar, Dhaka 1340",
+          "collectMinor": 75000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1044",
+      "addressId": "out-patuakhali-mixed",
+      "quirk": "mixed",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801400001576",
+          "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801400001576",
+          "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী"
+        },
+        "courier": {
+          "name": "GATE TEST Tanvir",
+          "phone": "01400001576",
+          "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী",
+          "codMinor": 75000,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Tanvir",
+          "phone": "01400001576",
+          "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী",
+          "collectMinor": 75000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1045",
+      "addressId": "dhk-khilgaon-pasted",
+      "quirk": "pasted",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801500001677",
+          "address": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219"
+        },
+        "admin": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801500001677",
+          "address": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219"
+        },
+        "courier": {
+          "name": "GATE TEST Rahim",
+          "phone": "01500001677",
+          "address": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219",
+          "codMinor": 150000,
+          "weightGrams": 800
+        },
+        "sticker": {
+          "name": "GATE TEST Rahim",
+          "phone": "01500001677",
+          "address": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219",
+          "collectMinor": 150000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1046",
+      "addressId": "dhk-rampura",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801700001879",
+          "address": "House 19, Hajipara, Rampura, Dhaka 1219"
+        },
+        "admin": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801700001879",
+          "address": "House 19, Hajipara, Rampura, Dhaka 1219"
+        },
+        "courier": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01700001879",
+          "address": "House 19, Hajipara, Rampura, Dhaka 1219",
+          "codMinor": 75000,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01700001879",
+          "address": "House 19, Hajipara, Rampura, Dhaka 1219",
+          "collectMinor": 75000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1047",
+      "addressId": "out-bhola-no-thana",
+      "quirk": "missingThana",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801800001980",
+          "address": "Char Fasson Road, Bhola"
+        },
+        "admin": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801800001980",
+          "address": "Char Fasson Road, Bhola"
+        },
+        "courier": {
+          "name": "GATE TEST Sumon",
+          "phone": "01800001980",
+          "address": "Char Fasson Road, Bhola",
+          "codMinor": 150000,
+          "weightGrams": 2100
+        },
+        "sticker": {
+          "name": "GATE TEST Sumon",
+          "phone": "01800001980",
+          "address": "Char Fasson Road, Bhola",
+          "collectMinor": 150000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    }
+  ],
+  "timings": [
+    {
+      "network": "slow-3g",
+      "cls": "phone",
+      "orders": 1,
+      "steps": {
+        "firstLoad": 10515,
+        "productPage": 11279,
+        "addToBag": 2109,
+        "checkoutOpen": 12423,
+        "submit": 13993
+      }
+    },
+    {
+      "network": "fast-3g",
+      "cls": "phone",
+      "orders": 3,
+      "steps": {
+        "firstLoad": 2983,
+        "productPage": 3190,
+        "addToBag": 646,
+        "checkoutOpen": 3559,
+        "submit": 4203
+      }
+    },
+    {
+      "network": "4g",
+      "cls": "desktop",
+      "orders": 1,
+      "steps": {
+        "firstLoad": 714,
+        "productPage": 733,
+        "addToBag": 218,
+        "checkoutOpen": 1065,
+        "submit": 1261
+      }
+    },
+    {
+      "network": "4g",
+      "cls": "phone",
+      "orders": 8,
+      "steps": {
+        "firstLoad": 756,
+        "productPage": 776,
+        "addToBag": 216,
+        "checkoutOpen": 1162,
+        "submit": 1337
+      }
+    },
+    {
+      "network": "wifi",
+      "cls": "desktop",
+      "orders": 1,
+      "steps": {
+        "firstLoad": 337,
+        "productPage": 1406,
+        "addToBag": 294,
+        "checkoutOpen": 837,
+        "submit": 1135
+      }
+    },
+    {
+      "network": "wifi",
+      "cls": "phone",
+      "orders": 1,
+      "steps": {
+        "firstLoad": 313,
+        "productPage": 301,
+        "addToBag": 111,
+        "checkoutOpen": 354,
+        "submit": 713
+      }
+    }
   ],
   "cleanup": {
     "ok": true,
-    "orders": 20,
-    "cancelled": 17,
-    "alreadyClosed": 3,
+    "orders": 47,
+    "cancelled": 23,
+    "alreadyClosed": 24,
     "failed": [],
-    "refundRequests": 2,
-    "tagged": "11 of 20 test orders carry an internal \"GATE TEST\" note (the order flags take only the owner's own list)",
+    "refundRequests": 5,
+    "tagged": "37 of 47 test orders carry an internal \"GATE TEST\" note (the order flags take only the owner's own list)",
     "productsArchived": 3,
-    "extrasArchived": 9,
+    "extrasArchived": 10,
     "courierArchived": true,
     "mockPay": {
       "ok": true,
       "closed": 1,
       "codRestored": 1,
-      "notes": []
+      "notes": [],
+      "runs": [
+        {
+          "run": "20261101161353",
+          "cod": "put back to no store value (the installation value answers)"
+        }
+      ]
     },
     "notes": [],
-    "courierProvider": null
+    "courierProvider": "steadfast",
+    "salesOk": true,
+    "salesDetail": "0 test orders counted as sales, 0 test pieces in sales by SKU (delivered only)"
+  },
+  "problems": [],
+  "safetyNet": {
+    "cod": "cash on delivery put back to no store value (the installation value answers)",
+    "grant": "test-pay grant closed",
+    "start": "nothing left open by an earlier run"
   }
 }
