@@ -12,6 +12,9 @@
 // PR 430 (B4.6, SIM-F-024): with `support.cart` on and `support.order`, the "Chat bag" card — the drawer's "Add to bag",
 // the shop's own prices and combos, the details from the customer, and "Create order" / "Take advance" by the owner's
 // own rule; the order keeps the chat's channel as its source.
+// PR 432 (B4.7, SIM-F-012): with `support.drafts` on and `support.reply`, EXTAS AI's draft answer above the reply box —
+// what the customer asked last, answered from the chat's order and parcel and Find My Size in the store's own words;
+// "Use draft" puts it in the box, a person sends it (nothing is sent by itself).
 // PR 431 (B4.14 item 7): the "Ticket" card — this question's status, owner, first-answer and solution timers (due, late,
 // or met with how long it took) and the chat's earlier tickets, once `support.tickets` opened one.
 //
@@ -27,7 +30,7 @@ import { DetailGrid } from '@/components/admin/orders/OrderCommands';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { ChatBag, type ChatBagTexts } from '@/components/admin/support/ChatBag';
-import { Composer, type ComposerProducts, type ComposerTexts } from '@/components/admin/support/Composer';
+import { Composer, type ComposerDraft, type ComposerProducts, type ComposerTexts } from '@/components/admin/support/Composer';
 import { CustomerContext } from '@/components/admin/support/CustomerContext';
 import { IdentityActions, type IdentityTexts } from '@/components/admin/support/IdentityActions';
 import { SideActions, type SideTexts } from '@/components/admin/support/SideActions';
@@ -35,6 +38,7 @@ import { TicketCard } from '@/components/admin/support/TicketCard';
 import { formatNumber, moneyOf } from '@/components/admin/products/model';
 import { printedAt } from '@/lib/admin-fulfil/handover';
 import { adminDeps } from '@/lib/admin-auth';
+import { draftSizeFinder } from '@/lib/admin-support/draft-size';
 import { kindName, logLine, senderLabel, withInbox } from '@/lib/admin-support/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -87,12 +91,14 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     throw e;
   }
   const r = access.deps.resolver;
-  const [staff, files, inbox, currency, catalogue] = await Promise.all([
+  const [staff, files, inbox, currency, catalogue, drafted] = await Promise.all([
     th.you.assign ? sp.supportStaff(sd, who) : Promise.resolve([]),
     r.value('support.attachments', { storeId: MOTHER_STORE_ID }),
     r.value('support.inbox', { storeId: MOTHER_STORE_ID }),
     r.value('store.currency', { storeId: MOTHER_STORE_ID }),
     r.value('support.catalogue', { storeId: MOTHER_STORE_ID }),
+    // PR 432: the draft answer (only for someone who may reply; off as it ships)
+    th.you.reply ? sp.supportDraft(sd, who, th.id, { sizeFor: draftSizeFinder(access.deps.db, r, MOTHER_STORE_ID) }) : Promise.resolve(null),
   ]);
   const n = (x: number) => formatNumber(x, view.locale);
   const at = (x: Date | null) => (x ? printedAt(x.toISOString(), view.timeZone) : t(d, 'sup.side.none'));
@@ -135,6 +141,15 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         },
         // PR 430: "Add to bag" (orders from the chat on, and this person may make them)
         addUrl: th.you.cart ? `${API}/c/${th.id}/cart` : null,
+      }
+    : null;
+  // PR 432: EXTAS AI's draft answer above the reply box
+  const draft: ComposerDraft | null = drafted
+    ? {
+        body: drafted.body,
+        about: t(d, drafted.complaint ? `sup.dr.c.${drafted.complaint}` : `sup.dr.i.${drafted.intent}`),
+        handover: drafted.handover ? t(d, `sup.dr.to.${drafted.handover}`) : null,
+        texts: { h: t(d, 'sup.dr.h'), use: t(d, 'sup.dr.use'), note: t(d, 'sup.dr.note') },
       }
     : null;
   // PR 430: the chat's bag (orders from the chat on, and `support.order`)
@@ -224,7 +239,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         )}
       </section>
       {th.you.reply ? (
-        <Composer url={`${API}/c/${th.id}/messages`} filesUrl={`${API}/files`} version={th.version} maxChars={inbox.replyMaxChars} files={{ enabled: files.enabled && accept !== '', max: files.maxPerMessage, accept }} products={products} texts={composer} />
+        <Composer url={`${API}/c/${th.id}/messages`} filesUrl={`${API}/files`} version={th.version} maxChars={inbox.replyMaxChars} files={{ enabled: files.enabled && accept !== '', max: files.maxPerMessage, accept }} products={products} draft={draft} texts={composer} />
       ) : (
         <p className="a2-note">
           <ShellIcon name="lock" size={15} />
@@ -353,7 +368,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         view={view}
         place={locateKey('supportConversation')}
         crumb={
-          <Link href="/admin/support">
+          <Link href="/admin/support" className="sp-back">
             <ShellIcon name="cl" size={12} />
             {t(d, 'sup.th.back')}
           </Link>

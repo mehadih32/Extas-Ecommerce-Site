@@ -12,6 +12,8 @@
 // pay link message the owner's advance rule sends (under "More options" inside the card's own fold).
 // PR 431: the "Tickets and timers" card (off as it ships) — the first-answer minutes, the solution hours, late chats in
 // the bell.
+// PR 432: the "Draft answers (EXTAS AI)" card (off as it ships) — the language for Banglish, the questions marked for a
+// person, the bulk count; under "More options" the drafts' words and the words that tell questions apart.
 // PR 427: the "Who is writing" card (off as it ships) — the number from WhatsApp or the chat's words, its customer, one
 // person across channels.
 // Optional behaviour ships off. Nothing here moves money or changes an order.
@@ -120,6 +122,17 @@ export default async function SupportSettingsPage() {
     { kind: 'number', path: 'resolutionHours', label: s('tickets.resolution'), help: s('tickets.resolutionHelp'), min: sp.TICKET_RESOLUTION_HOURS.min, max: sp.TICKET_RESOLUTION_HOURS.max },
     { kind: 'switch', path: 'notify', label: s('tickets.notify'), help: s('tickets.notifyHelp') },
   ];
+  // PR 432: draft answers (off as it ships); the words under "More options"
+  const intentName = (k: string) => t(d, `sup.dr.i.${k}`);
+  const drafts: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('drafts.enabled'), help: s('drafts.enabledHelp') },
+    { kind: 'select', path: 'banglishReply', label: s('drafts.banglish'), help: s('drafts.banglishHelp'), options: (['bn', 'en'] as const).map((v) => ({ value: v, label: s(`drafts.${v}`) })) },
+    { kind: 'checks', path: 'handover', label: s('drafts.handover'), options: sp.DRAFT_INTENTS.map((v) => ({ value: v, label: intentName(v) })) },
+    { kind: 'number', path: 'bulkPieces', label: s('drafts.bulk'), help: s('drafts.bulkHelp'), min: sp.DRAFT_BULK_PIECES.min, max: sp.DRAFT_BULK_PIECES.max },
+  ];
+  const textName = (k: string) => (['cancel', 'late', 'bulk', 'exchange', 'size', 'greeting', 'unknown'].includes(k) ? intentName(k) : ['overcharge', 'wrong', 'damage', 'fade'].includes(k) ? t(d, `sup.dr.c.${k}`) : s(`draftWords.x.${k}`));
+  const draftWords: FieldsCardField[] = sp.DRAFT_TEXTS.map((k) => ({ kind: 'pair', path: k, label: { en: `${textName(k)} · ${s('draftWords.x.en')}`, bn: `${textName(k)} · ${s('draftWords.x.bn')}` }, max: 400, rows: 2 }));
+  const draftKeywords: FieldsCardField[] = sp.DRAFT_WORD_LISTS.map((k) => ({ kind: 'text', path: k, label: k === 'pieces' ? s('draftWords.x.pieces') : textName(k), max: 600 }));
   // PR 427: who is writing (off as it ships)
   const identity: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: s('identity.enabled'), help: s('identity.enabledHelp') },
@@ -154,12 +167,15 @@ export default async function SupportSettingsPage() {
       <FieldsCard url={API} screen={screen('support.catalogue')} fields={catalogue} texts={texts('catalogue')} canEdit={canEdit} testId="support-set-catalogue" />
       <FieldsCard url={API} screen={screen('support.cart')} fields={cart} texts={texts('cart')} canEdit={canEdit} testId="support-set-cart" />
       <FieldsCard url={API} screen={screen('support.tickets')} fields={tickets} texts={texts('tickets')} canEdit={canEdit} testId="support-set-tickets" />
+      <FieldsCard url={API} screen={screen('support.drafts')} fields={drafts} texts={texts('drafts')} canEdit={canEdit} testId="support-set-drafts" />
       <p className="a2-xs a2-mute a2-mt12" data-testid="support-set-phones">{s('phones')}</p>
       <details className="a2-card a2-mt12" data-testid="support-set-more">
         <summary className="a2-h4">{s('more')}</summary>
         <p className="a2-xs a2-mute a2-mt6">{s('moreSub')}</p>
         <FieldsCard url={API} screen={screen('support.attachments')} fields={attachments} texts={texts('attachments')} canEdit={canEdit} testId="support-set-attachments" />
         <FieldsCard url={API} screen={screen('support.channels')} fields={windowFields} texts={texts('window')} canEdit={canEdit} testId="support-set-window" />
+        <FieldsCard url={API} screen={screen('support.draftWords')} fields={draftWords} texts={texts('draftWords')} canEdit={canEdit} testId="support-set-draft-words" />
+        <FieldsCard url={API} screen={screen('support.draftKeywords')} fields={draftKeywords} texts={texts('draftKeywords')} canEdit={canEdit} testId="support-set-draft-keywords" />
       </details>
     </div>
   );

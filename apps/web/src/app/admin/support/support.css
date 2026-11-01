@@ -38,7 +38,8 @@
 .adm2 .sp-cbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
 .adm2 .sp-cbar .sp-grow{flex:1 1 auto}
 .adm2 .sp-attach{position:relative;overflow:hidden}
-.adm2 .sp-attach input{position:absolute;inset:0;opacity:0;cursor:pointer}
+/* the hidden file input covers the whole button, border included (inset 0 left it 2 px short of the 44 px tap) */
+.adm2 .sp-attach input{position:absolute;inset:-1px;opacity:0;cursor:pointer}
 .adm2 .sp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .adm2 .sp-chips .sp-file button{border:0;background:none;padding:0 2px;color:var(--mute);cursor:pointer;min-width:28px;min-height:28px}
 /* the side */
@@ -94,3 +95,15 @@
 }
 /* PR 431: a late ticket timer */
 .adm2 .sp-late{color:var(--bad);font-weight:600}
+/* PR 432: EXTAS AI's draft answer above the reply box */
+.adm2 .sp-draft{border:1px dashed var(--ln);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--sf2)}
+.adm2 .sp-draft-body{margin:6px 0 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.adm2 .sp-draft-pill{margin-left:6px}
+.adm2 .sp-draft-foot{gap:8px;align-items:center;flex-wrap:wrap}
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .adm2 .sp-draft .a2-btn.sm{min-height:44px}
+}
+/* the conversation's "Inbox" back link: a full 44 px tap of its own on touch sizes, not only through the crumb's layer */
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .adm2 .a2-crumb a.sp-back { min-height: 44px; min-width: 44px; }
+}

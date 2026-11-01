@@ -7,13 +7,14 @@
 // PR 428: one more, the customer beside the chat (`support.context`, on: B4.5 locked).
 // PR 429: one more, products in the chat (`support.catalogue`, off as it ships).
 // PR 430: one more, orders from the chat (`support.cart`, off as it ships).
+// PR 431: tickets and timers (`support.tickets`); PR 432: draft answers and their words (`support.drafts` off, `support.draftWords`, `support.draftKeywords`).
 import { createHash } from 'node:crypto';
-import { callMeSchema, registry, storeTarget, supportAttachmentsSchema, supportCartSchema, supportCatalogueSchema, supportChannelsSchema, supportContextSchema, supportIdentitySchema, supportInboxSchema, supportLiveChatSchema, supportTicketsSchema, type Key, type Value } from '@extas/settings';
+import { callMeSchema, registry, storeTarget, supportAttachmentsSchema, supportCartSchema, supportCatalogueSchema, supportChannelsSchema, supportContextSchema, supportDraftKeywordsSchema, supportDraftsSchema, supportDraftWordsSchema, supportIdentitySchema, supportInboxSchema, supportLiveChatSchema, supportTicketsSchema, type Key, type Value } from '@extas/settings';
 import { z } from 'zod';
 import { allow, logChange, parse, setting, SupportError, type SettingsWriter, type SupportDeps, type Who } from './context';
 
 /** The keys Support settings edits, each one card. */
-export const SUPPORT_SETTING_KEYS = ['support.inbox', 'support.attachments', 'support.channels', 'support.liveChat', 'checkout.callMe', 'support.identity', 'support.context', 'support.catalogue', 'support.cart', 'support.tickets'] as const satisfies readonly Key[];
+export const SUPPORT_SETTING_KEYS = ['support.inbox', 'support.attachments', 'support.channels', 'support.liveChat', 'checkout.callMe', 'support.identity', 'support.context', 'support.catalogue', 'support.cart', 'support.tickets', 'support.drafts', 'support.draftWords', 'support.draftKeywords'] as const satisfies readonly Key[];
 export type SupportSettingKey = (typeof SUPPORT_SETTING_KEYS)[number];
 
 const SCHEMAS = {
@@ -33,6 +34,10 @@ const SCHEMAS = {
   'support.cart': supportCartSchema,
   // PR 431: tickets and timers
   'support.tickets': supportTicketsSchema,
+  // PR 432: draft answers and their words
+  'support.drafts': supportDraftsSchema,
+  'support.draftWords': supportDraftWordsSchema,
+  'support.draftKeywords': supportDraftKeywordsSchema,
 } as const satisfies Record<SupportSettingKey, z.ZodType>;
 
 export interface SupportSettingCard<K extends SupportSettingKey = SupportSettingKey> {
@@ -53,7 +58,7 @@ async function card<K extends SupportSettingKey>(deps: Pick<SupportDeps, 'settin
 }
 
 async function viewOf(deps: Pick<SupportDeps, 'settings'>, storeId: number): Promise<SupportSettingsView> {
-  const [a, b, c, d, e, f, g, h, i, j] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m] = await Promise.all([
     card(deps, storeId, 'support.inbox'),
     card(deps, storeId, 'support.attachments'),
     card(deps, storeId, 'support.channels'),
@@ -64,8 +69,11 @@ async function viewOf(deps: Pick<SupportDeps, 'settings'>, storeId: number): Pro
     card(deps, storeId, 'support.catalogue'),
     card(deps, storeId, 'support.cart'),
     card(deps, storeId, 'support.tickets'),
+    card(deps, storeId, 'support.drafts'),
+    card(deps, storeId, 'support.draftWords'),
+    card(deps, storeId, 'support.draftKeywords'),
   ]);
-  return { 'support.inbox': a, 'support.attachments': b, 'support.channels': c, 'support.liveChat': d, 'checkout.callMe': e, 'support.identity': f, 'support.context': g, 'support.catalogue': h, 'support.cart': i, 'support.tickets': j };
+  return { 'support.inbox': a, 'support.attachments': b, 'support.channels': c, 'support.liveChat': d, 'checkout.callMe': e, 'support.identity': f, 'support.context': g, 'support.catalogue': h, 'support.cart': i, 'support.tickets': j, 'support.drafts': k, 'support.draftWords': l, 'support.draftKeywords': m };
 }
 
 /** Every card's data (`support.read`). */
