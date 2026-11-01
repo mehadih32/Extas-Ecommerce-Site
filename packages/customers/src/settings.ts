@@ -10,12 +10,18 @@ import { allow, parse, setting, type CustomersDeps, type Who } from './context';
 import { CustomersError } from './errors';
 
 /** The settings the Customer settings page edits, in its order (later CRM PRs add theirs). */
-export const CRM_PAGE_SETTINGS = ['customers.journey', 'customers.aiWriter', 'customers.sendAdvice'] as const satisfies readonly Key[];
+export const CRM_PAGE_SETTINGS = ['customers.journey', 'customers.aiWriter', 'customers.sendAdvice', 'customers.points'] as const satisfies readonly Key[];
+
+/** PR 296 — settings that set a money rate (points into wallet credit): saving them also needs `settings.write`, as the
+ * Money section's own rules do. */
+export const CRM_MONEY_SETTINGS: ReadonlySet<CrmPageSetting> = new Set(['customers.points']);
 export type CrmPageSetting = (typeof CRM_PAGE_SETTINGS)[number];
 
 export interface CrmSettingsScreen {
   values: { [K in CrmPageSetting]: Value<K> };
   canWrite: boolean;
+  /** PR 296: may also save the money rate cards (`settings.write`). */
+  canWriteMoney: boolean;
 }
 
 /** Every card's current value. */
@@ -23,7 +29,7 @@ export async function crmSettingsScreen(deps: CustomersDeps, who: Who): Promise<
   const held = await requirePermission(deps.db, who.actor, 'customers.read', { storeId: who.storeId });
   await allow(deps, who, 'customers.read');
   const values = Object.fromEntries(await Promise.all(CRM_PAGE_SETTINGS.map(async (k) => [k, await setting(deps, who.storeId, k)] as const))) as CrmSettingsScreen['values'];
-  return { values, canWrite: held.has('customers.settings') };
+  return { values, canWrite: held.has('customers.settings'), canWriteMoney: held.has('customers.settings') && held.has('settings.write') };
 }
 
 const saveInput = z.object({ key: z.enum(CRM_PAGE_SETTINGS), value: z.unknown() }).strict();
@@ -32,6 +38,7 @@ const saveInput = z.object({ key: z.enum(CRM_PAGE_SETTINGS), value: z.unknown() 
 export async function saveCrmSetting(deps: CustomersDeps, who: Who, input: unknown): Promise<CrmSettingsScreen> {
   await allow(deps, who, 'customers.settings');
   const d = parse(saveInput, input, 'setting');
+  if (CRM_MONEY_SETTINGS.has(d.key)) await requirePermission(deps.db, who.actor, 'settings.write', { storeId: who.storeId });
   if (!deps.settings.set) throw new CustomersError('INVALID_INPUT', 'settings cannot be written here', ['settings']);
   const checked = registry[d.key].schema.safeParse(d.value);
   if (!checked.success) throw new CustomersError('INVALID_INPUT', `the ${d.key} setting is not valid`, checked.error.issues.map((i) => `${d.key}${i.path.length ? '.' + i.path.join('.') : ''}: ${i.message}`));

@@ -158,7 +158,26 @@
     "rewards": {
       "title": "Rewards",
       "none": "No rewards are running right now.",
-      "noneNote": "Your orders, wallet and wishlist are all here in My account."
+      "noneNote": "Your orders, wallet and wishlist are all here in My account.",
+      "points": {
+        "title": "Your points",
+        "perSpend": "{points} points for every {amount} of goods",
+        "perOrder": "{points} points for each delivered order",
+        "wait": "Points arrive {days} days after delivery.",
+        "waitNone": "Points arrive once the order is delivered.",
+        "rate": "{points} points = {money} in your wallet",
+        "redeem": "Turn {points} points into {money}",
+        "busy": "Adding to your wallet…",
+        "done": "{money} added to your wallet.",
+        "notEnough": "You can turn points into wallet credit from {points} points.",
+        "off": "Turning points in is not available right now.",
+        "error": "That did not work. Please try again.",
+        "history": "Points history",
+        "noTx": "No points yet. They come with your delivered orders.",
+        "forOrder": "Order {number}",
+        "redeemed": "Turned into wallet credit",
+        "other": "Points"
+      }
     },
     "wallet": {
       "balance": "Wallet balance",

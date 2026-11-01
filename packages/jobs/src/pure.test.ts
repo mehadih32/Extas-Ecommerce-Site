@@ -8,6 +8,7 @@ import { courierPlanner, courierZonesPlanner, packingPhotosPlanner, ZONE_TURN_MI
 import { messagesPlanner } from './messages';
 import { paymentsPlanner } from './payments';
 import { RETURNS_ERP_JOB, returnsErpPlanner } from './returns-erp';
+import { pointsPlanner } from './rewards';
 import { searchPlanner, searchRunKey } from './search';
 import { errorLine, MAX_ERROR } from './context';
 import { withDeadline } from './runs';
@@ -58,12 +59,15 @@ describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     // PR 351: + 'money.report.send' (its own queue 'reports').
     expect([...JOBS.keys()].sort()).toEqual(
-      ['courier.track', 'money.report.send', 'courier.zones', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
+      ['courier.track', 'money.report.send', 'courier.zones', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('money.report.send')!.queue).toBe('reports');
     expect(jobDefinition('payments.pending.sweep')!.queue).toBe('payments');
     expect(jobDefinition('search.index')!.queue).toBe('search');
+    // PR 296: the points run, per store, on its own queue
+    expect(jobDefinition('customers.points.run')!.queue).toBe('customers');
+    expect(() => jobDefinition('customers.points.run')!.parse({})).toThrow(/positive integer/);
     expect(QUEUES.length).toBeGreaterThanOrEqual(1);
     expect(jobDefinition('nope')).toBeNull();
   });
@@ -302,5 +306,16 @@ describe('R1 ops review (M10) · one attempt has a deadline', () => {
     expect(d.default).toBe(1800);
     expect(d.schema.safeParse(0).success).toBe(true);
     expect(d.schema.safeParse(-1).success).toBe(false);
+  });
+});
+
+describe('PR 296 · the points planner', () => {
+  it('plans one run an hour for each live store whose points give something, none while they are off', async () => {
+    const off = { enabled: false, pointsPer100: 0, orderPoints: 0, holdDays: 7, lookbackDays: 30, redeemPoints: 0, redeemMinor: 0, batchSize: 200 };
+    const values: Record<number, typeof off> = { 1: { ...off, enabled: true, orderPoints: 10 }, 2: off, 3: { ...off, enabled: true } };
+    const deps = { db: { store: { findMany: async () => [{ id: 1 }, { id: 2 }, { id: 3 }] } }, settings: { value: async (_k: string, o: { storeId: number }) => values[o.storeId] } } as unknown as Parameters<typeof pointsPlanner>[0];
+    const now = new Date('2026-11-01T10:30:00Z');
+    const planned = await pointsPlanner(deps, now);
+    expect(planned).toEqual([{ queue: 'customers', name: 'customers.points.run', payload: { storeId: 1 }, key: `customers.points.run/1/${Math.floor(now.getTime() / 3_600_000)}` }]);
   });
 });

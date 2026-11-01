@@ -38,7 +38,9 @@ export type CustomersErrorCode =
   /** PR 287: someone saved this segment since the page was opened; reload it. */
   | 'STALE'
   /** PR 293: the AI writer did not answer, or gave nothing usable. */
-  | 'AI_UNAVAILABLE';
+  | 'AI_UNAVAILABLE'
+  /** PR 296: fewer points than one block of the owner's rate (`data.redeemPoints`). */
+  | 'NOT_ENOUGH_POINTS';
 
 export class CustomersError extends Error {
   readonly code: CustomersErrorCode;
@@ -66,6 +68,7 @@ export class CustomersError extends Error {
       case 'CONFIRM_MISMATCH':
       case 'OPEN_ORDERS':
       case 'LIMIT_REACHED':
+      case 'NOT_ENOUGH_POINTS':
         return 422;
       case 'AI_UNAVAILABLE':
         return 503;

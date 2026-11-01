@@ -1,0 +1,10 @@
+/* S14 · PR 296 — Customers › Loyalty & wallet: one line per points or wallet entry (who and why on the left, the amount
+   on the right), the customer's name a full tap high; the shell's tokens only. */
+.adm2 .loy-lines{list-style:none;margin:8px 0 0;padding:0}
+.adm2 .loy-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-top:1px solid var(--ln)}
+.adm2 .loy-line:first-child{border-top:0}
+.adm2 .loy-who{display:flex;flex-direction:column;min-width:0}
+.adm2 .loy-who a{display:inline-flex;align-items:center;min-height:44px;font-weight:600;overflow-wrap:anywhere}
+.adm2 .loy-amt{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;font-weight:700;color:var(--ok)}
+.adm2 .loy-amt.neg{color:var(--bad)}
+.adm2 .loy-after{font-weight:400}

@@ -19,7 +19,9 @@ import { dateText } from '@/lib/shop/account-view';
 import { plural } from '@/lib/shop/bag-model';
 import { hrefIn } from '@/lib/shop/lang';
 import { ROUTES } from '@/lib/shop/routes';
+import { POINTS_REASONS, type MyPoints } from '@extas/customers';
 import { Icon } from '../Icon';
+import { RedeemPoints } from './RedeemPoints';
 import { ProductCard } from '../ProductCard';
 import { nameOf, Thumb } from '../bag/BagLines';
 
@@ -271,28 +273,103 @@ export function ForYouTab({ c, newIn, offers = null }: { c: ShopContext; newIn: 
   );
 }
 
-/** Rewards: nothing is made up — until a rewards programme runs, it says so plainly. */
-export function RewardsTab({ c }: { c: ShopContext }) {
+/**
+ * Rewards: nothing is made up — until a rewards programme runs, it says so plainly. S14 · PR 296: while the owner's
+ * points give something, his balance, the owner's rule in words, the turn-in button when he holds a whole block (the
+ * owner's own rate; RedeemPoints) and his newest points lines.
+ */
+export function RewardsTab({ c, points }: { c: ShopContext; points?: MyPoints | null }) {
   const t = c.t;
-  return (
-    <section className="card p20" aria-labelledby="rw-h" data-testid="acc-rewards">
-      <div className="row between top" style={{ gap: 12 }}>
-        <div>
-          <h2 className="h2" id="rw-h">
-            {t('account.rewards.title')}
-          </h2>
-          <p className="small text2" style={{ margin: '8px 0 0' }}>
-            {t('account.rewards.none')}
-          </p>
-          <p className="xs muted" style={{ margin: '6px 0 0' }}>
-            {t('account.rewards.noneNote')}
-          </p>
+  if (!points || !points.enabled)
+    return (
+      <section className="card p20" aria-labelledby="rw-h" data-testid="acc-rewards">
+        <div className="row between top" style={{ gap: 12 }}>
+          <div>
+            <h2 className="h2" id="rw-h">
+              {t('account.rewards.title')}
+            </h2>
+            <p className="small text2" style={{ margin: '8px 0 0' }}>
+              {t('account.rewards.none')}
+            </p>
+            <p className="xs muted" style={{ margin: '6px 0 0' }}>
+              {t('account.rewards.noneNote')}
+            </p>
+          </div>
+          <span className="acc-oico shrink0">
+            <Icon name="gift" size={20} />
+          </span>
         </div>
-        <span className="acc-oico shrink0">
-          <Icon name="gift" size={20} />
-        </span>
-      </div>
-    </section>
+      </section>
+    );
+  const r = points.rule;
+  const n = (x: number) => c.num(x);
+  const rate = { points: n(r.redeemPoints), money: c.money(r.redeemMinor) };
+  const what = (e: MyPoints['entries'][number]) =>
+    e.reason === POINTS_REASONS.order && e.orderNumber ? t('account.rewards.points.forOrder', { number: e.orderNumber }) : e.reason === POINTS_REASONS.redeem ? t('account.rewards.points.redeemed') : t('account.rewards.points.other');
+  return (
+    <div className="stack s16" data-testid="acc-rewards">
+      <section className="card acc-wal" aria-labelledby="rw-h">
+        <div className="acc-wal-top">
+          <div>
+            <div className="eyebrow" id="rw-h">
+              {t('account.rewards.points.title')}
+            </div>
+            <div className="display acc-bal" data-testid="acc-points">
+              {n(points.balance)}
+            </div>
+            <ul className="small text2 acc-rw-rule">
+              {/* hardcode-ok: the rule is per 100 of the currency (10,000 minor units) */}
+              {r.pointsPer100 > 0 ? <li>{t('account.rewards.points.perSpend', { points: n(r.pointsPer100), amount: c.money(10_000) })}</li> : null}
+              {r.orderPoints > 0 ? <li>{t('account.rewards.points.perOrder', { points: n(r.orderPoints) })}</li> : null}
+              <li>{r.holdDays > 0 ? t('account.rewards.points.wait', { days: n(r.holdDays) }) : t('account.rewards.points.waitNone')}</li>
+              {points.canRedeem ? <li>{t('account.rewards.points.rate', rate)}</li> : null}
+            </ul>
+            {points.canRedeem && points.redeemable.blocks > 0 ? (
+              <RedeemPoints
+                words={{
+                  button: t('account.rewards.points.redeem', { points: n(points.redeemable.points), money: c.money(points.redeemable.minor) }),
+                  busy: t('account.rewards.points.busy'),
+                  done: t('account.rewards.points.done', { money: c.money(points.redeemable.minor) }),
+                  NOT_ENOUGH_POINTS: t('account.rewards.points.notEnough', { points: rate.points }),
+                  SWITCHED_OFF: t('account.rewards.points.off'),
+                  error: t('account.rewards.points.error'),
+                }}
+              />
+            ) : points.canRedeem ? (
+              <p className="xs muted" style={{ margin: '8px 0 0' }}>
+                {t('account.rewards.points.notEnough', { points: rate.points })}
+              </p>
+            ) : null}
+          </div>
+          <span className="acc-wal-i">
+            <Icon name="gift" size={26} />
+          </span>
+        </div>
+      </section>
+      <section className="card" aria-labelledby="rw-tx">
+        <div className="ord-cardhd">
+          <h2 className="h3" id="rw-tx">
+            {t('account.rewards.points.history')}
+          </h2>
+        </div>
+        {points.entries.length ? (
+          points.entries.map((e) => (
+            <div className="acc-tx" key={e.id} data-testid="acc-points-tx">
+              <div style={{ minWidth: 0 }}>
+                <div className="small bold">{what(e)}</div>
+                <div className="xs muted">{dateText(c, e.at.toISOString())}</div>
+              </div>
+              <div className={`amt${e.points > 0 ? ' pos' : ''}`}>
+                {e.points > 0 ? '+' : '−'}
+                {n(Math.abs(e.points))}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="acc-tx small muted">{t('account.rewards.points.noTx')}</div>
+        )}
+      </section>
+    </div>
   );
 }
 

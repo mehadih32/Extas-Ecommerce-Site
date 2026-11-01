@@ -34,6 +34,9 @@
 // (`ai.enabled` and `customers.aiWriter`); it only fills the form.
 // PR 294: who and when to send (send-advice.ts) — the saved segments ranked by recent buyers who can be reached, and
 // the busiest order hours and weekday outside the quiet hours, with the numbers; rule-based, off as shipped.
+// PR 296: rewards and points (rewards.ts) — points for each delivered order by the owner's own rule, given after the
+// exchange window by the jobs worker, and turned into wallet credit by the customer himself at the owner's rate; the
+// Loyalty & wallet page's figures. Off as shipped (`customers.points`, every number 0).
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
@@ -51,6 +54,7 @@ export * from './list';
 export * from './merge';
 export * from './people-sql';
 export * from './profile';
+export * from './rewards';
 export * from './pure';
 export * from './segments';
 export * from './send-advice';

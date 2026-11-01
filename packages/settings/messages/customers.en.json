@@ -42,6 +42,10 @@
     "sendAdvice": {
       "label": "Who and when to send",
       "help": "On an e-mail send: your saved segments ranked by how many of their people bought in the last days (and can get offer e-mails), and the hours and weekday your orders come in, outside the quiet hours — each with the numbers behind it. Off as shipped. Works on your own data without AI. \"Days to look back\": how far back orders are read. \"Fewest orders\": below this the timing advice waits. \"Hours in the window\": how wide the suggested sending window is. \"Segments shown\": how many are suggested. Advice only: you pick."
+    },
+    "points": {
+      "label": "Rewards and points",
+      "help": "Points for each delivered order, by your own rule: \"Points per ৳100\" of the goods (the delivery charge never counts) and/or \"Points per order\". Points are given \"Days to wait\" after the delivery (the exchange window) and never for an order delivered more than \"Days to look back\" before. Turning points into money is yours too: each block of \"Points to turn in\" becomes \"Wallet credit\" in the customer's wallet, and only when both are set. Off as shipped with every number at 0. \"Per run\": how many orders one run reads. The late-delivery apology credit is under Money › Wallet."
     }
   }
 }

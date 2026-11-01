@@ -337,3 +337,6 @@
 .shop .ord-life-d.end { background: var(--muted); }
 .shop .ord-life-x { overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) { .shop .ord-life-c { transition: none; } }
+/* S14 · PR 296 — the owner's points rule under the balance (My account › Rewards). */
+.shop .acc-rw-rule { margin: 8px 0 0; padding: 0 0 0 18px; }
+.shop .acc-rw-rule li { margin: 2px 0; }

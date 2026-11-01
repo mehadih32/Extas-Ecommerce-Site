@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { isOrderShow, liveOffers, offerBanner, orderHistory, pageOf, profileView, walletView } from '@extas/accounts';
 import type { AccountTab } from '@extas/settings';
+import { pointsOf } from '@extas/customers';
 import { accountDeps } from '@/lib/shop/account';
 import { accountPage, accountWords } from '@/lib/shop/account-view';
 import { newestCards } from '@/lib/shop/catalogue';
@@ -55,7 +56,8 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
       break;
     }
     case 'rewards':
-      body = <RewardsTab c={c} />;
+      // S14 · PR 296: his points while the owner's rule gives something (never an error page: the section stays)
+      body = <RewardsTab c={c} points={await pointsOf({ db: deps.db, settings: deps.settings }, c.storeId, page.me.customer.id).catch(() => null)} />;
       break;
     case 'wallet':
       body = <WalletTab c={c} wallet={await walletView(deps, who)} usable={s['checkout.wallet.enabled']} />;

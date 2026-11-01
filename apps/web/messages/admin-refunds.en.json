@@ -224,7 +224,8 @@
         "MANUAL_CREDIT": "Added by hand",
         "MANUAL_DEBIT": "Taken by hand",
         "OFFER": "Offer credit",
-        "CORRECTION": "Correction"
+        "CORRECTION": "Correction",
+        "POINTS": "Points turned in"
       },
       "by": "by {name}",
       "byShop": "by the shop itself",

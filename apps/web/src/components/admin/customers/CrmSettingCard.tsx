@@ -4,30 +4,31 @@
 // with the whole value; the service checks it against the setting's schema and audits it). Words come from the page's
 // dictionary: `cus.set.<card>.<field>` and, for a choice, `cus.set.<card>.opt.<value>`. Without `customers.settings` the
 // card shows the values only. PR 289: `url` sends the whole value to another page's own settings route (Messages ›
-// Automations), and a `lang` field is one line of words in each language ({bn, en}).
+// Automations), and a `lang` field is one line of words in each language ({bn, en}). PR 296: a `money` field is typed in
+// whole units of the store's currency and kept in minor units (×100), like the Money section's cards.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
 
-export type CrmField = { name: string; kind: 'bool' } | { name: string; kind: 'int' } | { name: string; kind: 'multi'; options: readonly string[] } | { name: string; kind: 'lang'; max: number };
+export type CrmField = { name: string; kind: 'bool' } | { name: string; kind: 'int' } | { name: string; kind: 'multi'; options: readonly string[] } | { name: string; kind: 'lang'; max: number } | { name: string; kind: 'money' };
 const LANGS = ['bn', 'en'] as const;
 
 export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWrite, url }: { dict: Dict; settingKey: string; card: string; fields: readonly CrmField[]; value: Record<string, unknown>; canWrite: boolean; url?: string }) {
   const router = useRouter();
   const uid = useId();
-  const [v, setV] = useState<Record<string, unknown>>(() => Object.fromEntries(fields.map((f) => [f.name, f.kind === 'int' ? String(value[f.name] ?? '') : value[f.name]])));
+  const [v, setV] = useState<Record<string, unknown>>(() => Object.fromEntries(fields.map((f) => [f.name, f.kind === 'int' ? String(value[f.name] ?? '') : f.kind === 'money' ? String(Math.round(Number(value[f.name] ?? 0)) / 100) : value[f.name]])));
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const label = (f: string) => t(d, `cus.set.${card}.${f}`);
 
   const save = async () => {
-    const bad = fields.filter((f) => f.kind === 'int' && !/^\d+$/.test(String(v[f.name]).trim()));
+    const bad = fields.filter((f) => (f.kind === 'int' && !/^\d+$/.test(String(v[f.name]).trim())) || (f.kind === 'money' && !/^\d+(\.\d{1,2})?$/.test(String(v[f.name]).trim())));
     if (bad.length) {
       setMsg({ ok: false, text: cusError(d, 'INVALID_INPUT', bad.map((f) => label(f.name)).join(', ')) });
       return;
     }
-    const next = { ...value, ...Object.fromEntries(fields.map((f) => [f.name, f.kind === 'int' ? Number(String(v[f.name]).trim()) : v[f.name]])) };
+    const next = { ...value, ...Object.fromEntries(fields.map((f) => [f.name, f.kind === 'int' ? Number(String(v[f.name]).trim()) : f.kind === 'money' ? Math.round(Number(String(v[f.name]).trim()) * 100) : v[f.name]])) };
     setBusy(true);
     setMsg(null);
     try {
@@ -71,12 +72,12 @@ export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWr
                 );
               })}
             </span>
-          ) : f.kind === 'int' ? (
+          ) : f.kind === 'int' || f.kind === 'money' ? (
             <span key={f.name} className="a2-stack" style={{ gap: 4 }}>
               <label className="a2-xs a2-mute" htmlFor={`${uid}-${f.name}`}>
                 {label(f.name)}
               </label>
-              <input id={`${uid}-${f.name}`} className="a2-inp" inputMode="numeric" maxLength={6} value={String(v[f.name] ?? '')} disabled={!canWrite} onChange={(e) => setV({ ...v, [f.name]: e.target.value })} />
+              <input id={`${uid}-${f.name}`} className="a2-inp" inputMode={f.kind === 'money' ? 'decimal' : 'numeric'} maxLength={f.kind === 'money' ? 9 : 7} value={String(v[f.name] ?? '')} disabled={!canWrite} onChange={(e) => setV({ ...v, [f.name]: e.target.value })} />
             </span>
           ) : (
             <fieldset key={f.name} className="crm-multi">
