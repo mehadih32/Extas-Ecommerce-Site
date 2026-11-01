@@ -182,6 +182,10 @@
       "email": {
         "write": "Write offer e-mail templates and drafts of e-mail sends, and the e-mail settings",
         "send": "Schedule, pause, resume and cancel an e-mail send to a segment"
+      },
+      "campaigns": {
+        "write": "Write win-back campaign drafts and the campaign settings",
+        "send": "Schedule, pause, resume and cancel a win-back campaign (an SMS or WhatsApp to many people)"
       }
     },
     "payments": {

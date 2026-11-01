@@ -1,4 +1,4 @@
-// S14 · CRM (CN-031 lane A, After launch; PR 287 onwards). Registry versions 190–199 (lane A's reserved numbers). Labels:
+// S14 · CRM (CN-031 lane A, After launch; PR 287 onwards). Registry versions 190–209 (lane A's reserved numbers). Labels:
 // messages/customers.<lang>.json (the "customers" group; the admin's place is the Customers section,
 // docs/BACKEND-ARCHITECTURE.md §5.5). Every feature here is off as shipped. Nothing here moves money, changes a price,
 // COD or a charge, or blocks anyone.
@@ -47,6 +47,17 @@
 // a person holding `customers.export` downloads the list's people as one CSV file with a reason, at most `maxRows`
 // people (more are refused with the count, never cut). The retention rule always applies: an erased or archived
 // profile is never in the file, the address, IP and location never, and the number only as the person may see it.
+//
+// PR 300 (`customers.winback`, v199): win-back campaigns (Messages › Campaigns, the CN-019 control centre's campaign
+// tab with win-back as its ready-made type) — an SMS or WhatsApp from one of the shop's templates to the people who have
+// not ordered for N days (and, if the campaign says so, not longer than M days, with at least K orders, inside a saved
+// segment). Off as shipped; a campaign is a draft until a person holding `messages.campaigns.send` schedules it. Each
+// message is an offer: the customer's yes for offers on that channel (PR 298), never after his stop, never in the quiet
+// hours, at most `perCustomerPerWeek` offers by phone to one person in seven days (journeys and campaigns together),
+// never a second win-back to one person within `gapDays`; `batchSize` people queued per run (the throttle); the orders
+// a receiver places within `resultDays` count as the campaign's result; `defaultLapsedDays` fills a new campaign's form;
+// `stopLine` is added to every such SMS (the offer opt-out, CN-021 P14).
+// A campaign never makes or changes an offer, a price or a discount: its words are a template the owner wrote.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -58,6 +69,9 @@ export const CRM_MESSAGE_STEP = 'crmJourney';
 
 /** PR 290 — the step an offer e-mail of an e-mail send carries in the message log; the Messages engine sends it. */
 export const CRM_EMAIL_STEP = 'crmEmail';
+
+/** PR 300 — the step a win-back campaign's message carries in the message log; the Messages engine sends it. */
+export const CRM_CAMPAIGN_STEP = 'crmCampaign';
 
 /** PR 290 — the key prefix of the owner's e-mail templates (NotificationTemplate, channel EMAIL). */
 export const CRM_EMAIL_TEMPLATE_PREFIX = 'crmEmail.';
@@ -163,6 +177,20 @@ export type PointsSettings = z.output<typeof pointsSettingsSchema>;
 export const customerExportSettingsSchema = z.object({ enabled: z.boolean(), maxRows: z.int().min(1).max(50_000) }).strict();
 export type CustomerExportSettings = z.output<typeof customerExportSettingsSchema>;
 
+/** PR 300 — win-back campaigns (off as shipped). */
+export const winbackSettingsSchema = z
+  .object({
+    enabled: z.boolean(),
+    perCustomerPerWeek: z.int().min(1).max(14),
+    gapDays: z.int().min(1).max(365),
+    batchSize: z.int().min(10).max(5000),
+    resultDays: z.int().min(1).max(60),
+    defaultLapsedDays: z.int().min(7).max(730),
+    stopLine: z.object({ bn: stopLine, en: stopLine }).strict(),
+  })
+  .strict();
+export type WinbackSettings = z.output<typeof winbackSettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -246,5 +274,16 @@ export const crmSettings = {
     labelKey: 'customers.export.label',
     helpKey: 'customers.export.help',
     sortOrder: 270,
+  }),
+  'customers.winback': setting({
+    ...base,
+    version: 199,
+    schema: winbackSettingsSchema,
+    // hardcode-ok: registry default (off; caps, throttle, the form's first value and the stop line's words)
+    default: { enabled: false, perCustomerPerWeek: 1, gapDays: 30, batchSize: 200, resultDays: 14, defaultLapsedDays: 90, stopLine: { bn: 'অফার বন্ধ করতে STOP লিখে পাঠান', en: 'Reply STOP to stop offers' } },
+    valueType: 'JSON',
+    labelKey: 'customers.winback.label',
+    helpKey: 'customers.winback.help',
+    sortOrder: 280,
   }),
 };

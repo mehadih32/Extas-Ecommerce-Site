@@ -1,16 +1,16 @@
-// S14 · CRM (registry v190–199, CN-031 lane A): every key in the customers group at its own version, never owner data,
+// S14 · CRM (registry v190–209, CN-031 lane A): every key in the customers group at its own version, never owner data,
 // labelled in both languages, its default valid and off.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { aiWriterSettingsSchema, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
+import { aiWriterSettingsSchema, CRM_CAMPAIGN_STEP, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema, winbackSettingsSchema } from '../src/registry-crm';
 
-describe('CRM settings (v190–199)', () => {
+describe('CRM settings (v190–209)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(crmSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
       expect(spec.version, key).toBeGreaterThanOrEqual(190);
-      expect(spec.version, key).toBeLessThanOrEqual(199);
+      expect(spec.version, key).toBeLessThanOrEqual(209);
       expect(spec.group, key).toBe('customers');
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
@@ -80,5 +80,17 @@ describe('CRM settings (v190–199)', () => {
     expect(s.default).toEqual({ enabled: false, maxRows: 5_000 });
     expect(customerExportSettingsSchema.safeParse({ ...s.default, maxRows: 0 }).success).toBe(false);
     expect(customerExportSettingsSchema.safeParse({ ...s.default, columns: [] }).success).toBe(false);
+  });
+
+  it('PR 300: win-back campaigns are off as shipped (v199), one offer by phone a week, 30 days between win-backs', () => {
+    const s = crmSettings['customers.winback'];
+    expect(s.version).toBe(199);
+    expect(s.default).toMatchObject({ enabled: false, perCustomerPerWeek: 1, gapDays: 30, batchSize: 200, resultDays: 14, defaultLapsedDays: 90 });
+    expect(s.default.stopLine.bn).toBeTruthy();
+    expect(s.default.stopLine.en).toBeTruthy();
+    expect(winbackSettingsSchema.safeParse({ ...s.default, gapDays: 0 }).success).toBe(false);
+    expect(winbackSettingsSchema.safeParse({ ...s.default, defaultLapsedDays: 3 }).success).toBe(false);
+    expect(winbackSettingsSchema.safeParse({ ...s.default, discount: 10 }).success).toBe(false);
+    expect(CRM_CAMPAIGN_STEP).toBe('crmCampaign');
   });
 });

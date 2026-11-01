@@ -42,6 +42,10 @@
 // PR 299: the customer export (export.ts) — the list's people as one CSV file with a reason, under the retention rule
 // (never an erased or archived profile, an address or a location; numbers as the person may see them); its own key
 // `customers.export`, an ExportJob row and an audit line each time; off as shipped.
+// PR 300: win-back campaigns (winback.ts) — Messages › Campaigns: an SMS or WhatsApp from the shop's own template to the
+// people who stopped ordering (the owner's rule, a saved segment), shown with its reach and estimated cost, scheduled by
+// a person with the send key, queued at the throttle for the Messages engine (offers: his yes, the quiet hours, the
+// weekly cap, the gap between win-backs, the stop line), with each campaign's results; off as shipped.
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
@@ -67,3 +71,4 @@ export * from './segments';
 export * from './send-advice';
 export * from './settings';
 export * from './view';
+export * from './winback';

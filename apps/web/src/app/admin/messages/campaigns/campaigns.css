@@ -1,0 +1,8 @@
+/* S14 · PR 300 — Messages › Campaigns: the win-back rule's three numbers in one wrapping line, the reach steps, the
+   phone preview of the template's words; the shell's tokens only. */
+.adm2 [data-testid=crm-card-winback] .a2-ckb{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.adm2 .wb-rule{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.adm2 .wb-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.adm2 .wb-steps li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--ln2)}
+.adm2 .wb-steps li b{white-space:nowrap}
+.adm2 .wb-phone{max-width:320px;white-space:pre-wrap;padding:12px;border:1px solid var(--ln2);border-radius:14px;background:var(--bg2)}

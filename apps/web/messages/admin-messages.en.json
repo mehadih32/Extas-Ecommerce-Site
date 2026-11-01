@@ -52,7 +52,10 @@
       "lateApology": "Late delivery apology",
       "consentReply": "Answer to a stop or start",
       "autoReply": "Auto-reply",
-      "cancelDuplicate": "Cancelled as a duplicate"
+      "cancelDuplicate": "Cancelled as a duplicate",
+      "crmJourney": "Automation message",
+      "crmEmail": "Offer e-mail",
+      "crmCampaign": "Win-back campaign"
     },
     "reason": {
       "MASTER_OFF": "The messages master switch was off",
@@ -88,7 +91,9 @@
       "CANCELLED": "Its send was cancelled",
       "PAUSED": "Its send is paused",
       "SWITCHED_OFF": "E-mail marketing is switched off",
-      "ERASED": "The customer was erased"
+      "ERASED": "The customer was erased",
+      "WINBACK_OFF": "Win-back campaigns are switched off",
+      "CAP_GAP": "He had a win-back a short while ago (the gap between win-backs)"
     },
     "log": {
       "title": "Message log",

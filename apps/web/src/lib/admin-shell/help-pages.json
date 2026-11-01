@@ -53,6 +53,8 @@
     { "id": "messages/journey", "route": "/admin/messages/journey" },
     { "id": "messages/automations", "route": "/admin/messages/automations" },
     { "id": "messages/automation", "route": "/admin/messages/automations/[id]" },
+    { "id": "messages/campaigns", "route": "/admin/messages/campaigns" },
+    { "id": "messages/campaign", "route": "/admin/messages/campaigns/[id]" },
     { "id": "messages/email", "route": "/admin/messages/email" },
     { "id": "messages/email-send", "route": "/admin/messages/email/[id]" },
     { "id": "messages/email-template", "route": "/admin/messages/email/templates/[id]" },
