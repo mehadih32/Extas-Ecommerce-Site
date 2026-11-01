@@ -1,0 +1,8 @@
+{
+  "support": {
+    "cart": {
+      "label": "Orders from the chat",
+      "help": "A \"Chat bag\" card beside each conversation: add products from the Products drawer, and the shop's own combo prices and offers apply exactly as on the site. \"Create order\" fills the name, phone and address from the customer (or what you type), checks the stock and the delivery like the checkout, and places the order with the chat's channel as its source (WhatsApp, Messenger or Live chat), so the order list can show orders from support. Your own Parameter for Checkout is the fraud gate: when it asks this customer for an advance, no Cash on Delivery order is made — the button becomes \"Take advance\", the order waits for the advance and its pay link goes into the chat. No price, discount or COD rule changes here."
+    }
+  }
+}

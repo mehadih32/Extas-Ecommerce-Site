@@ -58,6 +58,10 @@ describe('the support words (PR 425)', () => {
     expect(logLine(d, { kind: 'IDENTITY_PHONE', actor: { type: 'STAFF', name: 'Sample owner' }, data: { byHand: true } })).toContain('Sample owner');
     expect(logLine(d, { kind: 'IDENTITY_MERGED', actor: { type: 'SYSTEM', name: null }, data: { via: 'phone', contacts: 2 } })).toContain('2');
     expect(logLine(d, { kind: 'IDENTITY_SPLIT', actor: { type: 'STAFF', name: 'Sample owner' }, data: {} })).toContain('Sample owner');
+    // PR 430: an order from the chat's bag — who made it, its number, and whether it waits for its advance
+    const made = logLine(d, { kind: 'ORDER_CREATED', actor: { type: 'STAFF', name: 'Sample owner' }, data: { number: 'EX1430', gate: 'cod' } });
+    expect(made).toBe(t(d, 'sup.log.ORDER_CREATED', { name: 'Sample owner', number: 'EX1430' }));
+    expect(logLine(d, { kind: 'ORDER_CREATED', actor: { type: 'STAFF', name: 'Sample owner' }, data: { number: 'EX1431', gate: 'advance' } })).toBe(t(d, 'sup.log.ORDER_CREATED_ADVANCE', { name: 'Sample owner', number: 'EX1431' }));
   });
 });
 

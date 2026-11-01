@@ -1200,6 +1200,12 @@ importers:
       '@extas/auth':
         specifier: workspace:*
         version: link:../auth
+      '@extas/cart':
+        specifier: workspace:*
+        version: link:../cart
+      '@extas/checkout':
+        specifier: workspace:*
+        version: link:../checkout
       '@extas/customers':
         specifier: workspace:*
         version: link:../customers

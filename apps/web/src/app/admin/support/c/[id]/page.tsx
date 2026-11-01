@@ -9,9 +9,12 @@
 // returned share, risk score, the orders on their way and where each is now, links), while `support.context` is on.
 // PR 429 (B4.6): with `support.catalogue` on, the reply box's "Products" drawer sends a product as a card with its
 // tracked link; each card in the thread says whether the customer opened it and the order it brought.
+// PR 430 (B4.6, SIM-F-024): with `support.cart` on and `support.order`, the "Chat bag" card — the drawer's "Add to bag",
+// the shop's own prices and combos, the details from the customer, and "Create order" / "Take advance" by the owner's
+// own rule; the order keeps the chat's channel as its source.
 //
 // `support.read` opens it; replying, notes, taking it and the state need `support.reply`, giving it to someone else
-// `support.assign` (the API checks again). Nothing here moves money or changes an order.
+// `support.assign` (the API checks again). Nothing here moves money, changes a price or COD, or edits an order.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -21,6 +24,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { DetailGrid } from '@/components/admin/orders/OrderCommands';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
+import { ChatBag, type ChatBagTexts } from '@/components/admin/support/ChatBag';
 import { Composer, type ComposerProducts, type ComposerTexts } from '@/components/admin/support/Composer';
 import { CustomerContext } from '@/components/admin/support/CustomerContext';
 import { IdentityActions, type IdentityTexts } from '@/components/admin/support/IdentityActions';
@@ -33,7 +37,7 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
-import { supportDeps } from '@/lib/support-api';
+import { chatOrderDeps, supportDeps } from '@/lib/support-api';
 import '../../support.css';
 
 export const dynamic = 'force-dynamic';
@@ -45,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'sup.th.main')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-const ERR_CODES = ['CATALOGUE_OFF', 'OUT_OF_STOCK', 'STALE', 'EMPTY', 'TOO_LONG', 'FILES_OFF', 'TOO_MANY_FILES', 'FILE_NOT_ALLOWED', 'TOO_LARGE', 'NOT_ASSIGNABLE', 'IDEMPOTENCY_MISMATCH', 'NOT_FOUND', 'INVALID_INPUT', 'FORBIDDEN', 'UNAUTHENTICATED', 'network', 'other'];
+const ERR_CODES = ['CART_OFF', 'NO_COD', 'CHECKOUT', 'CHECKOUT_PRICE_CHANGED', 'CHECKOUT_OUT_OF_STOCK', 'CHECKOUT_EMPTY', 'CHECKOUT_FORM', 'CHECKOUT_NO_PAYMENT', 'CHECKOUT_PAUSED', 'CHECKOUT_CART_NOT_OPEN', 'CHECKOUT_IDEMPOTENCY', 'CATALOGUE_OFF', 'OUT_OF_STOCK', 'STALE', 'EMPTY', 'TOO_LONG', 'FILES_OFF', 'TOO_MANY_FILES', 'FILE_NOT_ALLOWED', 'TOO_LARGE', 'NOT_ASSIGNABLE', 'IDEMPOTENCY_MISMATCH', 'NOT_FOUND', 'INVALID_INPUT', 'FORBIDDEN', 'UNAUTHENTICATED', 'network', 'other'];
 const errs = (d: Dict) => Object.fromEntries(ERR_CODES.map((c) => [c, t(d, `sup.err.${c}`)]));
 const deliveryTone = (s: string | null) => (s === 'SENT' ? 'ok' : s === 'FAILED' ? 'bad' : s === 'NOT_SENT' ? 'warn' : 'line');
 const statusTone = (s: string) => (s === 'OPEN' ? 'warn' : s === 'SOLVED' ? 'ok' : 'info');
@@ -123,11 +127,23 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         photos: files.enabled && files.kinds.image ? Math.min(catalogue.photos, files.maxPerMessage) : 0,
         button: pr('button'),
         texts: {
-          ...(Object.fromEntries((['h', 'search', 'searchPh', 'searching', 'none', 'close', 'colour', 'size', 'soldOut', 'pickSize', 'photos', 'send', 'sending', 'sent', 'back'] as const).map((k) => [k, pr(k)])) as Omit<ComposerProducts['texts'], 'err'>),
+          ...(Object.fromEntries((['h', 'search', 'searchPh', 'searching', 'none', 'close', 'colour', 'size', 'soldOut', 'pickSize', 'photos', 'send', 'sending', 'sent', 'back', 'add', 'added'] as const).map((k) => [k, pr(k)])) as Omit<ComposerProducts['texts'], 'err'>),
           err: errs(d),
         },
+        // PR 430: "Add to bag" (orders from the chat on, and this person may make them)
+        addUrl: th.you.cart ? `${API}/c/${th.id}/cart` : null,
       }
     : null;
+  // PR 430: the chat's bag (orders from the chat on, and `support.order`)
+  const bag = th.you.cart ? await sp.chatBag(chatOrderDeps(access.deps), who, th.id, view.lang) : null;
+  const ck = (k: string) => t(d, `sup.cart.${k}`);
+  const cartTexts: ChatBagTexts = {
+    ...(Object.fromEntries(
+      (['h', 'd', 'empty', 'less', 'more', 'remove', 'set', 'saves', 'soldOut', 'items', 'offers', 'delivery', 'deliveryFree', 'deliveryUnknown', 'total', 'due', 'name', 'phone', 'address', 'check', 'checking', 'create', 'creating', 'advance', 'advanceLine', 'closed', 'addressAsk', 'made', 'madeAdvance', 'last', 'openOrder'] as const).map((k) => [k, ck(k)]),
+    ) as Omit<ChatBagTexts, 'problem' | 'err'>),
+    problem: Object.fromEntries(['name', 'phone', 'address', 'other'].map((k) => [k, ck(`problem.${k}`)])),
+    err: errs(d),
+  };
   const s = (k: string) => t(d, `sup.side.${k}`);
   const side: SideTexts = { state: s('state'), solve: s('solve'), wait: s('wait'), reopen: s('reopen'), owner: s('owner'), take: s('take'), letGo: s('letGo'), give: s('give'), giveGo: s('giveGo'), nobody: s('nobody'), saved: s('saved'), err: errs(d) };
   const connected = Object.keys(sd.channels ?? {}).includes(th.channel.kind) && th.channel.enabled;
@@ -267,6 +283,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <SideActions base={`${API}/c/${th.id}`} version={th.version} status={th.status} assignedId={th.assignedTo?.id ?? null} me={th.you.id} canReply={th.you.reply} canAssign={th.you.assign} staff={staff} texts={side} />
         </div>
       </section>
+      {bag ? <ChatBag key={th.id} url={`${API}/c/${th.id}/cart`} bag={bag} lang={view.lang} money={moneyOf(currency, view.locale)} texts={cartTexts} /> : null}
       {th.context ? <CustomerContext ctx={th.context} d={d} lang={view.lang} locale={view.locale} money={moneyOf(currency, view.locale)} timeZone={view.timeZone} /> : null}
       <section className="a2-card" aria-labelledby="sp-person" data-testid="support-person">
         <h2 className="a2-h4" id="sp-person">

@@ -34,6 +34,13 @@
 // no account for the receiver: only a signed-in sender's account gets the order. With the whole amount ahead the quote
 // offers no Cash on Delivery; with a part ahead the order is flagged GIFT_ADVANCE, keeps that part in
 // `advanceRequiredMinor` and asks the team to call for it (until S07's part payment).
+//
+// PR 430 — an order an employee places from a support chat (`PlaceRequest.chat`, @extas/support chat-cart.ts): the bag
+// is the chat's own, priced, held and checked by exactly this function, so its prices, offers, stock and delivery are
+// the site's. Only who placed it differs: the source is the chat's channel (WhatsApp, Messenger, Live chat — never
+// "website", SIM-F-024), the placed event names the employee and the conversation, and no marketing consent is recorded
+// (nobody ticked a box). When the owner's Parameter for Checkout asks an advance, the advance's payment gets a pay link
+// token (`/pay/<token>`, PR 542) so the chat can send it; nothing else about the money changes.
 import { createHash, randomBytes } from 'node:crypto';
 import { linkOrderAccount } from '@extas/accounts';
 import { applyOutcome, PAYMENT_CALL_REASON, PAYMENT_EVENTS, PAYMENT_FLAGS } from '@extas/payments';
@@ -109,6 +116,8 @@ export interface PlaceRequest {
   attribution?: Partial<OrderAttribution> | null;
   /** PR 429: the reference of a product link from a support chat this browser opened (the order is credited to it). */
   supportRef?: string | null;
+  /** PR 430: placed by an employee from a support chat (the chat's own bag): the channel and who pressed. */
+  chat?: ChatPlace | null;
   input: unknown;
 }
 
@@ -123,6 +132,24 @@ export async function landingPageOf(tx: Pick<Prisma.TransactionClient, 'page'>, 
   const page = await tx.page.findFirst({ where: { id, storeId, kind: 'LANDING' }, select: { id: true } });
   return page?.id ?? null;
 }
+
+/** PR 430: the order sources a support chat's channel gives an order (the database's own list). */
+export const CHAT_ORDER_SOURCES = ['WHATSAPP', 'MESSENGER', 'LIVE_CHAT', 'ADMIN'] as const satisfies readonly NonNullable<Prisma.OrderUncheckedCreateInput['source']>[];
+export type ChatOrderSource = (typeof CHAT_ORDER_SOURCES)[number];
+
+/** PR 430: an order an employee places from a support chat. */
+export interface ChatPlace {
+  source: ChatOrderSource;
+  conversationId: string;
+  /** The chat's channel kind as the inbox names it (whatsapp, messenger, livechat …), kept on the placed event. */
+  channelKind: string;
+  staffUserId: string | null;
+}
+
+/** PR 430: where a chat order's events and records say they came from. */
+export const CHAT_SOURCE = 'support';
+/** PR 430: a pay link's token (18 random bytes, base64url — the order service's own shape, @extas/payments LINK_TOKEN). */
+const linkToken = () => randomBytes(18).toString('base64url');
 
 const DEVICE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DAY_MS = 86_400_000;
@@ -424,7 +451,9 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   if (preorder) flags.push(ORDER_FLAGS.preorder);
   if (voice) flags.push(ORDER_FLAGS.voiceEntered);
   if (voiceLow) flags.push(ORDER_FLAGS.voiceCall);
-  const consent = consentOf(cs, d.consent ?? null);
+  // PR 430: nobody ticked a box in a chat order — no marketing consent is recorded for it
+  const chat = req.chat ?? null;
+  const consent = chat ? { sms: null, whatsapp: null } : consentOf(cs, d.consent ?? null);
   const discountMinor = q.bag.summary.offers.reduce((a, o) => a + o.amountMinor, 0) + t.rewardMinor;
   // Review R1 (B1): the code the order uses is redeemed in the order's own transaction (its limits hold under load)
   const coupon = q.bag.summary.offers.find((x) => x.code) ?? null;
@@ -468,7 +497,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           number,
           customerId: ownerId,
           status: 'PLACED',
-          source: landingPageId ? 'LANDING_PAGE' : 'WEBSITE',
+          source: chat ? chat.source : landingPageId ? 'LANDING_PAGE' : 'WEBSITE',
           landingPageId,
           currency,
           placedAt: now,
@@ -558,9 +587,9 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           orderId: o.id,
           type: ORDER_EVENTS.placed,
           toStatus: 'PLACED',
-          actorType: 'CUSTOMER',
-          actorId: customerId,
-          source: CHECKOUT_SOURCE,
+          actorType: chat ? 'STAFF' : 'CUSTOMER',
+          actorId: chat ? chat.staffUserId : customerId,
+          source: chat ? CHAT_SOURCE : CHECKOUT_SOURCE,
           data: {
             payment: choice ? { method: choice.method, option: choice.option } : null,
             reward: q.pay.reward?.kind ?? null,
@@ -577,6 +606,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
             ...(voice ? { voice: { engine: voice.engine, confidence: voice.confidence, low: voiceLow } } : {}),
             // PR 429: credited to the support chat whose product link he opened
             ...(credited && share ? { supportRef: share.refCode } : {}),
+            // PR 430: placed from a support chat by an employee (the conversation and its channel)
+            ...(chat ? { chat: { conversationId: chat.conversationId, kind: chat.channelKind } } : {}),
           },
         },
       });
@@ -585,7 +616,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
         await tx.checkoutFlagEvent.create({
           data: { storeId, layerId: flagged.layerId, orderId: o.id, customerId: ownerId, requirement: flagged.requirement, outcome: FLAG_OUTCOMES.asked, explanation: { layer: flagged.layerName, score: flagged.score, band: flagged.band, kind: adv.kind, amountMinor: adv.amountMinor, restMinor: adv.restMinor } },
         });
-      await recordConsent(tx, { storeId, orderId: o.id, customerId: ownerId, phone: check.phone.e164, ip: req.ip ?? null, answer: consent, source: CHECKOUT_SOURCE });
+      await recordConsent(tx, { storeId, orderId: o.id, customerId: ownerId, phone: check.phone.e164, ip: req.ip ?? null, answer: consent, source: chat ? CHAT_SOURCE : CHECKOUT_SOURCE });
 
       if (t.walletMinor > 0) {
         if (!customerId) throw new CheckoutError('PRICE_CHANGED', 'the wallet needs a signed-in customer');
@@ -602,7 +633,21 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
       }
       if (prepaid) {
         await tx.payment.create({
-          data: { storeId, orderId: o.id, method: payMethod, provider: choice!.option ?? choice!.method, purpose: adv ? ADVANCE_PURPOSE[adv.kind] : 'ORDER', status: 'INITIATED', amountMinor: adv ? adv.amountMinor : t.dueMinor, currency, idempotencyKey: `${d.idempotencyKey}:pay:1`, attempt: 1, statusAt: now },
+          data: {
+            storeId,
+            orderId: o.id,
+            method: payMethod,
+            provider: choice!.option ?? choice!.method,
+            purpose: adv ? ADVANCE_PURPOSE[adv.kind] : 'ORDER',
+            status: 'INITIATED',
+            amountMinor: adv ? adv.amountMinor : t.dueMinor,
+            currency,
+            idempotencyKey: `${d.idempotencyKey}:pay:1`,
+            attempt: 1,
+            statusAt: now,
+            // PR 430: a chat order's advance is paid from the link the chat sends (no browser holds this bag)
+            ...(chat && adv ? { linkToken: linkToken() } : {}),
+          },
         });
       }
       const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : noDetail ? CALL_REASONS.addressCheck : giftPart ? CALL_REASONS.giftAdvance : voiceLow ? CALL_REASONS.voiceCall : null;

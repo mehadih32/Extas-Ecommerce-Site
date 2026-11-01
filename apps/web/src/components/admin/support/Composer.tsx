@@ -22,6 +22,8 @@ export interface ComposerProducts {
   photos: number;
   button: string;
   texts: ProductDrawerTexts;
+  /** PR 430: the chat bag's address when orders from the chat are on for this person ("Add to bag"). */
+  addUrl?: string | null;
 }
 
 export interface ComposerTexts {
@@ -149,6 +151,7 @@ export function Composer({
           lang={products.lang}
           money={products.money}
           photos={products.photos}
+          addUrl={products.addUrl ?? null}
           autoFocus
           onClose={() => setDrawer('')}
           texts={products.texts}

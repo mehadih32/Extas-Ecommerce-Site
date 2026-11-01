@@ -159,7 +159,7 @@ export function newRefCode(): string {
 }
 
 /** The money the shop shows, in the store's currency and language. */
-function moneyText(minor: number | null, currency: string, storeLocale: string, lang: 'en' | 'bn'): string {
+export function moneyText(minor: number | null, currency: string, storeLocale: string, lang: 'en' | 'bn'): string {
   if (minor == null) return '';
   let region: string | undefined;
   try {

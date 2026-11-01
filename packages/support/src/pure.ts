@@ -37,6 +37,8 @@ export const EVENT_KINDS = [
   'PRODUCT_SENT',
   'PRODUCT_OPENED',
   'PRODUCT_ORDERED',
+  // PR 430: an order created from the chat's bag (its number, source and gate)
+  'ORDER_CREATED',
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 

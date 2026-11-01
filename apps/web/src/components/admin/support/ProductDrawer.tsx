@@ -3,6 +3,7 @@
 // opens a search of the shop's live products by name, SKU or colour; a product opens its colours and sizes (a sold-out
 // size cannot be picked); one press sends the card — its photos, the name, the price and the product's link with this
 // chat's reference — and the conversation is read again. One press carries one key: pressed twice, it is one card.
+// PR 430: with orders from the chat on (`addUrl`), "Add to bag" puts the picked colour and size into the chat's bag.
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ChatProduct } from '@extas/support';
@@ -27,6 +28,9 @@ export interface ProductDrawerTexts {
   sending: string;
   sent: string;
   back: string;
+  /** PR 430: "Add to bag" and its answer. */
+  add: string;
+  added: string;
   err: Record<string, string>;
 }
 
@@ -41,6 +45,7 @@ export function ProductDrawer({
   lang,
   money,
   photos,
+  addUrl,
   autoFocus,
   onClose,
   texts: x,
@@ -52,6 +57,8 @@ export function ProductDrawer({
   money: Money;
   /** How many photos go with a card (settings: `support.catalogue.photos`, within the chat's file rules). */
   photos: number;
+  /** PR 430: the chat bag's address (null: orders from the chat are off, or not this person's). */
+  addUrl?: string | null;
   autoFocus: boolean;
   onClose: () => void;
   texts: ProductDrawerTexts;
@@ -121,6 +128,21 @@ export function ProductDrawer({
     setSaid({ text: err(code), bad: true });
   }
 
+  /** PR 430: the picked colour and size into the chat's bag. */
+  async function add() {
+    if (!open || busy || !addUrl) return;
+    if (!chosen) return setSaid({ text: x.pickSize, bad: true });
+    setBusy(true);
+    const a = await call('POST', addUrl, { action: 'add', variantId: chosen.id, lang });
+    setBusy(false);
+    if (a.status === 200) {
+      setSaid({ text: x.added, bad: false });
+      router.refresh();
+      return;
+    }
+    setSaid({ text: err(a.status === 0 ? 'network' : a.data.error), bad: true });
+  }
+
   return (
     <div className="sp-drawer" role="region" aria-labelledby={`${id}-h`} data-testid="support-products">
       <div className="sp-drawer-top">
@@ -183,6 +205,11 @@ export function ProductDrawer({
           ) : null}
           <div className="sp-cbar">
             <span className="sp-grow a2-xs a2-mute">{x.photos.replace('{n}', String(photos))}</span>
+            {addUrl ? (
+              <button type="button" className="a2-btn" disabled={busy || !chosen} onClick={() => void add()} data-testid="support-product-add">
+                {x.add}
+              </button>
+            ) : null}
             <button type="button" className="a2-btn pri" disabled={busy || needsSize} onClick={() => void send()} data-testid="support-product-send">
               {busy ? x.sending : x.send}
             </button>
