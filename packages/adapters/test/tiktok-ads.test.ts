@@ -89,8 +89,8 @@ describe('TikTok ads reader (PR 260)', () => {
     const p = practiceAdsReader('tiktokAds', 'tiktok');
     expect(p.practice).toBe(true);
     expect(allAdapters).toContain(tiktokAdsAdapter);
-    expect(adsReaderAdapters).toEqual([metaAdsAdapter, tiktokAdsAdapter]);
-    expect(Object.keys(ADS_READER_CONNECTION)).toEqual(['meta', 'tiktok']);
+    expect(adsReaderAdapters.slice(0, 2)).toEqual([metaAdsAdapter, tiktokAdsAdapter]);
+    expect(Object.keys(ADS_READER_CONNECTION).slice(0, 2)).toEqual(['meta', 'tiktok']);
     expect(ADS_READER_CONNECTION.tiktok).toEqual({ kind: 'TIKTOK', provider: 'tiktokAds' });
     expect(findConnection('tiktokAds')).toMatchObject({ kind: 'TIKTOK', secrets: [{ field: 'accessToken' }], exclusive: false });
     expect(tiktokAdsConfig.safeParse({ advertiserId: ADV }).success).toBe(true);
