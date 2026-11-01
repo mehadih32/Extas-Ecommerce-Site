@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-01 06:15 (Asia/Dhaka)
+# Smoke test · 2026-11-01 10:38 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (268টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (308টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `f5d916fafcae` · nightly · result **PASS** (268 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `9d6ffeb4b79f` · after deploy · result **PASS** (308 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -85,6 +85,11 @@ Site: https://new.extas.com.bd · commit `f5d916fafcae` · nightly · result **P
 | `/admin/server` | phone | 200 | `/admin/server` | ok | — |
 | `/admin/integrations` | phone | 200 | `/admin/integrations` | ok | — |
 | `/admin/settings/look` | phone | 200 | `/admin/settings/look` | ok | — |
+| `/admin/orders/digest` | phone | 200 | `/admin/orders/digest` | ok | — |
+| `/admin/orders/confirm/calls` | phone | 200 | `/admin/orders/confirm/calls` | ok | — |
+| `/admin/reports/fraud` | phone | 200 | `/admin/reports/fraud` | ok | — |
+| `/admin/reports/learning` | phone | 200 | `/admin/reports/learning` | ok | — |
+| `/admin/reports/stopped` | phone | 200 | `/admin/reports/stopped` | ok | — |
 | `/admin/messages` | phone | 200 | `/admin/messages` | ok | — |
 | `/admin/marketing` | phone | 200 | `/admin/marketing` | ok | — |
 | `/admin/website` | phone | 200 | `/admin/website` | ok | — |
@@ -138,6 +143,21 @@ Site: https://new.extas.com.bd · commit `f5d916fafcae` · nightly · result **P
 | `/admin/website/seo/categories` | phone | 200 | `/admin/website/seo/categories` | ok | — |
 | `/admin/orders/returns/qc` | phone | 200 | `/admin/orders/returns/qc` | ok | — |
 | `/admin/products/new` | phone | 200 | `/admin/products/new` | ok | — |
+| `/admin/help/manual` | phone | 200 | `/admin/help/manual` | ok | — |
+| `/admin/help/manual?c=orders` | phone | 200 | `/admin/help/manual` | ok | — |
+| `/admin/help/manual?q=backup` | phone | 200 | `/admin/help/manual` | ok | — |
+| `/admin/help/manual?new=1` | phone | 200 | `/admin/help/manual` | ok | — |
+| `/admin/reports/health/speed` | phone | 200 | `/admin/reports/health/speed` | ok | — |
+| `/admin/reports/health/smoke` | phone | 200 | `/admin/reports/health/smoke` | ok | — |
+| `/admin/reports/health/history` | phone | 200 | `/admin/reports/health/history` | ok | — |
+| `/admin/reports/health/fixes` | phone | 200 | `/admin/reports/health/fixes` | ok | — |
+| `/admin/ai/audit` | phone | 200 | `/admin/ai/audit` | ok | — |
+| `/admin/money/refunds` | phone | 200 | `/admin/money/refunds` | ok | — |
+| `/admin/money/refunds?view=all` | phone | 200 | `/admin/money/refunds` | ok | — |
+| `/admin/reports/delivery` | phone | 200 | `/admin/reports/delivery` | ok | — |
+| `/admin/support/rider-issues` | phone | 200 | `/admin/support/rider-issues` | ok | — |
+| `/admin/rules/eid` | phone | 200 | `/admin/rules/eid` | ok | — |
+| `/admin/delivery/settings` | phone | 200 | `/admin/delivery/settings` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -219,6 +239,11 @@ Site: https://new.extas.com.bd · commit `f5d916fafcae` · nightly · result **P
 | `/admin/server` | desktop | 200 | `/admin/server` | ok | — |
 | `/admin/integrations` | desktop | 200 | `/admin/integrations` | ok | — |
 | `/admin/settings/look` | desktop | 200 | `/admin/settings/look` | ok | — |
+| `/admin/orders/digest` | desktop | 200 | `/admin/orders/digest` | ok | — |
+| `/admin/orders/confirm/calls` | desktop | 200 | `/admin/orders/confirm/calls` | ok | — |
+| `/admin/reports/fraud` | desktop | 200 | `/admin/reports/fraud` | ok | — |
+| `/admin/reports/learning` | desktop | 200 | `/admin/reports/learning` | ok | — |
+| `/admin/reports/stopped` | desktop | 200 | `/admin/reports/stopped` | ok | — |
 | `/admin/messages` | desktop | 200 | `/admin/messages` | ok | — |
 | `/admin/marketing` | desktop | 200 | `/admin/marketing` | ok | — |
 | `/admin/website` | desktop | 200 | `/admin/website` | ok | — |
@@ -272,7 +297,22 @@ Site: https://new.extas.com.bd · commit `f5d916fafcae` · nightly · result **P
 | `/admin/website/seo/categories` | desktop | 200 | `/admin/website/seo/categories` | ok | — |
 | `/admin/orders/returns/qc` | desktop | 200 | `/admin/orders/returns/qc` | ok | — |
 | `/admin/products/new` | desktop | 200 | `/admin/products/new` | ok | — |
+| `/admin/help/manual` | desktop | 200 | `/admin/help/manual` | ok | — |
+| `/admin/help/manual?c=orders` | desktop | 200 | `/admin/help/manual` | ok | — |
+| `/admin/help/manual?q=backup` | desktop | 200 | `/admin/help/manual` | ok | — |
+| `/admin/help/manual?new=1` | desktop | 200 | `/admin/help/manual` | ok | — |
+| `/admin/reports/health/speed` | desktop | 200 | `/admin/reports/health/speed` | ok | — |
+| `/admin/reports/health/smoke` | desktop | 200 | `/admin/reports/health/smoke` | ok | — |
+| `/admin/reports/health/history` | desktop | 200 | `/admin/reports/health/history` | ok | — |
+| `/admin/reports/health/fixes` | desktop | 200 | `/admin/reports/health/fixes` | ok | — |
+| `/admin/ai/audit` | desktop | 200 | `/admin/ai/audit` | ok | — |
+| `/admin/money/refunds` | desktop | 200 | `/admin/money/refunds` | ok | — |
+| `/admin/money/refunds?view=all` | desktop | 200 | `/admin/money/refunds` | ok | — |
+| `/admin/reports/delivery` | desktop | 200 | `/admin/reports/delivery` | ok | — |
+| `/admin/support/rider-issues` | desktop | 200 | `/admin/support/rider-issues` | ok | — |
+| `/admin/rules/eid` | desktop | 200 | `/admin/rules/eid` | ok | — |
+| `/admin/delivery/settings` | desktop | 200 | `/admin/delivery/settings` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
-Database (PR 139): ok: 30 tables append-only; the app connects as extas_app.
+Database (PR 139): ok: 31 tables append-only; the app connects as extas_app.
