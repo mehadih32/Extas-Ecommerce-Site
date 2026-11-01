@@ -339,7 +339,12 @@ export async function runGate(o) {
               panel = page.locator('[role=dialog], [aria-modal="true"]').filter({ visible: true }).first();
               const opened = await panel.waitFor({ timeout: 5_000 }).then(() => true).catch(() => false);
               if (!opened) return { status: "FAIL", ms: v.ms, page, reason: "the filter button opened nothing" };
-            } else if (!(await side.count())) return { status: "FAIL", ms: v.ms, page, reason: "the category has products but no filter (no button, no side panel)" };
+            } else if (!(await side.count())) {
+              // live run 1 Nov 22:20: a computer drops the rail for a category of few styles with no filter on (demo D-012,
+              // `category.page.fewStyles`; the page marks it .cat-few), so that is a SKIP naming the rule, not a FAIL
+              if (await page.locator(".cat-layout.cat-few").count()) return { status: "SKIP", ms: v.ms, reason: L.fewStyles(await page.locator(".cat-layout .pcard-w").count()) };
+              return { status: "FAIL", ms: v.ms, page, reason: "the category has products but no filter (no button, no side panel)" };
+            }
             const before = page.url();
             const choice = panel.locator('label:has(input[type=checkbox]:not([disabled])), button[aria-pressed]:not([disabled]), [role=checkbox], .chip').filter({ visible: true }).first();
             if (await choice.count()) await choice.click({ timeout: 5_000 }).catch(() => {});
