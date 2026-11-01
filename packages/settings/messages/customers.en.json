@@ -38,6 +38,10 @@
     "aiWriter": {
       "label": "AI campaign writer",
       "help": "Two or three versions of an offer e-mail in your own voice, from what you say the message is about (Messages › E-mail, \"Write with AI\"). Off as shipped; it also needs AI for the whole shop. Until an AI provider is connected the practice writer only joins your own words. \"Greeting\", \"Sign-off\" and \"How you talk\" are your words in each language. \"Longest SMS\" is the most characters an SMS draft may have. A draft only fills the form: you pick one, change it, save it and send it yourself."
+    },
+    "sendAdvice": {
+      "label": "Who and when to send",
+      "help": "On an e-mail send: your saved segments ranked by how many of their people bought in the last days (and can get offer e-mails), and the hours and weekday your orders come in, outside the quiet hours — each with the numbers behind it. Off as shipped. Works on your own data without AI. \"Days to look back\": how far back orders are read. \"Fewest orders\": below this the timing advice waits. \"Hours in the window\": how wide the suggested sending window is. \"Segments shown\": how many are suggested. Advice only: you pick."
     }
   }
 }

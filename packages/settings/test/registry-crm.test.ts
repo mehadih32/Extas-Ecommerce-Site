@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { aiWriterSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
+import { aiWriterSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
 
 describe('CRM settings (v190–199)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -56,5 +56,12 @@ describe('CRM settings (v190–199)', () => {
     expect(s.default.greeting).toEqual({ bn: '', en: '' });
     expect(aiWriterSettingsSchema.safeParse({ ...s.default, versions: 4 }).success).toBe(false);
     expect(aiWriterSettingsSchema.safeParse({ ...s.default, style: { bn: 'x'.repeat(201), en: '' } }).success).toBe(false);
+  });
+
+  it('PR 294: who-and-when advice is off as shipped (v195), 90 days, 30 orders, a 2-hour window, 3 segments', () => {
+    const s = crmSettings['customers.sendAdvice'];
+    expect(s.version).toBe(195);
+    expect(s.default).toEqual({ enabled: false, lookbackDays: 90, minOrders: 30, windowHours: 2, maxSegments: 3 });
+    expect(sendAdviceSettingsSchema.safeParse({ ...s.default, windowHours: 0 }).success).toBe(false);
   });
 });

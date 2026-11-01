@@ -30,6 +30,11 @@
 // empty as shipped), and the longest SMS it drafts. Off as shipped, and it also needs AI for the whole shop
 // (`ai.enabled`); it runs on the practice writer until an AI provider's key is in the vault. It only fills the form: a
 // person picks a version, and saving and scheduling stay his.
+//
+// PR 294 (`customers.sendAdvice`, v195): who to send to and when (Blueprint C6.1 item 4) — on an e-mail send's form, the
+// saved segments ranked by how many of their people bought recently (and can get offer e-mails), and the hours and the
+// weekday the store's orders come in, outside the quiet hours, each with its reasoning in numbers. Off as shipped; the
+// rule-based reading (C6.1: "rule-based fallback when AI is off") works without AI. Advice only: the person picks.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -115,6 +120,18 @@ export const aiWriterSettingsSchema = z
   .strict();
 export type AiWriterSettings = z.output<typeof aiWriterSettingsSchema>;
 
+/** PR 294 — segment and timing advice. */
+export const sendAdviceSettingsSchema = z
+  .object({
+    enabled: z.boolean(),
+    lookbackDays: z.int().min(7).max(730),
+    minOrders: z.int().min(1).max(10_000),
+    windowHours: z.int().min(1).max(6),
+    maxSegments: z.int().min(1).max(10),
+  })
+  .strict();
+export type SendAdviceSettings = z.output<typeof sendAdviceSettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -168,5 +185,15 @@ export const crmSettings = {
     labelKey: 'customers.aiWriter.label',
     helpKey: 'customers.aiWriter.help',
     sortOrder: 240,
+  }),
+  'customers.sendAdvice': setting({
+    ...base,
+    version: 195,
+    schema: sendAdviceSettingsSchema,
+    default: { enabled: false, lookbackDays: 90, minOrders: 30, windowHours: 2, maxSegments: 3 }, // hardcode-ok: registry default (off; reading window and sizes)
+    valueType: 'JSON',
+    labelKey: 'customers.sendAdvice.label',
+    helpKey: 'customers.sendAdvice.help',
+    sortOrder: 250,
   }),
 };

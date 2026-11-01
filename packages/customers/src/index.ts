@@ -32,6 +32,8 @@
 // PR 293: the AI campaign writer (campaign-writer.ts) — 2–3 versions of an offer e-mail or SMS in the owner's voice, from
 // the caller's AI connection (the practice writer until a key), checked before anyone sees them; off as shipped
 // (`ai.enabled` and `customers.aiWriter`); it only fills the form.
+// PR 294: who and when to send (send-advice.ts) — the saved segments ranked by recent buyers who can be reached, and
+// the busiest order hours and weekday outside the quiet hours, with the numbers; rule-based, off as shipped.
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
@@ -51,5 +53,6 @@ export * from './people-sql';
 export * from './profile';
 export * from './pure';
 export * from './segments';
+export * from './send-advice';
 export * from './settings';
 export * from './view';
