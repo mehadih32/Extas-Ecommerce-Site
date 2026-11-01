@@ -428,4 +428,17 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const now = (await j('GET', ['settings'])).body.cards['support.app'];
     expect((await j('PUT', ['settings'], { body: { key: 'support.app', value: { ...now.value, enabled: false, push: false }, version: now.version } })).status).toBe(200);
   });
+
+  it('PR 436: support analytics — the owner sees the team and every channel; a reader only their own row; a bad period refused', async () => {
+    const r = (await j('GET', ['analytics'], { query: '?days=7' })).body;
+    expect(r).toMatchObject({ ok: true, analytics: { scope: 'team', days: 7 } });
+    expect(r.analytics.total.chats).toBeGreaterThan(0);
+    expect(r.analytics.byChannel.length).toBeGreaterThan(0);
+    const own = (await j('GET', ['analytics'], { cookie: reader })).body.analytics;
+    expect([own.scope, own.days, own.byChannel, own.byPerson.length]).toEqual(['own', 30, [], 1]);
+    const bad = await j('GET', ['analytics'], { query: '?from=2026-10-31&to=2026-10-01' });
+    expect([bad.status, bad.body.error]).toEqual([400, 'INVALID_INPUT']);
+    expect((await j('GET', ['analytics'], { query: '?days=12' })).status).toBe(400);
+    expect((await j('POST', ['analytics'], { body: {} })).status).toBe(405);
+  });
 });

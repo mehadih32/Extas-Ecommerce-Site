@@ -9683,6 +9683,8 @@ model Message {
   @@unique([conversationId, requestKey])
   @@unique([conversationId, externalMessageId])
   @@index([conversationId, sentAt])
+  /// PR 436: support analytics — a store's customer messages and answers in a period.
+  @@index([storeId, direction, sentAt])
 }
 
 /// @stage S22 · B4.8, B4.9 — chat media, copied to our storage on arrival (Drive), with the Bengali voice transcript and
@@ -9758,6 +9760,8 @@ model Ticket {
   @@index([storeId, status])
   /// PR 431: a chat's open ticket and its latest one, on every customer message and answer.
   @@index([conversationId, createdAt])
+  /// PR 436: support analytics — a store's tickets opened in a period.
+  @@index([storeId, createdAt])
 }
 
 /// @stage S22 · PR 429, 430 — the mini-cart beside a conversation, with the fraud gate (green COD / red take advance).

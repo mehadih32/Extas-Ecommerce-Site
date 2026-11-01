@@ -36,6 +36,9 @@
 //   POST  /api/admin/support/app                {action: on, endpoint, keys{p256dh, auth}, label?} notifications on for this
 //                                               device; {action: off, endpoint}; {action: test} a test to their devices
 //                                               (support.read; 422 PUSH_OFF while off)
+//   GET   /api/admin/support/analytics          PR 436: ?days=7|30|90 or ?from=&to= (shop days) the support report per
+//                                               channel and per employee; the team only to support.assign, others
+//                                               their own row (support.read)
 //   POST  /api/admin/support/c/:id/block        PR 434: {action: block, reason, version?} the chat's person on the support
 //                                               block list; {action: unblock, version?} taken off (support.block; 422
 //                                               BLOCK_OFF while the list is off)
@@ -118,6 +121,7 @@ function routeOf(path: string[], method: string): Route | null {
   if (a === 'files' && isUuid(b) && c === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'staff' && b === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'app' && b === undefined) return { perm: 'support.read', methods: ['GET', 'POST'] };
+  if (a === 'analytics' && b === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'settings' && b === undefined) return { perm: method === 'PUT' ? 'support.settings' : 'support.read', methods: ['GET', 'PUT'] };
   if (a === 'channels' && b === undefined) return { perm: method === 'POST' ? 'support.settings' : 'support.read', methods: ['GET', 'POST'] };
   return null;
@@ -257,6 +261,10 @@ export async function supportRoute(request: Request, deps: AdminDeps | null, pat
       if (what === 'off') return json({ ok: true, app: await sp.removeSupportDevice(sd, who, rest) });
       if (what === 'test') return json({ ok: true, ...(await sp.testSupportPush(sd, who)) });
       return fail(400, 'INVALID_INPUT', ['action']);
+    }
+    if (a === 'analytics') {
+      const q = Object.fromEntries(['days', 'from', 'to'].flatMap((k) => (url.searchParams.has(k) ? [[k, (url.searchParams.get(k) ?? '').slice(0, 10)]] : [])));
+      return json({ ok: true, analytics: await sp.supportAnalytics(sd, who, q) });
     }
     if (a === 'catalogue') return json({ ok: true, ...(await sp.chatCatalogue(sd, who, { q: (url.searchParams.get('q') ?? '').slice(0, 80) })) });
     if (a === 'channels') {

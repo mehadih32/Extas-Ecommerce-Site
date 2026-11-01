@@ -710,6 +710,69 @@
         "other": "Something went wrong. Try again."
       },
       "word": "Support"
+    },
+    "an": {
+      "title": "Support analytics",
+      "sub": "How fast the team answers and how many chats become orders — per channel and per person.",
+      "period": {
+        "label": "Period",
+        "d7": "7 days",
+        "d30": "30 days",
+        "d90": "90 days",
+        "from": "From",
+        "to": "To",
+        "show": "Show",
+        "span": "{from} – {to}",
+        "bad": "That period could not be shown (the end before the start, or longer than {n} days). Showing the last {d} days."
+      },
+      "own": "You see your own figures. People who give chats out see the whole team and every channel.",
+      "kpi": {
+        "chats": "Chats",
+        "chatsNote": "answers sent: {n}",
+        "first": "First answer",
+        "firstNote": "middle · average {avg}",
+        "resolve": "Solved in",
+        "resolveNote": "middle · {n} solved",
+        "conversion": "Chat → order",
+        "conversionNote": "chats with an order: {n}",
+        "sales": "Sales from chats",
+        "salesNote": "delivered only · orders: {n} ({v})",
+        "late": "Late tickets",
+        "lateNote": "{n} of {of} tickets late"
+      },
+      "byChannel": "By channel",
+      "byPerson": "By person",
+      "none": "Nothing in this period yet.",
+      "col": {
+        "channel": "Channel",
+        "person": "Person",
+        "chats": "Chats",
+        "replies": "Answers",
+        "tickets": "Tickets",
+        "first": "First answer",
+        "resolve": "Solved in",
+        "late": "Late",
+        "conversion": "Chat → order",
+        "orders": "Orders",
+        "sales": "Sales",
+        "followUps": "Follow-ups"
+      },
+      "avg": "avg {v}",
+      "ordered": "{n} ordered",
+      "sent": "{n} sent · {m} ordered",
+      "ai": "AI (answers on its own)",
+      "unnamed": "(no name)",
+      "how": {
+        "h": "How these are counted",
+        "chats": "Chats: for a channel, chats where a customer wrote in the period; for a person, chats they answered.",
+        "first": "First answer and Solved in: from the customer's question (a ticket) to the first answer, and to “Solved”. The middle shows the usual time; one very slow chat does not hide it.",
+        "late": "Late: answered or solved after the timer in Support settings (Tickets and timers), or still waiting past it.",
+        "orders": "Chat → order: chats with an order made in the chat or from a product link sent in it. An order is credited to the person who made it or sent the link.",
+        "sales": "Sales: only orders delivered. An order placed but not delivered yet is in Orders, not in Sales."
+      },
+      "err": {
+        "INVALID_INPUT": "That period could not be shown."
+      }
     }
   }
 }
