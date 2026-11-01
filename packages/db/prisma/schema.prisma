@@ -7837,17 +7837,24 @@ model RewardRule {
 /// @stage S14 · PR 296 — the points ledger (points are not money).
 /// @append-only
 model RewardEntry {
-  id          String   @id @default(uuid(7)) @db.Uuid
-  storeId     Int
-  store       Store    @relation(fields: [storeId], references: [id])
-  customerId  String   @db.Uuid
-  points      Int
-  pointsAfter Int
-  reason      String
-  orderId     String?  @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  id             String   @id @default(uuid(7)) @db.Uuid
+  storeId        Int
+  store          Store    @relation(fields: [storeId], references: [id])
+  customerId     String   @db.Uuid
+  points         Int
+  pointsAfter    Int
+  reason         String
+  orderId        String?  @db.Uuid
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  /// PR 296 (migration 0143) — one entry per key and customer: `order:<id>` (the points of a delivered order),
+  /// `redeem:<key>` (points turned into wallet credit).
+  idempotencyKey String?
+  /// PR 296 — the wallet credit a redemption made (WalletEntry, reason POINTS).
+  walletEntryId  String?  @db.Uuid
 
+  @@unique([customerId, idempotencyKey])
   @@index([customerId, createdAt])
+  @@index([storeId, createdAt])
 }
 
 /// @stage S14 · PR 295 — a review request after delivery.

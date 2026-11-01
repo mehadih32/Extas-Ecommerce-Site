@@ -148,6 +148,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'all', pages: [{ href: '/admin/customers', perm: 'customers.read', keys: ['customers', 'customer'] }] },
       // PR 287: Segments (CUS-03) and one segment's builder (CUS-03a), in the demo's order
       { id: 'segments', pages: [{ href: '/admin/customers/segments', perm: 'customers.read', keys: ['customersSegments'] }] },
+      // PR 296: Loyalty & wallet (CUS-04) — the points and the wallet's newest lines, with the points card
+      { id: 'loyalty', pages: [{ href: '/admin/customers/loyalty', perm: 'customers.read', keys: ['customersLoyalty'] }] },
       { id: 'review', pages: [{ href: '/admin/customers/review', perm: 'customers.read', keys: ['customersReview'] }] },
       // PR 288: the CRM switches and numbers, under More
       { id: 'settings', more: true, pages: [{ href: '/admin/customers/settings', perm: 'customers.read', keys: ['customersSettings'] }] },

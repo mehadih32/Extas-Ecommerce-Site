@@ -224,7 +224,8 @@
         "MANUAL_CREDIT": "হাতে যোগ",
         "MANUAL_DEBIT": "হাতে বাদ",
         "OFFER": "অফারের ক্রেডিট",
-        "CORRECTION": "সংশোধন"
+        "CORRECTION": "সংশোধন",
+        "POINTS": "পয়েন্ট ভাঙানো"
       },
       "by": "{name} করেছেন",
       "byShop": "দোকান নিজে থেকে",

@@ -22,6 +22,7 @@
     "@extas/delivery": "workspace:*",
     "@extas/metrics": "workspace:*",
     "@extas/orders": "workspace:*",
+    "@extas/payments": "workspace:*",
     "@extas/settings": "workspace:*",
     "zod": "4.6.7"
   },

@@ -83,6 +83,7 @@
       "customers": {
         "all": "All customers",
         "segments": "Segments",
+        "loyalty": "Loyalty & wallet",
         "review": "To review",
         "settings": "Customer settings"
       },

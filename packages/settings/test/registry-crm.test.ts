@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { aiWriterSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
+import { aiWriterSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
 
 describe('CRM settings (v190–199)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -63,5 +63,14 @@ describe('CRM settings (v190–199)', () => {
     expect(s.version).toBe(195);
     expect(s.default).toEqual({ enabled: false, lookbackDays: 90, minOrders: 30, windowHours: 2, maxSegments: 3 });
     expect(sendAdviceSettingsSchema.safeParse({ ...s.default, windowHours: 0 }).success).toBe(false);
+  });
+
+  it('PR 296: rewards and points are off as shipped (v197), every rule number 0 until the owner types his own', () => {
+    const s = crmSettings['customers.points'];
+    expect(s.version).toBe(197);
+    expect(s.default).toEqual({ enabled: false, pointsPer100: 0, orderPoints: 0, holdDays: 7, lookbackDays: 30, redeemPoints: 0, redeemMinor: 0, batchSize: 200 });
+    expect(pointsSettingsSchema.safeParse({ ...s.default, pointsPer100: -1 }).success).toBe(false);
+    expect(pointsSettingsSchema.safeParse({ ...s.default, lookbackDays: 0 }).success).toBe(false);
+    expect(pointsSettingsSchema.safeParse({ ...s.default, tiers: [] }).success).toBe(false);
   });
 });

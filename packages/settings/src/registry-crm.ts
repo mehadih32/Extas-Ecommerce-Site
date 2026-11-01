@@ -35,6 +35,13 @@
 // saved segments ranked by how many of their people bought recently (and can get offer e-mails), and the hours and the
 // weekday the store's orders come in, outside the quiet hours, each with its reasoning in numbers. Off as shipped; the
 // rule-based reading (C6.1: "rule-based fallback when AI is off") works without AI. Advice only: the person picks.
+//
+// PR 296 (`customers.points`, v197): rewards and points with the owner's own rules (Customers › Loyalty & wallet) —
+// points for each delivered order (per ৳100 of goods and/or a fixed number per order), given `holdDays` after the
+// delivery (the exchange window) and never for an order delivered more than `lookbackDays` before the run; and, only
+// when the owner sets both numbers, a customer turns each block of `redeemPoints` points into `redeemMinor` of wallet
+// credit himself (My account › Rewards). Off as shipped with every number at 0: nothing is earned and nothing becomes
+// money until the owner types his own rule. The late-delivery apology credit is `payments.wallet.apology` (PR 172).
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -132,6 +139,21 @@ export const sendAdviceSettingsSchema = z
   .strict();
 export type SendAdviceSettings = z.output<typeof sendAdviceSettingsSchema>;
 
+/** PR 296 — rewards and points (the owner's rules; 0 = that part does nothing). */
+export const pointsSettingsSchema = z
+  .object({
+    enabled: z.boolean(),
+    pointsPer100: z.int().min(0).max(10_000),
+    orderPoints: z.int().min(0).max(100_000),
+    holdDays: z.int().min(0).max(90),
+    lookbackDays: z.int().min(1).max(365),
+    redeemPoints: z.int().min(0).max(1_000_000),
+    redeemMinor: z.int().min(0).max(10_000_000),
+    batchSize: z.int().min(1).max(2_000),
+  })
+  .strict();
+export type PointsSettings = z.output<typeof pointsSettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -195,5 +217,15 @@ export const crmSettings = {
     labelKey: 'customers.sendAdvice.label',
     helpKey: 'customers.sendAdvice.help',
     sortOrder: 250,
+  }),
+  'customers.points': setting({
+    ...base,
+    version: 197,
+    schema: pointsSettingsSchema,
+    default: { enabled: false, pointsPer100: 0, orderPoints: 0, holdDays: 7, lookbackDays: 30, redeemPoints: 0, redeemMinor: 0, batchSize: 200 }, // hardcode-ok: registry default (off; no points and no money until the owner's rule)
+    valueType: 'JSON',
+    labelKey: 'customers.points.label',
+    helpKey: 'customers.points.help',
+    sortOrder: 260,
   }),
 };

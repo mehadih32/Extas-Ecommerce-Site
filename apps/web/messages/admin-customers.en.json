@@ -88,7 +88,8 @@
       "LIMIT_REACHED": "That is more than the settings allow. Archive one first, or raise the number in Segment settings.",
       "STALE": "Someone else saved this in the meantime. Reload the page.",
       "SWITCHED_OFF": "This is switched off in the settings.",
-      "AI_UNAVAILABLE": "The AI writer did not answer or gave nothing usable. Try again, or write it yourself."
+      "AI_UNAVAILABLE": "The AI writer did not answer or gave nothing usable. Try again, or write it yourself.",
+      "NOT_ENOUGH_POINTS": "Not enough points for one turn-in yet."
     },
     "list": {
       "title": "All customers",
@@ -554,6 +555,18 @@
         "minOrders": "Fewest orders before a time is suggested",
         "windowHours": "Hours in the suggested window (1–6)",
         "maxSegments": "Segments suggested (1–10)"
+      },
+      "points": {
+        "title": "Rewards and points",
+        "sub": "Off as shipped, every number 0. Points come only by your own rule, after the exchange window; they become money only when you set both numbers below.",
+        "enabled": "Give points for delivered orders",
+        "pointsPer100": "Points per ৳100 of goods (the delivery charge never counts)",
+        "orderPoints": "Points per delivered order",
+        "holdDays": "Days to wait after delivery (0–90)",
+        "lookbackDays": "Days to look back when it is switched on (1–365)",
+        "redeemPoints": "Points to turn in at a time (0: never)",
+        "redeemMinor": "Wallet credit for those points, in ৳ (0: never)",
+        "batchSize": "Orders read in one run (1–2000)"
       }
     },
     "auto": {
@@ -785,6 +798,46 @@
       "useTime": "Send at that time",
       "fewOrders": "Too few orders to read a time yet: {n} of the {needed} needed.",
       "quietBlocked": "Every window of that width touches your quiet hours. Make the window smaller in Customer settings."
+    },
+    "loy": {
+      "title": "Loyalty & wallet",
+      "sub": "Points by your own rule; the wallet ledger is always on. Nothing is given or becomes money until you set it.",
+      "off": "Points are off. Switch them on and type your rule in the card; until then nobody gets points.",
+      "kpi": {
+        "members": "Customers with points",
+        "membersNote": "points they still hold",
+        "given": "Points given",
+        "givenNote": "in the last {days} days",
+        "redeemed": "Points turned in",
+        "redeemedNote": "into wallet credit, last {days} days",
+        "wallet": "Wallet balances",
+        "walletNote": "owed to customers as credit · ledger lines in {days} days: {lines}",
+        "walletHidden": "Needs the money view key"
+      },
+      "points": {
+        "title": "Points, newest first",
+        "sub": "Each delivered order earns once; turning points in is the customer's own press.",
+        "none": "No points yet.",
+        "ORDER_DELIVERED": "For order {n}",
+        "REDEEMED": "Turned into wallet credit",
+        "other": "Points",
+        "after": "{n} after"
+      },
+      "wallet": {
+        "title": "Wallet ledger, newest first",
+        "sub": "Every credit and debit with its reason: refund, apology credit, review reward, points.",
+        "none": "No wallet lines yet.",
+        "order": "Order {n}",
+        "more": "Refunds & wallet"
+      },
+      "apology": {
+        "title": "Late-delivery apology credit",
+        "on": "On: late orders can get the apology credit from Money › Refunds & wallet, by a person or by your rule.",
+        "off": "Off. You can switch it on with your own amount or percentage in Money › Refunds & wallet.",
+        "link": "Open Refunds & wallet"
+      },
+      "tiers": "Customer grades (New, Verified, Gold) come with their own switch later; points do not change a grade.",
+      "someone": "A customer"
     }
   }
 }

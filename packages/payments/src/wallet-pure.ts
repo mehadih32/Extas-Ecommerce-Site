@@ -11,9 +11,10 @@ export const WALLET_ACTIVE = 'ACTIVE';
  * Why an entry was written (`WalletEntry.reason`). Fixed codes, so reports can count them:
  * ORDER (the checkout spent it), REVIEW_REWARD (PR 65), EXCHANGE_CREDIT (S08, B1.8: only after the old item passed
  * check), REFUND (PR 172), APOLOGY (CN-018 #8), MANUAL_CREDIT / MANUAL_DEBIT (a person, with a note), OFFER (credit the
- * owner issues), CORRECTION (the reversal of an earlier entry).
+ * owner issues), CORRECTION (the reversal of an earlier entry), POINTS (S14 · PR 296: a customer turned his points into
+ * credit at the owner's own rate, @extas/customers rewards.ts).
  */
-export const WALLET_REASONS = ['ORDER', 'REVIEW_REWARD', 'EXCHANGE_CREDIT', 'REFUND', 'APOLOGY', 'MANUAL_CREDIT', 'MANUAL_DEBIT', 'OFFER', 'CORRECTION'] as const;
+export const WALLET_REASONS = ['ORDER', 'REVIEW_REWARD', 'EXCHANGE_CREDIT', 'REFUND', 'APOLOGY', 'MANUAL_CREDIT', 'MANUAL_DEBIT', 'OFFER', 'CORRECTION', 'POINTS'] as const;
 export type WalletReason = (typeof WALLET_REASONS)[number];
 
 /** Entries a person may put right with a reversal. Money spent on an order or refunded goes back through a refund. */
