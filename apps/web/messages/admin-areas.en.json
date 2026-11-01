@@ -1,0 +1,56 @@
+{
+  "reportsAreas": {
+    "metaTitle": "Sales by area",
+    "title": "Sales by area",
+    "sub": "Where the shop sells and where parcels come back: delivered orders by district, upazila or area inside Dhaka, with the return rate of each.",
+    "level": {
+      "label": "Show by",
+      "district": "District",
+      "upazila": "Upazila / thana",
+      "dhaka": "Inside Dhaka City"
+    },
+    "filter": {
+      "label": "What to count",
+      "category": "Category",
+      "all": "Every category",
+      "product": "Only this product",
+      "find": "Find a product",
+      "findPh": "Name, style code or SKU",
+      "findBtn": "Find",
+      "none": "No product found.",
+      "clear": "Every product",
+      "pick": "Count only this"
+    },
+    "period": "From {from} to {to}",
+    "export": "Download the table (CSV)",
+    "kpi": {
+      "sales": "Sales (delivered)",
+      "orders": "{n} orders",
+      "pieces": "Pieces",
+      "returned": "Returned orders",
+      "rate": "Return rate",
+      "areas": "Areas with orders"
+    },
+    "table": {
+      "title": "Area by area",
+      "sub": "Highest Sales first. Return rate = returned ÷ (delivered + returned) in this period.",
+      "line": "{n} orders · {pieces} pieces · {ret} returned",
+      "rate": "{pct}% returned",
+      "noRate": "no returns yet",
+      "unknown": "Area not known",
+      "unknownHow": "Orders with no area, or an address that does not reach this level.",
+      "outside": "Outside Dhaka City",
+      "outsideHow": "Orders to addresses outside the city.",
+      "total": "Total",
+      "empty": "No delivered or returned orders in this period.",
+      "cut": "Only the first {n} areas are listed; the CSV has every area."
+    },
+    "map": {
+      "title": "Map",
+      "sub": "Each circle is an area: the bigger, the more Sales; the redder, the more parcels came back (the reddest is the highest return rate on this map). Areas without a map point are only in the table.",
+      "none": "None of these areas has a map point yet (Delivery → Places).",
+      "label": "{name}: Sales {sales}, {pct}"
+    },
+    "how": "Sales counts delivered orders only, on their delivered day; returns on the day the parcel came back. With a category or product chosen, only its share of each order counts."
+  }
+}

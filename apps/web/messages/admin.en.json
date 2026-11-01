@@ -100,6 +100,7 @@
     "buildFile": "Read a file",
     "healthSpeed": "Speed",
     "reportsTeam": "Team",
+    "reportsAreas": "Sales by area",
     "healthSmoke": "Smoke runs",
     "healthHistory": "Run history",
     "healthFixes": "Fixes to approve",
