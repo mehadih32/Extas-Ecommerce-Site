@@ -7,10 +7,12 @@
 // - Gate F-041 (PR 172 follow-up): the refunds on it and where each stands (always, when there is one: it is his money);
 // - S08 · PR 186: the exchange part — which pieces he may still exchange (the buttons under each line) and his exchanges
 //   on this order (`orders.exchange.account`, off by default; his account only, never a guest's browser).
+// - PR 144 follow-up (go-live gate customer 360°): his own cancel — one tap, a request, or "you asked" — as the owner's
+//   rule allows it now (`orders.cancel.customer`; nothing drawn when it allows none, e.g. once the courier is booked).
 // A test server's browser that asked for the cards (POST /api/account/try-cards) reads the two switches as on. Without
 // a database, or when a read is slow or fails, that part is simply not drawn — the page never guesses.
 import { orderLifecycle, orderRefunds, type CustomerRefund, type LifeStep } from '@extas/accounts';
-import { customerEditState, customerExchangeState, customerTwoSizeState, type CustomerEditState, type CustomerExchangeState, type CustomerRef, type CustomerTwoSizeState, type OrdersDeps } from '@extas/orders';
+import { customerCancelState, customerEditState, customerExchangeState, customerTwoSizeState, type CustomerEditState, type CustomerExchangeState, type CustomerRef, type CustomerTwoSizeState, type OrdersDeps } from '@extas/orders';
 import { settingsTimeoutMs, withTimeout } from '../settings';
 import { accountDeps, signedIn } from './account';
 import { visitorId } from './bag';
@@ -23,8 +25,15 @@ export interface OrderEditView {
   until: 'placed' | 'confirmed';
 }
 
+/** PR 144 follow-up: what his cancel card shows (null: no cancel open to him on this order). */
+export interface OrderCancelView {
+  mode: 'tap' | 'request' | 'requested';
+  reasons: { key: string; en: string; bn: string }[];
+}
+
 export interface OrderExtras {
   edit: OrderEditView | null;
+  cancel: OrderCancelView | null;
   twoSize: CustomerTwoSizeState | null;
   life: LifeStep[] | null;
   /** Gate F-041: his refunds on this order (null: none, or not readable now). */
@@ -33,7 +42,7 @@ export interface OrderExtras {
   exchange: CustomerExchangeState | null;
 }
 
-const NONE: OrderExtras = { edit: null, twoSize: null, life: null, refunds: null, exchange: null };
+const NONE: OrderExtras = { edit: null, cancel: null, twoSize: null, life: null, refunds: null, exchange: null };
 
 /** States after which there is nothing to change or answer (the edit card is not drawn at all). */
 const ENDED = new Set(['CANCELLED', 'RETURNED']);
@@ -56,12 +65,18 @@ export async function orderExtras(c: Pick<ShopContext, 'storeId'>, number: strin
   if (!who.customerId && !who.visitorId) return NONE;
   const settings = trial ? cardsTrialSettings(deps.settings) : deps.settings;
   const od: OrdersDeps = { db: deps.db, settings, ...(deps.now ? { now: deps.now } : {}) };
-  const [edit, twoSize, life, refunds, exchange] = await Promise.all([
+  const [edit, cancel, twoSize, life, refunds, exchange] = await Promise.all([
     ENDED.has(status)
       ? null
       : part('edit card', async () => {
           const [state, cfg] = await Promise.all([customerEditState(od, who, number), settings.value('orders.edit.customer', { storeId: c.storeId })]);
           return state.closed === 'OFF' ? null : { state, until: cfg.until };
+        }),
+    ENDED.has(status)
+      ? null
+      : part('cancel card', async (): Promise<OrderCancelView | null> => {
+          const st = await customerCancelState(od, who, number);
+          return st.mode === 'none' ? null : { mode: st.mode, reasons: st.reasons };
         }),
     ENDED.has(status) ? null : part('two-size question', async () => customerTwoSizeState(od, who, number)),
     opts.timeline ? part('timeline', () => orderLifecycle(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId })) : null,
@@ -69,5 +84,5 @@ export async function orderExtras(c: Pick<ShopContext, 'storeId'>, number: strin
     who.customerId ? part('exchange part', () => customerExchangeState(od, { ...who, visitorId: null }, number)) : null,
   ]);
   const hasExchange = !!exchange && exchange.closed !== 'OFF' && (exchange.open || exchange.exchanges.length > 0);
-  return { edit, twoSize: twoSize?.open ? twoSize : null, life, refunds: refunds?.length ? refunds : null, exchange: hasExchange ? exchange : null };
+  return { edit, cancel, twoSize: twoSize?.open ? twoSize : null, life, refunds: refunds?.length ? refunds : null, exchange: hasExchange ? exchange : null };
 }
