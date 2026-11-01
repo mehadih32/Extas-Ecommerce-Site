@@ -36,3 +36,6 @@ export * from './retail-day';
 export * from './order-profit';
 // S16 · PR 349: `profitAndLoss` — a period's profit and loss built from the per-order profit (pnl.ts).
 export * from './pnl';
+// S16 · PR 350: the VAT inside VAT-inclusive prices — the rate of a line (product > category > parent > default), the
+// VAT inside an amount, and `ordersVat` over orders the caller chose (vat.ts). Never changes a price.
+export * from './vat';

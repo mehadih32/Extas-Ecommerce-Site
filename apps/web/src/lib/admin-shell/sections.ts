@@ -276,6 +276,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'expenses', pages: [{ href: '/admin/money/expenses', perm: 'books.read', keys: ['moneyExpenses'] }] },
       // S16 · PR 345: Money → Costs & fees — gateway fees, packaging, the USD rate, courier rates (owner data).
       { id: 'fees', pages: [{ href: '/admin/money/fees', perm: 'books.read', keys: ['moneyFees'] }] },
+      // S16 · PR 350: Money → VAT — the VAT system's switch (off) and the owner's rates: default, per category, per product.
+      { id: 'vat', pages: [{ href: '/admin/money/vat', perm: 'books.read', keys: ['moneyVat'] }] },
       // S16 · PR 343: Money → Cost ledger — every paid call's cost row, prepaid balances, export.
       // S16 · PR 347: its second page, the Costs report — any period by day, month or year, by service or module, AI against its cap, export.
       {

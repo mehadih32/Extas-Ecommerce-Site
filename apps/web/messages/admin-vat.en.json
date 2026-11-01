@@ -1,0 +1,59 @@
+{
+  "moneyVat": {
+    "metaTitle": "VAT",
+    "title": "VAT",
+    "sub": "The VAT already inside your prices: the switch and your rates. Prices include VAT, so nothing here changes a price.",
+    "save": "Save",
+    "confirm": "Yes, save",
+    "saved": "Saved.",
+    "readOnly": "You can see this page; changing it needs the VAT permission.",
+    "system": {
+      "title": "VAT system",
+      "sub": "Off as shipped. When on, Sales and reports show the VAT inside them at the rates below. No price, delivery charge or COD changes.",
+      "on": "VAT is on.",
+      "off": "VAT is off. Nothing shows VAT anywhere.",
+      "enabled": "VAT system on",
+      "onDelivery": "VAT on the delivery charge too",
+      "onDeliveryHint": "At the default rate. Your accountant decides.",
+      "inclusive": "Prices include VAT: VAT is read out of what the customer pays, never added on top."
+    },
+    "rates": {
+      "title": "VAT rates",
+      "sub": "Your own rates, empty as shipped. A product's own rate wins over its category's, a category's over the default. Empty = takes the next one; 0 % is a real rate.",
+      "default": "Default rate (%)",
+      "defaultHint": "For every product with no product or category rate. Empty = no rate.",
+      "example": "Example: a {price} price holds {vat} VAT at {pct} %.",
+      "categories": "Category rates",
+      "noCategories": "No categories yet.",
+      "catField": "Rate (%)",
+      "archived": "archived",
+      "products": "Product rates",
+      "noProducts": "No product has its own rate.",
+      "remove": "Remove",
+      "removeSure": "Yes, remove",
+      "find": "Find a product",
+      "findHint": "Name, style code or SKU",
+      "findBtn": "Find",
+      "noneFound": "No product found.",
+      "add": "Give it its own rate",
+      "added": "Added below. Set its rate and save.",
+      "save": "Save rates",
+      "bad": "A rate must be a number from 0 to 50, with at most 2 decimals.",
+      "applies": {
+        "product": "{pct} % — its own rate",
+        "category": "{pct} % — its category {name}",
+        "parent": "{pct} % — from {name}",
+        "default": "{pct} % — the default rate",
+        "none": "No rate"
+      },
+      "without": "Without it: {text}"
+    },
+    "err": {
+      "INVALID_INPUT": "Something is not filled in right. Check the rates.",
+      "VERSION_CONFLICT": "Someone else saved this a moment ago. Open the page again and check.",
+      "forbidden": "You do not have the permission for this.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    }
+  }
+}

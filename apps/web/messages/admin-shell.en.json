@@ -108,6 +108,7 @@
         "costs": "Costs",
         "expenses": "Expenses",
         "fees": "Costs & fees",
+        "vat": "VAT",
         "ledger": "Cost ledger",
         "monthEnd": "Month-end"
       },

@@ -263,6 +263,9 @@
     "costs": {
       "write": "Record a prepaid top-up (SMS credit) and its low mark; set the costs & fees figures"
     },
+    "vat": {
+      "manage": "Switch the VAT system on or off and set the VAT rates (default, per category, per product); never changes a price"
+    },
     "support": {
       "read": "Open the support inbox and conversations (with who replied)",
       "reply": "Reply, write internal notes, take a conversation, mark it solved",
