@@ -54,6 +54,39 @@
       "forbidden": "You do not have the permission for this.",
       "network": "No connection. Try again.",
       "other": "Something went wrong. Try again."
+    },
+    "report": {
+      "title": "VAT report",
+      "sub": "The VAT already inside what customers paid on delivered orders, by the delivered day. Prices include VAT, so nothing here changes a price.",
+      "off": "The report shows here once the VAT system is on (the switch above).",
+      "period": "From {from} to {to}",
+      "export": "Download the report (CSV)",
+      "kpi": {
+        "sales": "Sales (delivered)",
+        "orders": "{n} orders",
+        "vat": "VAT inside Sales",
+        "goodsVat": "VAT inside goods",
+        "deliveryVat": "VAT inside delivery",
+        "deliveryOff": "not counted",
+        "noRate": "Goods with no rate"
+      },
+      "noRateLine": "Goods worth {amount} have no VAT rate (SKUs: {skus}). Give them a rate above: their VAT is not counted, never taken as 0%.",
+      "byRate": {
+        "title": "By rate",
+        "line": "{n} lines · goods {amount}",
+        "none": "No rate",
+        "empty": "No delivered orders in this period."
+      },
+      "byCategory": {
+        "title": "By category",
+        "none": "No category",
+        "noRate": "{amount} with no rate"
+      },
+      "byDay": {
+        "title": "Day by day",
+        "line": "{n} orders · Sales {amount}",
+        "cut": "Only the newest {n} days are listed; the CSV has every day."
+      }
     }
   }
 }

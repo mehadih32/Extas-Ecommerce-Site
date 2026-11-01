@@ -8,13 +8,16 @@
 //   GET   'find?q='    up to 10 products by name, link name, style code or SKU, each with the rate that applies now and why
 //   PUT   'system'     {value: {enabled, onDelivery}, version}          (`vat.manage`; settings history + audit `vat.system`)
 //   PUT   'rates'      {value: {defaultBps, categories, products} | null, version}   (`vat.manage`; history + audit `vat.rates`)
+//   GET   'report?from=&to='  PR 537: the period's VAT report as a CSV file (`books.read`; 409 VAT_OFF while the system is off)
 // A category or product of another store is refused; a category or product that is archived keeps its rate.
 import { z } from 'zod';
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { vatResolver, type VatRate } from '@extas/metrics';
+import { vatResolver, ymdIn, type VatRate } from '@extas/metrics';
 import { registry, SettingsError, storeTarget, type VatRates, type VatSystemSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
+import { parseReportQuery } from './cost-report';
+import { vatCsv, vatReportFor } from './vat-report';
 
 export { bpsToPercent, percentToBps } from './vat-percent';
 
@@ -152,6 +155,20 @@ function storeIdOf(url: URL): number | null {
 const invalid = (details: string[]) => json({ ok: false, error: 'INVALID_INPUT', details }, { status: 400 });
 const versionOf = (b: Record<string, unknown>) => (typeof b.version === 'number' ? b.version : undefined);
 
+/** PR 537: the period's VAT report as a CSV file, the period made safe as on the page (`costs.report`). */
+async function reportCsv(d: AdminDeps, storeId: number, url: URL): Promise<Response> {
+  const at = { storeId };
+  const [timeZone, currency, limits] = await Promise.all([d.resolver.value('store.timeZone', at), d.resolver.value('store.currency', at), d.resolver.value('costs.report', at)]);
+  const { q } = parseReportQuery(Object.fromEntries(url.searchParams), ymdIn(new Date(), timeZone), limits);
+  const r = await vatReportFor(d, storeId, q.from, q.to);
+  if (!r) return json({ ok: false, error: 'VAT_OFF' }, { status: 409 });
+  const ids = r.byCategory.map((c) => c.categoryId).filter((x): x is string => x !== null);
+  const cats = ids.length ? await d.db.category.findMany({ where: { storeId, id: { in: ids } }, select: { id: true, nameEn: true } }) : [];
+  const name = new Map(cats.map((c) => [c.id, c.nameEn]));
+  const csv = vatCsv(r, currency, (id) => (id === null ? '(no category)' : (name.get(id) ?? id)));
+  return new Response(csv, { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="vat-${q.from}-${q.to}.csv"`, 'cache-control': 'no-store' } });
+}
+
 /** The VAT routes (the table above). */
 export async function vatRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
@@ -159,9 +176,9 @@ export async function vatRoute(request: Request, deps: AdminDeps | null, path: s
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
   const where = path.join('/');
-  const kind = where === '' ? 'view' : where === 'find' ? 'find' : where === 'system' || where === 'rates' ? where : null;
+  const kind = where === '' ? 'view' : where === 'find' || where === 'report' ? where : where === 'system' || where === 'rates' ? where : null;
   if (!kind) return fail(404, 'not-found');
-  const want = kind === 'view' || kind === 'find' ? 'GET' : 'PUT';
+  const want = kind === 'view' || kind === 'find' || kind === 'report' ? 'GET' : 'PUT';
   if (m !== want) return fail(405, 'method-not-allowed');
   const g = await guardAdmin(request, deps, { permission: want === 'GET' ? 'books.read' : 'vat.manage', storeId });
   if (g instanceof Response) return g;
@@ -169,6 +186,7 @@ export async function vatRoute(request: Request, deps: AdminDeps | null, path: s
   try {
     if (kind === 'view') return json({ ok: true, ...(await vatView(d.db, d, storeId)) });
     if (kind === 'find') return json({ ok: true, products: await vatFind(d.db, d, storeId, url.searchParams.get('q') ?? '') });
+    if (kind === 'report') return await reportCsv(d, storeId, url);
     const b = await body(request);
     const key = kind === 'system' ? ('vat.system' as const) : ('vat.rates' as const);
     const parsed = (registry[key].schema as z.ZodType).safeParse(b.value === undefined ? Symbol('missing') : b.value);
