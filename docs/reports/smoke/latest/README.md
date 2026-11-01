@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-01 18:56 (Asia/Dhaka)
+# Smoke test · 2026-11-01 22:02 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (314টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (320টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `ebef0ceda3b8` · after deploy · result **PASS** (314 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `0f6ac8a037d2` · after deploy · result **PASS** (320 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -160,7 +160,10 @@ Site: https://new.extas.com.bd · commit `ebef0ceda3b8` · after deploy · resul
 | `/admin/support/rider-issues` | phone | 200 | `/admin/support/rider-issues` | ok | — |
 | `/admin/rules/eid` | phone | 200 | `/admin/rules/eid` | ok | — |
 | `/admin/delivery/settings` | phone | 200 | `/admin/delivery/settings` | ok | — |
-| `/admin/reports/health/history/01a196af-7e96-7993-93e9-90094eab131f` | phone | 200 | `/admin/reports/health/history/01a196af-7e96-7993-93e9-90094eab131f` | ok | — |
+| `/admin/orders/01a1973a-91e1-7683-ab8e-5aacb6568a5b` | phone | 200 | `/admin/orders/01a1973a-91e1-7683-ab8e-5aacb6568a5b` | ok | — |
+| `/admin/customers/01a1973a-78ac-7ac0-a884-17a6c164c439` | phone | 200 | `/admin/customers/01a1973a-78ac-7ac0-a884-17a6c164c439` | ok | — |
+| `/admin/reports/health/history/01a19734-37d2-7813-bf95-a6df0fa74d34` | phone | 200 | `/admin/reports/health/history/01a19734-37d2-7813-bf95-a6df0fa74d34` | ok | — |
+| `/admin/customers/01a1973a-78ac-7ac0-a884-17a6c164c439?tab=wallet` | phone | 200 | `/admin/customers/01a1973a-78ac-7ac0-a884-17a6c164c439` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -317,7 +320,10 @@ Site: https://new.extas.com.bd · commit `ebef0ceda3b8` · after deploy · resul
 | `/admin/support/rider-issues` | desktop | 200 | `/admin/support/rider-issues` | ok | — |
 | `/admin/rules/eid` | desktop | 200 | `/admin/rules/eid` | ok | — |
 | `/admin/delivery/settings` | desktop | 200 | `/admin/delivery/settings` | ok | — |
-| `/admin/reports/health/history/01a196af-7e96-7993-93e9-90094eab131f` | desktop | 200 | `/admin/reports/health/history/01a196af-7e96-7993-93e9-90094eab131f` | ok | — |
+| `/admin/orders/01a1973a-91e1-7683-ab8e-5aacb6568a5b` | desktop | 200 | `/admin/orders/01a1973a-91e1-7683-ab8e-5aacb6568a5b` | ok | — |
+| `/admin/customers/01a1973a-78ac-7ac0-a884-17a6c164c439` | desktop | 200 | `/admin/customers/01a1973a-78ac-7ac0-a884-17a6c164c439` | ok | — |
+| `/admin/reports/health/history/01a19734-37d2-7813-bf95-a6df0fa74d34` | desktop | 200 | `/admin/reports/health/history/01a19734-37d2-7813-bf95-a6df0fa74d34` | ok | — |
+| `/admin/customers/01a1973a-78ac-7ac0-a884-17a6c164c439?tab=wallet` | desktop | 200 | `/admin/customers/01a1973a-78ac-7ac0-a884-17a6c164c439` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 

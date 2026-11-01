@@ -1,11 +1,11 @@
 {
-  "at": "2026-11-01 18:56 (Asia/Dhaka)",
+  "at": "2026-11-01 22:02 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "ebef0ceda3b8",
+  "sha": "0f6ac8a037d2",
   "kind": "after deploy",
   "rolledBack": true,
   "ok": true,
-  "pages": 314,
+  "pages": 320,
   "failed": 0,
   "problems": [],
   "database": {
