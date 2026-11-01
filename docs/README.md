@@ -130,6 +130,7 @@ docs file (CN-011).
 | [`qa/audit-checklist.json`](qa/audit-checklist.json) | PR 570: the checklist's groups, points and newest QA marks, generated from `ECOMMERCE-CHECKLIST.md` by `tools/audit-checklist.mjs` (AI › Checklist audit; a test fails when it is out of date) |
 | [`qa/audit-groups.json`](qa/audit-groups.json) | PR 570: which smoke-test pages and saved journeys cover each checklist group, for the audit's report (`tools/audit-report.mjs`, `infra/deploy/audit.sh`, `audit.yml`) |
 | [`qa/journeys.json`](qa/journeys.json) | PR 414: the saved browser journeys (customer, admin, accountant, warehouse; phone and desktop) replayed by `tools/journeys.mjs` on the owner's schedule (Reports › Site health; `infra/deploy/journeys.sh`, `journeys.yml`); failed runs report to `reports/journeys/latest/` |
+| [`qa/FINAL-ANALYSIS-2026-11.md`](qa/FINAL-ANALYSIS-2026-11.md) | PR 414 follow-up (CN-013 go-live gate, phase 2): the customer 360° — every life-cycle stage (automatic, needs a person, needs a key), the angles the owner did not list, the local findings with file:line, and the live results; the run is `tools/gate-c360/`, `infra/deploy/gate-c360.sh`, `gate-c360.yml`, reporting to `reports/gate-c360/latest/` (Bengali summary first) |
 | `qa/tools/timing-audit-tools/` | Timing audit suites (sliders, drag, hover, overlays …) |
 | `qa/tools/blog-qa-tools/` | Blog QA checks, journeys and captures |
 | `qa/tools/desktop-fix-bag-tools/` | Bag and desktop fix checks, pixel diff |
