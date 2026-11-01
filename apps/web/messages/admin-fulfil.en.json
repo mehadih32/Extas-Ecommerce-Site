@@ -578,7 +578,20 @@
         "call": "Call the customer",
         "cancel": "Cancel the order (out of stock)",
         "cancelWhy": "Why (kept on the order)"
-      }
+      },
+      "docs": {
+        "line": "Documents: {list}",
+        "none": "none yet",
+        "sticker": "sticker ×{n}",
+        "invoice": "invoice",
+        "invoiceRevised": "invoice (revised {n})",
+        "picking": "picking list ×{n}",
+        "handover": {
+          "printed": "on a handover sheet",
+          "handed": "handed over on a sheet"
+        }
+      },
+      "summary": "Orders still with us:"
     },
     "printRun": {
       "press": {

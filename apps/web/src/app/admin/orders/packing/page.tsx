@@ -14,6 +14,9 @@
 // PR 178: while `delivery.courier.selection` is on, "Book courier" offers the cheapest courier first and lists every
 // courier's cost for this parcel (its own rate card for the band and weight, plus the COD fee) or why it has none. The
 // shop's cost only: the customer's delivery charge is never read or changed, and a person still presses Book.
+// S20 · PR 410 (B1.3, B1.7): each order in the queue says which documents it already has (sticker ×n, invoice and its
+// revision, picking list, handover sheet printed or handed), and the day's order summary line (orders · pieces · line
+// items, the categories) sits above the steps — the same figures the picking list prints.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -74,12 +77,23 @@ export default async function PackPage({ searchParams }: Props) {
   const can = (p: string) => perms.has(p);
   const sd = await shippingDeps(access.deps);
   const at = { storeId: MOTHER_STORE_ID };
-  const [queue, check, photoCfg, weightCfg] = await Promise.all([
+  const [queue, check, photoCfg, weightCfg, picking] = await Promise.all([
     sh.packingQueue(sd, who, { step }),
     sd.settings.value('fulfilment.packing.check', at),
     sd.settings.value('fulfilment.packing.photo', at),
     sd.settings.value('fulfilment.packing.weight', at),
+    sh.pickingList(sd, who),
   ]);
+  // PR 410: the documents an order has, in words (B&W: words, never a colour)
+  const docsLine = (x: sh.PackDocs) => {
+    const have = [
+      x.sticker ? t(d, 'ful.pack.docs.sticker', { n: n(x.sticker) }) : null,
+      x.invoice ? t(d, x.invoice > 1 ? 'ful.pack.docs.invoiceRevised' : 'ful.pack.docs.invoice', { n: n(x.invoice) }) : null,
+      x.picking ? t(d, 'ful.pack.docs.picking', { n: n(x.picking) }) : null,
+      x.handover !== 'none' ? t(d, `ful.pack.docs.handover.${x.handover}`) : null,
+    ].filter(Boolean);
+    return t(d, 'ful.pack.docs.line', { list: have.length ? have.join(' · ') : t(d, 'ful.pack.docs.none') });
+  };
   const pickedId = wanted && queue.rows.some((r) => r.orderId === wanted) ? wanted : (queue.rows[0]?.orderId ?? wanted);
   let order: sh.PackOrder | null = null;
   if (pickedId) {
@@ -154,6 +168,10 @@ export default async function PackPage({ searchParams }: Props) {
         }
       />
       <SectionTabs view={view} current="packingPack" />
+      <p className="a2-xs a2-mt12" data-testid="pack-summary">
+        <b>{t(d, 'ful.pack.summary')}</b> {t(d, 'ful.picking.sheet.counts', { orders: n(picking.summary.orders), pieces: n(picking.summary.pieces), lines: n(picking.summary.lineItems) })} ·{' '}
+        {t(d, 'ful.picking.sheet.categories', { list: picking.summary.categories.map((c) => `${c.name ? (view.lang === 'bn' && c.nameBn) || c.name : t(d, 'ful.picking.sheet.noCategory')} ${n(c.pieces)}`).join(' · ') || '—' })}
+      </p>
       <div className="a2-views a2-mt12" role="navigation" aria-label={t(d, 'ful.pack.stepsLabel')} data-testid="pack-steps">
         {STEPS.map((s, i) => (
           <Link key={s} className={`a2-view${s === step ? ' on' : ''}`} href={href(s)} aria-current={s === step ? 'page' : undefined} data-testid={`pack-step-${s}`}>
@@ -189,6 +207,7 @@ export default async function PackPage({ searchParams }: Props) {
                   <span>
                     {[r.courierName ? `${r.courierName}${r.consignmentId ? ` · ${r.consignmentId}` : ''}` : t(d, 'ful.pack.notBooked'), r.openIssues ? t(d, 'ful.pack.issues', { n: n(r.openIssues) }) : null, r.photos ? t(d, 'ful.pack.photos', { n: n(r.photos) }) : null].filter(Boolean).join(' · ')}
                   </span>
+                  <span data-testid="pack-docs">{docsLine(r.docs)}</span>
                 </div>
               </Link>
             ))
