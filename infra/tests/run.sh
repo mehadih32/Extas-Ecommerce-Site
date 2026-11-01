@@ -1813,6 +1813,19 @@ echo keep > "$JK/notes.txt"
 check "journeys (414): the newest runs are kept, older ones removed, other files left alone" "$(find "$JK" -type f -printf '%f\n' | sort | tr '\n' ' ')" "20261029-060101.json 20261030-060101.json notes.txt "
 check "journeys (414): the hourly check runs the script with the live checks and commits a report only on a change" \
   "$(grep -c 'bash infra/deploy/journeys.sh "$RUNNER_TEMP/journeys" "$MODE" "$live"' ../../.github/workflows/journeys.yml):$(grep -c 'docs/reports/journeys/' ../../.github/workflows/ci.yml)" "1:1"
+# PR 414 follow-up (CN-013 go-live gate, phase 2): a journey group by hand — only a short a-z/0-9/- name, only with
+# `now`, kept apart from the saved journeys' summary, history and alert; the workflow passes its `group` input through.
+jgroup() { ( . ../deploy/journeys-lib.sh; journeys_group_ok "$1" && echo ok || echo no ); }
+check "journeys (414 follow-up): a group name is a-z, 0-9 and - (empty = the saved journeys)" \
+  "$(jgroup ''):$(jgroup go-live-gate):$(jgroup 'go live'):$(jgroup '../x'):$(jgroup 'Gate'):$(jgroup 'a;rm -rf /'):$(jgroup "$(printf 'a%.0s' $(seq 41))")" "ok:ok:no:no:no:no:no"
+JG="$T/jgroup"; mkdir -p "$JG"
+jrc() { EXTAS_CONFIG_FILE=../config/server.conf bash ../deploy/journeys.sh "$JG/out" "$@" > /dev/null 2>&1; echo "$?"; }
+check "journeys (414 follow-up): a group runs only by hand (now), a bad name never runs, and nothing is made before the refusal" \
+  "$(jrc due '' go-live-gate):$(jrc now '' 'x;y'):$(jrc now '' '../state'):$([ -e "$JG/out" ] && echo made || echo none)" "2:2:2:none"
+check "journeys (414 follow-up): journeys.sh hands the group to the browser and keeps a group run apart" \
+  "$(grep -c '^GROUP="${4:-}"$' ../deploy/journeys.sh):$(grep -c -- '-e JOURNEYS_GROUP="$GROUP"' ../deploy/journeys.sh):$(grep -c 'SUMMARY="$STATE/journeys-$GROUP.json"; RUNS="$STATE/journeys-$GROUP"' ../deploy/journeys.sh):$(grep -c '^if \[ -z "$GROUP" \]; then$' ../deploy/journeys.sh)" "1:1:1:1"
+check "journeys (414 follow-up): the workflow passes its group input and commits a group's report to its own folder" \
+  "$(grep -c 'bash infra/deploy/journeys.sh "$RUNNER_TEMP/journeys" "$MODE" "$live" "$GROUP"' ../../.github/workflows/journeys.yml):$(grep -c 'GROUP: ${{ github.event.inputs.group }}' ../../.github/workflows/journeys.yml):$(grep -c 'dest="docs/reports/journeys/$GROUP/latest"' ../../.github/workflows/journeys.yml)" "1:2:1"
 rm -rf "$T"
 
 # S19 · PR 397 — extas-origin-cert: a checked pair goes to Caddy (tls.caddy names it, the key 0600) and the state says

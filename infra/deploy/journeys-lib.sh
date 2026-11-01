@@ -56,3 +56,10 @@ journeys_keep() {
   find "$dir" -maxdepth 1 -type f -name '*.json' -printf '%f\n' | grep -E '^[0-9]{8}-[0-9]{6}\.json$' | sort -r \
     | tail -n +"$((n + 1))" | while IFS= read -r f; do rm -f "${dir:?}/$f"; done || true
 }
+
+# journeys_group_ok <group>: 0 when <group> is empty (the saved journeys) or a journey group's name in
+# docs/qa/journeys.json (a-z, 0-9 and -, at most 40; PR 414 follow-up, the go-live gate); 1 otherwise, so nothing else
+# ever reaches a file name, a docker argument or the report's folder.
+journeys_group_ok() {
+  [ -z "${1:-}" ] || [[ "$1" =~ ^[a-z0-9-]{1,40}$ ]]
+}

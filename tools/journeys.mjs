@@ -13,6 +13,15 @@
 // docs/qa/device-gate.json) look for a broken layout (wider than the screen, sticking out, a squeezed tab), cut-off
 // text and small form text, pictures that did not load, and buttons that cannot be reached (too small on a touch
 // screen, on top of each other, or covered by something else). Each finding fails its step as `UI <KIND>: …`.
+// PR 414 follow-up (CN-013 go-live gate, phase 2): journeys carry an optional `group`. A run takes the journeys of one
+// group (JOURNEYS_GROUP=go-live-gate), or, with none named, only the journeys without a group (the saved journeys of the
+// owner's schedule, unchanged). A step may name the SIM-F findings it proves (`sim`), shown in the report; `expect` may
+// list several selectors that must all be there, `expectNone` the ones that must not be; an `open` may expect another
+// answer than 200 (`status`, e.g. 404 for a page the owner's switch closes). The owner's switches are read once a run,
+// as the read-only check account (GET /api/admin/settings, nothing changed): `when` / `unless` run a step only while
+// the named switches are all on / all off (the step is skipped otherwise, and says so), and `switches` ties a
+// selector to a switch — on, it must be on the page; off, it must not be. A switch is a setting key and the path in
+// its value, e.g. `pdp.buy.callToOrder` or `checkout.gift.enabled`; a name that is no setting fails the step.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
@@ -116,6 +125,11 @@ export async function uiProblems(page, screen, kinds, rules, matrix) {
   return uiFilter(found, kinds).map((i) => `UI ${i.k}: ${i.d}`);
 }
 
+/** A field that holds one name or a list of them, as a list. */
+const listOf = (v) => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);
+const SIM_ID = /^F-\d{3}$/;
+const GROUP_NAME = /^[a-z0-9-]{1,40}$/;
+
 /** What is wrong with the saved journeys (an empty list when nothing is). */
 export function journeyProblems(config) {
   const out = [];
@@ -125,6 +139,7 @@ export function journeyProblems(config) {
   for (const j of config?.journeys ?? []) {
     if (!j.id || ids.has(j.id)) out.push(`journey id missing or repeated: ${j.id}`);
     ids.add(j.id);
+    if (j.group !== undefined && !GROUP_NAME.test(String(j.group))) out.push(`${j.id}: a group is a short name of a-z, 0-9 and -`);
     if (!Array.isArray(j.steps) || !j.steps.length) out.push(`${j.id}: no steps`);
     (j.steps ?? []).forEach((s, i) => {
       const kinds = STEP_KINDS.filter((k) => k in s);
@@ -135,26 +150,75 @@ export function journeyProblems(config) {
         out.push(`${j.id} step ${i + 1}: an api step needs a method and the status it expects`);
       if (s.api && s.method && s.method !== "GET" && s.status !== 403)
         out.push(`${j.id} step ${i + 1}: a write may only be sent to prove it is refused (status 403)`);
+      if (s.status !== undefined && !s.api && !(s.open && Number.isInteger(s.status)))
+        out.push(`${j.id} step ${i + 1}: only an open or api step expects a status`);
+      if (!listOf(s.sim).every((x) => SIM_ID.test(String(x))))
+        out.push(`${j.id} step ${i + 1}: a finding is named F-### (SIM-F-###)`);
+      const names = [...listOf(s.when), ...listOf(s.unless), ...Object.keys(s.switches ?? {})];
+      if (!names.every((x) => typeof x === "string" && /^[A-Za-z0-9.]+$/.test(x)))
+        out.push(`${j.id} step ${i + 1}: a switch is a setting key with the path in its value`);
     });
   }
   return out;
 }
 
-/** The journeys to run: all, or the ones named (JOURNEYS_ONLY, the owner's choice). Unknown names are left out. */
-export function pickJourneys(config, only) {
+/**
+ * The journeys to run: the ones of the group asked for (JOURNEYS_GROUP), or with none, the journeys without a group
+ * (the saved journeys); of those, all or the ones named (JOURNEYS_ONLY, the owner's choice). Unknown names are left out.
+ */
+export function pickJourneys(config, only, group) {
   const want = (only ?? "")
     .split(",")
     .map((x) => x.trim())
     .filter(Boolean);
-  return (config.journeys ?? []).filter((j) => !want.length || want.includes(j.id));
+  const g = String(group ?? "").trim();
+  return (config.journeys ?? []).filter((j) => (j.group ?? "") === g && (!want.length || want.includes(j.id)));
+}
+
+/**
+ * A switch's value in the settings list of GET /api/admin/settings ([{key, value}]): the longest setting key the name
+ * starts with, then the path in its value. `found` is false when no setting has that key.
+ */
+export function switchValue(settings, name) {
+  let row = null;
+  for (const r of settings ?? [])
+    if ((name === r.key || name.startsWith(`${r.key}.`)) && (!row || r.key.length > row.key.length)) row = r;
+  if (!row) return { found: false, on: false };
+  let v = row.value;
+  for (const part of name === row.key ? [] : name.slice(row.key.length + 1).split("."))
+    v = v !== null && typeof v === "object" && Object.hasOwn(v, part) ? v[part] : undefined;
+  return { found: true, on: v === true };
+}
+
+/** The step names one of the owner's switches (`when`, `unless` or `switches`). */
+export const namesSwitch = (s) => listOf(s.when).length + listOf(s.unless).length + Object.keys(s.switches ?? {}).length > 0;
+
+/**
+ * Whether a step runs with the switches as they are: null = it runs; otherwise why it is skipped, or `problem` when a
+ * switch it names could not be read.
+ */
+export function switchGate(s, settings) {
+  if (!namesSwitch(s)) return null;
+  const named = [...listOf(s.when), ...listOf(s.unless), ...Object.keys(s.switches ?? {})];
+  if (!settings) return { problem: "the owner's switches could not be read (GET /api/admin/settings as the check account)" };
+  const missing = named.filter((n) => !switchValue(settings, n).found);
+  if (missing.length) return { problem: `no such setting on this site: ${missing.join(", ")}` };
+  const off = listOf(s.when).filter((n) => !switchValue(settings, n).on);
+  if (off.length) return { skip: `switch ${off.join(", ")} is off` };
+  const on = listOf(s.unless).filter((n) => switchValue(settings, n).on);
+  if (on.length) return { skip: `switch ${on.join(", ")} is on` };
+  return null;
 }
 
 /** One step in words for the report. */
 export function stepLabel(s) {
-  if (s.open) return `open ${s.open}`;
-  if (s.follow) return `follow ${s.follow}`;
-  if (s.click) return `click ${s.click}`;
-  if (s.api) return `${s.method} ${s.api} → ${s.status}`;
+  const sim = listOf(s.sim).length ? ` · ${listOf(s.sim).map((x) => `SIM-${x}`).join(", ")}` : "";
+  const cond = [...(listOf(s.when).length ? [`when ${listOf(s.when).join(" + ")}`] : []), ...(listOf(s.unless).length ? [`unless ${listOf(s.unless).join(" / ")}`] : [])];
+  const tail = `${cond.length ? ` (${cond.join("; ")})` : ""}${sim}`;
+  if (s.open) return `open ${s.open}${s.status ? ` → ${s.status}` : ""}${tail}`;
+  if (s.follow) return `follow ${s.follow}${tail}`;
+  if (s.click) return `click ${s.click}${tail}`;
+  if (s.api) return `${s.method} ${s.api} → ${s.status}${tail}`;
   return "?";
 }
 
@@ -181,7 +245,7 @@ export function reportMarkdown(result, meta) {
   const lines = [
     `# Journeys — ${result.ok ? "PASS" : "FAIL"}`,
     "",
-    `${meta.at} · ${meta.base} · ${meta.kind}${meta.sha ? ` · ${meta.sha}` : ""}`,
+    `${meta.at} · ${meta.base} · ${meta.kind}${meta.sha ? ` · ${meta.sha}` : ""}${meta.group ? ` · group ${meta.group}` : ""}`,
     "",
     `${result.journeys} journeys (journey × screen), ${result.failed} failed; ${result.steps} steps, ${result.skipped} skipped.`,
     "",
@@ -197,20 +261,42 @@ export function reportMarkdown(result, meta) {
   return `${lines.join("\n")}\n`;
 }
 
-async function expectOn(page, s) {
-  const any = s.expectAny ?? (s.expect ? [s.expect] : []);
-  if (!any.length) return [];
-  for (const sel of any) if ((await page.locator(sel).count()) > 0) return [];
-  return [`${any.join(" or ")} is not on the page`];
+/**
+ * What is missing or should not be there: `expectAny` (one of them), `expect` (each of them), `expectNone` (none of
+ * them), and `switches` (each selector there while its switch is on, absent while it is off).
+ */
+async function expectOn(page, s, settings) {
+  const out = [];
+  const has = async (sel) => (await page.locator(sel).count()) > 0;
+  if (s.expectAny?.length) {
+    let found = false;
+    for (const sel of s.expectAny) if (await has(sel)) found = true;
+    if (!found) out.push(`${s.expectAny.join(" or ")} is not on the page`);
+  }
+  for (const sel of listOf(s.expect)) if (!(await has(sel))) out.push(`${sel} is not on the page`);
+  for (const sel of listOf(s.expectNone)) if (await has(sel)) out.push(`${sel} is on the page and should not be`);
+  for (const [name, sel] of Object.entries(s.switches ?? {})) {
+    const on = switchValue(settings, name).on;
+    if (on && !(await has(sel))) out.push(`switch ${name} is on, but ${sel} is not on the page`);
+    if (!on && (await has(sel))) out.push(`switch ${name} is off, but ${sel} is on the page`);
+  }
+  return out;
 }
 
-/** Runs one step; returns its row. `skip`: an earlier optional step found nothing, so this one is skipped. */
-async function runStep(page, base, ignore, s, n, skip, out, tag, ui) {
+/**
+ * Runs one step; returns its row. `skip`: an earlier optional step found nothing, so this one is skipped. `settings`:
+ * the owner's switches as read at the start of the run (null when they could not be read).
+ */
+async function runStep(page, base, ignore, s, n, skip, out, tag, ui, settings) {
   const row = { n, what: stepLabel(s), ok: true, skipped: null, problems: [], screenshot: null };
   if (skip) return { ...row, skipped: skip };
+  const gate = switchGate(s, settings);
+  if (gate?.skip) return { ...row, skipped: gate.skip, bySwitch: true };
+  if (gate?.problem) return { ...row, ok: false, problems: [gate.problem] };
   let status = 0;
-  // an api step's own answer is the expected refusal (checked below), not a failed request or a console error
-  const known = s.api ? [...ignore, { path: new URL(s.api, base).pathname }] : ignore;
+  // an api step's own answer is the expected refusal (checked below), not a failed request or a console error; an open
+  // that expects another answer (a page the owner's switch closes: 404) is checked below the same way
+  const known = s.api ? [...ignore, { path: new URL(s.api, base).pathname }] : s.open && s.status ? [...ignore, { path: new URL(s.open, base).pathname }] : ignore;
   const watch = await watched(page, base, known, async () => {
     if (s.api) {
       const got = await page.evaluate(
@@ -240,8 +326,9 @@ async function runStep(page, base, ignore, s, n, skip, out, tag, ui) {
     await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
     const path = new URL(page.url()).pathname;
     row.problems.push(...pageProblems(path, status, await page.innerText("body").catch(() => "")));
+    if (s.open && s.status && status !== s.status) row.problems.push(`answered ${status}, expected ${s.status}`);
     if (s.open?.startsWith("/admin") && path.startsWith("/admin/login")) row.problems.push("sent back to the sign-in page");
-    row.problems.push(...(await expectOn(page, s)));
+    row.problems.push(...(await expectOn(page, s, settings)));
   });
   row.problems.push(...watch);
   // PR 416: the UI checks on the page the step opened or changed (an api step changes no page)
@@ -253,6 +340,27 @@ async function runStep(page, base, ignore, s, n, skip, out, tag, ui) {
     await page.screenshot({ path: join(out, row.screenshot), type: "jpeg", quality: 60 }).catch(() => {});
   }
   return row;
+}
+
+/**
+ * The owner's switches as they are now: GET /api/admin/settings, signed in as the read-only check account in a context
+ * of its own (the signed-out journeys stay signed out). Null when they cannot be read; the steps that need them fail.
+ */
+async function readSwitches(browser, base, creds, preview) {
+  const ctx = await browser.newContext(preview ? { storageState: preview } : {});
+  try {
+    const page = await ctx.newPage();
+    await signIn(page, base, creds);
+    const body = await page.evaluate(async () => {
+      const r = await fetch("/api/admin/settings", { credentials: "same-origin", cache: "no-store" });
+      return r.ok ? r.json() : null;
+    });
+    return Array.isArray(body?.settings) ? body.settings.map((r) => ({ key: r.key, value: r.value })) : null;
+  } catch {
+    return null;
+  } finally {
+    await ctx.close();
+  }
 }
 
 export async function runJourneys(opts) {
@@ -270,7 +378,11 @@ export async function runJourneys(opts) {
   const rows = [];
   try {
     const preview = opts.httpCredentials ? await previewCookie(browser, opts.base, opts.httpCredentials) : null;
-    for (const j of pickJourneys(config, opts.only)) {
+    const picked = pickJourneys(config, opts.only, opts.group);
+    if (!picked.length) throw new Error(`no journey to run${opts.group ? ` in the group ${opts.group}` : ""}`);
+    // the owner's switches, read once as the check account, only when a step names one
+    const settings = picked.some((j) => j.steps.some(namesSwitch)) ? await readSwitches(browser, opts.base, opts.creds, preview) : null;
+    for (const j of picked) {
       for (const scr of config.screens) {
         // PR 416: a touch screen opens as a phone does (its viewport tag honoured, touch taps)
         const touch = scr.touch === true ? { isMobile: true, hasTouch: true } : {};
@@ -283,8 +395,10 @@ export async function runJourneys(opts) {
           for (const [i, s] of j.steps.entries()) {
             // only a follow or click that found nothing skips the follows and clicks after it; an `open` starts afresh
             if (s.open || s.api) skip = null;
-            const row = await runStep(page, opts.base, ignore, s, i + 1, skip, opts.out, `${j.id}-${scr.id}`, { kinds: uiKinds, screen: scr, rules: uiRules, matrix });
-            if (row.skipped && !skip) skip = `step ${i + 1} found nothing`;
+            const row = await runStep(page, opts.base, ignore, s, i + 1, skip, opts.out, `${j.id}-${scr.id}`, { kinds: uiKinds, screen: scr, rules: uiRules, matrix }, settings);
+            // a step the switches skip leaves the steps after it alone
+            if (row.skipped && !row.bySwitch && !skip) skip = `step ${i + 1} found nothing`;
+            delete row.bySwitch;
             steps.push(row);
           }
         } catch (e) {
@@ -307,10 +421,10 @@ async function main() {
   if (!creds.email || !creds.password) throw new Error("sign-in details missing (SMOKE_EMAIL/SMOKE_PASSWORD)");
   const httpCredentials = process.env.SMOKE_HTTP_USER ? { username: process.env.SMOKE_HTTP_USER, password: process.env.SMOKE_HTTP_PASSWORD ?? "" } : undefined;
   const out = process.env.JOURNEYS_OUT || null;
-  const result = await runJourneys({ base, creds, httpCredentials, out, only: process.env.JOURNEYS_ONLY, ui: process.env.JOURNEYS_UI, chromiumPath: process.env.CHROMIUM_PATH });
+  const result = await runJourneys({ base, creds, httpCredentials, out, only: process.env.JOURNEYS_ONLY, group: process.env.JOURNEYS_GROUP, ui: process.env.JOURNEYS_UI, chromiumPath: process.env.CHROMIUM_PATH });
   for (const r of result.rows) console.log(`${r.ok ? "ok  " : "FAIL"} ${r.journey.padEnd(10)} ${r.screen}`);
   if (out) {
-    const meta = { at: process.env.JOURNEYS_AT || new Date().toISOString(), base, sha: process.env.JOURNEYS_SHA || "", kind: process.env.JOURNEYS_KIND || "run" };
+    const meta = { at: process.env.JOURNEYS_AT || new Date().toISOString(), base, sha: process.env.JOURNEYS_SHA || "", kind: process.env.JOURNEYS_KIND || "run", group: process.env.JOURNEYS_GROUP || "" };
     const { rows, ...summary } = result;
     writeFileSync(join(out, "result.json"), `${JSON.stringify({ ...meta, ...summary, problems: summary.problems.slice(0, 20), rows }, null, 2)}\n`);
     writeFileSync(join(out, "README.md"), reportMarkdown(result, meta));

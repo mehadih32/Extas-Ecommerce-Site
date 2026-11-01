@@ -6,6 +6,9 @@
 # result shows on Reports › Site health (state/journeys.json, the runs kept in state/journeys/). The report and the
 # pictures of failed steps are committed to docs/reports/journeys/latest/ with [skip ci] only when a run fails, or
 # passes after a failure (ci.yml ignores the folder), so a passing schedule adds no commits. By hand: "now" runs at once.
+# PR 414 follow-up (CN-013 go-live gate, phase 2): by hand, `group` runs only that journey group (go-live-gate: the
+# simulation findings a visitor or the check account can see; it orders and changes nothing). Its report goes to
+# docs/reports/journeys/<group>/latest/ on the same rule, and the owner's Site health keeps the saved journeys' own.
 name: journeys
 
 on:
@@ -17,6 +20,10 @@ on:
         description: "due (follow the schedule) or now (run at once)"
         required: false
         default: "now"
+      group:
+        description: "only this journey group, by hand with now (go-live-gate); empty = the saved journeys"
+        required: false
+        default: ""
 
 # Its own group: a queued hourly check must never replace a deploy or server job waiting in the extas-vm group (GitHub
 # keeps one pending run per group). The VM's single runner still takes one job at a time.
@@ -49,19 +56,23 @@ jobs:
         env:
           LIVE: ${{ steps.live.outputs.sha }}
           ASKED: ${{ github.event.inputs.mode }}
+          GROUP: ${{ github.event.inputs.group }}
         run: |
           live="$LIVE"
           MODE="due"; [ "$ASKED" = "now" ] && MODE="now"
-          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/journeys.sh "$RUNNER_TEMP/journeys" "$MODE" "$live"
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/journeys.sh "$RUNNER_TEMP/journeys" "$MODE" "$live" "$GROUP"
 
       - name: Commit the journeys report (a failure, or a pass after one)
         if: always()
         env:
           RESULT: ${{ steps.journeys.outcome }}
+          GROUP: ${{ github.event.inputs.group }}
         run: |
           set -eu
           out="$RUNNER_TEMP/journeys"
           [ -f "$out/result.json" ] || { echo "no run this hour"; exit 0; }
+          dest="docs/reports/journeys/latest"
+          case "$GROUP" in "") ;; *[!a-z0-9-]*) echo "bad group"; exit 1 ;; *) dest="docs/reports/journeys/$GROUP/latest" ;; esac
           sudo chown -R "$(id -u):$(id -g)" "$out"
           now_ok="$(jq -r '.ok' "$out/result.json")"
           git config user.name "extas-vm"
@@ -69,12 +80,12 @@ jobs:
           for i in 1 2 3 4; do
             git fetch -q origin main
             git reset -q --hard origin/main
-            was_ok="$(jq -r '.ok' docs/reports/journeys/latest/result.json 2>/dev/null || echo none)"
+            was_ok="$(jq -r '.ok' "$dest/result.json" 2>/dev/null || echo none)"
             if [ "$now_ok" = true ] && [ "$was_ok" = true ]; then echo "passed again; nothing to commit"; exit 0; fi
-            rm -rf docs/reports/journeys/latest && mkdir -p docs/reports/journeys && cp -r "$out" docs/reports/journeys/latest
-            git add -A docs/reports/journeys/latest
+            rm -rf "$dest" && mkdir -p "$(dirname "$dest")" && cp -r "$out" "$dest"
+            git add -A "$dest"
             if git diff --cached --quiet; then exit 0; fi
-            git commit -q -m "journeys report: ${RESULT} [skip ci]"
+            git commit -q -m "journeys report${GROUP:+ ($GROUP)}: ${RESULT} [skip ci]"
             if git push -q origin HEAD:main; then exit 0; fi
             sleep $((i * 2))
           done
