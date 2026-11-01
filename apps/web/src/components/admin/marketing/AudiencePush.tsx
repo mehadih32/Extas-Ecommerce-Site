@@ -4,6 +4,7 @@
 // words) and "Send now", which asks once more and then sends the audience (hashed) to Meta, TikTok and Google. While
 // the sending switch is off the button is locked and the card says where to turn it on. Each platform's answer is
 // listed after a send; a practice send (no key or no ad account yet) says so. No budget or campaign is changed.
+// PR 264: the exclusion list's card says it is sent marked as a list to leave out; it is locked while either switch is off.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { t, type Dict } from '@/lib/i18n';
@@ -28,7 +29,7 @@ interface Result {
 
 const API = '/api/admin/marketing/audiences';
 
-export function AudiencePush(p: { words: Dict; audienceId: string; version: string; on: boolean; canWrite: boolean; archived: boolean; lookalike: boolean; syncs: PushSyncLine[]; settingsHref: string }) {
+export function AudiencePush(p: { words: Dict; audienceId: string; version: string; on: boolean; canWrite: boolean; archived: boolean; lookalike: boolean; exclusion?: boolean; syncs: PushSyncLine[]; settingsHref: string }) {
   const id = useId();
   const router = useRouter();
   const a = (k: string, vars?: Record<string, string | number>) => t(p.words, `au.push.${k}`, vars);
@@ -61,7 +62,7 @@ export function AudiencePush(p: { words: Dict; audienceId: string; version: stri
       <h2 className="a2-h3" id={`${id}-h`}>
         {a('title')}
       </h2>
-      <p className="a2-cs">{a(p.lookalike ? 'subLal' : 'sub')}</p>
+      <p className="a2-cs">{a(p.exclusion ? 'subExcl' : p.lookalike ? 'subLal' : 'sub')}</p>
       {!p.on ? (
         <div className="a2-mt12" data-testid="au-push-off">
           <p className="a2-sm bk-warn">{a('off')}</p>

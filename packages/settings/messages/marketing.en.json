@@ -12,6 +12,14 @@
     "audiences": {
       "label": "Audiences sent to ad platforms",
       "help": "Off as it ships: no list leaves the shop. On, “Send now” on an audience sends its people to Meta, TikTok and Google as hashed phone numbers (never a name or a plain number). A lookalike is made only where you set its countries and size. A list smaller than the floor you set for a platform is not sent. No budget or campaign is changed."
+    },
+    "refusedExclude": {
+      "label": "Leave out people who refused a parcel",
+      "help": "Off as it ships: the list is never sent. On, the numbers a person put on the refused-parcel list (Orders › Returns › Refused) are sent to Meta, TikTok and Google as hashed phone numbers whenever audiences are sent, so campaigns can leave them out. You can also add every number with a parcel refused at the door that was not the shop’s fault, in your last N days (0 = any time). Never a block: they can still buy."
+    },
+    "audienceRefresh": {
+      "label": "Refresh audiences every day",
+      "help": "Off as it ships. On, once a day from your hour (store time) every live audience is counted again, the ones already sent to a real ad account are sent again, and the refused-parcel list too. No budget or campaign is changed."
     }
   }
 }

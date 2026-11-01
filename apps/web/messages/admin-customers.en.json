@@ -154,7 +154,9 @@
         "noneBody": "Every order makes or finds its customer by phone; they show here.",
         "view": "No one in this view",
         "viewBody": "Other views may have them."
-      }
+      },
+      "exclNote": "“Refused before” here counts every refused parcel. The list sent to the ad platforms to leave people out (hashed phone numbers only) is in Marketing › Audiences.",
+      "exclLink": "See the exclusion list"
     },
     "profile": {
       "crumb": "All customers",

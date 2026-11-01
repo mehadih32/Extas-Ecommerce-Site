@@ -93,7 +93,8 @@
       "ARCHIVED": "This audience is archived. Restore it first.",
       "WRONG_STATE": "That step is not possible now.",
       "NOT_FOUND": "Not found.",
-      "other": "Something went wrong. Try again."
+      "other": "Something went wrong. Try again.",
+      "SYSTEM": "The shop makes this list; it cannot be changed here."
     },
     "field": {
       "name": "name",
@@ -117,7 +118,8 @@
     },
     "kind": {
       "BUILDER": "From conditions",
-      "LOOKALIKE": "Lookalike"
+      "LOOKALIKE": "Lookalike",
+      "EXCLUSION": "Exclusion list"
     },
     "card": {
       "h": "Sending to ad platforms",
@@ -192,8 +194,46 @@
         "unauthorized": "Please sign in again.",
         "forbidden": "You do not have permission for this.",
         "other": "Something went wrong. Try again.",
-        "EMPTY": "Nobody is in this audience now, so there is nothing to send."
-      }
+        "EMPTY": "Nobody is in this audience now, so there is nothing to send.",
+        "EXCLUDE_OFF": "The exclusion list is switched off. Turn it on in its card first.",
+        "SYSTEM": "The shop makes this list; it cannot be changed here."
+      },
+      "subExcl": "Sends this list to Meta, TikTok and Google as hashed phone numbers, marked as a list to leave out."
+    },
+    "excl": {
+      "name": "Refused a parcel (leave out)",
+      "pill": "Leave out",
+      "off": "off",
+      "sumListed": "Numbers on the refused-parcel list",
+      "sumEvery": "Numbers on the refused-parcel list, and every parcel refused not by the shop’s fault ({when})",
+      "title": "Who is on this list",
+      "sub": "The shop makes this list by itself. It cannot be edited or archived: change it on the refused-parcel list, or in the card on Marketing › Audiences.",
+      "listed": "Every number a person put on the refused-parcel list (Orders › Returns › Refused).",
+      "every": "Every number with a parcel refused at the door that was not the shop’s fault ({when}).",
+      "everyOff": "Other refusals are not added (you can turn that on in the card).",
+      "count": "people on the list right now",
+      "never": "Numbers of customers who asked to be erased are never on it.",
+      "listLink": "Open the refused-parcel list",
+      "cardLink": "Change it in the exclusion card",
+      "offNote": "The exclusion list is switched off, so it is not sent."
+    },
+    "cardRefused": {
+      "h": "Leave out people who refused a parcel",
+      "d": "Off as it ships. On, this list is sent with the audiences (hashed phone numbers only), so campaigns can leave these people out. Never a block: they can still buy.",
+      "on": "Send the exclusion list",
+      "onHelp": "Off: the list is never sent.",
+      "every": "Also every refused parcel",
+      "everyHelp": "Not only the numbers a person put on the refused-parcel list: every number with a parcel refused at the door that was not the shop’s fault.",
+      "days": "… in the last days",
+      "daysHelp": "For “every refused parcel”. 0 = any time."
+    },
+    "cardRefresh": {
+      "h": "Refresh every day",
+      "d": "Off as it ships. Once a day every live audience is counted again; the ones already sent to a real ad account, and the exclusion list, are sent again. No budget or campaign is changed.",
+      "on": "Refresh every day",
+      "onHelp": "Off: audiences are counted and sent only when someone presses the button.",
+      "hour": "From this hour (store time)",
+      "hourHelp": "0–23. The refresh runs once a day at or after this hour."
     }
   }
 }

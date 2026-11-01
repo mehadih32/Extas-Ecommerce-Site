@@ -11,6 +11,10 @@
 //   TikTok is audience-push.ts (PR 263 / 264) — nothing here calls an ad platform, moves money or changes an order.
 // - PR 263: a lookalike audience's people are its seed: those whose parcels were delivered in the owner's last N days,
 //   each with his delivered sales in that window (the one "sales" status rule; never his number of orders).
+// - PR 264: the exclusion audience (one per store, made by the shop the first time it is needed, never edited or
+//   archived by hand) holds the numbers a person put on the refused-parcel list (@extas/orders `refusedExclusionPhones`,
+//   PR 191) and, when the owner ticks it (`ads.refusedExclude.everyRefusal`), every number of the "Refused a parcel"
+//   condition in his last N days. Sending it is audience-push.ts, only while `ads.refusedExclude.on`.
 // - The few names shown beside the count are for a person with `customers.read`, and their numbers are masked
 //   (`customers.phoneMask`).
 // - Seeing needs `marketing.audiences.read`; saving, counting again, archiving and restoring need
@@ -20,10 +24,12 @@ import { maskPhone, type PhoneMask } from '@extas/customers/pure';
 import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { customerFiguresSql, statusRule } from '@extas/metrics';
+import { refusedExclusionPhones } from '@extas/orders';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import {
   AUDIENCE_ACTIONS,
   AUDIENCE_KIND_BUILDER,
+  AUDIENCE_KIND_EXCLUSION,
   AUDIENCE_KIND_LOOKALIKE,
   AUDIENCE_KINDS,
   audienceInputSchema,
@@ -31,6 +37,7 @@ import {
   combine,
   definitionOf,
   definitionSchema,
+  EXCLUSION_DEFINITION,
   lookalikeDefinitionSchema,
   lookalikeInputSchema,
   lookalikeOf,
@@ -194,7 +201,7 @@ export async function audienceMembers(db: Db, resolver: Resolver, def: AudienceD
     }),
   );
   const out = combine(def.rules, sets);
-  if (out.size) for (const p of phonesOf(await db.customer.findMany({ where: { storeId, erasedAt: { not: null } }, select: { phone: true } }))) out.delete(p);
+  await dropErased(db, out, storeId);
   return { phones: out, unavailable: [...new Set(unavailable)] };
 }
 
@@ -210,12 +217,33 @@ export async function seedMembers(db: Db, def: LookalikeDefinition, now: Date = 
     const p = r.phone ? phoneNormalizeBD(r.phone) : null;
     if (p?.ok) out.set(p.e164, (out.get(p.e164) ?? 0) + Number(r.value));
   }
+  await dropErased(db, out, storeId);
+  return out;
+}
+
+/** Every number an erased customer had: never sent, never counted. */
+async function dropErased(db: Db, out: Set<string> | Map<string, unknown>, storeId: number) {
   if (out.size) for (const p of phonesOf(await db.customer.findMany({ where: { storeId, erasedAt: { not: null } }, select: { phone: true } }))) out.delete(p);
+}
+
+/**
+ * PR 264: the exclusion list's people now — the numbers a person put on the refused-parcel list, and (the owner's tick)
+ * every number with a parcel refused at the door that was not the shop's fault, in his last N days (0 = any time).
+ */
+export async function exclusionMembers(db: Db, resolver: Resolver, now: Date = new Date(), storeId: number = S): Promise<Set<string>> {
+  const [card, listed] = await Promise.all([resolver.value('ads.refusedExclude', { storeId }), refusedExclusionPhones(db, storeId)]);
+  const out = phonesOf(listed.map((phone) => ({ phone })));
+  if (card.everyRefusal) {
+    const q = ruleSql({ kind: 'refused', days: card.days || null, ref: null, exclude: false }, await ctxOf(db, resolver, storeId, now));
+    if (q) for (const p of phonesOf(await db.$queryRaw<{ phone: string | null }[]>(q))) out.add(p);
+  }
+  await dropErased(db, out, storeId);
   return out;
 }
 
 /** Any saved audience's people now: E.164 numbers, each with his delivered sales for a lookalike's seed (else null). */
 export async function membersOf(db: Db, resolver: Resolver, a: { kind: string; definition: unknown }, now: Date = new Date(), storeId: number = S): Promise<{ people: Map<string, number | null>; valueBased: boolean }> {
+  if (a.kind === AUDIENCE_KIND_EXCLUSION) return { people: new Map([...(await exclusionMembers(db, resolver, now, storeId))].map((p) => [p, null])), valueBased: false };
   if (a.kind === AUDIENCE_KIND_LOOKALIKE) {
     const def = lookalikeOf(a.definition);
     return { people: def ? await seedMembers(db, def, now, storeId) : new Map(), valueBased: true };
@@ -254,16 +282,34 @@ const rowOf = (a: Raw, used: Map<string, number>): AudienceRow => ({
   name: a.name,
   kind: a.kind,
   state: stateOfAudience(a),
-  rules: a.kind === AUDIENCE_KIND_LOOKALIKE ? [] : definitionOf(a.definition).rules,
+  rules: a.kind === AUDIENCE_KIND_BUILDER ? definitionOf(a.definition).rules : [],
   seedDays: a.kind === AUDIENCE_KIND_LOOKALIKE ? (lookalikeOf(a.definition)?.seedDays ?? null) : null,
   size: a.size,
   countedAt: iso(a.lastBuiltAt),
   campaigns: used.get(a.id) ?? 0,
 });
 
-/** Every audience (archived too, marked), newest first, with the campaigns that use it. */
+/**
+ * PR 264: the store's exclusion audience, made the first time it is needed (the name is the shop's words; one per store,
+ * kept so by a unique index). Not audited: the shop makes it, nobody chose anything.
+ */
+export async function ensureExclusionAudience(db: Db, name: string, storeId: number = S): Promise<{ id: string }> {
+  const have = await db.audience.findFirst({ where: { storeId, kind: AUDIENCE_KIND_EXCLUSION }, select: { id: true } });
+  if (have) return have;
+  try {
+    return await db.audience.create({ data: { storeId, kind: AUDIENCE_KIND_EXCLUSION, name, definition: { ...EXCLUSION_DEFINITION } }, select: { id: true } });
+  } catch (e) {
+    // another request made it a moment ago (the unique index): read that one
+    const again = await db.audience.findFirst({ where: { storeId, kind: AUDIENCE_KIND_EXCLUSION }, select: { id: true } });
+    if (again) return again;
+    throw e;
+  }
+}
+
+/** Every audience (archived too, marked), the exclusion list first, then newest first, with the campaigns that use it. */
 export async function audienceList(db: Db, storeId: number = S): Promise<AudienceRow[]> {
-  const rows = await db.audience.findMany({ where: { storeId }, orderBy: { createdAt: 'desc' }, take: AUDIENCE_LIST_MAX, select: SELECT });
+  const found = await db.audience.findMany({ where: { storeId }, orderBy: { createdAt: 'desc' }, take: AUDIENCE_LIST_MAX, select: SELECT });
+  const rows = [...found.filter((r) => r.kind === AUDIENCE_KIND_EXCLUSION), ...found.filter((r) => r.kind !== AUDIENCE_KIND_EXCLUSION)];
   const used = await campaignCounts(
     db,
     storeId,
@@ -312,6 +358,8 @@ export async function saveAudience(db: Db, resolver: Resolver, who: AudienceWho,
   if (id && !before) throw new AudienceError('NOT_FOUND', 404);
   if (before && before.version !== d.version) throw new AudienceError('STALE', 409);
   if (before?.state === 'ARCHIVED') throw new AudienceError('ARCHIVED', 409);
+  // PR 264: the shop's exclusion list is never edited by hand (its people come from the refused-parcel list)
+  if (before?.kind === AUDIENCE_KIND_EXCLUSION) throw new AudienceError('SYSTEM', 409);
   // an audience keeps its kind: a builder audience is never turned into a lookalike, nor back
   if (before && before.kind !== kind) throw new AudienceError('INVALID_INPUT', 400, ['kind']);
   const { people } = await membersOf(db, resolver, { kind, definition: d.definition }, now, storeId);
@@ -332,9 +380,11 @@ export async function audienceStep(db: Db, resolver: Resolver, who: AudienceWho,
   if (!before) throw new AudienceError('NOT_FOUND', 404);
   if (before.version !== o.version) throw new AudienceError('STALE', 409);
   if (!canAudienceStep(action, before.state)) throw new AudienceError('WRONG_STATE', 409);
+  // PR 264: the exclusion list can be counted again, never archived (turning its switch off stops it being sent)
+  if (before.kind === AUDIENCE_KIND_EXCLUSION && action !== 'recount') throw new AudienceError('SYSTEM', 409);
   let data: Prisma.AudienceUpdateInput;
   if (action === 'recount') {
-    const { people } = await membersOf(db, resolver, { kind: before.kind, definition: before.kind === AUDIENCE_KIND_LOOKALIKE ? { v: 1, seedDays: before.seedDays } : { v: 1, rules: before.rules } }, now, storeId);
+    const { people } = await membersOf(db, resolver, { kind: before.kind, definition: before.kind === AUDIENCE_KIND_LOOKALIKE ? { v: 1, seedDays: before.seedDays } : before.kind === AUDIENCE_KIND_EXCLUSION ? EXCLUSION_DEFINITION : { v: 1, rules: before.rules } }, now, storeId);
     data = { size: people.size, lastBuiltAt: now };
   } else data = { archivedAt: action === 'archive' ? now : null };
   await db.audience.update({ where: { id }, data });
@@ -343,7 +393,7 @@ export async function audienceStep(db: Db, resolver: Resolver, who: AudienceWho,
   return after;
 }
 
-/** Count every live audience again, builder and lookalike (for the daily refresh that comes with sending them). */
+/** Count every live audience again, builder, lookalike and the exclusion list (the daily refresh, PR 264). */
 export async function recountAudiences(db: Db, resolver: Resolver, now: Date = new Date(), storeId: number = S): Promise<number> {
   const rows = await db.audience.findMany({ where: { storeId, kind: { in: [...AUDIENCE_KINDS] }, archivedAt: null }, select: { id: true, kind: true, definition: true } });
   for (const a of rows) {

@@ -1,6 +1,7 @@
 // What every job and the worker get: the database, the settings (through the two-tier resolver, PR 492), the
 // inventory's dependencies (the ERP connection layer with the vault's keys, PR 18/493) and a clock for tests.
 import type { TelegramLink } from '@extas/adapters';
+import type { AudienceRefreshAnswer } from './audience-refresh';
 import type { Connections } from '@extas/adapters';
 import type { PrismaClient } from '@extas/db/client';
 import type { InventoryDeps, SettingsReader } from '@extas/inventory';
@@ -30,6 +31,11 @@ export interface JobDeps {
   voice?: { wipe(storeId: number, file: { storage: string; storageKey: string; mimeType: string }): Promise<void> };
   /** PR 351: the owner's Telegram (the mock until the bot's key is entered), or none — no money report is sent. */
   owner?: { telegram: TelegramLink };
+  /**
+   * PR 264: the web app's daily audience refresh (inside the server, with the internal token), or none — no refresh is
+   * planned. Answers counts only.
+   */
+  audiences?: { refresh(storeId: number): Promise<AudienceRefreshAnswer> };
   /** Clock, for tests. */
   now?: () => Date;
 }
