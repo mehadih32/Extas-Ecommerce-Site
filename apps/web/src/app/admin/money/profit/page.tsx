@@ -88,6 +88,8 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
   type Line = { key: string; sign: '+' | '−' | '='; minor: number | null; how?: string; note?: string };
   const lines: Line[] = [
     { key: 'sales', sign: '+', minor: r.parts.sales, how: c('lines.salesHow') },
+    { key: 'returns', sign: '−', minor: r.parts.returns, how: c('lines.returnsHow') },
+    { key: 'netSales', sign: '=', minor: r.netSalesMinor },
     { key: 'productCost', sign: '−', minor: r.parts.productCost, how: c('lines.productCostHow') },
     { key: 'gross', sign: '=', minor: r.grossProfitMinor },
     { key: 'deliveryCharge', sign: '+', minor: r.parts.deliveryCharge, how: c('lines.deliveryChargeHow') },
@@ -95,6 +97,7 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
     { key: 'paymentFees', sign: '−', minor: r.parts.paymentFees, how: c('lines.paymentFeesHow') },
     { key: 'packaging', sign: '−', minor: r.parts.packaging, how: c('lines.packagingHow') },
     { key: 'messages', sign: '−', minor: r.parts.messages, how: c('lines.messagesHow') },
+    { key: 'returnLoss', sign: '−', minor: r.parts.returnLoss, how: c('lines.returnLossHow') },
     { key: 'contribution', sign: '=', minor: r.contributionMinor },
     { key: 'ads', sign: '−', minor: r.adsMinor, how: r.adsMinor === null ? c('lines.adsUnknown') : r.adsImported ? c('lines.adsHow') : c('lines.adsNone') },
     { key: 'other', sign: '−', minor: r.otherCostsMinor, how: c('lines.otherHow') },

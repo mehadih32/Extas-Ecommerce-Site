@@ -68,8 +68,8 @@ describe.skipIf(!HAS_TEST_DB)('Money → Profit by group on PostgreSQL (PR 504)'
     expect(res.status).toBe(200);
     expect(res.headers.get('content-disposition')).toContain('profit-by-category-2026-10-01-2026-10-31.csv');
     const text = await res.text();
-    expect(text).toContain('"Shirts, formal",0,1,2,100000,0,60000,40000,10000,0,50000,50,1,BDT\r\n');
-    expect(text).toContain('(total),,1,2,100000,0,60000,40000,10000,0,50000,50,1,BDT\r\n');
+    expect(text).toContain('"Shirts, formal",0,1,2,100000,0,0,60000,40000,10000,0,50000,50,1,BDT\r\n');
+    expect(text).toContain('(total),,1,2,100000,0,0,60000,40000,10000,0,50000,50,1,BDT\r\n');
     expect(await (await csv(owner, '&by=style')).text()).toContain('Polo,0,1,2,100000');
     expect((await csv()).status).toBe(401);
     expect((await csv(owner, '', 'PUT')).status).toBe(405);

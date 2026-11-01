@@ -86,12 +86,14 @@ describe.skipIf(!HAS_TEST_DB)('PR 348 · per-order profit on PostgreSQL', () => 
     expect(r.deliveredDay).toBe('2026-10-10');
     expect(Object.fromEntries(Object.entries(r.parts).map(([k, v]) => [k, v.minor]))).toEqual({
       sales: 230_000,
+      returns: 0, // PR 353: nothing came back
       deliveryCharge: 8_000,
       productCost: 105_000,
       courier: 7_000,
       paymentFees: 1_850,
       packaging: 3_000,
       messages: 155,
+      returnLoss: 0,
       ads: null,
     });
     expect(r.parts.ads.state).toBe('off');

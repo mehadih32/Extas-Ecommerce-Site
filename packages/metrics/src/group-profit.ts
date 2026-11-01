@@ -6,6 +6,9 @@
 //   - its product cost: its own cost snapshot (unit cost × quantity);
 //   - the order's own figures — delivery charge in, courier, payment fees, packaging, messages out — and its ad share,
 //     spread over the lines by their Sales share; a part not known yet is left out and counted, never taken as 0.
+// PR 353: a line's pieces that came back after receipt — their value off its Sales (returns), their cost back off its
+// product cost (sellable, or not sellable with the loss booked) and the booked loss into its order costs — so the total
+// row still matches Profit & loss.
 // An order with a line without a cost snapshot is left out of every profit figure (as on Profit & loss) and its Sales
 // counted as "no cost yet" under its groups. Lines with no category / style are under `null`. Read-only, store-scoped.
 import { Prisma } from '@extas/db/client';
@@ -31,6 +34,8 @@ export interface GroupProfitRow {
   uncostedSalesMinor: number;
   /** Over the costed orders' lines: */
   costedSalesMinor: number;
+  /** PR 353: the value of the costed lines' pieces that came back after receipt (costed Sales − returns = net). */
+  returnsMinor: number;
   productCostMinor: number;
   grossProfitMinor: number;
   /** Delivery charges in less courier, payment fees, packaging and messages out (the known ones). */
@@ -52,6 +57,7 @@ export interface GroupProfit {
 
 /** One counted line of a delivered order, with its product's group. */
 interface GroupLine {
+  id: string;
   orderId: string;
   groupId: string | null;
   total: number;
@@ -72,6 +78,7 @@ const empty = (id: string | null, name: string | null, parentId: string | null, 
   salesMinor: 0,
   uncostedSalesMinor: 0,
   costedSalesMinor: 0,
+  returnsMinor: 0,
   productCostMinor: 0,
   grossProfitMinor: 0,
   orderCostsMinor: 0,
@@ -89,7 +96,7 @@ export async function profitByGroup(db: Db, storeId: number, days: { from: strin
     orderProfits(db, storeId, ids, inputs),
     ids.length
       ? db.$queryRaw<GroupLine[]>`
-          SELECT i."orderId", p.${Prisma.raw(by === 'category' ? '"categoryId"' : '"styleGroupId"')} AS "groupId",
+          SELECT i."id", i."orderId", p.${Prisma.raw(by === 'category' ? '"categoryId"' : '"styleGroupId"')} AS "groupId",
                  i."lineTotalMinor" AS "total", i."quantity", i."unitCostMinor" AS "unitCost"
             FROM "OrderItem" i LEFT JOIN "Product" p ON p."id" = i."productId" AND p."storeId" = i."storeId"
            WHERE i."storeId" = ${storeId} AND i."orderId" = ANY(${ids}::uuid[]) AND i."status"::text = ${COUNTED_LINE_STATUS}
@@ -146,12 +153,14 @@ function build(
     const known = (k: Parameters<typeof part>[0]) => part(k) ?? 0;
     const orderNet = known('deliveryCharge') - known('courier') - known('paymentFees') - known('packaging') - known('messages');
     const missing = (['courier', 'paymentFees', 'packaging'] as const).some((k) => part(k) === null) || (p.parts.ads.state !== 'off' && part('ads') === null);
-    const weights = sales.map((s) => Math.max(0, s));
+    const back = new Map(p.returned.map((r) => [r.orderItemId, r]));
+    const weights = sales.map((s, k) => Math.max(0, s - (back.get(mine[k]!.id)?.valueMinor ?? 0)));
     const netShares = apportion(orderNet, weights);
     const adShares = apportion(known('ads'), weights);
     const seen = new Set<string>();
     mine.forEach((l, k) => {
-      const cost = l.unitCost === null ? 0 : Number(l.unitCost) * Number(l.quantity);
+      const r = back.get(l.id);
+      const cost = (l.unitCost === null ? 0 : Number(l.unitCost) * Number(l.quantity)) - (r?.costBackMinor ?? 0);
       for (const g of [...chainOf(l.groupId).map(rowOf), total]) {
         const gk = g === total ? '*' : keyOf(g.id);
         if (!seen.has(gk)) {
@@ -165,15 +174,16 @@ function build(
           continue;
         }
         g.costedSalesMinor += sales[k]!;
+        g.returnsMinor += r?.valueMinor ?? 0;
         g.productCostMinor += cost;
-        g.orderCostsMinor += netShares[k]!;
+        g.orderCostsMinor += netShares[k]! - (r?.lossMinor ?? 0);
         g.adsMinor += adShares[k]!;
         if (missing) g.missingLines += 1;
       }
     });
   }
   const finish = (r: GroupProfitRow) => {
-    r.grossProfitMinor = r.costedSalesMinor - r.productCostMinor;
+    r.grossProfitMinor = r.costedSalesMinor - r.returnsMinor - r.productCostMinor;
     r.profitMinor = r.grossProfitMinor + r.orderCostsMinor - r.adsMinor;
     return r;
   };
