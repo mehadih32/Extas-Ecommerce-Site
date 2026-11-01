@@ -113,6 +113,8 @@ export * from './registry-bengali';
 export * from './registry-tracking';
 // S13 · PR 257 follow-up — where an order came from (registry-attribution.ts, version 230).
 export * from './registry-attribution';
+// S02 · PR 75 follow-up — the contact page's form (registry-contact-form.ts, version 231).
+export * from './registry-contact-form';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

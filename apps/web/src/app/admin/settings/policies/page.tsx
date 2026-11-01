@@ -3,6 +3,7 @@
 // which store details follow it, and the owner's own words in both languages, where `{rule-key.param}` quotes a live
 // rule's number. Below: every rule value he can quote, with what it is now. Seeing needs `settings.read`; saving
 // `settings.write` (the API checks again). The page picker is a link per page (`?page=`), so each page has its own URL.
+// PR 75 follow-up: the Contact page's tab also holds the contact form's card (`pages.contactForm`).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -29,6 +30,7 @@ export const dynamic = 'force-dynamic';
 const HERE = '/admin/settings/policies';
 const API = '/api/admin/policies';
 const RULES = '/admin/rules';
+const INBOX = '/admin/support';
 const KEY = 'policies';
 
 function withScreen(view: AdminView): AdminView {
@@ -87,6 +89,11 @@ export default async function PoliciesPage({ searchParams }: { searchParams: Pro
     { kind: 'pair', path: 'title', label: pair('title'), help: s('card.titleHelp'), max: wordMax('title') },
     { kind: 'pair', path: 'lede', label: pair('lede'), max: wordMax('lede'), rows: 3 },
     { kind: 'pair', path: 'body', label: pair('body'), help: s('card.bodyHelp'), max: wordMax('body'), rows: 10 },
+  ];
+  const formFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('form.on'), help: s('form.onHelp') },
+    { kind: 'number', path: 'perPhonePerDay', label: s('form.perDay'), help: s('form.perDayHelp'), min: 1, max: 20 },
+    { kind: 'number', path: 'maxChars', label: s('form.maxChars'), help: s('form.maxCharsHelp'), min: 100, max: 2000 },
   ];
   const tone = !page.on ? 'line' : page.shows ? 'ok' : 'warn';
   const state = !page.on ? s('now.off') : page.shows ? s('now.shows') : s('now.soon');
@@ -178,6 +185,18 @@ export default async function PoliciesPage({ searchParams }: { searchParams: Pro
       </section>
 
       <FieldsCard key={asked} url={API} screen={{ key: card.key, value: card.value, version: card.version }} fields={fields} texts={texts} canEdit={canEdit} testId="pol-card" />
+
+      {asked === 'contact' ? (
+        <>
+          {/* PR 75 follow-up: the contact page's "Send us a message" form (`pages.contactForm`, off as shipped) */}
+          <FieldsCard url={API} screen={{ key: v.form.key, value: v.form.value, version: v.form.version }} fields={formFields} texts={{ ...texts, h: s('form.h'), d: s('form.d') }} canEdit={canEdit} testId="pol-contact-form" />
+          <div className="a2-gap8 a2-mt12">
+            <Link className="a2-btn" href={INBOX} data-testid="pol-contact-inbox">
+              {s('form.inbox')}
+            </Link>
+          </div>
+        </>
+      ) : null}
 
       <section className="a2-sc a2-mt12" aria-labelledby="pol-values-h" data-testid="pol-values">
         <div className="a2-sch">

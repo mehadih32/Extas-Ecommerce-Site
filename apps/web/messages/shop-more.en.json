@@ -91,6 +91,23 @@
     },
     "before": "Before you message",
     "beforeText": "The delivery and exchange rules have their own pages:",
+    "form": {
+      "title": "Send us a message",
+      "name": "Your name",
+      "phone": "Phone",
+      "order": "Order number (if you have one)",
+      "msg": "How can we help?",
+      "send": "Send message",
+      "sending": "Sending…",
+      "note": "We reply on WhatsApp or by phone.",
+      "done": "Thanks — your message reached us. We will reply on WhatsApp or by phone to {number}.",
+      "again": "Send another message",
+      "off": "The form is closed just now. Please message us on WhatsApp or call the hotline.",
+      "tooMany": "You have sent us several messages already. We have them and will reply soon.",
+      "tooLong": "Please keep it shorter — at most {max} characters.",
+      "msgEmpty": "Write your message.",
+      "err": "That did not go through. Check your connection and try again."
+    },
     "details": {
       "contact": "Contact",
       "legal": "Who we are"

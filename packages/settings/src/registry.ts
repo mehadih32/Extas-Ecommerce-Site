@@ -88,6 +88,7 @@ import { supportChannelSettings } from './registry-support-channels';
 import { bengaliSettings } from './registry-bengali';
 import { trackingSettings } from './registry-tracking';
 import { attributionSettings } from './registry-attribution';
+import { contactFormSettings } from './registry-contact-form';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1332,6 +1333,8 @@ export const registry = {
   ...trackingSettings,
   // ---- S13 · PR 257 follow-up · where an order came from: campaign tags and ad click ids kept on the order (registry-attribution.ts, version 230). ----
   ...attributionSettings,
+  // ---- S02 · PR 75 follow-up · the contact page's form into the Support inbox (registry-contact-form.ts, version 231). ----
+  ...contactFormSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

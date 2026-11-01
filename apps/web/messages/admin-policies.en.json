@@ -62,6 +62,17 @@
       "body": { "en": "Your words (English)", "bn": "Your words (Bengali)" },
       "bodyHelp": "An empty line starts a new paragraph, \"## \" a heading, \"- \" a list line. Quote a rule's number as {exchange.windowHours}: see the list below."
     },
+    "form": {
+      "h": "Contact form",
+      "d": "The \"Send us a message\" form on the contact page. A message lands in Support › Inbox from the customer's number (Contact form channel), with his order linked when the number he names is his. Nothing is sent to him automatically; the team replies on WhatsApp or by phone. Turn it on once someone reads the inbox.",
+      "on": "Show the form on the contact page",
+      "onHelp": "Off: the page shows only WhatsApp, the hotline and the other ways to reach you.",
+      "perDay": "Messages one number may send in a day",
+      "perDayHelp": "Stops one number filling the inbox. Past it, the customer is told his messages arrived and you will reply.",
+      "maxChars": "Longest message (characters)",
+      "maxCharsHelp": "The message box takes no more than this.",
+      "inbox": "Open the inbox"
+    },
     "values": {
       "h": "Rule numbers you can quote",
       "d": "Copy a token into your words. The shop writes the rule's value in its place, and leaves the line out while the rule is not live.",

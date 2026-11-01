@@ -1,0 +1,10 @@
+{
+  "pages": {
+    "contactForm": {
+      "label": "Contact form",
+      "help": "The \"Send us a message\" form on the contact page. A message lands in Support › Inbox as a conversation from his number, on the Contact form channel, with the order he names linked when it is his. Nothing is sent to him automatically; the team replies on WhatsApp or by phone. Off as it ships — turn it on once someone reads the inbox. Each number may send the set number of messages a day.",
+      "channel": "Contact form",
+      "orderLine": "Order {number}"
+    }
+  }
+}

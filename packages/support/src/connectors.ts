@@ -156,7 +156,7 @@ export async function supportChannels(deps: Pick<SupportDeps, 'db' | 'settings'>
   const held = await allow(deps, who, 'support.read');
   const [rows, counts, live] = await Promise.all([
     // CN-020 (3): the checkout's call-back channel is not a channel to connect, switch or rename
-    deps.db.supportChannel.findMany({ where: { storeId: who.storeId, kind: { not: 'callback' } }, orderBy: [{ archivedAt: { sort: 'asc', nulls: 'first' } }, { enabled: 'desc' }, { kind: 'asc' }, { name: 'asc' }] }),
+    deps.db.supportChannel.findMany({ where: { storeId: who.storeId, kind: { notIn: ['callback', 'contactform'] } }, orderBy: [{ archivedAt: { sort: 'asc', nulls: 'first' } }, { enabled: 'desc' }, { kind: 'asc' }, { name: 'asc' }] }),
     deps.db.conversation.groupBy({ by: ['channelId'], where: { storeId: who.storeId }, _count: { _all: true } }),
     setting(deps, who.storeId, 'support.liveChat'),
   ]);

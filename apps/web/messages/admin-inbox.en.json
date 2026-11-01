@@ -35,7 +35,8 @@
       "livechat": "Site chat",
       "instagram": "Instagram",
       "email": "E-mail",
-      "callback": "Call-back"
+      "callback": "Call-back",
+      "contactform": "Contact form"
     },
     "nobody": "Not taken",
     "you": "You",
@@ -161,7 +162,8 @@
       "network": "No connection. Try again.",
       "other": "Something went wrong. Try again.",
       "CALLBACK_OFF": "“Call me” at checkout is switched off.",
-      "TOO_MANY": "This number asked for a call-back too often today."
+      "TOO_MANY": "This number asked for a call-back too often today.",
+      "CONTACT_FORM_OFF": "The contact page's form is switched off."
     },
     "set": {
       "title": "Support settings",

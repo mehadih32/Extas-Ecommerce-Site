@@ -179,6 +179,8 @@ import voiceAddressEn from '../messages/voice-address.en.json';
 import trackingEn from '../messages/tracking.en.json';
 import attributionBn from '../messages/attribution.bn.json';
 import attributionEn from '../messages/attribution.en.json';
+import contactFormBn from '../messages/contact-form.bn.json';
+import contactFormEn from '../messages/contact-form.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -273,6 +275,9 @@ messages.bn = mergeMessages(messages.bn, voiceAddressBn);
 // S13 · PR 257 follow-up (registry v230): where an order came from.
 messages.en = mergeMessages(messages.en, attributionEn);
 messages.bn = mergeMessages(messages.bn, attributionBn);
+// S02 · PR 75 follow-up (registry v231): the contact page's form.
+messages.en = mergeMessages(messages.en, contactFormEn);
+messages.bn = mergeMessages(messages.bn, contactFormBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {
