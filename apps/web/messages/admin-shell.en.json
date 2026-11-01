@@ -74,7 +74,8 @@
       "customers": {
         "all": "All customers",
         "segments": "Segments",
-        "review": "To review"
+        "review": "To review",
+        "settings": "Customer settings"
       },
       "messages": {
         "log": "Message log",

@@ -39,6 +39,7 @@
     { "id": "customers/segments", "route": "/admin/customers/segments" },
     { "id": "customers/segment", "route": "/admin/customers/segments/[id]" },
     { "id": "customers/review", "route": "/admin/customers/review" },
+    { "id": "customers/settings", "route": "/admin/customers/settings" },
     { "id": "customers/customer", "route": "/admin/customers/[id]" },
     { "id": "delivery/zones", "route": "/admin/delivery/zones" },
     { "id": "delivery/couriers", "route": "/admin/delivery/couriers" },

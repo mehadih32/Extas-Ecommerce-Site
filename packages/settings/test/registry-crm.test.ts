@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { crmSettings, segmentSettingsSchema } from '../src/registry-crm';
+import { crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
 
 describe('CRM settings (v190–199)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -28,4 +28,13 @@ describe('CRM settings (v190–199)', () => {
     expect(segmentSettingsSchema.safeParse({ ...s.default, maxConditions: 0 }).success).toBe(false);
     expect(segmentSettingsSchema.safeParse({ ...s.default, auto: true }).success).toBe(false);
   });
+
+  it('PR 288: the journey tab is off as shipped (v191), every kind listed once, 50 a page', () => {
+    const s = crmSettings['customers.journey'];
+    expect(s.version).toBe(191);
+    expect(s.default).toEqual({ enabled: false, kinds: [...JOURNEY_KIND_KEYS], perPage: 50 });
+    expect(journeySettingsSchema.safeParse({ ...s.default, kinds: ['order', 'order'] }).success).toBe(false);
+    expect(journeySettingsSchema.safeParse({ ...s.default, kinds: ['gps'] }).success).toBe(false);
+  });
 });
+

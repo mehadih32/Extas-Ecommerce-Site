@@ -19,6 +19,7 @@ export const PROFILE_SELECT = {
   gender: true,
   genderInferred: true,
   firstSource: true,
+  firstCampaignRef: true,
   createdAt: true,
   mergedIntoId: true,
   mergedAt: true,

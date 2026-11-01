@@ -1,0 +1,8 @@
+/* S14 · PR 288 — Customers › Customer settings: a tick row a full tap high, the choices of a list in two columns on
+   wider screens; the shell's tokens only. */
+.adm2 .crm-ck{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.adm2 .crm-multi{border:0;padding:0;margin:0;min-width:0}
+.adm2 .crm-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+@media (max-width:767px){
+  .adm2 .crm-opts{grid-template-columns:minmax(0,1fr)}
+}

@@ -24,6 +24,10 @@
 //   POST  /api/admin/customers/merge                  {survivorId, mergedId, signals?, note?} (Idempotency-Key) (customers.merge)
 //   POST  /api/admin/customers/not-same               {aId, bId, signals?, note?} the pair is not suggested again (customers.merge)
 //   POST  /api/admin/customers/merges/:id/undo        {note} a split, or a "not the same person" taken back (customers.merge)
+//   GET   /api/admin/customers/:id/journey?page=      PR 288: the journey view, every touch newest first (customers.read;
+//                                                     off as shipped)
+//   GET   /api/admin/customers/settings               PR 288: Customer settings, the CRM switches (customers.read)
+//   PUT   /api/admin/customers/settings               {key, value} one card saved (customers.settings; audited)
 //   GET   /api/admin/customers/segments               PR 287: the saved segments and the built-in ones, counted live
 //                                                     (customers.read)
 //   PUT   /api/admin/customers/segments/settings      {enabled?, maxSegments?, maxConditions?, previewShown?} the page's
@@ -97,6 +101,12 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
     return handle(request, deps, 'customers.read', async (x) => ({ match: await cu.customerByPhone(x.deps, x.who, x.url.searchParams.get('phone') ?? '') }));
   }
   if (a === 'segments') return segmentsRoute(request, deps, m, path.slice(1));
+  if (a === 'settings') {
+    if (path.length > 1) return notFound();
+    if (m === 'GET') return handle(request, deps, 'customers.read', async (x) => ({ screen: await cu.crmSettingsScreen(x.deps, x.who) }));
+    if (m === 'PUT') return handle(request, deps, 'customers.settings', async (x) => ({ screen: await cu.saveCrmSetting(x.deps, x.who, await body(request)) }));
+    return notAllowed();
+  }
   if (a === 'merge-suggestions') {
     if (path.length > 1) return notFound();
     if (m !== 'GET') return notAllowed();
@@ -140,12 +150,13 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
         return { customer: view };
       });
     }
-    if (path.length === 2 && (b === 'orders' || b === 'exchanges' || b === 'support' || b === 'looks')) {
+    if (path.length === 2 && (b === 'orders' || b === 'exchanges' || b === 'support' || b === 'looks' || b === 'journey')) {
       if (m !== 'GET') return notAllowed();
       return handle(request, deps, 'customers.read', async (x) => {
         if (b === 'orders') return { ...(await cu.customerOrders(x.deps, x.who, a, x.url.searchParams.has('page') ? { page: Number(x.url.searchParams.get('page')) } : {})) };
         if (b === 'exchanges') return { rows: await cu.customerExchanges(x.deps, x.who, a) };
         if (b === 'support') return { rows: await cu.customerSupport(x.deps, x.who, a) };
+        if (b === 'journey') return { journey: await cu.customerJourney(x.deps, x.who, a, x.url.searchParams.has('page') ? { page: Number(x.url.searchParams.get('page')) } : {}) };
         return { rows: await cu.customerLooks(x.deps, x.who, a) };
       });
     }

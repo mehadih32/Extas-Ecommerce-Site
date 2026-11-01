@@ -2216,6 +2216,8 @@ model Review {
   @@index([storeId, productId, status, publishedAt])
   @@index([storeId, status, createdAt])
   @@index([storeId, orderItemId])
+  /// PR 288: a customer's reviews on his journey view.
+  @@index([storeId, customerId])
 }
 
 enum ReviewStatus {
@@ -3268,6 +3270,8 @@ model NotificationLog {
   @@index([storeId, status, createdAt])
   @@index([status, sendAfter])
   @@index([provider, providerMessageId])
+  /// PR 288: the messages on a customer's journey view.
+  @@index([storeId, customerId, createdAt])
 }
 
 /// @stage S05 · PR 149 — one try at sending a message: the sender (provider and mode), the result, the provider's
@@ -8471,6 +8475,8 @@ model AnalyticsEvent {
 
   @@index([storeId, name, occurredAt])
   @@index([storeId, visitorId, occurredAt])
+  /// PR 288: a customer's visits on his journey view.
+  @@index([storeId, customerId, occurredAt])
 }
 
 /// @stage S15 · PR 339 — a per-page funnel built on the event layer.
@@ -9488,6 +9494,8 @@ model Conversation {
   @@index([storeId, status, lastMessageAt])
   @@index([storeId, assignedToId, status])
   @@index([storeId, lastMessageAt])
+  /// PR 288: a customer's conversations on his journey view.
+  @@index([storeId, customerId])
 }
 
 /// @stage S22 · PR 425, 538 — a message; who replied is always recorded (employee name or EXTAS AI). Links are checked.

@@ -164,7 +164,8 @@
         "orders": "Orders",
         "exchanges": "Exchanges",
         "support": "Support",
-        "wallet": "Wallet"
+        "wallet": "Wallet",
+        "journey": "Journey"
       },
       "kpi": {
         "orders": "Orders",
@@ -377,6 +378,125 @@
       },
       "listShowsName": "Showing only the segment “{name}”",
       "listOpen": "Open the segment"
+    },
+    "jr": {
+      "offTitle": "The journey view is off",
+      "offBody": "Turn it on in Customers › More › Customer settings.",
+      "firstTitle": "How he first came",
+      "firstNone": "Not known: no touch carries a source or a campaign.",
+      "title": "Journey",
+      "none": "Nothing recorded yet.",
+      "newer": "Newer",
+      "older": "Older",
+      "unknown": "not known",
+      "campaign": "campaign {campaign}",
+      "from": "from {from}",
+      "what": {
+        "profile": {
+          "first": "Profile made · first came from {source}",
+          "other": "Another profile of his made · from {source}"
+        },
+        "visit": "Visited the site · {pages} pages",
+        "touch": "{kind} · {source}",
+        "order": {
+          "placed": "Order {number} placed through {source} · now {status}",
+          "delivered": "Order {number} delivered"
+        },
+        "exchange": "Exchange {number} on order {order} · {status}",
+        "message": "{channel} message · {step} · {status}",
+        "chat": "Chat started on {channel} · {ref}",
+        "review": "Left a review · {rating} of 5 · {status}",
+        "wallet": {
+          "credit": "Wallet credit {amount} · {reason}",
+          "debit": "Wallet used {amount} · {reason}"
+        },
+        "consent": {
+          "yes": "Said yes to {channel} ({scope})",
+          "no": "Stopped {channel} ({scope})"
+        },
+        "merge": {
+          "merged": "Profiles merged as one person",
+          "split": "Profiles merged, later split again",
+          "notSame": "Marked as not the same person as another profile"
+        },
+        "note": "Staff note: {text}"
+      },
+      "kind": {
+        "profile": "Profile",
+        "visit": "Visit",
+        "touch": "Touch",
+        "order": "Order",
+        "exchange": "Exchange",
+        "message": "Message",
+        "chat": "Chat",
+        "review": "Review",
+        "wallet": "Wallet",
+        "consent": "Consent",
+        "merge": "Merge",
+        "note": "Note"
+      },
+      "channel": {
+        "SMS": "SMS",
+        "WHATSAPP": "WhatsApp",
+        "EMAIL": "E-mail",
+        "TELEGRAM": "Telegram",
+        "PUSH": "Push",
+        "whatsapp": "WhatsApp",
+        "messenger": "Messenger",
+        "instagram": "Instagram",
+        "web": "Live chat"
+      },
+      "status": {
+        "QUEUED": "waiting",
+        "SENT": "sent",
+        "DELIVERED": "delivered",
+        "FAILED": "failed",
+        "SKIPPED": "not sent",
+        "BLOCKED_BY_GUARD": "stopped by a limit",
+        "REQUESTED": "asked",
+        "APPROVED": "approved",
+        "PICKUP_BOOKED": "pickup booked",
+        "RECEIVED": "received",
+        "QC_PASSED": "checked",
+        "QC_FAILED": "failed the check",
+        "COMPLETED": "done",
+        "REJECTED": "refused",
+        "CANCELLED": "cancelled",
+        "PENDING": "waiting for a check",
+        "HIDDEN": "hidden",
+        "open": "open",
+        "solved": "solved",
+        "closed": "closed"
+      }
+    },
+    "set": {
+      "title": "Customer settings",
+      "sub": "The customer features, each off until you turn it on. Every change is kept in the log.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "readOnly": "Only someone with the customer settings permission can change these.",
+      "journey": {
+        "title": "Customer journey view",
+        "sub": "The Journey tab on a customer's page: every touch of that person in order, newest first. Nothing new is stored.",
+        "enabled": "Show the Journey tab",
+        "kinds": "What it lists",
+        "perPage": "Rows per page (10–200)",
+        "opt": {
+          "profile": "Profiles and where they came from",
+          "visit": "Visits to the site",
+          "touch": "Ad clicks and other touches",
+          "order": "Orders and deliveries",
+          "exchange": "Exchanges",
+          "message": "Messages sent",
+          "chat": "Support chats",
+          "review": "Reviews",
+          "wallet": "Wallet (only for those who see money)",
+          "consent": "Consent changes",
+          "merge": "Merges and splits",
+          "note": "Staff notes"
+        }
+      }
     }
   }
 }

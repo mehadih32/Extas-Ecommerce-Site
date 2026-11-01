@@ -22,6 +22,10 @@
     "segments": {
       "label": "Saved segments",
       "help": "Groups of customers by what they really did (orders, delivered spend, true delivery share, last order, a category or size bought, an area, where they first came from, offers consent, a refusal, an exchange), saved by name and used again in the Customers list and later in campaigns. \"On\": the Segments page counts and saves; off (as shipped): the page only says it is off. \"Most segments\": how many saved segments the store may keep (archived ones do not count). \"Most conditions\": how many conditions one segment joins with “and”. \"Shown in the builder\": how many matching customers the builder lists beside its live count. A segment never sends anything by itself, and nothing in it moves money or blocks anyone."
+    },
+    "journey": {
+      "label": "Customer journey view",
+      "help": "The Journey tab on a customer's page: every touch of that person in order, newest first — each profile and where it came from, his visits to the site (grouped by browsing session), touches like an ad click or a chat start, every order with its channel and campaign and how it ended, exchanges, messages sent to him, support conversations, reviews, wallet credits and debits (only for those who may see money), consent changes, merges and staff notes. \"How he first came\" is the earliest touch with a source or a campaign. Off (as shipped): the tab says it is off. \"Kinds\": which touches are listed. \"Per page\": rows before \"Older\". Nothing new is stored and no phone number is shown in a row."
     }
   }
 }

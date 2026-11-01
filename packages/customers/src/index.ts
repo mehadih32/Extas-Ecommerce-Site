@@ -20,6 +20,9 @@
 // PR 287: segments from real behaviour, saved and reusable (segments.ts; the conditions in segment-rules.ts, also in
 // `@extas/customers/pure`): counted live over the list's own people (people-sql.ts), the list's views as built-in
 // segments, the Customers list narrowed to one (`?segment=`); off as shipped (`customers.segments`).
+// PR 288: the journey view (journey.ts) — every touch of a person in order, from what the shop already keeps (profiles,
+// visits, touches, orders and how they ended, exchanges, messages, chats, reviews, wallet, consent, merges, notes);
+// off as shipped (`customers.journey`), nothing new stored.
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
@@ -28,10 +31,12 @@ export * from './erasure';
 export * from './erp-page';
 export * from './errors';
 export * from './family';
+export * from './journey';
 export * from './list';
 export * from './merge';
 export * from './people-sql';
 export * from './profile';
 export * from './pure';
 export * from './segments';
+export * from './settings';
 export * from './view';
