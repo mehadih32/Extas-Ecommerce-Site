@@ -107,3 +107,7 @@
 @media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
   .adm2 .a2-crumb a.sp-back { min-height: 44px; min-width: 44px; }
 }
+/* PR 433: the follow-up waiting on a chat without an order */
+.adm2 .sp-fu{border:1px dashed var(--g6);border-radius:10px;padding:10px 12px;background:var(--sf2)}
+.adm2 .sp-fu .a2-h4{margin:0}
+.adm2 .sp-fu-lbl{display:block;margin:8px 0 4px}

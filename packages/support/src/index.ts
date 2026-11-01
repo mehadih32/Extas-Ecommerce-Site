@@ -39,6 +39,10 @@
 // PR 432: EXTAS AI's draft answers.
 //   drafts.ts     the draft answer to the customer's latest question (supportDraft): what it is about, the chat's order
 //                 and parcel, Find My Size, the store's own words; a person sends it. drafts-pure.ts: the rules.
+// PR 433: follow-ups on chats that did not become an order.
+//   followups.ts  the rule-capped sweep (sweepFollowUps: the bag left, products sent and not ordered, a cancelled
+//                 order), the follow-up waiting on a chat (chatFollowUp) and a person's Send or Skip; followups-pure.ts:
+//                 the rules.
 //
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
@@ -65,3 +69,6 @@ export * from './tickets';
 // PR 432 — EXTAS AI's draft answers (a person sends them).
 export * from './drafts-pure';
 export * from './drafts';
+// PR 433 — follow-ups on chats without an order (rule-capped; a person sends).
+export * from './followups-pure';
+export * from './followups';

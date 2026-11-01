@@ -176,7 +176,7 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const r = await j('GET', ['settings']);
     const files = { enabled: true, maxPerMessage: 4, maxMb: 10, kinds: { image: true, video: true, pdf: true } };
     expect(r.body.cards['support.attachments'].value).toEqual(files);
-    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.draftKeywords', 'support.draftWords', 'support.drafts', 'support.identity', 'support.inbox', 'support.liveChat', 'support.tickets']);
+    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.draftKeywords', 'support.draftWords', 'support.drafts', 'support.followUp', 'support.followUpWords', 'support.identity', 'support.inbox', 'support.liveChat', 'support.tickets']);
     const version = r.body.cards['support.attachments'].version as string;
     const saved = await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxPerMessage: 3 }, version } });
     expect(saved.status).toBe(200);
@@ -354,5 +354,33 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const after = (await (await notificationsHandler(call('GET', '/api/admin/notifications', { cookie: owner }), deps)).json()) as { items: { href: string }[] };
     expect(after.items.some((i) => i.href === `/admin/support/c/${got.conversationId}`)).toBe(false);
     expect((await j('GET', ['c', got.conversationId])).body.thread.ticket).toMatchObject({ firstLate: true });
+  });
+
+  it('PR 433: follow-ups — off, refused and no view; on, a quiet chat with a product sent is in the Follow-ups view; skipped through the route', async () => {
+    const cards = (await j('GET', ['settings'])).body.cards;
+    expect(cards['support.followUp'].value).toMatchObject({ enabled: false, offerCode: '' });
+    const got = await receiveMessage(
+      { db: t.prisma, settings: deps.resolver },
+      { storeId, channel: { kind: 'livechat', externalId: 'sample-chat' }, contact: { externalId: 'v-433', name: 'Sample quiet visitor' }, message: { externalId: 'm-433', text: 'Sample: price?', sentAt: new Date(Date.now() - 6 * 3_600_000) } },
+    );
+    await t.prisma.supportProductShare.create({ data: { storeId, conversationId: got.conversationId, productId: got.conversationId, refCode: 'samplefu4330' } });
+    await t.prisma.conversation.update({ where: { id: got.conversationId }, data: { status: 'WAITING', lastDirection: 'OUT', lastMessageAt: new Date(Date.now() - 5 * 3_600_000) } });
+    const off = await j('POST', ['c', got.conversationId, 'followup'], { body: { action: 'send', followUpId: got.conversationId, body: 'x', requestKey: 'sample-press-0433', version: 'v' } });
+    expect([off.status, off.body.error]).toEqual([422, 'FOLLOW_UP_OFF']);
+    expect((await j('GET', [])).body.followUps).toBe(false);
+    expect((await j('PUT', ['settings'], { body: { key: 'support.followUp', value: { ...cards['support.followUp'].value, enabled: true }, version: cards['support.followUp'].version } })).status).toBe(200);
+    const box = (await j('GET', [], { query: '?view=followup' })).body;
+    expect(box.followUps).toBe(true);
+    expect(box.rows.map((r: { id: string }) => r.id)).toContain(got.conversationId);
+    const f = await t.prisma.supportFollowUp.findFirstOrThrow({ where: { conversationId: got.conversationId, outcome: null } });
+    expect(f.ruleKey).toBe('products');
+    expect((await j('POST', ['c', got.conversationId, 'followup'], { body: { action: 'nope' } })).status).toBe(400);
+    expect((await j('POST', ['c', got.conversationId, 'followup'], { cookie: reader, body: { action: 'skip', followUpId: f.id } })).status).toBe(403);
+    expect((await j('POST', ['c', got.conversationId, 'followup'], { body: { action: 'skip', followUpId: f.id } })).body).toEqual({ ok: true, skipped: true });
+    expect((await j('POST', ['c', got.conversationId, 'followup'], { body: { action: 'skip', followUpId: f.id } })).body.error).toBe('FOLLOW_UP_GONE');
+    expect((await j('GET', [], { query: '?view=followup' })).body.rows.map((r: { id: string }) => r.id)).not.toContain(got.conversationId);
+    // put it back for the tests after this one
+    const now = (await j('GET', ['settings'])).body.cards['support.followUp'];
+    expect((await j('PUT', ['settings'], { body: { key: 'support.followUp', value: { ...now.value, enabled: false }, version: now.version } })).status).toBe(200);
   });
 });

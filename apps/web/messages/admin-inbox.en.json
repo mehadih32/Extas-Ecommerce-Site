@@ -8,9 +8,10 @@
       "waiting": "Waiting for customer",
       "mine": "Mine",
       "unassigned": "Not taken",
+      "late": "Late",
+      "followup": "Follow-ups",
       "solved": "Solved",
-      "all": "All",
-      "late": "Late"
+      "all": "All"
     },
     "search": "Name, number or reference",
     "searchGo": "Search",
@@ -159,7 +160,10 @@
       "ORDER_CREATED_ADVANCE": "{name} created order {number}; it waits for its advance (pay link sent)",
       "TICKET_OPENED": "Ticket opened",
       "TICKET_SOLVED": "Ticket solved in {time}",
-      "TICKET_SOLVED_LATE": "Ticket solved in {time} (late)"
+      "TICKET_SOLVED_LATE": "Ticket solved in {time} (late)",
+      "FOLLOWUP_SENT": "{name} sent a follow-up ({why})",
+      "FOLLOWUP_SKIPPED": "{name} skipped a follow-up ({why})",
+      "FOLLOWUP_ORDERED": "Order {number} came after the follow-up"
     },
     "err": {
       "STALE": "Someone changed this conversation in between; it was read again.",
@@ -196,7 +200,9 @@
       "CHECKOUT_NO_PAYMENT": "No payment method is open for this order.",
       "CHECKOUT_PAUSED": "Ordering is paused while the ERP holds the account.",
       "CHECKOUT_CART_NOT_OPEN": "This bag already became an order. The page was read again.",
-      "CHECKOUT_IDEMPOTENCY": "That press was already used. Press again."
+      "CHECKOUT_IDEMPOTENCY": "That press was already used. Press again.",
+      "FOLLOW_UP_OFF": "Follow-ups are switched off in Support settings.",
+      "FOLLOW_UP_GONE": "This follow-up was already sent, skipped or closed, or the customer wrote meanwhile; it was read again."
     },
     "set": {
       "title": "Support settings",
@@ -390,6 +396,42 @@
       "draftKeywords": {
         "h": "Draft answers: the words that tell questions apart",
         "d": "For each question, the words that tell it apart, separated by commas — Bengali, Banglish and English. A message is read in this order: cancel, complaint, late, bulk, exchange, size, where is my order, greeting."
+      },
+      "followUp": {
+        "h": "Follow-ups on chats without an order",
+        "d": "When a customer goes quiet after your answer and the chat did not become an order, a follow-up is put up for a person to send: the bag left in the chat, products sent and not ordered, or (win-back) an order that was cancelled. The \"Follow-ups\" view of the inbox lists them. Nothing goes out by itself.",
+        "enabled": "Follow-ups",
+        "enabledHelp": "Shown only to people who may reply. A person reads it, may change the words, and presses Send or Skip.",
+        "rules": "Which chats get one",
+        "rule": {
+          "bag": "Bag left in the chat",
+          "products": "Products sent, no order",
+          "cancelled": "Order cancelled (win-back)"
+        },
+        "afterHours": "Hours the customer has been quiet",
+        "afterHoursHelp": "Counted from the shop's last answer.",
+        "maxPerChat": "Follow-ups one chat may get",
+        "gapDays": "One follow-up per person in (days)",
+        "gapDaysHelp": "One customer on every chat and channel counts once.",
+        "perDay": "Follow-ups per day for the shop",
+        "windowMargin": "Minutes left in the reply window",
+        "windowMarginHelp": "Messenger and WhatsApp take a shop's answer only for a while after the customer's message. A chat with less time left gets none.",
+        "cancelledDays": "Days a cancelled order counts for win-back",
+        "banglish": "Language for Banglish (Latin letters)",
+        "banglishHelp": "A message in Bengali letters is always followed up in Bengali.",
+        "bn": "Bengali",
+        "en": "English",
+        "offerCode": "Coupon code to mention (optional)",
+        "offerCodeHelp": "Empty: no coupon. The code of a coupon you already made; it is mentioned only while that coupon is switched on, in its dates, open to every customer and not used up. The coupon is never changed here."
+      },
+      "followUpWords": {
+        "h": "Follow-up words",
+        "d": "The words of each follow-up in English and Bengali. Only these may be used: {hello}, {name}, {product}, {code}.",
+        "x": {
+          "offer": "Coupon line",
+          "en": "English",
+          "bn": "Bengali"
+        }
       }
     },
     "person": {
@@ -539,6 +581,23 @@
         "person": "For a person",
         "owner": "For the owner"
       }
+    },
+    "fu": {
+      "h": "Follow-up",
+      "rule": {
+        "bag": "Bag left in the chat",
+        "products": "Products sent, no order",
+        "cancelled": "Order cancelled"
+      },
+      "window": "The channel takes an answer until {at}.",
+      "offer": "It mentions your coupon {code} (live). The coupon itself is not changed.",
+      "label": "Words (change them as you like)",
+      "send": "Send follow-up",
+      "sending": "Sending…",
+      "skip": "Skip",
+      "note": "Nothing goes out by itself.",
+      "sent": "Follow-up sent.",
+      "skipped": "Skipped. It comes back only if the chat moves."
     }
   }
 }

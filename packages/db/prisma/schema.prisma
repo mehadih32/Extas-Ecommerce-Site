@@ -9790,6 +9790,9 @@ model SupportProductShare {
 }
 
 /// @stage S22 · PR 433 — an AI follow-up on a chat that did not become an order (rule-capped).
+/// PR 433: `ruleKey` bag | products | cancelled; `outcome` null while it waits for a person, then SENT, SKIPPED,
+/// CLOSED (no longer due: the customer wrote, an order came, the reply window closed) or ORDERED (sent, then an order
+/// came from the chat). `offerCouponId` is the owner's own coupon it mentioned, never one it made.
 model SupportFollowUp {
   id             String    @id @default(uuid(7)) @db.Uuid
   storeId        Int
@@ -9802,6 +9805,16 @@ model SupportFollowUp {
   outcome        String?
   createdAt      DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 433 (migration 0115): one person across chats and channels (the customer, else the chat's first contact), for
+  /// "one follow-up per person in so many days".
+  personKey      String?
+  /// PR 433: the reply that carried it, and the person who sent or skipped it.
+  messageId      String?   @db.Uuid
+  decidedById    String?   @db.Uuid
+
+  @@index([storeId, outcome, scheduledAt])
+  @@index([conversationId, createdAt])
+  @@index([storeId, personKey, sentAt])
 }
 
 /// @stage S22 · PR 538 — no employee answered within the window: the AI pinged the owner on Telegram.

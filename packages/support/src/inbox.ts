@@ -13,6 +13,7 @@ import { personOf, type Person } from './identity';
 import { INBOX_VIEWS, type ConversationStatus, type InboxView } from './pure';
 import { inboxPhoneDigits } from './search-pure';
 import { clocksOf, ticketOf, type TicketClock, type TicketView } from './tickets';
+import { sweepFollowUpsSoon, waitingFollowUpChats } from './followups';
 
 async function phoneShown(deps: Pick<SupportDeps, 'settings'>, who: Who, held: Set<string>): Promise<(p: string | null) => string | null> {
   if (held.has('customers.phone')) return (p) => p;
@@ -63,9 +64,13 @@ export interface Inbox {
   pages: number;
   /** The store's channels, for the filter. */
   channels: { kind: string; name: string; enabled: boolean }[];
+  /** PR 433: follow-ups are on (the "Follow-ups" view is shown). */
+  followUps: boolean;
 }
 
-function viewWhere(view: InboxView, me: string | null, now: Date): Prisma.ConversationWhereInput {
+function viewWhere(view: InboxView, me: string | null, now: Date, followIds: string[]): Prisma.ConversationWhereInput {
+  // PR 433: a follow-up waits for a person (worked out by the sweep)
+  if (view === 'followup') return { id: { in: followIds } };
   // PR 431: a timer that ran out, on a chat the team still owes an answer or a solution
   if (view === 'late') return { status: 'OPEN', slaDueAt: { lt: now } };
   if (view === 'open') return { status: 'OPEN' };
@@ -83,7 +88,10 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings' | '
   const storeId = who.storeId;
   const me = who.actor.staffUserId;
   const now = nowOf(deps);
-  const { pageSize } = await setting(deps, storeId, 'support.inbox');
+  const [{ pageSize }, follow] = await Promise.all([setting(deps, storeId, 'support.inbox'), setting(deps, storeId, 'support.followUp')]);
+  // PR 433: the follow-ups due are put up first (at most once a minute per store)
+  if (follow.enabled) await sweepFollowUpsSoon(deps, storeId);
+  const followIds = follow.enabled ? await waitingFollowUpChats(deps.db, storeId) : [];
   // PR 425 follow-up: Bengali digits, +880 and the leading 0 are read too (search-pure.ts)
   const digits = q.q ? inboxPhoneDigits(q.q) : '';
   const search: Prisma.ConversationWhereInput = q.q
@@ -99,11 +107,11 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings' | '
     : {};
   const chan: Prisma.ConversationWhereInput = q.channel ? { channel: { kind: q.channel } } : {};
   const base: Prisma.ConversationWhereInput = { storeId, ...chan };
-  const where: Prisma.ConversationWhereInput = { AND: [base, search, viewWhere(q.view, me, now)] };
+  const where: Prisma.ConversationWhereInput = { AND: [base, search, viewWhere(q.view, me, now, followIds)] };
   // the oldest waiting customer first in the working views; the latest first in the others
   const working = q.view === 'open' || q.view === 'mine' || q.view === 'unassigned';
   const orderBy: Prisma.ConversationOrderByWithRelationInput[] = q.view === 'late' ? [{ slaDueAt: 'asc' }] : working ? [{ waitingSince: { sort: 'asc', nulls: 'last' } }, { lastMessageAt: { sort: 'desc', nulls: 'last' } }] : [{ lastMessageAt: { sort: 'desc', nulls: 'last' } }];
-  const counted = await Promise.all(INBOX_VIEWS.map((v) => deps.db.conversation.count({ where: { AND: [base, search, viewWhere(v, me, now)] } })));
+  const counted = await Promise.all(INBOX_VIEWS.map((v) => deps.db.conversation.count({ where: { AND: [base, search, viewWhere(v, me, now, followIds)] } })));
   const counts = Object.fromEntries(INBOX_VIEWS.map((v, i) => [v, counted[i]!])) as Record<InboxView, number>;
   const pages = Math.max(1, Math.ceil(counts[q.view] / pageSize));
   const page = Math.min(q.page, pages);
@@ -125,6 +133,7 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings' | '
     pages,
     counts,
     channels,
+    followUps: follow.enabled,
     rows: rows.map((r) => ({
       id: r.id,
       refCode: r.refCode,
