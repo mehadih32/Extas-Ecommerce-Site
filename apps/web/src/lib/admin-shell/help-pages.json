@@ -59,6 +59,7 @@
     { "id": "marketing/notices", "route": "/admin/rules/notices" },
     { "id": "marketing/eid", "route": "/admin/rules/eid" },
     { "id": "marketing/tracking", "route": "/admin/marketing/tracking" },
+    { "id": "marketing/ad-platforms", "route": "/admin/marketing/ad-platforms" },
     { "id": "marketing/landing", "route": "/admin/marketing/landing" },
     { "id": "marketing/landing-builder", "route": "/admin/marketing/landing/[id]" },
     { "id": "marketing/landing-templates", "route": "/admin/marketing/landing/templates" },

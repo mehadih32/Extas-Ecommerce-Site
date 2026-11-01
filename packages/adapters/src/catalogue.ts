@@ -334,6 +334,18 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S13 · PR 259: Meta's Marketing API, read only (the ad account, its campaigns and ad sets for Marketing › Ad
+  // platforms); the mock is a practice account until the token is in and the test (reading the account) passes.
+  {
+    id: 'metaAds',
+    kind: 'META',
+    provider: 'metaAds',
+    adapter: true,
+    secrets: [{ field: 'accessToken' }],
+    config: [{ field: 'adAccountId' }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   {
     id: 'googleAnalytics',
     kind: 'GOOGLE',

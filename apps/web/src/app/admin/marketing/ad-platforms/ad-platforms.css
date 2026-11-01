@@ -1,0 +1,11 @@
+/* S13 · PR 259 — Marketing › Ad platforms: the platform head, "Read now" with its answer, the tie select (the shell's tokens only). */
+.adm2 .adp-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.adm2 .adp-sub{font-weight:600;color:var(--ink);margin:0}
+.adm2 .adp-read{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
+.adm2 .adp-bad{color:var(--bad)}
+.adm2 .adp-nowrap{white-space:nowrap}
+.adm2 .adp-gone{margin-left:6px}
+.adm2 .adp-link{width:100%;max-width:260px}
+@media (min-width:768px){.adm2 .adp-link{min-width:160px}}
+/* The "Keys & connections" link is a 44 px tap at every width. */
+.adm2 .adp-keys{display:inline-flex;align-items:center;min-height:44px}
