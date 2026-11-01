@@ -3,6 +3,7 @@
 // profit for any period (one-press periods or from/to, made safe by `costs.report`), how each line is made, the orders
 // left out for a missing cost, the parts not known yet, day by day, and the CSV. Seeing it needs `books.read`. Read-only.
 // PR 351: at the end, the money report to the owner (how often, when, the language; changing it needs `books.report`).
+// PR 537: while the VAT system is on, a "VAT inside Sales" line under the profit lines (the same figure as Money → VAT).
 // Words: messages/admin-profit.*.json.
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -21,6 +22,7 @@ import { parseReportQuery, QUICK_PERIODS, quickPeriod } from '@/lib/cost-report'
 import { t, type Dict } from '@/lib/i18n';
 import { moneyReportView } from '@/lib/money-report-api';
 import { profitReport } from '@/lib/profit-report';
+import { vatReportFor } from '@/lib/vat-report';
 import bn from '../../../../../messages/admin-profit.bn.json';
 import en from '../../../../../messages/admin-profit.en.json';
 import reportBn from '../../../../../messages/admin-cost-report.bn.json';
@@ -62,7 +64,7 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
   const [currency, timeZone, limits] = await Promise.all([access.deps.resolver.value('store.currency', at), access.deps.resolver.value('store.timeZone', at), access.deps.resolver.value('costs.report', at)]);
   const today = ymdIn(new Date(), timeZone);
   const { q, notes } = parseReportQuery(sp, today, limits);
-  const [r, report] = await Promise.all([profitReport(access.deps, MOTHER_STORE_ID, q.from, q.to), moneyReportView(access.deps, MOTHER_STORE_ID)]);
+  const [r, report, vat] = await Promise.all([profitReport(access.deps, MOTHER_STORE_ID, q.from, q.to), moneyReportView(access.deps, MOTHER_STORE_ID), vatReportFor(access.deps, MOTHER_STORE_ID, q.from, q.to)]);
   const money = moneyOf(currency, view.locale);
   const m = (minor: number) => formatMoney(minor, money);
   const dayText = (day: string) => new Intl.DateTimeFormat(view.locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${day}T00:00:00Z`));
@@ -171,6 +173,25 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
             <b>{l.minor === null ? '—' : l.sign === '=' ? m(l.minor) : `${l.sign} ${m(l.minor)}`}</b>
           </div>
         ))}
+        {vat ? (
+          <div className="a2-rule" data-testid="pl-line-vat">
+            <span>
+              {c('vat.label')}
+              <span className="a2-xs a2-mute cl-sub">
+                {c('vat.how', { goods: m(vat.goodsVatMinor), delivery: vat.deliveryVatMinor === null ? c('vat.off') : m(vat.deliveryVatMinor), noRate: m(vat.unratedMinor) })}
+              </span>
+            </span>
+            <span />
+            <b>{m(vat.totalVatMinor)}</b>
+          </div>
+        ) : null}
+        {vat ? (
+          <div className="ct-actions">
+            <Link className="a2-btn" href={`/admin/money/vat?from=${q.from}&to=${q.to}#vr-title`} data-testid="pl-vat-open">
+              {c('vat.open')}
+            </Link>
+          </div>
+        ) : null}
         {r.uncosted.orders ? (
           <p className="a2-xs bk-warn a2-mt12" data-testid="pl-uncosted">
             {c('uncosted', { n: r.uncosted.orders, amount: m(r.uncosted.salesMinor), skus: r.uncosted.skus.join(', ') })}

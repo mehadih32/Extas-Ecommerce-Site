@@ -13,6 +13,7 @@ import { ymdIn } from '@extas/metrics';
 import { errorResponse, fail, guardAdmin, type AdminDeps } from './admin-auth';
 import { parseReportQuery } from './cost-report';
 import type { AppResolver } from './settings';
+import { vatReportFor } from './vat-report';
 
 /** The report of one store over `from`–`to` (the store's own days): @extas/inventory `profitReport` (PR 351 moved it there
  * so the worker's money report reads the same figure) with the app's settings resolver. */
@@ -26,8 +27,9 @@ const cell = (v: string | number | null) => {
   return /[",\r\n]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
 };
 
-/** The report as CSV: the lines of the profit, then day by day (amounts in minor units; empty = not known). */
-export function profitCsv(r: ProfitReport, currency: string): string {
+/** The report as CSV: the lines of the profit, then day by day (amounts in minor units; empty = not known). PR 537: while
+ * the VAT system is on, `vatInsideSales` adds the VAT already inside Sales after net profit (a part of Sales, not a cost). */
+export function profitCsv(r: ProfitReport, currency: string, vatInsideSales: number | null = null): string {
   const lines: (string | number | null)[][] = [
     ['line', 'amountMinor', 'currency'],
     ['sales.delivered', r.salesMinor, currency],
@@ -45,6 +47,7 @@ export function profitCsv(r: ProfitReport, currency: string): string {
     ['otherCosts', r.otherCostsMinor, currency],
     ['fixedCosts', r.fixedMinor, currency],
     ['netProfit', r.netProfitMinor, currency],
+    ...(vatInsideSales === null ? [] : [['vat.insideSales', vatInsideSales, currency]]),
     [],
     ['day', 'orders', 'salesMinor', 'grossProfitMinor', 'contributionMinor'],
     ...[...r.byDay].reverse().map((d) => [d.day, d.orders, d.salesMinor, d.grossProfitMinor, d.contributionMinor]),
@@ -66,8 +69,8 @@ export async function profitRoute(request: Request, deps: AdminDeps | null): Pro
     const at = { storeId };
     const [timeZone, currency, limits] = await Promise.all([d.resolver.value('store.timeZone', at), d.resolver.value('store.currency', at), d.resolver.value('costs.report', at)]);
     const { q } = parseReportQuery(Object.fromEntries(url.searchParams), ymdIn(new Date(), timeZone), limits);
-    const r = await profitReport(d, storeId, q.from, q.to);
-    return new Response(profitCsv(r, currency), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="profit-${q.from}-${q.to}.csv"`, 'cache-control': 'no-store' } });
+    const [r, vat] = await Promise.all([profitReport(d, storeId, q.from, q.to), vatReportFor(d, storeId, q.from, q.to)]);
+    return new Response(profitCsv(r, currency, vat?.totalVatMinor ?? null), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="profit-${q.from}-${q.to}.csv"`, 'cache-control': 'no-store' } });
   } catch (e) {
     return errorResponse(e);
   }

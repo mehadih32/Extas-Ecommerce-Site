@@ -97,6 +97,12 @@
         "network": "No connection. Try again.",
         "other": "Something went wrong. Try again."
       }
+    },
+    "vat": {
+      "label": "VAT inside Sales",
+      "how": "Already inside the prices (goods {goods}, delivery {delivery}); a part of Sales, not a cost on top. Goods with no rate: {noRate}.",
+      "open": "VAT report",
+      "off": "not counted"
     }
   }
 }

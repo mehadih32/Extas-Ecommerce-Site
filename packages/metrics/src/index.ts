@@ -39,3 +39,5 @@ export * from './pnl';
 // S16 · PR 350: the VAT inside VAT-inclusive prices — the rate of a line (product > category > parent > default), the
 // VAT inside an amount, and `ordersVat` over orders the caller chose (vat.ts). Never changes a price.
 export * from './vat';
+// S16 · PR 537: `vatReport` — a period's VAT inside Sales (delivered orders), by rate, by category and by day (vat-report.ts).
+export * from './vat-report';
