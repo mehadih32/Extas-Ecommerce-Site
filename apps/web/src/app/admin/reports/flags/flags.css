@@ -1,0 +1,10 @@
+/* S06 · PR 562 — Reports › Flag outcomes: the tag on a row pointed out and its row's tint. The tables reuse the Fraud &
+   RTO page's (fraud.css), the pointers and the link the learning page's (learning.css); the shell's tokens only. */
+.adm2 .flg-tag{margin-left:8px;vertical-align:middle}
+.adm2 .flg-tbl tr[data-warn=yes] th[scope=row]{color:var(--warn)}
+@media (min-width:768px){
+  .adm2 .flg-tbl th[scope=row]{min-width:180px}
+}
+@media (max-width:767px){
+  .adm2 .flg-tag{margin-left:6px}
+}

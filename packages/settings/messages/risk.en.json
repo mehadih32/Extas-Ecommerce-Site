@@ -117,6 +117,10 @@
     "phoneRisk": {
       "label": "Phone-entry risk check",
       "help": "When on, the moment the phone number at checkout is whole, the shop asks every connected courier fraud check in the background while the customer keeps typing. Each check gets the time you set; a slow or failed one simply passes the customer. The answers are kept for the hours you set, so the checkout's own look and the order's risk score read them without waiting. The customer never sees a score, a reason or a wait; nothing is blocked. Off as shipped."
+    },
+    "flagReport": {
+      "label": "Flag outcome report",
+      "help": "When on, every checkout the owner's layers ask to pay ahead is kept once per bag, and Reports › Flag outcomes shows, for the days you set: of the customers flagged — at checkout per layer, and after ordering per risk level — how many paid the advance, how many are still waiting, how many walked away (left the checkout, or the order was cancelled unpaid) and how many ordered without the ask; what became of those who paid, and the advance collected. A layer flagged at least the fewest flags you set that loses at least the share you set is pointed out (empty: never). It only reads: no layer, price or Cash on Delivery changes by itself. Off as shipped."
     }
   },
   "defaults": {

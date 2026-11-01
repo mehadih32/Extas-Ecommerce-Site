@@ -20,8 +20,11 @@ export const KIND_OF: Record<AdvanceRequirement, AdvanceKind> = { DELIVERY_CHARG
 
 /** The payment's purpose for each kind (the payment page pays it; the order service sees the advance met). */
 export const ADVANCE_PURPOSE = { delivery: 'ADVANCE_DELIVERY_CHARGE', part: 'PART_ADVANCE', full: 'FULL_ADVANCE' } as const satisfies Record<AdvanceKind, string>;
-/** The flag event's outcome as the checkout records it (the outcome report, PR 562, adds what happened next). */
-export const FLAG_OUTCOMES = { asked: 'ASKED' } as const;
+/**
+ * The flag event's outcome as the checkout records it: ASKED, the order placed with the ask (PR 560); SHOWN, a bag a layer
+ * asked to pay ahead, once (PR 562, while the flag outcome report is on). The report works out what happened next.
+ */
+export const FLAG_OUTCOMES = { asked: 'ASKED', shown: 'SHOWN' } as const;
 
 /** Every purpose the checkout's own payment page pays. */
 export const CHECKOUT_PAY_PURPOSES = ['ORDER', ...Object.values(ADVANCE_PURPOSE)] as ('ORDER' | (typeof ADVANCE_PURPOSE)[AdvanceKind])[];

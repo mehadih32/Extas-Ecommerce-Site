@@ -305,4 +305,35 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
       f.overrides.delete('checkout.phoneRisk');
     }
   });
+
+  it('S06 · PR 562: a flagged bag is kept once for the flag outcome report — only while the report is on; never his number', async () => {
+    const od = () => ({ db: f.t.prisma, settings: f.deps().settings });
+    const wired = (): CheckoutApiDeps => ({ ...deps(), checkout: { ...f.deps(), advanceFlag: (i) => checkoutFlag(od(), i) } });
+    if (!(await f.t.prisma.checkoutParameterLayer.count({ where: { storeId: f.S, enabled: true } })))
+      await f.t.prisma.checkoutParameterLayer.create({ data: { storeId: f.S, name: 'Sample layer', position: 1, enabled: true, conditions: { minScore: null, bands: [], signals: ['newPhone'] }, requirement: 'DELIVERY_CHARGE' } });
+    f.overrides.set('checkout.advance', { enabled: true, maxLayers: 5 });
+    const shown = () => f.t.prisma.checkoutFlagEvent.count({ where: { storeId: f.S, outcome: 'SHOWN' } });
+    try {
+      const bag = await f.bag('api-flag-shown', [{ variantId: f.variant('oxford-cotton-shirt', 'sky', 'S').id }]);
+      const cookie = `${BAG_COOKIE}=${bag.visitorId}`;
+      const details = { name: FORM.name, phone: '01700000562' };
+      const quote = async () => read(await quoteHandler(req('/api/checkout/quote', { lang: 'en', address: { line: FORM.address }, details }, { cookie }), wired()));
+      // off (as shipped): flagged, and nothing kept
+      expect((await quote()).body.view).toMatchObject({ pay: { codOff: 'ADVANCE' } });
+      expect(await shown()).toBe(0);
+      f.overrides.set('risk.flagReport', { enabled: true, days: 30, warnLeftPercent: null, minFlags: 10, maxRows: 5000 });
+      const a = await quote();
+      const b = await quote();
+      // the page sees the same checkout either way
+      expect(b.body.view).toEqual(a.body.view);
+      expect(await shown()).toBe(1);
+      const row = await f.t.prisma.checkoutFlagEvent.findFirstOrThrow({ where: { storeId: f.S, outcome: 'SHOWN' } });
+      expect(row).toMatchObject({ requirement: 'DELIVERY_CHARGE', orderId: null });
+      expect(row.explanation).toMatchObject({ cartId: bag.cartId, kind: 'delivery' });
+      expect(JSON.stringify(row.explanation)).not.toContain('1700000562');
+    } finally {
+      f.overrides.delete('checkout.advance');
+      f.overrides.delete('risk.flagReport');
+    }
+  });
 });

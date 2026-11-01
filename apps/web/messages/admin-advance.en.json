@@ -94,5 +94,10 @@
     "UNAUTHENTICATED": "Your sign-in has ended. Sign in again.",
     "network": "No connection. Check the internet and try again.",
     "server-error": "Something went wrong. Try again in a minute."
+  },
+  "outcomes": {
+    "title": "What the flagged customers did",
+    "text": "How many paid the advance and how many walked away, per layer:",
+    "link": "Reports › Flag outcomes"
   }
 }

@@ -80,6 +80,7 @@
     { "id": "reports/fraud", "route": "/admin/reports/fraud" },
     { "id": "reports/stopped", "route": "/admin/reports/stopped" },
     { "id": "reports/learning", "route": "/admin/reports/learning" },
+    { "id": "reports/flags", "route": "/admin/reports/flags" },
     { "id": "orders/digest", "route": "/admin/orders/digest" },
     { "id": "orders/calls", "route": "/admin/orders/confirm/calls" },
     { "id": "reports/delivery", "route": "/admin/reports/delivery" },

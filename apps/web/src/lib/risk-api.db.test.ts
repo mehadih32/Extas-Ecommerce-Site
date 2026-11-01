@@ -18,6 +18,8 @@
 // saved (`settings.write`, audited), out of range and stale refused; on, the hold proposals decided above are counted.
 // PR 559: the phone-entry check's card and the pattern's card, off as shipped; saved (`risk.rules.write`, audited) — the
 // pattern into the whole signal set, the other signals untouched; out of range and stale refused; a reader refused.
+// PR 562: the flag outcome report off as shipped with its card; a reader refused; the card saved (`settings.write`,
+// audited), out of range and stale refused; on, the report reads (nothing flagged in this store yet).
 // Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
@@ -382,5 +384,25 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect(await api('PUT', ['phone-risk'], { body: { key: 'pattern', value: pt.value, version: pt.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
     expect(await api('PUT', ['phone-risk'], { body: { key: 'phoneRisk', value: pr.value, version: pr.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
     for (const action of ['checkout.phoneRisk.save', 'risk.signals.pattern.save']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBe(1);
+  });
+
+  it('PR 562: the flag outcome report off as shipped with its card; a reader is refused; the card audited; on, it reads', async () => {
+    const got = await api('GET', ['flag-report']);
+    expect(got.status).toBe(200);
+    expect(got.body.report).toMatchObject({ enabled: false, checkout: [], order: [], total: { flagged: 0 } });
+    const card = got.body.cards.flagReport as { key: string; value: Record<string, unknown>; version: string };
+    expect(card).toMatchObject({ key: 'flagReport', value: { enabled: false, days: 30, warnLeftPercent: null, minFlags: 10, maxRows: 5000 } });
+    expect((await api('GET', ['flag-report'], { cookie: reader })).status).toBe(403);
+    expect((await api('GET', ['flag-report', 'x'])).status).toBe(404);
+    expect((await api('POST', ['flag-report'], { body: {} })).status).toBe(405);
+    expect((await api('PUT', ['flag-report'], { cookie: reader, body: { key: 'flagReport', value: card.value, version: card.version } })).status).toBe(403);
+    expect(await api('PUT', ['flag-report'], { body: { key: 'flagReport', value: { ...card.value, warnLeftPercent: 0 }, version: card.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['warnLeftPercent'] } });
+    expect((await api('PUT', ['flag-report'], { body: { key: 'other', value: card.value, version: card.version } })).status).toBe(400);
+    const put = await api('PUT', ['flag-report'], { body: { key: 'flagReport', value: { ...card.value, enabled: true, warnLeftPercent: 50 }, version: card.version } });
+    expect(put).toMatchObject({ status: 200, body: { cards: { flagReport: { value: { enabled: true, warnLeftPercent: 50 } } } } });
+    expect(await api('PUT', ['flag-report'], { body: { key: 'flagReport', value: card.value, version: card.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'risk.flagReport.save' } })).toBe(1);
+    const on = await api('GET', ['flag-report']);
+    expect(on.body.report).toMatchObject({ enabled: true, warnLeftPercent: 50, cut: false });
   });
 });

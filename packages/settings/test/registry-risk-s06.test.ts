@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { CALL_OUTCOMES_DEFAULT, callOutcomesSchema, checkoutPhoneRiskSchema, checkoutTransitDuplicateSchema, REFUSER_TERMS, riskApprovalSchema, riskNewCustomerSchema, riskLearningSchema, riskGoodCustomerSchema, riskStopReportSchema, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
+import { CALL_OUTCOMES_DEFAULT, callOutcomesSchema, checkoutPhoneRiskSchema, riskFlagReportSchema, checkoutTransitDuplicateSchema, REFUSER_TERMS, riskApprovalSchema, riskNewCustomerSchema, riskLearningSchema, riskGoodCustomerSchema, riskStopReportSchema, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
 
 describe('S06 risk settings (v100–109)', () => {
   it('PR 162: the blocklist is in the registry at version 100, labelled in English and Bengali, off as shipped', () => {
@@ -196,5 +196,19 @@ describe('S06 risk settings (v100–109)', () => {
     }
     expect(spec.default).toMatchObject({ enabled: false });
     for (const bad of [{ budgetMs: 100 }, { budgetMs: 10_001 }, { cacheHours: 0 }, { cacheHours: 721 }, { extra: 1 }]) expect(checkoutPhoneRiskSchema.safeParse({ ...spec.default, ...bad }).success, JSON.stringify(bad)).toBe(false);
+  });
+
+  it('PR 562: the flag outcome report (109), labelled in both languages, off as shipped, never pointing anything out until the owner sets a share', () => {
+    const spec = riskS06Settings['risk.flagReport'];
+    expect(registry['risk.flagReport']).toBe(spec);
+    expect(spec.version).toBe(109);
+    expect(spec.isOwnerData).toBe(false);
+    for (const lang of ['en', 'bn'] as const) {
+      expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+      expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+    }
+    expect(spec.default).toMatchObject({ enabled: false, warnLeftPercent: null });
+    expect(riskFlagReportSchema.safeParse({ ...spec.default, warnLeftPercent: 60 }).success).toBe(true);
+    for (const bad of [{ days: 6 }, { days: 367 }, { warnLeftPercent: 0 }, { warnLeftPercent: 101 }, { minFlags: 0 }, { maxRows: 99 }, { extra: 1 }]) expect(riskFlagReportSchema.safeParse({ ...spec.default, ...bad }).success, JSON.stringify(bad)).toBe(false);
   });
 });

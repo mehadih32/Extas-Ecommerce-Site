@@ -3,7 +3,7 @@
 // customer chose (the finished address line, the band he picked, the payment method …) and the server prices it again
 // with the engines; the answer is the checkout as the page draws it.
 import { findBag, visitorIdSchema } from '@extas/cart';
-import { captureDraft, checkoutQuote, CheckoutError, payAction, payView, placeOrder, saveVoiceAddress, viewOf, type CheckoutDeps, type PlaceNext, type VoiceHooks } from '@extas/checkout';
+import { captureDraft, checkoutQuote, CheckoutError, noteFlagShown, payAction, payView, placeOrder, saveVoiceAddress, viewOf, type CheckoutDeps, type CheckoutQuote, type PlaceNext, type VoiceHooks } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
 import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck } from '@extas/orders';
@@ -88,9 +88,23 @@ export async function quoteHandler(request: Request, deps: CheckoutApiDeps | nul
     const had = capture.device ? readCookie(request, DEVICE_COOKIE) : null;
     const deviceId = had && visitorIdSchema.safeParse(had).success ? had : null;
     const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, customerId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never, useWallet: b.useWallet === true, ip: requestContext(request).ip ?? null, gift: b.gift === true, details: (b.details ?? null) as never, deviceId });
+    if (q.flag) await keepFlagShown(deps, customerId, q);
     return json({ ok: true, view: viewOf(q) });
   } catch (e) {
     return refusal(e);
+  }
+}
+
+/**
+ * S06 · PR 562 — a bag a layer asked to pay ahead is kept once for the flag outcome report (only while the owner keeps
+ * `risk.flagReport` on). A record only: it never fails or slows the customer's checkout past its own write (a problem is
+ * logged).
+ */
+async function keepFlagShown(deps: CheckoutApiDeps, customerId: string | null, q: CheckoutQuote): Promise<void> {
+  try {
+    await noteFlagShown(deps.checkout, { storeId: deps.storeId, customerId, quote: q });
+  } catch (e) {
+    console.warn(`flag kept: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
   }
 }
 
