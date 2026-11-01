@@ -7,6 +7,8 @@
 - [অর্ডারের মেসেজ](journey.md) — কোন ঘটনায় কোন মেসেজ যায়: প্রতিটা ধাপের সুইচ, চ্যানেল, বিকল্প, সময়, কোন অর্ডার আর টেমপ্লেট (`/admin/messages/journey`)
 - [অটো মেসেজ](automations.md) — নিজে থেকে চলা কাস্টমার যাত্রা: প্রোডাক্ট ফুরানোর রিমাইন্ডার, ফিরিয়ে আনা, স্বাগত (`/admin/messages/automations`)
 - [একটা যাত্রা বানান](automation.md) — শুরু, অপেক্ষা, যাচাই আর মেসেজের ধাপ (`/admin/messages/automations/[id]`)
+- [ক্যাম্পেইন](campaigns.md) — উইন-ব্যাক: অনেক দিন অর্ডার না করা কাস্টমারদের কাছে SMS বা WhatsApp, কতজন পাবেন আর খরচ, ফল (`/admin/messages/campaigns`)
+- [একটা উইন-ব্যাক ক্যাম্পেইন](campaign.md) — কে পাবেন, কোন লেখা, কখন, আর ফল (`/admin/messages/campaigns/[id]`)
 - [ই-মেইল](email.md) — সেগমেন্টে অফারের ই-মেইল, টেমপ্লেট আর ফল (`/admin/messages/email`)
 - [একটা ই-মেইল পাঠানো](email-send.md) — কারা পাবে, লেখা, কখন, আর ফল (`/admin/messages/email/[id]`)
 - [ই-মেইল টেমপ্লেট](email-template.md) — বিষয় আর লেখা, প্রিভিউসহ (`/admin/messages/email/templates/[id]`)

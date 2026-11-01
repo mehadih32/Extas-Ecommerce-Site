@@ -181,6 +181,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'journey', pages: [{ href: '/admin/messages/journey', perm: 'messages.journey.read', keys: ['messagesJourney'] }] },
       // PR 289: customer journeys (product-life reminder, win-back, welcome) — MSG-02's ready-made automations
       { id: 'automations', pages: [{ href: '/admin/messages/automations', perm: 'messages.journey.read', keys: ['messagesAutomations'] }] },
+      // PR 300: campaigns — win-back as MSG-02's ready-made campaign type (CN-019 control centre)
+      { id: 'campaigns', pages: [{ href: '/admin/messages/campaigns', perm: 'messages.journey.read', keys: ['messagesCampaigns'] }] },
       // PR 290: e-mail marketing — the owner's e-mail templates, e-mail sends to a segment and their delivery log
       { id: 'email', pages: [{ href: '/admin/messages/email', perm: 'messages.journey.read', keys: ['messagesEmail'] }] },
       { id: 'templates', pages: [{ href: '/admin/messages/templates', perm: 'messages.templates.read', keys: ['messagesTemplates'] }] },

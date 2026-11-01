@@ -10,6 +10,7 @@ import { messages, prismaBackend, registry, SettingsResolver, syncSettings } fro
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
 import { automationsRoute } from './automations-api';
+import { campaignsRoute } from './campaigns-api';
 import { customersRoute } from './customers-api';
 
 const HOST = 'admin.example.test';
@@ -203,5 +204,30 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect(await r.text()).toContain('Sample Rahim');
     expect(await f.t.prisma.auditLog.count({ where: { action: 'customers.export' } })).toBe(1);
     expect((await raw(owner, undefined, 'GET')).status).toBe(405);
+  });
+
+  it('PR 300: Messages › Campaigns — off until its settings turn it on; a win-back draft; scheduling needs the send key', async () => {
+    const camp = async (method: string, path: string, opts: { body?: unknown; cookie?: string } = {}) => {
+      const parts = path.split('/').filter(Boolean);
+      const res = await campaignsRoute(call(method, `/api/admin/messages/campaigns/${parts.join('/')}`, { ...opts, cookie: opts.cookie ?? owner }), deps, parts);
+      return { status: res.status, body: (await res.json()) as Record<string, any> };
+    };
+    expect((await camp('GET', '', { cookie: reader })).status).toBe(403); // no messages.journey.read
+    expect((await camp('GET', '')).body).toMatchObject({ ok: true, screen: { enabled: false, canWrite: true, canSend: true, campaigns: [] } });
+    const tpl = await f.t.prisma.notificationTemplate.create({ data: { storeId: f.S, key: 'crm.api300', name: 'We miss you', channel: 'SMS', locale: 'en', body: 'We miss you, {customerName}' } });
+    const draft = { name: 'Back again', channel: 'SMS', templateId: tpl.id, segmentId: null, rule: { lapsedDays: 90, maxLapsedDays: null, minDelivered: 1 } };
+    expect((await camp('POST', 'items', { body: draft })).body).toMatchObject({ ok: false, error: 'SWITCHED_OFF' });
+    expect((await camp('PUT', 'settings', { body: { enabled: true, gapDays: 0 } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    expect((await camp('PUT', 'settings', { body: { enabled: true } })).body).toMatchObject({ ok: true, screen: { enabled: true } });
+    const made = await camp('POST', 'items', { body: draft });
+    expect(made.status).toBe(201);
+    const id = made.body.editor.campaign.id as string;
+    expect(made.body.editor.campaign).toMatchObject({ status: 'DRAFT', channel: 'SMS', name: 'Back again' });
+    expect(made.body.editor.templates).toContainEqual(expect.objectContaining({ key: 'crm.api300', channel: 'SMS' }));
+    expect(made.body.editor.templates.some((t: { key: string }) => t.key.startsWith('order.'))).toBe(false);
+    // nobody here said yes to offers: it cannot be scheduled
+    expect((await camp('POST', `items/${id}/state`, { body: { action: 'schedule' } })).body).toMatchObject({ ok: false, error: 'LIMIT_REACHED' });
+    expect((await camp('GET', 'items/00000000-0000-7000-8000-000000000000')).status).toBe(404);
+    expect((await camp('DELETE', `items/${id}`)).status).toBe(405);
   });
 });

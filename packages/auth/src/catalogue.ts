@@ -216,6 +216,11 @@ export const PERMISSIONS = {
   // `send` schedules, pauses, resumes and cancels a send to a segment (many people at once). Seeing: `messages.journey.read`.
   'messages.email.write': { group: 'messages' },
   'messages.email.send': { group: 'messages' },
+  // S14 · PR 300 — Messages › Campaigns (win-back): write the drafts of campaigns and the page's settings; `send`
+  // schedules, pauses, resumes and cancels a campaign (an SMS or WhatsApp to many people at once). Seeing:
+  // `messages.journey.read`.
+  'messages.campaigns.write': { group: 'messages' },
+  'messages.campaigns.send': { group: 'messages' },
   'messages.selfConfirm.reply': { group: 'messages' },
   // S05 · PR 149 — the message log: every message with its state, why it was skipped or blocked, and every try; and a
   // failed message tried again by hand. Not a `.read` key on purpose: the log shows customers' numbers, and the

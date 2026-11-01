@@ -7402,8 +7402,14 @@ model Broadcast {
   queuedCount       Int                 @default(0)
   startedAt         DateTime?           @db.Timestamptz(3)
   finishedAt        DateTime?           @db.Timestamptz(3)
+  /// S14 · PR 300 — a campaign of Messages › Campaigns: `kind` names its ready-made type (`winback`; null: a plain send
+  /// such as PR 290's e-mail sends), `rule` its audience rule as saved (win-back: lapsedDays, maxLapsedDays, minOrders),
+  /// and `templateId` the shop's template (SMS or WhatsApp) its messages use, in each customer's language.
+  kind              String?
+  rule              Json?
 
   @@index([storeId, status, scheduledAt])
+  @@index([storeId, kind, createdAt])
 }
 
 /// @stage S13 · PR 278 — a YouTube channel connected to the store.

@@ -38,7 +38,7 @@
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
 import type { Prisma } from '@extas/db/client';
 import { codToCollect, dueOf } from '@extas/orders/pure';
-import { CRM_EMAIL_STEP, CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings } from '@extas/settings';
+import { CRM_CAMPAIGN_STEP, CRM_EMAIL_STEP, CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings, type WinbackSettings } from '@extas/settings';
 import { consentBlock } from './consent';
 import { recordSendCost } from './costs';
 import { recordReviewRequest, REVIEW_STEP, reviewAskBlock } from './review-requests';
@@ -405,7 +405,7 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   if (claimed.count !== 1) return 'WAITING';
   const step = row.step as JourneyStep;
   if (!c.master) return close(deps, c, row, 'SKIPPED', 'MASTER_OFF').then(() => 'SKIPPED');
-  if (row.step === CRM_MESSAGE_STEP) return sendJourneyMessage(deps, c, row, opts);
+  if (row.step === CRM_MESSAGE_STEP || row.step === CRM_CAMPAIGN_STEP) return sendJourneyMessage(deps, c, row, opts);
   if (row.step === CRM_EMAIL_STEP) return sendOfferEmail(deps, c, row, opts);
   const cfg = await wordsKeyOf(deps, c, row);
   if (!cfg || !row.orderId) return close(deps, c, row, 'SKIPPED', 'UNKNOWN_STEP').then(() => 'SKIPPED');
@@ -536,9 +536,28 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
  * hours; at most `customers.journeys.perCustomerPerWeek` such messages to one person in seven days (BLOCKED `CAP_WEEK`);
  * the stop line added to an SMS and an e-mail (CN-021 P14). A live WhatsApp needs its template approved, as every other.
  * Logged, tried again and costed like every message.
+ *
+ * PR 300 — a win-back campaign's message (step `crmCampaign`, queued by @extas/customers with its campaign's id and
+ * template) goes the same way, with the campaign's own rules: a cancelled campaign or win-back switched off skips it
+ * (CANCELLED, WINBACK_OFF), a paused one waits; at most `customers.winback.perCustomerPerWeek` offers by phone (journey
+ * and campaign messages together) in seven days (CAP_WEEK); never a second win-back within `gapDays` (CAP_GAP); its
+ * own stop line; the campaign's sent, failed and cost follow.
  */
 async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, opts: SendOptions): Promise<SendOutcome> {
   const channel = row.channel as MessageChannel;
+  const campaign = row.step === CRM_CAMPAIGN_STEP;
+  let wb: WinbackSettings | null = null;
+  if (campaign) {
+    const b = row.broadcastId ? await deps.db.broadcast.findFirst({ where: { id: row.broadcastId, storeId: c.storeId }, select: { status: true } }) : null;
+    if (!b || b.status === 'CANCELLED') return close(deps, c, row, 'SKIPPED', 'CANCELLED').then(() => 'SKIPPED');
+    wb = await setting(deps, c.storeId, 'customers.winback');
+    if (!wb.enabled) return close(deps, c, row, 'SKIPPED', 'WINBACK_OFF').then(() => 'SKIPPED');
+    if (b.status === 'PAUSED') {
+      await deps.db.notificationLog.update({ where: { id: row.id }, data: { sendAfter: new Date(c.now.getTime() + PAUSE_WAIT_MS), reason: 'PAUSED' } });
+      return 'WAITING';
+    }
+  }
+  const step = campaign ? CRM_CAMPAIGN_STEP : CRM_MESSAGE_STEP;
   const until = quietUntil(c.quiet, c.now, c.timeZone);
   if (until) {
     await deps.db.notificationLog.update({ where: { id: row.id }, data: { sendAfter: until, reason: 'QUIET_HOURS' } });
@@ -547,11 +566,20 @@ async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, o
   const who = row.customerId ? await deps.db.customer.findFirst({ where: { id: row.customerId, storeId: c.storeId }, select: { name: true, phone: true, erasedAt: true } }) : null;
   if (!who || who.erasedAt || !row.recipient) return close(deps, c, row, 'SKIPPED', 'NO_RECIPIENT').then(() => 'SKIPPED');
   const to = row.recipient;
-  const refused = await consentBlock(deps.db, c.storeId, { offerSteps: [CRM_MESSAGE_STEP] as unknown as ConsentSettings['offerSteps'] }, { channel, phone: channel === 'EMAIL' ? who.phone : to, customerId: row.customerId, step: CRM_MESSAGE_STEP });
+  const refused = await consentBlock(deps.db, c.storeId, { offerSteps: [step] as unknown as ConsentSettings['offerSteps'] }, { channel, phone: channel === 'EMAIL' ? who.phone : to, customerId: row.customerId, step });
   if (refused) return close(deps, c, row, 'SKIPPED', refused, { recipient: to }).then(() => 'SKIPPED');
   const cfg = await setting(deps, c.storeId, 'customers.journeys');
-  const week = await deps.db.notificationLog.count({ where: { storeId: c.storeId, customerId: row.customerId, step: CRM_MESSAGE_STEP, status: 'SENT', sentAt: { gte: new Date(c.now.getTime() - 7 * 86_400_000) } } });
-  if (week >= cfg.perCustomerPerWeek) return close(deps, c, row, 'BLOCKED_BY_GUARD', 'CAP_WEEK', { recipient: to }).then(() => 'BLOCKED');
+  const weekAgo = new Date(c.now.getTime() - 7 * 86_400_000);
+  if (wb) {
+    // PR 300: offers by phone in seven days, automations and campaigns together; one win-back per gap
+    const week = await deps.db.notificationLog.count({ where: { storeId: c.storeId, customerId: row.customerId, step: { in: [CRM_MESSAGE_STEP, CRM_CAMPAIGN_STEP] }, channel: { in: ['SMS', 'WHATSAPP'] }, status: { in: ['SENT', 'DELIVERED'] }, sentAt: { gte: weekAgo } } });
+    if (week >= wb.perCustomerPerWeek) return close(deps, c, row, 'BLOCKED_BY_GUARD', 'CAP_WEEK', { recipient: to }).then(() => 'BLOCKED');
+    const gap = await deps.db.notificationLog.count({ where: { storeId: c.storeId, customerId: row.customerId, step: CRM_CAMPAIGN_STEP, status: { in: ['SENT', 'DELIVERED'] }, sentAt: { gte: new Date(c.now.getTime() - wb.gapDays * 86_400_000) } } });
+    if (gap > 0) return close(deps, c, row, 'BLOCKED_BY_GUARD', 'CAP_GAP', { recipient: to }).then(() => 'BLOCKED');
+  } else {
+    const week = await deps.db.notificationLog.count({ where: { storeId: c.storeId, customerId: row.customerId, step: CRM_MESSAGE_STEP, status: 'SENT', sentAt: { gte: weekAgo } } });
+    if (week >= cfg.perCustomerPerWeek) return close(deps, c, row, 'BLOCKED_BY_GUARD', 'CAP_WEEK', { recipient: to }).then(() => 'BLOCKED');
+  }
   const key = row.templateId ? await deps.db.notificationTemplate.findFirst({ where: { id: row.templateId, storeId: c.storeId }, select: { key: true } }) : null;
   const t = key ? await templateOf(deps, c.storeId, key.key, channel, c.locale) : null;
   if (!key || !t) return close(deps, c, row, 'SKIPPED', 'NO_TEMPLATE', { recipient: to }).then(() => 'SKIPPED');
@@ -560,7 +588,7 @@ async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, o
   const input: RenderInput = { storeName: c.storeName, customerName: who.name?.trim() || '', orderNumber: '', senderName: '', currency, dueMinor: 0, link: c.host ? `https://${c.host}/` : null, amountLine: c.amountLine[lang], exactAmount: null };
   const words = render(t.body, channel === 'EMAIL' ? (t.subject ?? '') : null, input);
   if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: to, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');
-  const stop = cfg.stopLine[lang].trim();
+  const stop = (wb ?? cfg).stopLine[lang].trim();
   const text = stop && channel !== 'WHATSAPP' ? `${words.text}\n${stop}` : words.text;
   const attempt = row.attempts + 1;
   const sms = channel === 'SMS';
@@ -590,6 +618,7 @@ async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, o
     await deps.db.$transaction(async (tx) => {
       await tx.notificationLog.update({ where: { id: row.id }, data: { ...tried, status: 'SENT', providerMessageId: messageId, sentAt: c.now, sendAfter: null, reason: null, error: null, costMinor } });
       await tx.notificationAttempt.create({ data: { ...tryData, ok: true, providerMessageId: messageId, costMinor } });
+      if (campaign && row.broadcastId) await tx.broadcast.update({ where: { id: row.broadcastId }, data: { sentCount: { increment: 1 }, ...(costMinor ? { costMinor: { increment: costMinor } } : {}) } });
       if (costMinor !== null && costMinor > 0) await recordSendCost(tx, { storeId: c.storeId, channel: row.channel, costMinor, currency, logId: row.id, template: key.key, provider: sender?.provider ?? null, at: c.now });
     }, TX);
     return 'SENT';
@@ -601,6 +630,7 @@ async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, o
     return 'RETRYING';
   }
   await close(deps, c, row, 'FAILED', r.unreachable ? 'UNREACHABLE' : error.startsWith('NO_SENDER') ? 'NO_SENDER' : 'SEND_FAILED', { ...tried, error });
+  if (campaign && row.broadcastId) await deps.db.broadcast.update({ where: { id: row.broadcastId }, data: { failedCount: { increment: 1 } } });
   return 'FAILED';
 }
 
@@ -747,8 +777,9 @@ export async function sendDue(deps: MessagesDeps, storeId: number): Promise<Send
   const c = await runContext(deps, storeId);
   const engine = await setting(deps, storeId, 'messages.engine');
   const rows = await deps.db.notificationLog.findMany({
-    // PR 289, 290: a customer journey's message and an e-mail send's e-mail have no order (the step says what it is)
-    where: { storeId, status: 'QUEUED', sendAfter: { lte: c.now }, step: { not: null }, OR: [{ orderId: { not: null } }, { step: { in: [CRM_MESSAGE_STEP, CRM_EMAIL_STEP] } }] },
+    // PR 289, 290, 300: a customer journey's message, an e-mail send's e-mail and a campaign's message have no order (the
+    // step says what it is)
+    where: { storeId, status: 'QUEUED', sendAfter: { lte: c.now }, step: { not: null }, OR: [{ orderId: { not: null } }, { step: { in: [CRM_MESSAGE_STEP, CRM_EMAIL_STEP, CRM_CAMPAIGN_STEP] } }] },
     orderBy: [{ sendAfter: 'asc' }, { id: 'asc' }],
     take: engine.batchSize,
     select: ROW_SELECT,
