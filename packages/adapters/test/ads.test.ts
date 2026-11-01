@@ -72,6 +72,29 @@ describe('ad platform payloads (PR 257)', () => {
   });
 });
 
+describe('the order steps on each platform (PR 258)', () => {
+  const step = (name: AdEvent['name'], o: Partial<AdEvent> = {}): AdEvent => ({ ...EVENT, eventId: `${name}-EX1001`, name, ...o });
+
+  it('confirmed and delivered are custom events everywhere; a purchase counted at the door goes as an order placed', () => {
+    const names = (e: AdEvent) => [
+      (metaPayload([e]) as { data: { event_name: string }[] }).data[0]!.event_name,
+      (googleEvents([e]) as { events: { name: string }[] }[])[0]!.events[0]!.name,
+      (tiktokPayload([e], { pixelCode: 'CSAMPLE1234567890' }) as { data: { event: string }[] }).data[0]!.event,
+    ];
+    expect(names(step('confirmed'))).toEqual(['OrderConfirmed', 'order_confirmed', 'OrderConfirmed']);
+    expect(names(step('delivered'))).toEqual(['OrderDelivered', 'order_delivered', 'OrderDelivered']);
+    expect(names(step('placed'))).toEqual(['OrderPlaced', 'order_placed', 'PlaceAnOrder']);
+    // the delivery under the purchase name keeps its own id and the order number
+    expect((metaPayload([step('purchase', { eventId: 'delivered-EX1001' })]) as { data: Record<string, unknown>[] }).data[0]).toMatchObject({ event_name: 'Purchase', event_id: 'delivered-EX1001', custom_data: expect.objectContaining({ order_id: 'EX1001' }) });
+  });
+
+  it('a step with no browser behind it is system-generated on Meta, never claimed as a website visit', () => {
+    const p = metaPayload([step('delivered', { system: true, url: null, user: { ext: 'c'.repeat(64) } })]) as { data: Record<string, unknown>[] };
+    expect(p.data[0]).toMatchObject({ action_source: 'system_generated', user_data: { external_id: ['c'.repeat(64)] } });
+    expect(p.data[0]).not.toHaveProperty('event_source_url');
+  });
+});
+
 describe('ad platform adapters (PR 257)', () => {
   it('are Keys & connections rows, each with its one key, and in the adapter list', () => {
     expect(findConnection('metaConversions')).toMatchObject({ kind: 'META', adapter: true, secrets: [{ field: 'accessToken' }] });

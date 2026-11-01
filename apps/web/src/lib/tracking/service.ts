@@ -9,6 +9,8 @@
 // - Each ticked platform gets the event through its connection (Keys & connections): the mock until the key is in
 //   and its test passed, so nothing leaves the shop before that (A1.3). A failed send is tried again on the next send
 //   until the owner's number of attempts; the same event id lets the platform count a repeat once.
+// - PR 258: the order's own steps (confirmed, delivered) are recorded here too (lib/tracking/orders.ts), and while a
+//   purchase means the delivery each send names the events accordingly (model `adNameOf`).
 import { randomUUID } from 'node:crypto';
 import { after } from 'next/server';
 import { AD_PLATFORM_CONNECTION, adEventAdapters, createConnections, type AdEventSender, type AdPlatform, type AdUser, type Connections } from '@extas/adapters';
@@ -17,7 +19,7 @@ import { tickedPlatforms, type TrackingSettings } from '@extas/settings';
 import type { Vault } from '@extas/vault';
 import { adminDeps } from '../admin-auth';
 import type { AppResolver } from '../settings';
-import { afterSend, hashEmail, hashId, hashPhone, records, stillWaiting, toAdEvent, valueOf, waitingFor, EVENT_ID, type Deliveries, type StoredItem, type TrackingEvent } from './model';
+import { afterSend, hashEmail, hashId, hashPhone, isOrderStep, records, recordsStep, stillWaiting, toAdEvent, valueOf, waitingFor, withoutContact, EVENT_ID, type AnyTrackingEvent, type Deliveries, type StoredItem } from './model';
 
 export interface TrackingDeps {
   db: PrismaClient;
@@ -58,7 +60,8 @@ export interface Shopper {
 
 export interface RecordInput {
   storeId: number;
-  name: TrackingEvent;
+  /** A shopper's event, or (PR 258) an order step read from the order timeline. */
+  name: AnyTrackingEvent;
   /** The id the browser's pixel uses for the same event; one is made when absent or not well formed. */
   eventId?: string | null;
   url: string | null;
@@ -73,9 +76,16 @@ export interface RecordInput {
   test?: boolean;
   /** Which platforms get it (default: the ticked ones). */
   platforms?: readonly AdPlatform[];
+  /** PR 258: the user data already made (an order step takes its order's purchase event's); hashes per matching now. */
+  user?: AdUser;
+  /** PR 258: when it happened (an order step: its timeline time); default now. */
+  occurredAt?: Date;
+  /** PR 258: record only; the caller sends the whole batch afterwards (the order-step reader). */
+  sendLater?: boolean;
 }
 
-function userDataOf(s: TrackingSettings, who: Shopper): AdUser {
+/** The user data of a shopper: the own id and browser as hashes and names, the contact only while matching is on. */
+export function userDataOf(s: TrackingSettings, who: Shopper): AdUser {
   const u: AdUser = { ...(who.cookies ?? {}) };
   const own = who.customerId ?? who.visitorId;
   if (own) u.ext = hashId(own);
@@ -93,7 +103,9 @@ function userDataOf(s: TrackingSettings, who: Shopper): AdUser {
 export async function recordEvent(deps: TrackingDeps, input: RecordInput): Promise<{ recorded: boolean; id?: string }> {
   const at = { storeId: input.storeId };
   const s = await deps.resolver.value('ads.tracking', at);
-  if (!records(s, input.name, input.test)) return { recorded: false };
+  const name = input.name;
+  const on = isOrderStep(name) ? recordsStep(s, await deps.resolver.value('ads.deliveredPurchase', at), name, input.test) : records(s, name, input.test);
+  if (!on) return { recorded: false };
   const currency = input.currency ?? (await deps.resolver.value('store.currency', at));
   const platforms = input.platforms ?? tickedPlatforms(s);
   const eventId = input.eventId && EVENT_ID.test(input.eventId) ? input.eventId : `${input.name}-${randomUUID()}`;
@@ -110,10 +122,10 @@ export async function recordEvent(deps: TrackingDeps, input: RecordInput): Promi
         currency,
         items: input.items as unknown as Prisma.InputJsonValue,
         orderId: input.orderId ?? null,
-        userData: userDataOf(s, input.shopper) as Prisma.InputJsonValue,
+        userData: (input.user ? (s.matchCustomers ? input.user : withoutContact(input.user)) : userDataOf(s, input.shopper)) as Prisma.InputJsonValue,
         deliveries: waitingFor(platforms) as Prisma.InputJsonValue,
         pending: platforms.length > 0,
-        occurredAt: nowOf(deps),
+        occurredAt: input.occurredAt ?? nowOf(deps),
       },
       select: { id: true },
     });
@@ -123,7 +135,7 @@ export async function recordEvent(deps: TrackingDeps, input: RecordInput): Promi
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return { recorded: false };
     throw e;
   }
-  if (platforms.length && !input.test) {
+  if (platforms.length && !input.test && !input.sendLater) {
     const task = async () => {
       try {
         await sendEvents(deps, { ids: [id] });
@@ -165,7 +177,13 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
   const out: SendOutcome = { platforms: {}, events: 0 };
   if (!rows.length) return out;
   const maxOf = new Map<number, number>();
-  for (const sid of new Set(rows.map((r) => r.storeId))) maxOf.set(sid, (await deps.resolver.value('ads.tracking', { storeId: sid })).maxAttempts);
+  // PR 258: what a purchase means for each store, read at the send (a change applies to what still waits)
+  const meansOf = new Map<number, 'placed' | 'delivered'>();
+  for (const sid of new Set(rows.map((r) => r.storeId))) {
+    maxOf.set(sid, (await deps.resolver.value('ads.tracking', { storeId: sid })).maxAttempts);
+    const dp = await deps.resolver.value('ads.deliveredPurchase', { storeId: sid });
+    meansOf.set(sid, dp.on ? dp.purchaseMeans : 'placed');
+  }
   // claim: a row changed since it was read is someone else's send
   const mine = [];
   for (const r of rows) {
@@ -192,7 +210,7 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
           const link = await conns.use<AdEventSender>(AD_PLATFORM_CONNECTION[platform].kind, { storeId: sid, provider: AD_PLATFORM_CONNECTION[platform].provider });
           tally.mode = link.mode;
           const r = await link.api.send(
-            group.map((g) => toAdEvent(g, g.orderId ? (numbers.get(g.orderId) ?? null) : null)),
+            group.map((g) => toAdEvent(g, g.orderId ? (numbers.get(g.orderId) ?? null) : null, meansOf.get(g.storeId) ?? 'placed')),
             { test },
           );
           result = r.ok ? { ok: true, mode: link.mode } : { ok: false, error: r.error };

@@ -4,11 +4,13 @@
 // events and the settings card (`ads.tracking`, off as it ships). Seeing needs `ads.tracking.read`; changing and
 // sending need `ads.tracking.manage`. Guide: docs/admin-guide/pages/marketing/tracking.md.
 // PR 257 follow-up (go-live gate customer 360°): the "Where an order came from" card (`ads.attribution`, on as it ships).
+// PR 258: the order's own steps (confirmed, delivered) in the counts, the table and the test event, and the
+// delivered-sales card (`ads.deliveredPurchase`, off as it ships): what a purchase means to the platforms.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { ATTRIBUTION_TOUCHES, tickedPlatforms } from '@extas/settings';
+import { ATTRIBUTION_TOUCHES, ORDER_TRACKING_SOURCES, PURCHASE_MEANS, tickedPlatforms } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { TrackingActions, type TrackingActionTexts } from '@/components/admin/settings/TrackingActions';
@@ -20,7 +22,7 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { TRACKING_DAYS, trackingOverview } from '@/lib/tracking/admin';
-import { TRACKING_EVENTS, TRACKING_PLATFORMS, type DeliveryState } from '@/lib/tracking/model';
+import { ALL_TRACKING_EVENTS, ORDER_TRACKING_EVENTS, TRACKING_EVENTS, TRACKING_PLATFORMS, type DeliveryState } from '@/lib/tracking/model';
 import bn from '../../../../../messages/admin-tracking.bn.json';
 import en from '../../../../../messages/admin-tracking.en.json';
 import '../../settings-cards.css';
@@ -67,9 +69,10 @@ export default async function TrackingPage(props: Props) {
   const when = (iso: string) => new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone }).format(new Date(iso));
   const money = (minor: number | null, cur: string | null) => (minor == null ? s('cellNone') : formatMoney(minor, moneyOf(cur ?? currency, view.locale)));
   const v = o.card.value;
+  const dp = o.delivered.value;
   const errs = Object.fromEntries(['STALE', 'INVALID_INPUT', 'forbidden', 'unauthorized', 'network', 'other'].map((k) => [k, s(`err.${k}`)]));
   const platformNames = Object.fromEntries(TRACKING_PLATFORMS.map((p) => [p, s(`platform.${p}`)]));
-  const actTexts = (label: string): TrackingActionTexts => ({ label, working: s('working'), outcome: s('outcome'), outcomeErr: s('outcomeErr'), outcomeNone: s('outcomeNone'), platforms: platformNames, err: errs });
+  const actTexts = (label: string): TrackingActionTexts => ({ label, working: s('working'), outcome: s('outcome'), outcomeErr: s('outcomeErr'), outcomeNone: s('outcomeNone'), steps: s('stepsRead'), platforms: platformNames, err: errs });
 
   const texts: FieldsCardTexts = {
     h: s('card.h'),
@@ -97,6 +100,16 @@ export default async function TrackingPage(props: Props) {
     { kind: 'number', path: 'keepDays', label: s('attr.days'), help: s('attr.daysHelp'), min: 1, max: 90 },
     { kind: 'select', path: 'touch', label: s('attr.touch'), help: s('attr.touchHelp'), options: ATTRIBUTION_TOUCHES.map((x) => ({ value: x, label: s(`attr.touch_${x}`) })) },
   ];
+  // PR 258: the delivered-sales card
+  const dpTexts: FieldsCardTexts = { ...texts, h: s('dp.h'), d: s('dp.d') };
+  const dpFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'on', label: s('dp.on'), help: s('dp.onHelp') },
+    { kind: 'checks', path: 'events', label: s('dp.events'), options: ORDER_TRACKING_EVENTS.map((e) => ({ value: e, label: s(`event.${e}`) })) },
+    { kind: 'select', path: 'purchaseMeans', label: s('dp.means'), help: s('dp.meansHelp'), options: PURCHASE_MEANS.map((m) => ({ value: m, label: s(`dp.mean.${m}`) })) },
+    { kind: 'checks', path: 'sources', label: s('dp.sources'), options: ORDER_TRACKING_SOURCES.map((k) => ({ value: k, label: s(`dp.source.${k}`) })) },
+    { kind: 'number', path: 'lookbackHours', label: s('dp.lookback'), help: s('dp.lookbackHelp'), min: 1, max: 168 },
+    { kind: 'number', path: 'everyMinutes', label: s('dp.every'), help: s('dp.everyHelp'), min: 1, max: 60 },
+  ];
 
   return (
     <div className="a2-z" data-testid="tracking-page">
@@ -110,6 +123,16 @@ export default async function TrackingPage(props: Props) {
       ) : !tickedPlatforms(v).length ? (
         <div className="a2-note" role="note">
           <span>{s('noPlatform')}</span>
+        </div>
+      ) : null}
+      {dp.on && !v.on ? (
+        <div className="a2-note" role="note" data-testid="tracking-dp-off">
+          <span>{s('dpTrackingOff')}</span>
+        </div>
+      ) : null}
+      {dp.on && dp.purchaseMeans === 'delivered' ? (
+        <div className="a2-note" role="note" data-testid="tracking-dp-means">
+          <span>{s('dpMeansDelivered')}</span>
         </div>
       ) : null}
 
@@ -143,7 +166,7 @@ export default async function TrackingPage(props: Props) {
       </nav>
 
       <div className="a2-kpis a2-mt12">
-        {TRACKING_EVENTS.map((e) => (
+        {ALL_TRACKING_EVENTS.map((e) => (
           <div key={e} className="a2-card a2-kpi" data-testid={`tracking-kpi-${e}`}>
             <div className="a2-kl">{s(`kpi.${e}`)}</div>
             <div className="a2-kv">{num(o.recorded[e] ?? 0)}</div>
@@ -169,7 +192,7 @@ export default async function TrackingPage(props: Props) {
               </tr>
             </thead>
             <tbody>
-              {TRACKING_EVENTS.map((e) => (
+              {ALL_TRACKING_EVENTS.map((e) => (
                 <tr key={e}>
                   <td>{s(`event.${e}`)}</td>
                   {TRACKING_PLATFORMS.map((p) => {
@@ -205,7 +228,7 @@ export default async function TrackingPage(props: Props) {
               {s('testH')}
             </h2>
             <p className="a2-sm a2-mute">{s('testLine')}</p>
-            <TrackingActions url={API} action="test" events={TRACKING_EVENTS.map((e) => ({ value: e, label: s(`event.${e}`) }))} eventLabel={s('testEvent')} testId="tracking-test" texts={actTexts(s('sendTest'))} />
+            <TrackingActions url={API} action="test" events={ALL_TRACKING_EVENTS.map((e) => ({ value: e, label: s(`event.${e}`) }))} eventLabel={s('testEvent')} testId="tracking-test" texts={actTexts(s('sendTest'))} />
           </section>
           <section className="a2-sc" aria-labelledby="trk-wait-h">
             <h2 className="a2-h3" id="trk-wait-h">
@@ -242,7 +265,7 @@ export default async function TrackingPage(props: Props) {
                   <tr key={r.id} data-event={r.name} data-test={r.test ? 'yes' : 'no'}>
                     <td className="a2-sm trk-nowrap">{when(r.at)}</td>
                     <td>
-                      {(TRACKING_EVENTS as readonly string[]).includes(r.name) ? s(`event.${r.name}`) : r.name}
+                      {(ALL_TRACKING_EVENTS as readonly string[]).includes(r.name) ? s(`event.${r.name}`) : r.name}
                       {r.test ? <span className="a2-pill info trk-test">{s('test')}</span> : null}
                     </td>
                     <td className="a2-sm trk-path">{r.path ?? s('cellNone')}</td>
@@ -273,6 +296,7 @@ export default async function TrackingPage(props: Props) {
 
       <FieldsCard url={API} screen={{ key: o.card.key, value: o.card.value, version: o.card.version }} fields={fields} texts={texts} canEdit={canManage} testId="tracking-settings" />
       <FieldsCard url={API} screen={{ key: o.attribution.key, value: o.attribution.value, version: o.attribution.version }} fields={attrFields} texts={attrTexts} canEdit={canManage} testId="tracking-attribution" />
+      <FieldsCard url={API} screen={{ key: o.delivered.key, value: o.delivered.value, version: o.delivered.version }} fields={dpFields} texts={dpTexts} canEdit={canManage} testId="tracking-delivered" />
     </div>
   );
 }
