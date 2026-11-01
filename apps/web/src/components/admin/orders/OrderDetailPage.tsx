@@ -57,7 +57,8 @@ function Buttons({ specs, size, open }: { specs: CommandSpec[]; size?: 'sm'; ope
   );
 }
 
-export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o: OrderDetailView; open: string | null; notice?: ReactNode }) {
+// S16 · PR 348: `extra` — cards the page adds after the money card (the order's profit, for people who may see the books).
+export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminView; o: OrderDetailView; open: string | null; notice?: ReactNode; extra?: ReactNode }) {
   const d = view.dict;
   const more = t(d, 'orders.detail.more');
   const right = (
@@ -257,7 +258,7 @@ export function OrderDetailPage({ view, o, open, notice }: { view: AdminView; o:
           <Chips chips={o.flags} />
         </div>
       ) : null}
-      <DetailGrid labels={{ aria: t(d, 'orders.detail.tabs'), main: t(d, 'orders.detail.details'), side: t(d, 'orders.detail.timeline') }} main={main} side={side} />
+      <DetailGrid labels={{ aria: t(d, 'orders.detail.tabs'), main: t(d, 'orders.detail.details'), side: t(d, 'orders.detail.timeline') }} main={extra ? [...main, extra] : main} side={side} />
     </div>
   );
 }

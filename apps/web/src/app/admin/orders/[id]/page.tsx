@@ -8,6 +8,8 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { CommandsProvider } from '@/components/admin/orders/OrderCommands';
 import { OrderDetailPage } from '@/components/admin/orders/OrderDetailPage';
+import { OrderProfitCard } from '@/components/admin/orders/OrderProfitCard';
+import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { readDeps } from '@/components/admin/orders/OrderListPage';
 import { ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -15,7 +17,10 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { DO_PERM, commandTexts, loadOrderDetail } from '@/lib/admin-orders/detail';
 import { orderHref } from '@/lib/admin-orders/model';
 import { adminView, pageAccess } from '@/lib/admin-page';
-import { t } from '@/lib/i18n';
+import { t, type Dict } from '@/lib/i18n';
+import { loadOrderProfit, PROFIT_PERMISSION } from '@/lib/order-profit-view';
+import profitBn from '../../../../../messages/admin-order-profit.bn.json';
+import profitEn from '../../../../../messages/admin-order-profit.en.json';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +53,9 @@ export default async function OrderPage({ params, searchParams }: { params: Para
         <ShellState view={view} kind="notfound" />
       </div>
     );
+  // S16 · PR 348: the order's profit after its own costs, for people who may see the books
+  const profit = perms.has(PROFIT_PERMISSION) ? await loadOrderProfit(access.deps, MOTHER_STORE_ID, o.id) : null;
+  const profitDict = { ...view.dict, orderProfit: (view.lang === 'bn' ? profitBn : profitEn).orderProfit as unknown as Dict };
   const want = one(sp.do) ?? null;
   const needs = want ? DO_PERM[want] : undefined;
   const denied = needs && !perms.has(needs) ? needs : null;
@@ -57,6 +65,7 @@ export default async function OrderPage({ params, searchParams }: { params: Para
         view={view}
         o={o}
         open={denied ? null : want}
+        extra={profit ? <OrderProfitCard key="profit" dict={profitDict} p={profit} money={(minor) => formatMoney(minor, moneyOf(o.currency, view.locale))} /> : null}
         notice={
           denied ? (
             <div data-testid="order-denied">
