@@ -14,7 +14,7 @@ docs file (CN-011).
 | File | What it is |
 |---|---|
 | [`BLUEPRINT.md`](BLUEPRINT.md) | The full build specification, V2.1 final, with every change note (CN-###) as a dated block; read it from here |
-| [`MASTER-REGISTER.md`](MASTER-REGISTER.md) | All 621 PRs in 28 stages (615 active, 6 parked): the Build status table (merged / live), change notes, the stage table, the parking lot, PR rows for S0A–S15 (S16–S25 rows are in Blueprint Appendix A) |
+| [`MASTER-REGISTER.md`](MASTER-REGISTER.md) | All 624 PRs in 28 stages (618 active, 6 parked): the Build status table (merged / live), change notes, the stage table, the parking lot, PR rows for S0A–S15 (S16–S25 rows are in Blueprint Appendix A) |
 | [`START-HERE.md`](START-HERE.md) | How every build session runs: reading order, build order, the gates, speed targets, the go-live gate |
 | [`LAUNCH-TRACK.md`](LAUNCH-TRACK.md) | **The build order (CN-027):** the Launch list (what real orders need, built first) and the After-launch list (built automatically right after), with counts and status per PR |
 | [`CONVENTIONS.md`](CONVENTIONS.md) | Branches, PR titles, commits, what to update after every PR, code mechanics (PR 11) |

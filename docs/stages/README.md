@@ -4,7 +4,7 @@
 
 > **বাংলায়:** এখানে দোকান বানানোর সব ধাপ (স্টেজ) আর প্রতিটা PR এক জায়গায়। কোনো স্টেজে ক্লিক করলে সেই স্টেজের সব PR দেখবেন; কোনো PR নম্বরে ক্লিক করলে আগে এক লাইনের বাংলা সারাংশ, তারপর পুরো বিস্তারিত।
 
-621 PRs · 28 stages · as of 25 October 2026. **Progress:** S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19 · S10 12/12 · S02 45/58 · S03 22/22 · S04 41/41 · S05 21/21 · S06 28/33 · S07 10/10 · S08 26/26 · S11 14/22 · S13 1/35 · S14 7/24 · S16 9/22 · S17 1/24 · S18 14/14 · S19 16/17 · S20 1/9 · S21 13/14 · S22 2/13 · total 356/615
+624 PRs · 28 stages · as of 1 November 2026. **Progress:** S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19 · S10 12/12 · S02 45/58 · S03 22/22 · S04 41/42 · S05 21/21 · S06 28/33 · S07 10/10 · S08 26/26 · S11 14/22 · S13 1/35 · S14 7/24 · S16 9/22 · S17 1/24 · S18 14/15 · S19 16/17 · S20 1/9 · S21 13/14 · S22 2/14 · total 356/618
 
 Waves are the build order from [Blueprint E3](../BLUEPRINT.md#e3-order-of-work). The live dashboard is in the [README](../../README.md#status-dashboard).
 
@@ -15,12 +15,12 @@ Waves are the build order from [Blueprint E3](../BLUEPRINT.md#e3-order-of-work).
 | [Wave 0](#wave-0) | [S0A](S0A.md) | 12 / 12 | সার্ভার আগে — সার্ভারের সব চেক পাস না হলে কোনো কোড না। |
 | [Wave 1](#wave-1) | [S00](S00.md), [S01](S01.md), [S09](S09.md) | 61 / 61 | সবকিছুর গোড়া: ডাটাবেস, সেটিংস, পণ্যের ক্যাটালগ আর ERP সংযোগ। |
 | [Wave 2](#wave-2) | [S02](S02.md), [S03](S03.md), [S10](S10.md) | 79 / 92 | দোকানের সামনের অংশ, পেজ সাজানোর টুল, কম্বো আর দোকানের নিয়ম। |
-| [Wave 3](#wave-3) | [S04](S04.md), [S05](S05.md), [S07](S07.md), [S08](S08.md) | 98 / 98 | টাকার পথ শুরু থেকে শেষ: ব্যাগ, checkout, অর্ডার, পেমেন্ট আর কুরিয়ার। |
-| [Wave 4](#wave-4) | [S06](S06.md), [S14](S14.md), [S20](S20.md), [S22](S22.md) | 38 / 79 | অর্ডার আসার পরের সব কাজ: জালিয়াতি ঠেকানো, কাস্টমার, প্যাকিং আর সাপোর্ট। |
+| [Wave 3](#wave-3) | [S04](S04.md), [S05](S05.md), [S07](S07.md), [S08](S08.md) | 98 / 99 | টাকার পথ শুরু থেকে শেষ: ব্যাগ, checkout, অর্ডার, পেমেন্ট আর কুরিয়ার। |
+| [Wave 4](#wave-4) | [S06](S06.md), [S14](S14.md), [S20](S20.md), [S22](S22.md) | 38 / 80 | অর্ডার আসার পরের সব কাজ: জালিয়াতি ঠেকানো, কাস্টমার, প্যাকিং আর সাপোর্ট। |
 | [Wave 5](#wave-5) | [S11](S11.md), [S12](S12.md), [S13](S13.md), [S23](S23.md) | 15 / 86 | খুঁজে পাওয়া আর প্রচার: SEO, ব্লগ, বিজ্ঞাপন আর সোশ্যাল মিডিয়া। |
 | [Wave 6](#wave-6) | [S15](S15.md), [S16](S16.md), [S21](S21.md) | 22 / 84 | AI কন্ট্রোল রুম, হিসাব-রিপোর্ট আর সাইটের স্বাস্থ্য। |
 | [Wave 7](#wave-7) | [S24](S24.md), [S25](S25.md) | 0 / 48 | ক্যাটালগ তৈরি হলে ছবি আর ভিডিও বানানোর স্টুডিও। |
-| [Wave 8](#wave-8) | [S17](S17.md), [S18](S18.md), [S19](S19.md) | 31 / 55 | একাধিক দোকান, নিয়মকানুন আর নতুন দোকান চালু (go-live)। |
+| [Wave 8](#wave-8) | [S17](S17.md), [S18](S18.md), [S19](S19.md) | 31 / 56 | একাধিক দোকান, নিয়মকানুন আর নতুন দোকান চালু (go-live)। |
 | [Parked](#parked) | [S26](S26.md), [S27](S27.md) | — / 6 | হ্যান্ডওভার প্যাক — শুধু আপনার কথায় বানানো হবে। |
 
 ## Wave 0
@@ -65,7 +65,7 @@ The money path, end to end.
 
 | Stage | Name | PR numbers | Done / total | বাংলায় |
 |---|---|---|:-:|---|
-| [S04](S04.md) | [Cart, checkout, accounts](S04.md) | 105–137, 558, 560, 561, 563, 565, 566, 605, 606 | 41 / 41 | ব্যাগ, checkout, ঠিকানা আর ডেলিভারি চার্জ, অর্ডার দেওয়া আর কাস্টমারের অ্যাকাউন্ট। |
+| [S04](S04.md) | [Cart, checkout, accounts](S04.md) | 105–137, 558, 560, 561, 563, 565, 566, 605, 606, 622 | 41 / 42 | ব্যাগ, checkout, ঠিকানা আর ডেলিভারি চার্জ, অর্ডার দেওয়া আর কাস্টমারের অ্যাকাউন্ট। |
 | [S05](S05.md) | [Order management](S05.md) | 138–155, 541, 546, 610 | 21 / 21 | অ্যাডমিনে অর্ডারের তালিকা, এডিট, বাতিল, নোটিফিকেশন আর ডুপ্লিকেট অর্ডার ঠেকানো। |
 | [S07](S07.md) | [Payments & wallet](S07.md) | 165–174 | 10 / 10 | ক্যাশ অন ডেলিভারি, bKash, Nagad, কার্ড আর কাস্টমারের ওয়ালেট। |
 | [S08](S08.md) | [Courier, returns, exchange](S08.md) | 175–193, 525–526, 564, 611–614 | 26 / 26 | কুরিয়ার বুকিং, স্টিকার, পিকিং লিস্ট, প্যাকিং, ট্র্যাকিং আর এক্সচেঞ্জ। |
@@ -81,7 +81,7 @@ Everything around an order once it exists.
 | [S06](S06.md) | [Fraud & location](S06.md) | 156–164, 502, 519–524, 540, 542–545, 549–557, 559, 562, 567 | 28 / 33 | ভুয়া আর ডুপ্লিকেট অর্ডার ধরা, আর ঠিকানা দেখে সঠিক ডেলিভারি চার্জ বের করা। |
 | [S14](S14.md) | [CRM & customers](S14.md) | 284–303, 505, 533–535 | 7 / 24 | কাস্টমারের তালিকা, ইতিহাস, মেসেজ, রিভিউ আর রিওয়ার্ড। |
 | [S20](S20.md) | [Fulfilment & documents](S20.md) | 404–412 | 1 / 9 | প্যাকিংয়ের কাজ, কাস্টমারের ইনভয়েস আর অন্যান্য PDF কাগজ। |
-| [S22](S22.md) | [Support (all-in-one)](S22.md) | 425–436, 538 | 2 / 13 | কাস্টমারের মেসেজ আর সাপোর্ট এক ইনবক্সে। |
+| [S22](S22.md) | [Support (all-in-one)](S22.md) | 425–436, 538, 624 | 2 / 14 | কাস্টমারের মেসেজ আর সাপোর্ট এক ইনবক্সে। |
 
 ## Wave 5
 
@@ -128,7 +128,7 @@ Multi-store, compliance and go-live.
 | Stage | Name | PR numbers | Done / total | বাংলায় |
 |---|---|---|:-:|---|
 | [S17](S17.md) | [Multi-store](S17.md) | 356–377, 511–512 | 1 / 24 | একই সার্ভার, একই কোড আর একই স্টক থেকে একাধিক দোকান চালানো। |
-| [S18](S18.md) | [Compliance, security, manual](S18.md) | 378–390, 620 | 14 / 14 | নিরাপত্তা, আইনি নিয়ম মানা আর দোকান চালানোর ইউজার ম্যানুয়াল। |
+| [S18](S18.md) | [Compliance, security, manual](S18.md) | 378–390, 620, 623 | 14 / 15 | নিরাপত্তা, আইনি নিয়ম মানা আর দোকান চালানোর ইউজার ম্যানুয়াল। |
 | [S19](S19.md) | [Deploy, backup, go-live](S19.md) | 391–403, 507, 587, 619, 621 | 16 / 17 | ব্যাকআপের সেটিংস, রিস্টোর মহড়া আর extas.com.bd-তে নতুন দোকান চালু করা। |
 
 ## Parked
@@ -144,7 +144,7 @@ Handover pack, built only on the owner's word.
 
 ## Where this comes from
 
-- PR titles, scope, dated updates and the build status: [`docs/MASTER-REGISTER.md`](../MASTER-REGISTER.md). PRs the register lists by range only take their title from [Blueprint Appendix A](../BLUEPRINT.md#appendix-a--every-pr-1621).
+- PR titles, scope, dated updates and the build status: [`docs/MASTER-REGISTER.md`](../MASTER-REGISTER.md). PRs the register lists by range only take their title from [Blueprint Appendix A](../BLUEPRINT.md#appendix-a--every-pr-1624).
 - Bengali text: [`bn.json`](bn.json), written by hand. A PR that is not built yet shows “শিগগির” and a line from its stage.
 - The same data, structured, for the admin "PR register" tab (PR 594): [`register.json`](register.json).
 - Made by `tools/docs/gen-stage-pages.mjs` (`pnpm docs:stages`); CI fails when these pages are out of date.

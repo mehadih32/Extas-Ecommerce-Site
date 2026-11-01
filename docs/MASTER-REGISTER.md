@@ -1,10 +1,10 @@
 # EXTAS — Master Register
 
-**621 PRs · 28 stages · as of 25 October 2026**
+**624 PRs · 28 stages · as of 1 November 2026**
 
-**615 are active. 6 are parked** — S26, the handover pack, together with S27. See *The parking lot*.
+**618 are active. 6 are parked** — S26, the handover pack, together with S27. See *The parking lot*.
 
-*Active* means filed and specified for the build, not coded: no PR has been coded yet. (Until 19 Oct 23:33 this line read "594 are built now", where "built" meant filed and specified.) The four newest, **PR 601–604**, come from the owner's server specification approved 19 Oct 23:33 (change note **CN-001**, blueprint V2.1) — filed, not built. **V2.1 final · 20 Oct:** the pre-code demo work is finished and folded into blueprint V2.1 (its last update before code) — **no new PR numbers**; dated scope "V2.1 final · 20 Oct" on PR 42, 45, 61, 98, 107, 109, 503, 570, 598 and in the 20 Oct scope block below. **23 Oct 2026:** two more, **PR 605** (gift mode, CN-014 h) and **PR 606** (bulk / corporate lane, CN-017 SIM-F-023), both in S04 — filed, not built; CN-012 … CN-019 are filed as dated "Updated 23 Oct 2026" lines on the PR rows they name. **25 Oct 2026 (CN-028):** fifteen more, **PR 607–621** (Retail and the ERP supplier model, in S01, S05, S08, S09, S16, S18 and S19) — filed, not built.
+*Active* means filed and specified for the build, not coded: no PR has been coded yet. (Until 19 Oct 23:33 this line read "594 are built now", where "built" meant filed and specified.) The four newest, **PR 601–604**, come from the owner's server specification approved 19 Oct 23:33 (change note **CN-001**, blueprint V2.1) — filed, not built. **V2.1 final · 20 Oct:** the pre-code demo work is finished and folded into blueprint V2.1 (its last update before code) — **no new PR numbers**; dated scope "V2.1 final · 20 Oct" on PR 42, 45, 61, 98, 107, 109, 503, 570, 598 and in the 20 Oct scope block below. **23 Oct 2026:** two more, **PR 605** (gift mode, CN-014 h) and **PR 606** (bulk / corporate lane, CN-017 SIM-F-023), both in S04 — filed, not built; CN-012 … CN-019 are filed as dated "Updated 23 Oct 2026" lines on the PR rows they name. **25 Oct 2026 (CN-028):** fifteen more, **PR 607–621** (Retail and the ERP supplier model, in S01, S05, S08, S09, S16, S18 and S19) — filed, not built. **1 Nov 2026 (CN-034):** three more, **PR 622–624** (Buy again in S04, the customer's privacy request in S18, the Messenger button in S22), from the go-live gate's customer 360° run — filed, not built.
 
 This is the one table everything hangs off. Every approved requirement has a stage, a PR number and a
 line here. When something new is agreed, it is filed into this table first — into an existing PR if it
@@ -31,7 +31,7 @@ ever appended to the end of the document instead of being filed.
 reads this table. States: **merged** = code merged to `main` and its gates passed; **live** = also verified running on
 the server.*
 
-**Progress: S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19 · S10 12/12 · S02 45/58 · S03 22/22 · S04 41/41 · S05 21/21 · S06 28/33 · S07 10/10 · S08 26/26 · S11 14/22 · S13 1/35 · S14 7/24 · S16 9/22 · S17 1/24 · S18 14/14 · S19 16/17 · S20 1/9 · S21 13/14 · S22 2/13 · total 356/615**
+**Progress: S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19 · S10 12/12 · S02 45/58 · S03 22/22 · S04 41/42 · S05 21/21 · S06 28/33 · S07 10/10 · S08 26/26 · S11 14/22 · S13 1/35 · S14 7/24 · S16 9/22 · S17 1/24 · S18 14/15 · S19 16/17 · S20 1/9 · S21 13/14 · S22 2/14 · total 356/618**
 
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
@@ -768,6 +768,20 @@ the server.*
 >
 > **(4) Where it is written.** Updated lines on PR 610, 614, 619 and 621 (CN-033); struck-through lines with dated notes in `docs/erp/site-changes-v6.md` (§2.10.2, §2.10.3, §2 order grade, §3 steps 3 and 5, §4).
 
+> **CN-034 · 1 Nov 2026 (owner, 06:58 UTC, in Bengali: one final 360° analysis of the customer's side before go-live, and "add whatever I missed").** Three new PR numbers, **622–624**; the total moves from 621 to **624 PRs (618 active, 6 parked)**.
+>
+> **(1) Where they come from.** The go-live gate's customer 360° run (`tools/gate-c360/`, `.github/workflows/gate-c360.yml`; report `docs/qa/FINAL-ANALYSIS-2026-11.md`) walks one customer before, during and after an order, through his account and through support, on phones and desktops. Four of its findings are scope on built PRs and are fixed as follow-ups (PR 257: UTM tags and ad click ids kept on the order; PR 144: "Cancel this order" on the order page; PR 75: the contact form into the Support inbox; PR 425: Bengali digits in the inbox search). Two more (a default address, a verified phone change) are scope on the built PR 131 and wait as follow-ups in `PROGRESS.md`. **Three are covered by no register PR**, so each takes the next free number in the stage that holds its flow.
+>
+> **(2) PR 622 · Buy again (S04, Cart, checkout, accounts).** A past order offers "Buy again" on its page and in My orders. It puts the order's lines back in the bag at today's price and today's stock, and orders nothing by itself: the customer still goes through the normal checkout.
+>
+> **(3) PR 623 · The customer's own privacy request (S18, Compliance).** From his account a customer asks for a copy of his data or for its erasure. The request files into PR 382's staff screen (Settings › Privacy & data); staff approval stays exactly as built, and only the owner carries out an erasure.
+>
+> **(4) PR 624 · Messenger button (S22, Support).** Most orders come from Facebook, yet the shop shows no Messenger link. A Messenger chat link or button sits beside the shop's other support channels (the header WhatsApp icon, the site chat, the contact page), opening the store's own Page.
+>
+> **(5) The rules for all three.** Each is **off by default** with its own switch, every number and text editable, in the section where it belongs (CN-014, CN-018). None changes a price, a discount or COD, moves money, blocks anyone or deletes anything. All three are **After launch** (`docs/LAUNCH-TRACK.md`); until a switch is on, the gate reports its step as SKIP.
+>
+> **(6) Where it is written.** The rows of "CN-034 additions" below; the stage table (S04 42, S18 15, S22 14) and "How this reached 624"; dated lines on PR 382 and 426; Blueprint Appendix A, E0, E1 and E3; `docs/LAUNCH-TRACK.md` (After launch and its priority order); the totals in CLAUDE.md, README.md and `docs/README.md`.
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |
@@ -777,7 +791,7 @@ the server.*
 | S01 | Catalog, media & images | 23 | 19–39, 590, 609 | locked |
 | S02 | Storefront | 58 | 40–88, 501, 503, 595–600, 602 | locked; UI in review |
 | S03 | Combo & bundles | 22 | 89–104, 571–576 | locked; UI in review |
-| S04 | Cart, checkout, accounts | 41 | 105–137, 558, 560, 561, 563, 565, 566, 605, 606 | locked; UI in review; **605–606 filed 23 Oct** |
+| S04 | Cart, checkout, accounts | 42 | 105–137, 558, 560, 561, 563, 565, 566, 605, 606, 622 | locked; UI in review; **605–606 filed 23 Oct**; **622 filed 1 Nov** |
 | S05 | Order management | 21 | 138–155, 541, 546, 610 | locked |
 | S06 | Fraud & location | 33 | 156–164, 502, 519–524, 540, 542–545, 549–557, 559, 562, 567 | **answered 18 Oct** |
 | S07 | Payments & wallet | 10 | 165–174 | locked |
@@ -791,19 +805,19 @@ the server.*
 | S15 | AI 360 Control Room | 48 | 304–341, 506, 577–585 | locked |
 | S16 | Finance, costs & reports | 22 | 342–355, 504, 536–537, 568, 615–618 | **answered 18 Oct** |
 | S17 | Multi-store | 24 | 356–377, 511–512 | settings open |
-| S18 | Compliance, security, manual | 14 | 378–390, 620 | settings open |
+| S18 | Compliance, security, manual | 15 | 378–390, 620, 623 | settings open; **623 filed 1 Nov** |
 | S19 | Deploy, backup, go-live | 17 | 391–403, 507, 587, 619, 621 | locked |
 | S20 | Fulfilment & documents | 9 | 404–412 | locked |
 | S21 | Site Health & Audit | 14 | 413–424, 570, 594 | locked |
-| S22 | Support (all-in-one) | 13 | 425–436, 538 | locked |
+| S22 | Support (all-in-one) | 14 | 425–436, 538, 624 | locked; **624 filed 1 Nov** |
 | S23 | Social & content studio | 7 | 437–443 | locked |
 | S24 | Virtual Photoshoot Studio | 38 | 444–480, 539 | locked |
 | S25 | Video & Campaign Creative Studio | 10 | 481–490 | locked |
 | S26 | Installation, documentation & distribution | 6 | 513–518 | **parked** — handover pack |
 | S27 | No-ERP stock module | parked | — | **parked** — handover pack; numbered when approved |
-| | **Total** | **621** | | 615 active · 6 parked |
+| | **Total** | **624** | | 618 active · 6 parked |
 
-### How this reached 621
+### How this reached 624
 
 | Step | Change | Total |
 |---|---|---:|
@@ -840,7 +854,8 @@ the server.*
 | On-page edit mode with phone review and the AI checker (owner, 19 Oct 22:27–22:33) | +1 | 600 |
 | Owner's server specification — NVMe boot unit, four-layer cache, database performance pack, hardware-aware profile (owner, 19 Oct 23:33; review/SERVER-SETUP-SPEC-OWNER.md; CN-001) | +4 | 604 |
 | Gift mode (CN-014 h, next free in S04) and the bulk / corporate lane (CN-017 SIM-F-023, proposal P11), both in S04 (23 Oct 2026) | +2 | 606 |
-| Retail and the ERP supplier model (CN-028, 25 Oct 2026): ERP contract v6, event ledger, import by style code, orders, shipment and delivery results, return lists, Returns section, exchange through the ERP, ERP account ledger, books match, daily summary, fixed costs, switch-over, signed ERP calls, acceptance suite | +15 | **621** |
+| Retail and the ERP supplier model (CN-028, 25 Oct 2026): ERP contract v6, event ledger, import by style code, orders, shipment and delivery results, return lists, Returns section, exchange through the ERP, ERP account ledger, books match, daily summary, fixed costs, switch-over, signed ERP calls, acceptance suite | +15 | 621 |
+| Three customer-side gaps from the go-live gate's customer 360° run (CN-034, 1 Nov 2026): Buy again (S04), the customer's own privacy request (S18), the Messenger button (S22) | +3 | **624** |
 
 **Owner answers, 19 Oct 11:39 (scope on existing PRs, no new numbers):** marketing consent = SMS tick on by default, **WhatsApp marketing tick separate and unticked** (PR 148/505); trial at delivery allowed — customer may try in front of the rider (setting, on; S08); Bengali pages get their own /bn/ URLs with hreflang for Google traffic (S11); barcodes internal/courier, no GS1 (S01); same size added twice → "already in bag" by default, **quantity +1 as a settings option** (S04); sliders keep auto-drift but snap after a manual drag (S02); admin shows customer phone numbers in full, every profile open and number copy is logged (S14; the address rule PR 561 is unchanged); Google Shopping BD → Merchant Center test after go-live; VAT/invoice details after launch with the accountant.
 
@@ -908,6 +923,10 @@ the server.*
 - **PR 610** — Updated 31 Oct 2026 (CN-033): `erp.orders.bGradeOpen` (off as shipped): while off no B-grade replacement is asked for before sending, and a `422` naming `bGradeSkus` holds the order with `B_GRADE_CLOSED` and an admin message instead of failing it; it goes again when the switch is on.
 - **PR 614** — Updated 31 Oct 2026 (CN-033): a refused exchange parcel keeps its new piece on a deadline (`WAITING_RETURN`): billed in full the night after the deadline, credited if it comes back later and is approved; the risk list says "new piece not back". The practice ERP follows this rule, its old "cancelled, no bill" behind a practice-ERP switch.
 - **PR 621** — Updated 31 Oct 2026 (CN-033): `switchOver.read` and `costOfGoods.read` say "not built in the ERP (decision 30 Oct 2026)" on fresh-start; `exchanges.refused` expects "not billed, not cancelled" after the refusal and, on the practice ERP, the bill after the deadline and the credit after a late approved return; the B-grade line of `orders.billAtShipment` is sent only while `erp.orders.bGradeOpen` is on.
+
+**Scope added to existing PRs, 1 Nov 2026 (CN-034; new PR 622–624):**
+- **PR 382 (S18, privacy and data)** — Updated 1 Nov 2026 (CN-034): a customer's own request from his account (PR 623) files into this screen as a request like the ones staff enter; nothing about carrying one out changes (owner only, the typed word, never while an order is on its way).
+- **PR 426 (S22, channel connectors)** — Updated 1 Nov 2026 (CN-034): the shop-side Messenger button (PR 624) opens the store's Page; the chats it starts reach the inbox through this PR's Messenger adapter once its keys are in, and until then the button only opens Messenger.
 
 **The 12 that moved:** page builder and the label dictionary S08 → S02 · category SEO S10 → S11 ·
 invoice and PDF templates S14 → S20 · celebration overlay S19 → S02 · user manual S20 → S18 ·
@@ -1313,6 +1332,14 @@ The owner's largest single input. Scenarios A–M are recorded in `PENDING_CHANG
 | 620 | **Signed calls from the ERP to the shop** (CN-028). `GET /erp-api/top-products` and `GET /erp-api/customers`, signed like the webhooks (`X-Extas-Signature` over `METHOD\nPATH?QUERY\nTIMESTAMP`, constant-time check, refused when older than 5 minutes), opened on the staging password gate for that path only, every call logged, customer data returned live and never pushed. The admin shows the base URL to put into the ERP. After launch. |
 | 621 | **ERP v6 acceptance suite** (CN-028; a go-live gate). The test list of `docs/erp/site-changes-v6.md` §4 plus the books drills: a lost webhook, the same webhook twice, a two-day outage, a reversal before its original, a closed day that moves, a month that must not close, the switch day, an exchange never returned, a hold and its release. Runs against the demo ERP (`https://demo.extasbd.com/api/v1/ecommerce`) with a demo shop key the owner types into the vault, every night and before every release. Launch. |
 
+
+### CN-034 additions — customer-side gaps from the go-live gate's 360° run (1 Nov 2026)
+
+| PR | What it does |
+|---:|---|
+| 622 | **Buy again** (CN-034; S04; customer 360° finding 3, step `account/reorder`). "Buy again" on a past order's page and on its row in My orders puts the order's lines back in the bag: the same product, colour and size at **today's** price, offers and stock, never the old order's. A size that is sold out is shown as sold out with the sizes still in stock beside it, never swapped silently; a product no longer sold is named and left out; a set comes back as its set only while that set is still offered, otherwise as its separate pieces; add-ons, gifts and the old delivery charge are not copied. Nothing is ordered until the customer goes through the normal checkout, so the delivery charge, COD and every offer rule are the checkout's own. The new order carries a "bought again from #…" source tag that staff see on the order and reports can count. Setting `account.reorder` (**off by default**): the switch, the order states that offer it (delivered as shipped), whether the order list shows it too, and the button and notice words in English and Bengali. Section: the customer-account settings. Tests: a sold-out size, a product taken off sale, a changed price, a set no longer offered, the switch off. |
+| 623 | **The customer's own privacy request** (CN-034; S18; customer 360° finding 6, step `account/privacy-request`; feeds PR 382). On his account's profile a signed-in customer asks for **a copy of his data** or for **its erasure**, with an optional note, after a plain notice of what erasure keeps (orders keep money, lines and history without his contact details; the shop's legal, money and stock records stay). The request goes into PR 382's staff list on Settings › Privacy & data as a request from the customer himself, with who, when and his account; the account page shows it as received and then its outcome. **Nothing is erased by the request**: staff approval and PR 382's way of carrying it out stay exactly as built (owner only, the typed word, never while an order is on its way); a copy of the data is prepared only after staff approve it and is given through his signed-in account. One open request per kind per customer; the same tap twice is one request. Setting `privacy.customerRequests` (**off by default**; it shows only while PR 382's `privacy.erasureRequests` is on): the switch, which kinds are offered, and the notice and button words in English and Bengali. Audited. Tests: the request files and changes nothing, a second tap, the switch off, a guest cannot ask for someone else. |
+| 624 | **Messenger button on the shop** (CN-034; S22; customer 360° finding 7, step `support/messenger-button`). A Messenger chat link or button beside the shop's other support channels — the header WhatsApp icon, the site chat (PR 426) and the contact page — that opens the store's own Facebook Page in Messenger (`m.me/<page>`), with an optional "ref" naming the page and product it was tapped on so the chat starts with context. The Page address is the store's own setting (owner data, empty as shipped), never code; the button shows only while it is set. Setting `support.messengerButton` (**off by default**): the switch, the Page address, where it shows (header, product page, help and contact pages, the order page), the label and the hint words in English and Bengali. Each tap is counted with the other support-channel clicks. Tests: off and empty show nothing, the link is built from the setting, the device gate on the pages it shows on. |
 
 ### S06 additions — the approval loop (review round, 18 Oct)
 
