@@ -2,7 +2,7 @@
 // the pages made for ads (one product, an order box inside), the orders each brought and how many were delivered, the
 // views All / Live / Archived, "Create" and the master switch's card (`marketing.landing`, off as it ships). Seeing needs
 // `marketing.landing.read`; creating and the switch need `marketing.landing.write`. Guide:
-// docs/admin-guide/pages/marketing/landing.md.
+// docs/admin-guide/pages/marketing/landing.md. PR 255: "Templates" opens the templates and the parts library.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -85,11 +85,16 @@ export default async function LandingPagesPage(props: Props) {
         title={s('title')}
         sub={s('sub')}
         right={
-          canWrite ? (
-            <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="lp-create">
-              {s('create')}
+          <div className="lp-acts">
+            <Link className="a2-btn" href={`${HERE}/templates`} data-testid="lp-templates-link">
+              {s('templates')}
             </Link>
-          ) : undefined
+            {canWrite ? (
+              <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="lp-create">
+                {s('create')}
+              </Link>
+            ) : null}
+          </div>
         }
       />
       <SectionTabs view={view} current={KEY} />

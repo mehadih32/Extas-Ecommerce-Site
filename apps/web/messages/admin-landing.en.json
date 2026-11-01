@@ -113,7 +113,98 @@
       "forbidden": "You do not have permission for this.",
       "unauthorized": "Please sign in again.",
       "network": "No connection. Try again.",
-      "other": "Something went wrong. Try again."
+      "other": "Something went wrong. Try again.",
+      "NAME_TAKEN": "Another template already has that name."
+    },
+    "templates": "Templates",
+    "t": {
+      "metaTitle": "Landing page templates",
+      "title": "Templates",
+      "sub": "Ready-made sets of parts and your own, to start a landing page from. The parts library says what each part shows.",
+      "ready": "Ready-made templates",
+      "readySub": "Layouts only: which parts are on. The words are yours and the prices are always the product's own.",
+      "yours": "Your templates",
+      "yoursSub": "Saved from the builder with their parts and words. A page made from one keeps its own copy.",
+      "none": "None yet. In the builder open More options and choose Save as a template.",
+      "archived": "Archived ({n})",
+      "uses": "Started {n} pages",
+      "use": "Use",
+      "archive": "Archive",
+      "archiveConfirm": "Archive — it can be restored",
+      "restore": "Restore",
+      "partsLabel": "Parts that are on",
+      "library": "Parts library",
+      "librarySub": "The eight parts every landing page is made of, always in this order.",
+      "col": {
+        "part": "Part",
+        "shows": "What it shows",
+        "from": "Where it comes from"
+      },
+      "start": "Start from a template",
+      "startSub": "Picking one fills the parts and words below. You can change everything after.",
+      "blank": "Every part",
+      "blankNote": "All parts on except the countdown, no words yet",
+      "own": "Your template",
+      "partsOn": "{n} parts on",
+      "all": "See all templates",
+      "more": "More options",
+      "saveName": "Save these parts as a template — its name",
+      "saveHelp": "Keeps the switches and words on screen (not the countdown's end). This page itself does not change.",
+      "save": "Save as a template",
+      "savedAs": "Saved as the template “{name}”.",
+      "from": "Started from the template: {name}"
+    },
+    "tpl": {
+      "offer-first": {
+        "name": "Offer first",
+        "note": "The offer and order box near the top, then photos, size chart and reviews. For people who just saw the ad."
+      },
+      "fit-first": {
+        "name": "Fit & size first",
+        "note": "Size chart and fit reviews before the offer. Fewer exchanges."
+      },
+      "story": {
+        "name": "Story & fabric",
+        "note": "Photos and why this product, then the order box. For premium styles."
+      },
+      "combo-push": {
+        "name": "Combo push",
+        "note": "Photos, reviews and the order box for a set or pack offer."
+      }
+    },
+    "lib": {
+      "hero": {
+        "shows": "The headline, your offer line and the main photo",
+        "from": "Your headline and offer line; the product's first photo"
+      },
+      "gallery": {
+        "shows": "The product's photos, colour by colour",
+        "from": "The product's own photos"
+      },
+      "benefits": {
+        "shows": "The reasons to buy, one per line",
+        "from": "Your own words in the builder"
+      },
+      "size": {
+        "shows": "The size chart, and the try-on line when the shop offers it",
+        "from": "The product's size chart; the checkout and product page settings"
+      },
+      "reviews": {
+        "shows": "Approved reviews of the product",
+        "from": "Products › Reviews (approved only)"
+      },
+      "form": {
+        "shows": "Colour, size and the order button, with the live price",
+        "from": "The product's live prices and stock"
+      },
+      "faq": {
+        "shows": "Cash on delivery, delivery and exchange answers",
+        "from": "The shop's own delivery, exchange and returns rules"
+      },
+      "timer": {
+        "shows": "A countdown to the offer's end; it hides itself after",
+        "from": "The end time set on each page"
+      }
     }
   }
 }

@@ -304,6 +304,7 @@
       "/admin/marketing/tracking",
       "/admin/marketing/landing",
       "/admin/marketing/landing/new",
+      "/admin/marketing/landing/templates",
       "/admin/help/manual",
       "/admin/orders/risk-rules",
       "/pay/0",

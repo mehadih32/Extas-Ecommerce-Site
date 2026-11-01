@@ -3,6 +3,7 @@
 // off in their fixed order and their words; a phone sketch; Save, Publish (asks once more), Take down, Archive and
 // Restore (nothing is deleted), Open and Copy link. Seeing needs `marketing.landing.read`, changing
 // `marketing.landing.write`. Guide: docs/admin-guide/pages/marketing/landing-builder.md.
+// PR 255: a new page offers the templates (`?t=<key>` starts from one, the Templates page's "Use" link).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -16,6 +17,7 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { landingChoices, landingOne } from '@/lib/marketing/landing';
+import { templateChoices } from '@/lib/marketing/landing-templates';
 import { shopOrigin } from '@/lib/shop/meta';
 import { sectionsOf } from '@/lib/marketing/landing-model';
 import bn from '../../../../../../messages/admin-landing.bn.json';
@@ -37,11 +39,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t(view.dict, 'lp.builderMeta'), robots: { index: false, follow: false } };
 }
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ t?: string }> };
 
 export default async function LandingBuilderPage(props: Props) {
   const deps = adminDeps();
-  const [{ id }, plain] = await Promise.all([props.params, adminView(deps)]);
+  const [{ id }, plain, sp] = await Promise.all([props.params, adminView(deps), props.searchParams]);
   const here = `${LIST}/${encodeURIComponent(id)}`;
   const access = await pageAccess('marketing.landing.read', deps, MOTHER_STORE_ID);
   const view = withScreen(plain);
@@ -61,7 +63,12 @@ export default async function LandingBuilderPage(props: Props) {
     </Link>
   );
   const isNew = id === 'new';
-  const [page, choices, domain] = await Promise.all([isNew ? Promise.resolve(null) : landingOne(access.deps.db, id), landingChoices(access.deps.db), shopOrigin(MOTHER_STORE_ID).catch(() => undefined)]);
+  const [page, choices, templates, domain] = await Promise.all([
+    isNew ? Promise.resolve(null) : landingOne(access.deps.db, id),
+    landingChoices(access.deps.db),
+    templateChoices(access.deps.db),
+    shopOrigin(MOTHER_STORE_ID).catch(() => undefined),
+  ]);
   if (!isNew && !page)
     return (
       <div className="a2-z">
@@ -70,14 +77,15 @@ export default async function LandingBuilderPage(props: Props) {
       </div>
     );
   const canWrite = access.guard.permissions?.has('marketing.landing.write') ?? false;
-  const start: BuilderPage = page ?? { id: null, slug: '', titleEn: '', titleBn: null, productId: null, campaignId: null, state: 'draft', sections: sectionsOf([]), version: null, orders: 0, delivered: 0 };
+  const from = isNew ? templates.find((x) => x.key === sp.t) : undefined;
+  const start: BuilderPage = page ?? { id: null, slug: '', titleEn: '', titleBn: null, productId: null, campaignId: null, templateKey: from?.key ?? null, state: 'draft', sections: from?.sections ?? sectionsOf([]), version: null, orders: 0, delivered: 0 };
   const words = { lp: (d as Record<string, Dict>).lp ?? {} } as Dict;
 
   return (
     <div className="a2-z" data-testid="landing-builder">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={page ? page.titleEn : s('newTitle')} sub={page ? s('b.stats', { orders: page.orders, delivered: page.delivered }) : undefined} />
       <SectionTabs view={view} current={KEY} />
-      <LandingBuilder words={words} page={start} products={choices.products} campaigns={choices.campaigns} origin={domain?.origin ?? ''} canWrite={canWrite} listHref={LIST} />
+      <LandingBuilder words={words} page={start} products={choices.products} campaigns={choices.campaigns} origin={domain?.origin ?? ''} canWrite={canWrite} listHref={LIST} templates={templates} templatesHref={`${LIST}/templates`} />
     </div>
   );
 }

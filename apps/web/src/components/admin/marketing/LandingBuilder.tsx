@@ -4,10 +4,13 @@
 // version the page was read at (STALE = someone changed it; the page is read again). Publish and Archive ask once more.
 // Without `marketing.landing.write` everything is read-only. Prices are never typed here: the shop shows the product's
 // own live prices.
+// PR 255: a new page starts from a template (ready-made or the owner's own: it fills the parts' switches and words, the
+// page keeps its own copy); "Save these parts as a template" under More options keeps the parts on screen as an own
+// template under a name.
 import { useRouter } from 'next/navigation';
 import { useId, useState, type ReactNode } from 'react';
 import { t, type Dict } from '@/lib/i18n';
-import { LANDING_SECTIONS, slugify, type LandingSection, type LandingSectionKey, type PageState } from '@/lib/marketing/landing-model';
+import { LANDING_SECTIONS, sectionsOf, slugify, type LandingSection, type LandingSectionKey, type PageState } from '@/lib/marketing/landing-model';
 import { call } from '../api';
 
 export interface BuilderPage {
@@ -17,6 +20,7 @@ export interface BuilderPage {
   titleBn: string | null;
   productId: string | null;
   campaignId: string | null;
+  templateKey: string | null;
   state: PageState;
   sections: LandingSection[];
   version: string | null;
@@ -24,8 +28,16 @@ export interface BuilderPage {
   delivered: number;
 }
 
+/** A template a new page can start from (name null = a ready-made one, named in the messages). */
+export interface BuilderTemplate {
+  key: string;
+  name: string | null;
+  sections: LandingSection[];
+}
+
 type Step = 'publish' | 'unpublish' | 'archive' | 'restore';
 const API = '/api/admin/marketing/landing-pages';
+const TPL_API = '/api/admin/marketing/landing-templates';
 const lines = (s: string) =>
   s
     .split('\n')
@@ -39,7 +51,17 @@ const toLocal = (iso: string | null | undefined) => {
 };
 const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null);
 
-export function LandingBuilder(p: { words: Dict; page: BuilderPage; products: { id: string; name: string; onSale: boolean }[]; campaigns: { id: string; name: string }[]; origin: string; canWrite: boolean; listHref: string }) {
+export function LandingBuilder(p: {
+  words: Dict;
+  page: BuilderPage;
+  products: { id: string; name: string; onSale: boolean }[];
+  campaigns: { id: string; name: string }[];
+  origin: string;
+  canWrite: boolean;
+  listHref: string;
+  templates?: BuilderTemplate[];
+  templatesHref?: string;
+}) {
   const id = useId();
   const router = useRouter();
   const c = (k: string, vars?: Record<string, string | number>) => t(p.words, `lp.${k}`, vars);
@@ -61,6 +83,9 @@ export function LandingBuilder(p: { words: Dict; page: BuilderPage; products: { 
   const [ask, setAsk] = useState<Step | null>(null);
   const [dirty, setDirty] = useState(!pg.id);
   const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
+  const [tpl, setTpl] = useState<string | null>(pg.templateKey);
+  const [tplName, setTplName] = useState('');
+  const [tplSaid, setTplSaid] = useState<{ text: string; bad: boolean } | null>(null);
   const ro = !p.canWrite || pg.state === 'archived';
   const off = ro || busy;
   const touch = <T,>(set: (v: T) => void) => (v: T) => {
@@ -80,12 +105,27 @@ export function LandingBuilder(p: { words: Dict; page: BuilderPage; products: { 
     return txt === `lp.${k}` ? c('err.other') : txt;
   }
 
-  async function save() {
-    setBusy(true);
-    setSaid(null);
+  const tplLabel = (t: BuilderTemplate) => t.name ?? c(`tpl.${t.key}.name`);
+  const fromT = p.templates?.find((x) => x.key === pg.templateKey);
+  const fromName = fromT ? tplLabel(fromT) : (pg.templateKey ?? '');
+  /** Start the new page from a template (null = every part at its default, no words). */
+  function startFrom(t: BuilderTemplate | null) {
+    const secs = t?.sections ?? sectionsOf([]);
+    const cf = (k: LandingSectionKey) => secs.find((x) => x.key === k)?.config ?? {};
+    setOn(Object.fromEntries(secs.map((x) => [x.key, x.on])) as Record<LandingSectionKey, boolean>);
+    setOfferEn(cf('hero').offer?.en ?? '');
+    setOfferBn(cf('hero').offer?.bn ?? '');
+    setBenEn((cf('benefits').lines ?? []).map((l) => l.en).join('\n'));
+    setBenBn((cf('benefits').lines ?? []).map((l) => l.bn ?? '').join('\n'));
+    setTpl(t?.key ?? null);
+    setDirty(true);
+    setAsk(null);
+  }
+
+  function partsBody() {
     const ben = lines(benEn);
     const bnl = benBn.split('\n').map((x) => x.trim());
-    const sections = Object.fromEntries(
+    return Object.fromEntries(
       LANDING_SECTIONS.map((k) => [
         k,
         {
@@ -94,7 +134,25 @@ export function LandingBuilder(p: { words: Dict; page: BuilderPage; products: { 
         },
       ]),
     );
-    const body = { titleEn, titleBn: titleBn || null, slug, productId, campaignId: campaignId || null, sections, version: pg.version };
+  }
+
+  async function saveTemplate() {
+    setBusy(true);
+    setTplSaid(null);
+    const a = await call('POST', TPL_API, { name: tplName, sections: partsBody() });
+    setBusy(false);
+    if (a.status === 201) {
+      setTplName('');
+      return setTplSaid({ text: c('t.savedAs', { name: (a.data.template as { name?: string } | undefined)?.name ?? '' }), bad: false });
+    }
+    setTplSaid({ text: errText(a), bad: true });
+  }
+
+  async function save() {
+    setBusy(true);
+    setSaid(null);
+    const sections = partsBody();
+    const body = { titleEn, titleBn: titleBn || null, slug, productId, campaignId: campaignId || null, sections, ...(pg.id ? {} : { templateKey: tpl }), version: pg.version };
     const a = await call(pg.id ? 'PUT' : 'POST', pg.id ? `${API}/${pg.id}` : API, body);
     setBusy(false);
     if (a.status === 200 || a.status === 201) {
@@ -146,6 +204,33 @@ export function LandingBuilder(p: { words: Dict; page: BuilderPage; products: { 
   return (
     <div className="lp-grid a2-mt12">
       <div className="lp-stack">
+        {!pg.id && p.canWrite && p.templates?.length ? (
+          <section className="a2-card a2-sc" aria-labelledby={`${id}-tp`} data-testid="lp-templates">
+            <h2 className="a2-h3" id={`${id}-tp`}>
+              {c('t.start')}
+            </h2>
+            <p className="a2-cs">{c('t.startSub')}</p>
+            <div className="lp-tpls a2-mt12" role="radiogroup" aria-labelledby={`${id}-tp`}>
+              {[null, ...p.templates].map((x) => {
+                const k = x?.key ?? '';
+                const picked = (tpl ?? '') === k;
+                const parts = (x?.sections ?? sectionsOf([])).filter((s) => s.on).length;
+                return (
+                  <button key={k || 'none'} type="button" role="radio" aria-checked={picked} className={`lp-tpl${picked ? ' on' : ''}`} disabled={busy} onClick={() => startFrom(x)} data-testid={`lp-tpl-${k || 'none'}`}>
+                    <b>{x ? tplLabel(x) : c('t.blank')}</b>
+                    <span className="a2-xs a2-mute">{x && !x.name ? c(`tpl.${x.key}.note`) : x ? c('t.own') : c('t.blankNote')}</span>
+                    <span className="a2-xs">{c('t.partsOn', { n: parts })}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {p.templatesHref ? (
+              <a className="a2-lnk lp-tlink" href={p.templatesHref}>
+                {c('t.all')}
+              </a>
+            ) : null}
+          </section>
+        ) : null}
         <section className="a2-card a2-sc" aria-labelledby={`${id}-ph`}>
           <h2 className="a2-h3" id={`${id}-ph`}>
             {c('b.page')}
@@ -294,8 +379,33 @@ export function LandingBuilder(p: { words: Dict; page: BuilderPage; products: { 
             {said.text}
           </p>
         ) : null}
+        {p.canWrite && pg.state !== 'archived' ? (
+          <details className="a2-more-opts lp-more" data-testid="lp-more">
+            <summary>{c('t.more')}</summary>
+            <div className="a2-fld a2-mt12">
+              <label className="a2-lbl" htmlFor={`${id}-tn`}>
+                {c('t.saveName')}
+              </label>
+              <input id={`${id}-tn`} className="a2-inp" value={tplName} maxLength={80} disabled={busy} onChange={(e) => setTplName(e.target.value)} data-testid="lp-tpl-name" />
+              <div className="a2-help a2-xs a2-mute">{c('t.saveHelp')}</div>
+            </div>
+            <button type="button" className="a2-btn a2-mt12" disabled={busy || !tplName.trim()} onClick={saveTemplate} data-testid="lp-tpl-save">
+              {c('t.save')}
+            </button>
+            {tplSaid ? (
+              <p className={`a2-sm lp-said ${tplSaid.bad ? 'bk-warn' : 'a2-mute'}`} role={tplSaid.bad ? 'alert' : 'status'} data-testid="lp-tpl-said">
+                {tplSaid.text}
+              </p>
+            ) : null}
+          </details>
+        ) : null}
         {!p.canWrite ? <p className="a2-xs a2-mute">{c('b.readOnly')}</p> : null}
         {pg.id ? <p className="a2-xs a2-mute">{c('b.stateLine', { state: c(`state.${pg.state}`) })}</p> : null}
+        {pg.id && pg.templateKey ? (
+          <p className="a2-xs a2-mute" data-testid="lp-from">
+            {c('t.from', { name: fromName })}
+          </p>
+        ) : null}
       </div>
 
       <div className="lp-stack">
