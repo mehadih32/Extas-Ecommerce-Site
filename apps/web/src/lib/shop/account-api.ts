@@ -8,6 +8,8 @@
 //   POST /api/account/password   {current?, next}           → {}                                     Profile: set or change it
 //   POST /api/account/profile    {name, addresses: [{id?, line}]} → {profile}                         PR 131: Profile's details
 //   POST /api/account/consent    {sms?, whatsapp?}          → {consent}                              PR 131: offers by SMS / WhatsApp
+//   POST /api/account/birthday   {day, month, year?} | {clear: true} → {birthday}                     PR 301: his birthday
+//                                (only while `customers.birthday` is on; the year only while it is asked)
 //   POST /api/account/cancel     {number, reasonKey, note?} → {outcome: cancelled|requested, status}  S05 · PR 144: his own
 //                                cancel (CN-020 (5)): one tap until the owner's cut-off, then a request until booking
 //   POST /api/account/cancel-state {number}                 → {mode: tap|request|requested|none, reasons}
@@ -31,7 +33,7 @@
 //
 // The session cookie is `__Host-extas_c`, the device cookie `__Host-extas_dev` (lib/shop/account.ts). Follow-up 71: a
 // sign-in brings this browser's wishlist hearts into the account (lib/shop/wishlist.ts mergeWishes).
-import { askForCode, isAccountError, normalPhone, saveConsent, saveProfile, setOwnPassword, signInWithCode, signInWithPassword, signOut, type AccountsDeps } from '@extas/accounts';
+import { askForCode, isAccountError, normalPhone, saveBirthday, saveConsent, saveProfile, setOwnPassword, signInWithCode, signInWithPassword, signOut, type AccountsDeps } from '@extas/accounts';
 import { mockSmsOutbox } from '@extas/adapters';
 import type { RequestContext } from '@extas/auth';
 import { addOnState, customerAddOn, customerCancel, customerCancelState, customerEdit, customerEditState, customerRemoveAddOn, customerTwoSizeAnswer, customerTwoSizeState, isOrdersError, type CustomerRef } from '@extas/orders';
@@ -151,6 +153,13 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         if (!auth) return fail(401, 'SIGNED_OUT');
         const consent = await saveConsent(a, { storeId: deps.storeId, customerId: auth.customer.id, consent: { sms: b.sms, whatsapp: b.whatsapp } }, ctxOf(request));
         return json({ ok: true, consent });
+      }
+      case 'birthday': {
+        const auth = await customerOfRequest(request, a, deps.storeId);
+        if (!auth) return fail(401, 'SIGNED_OUT');
+        const given = b.clear === true ? { clear: true } : { day: b.day, month: b.month, year: b.year ?? null };
+        const birthday = await saveBirthday(a, { storeId: deps.storeId, customerId: auth.customer.id, birthday: given }, ctxOf(request));
+        return json({ ok: true, birthday });
       }
       case 'cancel':
       case 'cancel-state':

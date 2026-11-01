@@ -227,6 +227,12 @@
         "conversation": "Conversation",
         "ticket": "Ticket"
       },
+      "birthday": {
+        "title": "Birthday",
+        "label": "Date",
+        "none": "not given",
+        "note": "He gave it in My account. Nothing is sent for it yet: birthday wishes stay off."
+      },
       "consent": {
         "title": "Offers",
         "sms": "SMS offers",
@@ -588,6 +594,12 @@
           "bn": "Stop line (Bengali)",
           "en": "Stop line (English)"
         }
+      },
+      "birthday": {
+        "title": "Birthday field",
+        "sub": "Off as shipped. When on, customers may give their birthday in My account › Profile, and it shows on their customer page. Nothing is sent or given for it: birthday wishes stay parked.",
+        "enabled": "Show the birthday box in My account",
+        "askYear": "Ask for the year too"
       }
     },
     "auto": {

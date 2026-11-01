@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { aiWriterSettingsSchema, CRM_CAMPAIGN_STEP, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema, winbackSettingsSchema } from '../src/registry-crm';
+import { aiWriterSettingsSchema, BIRTHDAY_NO_YEAR, birthdayDate, birthdayParts, birthdaySettingsSchema, CRM_CAMPAIGN_STEP, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema, winbackSettingsSchema } from '../src/registry-crm';
 
 describe('CRM settings (v190–209)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -92,5 +92,26 @@ describe('CRM settings (v190–209)', () => {
     expect(winbackSettingsSchema.safeParse({ ...s.default, defaultLapsedDays: 3 }).success).toBe(false);
     expect(winbackSettingsSchema.safeParse({ ...s.default, discount: 10 }).success).toBe(false);
     expect(CRM_CAMPAIGN_STEP).toBe('crmCampaign');
+  });
+
+  it('PR 301: the birthday field is off as shipped (v200), the year not asked', () => {
+    const s = crmSettings['customers.birthday'];
+    expect(s.version).toBe(200);
+    expect(s.default).toEqual({ enabled: false, askYear: false });
+    expect(birthdaySettingsSchema.safeParse({ ...s.default, gift: true }).success).toBe(false);
+  });
+
+  it('PR 301: a birthday without a year is stored on the marker year and read back as no year', () => {
+    const noYear = birthdayDate({ day: 29, month: 2, year: null })!;
+    expect(noYear.toISOString().slice(0, 10)).toBe(`${BIRTHDAY_NO_YEAR}-02-29`);
+    expect(birthdayParts(noYear)).toEqual({ day: 29, month: 2, year: null });
+    expect(birthdayParts(birthdayDate({ day: 5, month: 11, year: 1990 }))).toEqual({ day: 5, month: 11, year: 1990 });
+    expect(birthdayParts(new Date('1990-11-05'))).toEqual({ day: 5, month: 11, year: 1990 });
+    expect(birthdayDate({ day: 31, month: 4, year: null })).toBeNull();
+    expect(birthdayDate({ day: 29, month: 2, year: 2001 })).toBeNull();
+    expect(birthdayDate({ day: 0, month: 1, year: null })).toBeNull();
+    expect(birthdayDate({ day: 1, month: 13, year: null })).toBeNull();
+    expect(birthdayDate({ day: 1.5, month: 1, year: null })).toBeNull();
+    expect(birthdayParts(null)).toBeNull();
   });
 });

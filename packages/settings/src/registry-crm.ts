@@ -58,6 +58,11 @@
 // a receiver places within `resultDays` count as the campaign's result; `defaultLapsedDays` fills a new campaign's form;
 // `stopLine` is added to every such SMS (the offer opt-out, CN-021 P14).
 // A campaign never makes or changes an offer, a price or a discount: its words are a template the owner wrote.
+//
+// PR 301 (`customers.birthday`, v200): the birthday field (My account › Profile), ready for the parked birthday module
+// (Blueprint C6.6, Appendix F). Off as shipped; when on, a signed-in customer may give his birthday — the day and the
+// month, the year only when `askYear` is on — change it or clear it, and his customer page shows it. Nothing is sent,
+// given or promised for it: birthday messages and gifts stay parked until the owner asks.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -75,6 +80,33 @@ export const CRM_CAMPAIGN_STEP = 'crmCampaign';
 
 /** PR 290 — the key prefix of the owner's e-mail templates (NotificationTemplate, channel EMAIL). */
 export const CRM_EMAIL_TEMPLATE_PREFIX = 'crmEmail.';
+
+/** PR 301 — the year a birthday is stored with when the customer gave only the day and the month (a leap year, so
+ * 29 February fits). Never an age: `birthdayParts` reads it back as "no year". */
+export const BIRTHDAY_NO_YEAR = 1904; // hardcode-ok: a storage marker, not a business figure
+
+/** PR 301 — a birthday as people say it: the day, the month (1–12) and the year when it was given. */
+export interface BirthdayParts {
+  day: number;
+  month: number;
+  year: number | null;
+}
+
+/** PR 301 — the stored date (a Postgres DATE, read as midnight UTC) as its parts; the marker year reads as no year. */
+export function birthdayParts(d: Date | null | undefined): BirthdayParts | null {
+  if (!d || Number.isNaN(d.getTime())) return null;
+  const y = d.getUTCFullYear();
+  return { day: d.getUTCDate(), month: d.getUTCMonth() + 1, year: y === BIRTHDAY_NO_YEAR ? null : y };
+}
+
+/** PR 301 — the date to store for these parts, or null when no such day exists (31 April, 29 February 2001). */
+export function birthdayDate(p: BirthdayParts): Date | null {
+  const y = p.year ?? BIRTHDAY_NO_YEAR;
+  if (!Number.isInteger(p.day) || !Number.isInteger(p.month) || !Number.isInteger(y)) return null;
+  const d = new Date(Date.UTC(y, p.month - 1, p.day));
+  if (y < 100) d.setUTCFullYear(y);
+  return d.getUTCFullYear() === y && d.getUTCMonth() === p.month - 1 && d.getUTCDate() === p.day ? d : null;
+}
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'customers' } as const;
 
@@ -191,6 +223,10 @@ export const winbackSettingsSchema = z
   .strict();
 export type WinbackSettings = z.output<typeof winbackSettingsSchema>;
 
+/** PR 301 — the birthday field (off as shipped; the year only when asked). */
+export const birthdaySettingsSchema = z.object({ enabled: z.boolean(), askYear: z.boolean() }).strict();
+export type BirthdaySettings = z.output<typeof birthdaySettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -285,5 +321,14 @@ export const crmSettings = {
     labelKey: 'customers.winback.label',
     helpKey: 'customers.winback.help',
     sortOrder: 280,
+  }),  'customers.birthday': setting({
+    ...base,
+    version: 200,
+    schema: birthdaySettingsSchema,
+    default: { enabled: false, askYear: false }, // hardcode-ok: registry default (off)
+    valueType: 'JSON',
+    labelKey: 'customers.birthday.label',
+    helpKey: 'customers.birthday.help',
+    sortOrder: 290,
   }),
 };

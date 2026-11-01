@@ -54,6 +54,10 @@
     "winback": {
       "label": "Win-back campaigns",
       "help": "A message to the people who have stopped ordering (Messages › Campaigns): an SMS or WhatsApp from one of your own templates to those whose last order is older than the days you set. Off as shipped. Nothing goes until a person with the send right schedules a campaign. Each message is an offer: only to customers who said yes to offers on that channel, never in the quiet hours. \"Offers by phone in 7 days\": the most offers (automations and campaigns together) one person gets in a week. \"Days between win-backs\": nobody gets a second win-back sooner. \"Per run\": how many people one run queues. \"Days for results\": orders within these days of the message count for it. \"First \"no order for\" days\": what a new campaign starts with. A campaign never makes an offer or a discount: it only sends your words. \"Stop line\": added to every campaign SMS so a customer can say no to offers."
+    },
+    "birthday": {
+      "label": "Birthday field",
+      "help": "Off as shipped. When on, My account › Profile has a small \"Birthday\" box: a signed-in customer may give the day and the month (the year only when \"Ask for the year\" is on), change it or clear it, and his customer page shows it. Nothing is sent or given for it: birthday wishes and gifts are a separate module that stays parked until you ask for it. Erasing a customer clears it."
     }
   }
 }
