@@ -108,6 +108,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 425 · the support core (PostgreSQL)', () => {
     expect((await supportInbox(deps(), { ...who.elsewhere, storeId: S2 }, {})).counts.all).toBe(0);
     expect(await code(supportInbox(deps(), { ...who.elsewhere, storeId: S }, {}))).toBe('FORBIDDEN');
     expect((await supportInbox(deps(), who.agent, { q: '0100' })).counts.all).toBe(1);
+    // PR 425 follow-up (go-live gate customer 360°): the same number typed in Bengali digits
+    expect((await supportInbox(deps(), who.agent, { q: '০১০০' })).counts.all).toBe(1);
+    expect((await supportInbox(deps(), who.agent, { q: '৯৯৯৯' })).counts.all).toBe(0);
     overrides.set('customers.phoneMask', { first: 0, last: 4 });
     expect((await supportInbox(deps(), who.agent, {})).rows[0]!.contact.phone).toBe('•••••••0789');
     expect((await supportThread(deps(), who.agent, ids.conv!)).contact.phone).toBe('•••••••0789');
