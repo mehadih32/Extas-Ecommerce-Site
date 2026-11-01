@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৮টা PR-এর মধ্যে ৩৫৬টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৮টা PR-এর মধ্যে ৩৯৯টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -36,16 +36,16 @@ documents to it ([how](#how-it-is-built)).
 ## Status dashboard
 
 > **বাংলায় সংক্ষেপে:** সার্ভার (S0A), ভিত্তি (S00), পণ্য-ছবি-ক্যাটালগ (S01), স্টক-ERP (S09) আর স্মার্ট নিয়ম (S10) — এই পাঁচটা ধাপ পুরো শেষ।
-> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। ERP-এর সাথে টাকার হিসাব মেলানোর খাতা (S16: ERP অ্যাকাউন্ট, প্রতিদিনের মিল, মাস বন্ধ, ERP-তে দিনের হিসাব পাঠানো, মাসের স্থির খরচ) আর ERP দিয়ে ফেরত ও বদলের নতুন ব্যবস্থা (S08) তৈরি। ERP থেকে স্টাইল কোড ধরে পণ্য আনা (S01 শেষ) আর ERP-র সই করা প্রশ্নের উত্তর (S18) তৈরি। প্রতিটা দোকানের নিজের ERP সংযোগের পাতা, নতুন ERP চুক্তিতে যাওয়ার ব্যবস্থা আর পুরো ERP-র শেষ পরীক্ষা (S19) তৈরি। পুরোনো লিংক ঠিক পাতায় পাঠানো আর ৪০৪-এর তালিকা, বিক্রি শেষ হওয়া পণ্যের পাতা না হারানো, ডেমোর # লিংক আসল পাতায় নেওয়া (S11); নিরাপত্তার পাহারা, বট ধরার নীরব ব্যবস্থা, অ্যাডমিনের সাইন-ইন নিয়ম আর প্যাকেজের দুর্বলতা খোঁজা (S18); টেলিগ্রাম সতর্কবার্তা, এক ক্লিকে Google Drive ব্যাকআপ আর প্রতি মাসে ব্যাকআপ ফিরিয়ে দেখা (S19) তৈরি। প্রাইভেসি আর তথ্য মোছা, দোকানের আইনি নম্বর, হেল্প পাতার লেখা, ব্যাকআপ লকের ব্যবস্থা আর Cloudflare সুরক্ষা (S18); Cloudflare ক্যাশের নিয়ম (S17); সাইটের অবস্থা এক পাতায় (S21); Blob আর Drive ব্যাকআপ চালু, দোকান ফেরানো, 'চালুর আগে' তালিকা, চালুর দিনের গাইড আর প্রথম সপ্তাহের নজর (S19); টাকার সারসংক্ষেপ (S16) তৈরি, এগুলো এখন new.extas.com.bd-তে চালু। নতুন: Google-এর জন্য বাকি সব কাজ — কালেকশনের সার্চের লেখা, sitemap, robots.txt, ছবির বিবরণ, Search Console আর Bing, আসল কাস্টমারের গতি, বাংলা-ইংরেজি পাতার জোড়া আর বাংলা পাতা 'তৈরি' চিহ্ন (S11); Meta, Google আর TikTok-কে সার্ভার থেকে কেনাকাটার খবর (S13, শুরুতে বন্ধ); খরচের খাতা, খুচরা খরচ, খরচ ও ফি-র ঘর আর মাস শেষের হিসাব (S16); নিজে থেকে চলা ব্রাউজার পরীক্ষা আর কাস্টমারের সমস্যার তালিকা (S21); Messenger, WhatsApp আর সাইটের চ্যাট সাপোর্ট ইনবক্সে (S22)। **চালুর তালিকার বানানোর মতো সব কাজ শেষ।** পুরো সাইটের প্রথম দফা যাচাইয়ে পাওয়া ভুলগুলো ঠিক হয়েছে (#71): কুপনের ব্যবহারের সীমা এখন সত্যিই মানা হয়, পরীক্ষার পেমেন্ট শুরুতে বন্ধ, টাকা না আসা অনলাইন অর্ডার কনফার্ম হয় না, ফেরতের টাকা পাওয়া টাকার বেশি হয় না, অস্পষ্ট ঠিকানার অর্ডারে 'ডেলিভারি এলাকা ঠিক করুন' বোতাম, বাংলা পাতা আবার পুরো বাংলায়, ব্যাকআপ-ডিপ্লয়-নজরদারির ফাঁক বন্ধ, আর staging সবসময় পাসওয়ার্ডে বন্ধ। মূল ডোমেইন খোলার আলাদা সুইচ তৈরি (PR 403), সুইচটা খোলা হবে শুধু আপনার বলা দিনে (BLOCKED 25)। চালুর তালিকায় বাকি শুধু মূল ডোমেইন বদল (PR 587)। নতুন (#73): আসল অর্ডারের আগের পরীক্ষায় (গো-লাইভ গেট) পাওয়া ১৩টা সমস্যা ঠিক হয়েছে — ধন্যবাদ পাতায় শুধু সত্যি কথা, কাস্টমার যে ভাষায় অর্ডার দিলেন সেই ভাষায় মেসেজ, ফেরত পার্সেলের টাকা ফেরতের অনুরোধ আর "টাকা ফেরত আর ওয়ালেট" পাতা, কাস্টমারের ওয়ালেট ট্যাব, বুকিংয়ের পরে টাকা বদলালে আবার বুক, "শুধু প্রথম অর্ডার" কুপন, সেট ভাঙা যাবে কি না, "আমাকে কল করুন", মুখে বলে ঠিকানা, জেলা অনুযায়ী ডেলিভারির সময়, স্টিকারে ইংরেজি অক্ষরে ঠিকানা, ঈদের শেষ দিন আর আরও চারটা মেসেজ (সব নতুন সুবিধা শুরুতে বন্ধ)। চালুর পরের ৩০টা PR-ও তৈরি: ঝুঁকির ইঞ্জিনের বাকি অংশ (S06: ব্লক তালিকা, বারবার না নেওয়া কাস্টমারের শর্ত, ফ্রড রিপোর্ট, আজকের সারাংশ, নতুন কাস্টমারকে কল), নগদ আর কার্ড (S07 শেষ), কম খরচের কুরিয়ার, অ্যাকাউন্ট থেকে সাইজ বদল, কুরিয়ারের রিপোর্ট, ছুটির মোড (S08 শেষ), সাইট ম্যানুয়াল (S18 শেষ) আর সাইটের অবস্থার বাকি পাতা ও টেলিগ্রাম সতর্কবার্তা (S21)। মোট ৬১৫টা PR-এর মধ্যে ৩৫৬টা মার্জ হয়েছে।
+> এখন দোকানের সামনের অংশ (S02), কম্বো (S03), ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (S04), অর্ডারের হিসাব (S05), ডেলিভারি এলাকা ও ঝুঁকির স্কোর (S06) পেমেন্ট (S07) আর কুরিয়ার (S08: কাঠামো, Steadfast, Pathao, প্যাকিং) তৈরি হচ্ছে। কাস্টমারের সেকশন (S14: তালিকা, একজন কাস্টমারের পাতা, একই মানুষের প্রোফাইল একসাথে করা) আর মেসেজের ব্যবস্থাও (SMS, WhatsApp, "বন্ধ" লিখলে মেসেজ বন্ধ, মেসেজের লেখা বদলানোর পাতা) তৈরি। অর্ডারের ইনভয়েস (S20) আর সাপোর্ট ইনবক্সের মূল অংশ (S22) তৈরি। ERP-এর সাথে টাকার হিসাব মেলানোর খাতা (S16: ERP অ্যাকাউন্ট, প্রতিদিনের মিল, মাস বন্ধ, ERP-তে দিনের হিসাব পাঠানো, মাসের স্থির খরচ) আর ERP দিয়ে ফেরত ও বদলের নতুন ব্যবস্থা (S08) তৈরি। ERP থেকে স্টাইল কোড ধরে পণ্য আনা (S01 শেষ) আর ERP-র সই করা প্রশ্নের উত্তর (S18) তৈরি। প্রতিটা দোকানের নিজের ERP সংযোগের পাতা, নতুন ERP চুক্তিতে যাওয়ার ব্যবস্থা আর পুরো ERP-র শেষ পরীক্ষা (S19) তৈরি। পুরোনো লিংক ঠিক পাতায় পাঠানো আর ৪০৪-এর তালিকা, বিক্রি শেষ হওয়া পণ্যের পাতা না হারানো, ডেমোর # লিংক আসল পাতায় নেওয়া (S11); নিরাপত্তার পাহারা, বট ধরার নীরব ব্যবস্থা, অ্যাডমিনের সাইন-ইন নিয়ম আর প্যাকেজের দুর্বলতা খোঁজা (S18); টেলিগ্রাম সতর্কবার্তা, এক ক্লিকে Google Drive ব্যাকআপ আর প্রতি মাসে ব্যাকআপ ফিরিয়ে দেখা (S19) তৈরি। প্রাইভেসি আর তথ্য মোছা, দোকানের আইনি নম্বর, হেল্প পাতার লেখা, ব্যাকআপ লকের ব্যবস্থা আর Cloudflare সুরক্ষা (S18); Cloudflare ক্যাশের নিয়ম (S17); সাইটের অবস্থা এক পাতায় (S21); Blob আর Drive ব্যাকআপ চালু, দোকান ফেরানো, 'চালুর আগে' তালিকা, চালুর দিনের গাইড আর প্রথম সপ্তাহের নজর (S19); টাকার সারসংক্ষেপ (S16) তৈরি, এগুলো এখন new.extas.com.bd-তে চালু। নতুন: Google-এর জন্য বাকি সব কাজ — কালেকশনের সার্চের লেখা, sitemap, robots.txt, ছবির বিবরণ, Search Console আর Bing, আসল কাস্টমারের গতি, বাংলা-ইংরেজি পাতার জোড়া আর বাংলা পাতা 'তৈরি' চিহ্ন (S11); Meta, Google আর TikTok-কে সার্ভার থেকে কেনাকাটার খবর (S13, শুরুতে বন্ধ); খরচের খাতা, খুচরা খরচ, খরচ ও ফি-র ঘর আর মাস শেষের হিসাব (S16); নিজে থেকে চলা ব্রাউজার পরীক্ষা আর কাস্টমারের সমস্যার তালিকা (S21); Messenger, WhatsApp আর সাইটের চ্যাট সাপোর্ট ইনবক্সে (S22)। **চালুর তালিকার বানানোর মতো সব কাজ শেষ।** পুরো সাইটের প্রথম দফা যাচাইয়ে পাওয়া ভুলগুলো ঠিক হয়েছে (#71): কুপনের ব্যবহারের সীমা এখন সত্যিই মানা হয়, পরীক্ষার পেমেন্ট শুরুতে বন্ধ, টাকা না আসা অনলাইন অর্ডার কনফার্ম হয় না, ফেরতের টাকা পাওয়া টাকার বেশি হয় না, অস্পষ্ট ঠিকানার অর্ডারে 'ডেলিভারি এলাকা ঠিক করুন' বোতাম, বাংলা পাতা আবার পুরো বাংলায়, ব্যাকআপ-ডিপ্লয়-নজরদারির ফাঁক বন্ধ, আর staging সবসময় পাসওয়ার্ডে বন্ধ। মূল ডোমেইন খোলার আলাদা সুইচ তৈরি (PR 403), সুইচটা খোলা হবে শুধু আপনার বলা দিনে (BLOCKED 25)। চালুর তালিকায় বাকি শুধু মূল ডোমেইন বদল (PR 587)। নতুন (#73): আসল অর্ডারের আগের পরীক্ষায় (গো-লাইভ গেট) পাওয়া ১৩টা সমস্যা ঠিক হয়েছে — ধন্যবাদ পাতায় শুধু সত্যি কথা, কাস্টমার যে ভাষায় অর্ডার দিলেন সেই ভাষায় মেসেজ, ফেরত পার্সেলের টাকা ফেরতের অনুরোধ আর "টাকা ফেরত আর ওয়ালেট" পাতা, কাস্টমারের ওয়ালেট ট্যাব, বুকিংয়ের পরে টাকা বদলালে আবার বুক, "শুধু প্রথম অর্ডার" কুপন, সেট ভাঙা যাবে কি না, "আমাকে কল করুন", মুখে বলে ঠিকানা, জেলা অনুযায়ী ডেলিভারির সময়, স্টিকারে ইংরেজি অক্ষরে ঠিকানা, ঈদের শেষ দিন আর আরও চারটা মেসেজ (সব নতুন সুবিধা শুরুতে বন্ধ)। চালুর পরের ৩০টা PR-ও তৈরি: ঝুঁকির ইঞ্জিনের বাকি অংশ (S06: ব্লক তালিকা, বারবার না নেওয়া কাস্টমারের শর্ত, ফ্রড রিপোর্ট, আজকের সারাংশ, নতুন কাস্টমারকে কল), নগদ আর কার্ড (S07 শেষ), কম খরচের কুরিয়ার, অ্যাকাউন্ট থেকে সাইজ বদল, কুরিয়ারের রিপোর্ট, ছুটির মোড (S08 শেষ), সাইট ম্যানুয়াল (S18 শেষ) আর সাইটের অবস্থার বাকি পাতা ও টেলিগ্রাম সতর্কবার্তা (S21)। নতুন (#78): চালুর পরের আরও ৪৩টা PR তৈরি — ঝুঁকির ইঞ্জিনের শেষ পাঁচটা (S06 শেষ: রাস্তায় থাকা একই পণ্যের নোটিশ, অন্য সাইজ হলে বদলের প্রস্তাব, ফোন নম্বর লেখার সময় কুরিয়ারের ফ্রড তথ্য, অগ্রিম চাওয়ার ফলাফলের রিপোর্ট), লাভ-ক্ষতির হিসাব (S16 শেষ: খরচের রিপোর্ট, প্রতি অর্ডারের লাভ, লাভ-ক্ষতি, VAT, টেলিগ্রামে টাকার রিপোর্ট, টিমের ব্যাজ, এলাকা আর চ্যানেল ধরে বিক্রি ও লাভ), প্যাকিংয়ের বাকি পাতা (S20 শেষ: প্রিন্ট, পিকিং লিস্ট, হ্যান্ডওভার, ইনভয়েসের ডিজাইন), ব্যাকএন্ডে PR রেজিস্টার আর ফাইল (S21 শেষ), ল্যান্ডিং পেজ, ক্যাম্পেইন আর Meta, TikTok, Google-এর বিজ্ঞাপন পড়া (S13), কাস্টমারের দল, জার্নি, অটোমেশন আর ই-মেইল (S14), আর সাপোর্ট চ্যাটে কাস্টমার চেনা, পণ্য পাঠানো ও চ্যাট থেকেই অর্ডার (S22)। সব নতুন সুবিধা শুরুতে বন্ধ। মোট ৬১৮টা PR-এর মধ্যে ৩৯৯টা মার্জ হয়েছে।
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 304/305** · every buildable Launch row is built (#70); PR [403](docs/stages/S19.md#pr-403) built in #71: the main domain's own switch, shipped closed (opening it on go-live day stays the owner's step, BLOCKED 25). Review round 1 (#71) and round 2 (#72) fixes merged. 1 left: PR [587](docs/stages/S19.md#pr-587) (the main-domain switch, after the CN-013 go-live gate). Batch 4 (#73): the 13 go-live gate fixes (SIM-F-004, 019, 025, 031, 041, 046, 047, 048, 050, 051, 052, 053, 054) as follow-ups on built Launch rows, with the review round 3 fixes folded in. The go-live gate journeys (#74, PR [414](docs/stages/S21.md#pr-414) follow-up): CN-013 phase 2 runs on new.extas.com.bd as the journeys workflow's `go-live-gate` group, ordering and changing nothing; of its 38 live checks 8 are proved by the journeys, 24 by CI tests and 6 need a real test order. The After-launch list runs meanwhile, by priority (CN-031): #73 built 30 rows (S06 9, S07 2, S08 5, S18 4, S21 10); S07 and S08 are done (S18 was done until CN-034 added PR [623](docs/stages/S18.md#pr-623)). The go-live gate test orders and customer 360° runs (#75, PR [414](docs/stages/S21.md#pr-414) follow-ups): two by-hand workflows on the preview, 18 test-order scenarios and one customer's whole life cycle; four customer gaps they found are fixed (PR [257](docs/stages/S13.md#pr-257), 144, 75, 425 follow-ups) and three more are filed as After-launch PR [622–624](docs/stages/README.md) (CN-034) |
-| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 28/33** (wave 2) · **S04 41/42** · **S05 21/21** · **S07 10/10** · **S08 26/26** (wave 3) · **S11 14/22** · **S13 1/35** (wave 5) · **S16 9/22** · **S21 13/14** (wave 6) · **S17 1/24** · **S18 14/15** · **S19 16/17** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 2/14** (wave 4) · total **356/618** active PRs |
-| Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups); since 31 Oct 17:25 (#68) also Website › SEO › Redirects & 404, Settings › Sign-in & security and Settings › System › Backups; since 31 Oct 19:14 (#69) also Settings › Store details, Privacy & data, Policies & texts, Cloudflare protection, Settings › System › Go-live (restore, first-week watch), Reports › Site health and Money › Overview; since 31 Oct 22:46 (#70) also Website › SEO (collection pages, sitemaps, robots.txt, photo descriptions, Search Console and Bing, real visitors' speed, language pairs, Bengali pages), Marketing › Tracking, Money › Cost ledger, Expenses, Costs & fees and Month-end, Reports › Site health › Customer problems and journeys, and the Support channels; since 1 Nov 02:36 (#71) also the review round 1 fixes (Set delivery area on an order, test payments off by default, staging always on its own locked block); since 1 Nov 04:21 (#72) also the review round 2 fixes (`/status` on the preview host only, the unpaid hold's end, the Caddy body limits). Batch 4 (#73: Refunds & wallet, the Wallet tab, Fraud & RTO, Today's digest, Calls to make, Stopped by the engine, Decisions & learning, Delivery & RTO, Rider issues, Delivery › Settings, Eid order-by dates, the Site manual, Speed, Smoke runs, Run history, Fixes to approve, Checklist audit) goes live with the next deploy |
-| Last deploy | 1 Nov 2026, 04:21 (Dhaka) · commit `f5d916f` (#72 review round 2 fixes: 11 follow-ups) · **success**, smoke test 268 pages OK (nightly run 06:15 PASS); batch 4 (#73) goes live with the next deploy |
+| Launch | **Launch 304/305** · every buildable Launch row is built (#70); PR [403](docs/stages/S19.md#pr-403) built in #71: the main domain's own switch, shipped closed (opening it on go-live day stays the owner's step, BLOCKED 25). Review round 1 (#71) and round 2 (#72) fixes merged. 1 left: PR [587](docs/stages/S19.md#pr-587) (the main-domain switch, after the CN-013 go-live gate). Batch 4 (#73): the 13 go-live gate fixes (SIM-F-004, 019, 025, 031, 041, 046, 047, 048, 050, 051, 052, 053, 054) as follow-ups on built Launch rows, with the review round 3 fixes folded in. The go-live gate journeys (#74, PR [414](docs/stages/S21.md#pr-414) follow-up): CN-013 phase 2 runs on new.extas.com.bd as the journeys workflow's `go-live-gate` group, ordering and changing nothing; of its 38 live checks 8 are proved by the journeys, 24 by CI tests and 6 need a real test order. The After-launch list runs meanwhile, by priority (CN-031): #73 built 30 rows (S06 9, S07 2, S08 5, S18 4, S21 10); S07 and S08 are done (S18 was done until CN-034 added PR [623](docs/stages/S18.md#pr-623)). The go-live gate test orders and customer 360° runs (#75, PR [414](docs/stages/S21.md#pr-414) follow-ups): two by-hand workflows on the preview, 18 test-order scenarios and one customer's whole life cycle; four customer gaps they found are fixed (PR [257](docs/stages/S13.md#pr-257), 144, 75, 425 follow-ups) and three more are filed as After-launch PR [622–624](docs/stages/README.md) (CN-034). Batch 5 (#78) built 43 After-launch rows (S06 5, S13 7, S14 5, S16 13, S20 8, S21 1, S22 4) and follow-ups on PR [417](docs/stages/S21.md#pr-417), 559 and 562; S06, S16, S20 and S21 are done; Launch is unchanged |
+| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 33/33** (wave 2) · **S04 41/42** · **S05 21/21** · **S07 10/10** · **S08 26/26** (wave 3) · **S11 14/22** · **S13 8/35** (wave 5) · **S16 22/22** · **S21 14/14** (wave 6) · **S17 1/24** · **S18 14/15** · **S19 16/17** (wave 8) · **S14 12/24** · **S20 9/9** · **S22 6/14** (wave 4) · total **399/618** active PRs |
+| Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups); since 31 Oct 17:25 (#68) also Website › SEO › Redirects & 404, Settings › Sign-in & security and Settings › System › Backups; since 31 Oct 19:14 (#69) also Settings › Store details, Privacy & data, Policies & texts, Cloudflare protection, Settings › System › Go-live (restore, first-week watch), Reports › Site health and Money › Overview; since 31 Oct 22:46 (#70) also Website › SEO (collection pages, sitemaps, robots.txt, photo descriptions, Search Console and Bing, real visitors' speed, language pairs, Bengali pages), Marketing › Tracking, Money › Cost ledger, Expenses, Costs & fees and Month-end, Reports › Site health › Customer problems and journeys, and the Support channels; since 1 Nov 02:36 (#71) also the review round 1 fixes (Set delivery area on an order, test payments off by default, staging always on its own locked block); since 1 Nov 04:21 (#72) also the review round 2 fixes (`/status` on the preview host only, the unpaid hold's end, the Caddy body limits); since 1 Nov 10:43 (#73) also batch 4 (Refunds & wallet, the Wallet tab, Fraud & RTO, Today's digest, Calls to make, Stopped by the engine, Decisions & learning, Delivery & RTO, Rider issues, Delivery › Settings, Eid order-by dates, the Site manual, Speed, Smoke runs, Run history, Fixes to approve, Checklist audit); since 1 Nov 16:37 (#75) also "Cancel this order" on the customer's order page, the UTM tags kept on the order and Bengali digits in the inbox search; since 1 Nov 19:02 (#76) also the go-live gate's own practice payments. #77 (the gate runs' safety net) and batch 5 (#78: Reports › Flag outcomes, Sales by area and Team; Money › Profit & loss, Profit by group and by channel, VAT, the Costs report; Orders › Packing print run, picking list, handover and invoice designs; Marketing › Landing pages, Templates, Campaigns and Ad platforms; Customers › Segments and Customer settings, the Journey tab; Messages › Automations and E-mail; Help & Build › Build progress, Reported problems, Blueprint & files; the Support chat's Same person, Customer, Products and Chat bag cards — every new switch off) go live with the next deploy |
+| Last deploy | 1 Nov 2026, 19:02 (Dhaka) · commit `ebef0ce` (#76 go-live gate runs fixed after the first live run) · **success**, smoke test 314 pages OK; #77 and batch 5 (#78) go live with the next deploy |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
-| Waiting on the owner | 15 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17–28); none stops the build ([table below](#what-waits-on-the-owner)). New: 28 whether a repeat refuser's delivery-charge advance is given back when his parcel comes back, or kept (today kept, `payments.refunds.rtoAdvance`; a money decision; PR [163](docs/stages/S06.md#pr-163), 542). 27 whether typing a phone number at checkout may keep showing that customer's saved area, or only after the SMS code (review round 1; PR [555](docs/stages/S06.md#pr-555)). 26 whether old customer-problem records may ever be cleaned up (deleting data needs his OK; PR [423](docs/stages/S21.md#pr-423)). For go-live: 22 lock the Blob backups (cannot be undone, a cost; PR [385](docs/stages/S18.md#pr-385)), 23 connect Azure Blob and Google Drive (PR [391](docs/stages/S19.md#pr-391)), 24 type his own store data (PR [399](docs/stages/S19.md#pr-399)), 25 the day and time to switch extas.com.bd (PR [403](docs/stages/S19.md#pr-403)). 21 asks whether an outside security expert (a cost) checks the site before real money (PR [381](docs/stages/S18.md#pr-381)); 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
+| Waiting on the owner | 15 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17–28); none stops the build ([table below](#what-waits-on-the-owner)). Batch 5 (#78) adds none: its new switches ship off and the VAT rates, ad keys and courier fraud-check keys are the owner's own data, typed in later. 28 whether a repeat refuser's delivery-charge advance is given back when his parcel comes back, or kept (today kept, `payments.refunds.rtoAdvance`; a money decision; PR [163](docs/stages/S06.md#pr-163), 542). 27 whether typing a phone number at checkout may keep showing that customer's saved area, or only after the SMS code (review round 1; PR [555](docs/stages/S06.md#pr-555)). 26 whether old customer-problem records may ever be cleaned up (deleting data needs his OK; PR [423](docs/stages/S21.md#pr-423)). For go-live: 22 lock the Blob backups (cannot be undone, a cost; PR [385](docs/stages/S18.md#pr-385)), 23 connect Azure Blob and Google Drive (PR [391](docs/stages/S19.md#pr-391)), 24 type his own store data (PR [399](docs/stages/S19.md#pr-399)), 25 the day and time to switch extas.com.bd (PR [403](docs/stages/S19.md#pr-403)). 21 asks whether an outside security expert (a cost) checks the site before real money (PR [381](docs/stages/S18.md#pr-381)); 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
 | Last update | 1 Nov 2026 |
 
@@ -67,29 +67,29 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 22 / 22 | **Done** |
 | [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606), [622](docs/stages/S04.md#pr-622) | 41 / 42 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546), [610](docs/stages/S05.md#pr-610) | 21 / 21 | **Done** |
-| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 28 / 33 | In progress |
+| [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 33 / 33 | **Done** |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 10 / 10 | **Done** |
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564), [611–614](docs/stages/S08.md) | 26 / 26 | **Done** |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md), [607–608](docs/stages/S09.md) | 19 / 19 | **Done** |
 | [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 12 / 12 | **Done** |
 | [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 14 / 22 | In progress |
 | [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 0 / 22 | Not started |
-| [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 1 / 35 | In progress |
-| [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 7 / 24 | In progress |
+| [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 8 / 35 | In progress |
+| [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 12 / 24 | In progress |
 | [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 0 / 48 | Not started |
-| [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 9 / 22 | In progress |
+| [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 22 / 22 | **Done** |
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 1 / 24 | In progress |
 | [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620), [623](docs/stages/S18.md#pr-623) | 14 / 15 | In progress |
 | [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587), [619](docs/stages/S19.md#pr-619), [621](docs/stages/S19.md#pr-621) | 16 / 17 | In progress |
-| [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 1 / 9 | In progress |
-| [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 13 / 14 | In progress |
-| [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538), [624](docs/stages/S22.md#pr-624) | 2 / 14 | In progress |
+| [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 9 / 9 | **Done** |
+| [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 14 / 14 | **Done** |
+| [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538), [624](docs/stages/S22.md#pr-624) | 6 / 14 | In progress |
 | [S23](docs/stages/S23.md) | [Social & content studio](docs/stages/S23.md) | [5](docs/stages/README.md#wave-5) | [437–443](docs/stages/S23.md) | 0 / 7 | Not started |
 | [S24](docs/stages/S24.md) | [Virtual Photoshoot Studio](docs/stages/S24.md) | [7](docs/stages/README.md#wave-7) | [444–480](docs/stages/S24.md), [539](docs/stages/S24.md#pr-539) | 0 / 38 | Not started |
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **624 PRs** | **356 / 618 active** | 6 parked |
+| | **Total** | | **624 PRs** | **399 / 618 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1487,7 +1487,7 @@ no charge, COD or price changes, and booking stays a person's press.
   prints a Bengali address again in Latin letters with its English area and district (`delivery.sticker.latin`, off;
   PR 179 follow-up, SIM-F-048).
 
-### S06 · Fraud & location — In progress (28/33)
+### S06 · Fraud & location — Done (33/33)
 
 > **বাংলায় সংক্ষেপে:** ঠিকানা থেকে দোকান নিজে ডেলিভারি এলাকা আর চার্জ বের করে, আন্দাজে কখনো না; না বুঝলে কাস্টমারকে জিজ্ঞেস করে। অ্যাডমিনে "ডেলিভারি" পেজে তিনটা ব্যান্ড, আপনার সাব-এরিয়ার তালিকা, আর একটা ঠিকানা দিয়ে পরীক্ষা। চার্জ আপনি নিজে বসাবেন; শুরুতে সব বন্ধ।
 > নতুন: চেকআউটে "রাইডারের জন্য আমার লোকেশন দিন" বাটন; IP, ডিভাইস কোড আর লোকেশন 180 দিন পরে নিজে থেকে মুছে যায়।
@@ -1495,6 +1495,7 @@ no charge, COD or price changes, and booking stays a person's press.
 > নতুন: ঝুঁকির প্রতিটা ভাগে কী হবে (নজরে রাখা, হোল্ড, কল, আগে কত টাকা চাওয়ার প্রস্তাব) — শুরুতে বন্ধ; অর্ডার থেকে এক ক্লিকে "অগ্রিম চান": পে লিংক, SMS/WhatsApp আর কল একসাথে, টাকা এলে অর্ডার নিজে ফেরে। ডেলিভারি পাতা নতুন অ্যাডমিনে: প্রতিটা ব্যান্ডে ক্যাশ অন ডেলিভারির সীমা, সাব-এরিয়ার নিজের সুইচ, আর এলাকার নাম বদল, বানান, নতুন এলাকা, এক করা ও সরানো — কিছুই মোছে না।
 > প্রতিটা অর্ডারের একটা ঝুঁকির স্কোর (০–১০০) — নম্বরের আগের অর্ডার আর ঠিকানা দেখে, আপনার ঠিক করা সংকেত আর নম্বরে। অর্ডারের পাতায় "ঝুঁকি" কার্ড বলে কেন এই স্কোর। শুধু জানায়, কিছু আটকায় না; আমাদের দোষে ফেরত গোনা হয় না। শুরুতে বন্ধ।
 > নতুন (#73): ব্লক তালিকা (কারণসহ, ফেরানো যায়), বারবার পার্সেল না নেওয়া নম্বরের শর্ত, ব্লকের প্রস্তাব, ভালো কাস্টমার কখনো নিজে থেকে আটকায় না, আজকের সারাংশ, সিদ্ধান্ত থেকে শেখা, নতুন কাস্টমারকে একটা কল, ফ্রড ও RTO রিপোর্ট — সব শুরুতে বন্ধ, কাউকে নিজে থেকে ব্লক বা বাতিল করা হয় না। জেলা অনুযায়ী ডেলিভারির সময় (শুরুতে বন্ধ)।
+> নতুন (#78, S06 শেষ): কাস্টমারের একই পণ্য আগের অর্ডারে রাস্তায় থাকলে চেকআউটে মনে করিয়ে দেওয়া ("দরকার নেই — সরিয়ে দিন" বা "আরেকটা চাই"), অন্য সাইজ হলে পৌঁছানোর পর বদলের প্রস্তাব, ফোন নম্বর লেখার সময়েই পেছনে কুরিয়ারের ফ্রড তথ্য দেখা (Steadfast, Pathao আর আরেকটা সার্ভিস; সবচেয়ে খারাপটা ধরা হয়) আর "ভুল নয়, অভ্যাস" সংকেত, আর কাদের কাছে অগ্রিম চাওয়া হলো তাদের কতজন দিল আর কতজন চলে গেল তার রিপোর্ট। সব শুরুতে বন্ধ; কিছুই নিজে বাতিল বা ব্লক হয় না।
 
 **Delivery-zone engine (PR 549–553, 555, `@extas/delivery`).**
 - **Gazetteer (549):** division → district → upazila/thana → area with Bengali, English and Banglish names; importer and a shared index. A public **sample** list ships; the national list comes later.
@@ -1570,9 +1571,34 @@ changes COD, a price or a charge by itself (CN-018). Migrations `0080`–`0082` 
 - Guides: [orders/risk-rules](docs/admin-guide/pages/orders/risk-rules.md), [orders/digest](docs/admin-guide/pages/orders/digest.md),
   [orders/calls](docs/admin-guide/pages/orders/calls.md), [reports/stopped](docs/admin-guide/pages/reports/stopped.md),
   [reports/learning](docs/admin-guide/pages/reports/learning.md); smoke checks for each page.
-- Still planned in S06: 556–557, 559, 562, 567.
+- ~~Still planned in S06: 556–557, 559, 562, 567.~~ Built in #78 (below); S06 is done.
 
-### S14 · CRM & customers — In progress (7/24)
+**Built (PR [556](docs/stages/S06.md#pr-556), 557, 559, 562, 567; 1 Nov, #78, After launch): the duplicate notice, the
+phone-entry check, the flag report and the courier fraud data.** Every switch is off; nothing is cancelled, blocked or
+charged by itself, and no price or COD changes.
+- **Parcel already on its way (556):** `checkout.transitDuplicate` (v109, off) — once a whole number is typed, this
+  customer's order on its way (the number in any form plus the account, the bag and the device, never the number alone;
+  SIM-F-015) holding the same piece shows its picture, order number and tracking link: "No need - take it out" (the bag's
+  Remove with Undo) or "No, I want another one". Each firing and answer kept once (`DuplicateNoticeEvent`) with the
+  visit's campaign; Orders › Risk rules card (`risk.rules.write`) and the report by campaign (`risk.report`).
+- **Another size on its way (557):** `sizeExchange` on the same card (off) — "Not sure about the size?", both sizes,
+  "Exchange on arrival — take this out"; an `order.exchangeIntent` line on the earlier order's timeline.
+- **Phone-entry check and the pattern signal (559):** `checkout.phoneRisk` (off) — one background ping per number
+  (`/api/checkout/phone-risk`, always `{ok: true}`, the form never waits), the courier sources asked within a time budget
+  and kept for `cacheHours` (`CourierFraudCheck`), rate limited per IP; `risk.signals.pattern` (off) — the
+  recency-weighted share of failed parcels over his orders, device and identity graph and each courier's answer; two
+  Risk rules cards; the order page explains the pattern.
+- **Courier fraud data (567):** Steadfast, Pathao and an aggregator behind one `FraudCheckApi` adapter, their own rows
+  and keys in Keys & connections (never the courier connection's); only a connection switched on and past its Test is
+  asked; each source kept apart, the highest failed share counts.
+- **Flag outcomes (562, SIM-F-016):** `risk.flagReport` (off) — Reports › Flag outcomes (`/admin/reports/flags`,
+  `risk.report`): at checkout per layer and after ordering per way asked, who paid, still waits, left, cancelled unpaid
+  or ordered without the ask, the advance collected, a layer losing customers pointed out; reads only.
+- Guides: [orders/risk-rules](docs/admin-guide/pages/orders/risk-rules.md), [reports/flags](docs/admin-guide/pages/reports/flags.md),
+  [settings/keys](docs/admin-guide/pages/settings/keys.md); tests on PostgreSQL (SIM-F-015 and SIM-F-016 acceptance), the
+  adapters against stand-in servers, the checkout API.
+
+### S14 · CRM & customers — In progress (12/24)
 
 > **বাংলায় সংক্ষেপে:** কাস্টমারের সেকশন তৈরি: সব কাস্টমারের তালিকা (ফোন দিয়ে প্রতিটা মানুষের এক সারি, ভাগ, খোঁজা), একজন
 > কাস্টমারের নিজের পাতা (সব অর্ডার, বিক্রি শুধু ডেলিভারি হওয়া, বদল, সাপোর্ট) আর "যাচাই বাকি" — একই মানুষের দুইটা প্রোফাইল একজন
@@ -1619,12 +1645,33 @@ changes COD, a price or a charge by itself (CN-018). Migrations `0080`–`0082` 
 - **Admin API:** `/api/admin/messages/` — `channels`, `whatsapp/templates` (+ `sync`, `:id/submit`), `consent`, `consent/record`, `templates`, `templates/:id`, `templates/:id/reset`, `templates/auto-reply`. Permissions `messages.channels.read/write`, `messages.consent.view/write`, `messages.templates.read/write`.
 - **Settings (v61):** `messages.sms.masking` and `messages.sms.rates` (owner data, empty); `messages.whatsapp` (language codes en / bn, category UTILITY, webhook 256 KB, reply window 168 hours); `messages.consent` (stop words STOP, UNSUBSCRIBE, বন্ধ; start words START, চালু; confirm reply off); `messages.autoReply` (off; once in 24 hours per number; always, or outside 10 to 22).
 - **Tests:** PostgreSQL (the SIM-F-011 live path, webhook signatures, receipts and replies, consent on every channel, SIM-F-001 / 025 / 031, template save, version, re-approval, reset and the auto-reply), the pure rules, the SMS gateway against a stand-in fetch, the web API, the page drafts and words; smoke and device gate.
-- Still planned in S14 (after launch): segments, the journey view and builder, e-mail, AI helpers, reviews, rewards, tags, export, win-back, birthdays and retention (287–290, 293–297, 299–303, 533–535).
+- ~~Still planned in S14 (after launch): segments, the journey view and builder, e-mail, AI helpers, reviews, rewards, tags, export, win-back, birthdays and retention (287–290, 293–297, 299–303, 533–535).~~ 287–290 and 293 built in #78 (below); still planned: the other AI helpers, reviews, rewards, tags, export, win-back, birthdays and retention (294–297, 299–303, 533–535).
+
+**Built (PR [287](docs/stages/S14.md#pr-287), 288, 289, 290, 293; 1 Nov, #78, After launch): segments, the journey,
+automations and e-mail.** Every switch is off; settings registry v190–v194 (`registry-crm.ts`).
+> নতুন (#78): কাস্টমারদের আসল কেনাকাটা দেখে দল বানানো (সংখ্যা সাথে সাথে), একজন কাস্টমারের পুরো যাত্রা এক তালিকায়, নিজে থেকে চলা মেসেজ (পণ্য পুরোনো হলে মনে করানো, অনেকদিন না কিনলে ফিরিয়ে আনা, নতুনকে স্বাগত), অফারের ই-মেইল (কে খুলল, কে ক্লিক করল, কে অর্ডার দিল) আর AI দিয়ে ই-মেইলের লেখা। সব শুরুতে বন্ধ; কাস্টমারের "হ্যাঁ" ছাড়া কোনো অফার যায় না।
+- **Segments (287):** Customers › Segments (`/admin/customers/segments`, `customers.segments`) — conditions joined with
+  "and", the live count with the first people, the list's views as built-in segments, `?segment=` on the Customers list;
+  `customers.segments.write`; archive and restore, nothing deleted.
+- **Journey view (288):** the customer page's Journey tab (`customers.journey`; migration `0140` read indexes) — every
+  touch newest first, no phone number in any row; Customers › More › Customer settings (`/admin/customers/settings`,
+  `customers.settings`) holds the CRM cards.
+- **Automations (289):** Messages › Automations (`/admin/messages/automations`, `customers.journeys`, migration `0141`,
+  `messages.automations.write`) — product-life reminder (SIM-F-032), win-back and welcome; waits, a segment check, a
+  template message; every message an offer (his yes, quiet hours, the weekly cap, the stop line).
+- **E-mail (290):** Messages › E-mail (`/admin/messages/email`, `customers.email`, migration `0142`,
+  `messages.email.write`, `messages.email.send`) — templates, sends to a saved segment at a throttle, per-send results,
+  one-click unsubscribe and `/email/unsubscribe/[id]`; opens and clicks counted only while their switches are on.
+- **AI campaign writer (293):** `customers.aiWriter` (off, also needs `ai.enabled`) — "Write with AI" on the e-mail
+  forms, 2 or 3 versions in the owner's voice; the practice writer until an AI key; nothing saved or sent by itself.
+- Guides: [customers/segments](docs/admin-guide/pages/customers/segments.md), [customers/segment](docs/admin-guide/pages/customers/segment.md),
+  [customers/settings](docs/admin-guide/pages/customers/settings.md), [messages/automations](docs/admin-guide/pages/messages/automations.md),
+  [messages/email](docs/admin-guide/pages/messages/email.md); DB tests in customers, messages and the web API.
 Register: [S14](docs/MASTER-REGISTER.md#s14--crm--customers--pr-284303).
 
 - **Go-live gate (1 Nov, #73; PR 505 follow-up, SIM-F-031, F-025/F-047):** the thank-you page says "Order placed" until the shop confirms; `Order.lang` (migration `0083`) and `messages.language` "customer" (the new default) send each order's messages in the language it was placed in.
 
-### S20 · Fulfilment & documents — In progress (1/9)
+### S20 · Fulfilment & documents — Done (9/9)
 
 > **বাংলায় সংক্ষেপে:** প্রতিটা অর্ডারের ইনভয়েস নিজে থেকে তৈরি হয়ে থাকে — একটা অর্ডারে একটাই নম্বর; অর্ডার বদলালে একই নম্বরে "সংশোধিত"।
 > অর্ডার → প্যাকিং আর প্রিন্ট → ইনভয়েস: সবগুলো একসাথে কাগজে বা থার্মাল রোলে, একটা অর্ডারের চ্যাটের ছবি (JPG)। ইনভয়েসে শুধু অর্ডারে যা আছে তাই।
@@ -1651,9 +1698,30 @@ data, checked time); settings registry v63 (`packages/settings/src/registry-invo
 - **Tests:** issue, revise and keep on PostgreSQL; the PDF and the picture; the job; the settings. Guide:
   [Invoices](docs/admin-guide/pages/orders/invoices.md) and the [Orders guide](docs/admin-guide/orders.md).
 
-Still planned in S20: register PRs 404–406, 408–412.
+~~Still planned in S20: register PRs 404–406, 408–412.~~ Built in #78 (below); S20 is done.
 
-### S22 · Support (all-in-one) — In progress (2/14)
+**Built (PR [404](docs/stages/S20.md#pr-404)–406, 408–412; 1 Nov, #78, After launch): the packing room.** Settings
+registry v150–v154 (`registry-print-run.ts`); migrations `0110_picking_ticks`, `0111_shelf_bins`; permissions
+`fulfilment.printSettings`, `fulfilment.bins`.
+> নতুন (#78, S20 শেষ): প্রিন্টের পাতায় কী ছাপা হবে আর স্টিকারের মাপ, পিকিং লিস্টে ট্যাপ করে "তোলা হয়েছে" দাগ আর তাক ধরে সাজানো, হ্যান্ডওভারের ইতিহাস আর কপি প্রিন্ট, ছাপার মান যাচাই, ইনভয়েসের সাতটা ডিজাইন আর প্রতিটা শব্দ বদলানো, প্যাক পাতায় প্রতিটা অর্ডারের কাগজপত্র আর কয়েকটা অর্ডার বেছে একসাথে বুক বা প্রিন্ট।
+- **Print run (404):** Orders › Packing › Print — the queue preview with each parcel's pieces under its category, what
+  one press prints (stickers, sticker + invoice, invoices) and the sticker size (`fulfilment.printRun`, stickers only).
+- **Picking list (405, 412):** tap a size line to mark it pulled, "more to pull" when a new order comes after (marks
+  append-only); each style's shelf set on the page (`fulfilment.bins`, audited) and the sort as a card
+  (`fulfilment.picking.sort`, by category as shipped, or shelf by shelf, also on the PDF).
+- **Handover (406):** the "Handed over" history per courier with "Print copy" (`fulfilment.handover.history`).
+- **Print quality (408, B2.4):** every document checked on what was drawn; "Print check" draws every document at every
+  size the owner set; the shop's logo on the picking list and the handover sheet (`documents.printQuality`).
+- **Invoice designs (409, ORD-04d):** seven designs with a live preview (`documents.invoice.design`, classic) and every
+  word the invoice prints editable in English and Bengali.
+- **Pack page (410, 411):** each order's documents (sticker ×n, invoice, picking lists, handover sheet) and the day's
+  summary line; filter by date or a missing document, tick orders, "Book selected" (through the Delivery booking's
+  checks) and "Print selected" (a reprint asks its reason).
+- Guides: [print](docs/admin-guide/pages/orders/print.md), [picking](docs/admin-guide/pages/orders/picking.md),
+  [handover](docs/admin-guide/pages/orders/handover.md), [invoices](docs/admin-guide/pages/orders/invoices.md),
+  [pack](docs/admin-guide/pages/orders/pack.md).
+
+### S22 · Support (all-in-one) — In progress (6/14)
 
 > **বাংলায় সংক্ষেপে:** সাপোর্ট ইনবক্স তৈরি: সব চ্যানেলের কথোপকথন এক তালিকায়, কে উত্তর দিয়েছেন নামসহ, টিমের ভেতরের নোট, ফাইল, দায়িত্ব আর
 > "কে কী করেছে"-র লগ (কেউ মুছতে পারে না)। চ্যানেল (WhatsApp, Messenger, সাইটের চ্যাট) যুক্ত হবে PR 426-এ; ততদিন উত্তর রাখা হয়, "পাঠানো হয়নি" লেখা থাকে।
@@ -1690,7 +1758,7 @@ who-did-what log `ConversationEvent` is append-only at the database); settings r
 - **The contact form lands here (1 Nov, #75, PR 75 follow-up):** a "Send us a message" from `/help/contact` becomes a
   conversation on the store's own hidden "Contact form" channel (never a sending channel), tagged `contact-form`.
 
-Still planned in S22: register PRs 427–436, 538 and, since 1 Nov, 624 (a Messenger button on the shop, CN-034, After launch).
+~~Still planned in S22: register PRs 427–436, 538 and, since 1 Nov, 624 (a Messenger button on the shop, CN-034, After launch).~~ 427–430 built in #78 (below); still planned: 431–436, 538 and 624 (a Messenger button on the shop, CN-034, After launch).
 
 **Built (PR [426](docs/stages/S22.md#pr-426); 31 Oct, CN-031 lane A; not deployed yet): the channels come in.**
 
@@ -1713,6 +1781,24 @@ Still planned in S22: register PRs 427–436, 538 and, since 1 Nov, 624 (a Messe
 - **Tests:** `packages/adapters/test/messenger.test.ts`, `whatsapp.test.ts`, `packages/support/src/connectors.db.test.ts`,
   `packages/messages/src/whatsapp.db.test.ts`, `apps/web/src/lib/support-connect.db.test.ts`, `support-api.db.test.ts`,
   `edge-gate.test.ts`, the settings test; checked in a real browser at 390, 768, 1366 and 1920 px in English and Bengali.
+
+**Built (PR [427](docs/stages/S22.md#pr-427)–430; 1 Nov, #78, After launch): knowing the person and selling from the
+chat.** Settings registry v155–v158; migrations `0112_support_identity`, `0113_support_product_share`; permissions
+`support.identity`, `support.order`.
+> নতুন (#78): সাপোর্ট চ্যাটে কে লিখছেন তা নম্বর দিয়ে চেনা (WhatsApp, Messenger আর সাইটের চ্যাটে একই মানুষ এক জায়গায়), চ্যাটের পাশে কাস্টমারের অর্ডার, ঝুঁকি আর রাস্তায় থাকা পার্সেল, চ্যাটে পণ্যের কার্ড পাঠানো আর চ্যাট থেকেই অর্ডার (ঝুঁকি থাকলে আগে অগ্রিম)। দাম, ছাড় বা COD নিজে বদলায় না।
+- **Who is writing (427):** `support.identity` (off) — the number from the channel or the chat's words links the
+  customer and joins his chats across channels as one person; the "Same person" card; set by hand, "Not this customer",
+  "Not the same person" (`support.identity`, audited); erasure clears his chat contacts.
+- **Customer card (428):** `support.context` (on as it ships, B4.5 locked) — his orders and shares over every profile and
+  number, the latest risk band, parcels on their way, latest orders; counts and risk only with `customers.read`.
+- **Products in the chat (429):** `support.catalogue` (off) — "Products" (or "/") sends a product card with a reference
+  link; an order through it within the credit days is credited to the chat once (`Order.supportRefCode`), never changing
+  the price, a discount, COD, the total or the source.
+- **Chat bag and one-press order (430, SIM-F-024):** `support.cart` (off) — a bag priced by the shop's own engines;
+  "Create order" runs the checkout's stock and delivery checks and keeps the chat's channel as the source; a checkout the
+  owner's Parameter for Checkout flags gets "Take advance" and its pay link in the chat, never a COD order.
+- Guides: [support/conversation](docs/admin-guide/pages/support/conversation.md), [support/settings](docs/admin-guide/pages/support/settings.md),
+  [orders/all](docs/admin-guide/pages/orders/all.md).
 
 ### S11 · SEO engine — In progress (14/22)
 
@@ -1836,7 +1922,7 @@ Planned — see register PRs 223–226, 230, 231, 237, 238: [S11](docs/MASTER-RE
 
 Planned — see register PRs 239–253, 528–530, 547, 591–593: [S12](docs/MASTER-REGISTER.md#s12--content--blog--pr-239253).
 
-### S13 · Marketing & ads — In progress (1/35)
+### S13 · Marketing & ads — In progress (8/35)
 
 **Built (PR [257](docs/stages/S13.md#pr-257); 31 Oct, CN-031 lane B; not deployed yet): server-side event tracking.**
 
@@ -1870,7 +1956,28 @@ Planned — see register PRs 239–253, 528–530, 547, 591–593: [S12](docs/MA
   latest or the first visit; card "Where an order came from" on Marketing › Tracking (audited). Tests: the cookie and
   visit rules, the proxy, the checkout row, the checkout API on and off, the admin card, the fbc on PostgreSQL.
 
-Planned — see register PRs 254–256, 258–283, 531–532, 548, 569, 589: [S13](docs/MASTER-REGISTER.md#s13--marketing--ads--pr-254283).
+**Built (PR [254](docs/stages/S13.md#pr-254)–256, 258–261; 1 Nov, #78, After launch): landing pages, campaigns,
+delivered purchases and the ad platforms read.** No money moves, no ad budget changes, no price, discount or order is
+written here; `marketing.landing` (v168) and `ads.deliveredPurchase` (v169) ship off; migrations `0120_landing_pages`,
+`0121_campaigns`; permissions `marketing.landing.read/write`, `marketing.campaigns.read/write`.
+> নতুন (#78): বিজ্ঞাপনের জন্য ল্যান্ডিং পেজ (একটা পণ্য, অফার আর পাতাতেই অর্ডার; তৈরি টেমপ্লেট থেকে শুরু), ক্যাম্পেইনের খাতা (বাজেট শুধু পরিকল্পনা, শুরু হলে লক), ডেলিভারি হওয়া অর্ডার বিজ্ঞাপনের প্ল্যাটফর্মকে জানানো, আর Meta, TikTok, Google-এর বিজ্ঞাপন শুধু পড়া (চাবি না দেওয়া পর্যন্ত অনুশীলন)। কিছুই বন্ধ বা বাজেট বদল হয় না।
+- **Landing pages (254, 255):** Marketing › Landing pages (`/admin/marketing/landing`), the builder with the eight parts
+  of demo V12.4 in a fixed order, Templates (four ready-made and the owner's own) and the parts library; Publish behind a
+  confirm, archive and restore; the shop page `/l/<link>` (noindex, an order box); an order keeps the page and the
+  source LANDING_PAGE.
+- **Campaigns (256):** Marketing › Campaigns (`/admin/marketing/campaigns`) — audience, offer, creative, window, the
+  planned budget (locked once started; a live change goes through PR 268), its landing pages and the orders they brought.
+- **Delivered purchases (258):** each order's confirmation and delivery go once to Meta, Google and TikTok, valued at the
+  pieces kept; the owner may say a purchase means the delivery; a card on Marketing › Tracking.
+- **Ad platforms (259–261):** Marketing › Ad platforms (`/admin/marketing/ad-platforms`) reads Meta, TikTok and Google
+  ads (accounts, campaigns, ad sets / ad groups), kept and tied to our campaigns; a practice account until each key's
+  Test passes; read only.
+- Guides: [landing](docs/admin-guide/pages/marketing/landing.md), [landing-builder](docs/admin-guide/pages/marketing/landing-builder.md),
+  [landing-templates](docs/admin-guide/pages/marketing/landing-templates.md), [campaigns](docs/admin-guide/pages/marketing/campaigns.md),
+  [campaign](docs/admin-guide/pages/marketing/campaign.md), [ad-platforms](docs/admin-guide/pages/marketing/ad-platforms.md),
+  [tracking](docs/admin-guide/pages/marketing/tracking.md).
+
+Planned — see register PRs ~~254–256, 258–283~~ 262–283, 531–532, 548, 569, 589: [S13](docs/MASTER-REGISTER.md#s13--marketing--ads--pr-254283).
 
 ### S23 · Social & content studio — Not started
 
@@ -1880,9 +1987,9 @@ Planned — see register PRs 437–443: [Blueprint Appendix A](docs/BLUEPRINT.md
 
 Planned — see register PRs 304–341, 506, 577–585: [S15](docs/MASTER-REGISTER.md#s15--ai-360-control-room--pr-304341).
 
-### S16 · Finance, costs & reports — In progress (9/22)
+### S16 · Finance, costs & reports — Done (22/22)
 
-Planned — see register PRs 347–355, 504, 536–537, 568 and, from CN-028, 615–618 (the ERP account ledger, the books match engine, the daily summary, fixed costs; design in [`docs/RETAIL-ERP-MODEL.md`](docs/RETAIL-ERP-MODEL.md)): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+~~Planned — see register PRs 347–355, 504, 536–537, 568~~ (built in #78, below; S16 is done) and, from CN-028, 615–618 (the ERP account ledger, the books match engine, the daily summary, fixed costs; design in [`docs/RETAIL-ERP-MODEL.md`](docs/RETAIL-ERP-MODEL.md)): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
 > **বাংলায়:** নতুন (PR 615): রিটেইল ERP-কে কত টাকা দেবে, তার নিজের খাতা — কোনো এন্ট্রি বদলায় না বা মোছে না, ERP-র হিসাবের
 > সাথে এক টাকাও এদিক-ওদিক না; ERP-কে দেওয়া টাকা শুধু লিখে রাখা হয় (কোনো টাকা নড়ে না); পাইপলাইনে কত টাকার পিস, দোকানের নিজের রেকর্ড থেকে।
@@ -2056,12 +2163,41 @@ registry v68 `registry-books.ts`).
   `fees-api.db.test.ts`, `month-sheet.db.test.ts` (PostgreSQL), `packages/messages/src/channels.db.test.ts`; checked in a
   real browser at 390, 768, 1366 and 1920 px.
 
-### S21 · Site Health & Audit — In progress (13/14)
+**Built (PR [347](docs/stages/S16.md#pr-347)–355, 504, 536, 537, 568; 1 Nov, #78, After launch): profit, VAT and the
+reports.** Settings registry v160–v167 (`registry-finance.ts`); permissions `vat.manage`, `books.report`,
+`staff.performance`. Every figure only reads the shop's own records; nothing moves money or changes a price.
+> নতুন (#78, S16 শেষ): খরচের রিপোর্ট, প্রতিটা অর্ডারের আসল লাভ (পণ্য, কুরিয়ার, ফি, প্যাকেট, মেসেজ আর বিজ্ঞাপনের ভাগ), লাভ-ক্ষতির পাতা, ফেরত আর কুরিয়ারের আন্দাজি চার্জ লাভে ধরা, ক্যাটাগরি-স্টাইল আর চ্যানেল ধরে লাভ, এলাকা ধরে বিক্রি, VAT (শুরুতে বন্ধ; দাম কখনো বদলায় না), টেলিগ্রামে টাকার রিপোর্ট আর টিমের ব্যাজ (দুটোই শুরুতে বন্ধ)।
+- **Costs report (347):** Money › Cost ledger › Costs report (`/admin/money/cost-ledger/report`, `costs.report`) — any
+  period by day, month or year, by service or module, AI against its cap, export.
+- **Per-order profit (348, 353, 354):** the order page's profit card (`books.read`): product cost, courier, payment fees,
+  packaging, messages and AI and an ad-spend share (`costs.allocation`); returns after receipt come off Sales and their
+  cost comes back; a parcel not yet charged priced from the owner's rate card and marked an estimate
+  (`costs.courierEstimate`, off; Money › Costs & fees).
+- **Profit & loss (349, 504, 355):** Money › Profit & loss (`/admin/money/profit`) — Sales beside Ordered value, gross
+  profit, contribution, ad spend, other and fixed costs, net profit; Profit by group (`/admin/money/profit/groups`,
+  category and style) and Profit by channel (`/admin/money/profit/channels`, `reports.channels`: Meta, Google, YouTube,
+  TikTok, organic and the rest), each with a CSV.
+- **VAT (350, 537):** Money › VAT (`/admin/money/vat`; `vat.system` off, `vat.rates` empty owner data, `vat.manage`) —
+  rates by product, category and default; prices are VAT-inclusive, so switching it on never changes a price; the VAT
+  report by rate, category and day with a CSV, and its line on Profit & loss.
+- **Money report (351):** `money.report` (off; `books.report`) — daily, weekly or monthly by Telegram at the owner's time
+  and language, the same figures as Profit & loss.
+- **Team badges (352):** Reports › Team (`/admin/reports/team`, `team.badges` off, `staff.performance`) — recognition
+  only, never pay or a penalty.
+- **Sales by area (568):** Reports › Sales by area (`/admin/reports/areas`) — Sales, pieces, returns and the return rate
+  by district, upazila/thana or Dhaka area, as a table, a map and a CSV.
+- **ERP once (536):** an expense entered in the shop reaches the ERP's daily summary once (it was counted twice).
+- Guides: [money/cost-report](docs/admin-guide/pages/money/cost-report.md), [money/profit](docs/admin-guide/pages/money/profit.md),
+  [money/profit-groups](docs/admin-guide/pages/money/profit-groups.md), [money/profit-channels](docs/admin-guide/pages/money/profit-channels.md),
+  [money/vat](docs/admin-guide/pages/money/vat.md), [reports/team](docs/admin-guide/pages/reports/team.md),
+  [reports/areas](docs/admin-guide/pages/reports/areas.md), and the [Finance guide](docs/admin-guide/finance.md).
+
+### S21 · Site Health & Audit — Done (14/14)
 
 Started: `readme-guard` in CI (scope on PR 594, CN-011) fails a pull request whose README PR log, stage counts or
 feature states disagree with the register. Every deploy copies README.md and docs/ to `$EXTAS_ROOT/docs/<commit>/`
 (`infra/deploy/docs-sync.sh`, `current` link, newest `DOCS_KEEP_VERSIONS` kept), mounted read-only in the app as
-`/docs/current` for the admin tabs still to be built. ~~Planned — see register PRs 415–422, 424, 570, 594~~ (415–422, 424 and 570 built in #73, below); still planned: 594 (the PR register and "Blueprint & files" inside the admin): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
+`/docs/current` for the admin tabs ~~still to be built~~ (built in #78, PR 594, below). ~~Planned — see register PRs 415–422, 424, 570, 594~~ (415–422, 424 and 570 built in #73, 594 in #78, below; S21 is done): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
 **Page guides (scope on PR 594, CN-026 cut by CN-027, 24 Oct):**
 
@@ -2204,6 +2340,22 @@ Guide index: [docs/admin-guide/README.md](docs/admin-guide/README.md).
 - Guides: [health-speed](docs/admin-guide/pages/reports/health-speed.md), [health-smoke](docs/admin-guide/pages/reports/health-smoke.md),
   [health-history](docs/admin-guide/pages/reports/health-history.md), [health-history-run](docs/admin-guide/pages/reports/health-history-run.md),
   [health-fixes](docs/admin-guide/pages/reports/health-fixes.md), [ai/audit](docs/admin-guide/pages/ai/audit.md).
+
+**Built (PR [594](docs/stages/S21.md#pr-594); 1 Nov, #78, After launch; HLP-02, CN-011): the PR register, blueprint and
+files inside the admin.** Migration `0092_build_problems` (a table and an enum only); permissions `build.read`,
+`build.report`. Read from the deploy's docs copy; read only apart from problem reports.
+> নতুন (#78, S21 শেষ): অ্যাডমিনের সাহায্য › বিল্ড-এ পুরো PR রেজিস্টার (কোন ধাপে কতটা হলো, প্রতিটা PR-এর বাংলা লাইন আর বদলের ইতিহাস), কোনো PR-এ সমস্যা দেখলে জানানো (R-1, R-2 …, কিছু মোছে না) আর ব্লুপ্রিন্টসহ সব ফাইল খুঁজে পড়া ও নামানো।
+- **Build progress (`/admin/build`):** totals, the stages, the PRs by search, stage and state; a card per PR
+  (`/admin/build/pr/<n>`) with its Bengali line, stage, state, the PRs it builds on, dated updates, change notes and
+  build record.
+- **Reported problems (`/admin/build/problems`):** "Report a problem on this PR" (`build.report`): open → being fixed →
+  fixed (how) or closed (why); every step audited, nothing deleted.
+- **Blueprint & files (`/admin/build/files`):** every Markdown file of the docs copy, search across all, a reader with
+  contents, "find in this file", download and the file's earlier copies; only real `.md` files inside the docs folder.
+- The Speed test no longer fails early in a month (PR 417 follow-up, test only).
+- Guides: [help/build](docs/admin-guide/pages/help/build.md), [help/build-pr](docs/admin-guide/pages/help/build-pr.md),
+  [help/build-problems](docs/admin-guide/pages/help/build-problems.md), [help/build-files](docs/admin-guide/pages/help/build-files.md),
+  [help/build-file](docs/admin-guide/pages/help/build-file.md); device gate 0 fails in 217 checks over the build pages.
 
 ### S24 · Virtual Photoshoot Studio — Not started
 
@@ -2554,6 +2706,52 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #78 | PR [430](docs/stages/S22.md#pr-430) | 1 Nov | Support: the Chat bag and one-press order with the chat's channel, the checkout's stock check and the owner's fraud gate ("Take advance" with its pay link) (`support.cart`, off; `support.order`). |
+| #78 | PR [429](docs/stages/S22.md#pr-429) | 1 Nov | Support: the "Products" drawer sends a product card with a reference link; an order through it is credited to the chat once, never changing the price or the source (`support.catalogue`, off; migration `0113`). |
+| #78 | PR [428](docs/stages/S22.md#pr-428) | 1 Nov | Support: the "Customer" card beside every chat — his orders and shares, the latest risk band, parcels on their way (`support.context`, on as it ships). |
+| #78 | PR [427](docs/stages/S22.md#pr-427) | 1 Nov | Support: "Who is writing" — phone ↔ PSID ↔ customer, one person across channels, fixed by hand when wrong (`support.identity`, off; migration `0112`). |
+| #78 | PR [412](docs/stages/S20.md#pr-412) | 1 Nov | The picking list shelf by shelf: each style's shelf set on the page (migration `0111`, `fulfilment.bins`) and the sort as a card (`fulfilment.picking.sort`, by category as shipped). |
+| #78 | PR [411](docs/stages/S20.md#pr-411) | 1 Nov | The Pack page: filter by date or a missing document, tick orders, "Book selected" and "Print selected". |
+| #78 | PR [410](docs/stages/S20.md#pr-410) | 1 Nov | The Pack page shows each order's documents (sticker, invoice, picking lists, handover sheet) and the day's summary line. |
+| #78 | PR [409](docs/stages/S20.md#pr-409) | 1 Nov | Seven invoice designs with a live preview and every invoice word editable in English and Bengali (`documents.invoice.design`, classic as shipped). |
+| #78 | PR [408](docs/stages/S20.md#pr-408) | 1 Nov | Print quality rules (B2.4): every document checked on what was drawn, "Print check" at every size, the shop's logo on the picking list and handover sheet (`documents.printQuality`). |
+| #78 | PR [406](docs/stages/S20.md#pr-406) | 1 Nov | Orders › Packing › Handover: the "Handed over" history per courier with "Print copy" (`fulfilment.handover.history`). |
+| #78 | PR [405](docs/stages/S20.md#pr-405) | 1 Nov | The picking list on screen: tap a size line to mark it pulled, "more to pull" when a new order comes after; marks kept append-only (migration `0110`). |
+| #78 | PR [404](docs/stages/S20.md#pr-404) | 1 Nov | Orders › Packing › Print: the queue preview by category and the print settings on the page (what one press prints, the sticker size; stickers only as shipped). |
+| #78 | PR [261](docs/stages/S13.md#pr-261) | 1 Nov | Google ads (Search, Shopping, Performance Max, YouTube) read through the Google Ads API beside Meta and TikTok; practice until the keys; nothing paused or re-budgeted. |
+| #78 | PR [260](docs/stages/S13.md#pr-260) | 1 Nov | TikTok ads read through the Business API beside Meta on Marketing › Ad platforms; practice until the key; nothing paused or re-budgeted. |
+| #78 | PR [259](docs/stages/S13.md#pr-259) | 1 Nov | Marketing › Ad platforms: Facebook and Instagram ads read through Meta's Marketing API (account, campaigns, ad sets), tied to our campaigns; practice until the key; nothing paused or re-budgeted. |
+| #78 | PR [258](docs/stages/S13.md#pr-258) | 1 Nov | Delivered-purchase optimisation: each order's confirmation and delivery go once to the ad platforms, valued at the pieces kept; a purchase may mean the delivery (`ads.deliveredPurchase`, off). |
+| #78 | PR [256](docs/stages/S13.md#pr-256) | 1 Nov | Marketing › Campaigns: audience, offer, creative, window and planned budget (a plan only, locked once started), its landing pages and the orders they brought; migration `0121`; no ad platform called. |
+| #78 | PR [255](docs/stages/S13.md#pr-255) | 1 Nov | Landing page templates (four ready-made and the owner's own) and the parts library; archive and restore, never deleted. |
+| #78 | PR [254](docs/stages/S13.md#pr-254) | 1 Nov | Marketing › Landing pages and the builder: pages for ads at `/l/<link>` with an order box, parts on or off in a fixed order, publish behind a confirm, never deleted; orders keep the page (`marketing.landing`, off; migration `0120`). |
+| #78 | PR [355](docs/stages/S16.md#pr-355) | 1 Nov | Profit by channel: Meta, Google, YouTube and TikTok ad spend against the Sales each brought, organic and every other channel, profit after ads, the UTM words, CSV. |
+| #78 | PR [354](docs/stages/S16.md#pr-354) | 1 Nov | Courier estimate in the profit: a parcel the courier has not charged yet is priced from the owner's rate card and marked an estimate (`costs.courierEstimate`, off). |
+| #78 | PR [353](docs/stages/S16.md#pr-353) | 1 Nov | Returns in the profit: pieces returned after receipt come off Sales and their cost comes back; the booked return loss shown on the order, Profit & loss and profit by group. |
+| #78 | PR [536](docs/stages/S16.md#pr-536) | 1 Nov | An expense entered in the shop reaches the ERP once (it was sent twice in the daily summary). |
+| #78 | PR [504](docs/stages/S16.md#pr-504) | 1 Nov | Profit by group: profit by category and by style with the ad-spend share split over the lines, CSV. |
+| #78 | PR [568](docs/stages/S16.md#pr-568) | 1 Nov | Reports › Sales by area: Sales, pieces, returns and the return rate by district, upazila/thana or Dhaka area, as a table, a map and a CSV. |
+| #78 | PR [537](docs/stages/S16.md#pr-537) | 1 Nov | The VAT report: the VAT inside Sales by rate, category and day, goods with no rate, CSV, the same line on Profit & loss (while VAT is on). |
+| #78 | PR [352](docs/stages/S16.md#pr-352) | 1 Nov | Reports › Team: what each person did in the week or month and badges for the most and for the owner's own minimums (`team.badges`, off; `staff.performance`). |
+| #78 | PR [351](docs/stages/S16.md#pr-351) | 1 Nov | The money report to the owner by Telegram, daily, weekly or monthly at his time and language, the same figures as Profit & loss (`money.report`, off). |
+| #78 | PR [350](docs/stages/S16.md#pr-350) | 1 Nov | Money › VAT: the owner's rates by product, category and default; VAT shown inside prices, never a price change (`vat.system`, off; `vat.manage`). |
+| #78 | PR [349](docs/stages/S16.md#pr-349) | 1 Nov | Money › Profit & loss: Sales beside Ordered value, gross profit, contribution, ad spend, other and fixed costs, net profit for any period. |
+| #78 | PR [348](docs/stages/S16.md#pr-348) | 1 Nov | Per-order profit card on the order page: product cost, courier, payment fees, packaging, messages and AI, and an ad-spend share (`books.read`). |
+| #78 | PR [347](docs/stages/S16.md#pr-347) | 1 Nov | Money › Cost ledger › Costs report: any period by day, month or year, by service or module, AI against its cap, export. |
+| #78 | PR [594](docs/stages/S21.md#pr-594) | 1 Nov | Help & Build › Build progress (the register with a card per PR), Reported problems (R-1, R-2 …, never deleted) and Blueprint & files (every docs file of the deploy's copy, search, reader, earlier copies); migration `0092`; `build.read`, `build.report`. |
+| #78 | PR [417](docs/stages/S21.md#pr-417) | 1 Nov | Follow-up: the Speed test no longer fails early in a month (test only; the page is unchanged). |
+| #78 | PR [293](docs/stages/S14.md#pr-293) | 1 Nov | "Write with AI" on the e-mail forms: 2 or 3 versions in the owner's own voice, the practice writer until an AI key; nothing saved or sent by itself (`customers.aiWriter`, off). |
+| #78 | PR [290](docs/stages/S14.md#pr-290) | 1 Nov | Messages › E-mail: the owner's e-mail templates, sends to a saved segment at a throttle, opens, clicks, unsubscribes and orders per send, one-click unsubscribe (`customers.email`, off; migration `0142`). |
+| #78 | PR [562](docs/stages/S06.md#pr-562) | 1 Nov | Follow-up: Reports › Flag outcomes in the smoke test's admin list. |
+| #78 | PR [289](docs/stages/S14.md#pr-289) | 1 Nov | Messages › Automations: product-life reminder, win-back and welcome journeys with waits, checks and offer messages under his yes, quiet hours and the weekly cap (`customers.journeys`, off; migration `0141`). |
+| #78 | PR [288](docs/stages/S14.md#pr-288) | 1 Nov | The customer page's Journey tab: every touch of a person newest first, no phone number in any row; Customers › More › Customer settings (`customers.journey`, off; migration `0140`). |
+| #78 | PR [559](docs/stages/S06.md#pr-559) | 1 Nov | Follow-up: the phone-entry risk ping goes through the beacon and drops its answer (PR [104](docs/stages/S03.md#pr-104)'s rule). |
+| #78 | PR [287](docs/stages/S14.md#pr-287) | 1 Nov | Customers › Segments: saved groups by real behaviour, counted live, reused in the Customers list (`customers.segments`, off; `customers.segments.write`). |
+| #78 | PR [567](docs/stages/S06.md#pr-567) | 1 Nov | Multi-courier fraud data: Steadfast, Pathao and an aggregator behind one `FraudCheckApi` adapter, own keys in Keys & connections, practice until the Test passes, merged by the maximum (SIM-F-015). |
+| #78 | PR [562](docs/stages/S06.md#pr-562) | 1 Nov | Reports › Flag outcomes (SIM-F-016): of the customers asked to pay ahead, who paid, waits, walked away or ordered without the ask, the advance collected, the layers losing customers (`risk.flagReport`, off; reads only). |
+| #78 | PR [559](docs/stages/S06.md#pr-559) | 1 Nov | Phone-entry risk check: courier fraud sources asked in the background once a number is typed (`checkout.phoneRisk`, off) and the "pattern, not a slip" signal over his orders, device and identity (`risk.signals.pattern`, off; SIM-F-015). |
+| #78 | PR [557](docs/stages/S06.md#pr-557) | 1 Nov | Duplicate turned into an exchange: another size of the same product and colour on its way offers "Exchange on arrival" and notes it on the earlier order's timeline; nothing on that order changes (`sizeExchange`, off). |
+| #78 | PR [556](docs/stages/S06.md#pr-556) | 1 Nov | In-transit duplicate notice at checkout: this customer's order already on its way holding the same piece shows its picture and tracking link, "No need - take it out" or "I want another one"; kept with the visit's campaign; Risk rules card and report (`checkout.transitDuplicate`, off). |
 | #77 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (the gates' second live run, 1 Nov): every report ends with a Safety net line (cash on delivery put back to its earlier value or not touched; the test-pay grant closed); a start check before every run and a sweep at the workflow's end put back what an earlier run left open; each scenario has its own time budget and a stuck one is its own FAIL row with a picture, the run goes on; the GATE TEST products sit in their own shown category (search and the wishlist need one); `payments.manual` off makes check 4 a SKIP. The 13:03Z run did not leave cash on delivery on. Local runs: gate-orders 18 scenarios with `allow_cod`: 16 pass, 0 fail, 2 skip; a forced crash and a dead job both put back; gate-c360 150 steps: 121 pass, 28 skip, 1 fail (messages, server worker only). |
 | #76 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (the gates' first live run, 1 Nov): both go-live gate runs pay on the mock bKash through a grant for their own run only (the preview host, their own browser's cookie; closed by the shell's trap on a finish, a failure or a signal; audit lines by the system); `allow_cod` (false) is the only way a run switches cash on delivery on, put back exactly after; gate-c360 makes its own GATE TEST products with gate-orders' shared helpers; an owner's switch, a planned PR (622–624) or a by-design gap is a SKIP, never a FAIL; the UTM check reads the browser's own cookie jar. Local runs: gate-orders 18 scenarios, 24 orders on the mock bKash: 14 pass, 0 fail, 4 skip (cash on delivery off, no open coupon, delivered-parcel steps); gate-c360 150 steps: 120 pass, 27 skip, 3 fail — the unnamed-button check (fixed, desktop rerun green), one local browser crash (rerun green) and the messages step, which needs the job worker that runs only on the server. |
 | #76 | PR [170](docs/stages/S07.md#pr-170) | 1 Nov | Follow-up (go-live gate): the practice gateway answers for the gate's own browser while its run's grant is open (`lib/shop/gate-run.ts`); `payments.testPayments` stays off for every real visitor and in the admin; no real key, price, discount or COD amount is touched. |
