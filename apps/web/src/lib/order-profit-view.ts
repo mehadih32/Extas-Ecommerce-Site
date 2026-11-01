@@ -12,32 +12,19 @@ export const PROFIT_PERMISSION = 'books.read';
 /** The owner's figures the per-order profit needs (PR 504 shares them with Money → Profit by group). */
 export async function profitInputs(resolver: AppResolver, storeId: number): Promise<ProfitInputs> {
   const at = { storeId };
-  const [currency, timeZone, fees, packaging, allocation] = await Promise.all([
+  const [currency, timeZone, fees, packaging, allocation, courierEstimate] = await Promise.all([
     resolver.value('store.currency', at),
     resolver.value('store.timeZone', at),
     resolver.value('costs.gatewayFees', at),
     resolver.value('costs.packaging', at),
     resolver.value('costs.allocation', at),
+    resolver.value('costs.courierEstimate', at), // PR 354
   ]);
-  return { currency, timeZone, packagingMinor: packaging?.perOrderMinor ?? null, gatewayFee: (amount, provider) => gatewayFeeMinor(amount, provider, fees), ads: { allocate: allocation.adSpend, basis: allocation.adBasis } };
+  return { currency, timeZone, packagingMinor: packaging?.perOrderMinor ?? null, gatewayFee: (amount, provider) => gatewayFeeMinor(amount, provider, fees), ads: { allocate: allocation.adSpend, basis: allocation.adBasis }, courierEstimate };
 }
 
 /** One order's profit in its store, or null when the order is not that store's. */
 export async function loadOrderProfit(deps: { db: PrismaClient; resolver: AppResolver }, storeId: number, orderId: string): Promise<OrderProfit | null> {
-  const at = { storeId };
-  const [currency, timeZone, fees, packaging, allocation] = await Promise.all([
-    deps.resolver.value('store.currency', at),
-    deps.resolver.value('store.timeZone', at),
-    deps.resolver.value('costs.gatewayFees', at),
-    deps.resolver.value('costs.packaging', at),
-    deps.resolver.value('costs.allocation', at),
-  ]);
-  const m = await orderProfits(deps.db, storeId, [orderId], {
-    currency,
-    timeZone,
-    packagingMinor: packaging?.perOrderMinor ?? null,
-    gatewayFee: (amount, provider) => gatewayFeeMinor(amount, provider, fees),
-    ads: { allocate: allocation.adSpend, basis: allocation.adBasis },
-  });
+  const m = await orderProfits(deps.db, storeId, [orderId], await profitInputs(deps.resolver, storeId));
   return m.get(orderId) ?? null;
 }

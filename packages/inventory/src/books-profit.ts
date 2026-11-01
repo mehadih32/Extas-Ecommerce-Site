@@ -40,14 +40,15 @@ export async function fixedCostsIn(db: Pick<PrismaClient, 'erpFixedCostMonth'>, 
 /** The profit and loss of one store over `from`–`to` (the store's own days), fixed costs and net profit included. */
 export async function profitReport(deps: { db: PrismaClient; settings: SettingsReader }, storeId: number, from: string, to: string): Promise<ProfitReport> {
   const at = { storeId };
-  const [currency, timeZone, fees, packaging] = await Promise.all([
+  const [currency, timeZone, fees, packaging, courierEstimate] = await Promise.all([
     deps.settings.value('store.currency', at),
     deps.settings.value('store.timeZone', at),
     deps.settings.value('costs.gatewayFees', at),
     deps.settings.value('costs.packaging', at),
+    deps.settings.value('costs.courierEstimate', at), // PR 354
   ]);
   const [p, fixedMinor] = await Promise.all([
-    profitAndLoss(deps.db, storeId, { from, to }, { currency, timeZone, packagingMinor: packaging?.perOrderMinor ?? null, gatewayFee: (amount, provider) => gatewayFeeMinor(amount, provider, fees) }),
+    profitAndLoss(deps.db, storeId, { from, to }, { currency, timeZone, packagingMinor: packaging?.perOrderMinor ?? null, gatewayFee: (amount, provider) => gatewayFeeMinor(amount, provider, fees), courierEstimate }),
     fixedCostsIn(deps.db, storeId, from, to),
   ]);
   return { ...p, fixedMinor, netProfitMinor: p.adsMinor === null ? null : p.contributionMinor - p.adsMinor - p.otherCostsMinor - (fixedMinor ?? 0) };

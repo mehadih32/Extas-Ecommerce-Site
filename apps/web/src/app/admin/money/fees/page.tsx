@@ -17,6 +17,7 @@ import { feesView } from '@/lib/fees-api';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-fees.bn.json';
 import en from '../../../../../messages/admin-fees.en.json';
+import '../../settings-cards.css';
 import '../money.css';
 
 export const dynamic = 'force-dynamic';

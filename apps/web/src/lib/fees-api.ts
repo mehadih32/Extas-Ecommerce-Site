@@ -13,6 +13,7 @@
 //   GET   ''                     everything above (`books.read`)
 //   PUT   'gateway-fees'         {value: […] | null, version}   (`costs.write`; settings history + audit)
 //   PUT   'packaging'            {value: {perOrderMinor} | null, version}
+//   PUT   'courier-estimate'     {value: {enabled, codFee}, version}   (PR 354 `costs.courierEstimate`, off as shipped)
 //   POST  'usd-rate'             {rate: "121.50"}   a new rate from now
 //   POST  'rate-cards'           {courierAccountId, zoneKey, weightFromGrams, weightToGrams, chargeMinor, codFeeBps?,
 //                                 returnChargeMinor?}   a new courier rate from now
@@ -30,6 +31,8 @@ const USD = 'USD';
 export interface FeesView {
   gatewayFees: { value: z.output<(typeof registry)['costs.gatewayFees']['schema']>; version: number };
   packaging: { value: z.output<(typeof registry)['costs.packaging']['schema']>; version: number };
+  /** PR 354 — the per-order profit's courier estimate from the rate card (off as shipped). */
+  courierEstimate: { value: z.output<(typeof registry)['costs.courierEstimate']['schema']>; version: number };
   usd: { current: { rate: string; from: string } | null; history: { rate: string; from: string }[] };
   couriers: { id: string; name: string; enabled: boolean; cards: { id: string; zoneKey: string; weightFromGrams: number; weightToGrams: number; chargeMinor: number; codFeeBps: number | null; returnChargeMinor: number | null; from: string; to: string | null }[] }[];
   bands: { key: string; nameEn: string; nameBn: string | null }[];
@@ -48,9 +51,10 @@ export function rateText(raw: unknown): string | null {
 /** Everything the page shows for one store. */
 export async function feesView(db: Db, deps: Pick<AdminDeps, 'resolver'>, storeId: number, now = new Date()): Promise<FeesView> {
   const at = { storeId };
-  const [fees, pack, currency, rates, couriers, bands] = await Promise.all([
+  const [fees, pack, estimate, currency, rates, couriers, bands] = await Promise.all([
     deps.resolver.get('costs.gatewayFees', at),
     deps.resolver.get('costs.packaging', at),
+    deps.resolver.get('costs.courierEstimate', at),
     deps.resolver.value('store.currency', at),
     db.exchangeRate.findMany({ where: { storeId, baseCurrency: USD }, orderBy: { effectiveFrom: 'desc' }, take: 6, select: { rate: true, effectiveFrom: true, quoteCurrency: true } }),
     db.courierAccount.findMany({
@@ -64,6 +68,7 @@ export async function feesView(db: Db, deps: Pick<AdminDeps, 'resolver'>, storeI
   return {
     gatewayFees: { value: fees.value, version: fees.version },
     packaging: { value: pack.value, version: pack.version },
+    courierEstimate: { value: estimate.value, version: estimate.version },
     usd: { current: usd[0] ?? null, history: usd.slice(1) },
     couriers: couriers.map((c) => ({
       id: c.id,
@@ -102,7 +107,7 @@ export async function feesRoute(request: Request, deps: AdminDeps | null, path: 
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
   const where = path.join('/');
-  const kind = where === '' ? 'view' : where === 'gateway-fees' || where === 'packaging' ? 'setting' : where === 'usd-rate' ? 'usd' : where === 'rate-cards' ? 'card' : path.length === 3 && path[0] === 'rate-cards' && path[2] === 'end' ? 'end' : null;
+  const kind = where === '' ? 'view' : where === 'gateway-fees' || where === 'packaging' || where === 'courier-estimate' ? 'setting' : where === 'usd-rate' ? 'usd' : where === 'rate-cards' ? 'card' : path.length === 3 && path[0] === 'rate-cards' && path[2] === 'end' ? 'end' : null;
   if (!kind) return fail(404, 'not-found');
   const want = kind === 'view' ? 'GET' : kind === 'setting' ? 'PUT' : 'POST';
   if (m !== want) return fail(405, 'method-not-allowed');
@@ -114,7 +119,7 @@ export async function feesRoute(request: Request, deps: AdminDeps | null, path: 
     if (kind === 'view') return json({ ok: true, ...(await feesView(d.db, d, storeId, now)) });
     const b = await body(request);
     if (kind === 'setting') {
-      const key = where === 'gateway-fees' ? ('costs.gatewayFees' as const) : ('costs.packaging' as const);
+      const key = where === 'gateway-fees' ? ('costs.gatewayFees' as const) : where === 'courier-estimate' ? ('costs.courierEstimate' as const) : ('costs.packaging' as const);
       const parsed = registry[key].schema.safeParse(b.value === undefined ? Symbol('missing') : b.value);
       if (!parsed.success) return invalid(parsed.error.issues.map((i) => `${[key, ...i.path].join('.')}: ${i.message}`));
       const at = { storeId };

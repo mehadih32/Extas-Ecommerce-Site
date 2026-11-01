@@ -7,6 +7,10 @@
     "allocation": {
       "label": "Per-order profit: ad spend share",
       "help": "Whether each delivered order's profit carries a share of the ad spend, spread evenly over the orders delivered in the same month (or day). Always shown as an estimate; nothing is charged or changed."
+    },
+    "courierEstimate": {
+      "label": "Per-order profit: courier estimate",
+      "help": "Off as shipped. When on, a real parcel whose charge the courier has not reported yet is priced from your rate card on Money → Costs & fees (the order’s delivery band and the parcel’s weight) and marked as an estimate. \"COD fee apart\" also shows the rate card’s COD fee of such a parcel as its own line. Nothing is charged and no price changes."
     }
   },
   "vat": {

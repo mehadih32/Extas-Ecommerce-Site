@@ -13,6 +13,10 @@
 //   v165 · PR 352 `team.badges` — team performance badges (B3.10, §59 answer 25: "build it, default off"): off as
 //          shipped; the work each person did, counted from the shop's own records, and badges for the most in a period
 //          and for reaching the owner's own minimums (none set as shipped). Never pay, never a penalty: recognition only.
+//   v166 · PR 354 `costs.courierEstimate` — the per-order profit's courier part: off as shipped. When on, a real parcel
+//          whose charge the courier has not reported yet is priced from the owner's rate card (Money → Costs & fees) by
+//          the order's delivery band and the parcel's weight, labelled an estimate; `codFee` also shows the rate card's
+//          COD fee of such a parcel as its own part. Read-only figures; nothing is charged and no price changes.
 // Labels: messages/finance.<lang>.json.
 import { z } from 'zod';
 import { setting } from './define';
@@ -23,6 +27,7 @@ const V350 = 162;
 const V350_RATES = 163;
 const V351 = 164;
 const V352 = 165;
+const V354 = 166;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'books' } as const;
 
@@ -39,6 +44,10 @@ export type CostReportSettings = z.output<typeof costReportSchema>;
 /** PR 348 — whether each delivered order carries a share of the ad spend, and over which period it is spread. */
 export const costAllocationSchema = z.object({ adSpend: z.boolean(), adBasis: z.enum(['month', 'day']) }).strict();
 export type CostAllocationSettings = z.output<typeof costAllocationSchema>;
+
+/** PR 354 — whether a parcel without the courier's own charge is priced from the rate card (an estimate), and its COD fee shown apart. */
+export const courierEstimateSchema = z.object({ enabled: z.boolean(), codFee: z.boolean() }).strict();
+export type CourierEstimateSettings = z.output<typeof courierEstimateSchema>;
 
 /** PR 350 — the VAT system's switch, and whether the delivery charge carries VAT too (the accountant decides). */
 export const vatSystemSchema = z.object({ enabled: z.boolean(), onDelivery: z.boolean() }).strict();
@@ -107,6 +116,16 @@ export const financeSettings = {
     labelKey: 'costs.allocation.label',
     helpKey: 'costs.allocation.help',
     sortOrder: 350,
+  }),
+  'costs.courierEstimate': setting({
+    ...base,
+    version: V354,
+    schema: courierEstimateSchema,
+    default: { enabled: false, codFee: false },
+    valueType: 'JSON',
+    labelKey: 'costs.courierEstimate.label',
+    helpKey: 'costs.courierEstimate.help',
+    sortOrder: 355,
   }),
   'vat.system': setting({
     ...base,

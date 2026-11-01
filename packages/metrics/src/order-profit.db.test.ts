@@ -90,6 +90,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 348 · per-order profit on PostgreSQL', () => 
       deliveryCharge: 8_000,
       productCost: 105_000,
       courier: 7_000,
+      codFee: null, // PR 354: off as shipped
       paymentFees: 1_850,
       packaging: 3_000,
       messages: 155,

@@ -21,6 +21,13 @@
 //   the product cost then counts only the pieces kept: a piece judged sellable goes back to stock, and its cost with it;
 //   a piece judged not sellable with its loss booked (PR 187) is taken off the product cost and shown as
 //   − return loss (the booked loss row); a piece not checked yet, or not sellable without a loss row, keeps its cost.
+// S16 · PR 354 (§10.2 M6; `costs.courierEstimate`, off as shipped) — a real parcel the courier has not reported a charge
+// for yet: with the switch on it is priced from the owner's rate card (the order's delivery band = the card's zone, the
+// parcel's weight slab, the card valid when the parcel was booked; the same rule as @extas/shipping `rateFor`, never the
+// lightest slab when the weight is not known), and the courier part reads "estimated"; with `codFee` on the card's COD
+// fee of such a parcel (its share of the COD amount, `codFeeBps`; a card without one = not known) is its own part. A
+// courier's own charge is the whole charge it reported, so its COD fee is inside it (the COD fee part is then 0).
+// No card for it = still not known.
 // The profit is shown only when the product cost is known; any other unknown part is left out and named, so a figure
 // is never made to look complete. Only delivered orders have a profit (the one KPI rule, pure.ts BASIS_RULE `sales`).
 import { Prisma } from '@extas/db/client';
@@ -29,7 +36,7 @@ import { BASIS_RULE, COUNTED_LINE_STATUS, dayStart, nextDay } from './pure';
 import { apportion } from './vat';
 
 /** The parts of an order's profit, in the order they are added up. */
-export const PROFIT_PARTS = ['sales', 'returns', 'deliveryCharge', 'productCost', 'courier', 'paymentFees', 'packaging', 'messages', 'returnLoss', 'ads'] as const;
+export const PROFIT_PARTS = ['sales', 'returns', 'deliveryCharge', 'productCost', 'courier', 'codFee', 'paymentFees', 'packaging', 'messages', 'returnLoss', 'ads'] as const;
 export type ProfitPart = (typeof PROFIT_PARTS)[number];
 /** The parts that are added (the rest are costs, taken away). */
 export const PROFIT_INCOME: readonly ProfitPart[] = ['sales', 'deliveryCharge'];
@@ -85,7 +92,38 @@ export interface ProfitInputs {
   gatewayFee: (amountMinor: number, provider: string) => number | null;
   /** `costs.allocation`: spread ad spend over delivered orders, by the store's month or day. */
   ads: { allocate: boolean; basis: 'month' | 'day' };
+  /** PR 354 `costs.courierEstimate` (off when left out): price a parcel without its charge from the rate card; show its COD fee apart. */
+  courierEstimate?: { enabled: boolean; codFee: boolean };
 }
+
+/** PR 354: one rate-card row (the owner's courier rates, Money → Costs & fees). */
+export interface RateRow {
+  courierAccountId: string;
+  zoneKey: string;
+  weightFromGrams: number;
+  weightToGrams: number;
+  chargeMinor: number;
+  codFeeBps: number | null;
+  validFrom: Date;
+  validTo: Date | null;
+}
+
+/**
+ * PR 354: the card row for a parcel — the same rule as @extas/shipping `rateFor` (SIM-F-029): the zone's rows valid at
+ * `at`; without a weight only when the zone has a single row; else the newest row whose slab holds the weight.
+ */
+export function rateRowFor(cards: readonly RateRow[], q: { courierAccountId: string; zoneKey: string | null; weightGrams: number | null; at: Date }): RateRow | null {
+  if (!q.zoneKey) return null;
+  const t = q.at.getTime();
+  const valid = cards.filter((c) => c.courierAccountId === q.courierAccountId && c.zoneKey === q.zoneKey && c.validFrom.getTime() <= t && (!c.validTo || c.validTo.getTime() > t));
+  if (!valid.length) return null;
+  if (q.weightGrams === null) return valid.length === 1 ? valid[0]! : null;
+  const fits = valid.filter((c) => c.weightFromGrams <= q.weightGrams! && q.weightGrams! <= c.weightToGrams);
+  return fits.sort((a, b) => b.validFrom.getTime() - a.validFrom.getTime())[0] ?? null;
+}
+
+/** PR 354: a COD fee in minor units — `bps` of the COD amount, rounded to the nearest unit. */
+export const codFeeMinor = (codAmountMinor: number, bps: number) => Math.round((codAmountMinor * bps) / 10_000);
 
 /** The payment methods a gateway takes a fee on (COD, cash, wallet and bank transfer have none here). */
 export const FEE_METHODS = ['BKASH', 'NAGAD', 'CARD', 'ROCKET', 'UPAY', 'ONLINE'] as const;
@@ -97,7 +135,6 @@ const MESSAGE_REF = 'notification';
 export const RETURN_LOSS = 'RETURN_LOSS';
 const ORDER_REF = 'Order';
 
-const n = (v: bigint | number | null) => (v === null ? null : Number(v));
 
 /** The ad-spend period an order delivered on `day` falls in. */
 const adPeriodOf = (day: string, basis: 'month' | 'day') => (basis === 'day' ? day : day.slice(0, 7));
@@ -126,12 +163,14 @@ export async function orderProfits(db: Db, storeId: number, orderIds: readonly s
         FROM "OrderItem" i
        WHERE i."storeId" = ${storeId} AND i."orderId" = ANY(${ids}::uuid[]) AND i."status"::text = ${COUNTED_LINE_STATUS}
        GROUP BY 1, 2`,
-    db.$queryRaw<{ orderId: string; charge: bigint | null; known: boolean }[]>`
-      SELECT s."orderId", SUM(s."chargeMinor")::bigint AS "charge", bool_and(s."chargeMinor" IS NOT NULL) AS "known"
+    db.$queryRaw<{ orderId: string; courierAccountId: string; charge: number | null; cod: number; weight: number | null; at: Date; zoneKey: string | null }[]>`
+      SELECT s."orderId", s."courierAccountId", s."chargeMinor" AS "charge", s."codAmountMinor" AS "cod", s."weightGrams" AS "weight",
+             COALESCE(s."bookedAt", s."createdAt") AS "at", b."key" AS "zoneKey"
         FROM "Shipment" s
+        JOIN "Order" o ON o."id" = s."orderId" AND o."storeId" = s."storeId"
+        LEFT JOIN "DeliveryBand" b ON b."id" = o."deliveryBandId" AND b."storeId" = o."storeId"
        WHERE s."storeId" = ${storeId} AND s."orderId" = ANY(${ids}::uuid[]) AND s."isExchangeLeg" = false AND s."mode"::text IS DISTINCT FROM 'MOCK'
-         AND s."consignmentId" IS NOT NULL
-       GROUP BY 1`,
+         AND s."consignmentId" IS NOT NULL`,
     db.$queryRaw<{ orderId: string; method: string; provider: string | null; amountMinor: number }[]>`
       SELECT p."orderId", p."method"::text AS "method", p."provider", p."amountMinor"
         FROM "Payment" p
@@ -172,7 +211,25 @@ export async function orderProfits(db: Db, storeId: number, orderIds: readonly s
     }
     costOf.set(l.orderId, c);
   }
-  const parcelOf = new Map(parcels.map((p) => [p.orderId, p]));
+  const estimate = inputs.courierEstimate?.enabled === true;
+  const cards = estimate && parcels.some((p) => p.charge === null) ? await rateCards(db, storeId, [...new Set(parcels.filter((p) => p.charge === null).map((p) => p.courierAccountId))]) : [];
+  const parcelOf = new Map<string, { minor: number; known: boolean; estimated: boolean; codFeeSum: number; codKnown: boolean }>();
+  for (const p of parcels) {
+    const x = parcelOf.get(p.orderId) ?? { minor: 0, known: true, estimated: false, codFeeSum: 0, codKnown: true }; // hardcode-ok: a running total starts at 0
+    if (p.charge !== null) x.minor += Number(p.charge);
+    else {
+      const card = estimate ? rateRowFor(cards, { courierAccountId: p.courierAccountId, zoneKey: p.zoneKey, weightGrams: p.weight === null ? null : Number(p.weight), at: new Date(p.at) }) : null;
+      if (!card) x.known = false;
+      else {
+        x.estimated = true;
+        x.minor += card.chargeMinor;
+        // a COD amount with no COD fee on the card is not known (never taken as 0)
+        if (card.codFeeBps !== null) x.codFeeSum += codFeeMinor(Number(p.cod), card.codFeeBps);
+        else if (Number(p.cod) > 0) x.codKnown = false;
+      }
+    }
+    parcelOf.set(p.orderId, x);
+  }
   const feeOf = new Map<string, { minor: number; known: boolean }>();
   for (const p of payments) {
     if (!p.orderId) continue;
@@ -200,7 +257,8 @@ export async function orderProfits(db: Db, storeId: number, orderIds: readonly s
       returns: { minor: sum('valueMinor'), state: 'known' },
       deliveryCharge: { minor: Number(o.delivery), state: 'known' },
       productCost: c.costed ? { minor: c.minor - sum('costBackMinor'), state: 'known' } : { minor: null, state: 'missing' },
-      courier: !parcel ? { minor: 0, state: 'known' } : parcel.known ? { minor: n(parcel.charge), state: 'known' } : { minor: null, state: 'missing' },
+      courier: !parcel ? { minor: 0, state: 'known' } : !parcel.known ? { minor: null, state: 'missing' } : { minor: parcel.minor, state: parcel.estimated ? 'estimated' : 'known' },
+      codFee: !(estimate && inputs.courierEstimate?.codFee) ? { minor: null, state: 'off' } : !parcel?.estimated ? { minor: 0, state: 'known' } : !parcel.codKnown ? { minor: null, state: 'missing' } : { minor: parcel.codFeeSum, state: 'estimated' },
       paymentFees: !fee ? { minor: 0, state: 'known' } : fee.known ? { minor: fee.minor, state: 'known' } : { minor: null, state: 'missing' },
       packaging: inputs.packagingMinor === null ? { minor: null, state: 'missing' } : { minor: inputs.packagingMinor, state: 'known' },
       messages: { minor: msgOf.get(o.id) ?? 0, state: 'known' },
@@ -228,6 +286,14 @@ export async function orderProfits(db: Db, storeId: number, orderIds: readonly s
     });
   }
   return out;
+}
+
+/** PR 354: the rate-card rows of these courier accounts (all validity windows; `rateRowFor` picks the one in force). */
+async function rateCards(db: Db, storeId: number, accountIds: string[]): Promise<RateRow[]> {
+  if (!accountIds.length) return [];
+  return db.$queryRaw<RateRow[]>`
+    SELECT c."courierAccountId", c."zoneKey", c."weightFromGrams", c."weightToGrams", c."chargeMinor", c."codFeeBps", c."validFrom", c."validTo"
+      FROM "CourierRateCard" c WHERE c."storeId" = ${storeId} AND c."courierAccountId" = ANY(${accountIds}::uuid[])`;
 }
 
 /**

@@ -1,7 +1,8 @@
 'use client';
 // S16 · PR 345 — the cards of Money → Costs & fees (/admin/money/fees): payment gateway fees (a row per provider: share
 // in %, fixed amount), the packaging cost of one order, the USD rate (a new rate from now; the old ones stay) and the
-// courier rates (per courier: add a rate for a delivery band and weight band, end one). Saving a setting asks once more
+// courier rates (per courier: add a rate for a delivery band and weight band, end one); PR 354: the courier-estimate
+// switches (`costs.courierEstimate`, off). Saving a setting asks once more
 // before it is kept ("Save" → "Yes, save") and sends the version it was read at, so two people never overwrite each
 // other unseen. Amounts are read like the Books pages (`typedMinor`). Without `costs.write` it is read-only. Nothing
 // here charges a customer or changes a price, a delivery charge or COD.
@@ -47,7 +48,8 @@ export function FeesScreen(p: FeesScreenProps) {
   const firstCourier = p.view.couriers[0]?.id ?? '';
   const [card, setCard] = useState({ courierAccountId: firstCourier, zoneKey: p.view.bands[0]?.key ?? '', from: '0', to: '1000', charge: '', cod: '', ret: '' });
 
-  async function put(where: 'gateway-fees' | 'packaging', value: unknown, version: number) {
+  const [est, setEst] = useState(p.view.courierEstimate.value);
+  async function put(where: 'gateway-fees' | 'packaging' | 'courier-estimate', value: unknown, version: number) {
     if (confirm !== where) return setConfirm(where);
     setConfirm(null);
     setBusy(true);
@@ -324,6 +326,23 @@ export function FeesScreen(p: FeesScreenProps) {
         {say('cards')}
       </section>
       {off ? <p className="a2-xs a2-mute a2-mt12">{c('readOnly')}</p> : null}
+      <section className="a2-card a2-mt12" aria-labelledby={`${id}-e`} data-testid="fe-estimate">
+        <h2 className="a2-h3" id={`${id}-e`}>
+          {c('estimate.title')}
+        </h2>
+        <p className="a2-cs">{c('estimate.sub')}</p>
+        <div className="a2-swl a2-mt12">
+          <span id={`${id}-eon`}>{c('estimate.on')}</span>
+          <button type="button" className={`a2-sw${est.enabled ? ' on' : ''}`} role="switch" aria-checked={est.enabled} aria-labelledby={`${id}-eon`} disabled={off || busy} onClick={() => setEst({ ...est, enabled: !est.enabled })} data-testid="fe-estimate-on" />
+        </div>
+        <div className="a2-swl a2-mt12">
+          <span id={`${id}-ecod`}>{c('estimate.codFee')}</span>
+          <button type="button" className={`a2-sw${est.codFee ? ' on' : ''}`} role="switch" aria-checked={est.codFee} aria-labelledby={`${id}-ecod`} disabled={off || busy || !est.enabled} onClick={() => setEst({ ...est, codFee: !est.codFee })} data-testid="fe-estimate-cod" />
+        </div>
+        <p className="a2-xs a2-mute a2-mt6">{c('estimate.codFeeHow')}</p>
+        {p.canEdit ? <div className="ct-actions a2-mt12">{saveBtn('courier-estimate', () => put('courier-estimate', { enabled: est.enabled, codFee: est.enabled && est.codFee }, p.view.courierEstimate.version), 'fe-estimate-save')}</div> : null}
+        {say('courier-estimate')}
+      </section>
     </>
   );
 }

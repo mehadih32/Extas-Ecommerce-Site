@@ -90,6 +90,19 @@ describe.skipIf(!HAS_TEST_DB)('costs & fees on PostgreSQL (PR 345)', () => {
     expect(await deps.resolver.value('costs.packaging', { storeId: A })).toEqual({ perOrderMinor: 2_500 });
   });
 
+  it('PR 354: the courier estimate ships off; saved with its version and audited; a wrong shape refused; a reader may not', async () => {
+    const v0 = (await route('GET', [], { cookie: reader })).body as unknown as FeesView;
+    expect(v0.courierEstimate.value).toEqual({ enabled: false, codFee: false });
+    expect((await route('PUT', ['courier-estimate'], { cookie: reader, body: { value: { enabled: true, codFee: false }, version: v0.courierEstimate.version } })).status).toBe(403);
+    expect((await route('PUT', ['courier-estimate'], { cookie: owner, body: { value: { enabled: 'yes' }, version: v0.courierEstimate.version } })).status).toBe(400);
+    const before = await t.prisma.auditLog.count({ where: { action: 'costs.fees', storeId: A } });
+    const s1 = await route('PUT', ['courier-estimate'], { cookie: owner, body: { value: { enabled: true, codFee: true }, version: v0.courierEstimate.version } });
+    expect(s1.status).toBe(200);
+    expect((await route('PUT', ['courier-estimate'], { cookie: owner, body: { value: { enabled: false, codFee: false }, version: v0.courierEstimate.version } })).status).toBe(409);
+    expect(await deps.resolver.value('costs.courierEstimate', { storeId: A })).toEqual({ enabled: true, codFee: true });
+    expect(await t.prisma.auditLog.count({ where: { action: 'costs.fees', storeId: A } })).toBe(before + 1);
+  });
+
   it('a USD rate is a new row; the old one stays', async () => {
     expect((await route('POST', ['usd-rate'], { cookie: owner, body: { rate: '120.25' } })).status).toBe(201);
     expect((await route('POST', ['usd-rate'], { cookie: owner, body: { rate: 'abc' } })).status).toBe(400);
