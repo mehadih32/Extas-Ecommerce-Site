@@ -1336,6 +1336,11 @@ Register: [S05](docs/MASTER-REGISTER.md#s05--order-management--pr-138155).
   practice-gateway callback is refused; a callback whose payment id differs from the one stored at start is refused;
   the go-live list's `testPayments` item stays red while a live store has it on. A staging store that was not
   sample-seeded switches it on in Settings → Payments to try practice checkouts.
+  **The go-live gate's own run (1 Nov, #76, PR 170 follow-up):** a gate run (gate-orders, gate-c360) opens a grant for
+  itself — an `IdempotencyKey` row, scope `gate-run.mock-pay`: the SHA-256 of a random token, the preview host, a short
+  expiry, audit lines by the system. While it is open, the checkout and the shop's payments read `payments.testPayments`
+  as on only for a request on that host carrying the run's cookie `extas_gate_run` (`lib/shop/gate-run.ts`); never on a
+  host the shop sells on. The shop never sets that cookie, and the admin's payments are never wrapped.
 - **Review round 1 (31 Oct, #71):** an online order whose money has not come in is never confirmed (`PAYMENT_DUE`; PR 138)
   and the Prepaid view leaves it out; refunds made by the system never add up to more than came in (`OVER_REFUNDABLE`;
   PR 172); a partial delivery's COD counts only active lines (PR 166); a percent discount is rounded to a step a rider
@@ -2126,6 +2131,17 @@ Guide index: [docs/admin-guide/README.md](docs/admin-guide/README.md).
   iPhone and a desktop in English and /bn. It refuses to run off the preview host or while any connection is live; each
   step is PASS, FAIL or SKIP with its reason; report `docs/reports/gate-c360/latest/`; findings and the live-run log in
   [`docs/qa/FINAL-ANALYSIS-2026-11.md`](docs/qa/FINAL-ANALYSIS-2026-11.md). CI type-checks both gates' server code.
+  **After the first live run (1 Nov, #76, PR 414 follow-up):** the live run skipped all 18 orders (cash on delivery and
+  test payments are off) and the 360° run found no product. Now both runs pay on the mock bKash through their own run's
+  grant (PR 170 above) and close it in the shell's trap on a finish, a failure or SIGINT/SIGTERM (the browser runs in
+  the background, so the trap fires at once). gate-orders' `allow_cod` input (false by default) is the only way a run
+  switches cash on delivery on; it is put back to the exact earlier value (only if nobody changed it during the run);
+  without it the COD scenarios are SKIP "COD is off (owner's setting)". gate-c360 makes its own GATE TEST products with
+  gate-orders' shared helpers (`tools/gate-orders/lib/test-shop.ts`) and archives them at the end. An owner's switch
+  that is off, a gap planned as PR 622–624 and the default address / phone change (by design) are SKIPs with the reason.
+  The UTM check reads the browser's own cookie jar (the shop keeps the tags in the HttpOnly `__Host-extas_src`, which
+  page scripts cannot see); a link the check cannot reach is asked once more, with the reason kept. My account › Wallet
+  is in the smoke list. Proved locally: gate-orders 18 scenarios, 24 orders on the mock bKash: 14 pass, 0 fail, 4 skip (cash on delivery off, no open coupon, delivered-parcel steps); gate-c360 150 steps: 120 pass, 27 skip, 3 fail — the unnamed-button check (fixed, desktop rerun green), one local browser crash (rerun green) and the messages step, which needs the job worker that runs only on the server.
 - **Customer problems (PR 423, CN-015):** a small probe in the shop layout reports script errors, failed or slow calls to
   the shop's server, failed or slow pages, a form field refused again and again, rage clicks and broken pictures (the
   "Start fresh" screen too); anonymous by construction (masked page patterns, scrubbed messages, device and browser
@@ -2519,6 +2535,8 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #76 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (the gates' first live run, 1 Nov): both go-live gate runs pay on the mock bKash through a grant for their own run only (the preview host, their own browser's cookie; closed by the shell's trap on a finish, a failure or a signal; audit lines by the system); `allow_cod` (false) is the only way a run switches cash on delivery on, put back exactly after; gate-c360 makes its own GATE TEST products with gate-orders' shared helpers; an owner's switch, a planned PR (622–624) or a by-design gap is a SKIP, never a FAIL; the UTM check reads the browser's own cookie jar. Local runs: gate-orders 18 scenarios, 24 orders on the mock bKash: 14 pass, 0 fail, 4 skip (cash on delivery off, no open coupon, delivered-parcel steps); gate-c360 150 steps: 120 pass, 27 skip, 3 fail — the unnamed-button check (fixed, desktop rerun green), one local browser crash (rerun green) and the messages step, which needs the job worker that runs only on the server. |
+| #76 | PR [170](docs/stages/S07.md#pr-170) | 1 Nov | Follow-up (go-live gate): the practice gateway answers for the gate's own browser while its run's grant is open (`lib/shop/gate-run.ts`); `payments.testPayments` stays off for every real visitor and in the admin; no real key, price, discount or COD amount is touched. |
 | #75 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (go-live gate, CN-013 phase 2, owner's OK 1 Nov): test orders on the preview — `gate-orders.yml` with a host guard, a mock-only oracle and 18 browser scenarios (baskets, last piece, bKash mock, 8 orders for one customer, all 8 divisions' addresses compared from checkout to sticker), clean-up cancels and archives, nothing deleted. |
 | #75 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (go-live gate): the customer 360° run — `gate-c360.yml`, one test customer before, during and after an order, his account and support, on phones and a desktop in English and /bn; findings in `docs/qa/FINAL-ANALYSIS-2026-11.md`. |
 | #75 | PR [257](docs/stages/S13.md#pr-257) | 1 Nov | Follow-up (customer 360° finding 1): UTM tags and ad click ids kept in a first-party cookie and written on the order; `ads.attribution` (on), card on Marketing › Tracking. |
