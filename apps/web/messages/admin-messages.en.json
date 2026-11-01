@@ -81,7 +81,12 @@
       "PROVIDER_FAILED": "WhatsApp said it could not be delivered",
       "WA_TEMPLATE_NOT_APPROVED": "WhatsApp has not approved this text yet, so the other channel was used",
       "OPTED_OUT": "The customer stopped messages on this channel",
-      "NO_CONSENT": "An offer, and the customer has not said yes to offers"
+      "NO_CONSENT": "An offer, and the customer has not said yes to offers",
+      "CAP_WEEK": "The most offers one person gets in 7 days was reached",
+      "CANCELLED": "Its send was cancelled",
+      "PAUSED": "Its send is paused",
+      "SWITCHED_OFF": "E-mail marketing is switched off",
+      "ERASED": "The customer was erased"
     },
     "log": {
       "title": "Message log",

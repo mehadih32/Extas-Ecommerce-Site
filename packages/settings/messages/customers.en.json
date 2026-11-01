@@ -30,6 +30,10 @@
     "journeys": {
       "label": "Automations (customer journeys)",
       "help": "Journeys that start on a trigger (days after a delivered order: the product-life reminder; days without an order; days after joining), then wait, check and send a message. Off as shipped; each message needs the customer's yes for offers."
+    },
+    "email": {
+      "label": "E-mail marketing",
+      "help": "Offer e-mails from your own templates to a saved segment (Messages › E-mail), with the delivery log. Off as shipped. Each e-mail goes only to a customer who said yes to offer e-mails and always carries the unsubscribe line. \"Per person a week\": the most such e-mails one person gets in seven days. \"Per run\": how many people one run queues (the throttle). Open and click tracking are each off until you turn them on. \"Result days\": orders a receiver places within these days count as the send's result (Sales only when delivered)."
     }
   }
 }

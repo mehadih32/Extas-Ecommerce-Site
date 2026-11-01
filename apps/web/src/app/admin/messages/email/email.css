@@ -1,0 +1,15 @@
+/* S14 · PR 290 — Messages › E-mail: the sends and templates lists, a send's builder (who, words, when) and its results;
+   the fields stack on a phone; the shell's tokens only. */
+.adm2 .mail-form{display:flex;flex-direction:column;gap:12px}
+.adm2 .mail-form .a2-ta{min-height:180px}
+.adm2 .mail-when{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.adm2 .mail-when .a2-ckb{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.adm2 .mail-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.adm2 .mail-kpi{padding:10px;border:1px solid var(--ln2);border-radius:10px}
+.adm2 .mail-kpi b{display:block;font-size:20px;line-height:26px}
+.adm2 .mail-preview{white-space:pre-wrap;padding:12px;border:1px solid var(--ln2);border-radius:10px;background:var(--bg2)}
+.adm2 .mail-ask{padding:12px;border:1px solid var(--ln2);border-radius:10px}
+.adm2 [data-testid=crm-card-email] .a2-ckb{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+@media (max-width:767px){
+  .adm2 .a2-crumb a{display:inline-flex;align-items:center;min-height:44px}
+}

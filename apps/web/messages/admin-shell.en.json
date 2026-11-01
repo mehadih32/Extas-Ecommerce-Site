@@ -82,7 +82,8 @@
         "channels": "Channels & limits",
         "journey": "Order journey",
         "templates": "Templates",
-        "automations": "Automations"
+        "automations": "Automations",
+        "email": "E-mail"
       },
       "website": {
         "seo": "SEO"

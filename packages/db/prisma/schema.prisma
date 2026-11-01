@@ -3264,6 +3264,12 @@ model NotificationLog {
   deliveredAt       DateTime?             @db.Timestamptz(3)
   /// PR 291, 292 — the provider's own last word on it (`delivered`, `read`, `failed 131026` …), from its receipt.
   providerStatus    String?
+  /// PR 290 — an offer e-mail's first open (its tracking pixel, while open tracking is on), first click and clicks.
+  openedAt          DateTime?             @db.Timestamptz(3)
+  clickedAt         DateTime?             @db.Timestamptz(3)
+  clicks            Int                   @default(0)
+  /// PR 290 — when he pressed the e-mail's unsubscribe (his "no" to offer e-mails is a ConsentRecord as well).
+  unsubscribedAt    DateTime?             @db.Timestamptz(3)
 
   @@unique([storeId, dedupeKey])
   @@index([storeId, orderId])
@@ -3272,6 +3278,8 @@ model NotificationLog {
   @@index([provider, providerMessageId])
   /// PR 288: the messages on a customer's journey view.
   @@index([storeId, customerId, createdAt])
+  /// PR 290: one e-mail send's delivery log.
+  @@index([broadcastId, status])
 }
 
 /// @stage S05 · PR 149 — one try at sending a message: the sender (provider and mode), the result, the provider's
@@ -7369,6 +7377,19 @@ model Broadcast {
   createdById       String?             @db.Uuid
   createdAt         DateTime            @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime            @updatedAt @db.Timestamptz(3)
+  /// S14 · PR 290 — an e-mail send (channel EMAIL): the saved segment it goes to (null: everyone with an e-mail and a
+  /// yes for offer e-mails), its words as they go (a snapshot: a later change of the template does not change a send),
+  /// in one language. `templateId` is the template it started from. Status DRAFT → SCHEDULED → SENDING → SENT, or
+  /// PAUSED / CANCELLED by a person; `queuedCount` people were queued; `sentCount`/`failedCount` as the engine sends.
+  segmentId         String?             @db.Uuid
+  subject           String?
+  body              String?
+  locale            String?
+  queuedCount       Int                 @default(0)
+  startedAt         DateTime?           @db.Timestamptz(3)
+  finishedAt        DateTime?           @db.Timestamptz(3)
+
+  @@index([storeId, status, scheduledAt])
 }
 
 /// @stage S13 · PR 278 — a YouTube channel connected to the store.

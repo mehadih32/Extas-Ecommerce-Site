@@ -1013,5 +1013,12 @@
       "network": "No connection. Try again.",
       "other": "Something went wrong. Try again."
     }
+  },
+  "emailUnsub": {
+    "title": "Offer e-mails",
+    "text": "Press the button and we stop sending you offer e-mails. E-mails about your orders still come.",
+    "button": "Unsubscribe from offer e-mails",
+    "done": "Done. You will get no more offer e-mails from us. E-mails about your orders still come.",
+    "unknown": "We could not find this e-mail. If you want no more offer e-mails, write to us and we stop them."
   }
 }

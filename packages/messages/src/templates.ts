@@ -9,7 +9,7 @@
 // auto-reply's settings (`messages.autoReply`) are edited here too. Seeing needs `messages.templates.read`, changing
 // `messages.templates.write`; every change is in the audit log. Nothing here sends a message.
 import { defaultPack } from '@extas/seed/pack';
-import { MESSAGE_CHANNELS, type MessageChannel } from '@extas/settings';
+import { CRM_EMAIL_TEMPLATE_PREFIX, MESSAGE_CHANNELS, type MessageChannel } from '@extas/settings';
 import { z } from 'zod';
 import { groupVersion, readGroup, saveGroup, type GroupValues } from './channels';
 import { allow, holds, logChange, MessagesError, parse, setting, type MessagesDeps, type SettingsWriter, type Who } from './context';
@@ -115,7 +115,8 @@ export async function templatesScreen(deps: MessagesDeps, who: Who): Promise<Tem
     autoReply: auto.autoReply,
   });
   const rows = await deps.db.notificationTemplate.findMany({
-    where: { storeId: who.storeId, archivedAt: null },
+    // PR 290: the owner's offer e-mails live on Messages › E-mail, not here
+    where: { storeId: who.storeId, archivedAt: null, NOT: { key: { startsWith: CRM_EMAIL_TEMPLATE_PREFIX } } },
     orderBy: [{ key: 'asc' }, { channel: 'asc' }, { locale: 'asc' }],
     select: { id: true, key: true, channel: true, locale: true, name: true, subject: true, body: true, updatedAt: true, providerStatus: true },
   });
@@ -194,7 +195,7 @@ function checkedWords(channel: MessageChannel, locale: string, body: string, sub
 
 /** Writes a template's words over its own version; an edited WhatsApp body goes back for approval. Audited. */
 async function writeWords(deps: MessagesDeps, who: Who, id: string, version: string, next: (row: { key: string; channel: MessageChannel; locale: string }) => { body: string; subject: string | null }, action: string): Promise<string> {
-  const row = await deps.db.notificationTemplate.findFirst({ where: { id, storeId: who.storeId, archivedAt: null }, select: { id: true, key: true, channel: true, locale: true, body: true, subject: true, updatedAt: true, providerStatus: true } });
+  const row = await deps.db.notificationTemplate.findFirst({ where: { id, storeId: who.storeId, archivedAt: null, NOT: { key: { startsWith: CRM_EMAIL_TEMPLATE_PREFIX } } }, select: { id: true, key: true, channel: true, locale: true, body: true, subject: true, updatedAt: true, providerStatus: true } });
   if (!row || !isChannel(row.channel)) throw new MessagesError('NOT_FOUND', 'no such template', ['id']);
   if (row.updatedAt.toISOString() !== version) throw new MessagesError('STALE', 'the template was changed by someone else; reload it', ['version'], { version: row.updatedAt.toISOString() });
   const w = next({ key: row.key, channel: row.channel, locale: row.locale });

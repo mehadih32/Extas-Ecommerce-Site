@@ -39,6 +39,8 @@ export * from './whatsapp';
 export * from './consent';
 export * from './costs';
 export * from './templates';
+export * from './email-html';
+export * from './email-track';
 
 export interface RunResult {
   plan: PlanResult;

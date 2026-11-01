@@ -15,6 +15,10 @@ export interface EmailMessage {
   text: string;
   /** What the e-mail is for (`order.placed` …), for the shop's own record; never the text. */
   purpose: string;
+  /** PR 290 — the HTML part of an offer e-mail (its plain-text part is `text`). */
+  html?: string;
+  /** PR 290 — extra headers (the one-click unsubscribe, RFC 8058). */
+  headers?: Record<string, string>;
 }
 
 export type EmailResult = { ok: true; messageId: string } | { ok: false; error: string };

@@ -18,6 +18,12 @@
 // people one run moves, and the stop line added to every such SMS or e-mail (the offer opt-out, CN-021 P14). These are
 // offers: each one needs the customer's yes for offers on that channel (PR 298), and the quiet hours and the master
 // switch of Messages hold.
+//
+// PR 290 (`customers.email`, v193): e-mail marketing (Messages › E-mail) — offer e-mails written from the owner's own
+// templates and sent to a saved segment, with the delivery log. Off as shipped; each e-mail needs the customer's yes for
+// offer e-mails (PR 298) and always carries the unsubscribe line; at most `perCustomerPerWeek` such e-mails to one person
+// in seven days; `batchSize` people queued per run (the throttle); open and click tracking each its own switch, off; the
+// orders a receiver places within `resultDays` count as the send's result (Sales only when delivered).
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -26,6 +32,12 @@ export const JOURNEY_KIND_KEYS = ['profile', 'visit', 'touch', 'order', 'exchang
 
 /** PR 289 — the step a journey's message carries in the message log (NotificationLog.step); the Messages engine sends it. */
 export const CRM_MESSAGE_STEP = 'crmJourney';
+
+/** PR 290 — the step an offer e-mail of an e-mail send carries in the message log; the Messages engine sends it. */
+export const CRM_EMAIL_STEP = 'crmEmail';
+
+/** PR 290 — the key prefix of the owner's e-mail templates (NotificationTemplate, channel EMAIL). */
+export const CRM_EMAIL_TEMPLATE_PREFIX = 'crmEmail.';
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'customers' } as const;
 
@@ -66,6 +78,22 @@ export const journeysSettingsSchema = z
   .strict();
 export type JourneysSettings = z.output<typeof journeysSettingsSchema>;
 
+/** PR 290 — e-mail marketing. */
+const mailLine = z.string().trim().min(1).max(160);
+export const emailMarketingSettingsSchema = z
+  .object({
+    enabled: z.boolean(),
+    perCustomerPerWeek: z.int().min(1).max(14),
+    batchSize: z.int().min(10).max(5000),
+    trackOpens: z.boolean(),
+    trackClicks: z.boolean(),
+    resultDays: z.int().min(1).max(60),
+    maxTemplates: z.int().min(1).max(500),
+    unsubscribeLine: z.object({ bn: mailLine, en: mailLine }).strict(),
+  })
+  .strict();
+export type EmailMarketingSettings = z.output<typeof emailMarketingSettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -97,5 +125,16 @@ export const crmSettings = {
     labelKey: 'customers.journeys.label',
     helpKey: 'customers.journeys.help',
     sortOrder: 220,
+  }),
+  'customers.email': setting({
+    ...base,
+    version: 193,
+    schema: emailMarketingSettingsSchema,
+    // hardcode-ok: registry default (off; limits; the unsubscribe line's words)
+    default: { enabled: false, perCustomerPerWeek: 1, batchSize: 500, trackOpens: false, trackClicks: false, resultDays: 7, maxTemplates: 50, unsubscribeLine: { bn: 'অফারের ই-মেইল আর চান না? এখানে বন্ধ করুন', en: 'No more offer e-mails? Unsubscribe here' } },
+    valueType: 'JSON',
+    labelKey: 'customers.email.label',
+    helpKey: 'customers.email.help',
+    sortOrder: 230,
   }),
 };

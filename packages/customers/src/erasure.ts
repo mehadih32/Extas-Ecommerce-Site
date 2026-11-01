@@ -18,7 +18,7 @@
 // A request can be cancelled while it waits.
 import { audit, isOwner, requirePermission } from '@extas/auth';
 import { Prisma } from '@extas/db/client';
-import { CRM_MESSAGE_STEP } from '@extas/settings';
+import { CRM_EMAIL_STEP, CRM_MESSAGE_STEP } from '@extas/settings';
 import { z } from 'zod';
 import { nowOf, parse, setting, TX, UUID, type CustomersDeps, type Who } from './context';
 import { CustomersError } from './errors';
@@ -157,9 +157,10 @@ export async function carryOutErasure(deps: CustomersDeps, who: Who, input: unkn
     });
     await tx.customerCredential.updateMany({ where: { customerId: { in: ids } }, data: { passwordHash: CLOSED_PASSWORD } });
     await tx.customerSession.updateMany({ where: { customerId: { in: ids }, revokedAt: null }, data: { revokedAt: now } });
-    // PR 289: no automation goes on with him, and a journey message still waiting to go is dropped
+    // PR 289: no automation goes on with him, and a journey message still waiting to go is dropped (PR 290: an offer
+    // e-mail of an e-mail send too)
     await tx.journeyEnrollment.updateMany({ where: { storeId: who.storeId, customerId: { in: ids }, status: 'ACTIVE' }, data: { status: 'EXITED', reason: 'ERASED', exitedAt: now, nextRunAt: null } });
-    await tx.notificationLog.updateMany({ where: { storeId: who.storeId, customerId: { in: ids }, status: 'QUEUED', step: CRM_MESSAGE_STEP }, data: { status: 'SKIPPED', reason: 'ERASED', recipient: '' } });
+    await tx.notificationLog.updateMany({ where: { storeId: who.storeId, customerId: { in: ids }, status: 'QUEUED', step: { in: [CRM_MESSAGE_STEP, CRM_EMAIL_STEP] } }, data: { status: 'SKIPPED', reason: 'ERASED', recipient: '' } });
     const contact = [...(phones.length ? [{ phone: { in: phones } }] : []), ...(emails.length ? [{ email: { in: emails } }] : []), { customerId: { in: ids } }];
     await tx.checkoutDraft.updateMany({ where: { storeId: who.storeId, OR: contact }, data: { phone: null, name: null, email: null, addressText: null } });
     await tx.backInStockRequest.updateMany({ where: { storeId: who.storeId, OR: contact }, data: { phone: null, email: null } });

@@ -38,9 +38,10 @@
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
 import type { Prisma } from '@extas/db/client';
 import { codToCollect, dueOf } from '@extas/orders/pure';
-import { CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings } from '@extas/settings';
+import { CRM_EMAIL_STEP, CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings } from '@extas/settings';
 import { consentBlock } from './consent';
 import { recordSendCost } from './costs';
+import { emailHeaders, emailHtml, emailLinks, emailText, emailUrls } from './email-html';
 import { nowOf, setting, TX, type MessagesDeps, type OutgoingMessage, type SendResult } from './context';
 import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, EVENT_TOKENS, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, STEP_EVENT_TYPES, templateValues, tokensIn, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
 
@@ -194,7 +195,7 @@ async function templateOf(deps: MessagesDeps, storeId: number, key: string, chan
 }
 
 /** The shop's address for links: the store's primary domain, else the preview host (`system.stagingHost`). */
-async function linkHost(deps: MessagesDeps, storeId: number): Promise<string | null> {
+export async function linkHost(deps: Pick<MessagesDeps, 'db' | 'settings'>, storeId: number): Promise<string | null> {
   const d = await deps.db.storeDomain.findFirst({ where: { storeId, isPrimaryHost: true, archivedAt: null }, select: { hostname: true } });
   return d?.hostname ?? (await deps.settings.value('system.stagingHost')) ?? null;
 }
@@ -315,7 +316,7 @@ async function keptOrderOf(deps: MessagesDeps, c: RunContext, row: Row, o: Order
   return near ? { number: near.number } : null;
 }
 
-const ROW_SELECT = { id: true, orderId: true, step: true, channel: true, attempts: true, sendAfter: true, dedupeKey: true, eventId: true, customerId: true, recipient: true, templateId: true } satisfies Prisma.NotificationLogSelect;
+const ROW_SELECT = { id: true, orderId: true, step: true, channel: true, attempts: true, sendAfter: true, dedupeKey: true, eventId: true, customerId: true, recipient: true, templateId: true, broadcastId: true } satisfies Prisma.NotificationLogSelect;
 export { ROW_SELECT };
 export type Row = Prisma.NotificationLogGetPayload<{ select: typeof ROW_SELECT }>;
 
@@ -404,6 +405,7 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   const step = row.step as JourneyStep;
   if (!c.master) return close(deps, c, row, 'SKIPPED', 'MASTER_OFF').then(() => 'SKIPPED');
   if (row.step === CRM_MESSAGE_STEP) return sendJourneyMessage(deps, c, row, opts);
+  if (row.step === CRM_EMAIL_STEP) return sendOfferEmail(deps, c, row, opts);
   const cfg = await wordsKeyOf(deps, c, row);
   if (!cfg || !row.orderId) return close(deps, c, row, 'SKIPPED', 'UNKNOWN_STEP').then(() => 'SKIPPED');
   if (!cfg.on) return close(deps, c, row, 'SKIPPED', 'STEP_OFF').then(() => 'SKIPPED');
@@ -596,6 +598,86 @@ async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, o
   return 'FAILED';
 }
 
+/** PR 290 — how long a paused e-mail send's queued e-mails wait before they are looked at again. */
+const PAUSE_WAIT_MS = 15 * 60_000;
+
+/**
+ * PR 290 — one e-mail of an e-mail send (Messages › E-mail; queued by @extas/customers with its send's id, step
+ * `crmEmail`): an offer, so only with the customer's yes for offer e-mails and never after his stop; never in the quiet
+ * hours; at most `customers.email.perCustomerPerWeek` in seven days (BLOCKED `CAP_WEEK`); its words are the send's own
+ * (a snapshot), as plain text and HTML, always with the unsubscribe line and the one-click unsubscribe header, the
+ * template's links counted and the open pixel only while the owner's switches are on. A paused send waits; a cancelled
+ * one, or e-mail marketing switched off, skips it. Logged, tried again and costed like every message; the send's
+ * sent and failed counts follow.
+ */
+async function sendOfferEmail(deps: MessagesDeps, c: RunContext, row: Row, opts: SendOptions): Promise<SendOutcome> {
+  const b = row.broadcastId ? await deps.db.broadcast.findFirst({ where: { id: row.broadcastId, storeId: c.storeId }, select: { id: true, status: true, subject: true, body: true, locale: true } }) : null;
+  if (!b || b.status === 'CANCELLED') return close(deps, c, row, 'SKIPPED', 'CANCELLED').then(() => 'SKIPPED');
+  const cfg = await setting(deps, c.storeId, 'customers.email');
+  if (!cfg.enabled) return close(deps, c, row, 'SKIPPED', 'SWITCHED_OFF').then(() => 'SKIPPED');
+  if (b.status === 'PAUSED') {
+    await deps.db.notificationLog.update({ where: { id: row.id }, data: { sendAfter: new Date(c.now.getTime() + PAUSE_WAIT_MS), reason: 'PAUSED' } });
+    return 'WAITING';
+  }
+  const until = quietUntil(c.quiet, c.now, c.timeZone);
+  if (until) {
+    await deps.db.notificationLog.update({ where: { id: row.id }, data: { sendAfter: until, reason: 'QUIET_HOURS' } });
+    return 'WAITING';
+  }
+  const who = row.customerId ? await deps.db.customer.findFirst({ where: { id: row.customerId, storeId: c.storeId }, select: { name: true, phone: true, erasedAt: true } }) : null;
+  if (!who || who.erasedAt || !row.recipient) return close(deps, c, row, 'SKIPPED', 'NO_RECIPIENT').then(() => 'SKIPPED');
+  const to = row.recipient;
+  const refused = await consentBlock(deps.db, c.storeId, { offerSteps: [CRM_EMAIL_STEP] as unknown as ConsentSettings['offerSteps'] }, { channel: 'EMAIL', phone: who.phone, customerId: row.customerId, step: CRM_EMAIL_STEP });
+  if (refused) return close(deps, c, row, 'SKIPPED', refused, { recipient: to }).then(() => 'SKIPPED');
+  const week = await deps.db.notificationLog.count({ where: { storeId: c.storeId, customerId: row.customerId, step: CRM_EMAIL_STEP, status: { in: ['SENT', 'DELIVERED'] }, sentAt: { gte: new Date(c.now.getTime() - 7 * 86_400_000) } } });
+  if (week >= cfg.perCustomerPerWeek) return close(deps, c, row, 'BLOCKED_BY_GUARD', 'CAP_WEEK', { recipient: to }).then(() => 'BLOCKED');
+  if (!c.host) return close(deps, c, row, 'SKIPPED', 'NO_LINK', { recipient: to }).then(() => 'SKIPPED');
+  if (!b.body?.trim() || !b.subject?.trim()) return close(deps, c, row, 'SKIPPED', 'NO_TEMPLATE', { recipient: to }).then(() => 'SKIPPED');
+  const lang = b.locale === 'en' ? 'en' : 'bn';
+  const home = `https://${c.host}/`;
+  const currency = await setting(deps, c.storeId, 'store.currency');
+  const input: RenderInput = { storeName: c.storeName, customerName: who.name?.trim() || '', orderNumber: '', senderName: '', currency, dueMinor: 0, link: home, amountLine: c.amountLine[lang], exactAmount: null };
+  // `{link}` is the shop's home (the offer e-mail's own word; email-html.ts counts the same links)
+  const words = render(b.body.replaceAll('{link}', home), b.subject.replaceAll('{link}', home), input);
+  if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: to, locale: lang }).then(() => 'SKIPPED');
+  const urls = emailUrls(c.host, row.id);
+  const parts = { text: words.text, links: emailLinks(b.body, home), unsubscribeLine: cfg.unsubscribeLine[lang], urls, trackOpens: cfg.trackOpens, trackClicks: cfg.trackClicks, lang } as const;
+  const attempt = row.attempts + 1;
+  let sender = c.senders.get('EMAIL') ?? null;
+  let r: SendResult;
+  try {
+    if (!sender) {
+      sender = await deps.sender(c.storeId, 'EMAIL');
+      c.senders.set('EMAIL', sender);
+    }
+    r = await sender.send({ to, text: emailText(parts), subject: words.subject, purpose: CRM_EMAIL_STEP, html: emailHtml(parts), headers: emailHeaders(urls) });
+  } catch (e) {
+    r = { ok: false, error: `${sender ? '' : 'NO_SENDER: '}${errorText(e)}` };
+  }
+  const tried = { recipient: to, locale: lang, provider: sender?.provider ?? null, mode: sender?.mode ?? null, attempts: attempt } satisfies Prisma.NotificationLogUpdateInput;
+  const tryData = { storeId: c.storeId, notificationLogId: row.id, attempt, channel: row.channel, provider: sender?.provider ?? null, mode: sender?.mode ?? null, retriedById: opts.retriedById ?? null };
+  if (r.ok) {
+    const messageId = r.messageId;
+    const costMinor = sender?.mode === 'MOCK' ? null : (r.costMinor ?? null);
+    await deps.db.$transaction(async (tx) => {
+      await tx.notificationLog.update({ where: { id: row.id }, data: { ...tried, status: 'SENT', providerMessageId: messageId, sentAt: c.now, sendAfter: null, reason: null, error: null, costMinor } });
+      await tx.notificationAttempt.create({ data: { ...tryData, ok: true, providerMessageId: messageId, costMinor } });
+      await tx.broadcast.update({ where: { id: b.id }, data: { sentCount: { increment: 1 }, ...(costMinor ? { costMinor: { increment: costMinor } } : {}) } });
+      if (costMinor !== null && costMinor > 0) await recordSendCost(tx, { storeId: c.storeId, channel: row.channel, costMinor, currency, logId: row.id, template: CRM_EMAIL_STEP, provider: sender?.provider ?? null, at: c.now });
+    }, TX);
+    return 'SENT';
+  }
+  const error = r.error.slice(0, 300);
+  await deps.db.notificationAttempt.create({ data: { ...tryData, ok: false, error } });
+  if (!r.unreachable && !opts.manual && attempt < c.retry.maxAttempts) {
+    await deps.db.notificationLog.update({ where: { id: row.id }, data: { ...tried, status: 'QUEUED', sendAfter: new Date(c.now.getTime() + retryDelayMinutes(c.retry.delaysMinutes, attempt + 1) * 60_000), reason: 'RETRY', error } });
+    return 'RETRYING';
+  }
+  await close(deps, c, row, 'FAILED', r.unreachable ? 'UNREACHABLE' : error.startsWith('NO_SENDER') ? 'NO_SENDER' : 'SEND_FAILED', { ...tried, error });
+  await deps.db.broadcast.update({ where: { id: b.id }, data: { failedCount: { increment: 1 } } });
+  return 'FAILED';
+}
+
 /** PR 298 — the answer to a stop or start: a message of no order, filled with the shop's own name only. */
 export const CONSENT_REPLY = 'consentReply';
 /** PR 505 — the auto-reply to a customer who wrote to the shop (`messages.autoReply`). */
@@ -659,8 +741,8 @@ export async function sendDue(deps: MessagesDeps, storeId: number): Promise<Send
   const c = await runContext(deps, storeId);
   const engine = await setting(deps, storeId, 'messages.engine');
   const rows = await deps.db.notificationLog.findMany({
-    // PR 289: a customer journey's message has no order (its step says what it is)
-    where: { storeId, status: 'QUEUED', sendAfter: { lte: c.now }, step: { not: null }, OR: [{ orderId: { not: null } }, { step: CRM_MESSAGE_STEP }] },
+    // PR 289, 290: a customer journey's message and an e-mail send's e-mail have no order (the step says what it is)
+    where: { storeId, status: 'QUEUED', sendAfter: { lte: c.now }, step: { not: null }, OR: [{ orderId: { not: null } }, { step: { in: [CRM_MESSAGE_STEP, CRM_EMAIL_STEP] } }] },
     orderBy: [{ sendAfter: 'asc' }, { id: 'asc' }],
     take: engine.batchSize,
     select: ROW_SELECT,

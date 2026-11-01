@@ -12,7 +12,7 @@
 // A later stage adds its job here with its key, queue and function.
 import { ERP_WEBHOOK_JOB, INVENTORY_QUEUE, processErpWebhook, runInventoryJob, type InventoryJob } from '@extas/inventory';
 import type { JobDeps } from './context';
-import { runJourneys } from '@extas/customers';
+import { runEmailSends, runJourneys } from '@extas/customers';
 import { runMessages } from '@extas/messages';
 import { indexStore } from '@extas/search';
 import { sweepPending } from '@extas/payments';
@@ -160,8 +160,10 @@ const messagesJob: JobDefinition<{ storeId: number }> = {
     if (!m) return { ok: true, stats: { skipped: 'no senders' } };
     // PR 289: the automations queue their due messages first (nothing while `customers.journeys` is off)
     const j = await runJourneys({ db: deps.db, settings: deps.settings, now: deps.now }, p.storeId);
+    // PR 290: the e-mail sends queue their next people at the throttle (nothing while `customers.email` is off)
+    const e = await runEmailSends({ db: deps.db, settings: deps.settings, now: deps.now }, p.storeId);
     const r = await runMessages(m, p.storeId);
-    return { ok: true, stats: { ...(r ? compactStats(r) : { skipped: 'messages off' }), ...(j ? { journeys: `${j.enrolled}/${j.moved}/${j.queued}` } : {}) } };
+    return { ok: true, stats: { ...(r ? compactStats(r) : { skipped: 'messages off' }), ...(j ? { journeys: `${j.enrolled}/${j.moved}/${j.queued}` } : {}), ...(e ? { email: `${e.started}/${e.queued}/${e.finished}` } : {}) } };
   },
 };
 
