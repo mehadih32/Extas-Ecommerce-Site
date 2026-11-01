@@ -49,6 +49,8 @@ export const SUPPORT_ERROR_CODES = [
   // CN-020 (3): "Call me" at checkout is switched off, or this number asked too often today
   'CALLBACK_OFF',
   'TOO_MANY',
+  // PR 75 follow-up: the contact page's form is switched off
+  'CONTACT_FORM_OFF',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 

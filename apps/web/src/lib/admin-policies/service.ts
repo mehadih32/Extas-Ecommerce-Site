@@ -10,7 +10,7 @@ import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { formatValue, isLive, langContext, langOf, loadRules, policyTokenState, textContext, tokensIn, WINDOW_TOKENS, type PolicyTokenState, type Rule, type WindowedParams } from '@extas/rules';
-import { hasStandIn, HELP_PAGES, pagesHelpSchema, pagesTextSchema, pageWordsSchema, storeTarget, type HelpSlug, type PagesHelpSettings, type PagesTextSettings } from '@extas/settings';
+import { contactFormSchema, hasStandIn, HELP_PAGES, pagesHelpSchema, pagesTextSchema, pageWordsSchema, storeTarget, type ContactFormSettings, type HelpSlug, type PagesHelpSettings, type PagesTextSettings } from '@extas/settings';
 import type { AppResolver } from '../settings';
 
 export interface PoliciesDeps {
@@ -74,9 +74,18 @@ export interface QuotableValue {
   live: boolean;
 }
 
+/** PR 75 follow-up — the contact page's form card (`pages.contactForm`), shown on the Contact page's tab. */
+export const FORM_CARD = 'contactForm' as const;
+export interface FormCard {
+  key: typeof FORM_CARD;
+  value: ContactFormSettings;
+  version: string;
+}
+
 export interface PoliciesView {
   pages: PolicyPage[];
   cards: Record<HelpSlug, PolicyCard>;
+  form: FormCard;
   /** The rules a page may read (every rule not archived), for the ticks. */
   ruleChoices: { value: string; label: string }[];
   values: QuotableValue[];
@@ -157,6 +166,11 @@ function pageOf(l: Loaded, slug: HelpSlug, lang: string, reach: { contact: boole
   return { slug, on: c.on, own, rules, details: c.details, tokens, shows: c.on && said };
 }
 
+async function formCard(deps: PoliciesDeps): Promise<FormCard> {
+  const value = await deps.resolver.value('pages.contactForm', { storeId: S });
+  return { key: FORM_CARD, value, version: versionOf(value) };
+}
+
 /** The page's data (`settings.read`). */
 export async function policiesView(deps: PoliciesDeps, who: PoliciesWho, lang: string): Promise<PoliciesView> {
   await requirePermission(deps.db, who.actor, 'settings.read', { storeId: S });
@@ -172,6 +186,7 @@ export async function policiesView(deps: PoliciesDeps, who: PoliciesWho, lang: s
   return {
     pages: POLICY_PAGES.map((s) => pageOf(l, s, lang, reach)),
     cards: Object.fromEntries(POLICY_PAGES.map((s) => [s, cardOf(l, s)])) as Record<HelpSlug, PolicyCard>,
+    form: await formCard(deps),
     ruleChoices,
     values,
   };
@@ -233,5 +248,22 @@ export async function savePolicyPage(deps: PoliciesDeps, who: PoliciesWho, input
   if (changed.some((f) => (WORD_FIELDS as readonly string[]).includes(f))) await deps.resolver.set('pages.text', text, storeTarget(S), meta);
   // his words are owner data: the audit row names the page and the fields, never the words
   await audit(deps.db, who.actor, { storeId: S, action: 'policies.page.save', entityType: 'Setting', entityId: slug, after: { page: slug, changed } }, who.ctx);
+  return policiesView(deps, who, lang);
+}
+
+/**
+ * PR 75 follow-up — saves the contact page's form card (`settings.write`): on or off, how many messages one number may
+ * send a day, the longest message. The audit row keeps the new values (no owner words in it).
+ */
+export async function saveContactForm(deps: PoliciesDeps, who: PoliciesWho, input: unknown, lang: string): Promise<PoliciesView> {
+  await requirePermission(deps.db, who.actor, 'settings.write', { storeId: S });
+  if (!isObj(input) || input.key !== FORM_CARD) throw new PoliciesError('INVALID_INPUT', 400, ['key']);
+  const before = await formCard(deps);
+  if (input.version !== undefined && input.version !== before.version) throw new PoliciesError('STALE', 409, ['version'], { version: before.version });
+  const ok = contactFormSchema.safeParse(input.value);
+  if (!ok.success) throw new PoliciesError('INVALID_INPUT', 400, ok.error.issues.map((i) => i.path.join('.') || 'value'));
+  if (versionOf(ok.data) === before.version) return policiesView(deps, who, lang);
+  await deps.resolver.set('pages.contactForm', ok.data, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: 'Settings › Policies & texts › Contact form' });
+  await audit(deps.db, who.actor, { storeId: S, action: 'policies.contactForm.save', entityType: 'Setting', entityId: 'pages.contactForm', before: { ...before.value }, after: { ...ok.data } }, who.ctx);
   return policiesView(deps, who, lang);
 }

@@ -130,4 +130,22 @@ describe.skipIf(!HAS_TEST_DB)('Settings › Policies & texts on PostgreSQL (PR 3
     ]);
     expect(JSON.stringify(rows.map((x) => x.after))).not.toContain('Exchange within');
   });
+
+  it('PR 75 follow-up: the contact form card starts off, saves by its own key, refuses a bad number and a stale save', async () => {
+    const g = await send('GET');
+    expect(g.a.view.form.value).toEqual({ enabled: false, perPhonePerDay: 3, maxChars: 1000 });
+    const res = await policiesHandler(call('GET', { cookie: owner }), deps);
+    expect(((await res.json()) as { cards: Record<string, unknown> }).cards.contactForm).toEqual(g.a.view.form);
+    const card = g.a.view.form;
+    expect((await send('PUT', { key: 'contactForm', value: { ...card.value, perPhonePerDay: 0 }, version: card.version })).a.error).toBe('INVALID_INPUT');
+    const ok = await send('PUT', { key: 'contactForm', value: { ...card.value, enabled: true, maxChars: 500 }, version: card.version });
+    expect(ok.status).toBe(200);
+    expect(ok.a.view.form.value).toEqual({ enabled: true, perPhonePerDay: 3, maxChars: 500 });
+    expect(await deps.resolver.value('pages.contactForm', { storeId: MOTHER_STORE_ID })).toEqual({ enabled: true, perPhonePerDay: 3, maxChars: 500 });
+    // the help pages' cards are untouched
+    expect(ok.a.view.cards.contact).toEqual(g.a.view.cards.contact);
+    expect((await send('PUT', { key: 'contactForm', value: card.value, version: card.version })).status).toBe(409);
+    const row = await t.prisma.auditLog.findFirstOrThrow({ where: { action: 'policies.contactForm.save' } });
+    expect(row.after).toEqual({ enabled: true, perPhonePerDay: 3, maxChars: 500 });
+  });
 });

@@ -29,6 +29,14 @@
 .shop .pg-ch b { display: block; font-size: 14.5px; overflow-wrap: anywhere; }
 .shop .pg-ch span span { font-size: 12.5px; color: var(--text2); }
 .shop .pg-before p { margin: 6px 0 0; }
+/* PR 75 follow-up — the contact page's form (demo pg_contact): the form first, the ways to reach us beside it */
+.shop .pg-contents { display: contents; }
+.shop .pg-side { display: grid; gap: 12px; align-content: start; }
+.shop .pg-form-f { display: grid; gap: 12px; margin-top: 12px; }
+.shop .pg-form textarea.input { resize: vertical; min-height: 104px; font: inherit; }
+.shop .pg-form-bad { color: var(--sale); }
+.shop .pg-form-bad:not(:empty) { margin-top: 6px; }
+.shop .pg-form p { margin: 8px 0 12px; }
 .shop .pg-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .shop .pg-in { color: var(--brand) !important; font-weight: 600; text-decoration: underline; display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; }
 .shop .pg-body { margin-top: 0; }

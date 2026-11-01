@@ -12,6 +12,8 @@ import { hrefIn } from '@/lib/shop/lang';
 import { telHref, waHref } from '@/lib/shop/links';
 import { ROUTES } from '@/lib/shop/routes';
 import { Icon, WaGlyph } from '../Icon';
+import { contactFormWords } from '@/lib/shop/contact-form-words';
+import { ContactForm } from './ContactForm';
 
 function Blocks({ blocks }: { blocks: TextBlock[] }) {
   return (
@@ -44,6 +46,8 @@ export function HelpPage({ c, slug, data }: { c: ShopContext; slug: HelpSlug; da
   const tel = telHref(facts.phone);
   const firstHelp = topics[0]?.href ?? hrefIn(c.lang, ROUTES.help('faq'));
   const rules = (['delivery', 'exchange'] as const).filter((s) => shown.has(s) && s !== slug);
+  // PR 75 follow-up: the contact page's form, first in the grid as in the demo, when the shop switched it on
+  const form = slug === 'contact' && data.form.on ? contactFormWords(t) : null;
 
   const page = (
     <div className="pg" data-testid="help-page" data-help={slug}>
@@ -76,43 +80,46 @@ export function HelpPage({ c, slug, data }: { c: ShopContext; slug: HelpSlug; da
         </div>
       ) : null}
 
-      {m.channels.length ? (
+      {m.channels.length || form ? (
         <div className="pg-contact">
-          <div className="pg-chs">
-            {m.channels.map((ch) => {
-              const inner = (
-                <>
-                  <span className="ic">{ch.id === 'whatsapp' ? <WaGlyph size={19} /> : <Icon name={ch.icon} size={19} />}</span>
-                  <span>
-                    <b>{ch.title}</b>
-                    <span>{ch.sub}</span>
-                  </span>
-                </>
-              );
-              return ch.href ? (
-                <a key={ch.id} className="pg-ch" href={ch.href} data-testid={`help-ch-${ch.id}`} {...(ch.external ? { target: '_blank', rel: 'noopener' } : {})}>
-                  {inner}
-                </a>
-              ) : (
-                <div key={ch.id} className="pg-ch" data-testid={`help-ch-${ch.id}`}>
-                  {inner}
-                </div>
-              );
-            })}
-          </div>
-          {rules.length ? (
-            <div className="card pg-before">
-              <div className="h3">{t('helpPage.before')}</div>
-              <p className="small text2">{t('helpPage.beforeText')}</p>
-              <div className="pg-links">
-                {rules.map((s) => (
-                  <a key={s} className="pg-in" href={hrefIn(c.lang, ROUTES.help(s))}>
-                    {titles[s]}
+          {form ? <ContactForm words={form} lang={c.lang} maxChars={data.form.maxChars} /> : null}
+          <div className={form ? 'pg-side' : 'pg-contents'}>
+            <div className="pg-chs">
+              {m.channels.map((ch) => {
+                const inner = (
+                  <>
+                    <span className="ic">{ch.id === 'whatsapp' ? <WaGlyph size={19} /> : <Icon name={ch.icon} size={19} />}</span>
+                    <span>
+                      <b>{ch.title}</b>
+                      <span>{ch.sub}</span>
+                    </span>
+                  </>
+                );
+                return ch.href ? (
+                  <a key={ch.id} className="pg-ch" href={ch.href} data-testid={`help-ch-${ch.id}`} {...(ch.external ? { target: '_blank', rel: 'noopener' } : {})}>
+                    {inner}
                   </a>
-                ))}
-              </div>
+                ) : (
+                  <div key={ch.id} className="pg-ch" data-testid={`help-ch-${ch.id}`}>
+                    {inner}
+                  </div>
+                );
+              })}
             </div>
-          ) : null}
+            {rules.length ? (
+              <div className="card pg-before">
+                <div className="h3">{t('helpPage.before')}</div>
+                <p className="small text2">{t('helpPage.beforeText')}</p>
+                <div className="pg-links">
+                  {rules.map((s) => (
+                    <a key={s} className="pg-in" href={hrefIn(c.lang, ROUTES.help(s))}>
+                      {titles[s]}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
 

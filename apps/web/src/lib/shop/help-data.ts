@@ -10,10 +10,12 @@ export interface HelpData {
   set: PagesHelpSettings;
   models: Record<HelpSlug, HelpModel>;
   facts: HelpFacts;
+  /** PR 75 follow-up — the contact page's "Send us a message" form (`pages.contactForm`, off as shipped). */
+  form: { on: boolean; maxChars: number };
 }
 
 export async function loadHelp(c: ShopContext): Promise<HelpData> {
-  const s = await readPageSettings(['pages.help', 'pages.text', 'contact.address', 'legal.registeredName'] as const, c.storeId);
+  const s = await readPageSettings(['pages.help', 'pages.text', 'contact.address', 'legal.registeredName', 'pages.contactForm'] as const, c.storeId);
   const set = s['pages.help'];
   const pick = (l: { en: string; bn: string } | null | undefined) => (l ? (c.lang === 'bn' ? l.bn : l.en) || l.en : null);
   const facts: HelpFacts = {
@@ -46,5 +48,8 @@ export async function loadHelp(c: ShopContext): Promise<HelpData> {
   // PR 384: the owner's `{rule-key.param}` tokens read the live rules; a line that cannot be filled is left out
   const text = fillPagesText(s['pages.text'], await policyFiller({ storeId: c.storeId, locale: c.lang }));
   const models = Object.fromEntries(HELP_SLUGS.map((slug, i) => [slug, helpModel({ slug, set, text, lang: c.lang, t: c.t, rules: rules[i]!, facts })])) as Record<HelpSlug, HelpModel>;
-  return { set, models, facts };
+  const form = { on: s['pages.contactForm'].enabled, maxChars: s['pages.contactForm'].maxChars };
+  // PR 75 follow-up: the form is something true to say, so a shown contact page with it is never "Coming soon"
+  if (form.on && set.pages.contact.on && models.contact.soon) models.contact = { ...models.contact, soon: false };
+  return { set, models, facts, form };
 }
