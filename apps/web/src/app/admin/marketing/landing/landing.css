@@ -23,3 +23,17 @@
 .adm2 textarea.a2-inp{min-height:88px;resize:vertical}
 .adm2 .lp-views .a2-view{min-width:44px;justify-content:center}
 .adm2 .lp-part>.a2-swl{flex:1}
+/* S13 · PR 255 — templates: the builder's "Start from a template" picks, the Templates page's tiles and the parts library. */
+.adm2 .lp-tpls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(min-width:1024px){.adm2 .lp-tpls{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.adm2 .lp-tpl{display:grid;gap:3px;align-content:start;text-align:left;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit;cursor:pointer;min-width:0;overflow-wrap:anywhere}
+.adm2 .lp-tpl.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.adm2 .lp-tpl:disabled{cursor:default;opacity:.7}
+.adm2 .lp-tlink{display:inline-flex;align-items:center;min-height:44px;margin-top:4px}
+.adm2 .lp-tiles{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+@media(min-width:768px){.adm2 .lp-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1366px){.adm2 .lp-tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.adm2 .lp-tile{display:grid;gap:6px;align-content:start;padding:14px;min-width:0;overflow-wrap:anywhere}
+.adm2 .lp-chips{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:2px 0;padding:0}
+.adm2 details.lp-more>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--ink2)}
+.adm2 td .lp-pn{display:inline-flex;vertical-align:middle}

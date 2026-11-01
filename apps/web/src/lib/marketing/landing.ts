@@ -15,6 +15,7 @@ import { audit, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
 import { landingSettingsSchema, storeTarget, type LandingSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
+import { templateUsable } from './landing-templates';
 import { LANDING_ACTIONS, LANDING_SECTIONS, landingInputSchema, sectionsOf, sectionType, stateOf, type LandingAction, type LandingSection, type PageState } from './landing-model';
 
 const S = MOTHER_STORE_ID;
@@ -63,6 +64,8 @@ export interface LandingPageView {
   titleBn: string | null;
   productId: string | null;
   campaignId: string | null;
+  /** PR 255: the template the page started from (null = none). */
+  templateKey: string | null;
   state: PageState;
   sections: LandingSection[];
   version: string;
@@ -130,7 +133,7 @@ export async function landingOne(db: Db, id: string, storeId: number = S): Promi
   if (!UUID.test(id)) return null;
   const p = await db.page.findFirst({
     where: { id, storeId, kind: 'LANDING' },
-    select: { id: true, slug: true, titleEn: true, titleBn: true, productId: true, campaignId: true, status: true, archivedAt: true, updatedAt: true, sections: { select: { type: true, isVisible: true, config: true, archivedAt: true } } },
+    select: { id: true, slug: true, titleEn: true, titleBn: true, productId: true, campaignId: true, templateKey: true, status: true, archivedAt: true, updatedAt: true, sections: { select: { type: true, isVisible: true, config: true, archivedAt: true } } },
   });
   if (!p) return null;
   const counts = await orderCounts(db, storeId, [p.id]);
@@ -141,6 +144,7 @@ export async function landingOne(db: Db, id: string, storeId: number = S): Promi
     titleBn: p.titleBn,
     productId: p.productId,
     campaignId: p.campaignId,
+    templateKey: p.templateKey,
     state: stateOf(p),
     sections: sectionsOf(p.sections),
     version: pageVersion(p.updatedAt),
@@ -165,12 +169,14 @@ export async function saveLanding(db: Db, who: LandingWho, id: string | null, in
   const ok = landingInputSchema.safeParse(input);
   if (!ok.success) throw new LandingError('INVALID_INPUT', 400, [...new Set(ok.error.issues.map((i) => String(i.path[0] ?? 'value')))]);
   const d = ok.data;
-  const [product, campaign] = await Promise.all([
+  const [product, campaign, template] = await Promise.all([
     db.product.findFirst({ where: { id: d.productId, storeId, archivedAt: null }, select: { id: true } }),
     d.campaignId ? db.campaign.findFirst({ where: { id: d.campaignId, storeId }, select: { id: true } }) : Promise.resolve(null),
+    !id && d.templateKey ? templateUsable(db, d.templateKey, storeId) : Promise.resolve(true),
   ]);
   if (!product) throw new LandingError('INVALID_INPUT', 400, ['productId']);
   if (d.campaignId && !campaign) throw new LandingError('INVALID_INPUT', 400, ['campaignId']);
+  if (!template) throw new LandingError('INVALID_INPUT', 400, ['templateKey']);
   const before = id ? await landingOne(db, id, storeId) : null;
   if (id && !before) throw new LandingError('NOT_FOUND', 404);
   if (before && before.version !== d.version) throw new LandingError('STALE', 409);
@@ -179,7 +185,7 @@ export async function saveLanding(db: Db, who: LandingWho, id: string | null, in
   let pageId: string;
   try {
     pageId = await db.$transaction(async (tx) => {
-      const page = before ? await tx.page.update({ where: { id: before.id }, data: fields, select: { id: true } }) : await tx.page.create({ data: { storeId, kind: 'LANDING', status: 'DRAFT', ...fields }, select: { id: true } });
+      const page = before ? await tx.page.update({ where: { id: before.id }, data: fields, select: { id: true } }) : await tx.page.create({ data: { storeId, kind: 'LANDING', status: 'DRAFT', templateKey: d.templateKey, ...fields }, select: { id: true } });
       const rows = await tx.pageSection.findMany({ where: { pageId: page.id, archivedAt: null }, select: { id: true, type: true } });
       for (const [position, key] of LANDING_SECTIONS.entries()) {
         const s = d.sections[key];
