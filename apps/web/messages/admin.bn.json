@@ -115,7 +115,8 @@
     "healthSmoke": "স্মোক টেস্ট",
     "healthHistory": "পরীক্ষার ইতিহাস",
     "healthFixes": "অনুমতির অপেক্ষায়",
-    "aiAudit": "চেকলিস্ট অডিট"
+    "aiAudit": "চেকলিস্ট অডিট",
+    "supportAnalytics": "সাপোর্টের হিসাব"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

@@ -212,6 +212,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'riderIssues', pages: [{ href: '/admin/support/rider-issues', perm: 'support.read', keys: ['supportRiderIssues'] }] },
       // S22 · PR 435 — the support app: install it, notifications on this device (each person their own).
       { id: 'app', pages: [{ href: '/admin/support/app', perm: 'support.read', keys: ['supportApp'] }] },
+      // S22 · PR 436 — support analytics: per channel and per person, first answer, solved in, chat → order (B4.13).
+      { id: 'analytics', pages: [{ href: '/admin/support/analytics', perm: 'support.read', keys: ['supportAnalytics'] }] },
     ],
   },
   {

@@ -104,7 +104,8 @@
         "inbox": "Inbox",
         "settings": "Support settings",
         "riderIssues": "Rider issues",
-        "app": "Support app"
+        "app": "Support app",
+        "analytics": "Analytics"
       },
       "money": {
         "books": "Books",

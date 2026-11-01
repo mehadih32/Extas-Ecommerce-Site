@@ -115,7 +115,8 @@
     "healthSmoke": "Smoke runs",
     "healthHistory": "Run history",
     "healthFixes": "Fixes to approve",
-    "aiAudit": "Checklist audit"
+    "aiAudit": "Checklist audit",
+    "supportAnalytics": "Support analytics"
   },
   "login": {
     "metaTitle": "Admin sign-in",

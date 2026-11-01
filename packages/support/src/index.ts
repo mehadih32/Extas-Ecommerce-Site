@@ -49,6 +49,11 @@
 //                 person on the support block list or taking them off (support.block; nothing deleted)
 //   push.ts       PR 435: the support app's push notifications — who is told on which device, with what words
 //
+// PR 436: support analytics.
+//   analytics.ts  the report per channel and per employee (and EXTAS AI): chats, answers, tickets, first-answer and
+//                 solution minutes, late tickets, chat → order conversion, orders and their delivered value, follow-ups;
+//                 analytics-pure.ts: the medians, rates and the late rule.
+//
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
 export * from './channels';
@@ -81,3 +86,6 @@ export * from './followups';
 export * from './privacy';
 // PR 435 — the support app's push notifications (a new message, a chat given to someone).
 export * from './push';
+// PR 436 — support analytics: per channel and per employee, conversion, first-answer and solution times.
+export * from './analytics-pure';
+export * from './analytics';
