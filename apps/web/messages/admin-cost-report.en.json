@@ -1,0 +1,71 @@
+{
+  "moneyCostReport": {
+    "metaTitle": "Costs report",
+    "title": "Costs report",
+    "sub": "Every cost row for any period, by day, month or year and by service or module, with the export. Only shows; nothing is paid from here.",
+    "quick": {
+      "label": "Period",
+      "today": "Today",
+      "week": "Last 7 days",
+      "month": "This month",
+      "lastMonth": "Last month",
+      "year": "This year",
+      "lastYear": "Last year"
+    },
+    "form": {
+      "label": "Choose the period",
+      "from": "From",
+      "to": "To",
+      "by": "Rows by",
+      "group": "Split by",
+      "show": "Show"
+    },
+    "by": { "day": "Day", "month": "Month", "year": "Year" },
+    "group": { "service": "Service", "module": "Module" },
+    "note": {
+      "future": "The period ends today: later days have no costs yet.",
+      "swapped": "From was after To, so the two days were turned round.",
+      "tooLong": "One report covers at most {days} days, so the period starts later.",
+      "byMonth": "More than {rows} days are shown month by month."
+    },
+    "total": {
+      "title": "Total",
+      "sub": "{from} to {to} · days in the shop's own time zone; a cost line entered for an earlier day counts on that day",
+      "rows": "{n} row(s)"
+    },
+    "groups": {
+      "service": "By service",
+      "module": "By module",
+      "none": "No cost in this period."
+    },
+    "buckets": {
+      "day": "Day by day",
+      "month": "Month by month",
+      "year": "Year by year",
+      "sub": "The newest first; the line under each shows what it was spent on"
+    },
+    "ai": {
+      "title": "AI this month",
+      "sub": "This store's AI cost rows against the monthly AI cap (the cap covers the whole installation)",
+      "spent": "Spent",
+      "cap": "Monthly cap",
+      "noCap": "No cap set",
+      "noCapHelp": "No monthly AI cap is set. The owner sets it in the AI settings; until then nothing is compared.",
+      "used": "{pct}% of the cap used",
+      "over": "Over the cap"
+    },
+    "export": {
+      "title": "Export",
+      "sub": "The same period as a CSV file for the accountant",
+      "table": "Download this table (.csv)",
+      "rows": "Download every row (.csv)"
+    },
+    "module": {
+      "messages": "Messages",
+      "books": "Daily cost lines",
+      "returns": "Returns",
+      "none": "Not named"
+    },
+    "ledgerLink": "Back to the cost ledger"
+  }
+}

@@ -84,6 +84,7 @@ import { erpRetailSettings } from './registry-erp-retail';
 import { privacySettings } from './registry-privacy';
 import { edgeSettings } from './registry-edge';
 import { healthSettings } from './registry-health';
+import { financeSettings } from './registry-finance';
 import { supportChannelSettings } from './registry-support-channels';
 import { bengaliSettings } from './registry-bengali';
 import { trackingSettings } from './registry-tracking';
@@ -1338,6 +1339,8 @@ export const registry = {
   ...contactFormSettings,
   // ---- S14 · CN-031 lane A · PR 287 onwards · CRM: saved segments (registry-crm.ts, versions 190–199). ----
   ...crmSettings,
+  // ---- S16 · CN-031 lane B · PR 347 · the costs report's longest period and day rows (registry-finance.ts, versions 160–169). ----
+  ...financeSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

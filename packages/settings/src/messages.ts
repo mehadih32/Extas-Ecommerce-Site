@@ -147,6 +147,8 @@ import privacyEn from '../messages/privacy.en.json';
 import edgeBn from '../messages/edge.bn.json';
 import edgeEn from '../messages/edge.en.json';
 import healthBn from '../messages/health.bn.json';
+import financeBn from '../messages/finance.bn.json';
+import financeEn from '../messages/finance.en.json';
 import healthEn from '../messages/health.en.json';
 // S16 · PR 343 — the cost ledger (registry v77).
 import costsBn from '../messages/costs.bn.json';
@@ -278,6 +280,9 @@ messages.bn = mergeMessages(messages.bn, attributionBn);
 // S02 · PR 75 follow-up (registry v231): the contact page's form.
 messages.en = mergeMessages(messages.en, contactFormEn);
 messages.bn = mergeMessages(messages.bn, contactFormBn);
+// S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
+messages.en = mergeMessages(messages.en, financeEn);
+messages.bn = mergeMessages(messages.bn, financeBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {
