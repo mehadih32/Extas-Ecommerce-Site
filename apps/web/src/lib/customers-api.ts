@@ -26,6 +26,11 @@
 //   POST  /api/admin/customers/merges/:id/undo        {note} a split, or a "not the same person" taken back (customers.merge)
 //   GET   /api/admin/customers/:id/journey?page=      PR 288: the journey view, every touch newest first (customers.read;
 //                                                     off as shipped)
+//   GET   /api/admin/customers/:id/notes              PR 297: his tags and the team's notes (customers.read)
+//   POST  /api/admin/customers/:id/notes              {text, pinned?} "#tag" puts a tag on, anything else is a note
+//                                                     (customers.notes; audited)
+//   POST  /api/admin/customers/:id/notes/:noteId      {action: pin | unpin | archive} (customers.notes; never deleted)
+//   POST  /api/admin/customers/:id/tags/:tagId/remove a tag taken off (archived, never deleted; customers.notes)
 //   GET   /api/admin/customers/settings               PR 288: Customer settings, the CRM switches (customers.read)
 //   PUT   /api/admin/customers/settings               {key, value} one card saved (customers.settings; audited)
 //   GET   /api/admin/customers/segments               PR 287: the saved segments and the built-in ones, counted live
@@ -159,6 +164,29 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
         if (b === 'journey') return { journey: await cu.customerJourney(x.deps, x.who, a, x.url.searchParams.has('page') ? { page: Number(x.url.searchParams.get('page')) } : {}) };
         return { rows: await cu.customerLooks(x.deps, x.who, a) };
       });
+    }
+    // PR 297: tags and notes
+    if (b === 'notes') {
+      if (path.length === 2) {
+        if (m === 'GET') return handle(request, deps, 'customers.read', async (x) => ({ ...(await cu.tagsAndNotes(x.deps, x.who, a)) }));
+        if (m === 'POST') return handle(request, deps, 'customers.notes', async (x) => ({ result: await cu.addNoteOrTag(x.deps, x.who, a, await body(request)) }), 201);
+        return notAllowed();
+      }
+      if (path.length !== 3) return notFound();
+      if (!isUuid(c)) return badId('noteId');
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'customers.notes', async (x) => {
+        const action = (await body(request)).action;
+        if (action === 'archive') return { result: await cu.archiveNote(x.deps, x.who, a, c) };
+        if (action === 'pin' || action === 'unpin') return { result: await cu.pinNote(x.deps, x.who, a, c, action === 'pin') };
+        throw new cu.CustomersError('INVALID_INPUT', 'action is pin, unpin or archive', ['action']);
+      });
+    }
+    if (b === 'tags') {
+      if (path.length !== 4 || path[3] !== 'remove') return notFound();
+      if (!isUuid(c)) return badId('tagId');
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'customers.notes', async (x) => ({ result: await cu.untagCustomer(x.deps, x.who, a, c) }));
     }
     if (b === 'access' && path.length === 2) {
       if (m !== 'POST') return notAllowed();

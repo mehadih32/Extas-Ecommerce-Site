@@ -1,0 +1,13 @@
+/* S14 · PR 297 — "Tags & notes" on a customer's page: tag chips with a full-size take-off button, the box and its
+   button on one row, each note with its actions under it; the shell's tokens only. */
+.adm2 .cn-tags{flex-wrap:wrap;margin:10px 0}
+.adm2 .cn-tag{padding-right:2px}
+.adm2 .cn-x{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;margin:-12px -6px -12px 0;border:0;background:none;color:inherit;font-size:16px;cursor:pointer}
+.adm2 .cn-add{display:flex;flex-direction:column;gap:4px}
+.adm2 .cn-row{flex-wrap:nowrap}
+.adm2 .cn-row .a2-inp{flex:1;min-width:0}
+.adm2 .cn-notes{list-style:none;margin:12px 0 0;padding:0}
+.adm2 .cn-note{padding:10px 0;border-top:1px solid var(--ln);display:flex;flex-direction:column;gap:4px}
+.adm2 .cn-note.pinned{background:var(--goldbg);padding:10px;border-radius:8px;border-top:0;margin-bottom:6px}
+.adm2 .cn-body{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.adm2 .cn-acts{flex-wrap:wrap}

@@ -90,8 +90,13 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('erasure requests on Postg
     await f.t.prisma.journeyEnrollment.create({ data: { storeId: f.S, journeyId: j.id, customerId: b, status: 'ACTIVE', triggerRef: 'x' } });
     await f.t.prisma.notificationLog.create({ data: { storeId: f.S, customerId: a, channel: 'SMS', recipient: '+8801700003821', status: 'QUEUED', dedupeKey: 'crm:e382', step: 'crmJourney' } });
 
+    // PR 297: the team's notes on both his profiles (one pinned) hold his details
+    const n1 = await f.t.prisma.customerNote.create({ data: { storeId: f.S, customerId: a, body: 'Call +8801700003821 after 6 pm', pinned: true } });
+    const n2 = await f.t.prisma.customerNote.create({ data: { storeId: f.S, customerId: b, body: 'Gate 2, House 1' } });
+
     const done = await carryOutErasure(d, owner, { requestId: r.id, confirm: ` ${WORD} `, expected: WORD });
-    expect(done).toMatchObject({ profiles: 2, orders: 4, addresses: 1, voices: 2, request: { status: 'DONE' } });
+    expect(done).toMatchObject({ profiles: 2, orders: 4, addresses: 1, voices: 2, notes: 2, request: { status: 'DONE' } });
+    for (const n of [n1, n2]) expect(await f.t.prisma.customerNote.findUniqueOrThrow({ where: { id: n.id } })).toMatchObject({ body: '', pinned: false, archivedAt: expect.any(Date) });
     const p = f.t.prisma;
     for (const v of [onOrder, left]) expect(await p.checkoutVoice.findUniqueOrThrow({ where: { id: v.id } })).toMatchObject({ transcript: null, assetId: null });
     expect(await p.checkoutVoice.findUniqueOrThrow({ where: { id: someoneElse.id } })).toMatchObject({ transcript: 'House 1, Road 2', assetId: a3.id });

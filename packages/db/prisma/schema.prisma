@@ -7626,6 +7626,8 @@ model CustomerNote {
   archivedAt DateTime? @db.Timestamptz(3)
   createdAt  DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, customerId, createdAt])
 }
 
 /// @stage S14 · PR 297 — a customer tag.
@@ -7653,10 +7655,15 @@ model CustomerTagLink {
   customer   Customer    @relation(fields: [customerId], references: [id])
   tagId      String      @db.Uuid
   tag        CustomerTag @relation(fields: [tagId], references: [id])
+  /// PR 297 (migration 0144) — a tag taken off is archived, never deleted; putting it back clears this.
+  archivedAt DateTime?   @db.Timestamptz(3)
+  /// PR 297 — who put the tag on (or back on).
+  addedById  String?     @db.Uuid
   createdAt  DateTime    @default(now()) @db.Timestamptz(3)
   updatedAt  DateTime    @updatedAt @db.Timestamptz(3)
 
   @@unique([customerId, tagId])
+  @@index([storeId, tagId])
 }
 
 /// @stage S14 · B5.1 — "Who looked at this customer": every profile open, number copy and export.

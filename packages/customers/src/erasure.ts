@@ -13,7 +13,8 @@
 //     Support inbox chat contacts (the number and name kept on them, PR 427); the identity
 //     graph's links of his orders go; the spoken address of his checkouts (CN-020 (4), PR 117: the CheckoutVoice rows of
 //     his orders and of the browsers they came from) loses its words and its recording, the recording's library row
-//     archived (review R3 M1). An audit row records who and when (never what was erased).
+//     archived (review R3 M1); the team's notes on him (PR 297) lose their words and are archived (his tags stay: they
+//     are the shop's own labels). An audit row records who and when (never what was erased).
 //   - Kept on purpose, and said on the page: the message log and the consent history (the record of what was sent and
 //     agreed), the security log, fraud and courier-check records, and money and stock records.
 // A request can be cancelled while it waits.
@@ -107,6 +108,8 @@ export interface ErasureDone {
   addresses: number;
   /** Review R3 (M1): the spoken addresses cleared (their words and recordings). */
   voices: number;
+  /** PR 297: the team's notes on him, their words cleared and archived. */
+  notes: number;
 }
 
 /**
@@ -156,6 +159,8 @@ export async function carryOutErasure(deps: CustomersDeps, who: Who, input: unkn
       where: { storeId: who.storeId, id: { in: ids } },
       data: { name: null, phone: null, email: null, whatsappNumber: null, birthday: null, gender: null, genderInferred: false, smsMarketingConsent: null, whatsappMarketingConsent: null, erasedAt: now, archivedAt: now },
     });
+    // PR 297: a note may hold his details (a number, an address): its words go, the row stays archived
+    const notes = await tx.customerNote.updateMany({ where: { storeId: who.storeId, customerId: { in: ids } }, data: { body: '', pinned: false, archivedAt: now } });
     await tx.customerCredential.updateMany({ where: { customerId: { in: ids } }, data: { passwordHash: CLOSED_PASSWORD } });
     await tx.customerSession.updateMany({ where: { customerId: { in: ids }, revokedAt: null }, data: { revokedAt: now } });
     // PR 289: no automation goes on with him, and a journey message still waiting to go is dropped (PR 290: an offer
@@ -174,7 +179,7 @@ export async function carryOutErasure(deps: CustomersDeps, who: Who, input: unkn
       data: { status: ERASURE_STATUS.done, executedAt: now },
       select: { id: true, customerId: true, reason: true, status: true, requestedById: true, executedAt: true, createdAt: true },
     });
-    await audit(tx, who.actor, { storeId: who.storeId, action: 'customer.erasure.done', entityType: 'CustomerErasureRequest', entityId: req.id, after: { profiles: ids.length, orders: orderIds.length, addresses: addresses.count, voices: voices.length } }, who.ctx);
-    return { request, profiles: ids.length, orders: orderIds.length, addresses: addresses.count, voices: voices.length };
+    await audit(tx, who.actor, { storeId: who.storeId, action: 'customer.erasure.done', entityType: 'CustomerErasureRequest', entityId: req.id, after: { profiles: ids.length, orders: orderIds.length, addresses: addresses.count, voices: voices.length, notes: notes.count } }, who.ctx);
+    return { request, profiles: ids.length, orders: orderIds.length, addresses: addresses.count, voices: voices.length, notes: notes.count };
   }, TX);
 }
