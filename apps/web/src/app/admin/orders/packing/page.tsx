@@ -17,7 +17,14 @@
 // S20 · PR 410 (B1.3, B1.7): each order in the queue says which documents it already has (sticker ×n, invoice and its
 // revision, picking list, handover sheet printed or handed), and the day's order summary line (orders · pieces · line
 // items, the categories) sits above the steps — the same figures the picking list prints.
+// S20 · PR 411 (B1.3: "pick a date or a status, select orders, then act in this order: Book courier → Print stickers"):
+// the lists are narrowed by the shop day the order was placed (from / to) and by a document it still lacks (not booked,
+// no sticker, no invoice) — the step counts with it, the filter kept on every step and order link; every order on the
+// Pick, Pack and Ready steps has a tick, and the ticked ones are booked with one courier ("Book selected") or printed
+// in one press in packing order ("Print selected", what the owner's "What to print" says). Each act has its own
+// permission (delivery.book, fulfilment.print) and its own server checks; nothing happens without a press.
 import type { Metadata } from 'next';
+import './packing.css';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -27,6 +34,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { Act } from '@/components/admin/fulfil/Act';
 import { BookOne, PackButton, PhotoUpload, ReportIssue, ScanBox, StartAll, SwapPick, TickLine } from '@/components/admin/fulfil/Pack';
 import { PdfButton } from '@/components/admin/fulfil/Print';
+import { PackSelect, type PackSelectRow } from '@/components/admin/fulfil/PackSelect';
 import { invoiceHref } from '@/lib/admin-orders/model';
 import { formatNumber } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -46,6 +54,7 @@ const HERE = '/admin/orders/packing';
 const STEPS = ['pick', 'pack', 'ready', 'done'] as const;
 type Step = (typeof STEPS)[number];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = withFulfil(await adminView());
@@ -60,6 +69,12 @@ export default async function PackPage({ searchParams }: Props) {
   const sp = await searchParams;
   const step: Step = (STEPS as readonly string[]).includes(one(sp.step)) ? (one(sp.step) as Step) : 'pick';
   const wanted = UUID.test(one(sp.id)) ? one(sp.id) : null;
+  // PR 411: the date and document filter (a day typed wrong is left out; a span turned round is read the right way)
+  let from = DAY.test(one(sp.from)) ? one(sp.from) : '';
+  let to = DAY.test(one(sp.to)) ? one(sp.to) : '';
+  if (from && to && from > to) [from, to] = [to, from];
+  const docsFilter: sh.PackDocFilter = (sh.PACK_DOC_FILTERS as readonly string[]).includes(one(sp.docs)) ? (one(sp.docs) as sh.PackDocFilter) : 'all';
+  const filtered = !!from || !!to || docsFilter !== 'all';
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('fulfilment.read', deps, MOTHER_STORE_ID)]);
   const view = withFulfil(plain);
@@ -78,7 +93,7 @@ export default async function PackPage({ searchParams }: Props) {
   const sd = await shippingDeps(access.deps);
   const at = { storeId: MOTHER_STORE_ID };
   const [queue, check, photoCfg, weightCfg, picking] = await Promise.all([
-    sh.packingQueue(sd, who, { step }),
+    sh.packingQueue(sd, who, { step, ...(from ? { from } : {}), ...(to ? { to } : {}), docs: docsFilter }),
     sd.settings.value('fulfilment.packing.check', at),
     sd.settings.value('fulfilment.packing.photo', at),
     sd.settings.value('fulfilment.packing.weight', at),
@@ -124,6 +139,17 @@ export default async function PackPage({ searchParams }: Props) {
       if (!sh.isShippingError(e)) throw e;
     }
   }
+  // PR 411: the courier accounts for "Book selected" (only when a listed order is not booked yet)
+  const selectable = step !== 'done';
+  let bulkCouriers: { id: string; name: string }[] = [];
+  if (selectable && can('delivery.book') && queue.rows.some((r) => !r.shipmentId)) {
+    try {
+      const list = await sh.listCouriers(sd, who);
+      bulkCouriers = list.couriers.filter((c) => c.enabled && !c.archived).map((c) => ({ id: c.id, name: c.mode === 'MOCK' ? `${c.name} · ${t(d, 'ful.packing.pill.practice')}` : c.name }));
+    } catch (e) {
+      if (!sh.isShippingError(e)) throw e;
+    }
+  }
   // PR 183: the lines a packer can still raise a card on (one open card per line)
   const reportable = (order?.lines ?? [])
     .filter((l) => !order?.openIssues.some((i) => i.orderItemId === l.lineId))
@@ -139,7 +165,8 @@ export default async function PackPage({ searchParams }: Props) {
   }
   const fd: Dict = { ful: d.ful as Dict };
   const n = (x: number) => formatNumber(x, view.locale);
-  const href = (s: Step, id?: string) => `${HERE}?step=${s}${id ? `&id=${id}` : ''}`;
+  const keep = `${from ? `&from=${from}` : ''}${to ? `&to=${to}` : ''}${docsFilter !== 'all' ? `&docs=${docsFilter}` : ''}`;
+  const href = (s: Step, id?: string) => `${HERE}?step=${s}${keep}${id ? `&id=${id}` : ''}`;
   const codeWords = Object.fromEntries(sh.BOOKING_CODES.map((c) => [c, t(d, `courier.booking.code.${c}`)]));
   const lineOf = (orderItemId: string) => order?.lines.find((l) => l.lineId === orderItemId);
   const onOff = (on: boolean) => t(d, on ? 'ful.handover.on' : 'ful.handover.off');
@@ -172,6 +199,35 @@ export default async function PackPage({ searchParams }: Props) {
         <b>{t(d, 'ful.pack.summary')}</b> {t(d, 'ful.picking.sheet.counts', { orders: n(picking.summary.orders), pieces: n(picking.summary.pieces), lines: n(picking.summary.lineItems) })} ·{' '}
         {t(d, 'ful.picking.sheet.categories', { list: picking.summary.categories.map((c) => `${c.name ? (view.lang === 'bn' && c.nameBn) || c.name : t(d, 'ful.picking.sheet.noCategory')} ${n(c.pieces)}`).join(' · ') || '—' })}
       </p>
+      <form className="a2-card tight pf-form a2-mt12" method="get" action={HERE} role="search" aria-label={t(d, 'ful.pack.filter.title')} data-testid="pack-filter">
+        <input type="hidden" name="step" value={step} />
+        <label className="a2-xs">
+          {t(d, 'ful.pack.filter.from')}
+          <input className="a2-inp" type="date" name="from" defaultValue={from} data-testid="pack-filter-from" />
+        </label>
+        <label className="a2-xs">
+          {t(d, 'ful.pack.filter.to')}
+          <input className="a2-inp" type="date" name="to" defaultValue={to} data-testid="pack-filter-to" />
+        </label>
+        <label className="a2-xs">
+          {t(d, 'ful.pack.filter.docs')}
+          <select className="a2-sel" name="docs" defaultValue={docsFilter} data-testid="pack-filter-docs">
+            {sh.PACK_DOC_FILTERS.map((f) => (
+              <option key={f} value={f}>
+                {t(d, `ful.pack.filter.doc.${f}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit" className="a2-btn" data-testid="pack-filter-go">
+          {t(d, 'ful.pack.filter.go')}
+        </button>
+        {filtered ? (
+          <Link className="a2-btn ghost" href={`${HERE}?step=${step}`} data-testid="pack-filter-clear">
+            {t(d, 'ful.pack.filter.clear')}
+          </Link>
+        ) : null}
+      </form>
       <div className="a2-views a2-mt12" role="navigation" aria-label={t(d, 'ful.pack.stepsLabel')} data-testid="pack-steps">
         {STEPS.map((s, i) => (
           <Link key={s} className={`a2-view${s === step ? ' on' : ''}`} href={href(s)} aria-current={s === step ? 'page' : undefined} data-testid={`pack-step-${s}`}>
@@ -197,27 +253,34 @@ export default async function PackPage({ searchParams }: Props) {
       <div className="a2-row a2-r12" style={{ alignItems: 'start' }}>
         <div className="a2-q" data-testid="pack-queue">
           {queue.rows.length ? (
-            queue.rows.map((r) => (
-              <Link key={r.orderId} className={`a2-qi${r.orderId === order?.orderId ? ' on' : ''}`} href={href(step, r.orderId)} aria-current={r.orderId === order?.orderId ? 'true' : undefined} data-testid="pack-row">
-                <div>
-                  <b>
-                    {r.orderNumber} · {t(d, 'ful.pack.pcs', { n: n(r.pieces) })}
-                    {r.gift ? ` · ${t(d, 'ful.pack.gift')}` : ''}
-                  </b>
-                  <span>
-                    {[r.courierName ? `${r.courierName}${r.consignmentId ? ` · ${r.consignmentId}` : ''}` : t(d, 'ful.pack.notBooked'), r.openIssues ? t(d, 'ful.pack.issues', { n: n(r.openIssues) }) : null, r.photos ? t(d, 'ful.pack.photos', { n: n(r.photos) }) : null].filter(Boolean).join(' · ')}
-                  </span>
-                  <span data-testid="pack-docs">{docsLine(r.docs)}</span>
-                </div>
-              </Link>
-            ))
+            <PackSelect
+              dict={fd}
+              rows={queue.rows.map(
+                (r): PackSelectRow => ({
+                  orderId: r.orderId,
+                  orderNumber: r.orderNumber,
+                  href: href(step, r.orderId),
+                  on: r.orderId === order?.orderId,
+                  title: `${r.orderNumber} · ${t(d, 'ful.pack.pcs', { n: n(r.pieces) })}${r.gift ? ` · ${t(d, 'ful.pack.gift')}` : ''}`,
+                  sub: [r.courierName ? `${r.courierName}${r.consignmentId ? ` · ${r.consignmentId}` : ''}` : t(d, 'ful.pack.notBooked'), r.openIssues ? t(d, 'ful.pack.issues', { n: n(r.openIssues) }) : null, r.photos ? t(d, 'ful.pack.photos', { n: n(r.photos) }) : null].filter(Boolean).join(' · '),
+                  docs: docsLine(r.docs),
+                  shipmentId: r.shipmentId,
+                  printable: !!r.shipmentId && !!r.consignmentId,
+                }),
+              )}
+              selectable={selectable}
+              canBook={can('delivery.book')}
+              canPrint={can('fulfilment.print')}
+              couriers={bulkCouriers}
+              codeWords={codeWords}
+            />
           ) : (
             <div className="a2-state" data-testid="pack-empty">
               <div className="a2-sti">
                 <ShellIcon name="box" size={26} />
               </div>
               <h3>{t(d, 'ful.pack.empty')}</h3>
-              <p>{t(d, `ful.pack.emptySub.${step}`)}</p>
+              <p>{filtered ? t(d, 'ful.pack.filter.empty') : t(d, `ful.pack.emptySub.${step}`)}</p>
             </div>
           )}
           {queue.more ? <p className="a2-xs a2-mute">{t(d, 'ful.pack.more', { n: n(queue.more) })}</p> : null}

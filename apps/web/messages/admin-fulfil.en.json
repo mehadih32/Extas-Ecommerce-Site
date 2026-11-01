@@ -591,7 +591,32 @@
           "handed": "handed over on a sheet"
         }
       },
-      "summary": "Orders still with us:"
+      "summary": "Orders still with us:",
+      "filter": {
+        "title": "Filter the orders",
+        "from": "Placed from",
+        "to": "Placed to",
+        "docs": "Documents",
+        "doc": {
+          "all": "All orders",
+          "notBooked": "Not booked yet",
+          "noSticker": "No sticker yet",
+          "noInvoice": "No invoice yet"
+        },
+        "go": "Show",
+        "clear": "Clear",
+        "empty": "No order on this step matches the filter. Clear it to see every order."
+      },
+      "sel": {
+        "all": "Select all shown",
+        "count": "{n} selected",
+        "one": "Select order {n}",
+        "book": "Book selected ({n})",
+        "booked": "Booked {n}.",
+        "notBooked": "Not booked: {list}",
+        "print": "Print selected ({n})",
+        "note": "Book first, then print. A print makes what \"What to print\" on the print run page says, in packing order. Nothing is booked or printed by itself."
+      }
     },
     "printRun": {
       "press": {

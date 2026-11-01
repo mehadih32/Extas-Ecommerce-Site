@@ -22,8 +22,8 @@ import type { Prisma } from '@extas/db/client';
 import { isOrdersError, openReviewIds, orderStep, staffBy, type CommandOptions, type CommandResult, type OrdersDeps } from '@extas/orders';
 import { allow, logChange, nowOf, parse, setting, TX, type Db, type ShippingDeps, type Tx, type Who } from './context';
 import { ShippingError } from './errors';
-import { allChecked, CHECKING_STATES, codeKey, dayStart, lineChecks, matchPiece, packBlock, photoState, stepOf, weightGap, type LineCheck, type PackBlock, type PackLine, type PackStep, type PhotoState, type WeightGap } from './packing-pure';
-import { parcelWeight } from './pure';
+import { allChecked, CHECKING_STATES, codeKey, dayStart, lineChecks, localDayStart, matchPiece, packBlock, photoState, stepOf, weightGap, type LineCheck, type PackBlock, type PackLine, type PackStep, type PhotoState, type WeightGap } from './packing-pure';
+import { addDays, parcelWeight } from './pure';
 
 const ordersDeps = (deps: ShippingDeps): OrdersDeps => ({ db: deps.db, settings: deps.settings, now: deps.now });
 const LIVE_SHIPMENT = { status: { notIn: ['BOOKING_FAILED', 'CANCELLED'] } } as const satisfies Prisma.ShipmentWhereInput;
@@ -91,6 +91,8 @@ export interface PackQueueRow {
   gift: { deliverAfter: string | null } | null;
   courierName: string | null;
   consignmentId: string | null;
+  /** PR 411: the live parcel (for "Print selected"); null while not booked. */
+  shipmentId: string | null;
   openIssues: number;
   photos: number;
   placedAt: string;
@@ -109,6 +111,8 @@ export interface PackDocs {
 
 export interface PackQueue {
   step: PackStep;
+  /** PR 411: the date and document filter the lists and counts were read with. */
+  filter: PackFilter;
   counts: Record<PackStep, number>;
   rows: PackQueueRow[];
   /** More orders at this step than one list shows (the owner's `listMax`). */
@@ -126,6 +130,7 @@ const rowOf = (o: QueueRow, issues: Map<string, number>, photos: Map<string, num
   gift: o.isGift ? { deliverAfter: o.giftDeliverAfter ? o.giftDeliverAfter.toISOString().slice(0, 10) : null } : null,
   courierName: o.shipments[0]?.courierAccount.name ?? null,
   consignmentId: o.shipments[0]?.consignmentId ?? null,
+  shipmentId: o.shipments[0]?.id ?? null,
   openIssues: issues.get(o.id) ?? 0,
   photos: photos.get(o.id) ?? 0,
   placedAt: o.placedAt.toISOString(),
@@ -169,18 +174,49 @@ async function countsBy(db: Db, storeId: number, orderIds: string[]): Promise<{ 
   return { issues: new Map(issues.map((r) => [r.orderId, r._count._all])), photos: new Map(photos.map((r) => [r.orderId, r._count._all])) };
 }
 
-const queueQuery = z.object({ step: z.enum(['pick', 'pack', 'ready', 'done']).default('pick') }).strict();
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+/** PR 411 — the documents an order may still lack (the Pack screen's filter). */
+export const PACK_DOC_FILTERS = ['all', 'notBooked', 'noSticker', 'noInvoice'] as const;
+export type PackDocFilter = (typeof PACK_DOC_FILTERS)[number];
+const queueQuery = z
+  .object({
+    step: z.enum(['pick', 'pack', 'ready', 'done']).default('pick'),
+    from: z.string().regex(DAY).optional(),
+    to: z.string().regex(DAY).optional(),
+    docs: z.enum(PACK_DOC_FILTERS).default('all'),
+  })
+  .strict()
+  .refine((q) => !q.from || !q.to || q.from <= q.to, { message: 'from after to', path: ['to'] });
+
+/** PR 411 — what the queue was narrowed by (echoed to the screen). */
+export interface PackFilter {
+  from: string | null;
+  to: string | null;
+  docs: PackDocFilter;
+}
+
+/** PR 411 — the date and document filter as one more condition on the queue (never widens it). */
+function filterWhere(storeId: number, f: PackFilter, timeZone: string): Prisma.OrderWhereInput[] {
+  const and: Prisma.OrderWhereInput[] = [];
+  if (f.from || f.to) and.push({ placedAt: { ...(f.from ? { gte: localDayStart(f.from, timeZone) } : {}), ...(f.to ? { lt: localDayStart(addDays(f.to, 1), timeZone) } : {}) } });
+  if (f.docs === 'notBooked') and.push({ shipments: { none: LIVE_SHIPMENT } });
+  if (f.docs === 'noSticker') and.push({ shipments: { none: { ...LIVE_SHIPMENT, labelPrintCount: { gt: 0 } } } });
+  if (f.docs === 'noInvoice') and.push({ documents: { none: { storeId, kind: 'INVOICE' } } });
+  return and;
+}
 
 /** The packing screen's steps with their counts, and the orders of one step, oldest first. */
 export async function packingQueue(deps: ShippingDeps, who: Who, query: unknown = {}): Promise<PackQueue> {
   await allow(deps, who, 'fulfilment.read');
   const q = parse(queueQuery, query, 'packing queue');
-  const [base, cfg] = await Promise.all([queueWhere(deps, who.storeId), setting(deps, who.storeId, 'fulfilment.packing.queue')]);
-  const counts = Object.fromEntries(await Promise.all((Object.keys(STEP_WHERE) as PackStep[]).map(async (s) => [s, await deps.db.order.count({ where: { AND: [base, STEP_WHERE[s]] } })] as const))) as Record<PackStep, number>;
-  const rows = await deps.db.order.findMany({ where: { AND: [base, STEP_WHERE[q.step]] }, select: QUEUE_SELECT, orderBy: [{ placedAt: 'asc' }, { id: 'asc' }], take: cfg.listMax });
+  const [base, cfg, timeZone] = await Promise.all([queueWhere(deps, who.storeId), setting(deps, who.storeId, 'fulfilment.packing.queue'), setting(deps, who.storeId, 'store.timeZone')]);
+  const filter: PackFilter = { from: q.from ?? null, to: q.to ?? null, docs: q.docs };
+  const narrow = filterWhere(who.storeId, filter, timeZone);
+  const counts = Object.fromEntries(await Promise.all((Object.keys(STEP_WHERE) as PackStep[]).map(async (s) => [s, await deps.db.order.count({ where: { AND: [base, STEP_WHERE[s], ...narrow] } })] as const))) as Record<PackStep, number>;
+  const rows = await deps.db.order.findMany({ where: { AND: [base, STEP_WHERE[q.step], ...narrow] }, select: QUEUE_SELECT, orderBy: [{ placedAt: 'asc' }, { id: 'asc' }], take: cfg.listMax });
   const ids = rows.map((r) => r.id);
   const [{ issues, photos }, docs] = await Promise.all([countsBy(deps.db, who.storeId, ids), documentsOf(deps.db, who.storeId, ids)]);
-  return { step: q.step, counts, rows: rows.map((r) => rowOf(r, issues, photos, docs)), more: Math.max(0, counts[q.step] - rows.length) };
+  return { step: q.step, filter, counts, rows: rows.map((r) => rowOf(r, issues, photos, docs)), more: Math.max(0, counts[q.step] - rows.length) };
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
