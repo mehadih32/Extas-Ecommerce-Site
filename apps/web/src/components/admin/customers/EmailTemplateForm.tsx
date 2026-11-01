@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import type { EmailLocale } from '@extas/customers';
 import { t, type Dict } from '@/lib/i18n';
+import { AiCopyHelper } from './AiCopyHelper';
 import { emailPost } from './emailPost';
 
 export interface EmailTemplateFormProps {
@@ -18,6 +19,8 @@ export interface EmailTemplateFormProps {
   body: string;
   storeName: string;
   canWrite: boolean;
+  /** PR 293: the AI campaign writer is on ("Write with AI"). */
+  aiOn?: boolean;
 }
 
 /** The words as a sample customer would read them (the engine fills the same three words). */
@@ -78,6 +81,18 @@ export function EmailTemplateForm(p: EmailTemplateFormProps) {
         <textarea id={`${uid}-b`} className="a2-ta" value={body} maxLength={10_000} disabled={!p.canWrite} onChange={(e) => setBody(e.target.value)} />
         <p className="a2-xs a2-mute a2-mt6">{t(d, 'cus.mail.words')}</p>
       </div>
+      {p.aiOn && p.canWrite ? (
+        <AiCopyHelper
+          dict={d}
+          channel="email"
+          locale={locale}
+          disabled={busy}
+          onPick={(v) => {
+            if (v.subject) setSubject(v.subject);
+            setBody(v.body);
+          }}
+        />
+      ) : null}
       {subject || body ? (
         <div>
           <p className="a2-xs a2-mute">{x('preview')}</p>

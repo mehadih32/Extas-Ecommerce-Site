@@ -36,7 +36,9 @@ export type CustomersErrorCode =
   /** PR 287: the store keeps the owner's most segments already, or a segment has the most conditions. */
   | 'LIMIT_REACHED'
   /** PR 287: someone saved this segment since the page was opened; reload it. */
-  | 'STALE';
+  | 'STALE'
+  /** PR 293: the AI writer did not answer, or gave nothing usable. */
+  | 'AI_UNAVAILABLE';
 
 export class CustomersError extends Error {
   readonly code: CustomersErrorCode;
@@ -65,6 +67,8 @@ export class CustomersError extends Error {
       case 'OPEN_ORDERS':
       case 'LIMIT_REACHED':
         return 422;
+      case 'AI_UNAVAILABLE':
+        return 503;
       case 'OWNER_ONLY':
       case 'SWITCHED_OFF':
         return 403;

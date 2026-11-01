@@ -48,7 +48,7 @@ export default async function EmailTemplatePage({ params }: { params: Params }) 
     );
   const who: cu.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const isNew = id === 'new';
-  const e = await cu.emailTemplateEditor(customersDeps(access.deps), who, isNew ? null : id);
+  const [e, aiOn] = await Promise.all([cu.emailTemplateEditor(customersDeps(access.deps), who, isNew ? null : id), cu.aiWriterOn(customersDeps(access.deps), MOTHER_STORE_ID)]);
   if (!e || (!isNew && !e.template))
     return (
       <div className="a2-z">
@@ -87,7 +87,7 @@ export default async function EmailTemplatePage({ params }: { params: Params }) 
           <p className="a2-sm a2-mute">{t(d, 'cus.mail.t.archivedNote')}</p>
         </section>
       ) : (
-        <EmailTemplateForm key={tp ? tp.version : 'new'} dict={cdict} id={tp?.id ?? null} version={tp?.version ?? null} name={tp?.name ?? ''} locale={tp?.locale ?? (view.lang === 'en' ? 'en' : 'bn')} subject={tp?.subject ?? ''} body={tp?.body ?? ''} storeName={view.storeName ?? ''} canWrite={e.canWrite} />
+        <EmailTemplateForm key={tp ? tp.version : 'new'} dict={cdict} id={tp?.id ?? null} version={tp?.version ?? null} name={tp?.name ?? ''} locale={tp?.locale ?? (view.lang === 'en' ? 'en' : 'bn')} subject={tp?.subject ?? ''} body={tp?.body ?? ''} storeName={view.storeName ?? ''} canWrite={e.canWrite} aiOn={aiOn} />
       )}
     </div>
   );

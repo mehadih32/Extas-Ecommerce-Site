@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import type { EmailLocale, EmailTemplateRow } from '@extas/customers';
 import { t, type Dict } from '@/lib/i18n';
+import { AiCopyHelper } from './AiCopyHelper';
 import { emailPost } from './emailPost';
 
 export interface EmailSendFormProps {
@@ -25,6 +26,8 @@ export interface EmailSendFormProps {
   /** How many it reaches now (the saved draft's audience), or null when not counted. */
   reachable: number | null;
   canWrite: boolean;
+  /** PR 293: the AI campaign writer is on ("Write with AI"). */
+  aiOn?: boolean;
   canSend: boolean;
 }
 
@@ -144,6 +147,18 @@ export function EmailSendForm(p: EmailSendFormProps) {
         <textarea id={`${uid}-b`} className="a2-ta" value={body} maxLength={10_000} disabled={!p.canWrite} onChange={(e) => setBody(e.target.value)} />
         <p className="a2-xs a2-mute a2-mt6">{t(d, 'cus.mail.words')}</p>
       </div>
+      {p.aiOn && p.canWrite ? (
+        <AiCopyHelper
+          dict={d}
+          channel="email"
+          locale={locale}
+          disabled={busy}
+          onPick={(v) => {
+            if (v.subject) setSubject(v.subject);
+            setBody(v.body);
+          }}
+        />
+      ) : null}
       {p.canWrite ? (
         <span>
           <button type="button" className="a2-btn" onClick={save} disabled={busy} data-testid="mail-send-save">

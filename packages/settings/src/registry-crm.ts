@@ -24,6 +24,12 @@
 // offer e-mails (PR 298) and always carries the unsubscribe line; at most `perCustomerPerWeek` such e-mails to one person
 // in seven days; `batchSize` people queued per run (the throttle); open and click tracking each its own switch, off; the
 // orders a receiver places within `resultDays` count as the send's result (Sales only when delivered).
+//
+// PR 293 (`customers.aiWriter`, v194): the AI campaign writer (Blueprint C6.1 item 3) — 2 or 3 versions of an offer
+// e-mail or SMS in the owner's voice: his greeting, his sign-off and how he talks, in each language (owner's words,
+// empty as shipped), and the longest SMS it drafts. Off as shipped, and it also needs AI for the whole shop
+// (`ai.enabled`); it runs on the practice writer until an AI provider's key is in the vault. It only fills the form: a
+// person picks a version, and saving and scheduling stay his.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -94,6 +100,21 @@ export const emailMarketingSettingsSchema = z
   .strict();
 export type EmailMarketingSettings = z.output<typeof emailMarketingSettingsSchema>;
 
+/** PR 293 — the AI campaign writer. */
+const voiceLine = z.string().trim().max(200);
+const voiceLang = z.object({ bn: voiceLine, en: voiceLine }).strict();
+export const aiWriterSettingsSchema = z
+  .object({
+    enabled: z.boolean(),
+    versions: z.int().min(2).max(3),
+    smsMaxChars: z.int().min(60).max(1000),
+    greeting: voiceLang,
+    signOff: voiceLang,
+    style: voiceLang,
+  })
+  .strict();
+export type AiWriterSettings = z.output<typeof aiWriterSettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -136,5 +157,16 @@ export const crmSettings = {
     labelKey: 'customers.email.label',
     helpKey: 'customers.email.help',
     sortOrder: 230,
+  }),
+  'customers.aiWriter': setting({
+    ...base,
+    version: 194,
+    schema: aiWriterSettingsSchema,
+    // hardcode-ok: registry default (off; 3 versions; one long SMS; the owner's voice empty until he types it)
+    default: { enabled: false, versions: 3, smsMaxChars: 306, greeting: { bn: '', en: '' }, signOff: { bn: '', en: '' }, style: { bn: '', en: '' } },
+    valueType: 'JSON',
+    labelKey: 'customers.aiWriter.label',
+    helpKey: 'customers.aiWriter.help',
+    sortOrder: 240,
   }),
 };
