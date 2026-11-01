@@ -1,0 +1,57 @@
+{
+  "adp": {
+    "metaTitle": "Ad platforms — Marketing",
+    "title": "Ad platforms",
+    "sub": "Your ad accounts as Facebook and Instagram see them: the campaigns and ad sets, read from the platform. Read only — nothing is paused and no budget changes here.",
+    "platform": {
+      "meta": "Meta (Facebook, Instagram)",
+      "google": "Google",
+      "tiktok": "TikTok"
+    },
+    "mode": {
+      "MOCK": "Practice copy — nothing is read from the platform",
+      "LIVE": "Live",
+      "SANDBOX": "Platform's test system"
+    },
+    "lastTest": "Last connection test: {when} — {result}",
+    "testOk": "passed",
+    "testBad": "failed",
+    "noTest": "No key yet.",
+    "keysLink": "Keys & connections",
+    "read": "Read now",
+    "reading": "Reading…",
+    "readDone": "{campaigns} campaigns and {adSets} ad sets read; {gone} no longer listed by the platform.",
+    "readPractice": "Practice copy: {campaigns} example campaigns read, nothing saved. Type the key on Keys & connections to read your real account.",
+    "practiceH": "Example from the practice copy (not saved)",
+    "practiceBadge": "practice",
+    "accountLine": "Ad account {name} · {id} · {currency}",
+    "noAccount": "Nothing read yet. Press \"Read now\" after the key is in.",
+    "noCampaigns": "This account has no campaigns.",
+    "col": {
+      "name": "Campaign",
+      "status": "Status",
+      "objective": "Goal",
+      "budget": "Budget",
+      "adSets": "Ad sets",
+      "ours": "Our campaign"
+    },
+    "budgetDaily": "{amount} a day",
+    "budgetTotal": "{amount} in all",
+    "none": "—",
+    "gone": "no longer listed",
+    "linkLabel": "Our campaign for {name}",
+    "linkNone": "Not tied",
+    "linkErr": "Not saved. Try again.",
+    "noManage": "You can see this page; reading and tying need the \"Change campaigns\" permission.",
+    "readOnlyNote": "Pausing a campaign or changing a budget comes from the dashboard later, always behind your confirm (an increase needs your approval).",
+    "err": {
+      "PLATFORM": "The platform said:",
+      "INVALID_INPUT": "Something in it is not right.",
+      "NOT_FOUND": "It is not there any more; the page was read again.",
+      "forbidden": "You do not have permission for this.",
+      "unauthorized": "Your sign-in ran out. Sign in again.",
+      "network": "No connection. Try again.",
+      "other": "It did not work. Try again."
+    }
+  }
+}

@@ -98,6 +98,7 @@
     "marketingLandingTemplates": "Landing page templates",
     "marketingCampaigns": "Campaigns",
     "marketingCampaign": "Campaign",
+    "marketingAdPlatforms": "Ad platforms",
     "adsTracking": "Tracking",
     "manual": "Site manual",
     "build": "Build progress",
@@ -453,6 +454,16 @@
         "accessToken": "Access token (Events Manager → the pixel → Settings → Conversions API → Generate access token)",
         "pixelId": "Pixel (dataset) ID (Events Manager → the pixel → Settings)",
         "testEventCode": "Test event code — optional; from Events Manager → Test events. While it is set, test events show there",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
+    "metaAds": {
+      "name": "Meta Marketing API (Facebook and Instagram ad account, read only)",
+      "desc": "Reads the ad account, its campaigns and ad sets for Marketing › Ad platforms. Read only: it never pauses a campaign or changes a budget. A practice account until the token is in and the test (reading the account) passes: nothing is read or saved before that.",
+      "fields": {
+        "accessToken": "Access token with ads_read (Business settings → System users → Generate token → ads_read)",
+        "adAccountId": "Ad account ID (Ads Manager → the account menu), like act_1234567890",
         "apiVersion": "API version — leave empty for the one the shop was built with",
         "baseUrl": "Address — only for a test server"
       }
