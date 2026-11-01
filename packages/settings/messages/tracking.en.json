@@ -6,6 +6,10 @@
     "tracking": {
       "label": "Server-side event tracking",
       "help": "The shop's own server tells the ad platforms what shoppers did — a product seen, an item put in the bag, the checkout opened, an order placed — with the value, category, size and colour, so the ads learn who buys. Off as it ships. Each platform stays on its practice copy (nothing leaves the shop) until its key is typed into Settings › Keys & connections and its test passes. A customer's phone and e-mail leave only as one-way codes (hashes), and only when you allow matching."
+    },
+    "deliveredPurchase": {
+      "label": "Delivered-purchase optimisation",
+      "help": "For a cash-on-delivery shop the sale is the parcel the customer accepted, not the order typed in. While on (and server-side tracking is on), each order's confirmation and its delivery go to the ad platforms from the order's own timeline, with the value of the pieces kept. You may also tell the platforms that a purchase means the delivery, so the ads learn from parcels accepted and never from orders refused at the door. Off as it ships. No money moves and no ad budget changes."
     }
   }
 }

@@ -1,10 +1,21 @@
 // S13 · PR 257 (Blueprint C6.2) — the pure part of server-side event tracking: the event ids, the customer hashes, the
 // money in the platforms' unit, which shop page is which event, and the per-platform delivery state. No database.
 import { createHash } from 'node:crypto';
-import type { AdEvent, AdItem, AdPlatform, AdUser } from '@extas/adapters';
-import { TRACKING_EVENTS, TRACKING_PLATFORMS, type TrackingEvent, type TrackingSettings } from '@extas/settings';
+import type { AdEvent, AdEventName, AdItem, AdPlatform, AdUser } from '@extas/adapters';
+import {
+  ALL_TRACKING_EVENTS,
+  ORDER_TRACKING_EVENTS,
+  TRACKING_EVENTS,
+  TRACKING_PLATFORMS,
+  type AnyTrackingEvent,
+  type DeliveredPurchaseSettings,
+  type OrderTrackingEvent,
+  type PurchaseMeans,
+  type TrackingEvent,
+  type TrackingSettings,
+} from '@extas/settings';
 
-export { TRACKING_EVENTS, TRACKING_PLATFORMS, type TrackingEvent };
+export { ALL_TRACKING_EVENTS, ORDER_TRACKING_EVENTS, TRACKING_EVENTS, TRACKING_PLATFORMS, type AnyTrackingEvent, type OrderTrackingEvent, type TrackingEvent };
 
 /** An event id a browser may send (the same id its pixel would use); the server makes one otherwise. */
 export const EVENT_ID = /^[A-Za-z0-9_.:-]{8,80}$/;
@@ -43,6 +54,23 @@ export function toMajor(minor: number, currency: string): number {
 
 /** Whether this event is recorded now (the switch, the ticked events; a test event always is). */
 export const records = (s: TrackingSettings, name: TrackingEvent, test = false): boolean => test || (s.on && s.events[name]);
+
+/** PR 258: an order step (confirmed, delivered), read from the order timeline rather than a shopper's page. */
+export const isOrderStep = (name: string): name is OrderTrackingEvent => (ORDER_TRACKING_EVENTS as readonly string[]).includes(name);
+
+/** PR 258: an order step is recorded while tracking and delivered-purchase are both on and the step is ticked. */
+export const recordsStep = (s: TrackingSettings, dp: DeliveredPurchaseSettings, name: OrderTrackingEvent, test = false): boolean => test || (s.on && dp.on && dp.events[name]);
+
+/**
+ * PR 258 (C6.2 point 1): the name a stored event goes under. While a purchase means the delivery, the delivered event
+ * takes the platforms' purchase name and the order placed becomes a plain "order placed", so the ads learn from parcels
+ * accepted, not from COD orders refused at the door. Read at the send, so a change applies to what still waits.
+ */
+export function adNameOf(name: string, means: PurchaseMeans): AdEventName {
+  if (name === 'purchase') return means === 'delivered' ? 'placed' : 'purchase';
+  if (name === 'delivered') return means === 'delivered' ? 'purchase' : 'delivered';
+  return (ALL_TRACKING_EVENTS as readonly string[]).includes(name) ? (name as AnyTrackingEvent) : 'view';
+}
 
 /** The address a beacon came from, without its language prefix: `/p/<slug>` → the product, `/checkout` → checkout. */
 export function pageEvent(rawPath: string, productPrefix: string, checkoutPath: string): { name: 'view'; slug: string } | { name: 'checkout' } | null {
@@ -130,22 +158,34 @@ export interface StoredEventRow {
 
 const asItems = (v: unknown): StoredItem[] => (Array.isArray(v) ? (v as StoredItem[]) : []);
 
-/** The row as the adapters take it (money in the major unit; the order number for a purchase). */
-export function toAdEvent(row: StoredEventRow, orderNumber: string | null): AdEvent {
+/** The row as the adapters take it (money in the major unit; the order number for a purchase or an order step). */
+export function toAdEvent(row: StoredEventRow, orderNumber: string | null, means: PurchaseMeans = 'placed'): AdEvent {
   const currency = row.currency;
   const major = (m: number | null) => (m == null || !currency ? null : toMajor(m, currency));
   const items: AdItem[] = asItems(row.items).map((i) => ({ id: i.id, sku: i.sku, name: i.name, category: i.category, colour: i.colour, size: i.size, quantity: i.quantity, price: major(i.priceMinor) }));
+  const user = (row.userData && typeof row.userData === 'object' ? row.userData : {}) as AdUser;
   return {
     eventId: row.eventId,
-    name: (TRACKING_EVENTS as readonly string[]).includes(row.name) ? (row.name as TrackingEvent) : 'view',
+    name: adNameOf(row.name, means),
     at: row.occurredAt,
     url: row.url,
     value: major(row.valueMinor),
     currency,
     items,
     orderNumber,
-    user: (row.userData && typeof row.userData === 'object' ? row.userData : {}) as AdUser,
+    user,
+    // an order step with no shopper's browser behind it (an order typed by staff, tracking switched on after it)
+    ...(isOrderStep(row.name) && !user.ua ? { system: true } : {}),
   };
+}
+
+/** PR 258: the contact hashes leave only while matching is allowed now (an older row may carry them). */
+export function withoutContact(u: AdUser): AdUser {
+  const out = { ...u };
+  delete out.em;
+  delete out.ph;
+  delete out.phPlus;
+  return out;
 }
 
 /** The value of a list of items (minor units), or null when a price is unknown. */

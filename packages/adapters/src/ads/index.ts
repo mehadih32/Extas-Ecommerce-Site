@@ -15,7 +15,10 @@ import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
 
 export const AD_EVENT_NAMES = ['view', 'addToBag', 'checkout', 'purchase'] as const;
-export type AdEventName = (typeof AD_EVENT_NAMES)[number];
+/** PR 258 (C6.2 point 1): the order's own steps, and "placed" — the order placed while the owner counts a purchase at
+ *  the delivery (the delivered event then goes under the platform's purchase name, `purchase`). */
+export const AD_ORDER_EVENT_NAMES = ['placed', 'confirmed', 'delivered'] as const;
+export type AdEventName = (typeof AD_EVENT_NAMES)[number] | (typeof AD_ORDER_EVENT_NAMES)[number];
 export type AdPlatform = 'meta' | 'google' | 'tiktok';
 
 export interface AdItem {
@@ -64,6 +67,8 @@ export interface AdEvent {
   /** The order number (purchase only). */
   orderNumber: string | null;
   user: AdUser;
+  /** PR 258: an order step with no browser behind it (no browser name): Meta's `system_generated`, not `website`. */
+  system?: boolean;
 }
 
 export type AdSendResult = { ok: true; sent: number } | { ok: false; error: string };
@@ -79,9 +84,10 @@ export interface AdEventSender {
 
 // --- the platforms' event names ---------------------------------------------------------------------------------
 
-export const META_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'Purchase' };
-export const GOOGLE_EVENT: Record<AdEventName, string> = { view: 'view_item', addToBag: 'add_to_cart', checkout: 'begin_checkout', purchase: 'purchase' };
-export const TIKTOK_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'CompletePayment' };
+// PR 258: the order steps are custom events on Meta and Google, and on TikTok too except "placed" (its own PlaceAnOrder).
+export const META_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'Purchase', placed: 'OrderPlaced', confirmed: 'OrderConfirmed', delivered: 'OrderDelivered' };
+export const GOOGLE_EVENT: Record<AdEventName, string> = { view: 'view_item', addToBag: 'add_to_cart', checkout: 'begin_checkout', purchase: 'purchase', placed: 'order_placed', confirmed: 'order_confirmed', delivered: 'order_delivered' };
+export const TIKTOK_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'CompletePayment', placed: 'PlaceAnOrder', confirmed: 'OrderConfirmed', delivered: 'OrderDelivered' };
 
 const variantOf = (i: AdItem) => [i.colour, i.size].filter(Boolean).join(' / ') || undefined;
 const drop = <T extends Record<string, unknown>>(o: T): T => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')) as T;
@@ -96,7 +102,7 @@ export function metaPayload(events: readonly AdEvent[], o: { testEventCode?: str
         event_name: META_EVENT[e.name],
         event_time: seconds(e.at),
         event_id: e.eventId,
-        action_source: 'website',
+        action_source: e.system ? 'system_generated' : 'website',
         event_source_url: e.url ?? undefined,
         user_data: drop({
           em: e.user.em ? [e.user.em] : undefined,

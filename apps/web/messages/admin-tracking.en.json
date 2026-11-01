@@ -2,7 +2,7 @@
   "trk": {
     "metaTitle": "Tracking — Marketing",
     "title": "Tracking",
-    "sub": "What the shop's server tells the ad platforms: a product seen, put in the bag, the checkout opened, an order placed. Each platform counts an event once.",
+    "sub": "What the shop's server tells the ad platforms: a product seen, put in the bag, the checkout opened, an order placed, confirmed and delivered. Each platform counts an event once.",
     "off": "Tracking is off. Nothing is recorded or sent. Switch it on in the card at the bottom.",
     "noPlatform": "Tracking is on but no platform is ticked: events are recorded here and sent nowhere. Tick the platforms in the card at the bottom.",
     "platformsH": "Platforms",
@@ -29,7 +29,9 @@
       "addToBag": "Put in the bag",
       "checkout": "Checkouts opened",
       "purchase": "Orders placed",
-      "foot": "recorded, test events not counted"
+      "foot": "recorded, test events not counted",
+      "confirmed": "Orders confirmed",
+      "delivered": "Parcels delivered"
     },
     "tableH": "Sent per platform",
     "col": {
@@ -43,7 +45,9 @@
       "view": "Product seen",
       "addToBag": "Put in the bag",
       "checkout": "Checkout opened",
-      "purchase": "Order placed"
+      "purchase": "Order placed",
+      "confirmed": "Order confirmed",
+      "delivered": "Parcel delivered"
     },
     "state": {
       "sent": "sent",
@@ -105,6 +109,39 @@
       "unauthorized": "Your sign-in ran out. Sign in again.",
       "network": "No connection. Try again.",
       "other": "It did not work. Try again."
-    }
+    },
+    "dpTrackingOff": "Delivered sales are switched on, but tracking is off: no order step is recorded until tracking is on (the card at the bottom).",
+    "dpMeansDelivered": "The platforms count a purchase at the delivery: a parcel delivered goes under their purchase name, and an order placed goes as \"Order placed\".",
+    "dp": {
+      "h": "Delivered sales (cash on delivery)",
+      "d": "For a cash-on-delivery shop the sale is the parcel the customer accepted. While this and tracking are on, each order's confirmation and its delivery are sent from the order's own timeline, with the value of the pieces kept. Off as it ships. No money moves and no ad budget changes.",
+      "on": "Send confirmed and delivered orders",
+      "onHelp": "Off: no order step is recorded, and a purchase stays the order placed.",
+      "events": "Order steps",
+      "means": "A purchase on the ad platforms means",
+      "meansHelp": "The ads learn from what you call a purchase. \"Parcel delivered\" teaches them who accepts parcels, not who orders and refuses. Changing it starts the platforms' learning again, so choose once.",
+      "mean": {
+        "placed": "Order placed (as before)",
+        "delivered": "Parcel delivered"
+      },
+      "sources": "Orders from",
+      "source": {
+        "WEBSITE": "Website",
+        "LANDING_PAGE": "Landing pages",
+        "MESSENGER": "Messenger",
+        "WHATSAPP": "WhatsApp",
+        "LIVE_CHAT": "Live chat",
+        "PHONE": "Phone",
+        "TELEGRAM": "Telegram",
+        "ADMIN": "Typed in the admin",
+        "SHOWROOM": "Showroom",
+        "IMPORT": "Imported"
+      },
+      "lookback": "Look back (hours)",
+      "lookbackHelp": "Steps older than this are not sent. The platforms take events up to 7 days (168 hours) old.",
+      "every": "Read the order timeline every (minutes)",
+      "everyHelp": "\"Send waiting now\" reads it at once too."
+    },
+    "stepsRead": "{n} new order steps read from the order timeline."
   }
 }
