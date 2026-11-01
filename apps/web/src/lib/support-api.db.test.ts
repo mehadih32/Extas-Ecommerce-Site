@@ -5,6 +5,7 @@
 // PR 426: the channels list (add, switch, rename, put away) and the live chat switched on making its channel.
 // PR 427: who is writing — the card switched on, a number typed in the site's chat links its customer and joins the
 // same person's other chat; set by hand, "not this customer", "not the same person" through the identity route.
+// PR 428: the thread's customer card (his orders, the one on its way), the card switched off.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
@@ -166,7 +167,7 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const r = await j('GET', ['settings']);
     const files = { enabled: true, maxPerMessage: 4, maxMb: 10, kinds: { image: true, video: true, pdf: true } };
     expect(r.body.cards['support.attachments'].value).toEqual(files);
-    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.channels', 'support.identity', 'support.inbox', 'support.liveChat']);
+    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.channels', 'support.context', 'support.identity', 'support.inbox', 'support.liveChat']);
     const version = r.body.cards['support.attachments'].version as string;
     const saved = await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxPerMessage: 3 }, version } });
     expect(saved.status).toBe(200);
@@ -234,5 +235,21 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const phone = await j('POST', ['c', second.conversationId, 'identity'], { body: { action: 'phone', phone: '01712 000 427' } });
     expect(phone.body).toMatchObject({ ok: true, customerId: customer.id });
     expect(await t.prisma.auditLog.count({ where: { action: { startsWith: 'support.identity.' } } })).toBe(3);
+  });
+
+  it('PR 428: the customer beside the chat — on as it ships, his orders and the one on its way; off, the card is gone', async () => {
+    const customer = await t.prisma.customer.findFirstOrThrow({ where: { storeId, phone: '+8801712000427' } });
+    await t.prisma.order.create({
+      data: { storeId, number: 'S428-1', source: 'WEBSITE', currency: 'BDT', status: 'CONFIRMED', placedAt: new Date('2026-10-30T06:00:00Z'), subtotalMinor: 150_000, discountMinor: 0, deliveryChargeMinor: 0, totalMinor: 150_000, paymentMethod: 'COD', customerId: customer.id, phone: customer.phone, idempotencyKey: 's428-1', riskScore: 12, riskBand: 'low' },
+    });
+    const chat = await t.prisma.conversation.findFirstOrThrow({ where: { storeId, customerId: customer.id } });
+    const th = (await j('GET', ['c', chat.id])).body.thread;
+    expect(th.context).toMatchObject({ matchedBy: 'customer', customer: { id: customer.id }, orders: 1, history: { orders: 1, open: 1 }, risk: { score: 12, number: 'S428-1' } });
+    expect(th.context.live.map((o: { number: string }) => o.number)).toEqual(['S428-1']);
+    const cards = (await j('GET', ['settings'])).body.cards;
+    expect(cards['support.context'].value).toEqual({ enabled: true, recentOrders: 3 });
+    expect((await j('PUT', ['settings'], { body: { key: 'support.context', value: { enabled: true, recentOrders: 11 }, version: cards['support.context'].version } })).status).toBe(400);
+    expect((await j('PUT', ['settings'], { body: { key: 'support.context', value: { enabled: false, recentOrders: 3 }, version: cards['support.context'].version } })).status).toBe(200);
+    expect((await j('GET', ['c', chat.id])).body.thread.context).toBeNull();
   });
 });

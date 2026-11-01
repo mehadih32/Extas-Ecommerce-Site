@@ -35,6 +35,7 @@
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
+export * from './chat-context';
 export * from './context';
 export * from './erasure';
 export * from './erp-page';

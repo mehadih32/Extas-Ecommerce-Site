@@ -2,9 +2,11 @@
 // customer's on the left, the shop's replies on the right with who sent them and whether they went out, internal notes
 // in the note colour — with their files; the box to reply or write a note; beside it the state, who has it, the
 // customer and the linked order, and the who-did-what log. On a phone and a tablet "Conversation" and "Details & log"
-// are two tabs; on a computer they sit side by side. The order panel with the customer's history is PR 428.
+// are two tabs; on a computer they sit side by side. The customer's history is the "Customer" card (PR 428).
 // PR 427: "Same person" — this person's other chats (other channels, earlier chats) and, with `support.identity`, the
 // chat's number set by hand, "Not this customer" and "Not the same person".
+// PR 428 (B4.5): the "Customer" card — the instant scan of the person writing (orders in counts, delivered / refused /
+// returned share, risk score, the orders on their way and where each is now, links), while `support.context` is on.
 //
 // `support.read` opens it; replying, notes, taking it and the state need `support.reply`, giving it to someone else
 // `support.assign` (the API checks again). Nothing here moves money or changes an order.
@@ -18,9 +20,10 @@ import { DetailGrid } from '@/components/admin/orders/OrderCommands';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { Composer, type ComposerTexts } from '@/components/admin/support/Composer';
+import { CustomerContext } from '@/components/admin/support/CustomerContext';
 import { IdentityActions, type IdentityTexts } from '@/components/admin/support/IdentityActions';
 import { SideActions, type SideTexts } from '@/components/admin/support/SideActions';
-import { formatNumber } from '@/components/admin/products/model';
+import { formatNumber, moneyOf } from '@/components/admin/products/model';
 import { printedAt } from '@/lib/admin-fulfil/handover';
 import { adminDeps } from '@/lib/admin-auth';
 import { kindName, logLine, senderLabel, withInbox } from '@/lib/admin-support/i18n';
@@ -75,7 +78,12 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     throw e;
   }
   const r = access.deps.resolver;
-  const [staff, files, inbox] = await Promise.all([th.you.assign ? sp.supportStaff(sd, who) : Promise.resolve([]), r.value('support.attachments', { storeId: MOTHER_STORE_ID }), r.value('support.inbox', { storeId: MOTHER_STORE_ID })]);
+  const [staff, files, inbox, currency] = await Promise.all([
+    th.you.assign ? sp.supportStaff(sd, who) : Promise.resolve([]),
+    r.value('support.attachments', { storeId: MOTHER_STORE_ID }),
+    r.value('support.inbox', { storeId: MOTHER_STORE_ID }),
+    r.value('store.currency', { storeId: MOTHER_STORE_ID }),
+  ]);
   const n = (x: number) => formatNumber(x, view.locale);
   const at = (x: Date | null) => (x ? printedAt(x.toISOString(), view.timeZone) : t(d, 'sup.side.none'));
   const name = th.contact.name ?? th.contact.phone ?? t(d, 'sup.unnamed');
@@ -195,7 +203,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <span>
             {kindName(d, th.channel.kind)} · {th.channel.name}
           </span>
-          {th.customer ? (
+          {th.customer && !th.context ? (
             <>
               <span>{s('history')}</span>
               <span>{s('known').replace('{n}', n(th.customer.orderCount))}</span>
@@ -226,6 +234,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <SideActions base={`${API}/c/${th.id}`} version={th.version} status={th.status} assignedId={th.assignedTo?.id ?? null} me={th.you.id} canReply={th.you.reply} canAssign={th.you.assign} staff={staff} texts={side} />
         </div>
       </section>
+      {th.context ? <CustomerContext ctx={th.context} d={d} lang={view.lang} locale={view.locale} money={moneyOf(currency, view.locale)} timeZone={view.timeZone} /> : null}
       <section className="a2-card" aria-labelledby="sp-person" data-testid="support-person">
         <h2 className="a2-h4" id="sp-person">
           {p('h')}

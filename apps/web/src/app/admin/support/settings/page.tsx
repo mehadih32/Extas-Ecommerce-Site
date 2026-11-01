@@ -5,6 +5,7 @@
 // PR 426: the channels (a Facebook Page or a WhatsApp number added by its id, switched on, renamed, put away; the site's
 // live chat once it is on), the live chat card (off as it ships) and, under "More options", Meta's reply window.
 // CN-020 (3): the "Call me" card (off as it ships) — when the checkout offers it; its call-backs land in the inbox.
+// PR 428: the "Customer beside the chat" card (on as it ships) — the customer card on every chat, how many latest orders.
 // PR 427: the "Who is writing" card (off as it ships) — the number from WhatsApp or the chat's words, its customer, one
 // person across channels.
 // Optional behaviour ships off. Nothing here moves money or changes an order.
@@ -89,6 +90,11 @@ export default async function SupportSettingsPage() {
     { kind: 'number', path: 'idleSeconds', label: s('callMe.idleSeconds'), min: 15, max: 900 },
     { kind: 'number', path: 'perPhonePerDay', label: s('callMe.perPhonePerDay'), min: 1, max: 20, help: s('callMe.perPhonePerDayHelp') },
   ];
+  // PR 428: the customer beside the chat (on as it ships: B4.5 is locked)
+  const context: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('context.enabled'), help: s('context.enabledHelp') },
+    { kind: 'number', path: 'recentOrders', label: s('context.recentOrders'), help: s('context.recentOrdersHelp'), min: 1, max: 10 },
+  ];
   // PR 427: who is writing (off as it ships)
   const identity: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: s('identity.enabled'), help: s('identity.enabledHelp') },
@@ -119,6 +125,7 @@ export default async function SupportSettingsPage() {
       <FieldsCard url={API} screen={screen('support.inbox')} fields={inbox} texts={texts('inbox')} canEdit={canEdit} testId="support-set-inbox" />
       <FieldsCard url={API} screen={screen('checkout.callMe')} fields={callMe} texts={texts('callMe')} canEdit={canEdit} testId="support-set-callme" />
       <FieldsCard url={API} screen={screen('support.identity')} fields={identity} texts={texts('identity')} canEdit={canEdit} testId="support-set-identity" />
+      <FieldsCard url={API} screen={screen('support.context')} fields={context} texts={texts('context')} canEdit={canEdit} testId="support-set-context" />
       <p className="a2-xs a2-mute a2-mt12" data-testid="support-set-phones">{s('phones')}</p>
       <details className="a2-card a2-mt12" data-testid="support-set-more">
         <summary className="a2-h4">{s('more')}</summary>

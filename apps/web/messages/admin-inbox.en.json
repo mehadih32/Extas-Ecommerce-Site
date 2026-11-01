@@ -293,6 +293,14 @@
         "fromTextHelp": "For Messenger and the site's chat, where the channel gives no number: the first mobile number the customer types (Bengali or English digits).",
         "autoLink": "Put the same person's chats together",
         "autoLinkHelp": "The same number or the same customer on another channel is one person. Two different customers are never put together."
+      },
+      "context": {
+        "h": "Customer beside the chat",
+        "d": "On every chat, a card about the person writing: his orders in counts, how many were delivered, refused or returned, the risk score of his latest order, and the orders still on their way with where each one is now. Counts and the risk score show only to people who may read customers.",
+        "enabled": "Show the customer card",
+        "enabledHelp": "On as it ships. Off: the chat only shows the customer's order count.",
+        "recentOrders": "Latest orders listed",
+        "recentOrdersHelp": "How many of his latest orders the card lists, besides those on their way (1–10)."
       }
     },
     "person": {
@@ -308,6 +316,29 @@
       "split": "Not the same person",
       "saved": "Saved.",
       "badPhone": "This is not a Bangladeshi mobile number."
+    },
+    "ctx": {
+      "h": "Customer",
+      "byCustomer": "Found from the chat's customer. Worked out again each time the chat opens.",
+      "byPhone": "Found from the chat's number. Worked out again each time the chat opens.",
+      "unknown": "Nobody known yet: no customer and no number on this chat. Set the number under \"Same person\".",
+      "none": "No order for this customer or number yet.",
+      "orders": "Orders",
+      "delivered": "Delivered",
+      "refused": "Refused at the door",
+      "returned": "Returned after delivery",
+      "cancelled": "Cancelled",
+      "ourFault": "Refused, our fault (not counted)",
+      "share": "{n} · {p}%",
+      "risk": "Risk score",
+      "riskOf": "order {number}",
+      "noBand": "Score",
+      "noRisk": "No score yet",
+      "noHistory": "Counts and the risk score show only to people who may read customers.",
+      "live": "On the way now",
+      "liveNone": "No order on its way.",
+      "recent": "Latest orders",
+      "open": "Open customer"
     }
   }
 }

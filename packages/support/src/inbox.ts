@@ -1,12 +1,13 @@
 // PR 425 — what the team reads: the inbox (every channel in one list, B4.2) and one conversation's thread with its
 // files, internal notes and the who-did-what log (B4.4). Both need `support.read`. A customer's number is shown the way
 // the rest of the admin shows it (B4.12, Note 24.1): whole to a person with `customers.phone`, otherwise masked by
-// `customers.phoneMask` (PR 284, @extas/customers/pure `maskPhone`). The
-// order side panel with the customer's history is PR 428; here a conversation shows the linked customer and order.
+// `customers.phoneMask` (PR 284, @extas/customers/pure `maskPhone`). PR 428: the thread carries the customer scan
+// (`context`, @extas/customers chatContextOf) while `support.context` is on — counts and risk only with `customers.read`.
 import type { Prisma } from '@extas/db/client';
 import { actorPermissions } from '@extas/auth';
 import { z } from 'zod';
 import { allow, parse, setting, SupportError, type SupportDeps, type Who } from './context';
+import { chatContextOf, type ChatContext } from '@extas/customers';
 import { maskPhone } from '@extas/customers/pure';
 import { personOf, type Person } from './identity';
 import { INBOX_VIEWS, type ConversationStatus, type InboxView } from './pure';
@@ -189,6 +190,8 @@ export interface Thread {
   events: ThreadEvent[];
   /** PR 427: the same person's other chats (other channels, earlier chats). */
   person: Person;
+  /** PR 428 (B4.5): the person's orders beside the chat; null while `support.context` is off. */
+  context: ChatContext | null;
   /** What the person reading may do here (`identity`: set the number, unlink the customer, "not the same person"). */
   you: { id: string | null; reply: boolean; assign: boolean; identity: boolean };
 }
@@ -207,13 +210,15 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
     },
   });
   if (!c) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
-  const [shown, customer, order, names, perms, person] = await Promise.all([
+  const ctxOn = await setting(deps, who.storeId, 'support.context');
+  const [shown, customer, order, names, perms, person, context] = await Promise.all([
     phoneShown(deps, who, held),
     c.customerId ? deps.db.customer.findFirst({ where: { id: c.customerId, storeId: who.storeId }, select: { id: true, name: true, orderCount: true } }) : null,
     c.orderId ? deps.db.order.findFirst({ where: { id: c.orderId, storeId: who.storeId }, select: { id: true, number: true, status: true } }) : null,
     staffNames(deps, [c.assignedToId]),
     actorPermissions(deps.db, who.actor, { storeId: who.storeId }),
     personOf(deps.db, who.storeId, c.contactId, c.id),
+    ctxOn.enabled ? chatContextOf(deps, who, { customerId: c.customerId, phone: c.contact.phone }, { recent: ctxOn.recentOrders }) : null,
   ]);
   return {
     id: c.id,
@@ -243,6 +248,7 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
     })),
     events: c.events.map((e) => ({ id: e.id, kind: e.kind, actor: { type: e.actorType, name: e.actorName }, data: (e.data as Record<string, unknown> | null) ?? null, at: e.createdAt })),
     person,
+    context,
     you: { id: who.actor.staffUserId, reply: perms.has('support.reply'), assign: perms.has('support.assign'), identity: perms.has('support.identity') },
   };
 }

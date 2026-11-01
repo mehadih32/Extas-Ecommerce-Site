@@ -98,6 +98,8 @@ export * from './registry-voice-address';
 export * from './registry-print-run';
 // S22 · PR 427 — identity resolution in the Support inbox (registry-support-identity.ts, version 155).
 export * from './registry-support-identity';
+// S22 · PR 428 — the customer beside a support chat (registry-support-context.ts, version 156).
+export * from './registry-support-context';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).
