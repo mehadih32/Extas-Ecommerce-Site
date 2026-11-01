@@ -1,6 +1,6 @@
 // S13 · PR 263 / 264 (Blueprint C6.2 points 3–5) — the ad platforms' audience lists, written: a hashed customer list
 // (Meta custom audience + users, Google Customer Match through an offline user data job, TikTok custom audience file),
-// a lookalike made from it, and an exclusion list. One platform-neutral writer (`AudienceWriter`) beside the read-only
+// a lookalike made from it, and the exclusion list (PR 264: people who refused a parcel, marked so it is only left out). One platform-neutral writer (`AudienceWriter`) beside the read-only
 // `AdsReader`.
 //
 // - Members arrive here already hashed (sha256 of the phone: digits only for Meta, the +country form for Google and
@@ -39,7 +39,15 @@ export interface AudienceUpload {
   name: string;
   members: readonly AudienceMember[];
   valueBased: boolean;
+  /**
+   * PR 264: the shop's exclusion list (people who refused a parcel). It is sent like any list, marked so a person on the
+   * platform sees it is for leaving people out; a campaign picks it under "exclude". Never value-based.
+   */
+  exclusion?: boolean;
 }
+
+/** PR 264: the mark an exclusion list carries on the platform (its description), so it is never picked to target. */
+export const EXCLUSION_MARK = 'extas:exclusion';
 
 export interface AudienceWriter {
   provider: string;
@@ -58,7 +66,7 @@ export interface AudienceWriter {
 export function metaAudiencePayload(o: AudienceUpload) {
   const schema = o.valueBased ? ['PHONE_SHA256', 'LOOKUP_VALUE'] : ['PHONE_SHA256'];
   return {
-    create: o.externalId ? null : { name: o.name, subtype: 'CUSTOM', customer_file_source: 'USER_PROVIDED_ONLY', is_value_based: o.valueBased },
+    create: o.externalId ? null : { name: o.name, subtype: 'CUSTOM', customer_file_source: 'USER_PROVIDED_ONLY', is_value_based: o.valueBased, ...(o.exclusion ? { description: EXCLUSION_MARK } : {}) },
     users: { payload: { schema, data: o.members.map((m) => (o.valueBased ? [m.ph, m.value ?? 0] : [m.ph])) } },
   };
 }
@@ -71,7 +79,7 @@ export function metaLookalikePayload(o: { seedExternalId: string; name: string; 
 /** Google: the Customer Match list to create, then the offline user data job's operations (all members replace the old). */
 export function googleAudiencePayload(o: AudienceUpload) {
   return {
-    create: o.externalId ? null : { name: o.name, crmBasedUserList: { uploadKeyType: 'CONTACT_INFO', dataSourceType: 'FIRST_PARTY' } },
+    create: o.externalId ? null : { name: o.name, ...(o.exclusion ? { description: EXCLUSION_MARK } : {}), crmBasedUserList: { uploadKeyType: 'CONTACT_INFO', dataSourceType: 'FIRST_PARTY' } },
     job: { type: 'CUSTOMER_MATCH_USER_LIST', removeAll: !!o.externalId, operations: o.members.map((m) => ({ create: { userIdentifiers: [{ hashedPhoneNumber: m.phPlus }] } })) },
   };
 }

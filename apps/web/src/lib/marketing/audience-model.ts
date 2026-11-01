@@ -9,6 +9,7 @@
 //   must bring people in. Every number of days is the owner's: nothing is filled in for him.
 // - Nothing here sends anything to an ad platform: pushing an audience (hashed) is audience-push.ts (PR 263 / 264).
 // - PR 263: a lookalike audience has no conditions: its seed is the people delivered to in the owner's last N days.
+// - PR 264: the exclusion audience has no conditions either: it is the refused-parcel list (see AUDIENCE_KIND_EXCLUSION).
 import { z } from 'zod';
 
 /** The conditions, in the order the builder lists them; each label is in the messages files (`au.rule.<kind>`). */
@@ -33,9 +34,17 @@ export const AUDIENCE_KIND_BUILDER = 'BUILDER';
 /** PR 263: a lookalike's seed — people whose parcels were delivered in the owner's last N days, each valued by his
  *  delivered sales (never by how many orders he placed). */
 export const AUDIENCE_KIND_LOOKALIKE = 'LOOKALIKE';
-export const AUDIENCE_KINDS = [AUDIENCE_KIND_BUILDER, AUDIENCE_KIND_LOOKALIKE] as const;
+/**
+ * PR 264: the shop's own exclusion list (one per store, made by the shop, never edited or archived by hand): the numbers a
+ * person put on the refused-parcel list, and by the owner's choice every number with a parcel refused at the door that
+ * was not the shop's fault. Sent marked as an exclusion, so campaigns leave those people out.
+ */
+export const AUDIENCE_KIND_EXCLUSION = 'EXCLUSION';
+export const AUDIENCE_KINDS = [AUDIENCE_KIND_BUILDER, AUDIENCE_KIND_LOOKALIKE, AUDIENCE_KIND_EXCLUSION] as const;
 /** The definition's own version, so a later shape can read an older one. */
 export const AUDIENCE_DEFINITION_V = 1;
+/** PR 264: what an exclusion audience stores as its definition (its people come from the list and the owner's card). */
+export const EXCLUSION_DEFINITION = { v: AUDIENCE_DEFINITION_V, source: 'refusedParcels' } as const;
 /** Typing guards, not business numbers: the longest look-back the form takes and the most conditions in one audience. */
 export const AUDIENCE_DAYS_MAX = 3650; // hardcode-ok: a typing guard (ten years), not a business number
 export const AUDIENCE_RULES_MAX = 12; // hardcode-ok: a form length, not a business number

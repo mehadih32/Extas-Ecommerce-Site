@@ -13,6 +13,7 @@
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
+import { AUDIENCE_KIND_EXCLUSION } from './audience-model';
 import {
   CAMPAIGN_ACTIONS,
   STATUS_AFTER,
@@ -191,7 +192,7 @@ export async function campaignOne(db: Db, id: string, storeId: number = S): Prom
 /** What the form offers: the audiences and coupons that are not archived. */
 export async function campaignChoices(db: Db, storeId: number = S) {
   const [audiences, coupons] = await Promise.all([
-    db.audience.findMany({ where: { storeId, archivedAt: null }, orderBy: { createdAt: 'desc' }, take: CAMPAIGN_LIST_MAX, select: { id: true, name: true, size: true } }),
+    db.audience.findMany({ where: { storeId, archivedAt: null, kind: { not: AUDIENCE_KIND_EXCLUSION } }, orderBy: { createdAt: 'desc' }, take: CAMPAIGN_LIST_MAX, select: { id: true, name: true, size: true } }),
     db.coupon.findMany({ where: { storeId, archivedAt: null }, orderBy: { createdAt: 'desc' }, take: CAMPAIGN_LIST_MAX, select: { id: true, code: true, enabled: true } }),
   ]);
   return { audiences, coupons };
@@ -205,7 +206,8 @@ export async function saveCampaign(db: Db, resolver: Resolver, who: CampaignWho,
   if (!ok.success) throw new CampaignError('INVALID_INPUT', 400, issueFields(ok.error.issues));
   const d = ok.data;
   const [audience, coupon] = await Promise.all([
-    d.audienceId ? db.audience.findFirst({ where: { id: d.audienceId, storeId }, select: { id: true } }) : Promise.resolve(true),
+    // PR 264: the exclusion list is for leaving people out, never a campaign's audience to show ads to
+    d.audienceId ? db.audience.findFirst({ where: { id: d.audienceId, storeId, kind: { not: AUDIENCE_KIND_EXCLUSION } }, select: { id: true } }) : Promise.resolve(true),
     d.couponId ? db.coupon.findFirst({ where: { id: d.couponId, storeId }, select: { id: true } }) : Promise.resolve(true),
   ]);
   if (!audience) throw new CampaignError('INVALID_INPUT', 400, ['audienceId']);

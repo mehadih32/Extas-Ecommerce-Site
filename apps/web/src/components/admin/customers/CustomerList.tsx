@@ -1,5 +1,6 @@
 // S14 · PR 285 — Customers → All customers (CUS-01; demo V12.4 #/admin/customers): the header, the section's tabs, four
-// numbers (customers, returning, at risk, refused before), the owner's views with their counts, the search and filters
+// numbers (customers, returning, at risk, refused before), PR 264: on "Refused before" a note and a link to the exclusion
+// list sent to the ad platforms (Marketing › Audiences), the owner's views with their counts, the search and filters
 // (a plain GET form shared with the order list), the table (one card per person on a phone) and "More". Each row is one
 // person: his name and number as this viewer may see it (masked without `customers.phone`), where he first came from,
 // orders, Sales (delivered only) with Ordered value under it (CN-022), true deliveries, refusals that were not the
@@ -197,6 +198,14 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
           );
         })}
       </nav>
+      {current === 'refused' ? (
+        <div className="a2-note a2-mt12" role="note" data-testid="cus-excl-note">
+          <p>{t(d, 'cus.list.exclNote')}</p>
+          <Link className="a2-btn" href="/admin/marketing/audiences">
+            {t(d, 'cus.list.exclLink')}
+          </Link>
+        </div>
+      ) : null}
       <OrderFilters
         key={customersHref(query)}
         action={CUSTOMERS_BASE}

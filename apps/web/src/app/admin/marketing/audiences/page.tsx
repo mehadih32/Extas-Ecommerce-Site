@@ -4,11 +4,13 @@
 // `marketing.audiences.read`; creating needs `marketing.audiences.write`. Guide: docs/admin-guide/pages/marketing/audiences.md.
 // PR 263: "New lookalike" (a seed of the people delivered to, valued by delivered sales) and the sending card
 // (`ads.audiences`: the switch, off as it ships; the lookalike's countries and size per platform; each platform's floor).
+// PR 264: the shop's exclusion list (people who refused a parcel) always first with its "Leave out" pill, and two more
+// cards: the exclusion list (`ads.refusedExclude`, off) and the daily refresh (`ads.audienceRefresh`, off).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { AUDIENCE_FLOOR_MAX } from '@extas/settings';
+import { AUDIENCE_FLOOR_MAX, HOUR_MAX, REFUSED_DAYS_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -18,8 +20,8 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
-import { AUDIENCE_KIND_LOOKALIKE, ruleWords } from '@/lib/marketing/audience-model';
-import { audiencesCard } from '@/lib/marketing/audience-push';
+import { AUDIENCE_KIND_EXCLUSION, AUDIENCE_KIND_LOOKALIKE, ruleWords } from '@/lib/marketing/audience-model';
+import { audienceCard, exclusionAudience } from '@/lib/marketing/audience-push';
 import { audienceChoices, audienceList } from '@/lib/marketing/audiences';
 import bn from '../../../../../messages/admin-audiences.bn.json';
 import en from '../../../../../messages/admin-audiences.en.json';
@@ -62,7 +64,16 @@ export default async function AudiencesPage(props: Props) {
   const num = (n: number) => formatNumber(n, view.locale);
   const canWrite = access.guard.permissions?.has('marketing.audiences.write') ?? false;
   const v = (VIEWS as readonly string[]).includes(sp.v ?? '') ? (sp.v as (typeof VIEWS)[number]) : 'all';
-  const [list, choices, timeZone, card] = await Promise.all([audienceList(access.deps.db), audienceChoices(access.deps.db, access.deps.resolver), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }), audiencesCard(access.deps.resolver)]);
+  // PR 264: the exclusion list is always on the list (made and counted the first time it is needed)
+  await exclusionAudience(access.deps.db, access.deps.resolver);
+  const [list, choices, timeZone, card, refused, refresh] = await Promise.all([
+    audienceList(access.deps.db),
+    audienceChoices(access.deps.db, access.deps.resolver),
+    access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }),
+    audienceCard(access.deps.resolver, 'audiences'),
+    audienceCard(access.deps.resolver, 'refused'),
+    audienceCard(access.deps.resolver, 'refresh'),
+  ]);
   const texts: FieldsCardTexts = {
     h: s('card.h'),
     d: s('card.d'),
@@ -86,6 +97,17 @@ export default async function AudiencesPage(props: Props) {
     { kind: 'number', path: 'minTiktok', label: s('card.minTiktok'), min: 0, max: AUDIENCE_FLOOR_MAX },
     { kind: 'number', path: 'minGoogle', label: s('card.minGoogle'), min: 0, max: AUDIENCE_FLOOR_MAX },
   ];
+  const refusedFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'on', label: s('cardRefused.on'), help: s('cardRefused.onHelp') },
+    { kind: 'switch', path: 'everyRefusal', label: s('cardRefused.every'), help: s('cardRefused.everyHelp') },
+    { kind: 'number', path: 'days', label: s('cardRefused.days'), help: s('cardRefused.daysHelp'), min: 0, max: REFUSED_DAYS_MAX },
+  ];
+  const refreshFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'on', label: s('cardRefresh.on'), help: s('cardRefresh.onHelp') },
+    { kind: 'number', path: 'hour', label: s('cardRefresh.hour'), help: s('cardRefresh.hourHelp'), min: 0, max: HOUR_MAX },
+  ];
+  const exclWhen = refused.value.days ? s('lastDays', { days: refused.value.days }) : s('anyTime');
+  const exclSum = refused.value.everyRefusal ? s('excl.sumEvery', { when: exclWhen }) : s('excl.sumListed');
   const names = new Map([...choices.sizes.map((x) => [x.id, x.label] as const), ...choices.grades.map((x) => [x.id, (view.lang === 'bn' && x.nameBn) || x.nameEn] as const)]);
   const day = (iso: string) => new Intl.DateTimeFormat(view.locale, { timeZone, day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', numberingSystem: 'latn' }).format(new Date(iso));
   const rows = list.filter((r) => (v === 'archived' ? r.state === 'ARCHIVED' : r.state !== 'ARCHIVED'));
@@ -138,9 +160,15 @@ export default async function AudiencesPage(props: Props) {
                 <tr key={r.id} data-testid="au-row">
                   <td>
                     <Link className="a2-b lp-name" href={`${HERE}/${r.id}`}>
-                      {r.name}
+                      {r.kind === AUDIENCE_KIND_EXCLUSION ? s('excl.name') : r.name}
                     </Link>
-                    <span className="a2-xs a2-mute au-rules-sum">{r.kind === AUDIENCE_KIND_LOOKALIKE ? s('lal.sum', { days: r.seedDays ?? 0 }) : r.rules.map((x) => ruleWords(x, s, names)).join('; ')}</span>
+                    {r.kind === AUDIENCE_KIND_EXCLUSION ? (
+                      <span className={`a2-pill au-excl${refused.value.on ? ' bad' : ''}`} data-testid="au-excl-pill">
+                        {s('excl.pill')}
+                        {refused.value.on ? '' : ` · ${s('excl.off')}`}
+                      </span>
+                    ) : null}
+                    <span className="a2-xs a2-mute au-rules-sum">{r.kind === AUDIENCE_KIND_EXCLUSION ? exclSum : r.kind === AUDIENCE_KIND_LOOKALIKE ? s('lal.sum', { days: r.seedDays ?? 0 }) : r.rules.map((x) => ruleWords(x, s, names)).join('; ')}</span>
                   </td>
                   <td className="r a2-num">{r.size == null ? s('never') : num(r.size)}</td>
                   <td className="a2-sm">{r.countedAt ? day(r.countedAt) : s('never')}</td>
@@ -161,6 +189,12 @@ export default async function AudiencesPage(props: Props) {
       )}
       <div id="au-settings" className="a2-mt12">
         <FieldsCard url={SETTINGS_API} screen={{ key: card.key, value: card.value, version: card.version }} fields={fields} texts={texts} canEdit={canWrite} testId="au-settings" />
+      </div>
+      <div id="au-refused" className="a2-mt12">
+        <FieldsCard url={SETTINGS_API} screen={{ key: refused.key, value: refused.value, version: refused.version }} fields={refusedFields} texts={{ ...texts, h: s('cardRefused.h'), d: s('cardRefused.d') }} canEdit={canWrite} testId="au-refused" />
+      </div>
+      <div id="au-refresh" className="a2-mt12">
+        <FieldsCard url={SETTINGS_API} screen={{ key: refresh.key, value: refresh.value, version: refresh.version }} fields={refreshFields} texts={{ ...texts, h: s('cardRefresh.h'), d: s('cardRefresh.d') }} canEdit={canWrite} testId="au-refresh" />
       </div>
     </div>
   );

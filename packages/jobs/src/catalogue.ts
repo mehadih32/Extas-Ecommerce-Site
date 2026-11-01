@@ -26,6 +26,7 @@ import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 import { RETURNS_ERP_JOB, RETURNS_ERP_QUEUE, runReturnsErp } from './returns-erp';
 import { MONEY_REPORT_JOB, MONEY_REPORT_QUEUE, runMoneyReport, type MoneyReportPayload } from './money-report';
 import { POINTS_JOB, POINTS_QUEUE, runPointsJob } from './rewards';
+import { AUDIENCE_REFRESH_JOB, AUDIENCE_REFRESH_QUEUE, runAudienceRefresh, type AudienceRefreshPayload } from './audience-refresh';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
 export type JobOutcome = { ok: true; stats: Record<string, unknown> } | { ok: false; error: string; stats: Record<string, unknown> };
@@ -338,6 +339,23 @@ const pointsJob: JobDefinition<{ storeId: number }> = {
   run: async (deps, p) => ({ ok: true, stats: compactStats(await runPointsJob(deps, p.storeId)) }),
 };
 
+/**
+ * S13 · PR 264 — one store's daily audience refresh for one store day (audience-refresh.ts; planned only while it is due,
+ * the day in the run key). Safe to run twice: a run that already succeeded is skipped by the run guard; off = nothing.
+ */
+const audienceRefreshJob: JobDefinition<AudienceRefreshPayload> = {
+  key: AUDIENCE_REFRESH_JOB,
+  queue: AUDIENCE_REFRESH_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown; day?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${AUDIENCE_REFRESH_JOB}: storeId must be a positive integer`);
+    if (typeof p.day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(p.day)) throw new Error(`${AUDIENCE_REFRESH_JOB}: day must be YYYY-MM-DD`);
+    return { storeId: p.storeId as number, day: p.day };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runAudienceRefresh(deps, p)) }),
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -352,6 +370,7 @@ const definitions: JobDefinition<never>[] = [
   returnsErpJob as unknown as JobDefinition<never>,
   moneyReportJob as unknown as JobDefinition<never>,
   pointsJob as unknown as JobDefinition<never>,
+  audienceRefreshJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

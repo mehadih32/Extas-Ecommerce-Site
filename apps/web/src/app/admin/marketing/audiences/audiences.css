@@ -13,3 +13,8 @@
 /* PR 263 — the "Send to ad platforms" card: a platform's refusal under its line, the link to the sending switch. */
 .adm2 .au-push-err{display:block;overflow-wrap:anywhere}
 .adm2 .au-push-go{margin-top:8px}
+/* PR 264 — the exclusion list: its pill beside the name, and the links on its own page (44px tap height). */
+.adm2 .au-excl{margin-left:8px;vertical-align:middle}
+.adm2 .au-excl-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.adm2 .au-excl-links a{min-height:44px;display:inline-flex;align-items:center}
+.adm2 .au-excl-who{margin:12px 0 0;padding-left:20px;list-style:disc;display:grid;gap:4px}

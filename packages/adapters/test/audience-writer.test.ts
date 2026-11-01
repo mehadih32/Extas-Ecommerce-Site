@@ -2,7 +2,7 @@
 // value-based list, members replaced when the list exists), the lookalike's spec, and the practice writer that sends
 // nothing and refuses a lookalike the owner has not sized yet.
 import { beforeEach, describe, expect, it } from 'vitest';
-import { googleAudiencePayload, googleLookalikePayload, lookalikeReady, metaAudiencePayload, metaLookalikePayload, mockAudienceOutbox, practiceAudienceWriter, tiktokAudiencePayload, tiktokLookalikePayload, type AudienceUpload } from '../src';
+import { EXCLUSION_MARK, googleAudiencePayload, googleLookalikePayload, lookalikeReady, metaAudiencePayload, metaLookalikePayload, mockAudienceOutbox, practiceAudienceWriter, tiktokAudiencePayload, tiktokLookalikePayload, type AudienceUpload } from '../src';
 
 const m = (n: number, value: number | null = null) => ({ ph: `h${n}`, phPlus: `p${n}`, value });
 const upload = (o: Partial<AudienceUpload> = {}): AudienceUpload => ({ externalId: null, name: 'Seed', members: [m(1, 1200), m(2, 450)], valueBased: false, ...o });
@@ -36,6 +36,16 @@ describe('payloads', () => {
     expect(lookalikeReady('meta', { ...spec, percent: 11 })).toBe('size');
     expect(lookalikeReady('google', { ...spec, size: null })).toBe('size');
     expect(lookalikeReady('tiktok', { ...spec, countries: [] })).toBe('country');
+  });
+});
+
+describe('PR 264 exclusion list', () => {
+  it('is marked on Meta and Google when it is made, and carries hashes only', () => {
+    expect(metaAudiencePayload(upload({ exclusion: true })).create).toMatchObject({ description: EXCLUSION_MARK, is_value_based: false });
+    expect(metaAudiencePayload(upload()).create).not.toHaveProperty('description');
+    expect(googleAudiencePayload(upload({ exclusion: true })).create).toMatchObject({ description: EXCLUSION_MARK });
+    expect(googleAudiencePayload(upload({ exclusion: true, externalId: 'ul/9' })).create).toBeNull();
+    expect(tiktokAudiencePayload(upload({ exclusion: true })).file).toBe('p1\np2');
   });
 });
 

@@ -14,15 +14,22 @@
 // - Nothing here changes a budget, a bid or a campaign (rule 6), moves money or touches an order. Sending and the card
 //   need `marketing.audiences.write`; both are audited (marketing.audience.push, marketing.audiences.settings) with
 //   counts only — never a number or a hash.
-import { createHash } from 'node:crypto';
+// - PR 264: the exclusion audience (people who refused a parcel) is sent the same way, marked as an exclusion, only while
+//   both `ads.audiences.push` and `ads.refusedExclude.on` are on; its card and the daily refresh's card
+//   (`ads.audienceRefresh`) sit beside the sending card. The daily refresh (`refreshAudiences`) is called by the
+//   background worker once a day through the server-only hook /api/internal/audiences/refresh (the server's internal
+//   token, CACHE_HOOK_TOKEN; Caddy answers 404 to /api/internal/ from outside): every live audience counted again, and
+//   the ones already sent to a real ad account sent again, plus the exclusion list.
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { AUDIENCE_WRITER_PLATFORMS, practiceAudienceWriter, type AdsPlatform, type AudienceMember, type AudienceWriter, type LookalikeSize } from '@extas/adapters';
-import { audit } from '@extas/auth';
+import { audit, SYSTEM } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { adsAudiencesSchema, lookalikeCountries, storeTarget, type AdsAudiencesSettings } from '@extas/settings';
-import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
+import { adsAudienceRefreshSchema, adsAudiencesSchema, adsRefusedExcludeSchema, lookalikeCountries, storeTarget, type AdsAudiencesSettings } from '@extas/settings';
+import en from '../../../messages/admin-audiences.en.json';
+import { adminDeps, body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { hashPhone, toMajor } from '../tracking/model';
-import { AUDIENCE_KIND_LOOKALIKE } from './audience-model';
-import { AudienceError, audienceOne, membersOf, type AudienceWho } from './audiences';
+import { AUDIENCE_KIND_EXCLUSION, AUDIENCE_KIND_LOOKALIKE } from './audience-model';
+import { AudienceError, audienceOne, ensureExclusionAudience, membersOf, recountAudiences, type AudienceWho } from './audiences';
 
 const S = MOTHER_STORE_ID;
 const ENUM: Record<AdsPlatform, 'META' | 'GOOGLE' | 'TIKTOK'> = { meta: 'META', google: 'GOOGLE', tiktok: 'TIKTOK' };
@@ -65,30 +72,67 @@ export interface AudienceSyncRow {
 
 const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0, 16);
 
-export interface AudiencesCard {
-  key: 'audiences';
-  value: AdsAudiencesSettings;
+/** The cards on Marketing › Audiences and the setting each one saves (PR 264 adds the exclusion list and the refresh). */
+const CARDS = {
+  audiences: { setting: 'ads.audiences', schema: adsAudiencesSchema },
+  refused: { setting: 'ads.refusedExclude', schema: adsRefusedExcludeSchema },
+  refresh: { setting: 'ads.audienceRefresh', schema: adsAudienceRefreshSchema },
+} as const;
+export type AudienceCardKey = keyof typeof CARDS;
+type CardValue<K extends AudienceCardKey> = ReturnType<(typeof CARDS)[K]['schema']['parse']>;
+
+export interface AudiencesCard<K extends AudienceCardKey = 'audiences'> {
+  key: K;
+  value: CardValue<K>;
   version: string;
 }
 
-export async function audiencesCard(resolver: Resolver, storeId: number = S): Promise<AudiencesCard> {
-  const value = await resolver.value('ads.audiences', { storeId });
-  return { key: 'audiences', value, version: versionOf(value) };
+/** One card at its version. */
+export async function audienceCard<K extends AudienceCardKey>(resolver: Resolver, key: K, storeId: number = S): Promise<AudiencesCard<K>> {
+  const value = (await resolver.value(CARDS[key].setting, { storeId })) as CardValue<K>;
+  return { key, value, version: versionOf(value) };
 }
 
-/** PUT {key: 'audiences', value, version}: the owner's sending card (audited when it changes). */
-export async function saveAudiencesCard(db: Db, resolver: Resolver, who: AudienceWho, input: unknown, storeId: number = S): Promise<AudiencesCard> {
+export const audiencesCard = (resolver: Resolver, storeId: number = S) => audienceCard(resolver, 'audiences', storeId);
+
+/** PR 264: the name the exclusion audience is made with (the shop's words; the page shows it in the reader's language). */
+export const EXCLUSION_NAME: string = en.au.excl.name;
+
+/**
+ * PR 264: the store's exclusion audience, made when there is none yet and counted when it never was (or `recount`).
+ * Marketing › Audiences calls it so the list always shows the exclusion line, on or off.
+ */
+export async function exclusionAudience(db: Db, resolver: Resolver, storeId: number = S, opts: { recount?: boolean; now?: Date } = {}): Promise<{ id: string }> {
+  const ex = await ensureExclusionAudience(db, EXCLUSION_NAME, storeId);
+  const row = await db.audience.findUniqueOrThrow({ where: { id: ex.id }, select: { lastBuiltAt: true } });
+  if (opts.recount || !row.lastBuiltAt) {
+    const now = opts.now ?? new Date();
+    const { people } = await membersOf(db, resolver, { kind: AUDIENCE_KIND_EXCLUSION, definition: null }, now, storeId);
+    await db.audience.update({ where: { id: ex.id }, data: { size: people.size, lastBuiltAt: now } });
+  }
+  return ex;
+}
+
+/**
+ * PUT {key, value, version}: one of the owner's cards (audited when it changes). PR 264: turning the exclusion list on
+ * counts the shop's exclusion audience again (making it when there is none yet).
+ */
+export async function saveAudiencesCard(db: Db, resolver: Resolver, who: AudienceWho, input: unknown, storeId: number = S, now: Date = new Date()): Promise<AudiencesCard<AudienceCardKey>> {
   const o = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
-  if (o.key !== 'audiences') throw new AudienceError('INVALID_INPUT', 400, ['key']);
-  const before = await resolver.value('ads.audiences', { storeId });
+  const key = typeof o.key === 'string' && Object.hasOwn(CARDS, o.key) ? (o.key as AudienceCardKey) : null;
+  if (!key) throw new AudienceError('INVALID_INPUT', 400, ['key']);
+  const { setting, schema } = CARDS[key];
+  const before = await resolver.value(setting, { storeId });
   if (o.version !== versionOf(before)) throw new AudienceError('STALE', 409);
-  const ok = adsAudiencesSchema.safeParse(o.value);
+  const ok = schema.safeParse(o.value);
   if (!ok.success) throw new AudienceError('INVALID_INPUT', 400, [...new Set(ok.error.issues.map((i) => String(i.path[0] ?? 'value')))]);
   if (versionOf(ok.data) !== versionOf(before)) {
-    await resolver.set('ads.audiences', ok.data, storeTarget(storeId), { actorId: who.actor.staffUserId ?? null, reason: 'Marketing › Audiences' });
-    await audit(db, who.actor, { storeId, action: 'marketing.audiences.settings', entityType: 'Setting', entityId: 'ads.audiences', before: { ...before }, after: { ...ok.data } }, who.ctx);
+    await resolver.set(setting, ok.data as never, storeTarget(storeId), { actorId: who.actor.staffUserId ?? null, reason: 'Marketing › Audiences' });
+    await audit(db, who.actor, { storeId, action: 'marketing.audiences.settings', entityType: 'Setting', entityId: setting, before: { ...before }, after: { ...ok.data } }, who.ctx);
+    // the exclusion card changes who is on the list: count it again now
+    if (key === 'refused') await exclusionAudience(db, resolver, storeId, { recount: true, now });
   }
-  return audiencesCard(resolver, storeId);
+  return audienceCard(resolver, key, storeId);
 }
 
 /** What one platform takes from the owner's card: its floor and its lookalike's size. */
@@ -124,6 +168,9 @@ export async function pushAudience(deps: PushDeps, who: AudienceWho, id: string,
   if (a.version !== o.version) throw new AudienceError('STALE', 409);
   if (a.state === 'ARCHIVED') throw new AudienceError('ARCHIVED', 409);
   const raw = await db.audience.findUniqueOrThrow({ where: { id }, select: { kind: true, definition: true } });
+  const exclusion = raw.kind === AUDIENCE_KIND_EXCLUSION;
+  // PR 264: the exclusion list leaves the shop only while its own switch is on too
+  if (exclusion && !(await resolver.value('ads.refusedExclude', { storeId })).on) throw new AudienceError('EXCLUDE_OFF', 409);
   const [{ people, valueBased }, currency] = await Promise.all([membersOf(db, resolver, raw, now, storeId), resolver.value('store.currency', { storeId })]);
   const members: AudienceMember[] = [];
   for (const [phone, value] of people) {
@@ -150,7 +197,7 @@ export async function pushAudience(deps: PushDeps, who: AudienceWho, id: string,
       let lookalikeId = prev?.lookalikeExternalId ?? null;
       if (card.floor > 0 && members.length < card.floor) r.status = 'TOO_SMALL';
       else {
-        const up = await writer.upload({ externalId, name: a.name, members, valueBased });
+        const up = await writer.upload({ externalId, name: a.name, members, valueBased, exclusion });
         if (!up.ok) {
           r.status = 'FAILED';
           r.error = up.error.slice(0, ERROR_MAX);
@@ -183,8 +230,70 @@ export async function pushAudience(deps: PushDeps, who: AudienceWho, id: string,
       }
     }
   }
-  await audit(db, who.actor, { storeId, action: 'marketing.audience.push', entityType: 'Audience', entityId: id, after: { people: members.length, valueBased, results: results.map((x) => ({ platform: x.platform, account: x.account?.id ?? null, status: x.status, sent: x.sent, lookalike: x.lookalike })) } }, who.ctx);
+  await audit(db, who.actor, { storeId, action: 'marketing.audience.push', entityType: 'Audience', entityId: id, after: { people: members.length, valueBased, exclusion, results: results.map((x) => ({ platform: x.platform, account: x.account?.id ?? null, status: x.status, sent: x.sent, lookalike: x.lookalike })) } }, who.ctx);
   return results;
+}
+
+export interface RefreshResult {
+  /** Off (`ads.audienceRefresh`): nothing was counted or sent. */
+  skipped: 'off' | null;
+  counted: number;
+  /** Each audience sent again: its sends, or why it was not sent (switch off, empty …). */
+  sent: { id: string; results: PushResult[] | null; error: string | null }[];
+}
+
+/**
+ * PR 264 — the daily refresh (the worker, once a day from the owner's hour): every live audience counted again; while
+ * sending is on, the audiences already sent to a real ad account sent again, and the exclusion list while it is on.
+ * Practice sends keep no row, so before the keys are in only the exclusion list is sent (as practice).
+ */
+export async function refreshAudiences(deps: PushDeps, storeId: number = S): Promise<RefreshResult> {
+  const { db, resolver } = deps;
+  const now = deps.now?.() ?? new Date();
+  const [refresh, sending, refused] = await Promise.all([resolver.value('ads.audienceRefresh', { storeId }), resolver.value('ads.audiences', { storeId }), resolver.value('ads.refusedExclude', { storeId })]);
+  if (!refresh.on) return { skipped: 'off', counted: 0, sent: [] };
+  const ex = refused.on ? await exclusionAudience(db, resolver, storeId, { now }) : null;
+  const counted = await recountAudiences(db, resolver, now, storeId);
+  const sent: RefreshResult['sent'] = [];
+  if (!sending.push) return { skipped: null, counted, sent };
+  const synced = await db.audienceSync.findMany({ where: { storeId, audience: { archivedAt: null } }, distinct: ['audienceId'], select: { audienceId: true } });
+  const ids = [...new Set([...(ex ? [ex.id] : []), ...synced.map((r) => r.audienceId)])];
+  const who: AudienceWho = { actor: SYSTEM, ctx: { source: 'audience-refresh' } };
+  for (const id of ids) {
+    const a = await audienceOne(db, id, storeId);
+    if (!a) continue;
+    try {
+      sent.push({ id, results: await pushAudience(deps, who, id, { version: a.version }, storeId), error: null });
+    } catch (e) {
+      if (!(e instanceof AudienceError)) throw e;
+      sent.push({ id, results: null, error: e.code });
+    }
+  }
+  return { skipped: null, counted, sent };
+}
+
+/** The server's internal token (CACHE_HOOK_TOKEN), compared in constant time; none set = never. */
+function internalCaller(request: Request): boolean {
+  const token = process.env.CACHE_HOOK_TOKEN ?? '';
+  const sent = request.headers.get('x-extas-cache-hook') ?? '';
+  return token.length >= 32 && sent.length === token.length && timingSafeEqual(Buffer.from(sent), Buffer.from(token));
+}
+
+/**
+ * /api/internal/audiences/refresh — POST {storeId?} from the background worker with the server's internal token
+ * (CACHE_HOOK_TOKEN in `x-extas-cache-hook`); without it the answer is "not found". Counts only in the answer.
+ */
+export async function audienceRefreshHook(request: Request, deps: AdminDeps | null = adminDeps()): Promise<Response> {
+  if (request.method.toUpperCase() !== 'POST' || !internalCaller(request)) return fail(404, 'not-found');
+  if (!deps) return fail(503, 'database-not-configured');
+  try {
+    const o = await body(request);
+    const storeId = Number.isInteger(o.storeId) && (o.storeId as number) > 0 ? (o.storeId as number) : S;
+    const r = await refreshAudiences({ db: deps.db, resolver: deps.resolver }, storeId);
+    return json({ ok: true, skipped: r.skipped, counted: r.counted, sent: r.sent.map((x) => ({ id: x.id, error: x.error, statuses: x.results?.map((p) => p.status) ?? [] })) });
+  } catch (e) {
+    return errorResponse(e);
+  }
 }
 
 const answer = (e: unknown): Response => (e instanceof AudienceError ? json({ ok: false, error: e.code, ...(e.details ? { details: e.details } : {}) }, { status: e.status }) : errorResponse(e));
@@ -203,7 +312,7 @@ export async function audiencePushHandler(request: Request, deps: AdminDeps | nu
 }
 
 /**
- * /api/admin/marketing/audiences/settings — GET the sending card (`marketing.audiences.read`); PUT {key, value, version}
+ * /api/admin/marketing/audiences/settings — GET the cards (sending, PR 264 exclusion list and daily refresh) (`marketing.audiences.read`); PUT {key, value, version}
  * (`marketing.audiences.write`).
  */
 export async function audiencesSettingsHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
@@ -212,8 +321,12 @@ export async function audiencesSettingsHandler(request: Request, deps: AdminDeps
   const g = await guardAdmin(request, deps, { permission: method === 'GET' ? 'marketing.audiences.read' : 'marketing.audiences.write', storeId: S });
   if (g instanceof Response) return g;
   try {
-    const card = method === 'GET' ? await audiencesCard(deps!.resolver) : await saveAudiencesCard(deps!.db, deps!.resolver, { actor: g.actor, ctx: g.ctx }, await body(request));
-    return json({ ok: true, cards: { audiences: card } });
+    if (method === 'GET') {
+      const [audiences, refused, refresh] = await Promise.all([audienceCard(deps!.resolver, 'audiences'), audienceCard(deps!.resolver, 'refused'), audienceCard(deps!.resolver, 'refresh')]);
+      return json({ ok: true, cards: { audiences, refused, refresh } });
+    }
+    const card = await saveAudiencesCard(deps!.db, deps!.resolver, { actor: g.actor, ctx: g.ctx }, await body(request));
+    return json({ ok: true, cards: { [card.key]: card } });
   } catch (e) {
     return answer(e);
   }
