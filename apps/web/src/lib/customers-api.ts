@@ -8,6 +8,9 @@
 //
 //   GET   /api/admin/customers?view=&q=&source=&sort=&page=   PR 285: the Customers list, one row per person, with the
 //                                                     count of each view (customers.read)
+//   POST  /api/admin/customers/export             PR 299: {view?, q?, source?, sort?, segment?, reason} the list's people
+//                                                     as one CSV file (customers.read + customers.export; off as shipped;
+//                                                     an ExportJob row and an audit line with the reason)
 //   GET   /api/admin/customers/by-phone?phone=        the person a number belongs to, however it is written (customers.read)
 //   GET   /api/admin/customers/:id                    the single view: his profiles, numbers, order counts and lifetime
 //                                                     value; a merged profile answers with its survivor (customers.read)
@@ -82,6 +85,30 @@ async function handle(request: Request, deps: AdminDeps | null, permission: cu.C
   }
 }
 
+/** PR 299: the CSV file itself (not the `{ ok }` envelope); a refusal is the usual `{ ok: false }` answer. */
+async function exportCsv(request: Request, deps: AdminDeps | null): Promise<Response> {
+  const url = new URL(request.url);
+  const storeId = storeIdOf(url);
+  if (storeId === null) return fail(400, 'invalid-store-id');
+  const g = await guardAdmin(request, deps, { permission: 'customers.export', storeId });
+  if (g instanceof Response) return g;
+  try {
+    const x = await cu.exportCustomers(customersDeps(deps!), { actor: g.actor, storeId, ctx: g.ctx }, await body(request));
+    return new Response(x.csv, {
+      status: 200,
+      headers: {
+        'content-type': 'text/csv; charset=utf-8',
+        'content-disposition': `attachment; filename="${x.fileName}"`,
+        'cache-control': 'no-store',
+        'x-rows': String(x.rows),
+        'x-full-phone': x.fullPhone ? '1' : '0',
+      },
+    });
+  } catch (e) {
+    return customersFail(e);
+  }
+}
+
 /** The list's query parameters (anything else is ignored). */
 const LIST_PARAMS = ['view', 'q', 'source', 'sort', 'page', 'segment'] as const;
 
@@ -99,6 +126,11 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
       const q = Object.fromEntries(LIST_PARAMS.filter((k) => x.url.searchParams.has(k)).map((k) => [k, x.url.searchParams.get(k) ?? '']));
       return { ...(await cu.customerList(x.deps, x.who, q)) };
     });
+  }
+  if (a === 'export') {
+    if (path.length > 1) return notFound();
+    if (m !== 'POST') return notAllowed();
+    return exportCsv(request, deps);
   }
   if (a === 'by-phone') {
     if (path.length > 1) return notFound();

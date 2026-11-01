@@ -186,4 +186,22 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect((await auto('GET', '00000000-0000-7000-8000-000000000000')).status).toBe(404);
     expect((await auto('DELETE', id)).status).toBe(405);
   });
+
+  it('PR 299: the export — off until Customer settings turns it on; a reader may not; then one CSV file with a reason', async () => {
+    const raw = (cookie: string, body?: unknown, method = 'POST') => customersRoute(call(method, '/api/admin/customers/export', { cookie, body }), deps, ['export']);
+    const off = await raw(owner, { reason: 'Eid call list' });
+    expect(off.status).toBe(403);
+    expect(await off.json()).toMatchObject({ ok: false, error: 'SWITCHED_OFF' });
+    expect((await api('PUT', 'settings', { body: { key: 'customers.export', value: { enabled: true, maxRows: 5_000 } } })).status).toBe(200);
+    expect((await raw(reader, { reason: 'Eid call list' })).status).toBe(403);
+    expect(await (await raw(owner, { reason: 'x' })).json()).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    const r = await raw(owner, { reason: 'Eid call list', q: '01700002861' });
+    expect(r.status).toBe(200);
+    expect(r.headers.get('content-type')).toContain('text/csv');
+    expect(r.headers.get('content-disposition')).toMatch(/^attachment; filename="customers-\d{4}-\d{2}-\d{2}\.csv"$/);
+    expect(r.headers.get('x-full-phone')).toBe('1');
+    expect(await r.text()).toContain('Sample Rahim');
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'customers.export' } })).toBe(1);
+    expect((await raw(owner, undefined, 'GET')).status).toBe(405);
+  });
 });

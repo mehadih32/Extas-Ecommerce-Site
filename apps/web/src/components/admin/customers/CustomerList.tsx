@@ -3,7 +3,8 @@
 // (a plain GET form shared with the order list), the table (one card per person on a phone) and "More". Each row is one
 // person: his name and number as this viewer may see it (masked without `customers.phone`), where he first came from,
 // orders, Sales (delivered only) with Ordered value under it (CN-022), true deliveries, refusals that were not the
-// shop's fault, last order and whether he takes offers. Never his address (it stays inside an order).
+// shop's fault, last order and whether he takes offers. Never his address (it stays inside an order). PR 299: "Export"
+// above the table for a person allowed it (the owner's switch and `customers.export`), with a reason.
 import Link from 'next/link';
 import type { CustomerList as ListData, CustomerRow, CustomerView } from '@extas/customers';
 import { OrderFilters, type FilterSelect } from '@/components/admin/orders/OrderFilters';
@@ -11,9 +12,10 @@ import { formatMoney, formatNumber, type Money } from '@/components/admin/produc
 import { customersHref, CUSTOMERS_BASE, share, type CustomerQuery } from '@/lib/admin-customers/model';
 import type { AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { t } from '@/lib/i18n';
+import { t, type Dict } from '@/lib/i18n';
 import { PageHead, SectionTabs } from '../shell/ShellParts';
 import { ShellIcon } from '../shell/ShellIcon';
+import { CustomerExport } from './CustomerExport';
 import { initials } from './PairCard';
 
 export interface ListSettings {
@@ -146,7 +148,8 @@ export function CustomerTable({ view, rows, money, when, hrefOf }: { view: Admin
   );
 }
 
-export function CustomerListPage({ view, data, query, settings, money, hrefOf }: { view: AdminView; data: ListData; query: CustomerQuery; settings: ListSettings; money: Money; hrefOf?: (id: string) => string }) {
+/** `exportLimits` (PR 299): the reason's limits when this person may export the list (switched on and the key held); null hides Export. */
+export function CustomerListPage({ view, data, query, settings, money, hrefOf, exportLimits = null }: { view: AdminView; data: ListData; query: CustomerQuery; settings: ListSettings; money: Money; hrefOf?: (id: string) => string; exportLimits?: { min: number; max: number } | null }) {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
@@ -207,6 +210,7 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf }:
         keep={{ segment: query.segment ?? '' }}
         clear={filtered || query.sort ? { href: customersHref({ view: query.view, segment: query.segment }), label: t(d, 'cus.list.clear') } : null}
       />
+      {exportLimits && data.rows.length ? <CustomerExport dict={{ cus: d.cus as Dict }} query={{ view: data.query.view, q: data.query.q, source: data.query.source, sort: query.sort, segment: data.query.segment }} limits={exportLimits} /> : null}
       {data.rows.length ? (
         <>
           <CustomerTable view={view} rows={data.rows} money={money} when={when} hrefOf={hrefOf} />

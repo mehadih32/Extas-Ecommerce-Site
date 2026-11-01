@@ -46,6 +46,10 @@
     "points": {
       "label": "Rewards and points",
       "help": "Points for each delivered order, by your own rule: \"Points per ৳100\" of the goods (the delivery charge never counts) and/or \"Points per order\". Points are given \"Days to wait\" after the delivery (the exchange window) and never for an order delivered more than \"Days to look back\" before. Turning points into money is yours too: each block of \"Points to turn in\" becomes \"Wallet credit\" in the customer's wallet, and only when both are set. Off as shipped with every number at 0. \"Per run\": how many orders one run reads. The late-delivery apology credit is under Money › Wallet."
+    },
+    "export": {
+      "label": "Customer export",
+      "help": "Off as shipped. When on, a person holding \"Export customers\" downloads the list's people (the view, search and filters on screen) as one CSV file, after typing why; the reason, the person and the count are logged. \"Most people in one file\": more are refused with the count, never cut. The retention rule always applies: a customer who asked to be forgotten, or an archived profile, is never in the file; the address, IP and location never; the phone number only as the person may see it."
     }
   }
 }

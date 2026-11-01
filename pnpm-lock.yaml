@@ -502,6 +502,9 @@ importers:
       '@extas/auth':
         specifier: workspace:*
         version: link:../auth
+      '@extas/catalogue':
+        specifier: workspace:*
+        version: link:../catalogue
       '@extas/db':
         specifier: workspace:*
         version: link:../db

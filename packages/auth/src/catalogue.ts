@@ -298,6 +298,10 @@ export const PERMISSIONS = {
   // off (archived, never deleted), write a note, pin it, archive it (`customers.notes`; audited). Seeing them needs
   // `customers.read`; a note is for the team only and never reaches the customer.
   'customers.notes': { group: 'customers' },
+  // S14 · PR 299 — the customer export (Customers › All customers › Export, its own key): the list's people as one CSV
+  // file, with a reason; the number only as `customers.phone` allows; erased and archived profiles never; every export an
+  // ExportJob row and an audit line. Off until the owner turns `customers.export` on.
+  'customers.export': { group: 'customers' },
   // S11 · PR 220–222 — Website → SEO: see which pages search engines may list, the title and description templates, the
   // AI drafts waiting and the structured data (`seo.read`); change them, write AI drafts and accept or discard a draft
   // (`seo.manage`). Nothing here touches a price, an order or a customer.
