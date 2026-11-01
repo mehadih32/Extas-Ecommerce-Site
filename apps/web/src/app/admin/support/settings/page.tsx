@@ -21,13 +21,16 @@
 // list" card (off; blocking itself needs `support.block`, the owner's).
 // PR 435: the "Support app" card (off as it ships) — offer the app, its name, notifications, what they are about, what
 // a locked phone shows, how long a phone that is off is tried.
+// PR 538: the "Desk hours" card (off = always open; the days, opens, closes), the "Tell the owner when nobody answers"
+// card (off; minutes, outside desk hours wait or tell, the name, the hourly cap, how far back, the line's language and
+// words) and the "Link safety" card (off; trusted sites, bare number addresses, the shortener, ending and file lists).
 // PR 427: the "Who is writing" card (off as it ships) — the number from WhatsApp or the chat's words, its customer, one
 // person across channels.
 // Optional behaviour ships off. Nothing here moves money or changes an order.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { SUPPORT_APP_EVENTS, SUPPORT_APP_NAME_MAX, SUPPORT_APP_PREVIEWS } from '@extas/settings';
+import { DESK_DAYS, ESCALATION_BOUNDS, ESCALATION_LANGS, ESCALATION_OUTSIDE_HOURS, ESCALATION_WORDS_MAX, LINK_LIST_MAX, SUPPORT_APP_EVENTS, SUPPORT_APP_NAME_MAX, SUPPORT_APP_PREVIEWS } from '@extas/settings';
 import * as sp from '@extas/support';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
@@ -172,6 +175,32 @@ export default async function SupportSettingsPage() {
     { kind: 'select', path: 'preview', label: s('app.preview'), options: SUPPORT_APP_PREVIEWS.map((v) => ({ value: v, label: s(`app.previewOpt.${v}`) })) },
     { kind: 'number', path: 'ttlMinutes', label: s('app.ttlMinutes'), min: 1, max: 1440 },
   ];
+  // PR 538: desk hours, telling the owner when nobody answers, link safety (all off as they ship)
+  const deskHours: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('deskHours.enabled'), help: s('deskHours.enabledHelp') },
+    { kind: 'checks', path: 'days', label: s('deskHours.days'), options: DESK_DAYS.map((v) => ({ value: v, label: s(`deskHours.day.${v}`) })) },
+    { kind: 'text', path: 'opens', label: s('deskHours.opens'), help: s('deskHours.timeHelp'), max: 5 },
+    { kind: 'text', path: 'closes', label: s('deskHours.closes'), help: s('deskHours.timeHelp'), max: 5 },
+  ];
+  const eb = ESCALATION_BOUNDS;
+  const escalation: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('escalation.enabled'), help: s('escalation.enabledHelp') },
+    { kind: 'number', path: 'minutes', label: s('escalation.minutes'), help: s('escalation.minutesHelp'), min: eb.minutes.min, max: eb.minutes.max },
+    { kind: 'select', path: 'outsideHours', label: s('escalation.outsideHours'), options: ESCALATION_OUTSIDE_HOURS.map((v) => ({ value: v, label: s(`escalation.outside.${v}`) })) },
+    { kind: 'switch', path: 'showName', label: s('escalation.showName') },
+    { kind: 'number', path: 'perHour', label: s('escalation.perHour'), min: eb.perHour.min, max: eb.perHour.max },
+    { kind: 'number', path: 'lookBackHours', label: s('escalation.lookBackHours'), help: s('escalation.lookBackHoursHelp'), min: eb.lookBackHours.min, max: eb.lookBackHours.max },
+    { kind: 'select', path: 'lang', label: s('escalation.lang'), options: ESCALATION_LANGS.map((v) => ({ value: v, label: s(`followUp.${v}`) })) },
+    { kind: 'pair', path: 'words', label: { en: s('escalation.wordsEn'), bn: s('escalation.wordsBn') }, help: s('escalation.wordsHelp'), max: ESCALATION_WORDS_MAX, rows: 2 },
+  ];
+  const linkSafety: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('linkSafety.enabled'), help: s('linkSafety.enabledHelp') },
+    { kind: 'text', path: 'trustedSites', label: s('linkSafety.trustedSites'), help: s('linkSafety.trustedSitesHelp'), max: LINK_LIST_MAX },
+    { kind: 'switch', path: 'flagNumbers', label: s('linkSafety.flagNumbers') },
+    { kind: 'text', path: 'shorteners', label: s('linkSafety.shorteners'), help: s('linkSafety.listHelp'), max: LINK_LIST_MAX },
+    { kind: 'text', path: 'riskyEndings', label: s('linkSafety.riskyEndings'), help: s('linkSafety.listHelp'), max: LINK_LIST_MAX },
+    { kind: 'text', path: 'riskyFiles', label: s('linkSafety.riskyFiles'), help: s('linkSafety.listHelp'), max: LINK_LIST_MAX },
+  ];
   // PR 427: who is writing (off as it ships)
   const identity: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: s('identity.enabled'), help: s('identity.enabledHelp') },
@@ -211,6 +240,9 @@ export default async function SupportSettingsPage() {
       <FieldsCard url={API} screen={screen('support.privacy')} fields={privacy} texts={texts('privacy')} canEdit={canEdit} testId="support-set-privacy" />
       <FieldsCard url={API} screen={screen('support.blockList')} fields={blockList} texts={texts('blockList')} canEdit={canEdit} testId="support-set-blocklist" />
       <FieldsCard url={API} screen={screen('support.app')} fields={app} texts={texts('app')} canEdit={canEdit} testId="support-set-app" />
+      <FieldsCard url={API} screen={screen('support.deskHours')} fields={deskHours} texts={texts('deskHours')} canEdit={canEdit} testId="support-set-desk" />
+      <FieldsCard url={API} screen={screen('support.escalation')} fields={escalation} texts={texts('escalation')} canEdit={canEdit} testId="support-set-escalation" />
+      <FieldsCard url={API} screen={screen('support.linkSafety')} fields={linkSafety} texts={texts('linkSafety')} canEdit={canEdit} testId="support-set-links" />
       <p className="a2-xs a2-mute a2-mt12" data-testid="support-set-phones">{s('phones')}</p>
       <details className="a2-card a2-mt12" data-testid="support-set-more">
         <summary className="a2-h4">{s('more')}</summary>

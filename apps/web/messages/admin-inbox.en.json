@@ -88,7 +88,18 @@
       "pending": "Copying the file…",
       "open": "Open file",
       "file": "File",
-      "empty": "No messages yet."
+      "empty": "No messages yet.",
+      "risky": "Risky link — not opened",
+      "linkWhy": {
+        "shortener": "a link shortener hides the real address",
+        "lookalike": "looks like the shop's site but is not",
+        "ending": "an often-misused site ending",
+        "file": "a file that installs or runs something",
+        "number": "a bare number address",
+        "punycode": "disguised letters in the address",
+        "login": "a hidden address after “@”",
+        "broken": "not a real address"
+      }
     },
     "compose": {
       "label": "Write",
@@ -166,7 +177,10 @@
       "FOLLOWUP_SKIPPED": "{name} skipped a follow-up ({why})",
       "FOLLOWUP_ORDERED": "Order {number} came after the follow-up",
       "BLOCKED": "{name} put this person on the support block list: {reason}",
-      "UNBLOCKED": "{name} took this person off the support block list"
+      "UNBLOCKED": "{name} took this person off the support block list",
+      "ESCALATED": "The owner was told on Telegram: no answer for {minutes} min",
+      "ESCALATED_PRACTICE": "The owner's line went to the practice copy (Telegram not connected): no answer for {minutes} min",
+      "ESCALATED_FAILED": "The owner's line could not be sent (Telegram): no answer for {minutes} min"
     },
     "err": {
       "STALE": "Someone changed this conversation in between; it was read again.",
@@ -474,6 +488,59 @@
           "text": "The name and the start of the message"
         },
         "ttlMinutes": "Keep trying a phone that is off for (minutes)"
+      },
+      "deskHours": {
+        "h": "Desk hours",
+        "d": "When the support desk works, in the shop's own time. Off: always open. Telling the owner waits for these hours, and the inbox shows whether the desk is open.",
+        "enabled": "Use desk hours",
+        "enabledHelp": "Off: the desk counts as open all day, every day.",
+        "days": "Open on",
+        "day": {
+          "sat": "Saturday",
+          "sun": "Sunday",
+          "mon": "Monday",
+          "tue": "Tuesday",
+          "wed": "Wednesday",
+          "thu": "Thursday",
+          "fri": "Friday"
+        },
+        "opens": "Opens at",
+        "closes": "Closes at",
+        "timeHelp": "24-hour time, like 10:00 or 22:00 (24:00 = midnight)."
+      },
+      "escalation": {
+        "h": "Tell the owner when nobody answers",
+        "d": "A customer waits and no employee answers: the owner gets one line on Telegram (the bot on Keys & connections; until it is connected the line stays in the practice copy).",
+        "enabled": "Tell the owner",
+        "enabledHelp": "Once per wait. Any answer (a person's or the AI's) ends the wait.",
+        "minutes": "After how many minutes of waiting",
+        "minutesHelp": "Counted while the desk is open, unless set to tell at any hour.",
+        "outsideHours": "Outside desk hours",
+        "outside": {
+          "wait": "Wait for the desk to open",
+          "tell": "Tell at any hour"
+        },
+        "showName": "Name the customer in the line",
+        "perHour": "At most this many lines an hour",
+        "lookBackHours": "Ignore waits older than (hours)",
+        "lookBackHoursHelp": "Switching it on never sends the whole backlog.",
+        "lang": "Language of the line",
+        "wordsEn": "The line in English",
+        "wordsBn": "The line in Bengali",
+        "wordsHelp": "Blanks: {minutes} waited, {channel}, {name} (or “—”), {ref} the chat's reference."
+      },
+      "linkSafety": {
+        "h": "Link safety",
+        "d": "Links in a customer's message are checked. A risky one is shown as text that cannot be opened, with a danger mark; a safe one opens in a new tab.",
+        "enabled": "Check customers' links",
+        "enabledHelp": "Off: messages show as plain text, as before.",
+        "trustedSites": "Trusted sites",
+        "trustedSitesHelp": "The shop's own and partner sites, comma-separated (like yourshop.com.bd). Never marked; a site that only looks like one of them is.",
+        "flagNumbers": "Mark links to a bare number address (no site name)",
+        "shorteners": "Link shorteners (the real address is hidden)",
+        "riskyEndings": "Risky site endings",
+        "riskyFiles": "Risky files (they install or run something)",
+        "listHelp": "Comma-separated. Add or remove any."
       }
     },
     "person": {
@@ -773,6 +840,11 @@
       "err": {
         "INVALID_INPUT": "That period could not be shown."
       }
+    },
+    "desk": {
+      "open": "Desk open · until {time}",
+      "closed": "Desk closed · opens {time}",
+      "never": "Desk closed · no open day set"
     }
   }
 }

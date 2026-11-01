@@ -176,7 +176,13 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const r = await j('GET', ['settings']);
     const files = { enabled: true, maxPerMessage: 4, maxMb: 10, kinds: { image: true, video: true, pdf: true } };
     expect(r.body.cards['support.attachments'].value).toEqual(files);
-    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.app', 'support.attachments', 'support.blockList', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.draftKeywords', 'support.draftWords', 'support.drafts', 'support.followUp', 'support.followUpWords', 'support.identity', 'support.inbox', 'support.liveChat', 'support.privacy', 'support.tickets']);
+    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.app', 'support.attachments', 'support.blockList', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.draftKeywords', 'support.draftWords', 'support.drafts', 'support.followUp', 'support.followUpWords', 'support.identity', 'support.inbox', 'support.liveChat', 'support.privacy', 'support.tickets', 'support.deskHours', 'support.escalation', 'support.linkSafety'].sort());
+    // PR 538: a desk that closes before it opens is refused; a real one is kept (and put back)
+    const desk = r.body.cards['support.deskHours'];
+    expect((await j('PUT', ['settings'], { body: { key: 'support.deskHours', value: { ...desk.value, opens: '22:00', closes: '10:00' }, version: desk.version } })).status).toBe(400);
+    const deskSaved = await j('PUT', ['settings'], { body: { key: 'support.deskHours', value: { ...desk.value, enabled: true, closes: '21:30' }, version: desk.version } });
+    expect(deskSaved.body.cards['support.deskHours'].value).toMatchObject({ enabled: true, opens: '10:00', closes: '21:30' });
+    expect((await j('PUT', ['settings'], { body: { key: 'support.deskHours', value: desk.value, version: deskSaved.body.cards['support.deskHours'].version } })).status).toBe(200);
     const version = r.body.cards['support.attachments'].version as string;
     const saved = await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxPerMessage: 3 }, version } });
     expect(saved.status).toBe(200);

@@ -194,6 +194,8 @@ import supportPrivacyBn from '../messages/support-privacy.bn.json';
 import supportPrivacyEn from '../messages/support-privacy.en.json';
 import supportAppBn from '../messages/support-app.bn.json';
 import supportAppEn from '../messages/support-app.en.json';
+import supportEscalationBn from '../messages/support-escalation.bn.json';
+import supportEscalationEn from '../messages/support-escalation.en.json';
 import comboSplitEn from '../messages/combo-split.en.json';
 // CN-020 (3) — "Call me" at checkout (registry v99).
 import callMeBn from '../messages/call-me.bn.json';
@@ -336,6 +338,8 @@ messages.en = mergeMessages(messages.en, supportPrivacyEn);
 messages.bn = mergeMessages(messages.bn, supportPrivacyBn);
 messages.en = mergeMessages(messages.en, supportAppEn);
 messages.bn = mergeMessages(messages.bn, supportAppBn);
+messages.en = mergeMessages(messages.en, supportEscalationEn);
+messages.bn = mergeMessages(messages.bn, supportEscalationBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

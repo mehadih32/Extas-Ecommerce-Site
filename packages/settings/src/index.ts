@@ -114,6 +114,8 @@ export * from './registry-support-followup';
 export * from './registry-support-privacy';
 // S22 · PR 435 — the support app: installable, support-only frame, push notifications (registry-support-app.ts, version 187).
 export * from './registry-support-app';
+// S22 · PR 538 — desk hours, telling the owner when nobody answers, the links customers send (registry-support-escalation.ts, version 188).
+export * from './registry-support-escalation';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

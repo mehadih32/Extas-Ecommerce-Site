@@ -53,6 +53,10 @@
 //   analytics.ts  the report per channel and per employee (and EXTAS AI): chats, answers, tickets, first-answer and
 //                 solution minutes, late tickets, chat → order conversion, orders and their delivered value, follow-ups;
 //                 analytics-pure.ts: the medians, rates and the late rule.
+// PR 538: when nobody answers, desk hours and the links customers send.
+//   escalation.ts the owner told on Telegram once per wait (the worker's sweep; open desk minutes only), the desk now for
+//                 the inbox, a customer's links checked as they arrive; escalation-pure.ts: the desk's hours in the
+//                 store's time zone, when a wait is due, the owner's line, the link check.
 //
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
@@ -89,3 +93,6 @@ export * from './push';
 // PR 436 — support analytics: per channel and per employee, conversion, first-answer and solution times.
 export * from './analytics-pure';
 export * from './analytics';
+// PR 538: desk hours, the owner told on Telegram when nobody answers, the links customers send
+export * from './escalation-pure';
+export * from './escalation';

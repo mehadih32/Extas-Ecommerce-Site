@@ -28,6 +28,7 @@
     "@extas/search": "workspace:*",
     "@extas/settings": "workspace:*",
     "@extas/shipping": "workspace:*",
+    "@extas/support": "workspace:*",
     "@extas/vault": "workspace:*",
     "bullmq": "5.81.5",
     "ioredis": "5.11.1"

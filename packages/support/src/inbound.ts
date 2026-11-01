@@ -7,8 +7,10 @@
 // with the channel's address and PENDING until they are copied to our storage (B4.8, with the connector). The log
 // records every arrival. Nothing here sends anything or changes an order.
 import { randomBytes } from 'node:crypto';
+import type { Prisma } from '@extas/db/client';
 import { z } from 'zod';
 import { checkStoreId, nowOf, parse, setting, SupportError, TX, type SupportDeps } from './context';
+import { messageLinkSafety } from './escalation';
 import { queueSupportPush } from './push';
 import { resolveIdentity } from './identity';
 import { cleanFileName, PREVIEW_CHARS, previewOf, SUBJECT_CHARS } from './pure';
@@ -84,6 +86,8 @@ export async function receiveMessage(deps: SupportDeps, input: ReceiveInput): Pr
   const tickets = await setting(deps, d.storeId, 'support.tickets');
   // PR 434: a blocked person's message is kept, but opens no ticket (the list switched on)
   const blockOn = (await setting(deps, d.storeId, 'support.blockList')).enabled;
+  // PR 538: the links in the words checked as they arrive (support.linkSafety off as it ships)
+  const linkSafety = await messageLinkSafety(deps, d.storeId, text);
 
   const received = await deps.db.$transaction(async (tx) => {
     // one person on one channel at a time, so two messages arriving together never start two conversations
@@ -128,6 +132,7 @@ export async function receiveMessage(deps: SupportDeps, input: ReceiveInput): Pr
         externalMessageId: d.message.externalId,
         status: 'RECEIVED',
         sentAt: at,
+        ...(linkSafety ? { linkSafety: linkSafety as unknown as Prisma.InputJsonValue } : {}),
       },
     });
     for (const f of d.message.files) {

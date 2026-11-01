@@ -10,6 +10,7 @@ import { paymentsPlanner } from './payments';
 import { RETURNS_ERP_JOB, returnsErpPlanner } from './returns-erp';
 import { pointsPlanner } from './rewards';
 import { searchPlanner, searchRunKey } from './search';
+import { supportEscalationPlanner } from './support-escalation';
 import { errorLine, MAX_ERROR } from './context';
 import { withDeadline } from './runs';
 import { LeaderLock, type LockStore } from './leader';
@@ -59,7 +60,7 @@ describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     // PR 351: + 'money.report.send' (its own queue 'reports'). PR 264: + 'audiences.refresh' (the same queue).
     expect([...JOBS.keys()].sort()).toEqual(
-      ['audiences.refresh', 'courier.track', 'money.report.send', 'courier.zones', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
+      ['audiences.refresh', 'courier.track', 'money.report.send', 'courier.zones', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('money.report.send')!.queue).toBe('reports');
@@ -69,6 +70,7 @@ describe('PR 6 · catalogue', () => {
     // PR 296: the points run, per store, on its own queue
     expect(jobDefinition('customers.points.run')!.queue).toBe('customers');
     expect(() => jobDefinition('customers.points.run')!.parse({})).toThrow(/positive integer/);
+    expect(jobDefinition('support.escalate')!.queue).toBe('support');
     expect(QUEUES.length).toBeGreaterThanOrEqual(1);
     expect(jobDefinition('nope')).toBeNull();
   });
@@ -116,6 +118,18 @@ describe('PR 6 · catalogue', () => {
     expect(planned.map((p) => p.key)).toEqual([`messages.run/1/${slotOf(at.getTime(), 60_000)}`, `messages.run/2/${slotOf(at.getTime(), 60_000)}`]);
     expect(planned.every((p) => p.queue === 'messages')).toBe(true);
     expect(await searchPlanner({} as never, new Date())).toEqual([]);
+  });
+  it('PR 538: the support escalation sweep needs a store; one run per store and minute while it is on; nothing without the Telegram link', async () => {
+    const job = jobDefinition('support.escalate')!;
+    expect(() => job.parse({})).toThrow(/positive integer/);
+    expect(job.storeOf(job.parse({ storeId: 2 }))).toBe(2);
+    expect(await supportEscalationPlanner({} as never, new Date())).toEqual([]);
+    expect(await job.run({} as never, { storeId: 2 })).toEqual({ ok: true, stats: { waiting: 0, told: 0, capped: 0 } });
+    const settings = { value: async (k: string, t: { storeId: number }) => (k === 'support.escalation' ? { ...registry['support.escalation'].default, enabled: t.storeId === 2 } : null) };
+    const deps = { telegram: { use: async () => ({ api: {}, mode: 'MOCK' }) }, settings, db: { store: { findMany: async () => [{ id: 1 }, { id: 2 }] } } } as never;
+    const at = new Date(Date.UTC(2026, 10, 1, 6, 0, 30));
+    const planned = await supportEscalationPlanner(deps, at);
+    expect(planned).toEqual([{ queue: 'support', name: 'support.escalate', payload: { storeId: 2 }, key: `support.escalate/2/${slotOf(at.getTime(), 60_000)}` }]);
   });
   it('PR 176: the courier tracking read needs a store; one run per store and slot of `delivery.courier.tracking.everyMinutes`, none when off', async () => {
     const job = jobDefinition('courier.track')!;

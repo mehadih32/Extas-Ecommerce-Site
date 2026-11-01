@@ -61,7 +61,17 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   const q = (sq.q ?? '').trim().slice(0, 80);
   const channel = sp.isChannelKind(sq.channel ?? '') ? sq.channel : undefined;
   const sd = supportDeps(access.deps);
-  const box = await sp.supportInbox(sd, who, { view: current, q: q || undefined, channel, page: sq.page && /^\d{1,5}$/.test(sq.page) ? sq.page : undefined });
+  const [box, desk] = await Promise.all([
+    sp.supportInbox(sd, who, { view: current, q: q || undefined, channel, page: sq.page && /^\d{1,5}$/.test(sq.page) ? sq.page : undefined }),
+    // PR 538: the desk's hours (null while they are off: always open)
+    sp.supportDesk(sd, MOTHER_STORE_ID),
+  ]);
+  const deskTime = (at: Date, tz: string) => {
+    const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(view.locale, { timeZone: tz, numberingSystem: 'latn', ...o }).format(at);
+    // a time later today shows the hour only; another day shows the day too
+    const day = (x: Date) => x.toLocaleDateString('en-CA', { timeZone: tz });
+    return day(at) === day(now) ? f({ hour: 'numeric', minute: '2-digit' }) : f({ weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  };
   const n = (x: number) => formatNumber(x, view.locale);
   const now = new Date();
   const link = (over: Partial<Search>) => {
@@ -77,6 +87,12 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
     <div className="a2-z" data-testid="support-inbox">
       <PageHead view={view} place={locateKey('supportInbox')} title={t(d, 'sup.title')} sub={t(d, 'sup.sub')} />
       <SectionTabs view={view} current="supportInbox" />
+      {desk ? (
+        <p className={`sp-desk${desk.open ? '' : ' closed'}`} data-testid="support-desk">
+          <ShellIcon name="clock" size={14} />
+          <span>{!desk.next ? t(d, 'sup.desk.never') : t(d, desk.open ? 'sup.desk.open' : 'sup.desk.closed', { time: deskTime(desk.next, desk.timeZone) })}</span>
+        </p>
+      ) : null}
       {/* PR 426: ~~no adapter connected~~ no channel switched on yet (Support settings → Channels) */}
       {!box.channels.some((c) => c.enabled) ? (
         <div className="a2-note warn" data-testid="support-no-channel">
