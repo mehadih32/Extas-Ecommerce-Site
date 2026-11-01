@@ -510,6 +510,24 @@
         "price": "That size costs a different price now, so it can't be swapped here."
       }
     },
+    "cancel": {
+      "title": "Cancel this order",
+      "tapText": "You can still cancel this order yourself.",
+      "requestText": "We have started on this order. You can ask us to cancel it, and we will reply soon.",
+      "requested": "You asked us to cancel this order. We will let you know.",
+      "open": "Cancel order",
+      "openRequest": "Ask to cancel",
+      "reasonAsk": "Why do you want to cancel?",
+      "note": "Anything to add? (optional)",
+      "paid": "Money you paid is not sent back by itself: a refund request is made, and we check it before sending it.",
+      "confirm": "Yes, cancel the order",
+      "confirmRequest": "Send the request",
+      "keep": "Keep my order",
+      "done": "Your order is cancelled.",
+      "doneRequest": "Request sent. We will let you know.",
+      "reasonErr": "Please pick a reason.",
+      "err": "This order can no longer be cancelled here. Message us and we will help."
+    },
     "twoSize": {
       "title": "You ordered two sizes",
       "text": "{product}{colour}: {sizes}. Do you want them all, or only one size?",

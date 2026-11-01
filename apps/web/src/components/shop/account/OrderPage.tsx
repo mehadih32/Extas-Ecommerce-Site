@@ -24,6 +24,8 @@
 // not approved), only when there is one.
 // S08 · PR 186: "Exchange size" / "Report a problem" under each piece he may still exchange, and his exchanges on the
 // order (demo 60-account.js ord_line, ord_exchanges), while the owner has the account's exchange on.
+// PR 144 follow-up (go-live gate customer 360°, 1 Nov): "Cancel this order" under the edit card, as the owner's cancel
+// rule allows it now (one tap, a request the team answers, or "you asked"); never once a courier is booked.
 // Review R3 (M3): the delivered step says what the checkout said ("ships from …" for an order placed in the holiday
 // break, "may arrive after Eid") instead of the hours, and the late flag counts on the courier's own promise clock
 // (from the first day back; never late after Eid).
@@ -51,6 +53,7 @@ import { Icon, WaGlyph } from '../Icon';
 import { nameOf, Thumb } from '../bag/BagLines';
 import { AccountCrumbs } from './AccountShell';
 import { LateTag, StatusTag } from './AccountTabs';
+import { OrderCancelCard } from './OrderCancelCard';
 import { OrderEditCard } from './OrderEditCard';
 import { OrderLife } from './OrderLife';
 import { OrderTrack } from './OrderTrack';
@@ -529,6 +532,15 @@ export async function OrderPage({
               phone={phoneNormalizeBD(edit.state.phone).nice || (edit.state.phone ?? '')}
               address={edit.state.address ?? ''}
               lines={editLines}
+            />
+          ) : null}
+          {extras?.cancel ? (
+            <OrderCancelCard
+              words={{ ...prefixed(c, 'account.cancel.'), offline: t('account.err.offline') }}
+              number={r.number}
+              mode={extras.cancel.mode}
+              reasons={extras.cancel.reasons.map((x) => ({ key: x.key, label: (c.lang === 'bn' ? x.bn : x.en) || x.en }))}
+              paid={pay.kind === 'paid' || r.walletMinor > 0}
             />
           ) : null}
           {extras?.life ? <OrderLife c={c} steps={extras.life} /> : null}
