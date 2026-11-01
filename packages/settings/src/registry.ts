@@ -77,6 +77,7 @@ import { supportIdentitySettings } from './registry-support-identity';
 import { supportContextSettings } from './registry-support-context';
 import { supportCatalogueSettings } from './registry-support-catalogue';
 import { supportCartSettings } from './registry-support-cart';
+import { supportTicketsSettings } from './registry-support-tickets';
 import { callMeSettings } from './registry-call-me';
 import { voiceAddressSettings } from './registry-voice-address';
 import { bhandariP1Settings } from './registry-bhandari-p1';
@@ -1347,6 +1348,8 @@ export const registry = {
   ...supportCatalogueSettings,
   // ---- S22 · PR 430 · orders from a support chat: the chat bag, the channel kept, the fraud gate (off) (registry-support-cart.ts, version 158). ----
   ...supportCartSettings,
+  // ---- S22 · PR 431 · ticketing: the first-answer and solution timers, the Late view, late chats in the bell (off) (registry-support-tickets.ts, version 159). ----
+  ...supportTicketsSettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----

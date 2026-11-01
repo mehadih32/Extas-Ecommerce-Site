@@ -26,6 +26,19 @@ export function ago(dict: Dict, locale: string, at: Date | string | null, now: D
   return t(dict, 'sup.ago.d', { n: formatNumber(Math.floor(h / 24), locale) });
 }
 
+/** PR 431: a length of time in minutes, in words ("25 min", "3 h 10 min", "2 d"). */
+export function span(dict: Dict, locale: string, minutes: number): string {
+  const min = Math.max(0, Math.round(minutes));
+  if (min < 60) return t(dict, 'sup.ago.min', { n: formatNumber(min, locale) });
+  const h = Math.floor(min / 60);
+  if (h < 48) {
+    const m = min % 60;
+    const hours = t(dict, 'sup.ago.h', { n: formatNumber(h, locale) });
+    return m ? `${hours} ${t(dict, 'sup.ago.min', { n: formatNumber(m, locale) })}` : hours;
+  }
+  return t(dict, 'sup.ago.d', { n: formatNumber(Math.floor(h / 24), locale) });
+}
+
 /** A channel kind's name ("WhatsApp", "Site chat"); an unknown kind as it is. */
 export function kindName(dict: Dict, kind: string): string {
   const k = `sup.kind.${kind}`;
@@ -43,7 +56,7 @@ export function senderLabel(dict: Dict, type: string, name: string | null): stri
 }
 
 /** One line of the who-did-what log in words. */
-export function logLine(dict: Dict, e: { kind: string; actor: { type: string; name: string | null }; data: Record<string, unknown> | null }): string {
+export function logLine(dict: Dict, e: { kind: string; actor: { type: string; name: string | null }; data: Record<string, unknown> | null }, locale = 'en'): string {
   const name = senderLabel(dict, e.actor.type, e.actor.name);
   const d = e.data ?? {};
   const status = (s: unknown) => (typeof s === 'string' ? t(dict, `sup.status.${s}`) : '');
@@ -61,6 +74,9 @@ export function logLine(dict: Dict, e: { kind: string; actor: { type: string; na
   else if (e.kind === 'PRODUCT_ORDERED') line = t(dict, 'sup.log.PRODUCT_ORDERED', { number: typeof d.number === 'string' ? d.number : '' });
   // PR 430: an order created from the chat's bag (waiting for its advance when the owner's rule asked one)
   else if (e.kind === 'ORDER_CREATED') line = t(dict, d.gate === 'advance' ? 'sup.log.ORDER_CREATED_ADVANCE' : 'sup.log.ORDER_CREATED', { name, number: typeof d.number === 'string' ? d.number : '' });
+  // PR 431: a ticket opened by the customer's message, solved (how long it took, whether late)
+  else if (e.kind === 'TICKET_OPENED') line = t(dict, 'sup.log.TICKET_OPENED');
+  else if (e.kind === 'TICKET_SOLVED') line = t(dict, d.late === true ? 'sup.log.TICKET_SOLVED_LATE' : 'sup.log.TICKET_SOLVED', { time: span(dict, locale, typeof d.minutes === 'number' ? d.minutes : 0) });
   else line = e.kind;
   return d.auto === true ? `${line} ${t(dict, 'sup.log.auto')}` : line;
 }

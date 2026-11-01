@@ -8,7 +8,7 @@ import { CHANNEL_KINDS, CONVERSATION_STATUSES, DELIVERY_STATES, EVENT_KINDS, INB
 import bn from '../../../messages/admin-inbox.bn.json';
 import en from '../../../messages/admin-inbox.en.json';
 import { t, type Dict } from '../i18n';
-import { ago, kindName, logLine, senderLabel } from './i18n';
+import { ago, kindName, logLine, senderLabel, span } from './i18n';
 
 const keys = (d: Dict, at = ''): string[] => Object.entries(d).flatMap(([k, v]) => (typeof v === 'string' ? [`${at}${k}`] : keys(v, `${at}${k}.`)));
 const NOW = new Date('2026-10-23T06:00:00.000Z');
@@ -62,6 +62,14 @@ describe('the support words (PR 425)', () => {
     const made = logLine(d, { kind: 'ORDER_CREATED', actor: { type: 'STAFF', name: 'Sample owner' }, data: { number: 'EX1430', gate: 'cod' } });
     expect(made).toBe(t(d, 'sup.log.ORDER_CREATED', { name: 'Sample owner', number: 'EX1430' }));
     expect(logLine(d, { kind: 'ORDER_CREATED', actor: { type: 'STAFF', name: 'Sample owner' }, data: { number: 'EX1431', gate: 'advance' } })).toBe(t(d, 'sup.log.ORDER_CREATED_ADVANCE', { name: 'Sample owner', number: 'EX1431' }));
+    // PR 431: a ticket opened, and solved with how long it took (late or in time)
+    expect(logLine(d, { kind: 'TICKET_OPENED', actor: { type: 'SYSTEM', name: null }, data: {} })).toBe(t(d, 'sup.log.TICKET_OPENED'));
+    expect(logLine(d, { kind: 'TICKET_SOLVED', actor: { type: 'SYSTEM', name: null }, data: { minutes: 190, late: false } })).toBe(t(d, 'sup.log.TICKET_SOLVED', { time: span(d, 'en', 190) }));
+    expect(logLine(d, { kind: 'TICKET_SOLVED', actor: { type: 'SYSTEM', name: null }, data: { minutes: 30, late: true } })).toBe(t(d, 'sup.log.TICKET_SOLVED_LATE', { time: span(d, 'en', 30) }));
+    expect(span(d, 'en', 25)).toBe(t(d, 'sup.ago.min', { n: '25' }));
+    expect(span(d, 'en', 190)).toBe(`${t(d, 'sup.ago.h', { n: '3' })} ${t(d, 'sup.ago.min', { n: '10' })}`);
+    expect(span(d, 'en', 120)).toBe(t(d, 'sup.ago.h', { n: '2' }));
+    expect(span(d, 'en', 3 * 24 * 60)).toBe(t(d, 'sup.ago.d', { n: '3' }));
   });
 });
 

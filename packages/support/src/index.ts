@@ -32,6 +32,11 @@
 //                 typed details with the owner's fraud gate (quoteChatOrder), and "Create order" / "Take advance"
 //                 (createChatOrder: the checkout's own placeOrder, the chat's channel as source, the pay link sent)
 //
+// PR 431: ticketing.
+//   tickets.ts    one ticket per customer question: opened by their message (ticketOnCustomerMessage), its owner,
+//                 first answer and status following the chat; its timers (clockOf, clocksOf, ticketOf) and the late
+//                 chats for a person's notifications (lateChats)
+//
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
 export * from './channels';
@@ -52,3 +57,5 @@ export * from './identity';
 export * from './catalogue';
 // PR 430 — orders from the chat: the chat's bag, the fraud gate, the order with its channel.
 export * from './chat-cart';
+// PR 431 — ticketing: status, owner, the first-answer and solution timers, how long it took, late chats in the bell.
+export * from './tickets';

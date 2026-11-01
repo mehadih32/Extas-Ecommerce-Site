@@ -3,6 +3,8 @@
 // Mine, Not taken, Solved, All — each with its count; a search by name, number, reference or subject and a channel
 // filter. Each row shows who, the channel, the first words of the last message, who has it and how long the customer
 // has waited, and opens the conversation. While no channel is connected (PR 426) the page says replies cannot go out.
+// PR 431: the "Late" view (chats whose ticket timer ran out, the most late first) and each row's timer — the first
+// answer or the solution, due in or late by — while `support.tickets` opened a ticket.
 //
 // `support.read` opens it; a number is masked by `customers.phoneMask` (PR 284) unless the person holds
 // `customers.phone`. Nothing here sends anything, moves money or changes an order.
@@ -16,7 +18,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
-import { ago, kindName, withInbox } from '@/lib/admin-support/i18n';
+import { ago, kindName, span, withInbox } from '@/lib/admin-support/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -133,6 +135,11 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
                       <span className="a2-pill line">{kindName(d, r.channel.kind)}</span>
                       <span>{r.assignedTo ? (r.assignedTo.id === me ? t(d, 'sup.you') : r.assignedTo.name) : t(d, 'sup.nobody')}</span>
                       {r.waitingSince && r.status !== 'SOLVED' ? <span>· {t(d, 'sup.waitingFor', { time: ago(d, view.locale, r.waitingSince, now) })}</span> : null}
+                      {r.clock ? (
+                        <span className={`a2-pill ${r.clock.late ? 'bad' : 'line'}`} data-testid="support-row-clock" data-late={r.clock.late ? 'yes' : 'no'}>
+                          {t(d, `sup.clock.${r.clock.stage}${r.clock.late ? 'Late' : ''}`, { time: span(d, view.locale, Math.abs(r.clock.dueAt.getTime() - now.getTime()) / 60_000) })}
+                        </span>
+                      ) : null}
                       <span className="a2-mono">· {r.refCode}</span>
                     </span>
                   </span>

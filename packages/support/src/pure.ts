@@ -7,7 +7,8 @@ export const CONVERSATION_STATUSES = ['OPEN', 'WAITING', 'SOLVED'] as const;
 export type ConversationStatus = (typeof CONVERSATION_STATUSES)[number];
 
 /** The inbox's views (docs/ADMIN-ARCHITECTURE.md §4.7: All · Open · Waiting · Solved · Mine; plus "Not taken"). */
-export const INBOX_VIEWS = ['open', 'waiting', 'mine', 'unassigned', 'solved', 'all'] as const;
+// PR 431: 'late' — the chats whose ticket timer ran out (support.tickets)
+export const INBOX_VIEWS = ['open', 'waiting', 'mine', 'unassigned', 'late', 'solved', 'all'] as const;
 export type InboxView = (typeof INBOX_VIEWS)[number];
 
 /** IN: from the customer. OUT: the shop's reply. NOTE: an internal note, never sent and never shown to the customer. */
@@ -39,6 +40,9 @@ export const EVENT_KINDS = [
   'PRODUCT_ORDERED',
   // PR 430: an order created from the chat's bag (its number, source and gate)
   'ORDER_CREATED',
+  // PR 431: a ticket opened by a customer's message (its two timers), and solved (how long it took, whether late)
+  'TICKET_OPENED',
+  'TICKET_SOLVED',
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 

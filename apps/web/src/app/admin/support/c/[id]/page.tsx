@@ -12,6 +12,8 @@
 // PR 430 (B4.6, SIM-F-024): with `support.cart` on and `support.order`, the "Chat bag" card — the drawer's "Add to bag",
 // the shop's own prices and combos, the details from the customer, and "Create order" / "Take advance" by the owner's
 // own rule; the order keeps the chat's channel as its source.
+// PR 431 (B4.14 item 7): the "Ticket" card — this question's status, owner, first-answer and solution timers (due, late,
+// or met with how long it took) and the chat's earlier tickets, once `support.tickets` opened one.
 //
 // `support.read` opens it; replying, notes, taking it and the state need `support.reply`, giving it to someone else
 // `support.assign` (the API checks again). Nothing here moves money, changes a price or COD, or edits an order.
@@ -29,6 +31,7 @@ import { Composer, type ComposerProducts, type ComposerTexts } from '@/component
 import { CustomerContext } from '@/components/admin/support/CustomerContext';
 import { IdentityActions, type IdentityTexts } from '@/components/admin/support/IdentityActions';
 import { SideActions, type SideTexts } from '@/components/admin/support/SideActions';
+import { TicketCard } from '@/components/admin/support/TicketCard';
 import { formatNumber, moneyOf } from '@/components/admin/products/model';
 import { printedAt } from '@/lib/admin-fulfil/handover';
 import { adminDeps } from '@/lib/admin-auth';
@@ -283,6 +286,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <SideActions base={`${API}/c/${th.id}`} version={th.version} status={th.status} assignedId={th.assignedTo?.id ?? null} me={th.you.id} canReply={th.you.reply} canAssign={th.you.assign} staff={staff} texts={side} />
         </div>
       </section>
+      {th.ticket ? <TicketCard ticket={th.ticket} dict={d} locale={view.locale} timeZone={view.timeZone} now={new Date()} me={th.you.id} /> : null}
       {bag ? <ChatBag key={th.id} url={`${API}/c/${th.id}/cart`} bag={bag} lang={view.lang} money={moneyOf(currency, view.locale)} texts={cartTexts} /> : null}
       {th.context ? <CustomerContext ctx={th.context} d={d} lang={view.lang} locale={view.locale} money={moneyOf(currency, view.locale)} timeZone={view.timeZone} /> : null}
       <section className="a2-card" aria-labelledby="sp-person" data-testid="support-person">
@@ -334,7 +338,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         <div className="a2-tl">
           {[...th.events].reverse().map((e) => (
             <div key={e.id} className={`a2-tli${e.kind === 'NOTED' ? ' warn' : e.kind === 'RECEIVED' || e.kind === 'REOPENED' ? ' mute' : ''}`} data-testid="support-log-line">
-              <b>{logLine(d, e)}</b>
+              <b>{logLine(d, e, view.locale)}</b>
               <span>{printedAt(e.at.toISOString(), view.timeZone)}</span>
             </div>
           ))}

@@ -271,6 +271,12 @@
       "newDevice": {
         "title": "Staff sign-in from a new device",
         "someone": "A staff member"
+      },
+      "lateChat": {
+        "title": "A chat is late",
+        "first": "First answer is late",
+        "resolve": "Solution is late",
+        "unowned": "Nobody has taken it"
       }
     },
     "state": {

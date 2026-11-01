@@ -10,6 +10,7 @@ import { z } from 'zod';
 import type { OutgoingSupportMessage } from './channels';
 import { allow, nowOf, parse, setting, SupportError, TX, type Db, type SupportDeps, type Who } from './context';
 import { CONVERSATION_STATUSES, fileKindOf, PREVIEW_CHARS, previewOf, type ConversationStatus } from './pure';
+import { ticketOnOwner, ticketOnReply, ticketOnStatus } from './tickets';
 
 type Tx = Prisma.TransactionClient;
 
@@ -143,6 +144,8 @@ export async function sendReply(deps: SupportDeps, who: Who, input: unknown, hoo
     if (!d.note && inbox.waitingOnReply && c.status === 'OPEN') {
       await tx.conversationEvent.create({ data: { storeId, conversationId: c.id, kind: 'STATUS', ...staffEvent(who, name), data: { from: 'OPEN', to: 'WAITING', auto: true }, createdAt: now } });
     }
+    // PR 431: the ticket notes its first answer and follows the chat's status and owner
+    if (!d.note) await ticketOnReply(tx, c.id, inbox.waitingOnReply && c.status === 'OPEN' ? 'WAITING' : (c.status as ConversationStatus), now, take ? who.actor.staffUserId : c.assignedToId);
     if (take) {
       await tx.conversationEvent.create({ data: { storeId, conversationId: c.id, kind: 'ASSIGNED', ...staffEvent(who, name), data: { from: null, to: who.actor.staffUserId, toName: name, auto: true }, createdAt: now } });
     }
@@ -217,6 +220,7 @@ export async function assignConversation(deps: SupportDeps, who: Who, input: unk
     }
     const name = await nameOf(tx, me);
     await tx.conversation.update({ where: { id: c.id }, data: { assignedToId: d.staffId, assignedAt: d.staffId ? now : null } });
+    await ticketOnOwner(tx, c.id, d.staffId);
     await tx.conversationEvent.create({
       data: {
         storeId: who.storeId,
@@ -254,6 +258,7 @@ export async function setConversationStatus(deps: SupportDeps, who: Who, input: 
       },
     });
     await tx.conversationEvent.create({ data: { storeId: who.storeId, conversationId: c.id, kind: 'STATUS', ...staffEvent(who, name), data: { from, to: d.status }, createdAt: now } });
+    await ticketOnStatus(tx, { storeId: who.storeId, conversationId: c.id, from, to: d.status, now });
     return { changed: true, status: d.status };
   }, TX);
 }
