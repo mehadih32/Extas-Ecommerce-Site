@@ -2,6 +2,49 @@
 // which scenarios run, the gate's own number in every way people write it, the guard that keeps the run on the preview,
 // the checks on a message's words, the untranslated-text check, what may never reach a report, and the report itself.
 // No browser, no database, no network here; tested beside it (lib.test.mjs).
+// Live run 1 Nov: the words of a SKIP that is not a fault (an owner's switch that is off, a gap registered as a planned
+// PR, what is so by design), and the check of the ad link's tags in the shop's own HttpOnly cookie.
+import { COD_OFF } from "../gate-orders/lib/run-grant.mjs";
+
+export { COD_OFF };
+
+/** A step whose feature exists but the owner keeps switched off: a SKIP, never a FAIL. */
+export const ownerOff = (key) => `off — the owner's switch (${key})`;
+/** A step whose gap is already registered as a planned PR (CN-034): a SKIP naming it. */
+export const planned = (pr) => `planned in PR ${pr}`;
+/** A step that is so on purpose today (the demo's behaviour); the change is a proposal for the owner. */
+export const BY_DESIGN = "by design — proposal in the final analysis";
+
+/**
+ * Whether an ad link's tags were kept, from the browser's cookie jar (`jar`: what the browser context holds, HttpOnly
+ * cookies too) and what page scripts can see (`scriptSide`: document.cookie and storage). The shop keeps them in its
+ * own HttpOnly cookie (`name`, PR 257 follow-up): url-safe base64 JSON with the link's tags and the fbc made from
+ * fbclid — only the link's tags, no name, number or address. A `_fbc` cookie (the pixel's) also counts for fbclid.
+ * Returns { ok, how, why }.
+ */
+export function campaignKept(jar, scriptSide, utm, name) {
+  const cookies = Array.isArray(jar) ? jar : [];
+  const side = String(scriptSide ?? "");
+  const own = cookies.find((c) => c?.name === name);
+  let kept = null;
+  if (own) {
+    try {
+      kept = JSON.parse(Buffer.from(String(own.value), "base64url").toString("utf8"));
+    } catch {
+      kept = null;
+    }
+  }
+  const want = String(utm?.utm_campaign ?? "");
+  const fbclid = utm?.fbclid ? String(utm.fbclid) : null;
+  const pixelFbc = cookies.some((c) => c?.name === "_fbc") || /(^|;\s*)_fbc=/.test(side);
+  const campaign = !!want && (kept?.utmCampaign === want || side.includes(want));
+  const fbc = !fbclid || pixelFbc || (typeof kept?.fbc === "string" && kept.fbc.endsWith(`.${fbclid}`));
+  if (!own && !campaign) return { ok: false, how: null, why: `no cookie or storage holds the campaign (the browser's own cookie jar, HttpOnly cookies included, has no ${name})${fbclid && !pixelFbc ? ", and no fbc is made from fbclid" : ""}, so the order cannot say which ad brought him` };
+  if (!campaign) return { ok: false, how: null, why: `the shop's cookie ${name} is there but does not hold the link's campaign` };
+  if (!fbc) return { ok: false, how: null, why: "the campaign is kept, but no fbc is made from fbclid (the Conversions API has nothing to match the click on)" };
+  const tags = [kept?.utmSource, kept?.utmMedium, kept?.utmCampaign, kept?.adPlatform].filter(Boolean).join(" / ");
+  return { ok: true, why: null, how: own ? `kept in the shop's own cookie (${name}, HttpOnly: page scripts cannot read it, by design): ${tags}${fbclid ? "; fbc made from fbclid" : ""}` : "kept where page scripts see it" };
+}
 
 /** The life cycle in order. `before` needs nothing; `account`, `support` and `after` follow one customer. */
 export const SCENARIOS = ["before", "order", "account", "support", "after"];

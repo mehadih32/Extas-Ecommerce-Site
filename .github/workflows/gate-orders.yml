@@ -5,7 +5,9 @@
 # package functions on the mocks) in the live version's migrate image, and walks the scenarios in real browsers on
 # phones and desktops with throttled networks (tools/gate-orders/shop.mjs). Every test order is cancelled and the test
 # products archived at the end (nothing deleted). The report (README.md + result.json) is committed to
-# docs/reports/gate-orders/latest/ with [skip ci].
+# docs/reports/gate-orders/latest/ with [skip ci]. Live run 1 Nov: the run pays on the mock bKash through its own
+# grant (its browser only, the preview host; closed at the end, on a failure and on a signal too), and `allow_cod`
+# (false unless the owner says yes) is the only way it switches cash on delivery on, for the run alone.
 name: gate-orders
 
 on:
@@ -15,6 +17,14 @@ on:
         description: "all, or a list such as 1,5,7 (the 18 scenarios of docs/reports/gate-orders/latest/README.md)"
         required: false
         default: "all"
+      # Live run 1 Nov: cash on delivery is the owner's switch. Only he says yes here; the run then switches it on for
+      # this run alone and puts the exact earlier value back at the end (an audit line each way). Otherwise the
+      # scenarios that need it are a SKIP "COD is off (owner's setting)".
+      allow_cod:
+        description: "Switch cash on delivery on for this run only, and put it back after (the owner's OK)"
+        required: false
+        type: boolean
+        default: false
 
 # Its own lane: a by-hand run never replaces a deploy or another server job waiting in their groups, and two gate runs
 # never place test orders at the same time. The VM's single runner still takes one job at a time.
@@ -48,8 +58,10 @@ jobs:
         env:
           LIVE: ${{ steps.live.outputs.sha }}
           SCENARIOS: ${{ github.event.inputs.scenarios }}
+          ALLOW_COD: ${{ github.event.inputs.allow_cod }}
         run: |
-          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/gate-orders.sh "$RUNNER_TEMP/gate-orders" "${SCENARIOS:-all}" "$LIVE"
+          cod=no; [ "$ALLOW_COD" = true ] && cod=yes
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" GATE_ALLOW_COD="$cod" bash infra/deploy/gate-orders.sh "$RUNNER_TEMP/gate-orders" "${SCENARIOS:-all}" "$LIVE"
 
       - name: Commit the report
         if: always()

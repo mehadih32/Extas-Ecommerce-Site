@@ -21,6 +21,12 @@
 # 6. At the end the gate cancels what is still open and archives its rows (helper.ts cleanup, run again here in case the
 #    browser part stopped early). Nothing is deleted, ever.
 # 7. <out-dir> gets README.md, result.json and a picture of each failed step (gate-c360.yml commits them).
+# 8. Live run 1 Nov (no products, nothing to pay with): before the browser part the run makes its own GATE TEST
+#    products (tools/gate-orders/lib/test-shop.ts, shared with gate-orders, mounted beside helper.ts) and opens its
+#    run's mock-payment grant: a random token goes to the browser only (its cookie, in the root-only env file), the
+#    helper gets its SHA-256 and the preview host. The practice gateway answers for that browser alone; cash on delivery
+#    and `payments.testPayments` stay as the owner set them. The trap closes the grant on any exit, a failure or a signal
+#    included (an audit line as the system actor), and the clean-up archives the products.
 # Exit 0 = every step passed or was skipped with its reason; 1 = a step failed or the run could not finish; 2 = refused.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -54,7 +60,7 @@ gate_scenarios_ok() {
 
 # gate_action_ok <action>: what the browser part may ask of the database through the bridge.
 gate_action_ok() {
-  case "${1:-}" in otp | deliver | facts | messages | customer | cleanup) return 0 ;; *) return 1 ;; esac
+  case "${1:-}" in otp | deliver | facts | messages | customer | cleanup | switches) return 0 ;; *) return 1 ;; esac
 }
 
 why="$(gate_host_refusal "${EXTAS_STAGING_HOST:-}" "${EXTAS_EXTRA_HOSTS:-}" "${EXTAS_MAIN_OPEN:-no}")"
@@ -64,11 +70,26 @@ BASE="https://$EXTAS_STAGING_HOST"
 
 work="$(mktemp -d "$SEC/.gate-c360.XXXXXX")"
 loop_pid=""
+pay_open=""
+run=""
+c360_pid=""
 cleanup_work() {
+  # a signal while the browser run is on: stop it and clean up its orders and products (helper cleanup is safe twice)
+  if [ -n "$c360_pid" ]; then
+    kill "$c360_pid" 2>/dev/null || true
+    docker rm -f "extas-gate-c360-$$" >/dev/null 2>&1 || true
+    log "stopped by a signal — clean-up: $(helper cleanup "{\"phone\":\"$phone\"}" | jq -c 'del(.leftAlone)' 2>/dev/null || echo 'no answer')"
+  fi
   [ -n "$loop_pid" ] && kill "$loop_pid" 2>/dev/null || true
+  # the run's mock-payment grant closed, whatever ended the run (safe twice)
+  if [ -n "$pay_open" ]; then
+    log "closing the run's mock-payment grant: $(helper payclose "{\"run\":\"$run\"}" | jq -c '{ok, closed}' 2>/dev/null || echo 'no answer: it expires by itself')"
+  fi
   rm -rf "$work"
 }
 trap cleanup_work EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 mkdir -p "$OUT"
 rm -rf "${OUT:?}"/*
 
@@ -84,7 +105,7 @@ grep -E '^(DATABASE_DIRECT_URL|VAULT_MASTER_KEY)=' "$SEC/app.env" > "$work/db.en
 helper() {
   # shellcheck disable=SC2016  # expanded inside the container
   docker run --rm --network extas --env-file "$work/db.env" \
-    -v "$REPO/tools/gate-c360/helper.ts:/repo/packages/jobs/.gate-c360/helper.ts:ro" "$mig" \
+    -v "$REPO/tools/gate-c360/helper.ts:/repo/packages/jobs/.gate-c360/helper.ts:ro" -v "$REPO/tools/gate-orders:/repo/packages/jobs/.gate-orders:ro" "$mig" \
     sh -c 'cd /repo/packages/jobs && exec ./node_modules/.bin/tsx .gate-c360/helper.ts "$@"' gate "$1" "$2" 2>/dev/null | tail -n 1
 }
 
@@ -107,6 +128,20 @@ done
 [ -n "$phone" ] || { log "FAIL: no free test number found"; exit 1; }
 run="$(date +%Y%m%d%H%M)"
 
+log "the run's own GATE TEST products, and its mock-payment grant on $EXTAS_STAGING_HOST"
+made="$(helper products "{\"run\":\"$run\"}" || true)"
+paths="$(printf '%s' "$made" | jq -r '(.products // []) | map(.path) | join(",")' 2>/dev/null || true)"
+[[ "$paths" =~ ^[a-z0-9/,-]{0,400}$ ]] || paths=""
+[ -n "$paths" ] || log "no GATE TEST products could be made ($(printf '%s' "$made" | jq -r '.error // "no answer"' 2>/dev/null)): the steps that need one are a SKIP"
+pay_token="$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+pay_hash="$(printf '%s' "$pay_token" | sha256sum | cut -d' ' -f1)"
+minutes="$(jq -r '.waits.runMin // 45' "$CFG")"
+[[ "$minutes" =~ ^[0-9]+$ ]] || minutes=45
+pay_open=yes
+g="$(helper payopen "{\"run\":\"$run\",\"hash\":\"$pay_hash\",\"host\":\"$EXTAS_STAGING_HOST\",\"minutes\":$((minutes + 15)),\"cod\":\"no\"}" || true)"
+log "mock-payment grant: $(printf '%s' "$g" | jq -c '{open, why}' 2>/dev/null || echo 'no answer')"
+[ "$(printf '%s' "$g" | jq -r '.open // false' 2>/dev/null)" = true ] || pay_token=""
+
 log "check account (read-only, fresh password and two-step seed)"
 mkdir -m 0700 "$work/acct"
 chown "${SMOKE_IMAGE_UID:-1000}:${SMOKE_IMAGE_UID:-1000}" "$work/acct"
@@ -118,6 +153,8 @@ docker run --rm --name "extas-gcheck-$$" --network extas --env-file "$work/db.en
   cat "$work/acct/check.env"
   echo "SMOKE_HTTP_USER=$EXTAS_STAGING_USER"
   echo "SMOKE_HTTP_PASSWORD=$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" | cut -d= -f2-)"
+  echo "GATE_PAY_TOKEN=$pay_token"
+  echo "GATE_PRODUCT_PATHS=$paths"
 } > "$work/gate.env"
 rm -f "$work/acct/check.env"
 
@@ -157,15 +194,16 @@ loop_pid=$!
 
 log "walking one test customer through the life cycle on $BASE (scenarios: $SCENARIOS)"
 at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
-minutes="$(jq -r '.waits.runMin // 45' "$CFG")"
-[[ "$minutes" =~ ^[0-9]+$ ]] || minutes=45
 rc=0
 timeout "$((minutes * 60))" docker run --rm --name "extas-gate-c360-$$" --ipc=host --env-file "$work/gate.env" \
   -e BASE="$BASE" -e GATE_PREVIEW_HOST="$EXTAS_STAGING_HOST" -e GATE_EXTRA_HOSTS="${EXTAS_EXTRA_HOSTS:-}" -e GATE_MAIN_OPEN="${EXTAS_MAIN_OPEN:-no}" \
   -e GATE_PHONE="$phone" -e GATE_RUN="$run" -e GATE_SCENARIOS="$SCENARIOS" -e GATE_OUT=/out -e GATE_BRIDGE=/bridge \
   -e GATE_SHA="${SHA:0:12}" -e GATE_AT="$at ($EXTAS_TIMEZONE)" -e GATE_KIND="by hand" \
   -v "$REPO/tools:/w/tools:ro" -v "$REPO/docs/qa:/w/docs/qa:ro" -v "$OUT:/out" -v "$bridge:/bridge" \
-  "$IMG" node /w/tools/gate-c360/run.mjs || rc=$?
+  "$IMG" node /w/tools/gate-c360/run.mjs &
+c360_pid=$!   # in the background and waited for, so SIGINT/SIGTERM reach the trap at once, not after the browser run
+wait "$c360_pid" || rc=$?
+c360_pid=""
 
 touch "$bridge/.stop"
 wait "$loop_pid" 2>/dev/null || true

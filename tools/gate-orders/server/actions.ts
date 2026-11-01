@@ -11,32 +11,24 @@
 //   test shelf and the test courier account are archived; money is only ever the smallest manual record on a test order
 //   (gate check 4) and a statement that says nothing was collected (gate check 23) — no refund, price or discount moves;
 // - sample data only (tools/gate-orders/data/test-data.json), never the owner's: the run touches only orders that hold a
-//   GATE TEST piece, and it never changes a setting.
+//   GATE TEST piece, and it never changes a setting for the shop's visitors;
+// - live run 1 Nov: it pays on the practice gateway through its run's own grant (lib/test-shop.ts openRun: its own
+//   browser only, on the preview host, closed at the end), and turns cash on delivery on for the run only with the
+//   owner's `allow_cod` (put back as it was; both written to the audit log as the system actor).
 import { courierAdapters, mockCourierWorld, STEADFAST_PROVIDER, type CourierParcel } from '@extas/adapters';
 import { audit } from '@extas/auth';
 import { requestCode } from '@extas/accounts';
-import { unpublishProduct, updateProduct } from '@extas/catalogue';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
-import { recomputeVariantStock, sellableKinds, variantStock } from '@extas/inventory';
+import { variantStock } from '@extas/inventory';
 import { formatAmount, render, runContext, sampleInput, type MessagesDeps } from '@extas/messages';
 import { counts, kpi, salesBySku } from '@extas/metrics';
 import { addLine, addNote, cancelAfterBooking, cancelOrder, confirmOrder, getOrder, recordCourierCancel } from '@extas/orders';
 import { importSettlement, orderMoney, recordPayment } from '@extas/payments';
 import { addCourier, bookOrders, listCouriers, printStickers, rateFor, rebookParcel, staleParcelOf, updateCourier } from '@extas/shipping';
+import { archiveProducts, closeRuns, openRun, setTestStock, setUpProducts, skuPrefix, type Kit, type TestData } from '../lib/test-shop';
 import { keptSms, PROVIDER_KINDS, type GateDeps } from './deps';
 
-/** The test data file's shape (only what this side reads). */
-export interface TestData {
-  marker: string;
-  slugPrefix: string;
-  warehouse: { code: string; name: string; location: { code: string; name: string } };
-  colours: { key: string; nameEn: string; nameBn: string; hex: string }[];
-  sizes: { key: string; label: string; sortOrder: number }[];
-  products: { key: string; slug: string; nameEn: string; nameBn: string; priceMinor: number; weightGrams: number; colours: string[]; sizes: string[]; stock: number }[];
-  payment: { recordMinor: number };
-  statement: { collectedMinor: number; chargeMinor: number; unknownConsignment: string };
-  weightCheckGrams: number;
-}
+export { skuPrefix, type TestData };
 
 type Json = Record<string, unknown>;
 const errText = (e: unknown): string => {
@@ -44,11 +36,6 @@ const errText = (e: unknown): string => {
   const msg = e instanceof Error ? e.message : String(e);
   return `${typeof code === 'string' ? `${code}: ` : ''}${msg}`.split('\n')[0]!.slice(0, 300);
 };
-
-/** The SKU of a GATE TEST piece (every one starts with the marker, so the run finds its own orders and nothing else). */
-export const skuPrefix = (d: TestData): string => `${d.marker.replace(/\s+/g, '-').toUpperCase()}-`;
-const skuOf = (d: TestData, product: string, colour: string, size: string) =>
-  `${skuPrefix(d)}${product}-${colour.replace(d.slugPrefix, '')}-${size.replace(d.slugPrefix, '')}`.toUpperCase();
 
 /** The courier account the run books with (its own, archived at the end): the marker in its name. */
 const courierName = (d: TestData) => `${d.marker} — do not use (gate-orders run)`.slice(0, 60);
@@ -138,80 +125,34 @@ export class Oracle {
 
   // ---- the GATE TEST products ----
 
+  /** The shared helpers' view of this oracle (tools/gate-orders/lib/test-shop.ts). */
+  private get kit(): Kit {
+    return { db: this.g.db, storeId: this.S, settings: this.g.settings, who: this.g.who, source: 'gate-orders' };
+  }
+
   /** The test colours, sizes, shelf, products, variants and stock (made once, opened again on a later run). */
   async setUp(): Promise<Json> {
-    const d = this.data;
-    const S = this.S;
-    const kinds = await sellableKinds(this.g.inventory);
-    const kind = kinds.has('WAREHOUSE') ? 'WAREHOUSE' : ([...kinds][0] ?? 'WAREHOUSE');
-    const now = new Date();
-    const made = await this.g.db.$transaction(async (tx) => {
-      const colour = new Map<string, string>();
-      for (const c of d.colours) {
-        const row = await tx.colour.upsert({ where: { storeId_key: { storeId: S, key: c.key } }, create: { storeId: S, key: c.key, nameEn: c.nameEn, nameBn: c.nameBn, hex: c.hex, synonyms: [] }, update: { archivedAt: null }, select: { id: true } });
-        colour.set(c.key, row.id);
-      }
-      const size = new Map<string, string>();
-      for (const z of d.sizes) {
-        const row = await tx.size.upsert({ where: { storeId_key: { storeId: S, key: z.key } }, create: { storeId: S, key: z.key, label: z.label, sortOrder: z.sortOrder }, update: { archivedAt: null }, select: { id: true } });
-        size.set(z.key, row.id);
-      }
-      const wh = await tx.warehouse.upsert({ where: { code: d.warehouse.code }, create: { code: d.warehouse.code, name: d.warehouse.name }, update: { archivedAt: null }, select: { id: true } });
-      const loc = await tx.inventoryLocation.upsert({
-        where: { warehouseId_code: { warehouseId: wh.id, code: d.warehouse.location.code } },
-        create: { warehouseId: wh.id, code: d.warehouse.location.code, name: d.warehouse.location.name, kind },
-        update: { archivedAt: null, kind },
-        select: { id: true },
-      });
-      const products: Json[] = [];
-      const variantIds: string[] = [];
-      for (const p of d.products) {
-        const prod = await tx.product.upsert({
-          where: { storeId_slug: { storeId: S, slug: p.slug } },
-          create: { storeId: S, slug: p.slug, nameEn: p.nameEn, nameBn: p.nameBn, status: 'PUBLISHED', inStock: true, minPriceMinor: p.priceMinor, publishedAt: now, inCombos: false },
-          update: { status: 'PUBLISHED', archivedAt: null, unpublishedAt: null, publishedAt: now, inStock: true, minPriceMinor: p.priceMinor, inCombos: false },
-          select: { id: true },
-        });
-        const variants: Json[] = [];
-        for (const [ci, c] of p.colours.entries()) {
-          await tx.productColour.upsert({ where: { productId_colourId: { productId: prod.id, colourId: colour.get(c)! } }, create: { storeId: S, productId: prod.id, colourId: colour.get(c)!, sortOrder: ci * 10 }, update: {} });
-          for (const [si, z] of p.sizes.entries()) {
-            const sku = skuOf(d, p.key, c, z);
-            const v = await tx.productVariant.upsert({
-              where: { storeId_sku: { storeId: S, sku } },
-              create: { storeId: S, productId: prod.id, colourId: colour.get(c)!, sizeId: size.get(z)!, sku, priceMinor: p.priceMinor, weightGrams: p.weightGrams, active: true, inStock: true, sortOrder: ci * 100 + si },
-              update: { archivedAt: null, active: true, priceMinor: p.priceMinor, weightGrams: p.weightGrams },
-              select: { id: true },
-            });
-            const level = await tx.stockLevel.findUnique({ where: { variantId_locationId: { variantId: v.id, locationId: loc.id } }, select: { reserved: true } });
-            if (level) await tx.stockLevel.update({ where: { variantId_locationId: { variantId: v.id, locationId: loc.id } }, data: { onHand: p.stock + level.reserved, available: p.stock } });
-            else await tx.stockLevel.create({ data: { variantId: v.id, locationId: loc.id, onHand: p.stock, available: p.stock } });
-            variantIds.push(v.id);
-            variants.push({ id: v.id, sku, colour: c, size: z, priceMinor: p.priceMinor, weightGrams: p.weightGrams });
-          }
-        }
-        products.push({ key: p.key, slug: p.slug, id: prod.id, variants });
-      }
-      await recomputeVariantStock(tx, S, variantIds, kinds);
-      await audit(tx, this.g.who.actor, { action: 'gate-orders.setup', entityType: 'Product', storeId: S, after: { run: this.runId, products: products.length, variants: variantIds.length } }, this.g.who.ctx);
-      return { products, locationKind: kind };
-    }, { timeout: 60_000 });
-    return made;
+    return { ...(await setUpProducts(this.kit, this.data, this.runId)) };
   }
 
   /** Sets one test variant's sellable stock on the test shelf (the last-piece and race scenarios). */
   async setStock(variantId: string, qty: number): Promise<Json> {
-    const v = await this.g.db.productVariant.findFirst({ where: { id: variantId, storeId: this.S, sku: { startsWith: skuPrefix(this.data) } }, select: { id: true, stockLevels: { select: { id: true, reserved: true, location: { select: { code: true } } } } } });
-    if (!v) throw new Error('not a GATE TEST variant');
-    const level = v.stockLevels.find((l) => l.location.code === this.data.warehouse.location.code);
-    if (!level) throw new Error('the GATE TEST shelf holds no row for this variant');
-    const kinds = await sellableKinds(this.g.inventory);
-    await this.g.db.$transaction(async (tx) => {
-      await tx.stockLevel.update({ where: { id: level.id }, data: { onHand: qty + level.reserved, available: qty } });
-      await recomputeVariantStock(tx, this.S, [v.id], kinds);
-      await audit(tx, this.g.who.actor, { action: 'gate-orders.stock', entityType: 'ProductVariant', entityId: v.id, storeId: this.S, after: { run: this.runId, available: qty } }, this.g.who.ctx);
-    });
-    return { variantId, available: qty };
+    return setTestStock(this.kit, this.data, this.runId, variantId, qty);
+  }
+
+  /**
+   * The run's mock-payment grant for its own browser on the preview host (and cash on delivery only with the owner's
+   * `allow_cod`): GATE_PAY_TOKEN_HASH, GATE_ALLOW_COD and GATE_RUN_MINUTES come from the shell (gate-orders.sh).
+   */
+  async openRun(host: string): Promise<Json> {
+    const hash = process.env.GATE_PAY_TOKEN_HASH ?? '';
+    if (!hash) return { open: false, why: 'no run token (GATE_PAY_TOKEN_HASH)', cod: { on: (await this.setting('payment.cod.enabled')) === true, changed: false } };
+    return openRun(this.kit, { runId: this.runId, tokenHash: hash, host, minutes: Number(process.env.GATE_RUN_MINUTES || 0), allowCod: process.env.GATE_ALLOW_COD === 'yes' });
+  }
+
+  /** Closes the run's grant (with `all`: every other open one, what a crashed run left) and puts cash on delivery back. */
+  closeRun(all = false): ReturnType<typeof closeRuns> {
+    return closeRuns(this.kit, all ? { except: this.runId } : { runId: this.runId });
   }
 
   /** The sellable pieces of test variants now (the inventory's own figure, as the admin's stock page reads it). */
@@ -508,29 +449,9 @@ export class Oracle {
     const notes = ids.length ? await this.g.db.orderNote.count({ where: { storeId: this.S, orderId: { in: ids }, isInternal: true, body: { startsWith: this.data.marker } } }) : 0;
     const out: Json = { ok: failed.length === 0, orders: orders.length, cancelled, alreadyClosed, failed, refundRequests: refunds, tagged: `${notes} of ${orders.length} test orders carry an internal "${this.data.marker}" note (the order flags take only the owner's own list)` };
     if (!withProducts) return out;
-    let productsArchived = 0;
-    const productFails: string[] = [];
-    const products = await this.g.db.product.findMany({ where: { storeId: this.S, slug: { startsWith: this.data.slugPrefix }, archivedAt: null }, select: { id: true, slug: true, status: true } });
-    for (const p of products) {
-      try {
-        if (p.status === 'PUBLISHED') await unpublishProduct(this.g.catalogue, this.g.who, p.id);
-        await updateProduct(this.g.catalogue, this.g.who, p.id, { archived: true });
-        productsArchived += 1;
-      } catch (e) {
-        productFails.push(`${p.slug} (${errText(e)})`);
-      }
-    }
-    const at = new Date();
-    const extras = await this.g.db.$transaction(async (tx) => {
-      const c = await tx.colour.updateMany({ where: { storeId: this.S, key: { in: this.data.colours.map((x) => x.key) }, archivedAt: null }, data: { archivedAt: at } });
-      const z = await tx.size.updateMany({ where: { storeId: this.S, key: { in: this.data.sizes.map((x) => x.key) }, archivedAt: null }, data: { archivedAt: at } });
-      const wh = await tx.warehouse.findUnique({ where: { code: this.data.warehouse.code }, select: { id: true } });
-      const l = wh ? await tx.inventoryLocation.updateMany({ where: { warehouseId: wh.id, archivedAt: null }, data: { archivedAt: at } }) : { count: 0 };
-      const w = wh ? await tx.warehouse.updateMany({ where: { id: wh.id, archivedAt: null }, data: { archivedAt: at } }) : { count: 0 };
-      const n = c.count + z.count + l.count + w.count;
-      await audit(tx, this.g.who.actor, { action: 'gate-orders.cleanup', entityType: 'Product', storeId: this.S, after: { run: this.runId, productsArchived, colours: c.count, sizes: z.count, shelves: l.count, warehouses: w.count } }, this.g.who.ctx);
-      return n;
-    });
+    const archived = await archiveProducts(this.kit, this.data, this.runId);
+    const { productsArchived, extrasArchived: extras } = archived;
+    const productFails: string[] = [...archived.fails];
     let courierArchived = false;
     const name = courierName(this.data);
     const { couriers } = await listCouriers(this.g.shipping, this.g.who, { includeArchived: true });
@@ -543,6 +464,8 @@ export class Oracle {
         productFails.push(`courier account (${errText(e)})`);
       }
     }
-    return { ...out, ok: failed.length === 0 && productFails.length === 0, productsArchived, extrasArchived: extras, courierArchived, notes: productFails.map((f) => `could not archive: ${f}`), courierProvider: this.courierProvider };
+    // the run's mock-payment grant closed and cash on delivery put back (the shell's trap runs the same again)
+    const mockPay = await this.closeRun().catch((e: unknown) => ({ ok: false, closed: 0, codRestored: 0, notes: [`the run's grant: ${errText(e)}`] })); // hardcode-ok: a count, not a business number
+    return { ...out, ok: failed.length === 0 && productFails.length === 0 && mockPay.ok === true, productsArchived, extrasArchived: extras, courierArchived, mockPay, notes: [...productFails.map((f) => `could not archive: ${f}`), ...mockPay.notes], courierProvider: this.courierProvider };
   }
 }

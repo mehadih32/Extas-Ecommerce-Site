@@ -37,8 +37,10 @@ export function serverShare(timing, latencyMs) {
 }
 
 /** A new shopper: its own browser context (cookies, bag), the device's screen and the network's throttling. */
-export async function openShopper(browser, { device, network, storageState = null, httpCredentials = null, locale = "en-GB" }) {
+export async function openShopper(browser, { device, network, storageState = null, httpCredentials = null, locale = "en-GB", cookies = [] }) {
   const ctx = await browser.newContext({ ...contextOf(device), ...(storageState ? { storageState } : {}), ...(httpCredentials ? { httpCredentials } : {}), locale, serviceWorkers: "block" });
+  // the run's own mock-payment cookie (lib/run-grant.mjs), never one the shop set
+  if (cookies.length) await ctx.addCookies(cookies);
   const page = await ctx.newPage();
   const session = await throttle(page, device, network);
   const factor = slowFactor(device, network);

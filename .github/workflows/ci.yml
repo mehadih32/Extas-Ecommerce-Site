@@ -255,7 +255,7 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=6144
         run: |
           cp -r tools/gate-orders apps/web/gate-orders && (cd apps/web/gate-orders/server && ../../node_modules/.bin/tsc -p tsconfig.json)
-          mkdir -p packages/jobs/.gate-c360 && cp tools/gate-c360/helper.ts tools/gate-c360/tsconfig.json packages/jobs/.gate-c360/ && (cd packages/jobs/.gate-c360 && ../node_modules/.bin/tsc -p tsconfig.json)
+          cp -r tools/gate-orders packages/jobs/.gate-orders && mkdir -p packages/jobs/.gate-c360 && cp tools/gate-c360/helper.ts tools/gate-c360/tsconfig.json packages/jobs/.gate-c360/ && (cd packages/jobs/.gate-c360 && ../node_modules/.bin/tsc -p tsconfig.json)
 
   # PR 17 — every package's unit tests (and the tools' tests, with the web tests); no database here: the database tests
   # run in `db`.

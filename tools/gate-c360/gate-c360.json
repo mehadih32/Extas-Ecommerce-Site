@@ -15,6 +15,7 @@
     { "screen": "desktop-1366", "lang": "en" }
   ],
   "utm": { "utm_source": "facebook", "utm_medium": "paid_social", "utm_campaign": "gate-test-c360", "fbclid": "GATETEST360" },
+  "attributionCookie": "__Host-extas_src",
   "search": [
     { "id": "english", "q": "polo", "mustFind": true },
     { "id": "bengali", "q": "পোলো শার্ট", "mustFind": true },

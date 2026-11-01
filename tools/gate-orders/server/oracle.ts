@@ -3,6 +3,8 @@
 // /repo/apps/web/gate-orders, read only, so the @extas packages resolve; .github/workflows/gate-orders.yml starts it by hand).
 //   tsx oracle.ts --serve <port>      answers the browser run (tools/gate-orders/shop.mjs) on a private network of this
 //                                     run only: POST /<action> with a JSON body and the run's bearer token
+//   tsx oracle.ts --close-run --out <f> the shell's trap: closes this run's mock-payment grant and puts cash on delivery
+//                                     back when the run had switched it on (safe twice; on a failure or a signal too)
 //   tsx oracle.ts --cleanup --out <f> the safety net: cancels every open GATE TEST order, archives the test products,
 //                                     writes the clean-up's result to <f> (the shell runs it when the browser run ended
 //                                     without one)
@@ -66,12 +68,17 @@ function actions(o: Oracle): Record<string, (b: Json) => Promise<unknown>> {
     // read only: the facts of the host guard, the live providers and the owner's switches (nothing is written before
     // the browser run's guard has passed)
     facts: async () => ({ facts: await o.facts(), switches: await o.switches() }),
-    // after the guard: an earlier run's open test orders are cancelled; the products only when the run places orders
+    // after the guard: an earlier run's open test orders are cancelled and its grant closed (cash on delivery put back
+    // when it had changed it); the products only when the run places orders
     prepare: async (b) => {
+      const earlier = await o.closeRun(true);
       const leftovers = await o.cleanUp(false);
       const setUp = b.setUp === true ? await o.setUp() : null;
-      return { leftovers, setUp };
+      return { leftovers, earlierRuns: earlier, setUp };
     },
+    // the run's own mock-payment grant on the preview host the shell names (never a host the browser sends)
+    openRun: () => o.openRun(String(process.env.GATE_PREVIEW_HOST ?? '')),
+    closeRun: () => o.closeRun(),
     order: (b) => o.order(str(b.number, 'number')),
     ordersOf: (b) => o.ordersOf(str(b.phone, 'phone'), str(b.since, 'since')),
     stock: (b) => o.stock(strs(b.variantIds, 'variantIds')),
@@ -145,6 +152,17 @@ async function main(argv: string[]): Promise<number> {
   const runId = String(process.env.GATE_RUN_ID || new Date().toISOString().replace(/\D/g, '').slice(0, 12)).replace(/[^A-Za-z0-9-]/g, '').slice(0, 24) || 'run';
   const data = JSON.parse(readFileSync(new URL('../data/test-data.json', import.meta.url), 'utf8')) as TestData;
   const o = new Oracle(gateDeps(getPrisma(), storeId), data, runId);
+  if (argv.includes('--close-run')) {
+    const out = at('--out');
+    try {
+      const r = await o.closeRun();
+      if (out) writeFileSync(out, `${JSON.stringify(r, null, 2)}\n`);
+      log(`close-run: ${String(r.closed)} grant(s) closed, cash on delivery put back ${String(r.codRestored)} time(s)${r.ok ? '' : ' (not complete)'}`);
+      return r.ok ? 0 : 1;
+    } finally {
+      await disconnectPrisma();
+    }
+  }
   if (argv.includes('--cleanup')) {
     const out = at('--out');
     try {
@@ -159,7 +177,7 @@ async function main(argv: string[]): Promise<number> {
   const port = Number(at('--serve'));
   const token = process.env.GATE_ORACLE_TOKEN ?? '';
   if (!Number.isInteger(port) || port < 1 || token.length < 32) {
-    console.error('usage: oracle.ts --serve <port> (GATE_ORACLE_TOKEN of 32+ characters) | --cleanup --out <file>');
+    console.error('usage: oracle.ts --serve <port> (GATE_ORACLE_TOKEN of 32+ characters) | --cleanup --out <file> | --close-run --out <file>');
     return 2;
   }
   serve(o, port, token);

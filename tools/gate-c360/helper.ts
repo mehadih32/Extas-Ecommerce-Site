@@ -9,15 +9,28 @@
 //   tsx helper.ts deliver '{"number"}'                his order confirmed, packed, handed over and delivered on the mocks
 //   tsx helper.ts facts '{"number"|"phone"}'          the order and the customer as the shop stored them
 //   tsx helper.ts messages '{"number"}'               the messages planned for the order, each with its words re-drawn
-//   tsx helper.ts cleanup '{"phone"}'                 cancels what is still open and archives the gate's rows
+//   tsx helper.ts cleanup '{"phone"}'                 cancels what is still open and archives the gate's rows (with
+//                                                     the GATE TEST products)
+// Live run 1 Nov (the run found no products, and nothing to pay with): the shared test-data helpers of gate-orders
+// (tools/gate-orders/lib/test-shop.ts, mounted at /repo/packages/jobs/.gate-orders) give it its own GATE TEST products
+// and its run's mock-payment grant; only the shell asks for these (never the browser through the bridge):
+//   tsx helper.ts products '{"run"}'                  the GATE TEST products (one size sold out), with their shop paths
+//   tsx helper.ts switches '{}'                       the owner's switches the steps read (never changed here)
+//   tsx helper.ts payopen '{"run","hash","host","minutes","cod"}'  the run's grant: the practice gateway for the
+//                                                     run's own browser on the preview host (cod "yes": cash on
+//                                                     delivery on for the run only, the owner's OK)
+//   tsx helper.ts payclose '{"run"}'                  the grant closed and cash on delivery put back (safe twice)
 // Every action that writes touches only rows the gate made: a customer or an order whose name starts with the gate's
 // mark (GATE TEST), on a number no real customer has. Nothing is deleted, ever: the order service cancels, a row is
 // archived. Every write goes through the shop's own services where one exists (the order steps, the cancel).
 import { createHash, randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { SYSTEM } from '@extas/auth';
 import { disconnectPrisma, getPrisma, MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import { cancelWith, confirmBy, orderStep, type By, type OrdersDeps } from '@extas/orders';
 import { orderLink, render, runContext, type MessagesDeps } from '@extas/messages';
+import { archiveProducts, closeRuns, openRun, setTestStock, setUpProducts, type Kit, type TestData } from '../.gate-orders/lib/test-shop';
 
 /** The mark every row the gate makes carries (the customer's and the order's name). */
 export const GATE_MARK = 'GATE TEST';
@@ -192,7 +205,50 @@ async function messages(deps: OrdersDeps, a: Args): Promise<Args> {
   return { ok: true, rows: out };
 }
 
-async function cleanup(deps: OrdersDeps, a: Args): Promise<Args> {
+/** The run id the shell gives (letters, digits and dashes). */
+const runOf = (a: Args): string => {
+  const r = str(a.run, 24);
+  if (!/^[A-Za-z0-9-]{1,24}$/.test(r)) throw new Error('not a run id');
+  return r;
+};
+
+/** The helper's dependencies: the order service's, and the settings resolver itself (the shared helpers write with it). */
+type Deps = OrdersDeps & { resolver: Kit['settings'] };
+
+/** The shared helpers' view: the store, its settings, the system actor and this run's audit source. */
+const kitOf = (deps: Deps): Kit => ({ db: deps.db, storeId: STORE, settings: deps.resolver, who: { actor: SYSTEM, storeId: STORE, ctx: { source: 'gate-c360', userAgent: 'extas-gate-c360' } }, source: 'gate-c360' });
+const testData = (): TestData => JSON.parse(readFileSync(new URL('../.gate-orders/data/test-data.json', import.meta.url), 'utf8')) as TestData;
+
+/** The GATE TEST products, opened for the run; the first one's last size of its first colour sold out (the "tell me" step). */
+async function products(deps: Deps, a: Args): Promise<Args> {
+  const run = runOf(a);
+  const d = testData();
+  const k = kitOf(deps);
+  const made = await setUpProducts(k, d, run);
+  const first = made.products[0];
+  const out = first?.variants.filter((v) => v.colour === first.variants[0]?.colour).at(-1);
+  if (out) await setTestStock(k, d, run, out.id, 0);
+  const prefix = (await deps.settings.value('naming.productPathPrefix', { storeId: STORE })) || '/p';
+  return { ok: true, products: made.products.map((p) => ({ key: p.key, path: `${prefix}/${p.slug}`.replace(/\/{2,}/g, '/'), variants: p.variants.length })), soldOut: out ? out.sku : null };
+}
+
+/** The owner's switches the steps read, so a step behind one that is off says so (read only). */
+async function switches(deps: OrdersDeps): Promise<Args> {
+  const v = <K extends Parameters<OrdersDeps['settings']['value']>[0]>(key: K) => deps.settings.value(key, { storeId: STORE });
+  const [contact, attribution, chat, cod, test] = await Promise.all([v('pages.contactForm'), v('ads.attribution'), v('support.liveChat'), v('payment.cod.enabled'), v('payments.testPayments')]);
+  return { ok: true, contactForm: contact.enabled === true, attribution: attribution.on === true, liveChat: chat.enabled === true, cod: cod === true, testPayments: test === true };
+}
+
+async function payopen(deps: Deps, a: Args): Promise<Args> {
+  const r = await openRun(kitOf(deps), { runId: runOf(a), tokenHash: str(a.hash, 64), host: str(a.host, 253), minutes: Number(a.minutes) || 0, allowCod: a.cod === 'yes' });
+  return { ok: true, ...r };
+}
+
+async function payclose(deps: Deps, a: Args): Promise<Args> {
+  return { ...(await closeRuns(kitOf(deps), { runId: runOf(a) })) };
+}
+
+async function cleanup(deps: Deps, a: Args): Promise<Args> {
   const phone = e164(a.phone);
   const db = deps.db;
   const c = await gateCustomer(db, phone);
@@ -222,12 +278,15 @@ async function cleanup(deps: OrdersDeps, a: Args): Promise<Args> {
   }
   done.archivedBackInStock = (await db.backInStockRequest.updateMany({ where: { storeId: STORE, phone: { in: [phone, phone.replace('+88', '')] }, archivedAt: null }, data: { archivedAt: now } })).count;
   done.closedOtps = (await db.otpChallenge.updateMany({ where: { storeId: STORE, phone, consumedAt: null, expiresAt: { gt: now } }, data: { expiresAt: now } })).count;
-  return { ok: true, ...done };
+  // the GATE TEST products archived (never deleted); a later run opens them again
+  const archived = await archiveProducts(kitOf(deps), testData(), 'gate-c360');
+  return { ok: archived.fails.length === 0, ...done, productsArchived: archived.productsArchived, notes: archived.fails };
 }
 
 export async function runAction(action: string, args: Args): Promise<Args> {
   const db = getPrisma();
-  const deps: OrdersDeps = { db, settings: new SettingsResolver(prismaBackend(db), registry) };
+  const resolver = new SettingsResolver(prismaBackend(db), registry);
+  const deps: Deps = { db, settings: resolver, resolver };
   switch (action) {
     case 'guard':
       return guard(db);
@@ -243,6 +302,14 @@ export async function runAction(action: string, args: Args): Promise<Args> {
       return messages(deps, args);
     case 'cleanup':
       return cleanup(deps, args);
+    case 'products':
+      return products(deps, args);
+    case 'switches':
+      return switches(deps);
+    case 'payopen':
+      return payopen(deps, args);
+    case 'payclose':
+      return payclose(deps, args);
     default:
       throw new Error(`no such action: ${action}`);
   }

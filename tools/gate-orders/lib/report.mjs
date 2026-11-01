@@ -57,6 +57,7 @@ export function resultJson(run) {
     // the run made test data or orders (the server's safety net cleans up after a run that did and did not finish)
     started: !!run.started,
     providers: run.providers ?? null,
+    payment: run.payment ?? null,
     budget: run.budget ?? null,
     rows: run.rows.map((r) => ({ id: r.id, title: r.title, device: r.device, network: r.network, verdict: r.verdict, orders: r.orders ?? [], addresses: r.addresses ?? [], timings: r.timings ?? null, over: r.over ?? [], checks: r.checks })),
     gateChecks: run.gateChecks ?? [],
@@ -81,6 +82,7 @@ export function reportMarkdown(run) {
     const live = run.providers.live ?? [];
     L.push(`- Providers: ${live.length ? `a real connection is switched on for ${live.map((p) => `${p.kind} (${p.provider})`).join(", ")} — every check that would reach it is a SKIP` : "every payment, courier, message and ERP connection is on its mock; nothing left the server"}.`);
   }
+  if (run.payment) L.push(`- Payments: the mock bKash page — ${run.payment.mockPay}; cash on delivery — ${run.payment.cod}. No real payment key, price, discount or COD amount is touched.`);
   if (run.budget) L.push(`- Speed budget (${run.budget.source}): a page's largest paint ≤ ${ms(run.budget.page)}, a press's server answer ≤ ${ms(run.budget.press)}; counted on 4G and wifi, shown on 3G.`);
   for (const p of run.problems ?? []) L.push(`- Problem: ${cell(p)}`);
   L.push("");
@@ -138,7 +140,7 @@ export function reportMarkdown(run) {
     for (const n of c.notes ?? []) L.push(`- ${cell(n)}`);
   }
   L.push("");
-  L.push("How to run: GitHub › Actions › **gate-orders** › Run workflow (by hand only). `scenarios`: all, or a list such as `1,5,7`. The run places real orders only on the preview host and only on the mocks; it never runs on a schedule.");
+  L.push("How to run: GitHub › Actions › **gate-orders** › Run workflow (by hand only). `scenarios`: all, or a list such as `1,5,7`; `allow_cod` (off unless the owner says so) switches cash on delivery on for the run only and puts it back. The run places real orders only on the preview host and only on the mocks; it never runs on a schedule.");
   L.push("");
   return L.join("\n");
 }
