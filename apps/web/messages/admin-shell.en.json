@@ -39,6 +39,7 @@
       },
       "marketing": {
         "rules": "Smart Rules",
+        "campaigns": "Campaigns",
         "tracking": "Tracking",
         "landing": "Landing pages"
       },

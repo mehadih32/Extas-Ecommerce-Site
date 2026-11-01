@@ -306,6 +306,10 @@
       "landing": {
         "read": "See Marketing › Landing pages and the orders each page brought",
         "write": "Create, edit, publish, take down and archive landing pages"
+      },
+      "campaigns": {
+        "read": "See Marketing › Campaigns and the orders their landing pages brought",
+        "write": "Create, edit, schedule, start, pause, end and archive campaigns (the budget is a plan only)"
       }
     }
   },

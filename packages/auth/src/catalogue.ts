@@ -371,6 +371,11 @@ export const PERMISSIONS = {
   // the product's own live prices; nothing here changes a price, a discount or an order.
   'marketing.landing.read': { group: 'marketing' },
   'marketing.landing.write': { group: 'marketing' },
+  // S13 · PR 256 (Blueprint C6.2) — Marketing › Campaigns: see the campaigns and the orders their landing pages brought
+  // (`marketing.campaigns.read`); create, edit, schedule, start, pause, end and archive them (`marketing.campaigns.write`).
+  // A campaign's budget is a plan kept here: nothing changes an ad platform's budget, a price or a discount.
+  'marketing.campaigns.read': { group: 'marketing' },
+  'marketing.campaigns.write': { group: 'marketing' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
