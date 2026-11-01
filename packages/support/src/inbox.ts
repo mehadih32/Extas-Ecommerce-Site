@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { allow, parse, setting, SupportError, type SupportDeps, type Who } from './context';
 import { maskPhone } from '@extas/customers/pure';
 import { INBOX_VIEWS, type ConversationStatus, type InboxView } from './pure';
+import { inboxPhoneDigits } from './search-pure';
 
 async function phoneShown(deps: Pick<SupportDeps, 'settings'>, who: Who, held: Set<string>): Promise<(p: string | null) => string | null> {
   if (held.has('customers.phone')) return (p) => p;
@@ -75,6 +76,8 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings'>, w
   const storeId = who.storeId;
   const me = who.actor.staffUserId;
   const { pageSize } = await setting(deps, storeId, 'support.inbox');
+  // PR 425 follow-up: Bengali digits, +880 and the leading 0 are read too (search-pure.ts)
+  const digits = q.q ? inboxPhoneDigits(q.q) : '';
   const search: Prisma.ConversationWhereInput = q.q
     ? {
         OR: [
@@ -82,7 +85,7 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings'>, w
           { subject: { contains: q.q, mode: 'insensitive' } },
           { contact: { displayName: { contains: q.q, mode: 'insensitive' } } },
           // a number is searched by its digits; a masked number is still found, never shown
-          ...(q.q.replace(/\D/g, '').length >= 3 ? [{ contact: { phone: { contains: q.q.replace(/\D/g, '') } } }] : []),
+          ...(digits ? [{ contact: { phone: { contains: digits } } }] : []),
         ],
       }
     : {};
