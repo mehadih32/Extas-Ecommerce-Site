@@ -118,6 +118,8 @@ export * from './registry-tracking';
 export * from './registry-attribution';
 // S02 · PR 75 follow-up — the contact page's form (registry-contact-form.ts, version 231).
 export * from './registry-contact-form';
+// S13 · CN-031 lane B — marketing: landing pages (registry-marketing.ts, versions 168–179).
+export * from './registry-marketing';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

@@ -91,6 +91,7 @@ import { trackingSettings } from './registry-tracking';
 import { attributionSettings } from './registry-attribution';
 import { contactFormSettings } from './registry-contact-form';
 import { crmSettings } from './registry-crm';
+import { marketingSettings } from './registry-marketing';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1339,6 +1340,8 @@ export const registry = {
   ...contactFormSettings,
   // ---- S14 · CN-031 lane A · PR 287 onwards · CRM: saved segments (registry-crm.ts, versions 190–199). ----
   ...crmSettings,
+  // ---- S13 · CN-031 lane B · PR 254 · landing pages: the master switch (registry-marketing.ts, versions 168–179). ----
+  ...marketingSettings,
   // ---- S16 · CN-031 lane B · PR 347 · the costs report's longest period and day rows (registry-finance.ts, versions 160–169). ----
   ...financeSettings,
 } satisfies RegistryShape;

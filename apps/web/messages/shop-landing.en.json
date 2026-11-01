@@ -1,0 +1,29 @@
+{
+  "landing": {
+    "orderNow": "Order now",
+    "cod": "Cash on delivery",
+    "gallery": "Photos",
+    "benefits": "Why people love it",
+    "size": "Size chart",
+    "sizeIn": "inches",
+    "reviews": "What buyers say",
+    "form": "Order now",
+    "formSub": "Pick your colour and size. You confirm your name, phone and address on the next step.",
+    "colour": "Colour",
+    "sizePick": "Size",
+    "soldOut": "sold out",
+    "qty": "How many",
+    "adding": "Adding…",
+    "failed": "Could not add it. Try again.",
+    "pick": "Pick a size first.",
+    "faq": "Questions",
+    "timer": "Offer ends in",
+    "units": {
+      "d": "d",
+      "h": "h",
+      "m": "m",
+      "s": "s"
+    },
+    "notOnSale": "This product is not on sale right now."
+  }
+}

@@ -1,0 +1,39 @@
+/* S13 · PR 254 — the ad landing page /l/<slug> (demo 70-landing.js .lp-*): one column on a phone, the order box beside
+   the parts (sticky) on a desktop. Tokens only; tap targets 44px. */
+.lp-wrap{padding:14px 0 8px}
+.lp-grid{display:grid;grid-template-columns:minmax(0,1fr)}
+.lp-grid>.lp-s,.lp-grid>.lp-formcol{grid-column:1;margin-bottom:34px;min-width:0;scroll-margin-top:76px}
+.lp-title{font-size:30px;line-height:1.15;margin:14px 0 8px;font-family:var(--font-display)}
+.lp-offer-ln{font-size:16px;margin:0 0 10px}
+.lp-pr{gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:14px}
+.lp-now{font-family:var(--font-display);font-weight:800;font-size:24px}
+.lp-cta{min-height:48px;display:inline-flex;align-items:center;justify-content:center;width:100%}
+.lp-shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lp-ben{display:grid;gap:10px;list-style:none;margin:0;padding:0}
+.lp-ben>li{padding:16px;font-size:14px;color:var(--ink)}
+.lp-form{padding:16px;display:grid;gap:14px}
+.lp-fld{border:0;margin:0;padding:0;min-width:0}
+.lp-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.lp-pill{min-height:44px;min-width:44px;padding:0 14px;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);display:inline-flex;align-items:center;gap:8px;font:inherit;cursor:pointer;color:var(--ink)}
+.lp-pill.on{border:2px solid var(--brand);padding:0 13px}
+.lp-pill.out{text-decoration:line-through;color:var(--muted);cursor:not-allowed}
+.lp-pill .swatch{width:20px;height:20px;border-radius:50%;border:1px solid var(--line)}
+.lp-qrow{display:flex;align-items:center;justify-content:flex-end}
+.lp-price{font-family:var(--font-display);font-size:22px}
+.lp-go{min-height:48px}
+.lp-err{color:var(--danger,#b42318);margin:0}
+.lp-trial{margin-top:12px}
+.lp-timer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-radius:var(--radius)}
+.lp-clock{display:flex;gap:10px;font-size:13px}
+.lp-clock b{font-family:var(--font-display);font-size:20px;margin-right:2px}
+@media(min-width:768px){.lp-ben{grid-template-columns:repeat(3,minmax(0,1fr))}.lp-shots{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px){
+  .lp-wrap{padding:28px 0 24px}
+  .lp-grid{grid-template-columns:minmax(0,1fr) 420px;column-gap:52px}
+  .lp-grid>.lp-s{margin-bottom:52px;scroll-margin-top:92px}
+  .lp-grid>.lp-formcol{grid-column:2;grid-row:1 / span 40;align-self:start;position:sticky;top:92px;margin-bottom:0}
+  .lp-title{font-size:42px}
+  .lp-cta{width:auto;padding:0 28px}
+}
+/* the rules box's "72 hours" buttons: a full 44px tap target here (pdp.css holds them at 32px with !important) */
+.shop .lp-s [data-testid="pdp-rules"] .rule-v{min-height:44px!important;padding-top:9px!important;padding-bottom:9px!important;margin-top:-9px!important;margin-bottom:-9px!important}

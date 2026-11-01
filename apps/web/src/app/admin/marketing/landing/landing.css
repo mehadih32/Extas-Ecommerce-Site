@@ -1,0 +1,25 @@
+/* S13 · PR 254 — Marketing › Landing pages: the list and the builder (the phone sketch of demo x2-phone). */
+.adm2 .lp-name{display:inline-flex;align-items:center;min-height:44px}
+.adm2 .lp-slug{display:block;margin-top:-8px}
+.adm2 .lp-empty{padding:18px}
+.adm2 .lp-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media(min-width:1024px){.adm2 .lp-grid{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}}
+.adm2 .lp-stack{display:grid;gap:12px;align-content:start;min-width:0}
+.adm2 .lp-g2{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+@media(min-width:768px){.adm2 .lp-g2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.adm2 .lp-part{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding:2px 0}
+.adm2 .lp-part:first-of-type{border-top:0}
+.adm2 .lp-part.off>span{color:var(--ink3)}
+.adm2 .lp-pn{flex:none;width:22px;height:22px;border-radius:50%;background:#F1EFEA;font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.adm2 .lp-acts{display:flex;flex-wrap:wrap;gap:8px}
+.adm2 .lp-acts .a2-btn{min-height:44px}
+.adm2 .lp-phone{border:8px solid #1d1d1f;border-radius:28px;max-width:280px;margin:0 auto;overflow:hidden;background:#fff}
+.adm2 .lp-phs{display:grid;gap:6px;padding:10px;min-height:360px;align-content:start}
+.adm2 .lp-ph-hero{border-radius:10px;padding:18px 12px;background:#F1EFEA;display:grid;gap:4px}
+.adm2 .lp-ph-hero b{font-size:15px;line-height:1.25;overflow-wrap:anywhere}
+.adm2 .lp-ph-part{border:1px dashed var(--line);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--ink2)}
+.adm2 .lp-ph-form{border-radius:8px;padding:10px;background:var(--ink,#1d1d1f);color:#fff;font-size:12.5px;font-weight:700;text-align:center}
+.adm2 .lp-said{margin-top:8px}
+.adm2 textarea.a2-inp{min-height:88px;resize:vertical}
+.adm2 .lp-views .a2-view{min-width:44px;justify-content:center}
+.adm2 .lp-part>.a2-swl{flex:1}

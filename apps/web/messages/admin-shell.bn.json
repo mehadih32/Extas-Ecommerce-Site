@@ -39,7 +39,8 @@
       },
       "marketing": {
         "rules": "স্মার্ট নিয়ম",
-        "tracking": "ট্র্যাকিং"
+        "tracking": "ট্র্যাকিং",
+        "landing": "ল্যান্ডিং পেজ"
       },
       "reports": {
         "health": "সাইটের অবস্থা",

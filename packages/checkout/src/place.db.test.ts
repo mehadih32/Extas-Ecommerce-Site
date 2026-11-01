@@ -106,6 +106,20 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
     });
   });
 
+  describe('PR 254 · an order from a landing page carries the page', () => {
+    it('a bag line put in from the page gives the order its page and the source LANDING_PAGE; a stranger’s id gives none', async () => {
+      const page = await f.t.prisma.page.create({ data: { storeId: f.S, kind: 'LANDING', slug: 'test-lp-254', titleEn: 'Test landing', status: 'PUBLISHED' }, select: { id: true } });
+      const s = await shown('landing');
+      await f.t.prisma.cartItem.updateMany({ where: { cartId: s.cartId }, data: { source: `lp-${page.id}` } });
+      const o = await f.t.prisma.order.findUniqueOrThrow({ where: { id: (await s.place()).orderId }, select: { landingPageId: true, source: true } });
+      expect(o).toEqual({ landingPageId: page.id, source: 'LANDING_PAGE' });
+      // an id that is not one of this store's landing pages is not kept; a plain bag stays a website order
+      const odd = await shown('landing-odd');
+      await f.t.prisma.cartItem.updateMany({ where: { cartId: odd.cartId }, data: { source: `lp-${randomUUID()}` } });
+      expect(await f.t.prisma.order.findUniqueOrThrow({ where: { id: (await odd.place()).orderId }, select: { landingPageId: true, source: true } })).toEqual({ landingPageId: null, source: 'WEBSITE' });
+    });
+  });
+
   describe('review R1 B1 · the code is redeemed in the order’s own transaction', () => {
     it('a code with one use in all: the first order redeems it; the next is refused with the checkout as it is now', async () => {
       await f.coupon('TEST-ONCE', 10_000, { usageLimit: 1 });
