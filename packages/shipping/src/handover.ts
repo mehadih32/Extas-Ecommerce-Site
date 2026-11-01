@@ -8,6 +8,10 @@
 //   parcel booked since is added), counts the print, keeps what the sheet showed (each parcel's consignment id and the
 //   amount to collect, the receiver's name when the owner wants it) and logs one print job. The same press key again
 //   returns the same sheet, counted once.
+// - PR 406 (ORD-04c): the "Handed over" history per courier — the batches handed over in the owner's last days, each
+//   with its rider, who marked it, the parcels that went and the amount the courier collects — and a copy of a handed
+//   batch's sheet, from what it kept (only the parcels that went), marked COPY with the rider and the time. A copy is
+//   one more print job; nothing about the parcels or the orders changes.
 // - Handed over: the batch's ready orders move to "handed over" through the order machine (packed first when nobody
 //   packed them and the owner's "mark packed on handover" is on); an order that changed since the sheet was printed is
 //   left out and named. The batch keeps who received it and who handed it over. Nothing books, re-books or changes a
@@ -110,6 +114,8 @@ export interface HandoverSheet {
   lines: HandoverLine[];
   totals: { parcels: number; pieces: number; collectMinor: number };
   replay: boolean;
+  /** PR 406: a copy of a handed-over batch's sheet — who received it and when (null on a live sheet). */
+  copy?: { receivedBy: string | null; handedOverAt: string } | null;
 }
 
 interface SheetData {
@@ -248,4 +254,99 @@ export async function completeHandover(deps: ShippingDeps, who: Who, input: unkn
     await logChange(tx, who, 'handover.complete', 'HandoverBatch', batch.id, { handedOverAt: null }, { handedOverAt: at.toISOString(), receivedBy: d.receivedBy, handedOver: handedOver.length, skipped: skipped.length });
   }, TX);
   return { batchId: batch.id, handedOver, skipped };
+}
+
+/** PR 406 — one batch handed over to a courier's rider. Amounts in minor units. */
+export interface HandedBatch {
+  batchId: string;
+  handedOverAt: string;
+  receivedBy: string | null;
+  /** Who marked it handed over (the staff member's name), or null. */
+  by: string | null;
+  parcels: number;
+  pieces: number;
+  collectMinor: number;
+  /** Orders on the sheet that were left out when it was marked (changed since it was printed). */
+  leftOut: number;
+  printCount: number;
+}
+
+/** PR 406 — one courier's handed-over batches in the owner's last days, latest first, with the period's totals. */
+export interface HandedCourier {
+  courierAccountId: string;
+  courierName: string;
+  currency: string;
+  batches: HandedBatch[];
+  totals: { batches: number; parcels: number; collectMinor: number };
+}
+
+/** The lines of a handed batch that really went (its `handedOver` order numbers; all lines for an older batch). */
+function wentLines(data: SheetData & { handedOver?: string[]; skipped?: unknown[] }): HandoverLine[] {
+  if (!Array.isArray(data.handedOver)) return data.lines ?? [];
+  const went = new Set(data.handedOver);
+  return (data.lines ?? []).filter((l) => went.has(l.orderNumber));
+}
+
+/** PR 406 — the batches handed over per courier in the last `fulfilment.handover.history.days` (`fulfilment.read`). */
+export async function handoverHistory(deps: ShippingDeps, who: Who): Promise<HandedCourier[]> {
+  await allow(deps, who, 'fulfilment.read');
+  const cfg = await setting(deps, who.storeId, 'fulfilment.handover.history');
+  const since = new Date(nowOf(deps).getTime() - cfg.days * 86_400_000);
+  const rows = await deps.db.handoverBatch.findMany({
+    where: { storeId: who.storeId, handedOverAt: { gte: since } },
+    orderBy: { handedOverAt: 'desc' },
+    select: { id: true, handedOverAt: true, receivedBy: true, handedOverById: true, printCount: true, data: true, courierAccount: { select: { id: true, name: true } } },
+  });
+  const staffIds = [...new Set(rows.map((r) => r.handedOverById).filter((x): x is string => !!x))];
+  const staff = staffIds.length ? await deps.db.staffUser.findMany({ where: { id: { in: staffIds } }, select: { id: true, displayName: true } }) : [];
+  const nameOf = new Map(staff.map((x) => [x.id, x.displayName]));
+  const out = new Map<string, HandedCourier>();
+  for (const r of rows) {
+    const data = (r.data ?? {}) as unknown as SheetData & { handedOver?: string[]; skipped?: unknown[] };
+    const lines = wentLines(data);
+    const c = out.get(r.courierAccount.id) ?? { courierAccountId: r.courierAccount.id, courierName: r.courierAccount.name, currency: data.currency ?? '', batches: [], totals: { batches: 0, parcels: 0, collectMinor: 0 } };
+    out.set(r.courierAccount.id, c);
+    const collect = lines.reduce((n, l) => n + l.collectMinor, 0);
+    c.totals.batches += 1;
+    c.totals.parcels += lines.length;
+    c.totals.collectMinor += collect;
+    if (c.batches.length >= cfg.perCourier) continue;
+    c.batches.push({
+      batchId: r.id,
+      handedOverAt: r.handedOverAt!.toISOString(),
+      receivedBy: r.receivedBy,
+      by: r.handedOverById ? (nameOf.get(r.handedOverById) ?? null) : null,
+      parcels: lines.length,
+      pieces: lines.reduce((n, l) => n + l.pieces, 0),
+      collectMinor: collect,
+      leftOut: Array.isArray(data.skipped) ? data.skipped.length : 0,
+      printCount: r.printCount,
+    });
+  }
+  return [...out.values()].sort((a, b) => a.courierName.localeCompare(b.courierName));
+}
+
+const copyInput = z.object({ batchId: z.uuid() }).strict();
+
+/**
+ * PR 406 — a copy of a handed-over batch's sheet: what it kept, only the parcels that went, marked COPY with the rider
+ * and the time it was handed over. NOT_FOUND for another store's or an unknown batch; NOT_HANDED_OVER for a batch still
+ * open (print its live sheet instead). One more print job; the batch's print count grows; nothing else changes.
+ */
+export async function copyHandover(deps: ShippingDeps, who: Who, input: unknown): Promise<HandoverSheet> {
+  await allow(deps, who, 'fulfilment.handover');
+  const d = parse(copyInput, input, 'handover copy');
+  const batch = await deps.db.handoverBatch.findFirst({ where: { id: d.batchId, storeId: who.storeId }, select: { id: true, handedOverAt: true, receivedBy: true, data: true, printCount: true, orderIds: true, shipmentIds: true } });
+  if (!batch) throw new ShippingError('NOT_FOUND', 'no such handover batch', ['batchId']);
+  if (!batch.handedOverAt) throw new ShippingError('NOT_HANDED_OVER', 'this batch is not handed over yet: print its sheet instead', ['batchId']);
+  const data = (batch.data ?? {}) as unknown as SheetData & { handedOver?: string[] };
+  const lines = wentLines(data);
+  const at = nowOf(deps);
+  const printCount = await deps.db.$transaction(async (tx) => {
+    const b = await tx.handoverBatch.update({ where: { id: batch.id }, data: { printCount: { increment: 1 } }, select: { printCount: true } });
+    await tx.printJob.create({ data: { storeId: who.storeId, kind: 'HANDOVER_SHEET', orderIds: lines.map((l) => l.orderId), shipmentIds: lines.map((l) => l.shipmentId), isReprint: true, reason: 'copy', status: 'SUCCEEDED', printedAt: at, actorId: who.actor.staffUserId, batchId: batch.id, data: { copy: true, print: b.printCount } } });
+    await logChange(tx, who, 'handover.sheet.copy', 'HandoverBatch', batch.id, { printCount: batch.printCount }, { printCount: b.printCount, parcels: lines.length });
+    return b.printCount;
+  }, TX);
+  return { ...sheetOf(batch.id, printCount, { ...data, lines }, false), copy: { receivedBy: batch.receivedBy, handedOverAt: batch.handedOverAt.toISOString() } };
 }

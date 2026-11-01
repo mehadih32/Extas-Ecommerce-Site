@@ -3,6 +3,7 @@
 // the receiver's name, the signature lines), the shop's letterhead (name, address, phone from the settings), and the
 // sheet's own words in the language the owner chose (messages/admin-fulfil.<lang>.json `ful.handover.sheet`), drawn by
 // @extas/documents' paper list. Amounts and numbers in Western digits (what riders and the courier's hub read).
+// PR 406: a copy of a handed-over batch's sheet says COPY at the top with the rider and the time it was handed over.
 import { listPdf, PAPER_MM, sharpText, type ListColumn, type ListDocument, type TextEngine } from '@extas/documents';
 import type { HandoverSheetSettings } from '@extas/settings';
 import type { HandoverSheet } from '@extas/shipping';
@@ -48,7 +49,7 @@ export function handoverDocument(sheet: HandoverSheet, cfg: HandoverSheetSetting
     summary: [
       w('summary', { parcels: sheet.totals.parcels, pieces: sheet.totals.pieces, amount: total }),
       w('printed', { at: printedAt(sheet.printedAt, timeZone), n: sheet.printCount }),
-      ...(sheet.printCount > 1 ? [w('again', { n: sheet.printCount })] : []),
+      ...(sheet.copy ? [w('copy', { rider: sheet.copy.receivedBy || '—', at: printedAt(sheet.copy.handedOverAt, timeZone) })] : sheet.printCount > 1 ? [w('again', { n: sheet.printCount })] : []),
       ...(sheet.practice ? [w('practice')] : []),
     ],
     columns,

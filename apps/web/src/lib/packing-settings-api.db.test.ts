@@ -94,6 +94,21 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print settings API on PostgreSQL (S20 Â
     ]);
   });
 
+  it('PR 406: the handover sheet and the handed-over history are cards too, saved whole and audited', async () => {
+    const g = await api('GET', { cookie: owner });
+    const sheet = g.body.cards!['delivery.handover.sheet']!;
+    expect(sheet.value).toMatchObject({ paper: 'a4', lang: 'en', packOnHandover: false });
+    const hist = g.body.cards!['fulfilment.handover.history']!;
+    expect(hist.value).toEqual({ days: 7, perCourier: 10 });
+    expect((await api('PUT', { cookie: owner, body: { key: sheet.key, value: { ...sheet.value, paper: 'a5', lang: 'bn' }, version: sheet.version } })).status).toBe(200);
+    expect(await deps.resolver.value('delivery.handover.sheet', { storeId: MOTHER_STORE_ID })).toMatchObject({ paper: 'a5', lang: 'bn' });
+    expect((await api('PUT', { cookie: owner, body: { key: hist.key, value: { days: 91, perCourier: 10 }, version: hist.version } })).body).toMatchObject({ error: 'INVALID_INPUT', details: ['days'] });
+    const ok = await api('PUT', { cookie: owner, body: { key: hist.key, value: { days: 30, perCourier: 5 }, version: hist.version } });
+    expect(ok.body.cards!['fulfilment.handover.history']!.value).toEqual({ days: 30, perCourier: 5 });
+    expect((await api('PUT', { cookie: reader, body: { key: hist.key, value: { days: 3, perCourier: 5 }, version: ok.body.cards!['fulfilment.handover.history']!.version } })).status).toBe(403);
+    expect(await t.prisma.auditLog.count({ where: { action: { in: ['delivery.handover.sheet.save', 'fulfilment.handover.history.save'] } } })).toBe(2);
+  });
+
   it('refuses other methods', async () => {
     expect((await packingSettingsHandler(call('POST', { cookie: owner, body: {} }), deps)).status).toBe(405);
     expect((await packingSettingsHandler(call('GET', {}), deps)).status).toBe(401);

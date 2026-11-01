@@ -9,7 +9,7 @@ import { mockCourierWorld, STEADFAST_PROVIDER } from '@extas/adapters';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { confirmOrder } from '@extas/orders';
 import { shippingSettings } from '@extas/settings';
-import { bookOrders, completeHandover, handoverList, printHandover, printJobs, printRun, printStickers } from './index';
+import { bookOrders, completeHandover, copyHandover, handoverHistory, handoverList, printHandover, printJobs, printRun, printStickers } from './index';
 import { setUpShipping, type ShippingFixture } from './testing';
 
 async function refusal(p: Promise<unknown>): Promise<{ code: string; data?: Record<string, unknown> }> {
@@ -162,5 +162,42 @@ describe.skipIf(!HAS_TEST_DB)('PR 180 · the print queue and the handover sheet 
     expect((await refusal(completeHandover(f.shippingDeps(), f.looker, { batchId: sheet.batchId, receivedBy: 'x y' }))).code).toBe('FORBIDDEN');
     expect((await refusal(handoverList(f.shippingDeps(), f.looker))).code).toBe('FORBIDDEN');
     expect((await refusal(completeHandover(f.shippingDeps(), f.shipper, { batchId: '00000000-0000-7000-8000-000000000000', receivedBy: 'x y' }))).code).toBe('NOT_FOUND');
+  });
+
+  it('PR 406: the handed-over history per courier (rider, who, parcels, amount) and a COPY of a handed sheet with only the parcels that went', async () => {
+    const third = await f.courier(STEADFAST_PROVIDER, 'Steadfast history');
+    const a = await booked('hh-a', third);
+    const b = await booked('hh-b', third);
+    await print([a.shipmentId, b.shipmentId]);
+    const sheet = await printHandover(f.shippingDeps(), f.shipper, { courierAccountId: third });
+    // the open batch is not in the history and has no copy
+    expect((await handoverHistory(f.shippingDeps(), f.shipper)).find((c) => c.courierAccountId === third)).toBeUndefined();
+    expect((await refusal(copyHandover(f.shippingDeps(), f.shipper, { batchId: sheet.batchId }))).code).toBe('NOT_HANDED_OVER');
+    // b changes after the sheet: it is left out when the batch is handed over
+    await db().order.update({ where: { id: b.orderId }, data: { paidMinor: { increment: 1000 } } });
+    const done = await completeHandover(f.shippingDeps(), f.shipper, { batchId: sheet.batchId, receivedBy: 'Rider Rahim' });
+    expect(done.handedOver).toEqual([a.number]);
+
+    const mine = (await handoverHistory(f.shippingDeps(), f.shipper)).find((c) => c.courierAccountId === third)!;
+    expect(mine).toMatchObject({ courierName: 'Steadfast history', totals: { batches: 1, parcels: 1, collectMinor: a.shipment.codAmountMinor } });
+    expect(mine.batches).toEqual([expect.objectContaining({ batchId: sheet.batchId, receivedBy: 'Rider Rahim', by: expect.any(String), parcels: 1, collectMinor: a.shipment.codAmountMinor, leftOut: 1, printCount: 1 })]);
+
+    const copy = await copyHandover(f.shippingDeps(), f.shipper, { batchId: sheet.batchId });
+    expect(copy).toMatchObject({ batchId: sheet.batchId, printCount: 2, totals: { parcels: 1 }, copy: { receivedBy: 'Rider Rahim', handedOverAt: expect.any(String) } });
+    expect(copy.lines.map((l) => l.orderNumber)).toEqual([a.number]);
+    expect(await db().printJob.count({ where: { batchId: sheet.batchId, kind: 'HANDOVER_SHEET', isReprint: true, reason: 'copy' } })).toBe(1);
+    // nothing about the orders changed
+    expect(await db().order.findUniqueOrThrow({ where: { id: b.orderId } })).toMatchObject({ status: 'CONFIRMED' });
+
+    // the owner's days: a batch older than them leaves the history
+    f.overrides.set('fulfilment.handover.history', { days: 1, perCourier: 10 });
+    try {
+      f.clock.now = new Date(f.clock.now.getTime() + 2 * 86_400_000);
+      expect((await handoverHistory(f.shippingDeps(), f.shipper)).find((c) => c.courierAccountId === third)).toBeUndefined();
+    } finally {
+      f.overrides.delete('fulfilment.handover.history');
+    }
+    expect((await refusal(copyHandover(f.shippingDeps(), f.looker, { batchId: sheet.batchId }))).code).toBe('FORBIDDEN');
+    expect((await refusal(copyHandover(f.shippingDeps(), f.shipper, { batchId: '00000000-0000-7000-8000-000000000406' }))).code).toBe('NOT_FOUND');
   });
 });

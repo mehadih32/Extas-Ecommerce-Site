@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { printRunSchema, printRunSettings } from '../src/registry-print-run';
+import { handoverHistorySchema, printRunSchema, printRunSettings } from '../src/registry-print-run';
 
 const spec = printRunSettings['fulfilment.printRun'];
 
@@ -24,5 +24,18 @@ describe('fulfilment.printRun setting (v150)', () => {
     expect(printRunSchema.safeParse({ what: 'both', invoiceLayout: 'roll' }).success).toBe(true);
     expect(printRunSchema.safeParse({ what: 'slip', invoiceLayout: 'page' }).success).toBe(false);
     expect(printRunSchema.safeParse({ what: 'sticker', invoiceLayout: 'page', extra: 1 }).success).toBe(false);
+  });
+});
+
+describe('fulfilment.handover.history setting (v151)', () => {
+  const h = printRunSettings['fulfilment.handover.history'];
+  it('is in the registry at version 151, labelled in both languages, a week and ten per courier as shipped', () => {
+    expect(registry['fulfilment.handover.history']).toBe(h);
+    expect(h.version).toBe(151);
+    expect(h.isOwnerData).toBe(false);
+    for (const lang of ['en', 'bn'] as const) expect(lookup(messages[lang], h.labelKey)).toBeTruthy();
+    expect(h.default).toEqual({ days: 7, perCourier: 10 });
+    expect(handoverHistorySchema.safeParse({ days: 0, perCourier: 10 }).success).toBe(false);
+    expect(handoverHistorySchema.safeParse({ days: 91, perCourier: 10 }).success).toBe(false);
   });
 });

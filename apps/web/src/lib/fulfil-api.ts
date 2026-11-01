@@ -24,6 +24,10 @@
 //                                              ready parcels on the courier's open batch, counted (fulfilment.handover)
 //   POST  /api/admin/packing/handover/done     {batchId, receivedBy} the batch handed over: its ready orders move to
 //                                              "handed over"; the rest are named (fulfilment.handover)
+//   GET   /api/admin/packing/handover/history PR 406: per courier, the batches handed over in the owner's last days
+//                                              (rider, who marked it, parcels, amount) (fulfilment.read)
+//   POST  /api/admin/packing/handover/copy    {batchId} a COPY of a handed batch's sheet as a PDF: only the parcels
+//                                              that went, with the rider and the time (fulfilment.handover)
 //   GET   /api/admin/packing/picking           PR 181: the daily picking list (?from=&to= days, optional): orders and
 //                                              pieces, category → style → colour → size, shortages, held orders apart
 //                                              (fulfilment.read; no customer's details)
@@ -198,6 +202,19 @@ export async function handoverRoute(request: Request, deps: AdminDeps | null, pa
   if (path[0] === 'done') {
     if (m !== 'POST') return fail(405, 'method-not-allowed');
     return guarded(request, deps, 'fulfilment.handover', async (x) => json({ ok: true, ...(await sh.completeHandover(x.deps, x.who, await body(request))) }));
+  }
+  if (path[0] === 'history') {
+    if (m !== 'GET') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.read', async (x) => json({ ok: true, couriers: await sh.handoverHistory(x.deps, x.who) }));
+  }
+  if (path[0] === 'copy') {
+    if (m !== 'POST') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.handover', async (x) => {
+      const sheet = await sh.copyHandover(x.deps, x.who, await body(request));
+      const cfg = await x.deps.settings.value('delivery.handover.sheet', { storeId: x.who.storeId });
+      const { head, timeZone } = await letterhead(x.deps, x.who.storeId, cfg.lang);
+      return pdf(await handoverPdf(sheet, cfg, head, timeZone), pdfName(`handover-${sheet.courierName}-copy-${sheet.printCount}`));
+    });
   }
   return fail(404, 'not-found');
 }

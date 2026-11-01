@@ -29,6 +29,8 @@ export type ShippingErrorCode =
   | 'NOTHING_TO_HAND_OVER'
   /** PR 180: this handover batch was marked handed over already (`data.handedOverAt`). */
   | 'ALREADY_HANDED_OVER'
+  /** PR 406: a copy is made of a handed-over batch's sheet only; an open batch prints its live sheet. */
+  | 'NOT_HANDED_OVER'
   /** PR 525: the true-delivery check was resolved already (`data.resolution`). */
   | 'ALREADY_RESOLVED'
   /** PR 525, 526: the order service refused the step (`data.code`, e.g. CANCEL_PENDING); nothing was changed. */
@@ -98,6 +100,7 @@ export class ShippingError extends Error {
       case 'NO_ZONE_LIST':
       case 'REASON_REQUIRED':
       case 'NOTHING_TO_HAND_OVER':
+      case 'NOT_HANDED_OVER':
       case 'NOT_IN_ORDER':
       case 'ALREADY_CHECKED':
       case 'CHECK_MODE':
