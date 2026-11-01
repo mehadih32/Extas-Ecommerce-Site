@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৫টা PR-এর মধ্যে ৩৫৬টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৮টা PR-এর মধ্যে ৩৫৬টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -13,7 +13,7 @@ documents to it ([how](#how-it-is-built)).
 |---|---|
 | **Preview (the build)** | **new.extas.com.bd** — password-protected and `noindex`. Every merge to `main` deploys here by itself. The password is never written anywhere; the owner reads it on the server ([`docs/owner/PREVIEW-LOGIN.md`](docs/owner/PREVIEW-LOGIN.md)). Today the home address opens the Bengali progress page (`/status`); the admin is at `/admin`. |
 | **The old shop** | **extas.com.bd** (WordPress) stays live and untouched until go-live day. Then the main domain is switched and every old address gets a 301 redirect (S19, PR 587) — only on the owner's explicit word. |
-| **Specification** | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) (V2.1 final + change notes) · [`docs/MASTER-REGISTER.md`](docs/MASTER-REGISTER.md) (621 PRs, 28 stages) · UI truth: [`docs/demo/EXTAS-demo-V12.2.html`](docs/demo/EXTAS-demo-V12.2.html) (V12.1 and V12 kept as history) |
+| **Specification** | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) (V2.1 final + change notes) · [`docs/MASTER-REGISTER.md`](docs/MASTER-REGISTER.md) (624 PRs, 28 stages) · UI truth: [`docs/demo/EXTAS-demo-V12.2.html`](docs/demo/EXTAS-demo-V12.2.html) (V12.1 and V12 kept as history) |
 | **Every session starts with** | [`CLAUDE.md`](CLAUDE.md) → [`docs/START-HERE.md`](docs/START-HERE.md) → [`PROGRESS.md`](PROGRESS.md) and [`BLOCKED.md`](BLOCKED.md) |
 
 **Contents:** [Status](#status-dashboard) · [How it is built](#how-it-is-built) ·
@@ -41,7 +41,7 @@ documents to it ([how](#how-it-is-built)).
 | Item | Now |
 |---|---|
 | Launch | **Launch 304/305** · every buildable Launch row is built (#70); PR [403](docs/stages/S19.md#pr-403) built in #71: the main domain's own switch, shipped closed (opening it on go-live day stays the owner's step, BLOCKED 25). Review round 1 (#71) and round 2 (#72) fixes merged. 1 left: PR [587](docs/stages/S19.md#pr-587) (the main-domain switch, after the CN-013 go-live gate). Batch 4 (#73): the 13 go-live gate fixes (SIM-F-004, 019, 025, 031, 041, 046, 047, 048, 050, 051, 052, 053, 054) as follow-ups on built Launch rows, with the review round 3 fixes folded in. The go-live gate journeys (#74, PR [414](docs/stages/S21.md#pr-414) follow-up): CN-013 phase 2 runs on new.extas.com.bd as the journeys workflow's `go-live-gate` group, ordering and changing nothing; of its 38 live checks 8 are proved by the journeys, 24 by CI tests and 6 need a real test order. The After-launch list runs meanwhile, by priority (CN-031): #73 built 30 rows (S06 9, S07 2, S08 5, S18 4, S21 10); S07, S08 and S18 are done |
-| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 28/33** (wave 2) · **S04 41/41** · **S05 21/21** · **S07 10/10** · **S08 26/26** (wave 3) · **S11 14/22** · **S13 1/35** (wave 5) · **S16 9/22** · **S21 13/14** (wave 6) · **S17 1/24** · **S18 14/14** · **S19 16/17** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 2/13** (wave 4) · total **356/615** active PRs |
+| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 28/33** (wave 2) · **S04 41/42** · **S05 21/21** · **S07 10/10** · **S08 26/26** (wave 3) · **S11 14/22** · **S13 1/35** (wave 5) · **S16 9/22** · **S21 13/14** (wave 6) · **S17 1/24** · **S18 14/15** · **S19 16/17** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 2/14** (wave 4) · total **356/618** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups); since 31 Oct 17:25 (#68) also Website › SEO › Redirects & 404, Settings › Sign-in & security and Settings › System › Backups; since 31 Oct 19:14 (#69) also Settings › Store details, Privacy & data, Policies & texts, Cloudflare protection, Settings › System › Go-live (restore, first-week watch), Reports › Site health and Money › Overview; since 31 Oct 22:46 (#70) also Website › SEO (collection pages, sitemaps, robots.txt, photo descriptions, Search Console and Bing, real visitors' speed, language pairs, Bengali pages), Marketing › Tracking, Money › Cost ledger, Expenses, Costs & fees and Month-end, Reports › Site health › Customer problems and journeys, and the Support channels; since 1 Nov 02:36 (#71) also the review round 1 fixes (Set delivery area on an order, test payments off by default, staging always on its own locked block); since 1 Nov 04:21 (#72) also the review round 2 fixes (`/status` on the preview host only, the unpaid hold's end, the Caddy body limits). Batch 4 (#73: Refunds & wallet, the Wallet tab, Fraud & RTO, Today's digest, Calls to make, Stopped by the engine, Decisions & learning, Delivery & RTO, Rider issues, Delivery › Settings, Eid order-by dates, the Site manual, Speed, Smoke runs, Run history, Fixes to approve, Checklist audit) goes live with the next deploy |
 | Last deploy | 1 Nov 2026, 04:21 (Dhaka) · commit `f5d916f` (#72 review round 2 fixes: 11 follow-ups) · **success**, smoke test 268 pages OK (nightly run 06:15 PASS); batch 4 (#73) goes live with the next deploy |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
@@ -65,7 +65,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S01](docs/stages/S01.md) | [Catalog, media & images](docs/stages/S01.md) | [1](docs/stages/README.md#wave-1) | [19–39](docs/stages/S01.md), [590](docs/stages/S01.md#pr-590), [609](docs/stages/S01.md#pr-609) | 23 / 23 | **Done** |
 | [S02](docs/stages/S02.md) | [Storefront](docs/stages/S02.md) | [2](docs/stages/README.md#wave-2) | [40–88](docs/stages/S02.md), [501](docs/stages/S02.md#pr-501), [503](docs/stages/S02.md#pr-503), [595–600](docs/stages/S02.md), [602](docs/stages/S02.md#pr-602) | 45 / 58 | In progress |
 | [S03](docs/stages/S03.md) | [Combo & bundles](docs/stages/S03.md) | [2](docs/stages/README.md#wave-2) | [89–104](docs/stages/S03.md), [571–576](docs/stages/S03.md) | 22 / 22 | **Done** |
-| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606) | 41 / 41 | **Done** |
+| [S04](docs/stages/S04.md) | [Cart, checkout, accounts](docs/stages/S04.md) | [3](docs/stages/README.md#wave-3) | [105–137](docs/stages/S04.md), [558](docs/stages/S04.md#pr-558), [560](docs/stages/S04.md#pr-560), [561](docs/stages/S04.md#pr-561), [563](docs/stages/S04.md#pr-563), [565](docs/stages/S04.md#pr-565), [566](docs/stages/S04.md#pr-566), [605](docs/stages/S04.md#pr-605), [606](docs/stages/S04.md#pr-606), [622](docs/stages/S04.md#pr-622) | 41 / 42 | In progress |
 | [S05](docs/stages/S05.md) | [Order management](docs/stages/S05.md) | [3](docs/stages/README.md#wave-3) | [138–155](docs/stages/S05.md), [541](docs/stages/S05.md#pr-541), [546](docs/stages/S05.md#pr-546), [610](docs/stages/S05.md#pr-610) | 21 / 21 | **Done** |
 | [S06](docs/stages/S06.md) | [Fraud & location](docs/stages/S06.md) | [4](docs/stages/README.md#wave-4) | [156–164](docs/stages/S06.md), [502](docs/stages/S06.md#pr-502), [519–524](docs/stages/S06.md), [540](docs/stages/S06.md#pr-540), [542–545](docs/stages/S06.md), [549–557](docs/stages/S06.md), [559](docs/stages/S06.md#pr-559), [562](docs/stages/S06.md#pr-562), [567](docs/stages/S06.md#pr-567) | 28 / 33 | In progress |
 | [S07](docs/stages/S07.md) | [Payments & wallet](docs/stages/S07.md) | [3](docs/stages/README.md#wave-3) | [165–174](docs/stages/S07.md) | 10 / 10 | **Done** |
@@ -79,17 +79,17 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 0 / 48 | Not started |
 | [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 9 / 22 | In progress |
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 1 / 24 | In progress |
-| [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620) | 14 / 14 | **Done** |
+| [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620), [623](docs/stages/S18.md#pr-623) | 14 / 15 | In progress |
 | [S19](docs/stages/S19.md) | [Deploy, backup, go-live](docs/stages/S19.md) | [8](docs/stages/README.md#wave-8) | [391–403](docs/stages/S19.md), [507](docs/stages/S19.md#pr-507), [587](docs/stages/S19.md#pr-587), [619](docs/stages/S19.md#pr-619), [621](docs/stages/S19.md#pr-621) | 16 / 17 | In progress |
 | [S20](docs/stages/S20.md) | [Fulfilment & documents](docs/stages/S20.md) | [4](docs/stages/README.md#wave-4) | [404–412](docs/stages/S20.md) | 1 / 9 | In progress |
 | [S21](docs/stages/S21.md) | [Site Health & Audit](docs/stages/S21.md) | [6](docs/stages/README.md#wave-6) | [413–424](docs/stages/S21.md), [570](docs/stages/S21.md#pr-570), [594](docs/stages/S21.md#pr-594) | 13 / 14 | In progress |
-| [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538) | 2 / 13 | In progress |
+| [S22](docs/stages/S22.md) | [Support (all-in-one)](docs/stages/S22.md) | [4](docs/stages/README.md#wave-4) | [425–436](docs/stages/S22.md), [538](docs/stages/S22.md#pr-538), [624](docs/stages/S22.md#pr-624) | 2 / 14 | In progress |
 | [S23](docs/stages/S23.md) | [Social & content studio](docs/stages/S23.md) | [5](docs/stages/README.md#wave-5) | [437–443](docs/stages/S23.md) | 0 / 7 | Not started |
 | [S24](docs/stages/S24.md) | [Virtual Photoshoot Studio](docs/stages/S24.md) | [7](docs/stages/README.md#wave-7) | [444–480](docs/stages/S24.md), [539](docs/stages/S24.md#pr-539) | 0 / 38 | Not started |
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **621 PRs** | **356 / 615 active** | 6 parked |
+| | **Total** | | **624 PRs** | **356 / 618 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1119,7 +1119,7 @@ S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `disco
 
 - **Go-live gate (1 Nov, #73; PR 213 follow-up, SIM-F-050):** a "first order only" coupon is checked on the order history by phone number and account; "guests only" says what it checks.
 
-### S04 · Cart, checkout, accounts — Done (41/41)
+### S04 · Cart, checkout, accounts — In progress (41/42)
 
 > **বাংলায়:** ব্যাগ তৈরি — পণ্য রাখা, রং-সাইজ-সংখ্যা বদলানো, পরে কেনার জন্য রাখা, সরানো আর ফিরিয়ে আনা, সেট, অফারের ঘর, দুই সাইজের প্রশ্ন, অর্ডারের হিসাব, কোড, ফ্রি ডেলিভারির অগ্রগতি আর "আপনার পছন্দ হতে পারে"; "ব্যাগে রাখা হয়েছে" শিট। চেকআউটও তৈরি — নাম-ফোন-ঠিকানা, ঠিকানা থেকে এলাকা আর চার্জ (না বুঝলে জিজ্ঞেস করে), পেমেন্টের উপায়, ওয়ালেট, অফারের টিক, কনফার্ম বোতাম, একবার চাপলে একটাই অর্ডার, আর ধন্যবাদ পাতা। কার্ড/মোবাইল পেমেন্ট এখন টেস্ট পাতায়, কোনো টাকা নড়ে না। ডেমো V12.2-এর মতো, বাংলা আর ইংরেজি দুটোতেই। অর্ডারের পাতায় এখন "কেন অগ্রিম, কেন এই চার্জ" কার্ড, আর বাল্ক-কর্পোরেট অর্ডারের অনুরোধ (ডিফল্ট বন্ধ)।
 
@@ -1208,7 +1208,7 @@ S02/S04: placing the storefront pieces and the bag's use of `quoteCart` / `disco
 
 > **বাংলায়:** চেকআউটে অগ্রিম তৈরি: আপনি ঠিক করেন কাকে আগে টাকা দিতে বলা হবে। চিহ্নিত কাস্টমার একই পেজে ক্যাশ অন ডেলিভারি ছাড়া bKash, Nagad আর কার্ড দেখেন, সাথে একটা সাধারণ লাইন। শুরুতে বন্ধ।
 
-S04 is complete (41/41); stage report [2026-10-24-S04](docs/reports/2026-10-24-S04.md). ~~Next: PR 558 and 560 (the checkout's advance rules), the rest of S04.~~ Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
+~~S04 is complete (41/41)~~ S04 was complete (41/41) on 24 Oct; since 1 Nov it is 41/42 with PR 622 (Buy again, CN-034, After launch, not built); stage report [2026-10-24-S04](docs/reports/2026-10-24-S04.md). ~~Next: PR 558 and 560 (the checkout's advance rules), the rest of S04.~~ Register: [S04](docs/MASTER-REGISTER.md#s04--cart-checkout-accounts--pr-105137).
 
 - **Go-live gate (1 Nov, #73):** "Call me" at checkout (PR 124 follow-up, SIM-F-046; `checkout.callMe`, off): after refused tries or a long pause one tap leaves a call-back in the Support inbox; voice address (PR 117 follow-up, SIM-F-047; `checkout.voice`, off; migration `0074`): the order marked voice-entered with its recording, an unsure reading flagged for a call, Google Speech-to-Text on its mock until the key, the recording cleared by an erasure.
 
@@ -1637,7 +1637,7 @@ data, checked time); settings registry v63 (`packages/settings/src/registry-invo
 
 Still planned in S20: register PRs 404–406, 408–412.
 
-### S22 · Support (all-in-one) — In progress (2/13)
+### S22 · Support (all-in-one) — In progress (2/14)
 
 > **বাংলায় সংক্ষেপে:** সাপোর্ট ইনবক্স তৈরি: সব চ্যানেলের কথোপকথন এক তালিকায়, কে উত্তর দিয়েছেন নামসহ, টিমের ভেতরের নোট, ফাইল, দায়িত্ব আর
 > "কে কী করেছে"-র লগ (কেউ মুছতে পারে না)। চ্যানেল (WhatsApp, Messenger, সাইটের চ্যাট) যুক্ত হবে PR 426-এ; ততদিন উত্তর রাখা হয়, "পাঠানো হয়নি" লেখা থাকে।
@@ -2159,7 +2159,7 @@ cache rule and extra host names.**
 Planned — see register PRs 356–361, 363–377, 511–512: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604) and
 [A4](docs/BLUEPRINT.md#a4-multi-store--three-stores-one-server-one-codebase).
 
-### S18 · Compliance, security, manual — Done (14/14)
+### S18 · Compliance, security, manual — In progress (14/15)
 
 ~~Planned — see register PRs 387–390: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).~~ Built in #73 (the Site manual, below).
 
@@ -2724,6 +2724,7 @@ the register.
 | CN-031 | 31 Oct | Finish Launch in one run; never idle; three builders; lighter reviews; After-launch by priority | [track](docs/LAUNCH-TRACK.md) |
 | CN-032 | 31 Oct | A page never stays blank in one browser because of what it saved: browser translation off, a self-mending safety net, and a "Start fresh" page that clears only this site's data in that browser (PR 12) | [register](docs/MASTER-REGISTER.md#build-status) |
 | CN-033 | 31 Oct | The shop follows the ERP's 30 Oct retail decisions: switch-over as a fresh start (no moved orders, no cost-of-goods), B-grade lines held until the ERP opens them, a refused exchange parcel billed at the deadline and credited when it comes back approved (PR 610, 614, 619, 621) | [register](docs/MASTER-REGISTER.md#build-status) |
+| CN-034 | 1 Nov | One final customer 360° analysis before go-live, "add whatever I missed": three gaps no PR covered become PR 622 Buy again (S04), 623 the customer's own privacy request into the staff screen (S18) and 624 a Messenger button (S22), each off by default and After launch; total 624 PRs (618 active) | [register](docs/MASTER-REGISTER.md#build-status) · [analysis](docs/qa/FINAL-ANALYSIS-2026-11.md) |
 
 ---
 
@@ -2734,7 +2735,7 @@ the register.
 | What | Where |
 |---|---|
 | Full specification (V2.1 final + change notes) | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) — older versions in [`docs/history/`](docs/history) |
-| All 621 PRs, build status, stage table | [`docs/MASTER-REGISTER.md`](docs/MASTER-REGISTER.md) |
+| All 624 PRs, build status, stage table | [`docs/MASTER-REGISTER.md`](docs/MASTER-REGISTER.md) |
 | UI truth: the clickable demo | [`docs/demo/EXTAS-demo-V12.2.html`](docs/demo/EXTAS-demo-V12.2.html) (download, open in a browser) · source in [`docs/demo/src/`](docs/demo/src) · V12.1 and V12 kept beside it as history · public share build: see [`docs/README.md`](docs/README.md) |
 | Every owner note | [`docs/owner/ROUND15.md`](docs/owner/ROUND15.md) (and `ROUND14.md`) |
 | Owner reviews, research and plans | [`docs/owner/`](docs/owner) — desktop and phone reviews, combo research and ranking, Google traffic plan, blog plan, server spec, change process |

@@ -1,13 +1,13 @@
 # EXTAS — Launch track
 
-**CN-027 · 24 Oct 2026.** The build order until go-live and after it. Generated from `docs/MASTER-REGISTER.md` (Build status: total 243/615 on 25 Oct 2026) and Blueprint Appendix A. Counted in PRs, never in days. **25 Oct 2026 (CN-028):** PR 607–619 and 621 (Retail and the ERP supplier model) are added to Launch, PR 620 to After launch.
+**CN-027 · 24 Oct 2026.** The build order until go-live and after it. Generated from `docs/MASTER-REGISTER.md` (Build status: total 243/615 on 25 Oct 2026) and Blueprint Appendix A. Counted in PRs, never in days. **25 Oct 2026 (CN-028):** PR 607–619 and 621 (Retail and the ERP supplier model) are added to Launch, PR 620 to After launch. **1 Nov 2026 (CN-034):** PR 622–624 (Buy again, the customer's own privacy request, the Messenger button; from the go-live gate's customer 360° run) are added to After launch.
 
 ## বাংলায় সংক্ষেপে
 
 - **লক্ষ্য:** আগে শুধু সেই কাজগুলো শেষ হবে, যেগুলো ছাড়া নিরাপদে আসল অর্ডার নেওয়া যায় না। এটাই **Launch** লিস্ট।
 - **Launch-এ আছে:** দোকান ঘোরা, প্রোডাক্ট, কম্বো, ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (বেশিরভাগ বানানো শেষ); অর্ডার; পেমেন্ট, অগ্রিম আর রিফান্ডের হিসাব; কুরিয়ার বুকিং আর ট্র্যাকিং; QC-সহ রিটার্ন আর এক্সচেঞ্জ; COD মেলানো; ঝুঁকির বেসিক নিয়ম; অর্ডারের SMS আর WhatsApp; প্রতিদিন দোকান চালানোর অ্যাডমিন পেজ; সিকিউরিটি; ব্যাকআপ, রিস্টোর পরীক্ষা আর মনিটরিং; গুগলে আসার বেসিক SEO; নীতিমালার পেজ; আর গো-লাইভের কাজ, সাথে 70-অর্ডারের সিমুলেশন আবার চালানো (CN-013)।
 - **হিসাব:** Launch-এ মোট 305টা PR, এর মধ্যে 222টা বানানো শেষ। **লাইভে যাওয়ার আগে আর 83টা PR বাকি।** (২৫ অক্টোবর: রিটেইল আর ERP-র নতুন হিসাবের 14টা PR যোগ হয়েছে, CN-028।) সবচেয়ে বেশি বাকি কুরিয়ার-রিটার্নে (16টা), গো-লাইভে (15টা), SEO-তে (14টা), সিকিউরিটিতে (9টা) আর পেমেন্টে (8টা)।
-- **লাইভের পরে (310টা PR, 21টা আগেই বানানো, বাকি 289টা):** পুরো অ্যাড কন্ট্রোল, ফটো-ভিডিও স্টুডিও, AI এজেন্ট আর স্কিল, মাল্টি-স্টোর, বড় রিপোর্ট, লয়্যালটি আর রেফারেল, A/B টেস্ট, কম্পিটিটর টুল, ব্লগ, আর ডিফল্টের বাইরের বাড়তি অ্যাডমিন ডিজাইন।
+- **লাইভের পরে (~~310~~ 313টা PR, 21টা আগেই বানানো, বাকি ~~289~~ 292টা; ১ নভেম্বর: পুরনো অর্ডার আবার কেনা, কাস্টমারের নিজের প্রাইভেসি অনুরোধ আর Messenger বাটন — নতুন 3টা PR, CN-034):** পুরো অ্যাড কন্ট্রোল, ফটো-ভিডিও স্টুডিও, AI এজেন্ট আর স্কিল, মাল্টি-স্টোর, বড় রিপোর্ট, লয়্যালটি আর রেফারেল, A/B টেস্ট, কম্পিটিটর টুল, ব্লগ, আর ডিফল্টের বাইরের বাড়তি অ্যাডমিন ডিজাইন।
 - **আপনাকে কিছু করতে হবে না।** Launch শেষ হলে বিল্ড নিজে থেকেই লাইভের পরের লিস্ট আগের ক্রমে বানাতে থাকবে। যা বানানো হয়নি, তা বন্ধ বা লুকানো থাকবে। টাকা, দাম, COD বা মেইন ডোমেইন বদলানো আগের মতোই আপনার লিখিত OK ছাড়া হবে না।
 
 ## The rule (CN-027)
@@ -25,8 +25,8 @@
 | List | Done | Total | Left |
 |---|---:|---:|---:|
 | **Launch** | 222 | 305 | **83** |
-| **After launch** | 21 | 310 | 289 |
-| Active total | 243 | 615 | 372 |
+| **After launch** | 21 | 313 | 292 |
+| Active total | 243 | 618 | 375 |
 
 Parked (not counted): S26 handover pack, PR 513–518, and S27 (unnumbered). They stay in the parking lot until the owner says so.
 
@@ -657,6 +657,9 @@ Built automatically right after the Launch list, in the existing order: E3 waves
 | 295 | 389 | S18 | Slot — user manual search and "What's new" (B7.5; §5 HLP-01) | to build |
 | 296 | 390 | S18 | Slot — user manual copy kept with the blueprint documents (B7.5) | to build |
 | 297 | 620 | S18 | Signed calls from the ERP to the shop — top products and customers on click (CN-028; 25 Oct 2026) | to build |
+| 298 | 622 | S04 | Buy again — a past order's lines back in the bag at today's price and stock, then the normal checkout; off by default (CN-034; 1 Nov 2026) | to build |
+| 299 | 623 | S18 | The customer's own privacy request — a copy of his data or its erasure from his account, into PR 382's staff screen; off by default (CN-034; 1 Nov 2026) | to build |
+| 300 | 624 | S22 | Messenger button on the shop — the store's own Page link beside the other support channels; off by default (CN-034; 1 Nov 2026) | to build |
 
 <details><summary>After-launch PRs already built (13; they stay as they are)</summary>
 
@@ -685,15 +688,15 @@ Once every Launch row is merged and live, the build carries straight on with the
 | Order | Stages | Why first | Left |
 |---:|---|---|---:|
 | 1 | S07 payments (2), S08 courier, returns, exchange (5), S06 fraud and location (14) | Money in and out, parcels and the duplicate / fake COD losses | 21 |
-| 2 | S18 compliance (5), S21 site health (11), S16 finance (13), S20 fulfilment and documents (8) | The site stays safe, the books close, daily packing and invoices run | 37 |
-| 3 | S22 support (11), S14 CRM (17) | Customers get answers, repeat buyers are known | 28 |
+| 2 | S18 compliance (6, with 623 from CN-034), S21 site health (11), S16 finance (13), S20 fulfilment and documents (8) | The site stays safe, the books close, daily packing and invoices run | 38 |
+| 3 | S22 support (12, with 624 from CN-034), S14 CRM (17), S04 Buy again (1, 622 from CN-034) | Customers get answers, repeat buyers are known and can buy again in one tap | 30 |
 | 4 | S13 marketing and ads (34), S11 SEO (8), S12 content and blog (22) | Cheaper traffic and more orders | 64 |
 | 5 | S02 storefront extras (13) | Page builder, more templates, polish | 13 |
 | 6 | S17 multi-store (23) | The second and third shop on the same stock | 23 |
 | 7 | S15 AI control room (48) | AI agents and skills, always off until the owner turns them on | 48 |
 | 8 | S23 social studio (7), S25 video studio (10), S24 photoshoot studio (38) | Creative studios | 55 |
 
-Total 289 (as of 31 Oct 2026); the table above is the order, the "Left" counts move as PRs are built.
+Total ~~289 (as of 31 Oct 2026)~~ 292 (1 Nov 2026, with CN-034's PR 622–624); the table above is the order, the "Left" counts move as PRs are built.
 
 ## Launch lanes (CN-031)
 
