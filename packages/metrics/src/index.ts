@@ -43,3 +43,5 @@ export * from './vat';
 export * from './vat-report';
 // S16 · PR 568: `salesByArea` — Sales, pieces and returns by district, upazila/thana or area inside Dhaka (areas.ts).
 export * from './areas';
+// S16 · PR 504: `profitByGroup` — the per-order profit (ad share included) split over lines, by category or style (group-profit.ts).
+export * from './group-profit';

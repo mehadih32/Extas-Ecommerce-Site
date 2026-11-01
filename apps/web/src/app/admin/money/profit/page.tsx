@@ -137,6 +137,10 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
           <a className="a2-btn" href={`/api/admin/money/profit?from=${q.from}&to=${q.to}`} download data-testid="pl-export">
             {c('export')}
           </a>
+          {/* S16 · PR 504: the same period by category or by style */}
+          <Link className="a2-btn" href={`/admin/money/profit/groups?from=${q.from}&to=${q.to}`} data-testid="pl-groups">
+            {c('groups')}
+          </Link>
         </div>
         {notes
           .filter((n) => n !== 'byMonth')

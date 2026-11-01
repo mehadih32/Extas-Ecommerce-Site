@@ -103,6 +103,7 @@
       "how": "Already inside the prices (goods {goods}, delivery {delivery}); a part of Sales, not a cost on top. Goods with no rate: {noRate}.",
       "open": "VAT report",
       "off": "not counted"
-    }
+    },
+    "groups": "Profit by category or style"
   }
 }
