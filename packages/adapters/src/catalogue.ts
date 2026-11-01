@@ -227,6 +227,39 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S06 · PR 567 — the courier fraud checks (kind FRAUD_CHECK): Steadfast's and Pathao's own checks and an aggregator,
+  // each with its own keys (never the courier connection's, so removing one never stops the parcels) and an optional path
+  // for a check that moved. Never asked until the Test passes; several may be on at once (the shop asks all of them).
+  {
+    id: 'steadfastFraud',
+    kind: 'FRAUD_CHECK',
+    provider: 'steadfastFraud',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }, { field: 'secretKey' }],
+    config: [{ field: 'baseUrl', optional: true }, { field: 'path', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  {
+    id: 'pathaoFraud',
+    kind: 'FRAUD_CHECK',
+    provider: 'pathaoFraud',
+    adapter: true,
+    secrets: [{ field: 'clientId' }, { field: 'clientSecret' }, { field: 'username' }, { field: 'password' }],
+    config: [{ field: 'baseUrl', optional: true }, { field: 'path', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  {
+    id: 'fraudAggregator',
+    kind: 'FRAUD_CHECK',
+    provider: 'fraudAggregator',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }],
+    config: [{ field: 'baseUrl' }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   // S14 · PR 291 — the SMS gateway (BulkSMSBD): the API key from its panel and the sender id it gave the account (its own
   // number, used until the shop's masking name is approved). The mock serves until the Test (the balance) passes; one
   // SMS gateway is on at a time.

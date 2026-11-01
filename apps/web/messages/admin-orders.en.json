@@ -1383,7 +1383,8 @@
         "budgetMsHelp": "200 to 10,000. A check slower than this is let go and the customer passes.",
         "cacheHours": "Keep an answer (hours)",
         "cacheHoursHelp": "1 to 720. The same number is not asked again within this time; the checkout and the order's score read the kept answer.",
-        "none": "No courier fraud check is connected yet: they come with the courier connections. Until then the pattern below reads the shop's own records, the same device and the same person.",
+        "none": "No courier fraud check is connected yet: connect Steadfast's, Pathao's or an aggregator's in Keys & connections (each is asked only after its Test passes). Until then the pattern below reads the shop's own records, the same device and the same person.",
+        "connected": "Asked at phone entry: {names}. Each answer counts on its own in the pattern below, and the highest failed share counts.",
         "readOnly": "Only someone allowed to change the risk rules can change this.",
         "err": {
           "STALE": "Someone else changed this meanwhile. The card now shows theirs; change it again if needed.",

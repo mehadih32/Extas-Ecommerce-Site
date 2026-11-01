@@ -6,7 +6,7 @@ import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, noteFlagShown, payAction, payView, placeOrder, saveVoiceAddress, viewOf, type CheckoutDeps, type CheckoutQuote, type PlaceNext, type VoiceHooks } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
-import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck } from '@extas/orders';
+import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck, type CourierFraudSource } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -16,7 +16,6 @@ import { ATTRIBUTION_COOKIE, keptTouch, orderAttributionOf } from '../tracking/a
 import { trackPurchase } from '../tracking/shop';
 import { isSupportError, requestCallBack } from '@extas/support';
 import { phoneNormalizeBD } from '../phone-bd';
-import { courierFraudSources } from './courier-fraud';
 
 /** The largest request body the checkout takes (the delivery details, a note, the choices). */
 export const CHECKOUT_BODY_MAX = 8_192;
@@ -32,6 +31,8 @@ export interface CheckoutApiDeps {
   callbackBase?: (request: Request, provider: string, lang: string) => string;
   /** CN-020 (4): where voice recordings are kept and the speech-to-text connection; none: nothing kept or read. */
   voice?: () => VoiceHooks | null;
+  /** PR 567 — the courier fraud checks connected and passed (lib/shop/courier-fraud.ts); none: nothing is asked. */
+  fraudSources?: (storeId: number) => Promise<CourierFraudSource[]>;
 }
 
 const customerOf = (request: Request, d: CheckoutApiDeps) => (d.customerOf ? d.customerOf(request) : Promise.resolve(null));
@@ -367,7 +368,10 @@ export async function phoneRiskHandler(request: Request, deps: CheckoutApiDeps |
   const stop = guard(request, deps, ['POST']);
   if (stop || !deps) return stop!;
   try {
-    await phoneRiskCheck({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, ip: requestContext(request).ip ?? null }, await body(request), courierFraudSources());
+    // PR 567: the connected checks are looked up only while the owner keeps the check on
+    const on = (await deps.checkout.settings.value('checkout.phoneRisk', { storeId: deps.storeId })).enabled;
+    const sources = on && deps.fraudSources ? await deps.fraudSources(deps.storeId) : [];
+    await phoneRiskCheck({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, ip: requestContext(request).ip ?? null }, await body(request), sources);
   } catch (e) {
     if (isOrdersError(e) && e.code === 'INVALID_INPUT') return fail(e.status, e.code, e.details);
     console.warn(`phone-risk check: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);

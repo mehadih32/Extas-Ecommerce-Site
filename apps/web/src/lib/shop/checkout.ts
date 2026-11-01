@@ -20,6 +20,7 @@ import { voiceHooks } from './voice';
 import { tryVoiceOn } from './try-voice';
 import { callbackBaseUrl, paymentModeOf, shopPaymentsDeps } from '../payments-gateway';
 import { gateRunSettings } from './gate-run';
+import { courierFraudSources } from './courier-fraud';
 
 /** What the checkout engines need: the database and the settings, or null without a database. */
 export function checkoutDeps(): CheckoutDeps | null {
@@ -57,6 +58,8 @@ export function checkoutApiDeps(): CheckoutApiDeps | null {
     callbackBase: callbackBaseUrl,
     // CN-020 (4): the voice address's recordings (the media library) and the speech-to-text connection
     voice: voiceHooks,
+    // PR 567: the courier fraud checks the owner connected (asked at phone entry)
+    fraudSources: (id) => courierFraudSources(id),
   };
 }
 

@@ -297,10 +297,40 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
     try {
       expect((await ask({ phone: FORM.phone }, 'cross-site')).status).toBe(403);
       expect((await ask({ phone: FORM.phone, extra: 1 })).status).toBe(400);
-      // no courier check is connected yet (PR 567): the answer is the same, nothing is asked or kept
+      // no courier check is wired in these deps (PR 567: `fraudSources`): the answer is the same, nothing is asked or kept
       expect(await ask({ phone: FORM.phone })).toEqual({ status: 200, body: { ok: true } });
       expect(await ask({ phone: '017' })).toEqual({ status: 200, body: { ok: true } });
       expect(await f.t.prisma.courierFraudCheck.count({ where: { storeId: f.S } })).toBe(0);
+    } finally {
+      f.overrides.delete('checkout.phoneRisk');
+    }
+  });
+
+  it('S06 · PR 567: the connected fraud checks are looked up only while the check is on; each answer is kept, his reply never changes', async () => {
+    const looked: number[] = [];
+    const phone = '01700000126'; // hardcode-ok: a made-up test number
+    const wired = (): CheckoutApiDeps => ({
+      ...deps(),
+      fraudSources: async (storeId) => {
+        looked.push(storeId);
+        return [
+          { provider: 'steadfast', check: async () => ({ delivered: 10, cancelled: 1 }) },
+          { provider: 'aggregator', check: async () => ({ delivered: 2, cancelled: 8 }) },
+        ];
+      },
+    });
+    const ask = async () => read(await phoneRiskHandler(req('/api/checkout/phone-risk', { phone }), wired()));
+    expect(await ask()).toEqual({ status: 200, body: { ok: true } });
+    expect(looked).toEqual([]);
+    f.overrides.set('checkout.phoneRisk', { enabled: true, budgetMs: 1500, cacheHours: 24 });
+    try {
+      expect(await ask()).toEqual({ status: 200, body: { ok: true } });
+      expect(looked).toEqual([f.S]);
+      const kept = await f.t.prisma.courierFraudCheck.findMany({ where: { storeId: f.S, phone: '+8801700000126' }, orderBy: { provider: 'asc' } });
+      expect(kept.map((k) => [k.provider, k.deliveredCount, k.cancelledCount])).toEqual([
+        ['aggregator', 2, 8],
+        ['steadfast', 10, 1],
+      ]);
     } finally {
       f.overrides.delete('checkout.phoneRisk');
     }
