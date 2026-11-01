@@ -67,6 +67,7 @@
     { "id": "money/refunds", "route": "/admin/money/refunds" },
     { "id": "money/cost-ledger", "route": "/admin/money/cost-ledger" },
     { "id": "money/cost-report", "route": "/admin/money/cost-ledger/report" },
+    { "id": "money/profit", "route": "/admin/money/profit" },
     { "id": "money/expenses", "route": "/admin/money/expenses" },
     { "id": "money/fees", "route": "/admin/money/fees" },
     { "id": "money/month-end", "route": "/admin/money/month-end" },

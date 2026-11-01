@@ -1,0 +1,63 @@
+{
+  "moneyProfit": {
+    "metaTitle": "Profit & loss",
+    "title": "Profit & loss",
+    "sub": "What the shop earned in a period after its costs, from delivered orders. Only shows; nothing is paid or changed from here.",
+    "period": "{from} to {to} · by the day each order was delivered, in the shop's own time zone",
+    "kpi": {
+      "sales": "Sales (delivered)",
+      "ordered": "Ordered value",
+      "gross": "Gross profit",
+      "contribution": "Contribution",
+      "net": "Net profit",
+      "margin": "Net margin",
+      "orders": "{n} delivered order(s)",
+      "orderedSub": "Every order placed, shown beside Sales, never instead of it"
+    },
+    "lines": {
+      "title": "How the profit is made",
+      "sub": "From each delivered order's own profit; a part not known yet is left out and named below",
+      "sales": "Goods sold (orders with a cost)",
+      "salesHow": "Delivered orders after discounts",
+      "productCost": "Product cost",
+      "productCostHow": "The ERP's cost on each line when it was ordered",
+      "gross": "Gross profit",
+      "deliveryCharge": "Delivery charges",
+      "deliveryChargeHow": "The charge on each delivered order",
+      "courier": "Courier",
+      "courierHow": "The charge on each real parcel",
+      "paymentFees": "Payment fees",
+      "paymentFeesHow": "Online payments at your fee figures (Money → Costs & fees)",
+      "packaging": "Packaging",
+      "packagingHow": "Your packaging cost per order (Money → Costs & fees)",
+      "messages": "Messages and AI",
+      "messagesHow": "Paid messages about these orders",
+      "contribution": "Contribution",
+      "ads": "Ad spend",
+      "adsHow": "Imported for the period's days",
+      "adsNone": "No ad spend imported for these days",
+      "adsUnknown": "not known: a day's spend has no taka amount yet",
+      "other": "Other costs",
+      "otherHow": "Daily cost lines, expenses, return losses and messages not about a delivered order (the Costs report)",
+      "fixed": "Fixed costs",
+      "fixedHow": "Salary, rent, utilities and other, spread over the days (Money → Costs)",
+      "fixedNone": "None entered for these months",
+      "net": "Net profit",
+      "netUnknown": "Not shown while the ad spend is not known"
+    },
+    "uncosted": "{n} delivered order(s) worth {amount} have no ERP cost on a line, so they are left out of every profit line (never cost 0): {skus}",
+    "missing": {
+      "courier": "{n} order(s) have a parcel without its charge yet",
+      "paymentFees": "{n} order(s) have an online payment without a fee figure",
+      "packaging": "{n} order(s) without a packaging cost: enter it on Money → Costs & fees"
+    },
+    "byDay": {
+      "title": "Day by day",
+      "sub": "The newest first: delivered orders, gross profit and contribution",
+      "line": "{n} order(s) · gross {gross}",
+      "none": "No delivered order in this period.",
+      "cut": "Only the newest {n} days are listed here; the download has every day."
+    },
+    "export": "Download (.csv)"
+  }
+}
