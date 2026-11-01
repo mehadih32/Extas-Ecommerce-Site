@@ -127,11 +127,15 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Site health › Speed on PostgreSQL (
         { storeId: MOTHER_STORE_ID, day: new Date(`${lastMonth}-01T00:00:00Z`), metric: 'LCP', pageKind: 'home', device: 'desktop', buckets: fast, count: 4 },
       ],
     });
-    writeLab(new Date(Date.now() - 3_600_000), 1500);
+    // an hour ago, unless that is still last month (the first hour of a month): then a second ago
+    const hourAgo = new Date(Date.now() - 3_600_000);
+    writeLab(dayIn(TZ, hourAgo).startsWith(thisMonth) ? hourAgo : new Date(Date.now() - 1000), 1500);
     const { a } = await send('GET');
     expect(a.view.lab).toMatchObject({ ok: false, profile: 'phone · slow 4G' });
     expect(a.view.lab!.pages.find((p) => p.kind === 'category')!.misses).toEqual(['weight']);
-    expect(a.view.real.overall.LCP.phone.count).toBe(4);
+    // count by the report's own window: last month's 1st is normally outside it, but the test must not depend on the date
+    const inWindow = `${lastMonth}-01` >= a.view.real.from;
+    expect(a.view.real.overall.LCP.phone.count).toBe(inWindow ? 8 : 4);
     const [now, before] = a.view.months;
     expect(now).toMatchObject({ month: thisMonth, readings: 4, real: { LCP: { p75: p75('LCP', fast)!.value, ok: true } } });
     expect(now!.lab).toMatchObject({ pages: 3, ok: false, categoryKb: 1500, worstLcpMs: 2100 });
