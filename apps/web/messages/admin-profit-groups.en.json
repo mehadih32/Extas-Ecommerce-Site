@@ -1,0 +1,33 @@
+{
+  "moneyProfitGroups": {
+    "metaTitle": "Profit by group",
+    "title": "Profit by group",
+    "sub": "Which categories and styles make money after their own costs and their share of ad spend — to decide what to restock, buy in bulk or stop.",
+    "by": {
+      "label": "Group by",
+      "category": "Category",
+      "style": "Style"
+    },
+    "period": "From {from} to {to}",
+    "export": "Download the table (CSV)",
+    "adsOff": "Ad spend is not spread over orders (setting costs.allocation), so profit here is before ads.",
+    "kpi": {
+      "sales": "Sales (delivered)",
+      "profit": "Profit after costs and ads",
+      "margin": "Margin",
+      "noCost": "Sales with no cost yet"
+    },
+    "table": {
+      "title": "Group by group",
+      "sub": "Each group includes everything under it. Profit = Sales − product cost + delivery charges − courier, fees, packaging and messages − ad share. Margin = profit ÷ Sales with a cost.",
+      "line": "{orders} orders · {pieces} pieces · gross {gross} · ads {ads}",
+      "noCost": "{amount} with no cost yet (left out of profit)",
+      "missing": "{n} lines miss a cost part (courier, fee, packaging or ads): the profit is short of it",
+      "noneCategory": "No category",
+      "noneStyle": "No style",
+      "total": "Total",
+      "empty": "No delivered orders in this period.",
+      "cut": "Only the first {n} groups are listed; the CSV has every group."
+    }
+  }
+}

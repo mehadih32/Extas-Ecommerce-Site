@@ -264,7 +264,14 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S16 · PR 342: Money → Overview — cash received, COD the couriers owe, refunds waiting (read-only); second, so Money still opens Books (CN-028 · PR 615).
       { id: 'overview', pages: [{ href: '/admin/money', perm: 'payments.view', keys: ['moneyOverview'] }] },
       // S16 · PR 349: Money → Profit & loss (MNY-01) — Sales beside Ordered value, gross profit, contribution, net profit for any period.
-      { id: 'profit', pages: [{ href: '/admin/money/profit', perm: 'books.read', keys: ['moneyProfit'] }] },
+      // S16 · PR 504: its second page, Profit by group — by category or by style, ad spend spread in.
+      {
+        id: 'profit',
+        pages: [
+          { href: '/admin/money/profit', perm: 'books.read', keys: ['moneyProfit'] },
+          { href: '/admin/money/profit/groups', perm: 'books.read', keys: ['moneyProfitGroups'] },
+        ],
+      },
       // Go-live gate F-041 / F-054 (PR 172, 171 follow-ups): Money → Refunds & wallet — approve and record refunds, the apology credit, the money rules.
       { id: 'refunds', pages: [{ href: '/admin/money/refunds', perm: 'payments.view', keys: ['moneyRefunds'] }] },
       { id: 'match', pages: [{ href: '/admin/money/books/match', perm: 'books.read', keys: ['booksMatch'] }] },
