@@ -1,0 +1,18 @@
+/* S14 · PR 295 — Products › Reviews: a review card's stars, words, photos and buttons (44px taps on a phone). */
+.adm2 .rev-card{display:flex;flex-direction:column;gap:8px}
+.adm2 .rev-card.s-HIDDEN,.adm2 .rev-card.s-REJECTED{opacity:.72}
+.adm2 .rev-card.s-PENDING{border-left:3px solid var(--warn,#C08A3E)}
+.adm2 .rev-head{flex-wrap:wrap;gap:8px}
+.adm2 .rev-who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.adm2 .rev-stars{color:var(--g);letter-spacing:1px;font-size:15px}
+.adm2 .rev-stars .rev-off{color:var(--ln2)}
+.adm2 .rev-body{font-size:14px;line-height:1.55;white-space:pre-line;overflow-wrap:anywhere}
+.adm2 .rev-prod{display:inline-flex;align-items:center;min-height:44px}
+.adm2 .rev-photos{display:flex;gap:8px;flex-wrap:wrap}
+.adm2 .rev-photo{width:96px;border-radius:8px;overflow:hidden}
+.adm2 .rev-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-top:8px;border-top:1px solid var(--ln2)}
+.adm2 .rev-acts .a2-btn,.adm2 .rev-link,.adm2 .rev-more{min-height:44px}
+.adm2 .rev-ch{margin:4px 0 8px;padding-left:18px}
+.adm2 .rev-link{margin-top:4px;align-self:flex-start;display:inline-flex;align-items:center}
+.adm2 .rev-more{align-self:center;display:inline-flex;align-items:center}
+.adm2 details.a2-more-opts>summary{cursor:pointer;color:var(--ink2);list-style-position:inside;padding:12px 0;line-height:20px}

@@ -41,6 +41,7 @@ import { codToCollect, dueOf } from '@extas/orders/pure';
 import { CRM_EMAIL_STEP, CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings } from '@extas/settings';
 import { consentBlock } from './consent';
 import { recordSendCost } from './costs';
+import { recordReviewRequest, REVIEW_STEP, reviewAskBlock } from './review-requests';
 import { emailHeaders, emailHtml, emailLinks, emailText, emailUrls } from './email-html';
 import { nowOf, setting, TX, type MessagesDeps, type OutgoingMessage, type SendResult } from './context';
 import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, EVENT_TOKENS, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, STEP_EVENT_TYPES, templateValues, tokensIn, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
@@ -419,6 +420,9 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   const o = await deps.db.order.findUnique({ where: { id: row.orderId }, select: ORDER_SELECT });
   if (!o) return close(deps, c, row, 'SKIPPED', 'NO_ORDER').then(() => 'SKIPPED');
   if (!stillFits(step, o.status)) return close(deps, c, row, 'SKIPPED', 'ORDER_MOVED_ON').then(() => 'SKIPPED');
+  // PR 295: never ask for a review the shop cannot take, nor from someone who already wrote one for every line
+  const noAsk = step === REVIEW_STEP ? await reviewAskBlock(deps, c.storeId, o.id) : null;
+  if (noAsk) return close(deps, c, row, 'SKIPPED', noAsk).then(() => 'SKIPPED');
   const code = step === 'cancelled' ? (o.cancelReasonCode as CancelCode | null) : null;
   if (code && c.cancelNotice.silent.includes(code)) return close(deps, c, row, 'SKIPPED', 'REASON_SILENT').then(() => 'SKIPPED');
   const to = recipientOf(o, step, row.channel as MessageChannel);
@@ -510,6 +514,8 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
         data: { storeId: c.storeId, notificationLogId: row.id, attempt, channel: row.channel, provider: sender?.provider ?? null, mode: sender?.mode ?? null, ok: true, providerMessageId: messageId, retriedById: opts.retriedById ?? null, costMinor },
       });
       if (currency !== null) await recordSendCost(tx, { storeId: c.storeId, channel: row.channel, costMinor, currency, logId: row.id, template, provider: sender?.provider ?? null, at: c.now });
+      // PR 295: the review manager counts the requests that went
+      if (step === REVIEW_STEP) await recordReviewRequest(tx, { storeId: c.storeId, orderId: o.id, customerId: o.customerId, channel: row.channel, at: c.now });
     }, TX);
     return 'SENT';
   }

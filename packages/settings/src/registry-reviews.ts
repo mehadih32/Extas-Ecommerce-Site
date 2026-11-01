@@ -49,6 +49,14 @@ export const sizeAdviceSchema = z
   })
   .strict();
 
+/**
+ * PR 295 (v196) — the Day-3 review request (Messages journey step `day3Review`) and the review manager's count of it
+ * (Products › Reviews). `skipReviewed`: an order whose every line he has already reviewed is not asked again (a guard
+ * against a pointless message, not a perk; on). `resultDays`: how many days back the manager counts requests sent and
+ * answered. The request's own switch, channel, wording and day stay in Messages.
+ */
+export const reviewRequestsSchema = z.object({ skipReviewed: z.boolean(), resultDays: z.int().min(1).max(365) }).strict();
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: false, version: V } as const;
 /** The product page's own block: read by the page itself, so it may be public like the other `pdp.*` keys. */
 const pdpJson = { ...json, group: 'productPage', isPublic: true } as const;
@@ -183,6 +191,16 @@ export const reviewSettings = {
     labelKey: 'reviews.photoReward.label',
     helpKey: 'reviews.photoReward.help',
     sortOrder: 30,
+  }),
+  'reviews.requests': setting({
+    ...json,
+    version: 196,
+    group: 'reviews',
+    schema: reviewRequestsSchema,
+    default: { skipReviewed: true, resultDays: 30 }, // hardcode-ok: registry default (a guard on; the count's window)
+    labelKey: 'reviews.requests.label',
+    helpKey: 'reviews.requests.help',
+    sortOrder: 40,
   }),
   'catalogue.sizeAdvice': setting({
     ...json,

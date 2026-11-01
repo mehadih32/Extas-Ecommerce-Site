@@ -19,6 +19,8 @@
 // PR 298: consent and opt-out checked before every send (consent.ts). PR 505: Messages › Templates (templates.ts): every
 // template's words with their preview on the sample order in both languages, where each is used, the missing languages,
 // a default put back, and the auto-reply to a customer who writes on WhatsApp (off).
+// PR 295: the Day-3 review request is skipped while reviews are off or every line is reviewed, and each one that went
+// is a ReviewRequest row the review manager counts (review-requests.ts).
 //
 // PR 289: a customer journey's message (step `crmJourney`, queued by @extas/customers' automations) is sent here too:
 // an offer each time (his yes for offers, the quiet hours, the weekly cap per person, the stop line).
@@ -29,6 +31,7 @@ import { planMessages, sendDue, type PlanResult, type SendRunResult } from './en
 import { selfConfirmTimers, type SelfConfirmTimerResult } from './self-confirm';
 
 export * from './context';
+export * from './review-requests';
 export * from './pure';
 export * from './engine';
 export * from './self-confirm';

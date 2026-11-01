@@ -1,0 +1,103 @@
+{
+  "rev": {
+    "title": "Reviews",
+    "sub": "What buyers wrote, checked before anyone sees it. Publish, hide or refuse; mark a real buyer verified. The stars on the shop are the average of the published ones.",
+    "readOnly": "You can read reviews here; publishing or hiding needs the \"Check reviews\" permission.",
+    "kpi": {
+      "pending": "To check",
+      "pendingNote": "waiting for you",
+      "published": "Published",
+      "publishedNote": "on the product pages",
+      "average": "Average stars",
+      "averageNone": "none yet",
+      "averageNote": "of the published reviews",
+      "asked": "Asked after delivery",
+      "askedNote": "{answered} answered ({pct}%) · last {days} days"
+    },
+    "views": "Which reviews",
+    "view": {
+      "PENDING": "To check",
+      "APPROVED": "Published",
+      "HIDDEN": "Hidden",
+      "REJECTED": "Refused",
+      "photo": "With photo"
+    },
+    "state": {
+      "PENDING": "Waiting",
+      "APPROVED": "Published",
+      "HIDDEN": "Hidden",
+      "REJECTED": "Refused"
+    },
+    "source": {
+      "CUSTOMER": "From his account",
+      "STAFF": "Entered by the shop",
+      "IMPORT": "From a file"
+    },
+    "verified": "Verified buyer",
+    "rewarded": "Photo reward paid: {amount}",
+    "noProduct": "A product no longer listed",
+    "anonymous": "A buyer",
+    "fit": {
+      "SMALL": "Felt small",
+      "RIGHT": "Size was right",
+      "BIG": "Felt big"
+    },
+    "body": "{height} cm · {weight} kg",
+    "line": "Size {size} · {colour}",
+    "photoAlt": "The buyer's photo",
+    "act": {
+      "approve": "Publish",
+      "hide": "Hide",
+      "reject": "Refuse",
+      "restore": "Back to the queue",
+      "verify": "Mark verified",
+      "unverify": "Remove verified",
+      "saved": "Saved.",
+      "paid": "Saved. The photo reward went to his wallet: {amount}.",
+      "failed": "Could not save ({code}). Try again."
+    },
+    "empty": {
+      "PENDING": "Nothing waiting. New reviews come here first.",
+      "APPROVED": "No published reviews yet.",
+      "HIDDEN": "No hidden reviews.",
+      "REJECTED": "No refused reviews.",
+      "photo": "No reviews with a photo yet."
+    },
+    "more": "Show more",
+    "req": {
+      "title": "Review requests",
+      "line": "Orders asked for a review three days after delivery in the last {days} days: {asked}. Answered: {answered} ({pct}%); with a photo: {photo}.",
+      "channel": "{channel}: asked {asked}, answered {answered}",
+      "none": "No review request has gone in the last {days} days. It goes three days after delivery while the Day-3 step is on in Messages and reviews are switched on.",
+      "timing": "When and how it is asked"
+    },
+    "ch": {
+      "SMS": "SMS",
+      "WHATSAPP": "WhatsApp",
+      "EMAIL": "E-mail"
+    },
+    "set": {
+      "more": "More options",
+      "h": "Review requests",
+      "d": "The Day-3 review request's own switch, channel, words and day are in Messages › Order messages. Here: whom it skips and how far back this page counts.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "readOnly": "Only someone who may check reviews can change this.",
+      "skipReviewed": "Skip orders already reviewed",
+      "skipReviewedHelp": "An order whose every item he has already reviewed is not asked again.",
+      "resultDays": "Days counted (1–365)",
+      "resultDaysHelp": "How far back \"Asked after delivery\" counts the requests sent and answered.",
+      "err": {
+        "STALE": "Someone else changed this just now; it was read again.",
+        "INVALID_INPUT": "Check the values.",
+        "forbidden": "You may not change this.",
+        "unauthorized": "Please sign in again.",
+        "network": "No connection. Try again.",
+        "other": "Could not save. Try again."
+      }
+    }
+  }
+}

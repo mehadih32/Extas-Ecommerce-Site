@@ -14,7 +14,7 @@ const keys = (d: Dict, at = ''): string[] => Object.entries(d).flatMap(([k, v]) 
 const strings = (d: Dict): string[] => Object.values(d).flatMap((v) => (typeof v === 'string' ? [v] : strings(v)));
 
 /** Every reason the engine and the log write (packages/messages engine.ts, pure.ts render). */
-const REASONS = ['MASTER_OFF', 'UNKNOWN_STEP', 'STEP_OFF', 'QUIET_HOURS', 'NO_ORDER', 'ORDER_MOVED_ON', 'REASON_SILENT', 'NO_RECIPIENT', 'CAP_SMS', 'CAP_WHATSAPP', 'CAP_EMAIL', 'CAP_TOTAL', 'NO_TEMPLATE', 'AMOUNT_RULE', 'NO_LINK', 'NO_KEPT_ORDER', 'UNKNOWN_TOKEN', 'RETRY', 'STAFF_RETRY', 'UNREACHABLE', 'NO_SENDER', 'SEND_FAILED', 'PROVIDER_FAILED', 'WA_TEMPLATE_NOT_APPROVED', 'OPTED_OUT', 'NO_CONSENT'];
+const REASONS = ['MASTER_OFF', 'UNKNOWN_STEP', 'STEP_OFF', 'QUIET_HOURS', 'NO_ORDER', 'ORDER_MOVED_ON', 'REASON_SILENT', 'REVIEWS_OFF', 'REVIEWED', 'NO_RECIPIENT', 'CAP_SMS', 'CAP_WHATSAPP', 'CAP_EMAIL', 'CAP_TOTAL', 'NO_TEMPLATE', 'AMOUNT_RULE', 'NO_LINK', 'NO_KEPT_ORDER', 'UNKNOWN_TOKEN', 'RETRY', 'STAFF_RETRY', 'UNREACHABLE', 'NO_SENDER', 'SEND_FAILED', 'PROVIDER_FAILED', 'WA_TEMPLATE_NOT_APPROVED', 'OPTED_OUT', 'NO_CONSENT'];
 
 describe('the Messages pages` words', () => {
   it('Bengali and English have the same keys; the Bengali writes Western digits', () => {

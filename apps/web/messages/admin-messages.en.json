@@ -62,6 +62,8 @@
       "NO_ORDER": "The order is gone",
       "ORDER_MOVED_ON": "The order had moved on; the message no longer fitted",
       "REASON_SILENT": "A cancel reason that sends nothing",
+      "REVIEWS_OFF": "Reviews are switched off, so no review was asked for",
+      "REVIEWED": "He had already reviewed every item of this order",
       "NO_RECIPIENT": "No number or e-mail for this channel",
       "CAP_SMS": "The SMS limit per order was reached",
       "CAP_WHATSAPP": "The WhatsApp limit per order was reached",
