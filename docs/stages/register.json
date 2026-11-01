@@ -29240,6 +29240,7 @@
     "date": "2026-10-31",
     "note": "saved browser journeys (CN-031 lane B; B7.3; settings v82 `health.journeys`, off): `docs/qa/journeys.json` + `tools/journeys.mjs` — plain Playwright steps (open, follow, click, api) for customer, admin, accountant and warehouse on a phone and a desktop screen, sharing the smoke test's sign-in and error watch; the customer never adds to the bag or orders; staff journeys run as the read-only check account and prove writes are refused (403). Hourly, daily or weekly at the owner's hour, runs kept, \"Run now\" (`settings.write`, audited); synced to the server as `journeys-settings.env`; `infra/deploy/journeys.sh` and the hourly `journeys.yml` (own concurrency group, never displaces a deploy) keep the newest runs in `state/journeys/` and commit a report only on a failure or a recovery. Reports › Site health gains a sixth line, the recent runs and the schedule card",
     "github": [
+     "#74, 1 Nov",
      "#70, 31 Oct"
     ]
    },
@@ -29254,13 +29255,26 @@
      "tools/journeys.mjs",
      "infra/deploy/journeys.sh",
      "journeys.yml",
-     "state/journeys/"
+     "state/journeys/",
+     "GET /api/admin/settings",
+     "journeys.sh",
+     "state/journeys-<group>.json",
+     "docs/reports/journeys/<group>/latest/"
     ],
     "names": [
-     "journeys-settings.env"
+     "journeys-settings.env",
+     "go-live-gate",
+     "gate-shop",
+     "gate-admin",
+     "switches",
+     "when",
+     "unless",
+     "group",
+     "now"
     ],
     "tests": [
-     "settings v82 `health.journeys`, off): `docs/qa/journeys.json` + `tools/journeys.mjs` — plain Playwright steps (open, follow, click, api) for customer, admin, accountant and warehouse on a phone and a desktop screen, sharing the smoke test's sign-in and error watch"
+     "settings v82 `health.journeys`, off): `docs/qa/journeys.json` + `tools/journeys.mjs` — plain Playwright steps (open, follow, click, api) for customer, admin, accountant and warehouse on a phone and a desktop screen, sharing the smoke test's sign-in and error watch",
+     "Of the 38 phase-2 live checks, 8 are proved by the journeys, 24 by the CI tests and 6 need a person with a real test order"
     ]
    },
    "updates": [
@@ -29270,6 +29284,13 @@
      "source": "CN-015 (owner: customer problems are found automatically, a \"Running problems\" list in the admin and at the top of README)",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "(1) **Detect from real visits.** On every page and step of the journey (landing → product → bag → checkout → tracking → account), a small privacy-safe browser probe and server checks record: script errors, failed or slow requests, pages that fail to load, payment and API failures, stuck or repeated form errors (for example the phone field failing three times), \"rage\" clicks and dead clicks, checkout abandoned right after an error, slow loads by … — No new PR numbers: it lands on S21 (PR 413–424, mainly PR 423 and the audit runner PR 570), PR 594 and the README routine (CN-011). Some parts are moved earlier: the probe and the problem list start as soon as the shop's checkout exists on new.extas.com.bd, so the simulation and staging tests feed it too."
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 1 Nov (go-live gate, CN-013 phase 2; #74):** a `go-live-gate` journey group in `docs/qa/journeys.json` (`gate-shop` as a signed-out visitor, `gate-admin` as the read-only check account, phone and desktop), each step naming its SIM-F findings; it orders nothing, adds nothing to the bag and changes no setting; a feature behind an owner's switch is checked as it is set (`switches`, `when` / `unless`, read once a run from `GET /api/admin/settings`; an unknown switch name fails the step). `journeys.yml` and `journeys.sh` take a `group` by hand (with `now`); a group run keeps its own summary (`state/journeys-<group>.json`), runs and report folder (`docs/reports/journeys/<group>/latest/`), and Site health, Run history, the schedule and the Telegram alert keep only the saved journeys. Of the 38 phase-2 live checks, 8 are proved by the journeys, 24 by the CI tests and 6 need a person with a real test order"
     }
    ],
    "mentions": [],
