@@ -358,6 +358,18 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S13 · PR 261: the Google Ads API, read only (the customer, its campaigns and ad groups for Marketing › Ad
+  // platforms); the mock is a practice account until the keys are in and the test (reading the customer) passes.
+  {
+    id: 'googleAds',
+    kind: 'GOOGLE',
+    provider: 'googleAds',
+    adapter: true,
+    secrets: [{ field: 'developerToken' }, { field: 'clientSecret' }, { field: 'refreshToken' }],
+    config: [{ field: 'customerId' }, { field: 'clientId' }, { field: 'loginCustomerId', optional: true }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }, { field: 'oauthUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   {
     id: 'googleAnalytics',
     kind: 'GOOGLE',

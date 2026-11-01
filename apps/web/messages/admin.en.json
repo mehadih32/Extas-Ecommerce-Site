@@ -477,6 +477,21 @@
         "baseUrl": "Address — only for a test server"
       }
     },
+    "googleAds": {
+      "name": "Google Ads API (Google ad account incl. YouTube, read only)",
+      "desc": "Reads the Google Ads customer account, its campaigns (Search, Shopping, Performance Max, YouTube) and ad groups for Marketing › Ad platforms. Read only: it never pauses a campaign or changes a budget. A practice account until the keys are in and the test (reading the account) passes: nothing is read or saved before that.",
+      "fields": {
+        "developerToken": "Developer token (Google Ads → Tools → API Center)",
+        "clientSecret": "OAuth client secret of your own Google Cloud project",
+        "refreshToken": "Refresh token for that client with the adwords scope (Google Ads access)",
+        "customerId": "Customer ID of the ad account (Google Ads → top right), like 123-456-7890",
+        "clientId": "OAuth client ID of your own Google Cloud project",
+        "loginCustomerId": "Manager account (MCC) ID — only when the access comes through a manager account",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server",
+        "oauthUrl": "Sign-in address — only for a test server"
+      }
+    },
     "googleAnalytics": {
       "name": "Google Analytics 4 (Measurement Protocol)",
       "desc": "Sends the shop's events from the server to Google Analytics, which Google Ads can import, for Marketing › Tracking. Mock until the key is in and the test passes.",

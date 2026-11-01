@@ -1,10 +1,10 @@
 // S13 · PR 259 — Marketing › Ad platforms on a real PostgreSQL: before the key a practice copy that is shown and never
 // saved; with a (stand-in) Meta account the account, campaigns and ad sets are kept, changed ones updated, ones Meta
 // no longer lists marked gone (never deleted); a platform refusal is said; tying to our own campaign needs the write
-// permission and is audited. PR 260: TikTok is listed beside Meta, and its account is kept as its own (platform TIKTOK).
+// permission and is audited. PR 260 / 261: TikTok and Google are listed beside Meta, each account kept as its own.
 // A throwaway database (skipped without TEST_DATABASE_ADMIN_URL). Sample values.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createConnections, defineAdapter, metaAdsAdapter, tiktokAdsAdapter, type AdsCampaignFacts, type AdsReader } from '@extas/adapters';
+import { createConnections, defineAdapter, googleAdsAdapter, metaAdsAdapter, tiktokAdsAdapter, type AdsCampaignFacts, type AdsReader } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -59,8 +59,17 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Ad platforms on PostgreSQL (PR 259)
     campaigns: async () => ({ ok: true, value: [camp('t1', 'Eid polo on TikTok', { status: 'CAMPAIGN_STATUS_ENABLE', objective: 'PRODUCT_SALES', dailyBudgetMinor: 50_000 })] }),
     adSets: async () => ({ ok: true, value: [{ externalId: 't1-g', campaignExternalId: 't1', name: 'Dhaka 25–34', status: 'ENABLE', dailyBudgetMinor: null, targeting: { age_groups: ['AGE_25_34'] } }] }),
   };
+  // PR 261: a stand-in Google Ads customer
+  const googleStandIn: AdsReader = {
+    provider: 'googleAds',
+    platform: 'google',
+    practice: false,
+    account: async () => ({ ok: true, value: { externalId: '1234567890', name: 'Sample Google ads', currency: 'BDT', status: 'ENABLED' } }),
+    campaigns: async () => ({ ok: true, value: [camp('g1', 'Eid search', { status: 'ENABLED', objective: 'SEARCH', dailyBudgetMinor: 30_000 }), camp('g2', 'Old shopping', { status: 'REMOVED', objective: 'SHOPPING', dailyBudgetMinor: null })] }),
+    adSets: async () => ({ ok: true, value: [{ externalId: 'g1-a', campaignExternalId: 'g1', name: 'Polo words', status: 'ENABLED', dailyBudgetMinor: null, targeting: { type: 'SEARCH_STANDARD' } }] }),
+  };
   const liveConnections = () =>
-    createConnections({ db: t.prisma, vault: { get: async () => null }, adapters: [defineAdapter({ ...metaAdsAdapter, mock: async () => standIn }), defineAdapter({ ...tiktokAdsAdapter, mock: async () => tiktokStandIn })], secretCacheMs: 0, testTimeoutMs: 1000 });
+    createConnections({ db: t.prisma, vault: { get: async () => null }, adapters: [defineAdapter({ ...metaAdsAdapter, mock: async () => standIn }), defineAdapter({ ...tiktokAdsAdapter, mock: async () => tiktokStandIn }), defineAdapter({ ...googleAdsAdapter, mock: async () => googleStandIn })], secretCacheMs: 0, testTimeoutMs: 1000 });
 
   const api = async (method: string, b?: unknown, cookie = owner, extra = {}) => {
     const res = await adPlatformsHandler(req(method, { body: b, cookie }), admin, extra);
@@ -95,7 +104,7 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Ad platforms on PostgreSQL (PR 259)
     const { status, a } = await api('GET', undefined, reader);
     expect(status).toBe(200);
     const practice = expect.objectContaining({ campaigns: expect.arrayContaining([expect.objectContaining({ externalId: 'practice-1' })]) });
-    expect(a.overview.platforms).toEqual([expect.objectContaining({ platform: 'meta', mode: 'MOCK', accounts: [], practice }), expect.objectContaining({ platform: 'tiktok', mode: 'MOCK', accounts: [], practice })]);
+    expect(a.overview.platforms).toEqual([expect.objectContaining({ platform: 'meta', mode: 'MOCK', accounts: [], practice }), expect.objectContaining({ platform: 'tiktok', mode: 'MOCK', accounts: [], practice }), expect.objectContaining({ platform: 'google', mode: 'MOCK', accounts: [], practice })]);
     expect((await api('POST', { action: 'sync', platform: 'tiktok' })).a.outcome).toMatchObject({ platform: 'tiktok', practice: true });
     expect((await api('POST', { action: 'sync', platform: 'meta' }, reader)).status).toBe(403);
     const r = await api('POST', { action: 'sync', platform: 'meta' });
@@ -162,5 +171,22 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Ad platforms on PostgreSQL (PR 259)
     const [meta, tiktok] = r.a.overview.platforms;
     expect(meta!.accounts.map((x) => x.externalId)).toEqual(['act_1234567']);
     expect(tiktok!.accounts[0]!.campaigns.map((c) => [c.externalId, c.status, c.dailyBudgetMinor, c.adSets])).toEqual([['t1', 'CAMPAIGN_STATUS_ENABLE', 50_000, 1]]);
+  });
+
+  it('Google (PR 261): its customer, campaigns (a removed one kept, never dropped) and ad groups kept as its own account', async () => {
+    const r = await api('POST', { action: 'sync', platform: 'google' }, owner, { connections: liveConnections() });
+    expect(r.status).toBe(200);
+    expect(r.a.outcome).toEqual({ platform: 'google', practice: false, campaigns: 2, adSets: 1, gone: 0 });
+    expect(await t.prisma.adAccount.findFirst({ where: { platform: 'GOOGLE' } })).toMatchObject({ storeId: S, externalId: '1234567890', name: 'Sample Google ads', currency: 'BDT' });
+    const google = r.a.overview.platforms.find((p) => p.platform === 'google')!;
+    expect(google.accounts[0]!.campaigns.map((c) => [c.externalId, c.status, c.gone]).sort()).toEqual([
+      ['g1', 'ENABLED', false],
+      ['g2', 'REMOVED', false],
+    ]);
+    expect(r.a.overview.platforms.map((p) => [p.platform, p.accounts.length])).toEqual([
+      ['meta', 1],
+      ['tiktok', 1],
+      ['google', 1],
+    ]);
   });
 });

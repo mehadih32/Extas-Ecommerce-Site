@@ -58,10 +58,11 @@ export * from './ai-writer';
 // S13 · PR 257 — the ad platforms' server event APIs (Meta Conversions API, Google Analytics 4, TikTok Events API):
 // mocks until their keys are in and their tests pass.
 export * from './ads';
-// S13 · PR 259 / 260: the ad platforms' read-only Marketing APIs (ads/meta-ads.ts, ads/tiktok-ads.ts; ads/readers.ts
-// lists them).
+// S13 · PR 259–261: the ad platforms' read-only Marketing APIs (ads/meta-ads.ts, ads/tiktok-ads.ts, ads/google-ads.ts;
+// ads/readers.ts lists them).
 export * from './ads/meta-ads';
 export * from './ads/tiktok-ads';
+export * from './ads/google-ads';
 export * from './ads/readers';
 // CN-020 (4) — speech to text for the checkout's voice address (Google Cloud Speech-to-Text; the mock hears nothing).
 export * from './speech';
