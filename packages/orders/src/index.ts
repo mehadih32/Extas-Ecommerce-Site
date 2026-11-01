@@ -112,6 +112,9 @@ export * from './transit-duplicate';
 // S06 · PR 559: the phone-entry risk check — the courier fraud checks asked in the background and kept (phone-risk.ts); the
 // owner's pattern signal is in risk-score.ts.
 export * from './phone-risk';
+// S06 · PR 562: the flag outcome report — of the customers flagged, how many paid the advance and how many walked away
+// (flag-report.ts).
+export * from './flag-report';
 export * from './advance-request';
 export * from './advance-settings';
 export * from './booking';

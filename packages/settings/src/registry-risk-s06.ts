@@ -73,6 +73,13 @@
 // is whole the shop asks every connected courier fraud check in the background (each within `budgetMs`; a slow or failed
 // one simply passes) and keeps the answers `cacheHours`, so the checkout's own look and the order's score read them
 // without waiting. The customer is never shown anything and the form never waits. Off as shipped.
+// PR 562 (`risk.flagReport`, version 109): the flag outcome report (Reports › Flag outcomes). While on, every checkout
+// the owner's layers ask to pay ahead is kept once per bag (a SHOWN flag event, beside the ASKED one the order keeps), and
+// the report reads the last `days` days (at most `maxRows` flags): of the customers flagged — at checkout per layer, and
+// after ordering per risk level — how many paid the advance, are still waiting, walked away (left the checkout, or the
+// order was cancelled unpaid) or ordered without the ask; what the paid ones became; the advance collected. A layer
+// flagged at least `minFlags` times that loses at least `warnLeftPercent` of them (null: never) is pointed out — the
+// ask may cost more than it saves. It only reads and points out: no layer, price or COD changes by itself. Off as shipped.
 import { z } from 'zod';
 import { setting } from './define';
 import { ORDER_CANCEL_CODES } from './registry-orders';
@@ -310,6 +317,24 @@ export const checkoutPhoneRiskSchema = z
 export type CheckoutPhoneRisk = z.output<typeof checkoutPhoneRiskSchema>;
 export const CHECKOUT_PHONE_RISK_DEFAULT: CheckoutPhoneRisk = { enabled: false, budgetMs: 1500, cacheHours: 24 }; // hardcode-ok: registry default (the owner changes it on Orders › Risk rules)
 
+/** PR 562 — the flag outcome report: of the customers flagged, how many paid the advance and how many walked away. */
+export const riskFlagReportSchema = z
+  .object({
+    /** Keep each flagged checkout once (SHOWN) and read the report. */
+    enabled: z.boolean(),
+    /** How many days of flags the report reads, today included. */
+    days: z.int().min(7).max(366),
+    /** A layer that loses at least this share (%) of its flagged customers is pointed out; null: never. */
+    warnLeftPercent: z.int().min(1).max(100).nullable(),
+    /** The fewest flags on one layer before it is pointed out. */
+    minFlags: z.int().min(1).max(1000),
+    /** The most flags one report reads (the newest first). */
+    maxRows: z.int().min(100).max(20_000),
+  })
+  .strict();
+export type RiskFlagReport = z.output<typeof riskFlagReportSchema>;
+export const RISK_FLAG_REPORT_DEFAULT: RiskFlagReport = { enabled: false, days: 30, warnLeftPercent: null, minFlags: 10, maxRows: 5000 }; // hardcode-ok: registry default (the owner changes it on Reports › Flag outcomes)
+
 export const riskS06Settings = {
   'risk.blocklist': setting({
     ...base,
@@ -439,5 +464,15 @@ export const riskS06Settings = {
     labelKey: 'risk.phoneRisk.label',
     helpKey: 'risk.phoneRisk.help',
     sortOrder: 342,
+  }),
+  'risk.flagReport': setting({
+    ...base,
+    version: V545,
+    schema: riskFlagReportSchema,
+    default: RISK_FLAG_REPORT_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.flagReport.label',
+    helpKey: 'risk.flagReport.help',
+    sortOrder: 343,
   }),
 };

@@ -1,0 +1,96 @@
+{
+  "flg": {
+    "metaTitle": "Flag outcomes",
+    "title": "Flag outcomes",
+    "sub": "Of the customers asked to pay ahead: how many paid, how many walked away. This is the number that tunes your checkout layers. It only reads: nothing changes by itself.",
+    "showing": "Flags from {from} to {to} (the last {days} days).",
+    "off": "The report is off. Orders placed with an ask are always kept; turn the report on in the card below to also keep every checkout a layer asks, and to read them here.",
+    "cut": "More flags than the report reads: only the newest are counted. Raise the most flags in the card below.",
+    "kpi": {
+      "flagged": "Customers flagged",
+      "flaggedFoot": "At checkout {checkout} · after ordering {order}",
+      "paid": "Paid the advance",
+      "paidFoot": "{pct} of those flagged",
+      "lost": "Walked away",
+      "lostFoot": "{pct}: left the checkout, or the order was cancelled unpaid",
+      "collected": "Advance collected",
+      "collectedFoot": "Of those who paid: {delivered} delivered, {refused} refused at the door"
+    },
+    "point": {
+      "h": "Layers losing customers",
+      "d": "A layer or way flagged at least {n} times that loses at least {pct} of its customers.",
+      "off": "No share is set, so nothing is pointed out. Set one in the card below if you want the report to point out a layer that loses too many.",
+      "line": "{name}: {lost} of {n} flagged walked away ({pct}). The ask may cost more than it saves — consider asking less or asking fewer people in Orders › Risk rules › Checkout advance.",
+      "none": "No layer is losing that many customers."
+    },
+    "checkout": {
+      "h": "At checkout, per layer",
+      "d": "Every bag a layer asked to pay ahead, once. Left the checkout: no order from that bag. Ordered without the ask: the bag became an order the layer did not ask for (the details changed)."
+    },
+    "order": {
+      "h": "After ordering, per way asked",
+      "d": "Orders asked for an advance after they came in: by the team's \"Request advance\", by the auto option, or by a risk level."
+    },
+    "col": {
+      "layer": "Layer",
+      "way": "Asked by",
+      "flagged": "Flagged",
+      "paid": "Paid",
+      "waiting": "Still waiting",
+      "left": "Left the checkout",
+      "walked": "Cancelled unpaid",
+      "dodged": "Ordered without the ask",
+      "waived": "Sent on without it",
+      "paidDelivered": "Paid, then delivered",
+      "paidRefused": "Paid, then refused",
+      "collected": "Advance collected",
+      "lostShare": "Walked away"
+    },
+    "way": {
+      "team": "The team — {kind}",
+      "auto": "Auto option — {kind}",
+      "level": "Risk level — {level}"
+    },
+    "kind": {
+      "delivery": "delivery charge",
+      "partial": "a part",
+      "full": "the full amount",
+      "codOff": "no cash on delivery"
+    },
+    "layer": {
+      "unknown": "A layer since removed"
+    },
+    "warnTag": "Pointed out",
+    "empty": "No flag in these days.",
+    "note": "To change a layer, go to Orders › Risk rules › Checkout advance. A layer is never changed by this report.",
+    "layersLink": "Open Checkout advance",
+    "card": {
+      "h": "Report settings",
+      "d": "Whether the report keeps and reads the flags, how far back, and when it points a layer out.",
+      "enabled": "Keep and read the flags",
+      "days": "Days of flags it reads",
+      "daysHelp": "7 to 366, today included. 30 as shipped.",
+      "warnLeftPercent": "Point out a layer that loses this share (%)",
+      "warnLeftPercentHelp": "1 to 100. Empty: never pointed out (as shipped).",
+      "minFlags": "Fewest flags on a layer before it is pointed out",
+      "minFlagsHelp": "1 to 1,000. Keeps a few flags from pointing a layer out.",
+      "maxRows": "Most flags one report reads",
+      "maxRowsHelp": "100 to 20,000."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "discard": "Discard",
+    "unsaved": "There are unsaved changes",
+    "readOnly": "Only someone allowed to change settings can change this.",
+    "err": {
+      "STALE": "Someone else changed this meanwhile. The card now shows theirs; change it again if needed.",
+      "INVALID_INPUT": "Check: {fields}.",
+      "FORBIDDEN": "You cannot change settings.",
+      "forbidden": "You cannot change settings.",
+      "unauthorized": "Sign in again.",
+      "network": "No connection. Nothing was saved; try again.",
+      "other": "Something went wrong. Nothing was saved; try again."
+    }
+  }
+}

@@ -5,7 +5,7 @@
 .adm2 .lrn-people td{font-size:13.5px;padding:10px 12px;vertical-align:top}
 .adm2 .lrn-people th[scope=row]{vertical-align:top;white-space:nowrap;padding-top:10px}
 .adm2 .lrn-note+.lrn-note{margin-top:6px}
-.adm2 .lrn-link{padding:9px 0;font-weight:600}
+.adm2 .lrn-link{display:inline-flex;align-items:center;min-height:44px;font-weight:600}
 @media (max-width:767px){
   .adm2 .lrn-people td{padding:0}
 }

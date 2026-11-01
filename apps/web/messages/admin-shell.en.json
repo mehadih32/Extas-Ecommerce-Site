@@ -46,7 +46,8 @@
         "fraud": "Fraud & RTO",
         "stopped": "Stopped by the engine",
         "learning": "Decisions & learning",
-        "delivery": "Delivery & RTO"
+        "delivery": "Delivery & RTO",
+        "flags": "Flag outcomes"
       },
       "settings": {
         "store": "Store details",

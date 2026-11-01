@@ -2,7 +2,9 @@
 // demo V12.3 "Checkout advance layers"; docs/ADMIN-ARCHITECTURE.md: risk rules sit with orders): its own panel, mixed
 // with no earlier parameter — the one switch (`checkout.advance`, off), the layers (what counts as a flag, what each
 // asks for) and the most layers under "More options". Seeing needs `risk.rules.read`; saving `risk.rules.write`.
+// S06 · PR 562: a note linking Reports › Flag outcomes (what the flagged customers did, per layer).
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
@@ -19,11 +21,13 @@ import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../../messages/admin-advance.bn.json';
 import en from '../../../../../../messages/admin-advance.en.json';
 import '../../../settings/settings.css';
+import './advance.css';
 
 export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/orders/risk-rules/checkout';
 const KEY = 'checkoutAdvance';
+const FLAGS = '/admin/reports/flags';
 
 /** The admin dictionary with this screen's own messages under `advance.*`. */
 function withScreen(view: AdminView): AdminView {
@@ -83,6 +87,17 @@ export default async function CheckoutAdvancePage() {
         <ShellIcon name="shield" size={16} />
         <div>
           <b>{c('safe.title')}</b> {c('safe.text')}
+        </div>
+      </div>
+
+      {/* PR 562: what the flagged customers did, per layer (Reports › Flag outcomes) */}
+      <div className="a2-note a2-mt12" data-testid="advance-outcomes">
+        <ShellIcon name="chart" size={16} />
+        <div>
+          <b>{c('outcomes.title')}</b> {c('outcomes.text')}{' '}
+          <Link href={FLAGS} className="adv-out-link">
+            {c('outcomes.link')}
+          </Link>
         </div>
       </div>
 

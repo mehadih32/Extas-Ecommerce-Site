@@ -46,6 +46,9 @@
 //   GET   /api/admin/risk/learning  PR 543: the decision learning report with its card (risk.report); PUT {key:
 //                                   'learning', value, version} its switch, days and limits (settings.write)
 //                                   — lib/admin-reports/learning-api.ts
+//   GET   /api/admin/risk/flag-report  PR 562: the flag outcome report with its card (risk.report); PUT {key:
+//                                   'flagReport', value, version} its switch, days, pointer and limits (settings.write)
+//                                   — lib/admin-reports/flag-report-api.ts
 //   GET   /api/admin/risk/calls     PR 545: the new-customer card and the call outcomes card (orders.read); PUT {key:
 //                                   'newCustomer' | 'outcomes', value, version} (risk.rules.write) — lib/admin-orders/calls-api.ts
 //   GET   /api/admin/risk/transit   PR 556: the in-transit duplicate notice's card and its report by campaign
@@ -61,6 +64,7 @@ import { body, fail, type AdminDeps } from './admin-auth';
 import { fraudReportRoute } from './admin-reports/fraud-api';
 import { stopReportRoute } from './admin-reports/stop-report-api';
 import { learningRoute } from './admin-reports/learning-api';
+import { flagReportRoute } from './admin-reports/flag-report-api';
 import { callsRoute } from './admin-orders/calls-api';
 import { blockProposalSettingsRoute } from './admin-orders/block-proposal-api';
 import { bundleRoute, bundlingSettingsRoute } from './admin-orders/bundling-api';
@@ -130,6 +134,7 @@ export async function riskRoute(request: Request, deps: AdminDeps | null, path: 
   if (path[0] === 'digest') return digestRoute(request, deps, path);
   if (path[0] === 'hold-proposals') return holdProposalRoute(request, deps, path);
   if (path[0] === 'learning') return learningRoute(request, deps, path);
+  if (path[0] === 'flag-report') return flagReportRoute(request, deps, path);
   if (path[0] === 'calls') return callsRoute(request, deps, path);
   if (path[0] !== 'rules' || path.length > 1) return notFound();
   if (m === 'GET') return handle(request, deps, 'risk.rules.read', async (x) => ({ ...(await od.riskRules(x.deps, x.who)) }));

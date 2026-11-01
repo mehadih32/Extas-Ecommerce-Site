@@ -21,6 +21,8 @@ export * from './consent';
 export * from './place';
 export * from './receipt';
 export * from './advance';
+// S06 · PR 562: a flagged checkout kept once per bag for the flag outcome report (flag-shown.ts).
+export * from './flag-shown';
 export * from './bulk-service';
 // CN-020 (4) — the voice address: a recording of the address, its words and how sure the reading was.
 export * from './voice';
