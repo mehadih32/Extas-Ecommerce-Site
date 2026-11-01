@@ -82,10 +82,10 @@ export function definitionSql(def: SegmentDefinition, c: SegCtx): Prisma.Sql {
   return def.all.length ? Prisma.join(def.all.map((x) => conditionSql(x, c)), ' AND ') : Prisma.sql`TRUE`;
 }
 
-/** The people's base for the store (the Customers list's own rule). */
-async function baseOf(deps: CustomersDeps, storeId: number): Promise<Prisma.Sql> {
+/** The people's base for the store (the Customers list's own rule); `only` narrows it to these people (PR 289). */
+export async function baseOf(deps: CustomersDeps, storeId: number, only: readonly string[] | null = null): Promise<Prisma.Sql> {
   const hist = await historyOptions(deps, storeId);
-  return peopleBaseSql(storeId, [...hist.ourFault]);
+  return peopleBaseSql(storeId, [...hist.ourFault], Prisma.empty, only);
 }
 
 /** A built-in segment as SQL on `b` (the list's view with the owner's rules). */
@@ -207,7 +207,7 @@ async function switchedOn(deps: CustomersDeps, storeId: number) {
 }
 
 /** Checks the categories and areas a definition names exist (a typed id that is not this store's is refused). */
-async function checkRefs(deps: CustomersDeps, storeId: number, def: SegmentDefinition): Promise<void> {
+export async function checkRefs(deps: CustomersDeps, storeId: number, def: SegmentDefinition): Promise<void> {
   const cats = def.all.filter((x) => x.field === 'category').map((x) => x.value as string);
   const areas = def.all.filter((x) => x.field === 'area').map((x) => x.value as string);
   const [c, a] = await Promise.all([
@@ -350,7 +350,11 @@ export interface SegmentOptions {
 /** What the builder's pickers offer: the store's categories, the districts, the sizes sold, where people first came from. */
 export async function segmentOptions(deps: CustomersDeps, who: Who): Promise<SegmentOptions> {
   await allow(deps, who, 'customers.read');
-  const S = who.storeId;
+  return optionsOf(deps, who.storeId);
+}
+
+/** The pickers' lists without a permission check (the caller checked its own: PR 289's automations). */
+export async function optionsOf(deps: CustomersDeps, S: number): Promise<SegmentOptions> {
   const [categories, areas, sizes, sources] = await Promise.all([
     deps.db.category.findMany({ where: { storeId: S, archivedAt: null }, orderBy: [{ nameEn: 'asc' }], select: { id: true, nameEn: true, nameBn: true }, take: 500 }),
     deps.db.geoArea.findMany({ where: { level: 'DISTRICT', archivedAt: null }, orderBy: [{ nameEn: 'asc' }], select: { id: true, nameEn: true, nameBn: true }, take: 200 }),

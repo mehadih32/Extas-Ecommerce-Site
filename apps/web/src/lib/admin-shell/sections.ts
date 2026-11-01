@@ -175,6 +175,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'comms',
     tabs: [
       { id: 'journey', pages: [{ href: '/admin/messages/journey', perm: 'messages.journey.read', keys: ['messagesJourney'] }] },
+      // PR 289: customer journeys (product-life reminder, win-back, welcome) — MSG-02's ready-made automations
+      { id: 'automations', pages: [{ href: '/admin/messages/automations', perm: 'messages.journey.read', keys: ['messagesAutomations'] }] },
       { id: 'templates', pages: [{ href: '/admin/messages/templates', perm: 'messages.templates.read', keys: ['messagesTemplates'] }] },
       { id: 'log', pages: [{ href: '/admin/messages/log', perm: 'messages.log.view', keys: ['messagesLog'] }] },
       // PR 298: Consent is the Channels & limits tab's second page

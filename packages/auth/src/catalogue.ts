@@ -199,6 +199,9 @@ export const PERMISSIONS = {
   // confirm by hand would; a reply never cancels an order: 2 and 3 go to the call queue.
   'messages.journey.read': { group: 'messages' },
   'messages.journey.write': { group: 'messages' },
+  // S14 · PR 289 — Messages › Automations: build, switch on or off, archive and restore customer journeys (triggers,
+  // waits, checks, messages) and change their settings. Seeing them needs `messages.journey.read`.
+  'messages.automations.write': { group: 'messages' },
   'messages.selfConfirm.reply': { group: 'messages' },
   // S05 · PR 149 — the message log: every message with its state, why it was skipped or blocked, and every try; and a
   // failed message tried again by hand. Not a `.read` key on purpose: the log shows customers' numbers, and the

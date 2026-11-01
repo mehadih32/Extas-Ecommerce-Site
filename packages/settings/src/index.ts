@@ -41,6 +41,7 @@ export * from './registry-reviews';
 export * from './registry-set-builder';
 export * from './registry-support-lane';
 export * from './registry-messages';
+export * from './registry-crm';
 export * from './registry-message-channels';
 export * from './registry-risk';
 export * from './registry-risk-more';

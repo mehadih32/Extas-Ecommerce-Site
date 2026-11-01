@@ -169,6 +169,9 @@
       "templates": {
         "read": "See the message templates (every SMS, WhatsApp and e-mail text, its preview and where it is used)",
         "write": "Change, add or reset a message template's words"
+      },
+      "automations": {
+        "write": "Build, switch and archive automations (customer journeys)"
       }
     },
     "payments": {
