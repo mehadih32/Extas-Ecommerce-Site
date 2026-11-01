@@ -8,7 +8,7 @@ import { mockCourierWorld, STEADFAST_PROVIDER } from '@extas/adapters';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { confirmOrder } from '@extas/orders';
 import { shippingSettings } from '@extas/settings';
-import { bookOrders, pickingList, printJobs, printPicking } from './index';
+import { bookOrders, pickingList, printJobs, printPicking, tickPickLine } from './index';
 import { localDay } from './pure';
 import { setUpShipping, type ShippingFixture } from './testing';
 
@@ -118,5 +118,40 @@ describe.skipIf(!HAS_TEST_DB)('PR 181 · the daily picking list (PostgreSQL)', (
     expect(await db().pickingList.findUniqueOrThrow({ where: { id: printed.listId } })).toMatchObject({ orderIds: printed.orderIds, generatedById: f.staffId });
     expect((await printJobs(f.shippingDeps(), f.shipper))[0]).toMatchObject({ kind: 'PICKING_LIST', parcels: printed.orderIds.length });
     expect(await refusal(pickingList(f.shippingDeps(), f.looker))).toBe('FORBIDDEN');
+  });
+
+  it('PR 405: a size line marked pulled is done; a new order on it shows "more"; the mark taken back; only with the packing key; ticks are never edited', async () => {
+    const a = await confirmed('pk-tick-a');
+    const lineOf = (l: Awaited<ReturnType<typeof list>>, orderId: string) => l.groups.flatMap((g) => g.styles.flatMap((st) => st.colours.flatMap((c) => c.sizes))).find((z) => z.orders.some((o) => o.orderId === orderId))!;
+    const before = lineOf(await list(), a.orderId);
+    expect(before.tick).toEqual({ state: 'none', newOrders: [], at: null });
+    expect(before.orders.find((o) => o.orderId === a.orderId)).toMatchObject({ orderNumber: expect.any(String), quantity: expect.any(Number) });
+
+    const after = await tickPickLine(f.shippingDeps(), f.shipper, { key: before.key, ticked: true });
+    const done = lineOf(after, a.orderId);
+    expect(done.tick.state).toBe('done');
+    expect(after.summary.pulled).toBeGreaterThanOrEqual(done.quantity);
+
+    // a new order for the same line after the mark: "more", naming the new order
+    const b = await confirmed('pk-tick-b');
+    const now = await list();
+    const more = lineOf(now, a.orderId);
+    // (the fixture's orders all take the same sample piece)
+    expect(more.orders.map((o) => o.orderId)).toContain(b.orderId);
+    expect(more.tick.state).toBe('more');
+    expect(more.tick.newOrders).toEqual([more.orders.find((o) => o.orderId === b.orderId)!.orderNumber]);
+
+    const back = lineOf(await tickPickLine(f.shippingDeps(), f.shipper, { key: before.key, ticked: false }), a.orderId);
+    expect(back.tick.state).toBe('none');
+    const rows = await db().pickingTick.findMany({ where: { lineKey: before.key }, orderBy: { createdAt: 'asc' } });
+    expect(rows.map((r) => r.ticked)).toEqual([true, false]);
+    expect(rows[0]!.orderIds).toContain(a.orderId);
+
+    expect(await refusal(tickPickLine(f.shippingDeps(), f.shipper, { key: 'no-such-line', ticked: true }))).toBe('NOT_FOUND');
+    expect(await refusal(tickPickLine(f.shippingDeps(), f.shipper, { key: before.key, ticked: 'yes' }))).toBe('INVALID_INPUT');
+    expect(await refusal(tickPickLine(f.shippingDeps(), f.looker, { key: before.key, ticked: true }))).toBe('FORBIDDEN');
+    // the table refuses an edit or a removal (migration 0110's trigger)
+    expect(await refusal(db().pickingTick.update({ where: { id: rows[0]!.id }, data: { ticked: false } }))).not.toBe('ok');
+    expect(await refusal(db().pickingTick.delete({ where: { id: rows[0]!.id } }))).not.toBe('ok');
   });
 });

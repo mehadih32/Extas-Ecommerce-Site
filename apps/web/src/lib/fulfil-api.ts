@@ -29,6 +29,8 @@
 //                                              (fulfilment.read; no customer's details)
 //   POST  /api/admin/packing/picking           {from?, to?} the picking list as a PDF; the list is kept with a print
 //                                              job (fulfilment.read)
+//   POST  /api/admin/packing/picking/tick      PR 405: {key, ticked} one size line marked pulled (or the mark taken
+//                                              back) on the screen list; the list as it is now (fulfilment.pack)
 //   GET   /api/admin/packing/orders            PR 182: the packing steps with their counts and one step's orders
 //                                              (?step=pick|pack|ready|done; no customer's details) (fulfilment.read)
 //   POST  /api/admin/packing/orders/pick-all   "Start picking" for every order on the Pick step: the list's own filter,
@@ -203,6 +205,11 @@ export async function handoverRoute(request: Request, deps: AdminDeps | null, pa
 /** PR 181 — `path` is what comes after /api/admin/packing/picking. */
 export async function pickingRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
+  // PR 405: the picker's mark on one size line (pulled, or taken back); the list comes back as it is now
+  if (path.length === 1 && path[0] === 'tick') {
+    if (m !== 'POST') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.pack', async (x) => json({ ok: true, ...(await sh.tickPickLine(x.deps, x.who, await body(request))) }));
+  }
   if (path.length) return fail(404, 'not-found');
   if (m === 'GET')
     return guarded(request, deps, 'fulfilment.read', async (x) => {

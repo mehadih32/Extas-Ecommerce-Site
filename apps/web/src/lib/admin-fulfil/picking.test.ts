@@ -23,7 +23,7 @@ const groups = groupPicking(
 const list = (over: Partial<PickingList> = {}): PickingList => ({
   groups,
   categoryBn: { Polo: 'পোলো' },
-  summary: { orders: 2, pieces: 4, lineItems: 3, categories: [{ name: 'Polo', nameBn: 'পোলো', pieces: 3 }, { name: '', nameBn: null, pieces: 1 }], shortages: 1, shortPieces: 1, held: 1 },
+  summary: { orders: 2, pieces: 4, lineItems: 3, categories: [{ name: 'Polo', nameBn: 'পোলো', pieces: 3 }, { name: '', nameBn: null, pieces: 1 }], shortages: 1, shortPieces: 1, held: 1, pulled: 0 },
   held: [{ orderId: 'o9', orderNumber: 'EX-1009', reason: 'ON_HOLD', pieces: 2 }],
   orderIds: ['o1', 'o2'],
   range: { from: null, to: null },

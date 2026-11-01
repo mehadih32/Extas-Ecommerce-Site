@@ -15,8 +15,9 @@
 import { z } from 'zod';
 import { DELIVERY_TARGET_SELECT, deliveryTarget, openReviewIds, type OrdersDeps } from '@extas/orders';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Who } from './context';
+import { ShippingError } from './errors';
 import { bookedReceiver } from './fulfil-pure';
-import { groupPicking, pickingPlace, PICKING_FROM, type PickCategory, type PickingHeld, type PickLine } from './picking-pure';
+import { groupPicking, pickingPlace, PICKING_FROM, tickState, type PickCategory, type PickingHeld, type PickLine } from './picking-pure';
 import { localDay } from './pure';
 
 const ordersDeps = (deps: ShippingDeps): OrdersDeps => ({ db: deps.db, settings: deps.settings, now: deps.now });
@@ -46,6 +47,8 @@ export interface PickingSummary {
   shortages: number;
   shortPieces: number;
   held: number;
+  /** PR 405: the pieces of the size lines the picker marked pulled (and that got no new order since). */
+  pulled: number;
 }
 
 export interface PickingList {
@@ -122,7 +125,7 @@ async function build(deps: ShippingDeps, who: Who, range: z.output<typeof rangeI
     o.items.map((i) => {
       const cat = i.productId ? catOf.get(i.productId) : null;
       if (cat?.nameEn && cat.nameBn) categoryBn[cat.nameEn] = cat.nameBn;
-      return { category: cat?.nameEn ?? '', styleKey: i.productId ?? i.productName, style: i.productName, colour: i.colourName, size: i.sizeLabel, variantId: i.variantId, quantity: i.quantity };
+      return { category: cat?.nameEn ?? '', styleKey: i.productId ?? i.productName, style: i.productName, colour: i.colourName, size: i.sizeLabel, variantId: i.variantId, quantity: i.quantity, orderId: o.id, orderNumber: o.number };
     }),
   );
 
@@ -135,6 +138,11 @@ async function build(deps: ShippingDeps, who: Who, range: z.output<typeof rangeI
   }
   const groups = groupPicking(lines, onHand);
   const sizes = groups.flatMap((g) => g.styles.flatMap((s) => s.colours.flatMap((c) => c.sizes)));
+  // PR 405: each size line's latest tick on the screen list
+  const keys = sizes.map((z) => z.key);
+  const ticks = keys.length ? await deps.db.pickingTick.findMany({ where: { storeId, lineKey: { in: keys } }, orderBy: [{ lineKey: 'asc' }, { createdAt: 'desc' }], distinct: ['lineKey'], select: { lineKey: true, ticked: true, orderIds: true, createdAt: true } }) : [];
+  const latest = new Map(ticks.map((x) => [x.lineKey, x]));
+  for (const z of sizes) z.tick = tickState(z, latest.get(z.key) ?? null);
   return {
     groups,
     categoryBn,
@@ -146,6 +154,7 @@ async function build(deps: ShippingDeps, who: Who, range: z.output<typeof rangeI
       shortages: sizes.filter((s) => s.short > 0).length,
       shortPieces: sizes.reduce((n, s) => n + s.short, 0),
       held: held.length,
+      pulled: sizes.filter((z) => z.tick.state === 'done').reduce((n, z) => n + z.quantity, 0),
     },
     held,
     orderIds: taken.map((o) => o.id),
@@ -170,4 +179,24 @@ export async function printPicking(deps: ShippingDeps, who: Who, input: unknown 
     return row;
   }, TX);
   return { ...list, listId: kept.id, printedAt: at.toISOString() };
+}
+
+const tickInput = z.object({ key: z.string().min(1).max(400), ticked: z.boolean() }).strict();
+
+/**
+ * PR 405 (ORD-04b) — the picker marks one size line of the list pulled, or takes the mark back. The line is read again
+ * from the list as it is now (all days), so the mark keeps the orders and pieces it really covered; a line no longer on
+ * the list is NOT_FOUND. One new row each time (never an edit); noted in the change log. Nothing else changes.
+ */
+export async function tickPickLine(deps: ShippingDeps, who: Who, input: unknown): Promise<PickingList> {
+  await allow(deps, who, 'fulfilment.pack');
+  const d = parse(tickInput, input, 'picking tick');
+  const list = await build(deps, who, { from: null, to: null });
+  const line = list.groups.flatMap((g) => g.styles.flatMap((st) => st.colours.flatMap((c) => c.sizes))).find((z) => z.key === d.key);
+  if (!line) throw new ShippingError('NOT_FOUND', 'this line is no longer on the picking list', [d.key]);
+  await deps.db.$transaction(async (tx) => {
+    const row = await tx.pickingTick.create({ data: { storeId: who.storeId, lineKey: d.key, orderIds: line.orders.map((o) => o.orderId), quantity: line.quantity, ticked: d.ticked, actorId: who.actor.staffUserId ?? null }, select: { id: true } });
+    await logChange(tx, who, d.ticked ? 'picking.tick' : 'picking.untick', 'PickingTick', row.id, null, { key: d.key, quantity: line.quantity, orders: line.orders.map((o) => o.orderNumber) });
+  }, TX);
+  return build(deps, who, { from: null, to: null });
 }

@@ -398,6 +398,7 @@ model Store {
   documentTemplates       DocumentTemplate[]
   generatedDocuments      GeneratedDocument[]
   pickingLists            PickingList[]
+  pickingTicks            PickingTick[]
   siteAuditSchedules      SiteAuditSchedule[]
   siteAuditRuns           SiteAuditRun[]
   siteAuditFindings       SiteAuditFinding[]
@@ -9140,6 +9141,26 @@ model PickingList {
   generatedById String?   @db.Uuid
   createdAt     DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime  @updatedAt @db.Timestamptz(3)
+}
+
+/// @stage S20 · PR 405 (ORD-04b) — one tick on the picking list on screen: the picker marks a size line pulled (or
+/// takes the mark back). The orders and pieces the line held at that moment are kept, so a line that gets a new order
+/// afterwards shows "more to pull" instead of done. Rows are only added; the latest row of a line is its state.
+/// @append-only
+model PickingTick {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  /// the size line: its variant id, or "style|colour|size" for a line without one
+  lineKey   String
+  orderIds  String[] @db.Uuid
+  quantity  Int
+  /// true: pulled · false: the mark taken back
+  ticked    Boolean
+  actorId   String?  @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, lineKey, createdAt])
 }
 
 // =====================================================================================================================

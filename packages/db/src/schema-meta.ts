@@ -229,6 +229,8 @@ export const APPEND_ONLY_LOCKED = [
   'ErpSwitchOrder',
   // S08 · PR 564 (migration 0072_charge_mismatch): each recorded charge mismatch, written once per parcel.
   'ChargeMismatch',
+  // S20 · PR 405 (migration 0110_picking_ticks): each tick on the on-screen picking list; a mark taken back is a new row.
+  'PickingTick',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';

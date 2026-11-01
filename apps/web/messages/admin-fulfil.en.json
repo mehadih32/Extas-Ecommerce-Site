@@ -329,7 +329,8 @@
         "pieces": "Pieces",
         "lines": "Line items",
         "short": "Short rows",
-        "held": "Held apart"
+        "held": "Held apart",
+        "pulled": "Pulled"
       },
       "rangeTitle": "Days",
       "from": "From (order day)",
@@ -378,6 +379,12 @@
         "foot": "Printed {at}",
         "page": "{n}/{of}",
         "empty": "Nothing to pick"
+      },
+      "tick": {
+        "done": "Pulled — tap to take the mark back",
+        "more": "More to pull: new order {list}",
+        "tick": "Tap when pulled",
+        "untick": "Take the mark back"
       }
     },
     "pack": {
