@@ -7032,6 +7032,7 @@
     "date": "2026-10-23",
     "note": "storefront search: the header icon and the phone menu's \"Search\" open the demo's window (phone) or the panel under the header (computer, D-014) with live suggestions — help pages, categories, products, \"See all N results\" (`GET /search/suggest`); one index across products, categories and help pages (follow-up 73: \"delivery\", \"exchange\", Bengali words; a \"Coming soon\" page is never offered); prefix, typo and synonym matching with Bengali keywords (`search.words`, sample lists); Meilisearch when its URL and key are set and its index is current, otherwise PostgreSQL (`@extas/search`); indexing by the worker's `search.index` job, one per catalogue version (idempotent); only live, sellable products; SIM-F-035 test (a size sold out in every colour is crossed out, never hidden); settings registry v24 (`registry-search.ts`); screenshots `docs/qa/screenshots/pr-72/`",
     "github": [
+     "#79, 1 Nov",
      "#32, 23 Oct"
     ]
    },
@@ -7039,17 +7040,23 @@
     "routes": [],
     "settings": [
      "search.words",
-     "search.index"
+     "search.index",
+     "search.match.oneTypoAt"
     ],
     "code": [
      "GET /search/suggest",
      "@extas/search",
      "registry-search.ts",
-     "docs/qa/screenshots/pr-72/"
+     "docs/qa/screenshots/pr-72/",
+     "match.ts",
+     "search.db.test.ts"
     ],
-    "names": [],
+    "names": [
+     "isGeneral"
+    ],
     "tests": [
-     "SIM-F-035 test (a size sold out in every colour is crossed out, never hidden)"
+     "SIM-F-035 test (a size sold out in every colour is crossed out, never hidden)",
+     "test `search.db.test.ts` (\"classic shrit\" on the fake Meilisearch and on PostgreSQL)"
     ]
    },
    "updates": [
@@ -7073,6 +7080,13 @@
      "source": "Register row",
      "sourceLink": "../MASTER-REGISTER.md#s02--storefront--pr-4088",
      "text": "**Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-035 (a size sold out in every colour disappears) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4."
+    },
+    {
+     "date": "23 Oct",
+     "sortKey": 33120,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 1 Nov (go-live gate live run 3; #79):** a misspelt general word (\"shrit\", one slip from \"shirt\"; `search.match.oneTypoAt`) is dropped on the Meilisearch retry too, by `match.ts` `isGeneral`, the rule the PostgreSQL path already drops by, so \"pollo shrit\" finds the polo (the gate-c360 live run of 1 Nov 22:20 found nothing on all six screens); test `search.db.test.ts` (\"classic shrit\" on the fake Meilisearch and on PostgreSQL)"
     }
    ],
    "mentions": [
@@ -29844,6 +29858,7 @@
     "date": "2026-10-31",
     "note": "saved browser journeys (CN-031 lane B; B7.3; settings v82 `health.journeys`, off): `docs/qa/journeys.json` + `tools/journeys.mjs` — plain Playwright steps (open, follow, click, api) for customer, admin, accountant and warehouse on a phone and a desktop screen, sharing the smoke test's sign-in and error watch; the customer never adds to the bag or orders; staff journeys run as the read-only check account and prove writes are refused (403). Hourly, daily or weekly at the owner's hour, runs kept, \"Run now\" (`settings.write`, audited); synced to the server as `journeys-settings.env`; `infra/deploy/journeys.sh` and the hourly `journeys.yml` (own concurrency group, never displaces a deploy) keep the newest runs in `state/journeys/` and commit a report only on a failure or a recovery. Reports › Site health gains a sixth line, the recent runs and the schedule card",
     "github": [
+     "#79, 1 Nov",
      "#77, 1 Nov",
      "#76, 1 Nov",
      "#75, 1 Nov",
@@ -29855,7 +29870,8 @@
     "routes": [],
     "settings": [
      "health.journeys",
-     "settings.write"
+     "settings.write",
+     "category.page.fewStyles"
     ],
     "code": [
      "docs/qa/journeys.json",
@@ -29875,7 +29891,8 @@
      "infra/deploy/gate-c360.sh",
      "tools/gate-c360/",
      "docs/reports/gate-c360/latest/",
-     "docs/qa/FINAL-ANALYSIS-2026-11.md"
+     "docs/qa/FINAL-ANALYSIS-2026-11.md",
+     "lib.mjs"
     ],
     "names": [
      "journeys-settings.env",
@@ -29886,13 +29903,16 @@
      "when",
      "unless",
      "group",
-     "now"
+     "now",
+     ".cat-layout.cat-few",
+     "fewStyles"
     ],
     "tests": [
      "settings v82 `health.journeys`, off): `docs/qa/journeys.json` + `tools/journeys.mjs` — plain Playwright steps (open, follow, click, api) for customer, admin, accountant and warehouse on a phone and a desktop screen, sharing the smoke test's sign-in and error watch",
      "Of the 38 phase-2 live checks, 8 are proved by the journeys, 24 by the CI tests and 6 need a person with a real test order **Updated 1 Nov (go-live gate test orders and customer 360°, CN-013 phase 2",
      "`gate-c360.yml` / `infra/deploy/gate-c360.sh` / `tools/gate-c360/` — one test customer before, during and after an order, his account and support, report `docs/reports/gate-c360/latest/`, findings `docs/qa/FINAL-ANALYSIS-2026-11.md`",
-     "CI shellchecks both scripts and type-checks both gates' server code"
+     "CI shellchecks both scripts and type-checks both gates' server code",
+     "#79):** live run 3 on new.extas.com.bd (version 0f6ac8a0, 1 Nov 22:13 / 22:20 Dhaka): gate-orders PASS — 16 pass, 0 fail, 2 skip, 26 test orders, cash on delivery put back after the run, the test-pay grant closed"
     ]
    },
    "updates": [
@@ -29916,6 +29936,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 1 Nov (go-live gate test orders and customer 360°, CN-013 phase 2; #75):** `gate-orders.yml` / `infra/deploy/gate-orders.sh` / `tools/gate-orders/` — a host guard, an oracle in the live migrate image on mocks only, 18 browser scenarios on phones and desktops over throttled networks, every address compared typed, stored, admin, courier and sticker, clean-up cancels and archives (nothing deleted), report `docs/reports/gate-orders/latest/`; `gate-c360.yml` / `infra/deploy/gate-c360.sh` / `tools/gate-c360/` — one test customer before, during and after an order, his account and support, report `docs/reports/gate-c360/latest/`, findings `docs/qa/FINAL-ANALYSIS-2026-11.md`; CI shellchecks both scripts and type-checks both gates' server code."
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 1 Nov (go-live gate live run 3; #79):** live run 3 on new.extas.com.bd (version 0f6ac8a0, 1 Nov 22:13 / 22:20 Dhaka): gate-orders PASS — 16 pass, 0 fail, 2 skip, 26 test orders, cash on delivery put back after the run, the test-pay grant closed; gate-c360 115 pass, 8 fail, 27 skip — 6 × the misspelt search (fixed on PR 72) and 2 × the desktop category filter, which the shop hides by design when a category holds `category.page.fewStyles` (4) or fewer products and no filter is on (D-012): a page marked `.cat-layout.cat-few` is now a SKIP naming that rule (`lib.mjs` `fewStyles`), any other category without a filter still fails; reports `docs/reports/gate-orders/latest/`, `docs/reports/gate-c360/latest/`"
     }
    ],
    "mentions": [],
