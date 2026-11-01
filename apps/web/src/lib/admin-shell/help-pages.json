@@ -69,6 +69,8 @@
     { "id": "marketing/landing-templates", "route": "/admin/marketing/landing/templates" },
     { "id": "marketing/campaigns", "route": "/admin/marketing/campaigns" },
     { "id": "marketing/campaign", "route": "/admin/marketing/campaigns/[id]" },
+    { "id": "marketing/audiences", "route": "/admin/marketing/audiences" },
+    { "id": "marketing/audience", "route": "/admin/marketing/audiences/[id]" },
     { "id": "website/seo", "route": "/admin/website/seo" },
     { "id": "website/redirects", "route": "/admin/website/seo/redirects" },
     { "id": "website/seo-categories", "route": "/admin/website/seo/categories" },

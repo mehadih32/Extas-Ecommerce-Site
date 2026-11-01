@@ -41,6 +41,7 @@
       "marketing": {
         "rules": "Smart Rules",
         "campaigns": "Campaigns",
+        "audiences": "Audiences",
         "adPlatforms": "Ad platforms",
         "tracking": "Tracking",
         "landing": "Landing pages"

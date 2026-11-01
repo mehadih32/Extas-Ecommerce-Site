@@ -231,6 +231,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
       // S13 · PR 256: campaigns — audience, offer, creative, window and the planned budget (`/admin/marketing/campaigns/<id>`).
       { id: 'campaigns', pages: [{ href: '/admin/marketing/campaigns', perm: 'marketing.campaigns.read', keys: ['marketingCampaigns', 'marketingCampaign'] }] },
+      // S13 · PR 262: audiences from real orders — the list and the builder (`/admin/marketing/audiences/<id>`, `new`).
+      { id: 'audiences', pages: [{ href: '/admin/marketing/audiences', perm: 'marketing.audiences.read', keys: ['marketingAudiences', 'marketingAudience'] }] },
       // S13 · PR 259: the ad accounts as the platforms see them (read only; Meta first, TikTok PR 260, Google PR 261).
       { id: 'adPlatforms', pages: [{ href: '/admin/marketing/ad-platforms', perm: 'marketing.campaigns.read', keys: ['marketingAdPlatforms'] }] },
       // S13 · PR 257: server-side event tracking (the ad platforms' server APIs; mocks until their keys are in).
