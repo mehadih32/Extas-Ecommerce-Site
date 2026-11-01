@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-01 10:38 (Asia/Dhaka)
+# Smoke test · 2026-11-01 10:57 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (308টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (310টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `9d6ffeb4b79f` · after deploy · result **PASS** (308 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `98d378e6b4a0` · after deploy · result **PASS** (310 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -158,6 +158,7 @@ Site: https://new.extas.com.bd · commit `9d6ffeb4b79f` · after deploy · resul
 | `/admin/support/rider-issues` | phone | 200 | `/admin/support/rider-issues` | ok | — |
 | `/admin/rules/eid` | phone | 200 | `/admin/rules/eid` | ok | — |
 | `/admin/delivery/settings` | phone | 200 | `/admin/delivery/settings` | ok | — |
+| `/admin/reports/health/history/01a1956b-b895-7d81-be71-346408490f06` | phone | 200 | `/admin/reports/health/history/01a1956b-b895-7d81-be71-346408490f06` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -312,6 +313,7 @@ Site: https://new.extas.com.bd · commit `9d6ffeb4b79f` · after deploy · resul
 | `/admin/support/rider-issues` | desktop | 200 | `/admin/support/rider-issues` | ok | — |
 | `/admin/rules/eid` | desktop | 200 | `/admin/rules/eid` | ok | — |
 | `/admin/delivery/settings` | desktop | 200 | `/admin/delivery/settings` | ok | — |
+| `/admin/reports/health/history/01a1956b-b895-7d81-be71-346408490f06` | desktop | 200 | `/admin/reports/health/history/01a1956b-b895-7d81-be71-346408490f06` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
