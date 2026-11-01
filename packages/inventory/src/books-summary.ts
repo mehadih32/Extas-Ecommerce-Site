@@ -12,6 +12,7 @@
 //                        credit), and the WAITING_CHECK value at the end of the day — information only, never a cost
 //   costs.packaging …    CostEntry rows (`summaryLine`, `costDate` or the local day of `occurredAt`) and RetailExpense
 //   costs.other          rows of a head with a `summaryLine`, in the store's currency; fixed costs are never here
+//                        (PR 536: an expense row carried by a cost entry — `erpPushId` — counts once, through the entry)
 //   (priorPeriod)        the shop's own figure, never sent: the corrections of a closed month booked that day (owner's
 //                        decision; contract v6 has no summary line for it, a v7 request)
 //
@@ -166,6 +167,9 @@ export async function dayFigures(db: Db, q: { storeId: number; linkId: string; d
         SELECT h."summaryLine"::text, x."amountMinor", ${currency}, false
         FROM "RetailExpense" x JOIN "ExpenseHead" h ON h."id" = x."headId" AND h."storeId" = ${storeId}
         WHERE x."storeId" = ${storeId} AND x."archivedAt" IS NULL AND h."summaryLine" IS NOT NULL AND x."date" = ${day}::date
+          -- S16 · PR 536: an expense entered on Money → Expenses (PR 344) reaches the ERP through its cost entry (the
+          -- branch above), never a second time through its RetailExpense row, which only keeps the owner's own view
+          AND NOT EXISTS (SELECT 1 FROM "CostEntry" ce WHERE ce."storeId" = x."storeId" AND ce."id" = x."erpPushId")
       ) c
       GROUP BY c."line"`,
   ]);
