@@ -19,6 +19,7 @@ import { tryCallMeOn } from './try-callme';
 import { voiceHooks } from './voice';
 import { tryVoiceOn } from './try-voice';
 import { callbackBaseUrl, paymentModeOf, shopPaymentsDeps } from '../payments-gateway';
+import { gateRunSettings } from './gate-run';
 
 /** What the checkout engines need: the database and the settings, or null without a database. */
 export function checkoutDeps(): CheckoutDeps | null {
@@ -27,7 +28,8 @@ export function checkoutDeps(): CheckoutDeps | null {
   const db = getPrisma();
   return {
     db,
-    settings: resolver,
+    // PR 170 follow-up: the go-live gate's own browser pays on the practice gateway while its run's grant is open
+    settings: gateRunSettings(resolver),
     // follow-up 50: the payment page's go-live guard asks which gateway a provider runs on now
     paymentMode: paymentModeOf,
     // PR 560: the owner's Parameter for Checkout looks at a finished checkout (nobody flagged while it is off)

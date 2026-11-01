@@ -9,6 +9,7 @@ import { noteStatementCharges } from '@extas/shipping';
 import { connectionGateways, type GatewayResolver, type PaymentsDeps } from '@extas/payments';
 import { adminDeps, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
+import { gateRunSettings } from './shop/gate-run';
 
 const holder = globalThis as unknown as { __paymentConnections?: { connections: Connections; at: number; ttlMs: number } };
 
@@ -56,10 +57,14 @@ export async function paymentsServiceDeps(deps: AdminDeps): Promise<PaymentsDeps
   };
 }
 
-/** The shop's payments dependencies for this process, or null without a database. */
+/**
+ * The shop's payments dependencies for this process, or null without a database. PR 170 follow-up: the go-live gate's
+ * own browser reads the practice gateway as open while its run's grant is open (lib/shop/gate-run.ts); the admin's
+ * payments dependencies (paymentsServiceDeps) are never wrapped.
+ */
 export async function shopPaymentsDeps(): Promise<PaymentsDeps | null> {
   const d = adminDeps();
-  return d ? paymentsServiceDeps(d) : null;
+  return d ? { ...(await paymentsServiceDeps(d)), settings: gateRunSettings(d.resolver) } : null;
 }
 
 /** The route a gateway calls back (`/api/payments/callback/<provider>`), on the host of this request, with the page's language. */
