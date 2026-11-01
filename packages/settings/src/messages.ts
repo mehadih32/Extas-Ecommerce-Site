@@ -177,6 +177,8 @@ import callMeEn from '../messages/call-me.en.json';
 import voiceAddressBn from '../messages/voice-address.bn.json';
 import voiceAddressEn from '../messages/voice-address.en.json';
 import trackingEn from '../messages/tracking.en.json';
+import attributionBn from '../messages/attribution.bn.json';
+import attributionEn from '../messages/attribution.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -268,6 +270,9 @@ messages.en = mergeMessages(messages.en, callMeEn);
 messages.bn = mergeMessages(messages.bn, callMeBn);
 messages.en = mergeMessages(messages.en, voiceAddressEn);
 messages.bn = mergeMessages(messages.bn, voiceAddressBn);
+// S13 · PR 257 follow-up (registry v230): where an order came from.
+messages.en = mergeMessages(messages.en, attributionEn);
+messages.bn = mergeMessages(messages.bn, attributionBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

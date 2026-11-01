@@ -3,11 +3,12 @@
 // event and platform for the last 7 or 30 days, the waiting ones with "Send waiting now", "Send test event", the newest
 // events and the settings card (`ads.tracking`, off as it ships). Seeing needs `ads.tracking.read`; changing and
 // sending need `ads.tracking.manage`. Guide: docs/admin-guide/pages/marketing/tracking.md.
+// PR 257 follow-up (go-live gate customer 360°): the "Where an order came from" card (`ads.attribution`, on as it ships).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { tickedPlatforms } from '@extas/settings';
+import { ATTRIBUTION_TOUCHES, tickedPlatforms } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { TrackingActions, type TrackingActionTexts } from '@/components/admin/settings/TrackingActions';
@@ -88,6 +89,13 @@ export default async function TrackingPage(props: Props) {
     { kind: 'checks', path: 'platforms', label: s('card.platforms'), options: TRACKING_PLATFORMS.map((p) => ({ value: p, label: s(`platform.${p}`) })) },
     { kind: 'switch', path: 'matchCustomers', label: s('card.match'), help: s('card.matchHelp') },
     { kind: 'number', path: 'maxAttempts', label: s('card.attempts'), help: s('card.attemptsHelp'), min: 1, max: 20 },
+  ];
+  // PR 257 follow-up: where an order came from (the campaign tags and ad click ids of the visit)
+  const attrTexts: FieldsCardTexts = { ...texts, h: s('attr.h'), d: s('attr.d') };
+  const attrFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'on', label: s('attr.on'), help: s('attr.onHelp') },
+    { kind: 'number', path: 'keepDays', label: s('attr.days'), help: s('attr.daysHelp'), min: 1, max: 90 },
+    { kind: 'select', path: 'touch', label: s('attr.touch'), help: s('attr.touchHelp'), options: ATTRIBUTION_TOUCHES.map((x) => ({ value: x, label: s(`attr.touch_${x}`) })) },
   ];
 
   return (
@@ -264,6 +272,7 @@ export default async function TrackingPage(props: Props) {
       </section>
 
       <FieldsCard url={API} screen={{ key: o.card.key, value: o.card.value, version: o.card.version }} fields={fields} texts={texts} canEdit={canManage} testId="tracking-settings" />
+      <FieldsCard url={API} screen={{ key: o.attribution.key, value: o.attribution.value, version: o.attribution.version }} fields={attrFields} texts={attrTexts} canEdit={canManage} testId="tracking-attribution" />
     </div>
   );
 }

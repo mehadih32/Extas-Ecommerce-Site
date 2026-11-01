@@ -1,0 +1,8 @@
+{
+  "ads": {
+    "attribution": {
+      "label": "Where an order came from",
+      "help": "When a visitor arrives from an ad or a campaign link (with utm_source, utm_medium or utm_campaign, or a Facebook, Google or TikTok click id), the shop remembers those tags in one cookie of its own for the days you set. An order placed in that time keeps the source, medium, campaign and ad platform, so Profit & loss by channel and the order export can count ad sales. Only the tags in the link are kept — no name, number or address — and nothing is sent anywhere because of it. On as it ships."
+    }
+  }
+}

@@ -44,6 +44,7 @@ import { hasAddressDetail } from '@extas/delivery';
 import { convertCart, erpCheckoutPaused, holdCart, InventoryError, type InventoryDeps } from '@extas/inventory';
 import { z } from 'zod';
 import { addressInputSchema } from './address';
+import { attributionData, type OrderAttribution } from './attribution';
 import { ADVANCE_PURPOSE, CHECKOUT_PAY_PURPOSES, FLAG_OUTCOMES } from './advance';
 import { consentInputSchema, consentOf, consentSettings, recordConsent } from './consent';
 import { CheckoutError, checkStoreId, nowOf, parse, setting, TX, type CheckoutDeps, type Db, type Tx } from './context';
@@ -103,6 +104,8 @@ export interface PlaceRequest {
   ip?: string | null;
   /** PR 159: the shop's own random device id (a first-party cookie the API keeps); never a fingerprint. */
   deviceId?: string | null;
+  /** PR 257 follow-up: the campaign tags of the visit the shop read from its own cookie (`ads.attribution`); checked again here. */
+  attribution?: Partial<OrderAttribution> | null;
   input: unknown;
 }
 
@@ -481,6 +484,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           visitorId,
           // PR 159: the IP, the device id and the shared point, by the owner's switches, cleared after his days
           ...kept,
+          // PR 257 follow-up: the campaign tags and ad platform of the visit, for Profit & loss by channel and the export
+          ...attributionData(req.attribution),
           idempotencyKey: d.idempotencyKey,
           note: note || null,
           flags,

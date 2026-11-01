@@ -17,6 +17,7 @@ import { BAG_COOKIE } from '../shop/bag-model';
 import { trackingHandler, type TrackingOverview } from './admin';
 import { recordEvent, sendEvents, type TrackingDeps } from './service';
 import { trackAddToBag, trackHandler, trackPurchase } from './shop';
+import { ATTRIBUTION_COOKIE, encodeTouch, touchOf } from './attribution';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -154,6 +155,24 @@ describe.skipIf(!HAS_TEST_DB)('server-side event tracking on PostgreSQL (PR 257)
     // an order that is not there is passed over quietly
     await trackPurchase(req('/api/checkout/orders', 'POST'), { storeId: S, orderId: '00000000-0000-7000-8000-000000000000' }, deps);
     expect(await t.prisma.trackedEvent.count({ where: { name: 'purchase' } })).toBe(0);
+  });
+
+  it('PR 257 follow-up: "Where an order came from" ships on, is version-checked and audited; its Facebook click is the fbc', async () => {
+    const card = (await api('GET', undefined, reader)).a.overview.attribution;
+    expect(card.value).toEqual({ on: true, keepDays: 30, touch: 'last' });
+    expect((await api('PUT', { key: 'attribution', value: { ...card.value, keepDays: 7 }, version: card.version }, reader)).status).toBe(403);
+    expect((await api('PUT', { key: 'attribution', value: { ...card.value, keepDays: 0 }, version: card.version })).a.error).toBe('INVALID_INPUT');
+    expect((await api('PUT', { key: 'attribution', value: card.value, version: 'old' })).a.error).toBe('STALE');
+    const saved = await api('PUT', { key: 'attribution', value: { ...card.value, keepDays: 7 }, version: card.version });
+    expect(saved.a.overview.attribution.value).toEqual({ on: true, keepDays: 7, touch: 'last' });
+    expect(await t.prisma.auditLog.count({ where: { action: 'ads.tracking.attribution' } })).toBe(1);
+    // a visit from a Facebook ad with no pixel cookie: the click goes with the event as fbc
+    const visit = touchOf(new URLSearchParams('utm_source=facebook&fbclid=IwAR3sampleClickId_01'), null, HOST, Date.now())!;
+    const before = await t.prisma.trackedEvent.count({ where: { name: 'addToBag' } });
+    await trackAddToBag(req('/api/bag/lines', 'POST', { cookie: `${BAG_COOKIE}=${VISITOR}; ${ATTRIBUTION_COOKIE}=${encodeTouch(visit)}` }), { storeId: S, lineId, quantity: 1 }, deps);
+    const add = (await rows()).filter((r) => r.name === 'addToBag');
+    expect(add).toHaveLength(before + 1);
+    expect((add.at(-1)!.userData as Record<string, string>).fbc).toBe(visit.fbc);
   });
 
   it('a customer’s phone and e-mail only as hashes, and only while matching is allowed', async () => {

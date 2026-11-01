@@ -20,6 +20,8 @@
 // from the rewritten one, e.g. bound to 127.0.0.1), the proxy runs again on the English path and used to overwrite the
 // language with English: every /bn page drew in English. The rewrite now carries this process's random mark, and a
 // request with it keeps the Bengali language and path it was given (a browser cannot know the mark).
+// S13 · PR 257 follow-up (go-live gate customer 360°): a shop page asked for with campaign tags or an ad click id keeps
+// them in the shop's own cookie while `ads.attribution` is on (lib/tracking/attribution.ts); that answer is never cached.
 import { NextResponse, type NextRequest } from 'next/server';
 import { shopCacheHeaders } from './lib/cache-policy';
 import { apiGate, pageCspHeader } from './lib/security/edge-gate';
@@ -29,6 +31,7 @@ import { countRedirectHit, forwardOf, redirectTable } from './lib/seo/redirect-t
 import { isShopPath, LANG_HEADER, PATH_HEADER, REWRITE_MARK_HEADER, THEME_HEADER } from './lib/shop/lang';
 import { requestLang, rewriteMark } from './lib/shop/rewrite-mark';
 import { shopStoreId } from './lib/shop/store-id';
+import { ATTRIBUTION_COOKIE, hasTags, landingCookie } from './lib/tracking/attribution';
 
 /** A permanent move (HTTP's own code for it; search engines carry the page's rank over). */
 const PERMANENT = 301;
@@ -55,6 +58,18 @@ function gateApi(req: NextRequest): NextResponse {
 function withPageCsp(res: NextResponse): NextResponse {
   const h = pageCspHeader();
   if (h) res.headers.set(h.name, h.value);
+  return res;
+}
+
+/** PR 257 follow-up: the campaign tags of a tagged shop address, kept in the shop's own cookie (and never cached). */
+async function withAttribution(res: NextResponse, req: NextRequest): Promise<NextResponse> {
+  if (req.method !== 'GET' || !hasTags(req.nextUrl.searchParams)) return res;
+  const host = (req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? req.nextUrl.host).split(',')[0]!.trim();
+  const line = await landingCookie({ storeId: shopStoreId(), params: req.nextUrl.searchParams, referer: req.headers.get('referer'), host, cookie: req.cookies.get(ATTRIBUTION_COOKIE)?.value ?? null });
+  if (!line) return res;
+  res.headers.append('set-cookie', line);
+  res.headers.set('cache-control', 'private, no-store');
+  res.headers.set('cdn-cache-control', 'no-store');
   return res;
 }
 
@@ -94,9 +109,9 @@ export async function proxy(req: NextRequest) {
     h.set(REWRITE_MARK_HEADER, rewriteMark());
     const url = req.nextUrl.clone();
     url.pathname = path;
-    return withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h } }), req));
+    return withAttribution(withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h } }), req)), req);
   }
-  return withPageCsp(withCacheHeaders(NextResponse.next({ request: { headers: h } }), req));
+  return withAttribution(withPageCsp(withCacheHeaders(NextResponse.next({ request: { headers: h } }), req)), req);
 }
 
 export const config = {

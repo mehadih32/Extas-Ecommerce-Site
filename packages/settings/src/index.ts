@@ -111,6 +111,8 @@ export * from './registry-health';
 export * from './registry-bengali';
 // S13 · PR 257 — server-side event tracking (registry-tracking.ts, version 85).
 export * from './registry-tracking';
+// S13 · PR 257 follow-up — where an order came from (registry-attribution.ts, version 230).
+export * from './registry-attribution';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

@@ -7,11 +7,13 @@
 //   nothing leaves the shop. "Send waiting now": the waiting and failed events with attempts left, at once.
 // - Seeing needs `ads.tracking.read`; changing and sending need `ads.tracking.manage`; both audited. Keys are typed on
 //   Keys & connections (`vault.write`), never here. Nothing here moves money, changes a price or touches an order.
+// - PR 257 follow-up (go-live gate customer 360°): the "Where an order came from" card (`ads.attribution`): keep the
+//   campaign tags and ad click ids of a visit on the order, for how many days, the first or the latest visit.
 import { createHash } from 'node:crypto';
 import { AD_PLATFORM_CONNECTION, type AdPlatform } from '@extas/adapters';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { storeTarget, trackingSchema, type TrackingSettings } from '@extas/settings';
+import { attributionSchema, storeTarget, trackingSchema, type AttributionSettings, type TrackingSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { TRACKING_EVENTS, TRACKING_PLATFORMS, type Deliveries, type DeliveryState, type StoredItem } from './model';
 import { recordEvent, sendEvents, type SendOutcome, type TrackingDeps } from './service';
@@ -68,6 +70,8 @@ export interface RecentEvent {
 
 export interface TrackingOverview {
   card: { key: 'tracking'; value: TrackingSettings; version: string };
+  /** PR 257 follow-up: the "Where an order came from" card. */
+  attribution: { key: 'attribution'; value: AttributionSettings; version: string };
   days: number;
   platforms: PlatformLink[];
   /** Recorded per event (test events not counted). */
@@ -88,7 +92,7 @@ const pathOf = (url: string | null) => {
 };
 
 export async function trackingOverview(deps: Pick<TrackingDeps, 'db' | 'resolver'>, days: number = TRACKING_DAYS[0]): Promise<TrackingOverview> {
-  const value = await deps.resolver.value('ads.tracking', { storeId: S });
+  const [value, attribution] = await Promise.all([deps.resolver.value('ads.tracking', { storeId: S }), deps.resolver.value('ads.attribution', { storeId: S })]);
   const now = Date.now();
   const since = new Date(now - days * 86_400_000);
   const links = await deps.db.integration.findMany({ where: { archivedAt: null, OR: TRACKING_PLATFORMS.map((p) => ({ kind: AD_PLATFORM_CONNECTION[p].kind, provider: AD_PLATFORM_CONNECTION[p].provider })) }, orderBy: { updatedAt: 'desc' } });
@@ -127,12 +131,26 @@ export async function trackingOverview(deps: Pick<TrackingDeps, 'db' | 'resolver
       deliveries: (r.deliveries ?? {}) as Deliveries,
     }),
   );
-  return { card: { key: 'tracking', value, version: versionOf(value) }, days, platforms, recorded, table, waiting, recent };
+  return { card: { key: 'tracking', value, version: versionOf(value) }, attribution: { key: 'attribution', value: attribution, version: versionOf(attribution) }, days, platforms, recorded, table, waiting, recent };
+}
+
+/** PR 257 follow-up: PUT {key: 'attribution', value, version} — where an order came from (audited). */
+async function saveAttribution(deps: TrackingDeps, who: TrackingWho, input: { value?: unknown; version?: unknown }): Promise<TrackingOverview> {
+  const before = await deps.resolver.value('ads.attribution', { storeId: S });
+  if (input.version !== versionOf(before)) throw new TrackingError('STALE', 409);
+  const ok = attributionSchema.safeParse(input.value);
+  if (!ok.success) throw new TrackingError('INVALID_INPUT', 400, [...new Set(ok.error.issues.map((i) => String(i.path[0] ?? 'value')))]);
+  if (versionOf(ok.data) !== versionOf(before)) {
+    await deps.resolver.set('ads.attribution', ok.data, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: 'Marketing › Tracking' });
+    await audit(deps.db, who.actor, { storeId: S, action: 'ads.tracking.attribution', entityType: 'Setting', entityId: 'ads.attribution', before: { ...before }, after: { ...ok.data } }, who.ctx);
+  }
+  return trackingOverview(deps);
 }
 
 /** PUT {key: 'tracking', value, version}: the switch, the events, the platforms, matching and attempts (audited). */
 export async function saveTracking(deps: TrackingDeps, who: TrackingWho, input: unknown): Promise<TrackingOverview> {
   await requirePermission(deps.db, who.actor, 'ads.tracking.manage', { storeId: S });
+  if (isObj(input) && input.key === 'attribution') return saveAttribution(deps, who, input);
   if (!isObj(input) || input.key !== 'tracking') throw new TrackingError('INVALID_INPUT', 400, ['key']);
   const before = await deps.resolver.value('ads.tracking', { storeId: S });
   if (input.version !== versionOf(before)) throw new TrackingError('STALE', 409);
@@ -187,7 +205,7 @@ export async function trackingAction(deps: TrackingDeps, who: TrackingWho, input
 }
 
 const answer = (e: unknown): Response => (isTrackingError(e) ? json({ ok: false, error: e.code, details: e.details }, { status: e.status }) : errorResponse(e));
-const reply = (o: TrackingOverview, outcome?: SendOutcome) => json({ ok: true, overview: o, cards: { tracking: o.card }, ...(outcome ? { outcome } : {}) });
+const reply = (o: TrackingOverview, outcome?: SendOutcome) => json({ ok: true, overview: o, cards: { tracking: o.card, attribution: o.attribution }, ...(outcome ? { outcome } : {}) });
 
 /**
  * /api/admin/marketing/tracking — GET the overview (`ads.tracking.read`; `?days=7|30`), PUT the settings card, POST a

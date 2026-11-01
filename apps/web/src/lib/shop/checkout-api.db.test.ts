@@ -9,6 +9,7 @@ import { setUpCheckout, type CheckoutFixture } from '@extas/checkout/testing';
 import { checkoutFlag, recordAdvance, systemBy } from '@extas/orders';
 import { BAG_COOKIE, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { callMeHandler, draftHandler, paymentHandler, voiceHandler, placeHandler, quoteHandler, type CheckoutApiDeps } from './checkout-api';
+import { ATTRIBUTION_COOKIE, encodeTouch, touchOf } from '../tracking/attribution';
 
 const ORIGIN = 'https://shop.example.test';
 const FORM = { name: 'Test Customer', phone: '01700000125', address: 'House 4, Road 5, Dhanmondi, Dhaka 1209' };
@@ -84,6 +85,22 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
     const q = await page('api-dev-2');
     const second = (await (await placeHandler(req('/api/checkout/orders', q.order, { cookie: `${q.cookie}; ${DEVICE_COOKIE}=${device}` }), deps())).json()) as { number: string };
     expect((await f.t.prisma.order.findFirstOrThrow({ where: { number: second.number, storeId: f.S }, select: { deviceId: true } })).deviceId).toBe(device);
+  });
+
+  it('PR 257 follow-up (go-live gate customer 360°): an order after an ad visit keeps its source, campaign and platform; off keeps none', async () => {
+    await f.t.prisma.stockLevel.updateMany({ where: { variantId: f.variant('oxford-cotton-shirt', 'sky', 'M').id }, data: { onHand: { increment: 2 }, available: { increment: 2 } } });
+    const visit = encodeTouch(touchOf(new URLSearchParams('utm_source=facebook&utm_medium=paid_social&utm_campaign=eid-polo&fbclid=IwAR3sampleClickId_02'), 'https://l.facebook.com/', 'shop.example.test', Date.now())!);
+    const p = await page('api-utm');
+    const a = (await (await placeHandler(req('/api/checkout/orders', p.order, { cookie: `${p.cookie}; ${ATTRIBUTION_COOKIE}=${visit}` }), deps())).json()) as { number: string };
+    expect(await f.t.prisma.order.findFirstOrThrow({ where: { number: a.number, storeId: f.S }, select: { utmSource: true, utmMedium: true, utmCampaign: true, adPlatform: true, referrer: true, source: true } })).toEqual({ utmSource: 'facebook', utmMedium: 'paid_social', utmCampaign: 'eid-polo', adPlatform: 'META', referrer: 'https://l.facebook.com', source: 'WEBSITE' });
+    f.overrides.set('ads.attribution', { on: false, keepDays: 30, touch: 'last' });
+    try {
+      const q = await page('api-utm-off');
+      const b = (await (await placeHandler(req('/api/checkout/orders', q.order, { cookie: `${q.cookie}; ${ATTRIBUTION_COOKIE}=${visit}` }), deps())).json()) as { number: string };
+      expect(await f.t.prisma.order.findFirstOrThrow({ where: { number: b.number, storeId: f.S }, select: { utmSource: true, adPlatform: true } })).toEqual({ utmSource: null, adPlatform: null });
+    } finally {
+      f.overrides.delete('ads.attribution');
+    }
   });
 
   it('S06 · PR 156: with the owner\'s risk score on, the order is scored once as it lands (team only)', async () => {

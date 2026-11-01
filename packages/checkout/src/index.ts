@@ -24,3 +24,5 @@ export * from './advance';
 export * from './bulk-service';
 // CN-020 (4) — the voice address: a recording of the address, its words and how sure the reading was.
 export * from './voice';
+// PR 257 follow-up — where an order came from: the campaign tags the order keeps (attribution.ts).
+export * from './attribution';
