@@ -140,6 +140,9 @@
 .shop .acc-ro { background: var(--surface2); color: var(--text2); }
 .shop .acc-start { align-self: flex-start; }
 .shop .acc-addrs { display: grid; gap: 12px; }
+.shop .acc-bday { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 12px; max-width: 460px; }
+.shop .acc-bday.y { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1.2fr); max-width: 600px; }
+.shop .acc-bday .input { min-height: 44px; }
 .shop .acc-addr-rm { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
 .shop .acc-page .sec-hd .link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
 .shop .acc-addr-add { display: inline-flex; align-items: center; gap: 8px; justify-self: start; min-height: 46px; padding: 0; background: none; border: 0; cursor: pointer; color: var(--brand); font-size: 14.5px; font-weight: 700; }

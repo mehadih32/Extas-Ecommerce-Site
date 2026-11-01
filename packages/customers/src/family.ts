@@ -18,6 +18,7 @@ export const PROFILE_SELECT = {
   whatsappNumber: true,
   gender: true,
   genderInferred: true,
+  birthday: true,
   firstSource: true,
   firstCampaignRef: true,
   createdAt: true,

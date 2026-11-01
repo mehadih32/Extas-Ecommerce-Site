@@ -104,6 +104,12 @@ function OrderLines({ view, rows, money, when, canOpen }: { view: AdminView; row
   );
 }
 
+/** PR 301 — a birthday as people say it: "5 November", with the year only when he gave one. */
+function birthdayText(b: { day: number; month: number; year: number | null }, locale: string): string {
+  const f = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', ...(b.year ? { year: 'numeric' } : {}), timeZone: 'UTC', numberingSystem: 'latn' });
+  return f.format(new Date(Date.UTC(b.year ?? 2000, b.month - 1, b.day))); // hardcode-ok: a leap year only to name the day and month
+}
+
 export default async function CustomerPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   const deps = adminDeps();
   const [{ id }, sp, plain, access] = await Promise.all([params, searchParams, adminView(deps), pageAccess('customers.read', deps, MOTHER_STORE_ID)]);
@@ -143,6 +149,8 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   // PR 288: the Journey tab shows only while the owner's `customers.journey` is on
   const journeyOn = ((await access.deps.resolver.value('customers.journey', { storeId: MOTHER_STORE_ID })) as { enabled: boolean }).enabled;
   const tabs = TABS.filter((x) => (x !== 'wallet' || canWallet) && (x !== 'journey' || journeyOn));
+  // PR 301: the birthday he gave (his own profile's first, else a merged one's); the card shows while the field is on
+  const birthdayOn = ((await access.deps.resolver.value('customers.birthday', { storeId: MOTHER_STORE_ID })) as { enabled: boolean }).enabled;
   const tab: Tab = (tabs as readonly string[]).includes(one(sp.tab)) ? (one(sp.tab) as Tab) : 'overview';
   const page = Math.max(1, Math.trunc(Number(one(sp.page)) || 1));
   const from = one(sp.from);
@@ -179,6 +187,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
     : t(d, 'cus.profile.sub', { phone: phoneText, since: when.format(c.createdAt) });
   const mergedFrom = from ? profiles.find((p) => p.id === from) : null;
   const tabHref = (x: Tab) => (x === 'overview' ? here : `${here}?tab=${x}`);
+  const bday = profiles.map((p) => p.birthday).find((b) => b !== null) ?? null;
   const yesNo = (v: boolean | null) => t(d, `cus.profile.consent.${v === null ? 'unknown' : v ? 'yes' : 'no'}`);
 
   const kpis = (
@@ -456,6 +465,15 @@ export default async function CustomerPage({ params, searchParams }: { params: P
         customerId={sv.id}
         data={{ tags: tn.tags, notes: tn.notes.map((x) => ({ id: x.id, body: x.body, pinned: x.pinned, by: x.by, when: stamp.format(x.at) })), storeTags: tn.storeTags.map((x) => x.name), canWrite: tn.canWrite }}
       />
+      {birthdayOn || bday ? (
+        <Card title={t(d, 'cus.profile.birthday.title')} testId="cus-birthday">
+          <div className="a2-rule">
+            <span>{t(d, 'cus.profile.birthday.label')}</span>
+            <b>{bday ? birthdayText(bday, view.locale) : t(d, 'cus.profile.birthday.none')}</b>
+          </div>
+          <p className="a2-xs a2-mute a2-mt6">{t(d, 'cus.profile.birthday.note')}</p>
+        </Card>
+      ) : null}
       <Card title={t(d, 'cus.profile.consent.title')} testId="cus-consent">
         <div className="a2-rule">
           <span>{t(d, 'cus.profile.consent.sms')}</span>

@@ -2,6 +2,7 @@
 // prompt that comes back here; a section the owner hides (`account.tabs`) is "page not found"; otherwise the frame
 // (AccountShell) around the section's own body. The pages under app/(shop)/(store)/account call it.
 // PR 132: the offer banner on top of My orders; For you lists the same offers as cards.
+// S14 · PR 301: Profile's Birthday card while the owner's `customers.birthday` is on.
 // S05 · PR 150: My orders is the whole history — a page of one group at a time, from the address's `show` and `page`.
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
@@ -18,7 +19,7 @@ import { ForYouTab, OrdersTab, RewardsTab, WalletTab } from './AccountTabs';
 import { initialsOf } from '@extas/accounts/pure';
 import { PhotoCard } from './AccountPhoto';
 import { OfferBanner, OfferCards } from './OfferBanner';
-import { DetailsForm, PasswordForm, Preferences } from './ProfileForms';
+import { BirthdayForm, DetailsForm, PasswordForm, Preferences } from './ProfileForms';
 
 export async function AccountSection({ tab, query = {} }: { tab: Exclude<AccountTab, 'wishlist'>; query?: { show?: unknown; page?: unknown } }) {
   const c = await shopContext();
@@ -30,7 +31,7 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
   }
   if (!page.tabs.includes(tab)) notFound();
   const who = { storeId: c.storeId, customerId: page.me.customer.id };
-  const s = await readPageSettings(['account.lists', 'account.addresses.max', 'account.login', 'checkout.wallet.enabled', 'account.offerBanner', 'account.history'] as const, c.storeId);
+  const s = await readPageSettings(['account.lists', 'account.addresses.max', 'account.login', 'checkout.wallet.enabled', 'account.offerBanner', 'account.history', 'customers.birthday'] as const, c.storeId);
   let body: ReactNode;
   switch (tab) {
     case 'orders': {
@@ -66,6 +67,9 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
       const p = await profileView(deps, who);
       if (!p) notFound();
       const words = accountWords(c, ['profile.']);
+      // PR 301: the month names in the page's language (Western digits stay the shop's rule)
+      const monthName = new Intl.DateTimeFormat(c.lang === 'bn' ? 'bn-BD' : 'en-GB', { month: 'long', timeZone: 'UTC' });
+      const months = Array.from({ length: 12 }, (_, i) => monthName.format(new Date(Date.UTC(2000, i, 1))));
       const langs = c.s['language.bengali.enabled'] ? { en: c.t('lang.en'), bn: c.t('lang.bn'), other: twinHref(c.lang, c.path) } : null;
       body = (
         <div className="stack s16" data-testid="acc-profile">
@@ -79,6 +83,7 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
             </section>
             {s['account.login'].password ? <PasswordForm words={words} has={p.hasPassword} /> : null}
           </div>
+          {s['customers.birthday'].enabled ? <BirthdayForm words={words} birthday={p.birthday} askYear={s['customers.birthday'].askYear} months={months} /> : null}
           <Preferences words={words} consent={p.consent} lang={c.lang} langs={langs} />
         </div>
       );

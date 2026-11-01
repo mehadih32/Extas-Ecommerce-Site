@@ -3,7 +3,7 @@
 // Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { accountSummary, checkoutPrefill, orderCards, profileView, saveConsent, saveProfile, walletView } from './index';
+import { accountSummary, checkoutPrefill, orderCards, profileView, saveBirthday, saveConsent, saveProfile, walletView } from './index';
 import { setUpAccounts, type AccountsFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -140,5 +140,39 @@ describe.skipIf(!HAS_TEST_DB)('PR 131 · My account', () => {
       ['SMS', true, 'account'],
       ['WHATSAPP', false, 'account'],
     ]);
+  });
+
+  it('PR 301: his birthday — only while the owner\'s field is on; day and month, the year only when asked; cleared on his word', async () => {
+    const save = (birthday: unknown) => saveBirthday(f.deps(), { storeId: f.A, customerId: me.id, birthday }, { ip: '192.0.2.9' });
+    // off as shipped: refused, nothing stored
+    expect(await code(save({ day: 5, month: 11 }))).toBe('NOT_ALLOWED');
+    f.overrides.set('customers.birthday', { enabled: true, askYear: false });
+    // the year is dropped while it is not asked; 29 February fits without a year
+    expect(await save({ day: 29, month: 2, year: 1990 })).toEqual({ day: 29, month: 2, year: null });
+    expect((await profileView(f.deps(), { storeId: f.A, customerId: me.id }))?.birthday).toEqual({ day: 29, month: 2, year: null });
+    expect(await code(save({ day: 31, month: 4 }))).toBe('INVALID_INPUT');
+    expect(await code(save({ day: 5, month: 13 }))).toBe('INVALID_INPUT');
+    expect(await code(save({ day: '5', month: 11 }))).toBe('INVALID_INPUT');
+    expect(await code(save({ day: 5, month: 11, gift: 'yes' }))).toBe('INVALID_INPUT');
+    f.overrides.set('customers.birthday', { enabled: true, askYear: true });
+    expect(await save({ day: 5, month: 11, year: 1990 })).toEqual({ day: 5, month: 11, year: 1990 });
+    expect((await f.t.prisma.customer.findUniqueOrThrow({ where: { id: me.id } })).birthday?.toISOString().slice(0, 10)).toBe('1990-11-05');
+    expect(await code(save({ day: 29, month: 2, year: 2001 }))).toBe('INVALID_INPUT');
+    expect(await code(save({ day: 1, month: 1, year: 1850 }))).toBe('INVALID_INPUT');
+    expect(await code(save({ day: 1, month: 1, year: 2030 }))).toBe('INVALID_INPUT');
+    // another store's customer id is "no such customer"; another customer is untouched
+    expect(await code(saveBirthday(f.deps(), { storeId: f.B, customerId: me.id, birthday: { day: 1, month: 1 } }))).toBe('NOT_FOUND');
+    expect((await f.t.prisma.customer.findUniqueOrThrow({ where: { id: other.id } })).birthday).toBeNull();
+    // cleared on his word; the audit lines never hold the date
+    expect(await save({ clear: true })).toBeNull();
+    expect((await profileView(f.deps(), { storeId: f.A, customerId: me.id }))?.birthday).toBeNull();
+    const audit = await f.t.prisma.auditLog.findMany({ where: { action: 'customer.birthday.saved', entityId: me.id }, orderBy: { createdAt: 'asc' } });
+    expect(audit.map((a) => a.after)).toEqual([
+      { given: true, year: false },
+      { given: true, year: true },
+      { given: false, year: false },
+    ]);
+    expect(JSON.stringify(audit)).not.toContain('1990');
+    f.overrides.delete('customers.birthday');
   });
 });

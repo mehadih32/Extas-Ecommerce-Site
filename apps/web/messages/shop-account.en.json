@@ -76,7 +76,10 @@
       "pwWrongCurrent": "Your current password isn't right.",
       "pwRules": "The new password needs at least {min} characters.",
       "pwPhone": "Please don't use your mobile number as the password.",
-      "signedOut": "You have been logged out. Please log in again."
+      "signedOut": "You have been logged out. Please log in again.",
+      "bdayBad": "That date does not exist. Please check the day and the month.",
+      "bdayYear": "Please check the year.",
+      "bdayOff": "The birthday box is not open right now."
     },
     "title": "My account",
     "tabs": {
@@ -226,7 +229,19 @@
       "waNote": "Only if you turn it on. Stop anytime.",
       "on": "On",
       "off": "Off",
-      "consentSaved": "Saved"
+      "consentSaved": "Saved",
+      "bday": "Birthday",
+      "bdayNote": "Optional. The day and the month are enough.",
+      "bdayNoteYear": "Optional. The year too, if you like.",
+      "bdayDay": "Day",
+      "bdayMonth": "Month",
+      "bdayYear": "Year",
+      "bdayYearPh": "Four digits",
+      "bdaySave": "Save birthday",
+      "bdaySaved": "Birthday saved",
+      "bdayClear": "Remove",
+      "bdayCleared": "Birthday removed",
+      "bdayPick": "Choose"
     },
     "ob": {
       "aria": "Your offers and wallet",

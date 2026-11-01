@@ -68,6 +68,15 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
       { name: 'maxRows', kind: 'int' },
     ],
   },
+  {
+    // PR 301 — the birthday field (My account › Profile), ready for the parked birthday module; nothing is sent for it
+    key: 'customers.birthday',
+    card: 'birthday',
+    fields: [
+      { name: 'enabled', kind: 'bool' },
+      { name: 'askYear', kind: 'bool' },
+    ],
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {

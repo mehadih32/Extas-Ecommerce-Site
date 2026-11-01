@@ -4,6 +4,8 @@
 // default the checkout fills in), the password (set one, or change it with the current one; hidden when password
 // login is off), and Preferences (the language, and offers by SMS and on WhatsApp as two separate answers, B5.7).
 // Each form posts to /api/account/<action> and names every refusal in the shop's words (`account.err.*`).
+// S14 · PR 301: Birthday (only while the owner's `customers.birthday` is on) — the day and the month, the year only when
+// he asks for it; saved or removed on his word. It promises nothing: birthday wishes and gifts stay parked (C6.6).
 import { useRef, useState } from 'react';
 import type { ProfileView } from '@extas/accounts';
 import { showToast } from '../toast';
@@ -187,6 +189,110 @@ export function PasswordForm({ words, has }: { words: ProfileWords; has: boolean
         <button className="btn btn-secondary acc-start" type="submit" disabled={busy} aria-busy={busy || undefined}>
           {w('profile.pwSave')}
         </button>
+      </form>
+    </section>
+  );
+}
+
+/** PR 301 — his birthday. `months`: the twelve month names in the page's language (drawn on the server). */
+export function BirthdayForm({ words, birthday, askYear, months }: { words: ProfileWords; birthday: ProfileView['birthday']; askYear: boolean; months: readonly string[] }) {
+  const w = (k: string) => words[k] ?? k;
+  const [day, setDay] = useState(birthday ? String(birthday.day) : '');
+  const [month, setMonth] = useState(birthday ? String(birthday.month) : '');
+  const [year, setYear] = useState(birthday?.year ? String(birthday.year) : '');
+  const [saved, setSaved] = useState(!!birthday);
+  const [err, setErr] = useState<{ text: string; field: 'day' | 'year' | null } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const refused = (status: number, data: Record<string, unknown>) => {
+    const code = String(data.error ?? '');
+    const details = Array.isArray(data.details) ? (data.details as string[]) : [];
+    if (status === 401) return setErr({ text: w('err.signedOut'), field: null });
+    if (code === 'NOT_ALLOWED') return setErr({ text: w('err.bdayOff'), field: null });
+    if (code === 'INVALID_INPUT' && details.some((d) => d.startsWith('year'))) return setErr({ text: w('err.bdayYear'), field: 'year' });
+    if (code === 'INVALID_INPUT') return setErr({ text: w('err.bdayBad'), field: 'day' });
+    setErr({ text: w('err.offline'), field: null });
+  };
+  const send = async (form: HTMLElement, payload: Record<string, unknown>, done: string) => {
+    setBusy(true);
+    setErr(null);
+    const r = await post('birthday', payload);
+    setBusy(false);
+    if (r.status !== 200) return refused(r.status, r.data);
+    const b = (r.data.birthday ?? null) as ProfileView['birthday'];
+    setDay(b ? String(b.day) : '');
+    setMonth(b ? String(b.month) : '');
+    setYear(b?.year ? String(b.year) : '');
+    setSaved(!!b);
+    showToast(form, w(done));
+  };
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  return (
+    <section className="card p20" aria-labelledby="pf-b" data-testid="acc-bday">
+      <h2 className="h3" id="pf-b">
+        {w('profile.bday')}
+      </h2>
+      <p className="xs muted" style={{ margin: '4px 0 0' }}>
+        {w(askYear ? 'profile.bdayNoteYear' : 'profile.bdayNote')}
+      </p>
+      <form
+        className="stack s12 mt12"
+        noValidate
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          if (!day || !month) return setErr({ text: w('err.bdayBad'), field: 'day' });
+          const y = year.trim();
+          if (askYear && y && !/^\d{4}$/.test(y)) return setErr({ text: w('err.bdayYear'), field: 'year' });
+          await send(form, { day: Number(day), month: Number(month), year: askYear && y ? Number(y) : null }, 'profile.bdaySaved');
+        }}
+      >
+        <div className={`acc-bday${askYear ? ' y' : ''}`}>
+          <div>
+            <label className="label" htmlFor="pf-bd-d">
+              {w('profile.bdayDay')}
+            </label>
+            <select id="pf-bd-d" className="input" value={day} onChange={(e) => setDay(e.target.value)} autoComplete="bday-day" aria-invalid={err?.field === 'day' || undefined} data-testid="acc-bday-day">
+              <option value="">{w('profile.bdayPick')}</option>
+              {days.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label" htmlFor="pf-bd-m">
+              {w('profile.bdayMonth')}
+            </label>
+            <select id="pf-bd-m" className="input" value={month} onChange={(e) => setMonth(e.target.value)} autoComplete="bday-month" aria-invalid={err?.field === 'day' || undefined} data-testid="acc-bday-month">
+              <option value="">{w('profile.bdayPick')}</option>
+              {months.map((m, i) => (
+                <option key={i} value={i + 1}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+          {askYear ? (
+            <div>
+              <label className="label" htmlFor="pf-bd-y">
+                {w('profile.bdayYear')}
+              </label>
+              <input id="pf-bd-y" className="input" inputMode="numeric" maxLength={4} autoComplete="bday-year" placeholder={w('profile.bdayYearPh')} value={year} onChange={(e) => setYear(e.target.value.replace(/[^0-9]/g, ''))} aria-invalid={err?.field === 'year' || undefined} data-testid="acc-bday-year" />
+            </div>
+          ) : null}
+        </div>
+        <Err id="pf-bd-err" text={err?.text ?? null} />
+        <div className="row" style={{ gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary acc-start" type="submit" disabled={busy} aria-busy={busy || undefined} data-testid="acc-bday-save">
+            {w('profile.bdaySave')}
+          </button>
+          {saved ? (
+            <button type="button" className="link xs acc-addr-rm" disabled={busy} onClick={(e) => void send(e.currentTarget, { clear: true }, 'profile.bdayCleared')} data-testid="acc-bday-clear">
+              {w('profile.bdayClear')}
+            </button>
+          ) : null}
+        </div>
       </form>
     </section>
   );

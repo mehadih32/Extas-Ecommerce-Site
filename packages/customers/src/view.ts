@@ -8,6 +8,7 @@
 // `customerByPhone` finds the person a number belongs to, in any way it is written (one helper: phoneNormalizeBD).
 // Reading needs `customers.read`; the full number only goes out with `customers.phone` (PR 284 masking).
 import { customerKpis, type CustomerKpi } from '@extas/metrics';
+import { birthdayParts, type BirthdayParts } from '@extas/settings';
 import { historyOptions, pastOrdersOf, phoneForms, summarizeHistory, type PhoneSummary } from '@extas/orders';
 import { logAccess } from './access';
 import { allow, setting, UUID, type CustomersDeps, type Viewer, type Who } from './context';
@@ -23,6 +24,8 @@ export interface ProfileCard {
   whatsapp: PhoneShown | null;
   /** Gender only where it is known; an inferred one says so (B5.2). */
   gender: { value: string; inferred: boolean } | null;
+  /** PR 301 — the birthday he gave in My account (no year when he gave none). */
+  birthday: BirthdayParts | null;
   firstSource: string | null;
   createdAt: Date;
   /** He has signed in to the shop at least once (an account with a credential). */
@@ -64,6 +67,7 @@ export function cardOf(p: ProfileRow, v: Pick<Viewer, 'fullPhone'>, mask: PhoneM
     email: p.email,
     whatsapp: p.whatsappNumber && p.whatsappNumber !== p.phone ? phoneShown(p.whatsappNumber, v.fullPhone, mask) : null,
     gender: p.gender ? { value: p.gender, inferred: p.genderInferred } : null,
+    birthday: birthdayParts(p.birthday),
     firstSource: p.firstSource,
     createdAt: p.createdAt,
     hasLogin: !!p.credential,

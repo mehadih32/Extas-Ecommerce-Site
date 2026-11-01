@@ -2,9 +2,12 @@
 // only: it is the account), his delivery addresses (up to `account.addresses.max`, the first is the default the checkout
 // fills in, PR 137), and the marketing messages he agreed to, SMS and WhatsApp apart (B5.7). A removed address is
 // archived, never deleted (hard rule 3); every consent change is a new ConsentRecord row with where it came from.
+// S14 · PR 301: his birthday (the day and the month; the year only when the owner asks for it), while the owner's
+// `customers.birthday` is on — ready for the parked birthday module (Blueprint C6.6); nothing is sent or given for it.
 import { z } from 'zod';
 import type { RequestContext } from '@extas/auth';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
+import { birthdayDate, birthdayParts, type BirthdayParts } from '@extas/settings';
 import { AccountError, checkStoreId, nowOf, parse, setting, TX, type AccountsDeps } from './context';
 
 export interface AddressView {
@@ -20,6 +23,8 @@ export interface ProfileView {
   /** The latest answer per channel (null: never asked). */
   consent: { sms: boolean | null; whatsapp: boolean | null };
   hasPassword: boolean;
+  /** PR 301 — his birthday as he gave it (no year when he gave none). */
+  birthday: BirthdayParts | null;
 }
 
 /** Where a consent change came from (ConsentRecord.source). */
@@ -34,6 +39,7 @@ export async function profileView(deps: AccountsDeps, input: { storeId: number; 
       phone: true,
       smsMarketingConsent: true,
       whatsappMarketingConsent: true,
+      birthday: true,
       credential: { select: { id: true } },
       addresses: { where: { archivedAt: null }, orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }], select: { id: true, addressLine: true, isDefault: true } },
     },
@@ -46,6 +52,7 @@ export async function profileView(deps: AccountsDeps, input: { storeId: number; 
     addresses: c.addresses.map((a, i) => ({ id: a.id, line: a.addressLine, isDefault: i === 0 })),
     consent: { sms: c.smsMarketingConsent, whatsapp: c.whatsappMarketingConsent },
     hasPassword: !!c.credential,
+    birthday: birthdayParts(c.birthday),
   };
 }
 
@@ -118,6 +125,58 @@ export async function saveConsent(deps: AccountsDeps, input: { storeId: number; 
     await tx.customer.update({ where: { id: customerId }, data: { smsMarketingConsent: next.sms, whatsappMarketingConsent: next.whatsapp } });
     return next;
   }, TX);
+}
+
+/** PR 301 — the earliest birth year the field takes (a typing guard, not a business figure). */
+export const BIRTHDAY_MIN_YEAR = 1900; // hardcode-ok: an input sanity bound
+
+const birthdayInput = z.union([
+  z.object({ clear: z.literal(true) }).strict(),
+  z.object({ day: z.int().min(1).max(31), month: z.int().min(1).max(12), year: z.int().nullish() }).strict(),
+]);
+
+/**
+ * PR 301 — saves or clears his birthday while the owner's `customers.birthday` is on (off: NOT_ALLOWED). The year is
+ * kept only while `askYear` is on (otherwise it is dropped, never refused); a day that does not exist, a year before
+ * `BIRTHDAY_MIN_YEAR` or a date after today is INVALID_INPUT. Audited without the date itself.
+ */
+export async function saveBirthday(deps: AccountsDeps, input: { storeId: number; customerId: string; birthday: unknown }, ctx: RequestContext = {}): Promise<BirthdayParts | null> {
+  checkStoreId(input.storeId);
+  const { storeId, customerId } = input;
+  const rule = await setting(deps, storeId, 'customers.birthday');
+  if (!rule.enabled) throw new AccountError('NOT_ALLOWED', 'the birthday field is switched off');
+  const b = parse(birthdayInput, input.birthday, 'birthday');
+  const now = nowOf(deps);
+  let date: Date | null = null;
+  if (!('clear' in b)) {
+    const year = rule.askYear ? (b.year ?? null) : null;
+    if (year !== null && year < BIRTHDAY_MIN_YEAR) throw new AccountError('INVALID_INPUT', 'the year is too early', ['year']);
+    date = birthdayDate({ day: b.day, month: b.month, year });
+    if (!date) throw new AccountError('INVALID_INPUT', 'no such day', ['day']);
+    if (year !== null && date.getTime() > now.getTime()) throw new AccountError('INVALID_INPUT', 'the date is in the future', ['year']);
+  }
+  await deps.db.$transaction(async (tx) => {
+    const c = await tx.customer.findFirst({ where: { id: customerId, storeId, archivedAt: null, erasedAt: null }, select: { id: true, birthday: true } });
+    if (!c) throw new AccountError('NOT_FOUND', 'no such customer');
+    await tx.customer.update({ where: { id: c.id }, data: { birthday: date } });
+    const was = birthdayParts(c.birthday);
+    await tx.auditLog.create({
+      data: {
+        storeId,
+        actorType: 'CUSTOMER',
+        actorId: customerId,
+        action: 'customer.birthday.saved',
+        entityType: 'Customer',
+        entityId: customerId,
+        before: { given: !!was, year: !!was?.year },
+        after: { given: !!date, year: !!date && birthdayParts(date)!.year !== null },
+        ip: ctx.ip?.slice(0, 64) ?? null,
+        userAgent: ctx.userAgent?.slice(0, 512) ?? null,
+        source: 'shop-account',
+      },
+    });
+  }, TX);
+  return birthdayParts(date);
 }
 
 /** PR 137 — what his checkout starts with (the checkout's own three boxes). */
