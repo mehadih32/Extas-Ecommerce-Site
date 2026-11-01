@@ -33,6 +33,9 @@ export interface OutgoingMessage {
   senderId?: string | null;
   /** PR 292 — WhatsApp only: the provider's approved template (name, language, the body's values in order). */
   template?: WhatsAppTemplateRef | null;
+  /** PR 290 — e-mail only: the HTML part and the extra headers (one-click unsubscribe) of an offer e-mail. */
+  html?: string | null;
+  headers?: Record<string, string> | null;
 }
 
 export type SendResult =
@@ -99,7 +102,7 @@ export function sendersFrom(connections: Pick<Connections, 'use'>): MessagesDeps
       };
     }
     const c = await connections.use<EmailSender>('EMAIL', { storeId });
-    return { provider: c.provider, mode: c.mode, send: (m) => c.api.send({ to: m.to, subject: m.subject ?? '', text: m.text, purpose: m.purpose }) };
+    return { provider: c.provider, mode: c.mode, send: (m) => c.api.send({ to: m.to, subject: m.subject ?? '', text: m.text, purpose: m.purpose, ...(m.html ? { html: m.html } : {}), ...(m.headers ? { headers: m.headers } : {}) }) };
   };
 }
 

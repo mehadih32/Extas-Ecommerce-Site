@@ -82,7 +82,8 @@
         "channels": "চ্যানেল আর সীমা",
         "journey": "অর্ডারের মেসেজ",
         "templates": "টেমপ্লেট",
-        "automations": "অটো মেসেজ"
+        "automations": "অটো মেসেজ",
+        "email": "ই-মেইল"
       },
       "website": {
         "seo": "SEO"
