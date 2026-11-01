@@ -18,7 +18,9 @@ export type Inline =
   | { t: 'guide'; slug: string; c: Inline[] }
   /** PR 594: a link from one page guide to another (`all.md`, `../products/stock.md`): `<section>/<page>`. */
   | { t: 'page'; id: string; c: Inline[] }
-  | { t: 'a'; href: string; c: Inline[] };
+  | { t: 'a'; href: string; c: Inline[] }
+  /** PR 594: struck-through text (`~~old~~`): superseded words stay readable, marked as no longer true. */
+  | { t: 's'; c: Inline[] };
 
 export interface ListItem {
   c: Inline[];
@@ -82,7 +84,7 @@ export function parseInline(s: string): Inline[] {
       else if (guide && GUIDE_SLUG.test(guide[1]!)) out.push({ t: 'guide', slug: guide[1]!, c: parseInline(m[3]) });
       else if (/^https:\/\//.test(href)) out.push({ t: 'a', href, c: parseInline(m[3]) });
       else out.push(...parseInline(m[3]));
-    } else if (m[5] !== undefined) out.push({ t: 'text', v: m[5] });
+    } else if (m[5] !== undefined) out.push({ t: 's', c: parseInline(m[5]) });
     last = m.index! + m[0].length;
   }
   if (last < s.length) out.push({ t: 'text', v: s.slice(last) });

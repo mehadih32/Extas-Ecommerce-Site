@@ -66,6 +66,10 @@
     "help": {
       "read": "Open the admin guides and the manual"
     },
+    "build": {
+      "read": "See the build progress: the PR register, the blueprint and the docs files",
+      "report": "Report a problem on a PR of the build and set its status"
+    },
     "media": {
       "read": "See the media library",
       "upload": "Upload photos, describe them, place them on products",

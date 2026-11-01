@@ -402,6 +402,7 @@ model Store {
   siteAuditRuns           SiteAuditRun[]
   siteAuditFindings       SiteAuditFinding[]
   customerProblems        CustomerProblem[]
+  buildProblems           BuildProblem[]
   problemRecords          ProblemRecord[]
   trackedEvents           TrackedEvent[]
   supportChannels         SupportChannel[]
@@ -9311,6 +9312,41 @@ enum CustomerProblemStatus {
   COULD_NOT_FIX
   NEEDS_OWNER
   WAITING_OWNER_CHECK
+}
+
+/// @stage S21 · PR 594 (HLP-02) — a problem reported on one PR of the build ("Report a problem on this PR", Help & Build ›
+/// Reported problems): the PR number, what is wrong, the admin address it was seen on, and the status the build team
+/// gives it, with how it was fixed or why it was closed. Never deleted: closing keeps the row and its note.
+model BuildProblem {
+  id           String             @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store              @relation(fields: [storeId], references: [id])
+  /// R-1, R-2 … in the order reported, per store.
+  number       Int
+  prNumber     Int
+  note         String
+  /// The admin address it was seen on, when the person gave one.
+  page         String?
+  status       BuildProblemStatus @default(OPEN)
+  /// How it was fixed, or why it was closed.
+  statusNote   String?
+  statusById   String?            @db.Uuid
+  statusAt     DateTime?          @db.Timestamptz(3)
+  reportedById String?            @db.Uuid
+  createdAt    DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime           @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, number])
+  @@index([storeId, status, createdAt])
+  @@index([storeId, prNumber])
+}
+
+/// Open · Being fixed · Fixed (how) · Closed (why: not a problem, or it belongs elsewhere).
+enum BuildProblemStatus {
+  OPEN
+  FIXING
+  FIXED
+  CLOSED
 }
 
 /// @stage S21 · PR 423 (CN-015) — one report from a visitor's browser, for counting visitors and the date view. The

@@ -27,6 +27,10 @@ export const PERMISSIONS = {
   'dashboard.read': { group: 'admin' },
   'metrics.read': { group: 'admin' },
   'help.read': { group: 'admin' },
+  // S21 · PR 594 (HLP-02) — Build progress: read the PR register, the blueprint and every docs file (owner only until he
+  // gives it to a role); report a problem on a PR and set a reported problem's status.
+  'build.read': { group: 'admin' },
+  'build.report': { group: 'admin' },
   // PR 22, 25, 37 — the media library: see it; upload, describe and place photos; archive, restore and clean up.
   'media.read': { group: 'media' },
   'media.upload': { group: 'media' },

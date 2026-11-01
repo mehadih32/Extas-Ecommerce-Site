@@ -32,6 +32,12 @@ function Inlines({ c, onGuide }: { c: Inline[]; onGuide: OnGuide }) {
               <Inlines c={x.c} onGuide={onGuide} />
             </b>
           );
+        if (x.t === 's')
+          return (
+            <s key={i}>
+              <Inlines c={x.c} onGuide={onGuide} />
+            </s>
+          );
         if (x.t === 'a')
           return (
             <a key={i} className="a2-lnk" href={x.href} target="_blank" rel="noopener noreferrer">
