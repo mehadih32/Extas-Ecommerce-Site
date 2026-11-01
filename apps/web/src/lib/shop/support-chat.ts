@@ -9,6 +9,7 @@ import * as sp from '@extas/support';
 import { body, errorResponse, fail, json, readCookie, sameOrigin, type AdminDeps } from '../admin-auth';
 import { LIVE_CHAT_CHANNEL_NAME } from '../support-api';
 import { shopStoreId } from './store-id';
+import { supportPushWiring } from '../support-push';
 
 /** The chat cookie (its value is the visitor's token; only its hash is stored). */
 export const CHAT_COOKIE = 'extas_chat';
@@ -21,7 +22,8 @@ export async function supportChatHandler(request: Request, deps: AdminDeps | nul
   const m = request.method.toUpperCase();
   if (m !== 'GET' && m !== 'POST') return fail(405, 'method-not-allowed');
   if (!deps) return fail(503, 'database-not-configured');
-  const cd = { db: deps.db, settings: deps.resolver, now: deps.now };
+  // PR 435: a visitor's message wakes the support app's devices (support.app off as it ships)
+  const cd = { db: deps.db, settings: deps.resolver, now: deps.now, push: supportPushWiring(deps) };
   const had = readCookie(request, CHAT_COOKIE);
   const token = sp.isVisitorToken(had) ? had : null;
   try {

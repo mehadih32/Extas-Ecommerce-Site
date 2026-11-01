@@ -13,6 +13,7 @@ import * as sp from '@extas/support';
 import { adminDeps } from '@/lib/admin-auth';
 import { readCapped } from '@/lib/erp-webhook';
 import { whatsappToSupport } from '@/lib/support-connect';
+import { supportPushWiring } from '@/lib/support-push';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +35,8 @@ async function depsFor(deps: NonNullable<ReturnType<typeof adminDeps>>): Promise
     sender: sendersFrom(hit.connections),
     connections: hit.connections,
     now: deps.now,
-    onInbound: (storeId, inbound) => sp.receiveFromChannel({ db: deps.db, settings: deps.resolver, now: deps.now }, storeId, 'whatsapp', whatsappToSupport(inbound)),
+    // PR 435: the message wakes the support app's devices (support.app off as it ships)
+    onInbound: (storeId, inbound) => sp.receiveFromChannel({ db: deps.db, settings: deps.resolver, now: deps.now, push: supportPushWiring(deps) }, storeId, 'whatsapp', whatsappToSupport(inbound)),
   };
 }
 

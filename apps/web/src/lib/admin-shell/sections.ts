@@ -210,6 +210,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'settings', pages: [{ href: '/admin/support/settings', perm: 'support.read', keys: ['supportSettings'] }] },
       // S08 · PR 192 — SUP-02 Rider issues: a rider took more than the parcel asked; logged with proof, approved by a person.
       { id: 'riderIssues', pages: [{ href: '/admin/support/rider-issues', perm: 'support.read', keys: ['supportRiderIssues'] }] },
+      // S22 · PR 435 — the support app: install it, notifications on this device (each person their own).
+      { id: 'app', pages: [{ href: '/admin/support/app', perm: 'support.read', keys: ['supportApp'] }] },
     ],
   },
   {

@@ -10,11 +10,13 @@ import { MESSENGER_SIGNATURE_HEADER } from '@extas/adapters';
 import { adminDeps } from '@/lib/admin-auth';
 import { readCapped } from '@/lib/erp-webhook';
 import { messengerWebhookMaxBytes, receiveMessengerWebhook, supportConnections, verifyMessengerWebhook, type MessengerWebhookDeps } from '@/lib/support-connect';
+import { supportPushWiring } from '@/lib/support-push';
 
 export const dynamic = 'force-dynamic';
 
 async function depsFor(deps: NonNullable<ReturnType<typeof adminDeps>>): Promise<MessengerWebhookDeps> {
-  return { db: deps.db, settings: deps.resolver, connections: await supportConnections(deps), now: deps.now };
+  // PR 435: a message wakes the support app's devices (support.app off as it ships)
+  return { db: deps.db, settings: deps.resolver, connections: await supportConnections(deps), now: deps.now, push: supportPushWiring(deps) };
 }
 
 const answer = (status: number, body: Record<string, unknown>) => Response.json(body, { status, headers: { 'cache-control': 'no-store' } });

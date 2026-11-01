@@ -112,6 +112,8 @@ export * from './registry-support-drafts';
 export * from './registry-support-followup';
 // S22 · PR 434 — privacy inside support and the block list (registry-support-privacy.ts, versions 185–186).
 export * from './registry-support-privacy';
+// S22 · PR 435 — the support app: installable, support-only frame, push notifications (registry-support-app.ts, version 187).
+export * from './registry-support-app';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

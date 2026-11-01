@@ -103,7 +103,8 @@
       "support": {
         "inbox": "Inbox",
         "settings": "Support settings",
-        "riderIssues": "Rider issues"
+        "riderIssues": "Rider issues",
+        "app": "Support app"
       },
       "money": {
         "books": "Books",

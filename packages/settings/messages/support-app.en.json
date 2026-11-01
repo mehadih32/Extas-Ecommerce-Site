@@ -1,0 +1,8 @@
+{
+  "support": {
+    "app": {
+      "label": "Support app",
+      "help": "Lets employees install support on its own, like Messenger: an icon on the phone or computer that opens only support, with notifications. Each employee sets up their own device on Support → Support app. Notifications go out only once the push key is in Keys & connections and its Test passed; until then nothing leaves the server."
+    }
+  }
+}

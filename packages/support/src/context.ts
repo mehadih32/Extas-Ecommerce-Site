@@ -5,6 +5,7 @@ import type { Prisma, PrismaClient } from '@extas/db/client';
 import { audit, can, requirePermission, type Actor, type PermissionKey, type RequestContext } from '@extas/auth';
 import type { Key, storeTarget, Value } from '@extas/settings';
 import type { z } from 'zod';
+import type { SupportPushWiring } from './push';
 import type { ChannelAdapters } from './channels';
 
 /** Reads effective settings for a store (the app passes its SettingsResolver). */
@@ -27,6 +28,8 @@ export interface SupportDeps {
   /** The channels that can send a reply (PR 426). Missing or empty: a reply is kept and marked not sent. */
   channels?: ChannelAdapters;
   now?: () => Date;
+  /** PR 435: the support app's push notifications (a sender and the words). Missing: nobody is pushed. */
+  push?: SupportPushWiring;
 }
 
 export const nowOf = (deps: Pick<SupportDeps, 'now'>): Date => deps.now?.() ?? new Date();
@@ -67,6 +70,8 @@ export const SUPPORT_ERROR_CODES = [
   // PR 434: the block list is switched off; the chat's person is on the block list (no reply, no change)
   'BLOCK_OFF',
   'BLOCKED',
+  // PR 435: the support app's notifications are switched off
+  'PUSH_OFF',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 

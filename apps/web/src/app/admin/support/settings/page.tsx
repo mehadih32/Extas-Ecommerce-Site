@@ -19,12 +19,15 @@
 // "More options" the follow-ups' words.
 // PR 434: the "Privacy inside support" card (own chats only, numbers in messages masked; off) and the "Support block
 // list" card (off; blocking itself needs `support.block`, the owner's).
+// PR 435: the "Support app" card (off as it ships) — offer the app, its name, notifications, what they are about, what
+// a locked phone shows, how long a phone that is off is tried.
 // PR 427: the "Who is writing" card (off as it ships) — the number from WhatsApp or the chat's words, its customer, one
 // person across channels.
 // Optional behaviour ships off. Nothing here moves money or changes an order.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { SUPPORT_APP_EVENTS, SUPPORT_APP_NAME_MAX, SUPPORT_APP_PREVIEWS } from '@extas/settings';
 import * as sp from '@extas/support';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
@@ -160,6 +163,15 @@ export default async function SupportSettingsPage() {
     { kind: 'switch', path: 'maskNumbersInText', label: s('privacy.maskNumbersInText'), help: s('privacy.maskNumbersInTextHelp') },
   ];
   const blockList: FieldsCardField[] = [{ kind: 'switch', path: 'enabled', label: s('blockList.enabled'), help: s('blockList.enabledHelp') }];
+  // PR 435: the support app (off as it ships)
+  const app: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('app.enabled'), help: s('app.enabledHelp') },
+    { kind: 'text', path: 'appName', label: s('app.appName'), help: s('app.appNameHelp'), max: SUPPORT_APP_NAME_MAX },
+    { kind: 'switch', path: 'push', label: s('app.push'), help: s('app.pushHelp') },
+    { kind: 'checks', path: 'events', label: s('app.events'), options: SUPPORT_APP_EVENTS.map((v) => ({ value: v, label: s(`app.event.${v}`) })) },
+    { kind: 'select', path: 'preview', label: s('app.preview'), options: SUPPORT_APP_PREVIEWS.map((v) => ({ value: v, label: s(`app.previewOpt.${v}`) })) },
+    { kind: 'number', path: 'ttlMinutes', label: s('app.ttlMinutes'), min: 1, max: 1440 },
+  ];
   // PR 427: who is writing (off as it ships)
   const identity: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: s('identity.enabled'), help: s('identity.enabledHelp') },
@@ -198,6 +210,7 @@ export default async function SupportSettingsPage() {
       <FieldsCard url={API} screen={screen('support.followUp')} fields={followUp} texts={texts('followUp')} canEdit={canEdit} testId="support-set-followup" />
       <FieldsCard url={API} screen={screen('support.privacy')} fields={privacy} texts={texts('privacy')} canEdit={canEdit} testId="support-set-privacy" />
       <FieldsCard url={API} screen={screen('support.blockList')} fields={blockList} texts={texts('blockList')} canEdit={canEdit} testId="support-set-blocklist" />
+      <FieldsCard url={API} screen={screen('support.app')} fields={app} texts={texts('app')} canEdit={canEdit} testId="support-set-app" />
       <p className="a2-xs a2-mute a2-mt12" data-testid="support-set-phones">{s('phones')}</p>
       <details className="a2-card a2-mt12" data-testid="support-set-more">
         <summary className="a2-h4">{s('more')}</summary>

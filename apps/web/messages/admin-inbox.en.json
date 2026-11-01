@@ -207,7 +207,8 @@
       "FOLLOW_UP_OFF": "Follow-ups are switched off in Support settings.",
       "FOLLOW_UP_GONE": "This follow-up was already sent, skipped or closed, or the customer wrote meanwhile; it was read again.",
       "BLOCK_OFF": "The support block list is switched off in Support settings.",
-      "BLOCKED": "This person is on the support block list; no reply goes out."
+      "BLOCKED": "This person is on the support block list; no reply goes out.",
+      "PUSH_OFF": "Notifications are switched off in Support settings."
     },
     "set": {
       "title": "Support settings",
@@ -451,6 +452,28 @@
         "d": "Lets a person allowed to block (the owner, unless he gives it to a role) put a chat's person on the list with a reason. Nothing is deleted.",
         "enabled": "Support block list",
         "enabledHelp": "Off: nobody counts as blocked (the list is kept). On: blocked people's chats move to the Blocked view, with no ticket, follow-up or reply."
+      },
+      "app": {
+        "h": "Support app",
+        "d": "Support on its own icon, like Messenger: it opens only support and can notify on the phone or computer. Each employee sets up their own device on Support → Support app.",
+        "enabled": "Offer the support app",
+        "enabledHelp": "The support pages can be installed as an app (Android, iPhone, computer). Installed, it shows only support.",
+        "appName": "Name under the icon",
+        "appNameHelp": "Empty: the shop's name and “Support”.",
+        "push": "Notifications",
+        "pushHelp": "On the devices where an employee switched them on. Nothing leaves the server until the push key is in Keys & connections and its Test passed.",
+        "events": "Notify when",
+        "event": {
+          "message": "A customer writes (to the chat's owner, or everyone who may answer while nobody owns it)",
+          "assigned": "A chat is given to someone"
+        },
+        "preview": "On a locked phone show",
+        "previewOpt": {
+          "none": "Only that there is a message",
+          "name": "The customer's name",
+          "text": "The name and the start of the message"
+        },
+        "ttlMinutes": "Keep trying a phone that is off for (minutes)"
       }
     },
     "person": {
@@ -628,6 +651,65 @@
       "blocked": "Blocked. The chat moved to the Blocked view.",
       "unblocked": "Taken off the block list.",
       "note": "This person is on the support block list since {at}: {reason}. Their messages are kept; no reply goes out."
+    },
+    "app": {
+      "title": "Support app",
+      "sub": "Install support on this phone or computer and get notified about new chats.",
+      "off": "The support app is switched off in Support settings.",
+      "offLink": "Open Support settings",
+      "install": {
+        "h": "Install",
+        "d": "Put support on its own icon. Installed, it opens only support.",
+        "button": "Install the app",
+        "done": "Installed on this device.",
+        "ios": "On iPhone or iPad: open this page in Safari, tap Share, then “Add to Home Screen”.",
+        "other": "In your browser's menu choose “Install app” or “Add to Home screen”.",
+        "standalone": "You are in the support app."
+      },
+      "notify": {
+        "h": "Notifications on this device",
+        "d": "New messages and chats given to you, even when the app is closed.",
+        "pushOff": "Notifications are switched off in Support settings.",
+        "practice": "Practice mode: the push key is not in Keys & connections yet, so nothing reaches a phone. The owner adds it there.",
+        "on": "Turn on",
+        "off": "Turn off",
+        "isOn": "On for this device",
+        "isOffHere": "Off for this device",
+        "test": "Send a test notification",
+        "tested": "Test sent to {n} device(s).",
+        "testedPractice": "Practice mode: the test was kept on the server, not sent.",
+        "denied": "Notifications are blocked for this site in the browser's settings. Allow them there, then try again.",
+        "unsupported": "This browser cannot get notifications. On iPhone, install the app first (Add to Home Screen), then open it from its icon.",
+        "failed": "Could not switch notifications: {why}"
+      },
+      "devices": {
+        "h": "Your devices",
+        "none": "No device has notifications on yet.",
+        "since": "On since {date}",
+        "last": "Last notification {date}",
+        "failing": "{n} failed tries",
+        "unnamed": "A device"
+      },
+      "offline": {
+        "title": "No internet",
+        "body": "Support opens again when the connection is back."
+      },
+      "push": {
+        "someone": "A customer",
+        "message": "New message on {channel}",
+        "assigned": "A chat on {channel} was given to you",
+        "testTitle": "Support app",
+        "testBody": "Notifications work on this device."
+      },
+      "err": {
+        "PUSH_OFF": "Notifications are switched off in Support settings.",
+        "INVALID_INPUT": "This device gave something the shop cannot use.",
+        "forbidden": "You may not do this.",
+        "unauthorized": "Please sign in again.",
+        "network": "No connection. Try again.",
+        "other": "Something went wrong. Try again."
+      },
+      "word": "Support"
     }
   }
 }

@@ -31,6 +31,11 @@
 //   POST  /api/admin/support/c/:id/followup     PR 433: {action: send, followUpId, body, requestKey, version} the follow-up
 //                                               sent as the person's own reply; {action: skip, followUpId} skipped
 //                                               (support.reply; 422 FOLLOW_UP_OFF while off, 409 FOLLOW_UP_GONE)
+//   GET   /api/admin/support/app                PR 435: the support app for this person (on, push on, practice, the key
+//                                               a device subscribes with, their devices) (support.read)
+//   POST  /api/admin/support/app                {action: on, endpoint, keys{p256dh, auth}, label?} notifications on for this
+//                                               device; {action: off, endpoint}; {action: test} a test to their devices
+//                                               (support.read; 422 PUSH_OFF while off)
 //   POST  /api/admin/support/c/:id/block        PR 434: {action: block, reason, version?} the chat's person on the support
 //                                               block list; {action: unblock, version?} taken off (support.block; 422
 //                                               BLOCK_OFF while the list is off)
@@ -60,6 +65,7 @@ import { hrefIn } from './shop/lang';
 import { ROUTES } from './shop/routes';
 import { siteAddress } from './seo/site';
 import { supportConnections, supportSenders } from './support-connect';
+import { supportPushWiring } from './support-push';
 import inboxEn from '../../messages/admin-inbox.en.json';
 
 /** How the inbox names the live chat's channel when it is made (the team can rename it). */
@@ -79,7 +85,8 @@ function supportFail(e: unknown): Response {
 /** The support core's dependencies from the admin's, with the channels' reply adapters (PR 426). */
 export const supportDeps = (d: AdminDeps): sp.SupportDeps => {
   const base = { db: d.db, settings: d.resolver, now: d.now };
-  return { ...base, channels: sp.supportChannelAdapters(base, supportSenders(() => supportConnections(d))) };
+  // PR 435: the support app's notifications (a new message, a chat given to someone)
+  return { ...base, channels: sp.supportChannelAdapters(base, supportSenders(() => supportConnections(d))), push: supportPushWiring(d) };
 };
 
 /**
@@ -110,6 +117,7 @@ function routeOf(path: string[], method: string): Route | null {
   if (a === 'files' && b === undefined && c === undefined) return { perm: 'support.reply', methods: ['POST'] };
   if (a === 'files' && isUuid(b) && c === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'staff' && b === undefined) return { perm: 'support.read', methods: ['GET'] };
+  if (a === 'app' && b === undefined) return { perm: 'support.read', methods: ['GET', 'POST'] };
   if (a === 'settings' && b === undefined) return { perm: method === 'PUT' ? 'support.settings' : 'support.read', methods: ['GET', 'PUT'] };
   if (a === 'channels' && b === undefined) return { perm: method === 'POST' ? 'support.settings' : 'support.read', methods: ['GET', 'POST'] };
   return null;
@@ -242,6 +250,14 @@ export async function supportRoute(request: Request, deps: AdminDeps | null, pat
       return id ? await download(d, files, who, id) : await upload(request, d, files, storeId, g.actor.staffUserId);
     }
     if (a === 'staff') return json({ ok: true, staff: await sp.supportStaff(sd, who) });
+    if (a === 'app') {
+      if (m === 'GET') return json({ ok: true, app: await sp.supportAppState(sd, who) });
+      const { action: what, ...rest } = (await body(request)) as { action?: unknown };
+      if (what === 'on') return json({ ok: true, app: await sp.saveSupportDevice(sd, who, rest) });
+      if (what === 'off') return json({ ok: true, app: await sp.removeSupportDevice(sd, who, rest) });
+      if (what === 'test') return json({ ok: true, ...(await sp.testSupportPush(sd, who)) });
+      return fail(400, 'INVALID_INPUT', ['action']);
+    }
     if (a === 'catalogue') return json({ ok: true, ...(await sp.chatCatalogue(sd, who, { q: (url.searchParams.get('q') ?? '').slice(0, 80) })) });
     if (a === 'channels') {
       if (m === 'GET') return json({ ok: true, ...(await sp.supportChannels(sd, who)) });

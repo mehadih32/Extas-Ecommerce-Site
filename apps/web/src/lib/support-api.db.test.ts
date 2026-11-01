@@ -176,7 +176,7 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const r = await j('GET', ['settings']);
     const files = { enabled: true, maxPerMessage: 4, maxMb: 10, kinds: { image: true, video: true, pdf: true } };
     expect(r.body.cards['support.attachments'].value).toEqual(files);
-    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.blockList', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.draftKeywords', 'support.draftWords', 'support.drafts', 'support.followUp', 'support.followUpWords', 'support.identity', 'support.inbox', 'support.liveChat', 'support.privacy', 'support.tickets']);
+    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.app', 'support.attachments', 'support.blockList', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.draftKeywords', 'support.draftWords', 'support.drafts', 'support.followUp', 'support.followUpWords', 'support.identity', 'support.inbox', 'support.liveChat', 'support.privacy', 'support.tickets']);
     const version = r.body.cards['support.attachments'].version as string;
     const saved = await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxPerMessage: 3 }, version } });
     expect(saved.status).toBe(200);
@@ -407,5 +407,25 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     expect((await j('GET', [], { query: '?view=blocked' })).body.rows).toEqual([]);
     const now = (await j('GET', ['settings'])).body.cards['support.blockList'];
     expect((await j('PUT', ['settings'], { body: { key: 'support.blockList', value: { enabled: false }, version: now.version } })).status).toBe(200);
+  });
+
+  it('PR 435: the support app — off as shipped (no device); on, a device is switched on and off, a test runs on the push mock (nothing leaves)', async () => {
+    const off = (await j('GET', ['app'])).body;
+    expect(off).toEqual({ ok: true, app: { enabled: false, push: false, practice: true, publicKey: null, devices: [] } });
+    const device = { endpoint: 'https://push.example.com/send/sample-435', keys: { p256dh: 'BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4', auth: 'BTBZMqHH6r4Tts7J_aSIgg' }, label: 'Sample phone' };
+    const refused = await j('POST', ['app'], { body: { action: 'on', ...device } });
+    expect([refused.status, refused.body.error]).toEqual([422, 'PUSH_OFF']);
+    const card = (await j('GET', ['settings'])).body.cards['support.app'];
+    expect(card.value).toEqual({ enabled: false, appName: '', push: false, events: ['message', 'assigned'], preview: 'name', ttlMinutes: 60 });
+    expect((await j('PUT', ['settings'], { body: { key: 'support.app', value: { ...card.value, enabled: true, push: true }, version: card.version } })).status).toBe(200);
+    expect((await j('POST', ['app'], { body: { action: 'nope' } })).status).toBe(400);
+    const on = (await j('POST', ['app'], { body: { action: 'on', ...device } })).body;
+    expect(on.app).toMatchObject({ enabled: true, push: true, practice: true, publicKey: null, devices: [expect.objectContaining({ label: 'Sample phone', failCount: 0 })] });
+    expect((await j('POST', ['app'], { body: { action: 'test' } })).body).toEqual({ ok: true, devices: 1, sent: 1, failed: 0, gone: 0, practice: true });
+    // a reader may set up their own device too, but sees none of the others'
+    expect((await j('GET', ['app'], { cookie: reader })).body.app.devices).toEqual([]);
+    expect((await j('POST', ['app'], { body: { action: 'off', endpoint: device.endpoint } })).body.app.devices).toEqual([]);
+    const now = (await j('GET', ['settings'])).body.cards['support.app'];
+    expect((await j('PUT', ['settings'], { body: { key: 'support.app', value: { ...now.value, enabled: false, push: false }, version: now.version } })).status).toBe(200);
   });
 });
