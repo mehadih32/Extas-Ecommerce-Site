@@ -29,6 +29,7 @@
 // the same line instead of a toast. Confirm still asks the server, which decides: no order is made during a pause.
 // S06 · PR 556: `transit` — while the owner's in-transit duplicate notice is on, a whole phone number is checked once and
 // a piece already on its way to him opens the notice (TransitNotice).
+// PR 557: the notice gets the exchange policy's link for its "another size: exchange on arrival" kind.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { checkForm, checkGift, GIFT_FIELDS, latinDigits, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type GiftField, type PaymentChoice } from '@extas/checkout/pure';
 import { askKey, confirmedOf, payChoiceOf, payOpens, stillAsked } from '@/lib/shop/checkout-model';
@@ -667,7 +668,7 @@ export function CheckoutForm({
                 />
                 {gpsCfg ? <GpsShare cfg={gpsCfg} value={point} onChange={setPoint} w={w} /> : null}
                 {callMe.offer ? <CallMeCard offer={callMe.offer} phone={form.phone} name={form.name} lang={money.lang} w={w} onAway={callMe.putAway} /> : null}
-                {transit ? <TransitNotice phone={form.phone} cfg={transit} w={w} lang={money.lang} /> : null}
+                {transit ? <TransitNotice phone={form.phone} cfg={transit} w={w} lang={money.lang} exchangeHref={links.exchange} /> : null}
               </div>
             </section>
             <section className="card co-sec" data-testid="co-delivery">

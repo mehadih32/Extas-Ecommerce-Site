@@ -2,6 +2,7 @@
 // says is open now AND the person's keys allow (a role without orders.cancel gets no Cancel); a paid order's cancel
 // says it records a refund REQUEST and nothing more; the dialog sends exactly the fields, the note an "Other" reason
 // needs and the order's version; a refusal is a stable code with its own words, and a lost connection never throws.
+// S06 · PR 557: the earlier order's "may exchange on arrival" timeline line, in both languages.
 import { describe, expect, it, vi } from 'vitest';
 import type * as od from '@extas/orders';
 import { ORDER_COMMANDS, type OrderCommand } from '@extas/orders/pure';
@@ -12,7 +13,7 @@ import type { AdminView } from '../admin-page';
 import { t, type Dict } from '../i18n';
 import { COMMAND_PATHS, KNOWN_ERRORS, commandUrl, errorKey, newKey, refundRequestsOf, send } from './commands';
 import { editBody } from '../orders-api';
-import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, rebookSpecs, returnReasonSpecs, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
+import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, exchangeIntentLine, rebookSpecs, returnReasonSpecs, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
 import { flagChips } from './list';
 import { invoiceHref } from './model';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec } from './spec';
@@ -313,5 +314,20 @@ describe('PR 146 · the two-size band (SIM-F-036)', () => {
     expect(twoSizeSummary(view('en'), 'order.twoSizeCheck', { asked: [], noted: [{ product: 'Oxford shirt', sizes: [{ label: 'S' }, { label: 'M' }, { label: 'L' }] }] })).toBe('for someone else (said in the bag): Oxford shirt S + M + L');
     expect(twoSizeSummary(view('en'), 'order.twoSizeAnswer', { product: 'Oxford shirt', sizes: ['S', 'M'], keep: 'M', applied: true, via: 'order-page' })).toContain('Oxford shirt S + M: keep M');
     expect(twoSizeSummary(view('en'), 'order.twoSizeAnswer', { product: 'Oxford shirt', sizes: ['S', 'M'], keep: 'M', applied: false })).toContain('offer');
+  });
+});
+
+describe('PR 557 · the earlier order\'s exchange-on-arrival line', () => {
+  it('names the size he wants, in English and Bengali; without a size it adds nothing', () => {
+    expect(exchangeIntentLine(view('en'), { size: 'L', variantId: ID })).toContain('size L');
+    expect(exchangeIntentLine(view('bn'), { size: 'L' })).toContain('L');
+    expect(exchangeIntentLine(view('en'), { size: null })).toBeNull();
+    expect(exchangeIntentLine(view('en'), null)).toBeNull();
+  });
+
+  it('its title and line exist in both languages', () => {
+    for (const k of ['orders.ev.order_exchangeIntent', 'orders.ev.exchangeIntent', 'orders.rr.td.sizeExchange', 'orders.rr.td.sizeExchangeHelp', 'orders.rr.td.col.size']) {
+      for (const d of [en, bn] as Dict[]) expect(t(d, k), k).not.toBe(k);
+    }
   });
 });

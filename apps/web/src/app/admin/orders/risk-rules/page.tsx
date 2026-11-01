@@ -7,7 +7,8 @@
 // `risk.refuser.terms`, only ever a proposal on a new order); PR 522: the One parcel card; PR 523: the Blocklist proposal
 // card (the number of rejections that proposes a number; a person decides in the Blocklist card); PR 524: the Good
 // customers card (a good customer is never held by the engine by itself; the stops show in Reports › Stopped by the
-// engine); PR 556: the Parcel already on its way card (the checkout notice) and its report by campaign (`risk.report`).
+// engine); PR 556: the Parcel already on its way card (the checkout notice) and its report by campaign (`risk.report`);
+// PR 557: that card's "another size: exchange on arrival" switch and the report's "of them, another size" column.
 // The risk matrix, the rule switches (PR 544's API), the duplicate rules and
 // protection & learning join with their PRs. Seeing needs `risk.rules.read`, saving `risk.rules.write`; the API checks
 // each again. Everything ships off.
@@ -116,7 +117,7 @@ export default async function RiskRulesPage() {
     { kind: 'number', path: 'maxRefused', label: gw('maxRefused'), help: gw('maxRefusedHelp'), min: 0, max: 20 },
   ];
   // PR 556: the in-transit duplicate notice at checkout (the setting `checkout.transitDuplicate`, off as shipped) and its
-  // report by campaign (risk.report)
+  // report by campaign (risk.report); PR 557: its "another size: exchange on arrival" switch and the report's size column
   const tw = (k: string, vars?: Record<string, string | number>) => t(d, `orders.rr.td.${k}`, vars);
   const tdTexts: FieldsCardTexts = { ...bdTexts, h: tw('h'), d: tw('d'), readOnly: tw('readOnly'), err: Object.fromEntries(Object.keys(bdTexts.err).map((c) => [c, tw(`err.${c}`)])) };
   const tdFields: FieldsCardField[] = [
@@ -124,6 +125,7 @@ export default async function RiskRulesPage() {
     { kind: 'select', path: 'include', label: tw('include'), help: tw('includeHelp'), options: TRANSIT_INCLUDE.map((x) => ({ value: x, label: tw(`inc.${x}`) })) },
     { kind: 'number', path: 'windowDays', label: tw('windowDays'), help: tw('windowDaysHelp'), min: 1, max: 120 },
     { kind: 'switch', path: 'byPhoneAlone', label: tw('byPhoneAlone'), help: tw('byPhoneAloneHelp') },
+    { kind: 'switch', path: 'sizeExchange', label: tw('sizeExchange'), help: tw('sizeExchangeHelp') },
     { kind: 'number', path: 'reportDays', label: tw('reportDays'), help: tw('reportDaysHelp'), min: 1, max: 365 },
   ];
   const count = (x: number) => String(x);
@@ -160,6 +162,7 @@ export default async function RiskRulesPage() {
                     <th className="r">{tw('col.shown')}</th>
                     <th className="r">{tw('col.removed')}</th>
                     <th className="r">{tw('col.kept')}</th>
+                    <th className="r">{tw('col.size')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -174,6 +177,9 @@ export default async function RiskRulesPage() {
                       </td>
                       <td className="r" data-l={tw('col.kept')}>
                         <span className="a2-num">{count(r.kept)}</span>
+                      </td>
+                      <td className="r" data-l={tw('col.size')}>
+                        <span className="a2-num">{count(r.size)}</span>
                       </td>
                     </tr>
                   ))}

@@ -177,7 +177,10 @@ describe('S06 risk settings (v100–109)', () => {
       expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
       expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
     }
-    expect(spec.default).toMatchObject({ enabled: false, include: 'shipped', byPhoneAlone: false });
+    expect(spec.default).toMatchObject({ enabled: false, include: 'shipped', byPhoneAlone: false, sizeExchange: false });
+    // PR 557: a value saved before the size exchange existed still reads, with it off
+    const { sizeExchange: _gone, ...before557 } = spec.default;
+    expect(checkoutTransitDuplicateSchema.parse(before557).sizeExchange).toBe(false);
     expect(checkoutTransitDuplicateSchema.safeParse({ ...spec.default, enabled: true, include: 'open', byPhoneAlone: true }).success).toBe(true);
     for (const bad of [{ include: 'all' }, { windowDays: 0 }, { windowDays: 121 }, { reportDays: 0 }, { extra: 1 }]) expect(checkoutTransitDuplicateSchema.safeParse({ ...spec.default, ...bad }).success, JSON.stringify(bad)).toBe(false);
   });
