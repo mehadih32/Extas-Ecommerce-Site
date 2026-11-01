@@ -40,7 +40,7 @@ documents to it ([how](#how-it-is-built)).
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 304/305** · every buildable Launch row is built (#70); PR [403](docs/stages/S19.md#pr-403) built in #71: the main domain's own switch, shipped closed (opening it on go-live day stays the owner's step, BLOCKED 25). Review round 1 (#71) and round 2 (#72) fixes merged. 1 left: PR [587](docs/stages/S19.md#pr-587) (the main-domain switch, after the CN-013 go-live gate). Batch 4 (#73): the 13 go-live gate fixes (SIM-F-004, 019, 025, 031, 041, 046, 047, 048, 050, 051, 052, 053, 054) as follow-ups on built Launch rows, with the review round 3 fixes folded in. The go-live gate journeys (#74, PR [414](docs/stages/S21.md#pr-414) follow-up): CN-013 phase 2 runs on new.extas.com.bd as the journeys workflow's `go-live-gate` group, ordering and changing nothing; of its 38 live checks 8 are proved by the journeys, 24 by CI tests and 6 need a real test order. The After-launch list runs meanwhile, by priority (CN-031): #73 built 30 rows (S06 9, S07 2, S08 5, S18 4, S21 10); S07, S08 and S18 are done |
+| Launch | **Launch 304/305** · every buildable Launch row is built (#70); PR [403](docs/stages/S19.md#pr-403) built in #71: the main domain's own switch, shipped closed (opening it on go-live day stays the owner's step, BLOCKED 25). Review round 1 (#71) and round 2 (#72) fixes merged. 1 left: PR [587](docs/stages/S19.md#pr-587) (the main-domain switch, after the CN-013 go-live gate). Batch 4 (#73): the 13 go-live gate fixes (SIM-F-004, 019, 025, 031, 041, 046, 047, 048, 050, 051, 052, 053, 054) as follow-ups on built Launch rows, with the review round 3 fixes folded in. The go-live gate journeys (#74, PR [414](docs/stages/S21.md#pr-414) follow-up): CN-013 phase 2 runs on new.extas.com.bd as the journeys workflow's `go-live-gate` group, ordering and changing nothing; of its 38 live checks 8 are proved by the journeys, 24 by CI tests and 6 need a real test order. The After-launch list runs meanwhile, by priority (CN-031): #73 built 30 rows (S06 9, S07 2, S08 5, S18 4, S21 10); S07 and S08 are done (S18 was done until CN-034 added PR [623](docs/stages/S18.md#pr-623)). The go-live gate test orders and customer 360° runs (#75, PR [414](docs/stages/S21.md#pr-414) follow-ups): two by-hand workflows on the preview, 18 test-order scenarios and one customer's whole life cycle; four customer gaps they found are fixed (PR [257](docs/stages/S13.md#pr-257), 144, 75, 425 follow-ups) and three more are filed as After-launch PR [622–624](docs/stages/README.md) (CN-034) |
 | Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 28/33** (wave 2) · **S04 41/42** · **S05 21/21** · **S07 10/10** · **S08 26/26** (wave 3) · **S11 14/22** · **S13 1/35** (wave 5) · **S16 9/22** · **S21 13/14** (wave 6) · **S17 1/24** · **S18 14/15** · **S19 16/17** (wave 8) · **S14 7/24** · **S20 1/9** · **S22 2/14** (wave 4) · total **356/618** active PRs |
 | Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups); since 31 Oct 17:25 (#68) also Website › SEO › Redirects & 404, Settings › Sign-in & security and Settings › System › Backups; since 31 Oct 19:14 (#69) also Settings › Store details, Privacy & data, Policies & texts, Cloudflare protection, Settings › System › Go-live (restore, first-week watch), Reports › Site health and Money › Overview; since 31 Oct 22:46 (#70) also Website › SEO (collection pages, sitemaps, robots.txt, photo descriptions, Search Console and Bing, real visitors' speed, language pairs, Bengali pages), Marketing › Tracking, Money › Cost ledger, Expenses, Costs & fees and Month-end, Reports › Site health › Customer problems and journeys, and the Support channels; since 1 Nov 02:36 (#71) also the review round 1 fixes (Set delivery area on an order, test payments off by default, staging always on its own locked block); since 1 Nov 04:21 (#72) also the review round 2 fixes (`/status` on the preview host only, the unpaid hold's end, the Caddy body limits). Batch 4 (#73: Refunds & wallet, the Wallet tab, Fraud & RTO, Today's digest, Calls to make, Stopped by the engine, Decisions & learning, Delivery & RTO, Rider issues, Delivery › Settings, Eid order-by dates, the Site manual, Speed, Smoke runs, Run history, Fixes to approve, Checklist audit) goes live with the next deploy |
 | Last deploy | 1 Nov 2026, 04:21 (Dhaka) · commit `f5d916f` (#72 review round 2 fixes: 11 follow-ups) · **success**, smoke test 268 pages OK (nightly run 06:15 PASS); batch 4 (#73) goes live with the next deploy |
@@ -918,6 +918,12 @@ admin screen). Migration `0049_erp_v6` (additive), settings registry v62 (`packa
 - **Wishlist (71):** hearts kept for this browser on the server (no login), the wishlist page with Add to bag (the
   saved size), Choose a size and Remove, the empty list with the newest products on a computer, the bag's "Move to
   wishlist" with Undo; "Tell me when it is back" waits for a real sender (follow-up 70).
+- **"Send us a message" on the contact page (1 Nov, #75, PR 75 follow-up, go-live gate customer 360°):** `/help/contact`
+  has the demo's form (name, phone, order number, message); it lands in Support › Inbox as a conversation from his number,
+  linked to the order he names only when it was placed with that number. The same form twice is one message; one number
+  may send `perPhonePerDay` a day; a message is at most `maxChars`. Off as shipped (`pages.contactForm`, registry v231);
+  the switch and both numbers are on Settings › Policies & texts › Contact. Nothing is sent to the customer and nothing
+  changes an order. Guide `pages/settings/policies.md`; tests on PostgreSQL (support, shop API, admin API) and the form.
 - **Menu and help pages (74, 75):** the phone menu opens a category's sub-categories in place ("View all" first, a
   count on each row); help pages from the live Smart Rules' texts, the owner's own words and the store's details —
   privacy, terms and our story wait for the owner's words and say "Coming soon" until then (CN-017); on a computer a
@@ -1248,6 +1254,11 @@ on the order page (WAIT, REPLACE, CANCEL), and the order page's ERP card. Detail
 **Built (PR 138, 144, 145, 147, 153): the order core.** Package `@extas/orders`, migration `0018_order_core`, settings group `orders` (registry v32); its screens are PR 140–154 below.
 - **One order service (138):** the states DRAFT, PLACED, AWAITING_ADVANCE, CONFIRMED, ON_HOLD, PROCESSING, PACKED, HANDED_OVER, IN_TRANSIT, DELIVERED, PARTIALLY_DELIVERED, RETURNED, CANCELLED and every command's from → to in `src/pure.ts`; `execute()` runs each command with the order's row lock, the screen's `version` (STALE), the plan (ILLEGAL_TRANSITION with the commands open now), its effects, an OrderEvent (who, when, from, to, reason) and an AuditLog row in one transaction, and an `Idempotency-Key` (a repeat gets the first answer). Flags cancelPending and customerWantsChange; courier, payment and return statuses stay their own records, moved only through the hooks (`awaitAdvance`, `recordAdvance`, `orderStep`) S06–S08 will call. A guard test fails when any other code writes Order.status.
 - **Cancel (144):** nine fixed reason codes with the owner's words in both languages (`orders.cancel.reasons`; "Other" needs a note). The cancel releases the order's stock holds, closes a payment still waiting, closes call tasks and reviews, queues the CANCELLED status for the ERP when it had the order, and for anything paid (online or wallet) records a refund **request** only — no money moves (SIM-F-041). A booked order is never cancelled in one step: cancel after booking, then the courier's answer (confirmed → cancelled; refused → the parcel goes on, "customer wants a change", never a risk signal; SIM-F-004). The customer's own cancel (CN-020 (5), SIM-F-056): one tap until the cut-off (`orders.cancel.customer`: off / never / until confirmed (default) / until packed), then a request the team approves or refuses, until booking; `POST /api/account/cancel` and `cancel-state` (no shop button yet, follow-up 190).
+- **"Cancel this order" for the customer (1 Nov, #75, PR 144 follow-up, go-live gate customer 360°):** the order page
+  `/account/orders/<n>` now draws the cancel card as `orders.cancel.customer` allows it for that order (one tap until the
+  cut-off, then a request the team answers, never once a courier is booked): one of the owner's reasons, an optional note,
+  then a clear "Yes"; it goes through the one order service, which checks the window again under the order's lock. A
+  paid order's cancel records a refund request for the approval queue only, and the card says so. Words `account.cancel.*`.
 - **Duplicate defence (145):** the checkout's one-press key and the converted bag; then, when the order lands, other open orders of the same customer or phone in `orders.duplicates.lookbackDays` (5) days, high (same SKU, or same product and colour), medium (same product, other colour) or low (same category); from `reviewFrom` (medium) the order waits in the review queue and cannot be confirmed; decisions not a duplicate / cancel as duplicate / hold / ask the customer (a call task) / one parcel (an OrderGroup, money untouched), each with a FraudDecision, audit and timeline row; auto-hold of a high match off by default.
 - **Notes and flags (147):** internal notes (archived, never deleted; `orders.notes.maxChars`), internal flags from `orders.flags.list`.
 - **Hold and release (153):** a reason from `orders.hold.reasons` (support reads it on the order), release back to where it was held from; `orderFollowUps` makes one call task for a hold older than `orders.hold.reviewHours` or an advance past `orders.advance.waitHours` (both 0 = off) and never cancels (SIM-F-043).
@@ -1668,7 +1679,13 @@ who-did-what log `ConversationEvent` is append-only at the database); settings r
   [Conversation](docs/admin-guide/pages/support/conversation.md), [Support settings](docs/admin-guide/pages/support/settings.md),
   [Support](docs/admin-guide/support.md).
 
-Still planned in S22: register PRs 427–436, 538.
+- **Bengali digits in the inbox search (1 Nov, #75, PR 425 follow-up, go-live gate customer 360°):** `inboxPhoneDigits`
+  (`search-pure.ts`) reads ০–৯ as 0–9 and drops +880 / 880 / 00880 and the leading 0, so a number finds the same
+  conversations however it is typed. Unit test beside it; the inbox DB test searches in Bengali digits.
+- **The contact form lands here (1 Nov, #75, PR 75 follow-up):** a "Send us a message" from `/help/contact` becomes a
+  conversation on the store's own hidden "Contact form" channel (never a sending channel), tagged `contact-form`.
+
+Still planned in S22: register PRs 427–436, 538 and, since 1 Nov, 624 (a Messenger button on the shop, CN-034, After launch).
 
 **Built (PR [426](docs/stages/S22.md#pr-426); 31 Oct, CN-031 lane A; not deployed yet): the channels come in.**
 
@@ -1840,6 +1857,13 @@ Planned — see register PRs 239–253, 528–530, 547, 591–593: [S12](docs/MA
 - **Tests:** `packages/adapters/test/ads.test.ts`, `apps/web/src/lib/tracking/model.test.ts`, `tracking.db.test.ts`
   (PostgreSQL), `edge-gate.test.ts`; smoke check and device gate. Later: the delivered-order event (PR 258), the richer
   stage events (PR 532), the masking layer (PR 311) and a browser pixel sharing the event ids.
+- **Where an order came from (1 Nov, #75, PR 257 follow-up, go-live gate customer 360°):** UTM tags and fbclid / gclid /
+  ttclid of a tagged shop page are kept in one first-party HttpOnly cookie (`__Host-extas_src`; only the link's tags and
+  the referring site, no personal data) and written on the order (`utmSource`, `utmMedium`, `utmCampaign`, `adPlatform`);
+  price, discount and COD unchanged; a Facebook click without the pixel's `_fbc` still reaches the Conversions API with
+  its click id. Setting `ads.attribution` (registry v230, on as shipped, B3.10): days a visit counts (30, 1–90), the
+  latest or the first visit; card "Where an order came from" on Marketing › Tracking (audited). Tests: the cookie and
+  visit rules, the proxy, the checkout row, the checkout API on and off, the admin card, the fbc on PostgreSQL.
 
 Planned — see register PRs 254–256, 258–283, 531–532, 548, 569, 589: [S13](docs/MASTER-REGISTER.md#s13--marketing--ads--pr-254283).
 
@@ -2086,6 +2110,22 @@ Guide index: [docs/admin-guide/README.md](docs/admin-guide/README.md).
   by hand: Actions › journeys, `mode` now, `group` go-live-gate; its summary (`state/journeys-go-live-gate.json`) and
   report (`docs/reports/journeys/go-live-gate/latest/`) stay apart from Site health's saved journeys. Of the 38 phase-2
   live checks, 8 are proved by the journeys, 24 by CI tests and 6 need a person with a real test order.
+  **Go-live gate test orders (1 Nov, #75, PR 414 follow-up, CN-013 phase 2, owner's OK for test orders on the preview):**
+  `gate-orders.yml` (by hand, on the VM) runs `infra/deploy/gate-orders.sh`: a host guard (only the preview host), an
+  oracle in the live migrate image that uses the shop's own package functions on mocks only (a live provider turns its
+  checks into SKIP), and 18 scenarios in real browsers on phones and desktops over throttled networks — baskets of 1, 3
+  and 8, the last piece and a race for it, mock bKash paid / failed / retried, one customer with 8 orders (3 cancelled),
+  /bn, double tap and reload, a dropped network, OTP sign-in, delivery bands, gate checks 1, 4, 7, 21, 23 and 24. Every
+  order has its own address (all 8 divisions), compared as typed, stored, in the admin, at the courier and on the
+  sticker. Clean-up cancels every test order and archives the products (nothing deleted); report
+  `docs/reports/gate-orders/latest/`. Proved locally 18/18 (15 pass, 3 skip).
+  **Customer 360° run (1 Nov, #75, PR 414 follow-up):** `gate-c360.yml` (by hand) runs `infra/deploy/gate-c360.sh` and
+  `tools/gate-c360/run.mjs`: one fresh "GATE TEST" customer before ordering (an ad link with its tags, the Facebook and
+  Messenger in-app browsers, search, size guide, wishlist, bag, a checkout left and resumed), ordering (guest, then the
+  same number signed in), every account option, every support channel and after ordering, on a mid Android phone, an
+  iPhone and a desktop in English and /bn. It refuses to run off the preview host or while any connection is live; each
+  step is PASS, FAIL or SKIP with its reason; report `docs/reports/gate-c360/latest/`; findings and the live-run log in
+  [`docs/qa/FINAL-ANALYSIS-2026-11.md`](docs/qa/FINAL-ANALYSIS-2026-11.md). CI type-checks both gates' server code.
 - **Customer problems (PR 423, CN-015):** a small probe in the shop layout reports script errors, failed or slow calls to
   the shop's server, failed or slow pages, a form field refused again and again, rage clicks and broken pictures (the
   "Start fresh" screen too); anonymous by construction (masked page patterns, scrubbed messages, device and browser
@@ -2250,6 +2290,9 @@ the shop's legal words and the last line of defence.**
   `admin-policies/api.db.test.ts`, `packages/rules/test/policy-text.test.ts`, `packages/adapters/test/shield.test.ts`,
   `admin-edge/api.db.test.ts`, `infra/tests/run.sh` (the lock check); the pages checked in a real browser at 390, 768, 1366
   and 1920 px.
+
+Planned in S18 since 1 Nov: PR 623, the customer's own privacy request from his account into the Privacy & data list
+(staff approval stays; `privacy.customerRequests`, off; CN-034, After launch).
 
 **Built (PR 620, After launch): signed calls from the ERP to the shop** (CN-028, docs/erp/site-changes-v6.md §2.7; no
 migration).
@@ -2476,6 +2519,13 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #75 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (go-live gate, CN-013 phase 2, owner's OK 1 Nov): test orders on the preview — `gate-orders.yml` with a host guard, a mock-only oracle and 18 browser scenarios (baskets, last piece, bKash mock, 8 orders for one customer, all 8 divisions' addresses compared from checkout to sticker), clean-up cancels and archives, nothing deleted. |
+| #75 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (go-live gate): the customer 360° run — `gate-c360.yml`, one test customer before, during and after an order, his account and support, on phones and a desktop in English and /bn; findings in `docs/qa/FINAL-ANALYSIS-2026-11.md`. |
+| #75 | PR [257](docs/stages/S13.md#pr-257) | 1 Nov | Follow-up (customer 360° finding 1): UTM tags and ad click ids kept in a first-party cookie and written on the order; `ads.attribution` (on), card on Marketing › Tracking. |
+| #75 | PR [144](docs/stages/S05.md#pr-144) | 1 Nov | Follow-up (finding 2): "Cancel this order" on the customer's order page, as `orders.cancel.customer` allows; a paid order only asks for a refund. |
+| #75 | PR [75](docs/stages/S02.md#pr-75) | 1 Nov | Follow-up (finding 8): "Send us a message" on `/help/contact`, into Support › Inbox (`pages.contactForm`, off). |
+| #75 | PR [425](docs/stages/S22.md#pr-425) | 1 Nov | Follow-up (finding 9): the Support inbox search finds a number typed in Bengali digits or with +880. |
+| #75 | CN-034 (docs only) | 1 Nov | Three customer gaps no PR covered become After-launch PR [622](docs/stages/S04.md#pr-622) Buy again (S04), 623 the customer's privacy request (S18) and 624 a Messenger button (S22); total 624 PRs (618 active). |
 | #74 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (go-live gate, CN-013 phase 2): a `go-live-gate` journey group that checks the simulation findings on the live preview as a visitor and the check account, as each owner's switch is set; a `group` input on the journeys workflow, kept apart from Site health. |
 | #73 | PR [117](docs/stages/S04.md#pr-117) | 1 Nov | Follow-up (go-live gate SIM-F-047, CN-020 (4)): voice address at checkout, the order marked voice-entered with its recording, Speech-to-Text on its mock until the key (`checkout.voice`, off; migration `0074`). |
 | #73 | PR [124](docs/stages/S04.md#pr-124) | 1 Nov | Follow-up (go-live gate SIM-F-046, CN-020 (3)): "Call me" at checkout leaves a call-back in the Support inbox (`checkout.callMe`, off). |

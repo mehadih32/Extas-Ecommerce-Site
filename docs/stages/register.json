@@ -7212,6 +7212,7 @@
     "date": "2026-10-23",
     "note": "help pages `/help/faq`, `/help/delivery`, `/help/exchange`, `/help/privacy`, `/help/terms`, `/help/story`, `/help/contact` (+ `/bn/…`) from the live Smart Rules' texts, the owner's own words (`pages.text`, owner data, empty) and the store's details (`pages.help`); a page with nothing true to say shows \"Coming soon\"; on a computer the help centre (topics, breadcrumb, \"Still stuck?\"); screenshots `docs/qa/screenshots/pr-53/`",
     "github": [
+     "#75, 1 Nov",
      "#30, 23 Oct"
     ]
    },
@@ -7228,15 +7229,28 @@
     ],
     "settings": [
      "pages.text",
-     "pages.help"
+     "pages.help",
+     "pages.contactForm"
     ],
     "code": [
      "docs/qa/screenshots/pr-53/"
     ],
-    "names": [],
+    "names": [
+     "contact-form",
+     "perPhonePerDay",
+     "maxChars"
+    ],
     "tests": []
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "23 Oct",
+     "sortKey": 33120,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** \"Send us a message\" on `/help/contact` into Support › Inbox on the store's hidden \"Contact form\" channel, tagged `contact-form`, linked to the named order only when placed with that number; one message for the same form twice, `perPhonePerDay`, `maxChars`; `pages.contactForm` (v231, off) on Settings › Policies & texts › Contact."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "সাহায্যের পাতা: প্রশ্ন-উত্তর, ডেলিভারি, এক্সচেঞ্জ, প্রাইভেসি, শর্ত, আমাদের গল্প, যোগাযোগ; লেখা আসে চালু নিয়ম আর মালিকের লেখা থেকে।",
@@ -12371,14 +12385,18 @@
     "date": "2026-10-23",
     "note": "cancellation with fixed reason codes and the owner's words (`orders.cancel.reasons`): held stock released, open payments closed, a paid order's cancel records refund REQUESTS only (SIM-F-041); cancel after booking with the courier's answer as its own step (D5, SIM-F-004); the customer's own cancel (CN-020 (5), SIM-F-056): one tap until the cut-off (`orders.cancel.customer`, default until confirmed), then a request the team answers, until booking; `POST /api/account/cancel` (no shop button yet)",
     "github": [
+     "#75, 1 Nov",
      "#35, 23 Oct"
     ]
    },
    "builtFacts": {
-    "routes": [],
+    "routes": [
+     "/account/orders/<n>"
+    ],
     "settings": [
      "orders.cancel.reasons",
-     "orders.cancel.customer"
+     "orders.cancel.customer",
+     "account.cancel.*"
     ],
     "code": [
      "POST /api/account/cancel"
@@ -12386,7 +12404,15 @@
     "names": [],
     "tests": []
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "23 Oct",
+     "sortKey": 33120,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** \"Cancel this order\" on `/account/orders/<n>` as `orders.cancel.customer` allows it (one tap until the cut-off, then a request, never once booked): a reason, an optional note, a clear \"Yes\"; the window checked again under the order's lock; a paid order records a refund request only; words `account.cancel.*`."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "কারণসহ অর্ডার বাতিল: রাখা স্টক ছেড়ে দেয়, টাকা দেওয়া অর্ডারে শুধু রিফান্ডের অনুরোধ হয়; কাস্টমার কনফার্মের আগে এক চাপে বাতিল করতে পারেন, পরে অনুরোধ।",
@@ -21031,6 +21057,7 @@
     "date": "2026-10-31",
     "note": "server-side event tracking (CN-031 lane B; C6.2, §13 R9; migration `0067_tracked_events`; settings v85 `registry-tracking.ts` `ads.tracking`, off as shipped; permissions `ads.tracking.read`, `ads.tracking.manage`): a product page seen and the checkout opened (same-site beacon `/api/shop/track`, the proxy's report bucket), an item put in the bag and an order placed (event id `purchase-<number>`, never twice on a replay); prices, value, category, colour and size read on the server, never from the browser; every hook quiet. `TrackedEvent`: one row per event id per store with the delivery state per platform. Only hashes leave (the visitor/customer id; the order's phone and e-mail only while matching is on, a gift's receiver never); no name, address or IP. Meta Conversions API, GA4 Measurement Protocol and TikTok Events API adapters as Keys & connections rows, on the mock until a key passes its Test; failed sends tried again up to the owner's number. Marketing › Tracking (`/admin/marketing/tracking`): connections, 7/30-day counts, sent per event × platform, \"Send waiting now\", \"Send test event\", the newest events, the settings card; audited. Guide `pages/marketing/tracking.md`",
     "github": [
+     "#75, 1 Nov",
      "#70, 31 Oct"
     ]
    },
@@ -21042,7 +21069,9 @@
     "settings": [
      "ads.tracking",
      "ads.tracking.read",
-     "ads.tracking.manage"
+     "ads.tracking.manage",
+     "ads.attribution",
+     "ads.tracking.attribution"
     ],
     "code": [
      "registry-tracking.ts",
@@ -21051,14 +21080,27 @@
     "names": [
      "0067_tracked_events",
      "purchase-<number>",
-     "TrackedEvent"
+     "TrackedEvent",
+     "__Host-extas_src",
+     "utmSource",
+     "utmMedium",
+     "utmCampaign",
+     "adPlatform"
     ],
     "tests": [
      "Meta Conversions API, GA4 Measurement Protocol and TikTok Events API adapters as Keys & connections rows, on the mock until a key passes its Test",
      "Marketing › Tracking (`/admin/marketing/tracking`): connections, 7/30-day counts, sent per event × platform, \"Send waiting now\", \"Send test event\", the newest events, the settings card"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** UTM tags and fbclid / gclid / ttclid kept in the first-party cookie `__Host-extas_src` and written on the order (`utmSource`, `utmMedium`, `utmCampaign`, `adPlatform`); a click's fbc when the pixel left none; setting `ads.attribution` (v230, on as shipped): days a visit counts, latest or first visit; card on Marketing › Tracking, audited `ads.tracking.attribution`."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "দোকানের সার্ভার নিজে Meta, Google আর TikTok-কে জানায় কে পণ্য দেখল, ব্যাগে নিল, চেকআউট খুলল আর অর্ডার দিল; চাবি না দেওয়া পর্যন্ত কিছু বাইরে যায় না (শুরুতে বন্ধ)",
@@ -29320,6 +29362,7 @@
     "date": "2026-10-31",
     "note": "saved browser journeys (CN-031 lane B; B7.3; settings v82 `health.journeys`, off): `docs/qa/journeys.json` + `tools/journeys.mjs` — plain Playwright steps (open, follow, click, api) for customer, admin, accountant and warehouse on a phone and a desktop screen, sharing the smoke test's sign-in and error watch; the customer never adds to the bag or orders; staff journeys run as the read-only check account and prove writes are refused (403). Hourly, daily or weekly at the owner's hour, runs kept, \"Run now\" (`settings.write`, audited); synced to the server as `journeys-settings.env`; `infra/deploy/journeys.sh` and the hourly `journeys.yml` (own concurrency group, never displaces a deploy) keep the newest runs in `state/journeys/` and commit a report only on a failure or a recovery. Reports › Site health gains a sixth line, the recent runs and the schedule card",
     "github": [
+     "#75, 1 Nov",
      "#74, 1 Nov",
      "#70, 31 Oct"
     ]
@@ -29339,7 +29382,16 @@
      "GET /api/admin/settings",
      "journeys.sh",
      "state/journeys-<group>.json",
-     "docs/reports/journeys/<group>/latest/"
+     "docs/reports/journeys/<group>/latest/",
+     "gate-orders.yml",
+     "infra/deploy/gate-orders.sh",
+     "tools/gate-orders/",
+     "docs/reports/gate-orders/latest/",
+     "gate-c360.yml",
+     "infra/deploy/gate-c360.sh",
+     "tools/gate-c360/",
+     "docs/reports/gate-c360/latest/",
+     "docs/qa/FINAL-ANALYSIS-2026-11.md"
     ],
     "names": [
      "journeys-settings.env",
@@ -29354,7 +29406,9 @@
     ],
     "tests": [
      "settings v82 `health.journeys`, off): `docs/qa/journeys.json` + `tools/journeys.mjs` — plain Playwright steps (open, follow, click, api) for customer, admin, accountant and warehouse on a phone and a desktop screen, sharing the smoke test's sign-in and error watch",
-     "Of the 38 phase-2 live checks, 8 are proved by the journeys, 24 by the CI tests and 6 need a person with a real test order"
+     "Of the 38 phase-2 live checks, 8 are proved by the journeys, 24 by the CI tests and 6 need a person with a real test order **Updated 1 Nov (go-live gate test orders and customer 360°, CN-013 phase 2",
+     "`gate-c360.yml` / `infra/deploy/gate-c360.sh` / `tools/gate-c360/` — one test customer before, during and after an order, his account and support, report `docs/reports/gate-c360/latest/`, findings `docs/qa/FINAL-ANALYSIS-2026-11.md`",
+     "CI shellchecks both scripts and type-checks both gates' server code"
     ]
    },
    "updates": [
@@ -29371,6 +29425,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 1 Nov (go-live gate, CN-013 phase 2; #74):** a `go-live-gate` journey group in `docs/qa/journeys.json` (`gate-shop` as a signed-out visitor, `gate-admin` as the read-only check account, phone and desktop), each step naming its SIM-F findings; it orders nothing, adds nothing to the bag and changes no setting; a feature behind an owner's switch is checked as it is set (`switches`, `when` / `unless`, read once a run from `GET /api/admin/settings`; an unknown switch name fails the step). `journeys.yml` and `journeys.sh` take a `group` by hand (with `now`); a group run keeps its own summary (`state/journeys-<group>.json`), runs and report folder (`docs/reports/journeys/<group>/latest/`), and Site health, Run history, the schedule and the Telegram alert keep only the saved journeys. Of the 38 phase-2 live checks, 8 are proved by the journeys, 24 by the CI tests and 6 need a person with a real test order"
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 1 Nov (go-live gate test orders and customer 360°, CN-013 phase 2; #75):** `gate-orders.yml` / `infra/deploy/gate-orders.sh` / `tools/gate-orders/` — a host guard, an oracle in the live migrate image on mocks only, 18 browser scenarios on phones and desktops over throttled networks, every address compared typed, stored, admin, courier and sticker, clean-up cancels and archives (nothing deleted), report `docs/reports/gate-orders/latest/`; `gate-c360.yml` / `infra/deploy/gate-c360.sh` / `tools/gate-c360/` — one test customer before, during and after an order, his account and support, report `docs/reports/gate-c360/latest/`, findings `docs/qa/FINAL-ANALYSIS-2026-11.md`; CI shellchecks both scripts and type-checks both gates' server code."
     }
    ],
    "mentions": [],
@@ -30236,6 +30297,7 @@
     "date": "2026-10-30",
     "note": "the support core (new package `@extas/support`; migration `0050_invoice_support` additive: Conversation subject, order, last direction and preview, waiting since, assigned at; Message sender name, request key, fail reason, unique per external id and per press; MessageAttachment file name, type, size, source; `ConversationEvent` the who-did-what log, append-only at the database; settings registry v63 `registry-support.ts`, group `support`): one conversation per person per channel with its messages in order — the customer's, the shop's replies with the sender's name kept as it was, internal notes the customer never sees — and their files (image, video, PDF, checked by their contents, kept in our storage); OPEN / WAITING / SOLVED, a solved one reopens when the customer writes; take, let go, give to someone who may reply; a reply sent twice is one message, a stale screen is refused (`STALE`). Channels plug in later (PR 426): a channel kind and an adapter (`SupportChannelAdapter`), inbound through `receiveMessage`; with none connected a reply is kept as NOT_SENT (`CHANNEL_NOT_CONNECTED`). Support → Inbox (`/admin/support`: views open, waiting, mine, not taken, solved, all; search; channel), one conversation (`/admin/support/c/[id]`: thread, reply / note box with files, status, owner, customer and order, the log) and Support settings (`/admin/support/settings`): `support.inbox` (50 a page, 2000 characters, take on reply off, waiting after a reply on), `support.attachments` under More options (on, 4 a message, 10 MB, image / video / PDF); a customer's number is masked by `customers.phoneMask` (PR 284), whole only with `customers.phone`. Permissions `support.read`, `support.reply`, `support.assign`, `support.settings`. The sample seed gains a sample live-chat channel with three conversations",
     "github": [
+     "#75, 1 Nov",
      "#54, 30 Oct"
     ]
    },
@@ -30266,7 +30328,8 @@
      "STALE",
      "SupportChannelAdapter",
      "receiveMessage",
-     "CHANNEL_NOT_CONNECTED"
+     "CHANNEL_NOT_CONNECTED",
+     "inboxPhoneDigits"
     ],
     "tests": []
    },
@@ -30277,6 +30340,13 @@
      "source": "Scope added to existing PRs (CN-012 … CN-019 filed on the PR rows; new PR 605–606)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
      "text": "**PR 425–436 (S22 support, draft engine)** — Updated 23 Oct 2026 (CN-017): SIM-F-012 (the AI draft answers the wrong question in 6 of 10 chats) is a required acceptance test of the draft engine; see `docs/qa/SIMULATION-REPORT.md` §4."
+    },
+    {
+     "date": "30 Oct",
+     "sortKey": 43200,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** the inbox search reads Bengali digits and drops +880 / 880 / 00880 and the leading 0 (`inboxPhoneDigits`)."
     }
    ],
    "mentions": [
