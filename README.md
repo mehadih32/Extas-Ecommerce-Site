@@ -2142,6 +2142,25 @@ Guide index: [docs/admin-guide/README.md](docs/admin-guide/README.md).
   The UTM check reads the browser's own cookie jar (the shop keeps the tags in the HttpOnly `__Host-extas_src`, which
   page scripts cannot see); a link the check cannot reach is asked once more, with the reason kept. My account › Wallet
   is in the smoke list. Proved locally: gate-orders 18 scenarios, 24 orders on the mock bKash: 14 pass, 0 fail, 4 skip (cash on delivery off, no open coupon, delivered-parcel steps); gate-c360 150 steps: 120 pass, 27 skip, 3 fail — the unnamed-button check (fixed, desktop rerun green), one local browser crash (rerun green) and the messages step, which needs the job worker that runs only on the server.
+  **After the second live run (1 Nov, #77, PR 414 follow-up):** the 13:03Z run stopped in scenario 13 and its report
+  said nothing about cash on delivery (it had been put back: the shell's safety net closed the grant and restored the
+  exact earlier value). Now every report ends with a **Safety net** line ("cash on delivery put back to …" or "not
+  touched"; "test-pay grant closed"), also `safetyNet` in `result.json`; the run records its cash-on-delivery change on
+  its grant before it makes it; the trap closes the grant first and ignores a second signal; a **start check** before
+  every run closes what an earlier run left open and puts cash on delivery back (from its grant, or its own
+  setting-change line; never a later change by the owner); `gate-orders.yml` ends with `gate-orders.sh --sweep`
+  (`if: always()`). Each scenario has its own time budget (10 min, longer on a slow network, at most 30;
+  `GATE_SCENARIO_MIN`); a stuck or crashed scenario is its own FAIL row with a picture (`scenario-<n>.jpg`) and the run
+  goes on; the report is written after every scenario. Scenario 13: an unanswered bag wait stopped Node (unhandled
+  rejection) — the press now has its own timeout and names what took the tap; each scenario's pieces are stocked up
+  first. Search and wishlist: the GATE TEST products had no category, and the shop shows only products in a shown
+  category — the gate now makes its own (`GATE TEST — do not ship`, archived with the products); the search step waits
+  up to `waits.searchSec` for the word list. Recording a payment by hand switched off (`payments.manual`) makes gate
+  check 4 a SKIP. Proved locally: gate-orders 18 scenarios with `allow_cod`, 26 orders: 16 pass, 0 fail, 2 skip; a
+  SIGKILL mid-run put back by the safety net, and a dead job's switch put back by the next run's start check (cash on
+  delivery back to "no store value" both times); gate-c360 150 steps: 121 pass, 28 skip, 1 fail (the messages step,
+  which needs the server's job worker); search in English, Bengali ("পোলো শার্ট"), a typo ("pollo shrit") and
+  Banglish, and the wishlist, pass.
 - **Customer problems (PR 423, CN-015):** a small probe in the shop layout reports script errors, failed or slow calls to
   the shop's server, failed or slow pages, a form field refused again and again, rage clicks and broken pictures (the
   "Start fresh" screen too); anonymous by construction (masked page patterns, scrubbed messages, device and browser
@@ -2535,6 +2554,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #77 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (the gates' second live run, 1 Nov): every report ends with a Safety net line (cash on delivery put back to its earlier value or not touched; the test-pay grant closed); a start check before every run and a sweep at the workflow's end put back what an earlier run left open; each scenario has its own time budget and a stuck one is its own FAIL row with a picture, the run goes on; the GATE TEST products sit in their own shown category (search and the wishlist need one); `payments.manual` off makes check 4 a SKIP. The 13:03Z run did not leave cash on delivery on. Local runs: gate-orders 18 scenarios with `allow_cod`: 16 pass, 0 fail, 2 skip; a forced crash and a dead job both put back; gate-c360 150 steps: 121 pass, 28 skip, 1 fail (messages, server worker only). |
 | #76 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (the gates' first live run, 1 Nov): both go-live gate runs pay on the mock bKash through a grant for their own run only (the preview host, their own browser's cookie; closed by the shell's trap on a finish, a failure or a signal; audit lines by the system); `allow_cod` (false) is the only way a run switches cash on delivery on, put back exactly after; gate-c360 makes its own GATE TEST products with gate-orders' shared helpers; an owner's switch, a planned PR (622–624) or a by-design gap is a SKIP, never a FAIL; the UTM check reads the browser's own cookie jar. Local runs: gate-orders 18 scenarios, 24 orders on the mock bKash: 14 pass, 0 fail, 4 skip (cash on delivery off, no open coupon, delivered-parcel steps); gate-c360 150 steps: 120 pass, 27 skip, 3 fail — the unnamed-button check (fixed, desktop rerun green), one local browser crash (rerun green) and the messages step, which needs the job worker that runs only on the server. |
 | #76 | PR [170](docs/stages/S07.md#pr-170) | 1 Nov | Follow-up (go-live gate): the practice gateway answers for the gate's own browser while its run's grant is open (`lib/shop/gate-run.ts`); `payments.testPayments` stays off for every real visitor and in the admin; no real key, price, discount or COD amount is touched. |
 | #75 | PR [414](docs/stages/S21.md#pr-414) | 1 Nov | Follow-up (go-live gate, CN-013 phase 2, owner's OK 1 Nov): test orders on the preview — `gate-orders.yml` with a host guard, a mock-only oracle and 18 browser scenarios (baskets, last piece, bKash mock, 8 orders for one customer, all 8 divisions' addresses compared from checkout to sticker), clean-up cancels and archives, nothing deleted. |

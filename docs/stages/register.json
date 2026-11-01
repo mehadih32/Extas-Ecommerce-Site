@@ -29363,6 +29363,7 @@
     "date": "2026-10-31",
     "note": "saved browser journeys (CN-031 lane B; B7.3; settings v82 `health.journeys`, off): `docs/qa/journeys.json` + `tools/journeys.mjs` — plain Playwright steps (open, follow, click, api) for customer, admin, accountant and warehouse on a phone and a desktop screen, sharing the smoke test's sign-in and error watch; the customer never adds to the bag or orders; staff journeys run as the read-only check account and prove writes are refused (403). Hourly, daily or weekly at the owner's hour, runs kept, \"Run now\" (`settings.write`, audited); synced to the server as `journeys-settings.env`; `infra/deploy/journeys.sh` and the hourly `journeys.yml` (own concurrency group, never displaces a deploy) keep the newest runs in `state/journeys/` and commit a report only on a failure or a recovery. Reports › Site health gains a sixth line, the recent runs and the schedule card",
     "github": [
+     "#77, 1 Nov",
      "#76, 1 Nov",
      "#75, 1 Nov",
      "#74, 1 Nov",
