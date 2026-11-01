@@ -62,12 +62,14 @@ runs:
     # and every /bn page was measured in English. The log is /tmp/web-server.log (printed when a check fails).
     # connection_limit=20: the parallel page checks outran Prisma's default pool (2 vCPU → 5 connections; P2024 on
     # device-gate 2/4 of #41, pages drawn without their data). On the server the app goes through PgBouncer.
+    # EXTAS_DOCS_DIR: the standalone server.js changes into its own folder, where no docs/ sits, so the page guides and
+    # Help & Build (PR 594) read the checkout's docs, as the deploy's docs copy does on the server (CN-011).
     - name: Start the app (standalone server, on the sample database; throwaway keys)
       shell: bash
       run: |
         rand() { head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
         DATABASE_URL='postgresql://extas_app:ci-only-app@127.0.0.1:5432/extas?connection_limit=20&pool_timeout=20' \
-        SESSION_SECRET="$(rand)$(rand)" VAULT_MASTER_KEY="$(rand)$(rand)" PORT=3000 HOSTNAME=0.0.0.0 EXTAS_SHOP_TEST_PAGES=1 \
+        SESSION_SECRET="$(rand)$(rand)" VAULT_MASTER_KEY="$(rand)$(rand)" PORT=3000 HOSTNAME=0.0.0.0 EXTAS_SHOP_TEST_PAGES=1 EXTAS_DOCS_DIR="$GITHUB_WORKSPACE" \
           nohup node apps/web/.next/standalone/apps/web/server.js > /tmp/web-server.log 2>&1 &
         for _ in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:3000/status && exit 0; sleep 1; done
         cat /tmp/web-server.log; exit 1

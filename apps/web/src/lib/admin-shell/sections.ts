@@ -389,6 +389,11 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'manual', pages: [{ href: '/admin/help', perm: 'help.read', keys: ['help'] }] },
       // S18 · PR 387 (B7.5, HLP-01) — the Site manual: every section as a chapter, every page guide in it.
       { id: 'book', pages: [{ href: '/admin/help/manual', perm: 'help.read', keys: ['manual'] }] },
+      // S21 · PR 594 (HLP-02): Build progress (owner) — every stage and PR from the register with its card, the problems
+      // reported on PRs, and the blueprint and every docs file (read, search, download, earlier versions).
+      { id: 'build', pages: [{ href: '/admin/build', perm: 'build.read', keys: ['build', 'buildPr'] }] },
+      { id: 'problems', pages: [{ href: '/admin/build/problems', perm: 'build.read', keys: ['buildProblems'] }] },
+      { id: 'files', pages: [{ href: '/admin/build/files', perm: 'build.read', keys: ['buildFiles', 'buildFile'] }] },
     ],
   },
 ];

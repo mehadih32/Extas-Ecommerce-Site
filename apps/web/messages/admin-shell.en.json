@@ -61,7 +61,10 @@
       },
       "help": {
         "manual": "Help & manual",
-        "book": "Site manual"
+        "book": "Site manual",
+        "build": "Build progress",
+        "problems": "Reported problems",
+        "files": "Blueprint & files"
       },
       "orders": {
         "all": "All orders",

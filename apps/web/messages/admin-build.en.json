@@ -1,0 +1,182 @@
+{
+  "build": {
+    "metaTitle": "Build progress",
+    "title": "Build progress",
+    "sub": "Every stage and PR of the build, from the master register ({asOf})",
+    "noDocs": "The register is not on the server yet. It is copied there with every deploy.",
+    "smoke": "Smoke runs",
+    "kpi": {
+      "prs": "PRs in the plan",
+      "prsNote": "{n} stages",
+      "done": "Built (merged or live)",
+      "doneNote": "{live} live on the server",
+      "todo": "Still to build",
+      "parked": "Parked",
+      "parkedNote": "waits for the owner's OK"
+    },
+    "progress": "Progress by stage: {line}",
+    "filter": {
+      "q": "Search PRs",
+      "qPh": "PR number or words — e.g. 594, backup, gift",
+      "stage": "Stage",
+      "stageAll": "All stages",
+      "state": "Status",
+      "stateAll": "Any status",
+      "go": "Show",
+      "clear": "Clear"
+    },
+    "state": {
+      "live": "Live",
+      "merged": "Merged",
+      "todo": "To build",
+      "parked": "Parked"
+    },
+    "stages": {
+      "title": "Stages",
+      "built": "{done} of {n} built",
+      "parked": "Parked"
+    },
+    "list": {
+      "title": "{n} PRs",
+      "none": "No PR matches. Try other words, or clear the filters.",
+      "more": "Showing the first {shown} of {n}. Narrow the search to see the rest.",
+      "since": "since {date}",
+      "owner": "owner: {who}"
+    },
+    "pr": {
+      "metaTitle": "PR {n}",
+      "title": "PR {n} · {title}",
+      "backAll": "All stages",
+      "notFound": "There is no PR {n} in the register.",
+      "does": "What it does",
+      "short": "In short",
+      "stage": "Stage",
+      "state": "Status",
+      "owner": "Owning agent",
+      "none": "—",
+      "buildsOn": "Builds on",
+      "derived": "The register keeps this PR as part of its stage's scope; the blueprint's list of every PR names it.",
+      "updates": "Scope added later",
+      "updatesSub": "Each dated update, newest first",
+      "noUpdates": "Nothing was added later.",
+      "notes": "Change notes",
+      "noNotes": "No change note names this PR.",
+      "record": "Build record",
+      "noRecord": "Not built yet.",
+      "problems": "Reported problems",
+      "noProblems": "Nothing reported on this PR.",
+      "allProblems": "All reported problems"
+    },
+    "problems": {
+      "metaTitle": "Reported problems",
+      "title": "Reported problems",
+      "sub": "Problems reported on a PR of the build, and what happened to each",
+      "views": "Which problems",
+      "view": {
+        "open": "Open",
+        "done": "Fixed or closed",
+        "all": "All"
+      },
+      "none": {
+        "open": "No open problem. Report one from a PR's card, or with the button above.",
+        "done": "Nothing is fixed or closed yet.",
+        "all": "No problem reported yet."
+      },
+      "more": "Showing the newest {n}.",
+      "row": {
+        "n": "R-{n}",
+        "pr": "PR {n}",
+        "seen": "Seen on {page}",
+        "by": "Reported by {who} · {at}",
+        "status": "{who} · {at}",
+        "someone": "a team member"
+      },
+      "status": {
+        "OPEN": "Open",
+        "FIXING": "Being fixed",
+        "FIXED": "Fixed",
+        "CLOSED": "Closed"
+      }
+    },
+    "files": {
+      "metaTitle": "Blueprint & files",
+      "title": "Blueprint & files",
+      "sub": "The blueprint, the register and every supporting file, as the last deploy copied them to the server",
+      "noDocs": "The files are not on the server yet. They are copied there with every deploy.",
+      "search": "Search inside every file",
+      "searchPh": "Search inside every file — e.g. exchange window, CN-020",
+      "go": "Search",
+      "clear": "Clear",
+      "hits": "{n} files have “{q}”",
+      "hit": "{n} matches",
+      "nameHit": "in its name",
+      "none": "No file has “{q}”.",
+      "short": "Type at least {n} letters.",
+      "core": "Core",
+      "count": "{n} files",
+      "allFolders": "All files",
+      "inFolder": "{dir}/ — {n} files",
+      "folders": "Folders",
+      "folderCount": "{n} files",
+      "size": "{kb} KB",
+      "read": "Read",
+      "download": "Download",
+      "backup": "Every backup carries the same files with their commit (Google Drive and Azure Blob). The copies of other people's skills are never listed."
+    },
+    "read": {
+      "notFound": "That file is not in the docs copy.",
+      "sub": "{path} · {kb} KB · {n} parts",
+      "toc": "Contents",
+      "pick": "Part",
+      "find": "Find in this file",
+      "findGo": "Find",
+      "found": "{n} matches in this file; parts with a match are marked ●",
+      "notFound2": "“{q}” is not in this file.",
+      "start": "Start",
+      "prev": "Previous",
+      "next": "Next",
+      "part": "Part {i} of {n}",
+      "versions": "Earlier versions",
+      "versionsSub": "The copies the server keeps, one line per change",
+      "noVersions": "Only this version is on the server.",
+      "current": "Now",
+      "since": "since {at}",
+      "download": "Download"
+    },
+    "w": {
+      "report": {
+        "btn": "Report a problem",
+        "btnPr": "Report a problem on this PR",
+        "pr": "PR number",
+        "note": "What is wrong?",
+        "notePh": "What you saw, where, and what you expected",
+        "page": "Where you saw it (an admin address, if you know it)",
+        "what": "It goes to the build team with the PR named. You see its status on Reported problems and on the PR's card.",
+        "send": "Send",
+        "cancel": "Cancel",
+        "done": "Sent. It is R-{n} on the list."
+      },
+      "status": {
+        "OPEN": "Open again",
+        "FIXING": "Being fixed",
+        "FIXED": "Mark fixed",
+        "CLOSED": "Close",
+        "note": "How it was fixed, or why it is closed",
+        "save": "Save",
+        "cancel": "Cancel",
+        "done": "Saved."
+      },
+      "err": {
+        "UNKNOWN_PR": "There is no PR with that number in the register.",
+        "INVALID_INPUT": "Check the fields: a PR number, a note of at least 3 letters, and an admin address that starts with /admin.",
+        "NOTE_NEEDED": "Say how it was fixed, or why it is closed.",
+        "SAME_STATUS": "It already has that status.",
+        "NOT_FOUND": "This report is not there any more. Reload the page.",
+        "FORBIDDEN": "You may not do this. Ask the owner.",
+        "READ_ONLY_ACCOUNT": "The check account only reads.",
+        "network": "No connection. Try again.",
+        "other": "That did not work. Try again."
+      }
+    }
+  }
+}

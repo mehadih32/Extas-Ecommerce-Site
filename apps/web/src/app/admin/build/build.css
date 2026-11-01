@@ -1,0 +1,68 @@
+/* S21 · PR 594 — Help & Build › Build progress, Reported problems, Blueprint & files (lists that fold to one column on a
+   phone; no table scrolls sideways). */
+.adm2 .bd-filter { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.adm2 .bd-filter .a2-fsrch { flex: 1 1 260px; max-width: none; }
+.adm2 .bd-filter label.bd-fld { flex: 0 1 180px; }
+.adm2 .bd-filter .a2-btn { min-height: 38px; }
+.adm2 .bd-fld { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.adm2 .bd-fld + .bd-fld { margin-top: 8px; }
+.adm2 .bd-form { padding: 12px; border: 1px solid var(--ln); border-radius: 10px; background: var(--sf2); display: flex; flex-direction: column; gap: 8px; }
+.adm2 .bd-form .a2-ta { height: auto; padding: 8px 12px; }
+.adm2 .bd-act { min-width: 0; }
+.adm2 .bd-rows { list-style: none; margin: 8px 0 0; padding: 0; }
+.adm2 .bd-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--ln2); }
+.adm2 .bd-row:last-child { border-bottom: 0; }
+.adm2 .bd-row > .a2-pill { justify-self: end; }
+.adm2 .bd-row .bd-main { min-width: 0; overflow-wrap: anywhere; }
+.adm2 .bd-row .bd-main a { color: var(--ink); font-weight: 600; }
+.adm2 .bd-row .bd-main a:hover { color: var(--g); }
+.adm2 .bd-row .bd-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+.adm2 .bd-row .bd-sub a { min-height: 24px; display: inline-flex; align-items: center; }
+.adm2 .bd-row .bd-full { grid-column: 1 / -1; min-width: 0; }
+.adm2 .bd-meter { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+.adm2 .bd-meter .bd-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--ln2); overflow: hidden; }
+.adm2 .bd-meter .bd-bar i { display: block; height: 100%; background: var(--g6); }
+.adm2 .bd-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; font-size: 13.5px; margin-top: 12px; }
+.adm2 .bd-facts dt { color: var(--mute); }
+.adm2 .bd-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.adm2 .bd-facts dd a { min-height: 24px; display: inline-flex; align-items: center; }
+.adm2 .bd-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; align-items: start; }
+.adm2 .bd-grid > * { min-width: 0; }
+.adm2 .bd-text { overflow-wrap: anywhere; }
+.adm2 .bd-text.a2-guidebody { font-size: 14px; }
+.adm2 .bd-tl { list-style: none; margin: 8px 0 0; padding: 0; }
+.adm2 .bd-tl > li { padding: 10px 0; border-bottom: 1px solid var(--ln2); min-width: 0; overflow-wrap: anywhere; }
+.adm2 .bd-tl > li:last-child { border-bottom: 0; }
+.adm2 .bd-tl .bd-when { display: block; font-size: 12px; color: var(--mute); margin-bottom: 4px; }
+.adm2 .bd-reader { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; align-items: start; }
+.adm2 .bd-reader > * { min-width: 0; }
+.adm2 .bd-toc { display: flex; flex-direction: column; gap: 2px; max-height: 70vh; overflow-y: auto; margin-top: 10px; }
+.adm2 .bd-toc a { flex-shrink: 0; font-size: 13px; color: var(--ink2); padding: 7px 10px; border-radius: 8px; min-height: 32px; display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+.adm2 .bd-toc a:hover { background: var(--sf2); }
+.adm2 .bd-toc a.on { background: var(--g1); color: var(--g); font-weight: 600; }
+.adm2 .bd-toc a .bd-dot { color: var(--warn); }
+.adm2 .bd-pick { display: none; }
+.adm2 .bd-doc { overflow-wrap: anywhere; }
+.adm2 .bd-doc mark { background: #FBE7A1; color: inherit; border-radius: 3px; padding: 0 1px; }
+.adm2 .bd-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.adm2 .bd-find { display: flex; gap: 8px; }
+.adm2 .bd-find .a2-inp { flex: 1; }
+@media (max-width: 1023px) {
+  .adm2 .bd-grid { grid-template-columns: minmax(0, 1fr); }
+  .adm2 .bd-reader { grid-template-columns: minmax(0, 1fr); }
+  .adm2 .bd-toc { display: none; }
+  .adm2 .bd-pick { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+}
+@media (max-width: 599px) {
+  .adm2 .bd-filter label.bd-fld { flex: 1 1 140px; }
+  .adm2 .bd-meter { min-width: 0; }
+  .adm2 .bd-facts { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .adm2 .bd-facts dd { margin-bottom: 8px; }
+}
+.adm2 .bd-views .a2-view { min-width: 44px; justify-content: center; }
+.adm2 .bd-crumb { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; }
+/* Touch sizes (device gate): every link and button here takes a 44 px tap. */
+.adm2 .bd-filter .a2-btn, .adm2 .bd-find .a2-btn, .adm2 .bd-pick .a2-btn, .adm2 .bd-act .a2-btn, .adm2 .bd-nav .a2-btn { min-height: 44px; }
+.adm2 .bd-row .bd-main a, .adm2 .bd-row .bd-sub a, .adm2 .bd-facts dd a, .adm2 .bd-lnk { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.adm2 .bd-toc a { min-height: 44px; }
+.adm2 .bd-crumb { min-height: 44px; }
