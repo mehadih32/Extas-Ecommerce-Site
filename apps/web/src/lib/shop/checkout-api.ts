@@ -6,7 +6,7 @@ import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, payAction, payView, placeOrder, saveVoiceAddress, viewOf, type CheckoutDeps, type PlaceNext, type VoiceHooks } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
-import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, refuserTermsOnOrder, placeInSection, screenOrder, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck } from '@extas/orders';
+import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -16,6 +16,7 @@ import { ATTRIBUTION_COOKIE, keptTouch, orderAttributionOf } from '../tracking/a
 import { trackPurchase } from '../tracking/shop';
 import { isSupportError, requestCallBack } from '@extas/support';
 import { phoneNormalizeBD } from '../phone-bd';
+import { courierFraudSources } from './courier-fraud';
 
 /** The largest request body the checkout takes (the delivery details, a note, the choices). */
 export const CHECKOUT_BODY_MAX = 8_192;
@@ -82,8 +83,11 @@ export async function quoteHandler(request: Request, deps: CheckoutApiDeps | nul
   if (stop || !deps) return stop!;
   try {
     const b = await body(request);
-    const [{ cartId }, customerId] = await Promise.all([bagOfRequest(request, deps), customerOf(request, deps)]);
-    const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, customerId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never, useWallet: b.useWallet === true, ip: requestContext(request).ip ?? null, gift: b.gift === true, details: (b.details ?? null) as never });
+    const [{ cartId }, customerId, capture] = await Promise.all([bagOfRequest(request, deps), customerOf(request, deps), deps.checkout.settings.value('risk.capture', { storeId: deps.storeId })]);
+    // PR 559 (SIM-F-015): this browser's device id, while the owner keeps device ids, so the look sees more than the number
+    const had = capture.device ? readCookie(request, DEVICE_COOKIE) : null;
+    const deviceId = had && visitorIdSchema.safeParse(had).success ? had : null;
+    const q = await checkoutQuote(deps.checkout, { storeId: deps.storeId, cartId, customerId, lang: langOf(b.lang), address: (b.address ?? null) as never, payment: (b.payment ?? null) as never, useWallet: b.useWallet === true, ip: requestContext(request).ip ?? null, gift: b.gift === true, details: (b.details ?? null) as never, deviceId });
     return json({ ok: true, view: viewOf(q) });
   } catch (e) {
     return refusal(e);
@@ -337,6 +341,24 @@ export async function transitHandler(request: Request, deps: CheckoutApiDeps | n
     console.warn(`transit check: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
     return json({ ok: true, enabled: true, notices: [] });
   }
+}
+
+/**
+ * POST /api/checkout/phone-risk {phone} — S06 · PR 559: the phone-entry risk check (off until the owner turns
+ * `checkout.phoneRisk` on). The server asks the connected courier fraud checks in the background and keeps their answers
+ * for the checkout's own look; the page reads nothing from the answer, which is always the same `{ok: true}` — nothing
+ * about the number, a score or a reason ever goes back. A failure is logged and passes.
+ */
+export async function phoneRiskHandler(request: Request, deps: CheckoutApiDeps | null): Promise<Response> {
+  const stop = guard(request, deps, ['POST']);
+  if (stop || !deps) return stop!;
+  try {
+    await phoneRiskCheck({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, ip: requestContext(request).ip ?? null }, await body(request), courierFraudSources());
+  } catch (e) {
+    if (isOrdersError(e) && e.code === 'INVALID_INPUT') return fail(e.status, e.code, e.details);
+    console.warn(`phone-risk check: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+  return json({ ok: true });
 }
 
 /** POST /api/checkout/transit/answer {eventId, action: 'removed' | 'kept'} — PR 556: what he chose on the notice (kept once). */

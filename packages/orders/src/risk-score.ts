@@ -7,9 +7,14 @@
 // The score only informs (CLAUDE.md rule 6, R5): this file decides nothing about the order. A refusal the shop caused —
 // one of the owner's "our fault" reasons (SIM-F-044) — is shown in the number's history but never counts; a cancel
 // for a change after booking or by someone who never ordered (NOT_A_RISK_SIGNAL) never counts either.
+//
+// PR 559 (`pattern`, SIM-F-015): a pattern, not a slip — the failed share of the outcomes so far, recency weighted, from
+// the number, the same device and the same person under another number (one source), and each courier's own fraud
+// check (a source each); the highest share counts, from `minParcels` outcomes in that source (`patternOf`).
 import type { RiskBands, RiskSignalKey, RiskSignals } from '@extas/settings';
 import { addressNoDetail, addressUnresolved, addressUnsure, areaMismatch, inPlaces, placeRefusalCount, type AddressFacts, type CheckValues, type KnownPlace, type PlaceRefusal } from './address-checks';
 import { summarizeHistory, WITH_COURIER, type PastOrder, type PhoneSummary } from './phone-summary';
+import { NOT_A_RISK_SIGNAL } from './pure';
 
 /** The highest score (a sum above it is capped; the raw sum is kept beside it). */
 export const RISK_SCORE_MAX = 100;
@@ -41,6 +46,59 @@ export interface RiskFacts {
   device?: readonly PastOrder[];
   /** PR 159: the OTHER numbers that ordered from this order's connection (IP) in `ipPhones.withinHours`, with the latest order. */
   ipPhones?: { phones: number; latest: string | null };
+  /** PR 559: each courier's own fraud check for this number (cached at phone entry), read only while `pattern` is on. */
+  courier?: readonly CourierFacts[];
+}
+
+/** PR 559 — one courier's own fraud check for a number: its parcels taken and cancelled (refused) across its shops. */
+export interface CourierFacts {
+  provider: string;
+  delivered: number;
+  cancelled: number;
+}
+
+/** PR 559 — the pattern that fired: the failed share (%), of how many outcomes, and whose ('own' or the courier's key). */
+export interface PatternHit {
+  pct: number;
+  parcels: number;
+  source: string;
+}
+
+/**
+ * PR 559 — a pattern, not a slip. Our own outcomes (the number's, the same device's and the same person's under another
+ * number, each once): taken at the door, refused (not our fault, never a re-ship), cancelled with a counted code; others
+ * are left out. Each weighs 0.5^(age / halfLifeDays). Each courier's check is a source of its own (no dates: weight 1).
+ * The highest failed share among the sources with `minParcels` outcomes, when it reaches `failPct`; else null.
+ */
+export function patternOf(f: RiskFacts, c: RiskConfig): PatternHit | null {
+  const s = c.signals.pattern;
+  const ourFault = new Set(c.ourFault);
+  const counted = new Set<string>(c.signals.cancels.codes);
+  const seen = new Set<string>();
+  let good = 0;
+  let bad = 0;
+  let n = 0;
+  for (const o of [...f.past, ...(f.device ?? []), ...(f.identity ?? [])]) {
+    if (seen.has(o.id) || o.placedAt > f.placedAt) continue;
+    seen.add(o.id);
+    let failed: boolean | null = null;
+    if (o.status === 'DELIVERED' || o.status === 'PARTIALLY_DELIVERED') failed = false;
+    else if (o.status === 'RETURNED') failed = (o.refusalKey && ourFault.has(o.refusalKey)) || o.reshipped ? null : true;
+    else if (o.status === 'CANCELLED') failed = o.cancelCode && !(NOT_A_RISK_SIGNAL as ReadonlySet<string>).has(o.cancelCode) && counted.has(o.cancelCode) ? true : null;
+    if (failed === null) continue;
+    const w = Math.pow(0.5, Math.max(0, f.placedAt.getTime() - o.placedAt.getTime()) / DAY / s.halfLifeDays);
+    n++;
+    if (failed) bad += w;
+    else good += w;
+  }
+  const sources: { share: number; parcels: number; source: string }[] = [];
+  if (n >= s.minParcels && good + bad > 0) sources.push({ share: (bad * 100) / (good + bad), parcels: n, source: 'own' });
+  for (const k of f.courier ?? []) {
+    const total = k.delivered + k.cancelled;
+    if (total >= s.minParcels) sources.push({ share: (k.cancelled * 100) / total, parcels: total, source: k.provider });
+  }
+  const top = sources.filter((x) => x.share >= s.failPct).sort((a, b) => b.share - a.share)[0];
+  return top ? { pct: Math.round(top.share), parcels: top.parcels, source: top.source } : null;
 }
 
 export interface RiskConfig {
@@ -158,6 +216,11 @@ export function scoreRisk(f: RiskFacts, c: RiskConfig): RiskResult {
     ipPhones: () => {
       const n = f.ipPhones?.phones ?? 0;
       return n >= s.ipPhones.atLeast ? { count: n, number: f.ipPhones?.latest ?? null, withinHours: s.ipPhones.withinHours } : null;
+    },
+    // PR 559: a pattern, not a slip
+    pattern: () => {
+      const hit = patternOf(f, c);
+      return hit ? { pct: hit.pct, parcels: hit.parcels, source: hit.source, failPct: s.pattern.failPct } : null;
     },
     // PR 158: the address against the gazetteer
     addressUnresolved: () => addressUnresolved(f.address),

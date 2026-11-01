@@ -8,7 +8,7 @@ import { checkoutQuote } from '@extas/checkout';
 import { setUpCheckout, type CheckoutFixture } from '@extas/checkout/testing';
 import { checkoutFlag, recordAdvance, systemBy } from '@extas/orders';
 import { BAG_COOKIE, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
-import { callMeHandler, draftHandler, paymentHandler, voiceHandler, placeHandler, quoteHandler, transitAnswerHandler, transitHandler, type CheckoutApiDeps } from './checkout-api';
+import { callMeHandler, draftHandler, paymentHandler, phoneRiskHandler, voiceHandler, placeHandler, quoteHandler, transitAnswerHandler, transitHandler, type CheckoutApiDeps } from './checkout-api';
 import { ATTRIBUTION_COOKIE, encodeTouch, touchOf } from '../tracking/attribution';
 
 const ORIGIN = 'https://shop.example.test';
@@ -285,6 +285,24 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
       expect(await f.t.prisma.duplicateNoticeEvent.count({ where: { storeId: f.S, campaignRef: 'api-test' } })).toBe(2);
     } finally {
       f.overrides.delete('checkout.transitDuplicate');
+    }
+  });
+
+  it('S06 · PR 559: the phone-entry check always answers just {ok: true} — off or on — and never anything about the number', async () => {
+    const ask = async (b: unknown, site?: string) => read(await phoneRiskHandler(req('/api/checkout/phone-risk', b, { site }), deps()));
+    const counted = () => f.t.prisma.securityEvent.count({ where: { storeId: f.S, kind: 'checkout.phoneRisk.lookup' } });
+    expect(await ask({ phone: FORM.phone })).toEqual({ status: 200, body: { ok: true } });
+    expect(await counted()).toBe(0);
+    f.overrides.set('checkout.phoneRisk', { enabled: true, budgetMs: 1500, cacheHours: 24 });
+    try {
+      expect((await ask({ phone: FORM.phone }, 'cross-site')).status).toBe(403);
+      expect((await ask({ phone: FORM.phone, extra: 1 })).status).toBe(400);
+      // no courier check is connected yet (PR 567): the answer is the same, nothing is asked or kept
+      expect(await ask({ phone: FORM.phone })).toEqual({ status: 200, body: { ok: true } });
+      expect(await ask({ phone: '017' })).toEqual({ status: 200, body: { ok: true } });
+      expect(await f.t.prisma.courierFraudCheck.count({ where: { storeId: f.S } })).toBe(0);
+    } finally {
+      f.overrides.delete('checkout.phoneRisk');
     }
   });
 });

@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { CALL_OUTCOMES_DEFAULT, callOutcomesSchema, checkoutTransitDuplicateSchema, REFUSER_TERMS, riskApprovalSchema, riskNewCustomerSchema, riskLearningSchema, riskGoodCustomerSchema, riskStopReportSchema, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
+import { CALL_OUTCOMES_DEFAULT, callOutcomesSchema, checkoutPhoneRiskSchema, checkoutTransitDuplicateSchema, REFUSER_TERMS, riskApprovalSchema, riskNewCustomerSchema, riskLearningSchema, riskGoodCustomerSchema, riskStopReportSchema, riskBlockProposalSchema, riskBlocklistSchema, riskBundlingSchema, riskRefusersSchema, riskReportSchema, riskS06Settings } from '../src/registry-risk-s06';
 
 describe('S06 risk settings (v100–109)', () => {
   it('PR 162: the blocklist is in the registry at version 100, labelled in English and Bengali, off as shipped', () => {
@@ -183,5 +183,18 @@ describe('S06 risk settings (v100–109)', () => {
     expect(checkoutTransitDuplicateSchema.parse(before557).sizeExchange).toBe(false);
     expect(checkoutTransitDuplicateSchema.safeParse({ ...spec.default, enabled: true, include: 'open', byPhoneAlone: true }).success).toBe(true);
     for (const bad of [{ include: 'all' }, { windowDays: 0 }, { windowDays: 121 }, { reportDays: 0 }, { extra: 1 }]) expect(checkoutTransitDuplicateSchema.safeParse({ ...spec.default, ...bad }).success, JSON.stringify(bad)).toBe(false);
+  });
+
+  it('PR 559: the phone-entry risk check (109), labelled in both languages, off as shipped, its time and keep bounded', () => {
+    const spec = riskS06Settings['checkout.phoneRisk'];
+    expect(registry['checkout.phoneRisk']).toBe(spec);
+    expect(spec.version).toBe(109);
+    expect(spec.isOwnerData).toBe(false);
+    for (const lang of ['en', 'bn'] as const) {
+      expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+      expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+    }
+    expect(spec.default).toMatchObject({ enabled: false });
+    for (const bad of [{ budgetMs: 100 }, { budgetMs: 10_001 }, { cacheHours: 0 }, { cacheHours: 721 }, { extra: 1 }]) expect(checkoutPhoneRiskSchema.safeParse({ ...spec.default, ...bad }).success, JSON.stringify(bad)).toBe(false);
   });
 });

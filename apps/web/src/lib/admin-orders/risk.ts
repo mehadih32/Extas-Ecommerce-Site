@@ -88,6 +88,9 @@ export function signalDetail(view: AdminView, s: FiredSignal, currency: string):
     // PR 541: the pieces of one order and the owner's limit
     pieces: Number(v.pieces ?? 0),
     atLeast: Number(v.atLeast ?? 0),
+    // PR 559: the pattern's source (our records, or a courier's own check by its key) and the owner's share
+    source: v.source === 'own' ? t(d, 'orders.risk.source.own') : String(v.source ?? ''),
+    failPct: Number(v.failPct ?? 0),
   };
   const parts = [t(d, `orders.risk.why.${s.key}`, vars)];
   if (s.key === 'refusals' && vars.ourFault) parts.push(t(d, 'orders.risk.ourFault', { n: vars.ourFault }));

@@ -16,6 +16,8 @@
 // audited), out of range and stale refused; a proposed hold decided through the API (`orders.hold`): "Let it go" and
 // "Hold", decided twice refused. PR 543: the learning report read (`risk.report`) off as shipped with its card; the card
 // saved (`settings.write`, audited), out of range and stale refused; on, the hold proposals decided above are counted.
+// PR 559: the phone-entry check's card and the pattern's card, off as shipped; saved (`risk.rules.write`, audited) — the
+// pattern into the whole signal set, the other signals untouched; out of range and stale refused; a reader refused.
 // Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
@@ -357,5 +359,28 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     expect(on.body.report.rules.find((r: { key: string }) => r.key === 'gate.levelHold')).toMatchObject({ decided: 2, letGo: 1, kept: 1 });
     expect(on.body.report.rules.find((r: { key: string }) => r.key === 'blockProposal')).toMatchObject({ decided: 1, kept: 1 });
     expect(on.body.report.people[0]).toMatchObject({ actorType: 'STAFF', decided: 3, notes: [expect.objectContaining({ note: 'call first' }), expect.objectContaining({ note: 'known customer' }), expect.objectContaining({ kind: 'blockProposal', decision: 'block' })] });
+  });
+
+  it('PR 559: the phone-entry check and the pattern cards off as shipped, saved and audited; the other signals untouched', async () => {
+    const got = await api('GET', ['phone-risk']);
+    const pr = got.body.cards.phoneRisk as { key: string; value: Record<string, unknown>; version: string };
+    const pt = got.body.cards.pattern as { key: string; value: Record<string, unknown>; version: string };
+    expect(pr).toMatchObject({ key: 'phoneRisk', value: { enabled: false, budgetMs: 1500, cacheHours: 24 } });
+    expect(pt).toMatchObject({ key: 'pattern', value: { enabled: false, weight: 30, minParcels: 4, failPct: 80, halfLifeDays: 180 } });
+    expect((await api('GET', ['phone-risk'], { cookie: reader })).status).toBe(403);
+    expect((await api('GET', ['phone-risk', 'x'])).status).toBe(404);
+    expect(await api('PUT', ['phone-risk'], { body: { key: 'phoneRisk', value: { ...pr.value, budgetMs: 50 }, version: pr.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['budgetMs'] } });
+    expect(await api('PUT', ['phone-risk'], { body: { key: 'pattern', value: { ...pt.value, failPct: 0 }, version: pt.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['failPct'] } });
+    expect((await api('PUT', ['phone-risk'], { body: { key: 'other', value: {}, version: 'x' } })).status).toBe(400);
+    expect(await api('PUT', ['phone-risk'], { body: { key: 'phoneRisk', value: { ...pr.value, enabled: true }, version: pr.version } })).toMatchObject({ status: 200, body: { cards: { phoneRisk: { value: { enabled: true } } } } });
+    const before = await deps.resolver.value('risk.signals', { storeId: f.S });
+    const saved = await api('PUT', ['phone-risk'], { body: { key: 'pattern', value: { ...pt.value, enabled: true, failPct: 75 }, version: pt.version } });
+    expect(saved).toMatchObject({ status: 200, body: { cards: { pattern: { value: { enabled: true, failPct: 75 } } } } });
+    const after = await deps.resolver.value('risk.signals', { storeId: f.S });
+    expect({ ...after, pattern: before.pattern }).toEqual(before);
+    // a screen read before the last save is stale
+    expect(await api('PUT', ['phone-risk'], { body: { key: 'pattern', value: pt.value, version: pt.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    expect(await api('PUT', ['phone-risk'], { body: { key: 'phoneRisk', value: pr.value, version: pr.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    for (const action of ['checkout.phoneRisk.save', 'risk.signals.pattern.save']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBe(1);
   });
 });

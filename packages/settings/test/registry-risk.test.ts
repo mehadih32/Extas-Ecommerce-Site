@@ -12,8 +12,8 @@ describe('risk settings (v43)', () => {
     expect(registryVersion(registry)).toBeGreaterThanOrEqual(43);
     for (const [key, spec] of Object.entries(riskSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      // PR 541 (v46) added two signals to `risk.signals` (since v43)
-      expect(spec.version, key).toBe(key === 'risk.signals' ? 46 : 43);
+      // PR 541 (v46) added two signals to `risk.signals` (since v43); PR 559 (v109) the pattern
+      expect(spec.version, key).toBe(key === 'risk.signals' ? 109 : 43);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.isPublic, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
@@ -29,7 +29,13 @@ describe('risk settings (v43)', () => {
     const s = riskSettings['risk.signals'].default;
     expect(s.orderValue).toMatchObject({ enabled: false, atLeastMinor: null });
     expect(s.riskyArea).toMatchObject({ enabled: false, areaIds: [] });
-    expect(RISK_SIGNAL_KEYS).toHaveLength(18);
+    expect(RISK_SIGNAL_KEYS).toHaveLength(19);
+    // PR 559: the pattern starts off; a set saved before it still reads, with it off
+    expect(s.pattern).toMatchObject({ enabled: false, minParcels: 4, failPct: 80, halfLifeDays: 180 });
+    const { pattern: _gone, ...before559 } = s;
+    expect(riskSignalsSchema.parse(before559).pattern.enabled).toBe(false);
+    expect(riskSignalsSchema.safeParse({ ...s, pattern: { ...s.pattern, failPct: 0 } }).success).toBe(false);
+    expect(riskSignalsSchema.safeParse({ ...s, pattern: { ...s.pattern, halfLifeDays: 0 } }).success).toBe(false);
     // PR 159: the device and the connection start off
     expect(s.deviceMatch.enabled).toBe(false);
     expect(s.ipPhones.enabled).toBe(false);

@@ -1,9 +1,11 @@
 // PR 156 — the risk score model without a database (on PR 157's history counts and PR 158's address checks): every signal fires on its facts and stays quiet without them,
 // a switched-off signal never counts, the owner's weights and thresholds decide the score and the band, the sum is capped
-// at 100, and SIM-F-044 — a refusal the shop caused never counts against the customer. Every value is made up.
+// at 100, and SIM-F-044 — a refusal the shop caused never counts against the customer. PR 559: a pattern, not a slip —
+// the failed share recency-weighted over the number, the same device and the same person, and each courier's own check.
+// Every value is made up.
 import { describe, expect, it } from 'vitest';
 import { RISK_SIGNAL_KEYS, riskSettings, type RiskSignals } from '@extas/settings';
-import { bandOf, scoreRisk, type AddressFacts, type KnownPlace, type PastOrder, type RiskConfig, type RiskFacts } from './pure';
+import { bandOf, patternOf, scoreRisk, type AddressFacts, type KnownPlace, type PastOrder, type RiskConfig, type RiskFacts } from './pure';
 
 const T = new Date('2026-10-24T06:00:00Z');
 const H = 3_600_000;
@@ -227,5 +229,51 @@ describe('PR 156 · the risk score model', () => {
     expect(parsed.identityMatch.enabled).toBe(false);
     expect(parsed.deviceMatch).toEqual({ enabled: false, weight: 20, windowDays: 90 });
     expect(parsed.ipPhones).toEqual({ enabled: false, weight: 15, atLeast: 3, withinHours: 24 });
+  });
+});
+
+describe('PR 559 · a pattern, not a slip', () => {
+  const on = (more: Partial<RiskSignals['pattern']> = {}) => {
+    const s = structuredClone(riskSettings['risk.signals'].default);
+    s.pattern = { ...s.pattern, enabled: true, ...more };
+    return config(s);
+  };
+  const many = (n: number, status: PastOrder['status'], more: Partial<PastOrder> = {}) => Array.from({ length: n }, () => past(status, more));
+
+  it('20 orders with 5 to 8 cancelled is not a pattern; five parcels all refused is', () => {
+    for (const bad of [5, 8]) {
+      const p = [...many(20 - bad, 'DELIVERED'), ...many(bad, 'CANCELLED', { cancelCode: 'CUSTOMER_BEFORE_CONFIRM' })];
+      expect(patternOf(facts({ past: p }), on()), String(bad)).toBeNull();
+    }
+    expect(patternOf(facts({ past: many(5, 'RETURNED', { refusalKey: 'changed-mind' }) }), on())).toEqual({ pct: 100, parcels: 5, source: 'own' });
+    const r = scoreRisk(facts({ past: many(5, 'RETURNED', { refusalKey: 'changed-mind' }) }), on());
+    expect(r.fired.find((x) => x.key === 'pattern')).toMatchObject({ weight: 30, values: { pct: 100, parcels: 5, source: 'own', failPct: 80 } });
+  });
+
+  it('recency weighted: old refusals followed by fresh deliveries fade; fresh refusals after old deliveries weigh most', () => {
+    const at = (days: number) => ({ placedAt: ago(days * D) });
+    // 4 refused two years ago, 2 delivered last week: 67% counted plainly, about 11% weighed by recency
+    expect(patternOf(facts({ past: [...many(4, 'RETURNED', { refusalKey: 'no-money', ...at(720) }), ...many(2, 'DELIVERED', at(5))] }), on({ failPct: 60 }))).toBeNull();
+    // 4 delivered two years ago, 2 refused last week: 33% counted plainly, about 89% weighed by recency
+    expect(patternOf(facts({ past: [...many(4, 'DELIVERED', at(720)), ...many(2, 'RETURNED', { refusalKey: 'no-money', ...at(5) })] }), on({ failPct: 60 }))).toMatchObject({ pct: 89, parcels: 6, source: 'own' });
+  });
+
+  it('SIM-F-044 and SIM-F-015: our-fault refusals and uncounted cancels are left out; the device and the same person count, once each', () => {
+    expect(patternOf(facts({ past: many(5, 'RETURNED', { refusalKey: 'late' }) }), on())).toBeNull();
+    expect(patternOf(facts({ past: many(5, 'CANCELLED', { cancelCode: 'CHANGED_AFTER_BOOKING' }) }), on())).toBeNull();
+    const elsewhere = many(4, 'RETURNED', { refusalKey: 'no-money' });
+    expect(patternOf(facts({ past: [] }), on())).toBeNull();
+    expect(patternOf(facts({ past: [], device: elsewhere.slice(0, 2), identity: elsewhere }), on())).toEqual({ pct: 100, parcels: 4, source: 'own' });
+  });
+
+  it("each courier's own check is a source of its own; the highest share counts, from enough parcels; off never counts", () => {
+    const courier = [
+      { provider: 'steadfast', delivered: 1, cancelled: 4 },
+      { provider: 'pathao', delivered: 0, cancelled: 2 },
+    ];
+    expect(patternOf(facts({ courier }), on())).toEqual({ pct: 80, parcels: 5, source: 'steadfast' });
+    expect(patternOf(facts({ courier: [{ provider: 'pathao', delivered: 0, cancelled: 3 }] }), on())).toBeNull();
+    expect(patternOf(facts({ courier: [{ provider: 'pathao', delivered: 0, cancelled: 3 }] }), on({ minParcels: 3 }))).toEqual({ pct: 100, parcels: 3, source: 'pathao' });
+    expect(keys(facts({ courier }), config(riskSettings['risk.signals'].default))).not.toContain('pattern');
   });
 });

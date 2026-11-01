@@ -96,6 +96,8 @@ const KEYS = [
   'checkout.voice',
   // PR 556: the in-transit duplicate notice
   'checkout.transitDuplicate',
+  // PR 559: the phone-entry risk check
+  'checkout.phoneRisk',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];

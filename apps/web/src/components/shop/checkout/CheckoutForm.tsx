@@ -30,6 +30,8 @@
 // S06 · PR 556: `transit` — while the owner's in-transit duplicate notice is on, a whole phone number is checked once and
 // a piece already on its way to him opens the notice (TransitNotice).
 // PR 557: the notice gets the exchange policy's link for its "another size: exchange on arrival" kind.
+// PR 559: `phoneRisk` — while the owner's phone-entry risk check is on, a whole number is passed to the server once in the
+// background (PhoneRiskPing); nothing is drawn and the form never waits.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { checkForm, checkGift, GIFT_FIELDS, latinDigits, phoneNormalizeBD, type CheckoutView, type DetailsForm, type Field, type FormLimits, type ConsentInput, type GiftField, type PaymentChoice } from '@extas/checkout/pure';
 import { askKey, confirmedOf, payChoiceOf, payOpens, stillAsked } from '@/lib/shop/checkout-model';
@@ -44,6 +46,7 @@ import { GiftCard, type GiftConfig, type GiftForm } from './GiftCard';
 import { ConsentCard } from './ConsentCard';
 import { OffersCard } from './OffersCard';
 import { PausedNote } from './PausedNote';
+import { PhoneRiskPing } from './PhoneRiskPing';
 import { TransitNotice, type TransitConfig } from './TransitNotice';
 import { PaymentStep } from './PaymentStep';
 import { NoteCard } from './NoteCard';
@@ -110,6 +113,8 @@ export interface CheckoutFormProps {
   voice?: VoiceConfig | null;
   /** PR 556: the in-transit duplicate notice is on — each bag line's picture and name; null: off (or a gift). */
   transit?: TransitConfig | null;
+  /** PR 559: the phone-entry risk check is on. */
+  phoneRisk?: boolean;
 }
 
 const isGiftField = (f: unknown): f is GiftField => (GIFT_FIELDS as readonly unknown[]).includes(f);
@@ -142,6 +147,7 @@ export function CheckoutForm({
   callMe: callMeCfg = null,
   voice: voiceCfg = null,
   transit = null,
+  phoneRisk = false,
 }: CheckoutFormProps) {
   const stored = useDraft();
   const rememberDays = remember?.days ?? 0;
@@ -669,6 +675,7 @@ export function CheckoutForm({
                 {gpsCfg ? <GpsShare cfg={gpsCfg} value={point} onChange={setPoint} w={w} /> : null}
                 {callMe.offer ? <CallMeCard offer={callMe.offer} phone={form.phone} name={form.name} lang={money.lang} w={w} onAway={callMe.putAway} /> : null}
                 {transit ? <TransitNotice phone={form.phone} cfg={transit} w={w} lang={money.lang} exchangeHref={links.exchange} /> : null}
+                {phoneRisk ? <PhoneRiskPing phone={form.phone} /> : null}
               </div>
             </section>
             <section className="card co-sec" data-testid="co-delivery">

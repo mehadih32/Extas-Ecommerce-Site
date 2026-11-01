@@ -36,6 +36,10 @@ export interface AdvanceFlagInput {
   placeSure: boolean | null;
   totalMinor: number;
   pieces: number;
+  /** PR 559 (SIM-F-015): this browser's device id, the name and the address line, so the look sees more than the number. */
+  deviceId?: string | null;
+  name?: string | null;
+  addressText?: string | null;
 }
 
 /** The layer that flags a checkout (for the shop's own records only, never for the customer). */
@@ -63,11 +67,11 @@ export interface CheckoutDetails {
 }
 
 /** He has filled everything in: a name as long as the form asks, a real mobile number, and a settled address. */
-export function detailsFinished(d: CheckoutDetails | null | undefined, nameMin: number, addressSettled: boolean): { phone: string } | null {
+export function detailsFinished(d: CheckoutDetails | null | undefined, nameMin: number, addressSettled: boolean): { phone: string; name: string } | null {
   if (!d || !addressSettled) return null;
   if ([...d.name.trim()].length < Math.max(1, nameMin)) return null;
   const p = phoneNormalizeBD(d.phone);
-  return p.ok ? { phone: p.e164 } : null;
+  return p.ok ? { phone: p.e164, name: d.name.trim() } : null;
 }
 
 /**
