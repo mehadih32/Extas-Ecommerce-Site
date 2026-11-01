@@ -69,6 +69,7 @@
     { "id": "money/cost-report", "route": "/admin/money/cost-ledger/report" },
     { "id": "money/profit", "route": "/admin/money/profit" },
     { "id": "money/profit-groups", "route": "/admin/money/profit/groups" },
+    { "id": "money/profit-channels", "route": "/admin/money/profit/channels" },
     { "id": "money/expenses", "route": "/admin/money/expenses" },
     { "id": "money/fees", "route": "/admin/money/fees" },
     { "id": "money/vat", "route": "/admin/money/vat" },

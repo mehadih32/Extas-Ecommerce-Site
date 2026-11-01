@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { costReportSchema, courierEstimateSchema, financeSettings, moneyReportSchema, teamBadgesSchema, vatRatesSchema } from '../src/registry-finance';
+import { costReportSchema, courierEstimateSchema, financeSettings, moneyReportSchema, reportChannelsSchema, teamBadgesSchema, vatRatesSchema } from '../src/registry-finance';
 
 describe('finance settings (v160–169)', () => {
   it('every key is in the registry at a version 160–169, labelled in English and Bengali, its default valid', () => {
@@ -64,5 +64,13 @@ describe('finance settings (v160–169)', () => {
     expect(financeSettings['costs.courierEstimate'].default).toEqual({ enabled: false, codFee: false });
     expect(financeSettings['costs.courierEstimate'].version).toBe(166);
     expect(courierEstimateSchema.safeParse({ enabled: true, codFee: false, extra: 1 }).success).toBe(false);
+  });
+
+  it('PR 355: the channel words ship with the common UTM words; each platform once, lower case, only known platforms', () => {
+    const d = financeSettings['reports.channels'].default;
+    expect(d.platforms.map((p) => p.platform)).toEqual(['META', 'GOOGLE', 'YOUTUBE', 'TIKTOK']);
+    expect(reportChannelsSchema.parse({ paidMediums: [' CPC '], platforms: [] }).paidMediums).toEqual(['cpc']);
+    expect(reportChannelsSchema.safeParse({ ...d, platforms: [...d.platforms, d.platforms[0]] }).success).toBe(false);
+    expect(reportChannelsSchema.safeParse({ ...d, platforms: [{ platform: 'SNAP', sources: [] }] }).success).toBe(false);
   });
 });

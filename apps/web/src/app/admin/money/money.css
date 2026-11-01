@@ -67,6 +67,8 @@
 /* S16 · PR 351 — the money report's words, as the owner gets them on Telegram (lines kept, long lines wrap). */
 .adm2 .pl-report-text{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0;font-family:inherit;line-height:1.6}
 .adm2 .pl-report-more>summary{cursor:pointer;color:var(--ink2);list-style-position:inside;padding:12px 0;line-height:20px}
+/* S16 · PR 355: the "More options" fold of Money → Profit by channel (the UTM words), a 44 px tap height */
+.adm2 .pc-rules-more>summary{cursor:pointer;color:var(--ink2);list-style-position:inside;padding:12px 0;line-height:20px}
 /* S16 · PR 568 — Reports → Sales by area: the map of the areas (circles sized by Sales, coloured by return rate). */
 .adm2 .ar-map{display:block;width:100%;height:auto;max-height:min(70vh,520px);margin-top:8px;background:var(--bg);border-radius:12px}
 .adm2 .ar-dot{fill-opacity:.72;stroke:var(--ink);stroke-opacity:.35;stroke-width:1}

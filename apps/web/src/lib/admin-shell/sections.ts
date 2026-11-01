@@ -270,6 +270,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         pages: [
           { href: '/admin/money/profit', perm: 'books.read', keys: ['moneyProfit'] },
           { href: '/admin/money/profit/groups', perm: 'books.read', keys: ['moneyProfitGroups'] },
+          // S16 · PR 355: its third page, Profit by channel — ad spend per platform against the Sales each brought in.
+          { href: '/admin/money/profit/channels', perm: 'books.read', keys: ['moneyProfitChannels'] },
         ],
       },
       // Go-live gate F-041 / F-054 (PR 172, 171 follow-ups): Money → Refunds & wallet — approve and record refunds, the apology credit, the money rules.

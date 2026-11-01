@@ -1,0 +1,58 @@
+{
+  "moneyProfitChannels": {
+    "metaTitle": "Profit by channel",
+    "title": "Profit by channel",
+    "sub": "Ad spend on Meta, Google, YouTube and TikTok set against the Sales each brought in, against organic and the other channels — with returns and profit after ads.",
+    "period": "From {from} to {to}",
+    "export": "Download the table (CSV)",
+    "kpi": {
+      "spend": "Ad spend",
+      "spendNone": "No ad spend imported for these days",
+      "adsSales": "Sales from ads",
+      "share": "{pct}% of Sales",
+      "sales": "Sales (delivered)",
+      "orders": "{n} orders",
+      "profit": "Profit after ads",
+      "spendUnknown": "Not shown while a platform's spend has no taka amount"
+    },
+    "channel": {
+      "ads:META": "Meta ads (Facebook, Instagram)",
+      "ads:GOOGLE": "Google ads",
+      "ads:YOUTUBE": "YouTube ads",
+      "ads:TIKTOK": "TikTok ads",
+      "ads:OTHER": "Other ads",
+      "organic": "Organic (website, no ad)",
+      "source:MESSENGER": "Messenger",
+      "source:WHATSAPP": "WhatsApp",
+      "source:LIVE_CHAT": "Live chat",
+      "source:PHONE": "Phone",
+      "source:TELEGRAM": "Telegram",
+      "source:ADMIN": "Added by staff",
+      "source:SHOWROOM": "Showroom",
+      "source:IMPORT": "Imported"
+    },
+    "table": {
+      "title": "Channel by channel",
+      "sub": "Contribution = Sales − goods that came back − product cost + delivery charges − courier, fees, packaging, messages and return loss. Profit after ads = contribution − that platform's ad spend. Margin = profit ÷ Sales with a cost.",
+      "line": "{orders} orders · Sales {sales} · came back {returns} · contribution {contribution}",
+      "spend": "Ad spend {spend}",
+      "returned": "{n} parcels came back · return rate {pct}%",
+      "noCost": "{amount} with no cost yet (left out of profit)",
+      "missing": "{n} orders miss a cost part (courier, COD fee, payment fee or packaging): the profit is short of it",
+      "spendUnknown": "A day's spend has no taka amount yet (add the USD rate on Money → Costs & fees)",
+      "total": "Total",
+      "empty": "No delivered orders and no ad spend in this period."
+    },
+    "rules": {
+      "title": "More options: how an order is put in an ad channel",
+      "sub": "An order the ad platform tagged, or one from one of your ad accounts' campaigns, goes to that platform. Otherwise these UTM words decide: a paid medium plus a platform's source. A paid medium with another source is \"Other ads\". Words are separated by commas.",
+      "paid": "UTM mediums that mean a paid visit",
+      "save": "Save",
+      "confirm": "Yes, save",
+      "saved": "Saved.",
+      "stale": "Someone else changed these words. Open the page again.",
+      "bad": "Could not save: check the words (at most 30 each, 40 letters each).",
+      "readOnly": "Only someone with the costs permission can change these words."
+    }
+  }
+}

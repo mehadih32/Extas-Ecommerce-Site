@@ -113,6 +113,7 @@
       "open": "VAT report",
       "off": "not counted"
     },
-    "groups": "Profit by category or style"
+    "groups": "Profit by category or style",
+    "channels": "Profit by channel"
   }
 }
