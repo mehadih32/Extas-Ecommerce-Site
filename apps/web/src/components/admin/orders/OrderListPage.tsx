@@ -126,7 +126,7 @@ export function filterSelects(view: AdminView, q: ListQuery, bands: readonly Fie
   return [
     sel('status', FILTER_STATES, 'st'),
     sel('payment', od.PAYMENT_METHODS, 'method'),
-    sel('source', od.ORDER_SOURCES, 'source'),
+    sel('source', od.LIST_SOURCES, 'source'),
     { name: 'risk', label: risk, any: t(d, 'orders.list.any', { name: risk }), value: q.risk ?? '', options: bands.map((b) => ({ value: b.value, label: b.label })) },
     sel('section', RISK_SECTIONS, 'section'),
     { name: 'sort', label: t(d, 'orders.list.sort'), any: t(d, 'orders.list.sortNew'), value: q.sort ?? '', options: [{ value: 'risk', label: t(d, 'orders.list.sortRisk') }] },

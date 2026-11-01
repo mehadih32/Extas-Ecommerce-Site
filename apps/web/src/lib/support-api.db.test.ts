@@ -8,12 +8,14 @@
 // PR 428: the thread's customer card (his orders, the one on its way), the card switched off.
 // PR 429: products in the chat — off, the drawer's routes refuse; switched on, the search and one product sent with its
 // tracked link, the thread's card; a reader is refused at the door; the shop's click route keeps the reference.
+// PR 430: orders from the chat — off, the bag's route refuses; switched on, a piece into the chat's bag, priced with the
+// gate, and "Create order" placed with the chat's channel as its source, linked to the conversation; a reader is refused.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import type { MediaDeps } from '@extas/media';
-import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
+import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import { receiveMessage } from '@extas/support';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from './admin-api';
@@ -171,7 +173,7 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const r = await j('GET', ['settings']);
     const files = { enabled: true, maxPerMessage: 4, maxMb: 10, kinds: { image: true, video: true, pdf: true } };
     expect(r.body.cards['support.attachments'].value).toEqual(files);
-    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.catalogue', 'support.channels', 'support.context', 'support.identity', 'support.inbox', 'support.liveChat']);
+    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.identity', 'support.inbox', 'support.liveChat']);
     const version = r.body.cards['support.attachments'].version as string;
     const saved = await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxPerMessage: 3 }, version } });
     expect(saved.status).toBe(200);
@@ -288,5 +290,39 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     expect(kept.status).toBe(204);
     expect(kept.headers.getSetCookie()[0]).toMatch(new RegExp(`^${SUPPORT_REF_COOKIE}=${sent.body.refCode}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800$`));
     expect((await t.prisma.supportProductShare.findFirstOrThrow({ where: { refCode: sent.body.refCode } })).clickedAt).not.toBeNull();
+  });
+
+  it('PR 430: orders from the chat — off, refused; on, the bag priced with its gate and the order kept on its channel', async () => {
+    const p = await t.prisma.product.create({ data: { storeId, slug: 'sample-api-tee', nameEn: 'Sample API Tee', status: 'PUBLISHED', publishedAt: new Date() } });
+    const v = await t.prisma.productVariant.create({ data: { storeId, productId: p.id, sku: 'SAT-1', active: true, inStock: true, priceMinor: 55_000 } });
+    const wh = await t.prisma.warehouse.create({ data: { code: 'WH-430', name: 'Sample warehouse' } });
+    const loc = await t.prisma.inventoryLocation.create({ data: { warehouseId: wh.id, code: 'main', name: 'Main', kind: 'WAREHOUSE' } });
+    await t.prisma.stockLevel.create({ data: { variantId: v.id, locationId: loc.id, onHand: 5, available: 5, erpUpdatedAt: new Date() } });
+    // the owner's own Cash on Delivery switch (owner data, empty on a new installation)
+    await deps.resolver.set('payment.cod.enabled', true, storeTarget(storeId), { ownerApproved: true, reason: 'test: the owner switched Cash on Delivery on' });
+    expect((await j('GET', ['c', conversationId, 'cart'])).body.error).toBe('CART_OFF');
+    const cards = (await j('GET', ['settings'])).body.cards;
+    expect(cards['support.cart'].value.enabled).toBe(false);
+    expect((await j('PUT', ['settings'], { body: { key: 'support.cart', value: { ...cards['support.cart'].value, enabled: true }, version: cards['support.cart'].version } })).status).toBe(200);
+    expect((await j('GET', ['c', conversationId])).body.thread.you.cart).toBe(true);
+    expect((await j('GET', ['c', conversationId, 'cart'], { cookie: reader })).status).toBe(403);
+    const added = await j('POST', ['c', conversationId, 'cart'], { body: { action: 'add', variantId: v.id } });
+    expect(added.status).toBe(200);
+    expect(added.body.bag.lines).toMatchObject([{ kind: 'item', name: { nameEn: 'Sample API Tee' }, quantity: 1, amountMinor: 55_000 }]);
+    const form = { name: 'Sample Chat Buyer', phone: '01700000432', address: 'House 4, Road 5, Dhanmondi, Dhaka 1209' };
+    const q = await j('POST', ['c', conversationId, 'cart'], { body: { action: 'quote', form } });
+    expect(q.status).toBe(200);
+    expect(q.body.quote).toMatchObject({ gate: 'cod', problem: null });
+    const key = crypto.randomUUID();
+    const made = await j('POST', ['c', conversationId, 'cart'], { body: { action: 'order', form, fingerprint: q.body.quote.fingerprint, requestKey: key } });
+    expect(made.status).toBe(200);
+    expect(made.body.order).toMatchObject({ gate: 'cod', replay: false, payLink: null });
+    const o = await t.prisma.order.findUniqueOrThrow({ where: { id: made.body.order.orderId } });
+    expect(o).toMatchObject({ source: 'LIVE_CHAT', paymentMethod: 'COD' });
+    expect((await j('GET', ['c', conversationId])).body.thread.order).toMatchObject({ id: o.id, number: o.number });
+    // a stale fingerprint is the checkout's own refusal, with its code
+    await j('POST', ['c', conversationId, 'cart'], { body: { action: 'add', variantId: v.id } });
+    const stale = await j('POST', ['c', conversationId, 'cart'], { body: { action: 'order', form, fingerprint: 'c'.repeat(64), requestKey: crypto.randomUUID() } });
+    expect(stale.body).toMatchObject({ ok: false, error: 'CHECKOUT', data: { code: 'PRICE_CHANGED' } });
   });
 });

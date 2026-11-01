@@ -56,6 +56,11 @@ export const SUPPORT_ERROR_CODES = [
   // PR 429: products in the chat are switched off; the colour and size picked is sold out
   'CATALOGUE_OFF',
   'OUT_OF_STOCK',
+  // PR 430: orders from the chat are switched off; Cash on Delivery is closed for this order and no advance is asked;
+  // the checkout refused the order (its own code in `data.code`: FORM, PRICE_CHANGED, OUT_OF_STOCK, EMPTY …)
+  'CART_OFF',
+  'NO_COD',
+  'CHECKOUT',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 
@@ -89,7 +94,7 @@ export interface Who {
 }
 
 /** The support permissions (packages/auth/src/catalogue.ts). */
-export const SUPPORT_PERMISSIONS = ['support.read', 'support.reply', 'support.assign', 'support.settings', 'support.identity'] as const satisfies readonly PermissionKey[];
+export const SUPPORT_PERMISSIONS = ['support.read', 'support.reply', 'support.assign', 'support.settings', 'support.identity', 'support.order'] as const satisfies readonly PermissionKey[];
 export type SupportPermission = (typeof SUPPORT_PERMISSIONS)[number];
 
 export function checkStoreId(storeId: number): void {

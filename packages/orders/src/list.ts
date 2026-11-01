@@ -71,6 +71,10 @@ export function viewWhere(view: OrderView, openReviewOrderIds: string[]): Prisma
 /** Prisma's PaymentMethod and OrderSource, for the list's filters. */
 export const PAYMENT_METHODS = ['COD', 'BKASH', 'NAGAD', 'CARD', 'CASH', 'WALLET', 'BANK_TRANSFER', 'ROCKET', 'UPAY', 'ONLINE'] as const satisfies readonly NonNullable<Prisma.OrderUncheckedCreateInput['paymentMethod']>[];
 export const ORDER_SOURCES = ['WEBSITE', 'LANDING_PAGE', 'MESSENGER', 'WHATSAPP', 'LIVE_CHAT', 'PHONE', 'TELEGRAM', 'ADMIN', 'SHOWROOM', 'IMPORT'] as const satisfies readonly Prisma.OrderUncheckedCreateInput['source'][];
+/** S22 · PR 430 (B4.6 "order source filtering"): the channels of the support inbox — "from support" is any of them. */
+export const SUPPORT_SOURCES = ['MESSENGER', 'WHATSAPP', 'LIVE_CHAT'] as const satisfies readonly (typeof ORDER_SOURCES)[number][];
+/** The list's source filter: one channel, or every support channel together. */
+export const LIST_SOURCES = ['SUPPORT', ...ORDER_SOURCES] as const;
 
 /** PR 541 (follow-up 295): newest first, or the highest risk score first (unscored last, then newest). */
 export const LIST_SORTS = ['new', 'risk'] as const;
@@ -83,7 +87,7 @@ export const listQuery = z
     q: z.string().trim().max(80).optional(),
     /** PR 140: the payment method and the channel the order came from (filters of the list). */
     payment: z.enum(PAYMENT_METHODS).optional(),
-    source: z.enum(ORDER_SOURCES).optional(),
+    source: z.enum(LIST_SOURCES).optional(),
     /** PR 541 (follow-up 295): the risk band (a key of `risk.bands`) and the section; "risk" sorts the highest score first. */
     risk: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,59}$/).optional(),
     section: z.enum(RISK_SECTIONS).optional(),
@@ -177,7 +181,7 @@ export function listWhere(storeId: number, q: ListFilters, reviews: string[]): P
   const status = q.status ? { status: q.status as OrderState } : {};
   const filters: Prisma.OrderWhereInput = {
     ...(q.payment ? { paymentMethod: q.payment } : {}),
-    ...(q.source ? { source: q.source } : {}),
+    ...(q.source === 'SUPPORT' ? { source: { in: [...SUPPORT_SOURCES] } } : q.source ? { source: q.source } : {}),
     ...(q.risk ? { riskBand: q.risk } : {}),
     ...(q.section ? { riskSection: q.section } : {}),
   };

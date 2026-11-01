@@ -345,6 +345,10 @@ export const PERMISSIONS = {
   // S22 · PR 427 — who is writing (B4.5): set a chat's number by hand, link or unlink its customer, and say "not the same
   // person" when the inbox put two chats together. Audited; never sends a message or changes an order.
   'support.identity': { group: 'support' },
+  // S22 · PR 430 — orders from a chat (B4.6): fill the chat's bag and press "Create order" (or "Take advance" when the
+  // owner's Parameter for Checkout asks one). The order is priced and checked by the checkout's own engines and keeps the
+  // chat's channel as its source; never changes a price, a discount, COD or a risk rule, and never moves money.
+  'support.order': { group: 'support' },
   // S08 · PR 192 (CN-018 (7), SUP-02) — Support › Rider issues: log a customer's overcharge complaint with its proof
   // (`support.riderIssues.write`); approve or reject one (`support.riderIssues.decide`, the owner and managers: approval
   // opens the courier claim for the exact extra). Asking the refund of the extra also needs `payments.refunds.request`,

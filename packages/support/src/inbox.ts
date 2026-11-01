@@ -195,7 +195,7 @@ export interface Thread {
   /** PR 428 (B4.5): the person's orders beside the chat; null while `support.context` is off. */
   context: ChatContext | null;
   /** What the person reading may do here (`identity`: set the number, unlink the customer, "not the same person"). */
-  you: { id: string | null; reply: boolean; assign: boolean; identity: boolean; catalogue: boolean };
+  you: { id: string | null; reply: boolean; assign: boolean; identity: boolean; catalogue: boolean; /** PR 430: the chat's bag and "Create order" (`support.cart` on and `support.order`). */ cart: boolean };
 }
 
 /** One conversation with every message, file, note and log line, oldest first. */
@@ -212,9 +212,10 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
     },
   });
   if (!c) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
-  const [ctxOn, catOn, shares] = await Promise.all([
+  const [ctxOn, catOn, cartOn, shares] = await Promise.all([
     setting(deps, who.storeId, 'support.context'),
     setting(deps, who.storeId, 'support.catalogue'),
+    setting(deps, who.storeId, 'support.cart'),
     deps.db.supportProductShare.findMany({ where: { storeId: who.storeId, conversationId: c.id, messageId: { not: null } }, select: { messageId: true, productId: true, refCode: true, clickedAt: true, orderId: true } }),
   ]);
   const shareOrderIds = [...new Set(shares.flatMap((s) => (s.orderId ? [s.orderId] : [])))];
@@ -265,7 +266,7 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
     events: c.events.map((e) => ({ id: e.id, kind: e.kind, actor: { type: e.actorType, name: e.actorName }, data: (e.data as Record<string, unknown> | null) ?? null, at: e.createdAt })),
     person,
     context,
-    you: { id: who.actor.staffUserId, reply: perms.has('support.reply'), assign: perms.has('support.assign'), identity: perms.has('support.identity'), catalogue: catOn.enabled && perms.has('support.reply') },
+    you: { id: who.actor.staffUserId, reply: perms.has('support.reply'), assign: perms.has('support.assign'), identity: perms.has('support.identity'), catalogue: catOn.enabled && perms.has('support.reply'), cart: cartOn.enabled && perms.has('support.order') },
   };
 }
 

@@ -115,7 +115,7 @@ async function keepFlagShown(deps: CheckoutApiDeps, customerId: string | null, q
  * on): the same phone, the same device, or an alike name and address. First, so the duplicate rules and the risk score
  * read it. A record only: it never fails, holds or blocks the customer's order (a problem is logged).
  */
-async function linkToIdentity(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function linkToIdentity(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await linkIdentity({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
@@ -128,7 +128,7 @@ async function linkToIdentity(deps: CheckoutApiDeps, orderId: string): Promise<v
  * looks alike waits in the team's review queue). It never fails the customer's order: a problem is logged and the order
  * stays placed (the team can still see both orders).
  */
-async function screenForDuplicates(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function screenForDuplicates(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await screenOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
@@ -141,7 +141,7 @@ async function screenForDuplicates(deps: CheckoutApiDeps, orderId: string): Prom
  * same piece in neighbouring sizes is asked about, a family's sizes (the bag's "for different people") are only a note
  * (SIM-F-036). Like the duplicate check, it never fails the customer's order.
  */
-async function checkTwoSizes(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function checkTwoSizes(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await twoSizeCheck({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
@@ -154,7 +154,7 @@ async function checkTwoSizes(deps: CheckoutApiDeps, orderId: string): Promise<vo
  * the order with its reasons, for the team only. It never fails, holds or blocks the customer's order: a problem is
  * logged and the order stays placed, unscored (a person can score it again from the order page).
  */
-async function scoreRisk(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function scoreRisk(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await assessRisk({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
@@ -167,7 +167,7 @@ async function scoreRisk(deps: CheckoutApiDeps, orderId: string): Promise<void> 
  * customer with no earlier order anywhere gets one call task and a mark for the team. Never holds, declines or asks an
  * advance; a problem is logged and the order stays placed.
  */
-async function checkNewCustomer(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function checkNewCustomer(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await newCustomerOnOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
@@ -179,7 +179,7 @@ async function checkNewCustomer(deps: CheckoutApiDeps, orderId: string): Promise
  * S06 · PR 162 — the blocklist the moment the order lands (off until the owner turns `risk.blocklist` on): a listed
  * number, or the same identity, is marked for the team, or held for a person. Never fails, cancels or tells the customer.
  */
-async function checkBlocklist(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function checkBlocklist(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await blocklistOnOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
@@ -192,7 +192,7 @@ async function checkBlocklist(deps: CheckoutApiDeps, orderId: string): Promise<v
  * owner's terms for the number (or its identity) become the order's advance proposal, for a person to send. Never fails
  * the order, changes COD by itself or tells the customer.
  */
-async function checkRefuserTerms(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function checkRefuserTerms(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await refuserTermsOnOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
@@ -205,7 +205,7 @@ async function checkRefuserTerms(deps: CheckoutApiDeps, orderId: string): Promis
  * sets the number): a person with enough rejections has the number proposed for the blocklist and the order marked, for
  * a person to decide. Nothing is blocked, held or cancelled; the customer is told nothing. Never stops the order.
  */
-async function checkBlockProposal(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function checkBlockProposal(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await blockProposalOnOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
@@ -218,7 +218,7 @@ async function checkBlockProposal(deps: CheckoutApiDeps, orderId: string): Promi
  * `risk.bundling` on and sets its hours): the order is marked for a person to press "One parcel", or grouped with the same
  * person's other open orders to the same address. Lines, money and the status never change. Never stops the order.
  */
-async function checkBundling(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function checkBundling(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await bundleOnOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
@@ -231,7 +231,7 @@ async function checkBundling(deps: CheckoutApiDeps, orderId: string): Promise<vo
  * a duplicate, a re-order, a new identity, high risk, watch, prepaid or clear, with its note on the timeline; the strong
  * sections wait for a person. Marking only: nothing is cancelled, held or blocked, and the customer's order never fails.
  */
-async function sectionRisk(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function sectionRisk(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await placeInSection({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
@@ -244,12 +244,33 @@ async function sectionRisk(deps: CheckoutApiDeps, orderId: string): Promise<void
  * order service's AWAITING_ADVANCE; the payment page pays it and puts it back in the queue). Never cancelled, held or
  * blocked by itself, and the customer's order never fails: a problem is logged and the order stays placed.
  */
-async function waitForAdvance(deps: CheckoutApiDeps, orderId: string): Promise<void> {
+async function waitForAdvance(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await askCheckoutAdvance({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
   } catch (e) {
     console.warn(`checkout advance: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
   }
+}
+
+/** What the checks after an order need: the checkout's engines and the store. */
+export type LandedDeps = Pick<CheckoutApiDeps, 'checkout' | 'storeId'>;
+
+/**
+ * Every check the shop runs the moment an order lands, in this order (each one logs its own problem and never fails the
+ * order). The checkout's Confirm runs it; PR 430's "Create order" from a support chat runs the same list.
+ */
+export async function orderLanded(deps: LandedDeps, orderId: string): Promise<void> {
+  await linkToIdentity(deps, orderId);
+  await screenForDuplicates(deps, orderId);
+  await checkTwoSizes(deps, orderId);
+  await scoreRisk(deps, orderId);
+  await checkBlocklist(deps, orderId);
+  await checkRefuserTerms(deps, orderId);
+  await checkBlockProposal(deps, orderId);
+  await sectionRisk(deps, orderId);
+  await checkNewCustomer(deps, orderId);
+  await waitForAdvance(deps, orderId);
+  await checkBundling(deps, orderId);
 }
 
 /** Where the page goes after the order or a payment answer, in its language. */
@@ -281,17 +302,7 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip, deviceId: device, attribution, supportRef, input: b });
     if (!r.replay) {
       await noteBotSignals({ db: deps.checkout.db, settings: deps.checkout.settings }, { form: 'checkout', sent: human, storeId: deps.storeId, ip });
-      await linkToIdentity(deps, r.orderId);
-      await screenForDuplicates(deps, r.orderId);
-      await checkTwoSizes(deps, r.orderId);
-      await scoreRisk(deps, r.orderId);
-      await checkBlocklist(deps, r.orderId);
-      await checkRefuserTerms(deps, r.orderId);
-      await checkBlockProposal(deps, r.orderId);
-      await sectionRisk(deps, r.orderId);
-      await checkNewCustomer(deps, r.orderId);
-      await waitForAdvance(deps, r.orderId);
-      await checkBundling(deps, r.orderId);
+      await orderLanded(deps, r.orderId);
       // PR 257: the purchase goes to the ad platforms from the server while tracking is on (quiet, never stops the order)
       await trackPurchase(request, { storeId: deps.storeId, orderId: r.orderId });
     }

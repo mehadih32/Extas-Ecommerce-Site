@@ -153,7 +153,9 @@
       },
       "PRODUCT_SENT": "{name} sent a product",
       "PRODUCT_OPENED": "The customer opened the product link",
-      "PRODUCT_ORDERED": "Order {number} placed from the product link"
+      "PRODUCT_ORDERED": "Order {number} placed from the product link",
+      "ORDER_CREATED": "{name} created order {number} from the chat",
+      "ORDER_CREATED_ADVANCE": "{name} created order {number}; it waits for its advance (pay link sent)"
     },
     "err": {
       "STALE": "Someone changed this conversation in between; it was read again.",
@@ -179,7 +181,18 @@
       "CONTACT_FORM_OFF": "The contact page's form is switched off.",
       "NOT_LINKED": "There is nothing to undo here.",
       "CATALOGUE_OFF": "Products in the chat are switched off in Support settings.",
-      "OUT_OF_STOCK": "This colour and size is sold out."
+      "OUT_OF_STOCK": "This colour and size is sold out.",
+      "CART_OFF": "Orders from the chat are switched off in Support settings.",
+      "NO_COD": "Cash on Delivery is closed for this order and no advance is asked.",
+      "CHECKOUT": "The order could not be made. Check again.",
+      "CHECKOUT_PRICE_CHANGED": "The price or the stock changed. Check again, then press again.",
+      "CHECKOUT_OUT_OF_STOCK": "A piece is sold out now. Take it out or change it.",
+      "CHECKOUT_EMPTY": "The bag is empty.",
+      "CHECKOUT_FORM": "A detail is not finished.",
+      "CHECKOUT_NO_PAYMENT": "No payment method is open for this order.",
+      "CHECKOUT_PAUSED": "Ordering is paused while the ERP holds the account.",
+      "CHECKOUT_CART_NOT_OPEN": "This bag already became an order. The page was read again.",
+      "CHECKOUT_IDEMPOTENCY": "That press was already used. Press again."
     },
     "set": {
       "title": "Support settings",
@@ -318,6 +331,15 @@
         "resultsHelp": "How many products one search shows (4–20).",
         "creditDays": "Days an order is credited",
         "creditDaysHelp": "After the customer first opens the link, an order from that phone or computer within these days is credited to the chat (1–90)."
+      },
+      "cart": {
+        "h": "Orders from the chat",
+        "d": "A \"Chat bag\" beside each conversation: products from the Products drawer at the shop's own prices and combos, then \"Create order\". The order keeps the chat's channel (WhatsApp, Messenger, Live chat). Your Parameter for Checkout is the fraud gate: when it asks this customer for an advance, no Cash on Delivery order is made — the order waits for the advance and its pay link goes into the chat.",
+        "enabled": "Orders from the chat",
+        "enabledHelp": "Uses the Products drawer, so \"Products in the chat\" must be on too. Who may press Create order is the \"Create an order from a chat\" permission.",
+        "wordsEn": "Pay link message (English)",
+        "wordsBn": "Pay link message (Bengali)",
+        "wordsHelp": "What the customer reads with the pay link. Use {number} for the order, {amount} for the advance and {link} for the link ({link} must be there). Never type an amount: it comes from your advance rule."
       }
     },
     "person": {
@@ -377,7 +399,48 @@
       "card": "Product link",
       "opened": "opened",
       "notOpened": "not opened yet",
-      "ordered": "ordered {number}"
+      "ordered": "ordered {number}",
+      "add": "Add to bag",
+      "added": "Added to the chat bag."
+    },
+    "cart": {
+      "h": "Chat bag",
+      "d": "This customer's order, at the shop's own prices, combos and offers.",
+      "empty": "The bag is empty. Add products with \"Add to bag\" in the Products drawer.",
+      "less": "One less",
+      "more": "One more",
+      "remove": "Take out",
+      "set": "Set",
+      "saves": "saves {amount}",
+      "soldOut": "sold out now",
+      "items": "Items",
+      "offers": "Offer",
+      "delivery": "Delivery",
+      "deliveryFree": "Free",
+      "deliveryUnknown": "Not known yet (the team calls)",
+      "total": "Total",
+      "due": "Collect on delivery",
+      "name": "Name",
+      "phone": "Phone",
+      "address": "Full address",
+      "check": "Check price and stock",
+      "checking": "Checking…",
+      "create": "Create order (Cash on Delivery)",
+      "creating": "Creating…",
+      "advance": "Take advance",
+      "advanceLine": "The shop's rule asks {amount} ahead for this order, so it is not a Cash on Delivery order. Take advance makes the order, it waits for the advance, and the pay link goes into the chat.",
+      "closed": "Cash on Delivery is closed for this order and no advance is asked, so no order can be made here.",
+      "addressAsk": "The address names no place the shop knows: the order will be marked \"address unclear\" and the team will call.",
+      "made": "Order {number} created.",
+      "madeAdvance": "Order {number} created. It waits for the advance; the pay link is in the chat.",
+      "last": "Last order from this chat:",
+      "openOrder": "Open order",
+      "problem": {
+        "name": "Write the customer's name.",
+        "phone": "The phone number is not a full mobile number.",
+        "address": "Write the full address.",
+        "other": "A detail is not finished."
+      }
     }
   }
 }

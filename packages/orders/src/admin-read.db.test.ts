@@ -64,6 +64,16 @@ describe.skipIf(!HAS_TEST_DB)('the admin order screens read on PostgreSQL (S05 U
     const phone = await listOrders(d(), f.staff, { source: 'PHONE' });
     expect(phone.rows.map((r) => r.number)).toEqual([plain.number]);
     expect(phone.rows[0]!.source).toBe('PHONE');
+    // PR 430: "from support" is every chat channel together, then one channel
+    await db().order.update({ where: { id: reviewed.orderId }, data: { source: 'WHATSAPP' } });
+    await db().order.update({ where: { id: asked.orderId }, data: { source: 'MESSENGER' } });
+    try {
+      const support = await listOrders(d(), f.staff, { source: 'SUPPORT' });
+      expect(support.rows.map((r) => r.number).sort()).toEqual([asked.number, reviewed.number].sort());
+      expect((await listOrders(d(), f.staff, { source: 'WHATSAPP' })).rows.map((r) => r.number)).toEqual([reviewed.number]);
+    } finally {
+      await db().order.updateMany({ where: { id: { in: [reviewed.orderId, asked.orderId] } }, data: { source: 'WEBSITE' } });
+    }
     await expect(listOrders(d(), f.staff, { payment: 'GOLD' })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
   });
 

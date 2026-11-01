@@ -19,6 +19,15 @@
 //   POST  /api/admin/support/c/:id/products     PR 429: {productId, variantId?, colour?, lang?, requestKey, version?}
 //                                               one product sent as a card — its photos, name, price and the link
 //                                               with the chat's `r=` reference (support.reply)
+//   GET   /api/admin/support/c/:id/cart         PR 430: the chat's bag — its lines priced by the shop's own engines and
+//                                               the details to start from (support.order; CART_OFF while
+//                                               `support.cart` is off)
+//   POST  /api/admin/support/c/:id/cart         PR 430: {action: add|quantity|remove, …} the bag changed; {action: quote,
+//                                               form} the checkout priced for the details with the fraud gate (cod |
+//                                               advance | closed); {action: order, form, fingerprint, requestKey}
+//                                               "Create order" / "Take advance": the checkout's own placeOrder with the
+//                                               chat's channel as source, the shop's after-order checks, the pay link
+//                                               sent into the chat when the owner's layer asks an advance (support.order)
 //   POST  /api/admin/support/files              multipart `file` — one file for a reply, checked by its contents
 //                                               against Support settings; answers its id (support.reply)
 //   GET   /api/admin/support/files/:id          one file of a conversation, our stored copy (support.read)
@@ -33,11 +42,16 @@
 // PR 426: replies go out through the channels' connectors (lib/support-connect: Messenger, WhatsApp with Meta's reply
 // window, the site's live chat), each the practice mock until its key is in Keys & connections.
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { checkoutFlag } from '@extas/orders';
 import { storeGeneratedFile, type MediaDeps } from '@extas/media';
 import type { PermissionKey } from '@extas/auth';
 import * as sp from '@extas/support';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { mediaDeps } from './media';
+import { paymentModeOf } from './payments-gateway';
+import { orderLanded } from './shop/checkout-api';
+import { hrefIn } from './shop/lang';
+import { ROUTES } from './shop/routes';
 import { siteAddress } from './seo/site';
 import { supportConnections, supportSenders } from './support-connect';
 import inboxEn from '../../messages/admin-inbox.en.json';
@@ -62,6 +76,16 @@ export const supportDeps = (d: AdminDeps): sp.SupportDeps => {
   return { ...base, channels: sp.supportChannelAdapters(base, supportSenders(() => supportConnections(d))) };
 };
 
+/**
+ * PR 430: what orders from the chat need — the support core, the checkout's engines as the shop wires them (the owner's
+ * Parameter for Checkout is the fraud gate; the payment modes for the go-live guard) and the shop's after-order checks.
+ */
+export const chatOrderDeps = (d: AdminDeps): sp.ChatOrderDeps => {
+  const settings = d.resolver;
+  const checkout = { db: d.db, settings, now: d.now, paymentMode: paymentModeOf, advanceFlag: (input: Parameters<typeof checkoutFlag>[1]) => checkoutFlag({ db: d.db, settings, now: d.now }, input) };
+  return { ...supportDeps(d), checkout, afterPlace: (storeId, orderId) => orderLanded({ checkout, storeId }, orderId) };
+};
+
 type Route = { perm: PermissionKey; methods: string[] };
 
 /** Which permission each path asks for at the door (the package checks again, and "give to someone" more closely). */
@@ -73,6 +97,7 @@ function routeOf(path: string[], method: string): Route | null {
   if (a === 'c' && isUuid(b) && (c === 'messages' || c === 'assign' || c === 'status')) return { perm: 'support.reply', methods: ['POST'] };
   if (a === 'c' && isUuid(b) && c === 'identity') return { perm: 'support.identity', methods: ['POST'] };
   if (a === 'c' && isUuid(b) && c === 'products') return { perm: 'support.reply', methods: ['POST'] };
+  if (a === 'c' && isUuid(b) && c === 'cart') return { perm: 'support.order', methods: ['GET', 'POST'] };
   if (a === 'catalogue' && b === undefined) return { perm: 'support.reply', methods: ['GET'] };
   if (a === 'files' && b === undefined && c === undefined) return { perm: 'support.reply', methods: ['POST'] };
   if (a === 'files' && isUuid(b) && c === undefined) return { perm: 'support.read', methods: ['GET'] };
@@ -141,6 +166,21 @@ async function shopOriginOf(storeId: number): Promise<string | null> {
   }
 }
 
+/** PR 430: the chat's bag, its price with the gate, and "Create order". */
+async function cartRoute(request: Request, d: AdminDeps, who: sp.Who, id: string, url: URL): Promise<Response> {
+  const cd = chatOrderDeps(d);
+  const lang = url.searchParams.get('lang') === 'bn' ? 'bn' : 'en';
+  if (request.method.toUpperCase() === 'GET') return json({ ok: true, bag: await sp.chatBag(cd, who, id, lang) });
+  const { action, ...rest } = (await body(request)) as { action?: unknown };
+  const input = { ...rest, conversationId: id };
+  if (action === 'quote') return json({ ok: true, quote: await sp.quoteChatOrder(cd, who, input) });
+  if (action === 'order') {
+    const origin = (await shopOriginOf(who.storeId)) ?? '';
+    return json({ ok: true, order: await sp.createChatOrder(cd, who, input, { payLink: (token, l) => `${origin}${hrefIn(l, ROUTES.payLink(token))}` }) });
+  }
+  return json({ ok: true, bag: await sp.changeChatBag(cd, who, { ...input, action }) });
+}
+
 /** `path` is what comes after /api/admin/support; `media` (tests) replaces the app's file storage. */
 export async function supportRoute(request: Request, deps: AdminDeps | null, path: string[], media?: MediaDeps | null): Promise<Response> {
   const m = request.method.toUpperCase();
@@ -163,6 +203,7 @@ export async function supportRoute(request: Request, deps: AdminDeps | null, pat
     }
     if (a === 'c' && id) {
       if (action === undefined) return json({ ok: true, thread: await sp.supportThread(sd, who, id) });
+      if (action === 'cart') return await cartRoute(request, d, who, id, url);
       const input = { ...(await body(request)), conversationId: id };
       if (action === 'messages') return json({ ok: true, ...(await sp.replyToConversation(sd, who, input)) });
       if (action === 'products') return json({ ok: true, ...(await sp.shareProduct(sd, who, input, { origin: await shopOriginOf(storeId) })) });

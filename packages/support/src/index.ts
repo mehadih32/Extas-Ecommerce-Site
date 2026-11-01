@@ -27,6 +27,11 @@
 //   catalogue.ts  the drawer's product search (chatCatalogue), one product sent as a card with its tracked link
 //                 (shareProduct, kept with its message), the customer's first click on it (openShare)
 //
+// PR 430: orders from the chat.
+//   chat-cart.ts  the chat's own bag (chatBag, changeChatBag: the shop's prices and combos), the checkout priced for the
+//                 typed details with the owner's fraud gate (quoteChatOrder), and "Create order" / "Take advance"
+//                 (createChatOrder: the checkout's own placeOrder, the chat's channel as source, the pay link sent)
+//
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
 export * from './channels';
@@ -45,3 +50,5 @@ export * from './contact-form';
 export * from './identity';
 // PR 429 — the catalogue drawer: a product sent in the chat with its tracked link, the customer's click.
 export * from './catalogue';
+// PR 430 — orders from the chat: the chat's bag, the fraud gate, the order with its channel.
+export * from './chat-cart';

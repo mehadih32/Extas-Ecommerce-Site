@@ -277,6 +277,7 @@
       "assign": "Give a conversation to someone else",
       "settings": "Change Support settings",
       "identity": "Set who is writing a chat: its number, its customer, \"not the same person\" (never sends anything or changes an order)",
+      "order": "Create an order from a chat: fill the chat bag and press Create order (the shop's own prices and checks; an advance only when the checkout's own rule asks it)",
       "riderIssues": {
         "write": "Log a rider overcharge complaint with its proof",
         "decide": "Approve or reject a rider overcharge complaint (opens the courier claim)"

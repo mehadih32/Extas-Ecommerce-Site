@@ -59,6 +59,8 @@ export function logLine(dict: Dict, e: { kind: string; actor: { type: string; na
   // PR 429: a product sent from the drawer, its link opened, an order placed from it
   else if (e.kind === 'PRODUCT_SENT' || e.kind === 'PRODUCT_OPENED') line = t(dict, `sup.log.${e.kind}`, { name });
   else if (e.kind === 'PRODUCT_ORDERED') line = t(dict, 'sup.log.PRODUCT_ORDERED', { number: typeof d.number === 'string' ? d.number : '' });
+  // PR 430: an order created from the chat's bag (waiting for its advance when the owner's rule asked one)
+  else if (e.kind === 'ORDER_CREATED') line = t(dict, d.gate === 'advance' ? 'sup.log.ORDER_CREATED_ADVANCE' : 'sup.log.ORDER_CREATED', { name, number: typeof d.number === 'string' ? d.number : '' });
   else line = e.kind;
   return d.auto === true ? `${line} ${t(dict, 'sup.log.auto')}` : line;
 }

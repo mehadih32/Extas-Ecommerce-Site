@@ -78,3 +78,17 @@
 @media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
   .adm2 .sp-opt{min-height:44px}
 }
+/* S22 · PR 430 — the chat's bag beside a conversation: its lines with − / + / take out, the details, Check and Create order. */
+.adm2 .sp-bag{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.adm2 .sp-bag-row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding-bottom:8px;border-bottom:1px solid var(--ln2)}
+.adm2 .sp-bag-row .sp-grow{flex:1 1 160px;min-width:0}
+.adm2 .sp-bag-sub{display:block;overflow-wrap:anywhere}
+.adm2 .sp-bag-qty{display:flex;align-items:center;gap:6px;margin-left:auto}
+.adm2 .sp-bag-qty .a2-btn.sm{min-width:36px;min-height:36px;justify-content:center}
+.adm2 .sp-bag-amt{min-width:72px;text-align:right;font-variant-numeric:tabular-nums}
+.adm2 .sp-bag-form{display:flex;flex-direction:column;gap:4px}
+.adm2 .sp-bag-form .a2-inp{width:100%}
+.adm2 .sp-bag-form textarea{resize:vertical;min-height:60px}
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .adm2 .sp-bag-qty .a2-btn.sm{min-width:44px;min-height:44px}
+}

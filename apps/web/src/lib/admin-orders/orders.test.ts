@@ -51,7 +51,7 @@ describe('order screens messages', () => {
       for (const s of ORDER_STATES) has(`orders.st.${s}`);
       for (const v of od.ORDER_VIEWS) has(`orders.view.${v}`);
       for (const m of od.PAYMENT_METHODS) has(`orders.method.${m}`);
-      for (const s of od.ORDER_SOURCES) has(`orders.source.${s}`);
+      for (const s of od.LIST_SOURCES) has(`orders.source.${s}`);
       for (const s of Object.keys(SHIP_TONE)) has(`orders.ship.${s}`);
       for (const p of Object.keys(PAY_TONE)) has(`orders.pay.${p}`);
       for (const r of ['REFUND_APPROVED', 'REFUND_REQUESTED', 'RETURN_EXPECTED', 'RETURN_RECEIVED', 'REFUND_DONE']) has(`orders.ret.${r}`);

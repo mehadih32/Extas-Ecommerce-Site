@@ -186,6 +186,7 @@
       "ONLINE": "Online"
     },
     "source": {
+      "SUPPORT": "From support (any chat)",
       "WEBSITE": "Website",
       "LANDING_PAGE": "Ad page",
       "MESSENGER": "Messenger",
