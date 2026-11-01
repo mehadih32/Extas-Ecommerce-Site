@@ -53,6 +53,16 @@ describe('PR 180 · the handover sheet', () => {
     expect([doc.widthMm, doc.heightMm]).toEqual([148, 210]);
   });
 
+  it('PR 406: a copy of a handed-over sheet says COPY with the rider and the time, not "printed again"', () => {
+    const doc = handoverDocument(sheet({ printCount: 2, copy: { receivedBy: 'Rider Rahim', handedOverAt: '2026-10-24T08:00:00.000Z' } }), CFG, HEAD, 'Asia/Dhaka');
+    const all = doc.summary.join(' ');
+    expect(all).toContain(`COPY — handed over to Rider Rahim on ${printedAt('2026-10-24T08:00:00.000Z', 'Asia/Dhaka')}`);
+    expect(all).not.toContain('PRINTED AGAIN');
+    const bn = handoverDocument(sheet({ copy: { receivedBy: null, handedOverAt: '2026-10-24T08:00:00.000Z' } }), { ...CFG, lang: 'bn' }, HEAD, 'Asia/Dhaka');
+    expect(bn.summary.join(' ')).toContain('কপি');
+    expect(bn.summary.join(' ')).toContain('—');
+  });
+
   it('speaks Bengali when the owner chooses it, with Western digits for the amounts', () => {
     const doc = handoverDocument(sheet(), { ...CFG, lang: 'bn' }, HEAD, 'Asia/Dhaka');
     expect(doc.title).toBe('হ্যান্ডওভার শিট · Steadfast main');

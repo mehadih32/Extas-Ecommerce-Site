@@ -230,6 +230,24 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 Â· PR 179â
     expect((await handover('POST', ['teleport'])).status).toBe(404);
   });
 
+  it('PR 406: the handed-over history per courier, and a COPY of a handed sheet as a real PDF (one more print job)', async () => {
+    // the batch handed over in the PR 180 test above
+    const batch = await f.t.prisma.handoverBatch.findFirstOrThrow({ where: { courierAccountId: courierId, handedOverAt: { not: null } } });
+    expect((await handover('GET', ['history'], { cookie: reader })).status).toBe(403);
+    const h = (await (await handover('GET', ['history'])).json()) as { ok: boolean; couriers: { courierAccountId: string; batches: { batchId: string; receivedBy: string; parcels: number }[] }[] };
+    expect(h.ok).toBe(true);
+    expect(h.couriers.find((c) => c.courierAccountId === courierId)!.batches.find((b) => b.batchId === batch.id)).toMatchObject({ receivedBy: 'Rider Karim', parcels: 1 });
+    const copy = await handover('POST', ['copy'], { body: { batchId: batch.id } });
+    expect(copy.status).toBe(200);
+    expect(copy.headers.get('content-type')).toBe('application/pdf');
+    expect(Buffer.from(await copy.arrayBuffer()).subarray(0, 8).toString('latin1')).toBe('%PDF-1.4');
+    expect(await f.t.prisma.printJob.count({ where: { batchId: batch.id, reason: 'copy', isReprint: true } })).toBe(1);
+    expect((await handover('POST', ['copy'], { body: {} })).status).toBe(400);
+    expect((await handover('POST', ['copy'], { body: { batchId: '00000000-0000-4000-8000-000000000000' } })).status).toBe(404);
+    expect((await handover('GET', ['copy'])).status).toBe(405);
+    expect((await handover('POST', ['history'])).status).toBe(405);
+  });
+
   it('PR 181: the picking list as data (with a date range) and as a real PDF, kept with a print job', async () => {
     const e = await booked('fa-5', '01700001905'); // hardcode-ok: a made-up test number
     expect((await picking('GET', '', { cookie: reader })).status).toBe(403);

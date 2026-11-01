@@ -6,15 +6,21 @@
 // the batch's orders to "handed over". The sheet's paper, language, the receiver's name and the signature lines are the
 // owner's delivery settings, shown here. The screen shows no customer's details; the sheet and "Handed over" need
 // `fulfilment.handover`, which the API checks again.
+// S20 · PR 406 (ORD-04c): the sheet's settings are a card saved here (`delivery.handover.sheet`, with
+// `fulfilment.printSettings`), and below the couriers a "Handed over" history per courier — each sheet's time, rider,
+// who marked it, the parcels that went and the amount to collect, with "Print copy" (a COPY of that sheet). How far
+// back and how many per courier are the second card (`fulfilment.handover.history`).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { LIST_DPIS, LIST_PAPERS } from '@extas/settings';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { HandoverDone } from '@/components/admin/fulfil/Handover';
 import { PdfButton } from '@/components/admin/fulfil/Print';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
+import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
@@ -24,12 +30,15 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
+import { packingSettingCards } from '@/lib/packing-settings-api';
 import { shippingDeps } from '@/lib/shipping-api';
+import '../../../settings-cards.css';
 
 export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/orders/packing/handover';
 const API = '/api/admin/packing/handover';
+const SETTINGS = '/api/admin/packing/settings';
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = withFulfil(await adminView());
@@ -51,14 +60,48 @@ export default async function HandoverPage() {
     );
   const who: sh.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const sd = await shippingDeps(access.deps);
-  const [couriers, cfg, currency] = await Promise.all([sh.handoverList(sd, who), sd.settings.value('delivery.handover.sheet', { storeId: MOTHER_STORE_ID }), sd.settings.value('store.currency', { storeId: MOTHER_STORE_ID })]);
+  const [couriers, handed, currency, cards] = await Promise.all([
+    sh.handoverList(sd, who),
+    sh.handoverHistory(sd, who),
+    sd.settings.value('store.currency', { storeId: MOTHER_STORE_ID }),
+    packingSettingCards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx }),
+  ]);
   const canHand = access.guard.permissions?.has('fulfilment.handover') ?? false;
+  const canSettings = access.guard.permissions?.has('fulfilment.printSettings') ?? false;
+  const history = cards['fulfilment.handover.history'].value as { days: number; perCourier: number };
   const fd: Dict = { ful: d.ful as Dict };
   const n = (x: number) => formatNumber(x, view.locale);
   const m = (minor: number, cur: string) => formatMoney(minor, moneyOf(cur, view.locale));
   const ready = couriers.reduce((s, c) => s + c.ready.parcels, 0);
   const waiting = couriers.reduce((s, c) => s + c.parcels.length, 0);
-  const onOff = (on: boolean) => t(d, on ? 'ful.handover.on' : 'ful.handover.off');
+
+  // ---- the settings cards (CN-018: on the page where they are used); words here, values from the API ----
+  const ps = (k: string) => t(d, `ful.printRun.set.${k}`);
+  const hs = (k: string) => t(d, `ful.handover.set.${k}`);
+  const texts = (card: string): FieldsCardTexts => ({
+    h: hs(`${card}.h`),
+    d: hs(`${card}.d`),
+    save: ps('save'),
+    saving: ps('saving'),
+    saved: ps('saved'),
+    discard: ps('discard'),
+    unsaved: ps('unsaved'),
+    readOnly: ps('readOnly'),
+    pairHelp: ps('readOnly'),
+    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, ps(`err.${c}`)])),
+  });
+  const sheetFields: FieldsCardField[] = [
+    { kind: 'select', path: 'paper', label: hs('sheet.paper'), options: LIST_PAPERS.map((v) => ({ value: v, label: t(d, `ful.handover.paper.${v}`) })) },
+    { kind: 'select', path: 'dpi', label: hs('sheet.dpi'), numeric: true, options: LIST_DPIS.map((v) => ({ value: String(v), label: n(v) })) },
+    { kind: 'select', path: 'lang', label: hs('sheet.lang'), options: (['en', 'bn'] as const).map((v) => ({ value: v, label: t(d, `ful.packing.lang.${v}`) })) },
+    { kind: 'switch', path: 'receiverName', label: hs('sheet.receiverName') },
+    { kind: 'switch', path: 'signatures', label: hs('sheet.signatures') },
+    { kind: 'switch', path: 'packOnHandover', label: hs('sheet.packOnHandover'), help: hs('sheet.packOnHandoverHelp') },
+  ];
+  const historyFields: FieldsCardField[] = [
+    { kind: 'number', path: 'days', label: hs('history.days'), help: hs('history.daysHelp'), min: 1, max: 90 },
+    { kind: 'number', path: 'perCourier', label: hs('history.perCourier'), help: hs('history.perCourierHelp'), min: 1, max: 50 },
+  ];
 
   return (
     <div className="a2-z" data-testid="handover-page">
@@ -79,18 +122,6 @@ export default async function HandoverPage() {
           </div>
         ))}
       </div>
-      <section className="a2-card tight a2-mt12" aria-label={t(d, 'ful.handover.sheetTitle')} data-testid="handover-settings">
-        <h2 className="a2-h4">{t(d, 'ful.handover.sheetTitle')}</h2>
-        <div className="a2-gap8 a2-mt6" style={{ flexWrap: 'wrap' }}>
-          <span className="a2-pill line">{t(d, `ful.handover.paper.${cfg.paper}`)}</span>
-          <span className="a2-pill line">{t(d, 'ful.packing.dpi', { dpi: n(cfg.dpi) })}</span>
-          <span className="a2-pill line">{t(d, `ful.packing.lang.${cfg.lang}`)}</span>
-          <span className="a2-pill line">{t(d, 'ful.handover.names', { on: onOff(cfg.receiverName) })}</span>
-          <span className="a2-pill line">{t(d, 'ful.handover.signs', { on: onOff(cfg.signatures) })}</span>
-          <span className="a2-pill line">{t(d, 'ful.handover.packs', { on: onOff(cfg.packOnHandover) })}</span>
-        </div>
-        <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.handover.settingsNote')}</p>
-      </section>
       {couriers.length ? (
         couriers.map((c) => (
           <section key={c.courierAccountId} className="a2-card a2-mt12" aria-label={c.courierName} data-testid="handover-courier">
@@ -154,6 +185,62 @@ export default async function HandoverPage() {
           <p>{t(d, 'ful.handover.emptySub')}</p>
         </div>
       )}
+      <section className="a2-card a2-mt12" aria-label={t(d, 'ful.handover.history.title')} data-testid="handover-history">
+        <h2 className="a2-h4">{t(d, 'ful.handover.history.title')}</h2>
+        <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.handover.history.sub', { days: n(history.days) })}</p>
+        {handed.length ? (
+          handed.map((c) => (
+            <div key={c.courierAccountId} className="a2-mt12" data-testid="handover-history-courier">
+              <h3 className="a2-h4">{c.courierName}</h3>
+              <p className="a2-xs a2-mute">{t(d, 'ful.handover.history.line', { batches: n(c.totals.batches), parcels: n(c.totals.parcels), amount: m(c.totals.collectMinor, c.currency || currency) })}</p>
+              <div className="a2-tblw a2-mt6">
+                <table className="a2-tbl">
+                  <thead>
+                    <tr>
+                      <th>{t(d, 'ful.handover.history.col.at')}</th>
+                      <th>{t(d, 'ful.handover.history.col.rider')}</th>
+                      <th>{t(d, 'ful.handover.history.col.by')}</th>
+                      <th className="r">{t(d, 'ful.handover.history.col.parcels')}</th>
+                      <th className="r">{t(d, 'ful.handover.history.col.collect')}</th>
+                      {canHand ? <th /> : null}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {c.batches.map((b) => (
+                      <tr key={b.batchId} data-testid="handover-history-row">
+                        <td className="a2-tdh">
+                          <b>{printedAt(b.handedOverAt, view.timeZone)}</b>
+                        </td>
+                        <td data-l={t(d, 'ful.handover.history.col.rider')}>{b.receivedBy || t(d, 'ful.handover.history.nobody')}</td>
+                        <td data-l={t(d, 'ful.handover.history.col.by')}>{b.by || t(d, 'ful.handover.history.nobody')}</td>
+                        <td className="r" data-l={t(d, 'ful.handover.history.col.parcels')}>
+                          <b className="a2-num">{n(b.parcels)}</b>
+                          {b.leftOut ? <span className="a2-xs a2-mute"> · {t(d, 'ful.handover.history.leftOut', { n: n(b.leftOut) })}</span> : null}
+                        </td>
+                        <td className="r" data-l={t(d, 'ful.handover.history.col.collect')}>
+                          <span className="a2-num">{m(b.collectMinor, c.currency || currency)}</span>
+                        </td>
+                        {canHand ? (
+                          <td>
+                            <PdfButton dict={fd} url={`${API}/copy`} body={{ batchId: b.batchId }} label={t(d, 'ful.handover.history.copy')} busyLabel={t(d, 'ful.handover.history.copying')} tone="ghost" testId="handover-copy" fileName="handover-sheet-copy.pdf" />
+                          </td>
+                        ) : null}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {c.totals.batches !== c.batches.length ? <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.handover.history.more', { n: n(c.batches.length) })}</p> : null}
+            </div>
+          ))
+        ) : (
+          <p className="a2-xs a2-mt12" data-testid="handover-history-empty">
+            {t(d, 'ful.handover.history.empty', { days: n(history.days) })}
+          </p>
+        )}
+      </section>
+      <FieldsCard url={SETTINGS} screen={cards['delivery.handover.sheet']} fields={sheetFields} texts={texts('sheet')} canEdit={canSettings} testId="handover-settings" />
+      <FieldsCard url={SETTINGS} screen={cards['fulfilment.handover.history']} fields={historyFields} texts={texts('history')} canEdit={canSettings} testId="handover-history-settings" />
     </div>
   );
 }

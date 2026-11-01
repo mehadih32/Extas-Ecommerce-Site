@@ -317,7 +317,47 @@
         "receivedBy": "Received by (rider): name and signature",
         "foot": "Batch {batch} · print {n}",
         "page": "{n}/{of}",
-        "empty": "No parcel on this sheet"
+        "empty": "No parcel on this sheet",
+        "copy": "COPY — handed over to {rider} on {at}. Only the parcels that went."
+      },
+      "set": {
+        "sheet": {
+          "h": "The handover sheet",
+          "d": "How the rider's sheet prints: paper, printer dots, language, the receiver's name, the signature lines, and whether handing over also marks an order packed.",
+          "paper": "Paper",
+          "dpi": "Printer dots (DPI)",
+          "lang": "Sheet language",
+          "receiverName": "Receiver's name on each line",
+          "signatures": "Signature lines at the end",
+          "packOnHandover": "Handing over also marks it packed",
+          "packOnHandoverHelp": "Off: an order nobody packed is not ready and is left out. On: handing it over marks it packed too."
+        },
+        "history": {
+          "h": "Handed-over history",
+          "d": "How far back the \"Handed over\" list above goes, and how many sheets it shows per courier.",
+          "days": "Days to show",
+          "daysHelp": "1 to 90 days.",
+          "perCourier": "Sheets per courier",
+          "perCourierHelp": "1 to 50. The totals still count every sheet in those days."
+        }
+      },
+      "history": {
+        "title": "Handed over",
+        "sub": "The sheets handed over in the last {days} days, per courier: who took them, who marked them, the parcels and the amount the courier collects.",
+        "line": "Sheets {batches} · parcels {parcels} · to collect {amount}",
+        "col": {
+          "at": "Handed over",
+          "rider": "Rider",
+          "by": "Marked by",
+          "parcels": "Parcels",
+          "collect": "To collect"
+        },
+        "leftOut": "{n} left out",
+        "copy": "Print copy",
+        "copying": "Making the copy…",
+        "more": "Showing the latest {n}. Raise \"Sheets per courier\" to see more.",
+        "empty": "Nothing handed over in the last {days} days.",
+        "nobody": "—"
       }
     },
     "picking": {
