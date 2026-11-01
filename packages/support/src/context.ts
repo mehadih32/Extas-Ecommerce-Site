@@ -61,6 +61,9 @@ export const SUPPORT_ERROR_CODES = [
   'CART_OFF',
   'NO_COD',
   'CHECKOUT',
+  // PR 433: follow-ups are switched off; the follow-up was sent, skipped or closed meanwhile (or the chat moved)
+  'FOLLOW_UP_OFF',
+  'FOLLOW_UP_GONE',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 
@@ -78,7 +81,7 @@ export class SupportError extends Error {
   get status(): number {
     if (this.code === 'NOT_FOUND' || this.code === 'FILE_PENDING') return 404;
     if (this.code === 'INVALID_INPUT' || this.code === 'EMPTY' || this.code === 'TOO_LONG') return 400;
-    if (this.code === 'STALE' || this.code === 'IDEMPOTENCY_MISMATCH') return 409;
+    if (this.code === 'STALE' || this.code === 'IDEMPOTENCY_MISMATCH' || this.code === 'FOLLOW_UP_GONE') return 409;
     if (this.code === 'TOO_MANY') return 429;
     return 422;
   }

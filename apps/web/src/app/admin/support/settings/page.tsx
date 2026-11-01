@@ -14,6 +14,9 @@
 // the bell.
 // PR 432: the "Draft answers (EXTAS AI)" card (off as it ships) — the language for Banglish, the questions marked for a
 // person, the bulk count; under "More options" the drafts' words and the words that tell questions apart.
+// PR 433: the "Follow-ups on chats without an order" card (off as it ships) — which chats, the quiet hours, the caps
+// (per chat, per person, per day, the reply window), win-back, the language, the owner's coupon to mention; under
+// "More options" the follow-ups' words.
 // PR 427: the "Who is writing" card (off as it ships) — the number from WhatsApp or the chat's words, its customer, one
 // person across channels.
 // Optional behaviour ships off. Nothing here moves money or changes an order.
@@ -133,6 +136,22 @@ export default async function SupportSettingsPage() {
   const textName = (k: string) => (['cancel', 'late', 'bulk', 'exchange', 'size', 'greeting', 'unknown'].includes(k) ? intentName(k) : ['overcharge', 'wrong', 'damage', 'fade'].includes(k) ? t(d, `sup.dr.c.${k}`) : s(`draftWords.x.${k}`));
   const draftWords: FieldsCardField[] = sp.DRAFT_TEXTS.map((k) => ({ kind: 'pair', path: k, label: { en: `${textName(k)} · ${s('draftWords.x.en')}`, bn: `${textName(k)} · ${s('draftWords.x.bn')}` }, max: 400, rows: 2 }));
   const draftKeywords: FieldsCardField[] = sp.DRAFT_WORD_LISTS.map((k) => ({ kind: 'text', path: k, label: k === 'pieces' ? s('draftWords.x.pieces') : textName(k), max: 600 }));
+  // PR 433: follow-ups on chats without an order (off as it ships); the words under "More options"
+  const fb = sp.FOLLOW_UP_BOUNDS;
+  const followUp: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('followUp.enabled'), help: s('followUp.enabledHelp') },
+    { kind: 'checks', path: 'rules', label: s('followUp.rules'), options: sp.FOLLOW_UP_RULES.map((v) => ({ value: v, label: s(`followUp.rule.${v}`) })) },
+    { kind: 'number', path: 'afterHours', label: s('followUp.afterHours'), help: s('followUp.afterHoursHelp'), min: fb.afterHours.min, max: fb.afterHours.max },
+    { kind: 'number', path: 'maxPerChat', label: s('followUp.maxPerChat'), min: fb.maxPerChat.min, max: fb.maxPerChat.max },
+    { kind: 'number', path: 'gapDays', label: s('followUp.gapDays'), help: s('followUp.gapDaysHelp'), min: fb.gapDays.min, max: fb.gapDays.max },
+    { kind: 'number', path: 'perDay', label: s('followUp.perDay'), min: fb.perDay.min, max: fb.perDay.max },
+    { kind: 'number', path: 'windowMarginMinutes', label: s('followUp.windowMargin'), help: s('followUp.windowMarginHelp'), min: fb.windowMarginMinutes.min, max: fb.windowMarginMinutes.max },
+    { kind: 'number', path: 'cancelledDays', label: s('followUp.cancelledDays'), min: fb.cancelledDays.min, max: fb.cancelledDays.max },
+    { kind: 'select', path: 'banglishReply', label: s('followUp.banglish'), help: s('followUp.banglishHelp'), options: (['bn', 'en'] as const).map((v) => ({ value: v, label: s(`followUp.${v}`) })) },
+    { kind: 'text', path: 'offerCode', label: s('followUp.offerCode'), help: s('followUp.offerCodeHelp'), max: 40 },
+  ];
+  const followUpName = (k: string) => (k === 'offer' ? s('followUpWords.x.offer') : s(`followUp.rule.${k}`));
+  const followUpWords: FieldsCardField[] = sp.FOLLOW_UP_TEXTS.map((k) => ({ kind: 'pair', path: k, label: { en: `${followUpName(k)} · ${s('followUpWords.x.en')}`, bn: `${followUpName(k)} · ${s('followUpWords.x.bn')}` }, max: 400, rows: 2 }));
   // PR 427: who is writing (off as it ships)
   const identity: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: s('identity.enabled'), help: s('identity.enabledHelp') },
@@ -168,6 +187,7 @@ export default async function SupportSettingsPage() {
       <FieldsCard url={API} screen={screen('support.cart')} fields={cart} texts={texts('cart')} canEdit={canEdit} testId="support-set-cart" />
       <FieldsCard url={API} screen={screen('support.tickets')} fields={tickets} texts={texts('tickets')} canEdit={canEdit} testId="support-set-tickets" />
       <FieldsCard url={API} screen={screen('support.drafts')} fields={drafts} texts={texts('drafts')} canEdit={canEdit} testId="support-set-drafts" />
+      <FieldsCard url={API} screen={screen('support.followUp')} fields={followUp} texts={texts('followUp')} canEdit={canEdit} testId="support-set-followup" />
       <p className="a2-xs a2-mute a2-mt12" data-testid="support-set-phones">{s('phones')}</p>
       <details className="a2-card a2-mt12" data-testid="support-set-more">
         <summary className="a2-h4">{s('more')}</summary>
@@ -176,6 +196,7 @@ export default async function SupportSettingsPage() {
         <FieldsCard url={API} screen={screen('support.channels')} fields={windowFields} texts={texts('window')} canEdit={canEdit} testId="support-set-window" />
         <FieldsCard url={API} screen={screen('support.draftWords')} fields={draftWords} texts={texts('draftWords')} canEdit={canEdit} testId="support-set-draft-words" />
         <FieldsCard url={API} screen={screen('support.draftKeywords')} fields={draftKeywords} texts={texts('draftKeywords')} canEdit={canEdit} testId="support-set-draft-keywords" />
+        <FieldsCard url={API} screen={screen('support.followUpWords')} fields={followUpWords} texts={texts('followUpWords')} canEdit={canEdit} testId="support-set-followup-words" />
       </details>
     </div>
   );

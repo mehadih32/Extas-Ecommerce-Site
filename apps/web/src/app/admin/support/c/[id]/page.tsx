@@ -29,6 +29,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { DetailGrid } from '@/components/admin/orders/OrderCommands';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
+import { FollowUpCard, type FollowUpTexts } from '@/components/admin/support/FollowUpCard';
 import { ChatBag, type ChatBagTexts } from '@/components/admin/support/ChatBag';
 import { Composer, type ComposerDraft, type ComposerProducts, type ComposerTexts } from '@/components/admin/support/Composer';
 import { CustomerContext } from '@/components/admin/support/CustomerContext';
@@ -56,7 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'sup.th.main')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-const ERR_CODES = ['CART_OFF', 'NO_COD', 'CHECKOUT', 'CHECKOUT_PRICE_CHANGED', 'CHECKOUT_OUT_OF_STOCK', 'CHECKOUT_EMPTY', 'CHECKOUT_FORM', 'CHECKOUT_NO_PAYMENT', 'CHECKOUT_PAUSED', 'CHECKOUT_CART_NOT_OPEN', 'CHECKOUT_IDEMPOTENCY', 'CATALOGUE_OFF', 'OUT_OF_STOCK', 'STALE', 'EMPTY', 'TOO_LONG', 'FILES_OFF', 'TOO_MANY_FILES', 'FILE_NOT_ALLOWED', 'TOO_LARGE', 'NOT_ASSIGNABLE', 'IDEMPOTENCY_MISMATCH', 'NOT_FOUND', 'INVALID_INPUT', 'FORBIDDEN', 'UNAUTHENTICATED', 'network', 'other'];
+const ERR_CODES = ['CART_OFF', 'NO_COD', 'CHECKOUT', 'CHECKOUT_PRICE_CHANGED', 'CHECKOUT_OUT_OF_STOCK', 'CHECKOUT_EMPTY', 'CHECKOUT_FORM', 'CHECKOUT_NO_PAYMENT', 'CHECKOUT_PAUSED', 'CHECKOUT_CART_NOT_OPEN', 'CHECKOUT_IDEMPOTENCY', 'CATALOGUE_OFF', 'OUT_OF_STOCK', 'STALE', 'EMPTY', 'TOO_LONG', 'FILES_OFF', 'TOO_MANY_FILES', 'FILE_NOT_ALLOWED', 'TOO_LARGE', 'NOT_ASSIGNABLE', 'IDEMPOTENCY_MISMATCH', 'FOLLOW_UP_OFF', 'FOLLOW_UP_GONE', 'NOT_FOUND', 'INVALID_INPUT', 'FORBIDDEN', 'UNAUTHENTICATED', 'network', 'other'];
 const errs = (d: Dict) => Object.fromEntries(ERR_CODES.map((c) => [c, t(d, `sup.err.${c}`)]));
 const deliveryTone = (s: string | null) => (s === 'SENT' ? 'ok' : s === 'FAILED' ? 'bad' : s === 'NOT_SENT' ? 'warn' : 'line');
 const statusTone = (s: string) => (s === 'OPEN' ? 'warn' : s === 'SOLVED' ? 'ok' : 'info');
@@ -91,7 +92,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     throw e;
   }
   const r = access.deps.resolver;
-  const [staff, files, inbox, currency, catalogue, drafted] = await Promise.all([
+  const [staff, files, inbox, currency, catalogue, drafted, follow] = await Promise.all([
     th.you.assign ? sp.supportStaff(sd, who) : Promise.resolve([]),
     r.value('support.attachments', { storeId: MOTHER_STORE_ID }),
     r.value('support.inbox', { storeId: MOTHER_STORE_ID }),
@@ -99,6 +100,8 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     r.value('support.catalogue', { storeId: MOTHER_STORE_ID }),
     // PR 432: the draft answer (only for someone who may reply; off as it ships)
     th.you.reply ? sp.supportDraft(sd, who, th.id, { sizeFor: draftSizeFinder(access.deps.db, r, MOTHER_STORE_ID) }) : Promise.resolve(null),
+    // PR 433: the follow-up waiting on this chat (only for someone who may reply; off as it ships)
+    th.you.reply ? sp.chatFollowUp(sd, who, th.id) : Promise.resolve(null),
   ]);
   const n = (x: number) => formatNumber(x, view.locale);
   const at = (x: Date | null) => (x ? printedAt(x.toISOString(), view.timeZone) : t(d, 'sup.side.none'));
@@ -150,6 +153,24 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         about: t(d, drafted.complaint ? `sup.dr.c.${drafted.complaint}` : `sup.dr.i.${drafted.intent}`),
         handover: drafted.handover ? t(d, `sup.dr.to.${drafted.handover}`) : null,
         texts: { h: t(d, 'sup.dr.h'), use: t(d, 'sup.dr.use'), note: t(d, 'sup.dr.note') },
+      }
+    : null;
+  // PR 433: the follow-up's words and why it is due
+  const fu = (k: string, v?: Record<string, string>) => t(d, `sup.fu.${k}`, v);
+  const followTexts: FollowUpTexts | null = follow
+    ? {
+        h: fu('h'),
+        why: fu(`rule.${follow.rule}`),
+        window: follow.windowEndsAt ? fu('window', { at: printedAt(follow.windowEndsAt.toISOString(), view.timeZone) }) : null,
+        offer: follow.offer ? fu('offer', { code: follow.offer.code }) : null,
+        label: fu('label'),
+        send: fu('send'),
+        sending: fu('sending'),
+        skip: fu('skip'),
+        note: fu('note'),
+        sent: fu('sent'),
+        skipped: fu('skipped'),
+        err: errs(d),
       }
     : null;
   // PR 430: the chat's bag (orders from the chat on, and `support.order`)
@@ -238,6 +259,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <p className="a2-sm a2-mute">{t(d, 'sup.msg.empty')}</p>
         )}
       </section>
+      {follow && followTexts ? <FollowUpCard url={`${API}/c/${th.id}/followup`} id={follow.id} body={follow.body} version={th.version} maxChars={inbox.replyMaxChars} texts={followTexts} /> : null}
       {th.you.reply ? (
         <Composer url={`${API}/c/${th.id}/messages`} filesUrl={`${API}/files`} version={th.version} maxChars={inbox.replyMaxChars} files={{ enabled: files.enabled && accept !== '', max: files.maxPerMessage, accept }} products={products} draft={draft} texts={composer} />
       ) : (

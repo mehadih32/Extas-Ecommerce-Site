@@ -77,6 +77,9 @@ export function logLine(dict: Dict, e: { kind: string; actor: { type: string; na
   // PR 431: a ticket opened by the customer's message, solved (how long it took, whether late)
   else if (e.kind === 'TICKET_OPENED') line = t(dict, 'sup.log.TICKET_OPENED');
   else if (e.kind === 'TICKET_SOLVED') line = t(dict, d.late === true ? 'sup.log.TICKET_SOLVED_LATE' : 'sup.log.TICKET_SOLVED', { time: span(dict, locale, typeof d.minutes === 'number' ? d.minutes : 0) });
+  // PR 433: a follow-up sent or skipped by a person, and the order that came after it
+  else if (e.kind === 'FOLLOWUP_SENT' || e.kind === 'FOLLOWUP_SKIPPED') line = t(dict, `sup.log.${e.kind}`, { name, why: typeof d.rule === 'string' ? t(dict, `sup.fu.rule.${d.rule}`) : '' });
+  else if (e.kind === 'FOLLOWUP_ORDERED') line = t(dict, 'sup.log.FOLLOWUP_ORDERED', { number: typeof d.number === 'string' ? d.number : '' });
   else line = e.kind;
   return d.auto === true ? `${line} ${t(dict, 'sup.log.auto')}` : line;
 }

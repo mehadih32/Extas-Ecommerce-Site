@@ -1,0 +1,12 @@
+{
+  "support": {
+    "followUp": {
+      "label": "Follow-ups on chats without an order",
+      "help": "A chat whose bag was left, whose products were sent and not ordered, or (win-back) whose order was cancelled gets a follow-up once the customer has been quiet for a while — inside the channel's reply window, a few per chat, one per person in some days and a limit for the store each day. The follow-up is written from your own words and waits in the inbox's \"Follow-ups\" view; a person reads it and presses Send or Skip. Nothing is sent by itself, and a coupon is only mentioned when you name one you already made."
+    },
+    "followUpWords": {
+      "label": "Follow-up words",
+      "help": "The words of each follow-up in English and Bengali, and the line that mentions your coupon. Only these may be used: {hello}, {name}, {product}, {code}."
+    }
+  }
+}

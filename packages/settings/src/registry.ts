@@ -79,6 +79,7 @@ import { supportCatalogueSettings } from './registry-support-catalogue';
 import { supportCartSettings } from './registry-support-cart';
 import { supportTicketsSettings } from './registry-support-tickets';
 import { supportDraftsSettings } from './registry-support-drafts';
+import { supportFollowUpSettings } from './registry-support-followup';
 import { callMeSettings } from './registry-call-me';
 import { voiceAddressSettings } from './registry-voice-address';
 import { bhandariP1Settings } from './registry-bhandari-p1';
@@ -1353,6 +1354,8 @@ export const registry = {
   ...supportTicketsSettings,
   // ---- S22 · PR 432 · EXTAS AI's draft answers in a chat and their words (off) (registry-support-drafts.ts, versions 180–182). ----
   ...supportDraftsSettings,
+  // ---- S22 · PR 433 · follow-ups on chats that did not become an order, and their words (off) (registry-support-followup.ts, versions 183–184). ----
+  ...supportFollowUpSettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----

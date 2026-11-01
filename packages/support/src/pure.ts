@@ -8,7 +8,8 @@ export type ConversationStatus = (typeof CONVERSATION_STATUSES)[number];
 
 /** The inbox's views (docs/ADMIN-ARCHITECTURE.md §4.7: All · Open · Waiting · Solved · Mine; plus "Not taken"). */
 // PR 431: 'late' — the chats whose ticket timer ran out (support.tickets)
-export const INBOX_VIEWS = ['open', 'waiting', 'mine', 'unassigned', 'late', 'solved', 'all'] as const;
+// PR 433: 'followup' — the chats with a follow-up waiting for a person (support.followUp)
+export const INBOX_VIEWS = ['open', 'waiting', 'mine', 'unassigned', 'late', 'followup', 'solved', 'all'] as const;
 export type InboxView = (typeof INBOX_VIEWS)[number];
 
 /** IN: from the customer. OUT: the shop's reply. NOTE: an internal note, never sent and never shown to the customer. */
@@ -43,6 +44,10 @@ export const EVENT_KINDS = [
   // PR 431: a ticket opened by a customer's message (its two timers), and solved (how long it took, whether late)
   'TICKET_OPENED',
   'TICKET_SOLVED',
+  // PR 433: a follow-up sent by a person, skipped by a person, and an order that came from the chat after it
+  'FOLLOWUP_SENT',
+  'FOLLOWUP_SKIPPED',
+  'FOLLOWUP_ORDERED',
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
