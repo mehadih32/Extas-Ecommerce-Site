@@ -113,3 +113,20 @@
 .adm2 .sp-fu-lbl{display:block;margin:8px 0 4px}
 /* PR 434: the support block list on a conversation (a fold with a 44 px summary) */
 .adm2 details.sp-block>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--ink2)}
+/* PR 435: Support › Support app (install, notifications on this device, the person's devices) */
+.adm2 .sp-app-card p{margin:8px 0}
+.adm2 .sp-app-ok{font-weight:600;color:var(--ok)}
+.adm2 .sp-app-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.adm2 .sp-app-row .a2-btn,.adm2 .sp-app-card>.a2-btn,.adm2 .sp-app-off .a2-btn{min-height:44px}
+.adm2 .sp-app-note{color:var(--ink2)}
+.adm2 .sp-app-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.adm2 .sp-app-list li{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 0;border-top:1px solid var(--ln2)}
+.adm2 .sp-app-bad{color:var(--bad)}
+.adm2 .sp-app-off{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.adm2 .sp-app-off .a2-btn{display:inline-flex;align-items:center}
+/* PR 435: opened from its icon, the support app shows only support — the admin's other sections stay in the browser */
+@media (display-mode:standalone){
+  .adm2:has(.sp-app-shell) .a3-rail,.adm2:has(.sp-app-shell) .a3-bnav,.adm2:has(.sp-app-shell) .a3-mb{display:none!important}
+  .adm2:has(.sp-app-shell) .a3-ct{margin-left:0!important}
+}
+.sp-app-shell{display:none}

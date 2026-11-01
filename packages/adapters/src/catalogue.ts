@@ -203,6 +203,19 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S22 · PR 435 — web push for the support app's notifications: the shop's VAPID key pair (the public key on the
+  // connection, the private key in the vault) and a contact address for the push services. The mock sends nothing until
+  // the pair's (local) test passes.
+  {
+    id: 'webPush',
+    kind: 'PUSH',
+    provider: 'webPush',
+    adapter: true,
+    secrets: [{ field: 'privateKey' }],
+    config: [{ field: 'publicKey' }, { field: 'subject' }],
+    exclusive: true,
+    targetMode: 'LIVE',
+  },
   // PR 176 — Steadfast Courier: the API key and the secret key from its merchant panel. Runs on its practice world
   // (MOCK) until both are entered and the Test (the balance read) passes. Several couriers may be on at once.
   {

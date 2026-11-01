@@ -81,6 +81,7 @@ import { supportTicketsSettings } from './registry-support-tickets';
 import { supportDraftsSettings } from './registry-support-drafts';
 import { supportFollowUpSettings } from './registry-support-followup';
 import { supportPrivacySettings } from './registry-support-privacy';
+import { supportAppSettings } from './registry-support-app';
 import { callMeSettings } from './registry-call-me';
 import { voiceAddressSettings } from './registry-voice-address';
 import { bhandariP1Settings } from './registry-bhandari-p1';
@@ -1359,6 +1360,8 @@ export const registry = {
   ...supportFollowUpSettings,
   // ---- S22 · PR 434 · privacy inside support and the support block list (off) (registry-support-privacy.ts, versions 185–186). ----
   ...supportPrivacySettings,
+  // ---- S22 · PR 435 · the support app: installable, support-only, push (off) (registry-support-app.ts, version 187). ----
+  ...supportAppSettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----

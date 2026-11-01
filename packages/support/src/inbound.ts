@@ -9,6 +9,7 @@
 import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import { checkStoreId, nowOf, parse, setting, SupportError, TX, type SupportDeps } from './context';
+import { queueSupportPush } from './push';
 import { resolveIdentity } from './identity';
 import { cleanFileName, PREVIEW_CHARS, previewOf, SUBJECT_CHARS } from './pure';
 import { ticketOnCustomerMessage } from './tickets';
@@ -84,7 +85,7 @@ export async function receiveMessage(deps: SupportDeps, input: ReceiveInput): Pr
   // PR 434: a blocked person's message is kept, but opens no ticket (the list switched on)
   const blockOn = (await setting(deps, d.storeId, 'support.blockList')).enabled;
 
-  return deps.db.$transaction(async (tx) => {
+  const received = await deps.db.$transaction(async (tx) => {
     // one person on one channel at a time, so two messages arriving together never start two conversations
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`support:${d.storeId}:${channel.id}:${d.contact.externalId}`}, 0))`;
     let contact = await tx.supportContact.findUnique({ where: { storeId_channelKind_externalId: { storeId: d.storeId, channelKind: channel.kind, externalId: d.contact.externalId } } });
@@ -168,4 +169,7 @@ export async function receiveMessage(deps: SupportDeps, input: ReceiveInput): Pr
     await resolveIdentity(tx, { storeId: d.storeId, contactId: contact.id, conversationId: conv.id, text, at: new Date(at.getTime() + 1), rules: identity });
     return { conversationId: conv.id, messageId: message.id, started, reopened, duplicate: false };
   }, TX);
+  // PR 435: the support app's notification (support.app off as it ships); queued, so the channel is answered at once
+  if (!received.duplicate) queueSupportPush(deps, { kind: 'message', storeId: d.storeId, conversationId: received.conversationId, text });
+  return received;
 }

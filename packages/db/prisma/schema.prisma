@@ -1011,6 +1011,8 @@ enum IntegrationKind {
   /// S04 · PR 117 follow-up (CN-020 (4)): speech to text for the checkout's voice address, its own kind so it never
   /// stands in for the AI writer (AI_PROVIDER) or a one-per-kind OTHER connection such as the page reader.
   SPEECH
+  /// S22 · PR 435: web push (VAPID) for the support app's notifications, its own kind (one push connection).
+  PUSH
 }
 
 enum AdapterMode {
@@ -9861,9 +9863,15 @@ model StaffPushSubscription {
   p256dh      String
   auth        String
   deviceLabel String?
+  /// Switched off on the device, by its person, or the push service said the address is gone (404/410). Kept, not used.
   revokedAt   DateTime? @db.Timestamptz(3)
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 435: the last push that reached the push service, and the failures since (the screen shows a device that fails).
+  lastPushAt  DateTime? @db.Timestamptz(3)
+  failCount   Int       @default(0)
+
+  @@index([staffUserId, revokedAt])
 }
 
 // =====================================================================================================================

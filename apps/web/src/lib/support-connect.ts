@@ -85,6 +85,8 @@ export interface MessengerWebhookDeps {
   settings: Reader;
   connections: Pick<Connections, 'secretOf'>;
   now?: () => Date;
+  /** PR 435: the support app's push wiring (a new message wakes its devices). */
+  push?: sp.SupportPushWiring;
 }
 
 export type MessengerWebhookCode = 'OK' | 'NOT_CONNECTED' | 'TOO_LARGE' | 'BAD_SIGNATURE' | 'BAD_JSON';
@@ -114,7 +116,7 @@ export async function receiveMessengerWebhook(deps: MessengerWebhookDeps, req: {
     return { status: 400, code: 'BAD_JSON' };
   }
   const items: sp.ChannelInbound[] = parseMessengerWebhook(body).map((m) => ({ channelExternalId: m.pageId, from: m.from, messageId: m.messageId, text: m.text, files: m.files.map((f) => ({ kind: f.kind, sourceUrl: f.url })), at: m.at }));
-  const result = await sp.receiveFromChannel({ db: deps.db, settings: deps.settings, now: deps.now }, match.storeId, 'messenger', items);
+  const result = await sp.receiveFromChannel({ db: deps.db, settings: deps.settings, now: deps.now, push: deps.push }, match.storeId, 'messenger', items);
   return { status: 200, code: 'OK', result };
 }
 

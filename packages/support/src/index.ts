@@ -47,6 +47,7 @@
 // PR 434: privacy and the block list.
 //   privacy.ts    the reader's lens (own chats only, numbers in messages masked, the block list on) and putting a chat's
 //                 person on the support block list or taking them off (support.block; nothing deleted)
+//   push.ts       PR 435: the support app's push notifications — who is told on which device, with what words
 //
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
@@ -78,3 +79,5 @@ export * from './followups-pure';
 export * from './followups';
 // PR 434 — privacy inside support and the support block list.
 export * from './privacy';
+// PR 435 — the support app's push notifications (a new message, a chat given to someone).
+export * from './push';

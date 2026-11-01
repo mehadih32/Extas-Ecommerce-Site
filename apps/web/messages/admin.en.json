@@ -67,6 +67,7 @@
     "supportConversation": "Conversation",
     "supportSettings": "Support settings",
     "supportRiderIssues": "Rider issues",
+    "supportApp": "Support app",
     "moneyOverview": "Money overview",
     "moneyRefunds": "Refunds & wallet",
     "moneyCostLedger": "Cost ledger",
@@ -511,6 +512,15 @@
         "pixelCode": "Pixel code (Events Manager → the pixel)",
         "testEventCode": "Test event code — needed for the test; from Events Manager → the pixel → Test events",
         "baseUrl": "Address — only for a test server"
+      }
+    },
+    "webPush": {
+      "name": "Push notifications (support app)",
+      "desc": "Wakes employees' phones and computers for new support chats. The shop's own VAPID key pair — no account anywhere. Until it passes its Test nothing leaves the server.",
+      "fields": {
+        "privateKey": "Private key (43 letters)",
+        "publicKey": "Public key (87 letters)",
+        "subject": "Contact for the push services — mailto:you@… or an https:// page"
       }
     },
     "googleSpeech": {

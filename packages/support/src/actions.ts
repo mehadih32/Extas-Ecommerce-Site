@@ -11,6 +11,7 @@ import type { OutgoingSupportMessage } from './channels';
 import { allow, nowOf, parse, setting, SupportError, TX, type Db, type SupportDeps, type Who } from './context';
 import { CONVERSATION_STATUSES, fileKindOf, PREVIEW_CHARS, previewOf, type ConversationStatus } from './pure';
 import { mayOpen, supportLens } from './privacy';
+import { queueSupportPush } from './push';
 import { ticketOnOwner, ticketOnReply, ticketOnStatus } from './tickets';
 
 type Tx = Prisma.TransactionClient;
@@ -211,7 +212,7 @@ export async function assignConversation(deps: SupportDeps, who: Who, input: unk
   const d = parse(assignInput, input, 'assignment');
   const me = who.actor.staffUserId;
   const now = nowOf(deps);
-  return deps.db.$transaction(async (tx) => {
+  const changed = await deps.db.$transaction(async (tx): Promise<{ changed: boolean }> => {
     const c = await lockConversation(tx, who, d.conversationId, d.version);
     // PR 434: own chats only — another employee's chat is not there for this person (not even "no change")
     if (!mayOpen(lens, me, c.assignedToId)) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
@@ -241,6 +242,9 @@ export async function assignConversation(deps: SupportDeps, who: Who, input: unk
     });
     return { changed: true };
   }, TX);
+  // PR 435: the person given the chat is told on their devices (never the one who took it themselves)
+  if (changed.changed && d.staffId && d.staffId !== me) queueSupportPush(deps, { kind: 'assigned', storeId: who.storeId, conversationId: d.conversationId, to: d.staffId });
+  return changed;
 }
 
 // ------------------------------------------------------------------------------------------------------------ status
