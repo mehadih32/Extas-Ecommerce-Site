@@ -24,6 +24,7 @@ on:
       - "docs/reports/journeys/**"
       - "docs/reports/erp-acceptance/**"
       - "docs/reports/gate-orders/**"
+      - "docs/reports/gate-c360/**"
   # CN-023: nightly.yml (every night and by hand) calls this workflow; its run is named "nightly", so deploy.yml
   # (which follows "ci" runs) never starts for it.
   workflow_call:
@@ -111,7 +112,7 @@ jobs:
           rm -rf /tmp/sites/tls.caddy /tmp/sites/origin
       - name: Deploy script and app compose are valid
         run: |
-          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/pg-exec.sh infra/deploy/caddy-live.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/manual-md.sh infra/deploy/smoke.sh infra/deploy/smoke-lib.sh infra/deploy/journeys.sh infra/deploy/journeys-lib.sh infra/deploy/vitals-lab.sh infra/deploy/speed-lib.sh infra/deploy/erp-acceptance.sh infra/deploy/disk-tidy.sh infra/deploy/gate-orders.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
+          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/pg-exec.sh infra/deploy/caddy-live.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/manual-md.sh infra/deploy/smoke.sh infra/deploy/smoke-lib.sh infra/deploy/journeys.sh infra/deploy/journeys-lib.sh infra/deploy/vitals-lab.sh infra/deploy/speed-lib.sh infra/deploy/erp-acceptance.sh infra/deploy/disk-tidy.sh infra/deploy/gate-orders.sh infra/deploy/gate-c360.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
           # PR 620 · round 3: the upstream both ways — as before (Caddy without trusted_proxies) and with Caddy's own
           # client address (header_up, only when the live configuration trusts Cloudflare alone).
           for mode in "" client-ip; do
@@ -254,6 +255,7 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=6144
         run: |
           cp -r tools/gate-orders apps/web/gate-orders && (cd apps/web/gate-orders/server && ../../node_modules/.bin/tsc -p tsconfig.json)
+          mkdir -p packages/jobs/.gate-c360 && cp tools/gate-c360/helper.ts tools/gate-c360/tsconfig.json packages/jobs/.gate-c360/ && (cd packages/jobs/.gate-c360 && ../node_modules/.bin/tsc -p tsconfig.json)
 
   # PR 17 — every package's unit tests (and the tools' tests, with the web tests); no database here: the database tests
   # run in `db`.

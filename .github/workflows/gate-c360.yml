@@ -1,0 +1,84 @@
+# PR 414 follow-up (CN-013 go-live gate, phase 2; owner 1 Nov 2026) — the customer 360° run against the preview host, ON
+# the VM through the self-hosted runner (CN-003). By hand only. One test customer ("GATE TEST …", a fresh number each
+# run) walks the whole life cycle on a mid Android phone, an iPhone and a 1366 desktop, in English and /bn: before
+# ordering (an ad link, the Facebook and Messenger in-app browsers, search, a category, a product, the wishlist, the bag,
+# a checkout he leaves), one guest order, the same number signing in with the mock SMS code, every option of his
+# account, support (each channel, staff finding him by his number however it is written and tracing his orders), and
+# after ordering (the confirmation messages on the mocks, the order in the admin, a delivered order as a sale). The
+# owner OK'd real test orders on the preview (1 Nov). infra/deploy/gate-c360.sh refuses unless the host is the preview
+# host of server.conf and every customer-facing provider is its mock; it cancels and archives its own rows at the end
+# and never deletes anything. The report (README.md, result.json, a picture of each failed step) is committed to
+# docs/reports/gate-c360/latest/ with [skip ci] after every run.
+name: gate-c360
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenarios:
+        description: "all, or a list of: before, order, account, support, after"
+        required: false
+        default: "all"
+
+# Its own group: a by-hand run never replaces a deploy, a smoke test or the journeys waiting in theirs. The VM's single
+# runner still takes one job at a time.
+concurrency:
+  group: extas-gate-c360
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  gate-c360:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 60
+    steps:
+      # The run comes from the version that is live, not from the newest main (as in journeys.yml).
+      - name: Find the live version
+        id: live
+        run: |
+          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          if printf '%s' "$live" | grep -Eq '^[0-9a-f]{40}$'; then echo "sha=$live" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.live.outputs.sha || github.sha }}
+
+      - name: Customer 360° run
+        id: gate
+        continue-on-error: true
+        env:
+          LIVE: ${{ steps.live.outputs.sha }}
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: |
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/gate-c360.sh "$RUNNER_TEMP/gate-c360" "$LIVE" "${SCENARIOS:-all}"
+
+      - name: Commit the report
+        if: always()
+        env:
+          RESULT: ${{ steps.gate.outcome }}
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/gate-c360"
+          [ -f "$out/result.json" ] || { echo "no report (the run was refused before it started; see the log above)"; exit 0; }
+          dest="docs/reports/gate-c360/latest"
+          sudo chown -R "$(id -u):$(id -g)" "$out"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            rm -rf "$dest" && mkdir -p "$(dirname "$dest")" && cp -r "$out" "$dest"
+            git add -A "$dest"
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "gate-c360 report: ${RESULT} [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail when a step failed
+        if: steps.gate.outcome == 'failure'
+        run: |
+          echo "A step of the customer 360° run failed or the run was refused. See docs/reports/gate-c360/latest/README.md."
+          exit 1

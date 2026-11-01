@@ -1,0 +1,37 @@
+{
+  "$comment": "PR 414 follow-up (CN-013 phase 2, owner 1 Nov 2026) — what the customer 360° run (tools/gate-c360/run.mjs) walks. Data, not code: no owner data, no number, no price. The gate's own phone number is made fresh each run by infra/deploy/gate-c360.sh (operator prefix below + 8 random digits) and refused when a real customer has it.",
+  "screens": [
+    { "id": "android-mid", "width": 360, "height": 800, "touch": true, "ua": "Mozilla/5.0 (Linux; Android 12; SM-A135F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36" },
+    { "id": "iphone", "width": 390, "height": 844, "touch": true, "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1" },
+    { "id": "desktop-1366", "width": 1366, "height": 768, "touch": false, "ua": "" }
+  ],
+  "langs": ["en", "bn"],
+  "inApp": [
+    { "id": "facebook-in-app", "screen": "android-mid", "ua": "Mozilla/5.0 (Linux; Android 12; SM-A135F; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/128.0.0.0 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/478.0.0.43.109;]" },
+    { "id": "messenger-in-app", "screen": "iphone", "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/MessengerForiOS;FBAV/470.0.0.37.109;FBDV/iPhone13,2;FBMD/iPhone;FBSN/iOS;FBSV/17.5;FBLC/en_US]" }
+  ],
+  "interactive": [
+    { "screen": "android-mid", "lang": "bn" },
+    { "screen": "desktop-1366", "lang": "en" }
+  ],
+  "utm": { "utm_source": "facebook", "utm_medium": "paid_social", "utm_campaign": "gate-test-c360", "fbclid": "GATETEST360" },
+  "search": [
+    { "id": "english", "q": "polo", "mustFind": true },
+    { "id": "bengali", "q": "পোলো শার্ট", "mustFind": true },
+    { "id": "misspelt", "q": "pollo shrit", "mustFind": true },
+    { "id": "banglish", "q": "panjabi", "mustFind": false }
+  ],
+  "order": { "screen": "android-mid", "lang": "bn", "address": "GATE TEST House 1, Road 2, Dhanmondi, Dhaka" },
+  "phonePrefix": "013",
+  "accountPages": [
+    { "id": "home", "path": "/account", "expect": "[data-testid=acc-home], [data-testid=account-page]" },
+    { "id": "orders", "path": "/account/orders", "expect": "[data-testid=acc-orders], [data-testid=acc-orders-empty]" },
+    { "id": "foryou", "path": "/account/foryou", "expect": "[data-testid=acc-foryou]" },
+    { "id": "rewards", "path": "/account/rewards", "expect": "[data-testid=acc-rewards]" },
+    { "id": "wallet", "path": "/account/wallet", "expect": "[data-testid=acc-wallet]" },
+    { "id": "wishlist", "path": "/account/wishlist", "expect": "[data-testid=wish-page]" },
+    { "id": "profile", "path": "/account/profile", "expect": "[data-testid=acc-profile], [data-testid=acc-details]" }
+  ],
+  "allowLatin": ["SMS", "OTP", "COD", "bKash", "Nagad", "Rocket", "WhatsApp", "Messenger", "Facebook", "Google", "PDF", "XXL", "XL", "OK", "Email", "e-mail", "Wi-Fi", "Visa", "Mastercard", "AMEX", "Pathao", "Steadfast", "RedX", "Paperfly", "eCourier"],
+  "waits": { "runMin": 45, "pageMs": 30000, "messagesSec": 150, "messagesPollSec": 10, "helperSec": 90 }
+}
