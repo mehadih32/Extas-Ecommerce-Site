@@ -401,6 +401,11 @@ export const SCENARIOS = [
       const k = await x.call("check4", { number: r.number, variantId: extra.id });
       if (k.rebook) x.booked(r.number, k.rebook);
       else if (k.first?.booked) x.booked(r.number, k.first);
+      if (k.manualOff) {
+        // live run 2 (1 Nov): an owner's switch that is off is a SKIP with its reason, never a FAIL
+        x.gate("4", skip("4", k.manualOff));
+        return [placed("placed", r), check("the admin added a piece", k.added, `+${k.addedMinor}`), check("booked", !!k.first?.booked, k.first?.code ?? ""), skip("re-booked at the new amount", k.manualOff)];
+      }
       const ok = k.added && k.first?.booked && k.stale?.why === "COD_CHANGED" && k.rebook?.outcome === "booked" && k.rebook?.courier?.codMinor === k.dueMinor;
       x.gate("4", check("4", ok, `piece added (+${k.addedMinor}); first booking ${k.first?.courier?.codMinor ?? "—"}; payment ${k.recordedMinor} recorded; parcel ${k.stale?.why ?? "not stale"}; re-booked at ${k.rebook?.courier?.codMinor ?? "—"} = due ${k.dueMinor}`));
       return [placed("placed", r), check("the admin added a piece", k.added, `+${k.addedMinor}`), check("booked", !!k.first?.booked, k.first?.code ?? ""), check("re-booked at the new amount", !!ok, `${k.rebook?.courier?.codMinor ?? "—"} vs due ${k.dueMinor}`)];

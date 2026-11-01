@@ -294,10 +294,26 @@ export async function runGate(o) {
             await step({ ...m, id: `search-${q.id}`, title: `Searches (${q.id}: "${q.q}")` }, async () => {
               const v = await visit(page, L.inLang(lang, `/search?q=${encodeURIComponent(q.q)}`), { scr, lang });
               if (v.problems.length) return { ...fromPage(v), page };
-              const found = await page.locator("[data-testid=search-grid] .pcard-w a[href]").count();
+              let found = await page.locator("[data-testid=search-grid] .pcard-w a[href]").count();
               if (!st.products) return { status: "SKIP", ms: v.ms, reason: `the page works (${v.ms} ms), but the shop has no products yet: nothing to find` };
-              if (!found && q.mustFind) return { status: "FAIL", ms: v.ms, page, reason: `found nothing for "${q.q}" while the shop has products` };
-              return { status: "PASS", ms: v.ms, reason: `${found} result(s)` };
+              // live run 2 (1 Nov): the run's own GATE TEST products are minutes old. The shop's search reads them from its
+              // word list (kept search.engine.cacheSeconds, 30 s by default; Meilisearch only once its job has indexed
+              // them), so the first search waits for them once, as long as waits.searchSec, and says how long it took
+              let waited = "";
+              if (!found && q.mustFind && gateProducts.length && st.searchWait === undefined) {
+                const t0 = Date.now();
+                const limit = (cfg.waits.searchSec ?? 90) * 1000;
+                while (!found && Date.now() - t0 < limit) {
+                  await sleep(5_000);
+                  await page.reload({ waitUntil: "load" }).catch(() => null);
+                  found = await page.locator("[data-testid=search-grid] .pcard-w a[href]").count();
+                }
+                st.searchWait = Math.round((Date.now() - t0) / 1000);
+                waited = found ? ` (after waiting ${st.searchWait} s for the shop's search to take in the run's new products)` : ` (waited ${st.searchWait} s for the run's new products)`;
+              }
+              if (found) return { status: "PASS", ms: v.ms, reason: `${found} result(s)${waited}` };
+              if (q.mustFind) return { status: "FAIL", ms: v.ms, page, reason: `found nothing for "${q.q}" while the shop has products${waited}` };
+              return { status: "PASS", ms: v.ms, reason: "0 result(s): not a word the shop's products carry" };
             });
           }
           let productHref = null;
@@ -313,7 +329,7 @@ export async function runGate(o) {
             productHref = await firstProduct(page);
             const inCategory = !!productHref;
             productHref ??= gateProducts[0] ? L.inLang(lang, gateProducts[0]) : null;
-            if (!inCategory) return { status: "SKIP", ms: v.ms, reason: "the category opened has no products yet (the run's GATE TEST products are in no category), so no filter to use" };
+            if (!inCategory) return { status: "SKIP", ms: v.ms, reason: "the category opened has no products yet, so no filter to use" };
             const btn = page.locator("[data-testid=cat-filter-btn]").filter({ visible: true }).first();
             // a computer shows the filters beside the products; a phone opens them from the button
             const side = page.locator("aside").filter({ has: page.locator("input[type=checkbox], [aria-pressed], [role=switch]") }).filter({ visible: true }).first();
@@ -368,8 +384,20 @@ export async function runGate(o) {
               await visit(page, productHref, {});
               const heart = page.locator("[data-testid=pdp-wish]").filter({ visible: true }).first();
               if (!(await heart.count())) return { status: "FAIL", page, reason: "no heart on the product page" };
-              await heart.click();
-              await sleep(800);
+              // live run 2 (1 Nov): the heart counts once the shop has the save (its POST answered), not after a fixed
+              // 0.8 s — a tap before the page woke up, or a save still on its way when the next page opens, is retried
+              // or said, never read as an empty wishlist
+              let saved = null;
+              for (let i = 0; i < 3 && !saved; i++) {
+                const answer = page.waitForResponse((r) => r.url().includes("/api/wishlist") && r.request().method() === "POST", { timeout: 10_000 });
+                answer.catch(() => null);
+                // pressed already (the save is on its way): wait for it, never tap it off again
+                if ((await heart.getAttribute("aria-pressed").catch(() => null)) !== "true") await heart.click({ timeout: 10_000 }).catch(() => null);
+                saved = await answer.catch(() => null);
+                if (!saved) await sleep(1_000);
+              }
+              if (!saved) return { status: "FAIL", page, reason: "the heart was pressed three times but the shop was never asked to save it (no /api/wishlist request)" };
+              if (saved.status() !== 200) return { status: "FAIL", page, reason: `the shop refused the save (${saved.status()})` };
               const v = await visit(page, L.inLang(lang, "/account/wishlist"), { scr, lang, expect: "[data-testid=wish-page]" });
               const items = await page.locator("[data-testid=wish-item]").count();
               if (v.problems.length) return { ...fromPage(v), page };

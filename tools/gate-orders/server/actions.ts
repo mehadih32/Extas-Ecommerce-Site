@@ -23,9 +23,9 @@ import { variantStock } from '@extas/inventory';
 import { formatAmount, render, runContext, sampleInput, type MessagesDeps } from '@extas/messages';
 import { counts, kpi, salesBySku } from '@extas/metrics';
 import { addLine, addNote, cancelAfterBooking, cancelOrder, confirmOrder, getOrder, recordCourierCancel } from '@extas/orders';
-import { importSettlement, orderMoney, recordPayment } from '@extas/payments';
+import { importSettlement, orderMoney, PaymentsError, recordPayment } from '@extas/payments';
 import { addCourier, bookOrders, listCouriers, printStickers, rateFor, rebookParcel, staleParcelOf, updateCourier } from '@extas/shipping';
-import { archiveProducts, closeRuns, openRun, setTestStock, setUpProducts, skuPrefix, type Kit, type TestData } from '../lib/test-shop';
+import { archiveProducts, closeRuns, openRun, runState, setTestStock, setUpProducts, skuPrefix, strayCod, type Kit, type TestData } from '../lib/test-shop';
 import { keptSms, PROVIDER_KINDS, type GateDeps } from './deps';
 
 export { skuPrefix, type TestData };
@@ -153,6 +153,21 @@ export class Oracle {
   /** Closes the run's grant (with `all`: every other open one, what a crashed run left) and puts cash on delivery back. */
   closeRun(all = false): ReturnType<typeof closeRuns> {
     return closeRuns(this.kit, all ? { except: this.runId } : { runId: this.runId });
+  }
+
+  /** This run's grant as it stands now and what happened to cash on delivery (the report's "Safety net" line). */
+  runState(): ReturnType<typeof runState> {
+    return runState(this.kit, this.runId);
+  }
+
+  /**
+   * The start-of-run check (the shell, before the browser run): every grant an earlier run left open closed, with cash
+   * on delivery put back from its record, and a switch-on whose grant is gone put back from the setting-change log.
+   */
+  async earlier(): Promise<{ ok: boolean; closed: number; codRestored: number; notes: string[]; runs: { run: string; cod: string }[]; stray: string | null }> {
+    const c = await this.closeRun(true);
+    const s = await strayCod(this.kit);
+    return { ...c, codRestored: c.codRestored + (s.restored ? 1 : 0), stray: s.note };
   }
 
   /** The sellable pieces of test variants now (the inventory's own figure, as the admin's stock page reads it). */
@@ -327,7 +342,13 @@ export class Oracle {
     const after = await this.g.db.order.findUniqueOrThrow({ where: { id: o.id }, select: { totalMinor: true } });
     const first = await this.book(number);
     if (!first.booked) return { added: after.totalMinor > before.totalMinor, first, rebooked: false };
-    const pay = await recordPayment(this.g.payments, this.g.who, o.id, { method: 'BKASH', amountMinor: this.data.payment.recordMinor, reference: `${skuPrefix(this.data)}${this.runId}`.slice(0, 100), note: `${this.data.marker}: the gate run's test record (check 4)`, confirm: true }, { idempotencyKey: `gate-${this.runId}-${o.id}-pay` });
+    // live run 2 (1 Nov): recording a payment by hand is the owner's switch (`payments.manual`); off, the rest of the
+    // check is a SKIP with that reason, never a FAIL (the piece and the first booking are still checked)
+    const pay = await this.recordForCheck4(o.id).catch((e: unknown) => {
+      if (e instanceof PaymentsError && e.code === 'MANUAL_OFF') return null;
+      throw e;
+    });
+    if (!pay) return { added: after.totalMinor > before.totalMinor, addedMinor: after.totalMinor - before.totalMinor, first, manualOff: "recording payments by hand is off (owner's setting payments.manual)" };
     const stale = await staleParcelOf(this.g.db, this.S, o.id);
     let rebook: Json | null = null;
     if (stale) {
@@ -335,6 +356,10 @@ export class Oracle {
       rebook = { outcome: r.booking?.outcome ?? null, ...(await this.parcelFacts(o.id)) };
     }
     return { added: after.totalMinor > before.totalMinor, addedMinor: after.totalMinor - before.totalMinor, first, recordedMinor: pay.amountMinor, dueMinor: pay.dueMinor, codToCollectMinor: pay.codToCollectMinor, stale: stale ? { why: stale.why, bookedCodMinor: stale.bookedCodMinor, dueMinor: stale.dueMinor } : null, rebook };
+  }
+
+  private recordForCheck4(orderId: string) {
+    return recordPayment(this.g.payments, this.g.who, orderId, { method: 'BKASH', amountMinor: this.data.payment.recordMinor, reference: `${skuPrefix(this.data)}${this.runId}`.slice(0, 100), note: `${this.data.marker}: the gate run's test record (check 4)`, confirm: true }, { idempotencyKey: `gate-${this.runId}-${orderId}-pay` });
   }
 
   /** Check 21: after a failed mock payment and a retry — one order, one paid payment. */

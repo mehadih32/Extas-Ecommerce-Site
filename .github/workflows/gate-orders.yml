@@ -63,6 +63,14 @@ jobs:
           cod=no; [ "$ALLOW_COD" = true ] && cod=yes
           sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" GATE_ALLOW_COD="$cod" bash infra/deploy/gate-orders.sh "$RUNNER_TEMP/gate-orders" "${SCENARIOS:-all}" "$LIVE"
 
+      # Live run 2 (1 Nov): the last word on the owner's setting, after a cancelled or killed run too (if: always()): what
+      # any gate-orders run left open is closed and cash on delivery put back from its own record; the report says so.
+      - name: Close what a run left open (cash on delivery, the test-pay grant)
+        if: always()
+        continue-on-error: true
+        run: |
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/gate-orders.sh --sweep "$RUNNER_TEMP/gate-orders"
+
       - name: Commit the report
         if: always()
         env:
@@ -80,6 +88,7 @@ jobs:
             git reset -q --hard origin/main
             rm -rf "$dest" && mkdir -p "$(dirname "$dest")"
             mkdir -p "$dest" && cp "$out/README.md" "$out/result.json" "$dest/"
+            find "$out" -maxdepth 1 -name 'scenario-*.jpg' -exec cp {} "$dest/" \;
             git add -A "$dest"
             if git diff --cached --quiet; then exit 0; fi
             git commit -q -m "gate-orders report: ${RESULT} [skip ci]"

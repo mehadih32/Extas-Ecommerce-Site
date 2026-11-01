@@ -71,3 +71,48 @@ it('the workflow asks for allow_cod, false unless the owner says so, and hands i
   expect(wf).toMatch(/GATE_ALLOW_COD/);
   expect(wf).not.toMatch(/allow_cod:[^\n]*true/);
 });
+
+it('live run 2: the workflow always runs the sweep after the gate, and carries the failed scenarios\' pictures', () => {
+  const wf = readFileSync(new URL('../../.github/workflows/gate-orders.yml', import.meta.url), 'utf8');
+  expect(wf).toMatch(/if: always\(\)\n\s+continue-on-error: true\n\s+run: \|\n\s+sudo env [^\n]+gate-orders\.sh --sweep/);
+  expect(wf.indexOf('--sweep')).toBeLessThan(wf.indexOf('Commit the report'));
+  expect(wf).toMatch(/scenario-\*\.jpg/);
+});
+
+it('live run 2: every scenario has its own time budget, longer on a slow network, never more than 30 minutes', async () => {
+  const { scenarioBudgetMs } = await import('./shop.mjs');
+  for (const s of SCENARIOS) {
+    const ms = scenarioBudgetMs(s, {});
+    expect(ms, s.id).toBeGreaterThanOrEqual(10 * 60_000);
+    expect(ms, s.id).toBeLessThanOrEqual(30 * 60_000);
+  }
+  const wifi = SCENARIOS.find((s) => s.network === 'wifi');
+  const slow = SCENARIOS.find((s) => s.network === 'slow-3g');
+  expect(scenarioBudgetMs(slow, {})).toBeGreaterThan(scenarioBudgetMs(wifi, {}));
+  expect(scenarioBudgetMs(wifi, { GATE_SCENARIO_MIN: '2' })).toBe(2 * 60_000);
+});
+
+it('live run 2: a press that cannot happen names what took the tap, in one line', async () => {
+  const { clickReason } = await import('./lib/shopper.mjs');
+  const e = new Error('locator.click: Timeout 15000ms exceeded.\nCall log:\n  - waiting for locator(\'[data-testid="bar-add"]\')\n    - <div class="sheet-scrim"></div> intercepts pointer events\n  - retrying click action');
+  expect(clickReason(e)).toBe('locator.click: Timeout 15000ms exceeded. — <div class="sheet-scrim"></div> intercepts pointer events');
+  expect(clickReason(new Error('page closed'))).toBe('page closed');
+});
+
+it('live run 2: with cash on delivery on, recording payments switched off by the owner makes check 4 a SKIP, never a FAIL', async () => {
+  const s15 = SCENARIOS.find((s) => s.id === '15');
+  const gates = {};
+  const why = "recording payments by hand is off (owner's setting payments.manual)";
+  const x = {
+    pay: 'cod',
+    open: async () => ({}),
+    order: async () => ({ number: 'G-1' }),
+    v: () => [{ id: 'v1' }],
+    call: async () => ({ added: true, addedMinor: 1000, first: { booked: true, code: 'C1' }, manualOff: why }),
+    booked: () => {},
+    gate: (id, row) => (gates[id] = row),
+  };
+  const rows = await s15.run.call(s15, x);
+  expect(rows.map((r) => r.verdict)).toEqual(['PASS', 'PASS', 'PASS', 'SKIP']);
+  expect(gates['4']).toMatchObject({ verdict: 'SKIP', detail: why });
+});

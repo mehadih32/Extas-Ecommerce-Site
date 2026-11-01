@@ -56,10 +56,12 @@ export function resultJson(run) {
     ok: sum.ok && (run.cleanup?.ok ?? false),
     // the run made test data or orders (the server's safety net cleans up after a run that did and did not finish)
     started: !!run.started,
+    // live run 2: false in the report written after each scenario; true once the run (and its clean-up) ended
+    finished: run.finished !== false,
     providers: run.providers ?? null,
     payment: run.payment ?? null,
     budget: run.budget ?? null,
-    rows: run.rows.map((r) => ({ id: r.id, title: r.title, device: r.device, network: r.network, verdict: r.verdict, orders: r.orders ?? [], addresses: r.addresses ?? [], timings: r.timings ?? null, over: r.over ?? [], checks: r.checks })),
+    rows: run.rows.map((r) => ({ id: r.id, title: r.title, device: r.device, network: r.network, verdict: r.verdict, orders: r.orders ?? [], addresses: r.addresses ?? [], timings: r.timings ?? null, over: r.over ?? [], checks: r.checks, shot: r.shot ?? null })),
     gateChecks: run.gateChecks ?? [],
     addressRows: run.addressRows ?? [],
     timings: timingsTable(run.rows.flatMap((r) => r.timed ?? [])),
@@ -84,6 +86,7 @@ export function reportMarkdown(run) {
   }
   if (run.payment) L.push(`- Payments: the mock bKash page — ${run.payment.mockPay}; cash on delivery — ${run.payment.cod}. No real payment key, price, discount or COD amount is touched.`);
   if (run.budget) L.push(`- Speed budget (${run.budget.source}): a page's largest paint ≤ ${ms(run.budget.page)}, a press's server answer ≤ ${ms(run.budget.press)}; counted on 4G and wifi, shown on 3G.`);
+  if (run.finished === false) L.push(`- Written after scenario ${cell(run.rows.at(-1)?.id ?? "—")}: the run had not finished yet (a later report replaces this one; if none came, the run stopped here).`);
   for (const p of run.problems ?? []) L.push(`- Problem: ${cell(p)}`);
   L.push("");
   L.push("## Scenarios");
@@ -95,7 +98,8 @@ export function reportMarkdown(run) {
     const times = t ? STEPS.map((s) => ms(t[s.key]?.ms)).join(" · ") : "—";
     const why = r.checks.filter((c) => c.verdict !== "PASS" && c.detail).map((c) => `${c.verdict === "FAIL" ? "FAIL" : "skip"} ${c.id}: ${c.detail}`).slice(0, 4).join("; ");
     const over = (r.over ?? []).length ? ` ⚠ over budget: ${r.over.map((o) => `${o.step} ${ms(o.valueMs)}`).join(", ")}` : "";
-    L.push(`| ${cell(r.id)} | ${cell(r.title)} | ${cell(DEVICES[r.device]?.label ?? r.device ?? "—")} | ${cell(NETWORKS[r.network]?.label ?? r.network ?? "—")} | ${cell((r.addresses ?? []).join(", ") || "—")} | ${icon(r.verdict)} | ${cell((r.orders ?? []).join(", ") || "—")} | ${times}${over} | ${cell(why)} |`);
+    const shot = r.shot ? ` ([picture](${r.shot}))` : "";
+    L.push(`| ${cell(r.id)} | ${cell(r.title)} | ${cell(DEVICES[r.device]?.label ?? r.device ?? "—")} | ${cell(NETWORKS[r.network]?.label ?? r.network ?? "—")} | ${cell((r.addresses ?? []).join(", ") || "—")} | ${icon(r.verdict)} | ${cell((r.orders ?? []).join(", ") || "—")} | ${times}${over} | ${cell(why)}${shot} |`);
   }
   L.push("");
   if (run.gateChecks?.length) {

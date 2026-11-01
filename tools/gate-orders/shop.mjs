@@ -19,13 +19,14 @@
 // run pays on the mock bKash through its own grant (the oracle's openRun; closed by the clean-up and the shell's trap),
 // and a scenario that needs cash on delivery is a SKIP ("COD is off (owner's setting)") unless the owner ran it with
 // `allow_cod`.
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { createRequire } from "node:module";
 import { previewCookie } from "../smoke.mjs";
 import { addressDiffs, placeFails, placeVerdict } from "./lib/compare.mjs";
 import { baseOf, hostGuard, hostList } from "./lib/host-guard.mjs";
 import { oracleClient } from "./lib/oracle-client.mjs";
-import { classOf, networkOf } from "./lib/profiles.mjs";
+import { classOf, networkOf, slowFactor } from "./lib/profiles.mjs";
 import { providerPolicy } from "./lib/providers.mjs";
 import { COD_OFF, payWay, runCookie } from "./lib/run-grant.mjs";
 import { writeReport } from "./lib/report.mjs";
@@ -59,20 +60,66 @@ export function variantPool(products) {
   };
 }
 
+/**
+ * Live run 2 (1 Nov): a picture of the newest shopper's screen of a failed scenario (`name` in `dir`), or null. Small
+ * (a JPEG of the visible screen), so the report can carry one per failed scenario.
+ */
+export async function screenOf(shoppers, dir, name) {
+  mkdirSync(dir, { recursive: true });
+  for (const sh of [...shoppers].reverse()) {
+    try {
+      await sh.page.screenshot({ path: join(dir, name), type: "jpeg", quality: 55, timeout: 15_000 });
+      return name;
+    } catch {
+      /* this page is gone: try the one before */
+    }
+  }
+  return null;
+}
+
+/**
+ * Live run 2 (1 Nov): how long one scenario may take before it is stopped and counted as a FAIL (the run goes on with
+ * the next one). `budgetMin` of the scenario (default 10 minutes on wifi), longer on a slow network or phone, at most 30;
+ * GATE_SCENARIO_MIN sets the base for a whole run.
+ */
+export function scenarioBudgetMs(s, env = process.env) {
+  const base = Number(env.GATE_SCENARIO_MIN) > 0 ? Number(env.GATE_SCENARIO_MIN) : (s.budgetMin ?? 10);
+  const factor = Math.sqrt(Math.max(1, slowFactor(s.device, s.network)));
+  return Math.round(Math.min(30, base * factor) * 60_000);
+}
+
 /** The whole run; whatever happens, the report is written (a crash is a problem line, never a missing report). */
 export async function runGate(env = process.env) {
   const at = env.GATE_AT || new Date().toISOString();
-  const run = { at, sha: env.GATE_SHA || "", host: "", asked: env.GATE_SCENARIOS || "all", rows: [], gateChecks: [], addressRows: [], problems: [], cleanup: null, providers: null, budget: null, coverage: null };
+  const run = { at, sha: env.GATE_SHA || "", host: "", asked: env.GATE_SCENARIOS || "all", rows: [], gateChecks: [], addressRows: [], problems: [], cleanup: null, providers: null, budget: null, coverage: null, finished: false };
   const secrets = [env.GATE_ORACLE_TOKEN, env.SMOKE_HTTP_PASSWORD, env.GATE_PAY_TOKEN];
   const STOPPED = 1; // the exit of a run that crashed (as a failed scenario)
+  // live run 2: a browser wait that fails after its step has gone (a promise nobody waits for any more) is a line in the
+  // report, never the end of the whole run (Node stops a process on an unhandled rejection)
+  const stray = (e) => {
+    run.problems.push(`a browser wait failed after its step had ended: ${errLine(e)}`);
+    log(`stray: ${errLine(e)}`);
+  };
+  process.on("unhandledRejection", stray);
+  run.save = () => {
+    if (!env.GATE_OUT) return;
+    try {
+      writeReport(env.GATE_OUT, run, secrets);
+    } catch (e) {
+      log(`the report could not be written: ${errLine(e)}`);
+    }
+  };
   let exit;
   try {
     exit = await gateRun(env, run, secrets);
   } catch (e) {
     run.problems.push(`the run stopped: ${errLine(e)}`);
     exit = STOPPED;
+  } finally {
+    process.off("unhandledRejection", stray);
   }
-  if (env.GATE_OUT) writeReport(env.GATE_OUT, run, secrets);
+  run.finished = true;
+  run.save();
   return exit;
 }
 
@@ -216,6 +263,16 @@ async function gateRun(env, run, secrets) {
           const typed = { name: testName(c.n, lang === "bn" ? "bn" : "en"), phone: typedPhone(c.phone, format), address: address.text, localPhone: c.phone, format };
           const timings = {};
           if (spec.timed) timings.firstLoad = await timedGoto(sh, `${base}${inLang(lang, "/")}`);
+          // live run 2: every scenario its own stock — a piece an earlier scenario (or another gate run) left short is
+          // stocked up again on the test shelf first (never the two reserved for the stock scenarios)
+          const mine = spec.items.filter((v) => v !== pool.reserved.lastPiece && v !== pool.reserved.race);
+          if (mine.length) {
+            const have = await oracle.call("stock", { variantIds: mine.map((v) => v.id) }).catch(() => ({}));
+            for (const v of mine) {
+              const full = DATA.products.find((p) => p.key === v.product)?.stock ?? 0;
+              if ((have[v.id] ?? full) < (spec.qty ?? 1) + 1 && full > 0) await oracle.call("setStock", { variantId: v.id, qty: full });
+            }
+          }
           for (const [i, v] of spec.items.entries()) {
             const a = await addItem(sh, base, { path: pathOf(v), colour: v.colour, size: v.size }, lang);
             if (a.lostTaps) row.lostTaps = (row.lostTaps ?? 0) + a.lostTaps;
@@ -273,15 +330,29 @@ async function gateRun(env, run, secrets) {
           return { ...r, number, next: p.url };
         },
       };
+      // live run 2 (1 Nov): each scenario on its own — its own time budget, a crash or a stuck step is its own FAIL row
+      // with the error and a picture of the screen, and the run goes on with the next scenario
+      const budget = scenarioBudgetMs(s, env);
+      const work = Promise.resolve().then(() => s.run.call(s, x));
+      let timer;
+      const over = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`the scenario ran over its ${Math.round(budget / 60_000)}-minute budget and was stopped`)), budget);
+      });
       try {
-        row.checks = await s.run.call(s, x);
+        row.checks = await Promise.race([work, over]);
       } catch (e) {
         row.checks.push({ id: "run", verdict: "FAIL", detail: errLine(e) });
         log(`scenario ${s.id}: ${errLine(e)}`);
+      } finally {
+        clearTimeout(timer);
       }
       row.verdict = scenarioVerdict(row.checks);
+      if (row.verdict === "FAIL" && env.GATE_OUT) row.shot = await screenOf(shoppers, env.GATE_OUT, `scenario-${s.id}.jpg`);
       if (row.lostTaps) run.problems.push(`scenario ${s.id}: ${row.lostTaps} tap(s) landed before the product page had woken up and did nothing (the shopper tapped again)`);
       while (shoppers.length) await shoppers.pop().close().catch(() => null);
+      // a scenario stopped at its budget ends here: its browsers are closed, so whatever it still waited on fails now
+      await Promise.race([work.catch(() => null), new Promise((r) => setTimeout(r, 30_000))]);
+      run.save?.();
     }
 
     // ---- 4. every order's details at every stage: typed, stored, admin, courier, sticker ----

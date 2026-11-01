@@ -66,3 +66,14 @@ it('writes both files without a secret in them', () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+it('live run 2: a report written between scenarios says the run had not finished, and a failed row links its picture', () => {
+  const part = { ...run, finished: false, rows: [{ ...run.rows[0], verdict: 'FAIL', shot: 'scenario-1.jpg', checks: [{ id: 'run', verdict: 'FAIL', detail: 'the scenario ran over its 10-minute budget and was stopped' }] }] };
+  const md = reportMarkdown(part);
+  expect(md).toContain('Written after scenario 1: the run had not finished yet');
+  expect(md).toContain('([picture](scenario-1.jpg))');
+  expect(resultJson(part).finished).toBe(false);
+  expect(resultJson(part).rows[0].shot).toBe('scenario-1.jpg');
+  expect(resultJson(run).finished).toBe(true);
+  expect(reportMarkdown(run)).not.toContain('had not finished');
+});
