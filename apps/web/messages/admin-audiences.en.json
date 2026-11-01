@@ -7,7 +7,7 @@
     "newTitle": "New audience",
     "new": "New audience",
     "back": "Audiences",
-    "note": "These lists stay in the shop. Nothing is sent to Facebook, Google or TikTok from this page; when sending comes, the numbers are hashed before they leave.",
+    "note": "These lists stay in the shop until you press “Send now” on an audience, with sending switched on below. Only hashed phone numbers leave the shop — never a name or a plain number.",
     "views": {
       "all": "All",
       "archived": "Archived"
@@ -101,7 +101,99 @@
       "days": "days back",
       "ref": "the size or grade",
       "action": "the step",
-      "value": "the form"
+      "value": "the form",
+      "kind": "the kind of audience",
+      "seedDays": "the days"
+    },
+    "lal": {
+      "new": "New lookalike",
+      "newTitle": "New lookalike audience",
+      "whoSub": "The seed is everyone whose parcel was delivered in the days you choose, each weighed by how much he really bought (delivered sales, not the number of orders). The ad platform then finds people like the ones who spend.",
+      "days": "Delivered in the last … days",
+      "daysHelp": "Your number. Refused, cancelled and gift orders never count.",
+      "countSub": "people in the seed right now",
+      "fix": "Type the number of days to see the seed.",
+      "sum": "Lookalike · seed: delivered in the last {days} days, weighed by sales"
+    },
+    "kind": {
+      "BUILDER": "From conditions",
+      "LOOKALIKE": "Lookalike"
+    },
+    "card": {
+      "h": "Sending to ad platforms",
+      "d": "Off as it ships. Lists go out only as hashed phone numbers. No budget or campaign is changed.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "readOnly": "You can look, but changing this needs another permission.",
+      "push": "Allow “Send now”",
+      "pushHelp": "Off: no audience leaves the shop.",
+      "countries": "Lookalike countries",
+      "countriesHelp": "Two-letter codes, comma separated (for example the code of your country). Empty: no lookalike is made.",
+      "metaPercent": "Meta lookalike size (share of the country)",
+      "tiktokSize": "TikTok lookalike size",
+      "googleSize": "Google lookalike size",
+      "minMeta": "Fewest people for Meta",
+      "minTiktok": "Fewest people for TikTok",
+      "minGoogle": "Fewest people for Google",
+      "minHelp": "A smaller list is not sent. 0 = no floor (the platform itself may still refuse a small list).",
+      "size": {
+        "none": "Not set",
+        "narrow": "Narrow (closest)",
+        "balanced": "Balanced",
+        "broad": "Broad (most people)"
+      }
+    },
+    "push": {
+      "title": "Send to ad platforms",
+      "sub": "Sends these people to Meta, TikTok and Google as hashed phone numbers, so a campaign there can show ads to them or leave them out.",
+      "subLal": "Sends the seed (hashed, each with his delivered sales) and asks each platform for a lookalike drawn from it.",
+      "off": "Sending is switched off.",
+      "offLink": "Turn it on in the sending card",
+      "never": "Not sent anywhere yet.",
+      "noAccount": "no ad account read yet (practice)",
+      "send": "Send now",
+      "sendAsk": "Press again to send",
+      "sending": "Sending…",
+      "done": "Sent. Each platform’s answer is below.",
+      "when": "sent {when}",
+      "lalMade": "lookalike made",
+      "platform": {
+        "meta": "Meta",
+        "tiktok": "TikTok",
+        "google": "Google"
+      },
+      "status": {
+        "SENT": "{n} people sent",
+        "PRACTICE": "practice: {n} people would be sent, nothing left the shop",
+        "TOO_SMALL": "not sent: fewer people than your floor",
+        "FAILED": "the platform refused"
+      },
+      "saved": {
+        "SENT": "{n} people",
+        "PRACTICE": "practice",
+        "TOO_SMALL": "too few people ({n})",
+        "FAILED": "refused"
+      },
+      "lal": {
+        "MADE": "lookalike made",
+        "NO_SIZE": "no lookalike: set its size",
+        "NO_COUNTRY": "no lookalike: set its countries",
+        "FAILED": "lookalike refused"
+      },
+      "err": {
+        "SWITCH_OFF": "Sending is switched off.",
+        "STALE": "Someone changed this meanwhile. It has been read again.",
+        "ARCHIVED": "This audience is archived. Restore it first.",
+        "NOT_FOUND": "Not found.",
+        "network": "No connection. Try again.",
+        "unauthorized": "Please sign in again.",
+        "forbidden": "You do not have permission for this.",
+        "other": "Something went wrong. Try again.",
+        "EMPTY": "Nobody is in this audience now, so there is nothing to send."
+      }
     }
   }
 }

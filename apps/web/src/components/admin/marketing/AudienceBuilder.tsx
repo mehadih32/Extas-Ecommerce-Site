@@ -3,8 +3,10 @@
 // conditions (each "keep" or "leave out", with the owner's days, a size or a grade where the condition needs one), the
 // live count of people beside them (asked again a moment after each change; a few masked names for a person allowed to
 // see customers), and its steps: Save (counts and keeps the size), Count again, Archive (asks once more), Restore.
-// Saving sends the version it was read at (STALE = read again). Nothing here sends a list to an ad platform. Without
-// `marketing.audiences.write` everything is read-only.
+// Saving sends the version it was read at (STALE = read again). Nothing here sends a list to an ad platform (that is
+// AudiencePush). Without `marketing.audiences.write` everything is read-only.
+// PR 263: a lookalike audience has no conditions — only the owner's number of days for its seed (the people delivered
+// to in that window, each valued by his delivered sales); its count is the seed's.
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { t, type Dict } from '@/lib/i18n';
@@ -13,6 +15,8 @@ import { call } from '../api';
 
 export interface EditorAudience {
   id: string | null;
+  kind: 'BUILDER' | 'LOOKALIKE';
+  seedDays: number | null;
   name: string;
   state: AudienceState;
   rules: { kind: AudienceRuleKind; days: number | null; ref: string | null; exclude: boolean }[];
@@ -59,6 +63,8 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
   const au = p.audience;
   const seq = useRef(au.rules.length + 1);
   const [name, setName] = useState(au.name);
+  const isLal = au.kind === 'LOOKALIKE';
+  const [seed, setSeed] = useState(au.seedDays == null ? '' : String(au.seedDays));
   const [rules, setRules] = useState<Draft[]>(au.rules.length ? au.rules.map((r, i) => ({ key: i + 1, kind: r.kind, days: r.days == null ? '' : String(r.days), ref: r.ref ?? '', exclude: r.exclude })) : [{ key: 1, kind: 'ordered', days: '', ref: '', exclude: false }]);
   /** The last answer, with the conditions it was for (an answer for older conditions is not shown). */
   const [answer, setAnswer] = useState<{ key: string; count: Count | null } | null>(null);
@@ -68,17 +74,20 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
   const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
   const ro = !p.canWrite || au.state === 'ARCHIVED';
   const off = ro || busy;
-  const def = useMemo(() => ready(rules), [rules]);
-  const defKey = JSON.stringify(def);
+  const seedDays = /^\d+$/.test(seed) && Number(seed) >= 1 && Number(seed) <= AUDIENCE_DAYS_MAX ? Number(seed) : null;
+  const def = useMemo(() => (isLal ? null : ready(rules)), [isLal, rules]);
+  const ok = isLal ? seedDays != null : !!def;
+  const defKey = isLal ? `lal:${seedDays}` : JSON.stringify(def);
 
   const count = answer && answer.key === defKey ? answer.count : null;
-  const counting = !!def && (!answer || answer.key !== defKey);
+  const counting = ok && (!answer || answer.key !== defKey);
 
   useEffect(() => {
-    if (!def) return;
+    if (!ok) return;
     let live = true;
     const timer = setTimeout(async () => {
-      const r = await call('GET', `${API}/count?definition=${encodeURIComponent(JSON.stringify({ rules: def }))}`);
+      const q = isLal ? `lookalike=${encodeURIComponent(JSON.stringify({ seedDays }))}` : `definition=${encodeURIComponent(JSON.stringify({ rules: def }))}`;
+      const r = await call('GET', `${API}/count?${q}`);
       if (live) setAnswer({ key: defKey, count: r.status === 200 ? (r.data.count as Count) : null });
     }, COUNT_WAIT_MS);
     return () => {
@@ -114,10 +123,11 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
   }
 
   async function save() {
-    if (!def) return setSaid({ text: a('countFix'), bad: true });
+    if (!ok) return setSaid({ text: a(isLal ? 'lal.fix' : 'countFix'), bad: true });
     setBusy(true);
     setSaid(null);
-    const r = await call(au.id ? 'PUT' : 'POST', au.id ? `${API}/${au.id}` : API, { name, definition: { rules: def }, version: au.version });
+    const payload = isLal ? { kind: 'LOOKALIKE', name, definition: { seedDays }, version: au.version } : { name, definition: { rules: def }, version: au.version };
+    const r = await call(au.id ? 'PUT' : 'POST', au.id ? `${API}/${au.id}` : API, payload);
     setBusy(false);
     if (r.status === 200 || r.status === 201) {
       setDirty(false);
@@ -163,8 +173,13 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
           <h2 className="a2-h3" id={`${id}-who`}>
             {a('who')}
           </h2>
-          <p className="a2-cs">{a('whoSub')}</p>
+          <p className="a2-cs">{a(isLal ? 'lal.whoSub' : 'whoSub')}</p>
           <div className="a2-mt12">{fld('nm', a('name'), <input id={`${id}-nm`} className="a2-inp" value={name} maxLength={120} disabled={off} onChange={(e) => (setName(e.target.value), setDirty(true))} data-testid="au-name" />)}</div>
+          {isLal ? (
+            <div className="a2-mt12">
+              {fld('seed', a('lal.days'), <input id={`${id}-seed`} className="a2-inp" inputMode="numeric" value={seed} disabled={off} onChange={(e) => (setSeed(e.target.value.replace(/\D/g, '')), setDirty(true), setAsk(null))} data-testid="au-seed-days" />, a('lal.daysHelp'))}
+            </div>
+          ) : (
           <ol className="au-rules a2-mt12">
             {rules.map((r, i) => {
               const need = RULE_NEEDS[r.kind];
@@ -227,7 +242,8 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
               );
             })}
           </ol>
-          {!ro && rules.length < AUDIENCE_RULES_MAX ? (
+          )}
+          {!isLal && !ro && rules.length < AUDIENCE_RULES_MAX ? (
             <button type="button" className="a2-btn a2-mt12" disabled={busy} onClick={add} data-testid="au-add">
               {a('add')}
             </button>
@@ -263,12 +279,12 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
           <h2 className="a2-h3" id={`${id}-count`}>
             {a('countTitle')}
           </h2>
-          {def ? (
+          {ok ? (
             <>
               <div className="au-big a2-num" data-testid="au-size">
                 {count ? count.size : '…'}
               </div>
-              <p className="a2-sm a2-mute">{counting ? a('counting') : a('countSub')}</p>
+              <p className="a2-sm a2-mute">{counting ? a('counting') : a(isLal ? 'lal.countSub' : 'countSub')}</p>
               {count?.unavailable.includes('vip') ? <p className="a2-sm bk-warn">{a('vipUnset')}</p> : null}
               {count?.sample?.length ? (
                 <>
@@ -285,7 +301,7 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
               ) : null}
             </>
           ) : (
-            <p className="a2-sm a2-mute a2-mt12">{a('countFix')}</p>
+            <p className="a2-sm a2-mute a2-mt12">{a(isLal ? 'lal.fix' : 'countFix')}</p>
           )}
         </section>
         <div className="a2-note" role="note">

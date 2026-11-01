@@ -64,6 +64,8 @@ export * from './ads/meta-ads';
 export * from './ads/tiktok-ads';
 export * from './ads/google-ads';
 export * from './ads/readers';
+// S13 · PR 263 / 264: the audience lists written to the platforms — hashed lists, lookalikes, exclusions (practice only).
+export * from './ads/audience-writer';
 // CN-020 (4) — speech to text for the checkout's voice address (Google Cloud Speech-to-Text; the mock hears nothing).
 export * from './speech';
 

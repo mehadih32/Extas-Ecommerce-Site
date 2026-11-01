@@ -7,5 +7,11 @@
       "label": "Landing pages",
       "help": "Pages made for ads at /l/<link>: one product, its offer and an order box on the page. You build and publish them in Marketing › Landing pages; the shop shows none of them to customers until this switch is on. Search engines never list them. Every order from a page carries the page's name."
     }
+  },
+  "ads": {
+    "audiences": {
+      "label": "Audiences sent to ad platforms",
+      "help": "Off as it ships: no list leaves the shop. On, “Send now” on an audience sends its people to Meta, TikTok and Google as hashed phone numbers (never a name or a plain number). A lookalike is made only where you set its countries and size. A list smaller than the floor you set for a platform is not sent. No budget or campaign is changed."
+    }
   }
 }
