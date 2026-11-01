@@ -10,6 +10,10 @@
 //   "mark shortages" (on) a size row whose quantity is more than the shop's stock of that variant is marked short.
 // - The summary line (B1.7): orders and pieces counted separately, line items, the categories in print order,
 //   shortages, the held orders.
+// - PR 412 (B2.3): with the owner's `fulfilment.picking.sort` on "shelf" the same pieces are grouped under the shelf
+//   each style is kept on (ShelfBin, the latest row per product), shelves in order and the styles with no shelf last;
+//   the summary line keeps its categories. `setShelf` puts a style on a shelf (or clears it): a new row each time,
+//   audited; it never touches stock, a product or an order.
 // - Printing it keeps the list (PickingList: its orders and summary) and one print job. Nothing else changes. No
 //   customer's details anywhere: order numbers and pieces only.
 import { z } from 'zod';
@@ -17,7 +21,7 @@ import { DELIVERY_TARGET_SELECT, deliveryTarget, openReviewIds, type OrdersDeps 
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
 import { bookedReceiver } from './fulfil-pure';
-import { groupPicking, pickingPlace, PICKING_FROM, tickState, type PickCategory, type PickingHeld, type PickLine } from './picking-pure';
+import { groupByShelf, groupPicking, pickingPlace, PICKING_FROM, tickState, type PickCategory, type PickingHeld, type PickLine } from './picking-pure';
 import { localDay } from './pure';
 
 const ordersDeps = (deps: ShippingDeps): OrdersDeps => ({ db: deps.db, settings: deps.settings, now: deps.now });
@@ -60,6 +64,10 @@ export interface PickingList {
   orderIds: string[];
   range: { from: string | null; to: string | null };
   shortagesMarked: boolean;
+  /** PR 412: how the groups are made — by category, or by shelf (a group's `category` is then the shelf's code, '' none). */
+  sort: 'category' | 'bin';
+  /** PR 412: every style (product) on the list with its shelf now (null: none set), by name. */
+  shelves: { productId: string; style: string; code: string | null }[];
 }
 
 /** The picking list now (and for the owner's date range, when he chose one). */
@@ -70,7 +78,7 @@ export async function pickingList(deps: ShippingDeps, who: Who, input: unknown =
 
 async function build(deps: ShippingDeps, who: Who, range: z.output<typeof rangeInput>): Promise<PickingList> {
   const storeId = who.storeId;
-  const [cfg, timeZone, reviews] = await Promise.all([setting(deps, storeId, 'delivery.picking.list'), setting(deps, storeId, 'store.timeZone'), openReviewIds(ordersDeps(deps), storeId)]);
+  const [cfg, timeZone, reviews, sortCfg] = await Promise.all([setting(deps, storeId, 'delivery.picking.list'), setting(deps, storeId, 'store.timeZone'), openReviewIds(ordersDeps(deps), storeId), setting(deps, storeId, 'fulfilment.picking.sort')]);
   const inReview = new Set(reviews);
   const orders = await deps.db.order.findMany({
     where: { storeId, archivedAt: null, handedOverAt: null, status: { in: [...PICKING_FROM, 'ON_HOLD'] } },
@@ -136,7 +144,11 @@ async function build(deps: ShippingDeps, who: Who, range: z.output<typeof rangeI
     const rows = variantIds.length ? await deps.db.stockLevel.groupBy({ by: ['variantId'], where: { variantId: { in: variantIds }, variant: { storeId } }, _sum: { onHand: true } }) : [];
     onHand = new Map(rows.map((r) => [r.variantId, r._sum.onHand ?? 0]));
   }
-  const groups = groupPicking(lines, onHand);
+  // PR 412: each style's shelf now (the latest row per product; '' = cleared)
+  const shelfOf = new Map((await currentShelves(deps.db, storeId, productIds)).filter((b) => b.code).map((b) => [b.productId, b.code]));
+  const byShelf = sortCfg.mode === 'bin';
+  const groups = byShelf ? groupByShelf(lines, shelfOf, onHand) : groupPicking(lines, onHand);
+  const categories = byShelf ? groupPicking(lines, null) : groups;
   const sizes = groups.flatMap((g) => g.styles.flatMap((s) => s.colours.flatMap((c) => c.sizes)));
   // PR 405: each size line's latest tick on the screen list
   const keys = sizes.map((z) => z.key);
@@ -150,7 +162,7 @@ async function build(deps: ShippingDeps, who: Who, range: z.output<typeof rangeI
       orders: taken.length,
       pieces: groups.reduce((n, g) => n + g.pieces, 0),
       lineItems: lines.length,
-      categories: groups.map((g) => ({ name: g.category, nameBn: categoryBn[g.category] ?? null, pieces: g.pieces })),
+      categories: categories.map((g) => ({ name: g.category, nameBn: categoryBn[g.category] ?? null, pieces: g.pieces })),
       shortages: sizes.filter((s) => s.short > 0).length,
       shortPieces: sizes.reduce((n, s) => n + s.short, 0),
       held: held.length,
@@ -160,7 +172,39 @@ async function build(deps: ShippingDeps, who: Who, range: z.output<typeof rangeI
     orderIds: taken.map((o) => o.id),
     range: { from, to },
     shortagesMarked: cfg.markShortages,
+    sort: byShelf ? 'bin' : 'category',
+    shelves: [...new Map(lines.filter((l) => productIds.includes(l.styleKey)).map((l) => [l.styleKey, l.style])).entries()]
+      .map(([productId, style]) => ({ productId, style, code: shelfOf.get(productId) ?? null }))
+      .sort((a, b) => a.style.localeCompare(b.style, 'en', { numeric: true })),
   };
+}
+
+/** PR 412 — the latest shelf row of each product (its code '' when cleared). */
+async function currentShelves(db: ShippingDeps['db'], storeId: number, productIds: string[]): Promise<{ productId: string; code: string }[]> {
+  if (!productIds.length) return [];
+  return db.shelfBin.findMany({ where: { storeId, productId: { in: productIds } }, orderBy: [{ productId: 'asc' }, { createdAt: 'desc' }, { id: 'desc' }], distinct: ['productId'], select: { productId: true, code: true } });
+}
+
+const shelfInput = z
+  .object({ productId: z.uuid(), code: z.string().trim().max(40) })
+  .strict();
+
+/**
+ * PR 412 — puts a style (product) on a shelf, or clears it (code ''). A new row each time (the shelf's history is kept);
+ * the same code again changes nothing. Audited. Never touches stock, the product or an order.
+ */
+export async function setShelf(deps: ShippingDeps, who: Who, input: unknown): Promise<{ productId: string; code: string | null; changed: boolean }> {
+  await allow(deps, who, 'fulfilment.bins');
+  const d = parse(shelfInput, input, 'shelf');
+  const product = await deps.db.product.findFirst({ where: { id: d.productId, storeId: who.storeId }, select: { id: true } });
+  if (!product) throw new ShippingError('NOT_FOUND', 'no such product in this store', [d.productId]);
+  const [now] = await currentShelves(deps.db, who.storeId, [d.productId]);
+  if ((now?.code ?? '') === d.code) return { productId: d.productId, code: d.code || null, changed: false };
+  await deps.db.$transaction(async (tx) => {
+    const row = await tx.shelfBin.create({ data: { storeId: who.storeId, productId: d.productId, code: d.code, actorId: who.actor.staffUserId ?? null }, select: { id: true } });
+    await logChange(tx, who, d.code ? 'picking.shelf.set' : 'picking.shelf.clear', 'ShelfBin', row.id, { code: now?.code || null }, { productId: d.productId, code: d.code || null });
+  }, TX);
+  return { productId: d.productId, code: d.code || null, changed: true };
 }
 
 /** Prints the picking list: the same list, kept (PickingList) with one print job. */

@@ -47,8 +47,9 @@ export type ShippingPermission = (typeof SHIPPING_PERMISSIONS)[number];
  * details); `fulfilment.handover` prints the rider's handover sheet and marks a batch handed over. PR 182:
  * `fulfilment.pack` starts picking, checks the pieces, adds the packing photo and marks an order packed;
  * `fulfilment.photoWaive` is the owner's override of a required photo for one order, with a reason.
+ * `fulfilment.bins` (PR 412) sets the shelf each style is kept on, for the picking list read shelf by shelf.
  */
-export const FULFIL_PERMISSIONS = ['fulfilment.read', 'fulfilment.print', 'fulfilment.handover', 'fulfilment.pack', 'fulfilment.photoWaive'] as const;
+export const FULFIL_PERMISSIONS = ['fulfilment.read', 'fulfilment.print', 'fulfilment.handover', 'fulfilment.pack', 'fulfilment.photoWaive', 'fulfilment.bins'] as const;
 export type FulfilPermission = (typeof FULFIL_PERMISSIONS)[number];
 
 /** PR 164 — the fraud report with the RTO cost book (Reports › Fraud & RTO); it reads only. */

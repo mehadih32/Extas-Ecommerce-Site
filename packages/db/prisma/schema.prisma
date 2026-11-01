@@ -399,6 +399,7 @@ model Store {
   generatedDocuments      GeneratedDocument[]
   pickingLists            PickingList[]
   pickingTicks            PickingTick[]
+  shelfBins               ShelfBin[]
   siteAuditSchedules      SiteAuditSchedule[]
   siteAuditRuns           SiteAuditRun[]
   siteAuditFindings       SiteAuditFinding[]
@@ -9161,6 +9162,23 @@ model PickingTick {
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([storeId, lineKey, createdAt])
+}
+
+/// @stage S20 · PR 412 (B2.3; demo V12.4 97s "Picking list sort: shelf bin") — the shelf a style (product) is kept on,
+/// so the picking list can be read shelf by shelf. Append-only: a move to another shelf, or clearing it (code ''), is a
+/// new row; the latest row per product is its shelf now, the rows before it its history.
+/// @append-only
+model ShelfBin {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  productId String   @db.Uuid
+  /// the shelf's code as written on it (e.g. "A-03"); '' = no shelf any more
+  code      String
+  actorId   String?  @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, productId, createdAt])
 }
 
 // =====================================================================================================================

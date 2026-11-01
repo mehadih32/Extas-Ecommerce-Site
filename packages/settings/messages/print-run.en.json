@@ -9,6 +9,12 @@
         "label": "Handed-over history",
         "help": "How many days back the handover page lists the batches handed over to each courier, and at most how many per courier. Each one can print a copy of its sheet."
       }
+    },
+    "picking": {
+      "sort": {
+        "label": "Picking list order",
+        "help": "By category (the category and style with the most pieces first, as shipped) or shelf by shelf: the styles grouped under the shelf each is kept on, shelves in order, the styles with no shelf yet at the end. The shelves are set on the Picking list page. Only the list's order changes; what is picked and counted stays the same."
+      }
     }
   },
   "documents": {

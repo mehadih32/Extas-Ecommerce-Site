@@ -19,6 +19,8 @@
 //
 // S20 · PR 409 (ORD-04d; registry version 153) — the invoice's design: one of seven (classic as shipped), used wherever
 // the invoice is printed or sent as a picture. Each design keeps the B2.4 print rules (black and white, nothing cut).
+// S20 · PR 412 (B2.3; registry version 154; demo V12.4 97s "Picking list sort") — the picking list's order: by category
+// (most pieces first, as shipped) or shelf by shelf (each style's shelf set on the Picking list page).
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -26,6 +28,7 @@ const V404 = 150;
 const V406 = 151;
 const V408 = 152;
 const V409 = 153;
+const V412 = 154;
 
 export const PRINT_RUN_WHATS = ['sticker', 'both', 'invoice'] as const;
 export type PrintRunWhat = (typeof PRINT_RUN_WHATS)[number];
@@ -41,6 +44,10 @@ export type PrintQualitySettings = z.output<typeof printQualitySchema>;
 export const INVOICE_DESIGN_NAMES = ['classic', 'minimal', 'brand', 'receipt', 'twoColumn', 'accent', 'cards'] as const;
 export const invoiceDesignSchema = z.object({ design: z.enum(INVOICE_DESIGN_NAMES) }).strict();
 export type InvoiceDesignSettings = z.output<typeof invoiceDesignSchema>;
+/** PR 412 — the picking list's order: by category → style → colour → size, or shelf by shelf. */
+export const PICKING_SORTS = ['category', 'bin'] as const;
+export const pickingSortSchema = z.object({ mode: z.enum(PICKING_SORTS) }).strict();
+export type PickingSortSettings = z.output<typeof pickingSortSchema>;
 export type HandoverHistorySettings = z.output<typeof handoverHistorySchema>;
 
 export const printRunSettings = {
@@ -95,5 +102,18 @@ export const printRunSettings = {
     helpKey: 'documents.invoice.design.help',
     sortOrder: 966,
     version: V409,
+  }),
+  'fulfilment.picking.sort': setting({
+    scope: 'store',
+    group: 'orders',
+    valueType: 'JSON',
+    isOwnerData: false,
+    isPublic: false,
+    schema: pickingSortSchema,
+    default: { mode: 'category' },
+    labelKey: 'fulfilment.picking.sort.label',
+    helpKey: 'fulfilment.picking.sort.help',
+    sortOrder: 967,
+    version: V412,
   }),
 };

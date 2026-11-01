@@ -217,7 +217,8 @@
       "handover": "Print the rider's handover sheet (it can show the receivers' names) and mark a batch handed over to the courier",
       "pack": "Start picking, scan or type each piece, add the packing photo, weigh the parcel and mark an order packed (never books, cancels or edits an order)",
       "photoWaive": "Let one order be packed without the required packing photo, with a reason (the owner's override, audited)",
-      "printSettings": "Change how the packing documents print: the sticker's size and printer, what one print run prints (never prints or changes an order)"
+      "printSettings": "Change how the packing documents print: the sticker's size and printer, what one print run prints (never prints or changes an order)",
+      "bins": "Set the shelf each style is kept on, for the picking list read shelf by shelf (never changes stock, an order or a product)"
     },
     "returns": {
       "view": "See the returns and exchanges board and every case",

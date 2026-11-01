@@ -136,3 +136,37 @@
 .pf-form .a2-sel {
   min-height: 44px;
 }
+
+/* S20 · PR 412 — the shelves card on the picking list page: one row per style (its name, the shelf box, Save). */
+.sh-list {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .sh-list {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+.sh-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.sh-lab {
+  display: flex;
+  flex: 1 1 160px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sh-row .a2-inp,
+.sh-row .a2-btn {
+  min-height: 44px;
+}

@@ -39,6 +39,8 @@
 //                                              job (fulfilment.read)
 //   POST  /api/admin/packing/picking/tick      PR 405: {key, ticked} one size line marked pulled (or the mark taken
 //                                              back) on the screen list; the list as it is now (fulfilment.pack)
+//   POST  /api/admin/packing/picking/shelf     PR 412: {productId, code} a style put on a shelf ('' clears it): a new row,
+//                                              audited (fulfilment.bins)
 //   GET   /api/admin/packing/orders            PR 182: the packing steps with their counts and one step's orders
 //                                              (?step=pick|pack|ready|done; no customer's details) (fulfilment.read)
 //   POST  /api/admin/packing/orders/pick-all   "Start picking" for every order on the Pick step: the list's own filter,
@@ -245,6 +247,11 @@ export async function pickingRoute(request: Request, deps: AdminDeps | null, pat
   if (path.length === 1 && path[0] === 'tick') {
     if (m !== 'POST') return fail(405, 'method-not-allowed');
     return guarded(request, deps, 'fulfilment.pack', async (x) => json({ ok: true, ...(await sh.tickPickLine(x.deps, x.who, await body(request))) }));
+  }
+  // PR 412: a style put on a shelf (or cleared), for the list read shelf by shelf
+  if (path.length === 1 && path[0] === 'shelf') {
+    if (m !== 'POST') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.bins', async (x) => json({ ok: true, ...(await sh.setShelf(x.deps, x.who, await body(request))) }));
   }
   if (path.length) return fail(404, 'not-found');
   if (m === 'GET')

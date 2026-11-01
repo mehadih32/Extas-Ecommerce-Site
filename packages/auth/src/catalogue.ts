@@ -200,6 +200,9 @@ export const PERMISSIONS = {
   // S20 · PR 404 — Orders › Packing & print: change how the documents print (the sticker's size and printer, what one
   // print run prints; later the picking list's and the letterhead's cards). Never books, prints or changes an order.
   'fulfilment.printSettings': { group: 'fulfilment' },
+  // S20 · PR 412 (B2.3) — set the shelf each style is kept on, for the picking list read shelf by shelf (each change a
+  // new row, audited). Never changes stock, an order or a product.
+  'fulfilment.bins': { group: 'fulfilment' },
   // S05 · PR 148 — Messages › Order journey (MSG-01): see the journey (its steps, channels, caps and whether each channel
   // is live or on its mock); change it; and record a customer's self-confirm reply (1, 2 or 3) until the WhatsApp
   // provider's replies arrive by themselves. A 1 confirms the order only with `messages.selfConfirm.confirmOnYes`, as a
