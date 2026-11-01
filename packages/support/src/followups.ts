@@ -24,6 +24,7 @@ import { chatVisitorId } from './chat-cart';
 import { allow, nowOf, parse, setting, SupportError, TX, type Db, type SupportDeps, type Who } from './context';
 import { fillDraft } from './drafts-pure';
 import { followUpBody, followUpLang, followUpOpen, followUpRuleOf, personKeysOf, type FollowUpFacts } from './followups-pure';
+import { ownChat } from './privacy';
 
 const DAY = 86_400_000;
 /** How many quiet chats one sweep looks at (the warmest first). */
@@ -47,7 +48,7 @@ const chatSelect = {
   windowExpiresAt: true,
   orderId: true,
   customerId: true,
-  contact: { select: { id: true, mergedIntoId: true, customerId: true, displayName: true } },
+  contact: { select: { id: true, mergedIntoId: true, customerId: true, displayName: true, blockedAt: true } },
 } as const satisfies Prisma.ConversationSelect;
 type ChatRow = Prisma.ConversationGetPayload<{ select: typeof chatSelect }>;
 
@@ -96,6 +97,8 @@ export async function sweepFollowUps(deps: Pick<SupportDeps, 'db' | 'settings' |
   const cfg = await setting(deps, storeId, 'support.followUp');
   if (!cfg.enabled) return out;
   const { creditDays } = await setting(deps, storeId, 'support.catalogue');
+  // PR 434: a blocked person gets no follow-up (the list switched on)
+  const blockOn = (await setting(deps, storeId, 'support.blockList')).enabled;
   const now = nowOf(deps);
   await deps.db.$transaction(async (tx) => {
     // one sweep of a store at a time; a second screen meanwhile simply reads what the first one put up
@@ -107,7 +110,7 @@ export async function sweepFollowUps(deps: Pick<SupportDeps, 'db' | 'settings' |
     const chats = new Map((await tx.conversation.findMany({ where: { storeId, id: { in: waiting.map((w) => w.conversationId) } }, select: chatSelect })).map((c) => [c.id, c]));
     for (const w of waiting) {
       const c = chats.get(w.conversationId);
-      if (c && followUpOpen(c, cfg, now) && !(await personSent(tx, storeId, c, cfg.gapDays, now)) && followUpRuleOf(await factsOf(tx, storeId, c), cfg, now)) continue;
+      if (c && !(blockOn && c.contact.blockedAt) && followUpOpen(c, cfg, now) && !(await personSent(tx, storeId, c, cfg.gapDays, now)) && followUpRuleOf(await factsOf(tx, storeId, c), cfg, now)) continue;
       await tx.supportFollowUp.update({ where: { id: w.id }, data: { outcome: 'CLOSED' } });
       out.closed++;
     }
@@ -137,6 +140,7 @@ export async function sweepFollowUps(deps: Pick<SupportDeps, 'db' | 'settings' |
         storeId,
         status: { not: 'SOLVED' },
         lastDirection: 'OUT',
+        ...(blockOn ? { contact: { blockedAt: null } } : {}),
         lastMessageAt: { lte: quietSince, gte: new Date(now.getTime() - cfg.gapDays * DAY) },
         ...(stillWaiting.length ? { id: { notIn: stillWaiting } } : {}),
       },
@@ -210,11 +214,12 @@ export interface ChatFollowUp {
 
 /** The follow-up waiting on this chat, in the store's words, or null (switched off, or none is due). */
 export async function chatFollowUp(deps: Pick<SupportDeps, 'db' | 'settings' | 'now'>, who: Who, conversationId: string): Promise<ChatFollowUp | null> {
-  await allow(deps, who, 'support.reply');
+  const held = await allow(deps, who, 'support.reply');
   const storeId = who.storeId;
   const cfg = await setting(deps, storeId, 'support.followUp');
   if (!cfg.enabled) return null;
   if (!z.uuid().safeParse(conversationId).success) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
+  await ownChat(deps, who, held, conversationId);
   await sweepFollowUpsSoon(deps, storeId);
   const now = nowOf(deps);
   const [row, c] = await Promise.all([
@@ -269,8 +274,9 @@ async function lockWaiting(tx: Tx, storeId: number, conversationId: string, foll
 
 /** Send the follow-up as the person's own reply (`support.reply`), with the words they may have changed. */
 export async function sendFollowUp(deps: SupportDeps, who: Who, input: unknown): Promise<ReplyResult> {
-  await allow(deps, who, 'support.reply');
+  const held = await allow(deps, who, 'support.reply');
   const d = parse(sendFollowUpInput, input, 'follow-up');
+  await ownChat(deps, who, held, d.conversationId);
   const storeId = who.storeId;
   const cfg = await setting(deps, storeId, 'support.followUp');
   if (!cfg.enabled) throw new SupportError('FOLLOW_UP_OFF', 'follow-ups are switched off in Support settings', ['support.followUp']);
@@ -294,8 +300,9 @@ export async function sendFollowUp(deps: SupportDeps, who: Who, input: unknown):
 
 /** Skip the follow-up (`support.reply`): it does not come back until the chat moves. */
 export async function skipFollowUp(deps: Pick<SupportDeps, 'db' | 'settings' | 'now'>, who: Who, input: unknown): Promise<{ skipped: true }> {
-  await allow(deps, who, 'support.reply');
+  const held = await allow(deps, who, 'support.reply');
   const d = parse(skipFollowUpInput, input, 'follow-up');
+  await ownChat(deps, who, held, d.conversationId);
   const storeId = who.storeId;
   const now = nowOf(deps);
   await deps.db.$transaction(async (tx) => {

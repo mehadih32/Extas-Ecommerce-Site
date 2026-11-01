@@ -9,7 +9,8 @@ export type ConversationStatus = (typeof CONVERSATION_STATUSES)[number];
 /** The inbox's views (docs/ADMIN-ARCHITECTURE.md §4.7: All · Open · Waiting · Solved · Mine; plus "Not taken"). */
 // PR 431: 'late' — the chats whose ticket timer ran out (support.tickets)
 // PR 433: 'followup' — the chats with a follow-up waiting for a person (support.followUp)
-export const INBOX_VIEWS = ['open', 'waiting', 'mine', 'unassigned', 'late', 'followup', 'solved', 'all'] as const;
+// PR 434: 'blocked' — the chats of people on the support block list (support.blockList)
+export const INBOX_VIEWS = ['open', 'waiting', 'mine', 'unassigned', 'late', 'followup', 'solved', 'all', 'blocked'] as const;
 export type InboxView = (typeof INBOX_VIEWS)[number];
 
 /** IN: from the customer. OUT: the shop's reply. NOTE: an internal note, never sent and never shown to the customer. */
@@ -48,6 +49,9 @@ export const EVENT_KINDS = [
   'FOLLOWUP_SENT',
   'FOLLOWUP_SKIPPED',
   'FOLLOWUP_ORDERED',
+  // PR 434: the chat's person put on the support block list (with the reason), and taken off
+  'BLOCKED',
+  'UNBLOCKED',
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 

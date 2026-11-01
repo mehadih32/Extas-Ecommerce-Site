@@ -11,7 +11,8 @@
       "late": "Late",
       "followup": "Follow-ups",
       "solved": "Solved",
-      "all": "All"
+      "all": "All",
+      "blocked": "Blocked"
     },
     "search": "Name, number or reference",
     "searchGo": "Search",
@@ -163,7 +164,9 @@
       "TICKET_SOLVED_LATE": "Ticket solved in {time} (late)",
       "FOLLOWUP_SENT": "{name} sent a follow-up ({why})",
       "FOLLOWUP_SKIPPED": "{name} skipped a follow-up ({why})",
-      "FOLLOWUP_ORDERED": "Order {number} came after the follow-up"
+      "FOLLOWUP_ORDERED": "Order {number} came after the follow-up",
+      "BLOCKED": "{name} put this person on the support block list: {reason}",
+      "UNBLOCKED": "{name} took this person off the support block list"
     },
     "err": {
       "STALE": "Someone changed this conversation in between; it was read again.",
@@ -202,7 +205,9 @@
       "CHECKOUT_CART_NOT_OPEN": "This bag already became an order. The page was read again.",
       "CHECKOUT_IDEMPOTENCY": "That press was already used. Press again.",
       "FOLLOW_UP_OFF": "Follow-ups are switched off in Support settings.",
-      "FOLLOW_UP_GONE": "This follow-up was already sent, skipped or closed, or the customer wrote meanwhile; it was read again."
+      "FOLLOW_UP_GONE": "This follow-up was already sent, skipped or closed, or the customer wrote meanwhile; it was read again.",
+      "BLOCK_OFF": "The support block list is switched off in Support settings.",
+      "BLOCKED": "This person is on the support block list; no reply goes out."
     },
     "set": {
       "title": "Support settings",
@@ -432,6 +437,20 @@
           "en": "English",
           "bn": "Bengali"
         }
+      },
+      "privacy": {
+        "h": "Privacy inside support",
+        "d": "Who sees which chats and numbers inside support.",
+        "ownChatsOnly": "Only their own chats",
+        "ownChatsOnlyHelp": "An employee who may not give chats out sees only the chats given to them and the ones nobody took.",
+        "maskNumbersInText": "Mask numbers in messages",
+        "maskNumbersInTextHelp": "Phone numbers customers type are masked like the chat's own number for anyone not allowed the full number. The message itself is never changed."
+      },
+      "blockList": {
+        "h": "Support block list",
+        "d": "Lets a person allowed to block (the owner, unless he gives it to a role) put a chat's person on the list with a reason. Nothing is deleted.",
+        "enabled": "Support block list",
+        "enabledHelp": "Off: nobody counts as blocked (the list is kept). On: blocked people's chats move to the Blocked view, with no ticket, follow-up or reply."
       }
     },
     "person": {
@@ -598,6 +617,17 @@
       "note": "Nothing goes out by itself.",
       "sent": "Follow-up sent.",
       "skipped": "Skipped. It comes back only if the chat moves."
+    },
+    "block": {
+      "fold": "Block this person",
+      "reason": "Reason (only the team sees it)",
+      "reasonHelp": "Their messages are kept and move to the Blocked view: no ticket, no follow-up, no reply. Every channel of this person counts. You can take them off again.",
+      "block": "Block",
+      "confirm": "Yes, block",
+      "unblock": "Take off the block list",
+      "blocked": "Blocked. The chat moved to the Blocked view.",
+      "unblocked": "Taken off the block list.",
+      "note": "This person is on the support block list since {at}: {reason}. Their messages are kept; no reply goes out."
     }
   }
 }

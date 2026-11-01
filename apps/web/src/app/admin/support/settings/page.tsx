@@ -17,6 +17,8 @@
 // PR 433: the "Follow-ups on chats without an order" card (off as it ships) — which chats, the quiet hours, the caps
 // (per chat, per person, per day, the reply window), win-back, the language, the owner's coupon to mention; under
 // "More options" the follow-ups' words.
+// PR 434: the "Privacy inside support" card (own chats only, numbers in messages masked; off) and the "Support block
+// list" card (off; blocking itself needs `support.block`, the owner's).
 // PR 427: the "Who is writing" card (off as it ships) — the number from WhatsApp or the chat's words, its customer, one
 // person across channels.
 // Optional behaviour ships off. Nothing here moves money or changes an order.
@@ -152,6 +154,12 @@ export default async function SupportSettingsPage() {
   ];
   const followUpName = (k: string) => (k === 'offer' ? s('followUpWords.x.offer') : s(`followUp.rule.${k}`));
   const followUpWords: FieldsCardField[] = sp.FOLLOW_UP_TEXTS.map((k) => ({ kind: 'pair', path: k, label: { en: `${followUpName(k)} · ${s('followUpWords.x.en')}`, bn: `${followUpName(k)} · ${s('followUpWords.x.bn')}` }, max: 400, rows: 2 }));
+  // PR 434: privacy inside support and the support block list (both off as they ship)
+  const privacy: FieldsCardField[] = [
+    { kind: 'switch', path: 'ownChatsOnly', label: s('privacy.ownChatsOnly'), help: s('privacy.ownChatsOnlyHelp') },
+    { kind: 'switch', path: 'maskNumbersInText', label: s('privacy.maskNumbersInText'), help: s('privacy.maskNumbersInTextHelp') },
+  ];
+  const blockList: FieldsCardField[] = [{ kind: 'switch', path: 'enabled', label: s('blockList.enabled'), help: s('blockList.enabledHelp') }];
   // PR 427: who is writing (off as it ships)
   const identity: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: s('identity.enabled'), help: s('identity.enabledHelp') },
@@ -188,6 +196,8 @@ export default async function SupportSettingsPage() {
       <FieldsCard url={API} screen={screen('support.tickets')} fields={tickets} texts={texts('tickets')} canEdit={canEdit} testId="support-set-tickets" />
       <FieldsCard url={API} screen={screen('support.drafts')} fields={drafts} texts={texts('drafts')} canEdit={canEdit} testId="support-set-drafts" />
       <FieldsCard url={API} screen={screen('support.followUp')} fields={followUp} texts={texts('followUp')} canEdit={canEdit} testId="support-set-followup" />
+      <FieldsCard url={API} screen={screen('support.privacy')} fields={privacy} texts={texts('privacy')} canEdit={canEdit} testId="support-set-privacy" />
+      <FieldsCard url={API} screen={screen('support.blockList')} fields={blockList} texts={texts('blockList')} canEdit={canEdit} testId="support-set-blocklist" />
       <p className="a2-xs a2-mute a2-mt12" data-testid="support-set-phones">{s('phones')}</p>
       <details className="a2-card a2-mt12" data-testid="support-set-more">
         <summary className="a2-h4">{s('more')}</summary>

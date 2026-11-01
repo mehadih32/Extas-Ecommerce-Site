@@ -64,6 +64,9 @@ export const SUPPORT_ERROR_CODES = [
   // PR 433: follow-ups are switched off; the follow-up was sent, skipped or closed meanwhile (or the chat moved)
   'FOLLOW_UP_OFF',
   'FOLLOW_UP_GONE',
+  // PR 434: the block list is switched off; the chat's person is on the block list (no reply, no change)
+  'BLOCK_OFF',
+  'BLOCKED',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 
@@ -97,7 +100,7 @@ export interface Who {
 }
 
 /** The support permissions (packages/auth/src/catalogue.ts). */
-export const SUPPORT_PERMISSIONS = ['support.read', 'support.reply', 'support.assign', 'support.settings', 'support.identity', 'support.order'] as const satisfies readonly PermissionKey[];
+export const SUPPORT_PERMISSIONS = ['support.read', 'support.reply', 'support.assign', 'support.settings', 'support.identity', 'support.order', 'support.block'] as const satisfies readonly PermissionKey[];
 export type SupportPermission = (typeof SUPPORT_PERMISSIONS)[number];
 
 export function checkStoreId(storeId: number): void {

@@ -15,6 +15,7 @@
 // here changes a price, a discount, a charge, COD or a risk rule, or moves money: the money is what the checkout prices,
 // the advance is what the owner's layer asks, and the customer pays it himself from the link.
 import { createHash } from 'node:crypto';
+import type { PermissionKey } from '@extas/auth';
 import { addItem, CartError, findBag, openBag, removeLine, setQuantity, type BagView } from '@extas/cart';
 import { checkForm, checkoutQuote, CheckoutError, fieldOrder, phoneNormalizeBD, placeOrder, type AdvanceView, type ChatOrderSource, type CheckoutDeps, type CheckoutQuote, type DeliveryCharge, type Totals } from '@extas/checkout';
 import { z } from 'zod';
@@ -22,6 +23,7 @@ import { sendReply, type ReplyResult } from './actions';
 import { moneyText } from './catalogue';
 import type { ChannelKind } from './channels';
 import { allow, nowOf, parse, setting, SupportError, TX, type SupportDeps, type Who } from './context';
+import { ownChat } from './privacy';
 
 /** What orders from the chat need besides the support core: the checkout's engines and the shop's after-order checks. */
 export interface ChatOrderDeps extends SupportDeps {
@@ -125,8 +127,9 @@ async function cartOn(deps: Pick<SupportDeps, 'settings'>, storeId: number) {
   return s;
 }
 
-async function chatOf(deps: Pick<SupportDeps, 'db'>, who: Who, conversationId: string) {
+async function chatOf(deps: Pick<SupportDeps, 'db' | 'settings'>, who: Who, conversationId: string, held: Set<PermissionKey>) {
   if (!z.uuid().safeParse(conversationId).success) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
+  await ownChat(deps, who, held, conversationId);
   const c = await deps.db.conversation.findFirst({
     where: { id: conversationId, storeId: who.storeId },
     select: { id: true, customerId: true, orderId: true, channel: { select: { kind: true } }, contact: { select: { displayName: true, phone: true } } },
@@ -208,9 +211,9 @@ async function orderOf(deps: Pick<SupportDeps, 'db'>, storeId: number, orderId: 
 
 /** The chat's bag (`support.order`; off while `support.cart` is off). */
 export async function chatBag(deps: ChatOrderDeps, who: Who, conversationId: string, lang: 'en' | 'bn' = 'en'): Promise<ChatBag> {
-  await allow(deps, who, 'support.order');
+  const held = await allow(deps, who, 'support.order');
   await cartOn(deps, who.storeId);
-  const c = await chatOf(deps, who, conversationId);
+  const c = await chatOf(deps, who, conversationId, held);
   const cartId = await findBag(deps.checkout, { storeId: who.storeId, visitorId: chatVisitorId(c.id) });
   const [q, prefill, order] = await Promise.all([quoteOf(deps, who.storeId, cartId, lang, null, null), prefillOf(deps, who.storeId, c), orderOf(deps, who.storeId, c.orderId)]);
   return bagOf(c, q, prefill, order);
@@ -218,10 +221,10 @@ export async function chatBag(deps: ChatOrderDeps, who: Who, conversationId: str
 
 /** Adds a piece, sets a line's quantity or takes a line out of the chat's bag (`support.order`). */
 export async function changeChatBag(deps: ChatOrderDeps, who: Who, input: unknown): Promise<ChatBag> {
-  await allow(deps, who, 'support.order');
+  const held = await allow(deps, who, 'support.order');
   await cartOn(deps, who.storeId);
   const d = parse(chatBagInput, input, 'chat bag');
-  const c = await chatOf(deps, who, d.conversationId);
+  const c = await chatOf(deps, who, d.conversationId, held);
   const storeId = who.storeId;
   try {
     const { cartId } = await openBag(deps.checkout, { storeId, visitorId: chatVisitorId(c.id) });
@@ -243,10 +246,10 @@ export function gateOf(q: Pick<CheckoutQuote, 'pay' | 'advance'>): ChatGate {
 
 /** Prices the chat's bag for the details typed, with the gate (`support.order`). */
 export async function quoteChatOrder(deps: ChatOrderDeps, who: Who, input: unknown): Promise<ChatQuote> {
-  await allow(deps, who, 'support.order');
+  const held = await allow(deps, who, 'support.order');
   await cartOn(deps, who.storeId);
   const d = parse(chatQuoteInput, input, 'chat order');
-  const c = await chatOf(deps, who, d.conversationId);
+  const c = await chatOf(deps, who, d.conversationId, held);
   return priced(deps, who.storeId, c, d.lang, d.form);
 }
 
@@ -299,11 +302,11 @@ const payKeyOf = (requestKey: string) => `pay-${createHash('sha256').update(requ
  * …) or NO_COD when Cash on Delivery is closed for this checkout and no advance is asked.
  */
 export async function createChatOrder(deps: ChatOrderDeps, who: Who, input: unknown, link: { payLink: (token: string, lang: 'en' | 'bn') => string }): Promise<ChatOrderResult> {
-  await allow(deps, who, 'support.order');
+  const held = await allow(deps, who, 'support.order');
   const cfg = await cartOn(deps, who.storeId);
   const d = parse(chatOrderInput, input, 'chat order');
   const storeId = who.storeId;
-  const c = await chatOf(deps, who, d.conversationId);
+  const c = await chatOf(deps, who, d.conversationId, held);
   const visitorId = chatVisitorId(c.id);
 
   // a second press: the order this key placed (the bag is closed by now, so the gate is read from the order)

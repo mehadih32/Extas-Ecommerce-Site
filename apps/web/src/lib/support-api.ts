@@ -31,6 +31,9 @@
 //   POST  /api/admin/support/c/:id/followup     PR 433: {action: send, followUpId, body, requestKey, version} the follow-up
 //                                               sent as the person's own reply; {action: skip, followUpId} skipped
 //                                               (support.reply; 422 FOLLOW_UP_OFF while off, 409 FOLLOW_UP_GONE)
+//   POST  /api/admin/support/c/:id/block        PR 434: {action: block, reason, version?} the chat's person on the support
+//                                               block list; {action: unblock, version?} taken off (support.block; 422
+//                                               BLOCK_OFF while the list is off)
 //   POST  /api/admin/support/files              multipart `file` — one file for a reply, checked by its contents
 //                                               against Support settings; answers its id (support.reply)
 //   GET   /api/admin/support/files/:id          one file of a conversation, our stored copy (support.read)
@@ -101,6 +104,7 @@ function routeOf(path: string[], method: string): Route | null {
   if (a === 'c' && isUuid(b) && c === 'identity') return { perm: 'support.identity', methods: ['POST'] };
   if (a === 'c' && isUuid(b) && c === 'products') return { perm: 'support.reply', methods: ['POST'] };
   if (a === 'c' && isUuid(b) && c === 'followup') return { perm: 'support.reply', methods: ['POST'] };
+  if (a === 'c' && isUuid(b) && c === 'block') return { perm: 'support.block', methods: ['POST'] };
   if (a === 'c' && isUuid(b) && c === 'cart') return { perm: 'support.order', methods: ['GET', 'POST'] };
   if (a === 'catalogue' && b === undefined) return { perm: 'support.reply', methods: ['GET'] };
   if (a === 'files' && b === undefined && c === undefined) return { perm: 'support.reply', methods: ['POST'] };
@@ -211,6 +215,12 @@ export async function supportRoute(request: Request, deps: AdminDeps | null, pat
       const input = { ...(await body(request)), conversationId: id };
       if (action === 'messages') return json({ ok: true, ...(await sp.replyToConversation(sd, who, input)) });
       if (action === 'products') return json({ ok: true, ...(await sp.shareProduct(sd, who, input, { origin: await shopOriginOf(storeId) })) });
+      if (action === 'block') {
+        const { action: what, ...rest } = input as { action?: unknown };
+        if (what === 'block') return json({ ok: true, ...(await sp.blockChatPerson(sd, who, rest)) });
+        if (what === 'unblock') return json({ ok: true, ...(await sp.unblockChatPerson(sd, who, rest)) });
+        return fail(400, 'INVALID_INPUT', ['action']);
+      }
       if (action === 'followup') {
         const { action: what, ...rest } = input as { action?: unknown };
         if (what === 'send') return json({ ok: true, ...(await sp.sendFollowUp(sd, who, rest)) });

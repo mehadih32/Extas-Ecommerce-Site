@@ -9,13 +9,14 @@
 // PR 430: one more, orders from the chat (`support.cart`, off as it ships).
 // PR 431: tickets and timers (`support.tickets`); PR 432: draft answers and their words (`support.drafts` off, `support.draftWords`, `support.draftKeywords`).
 // PR 433: follow-ups on chats without an order and their words (`support.followUp` off, `support.followUpWords`).
+// PR 434: privacy inside support (`support.privacy`, off) and the support block list (`support.blockList`, off).
 import { createHash } from 'node:crypto';
-import { callMeSchema, registry, storeTarget, supportAttachmentsSchema, supportCartSchema, supportCatalogueSchema, supportChannelsSchema, supportContextSchema, supportDraftKeywordsSchema, supportDraftsSchema, supportDraftWordsSchema, supportFollowUpSchema, supportFollowUpWordsSchema, supportIdentitySchema, supportInboxSchema, supportLiveChatSchema, supportTicketsSchema, type Key, type Value } from '@extas/settings';
+import { callMeSchema, registry, storeTarget, supportAttachmentsSchema, supportCartSchema, supportCatalogueSchema, supportChannelsSchema, supportContextSchema, supportDraftKeywordsSchema, supportDraftsSchema, supportDraftWordsSchema, supportBlockListSchema, supportFollowUpSchema, supportFollowUpWordsSchema, supportIdentitySchema, supportPrivacySchema, supportInboxSchema, supportLiveChatSchema, supportTicketsSchema, type Key, type Value } from '@extas/settings';
 import { z } from 'zod';
 import { allow, logChange, parse, setting, SupportError, type SettingsWriter, type SupportDeps, type Who } from './context';
 
 /** The keys Support settings edits, each one card. */
-export const SUPPORT_SETTING_KEYS = ['support.inbox', 'support.attachments', 'support.channels', 'support.liveChat', 'checkout.callMe', 'support.identity', 'support.context', 'support.catalogue', 'support.cart', 'support.tickets', 'support.drafts', 'support.draftWords', 'support.draftKeywords', 'support.followUp', 'support.followUpWords'] as const satisfies readonly Key[];
+export const SUPPORT_SETTING_KEYS = ['support.inbox', 'support.attachments', 'support.channels', 'support.liveChat', 'checkout.callMe', 'support.identity', 'support.context', 'support.catalogue', 'support.cart', 'support.tickets', 'support.drafts', 'support.draftWords', 'support.draftKeywords', 'support.followUp', 'support.followUpWords', 'support.privacy', 'support.blockList'] as const satisfies readonly Key[];
 export type SupportSettingKey = (typeof SUPPORT_SETTING_KEYS)[number];
 
 const SCHEMAS = {
@@ -42,6 +43,9 @@ const SCHEMAS = {
   // PR 433: follow-ups and their words
   'support.followUp': supportFollowUpSchema,
   'support.followUpWords': supportFollowUpWordsSchema,
+  // PR 434: privacy and the block list
+  'support.privacy': supportPrivacySchema,
+  'support.blockList': supportBlockListSchema,
 } as const satisfies Record<SupportSettingKey, z.ZodType>;
 
 export interface SupportSettingCard<K extends SupportSettingKey = SupportSettingKey> {
@@ -62,7 +66,7 @@ async function card<K extends SupportSettingKey>(deps: Pick<SupportDeps, 'settin
 }
 
 async function viewOf(deps: Pick<SupportDeps, 'settings'>, storeId: number): Promise<SupportSettingsView> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q] = await Promise.all([
     card(deps, storeId, 'support.inbox'),
     card(deps, storeId, 'support.attachments'),
     card(deps, storeId, 'support.channels'),
@@ -78,8 +82,10 @@ async function viewOf(deps: Pick<SupportDeps, 'settings'>, storeId: number): Pro
     card(deps, storeId, 'support.draftKeywords'),
     card(deps, storeId, 'support.followUp'),
     card(deps, storeId, 'support.followUpWords'),
+    card(deps, storeId, 'support.privacy'),
+    card(deps, storeId, 'support.blockList'),
   ]);
-  return { 'support.inbox': a, 'support.attachments': b, 'support.channels': c, 'support.liveChat': d, 'checkout.callMe': e, 'support.identity': f, 'support.context': g, 'support.catalogue': h, 'support.cart': i, 'support.tickets': j, 'support.drafts': k, 'support.draftWords': l, 'support.draftKeywords': m, 'support.followUp': n, 'support.followUpWords': o };
+  return { 'support.inbox': a, 'support.attachments': b, 'support.channels': c, 'support.liveChat': d, 'checkout.callMe': e, 'support.identity': f, 'support.context': g, 'support.catalogue': h, 'support.cart': i, 'support.tickets': j, 'support.drafts': k, 'support.draftWords': l, 'support.draftKeywords': m, 'support.followUp': n, 'support.followUpWords': o, 'support.privacy': p, 'support.blockList': q };
 }
 
 /** Every card's data (`support.read`). */

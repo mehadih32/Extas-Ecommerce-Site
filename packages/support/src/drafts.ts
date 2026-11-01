@@ -13,6 +13,7 @@
 import type { DraftComplaint, DraftIntent, DraftText } from '@extas/settings';
 import { allow, nowOf, setting, SupportError, type SupportDeps, type Who } from './context';
 import { bodyIn, classifyMessage, draftTextKey, fillDraft, isBengaliScript } from './drafts-pure';
+import { ownChat } from './privacy';
 
 /** The order timeline line the courier check writes for a parcel past its promise (@extas/shipping LATE_EVENT). */
 const LATE_LINE = 'shipment.late';
@@ -42,10 +43,11 @@ export interface DraftOptions {
 
 /** The draft answer to the customer's latest question, or null (switched off, or nothing waits for an answer). */
 export async function supportDraft(deps: Pick<SupportDeps, 'db' | 'settings' | 'now'>, who: Who, conversationId: string, opts: DraftOptions = {}): Promise<SupportDraft | null> {
-  await allow(deps, who, 'support.reply');
+  const held = await allow(deps, who, 'support.reply');
   const storeId = who.storeId;
   const cfg = await setting(deps, storeId, 'support.drafts');
   if (!cfg.enabled) return null;
+  await ownChat(deps, who, held, conversationId);
   const c = await deps.db.conversation.findFirst({
     where: { id: conversationId, storeId },
     select: { id: true, orderId: true, customerId: true, contact: { select: { displayName: true, customerId: true } } },

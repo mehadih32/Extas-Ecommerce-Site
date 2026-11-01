@@ -1,0 +1,12 @@
+{
+  "support": {
+    "privacy": {
+      "label": "Privacy inside support",
+      "help": "Who sees which chats and numbers. \"Only their own chats\": an employee who may not give chats out sees only the chats given to them and the ones nobody has taken. \"Mask numbers in messages\": phone numbers customers type are masked like the chat's own number for anyone not allowed the full number."
+    },
+    "blockList": {
+      "label": "Support block list",
+      "help": "Lets a person allowed to block (only the owner, unless he gives it to a role) put a chat's person on the support block list with a reason, and take them off again. Their messages are kept but go to the \"Blocked\" view: no ticket, no follow-up, no reply from the shop. Nothing is deleted."
+    }
+  }
+}

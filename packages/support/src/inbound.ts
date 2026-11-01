@@ -81,6 +81,8 @@ export async function receiveMessage(deps: SupportDeps, input: ReceiveInput): Pr
   if (!channel || channel.archivedAt) throw new SupportError('NOT_FOUND', 'no such channel', ['channel']);
   const identity = await setting(deps, d.storeId, 'support.identity');
   const tickets = await setting(deps, d.storeId, 'support.tickets');
+  // PR 434: a blocked person's message is kept, but opens no ticket (the list switched on)
+  const blockOn = (await setting(deps, d.storeId, 'support.blockList')).enabled;
 
   return deps.db.$transaction(async (tx) => {
     // one person on one channel at a time, so two messages arriving together never start two conversations
@@ -157,7 +159,7 @@ export async function receiveMessage(deps: SupportDeps, input: ReceiveInput): Pr
     if (reopened) await tx.conversationEvent.create({ data: { storeId: d.storeId, conversationId: conv.id, kind: 'REOPENED', ...actor, data: { from: 'SOLVED' }, createdAt: at } });
     await tx.conversationEvent.create({ data: { storeId: d.storeId, conversationId: conv.id, kind: 'RECEIVED', ...actor, messageId: message.id, data: { files: d.message.files.length }, createdAt: at } });
     // PR 431: the question's ticket — opened (support.tickets on), or open again after waiting for the customer
-    await ticketOnCustomerMessage(
+    if (!(blockOn && contact.blockedAt)) await ticketOnCustomerMessage(
       tx,
       { storeId: d.storeId, conversationId: conv.id, customerId: conv.customerId ?? contact.customerId, ownerId: conv.assignedToId, subject: conv.subject ?? previewOf(text, PREVIEW_CHARS) ?? conv.refCode, priority: conv.priority, at },
       tickets,
