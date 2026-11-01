@@ -48,7 +48,8 @@
         "learning": "Decisions & learning",
         "delivery": "Delivery & RTO",
         "flags": "Flag outcomes",
-        "team": "Team"
+        "team": "Team",
+        "areas": "Sales by area"
       },
       "settings": {
         "store": "Store details",

@@ -41,3 +41,5 @@ export * from './pnl';
 export * from './vat';
 // S16 · PR 537: `vatReport` — a period's VAT inside Sales (delivered orders), by rate, by category and by day (vat-report.ts).
 export * from './vat-report';
+// S16 · PR 568: `salesByArea` — Sales, pieces and returns by district, upazila/thana or area inside Dhaka (areas.ts).
+export * from './areas';

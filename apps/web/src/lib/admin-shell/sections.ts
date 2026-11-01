@@ -345,6 +345,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
       // S16 · PR 352: Reports → Team — what each person did in the week or month, with badges (off as shipped).
       { id: 'team', pages: [{ href: '/admin/reports/team', perm: 'staff.performance', keys: ['reportsTeam'] }] },
+      // S16 · PR 568: Reports → Sales by area — REP-02's area part: district, upazila/thana or inside Dhaka, with returns.
+      { id: 'areas', pages: [{ href: '/admin/reports/areas', perm: 'books.read', keys: ['reportsAreas'] }] },
     ],
   },
   {
