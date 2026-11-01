@@ -1,0 +1,527 @@
+{
+  "at": "2026-11-01 11:37 (Asia/Dhaka)",
+  "base": "https://new.extas.com.bd",
+  "sha": "98d378e6b4a0",
+  "kind": "run now",
+  "group": "go-live-gate",
+  "ok": true,
+  "ui": {
+    "kinds": [],
+    "issues": 0
+  },
+  "journeys": 4,
+  "failed": 0,
+  "steps": 60,
+  "skipped": 8,
+  "problems": [],
+  "rows": [
+    {
+      "journey": "gate-shop",
+      "screen": "phone",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open / (unless rules.eid.enabled / delivery.holiday.enabled) · SIM-F-019",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "open /bn · SIM-F-025, SIM-F-047",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "open /bn/search · SIM-F-025, SIM-F-047",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "open /bn/bag · SIM-F-025, SIM-F-047",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "open /bn/checkout · SIM-F-025, SIM-F-047",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 6,
+          "what": "open /bulk-order → 404 (unless orders.bulkLane.enabled) · SIM-F-023",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 7,
+          "what": "open /bulk-order (when orders.bulkLane.enabled) · SIM-F-023",
+          "ok": true,
+          "skipped": "switch orders.bulkLane.enabled is off",
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 8,
+          "what": "open /account/login · SIM-F-039",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 9,
+          "what": "open / · SIM-F-035, SIM-F-046",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 10,
+          "what": "follow a[href^='/collections/'] · SIM-F-035, SIM-F-046",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 11,
+          "what": "follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034",
+          "ok": true,
+          "skipped": "nothing matches a.pcard-lnk (the shop has none yet)",
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    },
+    {
+      "journey": "gate-shop",
+      "screen": "desktop",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open / (unless rules.eid.enabled / delivery.holiday.enabled) · SIM-F-019",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "open /bn · SIM-F-025, SIM-F-047",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "open /bn/search · SIM-F-025, SIM-F-047",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "open /bn/bag · SIM-F-025, SIM-F-047",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "open /bn/checkout · SIM-F-025, SIM-F-047",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 6,
+          "what": "open /bulk-order → 404 (unless orders.bulkLane.enabled) · SIM-F-023",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 7,
+          "what": "open /bulk-order (when orders.bulkLane.enabled) · SIM-F-023",
+          "ok": true,
+          "skipped": "switch orders.bulkLane.enabled is off",
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 8,
+          "what": "open /account/login · SIM-F-039",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 9,
+          "what": "open / · SIM-F-035, SIM-F-046",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 10,
+          "what": "follow a[href^='/collections/'] · SIM-F-035, SIM-F-046",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 11,
+          "what": "follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034",
+          "ok": true,
+          "skipped": "nothing matches a.pcard-lnk (the shop has none yet)",
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    },
+    {
+      "journey": "gate-admin",
+      "screen": "phone",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open /admin/messages/journey · SIM-F-011, SIM-F-013, SIM-F-025, SIM-F-052, SIM-F-053",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "open /admin/messages/templates · SIM-F-013, SIM-F-052, SIM-F-053",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "open /admin/orders · SIM-F-020",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "open /admin/orders/packing · SIM-F-006, SIM-F-010",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "open /admin/orders/returns · SIM-F-021, SIM-F-022",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 6,
+          "what": "open /admin/orders/risk-rules/checkout · SIM-F-016, SIM-F-043",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 7,
+          "what": "open /admin/reports/delivery · SIM-F-017, SIM-F-018, SIM-F-027",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 8,
+          "what": "open /admin/support/rider-issues · SIM-F-017, SIM-F-054",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 9,
+          "what": "open /admin/money · SIM-F-028, SIM-F-041",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 10,
+          "what": "open /admin/money/refunds · SIM-F-041, SIM-F-054, SIM-F-056",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 11,
+          "what": "open /admin/customers · SIM-F-054",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 12,
+          "what": "follow [data-testid=cus-row] a[href^='/admin/customers/'] · SIM-F-054",
+          "ok": true,
+          "skipped": "nothing matches [data-testid=cus-row] a[href^='/admin/customers/'] (the shop has none yet)",
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 13,
+          "what": "follow [data-testid=cus-wallet-open] · SIM-F-054",
+          "ok": true,
+          "skipped": "step 12 found nothing",
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 14,
+          "what": "open /admin/combos?tab=fixed · SIM-F-051",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 15,
+          "what": "open /admin/delivery/settings · SIM-F-019, SIM-F-047, SIM-F-048",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 16,
+          "what": "open /admin/support/settings · SIM-F-046",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 17,
+          "what": "open /admin/rules/eid · SIM-F-019",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 18,
+          "what": "open /admin?home=1 · SIM-F-032, SIM-F-034, SIM-F-057",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 19,
+          "what": "open /admin/support · SIM-F-012, SIM-F-024, SIM-F-055",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    },
+    {
+      "journey": "gate-admin",
+      "screen": "desktop",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open /admin/messages/journey · SIM-F-011, SIM-F-013, SIM-F-025, SIM-F-052, SIM-F-053",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "open /admin/messages/templates · SIM-F-013, SIM-F-052, SIM-F-053",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "open /admin/orders · SIM-F-020",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "open /admin/orders/packing · SIM-F-006, SIM-F-010",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "open /admin/orders/returns · SIM-F-021, SIM-F-022",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 6,
+          "what": "open /admin/orders/risk-rules/checkout · SIM-F-016, SIM-F-043",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 7,
+          "what": "open /admin/reports/delivery · SIM-F-017, SIM-F-018, SIM-F-027",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 8,
+          "what": "open /admin/support/rider-issues · SIM-F-017, SIM-F-054",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 9,
+          "what": "open /admin/money · SIM-F-028, SIM-F-041",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 10,
+          "what": "open /admin/money/refunds · SIM-F-041, SIM-F-054, SIM-F-056",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 11,
+          "what": "open /admin/customers · SIM-F-054",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 12,
+          "what": "follow [data-testid=cus-row] a[href^='/admin/customers/'] · SIM-F-054",
+          "ok": true,
+          "skipped": "nothing matches [data-testid=cus-row] a[href^='/admin/customers/'] (the shop has none yet)",
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 13,
+          "what": "follow [data-testid=cus-wallet-open] · SIM-F-054",
+          "ok": true,
+          "skipped": "step 12 found nothing",
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 14,
+          "what": "open /admin/combos?tab=fixed · SIM-F-051",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 15,
+          "what": "open /admin/delivery/settings · SIM-F-019, SIM-F-047, SIM-F-048",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 16,
+          "what": "open /admin/support/settings · SIM-F-046",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 17,
+          "what": "open /admin/rules/eid · SIM-F-019",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 18,
+          "what": "open /admin?home=1 · SIM-F-032, SIM-F-034, SIM-F-057",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 19,
+          "what": "open /admin/support · SIM-F-012, SIM-F-024, SIM-F-055",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    }
+  ]
+}
