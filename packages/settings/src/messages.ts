@@ -183,6 +183,8 @@ import attributionBn from '../messages/attribution.bn.json';
 import attributionEn from '../messages/attribution.en.json';
 import contactFormBn from '../messages/contact-form.bn.json';
 import contactFormEn from '../messages/contact-form.en.json';
+import marketingBn from '../messages/marketing.bn.json';
+import marketingEn from '../messages/marketing.en.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -280,6 +282,9 @@ messages.bn = mergeMessages(messages.bn, attributionBn);
 // S02 · PR 75 follow-up (registry v231): the contact page's form.
 messages.en = mergeMessages(messages.en, contactFormEn);
 messages.bn = mergeMessages(messages.bn, contactFormBn);
+// S13 · CN-031 lane B — marketing: landing pages (registry-marketing.ts).
+messages.en = mergeMessages(messages.en, marketingEn);
+messages.bn = mergeMessages(messages.bn, marketingBn);
 // S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
 messages.en = mergeMessages(messages.en, financeEn);
 messages.bn = mergeMessages(messages.bn, financeBn);

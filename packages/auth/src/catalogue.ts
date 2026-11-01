@@ -366,6 +366,11 @@ export const PERMISSIONS = {
   // S08 · PR 192 (REP-06) — Reports › Delivery & RTO: courier performance (on time, refused, by zone), parcels past
   // their promise and the RTO cost book. Seeing only.
   'reports.read': { group: 'reports' },
+  // S13 · PR 254 (Blueprint MKT-05) — Marketing › Landing pages: see the pages and the orders each brought
+  // (`marketing.landing.read`); create, edit, publish, take down and archive them (`marketing.landing.write`). A page shows
+  // the product's own live prices; nothing here changes a price, a discount or an order.
+  'marketing.landing.read': { group: 'marketing' },
+  'marketing.landing.write': { group: 'marketing' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

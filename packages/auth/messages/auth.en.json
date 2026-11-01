@@ -31,7 +31,8 @@
     "support": "Support",
     "health": "Site health",
     "ads": "Ads and tracking",
-    "reports": "Reports"
+    "reports": "Reports",
+    "marketing": "Marketing"
   },
   "permissions": {
     "settings": {
@@ -300,6 +301,12 @@
     },
     "reports": {
       "read": "See Reports › Delivery & RTO (courier performance, late parcels, RTO cost)"
+    },
+    "marketing": {
+      "landing": {
+        "read": "See Marketing › Landing pages and the orders each page brought",
+        "write": "Create, edit, publish, take down and archive landing pages"
+      }
     }
   },
   "totp": {

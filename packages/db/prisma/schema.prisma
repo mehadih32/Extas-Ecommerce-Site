@@ -1901,6 +1901,8 @@ model Page {
   bnReadyAt   DateTime?     @db.Timestamptz(3)
   /// Seasonal lifecycle (PR 530): when the occasion returns, the page goes live again.
   recurrence  Json?
+  /// Landing pages (PR 254): the one product the page sells; its prices are the product's own live prices.
+  productId   String?       @db.Uuid
   publishedAt DateTime?     @db.Timestamptz(3)
   archivedAt  DateTime?     @db.Timestamptz(3)
   createdAt   DateTime      @default(now()) @db.Timestamptz(3)
@@ -1909,6 +1911,7 @@ model Page {
   sections PageSection[]
 
   @@unique([storeId, kind, slug])
+  @@index([storeId, kind, status])
 }
 
 enum PageKind {

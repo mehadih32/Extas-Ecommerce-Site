@@ -302,6 +302,8 @@
       "/admin/reports/health/fixes",
       "/admin/website/seo/bengali",
       "/admin/marketing/tracking",
+      "/admin/marketing/landing",
+      "/admin/marketing/landing/new",
       "/admin/help/manual",
       "/admin/orders/risk-rules",
       "/pay/0",

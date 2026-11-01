@@ -1,0 +1,11 @@
+{
+  "groups": {
+    "marketing": "Marketing"
+  },
+  "marketing": {
+    "landing": {
+      "label": "Landing pages",
+      "help": "Pages made for ads at /l/<link>: one product, its offer and an order box on the page. You build and publish them in Marketing › Landing pages; the shop shows none of them to customers until this switch is on. Search engines never list them. Every order from a page carries the page's name."
+    }
+  }
+}

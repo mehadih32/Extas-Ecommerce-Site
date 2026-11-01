@@ -109,6 +109,18 @@ export interface PlaceRequest {
   input: unknown;
 }
 
+/** PR 254: the bag line's source of an item put in the bag from a landing page (`lp-<page id>`: the cart's source words are a-z, 0-9 and hyphens). */
+export const LANDING_LINE_SOURCE = 'lp-';
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The landing page the order came from: the first bag line put in from one, when that page is this store's own. */
+export async function landingPageOf(tx: Pick<Prisma.TransactionClient, 'page'>, storeId: number, lines: readonly { source: string | null }[]): Promise<string | null> {
+  const id = lines.map((l) => l.source ?? '').find((s) => s.startsWith(LANDING_LINE_SOURCE))?.slice(LANDING_LINE_SOURCE.length) ?? '';
+  if (!UUID.test(id)) return null;
+  const page = await tx.page.findFirst({ where: { id, storeId, kind: 'LANDING' }, select: { id: true } });
+  return page?.id ?? null;
+}
+
 const DEVICE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DAY_MS = 86_400_000;
 
@@ -443,13 +455,16 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
       const rows = orderLinesOf(q, lines);
       const variants = await tx.productVariant.findMany({ where: { storeId, id: { in: [...new Set(rows.map((r) => r.variantId))] } }, select: { id: true, sku: true } });
       const sku = new Map(variants.map((v) => [v.id, v.sku]));
+      // PR 254: an item put in the bag from a landing page carries that page; the order keeps it (MKT-05)
+      const landingPageId = await landingPageOf(tx, storeId, lines);
       const o = await tx.order.create({
         data: {
           storeId,
           number,
           customerId: ownerId,
           status: 'PLACED',
-          source: 'WEBSITE',
+          source: landingPageId ? 'LANDING_PAGE' : 'WEBSITE',
+          landingPageId,
           currency,
           placedAt: now,
           // PR 505 follow-up (SIM-F-025): the language he ordered in; his messages follow it

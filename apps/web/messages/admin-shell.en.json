@@ -39,7 +39,8 @@
       },
       "marketing": {
         "rules": "Smart Rules",
-        "tracking": "Tracking"
+        "tracking": "Tracking",
+        "landing": "Landing pages"
       },
       "reports": {
         "health": "Site health",
