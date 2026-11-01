@@ -1,13 +1,16 @@
 // S13 · PR 262 (Blueprint C6.2 point 3, demo 97x-adm2-marketing.js "Ads › Audiences") — Marketing › Audiences at
 // /admin/marketing/audiences: each audience with its conditions, how many people it held when last counted, when that
 // was, the campaigns that use it and its state; views All / Archived; "New audience". Seeing needs
-// `marketing.audiences.read`; creating needs `marketing.audiences.write`. Nothing here sends a list to an ad platform.
-// Guide: docs/admin-guide/pages/marketing/audiences.md.
+// `marketing.audiences.read`; creating needs `marketing.audiences.write`. Guide: docs/admin-guide/pages/marketing/audiences.md.
+// PR 263: "New lookalike" (a seed of the people delivered to, valued by delivered sales) and the sending card
+// (`ads.audiences`: the switch, off as it ships; the lookalike's countries and size per platform; each platform's floor).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { AUDIENCE_FLOOR_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
@@ -15,7 +18,8 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
-import { ruleWords } from '@/lib/marketing/audience-model';
+import { AUDIENCE_KIND_LOOKALIKE, ruleWords } from '@/lib/marketing/audience-model';
+import { audiencesCard } from '@/lib/marketing/audience-push';
 import { audienceChoices, audienceList } from '@/lib/marketing/audiences';
 import bn from '../../../../../messages/admin-audiences.bn.json';
 import en from '../../../../../messages/admin-audiences.en.json';
@@ -28,6 +32,7 @@ export const dynamic = 'force-dynamic';
 const HERE = '/admin/marketing/audiences';
 const KEY = 'marketingAudiences';
 const VIEWS = ['all', 'archived'] as const;
+const SETTINGS_API = '/api/admin/marketing/audiences/settings';
 
 function withScreen(view: AdminView): AdminView {
   return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
@@ -57,7 +62,30 @@ export default async function AudiencesPage(props: Props) {
   const num = (n: number) => formatNumber(n, view.locale);
   const canWrite = access.guard.permissions?.has('marketing.audiences.write') ?? false;
   const v = (VIEWS as readonly string[]).includes(sp.v ?? '') ? (sp.v as (typeof VIEWS)[number]) : 'all';
-  const [list, choices, timeZone] = await Promise.all([audienceList(access.deps.db), audienceChoices(access.deps.db, access.deps.resolver), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID })]);
+  const [list, choices, timeZone, card] = await Promise.all([audienceList(access.deps.db), audienceChoices(access.deps.db, access.deps.resolver), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }), audiencesCard(access.deps.resolver)]);
+  const texts: FieldsCardTexts = {
+    h: s('card.h'),
+    d: s('card.d'),
+    save: s('card.save'),
+    saving: s('card.saving'),
+    saved: s('card.saved'),
+    discard: s('card.discard'),
+    unsaved: s('card.unsaved'),
+    readOnly: s('card.readOnly'),
+    pairHelp: '',
+    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'forbidden', 'unauthorized', 'network', 'other'].map((k) => [k, s(`err.${k}`, { fields: s('field.value') })])),
+  };
+  const sizes = ['', 'narrow', 'balanced', 'broad'].map((x) => ({ value: x, label: s(`card.size.${x || 'none'}`) }));
+  const fields: FieldsCardField[] = [
+    { kind: 'switch', path: 'push', label: s('card.push'), help: s('card.pushHelp') },
+    { kind: 'text', path: 'countries', label: s('card.countries'), help: s('card.countriesHelp'), max: 60 },
+    { kind: 'select', path: 'metaPercent', label: s('card.metaPercent'), numeric: true, options: Array.from({ length: 11 }, (_, i) => ({ value: String(i), label: i ? `${i}%` : s('card.size.none') })) },
+    { kind: 'select', path: 'tiktokSize', label: s('card.tiktokSize'), options: sizes },
+    { kind: 'select', path: 'googleSize', label: s('card.googleSize'), options: sizes },
+    { kind: 'number', path: 'minMeta', label: s('card.minMeta'), help: s('card.minHelp'), min: 0, max: AUDIENCE_FLOOR_MAX },
+    { kind: 'number', path: 'minTiktok', label: s('card.minTiktok'), min: 0, max: AUDIENCE_FLOOR_MAX },
+    { kind: 'number', path: 'minGoogle', label: s('card.minGoogle'), min: 0, max: AUDIENCE_FLOOR_MAX },
+  ];
   const names = new Map([...choices.sizes.map((x) => [x.id, x.label] as const), ...choices.grades.map((x) => [x.id, (view.lang === 'bn' && x.nameBn) || x.nameEn] as const)]);
   const day = (iso: string) => new Intl.DateTimeFormat(view.locale, { timeZone, day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', numberingSystem: 'latn' }).format(new Date(iso));
   const rows = list.filter((r) => (v === 'archived' ? r.state === 'ARCHIVED' : r.state !== 'ARCHIVED'));
@@ -71,9 +99,14 @@ export default async function AudiencesPage(props: Props) {
         sub={s('sub')}
         right={
           canWrite ? (
-            <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="au-create">
-              {s('new')}
-            </Link>
+            <>
+              <Link className="a2-btn" href={`${HERE}/new?kind=lookalike`} data-testid="au-create-lal">
+                {s('lal.new')}
+              </Link>
+              <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="au-create">
+                {s('new')}
+              </Link>
+            </>
           ) : undefined
         }
       />
@@ -107,7 +140,7 @@ export default async function AudiencesPage(props: Props) {
                     <Link className="a2-b lp-name" href={`${HERE}/${r.id}`}>
                       {r.name}
                     </Link>
-                    <span className="a2-xs a2-mute au-rules-sum">{r.rules.map((x) => ruleWords(x, s, names)).join('; ')}</span>
+                    <span className="a2-xs a2-mute au-rules-sum">{r.kind === AUDIENCE_KIND_LOOKALIKE ? s('lal.sum', { days: r.seedDays ?? 0 }) : r.rules.map((x) => ruleWords(x, s, names)).join('; ')}</span>
                   </td>
                   <td className="r a2-num">{r.size == null ? s('never') : num(r.size)}</td>
                   <td className="a2-sm">{r.countedAt ? day(r.countedAt) : s('never')}</td>
@@ -126,6 +159,9 @@ export default async function AudiencesPage(props: Props) {
           <p className="a2-sm a2-mute">{s('emptySub')}</p>
         </div>
       )}
+      <div id="au-settings" className="a2-mt12">
+        <FieldsCard url={SETTINGS_API} screen={{ key: card.key, value: card.value, version: card.version }} fields={fields} texts={texts} canEdit={canWrite} testId="au-settings" />
+      </div>
     </div>
   );
 }

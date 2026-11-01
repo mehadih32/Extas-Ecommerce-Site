@@ -10,3 +10,6 @@
 .adm2 .au-sample li:first-child{border-top:0}
 .adm2 .au-sample li span:first-child{overflow-wrap:anywhere}
 .adm2 .au-rules-sum{display:block;overflow-wrap:anywhere}
+/* PR 263 — the "Send to ad platforms" card: a platform's refusal under its line, the link to the sending switch. */
+.adm2 .au-push-err{display:block;overflow-wrap:anywhere}
+.adm2 .au-push-go{margin-top:8px}

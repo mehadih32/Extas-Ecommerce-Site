@@ -7,8 +7,10 @@
 //   `risk.history.ourFaultRefusals` or a return marked the shop's fault, SIM-F-044), no offers. A person is his phone
 //   number, read through the one BD phone helper; a gift's number is the receiver's, so gifts never count; an erased
 //   customer's numbers never count.
-// - Saving (and "Count again") stores the size and when it was counted; the daily refresh and pushing the list (hashed)
-//   to Meta, Google and TikTok are PR 263 / 264 — nothing here calls an ad platform, moves money or changes an order.
+// - Saving (and "Count again") stores the size and when it was counted; sending the list (hashed) to Meta, Google and
+//   TikTok is audience-push.ts (PR 263 / 264) — nothing here calls an ad platform, moves money or changes an order.
+// - PR 263: a lookalike audience's people are its seed: those whose parcels were delivered in the owner's last N days,
+//   each with his delivered sales in that window (the one "sales" status rule; never his number of orders).
 // - The few names shown beside the count are for a person with `customers.read`, and their numbers are masked
 //   (`customers.phoneMask`).
 // - Seeing needs `marketing.audiences.read`; saving, counting again, archiving and restoring need
@@ -22,16 +24,22 @@ import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../
 import {
   AUDIENCE_ACTIONS,
   AUDIENCE_KIND_BUILDER,
+  AUDIENCE_KIND_LOOKALIKE,
+  AUDIENCE_KINDS,
   audienceInputSchema,
   canAudienceStep,
   combine,
   definitionOf,
   definitionSchema,
+  lookalikeDefinitionSchema,
+  lookalikeInputSchema,
+  lookalikeOf,
   stateOfAudience,
   type AudienceAction,
   type AudienceDefinition,
   type AudienceRule,
   type AudienceState,
+  type LookalikeDefinition,
 } from './audience-model';
 
 const S = MOTHER_STORE_ID;
@@ -63,6 +71,8 @@ export interface AudienceRow {
   kind: string;
   state: AudienceState;
   rules: AudienceRule[];
+  /** A lookalike's seed window (days), else null. */
+  seedDays: number | null;
   size: number | null;
   countedAt: string | null;
   campaigns: number;
@@ -188,14 +198,50 @@ export async function audienceMembers(db: Db, resolver: Resolver, def: AudienceD
   return { phones: out, unavailable: [...new Set(unavailable)] };
 }
 
+/** PR 263: a lookalike's seed — each person delivered to in the last `seedDays`, with his delivered sales (minor unit). */
+export async function seedMembers(db: Db, def: LookalikeDefinition, now: Date = new Date(), storeId: number = S): Promise<Map<string, number>> {
+  const since = new Date(now.getTime() - def.seedDays * DAY_MS);
+  const rows = await db.$queryRaw<{ phone: string | null; value: bigint | number }[]>(Prisma.sql`
+    SELECT ${orderPhone} AS phone, COALESCE(sum(o."totalMinor"), 0)::bigint AS value FROM ${orderFrom}
+    WHERE ${ownOrder(storeId)} AND ${statusRule('sales')} AND o."deliveredAt" >= ${since}
+    GROUP BY 1`);
+  const out = new Map<string, number>();
+  for (const r of rows) {
+    const p = r.phone ? phoneNormalizeBD(r.phone) : null;
+    if (p?.ok) out.set(p.e164, (out.get(p.e164) ?? 0) + Number(r.value));
+  }
+  if (out.size) for (const p of phonesOf(await db.customer.findMany({ where: { storeId, erasedAt: { not: null } }, select: { phone: true } }))) out.delete(p);
+  return out;
+}
+
+/** Any saved audience's people now: E.164 numbers, each with his delivered sales for a lookalike's seed (else null). */
+export async function membersOf(db: Db, resolver: Resolver, a: { kind: string; definition: unknown }, now: Date = new Date(), storeId: number = S): Promise<{ people: Map<string, number | null>; valueBased: boolean }> {
+  if (a.kind === AUDIENCE_KIND_LOOKALIKE) {
+    const def = lookalikeOf(a.definition);
+    return { people: def ? await seedMembers(db, def, now, storeId) : new Map(), valueBased: true };
+  }
+  const { phones } = await audienceMembers(db, resolver, definitionOf(a.definition), now, storeId);
+  return { people: new Map([...phones].map((p) => [p, null])), valueBased: false };
+}
+
+/** Names beside a few numbers, masked. */
+async function sampleOf(db: Db, resolver: Resolver, phones: Iterable<string>, storeId: number) {
+  const some = [...phones].sort().slice(0, AUDIENCE_SAMPLE);
+  const [mask, people] = await Promise.all([resolver.value('customers.phoneMask', { storeId }) as Promise<PhoneMask>, some.length ? db.customer.findMany({ where: { storeId, phone: { in: some } }, select: { phone: true, name: true } }) : Promise.resolve([])]);
+  const names = new Map(people.map((p) => [p.phone ?? '', p.name]));
+  return some.map((p) => ({ name: names.get(p) ?? null, phone: maskPhone(p, mask) }));
+}
+
+/** PR 263: a lookalike seed's count, and a few masked names for a person allowed to see customers. */
+export async function seedCount(db: Db, resolver: Resolver, def: LookalikeDefinition, seeCustomers: boolean, now: Date = new Date(), storeId: number = S): Promise<AudienceCount> {
+  const m = await seedMembers(db, def, now, storeId);
+  return { size: m.size, unavailable: [], sample: seeCustomers ? await sampleOf(db, resolver, m.keys(), storeId) : null };
+}
+
 /** The count, and a few masked names for a person allowed to see customers. */
 export async function audienceCount(db: Db, resolver: Resolver, def: AudienceDefinition, seeCustomers: boolean, now: Date = new Date(), storeId: number = S): Promise<AudienceCount> {
   const m = await audienceMembers(db, resolver, def, now, storeId);
-  if (!seeCustomers) return { size: m.phones.size, unavailable: m.unavailable, sample: null };
-  const some = [...m.phones].sort().slice(0, AUDIENCE_SAMPLE);
-  const [mask, people] = await Promise.all([resolver.value('customers.phoneMask', { storeId }) as Promise<PhoneMask>, some.length ? db.customer.findMany({ where: { storeId, phone: { in: some } }, select: { phone: true, name: true } }) : Promise.resolve([])]);
-  const names = new Map(people.map((p) => [p.phone ?? '', p.name]));
-  return { size: m.phones.size, unavailable: m.unavailable, sample: some.map((p) => ({ name: names.get(p) ?? null, phone: maskPhone(p, mask) })) };
+  return { size: m.phones.size, unavailable: m.unavailable, sample: seeCustomers ? await sampleOf(db, resolver, m.phones, storeId) : null };
 }
 
 async function campaignCounts(db: Db, storeId: number, ids: string[]) {
@@ -208,7 +254,8 @@ const rowOf = (a: Raw, used: Map<string, number>): AudienceRow => ({
   name: a.name,
   kind: a.kind,
   state: stateOfAudience(a),
-  rules: definitionOf(a.definition).rules,
+  rules: a.kind === AUDIENCE_KIND_LOOKALIKE ? [] : definitionOf(a.definition).rules,
+  seedDays: a.kind === AUDIENCE_KIND_LOOKALIKE ? (lookalikeOf(a.definition)?.seedDays ?? null) : null,
   size: a.size,
   countedAt: iso(a.lastBuiltAt),
   campaigns: used.get(a.id) ?? 0,
@@ -255,17 +302,21 @@ async function checkRefs(db: Db, def: AudienceDefinition, storeId: number) {
 
 /** Create (id null) or save an audience at the version it was read at; the count is taken and kept with it. */
 export async function saveAudience(db: Db, resolver: Resolver, who: AudienceWho, id: string | null, input: unknown, now: Date = new Date(), storeId: number = S): Promise<AudienceView> {
-  const ok = audienceInputSchema.safeParse(input);
+  const lookalike = !!input && typeof input === 'object' && (input as { kind?: unknown }).kind === AUDIENCE_KIND_LOOKALIKE;
+  const ok = lookalike ? lookalikeInputSchema.safeParse(input) : audienceInputSchema.safeParse(input);
   if (!ok.success) throw new AudienceError('INVALID_INPUT', 400, issueFields(ok.error.issues));
   const d = ok.data;
-  await checkRefs(db, d.definition, storeId);
+  const kind = lookalike ? AUDIENCE_KIND_LOOKALIKE : AUDIENCE_KIND_BUILDER;
+  if (!lookalike) await checkRefs(db, d.definition as AudienceDefinition, storeId);
   const before = id ? await audienceOne(db, id, storeId) : null;
   if (id && !before) throw new AudienceError('NOT_FOUND', 404);
   if (before && before.version !== d.version) throw new AudienceError('STALE', 409);
   if (before?.state === 'ARCHIVED') throw new AudienceError('ARCHIVED', 409);
-  const { phones } = await audienceMembers(db, resolver, d.definition, now, storeId);
-  const data = { name: d.name, definition: d.definition as unknown as Prisma.InputJsonValue, size: phones.size, lastBuiltAt: now };
-  const row = before ? await db.audience.update({ where: { id: before.id }, data, select: { id: true } }) : await db.audience.create({ data: { storeId, kind: AUDIENCE_KIND_BUILDER, ...data }, select: { id: true } });
+  // an audience keeps its kind: a builder audience is never turned into a lookalike, nor back
+  if (before && before.kind !== kind) throw new AudienceError('INVALID_INPUT', 400, ['kind']);
+  const { people } = await membersOf(db, resolver, { kind, definition: d.definition }, now, storeId);
+  const data = { name: d.name, definition: d.definition as unknown as Prisma.InputJsonValue, size: people.size, lastBuiltAt: now };
+  const row = before ? await db.audience.update({ where: { id: before.id }, data, select: { id: true } }) : await db.audience.create({ data: { storeId, kind, ...data }, select: { id: true } });
   const after = (await audienceOne(db, row.id, storeId))!;
   const strip = ({ version: _v, ...x }: AudienceView) => ({ ...x });
   await audit(db, who.actor, { storeId, action: before ? 'marketing.audience.save' : 'marketing.audience.create', entityType: 'Audience', entityId: row.id, before: before ? strip(before) : undefined, after: strip(after) }, who.ctx);
@@ -283,8 +334,8 @@ export async function audienceStep(db: Db, resolver: Resolver, who: AudienceWho,
   if (!canAudienceStep(action, before.state)) throw new AudienceError('WRONG_STATE', 409);
   let data: Prisma.AudienceUpdateInput;
   if (action === 'recount') {
-    const { phones } = await audienceMembers(db, resolver, { v: 1, rules: before.rules }, now, storeId);
-    data = { size: phones.size, lastBuiltAt: now };
+    const { people } = await membersOf(db, resolver, { kind: before.kind, definition: before.kind === AUDIENCE_KIND_LOOKALIKE ? { v: 1, seedDays: before.seedDays } : { v: 1, rules: before.rules } }, now, storeId);
+    data = { size: people.size, lastBuiltAt: now };
   } else data = { archivedAt: action === 'archive' ? now : null };
   await db.audience.update({ where: { id }, data });
   const after = (await audienceOne(db, id, storeId))!;
@@ -292,12 +343,12 @@ export async function audienceStep(db: Db, resolver: Resolver, who: AudienceWho,
   return after;
 }
 
-/** Count every live builder audience again (for the daily refresh that comes with pushing them, PR 263 / 264). */
+/** Count every live audience again, builder and lookalike (for the daily refresh that comes with sending them). */
 export async function recountAudiences(db: Db, resolver: Resolver, now: Date = new Date(), storeId: number = S): Promise<number> {
-  const rows = await db.audience.findMany({ where: { storeId, kind: AUDIENCE_KIND_BUILDER, archivedAt: null }, select: { id: true, definition: true } });
+  const rows = await db.audience.findMany({ where: { storeId, kind: { in: [...AUDIENCE_KINDS] }, archivedAt: null }, select: { id: true, kind: true, definition: true } });
   for (const a of rows) {
-    const { phones } = await audienceMembers(db, resolver, definitionOf(a.definition), now, storeId);
-    await db.audience.update({ where: { id: a.id }, data: { size: phones.size, lastBuiltAt: now } });
+    const { people } = await membersOf(db, resolver, a, now, storeId);
+    await db.audience.update({ where: { id: a.id }, data: { size: people.size, lastBuiltAt: now } });
   }
   return rows.length;
 }
@@ -341,16 +392,22 @@ export async function audienceCountHandler(request: Request, deps: AdminDeps | n
   const g = await guardAdmin(request, deps, { permission: 'marketing.audiences.read', storeId: S });
   if (g instanceof Response) return g;
   try {
+    const q = new URL(request.url).searchParams;
     let raw: unknown = null;
     try {
-      raw = JSON.parse(new URL(request.url).searchParams.get('definition') ?? 'null');
+      raw = JSON.parse(q.get('definition') ?? q.get('lookalike') ?? 'null');
     } catch {
       raw = null;
+    }
+    const see = g.permissions?.has('customers.read') ?? false;
+    if (q.has('lookalike')) {
+      const lal = lookalikeDefinitionSchema.safeParse(raw);
+      if (!lal.success) throw new AudienceError('INVALID_INPUT', 400, issueFields(lal.error.issues));
+      return json({ ok: true, count: await seedCount(deps!.db, deps!.resolver, lal.data, see) });
     }
     const ok = definitionSchema.safeParse(raw);
     if (!ok.success) throw new AudienceError('INVALID_INPUT', 400, issueFields(ok.error.issues));
     await checkRefs(deps!.db, ok.data, S);
-    const see = g.permissions?.has('customers.read') ?? false;
     return json({ ok: true, count: await audienceCount(deps!.db, deps!.resolver, ok.data, see) });
   } catch (e) {
     return answer(e);

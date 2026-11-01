@@ -97,6 +97,7 @@ import { attributionSettings } from './registry-attribution';
 import { contactFormSettings } from './registry-contact-form';
 import { crmSettings } from './registry-crm';
 import { marketingSettings } from './registry-marketing';
+import { adsAudiencesSettings } from './registry-ads-audiences';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1357,6 +1358,8 @@ export const registry = {
   ...crmSettings,
   // ---- S13 · CN-031 lane B · PR 254 · landing pages: the master switch (registry-marketing.ts, versions 168–179). ----
   ...marketingSettings,
+  // ---- S13 · CN-031 lane B · PR 263 · audiences sent to the ad platforms (registry-ads-audiences.ts, version 170). ----
+  ...adsAudiencesSettings,
   // ---- S16 · CN-031 lane B · PR 347 · the costs report's longest period and day rows (registry-finance.ts, versions 160–169). ----
   ...financeSettings,
 } satisfies RegistryShape;
