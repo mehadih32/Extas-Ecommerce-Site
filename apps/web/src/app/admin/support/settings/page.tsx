@@ -10,6 +10,8 @@
 // products per search, how many days an order from the link is credited to the chat.
 // PR 430: the "Orders from the chat" card (off as it ships) — the chat's bag and "Create order", and the words of the
 // pay link message the owner's advance rule sends (under "More options" inside the card's own fold).
+// PR 431: the "Tickets and timers" card (off as it ships) — the first-answer minutes, the solution hours, late chats in
+// the bell.
 // PR 427: the "Who is writing" card (off as it ships) — the number from WhatsApp or the chat's words, its customer, one
 // person across channels.
 // Optional behaviour ships off. Nothing here moves money or changes an order.
@@ -111,6 +113,13 @@ export default async function SupportSettingsPage() {
     { kind: 'switch', path: 'enabled', label: s('cart.enabled'), help: s('cart.enabledHelp') },
     { kind: 'pair', path: 'payLinkWords', label: { en: s('cart.wordsEn'), bn: s('cart.wordsBn') }, help: s('cart.wordsHelp'), max: 400, rows: 3 },
   ];
+  // PR 431: tickets and timers (off as it ships); the windows' bounds are the setting's own
+  const tickets: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('tickets.enabled'), help: s('tickets.enabledHelp') },
+    { kind: 'number', path: 'firstResponseMinutes', label: s('tickets.first'), help: s('tickets.firstHelp'), min: sp.TICKET_FIRST_MINUTES.min, max: sp.TICKET_FIRST_MINUTES.max },
+    { kind: 'number', path: 'resolutionHours', label: s('tickets.resolution'), help: s('tickets.resolutionHelp'), min: sp.TICKET_RESOLUTION_HOURS.min, max: sp.TICKET_RESOLUTION_HOURS.max },
+    { kind: 'switch', path: 'notify', label: s('tickets.notify'), help: s('tickets.notifyHelp') },
+  ];
   // PR 427: who is writing (off as it ships)
   const identity: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: s('identity.enabled'), help: s('identity.enabledHelp') },
@@ -144,6 +153,7 @@ export default async function SupportSettingsPage() {
       <FieldsCard url={API} screen={screen('support.context')} fields={context} texts={texts('context')} canEdit={canEdit} testId="support-set-context" />
       <FieldsCard url={API} screen={screen('support.catalogue')} fields={catalogue} texts={texts('catalogue')} canEdit={canEdit} testId="support-set-catalogue" />
       <FieldsCard url={API} screen={screen('support.cart')} fields={cart} texts={texts('cart')} canEdit={canEdit} testId="support-set-cart" />
+      <FieldsCard url={API} screen={screen('support.tickets')} fields={tickets} texts={texts('tickets')} canEdit={canEdit} testId="support-set-tickets" />
       <p className="a2-xs a2-mute a2-mt12" data-testid="support-set-phones">{s('phones')}</p>
       <details className="a2-card a2-mt12" data-testid="support-set-more">
         <summary className="a2-h4">{s('more')}</summary>

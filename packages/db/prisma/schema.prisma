@@ -9639,6 +9639,8 @@ model Conversation {
   @@index([storeId, lastMessageAt])
   /// PR 288: a customer's conversations on his journey view.
   @@index([storeId, customerId])
+  /// PR 431: the Late view and the late chats in the bell (open chats whose ticket timer ran out).
+  @@index([storeId, status, slaDueAt])
 }
 
 /// @stage S22 · PR 425, 538 — a message; who replied is always recorded (employee name or EXTAS AI). Links are checked.
@@ -9746,6 +9748,8 @@ model Ticket {
   updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
 
   @@index([storeId, status])
+  /// PR 431: a chat's open ticket and its latest one, on every customer message and answer.
+  @@index([conversationId, createdAt])
 }
 
 /// @stage S22 · PR 429, 430 — the mini-cart beside a conversation, with the fraud gate (green COD / red take advance).

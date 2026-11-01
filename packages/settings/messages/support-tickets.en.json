@@ -1,0 +1,8 @@
+{
+  "support": {
+    "tickets": {
+      "label": "Tickets and timers",
+      "help": "Each question from a customer becomes a ticket, from their message until it is marked solved. Its owner is the employee the chat is given to; it has a timer for the first answer and one for the solution, and once solved it keeps how long it took. The inbox shows each chat's timer and a \"Late\" view; late chats go into their owner's notifications. Nothing is sent to the customer and nothing about money changes."
+    }
+  }
+}

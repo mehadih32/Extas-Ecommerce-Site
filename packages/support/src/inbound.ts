@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { checkStoreId, nowOf, parse, setting, SupportError, TX, type SupportDeps } from './context';
 import { resolveIdentity } from './identity';
 import { cleanFileName, PREVIEW_CHARS, previewOf, SUBJECT_CHARS } from './pure';
+import { ticketOnCustomerMessage } from './tickets';
 
 // the database's MediaKind values
 const MEDIA_KINDS = ['IMAGE', 'VIDEO', 'AUDIO', 'PDF', 'DOCUMENT', 'OTHER'] as const;
@@ -79,6 +80,7 @@ export async function receiveMessage(deps: SupportDeps, input: ReceiveInput): Pr
   const channel = await deps.db.supportChannel.findUnique({ where: { storeId_kind_externalId: { storeId: d.storeId, kind: d.channel.kind, externalId: d.channel.externalId } } });
   if (!channel || channel.archivedAt) throw new SupportError('NOT_FOUND', 'no such channel', ['channel']);
   const identity = await setting(deps, d.storeId, 'support.identity');
+  const tickets = await setting(deps, d.storeId, 'support.tickets');
 
   return deps.db.$transaction(async (tx) => {
     // one person on one channel at a time, so two messages arriving together never start two conversations
@@ -154,6 +156,12 @@ export async function receiveMessage(deps: SupportDeps, input: ReceiveInput): Pr
     const actor = { actorType: 'CUSTOMER' as const, actorName: contact.displayName };
     if (reopened) await tx.conversationEvent.create({ data: { storeId: d.storeId, conversationId: conv.id, kind: 'REOPENED', ...actor, data: { from: 'SOLVED' }, createdAt: at } });
     await tx.conversationEvent.create({ data: { storeId: d.storeId, conversationId: conv.id, kind: 'RECEIVED', ...actor, messageId: message.id, data: { files: d.message.files.length }, createdAt: at } });
+    // PR 431: the question's ticket — opened (support.tickets on), or open again after waiting for the customer
+    await ticketOnCustomerMessage(
+      tx,
+      { storeId: d.storeId, conversationId: conv.id, customerId: conv.customerId ?? contact.customerId, ownerId: conv.assignedToId, subject: conv.subject ?? previewOf(text, PREVIEW_CHARS) ?? conv.refCode, priority: conv.priority, at },
+      tickets,
+    );
     // PR 427: who wrote it (off as it ships); its log lines come just after the message's own
     await resolveIdentity(tx, { storeId: d.storeId, contactId: contact.id, conversationId: conv.id, text, at: new Date(at.getTime() + 1), rules: identity });
     return { conversationId: conv.id, messageId: message.id, started, reopened, duplicate: false };

@@ -6,12 +6,13 @@
 import type { Prisma } from '@extas/db/client';
 import { actorPermissions } from '@extas/auth';
 import { z } from 'zod';
-import { allow, parse, setting, SupportError, type SupportDeps, type Who } from './context';
+import { allow, nowOf, parse, setting, SupportError, type SupportDeps, type Who } from './context';
 import { chatContextOf, type ChatContext } from '@extas/customers';
 import { maskPhone } from '@extas/customers/pure';
 import { personOf, type Person } from './identity';
 import { INBOX_VIEWS, type ConversationStatus, type InboxView } from './pure';
 import { inboxPhoneDigits } from './search-pure';
+import { clocksOf, ticketOf, type TicketClock, type TicketView } from './tickets';
 
 async function phoneShown(deps: Pick<SupportDeps, 'settings'>, who: Who, held: Set<string>): Promise<(p: string | null) => string | null> {
   if (held.has('customers.phone')) return (p) => p;
@@ -50,6 +51,8 @@ export interface InboxRow {
   waitingSince: Date | null;
   assignedTo: { id: string; name: string } | null;
   customerId: string | null;
+  /** PR 431: the open ticket's timer (first answer or solution), or null. */
+  clock: TicketClock | null;
 }
 
 export interface Inbox {
@@ -62,7 +65,9 @@ export interface Inbox {
   channels: { kind: string; name: string; enabled: boolean }[];
 }
 
-function viewWhere(view: InboxView, me: string | null): Prisma.ConversationWhereInput {
+function viewWhere(view: InboxView, me: string | null, now: Date): Prisma.ConversationWhereInput {
+  // PR 431: a timer that ran out, on a chat the team still owes an answer or a solution
+  if (view === 'late') return { status: 'OPEN', slaDueAt: { lt: now } };
   if (view === 'open') return { status: 'OPEN' };
   if (view === 'waiting') return { status: 'WAITING' };
   if (view === 'solved') return { status: 'SOLVED' };
@@ -72,11 +77,12 @@ function viewWhere(view: InboxView, me: string | null): Prisma.ConversationWhere
 }
 
 /** The inbox: one view, searched by name, number, reference or subject, optionally one channel kind; one page. */
-export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings'>, who: Who, input: unknown): Promise<Inbox> {
+export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings' | 'now'>, who: Who, input: unknown): Promise<Inbox> {
   const held = await allow(deps, who, 'support.read');
   const q = parse(inboxInput, input, 'inbox');
   const storeId = who.storeId;
   const me = who.actor.staffUserId;
+  const now = nowOf(deps);
   const { pageSize } = await setting(deps, storeId, 'support.inbox');
   // PR 425 follow-up: Bengali digits, +880 and the leading 0 are read too (search-pure.ts)
   const digits = q.q ? inboxPhoneDigits(q.q) : '';
@@ -93,11 +99,11 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings'>, w
     : {};
   const chan: Prisma.ConversationWhereInput = q.channel ? { channel: { kind: q.channel } } : {};
   const base: Prisma.ConversationWhereInput = { storeId, ...chan };
-  const where: Prisma.ConversationWhereInput = { AND: [base, search, viewWhere(q.view, me)] };
+  const where: Prisma.ConversationWhereInput = { AND: [base, search, viewWhere(q.view, me, now)] };
   // the oldest waiting customer first in the working views; the latest first in the others
   const working = q.view === 'open' || q.view === 'mine' || q.view === 'unassigned';
-  const orderBy: Prisma.ConversationOrderByWithRelationInput[] = working ? [{ waitingSince: { sort: 'asc', nulls: 'last' } }, { lastMessageAt: { sort: 'desc', nulls: 'last' } }] : [{ lastMessageAt: { sort: 'desc', nulls: 'last' } }];
-  const counted = await Promise.all(INBOX_VIEWS.map((v) => deps.db.conversation.count({ where: { AND: [base, search, viewWhere(v, me)] } })));
+  const orderBy: Prisma.ConversationOrderByWithRelationInput[] = q.view === 'late' ? [{ slaDueAt: 'asc' }] : working ? [{ waitingSince: { sort: 'asc', nulls: 'last' } }, { lastMessageAt: { sort: 'desc', nulls: 'last' } }] : [{ lastMessageAt: { sort: 'desc', nulls: 'last' } }];
+  const counted = await Promise.all(INBOX_VIEWS.map((v) => deps.db.conversation.count({ where: { AND: [base, search, viewWhere(v, me, now)] } })));
   const counts = Object.fromEntries(INBOX_VIEWS.map((v, i) => [v, counted[i]!])) as Record<InboxView, number>;
   const pages = Math.max(1, Math.ceil(counts[q.view] / pageSize));
   const page = Math.min(q.page, pages);
@@ -112,7 +118,7 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings'>, w
     deps.db.supportChannel.findMany({ where: { storeId, archivedAt: null }, orderBy: { createdAt: 'asc' }, select: { kind: true, name: true, enabled: true } }),
     phoneShown(deps, who, held),
   ]);
-  const names = await staffNames(deps, rows.map((r) => r.assignedToId));
+  const [names, clocks] = await Promise.all([staffNames(deps, rows.map((r) => r.assignedToId)), clocksOf(deps.db, rows.map((r) => r.id), now)]);
   return {
     view: q.view,
     page,
@@ -132,6 +138,7 @@ export async function supportInbox(deps: Pick<SupportDeps, 'db' | 'settings'>, w
       waitingSince: r.waitingSince,
       assignedTo: r.assignedToId ? { id: r.assignedToId, name: names.get(r.assignedToId) ?? '' } : null,
       customerId: r.customerId,
+      clock: clocks.get(r.id) ?? null,
     })),
   };
 }
@@ -194,12 +201,14 @@ export interface Thread {
   person: Person;
   /** PR 428 (B4.5): the person's orders beside the chat; null while `support.context` is off. */
   context: ChatContext | null;
+  /** PR 431: the chat's latest ticket (open, or the last solved), or null when it never had one. */
+  ticket: TicketView | null;
   /** What the person reading may do here (`identity`: set the number, unlink the customer, "not the same person"). */
   you: { id: string | null; reply: boolean; assign: boolean; identity: boolean; catalogue: boolean; /** PR 430: the chat's bag and "Create order" (`support.cart` on and `support.order`). */ cart: boolean };
 }
 
 /** One conversation with every message, file, note and log line, oldest first. */
-export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, who: Who, conversationId: string): Promise<Thread> {
+export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings' | 'now'>, who: Who, conversationId: string): Promise<Thread> {
   const held = await allow(deps, who, 'support.read');
   if (!z.uuid().safeParse(conversationId).success) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
   const c = await deps.db.conversation.findFirst({
@@ -219,7 +228,7 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
     deps.db.supportProductShare.findMany({ where: { storeId: who.storeId, conversationId: c.id, messageId: { not: null } }, select: { messageId: true, productId: true, refCode: true, clickedAt: true, orderId: true } }),
   ]);
   const shareOrderIds = [...new Set(shares.flatMap((s) => (s.orderId ? [s.orderId] : [])))];
-  const [shown, customer, order, names, perms, person, context, shareOrders] = await Promise.all([
+  const [shown, customer, order, names, perms, person, context, shareOrders, ticket] = await Promise.all([
     phoneShown(deps, who, held),
     c.customerId ? deps.db.customer.findFirst({ where: { id: c.customerId, storeId: who.storeId }, select: { id: true, name: true, orderCount: true } }) : null,
     c.orderId ? deps.db.order.findFirst({ where: { id: c.orderId, storeId: who.storeId }, select: { id: true, number: true, status: true } }) : null,
@@ -228,6 +237,7 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
     personOf(deps.db, who.storeId, c.contactId, c.id),
     ctxOn.enabled ? chatContextOf(deps, who, { customerId: c.customerId, phone: c.contact.phone }, { recent: ctxOn.recentOrders }) : null,
     shareOrderIds.length ? deps.db.order.findMany({ where: { storeId: who.storeId, id: { in: shareOrderIds } }, select: { id: true, number: true } }) : [],
+    ticketOf(deps.db, c.id, nowOf(deps)),
   ]);
   const shareOf = new Map(shares.map((s) => [s.messageId!, s]));
   const numberOf = new Map(shareOrders.map((o) => [o.id, o.number]));
@@ -266,6 +276,7 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
     events: c.events.map((e) => ({ id: e.id, kind: e.kind, actor: { type: e.actorType, name: e.actorName }, data: (e.data as Record<string, unknown> | null) ?? null, at: e.createdAt })),
     person,
     context,
+    ticket,
     you: { id: who.actor.staffUserId, reply: perms.has('support.reply'), assign: perms.has('support.assign'), identity: perms.has('support.identity'), catalogue: catOn.enabled && perms.has('support.reply'), cart: cartOn.enabled && perms.has('support.order') },
   };
 }

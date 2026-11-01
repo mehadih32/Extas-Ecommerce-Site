@@ -92,3 +92,5 @@
 @media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
   .adm2 .sp-bag-qty .a2-btn.sm{min-width:44px;min-height:44px}
 }
+/* PR 431: a late ticket timer */
+.adm2 .sp-late{color:var(--bad);font-weight:600}

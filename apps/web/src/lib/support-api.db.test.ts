@@ -10,6 +10,8 @@
 // tracked link, the thread's card; a reader is refused at the door; the shop's click route keeps the reference.
 // PR 430: orders from the chat — off, the bag's route refuses; switched on, a piece into the chat's bag, priced with the
 // gate, and "Create order" placed with the chat's channel as its source, linked to the conversation; a reader is refused.
+// PR 431: tickets — switched on, a late chat is in the Late view, on the chat's ticket and in the owner's notifications
+// (not a reader's); the answer takes it out of the bell.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
@@ -19,6 +21,7 @@ import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncS
 import { receiveMessage } from '@extas/support';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from './admin-api';
+import { notificationsHandler } from './admin-shell/api';
 import { supportRoute } from './support-api';
 import { supportRefHandler } from './shop/support-ref';
 import { SUPPORT_REF_COOKIE } from './shop/support-ref-model';
@@ -173,7 +176,7 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const r = await j('GET', ['settings']);
     const files = { enabled: true, maxPerMessage: 4, maxMb: 10, kinds: { image: true, video: true, pdf: true } };
     expect(r.body.cards['support.attachments'].value).toEqual(files);
-    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.identity', 'support.inbox', 'support.liveChat']);
+    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.cart', 'support.catalogue', 'support.channels', 'support.context', 'support.identity', 'support.inbox', 'support.liveChat', 'support.tickets']);
     const version = r.body.cards['support.attachments'].version as string;
     const saved = await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxPerMessage: 3 }, version } });
     expect(saved.status).toBe(200);
@@ -324,5 +327,32 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     await j('POST', ['c', conversationId, 'cart'], { body: { action: 'add', variantId: v.id } });
     const stale = await j('POST', ['c', conversationId, 'cart'], { body: { action: 'order', form, fingerprint: 'c'.repeat(64), requestKey: crypto.randomUUID() } });
     expect(stale.body).toMatchObject({ ok: false, error: 'CHECKOUT', data: { code: 'PRICE_CHANGED' } });
+  });
+
+  it('PR 431: tickets — off, no ticket; on, a late chat is in the Late view, on the chat and in the owner\'s notifications', async () => {
+    const cards = (await j('GET', ['settings'])).body.cards;
+    expect(cards['support.tickets'].value).toEqual({ enabled: false, firstResponseMinutes: 5, resolutionHours: 24, notify: true });
+    expect((await j('PUT', ['settings'], { body: { key: 'support.tickets', value: { ...cards['support.tickets'].value, enabled: true, firstResponseMinutes: 15 }, version: cards['support.tickets'].version } })).status).toBe(200);
+    // a customer wrote an hour ago and nobody answered: the first answer is late
+    const got = await receiveMessage(
+      { db: t.prisma, settings: deps.resolver },
+      { storeId, channel: { kind: 'livechat', externalId: 'sample-chat' }, contact: { externalId: 'v-431', name: 'Sample late visitor' }, message: { externalId: 'm-431', text: 'Sample: anyone there?', sentAt: new Date(Date.now() - 3_600_000) } },
+    );
+    const late = (await j('GET', [], { query: '?view=late' })).body;
+    expect(late.rows.map((r: { id: string }) => r.id)).toContain(got.conversationId);
+    expect(late.rows.find((r: { id: string }) => r.id === got.conversationId).clock).toMatchObject({ stage: 'first', late: true });
+    const th = (await j('GET', ['c', got.conversationId])).body.thread;
+    expect(th.ticket).toMatchObject({ status: 'OPEN', clock: { stage: 'first', late: true }, firstResponseAt: null });
+    const n = (await (await notificationsHandler(call('GET', '/api/admin/notifications', { cookie: owner }), deps)).json()) as { items: { href: string; body: string }[]; source: string };
+    expect(n.source).toBe('mixed');
+    const note = n.items.find((i) => i.href === `/admin/support/c/${got.conversationId}`);
+    expect(note?.body).toContain('Sample late visitor');
+    // a reader (support.read only) sees no one else's late chat; the owner's answer takes it out of the bell
+    const r = (await (await notificationsHandler(call('GET', '/api/admin/notifications', { cookie: reader }), deps)).json()) as { items: unknown[] };
+    expect(r.items).toEqual([]);
+    expect((await j('POST', ['c', got.conversationId, 'messages'], { body: { body: 'Sample: yes, here!', requestKey: 'sample-press-0431', version: th.version } })).status).toBe(200);
+    const after = (await (await notificationsHandler(call('GET', '/api/admin/notifications', { cookie: owner }), deps)).json()) as { items: { href: string }[] };
+    expect(after.items.some((i) => i.href === `/admin/support/c/${got.conversationId}`)).toBe(false);
+    expect((await j('GET', ['c', got.conversationId])).body.thread.ticket).toMatchObject({ firstLate: true });
   });
 });

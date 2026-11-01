@@ -9,7 +9,8 @@
       "mine": "Mine",
       "unassigned": "Not taken",
       "solved": "Solved",
-      "all": "All"
+      "all": "All",
+      "late": "Late"
     },
     "search": "Name, number or reference",
     "searchGo": "Search",
@@ -155,7 +156,10 @@
       "PRODUCT_OPENED": "The customer opened the product link",
       "PRODUCT_ORDERED": "Order {number} placed from the product link",
       "ORDER_CREATED": "{name} created order {number} from the chat",
-      "ORDER_CREATED_ADVANCE": "{name} created order {number}; it waits for its advance (pay link sent)"
+      "ORDER_CREATED_ADVANCE": "{name} created order {number}; it waits for its advance (pay link sent)",
+      "TICKET_OPENED": "Ticket opened",
+      "TICKET_SOLVED": "Ticket solved in {time}",
+      "TICKET_SOLVED_LATE": "Ticket solved in {time} (late)"
     },
     "err": {
       "STALE": "Someone changed this conversation in between; it was read again.",
@@ -340,6 +344,18 @@
         "wordsEn": "Pay link message (English)",
         "wordsBn": "Pay link message (Bengali)",
         "wordsHelp": "What the customer reads with the pay link. Use {number} for the order, {amount} for the advance and {link} for the link ({link} must be there). Never type an amount: it comes from your advance rule."
+      },
+      "tickets": {
+        "h": "Tickets and timers",
+        "d": "Each question from a customer becomes a ticket, from their message until you mark it solved: its owner is the person the chat is given to, with a timer for the first answer and one for the solution. The inbox shows each chat's timer and a \"Late\" view.",
+        "enabled": "Tickets and timers",
+        "enabledHelp": "A customer's message on a chat with no open ticket opens one. A ticket already open is kept up to date after you switch this off.",
+        "first": "First answer within (minutes)",
+        "firstHelp": "From the customer's message to the first reply. A note does not count.",
+        "resolution": "Solved within (hours)",
+        "resolutionHelp": "From the customer's message until the chat is marked solved. While the chat waits for the customer the inbox shows no timer, but the time still counts.",
+        "notify": "Late chats in notifications",
+        "notifyHelp": "A late chat goes into its owner's notifications (the bell). A late chat nobody has taken goes to the people who may give chats out."
       }
     },
     "person": {
@@ -441,6 +457,28 @@
         "address": "Write the full address.",
         "other": "A detail is not finished."
       }
+    },
+    "tk": {
+      "h": "Ticket",
+      "d": "This question's timers. A new question after \"Solved\" is a new ticket.",
+      "status": "Status",
+      "owner": "Owner",
+      "opened": "Opened",
+      "first": "First answer",
+      "resolve": "Solved",
+      "dueBy": "due {time}",
+      "lateBy": "late by {time}",
+      "inTime": "{time} · in time",
+      "lateTime": "{time} · late",
+      "notYet": "not yet",
+      "earlier": "Earlier tickets in this chat: {n}",
+      "waiting": "Waiting for the customer: no timer."
+    },
+    "clock": {
+      "first": "Answer in {time}",
+      "firstLate": "Answer late {time}",
+      "resolve": "Solve in {time}",
+      "resolveLate": "Solve late {time}"
     }
   }
 }

@@ -104,6 +104,8 @@ export * from './registry-support-context';
 export * from './registry-support-catalogue';
 // S22 · PR 430 — orders from a support chat: the chat bag and its fraud gate (registry-support-cart.ts, version 158).
 export * from './registry-support-cart';
+// S22 · PR 431 — ticketing: the first-answer and solution timers of each support question (registry-support-tickets.ts, version 159).
+export * from './registry-support-tickets';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

@@ -2,7 +2,8 @@
 //   GET /api/admin/shell/badges      the sidebar badges: waiting work per section, only what the person may open
 //   GET /api/admin/dashboard/queues  "Needs you now": each waiting list with its count, oldest age and link (dashboard.read)
 //   GET /api/admin/search?q=         the command palette (lib/admin-shell/search.ts)
-//   GET /api/admin/notifications     the person's own notifications (PR 380: new-device staff sign-ins for security.read)
+//   GET /api/admin/notifications     the person's own notifications (PR 380: new-device staff sign-ins for security.read;
+//                                    PR 431: their late support chats)
 //   GET /api/admin/help/<slug>       one admin guide, parsed (lib/admin-shell/guide.ts)
 //   GET /api/admin/guide?path=|page= PR 594 (CN-026): the guide of the page at an address (or a page guide by its id),
 //                                    with its section's overview and the section's other pages (lib/admin-shell/help-pages.ts)
@@ -13,6 +14,7 @@ import { isOwner, permissionsFor, type PermissionKey } from '@extas/auth';
 import { adminDeps, errorResponse, fail, guardAdmin, json, readCookie, type AdminDeps, type Guarded } from '../admin-auth';
 import { ADMIN_LANG_COOKIE, adminLocale, pickAdminLang, type AdminLang } from '../admin-i18n';
 import { loginNotes } from '../admin-security/login-notes';
+import { lateChatNotes } from '../admin-support/late-notes';
 import { guideDir, readGuide, readPageGuide } from './guide';
 import { guidePlace, PAGE_GUIDE_ID, sectionOfGuide, sectionPages } from './help-pages';
 import { todoItems } from './model';
@@ -91,16 +93,24 @@ export async function notificationsHandler(request: Request, deps: AdminDeps | n
   if (c instanceof Response) return c;
   // No staff notification store yet (approvals, failed syncs and backups, mentions arrive with their PRs). PR 380: the
   // people who may see security (`security.read`) get the new-device staff sign-ins of the last
-  // `security.newLoginNoteDays` days; everyone else an honest empty list, never a sample.
-  if (!c.viewer.owner && !c.viewer.perms.has('security.read')) return json({ ok: true, items: [], unread: 0, source: 'none' });
+  // `security.newLoginNoteDays` days. PR 431: the people who may read support get their late chats (support.tickets).
+  // Everyone else an honest empty list, never a sample.
+  const security = c.viewer.owner || c.viewer.perms.has('security.read');
+  const support = c.viewer.owner || c.viewer.perms.has('support.read');
+  if (!security && !support) return json({ ok: true, items: [], unread: 0, source: 'none' });
   try {
-    const [lang, locale, timeZone] = await Promise.all([
-      langOf(request, c.deps),
-      c.deps.resolver.value('store.locale', { storeId: MOTHER_STORE_ID }) as Promise<string>,
-      c.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }) as Promise<string>,
+    const lang = await langOf(request, c.deps);
+    const [late, logins] = await Promise.all([
+      support ? lateChatNotes(c.deps, c.g, lang) : [],
+      security
+        ? Promise.all([c.deps.resolver.value('store.locale', { storeId: MOTHER_STORE_ID }) as Promise<string>, c.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }) as Promise<string>]).then(([locale, timeZone]) =>
+            loginNotes(c.deps, lang, { locale: adminLocale(lang, locale), timeZone }),
+          )
+        : [],
     ]);
-    const items = await loginNotes(c.deps, lang, { locale: adminLocale(lang, locale), timeZone });
-    return json({ ok: true, items, unread: items.length, source: items.length ? 'security' : 'none' });
+    const items = [...late, ...logins];
+    const source = late.length && logins.length ? 'mixed' : late.length ? 'support' : logins.length ? 'security' : 'none';
+    return json({ ok: true, items, unread: items.length, source });
   } catch (e) {
     return errorResponse(e);
   }
