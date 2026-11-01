@@ -29,6 +29,9 @@
 // PR 290: e-mail marketing (email-marketing.ts) — the owner's e-mail templates and e-mail sends to a saved segment, queued
 // at the throttle for the Messages engine (offers: his yes, the quiet hours, the weekly cap, the unsubscribe line), with
 // each send's delivery log and results; off as shipped (`customers.email`).
+// PR 293: the AI campaign writer (campaign-writer.ts) — 2–3 versions of an offer e-mail or SMS in the owner's voice, from
+// the caller's AI connection (the practice writer until a key), checked before anyone sees them; off as shipped
+// (`ai.enabled` and `customers.aiWriter`); it only fills the form.
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
@@ -38,6 +41,7 @@ export * from './erp-page';
 export * from './errors';
 export * from './family';
 export * from './journey';
+export * from './campaign-writer';
 export * from './email-marketing';
 export * from './journeys';
 export * from './list';

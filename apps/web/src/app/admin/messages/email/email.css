@@ -13,3 +13,7 @@
 @media (max-width:767px){
   .adm2 .a2-crumb a{display:inline-flex;align-items:center;min-height:44px}
 }
+/* PR 293 — "Write with AI": the brief, the versions to pick from */
+.adm2 .ai-copy{display:flex;flex-direction:column;gap:10px;padding:12px;border:1px dashed var(--ln2);border-radius:10px}
+.adm2 .mail-form .ai-copy .ai-copy-brief{min-height:72px}
+.adm2 .ai-copy-v{padding-top:8px;border-top:1px solid var(--ln2)}

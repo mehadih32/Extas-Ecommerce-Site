@@ -34,6 +34,19 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
       { name: 'perPage', kind: 'int' },
     ],
   },
+  {
+    // PR 293 — the AI campaign writer ("Write with AI" on Messages › E-mail)
+    key: 'customers.aiWriter',
+    card: 'aiWriter',
+    fields: [
+      { name: 'enabled', kind: 'bool' },
+      { name: 'versions', kind: 'int' },
+      { name: 'smsMaxChars', kind: 'int' },
+      { name: 'greeting', kind: 'lang', max: 200 },
+      { name: 'signOff', kind: 'lang', max: 200 },
+      { name: 'style', kind: 'lang', max: 200 },
+    ],
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {

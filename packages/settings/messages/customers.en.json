@@ -34,6 +34,10 @@
     "email": {
       "label": "E-mail marketing",
       "help": "Offer e-mails from your own templates to a saved segment (Messages › E-mail), with the delivery log. Off as shipped. Each e-mail goes only to a customer who said yes to offer e-mails and always carries the unsubscribe line. \"Per person a week\": the most such e-mails one person gets in seven days. \"Per run\": how many people one run queues (the throttle). Open and click tracking are each off until you turn them on. \"Result days\": orders a receiver places within these days count as the send's result (Sales only when delivered)."
+    },
+    "aiWriter": {
+      "label": "AI campaign writer",
+      "help": "Two or three versions of an offer e-mail in your own voice, from what you say the message is about (Messages › E-mail, \"Write with AI\"). Off as shipped; it also needs AI for the whole shop. Until an AI provider is connected the practice writer only joins your own words. \"Greeting\", \"Sign-off\" and \"How you talk\" are your words in each language. \"Longest SMS\" is the most characters an SMS draft may have. A draft only fills the form: you pick one, change it, save it and send it yourself."
     }
   }
 }

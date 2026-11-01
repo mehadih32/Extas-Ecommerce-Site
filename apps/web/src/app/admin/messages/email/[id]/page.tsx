@@ -53,7 +53,7 @@ export default async function EmailSendPage({ params }: { params: Params }) {
     );
   const who: cu.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const isNew = id === 'new';
-  const [e, currency] = await Promise.all([cu.emailSendEditor(customersDeps(access.deps), who, isNew ? null : id), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>]);
+  const [e, currency, aiOn] = await Promise.all([cu.emailSendEditor(customersDeps(access.deps), who, isNew ? null : id), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>, cu.aiWriterOn(customersDeps(access.deps), MOTHER_STORE_ID)]);
   if (!e || (!isNew && !e.send))
     return (
       <div className="a2-z">
@@ -138,6 +138,7 @@ export default async function EmailSendPage({ params }: { params: Params }) {
           reachable={e.audience?.reachable ?? null}
           canWrite={e.canWrite}
           canSend={e.canSend}
+          aiOn={aiOn}
         />
       ) : null}
       {s && s.status !== 'DRAFT' ? (

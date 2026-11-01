@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
+import { aiWriterSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
 
 describe('CRM settings (v190–199)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -46,5 +46,15 @@ describe('CRM settings (v190–199)', () => {
     expect(journeysSettingsSchema.safeParse({ ...s.default, perCustomerPerWeek: 0 }).success).toBe(false);
     expect(journeysSettingsSchema.safeParse({ ...s.default, stopLine: { bn: 'x'.repeat(121), en: '' } }).success).toBe(false);
     expect(CRM_MESSAGE_STEP).toBe('crmJourney');
+  });
+
+  it('PR 293: the AI campaign writer is off as shipped (v194), 3 versions, the owner\'s voice empty until he types it', () => {
+    const s = crmSettings['customers.aiWriter'];
+    expect(s.version).toBe(194);
+    expect(s.default.enabled).toBe(false);
+    expect(s.default.versions).toBe(3);
+    expect(s.default.greeting).toEqual({ bn: '', en: '' });
+    expect(aiWriterSettingsSchema.safeParse({ ...s.default, versions: 4 }).success).toBe(false);
+    expect(aiWriterSettingsSchema.safeParse({ ...s.default, style: { bn: 'x'.repeat(201), en: '' } }).success).toBe(false);
   });
 });

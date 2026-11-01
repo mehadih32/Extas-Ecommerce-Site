@@ -87,7 +87,8 @@
       "NAME_TAKEN": "Another segment already has this name.",
       "LIMIT_REACHED": "That is more than the settings allow. Archive one first, or raise the number in Segment settings.",
       "STALE": "Someone else saved this in the meantime. Reload the page.",
-      "SWITCHED_OFF": "This is switched off in the settings."
+      "SWITCHED_OFF": "This is switched off in the settings.",
+      "AI_UNAVAILABLE": "The AI writer did not answer or gave nothing usable. Try again, or write it yourself."
     },
     "list": {
       "title": "All customers",
@@ -525,6 +526,25 @@
           "bn": "Unsubscribe line (Bengali)",
           "en": "Unsubscribe line (English)"
         }
+      },
+      "aiWriter": {
+        "title": "AI campaign writer",
+        "sub": "Off as shipped; it also needs AI for the whole shop. \"Write with AI\" on an offer e-mail gives 2 or 3 versions in your voice. It only fills the form: you pick, check and save.",
+        "enabled": "AI campaign writer on",
+        "versions": "Versions each time (2 or 3)",
+        "smsMaxChars": "Longest SMS draft, in characters (60–1000)",
+        "greeting": {
+          "bn": "Greeting (Bengali), e.g. how you start",
+          "en": "Greeting (English), e.g. how you start"
+        },
+        "signOff": {
+          "bn": "Sign-off (Bengali)",
+          "en": "Sign-off (English)"
+        },
+        "style": {
+          "bn": "How you talk (Bengali), a few words",
+          "en": "How you talk (English), a few words"
+        }
       }
     },
     "auto": {
@@ -726,6 +746,19 @@
         "preview": "Preview (sample customer)",
         "sample": "Rahim"
       }
+    },
+    "ai": {
+      "open": "Write with AI",
+      "brief": "What is this e-mail about?",
+      "briefPh": "e.g. New winter polos, ten colours, free exchange for a week",
+      "briefHelp": "A line or two in your words. The versions come in {lang}, in your voice from Customer settings.",
+      "write": "Write versions",
+      "writing": "Writing…",
+      "close": "Close",
+      "practice": "Practice text: no AI provider is connected yet, so these only join your own words.",
+      "version": "Version {n}",
+      "use": "Use this",
+      "used": "Put into the form. Check it, change it if you like, then save."
     }
   }
 }
