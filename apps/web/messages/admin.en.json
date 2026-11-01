@@ -351,6 +351,36 @@
         "baseUrl": "Address — only for a test server"
       }
     },
+    "steadfastFraud": {
+      "name": "Steadfast fraud check",
+      "desc": "How many of a number's parcels Steadfast delivered and how many were cancelled or refused, asked at checkout. Never asked until the keys are in and the test passes",
+      "fields": {
+        "apiKey": "API key (Steadfast merchant panel → API)",
+        "secretKey": "Secret key (same page)",
+        "baseUrl": "Address — only for a test server",
+        "path": "Path of the check — only if Steadfast gives another (default /fraud_check/{phone})"
+      }
+    },
+    "pathaoFraud": {
+      "name": "Pathao fraud check",
+      "desc": "How many of a number's parcels Pathao delivered and how many it did not, asked at checkout. Never asked until the four keys are in and the test passes",
+      "fields": {
+        "clientId": "Client ID (Pathao merchant panel → Developers API)",
+        "clientSecret": "Client secret (same page)",
+        "username": "Merchant login e-mail",
+        "password": "Merchant login password",
+        "baseUrl": "Address — only for a test server",
+        "path": "Path of the check — only if Pathao gives another (default /aladdin/api/v1/user/success)"
+      }
+    },
+    "fraudAggregator": {
+      "name": "Courier fraud check (aggregator)",
+      "desc": "A service that sums a number's parcels across several couriers, asked at checkout. Never asked until the key and address are in and the test passes",
+      "fields": {
+        "apiKey": "API key (from the service's panel)",
+        "baseUrl": "The service's check address (https://…); the number is added as ?phone="
+      }
+    },
     "bulkSmsBd": {
       "name": "SMS gateway (BulkSMSBD)",
       "desc": "Order SMS and sign-in codes. Mock until the key is in and the test (the balance) passes: nothing is sent before that",

@@ -35,7 +35,7 @@ import { bundlingCard } from '@/lib/admin-orders/bundling-api';
 import { goodCustomerCard } from '@/lib/admin-orders/good-customer-api';
 import { phoneRiskCards } from '@/lib/admin-orders/phone-risk-api';
 import { transitCard, transitReportFor } from '@/lib/admin-orders/transit-api';
-import { courierFraudSources } from '@/lib/shop/courier-fraud';
+import { connectedFraudChecks } from '@/lib/shop/courier-fraud';
 import { TRANSIT_INCLUDE } from '@extas/settings';
 import { refusersCardScreen, refusersCardTexts } from '@/lib/admin-orders/refusers-card';
 import { levelsScreen, levelsTexts } from '@/lib/admin-orders/risk-levels';
@@ -69,7 +69,7 @@ export default async function RiskRulesPage() {
   const who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const held = access.guard.permissions;
   const canEdit = held?.has('risk.rules.write') ?? false;
-  const [data, adv, bl, rf, bd, bp, gc, cancelReasons, td, tdReport, pr] = await Promise.all([
+  const [data, adv, bl, rf, bd, bp, gc, cancelReasons, td, tdReport, pr, fraudChecks] = await Promise.all([
     riskLevels(readDeps(access.deps), who),
     advanceSettings(readDeps(access.deps), who),
     blocklist(readDeps(access.deps), who),
@@ -81,6 +81,8 @@ export default async function RiskRulesPage() {
     transitCard(access.deps, MOTHER_STORE_ID),
     transitReportFor(access.deps, who),
     phoneRiskCards(access.deps, MOTHER_STORE_ID),
+    // PR 567: the courier fraud checks switched on and passed in Keys & connections
+    connectedFraudChecks(access.deps.db, MOTHER_STORE_ID),
   ]);
   const d = view.dict;
   // PR 522: one parcel for one person's orders (the setting `risk.bundling`, off as shipped)
@@ -149,7 +151,7 @@ export default async function RiskRulesPage() {
     { kind: 'number', path: 'failPct', label: ptw('failPct'), help: ptw('failPctHelp'), min: 1, max: 100 },
     { kind: 'number', path: 'halfLifeDays', label: ptw('halfLifeDays'), help: ptw('halfLifeDaysHelp'), min: 1, max: 3_650 },
   ];
-  const noCourierCheck = courierFraudSources().length === 0;
+  const checkNames = fraudChecks.map((p) => t(d, `connections.${p}.name`)).join(', ');
   const count = (x: number) => String(x);
   return (
     <div className="a2-z" data-testid="risk-rules">
@@ -215,11 +217,15 @@ export default async function RiskRulesPage() {
       ) : null}
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/risk/phone-risk" screen={pr.phoneRisk} fields={prFields} texts={prTexts} canEdit={canEdit} testId="risk-phone" />
-        {noCourierCheck ? (
+        {fraudChecks.length === 0 ? (
           <p className="a2-xs a2-mute a2-mt6" data-testid="risk-phone-none">
             {rw('none')}
           </p>
-        ) : null}
+        ) : (
+          <p className="a2-xs a2-mute a2-mt6" data-testid="risk-phone-connected">
+            {rw('connected', { names: checkNames })}
+          </p>
+        )}
       </div>
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/risk/phone-risk" screen={pr.pattern} fields={ptFields} texts={ptTexts} canEdit={canEdit} testId="risk-pattern" />

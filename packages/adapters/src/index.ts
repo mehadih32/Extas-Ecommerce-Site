@@ -10,6 +10,7 @@ import { liveWhatsAppAdapters, whatsappAdapters } from './whatsapp';
 import { emailAdapters } from './email';
 import { paymentAdapters } from './payment';
 import { keyedCourierAdapters } from './courier';
+import { fraudCheckAdapters } from './fraud-check';
 import { cdnAdapters } from './cdn';
 import { telegramAdapters } from './telegram';
 import { certificateAdapters } from './certificate';
@@ -36,6 +37,8 @@ export * from './email';
 export * from './payment';
 // S08 · PR 175 — the courier contract, the practice courier and its scripted worlds (courier/).
 export * from './courier';
+// S06 · PR 567 — the courier fraud checks (Steadfast's, Pathao's, an aggregator's) behind one contract (fraud-check/).
+export * from './fraud-check';
 // PR 602 — the CDN (Cloudflare): dropping what it keeps; the mock until the owner types its token.
 export * from './cdn';
 // S19 · PR 392 — Telegram alerts to the owner's bot: the mock until the token and the chat are entered and tested.
@@ -60,9 +63,10 @@ export * from './speech';
 /** PR 148 — every message sender (SMS, WhatsApp, e-mail) for `createConnections` in the message engine. */
 export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAdapters] as const;
 
-// PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 291: the SMS
+// PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 567: the
+// courier fraud checks too. PR 291: the SMS
 // gateway too (its key and Test button); PR 292 the WhatsApp Business Platform; the mock senders are not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters, ...adEventAdapters, ...speechAdapters] as const;
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...fraudCheckAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters, ...adEventAdapters, ...speechAdapters] as const;
 
 /** PR 426 — the Support inbox's channels (WhatsApp, Messenger) for `createConnections`: each falls back to its mock. */
 export const supportAdapters = [...whatsappAdapters, ...messengerAdapters] as const;
