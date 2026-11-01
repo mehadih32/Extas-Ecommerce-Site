@@ -12,8 +12,13 @@
 // env: BASE (the shop's address: https on the preview host), GATE_PREVIEW_HOST (server.conf's EXTAS_STAGING_HOST),
 //      GATE_EXTRA_HOSTS (server.conf's EXTAS_EXTRA_HOSTS: hosts the shop sells on), GATE_ORACLE_URL, GATE_ORACLE_TOKEN,
 //      GATE_SCENARIOS (all | 1,5,7), GATE_OUT, GATE_RUN_ID, GATE_SHA, GATE_AT, GATE_LHRC (lighthouserc.json),
-//      SMOKE_HTTP_USER / SMOKE_HTTP_PASSWORD (the preview login), CHROMIUM_PATH (optional), GATE_LOOPBACK=1 (a
-//      developer's local proof on 127.0.0.1 only; never set on the server).
+//      SMOKE_HTTP_USER / SMOKE_HTTP_PASSWORD (the preview login), GATE_PAY_TOKEN (the run's random token: its own
+//      browser's cookie for the run's mock-payment grant, lib/run-grant.mjs), CHROMIUM_PATH (optional), GATE_LOOPBACK=1
+//      (a developer's local proof on 127.0.0.1 only; never set on the server).
+// Live run 1 Nov: cash on delivery is the owner's switch and the practice gateway's page is closed for everyone, so the
+// run pays on the mock bKash through its own grant (the oracle's openRun; closed by the clean-up and the shell's trap),
+// and a scenario that needs cash on delivery is a SKIP ("COD is off (owner's setting)") unless the owner ran it with
+// `allow_cod`.
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { previewCookie } from "../smoke.mjs";
@@ -22,6 +27,7 @@ import { baseOf, hostGuard, hostList } from "./lib/host-guard.mjs";
 import { oracleClient } from "./lib/oracle-client.mjs";
 import { classOf, networkOf } from "./lib/profiles.mjs";
 import { providerPolicy } from "./lib/providers.mjs";
+import { COD_OFF, payWay, runCookie } from "./lib/run-grant.mjs";
 import { writeReport } from "./lib/report.mjs";
 import { addItem, choosePay, fillDetails, inLang, openCheckout, openShopper, payPage, pickZone, setQuantity, submit, timedGoto } from "./lib/shopper.mjs";
 import { addressBook, coverage, DATA, PHONE_FORMATS, seedOf, testName, testPhone, typedPhone } from "./lib/test-data.mjs";
@@ -57,7 +63,7 @@ export function variantPool(products) {
 export async function runGate(env = process.env) {
   const at = env.GATE_AT || new Date().toISOString();
   const run = { at, sha: env.GATE_SHA || "", host: "", asked: env.GATE_SCENARIOS || "all", rows: [], gateChecks: [], addressRows: [], problems: [], cleanup: null, providers: null, budget: null, coverage: null };
-  const secrets = [env.GATE_ORACLE_TOKEN, env.SMOKE_HTTP_PASSWORD];
+  const secrets = [env.GATE_ORACLE_TOKEN, env.SMOKE_HTTP_PASSWORD, env.GATE_PAY_TOKEN];
   const STOPPED = 1; // the exit of a run that crashed (as a failed scenario)
   let exit;
   try {
@@ -117,15 +123,22 @@ async function gateRun(env, run, secrets) {
   const { picked, unknown } = pickScenarios(env.GATE_SCENARIOS);
   for (const id of unknown) run.problems.push(`no scenario "${id}" (the list is 1–18)`);
   if (prep.leftovers?.cancelled) run.problems.push(`an earlier run left ${prep.leftovers.cancelled} open test order(s): cancelled first`);
+  if (prep.earlierRuns?.closed) run.problems.push(`an earlier run left its mock-payment grant open: closed first${prep.earlierRuns.codRestored ? " and cash on delivery put back" : ""}`);
+  for (const n of prep.earlierRuns?.notes ?? []) run.problems.push(n);
+  // the run's own mock-payment grant (its browser only, on the preview host), and cash on delivery only with allow_cod
+  const grant = policy.blockAll || !picked.length ? null : await oracle.call("openRun").catch((e) => ({ open: false, why: errLine(e), cod: { on: false, changed: false } }));
+  const payCookie = grant?.open ? runCookie(base, runId, env.GATE_PAY_TOKEN) : null;
+  run.payment = { mockPay: grant?.open ? "the run's own grant: its browser only, on the preview host, closed at the end" : `no grant (${grant?.why ?? "not asked"})`, cod: sw.cod ? "on (the owner's setting)" : grant?.cod?.changed ? "switched on for this run only (allow_cod, the owner's OK) and put back at the end" : COD_OFF };
   const mobileBkash = sw.mobile.enabled && sw.mobile.list.includes("bkash");
-  const canPrepay = policy.prepaid ?? (!mobileBkash ? "bKash is not offered at the checkout (Payments › mobile wallets)" : !sw.testPayments ? "the owner's test payments are off (payments.testPayments): the mock bKash page is closed" : null);
-  const pay = sw.cod ? "cod" : !canPrepay ? "bkash" : null;
+  const way = payWay({ cod: sw.cod || grant?.cod?.on === true, mobileBkash, testPayments: sw.testPayments, grant: grant && !payCookie ? { open: false, why: "the run has no token (GATE_PAY_TOKEN)" } : grant, prepaidBlock: policy.prepaid ?? null });
+  const { pay, canPrepay } = way;
 
   if (policy.blockAll || !pay || !picked.length) {
-    const why = policy.blockAll ?? (!pay ? "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed" : "no scenario asked");
+    const why = policy.blockAll ?? (!pay ? way.why : "no scenario asked");
     for (const s of picked) run.rows.push({ id: s.id, title: s.title, device: s.device, network: s.network, verdict: "SKIP", orders: [], addresses: [], checks: [skip("run", why)], timed: [] });
     for (const [id, what] of Object.entries(GATE_CHECKS)) run.gateChecks.push({ id, what, verdict: "SKIP", detail: why });
-    run.cleanup = { ...prep.leftovers, productsArchived: 0, extrasArchived: 0, salesOk: true, salesDetail: "no order placed" };
+    const closed = grant ? await oracle.call("closeRun").catch((e) => ({ ok: false, notes: [errLine(e)] })) : { ok: true, notes: [] };
+    run.cleanup = { ...prep.leftovers, ok: (prep.leftovers?.ok ?? true) && closed.ok !== false, productsArchived: 0, extrasArchived: 0, salesOk: true, salesDetail: "no order placed", notes: closed.notes ?? [] };
     return finish(0);
   }
 
@@ -151,6 +164,12 @@ async function gateRun(env, run, secrets) {
     for (const s of picked) {
       const row = { id: s.id, title: s.title, device: s.device, network: s.network, verdict: "SKIP", orders: [], addresses: [], checks: [], timed: [], timings: null, over: [] };
       run.rows.push(row);
+      // a scenario about cash on delivery waits for the owner's switch (or a run with allow_cod)
+      if (s.cod && pay !== "cod") {
+        row.checks = [skip("run", COD_OFF)];
+        for (const id of s.gates ?? []) gates.set(String(id), { id: String(id), what: GATE_CHECKS[id], verdict: "SKIP", detail: COD_OFF });
+        continue;
+      }
       log(`scenario ${s.id}: ${s.title} (${s.device}, ${s.network})`);
       const x = {
         base,
@@ -181,7 +200,7 @@ async function gateRun(env, run, secrets) {
           if (!row.addresses.includes(r.address.id)) row.addresses.push(r.address.id);
         },
         async open(device, network, opts = {}) {
-          const sh = await openShopper(browser, { device, network, storageState: state, httpCredentials, ...opts });
+          const sh = await openShopper(browser, { device, network, storageState: state, httpCredentials, cookies: payCookie ? [payCookie] : [], ...opts });
           shoppers.push(sh);
           return sh;
         },

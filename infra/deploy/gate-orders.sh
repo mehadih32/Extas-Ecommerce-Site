@@ -14,6 +14,14 @@
 #    place the test orders like customers; at the end every test order is cancelled and the test products archived.
 # 4. A safety net: when the browser run ended without its clean-up (stopped at the time limit, or crashed), the oracle's
 #    one-shot clean-up runs here. Nothing is deleted, ever.
+# 5. Live run 1 Nov — paying on the mocks. The run's own mock-payment grant (tools/gate-orders/lib/test-shop.ts openRun,
+#    apps/web/src/lib/shop/gate-run.ts): a second random token of this run goes to the browser only (its cookie); the
+#    oracle gets only its SHA-256, the preview host and the run's minutes. The practice gateway answers for that
+#    browser alone, on the preview host, never for a real visitor; `payments.testPayments` stays as the owner set it.
+#    GATE_ALLOW_COD=yes (the workflow's `allow_cod`, the owner's OK; anything else is no) switches cash on delivery on
+#    for the run and puts the exact earlier value back. Whatever happens — a finished run, a failure, a crash, a stop at
+#    the time limit, SIGINT or SIGTERM — the trap closes the grant and puts cash on delivery back (oracle --close-run),
+#    each with an audit line as the system actor. No real payment key, price, discount or COD amount is touched.
 # <out-dir> gets README.md and result.json; state/gate-orders.json the summary. No password, token, sign-in code or
 # connection string is printed or kept. Exit 0 = passed (or nothing could run, with the reason in the report); 1 = a
 # scenario or the clean-up failed; 2 = refused (wrong use, or the host guard).
@@ -26,6 +34,7 @@ CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 OUT="${1:?usage: gate-orders.sh <out-dir> [all|1,5,7] [<commit sha>]}"
 ASKED="${2:-all}"
 SHA="${3:-}"
+ALLOW_COD="no"; [ "${GATE_ALLOW_COD:-no}" = yes ] && ALLOW_COD="yes"
 R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
 IMG="extas-smoke:$SMOKE_PLAYWRIGHT_VERSION"
 PORT=8790
@@ -59,18 +68,40 @@ run_id="$(date -u +%Y%m%d%H%M%S)"
 net="extas-gate-$$"
 oracle="extas-gate-oracle-$$"
 work="$(mktemp -d "$SEC/.gate-orders.XXXXXX")"
+oracle_up=""
+shop_pid=""
 cleanup() {
+  # a signal while the browser run is on: stop it first (bash runs the trap at once because the run waits in `wait`)
+  if [ -n "$shop_pid" ]; then
+    kill "$shop_pid" >/dev/null 2>&1 || true
+    docker rm -f "extas-gate-shop-$$" >/dev/null 2>&1 || true
+    log "stopped by a signal: cancelling every open test order and archiving the test products now"
+    oracle_run --rm --name "$oracle-cleanup" -- --cleanup --out /out/cleanup.json >/dev/null 2>&1 || log "the clean-up could not run here: the next run cancels every open test order first"
+  fi
+  # the run's mock-payment grant closed and cash on delivery put back, whatever ended the run (safe twice)
+  if [ -n "$oracle_up" ]; then
+    oracle_run --rm --name "$oracle-close" -- --close-run --out /out/close-run.json >/dev/null 2>&1 || log "the run's grant could not be closed here: the next run closes it first, and it expires by itself"
+    if [ -f "$work/net/close-run.json" ] && [ "$(jq -r '.closed // 0' "$work/net/close-run.json")" != 0 ] && [ -f "$OUT/README.md" ]; then
+      printf '\n- Safety net: the run ended before it closed its mock-payment grant; the server closed it%s.\n' "$(jq -r 'if .codRestored > 0 then " and put cash on delivery back" else "" end' "$work/net/close-run.json")" >> "$OUT/README.md"
+    fi
+  fi
   docker rm -f "$oracle" >/dev/null 2>&1 || true
   docker network rm "$net" >/dev/null 2>&1 || true
   rm -rf "$work"
 }
 trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 mkdir -p "$OUT" "$STATE" "$work/out" "$work/net"
 rm -f "$OUT/README.md" "$OUT/result.json"   # never an older run's report in this run's place
 chown "${GATE_IMAGE_UID:-1000}:${GATE_IMAGE_UID:-1000}" "$work/net"   # the migrate image runs as `node`
 
 # ---- 2. the oracle: the database address (the app's own role once it has one, as erp-acceptance.sh), a random token ----
+limit_min="${GATE_ORDERS_TIMEOUT_MIN:-120}"
+[[ "$limit_min" =~ ^[0-9]{1,3}$ ]] || limit_min=120
 token="$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+pay_token="$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+pay_hash="$(printf '%s' "$pay_token" | sha256sum | cut -d' ' -f1)"
 {
   if grep -q '^DATABASE_URL=postgresql://extas_app:' "$SEC/app.env"; then
     grep -E '^DATABASE_URL=' "$SEC/app.env" | head -n 1
@@ -79,10 +110,15 @@ token="$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
   fi
   echo "GATE_ORACLE_TOKEN=$token"
   echo "GATE_RUN_ID=$run_id"
+  echo "GATE_PAY_TOKEN_HASH=$pay_hash"
+  echo "GATE_PREVIEW_HOST=$preview"
+  echo "GATE_RUN_MINUTES=$((limit_min + 15))"
+  echo "GATE_ALLOW_COD=$ALLOW_COD"
 } > "$work/oracle.env"
 grep -q '^DATABASE_URL=' "$work/oracle.env" || { log "FAIL: no database address in the server's secrets"; exit 1; }
 {
   echo "GATE_ORACLE_TOKEN=$token"
+  echo "GATE_PAY_TOKEN=$pay_token"
   echo "SMOKE_HTTP_USER=$EXTAS_STAGING_USER"
   echo "SMOKE_HTTP_PASSWORD=$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" | cut -d= -f2-)"
 } > "$work/shop.env"
@@ -100,6 +136,7 @@ if ! docker run --rm --name "extas-gate-probe-$$" "$mig" test -x "$TSX"; then
   exit 1
 fi
 docker network create "$net" >/dev/null
+oracle_up=yes
 oracle_run -d --name "$oracle" -- --serve "$PORT" >/dev/null
 docker network connect "$net" "$oracle"
 
@@ -109,11 +146,13 @@ if ! docker image inspect "$IMG" >/dev/null 2>&1; then
 fi
 
 # ---- 3. the browser run, on the run's own network only (no database network, no database address) ----
-limit_min="${GATE_ORDERS_TIMEOUT_MIN:-120}"
 at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
-log "test orders on https://$preview (scenarios: $ASKED), at most $limit_min min"
+log "test orders on https://$preview (scenarios: $ASKED; cash on delivery for the run: $ALLOW_COD), at most $limit_min min"
 rc=0
-timeout "$((limit_min * 60))" docker run --rm --name "extas-gate-shop-$$" --ipc=host --network "$net" --env-file "$work/shop.env" -e BASE="https://$preview" -e GATE_PREVIEW_HOST="$preview" -e GATE_EXTRA_HOSTS="${EXTAS_EXTRA_HOSTS:-}" -e GATE_ORACLE_URL="http://$oracle:$PORT" -e GATE_SCENARIOS="$ASKED" -e GATE_OUT=/out -e GATE_RUN_ID="$run_id" -e GATE_SHA="${SHA:0:12}" -e GATE_AT="$at ($EXTAS_TIMEZONE)" -e GATE_LHRC=/w/lighthouserc.json -v "$REPO/tools:/w/tools:ro" -v "$REPO/lighthouserc.json:/w/lighthouserc.json:ro" -v "$work/out:/out" "$IMG" node /w/tools/gate-orders/shop.mjs || rc=$?
+timeout "$((limit_min * 60))" docker run --rm --name "extas-gate-shop-$$" --ipc=host --network "$net" --env-file "$work/shop.env" -e BASE="https://$preview" -e GATE_PREVIEW_HOST="$preview" -e GATE_EXTRA_HOSTS="${EXTAS_EXTRA_HOSTS:-}" -e GATE_ORACLE_URL="http://$oracle:$PORT" -e GATE_SCENARIOS="$ASKED" -e GATE_OUT=/out -e GATE_RUN_ID="$run_id" -e GATE_SHA="${SHA:0:12}" -e GATE_AT="$at ($EXTAS_TIMEZONE)" -e GATE_LHRC=/w/lighthouserc.json -v "$REPO/tools:/w/tools:ro" -v "$REPO/lighthouserc.json:/w/lighthouserc.json:ro" -v "$work/out:/out" "$IMG" node /w/tools/gate-orders/shop.mjs &
+shop_pid=$!   # in the background and waited for, so SIGINT/SIGTERM reach the trap at once, not after the browser run
+wait "$shop_pid" || rc=$?
+shop_pid=""
 [ "$rc" = 124 ] && { docker rm -f "extas-gate-shop-$$" >/dev/null 2>&1 || true; log "stopped after $limit_min min"; }
 
 # ---- 4. the safety net: the clean-up when the browser run ended without one ----

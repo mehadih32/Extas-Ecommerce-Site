@@ -4,7 +4,10 @@ import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import {
   amountsIn,
+  BY_DESIGN,
   bengaliShare,
+  campaignKept,
+  COD_OFF,
   gateLabel,
   gatePhone,
   hostGuard,
@@ -12,8 +15,10 @@ import {
   isGateLabel,
   localPhone,
   messageProblems,
+  ownerOff,
   phoneForms,
   pickScenarios,
+  planned,
   redact,
   reportMarkdown,
   row,
@@ -152,4 +157,32 @@ it('asks the database side through the bridge folder and waits for its answer', 
   } finally {
     clearInterval(answer);
   }
+});
+
+// Live run 1 Nov: what is not a fault is a SKIP with its reason, and the ad link's tags are read where the shop keeps them.
+it('names an owner\'s switch, a planned PR and what is so by design in the words of the report', () => {
+  expect(ownerOff('pages.contactForm')).toBe("off — the owner's switch (pages.contactForm)");
+  expect(planned(622)).toBe('planned in PR 622');
+  expect(BY_DESIGN).toBe('by design — proposal in the final analysis');
+  expect(COD_OFF).toBe("COD is off (owner's setting)");
+});
+
+it('finds the campaign in the shop\'s own HttpOnly cookie, which page scripts cannot see', () => {
+  const touch = (t) => Buffer.from(JSON.stringify(t), 'utf8').toString('base64url');
+  const name = cfg.attributionCookie;
+  expect(name).toBe('__Host-extas_src');
+  const good = [{ name, value: touch({ utmSource: 'facebook', utmMedium: 'paid_social', utmCampaign: cfg.utm.utm_campaign, adPlatform: 'META', fbc: `fb.1.1761998400000.${cfg.utm.fbclid}`, at: 1 }), httpOnly: true }];
+  const ok = campaignKept(good, '', cfg.utm, name);
+  expect(ok.ok).toBe(true);
+  expect(ok.how).toMatch(/HttpOnly/);
+  expect(ok.how).toMatch(/gate-test-c360/);
+  // the live run's FAIL came from reading document.cookie only: the jar is empty there
+  expect(campaignKept([], '', cfg.utm, name)).toMatchObject({ ok: false, why: expect.stringMatching(/no fbc is made from fbclid/) });
+  // the campaign kept but no fbc from the click id (and no pixel cookie)
+  const noFbc = [{ name, value: touch({ utmCampaign: cfg.utm.utm_campaign, at: 1 }) }];
+  expect(campaignKept(noFbc, '', cfg.utm, name)).toMatchObject({ ok: false, why: expect.stringMatching(/no fbc/) });
+  expect(campaignKept([...noFbc, { name: '_fbc', value: 'fb.1.1.x' }], '', cfg.utm, name).ok).toBe(true);
+  // another campaign, or a damaged cookie
+  expect(campaignKept([{ name, value: touch({ utmCampaign: 'other', at: 1 }) }], '', cfg.utm, name).ok).toBe(false);
+  expect(campaignKept([{ name, value: '%%%' }], '', cfg.utm, name).ok).toBe(false);
 });

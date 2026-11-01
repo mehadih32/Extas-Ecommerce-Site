@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import { classOf, DEVICES, NETWORKS } from './lib/profiles.mjs';
+import { COD_OFF } from './lib/run-grant.mjs';
 import { GATE_CHECKS, GATE_SCENARIO, pickScenarios, SCENARIOS, unreachedGate } from './scenarios.mjs';
 import { variantPool } from './shop.mjs';
 
@@ -56,4 +57,17 @@ it('every gate check has its scenario; one that was asked but stopped before the
   for (const s of Object.values(GATE_SCENARIO)) expect(SCENARIOS.some((x) => x.id === s)).toBe(true);
   expect(unreachedGate('1', 'w', ['5', '6'])).toMatchObject({ verdict: 'FAIL', detail: expect.stringMatching(/scenario 5 stopped/) });
   expect(unreachedGate('1', 'w', ['6'])).toMatchObject({ verdict: 'SKIP', detail: expect.stringMatching(/\(5\) was not asked/) });
+});
+
+it('live run 1 Nov: the cash-on-delivery scenarios are marked, and their gate check names the owner\'s setting', () => {
+  expect(SCENARIOS.filter((s) => s.cod).map((s) => s.id)).toEqual(['1', '15']);
+  expect(SCENARIOS.find((s) => s.id === '15').gates).toEqual(['4']);
+  expect(COD_OFF).toBe("COD is off (owner's setting)");
+});
+
+it('the workflow asks for allow_cod, false unless the owner says so, and hands it to the run', () => {
+  const wf = readFileSync(new URL('../../.github/workflows/gate-orders.yml', import.meta.url), 'utf8');
+  expect(wf).toMatch(/allow_cod:\n\s+description: .+\n\s+required: false\n\s+type: boolean\n\s+default: false/);
+  expect(wf).toMatch(/GATE_ALLOW_COD/);
+  expect(wf).not.toMatch(/allow_cod:[^\n]*true/);
 });

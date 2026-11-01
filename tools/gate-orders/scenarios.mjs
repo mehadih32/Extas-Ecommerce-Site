@@ -2,8 +2,12 @@
 // shop in one run: owner's OK of 1 Nov 2026). Each scenario names its device and network (most orders come from
 // phones) and returns its checks; the run (shop.mjs) gives it `x`: shoppers in real browsers, the order journey through
 // the storefront's own buttons, and the oracle that does the admin's half with the shop's own package functions.
-// A scenario that needs what the shop has not switched on (cash on delivery, test payments, gift mode, a coupon with no
-// use limit, delivery charges) is a SKIP with the reason, never a failure, and the run never switches anything on.
+// A scenario that needs what the shop has not switched on (cash on delivery, gift mode, a coupon with no use limit,
+// delivery charges) is a SKIP with the reason, never a failure, and the run switches nothing on for the shop's visitors.
+// Live run 1 Nov: the run pays on the mock bKash through its own grant (lib/run-grant.mjs); a scenario marked `cod`
+// needs cash on delivery and is a SKIP "COD is off (owner's setting)" unless the owner keeps it on or runs with
+// `allow_cod`.
+import { COD_OFF } from "./lib/run-grant.mjs";
 import { check, fail, pass, skip } from "./lib/verdict.mjs";
 import { customerCancel, fillDetails, loseNextAnswer, payPage, pickZone, setQuantity, submit, waitAwake } from "./lib/shopper.mjs";
 
@@ -34,12 +38,17 @@ export function unreachedGate(id, what, pickedIds) {
   return pickedIds.includes(s) ? { id, what, verdict: "FAIL", detail: `scenario ${s} stopped before this check (see its row)` } : { id, what, verdict: "SKIP", detail: `its scenario (${s}) was not asked in this run` };
 }
 
+/** What a press with no order answer showed: the Confirm button, the box the form marks, or where the page went. */
+const noAnswer = (p) =>
+  p.unanswered ? `no answer (Confirm ${p.unanswered.off ? "off" : "on"}${p.unanswered.field ? `, ${p.unanswered.field} marked` : ""})` : `no answer (${p.presses} reply unread, at ${String(p.url ?? "").replace(/^https?:\/\/[^/]+/, "")})`;
+
 export const SCENARIOS = [
   {
     id: "1",
     title: "One item, cash on delivery, phone on 4G",
     device: "android-mid",
     network: "4g",
+    cod: true,
     async run(x) {
       const sh = await x.open(this.device, this.network);
       const r = await x.order(sh, { items: x.v(1), address: "dhaka", timed: true });
@@ -374,14 +383,16 @@ export const SCENARIOS = [
     title: "The admin adds a piece, records a payment and re-books (gate check 4)",
     device: "android-mid",
     network: "4g",
+    cod: true,
+    gates: ["4"],
     async run(x) {
       if (x.canBook) {
         x.gate("4", skip("4", x.canBook));
         return [skip("re-book", x.canBook)];
       }
       if (x.pay !== "cod") {
-        x.gate("4", skip("4", "cash on delivery is off: the courier's amount has nothing to change"));
-        return [skip("re-book", "cash on delivery is off")];
+        x.gate("4", skip("4", COD_OFF));
+        return [skip("re-book", COD_OFF)];
       }
       const sh = await x.open(this.device, this.network);
       const r = await x.order(sh, { items: x.v(1), address: "dhaka", timed: true });
@@ -425,8 +436,12 @@ export const SCENARIOS = [
         x.track(p.answer.number, go[i]);
         await x.settle(go[i].sh, p);
       }
-      const told = ready.some((r) => !r.ok && /OUT_OF_STOCK|sold out/i.test(r.error ?? "")) || presses.some((p) => p.answer?.error === "OUT_OF_STOCK");
-      return [check("one shopper wins", total === 1, `${total} orders for the last piece`), check("the other is told clearly", told, ready.map((r) => (r.ok ? "reached the checkout" : r.error)).join("; ") + "; " + presses.map((p) => p.answer?.error ?? (p.answer?.ok ? "placed" : "no answer")).join(", "))];
+      // the shop's answer to the one who lost is OUT_OF_STOCK, and its checkout sends him back to the bag at once, where
+      // the line says it is sold out (CheckoutForm): the reply's body is often gone with that page, so the bag is read
+      const sentBack = await Promise.all(presses.map((p, i) => (p.answer?.ok || !/\/bag(?:[?#]|$)/.test(String(p.url ?? "")) ? false : go[i].sh.page.locator('[data-testid="bag-stock-issue"]').first().waitFor({ state: "visible", timeout: 10_000 }).then(() => true, () => false))));
+      const told = ready.some((r) => !r.ok && /OUT_OF_STOCK|sold out/i.test(r.error ?? "")) || presses.some((p) => p.answer?.error === "OUT_OF_STOCK") || sentBack.some(Boolean);
+      const said = presses.map((p, i) => p.answer?.error ?? (p.answer?.ok ? "placed" : sentBack[i] ? "sent back to the bag, which says the piece is sold out" : noAnswer(p)));
+      return [check("one shopper wins", total === 1, `${total} orders for the last piece`), check("the other is told clearly", told, ready.map((r) => (r.ok ? "reached the checkout" : r.error)).join("; ") + "; " + said.join(", "))];
     },
   },
   {
@@ -452,7 +467,7 @@ export const SCENARIOS = [
           const slabOk = slabs.every((a) => a.slab.from <= x.weightCheckGrams && x.weightCheckGrams <= a.slab.to && (!a.oneKilo || a.oneKilo.to < x.weightCheckGrams || a.slab.chargeMinor === a.oneKilo.chargeMinor));
           x.gate("24", w.rateCards ? check("24", w.weightSent === x.weightCheckGrams && slabOk && slabs.length > 0, `courier sent ${w.weightSent} g; ${slabs.length} rate card(s) price it by the ${slabs.map((a) => `${a.slab.from}–${a.slab.to} g`).join(", ") || "none"} slab`) : check("24", w.weightSent === x.weightCheckGrams, `courier sent ${w.weightSent} g (no rate card yet, so the slab price is not checked)`, w.weightSent === x.weightCheckGrams ? "no courier rate card is entered yet (owner data): the weight was sent right, the slab price is not checked" : null));
           out.push(check("the courier gets 2.1 kg", w.weightSent === x.weightCheckGrams, `${w.weightSent} g`));
-          if (x.pay !== "cod") x.gate("23", skip("23", "cash on delivery is off: no parcel owes cash"));
+          if (x.pay !== "cod") x.gate("23", skip("23", `${COD_OFF}: no parcel owes cash`));
           else {
             const s = await x.call("check23", { number: r.number });
             const ours = s.lines?.find((l) => l.ours);

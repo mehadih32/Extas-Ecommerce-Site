@@ -1939,10 +1939,12 @@ done
 case "$*" in
   *"test -x"*) exit 0 ;;
   *"--serve"*) cp "$envf" "$T_DIR/oracle.env"; exit 0 ;;
+  *"--close-run"*) printf '{"ok":true,"closed":%s,"codRestored":0}\n' "${FAKE_CLOSED:-0}" > "$mnt/close-run.json"; exit 0 ;;
   *"--cleanup"*) echo '{"ok":true,"cancelled":2,"productsArchived":3}' > "$mnt/cleanup.json"; exit 0 ;;
   *shop.mjs*)
     cp "$envf" "$T_DIR/shop.env"
     [ "$FAKE_SHOP" = crash ] && exit 3
+    if [ "$FAKE_SHOP" = hang ]; then sleep 30 & wait; exit 0; fi
     printf '{"kind":"gate-orders","at":"x","ok":true,"scenarios":18,"passed":16,"failed":0,"skipped":2,"orders":30,"started":true,"cleanup":{"ok":%s}}\n' "$FAKE_CLEAN" > "$mnt/result.json"
     echo "# Go-live gate" > "$mnt/README.md"; exit 0 ;;
 esac
@@ -1961,9 +1963,18 @@ check "gate orders: only scenario numbers are taken" "$rc" "2"
 rc=0; go FAKE_CLEAN=true bash ../deploy/gate-orders.sh "$T/out" 1,5 >/dev/null 2>&1 || rc=$?
 check "gate orders: a finished run exits 0 and records it" "$rc:$(jq -c '{exit,ok,orders,cleanup}' "$T/root/state/gate-orders.json")" '0:{"exit":0,"ok":true,"orders":30,"cleanup":true}'
 check "gate orders: the oracle gets the direct database address, a token and the run id, nothing else" \
-  "$(cut -d= -f1 "$T/oracle.env" | sort | tr '\n' ' '):$(grep -c '^DATABASE_URL=postgresql://u:dbpw@h/d$' "$T/oracle.env")" "DATABASE_URL GATE_ORACLE_TOKEN GATE_RUN_ID :1"
+  "$(cut -d= -f1 "$T/oracle.env" | sort | tr '\n' ' '):$(grep -c '^DATABASE_URL=postgresql://u:dbpw@h/d$' "$T/oracle.env")" "DATABASE_URL GATE_ALLOW_COD GATE_ORACLE_TOKEN GATE_PAY_TOKEN_HASH GATE_PREVIEW_HOST GATE_RUN_ID GATE_RUN_MINUTES :1"
 check "gate orders: the browser gets the token and the preview login, no database address" \
-  "$(cut -d= -f1 "$T/shop.env" | sort | tr '\n' ' '):$(grep -c 'DATABASE' "$T/shop.env")" "GATE_ORACLE_TOKEN SMOKE_HTTP_PASSWORD SMOKE_HTTP_USER :0"
+  "$(cut -d= -f1 "$T/shop.env" | sort | tr '\n' ' '):$(grep -c 'DATABASE' "$T/shop.env")" "GATE_ORACLE_TOKEN GATE_PAY_TOKEN SMOKE_HTTP_PASSWORD SMOKE_HTTP_USER :0"
+# Live run 1 Nov: the run pays on the mock bKash through a grant only its own browser holds. The oracle keeps only the
+# token's hash (the token itself never reaches the database side), and cash on delivery stays off unless the workflow
+# input says yes; the trap closes the grant whatever ends the run.
+pay_tok="$(sed -n 's/^GATE_PAY_TOKEN=//p' "$T/shop.env")"
+check "gate orders: the oracle holds the hash of the browser's pay token, never the token" \
+  "$(printf '%s' "$pay_tok" | grep -cE '^[0-9a-f]{64}$'):$([ "$(printf '%s' "$pay_tok" | sha256sum | cut -d' ' -f1)" = "$(sed -n 's/^GATE_PAY_TOKEN_HASH=//p' "$T/oracle.env")" ] && echo same):$(grep -c "$pay_tok" "$T/oracle.env")" "1:same:0"
+check "gate orders: cash on delivery is not switched on for the run by default; the grant is for the preview host only" \
+  "$(grep -c '^GATE_ALLOW_COD=no$' "$T/oracle.env"):$(grep -c '^GATE_PREVIEW_HOST=new.extas.com.bd$' "$T/oracle.env")" "1:1"
+check "gate orders: a finished run closes its grant once" "$(grep -c -e '--close-run --out /out/close-run.json' "$T/docker.log")" "1"
 check "gate orders: the browser is on the run's own network only, on https of the preview host" \
   "$(grep 'shop.mjs' "$T/docker.log" | grep -c -e '--network extas ' -e 'db\.env'):$(grep 'shop.mjs' "$T/docker.log" | grep -c -e '--network extas-gate-[0-9]* .*BASE=https://new.extas.com.bd ')" "0:1"
 check "gate orders: the live version's migrate image runs the oracle; no clean-up run after a finished run" \
@@ -1974,12 +1985,30 @@ check "gate orders: the secrets file is gone, the oracle and its network removed
 rc=0; go FAKE_CLEAN=false bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
 check "gate orders: a run without its full clean-up gets the server's clean-up and fails" \
   "$rc:$(grep -c -e '--cleanup --out /out/cleanup.json' "$T/docker.log"):$(jq -c '[.ok, .cleanup.cancelled]' "$T/out/result.json"):$(grep -c '## Safety net' "$T/out/README.md")" "1:1:[false,2]:1"
+rc=0; go FAKE_CLEAN=true GATE_ALLOW_COD=true bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: only the word yes from the workflow switches cash on delivery on for the run" "$rc:$(grep -c '^GATE_ALLOW_COD=no$' "$T/oracle.env")" "0:1"
+rc=0; go FAKE_CLEAN=true GATE_ALLOW_COD=yes bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: allow_cod true reaches the oracle as yes" "$rc:$(grep -c '^GATE_ALLOW_COD=yes$' "$T/oracle.env")" "0:1"
+: > "$T/docker.log"
+rc=0; go FAKE_CLEAN=true FAKE_CLOSED=1 bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: a grant the run left open is closed by the trap and said in the report" "$rc:$(grep -c 'Safety net: the run ended before it closed its mock-payment grant' "$T/out/README.md")" "0:1"
+: > "$T/docker.log"
 rc=0; go FAKE_SHOP=crash bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
 check "gate orders: a browser run that crashed still leaves a report and the clean-up" \
   "$rc:$(jq -c '[.ok, .cleanup.ok]' "$T/out/result.json"):$(jq -r '.exit' "$T/root/state/gate-orders.json"):$(grep -c 'without a report (exit 3)' "$T/out/README.md")" "1:[false,true]:1:1"
+check "gate orders: a crashed run still closes its grant" "$(grep -c -e '--close-run' "$T/docker.log")" "1"
+: > "$T/docker.log"
+env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" GATE_IMAGE_UID="$(id -u)" FAKE_LOG="$T/docker.log" T_DIR="$T" FAKE_SHOP=hang bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 &
+gpid=$!
+for _ in $(seq 1 100); do grep -q 'shop.mjs' "$T/docker.log" 2>/dev/null && break; sleep 0.1; done
+t0="$(date +%s)"; kill -TERM "$gpid"; rc=0; wait "$gpid" || rc=$?
+check "gate orders: SIGTERM mid-run stops the browser, cleans up and closes the grant at once" \
+  "$rc:$(( $(date +%s) - t0 < 10 )):$(grep -c 'rm -f extas-gate-shop-' "$T/docker.log"):$(grep -c -e '--cleanup --out' "$T/docker.log"):$(grep -c -e '--close-run' "$T/docker.log"):$(find "$T/root/config/secrets" -name '.gate-orders.*' | wc -l | tr -d ' ')" "143:1:1:1:1:0"
 check "workflows: gate-orders is by hand only, on the VM, in its own lane" \
   "$(grep -c '^  workflow_dispatch:' ../../.github/workflows/gate-orders.yml):$(grep -cE '^\s+(schedule|push|pull_request):' ../../.github/workflows/gate-orders.yml):$(grep -c 'runs-on: \[self-hosted, extas-vm\]' ../../.github/workflows/gate-orders.yml):$(grep -c 'group: extas-gate-orders' ../../.github/workflows/gate-orders.yml)" "1:0:1:1"
 check "workflows: gate-orders holds no secret" "$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/gate-orders.yml)" "0"
+check "workflows: gate-orders' allow_cod is a yes/no input, off by default" \
+  "$(grep -A4 '^      allow_cod:' ../../.github/workflows/gate-orders.yml | grep -c -e 'type: boolean' -e 'default: false')" "2"
 rm -rf "$T"
 
 exit $fail
