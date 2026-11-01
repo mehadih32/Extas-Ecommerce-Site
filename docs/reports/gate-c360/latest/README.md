@@ -1,174 +1,186 @@
 # Customer 360° gate — FAIL
 
-2026-11-01 16:39 (Asia/Dhaka) · https://new.extas.com.bd · by hand · 3843bb63837b · scenarios: before, order, account, support, after
+2026-11-01 19:10 (Asia/Dhaka) · https://new.extas.com.bd · by hand · ebef0ceda3b8 · scenarios: before, order, account, support, after
 
-138 steps: 51 PASS, 12 FAIL, 75 SKIP. Every provider ran on its mock; the test customer is "GATE TEST customer 202611011639".
+150 steps: 98 PASS, 20 FAIL, 32 SKIP. Every provider ran on its mock; the test customer is "GATE TEST customer 202611011910".
 
 Each step says what was tried, how long it took, and why it failed or was skipped. A SKIP is never a pass: it names what is
 missing (a product, a switch the owner keeps off, a part not built yet, or a real key).
 
-Clean-up: cancelled 0, archived 0 order(s), 0 review(s), 0 back-in-stock request(s), the customer; nothing deleted
+Clean-up: cancelled 1, archived 1 order(s), 0 review(s), 0 back-in-stock request(s), the customer; nothing deleted
 
-## Before ordering — 4 pass, 6 fail, 50 skip
-
-| Step | Screen | Result | Time | Why / what was seen |
-|---|---|---|---|---|
-| Lands from an ad link (UTM tags kept) | android-mid · en | **FAIL** | 919 ms | the ad link's tags are not kept: no cookie or storage holds the campaign, and no _fbc is made from fbclid, so the order cannot say which ad brought him — apps/web/src/lib/tracking/model.ts:72 only reads _fbc; nothing writes Order.utmSource/utmCampaign (packages/orders/src/export.ts:59 exports them) ([picture](before-landing-ad-android-mid-en.jpg)) |
-| Opens in the facebook in-app browser | android-mid · en | PASS | 929 ms | — |
-| Searches (english: "polo") | android-mid · en | **SKIP** | 778 ms | the page works (778 ms), but the shop has no products yet: nothing to find |
-| Searches (bengali: "পোলো শার্ট") | android-mid · en | **SKIP** | 738 ms | the page works (738 ms), but the shop has no products yet: nothing to find |
-| Searches (misspelt: "pollo shrit") | android-mid · en | **SKIP** | 688 ms | the page works (688 ms), but the shop has no products yet: nothing to find |
-| Searches (banglish: "panjabi") | android-mid · en | **SKIP** | 705 ms | the page works (705 ms), but the shop has no products yet: nothing to find |
-| Opens a category and uses its filter | android-mid · en | **SKIP** | 646 ms | no products in the category yet, so no filter to use |
-| Opens a product and its size guide | android-mid · en | **SKIP** | 0 ms | the shop has no products yet |
-| A sold-out size: "tell me when it is back" | android-mid · en | **SKIP** | 1 ms | the shop has no products yet |
-| Lands from an ad link (UTM tags kept) | android-mid · bn | **FAIL** | 810 ms | the ad link's tags are not kept: no cookie or storage holds the campaign, and no _fbc is made from fbclid, so the order cannot say which ad brought him — apps/web/src/lib/tracking/model.ts:72 only reads _fbc; nothing writes Order.utmSource/utmCampaign (packages/orders/src/export.ts:59 exports them) ([picture](before-landing-ad-android-mid-bn.jpg)) |
-| Opens in the facebook in-app browser | android-mid · bn | PASS | 881 ms | — |
-| Searches (english: "polo") | android-mid · bn | **SKIP** | 717 ms | the page works (717 ms), but the shop has no products yet: nothing to find |
-| Searches (bengali: "পোলো শার্ট") | android-mid · bn | **SKIP** | 677 ms | the page works (677 ms), but the shop has no products yet: nothing to find |
-| Searches (misspelt: "pollo shrit") | android-mid · bn | **SKIP** | 700 ms | the page works (700 ms), but the shop has no products yet: nothing to find |
-| Searches (banglish: "panjabi") | android-mid · bn | **SKIP** | 698 ms | the page works (698 ms), but the shop has no products yet: nothing to find |
-| Opens a category and uses its filter | android-mid · bn | **SKIP** | 674 ms | no products in the category yet, so no filter to use |
-| Opens a product and its size guide | android-mid · bn | **SKIP** | 0 ms | the shop has no products yet |
-| A sold-out size: "tell me when it is back" | android-mid · bn | **SKIP** | 0 ms | the shop has no products yet |
-| Saves to the wishlist | android-mid · bn | **SKIP** | 0 ms | the shop has no products yet |
-| Puts a size in the bag | android-mid · bn | **SKIP** | 0 ms | the shop has no products yet |
-| Starts the checkout and leaves (what the shop keeps) | android-mid · bn | **SKIP** | 644 ms | the bag is empty, so the checkout has no form (no products yet) |
-| Leaves without ordering and comes back (the bag waits) | android-mid · bn | **SKIP** | 805 ms | nothing was in the bag (no products yet) |
-| Lands from an ad link (UTM tags kept) | iphone · en | **FAIL** | 836 ms | the ad link's tags are not kept: no cookie or storage holds the campaign, and no _fbc is made from fbclid, so the order cannot say which ad brought him — apps/web/src/lib/tracking/model.ts:72 only reads _fbc; nothing writes Order.utmSource/utmCampaign (packages/orders/src/export.ts:59 exports them) ([picture](before-landing-ad-iphone-en.jpg)) |
-| Opens in the messenger in-app browser | iphone · en | PASS | 856 ms | — |
-| Searches (english: "polo") | iphone · en | **SKIP** | 692 ms | the page works (692 ms), but the shop has no products yet: nothing to find |
-| Searches (bengali: "পোলো শার্ট") | iphone · en | **SKIP** | 689 ms | the page works (689 ms), but the shop has no products yet: nothing to find |
-| Searches (misspelt: "pollo shrit") | iphone · en | **SKIP** | 642 ms | the page works (642 ms), but the shop has no products yet: nothing to find |
-| Searches (banglish: "panjabi") | iphone · en | **SKIP** | 653 ms | the page works (653 ms), but the shop has no products yet: nothing to find |
-| Opens a category and uses its filter | iphone · en | **SKIP** | 647 ms | no products in the category yet, so no filter to use |
-| Opens a product and its size guide | iphone · en | **SKIP** | 0 ms | the shop has no products yet |
-| A sold-out size: "tell me when it is back" | iphone · en | **SKIP** | 0 ms | the shop has no products yet |
-| Lands from an ad link (UTM tags kept) | iphone · bn | **FAIL** | 899 ms | the ad link's tags are not kept: no cookie or storage holds the campaign, and no _fbc is made from fbclid, so the order cannot say which ad brought him — apps/web/src/lib/tracking/model.ts:72 only reads _fbc; nothing writes Order.utmSource/utmCampaign (packages/orders/src/export.ts:59 exports them) ([picture](before-landing-ad-iphone-bn.jpg)) |
-| Opens in the messenger in-app browser | iphone · bn | PASS | 810 ms | — |
-| Searches (english: "polo") | iphone · bn | **SKIP** | 721 ms | the page works (721 ms), but the shop has no products yet: nothing to find |
-| Searches (bengali: "পোলো শার্ট") | iphone · bn | **SKIP** | 659 ms | the page works (659 ms), but the shop has no products yet: nothing to find |
-| Searches (misspelt: "pollo shrit") | iphone · bn | **SKIP** | 704 ms | the page works (704 ms), but the shop has no products yet: nothing to find |
-| Searches (banglish: "panjabi") | iphone · bn | **SKIP** | 653 ms | the page works (653 ms), but the shop has no products yet: nothing to find |
-| Opens a category and uses its filter | iphone · bn | **SKIP** | 649 ms | no products in the category yet, so no filter to use |
-| Opens a product and its size guide | iphone · bn | **SKIP** | 0 ms | the shop has no products yet |
-| A sold-out size: "tell me when it is back" | iphone · bn | **SKIP** | 0 ms | the shop has no products yet |
-| Lands from an ad link (UTM tags kept) | desktop-1366 · en | **FAIL** | 802 ms | the ad link's tags are not kept: no cookie or storage holds the campaign, and no _fbc is made from fbclid, so the order cannot say which ad brought him — apps/web/src/lib/tracking/model.ts:72 only reads _fbc; nothing writes Order.utmSource/utmCampaign (packages/orders/src/export.ts:59 exports them) ([picture](before-landing-ad-desktop-1366-en.jpg)) |
-| Searches (english: "polo") | desktop-1366 · en | **SKIP** | 721 ms | the page works (721 ms), but the shop has no products yet: nothing to find |
-| Searches (bengali: "পোলো শার্ট") | desktop-1366 · en | **SKIP** | 679 ms | the page works (679 ms), but the shop has no products yet: nothing to find |
-| Searches (misspelt: "pollo shrit") | desktop-1366 · en | **SKIP** | 662 ms | the page works (662 ms), but the shop has no products yet: nothing to find |
-| Searches (banglish: "panjabi") | desktop-1366 · en | **SKIP** | 663 ms | the page works (663 ms), but the shop has no products yet: nothing to find |
-| Opens a category and uses its filter | desktop-1366 · en | **SKIP** | 646 ms | no products in the category yet, so no filter to use |
-| Opens a product and its size guide | desktop-1366 · en | **SKIP** | 0 ms | the shop has no products yet |
-| A sold-out size: "tell me when it is back" | desktop-1366 · en | **SKIP** | 0 ms | the shop has no products yet |
-| Saves to the wishlist | desktop-1366 · en | **SKIP** | 0 ms | the shop has no products yet |
-| Puts a size in the bag | desktop-1366 · en | **SKIP** | 0 ms | the shop has no products yet |
-| Starts the checkout and leaves (what the shop keeps) | desktop-1366 · en | **SKIP** | 630 ms | the bag is empty, so the checkout has no form (no products yet) |
-| Leaves without ordering and comes back (the bag waits) | desktop-1366 · en | **SKIP** | 835 ms | nothing was in the bag (no products yet) |
-| Lands from an ad link (UTM tags kept) | desktop-1366 · bn | **FAIL** | 827 ms | the ad link's tags are not kept: no cookie or storage holds the campaign, and no _fbc is made from fbclid, so the order cannot say which ad brought him — apps/web/src/lib/tracking/model.ts:72 only reads _fbc; nothing writes Order.utmSource/utmCampaign (packages/orders/src/export.ts:59 exports them) ([picture](before-landing-ad-desktop-1366-bn.jpg)) |
-| Searches (english: "polo") | desktop-1366 · bn | **SKIP** | 710 ms | the page works (710 ms), but the shop has no products yet: nothing to find |
-| Searches (bengali: "পোলো শার্ট") | desktop-1366 · bn | **SKIP** | 713 ms | the page works (713 ms), but the shop has no products yet: nothing to find |
-| Searches (misspelt: "pollo shrit") | desktop-1366 · bn | **SKIP** | 652 ms | the page works (652 ms), but the shop has no products yet: nothing to find |
-| Searches (banglish: "panjabi") | desktop-1366 · bn | **SKIP** | 691 ms | the page works (691 ms), but the shop has no products yet: nothing to find |
-| Opens a category and uses its filter | desktop-1366 · bn | **SKIP** | 651 ms | no products in the category yet, so no filter to use |
-| Opens a product and its size guide | desktop-1366 · bn | **SKIP** | 0 ms | the shop has no products yet |
-| A sold-out size: "tell me when it is back" | desktop-1366 · bn | **SKIP** | 0 ms | the shop has no products yet |
-
-## Ordering — 1 pass, 0 fail, 3 skip
+## Before ordering — 26 pass, 20 fail, 14 skip
 
 | Step | Screen | Result | Time | Why / what was seen |
 |---|---|---|---|---|
-| Places one order as a guest (cash on delivery) | android-mid · bn | **SKIP** | 1036 ms | the shop has no products yet: the order and every step that needs it wait until the owner adds one |
-| Sees the thank-you page with his order | android-mid · bn | **SKIP** | 0 ms | no order was placed |
-| The same phone signs in with the SMS code (mock) | android-mid · bn | PASS | 5945 ms | signed in; the page says the SMS is a practice one |
-| The guest order shows in his account | android-mid · bn | **SKIP** | 0 ms | no order was placed |
+| Lands from an ad link (UTM tags kept) | android-mid · en | PASS | 3390 ms | kept in the shop's own cookie (__Host-extas_src, HttpOnly: page scripts cannot read it, by design): facebook / paid_social / gate-test-c360 / META; fbc made from fbclid |
+| Opens in the facebook in-app browser | android-mid · en | PASS | 3354 ms | — |
+| Searches (english: "polo") | android-mid · en | **FAIL** | 2296 ms | found nothing for "polo" while the shop has products ([picture](before-search-english-android-mid-en.jpg)) |
+| Searches (bengali: "পোলো শার্ট") | android-mid · en | **FAIL** | 1397 ms | found nothing for "পোলো শার্ট" while the shop has products ([picture](before-search-bengali-android-mid-en.jpg)) |
+| Searches (misspelt: "pollo shrit") | android-mid · en | **FAIL** | 1358 ms | found nothing for "pollo shrit" while the shop has products ([picture](before-search-misspelt-android-mid-en.jpg)) |
+| Searches (banglish: "panjabi") | android-mid · en | PASS | 1635 ms | 0 result(s) |
+| Opens a category and uses its filter | android-mid · en | **SKIP** | 2211 ms | the category opened has no products yet (the run's GATE TEST products are in no category), so no filter to use |
+| Opens a product and its size guide | android-mid · en | PASS | 1662 ms | no size guide on this product |
+| A sold-out size: "tell me when it is back" | android-mid · en | **SKIP** | 5 ms | a sold-out size cannot be pressed: the owner's "tell me when it is back" switch is off (pdp.size.notifyBack) |
+| Lands from an ad link (UTM tags kept) | android-mid · bn | PASS | 3066 ms | kept in the shop's own cookie (__Host-extas_src, HttpOnly: page scripts cannot read it, by design): facebook / paid_social / gate-test-c360 / META; fbc made from fbclid |
+| Opens in the facebook in-app browser | android-mid · bn | PASS | 1206 ms | — |
+| Searches (english: "polo") | android-mid · bn | **FAIL** | 1750 ms | found nothing for "polo" while the shop has products ([picture](before-search-english-android-mid-bn.jpg)) |
+| Searches (bengali: "পোলো শার্ট") | android-mid · bn | **FAIL** | 1412 ms | found nothing for "পোলো শার্ট" while the shop has products ([picture](before-search-bengali-android-mid-bn.jpg)) |
+| Searches (misspelt: "pollo shrit") | android-mid · bn | **FAIL** | 1488 ms | found nothing for "pollo shrit" while the shop has products ([picture](before-search-misspelt-android-mid-bn.jpg)) |
+| Searches (banglish: "panjabi") | android-mid · bn | PASS | 1319 ms | 0 result(s) |
+| Opens a category and uses its filter | android-mid · bn | **SKIP** | 1510 ms | the category opened has no products yet (the run's GATE TEST products are in no category), so no filter to use |
+| Opens a product and its size guide | android-mid · bn | PASS | 1774 ms | no size guide on this product |
+| A sold-out size: "tell me when it is back" | android-mid · bn | **SKIP** | 5 ms | a sold-out size cannot be pressed: the owner's "tell me when it is back" switch is off (pdp.size.notifyBack) |
+| Saves to the wishlist | android-mid · bn | **FAIL** | 2123 ms | the heart was pressed but the wishlist is empty ([picture](before-wishlist-android-mid-bn.jpg)) |
+| Puts a size in the bag | android-mid · bn | PASS | 1573 ms | 1 line(s) |
+| Starts the checkout and leaves (what the shop keeps) | android-mid · bn | **SKIP** | 1645 ms | the page sent nothing to keep: the owner's follow-up switch (SIM-F-026) is off, so a customer who leaves is not followed up |
+| Leaves without ordering and comes back (the bag waits) | android-mid · bn | PASS | 1386 ms | the bag still holds his line |
+| Lands from an ad link (UTM tags kept) | iphone · en | PASS | 888 ms | kept in the shop's own cookie (__Host-extas_src, HttpOnly: page scripts cannot read it, by design): facebook / paid_social / gate-test-c360 / META; fbc made from fbclid |
+| Opens in the messenger in-app browser | iphone · en | PASS | 868 ms | — |
+| Searches (english: "polo") | iphone · en | **FAIL** | 790 ms | found nothing for "polo" while the shop has products ([picture](before-search-english-iphone-en.jpg)) |
+| Searches (bengali: "পোলো শার্ট") | iphone · en | **FAIL** | 721 ms | found nothing for "পোলো শার্ট" while the shop has products ([picture](before-search-bengali-iphone-en.jpg)) |
+| Searches (misspelt: "pollo shrit") | iphone · en | **FAIL** | 742 ms | found nothing for "pollo shrit" while the shop has products ([picture](before-search-misspelt-iphone-en.jpg)) |
+| Searches (banglish: "panjabi") | iphone · en | PASS | 706 ms | 0 result(s) |
+| Opens a category and uses its filter | iphone · en | **SKIP** | 677 ms | the category opened has no products yet (the run's GATE TEST products are in no category), so no filter to use |
+| Opens a product and its size guide | iphone · en | PASS | 743 ms | no size guide on this product |
+| A sold-out size: "tell me when it is back" | iphone · en | **SKIP** | 4 ms | a sold-out size cannot be pressed: the owner's "tell me when it is back" switch is off (pdp.size.notifyBack) |
+| Lands from an ad link (UTM tags kept) | iphone · bn | PASS | 1061 ms | kept in the shop's own cookie (__Host-extas_src, HttpOnly: page scripts cannot read it, by design): facebook / paid_social / gate-test-c360 / META; fbc made from fbclid |
+| Opens in the messenger in-app browser | iphone · bn | PASS | 1044 ms | — |
+| Searches (english: "polo") | iphone · bn | **FAIL** | 2080 ms | found nothing for "polo" while the shop has products ([picture](before-search-english-iphone-bn.jpg)) |
+| Searches (bengali: "পোলো শার্ট") | iphone · bn | **FAIL** | 1436 ms | found nothing for "পোলো শার্ট" while the shop has products ([picture](before-search-bengali-iphone-bn.jpg)) |
+| Searches (misspelt: "pollo shrit") | iphone · bn | **FAIL** | 1363 ms | found nothing for "pollo shrit" while the shop has products ([picture](before-search-misspelt-iphone-bn.jpg)) |
+| Searches (banglish: "panjabi") | iphone · bn | PASS | 1411 ms | 0 result(s) |
+| Opens a category and uses its filter | iphone · bn | **SKIP** | 1597 ms | the category opened has no products yet (the run's GATE TEST products are in no category), so no filter to use |
+| Opens a product and its size guide | iphone · bn | PASS | 1658 ms | no size guide on this product |
+| A sold-out size: "tell me when it is back" | iphone · bn | **SKIP** | 4 ms | a sold-out size cannot be pressed: the owner's "tell me when it is back" switch is off (pdp.size.notifyBack) |
+| Lands from an ad link (UTM tags kept) | desktop-1366 · en | PASS | 2390 ms | kept in the shop's own cookie (__Host-extas_src, HttpOnly: page scripts cannot read it, by design): facebook / paid_social / gate-test-c360 / META; fbc made from fbclid |
+| Searches (english: "polo") | desktop-1366 · en | **FAIL** | 801 ms | found nothing for "polo" while the shop has products ([picture](before-search-english-desktop-1366-en.jpg)) |
+| Searches (bengali: "পোলো শার্ট") | desktop-1366 · en | **FAIL** | 663 ms | found nothing for "পোলো শার্ট" while the shop has products ([picture](before-search-bengali-desktop-1366-en.jpg)) |
+| Searches (misspelt: "pollo shrit") | desktop-1366 · en | **FAIL** | 657 ms | found nothing for "pollo shrit" while the shop has products ([picture](before-search-misspelt-desktop-1366-en.jpg)) |
+| Searches (banglish: "panjabi") | desktop-1366 · en | PASS | 680 ms | 0 result(s) |
+| Opens a category and uses its filter | desktop-1366 · en | **SKIP** | 680 ms | the category opened has no products yet (the run's GATE TEST products are in no category), so no filter to use |
+| Opens a product and its size guide | desktop-1366 · en | PASS | 807 ms | no size guide on this product |
+| A sold-out size: "tell me when it is back" | desktop-1366 · en | **SKIP** | 5 ms | a sold-out size cannot be pressed: the owner's "tell me when it is back" switch is off (pdp.size.notifyBack) |
+| Saves to the wishlist | desktop-1366 · en | **FAIL** | 675 ms | the heart was pressed but the wishlist is empty ([picture](before-wishlist-desktop-1366-en.jpg)) |
+| Puts a size in the bag | desktop-1366 · en | PASS | 702 ms | 1 line(s) |
+| Starts the checkout and leaves (what the shop keeps) | desktop-1366 · en | **SKIP** | 720 ms | the page sent nothing to keep: the owner's follow-up switch (SIM-F-026) is off, so a customer who leaves is not followed up |
+| Leaves without ordering and comes back (the bag waits) | desktop-1366 · en | PASS | 1072 ms | the bag still holds his line |
+| Lands from an ad link (UTM tags kept) | desktop-1366 · bn | PASS | 859 ms | kept in the shop's own cookie (__Host-extas_src, HttpOnly: page scripts cannot read it, by design): facebook / paid_social / gate-test-c360 / META; fbc made from fbclid |
+| Searches (english: "polo") | desktop-1366 · bn | **FAIL** | 744 ms | found nothing for "polo" while the shop has products ([picture](before-search-english-desktop-1366-bn.jpg)) |
+| Searches (bengali: "পোলো শার্ট") | desktop-1366 · bn | **FAIL** | 679 ms | found nothing for "পোলো শার্ট" while the shop has products ([picture](before-search-bengali-desktop-1366-bn.jpg)) |
+| Searches (misspelt: "pollo shrit") | desktop-1366 · bn | **FAIL** | 667 ms | found nothing for "pollo shrit" while the shop has products ([picture](before-search-misspelt-desktop-1366-bn.jpg)) |
+| Searches (banglish: "panjabi") | desktop-1366 · bn | PASS | 651 ms | 0 result(s) |
+| Opens a category and uses its filter | desktop-1366 · bn | **SKIP** | 633 ms | the category opened has no products yet (the run's GATE TEST products are in no category), so no filter to use |
+| Opens a product and its size guide | desktop-1366 · bn | PASS | 723 ms | no size guide on this product |
+| A sold-out size: "tell me when it is back" | desktop-1366 · bn | **SKIP** | 3 ms | a sold-out size cannot be pressed: the owner's "tell me when it is back" switch is off (pdp.size.notifyBack) |
 
-## The customer's account — 43 pass, 4 fail, 8 skip
+## Ordering — 4 pass, 0 fail, 0 skip
 
 | Step | Screen | Result | Time | Why / what was seen |
 |---|---|---|---|---|
-| Opens /account | android-mid · en | PASS | 863 ms | — |
-| Opens /account/orders | android-mid · en | PASS | 677 ms | — |
-| Opens /account/foryou | android-mid · en | PASS | 649 ms | — |
-| Opens /account/rewards | android-mid · en | PASS | 655 ms | — |
-| Opens /account/wallet | android-mid · en | PASS | 824 ms | — |
-| Opens /account/wishlist | android-mid · en | PASS | 672 ms | — |
-| Opens /account/profile | android-mid · en | PASS | 659 ms | — |
-| Opens /account | android-mid · bn | PASS | 856 ms | — |
+| Places one order as a guest (cash on delivery, or the mock bKash while COD is off) | android-mid · bn | PASS | 527 ms | order 1021 (paid ahead on the mock bKash: COD is off (owner's setting)) |
+| Sees the thank-you page with his order | android-mid · bn | PASS | 655 ms | — |
+| The same phone signs in with the SMS code (mock) | android-mid · bn | PASS | 5671 ms | signed in; the page says the SMS is a practice one |
+| The guest order shows in his account | android-mid · bn | PASS | 692 ms | — |
+
+## The customer's account — 59 pass, 0 fail, 8 skip
+
+| Step | Screen | Result | Time | Why / what was seen |
+|---|---|---|---|---|
+| Opens /account | android-mid · en | PASS | 2147 ms | — |
+| Opens /account/orders | android-mid · en | PASS | 1317 ms | — |
+| Opens /account/foryou | android-mid · en | PASS | 1240 ms | — |
+| Opens /account/rewards | android-mid · en | PASS | 1224 ms | — |
+| Opens /account/wallet | android-mid · en | PASS | 1234 ms | — |
+| Opens /account/wishlist | android-mid · en | PASS | 1437 ms | — |
+| Opens /account/profile | android-mid · en | PASS | 1262 ms | — |
+| Opens /account/orders/<order> | android-mid · en | PASS | 1462 ms | — |
+| Opens /account/orders/<order>/invoice | android-mid · en | PASS | 1472 ms | — |
+| Opens /account | android-mid · bn | PASS | 1095 ms | — |
 | Opens /account/orders | android-mid · bn | PASS | 704 ms | — |
-| Opens /account/foryou | android-mid · bn | PASS | 649 ms | — |
-| Opens /account/rewards | android-mid · bn | PASS | 687 ms | — |
-| Opens /account/wallet | android-mid · bn | PASS | 710 ms | — |
-| Opens /account/wishlist | android-mid · bn | PASS | 696 ms | — |
-| Opens /account/profile | android-mid · bn | PASS | 740 ms | — |
-| Opens /account | iphone · en | PASS | 778 ms | — |
-| Opens /account/orders | iphone · en | PASS | 700 ms | — |
-| Opens /account/foryou | iphone · en | PASS | 648 ms | — |
-| Opens /account/rewards | iphone · en | PASS | 648 ms | — |
-| Opens /account/wallet | iphone · en | PASS | 657 ms | — |
-| Opens /account/wishlist | iphone · en | PASS | 706 ms | — |
-| Opens /account/profile | iphone · en | PASS | 666 ms | — |
-| Opens /account | iphone · bn | PASS | 902 ms | — |
-| Opens /account/orders | iphone · bn | PASS | 802 ms | — |
-| Opens /account/foryou | iphone · bn | PASS | 667 ms | — |
-| Opens /account/rewards | iphone · bn | PASS | 652 ms | — |
-| Opens /account/wallet | iphone · bn | PASS | 1256 ms | — |
-| Opens /account/wishlist | iphone · bn | PASS | 709 ms | — |
-| Opens /account/profile | iphone · bn | PASS | 672 ms | — |
-| Opens /account | desktop-1366 · en | PASS | 885 ms | — |
-| Opens /account/orders | desktop-1366 · en | PASS | 695 ms | — |
-| Opens /account/foryou | desktop-1366 · en | PASS | 666 ms | — |
-| Opens /account/rewards | desktop-1366 · en | PASS | 671 ms | — |
-| Opens /account/wallet | desktop-1366 · en | PASS | 655 ms | — |
-| Opens /account/wishlist | desktop-1366 · en | PASS | 668 ms | — |
-| Opens /account/profile | desktop-1366 · en | PASS | 649 ms | — |
-| Opens /account | desktop-1366 · bn | PASS | 870 ms | — |
-| Opens /account/orders | desktop-1366 · bn | PASS | 656 ms | — |
-| Opens /account/foryou | desktop-1366 · bn | PASS | 652 ms | — |
-| Opens /account/rewards | desktop-1366 · bn | PASS | 649 ms | — |
-| Opens /account/wallet | desktop-1366 · bn | PASS | 637 ms | — |
-| Opens /account/wishlist | desktop-1366 · bn | PASS | 672 ms | — |
-| Opens /account/profile | desktop-1366 · bn | **FAIL** | 657 ms | dead link /bn/account/wallet (no answer) ([picture](account-page-profile-desktop-1366-bn.jpg)) |
-| Order detail: live status and tracking link | android-mid · bn | **SKIP** | 0 ms | no order (the shop has no products yet) |
-| Downloads the invoice | android-mid · bn | **SKIP** | 0 ms | no order (the shop has no products yet) |
-| Cancels within the window | android-mid · bn | **SKIP** | 0 ms | no order (the shop has no products yet) |
-| The order is moved to delivered on the mocks | android-mid · bn | **SKIP** | 0 ms | no order (the shop has no products yet) |
-| His page says delivered | android-mid · bn | **SKIP** | 0 ms | no order (the shop has no products yet) |
-| Writes the review after delivery | android-mid · bn | **SKIP** | 0 ms | no order (the shop has no products yet) |
-| Asks for a size exchange or a return | android-mid · bn | **SKIP** | 0 ms | no order (the shop has no products yet) |
-| Orders the same again | android-mid · bn | **SKIP** | 0 ms | no order (the shop has no products yet) |
-| Adds and edits an address, sets the default | android-mid · bn | **FAIL** | 911 ms | add and edit work, but there is no way to choose the default address — apps/web/src/components/shop/account/ProfileForms.tsx:92 (the list has no default) ([picture](account-addresses-android-mid-bn.jpg)) |
-| Changes his name and his phone | android-mid · bn | **FAIL** | 3017 ms | the name changes, but the phone cannot be changed from the account (read-only, no verified change) — apps/web/src/components/shop/account/ProfileForms.tsx:87 ([picture](account-profile-android-mid-bn.jpg)) |
-| Turns SMS and WhatsApp offers on and off | android-mid · bn | PASS | 5102 ms | both saved and stored |
-| Asks for his data or its erasure | android-mid · bn | **FAIL** | 696 ms | neither his account nor the privacy page lets him ask for his data or its erasure (staff have the requests screen) — apps/web/src/components/admin/settings/PrivacyRequests.tsx exists; nothing on the shop side ([picture](account-privacy-request-android-mid-bn.jpg)) |
-| Signs out and signs in again | android-mid · bn | PASS | 6776 ms | — |
+| Opens /account/foryou | android-mid · bn | PASS | 673 ms | — |
+| Opens /account/rewards | android-mid · bn | PASS | 640 ms | — |
+| Opens /account/wallet | android-mid · bn | PASS | 652 ms | — |
+| Opens /account/wishlist | android-mid · bn | PASS | 707 ms | — |
+| Opens /account/profile | android-mid · bn | PASS | 665 ms | — |
+| Opens /account/orders/<order> | android-mid · bn | PASS | 720 ms | — |
+| Opens /account/orders/<order>/invoice | android-mid · bn | PASS | 670 ms | — |
+| Opens /account | iphone · en | PASS | 841 ms | — |
+| Opens /account/orders | iphone · en | PASS | 738 ms | — |
+| Opens /account/foryou | iphone · en | PASS | 663 ms | — |
+| Opens /account/rewards | iphone · en | PASS | 667 ms | — |
+| Opens /account/wallet | iphone · en | PASS | 728 ms | — |
+| Opens /account/wishlist | iphone · en | PASS | 670 ms | — |
+| Opens /account/profile | iphone · en | PASS | 680 ms | — |
+| Opens /account/orders/<order> | iphone · en | PASS | 704 ms | — |
+| Opens /account/orders/<order>/invoice | iphone · en | PASS | 705 ms | — |
+| Opens /account | iphone · bn | PASS | 1415 ms | — |
+| Opens /account/orders | iphone · bn | PASS | 1363 ms | — |
+| Opens /account/foryou | iphone · bn | PASS | 1230 ms | — |
+| Opens /account/rewards | iphone · bn | PASS | 1308 ms | — |
+| Opens /account/wallet | iphone · bn | PASS | 1233 ms | — |
+| Opens /account/wishlist | iphone · bn | PASS | 1408 ms | — |
+| Opens /account/profile | iphone · bn | PASS | 1318 ms | — |
+| Opens /account/orders/<order> | iphone · bn | PASS | 1461 ms | — |
+| Opens /account/orders/<order>/invoice | iphone · bn | PASS | 1556 ms | — |
+| Opens /account | desktop-1366 · en | PASS | 800 ms | — |
+| Opens /account/orders | desktop-1366 · en | PASS | 2067 ms | — |
+| Opens /account/foryou | desktop-1366 · en | PASS | 1888 ms | — |
+| Opens /account/rewards | desktop-1366 · en | PASS | 1580 ms | — |
+| Opens /account/wallet | desktop-1366 · en | PASS | 1575 ms | — |
+| Opens /account/wishlist | desktop-1366 · en | PASS | 1628 ms | — |
+| Opens /account/profile | desktop-1366 · en | PASS | 1370 ms | — |
+| Opens /account/orders/<order> | desktop-1366 · en | PASS | 2622 ms | — |
+| Opens /account/orders/<order>/invoice | desktop-1366 · en | PASS | 3706 ms | — |
+| Opens /account | desktop-1366 · bn | PASS | 1317 ms | — |
+| Opens /account/orders | desktop-1366 · bn | PASS | 777 ms | — |
+| Opens /account/foryou | desktop-1366 · bn | PASS | 673 ms | — |
+| Opens /account/rewards | desktop-1366 · bn | PASS | 663 ms | — |
+| Opens /account/wallet | desktop-1366 · bn | PASS | 667 ms | — |
+| Opens /account/wishlist | desktop-1366 · bn | PASS | 682 ms | — |
+| Opens /account/profile | desktop-1366 · bn | PASS | 678 ms | — |
+| Opens /account/orders/<order> | desktop-1366 · bn | PASS | 721 ms | — |
+| Opens /account/orders/<order>/invoice | desktop-1366 · bn | PASS | 682 ms | — |
+| Order detail: live status and tracking link | android-mid · bn | PASS | 1630 ms | status shown; no tracking link until a courier has the parcel |
+| Downloads the invoice | android-mid · bn | PASS | 299 ms | text/html, 5 KB |
+| Cancels within the window | android-mid · bn | PASS | 1717 ms | cancel offered (tap) |
+| The order is moved to delivered on the mocks | android-mid · bn | **SKIP** | 4605 ms | moved to PACKED on the mocks (confirmed → pack); then no courier is set up yet, and booking is a staff action, so the steps that need a delivered order wait for a person |
+| His page says delivered | android-mid · bn | **SKIP** | 0 ms | needs a delivered order: the gate cannot book the parcel (a staff action), so it is not delivered |
+| Writes the review after delivery | android-mid · bn | **SKIP** | 0 ms | needs a delivered order: the gate cannot book the parcel (a staff action), so it is not delivered |
+| Asks for a size exchange or a return | android-mid · bn | **SKIP** | 0 ms | needs a delivered order: the gate cannot book the parcel (a staff action), so it is not delivered |
+| Orders the same again | android-mid · bn | **SKIP** | 1346 ms | no "order again" on his order yet: planned in PR 622 |
+| Adds and edits an address, sets the default | android-mid · bn | **SKIP** | 1386 ms | add and edit work; no way to choose the default address: by design — proposal in the final analysis |
+| Changes his name and his phone | android-mid · bn | **SKIP** | 4117 ms | the name changes; the phone is not changed from the account: by design — proposal in the final analysis |
+| Turns SMS and WhatsApp offers on and off | android-mid · bn | PASS | 6071 ms | both saved and stored |
+| Asks for his data or its erasure | android-mid · bn | **SKIP** | 1416 ms | his own request for his data or its erasure: planned in PR 623 (staff have the requests screen) |
+| Signs out and signs in again | android-mid · bn | PASS | 10662 ms | — |
 
-## Support — 3 pass, 2 fail, 6 skip
+## Support — 4 pass, 0 fail, 7 skip
 
 | Step | Screen | Result | Time | Why / what was seen |
 |---|---|---|---|---|
-| Writes in the shop's chat | android-mid · bn | **SKIP** | 2 ms | the live chat is switched off (support.liveChat, off as shipped) |
+| Writes in the shop's chat | android-mid · bn | **SKIP** | 2 ms | off — the owner's switch (support.liveChat) |
 | Finds the WhatsApp button | android-mid · bn | **SKIP** | 2 ms | the owner keeps the WhatsApp button off, or has not typed the number (shell.fab, contact.whatsapp) |
-| Finds a Messenger button | android-mid · bn | **FAIL** | 726 ms | no Messenger link on the shop, though most orders come from Facebook (the inbox can take Messenger, PR 426) ([picture](support-messenger-button-android-mid-bn.jpg)) |
-| Uses the contact form | android-mid · bn | **FAIL** | 681 ms | the contact page lists ways to reach the shop but has no form, so nothing lands in the support inbox from it ([picture](support-contact-form-android-mid-bn.jpg)) |
-| Opens the support inbox | desktop-1366 · en | PASS | 983 ms | — |
-| Finds him by his number in any format (01…, +880…, Bengali digits) | desktop-1366 · en | PASS | 394 ms | every format finds him |
-| Finds his conversation by his number in any format | desktop-1366 · en | **SKIP** | 56 ms | he has no conversation (the chat is off and no channel is connected): nothing to find; by reading the code, a number in Bengali digits is never searched as a number — packages/support/src/inbox.ts:85 strips non-ASCII digits (\D) before the phone search |
+| Finds a Messenger button | android-mid · bn | **SKIP** | 1106 ms | no Messenger link on the shop yet: planned in PR 624 |
+| Uses the contact form | android-mid · bn | **SKIP** | 795 ms | off — the owner's switch (pages.contactForm) |
+| Opens the support inbox | desktop-1366 · en | PASS | 994 ms | — |
+| Finds him by his number in any format (01…, +880…, Bengali digits) | desktop-1366 · en | PASS | 396 ms | every format finds him |
+| Finds his conversation by his number in any format | desktop-1366 · en | **SKIP** | 60 ms | he has no conversation (the chat is off and no channel is connected): nothing to find; by reading the code, a number in Bengali digits is never searched as a number — packages/support/src/inbox.ts:85 strips non-ASCII digits (\D) before the phone search |
 | Sees his orders, status and parcel beside the conversation | desktop-1366 · en | **SKIP** | 0 ms | no conversation to open; the order side panel is PR 428, not built yet (packages/support/src/inbox.ts:5) |
-| Traces his order by his number (any format) and opens it | desktop-1366 · en | **SKIP** | 0 ms | no order |
-| Opens his customer page (orders and support tabs) | desktop-1366 · en | PASS | 974 ms | — |
+| Traces his order by his number (any format) and opens it | desktop-1366 · en | PASS | 1007 ms | found and opened; 6 history line(s) |
+| Opens his customer page (orders and support tabs) | desktop-1366 · en | PASS | 1007 ms | — |
 | Sends him a product card from the inbox | desktop-1366 · en | **SKIP** | 0 ms | no conversation; sending a product card from the inbox is not built yet (S22) |
 
-## After ordering — 0 pass, 0 fail, 8 skip
+## After ordering — 5 pass, 0 fail, 3 skip
 
 | Step | Screen | Result | Time | Why / what was seen |
 |---|---|---|---|---|
-| The admin sees the order at once | — | **SKIP** | 0 ms | no order (the shop has no products yet) |
-| The order says which ad brought him | — | **SKIP** | 0 ms | no order |
-| Confirmation messages are planned (mock senders) | — | **SKIP** | 0 ms | no order |
-| The SMS message: right order, amount and language | — | **SKIP** | 0 ms | no order |
-| The WhatsApp message: right order, amount and language | — | **SKIP** | 0 ms | no order |
-| The e-mail message: right order, amount and language | — | **SKIP** | 0 ms | no order |
-| A delivered order counts as a sale | — | **SKIP** | 0 ms | no order |
-| His history in the admin, in order (journey view) | — | **SKIP** | 0 ms | no order |
+| The admin sees the order at once | — | PASS | 77 ms | — |
+| The order says which ad brought him | — | PASS | 4604 ms | facebook / paid_social / gate-test-c360 / META |
+| Confirmation messages are planned (mock senders) | — | PASS | 4606 ms | SMS/placed: SENT; SMS/confirmed: SKIPPED (NO_LINK); WHATSAPP/packed: SKIPPED (NO_LINK) |
+| The SMS message: right order, amount and language | — | PASS | 2 ms | 1 drawn: "EXTAS: আপনার অর্ডার 1021 পেয়েছি। ধন্যবাদ!" |
+| The WhatsApp message: right order, amount and language | — | PASS | 0 ms | planned (SKIPPED); words drawn when sent |
+| The e-mail message: right order, amount and language | — | **SKIP** | 0 ms | no EMAIL message for this order (the owner's journey does not use it, or no address for it) |
+| A delivered order counts as a sale | — | **SKIP** | 0 ms | needs a delivered order: the gate cannot book the parcel (a staff action), so it is not delivered |
+| His history in the admin, in order (journey view) | — | **SKIP** | 5646 ms | the order's own history is right (6 lines); the customer journey view (every visit, bag and message in one line) is PR 288, not built yet |
 
