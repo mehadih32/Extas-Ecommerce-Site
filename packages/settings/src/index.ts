@@ -106,6 +106,8 @@ export * from './registry-support-catalogue';
 export * from './registry-support-cart';
 // S22 · PR 431 — ticketing: the first-answer and solution timers of each support question (registry-support-tickets.ts, version 159).
 export * from './registry-support-tickets';
+// S22 · PR 432 — draft answers in a support chat (registry-support-drafts.ts, versions 180–182).
+export * from './registry-support-drafts';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

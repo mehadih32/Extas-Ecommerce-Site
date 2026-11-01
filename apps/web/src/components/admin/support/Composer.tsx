@@ -48,6 +48,16 @@ export interface ComposerTexts {
   err: Record<string, string>;
 }
 
+/** PR 432: EXTAS AI's draft answer to the customer's latest question (a person reads it and presses "Use draft"). */
+export interface ComposerDraft {
+  body: string;
+  /** What the question is about, in words ("Order status", "Complaint: rider overcharge"). */
+  about: string;
+  /** "For a person" / "For the owner", when the store marks this question so. */
+  handover: string | null;
+  texts: { h: string; use: string; note: string };
+}
+
 interface Chosen {
   id: string;
   name: string;
@@ -62,6 +72,7 @@ export function Composer({
   maxChars,
   files,
   products = null,
+  draft = null,
   texts: x,
 }: {
   url: string;
@@ -70,6 +81,7 @@ export function Composer({
   maxChars: number;
   files: { enabled: boolean; max: number; accept: string };
   products?: ComposerProducts | null;
+  draft?: ComposerDraft | null;
   texts: ComposerTexts;
 }) {
   const id = useId();
@@ -156,6 +168,31 @@ export function Composer({
           onClose={() => setDrawer('')}
           texts={products.texts}
         />
+      ) : null}
+      {draft && !note ? (
+        <div className="sp-draft" data-testid="support-draft" data-handover={draft.handover ? 'yes' : 'no'}>
+          <p className="a2-xs a2-mute">
+            <b>{draft.texts.h}</b> · {draft.about}
+            {draft.handover ? <span className="a2-pill warn sp-draft-pill">{draft.handover}</span> : null}
+          </p>
+          <p className="sp-draft-body" data-testid="support-draft-body">
+            {draft.body}
+          </p>
+          <div className="a2-row sp-draft-foot">
+            <button
+              type="button"
+              className="a2-btn sm"
+              onClick={() => {
+                setBody(draft.body.slice(0, maxChars));
+                setSaid(null);
+              }}
+              data-testid="support-draft-use"
+            >
+              {draft.texts.use}
+            </button>
+            <span className="a2-xs a2-mute">{draft.texts.note}</span>
+          </div>
+        </div>
       ) : null}
       <textarea
         className="a2-inp a2-ta"

@@ -356,6 +356,40 @@
         "resolutionHelp": "From the customer's message until the chat is marked solved. While the chat waits for the customer the inbox shows no timer, but the time still counts.",
         "notify": "Late chats in notifications",
         "notifyHelp": "A late chat goes into its owner's notifications (the bell). A late chat nobody has taken goes to the people who may give chats out."
+      },
+      "drafts": {
+        "h": "Draft answers (AI)",
+        "d": "Above the reply box, a draft answer to what the customer asked last — cancel, a complaint, a late parcel, a bulk order, an exchange, a size or where the order is — from their words, the chat's order and its parcel, and Find My Size on the product last sent in the chat. A person presses \"Use draft\" and sends it; nothing goes out by itself.",
+        "enabled": "Draft answers",
+        "enabledHelp": "Shown only to people who may reply. A draft never promises a refund, a discount or an exchange.",
+        "banglish": "Language for Banglish (Latin letters)",
+        "banglishHelp": "A message in Bengali letters is always answered in Bengali.",
+        "bn": "Bengali",
+        "en": "English",
+        "handover": "Mark these questions \"for a person\"",
+        "bulk": "Pieces that make a bulk order",
+        "bulkHelp": "\"40 polos\" with 10 here is a bulk order, marked for the owner when bulk is marked."
+      },
+      "draftWords": {
+        "h": "Draft answers: words",
+        "d": "The draft's words in English and Bengali. Use {hello} for the greeting, {name}, {number} (the order), {courier}, {tracking}, {size} and {days}. Never type an amount or a promise of money.",
+        "x": {
+          "hello": "Greeting with the name",
+          "helloNoName": "Greeting with no name known",
+          "sizeAsk": "Size: ask the measures",
+          "statusPreparing": "Order being prepared",
+          "statusShipped": "Order with the courier",
+          "statusDelivered": "Order delivered",
+          "statusCancelled": "Order cancelled",
+          "noOrder": "No order found: ask for it",
+          "pieces": "Pieces after a count (\"40 polos\")",
+          "en": "English",
+          "bn": "Bengali"
+        }
+      },
+      "draftKeywords": {
+        "h": "Draft answers: the words that tell questions apart",
+        "d": "For each question, the words that tell it apart, separated by commas — Bengali, Banglish and English. A message is read in this order: cancel, complaint, late, bulk, exchange, size, where is my order, greeting."
       }
     },
     "person": {
@@ -479,6 +513,32 @@
       "firstLate": "Answer late {time}",
       "resolve": "Solve in {time}",
       "resolveLate": "Solve late {time}"
+    },
+    "dr": {
+      "h": "AI draft",
+      "use": "Use draft",
+      "note": "Read it, change what you like, then send. Nothing goes out by itself.",
+      "i": {
+        "cancel": "Cancel an order",
+        "complaint": "Complaint",
+        "late": "Late parcel",
+        "bulk": "Bulk order",
+        "exchange": "Exchange",
+        "size": "Size question",
+        "status": "Where is my order",
+        "greeting": "Greeting",
+        "unknown": "Not sure what was asked"
+      },
+      "c": {
+        "overcharge": "Complaint: rider asked for more",
+        "wrong": "Complaint: wrong item",
+        "damage": "Complaint: damaged item",
+        "fade": "Complaint: colour"
+      },
+      "to": {
+        "person": "For a person",
+        "owner": "For the owner"
+      }
     }
   }
 }

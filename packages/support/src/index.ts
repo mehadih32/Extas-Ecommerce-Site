@@ -36,6 +36,9 @@
 //   tickets.ts    one ticket per customer question: opened by their message (ticketOnCustomerMessage), its owner,
 //                 first answer and status following the chat; its timers (clockOf, clocksOf, ticketOf) and the late
 //                 chats for a person's notifications (lateChats)
+// PR 432: EXTAS AI's draft answers.
+//   drafts.ts     the draft answer to the customer's latest question (supportDraft): what it is about, the chat's order
+//                 and parcel, Find My Size, the store's own words; a person sends it. drafts-pure.ts: the rules.
 //
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
@@ -59,3 +62,6 @@ export * from './catalogue';
 export * from './chat-cart';
 // PR 431 — ticketing: status, owner, the first-answer and solution timers, how long it took, late chats in the bell.
 export * from './tickets';
+// PR 432 — EXTAS AI's draft answers (a person sends them).
+export * from './drafts-pure';
+export * from './drafts';

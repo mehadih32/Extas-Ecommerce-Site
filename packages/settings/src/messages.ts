@@ -186,6 +186,8 @@ import supportCartBn from '../messages/support-cart.bn.json';
 import supportCartEn from '../messages/support-cart.en.json';
 import supportTicketsBn from '../messages/support-tickets.bn.json';
 import supportTicketsEn from '../messages/support-tickets.en.json';
+import supportDraftsBn from '../messages/support-drafts.bn.json';
+import supportDraftsEn from '../messages/support-drafts.en.json';
 import comboSplitEn from '../messages/combo-split.en.json';
 // CN-020 (3) — "Call me" at checkout (registry v99).
 import callMeBn from '../messages/call-me.bn.json';
@@ -319,6 +321,9 @@ messages.en = mergeMessages(messages.en, supportCartEn);
 messages.bn = mergeMessages(messages.bn, supportCartBn);
 messages.en = mergeMessages(messages.en, supportTicketsEn);
 messages.bn = mergeMessages(messages.bn, supportTicketsBn);
+// S22 · PR 432 (registry v180–182): draft answers in a support chat.
+messages.en = mergeMessages(messages.en, supportDraftsEn);
+messages.bn = mergeMessages(messages.bn, supportDraftsBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

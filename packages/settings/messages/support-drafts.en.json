@@ -1,0 +1,16 @@
+{
+  "support": {
+    "drafts": {
+      "label": "Draft answers (AI)",
+      "help": "Above the reply box, a draft answer to what the customer asked last: cancel, a complaint, a late parcel, a bulk order, an exchange, a size or where the order is — worked out from their words, the chat's order and its parcel, and Find My Size. A person reads it and presses \"Use draft\"; nothing is sent by itself. Some questions are marked for a person. Nothing about money changes."
+    },
+    "draftWords": {
+      "label": "Draft answers: words",
+      "help": "The draft's words in English and Bengali. Only the listed {tokens} may be used."
+    },
+    "draftKeywords": {
+      "label": "Draft answers: the words that tell questions apart",
+      "help": "For each question (cancel, each complaint, late, bulk, the pieces after a count, exchange, size, order status, greeting), the words that tell it apart, separated by commas — Bengali, Banglish and English."
+    }
+  }
+}
