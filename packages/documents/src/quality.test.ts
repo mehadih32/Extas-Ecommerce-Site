@@ -2,8 +2,9 @@
 // sticker at each sticker size and both printer dots, the paper lists (picking list, handover sheet) on A4 and A5, the
 // invoice on A4, A5 and both rolls — each with long, worst-case words — nothing cut, nothing wider than its box, nothing
 // over other text, no ink in the outer band, black-and-white safe. And the checks themselves catch each fault.
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { invoicePages, ROLL_MM, type InvoiceDocument } from './invoice';
+import { INVOICE_DESIGNS, invoicePages, ROLL_MM, type InvoiceDocument } from './invoice';
 import { overlaps, Sheet } from './layout';
 import { listPages, PAPER_MM, type ListDocument } from './list';
 import { pageQuality, printQuality } from './quality';
@@ -101,6 +102,32 @@ describe('PR 408 · print quality on every document at every size', () => {
       expect({ paper: paper.widthMm, ...printQuality(pages, { edgeMm: 2 }) }).toEqual({ paper: paper.widthMm, pages: pages.length, problems: [] });
     }
   });
+
+  it('PR 409: every invoice design prints right on A4, A5 and both rolls; the band designs draw a black band, and no two look the same', async () => {
+    const papers = [
+      { kind: 'page', widthMm: PAPER_MM.a4[0], heightMm: PAPER_MM.a4[1] },
+      { kind: 'page', widthMm: PAPER_MM.a5[0], heightMm: PAPER_MM.a5[1] },
+      { kind: 'roll', widthMm: ROLL_MM.roll80 },
+      { kind: 'roll', widthMm: ROLL_MM.roll58 },
+    ] as const;
+    const firstPage: Record<string, { dark: number; h: number }> = {};
+    for (const design of INVOICE_DESIGNS)
+      for (const paper of papers) {
+        const pages = await invoicePages({ ...invoice(), design }, paper, 203, boxText());
+        expect({ design, paper: paper.widthMm, ...printQuality(pages, { edgeMm: 2 }) }).toEqual({ design, paper: paper.widthMm, pages: pages.length, problems: [] });
+        if (paper.widthMm === PAPER_MM.a4[0]) {
+          const img = pages[0]!.image;
+          const top = img.gray.subarray(0, img.width * Math.round(img.height / 12));
+          firstPage[design] = { dark: top.filter((v) => v === 0).length, h: pages.length };
+        }
+      }
+    // a solid black band at the top of the brand and accent designs; none on classic
+    expect(firstPage.brand!.dark).toBeGreaterThan(firstPage.classic!.dark * 3);
+    expect(firstPage.accent!.dark).toBeGreaterThan(firstPage.classic!.dark * 3);
+    // the designs really differ: no two A4 first pages the same
+    const sig = await Promise.all(INVOICE_DESIGNS.map(async (design) => createHash('sha256').update((await invoicePages({ ...invoice(), design }, papers[0], 150, boxText()))[0]!.image.gray).digest('hex')));
+    expect(new Set(sig).size).toBe(INVOICE_DESIGNS.length);
+  }, 120_000);
 
   it('the checks catch each fault: cut, wider than its box, text over text, ink at the edge, faint ink', async () => {
     const e = boxText();

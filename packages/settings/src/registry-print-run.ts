@@ -16,12 +16,16 @@
 // (Brand settings, the same as on its invoice) at the top of the picking list and the handover sheet, so every printed
 // document carries one letterhead (the locked B2.4 rule; with no logo set the shop's name prints, as before);
 // `edgeMm` is the outer band a printer cannot reach, where the admin's "Print check" wants no ink.
+//
+// S20 · PR 409 (ORD-04d; registry version 153) — the invoice's design: one of seven (classic as shipped), used wherever
+// the invoice is printed or sent as a picture. Each design keeps the B2.4 print rules (black and white, nothing cut).
 import { z } from 'zod';
 import { setting } from './define';
 
 const V404 = 150;
 const V406 = 151;
 const V408 = 152;
+const V409 = 153;
 
 export const PRINT_RUN_WHATS = ['sticker', 'both', 'invoice'] as const;
 export type PrintRunWhat = (typeof PRINT_RUN_WHATS)[number];
@@ -33,6 +37,10 @@ export type PrintRunSettings = z.output<typeof printRunSchema>;
 export const handoverHistorySchema = z.object({ days: z.int().min(1).max(90), perCourier: z.int().min(1).max(50) }).strict();
 export const printQualitySchema = z.object({ logoOnLists: z.boolean(), edgeMm: z.int().min(0).max(5) }).strict();
 export type PrintQualitySettings = z.output<typeof printQualitySchema>;
+/** PR 409 — the invoice designs (the same list as @extas/documents' INVOICE_DESIGNS; a web test keeps them equal). */
+export const INVOICE_DESIGN_NAMES = ['classic', 'minimal', 'brand', 'receipt', 'twoColumn', 'accent', 'cards'] as const;
+export const invoiceDesignSchema = z.object({ design: z.enum(INVOICE_DESIGN_NAMES) }).strict();
+export type InvoiceDesignSettings = z.output<typeof invoiceDesignSchema>;
 export type HandoverHistorySettings = z.output<typeof handoverHistorySchema>;
 
 export const printRunSettings = {
@@ -74,5 +82,18 @@ export const printRunSettings = {
     helpKey: 'documents.printQuality.help',
     sortOrder: 965,
     version: V408,
+  }),
+  'documents.invoice.design': setting({
+    scope: 'store',
+    group: 'orders',
+    valueType: 'JSON',
+    isOwnerData: false,
+    isPublic: false,
+    schema: invoiceDesignSchema,
+    default: { design: 'classic' },
+    labelKey: 'documents.invoice.design.label',
+    helpKey: 'documents.invoice.design.help',
+    sortOrder: 966,
+    version: V409,
   }),
 };

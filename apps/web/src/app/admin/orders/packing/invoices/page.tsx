@@ -9,6 +9,9 @@
 // The list shows no customer's name, phone or address (`fulfilment.read`); printing needs `orders.invoice` and
 // changing the cards `orders.invoiceSettings`, both checked again by the API. Nothing here moves money or changes an
 // order, a price or COD.
+// S20 · PR 409 (ORD-04d): "Invoice design" — seven designs with a live preview of the latest invoice in each
+// (`documents.invoice.design`), and "Every word on the invoice" — the owner's own English and Bengali for each word the
+// invoice prints (kept in `language.labels`); both saved with `orders.invoiceSettings`.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -17,6 +20,8 @@ import * as od from '@extas/orders';
 import { INVOICE_BLOCKS, INVOICE_DPIS, INVOICE_IMAGE_FORMATS, INVOICE_PAPERS, INVOICE_ROLLS } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PdfButton } from '@/components/admin/fulfil/Print';
+import { InvoiceDesigns } from '@/components/admin/invoices/InvoiceDesigns';
+import { InvoiceWords } from '@/components/admin/invoices/InvoiceWords';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
@@ -28,7 +33,11 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
+import { hasIssuedInvoice } from '@/lib/admin-invoices/print';
+import { invoiceWords } from '@/lib/admin-invoices/words';
+import { INVOICE_DESIGNS } from '@extas/documents';
 import '../../../settings-cards.css';
+import './invoices.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +70,12 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
   const sd = { db: access.deps.db, settings: access.deps.resolver };
   const current: od.InvoiceListView = (od.INVOICE_VIEWS as readonly string[]).includes(sp.view ?? '') ? (sp.view as od.InvoiceListView) : 'all';
   const q = (sp.q ?? '').trim().slice(0, 60);
-  const [cards, currency] = await Promise.all([od.invoiceSettings(sd, who), sd.settings.value('store.currency', { storeId: MOTHER_STORE_ID })]);
+  const [cards, currency, words, issued] = await Promise.all([
+    od.invoiceSettings(sd, who),
+    sd.settings.value('store.currency', { storeId: MOTHER_STORE_ID }),
+    invoiceWords(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx, storeId: MOTHER_STORE_ID }),
+    hasIssuedInvoice(access.deps, MOTHER_STORE_ID),
+  ]);
   // the list shows as many as one print takes (the owner's "most per print"); the rest wait for the next print
   const max = cards['documents.invoice.print'].value.maxPerPdf;
   const list = await od.invoiceList(sd, who, { view: current, q: q || undefined, limit: max });
@@ -240,7 +254,9 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
           <p>{t(d, 'inv.emptySub')}</p>
         </div>
       )}
+      <InvoiceDesigns dict={{ inv: d.inv as Dict }} designs={INVOICE_DESIGNS} current={cards['documents.invoice.design'].value.design} version={cards['documents.invoice.design'].version} canEdit={canEdit} canPreview={held?.has('orders.invoice') ?? false} hasInvoice={issued} />
       <FieldsCard url={SETTINGS} screen={screen('account.invoice')} fields={content} texts={texts('content')} canEdit={canEdit} testId="invoice-content" />
+      <InvoiceWords dict={{ inv: d.inv as Dict }} words={words.words} version={words.version} canEdit={canEdit} />
       <FieldsCard url={SETTINGS} screen={screen('documents.invoice.print')} fields={print} texts={texts('print')} canEdit={canEdit} testId="invoice-print" />
       <details className="a2-card a2-mt12" data-testid="invoice-more">
         <summary className="a2-h4">{s('more')}</summary>

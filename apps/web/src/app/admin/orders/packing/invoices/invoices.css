@@ -1,0 +1,12 @@
+/* S20 · PR 409 — Invoices: the design buttons, the live preview and the word list (phone first; 44 px targets). */
+.adm2 .inv-designs { display: flex; flex-wrap: wrap; gap: 8px; }
+.adm2 .inv-designs .a2-btn { min-height: 44px; }
+.adm2 .inv-preview { border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 8px; max-height: 70vh; overflow: auto; }
+.adm2 .inv-preview img { display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; }
+.adm2 details.a2-more-opts > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+.adm2 .inv-words { display: grid; gap: 12px; }
+.adm2 .inv-word { display: grid; gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+@media (min-width: 900px) {
+  .adm2 .inv-word { grid-template-columns: 1fr 1fr; column-gap: 12px; }
+  .adm2 .inv-word > p { grid-column: 1 / -1; }
+}

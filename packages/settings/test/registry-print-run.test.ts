@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { handoverHistorySchema, printQualitySchema, printRunSchema, printRunSettings } from '../src/registry-print-run';
+import { handoverHistorySchema, invoiceDesignSchema, printQualitySchema, printRunSchema, printRunSettings } from '../src/registry-print-run';
 
 const spec = printRunSettings['fulfilment.printRun'];
 
@@ -49,5 +49,17 @@ describe('documents.printQuality setting (v152)', () => {
     expect(q.default).toEqual({ logoOnLists: true, edgeMm: 2 });
     expect(printQualitySchema.safeParse({ logoOnLists: true, edgeMm: 6 }).success).toBe(false);
     expect(printQualitySchema.safeParse({ logoOnLists: false, edgeMm: 0 }).success).toBe(true);
+  });
+});
+
+describe('documents.invoice.design setting (v153)', () => {
+  const d = printRunSettings['documents.invoice.design'];
+  it('is in the registry at version 153, labelled in both languages, classic as shipped, one of seven', () => {
+    expect(registry['documents.invoice.design']).toBe(d);
+    expect(d.version).toBe(153);
+    for (const lang of ['en', 'bn'] as const) expect(lookup(messages[lang], d.helpKey!)).toBeTruthy();
+    expect(d.default).toEqual({ design: 'classic' });
+    expect(invoiceDesignSchema.safeParse({ design: 'cards' }).success).toBe(true);
+    expect(invoiceDesignSchema.safeParse({ design: 'neon' }).success).toBe(false);
   });
 });

@@ -5,7 +5,7 @@
 // so the printed copy carries its kept number and, after an edit, its "Revised" mark. The barcode is the courier's
 // own consignment id, only once a parcel is booked. Nothing here changes an order, a price or COD.
 import { orderReceipt } from '@extas/checkout';
-import { invoiceJpeg, invoicePdf, PAPER_MM, ROLL_MM, sharpText, type InvoiceDocument, type InvoicePaper } from '@extas/documents';
+import { invoiceJpeg, invoicePdf, PAPER_MM, ROLL_MM, sharpText, type InvoiceDesign, type InvoiceDocument, type InvoicePaper } from '@extas/documents';
 import { invoiceOrders, issueInvoice, OrdersError } from '@extas/orders';
 import type { InvoiceImageSettings, InvoicePrintSettings } from '@extas/settings';
 import type { AdminDeps } from '../admin-auth';
@@ -13,6 +13,9 @@ import { mediaDeps } from '../media';
 import { shopContextFor, type ShopContext } from '../shop/context';
 import { invoiceViewFor, readInvoiceSettings } from '../shop/invoice-load';
 import type { InvoiceView } from '../shop/invoice';
+
+/** PR 409: a preview is a small picture (its width in pixels at most; the chat picture's own width when smaller). */
+const PREVIEW_PX = 900;
 
 export const INVOICE_LAYOUTS = ['page', 'roll'] as const;
 export type InvoiceLayout = (typeof INVOICE_LAYOUTS)[number];
@@ -26,8 +29,9 @@ export interface InvoiceFile {
 }
 
 /** The printed copy of one invoice view: the same words, plus the logo, the barcode (when on) and "n/of". */
-export function invoiceDocument(view: InvoiceView, c: Pick<ShopContext, 't'>, o: { barcode: boolean; logo: Buffer | null }): InvoiceDocument {
+export function invoiceDocument(view: InvoiceView, c: Pick<ShopContext, 't'>, o: { barcode: boolean; logo: Buffer | null; design?: InvoiceDesign | null }): InvoiceDocument {
   return {
+    design: o.design ?? null,
     brand: view.brand,
     logo: o.logo,
     shopLines: view.shopLines,
@@ -94,8 +98,8 @@ export interface PrintedInvoice {
  * orders are left out; the invoice switched off (`account.invoice.enabled`) → INVOICE_OFF.
  */
 export async function printedInvoices(deps: AdminDeps, storeId: number, orderIds: readonly string[]): Promise<{ print: InvoicePrintSettings; image: InvoiceImageSettings; invoices: PrintedInvoice[] }> {
-  const v = <K extends 'documents.invoice.print' | 'documents.invoice.image' | 'brand.logo'>(k: K) => deps.resolver.value(k, { storeId });
-  const [print, image, logoRef] = await Promise.all([v('documents.invoice.print'), v('documents.invoice.image'), v('brand.logo')]);
+  const v = <K extends 'documents.invoice.print' | 'documents.invoice.image' | 'documents.invoice.design' | 'brand.logo'>(k: K) => deps.resolver.value(k, { storeId });
+  const [print, image, logoRef, look] = await Promise.all([v('documents.invoice.print'), v('documents.invoice.image'), v('brand.logo'), v('documents.invoice.design')]);
   const s = await readInvoiceSettings(storeId);
   if (!s['account.invoice'].enabled) throw new OrdersError('INVOICE_OFF', 'the invoice is switched off');
   const orders = await invoiceOrders(deps, storeId, [...orderIds], print.maxPerPdf);
@@ -107,7 +111,7 @@ export async function printedInvoices(deps: AdminDeps, storeId: number, orderIds
     if (!receipt) continue;
     const issued = await issueInvoice({ db: deps.db, settings: deps.resolver, now: deps.now }, { storeId, orderId: o.id });
     const view = invoiceViewFor(c, receipt, s, issued ? { number: issued.invoice.number, version: issued.invoice.version, issuedAt: issued.invoice.issuedAt } : null);
-    invoices.push({ orderId: o.id, number: view.invoiceNo, doc: invoiceDocument(view, c, { barcode: print.barcode, logo }) });
+    invoices.push({ orderId: o.id, number: view.invoiceNo, doc: invoiceDocument(view, c, { barcode: print.barcode, logo, design: look.design }) });
   }
   return { print, image, invoices };
 }
@@ -131,4 +135,21 @@ export async function invoiceFile(deps: AdminDeps, storeId: number, input: { ord
   }
   const body = await invoicePdf(docs, invoicePaper(print, input.layout), print.dpi, engine, { title: numbers.length === 1 ? numbers[0] : stem, created: deps.now?.() });
   return { body, contentType: 'application/pdf', fileName: `${stem}.pdf` };
+}
+
+/** PR 409 — whether the store has an issued invoice to preview (the page asks for no picture before there is one). */
+export async function hasIssuedInvoice(deps: Pick<AdminDeps, 'db'>, storeId: number): Promise<boolean> {
+  return !!(await deps.db.generatedDocument.findFirst({ where: { storeId, kind: 'INVOICE', orderId: { not: null } }, select: { id: true } }));
+}
+
+/**
+ * PR 409 (ORD-04d) — the live preview of a design: the latest order's issued invoice drawn in `design` as the chat
+ * picture (the owner's own words, parts, logo and settings), never saved, sent or counted. None issued yet → NOT_FOUND.
+ */
+export async function invoicePreview(deps: AdminDeps, storeId: number, design: InvoiceDesign): Promise<Buffer> {
+  const latest = await deps.db.generatedDocument.findFirst({ where: { storeId, kind: 'INVOICE', orderId: { not: null } }, orderBy: { createdAt: 'desc' }, select: { orderId: true } });
+  if (!latest?.orderId) throw new OrdersError('NOT_FOUND', 'no invoice issued yet', ['orderId']);
+  const { print, image, invoices } = await printedInvoices(deps, storeId, [latest.orderId]);
+  if (!invoices.length) throw new OrdersError('NOT_FOUND', 'no invoice issued yet', ['orderId']);
+  return invoiceJpeg({ ...invoices[0]!.doc, design }, { widthMm: PAPER_MM[print.paper][0], widthPx: Math.min(image.widthPx, PREVIEW_PX), quality: image.quality }, sharpText());
 }
