@@ -54,8 +54,16 @@ export interface ReplyResult {
   replay: boolean;
 }
 
+/** What a caller keeps inside the reply's own transaction (PR 429: the product card's share row and log line). */
+export type ReplyHook = (tx: Tx, saved: { conversationId: string; messageId: string; actorName: string | null; now: Date }) => Promise<void>;
+
 /** A reply to the customer, or an internal note (`support.reply`). */
-export async function replyToConversation(deps: SupportDeps, who: Who, input: unknown): Promise<ReplyResult> {
+export function replyToConversation(deps: SupportDeps, who: Who, input: unknown): Promise<ReplyResult> {
+  return sendReply(deps, who, input);
+}
+
+/** The reply itself; `hook` (PR 429) adds its rows in the same transaction, so a card and its share are one change. */
+export async function sendReply(deps: SupportDeps, who: Who, input: unknown, hook?: ReplyHook): Promise<ReplyResult> {
   await allow(deps, who, 'support.reply');
   const d = parse(replyInput, input, 'reply');
   const storeId = who.storeId;
@@ -138,6 +146,7 @@ export async function replyToConversation(deps: SupportDeps, who: Who, input: un
     if (take) {
       await tx.conversationEvent.create({ data: { storeId, conversationId: c.id, kind: 'ASSIGNED', ...staffEvent(who, name), data: { from: null, to: who.actor.staffUserId, toName: name, auto: true }, createdAt: now } });
     }
+    if (hook) await hook(tx, { conversationId: c.id, messageId: m.id, actorName: name, now });
     return { c, m, made };
   }, TX);
 

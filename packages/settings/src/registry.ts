@@ -75,6 +75,7 @@ import { comboSplitSettings } from './registry-combo-split';
 import { printRunSettings } from './registry-print-run';
 import { supportIdentitySettings } from './registry-support-identity';
 import { supportContextSettings } from './registry-support-context';
+import { supportCatalogueSettings } from './registry-support-catalogue';
 import { callMeSettings } from './registry-call-me';
 import { voiceAddressSettings } from './registry-voice-address';
 import { bhandariP1Settings } from './registry-bhandari-p1';
@@ -1339,6 +1340,8 @@ export const registry = {
   ...supportIdentitySettings,
   // ---- S22 · PR 428 · the customer beside a support chat (on, B4.5 locked) (registry-support-context.ts, version 156). ----
   ...supportContextSettings,
+  // ---- S22 · PR 429 · the catalogue drawer: products sent in a chat with their tracked link (off) (registry-support-catalogue.ts, version 157). ----
+  ...supportCatalogueSettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----

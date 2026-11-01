@@ -160,6 +160,8 @@ export interface ThreadMessage {
   failReason: string | null;
   sentAt: Date;
   files: ThreadFile[];
+  /** PR 429: a product card sent from the drawer — its reference, when the customer opened it, the order it brought. */
+  share: { productId: string; refCode: string; openedAt: Date | null; order: { id: string; number: string } | null } | null;
 }
 
 export interface ThreadEvent {
@@ -193,7 +195,7 @@ export interface Thread {
   /** PR 428 (B4.5): the person's orders beside the chat; null while `support.context` is off. */
   context: ChatContext | null;
   /** What the person reading may do here (`identity`: set the number, unlink the customer, "not the same person"). */
-  you: { id: string | null; reply: boolean; assign: boolean; identity: boolean };
+  you: { id: string | null; reply: boolean; assign: boolean; identity: boolean; catalogue: boolean };
 }
 
 /** One conversation with every message, file, note and log line, oldest first. */
@@ -210,8 +212,13 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
     },
   });
   if (!c) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
-  const ctxOn = await setting(deps, who.storeId, 'support.context');
-  const [shown, customer, order, names, perms, person, context] = await Promise.all([
+  const [ctxOn, catOn, shares] = await Promise.all([
+    setting(deps, who.storeId, 'support.context'),
+    setting(deps, who.storeId, 'support.catalogue'),
+    deps.db.supportProductShare.findMany({ where: { storeId: who.storeId, conversationId: c.id, messageId: { not: null } }, select: { messageId: true, productId: true, refCode: true, clickedAt: true, orderId: true } }),
+  ]);
+  const shareOrderIds = [...new Set(shares.flatMap((s) => (s.orderId ? [s.orderId] : [])))];
+  const [shown, customer, order, names, perms, person, context, shareOrders] = await Promise.all([
     phoneShown(deps, who, held),
     c.customerId ? deps.db.customer.findFirst({ where: { id: c.customerId, storeId: who.storeId }, select: { id: true, name: true, orderCount: true } }) : null,
     c.orderId ? deps.db.order.findFirst({ where: { id: c.orderId, storeId: who.storeId }, select: { id: true, number: true, status: true } }) : null,
@@ -219,7 +226,10 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
     actorPermissions(deps.db, who.actor, { storeId: who.storeId }),
     personOf(deps.db, who.storeId, c.contactId, c.id),
     ctxOn.enabled ? chatContextOf(deps, who, { customerId: c.customerId, phone: c.contact.phone }, { recent: ctxOn.recentOrders }) : null,
+    shareOrderIds.length ? deps.db.order.findMany({ where: { storeId: who.storeId, id: { in: shareOrderIds } }, select: { id: true, number: true } }) : [],
   ]);
+  const shareOf = new Map(shares.map((s) => [s.messageId!, s]));
+  const numberOf = new Map(shareOrders.map((o) => [o.id, o.number]));
   return {
     id: c.id,
     refCode: c.refCode,
@@ -245,11 +255,17 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings'>, 
       failReason: m.failReason,
       sentAt: m.sentAt,
       files: m.attachments.map((a) => ({ id: a.id, kind: a.kind, fileName: a.fileName, contentType: a.contentType, sizeBytes: a.sizeBytes, status: a.status, ready: !!a.assetId && !a.removedAt })),
+      share: (() => {
+        const s = shareOf.get(m.id);
+        if (!s) return null;
+        const number = s.orderId ? numberOf.get(s.orderId) : undefined;
+        return { productId: s.productId, refCode: s.refCode, openedAt: s.clickedAt, order: s.orderId && number ? { id: s.orderId, number } : null };
+      })(),
     })),
     events: c.events.map((e) => ({ id: e.id, kind: e.kind, actor: { type: e.actorType, name: e.actorName }, data: (e.data as Record<string, unknown> | null) ?? null, at: e.createdAt })),
     person,
     context,
-    you: { id: who.actor.staffUserId, reply: perms.has('support.reply'), assign: perms.has('support.assign'), identity: perms.has('support.identity') },
+    you: { id: who.actor.staffUserId, reply: perms.has('support.reply'), assign: perms.has('support.assign'), identity: perms.has('support.identity'), catalogue: catOn.enabled && perms.has('support.reply') },
   };
 }
 

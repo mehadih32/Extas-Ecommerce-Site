@@ -52,6 +52,7 @@ import { checkGift, storeToday } from './gift';
 import { paymentInputSchema, isPrepaid, type PaymentChoice } from './payment';
 import { checkForm, fieldOrder, phoneNormalizeBD, type FieldProblem } from './pure';
 import { checkoutQuote, viewOf, WALLET_ACTIVE, type CheckoutQuote } from './quote';
+import { creditSupportShare, supportShareFor } from './support-credit';
 import { isLow } from './voice';
 
 const TEXT_MAX = 2_000;
@@ -106,6 +107,8 @@ export interface PlaceRequest {
   deviceId?: string | null;
   /** PR 257 follow-up: the campaign tags of the visit the shop read from its own cookie (`ads.attribution`); checked again here. */
   attribution?: Partial<OrderAttribution> | null;
+  /** PR 429: the reference of a product link from a support chat this browser opened (the order is credited to it). */
+  supportRef?: string | null;
   input: unknown;
 }
 
@@ -448,6 +451,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
       }
 
       const number = await nextOrderNumber(tx, storeId, prefix, start);
+      // PR 429: the support chat whose product link brought him here (checked again; claimed once the order exists)
+      const share = await supportShareFor(deps, tx, storeId, req.supportRef, now);
       // PR 129: the account it belongs to (SIM-F-039: a new one has no password; the browser is not signed in).
       // PR 605: the phone of a gift is the receiver's — no account is made or found for him; a signed-in sender keeps it
       const account = await linkOrderAccount(tx, { storeId, phone: check.phone.e164, name: d.form.name, placedAt: now, signedInCustomerId: customerId, autoCreate: autoCreate && !gift });
@@ -544,6 +549,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
       // who may use it is judged as the quote judged it: the signed-in customer (a guest is counted by his phone)
       if (coupon?.code) await redeemCoupon(tx, { storeId, code: coupon.code, orderId: o.id, phone: check.phone.e164, customerId, discountMinor: couponMinor, now });
       await convertCart(inv, { storeId, cartId, orderId: o.id }, { tx });
+      const credited = share ? await creditSupportShare(tx, storeId, share, { id: o.id, number }, now) : false;
       const closed = await tx.cart.updateMany({ where: { id: cartId, storeId, status: 'ACTIVE' }, data: { status: 'CONVERTED', convertedOrderId: o.id, lastActivityAt: now } });
       if (closed.count !== 1) throw new CheckoutError('CART_NOT_OPEN', 'the bag became an order already');
       await tx.orderEvent.create({
@@ -569,6 +575,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
             ...(preorder ? { preorder: true } : {}),
             // CN-020 (4): the address was spoken (who read it, how sure; the recording is on the CheckoutVoice row)
             ...(voice ? { voice: { engine: voice.engine, confidence: voice.confidence, low: voiceLow } } : {}),
+            // PR 429: credited to the support chat whose product link he opened
+            ...(credited && share ? { supportRef: share.refCode } : {}),
           },
         },
       });

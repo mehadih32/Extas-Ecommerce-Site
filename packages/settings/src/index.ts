@@ -100,6 +100,8 @@ export * from './registry-print-run';
 export * from './registry-support-identity';
 // S22 · PR 428 — the customer beside a support chat (registry-support-context.ts, version 156).
 export * from './registry-support-context';
+// S22 · PR 429 — the catalogue drawer in a support chat (registry-support-catalogue.ts, version 157).
+export * from './registry-support-catalogue';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

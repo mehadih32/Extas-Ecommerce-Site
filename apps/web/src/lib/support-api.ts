@@ -13,6 +13,12 @@
 //   POST  /api/admin/support/c/:id/identity     PR 427: {action: phone|unlink|split, phone?, version?} who is writing —
 //                                               set the chat's number (and so its customer), "not this customer", "not
 //                                               the same person"; audited (support.identity)
+//   GET   /api/admin/support/catalogue          PR 429: ?q= the catalogue drawer's search — live products by name, SKU
+//                                               or colour, with their colours, sizes and stock (support.reply; off
+//                                               while `support.catalogue` is off: CATALOGUE_OFF)
+//   POST  /api/admin/support/c/:id/products     PR 429: {productId, variantId?, colour?, lang?, requestKey, version?}
+//                                               one product sent as a card — its photos, name, price and the link
+//                                               with the chat's `r=` reference (support.reply)
 //   POST  /api/admin/support/files              multipart `file` — one file for a reply, checked by its contents
 //                                               against Support settings; answers its id (support.reply)
 //   GET   /api/admin/support/files/:id          one file of a conversation, our stored copy (support.read)
@@ -32,6 +38,7 @@ import type { PermissionKey } from '@extas/auth';
 import * as sp from '@extas/support';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { mediaDeps } from './media';
+import { siteAddress } from './seo/site';
 import { supportConnections, supportSenders } from './support-connect';
 import inboxEn from '../../messages/admin-inbox.en.json';
 
@@ -65,6 +72,8 @@ function routeOf(path: string[], method: string): Route | null {
   if (a === 'c' && isUuid(b) && c === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'c' && isUuid(b) && (c === 'messages' || c === 'assign' || c === 'status')) return { perm: 'support.reply', methods: ['POST'] };
   if (a === 'c' && isUuid(b) && c === 'identity') return { perm: 'support.identity', methods: ['POST'] };
+  if (a === 'c' && isUuid(b) && c === 'products') return { perm: 'support.reply', methods: ['POST'] };
+  if (a === 'catalogue' && b === undefined) return { perm: 'support.reply', methods: ['GET'] };
   if (a === 'files' && b === undefined && c === undefined) return { perm: 'support.reply', methods: ['POST'] };
   if (a === 'files' && isUuid(b) && c === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'staff' && b === undefined) return { perm: 'support.read', methods: ['GET'] };
@@ -123,6 +132,15 @@ async function download(d: AdminDeps, media: MediaDeps | null, who: sp.Who, id: 
   });
 }
 
+/** PR 429: the shop's own address for a product link (the store's domain, a setting); none outside a request. */
+async function shopOriginOf(storeId: number): Promise<string | null> {
+  try {
+    return (await siteAddress(storeId)).origin?.origin ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** `path` is what comes after /api/admin/support; `media` (tests) replaces the app's file storage. */
 export async function supportRoute(request: Request, deps: AdminDeps | null, path: string[], media?: MediaDeps | null): Promise<Response> {
   const m = request.method.toUpperCase();
@@ -147,6 +165,7 @@ export async function supportRoute(request: Request, deps: AdminDeps | null, pat
       if (action === undefined) return json({ ok: true, thread: await sp.supportThread(sd, who, id) });
       const input = { ...(await body(request)), conversationId: id };
       if (action === 'messages') return json({ ok: true, ...(await sp.replyToConversation(sd, who, input)) });
+      if (action === 'products') return json({ ok: true, ...(await sp.shareProduct(sd, who, input, { origin: await shopOriginOf(storeId) })) });
       if (action === 'assign') return json({ ok: true, ...(await sp.assignConversation(sd, who, input)) });
       if (action === 'identity') {
         const { action: what, ...rest } = input as { action?: unknown };
@@ -162,6 +181,7 @@ export async function supportRoute(request: Request, deps: AdminDeps | null, pat
       return id ? await download(d, files, who, id) : await upload(request, d, files, storeId, g.actor.staffUserId);
     }
     if (a === 'staff') return json({ ok: true, staff: await sp.supportStaff(sd, who) });
+    if (a === 'catalogue') return json({ ok: true, ...(await sp.chatCatalogue(sd, who, { q: (url.searchParams.get('q') ?? '').slice(0, 80) })) });
     if (a === 'channels') {
       if (m === 'GET') return json({ ok: true, ...(await sp.supportChannels(sd, who)) });
       const saved = await sp.saveSupportChannel(sd, who, await body(request));

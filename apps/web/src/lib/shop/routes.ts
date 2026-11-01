@@ -45,6 +45,10 @@ export const ROUTES = {
 
 /** The product page's query word that opens it on one colour (demo `#/p/<id>?color=<key>`; the product page, PR 49). */
 export const COLOUR_QUERY = 'color';
+/** PR 429: the size a product link from a support chat opens with (`?s=<size key>`, chosen when it is in stock). */
+export const SIZE_QUERY = 's';
+/** PR 429: a support chat's reference on a product link (`?r=<ref>`), kept for the order's credit (lib/shop/support-ref.ts). */
+export const REF_QUERY = 'r';
 
 /**
  * The shop pages still to come, by the register PR that builds each (Blueprint E0 stage table). `deep`: the address

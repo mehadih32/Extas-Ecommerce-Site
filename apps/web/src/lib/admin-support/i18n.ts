@@ -56,6 +56,9 @@ export function logLine(dict: Dict, e: { kind: string; actor: { type: string; na
   else if (e.kind === 'IDENTITY_CUSTOMER') line = d.byHand === true ? t(dict, 'sup.log.id.customerHand', { name }) : t(dict, 'sup.log.IDENTITY_CUSTOMER');
   else if (e.kind === 'IDENTITY_MERGED') line = t(dict, 'sup.log.IDENTITY_MERGED', { n: typeof d.contacts === 'number' ? String(d.contacts) : '1' });
   else if (e.kind === 'IDENTITY_UNLINKED' || e.kind === 'IDENTITY_SPLIT') line = t(dict, `sup.log.${e.kind}`, { name });
+  // PR 429: a product sent from the drawer, its link opened, an order placed from it
+  else if (e.kind === 'PRODUCT_SENT' || e.kind === 'PRODUCT_OPENED') line = t(dict, `sup.log.${e.kind}`, { name });
+  else if (e.kind === 'PRODUCT_ORDERED') line = t(dict, 'sup.log.PRODUCT_ORDERED', { number: typeof d.number === 'string' ? d.number : '' });
   else line = e.kind;
   return d.auto === true ? `${line} ${t(dict, 'sup.log.auto')}` : line;
 }

@@ -13,6 +13,8 @@
 // ("Polo Duo: any 2 colours for ৳1,800 · Save ৳200", `combos.pdpOffer`), each linking to its combo page. PR 65: the
 // buyers' reviews above the questions, the ones with a photo first, in one sliding row (PdpReviews, `pdp.reviews`),
 // with the rating line under the title that jumps down to them; approved reviews only, so a page with none shows none.
+// PR 429: a product link sent from a support chat opens on its colour and, when that size is in stock, its size
+// (`?s=`); its reference (`?r=`) goes to the support beacon (SupportRefBeacon), which credits an order to the chat.
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
@@ -43,7 +45,9 @@ import { liveFreeOverMinor, productExchangeTerms } from '@/lib/rules-public';
 import { productData } from '@/lib/shop/product';
 import { colourPath, isOneSize, nameParts, NO_COLOUR, openingColour, productRoute, stockOf, type PdpModel } from '@/lib/shop/product-model';
 import { toModel } from '@/lib/shop/product-view';
-import { COLOUR_QUERY, ROUTES } from '@/lib/shop/routes';
+import { COLOUR_QUERY, REF_QUERY, ROUTES, SIZE_QUERY } from '@/lib/shop/routes';
+import { supportRefOf } from '@/lib/shop/support-ref-model';
+import { SupportRefBeacon } from '@/components/shop/SupportRefBeacon';
 import { categoryName } from '@/lib/shop/shell-model';
 import { breadcrumbLd, largestUrl, productLd } from '@/lib/shop/structured-data';
 import { setCardGroups } from '@/lib/shop/combo';
@@ -329,7 +333,11 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   const finder = finderOffered(m, fs) ? fs : null;
   const fitKept = finder && finder.remember ? readFit(jar.get(FIT_COOKIE)?.value, finder) : null;
   const keptSize = finder && fitKept ? sizeFor(m, finder, fitKept)?.size : null;
-  const openSize = m.sizes.length === 1 ? m.sizes[0]!.key : keptSize && stockOf(m, colour, keptSize) > 0 ? keptSize : null;
+  // PR 429: a link from a support chat names the size the employee picked; it opens chosen while it is in stock
+  const askedSize = one(search[SIZE_QUERY]);
+  const linkSize = askedSize && m.sizes.some((x) => x.key === askedSize) && stockOf(m, colour, askedSize) > 0 ? askedSize : null;
+  const openSize = m.sizes.length === 1 ? m.sizes[0]!.key : (linkSize ?? (keptSize && stockOf(m, colour, keptSize) > 0 ? keptSize : null));
+  const supportRef = supportRefOf(one(search[REF_QUERY]));
 
   // ---- PR 49 · buttons and links; the bag is S04's (follow-up 38) ----
   const buy = set['pdp.buy'];
@@ -582,6 +590,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
         ) : null}
         <FinderPopup />
         <PdpEffects />
+        {supportRef ? <SupportRefBeacon code={supportRef} /> : null}
         {ld}
         {/* follow-up 21: the rows' cards get the back view and Quick add on a computer with a mouse */}
         <CardDeskMount c={c} />

@@ -53,6 +53,9 @@ export const SUPPORT_ERROR_CODES = [
   'CONTACT_FORM_OFF',
   // PR 427: the chat has no customer or no other chat to undo
   'NOT_LINKED',
+  // PR 429: products in the chat are switched off; the colour and size picked is sold out
+  'CATALOGUE_OFF',
+  'OUT_OF_STOCK',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 
