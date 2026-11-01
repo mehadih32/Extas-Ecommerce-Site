@@ -11,6 +11,11 @@ export interface PdfPage {
   heightPt: number;
   /** The page's picture: 8-bit greyscale, one byte per pixel, row by row from the top. */
   image: { width: number; height: number; gray: Buffer };
+  /**
+   * PR 408 (B2.4): what the drawing noticed — text cut at the page's edge, text wider than its box, text over other
+   * text. Only on a page drawn by `Sheet` (a tiled sheet has none of its own).
+   */
+  check?: { cut: number; overflow: number; overlap: number };
 }
 
 /** Millimetres to PDF points. */

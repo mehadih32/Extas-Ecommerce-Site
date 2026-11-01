@@ -10,5 +10,11 @@
         "help": "How many days back the handover page lists the batches handed over to each courier, and at most how many per courier. Each one can print a copy of its sheet."
       }
     }
+  },
+  "documents": {
+    "printQuality": {
+      "label": "Print quality",
+      "help": "The shop's logo at the top of the picking list and the handover sheet (the same letterhead as the invoice), and the outer band in millimetres where a printer cannot reach and the print check wants no ink."
+    }
   }
 }

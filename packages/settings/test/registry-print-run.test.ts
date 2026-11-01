@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { handoverHistorySchema, printRunSchema, printRunSettings } from '../src/registry-print-run';
+import { handoverHistorySchema, printQualitySchema, printRunSchema, printRunSettings } from '../src/registry-print-run';
 
 const spec = printRunSettings['fulfilment.printRun'];
 
@@ -37,5 +37,17 @@ describe('fulfilment.handover.history setting (v151)', () => {
     expect(h.default).toEqual({ days: 7, perCourier: 10 });
     expect(handoverHistorySchema.safeParse({ days: 0, perCourier: 10 }).success).toBe(false);
     expect(handoverHistorySchema.safeParse({ days: 91, perCourier: 10 }).success).toBe(false);
+  });
+});
+
+describe('documents.printQuality setting (v152)', () => {
+  const q = printRunSettings['documents.printQuality'];
+  it('is in the registry at version 152, labelled in both languages, the logo on lists and a 2 mm edge as shipped', () => {
+    expect(registry['documents.printQuality']).toBe(q);
+    expect(q.version).toBe(152);
+    for (const lang of ['en', 'bn'] as const) expect(lookup(messages[lang], q.helpKey!)).toBeTruthy();
+    expect(q.default).toEqual({ logoOnLists: true, edgeMm: 2 });
+    expect(printQualitySchema.safeParse({ logoOnLists: true, edgeMm: 6 }).success).toBe(false);
+    expect(printQualitySchema.safeParse({ logoOnLists: false, edgeMm: 0 }).success).toBe(true);
   });
 });

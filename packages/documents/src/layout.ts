@@ -66,6 +66,10 @@ export class Sheet {
   readonly height: number;
   private readonly shapes: string[] = [];
   private readonly texts: { input: Buffer; left: number; top: number }[] = [];
+  /** PR 408: every placed text's box, and what the placing noticed (see PdfPage.check). */
+  private readonly boxes: { x: number; y: number; w: number; h: number }[] = [];
+  private cut = 0;
+  private overflow = 0;
 
   constructor(
     readonly widthMm: number,
@@ -92,7 +96,11 @@ export class Sheet {
   place(block: TextBlock, x: number, y: number, widthPx: number, align: TextStyle['align'] = 'left'): number {
     if (!block.height) return 0;
     const left = align === 'centre' ? x + Math.max(0, Math.round((widthPx - block.width) / 2)) : align === 'right' ? x + Math.max(0, widthPx - block.width) : x;
-    this.texts.push({ input: block.png, left: Math.max(0, Math.round(left)), top: Math.max(0, Math.round(y)) });
+    const at = { x: Math.max(0, Math.round(left)), y: Math.max(0, Math.round(y)), w: block.width, h: block.height };
+    this.texts.push({ input: block.png, left: at.x, top: at.y });
+    if (left < 0 || y < 0 || at.x + at.w > this.width || at.y + at.h > this.height) this.cut += 1;
+    if (block.width > Math.ceil(widthPx) + 1) this.overflow += 1;
+    this.boxes.push(at);
     return block.height;
   }
 
@@ -145,8 +153,26 @@ export class Sheet {
       .greyscale()
       .raw()
       .toBuffer({ resolveWithObject: true });
-    return { widthPt: mmToPt(this.widthMm), heightPt: mmToPt(this.heightMm), image: { width: gray.info.width, height: gray.info.height, gray: gray.info.channels === 1 ? gray.data : toOneChannel(gray.data, gray.info.channels) } };
+    return {
+      widthPt: mmToPt(this.widthMm),
+      heightPt: mmToPt(this.heightMm),
+      image: { width: gray.info.width, height: gray.info.height, gray: gray.info.channels === 1 ? gray.data : toOneChannel(gray.data, gray.info.channels) },
+      check: { cut: this.cut, overflow: this.overflow, overlap: overlaps(this.boxes) },
+    };
   }
+}
+
+/** PR 408 — how many pairs of text boxes cover the same pixels (touching edges do not count). */
+export function overlaps(boxes: readonly { x: number; y: number; w: number; h: number }[]): number {
+  let n = 0;
+  for (let i = 0; i < boxes.length; i++) {
+    const a = boxes[i]!;
+    for (let j = i + 1; j < boxes.length; j++) {
+      const b = boxes[j]!;
+      if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) n += 1;
+    }
+  }
+  return n;
 }
 
 /** A text picture cut to what is left of the page (sharp refuses an overlay larger than its base). */

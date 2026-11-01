@@ -200,6 +200,20 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 Â· PR 179â
     expect(pdf.toString('latin1')).toContain('/MediaBox [0 0 283.46 425.20]');
   });
 
+  it('PR 408: the print check draws every document at every size and says each prints right; nothing printed or counted', async () => {
+    const jobs = await f.t.prisma.printJob.count();
+    expect((await stickers('POST', ['check'], { cookie: reader })).status).toBe(403);
+    const res = await stickers('POST', ['check']);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; edgeMm: number; rows: { doc: string; size: string; pages: number; problems: string[] }[] };
+    expect(body).toMatchObject({ ok: true, edgeMm: 2 });
+    expect(body.rows).toHaveLength(15);
+    expect(new Set(body.rows.map((r) => r.doc))).toEqual(new Set(['sticker', 'picking', 'handover', 'invoice']));
+    expect(body.rows.every((r) => r.pages >= 1 && Array.isArray(r.problems))).toBe(true);
+    expect(await f.t.prisma.printJob.count()).toBe(jobs);
+    expect((await stickers('GET', ['check'])).status).toBe(405);
+  }, 120_000);
+
   it('PR 180: the handover list, the rider\'s sheet as a real A4 PDF, and the batch handed over', async () => {
     const d = await booked('fa-4', '01700001904'); // hardcode-ok: a made-up test number
     expect((await stickers('POST', [], { body: { shipmentIds: [d.shipmentId] } })).status).toBe(200);

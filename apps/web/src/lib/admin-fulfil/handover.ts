@@ -16,6 +16,8 @@ export interface Letterhead {
   name: string | null;
   address: string | null;
   phone: string | null;
+  /** PR 408 (B2.4): the shop's logo, the same as on its invoice, printed in place of the name (none: the name prints). */
+  logo?: Buffer | null;
 }
 
 const money = (minor: number, currency: string) => formatMoney(minor, currency, 'en', false, 'en', '');
@@ -45,6 +47,7 @@ export function handoverDocument(sheet: HandoverSheet, cfg: HandoverSheetSetting
     heightMm,
     dpi: cfg.dpi,
     letterhead: [head.name, head.address, head.phone],
+    logo: head.logo ?? null,
     title: w('title', { courier: sheet.courierName }),
     summary: [
       w('summary', { parcels: sheet.totals.parcels, pieces: sheet.totals.pieces, amount: total }),

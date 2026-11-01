@@ -642,6 +642,65 @@
           "maxPerPdf": "Stickers per print"
         }
       }
+    },
+    "check": {
+      "sample": {
+        "heading": "Invoice",
+        "number": "Invoice",
+        "stamp": "SAMPLE",
+        "billed": "Billed to",
+        "deliver": "Deliver to",
+        "item": "Item",
+        "qty": "Qty",
+        "unit": "Price",
+        "amount": "Amount",
+        "subtotal": "Subtotal",
+        "total": "Total",
+        "payment": "Payment: cash on delivery",
+        "footer": "A sample to check the printing — not a real invoice"
+      },
+      "h": "Print check",
+      "d": "Draws every document at every size in your settings from sample words, and checks the print rules: nothing cut, nothing overlapping, no ink in the edge the printer cannot reach, readable in black and white. Nothing is printed or counted.",
+      "run": "Run the print check",
+      "running": "Checking every document…",
+      "again": "Check again",
+      "summary": "{ok} of {all} print right · edge {edge} mm",
+      "allOk": "Every document prints right at every size.",
+      "col": {
+        "doc": "Document",
+        "size": "Size",
+        "pages": "Pages",
+        "result": "Result"
+      },
+      "doc": {
+        "sticker": "Courier sticker",
+        "picking": "Picking list",
+        "handover": "Handover sheet",
+        "invoice": "Invoice"
+      },
+      "size": {
+        "a4": "A4",
+        "a5": "A5",
+        "roll80": "80 mm roll",
+        "roll58": "58 mm roll"
+      },
+      "ok": "prints right",
+      "problem": {
+        "CUT": "text cut at the edge",
+        "OVERFLOW": "text wider than its place",
+        "OVERLAP": "text over other text",
+        "EDGE_INK": "ink too close to the edge",
+        "FAINT": "too light for black and white"
+      },
+      "err": "The check could not run. Try again.",
+      "set": {
+        "h": "Print quality",
+        "d": "One letterhead on every document, and the edge the printer cannot reach.",
+        "logoOnLists": "The shop's logo on the picking list and the handover sheet",
+        "logoOnListsHelp": "The same logo as on the invoice (Brand settings). No logo set: the shop's name prints.",
+        "edgeMm": "Edge the printer cannot reach (mm)",
+        "edgeMmHelp": "0 to 5. The print check wants no ink in this band."
+      }
     }
   }
 }

@@ -26,6 +26,7 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { PrintCheck } from '@/components/admin/fulfil/PrintCheck';
 import { PdfButton } from '@/components/admin/fulfil/Print';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PRINT_RUN_INVOICE_LAYOUTS, PRINT_RUN_WHATS, STICKER_DPIS, STICKER_SIZES } from '@extas/settings';
@@ -129,6 +130,17 @@ export default async function PrintRunPage() {
     { kind: 'number', path: 'minScalePercent', label: ps('sticker.minScale'), help: ps('sticker.minScaleHelp'), min: 50, max: 100 },
     { kind: 'switch', path: 'showShop', label: ps('sticker.showShop') },
     { kind: 'number', path: 'maxPerPdf', label: ps('sticker.maxPerPdf'), min: 1, max: 500 },
+  ];
+  // PR 408: the print check's size names, and the print quality card
+  const checkSizes: Record<string, string> = {
+    ...Object.fromEntries(STICKER_SIZES.map((v) => [v, v === 'custom' ? t(d, 'ful.packing.size.custom', { w: n(layout.customMm.width), h: n(layout.customMm.height) }) : t(d, `ful.packing.size.${v}`)])),
+    ...Object.fromEntries(['a4', 'a5', 'roll80', 'roll58'].map((v) => [v, t(d, `ful.check.size.${v}`)])),
+  };
+  const qs = (k: string) => t(d, `ful.check.set.${k}`);
+  const qualityTexts: FieldsCardTexts = { ...texts('what'), h: qs('h'), d: qs('d') };
+  const qualityFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'logoOnLists', label: qs('logoOnLists'), help: qs('logoOnListsHelp') },
+    { kind: 'number', path: 'edgeMm', label: qs('edgeMm'), help: qs('edgeMmHelp'), min: 0, max: 5 },
   ];
   const size = layout.size === 'custom' ? t(d, 'ful.packing.size.custom', { w: n(layout.customMm.width), h: n(layout.customMm.height) }) : t(d, `ful.packing.size.${layout.size}`);
   const counts: [string, number][] = [
@@ -249,6 +261,8 @@ export default async function PrintRunPage() {
       )}
       <FieldsCard url={SETTINGS} screen={cards['fulfilment.printRun']} fields={whatFields} texts={texts('what')} canEdit={canSettings} testId="print-run-what" />
       <FieldsCard url={SETTINGS} screen={cards['delivery.sticker.layout']} fields={stickerFields} texts={texts('sticker')} canEdit={canSettings} testId="print-run-sticker" />
+      {canPrint ? <PrintCheck dict={fd} url="/api/admin/packing/stickers/check" sizeLabel={checkSizes} testId="print-check" /> : null}
+      <FieldsCard url={SETTINGS} screen={cards['documents.printQuality']} fields={qualityFields} texts={qualityTexts} canEdit={canSettings} testId="print-quality" />
       <section className="a2-card tight a2-mt12" aria-label={t(d, 'ful.recent.title')} data-testid="print-recent">
         <h2 className="a2-h4">{t(d, 'ful.recent.title')}</h2>
         {recent.length ? (
