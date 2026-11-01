@@ -1,0 +1,401 @@
+{
+  "kind": "gate-orders",
+  "at": "2026-11-01 16:38 (Asia/Dhaka)",
+  "sha": "3843bb63837b",
+  "host": "new.extas.com.bd",
+  "scenarios": 18,
+  "passed": 0,
+  "failed": 0,
+  "skipped": 18,
+  "ok": true,
+  "orders": 0,
+  "started": false,
+  "providers": {
+    "live": []
+  },
+  "budget": {
+    "page": 2500,
+    "press": 600,
+    "source": "lighthouserc.json ci.assert.assertions"
+  },
+  "rows": [
+    {
+      "id": "1",
+      "title": "One item, cash on delivery, phone on 4G",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "Three items, low-end Android on slow 3G",
+      "device": "android-low",
+      "network": "slow-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "Eight different items on a desktop",
+      "device": "desktop-1366",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "The same item twice, and the last pieces of its stock",
+      "device": "iphone-se",
+      "network": "fast-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "title": "Mock bKash, paid ahead (gate check 1)",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "title": "Mock bKash fails, then the retry (gate check 21)",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "title": "One customer, eight orders in a month, three cancelled",
+      "device": "android-low",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "title": "The Bengali checkout (/bn), Bengali digits in the phone",
+      "device": "android-mid",
+      "network": "fast-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "title": "A wrong phone number and a missing address first, then corrected",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "title": "Double-tap on Confirm, a reload mid-checkout and Back after it",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "title": "The network drops while the order is sent, then he presses again",
+      "device": "android-mid",
+      "network": "fast-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "title": "A guest order, then signed in with the sign-in code (mock SMS)",
+      "device": "iphone",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "title": "Delivery inside Dhaka, a Dhaka suburb and outside Dhaka, with the owner's charges",
+      "device": "tablet",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "title": "A coupon the owner made (only one with no use limit; none is ever made)",
+      "device": "desktop-1920",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "title": "The admin adds a piece, records a payment and re-books (gate check 4)",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "title": "Partial delivery, a return and an exchange (on the mocks)",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "title": "Two shoppers race for the last piece",
+      "device": "android-mid",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "title": "A 2.1 kg parcel, the courier's statement with a planted mismatch, and a gift (gate checks 24, 23, 7)",
+      "device": "desktop-1366",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "SKIP",
+          "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+        }
+      ]
+    }
+  ],
+  "gateChecks": [
+    {
+      "id": "1",
+      "what": "A mock-bKash-paid order: no message asks for money and the sticker says collect 0",
+      "verdict": "SKIP",
+      "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+    },
+    {
+      "id": "4",
+      "what": "Book, record a payment, re-book: the courier gets the new cash-on-delivery amount",
+      "verdict": "SKIP",
+      "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+    },
+    {
+      "id": "7",
+      "what": "Gift: sticker and receiver's details only while gift mode (checkout.gift) is on",
+      "verdict": "SKIP",
+      "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+    },
+    {
+      "id": "21",
+      "what": "bKash fails, then the retry: one order, one paid payment",
+      "verdict": "SKIP",
+      "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+    },
+    {
+      "id": "23",
+      "what": "The courier's statement with a planted mismatch is flagged",
+      "verdict": "SKIP",
+      "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+    },
+    {
+      "id": "24",
+      "what": "A 2.1 kg parcel follows its weight slab",
+      "verdict": "SKIP",
+      "detail": "no way to pay that the run can use on the mocks: cash on delivery is off and the mock bKash page is closed"
+    }
+  ],
+  "addressRows": [],
+  "timings": [],
+  "cleanup": {
+    "ok": true,
+    "orders": 0,
+    "cancelled": 0,
+    "alreadyClosed": 0,
+    "failed": [],
+    "refundRequests": 0,
+    "tagged": "0 of 0 test orders carry an internal \"GATE TEST\" note (the order flags take only the owner's own list)",
+    "productsArchived": 0,
+    "extrasArchived": 0,
+    "salesOk": true,
+    "salesDetail": "no order placed"
+  },
+  "problems": []
+}
