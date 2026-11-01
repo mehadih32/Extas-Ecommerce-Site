@@ -4,12 +4,14 @@
     "sub": "After its own costs; only delivered orders have a profit",
     "part": {
       "sales": "Goods sold",
+      "returns": "Goods that came back",
       "deliveryCharge": "Delivery charge",
       "productCost": "Product cost",
       "courier": "Courier",
       "paymentFees": "Payment fees",
       "packaging": "Packaging",
       "messages": "Messages and AI",
+      "returnLoss": "Return loss (not sellable)",
       "ads": "Ad spend share"
     },
     "state": {
@@ -27,6 +29,7 @@
     },
     "notDelivered": "The profit is counted when the order is delivered.",
     "uncosted": "No cost from the ERP for: {skus}",
-    "never": "Shows only. Nothing here charges anyone or changes a price."
+    "never": "Shows only. Nothing here charges anyone or changes a price.",
+    "returned": "Came back after delivery: {lines}"
   }
 }

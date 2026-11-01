@@ -44,9 +44,9 @@ const cell = (v: string | number | null) => {
 
 /** The table as CSV (minor units; the margin in %; `level` 0 = top group). */
 export function groupProfitCsv(r: GroupProfit, currency: string, name: (row: GroupProfitRow) => string): string {
-  const fig = (x: GroupProfitRow) => [x.orders, x.pieces, x.salesMinor, x.uncostedSalesMinor, x.productCostMinor, x.grossProfitMinor, x.orderCostsMinor, x.adsMinor, x.profitMinor, marginPct(x), x.missingLines, currency];
+  const fig = (x: GroupProfitRow) => [x.orders, x.pieces, x.salesMinor, x.uncostedSalesMinor, x.returnsMinor, x.productCostMinor, x.grossProfitMinor, x.orderCostsMinor, x.adsMinor, x.profitMinor, marginPct(x), x.missingLines, currency];
   const lines: (string | number | null)[][] = [
-    [r.by, 'level', 'orders', 'pieces', 'salesMinor', 'noCostSalesMinor', 'productCostMinor', 'grossProfitMinor', 'orderCostsMinor', 'adSpendMinor', 'profitMinor', 'marginPct', 'linesMissingAPart', 'currency'],
+    [r.by, 'level', 'orders', 'pieces', 'salesMinor', 'noCostSalesMinor', 'returnsMinor', 'productCostMinor', 'grossProfitMinor', 'orderCostsMinor', 'adSpendMinor', 'profitMinor', 'marginPct', 'linesMissingAPart', 'currency'],
     ...r.rows.map((x) => [name(x), x.id === null ? null : x.depth, ...fig(x)]),
     ['(total)', null, ...fig(r.total)],
   ];

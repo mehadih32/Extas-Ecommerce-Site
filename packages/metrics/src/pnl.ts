@@ -6,11 +6,14 @@
 //   − ad spend imported for the period's days (M8) − the other cost-ledger rows of the period (month-end expenses, M13:
 //     daily cost lines, expenses, return losses, messages not about a delivered order) − fixed costs (added by the caller,
 //     which spreads each month's fixed costs over its days) = net profit (M14).
+// PR 353: pieces that came back after receipt — returns (M2 value) off Sales = net delivered sales (M4); gross profit is
+// M4 − M9 (the kept pieces' cost); the booked return loss (M10) is inside the contribution, so its rows are no longer
+// among the other cost rows when the order is a delivered one.
 // An order without a cost snapshot on a counted line is left out of every profit line (never cost 0) and counted in
 // `uncosted` with its SKUs, so the coverage is shown; a part not known yet on a costed order (courier charge, a fee
 // figure, packaging) is left out and counted in `missing`. Store-scoped, archived orders skipped, minor units.
 import { basisWhere, kpi, type Db } from './metrics';
-import { orderProfits, PROFIT_PARTS, type ProfitInputs, type ProfitPart } from './order-profit';
+import { orderProfits, PROFIT_PARTS, RETURN_LOSS, SALE_RETURN_KINDS, type ProfitInputs, type ProfitPart } from './order-profit';
 import { BASIS_RULE, daysPeriod, nextDay } from './pure';
 
 export type PnlInputs = Omit<ProfitInputs, 'ads'>;
@@ -38,6 +41,8 @@ export interface Pnl {
   parts: Record<ProfitPart, number>;
   /** How many costed orders were missing each part. */
   missing: Record<(typeof PNL_MAYBE_MISSING)[number], number>;
+  /** PR 353: M4 over the costed orders — their Sales less the goods that came back. */
+  netSalesMinor: number;
   grossProfitMinor: number;
   contributionMinor: number;
   /** M8 over the period's days; null when an imported row has no converted amount; `adsImported` false when no rows. */
@@ -51,7 +56,8 @@ export interface Pnl {
 }
 
 const zeroParts = () => Object.fromEntries(PROFIT_PARTS.map((k) => [k, 0])) as Record<ProfitPart, number>;
-const contributionOf = (p: Record<ProfitPart, number>) => p.sales + p.deliveryCharge - p.productCost - p.courier - p.paymentFees - p.packaging - p.messages;
+const grossOf = (p: Record<ProfitPart, number>) => p.sales - p.returns - p.productCost;
+const contributionOf = (p: Record<ProfitPart, number>) => grossOf(p) + p.deliveryCharge - p.courier - p.paymentFees - p.packaging - p.messages - p.returnLoss;
 
 /** Profit and loss of one store over the days `from`–`to` (the store's own days), fixed costs not included. */
 export async function profitAndLoss(db: Db, storeId: number, days: { from: string; to: string }, inputs: PnlInputs): Promise<Pnl> {
@@ -73,8 +79,10 @@ export async function profitAndLoss(db: Db, storeId: number, days: { from: strin
       SELECT c."service", SUM(c."amountMinor")::bigint AS "minor"
         FROM "CostEntry" c
         LEFT JOIN "NotificationLog" l ON c."refType" = 'notification' AND l."id"::text = c."refId"
+        LEFT JOIN "ReturnItem" ri ON c."refType" = 'ReturnItem' AND c."service" = ${RETURN_LOSS} AND ri."id"::text = c."refId" AND ri."storeId" = c."storeId"
+        LEFT JOIN "ReturnRecord" rr ON rr."id" = ri."returnId" AND rr."kind"::text = ANY(${[...SALE_RETURN_KINDS]}) AND rr."receivedAt" IS NOT NULL
         LEFT JOIN "Order" o ON o."storeId" = c."storeId"
-                           AND o."id"::text = (CASE WHEN c."refType" = 'Order' THEN c."refId" ELSE l."orderId"::text END)
+                           AND o."id"::text = (CASE WHEN c."refType" = 'Order' THEN c."refId" WHEN c."refType" = 'ReturnItem' THEN rr."orderId"::text ELSE l."orderId"::text END)
        WHERE c."storeId" = ${storeId}
          AND COALESCE(c."costDate", (c."occurredAt" AT TIME ZONE ${inputs.timeZone})::date) >= ${days.from}::date
          AND COALESCE(c."costDate", (c."occurredAt" AT TIME ZONE ${inputs.timeZone})::date) < ${nextDay(days.to)}::date
@@ -111,7 +119,7 @@ export async function profitAndLoss(db: Db, storeId: number, days: { from: strin
     for (const key of PNL_MAYBE_MISSING) if (p.parts[key].state === 'missing') missing[key] += 1;
     for (const key of PROFIT_PARTS) parts[key] += own[key];
     day.salesMinor += own.sales;
-    day.grossProfitMinor += own.sales - own.productCost;
+    day.grossProfitMinor += grossOf(own);
     day.contributionMinor += contributionOf(own);
   }
   const a = ads[0]!;
@@ -126,7 +134,8 @@ export async function profitAndLoss(db: Db, storeId: number, days: { from: strin
     orderedMinor: k.ordered.valueMinor,
     parts,
     missing,
-    grossProfitMinor: parts.sales - parts.productCost,
+    netSalesMinor: parts.sales - parts.returns,
+    grossProfitMinor: grossOf(parts),
     contributionMinor: contributionOf(parts),
     adsMinor: a.unknown > 0 ? null : Number(a.minor ?? 0),
     adsImported: a.rows > 0,

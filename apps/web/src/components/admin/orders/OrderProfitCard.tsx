@@ -1,5 +1,6 @@
 // S16 · PR 348 — "Profit on this order" on the order page: goods sold and the delivery charge, less the product cost,
-// courier, payment fees, packaging, messages and AI, and the ad-spend share (an estimate); a part not known yet says so
+// courier, payment fees, packaging, messages and AI, and the ad-spend share (an estimate); PR 353: the goods that came
+// back after delivery and the return loss, with the returned pieces named; a part not known yet says so
 // and is left out, a line without an ERP cost hides the profit. Only for a delivered order. Words: orderProfit.*.
 import { PROFIT_INCOME, PROFIT_PARTS, type OrderProfit } from '@extas/metrics';
 import { t, type Dict } from '@/lib/i18n';
@@ -41,6 +42,12 @@ export function OrderProfitCard({ dict, p, money }: { dict: Dict; p: OrderProfit
             <div className="a2-note" data-testid="profit-uncosted">
               <ShellIcon name="alert" size={15} />
               <span>{c('uncosted', { skus: p.uncostedSkus.join(', ') })}</span>
+            </div>
+          ) : null}
+          {p.returned.length ? (
+            <div className="a2-note" data-testid="profit-returned">
+              <ShellIcon name="info" size={15} />
+              <span>{c('returned', { lines: p.returned.map((r) => `${r.sku} × ${r.pieces}`).join(', ') })}</span>
             </div>
           ) : null}
         </>
