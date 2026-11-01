@@ -223,6 +223,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/rules/eid', perm: 'rules.read', keys: ['eidDates'] },
         ],
       },
+      // S13 · PR 256: campaigns — audience, offer, creative, window and the planned budget (`/admin/marketing/campaigns/<id>`).
+      { id: 'campaigns', pages: [{ href: '/admin/marketing/campaigns', perm: 'marketing.campaigns.read', keys: ['marketingCampaigns', 'marketingCampaign'] }] },
       // S13 · PR 257: server-side event tracking (the ad platforms' server APIs; mocks until their keys are in).
       { id: 'tracking', pages: [{ href: '/admin/marketing/tracking', perm: 'ads.tracking.read', keys: ['adsTracking'] }] },
       // S13 · PR 254 (MKT-05): landing pages for ads — the list and the builder (`/admin/marketing/landing/<id>`, `new`);

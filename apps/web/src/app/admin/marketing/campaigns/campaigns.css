@@ -1,0 +1,10 @@
+/* S13 · PR 256 — Marketing › Campaigns: the channel and offer chips and the campaign's landing pages (the list and the
+   two-column page reuse landing.css's lp-grid / lp-stack / lp-g2 / lp-acts). */
+.adm2 .cp-chips{display:flex;flex-wrap:wrap;gap:8px}
+.adm2 .cp-chip{min-height:44px;min-width:44px;padding:0 14px;border:1px solid var(--line);border-radius:22px;background:#fff;color:var(--ink);font:inherit;font-size:13.5px;cursor:pointer}
+.adm2 .cp-chip.on{border-color:var(--ink);background:var(--ink);color:#fff}
+.adm2 .cp-chip:disabled{cursor:default;opacity:.7}
+.adm2 .cp-pages{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.adm2 .cp-pages li{display:grid;gap:0;border-top:1px solid var(--line);padding:2px 0}
+.adm2 .cp-pages li:first-child{border-top:0}
+.adm2 .cp-pl{display:inline-flex;align-items:center;min-height:44px;overflow-wrap:anywhere}

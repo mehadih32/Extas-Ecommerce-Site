@@ -7022,8 +7022,16 @@ model Campaign {
   archivedAt     DateTime?      @db.Timestamptz(3)
   createdAt      DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 256: where it runs (meta, google, youtube, tiktok, sms, whatsapp, email, organic) — a record, nothing is sent.
+  channels       String[]       @default([])
+  /// PR 256: the creative — headline and main text (English, Bengali optional), versioned JSON.
+  creative       Json?
+  /// PR 256: what budgetMinor means: DAILY or TOTAL (a plan only; no platform budget is changed from here).
+  budgetKind     String?
 
   adCampaigns AdCampaign[]
+
+  @@index([storeId, status])
 }
 
 enum CampaignStatus {
