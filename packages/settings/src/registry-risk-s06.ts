@@ -69,6 +69,10 @@
 // firing is kept with its campaign; the report reads `reportDays`. Off as shipped.
 // PR 557 (`sizeExchange`, in the same setting, off as shipped): the same product and colour in another size already on its
 // way is a size worry, not forgetfulness — the notice offers an exchange on arrival instead of a second parcel.
+// PR 559 (`checkout.phoneRisk`, version 109): the phone-entry risk check. While on, the moment the checkout's phone number
+// is whole the shop asks every connected courier fraud check in the background (each within `budgetMs`; a slow or failed
+// one simply passes) and keeps the answers `cacheHours`, so the checkout's own look and the order's score read them
+// without waiting. The customer is never shown anything and the form never waits. Off as shipped.
 import { z } from 'zod';
 import { setting } from './define';
 import { ORDER_CANCEL_CODES } from './registry-orders';
@@ -293,6 +297,19 @@ export const checkoutTransitDuplicateSchema = z
 export type CheckoutTransitDuplicate = z.output<typeof checkoutTransitDuplicateSchema>;
 export const CHECKOUT_TRANSIT_DUPLICATE_DEFAULT: CheckoutTransitDuplicate = { enabled: false, include: 'shipped', windowDays: 30, byPhoneAlone: false, sizeExchange: false, reportDays: 30 }; // hardcode-ok: registry default (the owner changes it on Orders › Risk rules)
 
+/** PR 559 — the phone-entry risk check: the courier fraud checks asked in the background while the customer types. */
+export const checkoutPhoneRiskSchema = z
+  .object({
+    enabled: z.boolean(),
+    /** How long one courier check may take before it is let go (the customer passes). */
+    budgetMs: z.int().min(200).max(10_000),
+    /** How long a courier's answer is kept for the checkout and the order's score. */
+    cacheHours: z.int().min(1).max(720),
+  })
+  .strict();
+export type CheckoutPhoneRisk = z.output<typeof checkoutPhoneRiskSchema>;
+export const CHECKOUT_PHONE_RISK_DEFAULT: CheckoutPhoneRisk = { enabled: false, budgetMs: 1500, cacheHours: 24 }; // hardcode-ok: registry default (the owner changes it on Orders › Risk rules)
+
 export const riskS06Settings = {
   'risk.blocklist': setting({
     ...base,
@@ -412,5 +429,15 @@ export const riskS06Settings = {
     labelKey: 'risk.transitDuplicate.label',
     helpKey: 'risk.transitDuplicate.help',
     sortOrder: 341,
+  }),
+  'checkout.phoneRisk': setting({
+    ...base,
+    version: V545,
+    schema: checkoutPhoneRiskSchema,
+    default: CHECKOUT_PHONE_RISK_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'risk.phoneRisk.label',
+    helpKey: 'risk.phoneRisk.help',
+    sortOrder: 342,
   }),
 };

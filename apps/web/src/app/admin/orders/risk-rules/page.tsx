@@ -9,6 +9,7 @@
 // customers card (a good customer is never held by the engine by itself; the stops show in Reports › Stopped by the
 // engine); PR 556: the Parcel already on its way card (the checkout notice) and its report by campaign (`risk.report`);
 // PR 557: that card's "another size: exchange on arrival" switch and the report's "of them, another size" column.
+// PR 559: the Phone-entry check card (`checkout.phoneRisk`) and the "A pattern, not a slip" card (the `pattern` signal).
 // The risk matrix, the rule switches (PR 544's API), the duplicate rules and
 // protection & learning join with their PRs. Seeing needs `risk.rules.read`, saving `risk.rules.write`; the API checks
 // each again. Everything ships off.
@@ -32,7 +33,9 @@ import { blocklistCardScreen, blocklistCardTexts } from '@/lib/admin-orders/bloc
 import { blockProposalCard } from '@/lib/admin-orders/block-proposal-api';
 import { bundlingCard } from '@/lib/admin-orders/bundling-api';
 import { goodCustomerCard } from '@/lib/admin-orders/good-customer-api';
+import { phoneRiskCards } from '@/lib/admin-orders/phone-risk-api';
 import { transitCard, transitReportFor } from '@/lib/admin-orders/transit-api';
+import { courierFraudSources } from '@/lib/shop/courier-fraud';
 import { TRANSIT_INCLUDE } from '@extas/settings';
 import { refusersCardScreen, refusersCardTexts } from '@/lib/admin-orders/refusers-card';
 import { levelsScreen, levelsTexts } from '@/lib/admin-orders/risk-levels';
@@ -66,7 +69,7 @@ export default async function RiskRulesPage() {
   const who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const held = access.guard.permissions;
   const canEdit = held?.has('risk.rules.write') ?? false;
-  const [data, adv, bl, rf, bd, bp, gc, cancelReasons, td, tdReport] = await Promise.all([
+  const [data, adv, bl, rf, bd, bp, gc, cancelReasons, td, tdReport, pr] = await Promise.all([
     riskLevels(readDeps(access.deps), who),
     advanceSettings(readDeps(access.deps), who),
     blocklist(readDeps(access.deps), who),
@@ -77,6 +80,7 @@ export default async function RiskRulesPage() {
     access.deps.resolver.value('orders.cancel.reasons', { storeId: MOTHER_STORE_ID }),
     transitCard(access.deps, MOTHER_STORE_ID),
     transitReportFor(access.deps, who),
+    phoneRiskCards(access.deps, MOTHER_STORE_ID),
   ]);
   const d = view.dict;
   // PR 522: one parcel for one person's orders (the setting `risk.bundling`, off as shipped)
@@ -128,6 +132,24 @@ export default async function RiskRulesPage() {
     { kind: 'switch', path: 'sizeExchange', label: tw('sizeExchange'), help: tw('sizeExchangeHelp') },
     { kind: 'number', path: 'reportDays', label: tw('reportDays'), help: tw('reportDaysHelp'), min: 1, max: 365 },
   ];
+  // PR 559: the phone-entry check (the setting `checkout.phoneRisk`, off as shipped) and the pattern signal (off)
+  const rw = (k: string, vars?: Record<string, string | number>) => t(d, `orders.rr.pr.${k}`, vars);
+  const prTexts: FieldsCardTexts = { ...bdTexts, h: rw('h'), d: rw('d'), readOnly: rw('readOnly'), err: Object.fromEntries(Object.keys(bdTexts.err).map((c) => [c, rw(`err.${c}`)])) };
+  const prFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: rw('enabled') },
+    { kind: 'number', path: 'budgetMs', label: rw('budgetMs'), help: rw('budgetMsHelp'), min: 200, max: 10_000 },
+    { kind: 'number', path: 'cacheHours', label: rw('cacheHours'), help: rw('cacheHoursHelp'), min: 1, max: 720 },
+  ];
+  const ptw = (k: string) => t(d, `orders.rr.pt.${k}`);
+  const ptTexts: FieldsCardTexts = { ...bdTexts, h: ptw('h'), d: ptw('d'), readOnly: ptw('readOnly'), err: Object.fromEntries(Object.keys(bdTexts.err).map((c) => [c, ptw(`err.${c}`)])) };
+  const ptFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: ptw('enabled') },
+    { kind: 'number', path: 'weight', label: ptw('weight'), help: ptw('weightHelp'), min: 0, max: 100 },
+    { kind: 'number', path: 'minParcels', label: ptw('minParcels'), help: ptw('minParcelsHelp'), min: 1, max: 100 },
+    { kind: 'number', path: 'failPct', label: ptw('failPct'), help: ptw('failPctHelp'), min: 1, max: 100 },
+    { kind: 'number', path: 'halfLifeDays', label: ptw('halfLifeDays'), help: ptw('halfLifeDaysHelp'), min: 1, max: 3_650 },
+  ];
+  const noCourierCheck = courierFraudSources().length === 0;
   const count = (x: number) => String(x);
   return (
     <div className="a2-z" data-testid="risk-rules">
@@ -191,6 +213,17 @@ export default async function RiskRulesPage() {
           )}
         </div>
       ) : null}
+      <div className="a2-mt12">
+        <FieldsCard url="/api/admin/risk/phone-risk" screen={pr.phoneRisk} fields={prFields} texts={prTexts} canEdit={canEdit} testId="risk-phone" />
+        {noCourierCheck ? (
+          <p className="a2-xs a2-mute a2-mt6" data-testid="risk-phone-none">
+            {rw('none')}
+          </p>
+        ) : null}
+      </div>
+      <div className="a2-mt12">
+        <FieldsCard url="/api/admin/risk/phone-risk" screen={pr.pattern} fields={ptFields} texts={ptTexts} canEdit={canEdit} testId="risk-pattern" />
+      </div>
       <p className="a2-xs a2-mute a2-mt12">{t(d, 'orders.rr.later')}</p>
     </div>
   );

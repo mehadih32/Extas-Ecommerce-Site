@@ -61,6 +61,8 @@ export interface CheckoutRequest {
   gift?: boolean;
   /** PR 560: the name and phone he typed (null: not yet); only a finished checkout is looked at. */
   details?: CheckoutDetails | null;
+  /** PR 559 (SIM-F-015): this browser's device id (while the owner keeps device ids), for the Parameter for Checkout's look. */
+  deviceId?: string | null;
 }
 
 /** PR 605 — a gift checkout: how it is paid ahead (`checkout.gift.advance`). */
@@ -305,7 +307,7 @@ export async function checkoutQuote(deps: CheckoutDeps, input: CheckoutRequest):
     const done = detailsFinished(details, await setting(deps, input.storeId, 'checkout.form.nameMin'), true);
     const line = address.line.status === 'resolved' ? address.line : null;
     if (done) {
-      const f = await deps.advanceFlag({ storeId: input.storeId, phone: done.phone, areaId: line?.area.areaId ?? null, resolved: true, placeSure: address.read.placeSure, totalMinor: codTotal, pieces: bag.summary.count });
+      const f = await deps.advanceFlag({ storeId: input.storeId, phone: done.phone, areaId: line?.area.areaId ?? null, resolved: true, placeSure: address.read.placeSure, totalMinor: codTotal, pieces: bag.summary.count, deviceId: input.deviceId ?? null, name: done.name, addressText: input.address?.line ?? null });
       if (f && advanceAmountOf(f.requirement, f.partPercent, { dueMinor: codTotal, chargeMinor: before.state === 'charge' ? before.chargeMinor : null }) > ZERO) flag = f;
     }
   }

@@ -173,6 +173,14 @@ describe('the row’s chips', () => {
     expect(signalDetail(view('bn'), { key: 'ipPhones', weight: 15, values: { count: 3, number: 'EX-9', withinHours: 24 } } as never, 'BDT')).toContain('24');
   });
 
+  it('PR 559: the pattern says the share, of how many, and whose — our records or a courier by its key', () => {
+    expect(signalDetail(view('en'), { key: 'pattern', weight: 30, values: { pct: 100, parcels: 5, source: 'own', failPct: 80 } } as never, 'BDT')).toBe(
+      '100% of 5 outcomes failed, newer ones weighing more (' + t(adminDicts.en, 'orders.risk.source.own') + '; from 80%)',
+    );
+    expect(signalDetail(view('bn'), { key: 'pattern', weight: 30, values: { pct: 80, parcels: 5, source: 'steadfast', failPct: 80 } } as never, 'BDT')).toContain('steadfast');
+    for (const lang of ['en', 'bn'] as const) for (const k of ['orders.risk.sig.pattern', 'orders.rr.pr.h', 'orders.rr.pr.none', 'orders.rr.pt.h', 'orders.rr.pt.halfLifeDaysHelp']) expect(t(adminDicts[lang], k), k).not.toBe(k);
+  });
+
   it('the phone is said back the way the team reads it', () => {
     expect(phoneText('+8801712345678')).toBe('01712-345678');
     expect(phoneText(null)).toBe('');

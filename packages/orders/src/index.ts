@@ -109,6 +109,9 @@ export * from './new-customer';
 // S06 · PR 556: the in-transit duplicate notice at checkout and its campaign report (transit-duplicate.ts); PR 557: its
 // "another size: exchange on arrival" notice and the earlier order's exchange line.
 export * from './transit-duplicate';
+// S06 · PR 559: the phone-entry risk check — the courier fraud checks asked in the background and kept (phone-risk.ts); the
+// owner's pattern signal is in risk-score.ts.
+export * from './phone-risk';
 export * from './advance-request';
 export * from './advance-settings';
 export * from './booking';

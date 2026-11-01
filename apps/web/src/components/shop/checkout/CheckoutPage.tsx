@@ -101,6 +101,7 @@ export async function CheckoutPage({ c, quote, s, prefill = null, gift = false, 
         voice={s['checkout.voice'].enabled ? { speechLang: s['checkout.voice'].speechLang, maxSeconds: s['checkout.voice'].maxSeconds, maxKb: s['checkout.voice'].maxKb, keepRecording: s['checkout.voice'].keepRecording, retentionDays: s['checkout.voice'].retentionDays } : null}
         paused={paused}
         transit={transit}
+        phoneRisk={s['checkout.phoneRisk'].enabled}
       />
       {actions}
     </div>

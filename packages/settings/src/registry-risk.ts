@@ -1,4 +1,5 @@
-// S06 · a number's history and the risk score. Registry version 43 (`risk.signals` changed in v46: PR 541's signals). Labels: messages/risk.<lang>.json (the Orders
+// S06 · a number's history and the risk score. Registry version 43 (`risk.signals` changed in v46: PR 541's signals; in
+// v109: PR 559's pattern). Labels: messages/risk.<lang>.json (the Orders
 // group; the admin's place is Orders → Risk rules, ORD-06 of docs/BACKEND-ARCHITECTURE.md §5.3, built on the new
 // admin shell).
 //
@@ -83,6 +84,18 @@ const historySignals = {
   deviceMatch: z.object({ enabled: z.boolean(), weight, windowDays: days }).strict().default({ enabled: false, weight: 20, windowDays: 90 }),
   /** PR 159 (v46): at least `atLeast` OTHER numbers ordered from the same connection (IP) in the `withinHours` before this one. */
   ipPhones: z.object({ enabled: z.boolean(), weight, atLeast: count, withinHours: z.int().min(1).max(24 * 30) }).strict().default({ enabled: false, weight: 15, atLeast: 3, withinHours: 24 }),
+  /**
+   * PR 559 (v109, SIM-F-015): a pattern, not a slip. Of the outcomes so far — parcels taken or refused at the door (not
+   * our fault) and cancels with one of `cancels.codes` — from this number, and the same device or the same person under
+   * another number, the failed share is weighed by recency (an outcome `halfLifeDays` old counts half), and each courier's
+   * own fraud check (cached at phone entry, PR 559/567) is a source of its own; the highest share counts. It fires from
+   * `minParcels` outcomes in one source when `failPct` % or more failed: 20 orders with 5–8 cancelled is not a flag, five
+   * parcels all refused is. Off until the owner switches it on.
+   */
+  pattern: z
+    .object({ enabled: z.boolean(), weight, minParcels: count, failPct: z.int().min(1).max(100), halfLifeDays: z.int().min(1).max(3_650) })
+    .strict()
+    .default({ enabled: false, weight: 30, minParcels: 4, failPct: 80, halfLifeDays: 180 }),
 };
 
 /** Signals read from the address against the gazetteer (PR 158). */
@@ -166,6 +179,7 @@ export const riskSettings = {
       identityMatch: { enabled: false, weight: 20, windowDays: 365, addressSimilarity: 0.6 },
       deviceMatch: { enabled: false, weight: 20, windowDays: 90 },
       ipPhones: { enabled: false, weight: 15, atLeast: 3, withinHours: 24 },
+      pattern: { enabled: false, weight: 30, minParcels: 4, failPct: 80, halfLifeDays: 180 },
       addressUnresolved: { enabled: true, weight: 10 },
       addressUnsure: { enabled: true, weight: 5 },
       addressNoDetail: { enabled: true, weight: 5 },
@@ -174,8 +188,9 @@ export const riskSettings = {
       areaRefusals: { enabled: false, weight: 10, atLeast: 3, windowDays: 90 },
     },
     // PR 541 (v46) added orderPieces and identityMatch (off): an owner's stored set from v43 still reads, the new
-    // signals taking their defaults (the schema's `.default`), so nothing he set is lost.
-    version: 46,
+    // signals taking their defaults (the schema's `.default`), so nothing he set is lost. PR 559 (v109) added the
+    // pattern (off) the same way.
+    version: 109,
     since: V,
     valueType: 'JSON',
     labelKey: 'risk.signals.label',

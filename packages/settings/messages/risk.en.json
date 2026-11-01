@@ -10,7 +10,7 @@
     },
     "signals": {
       "label": "Risk signals and weights",
-      "help": "Each signal has its own switch and weight (0–100), and the numbers it looks at. From the number's history: refused parcels (not our fault), cancelled orders (only the reasons you tick), the share of parcels taken at the door, a first order, unanswered calls, another order in the last hours, a parcel already on its way, a high order value (your amount; empty: never). From the address: no place found, the place not sure, no house details, a different district than the number is known by, your list of places, many refusals at the same place. PR 541 adds, both off: many pieces in one order (your number; empty: never), and the same person under another number — earlier orders of another number with the same name and an address this alike, a refusal among them named. Same device, another number (off): earlier orders from this device under another number. Many numbers from one connection (off): other numbers ordered from the same connection within the hours you set.",
+      "help": "Each signal has its own switch and weight (0–100), and the numbers it looks at. From the number's history: refused parcels (not our fault), cancelled orders (only the reasons you tick), the share of parcels taken at the door, a first order, unanswered calls, another order in the last hours, a parcel already on its way, a high order value (your amount; empty: never). From the address: no place found, the place not sure, no house details, a different district than the number is known by, your list of places, many refusals at the same place. PR 541 adds, both off: many pieces in one order (your number; empty: never), and the same person under another number — earlier orders of another number with the same name and an address this alike, a refusal among them named. Same device, another number (off): earlier orders from this device under another number. Many numbers from one connection (off): other numbers ordered from the same connection within the hours you set. PR 559 adds, off: a pattern of failed parcels — of the outcomes so far (taken, refused, cancelled with a counted reason) from this number, the same device or the same person under another number, and each courier's own check, the failed share weighed by recency (an outcome as old as the half-life counts half); it fires from the outcomes you set when the share you set or more failed. Twenty orders with five to eight cancelled is not a pattern; five parcels all refused is.",
       "names": {
         "refusals": "Refused parcels before",
         "cancels": "Cancelled orders before",
@@ -29,7 +29,8 @@
         "orderPieces": "Many pieces in one order",
         "identityMatch": "Same person, another number",
         "deviceMatch": "Same device, another number",
-        "ipPhones": "Many numbers from one connection"
+        "ipPhones": "Many numbers from one connection",
+        "pattern": "A pattern of failed parcels"
       }
     },
     "bands": {
@@ -112,6 +113,10 @@
     "transitDuplicate": {
       "label": "Parcel already on its way",
       "help": "When on, the moment a whole phone number is typed at checkout the shop looks for this customer's order that is already on its way (or any open order, if chosen) with the very piece in the bag — same product, colour and size. The checkout shows the piece, the earlier order's number and its tracking link, and two buttons: take it out, or \"No, I want another one\". The order's number and link show only when that order was placed from this browser or account; a match by the number alone shows nothing unless \"by the number alone\" is on (then without them). Every notice is kept with the campaign that brought the customer, for the report. Nothing is cancelled or blocked. With \"size exchange\" on, the same product and colour in another size already on its way offers an exchange on arrival instead of a second parcel. Off as shipped."
+    },
+    "phoneRisk": {
+      "label": "Phone-entry risk check",
+      "help": "When on, the moment the phone number at checkout is whole, the shop asks every connected courier fraud check in the background while the customer keeps typing. Each check gets the time you set; a slow or failed one simply passes the customer. The answers are kept for the hours you set, so the checkout's own look and the order's risk score read them without waiting. The customer never sees a score, a reason or a wait; nothing is blocked. Off as shipped."
     }
   },
   "defaults": {

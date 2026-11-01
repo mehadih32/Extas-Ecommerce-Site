@@ -15,6 +15,7 @@ import { allow, setting, UUID, type OrdersDeps, type Who } from './context';
 import { OrdersError, isOrdersError } from './errors';
 import { deviceOrders, IDENTITY_SELECT, identityOrders, ipPhoneCount } from './identity';
 import { identityRiskFacts } from './identity-graph';
+import { courierFactsOf } from './phone-risk';
 import { phoneOrders } from './phone-history';
 import { scoreRisk, type AddressFacts, type FiredSignal, type KnownPlace, type PhoneSummary, type RiskConfig, type RiskFacts, type RiskResult } from './pure';
 import { applyRiskLevel } from './risk-levels';
@@ -29,7 +30,10 @@ export async function riskConfig(deps: OrdersDeps, storeId: number): Promise<{ c
   const [signals, bands, history, identity] = await Promise.all([setting(deps, storeId, 'risk.signals'), setting(deps, storeId, 'risk.bands'), setting(deps, storeId, 'risk.history'), setting(deps, storeId, 'risk.identity')]);
   const config: RiskConfig = { signals, bands, ourFault: history.ourFaultRefusals, noAnswerOutcomes: history.noAnswerOutcomes };
   // PR 519: the identity graph's matching is part of the rules only while it is on (off, a stored score's fingerprint is as before)
-  const fingerprint = identity.enabled ? { ...config, identity } : config;
+  // PR 559: the pattern only joins the fingerprint while it is on (off, a stored score's fingerprint is as before)
+  const { pattern, ...others } = signals;
+  const kept: RiskConfig = pattern.enabled ? config : { ...config, signals: others as RiskConfig['signals'] };
+  const fingerprint = identity.enabled ? { ...kept, identity } : kept;
   return { config, version: createHash('sha256').update(JSON.stringify(fingerprint)).digest('hex').slice(0, 12), historyOrders: history.orders };
 }
 
@@ -43,18 +47,21 @@ export async function riskFactsOf(deps: OrdersDeps, storeId: number, orderId: st
   const s = config.signals;
   // PR 519: while the identity graph is on and the order is linked, the same person under another number and the same
   // device are read from its identity (transitive: through any of his orders); otherwise from their own look-ups
-  const graph = s.identityMatch.enabled || s.deviceMatch.enabled ? await identityRiskFacts(deps, storeId, o, historyOrders) : null;
-  const [past, identity, device, ipPhones] = await Promise.all([
+  // PR 559: the pattern reads the same person and the same device too (SIM-F-015), and the couriers' own checks
+  const pattern = s.pattern.enabled;
+  const graph = s.identityMatch.enabled || s.deviceMatch.enabled || pattern ? await identityRiskFacts(deps, storeId, o, historyOrders) : null;
+  const [past, identity, device, ipPhones, courier] = await Promise.all([
     phoneOrders(deps, storeId, o.phone, { excludeOrderId: o.id, before: o.placedAt, take: historyOrders }),
-    // PR 541 (SIM-F-015): only read while the owner has the identity check on
-    !s.identityMatch.enabled ? Promise.resolve([]) : graph ? Promise.resolve(graph.identity) : identityOrders(deps, storeId, o, s.identityMatch, historyOrders),
-    // PR 159: the device and the connection, only while their signal is on
-    !s.deviceMatch.enabled ? Promise.resolve([]) : graph ? Promise.resolve(graph.device) : deviceOrders(deps, storeId, o, s.deviceMatch, historyOrders),
+    // PR 541 (SIM-F-015): only read while the owner has the identity check (or the pattern) on
+    !s.identityMatch.enabled && !pattern ? Promise.resolve([]) : graph ? Promise.resolve(graph.identity) : identityOrders(deps, storeId, o, s.identityMatch, historyOrders),
+    // PR 159: the device and the connection, only while their signal (or the pattern) is on
+    !s.deviceMatch.enabled && !pattern ? Promise.resolve([]) : graph ? Promise.resolve(graph.device) : deviceOrders(deps, storeId, o, s.deviceMatch, historyOrders),
     s.ipPhones.enabled ? ipPhoneCount(deps, storeId, o, s.ipPhones) : Promise.resolve(undefined),
+    pattern ? courierFactsOf(deps, storeId, o.phone, o.placedAt) : Promise.resolve([]),
   ]);
   const place = await placeFactsOf(deps, storeId, o, past, { refusals: s.areaRefusals.enabled });
   const pieces = o.items.reduce((n, i) => n + i.quantity, 0);
-  const facts: RiskFacts = { placedAt: o.placedAt, totalMinor: o.totalMinor, past, ...place, pieces, identity, device, ...(ipPhones ? { ipPhones } : {}) };
+  const facts: RiskFacts = { placedAt: o.placedAt, totalMinor: o.totalMinor, past, ...place, pieces, identity, device, ...(ipPhones ? { ipPhones } : {}), ...(courier.length ? { courier } : {}) };
   return { order: o, facts };
 }
 

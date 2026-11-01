@@ -365,6 +365,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
     gift: gift !== null,
     // PR 560: the finished details, so the owner's Parameter for Checkout looks at exactly what the page showed
     details: { name: d.form.name, phone: check.phone.e164 },
+    // PR 559 (SIM-F-015): and this browser's device, as the page's own quote had it
+    deviceId: req.deviceId ?? null,
   });
   const q = await quoteNow();
   if (!q.bag.items.length && !q.bag.sets.length) throw new CheckoutError('EMPTY', 'the bag has nothing to order');
