@@ -236,7 +236,10 @@
       "read": "See the customers and one customer's page (orders, lifetime value, exchanges, support), with the phone number masked; every profile open is logged",
       "phone": "See, call and copy a customer's full phone number (each copy and call is logged)",
       "merge": "Merge two profiles of the same person, split a merge again, or mark a pair as not the same person (nothing moves or is deleted)",
-      "privacy": "File and cancel a customer’s request to erase his personal details, and see the requests; only the owner carries one out"
+      "privacy": "File and cancel a customer’s request to erase his personal details, and see the requests; only the owner carries one out",
+      "segments": {
+        "write": "Save, change, copy and archive customer segments (groups by what customers did); seeing them needs only “see customers”"
+      }
     },
     "seo": {
       "read": "See the SEO page: which pages search engines may list, the title and description templates, the AI drafts and the structured data",

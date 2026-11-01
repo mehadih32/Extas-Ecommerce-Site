@@ -1,0 +1,17 @@
+/* S14 · PR 287 — Customers › Segments and the builder: a condition row (field, value, remove) that wraps under itself
+   on a phone, the big live count, a row's "not valid" line; the shell's tokens only. */
+.adm2 .seg-cond{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto;gap:8px;align-items:center}
+.adm2 .seg-cond .seg-bad{grid-column:1/-1;color:var(--bad)}
+.adm2 details.a2-more-opts>summary{cursor:pointer;color:var(--ink2);list-style-position:inside;padding:12px 0;line-height:20px}
+.adm2 [data-testid=seg-settings] .a2-ckb{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.adm2 .seg-big{font-size:40px;font-weight:650;letter-spacing:-.02em;line-height:1.1}
+.adm2 .seg-list .a2-prow{min-height:44px}
+.adm2 .seg-list .a2-prs{margin-left:auto;font-weight:650}
+@media (max-width:767px){
+  .adm2 .a2-crumb a{display:inline-flex;align-items:center;min-height:44px}
+  .adm2 .seg-cond{grid-template-columns:minmax(0,1fr) auto}
+  .adm2 .seg-cond > :first-child{grid-row:1;grid-column:1}
+  .adm2 .seg-cond > :nth-child(2){grid-row:2;grid-column:1/-1}
+  .adm2 .seg-cond > .a2-icb{grid-row:1;grid-column:2}
+  .adm2 .seg-cond + .seg-cond{border-top:1px solid var(--ln2);padding-top:10px}
+}

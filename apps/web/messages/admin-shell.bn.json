@@ -73,6 +73,7 @@
       },
       "customers": {
         "all": "সব কাস্টমার",
+        "segments": "সেগমেন্ট",
         "review": "যাচাই বাকি"
       },
       "messages": {

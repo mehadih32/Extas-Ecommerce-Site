@@ -30,7 +30,13 @@ export type CustomersErrorCode =
   /** PR 382: a request for this person is waiting already (`data.requestId`). */
   | 'ALREADY_REQUESTED'
   /** PR 382: the request is done or cancelled (`data.status`). */
-  | 'NOT_WAITING';
+  | 'NOT_WAITING'
+  /** PR 287: another live segment already has this name. */
+  | 'NAME_TAKEN'
+  /** PR 287: the store keeps the owner's most segments already, or a segment has the most conditions. */
+  | 'LIMIT_REACHED'
+  /** PR 287: someone saved this segment since the page was opened; reload it. */
+  | 'STALE';
 
 export class CustomersError extends Error {
   readonly code: CustomersErrorCode;
@@ -57,6 +63,7 @@ export class CustomersError extends Error {
       case 'NOT_ACTIVE':
       case 'CONFIRM_MISMATCH':
       case 'OPEN_ORDERS':
+      case 'LIMIT_REACHED':
         return 422;
       case 'OWNER_ONLY':
       case 'SWITCHED_OFF':

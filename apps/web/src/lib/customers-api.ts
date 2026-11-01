@@ -24,6 +24,16 @@
 //   POST  /api/admin/customers/merge                  {survivorId, mergedId, signals?, note?} (Idempotency-Key) (customers.merge)
 //   POST  /api/admin/customers/not-same               {aId, bId, signals?, note?} the pair is not suggested again (customers.merge)
 //   POST  /api/admin/customers/merges/:id/undo        {note} a split, or a "not the same person" taken back (customers.merge)
+//   GET   /api/admin/customers/segments               PR 287: the saved segments and the built-in ones, counted live
+//                                                     (customers.read)
+//   PUT   /api/admin/customers/segments/settings      {enabled?, maxSegments?, maxConditions?, previewShown?} the page's
+//                                                     settings card (customers.segments.write; audited)
+//   GET   /api/admin/customers/segments/options       the builder's pickers: categories, districts, sizes, sources
+//   POST  /api/admin/customers/segments/preview       {definition} the builder's live count and first people (customers.read)
+//   POST  /api/admin/customers/segments               {name, definition} a new segment (customers.segments.write; audited)
+//   GET   /api/admin/customers/segments/:id           one segment with its live count (customers.read)
+//   POST  /api/admin/customers/segments/:id           {name, definition, version} a change (STALE in between; audited)
+//   POST  /api/admin/customers/segments/:id/archive   {archived} archive or restore, never deleted (audited)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -64,7 +74,7 @@ async function handle(request: Request, deps: AdminDeps | null, permission: cu.C
 }
 
 /** The list's query parameters (anything else is ignored). */
-const LIST_PARAMS = ['view', 'q', 'source', 'sort', 'page'] as const;
+const LIST_PARAMS = ['view', 'q', 'source', 'sort', 'page', 'segment'] as const;
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 const notFound = () => Promise.resolve(fail(404, 'not-found'));
@@ -86,6 +96,7 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
     if (m !== 'GET') return notAllowed();
     return handle(request, deps, 'customers.read', async (x) => ({ match: await cu.customerByPhone(x.deps, x.who, x.url.searchParams.get('phone') ?? '') }));
   }
+  if (a === 'segments') return segmentsRoute(request, deps, m, path.slice(1));
   if (a === 'merge-suggestions') {
     if (path.length > 1) return notFound();
     if (m !== 'GET') return notAllowed();
@@ -145,5 +156,32 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
     return notFound();
   }
   if (a) return badId('customerId');
+  return notFound();
+}
+
+/** PR 287 — the segments' routes (`path` after /segments). */
+function segmentsRoute(request: Request, deps: AdminDeps | null, m: string, path: string[]): Promise<Response> {
+  const [id, sub] = path;
+  if (!id) {
+    if (m === 'GET') return handle(request, deps, 'customers.read', async (x) => ({ screen: await cu.segmentsScreen(x.deps, x.who) }));
+    if (m === 'POST') return handle(request, deps, 'customers.segments.write', async (x) => ({ segment: await cu.saveSegment(x.deps, x.who, null, await body(request)) }), 201);
+    return notAllowed();
+  }
+  if (path.length > 2) return notFound();
+  if (id === 'settings' && !sub) return m === 'PUT' ? handle(request, deps, 'customers.segments.write', async (x) => ({ screen: await cu.saveSegmentSettings(x.deps, x.who, await body(request)) })) : notAllowed();
+  if (id === 'options' && !sub) return m === 'GET' ? handle(request, deps, 'customers.read', async (x) => ({ options: await cu.segmentOptions(x.deps, x.who) })) : notAllowed();
+  if (id === 'preview' && !sub) return m === 'POST' ? handle(request, deps, 'customers.read', async (x) => ({ preview: await cu.previewSegment(x.deps, x.who, await body(request)) })) : notAllowed();
+  if (!isUuid(id)) return badId('segmentId');
+  if (!sub) {
+    if (m === 'GET')
+      return handle(request, deps, 'customers.read', async (x) => {
+        const page = await cu.segmentPage(x.deps, x.who, id);
+        if (!page) throw new cu.CustomersError('NOT_FOUND', 'no such segment', ['segmentId']);
+        return { segment: page };
+      });
+    if (m === 'POST') return handle(request, deps, 'customers.segments.write', async (x) => ({ segment: await cu.saveSegment(x.deps, x.who, id, await body(request)) }));
+    return notAllowed();
+  }
+  if (sub === 'archive') return m === 'POST' ? handle(request, deps, 'customers.segments.write', async (x) => ({ result: await cu.archiveSegment(x.deps, x.who, id, await body(request)) })) : notAllowed();
   return notFound();
 }

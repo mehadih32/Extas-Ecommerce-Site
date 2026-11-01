@@ -11,6 +11,8 @@ export interface CustomerQuery {
   source?: string;
   sort?: CustomerSort;
   page?: number;
+  /** PR 287: a saved segment's id. */
+  segment?: string;
 }
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)?.trim() ?? '';
@@ -26,6 +28,7 @@ export function parseCustomerQuery(sp: Record<string, string | string[] | undefi
     ...(one(sp.source) ? { source: one(sp.source).slice(0, 60) } : {}),
     ...((CUSTOMER_SORTS as readonly string[]).includes(sort) && sort !== 'last' ? { sort: sort as CustomerSort } : {}),
     ...(Number.isInteger(page) && page > 1 ? { page } : {}),
+    ...(/^[0-9a-f-]{36}$/i.test(one(sp.segment)) ? { segment: one(sp.segment) } : {}),
   };
 }
 
@@ -38,6 +41,7 @@ export function customersHref(q: CustomerQuery, change: Partial<Record<keyof Cus
   if (m.source) sp.set('source', m.source);
   if (m.sort && m.sort !== 'last') sp.set('sort', m.sort);
   if (m.page && m.page > 1) sp.set('page', String(m.page));
+  if (m.segment) sp.set('segment', m.segment);
   const s = sp.toString();
   return s ? `${CUSTOMERS_BASE}?${s}` : CUSTOMERS_BASE;
 }

@@ -18,6 +18,12 @@ describe('the Customers list address (PR 285)', () => {
     expect(customersHref(q, { page: undefined })).toBe('/admin/customers?view=refused&q=01712&sort=name');
     expect(customersHref(q, { view: 'all' })).toBe('/admin/customers?q=01712&sort=name&page=2');
   });
+  it('PR 287: keeps a segment id, never anything else in its place', () => {
+    const seg = '01963f6e-1111-7000-8000-000000000287';
+    expect(parseCustomerQuery({ segment: seg })).toEqual({ segment: seg });
+    expect(parseCustomerQuery({ segment: 'everyone' })).toEqual({});
+    expect(customersHref({ segment: seg }, { view: 'new' })).toBe(`/admin/customers?view=new&segment=${seg}`);
+  });
   it('a share is a whole percent, or nothing when there is nothing to share', () => {
     expect(share(1, 3)).toBe(33);
     expect(share(0, 0)).toBeNull();

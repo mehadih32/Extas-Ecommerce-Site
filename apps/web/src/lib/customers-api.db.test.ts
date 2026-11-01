@@ -120,4 +120,30 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect((await api('POST', `${a}/orders`)).status).toBe(405);
     expect((await api('GET', `${a}/nothing`)).status).toBe(404);
   });
+
+  it('PR 287: segments — off until the owner turns them on (audited); a reader sees and previews, may not save; save, change, archive', async () => {
+    expect((await api('GET', 'segments', { cookie: reader })).body).toMatchObject({ ok: true, screen: { enabled: false, segments: [] } });
+    expect((await api('POST', 'segments/preview', { cookie: reader, body: { definition: { v: 1, all: [] } } })).body).toMatchObject({ ok: false, error: 'SWITCHED_OFF' });
+    expect((await api('PUT', 'segments/settings', { cookie: reader, body: { enabled: true } })).status).toBe(403);
+    const on = await api('PUT', 'segments/settings', { body: { enabled: true } });
+    expect(on.body).toMatchObject({ ok: true, screen: { enabled: true } });
+    const pv = await api('POST', 'segments/preview', { cookie: reader, body: { definition: { v: 1, all: [{ field: 'ordersMax', value: 0 }] } } });
+    expect(pv.status).toBe(200);
+    expect(pv.body.preview.count).toBeGreaterThan(0);
+    expect(pv.body.preview.members.every((m: { phone: { masked: boolean } | null }) => !m.phone || m.phone.masked)).toBe(true);
+    expect((await api('POST', 'segments', { cookie: reader, body: { name: 'No orders', definition: { v: 1, all: [] } } })).status).toBe(403);
+    const made = await api('POST', 'segments', { body: { name: 'No orders', definition: { v: 1, all: [{ field: 'ordersMax', value: 0 }] } } });
+    expect(made.status).toBe(201);
+    const id = made.body.segment.segment.id as string;
+    expect((await api('GET', `segments/${id}`, { cookie: reader })).body.segment.segment.name).toBe('No orders');
+    const changed = await api('POST', `segments/${id}`, { body: { name: 'Never ordered', definition: { v: 1, all: [{ field: 'ordersMax', value: 0 }] }, version: made.body.segment.segment.version } });
+    expect(changed.body).toMatchObject({ ok: true, segment: { segment: { name: 'Never ordered' } } });
+    expect((await api('POST', `segments/${id}`, { body: { name: 'Again', definition: { v: 1, all: [] }, version: made.body.segment.segment.version } })).body).toMatchObject({ ok: false, error: 'STALE' });
+    expect((await api('GET', `?segment=${id}`, { cookie: reader })).body).toMatchObject({ ok: true, segment: { id, name: 'Never ordered' } });
+    expect((await api('POST', `segments/${id}/archive`, { body: { archived: true } })).body).toMatchObject({ ok: true, result: { archived: true } });
+    expect((await api('GET', 'segments/options', { cookie: reader })).body.options).toMatchObject({ categories: expect.any(Array), areas: expect.any(Array) });
+    expect((await api('GET', 'segments/not-a-uuid')).status).toBe(404);
+    expect((await api('DELETE', `segments/${id}`)).status).toBe(405);
+    expect((await api('GET', `segments/${id}/x`)).status).toBe(404);
+  });
 });

@@ -17,6 +17,9 @@
 // history (empty until S22) and "Who looked at this customer" for the owner (profile.ts).
 // S18 · PR 382: erasure requests (CUS-07, D9): filed by `customers.privacy`, carried out by the owner alone with a typed
 // word, never while an order is on its way; the personal details are anonymised, money and stock stay (erasure.ts).
+// PR 287: segments from real behaviour, saved and reusable (segments.ts; the conditions in segment-rules.ts, also in
+// `@extas/customers/pure`): counted live over the list's own people (people-sql.ts), the list's views as built-in
+// segments, the Customers list narrowed to one (`?segment=`); off as shipped (`customers.segments`).
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
@@ -27,6 +30,8 @@ export * from './errors';
 export * from './family';
 export * from './list';
 export * from './merge';
+export * from './people-sql';
 export * from './profile';
 export * from './pure';
+export * from './segments';
 export * from './view';

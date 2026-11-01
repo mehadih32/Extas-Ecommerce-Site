@@ -144,6 +144,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'customers',
     tabs: [
       { id: 'all', pages: [{ href: '/admin/customers', perm: 'customers.read', keys: ['customers', 'customer'] }] },
+      // PR 287: Segments (CUS-03) and one segment's builder (CUS-03a), in the demo's order
+      { id: 'segments', pages: [{ href: '/admin/customers/segments', perm: 'customers.read', keys: ['customersSegments'] }] },
       { id: 'review', pages: [{ href: '/admin/customers/review', perm: 'customers.read', keys: ['customersReview'] }] },
     ],
   },

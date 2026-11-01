@@ -56,7 +56,7 @@ export function PersonCell({ view, r, href }: { view: AdminView; r: Pick<Custome
   );
 }
 
-function Kpis({ view, data, s }: { view: AdminView; data: ListData; s: ListSettings }) {
+function Kpis({ view, data, s, segment }: { view: AdminView; data: ListData; s: ListSettings; segment?: string }) {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const c = data.counts;
@@ -77,7 +77,7 @@ function Kpis({ view, data, s }: { view: AdminView; data: ListData; s: ListSetti
         {body}
       </div>
     ) : (
-      <Link key={id} className="a2-card a2-kpi" href={customersHref({}, { view: id })} data-testid={`cus-kpi-${id}`}>
+      <Link key={id} className="a2-card a2-kpi" href={customersHref({ segment }, { view: id })} data-testid={`cus-kpi-${id}`}>
         {body}
       </Link>
     );
@@ -165,12 +165,29 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf }:
     <div className="a2-z" data-testid="customers-list">
       <PageHead view={view} place={locateKey('customers')} title={t(d, 'cus.list.title')} sub={t(d, 'cus.list.sub')} />
       <SectionTabs view={view} current="customers" />
-      <Kpis view={view} data={data} s={settings} />
+      {query.segment ? (
+        <section className="a2-card tight a2-mt12" data-testid="cus-segment">
+          <div className="a2-between">
+            <span className="a2-sm">{data.segment ? t(d, 'cus.seg.listShowsName', { name: data.segment.name }) : t(d, 'cus.seg.listGone')}</span>
+            <span className="a2-gap8">
+              {data.segment ? (
+                <Link className="a2-btn sm" href={`/admin/customers/segments/${data.segment.id}`}>
+                  {t(d, 'cus.seg.listOpen')}
+                </Link>
+              ) : null}
+              <Link className="a2-btn sm" href={customersHref({ ...query, segment: undefined, page: undefined })}>
+                {t(d, 'cus.seg.listClear')}
+              </Link>
+            </span>
+          </div>
+        </section>
+      ) : null}
+      <Kpis view={view} data={data} s={settings} segment={query.segment} />
       <nav className="a2-views" aria-label={t(d, 'cus.list.viewsAria')} data-testid="cus-views">
         {data.views.map((v) => {
           const on = v === current;
           return (
-            <Link key={v} className={`a2-view${on ? ' on' : ''}`} href={customersHref({ q: query.q, source: query.source, sort: query.sort }, { view: v })} aria-current={on ? 'page' : undefined} scroll={false} data-view={v}>
+            <Link key={v} className={`a2-view${on ? ' on' : ''}`} href={customersHref({ q: query.q, source: query.source, sort: query.sort, segment: query.segment }, { view: v })} aria-current={on ? 'page' : undefined} scroll={false} data-view={v}>
               {t(d, `cus.list.view.${v}`)}
               <span className="a2-cnt">{n(data.counts[v] ?? 0)}</span>
             </Link>
@@ -187,7 +204,8 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf }:
         go={t(d, 'cus.list.searchGo')}
         aria={t(d, 'cus.list.filtersAria')}
         selects={[sourceSel, sortSel]}
-        clear={filtered || query.sort ? { href: customersHref({ view: query.view }), label: t(d, 'cus.list.clear') } : null}
+        keep={{ segment: query.segment ?? '' }}
+        clear={filtered || query.sort ? { href: customersHref({ view: query.view, segment: query.segment }), label: t(d, 'cus.list.clear') } : null}
       />
       {data.rows.length ? (
         <>

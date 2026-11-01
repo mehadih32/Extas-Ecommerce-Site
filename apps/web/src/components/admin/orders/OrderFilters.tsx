@@ -15,7 +15,7 @@ export interface FilterSelect {
   options: { value: string; label: string }[];
 }
 
-export function OrderFilters({ action, view, defaultView, q, search, go, aria, selects, clear }: { action: string; view: string; defaultView: string; q: string; search: string; go: string; aria: string; selects: FilterSelect[]; clear: { href: string; label: string } | null }) {
+export function OrderFilters({ action, view, defaultView, q, search, go, aria, selects, clear, keep }: { action: string; view: string; defaultView: string; q: string; search: string; go: string; aria: string; selects: FilterSelect[]; clear: { href: string; label: string } | null; /** PR 287: more parts of the address the search keeps (the Customers list's segment). */ keep?: Record<string, string> }) {
   const form = useRef<HTMLFormElement>(null);
   const router = useRouter();
   // With JavaScript: the same address without the empty fields (a clean, shareable link), and no full reload.
@@ -29,6 +29,7 @@ export function OrderFilters({ action, view, defaultView, q, search, go, aria, s
   return (
     <form ref={form} className="a2-fbar" action={action} method="get" role="search" aria-label={aria} onSubmit={submit} data-testid="orders-filters">
       {view !== defaultView ? <input type="hidden" name="view" value={view} /> : null}
+      {Object.entries(keep ?? {}).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v} /> : null))}
       <label className="a2-fsrch">
         <span className="a2-sr">{search}</span>
         <ShellIcon name="search" size={16} />
