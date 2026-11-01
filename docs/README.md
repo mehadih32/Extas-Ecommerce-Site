@@ -235,6 +235,7 @@ the pages are out of date.
 | `reports/server/2026-10-20-*-setup.md` | Earlier machine reports, one per setup run |
 | [`reports/smoke/latest/README.md`](reports/smoke/latest/README.md) | The newest smoke test (after every deploy and every night): each page and screen, its result and picture (CN-016) |
 | `reports/erp-acceptance/latest/` | The newest ERP v6 acceptance run against the demo ERP (every night and before every release; "waiting for the demo key" until the owner types it): README.md with a Bengali summary line and report.json (PR 621) |
+| `reports/gate-orders/latest/` | The newest go-live test-order run on the preview site (by hand only: GitHub › Actions › gate-orders; `tools/gate-orders/`, `infra/deploy/gate-orders.sh`): 18 scenarios on phones and desktops over throttled networks, the six gate checks 1, 4, 7, 21, 23, 24, every address typed → stored → admin → courier → sticker, timings, and the clean-up (every test order cancelled, the test products archived, nothing deleted). README.md with a Bengali summary line and result.json (PR 414 follow-up, CN-013 phase 2) |
 
 ## Where the docs also live (CN-011)
 

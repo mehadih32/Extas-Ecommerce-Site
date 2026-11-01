@@ -1,0 +1,120 @@
+{
+  "$comment": "PR 414 follow-up (CN-013 go-live gate phase 2, owner's OK of 1 Nov 2026) — the test data of the gate-orders run (tools/gate-orders/). SAMPLE DATA ONLY, never the owner's: every product, colour, size and place of stock carries the GATE TEST mark (`marker`) and is archived when the run ends; the prices and weights are made-up test figures; the addresses are public place names from the shipped gazetteer (packages/delivery/data/gazetteer-sample.csv; tools/gate-orders/lib/test-data.test.mjs proves each district and thana is in it) with made-up house numbers; the phone numbers are made from `phone` below, never written out. `expect.district` is the gazetteer code the address lies in, `expect.places` the codes the shop's resolver may read it as (null: the customer must pick, `pick`), `band` the default delivery band it belongs to (compared only while that band is switched on).",
+  "version": 1,
+  "marker": "GATE TEST",
+  "slugPrefix": "gate-test-",
+  "warehouse": { "code": "GATE-TEST", "name": "GATE TEST — do not ship (gate-orders run)", "location": { "code": "GATE-TEST-1", "name": "GATE TEST shelf" } },
+  "colours": [
+    { "key": "gate-test-black", "nameEn": "GATE TEST Black", "nameBn": "গেট টেস্ট কালো", "hex": "#1A1A1A" },
+    { "key": "gate-test-white", "nameEn": "GATE TEST White", "nameBn": "গেট টেস্ট সাদা", "hex": "#F4F4F4" },
+    { "key": "gate-test-navy", "nameEn": "GATE TEST Navy", "nameBn": "গেট টেস্ট নেভি", "hex": "#1F2A44" }
+  ],
+  "sizes": [
+    { "key": "gate-test-s", "label": "S", "sortOrder": 10 },
+    { "key": "gate-test-m", "label": "M", "sortOrder": 20 },
+    { "key": "gate-test-l", "label": "L", "sortOrder": 30 },
+    { "key": "gate-test-xl", "label": "XL", "sortOrder": 40 }
+  ],
+  "products": [
+    {
+      "key": "polo",
+      "slug": "gate-test-polo",
+      "nameEn": "GATE TEST — do not ship · Polo",
+      "nameBn": "GATE TEST — পাঠাবেন না · পোলো",
+      "category": "polos",
+      "priceMinor": 50000,
+      "weightGrams": 700,
+      "colours": ["gate-test-black", "gate-test-white"],
+      "sizes": ["gate-test-s", "gate-test-m", "gate-test-l", "gate-test-xl"],
+      "stock": 40
+    },
+    {
+      "key": "shirt",
+      "slug": "gate-test-shirt",
+      "nameEn": "GATE TEST — do not ship · Shirt",
+      "nameBn": "GATE TEST — পাঠাবেন না · শার্ট",
+      "category": "shirts",
+      "priceMinor": 75000,
+      "weightGrams": 400,
+      "colours": ["gate-test-black", "gate-test-white", "gate-test-navy"],
+      "sizes": ["gate-test-m", "gate-test-l", "gate-test-xl"],
+      "stock": 40
+    },
+    {
+      "key": "trouser",
+      "slug": "gate-test-trouser",
+      "nameEn": "GATE TEST — do not ship · Trouser",
+      "nameBn": "GATE TEST — পাঠাবেন না · ট্রাউজার",
+      "category": "trousers",
+      "priceMinor": 99000,
+      "weightGrams": 600,
+      "colours": ["gate-test-navy", "gate-test-black"],
+      "sizes": ["gate-test-s", "gate-test-m", "gate-test-l", "gate-test-xl"],
+      "stock": 40
+    }
+  ],
+  "phone": {
+    "$comment": "Made-up test numbers: 01 + an operator digit + 0000 + four digits from the run and the order (tools/gate-orders/lib/test-data.mjs). Under the mock SMS nothing is sent; a run with a real message gateway connected places no order at all.",
+    "operators": ["3", "4", "5", "6", "7", "8", "9"],
+    "middle": "0000"
+  },
+  "payment": {
+    "$comment": "Gate check 4: the smallest payment recorded by hand on the edited order (a made-up test figure), so the courier's amount changes while the owner's money pages barely move.",
+    "recordMinor": 100
+  },
+  "coverageGoal": { "$comment": "The owner's ask (1 Nov 2026): a full run's addresses reach every division and this many districts outside Dhaka.", "divisions": 8, "outsideDistricts": 12 },
+  "statement": {
+    "$comment": "Gate check 23: the planted mismatch — the courier's statement says this much was collected for a test parcel that owes more (the shop must flag it), and a parcel the shop never booked; no charge, so the test statement moves no money.",
+    "collectedMinor": 0,
+    "chargeMinor": 0,
+    "unknownConsignment": "GATE-TEST-NOT-OURS"
+  },
+  "weightCheckGrams": 2100,
+  "addresses": [
+    { "id": "dhk-dhanmondi", "kind": "dhaka", "division": "dhaka", "text": "House 12, Road 7, Dhanmondi, Dhaka 1209", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.dhanmondi", "bd.dhaka.dhaka.dhanmondi-road-7"] }, "band": "dhaka-city" },
+    { "id": "dhk-mirpur", "kind": "dhaka", "division": "dhaka", "text": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.mirpur-dohs", "bd.dhaka.dhaka.mirpur"] }, "band": "dhaka-city" },
+    { "id": "dhk-gulshan", "kind": "dhaka", "division": "dhaka", "text": "House 5, Road 90, Gulshan 2, Dhaka 1212", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.gulshan-2", "bd.dhaka.dhaka.gulshan"] }, "band": "dhaka-city" },
+    { "id": "dhk-uttara", "kind": "dhaka", "division": "dhaka", "text": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.uttara"] }, "band": "dhaka-city" },
+    { "id": "dhk-mohammadpur-bn", "kind": "dhaka", "division": "dhaka", "quirk": "bengali", "text": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.mohammadpur"] }, "band": "dhaka-city" },
+    { "id": "dhk-motijheel-mixed", "kind": "dhaka", "division": "dhaka", "quirk": "mixed", "text": "৪৫ নম্বর বিল্ডিং, Motijheel C/A, ঢাকা", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.motijheel"] }, "band": "dhaka-city" },
+    { "id": "dhk-banani-long", "kind": "dhaka", "division": "dhaka", "quirk": "long", "text": "House 48, 3rd floor (opposite the green gate, beside the pharmacy, ask the guard for the GATE TEST parcel), Road 11, Block F, Banani, Dhaka 1213", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.banani"] }, "band": "dhaka-city" },
+    { "id": "dhk-khilgaon-pasted", "kind": "dhaka", "division": "dhaka", "quirk": "pasted", "text": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.khilgaon-taltola", "bd.dhaka.dhaka.khilgaon"] }, "band": "dhaka-city" },
+    { "id": "dhk-badda", "kind": "dhaka", "division": "dhaka", "text": "House 7, Link Road, Badda, Dhaka 1212", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.badda"] }, "band": "dhaka-city" },
+    { "id": "dhk-rampura", "kind": "dhaka", "division": "dhaka", "text": "House 19, Hajipara, Rampura, Dhaka 1219", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.hajipara-rampura", "bd.dhaka.dhaka.rampura"] }, "band": "dhaka-city" },
+    { "id": "dhk-lalbagh", "kind": "dhaka", "division": "dhaka", "text": "23/1 Fort Road, Lalbagh, Dhaka 1211", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.lalbagh"] }, "band": "dhaka-city" },
+    { "id": "dhk-jatrabari", "kind": "dhaka", "division": "dhaka", "text": "House 8, Lane 2, Jatrabari, Dhaka 1204", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.jatrabari"] }, "band": "dhaka-city" },
+    { "id": "dhk-farmgate", "kind": "dhaka", "division": "dhaka", "text": "House 3, Tejturi Bazar, Farmgate, Dhaka 1215", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.farmgate"] }, "band": "dhaka-city" },
+    { "id": "dhk-bashundhara", "kind": "dhaka", "division": "dhaka", "text": "House 210, Road 5, Block D, Bashundhara R/A, Dhaka 1229", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.bashundhara-r-a"] }, "band": "dhaka-city" },
+    { "id": "dhk-mohakhali", "kind": "dhaka", "division": "dhaka", "text": "House 410, Road 25, Mohakhali DOHS, Dhaka", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.mohakhali-dohs", "bd.dhaka.dhaka.mohakhali"] }, "band": "dhaka-city" },
+    { "id": "dhk-shyamoli", "kind": "dhaka", "division": "dhaka", "text": "House 6, Ring Road, Shyamoli, Dhaka 1207", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.ring-road-shyamoli"] }, "band": "dhaka-city" },
+    { "id": "dhk-no-thana", "kind": "dhaka", "division": "dhaka", "quirk": "missingThana", "text": "House 9, Road 2, Dhaka", "expect": { "district": "bd.dhaka.dhaka", "places": null }, "band": "dhaka-city", "pick": "dhaka-city" },
+    { "id": "sub-savar", "kind": "suburb", "division": "dhaka", "text": "House 14, Bank Colony, Savar, Dhaka 1340", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.savar"] }, "band": "dhaka-sub-area" },
+    { "id": "sub-ashulia", "kind": "suburb", "division": "dhaka", "text": "Baipail, Ashulia, Savar, Dhaka", "expect": { "district": "bd.dhaka.dhaka", "places": ["bd.dhaka.dhaka.savar.ashulia"] }, "band": "dhaka-sub-area" },
+    { "id": "sub-tongi", "kind": "suburb", "division": "dhaka", "text": "House 2, Station Road, Tongi, Gazipur 1710", "expect": { "district": "bd.dhaka.gazipur", "places": ["bd.dhaka.gazipur.gazipur-sadar.tongi"] }, "band": "dhaka-sub-area" },
+    { "id": "sub-fatullah", "kind": "suburb", "division": "dhaka", "text": "Fatullah Bazar, Fatullah, Narayanganj 1420", "expect": { "district": "bd.dhaka.narayanganj", "places": ["bd.dhaka.narayanganj.narayanganj-sadar.fatullah"] }, "band": "dhaka-sub-area" },
+    { "id": "sub-siddhirganj-bn", "kind": "suburb", "division": "dhaka", "quirk": "bengali", "text": "বাড়ি ৭, সিদ্ধিরগঞ্জ, নারায়ণগঞ্জ", "expect": { "district": "bd.dhaka.narayanganj", "places": ["bd.dhaka.narayanganj.narayanganj-sadar.siddhirganj"] }, "band": "dhaka-sub-area" },
+    { "id": "out-chattogram", "kind": "outside", "division": "chattogram", "text": "House 3, Road 1, Panchlaish, Chattogram 4203", "expect": { "district": "bd.chattogram.chattogram", "places": ["bd.chattogram.chattogram.panchlaish"] }, "band": "outside-dhaka" },
+    { "id": "out-coxs-bazar", "kind": "outside", "division": "chattogram", "text": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar", "expect": { "district": "bd.chattogram.coxs-bazar", "places": ["bd.chattogram.coxs-bazar.coxs-bazar-sadar"] }, "band": "outside-dhaka" },
+    { "id": "out-cumilla", "kind": "outside", "division": "chattogram", "text": "Kandirpar, Cumilla Adarsha Sadar, Cumilla", "expect": { "district": "bd.chattogram.cumilla", "places": ["bd.chattogram.cumilla.cumilla-adarsha-sadar"] }, "band": "outside-dhaka" },
+    { "id": "out-rajshahi", "kind": "outside", "division": "rajshahi", "text": "Shaheb Bazar, Boalia, Rajshahi 6100", "expect": { "district": "bd.rajshahi.rajshahi", "places": ["bd.rajshahi.rajshahi.boalia"] }, "band": "outside-dhaka" },
+    { "id": "out-bogura-bn", "kind": "outside", "division": "rajshahi", "quirk": "bengali", "text": "গাবতলী বাজার, গাবতলী, বগুড়া", "expect": { "district": "bd.rajshahi.bogura", "places": ["bd.rajshahi.bogura.gabtali"] }, "band": "outside-dhaka" },
+    { "id": "out-khulna", "kind": "outside", "division": "khulna", "text": "House 11, Sonadanga, Khulna 9100", "expect": { "district": "bd.khulna.khulna", "places": ["bd.khulna.khulna.sonadanga"] }, "band": "outside-dhaka" },
+    { "id": "out-jashore", "kind": "outside", "division": "khulna", "text": "Doratana More, Jashore Sadar, Jashore", "expect": { "district": "bd.khulna.jashore", "places": ["bd.khulna.jashore.jashore-sadar"] }, "band": "outside-dhaka" },
+    { "id": "out-kushtia", "kind": "outside", "division": "khulna", "text": "NS Road, Kushtia Sadar, Kushtia", "expect": { "district": "bd.khulna.kushtia", "places": ["bd.khulna.kushtia.kushtia-sadar"] }, "band": "outside-dhaka" },
+    { "id": "out-barishal", "kind": "outside", "division": "barishal", "text": "Sadar Road, Barishal Kotwali, Barishal", "expect": { "district": "bd.barishal.barishal", "places": ["bd.barishal.barishal.barishal-kotwali"] }, "band": "outside-dhaka" },
+    { "id": "out-patuakhali-mixed", "kind": "outside", "division": "barishal", "quirk": "mixed", "text": "সদর রোড, Patuakhali Sadar, পটুয়াখালী", "expect": { "district": "bd.barishal.patuakhali", "places": ["bd.barishal.patuakhali.patuakhali-sadar"] }, "band": "outside-dhaka" },
+    { "id": "out-bhola-no-thana", "kind": "outside", "division": "barishal", "quirk": "missingThana", "text": "Char Fasson Road, Bhola", "expect": { "district": "bd.barishal.bhola", "places": null }, "band": "outside-dhaka", "pick": "outside-dhaka" },
+    { "id": "out-sylhet", "kind": "outside", "division": "sylhet", "text": "House 4, Jalalabad, Sylhet 3100", "expect": { "district": "bd.sylhet.sylhet", "places": ["bd.sylhet.sylhet.jalalabad"] }, "band": "outside-dhaka" },
+    { "id": "out-sreemangal", "kind": "outside", "division": "sylhet", "text": "Tea Resort Road, Sreemangal, Moulvibazar", "expect": { "district": "bd.sylhet.moulvibazar", "places": ["bd.sylhet.moulvibazar.sreemangal"] }, "band": "outside-dhaka" },
+    { "id": "out-rangpur", "kind": "outside", "division": "rangpur", "text": "Jahaj Company More, Rangpur Kotwali, Rangpur", "expect": { "district": "bd.rangpur.rangpur", "places": ["bd.rangpur.rangpur.rangpur-kotwali"] }, "band": "outside-dhaka" },
+    { "id": "out-dinajpur-bn", "kind": "outside", "division": "rangpur", "quirk": "bengali", "text": "বালুবাড়ি, দিনাজপুর সদর, দিনাজপুর", "expect": { "district": "bd.rangpur.dinajpur", "places": ["bd.rangpur.dinajpur.dinajpur-sadar"] }, "band": "outside-dhaka" },
+    { "id": "out-mymensingh", "kind": "outside", "division": "mymensingh", "text": "Ganginarpar, Mymensingh Kotwali, Mymensingh 2200", "expect": { "district": "bd.mymensingh.mymensingh", "places": ["bd.mymensingh.mymensingh.mymensingh-kotwali"] }, "band": "outside-dhaka" },
+    { "id": "out-netrokona", "kind": "outside", "division": "mymensingh", "text": "Teribazar, Netrokona Sadar, Netrokona", "expect": { "district": "bd.mymensingh.netrokona", "places": ["bd.mymensingh.netrokona.netrokona-sadar"] }, "band": "outside-dhaka" },
+    { "id": "out-tangail", "kind": "outside", "division": "dhaka", "text": "Victoria Road, Tangail Sadar, Tangail", "expect": { "district": "bd.dhaka.tangail", "places": ["bd.dhaka.tangail.tangail-sadar"] }, "band": "outside-dhaka" },
+    { "id": "out-faridpur", "kind": "outside", "division": "dhaka", "text": "Jhiltuli, Faridpur Sadar, Faridpur", "expect": { "district": "bd.dhaka.faridpur", "places": ["bd.dhaka.faridpur.faridpur-sadar"] }, "band": "outside-dhaka" }
+  ],
+  "names": {
+    "en": ["GATE TEST Rahim", "GATE TEST Karim", "GATE TEST Nasrin", "GATE TEST Sumon", "GATE TEST Farhana", "GATE TEST Jamal", "GATE TEST Ruma", "GATE TEST Tanvir"],
+    "bn": ["গেট টেস্ট রহিম", "গেট টেস্ট নাসরিন", "গেট টেস্ট সুমন", "গেট টেস্ট ফারহানা"]
+  }
+}

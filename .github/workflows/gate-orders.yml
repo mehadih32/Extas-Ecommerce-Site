@@ -1,0 +1,83 @@
+# PR 414 follow-up (CN-013 go-live gate, phase 2; the owner's OK of 1 Nov 2026) — the go-live test orders on the preview
+# site, ON the VM through the self-hosted runner (CN-003), BY HAND ONLY: GitHub › Actions › gate-orders › Run workflow.
+# It never runs on a schedule, a push or a pull request. infra/deploy/gate-orders.sh refuses any host but the preview
+# host of server.conf (and the shop's saved preview host), starts the oracle (tools/gate-orders/server, the shop's own
+# package functions on the mocks) in the live version's migrate image, and walks the scenarios in real browsers on
+# phones and desktops with throttled networks (tools/gate-orders/shop.mjs). Every test order is cancelled and the test
+# products archived at the end (nothing deleted). The report (README.md + result.json) is committed to
+# docs/reports/gate-orders/latest/ with [skip ci].
+name: gate-orders
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenarios:
+        description: "all, or a list such as 1,5,7 (the 18 scenarios of docs/reports/gate-orders/latest/README.md)"
+        required: false
+        default: "all"
+
+# Its own lane: a by-hand run never replaces a deploy or another server job waiting in their groups, and two gate runs
+# never place test orders at the same time. The VM's single runner still takes one job at a time.
+concurrency:
+  group: extas-gate-orders
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  gate-orders:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 150
+    steps:
+      # The run comes from the version that is live, not from the newest main (as in journeys.yml): its oracle runs in
+      # that version's migrate image, so both halves are the same code.
+      - name: Find the live version
+        id: live
+        run: |
+          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          if printf '%s' "$live" | grep -Eq '^[0-9a-f]{40}$'; then echo "sha=$live" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.live.outputs.sha || github.sha }}
+
+      - name: Test orders on the preview site (mocks only)
+        id: gate
+        continue-on-error: true
+        env:
+          LIVE: ${{ steps.live.outputs.sha }}
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: |
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/gate-orders.sh "$RUNNER_TEMP/gate-orders" "${SCENARIOS:-all}" "$LIVE"
+
+      - name: Commit the report
+        if: always()
+        env:
+          RESULT: ${{ steps.gate.outcome }}
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/gate-orders"
+          [ -f "$out/result.json" ] || { echo "the run wrote no report"; exit 1; }
+          dest="docs/reports/gate-orders/latest"
+          sudo chown -R "$(id -u):$(id -g)" "$out"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            rm -rf "$dest" && mkdir -p "$(dirname "$dest")"
+            mkdir -p "$dest" && cp "$out/README.md" "$out/result.json" "$dest/"
+            git add -A "$dest"
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "gate-orders report: ${RESULT} [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail when a scenario failed
+        if: steps.gate.outcome == 'failure'
+        run: |
+          echo "A gate scenario failed, or the clean-up did not finish. See docs/reports/gate-orders/latest/README.md."
+          exit 1
