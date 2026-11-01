@@ -19,7 +19,21 @@ export const DELIVERY_STATES = ['QUEUED', 'SENT', 'NOT_SENT', 'FAILED'] as const
 export type DeliveryState = (typeof DELIVERY_STATES)[number];
 
 /** What the who-did-what log records (ConversationEvent.kind). */
-export const EVENT_KINDS = ['RECEIVED', 'REPLIED', 'NOTED', 'ASSIGNED', 'UNASSIGNED', 'STATUS', 'REOPENED'] as const;
+export const EVENT_KINDS = [
+  'RECEIVED',
+  'REPLIED',
+  'NOTED',
+  'ASSIGNED',
+  'UNASSIGNED',
+  'STATUS',
+  'REOPENED',
+  // PR 427: who is writing — a number found, a customer linked, one person across channels, and the team's corrections
+  'IDENTITY_PHONE',
+  'IDENTITY_CUSTOMER',
+  'IDENTITY_MERGED',
+  'IDENTITY_UNLINKED',
+  'IDENTITY_SPLIT',
+] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
 /** A file's state: PENDING while a channel's copy waits to be saved to our storage (B4.8), STORED once we have it. */
@@ -77,3 +91,6 @@ export function cleanFileName(name: string | null | undefined): string | null {
   const s = base.replace(/[\u0000-\u001f\u007f"]/g, '').trim().slice(0, 120);
   return s || null;
 }
+
+// PR 427 — who is writing: a Bangladeshi mobile number found in a chat's words.
+export * from './identity-pure';

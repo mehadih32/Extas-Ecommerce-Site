@@ -1,6 +1,6 @@
 // S22 · PR 425 — the words of Support › Inbox, one conversation and Support settings: messages/admin-inbox.<lang>.json,
 // everything under `sup.*`, merged into the page's dictionary. A few helpers the pages share: how long ago, the
-// sender's label, a log line in words.
+// sender's label, a log line in words (PR 427: the lines of who is writing).
 import type { AdminView } from '@/lib/admin-page';
 import { mergeDicts } from '@/lib/admin-i18n';
 import { t, type Dict } from '@/lib/i18n';
@@ -51,6 +51,11 @@ export function logLine(dict: Dict, e: { kind: string; actor: { type: string; na
   if (e.kind === 'ASSIGNED') line = d.to && d.toName === e.actor.name ? t(dict, 'sup.log.TOOK', { name }) : t(dict, 'sup.log.ASSIGNED', { name, to: typeof d.toName === 'string' ? d.toName : t(dict, 'sup.msg.someone') });
   else if (e.kind === 'STATUS') line = t(dict, 'sup.log.STATUS', { name, from: status(d.from), to: status(d.to) });
   else if (['RECEIVED', 'REPLIED', 'NOTED', 'UNASSIGNED', 'REOPENED'].includes(e.kind)) line = t(dict, `sup.log.${e.kind}`, { name });
+  // PR 427: who is writing (never the number itself)
+  else if (e.kind === 'IDENTITY_PHONE') line = d.byHand === true ? t(dict, 'sup.log.id.phoneHand', { name }) : t(dict, d.via === 'channel' ? 'sup.log.id.phoneChannel' : 'sup.log.IDENTITY_PHONE');
+  else if (e.kind === 'IDENTITY_CUSTOMER') line = d.byHand === true ? t(dict, 'sup.log.id.customerHand', { name }) : t(dict, 'sup.log.IDENTITY_CUSTOMER');
+  else if (e.kind === 'IDENTITY_MERGED') line = t(dict, 'sup.log.IDENTITY_MERGED', { n: typeof d.contacts === 'number' ? String(d.contacts) : '1' });
+  else if (e.kind === 'IDENTITY_UNLINKED' || e.kind === 'IDENTITY_SPLIT') line = t(dict, `sup.log.${e.kind}`, { name });
   else line = e.kind;
   return d.auto === true ? `${line} ${t(dict, 'sup.log.auto')}` : line;
 }

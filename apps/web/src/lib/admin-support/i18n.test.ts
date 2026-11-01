@@ -52,6 +52,12 @@ describe('the support words (PR 425)', () => {
     expect(auto).toContain(t(d, 'sup.log.auto'));
     expect(logLine(d, { kind: 'ASSIGNED', actor: { type: 'STAFF', name: 'Sample owner' }, data: { to: 'x', toName: 'Sample owner' } })).toBe(t(d, 'sup.log.TOOK', { name: 'Sample owner' }));
     expect(logLine(d, { kind: 'SOMETHING_NEW', actor: { type: 'SYSTEM', name: null }, data: null })).toBe('SOMETHING_NEW');
+    // PR 427: who is writing — where the number came from, by hand with the name, never the number itself
+    expect(logLine(d, { kind: 'IDENTITY_PHONE', actor: { type: 'SYSTEM', name: null }, data: { via: 'channel' } })).toBe(t(d, 'sup.log.id.phoneChannel'));
+    expect(logLine(d, { kind: 'IDENTITY_PHONE', actor: { type: 'SYSTEM', name: null }, data: { via: 'text' } })).toBe(t(d, 'sup.log.IDENTITY_PHONE'));
+    expect(logLine(d, { kind: 'IDENTITY_PHONE', actor: { type: 'STAFF', name: 'Sample owner' }, data: { byHand: true } })).toContain('Sample owner');
+    expect(logLine(d, { kind: 'IDENTITY_MERGED', actor: { type: 'SYSTEM', name: null }, data: { via: 'phone', contacts: 2 } })).toContain('2');
+    expect(logLine(d, { kind: 'IDENTITY_SPLIT', actor: { type: 'STAFF', name: 'Sample owner' }, data: {} })).toContain('Sample owner');
   });
 });
 

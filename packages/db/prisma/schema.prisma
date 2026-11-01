@@ -9548,22 +9548,27 @@ model SupportChannel {
 
 /// @stage S22 · PR 427 — a person on a channel (PSID, WhatsApp id, chat visitor), matched to a customer by phone.
 model SupportContact {
-  id           String   @id @default(uuid(7)) @db.Uuid
-  storeId      Int
-  store        Store    @relation(fields: [storeId], references: [id])
-  channelKind  String
-  externalId   String
-  customerId   String?  @db.Uuid
-  displayName  String?
-  phone        String?
-  mergedIntoId String?  @db.Uuid
-  createdAt    DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  id              String    @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store     @relation(fields: [storeId], references: [id])
+  channelKind     String
+  externalId      String
+  customerId      String?   @db.Uuid
+  displayName     String?
+  phone           String?
+  mergedIntoId    String?   @db.Uuid
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 427: an employee set this chat's person by hand (a number or a customer linked or unlinked, "not the same
+  /// person"); automatic matching never changes it again. `mergedIntoId` always names the person's first contact.
+  identityFixedAt DateTime? @db.Timestamptz(3)
 
   conversations Conversation[]
 
   @@unique([storeId, channelKind, externalId])
   @@index([storeId, phone])
+  @@index([storeId, customerId])
+  @@index([storeId, mergedIntoId])
 }
 
 /// @stage S22 · PR 425, 431 — a conversation with its assignment, SLA timers, the Meta reply window and the r= code.

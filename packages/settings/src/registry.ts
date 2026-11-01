@@ -73,6 +73,7 @@ import { stickerLatinSettings } from './registry-sticker-latin';
 import { districtPromiseSettings } from './registry-district-promise';
 import { comboSplitSettings } from './registry-combo-split';
 import { printRunSettings } from './registry-print-run';
+import { supportIdentitySettings } from './registry-support-identity';
 import { callMeSettings } from './registry-call-me';
 import { voiceAddressSettings } from './registry-voice-address';
 import { bhandariP1Settings } from './registry-bhandari-p1';
@@ -1333,6 +1334,8 @@ export const registry = {
   ...voiceAddressSettings,
   // ---- S20 · PR 404 · the print run: stickers, sticker + invoice, or invoices, in packing order (registry-print-run.ts, version 150). ----
   ...printRunSettings,
+  // ---- S22 · PR 427 · identity resolution: who is writing, one person across channels (off) (registry-support-identity.ts, version 155). ----
+  ...supportIdentitySettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----

@@ -342,6 +342,9 @@ export const PERMISSIONS = {
   'support.reply': { group: 'support' },
   'support.assign': { group: 'support' },
   'support.settings': { group: 'support' },
+  // S22 · PR 427 — who is writing (B4.5): set a chat's number by hand, link or unlink its customer, and say "not the same
+  // person" when the inbox put two chats together. Audited; never sends a message or changes an order.
+  'support.identity': { group: 'support' },
   // S08 · PR 192 (CN-018 (7), SUP-02) — Support › Rider issues: log a customer's overcharge complaint with its proof
   // (`support.riderIssues.write`); approve or reject one (`support.riderIssues.decide`, the owner and managers: approval
   // opens the courier claim for the exact extra). Asking the refund of the extra also needs `payments.refunds.request`,

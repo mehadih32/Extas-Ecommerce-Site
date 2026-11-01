@@ -5,6 +5,9 @@
 // phoneNormalizeBD from @extas/delivery/phone.
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 
+/** The one number normaliser, passed on for the packages that read customers' numbers (PR 427: the Support inbox). */
+export { phoneNormalizeBD };
+
 /** The digits kept visible at each end of a masked number (`customers.phoneMask`). */
 export interface PhoneMask {
   first: number;
