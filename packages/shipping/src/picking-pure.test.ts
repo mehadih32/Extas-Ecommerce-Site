@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupPicking, pickingPlace, type PickingFacts, type PickLine } from './picking-pure';
+import { groupByShelf, groupPicking, pickingPlace, type PickingFacts, type PickLine } from './picking-pure';
 
 const parcel = (status: string, over: Partial<PickingFacts['parcels'][number]> = {}): PickingFacts['parcels'][number] => ({
   status,
@@ -106,3 +106,22 @@ describe('PR 405 · the size line\'s orders and its mark', () => {
     expect(loose.key).toBe('p1|Navy|M');
   });
 });
+
+describe('PR 412 · shelf by shelf (B2.3)', () => {
+  it('groups the styles under their shelf, shelves in their own order (A-2 before A-10), no shelf last; counts unchanged', () => {
+    const lines = [line('Polo', 'Ralph', 'Black', 'M', 3), line('Polo', 'Tommy', 'Navy', 'L', 1), line('Shirt', 'Oxford', 'White', 'M', 2), line('Shirt', 'Linen', 'Blue', 'S', 5)];
+    const shelves = new Map([
+      ['Ralph', 'A-10'],
+      ['Oxford', 'A-2'],
+      ['Tommy', 'A-10'],
+    ]);
+    const g = groupByShelf(lines, shelves, null);
+    expect(g.map((x) => x.category)).toEqual(['A-2', 'A-10', '']);
+    expect(g[1]!.styles.map((s) => s.style)).toEqual(['Ralph', 'Tommy']);
+    expect(g[2]!.styles.map((s) => s.style)).toEqual(['Linen']);
+    expect(g.reduce((n, x) => n + x.pieces, 0)).toBe(groupPicking(lines, null).reduce((n, x) => n + x.pieces, 0));
+    // no shelves at all: one group, every style in it
+    expect(groupByShelf(lines, new Map(), null).map((x) => x.category)).toEqual(['']);
+  });
+});
+

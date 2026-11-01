@@ -8,7 +8,7 @@ import { mockCourierWorld, STEADFAST_PROVIDER } from '@extas/adapters';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { confirmOrder } from '@extas/orders';
 import { shippingSettings } from '@extas/settings';
-import { bookOrders, pickingList, printJobs, printPicking, tickPickLine } from './index';
+import { bookOrders, pickingList, printJobs, printPicking, setShelf, tickPickLine } from './index';
 import { localDay } from './pure';
 import { setUpShipping, type ShippingFixture } from './testing';
 
@@ -153,5 +153,49 @@ describe.skipIf(!HAS_TEST_DB)('PR 181 · the daily picking list (PostgreSQL)', (
     // the table refuses an edit or a removal (migration 0110's trigger)
     expect(await refusal(db().pickingTick.update({ where: { id: rows[0]!.id }, data: { ticked: false } }))).not.toBe('ok');
     expect(await refusal(db().pickingTick.delete({ where: { id: rows[0]!.id } }))).not.toBe('ok');
+  });
+
+  it('PR 412: shelf by shelf only when the owner chooses it; a shelf set, moved and cleared is a new row each time, audited; only with the shelf key', async () => {
+    const a = await confirmed('pk-shelf-a');
+    const productId = (await db().orderItem.findFirstOrThrow({ where: { orderId: a.orderId } })).productId!;
+    const first = await list();
+    expect(first.sort).toBe('category');
+    expect(first.shelves.find((x) => x.productId === productId)).toMatchObject({ code: null });
+
+    expect(await setShelf(f.shippingDeps(), f.shipper, { productId, code: ' B-07 ' })).toEqual({ productId, code: 'B-07', changed: true });
+    expect(await setShelf(f.shippingDeps(), f.shipper, { productId, code: 'B-07' })).toMatchObject({ changed: false });
+    // the category list does not move with a shelf
+    const still = await list();
+    expect(still.groups.map((g) => g.category)).toEqual(first.groups.map((g) => g.category));
+    expect(still.shelves.find((x) => x.productId === productId)).toMatchObject({ code: 'B-07' });
+
+    f.overrides.set('fulfilment.picking.sort', { mode: 'bin' });
+    try {
+      const shelf = await list();
+      expect(shelf.sort).toBe('bin');
+      const g = shelf.groups.find((x) => x.styles.some((st) => st.styleKey === productId))!;
+      expect(g.category).toBe('B-07');
+      // the summary keeps its categories and the same pieces
+      expect(shelf.summary.categories).toEqual(still.summary.categories);
+      expect(shelf.summary.pieces).toBe(still.summary.pieces);
+      await setShelf(f.shippingDeps(), f.shipper, { productId, code: 'C-01' });
+      expect((await list()).groups.find((x) => x.styles.some((st) => st.styleKey === productId))!.category).toBe('C-01');
+      await setShelf(f.shippingDeps(), f.shipper, { productId, code: '' });
+      const cleared = await list();
+      expect(cleared.groups.find((x) => x.styles.some((st) => st.styleKey === productId))!.category).toBe('');
+      expect(cleared.shelves.find((x) => x.productId === productId)).toMatchObject({ code: null });
+    } finally {
+      f.overrides.delete('fulfilment.picking.sort');
+    }
+    const rows = await db().shelfBin.findMany({ where: { productId }, orderBy: { createdAt: 'asc' } });
+    expect(rows.map((r) => r.code)).toEqual(['B-07', 'C-01', '']);
+    expect(await db().auditLog.count({ where: { entityType: 'ShelfBin', entityId: { in: rows.map((r) => r.id) } } })).toBe(3);
+
+    expect(await refusal(setShelf(f.shippingDeps(), f.shipper, { productId: '01900000-0000-7000-8000-000000000000', code: 'A-1' }))).toBe('NOT_FOUND');
+    expect(await refusal(setShelf(f.shippingDeps(), f.shipper, { productId, code: 'x'.repeat(41) }))).toBe('INVALID_INPUT');
+    expect(await refusal(setShelf(f.shippingDeps(), f.looker, { productId, code: 'A-1' }))).toBe('FORBIDDEN');
+    // the table refuses an edit or a removal (migration 0111's trigger)
+    expect(await refusal(db().shelfBin.update({ where: { id: rows[0]!.id }, data: { code: 'Z' } }))).not.toBe('ok');
+    expect(await refusal(db().shelfBin.delete({ where: { id: rows[0]!.id } }))).not.toBe('ok');
   });
 });

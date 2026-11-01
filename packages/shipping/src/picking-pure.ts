@@ -170,3 +170,16 @@ export function groupPicking(lines: readonly PickLine[], onHand: ReadonlyMap<str
   }
   return out.sort(byPieces((c) => c.category));
 }
+
+/**
+ * PR 412 (B2.3) — the list shelf by shelf: the same lines grouped under the shelf each style is kept on (`shelfOf`, by
+ * style key) instead of its category, the shelves in their own order (A-2 before A-10), the styles with no shelf last
+ * under ''. Inside a shelf the styles keep their rule (most pieces first). What is counted never changes.
+ */
+export function groupByShelf(lines: readonly PickLine[], shelfOf: ReadonlyMap<string, string>, onHand: ReadonlyMap<string, number> | null): PickCategory[] {
+  const groups = groupPicking(
+    lines.map((l) => ({ ...l, category: shelfOf.get(l.styleKey) ?? '' })),
+    onHand,
+  );
+  return groups.sort((a, b) => (a.category === '' ? 1 : 0) - (b.category === '' ? 1 : 0) || a.category.localeCompare(b.category, 'en', { numeric: true, sensitivity: 'base' }));
+}

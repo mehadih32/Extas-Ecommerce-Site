@@ -13,13 +13,13 @@
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { handoverHistorySchema, handoverSheetSchema, printQualitySchema, printRunSchema, stickerLayoutSchema, storeTarget } from '@extas/settings';
+import { handoverHistorySchema, handoverSheetSchema, pickingSortSchema, printQualitySchema, printRunSchema, stickerLayoutSchema, storeTarget } from '@extas/settings';
 import type { ZodType } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
 /** The keys these pages save (one card each). */
-export const PACKING_SETTING_KEYS = ['fulfilment.printRun', 'delivery.sticker.layout', 'delivery.handover.sheet', 'fulfilment.handover.history', 'documents.printQuality'] as const;
+export const PACKING_SETTING_KEYS = ['fulfilment.printRun', 'delivery.sticker.layout', 'delivery.handover.sheet', 'fulfilment.handover.history', 'documents.printQuality', 'fulfilment.picking.sort'] as const;
 export type PackingSettingKey = (typeof PACKING_SETTING_KEYS)[number];
 
 /** Each card's schema, its line in the settings change log and its audit action. */
@@ -29,6 +29,8 @@ const CARDS: Record<PackingSettingKey, { schema: ZodType<Record<string, unknown>
   'delivery.handover.sheet': { schema: handoverSheetSchema, reason: 'Orders › Packing & print › Handover › The handover sheet', action: 'delivery.handover.sheet.save' },
   'fulfilment.handover.history': { schema: handoverHistorySchema, reason: 'Orders › Packing & print › Handover › Handed-over history', action: 'fulfilment.handover.history.save' },
   'documents.printQuality': { schema: printQualitySchema, reason: 'Orders › Packing & print › Print run › Print quality', action: 'documents.printQuality.save' },
+  // PR 412: the picking list's order (by category, or shelf by shelf), on the Picking list page
+  'fulfilment.picking.sort': { schema: pickingSortSchema, reason: 'Orders › Packing & print › Picking list › List order', action: 'fulfilment.picking.sort.save' },
 };
 
 const isKey = (k: unknown): k is PackingSettingKey => typeof k === 'string' && (PACKING_SETTING_KEYS as readonly string[]).includes(k);

@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { handoverHistorySchema, invoiceDesignSchema, printQualitySchema, printRunSchema, printRunSettings } from '../src/registry-print-run';
+import { handoverHistorySchema, invoiceDesignSchema, pickingSortSchema, printQualitySchema, printRunSchema, printRunSettings } from '../src/registry-print-run';
 
 const spec = printRunSettings['fulfilment.printRun'];
 
@@ -61,5 +61,17 @@ describe('documents.invoice.design setting (v153)', () => {
     expect(d.default).toEqual({ design: 'classic' });
     expect(invoiceDesignSchema.safeParse({ design: 'cards' }).success).toBe(true);
     expect(invoiceDesignSchema.safeParse({ design: 'neon' }).success).toBe(false);
+  });
+});
+
+describe('fulfilment.picking.sort setting (v154)', () => {
+  const d = printRunSettings['fulfilment.picking.sort'];
+  it('is in the registry at version 154, labelled in both languages, by category as shipped, shelf by shelf only when chosen', () => {
+    expect(registry['fulfilment.picking.sort']).toBe(d);
+    expect(d.version).toBe(154);
+    for (const lang of ['en', 'bn'] as const) expect(lookup(messages[lang], d.helpKey!)).toBeTruthy();
+    expect(d.default).toEqual({ mode: 'category' });
+    expect(pickingSortSchema.safeParse({ mode: 'bin' }).success).toBe(true);
+    expect(pickingSortSchema.safeParse({ mode: 'aisle' }).success).toBe(false);
   });
 });

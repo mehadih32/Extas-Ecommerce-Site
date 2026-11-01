@@ -231,6 +231,8 @@ export const APPEND_ONLY_LOCKED = [
   'ChargeMismatch',
   // S20 · PR 405 (migration 0110_picking_ticks): each tick on the on-screen picking list; a mark taken back is a new row.
   'PickingTick',
+  // S20 · PR 412 (migration 0111_shelf_bins): each shelf a style was put on; a move or a clear is a new row.
+  'ShelfBin',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';

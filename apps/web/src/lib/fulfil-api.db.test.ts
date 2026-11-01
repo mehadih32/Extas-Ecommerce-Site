@@ -297,6 +297,34 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 Â· PR 179â
     expect((await pickingRoute(call('GET', '/api/admin/packing/picking/tick', { cookie: owner }), deps, ['tick'])).status).toBe(405);
   });
 
+  it('PR 412: a style put on a shelf through the API (the shelf key), then the list read shelf by shelf when the owner chooses it', async () => {
+    const o = await booked('fa-412', '01700004121'); // hardcode-ok: a made-up test number
+    const productId = (await f.t.prisma.orderItem.findFirstOrThrow({ where: { orderId: o.orderId } })).productId!;
+    const shelf = (b: unknown, cookie?: string) => pickingRoute(call('POST', '/api/admin/packing/picking/shelf', { body: b, cookie: cookie ?? owner }), deps, ['shelf']);
+    const r = await shelf({ productId, code: 'D-4' });
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ ok: true, productId, code: 'D-4', changed: true });
+    expect((await shelf({ productId, code: 'D-4' }, reader)).status).toBe(403);
+    expect((await shelf({ productId })).status).toBe(400);
+    expect((await pickingRoute(call('GET', '/api/admin/packing/picking/shelf', { cookie: owner }), deps, ['shelf'])).status).toBe(405);
+    type Listed = { sort: string; groups: { category: string; styles: { styleKey: string }[] }[]; shelves: { productId: string; code: string | null }[] };
+    const before = (await (await picking('GET')).json()) as Listed;
+    expect(before.sort).toBe('category');
+    expect(before.shelves.find((x) => x.productId === productId)).toMatchObject({ code: 'D-4' });
+    const sort = (mode: 'category' | 'bin') => deps.resolver.set('fulfilment.picking.sort', { mode }, storeTarget(f.S), { actorId: null, reason: 'test' });
+    await sort('bin');
+    try {
+      const after = (await (await picking('GET')).json()) as Listed;
+      expect(after.sort).toBe('bin');
+      expect(after.groups.find((g) => g.styles.some((st) => st.styleKey === productId))!.category).toBe('D-4');
+      // the PDF draws the shelf headings
+      const res = await picking('POST', '', { body: {} });
+      expect(res.status).toBe(200);
+    } finally {
+      await sort('category');
+    }
+  });
+
   it('PR 182: the packing steps, "Start picking" for all, each piece checked, and "Mark packed" once per press', async () => {
     const g = await f.place('fa-6', { phone: '01700001906' }); // hardcode-ok: a made-up test number
     await confirmOrder(f.ordersDeps(), f.staff, g.orderId);

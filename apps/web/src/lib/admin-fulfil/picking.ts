@@ -16,6 +16,12 @@ export function categoryName(list: Pick<PickingList, 'categoryBn'>, name: string
   return (lang === 'bn' && list.categoryBn[name]) || name;
 }
 
+/** PR 412 — a group's heading: its category, or — read shelf by shelf — its shelf ("Shelf A-03", or "No shelf set"). */
+export function groupName(list: Pick<PickingList, 'categoryBn' | 'sort'>, name: string, lang: 'en' | 'bn', words: { none: string; shelf: (code: string) => string; noShelf: string }): string {
+  if (list.sort === 'bin') return name ? words.shelf(name) : words.noShelf;
+  return categoryName(list, name, lang, words.none);
+}
+
 /** The list as the paper list's data. */
 export function pickingDocument(list: PickingList, cfg: PickingListSettings, head: Letterhead, timeZone: string, at: string): ListDocument {
   const d = fulfilDicts[cfg.lang];
@@ -24,7 +30,7 @@ export function pickingDocument(list: PickingList, cfg: PickingListSettings, hea
   const s = list.summary;
   const rows: ListRow[] = [];
   for (const g of list.groups) {
-    rows.push({ cells: [categoryName(list, g.category, cfg.lang, none), String(g.pieces)], bold: true, ruleAbove: rows.length > 0 });
+    rows.push({ cells: [groupName(list, g.category, cfg.lang, { none, shelf: (code) => w('shelf', { code }), noShelf: w('noShelf') }), String(g.pieces)], bold: true, ruleAbove: rows.length > 0 });
     for (const st of g.styles) {
       rows.push({ cells: [st.style, String(st.pieces)], bold: true, indent: 1 });
       for (const c of st.colours) {

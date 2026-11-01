@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { readPdf, boxText } from '@extas/documents/test-kit';
 import { shippingSettings } from '@extas/settings';
-import { groupPicking, type PickingList } from '@extas/shipping';
+import { groupByShelf, groupPicking, type PickingList } from '@extas/shipping';
 import { pickingDocument, pickingPdf } from './picking';
 
 const CFG = shippingSettings['delivery.picking.list'].default;
@@ -28,6 +28,8 @@ const list = (over: Partial<PickingList> = {}): PickingList => ({
   orderIds: ['o1', 'o2'],
   range: { from: null, to: null },
   shortagesMarked: true,
+  sort: 'category',
+  shelves: [],
   ...over,
 });
 const AT = '2026-10-24T05:30:00.000Z';
@@ -58,6 +60,19 @@ describe('PR 181 · the picking list document', () => {
     expect(doc.summary).toContain('কম স্টক দেখানো বন্ধ');
     expect(doc.rows[0]!.cells[0]).toBe('পোলো');
     expect(doc.after).toEqual([]);
+  });
+
+  it('PR 412: read shelf by shelf, the headings are the shelves ("No shelf set" last) and the summary keeps its categories', () => {
+    const lines = [
+      { category: 'Polo', styleKey: 'p1', style: 'Ralph Lauren polo', colour: 'Black', size: 'M', variantId: 'v1', quantity: 2 },
+      { category: '', styleKey: 'p2', style: 'Gift box', colour: null, size: null, variantId: null, quantity: 1 },
+    ];
+    const shelf = groupByShelf(lines, new Map([['p1', 'A-03']]), null);
+    const en = pickingDocument(list({ groups: shelf, sort: 'bin' }), CFG, HEAD, 'Asia/Dhaka', AT);
+    expect(en.rows.filter((r) => (r.indent ?? 0) === 0).map((r) => r.cells[0])).toEqual(['Shelf A-03', 'No shelf set']);
+    expect(en.summary[1]).toBe('Categories: Polo 3 · Other 1');
+    const bn = pickingDocument(list({ groups: shelf, sort: 'bin' }), { ...CFG, lang: 'bn' }, HEAD, 'Asia/Dhaka', AT);
+    expect(bn.rows[0]!.cells[0]).toBe('তাক A-03');
   });
 
   it('draws an A4 PDF', async () => {

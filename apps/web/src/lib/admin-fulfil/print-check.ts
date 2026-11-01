@@ -69,7 +69,7 @@ function sampleList(lang: 'en' | 'bn'): PickingList {
   const lines = Array.from({ length: SAMPLE_ROWS }, (_, i) => ({ category: s('item1'), styleKey: `st${i % 8}`, style: `${s(i % 2 ? 'item1' : 'item2')} ${i % 8}`, colour: s(i % 2 ? 'colour1' : 'colour2'), size: `${s('size1')}${i}`, variantId: `v${i}`, quantity: 1 + (i % 4) }));
   const groups = groupPicking(lines, null);
   const pieces = lines.reduce((n, l) => n + l.quantity, 0);
-  return { groups, categoryBn: {}, summary: { orders: SAMPLE_ROWS, pieces, lineItems: lines.length, categories: [{ name: s('item1'), nameBn: null, pieces }], shortages: 0, shortPieces: 0, held: 0, pulled: 0 }, held: [], orderIds: [], range: { from: null, to: null }, shortagesMarked: false };
+  return { groups, categoryBn: {}, summary: { orders: SAMPLE_ROWS, pieces, lineItems: lines.length, categories: [{ name: s('item1'), nameBn: null, pieces }], shortages: 0, shortPieces: 0, held: 0, pulled: 0 }, held: [], orderIds: [], range: { from: null, to: null }, shortagesMarked: false, sort: 'category', shelves: [] };
 }
 
 function sampleInvoice(lang: 'en' | 'bn', currency: string, head: Letterhead): InvoiceDocument {

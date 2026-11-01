@@ -418,13 +418,42 @@
         "checkedBy": "Checked by",
         "foot": "Printed {at}",
         "page": "{n}/{of}",
-        "empty": "Nothing to pick"
+        "empty": "Nothing to pick",
+        "shelf": "Shelf {code}",
+        "noShelf": "No shelf set"
       },
       "tick": {
         "done": "Pulled — tap to take the mark back",
         "more": "More to pull: new order {list}",
         "tick": "Tap when pulled",
         "untick": "Take the mark back"
+      },
+      "shelves": {
+        "title": "Shelves",
+        "sub": "The shelf each style on today's list is kept on. With the list read shelf by shelf, the picker walks the shelves in order.",
+        "code": "Shelf of {style}",
+        "ph": "e.g. A-03",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "cleared": "Cleared",
+        "none": "No style on the list now.",
+        "readOnly": "You can see the shelves; setting them needs the shelf permission.",
+        "note": "Each change is kept (who, when); clearing a shelf leaves the style at the end of the list. Stock, products and orders never change here.",
+        "sortPill": "Order: {mode}",
+        "sort": {
+          "category": "by category",
+          "bin": "shelf by shelf"
+        },
+        "set": {
+          "h": "List order",
+          "d": "By category (most pieces first) or shelf by shelf. Only the order of the list changes.",
+          "mode": "Order the list",
+          "modes": {
+            "category": "By category → style → size",
+            "bin": "Shelf by shelf"
+          }
+        }
       }
     },
     "pack": {

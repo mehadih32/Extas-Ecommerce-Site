@@ -10,7 +10,14 @@
 // large button with its colour, size, pieces (and shortage) and the order numbers it is for; a tap marks it pulled
 // (`fulfilment.pack`), another tap takes the mark back; a line that got a new order after the mark shows "more to pull"
 // with the new order numbers. "Pulled" counts the pieces of the lines marked. Each mark is one kept row (PickingTick).
+//
+// S20 · PR 412 (B2.3; demo V12.4 97s "Picking list sort"): the list's order as a card on this page
+// (`fulfilment.picking.sort`: by category as shipped, or shelf by shelf; saved with `fulfilment.printSettings`) and a
+// "Shelves" card — the shelf each style on the list is kept on, set here (`fulfilment.bins`; each change kept). Read
+// shelf by shelf, the groups (on screen and on the PDF) are the shelves in order, the styles with no shelf last; the
+// summary keeps its categories and nothing counted changes.
 import type { Metadata } from 'next';
+import '../../../settings-cards.css';
 import '../packing.css';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -19,12 +26,16 @@ import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PdfButton } from '@/components/admin/fulfil/Print';
 import { PickTick } from '@/components/admin/fulfil/PickTick';
+import { ShelfEdit } from '@/components/admin/fulfil/ShelfEdit';
+import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
+import { PICKING_SORTS } from '@extas/settings';
+import { packingSettingCards } from '@/lib/packing-settings-api';
 import { formatNumber } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { withFulfil } from '@/lib/admin-fulfil/i18n';
-import { categoryName } from '@/lib/admin-fulfil/picking';
+import { categoryName, groupName } from '@/lib/admin-fulfil/picking';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -64,13 +75,31 @@ export default async function PickingPage({ searchParams }: { searchParams: Sear
   if (badRange) [from, to] = [null, null];
   const who: sh.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const sd = await shippingDeps(access.deps);
-  const [list, cfg] = await Promise.all([sh.pickingList(sd, who, { from, to }), sd.settings.value('delivery.picking.list', { storeId: MOTHER_STORE_ID })]);
+  const [list, cfg, cards] = await Promise.all([sh.pickingList(sd, who, { from, to }), sd.settings.value('delivery.picking.list', { storeId: MOTHER_STORE_ID }), packingSettingCards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx })]);
   const fd: Dict = { ful: d.ful as Dict };
   const n = (x: number) => formatNumber(x, view.locale);
   const s = list.summary;
   const none = t(d, 'ful.picking.sheet.noCategory');
   const cat = (name: string) => categoryName(list, name, view.lang, none);
   const canTick = access.guard.permissions?.has('fulfilment.pack') ?? false;
+  // PR 412: the group headings (categories, or shelves), the list-order card and the shelves card
+  const group = (name: string) => groupName(list, name, view.lang, { none, shelf: (code) => t(d, 'ful.picking.sheet.shelf', { code }), noShelf: t(d, 'ful.picking.sheet.noShelf') });
+  const canSettings = access.guard.permissions?.has('fulfilment.printSettings') ?? false;
+  const canBins = access.guard.permissions?.has('fulfilment.bins') ?? false;
+  const ps = (k: string) => t(d, `ful.printRun.set.${k}`);
+  const sortTexts: FieldsCardTexts = {
+    h: t(d, 'ful.picking.shelves.set.h'),
+    d: t(d, 'ful.picking.shelves.set.d'),
+    save: ps('save'),
+    saving: ps('saving'),
+    saved: ps('saved'),
+    discard: ps('discard'),
+    unsaved: ps('unsaved'),
+    readOnly: ps('readOnly'),
+    pairHelp: ps('readOnly'),
+    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, ps(`err.${c}`)])),
+  };
+  const sortFields: FieldsCardField[] = [{ kind: 'select', path: 'mode', label: t(d, 'ful.picking.shelves.set.mode'), options: PICKING_SORTS.map((v) => ({ value: v, label: t(d, `ful.picking.shelves.set.modes.${v}`) })) }];
   const counts: [string, number][] = [
     ['orders', s.orders],
     ['pieces', s.pieces],
@@ -123,6 +152,7 @@ export default async function PickingPage({ searchParams }: { searchParams: Sear
           <span className="a2-pill line">{t(d, 'ful.packing.dpi', { dpi: n(cfg.dpi) })}</span>
           <span className="a2-pill line">{t(d, `ful.packing.lang.${cfg.lang}`)}</span>
           <span className="a2-pill line">{t(d, 'ful.picking.shortPill', { on: t(d, cfg.markShortages ? 'ful.handover.on' : 'ful.handover.off') })}</span>
+          <span className="a2-pill line" data-testid="picking-sort-pill">{t(d, 'ful.picking.shelves.sortPill', { mode: t(d, `ful.picking.shelves.sort.${list.sort}`) })}</span>
         </div>
         <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.picking.settingsNote')}</p>
       </section>
@@ -140,7 +170,7 @@ export default async function PickingPage({ searchParams }: { searchParams: Sear
               {list.groups.flatMap((g) => [
                 <tr key={`c-${g.category}`} data-testid="picking-category">
                   <td className="a2-tdh">
-                    <b>{cat(g.category)}</b>
+                    <b>{group(g.category)}</b>
                   </td>
                   <td className="r">
                     <b className="a2-num">{n(g.pieces)}</b>
@@ -187,6 +217,15 @@ export default async function PickingPage({ searchParams }: { searchParams: Sear
           <p>{t(d, 'ful.picking.emptySub')}</p>
         </div>
       )}
+      <section className="a2-card tight a2-mt12" aria-label={t(d, 'ful.picking.shelves.title')} data-testid="picking-shelves">
+        <h2 className="a2-h4">{t(d, 'ful.picking.shelves.title')}</h2>
+        <p className="a2-xs a2-mute">{t(d, 'ful.picking.shelves.sub')}</p>
+        <ShelfEdit dict={fd} rows={list.shelves} canEdit={canBins} />
+        <p className="a2-xs a2-mute a2-mt6">{canBins ? t(d, 'ful.picking.shelves.note') : t(d, 'ful.picking.shelves.readOnly')}</p>
+      </section>
+      <div className="a2-mt12">
+        <FieldsCard url="/api/admin/packing/settings" screen={cards['fulfilment.picking.sort']} fields={sortFields} texts={sortTexts} canEdit={canSettings} testId="picking-sort" />
+      </div>
       <section className="a2-card tight a2-mt12" aria-label={t(d, 'ful.picking.heldTitle')} data-testid="picking-held">
         <h2 className="a2-h4">{t(d, 'ful.picking.heldTitle')}</h2>
         {list.held.length ? (
