@@ -26,6 +26,10 @@
     "photoReward": {
       "label": "Photo review reward",
       "help": "Off, with no amount. Switch it on and type your own figure to pay a customer for an approved review that carries his own photo. The money goes to his wallet as one entry, only when a member of staff approves that review, and only once for that review — never automatically, never twice. \"Smallest stars\" is the lowest rating that earns it, and \"One per order\" keeps it to one reward however many lines of that order are reviewed. While it is off, the review form says nothing about a reward."
+    },
+    "requests": {
+      "label": "Review requests",
+      "help": "The Day-3 review request (Messages › Order messages, \"Day-3 review request\": its switch, channel, words and day) and its count on Products › Reviews. It is never sent while reviews are switched off (it would ask for something the customer cannot write). \"Skip orders already reviewed\": an order whose every line he has already reviewed is not asked again. \"Days counted\": how far back the Reviews page counts the requests sent and answered."
     }
   }
 }

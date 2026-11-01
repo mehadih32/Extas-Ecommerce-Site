@@ -18,6 +18,7 @@ SKU আর স্টক আসে ERP থেকে। এখান থেকে 
      "কেনা দাম বদলেছে" তালিকা। আলাদা গাইড: [pages/products/erp-import.md](pages/products/erp-import.md)
 5. **প্রোডাক্ট অডিট** (`/admin/products/audit`)
 6. **স্টকে ফিরলে** (`/admin/products/back-in-stock`)
+7. **রিভিউ** (`/admin/products/reviews`, PR 295) — ক্রেতাদের রিভিউ দেখা, প্রকাশ, লুকানো, বাতিল, যাচাই চিহ্ন, আর ডেলিভারির পর রিভিউ চাওয়ার হিসাব। আলাদা গাইড: [pages/products/reviews.md](pages/products/reviews.md)
 
 আরও দুটো পাতা তালিকা থেকে খোলে: **নতুন প্রোডাক্ট** (`/admin/products/new`) আর প্রতিটা প্রোডাক্টের নিজের পাতা।
 

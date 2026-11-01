@@ -16,6 +16,7 @@ import {
   listReviews,
   moderateReview,
   reviewChance,
+  reviewDesk,
   setReviewVerified,
   submitCustomerReview,
   type CatalogueDeps,
@@ -325,5 +326,31 @@ describe.skipIf(!HAS_TEST_DB)('product reviews on PostgreSQL (PR 65)', () => {
     expect(next.reviews.map((r) => r.id)).not.toContain(page.reviews[0]!.id);
     // a made-up query is refused rather than quietly ignored
     expect(await code(listReviews(deps(), as(viewer), { status: 'LIVE' }))).toBe('INVALID_INPUT');
+  });
+  it('PR 295: the Day-3 request is answered by his first review; the desk counts asked, answered and photo answers', async () => {
+    // salam (delivered 4 days ago, one line) was asked on WhatsApp yesterday; another order was asked by SMS 40 days ago
+    await buyer({ key: 'salam', phone: '+8801000000655', number: 'TEST-655', delivered: new Date(clock.getTime() - 4 * 86_400_000), sizes: ['M'] });
+    await t.prisma.reviewRequest.create({ data: { storeId: A, orderId: ids.order_salam!, customerId: ids.cust_salam!, channel: 'WHATSAPP', sentAt: new Date(clock.getTime() - 86_400_000) } });
+    await t.prisma.reviewRequest.create({ data: { storeId: A, orderId: ids.order_nabil!, customerId: ids.cust_nabil!, channel: 'SMS', sentAt: new Date(clock.getTime() - 40 * 86_400_000) } });
+    // another store's request is never counted here
+    const other = await t.prisma.order.create({ data: { storeId: B, number: 'TEST-B-295', status: 'DELIVERED', source: 'WEBSITE', currency: 'BDT', subtotalMinor: 1, totalMinor: 1, idempotencyKey: 'test:b295' }, select: { id: true } });
+    await t.prisma.reviewRequest.create({ data: { storeId: B, orderId: other.id, channel: 'SMS', sentAt: clock } });
+    expect(await code(reviewDesk(deps(), as(nobody)))).toBe('FORBIDDEN');
+    const before = await reviewDesk(deps(), as(viewer));
+    expect(before.requests).toMatchObject({ days: 30, asked: 1, answered: 0, withPhoto: 0, byChannel: [{ channel: 'WHATSAPP', asked: 1, answered: 0 }] });
+
+    const photo = await image();
+    const r = await submitCustomerReview(pub(), { storeId: A, customerId: ids.cust_salam! }, { orderNumber: 'TEST-655', orderItemId: ids.line_salam_M, rating: 4, body: 'Sample.', photoAssetIds: [photo] });
+    expect((await t.prisma.reviewRequest.findUniqueOrThrow({ where: { orderId: ids.order_salam! } })).reviewId).toBe(r.id);
+    const after = await reviewDesk(deps(), as(viewer));
+    expect(after.requests).toMatchObject({ asked: 1, answered: 1, withPhoto: 1 });
+    // the window is the owner's number
+    set('reviews.requests', { skipReviewed: true, resultDays: 60 });
+    expect((await reviewDesk(deps(), as(viewer))).requests).toMatchObject({ days: 60, asked: 2, answered: 1 });
+    overrides.delete('reviews.requests');
+    // the published average, to one decimal, of approved reviews only
+    const published = await t.prisma.review.aggregate({ where: { storeId: A, status: 'APPROVED', archivedAt: null }, _avg: { rating: true }, _count: { _all: true } });
+    expect(after.published).toBe(published._count._all);
+    expect(after.average).toBe(published._avg.rating === null ? null : Math.round(published._avg.rating * 10) / 10);
   });
 });

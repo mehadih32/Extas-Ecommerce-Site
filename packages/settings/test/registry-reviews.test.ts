@@ -4,13 +4,13 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { reviewPhotoRewardSchema, reviewSettings, reviewSubmitSchema, sizeAdviceSchema } from '../src/registry-reviews';
+import { reviewPhotoRewardSchema, reviewRequestsSchema, reviewSettings, reviewSubmitSchema, sizeAdviceSchema } from '../src/registry-reviews';
 
 describe('reviews and size-advice settings (v35)', () => {
   it('every key is in the registry at version 35, never owner data, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(reviewSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(35);
+      expect(spec.version, key).toBe(key === 'reviews.requests' ? 196 : 35); // PR 295 added its key at v196
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {
@@ -56,5 +56,13 @@ describe('reviews and size-advice settings (v35)', () => {
     expect(p.on).toBe(true);
     expect(p.max).toBe(3); // the demo's row (V12.2 `pdp_reviewsSection`)
     expect(p.photosFirst).toBe(true);
+  });
+
+  it('PR 295: review requests (v196) skip orders already reviewed and count 30 days; the window is 1–365', () => {
+    const r = reviewSettings['reviews.requests'];
+    expect(r.version).toBe(196);
+    expect(r.default).toEqual({ skipReviewed: true, resultDays: 30 });
+    expect(reviewRequestsSchema.safeParse({ skipReviewed: true, resultDays: 0 }).success).toBe(false);
+    expect(reviewRequestsSchema.safeParse({ skipReviewed: true, resultDays: 366 }).success).toBe(false);
   });
 });

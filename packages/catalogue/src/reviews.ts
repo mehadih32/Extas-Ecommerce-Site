@@ -19,6 +19,10 @@
 //
 // There is no admin screen in this PR (the moderation queue is a follow-up on the new 14-section admin shell): the
 // admin API (`/api/admin/reviews`) is the whole staff side, and it checks its permissions on the server, per store.
+//
+// PR 295: the screen is built — Products › Reviews (`/admin/products/reviews`) — and `reviewDesk` gives its top line
+// (the published average, the Day-3 review requests sent and answered); a customer's first review of an order answers
+// that order's ReviewRequest (`reviewId`).
 import { audit } from '@extas/auth';
 import { z } from 'zod';
 import { CatalogueError } from './errors';
@@ -360,6 +364,8 @@ export async function submitCustomerReview(deps: ReviewPublicDeps, buyer: { stor
       await tx.reviewMedia.create({ data: { storeId, reviewId: row.id, assetId, sortOrder: i } });
     }
     await logCustomer(tx, storeId, row.id, { orderItemId: item.id, rating: d.rating, photos: photos.length, status: 'PENDING' });
+    // PR 295: the Day-3 request for this order (if one went) is answered by his first review
+    await tx.reviewRequest.updateMany({ where: { storeId, orderId: order.id, reviewId: null }, data: { reviewId: row.id } });
     return row;
   });
   return { id: created.id, status: 'PENDING', rewardMinor: reward.live && photos.length ? reward.amountMinor : null };
@@ -401,6 +407,43 @@ export async function listReviews(deps: CatalogueDeps, who: Who, query: unknown 
   const byState = { PENDING: 0, APPROVED: 0, REJECTED: 0, HIDDEN: 0 } as Record<ReviewState, number>;
   for (const c of counts) byState[stateOf(c.status)] = c._count._all;
   return { reviews: page.map(view), nextCursor: rows.length > take ? (page[page.length - 1]?.id ?? null) : null, counts: byState };
+}
+
+/** PR 295 — the review manager's top line: the published average and the Day-3 requests sent and answered. */
+export interface ReviewDesk {
+  /** The average stars of the published reviews (null: none yet), and how many. */
+  average: number | null;
+  published: number;
+  requests: {
+    /** How many days back the requests are counted (`reviews.requests.resultDays`). */
+    days: number;
+    asked: number;
+    answered: number;
+    /** Answered with his own photo. */
+    withPhoto: number;
+    byChannel: { channel: string; asked: number; answered: number }[];
+  };
+}
+
+/** PR 295 — the published average and the review requests of the last `resultDays` days (`reviews.read`). */
+export async function reviewDesk(deps: CatalogueDeps, who: Who): Promise<ReviewDesk> {
+  await allow(deps, who, 'reviews.read');
+  const S = who.storeId;
+  const { resultDays } = await setting(deps, who, 'reviews.requests');
+  const since = new Date((deps.now?.() ?? new Date()).getTime() - resultDays * DAY_MS);
+  const [avg, groups, answeredIds] = await Promise.all([
+    deps.db.review.aggregate({ where: { storeId: S, status: 'APPROVED', archivedAt: null }, _avg: { rating: true }, _count: { _all: true } }),
+    deps.db.reviewRequest.groupBy({ by: ['channel'], where: { storeId: S, sentAt: { gte: since } }, _count: { _all: true, reviewId: true }, orderBy: { channel: 'asc' } }),
+    deps.db.reviewRequest.findMany({ where: { storeId: S, sentAt: { gte: since }, reviewId: { not: null } }, select: { reviewId: true } }),
+  ]);
+  const ids = answeredIds.map((r) => r.reviewId).filter((x): x is string => x !== null);
+  const withPhoto = ids.length ? await deps.db.review.count({ where: { storeId: S, id: { in: ids }, media: { some: {} } } }) : 0;
+  const byChannel = groups.map((g) => ({ channel: g.channel, asked: g._count._all, answered: g._count.reviewId }));
+  return {
+    average: avg._avg.rating === null ? null : Math.round(avg._avg.rating * 10) / 10,
+    published: avg._count._all,
+    requests: { days: resultDays, asked: byChannel.reduce((a, c) => a + c.asked, 0), answered: byChannel.reduce((a, c) => a + c.answered, 0), withPhoto, byChannel },
+  };
 }
 
 /** PR 65 — one review (`reviews.read`). */
