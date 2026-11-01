@@ -258,4 +258,51 @@ describe.skipIf(!HAS_TEST_DB)('PR 182 · the packing step (PostgreSQL)', () => {
     expect(q.rows.find((r) => r.orderId === a.orderId)!.docs).toEqual({ sticker: 0, invoice: 2, picking: 2, handover: 'handed' });
     expect(q.rows.find((r) => r.orderId === c.orderId)!.docs.handover).toBe('printed');
   });
+
+  it('PR 411 (B1.3): the queue by the shop day it was placed and by a document it still lacks — counts with it, never a cancelled order', async () => {
+    f.overrides.set('store.timeZone', 'Asia/Dhaka');
+    try {
+      const a = await confirmed('flt-a');
+      const b = await confirmed('flt-b');
+      const c = await confirmed('flt-c');
+      const gone = await confirmed('flt-cancelled');
+      await cancelOrder(f.ordersDeps(), f.staff, gone.orderId, { reasonCode: 'NOT_ORDERED' });
+      const p = db();
+      // Dhaka is UTC+6: a 01:00 and b 23:00 on 21 Jan 2025, c 00:30 on 22 Jan
+      await p.order.update({ where: { id: a.orderId }, data: { placedAt: new Date('2025-01-20T19:00:00Z') } });
+      await p.order.update({ where: { id: b.orderId }, data: { placedAt: new Date('2025-01-21T17:00:00Z') } });
+      await p.order.update({ where: { id: c.orderId }, data: { placedAt: new Date('2025-01-21T18:30:00Z') } });
+      await p.order.update({ where: { id: gone.orderId }, data: { placedAt: new Date('2025-01-21T10:00:00Z') } });
+      const ids = (q: { rows: { orderId: string }[] }) => q.rows.map((r) => r.orderId);
+      const day = await packingQueue(d(), packer, { step: 'pick', from: '2025-01-21', to: '2025-01-21' });
+      expect(ids(day)).toEqual([a.orderId, b.orderId]);
+      expect(day.counts.pick).toBe(2);
+      expect(day.filter).toEqual({ from: '2025-01-21', to: '2025-01-21', docs: 'all' });
+      expect(ids(await packingQueue(d(), packer, { step: 'pick', from: '2025-01-22', to: '2025-01-22' }))).toEqual([c.orderId]);
+      expect(ids(await packingQueue(d(), packer, { step: 'pick', to: '2025-01-22' }))).toEqual([a.orderId, b.orderId, c.orderId]);
+
+      // documents still lacking: a has its invoice; b is booked, then its sticker printed
+      await p.generatedDocument.create({ data: { storeId: f.S, kind: 'INVOICE', orderId: a.orderId, format: 'pdf', version: 1, number: 'INV-FLT-A' } });
+      expect((await bookOrders(d(), f.shipper, { courierAccountId: courierId, orderIds: [b.orderId] })).results[0]).toMatchObject({ outcome: 'booked' });
+      const span = { step: 'pick', from: '2025-01-21', to: '2025-01-22' } as const;
+      expect(ids(await packingQueue(d(), packer, { ...span, docs: 'noInvoice' }))).toEqual([b.orderId, c.orderId]);
+      expect(ids(await packingQueue(d(), packer, { ...span, docs: 'notBooked' }))).toEqual([a.orderId, c.orderId]);
+      expect(ids(await packingQueue(d(), packer, { ...span, docs: 'noSticker' }))).toEqual([a.orderId, b.orderId, c.orderId]);
+      const s = await p.shipment.findFirstOrThrow({ where: { orderId: b.orderId } });
+      await printStickers(d(), f.shipper, { shipmentIds: [s.id] });
+      const left = await packingQueue(d(), packer, { ...span, docs: 'noSticker' });
+      expect(ids(left)).toEqual([a.orderId, c.orderId]);
+      expect(left.counts).toMatchObject({ pick: 2 });
+      // the parcel rides on its row for "Print selected"
+      expect((await packingQueue(d(), packer, span)).rows.find((r) => r.orderId === b.orderId)).toMatchObject({ shipmentId: s.id });
+      expect((await packingQueue(d(), packer, span)).rows.find((r) => r.orderId === a.orderId)).toMatchObject({ shipmentId: null });
+
+      // a bad day or a span turned round is refused, never read as "everything"
+      expect((await refusal(packingQueue(d(), packer, { step: 'pick', from: '2025-01-22', to: '2025-01-21' }))).code).toBe('INVALID_INPUT');
+      expect((await refusal(packingQueue(d(), packer, { step: 'pick', from: '21/01/2025' }))).code).toBe('INVALID_INPUT');
+      expect((await refusal(packingQueue(d(), packer, { step: 'pick', docs: 'everything' }))).code).toBe('INVALID_INPUT');
+    } finally {
+      f.overrides.delete('store.timeZone');
+    }
+  });
 });

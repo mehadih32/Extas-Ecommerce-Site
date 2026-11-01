@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { fulfilmentSettings } from '@extas/settings';
 import { handoverProblem } from './fulfil-pure';
-import { allChecked, codeKey, dayStart, lineChecks, matchPiece, packBlock, photoState, stepOf, weightGap, type PackFacts } from './packing-pure';
+import { allChecked, codeKey, dayStart, lineChecks, localDayStart, matchPiece, packBlock, photoState, stepOf, weightGap, type PackFacts } from './packing-pure';
 
 const lines = [
   { id: 'a', sku: 'POLO-NVY-M', barcode: '8901234567890', quantity: 2 },
@@ -78,5 +78,11 @@ describe('packing rules', () => {
     // 10:30 in Dhaka (UTC+6) is 04:30 UTC: today began at 18:00 UTC the day before
     expect(dayStart(new Date('2026-10-24T04:30:00Z'), 'Asia/Dhaka', 0).toISOString()).toBe('2026-10-23T18:00:00.000Z');
     expect(dayStart(new Date('2026-10-24T04:30:00Z'), 'Asia/Dhaka', 1).toISOString()).toBe('2026-10-22T18:00:00.000Z');
+  });
+
+  it('PR 411: a shop day starts at its local midnight (the Pack screen\'s date filter)', () => {
+    expect(localDayStart('2026-10-24', 'Asia/Dhaka').toISOString()).toBe('2026-10-23T18:00:00.000Z');
+    expect(localDayStart('2026-10-24', 'UTC').toISOString()).toBe('2026-10-24T00:00:00.000Z');
+    expect(localDayStart('2026-03-01', 'America/New_York').toISOString()).toBe('2026-03-01T05:00:00.000Z');
   });
 });

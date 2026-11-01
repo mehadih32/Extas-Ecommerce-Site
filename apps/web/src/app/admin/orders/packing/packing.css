@@ -67,3 +67,72 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* S20 · PR 411 — the Pack list with a tick per order (B1.3) and its bar: each tick a 44 px tap box beside the row. */
+.ps-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.ps-row .a2-qi {
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-row .a2-qi span {
+  display: block;
+}
+
+.ps-tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+}
+
+.ps-one {
+  justify-content: center;
+  border: 1px solid var(--ln);
+  border-radius: 10px;
+  background: var(--sf);
+}
+
+.ps-tick input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.ps-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ps-acts {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.pf-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.pf-form label {
+  display: flex;
+  flex: 1 1 140px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-form .a2-btn,
+.pf-form .a2-inp,
+.pf-form .a2-sel {
+  min-height: 44px;
+}

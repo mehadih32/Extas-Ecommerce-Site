@@ -151,3 +151,9 @@ export function dayStart(now: Date, timeZone: string, days: number): Date {
   const since = ((n('hour') * 60 + n('minute')) * 60 + n('second')) * 1000 + now.getMilliseconds();
   return new Date(now.getTime() - since - days * 86_400_000);
 }
+
+/** PR 411 — the instant a shop day (YYYY-MM-DD) starts in the time zone (the Pack screen's date filter). Read at the
+ * day's UTC noon, which lies inside that local day for every zone within ±12 hours. */
+export function localDayStart(day: string, timeZone: string): Date {
+  return dayStart(new Date(`${day}T12:00:00.000Z`), timeZone, 0);
+}
