@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { costReportSchema, financeSettings } from '../src/registry-finance';
+import { costReportSchema, financeSettings, vatRatesSchema } from '../src/registry-finance';
 
 describe('finance settings (v160–169)', () => {
   it('every key is in the registry at a version 160–169, labelled in English and Bengali, its default valid', () => {
@@ -24,5 +24,19 @@ describe('finance settings (v160–169)', () => {
     expect(costReportSchema.safeParse({ maxDays: 60, maxDayRows: 92 }).success).toBe(false);
     expect(costReportSchema.safeParse({ maxDays: 10, maxDayRows: 7 }).success).toBe(false);
     expect(costReportSchema.safeParse({ maxDays: 400, maxDayRows: 92, extra: 1 }).success).toBe(false);
+  });
+
+  it('PR 350: the VAT system is off as shipped; the rates are owner data, empty, each target once, 0–50 %', () => {
+    expect(financeSettings['vat.system'].default).toEqual({ enabled: false, onDelivery: false });
+    expect(financeSettings['vat.rates'].default).toBeNull();
+    expect(financeSettings['vat.rates'].isOwnerData).toBe(true);
+    const cat = '0190a1b2-0000-7000-8000-000000000001';
+    const prod = '0190a1b2-0000-7000-8000-000000000002';
+    expect(vatRatesSchema.safeParse({ defaultBps: 1500, categories: [{ categoryId: cat, bps: 0 }], products: [{ productId: prod, bps: 750 }] }).success).toBe(true);
+    expect(vatRatesSchema.safeParse({ defaultBps: null, categories: [], products: [] }).success).toBe(true);
+    expect(vatRatesSchema.safeParse({ defaultBps: 5001, categories: [], products: [] }).success).toBe(false);
+    expect(vatRatesSchema.safeParse({ defaultBps: 1500.5, categories: [], products: [] }).success).toBe(false);
+    expect(vatRatesSchema.safeParse({ defaultBps: null, categories: [{ categoryId: cat, bps: 500 }, { categoryId: cat, bps: 750 }], products: [] }).success).toBe(false);
+    expect(vatRatesSchema.safeParse({ defaultBps: null, categories: [], products: [{ productId: prod, bps: 1 }, { productId: prod, bps: 2 }] }).success).toBe(false);
   });
 });

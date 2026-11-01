@@ -318,6 +318,9 @@ export const PERMISSIONS = {
   // a prepaid balance (SMS credit) the shop already paid for, set its low mark, and (PR 345) the costs & fees figures.
   // Records only: nothing here pays anyone or moves money.
   'costs.write': { group: 'books' },
+  // S16 · PR 350 (B3.10, §59 answer 23) — the VAT system: switch it on or off and set the VAT rates (default, per category,
+  // per product) on Money → VAT. Prices are VAT inclusive, so this never changes a price; owner only until he gives it.
+  'vat.manage': { group: 'books' },
   // S22 · PR 425 — the support inbox (B4.4, B4.12): open the inbox and every conversation with its who-did-what log
   // (`support.read`); reply, write an internal note, take a conversation, mark it solved or open (`support.reply`);
   // give a conversation to someone else or take it back from them (`support.assign`); change Support settings

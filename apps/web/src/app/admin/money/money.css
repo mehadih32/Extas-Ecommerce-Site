@@ -61,3 +61,6 @@
 .adm2 .rf-pick{border:0;padding:0;margin:0;min-width:0;display:flex;flex-wrap:wrap;gap:0 16px}
 .adm2 .rf-pick legend{padding:0;margin-bottom:4px;width:100%}
 .adm2 .rf-row > .a2-pill{justify-self:start}
+/* S16 · PR 350 — Money → VAT: a short rate field at the end of a category or product row. */
+.adm2 .vat-pct{width:88px;flex:0 0 88px}
+.adm2 .a2-rule .vat-act{flex:0 0 auto;align-items:center}

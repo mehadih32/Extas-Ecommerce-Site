@@ -8,5 +8,15 @@
       "label": "Per-order profit: ad spend share",
       "help": "Whether each delivered order's profit carries a share of the ad spend, spread evenly over the orders delivered in the same month (or day). Always shown as an estimate; nothing is charged or changed."
     }
+  },
+  "vat": {
+    "system": {
+      "label": "VAT system",
+      "help": "Off as shipped. When on, the shop shows the VAT already inside its prices (prices include VAT, so no price changes) at the rates on Money → VAT. \"On the delivery charge too\" adds the delivery charge to what carries VAT; your accountant decides."
+    },
+    "rates": {
+      "label": "VAT rates",
+      "help": "Your own rates, empty as shipped: a default rate, a rate per category (a sub-category without one takes its parent's) and a rate per product. A product's own rate wins over its category's, a category's over the default. 0 % is a real rate."
+    }
   }
 }
