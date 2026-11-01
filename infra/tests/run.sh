@@ -1930,16 +1930,23 @@ cat > "$T/bin/docker" <<'STUB'
 #!/usr/bin/env bash
 echo "docker $*" >> "$FAKE_LOG"
 [ "$1" = run ] || exit 0
-mnt=""; envf=""; prev=""
+mnt=""; envf=""; prev=""; outf=""
 for a in "$@"; do
   [ "$prev" = -v ] && case "$a" in *:/out) mnt="${a%:/out}" ;; esac
   [ "$prev" = --env-file ] && envf="$a"
+  [ "$prev" = --out ] && outf="${a#/out/}"
   prev="$a"
 done
 case "$*" in
-  *"test -x"*) exit 0 ;;
+  *"test -x"*) [ "$FAKE_PROBE" = fail ] && exit 1; exit 0 ;;
   *"--serve"*) cp "$envf" "$T_DIR/oracle.env"; exit 0 ;;
-  *"--close-run"*) printf '{"ok":true,"closed":%s,"codRestored":0}\n' "${FAKE_CLOSED:-0}" > "$mnt/close-run.json"; exit 0 ;;
+  *"--close-run --earlier"*)
+    if [ "${FAKE_EARLIER:-0}" = 1 ]; then echo '{"ok":true,"closed":1,"codRestored":1,"runs":[{"run":"20261101130300","cod":"put back to false"}],"stray":null}' > "$mnt/$outf"
+    else echo '{"ok":true,"closed":0,"codRestored":0,"runs":[],"stray":null}' > "$mnt/$outf"; fi
+    exit 0 ;;
+  *"--close-run"*)
+    [ "$FAKE_CLOSE" = fail ] && exit 1
+    printf '{"ok":true,"closed":%s,"codRestored":0,"state":{"grant":"closed","cod":"%s"}}\n' "${FAKE_CLOSED:-0}" "${FAKE_COD:-not touched}" > "$mnt/$outf"; exit 0 ;;
   *"--cleanup"*) echo '{"ok":true,"cancelled":2,"productsArchived":3}' > "$mnt/cleanup.json"; exit 0 ;;
   *shop.mjs*)
     cp "$envf" "$T_DIR/shop.env"
@@ -1990,20 +1997,51 @@ check "gate orders: only the word yes from the workflow switches cash on deliver
 rc=0; go FAKE_CLEAN=true GATE_ALLOW_COD=yes bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
 check "gate orders: allow_cod true reaches the oracle as yes" "$rc:$(grep -c '^GATE_ALLOW_COD=yes$' "$T/oracle.env")" "0:1"
 : > "$T/docker.log"
-rc=0; go FAKE_CLEAN=true FAKE_CLOSED=1 bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
-check "gate orders: a grant the run left open is closed by the trap and said in the report" "$rc:$(grep -c 'Safety net: the run ended before it closed its mock-payment grant' "$T/out/README.md")" "0:1"
+rc=0; go FAKE_CLEAN=true FAKE_CLOSED=1 FAKE_COD='put back to false' GATE_ALLOW_COD=yes bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: the report always says what happened to cash on delivery and the grant (Safety net)" \
+  "$rc:$(grep -c '^- Safety net: cash on delivery put back to false; test-pay grant closed\.$' "$T/out/README.md"):$(jq -c '.safetyNet | [.cod, .grant]' "$T/out/result.json")" \
+  '0:1:["cash on delivery put back to false","test-pay grant closed"]'
+# Live run 2: the start check closes what an earlier run left open and puts cash on delivery back BEFORE this run
+# serves or shops, and says so; the close of this run's own grant comes before the clean-up of the test orders.
+check "gate orders: the start check runs before the oracle serves and before the browser" \
+  "$(awk '/--close-run --earlier/{a=NR} /--serve/{b=NR} /shop.mjs/{c=NR} END{print (a>0 && a<b && b<c) ? "in order" : "out of order"}' "$T/docker.log")" "in order"
+check "gate orders: nothing left open by an earlier run is said too" "$(grep -c '^- Start check: nothing left open by an earlier run$' "$T/out/README.md")" "1"
 : > "$T/docker.log"
-rc=0; go FAKE_SHOP=crash bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+rc=0; go FAKE_CLEAN=true FAKE_EARLIER=1 bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: what an earlier run left open is closed first and said in the report" \
+  "$rc:$(grep -cF -- '- Start check: an earlier run left 1 test-pay grant(s) open: closed first (run 20261101130300: cash on delivery put back to false)' "$T/out/README.md"):$(jq -r '.safetyNet.start' "$T/out/result.json" | grep -c 'closed first')" "0:1:1"
+: > "$T/docker.log"
+rc=0; go FAKE_CLEAN=true FAKE_CLOSE=fail bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: a close that did not answer is said plainly, never as done" \
+  "$(grep -c '^- Safety net: cash on delivery: not known here' "$T/out/README.md"):$(grep -c 'test-pay grant closed' "$T/out/README.md")" "1:0"
+: > "$T/docker.log"
+rc=0; go FAKE_CLEAN=true FAKE_PROBE=fail bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: a run that stopped before the oracle still writes a report: cash on delivery not touched, no grant" \
+  "$rc:$(grep -c '^- Safety net: cash on delivery not touched; test-pay grant not opened\.$' "$T/out/README.md"):$(jq -c '[.ok, .started]' "$T/out/result.json"):$(grep -c -e '--close-run' "$T/docker.log")" "1:1:[false,false]:0"
+: > "$T/docker.log"
+rc=0; go FAKE_SHOP=crash GATE_ALLOW_COD=yes FAKE_COD='put back to no store value (the installation value answers)' bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
 check "gate orders: a browser run that crashed still leaves a report and the clean-up" \
   "$rc:$(jq -c '[.ok, .cleanup.ok]' "$T/out/result.json"):$(jq -r '.exit' "$T/root/state/gate-orders.json"):$(grep -c 'without a report (exit 3)' "$T/out/README.md")" "1:[false,true]:1:1"
-check "gate orders: a crashed run still closes its grant" "$(grep -c -e '--close-run' "$T/docker.log")" "1"
+check "gate orders: a crashed run still closes its grant once and says cash on delivery was put back" \
+  "$(grep -c -e '--close-run --out /out/close-run.json' "$T/docker.log"):$(grep -cF -- '- Safety net: cash on delivery put back to no store value (the installation value answers); test-pay grant closed.' "$T/out/README.md")" "1:1"
 : > "$T/docker.log"
 env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" GATE_IMAGE_UID="$(id -u)" FAKE_LOG="$T/docker.log" T_DIR="$T" FAKE_SHOP=hang bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 &
 gpid=$!
 for _ in $(seq 1 100); do grep -q 'shop.mjs' "$T/docker.log" 2>/dev/null && break; sleep 0.1; done
 t0="$(date +%s)"; kill -TERM "$gpid"; rc=0; wait "$gpid" || rc=$?
 check "gate orders: SIGTERM mid-run stops the browser, cleans up and closes the grant at once" \
-  "$rc:$(( $(date +%s) - t0 < 10 )):$(grep -c 'rm -f extas-gate-shop-' "$T/docker.log"):$(grep -c -e '--cleanup --out' "$T/docker.log"):$(grep -c -e '--close-run' "$T/docker.log"):$(find "$T/root/config/secrets" -name '.gate-orders.*' | wc -l | tr -d ' ')" "143:1:1:1:1:0"
+  "$rc:$(( $(date +%s) - t0 < 10 )):$(grep -c 'rm -f extas-gate-shop-' "$T/docker.log"):$(grep -c -e '--cleanup --out' "$T/docker.log"):$(grep -c -e '--close-run --out' "$T/docker.log"):$(find "$T/root/config/secrets" -name '.gate-orders.*' | wc -l | tr -d ' ')" "143:1:1:1:1:0"
+check "gate orders: SIGTERM mid-run closes the grant before the clean-up and still writes the Safety net line" \
+  "$(awk '/--close-run --out/{a=NR} /--cleanup --out/{b=NR} END{print (a>0 && b>0 && a<b) ? "first" : "not first"}' "$T/docker.log"):$(grep -c '^- Safety net: cash on delivery not touched; test-pay grant closed\.$' "$T/out/README.md"):$(grep -c 'Stopped by a signal' "$T/out/README.md"):$(grep -c '^## Safety net' "$T/out/README.md")" "first:1:1:1"
+# The workflow's last step (if: always()): only the start check runs, nothing is served or shopped, the run's report
+# stays and gets one line when something was found.
+: > "$T/docker.log"; cp "$T/out/README.md" "$T/readme-before"
+rc=0; go bash ../deploy/gate-orders.sh --sweep "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: the sweep runs only the start check and leaves the report as it was when nothing was left open" \
+  "$rc:$(grep -c -e '--close-run --earlier' "$T/docker.log"):$(grep -c -e '--serve' -e 'shop.mjs' -e '--cleanup' -e '--close-run --out /out/close-run' "$T/docker.log"):$(cmp -s "$T/readme-before" "$T/out/README.md" && echo same)" "0:1:0:same"
+rc=0; go FAKE_EARLIER=1 bash ../deploy/gate-orders.sh --sweep "$T/out" >/dev/null 2>&1 || rc=$?
+check "gate orders: the sweep says what it put back in the run's report" \
+  "$rc:$(grep -c "^- The workflow's last step: an earlier run left 1 test-pay grant(s) open" "$T/out/README.md"):$(jq -r '.safetyNet.sweep' "$T/out/result.json" | grep -c 'cash on delivery put back to false'):$(find "$T/root/config/secrets" -name '.gate-orders.*' | wc -l | tr -d ' ')" "0:1:1:0"
 check "workflows: gate-orders is by hand only, on the VM, in its own lane" \
   "$(grep -c '^  workflow_dispatch:' ../../.github/workflows/gate-orders.yml):$(grep -cE '^\s+(schedule|push|pull_request):' ../../.github/workflows/gate-orders.yml):$(grep -c 'runs-on: \[self-hosted, extas-vm\]' ../../.github/workflows/gate-orders.yml):$(grep -c 'group: extas-gate-orders' ../../.github/workflows/gate-orders.yml)" "1:0:1:1"
 check "workflows: gate-orders holds no secret" "$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/gate-orders.yml)" "0"

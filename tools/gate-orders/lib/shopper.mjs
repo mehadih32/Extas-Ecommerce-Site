@@ -84,13 +84,49 @@ export async function addItem(sh, base, { path, colour, size }, lang = "en") {
   const chosen = visible(page, '[data-testid="add-to-bag"][data-variant], [data-testid="bar-add"][data-variant], [data-testid="dkb-add"][data-variant]');
   lostTaps += await tapUntil(sh, pill, chosen);
   const button = chosen;
-  const answer = page.waitForResponse((r) => r.url().includes(BAG_LINES_PATH) && r.request().method() === "POST");
   const t0 = Date.now();
-  await button.click();
-  const res = await answer;
+  // live run 2 (1 Nov): the press and the wait for the bag's answer are one step. The wait used to start first and be
+  // awaited only after the press: a press that could not happen (on the live tablet it waited the full 20 s) let the
+  // wait time out with nobody listening, and Node stopped the whole run on that unhandled rejection. Now the press has
+  // its own shorter limit, either failure is this piece's answer, and the answer says what took the tap.
+  const wait = sh.page.waitForResponse((r) => r.url().includes(BAG_LINES_PATH) && r.request().method() === "POST");
+  wait.catch(() => null);
+  let res;
+  try {
+    await button.click({ timeout: Math.min(135_000, 15_000 * (sh.factor ?? 1)) });
+    res = await wait;
+  } catch (e) {
+    return { pdp, lostTaps, ok: false, error: `the Add press got no answer from the bag (${await pressBlocker(page, button)}): ${clickReason(e)}` };
+  }
   const ms = Date.now() - t0;
   const body = await res.json().catch(() => ({}));
   return { pdp, lostTaps, press: { ms, serverMs: serverShare(res.request().timing(), sh.latencyMs) }, ok: res.ok() && body.ok === true, error: body.error ?? (res.ok() ? null : `the bag answered ${res.status()}`) };
+}
+
+/** A Playwright press error in one line: its first line, and the last thing it was waiting on (what took the tap). */
+export function clickReason(e) {
+  const lines = String(e instanceof Error ? e.message : e)
+    .replace(/\x1b\[[0-9;]*m/g, "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const why = [...lines].reverse().find((l) => /intercepts pointer events|not visible|not enabled|not stable|detached|outside of the viewport/.test(l));
+  return `${lines[0] ?? "no answer"}${why && why !== lines[0] ? ` — ${why.replace(/^-\s*/, "")}` : ""}`.slice(0, 300);
+}
+
+/** What the customer's finger would land on at the button's centre (the button itself, or what covers it). */
+export async function pressBlocker(page, button) {
+  return button
+    .evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) return "the button is not drawn";
+      const at = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      const name = (n) => `${n.tagName.toLowerCase()}${n.getAttribute("data-testid") ? `[data-testid=${n.getAttribute("data-testid")}]` : ""}${n.className && typeof n.className === "string" ? `.${n.className.trim().split(/\s+/).slice(0, 3).join(".")}` : ""}`;
+      if (!at) return `the button is off the screen (${Math.round(r.x)},${Math.round(r.y)} on ${innerWidth}×${innerHeight})`;
+      if (at === el || el.contains(at)) return `${name(el)} on top, ${el.hasAttribute("aria-busy") ? "busy" : "not busy"}`;
+      return `${name(el)} is covered by ${name(at)}`;
+    }, null, { timeout: 3_000 })
+    .catch(() => "the button is gone from the page");
 }
 
 /**

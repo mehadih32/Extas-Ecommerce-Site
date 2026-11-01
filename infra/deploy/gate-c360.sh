@@ -82,10 +82,26 @@ cleanup_work() {
   fi
   [ -n "$loop_pid" ] && kill "$loop_pid" 2>/dev/null || true
   # the run's mock-payment grant closed, whatever ended the run (safe twice)
+  local pc="" grant="test-pay grant not opened"
   if [ -n "$pay_open" ]; then
-    log "closing the run's mock-payment grant: $(helper payclose "{\"run\":\"$run\"}" | jq -c '{ok, closed}' 2>/dev/null || echo 'no answer: it expires by itself')"
+    pc="$(helper payclose "{\"run\":\"$run\"}" 2>/dev/null || true)"
+    log "closing the run's mock-payment grant: $(printf '%s' "$pc" | jq -c '{ok, closed}' 2>/dev/null || echo 'no answer: it expires by itself')"
+    if [ "$(printf '%s' "$pc" | jq -r '.ok // false' 2>/dev/null || true)" = true ]; then grant="test-pay grant closed"
+    else grant="test-pay grant: not known here — the close did not answer (it expires by itself; the next run closes it first)"; fi
   fi
+  safety_line "$grant" || true
   rm -rf "$work"
+}
+# Live run 2 (1 Nov): the report always ends with its Safety net line. This gate opens its grant with cash on delivery
+# "no", so the owner's setting is never touched; the line says so, and how the grant stands.
+safety_line() {
+  [ -d "$OUT" ] || return 0
+  if [ ! -f "$OUT/result.json" ] || [ ! -f "$OUT/README.md" ]; then
+    jq -n --arg at "${at:-}" --arg sha "${SHA:0:12}" '{at:$at, sha:$sha, ok:false, steps:0, problems:["the run stopped before the browser part wrote its report"]}' > "$OUT/result.json"
+    printf '# Customer 360° gate — FAIL\n\n%s · the run stopped before the browser part wrote its report. See the workflow log.\n' "${at:-}" > "$OUT/README.md"
+  fi
+  printf '\n## Safety net\n\n- Safety net: cash on delivery not touched (this gate never switches it on); %s.\n' "$1" >> "$OUT/README.md"
+  jq --arg cod "cash on delivery not touched" --arg grant "$1" '.safetyNet = {cod: $cod, grant: $grant}' "$OUT/result.json" > "$OUT/.r.json" && mv "$OUT/.r.json" "$OUT/result.json"
 }
 trap cleanup_work EXIT
 trap 'exit 130' INT

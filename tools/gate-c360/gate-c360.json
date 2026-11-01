@@ -34,5 +34,5 @@
     { "id": "profile", "path": "/account/profile", "expect": "[data-testid=acc-profile], [data-testid=acc-details]" }
   ],
   "allowLatin": ["SMS", "OTP", "COD", "bKash", "Nagad", "Rocket", "WhatsApp", "Messenger", "Facebook", "Google", "PDF", "XXL", "XL", "OK", "Email", "e-mail", "Wi-Fi", "Visa", "Mastercard", "AMEX", "Pathao", "Steadfast", "RedX", "Paperfly", "eCourier"],
-  "waits": { "runMin": 45, "pageMs": 30000, "messagesSec": 150, "messagesPollSec": 10, "helperSec": 90 }
+  "waits": { "runMin": 45, "pageMs": 30000, "messagesSec": 150, "messagesPollSec": 10, "helperSec": 90, "searchSec": 90 }
 }

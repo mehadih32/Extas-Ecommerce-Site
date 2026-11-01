@@ -4,6 +4,7 @@
   "marker": "GATE TEST",
   "slugPrefix": "gate-test-",
   "warehouse": { "code": "GATE-TEST", "name": "GATE TEST — do not ship (gate-orders run)", "location": { "code": "GATE-TEST-1", "name": "GATE TEST shelf" } },
+  "category": { "slug": "gate-test-category", "nameEn": "GATE TEST — do not ship", "nameBn": "GATE TEST — পাঠাবেন না", "sortOrder": 9999 },
   "colours": [
     { "key": "gate-test-black", "nameEn": "GATE TEST Black", "nameBn": "গেট টেস্ট কালো", "hex": "#1A1A1A" },
     { "key": "gate-test-white", "nameEn": "GATE TEST White", "nameBn": "গেট টেস্ট সাদা", "hex": "#F4F4F4" },

@@ -4,7 +4,11 @@
 //   tsx oracle.ts --serve <port>      answers the browser run (tools/gate-orders/shop.mjs) on a private network of this
 //                                     run only: POST /<action> with a JSON body and the run's bearer token
 //   tsx oracle.ts --close-run --out <f> the shell's trap: closes this run's mock-payment grant and puts cash on delivery
-//                                     back when the run had switched it on (safe twice; on a failure or a signal too)
+//                                     back when the run had switched it on (safe twice; on a failure or a signal too),
+//                                     and writes how the grant and cash on delivery stand (the report's "Safety net")
+//   tsx oracle.ts --close-run --earlier --out <f>  the start of every run and the workflow's last step: closes what
+//                                     earlier runs left open and puts cash on delivery back from their records (live
+//                                     run 2, 1 Nov)
 //   tsx oracle.ts --cleanup --out <f> the safety net: cancels every open GATE TEST order, archives the test products,
 //                                     writes the clean-up's result to <f> (the shell runs it when the browser run ended
 //                                     without one)
@@ -155,9 +159,18 @@ async function main(argv: string[]): Promise<number> {
   if (argv.includes('--close-run')) {
     const out = at('--out');
     try {
+      // --earlier (the start of a run, and the workflow's last step): what earlier runs left; else this run's own grant,
+      // then how it stands (closed now or before, by the browser run's clean-up or the safety net) for the report
+      if (argv.includes('--earlier')) {
+        const r = await o.earlier();
+        if (out) writeFileSync(out, `${JSON.stringify(r, null, 2)}\n`);
+        log(`earlier runs: ${String(r.closed)} grant(s) closed, cash on delivery put back ${String(r.codRestored)} time(s)${r.ok ? '' : ' (not complete)'}`);
+        return r.ok ? 0 : 1;
+      }
       const r = await o.closeRun();
-      if (out) writeFileSync(out, `${JSON.stringify(r, null, 2)}\n`);
-      log(`close-run: ${String(r.closed)} grant(s) closed, cash on delivery put back ${String(r.codRestored)} time(s)${r.ok ? '' : ' (not complete)'}`);
+      const state = await o.runState();
+      if (out) writeFileSync(out, `${JSON.stringify({ ...r, state }, null, 2)}\n`);
+      log(`close-run: ${String(r.closed)} grant(s) closed, cash on delivery put back ${String(r.codRestored)} time(s); the run's grant: ${state.grant}${r.ok ? '' : ' (not complete)'}`);
       return r.ok ? 0 : 1;
     } finally {
       await disconnectPrisma();
@@ -177,7 +190,7 @@ async function main(argv: string[]): Promise<number> {
   const port = Number(at('--serve'));
   const token = process.env.GATE_ORACLE_TOKEN ?? '';
   if (!Number.isInteger(port) || port < 1 || token.length < 32) {
-    console.error('usage: oracle.ts --serve <port> (GATE_ORACLE_TOKEN of 32+ characters) | --cleanup --out <file> | --close-run --out <file>');
+    console.error('usage: oracle.ts --serve <port> (GATE_ORACLE_TOKEN of 32+ characters) | --cleanup --out <file> | --close-run [--earlier] --out <file>');
     return 2;
   }
   serve(o, port, token);
