@@ -56,10 +56,12 @@ describe('PR 6 · timetable slots', () => {
 
 describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
+    // PR 351: + 'money.report.send' (its own queue 'reports').
     expect([...JOBS.keys()].sort()).toEqual(
-      ['courier.track', 'courier.zones', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
+      ['courier.track', 'money.report.send', 'courier.zones', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
+    expect(jobDefinition('money.report.send')!.queue).toBe('reports');
     expect(jobDefinition('payments.pending.sweep')!.queue).toBe('payments');
     expect(jobDefinition('search.index')!.queue).toBe('search');
     expect(QUEUES.length).toBeGreaterThanOrEqual(1);

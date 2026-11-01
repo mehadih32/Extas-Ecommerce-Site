@@ -133,13 +133,14 @@ describe('permission catalogue (PR 16, 495)', () => {
     // ~~expect(ACCESS_TREE.find((b) => b.group === 'books')?.keys).toEqual(['books.read', 'books.reconcile', 'books.adjust', 'books.close', 'erp.account.read', 'erp.payments.record', 'fixedcosts.write']);~~
     // PR 343: the cost ledger's `costs.write` joins the books group.
     // ~~expect(ACCESS_TREE.find((b) => b.group === 'books')?.keys).toEqual(['books.read', 'books.reconcile', 'books.adjust', 'books.close', 'erp.account.read', 'erp.payments.record', 'fixedcosts.write', 'costs.write']);~~
-    // PR 350: the VAT system's `vat.manage` joins the books group after it.
-    expect(ACCESS_TREE.find((b) => b.group === 'books')?.keys).toEqual(['books.read', 'books.reconcile', 'books.adjust', 'books.close', 'erp.account.read', 'erp.payments.record', 'fixedcosts.write', 'costs.write', 'vat.manage']);
+    // ~~PR 350: the VAT system's `vat.manage` joins the books group after it.~~
+    // PR 350: the VAT system's `vat.manage`, then (PR 351) the money report's `books.report`, join the books group.
+    expect(ACCESS_TREE.find((b) => b.group === 'books')?.keys).toEqual(['books.read', 'books.reconcile', 'books.adjust', 'books.close', 'erp.account.read', 'erp.payments.record', 'fixedcosts.write', 'costs.write', 'vat.manage', 'books.report']);
     // A correction of the books and a month closed with differences also need the owner's PIN.
     expect([...PIN_PERMISSIONS]).toEqual(['books.adjust', 'books.close']);
     // The read-only smoke check account may see the books, never change them or record money.
     expect(CHECK_PERMISSIONS).toEqual(expect.arrayContaining(['books.read', 'erp.account.read']));
-    for (const k of ['books.reconcile', 'books.adjust', 'books.close', 'erp.payments.record', 'fixedcosts.write', 'costs.write', 'vat.manage', 'returns.handback', 'exchange.approve']) expect(CHECK_PERMISSIONS, k).not.toContain(k);
+    for (const k of ['books.reconcile', 'books.adjust', 'books.close', 'erp.payments.record', 'fixedcosts.write', 'costs.write', 'vat.manage', 'books.report', 'returns.handback', 'exchange.approve']) expect(CHECK_PERMISSIONS, k).not.toContain(k);
   });
 
   it('keys look like area.action', () => {

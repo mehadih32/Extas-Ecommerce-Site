@@ -2,58 +2,22 @@
 // The period's profit and loss from @extas/metrics `profitAndLoss` (the per-order profit, so the order page and this page
 // agree), with the owner's figures (`costs.gatewayFees`, `costs.packaging`) and the fixed costs of PR 618 (salary, rent,
 // utilities, other): each month's latest version spread over its days by the ERP's rule (`fixedCostDays`), the days
-// inside the period added. Read-only; nothing here pays, charges or changes a price.
+// inside the period added. Read-only; nothing here pays, charges or changes a price. (PR 351: the figure itself now lives
+// in @extas/inventory books-profit.ts, shared with the worker's money report; `fixedCostsIn` and `ProfitReport` too.)
 //   GET /api/admin/money/profit?from=YYYY-MM-DD&to=YYYY-MM-DD   the period as a CSV file (`books.read`)
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { fixedCostDays } from '@extas/inventory';
-import { profitAndLoss, ymdIn, type Pnl } from '@extas/metrics';
-import { gatewayFeeMinor } from '@extas/settings';
+import { profitReport as inventoryProfitReport, type ProfitReport } from '@extas/inventory';
+
+export { fixedCostsIn, type ProfitReport } from '@extas/inventory';
+import { ymdIn } from '@extas/metrics';
 import { errorResponse, fail, guardAdmin, type AdminDeps } from './admin-auth';
 import { parseReportQuery } from './cost-report';
 import type { AppResolver } from './settings';
 
-export interface ProfitReport extends Pnl {
-  /** The fixed costs on the period's days, or null when none were entered for any of its months. */
-  fixedMinor: number | null;
-  /** Contribution − ad spend − other costs − fixed costs; null while the ad spend is not known. */
-  netProfitMinor: number | null;
-}
-
-/** Fixed costs (PR 618) on the days `from`–`to`: each month's latest version spread by its days. */
-export async function fixedCostsIn(db: Pick<PrismaClient, 'erpFixedCostMonth'>, storeId: number, from: string, to: string): Promise<number | null> {
-  const rows = await db.erpFixedCostMonth.findMany({
-    where: { storeId, month: { gte: new Date(`${from.slice(0, 7)}-01T00:00:00Z`), lte: new Date(`${to.slice(0, 7)}-01T00:00:00Z`) } },
-    orderBy: [{ month: 'asc' }, { version: 'desc' }],
-    select: { month: true, version: true, salaryMinor: true, rentMinor: true, utilitiesMinor: true, otherMinor: true },
-  });
-  if (!rows.length) return null;
-  const seen = new Set<string>();
-  let total = 0;
-  for (const r of rows) {
-    const month = r.month.toISOString().slice(0, 7);
-    if (seen.has(month)) continue;
-    seen.add(month);
-    const days = fixedCostDays(month, { salary: Number(r.salaryMinor), rent: Number(r.rentMinor), utilities: Number(r.utilitiesMinor), other: Number(r.otherMinor) });
-    for (const d of days) if (d.day >= from && d.day <= to) total += d.minor;
-  }
-  return total;
-}
-
-/** The report of one store over `from`–`to` (the store's own days). */
-export async function profitReport(deps: { db: PrismaClient; resolver: AppResolver }, storeId: number, from: string, to: string): Promise<ProfitReport> {
-  const at = { storeId };
-  const [currency, timeZone, fees, packaging] = await Promise.all([
-    deps.resolver.value('store.currency', at),
-    deps.resolver.value('store.timeZone', at),
-    deps.resolver.value('costs.gatewayFees', at),
-    deps.resolver.value('costs.packaging', at),
-  ]);
-  const [p, fixedMinor] = await Promise.all([
-    profitAndLoss(deps.db, storeId, { from, to }, { currency, timeZone, packagingMinor: packaging?.perOrderMinor ?? null, gatewayFee: (amount, provider) => gatewayFeeMinor(amount, provider, fees) }),
-    fixedCostsIn(deps.db, storeId, from, to),
-  ]);
-  return { ...p, fixedMinor, netProfitMinor: p.adsMinor === null ? null : p.contributionMinor - p.adsMinor - p.otherCostsMinor - (fixedMinor ?? 0) };
-}
+/** The report of one store over `from`–`to` (the store's own days): @extas/inventory `profitReport` (PR 351 moved it there
+ * so the worker's money report reads the same figure) with the app's settings resolver. */
+export const profitReport = (deps: { db: PrismaClient; resolver: AppResolver }, storeId: number, from: string, to: string): Promise<ProfitReport> =>
+  inventoryProfitReport({ db: deps.db, settings: deps.resolver }, storeId, from, to);
 
 const cell = (v: string | number | null) => {
   if (v === null) return '';

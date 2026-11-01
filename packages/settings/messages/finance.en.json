@@ -18,5 +18,11 @@
       "label": "VAT rates",
       "help": "Your own rates, empty as shipped: a default rate, a rate per category (a sub-category without one takes its parent's) and a rate per product. A product's own rate wins over its category's, a category's over the default. 0 % is a real rate."
     }
+  },
+  "money": {
+    "report": {
+      "label": "Money report to the owner",
+      "help": "Off as shipped. When on, the Profit & loss figures of the day (or the last 7 days, or the last month) go to the owner by Telegram at the time set, in the language set. Weekly: on the weekday chosen; monthly: on the day of the month chosen (1–28), for the month before. A report missed at its time (the server was down) still goes later the same day, once."
+    }
   }
 }

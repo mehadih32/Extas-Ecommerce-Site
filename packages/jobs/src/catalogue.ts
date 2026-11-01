@@ -24,6 +24,7 @@ import { expirePackingPhotos, trackParcels, zoneSyncTurn } from '@extas/shipping
 import { COURIER_QUEUE, COURIER_TRACK_JOB, COURIER_ZONES_JOB, courierDeps, PACKING_PHOTOS_JOB } from './courier';
 import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 import { RETURNS_ERP_JOB, RETURNS_ERP_QUEUE, runReturnsErp } from './returns-erp';
+import { MONEY_REPORT_JOB, MONEY_REPORT_QUEUE, runMoneyReport, type MoneyReportPayload } from './money-report';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
 export type JobOutcome = { ok: true; stats: Record<string, unknown> } | { ok: false; error: string; stats: Record<string, unknown> };
@@ -301,6 +302,23 @@ const returnsErpJob: JobDefinition<{ storeId: number }> = {
   run: async (deps, p) => outcomeOf(await runReturnsErp(deps, p.storeId)),
 };
 
+/**
+ * S16 · PR 351 — one store's money report for one period (money-report.ts; planned only while it is due, the period in
+ * the run key). Safe to run twice: a run that already succeeded is skipped by the run guard; switched off = nothing.
+ */
+const moneyReportJob: JobDefinition<MoneyReportPayload> = {
+  key: MONEY_REPORT_JOB,
+  queue: MONEY_REPORT_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown; period?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${MONEY_REPORT_JOB}: storeId must be a positive integer`);
+    if (typeof p.period !== 'string' || !/^(D:\d{4}-\d{2}-\d{2}|W:\d{4}-\d{2}-\d{2}|M:\d{4}-\d{2})$/.test(p.period)) throw new Error(`${MONEY_REPORT_JOB}: period must be D:/W:YYYY-MM-DD or M:YYYY-MM`);
+    return { storeId: p.storeId as number, period: p.period };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runMoneyReport(deps, p)) }),
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -313,6 +331,7 @@ const definitions: JobDefinition<never>[] = [
   packingPhotosJob as unknown as JobDefinition<never>,
   invoiceIssueJob as unknown as JobDefinition<never>,
   returnsErpJob as unknown as JobDefinition<never>,
+  moneyReportJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

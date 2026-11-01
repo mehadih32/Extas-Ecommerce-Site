@@ -7,6 +7,9 @@
 //          inclusive only, so switching it on never changes a price; it only shows the VAT already inside Sales.
 //   v163 · PR 350 `vat.rates` — the VAT rates (owner data, empty as shipped, never guessed): a default rate, a rate per
 //          category (a sub-category without one takes its parent's) and a rate per product; product > category > default.
+//   v164 · PR 351 `money.report` — the money report to the owner (B3.10, §59 answer 24: "report frequency set by the
+//          owner"; the recommended time 22:00): off as shipped; daily, weekly or monthly, at the owner's time, in his
+//          language, by Telegram. It only reads the figures of Money → Profit & loss; nothing moves money.
 // Labels: messages/finance.<lang>.json.
 import { z } from 'zod';
 import { setting } from './define';
@@ -15,6 +18,7 @@ const V347 = 160;
 const V348 = 161;
 const V350 = 162;
 const V350_RATES = 163;
+const V351 = 164;
 
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'books' } as const;
 
@@ -50,6 +54,19 @@ export const vatRatesSchema = z
   .refine((v) => new Set(v.categories.map((c) => c.categoryId)).size === v.categories.length, { message: 'each category once', path: ['categories'] })
   .refine((v) => new Set(v.products.map((c) => c.productId)).size === v.products.length, { message: 'each product once', path: ['products'] });
 export type VatRates = z.output<typeof vatRatesSchema>;
+
+/** PR 351 — when the money report goes to the owner. `weekday` 0 = Sunday … 6 = Saturday; `monthDay` 1–28 (every month has it). */
+export const moneyReportSchema = z
+  .object({
+    enabled: z.boolean(),
+    frequency: z.enum(['daily', 'weekly', 'monthly']),
+    at: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'HH:MM'),
+    weekday: z.int().min(0).max(6),
+    monthDay: z.int().min(1).max(28),
+    lang: z.enum(['bn', 'en']),
+  })
+  .strict();
+export type MoneyReportSettings = z.output<typeof moneyReportSchema>;
 
 export const financeSettings = {
   'costs.report': setting({
@@ -93,5 +110,16 @@ export const financeSettings = {
     labelKey: 'vat.rates.label',
     helpKey: 'vat.rates.help',
     sortOrder: 370,
+  }),
+  'money.report': setting({
+    ...base,
+    version: V351,
+    schema: moneyReportSchema,
+    // The blueprint's recommended time (Part F, S16 answer 24); Saturday is the first day of the week in Bangladesh.
+    default: { enabled: false, frequency: 'daily', at: '22:00', weekday: 6, monthDay: 1, lang: 'bn' },
+    valueType: 'JSON',
+    labelKey: 'money.report.label',
+    helpKey: 'money.report.help',
+    sortOrder: 380,
   }),
 };

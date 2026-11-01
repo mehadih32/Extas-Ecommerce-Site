@@ -58,6 +58,45 @@
       "none": "No delivered order in this period.",
       "cut": "Only the newest {n} days are listed here; the download has every day."
     },
-    "export": "Download (.csv)"
+    "export": "Download (.csv)",
+    "report": {
+      "title": "Money report to you",
+      "sub": "These figures can go to you by Telegram on their own: every day, every week or every month, at your time. Off as shipped.",
+      "on": "Money report on",
+      "frequency": "How often",
+      "daily": "Every day (that day)",
+      "weekly": "Every week (the last 7 days)",
+      "monthly": "Every month (the month before)",
+      "at": "Time (store time)",
+      "weekday": "Day of the week",
+      "monthDay": "Day of the month (1–28)",
+      "lang": "Language",
+      "bn": "Bengali",
+      "en": "English",
+      "days": {
+        "d0": "Sunday",
+        "d1": "Monday",
+        "d2": "Tuesday",
+        "d3": "Wednesday",
+        "d4": "Thursday",
+        "d5": "Friday",
+        "d6": "Saturday"
+      },
+      "next": "Next report: {day} at {at}.",
+      "off": "Off: no report goes.",
+      "preview": "What it would send now",
+      "telegram": "It goes to your Telegram once the Telegram bot is connected in Settings → Keys & connections; until then it goes to the practice bot only.",
+      "save": "Save",
+      "confirm": "Yes, save",
+      "saved": "Saved.",
+      "readOnly": "Changing it needs the money report permission.",
+      "err": {
+        "INVALID_INPUT": "Something is not filled in right. Check the time.",
+        "VERSION_CONFLICT": "Someone else saved this a moment ago. Open the page again and check.",
+        "forbidden": "You do not have the permission for this.",
+        "network": "No connection. Try again.",
+        "other": "Something went wrong. Try again."
+      }
+    }
   }
 }

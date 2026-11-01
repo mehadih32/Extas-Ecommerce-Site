@@ -1,5 +1,6 @@
 // What every job and the worker get: the database, the settings (through the two-tier resolver, PR 492), the
 // inventory's dependencies (the ERP connection layer with the vault's keys, PR 18/493) and a clock for tests.
+import type { TelegramLink } from '@extas/adapters';
 import type { Connections } from '@extas/adapters';
 import type { PrismaClient } from '@extas/db/client';
 import type { InventoryDeps, SettingsReader } from '@extas/inventory';
@@ -27,6 +28,8 @@ export interface JobDeps {
    * library row is archived), or none — the purge then only unlinks and archives it.
    */
   voice?: { wipe(storeId: number, file: { storage: string; storageKey: string; mimeType: string }): Promise<void> };
+  /** PR 351: the owner's Telegram (the mock until the bot's key is entered), or none — no money report is sent. */
+  owner?: { telegram: TelegramLink };
   /** Clock, for tests. */
   now?: () => Date;
 }
