@@ -17,6 +17,10 @@
 //                                              sticker counted); an invoice needs `orders.invoice` too. `single: true`
 //                                              (a row's own Print / Reprint) is always the sticker.
 //   GET   /api/admin/packing/stickers/sample   a sample sticker at the owner's size, to try the printer (fulfilment.print)
+//   POST  /api/admin/packing/stickers/check    PR 408: the print check — every document at every size drawn from
+//                                              sample words in the owner's settings and checked against the B2.4 rules
+//                                              (nothing cut or overlapping, no ink at the edge, black-and-white safe);
+//                                              nothing printed or counted (fulfilment.print)
 //   GET   /api/admin/packing/stickers/recent   the last prints (stickers and handover sheets) (fulfilment.read)
 //   GET   /api/admin/packing/handover          PR 180: per courier, the parcels waiting to be handed over, each with why
 //                                              it cannot go yet, and the open batch (fulfilment.read)
@@ -64,9 +68,10 @@ import { isOrdersError } from '@extas/orders';
 import * as sh from '@extas/shipping';
 import { body, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { handoverPdf, type Letterhead } from './admin-fulfil/handover';
+import { printCheck } from './admin-fulfil/print-check';
 import { pickingPdf } from './admin-fulfil/picking';
 import { oneSticker, printRunPages, sampleParcel, stickerInput, stickersPdf, pdfName, type StickerContext } from './admin-fulfil/sticker';
-import { invoicePaper, printedInvoices, type InvoiceLayout } from './admin-invoices/print';
+import { invoicePaper, printedInvoices, shopLogo, type InvoiceLayout } from './admin-invoices/print';
 import { fulfilDicts } from './admin-fulfil/i18n';
 import { mediaDeps } from './media';
 import { shippingDeps, shippingFail, storeIdOf } from './shipping-api';
@@ -100,10 +105,13 @@ function pdf(bytes: Buffer, name: string, extra: Record<string, string> = {}): R
 }
 
 /** The shop's letterhead (name, address in the sheet's language, phone) and its time zone. */
-async function letterhead(deps: sh.ShippingDeps, storeId: number, lang: 'en' | 'bn'): Promise<{ head: Letterhead; timeZone: string }> {
-  const v = <K extends Parameters<sh.SettingsReader['value']>[0]>(k: K) => deps.settings.value(k, { storeId });
-  const [name, address, phone, timeZone] = await Promise.all([v('store.name'), v('contact.address'), v('contact.phone'), v('store.timeZone')]);
-  return { head: { name, address: address ? address[lang] || address.en || null : null, phone: phone ?? null }, timeZone };
+async function letterhead(x: Ctx, lang: 'en' | 'bn'): Promise<{ head: Letterhead; timeZone: string }> {
+  const storeId = x.who.storeId;
+  const v = <K extends Parameters<sh.SettingsReader['value']>[0]>(k: K) => x.deps.settings.value(k, { storeId });
+  const [name, address, phone, timeZone, quality] = await Promise.all([v('store.name'), v('contact.address'), v('contact.phone'), v('store.timeZone'), v('documents.printQuality')]);
+  // PR 408 (B2.4): the same letterhead as the invoice — the shop's logo when the owner set one and wants it on lists
+  const logo = quality.logoOnLists ? await shopLogo(x.admin, storeId) : null;
+  return { head: { name, address: address ? address[lang] || address.en || null : null, phone: phone ?? null, logo }, timeZone };
 }
 
 /** The owner's sticker settings and the shop's name and phone, for one store. */
@@ -123,6 +131,17 @@ export async function stickersRoute(request: Request, deps: AdminDeps | null, pa
       const currency = await x.deps.settings.value('store.currency', { storeId: x.who.storeId });
       const input = stickerInput(sampleParcel(fulfilDicts[c.layout.lang], currency), c);
       return pdf(await stickersPdf([input], c.layout, 'Sample sticker'), pdfName('sample-sticker'));
+    });
+  }
+  if (path.length === 1 && path[0] === 'check') {
+    if (m !== 'POST') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.print', async (x) => {
+      const storeId = x.who.storeId;
+      const v = <K extends Parameters<sh.SettingsReader['value']>[0]>(k: K) => x.deps.settings.value(k, { storeId });
+      const [sticker, picking, handover, invoice, currency, quality] = await Promise.all([stickerContext(x.deps, storeId), v('delivery.picking.list'), v('delivery.handover.sheet'), x.admin.resolver.value('documents.invoice.print', { storeId }), v('store.currency'), v('documents.printQuality')]);
+      const { head, timeZone } = await letterhead(x, sticker.layout.lang);
+      const rows = await printCheck({ sticker, picking, handover, invoice, head, currency, timeZone, edgeMm: quality.edgeMm, at: (x.deps.now?.() ?? new Date()).toISOString() });
+      return json({ ok: true, edgeMm: quality.edgeMm, rows });
     });
   }
   if (path.length === 1 && path[0] === 'recent') {
@@ -194,7 +213,7 @@ export async function handoverRoute(request: Request, deps: AdminDeps | null, pa
     return guarded(request, deps, 'fulfilment.handover', async (x) => {
       const sheet = await sh.printHandover(x.deps, x.who, await body(request));
       const cfg = await x.deps.settings.value('delivery.handover.sheet', { storeId: x.who.storeId });
-      const { head, timeZone } = await letterhead(x.deps, x.who.storeId, cfg.lang);
+      const { head, timeZone } = await letterhead(x, cfg.lang);
       const name = pdfName(`handover-${sheet.courierName}-${sheet.printCount}`);
       return pdf(await handoverPdf(sheet, cfg, head, timeZone), name, { 'x-print-replay': sheet.replay ? '1' : '0' });
     });
@@ -212,7 +231,7 @@ export async function handoverRoute(request: Request, deps: AdminDeps | null, pa
     return guarded(request, deps, 'fulfilment.handover', async (x) => {
       const sheet = await sh.copyHandover(x.deps, x.who, await body(request));
       const cfg = await x.deps.settings.value('delivery.handover.sheet', { storeId: x.who.storeId });
-      const { head, timeZone } = await letterhead(x.deps, x.who.storeId, cfg.lang);
+      const { head, timeZone } = await letterhead(x, cfg.lang);
       return pdf(await handoverPdf(sheet, cfg, head, timeZone), pdfName(`handover-${sheet.courierName}-copy-${sheet.printCount}`));
     });
   }
@@ -237,7 +256,7 @@ export async function pickingRoute(request: Request, deps: AdminDeps | null, pat
     return guarded(request, deps, 'fulfilment.read', async (x) => {
       const list = await sh.printPicking(x.deps, x.who, await body(request));
       const cfg = await x.deps.settings.value('delivery.picking.list', { storeId: x.who.storeId });
-      const { head, timeZone } = await letterhead(x.deps, x.who.storeId, cfg.lang);
+      const { head, timeZone } = await letterhead(x, cfg.lang);
       return pdf(await pickingPdf(list, cfg, head, timeZone, list.printedAt), pdfName(`picking-list-${list.printedAt.slice(0, 10)}`), { 'x-picking-list': list.listId });
     });
   return fail(405, 'method-not-allowed');

@@ -109,6 +109,16 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print settings API on PostgreSQL (S20 Â
     expect(await t.prisma.auditLog.count({ where: { action: { in: ['delivery.handover.sheet.save', 'fulfilment.handover.history.save'] } } })).toBe(2);
   });
 
+  it('PR 408: the print quality card (the logo on the lists, the edge) saved whole and audited', async () => {
+    const g = await api('GET', { cookie: owner });
+    const q = g.body.cards!['documents.printQuality']!;
+    expect(q.value).toEqual({ logoOnLists: true, edgeMm: 2 });
+    expect((await api('PUT', { cookie: owner, body: { key: q.key, value: { logoOnLists: true, edgeMm: 9 }, version: q.version } })).body).toMatchObject({ error: 'INVALID_INPUT', details: ['edgeMm'] });
+    const ok = await api('PUT', { cookie: owner, body: { key: q.key, value: { logoOnLists: false, edgeMm: 3 }, version: q.version } });
+    expect(ok.body.cards!['documents.printQuality']!.value).toEqual({ logoOnLists: false, edgeMm: 3 });
+    expect(await t.prisma.auditLog.count({ where: { action: 'documents.printQuality.save' } })).toBe(1);
+  });
+
   it('refuses other methods', async () => {
     expect((await packingSettingsHandler(call('POST', { cookie: owner, body: {} }), deps)).status).toBe(405);
     expect((await packingSettingsHandler(call('GET', {}), deps)).status).toBe(401);

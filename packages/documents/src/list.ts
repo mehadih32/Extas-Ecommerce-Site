@@ -33,6 +33,11 @@ export interface ListDocument {
   dpi: number;
   /** The letterhead: the shop's name first (bold), then its address and phone lines; empty lines are left out. */
   letterhead: readonly (string | null)[];
+  /**
+   * PR 408 (B2.4): the shop's logo, the same as on its invoice; when it can be read it prints in place of the name line,
+   * so every printed document carries one letterhead. None: the name prints.
+   */
+  logo?: Buffer | null;
   title: string;
   /** The summary lines under the title, on the first page. */
   summary: readonly string[];
@@ -77,7 +82,12 @@ export async function listPages(doc: ListDocument, engine: TextEngine): Promise<
   // the letterhead (every page) and the foot (every page)
   const head: Part[] = [];
   const lines = doc.letterhead.filter((l): l is string => !!l && !!l.trim());
-  for (const [i, l] of lines.entries()) head.push(textPart(await shape(l, i === 0 ? st('head', { bold: true, align: 'centre' }) : st('small', { align: 'centre' })), m, w, 'centre'));
+  const logo = doc.logo ? await measure.shapePicture(doc.logo, Math.min(w, measure.px(60)), measure.px(20)) : null;
+  if (logo && logo.height) head.push(textPart(logo, m, w, 'centre'));
+  for (const [i, l] of lines.entries()) {
+    if (i === 0 && logo && logo.height) continue;
+    head.push(textPart(await shape(l, i === 0 ? st('head', { bold: true, align: 'centre' }) : st('small', { align: 'centre' })), m, w, 'centre'));
+  }
   head.push({ h: gap * 2, draw: (s, y) => s.line(m, y + gap, m + w, y + gap, line * 2) });
 
   // the table's columns (the tick box gets its own narrow column)

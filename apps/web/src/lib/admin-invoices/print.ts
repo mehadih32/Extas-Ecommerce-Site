@@ -76,6 +76,11 @@ async function logoBytes(deps: AdminDeps, storeId: number, assetId: string | nul
   }
 }
 
+/** PR 408 (B2.4) — the shop's logo (Brand settings) for the other printed documents' letterhead, or null. */
+export async function shopLogo(deps: AdminDeps, storeId: number): Promise<Buffer | null> {
+  return logoBytes(deps, storeId, await deps.resolver.value('brand.logo', { storeId }));
+}
+
 /** One order's printed invoice: the document, its kept number, and the order it belongs to. */
 export interface PrintedInvoice {
   orderId: string;

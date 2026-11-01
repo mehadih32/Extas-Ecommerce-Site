@@ -1,4 +1,5 @@
 import { writeFileSync } from 'node:fs';
+import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 import { sharpText } from './layout';
 import { PAPER_MM, listPages, listPdf, type ListDocument, type ListRow } from './list';
@@ -84,5 +85,22 @@ describe('the paper list', () => {
     expect(read.pages).toHaveLength(1);
     const ink = [...read.pages[0]!.image.gray].filter((v) => v < 128).length;
     expect(ink).toBeGreaterThan(1000);
+  });
+
+  it('PR 408: prints the shop\'s logo in place of its name when one is given (the same letterhead as the invoice); an unreadable logo prints the name', async () => {
+    const logo = await sharp({ create: { width: 300, height: 100, channels: 3, background: { r: 0, g: 0, b: 0 } } }).png().toBuffer();
+    const named = boxText();
+    await listPages(doc({ logo: null }), named);
+    expect(named.calls).toContain('Sample Shop');
+    const withLogo = boxText();
+    const pages = await listPages(doc({ logo }), withLogo);
+    expect(withLogo.calls).not.toContain('Sample Shop');
+    expect(withLogo.calls).toContain('Sample address');
+    // the logo's black box is on the page's top band
+    const top = pages[0]!.image.gray.subarray(0, pages[0]!.image.width * Math.round(pages[0]!.image.height / 8));
+    expect(top.some((v) => v === 0)).toBe(true);
+    const broken = boxText();
+    await listPages(doc({ logo: Buffer.from('not a picture') }), broken);
+    expect(broken.calls).toContain('Sample Shop');
   });
 });

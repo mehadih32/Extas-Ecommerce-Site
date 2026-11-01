@@ -2,7 +2,8 @@
 // first the print run's (what one press prints, `fulfilment.printRun`) and the courier sticker's size and printer
 // (`delivery.sticker.layout`, PR 179; until now only shown). Later S20 PRs add their cards to this list:
 // PR 406 the rider's handover sheet (`delivery.handover.sheet`, PR 180; until now only shown) and the handed-over
-// history's reach (`fulfilment.handover.history`), both on Orders › Packing & print › Handover.
+// history's reach (`fulfilment.handover.history`), both on Orders › Packing & print › Handover; PR 408 the print
+// quality (`documents.printQuality`: the logo on the lists, the edge the printer cannot reach) on the Print run page.
 //
 //   GET  /api/admin/packing/settings   the cards with their versions (`fulfilment.read`)
 //   PUT  /api/admin/packing/settings   {key, value, version} one card saved whole; a card changed by someone else in
@@ -12,13 +13,13 @@
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { handoverHistorySchema, handoverSheetSchema, printRunSchema, stickerLayoutSchema, storeTarget } from '@extas/settings';
+import { handoverHistorySchema, handoverSheetSchema, printQualitySchema, printRunSchema, stickerLayoutSchema, storeTarget } from '@extas/settings';
 import type { ZodType } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
 /** The keys these pages save (one card each). */
-export const PACKING_SETTING_KEYS = ['fulfilment.printRun', 'delivery.sticker.layout', 'delivery.handover.sheet', 'fulfilment.handover.history'] as const;
+export const PACKING_SETTING_KEYS = ['fulfilment.printRun', 'delivery.sticker.layout', 'delivery.handover.sheet', 'fulfilment.handover.history', 'documents.printQuality'] as const;
 export type PackingSettingKey = (typeof PACKING_SETTING_KEYS)[number];
 
 /** Each card's schema, its line in the settings change log and its audit action. */
@@ -27,6 +28,7 @@ const CARDS: Record<PackingSettingKey, { schema: ZodType<Record<string, unknown>
   'delivery.sticker.layout': { schema: stickerLayoutSchema as unknown as ZodType<Record<string, unknown>>, reason: 'Orders › Packing & print › Print run › Sticker and printer', action: 'delivery.sticker.layout.save' },
   'delivery.handover.sheet': { schema: handoverSheetSchema, reason: 'Orders › Packing & print › Handover › The handover sheet', action: 'delivery.handover.sheet.save' },
   'fulfilment.handover.history': { schema: handoverHistorySchema, reason: 'Orders › Packing & print › Handover › Handed-over history', action: 'fulfilment.handover.history.save' },
+  'documents.printQuality': { schema: printQualitySchema, reason: 'Orders › Packing & print › Print run › Print quality', action: 'documents.printQuality.save' },
 };
 
 const isKey = (k: unknown): k is PackingSettingKey => typeof k === 'string' && (PACKING_SETTING_KEYS as readonly string[]).includes(k);

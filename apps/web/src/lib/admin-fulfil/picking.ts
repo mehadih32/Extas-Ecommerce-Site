@@ -40,6 +40,7 @@ export function pickingDocument(list: PickingList, cfg: PickingListSettings, hea
     heightMm,
     dpi: cfg.dpi,
     letterhead: [head.name, head.address, head.phone],
+    logo: head.logo ?? null,
     title: w('title'),
     summary: [
       w('counts', { orders: s.orders, pieces: s.pieces, lines: s.lineItems }),
