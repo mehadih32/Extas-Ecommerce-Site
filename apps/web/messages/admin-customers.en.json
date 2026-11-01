@@ -545,6 +545,15 @@
           "bn": "How you talk (Bengali), a few words",
           "en": "How you talk (English), a few words"
         }
+      },
+      "sendAdvice": {
+        "title": "Who and when to send",
+        "sub": "Off as shipped. On an e-mail send: the segments most likely to buy and the hours your orders come in, with the numbers. Works on your own data, no AI needed.",
+        "enabled": "Show \"Who and when\" on e-mail sends",
+        "lookbackDays": "Days of orders to read (7–730)",
+        "minOrders": "Fewest orders before a time is suggested",
+        "windowHours": "Hours in the suggested window (1–6)",
+        "maxSegments": "Segments suggested (1–10)"
       }
     },
     "auto": {
@@ -759,6 +768,23 @@
       "version": "Version {n}",
       "use": "Use this",
       "used": "Put into the form. Check it, change it if you like, then save."
+    },
+    "advice": {
+      "title": "Who and when",
+      "sub": "From your own orders of the last {days} days. Advice only: you pick.",
+      "who": "Who is most likely to buy",
+      "why": "{buyers} of {people} ({pct}%) bought in the last {days} days · {reach} can get offer e-mails",
+      "picked": "Picked",
+      "useSegment": "Use this segment",
+      "noSegments": "No saved segment with anyone who can get offer e-mails yet. Make one under Customers › Segments.",
+      "when": "When to send",
+      "window": "Most orders come {from}–{to}",
+      "windowWhy": "{n} of {total} orders ({pct}%) were placed then.",
+      "dayWhy": "Busiest day: {day} ({n} orders).",
+      "quietWhy": "Your quiet hours {from}–{to} are left out.",
+      "useTime": "Send at that time",
+      "fewOrders": "Too few orders to read a time yet: {n} of the {needed} needed.",
+      "quietBlocked": "Every window of that width touches your quiet hours. Make the window smaller in Customer settings."
     }
   }
 }

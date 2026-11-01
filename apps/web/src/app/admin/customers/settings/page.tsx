@@ -47,6 +47,18 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
       { name: 'style', kind: 'lang', max: 200 },
     ],
   },
+  {
+    // PR 294 — who and when to send ("Who and when" on an e-mail send)
+    key: 'customers.sendAdvice',
+    card: 'sendAdvice',
+    fields: [
+      { name: 'enabled', kind: 'bool' },
+      { name: 'lookbackDays', kind: 'int' },
+      { name: 'minOrders', kind: 'int' },
+      { name: 'windowHours', kind: 'int' },
+      { name: 'maxSegments', kind: 'int' },
+    ],
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {

@@ -176,6 +176,8 @@ const answerSql = (S: number, scope: 'ALL' | 'MARKETING') =>
   Prisma.sql`(SELECT cr."granted" FROM "ConsentRecord" cr WHERE cr."storeId" = ${S} AND cr."channel"::text = 'EMAIL' AND cr."scope" = ${scope} AND (cr."customerId" = b."id" OR (b."phone" IS NOT NULL AND cr."phone" = b."phone")) ORDER BY cr."createdAt" DESC, cr."id" DESC LIMIT 1)`;
 /** He may get an offer e-mail: an address, his yes for offer e-mails, and no stop of every e-mail. */
 const reachableSql = (S: number) => Prisma.sql`${EMAIL_OK} AND ${answerSql(S, 'MARKETING')} IS TRUE AND ${answerSql(S, 'ALL')} IS DISTINCT FROM FALSE`;
+/** PR 294: the same rule for the who-and-when advice (send-advice.ts). */
+export const emailReachableSql = reachableSql;
 
 /** The SQL that keeps a send's people on `b` (null segment: everyone); throws when the segment cannot be used. */
 async function audienceSql(deps: CustomersDeps, S: number, segmentId: string | null): Promise<Prisma.Sql> {

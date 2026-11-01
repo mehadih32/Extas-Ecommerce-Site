@@ -5,10 +5,11 @@
 // reaches. The API checks everything again; a send is never sent from here, only scheduled for the engine.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
-import type { EmailLocale, EmailTemplateRow } from '@extas/customers';
+import type { EmailLocale, EmailTemplateRow, SendAdvice } from '@extas/customers';
 import { t, type Dict } from '@/lib/i18n';
 import { AiCopyHelper } from './AiCopyHelper';
 import { emailPost } from './emailPost';
+import { SendAdviceBox } from './SendAdviceBox';
 
 export interface EmailSendFormProps {
   dict: Dict;
@@ -28,6 +29,10 @@ export interface EmailSendFormProps {
   canWrite: boolean;
   /** PR 293: the AI campaign writer is on ("Write with AI"). */
   aiOn?: boolean;
+  /** PR 294: who and when to send (null: switched off). */
+  advice?: SendAdvice | null;
+  /** PR 294: the page's locale for weekday names. */
+  viewLocale?: string;
   canSend: boolean;
 }
 
@@ -92,6 +97,21 @@ export function EmailSendForm(p: EmailSendFormProps) {
         </label>
         <input id={`${uid}-n`} className="a2-inp" value={name} maxLength={80} placeholder={x('namePh')} disabled={!p.canWrite} onChange={(e) => setName(e.target.value)} />
       </div>
+      {p.advice && p.canWrite ? (
+        <SendAdviceBox
+          dict={d}
+          advice={p.advice}
+          locale={p.viewLocale ?? 'en'}
+          segmentId={segmentId}
+          canPickTime={!!p.id && p.canSend}
+          disabled={busy}
+          onSegment={setSegmentId}
+          onTime={(local) => {
+            setLater(true);
+            setAt(local);
+          }}
+        />
+      ) : null}
       <h2 className="a2-h3">{x('audience')}</h2>
       {p.segmentsOn ? (
         <div className="a2-fld">
