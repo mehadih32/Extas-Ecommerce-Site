@@ -1,0 +1,12 @@
+/* S13 · PR 262 — Marketing › Audiences: the conditions (each a card row that stacks on a phone), the big live count and
+   the few masked names (the list and the two-column page reuse landing.css's lp-grid / lp-stack / lp-acts). */
+.adm2 .au-rules{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:12px}
+.adm2 .au-rule{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:12px}
+.adm2 .au-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;align-items:end}
+.adm2 .au-rm{min-height:44px;justify-self:start}
+.adm2 .au-big{font-size:40px;font-weight:650;letter-spacing:-.02em;line-height:1.1;margin-top:8px}
+.adm2 .au-sample{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:2px}
+.adm2 .au-sample li{display:flex;justify-content:space-between;gap:12px;min-height:36px;align-items:center;border-top:1px solid var(--line)}
+.adm2 .au-sample li:first-child{border-top:0}
+.adm2 .au-sample li span:first-child{overflow-wrap:anywhere}
+.adm2 .au-rules-sum{display:block;overflow-wrap:anywhere}

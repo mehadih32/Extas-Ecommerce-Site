@@ -402,6 +402,11 @@ export const PERMISSIONS = {
   // A campaign's budget is a plan kept here: nothing changes an ad platform's budget, a price or a discount.
   'marketing.campaigns.read': { group: 'marketing' },
   'marketing.campaigns.write': { group: 'marketing' },
+  // S13 · PR 262 (Blueprint C6.2 point 3) — Marketing › Audiences: see the audiences built from real orders and their counts
+  // (`marketing.audiences.read`); build, save, count again, archive and restore them (`marketing.audiences.write`).
+  // Nothing here sends a list to an ad platform (PR 263 / 264), moves money or changes an order.
+  'marketing.audiences.read': { group: 'marketing' },
+  'marketing.audiences.write': { group: 'marketing' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

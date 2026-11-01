@@ -1,0 +1,107 @@
+{
+  "au": {
+    "metaTitle": "Audiences",
+    "title": "Audiences",
+    "sub": "Groups of people made from what they really did in the shop: ordered, got a parcel, left a checkout, refused a parcel. A campaign picks one.",
+    "editMeta": "Audience",
+    "newTitle": "New audience",
+    "new": "New audience",
+    "back": "Audiences",
+    "note": "These lists stay in the shop. Nothing is sent to Facebook, Google or TikTok from this page; when sending comes, the numbers are hashed before they leave.",
+    "views": {
+      "all": "All",
+      "archived": "Archived"
+    },
+    "col": {
+      "audience": "Audience",
+      "people": "People",
+      "counted": "Counted",
+      "campaigns": "Campaigns",
+      "state": "State"
+    },
+    "state": {
+      "ACTIVE": "In use",
+      "ARCHIVED": "Archived"
+    },
+    "empty": "No audiences yet",
+    "emptySub": "Build one from real orders, for example: ordered in the last 30 days and never refused a parcel.",
+    "never": "not counted",
+    "rule": {
+      "incomplete": "Left a checkout without ordering",
+      "ordered": "Ordered",
+      "delivered": "Got a parcel delivered",
+      "bagNoBuy": "Put something in the bag, never bought",
+      "vip": "VIP (your Sales figure in Customers)",
+      "grade": "Has the grade",
+      "size": "Bought the size",
+      "refused": "Refused a parcel (not our fault)",
+      "noOffers": "Said no to offers"
+    },
+    "lastDays": "last {days} days",
+    "anyTime": "any time",
+    "notRule": "not: {rule}",
+    "who": "Who is in it",
+    "whoSub": "Every condition must match. A “Leave out” condition takes its people away.",
+    "name": "Name",
+    "condition": "Condition {n}",
+    "mode": "Keep or leave out",
+    "modeIn": "Keep these people",
+    "modeOut": "Leave them out",
+    "days": "Days back",
+    "daysAny": "Days back (empty = any time)",
+    "size": "Size",
+    "grade": "Grade",
+    "pick": "Choose…",
+    "sizesNone": "No sizes yet: add them in Products › Sizes.",
+    "gradesNone": "No grades yet.",
+    "remove": "Remove",
+    "add": "Add condition",
+    "countTitle": "People now",
+    "countSub": "people match right now",
+    "counting": "Counting…",
+    "countFix": "Fill in every condition to see the count.",
+    "vipUnset": "VIP counts nobody until you set the VIP figure in Customers.",
+    "sampleTitle": "A few of them",
+    "sampleNoName": "(no name)",
+    "save": "Save",
+    "create": "Create audience",
+    "saving": "Saving…",
+    "saved": "Saved and counted.",
+    "countedLine": "Counted {when}: {size} people",
+    "usedBy": "Used by {n} campaigns",
+    "step": {
+      "recount": "Count again",
+      "archive": "Archive",
+      "restore": "Restore"
+    },
+    "stepAsk": {
+      "archive": "Archive it? Tap again"
+    },
+    "stepDone": {
+      "recount": "Counted again.",
+      "archive": "Archived.",
+      "restore": "Restored."
+    },
+    "readOnly": "You can look, but changing audiences needs another permission.",
+    "unsavedFirst": "Save your changes first.",
+    "err": {
+      "network": "No connection. Try again.",
+      "unauthorized": "Please sign in again.",
+      "forbidden": "You do not have permission for this.",
+      "INVALID_INPUT": "Please check: {fields}.",
+      "STALE": "Someone changed this meanwhile. It has been read again.",
+      "ARCHIVED": "This audience is archived. Restore it first.",
+      "WRONG_STATE": "That step is not possible now.",
+      "NOT_FOUND": "Not found.",
+      "other": "Something went wrong. Try again."
+    },
+    "field": {
+      "name": "name",
+      "rules": "the conditions",
+      "days": "days back",
+      "ref": "the size or grade",
+      "action": "the step",
+      "value": "the form"
+    }
+  }
+}

@@ -63,7 +63,7 @@
     },
     "audience": "Audience",
     "audienceNone": "Everyone (no audience)",
-    "audienceEmpty": "No audiences yet. The Audience Builder makes them from real orders.",
+    "audienceEmpty": "No audiences yet. Build them from real orders in Marketing › Audiences.",
     "channels": "Where it runs",
     "ch": {
       "meta": "Facebook & Instagram",

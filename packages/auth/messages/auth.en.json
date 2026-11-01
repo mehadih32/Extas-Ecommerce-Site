@@ -320,6 +320,10 @@
       "campaigns": {
         "read": "See Marketing › Campaigns and the orders their landing pages brought",
         "write": "Create, edit, schedule, start, pause, end and archive campaigns (the budget is a plan only)"
+      },
+      "audiences": {
+        "read": "See Marketing › Audiences and how many people each one holds",
+        "write": "Build, save, count again, archive and restore audiences (nothing is sent to an ad platform)"
       }
     }
   },
