@@ -37,6 +37,8 @@
 // PR 296: rewards and points (rewards.ts) — points for each delivered order by the owner's own rule, given after the
 // exchange window by the jobs worker, and turned into wallet credit by the customer himself at the owner's rate; the
 // Loyalty & wallet page's figures. Off as shipped (`customers.points`, every number 0).
+// PR 297: tags and internal notes (notes.ts) — "Note or #tag" on a customer's page: a tag put on or taken off (archived,
+// never deleted), notes for the team pinned or put away (`customers.notes`); an erasure clears a note's words.
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
@@ -52,6 +54,7 @@ export * from './email-marketing';
 export * from './journeys';
 export * from './list';
 export * from './merge';
+export * from './notes';
 export * from './people-sql';
 export * from './profile';
 export * from './rewards';

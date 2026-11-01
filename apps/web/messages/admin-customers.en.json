@@ -838,6 +838,23 @@
       },
       "tiers": "Customer grades (New, Verified, Gold) come with their own switch later; points do not change a grade.",
       "someone": "A customer"
+    },
+    "notes": {
+      "title": "Tags & notes",
+      "noTags": "No tags",
+      "boxLabel": "Note or #tag",
+      "placeholder": "Write a note, or #tag to tag him",
+      "add": "Add",
+      "added": "Note added.",
+      "tagged": "Tag added.",
+      "untag": "Take the tag “{tag}” off",
+      "noNotes": "No notes yet. Notes are for the team only; the customer never sees them.",
+      "pinned": "Pinned",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "archive": "Put away",
+      "archived": "Note put away.",
+      "someone": "A team member"
     }
   }
 }

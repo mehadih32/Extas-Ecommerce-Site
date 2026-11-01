@@ -11,6 +11,8 @@
 // owner's `payments.wallet.manual` is on, within its largest line), one line put right with a new line the other way,
 // and his late orders' apology credit (`payments.apology`, while `payments.wallet.apology` is on). The payments API
 // checks each permission and rule again and audits it; no line is ever changed or removed.
+// S14 · PR 297: on the side, first, "Tags & notes" (TagsNotes): his tags and the team's notes, pinned first; "Note or
+// #tag" adds either one, a tag comes off and a note is put away (`customers.notes`; archived, never deleted).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -23,6 +25,7 @@ import { WalletAdjust, WalletReverse } from '@/components/admin/money/WalletTool
 import { sourceLabel } from '@/components/admin/customers/CustomerList';
 import { MergeWith, PhoneButtons } from '@/components/admin/customers/CustomerTools';
 import { JourneyCard } from '@/components/admin/customers/JourneyCard';
+import { TagsNotes } from '@/components/admin/customers/TagsNotes';
 import { initials } from '@/components/admin/customers/PairCard';
 import { formatMoney, formatNumber, moneyOf, type Money } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -39,6 +42,7 @@ import { customerWallets } from '@/lib/money-refunds';
 import { flatWords, refundWords } from '@/lib/money-words';
 import { paymentsDeps } from '@/lib/payments-api';
 import '../../money/money.css';
+import './notes.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -145,7 +149,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   const profiles = [sv.customer, ...sv.members];
   // the owner's "0 lines" hides the "Who looked" card (the log itself is always written)
   const { accessLogShown } = (await access.deps.resolver.value('customers.profile', { storeId: MOTHER_STORE_ID })) as { accessLogShown: number };
-  const [orders, exchanges, support, looks, wallets, currency, ledger, journey] = await Promise.all([
+  const [orders, exchanges, support, looks, wallets, currency, ledger, journey, tn] = await Promise.all([
     cu.customerOrders(cd, who, sv.id, tab === 'orders' ? { page } : {}),
     tab === 'overview' || tab === 'exchanges' ? cu.customerExchanges(cd, who, sv.id) : Promise.resolve([]),
     tab === 'support' ? cu.customerSupport(cd, who, sv.id) : Promise.resolve([]),
@@ -158,6 +162,8 @@ export default async function CustomerPage({ params, searchParams }: { params: P
       ? paymentsDeps(access.deps).then((pd) => customerWallets({ db: access.deps.db, resolver: access.deps.resolver, payments: pd }, { actor: access.guard.actor, ctx: access.guard.ctx }, profiles.map((p) => p.id)))
       : Promise.resolve(null),
     tab === 'journey' ? cu.customerJourney(cd, who, sv.id, { page }) : Promise.resolve(null),
+    // PR 297: his tags and the team's notes
+    cu.tagsAndNotes(cd, who, sv.id),
   ]);
   const money = moneyOf(currency, view.locale);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
@@ -445,6 +451,11 @@ export default async function CustomerPage({ params, searchParams }: { params: P
 
   const side = (
     <>
+      <TagsNotes
+        dict={cdict}
+        customerId={sv.id}
+        data={{ tags: tn.tags, notes: tn.notes.map((x) => ({ id: x.id, body: x.body, pinned: x.pinned, by: x.by, when: stamp.format(x.at) })), storeTags: tn.storeTags.map((x) => x.name), canWrite: tn.canWrite }}
+      />
       <Card title={t(d, 'cus.profile.consent.title')} testId="cus-consent">
         <div className="a2-rule">
           <span>{t(d, 'cus.profile.consent.sms')}</span>
