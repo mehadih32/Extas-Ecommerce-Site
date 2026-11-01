@@ -1,7 +1,69 @@
-/* S20 · PR 404 — Orders › Packing & print: the print run's category heading rows (ORD-04a; demo V12.4 97s). Only the
-   admin shell's own tokens (shell.css) are used. */
+/* S20 · PR 404, 405 — Orders › Packing & print: the print run's category heading rows and the picking list's size
+   lines the picker taps (ORD-04a, 04b; demo V12.4 97s). Only the admin shell's own tokens (shell.css) are used.
+   Phone first: each size line a full-width 48 px button; side by side from 768 px. */
 
 .pr-group td {
   background: var(--sf2);
   padding-block: 8px;
+}
+
+.pk-lines {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+@media (min-width: 768px) {
+  .pk-lines {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+.pk-tick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 10px;
+  border: 1px solid var(--ln);
+  border-radius: var(--r);
+  background: var(--sf);
+  color: var(--ink);
+  text-align: start;
+  cursor: pointer;
+}
+
+.pk-tick:disabled {
+  cursor: default;
+}
+
+.pk-tick.done {
+  border-color: var(--ok);
+  background: var(--okbg);
+}
+
+.pk-tick.more {
+  border-color: var(--warn);
+  background: var(--warnbg);
+}
+
+.pk-box {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--ink2);
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.pk-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }

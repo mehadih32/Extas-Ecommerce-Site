@@ -5,13 +5,20 @@
 // the held and problem orders (listed apart, never counted). The owner may narrow it to days (the day the order was
 // placed); a dispatched order never enters it. "Print picking list" makes the PDF on the letterhead with a tick box per
 // row. No customer's details: order numbers and pieces only.
+//
+// S20 · PR 405 (ORD-04b; demo V12.4 97s picking list): the list on screen for the picker's phone — every size line a
+// large button with its colour, size, pieces (and shortage) and the order numbers it is for; a tap marks it pulled
+// (`fulfilment.pack`), another tap takes the mark back; a line that got a new order after the mark shows "more to pull"
+// with the new order numbers. "Pulled" counts the pieces of the lines marked. Each mark is one kept row (PickingTick).
 import type { Metadata } from 'next';
+import '../packing.css';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PdfButton } from '@/components/admin/fulfil/Print';
+import { PickTick } from '@/components/admin/fulfil/PickTick';
 import { formatNumber } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
@@ -63,9 +70,11 @@ export default async function PickingPage({ searchParams }: { searchParams: Sear
   const s = list.summary;
   const none = t(d, 'ful.picking.sheet.noCategory');
   const cat = (name: string) => categoryName(list, name, view.lang, none);
+  const canTick = access.guard.permissions?.has('fulfilment.pack') ?? false;
   const counts: [string, number][] = [
     ['orders', s.orders],
     ['pieces', s.pieces],
+    ['pulled', s.pulled],
     ['lines', s.lineItems],
     ['short', s.shortages],
     ['held', s.held],
@@ -142,18 +151,22 @@ export default async function PickingPage({ searchParams }: { searchParams: Sear
                     <td className="a2-tdh">
                       <div className="a2-cell" style={{ paddingInlineStart: 16 }}>
                         <b>{st.style}</b>
-                        {st.colours.map((c) => (
-                          <span key={c.colour ?? ''} className="a2-xs">
-                            {c.colour ?? t(d, 'ful.picking.sheet.noColour')} · {n(c.pieces)}:{' '}
-                            {c.sizes.map((z, i) => (
-                              <span key={z.variantId ?? z.size ?? i}>
-                                {i ? ' · ' : ''}
-                                {z.size ?? t(d, 'ful.picking.sheet.noSize')} {n(z.quantity)}
-                                {z.short ? <span className="a2-pill bad">{t(d, 'ful.picking.sheet.short', { n: n(z.short) })}</span> : null}
-                              </span>
-                            ))}
-                          </span>
-                        ))}
+                        <div className="pk-lines">
+                          {st.colours.flatMap((c) =>
+                            c.sizes.map((z) => (
+                              <PickTick
+                                key={z.key}
+                                dict={fd}
+                                lineKey={z.key}
+                                state={z.tick.state}
+                                canTick={canTick}
+                                label={`${c.colour ?? t(d, 'ful.picking.sheet.noColour')} · ${z.size ?? t(d, 'ful.picking.sheet.noSize')} × ${n(z.quantity)}${z.short ? ` · ${t(d, 'ful.picking.sheet.short', { n: n(z.short) })}` : ''}`}
+                                sub={z.orders.map((o) => (o.quantity > 1 ? `${o.orderNumber} ×${n(o.quantity)}` : o.orderNumber)).join(', ')}
+                                words={{ done: t(d, 'ful.picking.tick.done'), more: t(d, 'ful.picking.tick.more', { list: z.tick.newOrders.join(', ') }), tick: t(d, 'ful.picking.tick.tick'), untick: t(d, 'ful.picking.tick.untick') }}
+                              />
+                            )),
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="r" data-l={t(d, 'ful.picking.sheet.col.pieces')}>

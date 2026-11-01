@@ -61,14 +61,52 @@ export interface PickLine {
   size: string | null;
   variantId: string | null;
   quantity: number;
+  /** PR 405: the order the pieces are for. */
+  orderId?: string;
+  orderNumber?: string;
+}
+
+/** PR 405 — one order a size line is for, with its pieces. */
+export interface PickOrder {
+  orderId: string;
+  orderNumber: string;
+  quantity: number;
+}
+
+/** PR 405 — the picker's mark on a size line: none, pulled ('done'), or pulled before new orders came ('more'). */
+export interface PickTickState {
+  state: 'none' | 'done' | 'more';
+  /** 'more': the order numbers that came after the mark. */
+  newOrders: string[];
+  at: string | null;
 }
 
 export interface PickSize {
+  /** PR 405: the line's key on the list (its variant, or style|colour|size when it has none). */
+  key: string;
   size: string | null;
   variantId: string | null;
   quantity: number;
   /** How many pieces the shop's stock is short of (0: enough, or stock not counted). */
   short: number;
+  /** PR 405: the orders the pieces are for, by order number. */
+  orders: PickOrder[];
+  /** PR 405: the picker's mark (none until the list is read with its ticks). */
+  tick: PickTickState;
+}
+
+/** PR 405 — a size line's key: its variant id, or style|colour|size for a line without one. */
+export const pickLineKey = (l: Pick<PickLine, 'variantId' | 'styleKey' | 'colour' | 'size'>): string => l.variantId ?? `${l.styleKey}|${l.colour ?? ''}|${l.size ?? ''}`;
+
+/**
+ * PR 405 — a line's mark from its latest tick: done when the latest tick is "pulled" and covers every order the line
+ * holds now; "more" when orders came after it (their numbers named); none when there is no tick or it was taken back.
+ */
+export function tickState(line: Pick<PickSize, 'orders'>, latest: { ticked: boolean; orderIds: readonly string[]; createdAt: Date } | null): PickTickState {
+  if (!latest || !latest.ticked) return { state: 'none', newOrders: [], at: null };
+  const had = new Set(latest.orderIds);
+  const fresh = line.orders.filter((o) => !had.has(o.orderId)).map((o) => o.orderNumber);
+  return { state: fresh.length ? 'more' : 'done', newOrders: fresh, at: latest.createdAt.toISOString() };
 }
 export interface PickColour {
   colour: string | null;
@@ -105,8 +143,13 @@ export function groupPicking(lines: readonly PickLine[], onHand: ReadonlyMap<str
     const sizes = st.colours.get(colourKey) ?? new Map<string, PickSize>();
     st.colours.set(colourKey, sizes);
     const sizeKey = l.variantId ?? `${l.size ?? ''}`;
-    const row = sizes.get(sizeKey) ?? { size: l.size, variantId: l.variantId, quantity: 0, short: 0 };
+    const row: PickSize = sizes.get(sizeKey) ?? { key: pickLineKey(l), size: l.size, variantId: l.variantId, quantity: 0, short: 0, orders: [], tick: { state: 'none', newOrders: [], at: null } };
     row.quantity += l.quantity;
+    if (l.orderId) {
+      const o = row.orders.find((x) => x.orderId === l.orderId);
+      if (o) o.quantity += l.quantity;
+      else row.orders.push({ orderId: l.orderId, orderNumber: l.orderNumber ?? '', quantity: l.quantity });
+    }
     sizes.set(sizeKey, row);
   }
   const out: PickCategory[] = [];
@@ -115,7 +158,7 @@ export function groupPicking(lines: readonly PickLine[], onHand: ReadonlyMap<str
     for (const [styleKey, st] of styles) {
       const colours: PickColour[] = [];
       for (const [colourKey, sizes] of st.colours) {
-        const rows = [...sizes.values()].map((r) => ({ ...r, short: onHand && r.variantId && onHand.has(r.variantId) ? Math.max(0, r.quantity - onHand.get(r.variantId)!) : 0 }));
+        const rows = [...sizes.values()].map((r) => ({ ...r, orders: [...r.orders].sort((a, b) => a.orderNumber.localeCompare(b.orderNumber, 'en', { numeric: true })), short: onHand && r.variantId && onHand.has(r.variantId) ? Math.max(0, r.quantity - onHand.get(r.variantId)!) : 0 }));
         rows.sort((a, b) => b.quantity - a.quantity || (a.size ?? '').localeCompare(b.size ?? '', 'en', { numeric: true }));
         colours.push({ colour: colourKey || null, pieces: rows.reduce((n, r) => n + r.quantity, 0), sizes: rows });
       }

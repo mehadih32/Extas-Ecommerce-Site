@@ -250,6 +250,21 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 Â· PR 179â
     expect((await picking('PATCH')).status).toBe(405);
   });
 
+  it('PR 405: a size line marked pulled on the screen list, and the mark taken back; other methods and unknown lines refused', async () => {
+    const o = await booked('fa-405', '01700004051'); // hardcode-ok: a made-up test number
+    const listed = (await (await picking('GET')).json()) as { groups: { styles: { colours: { sizes: { key: string; orders: { orderId: string }[]; tick: { state: string } }[] }[] }[] }[]; summary: { pulled: number } };
+    const line = listed.groups.flatMap((g) => g.styles.flatMap((st) => st.colours.flatMap((c) => c.sizes))).find((z) => z.orders.some((x) => x.orderId === o.orderId))!;
+    const tick = (b: unknown, cookie?: string) => pickingRoute(call('POST', '/api/admin/packing/picking/tick', { body: b, cookie: cookie ?? owner }), deps, ['tick']);
+    const r = await tick({ key: line.key, ticked: true });
+    expect(r.status).toBe(200);
+    const after = (await r.json()) as typeof listed;
+    expect(after.groups.flatMap((g) => g.styles.flatMap((st) => st.colours.flatMap((c) => c.sizes))).find((z) => z.key === line.key)!.tick.state).toBe('done');
+    expect((await tick({ key: line.key, ticked: false })).status).toBe(200);
+    expect((await tick({ key: 'no-such-line', ticked: true })).status).toBe(404);
+    expect((await tick({ key: line.key, ticked: true }, reader)).status).toBe(403);
+    expect((await pickingRoute(call('GET', '/api/admin/packing/picking/tick', { cookie: owner }), deps, ['tick'])).status).toBe(405);
+  });
+
   it('PR 182: the packing steps, "Start picking" for all, each piece checked, and "Mark packed" once per press', async () => {
     const g = await f.place('fa-6', { phone: '01700001906' }); // hardcode-ok: a made-up test number
     await confirmOrder(f.ordersDeps(), f.staff, g.orderId);

@@ -88,3 +88,21 @@ describe('PR 181 · grouping (B1.6): category → style → colour → size, mos
     expect(groupPicking(lines, null).flatMap((c) => c.styles.flatMap((s) => s.colours.flatMap((x) => x.sizes))).every((s) => s.short === 0)).toBe(true);
   });
 });
+
+describe('PR 405 · the size line\'s orders and its mark', () => {
+  it('names the orders a size is for, and reads the latest tick: done, more (new orders named) or none', async () => {
+    const { groupPicking, tickState } = await import('./picking-pure');
+    const line = (orderId: string, orderNumber: string, quantity: number) => ({ category: 'Polo', styleKey: 'p1', style: 'Polo', colour: 'Navy', size: 'M', variantId: 'v1', quantity, orderId, orderNumber });
+    const g = groupPicking([line('o2', '1002', 1), line('o1', '1001', 2), line('o1', '1001', 1)], null);
+    const z = g[0]!.styles[0]!.colours[0]!.sizes[0]!;
+    expect(z).toMatchObject({ key: 'v1', quantity: 4, orders: [{ orderId: 'o1', orderNumber: '1001', quantity: 3 }, { orderId: 'o2', orderNumber: '1002', quantity: 1 }] });
+    const at = new Date('2026-11-01T10:00:00Z');
+    expect(tickState(z, null)).toEqual({ state: 'none', newOrders: [], at: null });
+    expect(tickState(z, { ticked: true, orderIds: ['o1', 'o2'], createdAt: at })).toEqual({ state: 'done', newOrders: [], at: at.toISOString() });
+    expect(tickState(z, { ticked: true, orderIds: ['o1'], createdAt: at })).toEqual({ state: 'more', newOrders: ['1002'], at: at.toISOString() });
+    expect(tickState(z, { ticked: false, orderIds: ['o1', 'o2'], createdAt: at }).state).toBe('none');
+    // a line without a variant is keyed by its style, colour and size
+    const loose = groupPicking([{ ...line('o3', '1003', 1), variantId: null }], null)[0]!.styles[0]!.colours[0]!.sizes[0]!;
+    expect(loose.key).toBe('p1|Navy|M');
+  });
+});
