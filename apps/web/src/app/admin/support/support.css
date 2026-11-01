@@ -61,3 +61,20 @@
   .adm2 .sp-msg{max-width:92%}
   .adm2 .sp-file img{max-width:160px}
 }
+/* PR 429: the catalogue drawer inside the reply box */
+.adm2 .sp-drawer{margin:0 0 10px;padding:12px;border:1px solid var(--ln);border-radius:var(--r,12px);background:var(--sf2)}
+.adm2 .sp-drawer-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.adm2 .sp-drawer .a2-inp{width:100%}
+.adm2 .sp-prods{max-height:320px;overflow:auto}
+.adm2 .sp-prod{width:100%;background:var(--sf);cursor:pointer;text-align:left;font:inherit}
+.adm2 .sp-prod>span:last-child{margin-left:auto;font-variant-numeric:tabular-nums}
+.adm2 .sp-dots{display:inline-flex;gap:3px;align-items:center}
+.adm2 .sp-dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid var(--ln);flex:0 0 auto}
+.adm2 .sp-opts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.adm2 .sp-opts>.a2-xs{flex:0 0 100%}
+.adm2 .sp-opt{display:inline-flex;align-items:center;gap:6px;min-height:36px;min-width:44px;justify-content:center;padding:4px 12px;border-radius:999px;border:1px solid var(--ln);background:var(--sf);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+.adm2 .sp-opt.on{border-color:var(--g6);background:var(--g0);font-weight:600}
+.adm2 .sp-opt:disabled{opacity:.5;cursor:not-allowed;text-decoration:line-through}
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .adm2 .sp-opt{min-height:44px}
+}

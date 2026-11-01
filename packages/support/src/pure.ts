@@ -33,6 +33,10 @@ export const EVENT_KINDS = [
   'IDENTITY_MERGED',
   'IDENTITY_UNLINKED',
   'IDENTITY_SPLIT',
+  // PR 429: a product sent from the catalogue drawer, its link opened by the customer, an order placed from it
+  'PRODUCT_SENT',
+  'PRODUCT_OPENED',
+  'PRODUCT_ORDERED',
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
@@ -94,3 +98,31 @@ export function cleanFileName(name: string | null | undefined): string | null {
 
 // PR 427 — who is writing: a Bangladeshi mobile number found in a chat's words.
 export * from './identity-pure';
+
+// ------------------------------------------------------------------------------------------------ PR 429 · products
+
+/**
+ * The words of a product link sent from a chat (B4.6): the colour it opens on (the product page's own word), the size
+ * it opens with, and the chat's reference that credits the click and the order to the chat and the employee.
+ */
+export const SHARE_QUERY = { colour: 'color', size: 's', ref: 'r' } as const;
+
+/** A link's reference as the shop accepts it: lower-case letters and digits (anything else is not ours). */
+export const REF_CODE = /^[a-z0-9]{8,24}$/;
+
+/** The product link of a share: the shop's address, the product's own path, its colour and size, the reference. */
+export function shareLink(o: { origin: string | null; prefix: string; slug: string; colour: string | null; size: string | null; ref: string }): string {
+  const q = new URLSearchParams();
+  if (o.colour) q.set(SHARE_QUERY.colour, o.colour);
+  if (o.size) q.set(SHARE_QUERY.size, o.size);
+  q.set(SHARE_QUERY.ref, o.ref);
+  const base = (o.origin ?? '').replace(/\/+$/, '');
+  const prefix = o.prefix.replace(/\/+$/, '');
+  return `${base}${prefix}/${encodeURIComponent(o.slug)}?${q.toString()}`;
+}
+
+/** The card's words: the name (with the colour and size picked), the price, the link — one line each. */
+export function shareBody(o: { name: string; colour: string | null; size: string | null; price: string; link: string }): string {
+  const picked = [o.colour, o.size].filter(Boolean).join(' · ');
+  return [picked ? `${o.name} (${picked})` : o.name, o.price, o.link].filter(Boolean).join('\n');
+}

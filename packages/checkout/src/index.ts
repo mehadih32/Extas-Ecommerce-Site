@@ -28,3 +28,5 @@ export * from './bulk-service';
 export * from './voice';
 // PR 257 follow-up — where an order came from: the campaign tags the order keeps (attribution.ts).
 export * from './attribution';
+// S22 · PR 429: an order placed from a product link sent in a support chat is credited to the chat.
+export * from './support-credit';

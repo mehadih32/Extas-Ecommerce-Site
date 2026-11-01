@@ -6,6 +6,8 @@
 // live chat once it is on), the live chat card (off as it ships) and, under "More options", Meta's reply window.
 // CN-020 (3): the "Call me" card (off as it ships) — when the checkout offers it; its call-backs land in the inbox.
 // PR 428: the "Customer beside the chat" card (on as it ships) — the customer card on every chat, how many latest orders.
+// PR 429: the "Products in the chat" card (off as it ships) — the reply box's catalogue drawer: photos per product,
+// products per search, how many days an order from the link is credited to the chat.
 // PR 427: the "Who is writing" card (off as it ships) — the number from WhatsApp or the chat's words, its customer, one
 // person across channels.
 // Optional behaviour ships off. Nothing here moves money or changes an order.
@@ -95,6 +97,13 @@ export default async function SupportSettingsPage() {
     { kind: 'switch', path: 'enabled', label: s('context.enabled'), help: s('context.enabledHelp') },
     { kind: 'number', path: 'recentOrders', label: s('context.recentOrders'), help: s('context.recentOrdersHelp'), min: 1, max: 10 },
   ];
+  // PR 429: products in the chat (off as it ships)
+  const catalogue: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('catalogue.enabled'), help: s('catalogue.enabledHelp') },
+    { kind: 'number', path: 'photos', label: s('catalogue.photos'), help: s('catalogue.photosHelp'), min: 0, max: 3 },
+    { kind: 'number', path: 'results', label: s('catalogue.results'), help: s('catalogue.resultsHelp'), min: 4, max: 20 },
+    { kind: 'number', path: 'creditDays', label: s('catalogue.creditDays'), help: s('catalogue.creditDaysHelp'), min: 1, max: 90 },
+  ];
   // PR 427: who is writing (off as it ships)
   const identity: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: s('identity.enabled'), help: s('identity.enabledHelp') },
@@ -126,6 +135,7 @@ export default async function SupportSettingsPage() {
       <FieldsCard url={API} screen={screen('checkout.callMe')} fields={callMe} texts={texts('callMe')} canEdit={canEdit} testId="support-set-callme" />
       <FieldsCard url={API} screen={screen('support.identity')} fields={identity} texts={texts('identity')} canEdit={canEdit} testId="support-set-identity" />
       <FieldsCard url={API} screen={screen('support.context')} fields={context} texts={texts('context')} canEdit={canEdit} testId="support-set-context" />
+      <FieldsCard url={API} screen={screen('support.catalogue')} fields={catalogue} texts={texts('catalogue')} canEdit={canEdit} testId="support-set-catalogue" />
       <p className="a2-xs a2-mute a2-mt12" data-testid="support-set-phones">{s('phones')}</p>
       <details className="a2-card a2-mt12" data-testid="support-set-more">
         <summary className="a2-h4">{s('more')}</summary>

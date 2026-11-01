@@ -9,6 +9,7 @@ import { CartError } from '@extas/cart';
 import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck, type CourierFraudSource } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
+import { SUPPORT_REF_COOKIE, supportRefOf } from './support-ref-model';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
 import { noteBotSignals } from '../security/bot-check';
@@ -275,7 +276,9 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     const ip = requestContext(request).ip ?? null;
     // PR 257 follow-up: the campaign tags of the visit (the shop's own cookie, within the owner's days)
     const attribution = orderAttributionOf(await keptTouch(readCookie(request, ATTRIBUTION_COOKIE), deps.storeId, deps.checkout.settings));
-    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip, deviceId: device, attribution, input: b });
+    // PR 429: a product link from a support chat this browser opened (the checkout checks it again and credits once)
+    const supportRef = supportRefOf(readCookie(request, SUPPORT_REF_COOKIE));
+    const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip, deviceId: device, attribution, supportRef, input: b });
     if (!r.replay) {
       await noteBotSignals({ db: deps.checkout.db, settings: deps.checkout.settings }, { form: 'checkout', sent: human, storeId: deps.storeId, ip });
       await linkToIdentity(deps, r.orderId);

@@ -1,0 +1,8 @@
+{
+  "support": {
+    "catalogue": {
+      "label": "Products in the chat",
+      "help": "A \"Products\" button in a chat's reply box: search the shop's products by name, SKU or colour, pick the colour and size, and one press sends the photos, the name, the price and the product's link. The link carries the chat's own reference, so when the customer opens it and orders, the order is credited to that chat and to the employee who sent it. The link opens the shop's own page at the shop's own price; nothing about the price or the order changes."
+    }
+  }
+}

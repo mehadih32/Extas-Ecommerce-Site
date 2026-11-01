@@ -6,6 +6,8 @@
 // PR 427: who is writing — the card switched on, a number typed in the site's chat links its customer and joins the
 // same person's other chat; set by hand, "not this customer", "not the same person" through the identity route.
 // PR 428: the thread's customer card (his orders, the one on its way), the card switched off.
+// PR 429: products in the chat — off, the drawer's routes refuse; switched on, the search and one product sent with its
+// tracked link, the thread's card; a reader is refused at the door; the shop's click route keeps the reference.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
@@ -16,6 +18,8 @@ import { receiveMessage } from '@extas/support';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from './admin-api';
 import { supportRoute } from './support-api';
+import { supportRefHandler } from './shop/support-ref';
+import { SUPPORT_REF_COOKIE } from './shop/support-ref-model';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -167,7 +171,7 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     const r = await j('GET', ['settings']);
     const files = { enabled: true, maxPerMessage: 4, maxMb: 10, kinds: { image: true, video: true, pdf: true } };
     expect(r.body.cards['support.attachments'].value).toEqual(files);
-    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.channels', 'support.context', 'support.identity', 'support.inbox', 'support.liveChat']);
+    expect(Object.keys(r.body.cards).sort()).toEqual(['checkout.callMe', 'support.attachments', 'support.catalogue', 'support.channels', 'support.context', 'support.identity', 'support.inbox', 'support.liveChat']);
     const version = r.body.cards['support.attachments'].version as string;
     const saved = await j('PUT', ['settings'], { body: { key: 'support.attachments', value: { ...files, maxPerMessage: 3 }, version } });
     expect(saved.status).toBe(200);
@@ -251,5 +255,38 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     expect((await j('PUT', ['settings'], { body: { key: 'support.context', value: { enabled: true, recentOrders: 11 }, version: cards['support.context'].version } })).status).toBe(400);
     expect((await j('PUT', ['settings'], { body: { key: 'support.context', value: { enabled: false, recentOrders: 3 }, version: cards['support.context'].version } })).status).toBe(200);
     expect((await j('GET', ['c', chat.id])).body.thread.context).toBeNull();
+  });
+  it('PR 429: products in the chat — off, refused; on, a search and one product sent with its link; the shop keeps the click', async () => {
+    const live = await t.prisma.product.create({ data: { storeId, slug: 'sample-api-polo', nameEn: 'Sample API Polo', status: 'PUBLISHED', publishedAt: new Date() } });
+    const v = await t.prisma.productVariant.create({ data: { storeId, productId: live.id, sku: 'SAP-1', active: true, inStock: true, priceMinor: 99_000 } });
+    expect((await j('GET', ['catalogue'], { query: '?q=api' })).body.error).toBe('CATALOGUE_OFF');
+    const cards = (await j('GET', ['settings'])).body.cards;
+    expect(cards['support.catalogue'].value).toEqual({ enabled: false, photos: 3, results: 8, creditDays: 7 });
+    const on = await j('PUT', ['settings'], { body: { key: 'support.catalogue', value: { enabled: true, photos: 0, results: 8, creditDays: 7 }, version: cards['support.catalogue'].version } });
+    expect(on.status).toBe(200);
+    const found = await j('GET', ['catalogue'], { query: '?q=sap-1' });
+    expect(found.body.products.map((p: { id: string }) => p.id)).toEqual([live.id]);
+    expect((await j('GET', ['catalogue'], { query: '?q=api', cookie: reader })).status).toBe(403);
+    const th = (await j('GET', ['c', conversationId])).body.thread;
+    expect(th.you.catalogue).toBe(true);
+    const sent = await j('POST', ['c', conversationId, 'products'], { body: { productId: live.id, variantId: v.id, requestKey: 'api-share-429', version: th.version } });
+    expect(sent.status).toBe(200);
+    expect(sent.body).toMatchObject({ ok: true, replay: false, photos: 0 });
+    expect(sent.body.link).toMatch(new RegExp(`/sample-api-polo\\?r=${sent.body.refCode}$`));
+    expect((await j('POST', ['c', conversationId, 'products'], { body: { productId: live.id, requestKey: 'api-share-429b' }, cookie: reader })).status).toBe(403);
+    const msg = (await j('GET', ['c', conversationId])).body.thread.messages.find((m: { id: string }) => m.id === sent.body.messageId);
+    expect(msg.share).toMatchObject({ productId: live.id, refCode: sent.body.refCode, openedAt: null, order: null });
+
+    // the shop: same site only; an unknown reference keeps nothing; this one is kept for the order's credit
+    const shop = (body: unknown, origin = `https://${HOST}`) => new Request(`https://${HOST}/api/shop/support-ref`, { method: 'POST', headers: { host: HOST, origin, 'content-type': 'text/plain' }, body: JSON.stringify(body) });
+    const sd = { db: t.prisma, settings: deps.resolver };
+    expect((await supportRefHandler(shop({ r: sent.body.refCode }, 'https://elsewhere.example'), storeId, sd)).status).toBe(403);
+    const unknown = await supportRefHandler(shop({ r: 'nosuchref429' }), storeId, sd);
+    expect(unknown.status).toBe(204);
+    expect(unknown.headers.getSetCookie()).toEqual([]);
+    const kept = await supportRefHandler(shop({ r: sent.body.refCode }), storeId, sd);
+    expect(kept.status).toBe(204);
+    expect(kept.headers.getSetCookie()[0]).toMatch(new RegExp(`^${SUPPORT_REF_COOKIE}=${sent.body.refCode}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800$`));
+    expect((await t.prisma.supportProductShare.findFirstOrThrow({ where: { refCode: sent.body.refCode } })).clickedAt).not.toBeNull();
   });
 });

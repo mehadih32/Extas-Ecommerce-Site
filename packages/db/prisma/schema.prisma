@@ -9754,7 +9754,10 @@ model SupportProductShare {
   orderId        String?   @db.Uuid
   createdAt      DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 429 (migration 0113): the chat message that carried the card (one share per message).
+  messageId      String?   @unique @db.Uuid
 
+  @@unique([storeId, refCode])
   @@index([storeId, refCode])
 }
 

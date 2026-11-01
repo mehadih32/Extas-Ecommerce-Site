@@ -7,6 +7,8 @@
 // chat's number set by hand, "Not this customer" and "Not the same person".
 // PR 428 (B4.5): the "Customer" card — the instant scan of the person writing (orders in counts, delivered / refused /
 // returned share, risk score, the orders on their way and where each is now, links), while `support.context` is on.
+// PR 429 (B4.6): with `support.catalogue` on, the reply box's "Products" drawer sends a product as a card with its
+// tracked link; each card in the thread says whether the customer opened it and the order it brought.
 //
 // `support.read` opens it; replying, notes, taking it and the state need `support.reply`, giving it to someone else
 // `support.assign` (the API checks again). Nothing here moves money or changes an order.
@@ -19,7 +21,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { DetailGrid } from '@/components/admin/orders/OrderCommands';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
-import { Composer, type ComposerTexts } from '@/components/admin/support/Composer';
+import { Composer, type ComposerProducts, type ComposerTexts } from '@/components/admin/support/Composer';
 import { CustomerContext } from '@/components/admin/support/CustomerContext';
 import { IdentityActions, type IdentityTexts } from '@/components/admin/support/IdentityActions';
 import { SideActions, type SideTexts } from '@/components/admin/support/SideActions';
@@ -43,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'sup.th.main')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-const ERR_CODES = ['STALE', 'EMPTY', 'TOO_LONG', 'FILES_OFF', 'TOO_MANY_FILES', 'FILE_NOT_ALLOWED', 'TOO_LARGE', 'NOT_ASSIGNABLE', 'IDEMPOTENCY_MISMATCH', 'NOT_FOUND', 'INVALID_INPUT', 'FORBIDDEN', 'UNAUTHENTICATED', 'network', 'other'];
+const ERR_CODES = ['CATALOGUE_OFF', 'OUT_OF_STOCK', 'STALE', 'EMPTY', 'TOO_LONG', 'FILES_OFF', 'TOO_MANY_FILES', 'FILE_NOT_ALLOWED', 'TOO_LARGE', 'NOT_ASSIGNABLE', 'IDEMPOTENCY_MISMATCH', 'NOT_FOUND', 'INVALID_INPUT', 'FORBIDDEN', 'UNAUTHENTICATED', 'network', 'other'];
 const errs = (d: Dict) => Object.fromEntries(ERR_CODES.map((c) => [c, t(d, `sup.err.${c}`)]));
 const deliveryTone = (s: string | null) => (s === 'SENT' ? 'ok' : s === 'FAILED' ? 'bad' : s === 'NOT_SENT' ? 'warn' : 'line');
 const statusTone = (s: string) => (s === 'OPEN' ? 'warn' : s === 'SOLVED' ? 'ok' : 'info');
@@ -78,11 +80,12 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     throw e;
   }
   const r = access.deps.resolver;
-  const [staff, files, inbox, currency] = await Promise.all([
+  const [staff, files, inbox, currency, catalogue] = await Promise.all([
     th.you.assign ? sp.supportStaff(sd, who) : Promise.resolve([]),
     r.value('support.attachments', { storeId: MOTHER_STORE_ID }),
     r.value('support.inbox', { storeId: MOTHER_STORE_ID }),
     r.value('store.currency', { storeId: MOTHER_STORE_ID }),
+    r.value('support.catalogue', { storeId: MOTHER_STORE_ID }),
   ]);
   const n = (x: number) => formatNumber(x, view.locale);
   const at = (x: Date | null) => (x ? printedAt(x.toISOString(), view.timeZone) : t(d, 'sup.side.none'));
@@ -109,6 +112,22 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     reasons,
     err: errs(d),
   };
+  // PR 429: the catalogue drawer (only while products in the chat are on and this person may reply)
+  const pr = (k: string) => t(d, `sup.prod.${k}`);
+  const products: ComposerProducts | null = th.you.catalogue
+    ? {
+        searchUrl: `${API}/catalogue`,
+        shareUrl: `${API}/c/${th.id}/products`,
+        lang: view.lang,
+        money: moneyOf(currency, view.locale),
+        photos: files.enabled && files.kinds.image ? Math.min(catalogue.photos, files.maxPerMessage) : 0,
+        button: pr('button'),
+        texts: {
+          ...(Object.fromEntries((['h', 'search', 'searchPh', 'searching', 'none', 'close', 'colour', 'size', 'soldOut', 'pickSize', 'photos', 'send', 'sending', 'sent', 'back'] as const).map((k) => [k, pr(k)])) as Omit<ComposerProducts['texts'], 'err'>),
+          err: errs(d),
+        },
+      }
+    : null;
   const s = (k: string) => t(d, `sup.side.${k}`);
   const side: SideTexts = { state: s('state'), solve: s('solve'), wait: s('wait'), reopen: s('reopen'), owner: s('owner'), take: s('take'), letGo: s('letGo'), give: s('give'), giveGo: s('giveGo'), nobody: s('nobody'), saved: s('saved'), err: errs(d) };
   const connected = Object.keys(sd.channels ?? {}).includes(th.channel.kind) && th.channel.enabled;
@@ -152,6 +171,20 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
                     )}
                   </div>
                 ) : null}
+                {m.share ? (
+                  <div className="sp-by" data-testid="support-msg-share">
+                    <span className="a2-pill line">
+                      <ShellIcon name="shirt" size={11} />
+                      {t(d, 'sup.prod.card')}
+                    </span>
+                    <span>{m.share.openedAt ? `${t(d, 'sup.prod.opened')} · ${printedAt(m.share.openedAt.toISOString(), view.timeZone)}` : t(d, 'sup.prod.notOpened')}</span>
+                    {m.share.order ? (
+                      <Link href={`/admin/orders/${m.share.order.id}`} className="a2-pill ok" data-testid="support-msg-share-order">
+                        {t(d, 'sup.prod.ordered', { number: m.share.order.number })}
+                      </Link>
+                    ) : null}
+                  </div>
+                ) : null}
                 <div className="sp-by">
                   {m.isNote ? (
                     <span className="a2-pill warn">
@@ -172,7 +205,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         )}
       </section>
       {th.you.reply ? (
-        <Composer url={`${API}/c/${th.id}/messages`} filesUrl={`${API}/files`} version={th.version} maxChars={inbox.replyMaxChars} files={{ enabled: files.enabled && accept !== '', max: files.maxPerMessage, accept }} texts={composer} />
+        <Composer url={`${API}/c/${th.id}/messages`} filesUrl={`${API}/files`} version={th.version} maxChars={inbox.replyMaxChars} files={{ enabled: files.enabled && accept !== '', max: files.maxPerMessage, accept }} products={products} texts={composer} />
       ) : (
         <p className="a2-note">
           <ShellIcon name="lock" size={15} />

@@ -4,10 +4,25 @@
 // settings; the message then carries the stored copies. One press of Send carries one key, so a double press is one
 // message. A conversation changed in between (a new customer message, someone else's reply) is read again and the
 // draft is kept, so nobody answers without seeing the latest message. Ctrl + Enter sends.
+// PR 429: with products in the chat on, "Products" (or "/" typed in an empty reply) opens the catalogue drawer
+// (ProductDrawer): one product sent as a card with its tracked link.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { call } from '../api';
+import type { Lang, Money } from '../products/model';
 import { ShellIcon } from '../shell/ShellIcon';
+import { ProductDrawer, type ProductDrawerTexts } from './ProductDrawer';
+
+/** PR 429: the catalogue drawer's place in the reply box (null while `support.catalogue` is off). */
+export interface ComposerProducts {
+  searchUrl: string;
+  shareUrl: string;
+  lang: Lang;
+  money: Money;
+  photos: number;
+  button: string;
+  texts: ProductDrawerTexts;
+}
 
 export interface ComposerTexts {
   label: string;
@@ -38,7 +53,23 @@ interface Chosen {
 
 const newKey = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `k${Date.now()}${Math.random().toString(36).slice(2)}`);
 
-export function Composer({ url, filesUrl, version, maxChars, files, texts: x }: { url: string; filesUrl: string; version: string; maxChars: number; files: { enabled: boolean; max: number; accept: string }; texts: ComposerTexts }) {
+export function Composer({
+  url,
+  filesUrl,
+  version,
+  maxChars,
+  files,
+  products = null,
+  texts: x,
+}: {
+  url: string;
+  filesUrl: string;
+  version: string;
+  maxChars: number;
+  files: { enabled: boolean; max: number; accept: string };
+  products?: ComposerProducts | null;
+  texts: ComposerTexts;
+}) {
   const id = useId();
   const router = useRouter();
   const [mode, setMode] = useState<'reply' | 'note'>('reply');
@@ -47,6 +78,7 @@ export function Composer({ url, filesUrl, version, maxChars, files, texts: x }: 
   const [busy, setBusy] = useState<'' | 'send' | 'upload'>('');
   const [key, setKey] = useState(newKey);
   const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
+  const [drawer, setDrawer] = useState<'' | 'button' | 'slash'>('');
   const err = (code: string | undefined) => x.err[code ?? 'other'] ?? x.err.other ?? '';
 
   async function add(list: FileList | null) {
@@ -109,6 +141,19 @@ export function Composer({ url, filesUrl, version, maxChars, files, texts: x }: 
           {x.note}
         </button>
       </div>
+      {products && drawer && !note ? (
+        <ProductDrawer
+          searchUrl={products.searchUrl}
+          shareUrl={products.shareUrl}
+          version={version}
+          lang={products.lang}
+          money={products.money}
+          photos={products.photos}
+          autoFocus
+          onClose={() => setDrawer('')}
+          texts={products.texts}
+        />
+      ) : null}
       <textarea
         className="a2-inp a2-ta"
         value={body}
@@ -120,6 +165,12 @@ export function Composer({ url, filesUrl, version, maxChars, files, texts: x }: 
           setSaid(null);
         }}
         onKeyDown={(e) => {
+          // PR 429: "/" in an empty reply opens the products
+          if (products && !note && e.key === '/' && body === '' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            setDrawer('slash');
+            return;
+          }
           if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
             void send();
@@ -158,6 +209,12 @@ export function Composer({ url, filesUrl, version, maxChars, files, texts: x }: 
               data-testid="support-attach"
             />
           </label>
+        ) : null}
+        {products && !note ? (
+          <button type="button" className={`a2-btn${drawer ? ' on' : ''}`} aria-expanded={drawer !== ''} onClick={() => setDrawer(drawer ? '' : 'button')} data-testid="support-products-open">
+            <ShellIcon name="shirt" size={14} />
+            {products.button}
+          </button>
         ) : null}
         <span className="sp-grow a2-xs a2-mute">
           {body.length}/{maxChars} · {x.hint}

@@ -23,6 +23,10 @@
 //   identity.ts   who wrote a message (resolveIdentity, in receiveMessage), the person's other chats (personOf), and
 //                 the team's corrections: set the number, unlink the customer, "not the same person"
 //
+// PR 429: selling from the chat.
+//   catalogue.ts  the drawer's product search (chatCatalogue), one product sent as a card with its tracked link
+//                 (shareProduct, kept with its message), the customer's first click on it (openShare)
+//
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
 export * from './channels';
@@ -39,3 +43,5 @@ export * from './callback';
 export * from './contact-form';
 // PR 427 — who is writing: one person across channels.
 export * from './identity';
+// PR 429 — the catalogue drawer: a product sent in the chat with its tracked link, the customer's click.
+export * from './catalogue';

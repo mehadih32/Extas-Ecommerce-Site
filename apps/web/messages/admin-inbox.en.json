@@ -150,7 +150,10 @@
         "phoneChannel": "Number from the channel",
         "phoneHand": "{name} set the number",
         "customerHand": "{name} linked the customer"
-      }
+      },
+      "PRODUCT_SENT": "{name} sent a product",
+      "PRODUCT_OPENED": "The customer opened the product link",
+      "PRODUCT_ORDERED": "Order {number} placed from the product link"
     },
     "err": {
       "STALE": "Someone changed this conversation in between; it was read again.",
@@ -174,7 +177,9 @@
       "CALLBACK_OFF": "“Call me” at checkout is switched off.",
       "TOO_MANY": "This number asked for a call-back too often today.",
       "CONTACT_FORM_OFF": "The contact page's form is switched off.",
-      "NOT_LINKED": "There is nothing to undo here."
+      "NOT_LINKED": "There is nothing to undo here.",
+      "CATALOGUE_OFF": "Products in the chat are switched off in Support settings.",
+      "OUT_OF_STOCK": "This colour and size is sold out."
     },
     "set": {
       "title": "Support settings",
@@ -301,6 +306,18 @@
         "enabledHelp": "On as it ships. Off: the chat only shows the customer's order count.",
         "recentOrders": "Latest orders listed",
         "recentOrdersHelp": "How many of his latest orders the card lists, besides those on their way (1–10)."
+      },
+      "catalogue": {
+        "h": "Products in the chat",
+        "d": "A \"Products\" button in the reply box (or \"/\" typed in an empty reply): search the shop's products by name, SKU or colour, pick the colour and size, and one press sends the photos, the name, the price and the product's link. The link carries this chat's own reference: when the customer opens it and orders, the order is credited to the chat and to the employee who sent it.",
+        "enabled": "Products in the chat",
+        "enabledHelp": "Off as it ships. The link opens the shop's own page at the shop's own price; nothing about the price or the order changes.",
+        "photos": "Photos with each product",
+        "photosHelp": "0–3. The chat's file rules still apply (files on, pictures allowed, the size limit).",
+        "results": "Products per search",
+        "resultsHelp": "How many products one search shows (4–20).",
+        "creditDays": "Days an order is credited",
+        "creditDaysHelp": "After the customer first opens the link, an order from that phone or computer within these days is credited to the chat (1–90)."
       }
     },
     "person": {
@@ -339,6 +356,28 @@
       "liveNone": "No order on its way.",
       "recent": "Latest orders",
       "open": "Open customer"
+    },
+    "prod": {
+      "button": "Products",
+      "h": "Send a product",
+      "search": "Search products",
+      "searchPh": "Name, SKU or colour…",
+      "searching": "Looking…",
+      "none": "No product on sale matches these words.",
+      "close": "Close products",
+      "colour": "Colour",
+      "size": "Size",
+      "soldOut": "sold out",
+      "pickSize": "Pick a size first.",
+      "photos": "Sends up to {n} photos, the name, the price and the link.",
+      "send": "Send to the customer",
+      "sending": "Sending…",
+      "sent": "Product sent.",
+      "back": "Back to the list",
+      "card": "Product link",
+      "opened": "opened",
+      "notOpened": "not opened yet",
+      "ordered": "ordered {number}"
     }
   }
 }
