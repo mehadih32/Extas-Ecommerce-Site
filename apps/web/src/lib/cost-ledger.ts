@@ -6,6 +6,8 @@
 //
 // `path` is what comes after /api/admin/money/cost-ledger:
 //   GET   ''          ?from=YYYY-MM-DD&to=YYYY-MM-DD   the period's rows as a CSV file (`books.read`)
+//   GET   'report'    ?from&to&by=day|month|year&group=service|module   PR 347: the Costs report's table as a CSV file,
+//                     one line per period and service or module (`books.read`; the same safe period as the page)
 //   POST  'top-up'    {service, amountMinor, credits?, note?, requestKey}   record a top-up the shop already paid for:
 //                     the balance goes up (`costs.write`; audited `costs.topUp`; the same request key twice writes once)
 //   PUT   'low-mark'  {service, lowMinor|null}   the balance below which the page warns (`costs.write`; audited)
@@ -15,6 +17,7 @@ import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID, type Prisma, type PrismaClient } from '@extas/db/client';
 import { dayStart, nextDay, ymdIn } from '@extas/metrics';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
+import { costReport, parseReportQuery, reportCsv, reportFileName } from './cost-report';
 
 type Db = Pick<PrismaClient, 'costEntry' | 'prepaidBalance'>;
 
@@ -112,17 +115,24 @@ const invalid = (details: string[]) => json({ ok: false, error: 'costs.INVALID_I
 export async function costLedgerRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
   const where = path.join('/');
-  const want = where === '' ? 'GET' : where === 'top-up' ? 'POST' : where === 'low-mark' ? 'PUT' : null;
+  const reading = where === '' || where === 'report';
+  const want = reading ? 'GET' : where === 'top-up' ? 'POST' : where === 'low-mark' ? 'PUT' : null;
   if (!want) return fail(404, 'not-found');
   if (m !== want) return fail(405, 'method-not-allowed');
   const url = new URL(request.url);
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
-  const g = await guardAdmin(request, deps, { permission: where === '' ? 'books.read' : 'costs.write', storeId });
+  const g = await guardAdmin(request, deps, { permission: reading ? 'books.read' : 'costs.write', storeId });
   if (g instanceof Response) return g;
   const d = deps!;
   try {
     const at = { storeId };
+    if (where === 'report') {
+      const [timeZone, currency, limits] = await Promise.all([d.resolver.value('store.timeZone', at), d.resolver.value('store.currency', at), d.resolver.value('costs.report', at)]);
+      const { q } = parseReportQuery(Object.fromEntries(url.searchParams), ymdIn(new Date(), timeZone), limits);
+      const r = await costReport(d.db, storeId, q, timeZone);
+      return new Response(reportCsv(r, currency), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${reportFileName(q)}"`, 'cache-control': 'no-store' } });
+    }
     if (where === '') {
       const from = DAY.safeParse(url.searchParams.get('from'));
       const to = DAY.safeParse(url.searchParams.get('to'));

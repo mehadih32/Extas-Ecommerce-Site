@@ -108,6 +108,8 @@ export * from './registry-privacy';
 export * from './registry-edge';
 // S21 · PR 413 — the Site health hub (registry-health.ts, version 81).
 export * from './registry-health';
+// S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
+export * from './registry-finance';
 // S11 · PR 588 — the Bengali translation gate (registry-bengali.ts, version 84).
 export * from './registry-bengali';
 // S13 · PR 257 — server-side event tracking (registry-tracking.ts, version 85).

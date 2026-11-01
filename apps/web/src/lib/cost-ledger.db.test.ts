@@ -122,4 +122,17 @@ describe.skipIf(!HAS_TEST_DB)('cost ledger on PostgreSQL (PR 343)', () => {
 
     expect((await route('GET', '', { cookie: owner, query: '&from=2026-10-31&to=2026-10-01' })).status).toBe(400);
   });
+
+  it('PR 347: the Costs report as CSV — one line per period and service, the total last; a reader may; GET only', async () => {
+    const r = await route('GET', 'report', { cookie: reader, query: '&from=2026-10-01&to=2026-10-31&by=month&group=service' });
+    expect(r.status).toBe(200);
+    expect(r.headers.get('content-disposition')).toContain('costs-by-month-service-2026-10-01-2026-10-31.csv');
+    const lines = (await r.text()).trim().split('\r\n');
+    expect(lines[0]).toBe('period,service,amountMinor,currency,rows');
+    expect(lines).toContain('2026-10,SMS,105,BDT,2');
+    expect(lines).toContain('2026-10,WHATSAPP,90,BDT,1');
+    expect(lines.at(-1)).toBe('total,,195,BDT,3');
+    expect((await route('POST', 'report', { cookie: owner, body: {} })).status).toBe(405);
+    expect((await route('GET', 'report', { query: '&from=2026-10-01&to=2026-10-31' })).status).toBe(401);
+  });
 });
