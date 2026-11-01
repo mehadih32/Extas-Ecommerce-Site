@@ -62,6 +62,10 @@ export * from './books-rules';
 export * from './books-summary';
 export * from './books-status';
 export * from './books-costs';
+// S16 · PR 349 → 351: a period's profit and loss with the fixed costs (the admin page and the worker's money report).
+export * from './books-profit';
+// S16 · PR 351: the money report to the owner — when it is due, its period and its words.
+export * from './money-report';
 export * from './sync';
 export * from './locations';
 export * from './stock';

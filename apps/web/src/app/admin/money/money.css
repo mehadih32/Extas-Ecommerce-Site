@@ -64,3 +64,6 @@
 /* S16 · PR 350 — Money → VAT: a short rate field at the end of a category or product row. */
 .adm2 .vat-pct{width:88px;flex:0 0 88px}
 .adm2 .a2-rule .vat-act{flex:0 0 auto;align-items:center}
+/* S16 · PR 351 — the money report's words, as the owner gets them on Telegram (lines kept, long lines wrap). */
+.adm2 .pl-report-text{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0;font-family:inherit;line-height:1.6}
+.adm2 .pl-report-more>summary{cursor:pointer;color:var(--ink2);list-style-position:inside;padding:12px 0;line-height:20px}

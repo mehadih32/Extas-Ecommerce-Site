@@ -233,7 +233,8 @@
       "read": "See the books, the match with the ERP and the parts of every figure",
       "reconcile": "Run the books match and write notes on a difference",
       "adjust": "Put a difference right by a reversing and a new entry (owner’s PIN, reason, the ERP’s matching event)",
-      "close": "Close a week, month or year, or close a month with differences (PIN, logged)"
+      "close": "Close a week, month or year, or close a month with differences (PIN, logged)",
+      "report": "Set the money report to the owner: on or off, how often, the time and the language"
     },
     "erp": {
       "account": {

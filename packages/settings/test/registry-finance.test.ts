@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { costReportSchema, financeSettings, vatRatesSchema } from '../src/registry-finance';
+import { costReportSchema, financeSettings, moneyReportSchema, vatRatesSchema } from '../src/registry-finance';
 
 describe('finance settings (v160–169)', () => {
   it('every key is in the registry at a version 160–169, labelled in English and Bengali, its default valid', () => {
@@ -38,5 +38,16 @@ describe('finance settings (v160–169)', () => {
     expect(vatRatesSchema.safeParse({ defaultBps: 1500.5, categories: [], products: [] }).success).toBe(false);
     expect(vatRatesSchema.safeParse({ defaultBps: null, categories: [{ categoryId: cat, bps: 500 }, { categoryId: cat, bps: 750 }], products: [] }).success).toBe(false);
     expect(vatRatesSchema.safeParse({ defaultBps: null, categories: [], products: [{ productId: prod, bps: 1 }, { productId: prod, bps: 2 }] }).success).toBe(false);
+  });
+
+  it('PR 351: the money report is off as shipped at 22:00; a time is HH:MM, a month day 1–28', () => {
+    const d = financeSettings['money.report'].default;
+    expect(d).toMatchObject({ enabled: false, frequency: 'daily', at: '22:00' });
+    expect(moneyReportSchema.safeParse({ ...d, at: '24:00' }).success).toBe(false);
+    expect(moneyReportSchema.safeParse({ ...d, at: '9:30' }).success).toBe(false);
+    expect(moneyReportSchema.safeParse({ ...d, monthDay: 31 }).success).toBe(false);
+    expect(moneyReportSchema.safeParse({ ...d, weekday: 7 }).success).toBe(false);
+    expect(moneyReportSchema.safeParse({ ...d, frequency: 'hourly' }).success).toBe(false);
+    expect(moneyReportSchema.safeParse({ ...d, at: '06:05', frequency: 'monthly', monthDay: 28 }).success).toBe(true);
   });
 });

@@ -2,6 +2,7 @@
 // delivered orders with Ordered value beside it, gross profit, contribution, ad spend, other costs, fixed costs and net
 // profit for any period (one-press periods or from/to, made safe by `costs.report`), how each line is made, the orders
 // left out for a missing cost, the parts not known yet, day by day, and the CSV. Seeing it needs `books.read`. Read-only.
+// PR 351: at the end, the money report to the owner (how often, when, the language; changing it needs `books.report`).
 // Words: messages/admin-profit.*.json.
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -9,6 +10,7 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { PNL_MAYBE_MISSING, ymdIn } from '@extas/metrics';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { MoneyReportCard } from '@/components/admin/money/MoneyReportCard';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -17,11 +19,13 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { parseReportQuery, QUICK_PERIODS, quickPeriod } from '@/lib/cost-report';
 import { t, type Dict } from '@/lib/i18n';
+import { moneyReportView } from '@/lib/money-report-api';
 import { profitReport } from '@/lib/profit-report';
 import bn from '../../../../../messages/admin-profit.bn.json';
 import en from '../../../../../messages/admin-profit.en.json';
 import reportBn from '../../../../../messages/admin-cost-report.bn.json';
 import reportEn from '../../../../../messages/admin-cost-report.en.json';
+import '../../settings-cards.css';
 import '../money.css';
 
 export const dynamic = 'force-dynamic';
@@ -58,7 +62,7 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
   const [currency, timeZone, limits] = await Promise.all([access.deps.resolver.value('store.currency', at), access.deps.resolver.value('store.timeZone', at), access.deps.resolver.value('costs.report', at)]);
   const today = ymdIn(new Date(), timeZone);
   const { q, notes } = parseReportQuery(sp, today, limits);
-  const r = await profitReport(access.deps, MOTHER_STORE_ID, q.from, q.to);
+  const [r, report] = await Promise.all([profitReport(access.deps, MOTHER_STORE_ID, q.from, q.to), moneyReportView(access.deps, MOTHER_STORE_ID)]);
   const money = moneyOf(currency, view.locale);
   const m = (minor: number) => formatMoney(minor, money);
   const dayText = (day: string) => new Intl.DateTimeFormat(view.locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${day}T00:00:00Z`));
@@ -200,6 +204,9 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
           <p className="a2-xs a2-mute">{c('byDay.none')}</p>
         )}
       </section>
+
+      {/* S16 · PR 351: the money report to the owner — how often, when, in which language; its next day and its words. */}
+      <MoneyReportCard key={report.version} dict={d} view={report} canEdit={access.guard.permissions?.has('books.report') ?? false} nextDayText={report.nextDay ? dayText(report.nextDay) : null} />
     </div>
   );
 }

@@ -11,7 +11,7 @@
 //   EXTAS_WORKER_HEALTH_FILE   where the heartbeat file for the container's health check goes (optional)
 // SIGTERM / SIGINT stop it cleanly: running jobs finish, the leader lock is let go, the heartbeat row says "stopped".
 import { hostname } from 'node:os';
-import { allAdapters, courierAdapters, createConnections, messageAdapters, paymentAdapters, type CdnPurger, type Storage } from '@extas/adapters';
+import { allAdapters, courierAdapters, createConnections, messageAdapters, paymentAdapters, telegramAdapters, type CdnPurger, type Storage } from '@extas/adapters';
 import { createCacheRuntime, dayIn, SHOP_PATHS } from '@extas/cache';
 import { connectionGateways } from '@extas/payments';
 import { getPrisma } from '@extas/db/client';
@@ -25,6 +25,7 @@ import { messagesPlanner } from './messages';
 import { piiPlanner } from './pii';
 import { invoicePlanner } from './invoices';
 import { returnsErpPlanner } from './returns-erp';
+import { moneyReportPlanner } from './money-report';
 import { paymentsPlanner } from './payments';
 import { searchPlanner } from './search';
 import { webhookPlanner } from './webhooks';
@@ -49,6 +50,8 @@ async function main(): Promise<void> {
   const couriers = createConnections({ db, vault, adapters: courierAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
   // PR 170: the payment gateways (each the practice gateway until the owner's keys pass the Test button)
   const gateways = createConnections({ db, vault, adapters: paymentAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
+  // PR 351: the owner's Telegram for the money report (the mock until the bot's key passes its test)
+  const owner = createConnections({ db, vault, adapters: telegramAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
   const deps: JobDeps = {
     db,
     settings,
@@ -66,6 +69,7 @@ async function main(): Promise<void> {
         await c.api.put(file.storageKey, new Uint8Array(0), file.mimeType);
       },
     },
+    owner: { telegram: owner },
   };
   // PR 602: a change the worker makes (the ERP's stock, a price) is cleared from every web process's page cache over
   // Redis and, while Cloudflare keeps pages, at Cloudflare (the mock until the owner's token passes its test)
@@ -92,8 +96,9 @@ async function main(): Promise<void> {
     // PR 148: each store's message run per slot; PR 159: each store's purge of kept IP, device and location; PR 170:
     // each store's sweep of open online payments per slot; PR 176: each store's courier tracking read per slot; PR 182:
     // each store's packing photos past their days to keep, archived once a day; PR 407: each store's invoice run per slot
-    // CN-028 · PR 612–614: each v6 store's returns and exchanges with its own ERP per slot
-    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner, invoicePlanner, returnsErpPlanner],
+    // CN-028 · PR 612–614: each v6 store's returns and exchanges with its own ERP per slot; S16 · PR 351: each store's
+    // money report to the owner, once per period while it is due
+    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner, invoicePlanner, returnsErpPlanner, moneyReportPlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {

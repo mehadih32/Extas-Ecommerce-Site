@@ -1,0 +1,30 @@
+{
+  "en": {
+    "title": "Money report · {period}",
+    "sales": "Sales (delivered): {amount} · orders: {orders}",
+    "ordered": "Ordered value: {amount}",
+    "gross": "Gross profit: {amount}",
+    "contribution": "Contribution: {amount}",
+    "ads": "Ad spend: {amount}",
+    "fixed": "Fixed costs: {amount}",
+    "net": "Net profit: {amount}",
+    "unknown": "not known yet",
+    "uncosted": "Delivered orders without a product cost yet (left out of profit): {orders}",
+    "noFixed": "no fixed costs entered",
+    "more": "Details: Money → Profit & loss"
+  },
+  "bn": {
+    "title": "টাকার রিপোর্ট · {period}",
+    "sales": "বিক্রি (ডেলিভারি হওয়া): {amount} · {orders}টা অর্ডার",
+    "ordered": "অর্ডারের মূল্য: {amount}",
+    "gross": "মোট লাভ: {amount}",
+    "contribution": "অবদান: {amount}",
+    "ads": "বিজ্ঞাপনের খরচ: {amount}",
+    "fixed": "স্থায়ী খরচ: {amount}",
+    "net": "নিট লাভ: {amount}",
+    "unknown": "এখনো জানা নেই",
+    "uncosted": "{orders}টা ডেলিভারি হওয়া অর্ডারের প্রোডাক্টের দাম এখনো নেই, লাভের হিসাবে ধরা হয়নি।",
+    "noFixed": "স্থায়ী খরচ দেওয়া হয়নি",
+    "more": "বিস্তারিত: টাকা › লাভ-ক্ষতি"
+  }
+}

@@ -321,6 +321,9 @@ export const PERMISSIONS = {
   // S16 · PR 350 (B3.10, §59 answer 23) — the VAT system: switch it on or off and set the VAT rates (default, per category,
   // per product) on Money → VAT. Prices are VAT inclusive, so this never changes a price; owner only until he gives it.
   'vat.manage': { group: 'books' },
+  // S16 · PR 351 (B3.10, §59 answer 24) — the money report to the owner: switch it on or off and set how often, when and
+  // in which language it goes (Money → Profit & loss). It only sends the figures; owner only until he gives it.
+  'books.report': { group: 'books' },
   // S22 · PR 425 — the support inbox (B4.4, B4.12): open the inbox and every conversation with its who-did-what log
   // (`support.read`); reply, write an internal note, take a conversation, mark it solved or open (`support.reply`);
   // give a conversation to someone else or take it back from them (`support.assign`); change Support settings
