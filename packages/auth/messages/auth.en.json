@@ -257,7 +257,8 @@
         "write": "Save, change, copy and archive customer segments (groups by what customers did); seeing them needs only “see customers”"
       },
       "settings": "Switch the customer features (journey view and others) on or off and change their numbers",
-      "notes": "Put tags on a customer or take them off, and write, pin or put away the team’s notes about him (never shown to the customer; nothing is deleted)"
+      "notes": "Put tags on a customer or take them off, and write, pin or put away the team’s notes about him (never shown to the customer; nothing is deleted)",
+      "export": "Download the customer list as a CSV file, with a reason (logged; never an erased customer, an address or a location)"
     },
     "seo": {
       "read": "See the SEO page: which pages search engines may list, the title and description templates, the AI drafts and the structured data",

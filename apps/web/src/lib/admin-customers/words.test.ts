@@ -11,7 +11,7 @@ import { cusError, lookWord } from './words';
 const keys = (d: unknown, p = ''): string[] =>
   d && typeof d === 'object' ? Object.entries(d as Record<string, unknown>).flatMap(([k, v]) => keys(v, p ? `${p}.${k}` : k)) : [p];
 
-const CODES: CustomersErrorCode[] = ['INVALID_INPUT', 'NOT_FOUND', 'SAME_PROFILE', 'ALREADY_MERGED', 'HAS_MERGED', 'NOT_ACTIVE', 'NOTE_REQUIRED', 'ALREADY_UNDONE', 'MOVED_ON', 'KEY_REUSED', 'NOT_ENOUGH_POINTS'];
+const CODES: CustomersErrorCode[] = ['INVALID_INPUT', 'NOT_FOUND', 'SAME_PROFILE', 'ALREADY_MERGED', 'HAS_MERGED', 'NOT_ACTIVE', 'NOTE_REQUIRED', 'ALREADY_UNDONE', 'MOVED_ON', 'KEY_REUSED', 'NOT_ENOUGH_POINTS', 'EXPORT_TOO_LARGE'];
 
 describe('Customers page words (PR 284)', () => {
   it('English and Bengali have the same keys', () => {

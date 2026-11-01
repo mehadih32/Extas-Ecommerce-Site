@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { aiWriterSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
+import { aiWriterSettingsSchema, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema } from '../src/registry-crm';
 
 describe('CRM settings (v190–199)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -72,5 +72,13 @@ describe('CRM settings (v190–199)', () => {
     expect(pointsSettingsSchema.safeParse({ ...s.default, pointsPer100: -1 }).success).toBe(false);
     expect(pointsSettingsSchema.safeParse({ ...s.default, lookbackDays: 0 }).success).toBe(false);
     expect(pointsSettingsSchema.safeParse({ ...s.default, tiers: [] }).success).toBe(false);
+  });
+
+  it('PR 299: the customer export is off as shipped (v198), 5000 people a file at most', () => {
+    const s = crmSettings['customers.export'];
+    expect(s.version).toBe(198);
+    expect(s.default).toEqual({ enabled: false, maxRows: 5_000 });
+    expect(customerExportSettingsSchema.safeParse({ ...s.default, maxRows: 0 }).success).toBe(false);
+    expect(customerExportSettingsSchema.safeParse({ ...s.default, columns: [] }).success).toBe(false);
   });
 });

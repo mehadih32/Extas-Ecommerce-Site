@@ -39,6 +39,9 @@
 // Loyalty & wallet page's figures. Off as shipped (`customers.points`, every number 0).
 // PR 297: tags and internal notes (notes.ts) — "Note or #tag" on a customer's page: a tag put on or taken off (archived,
 // never deleted), notes for the team pinned or put away (`customers.notes`); an erasure clears a note's words.
+// PR 299: the customer export (export.ts) — the list's people as one CSV file with a reason, under the retention rule
+// (never an erased or archived profile, an address or a location; numbers as the person may see them); its own key
+// `customers.export`, an ExportJob row and an audit line each time; off as shipped.
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
@@ -46,6 +49,7 @@ export * from './chat-context';
 export * from './context';
 export * from './erasure';
 export * from './erp-page';
+export * from './export';
 export * from './errors';
 export * from './family';
 export * from './journey';

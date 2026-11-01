@@ -42,6 +42,11 @@
 // when the owner sets both numbers, a customer turns each block of `redeemPoints` points into `redeemMinor` of wallet
 // credit himself (My account › Rewards). Off as shipped with every number at 0: nothing is earned and nothing becomes
 // money until the owner types his own rule. The late-delivery apology credit is `payments.wallet.apology` (PR 172).
+//
+// PR 299 (`customers.export`, v198): the customer export (Customers › All customers › Export) — off as shipped; when on,
+// a person holding `customers.export` downloads the list's people as one CSV file with a reason, at most `maxRows`
+// people (more are refused with the count, never cut). The retention rule always applies: an erased or archived
+// profile is never in the file, the address, IP and location never, and the number only as the person may see it.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -154,6 +159,10 @@ export const pointsSettingsSchema = z
   .strict();
 export type PointsSettings = z.output<typeof pointsSettingsSchema>;
 
+/** PR 299 — the customer export (off as shipped; the most people one file holds). */
+export const customerExportSettingsSchema = z.object({ enabled: z.boolean(), maxRows: z.int().min(1).max(50_000) }).strict();
+export type CustomerExportSettings = z.output<typeof customerExportSettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -227,5 +236,15 @@ export const crmSettings = {
     labelKey: 'customers.points.label',
     helpKey: 'customers.points.help',
     sortOrder: 260,
+  }),
+  'customers.export': setting({
+    ...base,
+    version: 198,
+    schema: customerExportSettingsSchema,
+    default: { enabled: false, maxRows: 5_000 }, // hardcode-ok: registry default (off; the owner's number to change)
+    valueType: 'JSON',
+    labelKey: 'customers.export.label',
+    helpKey: 'customers.export.help',
+    sortOrder: 270,
   }),
 };

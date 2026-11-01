@@ -89,7 +89,8 @@
       "STALE": "Someone else saved this in the meantime. Reload the page.",
       "SWITCHED_OFF": "This is switched off in the settings.",
       "AI_UNAVAILABLE": "The AI writer did not answer or gave nothing usable. Try again, or write it yourself.",
-      "NOT_ENOUGH_POINTS": "Not enough points for one turn-in yet."
+      "NOT_ENOUGH_POINTS": "Not enough points for one turn-in yet.",
+      "EXPORT_TOO_LARGE": "Too many customers for one file. Narrow the list (a view, search or filter) and try again."
     },
     "list": {
       "title": "All customers",
@@ -567,6 +568,12 @@
         "redeemPoints": "Points to turn in at a time (0: never)",
         "redeemMinor": "Wallet credit for those points, in ৳ (0: never)",
         "batchSize": "Orders read in one run (1–2000)"
+      },
+      "export": {
+        "title": "Customer export",
+        "sub": "Off as shipped. When on, people who hold \"Export customers\" see Export on the customer list; each file needs a reason and is logged.",
+        "enabled": "Allow the customer export",
+        "maxRows": "Most customers in one file (1–50000)"
       }
     },
     "auto": {
@@ -855,6 +862,17 @@
       "archive": "Put away",
       "archived": "Note put away.",
       "someone": "A team member"
+    },
+    "exp": {
+      "open": "Export",
+      "why": "Why do you need this file?",
+      "whyPlaceholder": "For example: the call list for the Eid offer",
+      "rule": "The file is the list as you see it now. Your name and reason are logged. A customer who asked to be forgotten, an archived profile, an address and a location are never in it; numbers are as you may see them.",
+      "go": "Download CSV",
+      "busy": "Preparing…",
+      "cancel": "Cancel",
+      "done": "Customers in the file: {n}. It is in the log with your reason.",
+      "tooMany": "{n} customers are more than one file holds ({max}). Narrow the list first."
     }
   }
 }

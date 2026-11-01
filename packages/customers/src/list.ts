@@ -9,7 +9,8 @@
 // its count. Search by name, e-mail or any of his numbers (4 digits or more, however written); filter by where he first
 // came from; sort by last order, newest profile, spend, orders or name. A page is the owner's page size, then "More".
 //
-// Reading needs `customers.read`; the numbers are masked without `customers.phone`. Nothing here is exported (PR 299).
+// Reading needs `customers.read`; the numbers are masked without `customers.phone`. The export (PR 299, export.ts) reads
+// the same people through `listSql`.
 import { Prisma } from '@extas/db/client';
 import { historyOptions } from '@extas/orders';
 import { z } from 'zod';
@@ -78,7 +79,7 @@ export interface CustomerList {
   viewer: Viewer;
 }
 
-interface Row {
+export interface PeopleRow {
   id: string;
   name: string | null;
   phone: string | null;
@@ -100,16 +101,13 @@ interface Row {
 
 const num = (v: bigint | number | null | undefined) => Number(v ?? 0);
 
-/** The list of people, a page at a time (see the file header). */
-export async function customerList(deps: CustomersDeps, who: Who, input: unknown = {}): Promise<CustomerList> {
-  const viewer = await allow(deps, who, 'customers.read');
-  const d = parse(listInput, input, 'list');
-  const S = who.storeId;
-  const [rules, mask, hist] = await Promise.all([setting(deps, S, 'customers.list'), maskOf(deps, S), historyOptions(deps, S)]);
+/** PR 299: the list's people as SQL, shared by the list and its export — the base rows (search and filter applied), the
+ * chosen view's condition (with the saved segment) and the chosen order. */
+export async function listSql(deps: CustomersDeps, S: number, d: z.output<typeof listInput>) {
+  const [rules, hist] = await Promise.all([setting(deps, S, 'customers.list'), historyOptions(deps, S)]);
   const views = CUSTOMER_VIEWS.filter((v) => v !== 'vip' || rules.vipMinSalesMinor !== null);
   const view: CustomerView = d.view && views.includes(d.view) ? d.view : 'all';
   const sort: CustomerSort = d.sort ?? 'last';
-  const page = d.page ?? 1;
   const q = d.q ?? '';
   const source = d.source ?? '';
   const riskSince = new Date(nowOf(deps).getTime() - rules.atRiskDays * DAY_MS);
@@ -127,9 +125,19 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
     orders: Prisma.sql`b.orders DESC, b.last_at DESC NULLS LAST`,
     name: Prisma.sql`lower(COALESCE(b."name", '')) ASC`,
   }[sort];
+  return { rules, views, view, sort, q, source, segmentId, seg, base, viewSql, order };
+}
+
+/** The list of people, a page at a time (see the file header). */
+export async function customerList(deps: CustomersDeps, who: Who, input: unknown = {}): Promise<CustomerList> {
+  const viewer = await allow(deps, who, 'customers.read');
+  const d = parse(listInput, input, 'list');
+  const S = who.storeId;
+  const [{ rules, views, view, sort, q, source, segmentId, seg, base, viewSql, order }, mask] = await Promise.all([listSql(deps, S, d), maskOf(deps, S)]);
+  const page = d.page ?? 1;
 
   const [rows, countRows, sourceRows] = await Promise.all([
-    deps.db.$queryRaw<Row[]>`${base} SELECT b.* FROM base b WHERE ${viewSql(view)} ORDER BY ${order}, b."id" LIMIT ${rules.pageSize + 1} OFFSET ${(page - 1) * rules.pageSize}`,
+    deps.db.$queryRaw<PeopleRow[]>`${base} SELECT b.* FROM base b WHERE ${viewSql(view)} ORDER BY ${order}, b."id" LIMIT ${rules.pageSize + 1} OFFSET ${(page - 1) * rules.pageSize}`,
     deps.db.$queryRaw<Record<string, bigint>[]>`${base} SELECT ${Prisma.join(
       views.map((v) => Prisma.sql`count(*) FILTER (WHERE ${viewSql(v)}) AS ${Prisma.raw(`"${v}"`)}`),
       ', ',

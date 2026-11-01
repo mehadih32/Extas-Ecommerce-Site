@@ -59,6 +59,15 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
       { name: 'maxSegments', kind: 'int' },
     ],
   },
+  {
+    // PR 299 — the customer export ("Export" on the customer list, with a reason; the retention rule always applies)
+    key: 'customers.export',
+    card: 'export',
+    fields: [
+      { name: 'enabled', kind: 'bool' },
+      { name: 'maxRows', kind: 'int' },
+    ],
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {

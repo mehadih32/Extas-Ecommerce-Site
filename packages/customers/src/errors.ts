@@ -40,7 +40,9 @@ export type CustomersErrorCode =
   /** PR 293: the AI writer did not answer, or gave nothing usable. */
   | 'AI_UNAVAILABLE'
   /** PR 296: fewer points than one block of the owner's rate (`data.redeemPoints`). */
-  | 'NOT_ENOUGH_POINTS';
+  | 'NOT_ENOUGH_POINTS'
+  /** PR 299: more people than one export file holds (`data.count`, `data.maxRows`); narrow the list first. */
+  | 'EXPORT_TOO_LARGE';
 
 export class CustomersError extends Error {
   readonly code: CustomersErrorCode;
@@ -69,6 +71,7 @@ export class CustomersError extends Error {
       case 'OPEN_ORDERS':
       case 'LIMIT_REACHED':
       case 'NOT_ENOUGH_POINTS':
+      case 'EXPORT_TOO_LARGE':
         return 422;
       case 'AI_UNAVAILABLE':
         return 503;

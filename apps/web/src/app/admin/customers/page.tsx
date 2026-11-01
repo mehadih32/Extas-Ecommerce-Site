@@ -1,8 +1,8 @@
 // S14 · PR 285 — Customers → All customers at /admin/customers (CUS-01, docs/BACKEND-ARCHITECTURE.md §5.5; demo V12.4
 // #/admin/customers): one row per person with the owner's views and their counts, the search and filters in the address
 // (`?view=&q=&source=&sort=&page=`, so a link opens the same list), the table and "More". Reading needs `customers.read`
-// in the store (the numbers are masked without `customers.phone`); the customers service checks the key again. The list
-// has no export (PR 299 brings one, with its own key).
+// in the store (the numbers are masked without `customers.phone`); the customers service checks the key again. PR 299:
+// "Export" is shown when the owner turned the export on and the person holds its own key `customers.export`.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -43,10 +43,11 @@ export default async function CustomersPage({ searchParams }: { searchParams: Se
     );
   const who: cu.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const cd = customersDeps(access.deps);
-  const [data, settings, currency] = await Promise.all([
+  const [data, settings, currency, exportOk] = await Promise.all([
     cu.customerList(cd, who, query),
     cd.settings.value('customers.list', { storeId: MOTHER_STORE_ID }),
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
+    cu.canExport(cd, who),
   ]);
-  return <CustomerListPage view={view} data={data} query={query} settings={settings} money={moneyOf(currency, view.locale)} hrefOf={(id) => `/admin/customers/${id}`} />;
+  return <CustomerListPage view={view} data={data} query={query} settings={settings} money={moneyOf(currency, view.locale)} hrefOf={(id) => `/admin/customers/${id}`} exportLimits={exportOk ? { ...cu.EXPORT_REASON } : null} />;
 }
