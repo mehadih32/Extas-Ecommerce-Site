@@ -72,6 +72,14 @@ export interface PrintOrderParcel {
  * then by order number. Returns the keys in order.
  */
 export function printOrder(parcels: readonly PrintOrderParcel[]): string[] {
+  return printPlacement(parcels).map((x) => x.key);
+}
+
+/**
+ * PR 404 (ORD-04a) — the same packing order as `printOrder`, each parcel with the category group it is printed in (the
+ * print run's queue preview shows a heading where a new group starts).
+ */
+export function printPlacement(parcels: readonly PrintOrderParcel[]): { key: string; group: string }[] {
   const cat = new Map<string, number>();
   const style = new Map<string, number>();
   for (const p of parcels)
@@ -87,7 +95,7 @@ export function printOrder(parcels: readonly PrintOrderParcel[]): string[] {
     return { p, group, style: styles[0] ?? '' };
   });
   placed.sort((a, b) => byCount(cat)(a.group, b.group) || byCount(style)(a.style, b.style) || a.p.orderNumber.localeCompare(b.p.orderNumber, 'en', { numeric: true }));
-  return placed.map((x) => x.p.key);
+  return placed.map((x) => ({ key: x.p.key, group: x.group }));
 }
 
 /** PR 180 — the order states a parcel is handed over from (confirmed, picking started, packed). */

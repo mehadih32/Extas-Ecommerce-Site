@@ -152,7 +152,7 @@
       "exactOn": "Exact-amount line: on",
       "exactOff": "Exact-amount line: off",
       "perPrint": "Up to {n} stickers per print",
-      "settingsNote": "Size, printer dots, language and the exact-amount line are delivery settings (Delivery → More options).",
+      "settingsNote": "Change the size, printer and what one press prints in the cards below; the exact-amount line is in Delivery → More options.",
       "sample": "Sample sticker",
       "counts": {
         "waiting": "Waiting",
@@ -531,6 +531,69 @@
         "call": "Call the customer",
         "cancel": "Cancel the order (out of stock)",
         "cancelWhy": "Why (kept on the order)"
+      }
+    },
+    "printRun": {
+      "press": {
+        "sticker": "Print new stickers · {n}",
+        "both": "Print stickers + invoices · {n}",
+        "invoice": "Print invoices · {n}"
+      },
+      "whatNote": {
+        "sticker": "One press prints the new stickers.",
+        "both": "One press prints each new parcel's sticker, then its invoice, in packing order.",
+        "invoice": "One press prints the invoices of every parcel waiting, in packing order; no sticker is printed or counted."
+      },
+      "needInvoice": "Printing invoices here needs the \"Print invoices\" permission; ask the owner, or print stickers only.",
+      "noCategory": "No category",
+      "groupCount": "{n} parcels",
+      "col": {
+        "items": "Pieces"
+      },
+      "set": {
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved.",
+        "discard": "Discard changes",
+        "unsaved": "Not saved yet",
+        "readOnly": "Only someone with \"Change how the packing documents print\" can change this.",
+        "err": {
+          "STALE": "Someone else changed this card a moment ago; it now shows theirs. Make your change again.",
+          "INVALID_INPUT": "A value is not allowed; check the boxes.",
+          "forbidden": "You may not change this card.",
+          "unauthorized": "Please sign in again.",
+          "network": "No connection; nothing was saved.",
+          "other": "Could not save; try again."
+        },
+        "what": {
+          "h": "What to print",
+          "d": "What the main print button prints. Always in packing order, as one PDF.",
+          "what": "One print run prints",
+          "whatHelp": "Stickers only (as before), each sticker followed by its customer invoice, or only the invoices.",
+          "whats": {
+            "sticker": "Stickers only",
+            "both": "Sticker + invoice",
+            "invoice": "Invoices only"
+          },
+          "layout": "Invoices in the run print on",
+          "layouts": {
+            "page": "Paper (the invoice's paper size)",
+            "roll": "Thermal roll (the invoice's roll width)"
+          }
+        },
+        "sticker": {
+          "h": "Sticker and printer",
+          "d": "Set these to match your sticker printer. Print a sample sticker after a change.",
+          "size": "Printer size",
+          "sizeHelp": "A label printer takes one sticker per label; A4 · 4 per sheet prints four stickers on one A4 page. \"Own size\" uses the millimetres shown in its name.",
+          "dpi": "Printer dots per inch",
+          "lang": "Sticker words in",
+          "scale": "Type size (%)",
+          "minScale": "Smallest type (%)",
+          "minScaleHelp": "A parcel with many pieces gets smaller type down to this size before its pieces carry on onto a second sticker.",
+          "showShop": "Shop's name and phone at the top",
+          "maxPerPdf": "Stickers per print"
+        }
       }
     }
   }

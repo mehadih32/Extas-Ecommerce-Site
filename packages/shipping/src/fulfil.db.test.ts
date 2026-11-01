@@ -66,6 +66,13 @@ describe.skipIf(!HAS_TEST_DB)('PR 179 · the courier sticker (PostgreSQL)', () =
     // the list carries no customer's details
     expect(JSON.stringify(run)).not.toContain(order.customerName!);
     expect(JSON.stringify(run)).not.toContain(order.phone!);
+    // PR 404: the queue preview — each parcel's pieces (no price) and the category it prints under
+    const items = await db().orderItem.findMany({ where: { orderId: cod.orderId, status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { productName: true, colourName: true, sizeLabel: true, quantity: true } });
+    const row = mine.find((r) => r.shipmentId === cod.shipmentId)!;
+    expect(row.items).toEqual(items.map((i) => ({ name: i.productName, colour: i.colourName, size: i.sizeLabel, quantity: i.quantity })));
+    expect(typeof row.category.en).toBe('string');
+    expect(row.category.bn === null || typeof row.category.bn === 'string').toBe(true);
+    expect(JSON.stringify(row)).not.toMatch(/Minor/);
 
     const first = await print([cod.shipmentId, paid.shipmentId]);
     const c = first.find((s) => s.shipmentId === cod.shipmentId)!;

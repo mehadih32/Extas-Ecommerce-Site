@@ -14,10 +14,29 @@ import { HAS_TEST_DB } from '@extas/auth/testing';
 import { confirmOrder } from '@extas/orders';
 import { setUpShipping, type ShippingFixture } from '@extas/shipping/testing';
 import { bookOrders } from '@extas/shipping';
-import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
+import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
 import { handoverRoute, packingRoute, pickingRoute, stickersRoute } from './fulfil-api';
+
+// PR 404: the print run's invoices come from the customer's invoice view (the shop's context reads the live database);
+// here each order's invoice is a made-up document with the order id in its number, so the order of pages can be read.
+vi.mock('./admin-invoices/print', async (original) => {
+  const real = await original<typeof import('./admin-invoices/print')>();
+  const { invoiceSettings } = await import('@extas/settings');
+  return {
+    ...real,
+    printedInvoices: vi.fn(async (_deps: unknown, _storeId: number, orderIds: readonly string[]) => ({
+      print: invoiceSettings['documents.invoice.print'].default,
+      image: invoiceSettings['documents.invoice.image'].default,
+      invoices: orderIds.map((orderId) => ({
+        orderId,
+        number: `INV-${orderId.slice(0, 8)}`,
+        doc: { brand: 'Sample Shop', shopLines: [], heading: 'Invoice', meta: [`INV-${orderId.slice(0, 8)}`], parties: [], cols: { no: '#', item: 'Item', qty: 'Qty', unit: 'Price', amount: 'Amount' }, rows: [{ no: '1', name: 'Linen shirt', subs: [], marks: [], qty: '1', unit: 'Tk 1', amount: 'Tk 1' }], totals: [], payment: null, note: [], footer: [], pageWords: '{n}/{of}' },
+      })),
+    })),
+  };
+});
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -126,6 +145,50 @@ describe.skipIf(!HAS_TEST_DB)('Packing & print API on PostgreSQL (S08 · PR 179�
     expect(res.status).toBe(409);
     expect(await res.json()).toMatchObject({ ok: false, error: 'NOT_PRINTABLE', data: { refused: [{ shipmentId: c.shipmentId, problem: 'COD_CHANGED' }] } });
     expect((await f.t.prisma.shipment.findUniqueOrThrow({ where: { id: c.shipmentId } })).labelPrintCount).toBe(0);
+  });
+
+  it('PR 404: "sticker + invoice" puts each invoice after its sticker; "invoices only" counts no sticker; a row\'s own Print stays a sticker; an invoice needs its permission', async () => {
+    const a = await booked('fa-404a', '01700004041'); // hardcode-ok: a made-up test number
+    const b = await booked('fa-404b', '01700004042'); // hardcode-ok: a made-up test number
+    const set = (what: 'sticker' | 'both' | 'invoice') => deps.resolver.set('fulfilment.printRun', { what, invoiceLayout: 'page' }, storeTarget(f.S), { actorId: null, reason: 'test' });
+    const sizes = (pdf: Buffer) => [...pdf.toString('latin1').matchAll(/\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/g)].map((m) => `${m[1]}x${m[2]}`);
+    const sticker = '283.46x425.20';
+    const a4 = '595.28x841.89';
+    try {
+      await set('both');
+      const both = await stickers('POST', [], { body: { shipmentIds: [a.shipmentId, b.shipmentId] } });
+      expect(both.status).toBe(200);
+      expect(sizes(Buffer.from(await both.arrayBuffer()))).toEqual([sticker, a4, sticker, a4]);
+      expect((await f.t.prisma.shipment.findUniqueOrThrow({ where: { id: a.shipmentId } })).labelPrintCount).toBe(1);
+
+      await set('invoice');
+      const inv = await stickers('POST', [], { body: { shipmentIds: [b.shipmentId, a.shipmentId] } });
+      expect(inv.status).toBe(200);
+      expect(sizes(Buffer.from(await inv.arrayBuffer()))).toEqual([a4, a4]);
+      expect((await f.t.prisma.shipment.findUniqueOrThrow({ where: { id: b.shipmentId } })).labelPrintCount).toBe(1);
+      expect((await stickers('POST', [], { body: { shipmentIds: ['00000000-0000-7000-8000-000000000404'] } })).status).toBe(404);
+      expect((await stickers('POST', [], { body: { shipmentIds: ['not-an-id'] } })).status).toBe(400);
+
+      // a row's own Print / Reprint is its sticker, whatever the run prints
+      const one = await stickers('POST', [], { body: { shipmentIds: [b.shipmentId], single: true, reason: 'Sticker torn' } });
+      expect(one.status).toBe(200);
+      expect(sizes(Buffer.from(await one.arrayBuffer()))).toEqual([sticker]);
+
+      // without "orders.invoice" a print with invoices is refused before anything is counted
+      const role = await f.t.prisma.role.create({ data: { key: 'printer-404', nameEn: 'Printer', nameBn: 'প্রিন্টার' } });
+      for (const key of ['fulfilment.read', 'fulfilment.print']) {
+        const perm = await f.t.prisma.permission.findUniqueOrThrow({ where: { key } });
+        await f.t.prisma.rolePermission.create({ data: { roleId: role.id, permissionId: perm.id } });
+      }
+      const staff = await f.t.prisma.staffUser.findUniqueOrThrow({ where: { email: 'reader@example.com' } });
+      await f.t.prisma.staffRoleAssignment.create({ data: { staffUserId: staff.id, roleId: role.id, storeId: f.S } });
+      const refused = await stickers('POST', [], { cookie: reader, body: { shipmentIds: [a.shipmentId] } });
+      expect(refused.status).toBe(403);
+      expect((await f.t.prisma.shipment.findUniqueOrThrow({ where: { id: a.shipmentId } })).labelPrintCount).toBe(1);
+      await f.t.prisma.staffRoleAssignment.deleteMany({ where: { roleId: role.id } });
+    } finally {
+      await set('sticker');
+    }
   });
 
   it('makes a sample sticker at the owner\'s size to try the printer', async () => {
