@@ -9,6 +9,7 @@
 // default locations. PR 196 adds the ERP webhook job (one stored event applied), PR 72 the search index job
 // (search.ts), PR 148 the message engine's run (messages.ts), PR 170 the sweep of open online payments (payments.ts),
 // PR 407 the invoice run (invoices.ts), PR 296 the points run (rewards.ts).
+// PR 538 the support escalation sweep (support-escalation.ts).
 // A later stage adds its job here with its key, queue and function.
 import { ERP_WEBHOOK_JOB, INVENTORY_QUEUE, processErpWebhook, runInventoryJob, type InventoryJob } from '@extas/inventory';
 import type { JobDeps } from './context';
@@ -19,6 +20,7 @@ import { sweepPending } from '@extas/payments';
 import { MESSAGES_JOB, MESSAGES_QUEUE, messagesDeps } from './messages';
 import { PII_PURGE_JOB, PII_QUEUE, runPiiPurge } from './pii';
 import { INVOICE_ISSUE_JOB, INVOICE_QUEUE, runInvoiceIssue } from './invoices';
+import { runSupportEscalation, SUPPORT_ESCALATE_JOB, SUPPORT_QUEUE } from './support-escalation';
 import { PAYMENTS_QUEUE, PAYMENTS_SWEEP_JOB, paymentsDeps } from './payments';
 import { expirePackingPhotos, trackParcels, zoneSyncTurn } from '@extas/shipping';
 import { COURIER_QUEUE, COURIER_TRACK_JOB, COURIER_ZONES_JOB, courierDeps, PACKING_PHOTOS_JOB } from './courier';
@@ -356,6 +358,23 @@ const audienceRefreshJob: JobDefinition<AudienceRefreshPayload> = {
   run: async (deps, p) => ({ ok: true, stats: compactStats(await runAudienceRefresh(deps, p)) }),
 };
 
+/**
+ * PR 538 — one store's support escalation sweep (packages/support `sweepEscalations`; planned by support-escalation.ts
+ * per store and minute while `support.escalation` is on): the owner told on Telegram once per customer wait nobody
+ * answered. Safe to run twice: one row per wait, one sweep of a store at a time.
+ */
+const supportEscalateJob: JobDefinition<{ storeId: number }> = {
+  key: SUPPORT_ESCALATE_JOB,
+  queue: SUPPORT_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${SUPPORT_ESCALATE_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runSupportEscalation(deps, p.storeId)) }),
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -371,6 +390,7 @@ const definitions: JobDefinition<never>[] = [
   moneyReportJob as unknown as JobDefinition<never>,
   pointsJob as unknown as JobDefinition<never>,
   audienceRefreshJob as unknown as JobDefinition<never>,
+  supportEscalateJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

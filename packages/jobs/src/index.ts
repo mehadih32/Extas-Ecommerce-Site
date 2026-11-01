@@ -37,6 +37,8 @@ export * from './backup-requests';
 export * from './restore-requests';
 export * from './courier';
 export * from './invoices';
+// S22 · PR 538 — the owner told on Telegram when a customer waits and nobody answers (support-escalation.ts).
+export * from './support-escalation';
 export * from './returns-erp';
 // S21 · PR 419 — run history: every smoke test and journeys run kept with its findings.
 export * from './run-history';

@@ -57,6 +57,9 @@ describe('the support words (PR 425)', () => {
     expect(logLine(d, { kind: 'IDENTITY_PHONE', actor: { type: 'SYSTEM', name: null }, data: { via: 'text' } })).toBe(t(d, 'sup.log.IDENTITY_PHONE'));
     expect(logLine(d, { kind: 'IDENTITY_PHONE', actor: { type: 'STAFF', name: 'Sample owner' }, data: { byHand: true } })).toContain('Sample owner');
     expect(logLine(d, { kind: 'IDENTITY_MERGED', actor: { type: 'SYSTEM', name: null }, data: { via: 'phone', contacts: 2 } })).toContain('2');
+    expect(logLine(d, { kind: 'ESCALATED', actor: { type: 'SYSTEM', name: null }, data: { minutes: 7, ok: true, practice: false } })).toBe('The owner was told on Telegram: no answer for 7 min');
+    expect(logLine(d, { kind: 'ESCALATED', actor: { type: 'SYSTEM', name: null }, data: { minutes: 7, ok: true, practice: true } })).toContain('practice copy');
+    expect(logLine(d, { kind: 'ESCALATED', actor: { type: 'SYSTEM', name: null }, data: { minutes: 7, ok: false } })).toContain('could not be sent');
     expect(logLine(d, { kind: 'IDENTITY_SPLIT', actor: { type: 'STAFF', name: 'Sample owner' }, data: {} })).toContain('Sample owner');
     // PR 430: an order from the chat's bag — who made it, its number, and whether it waits for its advance
     const made = logLine(d, { kind: 'ORDER_CREATED', actor: { type: 'STAFF', name: 'Sample owner' }, data: { number: 'EX1430', gate: 'cod' } });

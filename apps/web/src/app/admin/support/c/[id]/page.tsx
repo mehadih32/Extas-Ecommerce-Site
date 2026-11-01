@@ -22,6 +22,7 @@
 // `support.assign` (the API checks again). Nothing here moves money, changes a price or COD, or edits an order.
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Fragment } from 'react';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sp from '@extas/support';
@@ -207,7 +208,31 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
             const cls = m.direction === 'IN' ? 'in' : m.direction === 'NOTE' ? 'note' : 'out';
             return (
               <article key={m.id} className={`sp-msg ${cls}`} data-testid="support-msg" data-direction={m.direction}>
-                {m.body ? <div className="sp-bub">{m.body}</div> : null}
+                {m.body ? (
+                  <div className="sp-bub">
+                    {m.parts
+                      ? m.parts.map((part, i) =>
+                          !part.link ? (
+                            // plain words stay text beside the links (an inline link's tap height counts its words)
+                            <Fragment key={i}>{part.text}</Fragment>
+                          ) : part.link.risky ? (
+                            // PR 538: a risky link stays words that cannot be opened, with a danger mark and why
+                            <span key={i} className="sp-link-risky" data-testid="support-link-risky" title={part.link.reasons.map((r) => t(d, `sup.msg.linkWhy.${r}`)).join(' · ')}>
+                              <ShellIcon name="alert" size={13} />
+                              <span className="sp-link-text">{part.text}</span>
+                              <span className="sp-link-why">
+                                {t(d, 'sup.msg.risky')}: {part.link.reasons.map((r) => t(d, `sup.msg.linkWhy.${r}`)).join(' · ')}
+                              </span>
+                            </span>
+                          ) : (
+                            <a key={i} className={`sp-link${m.parts!.length === 1 ? ' solo' : ''}`} href={part.link.url} target="_blank" rel="noopener noreferrer nofollow ugc" data-testid="support-link">
+                              {part.text}
+                            </a>
+                          ),
+                        )
+                      : m.body}
+                  </div>
+                ) : null}
                 {m.files.length ? (
                   <div className="sp-files">
                     {m.files.map((f) =>

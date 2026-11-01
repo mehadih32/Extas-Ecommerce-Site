@@ -3,6 +3,7 @@
 // the rest of the admin shows it (B4.12, Note 24.1): whole to a person with `customers.phone`, otherwise masked by
 // `customers.phoneMask` (PR 284, @extas/customers/pure `maskPhone`). PR 428: the thread carries the customer scan
 // (`context`, @extas/customers chatContextOf) while `support.context` is on — counts and risk only with `customers.read`.
+import { linkParts, type BodyPart } from './escalation-pure';
 import type { Prisma } from '@extas/db/client';
 import { actorPermissions } from '@extas/auth';
 import { z } from 'zod';
@@ -190,6 +191,8 @@ export interface ThreadMessage {
   files: ThreadFile[];
   /** PR 429: a product card sent from the drawer — its reference, when the customer opened it, the order it brought. */
   share: { productId: string; refCode: string; openedAt: Date | null; order: { id: string; number: string } | null } | null;
+  /** PR 538: a customer's words cut around their checked links (link safety on and a link in them), else null. */
+  parts: BodyPart[] | null;
 }
 
 export interface ThreadEvent {
@@ -248,12 +251,19 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings' | 
   const lens = await supportLens(deps, who, held);
   if (!mayOpen(lens, who.actor.staffUserId, c.assignedToId)) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
   const blocked = lens.blockOn && c.contact.blockedAt ? { at: c.contact.blockedAt, reason: c.contact.blockReason } : null;
-  const [ctxOn, catOn, cartOn, shares] = await Promise.all([
+  const [ctxOn, catOn, cartOn, shares, linkSafety] = await Promise.all([
     setting(deps, who.storeId, 'support.context'),
     setting(deps, who.storeId, 'support.catalogue'),
     setting(deps, who.storeId, 'support.cart'),
     deps.db.supportProductShare.findMany({ where: { storeId: who.storeId, conversationId: c.id, messageId: { not: null } }, select: { messageId: true, productId: true, refCode: true, clickedAt: true, orderId: true } }),
+    setting(deps, who.storeId, 'support.linkSafety'),
   ]);
+  // PR 538: the links of a customer's words, checked with today's lists (a site trusted later is no longer marked)
+  const partsOf = (direction: string, body: string | null): BodyPart[] | null => {
+    if (direction !== 'IN' || !body || !linkSafety.enabled) return null;
+    const parts = linkParts(body, linkSafety);
+    return parts.some((p) => p.link) ? parts : null;
+  };
   const shareOrderIds = [...new Set(shares.flatMap((s) => (s.orderId ? [s.orderId] : [])))];
   const [shown, customer, order, names, perms, person, context, shareOrders, ticket] = await Promise.all([
     phoneShown(deps, who, held),
@@ -299,6 +309,7 @@ export async function supportThread(deps: Pick<SupportDeps, 'db' | 'settings' | 
         const number = s.orderId ? numberOf.get(s.orderId) : undefined;
         return { productId: s.productId, refCode: s.refCode, openedAt: s.clickedAt, order: s.orderId && number ? { id: s.orderId, number } : null };
       })(),
+      parts: m.isInternalNote ? null : partsOf(m.direction, lens.text(m.body)),
     })),
     events: c.events.map((e) => ({ id: e.id, kind: e.kind, actor: { type: e.actorType, name: e.actorName }, data: (e.data as Record<string, unknown> | null) ?? null, at: e.createdAt })),
     person,

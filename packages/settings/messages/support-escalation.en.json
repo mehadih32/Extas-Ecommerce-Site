@@ -1,0 +1,16 @@
+{
+  "support": {
+    "deskHours": {
+      "label": "Desk hours",
+      "help": "When the support desk works, in the store's own time zone. Off means the desk is always open. Telling the owner when nobody answers waits for these hours, and the inbox shows whether the desk is open."
+    },
+    "escalation": {
+      "label": "Tell the owner when nobody answers",
+      "help": "When a customer waits this many minutes and no employee answers, the owner gets one line on Telegram (the bot on Keys & connections; until it is connected the line stays in the practice copy). Once per wait, at most the hourly cap."
+    },
+    "linkSafety": {
+      "label": "Link safety",
+      "help": "Links in a customer's message are checked. A risky one (a link shortener, a look-alike of the shop's site, an odd site ending, a bare number address, a file that installs something) is shown as text that cannot be opened, with a danger mark."
+    }
+  }
+}

@@ -30,6 +30,7 @@ import { pointsPlanner } from './rewards';
 import { audienceRefreshHookFromEnv, audienceRefreshPlanner } from './audience-refresh';
 import { paymentsPlanner } from './payments';
 import { searchPlanner } from './search';
+import { supportEscalationPlanner } from './support-escalation';
 import { webhookPlanner } from './webhooks';
 import { startWorker } from './worker';
 
@@ -62,6 +63,8 @@ async function main(): Promise<void> {
     messages: { sender: sendersFrom(senders) },
     payments: { gateways: connectionGateways(gateways) },
     couriers: { connections: couriers },
+    // PR 538: the owner's Telegram bot (allAdapters holds it; the practice copy until it is connected)
+    telegram: connections,
     // review R3 (M1): a voice-address recording past its days is overwritten with nothing where it is kept
     voice: {
       async wipe(storeId, file) {
@@ -101,8 +104,8 @@ async function main(): Promise<void> {
     // each store's sweep of open online payments per slot; PR 176: each store's courier tracking read per slot; PR 182:
     // each store's packing photos past their days to keep, archived once a day; PR 407: each store's invoice run per slot
     // CN-028 · PR 612–614: each v6 store's returns and exchanges with its own ERP per slot; S16 · PR 351: each store's
-    // money report to the owner, once per period while it is due; PR 296: each store's points run per hour while its points are on; S13 · PR 264: each store's audience refresh, once a day
-    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner, invoicePlanner, returnsErpPlanner, moneyReportPlanner, pointsPlanner, audienceRefreshPlanner],
+    // money report to the owner, once per period while it is due; PR 296: each store's points run per hour while its points are on; S13 · PR 264: each store's audience refresh, once a day; PR 538: each store's support escalation sweep per minute
+    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner, invoicePlanner, returnsErpPlanner, moneyReportPlanner, pointsPlanner, audienceRefreshPlanner, supportEscalationPlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {

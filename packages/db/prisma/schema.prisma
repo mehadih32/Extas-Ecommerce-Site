@@ -9832,13 +9832,20 @@ model SupportFollowUp {
 /// @stage S22 · PR 538 — no employee answered within the window: the AI pinged the owner on Telegram.
 /// @append-only
 model SupportEscalation {
-  id             String   @id @default(uuid(7)) @db.Uuid
+  id             String    @id @default(uuid(7)) @db.Uuid
   storeId        Int
-  store          Store    @relation(fields: [storeId], references: [id])
-  conversationId String   @db.Uuid
+  store          Store     @relation(fields: [storeId], references: [id])
+  conversationId String    @db.Uuid
   reason         String
   notifiedVia    String
-  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  /// PR 538: the customer's wait this row is about (Conversation.waitingSince then): one row per wait.
+  waitingSince   DateTime? @db.Timestamptz(3)
+  /// PR 538: how many minutes the customer had waited when the owner was told.
+  minutes        Int?
+
+  @@unique([conversationId, waitingSince])
+  @@index([storeId, createdAt])
 }
 
 /// @stage S22 · B4.15 — a knowledge chunk the support AI answers from (manual, policies, catalogue, FAQs, solved tickets).

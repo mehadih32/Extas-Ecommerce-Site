@@ -139,3 +139,13 @@
 .adm2 .sp-an-num{font-variant-numeric:tabular-nums;white-space:nowrap}
 .adm2 .sp-an-how ul{margin:4px 0 0;padding-left:18px;display:grid;gap:6px;color:var(--ink2)}
 .adm2 .sp-an-how>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--ink2)}
+/* PR 538: a customer's links — a safe one opens in a new tab; a risky one is words with a danger mark, never a link */
+.adm2 .sp-link{color:inherit;text-decoration:underline;text-underline-offset:2px;padding:9px 0}
+.adm2 .sp-link.solo{display:inline-flex;align-items:center;min-height:44px;min-width:44px;padding:0}
+.adm2 .sp-link-risky{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px;padding:1px 6px;border-radius:6px;background:var(--badbg);color:var(--bad);cursor:not-allowed}
+.adm2 .sp-link-risky svg{flex:none}
+.adm2 .sp-link-risky .sp-link-text{text-decoration:line-through;overflow-wrap:anywhere}
+.adm2 .sp-link-risky .sp-link-why{font-size:12px;font-weight:600}
+/* PR 538: the desk's hours on the inbox */
+.adm2 .sp-desk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--ln);background:var(--sf)}
+.adm2 .sp-desk.closed{background:var(--warnbg);color:var(--warn);border-color:transparent}

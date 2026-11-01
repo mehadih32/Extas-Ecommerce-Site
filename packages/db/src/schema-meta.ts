@@ -233,6 +233,8 @@ export const APPEND_ONLY_LOCKED = [
   'PickingTick',
   // S20 · PR 412 (migration 0111_shelf_bins): each shelf a style was put on; a move or a clear is a new row.
   'ShelfBin',
+  // S22 · PR 538 (migration 0119_support_escalation): each time the owner was told nobody answered a waiting customer.
+  'SupportEscalation',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';
@@ -288,7 +290,6 @@ export const APPEND_ONLY_OPEN: Readonly<Record<string, string>> = {
   CostEntry: NOT_BUILT,
   PrepaidTopUp: NOT_BUILT,
   SamenessCheck: NOT_BUILT,
-  SupportEscalation: NOT_BUILT,
   ImageEdit: NOT_BUILT,
   ColourVerification: NOT_BUILT,
 };

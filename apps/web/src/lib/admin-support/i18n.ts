@@ -83,6 +83,8 @@ export function logLine(dict: Dict, e: { kind: string; actor: { type: string; na
   // PR 434: the chat's person put on the support block list (the reason) and taken off
   else if (e.kind === 'BLOCKED') line = t(dict, 'sup.log.BLOCKED', { name, reason: typeof d.reason === 'string' ? d.reason : '' });
   else if (e.kind === 'UNBLOCKED') line = t(dict, 'sup.log.UNBLOCKED', { name });
+  // PR 538: the owner told on Telegram that nobody answered (or the practice copy took it, or it could not go)
+  else if (e.kind === 'ESCALATED') line = t(dict, d.ok !== true ? 'sup.log.ESCALATED_FAILED' : d.practice === true ? 'sup.log.ESCALATED_PRACTICE' : 'sup.log.ESCALATED', { minutes: typeof d.minutes === 'number' ? String(d.minutes) : '' });
   else line = e.kind;
   return d.auto === true ? `${line} ${t(dict, 'sup.log.auto')}` : line;
 }
