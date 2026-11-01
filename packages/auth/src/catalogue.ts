@@ -274,6 +274,9 @@ export const PERMISSIONS = {
   // S14 · PR 287 — CUS-03: save, change, copy and archive the store's segments (`customers.segments.write`; audited).
   // Seeing them and their counts needs `customers.read` only; a segment holds rules, never a customer's details.
   'customers.segments.write': { group: 'customers' },
+  // S14 · PR 288 — Customers › Customer settings: switch the CRM features on or off and change their numbers (the
+  // journey view first; later CRM PRs add theirs); audited.
+  'customers.settings': { group: 'customers' },
   // S11 · PR 220–222 — Website → SEO: see which pages search engines may list, the title and description templates, the
   // AI drafts waiting and the structured data (`seo.read`); change them, write AI drafts and accept or discard a draft
   // (`seo.manage`). Nothing here touches a price, an order or a customer.

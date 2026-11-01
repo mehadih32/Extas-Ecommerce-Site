@@ -239,7 +239,8 @@
       "privacy": "File and cancel a customer’s request to erase his personal details, and see the requests; only the owner carries one out",
       "segments": {
         "write": "Save, change, copy and archive customer segments (groups by what customers did); seeing them needs only “see customers”"
-      }
+      },
+      "settings": "Switch the customer features (journey view and others) on or off and change their numbers"
     },
     "seo": {
       "read": "See the SEO page: which pages search engines may list, the title and description templates, the AI drafts and the structured data",

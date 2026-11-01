@@ -113,3 +113,5 @@ export const PHONE_SEARCH_MIN_DIGITS = 4;
 
 // PR 287 — the segment conditions (no database), for the builder in the browser.
 export * from './segment-rules';
+// PR 288 — the journey view's kinds of touch.
+export * from './journey-kinds';

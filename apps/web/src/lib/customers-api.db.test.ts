@@ -146,4 +146,19 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect((await api('DELETE', `segments/${id}`)).status).toBe(405);
     expect((await api('GET', `segments/${id}/x`)).status).toBe(404);
   });
+
+  it('PR 288: the journey view off until Customer settings turns it on (customers.settings; a reader may not); then rows', async () => {
+    expect((await api('GET', `${a}/journey`, { cookie: reader })).body).toMatchObject({ ok: true, journey: { enabled: false, rows: [] } });
+    const s = await api('GET', 'settings', { cookie: reader });
+    expect(s.body).toMatchObject({ ok: true, screen: { canWrite: false, values: { 'customers.journey': { enabled: false } } } });
+    const value = { ...s.body.screen.values['customers.journey'], enabled: true };
+    expect((await api('PUT', 'settings', { cookie: reader, body: { key: 'customers.journey', value } })).status).toBe(403);
+    expect((await api('PUT', 'settings', { body: { key: 'customers.journey', value: { ...value, perPage: 1 } } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    expect((await api('PUT', 'settings', { body: { key: 'customers.journey', value } })).body).toMatchObject({ ok: true, screen: { canWrite: true, values: { 'customers.journey': { enabled: true } } } });
+    const j = await api('GET', `${a}/journey?page=1`, { cookie: reader });
+    expect(j.body.journey.enabled).toBe(true);
+    expect(j.body.journey.rows.some((r: { kind: string }) => r.kind === 'profile')).toBe(true);
+    expect((await api('POST', 'settings', { body: {} })).status).toBe(405);
+  });
 });
+

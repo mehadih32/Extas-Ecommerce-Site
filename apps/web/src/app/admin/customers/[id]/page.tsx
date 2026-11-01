@@ -22,6 +22,7 @@ import { ApologyGive } from '@/components/admin/money/RefundActions';
 import { WalletAdjust, WalletReverse } from '@/components/admin/money/WalletTools';
 import { sourceLabel } from '@/components/admin/customers/CustomerList';
 import { MergeWith, PhoneButtons } from '@/components/admin/customers/CustomerTools';
+import { JourneyCard } from '@/components/admin/customers/JourneyCard';
 import { initials } from '@/components/admin/customers/PairCard';
 import { formatMoney, formatNumber, moneyOf, type Money } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -41,7 +42,7 @@ import '../../money/money.css';
 
 export const dynamic = 'force-dynamic';
 
-const TABS = ['overview', 'orders', 'wallet', 'exchanges', 'support'] as const;
+const TABS = ['overview', 'orders', 'wallet', 'exchanges', 'support', 'journey'] as const;
 /** The logged actions' icons in "Who looked at this customer". */
 const LOOK_ICON: Record<string, 'eye' | 'file' | 'phone'> = { 'profile.open': 'eye', 'phone.copy': 'file', 'phone.call': 'phone' };
 type Tab = (typeof TABS)[number];
@@ -135,14 +136,16 @@ export default async function CustomerPage({ params, searchParams }: { params: P
 
   const canWallet = perms.has('payments.view');
   // the Wallet tab only for a person who may see money (gate F-054)
-  const tabs = TABS.filter((x) => x !== 'wallet' || canWallet);
+  // PR 288: the Journey tab shows only while the owner's `customers.journey` is on
+  const journeyOn = ((await access.deps.resolver.value('customers.journey', { storeId: MOTHER_STORE_ID })) as { enabled: boolean }).enabled;
+  const tabs = TABS.filter((x) => (x !== 'wallet' || canWallet) && (x !== 'journey' || journeyOn));
   const tab: Tab = (tabs as readonly string[]).includes(one(sp.tab)) ? (one(sp.tab) as Tab) : 'overview';
   const page = Math.max(1, Math.trunc(Number(one(sp.page)) || 1));
   const from = one(sp.from);
   const profiles = [sv.customer, ...sv.members];
   // the owner's "0 lines" hides the "Who looked" card (the log itself is always written)
   const { accessLogShown } = (await access.deps.resolver.value('customers.profile', { storeId: MOTHER_STORE_ID })) as { accessLogShown: number };
-  const [orders, exchanges, support, looks, wallets, currency, ledger] = await Promise.all([
+  const [orders, exchanges, support, looks, wallets, currency, ledger, journey] = await Promise.all([
     cu.customerOrders(cd, who, sv.id, tab === 'orders' ? { page } : {}),
     tab === 'overview' || tab === 'exchanges' ? cu.customerExchanges(cd, who, sv.id) : Promise.resolve([]),
     tab === 'support' ? cu.customerSupport(cd, who, sv.id) : Promise.resolve([]),
@@ -154,6 +157,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
     tab === 'wallet'
       ? paymentsDeps(access.deps).then((pd) => customerWallets({ db: access.deps.db, resolver: access.deps.resolver, payments: pd }, { actor: access.guard.actor, ctx: access.guard.ctx }, profiles.map((p) => p.id)))
       : Promise.resolve(null),
+    tab === 'journey' ? cu.customerJourney(cd, who, sv.id, { page }) : Promise.resolve(null),
   ]);
   const money = moneyOf(currency, view.locale);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
@@ -542,6 +546,8 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             walletTab
           ) : tab === 'exchanges' ? (
             exchangeCard
+          ) : tab === 'journey' && journey ? (
+            <JourneyCard view={view} journey={journey} money={money} stamp={stamp} canOrders={sv.viewer.orders} canSupport={perms.has('support.read')} here={here} />
           ) : (
             supportCard
           )}
