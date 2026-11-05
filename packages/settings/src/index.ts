@@ -152,6 +152,8 @@ export * from './registry-ads-refused';
 export * from './registry-ads-spend';
 export * from './registry-ads-alerts';
 export * from './registry-ads-control';
+// S13 · PR 269 — the AI growth agent's limits (registry-ads-growth.ts, version 175).
+export * from './registry-ads-growth';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

@@ -3,6 +3,7 @@
 // platform lists them (status, goal, budget, ad sets), each tied or not to one of the shop's own campaigns. Read only:
 // nothing is paused and no budget changes here. Seeing needs `marketing.campaigns.read`; reading and tying need
 // `marketing.campaigns.write`. Guide: docs/admin-guide/pages/marketing/ad-platforms.md.
+// PR 269: a link to the growth agent's page (ad-platforms/growth: delivered ROAS and proposals that wait for the owner).
 // PR 268: with the owner's switch on, each campaign's "Change" fold (pause, start again, a new daily budget — always after a
 // confirm; more spend waits for the owner's approval), the requests waiting for him and the latest changes, and the
 // switch's card (lib/marketing/campaign-control.ts). Practice writers only: no real budget or campaign changes.
@@ -48,6 +49,7 @@ const ALERTS_API = '/api/admin/marketing/ad-platforms/alerts';
 const CONTROL_API = '/api/admin/marketing/ad-platforms/control';
 const KEYS_PAGE = '/admin/integrations';
 const FEES_PAGE = '/admin/money/fees';
+const GROWTH_PAGE = '/admin/marketing/ad-platforms/growth';
 const KEY = 'marketingAdPlatforms';
 
 function withScreen(view: AdminView): AdminView {
@@ -184,6 +186,11 @@ export default async function AdPlatformsPage() {
       <div className="a2-note" role="note">
         <span>{s('readOnlyNote')}</span>
       </div>
+      <p className="a2-mt12">
+        <Link className="a2-sm adp-keys" href={GROWTH_PAGE} data-testid="adp-growth-link">
+          {s('growth.link')}
+        </Link>
+      </p>
       <p className="a2-sm a2-mute a2-mt12">{sp('spendNote')}</p>
       {rates.map((r) => (
         <div key={r.base} className={`a2-note adp-rate a2-mt12${r.rate ? '' : ' warn'}`} role="note" data-testid={`adp-rate-${r.base}`}>

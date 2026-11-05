@@ -127,6 +127,27 @@ export async function requestCampaignChange(deps: ControlDeps, who: AdPlatformsW
   return { id, status: await apply(deps, who, id, c, p) };
 }
 
+/**
+ * PR 269: a change a person already approved elsewhere (the AI growth agent's proposal, approved by someone with
+ * `marketing.ads.approve` after a confirm) is sent now through the same writer, kept as an AdChangeRequest that names the
+ * agent, the reason and the approval. The campaign's own row must still be as the proposal saw it (`fromDailyMinor`),
+ * and no other request may be waiting for it. Needs the campaign controls switched on.
+ */
+export async function applyApprovedChange(deps: ControlDeps, who: AdPlatformsWho, input: { adCampaignId: string; change: CampaignChange; fromDailyMinor: number | null; approvalRequestId: string; agent: string; reason: string }): Promise<{ id: string; status: ControlStatus }> {
+  if (!(await deps.resolver.value('ads.campaignControl', { storeId: S })).on) throw new AdPlatformsError('CONTROL_OFF', 409);
+  const c = await campaignOf(deps.db, input.adCampaignId);
+  if (!c) throw new AdPlatformsError('NOT_FOUND', 404);
+  if (input.change.kind === 'budget' && c.dailyBudgetMinor !== input.fromDailyMinor) throw new AdPlatformsError('CHANGED', 409);
+  if (input.change.kind === 'pause' && isPaused(c.status)) throw new AdPlatformsError('CHANGED', 409);
+  if (await deps.db.adChangeRequest.findFirst({ where: { storeId: S, adCampaignId: c.id, status: 'WAITING' }, select: { id: true } })) throw new AdPlatformsError('WAITING', 409);
+  const p: Payload = { change: input.change, fromDailyMinor: c.dailyBudgetMinor, fromStatus: c.status, currency: c.currency };
+  const row = await deps.db.adChangeRequest.create({
+    data: { storeId: S, adCampaignId: c.id, action: input.change.kind, payload: p as unknown as Prisma.InputJsonValue, reason: input.reason.slice(0, 500), requestedByAgent: input.agent, requestedById: who.actor.staffUserId ?? null, status: 'SENDING', approvalRequestId: input.approvalRequestId }, // hardcode-ok: the kept reason's length
+  });
+  await audit(deps.db, who.actor, { storeId: S, action: 'marketing.adControl.request', entityType: 'AdChangeRequest', entityId: row.id, after: { adCampaignId: c.id, change: input.change, agent: input.agent, approvalRequestId: input.approvalRequestId } }, who.ctx);
+  return { id: row.id, status: await apply(deps, who, row.id, c, p) };
+}
+
 /** POST {action: 'decide', id, decision, confirm: true}: the owner approves (sent now) or rejects a waiting increase. */
 export async function decideCampaignChange(deps: ControlDeps, who: AdPlatformsWho, input: unknown): Promise<{ id: string; status: ControlStatus }> {
   if (!(await deps.resolver.value('ads.campaignControl', { storeId: S })).on) throw new AdPlatformsError('OFF', 409);

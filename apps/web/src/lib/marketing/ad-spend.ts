@@ -16,7 +16,8 @@
 //   token). "Import now" works with the switch off.
 // - Read only on the platforms: nothing pauses a campaign or changes a budget (rule 6). Audited
 //   (marketing.adSpend.import, counts only).
-// - PR 267: the daily hook then checks the owner's cost alerts (ad-alerts.ts `sendCostAlerts`).
+// - PR 267: the daily hook then checks the owner's cost alerts (ad-alerts.ts `sendCostAlerts`); PR 269: and runs the growth
+//   agent when it is on (growth-agent.ts `runGrowthDaily`: proposals that wait for the owner, nothing changed).
 import { createHash } from 'node:crypto';
 import { adsSpendImportSchema, storeTarget, type AdsSpendImportSettings } from '@extas/settings';
 import type { AdsPlatform, AdsSpendFacts, AdsSpendRange } from '@extas/adapters';
@@ -28,6 +29,7 @@ import { AD_READER_PLATFORMS, AdPlatformsError, readerOf, syncAdPlatform, type A
 import { internalCaller } from './audience-push';
 import { pricerFor, type Pricer } from '../exchange-rate';
 import { sendCostAlerts } from './ad-alerts';
+import { runGrowthDaily } from './growth-agent';
 
 const S = MOTHER_STORE_ID;
 const DAY_MS = 86_400_000; // hardcode-ok: milliseconds in a day
@@ -191,7 +193,9 @@ export async function spendImportHook(request: Request, deps: AdminDeps | null =
     const results = await importAdSpend(d, { actor: SYSTEM, ctx: { source: 'ad-spend-import' } }, {});
     // PR 267: right after the import, the owner's crossed cost alerts go to his Telegram (`ads.costAlerts`, off as shipped)
     const alerts = await sendCostAlerts({ ...d, send: extra.send });
-    return json({ ok: true, skipped: null, alerts, results: results.map((r) => ({ platform: r.platform, practice: r.practice, rows: r.rows, unknown: r.unknown, noRate: r.noRate, error: r.error ? 'PLATFORM' : null })) });
+    // PR 269: then the growth agent reads the fresh figures and proposes (`ads.growthAgent`, off as shipped; proposals only wait)
+    const growth = await runGrowthDaily(d);
+    return json({ ok: true, skipped: null, alerts, growth, results: results.map((r) => ({ platform: r.platform, practice: r.practice, rows: r.rows, unknown: r.unknown, noRate: r.noRate, error: r.error ? 'PLATFORM' : null })) });
   } catch (e) {
     return errorResponse(e);
   }

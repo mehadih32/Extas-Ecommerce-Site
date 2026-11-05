@@ -216,6 +216,112 @@
         "hoursHelp": "1 to 720. After that the request runs out and nothing changes.",
         "readOnly": "You can see this card; changing it needs the \"Approve ad budget increases\" permission."
       }
+    },
+    "growth": {
+      "metaTitle": "Growth agent · Ad platforms",
+      "title": "Growth agent",
+      "sub": "Tirondaj reads what the ads brought back in delivered parcels and proposes changes. Nothing changes until you approve.",
+      "link": "Growth agent (proposals)",
+      "back": "Back to Ad platforms",
+      "note": "The agent only proposes. A pause or a budget change you approve goes through the campaign controls (they must be on) and, until a platform is connected for changes, only to its practice copy.",
+      "run": "Run now",
+      "running": "Reading…",
+      "ran": "{made} new proposal(s); {waiting} waiting.",
+      "noRun": "Running needs the “control ads” permission.",
+      "waitingH": "Waiting for your approval",
+      "waitingNone": "Nothing waits. With every limit at 0 the agent proposes nothing.",
+      "type": {
+        "pause": "Pause “{name}”",
+        "lowerBudget": "Lower the daily budget of “{name}” from {from} to {to}",
+        "refreshCreative": "Refresh the creative of “{name}”",
+        "raiseBudget": "Raise the daily budget of “{name}” from {from} to {to}",
+        "buildAudience": "Build an audience from “{name}”"
+      },
+      "why": {
+        "pause": "Spent {spend} in {from} – {to} and not one order was delivered.",
+        "lowerBudget": "Delivered ROAS {roas} (your floor {limit}) on {delivered} delivered orders.",
+        "refreshCreative": "Delivered ROAS fell from {before} to {roas}.",
+        "raiseBudget": "Delivered ROAS {roas} (your bar {limit}) on {delivered} delivered orders.",
+        "buildAudience": "{sales} of delivered sales, ROAS {roas}: people like these buyers are worth reaching."
+      },
+      "expires": "runs out {when}",
+      "approve": "Approve",
+      "reject": "Reject",
+      "confirmApprove": "Approve: {what}? A pause or a budget change is sent at once.",
+      "confirmReject": "Reject: {what}? Nothing changes.",
+      "yes": "Yes, go ahead",
+      "cancel": "Cancel",
+      "said": {
+        "APPROVED": "Approved and kept: make it from Marketing › Audiences or the creative brief.",
+        "REJECTED": "Rejected; nothing changed.",
+        "PRACTICE": "Sent to the practice copy: nothing reached the platform.",
+        "APPLIED": "Done on the platform.",
+        "FAILED": "The platform refused it; nothing changed."
+      },
+      "err": {
+        "CONTROL_OFF": "Turn on the campaign controls on Ad platforms first; nothing was decided.",
+        "CHANGED": "The campaign changed since the proposal; approved, but nothing was sent.",
+        "WAITING": "Another change for this campaign waits for approval.",
+        "DECIDED": "It was already decided.",
+        "EXPIRED": "It ran out; nothing changed."
+      },
+      "decidedH": "Decided",
+      "decidedNone": "Nothing decided yet.",
+      "status": {
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "EXPIRED": "Ran out",
+        "CANCELLED": "Cancelled",
+        "PRACTICE": "Practice copy",
+        "APPLIED": "Done",
+        "FAILED": "Not sent"
+      },
+      "flagH": "Spending with no delivered order",
+      "flagD": "Campaigns that spent in {from} – {to} without one delivered order. Shown whatever your limits.",
+      "flagNone": "None — every campaign that spent has delivered orders.",
+      "roasH": "Delivered ROAS",
+      "roasD": "Delivered sales ÷ ad spend, {from} – {to} (your last {days} days). 300 % = 3 taka back for each taka spent. A product's or district's spend is its share of its campaigns' spend.",
+      "noFigures": "No ad spend or delivered ad order in these days yet.",
+      "unknown": "not known yet",
+      "tab": {
+        "campaigns": "By campaign",
+        "products": "Top products",
+        "districts": "Top districts"
+      },
+      "col": {
+        "name": "Name",
+        "spend": "Spend",
+        "delivered": "Delivered",
+        "sales": "Delivered sales",
+        "roas": "ROAS"
+      },
+      "noDistrict": "No district known",
+      "gone": "(not in the list any more)",
+      "card": {
+        "h": "The agent's limits",
+        "d": "Every limit at 0 keeps that kind of proposal off. Only the owner changes these.",
+        "readOnly": "Only the owner (approve ad budget increases) changes the limits.",
+        "on": "Run every day after the spend import",
+        "onHelp": "Off: only “Run now”. The agent never changes anything by itself.",
+        "days": "Days it reads",
+        "daysHelp": "Today included; the same number of days before them is the comparison for a tired creative.",
+        "minDelivered": "Delivered orders before judging",
+        "minDeliveredHelp": "A campaign, product or district needs this many delivered orders before its ROAS is judged.",
+        "goodRoasPercent": "Good ROAS (%) — raise budget / build audience",
+        "goodRoasPercentHelp": "At or over this, the agent proposes a higher daily budget and an audience. 0 = off.",
+        "poorRoasPercent": "Poor ROAS (%) — lower budget",
+        "poorRoasPercentHelp": "Under this, the agent proposes a lower daily budget. 0 = off.",
+        "stepPercent": "Budget step (%)",
+        "stepPercentHelp": "How much a proposal raises or lowers a daily budget.",
+        "noDeliveredSpend": "Pause after this spend with no delivered order",
+        "noDeliveredSpendHelp": "In whole {currency}. Over it with not one delivered order, the agent proposes a pause. 0 = off.",
+        "fatiguePercent": "Tired creative: ROAS fall (%)",
+        "fatiguePercentHelp": "ROAS fallen by more than this against the days before → refresh the creative. 0 = off.",
+        "approvalHours": "Hours a proposal waits",
+        "approvalHoursHelp": "Not decided by then, it runs out and nothing changes.",
+        "maxProposals": "Most proposals per run",
+        "maxProposalsHelp": "The most urgent come first: pause, lower, refresh, raise, audience."
+      }
     }
   }
 }
