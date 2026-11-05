@@ -69,6 +69,7 @@
     { "id": "marketing/ad-platforms", "route": "/admin/marketing/ad-platforms" },
     { "id": "marketing/ad-growth", "route": "/admin/marketing/ad-platforms/growth" },
     { "id": "marketing/ad-briefs", "route": "/admin/marketing/ad-platforms/briefs" },
+    { "id": "marketing/referrals", "route": "/admin/marketing/referrals" },
     { "id": "marketing/landing", "route": "/admin/marketing/landing" },
     { "id": "marketing/landing-builder", "route": "/admin/marketing/landing/[id]" },
     { "id": "marketing/landing-templates", "route": "/admin/marketing/landing/templates" },

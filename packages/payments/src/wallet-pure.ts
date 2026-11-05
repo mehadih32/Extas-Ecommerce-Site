@@ -12,13 +12,14 @@ export const WALLET_ACTIVE = 'ACTIVE';
  * ORDER (the checkout spent it), REVIEW_REWARD (PR 65), EXCHANGE_CREDIT (S08, B1.8: only after the old item passed
  * check), REFUND (PR 172), APOLOGY (CN-018 #8), MANUAL_CREDIT / MANUAL_DEBIT (a person, with a note), OFFER (credit the
  * owner issues), CORRECTION (the reversal of an earlier entry), POINTS (S14 · PR 296: a customer turned his points into
- * credit at the owner's own rate, @extas/customers rewards.ts).
+ * credit at the owner's own rate, @extas/customers rewards.ts), REFERRAL (S13 · PR 273: the reward for a friend's
+ * delivered first order with his invite code, given by a person after a confirm, web lib/marketing/referrals.ts).
  */
-export const WALLET_REASONS = ['ORDER', 'REVIEW_REWARD', 'EXCHANGE_CREDIT', 'REFUND', 'APOLOGY', 'MANUAL_CREDIT', 'MANUAL_DEBIT', 'OFFER', 'CORRECTION', 'POINTS'] as const;
+export const WALLET_REASONS = ['ORDER', 'REVIEW_REWARD', 'EXCHANGE_CREDIT', 'REFUND', 'APOLOGY', 'MANUAL_CREDIT', 'MANUAL_DEBIT', 'OFFER', 'CORRECTION', 'POINTS', 'REFERRAL'] as const;
 export type WalletReason = (typeof WALLET_REASONS)[number];
 
 /** Entries a person may put right with a reversal. Money spent on an order or refunded goes back through a refund. */
-export const REVERSIBLE_REASONS: ReadonlySet<string> = new Set(['REVIEW_REWARD', 'APOLOGY', 'MANUAL_CREDIT', 'MANUAL_DEBIT', 'OFFER']);
+export const REVERSIBLE_REASONS: ReadonlySet<string> = new Set(['REVIEW_REWARD', 'APOLOGY', 'MANUAL_CREDIT', 'MANUAL_DEBIT', 'OFFER', 'REFERRAL']);
 
 export type Direction = 'CREDIT' | 'DEBIT';
 

@@ -33,6 +33,7 @@ export * from './conflicts-service';
 export * from './simulate-service';
 export * from './notices-service';
 export * from './coupons-service';
+export * from './referrals-service';
 export * from './eid-service';
 export * from './eta-service';
 export * from './public';

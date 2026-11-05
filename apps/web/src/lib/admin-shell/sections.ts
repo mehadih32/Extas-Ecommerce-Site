@@ -248,6 +248,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S13 · PR 254 (MKT-05): landing pages for ads — the list and the builder (`/admin/marketing/landing/<id>`, `new`);
       // PR 255: the templates and the parts library (`/admin/marketing/landing/templates`).
       { id: 'landing', pages: [{ href: '/admin/marketing/landing', perm: 'marketing.landing.read', keys: ['marketingLanding', 'marketingLandingPage', 'marketingLandingTemplates'] }] },
+      // S13 · PR 273: referrals — the programme, friends' orders with their invite codes and the sharers' rewards.
+      { id: 'referrals', pages: [{ href: '/admin/marketing/referrals', perm: 'marketing.campaigns.read', keys: ['marketingReferrals'] }] },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,

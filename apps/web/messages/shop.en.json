@@ -925,7 +925,8 @@
         "GUESTS_ONLY": "The code {code} works only without logging in.",
         "FIRST_ORDER_ONLY": "The code {code} is for a first order only. This number has ordered before.",
         "RULE_NOT_LIVE": "The offer behind {code} is not running now.",
-        "REFERRAL": "{code} is an invite code. Invite codes are not taken in the bag yet."
+        "REFERRAL": "{code} is an invite code. Invite codes are not being taken right now.",
+        "REFERRAL_OWN": "{code} is your own invite code. Share it with a friend: it works on his first order."
       }
     },
     "trust": {

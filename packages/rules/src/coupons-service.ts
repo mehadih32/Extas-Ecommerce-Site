@@ -14,6 +14,7 @@
 // later (on a switched-on coupon that is the owner's OK); batches of single-use codes (each usable once in all and once
 // per customer, guests counted by phone) for SMS, WhatsApp or printed cards, made off, switched on together with the
 // owner's OK and downloaded as a CSV; both distribution parts are off as shipped (`rules.coupons.distribution`).
+// PR 273: a code with no coupon may be a friend's invite code: redeeming records its use (referrals-service.ts).
 
 import { randomInt, randomUUID } from 'node:crypto';
 import { Prisma } from '@extas/db/client';
@@ -21,6 +22,7 @@ import { z } from 'zod';
 import { allow, found, holds, logChange, nowOf, parse, setting, type Db, type RulesDeps, type Tx, type Who } from './context';
 import { RulesError } from './errors';
 import { COUPON_AUDIENCES, couponAudienceOf, isLive, unlocksWithCoupon, type CouponAudience } from './model';
+import { redeemReferral } from './referrals-service';
 import { toRule } from './rows';
 
 type CouponRow = Prisma.CouponGetPayload<object>;
@@ -292,7 +294,7 @@ export async function couponBatchCsv(deps: RulesDeps, who: Who, batchId: string)
   return ['code,on,used', ...rows.map((r) => `${r.code},${r.enabled ? 'yes' : 'no'},${r.usedCount}`)].join('\n') + '\n';
 }
 
-export type CouponRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'MEMBERS_ONLY' | 'GUESTS_ONLY' | 'FIRST_ORDER_ONLY' | 'RULE_NOT_LIVE';
+export type CouponRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'MEMBERS_ONLY' | 'GUESTS_ONLY' | 'FIRST_ORDER_ONLY' | 'RULE_NOT_LIVE' | 'REFERRAL_OWN';
 
 /** PR 213 follow-up — the orders that do not make a buyer "not new": never placed, or cancelled. */
 const NOT_AN_ORDER = ['DRAFT', 'CANCELLED'] as const;
@@ -304,6 +306,8 @@ export interface CouponCheck {
   /** The rule the coupon unlocks (pass it to the engine as `couponRuleIds`). */
   ruleId: string | null;
   code: string;
+  /** PR 273: the code is a friend's invite code (referrals-service.ts), not a coupon. */
+  referralId?: string | null;
 }
 
 /**
@@ -353,7 +357,8 @@ export async function checkCoupon(db: Db, input: { storeId: number; code: string
 export async function redeemCoupon(tx: Tx, input: { storeId: number; code: string; orderId: string; phone?: string | null; customerId?: string | null; discountMinor: number; now: Date }): Promise<{ redemptionId: string; replayed: boolean }> {
   const code = normaliseCode(input.code);
   const found = await tx.coupon.findUnique({ where: { storeId_code: { storeId: input.storeId, code } }, select: { id: true } });
-  if (!found) throw new RulesError('COUPON_NOT_USABLE', 'no such coupon', ['UNKNOWN']);
+  // PR 273: a code that is not a coupon may be a friend's invite code (one use recorded per order)
+  if (!found) return redeemReferral(tx, input);
   // Review R1 (B1): two orders redeeming the same code wait for each other here, so the per-customer count below is read
   // after the other order's redemption is in (the use count itself is also guarded by the conditional update).
   await tx.$queryRaw(Prisma.sql`SELECT 1 FROM "Coupon" WHERE "id" = ${found.id}::uuid FOR UPDATE`);

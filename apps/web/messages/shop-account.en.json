@@ -161,6 +161,17 @@
       "newIn": "New in",
       "seeAll": "See all"
     },
+    "invite": {
+      "title": "Invite a friend",
+      "sub": "Share your code. Your friend gets the offer on his first order{reward}.",
+      "reward": ", and you get {amount} in your wallet once it is delivered",
+      "code": "Your invite code",
+      "copy": "Copy code",
+      "copied": "Code {code} copied",
+      "share": "Share on WhatsApp",
+      "shareText": "Use my code {code} on your first order at {store}: {link}",
+      "used": "Friends who ordered with it: {n}"
+    },
     "rewards": {
       "title": "Rewards",
       "none": "No rewards are running right now.",

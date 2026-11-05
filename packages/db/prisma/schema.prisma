@@ -335,6 +335,7 @@ model Store {
   coupons                 Coupon[]
   couponRedemptions       CouponRedemption[]
   referrals               Referral[]
+  referralUses            ReferralUse[]
   recoveryMessages        RecoveryMessage[]
   broadcasts              Broadcast[]
   youtubeChannels         YoutubeChannel[]
@@ -7352,20 +7353,50 @@ model CouponRedemption {
 
 /// @stage S13 · PR 273 — a referral.
 model Referral {
-  id                 String    @id @default(uuid(7)) @db.Uuid
+  id                 String        @id @default(uuid(7)) @db.Uuid
   storeId            Int
-  store              Store     @relation(fields: [storeId], references: [id])
-  referrerCustomerId String    @db.Uuid
+  store              Store         @relation(fields: [storeId], references: [id])
+  referrerCustomerId String        @db.Uuid
   code               String
-  refereeCustomerId  String?   @db.Uuid
-  orderId            String?   @db.Uuid
+  refereeCustomerId  String?       @db.Uuid
+  orderId            String?       @db.Uuid
   rewardMinor        Int?
   status             String
-  rewardedAt         DateTime? @db.Timestamptz(3)
-  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+  rewardedAt         DateTime?     @db.Timestamptz(3)
+  createdAt          DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime      @updatedAt @db.Timestamptz(3)
+  /// PR 273 (migration 0124): each order placed with this code.
+  uses               ReferralUse[]
 
   @@unique([storeId, code])
+  /// PR 273 (migration 0124): one invite code per customer (this row is his code; `refereeCustomerId`, `orderId` and
+  /// `rewardMinor` stay unused: each use is a ReferralUse).
+  @@unique([storeId, referrerCustomerId])
+}
+
+/// @stage S13 · PR 273 — one order placed with a friend's invite code (the new buyer's first order) and the reward the
+/// customer who shared it may get once it is delivered (a wallet credit, given by a person with the wallet permission
+/// after a confirm).
+model ReferralUse {
+  id                String    @id @default(uuid(7)) @db.Uuid
+  storeId           Int
+  store             Store     @relation(fields: [storeId], references: [id])
+  referralId        String    @db.Uuid
+  referral          Referral  @relation(fields: [referralId], references: [id])
+  orderId           String    @db.Uuid
+  refereeCustomerId String?   @db.Uuid
+  phone             String?
+  /// PENDING (placed) · REWARDED (the wallet credit is given).
+  status            String
+  rewardMinor       Int?
+  walletEntryId     String?   @db.Uuid
+  rewardedAt        DateTime? @db.Timestamptz(3)
+  rewardedById      String?   @db.Uuid
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, orderId])
+  @@index([referralId])
 }
 
 /// @stage S13 · PR 275, 276 — a follow-up on an incomplete order or abandoned bag (capped by settings).

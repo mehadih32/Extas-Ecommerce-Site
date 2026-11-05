@@ -6,6 +6,10 @@
     "landing": {
       "label": "Landing pages",
       "help": "Pages made for ads at /l/<link>: one product, its offer and an order box on the page. You build and publish them in Marketing › Landing pages; the shop shows none of them to customers until this switch is on. Search engines never list them. Every order from a page carries the page's name."
+    },
+    "referrals": {
+      "label": "Referral programme",
+      "help": "Off as it ships. On (and inside its first and last day), a signed-in customer sees his own invite code under My account › For you, and a friend who types it on his first order gets the offer of the Smart Rule you pick (a rule whose offer asks for a code; its amount is the rule's). Once the friend's order is delivered, the customer who shared the code may get the wallet reward you set here, given by a person with the wallet permission after a confirm. Empty reward = none."
     }
   },
   "ads": {
