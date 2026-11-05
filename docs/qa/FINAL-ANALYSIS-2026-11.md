@@ -121,16 +121,21 @@ messages need the jobs worker, which does not run in a local build; on the previ
 
 ## Live results
 
-To be filled in by the integrator after each run on new.extas.com.bd.
+Both gates ran on new.extas.com.bd with every provider on its mock.
 
-### Run 1
+### Run 1 — 1 Nov 2026, live `0f6ac8a0`
 
-- Date, live version (commit):
-- Result (pass / fail / skip counts):
-- Failed steps and the fix PR for each:
+- Test orders (gate-orders): **PASS**, 16 pass, 0 fail, 2 skip, 26 test orders on 3 phones and desktop, 3G/4G/wifi,
+  1 to 8 items, cancellations; COD on for the run only and put back; every order cancelled and archived.
+- Customer 360° (gate-c360): 115 pass, **8 fail**, 27 skip.
+- Fails and fixes (both in #79, PR 72 and PR 414 follow-ups):
+  - misspelt search "pollo shrit" found nothing on all 6 screens: the general-word check ignored the owner's match
+    rules (`packages/search/src/engine.ts`); now uses `isGeneral`, with a DB test;
+  - a category with too few styles shows no filter by design (`.cat-few`): the gate now counts it as SKIP, not FAIL.
 
-### Run 2
+### Run 2 — 6 Nov 2026 01:07 (Asia/Dhaka), live `491ac577`
 
-- Date, live version (commit):
-- Result (pass / fail / skip counts):
-- Failed steps and the fix PR for each:
+- Customer 360° (gate-c360): **PASS**, 122 pass, 0 fail, 28 skip. Misspelt search now finds the product on every screen.
+- Each SKIP names its reason: an owner switch kept off (back-in-stock, checkout follow-up and similar), a step that
+  needs a person (parcel hand-over, so delivered/review/exchange cannot run yet) or a real key (SMS, courier, payment).
+- Nothing failed, so no new fix PR. Full table: [`docs/reports/gate-c360/latest/README.md`](../reports/gate-c360/latest/README.md).
