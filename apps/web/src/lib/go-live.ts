@@ -83,6 +83,7 @@ const HOUR_MINUTES = 60;
 const passed = (checks: GoLiveContext['backups']['checks'], keys: readonly string[]) =>
   Boolean(checks) && keys.every((k) => checks!.some((c) => c.key === k && c.ok));
 const OFF_SERVER = ['blobLive', 'blobFresh', 'driveLive', 'driveFresh'] as const;
+const DRILL = ['drillBlob', 'drillDrive'] as const;
 
 const within = (at: string | undefined, now: Date, minutes: number) => {
   const t = at ? Date.parse(at) : Number.NaN;
@@ -121,6 +122,18 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     kind: 'auto',
     when: 'after',
     check: ({ backups: { checks } }) => ({ ok: passed(checks, OFF_SERVER), vars: { todo: OFF_SERVER.filter((k) => !passed(checks, [k])).length } }),
+  },
+  // PR 507 (CN-035): the monthly restore drill brings the Blob and the Drive copy back; it starts once they are connected.
+  {
+    key: 'restoreDrill',
+    pr: 507,
+    kind: 'auto',
+    when: 'after',
+    check: ({ backups: { checks } }) => ({
+      ok: passed(checks, DRILL),
+      at: checks?.find((c) => c.key === 'drillBlob')?.at,
+      vars: { todo: DRILL.filter((k) => !passed(checks, [k])).length },
+    }),
   },
   // PR 394 — every server item of Blueprint A2.9 (A2.9.16): the last full setup run passed every step. A warning (for
   // example the public HTTPS answer while DNS is new) is shown with the number but does not hold it back.

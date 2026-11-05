@@ -51,8 +51,12 @@ describe('go-live checklist (PR 393)', () => {
     expect(r.soon.done).toBe(r.soon.total - open(ctx({ backups: noOffSite })).length);
     // the server's own copy stays needed
     expect(goLiveChecks(ctx({ backups: { ready: false, todo: 1, checks: [] } })).ready).toBe(false);
+    // PR 507: the restore drill of both copies is soon after go-live too
+    const noDrill = { ready: true, todo: 0, checks: ctx().backups.checks!.map((c) => (c.key === 'drillDrive' ? { ...c, ok: false } : c)) };
+    expect(goLiveChecks(ctx({ backups: noDrill }))).toMatchObject({ ready: true });
+    expect(goLiveChecks(ctx({ backups: noDrill })).items.find((i) => i.key === 'restoreDrill')).toMatchObject({ ok: false, when: 'after', pr: 507, vars: { todo: 1 } });
     // no checks known: the off-server row is not done
-    expect(open(ctx({ backups: { ready: true, todo: 0 } }))).toContain('offServer');
+    expect(open(ctx({ backups: { ready: true, todo: 0 } }))).toEqual(['offServer', 'restoreDrill']);
   });
 
   it('automatic items: a failed, old or missing smoke test, a health problem or a stale check, backups not ready', () => {

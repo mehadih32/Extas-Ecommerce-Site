@@ -49,6 +49,12 @@
       "how": "Off-server backup: not connected ({todo} check(s) to do). Connect Azure Blob and Google Drive in Settings → System → Backups; the yellow line on the Dashboard comes back every day until then.",
       "why": "Soon after: the server's own copy and its provider's snapshot keep the data meanwhile; the owner connects Blob and Drive from the admin."
     },
+    "restoreDrill": {
+      "title": "Restore drill of the off-server copies",
+      "ok": "the Blob and the Drive copy were brought back",
+      "how": "The monthly restore drill brings the Azure Blob and the Google Drive copy back into a throw-away database ({todo} still to do). It starts once both are connected; press \"Run the restore drill now\" in Settings → System → Backups.",
+      "why": "Soon after: it needs the off-server copies first; the server's own copy is tested every night meanwhile."
+    },
     "originCert": {
       "title": "Cloudflare Origin certificate on the server",
       "ok": "covers {names}; {days} days left",
