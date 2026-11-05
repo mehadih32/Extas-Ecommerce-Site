@@ -174,3 +174,8 @@
 /* The breadcrumb links are drawn 32 px tall (demo); an invisible layer makes each a 44 px tap without moving them. */
 .shop .crumbs a { position: relative; }
 .shop .crumbs a::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%); }
+/* S11 · PR 231: "More collections" — plain links under the page, each a full tap target */
+.shop .cat-rel { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+.shop .cat-rel-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.shop .cat-rel-a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--line2); border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.shop .cat-rel-a:hover { border-color: var(--ink); }
