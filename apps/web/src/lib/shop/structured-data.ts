@@ -5,6 +5,8 @@
 // S11 · PR 222 (follow-up 110, C12.4): the shop itself on the home page (Organization: only what the owner filled in;
 // WebSite: the name Google shows above the results), a set page as a Product with one Offer at its set price (in stock
 // only while every piece can be sold), and the struck price beside an offer only where the page shows it struck.
+// S11 · PR 223 (C12.4): the product's rating and reviews, only from its real approved review rows and only what the
+// page itself shows (the summary box's average and count, the cards the page draws), never a made-up number.
 import type { ImageSource } from '@extas/media';
 
 export interface LdCrumb {
@@ -44,6 +46,27 @@ export interface LdProduct {
   wasPrice?: boolean;
   /** PR 527: archived for good (not only sold out): the offer says Discontinued while nothing can be bought. */
   retired?: boolean;
+  /** PR 223: the reviews block the page draws (real approved rows), or null/absent: no rating, no review sent. */
+  reviews?: LdReviews | null;
+}
+
+/** PR 223 · one review card the page shows. */
+export interface LdReview {
+  /** 1–5 stars, as the buyer gave them. */
+  rating: number;
+  /** The name he chose to show; without one the review is not sent on its own (it still counts in the average). */
+  author: string | null;
+  title: string | null;
+  body: string;
+  /** The day it was published (YYYY-MM-DD), or null. */
+  published: string | null;
+}
+
+/** PR 223 · the page's reviews block: the summary box (every approved review of the product) and its cards. */
+export interface LdReviews {
+  average: number;
+  total: number;
+  reviews: readonly LdReview[];
 }
 
 type Ld = Record<string, unknown>;
@@ -125,6 +148,32 @@ export function productLd(origin: URL | string, p: LdProduct): Ld | null {
   if (p.brand?.trim()) out.brand = { '@type': 'Brand', name: p.brand.trim() };
   if (p.category?.trim()) out.category = p.category.trim();
   out.offers = offers;
+  Object.assign(out, reviewsPart(p.reviews ?? null));
+  return out;
+}
+
+const starOk = (n: number) => Number.isInteger(n) && n >= 1 && n <= 5;
+
+/**
+ * PR 223 · the rating and the reviews beside a product: the average and count the page's summary box shows, and each
+ * card the page draws that carries a name. Nothing at all without a real review (no count, an average outside 1–5,
+ * or nothing passed): a rating is never sent that the page does not show.
+ */
+export function reviewsPart(r: LdReviews | null): Ld {
+  if (!r || !Number.isInteger(r.total) || r.total < 1 || !Number.isFinite(r.average) || r.average < 1 || r.average > 5) return {};
+  const out: Ld = {
+    aggregateRating: { '@type': 'AggregateRating', ratingValue: r.average.toFixed(1), reviewCount: r.total, bestRating: 5, worstRating: 1 },
+  };
+  const items = r.reviews.flatMap((x) => {
+    const author = x.author?.trim();
+    if (!author || !starOk(x.rating)) return [];
+    const one: Ld = { '@type': 'Review', reviewRating: { '@type': 'Rating', ratingValue: x.rating, bestRating: 5, worstRating: 1 }, author: { '@type': 'Person', name: author } };
+    if (x.title?.trim()) one.name = x.title.trim();
+    if (x.body.trim()) one.reviewBody = x.body.trim();
+    if (x.published && /^\d{4}-\d{2}-\d{2}$/.test(x.published)) one.datePublished = x.published;
+    return [one];
+  });
+  if (items.length) out.review = items.slice(0, r.total);
   return out;
 }
 

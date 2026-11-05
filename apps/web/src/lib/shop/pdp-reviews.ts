@@ -7,6 +7,7 @@
 // shows, so it is never flattered by the three cards on the page.
 import type { PdpReviewsSettings } from '@extas/settings';
 import type { ImageSource } from '@extas/media';
+import type { LdReviews } from './structured-data';
 
 /** How a size felt, as the review says it. */
 export type PdpFit = 'SMALL' | 'RIGHT' | 'BIG';
@@ -26,6 +27,8 @@ export interface PdpReviewRow {
   colourName: string | null;
   fit: PdpFit | null;
   photo: ImageSource | null;
+  /** PR 223: the day it was published (YYYY-MM-DD), for search engines; absent where nobody needs it. */
+  publishedAt?: string | null;
 }
 
 export interface PdpReviewsView {
@@ -83,4 +86,17 @@ export function pdpReviewsView(rows: readonly PdpReviewRow[], agg: { average: nu
 export function ratingLineOf(view: PdpReviewsView | null, set: PdpReviewsSettings): { average: number; total: number } | null {
   if (!view || !set.ratingLine || view.total < 1) return null;
   return { average: view.average, total: view.total };
+}
+
+/**
+ * S11 · PR 223: what search engines are told about the reviews, exactly what the reviews block shows — the summary
+ * box's average and count, and the cards drawn (the name each shows). No block on the page: nothing (null).
+ */
+export function ldReviewsOf(view: PdpReviewsView | null): LdReviews | null {
+  if (!view || view.total < 1) return null;
+  return {
+    average: view.average,
+    total: view.total,
+    reviews: view.cards.map((c) => ({ rating: c.rating, author: c.name, title: c.title, body: c.body, published: c.publishedAt ?? null })),
+  };
 }

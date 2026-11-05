@@ -35,7 +35,7 @@ import { careList, detailBlocks, fabricLine } from '@/lib/shop/pdp-details';
 import { finderOffered, FIT_COOKIE, readFit, sizeFor } from '@/lib/shop/pdp-finder';
 import { payWords } from '@/lib/shop/pdp-price';
 import { readRecent, RECENT_COOKIE } from '@/lib/shop/pdp-rows';
-import { pdpReviewsView, ratingLineOf } from '@/lib/shop/pdp-reviews';
+import { ldReviewsOf, pdpReviewsView, ratingLineOf } from '@/lib/shop/pdp-reviews';
 import { productReviews } from '@/lib/shop/pdp-reviews-load';
 import { ruleCells } from '@/lib/shop/pdp-rules';
 import { TEMPLATE_QUERY, templateFor } from '@/lib/shop/pdp-template';
@@ -255,7 +255,8 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   // ---- PR 65 · the reviews block, and the rating line under the title (approved reviews only; none = neither) ----
   const revSet = set['pdp.reviews'];
   const reviewData = revSet.on ? await reviewsFor(c.storeId, m.productId, revSet.max) : { rows: [], average: 0, total: 0 };
-  const ratingLine = ratingLineOf(pdpReviewsView(reviewData.rows, { average: reviewData.average, total: reviewData.total }, revSet), revSet);
+  const reviewView = pdpReviewsView(reviewData.rows, { average: reviewData.average, total: reviewData.total }, revSet);
+  const ratingLine = ratingLineOf(reviewView, revSet);
 
   // ---- PR 64 · details ----
   const fabric = fabricLine(lang === 'bn' ? (data.fabricBn ?? data.fabricEn) : data.fabricEn, data.gsm, (n) => t('pdp.details.gsm', { n: c.num(n) }));
@@ -441,6 +442,8 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
               wasPrice: sd.wasPrice,
               // PR 527: archived for good is "discontinued", only sold out is "out of stock"
               retired: retiredForGood(data.reason),
+              // PR 223: the rating and reviews only from the real approved rows the reviews block shows (off as shipped)
+              reviews: sd.reviews ? ldReviewsOf(reviewView) : null,
             })
           : null,
       ]}
