@@ -411,6 +411,11 @@ export const PERMISSIONS = {
   // Nothing here sends a list to an ad platform (PR 263 / 264), moves money or changes an order.
   'marketing.audiences.read': { group: 'marketing' },
   'marketing.audiences.write': { group: 'marketing' },
+  // S13 · PR 268 (CLAUDE.md rule 6) — Marketing › Ad platforms' campaign controls: pause a platform campaign or lower its
+  // daily budget after a confirm step, and ask to start one again or raise its budget (`marketing.ads.control`); approve
+  // or reject such an increase (`marketing.ads.approve`, the owner). Nothing raises spend without that approval.
+  'marketing.ads.control': { group: 'marketing' },
+  'marketing.ads.approve': { group: 'marketing' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

@@ -25,3 +25,12 @@
 .adm2 .adp-rule-limit .a2-btn,.adm2 .adp-add .a2-btn{min-height:44px}
 .adm2 .adp-add{display:grid;gap:8px;margin-top:8px}
 @media (min-width:768px){.adm2 .adp-add{grid-template-columns:repeat(3,minmax(0,1fr))}.adm2 .adp-add .adp-read{grid-column:1/-1}}
+/* PR 268 — the campaign "Change" fold, its confirm box and the latest-changes list. */
+.adm2 .adp-ctl{width:100%;min-width:0}
+@media (min-width:768px){.adm2 .adp-ctl{min-width:200px}}
+.adm2 .adp-ctl>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--ink2)}
+.adm2 .adp-ctl-body{display:grid;gap:8px;margin-top:8px}
+.adm2 .adp-ctl-body .a2-btn{min-height:44px}
+.adm2 .adp-confirm{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.adm2 .adp-confirm p{margin:0}
+.adm2 .adp-log{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}

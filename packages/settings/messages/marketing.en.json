@@ -28,6 +28,10 @@
     "costAlerts": {
       "label": "Ad cost alerts",
       "help": "Off as it ships. On, right after each daily spend import the shop checks your alert rules (cost per order or per delivered order over your limit) over the last few days and sends the crossed ones to your Telegram. An alert never pauses a campaign or changes a budget."
+    },
+    "campaignControl": {
+      "label": "Campaign controls (pause and budget)",
+      "help": "Off as it ships. On, Marketing › Ad platforms shows pause and budget controls for each platform campaign: pausing or lowering the daily budget happens after a confirm step; starting again or raising the budget waits for your approval and nothing changes until you approve. Until a platform is connected for changes, every change goes to its practice copy."
     }
   }
 }
