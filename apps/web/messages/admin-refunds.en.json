@@ -225,7 +225,8 @@
         "MANUAL_DEBIT": "Taken by hand",
         "OFFER": "Offer credit",
         "CORRECTION": "Correction",
-        "POINTS": "Points turned in"
+        "POINTS": "Points turned in",
+        "REFERRAL": "Invite reward"
       },
       "by": "by {name}",
       "byShop": "by the shop itself",

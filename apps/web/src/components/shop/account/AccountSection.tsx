@@ -4,21 +4,26 @@
 // PR 132: the offer banner on top of My orders; For you lists the same offers as cards.
 // S14 · PR 301: Profile's Birthday card while the owner's `customers.birthday` is on.
 // S18 · PR 623: Profile's "Your data" card (a copy or erasure of his data) while `privacy.customerRequests` is on.
+// S13 · PR 273: For you's "Invite a friend" card (his invite code) while the referral programme runs.
 // S05 · PR 150: My orders is the whole history — a page of one group at a time, from the address's `show` and `page`.
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { isOrderShow, liveOffers, offerBanner, orderHistory, pageOf, profileView, walletView } from '@extas/accounts';
 import type { AccountTab } from '@extas/settings';
 import { customerPrivacyState, pointsOf, PRIVACY_NOTE_MAX } from '@extas/customers';
+import { myInvite } from '@extas/rules';
 import { accountDeps } from '@/lib/shop/account';
 import { accountPage, accountWords } from '@/lib/shop/account-view';
 import { newestCards } from '@/lib/shop/catalogue';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
+import { fill } from '@/lib/shop/dict';
 import { hrefIn, twinHref } from '@/lib/shop/lang';
+import { ROUTES } from '@/lib/shop/routes';
 import { AccountShell, LoginPrompt } from './AccountShell';
 import { ForYouTab, OrdersTab, RewardsTab, WalletTab } from './AccountTabs';
 import { initialsOf } from '@extas/accounts/pure';
 import { PhotoCard } from './AccountPhoto';
+import { InviteCard } from './InviteCard';
 import { OfferBanner, OfferCards } from './OfferBanner';
 import { BirthdayForm, DetailsForm, PasswordForm, Preferences } from './ProfileForms';
 import { PrivacyCard } from './PrivacyCard';
@@ -55,7 +60,22 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
         s['account.offerBanner'].enabled ? liveOffers(deps, who) : Promise.resolve([]),
         s['account.lists'].newIn > 0 ? newestCards(c.storeId, s['account.lists'].newIn, 'newest') : Promise.resolve([]),
       ]);
-      body = <ForYouTab c={c} newIn={newIn} offers={offers.length ? <OfferCards c={c} offers={offers} /> : null} />;
+      // S13 · PR 273: his invite code while the referral programme runs (signed in only: this page is)
+      const invite = await myInvite({ db: deps.db, settings: deps.settings }, who).catch(() => null);
+      let card: ReactNode = null;
+      if (invite) {
+        const words = accountWords(c, ['invite.']);
+        const [programme, dist] = await Promise.all([deps.settings.value('referrals.programme', { storeId: c.storeId }), deps.settings.value('rules.coupons.distribution', { storeId: c.storeId })]);
+        const reward = programme.rewardMinor === null ? '' : fill(words['invite.reward'] ?? '', { amount: c.money(programme.rewardMinor) });
+        const usedLine = invite.used > 0 ? fill(words['invite.used'] ?? '', { n: c.num(invite.used) }) : null;
+        card = <InviteCard code={invite.code} sub={fill(words['invite.sub'] ?? '', { reward })} usedLine={usedLine} path={dist.links ? `${hrefIn(c.lang, ROUTES.bag)}?code=${encodeURIComponent(invite.code)}` : hrefIn(c.lang, '/')} words={words} />;
+      }
+      body = (
+        <>
+          {card}
+          <ForYouTab c={c} newIn={newIn} offers={offers.length ? <OfferCards c={c} offers={offers} /> : null} />
+        </>
+      );
       break;
     }
     case 'rewards':

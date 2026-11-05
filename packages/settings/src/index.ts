@@ -162,6 +162,8 @@ export * from './registry-ads-growth';
 export * from './registry-ads-brief';
 // S13 · PR 272 — how coupon codes reach people: links and single-use batches (registry-coupons-distribution.ts, version 177).
 export * from './registry-coupons-distribution';
+// S13 · PR 273 — the referral programme: switch, window, the friend's rule, the sharer's reward (registry-referrals.ts, version 178).
+export * from './registry-referrals';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

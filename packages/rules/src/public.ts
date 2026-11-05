@@ -14,6 +14,7 @@
 //   liveNotices      the notices and pop-ups for one place, filled in, with the pop-up limits
 //   policyFillerFor  PR 384: fills the owner's policy texts from the live rules (`{rule-key.param}`)
 import { checkCoupon, type CouponCheck } from './coupons-service';
+import { checkReferral } from './referrals-service';
 import { cached } from './cache';
 import { nowOf, setting, textContext, type RulesDeps } from './context';
 import { cachedActiveRules, langContext, othersByKey } from './core';
@@ -154,11 +155,13 @@ export async function quoteCart(
     return [{ id: l.id ?? `line-${i}`, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: l.quantity, productId: v.productId, categoryIds: f.categoryIds, collectionIds: f.collectionIds, freeDelivery: f.freeDelivery, comboId: l.comboId ?? null, floorMinor: floorMinorOf(v.shopPriceMinor, floorPercent, roundingStepMinor) }];
   });
   const redeemed = input.redeemedCoupon ?? null;
-  const coupon: CouponCheck | null = redeemed
+  let coupon: CouponCheck | null = redeemed
     ? { ok: true, reason: null, couponId: redeemed.couponId, ruleId: redeemed.ruleId, code: redeemed.code }
     : input.couponCode?.trim()
       ? await checkCoupon(deps.db, { storeId: input.storeId, code: input.couponCode, phone: input.phone, customerId: input.customerId, now })
       : null;
+  // PR 273: no such coupon — a friend's invite code unlocks the programme's friend rule on a first order
+  if (coupon && !coupon.ok && coupon.reason === 'UNKNOWN' && input.couponCode) coupon = (await checkReferral(deps, { storeId: input.storeId, code: input.couponCode, phone: input.phone, customerId: input.customerId })) ?? coupon;
   const clock = clockFacts(now, timeZone);
   const q = quote(
     rules,

@@ -19,6 +19,7 @@ import {
   createCoupon,
   createCouponBatch,
   listCoupons,
+  myInvite,
   setCouponBatchEnabled,
   updateCouponLimits,
   createNotice,
@@ -567,6 +568,56 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
       await setCouponBatchEnabled(deps(), as(owner), b.batchId, { enabled: false });
     } finally {
       overrides.delete('rules.coupons.distribution');
+    }
+  });
+
+  it('PR 273, SIM-F-009 referral half: off as shipped; on, a signed-in customer gets one invite code and a guest friend gets the friend offer on his first order; own code, a repeat buyer and days outside the window are refused', async () => {
+    const friend = await createRule(deps(), as(writer), { templateId: 'coupon', key: 'friend-offer' });
+    await saveDraft(deps(), as(writer), friend.id, { content: withValues(friend.live!, { amountOff: 5000, minOrder: 100 }, { status: 'ACTIVE' }) });
+    await publishRule(deps(), as(owner), friend.id);
+    const sharer = await t.prisma.customer.create({ data: { storeId: A, phone: '+8801711000273', name: 'Sample sharer' } });
+    expect(await myInvite(deps(), { storeId: A, customerId: sharer.id })).toBeNull();
+    const on = { on: true, startsOn: null, endsOn: null, friendRuleKey: 'friend-offer', rewardMinor: null, rewardsMax: null, codeLength: 6 };
+    overrides.set('referrals.programme', on);
+    try {
+      const mine = (await myInvite(deps(), { storeId: A, customerId: sharer.id }))!;
+      expect(mine).toMatchObject({ used: 0, rewarded: 0 });
+      expect(mine.code).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
+      expect((await myInvite(deps(), { storeId: A, customerId: sharer.id }))!.code).toBe(mine.code);
+      const bag = (who: { phone?: string; customerId?: string }) => quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 1 }], couponCode: mine.code.toLowerCase(), ...who });
+      // a guest friend (no account, number not known yet, then known): the friend offer, the code kept as his invite
+      const fresh = '+8801711000274';
+      for (const who of [{}, { phone: fresh }]) {
+        const q = await bag(who);
+        expect(q.coupon).toMatchObject({ ok: true, ruleId: friend.id, couponId: null, code: mine.code });
+        expect(q.coupon!.referralId).toBeTruthy();
+        expect(q.applied.some((x) => x.rule.id === friend.id && (x.amountMinor ?? 0) >= 5000)).toBe(true);
+      }
+      // his own code, by account or by his number; a number that ordered before
+      expect((await bag({ customerId: sharer.id })).coupon).toMatchObject({ ok: false, reason: 'REFERRAL_OWN' });
+      expect((await bag({ phone: sharer.phone! })).coupon).toMatchObject({ ok: false, reason: 'REFERRAL_OWN' });
+      const placed = (num: string, phone: string, status: 'DELIVERED' | 'PLACED') =>
+        t.prisma.order.create({ data: { storeId: A, number: num, source: 'WEBSITE', currency: 'BDT', placedAt: clock, paymentMethod: 'COD', subtotalMinor: 100000, totalMinor: 100000, idempotencyKey: `idem-${num}`, phone, status } });
+      await placed('S-2731', '+8801711000275', 'DELIVERED');
+      expect((await bag({ phone: '+8801711000275' })).coupon).toMatchObject({ ok: false, reason: 'FIRST_ORDER_ONLY' });
+      // placing the order records one use (a replay returns it); his next order cannot use it again
+      const first = await placed('S-2732', fresh, 'PLACED');
+      const use = { storeId: A, code: mine.code, orderId: first.id, phone: fresh, discountMinor: 5000, now: clock };
+      expect((await t.prisma.$transaction((tx) => redeemCoupon(tx, use))).replayed).toBe(false);
+      expect((await t.prisma.$transaction((tx) => redeemCoupon(tx, use))).replayed).toBe(true);
+      expect(await t.prisma.referralUse.findMany({ where: { orderId: first.id } })).toEqual([expect.objectContaining({ status: 'PENDING', phone: fresh, rewardMinor: null })]);
+      expect((await myInvite(deps(), { storeId: A, customerId: sharer.id }))!.used).toBe(1);
+      const second = await placed('S-2733', fresh, 'PLACED');
+      expect(await code(t.prisma.$transaction((tx) => redeemCoupon(tx, { ...use, orderId: second.id })))).toBe('COUPON_NOT_USABLE');
+      expect(await code(t.prisma.$transaction((tx) => redeemCoupon(tx, { ...use, code: 'NOSUCH', orderId: second.id })))).toBe('COUPON_NOT_USABLE');
+      // not running: before its first day, or with no friend rule — the code is not taken and he sees no invite card
+      for (const off of [{ ...on, startsOn: '2099-01-01' }, { ...on, endsOn: '2026-10-19' }, { ...on, friendRuleKey: '' }, { ...on, on: false }]) {
+        overrides.set('referrals.programme', off);
+        expect((await bag({ phone: '+8801711000276' })).coupon).toMatchObject({ ok: false, reason: 'UNKNOWN' });
+        expect(await myInvite(deps(), { storeId: A, customerId: sharer.id })).toBeNull();
+      }
+    } finally {
+      overrides.delete('referrals.programme');
     }
   });
 

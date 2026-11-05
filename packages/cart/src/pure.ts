@@ -215,7 +215,8 @@ export type CodeState =
   | { state: 'refused'; code: string; reason: CodeRefusal };
 
 // PR 213 follow-up (SIM-F-050): FIRST_ORDER_ONLY, a first-order code for a number that ordered before
-export type CodeRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'MEMBERS_ONLY' | 'GUESTS_ONLY' | 'FIRST_ORDER_ONLY' | 'RULE_NOT_LIVE' | 'REFERRAL';
+// PR 273: REFERRAL now means an invite code while the referral programme is not running; REFERRAL_OWN, his own code
+export type CodeRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'MEMBERS_ONLY' | 'GUESTS_ONLY' | 'FIRST_ORDER_ONLY' | 'RULE_NOT_LIVE' | 'REFERRAL' | 'REFERRAL_OWN';
 
 /** The quote's facts about the code, in the shape the pure rule reads. */
 export interface CodeFacts {

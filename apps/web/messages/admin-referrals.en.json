@@ -1,0 +1,81 @@
+{
+  "ref": {
+    "metaTitle": "Referrals",
+    "title": "Referrals",
+    "sub": "A customer shares his invite code; a friend gets your code offer on his first order, and the customer may get a wallet reward once that order is delivered.",
+    "note": "Off as it ships. The friend's amount is the Smart Rule you pick (an offer that asks for a code); the reward is the amount you set below. Nothing is paid until a person with the wallet permission gives it after a confirm.",
+    "rulesLink": "Make or change the friend offer in Smart Rules",
+    "liveTag": "Running",
+    "notLiveTag": "Not running",
+    "live": "Signed-in customers see their invite code under My account › For you.",
+    "notLive": "No invite card is shown and invite codes are not taken. Switch it on, pick the friend offer (a live rule) and check the days.",
+    "totals": {
+      "h": "What it brought",
+      "codes": "Invite codes",
+      "uses": "Friends' orders",
+      "delivered": "Delivered",
+      "rewarded": "Rewards given",
+      "rewardedMoney": "Paid into wallets"
+    },
+    "list": {
+      "h": "Friends' orders",
+      "empty": "No order has used an invite code yet.",
+      "order": "Order #{number}",
+      "noOrder": "Order not found",
+      "by": "Code {code} · shared by {name}",
+      "unknown": "a customer",
+      "reward": "Reward {amount}",
+      "givenOn": "Reward {amount} given {when}",
+      "block": {
+        "NO_REWARD": "No reward is set",
+        "NOT_DELIVERED": "Reward after delivery",
+        "CAP": "This customer has had the most rewards"
+      }
+    },
+    "give": "Give reward",
+    "confirm": "Put {amount} into {name}'s wallet for order #{number}? This cannot be taken back here (a correction is a new wallet entry).",
+    "yes": "Yes, give it",
+    "cancel": "Cancel",
+    "given": "Reward given.",
+    "err": {
+      "INVALID_INPUT": "Check the fields: {fields}",
+      "STALE": "Someone changed this a moment ago. The card shows the latest; try again.",
+      "NOT_FOUND": "This order is not in the list any more.",
+      "CONFIRM_REQUIRED": "Confirm first.",
+      "NO_REWARD": "No reward is set.",
+      "NOT_DELIVERED": "The friend's order is not delivered yet.",
+      "GIVEN": "This reward was already given.",
+      "CAP": "This customer has had the most rewards.",
+      "forbidden": "You do not have permission for this.",
+      "unauthorized": "Sign in again.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    },
+    "card": {
+      "h": "Programme settings",
+      "d": "Changing these changes what customers pay: only the owner (Approve rules) can save.",
+      "readOnly": "Only the owner can change these.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "on": "Referral programme on",
+      "onHelp": "Signed-in customers see their invite code and friends' codes are taken on a first order.",
+      "startsOn": "First day",
+      "startsOnHelp": "Empty = from today.",
+      "endsOn": "Last day",
+      "endsOnHelp": "Empty = no end.",
+      "friendRuleKey": "Friend offer (Smart Rule)",
+      "friendRuleKeyHelp": "A rule whose offer asks for a code. Its amount is what the friend gets. None = codes are not taken.",
+      "noRule": "None",
+      "off": "(not running)",
+      "rewardMinor": "Reward for the customer (taka)",
+      "rewardMinorHelp": "Put into his wallet once the friend's order is delivered, by a person after a confirm. Empty = no reward.",
+      "rewardsMax": "Most rewards per customer",
+      "rewardsMaxHelp": "Empty = no cap.",
+      "codeLength": "Invite code length",
+      "codeLengthHelp": "Letters and digits that cannot be misread."
+    }
+  }
+}
