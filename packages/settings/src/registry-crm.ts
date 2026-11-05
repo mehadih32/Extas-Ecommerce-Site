@@ -73,6 +73,12 @@
 // `verifiedMinDelivered` true deliveries (0 = no mark). Off as shipped, no grade made for him. `goodFrom` (a grade's key,
 // empty = none) lets a grade at or above it count as a good customer for the fraud engine's good-customer override
 // (S06 PR 524), which keeps its own switch `risk.goodCustomer`. A grade never blocks anyone and never changes COD.
+//
+// PR 535 (`customers.legacyImport`, v204): the legacy customer import (Customers › More › Import old customers) — off as
+// shipped; when on, a person holding `customers.import` uploads the old shop's order list (CSV), sees a preview (new
+// people, already here by phone, the same old order twice, bad numbers) and confirms; at most `maxRows` rows in one file
+// (more are refused with the count, never cut). The old orders become history only, never an Order (no stock, no money,
+// no message); nothing already here is overwritten; an import's undo archives, never deletes.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -263,6 +269,10 @@ export const gradesSettingsSchema = z
   .strict();
 export type GradesSettings = z.output<typeof gradesSettingsSchema>;
 
+/** PR 535 — the legacy customer import: off as shipped; the most rows one file may hold. */
+export const legacyImportSettingsSchema = z.object({ enabled: z.boolean(), maxRows: z.int().min(1).max(50_000) }).strict();
+export type LegacyImportSettings = z.output<typeof legacyImportSettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -396,5 +406,15 @@ export const crmSettings = {
     labelKey: 'customers.grades.label',
     helpKey: 'customers.grades.help',
     sortOrder: 320,
+  }),
+  'customers.legacyImport': setting({
+    ...base,
+    version: 204,
+    schema: legacyImportSettingsSchema,
+    default: { enabled: false, maxRows: 5_000 }, // hardcode-ok: registry default (off; the owner's number to change)
+    valueType: 'JSON',
+    labelKey: 'customers.legacyImport.label',
+    helpKey: 'customers.legacyImport.help',
+    sortOrder: 330,
   }),
 };

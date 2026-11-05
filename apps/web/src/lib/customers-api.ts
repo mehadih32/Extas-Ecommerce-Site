@@ -51,6 +51,12 @@
 //   POST  /api/admin/customers/grades/run             "Grade everyone now" (customers.settings; audited; SWITCHED_OFF while off)
 //   POST  /api/admin/customers/grades/:id             {nameEn, nameBn?, criteria, sortOrder} a change (customers.settings; audited)
 //   POST  /api/admin/customers/grades/:id/archive     {archived} archive or restore, never deleted (customers.settings; audited)
+//   GET   /api/admin/customers/import                 PR 535: the legacy import page — switch, limit, imports so far (customers.read)
+//   POST  /api/admin/customers/import/preview         {fileName, csv, mapping?, statuses?, dateOrder?, hints?} the preview;
+//                                                     nothing saved (customers.import; SWITCHED_OFF while off)
+//   POST  /api/admin/customers/import                 the same with {confirm: true}: the import, history only (customers.import;
+//                                                     audited)
+//   POST  /api/admin/customers/import/:id/undo        {reason?} archived, never deleted (customers.import; audited)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -144,6 +150,7 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
   }
   if (a === 'segments') return segmentsRoute(request, deps, m, path.slice(1));
   if (a === 'grades') return gradesRoute(request, deps, m, path.slice(1));
+  if (a === 'import') return importRoute(request, deps, m, path.slice(1));
   if (a === 'settings') {
     if (path.length > 1) return notFound();
     if (m === 'GET') return handle(request, deps, 'customers.read', async (x) => ({ screen: await cu.crmSettingsScreen(x.deps, x.who) }));
@@ -234,6 +241,20 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
   }
   if (a) return badId('customerId');
   return notFound();
+}
+
+/** PR 535 — the legacy import's routes (`path` after /import). */
+function importRoute(request: Request, deps: AdminDeps | null, m: string, path: string[]): Promise<Response> {
+  const [id, sub, ...rest] = path;
+  if (rest.length) return notFound();
+  if (!id) {
+    if (m === 'GET') return handle(request, deps, 'customers.read', async (x) => ({ screen: await cu.legacyImportScreen(x.deps, x.who) }));
+    if (m === 'POST') return handle(request, deps, 'customers.import', async (x) => ({ result: await cu.runLegacyImport(x.deps, x.who, await body(request)) }), 201);
+    return notAllowed();
+  }
+  if (id === 'preview' && !sub) return m === 'POST' ? handle(request, deps, 'customers.import', async (x) => ({ preview: await cu.previewLegacyImport(x.deps, x.who, await body(request)) })) : notAllowed();
+  if (!isUuid(id) || sub !== 'undo') return notFound();
+  return m === 'POST' ? handle(request, deps, 'customers.import', async (x) => ({ result: await cu.undoLegacyImport(x.deps, x.who, id, await body(request)) })) : notAllowed();
 }
 
 /** PR 534 — the grades' routes (`path` after /grades). */

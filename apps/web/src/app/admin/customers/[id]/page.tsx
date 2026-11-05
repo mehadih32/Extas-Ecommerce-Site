@@ -7,6 +7,7 @@
 // order. A merged profile's address opens its survivor's page. "Merge with…" (with `customers.merge`) finds the other
 // profile by phone and opens both side by side in To review. Reading needs `customers.read`; every open is logged.
 // PR 534: beside his number, the grade and verified mark his history earns while the owner's grading is on.
+// PR 535: "Old shop orders" — the old orders a legacy import brought in (history only, never in Sales), when he has any.
 // Gate F-054 (follow-up of PR 171): with `payments.view` a Wallet tab — each profile's balance and ledger (who wrote each
 // line, its order, the balance after), a person's own credit or debit with its reason (`payments.wallet`, only while the
 // owner's `payments.wallet.manual` is on, within its largest line), one line put right with a new line the other way,
@@ -177,6 +178,8 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   ]);
   // PR 534: the grade and verified mark his history earns, beside his number (only while the owner's grading is on)
   const mark = cu.customerMark(await cu.customerGrading(cd, MOTHER_STORE_ID), sv.history);
+  // PR 535: the old shop's orders brought in by a legacy import (history only)
+  const legacy = await cu.legacyHistory(cd, who, [sv.id, ...sv.members.map((m) => m.id)]);
   const money = moneyOf(currency, view.locale);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
   const stamp = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium', timeStyle: 'short' });
@@ -239,6 +242,27 @@ export default async function CustomerPage({ params, searchParams }: { params: P
       </div>
     </Card>
   );
+
+  const legacyCard = legacy ? (
+    <Card title={t(d, 'cus.profile.legacy.title')} testId="cus-legacy">
+      <p className="a2-xs a2-mute">
+        {legacy.imported ? <span className="a2-pill line">{t(d, 'cus.profile.legacy.imported')}</span> : null} {t(d, 'cus.profile.legacy.sub')}
+      </p>
+      <div className="a2-hist a2-mt6">
+        <div>
+          <b>{n(legacy.orders)}</b>
+          <span>{t(d, 'cus.profile.legacy.orders')}</span>
+        </div>
+        {(['delivered', 'returned', 'cancelled', 'other'] as const).map((k) => (
+          <div key={k}>
+            <b>{n(legacy.outcomes[k])}</b>
+            <span>{t(d, `cus.profile.legacy.${k}`)}</span>
+          </div>
+        ))}
+      </div>
+      {legacy.firstAt && legacy.lastAt ? <p className="a2-xs a2-mute a2-mt6">{t(d, 'cus.profile.legacy.span', { first: when.format(legacy.firstAt), last: when.format(legacy.lastAt) })}</p> : null}
+    </Card>
+  ) : null;
 
   const numbers = (
     <Card title={t(d, 'cus.profile.numbers.title')} testId="cus-numbers">
@@ -573,6 +597,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             <>
               {kpis}
               {hist}
+              {legacyCard}
               {numbers}
               {profileCard}
               {orderCard(false)}

@@ -206,6 +206,27 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect((await raw(owner, undefined, 'GET')).status).toBe(405);
   });
 
+  it('PR 535: the legacy import — off until Customer settings turns it on; a reader sees the page, may not import; preview, import, undo', async () => {
+    const csv = 'Name,Phone,Status\nOld Shop Buyer,01700005359,Delivered\n'; // hardcode-ok: made-up test file
+    const off = await api('POST', 'import/preview', { body: { fileName: 'old.csv', csv } });
+    expect(off.status).toBe(403);
+    expect(off.body).toMatchObject({ ok: false, error: 'SWITCHED_OFF' });
+    expect((await api('PUT', 'settings', { body: { key: 'customers.legacyImport', value: { enabled: true, maxRows: 5_000 } } })).status).toBe(200);
+    expect((await api('POST', 'import/preview', { cookie: reader, body: { fileName: 'old.csv', csv } })).status).toBe(403);
+    const p = await api('POST', 'import/preview', { body: { fileName: 'old.csv', csv, statuses: { Delivered: 'delivered' } } });
+    expect(p.body.preview.counts).toMatchObject({ toImport: 1, newPeople: 1 });
+    expect(await f.t.prisma.legacyImport.count()).toBe(0);
+    const run = await api('POST', 'import', { body: { fileName: 'old.csv', csv, statuses: { Delivered: 'delivered' }, confirm: true } });
+    expect(run.status).toBe(201);
+    const screen = await api('GET', 'import', { cookie: reader });
+    expect(screen.body.screen.canImport).toBe(false);
+    const id = screen.body.screen.imports[0].id as string;
+    expect((await api('POST', `import/${id}/undo`, { cookie: reader })).status).toBe(403);
+    expect((await api('POST', `import/${id}/undo`)).body).toMatchObject({ ok: true, result: { records: 1, profilesArchived: 1 } });
+    expect((await api('GET', `import/${id}/undo`)).status).toBe(405);
+    expect((await api('POST', 'import/not-an-id/undo')).status).toBe(404);
+  });
+
   it('PR 300: Messages › Campaigns — off until its settings turn it on; a win-back draft; scheduling needs the send key', async () => {
     const camp = async (method: string, path: string, opts: { body?: unknown; cookie?: string } = {}) => {
       const parts = path.split('/').filter(Boolean);

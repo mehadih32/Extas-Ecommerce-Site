@@ -1,0 +1,13 @@
+/* S14 · PR 535 — Customers › Import old customers: the column and status choices in a grid (one column on a phone), one
+   row per sample line or past import (wrapping on a phone), the confirm step set apart; the shell's tokens only. */
+.adm2 .a2-imp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.adm2 .a2-imp-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--ln2)}
+.adm2 .a2-imp-row:last-child{border-bottom:0}
+.adm2 .a2-imp-name{overflow-wrap:anywhere}
+.adm2 .a2-imp-ask{display:block;border-top:1px solid var(--ln2);padding-top:10px}
+.adm2 .a2-imp-file{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
+.adm2 label.a2-btn{cursor:pointer}
+.adm2 label.a2-btn[aria-disabled]{opacity:.6;pointer-events:none}
+@media (max-width:767px){
+  .adm2 .a2-imp-grid{grid-template-columns:minmax(0,1fr)}
+}

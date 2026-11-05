@@ -52,6 +52,8 @@
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 // PR 534: customer grading (grades.ts) — the owner's own grades and a verified mark from true deliveries, shown to the
 // team, written on each profile by the daily run for Marketing › Audiences; never blocks, never changes COD; off as shipped.
+// PR 535: the legacy customer import (legacy-csv.ts, legacy-import.ts) — the old shop's order list previewed, then brought
+// in as history only (never an order, nothing sent, nothing here overwritten); an import's undo archives, never deletes.
 export * from './access';
 export * from './chat-context';
 export * from './context';
@@ -67,6 +69,8 @@ export * from './journey';
 export * from './campaign-writer';
 export * from './email-marketing';
 export * from './journeys';
+export * from './legacy-csv';
+export * from './legacy-import';
 export * from './list';
 export * from './merge';
 export * from './notes';
