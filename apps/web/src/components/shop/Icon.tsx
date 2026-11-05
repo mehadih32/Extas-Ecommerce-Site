@@ -37,6 +37,18 @@ export function WaGlyph({ size = 22 }: { size?: number }) {
   );
 }
 
+const MS_MARK =
+  'M12 2C6.36 2 2 6.13 2 11.7c0 2.91 1.19 5.44 3.14 7.17.16.14.26.35.27.57l.05 1.78a.8.8 0 0 0 1.12.71l1.98-.87a.8.8 0 0 1 .54-.04c.91.25 1.87.38 2.9.38 5.64 0 10-4.13 10-9.7C22 6.13 17.64 2 12 2Zm6 7.46-2.93 4.66a1.5 1.5 0 0 1-2.17.4l-2.34-1.75a.6.6 0 0 0-.72 0l-3.16 2.4c-.42.32-.97-.18-.69-.63l2.94-4.66a1.5 1.5 0 0 1 2.17-.4l2.34 1.75a.6.6 0 0 0 .72 0l3.16-2.4c.42-.32.97.18.69.63Z';
+
+/** PR 624: the Messenger mark (a bubble with the lightning stroke knocked out), in the text colour. */
+export function MessengerGlyph({ size = 22 }: { size?: number }) {
+  return (
+    <svg className="ms-glyph" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path fill="currentColor" d={MS_MARK} />
+    </svg>
+  );
+}
+
 /** V12.2 (Note 54 #2, 98c-n54.js N54_SOC): each network's own filled mark, 24 × 24, in the text colour. */
 const SOCIAL_MARKS = {
   facebook: 'M13.6 21.5v-8.2h2.8l.4-3.3h-3.2V7.9c0-.9.3-1.6 1.6-1.6h1.7V3.4a22 22 0 0 0-2.5-.1c-2.5 0-4.2 1.5-4.2 4.3V10H7.5v3.3h2.7v8.2Z',

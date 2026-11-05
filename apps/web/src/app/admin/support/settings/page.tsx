@@ -26,11 +26,14 @@
 // words) and the "Link safety" card (off; trusted sites, bare number addresses, the shortener, ending and file lists).
 // PR 427: the "Who is writing" card (off as it ships) — the number from WhatsApp or the chat's words, its customer, one
 // person across channels.
+// PR 624 (CN-034): the "Messenger button on the shop" card (off as it ships; where it shows, the ref, counting taps, the
+// words), the "Facebook Page for Messenger" card (owner data, empty) and the last 30 days' taps on the shop's support
+// buttons per channel and place (numbers only).
 // Optional behaviour ships off. Nothing here moves money or changes an order.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { DESK_DAYS, ESCALATION_BOUNDS, ESCALATION_LANGS, ESCALATION_OUTSIDE_HOURS, ESCALATION_WORDS_MAX, LINK_LIST_MAX, SUPPORT_APP_EVENTS, SUPPORT_APP_NAME_MAX, SUPPORT_APP_PREVIEWS } from '@extas/settings';
+import { DESK_DAYS, ESCALATION_BOUNDS, ESCALATION_LANGS, ESCALATION_OUTSIDE_HOURS, ESCALATION_WORDS_MAX, LINK_LIST_MAX, SUPPORT_APP_EVENTS, SUPPORT_APP_NAME_MAX, SUPPORT_APP_PREVIEWS, MESSENGER_PLACES, MESSENGER_WORDS_MAX } from '@extas/settings';
 import * as sp from '@extas/support';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
@@ -68,7 +71,7 @@ export default async function SupportSettingsPage() {
       </div>
     );
   const who: sp.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
-  const [cards, channels] = await Promise.all([sp.supportSettingsView({ db: access.deps.db, settings: access.deps.resolver }, who), sp.supportChannels({ db: access.deps.db, settings: access.deps.resolver }, who)]);
+  const [cards, channels, taps] = await Promise.all([sp.supportSettingsView({ db: access.deps.db, settings: access.deps.resolver }, who), sp.supportChannels({ db: access.deps.db, settings: access.deps.resolver }, who), sp.supportTaps({ db: access.deps.db, settings: access.deps.resolver }, who)]);
   const canEdit = access.guard.permissions?.has('support.settings') ?? false;
   const s = (k: string) => t(d, `sup.set.${k}`);
   const texts = (card: string): FieldsCardTexts => ({
@@ -207,6 +210,18 @@ export default async function SupportSettingsPage() {
     { kind: 'switch', path: 'fromText', label: s('identity.fromText'), help: s('identity.fromTextHelp') },
     { kind: 'switch', path: 'autoLink', label: s('identity.autoLink'), help: s('identity.autoLinkHelp') },
   ];
+  // PR 624: the Messenger button (off as it ships) and the Page it opens (owner data)
+  const messenger: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('messenger.enabled'), help: s('messenger.enabledHelp') },
+    { kind: 'checks', path: 'places', label: s('messenger.places'), options: MESSENGER_PLACES.map((v) => ({ value: v, label: s(`messenger.place.${v}`) })) },
+    { kind: 'switch', path: 'useFacebookLink', label: s('messenger.useFacebookLink'), help: s('messenger.useFacebookLinkHelp') },
+    { kind: 'switch', path: 'sendRef', label: s('messenger.sendRef'), help: s('messenger.sendRefHelp') },
+    { kind: 'switch', path: 'countTaps', label: s('messenger.countTaps'), help: s('messenger.countTapsHelp') },
+    { kind: 'pair', path: 'label', label: { en: s('messenger.labelEn'), bn: s('messenger.labelBn') }, help: s('messenger.wordsHelp'), max: MESSENGER_WORDS_MAX.label, rows: 1 },
+    { kind: 'pair', path: 'hint', label: { en: s('messenger.hintEn'), bn: s('messenger.hintBn') }, help: s('messenger.wordsHelp'), max: MESSENGER_WORDS_MAX.hint, rows: 2 },
+  ];
+  const messengerPage: FieldsCardField[] = [{ kind: 'text', path: 'page', label: s('messengerPage.page'), help: s('messengerPage.pageHelp'), max: 200 }];
+  const tapCh = sp.TAP_CHANNELS;
   const windowFields: FieldsCardField[] = [
     { kind: 'number', path: 'replyWindowHours', label: s('window.replyWindowHours'), min: 1, max: 168, help: s('window.replyWindowHoursHelp') },
     { kind: 'number', path: 'webhookMaxBodyKb', label: s('window.webhookMaxBodyKb'), min: 16, max: 2048 },
@@ -243,6 +258,49 @@ export default async function SupportSettingsPage() {
       <FieldsCard url={API} screen={screen('support.deskHours')} fields={deskHours} texts={texts('deskHours')} canEdit={canEdit} testId="support-set-desk" />
       <FieldsCard url={API} screen={screen('support.escalation')} fields={escalation} texts={texts('escalation')} canEdit={canEdit} testId="support-set-escalation" />
       <FieldsCard url={API} screen={screen('support.linkSafety')} fields={linkSafety} texts={texts('linkSafety')} canEdit={canEdit} testId="support-set-links" />
+      <FieldsCard url={API} screen={screen('support.messengerButton')} fields={messenger} texts={texts('messenger')} canEdit={canEdit} testId="support-set-messenger" />
+      <FieldsCard url={API} screen={screen('contact.messenger')} fields={messengerPage} texts={texts('messengerPage')} canEdit={canEdit} testId="support-set-messenger-page" />
+      <section className="a2-card a2-mt12" data-testid="support-set-taps">
+        <h3 className="a2-h4">{s('taps.h')}</h3>
+        <p className="a2-xs a2-mute a2-mt6">{s('taps.d').replace('{days}', String(taps.days)).replace('{from}', taps.from).replace('{to}', taps.to)}</p>
+        {!taps.counting ? <p className="a2-xs a2-mute a2-mt6">{s('taps.off')}</p> : null}
+        {taps.total.total ? (
+          <div className="a2-tblw a2-mt12">
+            <table className="a2-tbl" data-testid="support-taps-table">
+              <thead>
+                <tr>
+                  <th>{s('taps.place')}</th>
+                  {tapCh.map((k) => (
+                    <th key={k} className="r">
+                      {s(`taps.ch.${k}`)}
+                    </th>
+                  ))}
+                  <th className="r">{s('taps.total')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...taps.byPlace.map((r) => ({ key: r.place, name: s(`taps.where.${r.place}`), r })), { key: 'all', name: s('taps.total'), r: taps.total }].map(({ key, name, r }) => (
+                  <tr key={key}>
+                    <td className="a2-tdh">
+                      <b>{name}</b>
+                    </td>
+                    {tapCh.map((k) => (
+                      <td key={k} className="r" data-l={s(`taps.ch.${k}`)}>
+                        {r[k]}
+                      </td>
+                    ))}
+                    <td className="r" data-l={s('taps.total')}>
+                      {r.total}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="a2-xs a2-mute a2-mt6">{s('taps.none')}</p>
+        )}
+      </section>
       <p className="a2-xs a2-mute a2-mt12" data-testid="support-set-phones">{s('phones')}</p>
       <details className="a2-card a2-mt12" data-testid="support-set-more">
         <summary className="a2-h4">{s('more')}</summary>

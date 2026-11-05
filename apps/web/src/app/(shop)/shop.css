@@ -1065,3 +1065,10 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 .shop .sh-eta-l p { margin: 0; }
 .shop .sh-etawrap { margin-top: 14px; }
 .shop .bg-wrap > .sh-eta { margin-bottom: 16px; }
+
+/* PR 624 (CN-034): the Messenger button — the WhatsApp button's shape, the hint under it on one line that steps down to
+   two only when the words need it; the header icon is the computer's (hide-m). */
+.shop .ms-box { margin-top: 12px; }
+.shop .ms-box .ms-btn { width: 100%; }
+.shop .ms-hint { margin: 6px 0 0; text-align: center; }
+.shop .ms-glyph { flex-shrink: 0; }

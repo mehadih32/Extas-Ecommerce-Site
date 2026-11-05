@@ -114,6 +114,9 @@ export function cleanFileName(name: string | null | undefined): string | null {
 // PR 427 — who is writing: a Bangladeshi mobile number found in a chat's words.
 export * from './identity-pure';
 
+// PR 624 — taps on the shop's support buttons: the channels and places counted.
+export * from './taps-pure';
+
 // ------------------------------------------------------------------------------------------------ PR 429 · products
 
 /**

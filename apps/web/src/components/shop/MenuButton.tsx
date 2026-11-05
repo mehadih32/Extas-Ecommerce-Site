@@ -9,7 +9,7 @@ import type { ShopIcon } from '@extas/settings';
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { MenuRow } from '@/lib/shop/shell-model';
-import { Icon } from './Icon';
+import { Icon, MessengerGlyph } from './Icon';
 
 export interface MenuData {
   title: string;
@@ -21,6 +21,8 @@ export interface MenuData {
   helpTitle: string;
   help: MenuRow[];
   wa: { href: string | null; label: string };
+  /** PR 624: the Messenger button under WhatsApp (the header's, on a phone), or null. */
+  ms?: { href: string; label: string; hint: string } | null;
   hotline: { href: string; label: string } | null;
   hours: string | null;
 }
@@ -178,6 +180,12 @@ export function MenuButton({ label, data, lang }: { label: string; data: MenuDat
                       <a className="btn btn-primary btn-block" href={data.wa.href} target="_blank" rel="noopener">
                         <Icon name="chat" size={17} />
                         {data.wa.label}
+                      </a>
+                    ) : null}
+                    {data.ms ? (
+                      <a className="btn btn-block mt8 ms-btn" href={data.ms.href} target="_blank" rel="noopener" data-testid="mn-ms">
+                        <MessengerGlyph size={17} />
+                        {data.ms.label}
                       </a>
                     ) : null}
                     {data.hotline ? (

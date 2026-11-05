@@ -116,6 +116,8 @@ export * from './registry-support-privacy';
 export * from './registry-support-app';
 // S22 · PR 538 — desk hours, telling the owner when nobody answers, the links customers send (registry-support-escalation.ts, version 188).
 export * from './registry-support-escalation';
+// S22 · PR 624 (CN-034) — the Messenger button on the shop and the store's Page (registry-support-messenger.ts, version 189).
+export * from './registry-support-messenger';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

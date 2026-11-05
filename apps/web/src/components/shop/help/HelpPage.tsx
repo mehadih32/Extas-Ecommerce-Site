@@ -14,6 +14,7 @@ import { ROUTES } from '@/lib/shop/routes';
 import { Icon, WaGlyph } from '../Icon';
 import { contactFormWords } from '@/lib/shop/contact-form-words';
 import { ContactForm } from './ContactForm';
+import { MessengerButton } from '../MessengerButton';
 
 function Blocks({ blocks }: { blocks: TextBlock[] }) {
   return (
@@ -151,6 +152,8 @@ export function HelpPage({ c, slug, data }: { c: ShopContext; slug: HelpSlug; da
           </a>
         </div>
       ) : null}
+      {/* PR 624: the Messenger button (the contact page's own place; nothing while it is off) */}
+      <MessengerButton c={c} place={slug === 'contact' ? 'contact' : 'help'} detail={slug === 'contact' ? null : slug} className="mt16 pg-ms" />
     </div>
   );
 
