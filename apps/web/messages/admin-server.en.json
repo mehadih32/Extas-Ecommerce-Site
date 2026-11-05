@@ -77,7 +77,8 @@
       "money_report_send": "Sending the owner's money report",
       "audiences_refresh": "Refreshing the ad audiences and the refused-parcel list",
       "support_escalate": "Telling the owner when a customer waits with no answer",
-      "ads_spend_import": "Importing each day's ad spend from the ad platforms"
+      "ads_spend_import": "Importing each day's ad spend from the ad platforms",
+      "customers_grades_run": "Working out each customer's grade"
     },
     "workers": {
       "title": "Workers",

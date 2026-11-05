@@ -66,6 +66,10 @@
     "approvalHistory": {
       "label": "Customer history at approval",
       "help": "Off as shipped. When on, Orders › To confirm shows the caller a summary of the customer's earlier orders under the same number before he confirms: orders, true deliveries (a delivery still being checked is not counted), refusals at the door and charge-paid returns with their reasons, returns after delivery, exchanges and cancels. A refusal the shop caused is shown and never counted. It only shows: it never confirms, holds or blocks."
+    },
+    "grades": {
+      "label": "Customer grading",
+      "help": "Off as shipped, with no grade made for you. When on, the team sees each customer's grade — one of your own grades, each with its rule of true deliveries and refusals that were not the shop's fault — as a small mark on the customer list, the customer's page and Orders › To confirm, and a \"Verified\" mark once he has the true deliveries you set (0 = no mark). A customer gets the highest grade (in your order) whose rule he meets. \"Good customer from\": a grade at or above it also counts as a good customer for the fraud check's good-customer override, which has its own switch (Orders › Risk rules › Good customer). A grade is only shown to the team: it never blocks anyone, never holds an order and never changes cash on delivery."
     }
   }
 }

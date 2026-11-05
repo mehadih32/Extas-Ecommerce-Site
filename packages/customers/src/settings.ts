@@ -11,7 +11,7 @@ import { allow, parse, setting, type CustomersDeps, type Who } from './context';
 import { CustomersError } from './errors';
 
 /** The settings the Customer settings page edits, in its order (later CRM PRs add theirs). */
-export const CRM_PAGE_SETTINGS = ['customers.journey', 'customers.aiWriter', 'customers.sendAdvice', 'customers.points', 'customers.export', 'customers.birthday', 'customers.report', 'customers.approvalHistory', 'account.reorder'] as const satisfies readonly Key[];
+export const CRM_PAGE_SETTINGS = ['customers.journey', 'customers.aiWriter', 'customers.sendAdvice', 'customers.points', 'customers.export', 'customers.birthday', 'customers.report', 'customers.approvalHistory', 'customers.grades', 'account.reorder'] as const satisfies readonly Key[];
 
 /** PR 622 — the days the "Buy again" count on this page looks back. */
 export const REORDER_COUNT_DAYS = 30; // hardcode-ok: the window the page's count is labelled with, not a shop rule

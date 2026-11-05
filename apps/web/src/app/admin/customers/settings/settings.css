@@ -6,3 +6,8 @@
 @media (max-width:767px){
   .adm2 .crm-opts{grid-template-columns:minmax(0,1fr)}
 }
+
+/* PR 534 — the owner's grades: one row per grade (its pill, rule and people; Edit and Archive), wrapping on a phone */
+.adm2 .a2-gr-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--ln2)}
+.adm2 .a2-gr-row:last-child{border-bottom:0}
+.adm2 .a2-gr-form{border-top:1px solid var(--ln2);padding-top:12px}

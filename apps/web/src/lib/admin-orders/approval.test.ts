@@ -21,13 +21,14 @@ const h: ApprovalHistoryView = {
   noReason: 0,
   recent: [{ id: '01a16af2-30f0-7462-aab8-719bb3ce51b1', number: 'EX-1001', placedAt: at, outcome: 'chargePaid', reasonKey: 'changed-mind', exchange: true, returned: false }],
   firstAt: at,
+  mark: null,
 };
 
 describe('PR 533 · the customer history card', () => {
   it('has every word in both languages', () => {
     for (const lang of ['en', 'bn'] as const) {
       const d = adminDicts[lang];
-      for (const k of ['title', 'sub', 'noPhone', 'first', 'reasons', 'noReason', 'recent', 'exchange', 'note']) expect(t(d, `orders.appr.${k}`), `${lang} ${k}`).not.toBe(`orders.appr.${k}`);
+      for (const k of ['title', 'sub', 'noPhone', 'first', 'reasons', 'noReason', 'recent', 'exchange', 'note', 'verified']) expect(t(d, `orders.appr.${k}`), `${lang} ${k}`).not.toBe(`orders.appr.${k}`);
       for (const k of Object.keys(ZERO)) expect(t(d, `orders.appr.tile.${k}`), `${lang} tile ${k}`).not.toBe(`orders.appr.tile.${k}`);
       for (const k of APPROVAL_OUTCOMES) expect(t(d, `orders.appr.out.${k}`), `${lang} out ${k}`).not.toBe(`orders.appr.out.${k}`);
     }
@@ -54,5 +55,13 @@ describe('PR 533 · the customer history card', () => {
     expect(c.tiles).toBeNull();
     expect(c.first).toBe(t(adminDicts.en, 'orders.appr.first'));
     expect(approvalCard(view('en'), { ...h, phone: null }, new Map()).sub).toBe(t(adminDicts.en, 'orders.appr.noPhone'));
+  });
+
+  it('PR 534: the grade in the language read and the verified mark, none while grading is off', () => {
+    expect(approvalCard(view('en'), h, new Map())).toMatchObject({ grade: null, verified: null });
+    const marked = { ...h, mark: { grade: { key: 'gold', nameEn: 'Gold', nameBn: 'সোনা' }, verified: true } };
+    expect(approvalCard(view('en'), marked, new Map())).toMatchObject({ grade: 'Gold', verified: t(adminDicts.en, 'orders.appr.verified') });
+    expect(approvalCard(view('bn'), marked, new Map()).grade).toBe('সোনা');
+    expect(approvalCard(view('bn'), { ...marked, mark: { grade: { key: 'new', nameEn: 'New', nameBn: null }, verified: false } }, new Map())).toMatchObject({ grade: 'New', verified: null });
   });
 });

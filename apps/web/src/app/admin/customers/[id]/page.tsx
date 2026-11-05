@@ -6,6 +6,7 @@
 // `payments.view`), "Who looked at this customer" (with `audit.read`) and the note that the address lives only inside an
 // order. A merged profile's address opens its survivor's page. "Merge with…" (with `customers.merge`) finds the other
 // profile by phone and opens both side by side in To review. Reading needs `customers.read`; every open is logged.
+// PR 534: beside his number, the grade and verified mark his history earns while the owner's grading is on.
 // Gate F-054 (follow-up of PR 171): with `payments.view` a Wallet tab — each profile's balance and ledger (who wrote each
 // line, its order, the balance after), a person's own credit or debit with its reason (`payments.wallet`, only while the
 // owner's `payments.wallet.manual` is on, within its largest line), one line put right with a new line the other way,
@@ -28,6 +29,7 @@ import { JourneyCard } from '@/components/admin/customers/JourneyCard';
 import { TagsNotes } from '@/components/admin/customers/TagsNotes';
 import { initials } from '@/components/admin/customers/PairCard';
 import { formatMoney, formatNumber, moneyOf, type Money } from '@/components/admin/products/model';
+import { GradePill } from '@/components/admin/customers/GradePill';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
@@ -173,6 +175,8 @@ export default async function CustomerPage({ params, searchParams }: { params: P
     // PR 297: his tags and the team's notes
     cu.tagsAndNotes(cd, who, sv.id),
   ]);
+  // PR 534: the grade and verified mark his history earns, beside his number (only while the owner's grading is on)
+  const mark = cu.customerMark(await cu.customerGrading(cd, MOTHER_STORE_ID), sv.history);
   const money = moneyOf(currency, view.locale);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
   const stamp = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium', timeStyle: 'short' });
@@ -541,7 +545,12 @@ export default async function CustomerPage({ params, searchParams }: { params: P
           </Link>
         }
         title={name}
-        sub={sub}
+        sub={
+          <>
+            {sub}
+            <GradePill mark={mark} lang={view.lang} verified={t(d, 'cus.grade.verified')} />
+          </>
+        }
         right={sv.viewer.merge ? <MergeWith dict={cdict} customerId={sv.id} /> : null}
       />
       <SectionTabs view={view} current="customer" />

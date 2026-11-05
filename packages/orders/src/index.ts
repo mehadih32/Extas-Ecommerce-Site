@@ -81,6 +81,9 @@ export * from './phone-history';
 // S14 · PR 533: the customer history summary at approval (approval-summary.ts pure, approval-history.ts the read).
 export * from './approval-summary';
 export * from './approval-history';
+// S14 · PR 534: customer grading (grade-rules.ts pure, grades.ts the read).
+export * from './grade-rules';
+export * from './grades';
 export * from './address-facts';
 export * from './risk';
 export * from './risk-panel';

@@ -17,6 +17,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { PageHead, SectionTabs } from '../shell/ShellParts';
 import { ShellIcon } from '../shell/ShellIcon';
 import { CustomerExport } from './CustomerExport';
+import { GradePill } from './GradePill';
 import { initials } from './PairCard';
 
 export interface ListSettings {
@@ -33,7 +34,7 @@ export function sourceLabel(view: AdminView, s: string | null): string {
 }
 
 /** The person's name cell; `href` (PR 286) makes the name his page's link. */
-export function PersonCell({ view, r, href }: { view: AdminView; r: Pick<CustomerRow, 'name' | 'phone' | 'source' | 'members' | 'codPolicy'>; href?: string | null }) {
+export function PersonCell({ view, r, href }: { view: AdminView; r: Pick<CustomerRow, 'name' | 'phone' | 'source' | 'members' | 'codPolicy'> & Partial<Pick<CustomerRow, 'mark'>>; href?: string | null }) {
   const d = view.dict;
   const name = r.name ?? t(d, 'cus.side.noName');
   return (
@@ -52,6 +53,8 @@ export function PersonCell({ view, r, href }: { view: AdminView; r: Pick<Custome
           )}
           {r.members ? <span className="a2-pill line" style={{ marginLeft: 6 }}>{t(d, 'cus.list.merged', { n: formatNumber(r.members, view.locale) })}</span> : null}
           {r.codPolicy ? <span className="a2-pill warn" style={{ marginLeft: 6 }}>{t(d, 'cus.list.codPolicy')}</span> : null}
+          {/* PR 534: the grade and verified mark his counts earn (only while the owner's grading is on) */}
+          <GradePill mark={r.mark ?? null} lang={view.lang} verified={t(d, 'cus.grade.verified')} />
         </b>
         <span>{[r.phone?.text ?? t(d, 'cus.side.noPhone'), sourceLabel(view, r.source)].filter(Boolean).join(' · ')}</span>
       </div>

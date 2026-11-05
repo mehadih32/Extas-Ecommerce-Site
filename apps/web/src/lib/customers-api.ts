@@ -46,6 +46,11 @@
 //   GET   /api/admin/customers/segments/:id           one segment with its live count (customers.read)
 //   POST  /api/admin/customers/segments/:id           {name, definition, version} a change (STALE in between; audited)
 //   POST  /api/admin/customers/segments/:id/archive   {archived} archive or restore, never deleted (audited)
+//   GET   /api/admin/customers/grades                 PR 534: the owner's grades with the people holding each (customers.read)
+//   POST  /api/admin/customers/grades                 {nameEn, nameBn?, criteria, sortOrder} a new grade (customers.settings; audited)
+//   POST  /api/admin/customers/grades/run             "Grade everyone now" (customers.settings; audited; SWITCHED_OFF while off)
+//   POST  /api/admin/customers/grades/:id             {nameEn, nameBn?, criteria, sortOrder} a change (customers.settings; audited)
+//   POST  /api/admin/customers/grades/:id/archive     {archived} archive or restore, never deleted (customers.settings; audited)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -138,6 +143,7 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
     return handle(request, deps, 'customers.read', async (x) => ({ match: await cu.customerByPhone(x.deps, x.who, x.url.searchParams.get('phone') ?? '') }));
   }
   if (a === 'segments') return segmentsRoute(request, deps, m, path.slice(1));
+  if (a === 'grades') return gradesRoute(request, deps, m, path.slice(1));
   if (a === 'settings') {
     if (path.length > 1) return notFound();
     if (m === 'GET') return handle(request, deps, 'customers.read', async (x) => ({ screen: await cu.crmSettingsScreen(x.deps, x.who) }));
@@ -227,6 +233,22 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
     return notFound();
   }
   if (a) return badId('customerId');
+  return notFound();
+}
+
+/** PR 534 — the grades' routes (`path` after /grades). */
+function gradesRoute(request: Request, deps: AdminDeps | null, m: string, path: string[]): Promise<Response> {
+  const [id, sub, ...rest] = path;
+  if (rest.length) return notFound();
+  if (!id) {
+    if (m === 'GET') return handle(request, deps, 'customers.read', async (x) => ({ screen: await cu.gradesScreen(x.deps, x.who) }));
+    if (m === 'POST') return handle(request, deps, 'customers.settings', async (x) => ({ grade: await cu.saveGrade(x.deps, x.who, null, await body(request)) }), 201);
+    return notAllowed();
+  }
+  if (id === 'run' && !sub) return m === 'POST' ? handle(request, deps, 'customers.settings', async (x) => ({ run: await cu.runGradesNow(x.deps, x.who) })) : notAllowed();
+  if (!isUuid(id)) return notFound();
+  if (!sub) return m === 'POST' ? handle(request, deps, 'customers.settings', async (x) => ({ grade: await cu.saveGrade(x.deps, x.who, id, await body(request)) })) : notAllowed();
+  if (sub === 'archive') return m === 'POST' ? handle(request, deps, 'customers.settings', async (x) => ({ result: await cu.archiveGrade(x.deps, x.who, id, await body(request)) })) : notAllowed();
   return notFound();
 }
 

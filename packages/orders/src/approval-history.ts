@@ -3,14 +3,20 @@
 // history's read, PR 157, as many as `risk.history.orders`), what became of each, the exchanges that went ahead and the
 // deliveries still being checked (PR 525) — summed up by approval-summary.ts. A read for `orders.read`: it never
 // confirms, holds, blocks or changes an order.
+// PR 534: while the owner's grading is on, the card also names the grade and the verified mark his history earns — counted
+// as the good-customer override and the customer page count it (summarizeHistory), so all three agree.
 import { phoneNormalizeBD } from '@extas/delivery';
 import { approvalSummary, type ApprovalSummary } from './approval-summary';
 import { allow, setting, UUID, type OrdersDeps, type Who } from './context';
+import { gradingOf, markOf, type GradeMark } from './grades';
 import { historyOptions, phoneOrders } from './phone-history';
+import { summarizeHistory } from './phone-summary';
 
 export interface ApprovalHistoryView extends ApprovalSummary {
   /** The number as the team reads it (01712-345678), or the stored text when it is not a mobile number. */
   phone: string | null;
+  /** PR 534: his grade and verified mark (null while grading is off). */
+  mark: GradeMark | null;
 }
 
 /** The chosen order's customer history for the person confirming it; null while switched off or for no such order. */
@@ -30,12 +36,12 @@ export async function approvalHistory(deps: OrdersDeps, who: Who, orderId: strin
       ])
     : [[], []];
   const p = o.phone ? phoneNormalizeBD(o.phone) : null;
-  return {
-    phone: p?.ok ? p.nice : (o.phone ?? null),
-    ...approvalSummary(
-      past,
-      { exchanged: new Set(exchanged.map((x) => x.orderId)), checking: new Set(checking.map((x) => x.orderId)) },
-      { ourFault: opts.ourFault, noAnswerOutcomes: opts.noAnswerOutcomes, recent: cfg.recent, reasonsShown: cfg.reasonsShown },
-    ),
-  };
+  const summary = approvalSummary(
+    past,
+    { exchanged: new Set(exchanged.map((x) => x.orderId)), checking: new Set(checking.map((x) => x.orderId)) },
+    { ourFault: opts.ourFault, noAnswerOutcomes: opts.noAnswerOutcomes, recent: cfg.recent, reasonsShown: cfg.reasonsShown },
+  );
+  const grading = await gradingOf(deps, who.storeId);
+  const mark = grading ? markOf(grading, summarizeHistory(past, { ourFault: opts.ourFault, noAnswerOutcomes: opts.noAnswerOutcomes })) : null;
+  return { phone: p?.ok ? p.nice : (o.phone ?? null), ...summary, mark };
 }

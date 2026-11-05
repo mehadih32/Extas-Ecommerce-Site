@@ -3,6 +3,7 @@
 // refused, charge-paid returns, our fault, returns after delivery, exchanges, cancels, calls not answered), why his
 // parcels came back (the owner's refusal reasons, most first) and the newest orders with what became of each. Words
 // from messages/admin-orders.<lang>.json; numbers in Western digits. It only shows: the person confirming decides.
+// PR 534: the grade and verified mark his counts earn, beside the title (only while the owner's grading is on).
 import type * as od from '@extas/orders';
 import { formatNumber } from '@/components/admin/products/model';
 import type { AdminView } from '@/lib/admin-page';
@@ -21,6 +22,9 @@ export interface ApprovalCard {
   recentTitle: string;
   recent: { number: string; href: string; outcome: string; tone: Tone; extra: string; placed: string }[];
   note: string;
+  /** PR 534: his grade's name and the verified mark's word, each null when not earned (or grading is off). */
+  grade: string | null;
+  verified: string | null;
 }
 
 /** The tiles in their order; a tile with nothing in it is left out, except the first three. */
@@ -65,5 +69,7 @@ export function approvalCard(view: AdminView, h: od.ApprovalHistoryView, reasonN
       placed: date.format(r.placedAt),
     })),
     note: t(d, 'orders.appr.note'),
+    grade: h.mark?.grade ? (view.lang === 'bn' && h.mark.grade.nameBn) || h.mark.grade.nameEn : null,
+    verified: h.mark?.verified ? t(d, 'orders.appr.verified') : null,
   };
 }

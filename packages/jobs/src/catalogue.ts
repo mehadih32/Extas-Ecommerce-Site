@@ -8,7 +8,7 @@
 // the cart-hold expiry, the ERP document relay (the outbox), the low-stock check, the reconcile with the ERP and the
 // default locations. PR 196 adds the ERP webhook job (one stored event applied), PR 72 the search index job
 // (search.ts), PR 148 the message engine's run (messages.ts), PR 170 the sweep of open online payments (payments.ts),
-// PR 407 the invoice run (invoices.ts), PR 296 the points run (rewards.ts).
+// PR 407 the invoice run (invoices.ts), PR 296 the points run (rewards.ts), PR 534 the grading run (grades.ts).
 // PR 538 the support escalation sweep (support-escalation.ts).
 // A later stage adds its job here with its key, queue and function.
 import { ERP_WEBHOOK_JOB, INVENTORY_QUEUE, processErpWebhook, runInventoryJob, type InventoryJob } from '@extas/inventory';
@@ -28,6 +28,7 @@ import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 import { RETURNS_ERP_JOB, RETURNS_ERP_QUEUE, runReturnsErp } from './returns-erp';
 import { MONEY_REPORT_JOB, MONEY_REPORT_QUEUE, runMoneyReport, type MoneyReportPayload } from './money-report';
 import { POINTS_JOB, POINTS_QUEUE, runPointsJob } from './rewards';
+import { GRADES_JOB, GRADES_QUEUE, runGradesJob } from './grades';
 import { AUDIENCE_REFRESH_JOB, AUDIENCE_REFRESH_QUEUE, runAudienceRefresh, type AudienceRefreshPayload } from './audience-refresh';
 import { AD_SPEND_IMPORT_JOB, AD_SPEND_IMPORT_QUEUE, runAdSpendImport, type AdSpendImportPayload } from './ad-spend-import';
 
@@ -343,6 +344,22 @@ const pointsJob: JobDefinition<{ storeId: number }> = {
 };
 
 /**
+ * PR 534 — one store's grading run (packages/customers `runGrades`; planned by grades.ts `gradesPlanner` once a day while
+ * the owner's grading is on). Safe to run twice: only changes are written.
+ */
+const gradesJob: JobDefinition<{ storeId: number }> = {
+  key: GRADES_JOB,
+  queue: GRADES_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${GRADES_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runGradesJob(deps, p.storeId)) }),
+};
+
+/**
  * S13 · PR 264 — one store's daily audience refresh for one store day (audience-refresh.ts; planned only while it is due,
  * the day in the run key). Safe to run twice: a run that already succeeded is skipped by the run guard; off = nothing.
  */
@@ -407,6 +424,7 @@ const definitions: JobDefinition<never>[] = [
   returnsErpJob as unknown as JobDefinition<never>,
   moneyReportJob as unknown as JobDefinition<never>,
   pointsJob as unknown as JobDefinition<never>,
+  gradesJob as unknown as JobDefinition<never>,
   audienceRefreshJob as unknown as JobDefinition<never>,
   supportEscalateJob as unknown as JobDefinition<never>,
   adSpendImportJob as unknown as JobDefinition<never>,

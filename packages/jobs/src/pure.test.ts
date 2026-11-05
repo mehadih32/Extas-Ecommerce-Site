@@ -9,6 +9,7 @@ import { messagesPlanner } from './messages';
 import { paymentsPlanner } from './payments';
 import { RETURNS_ERP_JOB, returnsErpPlanner } from './returns-erp';
 import { pointsPlanner } from './rewards';
+import { gradesPlanner } from './grades';
 import { searchPlanner, searchRunKey } from './search';
 import { supportEscalationPlanner } from './support-escalation';
 import { errorLine, MAX_ERROR } from './context';
@@ -60,7 +61,7 @@ describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     // PR 351: + 'money.report.send' (its own queue 'reports'). PR 264: + 'audiences.refresh' (the same queue). PR 265: + 'ads.spend.import' (the same queue).
     expect([...JOBS.keys()].sort()).toEqual(
-      ['ads.spend.import', 'audiences.refresh', 'courier.track', 'money.report.send', 'courier.zones', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate'].sort(),
+      ['ads.spend.import', 'audiences.refresh', 'courier.track', 'money.report.send', 'courier.zones', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('money.report.send')!.queue).toBe('reports');
@@ -333,5 +334,16 @@ describe('PR 296 · the points planner', () => {
     const now = new Date('2026-11-01T10:30:00Z');
     const planned = await pointsPlanner(deps, now);
     expect(planned).toEqual([{ queue: 'customers', name: 'customers.points.run', payload: { storeId: 1 }, key: `customers.points.run/1/${Math.floor(now.getTime() / 3_600_000)}` }]);
+  });
+});
+
+describe('PR 534 · the grading planner', () => {
+  it('plans one run a day for each live store with grading on, none while it is off', async () => {
+    const off = { enabled: false, verifiedMinDelivered: 0, goodFrom: '', maxGrades: 6 };
+    const values: Record<number, typeof off> = { 1: off, 2: { ...off, enabled: true } };
+    const deps = { db: { store: { findMany: async () => [{ id: 1 }, { id: 2 }] } }, settings: { value: async (_k: string, o: { storeId: number }) => values[o.storeId] } } as unknown as Parameters<typeof gradesPlanner>[0];
+    const now = new Date('2026-11-05T10:30:00Z');
+    expect(await gradesPlanner(deps, now)).toEqual([{ queue: 'customers', name: 'customers.grades.run', payload: { storeId: 2 }, key: `customers.grades.run/2/${Math.floor(now.getTime() / 86_400_000)}` }]);
+    expect(() => JOBS.get('customers.grades.run')!.parse({ storeId: 0 })).toThrow(/positive integer/);
   });
 });

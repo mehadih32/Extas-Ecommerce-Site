@@ -5,10 +5,13 @@
 // skipped, and so is a risk level's automatic advance request (the owner's auto option; the ask stays a proposal on the
 // order for a person); the order gets a "Good customer" mark and a timeline line naming what was skipped. A review a rule opened
 // still waits for a person; nothing here confirms, releases or changes an order's money (CLAUDE.md rule 6).
+// PR 534: while the owner's grading (`customers.grades`) is on with a "good customer from" grade, a customer whose counts
+// earn that grade or a higher one is a good customer too — still only while `risk.goodCustomer` is on.
 import { isOrdersError } from './errors';
 import { historyOptions, phoneOrders } from './phone-history';
 import { summarizeHistory } from './phone-summary';
 import { setting, type OrdersDeps } from './context';
+import { goodByGrade, gradingOf } from './grades';
 import { execute, type By } from './service';
 
 /** The order flag of an order the good-customer override spared (the team's screens show it, never the customer). */
@@ -22,18 +25,24 @@ export type GoodCustomerSkip = (typeof GOOD_CUSTOMER_SKIPS)[number];
 export interface GoodCustomer {
   delivered: number;
   refused: number;
+  /** PR 534: the grade that made him good (absent when the counts rule did). */
+  grade?: string;
 }
 
 /** The order's customer is a good customer now (the switch on, the number set, the history enough); otherwise null. */
 export async function goodCustomerOf(deps: OrdersDeps, ref: { storeId: number; orderId: string }): Promise<GoodCustomer | null> {
   const cfg = await setting(deps, ref.storeId, 'risk.goodCustomer');
-  if (!cfg.enabled || cfg.minDelivered === null) return null;
+  if (!cfg.enabled) return null;
+  const grading = await gradingOf(deps, ref.storeId);
+  if (cfg.minDelivered === null && !grading?.goodFrom) return null;
   const order = await deps.db.order.findFirst({ where: { storeId: ref.storeId, id: ref.orderId }, select: { phone: true, placedAt: true } });
   if (!order?.phone) return null;
   const opts = await historyOptions(deps, ref.storeId);
   const past = await phoneOrders(deps, ref.storeId, order.phone, { excludeOrderId: ref.orderId, before: order.placedAt, take: opts.take });
   const s = summarizeHistory(past, { ourFault: opts.ourFault });
-  return s.delivered >= cfg.minDelivered && s.refused <= cfg.maxRefused ? { delivered: s.delivered, refused: s.refused } : null;
+  if (cfg.minDelivered !== null && s.delivered >= cfg.minDelivered && s.refused <= cfg.maxRefused) return { delivered: s.delivered, refused: s.refused };
+  const grade = goodByGrade(grading, s);
+  return grade ? { delivered: s.delivered, refused: s.refused, grade } : null;
 }
 
 /** Writes the override on the order once per skip (a mark and a timeline line). A closed order is left as it is. */
