@@ -81,3 +81,52 @@ export function AdCampaignLink({ url, adCampaignId, value, ours, label, none, di
     </>
   );
 }
+
+export interface SpendTexts {
+  label: string;
+  working: string;
+  /** `{rows} campaign days of spend kept ({from} to {to}).` */
+  done: string;
+  /** `Practice copy: {rows} example days counted, nothing saved.` */
+  practice: string;
+  /** ` {unknown} days … left out.` */
+  unknown: string;
+  /** ` {noRate} days … wait for the USD rate.` (PR 266) */
+  noRate: string;
+  err: Record<string, string>;
+}
+
+/** PR 265 — "Import spend now" for one platform (POST {platform} to the spend API; read only on the platform). */
+export function AdSpendImport({ url, platform, texts: x }: { url: string; platform: string; texts: SpendTexts }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
+  async function press() {
+    setBusy(true);
+    setSaid(null);
+    const a = await call('POST', url, { platform });
+    setBusy(false);
+    const r = a.status === 200 && Array.isArray(a.data.results) ? (a.data.results[0] as { practice: boolean; rows: number; unknown: number; noRate: number; error: string | null; range: { from: string; to: string } } | undefined) : undefined;
+    if (!r || r.error) {
+      const code = a.status === 0 ? 'network' : r?.error ? 'PLATFORM' : (a.data.error ?? 'other');
+      setSaid({ text: `${x.err[code] ?? x.err.other ?? code}${r?.error ? ` ${r.error}` : ''}`, bad: true });
+      return;
+    }
+    const vars = { rows: r.rows, from: r.range.from, to: r.range.to, unknown: r.unknown, noRate: r.noRate };
+    const text = r.practice ? fill(x.practice, vars) : `${fill(x.done, vars)}${r.unknown ? fill(x.unknown, vars) : ''}${r.noRate ? fill(x.noRate, vars) : ''}`;
+    setSaid({ text, bad: false });
+    router.refresh();
+  }
+  return (
+    <div className="adp-read">
+      <button type="button" className="a2-btn" disabled={busy} onClick={press} data-testid={`adp-spend-${platform}`}>
+        {busy ? x.working : x.label}
+      </button>
+      {said ? (
+        <span className={`a2-sm${said.bad ? ' adp-bad' : ''}`} role="status" aria-live="polite" data-testid={`adp-spend-${platform}-said`}>
+          {said.text}
+        </span>
+      ) : null}
+    </div>
+  );
+}

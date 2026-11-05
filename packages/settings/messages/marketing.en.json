@@ -20,6 +20,10 @@
     "audienceRefresh": {
       "label": "Refresh audiences every day",
       "help": "Off as it ships. On, once a day from your hour (store time) every live audience is counted again, the ones already sent to a real ad account are sent again, and the refused-parcel list too. No budget or campaign is changed."
+    },
+    "spendImport": {
+      "label": "Import ad spend every day",
+      "help": "Off as it ships. On, once a day from your hour (store time) the shop reads what Meta, TikTok and Google spent per campaign over the last few days and keeps it for the profit figures. Read only: no budget or campaign is changed."
     }
   }
 }

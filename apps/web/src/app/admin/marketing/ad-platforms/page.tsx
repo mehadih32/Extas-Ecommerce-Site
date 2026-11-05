@@ -3,28 +3,35 @@
 // platform lists them (status, goal, budget, ad sets), each tied or not to one of the shop's own campaigns. Read only:
 // nothing is paused and no budget changes here. Seeing needs `marketing.campaigns.read`; reading and tying need
 // `marketing.campaigns.write`. Guide: docs/admin-guide/pages/marketing/ad-platforms.md.
+// PR 265: "Import spend now" per platform, each campaign's spend over the owner's last days, and the daily import card
+// (`ads.spendImport`, off as it ships).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { SPEND_DAYS_MAX, SPEND_HOUR_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { AdCampaignLink, AdPlatformRead } from '@/components/admin/marketing/AdPlatformControls';
+import { AdCampaignLink, AdPlatformRead, AdSpendImport } from '@/components/admin/marketing/AdPlatformControls';
+import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
-import { formatMoney, moneyOf } from '@/components/admin/products/model';
+import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { adPlatformsOverview } from '@/lib/marketing/ad-platforms';
+import { campaignSpend, spendCard, spendRange } from '@/lib/marketing/ad-spend';
 import bn from '../../../../../messages/admin-ad-platforms.bn.json';
 import en from '../../../../../messages/admin-ad-platforms.en.json';
+import '../../settings-cards.css';
 import './ad-platforms.css';
 
 export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/marketing/ad-platforms';
 const API = '/api/admin/marketing/ad-platforms';
+const SPEND_API = '/api/admin/marketing/ad-platforms/spend';
 const KEYS_PAGE = '/admin/integrations';
 const KEY = 'marketingAdPlatforms';
 
@@ -51,12 +58,33 @@ export default async function AdPlatformsPage() {
       </div>
     );
   const o = await adPlatformsOverview({ db: access.deps.db, resolver: access.deps.resolver, vault: access.deps.vault });
+  const [card, tz] = await Promise.all([spendCard(access.deps.resolver), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID })]);
+  const spend = await campaignSpend(access.deps.db, spendRange(new Date(), tz, card.value.days).from);
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
   const s = (k: string, vars?: Record<string, string | number>) => t(d, `adp.${k}`, vars);
   const when = (iso: string) => new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone }).format(new Date(iso));
   const budget = (daily: number | null, total: number | null, cur: string) =>
     daily ? s('budgetDaily', { amount: formatMoney(daily, moneyOf(cur, view.locale)) }) : total ? s('budgetTotal', { amount: formatMoney(total, moneyOf(cur, view.locale)) }) : s('none');
   const errs = Object.fromEntries(['PLATFORM', 'INVALID_INPUT', 'NOT_FOUND', 'forbidden', 'unauthorized', 'network', 'other'].map((k) => [k, s(`err.${k}`)]));
+  const sp = (k: string, vars?: Record<string, string | number>) => s(`spend.${k}`, vars);
+  const spendTexts = { label: sp('import'), working: sp('importing'), done: sp('importDone'), practice: sp('importPractice'), unknown: sp('importUnknown'), noRate: sp('importNoRate'), err: errs };
+  const cardTexts: FieldsCardTexts = {
+    h: sp('card.h'),
+    d: sp('card.d'),
+    save: sp('card.save'),
+    saving: sp('card.saving'),
+    saved: sp('card.saved'),
+    discard: sp('card.discard'),
+    unsaved: sp('card.unsaved'),
+    readOnly: sp('card.readOnly'),
+    pairHelp: '',
+    err: { ...errs, STALE: s('err.STALE') },
+  };
+  const cardFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'on', label: sp('card.on'), help: sp('card.onHelp') },
+    { kind: 'number', path: 'days', label: sp('card.days'), help: sp('card.daysHelp'), min: 1, max: SPEND_DAYS_MAX },
+    { kind: 'number', path: 'hour', label: sp('card.hour'), help: sp('card.hourHelp'), min: 0, max: SPEND_HOUR_MAX },
+  ];
 
   return (
     <div className="a2-z" data-testid="adp-page">
@@ -65,6 +93,7 @@ export default async function AdPlatformsPage() {
       <div className="a2-note" role="note">
         <span>{s('readOnlyNote')}</span>
       </div>
+      <p className="a2-sm a2-mute a2-mt12">{sp('spendNote')}</p>
 
       {o.platforms.map((p) => (
         <section key={p.platform} className="a2-sc a2-mt12" aria-labelledby={`adp-${p.platform}-h`} data-testid={`adp-${p.platform}`} data-mode={p.mode}>
@@ -78,7 +107,14 @@ export default async function AdPlatformsPage() {
           <Link className="a2-sm adp-keys" href={KEYS_PAGE}>
             {s('keysLink')}
           </Link>
-          {canWrite ? <AdPlatformRead url={API} platform={p.platform} texts={{ label: s('read'), working: s('reading'), done: s('readDone'), practice: s('readPractice'), err: errs }} /> : <p className="a2-sm a2-mute">{s('noManage')}</p>}
+          {canWrite ? (
+            <>
+              <AdPlatformRead url={API} platform={p.platform} texts={{ label: s('read'), working: s('reading'), done: s('readDone'), practice: s('readPractice'), err: errs }} />
+              <AdSpendImport url={SPEND_API} platform={p.platform} texts={spendTexts} />
+            </>
+          ) : (
+            <p className="a2-sm a2-mute">{s('noManage')}</p>
+          )}
 
           {p.practice ? (
             <div className="a2-mt12" data-testid={`adp-${p.platform}-practice`}>
@@ -123,6 +159,7 @@ export default async function AdPlatformsPage() {
                         <th>{s('col.objective')}</th>
                         <th>{s('col.budget')}</th>
                         <th>{s('col.adSets')}</th>
+                        <th>{sp('spendCol', { days: card.value.days })}</th>
                         <th>{s('col.ours')}</th>
                       </tr>
                     </thead>
@@ -137,6 +174,17 @@ export default async function AdPlatformsPage() {
                           <td className="a2-sm">{c.objective ?? s('none')}</td>
                           <td className="a2-sm adp-nowrap">{budget(c.dailyBudgetMinor, c.lifetimeBudgetMinor, c.currency)}</td>
                           <td className="a2-sm">{c.adSets}</td>
+                          <td className="a2-sm" data-testid="adp-spend-cell">
+                            {spend.get(c.id) ? (
+                              <>
+                                <b className="adp-nowrap">{formatMoney(spend.get(c.id)!.minor, moneyOf(c.currency, view.locale))}</b>
+                                <br />
+                                <span className="a2-mute">{sp('spendLine', { purchases: formatNumber(spend.get(c.id)!.purchases, view.locale) })}</span>
+                              </>
+                            ) : (
+                              <span className="a2-mute">{sp('spendNone')}</span>
+                            )}
+                          </td>
                           <td>
                             <AdCampaignLink url={API} adCampaignId={c.id} value={c.campaign?.id ?? null} ours={o.ours} label={s('linkLabel', { name: c.name })} none={s('linkNone')} disabled={!canWrite} err={s('linkErr')} />
                           </td>
@@ -152,6 +200,9 @@ export default async function AdPlatformsPage() {
           ))}
         </section>
       ))}
+      <div id="adp-spend-card" className="a2-mt12">
+        <FieldsCard url={SPEND_API} screen={{ key: card.key, value: card.value, version: card.version }} fields={cardFields} texts={cardTexts} canEdit={canWrite} testId="adp-spend-card" />
+      </div>
     </div>
   );
 }

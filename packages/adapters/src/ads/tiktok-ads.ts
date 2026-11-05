@@ -14,6 +14,7 @@
 import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
 import { TIKTOK_DEFAULT_BASE_URL } from './index';
+import { countOf, minorDigitsOf, spendMinorOf, type AdsSpendFacts, type AdsSpendRange } from './spend';
 import { practiceAdsReader, type AdsAccountFacts, type AdsCampaignFacts, type AdsRead, type AdsReader, type AdsSetFacts } from './meta-ads';
 
 export const TIKTOK_ADS_PROVIDER = 'tiktokAds';
@@ -33,15 +34,6 @@ export const tiktokAdsConfig = z.object({
 export type TiktokAdsConfig = z.output<typeof tiktokAdsConfig>;
 
 const str = (v: unknown, max = 300): string => (typeof v === 'string' ? v.slice(0, max) : typeof v === 'number' && Number.isFinite(v) ? String(v) : '');
-
-/** The currency's minor digits (BDT 2, JPY 0); an unknown code keeps the common two. */
-export function minorDigitsOf(currency: string): number {
-  try {
-    return new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions().maximumFractionDigits ?? 2;
-  } catch {
-    return 2; // hardcode-ok: ISO 4217's usual minor digits, only for a code Intl does not know
-  }
-}
 
 /** A TikTok amount (major unit, a number or a numeric string) in the minor unit; none, zero or nonsense is null. */
 export function tiktokMinor(v: unknown, currency: string): number | null {
@@ -89,6 +81,16 @@ export function tiktokAdGroup(r: Record<string, unknown>, currency: string): Ads
     dailyBudgetMinor: str(r.budget_mode, 40) === 'BUDGET_MODE_DAY' ? tiktokMinor(r.budget, currency) : null,
     targeting: Object.keys(targeting).length ? targeting : null,
   };
+}
+
+/** One TikTok report row (campaign × day, BASIC report) in our shape; null without a campaign or a day. */
+export function tiktokSpendRow(r: Record<string, unknown>, currency: string): AdsSpendFacts | null {
+  const d = r.dimensions && typeof r.dimensions === 'object' ? (r.dimensions as Record<string, unknown>) : {};
+  const m = r.metrics && typeof r.metrics === 'object' ? (r.metrics as Record<string, unknown>) : {};
+  const campaignExternalId = str(d.campaign_id, 40);
+  const day = str(d.stat_time_day, 10);
+  if (!campaignExternalId || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  return { campaignExternalId, day, spendMinor: spendMinorOf(m.spend, currency) ?? 0, impressions: countOf(m.impressions), clicks: countOf(m.clicks), purchases: countOf(m.complete_payment) };
 }
 
 export function createTiktokAdsClient(o: { baseUrl: string; advertiserId: string; token: string; fetch?: typeof fetch }): AdsReader & { check(): Promise<{ ok: boolean; message: string }> } {
@@ -154,6 +156,32 @@ export function createTiktokAdsClient(o: { baseUrl: string; advertiserId: string
     account,
     campaigns: () => list('/campaign/get/', tiktokCampaign),
     adSets: () => list('/adgroup/get/', tiktokAdGroup),
+    // PR 265: the BASIC report per campaign per day (TikTok's report is in the advertiser's currency)
+    async spend(range: AdsSpendRange): Promise<AdsRead<AdsSpendFacts[]>> {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(range.from) || !/^\d{4}-\d{2}-\d{2}$/.test(range.to) || range.from > range.to) return { ok: false, error: 'not a range of days' };
+      const c = await currencyOf();
+      if (!c.ok) return c;
+      const out: AdsSpendFacts[] = [];
+      const base = {
+        advertiser_id: o.advertiserId,
+        report_type: 'BASIC',
+        data_level: 'AUCTION_CAMPAIGN',
+        dimensions: JSON.stringify(['campaign_id', 'stat_time_day']),
+        metrics: JSON.stringify(['spend', 'impressions', 'clicks', 'complete_payment']),
+        start_date: range.from,
+        end_date: range.to,
+        page_size: String(PAGE_SIZE),
+      };
+      for (let page = 1; page <= TIKTOK_ADS_MAX_PAGES; page += 1) {
+        const r = await get('/report/integrated/get/', { ...base, page: String(page) });
+        if (!r.ok) return r;
+        const data = Array.isArray(r.value.list) ? (r.value.list as Record<string, unknown>[]) : [];
+        out.push(...data.map((x) => tiktokSpendRow(x, c.value)).filter((x): x is AdsSpendFacts => x !== null));
+        const total = Number((r.value.page_info as { total_page?: unknown } | undefined)?.total_page);
+        if (!data.length || !Number.isFinite(total) || page >= total) break;
+      }
+      return { ok: true, value: out };
+    },
     async check() {
       const r = await account();
       return r.ok ? { ok: true, message: `connected; advertiser ${r.value.name} (${r.value.currency})` } : { ok: false, message: r.error };

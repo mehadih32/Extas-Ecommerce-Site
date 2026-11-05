@@ -148,6 +148,8 @@ export * from './registry-marketing';
 export * from './registry-ads-audiences';
 // S13 · CN-031 lane B · PR 264 — the refused-parcel exclusion list and the daily audience refresh (registry-ads-refused.ts, version 171).
 export * from './registry-ads-refused';
+// S13 · CN-031 lane B · PR 265 — the daily ad spend import (registry-ads-spend.ts, version 172).
+export * from './registry-ads-spend';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

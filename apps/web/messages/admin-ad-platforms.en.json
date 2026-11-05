@@ -51,7 +51,36 @@
       "forbidden": "You do not have permission for this.",
       "unauthorized": "Your sign-in ran out. Sign in again.",
       "network": "No connection. Try again.",
-      "other": "It did not work. Try again."
+      "other": "It did not work. Try again.",
+      "STALE": "Someone changed this card in between; it was read again."
+    },
+    "spend": {
+      "import": "Import spend now",
+      "importing": "Importing…",
+      "importDone": "{rows} campaign days of spend kept ({from} to {to}).",
+      "importPractice": "Practice copy: {rows} example days counted, nothing saved.",
+      "importUnknown": " {unknown} days of campaigns the platform did not list were left out.",
+      "importNoRate": " {noRate} days in another currency wait for the USD rate.",
+      "spendCol": "Spend, last {days} days",
+      "spendLine": "{purchases} platform purchases",
+      "spendNone": "Not imported yet",
+      "spendNote": "Spend is read per campaign and per day and kept for the profit figures (Money › Profit and loss, channels, each order). Reading again replaces each day, it never adds twice.",
+      "card": {
+        "h": "Daily spend import",
+        "d": "Off as it ships. \"Import spend now\" works with it off too.",
+        "on": "Import every day",
+        "onHelp": "Once a day from your hour (store time) the shop reads what each platform spent per campaign. Read only: no budget or campaign changes.",
+        "days": "Days read again each time",
+        "daysHelp": "Today included. The platforms correct the last few days for a while, so they are read again and replaced (1 to 30).",
+        "hour": "From this hour",
+        "hourHelp": "The hour of the store’s day (0 to 23) from which the daily import runs.",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "discard": "Undo changes",
+        "unsaved": "Not saved yet",
+        "readOnly": "You can see this card; changing it needs the \"Change campaigns\" permission."
+      }
     }
   }
 }

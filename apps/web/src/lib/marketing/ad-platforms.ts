@@ -56,7 +56,8 @@ async function connectionsOf(deps: AdPlatformsDeps): Promise<Connections> {
   return createConnections({ db: deps.db, vault: deps.vault ?? { get: async () => null }, adapters: adsReaderAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
 }
 
-async function readerOf(deps: AdPlatformsDeps, platform: AdsPlatform): Promise<AdsReader> {
+/** One platform's reader (the practice copy until its key is in and tested). PR 265 reads its spend too. */
+export async function readerOf(deps: AdPlatformsDeps, platform: AdsPlatform): Promise<AdsReader> {
   const c = ADS_READER_CONNECTION[platform];
   if (!c) throw new AdPlatformsError('INVALID_INPUT', 400, ['platform']);
   const link = await (await connectionsOf(deps)).use<AdsReader>(c.kind, { storeId: S, provider: c.provider });

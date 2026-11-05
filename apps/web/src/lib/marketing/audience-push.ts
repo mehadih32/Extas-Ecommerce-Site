@@ -273,7 +273,7 @@ export async function refreshAudiences(deps: PushDeps, storeId: number = S): Pro
 }
 
 /** The server's internal token (CACHE_HOOK_TOKEN), compared in constant time; none set = never. */
-function internalCaller(request: Request): boolean {
+export function internalCaller(request: Request): boolean {
   const token = process.env.CACHE_HOOK_TOKEN ?? '';
   const sent = request.headers.get('x-extas-cache-hook') ?? '';
   return token.length >= 32 && sent.length === token.length && timingSafeEqual(Buffer.from(sent), Buffer.from(token));
