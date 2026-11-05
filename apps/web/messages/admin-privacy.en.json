@@ -26,12 +26,19 @@
     "overdueNote": "{n} order(s) are past the period and still hold these facts. The clean-up runs in the background worker; if this does not go to zero within the hour, look at Reports › Server.",
     "keep": {
       "h": "What orders keep, and for how long",
-      "d": "For the risk checks an order keeps the internet address, the device and (when the customer shares it) the location. The clean-up removes them after the period; the order, its money and its history stay.",
+      "d": "For the risk checks an order keeps the internet address, the device and (when the customer shares it) the location; sign-ins, one-time codes, bulk enquiries and consent answers keep the internet address. The clean-up removes them after the period; the order, its money and its history stay.",
       "retentionDays": "Keep these facts for (days)",
       "retentionHelp": "180 days by default. After this, the clean-up removes them from the order.",
       "purgeEveryMinutes": "Run the clean-up every (minutes)",
       "erasureRequests": "Take customers' requests to erase their details",
       "erasureHelp": "Off by default. When on, the team can file a request below; only the owner carries it out."
+    },
+    "kept": {
+      "h": "What the shop keeps",
+      "d": "The standing rule for customers' details.",
+      "never": "Customers are never removed on their own. A customer, his orders, money and history stay, however long ago he last ordered.",
+      "ipOnly": "Only the internet address and the location go, after {n} days: from orders, sign-ins, one-time codes, bulk enquiries and consent answers. The rows themselves stay.",
+      "byHand": "Removing a customer's details is by hand only: a request below, carried out by the owner."
     },
     "consent": {
       "h": "Message consent",
@@ -52,7 +59,11 @@
       "why": "Reason",
       "state": "Status",
       "erased": "erased",
-      "states": { "REQUESTED": "Waiting", "DONE": "Erased", "CANCELLED": "Cancelled" },
+      "states": {
+        "REQUESTED": "Waiting",
+        "DONE": "Erased",
+        "CANCELLED": "Cancelled"
+      },
       "cancel": "Cancel",
       "erase": "Erase now",
       "ownerOnly": "Only the owner can erase.",
