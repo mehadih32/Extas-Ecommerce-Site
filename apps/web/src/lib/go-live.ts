@@ -9,10 +9,15 @@
 // Later PRs add their items to GO_LIVE (394 the server, 397 the certificate, 398 the runbook — added; 400 the connections,
 // 401 indexing, 402 the first week). One pure function evaluates the list; it only reports: nothing is switched,
 // opened or blocked by it.
+// CN-035 (6 Nov 2026): every item is either needed before go-live (`before`: only these hold back the switch of the main
+// domain) or done soon after go-live (`after`: the owner's own set-up from the admin, shown yellow until done), each with
+// its reason in the page's words (`item.<key>.why`).
 import { certCovers } from '@extas/adapters';
 import type { Health, OriginCert, ServerSetup, Smoke } from './status';
 
 export type GoLiveKind = 'auto' | 'signoff' | 'owner';
+/** CN-035: needed before go-live (holds back the switch), or soon after go-live (never holds it back). */
+export type GoLiveWhen = 'before' | 'after';
 
 export interface GoLiveContext {
   now: Date;
@@ -20,8 +25,11 @@ export interface GoLiveContext {
   signoff: Record<string, { at: string; by: string | null }>;
   smoke: Smoke | null;
   health: Health | null;
-  /** The backups' own go-live checks (PR 391): ready, and how many are still to do. */
-  backups: { ready: boolean; todo: number };
+  /**
+   * The backups' own go-live checks (PR 391): ready for real orders (CN-035: the server's own copy), how many of those
+   * are still to do, and every check (the copies away from the server and their drill are soon after go-live).
+   */
+  backups: { ready: boolean; todo: number; checks?: readonly { key: string; ok: boolean; at?: string }[] };
   /** PR 394: the last full server setup run (infra/server/setup.sh → state/server-setup.json). */
   serverSetup?: ServerSetup | null;
   /** PR 397: the certificate Caddy shows Cloudflare (state/origin-cert.json), and the stores' main domains. */
@@ -49,6 +57,7 @@ export interface GoLiveResult {
   key: string;
   pr: number;
   kind: GoLiveKind;
+  when: GoLiveWhen;
   ok: boolean;
   /** When it last happened or was confirmed. */
   at?: string;
@@ -62,12 +71,18 @@ interface GoLiveItem {
   key: string;
   pr: number;
   kind: GoLiveKind;
+  when: GoLiveWhen;
   /** For `auto` items; `signoff` items are done when confirmed. */
-  check?: (ctx: GoLiveContext) => Omit<GoLiveResult, 'key' | 'pr' | 'kind'>;
+  check?: (ctx: GoLiveContext) => Omit<GoLiveResult, 'key' | 'pr' | 'kind' | 'when'>;
 }
 
 const MINUTE_MS = 60_000;
 const HOUR_MINUTES = 60;
+
+/** The named backup checks all pass (none given = not known, so not done). */
+const passed = (checks: GoLiveContext['backups']['checks'], keys: readonly string[]) =>
+  Boolean(checks) && keys.every((k) => checks!.some((c) => c.key === k && c.ok));
+const OFF_SERVER = ['blobLive', 'blobFresh', 'driveLive', 'driveFresh'] as const;
 
 const within = (at: string | undefined, now: Date, minutes: number) => {
   const t = at ? Date.parse(at) : Number.NaN;
@@ -80,6 +95,7 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     key: 'smoke',
     pr: 393,
     kind: 'auto',
+    when: 'before',
     check: ({ smoke, now, checks }) => ({
       ok: smoke?.ok === true && within(smoke.at, now, checks.smokeHours * HOUR_MINUTES),
       at: smoke?.at,
@@ -90,19 +106,29 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     key: 'health',
     pr: 393,
     kind: 'auto',
+    when: 'before',
     check: ({ health, now, checks }) => ({
       ok: Boolean(health) && (health?.problems ?? []).length === 0 && within(health?.at, now, checks.healthMinutes),
       at: health?.at,
       vars: { problems: (health?.problems ?? []).length },
     }),
   },
-  { key: 'backups', pr: 393, kind: 'auto', check: ({ backups }) => ({ ok: backups.ready, vars: { todo: backups.todo } }) },
+  // CN-035: the server's own copy of last night is needed; the copies away from the server come soon after go-live.
+  { key: 'backups', pr: 393, kind: 'auto', when: 'before', check: ({ backups }) => ({ ok: backups.ready, vars: { todo: backups.todo } }) },
+  {
+    key: 'offServer',
+    pr: 391,
+    kind: 'auto',
+    when: 'after',
+    check: ({ backups: { checks } }) => ({ ok: passed(checks, OFF_SERVER), vars: { todo: OFF_SERVER.filter((k) => !passed(checks, [k])).length } }),
+  },
   // PR 394 — every server item of Blueprint A2.9 (A2.9.16): the last full setup run passed every step. A warning (for
   // example the public HTTPS answer while DNS is new) is shown with the number but does not hold it back.
   {
     key: 'server',
     pr: 394,
     kind: 'auto',
+    when: 'before',
     check: ({ serverSetup: s }) => ({
       ok: s?.full === true && s.passed === true,
       at: s?.at,
@@ -120,6 +146,7 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     key: 'originCert',
     pr: 397,
     kind: 'auto',
+    when: 'before',
     check: ({ originCert: o, primaryHosts = [], checks }) => {
       const missing = primaryHosts.filter((h) => !certCovers(o?.names ?? [], h));
       return {
@@ -134,13 +161,14 @@ export const GO_LIVE: readonly GoLiveItem[] = [
       };
     },
   },
-  { key: 'sslStrict', pr: 397, kind: 'signoff' },
+  { key: 'sslStrict', pr: 397, kind: 'signoff', when: 'before' },
   // PR 399 — the owner's own data (PR 509) on every store that goes live: the fields of `golive.ownerData` filled in,
   // and a delivery band switched on (its charge is his; 0 = free delivery is a choice, not a gap). Named, never shown.
   {
     key: 'ownerData',
     pr: 399,
     kind: 'auto',
+    when: 'before',
     check: ({ ownerData = [] }) => {
       const gaps = ownerData
         .map((s) => ({ name: s.name, gaps: [...s.missing, ...(s.bands === 0 ? ['delivery band'] : [])] }))
@@ -158,6 +186,7 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     key: 'connections',
     pr: 400,
     kind: 'auto',
+    when: 'before',
     check: ({ connections: c }) => {
       const live = (c?.on ?? []).filter((x) => x.mode === 'LIVE' && x.lastTestOk === true);
       const missing = (c?.kinds ?? []).filter((k) => !live.some((x) => x.kind === k));
@@ -174,12 +203,13 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     key: 'indexing',
     pr: 401,
     kind: 'auto',
+    when: 'before',
     check: ({ searchEngines, primaryHosts = [] }) => ({
       ok: searchEngines === true && primaryHosts.length > 0,
       vars: { hosts: primaryHosts.join(', ') || '—', on: searchEngines === true ? 'on' : 'off' },
     }),
   },
-  { key: 'searchConsole', pr: 401, kind: 'signoff' },
+  { key: 'searchConsole', pr: 401, kind: 'signoff', when: 'before' },
   // Review R1 (security B1) — no customer can mark an order paid on the practice gateway: test payments are off on every
   // store that goes live, and every online method offered there runs on a real gateway (else it is not offered at all).
   // It only reports: the owner switches test payments off himself (Money → Payments).
@@ -187,6 +217,7 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     key: 'testPayments',
     pr: 400,
     kind: 'auto',
+    when: 'before',
     check: ({ payments: p }) => ({
       ok: Boolean(p) && (p?.testOn ?? []).length === 0 && (p?.practice ?? []).length === 0,
       vars: { stores: (p?.testOn ?? []).join(', ') || '—', methods: (p?.practice ?? []).join(', ') || '—' },
@@ -199,34 +230,41 @@ export const GO_LIVE: readonly GoLiveItem[] = [
     key: 'rateLimit',
     pr: 393,
     kind: 'auto',
+    when: 'before',
     check: ({ security: x }) => ({ ok: x?.rateLimitMode === 'enforce', vars: { mode: x?.rateLimitMode ?? '—' } }),
   },
   {
     key: 'staffTwoFactor',
     pr: 393,
     kind: 'auto',
+    when: 'before',
     check: ({ security: x }) => ({
       ok: Boolean(x) && (x?.twoFactorRequired === true || x?.withoutTwoFactor === 0),
       vars: { without: x?.withoutTwoFactor ?? 0, required: x?.twoFactorRequired ? 'on' : 'off' },
     }),
   },
-  { key: 'runbook', pr: 398, kind: 'signoff' },
-  { key: 'qaGate', pr: 393, kind: 'signoff' },
-  { key: 'acceptance', pr: 393, kind: 'signoff' },
-  { key: 'realPhones', pr: 393, kind: 'signoff' },
-  { key: 'simulation', pr: 393, kind: 'signoff' },
+  { key: 'runbook', pr: 398, kind: 'signoff', when: 'before' },
+  { key: 'qaGate', pr: 393, kind: 'signoff', when: 'before' },
+  { key: 'acceptance', pr: 393, kind: 'signoff', when: 'before' },
+  { key: 'realPhones', pr: 393, kind: 'signoff', when: 'before' },
+  { key: 'simulation', pr: 393, kind: 'signoff', when: 'before' },
 ];
 
 /** The keys a person may confirm. */
 export const SIGNOFF_KEYS: readonly string[] = GO_LIVE.filter((i) => i.kind === 'signoff').map((i) => i.key);
 
-/** Every item now, and whether all of them are done. */
-export function goLiveChecks(ctx: GoLiveContext): { ready: boolean; done: number; total: number; items: GoLiveResult[] } {
+/**
+ * Every item now. `ready`, `done` and `total` count only what is needed before go-live (CN-035); `soon` counts what is
+ * done soon after it.
+ */
+export function goLiveChecks(ctx: GoLiveContext): { ready: boolean; done: number; total: number; soon: { done: number; total: number }; items: GoLiveResult[] } {
   const items = GO_LIVE.map((i): GoLiveResult => {
-    if (i.check) return { key: i.key, pr: i.pr, kind: i.kind, ...i.check(ctx) };
+    if (i.check) return { key: i.key, pr: i.pr, kind: i.kind, when: i.when, ...i.check(ctx) };
     const s = ctx.signoff[i.key];
-    return { key: i.key, pr: i.pr, kind: i.kind, ok: Boolean(s), at: s?.at, by: s?.by ?? null };
+    return { key: i.key, pr: i.pr, kind: i.kind, when: i.when, ok: Boolean(s), at: s?.at, by: s?.by ?? null };
   });
-  const done = items.filter((i) => i.ok).length;
-  return { ready: done === items.length, done, total: items.length, items };
+  const before = items.filter((i) => i.when === 'before');
+  const after = items.filter((i) => i.when === 'after');
+  const done = before.filter((i) => i.ok).length;
+  return { ready: done === before.length, done, total: before.length, soon: { done: after.filter((i) => i.ok).length, total: after.length }, items };
 }
