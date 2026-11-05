@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { productSettings } from '@extas/settings';
-import { qaView, type QaRow } from './pdp-qa';
+import { qaLdItems, qaView, type QaRow } from './pdp-qa';
 
 const SET = productSettings['pdp.qa'].default;
 const rows = (n: number): QaRow[] => Array.from({ length: n }, (_, i) => ({ id: `q${i}`, question: `Question ${i}?`, answer: `Answer ${i}.`, answeredAt: null }));
@@ -48,5 +48,17 @@ describe('PR 66 · the questions block', () => {
     if (v?.kind !== 'list') throw new Error('expected a list');
     expect(1 + v.first.length + v.rest.length).toBe(5);
     expect(v.ask).toBeNull();
+  });
+});
+
+describe('S11 · PR 224 · the questions as FAQ data', () => {
+  it('exactly the answered questions the block shows (the open one, the folded and the "See all" ones), else none', () => {
+    const view = qaView(rows(SET.max + 3), SET, false);
+    const items = qaLdItems(view);
+    expect(items).toHaveLength(SET.max);
+    expect(items[0]).toEqual({ question: 'Question 0?', answer: 'Answer 0.' });
+    expect(qaLdItems(qaView([], SET, true))).toEqual([]);
+    expect(qaLdItems(null)).toEqual([]);
+    expect(qaLdItems(qaView(rows(2), { ...SET, featured: false }, true))).toHaveLength(2);
   });
 });

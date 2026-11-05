@@ -37,6 +37,8 @@ import { payWords } from '@/lib/shop/pdp-price';
 import { readRecent, RECENT_COOKIE } from '@/lib/shop/pdp-rows';
 import { ldReviewsOf, pdpReviewsView, ratingLineOf } from '@/lib/shop/pdp-reviews';
 import { productReviews } from '@/lib/shop/pdp-reviews-load';
+import { qaLdItems, qaView } from '@/lib/shop/pdp-qa';
+import { answeredQuestionsOnce } from '@/lib/shop/pdp-qa-load';
 import { ruleCells } from '@/lib/shop/pdp-rules';
 import { TEMPLATE_QUERY, templateFor } from '@/lib/shop/pdp-template';
 import { beforeCutoff, clockIn, cutoffWords } from '@/lib/shop/pdp-stock';
@@ -49,7 +51,7 @@ import { COLOUR_QUERY, REF_QUERY, ROUTES, SIZE_QUERY } from '@/lib/shop/routes';
 import { supportRefOf } from '@/lib/shop/support-ref-model';
 import { SupportRefBeacon } from '@/components/shop/SupportRefBeacon';
 import { categoryName } from '@/lib/shop/shell-model';
-import { breadcrumbLd, largestUrl, productLd } from '@/lib/shop/structured-data';
+import { breadcrumbLd, faqLd, largestUrl, productLd } from '@/lib/shop/structured-data';
 import { setCardGroups } from '@/lib/shop/combo';
 import { AddedPanel } from '../bag/AddedPanel';
 import { SetOffer } from '../combo/SetCards';
@@ -414,6 +416,9 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   const here = await shopOrigin();
   const pageHref = p.route.colour ? colourPath(productHref, p.route.colour) : productHref;
   const ldVariants = p.route.colour ? data.variants.filter((v) => v.colour === p.route.colour) : data.variants;
+  // PR 224: the answered questions the Q&A block shows, as FAQ data (optional markup, off as shipped; same rows)
+  const qaSet = set['pdp.qa'];
+  const qaItems = sd.faq && qaSet.on ? qaLdItems(qaView(await answeredQuestionsOnce(c.storeId, m.productId, qaSet.max), qaSet, false)) : [];
   const ld = here ? (
     <JsonLd
       data={[
@@ -446,6 +451,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
               reviews: sd.reviews ? ldReviewsOf(reviewView) : null,
             })
           : null,
+        sd.faq ? faqLd(here, pageHref, qaItems) : null,
       ]}
     />
   ) : null;

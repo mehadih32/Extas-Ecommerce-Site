@@ -3,7 +3,7 @@
 import { shopMoreSettings, type PagesTextSettings } from '@extas/settings';
 import { describe, expect, it } from 'vitest';
 import { shopT } from './dict';
-import { fillPagesText, HELP_SLUGS, helpModel, helpTopics, isHelpSlug, textBlocks, type HelpFacts, type RuleWords } from './help-pages';
+import { fillPagesText, HELP_SLUGS, helpFaqItems, helpModel, helpTopics, isHelpSlug, textBlocks, type HelpFacts, type RuleWords } from './help-pages';
 import { BUILT_INSIDE, comingSoon } from './routes';
 
 const set = shopMoreSettings['pages.help'].default;
@@ -60,6 +60,13 @@ describe('a help page', () => {
     const m = model('faq', { rules: [exchange], text, lang: 'bn' });
     expect(m.qa.map((q) => q.q)).toEqual(['দোকান আছে?', exchange.short]);
     expect(m.title).toBe('প্রশ্ন ও উত্তর');
+    // S11 · PR 224: the FAQ data is exactly these questions, each answer as the plain text it shows
+    const items = helpFaqItems(m);
+    expect(items.map((x) => x.question)).toEqual(['দোকান আছে?', exchange.short]);
+    expect(items[0]!.answer).toBe('শুধু অনলাইনে।');
+    expect(items[1]!.answer).toContain('You can exchange for a different SIZE.');
+    // a page that says "Coming soon" has no questions to send
+    expect(helpFaqItems(model('faq'))).toEqual([]);
   });
 
   it('privacy, terms and our story are the owner`s alone: his text shows them, the store`s details follow', () => {

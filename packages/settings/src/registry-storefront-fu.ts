@@ -52,6 +52,9 @@ export const structuredDataSchema = z
     // S11 · PR 223 (registry v205): off as shipped; a value saved before it existed reads it as off.
     /** The product's rating and reviews, only from its real approved reviews and only what the reviews block shows. */
     reviews: z.boolean().default(false),
+    // S11 · PR 224 (registry v206): optional markup, off as shipped; Google shows no FAQ rich result since 7 May 2026.
+    /** FAQPage from the questions a page really answers: the product's answered questions and the FAQ page. */
+    faq: z.boolean().default(false),
   })
   .strict();
 
@@ -143,9 +146,10 @@ export const storefrontFuSettings = {
     ...json,
     group: 'naming',
     schema: structuredDataSchema,
-    default: { breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false },
-    // PR 222 added the home page, set page and struck-price parts (registry v64); PR 223 the reviews part (v205)
-    version: 205,
+    default: { breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false, faq: false },
+    // PR 222 added the home page, set page and struck-price parts (registry v64); PR 223 the reviews part (v205);
+    // PR 224 the FAQ part (v206)
+    version: 206,
     labelKey: 'seo.structuredData.label',
     helpKey: 'seo.structuredData.help',
     sortOrder: 900,

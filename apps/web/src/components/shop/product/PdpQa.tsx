@@ -8,7 +8,7 @@ import { dateText } from '@/lib/shop/account-view';
 import type { ShopContext } from '@/lib/shop/context';
 import { waHref } from '@/lib/shop/links';
 import { qaView, type QaRow } from '@/lib/shop/pdp-qa';
-import { answeredQuestions } from '@/lib/shop/pdp-qa-load';
+import { answeredQuestionsOnce } from '@/lib/shop/pdp-qa-load';
 import { Icon, WaGlyph } from '../Icon';
 
 function Ask({ c, href, lead, cls }: { c: ShopContext; href: string; lead: string; cls: string }) {
@@ -39,7 +39,7 @@ export async function PdpQa({ c, set, productId, name }: { c: ShopContext; set: 
   if (!set.on) return null;
   const t = c.t;
   const wa = waHref(c.s['contact.whatsapp'], t('qa.waMessage', { ...c.vars, name }));
-  const view = qaView(await answeredQuestions(c.storeId, productId, set.max), set, wa !== null);
+  const view = qaView(await answeredQuestionsOnce(c.storeId, productId, set.max), set, wa !== null);
   if (!view) return null;
   const hours = c.s['contact.hours']?.[c.lang] ?? null;
   const head = (
