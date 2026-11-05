@@ -307,6 +307,11 @@ export const PERMISSIONS = {
   // file, with a reason; the number only as `customers.phone` allows; erased and archived profiles never; every export an
   // ExportJob row and an audit line. Off until the owner turns `customers.export` on.
   'customers.export': { group: 'customers' },
+  // S14 · PR 535 — the legacy customer import (Customers › More › Import old customers, its own key): the old shop's order
+  // list as a CSV file, previewed first (new people, matched by phone, the same old order twice, bad numbers), then
+  // brought in as history only after a person confirms; never overwrites a customer, never an order that moves stock or
+  // money, never a message; an import's undo archives, never deletes. Off until the owner turns `customers.legacyImport` on.
+  'customers.import': { group: 'customers' },
   // S11 · PR 220–222 — Website → SEO: see which pages search engines may list, the title and description templates, the
   // AI drafts waiting and the structured data (`seo.read`); change them, write AI drafts and accept or discard a draft
   // (`seo.manage`). Nothing here touches a price, an order or a customer.

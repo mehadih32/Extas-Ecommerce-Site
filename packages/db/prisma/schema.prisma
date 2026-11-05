@@ -362,6 +362,7 @@ model Store {
   rewardEntries           RewardEntry[]
   reviewRequests          ReviewRequest[]
   legacyImports           LegacyImport[]
+  legacyOrderRecords      LegacyOrderRecord[]
   customerErasureRequests CustomerErasureRequest[]
   aiAgentStoreSettings    AiAgentStoreSetting[]
   aiUsageLedgers          AiUsageLedger[]
@@ -7597,14 +7598,16 @@ model Customer {
   createdAt                DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt                DateTime       @updatedAt @db.Timestamptz(3)
 
-  credential CustomerCredential?
-  sessions   CustomerSession[]
-  addresses  CustomerAddress[]
-  carts      Cart[]
-  orders     Order[]
-  wallet     WalletAccount?
-  notes      CustomerNote[]
-  tagLinks   CustomerTagLink[]
+  credential   CustomerCredential?
+  sessions     CustomerSession[]
+  addresses    CustomerAddress[]
+  carts        Cart[]
+  orders       Order[]
+  wallet       WalletAccount?
+  notes        CustomerNote[]
+  tagLinks     CustomerTagLink[]
+  /// PR 535: the old shop's orders brought in by a legacy import (history only).
+  legacyOrders LegacyOrderRecord[]
 
   @@unique([storeId, phone])
   @@index([storeId, lastOrderAt])
@@ -7902,19 +7905,62 @@ model ReviewRequest {
 
 /// @stage S14 · PR 535 — a legacy customer/order import (the owner's order sheet and courier data).
 model LegacyImport {
-  id           String           @id @default(uuid(7)) @db.Uuid
+  id           String              @id @default(uuid(7)) @db.Uuid
   storeId      Int
-  store        Store            @relation(fields: [storeId], references: [id])
+  store        Store               @relation(fields: [storeId], references: [id])
   source       String
-  fileAssetId  String?          @db.Uuid
-  status       BackgroundStatus @default(QUEUED)
-  rowsTotal    Int              @default(0)
-  rowsImported Int              @default(0)
-  duplicates   Int              @default(0)
-  startedById  String?          @db.Uuid
-  finishedAt   DateTime?        @db.Timestamptz(3)
-  createdAt    DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime         @updatedAt @db.Timestamptz(3)
+  fileAssetId  String?             @db.Uuid
+  status       BackgroundStatus    @default(QUEUED)
+  rowsTotal    Int                 @default(0)
+  rowsImported Int                 @default(0)
+  duplicates   Int                 @default(0)
+  startedById  String?             @db.Uuid
+  finishedAt   DateTime?           @db.Timestamptz(3)
+  createdAt    DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime            @updatedAt @db.Timestamptz(3)
+  /// PR 535: the file's name as uploaded (the file itself is not kept).
+  fileName     String?
+  /// PR 535: the column and status choices used and the counts (new people, matched, bad numbers).
+  summary      Json?
+  /// PR 535: "Undo this import" — its records and the profiles it made (still without an order) archived, never deleted.
+  undoneAt     DateTime?           @db.Timestamptz(3)
+  undoneById   String?             @db.Uuid
+  records      LegacyOrderRecord[]
+
+  @@index([storeId, createdAt])
+}
+
+/// @stage S14 · PR 535 — one order of the old shop, from a legacy import: history only. It is never an Order: it moves no
+/// stock and no money, sends nothing and is never counted in Sales. Archived with its import's undo, never deleted.
+model LegacyOrderRecord {
+  id          String       @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store        @relation(fields: [storeId], references: [id])
+  importId    String       @db.Uuid
+  import      LegacyImport @relation(fields: [importId], references: [id])
+  customerId  String?      @db.Uuid
+  customer    Customer?    @relation(fields: [customerId], references: [id])
+  /// Normalised E.164.
+  phone       String
+  name        String?
+  address     String?
+  /// The old shop's own order number, when the file has one.
+  ref         String?
+  orderedAt   DateTime?    @db.Timestamptz(3)
+  totalMinor  Int?
+  /// The status as the file wrote it, and what the owner said it means: delivered, returned, cancelled or other.
+  statusText  String?
+  outcome     String
+  /// The row's fingerprint (phone, date, total, ref) that finds the same old order in a later file.
+  fingerprint String
+  archivedAt  DateTime?    @db.Timestamptz(3)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, phone])
+  @@index([storeId, fingerprint])
+  @@index([importId])
+  @@index([customerId])
 }
 
 /// @stage S14 · PR 302 — a manual erasure request (owner's written OK; the record is anonymised, never silently dropped).

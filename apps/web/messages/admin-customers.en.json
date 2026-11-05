@@ -90,7 +90,10 @@
       "SWITCHED_OFF": "This is switched off in the settings.",
       "AI_UNAVAILABLE": "The AI writer did not answer or gave nothing usable. Try again, or write it yourself.",
       "NOT_ENOUGH_POINTS": "Not enough points for one turn-in yet.",
-      "EXPORT_TOO_LARGE": "Too many customers for one file. Narrow the list (a view, search or filter) and try again."
+      "EXPORT_TOO_LARGE": "Too many customers for one file. Narrow the list (a view, search or filter) and try again.",
+      "BAD_FILE": "This file cannot be read (a quote is not closed). Save it again as CSV and try again.",
+      "IMPORT_TOO_LARGE": "This file has more rows than one import takes. Split it into smaller files, or raise the number in Customer settings.",
+      "NOTHING_TO_IMPORT": "Nothing new in this file: every row is a bad number or an old order brought in already."
     },
     "list": {
       "title": "All customers",
@@ -283,6 +286,17 @@
         "COMPLETED": "Done",
         "REJECTED": "Refused",
         "CANCELLED": "Cancelled"
+      },
+      "legacy": {
+        "title": "Old shop orders",
+        "sub": "From the old shop's order list (import): history only, never counted in Sales or in the risk check.",
+        "imported": "Imported",
+        "orders": "old orders",
+        "delivered": "delivered",
+        "returned": "returned or refused",
+        "cancelled": "cancelled",
+        "other": "other",
+        "span": "{first} – {last}"
       }
     },
     "seg": {
@@ -665,6 +679,12 @@
         "maxGrades": "Most grades kept (1–20)",
         "goodFrom": "Good customer from this grade (for the good-customer rule in Orders › Risk rules)",
         "goodNone": "None — grades do not count for it"
+      },
+      "legacyImport": {
+        "title": "Import old customers",
+        "sub": "Off as shipped. When on, people who hold \"Import old customers\" can bring in the old shop's order list on Customers › More › Import old customers: a preview first, then history only — nothing here is overwritten, no order is made and no message is sent.",
+        "enabled": "Allow the import",
+        "maxRows": "Most rows in one file (1–50000)"
       }
     },
     "auto": {
@@ -1142,6 +1162,99 @@
         "NAME_TAKEN": "Another grade already has this name.",
         "LIMIT_REACHED": "That is more grades than the settings allow. Archive one first, or raise \"Most grades kept\"."
       }
+    },
+    "imp": {
+      "title": "Import old customers",
+      "sub": "Upload the old shop's order list → check the preview → import. History only: never overwrites, never an order, never a message.",
+      "off": "The import is switched off.",
+      "offLink": "Turn it on in Customer settings",
+      "readOnly": "You can see past imports. Importing needs the \"Import old customers\" permission.",
+      "upload": {
+        "title": "Upload a file",
+        "hint": "A CSV file, one old order per row: phone number (needed), name, address, order date, total, status, old order number. From Excel: File › Save as › CSV.",
+        "choose": "Choose a CSV file",
+        "reading": "Reading the file…",
+        "limit": "Up to {n} rows in one file."
+      },
+      "hint": {
+        "phone": "phone,mobile,number,contact,ফোন,মোবাইল,নম্বর",
+        "name": "name,customer,নাম,কাস্টমার",
+        "address": "address,ঠিকানা",
+        "orderedAt": "date,order date,ordered,তারিখ",
+        "total": "total,amount,price,bill,টাকা,মোট",
+        "status": "status,state,অবস্থা,স্ট্যাটাস",
+        "ref": "invoice,order no,order id,ref,id,অর্ডার নম্বর",
+        "delivered": "deliver,complete,done,paid,ডেলিভারি,পৌঁছেছে",
+        "returned": "return,refus,ফেরত",
+        "cancelled": "cancel,বাতিল"
+      },
+      "field": {
+        "phone": "Phone number",
+        "name": "Name",
+        "address": "Address",
+        "orderedAt": "Order date",
+        "total": "Total",
+        "status": "Status",
+        "ref": "Old order number",
+        "none": "— not in the file —"
+      },
+      "dateOrder": {
+        "label": "Dates like 04/03/2025 are",
+        "dmy": "day / month / year",
+        "mdy": "month / day / year"
+      },
+      "outcome": {
+        "delivered": "Delivered",
+        "returned": "Returned or refused",
+        "cancelled": "Cancelled",
+        "other": "Other"
+      },
+      "prev": {
+        "title": "Preview: {file}",
+        "columns": "Which column is which",
+        "statuses": "What each status means",
+        "statusRows": "{n} rows",
+        "needPhone": "Choose the column with the phone number.",
+        "never": "Customers already here keep everything they have: only the old orders are added to their history. No order is made, no stock or money moves and no message is sent. The same old order is never brought in twice.",
+        "badLines": "Lines with a bad number (skipped): {lines}",
+        "sample": "First rows",
+        "line": "Line {n}",
+        "noDate": "no date",
+        "reading": "Reading again…"
+      },
+      "count": {
+        "rows": "rows",
+        "toImport": "old orders to bring in",
+        "newPeople": "new customers",
+        "matched": "already here (matched by phone)",
+        "sameInFile": "the same order twice in this file",
+        "importedBefore": "brought in before",
+        "badPhone": "bad numbers",
+        "noDate": "without a date"
+      },
+      "fate": {
+        "new": "New customer",
+        "matched": "Already here",
+        "sameInFile": "Same order again",
+        "before": "Brought in before",
+        "badPhone": "Bad number"
+      },
+      "go": "Import {n} old orders",
+      "going": "Importing…",
+      "confirm": "Import {n} old orders from {file}? {people} new customers will be made; {matched} customers already here get the old orders in their history. You can undo this import later.",
+      "done": "Imported {n} old orders: {people} new customers, {matched} already here.",
+      "another": "Choose another file",
+      "past": {
+        "title": "Imported before",
+        "none": "Nothing imported yet.",
+        "line": "{when} · {by}",
+        "counts": "{rows} rows · {imported} brought in · {dups} skipped as the same · {people} new · {matched} matched",
+        "undone": "Undone on {when}",
+        "unknown": "—"
+      },
+      "undo": "Undo this import",
+      "undoConfirm": "Undo this import? Its old orders, and the new customers it made that have not ordered since, are archived (never deleted).",
+      "undoDone": "Undone: {records} old orders archived, {archived} new customers archived, {kept} kept (they ordered or were merged since)."
     }
   }
 }

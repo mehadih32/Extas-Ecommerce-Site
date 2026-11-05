@@ -152,6 +152,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'loyalty', pages: [{ href: '/admin/customers/loyalty', perm: 'customers.read', keys: ['customersLoyalty'] }] },
       { id: 'review', pages: [{ href: '/admin/customers/review', perm: 'customers.read', keys: ['customersReview'] }] },
       // PR 288: the CRM switches and numbers, under More
+      // PR 535: the legacy customer import (CUS-06), under More
+      { id: 'import', more: true, pages: [{ href: '/admin/customers/import', perm: 'customers.read', keys: ['customersImport'] }] },
       { id: 'settings', more: true, pages: [{ href: '/admin/customers/settings', perm: 'customers.read', keys: ['customersSettings'] }] },
     ],
   },

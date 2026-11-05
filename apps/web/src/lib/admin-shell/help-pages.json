@@ -44,6 +44,7 @@
     { "id": "customers/loyalty", "route": "/admin/customers/loyalty" },
     { "id": "customers/review", "route": "/admin/customers/review" },
     { "id": "customers/settings", "route": "/admin/customers/settings" },
+    { "id": "customers/import", "route": "/admin/customers/import" },
     { "id": "customers/customer", "route": "/admin/customers/[id]" },
     { "id": "delivery/zones", "route": "/admin/delivery/zones" },
     { "id": "delivery/couriers", "route": "/admin/delivery/couriers" },

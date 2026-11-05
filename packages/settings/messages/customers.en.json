@@ -70,6 +70,10 @@
     "grades": {
       "label": "Customer grading",
       "help": "Off as shipped, with no grade made for you. When on, the team sees each customer's grade — one of your own grades, each with its rule of true deliveries and refusals that were not the shop's fault — as a small mark on the customer list, the customer's page and Orders › To confirm, and a \"Verified\" mark once he has the true deliveries you set (0 = no mark). A customer gets the highest grade (in your order) whose rule he meets. \"Good customer from\": a grade at or above it also counts as a good customer for the fraud check's good-customer override, which has its own switch (Orders › Risk rules › Good customer). A grade is only shown to the team: it never blocks anyone, never holds an order and never changes cash on delivery."
+    },
+    "legacyImport": {
+      "label": "Import old customers",
+      "help": "Off as shipped. When on, a person holding the import key uploads the old shop's order list (a CSV file: phone, name, address, order date, total, status), sees a preview first — new people, people already here (matched by phone), the same old order twice, bad numbers — and confirms. The old orders are kept as each customer's history only: never an order, no stock, no money, no message, and nothing already here is overwritten. Max rows: the most rows one file may hold (a bigger file is refused with its count). An import can be undone: its records and the new profiles that still have no order are archived, never deleted."
     }
   }
 }

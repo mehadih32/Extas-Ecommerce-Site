@@ -262,7 +262,8 @@
       },
       "settings": "Switch the customer features (journey view and others) on or off and change their numbers",
       "notes": "Put tags on a customer or take them off, and write, pin or put away the team’s notes about him (never shown to the customer; nothing is deleted)",
-      "export": "Download the customer list as a CSV file, with a reason (logged; never an erased customer, an address or a location)"
+      "export": "Download the customer list as a CSV file, with a reason (logged; never an erased customer, an address or a location)",
+      "import": "Bring in the old shop's order list (CSV): preview first, then import as history only (never overwrites a customer, never an order or a message), or undo an import (archived, never deleted)"
     },
     "seo": {
       "read": "See the SEO page: which pages search engines may list, the title and description templates, the AI drafts and the structured data",

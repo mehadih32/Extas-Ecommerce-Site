@@ -87,7 +87,8 @@
         "segments": "Segments",
         "loyalty": "Loyalty & wallet",
         "review": "To review",
-        "settings": "Customer settings"
+        "settings": "Customer settings",
+        "import": "Import old customers"
       },
       "messages": {
         "log": "Message log",

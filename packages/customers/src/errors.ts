@@ -42,7 +42,13 @@ export type CustomersErrorCode =
   /** PR 296: fewer points than one block of the owner's rate (`data.redeemPoints`). */
   | 'NOT_ENOUGH_POINTS'
   /** PR 299: more people than one export file holds (`data.count`, `data.maxRows`); narrow the list first. */
-  | 'EXPORT_TOO_LARGE';
+  | 'EXPORT_TOO_LARGE'
+  /** PR 535: the file cannot be read (`data.line`: an unclosed quote). */
+  | 'BAD_FILE'
+  /** PR 535: more rows than one import takes (`data.count`, `data.maxRows`); split the file. */
+  | 'IMPORT_TOO_LARGE'
+  /** PR 535: every row of the file is a bad number or an old order brought in already. */
+  | 'NOTHING_TO_IMPORT';
 
 export class CustomersError extends Error {
   readonly code: CustomersErrorCode;
@@ -72,6 +78,9 @@ export class CustomersError extends Error {
       case 'LIMIT_REACHED':
       case 'NOT_ENOUGH_POINTS':
       case 'EXPORT_TOO_LARGE':
+      case 'BAD_FILE':
+      case 'IMPORT_TOO_LARGE':
+      case 'NOTHING_TO_IMPORT':
         return 422;
       case 'AI_UNAVAILABLE':
         return 503;

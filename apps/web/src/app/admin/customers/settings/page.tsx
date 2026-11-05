@@ -124,6 +124,15 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
       { name: 'maxGrades', kind: 'int' },
     ],
   },
+  {
+    // PR 535 — the legacy customer import (Customers › More › Import old customers): the switch and the row limit
+    key: 'customers.legacyImport',
+    card: 'legacyImport',
+    fields: [
+      { name: 'enabled', kind: 'bool' },
+      { name: 'maxRows', kind: 'int' },
+    ],
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {

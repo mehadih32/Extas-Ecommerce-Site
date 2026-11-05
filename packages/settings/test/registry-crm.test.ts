@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { aiWriterSettingsSchema, approvalHistorySettingsSchema, gradesSettingsSchema, BIRTHDAY_NO_YEAR, birthdayDate, birthdayParts, birthdaySettingsSchema, CRM_CAMPAIGN_STEP, customerReportSettingsSchema, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema, winbackSettingsSchema } from '../src/registry-crm';
+import { aiWriterSettingsSchema, approvalHistorySettingsSchema, gradesSettingsSchema, legacyImportSettingsSchema, BIRTHDAY_NO_YEAR, birthdayDate, birthdayParts, birthdaySettingsSchema, CRM_CAMPAIGN_STEP, customerReportSettingsSchema, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema, winbackSettingsSchema } from '../src/registry-crm';
 
 describe('CRM settings (v190–209)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -142,5 +142,15 @@ describe('CRM settings (v190–209)', () => {
     expect(gradesSettingsSchema.safeParse({ ...s.default, maxGrades: 0 }).success).toBe(false);
     expect(gradesSettingsSchema.safeParse({ ...s.default, blockFrom: 'watch' }).success).toBe(false);
     expect(gradesSettingsSchema.safeParse({ ...s.default, codOff: true }).success).toBe(false);
+  });
+
+  it('PR 535: the legacy import is off as shipped (v204) with a row limit; it has no switch that sends or orders', () => {
+    const s = crmSettings['customers.legacyImport'];
+    expect(s.version).toBe(204);
+    expect(s.default).toEqual({ enabled: false, maxRows: 5_000 });
+    expect(legacyImportSettingsSchema.safeParse({ ...s.default, maxRows: 0 }).success).toBe(false);
+    expect(legacyImportSettingsSchema.safeParse({ ...s.default, maxRows: 50_001 }).success).toBe(false);
+    expect(legacyImportSettingsSchema.safeParse({ ...s.default, sendWelcome: true }).success).toBe(false);
+    expect(legacyImportSettingsSchema.safeParse({ ...s.default, overwrite: true }).success).toBe(false);
   });
 });
