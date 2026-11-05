@@ -51,3 +51,6 @@ export * from './channels';
 // S13 · PR 267: `adCostPerOrder` — ad spend per order and per delivered order by campaign, platform and for the shop, and
 // `adAlertHits` — the owner's alert rules held against them (ad-cost.ts).
 export * from './ad-cost';
+// S13 · PR 269: `adDeliveredReturn` — delivered sales and delivered ROAS by platform campaign, product and district, the
+// campaign's spend shared out over its delivered orders (ad-return.ts), for the AI growth agent.
+export * from './ad-return';
