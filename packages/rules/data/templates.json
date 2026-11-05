@@ -1,6 +1,6 @@
 {
-  "$comment": "S10 · PR 208–216 — starting points for a new Smart Rule, one per common rule. Words and structure only: every number a rule needs is a param whose value is empty (null) until the owner types it in, or is read from the store's own setting at the moment the rule is made (fromSetting). Nothing here is the owner's data or a price. A template marked starter is offered as one of the store's first rules (all as drafts: nothing reaches customers until it is published, and a rule that moves money needs the owner's OK). Delivery-band keys are the default pack's (PR 508).",
-  "version": 1,
+  "$comment": "S10 · PR 208–216 — starting points for a new Smart Rule, one per common rule. Words and structure only: every number a rule needs is a param whose value is empty (null) until the owner types it in, or is read from the store's own setting at the moment the rule is made (fromSetting). Nothing here is the owner's data or a price. A template marked starter is offered as one of the store's first rules (all as drafts: nothing reaches customers until it is published, and a rule that moves money needs the owner's OK). Delivery-band keys are the default pack's (PR 508). PR 271: coupon shapes (percentage, fixed, free delivery, buy some get some, a few pieces for a percentage, a set price behind a code) are templates too: a new shape is a new entry here built from the same blocks, not new code.",
+  "version": 2,
   "templates": [
     {
       "id": "exchange",
@@ -188,6 +188,240 @@
       ],
       "actions": [{ "type": "discount", "mode": "amount", "param": "amountOff", "target": "order", "minSubtotalParam": "minOrder", "requiresCoupon": true, "showWas": false }],
       "placements": ["checkout"]
+    },
+    {
+      "id": "coupon-percent",
+      "kind": "discount",
+      "nameEn": "Coupon: percentage off",
+      "nameBn": "কুপন: শতাংশ ছাড়",
+      "text": {
+        "short": {
+          "en": "{percentOff} off with a coupon on orders over {minOrder}",
+          "bn": "{minOrder}-এর বেশি অর্ডারে কুপনে {percentOff} ছাড়"
+        },
+        "full": {
+          "en": "Type the coupon code in the bag or at checkout: {percentOff} off orders over {minOrder}, up to {maxOff}.\nOne coupon per order.",
+          "bn": "ব্যাগে বা চেকআউটে কুপন কোড লিখুন: {minOrder}-এর বেশি অর্ডারে {percentOff} ছাড়, সর্বোচ্চ {maxOff}।\nএক অর্ডারে একটা কুপন।"
+        }
+      },
+      "params": [
+        {
+          "key": "percentOff",
+          "type": "percent",
+          "value": null,
+          "labelEn": "Discount (%)",
+          "labelBn": "ছাড় (%)"
+        },
+        {
+          "key": "minOrder",
+          "type": "money",
+          "value": null,
+          "labelEn": "Smallest order",
+          "labelBn": "সবচেয়ে ছোট অর্ডার"
+        },
+        {
+          "key": "maxOff",
+          "type": "money",
+          "value": null,
+          "labelEn": "Largest discount",
+          "labelBn": "সর্বোচ্চ ছাড়"
+        }
+      ],
+      "actions": [
+        {
+          "type": "discount",
+          "mode": "percent",
+          "param": "percentOff",
+          "target": "order",
+          "maxParam": "maxOff",
+          "minSubtotalParam": "minOrder",
+          "requiresCoupon": true,
+          "showWas": false
+        }
+      ],
+      "placements": [
+        "bag",
+        "checkout"
+      ]
+    },
+    {
+      "id": "coupon-free-delivery",
+      "kind": "discount",
+      "nameEn": "Coupon: free delivery",
+      "nameBn": "কুপন: ফ্রি ডেলিভারি",
+      "text": {
+        "short": {
+          "en": "Free delivery with a coupon",
+          "bn": "কুপনে ফ্রি ডেলিভারি"
+        },
+        "full": {
+          "en": "Type the coupon code in the bag or at checkout and the delivery is free.\nOne coupon per order.",
+          "bn": "ব্যাগে বা চেকআউটে কুপন কোড লিখুন, ডেলিভারি ফ্রি।\nএক অর্ডারে একটা কুপন।"
+        }
+      },
+      "params": [],
+      "actions": [
+        {
+          "type": "freeDelivery",
+          "requiresCoupon": true
+        }
+      ],
+      "placements": [
+        "bag",
+        "checkout"
+      ]
+    },
+    {
+      "id": "coupon-buy-get",
+      "kind": "discount",
+      "nameEn": "Coupon: buy some, get some (buy 1 get 1)",
+      "nameBn": "কুপন: কিনলে আরও পান (১টা কিনলে ১টা)",
+      "text": {
+        "short": {
+          "en": "Buy {buy}, get {get} at {percentOff} off with a coupon",
+          "bn": "কুপনে {buy}টা কিনলে আরও {get}টায় {percentOff} ছাড়"
+        },
+        "full": {
+          "en": "Type the coupon code in the bag or at checkout: for every {buy} pieces, {get} more of the cheapest are {percentOff} off (100% = free), up to {maxGroups} times per order.\nOne coupon per order.",
+          "bn": "ব্যাগে বা চেকআউটে কুপন কোড লিখুন: প্রতি {buy}টা পণ্যে সবচেয়ে কম দামের আরও {get}টায় {percentOff} ছাড় (১০০% = ফ্রি), এক অর্ডারে সর্বোচ্চ {maxGroups} বার।\nএক অর্ডারে একটা কুপন।"
+        },
+        "badge": {
+          "en": "Buy {buy} get {get}",
+          "bn": "{buy}টা কিনলে {get}টা"
+        }
+      },
+      "params": [
+        {
+          "key": "buy",
+          "type": "int",
+          "value": null,
+          "labelEn": "Pieces to buy",
+          "labelBn": "কয়টা কিনতে হবে"
+        },
+        {
+          "key": "get",
+          "type": "int",
+          "value": null,
+          "labelEn": "Pieces that get the offer",
+          "labelBn": "কয়টায় অফার"
+        },
+        {
+          "key": "percentOff",
+          "type": "percent",
+          "value": null,
+          "labelEn": "Off those pieces (%) — 100 = free",
+          "labelBn": "ওই পণ্যগুলোতে ছাড় (%) — ১০০ = ফ্রি"
+        },
+        {
+          "key": "maxGroups",
+          "type": "int",
+          "value": null,
+          "labelEn": "Times per order",
+          "labelBn": "এক অর্ডারে কতবার"
+        }
+      ],
+      "actions": [
+        {
+          "type": "buyGet",
+          "buyParam": "buy",
+          "getParam": "get",
+          "percentParam": "percentOff",
+          "maxGroupsParam": "maxGroups",
+          "requiresCoupon": true
+        }
+      ],
+      "placements": [
+        "bag",
+        "checkout"
+      ]
+    },
+    {
+      "id": "coupon-pieces",
+      "kind": "discount",
+      "nameEn": "Coupon: buy a few, get a percentage off",
+      "nameBn": "কুপন: কয়েকটা কিনলে শতাংশ ছাড়",
+      "text": {
+        "short": {
+          "en": "Buy {minPieces} or more, get {percentOff} off with a coupon",
+          "bn": "কুপনে {minPieces}টা বা বেশি কিনলে {percentOff} ছাড়"
+        },
+        "full": {
+          "en": "Type the coupon code in the bag or at checkout: {percentOff} off when you buy {minPieces} or more of these products.\nOne coupon per order.",
+          "bn": "ব্যাগে বা চেকআউটে কুপন কোড লিখুন: এই পণ্যগুলোর {minPieces}টা বা বেশি কিনলে {percentOff} ছাড়।\nএক অর্ডারে একটা কুপন।"
+        }
+      },
+      "params": [
+        {
+          "key": "percentOff",
+          "type": "percent",
+          "value": null,
+          "labelEn": "Discount (%)",
+          "labelBn": "ছাড় (%)"
+        },
+        {
+          "key": "minPieces",
+          "type": "int",
+          "value": null,
+          "labelEn": "Smallest number of pieces",
+          "labelBn": "কমপক্ষে কয়টা পণ্য"
+        }
+      ],
+      "actions": [
+        {
+          "type": "discount",
+          "mode": "percent",
+          "param": "percentOff",
+          "target": "lines",
+          "minQuantityParam": "minPieces",
+          "requiresCoupon": true,
+          "showWas": false
+        }
+      ],
+      "placements": [
+        "bag",
+        "checkout"
+      ]
+    },
+    {
+      "id": "coupon-set-price",
+      "kind": "setTier",
+      "nameEn": "Coupon: set price",
+      "nameBn": "কুপন: সেটের দাম",
+      "text": {
+        "short": {
+          "en": "Any 2 for {tier2} with a coupon",
+          "bn": "কুপনে যেকোনো ২টা {tier2}"
+        },
+        "full": {
+          "en": "Type the coupon code in the bag or at checkout: any 2 of these products for {tier2}.\nSet prices are not combined with other offers.",
+          "bn": "ব্যাগে বা চেকআউটে কুপন কোড লিখুন: এই পণ্যগুলোর যেকোনো ২টা {tier2}।\nসেটের দামের সাথে অন্য অফার মেলে না।"
+        }
+      },
+      "params": [
+        {
+          "key": "tier2",
+          "type": "money",
+          "value": null,
+          "labelEn": "Price for any 2",
+          "labelBn": "যেকোনো ২টার দাম"
+        }
+      ],
+      "actions": [
+        {
+          "type": "setTier",
+          "tiers": [
+            {
+              "quantity": 2,
+              "param": "tier2"
+            }
+          ],
+          "requiresCoupon": true
+        }
+      ],
+      "placements": [
+        "bag",
+        "checkout"
+      ]
     },
     {
       "id": "festive",

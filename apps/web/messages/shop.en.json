@@ -908,6 +908,8 @@
       "remove": "Remove",
       "removed": "Code removed",
       "needsMore": "Add {amount} more to use {code}.",
+      "needsPieces": "Add more pieces to use {code}: {count} to go.",
+      "freeDelivery": "Code {code} added: free delivery.",
       "betterSet": "{code} is not added: your set price already saves more, and offers are not combined.",
       "betterOffer": "{code} is not added: another offer in your bag already saves more, and offers are not combined.",
       "notForItems": "{code} does not cover the items in your bag.",

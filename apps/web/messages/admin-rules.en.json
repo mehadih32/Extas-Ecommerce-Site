@@ -118,6 +118,7 @@
         "exchangePolicy": "Sets the exchange window, what qualifies and who pays",
         "setTier": "Any few pieces for a set price",
         "discount": "Gives a discount",
+        "buyGet": "Buy some, get some (the cheapest at a percentage off)",
         "cutoff": "Order-by dates per area",
         "cod": "Cash on delivery on or off"
       },
@@ -340,7 +341,7 @@
       "KEY_FIXED": "The topic and the short name of a rule stay as they are.",
       "NOTICE_INVALID": "The notice is not ready: {fields}",
       "COUPON_CODE_INVALID": "That code will not do: {fields}",
-      "COUPON_RULE_INVALID": "Coupons work only with a discount that asks for a coupon.",
+      "COUPON_RULE_INVALID": "Coupons work only with an offer that asks for a coupon.",
       "COUPON_NOT_USABLE": "This coupon cannot be used.",
       "CANNOT_FIX": "This clash cannot be fixed by itself — change the text by hand."
     },

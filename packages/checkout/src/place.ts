@@ -456,7 +456,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   const consent = chat ? { sms: null, whatsapp: null } : consentOf(cs, d.consent ?? null);
   const discountMinor = q.bag.summary.offers.reduce((a, o) => a + o.amountMinor, 0) + t.rewardMinor;
   // Review R1 (B1): the code the order uses is redeemed in the order's own transaction (its limits hold under load)
-  const coupon = q.bag.summary.offers.find((x) => x.code) ?? null;
+  // PR 271: a free-delivery code takes nothing off the items, yet it is the order's code and counts against its limits.
+  const coupon = q.bag.summary.offers.find((x) => x.code) ?? (q.bag.code.state === 'freeDelivery' ? { code: q.bag.code.code } : null);
   const couponMinor = q.bag.summary.offers.filter((x) => x.code).reduce((a, o) => a + o.amountMinor, 0);
   const scope = scopeOf(storeId);
   const inv = inventoryDeps(deps);

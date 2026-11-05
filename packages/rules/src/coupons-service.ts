@@ -7,11 +7,15 @@
 // A coupon is made off. Switching it on or off changes what customers pay: that needs the owner's OK (`rules.approve`,
 // CLAUDE.md rule 6). Redeeming is part of placing an order (S04 calls `redeemCoupon` inside its transaction): the use
 // count can never pass the limit, even with two orders at the same moment, and one order redeems a coupon once.
+// PR 271 (answer 20, fully dynamic): a coupon unlocks any rule whose offer waits for a code — a percentage or a fixed
+// amount (discount), free delivery, buy some get some (buy-one-get-one), a percentage from a few pieces, or a set price
+// — so a new offer shape is a new rule template, not new code. Who may use it stays per coupon (CN-018).
+
 import { Prisma } from '@extas/db/client';
 import { z } from 'zod';
 import { allow, found, holds, logChange, nowOf, parse, setting, type Db, type RulesDeps, type Tx, type Who } from './context';
 import { RulesError } from './errors';
-import { COUPON_AUDIENCES, couponAudienceOf, isLive, type CouponAudience } from './model';
+import { COUPON_AUDIENCES, couponAudienceOf, isLive, unlocksWithCoupon, type CouponAudience } from './model';
 import { toRule } from './rows';
 
 type CouponRow = Prisma.CouponGetPayload<object>;
@@ -68,7 +72,7 @@ const createSchema = z
   .strict()
   .refine((b) => !b.startsAt || !b.endsAt || Date.parse(b.endsAt) > Date.parse(b.startsAt), { message: 'the end must be after the start', path: ['endsAt'] });
 
-/** A new coupon for a discount rule that asks for one: always off. */
+/** A new coupon for a rule whose offer asks for one (any shape, PR 271): always off. */
 export async function createCoupon(deps: RulesDeps, who: Who, input: unknown): Promise<CouponView> {
   await allow(deps, who, 'rules.write');
   const b = parse(createSchema, input, 'coupon');
@@ -77,7 +81,7 @@ export async function createCoupon(deps: RulesDeps, who: Who, input: unknown): P
   if (!new RegExp(pattern).test(code)) throw new RulesError('COUPON_CODE_INVALID', 'the code does not have the allowed shape', [code]);
   const ruleRow = found(await deps.db.smartRule.findFirst({ where: { id: b.ruleId, storeId: who.storeId } }), 'rule');
   const rule = toRule(ruleRow);
-  if (!rule || !rule.actions.some((a) => a.type === 'discount' && a.requiresCoupon)) throw new RulesError('COUPON_RULE_INVALID', 'the rule must be a discount that asks for a coupon');
+  if (!rule || !unlocksWithCoupon(rule)) throw new RulesError('COUPON_RULE_INVALID', 'the rule must hold an offer that asks for a coupon');
   if (await deps.db.coupon.findUnique({ where: { storeId_code: { storeId: who.storeId, code } }, select: { id: true } })) throw new RulesError('KEY_TAKEN', 'this code is used already', [code]);
   const row = await deps.db.$transaction(async (tx) => {
     const c = await tx.coupon.create({

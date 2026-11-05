@@ -204,6 +204,10 @@ export type CodeState =
   | { state: 'applied'; code: string; amountMinor: number }
   /** The code works but asks for a bigger order: "Add ৳X more to use CODE". */
   | { state: 'needsMore'; code: string; moreMinor: number }
+  /** PR 271: the code works but asks for more pieces ("buy 1 get 1", "buy 3, get 5% off"): "Add N more pieces". */
+  | { state: 'needsPieces'; code: string; pieces: number }
+  /** PR 271: a free-delivery code: it takes nothing off the items, the delivery is free. */
+  | { state: 'freeDelivery'; code: string }
   /** The code works, but a set price or another offer saves more; offers are not combined. */
   | { state: 'betterOffer'; code: string; by: 'set' | 'offer' }
   /** The code works, but none of the items in the bag are covered. */
@@ -221,6 +225,10 @@ export interface CodeFacts {
   appliedMinor: number;
   /** The rule waits for a bigger order: how much more (null = not waiting for that). */
   moreMinor: number | null;
+  /** PR 271: the rule waits for more pieces: how many more (null or left out = not waiting for that). */
+  morePieces?: number | null;
+  /** PR 271: the code's rule made the delivery free. */
+  freeDelivery?: boolean;
   /** A set price applied in the bag (set tiers or set lines). */
   setApplied: boolean;
   /** Another discount applied to the items the code would cover. */
@@ -239,6 +247,8 @@ export function codeStateOf(f: CodeFacts): CodeState {
   }
   if (f.appliedMinor > 0) return { state: 'applied', code, amountMinor: f.appliedMinor };
   if (f.moreMinor !== null && f.moreMinor > 0) return { state: 'needsMore', code, moreMinor: f.moreMinor };
+  if (f.morePieces != null && f.morePieces > 0) return { state: 'needsPieces', code, pieces: f.morePieces };
+  if (f.freeDelivery) return { state: 'freeDelivery', code };
   if (f.setApplied) return { state: 'betterOffer', code, by: 'set' };
   if (f.otherApplied) return { state: 'betterOffer', code, by: 'offer' };
   return { state: 'notForItems', code };

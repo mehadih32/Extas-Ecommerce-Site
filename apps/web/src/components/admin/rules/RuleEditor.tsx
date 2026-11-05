@@ -5,7 +5,7 @@
 // stops it going live, and the buttons. Everything typed here is a candidate in the browser until "Save draft" or
 // "Publish"; the live preview uses the same code as the storefront (@extas/rules/pure), so what it shows is exact.
 import type { RuleView } from '@extas/rules';
-import { actionParamNeeds, KIND_SPECS, needsOwnerOk, type Param, type RuleContent, type TextSlot } from '@extas/rules/pure';
+import { actionParamNeeds, KIND_SPECS, needsOwnerOk, unlocksWithCoupon, type Param, type RuleContent, type TextSlot } from '@extas/rules/pure';
 import { Icon } from '../Icon';
 import { t, type Dict } from '@/lib/i18n';
 import {
@@ -96,8 +96,9 @@ export function RuleEditor(p: EditorProps) {
   const slots = KIND_SPECS[cand.kind].slots.filter((s) => EXTRA_SLOTS.includes(s));
   const used = usedByActions(cand);
   const params = [...cand.params].sort((a, b) => Number(used.has(b.key)) - Number(used.has(a.key)));
-  const coupons = cand.actions.some((a) => a.type === 'discount' && a.requiresCoupon);
-  const hasDiscount = cand.actions.some((a) => a.type === 'discount' || a.type === 'setTier');
+  // PR 271: every offer shape that waits for a code gets its coupons here (discount, buy-get, free delivery, set price).
+  const coupons = unlocksWithCoupon(cand);
+  const hasDiscount = cand.actions.some((a) => a.type === 'discount' || a.type === 'setTier' || a.type === 'buyGet');
   const textOf = (slot: TextSlot) => (textLang === 'en' ? (cand.text[slot]?.en ?? '') : (cand.text[slot]?.bn ?? ''));
   const set = (next: RuleContent) => {
     if (canEdit) p.onChange(next);

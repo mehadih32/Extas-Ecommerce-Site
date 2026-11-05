@@ -116,4 +116,10 @@ describe('PR 112 · the code box, SIM-F-009', () => {
     expect(codeStateOf(facts({ check: { ok: false, reason: 'UNKNOWN', ruleId: null } }))).toEqual({ state: 'refused', code: 'EID', reason: 'UNKNOWN' });
     expect(codeStateOf(facts({ check: { ok: false, reason: 'UNKNOWN', ruleId: null }, referral: true }))).toEqual({ state: 'refused', code: 'EID', reason: 'REFERRAL' });
   });
+
+  it('PR 271: a buy-get code waiting for pieces says how many; a free-delivery code reads as added', () => {
+    expect(codeStateOf(facts({ morePieces: 1 }))).toEqual({ state: 'needsPieces', code: 'EID', pieces: 1 });
+    expect(codeStateOf(facts({ freeDelivery: true }))).toEqual({ state: 'freeDelivery', code: 'EID' });
+    expect(codeStateOf(facts({ appliedMinor: 500, freeDelivery: true }))).toEqual({ state: 'applied', code: 'EID', amountMinor: 500 });
+  });
 });

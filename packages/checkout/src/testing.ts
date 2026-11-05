@@ -31,6 +31,8 @@ export interface CheckoutFixture {
   switchRule: (key: string, on?: boolean) => Promise<void>;
   /** A live coupon rule taking `amountOffMinor` off, and its code switched on with these limits (as in the admin). */
   coupon: (code: string, amountOffMinor: number, limits?: { usageLimit?: number; perCustomerLimit?: number }) => Promise<void>;
+  /** PR 271: a live free-delivery code (the coupon-free-delivery shape), switched on with these limits. */
+  freeDeliveryCoupon: (code: string, limits?: { usageLimit?: number; perCustomerLimit?: number }) => Promise<void>;
 }
 
 export async function setUpCheckout(label: string): Promise<CheckoutFixture> {
@@ -98,6 +100,15 @@ export async function setUpCheckout(label: string): Promise<CheckoutFixture> {
       const live = rule.live!;
       const content = { ...live, status: 'ACTIVE' as const, params: live.params.map((p) => (p.key === 'amountOff' ? { ...p, value: amountOffMinor } : p.key === 'minOrder' ? { ...p, value: 100 } : p)) };
       await saveDraft(deps(), who, rule.id, { content });
+      await publishRule(deps(), who, rule.id);
+      const c = await createCoupon(deps(), who, { code, ruleId: rule.id, ...limits });
+      await setCouponEnabled(deps(), who, c.id, { enabled: true });
+      bustAll();
+    },
+    async freeDeliveryCoupon(code, limits = {}) {
+      const who = { actor: owner, storeId: S };
+      const rule = await createRule(deps(), who, { templateId: 'coupon-free-delivery', key: `test-${code.toLowerCase()}` });
+      await saveDraft(deps(), who, rule.id, { content: { ...rule.live!, status: 'ACTIVE' as const } });
       await publishRule(deps(), who, rule.id);
       const c = await createCoupon(deps(), who, { code, ruleId: rule.id, ...limits });
       await setCouponEnabled(deps(), who, c.id, { enabled: true });

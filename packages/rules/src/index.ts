@@ -8,6 +8,9 @@
 // - PR 216 notices and the pop-up builder (notices-model.ts, notices-service.ts);
 // - PR 217 conflict detection and the resolution order (conflicts.ts, conflicts-service.ts);
 // - PR 218 rule history (history.ts); PR 219 rule simulation (simulate-service.ts);
+// - S13 PR 271 the coupon engine, fully dynamic: a code unlocks any offer shape that asks for one — percentage, fixed
+//   amount, free delivery, buy some get some (buyGet: buy-one-get-one), a percentage from a few pieces, a set price —
+//   each a template from the same blocks, so a new shape needs no new code; who may use it stays per coupon (CN-018);
 // - PR 214 follow-up (CN-014 g): Eid order-by dates per band and district, the "may arrive after Eid" line and
 //   pre-order with an advance (eid.ts the engine, eid-service.ts the settings, the admin screen and the storefront read);
 // - PR 193 holiday mode (holiday.ts) and what the shop says about when an order comes (eta-service.ts: the home and
