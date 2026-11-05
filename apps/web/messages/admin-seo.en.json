@@ -419,6 +419,17 @@
     "now": "What robots.txt says now",
     "nowHint": "On the shop's own address. While the shop is closed to search engines every robot is kept out."
   },
+  "ap": {
+    "title": "Summary for AI assistants",
+    "desc": "/llms.txt: a short file AI assistants (ChatGPT, Claude, Perplexity, Gemini) read to learn what the shop is — its name, your summary, the collections, the shop rules pages and the contact details, all from what the shop already shows.",
+    "on": "Answer /llms.txt",
+    "onHint": "On: AI assistants can read the summary. Off: the address says \"not found\".",
+    "summary": "Your summary of the shop (English)",
+    "summaryHint": "One short paragraph in your own words, such as what you sell and for whom; at most {n} letters ({used} now). Empty: left out, nothing is made up.",
+    "open": "The file now:",
+    "closed": "The file answers only while the shop is open to search engines on its own address (Indexing, above).",
+    "openBtn": "Open /llms.txt"
+  },
   "at": {
     "title": "Photo descriptions",
     "desc": "The words search engines and screen readers get for each product photo (alt text). The shop writes them from the product's name, the photo's colour and the kind of photo.",

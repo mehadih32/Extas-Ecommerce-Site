@@ -281,6 +281,28 @@ export const seoHreflangSchema = z
 export type SeoHreflang = z.output<typeof seoHreflangSchema>;
 export const SEO_HREFLANG_DEFAULT: SeoHreflang = { inSitemaps: false };
 
+// ---- S11 · PR 230 · the answer-engine pack (Blueprint C4.3; registry v207) ----
+
+/** The longest owner's summary at the top of /llms.txt. */
+export const SEO_ANSWER_PACK_LIMITS = { summary: 600 } as const;
+
+/**
+ * The site summary AI assistants read (`/llms.txt`, Blueprint C4.3): the shop's name, the owner's own summary line,
+ * the collections with their own lines, the shop rules pages and the contact details that are filled in, all from what
+ * the shop already shows. Served only while the shop is open to search engines on its own domain (as robots.txt).
+ * On as shipped (App. answers #56: AI assistants may read the shop); the summary is the owner's words, empty as shipped.
+ */
+export const seoAnswerPackSchema = z
+  .object({
+    /** Answer /llms.txt (while the shop is open to search engines on its own domain). */
+    llmsTxt: z.boolean(),
+    /** The owner's own one-paragraph summary of the shop, in English (none: left out, nothing made up). */
+    summary: z.string().trim().max(SEO_ANSWER_PACK_LIMITS.summary),
+  })
+  .strict();
+export type SeoAnswerPack = z.output<typeof seoAnswerPackSchema>;
+export const SEO_ANSWER_PACK_DEFAULT: SeoAnswerPack = { llmsTxt: true, summary: '' };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -388,5 +410,15 @@ export const seoReachSettings = {
     labelKey: 'seo.hreflang.label',
     helpKey: 'seo.hreflang.help',
     sortOrder: 50,
+  }),
+  // ---- PR 230 · the answer-engine pack (/llms.txt) ----
+  'seo.answerPack': setting({
+    ...base,
+    version: 207,
+    schema: seoAnswerPackSchema,
+    default: SEO_ANSWER_PACK_DEFAULT,
+    labelKey: 'seo.answerPack.label',
+    helpKey: 'seo.answerPack.help',
+    sortOrder: 51,
   }),
 };

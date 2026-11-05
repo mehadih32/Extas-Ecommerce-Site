@@ -11,13 +11,13 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { seoReachSettings, SEO_ALT_TEXT_DEFAULT, SEO_HREFLANG_DEFAULT, SEO_VERIFICATION_DEFAULT, SEO_VITALS_DEFAULT, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
+import { seoAnswerPackSchema, seoReachSettings, SEO_ALT_TEXT_DEFAULT, SEO_HREFLANG_DEFAULT, SEO_VERIFICATION_DEFAULT, SEO_VITALS_DEFAULT, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
 
 describe('lane A SEO settings (v71–72)', () => {
   it('every key is in the registry at version 71, labelled in English and Bengali, its default valid', () => {
     for (const [key, s] of Object.entries(seoReachSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect([71, 72], key).toContain(s.version);
+      expect([71, 72, 207], key).toContain(s.version);
       expect(s.group, key).toBe('seo');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       expect(s.isOwnerData, key).toBe(false);
@@ -125,5 +125,12 @@ describe('lane A SEO settings (v71–72)', () => {
     expect(registry['seo.hreflang'].version).toBe(72);
     expect(registry['seo.hreflang'].schema.safeParse({ inSitemaps: 'yes' }).success).toBe(false);
     expect(registry['seo.hreflang'].schema.safeParse({ inSitemaps: true, codes: ['en-BD'] }).success).toBe(false);
+  });
+
+  it('PR 230: /llms.txt is answered as shipped (v207), the owner`s summary empty; nothing else is accepted', () => {
+    expect(registry['seo.answerPack'].version).toBe(207);
+    expect(registry['seo.answerPack'].default).toEqual({ llmsTxt: true, summary: '' });
+    expect(seoAnswerPackSchema.safeParse({ llmsTxt: true, summary: 'x'.repeat(601) }).success).toBe(false);
+    expect(seoAnswerPackSchema.safeParse({ llmsTxt: true, summary: '', extra: 1 }).success).toBe(false);
   });
 });
