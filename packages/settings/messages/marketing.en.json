@@ -24,6 +24,10 @@
     "spendImport": {
       "label": "Import ad spend every day",
       "help": "Off as it ships. On, once a day from your hour (store time) the shop reads what Meta, TikTok and Google spent per campaign over the last few days and keeps it for the profit figures. Read only: no budget or campaign is changed."
+    },
+    "costAlerts": {
+      "label": "Ad cost alerts",
+      "help": "Off as it ships. On, right after each daily spend import the shop checks your alert rules (cost per order or per delivered order over your limit) over the last few days and sends the crossed ones to your Telegram. An alert never pauses a campaign or changes a budget."
     }
   }
 }

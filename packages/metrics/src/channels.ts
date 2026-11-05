@@ -174,6 +174,6 @@ function finish(r: ChannelRow): ChannelRow {
 }
 
 /** Orders that came back in the period (as Sales by area, PR 568). */
-function returnedWhere(storeId: number, period: { from: Date; to: Date }) {
+export function returnedWhere(storeId: number, period: { from: Date; to: Date }) {
   return Prisma.sql`o."storeId" = ${storeId} AND o."archivedAt" IS NULL AND o."status"::text = 'RETURNED' AND o."returnedAt" >= ${period.from} AND o."returnedAt" < ${period.to}`;
 }

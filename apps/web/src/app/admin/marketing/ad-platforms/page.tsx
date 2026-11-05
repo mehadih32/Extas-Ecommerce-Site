@@ -3,6 +3,8 @@
 // platform lists them (status, goal, budget, ad sets), each tied or not to one of the shop's own campaigns. Read only:
 // nothing is paused and no budget changes here. Seeing needs `marketing.campaigns.read`; reading and tying need
 // `marketing.campaigns.write`. Guide: docs/admin-guide/pages/marketing/ad-platforms.md.
+// PR 267: cost per order and per delivered order (campaign, platform, shop) and the owner's alert rules, with the card
+// that sends the crossed ones to his Telegram after the daily import (lib/marketing/ad-alerts.ts).
 // PR 265: "Import spend now" per platform, each campaign's spend over the owner's last days, and the daily import card
 // (`ads.spendImport`, off as it ships). PR 266: an account in another currency (dollars) shows the owner's rate (or that
 // none is typed yet) with a link to Money › Costs & fees, and each campaign's spend in the store's currency.
@@ -10,9 +12,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { SPEND_DAYS_MAX, SPEND_HOUR_MAX } from '@extas/settings';
+import { COST_ALERT_DAYS_MAX, SPEND_DAYS_MAX, SPEND_HOUR_MAX } from '@extas/settings';
+import { AD_ALERT_METRICS, type AdCostRow } from '@extas/metrics';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { AdCampaignLink, AdPlatformRead, AdSpendImport } from '@/components/admin/marketing/AdPlatformControls';
+import { AlertRuleAdd, AlertRuleControls, type AlertTexts } from '@/components/admin/marketing/AdAlertControls';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -24,6 +28,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { adPlatformsOverview } from '@/lib/marketing/ad-platforms';
 import { campaignSpend, spendCard, spendRange } from '@/lib/marketing/ad-spend';
 import { currentRate } from '@/lib/exchange-rate';
+import { ALERT_PLATFORMS, alertsOverview } from '@/lib/marketing/ad-alerts';
 import bn from '../../../../../messages/admin-ad-platforms.bn.json';
 import en from '../../../../../messages/admin-ad-platforms.en.json';
 import '../../settings-cards.css';
@@ -34,6 +39,7 @@ export const dynamic = 'force-dynamic';
 const HERE = '/admin/marketing/ad-platforms';
 const API = '/api/admin/marketing/ad-platforms';
 const SPEND_API = '/api/admin/marketing/ad-platforms/spend';
+const ALERTS_API = '/api/admin/marketing/ad-platforms/alerts';
 const KEYS_PAGE = '/admin/integrations';
 const FEES_PAGE = '/admin/money/fees';
 const KEY = 'marketingAdPlatforms';
@@ -66,6 +72,7 @@ export default async function AdPlatformsPage() {
   // PR 266: the owner's rate for each other currency an ad account is in
   const foreign = [...new Set(o.platforms.flatMap((p) => p.accounts.map((a) => a.currency)).filter((c) => c && c !== storeCur))];
   const rates = await Promise.all(foreign.map(async (base) => ({ base, rate: await currentRate(access.deps.db, MOTHER_STORE_ID, base, storeCur) })));
+  const al = await alertsOverview({ db: access.deps.db, resolver: access.deps.resolver });
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
   const s = (k: string, vars?: Record<string, string | number>) => t(d, `adp.${k}`, vars);
   const when = (iso: string) => new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone }).format(new Date(iso));
@@ -91,6 +98,47 @@ export default async function AdPlatformsPage() {
     { kind: 'number', path: 'days', label: sp('card.days'), help: sp('card.daysHelp'), min: 1, max: SPEND_DAYS_MAX },
     { kind: 'number', path: 'hour', label: sp('card.hour'), help: sp('card.hourHelp'), min: 0, max: SPEND_HOUR_MAX },
   ];
+
+  // PR 267: cost per order and the alert rules
+  const ap = (k: string, vars?: Record<string, string | number>) => s(`alerts.${k}`, vars);
+  const shopMoney = moneyOf(storeCur, view.locale);
+  const scale = 10 ** shopMoney.digits;
+  const money = (v: number | null) => (v === null ? ap('unknown') : formatMoney(v, shopMoney));
+  const names = new Map(o.platforms.flatMap((p) => p.accounts.flatMap((a) => a.campaigns.map((c) => [c.id, c.name] as const))));
+  const platformName = (p: string) => s(`platform.${p.toLowerCase()}`);
+  const costRows: { row: AdCostRow; label: string; kind: string }[] = [
+    { row: al.cost.total, label: ap('scopeShop'), kind: 'total' },
+    ...al.cost.platforms.map((r) => ({ row: r, label: platformName(r.key), kind: 'platform' })),
+    ...al.cost.campaigns.map((r) => ({ row: r, label: names.get(r.key) ?? ap('gone'), kind: 'campaign' })),
+  ];
+  const anyUnknown = costRows.some((r) => r.row.spendMinor === null);
+  const noFigures = al.cost.total.spendMinor === 0 && al.cost.total.orders === 0 && al.cost.platforms.length === 0 && al.cost.campaigns.length === 0;
+  const where = (sc: (typeof al.rules)[number]['scope'], campaignName: string | null) => (sc && 'platform' in sc ? platformName(sc.platform) : sc ? (campaignName ?? ap('gone')) : ap('scopeShop'));
+  const alertTexts: AlertTexts = {
+    enabled: ap('enabled'),
+    limit: ap('limit', { currency: storeCur }),
+    saveLimit: ap('saveLimit'),
+    archive: ap('archive'),
+    addMetric: ap('addMetric'),
+    addWhere: ap('addWhere'),
+    addLimit: ap('addLimit', { currency: storeCur }),
+    add: ap('add'),
+    working: ap('working'),
+    done: ap('done'),
+    err: errs,
+  };
+  const places = [
+    { value: 'shop', label: ap('scopeShop') },
+    ...ALERT_PLATFORMS.map((p) => ({ value: `p:${p}`, label: platformName(p) })),
+    ...o.platforms.flatMap((p) => p.accounts.flatMap((a) => a.campaigns.filter((c) => !c.gone).map((c) => ({ value: `c:${c.id}`, label: `${platformName(p.platform)} · ${c.name}` })))),
+  ];
+  const alertCardFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'on', label: ap('card.on'), help: ap('card.onHelp') },
+    { kind: 'number', path: 'days', label: ap('card.days'), help: ap('card.daysHelp'), min: 1, max: COST_ALERT_DAYS_MAX },
+    { kind: 'select', path: 'lang', label: ap('card.lang'), options: [{ value: 'bn', label: ap('card.bn') }, { value: 'en', label: ap('card.en') }] },
+  ];
+  const alertCardTexts: FieldsCardTexts = { ...cardTexts, h: ap('card.h'), d: ap('card.d'), readOnly: ap('card.readOnly') };
+  const pill = (state: string) => (state === 'over' || state === 'noOrders' ? 'bad' : state === 'unknown' ? 'warn' : 'g');
 
   return (
     <div className="a2-z" data-testid="adp-page">
@@ -220,6 +268,95 @@ export default async function AdPlatformsPage() {
           ))}
         </section>
       ))}
+      <section className="a2-sc a2-mt12" aria-labelledby="adp-alerts-h" data-testid="adp-alerts">
+        <h2 className="a2-h3" id="adp-alerts-h">
+          {ap('h')}
+        </h2>
+        <p className="a2-sm a2-mute">{ap('d', { days: al.card.value.days, from: al.cost.from, to: al.cost.to })}</p>
+        {noFigures ? (
+          <p className="a2-sm a2-mute a2-mt12" data-testid="adp-cost-none">
+            {ap('noFigures')}
+          </p>
+        ) : (
+          <div className="a2-tblw a2-mt12">
+            <table className="a2-tbl" data-testid="adp-cost">
+              <thead>
+                <tr>
+                  <th>{ap('col.where')}</th>
+                  <th>{ap('col.spend')}</th>
+                  <th>{ap('col.purchases')}</th>
+                  <th>{ap('col.orders')}</th>
+                  <th>{ap('col.delivered')}</th>
+                  <th>{ap('col.returned')}</th>
+                  <th>{ap('col.perOrder')}</th>
+                  <th>{ap('col.perDelivered')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {costRows.map(({ row, label, kind }) => (
+                  <tr key={`${kind}-${row.key}`} data-kind={kind}>
+                    <td className={kind === 'campaign' ? 'adp-camp' : 'adp-sub'}>{label}</td>
+                    <td className="a2-sm adp-nowrap" data-l={ap('col.spend')}>
+                      {money(row.spendMinor)}
+                    </td>
+                    <td className="a2-sm" data-l={ap('col.purchases')}>
+                      {formatNumber(row.platformPurchases, view.locale)}
+                    </td>
+                    <td className="a2-sm" data-l={ap('col.orders')}>
+                      {formatNumber(row.orders, view.locale)}
+                    </td>
+                    <td className="a2-sm" data-l={ap('col.delivered')}>
+                      {formatNumber(row.delivered, view.locale)}
+                    </td>
+                    <td className="a2-sm" data-l={ap('col.returned')}>
+                      {formatNumber(row.returned, view.locale)}
+                    </td>
+                    <td className="a2-sm adp-nowrap" data-l={ap('col.perOrder')}>
+                      {row.perOrderMinor === null ? '—' : formatMoney(row.perOrderMinor, shopMoney)}
+                    </td>
+                    <td className="a2-sm adp-nowrap" data-l={ap('col.perDelivered')} data-testid="adp-cost-per-delivered">
+                      {row.perDeliveredMinor === null ? '—' : formatMoney(row.perDeliveredMinor, shopMoney)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {anyUnknown ? (
+          <div className="a2-note warn a2-mt12" role="note">
+            <span>{ap('unknownNote')}</span>
+          </div>
+        ) : null}
+
+        <h3 className="a2-sm adp-sub a2-mt12">{ap('rulesH')}</h3>
+        <p className="a2-sm a2-mute">{ap('rulesD')}</p>
+        {al.rules.length ? (
+          <ul className="adp-rules" data-testid="adp-rules">
+            {al.rules.map((r) => {
+              const line = ap('ruleLine', { metric: ap(`metric.${r.metric}`), where: where(r.scope, r.campaignName), limit: formatMoney(r.thresholdMinor, shopMoney) });
+              return (
+                <li key={r.id} className="adp-rule" data-testid="adp-rule" data-state={r.hit.state} data-on={r.enabled ? 'yes' : 'no'}>
+                  <p className="a2-sm adp-sub">{line}</p>
+                  <span className={`a2-pill ${pill(r.hit.state)}`}>{ap(`state.${r.hit.state}`, { value: money(r.hit.valueMinor), spend: money(r.hit.spendMinor) })}</span>
+                  <AlertRuleControls url={ALERTS_API} id={r.id} enabled={r.enabled} thresholdMinor={r.thresholdMinor} scale={scale} label={line} canEdit={canWrite} texts={alertTexts} />
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="a2-sm a2-mute">{ap('noRules')}</p>
+        )}
+        {canWrite ? (
+          <>
+            <h3 className="a2-sm adp-sub a2-mt12">{ap('addH')}</h3>
+            <AlertRuleAdd url={ALERTS_API} scale={scale} metrics={AD_ALERT_METRICS.map((m) => ({ value: m, label: ap(`metric.${m}`) }))} places={places} texts={alertTexts} />
+          </>
+        ) : null}
+      </section>
+      <div id="adp-alerts-card" className="a2-mt12">
+        <FieldsCard url={ALERTS_API} screen={{ key: al.card.key, value: al.card.value, version: al.card.version }} fields={alertCardFields} texts={alertCardTexts} canEdit={canWrite} testId="adp-alerts-card" />
+      </div>
       <div id="adp-spend-card" className="a2-mt12">
         <FieldsCard url={SPEND_API} screen={{ key: card.key, value: card.value, version: card.version }} fields={cardFields} texts={cardTexts} canEdit={canWrite} testId="adp-spend-card" />
       </div>

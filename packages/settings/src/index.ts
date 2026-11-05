@@ -150,6 +150,7 @@ export * from './registry-ads-audiences';
 export * from './registry-ads-refused';
 // S13 · CN-031 lane B · PR 265 — the daily ad spend import (registry-ads-spend.ts, version 172).
 export * from './registry-ads-spend';
+export * from './registry-ads-alerts';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
