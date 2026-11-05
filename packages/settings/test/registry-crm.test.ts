@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { aiWriterSettingsSchema, BIRTHDAY_NO_YEAR, birthdayDate, birthdayParts, birthdaySettingsSchema, CRM_CAMPAIGN_STEP, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema, winbackSettingsSchema } from '../src/registry-crm';
+import { aiWriterSettingsSchema, BIRTHDAY_NO_YEAR, birthdayDate, birthdayParts, birthdaySettingsSchema, CRM_CAMPAIGN_STEP, customerReportSettingsSchema, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema, winbackSettingsSchema } from '../src/registry-crm';
 
 describe('CRM settings (v190–209)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -113,5 +113,14 @@ describe('CRM settings (v190–209)', () => {
     expect(birthdayDate({ day: 1, month: 13, year: null })).toBeNull();
     expect(birthdayDate({ day: 1.5, month: 1, year: null })).toBeNull();
     expect(birthdayParts(null)).toBeNull();
+  });
+
+  it('PR 303: the customer report is off as shipped (v201); its numbers stay in range', () => {
+    const s = crmSettings['customers.report'];
+    expect(s.version).toBe(201);
+    expect(s.default).toEqual({ enabled: false, quietDays: 60, segmentsShown: 10 });
+    expect(customerReportSettingsSchema.safeParse({ ...s.default, quietDays: 3 }).success).toBe(false);
+    expect(customerReportSettingsSchema.safeParse({ ...s.default, segmentsShown: 0 }).success).toBe(false);
+    expect(customerReportSettingsSchema.safeParse({ ...s.default, send: true }).success).toBe(false);
   });
 });

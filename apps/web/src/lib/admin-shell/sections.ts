@@ -365,6 +365,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
       // S08 · PR 192 — REP-05 Delivery & RTO: courier performance by courier, zone and district, late parcels, RTO cost book.
       { id: 'delivery', pages: [{ href: '/admin/reports/delivery', perm: 'reports.read', keys: ['reportsDelivery'] }] },
+      // S14 · PR 303 — REP-04 Customers: new, returning and quiet (churned) buyers over a period, overall and per saved segment.
+      { id: 'customers', guide: 'analytics', pages: [{ href: '/admin/reports/customers', perm: 'reports.read', keys: ['reportsCustomers'] }] },
       // S06 · PR 562 — Flag outcomes: of the customers asked to pay ahead, how many paid and how many walked away, per layer.
       {
         id: 'flags',

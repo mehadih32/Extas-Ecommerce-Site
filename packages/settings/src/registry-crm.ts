@@ -63,6 +63,10 @@
 // (Blueprint C6.6, Appendix F). Off as shipped; when on, a signed-in customer may give his birthday — the day and the
 // month, the year only when `askYear` is on — change it or clear it, and his customer page shows it. Nothing is sent,
 // given or promised for it: birthday messages and gifts stay parked until the owner asks.
+//
+// PR 303 (`customers.report`, v201): Reports › Customers (REP-04) — new, returning and quiet (churned) buyers over a
+// period, overall and per saved segment. Off as shipped; `quietDays` is when a buyer with no order counts as quiet, and
+// `segmentsShown` how many saved segments the report splits by. Read-only: it counts, it never sends or changes anything.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -227,6 +231,13 @@ export type WinbackSettings = z.output<typeof winbackSettingsSchema>;
 export const birthdaySettingsSchema = z.object({ enabled: z.boolean(), askYear: z.boolean() }).strict();
 export type BirthdaySettings = z.output<typeof birthdaySettingsSchema>;
 
+/** PR 303 — Reports › Customers (REP-04): off as shipped; after how many days without an order a buyer counts as quiet
+ * (churned), and how many saved segments the report splits by. */
+export const customerReportSettingsSchema = z
+  .object({ enabled: z.boolean(), quietDays: z.number().int().min(7).max(730), segmentsShown: z.number().int().min(1).max(50) })
+  .strict();
+export type CustomerReportSettings = z.output<typeof customerReportSettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -330,5 +341,15 @@ export const crmSettings = {
     labelKey: 'customers.birthday.label',
     helpKey: 'customers.birthday.help',
     sortOrder: 290,
+  }),
+  'customers.report': setting({
+    ...base,
+    version: 201,
+    schema: customerReportSettingsSchema,
+    default: { enabled: false, quietDays: 60, segmentsShown: 10 }, // hardcode-ok: registry default (off; the owner's numbers to change)
+    valueType: 'JSON',
+    labelKey: 'customers.report.label',
+    helpKey: 'customers.report.help',
+    sortOrder: 300,
   }),
 };
