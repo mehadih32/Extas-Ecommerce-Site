@@ -11,13 +11,13 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { seoAnswerPackSchema, seoReachSettings, SEO_ALT_TEXT_DEFAULT, SEO_HREFLANG_DEFAULT, SEO_VERIFICATION_DEFAULT, SEO_VITALS_DEFAULT, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
+import { seoAnswerPackSchema, seoInternalLinksSchema, seoReachSettings, SEO_ALT_TEXT_DEFAULT, SEO_HREFLANG_DEFAULT, SEO_VERIFICATION_DEFAULT, SEO_VITALS_DEFAULT, SEO_FILTER_PAGES_DEFAULT, SEO_ROBOTS_DEFAULT, SEO_SITEMAPS_DEFAULT, SEO_HASH_LINKS_DEFAULT, SEO_NOT_FOUND_DEFAULT, SEO_REDIRECTS_DEFAULT, SEO_URL_POLICY_DEFAULT } from '../src/registry-seo-reach';
 
 describe('lane A SEO settings (v71–72)', () => {
   it('every key is in the registry at version 71, labelled in English and Bengali, its default valid', () => {
     for (const [key, s] of Object.entries(seoReachSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect([71, 72, 207], key).toContain(s.version);
+      expect([71, 72, 207, 208], key).toContain(s.version);
       expect(s.group, key).toBe('seo');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       expect(s.isOwnerData, key).toBe(false);
@@ -132,5 +132,12 @@ describe('lane A SEO settings (v71–72)', () => {
     expect(registry['seo.answerPack'].default).toEqual({ llmsTxt: true, summary: '' });
     expect(seoAnswerPackSchema.safeParse({ llmsTxt: true, summary: 'x'.repeat(601) }).success).toBe(false);
     expect(seoAnswerPackSchema.safeParse({ llmsTxt: true, summary: '', extra: 1 }).success).toBe(false);
+  });
+
+  it('PR 231: the "More collections" links are off as shipped, 6 at most, 1–12 (v208)', () => {
+    expect(registry['seo.internalLinks'].version).toBe(208);
+    expect(registry['seo.internalLinks'].default).toEqual({ relatedCollections: false, max: 6 });
+    expect(seoInternalLinksSchema.safeParse({ relatedCollections: true, max: 13 }).success).toBe(false);
+    expect(seoInternalLinksSchema.safeParse({ relatedCollections: true, max: 0 }).success).toBe(false);
   });
 });

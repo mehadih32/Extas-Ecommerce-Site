@@ -53,6 +53,8 @@ export const SEO_KEYS = [
   'seo.hreflang',
   // PR 230: the summary for AI assistants (/llms.txt)
   'seo.answerPack',
+  // PR 231: the links between pages
+  'seo.internalLinks',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 

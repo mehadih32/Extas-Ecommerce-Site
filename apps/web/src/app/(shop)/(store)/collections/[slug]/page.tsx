@@ -17,6 +17,8 @@
 // S11 · PR 226: each category's own content block (its heading and text under the grid, `category.seo`, PR 45/227)
 // and its questions; the questions the page shows also go as FAQ data while `seo.structuredData.faq` is on (PR 224,
 // optional, off as shipped).
+// S11 · PR 231: "More collections" under the page — its sub-collections or sisters, then the other main collections,
+// as plain links (lib/seo/internal-links, `seo.internalLinks`, off as shipped).
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
@@ -37,10 +39,11 @@ import { filterPageListed, filterPagePath, filterPageStyles, namedFilterPage, si
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { ROUTES } from '@/lib/shop/routes';
 import { categoryName, requirementsMet } from '@/lib/shop/shell-model';
+import { relatedCollections } from '@/lib/seo/internal-links';
 import { breadcrumbLd, faqLd, itemListLd, type LdCrumb, type LdQuestion } from '@/lib/shop/structured-data';
 import './category.css';
 
-const KEYS = ['category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages'] as const;
+const KEYS = ['category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages', 'seo.internalLinks'] as const;
 
 /** The "New in" page's own link name, from the routing table (`/collections/new-in`). */
 const NEW_IN = ROUTES.newIn.split('/').pop()!;
@@ -224,6 +227,22 @@ export default async function CategoryPage(props: Props) {
       </section>
     ) : null;
 
+  // ---- PR 231 · "More collections" (plain links a shopper and a search engine follow) ----
+  const links = set['seo.internalLinks'];
+  const related = links.relatedCollections ? relatedCollections(c.cats, slug, links.max) : [];
+  const more = related.length ? (
+    <nav className="cat-rel" aria-label={t('cat.related')} data-testid="cat-related">
+      <h2 className="h3">{t('cat.related')}</h2>
+      <div className="cat-rel-links">
+        {related.map((x) => (
+          <a key={x.slug} className="cat-rel-a" href={hrefIn(c.lang, ROUTES.category(x.slug))}>
+            {categoryName(x, c.lang)}
+          </a>
+        ))}
+      </div>
+    </nav>
+  ) : null;
+
   return (
     <div className="container">
       {hd}
@@ -241,6 +260,7 @@ export default async function CategoryPage(props: Props) {
         after={(shown) => ldOf(shown, faqItems)}
       />
       {info}
+      {more}
       {/* follow-up 21: the cards' back view and Quick add (computer with a mouse), and the panel it opens */}
       <CardDeskMount c={c} />
       <AddedSlot c={c} added={sp.added} closeHref={closeHrefOf(basePath, sp)} />

@@ -62,6 +62,10 @@
     "answerPack": {
       "label": "Summary for AI assistants (llms.txt)",
       "help": "The page /llms.txt that AI assistants (ChatGPT, Claude, Perplexity, Gemini) read to learn what the shop is: its name, your own summary line, the collections with their lines, the shop rules pages and the contact details that are filled in, all from what the shop already shows. Answered only while the shop is open to search engines on its own domain. On as shipped; the summary is your own words and starts empty."
+    },
+    "internalLinks": {
+      "label": "Links between pages",
+      "help": "Plain links between the shop's own pages that shoppers and search engines follow: under a collection page, \"More collections\" (its sister collections, then the other main collections; only shown ones with styles). Off as shipped; up to 6 as shipped (1–12)."
     }
   },
   "defaults": {

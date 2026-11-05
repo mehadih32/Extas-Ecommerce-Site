@@ -430,6 +430,15 @@
     "closed": "The file answers only while the shop is open to search engines on its own address (Indexing, above).",
     "openBtn": "Open /llms.txt"
   },
+  "il": {
+    "title": "Links between pages",
+    "desc": "Plain links between the shop's own pages, which shoppers and search engines both follow.",
+    "collections": "\"More collections\" under a collection page",
+    "collectionsHint": "On: under each collection page, links to its sub-collections or sister collections, then the other main collections (only shown ones with styles).",
+    "max": "Collections linked at most",
+    "maxHint": "Shipped with {v}; from {min} to {max}.",
+    "also": "Product pages already link related products (\"Wear it with\", \"You may also like\"). Links to journal articles come with the journal."
+  },
   "at": {
     "title": "Photo descriptions",
     "desc": "The words search engines and screen readers get for each product photo (alt text). The shop writes them from the product's name, the photo's colour and the kind of photo.",

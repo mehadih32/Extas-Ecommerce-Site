@@ -11,7 +11,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { MOTHER_STORE_ID } from "@extas/db/client";
-import { namingTokens, SEO_ALT_TEXT_LIMITS, SEO_ANSWER_PACK_LIMITS, SEO_VERIFICATION_LIMITS, SEO_VITALS_LIMITS, SEO_PAGE_TYPES, SEO_ROBOTS_LIMITS, SEO_SITEMAP_LIMITS, SEO_TEMPLATE_PAGES, SEO_TEMPLATE_TOKENS } from "@extas/settings";
+import { namingTokens, SEO_ALT_TEXT_LIMITS, SEO_ANSWER_PACK_LIMITS, SEO_INTERNAL_LINKS_LIMITS, SEO_VERIFICATION_LIMITS, SEO_VITALS_LIMITS, SEO_PAGE_TYPES, SEO_ROBOTS_LIMITS, SEO_SITEMAP_LIMITS, SEO_TEMPLATE_PAGES, SEO_TEMPLATE_TOKENS } from "@extas/settings";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import { IndexingCard, StructuredDataCard } from "@/components/admin/website/SeoScreen";
 import { AiDraftsCard, TitlesCard } from "@/components/admin/website/SeoTexts";
@@ -19,6 +19,7 @@ import { UrlPolicyCard } from "@/components/admin/website/UrlPolicyCard";
 import { SitemapsCard } from "@/components/admin/website/SitemapsCard";
 import { RobotsCard } from "@/components/admin/website/RobotsCard";
 import { AnswerPackCard } from "@/components/admin/website/AnswerPackCard";
+import { InternalLinksCard } from "@/components/admin/website/InternalLinksCard";
 import { AltTextCard } from "@/components/admin/website/AltTextCard";
 import { SearchEnginesCard } from "@/components/admin/website/SearchEnginesCard";
 import { VitalsCard } from "@/components/admin/website/VitalsCard";
@@ -185,6 +186,10 @@ export default async function SeoPage() {
       <div className="a2-mt12">
         {/* PR 230: the summary for AI assistants (/llms.txt), answered only while the shop is open on its own address */}
         <AnswerPackCard d={d} value={snap.values["seo.answerPack"]} defaults={snap.defaults["seo.answerPack"]} max={SEO_ANSWER_PACK_LIMITS.summary} version={snap.versions["seo.answerPack"]} canWrite={canWrite} fileUrl={open && primarySite ? new URL("/llms.txt", primarySite).toString() : null} />
+      </div>
+      <div className="a2-mt12">
+        {/* PR 231: the links between pages ("More collections") */}
+        <InternalLinksCard d={d} value={snap.values["seo.internalLinks"]} defaults={snap.defaults["seo.internalLinks"]} limits={SEO_INTERNAL_LINKS_LIMITS.max} version={snap.versions["seo.internalLinks"]} canWrite={canWrite} />
       </div>
       <div className="a2-mt12">
         <VitalsCard d={d} value={snap.values["seo.vitals"]} defaults={snap.defaults["seo.vitals"]} limits={SEO_VITALS_LIMITS} version={snap.versions["seo.vitals"]} canWrite={canWrite} report={vReport} lab={vLab} locale={view.locale} timeZone={view.timeZone} />

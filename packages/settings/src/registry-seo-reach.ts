@@ -303,6 +303,27 @@ export const seoAnswerPackSchema = z
 export type SeoAnswerPack = z.output<typeof seoAnswerPackSchema>;
 export const SEO_ANSWER_PACK_DEFAULT: SeoAnswerPack = { llmsTxt: true, summary: '' };
 
+// ---- S11 · PR 231 · the internal links engine (registry v208) ----
+
+export const SEO_INTERNAL_LINKS_LIMITS = { max: { min: 1, max: 12 } } as const;
+
+/**
+ * Links between the shop's own pages that a shopper and a search engine follow: on a collection page, "More
+ * collections" — its sister collections under the same parent, then the other main collections — as plain links, only
+ * collections that are shown and have styles. Off as shipped (the demo has no such row); related products are PR 67's
+ * rows on the product page; related articles wait for the journal (S12).
+ */
+export const seoInternalLinksSchema = z
+  .object({
+    /** The "More collections" links under a collection page. */
+    relatedCollections: z.boolean(),
+    /** How many collections it links at most. */
+    max: z.int().min(SEO_INTERNAL_LINKS_LIMITS.max.min).max(SEO_INTERNAL_LINKS_LIMITS.max.max),
+  })
+  .strict();
+export type SeoInternalLinks = z.output<typeof seoInternalLinksSchema>;
+export const SEO_INTERNAL_LINKS_DEFAULT: SeoInternalLinks = { relatedCollections: false, max: 6 };
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -420,5 +441,15 @@ export const seoReachSettings = {
     labelKey: 'seo.answerPack.label',
     helpKey: 'seo.answerPack.help',
     sortOrder: 51,
+  }),
+  // ---- PR 231 · the internal links engine ----
+  'seo.internalLinks': setting({
+    ...base,
+    version: 208,
+    schema: seoInternalLinksSchema,
+    default: SEO_INTERNAL_LINKS_DEFAULT,
+    labelKey: 'seo.internalLinks.label',
+    helpKey: 'seo.internalLinks.help',
+    sortOrder: 52,
   }),
 };
