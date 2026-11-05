@@ -58,6 +58,10 @@
     "hreflang": {
       "label": "Language pairs (hreflang)",
       "help": "A page whose Bengali twin is ready names both (en, bn, and x-default for the English one) in its HTML head, so Google shows each searcher the right language. Optionally the sitemaps carry the same pairs; off as shipped (one method, as Google advises)."
+    },
+    "answerPack": {
+      "label": "Summary for AI assistants (llms.txt)",
+      "help": "The page /llms.txt that AI assistants (ChatGPT, Claude, Perplexity, Gemini) read to learn what the shop is: its name, your own summary line, the collections with their lines, the shop rules pages and the contact details that are filled in, all from what the shop already shows. Answered only while the shop is open to search engines on its own domain. On as shipped; the summary is your own words and starts empty."
     }
   },
   "defaults": {

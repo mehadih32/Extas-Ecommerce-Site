@@ -51,6 +51,8 @@ export const SEO_KEYS = [
   'seo.vitals',
   // PR 236: the language pairs (hreflang)
   'seo.hreflang',
+  // PR 230: the summary for AI assistants (/llms.txt)
+  'seo.answerPack',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 
