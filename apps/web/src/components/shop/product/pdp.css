@@ -899,3 +899,6 @@
 .shop .pdp-page #pdp-reviews { scroll-margin-top: 84px; }
 /* "Questions?" is a thumb target like every other link in a heading (Appendix C2: 44 px). */
 .shop .pdp-page #pdp-reviews .sec-hd .link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
+/* S11 · PR 225: a closed accordion's and rule's words stay in the HTML, only hidden (never loaded on a tap) */
+.shop .pdp-acc-b[hidden],
+.shop .pdp-rule-open[hidden] { display: none; }
