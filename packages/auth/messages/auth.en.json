@@ -325,6 +325,10 @@
       "audiences": {
         "read": "See Marketing › Audiences and how many people each one holds",
         "write": "Build, save, count again, archive and restore audiences (nothing is sent to an ad platform)"
+      },
+      "ads": {
+        "control": "Pause a platform campaign or lower its daily budget (after a confirm), and ask to start one again or raise its budget",
+        "approve": "Approve or reject starting an ad campaign again or raising its budget (the owner)"
       }
     }
   },

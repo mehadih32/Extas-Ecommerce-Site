@@ -108,6 +108,7 @@ import { adsAudiencesSettings } from './registry-ads-audiences';
 import { adsRefusedSettings } from './registry-ads-refused';
 import { adsSpendSettings } from './registry-ads-spend';
 import { adsAlertSettings } from './registry-ads-alerts';
+import { adsControlSettings } from './registry-ads-control';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1389,6 +1390,7 @@ export const registry = {
   // ---- S13 · CN-031 lane B · PR 265 · the daily ad spend import (registry-ads-spend.ts, version 172). ----
   ...adsSpendSettings,
   ...adsAlertSettings,
+  ...adsControlSettings,
   // ---- S16 · CN-031 lane B · PR 347 · the costs report's longest period and day rows (registry-finance.ts, versions 160–169). ----
   ...financeSettings,
 } satisfies RegistryShape;

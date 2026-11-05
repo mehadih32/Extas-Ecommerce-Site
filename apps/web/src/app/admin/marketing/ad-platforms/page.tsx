@@ -3,6 +3,9 @@
 // platform lists them (status, goal, budget, ad sets), each tied or not to one of the shop's own campaigns. Read only:
 // nothing is paused and no budget changes here. Seeing needs `marketing.campaigns.read`; reading and tying need
 // `marketing.campaigns.write`. Guide: docs/admin-guide/pages/marketing/ad-platforms.md.
+// PR 268: with the owner's switch on, each campaign's "Change" fold (pause, start again, a new daily budget — always after a
+// confirm; more spend waits for the owner's approval), the requests waiting for him and the latest changes, and the
+// switch's card (lib/marketing/campaign-control.ts). Practice writers only: no real budget or campaign changes.
 // PR 267: cost per order and per delivered order (campaign, platform, shop) and the owner's alert rules, with the card
 // that sends the crossed ones to his Telegram after the daily import (lib/marketing/ad-alerts.ts).
 // PR 265: "Import spend now" per platform, each campaign's spend over the owner's last days, and the daily import card
@@ -12,11 +15,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { COST_ALERT_DAYS_MAX, SPEND_DAYS_MAX, SPEND_HOUR_MAX } from '@extas/settings';
+import { CONTROL_APPROVAL_HOURS_MAX, COST_ALERT_DAYS_MAX, SPEND_DAYS_MAX, SPEND_HOUR_MAX } from '@extas/settings';
 import { AD_ALERT_METRICS, type AdCostRow } from '@extas/metrics';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { AdCampaignLink, AdPlatformRead, AdSpendImport } from '@/components/admin/marketing/AdPlatformControls';
 import { AlertRuleAdd, AlertRuleControls, type AlertTexts } from '@/components/admin/marketing/AdAlertControls';
+import { AdCampaignControl, AdControlDecide, type ControlTexts } from '@/components/admin/marketing/AdControlControls';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -29,6 +33,7 @@ import { adPlatformsOverview } from '@/lib/marketing/ad-platforms';
 import { campaignSpend, spendCard, spendRange } from '@/lib/marketing/ad-spend';
 import { currentRate } from '@/lib/exchange-rate';
 import { ALERT_PLATFORMS, alertsOverview } from '@/lib/marketing/ad-alerts';
+import { controlOverview, isPaused, type ControlRow } from '@/lib/marketing/campaign-control';
 import bn from '../../../../../messages/admin-ad-platforms.bn.json';
 import en from '../../../../../messages/admin-ad-platforms.en.json';
 import '../../settings-cards.css';
@@ -40,6 +45,7 @@ const HERE = '/admin/marketing/ad-platforms';
 const API = '/api/admin/marketing/ad-platforms';
 const SPEND_API = '/api/admin/marketing/ad-platforms/spend';
 const ALERTS_API = '/api/admin/marketing/ad-platforms/alerts';
+const CONTROL_API = '/api/admin/marketing/ad-platforms/control';
 const KEYS_PAGE = '/admin/integrations';
 const FEES_PAGE = '/admin/money/fees';
 const KEY = 'marketingAdPlatforms';
@@ -73,7 +79,10 @@ export default async function AdPlatformsPage() {
   const foreign = [...new Set(o.platforms.flatMap((p) => p.accounts.map((a) => a.currency)).filter((c) => c && c !== storeCur))];
   const rates = await Promise.all(foreign.map(async (base) => ({ base, rate: await currentRate(access.deps.db, MOTHER_STORE_ID, base, storeCur) })));
   const al = await alertsOverview({ db: access.deps.db, resolver: access.deps.resolver });
+  const ctl = await controlOverview({ db: access.deps.db, resolver: access.deps.resolver });
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
+  const canControl = access.guard.permissions?.has('marketing.ads.control') ?? false;
+  const canApprove = access.guard.permissions?.has('marketing.ads.approve') ?? false;
   const s = (k: string, vars?: Record<string, string | number>) => t(d, `adp.${k}`, vars);
   const when = (iso: string) => new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone }).format(new Date(iso));
   const budget = (daily: number | null, total: number | null, cur: string) =>
@@ -138,6 +147,34 @@ export default async function AdPlatformsPage() {
     { kind: 'select', path: 'lang', label: ap('card.lang'), options: [{ value: 'bn', label: ap('card.bn') }, { value: 'en', label: ap('card.en') }] },
   ];
   const alertCardTexts: FieldsCardTexts = { ...cardTexts, h: ap('card.h'), d: ap('card.d'), readOnly: ap('card.readOnly') };
+  // PR 268: the campaign controls
+  const cp = (k: string, vars?: Record<string, string | number>) => s(`control.${k}`, vars);
+  const controlOn = ctl.card.value.on;
+  const ctlErr = { ...errs, OFF: cp('err.OFF'), WAITING: cp('err.WAITING'), DECIDED: cp('err.DECIDED'), EXPIRED: cp('err.EXPIRED') };
+  const ctlSaid = Object.fromEntries(['WAITING', 'PRACTICE', 'APPLIED', 'FAILED', 'REJECTED'].map((k) => [k, cp(`said.${k}`)]));
+  const controlTexts: ControlTexts = {
+    fold: cp('fold'),
+    pause: cp('pause'),
+    resume: cp('resume'),
+    budget: cp('budget', { currency: storeCur }),
+    budgetGo: cp('budgetGo'),
+    confirm: { pause: cp('confirm.pause'), resume: cp('confirm.resume'), down: cp('confirm.down'), up: cp('confirm.up') },
+    yes: cp('yes'),
+    cancel: cp('cancel'),
+    said: ctlSaid,
+    err: ctlErr,
+  };
+  const whatOf = (r: ControlRow) => {
+    const m = moneyOf(r.currency, view.locale);
+    const what = r.change.kind === 'budget' ? cp('what.budget', { from: r.fromDailyMinor === null ? s('none') : formatMoney(r.fromDailyMinor, m), to: formatMoney(r.change.dailyBudgetMinor, m) }) : cp(`what.${r.change.kind}`);
+    return `${r.platform ? s(`platform.${r.platform}`) : ''} · ${r.campaignName ?? ap('gone')}: ${what}`;
+  };
+  const controlCardFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'on', label: cp('card.on'), help: cp('card.onHelp') },
+    { kind: 'number', path: 'approvalHours', label: cp('card.hours'), help: cp('card.hoursHelp'), min: 1, max: CONTROL_APPROVAL_HOURS_MAX },
+  ];
+  const controlCardTexts: FieldsCardTexts = { ...cardTexts, h: cp('card.h'), d: cp('card.d'), readOnly: cp('card.readOnly') };
+  const statusPill = (st: string) => (st === 'APPLIED' ? 'g' : st === 'FAILED' ? 'bad' : st === 'WAITING' || st === 'SENDING' ? 'warn' : st === 'PRACTICE' ? 'info' : 'line');
   const pill = (state: string) => (state === 'over' || state === 'noOrders' ? 'bad' : state === 'unknown' ? 'warn' : 'g');
 
   return (
@@ -223,6 +260,7 @@ export default async function AdPlatformsPage() {
                         <th>{s('col.adSets')}</th>
                         <th>{sp('spendCol', { days: card.value.days })}</th>
                         <th>{s('col.ours')}</th>
+                        {controlOn ? <th>{cp('fold')}</th> : null}
                       </tr>
                     </thead>
                     <tbody>
@@ -256,6 +294,15 @@ export default async function AdPlatformsPage() {
                           <td>
                             <AdCampaignLink url={API} adCampaignId={c.id} value={c.campaign?.id ?? null} ours={o.ours} label={s('linkLabel', { name: c.name })} none={s('linkNone')} disabled={!canWrite} err={s('linkErr')} />
                           </td>
+                          {controlOn ? (
+                            <td data-l={cp('fold')}>
+                              {canControl && !c.gone ? (
+                                <AdCampaignControl url={CONTROL_API} adCampaignId={c.id} name={c.name} paused={isPaused(c.status)} dailyBudgetMinor={c.dailyBudgetMinor} scale={10 ** moneyOf(c.currency, view.locale).digits} none={s('none')} currency={c.currency} locale={view.locale} texts={controlTexts} />
+                              ) : (
+                                <span className="a2-sm a2-mute">{canControl ? s('gone') : cp('noControl')}</span>
+                              )}
+                            </td>
+                          ) : null}
                         </tr>
                       ))}
                     </tbody>
@@ -268,6 +315,42 @@ export default async function AdPlatformsPage() {
           ))}
         </section>
       ))}
+      {controlOn ? (
+        <section className="a2-sc a2-mt12" aria-labelledby="adp-control-h" data-testid="adp-control">
+          <h2 className="a2-h3" id="adp-control-h">
+            {cp('h')}
+          </h2>
+          <p className="a2-sm a2-mute">{cp('d')}</p>
+          <h3 className="a2-sm adp-sub a2-mt12">{cp('waitingH')}</h3>
+          {ctl.waiting.length ? (
+            <ul className="adp-rules" data-testid="adp-waiting">
+              {ctl.waiting.map((r) => (
+                <li key={r.id} className="adp-rule" data-testid="adp-waiting-row">
+                  <p className="a2-sm adp-sub">{whatOf(r)}</p>
+                  {r.expiresAt ? <p className="a2-sm a2-mute">{cp('expires', { when: when(r.expiresAt) })}</p> : null}
+                  {canApprove ? (
+                    <AdControlDecide url={CONTROL_API} id={r.id} what={whatOf(r)} texts={{ approve: cp('approve'), reject: cp('reject'), confirmApprove: cp('confirmApprove'), confirmReject: cp('confirmReject'), yes: cp('yes'), cancel: cp('cancel'), said: ctlSaid, err: ctlErr }} />
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="a2-sm a2-mute">{cp('waitingNone')}</p>
+          )}
+          <h3 className="a2-sm adp-sub a2-mt12">{cp('recentH')}</h3>
+          {ctl.recent.length ? (
+            <ul className="adp-log" data-testid="adp-recent">
+              {ctl.recent.map((r) => (
+                <li key={r.id} className="a2-sm" data-status={r.status}>
+                  <span className={`a2-pill ${statusPill(r.status)}`}>{cp(`status.${r.status}`)}</span> {whatOf(r)} <span className="a2-mute">· {when(r.createdAt)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="a2-sm a2-mute">{cp('recentNone')}</p>
+          )}
+        </section>
+      ) : null}
       <section className="a2-sc a2-mt12" aria-labelledby="adp-alerts-h" data-testid="adp-alerts">
         <h2 className="a2-h3" id="adp-alerts-h">
           {ap('h')}
@@ -356,6 +439,9 @@ export default async function AdPlatformsPage() {
       </section>
       <div id="adp-alerts-card" className="a2-mt12">
         <FieldsCard url={ALERTS_API} screen={{ key: al.card.key, value: al.card.value, version: al.card.version }} fields={alertCardFields} texts={alertCardTexts} canEdit={canWrite} testId="adp-alerts-card" />
+      </div>
+      <div id="adp-control-card" className="a2-mt12">
+        <FieldsCard url={CONTROL_API} screen={{ key: ctl.card.key, value: ctl.card.value, version: ctl.card.version }} fields={controlCardFields} texts={controlCardTexts} canEdit={canApprove} testId="adp-control-card" />
       </div>
       <div id="adp-spend-card" className="a2-mt12">
         <FieldsCard url={SPEND_API} screen={{ key: card.key, value: card.value, version: card.version }} fields={cardFields} texts={cardTexts} canEdit={canWrite} testId="adp-spend-card" />

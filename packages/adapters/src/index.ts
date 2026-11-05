@@ -69,6 +69,8 @@ export * from './ads/readers';
 export * from './ads/spend';
 // S13 · PR 263 / 264: the audience lists written to the platforms — hashed lists, lookalikes, exclusions (practice only).
 export * from './ads/audience-writer';
+// S13 · PR 268: a platform campaign paused, started again or given a new daily budget (practice writer only for now).
+export * from './ads/campaign-writer';
 // CN-020 (4) — speech to text for the checkout's voice address (Google Cloud Speech-to-Text; the mock hears nothing).
 export * from './speech';
 // S22 · PR 435 — web push for the support app (VAPID, RFC 8291; the mock sends nothing until the key pair is in).

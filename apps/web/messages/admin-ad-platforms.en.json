@@ -148,6 +148,74 @@
         "noOrders": "{where}: {metric} — spent {spend} and nothing counted yet, over your limit {limit}",
         "foot": "Nothing was paused or changed. See Marketing › Ad platforms."
       }
+    },
+    "control": {
+      "h": "Campaign changes",
+      "d": "Pausing or lowering a daily budget is sent after you confirm. Starting again or raising a budget waits for the owner's approval and nothing changes until he approves. Until a platform is connected for changes every change goes to its practice copy: nothing reaches the platform.",
+      "fold": "Change",
+      "pause": "Pause",
+      "resume": "Start again",
+      "budget": "New daily budget ({currency})",
+      "budgetGo": "Change budget",
+      "confirm": {
+        "pause": "Pause “{name}”? Its ads stop now.",
+        "resume": "Ask the owner to start “{name}” again? Nothing changes until he approves.",
+        "down": "Lower the daily budget of “{name}” from {from} to {to}? It is sent now.",
+        "up": "Ask the owner to raise the daily budget of “{name}” from {from} to {to}? Nothing changes until he approves."
+      },
+      "yes": "Yes, go ahead",
+      "cancel": "Cancel",
+      "said": {
+        "WAITING": "Waiting for the owner's approval.",
+        "PRACTICE": "Sent to the practice copy: nothing reached the platform.",
+        "APPLIED": "Done on the platform.",
+        "FAILED": "The platform refused it; nothing changed.",
+        "REJECTED": "Rejected; nothing changed."
+      },
+      "err": {
+        "OFF": "Campaign controls are off.",
+        "WAITING": "A request for this campaign already waits for the owner.",
+        "DECIDED": "It was already decided.",
+        "EXPIRED": "It ran out; nothing changed."
+      },
+      "waitingH": "Waiting for the owner's approval",
+      "waitingNone": "Nothing waits.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "confirmApprove": "Approve: {what}? It is sent at once.",
+      "confirmReject": "Reject: {what}? Nothing changes.",
+      "expires": "runs out {when}",
+      "recentH": "Latest changes",
+      "recentNone": "No change asked yet.",
+      "status": {
+        "WAITING": "Waiting",
+        "SENDING": "Sending",
+        "APPLIED": "Done",
+        "PRACTICE": "Practice copy",
+        "FAILED": "Refused",
+        "REJECTED": "Rejected",
+        "EXPIRED": "Ran out"
+      },
+      "what": {
+        "pause": "Pause",
+        "resume": "Start again",
+        "budget": "Daily budget {from} → {to}"
+      },
+      "ask": {
+        "pause": "pause",
+        "resume": "start again",
+        "budget": "daily budget {from} → {to}"
+      },
+      "noControl": "Changing a campaign needs the \"Control ads\" permission.",
+      "card": {
+        "h": "Campaign controls",
+        "d": "Off as it ships. Only the owner can switch it.",
+        "on": "Show pause and budget controls",
+        "onHelp": "On, each platform campaign gets a \"Change\" fold. Pausing and lowering a budget are sent after a confirm; starting again and raising a budget wait for your approval.",
+        "hours": "Hours an increase waits for approval",
+        "hoursHelp": "1 to 720. After that the request runs out and nothing changes.",
+        "readOnly": "You can see this card; changing it needs the \"Approve ad budget increases\" permission."
+      }
     }
   }
 }
