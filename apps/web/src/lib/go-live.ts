@@ -177,11 +177,12 @@ export const GO_LIVE: readonly GoLiveItem[] = [
   { key: 'sslStrict', pr: 397, kind: 'signoff', when: 'before' },
   // PR 399 — the owner's own data (PR 509) on every store that goes live: the fields of `golive.ownerData` filled in,
   // and a delivery band switched on (its charge is his; 0 = free delivery is a choice, not a gap). Named, never shown.
+  // CN-035: soon after go-live — "Owner data: to fill in"; an empty detail is simply not shown on the shop (PR 383).
   {
     key: 'ownerData',
     pr: 399,
     kind: 'auto',
-    when: 'before',
+    when: 'after',
     check: ({ ownerData = [] }) => {
       const gaps = ownerData
         .map((s) => ({ name: s.name, gaps: [...s.missing, ...(s.bands === 0 ? ['delivery band'] : [])] }))
