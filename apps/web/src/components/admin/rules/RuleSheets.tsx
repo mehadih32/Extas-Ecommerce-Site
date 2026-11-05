@@ -9,6 +9,7 @@ import { call, type Answer } from '../api';
 import { Icon } from '../Icon';
 import { t, type Dict } from '@/lib/i18n';
 import { Sheet } from './Sheet';
+import { ROUTES } from '@/lib/shop/routes';
 import { changeText, issueText, keyFromTitle, langCtx, money, nameIn, paramLabels, rulesRefusal, targetKey, when, withText, type Lang, type RulesEnv, type ScopeOption } from './model';
 import type { Perms } from './RuleEditor';
 
@@ -516,12 +517,61 @@ export function CouponsSheet({ d, lang: _lang, onClose, view, name, perms }: Bas
   const [err, setErr] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  // PR 272: how codes reach people (both off as shipped), a batch being made, and a coupon's limits being changed
+  const [dist, setDist] = useState<{ links: boolean; batches: boolean; batchMax: number } | null>(null);
+  const [prefix, setPrefix] = useState('');
+  const [count, setCount] = useState('');
+  const [made, setMade] = useState<{ batchId: string; count: number } | null>(null);
+  const [edit, setEdit] = useState<{ id: string; usage: string; per: string; aud: CouponAudience } | null>(null);
   useEffect(() => {
     void call('GET', `${RULES_API}/coupons?ruleId=${view.id}`).then((a) => {
-      if (a.status === 200 && Array.isArray(a.data.coupons)) setList(a.data.coupons as CouponView[]);
-      else setErr(refusal(d, a));
+      if (a.status === 200 && Array.isArray(a.data.coupons)) {
+        setList(a.data.coupons as CouponView[]);
+        setDist((a.data.distribution as typeof dist) ?? null);
+      } else setErr(refusal(d, a));
     });
   }, [view.id, d]);
+  const single = (list ?? []).filter((c) => !c.batchId);
+  const batches = [...new Map((list ?? []).filter((c) => c.batchId).map((c) => [c.batchId!, (list ?? []).filter((x) => x.batchId === c.batchId)])).entries()];
+  const makeBatch = async () => {
+    setBusy(true);
+    setErr('');
+    const a = await call('POST', `${RULES_API}/coupons/batches`, { ruleId: view.id, prefix: prefix.trim(), count: Number(count), ...(aud !== 'ALL' ? { audience: aud } : {}) });
+    setBusy(false);
+    if (a.status !== 201 || !a.data.batch) return setErr(refusal(d, a));
+    const b = a.data.batch as { batchId: string; count: number };
+    setMade(b);
+    setNote(tt('coupons.batchMade', { n: b.count }));
+    const again = await call('GET', `${RULES_API}/coupons?ruleId=${view.id}`);
+    if (again.status === 200 && Array.isArray(again.data.coupons)) setList(again.data.coupons as CouponView[]);
+  };
+  const switchBatch = async (batchId: string, enabled: boolean) => {
+    setBusy(true);
+    setErr('');
+    const a = await call('POST', `${RULES_API}/coupons/batches/${batchId}`, { enabled });
+    setBusy(false);
+    if (a.status !== 200) return setErr(refusal(d, a));
+    setList((l) => (l ?? []).map((x) => (x.batchId === batchId ? { ...x, enabled } : x)));
+  };
+  const saveLimits = async () => {
+    if (!edit) return;
+    const num = (s: string) => (s.trim() ? Number(s) : null);
+    setBusy(true);
+    setErr('');
+    const a = await call('POST', `${RULES_API}/coupons/${edit.id}`, { limits: { usageLimit: num(edit.usage), perCustomerLimit: num(edit.per), audience: edit.aud } });
+    setBusy(false);
+    if (a.status !== 200 || !a.data.coupon) return setErr(refusal(d, a));
+    replace(a.data.coupon as CouponView);
+    setEdit(null);
+    setNote(tt('coupons.limitsSaved'));
+  };
+  const copyLink = (c: CouponView) => {
+    const link = `${window.location.origin}${ROUTES.bag}?code=${encodeURIComponent(c.code)}`;
+    void navigator.clipboard?.writeText(link).then(
+      () => setNote(tt('coupons.linkCopied', { link })),
+      () => setNote(link),
+    );
+  };
   const replace = (c: CouponView) => setList((l) => (l ?? []).map((x) => (x.id === c.id ? c : x)).filter((x) => !x.archived));
   const add = async (e: FormEvent) => {
     e.preventDefault();
@@ -595,9 +645,39 @@ export function CouponsSheet({ d, lang: _lang, onClose, view, name, perms }: Bas
           {note}
         </p>
       ) : null}
+      {perms.write && dist?.batches ? (
+        <details className="a2-more-opts a2-mt12 rl-c-more" data-testid="rl-c-batch">
+          <summary>{tt('coupons.batchTitle')}</summary>
+          <p className="ad-mini">{tt('coupons.batchHelp', { max: dist.batchMax })}</p>
+          <div className="rl-sets">
+            <div>
+              <label className="ad-label" htmlFor="rl-c-prefix">
+                {tt('coupons.prefix')}
+              </label>
+              <input id="rl-c-prefix" className="ad-input" autoCapitalize="characters" maxLength={12} value={prefix} onChange={(e) => setPrefix(e.target.value.toUpperCase())} />
+            </div>
+            <div>
+              <label className="ad-label" htmlFor="rl-c-count">
+                {tt('coupons.count')}
+              </label>
+              <input id="rl-c-count" className="ad-input" type="number" inputMode="numeric" min={1} max={dist.batchMax} value={count} onChange={(e) => setCount(e.target.value)} />
+            </div>
+            <div className="rl-wide">
+              <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" disabled={busy || !prefix.trim() || !(Number(count) >= 1)} onClick={makeBatch} data-testid="rl-c-batch-make">
+                {tt('coupons.batchMake')}
+              </button>
+              {made ? (
+                <a className="ad-btn ad-btn-ghost ad-btn-sm" href={`${RULES_API}/coupons/batches/${made.batchId}`} download data-testid="rl-c-batch-csv">
+                  {tt('coupons.download')}
+                </a>
+              ) : null}
+            </div>
+          </div>
+        </details>
+      ) : null}
       {list?.length === 0 ? <p className="ad-mini">{tt('coupons.none')}</p> : null}
       <div>
-        {(list ?? []).map((c) => (
+        {single.map((c) => (
           <div key={c.id} className="ad-row">
             <div className="ad-row-main">
               <div className="ad-row-name">
@@ -622,9 +702,83 @@ export function CouponsSheet({ d, lang: _lang, onClose, view, name, perms }: Bas
                 ) : null}
               </div>
             ) : null}
+            {perms.write || (dist?.links && c.enabled) ? (
+              <div className="ad-row-acts">
+                {dist?.links && c.enabled ? (
+                  <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={() => copyLink(c)} data-testid="rl-c-link">
+                    {tt('coupons.copyLink')}
+                  </button>
+                ) : null}
+                {perms.write && (!c.enabled || perms.approve) ? (
+                  <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" disabled={busy} aria-expanded={edit?.id === c.id} onClick={() => setEdit(edit?.id === c.id ? null : { id: c.id, usage: c.usageLimit ? String(c.usageLimit) : '', per: c.perCustomerLimit ? String(c.perCustomerLimit) : '', aud: c.audience })}>
+                    {tt('coupons.changeLimits')}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            {edit?.id === c.id ? (
+              <div className="rl-sets" data-testid="rl-c-limits">
+                <div>
+                  <label className="ad-label" htmlFor="rl-c-e-usage">
+                    {tt('coupons.usageLimit')}
+                  </label>
+                  <input id="rl-c-e-usage" className="ad-input" type="number" inputMode="numeric" min={Math.max(1, c.usedCount)} value={edit.usage} placeholder={tt('coupons.noLimit')} onChange={(e) => setEdit({ ...edit, usage: e.target.value })} />
+                </div>
+                <div>
+                  <label className="ad-label" htmlFor="rl-c-e-per">
+                    {tt('coupons.perCustomer')}
+                  </label>
+                  <input id="rl-c-e-per" className="ad-input" type="number" inputMode="numeric" min={1} value={edit.per} placeholder={tt('coupons.noLimit')} onChange={(e) => setEdit({ ...edit, per: e.target.value })} />
+                </div>
+                <div className="rl-wide">
+                  <label className="ad-label" htmlFor="rl-c-e-aud">
+                    {tt('coupons.audience')}
+                  </label>
+                  <select id="rl-c-e-aud" className="ad-input" value={edit.aud} onChange={(e) => setEdit({ ...edit, aud: e.target.value as CouponAudience })}>
+                    {COUPON_AUDIENCES.map((x) => (
+                      <option key={x} value={x}>
+                        {tt(`coupons.aud.${x}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="rl-wide">
+                  <button type="button" className="ad-btn ad-btn-primary ad-btn-sm" disabled={busy} onClick={saveLimits}>
+                    {tt('coupons.saveLimits')}
+                  </button>
+                  {c.enabled ? <span className="ad-mini"> · {tt('coupons.limitsOwnerOk')}</span> : null}
+                </div>
+              </div>
+            ) : null}
           </div>
         ))}
       </div>
+      {batches.map(([batchId, codes]) => {
+        const on = codes.every((x) => x.enabled);
+        return (
+          <div key={batchId} className="ad-row" data-testid="rl-c-batch-row">
+            <div className="ad-row-main">
+              <div className="ad-row-name">
+                <span className={`ad-dot${on ? '' : ' off'}`} />
+                <span className="rl-code">{codes[0]!.code.replace(/-[^-]*$/, '-…')}</span>
+              </div>
+              <div className="ad-mini">
+                {tt('coupons.batchRow', { n: codes.length, used: codes.filter((x) => x.usedCount > 0).length })} · {on ? tt('coupons.on') : tt('coupons.off')}
+              </div>
+            </div>
+            <div className="ad-row-acts">
+              <a className="ad-btn ad-btn-ghost ad-btn-sm" href={`${RULES_API}/coupons/batches/${batchId}`} download>
+                {tt('coupons.download')}
+              </a>
+              {perms.approve ? (
+                <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" disabled={busy} onClick={() => switchBatch(batchId, !on)}>
+                  {on ? tt('coupons.switchOffAll') : tt('coupons.switchOnAll')}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        );
+      })}
     </Sheet>
   );
 }

@@ -41,6 +41,8 @@ const KEYS = [
   'wish.list',
   // PR 605: "Send as a gift" under Checkout while gift mode is on
   'checkout.gift',
+  // PR 272: a code in a link (/bag?code=…) goes into the bag while `links` is on
+  'rules.coupons.distribution',
 ] as const satisfies readonly Key[];
 
 type BagKey = (typeof KEYS)[number];

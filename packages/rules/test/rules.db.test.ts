@@ -15,7 +15,12 @@ import {
   archiveRule,
   bustAll,
   checkCoupon,
+  couponBatchCsv,
   createCoupon,
+  createCouponBatch,
+  listCoupons,
+  setCouponBatchEnabled,
+  updateCouponLimits,
   createNotice,
   createRule,
   discardDraft,
@@ -516,6 +521,53 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
     const member = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 2 }], couponCode: 'sample-bogo-members', customerId: '00000000-0000-4000-8000-000000000271' });
     expect(member.coupon!.ok).toBe(true);
     for (const c of codes) await setCouponEnabled(deps(), as(owner), c.id, { enabled: false });
+  });
+
+  it('PR 272, SIM-F-009: limits change later (on: the owner’s OK); single-use batches are off as shipped, then made off, switched on together and downloaded; a guest uses one once', async () => {
+    const r = await createRule(deps(), as(writer), { templateId: 'coupon', key: 'batch-coupon' });
+    await saveDraft(deps(), as(writer), r.id, { content: withValues(r.live!, { amountOff: 5000, minOrder: 100 }, { status: 'ACTIVE' }) });
+    await publishRule(deps(), as(owner), r.id);
+    // limits: free while off; once on, the owner's OK; never below the uses made
+    const c = await createCoupon(deps(), as(writer), { code: 'sample-limits', ruleId: r.id });
+    expect(await updateCouponLimits(deps(), as(writer), c.id, { usageLimit: 5, perCustomerLimit: 1, audience: 'MEMBERS' })).toMatchObject({ usageLimit: 5, perCustomerLimit: 1, audience: 'MEMBERS' });
+    await setCouponEnabled(deps(), as(owner), c.id, { enabled: true });
+    expect(await code(updateCouponLimits(deps(), as(writer), c.id, { audience: 'ALL' }))).toBe('OWNER_OK_REQUIRED');
+    expect((await updateCouponLimits(deps(), as(owner), c.id, { audience: 'ALL', usageLimit: null })).audience).toBe('ALL');
+    await t.prisma.coupon.update({ where: { id: c.id }, data: { usedCount: 3 } });
+    expect(await code(updateCouponLimits(deps(), as(owner), c.id, { usageLimit: 2 }))).toBe('INVALID_INPUT');
+    expect(await code(updateCouponLimits(deps(), as(reader), c.id, { usageLimit: 9 }))).toBe('FORBIDDEN');
+    await setCouponEnabled(deps(), as(owner), c.id, { enabled: false });
+    // batches: off as shipped
+    const input = { ruleId: r.id, prefix: 'sms', count: 3 };
+    expect(await code(createCouponBatch(deps(), as(writer), input))).toBe('CONFLICT');
+    overrides.set('rules.coupons.distribution', { links: false, batches: true, batchMax: 3, randomLength: 8 });
+    try {
+      expect(await code(createCouponBatch(deps(), as(writer), { ...input, count: 4 }))).toBe('INVALID_INPUT');
+      expect(await code(createCouponBatch(deps(), as(writer), { ...input, prefix: 'much-too-long' }))).toBe('INVALID_INPUT');
+      const b = await createCouponBatch(deps(), as(writer), input);
+      expect(b.codes).toHaveLength(3);
+      expect(new Set(b.codes).size).toBe(3);
+      for (const x of b.codes) expect(x).toMatch(/^SMS-[A-HJ-NP-Z2-9]{8}$/);
+      const rows = await listCoupons(deps(), as(writer), { ruleId: r.id });
+      expect(rows.filter((x) => x.batchId === b.batchId).every((x) => !x.enabled && x.usageLimit === 1 && x.perCustomerLimit === 1)).toBe(true);
+      expect(await code(setCouponBatchEnabled(deps(), as(publisher), b.batchId, { enabled: true }))).toBe('OWNER_OK_REQUIRED');
+      expect(await setCouponBatchEnabled(deps(), as(owner), b.batchId, { enabled: true })).toEqual({ batchId: b.batchId, changed: 3 });
+      const csv = await couponBatchCsv(deps(), as(reader), b.batchId);
+      expect(csv.split('\n')[0]).toBe('code,on,used');
+      expect(csv.trim().split('\n')).toHaveLength(4);
+      // a guest (no account) uses one code once: counted by his phone, and then by anyone
+      const one = b.codes[0]!;
+      const guest = { storeId: A, code: one, phone: '+8801700000272', now: clock };
+      expect((await checkCoupon(t.prisma, guest)).ok).toBe(true);
+      const [o1, o2] = await t.prisma.order.findMany({ where: { storeId: A }, orderBy: { number: 'asc' }, take: 2 });
+      await t.prisma.$transaction((tx) => redeemCoupon(tx, { ...guest, orderId: o1!.id, discountMinor: 5000 }));
+      expect((await checkCoupon(t.prisma, guest)).reason).toBe('USED_UP');
+      expect(await code(t.prisma.$transaction((tx) => redeemCoupon(tx, { ...guest, phone: '+8801700000273', orderId: o2!.id, discountMinor: 5000 })))).toBe('COUPON_NOT_USABLE');
+      expect(await code(couponBatchCsv(deps(), as(reader), '00000000-0000-4000-8000-000000000272'))).toBe('NOT_FOUND');
+      await setCouponBatchEnabled(deps(), as(owner), b.batchId, { enabled: false });
+    } finally {
+      overrides.delete('rules.coupons.distribution');
+    }
   });
 
   it('PR 213 follow-up, SIM-F-050: a first-order code reads his order history by phone — logged in or not; the order being placed and cancelled ones do not count', async () => {

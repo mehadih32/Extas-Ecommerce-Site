@@ -26,7 +26,9 @@
 //   GET   /api/admin/rules/notices              notices (?includeArchived=1) · POST a new one (off) (PR 216)
 //   GET   /api/admin/rules/notices/:id          one notice · PUT {notice, version?} change · POST {enabled} | {archived}
 //   GET   /api/admin/rules/coupons              coupons (?ruleId=) · POST a new one (off) (PR 213)
-//   POST  /api/admin/rules/coupons/:id          {enabled} (the owner's OK) | {archived}
+//   POST  /api/admin/rules/coupons/:id          {enabled} (the owner's OK) | {archived} | {limits} (PR 272; on: the owner's OK)
+//   POST  /api/admin/rules/coupons/batches      {ruleId, prefix, count, audience?, startsAt?, endsAt?} single-use codes (PR 272)
+//   GET   /api/admin/rules/coupons/batches/:id  the batch's codes as a CSV · POST {enabled} all of them (the owner's OK)
 //   GET   /api/admin/rules/eid                  Eid order-by dates: settings, checks, bands, districts (PR 214 follow-up)
 //   PUT   /api/admin/rules/eid                  {eidDate?, bandDates?, districtDates?, cutoffTime?, …texts} save
 //   POST  /api/admin/rules/eid/status           {enabled} switch on (every check passed) or off
@@ -159,9 +161,19 @@ export async function rulesRoute(request: Request, deps: AdminDeps | null, path:
         return handle(request, deps, 'rules.read', async (x) => {
           const ruleId = x.url.searchParams.get('ruleId') || undefined;
           if (ruleId && !isUuid(ruleId)) return fail(400, 'INVALID_INPUT', ['ruleId']);
-          return { coupons: await rl.listCoupons(x.deps, x.who, { ruleId, includeArchived: flag(x.url, 'includeArchived') }) };
+          // PR 272: with the distribution switches, so the sheet shows "Copy link" and "Make single-use codes" only when on
+          return { coupons: await rl.listCoupons(x.deps, x.who, { ruleId, includeArchived: flag(x.url, 'includeArchived') }), distribution: await x.deps.settings.value('rules.coupons.distribution', { storeId: x.who.storeId }) };
         });
       if (m === 'POST') return handle(request, deps, 'rules.write', async (x) => ({ coupon: await rl.createCoupon(x.deps, x.who, await body(request)) }), 201);
+      return notAllowed();
+    }
+    // PR 272: batches of single-use codes
+    if (b === 'batches') {
+      if (!c) return m === 'POST' ? handle(request, deps, 'rules.write', async (x) => ({ batch: await rl.createCouponBatch(x.deps, x.who, await body(request)) }), 201) : notAllowed();
+      if (!isUuid(c)) return fail(400, 'INVALID_INPUT', ['batch']);
+      if (m === 'GET')
+        return handle(request, deps, 'rules.read', async (x) => new Response(await rl.couponBatchCsv(x.deps, x.who, c), { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="codes-${c.slice(0, 8)}.csv"`, 'cache-control': 'no-store' } }));
+      if (m === 'POST') return handle(request, deps, 'rules.read', async (x) => ({ batch: await rl.setCouponBatchEnabled(x.deps, x.who, c, await body(request)) }));
       return notAllowed();
     }
     if (c || !isUuid(b)) return fail(400, 'INVALID_INPUT', ['id']);
@@ -169,6 +181,7 @@ export async function rulesRoute(request: Request, deps: AdminDeps | null, path:
     return handle(request, deps, 'rules.read', async (x) => {
       const input = await body(request);
       if ('archived' in input) return { coupon: await rl.archiveCoupon(x.deps, x.who, b, input) };
+      if ('limits' in input) return { coupon: await rl.updateCouponLimits(x.deps, x.who, b, input.limits) };
       return { coupon: await rl.setCouponEnabled(x.deps, x.who, b, input) };
     });
   }

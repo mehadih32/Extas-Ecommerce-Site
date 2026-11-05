@@ -254,7 +254,7 @@
     },
     "coupons": {
       "title": "Coupons — {name}",
-      "intro": "A coupon unlocks this discount. It starts switched off; switching it on needs the owner's OK.",
+      "intro": "A coupon unlocks this offer. It starts switched off; switching it on needs the owner's OK.",
       "code": "Code",
       "codeHelp": "Capital letters and numbers",
       "usageLimit": "Times it can be used",
@@ -277,7 +277,23 @@
       "switchOff": "Switch off",
       "archive": "Archive",
       "added": "Coupon added — it stays off until it is switched on",
-      "needsCoupon": "Coupons work only with a discount that asks for a coupon."
+      "batchMade": "{n} single-use codes made — they stay off until switched on.",
+      "limitsSaved": "Limits saved.",
+      "linkCopied": "Link copied: {link}",
+      "batchTitle": "Make single-use codes",
+      "batchHelp": "Many codes at once, each usable once and once per customer — for SMS, WhatsApp or printed cards. At most {max} per batch. They are made off.",
+      "prefix": "Start of each code",
+      "count": "How many codes",
+      "batchMake": "Make the codes",
+      "download": "Download codes (CSV)",
+      "copyLink": "Copy link",
+      "changeLimits": "Change limits",
+      "saveLimits": "Save limits",
+      "limitsOwnerOk": "This coupon is on: saving needs the owner's OK",
+      "batchRow": "{n} single-use codes · {used} used",
+      "switchOnAll": "Switch all on",
+      "switchOffAll": "Switch all off",
+      "needsCoupon": "Coupons work only with an offer that asks for a coupon."
     },
     "conflicts": {
       "title": "Conflict found",

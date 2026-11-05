@@ -10,7 +10,12 @@
 // PR 271 (answer 20, fully dynamic): a coupon unlocks any rule whose offer waits for a code — a percentage or a fixed
 // amount (discount), free delivery, buy some get some (buy-one-get-one), a percentage from a few pieces, or a set price
 // — so a new offer shape is a new rule template, not new code. Who may use it stays per coupon (CN-018).
+// PR 272 (distribution, limits, per-customer caps): a coupon's limits, who may use it and its window can be changed
+// later (on a switched-on coupon that is the owner's OK); batches of single-use codes (each usable once in all and once
+// per customer, guests counted by phone) for SMS, WhatsApp or printed cards, made off, switched on together with the
+// owner's OK and downloaded as a CSV; both distribution parts are off as shipped (`rules.coupons.distribution`).
 
+import { randomInt, randomUUID } from 'node:crypto';
 import { Prisma } from '@extas/db/client';
 import { z } from 'zod';
 import { allow, found, holds, logChange, nowOf, parse, setting, type Db, type RulesDeps, type Tx, type Who } from './context';
@@ -34,7 +39,11 @@ export interface CouponView {
   endsAt: string | null;
   archived: boolean;
   createdAt: string;
+  /** PR 272: the batch of single-use codes it belongs to (null: a code made on its own). */
+  batchId: string | null;
 }
+
+const batchOf = (v: unknown): string | null => (v && typeof v === 'object' && typeof (v as { batchId?: unknown }).batchId === 'string' ? (v as { batchId: string }).batchId : null);
 
 const view = (c: CouponRow): CouponView => ({
   id: c.id,
@@ -49,6 +58,7 @@ const view = (c: CouponRow): CouponView => ({
   endsAt: c.endsAt?.toISOString() ?? null,
   archived: c.archivedAt !== null,
   createdAt: c.createdAt.toISOString(),
+  batchId: batchOf(c.value),
 });
 
 export const normaliseCode = (code: string) => code.trim().toUpperCase();
@@ -138,6 +148,148 @@ export async function archiveCoupon(deps: RulesDeps, who: Who, id: string, input
     return r;
   });
   return view(row);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// PR 272 — limits changed later, and batches of single-use codes
+// ---------------------------------------------------------------------------------------------------------------
+
+const limitsSchema = z
+  .object({
+    usageLimit: z.int().min(1).max(10_000_000).nullable().optional(),
+    perCustomerLimit: z.int().min(1).max(1000).nullable().optional(),
+    audience: z.enum(COUPON_AUDIENCES).optional(),
+    startsAt: z.iso.datetime({ offset: true }).nullable().optional(),
+    endsAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  })
+  .strict();
+
+/**
+ * Changes a coupon's limits, who may use it or its window. On a switched-on coupon this changes who gets a discount, so
+ * it is the owner's OK (`rules.approve`); a limit never goes below the uses already made.
+ */
+export async function updateCouponLimits(deps: RulesDeps, who: Who, id: string, input: unknown): Promise<CouponView> {
+  await allow(deps, who, 'rules.write');
+  const b = parse(limitsSchema, input, 'limits');
+  const c = found(await deps.db.coupon.findFirst({ where: { id, storeId: who.storeId } }), 'coupon');
+  if (c.archivedAt) throw new RulesError('RULE_ARCHIVED', 'the coupon is archived');
+  if (c.enabled && !(await holds(deps, who, 'rules.approve'))) throw new RulesError('OWNER_OK_REQUIRED', "changing a switched-on coupon changes who gets a discount and needs the owner's OK", ['limits']);
+  if (b.usageLimit != null && b.usageLimit < c.usedCount) throw new RulesError('INVALID_INPUT', 'the limit is below the uses already made', ['usageLimit']);
+  const startsAt = b.startsAt === undefined ? c.startsAt : b.startsAt ? new Date(b.startsAt) : null;
+  const endsAt = b.endsAt === undefined ? c.endsAt : b.endsAt ? new Date(b.endsAt) : null;
+  if (startsAt && endsAt && endsAt <= startsAt) throw new RulesError('INVALID_INPUT', 'the end must be after the start', ['endsAt']);
+  const data = {
+    ...(b.usageLimit !== undefined ? { usageLimit: b.usageLimit } : {}),
+    ...(b.perCustomerLimit !== undefined ? { perCustomerLimit: b.perCustomerLimit } : {}),
+    ...(b.audience !== undefined ? { audience: b.audience } : {}),
+    startsAt,
+    endsAt,
+  };
+  const row = await deps.db.$transaction(async (tx) => {
+    const r = await tx.coupon.update({ where: { id }, data });
+    await logChange(tx, who, { action: 'coupon.limits', entityType: 'Coupon', entityId: id, before: view(c), after: { ...view(r), ...(c.enabled ? { ownerOk: true } : {}) } });
+    return r;
+  });
+  return view(row);
+}
+
+/** Letters and digits that are not mistaken for each other on a printed card or an SMS (no 0/O, 1/I/L). */
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const randomPart = (n: number) => Array.from({ length: n }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
+
+const batchSchema = z
+  .object({
+    ruleId: z.uuid(),
+    prefix: z.string().trim().min(1).max(12),
+    count: z.int().min(1),
+    audience: z.enum(COUPON_AUDIENCES).optional(),
+    startsAt: z.iso.datetime({ offset: true }).nullable().optional(),
+    endsAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  })
+  .strict()
+  .refine((b) => !b.startsAt || !b.endsAt || Date.parse(b.endsAt) > Date.parse(b.startsAt), { message: 'the end must be after the start', path: ['endsAt'] });
+
+export interface CouponBatchView {
+  batchId: string;
+  ruleId: string;
+  count: number;
+  codes: string[];
+}
+
+/**
+ * Makes a batch of single-use codes for a rule whose offer asks for a code (`rules.coupons.distribution.batches` on):
+ * PREFIX-XXXXXXXX, each usable once in all and once per customer, every one off.
+ */
+export async function createCouponBatch(deps: RulesDeps, who: Who, input: unknown): Promise<CouponBatchView> {
+  await allow(deps, who, 'rules.write');
+  const dist = await setting(deps, who.storeId, 'rules.coupons.distribution');
+  if (!dist.batches) throw new RulesError('CONFLICT', 'single-use code batches are switched off', ['rules.coupons.distribution']);
+  const b = parse(batchSchema, input, 'batch');
+  if (b.count > dist.batchMax) throw new RulesError('INVALID_INPUT', 'more codes than one batch may make', ['count', String(dist.batchMax)]);
+  const prefix = normaliseCode(b.prefix);
+  const pattern = new RegExp(await setting(deps, who.storeId, 'rules.coupons.codePattern'));
+  if (!pattern.test(`${prefix}-${randomPart(dist.randomLength)}`)) throw new RulesError('COUPON_CODE_INVALID', 'the prefix and the random part do not fit the allowed shape', [prefix]);
+  const rule = toRule(found(await deps.db.smartRule.findFirst({ where: { id: b.ruleId, storeId: who.storeId } }), 'rule'));
+  if (!rule || !unlocksWithCoupon(rule)) throw new RulesError('COUPON_RULE_INVALID', 'the rule must hold an offer that asks for a coupon');
+  // Unique codes: drawn, then any already in use (or drawn twice) drawn again.
+  const codes = new Set<string>();
+  for (let round = 0; codes.size < b.count && round < 20; round++) {
+    const draw = new Set<string>();
+    while (draw.size < b.count - codes.size) {
+      const x = `${prefix}-${randomPart(dist.randomLength)}`;
+      if (!codes.has(x)) draw.add(x);
+    }
+    const taken = await deps.db.coupon.findMany({ where: { storeId: who.storeId, code: { in: [...draw] } }, select: { code: true } });
+    const used = new Set(taken.map((t) => t.code));
+    for (const x of draw) if (!used.has(x)) codes.add(x);
+  }
+  if (codes.size < b.count) throw new RulesError('CONFLICT', 'not enough free codes: use a longer random part', ['randomLength']);
+  const batchId = randomUUID();
+  const list = [...codes];
+  await deps.db.$transaction(async (tx) => {
+    await tx.coupon.createMany({
+      data: list.map((code) => ({
+        storeId: who.storeId,
+        code,
+        kind: 'rule',
+        value: { batchId },
+        ruleId: rule.id,
+        usageLimit: 1, // hardcode-ok: a single-use code is used once, by definition
+        perCustomerLimit: 1, // hardcode-ok: once per customer, by definition
+        audience: b.audience ?? 'ALL',
+        startsAt: b.startsAt ? new Date(b.startsAt) : null,
+        endsAt: b.endsAt ? new Date(b.endsAt) : null,
+        enabled: false,
+      })),
+    });
+    await logChange(tx, who, { action: 'coupon.batch.create', entityType: 'CouponBatch', entityId: batchId, before: null, after: { ruleId: rule.id, prefix, count: list.length, audience: b.audience ?? 'ALL' } });
+  });
+  return { batchId, ruleId: rule.id, count: list.length, codes: list };
+}
+
+const inBatch = (storeId: number, batchId: string) => ({ storeId, archivedAt: null, value: { path: ['batchId'], equals: batchId } }) satisfies Prisma.CouponWhereInput;
+
+/** Switches every code of a batch on or off at once: the owner's OK (`rules.approve`). */
+export async function setCouponBatchEnabled(deps: RulesDeps, who: Who, batchId: string, input: unknown): Promise<{ batchId: string; changed: number }> {
+  await allow(deps, who, 'rules.read');
+  const b = parse(enableSchema, input, 'switch');
+  if (!(await holds(deps, who, 'rules.approve'))) throw new RulesError('OWNER_OK_REQUIRED', "switching coupons on or off changes what customers pay and needs the owner's OK", ['enabled']);
+  const n = await deps.db.coupon.count({ where: inBatch(who.storeId, batchId) });
+  if (!n) throw new RulesError('NOT_FOUND', 'no such batch', ['batch']);
+  const changed = await deps.db.$transaction(async (tx) => {
+    const r = await tx.coupon.updateMany({ where: { ...inBatch(who.storeId, batchId), enabled: !b.enabled }, data: { enabled: b.enabled } });
+    await logChange(tx, who, { action: b.enabled ? 'coupon.batch.enable' : 'coupon.batch.disable', entityType: 'CouponBatch', entityId: batchId, before: null, after: { enabled: b.enabled, changed: r.count, ownerOk: true } });
+    return r.count;
+  });
+  return { batchId, changed };
+}
+
+/** A batch's codes as a CSV (code, on, used), for the SMS or WhatsApp tool or the printer. */
+export async function couponBatchCsv(deps: RulesDeps, who: Who, batchId: string): Promise<string> {
+  await allow(deps, who, 'rules.read');
+  const rows = await deps.db.coupon.findMany({ where: inBatch(who.storeId, batchId), orderBy: { code: 'asc' }, select: { code: true, enabled: true, usedCount: true } });
+  if (!rows.length) throw new RulesError('NOT_FOUND', 'no such batch', ['batch']);
+  return ['code,on,used', ...rows.map((r) => `${r.code},${r.enabled ? 'yes' : 'no'},${r.usedCount}`)].join('\n') + '\n';
 }
 
 export type CouponRefusal = 'UNKNOWN' | 'OFF' | 'NOT_STARTED' | 'ENDED' | 'USED_UP' | 'PER_CUSTOMER' | 'MEMBERS_ONLY' | 'GUESTS_ONLY' | 'FIRST_ORDER_ONLY' | 'RULE_NOT_LIVE';
