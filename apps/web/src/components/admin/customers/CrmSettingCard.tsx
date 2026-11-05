@@ -8,12 +8,13 @@
 // whole units of the store's currency and kept in minor units (×100), like the Money section's cards. PR 622: a `words`
 // field is an object of several words, each in both languages (`cus.set.<card>.w.<word>`, "(English)/(Bengali)"
 // from `cus.set.inLang`).
+// PR 534: a `choice` field is one value picked from a list the page gives with its own words (the owner's grades, say).
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
 
-export type CrmField = { name: string; kind: 'bool' } | { name: string; kind: 'int' } | { name: string; kind: 'multi'; options: readonly string[] } | { name: string; kind: 'lang'; max: number } | { name: string; kind: 'money' } | { name: string; kind: 'words'; keys: readonly string[]; max: number };
+export type CrmField = { name: string; kind: 'bool' } | { name: string; kind: 'int' } | { name: string; kind: 'multi'; options: readonly string[] } | { name: string; kind: 'lang'; max: number } | { name: string; kind: 'money' } | { name: string; kind: 'words'; keys: readonly string[]; max: number } | { name: string; kind: 'choice'; options: readonly { value: string; label: string }[] };
 const LANGS = ['bn', 'en'] as const;
 
 export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWrite, url }: { dict: Dict; settingKey: string; card: string; fields: readonly CrmField[]; value: Record<string, unknown>; canWrite: boolean; url?: string }) {
@@ -60,6 +61,19 @@ export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWr
               <input type="checkbox" checked={!!v[f.name]} disabled={!canWrite} onChange={(e) => setV({ ...v, [f.name]: e.target.checked })} data-testid={`crm-${card}-${f.name}`} />
               <span>{label(f.name)}</span>
             </label>
+          ) : f.kind === 'choice' ? (
+            <span key={f.name} className="a2-stack" style={{ gap: 4 }}>
+              <label className="a2-xs a2-mute" htmlFor={`${uid}-${f.name}`}>
+                {label(f.name)}
+              </label>
+              <select id={`${uid}-${f.name}`} className="a2-sel" value={String(v[f.name] ?? '')} disabled={!canWrite} onChange={(e) => setV({ ...v, [f.name]: e.target.value })} data-testid={`crm-${card}-${f.name}`}>
+                {f.options.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </span>
           ) : f.kind === 'lang' ? (
             <span key={f.name} className="a2-stack" style={{ gap: 4 }}>
               {LANGS.map((l) => {

@@ -656,6 +656,15 @@
         "enabled": "Show the history on the To confirm page",
         "recent": "Latest orders listed (1–20)",
         "reasonsShown": "Reasons named (1–20)"
+      },
+      "grades": {
+        "title": "Customer grading",
+        "sub": "Off as shipped. When on, the team sees each customer's grade (your own grades, below) and a \"Verified\" mark on the customer list, his page and Orders › To confirm. A grade only shows: it never blocks anyone, never holds an order and never changes cash on delivery.",
+        "enabled": "Turn on customer grading",
+        "verifiedMinDelivered": "\"Verified\" mark after this many true deliveries (0 = no mark)",
+        "maxGrades": "Most grades kept (1–20)",
+        "goodFrom": "Good customer from this grade (for the good-customer rule in Orders › Risk rules)",
+        "goodNone": "None — grades do not count for it"
       }
     },
     "auto": {
@@ -1090,6 +1099,49 @@
         "sub": "Chats per agent and channel, chats that became orders, first response and solved. These figures start with the Support inbox (S22); nothing is shown until then."
       },
       "note": "Counts only, from placed orders (drafts and archived orders left out). One person is counted once over his merged profiles and his guest orders by number."
+    },
+    "grade": {
+      "verified": "Verified",
+      "title": "Your grades",
+      "sub": "Each grade has a rule: at least so many true deliveries, and refusals that were not the shop's fault within your limits. A customer gets the highest grade (in your order, lowest number first) whose rule he meets. None is made for you.",
+      "offNote": "Customer grading is off: you can prepare the grades now; nobody sees them until you turn it on above.",
+      "none": "No grade yet. Press \"Add a grade\".",
+      "archived": "archived",
+      "order": "order {n}",
+      "people": "{n} people at the last run",
+      "edit": "Change",
+      "archive": "Archive",
+      "restore": "Bring back",
+      "restored": "Brought back.",
+      "archivedDone": "Archived. The next run takes it off people.",
+      "newTitle": "New grade",
+      "editTitle": "Change grade",
+      "formNote": "Leave \"Refusals at most\" empty for any number. A refusal the shop caused never counts. The grade stays only a mark for the team.",
+      "cancel": "Cancel",
+      "add": "Add a grade",
+      "run": "Grade everyone now",
+      "ran": "Done: {people} people looked at, {changed} changed.",
+      "saved": "Saved.",
+      "ruleBroken": "This rule no longer reads; change it and save again.",
+      "rule": {
+        "delivered": "true deliveries at least {n}",
+        "anyRefused": "any number of refusals",
+        "maxRefused": "refusals at most {n}",
+        "minRefused": "refusals at least {n}",
+        "rangeRefused": "refusals {min} to {max}"
+      },
+      "f": {
+        "nameEn": "Name in English",
+        "nameBn": "Name in Bengali",
+        "minDelivered": "True deliveries at least",
+        "maxRefused": "Refusals at most (empty = any)",
+        "minRefused": "Refusals at least",
+        "sortOrder": "Order (higher = better grade)"
+      },
+      "err": {
+        "NAME_TAKEN": "Another grade already has this name.",
+        "LIMIT_REACHED": "That is more grades than the settings allow. Archive one first, or raise \"Most grades kept\"."
+      }
     }
   }
 }

@@ -50,6 +50,8 @@
 // and the repeat rate, overall and per saved segment; counts only, `reports.read`; off as shipped (`customers.report`).
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
+// PR 534: customer grading (grades.ts) — the owner's own grades and a verified mark from true deliveries, shown to the
+// team, written on each profile by the daily run for Marketing › Audiences; never blocks, never changes COD; off as shipped.
 export * from './access';
 export * from './chat-context';
 export * from './context';
@@ -60,6 +62,7 @@ export * from './erp-page';
 export * from './export';
 export * from './errors';
 export * from './family';
+export * from './grades';
 export * from './journey';
 export * from './campaign-writer';
 export * from './email-marketing';

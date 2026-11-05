@@ -67,6 +67,12 @@
 // PR 303 (`customers.report`, v201): Reports › Customers (REP-04) — new, returning and quiet (churned) buyers over a
 // period, overall and per saved segment. Off as shipped; `quietDays` is when a buyer with no order counts as quiet, and
 // `segmentsShown` how many saved segments the report splits by. Read-only: it counts, it never sends or changes anything.
+//
+// PR 534 (`customers.grades`, v203): customer grading — the owner's own grades (CustomerGrade rows, each with its rule of
+// true deliveries and refusals not the shop's fault) shown to the team as a pill, plus a verified mark from
+// `verifiedMinDelivered` true deliveries (0 = no mark). Off as shipped, no grade made for him. `goodFrom` (a grade's key,
+// empty = none) lets a grade at or above it count as a good customer for the fraud engine's good-customer override
+// (S06 PR 524), which keeps its own switch `risk.goodCustomer`. A grade never blocks anyone and never changes COD.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -245,6 +251,18 @@ export const approvalHistorySettingsSchema = z
   .strict();
 export type ApprovalHistorySettings = z.output<typeof approvalHistorySettingsSchema>;
 
+/** PR 534 — customer grading: off as shipped; the verified mark's true deliveries (0 = no mark), the grade from which
+ * a customer counts as good for the good-customer override (empty = none) and how many grades the store keeps. */
+export const gradesSettingsSchema = z
+  .object({
+    enabled: z.boolean(),
+    verifiedMinDelivered: z.number().int().min(0).max(10_000),
+    goodFrom: z.string().trim().max(40).regex(/^[a-z0-9-]*$/),
+    maxGrades: z.number().int().min(1).max(20),
+  })
+  .strict();
+export type GradesSettings = z.output<typeof gradesSettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -368,5 +386,15 @@ export const crmSettings = {
     labelKey: 'customers.approvalHistory.label',
     helpKey: 'customers.approvalHistory.help',
     sortOrder: 310,
+  }),
+  'customers.grades': setting({
+    ...base,
+    version: 203,
+    schema: gradesSettingsSchema,
+    default: { enabled: false, verifiedMinDelivered: 0, goodFrom: '', maxGrades: 6 }, // hardcode-ok: registry default (off; no mark, no grade feeds the override)
+    valueType: 'JSON',
+    labelKey: 'customers.grades.label',
+    helpKey: 'customers.grades.help',
+    sortOrder: 320,
   }),
 };

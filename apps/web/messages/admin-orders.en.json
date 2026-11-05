@@ -1568,7 +1568,8 @@
         "cancelled": "Cancelled",
         "open": "Open"
       },
-      "note": "Only shows his history: it never confirms, holds or blocks. You decide."
+      "note": "Only shows his history: it never confirms, holds or blocks. You decide.",
+      "verified": "Verified"
     }
   }
 }

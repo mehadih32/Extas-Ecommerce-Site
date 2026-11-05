@@ -50,6 +50,13 @@ describe.skipIf(!HAS_TEST_DB)('PR 533 · customer history at approval (PostgreSQ
         { key: 'size', count: 1 },
       ]);
       expect(h!.recent).toHaveLength(3);
+      // PR 534: no grade while grading is off; on, the grade his history earns, counted as the good-customer override
+      // counts it (the charge-paid return is a refusal there too)
+      expect(h!.mark).toBeNull();
+      await db().customerGrade.create({ data: { storeId: f.S, key: 'watch', nameEn: 'Watch', criteria: { minDelivered: 0, maxRefused: null, minRefused: 2 }, sortOrder: 0 } });
+      f.overrides.set('customers.grades', { enabled: true, verifiedMinDelivered: 1, goodFrom: '', maxGrades: 6 });
+      expect((await approvalHistory(f.ordersDeps(), f.reader, now.orderId))!.mark).toEqual({ grade: { key: 'watch', nameEn: 'Watch', nameBn: null }, verified: true });
+      f.overrides.delete('customers.grades');
       expect(h!.recent.map((r) => r.id)).not.toContain(now.orderId);
       // a first order has nothing to show; an unknown id or another store's order reads nothing
       const first = await f.place('ah-first', { phone: '01700000535' });

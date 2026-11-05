@@ -28,7 +28,19 @@ export const pickHref = (query: ListQuery, id: string) => {
 function HistoryCard({ h }: { h: ApprovalCard }) {
   return (
     <section className="a2-card" data-testid="approval-history">
-      <h2 className="a2-h3">{h.title}</h2>
+      <h2 className="a2-h3">
+        {h.title}
+        {h.grade ? (
+          <span className="a2-pill info" style={{ marginLeft: 6 }} data-testid="approval-grade">
+            {h.grade}
+          </span>
+        ) : null}
+        {h.verified ? (
+          <span className="a2-pill ok" style={{ marginLeft: 6 }}>
+            ✓ {h.verified}
+          </span>
+        ) : null}
+      </h2>
       <div className="a2-xs a2-mute">{h.sub}</div>
       {h.tiles ? (
         <>

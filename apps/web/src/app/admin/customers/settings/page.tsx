@@ -2,7 +2,8 @@
 // docs/ADMIN-ARCHITECTURE.md: settings inside their section, rare options under More): one card per CRM feature, each
 // off as shipped — the journey view first (PR 288); later CRM PRs add their cards here. PR 622 (CN-034): "Buy again"
 // (`account.reorder`) with how many orders came from it in the last 30 days, above the cards. Seeing needs `customers.read`;
-// saving needs `customers.settings`, which the API checks again (schema-checked, audited).
+// saving needs `customers.settings`, which the API checks again (schema-checked, audited). PR 534: the "Customer grading"
+// card picks its "good customer from" grade among the owner's own grades, which the grades card under it keeps.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -12,6 +13,7 @@ import { REORDER_STATES, REORDER_WORDS, REORDER_WORDS_MAX } from '@extas/setting
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { CrmSettingCard, type CrmField } from '@/components/admin/customers/CrmSettingCard';
 import { formatNumber } from '@/components/admin/products/model';
+import { GradesEditor } from '@/components/admin/customers/GradesEditor';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withCustomers } from '@/lib/admin-customers/i18n';
@@ -111,6 +113,17 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
       { name: 'words', kind: 'words', keys: REORDER_WORDS, max: REORDER_WORDS_MAX },
     ],
   },
+  {
+    // PR 534 — customer grading: the switch, the verified mark's true deliveries (0 = none), how many grades are kept;
+    // "good customer from" (the owner's grades) is added on the page
+    key: 'customers.grades',
+    card: 'grades',
+    fields: [
+      { name: 'enabled', kind: 'bool' },
+      { name: 'verifiedMinDelivered', kind: 'int' },
+      { name: 'maxGrades', kind: 'int' },
+    ],
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -132,8 +145,11 @@ export default async function CustomerSettingsPage() {
       </div>
     );
   const who: cu.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
-  const s = await cu.crmSettingsScreen(customersDeps(access.deps), who);
+  const [s, gs] = await Promise.all([cu.crmSettingsScreen(customersDeps(access.deps), who), cu.gradesScreen(customersDeps(access.deps), who)]);
   const cdict: Dict = { cus: d.cus as Dict };
+  // PR 534: "good customer from" offers the owner's live grades (none = grades do not feed the good-customer override)
+  const gradeChoices = [{ value: '', label: t(d, 'cus.set.grades.goodNone') }, ...gs.grades.filter((g) => !g.archived).map((g) => ({ value: g.key, label: (view.lang === 'bn' && g.nameBn) || g.nameEn }))];
+  const fieldsOf = (c: (typeof CARDS)[number]): readonly CrmField[] => (c.key === 'customers.grades' ? [...c.fields, { name: 'goodFrom', kind: 'choice', options: gradeChoices }] : c.fields);
   return (
     <div className="a2-z" data-testid="customer-settings">
       <PageHead view={view} place={locateKey('customersSettings')} title={t(d, 'cus.set.title')} sub={t(d, 'cus.set.sub')} />
@@ -149,8 +165,9 @@ export default async function CustomerSettingsPage() {
       </div>
       <div className="a2-row a2-r2 a2-mt12">
         {CARDS.map((c) => (
-          <CrmSettingCard key={c.key} dict={cdict} settingKey={c.key} card={c.card} fields={c.fields} value={s.values[c.key] as unknown as Record<string, unknown>} canWrite={s.canWrite} />
+          <CrmSettingCard key={c.key} dict={cdict} settingKey={c.key} card={c.card} fields={fieldsOf(c)} value={s.values[c.key] as unknown as Record<string, unknown>} canWrite={s.canWrite} />
         ))}
+        <GradesEditor dict={cdict} grades={gs.grades} canWrite={gs.canWrite} enabled={gs.enabled} lang={view.lang} />
       </div>
     </div>
   );

@@ -88,6 +88,47 @@ describe.skipIf(!HAS_TEST_DB)('PR 524 · good customers and the stop report (Pos
     expect((await row(o3.orderId)).status).toBe('PLACED');
   });
 
+  it('PR 534: a grade at or above the owner\'s "good customer from" counts as good, only while grading and the override are on', async () => {
+    holdHigh();
+    good({ enabled: true, minDelivered: null });
+    // the owner's own grades (made up): gold = 2+ true deliveries and no refusal, regular = 1+
+    await db().customerGrade.createMany({
+      data: [
+        { storeId: f.S, key: 'regular', nameEn: 'Regular', criteria: { minDelivered: 1, maxRefused: null, minRefused: 0 }, sortOrder: 1 },
+        { storeId: f.S, key: 'gold', nameEn: 'Gold', criteria: { minDelivered: 2, maxRefused: 0, minRefused: 0 }, sortOrder: 2 },
+      ],
+    });
+    const grades = (v: Partial<(typeof registry)['customers.grades']['default']>) => f.overrides.set('customers.grades', { ...registry['customers.grades'].default, ...v });
+    await past('gc-g1', '01700000641', 'DELIVERED');
+    await past('gc-g2', '01700000641', 'DELIVERED');
+    // grading off (as shipped), or on without "good customer from": held as before
+    grades({ goodFrom: 'gold' });
+    const o1 = await f.place('gc-g3', { phone: '01700000641' });
+    await assessRisk(f.ordersDeps(), ref(o1.orderId));
+    expect((await row(o1.orderId)).status).toBe('ON_HOLD');
+    grades({ enabled: true });
+    const o2 = await f.place('gc-g4', { phone: '01700000641' });
+    await assessRisk(f.ordersDeps(), ref(o2.orderId));
+    expect((await row(o2.orderId)).status).toBe('ON_HOLD');
+    // on, from gold: spared, and the timeline names the grade
+    grades({ enabled: true, goodFrom: 'gold' });
+    const o3 = await f.place('gc-g5', { phone: '01700000641' });
+    await assessRisk(f.ordersDeps(), ref(o3.orderId));
+    expect((await row(o3.orderId)).status).toBe('PLACED');
+    expect((await db().orderEvent.findFirstOrThrow({ where: { orderId: o3.orderId, type: GOOD_CUSTOMER_EVENT } })).data).toMatchObject({ skipped: 'levelHold', delivered: 2, refused: 0, grade: 'gold' });
+    // one delivery only earns "regular", below gold: held
+    await past('gc-h1', '01700000642', 'DELIVERED');
+    const o4 = await f.place('gc-h2', { phone: '01700000642' });
+    await assessRisk(f.ordersDeps(), ref(o4.orderId));
+    expect((await row(o4.orderId)).status).toBe('ON_HOLD');
+    // the override's own switch off: nobody, whatever the grade
+    good({ enabled: false });
+    const o5 = await f.place('gc-g6', { phone: '01700000641' });
+    await assessRisk(f.ordersDeps(), ref(o5.orderId));
+    expect((await row(o5.orderId)).status).toBe('ON_HOLD');
+    f.overrides.delete('customers.grades');
+  });
+
   it('a risk level\'s automatic advance request is skipped too (the ask stays a proposal); with the auto option off nothing is written', async () => {
     holdHigh();
     good({ enabled: true, minDelivered: 2, maxRefused: 0 });
@@ -131,7 +172,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 524 · good customers and the stop report (Pos
     expect(held.length).toBeGreaterThanOrEqual(3);
     expect(held[0]).toMatchObject({ detail: 'high', outcome: 'open' });
     expect(typeof held[0]!.confidence).toBe('number');
-    expect(before.spared).toBe(4);
+    expect(before.spared).toBe(5); // PR 534: + the order the gold grade spared
     // the spared look-alike's review is listed (a person still decides it); its hold is not, there was none
     expect(before.rows.filter((r) => r.rule === 'duplicateReview')).toHaveLength(1);
     expect(before.rows.filter((r) => r.rule === 'duplicateHold')).toHaveLength(0);

@@ -9,10 +9,12 @@
 // its count. Search by name, e-mail or any of his numbers (4 digits or more, however written); filter by where he first
 // came from; sort by last order, newest profile, spend, orders or name. A page is the owner's page size, then "More".
 //
+// PR 534: while the owner's grading is on, each row carries the grade and verified mark its own counts earn.
+//
 // Reading needs `customers.read`; the numbers are masked without `customers.phone`. The export (PR 299, export.ts) reads
 // the same people through `listSql`.
 import { Prisma } from '@extas/db/client';
-import { historyOptions } from '@extas/orders';
+import { gradingOf, historyOptions, markOf, type GradeMark } from '@extas/orders';
 import { z } from 'zod';
 import { allow, nowOf, parse, setting, type CustomersDeps, type Viewer, type Who } from './context';
 import { peopleBaseSql, searchSql, viewWhere } from './people-sql';
@@ -61,6 +63,8 @@ export interface CustomerRow {
   lastOrderAt: Date | null;
   consent: { sms: boolean | null; whatsapp: boolean | null };
   codPolicy: string | null;
+  /** PR 534: his grade and verified mark from this row's counts (null while grading is off). */
+  mark: GradeMark | null;
 }
 
 export interface CustomerList {
@@ -133,7 +137,7 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
   const viewer = await allow(deps, who, 'customers.read');
   const d = parse(listInput, input, 'list');
   const S = who.storeId;
-  const [{ rules, views, view, sort, q, source, segmentId, seg, base, viewSql, order }, mask] = await Promise.all([listSql(deps, S, d), maskOf(deps, S)]);
+  const [{ rules, views, view, sort, q, source, segmentId, seg, base, viewSql, order }, mask, grading] = await Promise.all([listSql(deps, S, d), maskOf(deps, S), gradingOf(deps, S)]);
   const page = d.page ?? 1;
 
   const [rows, countRows, sourceRows] = await Promise.all([
@@ -163,6 +167,7 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
       lastOrderAt: r.last_at,
       consent: { sms: r.smsMarketingConsent, whatsapp: r.whatsappMarketingConsent },
       codPolicy: r.codPolicy,
+      mark: grading ? markOf(grading, { delivered: num(r.delivered), refused: num(r.refused) }) : null,
     })),
     counts: Object.fromEntries(views.map((v) => [v, num(c[v])])),
     views,
