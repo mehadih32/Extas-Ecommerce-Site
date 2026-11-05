@@ -2,7 +2,8 @@
 // §5.5; decision D9): how long orders keep the internet address, device and shared location (`risk.capture`, PR 159)
 // and how often the clean-up runs, its last run and how many orders still hold those facts; the switch for customers'
 // erasure requests (off) and the requests with Cancel and, for the owner, "Erase now" behind a typed word; a link to
-// the consent history (Messages › Consent). Seeing needs `security.read`; saving the card `security.write`; requests
+// the consent history (Messages › Consent). PR 302 (B5.6 V2, answer 50): the standing rule, said plainly — customers
+// are never removed on their own, only the IP and the location go after the days, removing details is by hand. Seeing needs `security.read`; saving the card `security.write`; requests
 // `customers.privacy` (the API checks again).
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -140,6 +141,27 @@ export default async function PrivacyPage() {
       ) : null}
 
       <FieldsCard url={API} screen={{ key: card.key, value: card.value, version: card.version }} fields={keep} texts={texts} canEdit={canEdit} testId="privacy-keep" />
+
+      <section className="a2-card a2-mt12" data-testid="privacy-kept">
+        <div className="a2-ch">
+          <div>
+            <h2 className="a2-h3">{s('kept.h')}</h2>
+            <div className="a2-cs">{s('kept.d')}</div>
+          </div>
+        </div>
+        <div className="a2-rule a2-rule-t" data-testid="privacy-kept-never">
+          <ShellIcon name="shield" size={15} />
+          <span>{s('kept.never')}</span>
+        </div>
+        <div className="a2-rule a2-rule-t" data-testid="privacy-kept-ip">
+          <ShellIcon name="clock" size={15} />
+          <span>{s('kept.ipOnly', { n: num(card.value.retentionDays as number) })}</span>
+        </div>
+        <div className="a2-rule a2-rule-t" data-testid="privacy-kept-hand">
+          <ShellIcon name="lock" size={15} />
+          <span>{s('kept.byHand')}</span>
+        </div>
+      </section>
 
       <section className="a2-card a2-mt12" data-testid="privacy-consent">
         <div className="a2-ch">

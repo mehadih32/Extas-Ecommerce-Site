@@ -8,6 +8,11 @@
 // forever) of checkouts that were abandoned (no order) or whose order is finished: the file is overwritten with
 // nothing and its library row archived, the CheckoutVoice row keeps no recording (an abandoned one no words either);
 // the order, its history and its audit lines stay, and each wipe is written to the audit log.
+// S14 · PR 302 (Blueprint B5.6 V2, §59 answer 50): customers are never removed on their own — no job deletes or
+// anonymises a customer (the guard test `retention.test.ts` keeps it so); erasing one stays a person's step (PR 382,
+// the owner alone). Only the internet address and the location expire: the same run, by the same days, also clears
+// the IP that a customer's sign-in, a one-time code, a bulk enquiry and a consent answer kept. The rows themselves stay
+// (the consent answer, its time and channel are the record; the staff sign-in log is the security record, not here).
 // This module imports `./keys`, never `./scheduler` (the scheduler imports the catalogue, which imports this).
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { nowOf, type JobDeps } from './context';
@@ -37,6 +42,31 @@ export async function purgeOrderPii(db: Pick<PrismaClient, 'order' | 'identityLi
   });
   const links = await db.identityLink.deleteMany({ where: { storeId, kind: { in: ['IP', 'DEVICE'] }, OR: [{ expiresAt: { lte: now } }, { firstSeenAt: { lt: before } }] } });
   return { cleared: r.count, links: links.count, before: before.toISOString() };
+}
+
+/** PR 302 — the other places a customer's IP is kept, cleared by the same days. */
+export interface CustomerIpsCleared {
+  sessions: number;
+  codes: number;
+  enquiries: number;
+  consents: number;
+}
+
+/**
+ * PR 302 — clears the IP kept by one store's customer sign-ins, one-time codes, bulk enquiries and consent answers
+ * older than `retentionDays` (the IP is written once, when the row is made). Only that field changes; no row is
+ * removed. Safe to run twice (a cleared row matches no more).
+ */
+export async function purgeCustomerIps(db: Pick<PrismaClient, 'customerSession' | 'otpChallenge' | 'bulkEnquiry' | 'consentRecord'>, storeId: number, now: Date, retentionDays: number): Promise<CustomerIpsCleared> {
+  const where = { storeId, ip: { not: null }, createdAt: { lt: new Date(now.getTime() - retentionDays * DAY) } };
+  const data = { ip: null };
+  const [sessions, codes, enquiries, consents] = await Promise.all([
+    db.customerSession.updateMany({ where, data }),
+    db.otpChallenge.updateMany({ where, data }),
+    db.bulkEnquiry.updateMany({ where, data }),
+    db.consentRecord.updateMany({ where, data }),
+  ]);
+  return { sessions: sessions.count, codes: codes.count, enquiries: enquiries.count, consents: consents.count };
 }
 
 /** An order whose checkout is finished: nothing more happens to its parcel (a recording is no longer needed). */
@@ -93,12 +123,13 @@ export async function purgeVoice(deps: Pick<JobDeps, 'db' | 'voice'>, storeId: n
 }
 
 /** One store's purge, with the owner's days read when it runs. */
-export async function runPiiPurge(deps: JobDeps, storeId: number): Promise<{ cleared: number; links: number; before: string; retentionDays: number; voice: { wiped: number; files: number; retentionDays: number } }> {
+export async function runPiiPurge(deps: JobDeps, storeId: number): Promise<{ cleared: number; links: number; before: string; retentionDays: number; customers: CustomerIpsCleared; voice: { wiped: number; files: number; retentionDays: number } }> {
   const [cap, voiceCfg] = await Promise.all([deps.settings.value('risk.capture', { storeId }), deps.settings.value('checkout.voice', { storeId })]);
   const now = nowOf(deps);
   const voiceDays = voiceCfg.retentionDays ?? 30; // hardcode-ok: a value saved before v142 reads as the registry default
   const v = await purgeVoice(deps, storeId, now, voiceDays);
-  return { ...(await purgeOrderPii(deps.db, storeId, now, cap.retentionDays)), retentionDays: cap.retentionDays, voice: { wiped: v.wiped, files: v.files, retentionDays: voiceDays } };
+  const customers = await purgeCustomerIps(deps.db, storeId, now, cap.retentionDays);
+  return { ...(await purgeOrderPii(deps.db, storeId, now, cap.retentionDays)), retentionDays: cap.retentionDays, customers, voice: { wiped: v.wiped, files: v.files, retentionDays: voiceDays } };
 }
 
 /** Each live store: one purge per slot of its `purgeEveryMinutes`. */

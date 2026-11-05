@@ -3,7 +3,9 @@
 // days (or past the day stored on the order), and nothing else — the order, its money and its other fields stay; a
 // second run clears nothing more; a shorter rule reaches older orders too; the job runs through the catalogue. Review
 // R3 (M1): voice-address recordings past their days are wiped for abandoned checkouts and finished orders only, the
-// library row archived (never deleted), the order and its audit kept, each wipe audited. Every value is made up.
+// library row archived (never deleted), the order and its audit kept, each wipe audited. PR 302: the IP kept by a
+// customer's sign-ins, one-time codes, bulk enquiries and consent answers goes by the same days; the rows and the
+// customer stay. Every value is made up.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -11,7 +13,7 @@ import type { InventoryDeps, SettingsReader } from '@extas/inventory';
 import { registry, type Key, type Value } from '@extas/settings';
 import { jobDefinition } from './catalogue';
 import type { JobDeps } from './context';
-import { PII_PURGE_JOB, piiPlanner, purgeOrderPii, purgeVoice } from './pii';
+import { PII_PURGE_JOB, piiPlanner, purgeCustomerIps, purgeOrderPii, purgeVoice } from './pii';
 
 const D = 86_400_000;
 const NOW = new Date('2026-10-24T06:00:00Z');
@@ -125,6 +127,41 @@ describe.skipIf(!HAS_TEST_DB)('PR 159 · the 180-day purge on PostgreSQL', () =>
     expect(await t.prisma.auditLog.count({ where: { action: 'checkout.voice.purge', entityId: { in: [abandoned.v.id, finished.v.id] } } })).toBe(2);
     // a second run wipes nothing more
     expect((await purgeVoice({ db: t.prisma }, storeId, NOW, 30)).wiped).toBe(0);
+  });
+
+  it("PR 302: the IP of a customer's sign-ins, codes, bulk enquiries and consent answers goes by the same days; nothing is removed", async () => {
+    const IP = '198.51.100.9';
+    const ago = (days: number) => new Date(NOW.getTime() - days * D);
+    const phone = '+8801700000302'; // hardcode-ok: a made-up test number
+    const c = await t.prisma.customer.create({ data: { storeId, phone, name: 'Test Customer' }, select: { id: true } });
+    const session = (days: number) => t.prisma.customerSession.create({ data: { storeId, customerId: c.id, tokenHash: randomUUID(), ip: IP, expiresAt: new Date(NOW.getTime() + D), createdAt: ago(days) }, select: { id: true } });
+    const code = (days: number) => t.prisma.otpChallenge.create({ data: { storeId, phone, purpose: 'LOGIN', codeHash: randomUUID(), ip: IP, expiresAt: ago(days - 1), createdAt: ago(days) }, select: { id: true } });
+    let ref = 302_000;
+    const enquiry = (days: number) => t.prisma.bulkEnquiry.create({ data: { storeId, refNo: ++ref, name: 'Test Buyer', phone, quantity: 20, source: 'page', lang: 'en', ip: IP, createdAt: ago(days) }, select: { id: true } });
+    const consent = (days: number) => t.prisma.consentRecord.create({ data: { storeId, customerId: c.id, phone, channel: 'SMS', granted: true, source: 'checkout', ip: IP, createdAt: ago(days) }, select: { id: true } });
+    const old = { s: await session(200), o: await code(200), e: await enquiry(200), c: await consent(200) };
+    const fresh = { s: await session(10), o: await code(10), e: await enquiry(10), c: await consent(10) };
+    const r = await purgeCustomerIps(t.prisma, storeId, NOW, 180);
+    expect(r).toEqual({ sessions: 1, codes: 1, enquiries: 1, consents: 1 });
+    const ips = async (x: typeof old) => [
+      (await t.prisma.customerSession.findUniqueOrThrow({ where: { id: x.s.id } })).ip,
+      (await t.prisma.otpChallenge.findUniqueOrThrow({ where: { id: x.o.id } })).ip,
+      (await t.prisma.bulkEnquiry.findUniqueOrThrow({ where: { id: x.e.id } })).ip,
+      (await t.prisma.consentRecord.findUniqueOrThrow({ where: { id: x.c.id } })).ip,
+    ];
+    expect(await ips(old)).toEqual([null, null, null, null]);
+    expect(await ips(fresh)).toEqual([IP, IP, IP, IP]);
+    // the consent answer itself stays as the record; the customer is never removed
+    expect(await t.prisma.consentRecord.findUniqueOrThrow({ where: { id: old.c.id } })).toMatchObject({ granted: true, channel: 'SMS', source: 'checkout' });
+    expect(await t.prisma.customer.findUniqueOrThrow({ where: { id: c.id } })).toMatchObject({ phone, name: 'Test Customer', erasedAt: null, archivedAt: null });
+    expect(await purgeCustomerIps(t.prisma, storeId, NOW, 180)).toEqual({ sessions: 0, codes: 0, enquiries: 0, consents: 0 });
+    // the job does it too, with the owner's days
+    days = 7;
+    const out = await jobDefinition(PII_PURGE_JOB)!.run(deps(), { storeId });
+    expect(out).toMatchObject({ ok: true, stats: { customers: { sessions: 1, codes: 1, enquiries: 1, consents: 1 } } });
+    expect(await ips(fresh)).toEqual([null, null, null, null]);
+    expect(await t.prisma.customer.count({ where: { id: c.id } })).toBe(1);
+    days = 180;
   });
 
   it('runs as a job from the catalogue with the owner\'s days, and the planner plans one run per store and slot', async () => {

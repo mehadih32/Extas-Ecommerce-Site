@@ -260,7 +260,7 @@ export const APPEND_ONLY_OPEN: Readonly<Record<string, string>> = {
   RiskAssessment: PERSONAL,
   CouponRedemption: PERSONAL,
   CustomerAccessLog: PERSONAL,
-  ConsentRecord: PERSONAL,
+  ConsentRecord: 'the consent history, kept as the record; its IP is cleared after the IP/GPS keeping days (PR 302, jobs pii.ts)',
   CustomerTouchpoint: PERSONAL,
   AnalyticsEvent: PERSONAL,
   TelegramMessage: PERSONAL,
