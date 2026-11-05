@@ -273,6 +273,9 @@ export const GO_LIVE: readonly GoLiveItem[] = [
   { key: 'acceptance', pr: 393, kind: 'signoff', when: 'before' },
   { key: 'realPhones', pr: 393, kind: 'signoff', when: 'before' },
   { key: 'simulation', pr: 393, kind: 'signoff', when: 'before' },
+  // PR 381 (CN-035) — the independent outside security review is skipped by the owner; the automatic parts (dependency
+  // scanning in CI, the security checks) keep running. Soon after go-live: confirmed here if a review is done later.
+  { key: 'securityReview', pr: 381, kind: 'signoff', when: 'after' },
 ];
 
 /** The keys a person may confirm. */

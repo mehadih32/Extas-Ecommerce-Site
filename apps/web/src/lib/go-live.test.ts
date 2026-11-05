@@ -141,6 +141,13 @@ describe('go-live checklist (PR 393)', () => {
     expect(SIGNOFF_KEYS).toContain('searchConsole');
   });
 
+  it('PR 381 (CN-035): the outside security review is a sign-off soon after go-live; unconfirmed, it never holds back', () => {
+    expect(SIGNOFF_KEYS).toContain('securityReview');
+    const r = goLiveChecks(ctx({ signoff: { ...ctx().signoff, securityReview: undefined as never } }));
+    expect(r.ready).toBe(true);
+    expect(r.items.find((i) => i.key === 'securityReview')).toMatchObject({ ok: false, when: 'after', kind: 'signoff' });
+  });
+
   it('PR 398: the runbook is a sign-off, and its file exists', () => {
     expect(SIGNOFF_KEYS).toContain('runbook');
     expect(existsSync(fileURLToPath(new URL('../../../../docs/golive/RUNBOOK.md', import.meta.url)))).toBe(true);
