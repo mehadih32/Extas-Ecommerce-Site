@@ -56,7 +56,7 @@ describe('go-live checklist (PR 393)', () => {
     expect(goLiveChecks(ctx({ backups: noDrill }))).toMatchObject({ ready: true });
     expect(goLiveChecks(ctx({ backups: noDrill })).items.find((i) => i.key === 'restoreDrill')).toMatchObject({ ok: false, when: 'after', pr: 507, vars: { todo: 1 } });
     // no checks known: the off-server row is not done
-    expect(open(ctx({ backups: { ready: true, todo: 0 } }))).toEqual(['offServer', 'restoreDrill']);
+    expect(open(ctx({ backups: { ready: true, todo: 0 } }))).toEqual(['offServer', 'restoreDrill', 'telegram']);
   });
 
   it('automatic items: a failed, old or missing smoke test, a health problem or a stale check, backups not ready', () => {
@@ -114,6 +114,10 @@ describe('go-live checklist (PR 393)', () => {
       expect(goLiveChecks(ctx({ connections: sms(over) })).items.find((i) => i.key === 'connections')).toMatchObject({ ok: false, vars: { missing: 'SMS', live: 'bkash, steadfast' } });
     }
     expect(open(ctx({ connections: { kinds: ['COURIER', 'SMS'], on: on.slice(1) } }))).toEqual([]);
+    // CN-035: live keys and Telegram are soon after go-live; on their mocks the switch is not held back
+    const mocks = goLiveChecks(ctx({ connections: { kinds: ['PAYMENT', 'COURIER', 'SMS'], on: [] }, backups: { ...ctx().backups, checks: ctx().backups.checks!.map((c) => (c.key === 'telegram' ? { ...c, ok: false } : c)) } }));
+    expect(mocks.ready).toBe(true);
+    expect(mocks.items.filter((i) => !i.ok).map((i) => [i.key, i.when])).toEqual([['connections', 'after'], ['telegram', 'after']]);
   });
 
   it('review R1 (security B1): test payments off on every live store, and no online method left on the practice gateway', () => {

@@ -196,11 +196,13 @@ export const GO_LIVE: readonly GoLiveItem[] = [
   // PR 398 — docs/golive/RUNBOOK.md read, and the rollback rehearsed on staging (back one version and forward again).
   // PR 400 (A1.3) — every kind of `golive.connections` (payment, courier, SMS by default) has a connection that left
   // the mock by a passing test: switched on, LIVE, and its last test passed. A connection is moved in Keys & connections.
+  // CN-035: soon after go-live — a connection without its key stays on its mock, which is allowed at go-live (cash on
+  // delivery needs no key; without an SMS key the customer gets no SMS, and the row says so).
   {
     key: 'connections',
     pr: 400,
     kind: 'auto',
-    when: 'before',
+    when: 'after',
     check: ({ connections: c }) => {
       const live = (c?.on ?? []).filter((x) => x.mode === 'LIVE' && x.lastTestOk === true);
       const missing = (c?.kinds ?? []).filter((k) => !live.some((x) => x.kind === k));
@@ -209,6 +211,15 @@ export const GO_LIVE: readonly GoLiveItem[] = [
         vars: { live: [...new Set(live.map((x) => x.provider))].join(', ') || '—', missing: missing.join(', ') || '—' },
       };
     },
+  },
+  // PR 400 (CN-035) — Telegram connected, so a failed night, the daily off-server line and the first-week check reach the
+  // owner's phone; soon after go-live (meanwhile they are in the server's alert log and on the Server page).
+  {
+    key: 'telegram',
+    pr: 400,
+    kind: 'auto',
+    when: 'after',
+    check: ({ backups: { checks } }) => ({ ok: passed(checks, ['telegram']) }),
   },
   // PR 401 — on go-live day the main domain is opened to search engines: the switch is on and there is a store primary
   // domain for it to count on (the preview host always stays out, PR 220). Search Console and the sitemap are a person's

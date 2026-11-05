@@ -73,10 +73,16 @@
       "why": "Soon after: the owner types his own details in the admin after go-live; an empty one is never shown to a customer."
     },
     "connections": {
-      "title": "Payment, courier and SMS connections live",
+      "title": "Live payment, courier and SMS keys",
       "ok": "live: {live}",
-      "how": "In Keys & connections, enter each provider's keys and press Save and test; a passing test moves it from practice to live. Still on practice: {missing} (the list is the setting golive.connections). Live now: {live}.",
-      "why": "Needed: orders must be paid, shipped and confirmed for real."
+      "how": "In Keys & connections, enter each provider's keys and press Save and test; a passing test moves it from practice to live. Still on practice: {missing} (the list is the setting golive.connections). Until then: cash on delivery works without a key, and without an SMS key the customer gets no SMS.",
+      "why": "Soon after: a connection without its key stays on its mock, which is allowed at go-live."
+    },
+    "telegram": {
+      "title": "Telegram connected",
+      "ok": "alerts reach the owner's phone",
+      "how": "Keys & connections → Telegram: the bot's token and the chat, press Test. Then a failed night, the daily off-server backup line and the first-week check reach the owner's phone.",
+      "why": "Soon after: meanwhile every alert is kept in the server's alert log and on the Server page."
     },
     "indexing": {
       "title": "Main domain open to search engines",
