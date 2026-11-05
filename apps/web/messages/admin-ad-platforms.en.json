@@ -80,7 +80,12 @@
         "discard": "Undo changes",
         "unsaved": "Not saved yet",
         "readOnly": "You can see this card; changing it needs the \"Change campaigns\" permission."
-      }
+      },
+      "rateLine": "Dollar rate: 1 {base} = {rate} (from {when}). Spend in {base} is turned into {store} with the rate of its day.",
+      "rateNone": "No {base} rate yet: spend in {base} is kept but not in the profit figures until you type the rate.",
+      "rateLink": "Change the rate on Money › Costs & fees",
+      "inStore": "≈ {amount}",
+      "noRate": "no rate yet"
     }
   }
 }

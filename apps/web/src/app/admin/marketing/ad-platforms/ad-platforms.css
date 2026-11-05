@@ -9,3 +9,6 @@
 @media (min-width:768px){.adm2 .adp-link{min-width:160px}}
 /* The "Keys & connections" link is a 44 px tap at every width. */
 .adm2 .adp-keys{display:inline-flex;align-items:center;min-height:44px}
+/* PR 266 — the dollar-rate note: the words first, the Costs & fees link under them on a phone, beside them when wide. */
+.adm2 .adp-rate{flex-wrap:wrap}
+.adm2 .adp-rate>span{flex:1 1 260px;min-width:0}

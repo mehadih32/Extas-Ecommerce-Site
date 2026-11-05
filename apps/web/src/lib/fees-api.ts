@@ -3,7 +3,8 @@
 //   - payment gateway fees (`costs.gatewayFees`: a share in basis points and a fixed amount per provider);
 //   - the packaging cost of one order (`costs.packaging`);
 //   - the USD rate (ExchangeRate rows USD → the store's currency; a new rate is a new row from now, the old ones stay:
-//     AI costs in dollars are turned into taka with the rate of their day);
+//     AI costs in dollars are turned into taka with the rate of their day; PR 266: the ad spend in dollars too, priced
+//     again from the new rate's day — lib/exchange-rate.ts);
 //   - the courier rates (CourierRateCard per courier account, delivery band and weight band: charge, COD fee, return
 //     charge; a rate is ended, never edited or deleted, and a new one entered from now).
 // The RTO cost inputs (courier charge, packaging, handling per returned parcel) already live on Delivery → Couriers
@@ -14,7 +15,7 @@
 //   PUT   'gateway-fees'         {value: […] | null, version}   (`costs.write`; settings history + audit)
 //   PUT   'packaging'            {value: {perOrderMinor} | null, version}
 //   PUT   'courier-estimate'     {value: {enabled, codFee}, version}   (PR 354 `costs.courierEstimate`, off as shipped)
-//   POST  'usd-rate'             {rate: "121.50"}   a new rate from now
+//   POST  'usd-rate'             {rate: "121.50"}   a new rate from now (answers how many ad spend days it priced)
 //   POST  'rate-cards'           {courierAccountId, zoneKey, weightFromGrams, weightToGrams, chargeMinor, codFeeBps?,
 //                                 returnChargeMinor?}   a new courier rate from now
 //   POST  'rate-cards/:id/end'   end a rate now (it stays for the past)
@@ -22,8 +23,10 @@
 import { z } from 'zod';
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
+import { localClock } from '@extas/inventory';
 import { registry, SettingsError, storeTarget } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
+import { repriceAdSpend } from './exchange-rate';
 
 type Db = Pick<PrismaClient, 'exchangeRate' | 'courierAccount' | 'courierRateCard' | 'deliveryBand'>;
 const USD = 'USD';
@@ -137,8 +140,11 @@ export async function feesRoute(request: Request, deps: AdminDeps | null, path: 
       if (!rate) return invalid(['rate: a number above 0, at most 6 decimals']);
       const currency = await d.resolver.value('store.currency', { storeId });
       const row = await d.db.exchangeRate.create({ data: { storeId, baseCurrency: USD, quoteCurrency: currency, rate, effectiveFrom: now, setById: g.actor.staffUserId ?? null }, select: { id: true } });
-      await audit(d.db, g.actor, { storeId, action: 'costs.usdRate', entityType: 'ExchangeRate', entityId: row.id, before: null, after: { base: USD, quote: currency, rate } }, g.ctx);
-      return json({ ok: true, id: row.id, rate }, { status: 201 });
+      // PR 266: every cost figure in dollars from today on (and any still without one) takes the new rate
+      const day = localClock(now, await d.resolver.value('store.timeZone', { storeId })).day;
+      const repriced = await repriceAdSpend(d.db, d.resolver, storeId, day);
+      await audit(d.db, g.actor, { storeId, action: 'costs.usdRate', entityType: 'ExchangeRate', entityId: row.id, before: null, after: { base: USD, quote: currency, rate, adSpendDaysPriced: repriced } }, g.ctx);
+      return json({ ok: true, id: row.id, rate, repriced }, { status: 201 });
     }
     if (kind === 'card') {
       const x = cardInput.safeParse(b);

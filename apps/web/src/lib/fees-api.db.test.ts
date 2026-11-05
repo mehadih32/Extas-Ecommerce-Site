@@ -11,6 +11,8 @@ import { createVault } from '@extas/vault';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from './admin-api';
 import { feesRoute, rateText, type FeesView } from './fees-api';
+import { localClock } from '@extas/inventory';
+import { pricerFor } from './exchange-rate';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -103,11 +105,29 @@ describe.skipIf(!HAS_TEST_DB)('costs & fees on PostgreSQL (PR 345)', () => {
     expect(await t.prisma.auditLog.count({ where: { action: 'costs.fees', storeId: A } })).toBe(before + 1);
   });
 
-  it('a USD rate is a new row; the old one stays', async () => {
-    expect((await route('POST', ['usd-rate'], { cookie: owner, body: { rate: '120.25' } })).status).toBe(201);
+  it('a USD rate is a new row; the old one stays (PR 266: the dollar ad spend priced with the rate of its day)', async () => {
+    // PR 266: a dollar ad account's spend, today and yesterday (store time), with no rate yet
+    const today = localClock(new Date(), await deps.resolver.value('store.timeZone', { storeId: A })).day;
+    const yesterday = new Date(new Date(`${today}T00:00:00Z`).getTime() - 86_400_000).toISOString().slice(0, 10);
+    const acc = await t.prisma.adAccount.create({ data: { storeId: A, platform: 'META', externalId: 'act_usd', name: 'Dollar ads', currency: 'USD' } });
+    const camp = await t.prisma.adCampaign.create({ data: { storeId: A, adAccountId: acc.id, externalId: 'u1', name: 'Dollar campaign', status: 'ACTIVE', currency: 'USD' } });
+    const day = (d: string) => new Date(`${d}T00:00:00Z`);
+    for (const d of [yesterday, today]) await t.prisma.adSpendDaily.create({ data: { storeId: A, adAccountId: acc.id, adCampaignId: camp.id, date: day(d), platform: 'META', spendMinor: 1_000, currency: 'USD' } });
+    expect((await pricerFor(t.prisma, deps.resolver, A))(1_000, 'USD', today)).toBeNull();
+    const spendOf = async (d: string) => (await t.prisma.adSpendDaily.findFirstOrThrow({ where: { adAccountId: acc.id, date: day(d) } })).spendStoreMinor;
+    const r1 = await route('POST', ['usd-rate'], { cookie: owner, body: { rate: '120.25' } });
+    expect(r1.status).toBe(201);
+    expect((r1.body as { repriced?: number }).repriced).toBe(2);
+    // $10.00 at 120.25 = ৳1,202.50; the day before the first rate takes the first rate
+    expect([await spendOf(yesterday), await spendOf(today)]).toEqual([120_250, 120_250]);
     expect((await route('POST', ['usd-rate'], { cookie: owner, body: { rate: 'abc' } })).status).toBe(400);
     await new Promise((r) => setTimeout(r, 5));
-    expect((await route('POST', ['usd-rate'], { cookie: owner, body: { rate: '122' } })).status).toBe(201);
+    const r2 = await route('POST', ['usd-rate'], { cookie: owner, body: { rate: '122' } });
+    expect(r2.status).toBe(201);
+    // the new rate from its day on; yesterday keeps the rate it was priced with
+    expect((r2.body as { repriced?: number }).repriced).toBe(1);
+    expect([await spendOf(yesterday), await spendOf(today)]).toEqual([120_250, 122_000]);
+    expect((await pricerFor(t.prisma, deps.resolver, A))(500, 'BDT', today)).toEqual({ storeMinor: 500, exchangeRateId: null });
     const v = (await route('GET', [], { cookie: owner })).body as unknown as FeesView;
     expect(Number(v.usd.current?.rate)).toBe(122);
     expect(v.usd.history.map((h) => Number(h.rate))).toEqual([120.25]);
