@@ -404,6 +404,16 @@ function DashboardA(p: DashProps) {
   return (
     <div className="a2-z a3-B a3-dash" data-testid="dash" data-design="A" data-view={view}>
       <DashHead p={p} views={views} />
+      {p.data.offSite?.length ? (
+        // CN-035 (PR 391): the copies away from the server come soon after go-live; until both are connected this yellow
+        // line is here every day (only for someone who sees System), and it leads to the Backups page.
+        <Link className="a2-note warn a3-offsite" href="/admin/settings/system/backups" data-testid="dash-offsite">
+          <ShellIcon name="alert" size={15} />
+          <span>
+            <b>{f.t('dsh.offSite.title')}</b> {f.t('dsh.offSite.text', { places: p.data.offSite.map((k) => f.t(`dsh.offSite.${k}`)).join(', ') })}
+          </span>
+        </Link>
+      ) : null}
       {view === 'money' ? <MoneyView {...p} /> : <Overview {...p} />}
     </div>
   );
@@ -416,7 +426,7 @@ export const dashboardA: LookDesign<DashProps, DashPart> = {
     en: 'One big delivered-sales story with a comparison line, where every order is right now, and four short cards. A money & marketing view sits one click away.',
     bn: 'একটা বড় ডেলিভারি বিক্রির গ্রাফ আর তুলনা, অর্ডার এখন কোথায়, আর চারটা ছোট কার্ড। টাকা ও মার্কেটিং এক ক্লিকে।',
   },
-  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues'],
+  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite'],
   Render: DashboardA,
   // The demo's sketch of this design (its key there is B).
   Thumb: () => <LookThumb page="dashboard" id="B" />,

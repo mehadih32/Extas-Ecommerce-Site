@@ -7,14 +7,34 @@
 //   - the restore drill brought back the Blob copy and the Drive copy within `backups.gate.drillDays`;
 //   - Telegram is connected, so a failed night reaches the owner's phone.
 // It only reads and reports: nothing is switched or blocked by it (the go-live checklist, PR 393, reads the same).
+// CN-035 (6 Nov 2026): only the server's own copy is needed before go-live. The copies away from the server (Blob, Drive),
+// their restore drill and Telegram are connected by the owner soon after go-live (`soon`); until Blob and Drive are both
+// connected, `offSite` names what is missing for the yellow "Off-server backup: not connected" line (Dashboard, go-live
+// page, the nightly Telegram line once Telegram is connected).
 import type { Backup, RestoreDrill, RestoreTest } from './status';
 
 export const GATE_CHECKS = ['local', 'blobLive', 'blobFresh', 'driveLive', 'driveFresh', 'drillBlob', 'drillDrive', 'telegram'] as const;
 export type GateKey = (typeof GATE_CHECKS)[number];
 
+/** The two places away from the server, as their installation-wide connections are kept (Keys & connections). */
+export const OFF_SITE = {
+  blob: { kind: 'STORAGE', provider: 'azureBlob' },
+  drive: { kind: 'GOOGLE_DRIVE', provider: 'googleDrive' },
+} as const;
+
+/** CN-035: the places away from the server with no LIVE connection, from the switched-on LIVE connection rows. */
+export function offSiteMissing(live: readonly { kind: string; provider: string }[]): ('blob' | 'drive')[] {
+  return (Object.keys(OFF_SITE) as ('blob' | 'drive')[]).filter((k) => !live.some((r) => r.kind === OFF_SITE[k].kind && r.provider === OFF_SITE[k].provider));
+}
+
+/** CN-035: the checks done soon after go-live; they never hold back real orders. */
+export const SOON_AFTER: readonly GateKey[] = ['blobLive', 'blobFresh', 'driveLive', 'driveFresh', 'drillBlob', 'drillDrive', 'telegram'];
+
 export interface GateCheck {
   key: GateKey;
   ok: boolean;
+  /** CN-035: done soon after go-live (it never holds back real orders). */
+  soon: boolean;
   /** When the thing it is about happened (a copy, a drill), for "last: …". */
   at?: string;
 }
@@ -50,12 +70,22 @@ function drilled(from: 'blob' | 'drive', input: GateInput): { ok: boolean; at?: 
   return { ok: false, at: run ? input.drill?.at : undefined };
 }
 
-/** Every check in a fixed order, and whether all of them pass. */
-export function backupGateChecks(input: GateInput): { ready: boolean; checks: GateCheck[] } {
+export interface GateResult {
+  /** Ready for real orders: every check that is not `soon` passes (CN-035: the server's own copy). */
+  ready: boolean;
+  /** Every check passes, the soon-after ones too. */
+  complete: boolean;
+  /** CN-035: the places away from the server not connected yet (empty = both connected). */
+  offSite: ('blob' | 'drive')[];
+  checks: GateCheck[];
+}
+
+/** Every check in a fixed order, whether those needed for real orders pass, and whether all of them do. */
+export function backupGateChecks(input: GateInput): GateResult {
   const { backups, live } = input;
   const db = drilled('blob', input);
   const dd = drilled('drive', input);
-  const checks: GateCheck[] = [
+  const rows: Omit<GateCheck, 'soon'>[] = [
     { key: 'local', ok: freshCopy(backups.local, input), at: backups.local?.at },
     { key: 'blobLive', ok: live.blob },
     { key: 'blobFresh', ok: live.blob && freshCopy(backups.blob, input), at: backups.blob?.at },
@@ -65,5 +95,7 @@ export function backupGateChecks(input: GateInput): { ready: boolean; checks: Ga
     { key: 'drillDrive', ok: dd.ok, at: dd.at },
     { key: 'telegram', ok: live.telegram },
   ];
-  return { ready: checks.every((c) => c.ok), checks };
+  const checks = rows.map((c): GateCheck => ({ ...c, soon: SOON_AFTER.includes(c.key) }));
+  const offSite = (['blob', 'drive'] as const).filter((k) => !live[k]);
+  return { ready: checks.every((c) => c.ok || c.soon), complete: checks.every((c) => c.ok), offSite, checks };
 }
