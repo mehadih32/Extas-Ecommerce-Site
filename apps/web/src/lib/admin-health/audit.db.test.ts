@@ -2,7 +2,7 @@
 // ships; the last audit and the kept ones from the server's files (a broken file is skipped); the switches and "Run
 // now" only with `settings.write` (audited; a stale version, an unknown or empty group choice refused); all ticked is
 // saved as "all"; what the server's file gets.
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -79,6 +79,8 @@ describe.skipIf(!HAS_TEST_DB)('AI › Checklist audit on PostgreSQL (PR 570)', (
     dir = await mkdtemp(join(tmpdir(), 'audit-'));
     await mkdir(join(dir, 'audit'));
     await writeFile(join(dir, 'audit.json'), JSON.stringify(summary));
+    // The run file's time is what "asked" is compared with: keep it before the test's fixed clock, not the real one.
+    await utimes(join(dir, 'audit.json'), new Date(now.getTime() - 3_600_000), new Date(now.getTime() - 3_600_000));
     await writeFile(join(dir, 'audit', '20261102-034000.json'), JSON.stringify(summary));
     await writeFile(join(dir, 'audit', '20261026-034000.json'), JSON.stringify({ ...summary, ok: true, failedGroups: 0, passedGroups: 2, at: '2026-10-26 03:40 (Asia/Dhaka)' }));
     await writeFile(join(dir, 'audit', '20261019-034000.json'), 'not json');
