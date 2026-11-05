@@ -64,6 +64,10 @@
       "codePattern": {
         "label": "Shape of a coupon code",
         "help": "Capital letters, digits and dashes by default. Codes are always read in capitals."
+      },
+      "distribution": {
+        "label": "How codes reach people",
+        "help": "A code in a link (/bag?code=…) goes into the bag when the customer opens it, with the same checks as typing it. Single-use batches make many codes, each usable once, for SMS, WhatsApp or printed cards; download them as a CSV. Both are off as shipped."
       }
     },
     "eid": {

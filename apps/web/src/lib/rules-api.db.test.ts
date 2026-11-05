@@ -94,6 +94,15 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules admin API on PostgreSQL', () => {
     expect(pop.body.notice.issues).toContain('ARRIVAL_POPUP');
     expect((await api('POST', ['notices', pop.body.notice.id], { enabled: true })).body.error).toBe('NOTICE_INVALID');
     expect((await api('GET', ['coupons'])).body.coupons).toEqual([]);
+    // PR 272: the distribution switches come with the list, both off; a batch is refused while off; a batch path is checked
+    expect((await api('GET', ['coupons'])).body.distribution).toMatchObject({ links: false, batches: false });
+    const rule = await api('POST', [], { templateId: 'coupon-free-delivery', key: 'api-free-code', nameEn: 'Free delivery code' });
+    const batch = await api('POST', ['coupons', 'batches'], { ruleId: rule.body.rule.id, prefix: 'SMS', count: 2 });
+    expect([batch.status, batch.body.error]).toEqual([409, 'CONFLICT']);
+    expect((await api('GET', ['coupons', 'batches', 'nope'])).status).toBe(400);
+    const c = await api('POST', ['coupons'], { code: 'API-FREE', ruleId: rule.body.rule.id });
+    expect(c.status).toBe(201);
+    expect((await api('POST', ['coupons', c.body.coupon.id], { limits: { perCustomerLimit: 1, audience: 'GUESTS' } })).body.coupon).toMatchObject({ perCustomerLimit: 1, audience: 'GUESTS', enabled: false });
   });
 
   it('Eid order-by dates: off and empty, cannot go on without dates, then on; pre-order only with an advance', async () => {

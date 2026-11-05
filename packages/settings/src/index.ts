@@ -160,6 +160,8 @@ export * from './registry-ads-control';
 export * from './registry-ads-growth';
 // S13 · PR 270 — the ad creative brief's settings (registry-ads-brief.ts, version 176).
 export * from './registry-ads-brief';
+// S13 · PR 272 — how coupon codes reach people: links and single-use batches (registry-coupons-distribution.ts, version 177).
+export * from './registry-coupons-distribution';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

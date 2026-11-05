@@ -56,7 +56,7 @@ export function bagWords(c: ShopContext): BagWords {
   };
 }
 
-export async function BagPage({ c, view, s, btpl = null, paused = false }: { c: ShopContext; view: BagView; s: BagSettings; btpl?: string | null; paused?: boolean }) {
+export async function BagPage({ c, view, s, btpl = null, paused = false, linkCode = null }: { c: ShopContext; view: BagView; s: BagSettings; btpl?: string | null; paused?: boolean; linkCode?: string | null }) {
   const t = c.t;
   const empty = !view.items.length && !view.sets.length;
   const savedOn = s['bag.saved.enabled'];
@@ -177,7 +177,7 @@ export async function BagPage({ c, view, s, btpl = null, paused = false }: { c: 
           </a>
         )}
       </div>
-      <BagActions words={words} undoMs={s['bag.undoMs']} bagHref={bagHref} stamp={stamp} />
+      <BagActions words={words} undoMs={s['bag.undoMs']} bagHref={bagHref} stamp={stamp} linkCode={linkCode && (view.code.state === 'none' || view.code.code !== linkCode.toUpperCase()) ? linkCode : null} />
     </div>
   );
 }

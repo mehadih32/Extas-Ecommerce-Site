@@ -47,9 +47,23 @@ async function send(s: Send): Promise<{ ok: boolean; status: number; data: Recor
 }
 
 /** `stamp` changes whenever the bag does, so the checkout bar watches the button that is on the page now. */
-export function BagActions({ words, undoMs, bagHref, stamp }: { words: BagWords; undoMs: number; bagHref: string; stamp: string }) {
+export function BagActions({ words, undoMs, bagHref, stamp, linkCode = null }: { words: BagWords; undoMs: number; bagHref: string; stamp: string; linkCode?: string | null }) {
   const router = useRouter();
   const busy = useRef(false);
+
+  // PR 272: a code from a link goes into the bag once (the same request as the code box), then the address drops it.
+  useEffect(() => {
+    if (!linkCode) return;
+    let gone = false;
+    void send({ url: `${API}/code`, method: 'POST', body: { code: linkCode } }).then(() => {
+      if (gone) return;
+      router.replace(bagHref);
+      router.refresh();
+    });
+    return () => {
+      gone = true;
+    };
+  }, [linkCode, bagHref, router]);
   const toastRef = useRef<{ el: HTMLElement; timer: HoldTimer | null } | null>(null);
 
   useEffect(() => {

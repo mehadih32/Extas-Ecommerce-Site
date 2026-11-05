@@ -175,3 +175,5 @@
 .rl-nt-prev { border: 1px dashed var(--rl-add-line); border-radius: var(--ad-radius); padding: 12px 14px; font-size: 14px; background: var(--ad-surface); }
 .rl-nt-prev b { display: block; margin-bottom: 4px; }
 .rl-nt-cta { display: inline-block; margin-top: 8px; font-weight: 600; color: var(--ad-brand); text-decoration: underline; text-underline-offset: 2px; }
+/* PR 272 fix: the coupon sheet's "Make single-use codes" fold opens with a 44 px tap (device gate TAP-TOO-SMALL) */
+.rl-c-more > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
