@@ -101,6 +101,9 @@ describe('go-live checklist (PR 393)', () => {
     const r = goLiveChecks(ctx({ ownerData: [{ name: 'Main', missing: ['legal.tradeLicence'], bands: 0 }, { name: 'Two', missing: [], bands: 1 }, { name: 'Three', missing: [], bands: null }] }));
     expect(r.items.find((i) => i.key === 'ownerData')).toMatchObject({ ok: false, vars: { stores: 3, missing: 'Main: legal.tradeLicence, delivery band' } });
     expect(open(ctx({ ownerData: [{ name: 'Main', missing: [], bands: null }] }))).toEqual([]);
+    // CN-035: soon after go-live — named as "to fill in", never holding back the switch
+    expect(goLiveChecks(ctx({ ownerData: [] }))).toMatchObject({ ready: true, soon: { done: GO_LIVE.filter((i) => i.when === 'after').length - 1 } });
+    expect(GO_LIVE.find((i) => i.key === 'ownerData')?.when).toBe('after');
   });
 
   it('PR 400: every kind on the list has a connection that left the mock by a passing test', () => {

@@ -67,10 +67,10 @@
       "why": "Needed: it keeps the line between Cloudflare and the server private."
     },
     "ownerData": {
-      "title": "The owner's own data on every live store",
+      "title": "Store details and legal numbers (owner data)",
       "ok": "{stores} store(s): every field filled in",
-      "how": "The owner types his own details in Settings → Store details for each store that goes live (contact, legal numbers …; the list is the setting golive.ownerData) and switches on at least one delivery band with his charge (Delivery). Still empty: {missing}.",
-      "why": "Needed: the shop must show the owner's own details."
+      "how": "Owner data: to fill in — {missing}. The owner types them in Settings → Store details for each store (contact, address, legal numbers …; the list is the setting golive.ownerData) and his delivery charge in Delivery. Until then an empty detail is simply not shown on the shop.",
+      "why": "Soon after: the owner types his own details in the admin after go-live; an empty one is never shown to a customer."
     },
     "connections": {
       "title": "Payment, courier and SMS connections live",
