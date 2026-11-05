@@ -4,12 +4,13 @@
 // erasure requests (off) and the requests with Cancel and, for the owner, "Erase now" behind a typed word; a link to
 // the consent history (Messages › Consent). PR 302 (B5.6 V2, answer 50): the standing rule, said plainly — customers
 // are never removed on their own, only the IP and the location go after the days, removing details is by hand. Seeing needs `security.read`; saving the card `security.write`; requests
-// `customers.privacy` (the API checks again).
+// `customers.privacy` (the API checks again). S18 · PR 623: the card for customers' own requests from their account
+// (`privacy.customerRequests`, off) under the first card; the list says each request's kind and who filed it.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { registry } from '@extas/settings';
+import { PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, PRIVACY_REQUEST_WORDS_MAX, privacyCustomerRequestsSchema, registry } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PrivacyRequests } from '@/components/admin/settings/PrivacyRequests';
@@ -95,7 +96,15 @@ export default async function PrivacyPage() {
     { kind: 'number', path: 'purgeEveryMinutes', label: s('keep.purgeEveryMinutes'), ...bounds('purgeEveryMinutes') },
     { kind: 'switch', path: 'erasureRequests', label: s('keep.erasureRequests'), help: s('keep.erasureHelp') },
   ];
+  const copyDays = privacyCustomerRequestsSchema.shape.copyDays;
+  const cust: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('cust.enabled'), help: s('cust.enabledHelp') },
+    { kind: 'checks', path: 'kinds', label: s('cust.kinds'), options: PRIVACY_REQUEST_KINDS.map((k) => ({ value: k, label: s(`cust.kind.${k}`) })) },
+    { kind: 'number', path: 'copyDays', label: s('cust.copyDays'), help: s('cust.copyDaysHelp'), min: copyDays.minValue ?? 1, max: copyDays.maxValue ?? Number.MAX_SAFE_INTEGER },
+    ...PRIVACY_REQUEST_WORDS.map((w): FieldsCardField => ({ kind: 'pair', path: w, label: { en: s('cust.inEn', { label: s(`cust.w.${w}`) }), bn: s('cust.inBn', { label: s(`cust.w.${w}`) }) }, max: PRIVACY_REQUEST_WORDS_MAX, rows: w === 'notice' ? 4 : undefined })),
+  ];
   const card = v.cards.keep;
+  const ccard = v.cards.customer;
   const on = card.value.erasureRequests === true;
   const last = v.purge.lastRun;
 
@@ -142,6 +151,14 @@ export default async function PrivacyPage() {
 
       <FieldsCard url={API} screen={{ key: card.key, value: card.value, version: card.version }} fields={keep} texts={texts} canEdit={canEdit} testId="privacy-keep" />
 
+      {on ? null : (
+        <div className="a2-note a2-mt12" data-testid="privacy-customer-needs">
+          <ShellIcon name="lock" size={15} />
+          <span>{s('cust.needsErasure')}</span>
+        </div>
+      )}
+      <FieldsCard url={API} screen={{ key: ccard.key, value: ccard.value, version: ccard.version }} fields={cust} texts={{ ...texts, h: s('cust.h'), d: s('cust.d') }} canEdit={canEdit} testId="privacy-customer" />
+
       <section className="a2-card a2-mt12" data-testid="privacy-kept">
         <div className="a2-ch">
           <div>
@@ -179,7 +196,7 @@ export default async function PrivacyPage() {
         <PrivacyRequests
           w={flat(words as unknown as Record<string, unknown>)}
           effects={[...words.req.confirmEffects]}
-          rows={v.requests.map((r) => ({ id: r.id, name: r.name, phoneEnd: r.phoneEnd, reason: r.reason, status: r.status, at: r.createdAt.toISOString() }))}
+          rows={v.requests.map((r) => ({ id: r.id, name: r.name, phoneEnd: r.phoneEnd, reason: r.reason, status: r.status, at: r.createdAt.toISOString(), kind: r.kind, source: r.source }))}
           on={on}
           canRequest={v.canRequest}
           canErase={v.canErase}

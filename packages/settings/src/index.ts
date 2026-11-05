@@ -120,6 +120,8 @@ export * from './registry-support-escalation';
 export * from './registry-support-messenger';
 // S04 · PR 622 (CN-034) — Buy again on a past order (registry-account-reorder.ts, version 220).
 export * from './registry-account-reorder';
+// S18 · PR 623 (CN-034) — the customer's own privacy request (registry-privacy-customer.ts, version 221).
+export * from './registry-privacy-customer';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

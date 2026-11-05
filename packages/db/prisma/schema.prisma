@@ -7930,6 +7930,16 @@ model CustomerErasureRequest {
   executedAt        DateTime? @db.Timestamptz(3)
   createdAt         DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 623: what was asked — ERASURE (every request before) or COPY of his data.
+  kind              String    @default("ERASURE")
+  /// PR 623: who filed it — STAFF (Settings › Privacy & data) or the CUSTOMER from his account.
+  source            String    @default("STAFF")
+  /// PR 623: a COPY request approved by staff (status READY): when and by whom.
+  decidedAt         DateTime? @db.Timestamptz(3)
+  decidedById       String?   @db.Uuid
+
+  /// PR 623: one waiting request per kind per person is a partial unique index in migration 0132 (WHERE status = 'REQUESTED').
+  @@index([storeId, customerId, kind])
 }
 
 // =====================================================================================================================

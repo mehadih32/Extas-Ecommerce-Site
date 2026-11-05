@@ -62,7 +62,8 @@
       "states": {
         "REQUESTED": "Waiting",
         "DONE": "Erased",
-        "CANCELLED": "Cancelled"
+        "CANCELLED": "Cancelled",
+        "READY": "Copy ready"
       },
       "cancel": "Cancel",
       "erase": "Erase now",
@@ -78,7 +79,15 @@
       "confirmCancel": "Keep",
       "working": "Erasing…",
       "close": "Close",
-      "done": "Erased."
+      "done": "Erased.",
+      "kind": "What",
+      "kinds": {
+        "COPY": "Copy of data",
+        "ERASURE": "Erasure"
+      },
+      "fromCustomer": "asked from his account",
+      "approve": "Approve copy",
+      "approved": "Approved. He can download his copy from his account."
     },
     "err": {
       "STALE": "Someone else changed this card; it shows their values now.",
@@ -101,6 +110,28 @@
     "discard": "Discard",
     "unsaved": "Not saved yet",
     "readOnly": "You can see these settings; changing them needs the security permission.",
-    "pairHelp": "Write both languages."
+    "pairHelp": "Write both languages.",
+    "cust": {
+      "h": "Customers' own requests",
+      "d": "A signed-in customer asks from My account › Profile for a copy of his data or for its erasure. The request lands in the list below; nothing changes until you act. Off as it ships.",
+      "needsErasure": "Customers' own requests show on the shop only while erasure requests are on (the card above).",
+      "enabled": "Let customers ask from their account",
+      "enabledHelp": "Off as it ships. Off: no card on My account › Profile.",
+      "kinds": "What they may ask for",
+      "kind": {
+        "COPY": "A copy of his data",
+        "ERASURE": "Erasure of his data"
+      },
+      "copyDays": "Days an approved copy can be downloaded",
+      "copyDaysHelp": "From the moment you approve it; then he must ask again.",
+      "w": {
+        "title": "Card title",
+        "notice": "Notice of what erasure keeps",
+        "copy": "Button: ask for a copy",
+        "erasure": "Button: ask for erasure"
+      },
+      "inEn": "{label} (English)",
+      "inBn": "{label} (Bengali)"
+    }
   }
 }

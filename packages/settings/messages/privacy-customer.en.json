@@ -1,0 +1,8 @@
+{
+  "privacy": {
+    "customerRequests": {
+      "label": "Customers' own privacy requests",
+      "help": "A signed-in customer asks from My account › Profile for a copy of his data or for its erasure. The request only files into the list on Settings › Privacy & data; nothing changes until staff act. A copy is prepared only after staff approve it and is downloaded from his signed-in account for the chosen days; an erasure is carried out only by the owner, as before. Shown only while erasure requests are on. Off as it ships."
+    }
+  }
+}

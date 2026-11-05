@@ -3,12 +3,13 @@
 // (AccountShell) around the section's own body. The pages under app/(shop)/(store)/account call it.
 // PR 132: the offer banner on top of My orders; For you lists the same offers as cards.
 // S14 · PR 301: Profile's Birthday card while the owner's `customers.birthday` is on.
+// S18 · PR 623: Profile's "Your data" card (a copy or erasure of his data) while `privacy.customerRequests` is on.
 // S05 · PR 150: My orders is the whole history — a page of one group at a time, from the address's `show` and `page`.
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { isOrderShow, liveOffers, offerBanner, orderHistory, pageOf, profileView, walletView } from '@extas/accounts';
 import type { AccountTab } from '@extas/settings';
-import { pointsOf } from '@extas/customers';
+import { customerPrivacyState, pointsOf, PRIVACY_NOTE_MAX } from '@extas/customers';
 import { accountDeps } from '@/lib/shop/account';
 import { accountPage, accountWords } from '@/lib/shop/account-view';
 import { newestCards } from '@/lib/shop/catalogue';
@@ -20,6 +21,7 @@ import { initialsOf } from '@extas/accounts/pure';
 import { PhotoCard } from './AccountPhoto';
 import { OfferBanner, OfferCards } from './OfferBanner';
 import { BirthdayForm, DetailsForm, PasswordForm, Preferences } from './ProfileForms';
+import { PrivacyCard } from './PrivacyCard';
 
 export async function AccountSection({ tab, query = {} }: { tab: Exclude<AccountTab, 'wishlist'>; query?: { show?: unknown; page?: unknown } }) {
   const c = await shopContext();
@@ -64,7 +66,7 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
       body = <WalletTab c={c} wallet={await walletView(deps, who)} usable={s['checkout.wallet.enabled']} />;
       break;
     case 'profile': {
-      const p = await profileView(deps, who);
+      const [p, privacy] = await Promise.all([profileView(deps, who), customerPrivacyState({ db: deps.db, settings: deps.settings, now: deps.now }, who)]);
       if (!p) notFound();
       const words = accountWords(c, ['profile.']);
       // PR 301: the month names in the page's language (Western digits stay the shop's rule)
@@ -85,6 +87,17 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
           </div>
           {s['customers.birthday'].enabled ? <BirthdayForm words={words} birthday={p.birthday} askYear={s['customers.birthday'].askYear} months={months} /> : null}
           <Preferences words={words} consent={p.consent} lang={c.lang} langs={langs} />
+          {privacy ? (
+            <PrivacyCard
+              words={words}
+              owner={{ title: privacy.rule.words.title[c.lang], notice: privacy.rule.words.notice[c.lang], copy: privacy.rule.words.copy[c.lang], erasure: privacy.rule.words.erasure[c.lang] }}
+              kinds={privacy.rule.kinds}
+              latest={Object.fromEntries(Object.entries(privacy.latest).map(([k, q]) => [k, { id: q.id, kind: q.kind, status: q.status, createdAt: q.createdAt.toISOString(), readyUntil: q.readyUntil?.toISOString() ?? null }]))}
+              noteMax={PRIVACY_NOTE_MAX}
+              lang={c.lang}
+              timeZone={c.s['store.timeZone']}
+            />
+          ) : null}
         </div>
       );
       break;

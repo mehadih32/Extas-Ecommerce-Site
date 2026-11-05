@@ -79,7 +79,10 @@
       "signedOut": "You have been logged out. Please log in again.",
       "bdayBad": "That date does not exist. Please check the day and the month.",
       "bdayYear": "Please check the year.",
-      "bdayOff": "The birthday box is not open right now."
+      "bdayOff": "The birthday box is not open right now.",
+      "privOff": "This is not open right now.",
+      "privGone": "There is no copy ready right now.",
+      "privNote": "Please make the note shorter."
     },
     "title": "My account",
     "tabs": {
@@ -241,7 +244,19 @@
       "bdaySaved": "Birthday saved",
       "bdayClear": "Remove",
       "bdayCleared": "Birthday removed",
-      "bdayPick": "Choose"
+      "bdayPick": "Choose",
+      "privCopy": "A copy of your data",
+      "privErase": "Erasing your data",
+      "privNoteLabel": "Anything you want us to know (optional)",
+      "privReceived": "We have your request of {date}. Our team will look at it; nothing changes until then.",
+      "privReady": "Your copy is ready. You can download it until {date}.",
+      "privDownload": "Download my data",
+      "privFile": "my-data",
+      "privExpired": "The days to download your copy have passed. You can ask again.",
+      "privDone": "Done.",
+      "privClosed": "Your request of {date} was closed by our team. You can ask again.",
+      "privSent": "Request sent",
+      "privAgain": "We already have this request"
     },
     "ob": {
       "aria": "Your offers and wallet",

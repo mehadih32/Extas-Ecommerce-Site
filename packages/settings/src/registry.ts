@@ -85,6 +85,7 @@ import { supportAppSettings } from './registry-support-app';
 import { supportEscalationSettings } from './registry-support-escalation';
 import { supportMessengerSettings } from './registry-support-messenger';
 import { accountReorderSettings } from './registry-account-reorder';
+import { privacyCustomerSettings } from './registry-privacy-customer';
 import { callMeSettings } from './registry-call-me';
 import { voiceAddressSettings } from './registry-voice-address';
 import { bhandariP1Settings } from './registry-bhandari-p1';
@@ -1375,6 +1376,8 @@ export const registry = {
   ...supportMessengerSettings,
   // ---- S04 · PR 622 (CN-034) · Buy again on a past order, off (registry-account-reorder.ts, version 220). ----
   ...accountReorderSettings,
+  // ---- S18 · PR 623 (CN-034) · the customer's own privacy request, off; only while erasure requests are on (registry-privacy-customer.ts, version 221). ----
+  ...privacyCustomerSettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----
