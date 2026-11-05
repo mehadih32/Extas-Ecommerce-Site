@@ -1,4 +1,4 @@
-# Smoke test · 2026-11-04 07:32 (Asia/Dhaka)
+# Smoke test · 2026-11-05 07:34 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (384টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
@@ -194,7 +194,7 @@ Site: https://new.extas.com.bd · commit `491ac5771af6` · nightly · result **P
 | `/admin/orders?source=SUPPORT` | phone | 200 | `/admin/orders` | ok | — |
 | `/admin/orders/01a197e9-19c1-7ed2-b861-31345807e62e` | phone | 200 | `/admin/orders/01a197e9-19c1-7ed2-b861-31345807e62e` | ok | — |
 | `/admin/customers/01a197e9-19be-7132-9446-cea53e9c5b0a` | phone | 200 | `/admin/customers/01a197e9-19be-7132-9446-cea53e9c5b0a` | ok | — |
-| `/admin/reports/health/history/01a19f5f-f3d9-78a0-8b27-9f3008a4f0c5` | phone | 200 | `/admin/reports/health/history/01a19f5f-f3d9-78a0-8b27-9f3008a4f0c5` | ok | — |
+| `/admin/reports/health/history/01a1a434-e17a-7f53-b5e7-228fc2427ff3` | phone | 200 | `/admin/reports/health/history/01a1a434-e17a-7f53-b5e7-228fc2427ff3` | ok | — |
 | `/admin/customers/01a197e9-19be-7132-9446-cea53e9c5b0a?tab=wallet` | phone | 200 | `/admin/customers/01a197e9-19be-7132-9446-cea53e9c5b0a` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -386,7 +386,7 @@ Site: https://new.extas.com.bd · commit `491ac5771af6` · nightly · result **P
 | `/admin/orders?source=SUPPORT` | desktop | 200 | `/admin/orders` | ok | — |
 | `/admin/orders/01a197e9-19c1-7ed2-b861-31345807e62e` | desktop | 200 | `/admin/orders/01a197e9-19c1-7ed2-b861-31345807e62e` | ok | — |
 | `/admin/customers/01a197e9-19be-7132-9446-cea53e9c5b0a` | desktop | 200 | `/admin/customers/01a197e9-19be-7132-9446-cea53e9c5b0a` | ok | — |
-| `/admin/reports/health/history/01a19f5f-f3d9-78a0-8b27-9f3008a4f0c5` | desktop | 200 | `/admin/reports/health/history/01a19f5f-f3d9-78a0-8b27-9f3008a4f0c5` | ok | — |
+| `/admin/reports/health/history/01a1a434-e17a-7f53-b5e7-228fc2427ff3` | desktop | 200 | `/admin/reports/health/history/01a1a434-e17a-7f53-b5e7-228fc2427ff3` | ok | — |
 | `/admin/customers/01a197e9-19be-7132-9446-cea53e9c5b0a?tab=wallet` | desktop | 200 | `/admin/customers/01a197e9-19be-7132-9446-cea53e9c5b0a` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
