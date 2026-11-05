@@ -128,7 +128,7 @@ export async function goLiveNow(deps: Deps) {
     signoff,
     smoke: state.smoke,
     health: state.health,
-    backups: { ready: gate.ready, todo: gate.checks.filter((c) => !c.ok).length },
+    backups: { ready: gate.ready, todo: gate.checks.filter((c) => !c.ok && !c.soon).length, checks: gate.checks },
     serverSetup: state.serverSetup,
     originCert: state.originCert,
     primaryHosts: domains.map((d) => d.hostname),

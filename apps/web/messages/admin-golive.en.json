@@ -1,7 +1,7 @@
 {
   "metaTitle": "Go-live · Admin",
   "title": "Go-live checklist",
-  "sub": "Everything that must be true before real orders, in one list. Automatic items come from the server; the others are checked by a person and confirmed here.",
+  "sub": "Everything for real orders in two groups: what is needed before go-live (only these hold back the switch of the main domain) and what the owner does soon after go-live. Automatic items come from the server; the others are checked by a person and confirmed here.",
   "safe": {
     "title": "Only a list.",
     "text": "Nothing here switches anything on or off, and the main domain is never switched from here. The backups have their own checks:",
@@ -28,85 +28,109 @@
     "smoke": {
       "title": "Every page opens (smoke test)",
       "ok": "{pages} pages, none failed",
-      "how": "The smoke test after every deploy and every night must pass, and be recent: {failed} page(s) failed or it has not run lately (the Server page has the list)."
+      "how": "The smoke test after every deploy and every night must pass, and be recent: {failed} page(s) failed or it has not run lately (the Server page has the list).",
+      "why": "Needed: a page that does not open loses real orders."
     },
     "health": {
       "title": "The server's health check is clean",
       "ok": "no problem",
-      "how": "The server's own check reports {problems} problem(s), or has not run lately; the Server page says which."
+      "how": "The server's own check reports {problems} problem(s), or has not run lately; the Server page says which.",
+      "why": "Needed: a sick server can stop orders or lose them."
     },
     "backups": {
-      "title": "Backups ready (Blob, Drive, restore drill, Telegram)",
-      "ok": "all backup checks pass",
-      "how": "{todo} backup check(s) to do — open Settings → System → Backups."
+      "title": "Last night's backup on the server",
+      "ok": "last night's server copy is good",
+      "how": "Last night's copy on the server did not go well, or is missing ({todo} to do) — open Settings → System → Backups and press \"Back up now\".",
+      "why": "Needed: with last night's copy on the server, a mistake can be undone."
+    },
+    "offServer": {
+      "title": "Off-server backup (Azure Blob and Google Drive)",
+      "ok": "Blob and Drive connected, each with a fresh copy",
+      "how": "Off-server backup: not connected ({todo} check(s) to do). Connect Azure Blob and Google Drive in Settings → System → Backups; the yellow line on the Dashboard comes back every day until then.",
+      "why": "Soon after: the server's own copy and its provider's snapshot keep the data meanwhile; the owner connects Blob and Drive from the admin."
     },
     "originCert": {
       "title": "Cloudflare Origin certificate on the server",
       "ok": "covers {names}; {days} days left",
-      "how": "Make an Origin certificate in Cloudflare (SSL/TLS → Origin Server → Create certificate, for the main domain and *. of it) and paste the certificate and its private key into Keys & connections → Cloudflare origin certificate. Now: {error}. Main domains not covered: {missing}."
+      "how": "Make an Origin certificate in Cloudflare (SSL/TLS → Origin Server → Create certificate, for the main domain and *. of it) and paste the certificate and its private key into Keys & connections → Cloudflare origin certificate. Now: {error}. Main domains not covered: {missing}.",
+      "why": "Needed: without it customers see a security error."
     },
     "sslStrict": {
       "title": "Cloudflare SSL/TLS mode is Full (strict)",
-      "how": "Once the line above is done: Cloudflare → SSL/TLS → Overview → Full (strict), for the staging and the main domain. Open the shop afterwards; an error 526 means the certificate does not fit — set it back to Full and check the line above."
+      "how": "Once the line above is done: Cloudflare → SSL/TLS → Overview → Full (strict), for the staging and the main domain. Open the shop afterwards; an error 526 means the certificate does not fit — set it back to Full and check the line above.",
+      "why": "Needed: it keeps the line between Cloudflare and the server private."
     },
     "ownerData": {
       "title": "The owner's own data on every live store",
       "ok": "{stores} store(s): every field filled in",
-      "how": "The owner types his own details in Settings → Store details for each store that goes live (contact, legal numbers …; the list is the setting golive.ownerData) and switches on at least one delivery band with his charge (Delivery). Still empty: {missing}."
+      "how": "The owner types his own details in Settings → Store details for each store that goes live (contact, legal numbers …; the list is the setting golive.ownerData) and switches on at least one delivery band with his charge (Delivery). Still empty: {missing}.",
+      "why": "Needed: the shop must show the owner's own details."
     },
     "connections": {
       "title": "Payment, courier and SMS connections live",
       "ok": "live: {live}",
-      "how": "In Keys & connections, enter each provider's keys and press Save and test; a passing test moves it from practice to live. Still on practice: {missing} (the list is the setting golive.connections). Live now: {live}."
+      "how": "In Keys & connections, enter each provider's keys and press Save and test; a passing test moves it from practice to live. Still on practice: {missing} (the list is the setting golive.connections). Live now: {live}.",
+      "why": "Needed: orders must be paid, shipped and confirmed for real."
     },
     "indexing": {
       "title": "Main domain open to search engines",
       "ok": "on for {hosts}",
-      "how": "On go-live day, after the switch: Website → SEO → let search engines in. It only counts on a store's main domain (Settings → Stores); the staging site always stays out. Main domains now: {hosts}."
+      "how": "On go-live day, after the switch: Website → SEO → let search engines in. It only counts on a store's main domain (Settings → Stores); the staging site always stays out. Main domains now: {hosts}.",
+      "why": "Needed: on go-live day the new shop must be found on Google."
     },
     "searchConsole": {
       "title": "Search Console on the main domain, sitemap sent",
-      "how": "In Google Search Console: the main domain's property is verified (a DNS record in Cloudflare is the simplest), /sitemap.xml is submitted under Sitemaps, and the old shop's property is kept to watch the move (PR 587). Then confirm."
+      "how": "In Google Search Console: the main domain's property is verified (a DNS record in Cloudflare is the simplest), /sitemap.xml is submitted under Sitemaps, and the old shop's property is kept to watch the move (PR 587). Then confirm.",
+      "why": "Needed: Google learns the new pages and the old addresses move with them."
     },
     "testPayments": {
       "title": "Test payments off, every online method on a real gateway",
       "ok": "off on every live store; every online method is real",
-      "how": "Money → Payments → switch \"Test payment buttons\" off on every store that goes live (still on: {stores}). Every wallet, card or online method offered must have its real gateway live in Keys & connections, or be switched off in the checkout's payment settings (still on practice: {methods})."
+      "how": "Money → Payments → switch \"Test payment buttons\" off on every store that goes live (still on: {stores}). Every wallet, card or online method offered must have its real gateway live in Keys & connections, or be switched off in the checkout's payment settings (still on practice: {methods}).",
+      "why": "Needed: nobody may mark an order paid without paying."
     },
     "rateLimit": {
       "title": "Request limits enforce",
       "ok": "the limits enforce",
-      "how": "Settings → Security → Request limits: set the mode to \"enforce\" (now: {mode}), so sign-in guessing and fake orders are slowed down. Raise the per-minute numbers there first if many customers share one mobile address."
+      "how": "Settings → Security → Request limits: set the mode to \"enforce\" (now: {mode}), so sign-in guessing and fake orders are slowed down. Raise the per-minute numbers there first if many customers share one mobile address.",
+      "why": "Needed: slows down password guessing and fake orders."
     },
     "staffTwoFactor": {
       "title": "Two-step sign-in for every staff member who can change things",
       "ok": "every such staff member signs in with two steps",
-      "how": "{without} active staff member(s) who can change something have no two-step sign-in yet. Each turns it on for their own sign-in, or the owner requires it of everybody (Settings → Security → \"Everyone must use two-step sign-in\"; now: {required})."
+      "how": "{without} active staff member(s) who can change something have no two-step sign-in yet. Each turns it on for their own sign-in, or the owner requires it of everybody (Settings → Security → \"Everyone must use two-step sign-in\"; now: {required}).",
+      "why": "Needed: a stolen staff password alone cannot change the shop."
     },
     "runbook": {
       "title": "Go-live runbook read, rollback rehearsed",
-      "how": "Read docs/golive/RUNBOOK.md (the switch minute by minute, and how each step is undone). On staging, run the Deploy workflow once with \"Go back to the previous version\" and once without, and note how long it took. Then confirm."
+      "how": "Read docs/golive/RUNBOOK.md (the switch minute by minute, and how each step is undone). On staging, run the Deploy workflow once with \"Go back to the previous version\" and once without, and note how long it took. Then confirm.",
+      "why": "Needed: if the switch goes wrong, it can be undone in minutes."
     },
     "qaGate": {
       "title": "QA gate green (Blueprint Appendix C)",
-      "how": "The device gate at 0 failures on phones, tablets and desktop, the journeys and the Lighthouse budget pass in CI for the build on staging; the screenshots were looked at."
+      "how": "The device gate at 0 failures on phones, tablets and desktop, the journeys and the Lighthouse budget pass in CI for the build on staging; the screenshots were looked at.",
+      "why": "Needed: every page works on phones, tablets and desktops."
     },
     "acceptance": {
       "title": "Staging acceptance list walked through",
-      "how": "Every line of docs/golive/ACCEPTANCE.md checked on the staging site as a customer and as admin."
+      "how": "Every line of docs/golive/ACCEPTANCE.md checked on the staging site as a customer and as admin.",
+      "why": "Needed: what a customer and the admin do was checked on staging."
     },
     "realPhones": {
       "title": "Real iPhone and real Android",
-      "how": "The shop opened and one order placed on a real iPhone (Safari) and a real Android phone (Chrome)."
+      "how": "The shop opened and one order placed on a real iPhone (Safari) and a real Android phone (Chrome).",
+      "why": "Needed: real customers use real phones."
     },
     "simulation": {
       "title": "The real-life journey simulation passed on staging",
-      "how": "The 70-order simulation of docs/qa/SIMULATION-PLAN.md rerun on the staging site, every finding fixed (CN-013)."
+      "how": "The 70-order simulation of docs/qa/SIMULATION-PLAN.md rerun on the staging site, every finding fixed (CN-013).",
+      "why": "Needed: the money and the orders add up across 70 real-life orders."
     },
     "server": {
       "title": "Every server item of A2.9 in place",
       "ok": "{steps} steps, none failed ({warn} warning(s))",
-      "how": "The last full server setup run must pass every step (Blueprint A2.9.16): {fail} failed ({failed}). Run the \"Server setup\" workflow again after the fix; the report is in docs/reports/server/latest.md."
+      "how": "The last full server setup run must pass every step (Blueprint A2.9.16): {fail} failed ({failed}). Run the \"Server setup\" workflow again after the fix; the report is in docs/reports/server/latest.md.",
+      "why": "Needed: the server's own set-up protects the shop and its data."
     }
   },
   "firstWeek": {
@@ -131,5 +155,17 @@
     "unauthorized": "Sign in again.",
     "server-error": "Something went wrong on the server; try again in a moment.",
     "network": "The server cannot be reached — check the connection and try again."
-  }
+  },
+  "group": {
+    "before": {
+      "title": "Needed before go-live",
+      "sub": "Only these hold back the switch of the main domain."
+    },
+    "after": {
+      "title": "Soon after go-live",
+      "sub": "The owner does these from the admin once the shop is live; they never hold back the switch and stay yellow until done."
+    }
+  },
+  "soonTodo": "Soon after go-live",
+  "soonLeft": "{n} soon after go-live"
 }

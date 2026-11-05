@@ -18,7 +18,7 @@ function ctx(over: Partial<GoLiveContext> = {}): GoLiveContext {
     signoff: Object.fromEntries(SIGNOFF_KEYS.map((k) => [k, { at: ago(60), by: 'u1' }])),
     smoke: { ok: true, at: ago(120), pages: 40, failed: 0 },
     health: { at: ago(2), problems: [] },
-    backups: { ready: true, todo: 0 },
+    backups: { ready: true, todo: 0, checks: ['local', 'blobLive', 'blobFresh', 'driveLive', 'driveFresh', 'drillBlob', 'drillDrive', 'telegram'].map((key) => ({ key, ok: true })) },
     serverSetup: { at: ago(600), full: true, passed: true, counts: { ok: 13, fail: 0, warn: 1 }, steps: [] },
     originCert: { at: ago(3), mode: 'origin', active: true, names: ['example.test', '*.example.test'], daysLeft: 5400, error: null },
     primaryHosts: ['example.test'],
@@ -38,8 +38,21 @@ const open = (c: GoLiveContext) =>
 describe('go-live checklist (PR 393)', () => {
   it('everything done: ready; the order is the list order', () => {
     const r = goLiveChecks(ctx());
-    expect(r).toMatchObject({ ready: true, done: GO_LIVE.length, total: GO_LIVE.length });
+    const before = GO_LIVE.filter((i) => i.when === 'before').length;
+    expect(r).toMatchObject({ ready: true, done: before, total: before, soon: { done: GO_LIVE.length - before, total: GO_LIVE.length - before } });
     expect(r.items.map((i) => i.key)).toEqual(GO_LIVE.map((i) => i.key));
+  });
+
+  it('CN-035: only "needed before go-live" holds back ready; "soon after" rows count apart and stay to do', () => {
+    const noOffSite = { ready: true, todo: 0, checks: [{ key: 'local', ok: true }, { key: 'blobLive', ok: false }, { key: 'driveLive', ok: true }] };
+    const r = goLiveChecks(ctx({ backups: noOffSite }));
+    expect(r.ready).toBe(true);
+    expect(r.items.find((i) => i.key === 'offServer')).toMatchObject({ ok: false, when: 'after', pr: 391, vars: { todo: 3 } });
+    expect(r.soon.done).toBe(r.soon.total - open(ctx({ backups: noOffSite })).length);
+    // the server's own copy stays needed
+    expect(goLiveChecks(ctx({ backups: { ready: false, todo: 1, checks: [] } })).ready).toBe(false);
+    // no checks known: the off-server row is not done
+    expect(open(ctx({ backups: { ready: true, todo: 0 } }))).toContain('offServer');
   });
 
   it('automatic items: a failed, old or missing smoke test, a health problem or a stale check, backups not ready', () => {
@@ -56,7 +69,7 @@ describe('go-live checklist (PR 393)', () => {
     expect(open(ctx({ smoke: { ok: true, at: dhaka(37 * 60), pages: 40, failed: 0 } }))).toEqual(['smoke']);
     expect(open(ctx({ health: { at: ago(1), problems: ['disk 91%'] } }))).toEqual(['health']);
     expect(open(ctx({ health: { at: ago(45), problems: [] } }))).toEqual(['health']);
-    expect(open(ctx({ backups: { ready: false, todo: 3 } }))).toEqual(['backups']);
+    expect(open(ctx({ backups: { ...ctx().backups, ready: false, todo: 3 } }))).toEqual(['backups']);
     expect(goLiveChecks(ctx({ backups: { ready: false, todo: 3 } })).items.find((i) => i.key === 'backups')?.vars).toEqual({ todo: 3 });
   });
 
@@ -136,6 +149,7 @@ describe('go-live checklist (PR 393)', () => {
         const words = (d.item as Record<string, Record<string, string>>)[i.key];
         expect(words?.title, `${i.key}`).toBeTruthy();
         expect(words?.how, `${i.key}`).toBeTruthy();
+        expect(words?.why, `${i.key}`).toBeTruthy(); // CN-035: every row says why it is needed before or soon after
         if (i.kind === 'auto') expect(words?.ok, `${i.key}`).toBeTruthy();
       }
     }

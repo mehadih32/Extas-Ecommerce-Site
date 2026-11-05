@@ -2,7 +2,9 @@
 // S19 · PR 393 (CN-031) — Settings → System → Go-live: the checklist before real orders. Automatic items say what the
 // server and the shop's records show; items a person checks have "Confirm" (permission `system.golive`, the API checks
 // again) and say who confirmed them and when; the owner's own steps are shown as his. Every word is from
-// messages/admin-golive.<lang>.json; the rows come from lib/go-live.ts.
+// messages/admin-golive.<lang>.json; the rows come from lib/go-live.ts. CN-035: two groups — "Needed before go-live"
+// (only these hold back the switch of the main domain) and "Soon after go-live" (yellow until done) — each row with
+// its reason.
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { call, errorText } from "@/components/admin/api";
@@ -15,6 +17,8 @@ export interface GoLiveView {
   ready: boolean;
   done: number;
   total: number;
+  /** CN-035: what is done soon after go-live. */
+  soon: { done: number; total: number };
   items: GoLiveResult[];
   people: Record<string, string>;
   /** PR 402: the first-week watch after go-live. */
@@ -82,71 +86,106 @@ export function GoLiveList({
     return local(d, `item.${i.key}.how`, i.vars ?? {});
   };
 
-  return (
-    <section
-      className="a2-card a2-mt12"
-      aria-labelledby="gl-list"
-      data-testid="gl-list"
-      data-ready={view.ready ? "yes" : "no"}
+  const row = (i: GoLiveResult) => (
+    <div
+      key={i.key}
+      className="a2-rule"
+      data-testid={`gl-${i.key}`}
+      data-ok={i.ok ? "yes" : "no"}
+      data-when={i.when}
     >
-      <div className="a2-ch">
-        <div>
-          <h2 className="a2-h3" id="gl-list">
-            {local(d, "listTitle")}
-          </h2>
-          <div className="a2-cs">
-            {local(d, "progress", { done: view.done, total: view.total })}
-          </div>
-        </div>
-        <span className={`a2-pill ${view.ready ? "ok" : "warn"}`}>
-          {local(d, view.ready ? "ready" : "notReady", {
-            n: view.total - view.done,
-          })}
-        </span>
-      </div>
-      {note ? (
-        <div className="a2-note bad" role="alert" data-testid="gl-note">
-          <ShellIcon name="alert" size={15} />
-          <span>{note}</span>
-        </div>
-      ) : null}
-      {view.items.map((i) => (
-        <div
-          key={i.key}
-          className="a2-rule"
-          data-testid={`gl-${i.key}`}
-          data-ok={i.ok ? "yes" : "no"}
+      <span>
+        <b className="a2-blk">
+          {local(d, `item.${i.key}.title`)}{" "}
+          <span className="a2-xs a2-mute">
+            · {local(d, `kind.${i.kind}`)} · PR {i.pr}
+          </span>
+        </b>
+        <span className="a2-xs a2-blk">{local(d, `item.${i.key}.why`)}</span>
+        <span className="a2-xs a2-mute">{foot(i)}</span>
+      </span>
+      {i.kind === "signoff" && canSign ? (
+        <button
+          type="button"
+          className={`a2-btn sm${i.ok ? " ghost" : ""}`}
+          onClick={() => sign(i.key, !i.ok)}
+          disabled={busy !== null}
+          aria-busy={busy === i.key || undefined}
+          data-testid={`gl-sign-${i.key}`}
         >
-          <span>
-            <b className="a2-blk">
-              {local(d, `item.${i.key}.title`)}{" "}
-              <span className="a2-xs a2-mute">
-                · {local(d, `kind.${i.kind}`)} · PR {i.pr}
-              </span>
-            </b>
-            <span className="a2-xs a2-mute">{foot(i)}</span>
-          </span>
-          {i.kind === "signoff" && canSign ? (
-            <button
-              type="button"
-              className={`a2-btn sm${i.ok ? " ghost" : ""}`}
-              onClick={() => sign(i.key, !i.ok)}
-              disabled={busy !== null}
-              aria-busy={busy === i.key || undefined}
-              data-testid={`gl-sign-${i.key}`}
-            >
-              {local(d, i.ok ? "undo" : "confirm")}
-            </button>
-          ) : null}
-          <span className={`a2-pill ${i.ok ? "ok" : "line"}`}>
-            {local(d, i.ok ? "ok" : "todo")}
+          {local(d, i.ok ? "undo" : "confirm")}
+        </button>
+      ) : null}
+      <span
+        className={`a2-pill ${i.ok ? "ok" : i.when === "after" ? "warn" : "line"}`}
+      >
+        {local(d, i.ok ? "ok" : i.when === "after" ? "soonTodo" : "todo")}
+      </span>
+    </div>
+  );
+  const soonLeft = view.soon.total - view.soon.done;
+
+  return (
+    <>
+      <section
+        className="a2-card a2-mt12"
+        aria-labelledby="gl-list"
+        data-testid="gl-list"
+        data-ready={view.ready ? "yes" : "no"}
+      >
+        <div className="a2-ch">
+          <div>
+            <h2 className="a2-h3" id="gl-list">
+              {local(d, "group.before.title")}
+            </h2>
+            <div className="a2-cs">
+              {local(d, "group.before.sub")}{" "}
+              {local(d, "progress", { done: view.done, total: view.total })}
+            </div>
+          </div>
+          <span className={`a2-pill ${view.ready ? "ok" : "warn"}`}>
+            {local(d, view.ready ? "ready" : "notReady", {
+              n: view.total - view.done,
+            })}
           </span>
         </div>
-      ))}
-      {!canSign ? (
-        <p className="a2-xs a2-mute a2-mt12">{local(d, "readOnly")}</p>
-      ) : null}
-    </section>
+        {note ? (
+          <div className="a2-note bad" role="alert" data-testid="gl-note">
+            <ShellIcon name="alert" size={15} />
+            <span>{note}</span>
+          </div>
+        ) : null}
+        {view.items.filter((i) => i.when === "before").map(row)}
+        {!canSign ? (
+          <p className="a2-xs a2-mute a2-mt12">{local(d, "readOnly")}</p>
+        ) : null}
+      </section>
+      <section
+        className="a2-card a2-mt12"
+        aria-labelledby="gl-soon"
+        data-testid="gl-soon"
+        data-left={soonLeft}
+      >
+        <div className="a2-ch">
+          <div>
+            <h2 className="a2-h3" id="gl-soon">
+              {local(d, "group.after.title")}
+            </h2>
+            <div className="a2-cs">
+              {local(d, "group.after.sub")}{" "}
+              {local(d, "progress", {
+                done: view.soon.done,
+                total: view.soon.total,
+              })}
+            </div>
+          </div>
+          <span className={`a2-pill ${soonLeft ? "warn" : "ok"}`}>
+            {local(d, soonLeft ? "soonLeft" : "ok", { n: soonLeft })}
+          </span>
+        </div>
+        {view.items.filter((i) => i.when === "after").map(row)}
+      </section>
+    </>
   );
 }
 
