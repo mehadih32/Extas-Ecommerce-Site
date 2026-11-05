@@ -3,15 +3,18 @@
 // owner's order (`shell.header`). The bag can never be switched off — it is how every order starts. The desktop
 // wordmark wears the owner's logo style (`brand.logoStyle`, H5); the phone wordmark never changes.
 // PR 606: the phone menu gains a "Bulk & corporate orders" row while the owner has the lane on (`orders.bulkLane`).
+// PR 624 (CN-034): the Messenger button (`support.messengerButton`, off as it ships) — on a computer an icon right after
+// the WhatsApp icon; on a phone the header stays as designed and the button sits in the menu under WhatsApp.
 import type { ShellMenuSubsSettings, ShopIcon } from '@extas/settings';
 import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
+import { messengerLink } from '@/lib/shop/messenger';
 import { ROUTES } from '@/lib/shop/routes';
 import { deskNavItems, liveAnnouncements, phoneMenuRows, helpRows, type MenuRow, type ShopCategory } from '@/lib/shop/shell-model';
 import { AnnounceBar } from './AnnounceBar';
 import { DeskNav, type MegaData } from './DeskNav';
-import { Icon, WaGlyph } from './Icon';
+import { Icon, MessengerGlyph, WaGlyph } from './Icon';
 import { LangSwitch } from './LangSwitch';
 import { LogoText } from './LogoText';
 import { MenuButton, type MenuData } from './MenuButton';
@@ -43,6 +46,21 @@ export function HeaderWa({ c, auto = false }: { c: ShopContext; auto?: boolean }
       <span className="hdr-wa-tip" role="tooltip">
         {tip}
       </span>
+    </a>
+  );
+}
+
+/** PR 624: the header's Messenger link (computer only), or null while it is off, not ticked for the header or has no Page. */
+function headerMessenger(c: ShopContext, refAs?: 'menu') {
+  return messengerLink(c.s['support.messengerButton'], { page: c.s['contact.messenger'], facebook: c.s['social.facebook'], place: 'header', lang: c.lang, refAs });
+}
+
+export function HeaderMessenger({ c }: { c: ShopContext }) {
+  const ms = headerMessenger(c);
+  if (!ms) return null;
+  return (
+    <a key="ms" className="iconbtn hdr-ms hide-m" href={ms.href} target="_blank" rel="noopener" aria-label={ms.label} data-tip={ms.label} data-testid="hdr-ms">
+      <MessengerGlyph size={22} />
     </a>
   );
 }
@@ -86,6 +104,7 @@ export function menuData(c: ShopContext, subs?: ShellMenuSubsSettings): MenuData
     helpTitle: t.label(m.helpTitle),
     help: [...helpRows(m, t), ...bulkRow(c)],
     wa: { href: waHref(c.s['contact.whatsapp'], t('footer.waMessage', c.vars)), label: t('menu.whatsapp') },
+    ms: headerMessenger(c, 'menu'),
     hotline: c.s['contact.phone'] ? { href: `tel:${c.s['contact.phone'].replace(/[^\d+]/g, '')}`, label: t('menu.hotline', { number: c.s['contact.phone'] }) } : null,
     hours: c.s['contact.hours'] ? c.s['contact.hours'][c.lang] || c.s['contact.hours'].en : null,
   };
@@ -101,7 +120,7 @@ export function StoreHeader({ c, bagCount = 0, menuSubs }: { c: ShopContext; bag
   const hasSlogan = (w: 'phone' | 'desk') => Boolean(head.slogan.on && head.slogan[w] && c.s['brand.slogan']);
   const nav = deskNavItems(c.s['shell.menu'], c.s['shell.desktopNav'], c.cats, t, c.path);
   const icons: Record<string, () => React.ReactNode> = {
-    whatsapp: () => <HeaderWa key="wa" c={c} />,
+    whatsapp: () => [<HeaderWa key="wa" c={c} />, <HeaderMessenger key="ms" c={c} />],
     search: () => (
       <a
         key="search"
@@ -151,6 +170,8 @@ export function StoreHeader({ c, bagCount = 0, menuSubs }: { c: ShopContext; bag
     if (x.on || x.id === 'bag') right.push(icons[x.id]!());
   }
   if (!seen.has('bag')) right.push(icons.bag!());
+  // PR 624: with the WhatsApp icon off, the Messenger icon still shows, first
+  if (!head.icons.some((x) => x.id === 'whatsapp' && x.on)) right.unshift(<HeaderMessenger key="ms" c={c} />);
   const mega = c.s['shell.desktopNav'].mega ? megaFor(c, c.cats) : {};
   return (
     <>

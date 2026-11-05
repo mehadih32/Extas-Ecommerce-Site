@@ -541,6 +541,60 @@
         "riskyEndings": "Risky site endings",
         "riskyFiles": "Risky files (they install or run something)",
         "listHelp": "Comma-separated. Add or remove any."
+      },
+      "messenger": {
+        "h": "Messenger button on the shop",
+        "d": "A button that opens the shop's Facebook Page in Messenger, beside the shop's other ways to reach you. Off as it ships; with no Page it shows nowhere.",
+        "enabled": "Show the Messenger button",
+        "enabledHelp": "Off: the shop shows no Messenger button anywhere.",
+        "useFacebookLink": "Use the Page of the shop's Facebook link",
+        "useFacebookLinkHelp": "Only when the Page below is empty.",
+        "places": "Where it shows",
+        "place": {
+          "header": "Header (computer) and the phone menu",
+          "product": "Product page",
+          "help": "Help pages",
+          "contact": "Contact page",
+          "order": "Customer's order page"
+        },
+        "sendRef": "Tell the chat where it was tapped",
+        "sendRefHelp": "The link names the page, product or order, so the chat starts with context.",
+        "countTaps": "Count taps on the support buttons",
+        "countTapsHelp": "Messenger, WhatsApp and call taps by day and place; numbers only, nothing about the person.",
+        "labelEn": "Button words (English)",
+        "labelBn": "Button words (Bengali)",
+        "hintEn": "Line under it (English)",
+        "hintBn": "Line under it (Bengali)",
+        "wordsHelp": "Both languages are needed."
+      },
+      "messengerPage": {
+        "h": "Facebook Page for Messenger",
+        "d": "The shop's own Page the button opens. Your own data: empty until you type it.",
+        "page": "Page name or address",
+        "pageHelp": "Like extas.bd, m.me/extas.bd or facebook.com/extas.bd. Empty: no Page."
+      },
+      "taps": {
+        "h": "Taps on the support buttons",
+        "d": "The last {days} days ({from} – {to}).",
+        "off": "Counting is off: turn on the Messenger button and \"Count taps\".",
+        "none": "No taps yet.",
+        "place": "Place",
+        "total": "All",
+        "ch": {
+          "messenger": "Messenger",
+          "whatsapp": "WhatsApp",
+          "call": "Call"
+        },
+        "where": {
+          "header": "Header",
+          "menu": "Phone menu",
+          "fab": "WhatsApp disc",
+          "product": "Product page",
+          "help": "Help pages",
+          "contact": "Contact page",
+          "order": "Order page",
+          "other": "Other pages"
+        }
       }
     },
     "person": {

@@ -57,6 +57,10 @@
 //   escalation.ts the owner told on Telegram once per wait (the worker's sweep; open desk minutes only), the desk now for
 //                 the inbox, a customer's links checked as they arrive; escalation-pure.ts: the desk's hours in the
 //                 store's time zone, when a wait is due, the owner's line, the link check.
+// PR 624 (CN-034): the Messenger button on the shop.
+//   taps.ts       taps on the shop's support buttons (Messenger, WhatsApp, call) counted by day, channel and place
+//                 while the button's counting is on (recordSupportTap), and the last days' counts (supportTaps);
+//                 taps-pure.ts: the channels and places.
 //
 // `./pure` holds the rules without a database (the screens use them).
 export * from './context';
@@ -96,3 +100,5 @@ export * from './analytics';
 // PR 538: desk hours, the owner told on Telegram when nobody answers, the links customers send
 export * from './escalation-pure';
 export * from './escalation';
+// PR 624: taps on the shop's support buttons, counted
+export * from './taps';

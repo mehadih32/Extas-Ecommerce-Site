@@ -1,0 +1,14 @@
+{
+  "contact": {
+    "messenger": {
+      "label": "Facebook Page for Messenger",
+      "help": "The shop's own Facebook Page that the Messenger button opens: its user name (like extas.bd) or number id, or its address (m.me/… or facebook.com/…). Empty until the owner types it."
+    }
+  },
+  "support": {
+    "messengerButton": {
+      "label": "Messenger button on the shop",
+      "help": "A Messenger button beside the shop's other ways to reach you (the header's WhatsApp icon, the product page, the help and contact pages, the order page) that opens the shop's Facebook Page in Messenger. Off as it ships; with no Page set it shows nowhere. Taps on the shop's support buttons are counted by day, channel and place while it is on."
+    }
+  }
+}

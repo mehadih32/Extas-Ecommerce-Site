@@ -417,6 +417,7 @@ model Store {
   supportProductShares    SupportProductShare[]
   supportFollowUps        SupportFollowUp[]
   supportEscalations      SupportEscalation[]
+  supportChannelTaps      SupportChannelTap[]
   conversationEvents      ConversationEvent[]
   knowledgeChunks         KnowledgeChunk[]
   socialAccounts          SocialAccount[]
@@ -9846,6 +9847,24 @@ model SupportEscalation {
 
   @@unique([conversationId, waitingSince])
   @@index([storeId, createdAt])
+}
+
+/// @stage S22 · PR 624 (CN-034) — taps on the shop's support buttons (Messenger, WhatsApp, the call button), counted by
+/// the shop's day, channel and place while the Messenger button's counting is on. Numbers only: nothing about the
+/// person who tapped. `channel` messenger | whatsapp | call; `place` header | menu | fab | product | help | contact |
+/// order | other (lib/shop/support-taps-model.ts).
+model SupportChannelTap {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  day       DateTime @db.Date
+  channel   String
+  place     String
+  count     Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, day, channel, place])
 }
 
 /// @stage S22 · B4.15 — a knowledge chunk the support AI answers from (manual, policies, catalogue, FAQs, solved tickets).

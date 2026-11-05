@@ -50,6 +50,7 @@ import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
 import { ROUTES } from '@/lib/shop/routes';
 import { Icon, WaGlyph } from '../Icon';
+import { MessengerButton } from '../MessengerButton';
 import { nameOf, Thumb } from '../bag/BagLines';
 import { AccountCrumbs } from './AccountShell';
 import { LateTag, StatusTag } from './AccountTabs';
@@ -614,8 +615,12 @@ export async function OrderPage({
                 <WaGlyph size={18} />
                 {t('account.order.helpWa')}
               </a>
+              <MessengerButton c={c} place="order" detail={r.number} />
             </section>
-          ) : null}
+          ) : (
+            // PR 624: with no WhatsApp help, Messenger alone (nothing while it is off)
+            <MessengerButton c={c} place="order" detail={r.number} card={t('account.order.help')} />
+          )}
         </aside>
       </div>
     </div>

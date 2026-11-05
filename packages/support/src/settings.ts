@@ -11,13 +11,16 @@
 // PR 433: follow-ups on chats without an order and their words (`support.followUp` off, `support.followUpWords`).
 // PR 434: privacy inside support (`support.privacy`, off) and the support block list (`support.blockList`, off).
 // PR 435: the support app — installable, support-only, push notifications (`support.app`, off).
+// PR 624 (CN-034): the Messenger button on the shop (`support.messengerButton`, off) and the store's Facebook Page it
+// opens (`contact.messenger`, owner data, empty as it ships). The Page is kept as its bare name (null = not set); its
+// card edits it as `{ page }`, where any address of the Page may be typed ('' = not set).
 import { createHash } from 'node:crypto';
-import { callMeSchema, registry, storeTarget, supportAttachmentsSchema, supportCartSchema, supportCatalogueSchema, supportChannelsSchema, supportContextSchema, supportDraftKeywordsSchema, supportDraftsSchema, supportDraftWordsSchema, supportBlockListSchema, supportAppSchema, supportDeskHoursSchema, supportEscalationSchema, supportLinkSafetySchema, supportFollowUpSchema, supportFollowUpWordsSchema, supportIdentitySchema, supportPrivacySchema, supportInboxSchema, supportLiveChatSchema, supportTicketsSchema, type Key, type Value } from '@extas/settings';
+import { callMeSchema, registry, storeTarget, supportAttachmentsSchema, supportCartSchema, supportCatalogueSchema, supportChannelsSchema, supportContextSchema, supportDraftKeywordsSchema, supportDraftsSchema, supportDraftWordsSchema, supportBlockListSchema, supportAppSchema, supportDeskHoursSchema, supportEscalationSchema, supportLinkSafetySchema, supportMessengerButtonSchema, messengerPageOf, supportFollowUpSchema, supportFollowUpWordsSchema, supportIdentitySchema, supportPrivacySchema, supportInboxSchema, supportLiveChatSchema, supportTicketsSchema, type Key, type Value } from '@extas/settings';
 import { z } from 'zod';
 import { allow, logChange, parse, setting, SupportError, type SettingsWriter, type SupportDeps, type Who } from './context';
 
 /** The keys Support settings edits, each one card. */
-export const SUPPORT_SETTING_KEYS = ['support.inbox', 'support.attachments', 'support.channels', 'support.liveChat', 'checkout.callMe', 'support.identity', 'support.context', 'support.catalogue', 'support.cart', 'support.tickets', 'support.drafts', 'support.draftWords', 'support.draftKeywords', 'support.followUp', 'support.followUpWords', 'support.privacy', 'support.blockList', 'support.app', 'support.deskHours', 'support.escalation', 'support.linkSafety'] as const satisfies readonly Key[];
+export const SUPPORT_SETTING_KEYS = ['support.inbox', 'support.attachments', 'support.channels', 'support.liveChat', 'checkout.callMe', 'support.identity', 'support.context', 'support.catalogue', 'support.cart', 'support.tickets', 'support.drafts', 'support.draftWords', 'support.draftKeywords', 'support.followUp', 'support.followUpWords', 'support.privacy', 'support.blockList', 'support.app', 'support.deskHours', 'support.escalation', 'support.linkSafety', 'support.messengerButton', 'contact.messenger'] as const satisfies readonly Key[];
 export type SupportSettingKey = (typeof SUPPORT_SETTING_KEYS)[number];
 
 const SCHEMAS = {
@@ -53,13 +56,24 @@ const SCHEMAS = {
   'support.deskHours': supportDeskHoursSchema,
   'support.escalation': supportEscalationSchema,
   'support.linkSafety': supportLinkSafetySchema,
+  // PR 624: the Messenger button, and the Page typed as any of its addresses (kept as its bare name; '' = not set)
+  'support.messengerButton': supportMessengerButtonSchema,
+  'contact.messenger': z
+    .object({ page: z.string().trim().max(200) })
+    .strict()
+    .refine((v) => !v.page || messengerPageOf(v.page) !== null, { message: 'a Facebook Page name, number id or address', path: ['page'] })
+    .transform((v) => (v.page ? messengerPageOf(v.page) : null)),
 } as const satisfies Record<SupportSettingKey, z.ZodType>;
+
+/** What a card edits: the setting's value, except the Page (PR 624), edited as `{ page }`. */
+export type SupportCardValue<K extends SupportSettingKey> = K extends 'contact.messenger' ? { page: string } : Value<K>;
+const shown = <K extends SupportSettingKey>(key: K, v: Value<K>): SupportCardValue<K> => (key === 'contact.messenger' ? { page: (v as string | null) ?? '' } : v) as SupportCardValue<K>;
 
 export interface SupportSettingCard<K extends SupportSettingKey = SupportSettingKey> {
   key: K;
-  value: Value<K>;
+  value: SupportCardValue<K>;
   /** What a new installation ships with. */
-  byDefault: Value<K>;
+  byDefault: SupportCardValue<K>;
   version: string;
 }
 
@@ -69,11 +83,11 @@ const versionOf = (v: unknown): string => createHash('sha256').update(JSON.strin
 
 async function card<K extends SupportSettingKey>(deps: Pick<SupportDeps, 'settings'>, storeId: number, key: K): Promise<SupportSettingCard<K>> {
   const value = await setting(deps, storeId, key);
-  return { key, value, byDefault: registry[key].default as Value<K>, version: versionOf(value) };
+  return { key, value: shown(key, value), byDefault: shown(key, registry[key].default as Value<K>), version: versionOf(value) };
 }
 
 async function viewOf(deps: Pick<SupportDeps, 'settings'>, storeId: number): Promise<SupportSettingsView> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, u, v, w] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, u, v, w, x, y] = await Promise.all([
     card(deps, storeId, 'support.inbox'),
     card(deps, storeId, 'support.attachments'),
     card(deps, storeId, 'support.channels'),
@@ -95,8 +109,10 @@ async function viewOf(deps: Pick<SupportDeps, 'settings'>, storeId: number): Pro
     card(deps, storeId, 'support.deskHours'),
     card(deps, storeId, 'support.escalation'),
     card(deps, storeId, 'support.linkSafety'),
+    card(deps, storeId, 'support.messengerButton'),
+    card(deps, storeId, 'contact.messenger'),
   ]);
-  return { 'support.inbox': a, 'support.attachments': b, 'support.channels': c, 'support.liveChat': d, 'checkout.callMe': e, 'support.identity': f, 'support.context': g, 'support.catalogue': h, 'support.cart': i, 'support.tickets': j, 'support.drafts': k, 'support.draftWords': l, 'support.draftKeywords': m, 'support.followUp': n, 'support.followUpWords': o, 'support.privacy': p, 'support.blockList': q, 'support.app': r, 'support.deskHours': u, 'support.escalation': v, 'support.linkSafety': w };
+  return { 'support.inbox': a, 'support.attachments': b, 'support.channels': c, 'support.liveChat': d, 'checkout.callMe': e, 'support.identity': f, 'support.context': g, 'support.catalogue': h, 'support.cart': i, 'support.tickets': j, 'support.drafts': k, 'support.draftWords': l, 'support.draftKeywords': m, 'support.followUp': n, 'support.followUpWords': o, 'support.privacy': p, 'support.blockList': q, 'support.app': r, 'support.deskHours': u, 'support.escalation': v, 'support.linkSafety': w, 'support.messengerButton': x, 'contact.messenger': y };
 }
 
 /** Every card's data (`support.read`). */
@@ -122,6 +138,6 @@ export async function saveSupportSetting(deps: Pick<SupportDeps, 'db'> & { setti
     const details = (e as { details?: string[] }).details ?? [];
     throw new SupportError('INVALID_INPUT', 'Support settings could not be saved', details.length ? details : ['value']);
   }
-  await logChange(deps.db, who, { action: 'support.settings.save', entityType: 'Setting', entityId: key, before: before.value, after: value });
+  await logChange(deps.db, who, { action: 'support.settings.save', entityType: 'Setting', entityId: key, before: before.value, after: shown(key, value) });
   return viewOf(deps, who.storeId);
 }

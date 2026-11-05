@@ -4,6 +4,8 @@
 // header's search icon and the menu's "Search" (`search.panel`).
 // PR 426: the live chat button (`support.liveChat`, off as it ships): drawn only while the owner has it on, on the side
 // the WhatsApp disc does not take.
+// PR 624 (CN-034): while the Messenger button and its counting are on, one listener counts taps on the shop's support
+// buttons (SupportTaps: channel and place only).
 import { StoreFooter } from '@/components/shop/StoreFooter';
 import { StoreHeader } from '@/components/shop/StoreHeader';
 import { BottomNav } from '@/components/shop/BottomNav';
@@ -11,6 +13,7 @@ import { ShellEffects } from '@/components/shop/ShellEffects';
 import { SearchPanel } from '@/components/shop/search/SearchPanel';
 import { WaGlyph } from '@/components/shop/Icon';
 import { LiveChat, type LiveChatTexts } from '@/components/shop/LiveChat';
+import { SupportTaps } from '@/components/shop/SupportTaps';
 import { cookies } from 'next/headers';
 import { badgeCount, COUNT_COOKIE } from '@/lib/shop/bag-model';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
@@ -54,6 +57,7 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
         </a>
       ) : null}
       {chat.enabled ? <LiveChat texts={chatTexts()} side={fab && fabSet.side !== 'left' ? 'left' : 'right'} pollSeconds={chat.pollSeconds} maxChars={chat.maxChars} /> : null}
+      {c.s['support.messengerButton'].enabled && c.s['support.messengerButton'].countTaps ? <SupportTaps productPrefix={c.s['naming.productPathPrefix']} /> : null}
       <ShellEffects />
       <SearchPanel {...searchPanelProps(c, more['search.panel'])} />
     </>

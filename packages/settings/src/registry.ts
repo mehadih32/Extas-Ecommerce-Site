@@ -83,6 +83,7 @@ import { supportFollowUpSettings } from './registry-support-followup';
 import { supportPrivacySettings } from './registry-support-privacy';
 import { supportAppSettings } from './registry-support-app';
 import { supportEscalationSettings } from './registry-support-escalation';
+import { supportMessengerSettings } from './registry-support-messenger';
 import { callMeSettings } from './registry-call-me';
 import { voiceAddressSettings } from './registry-voice-address';
 import { bhandariP1Settings } from './registry-bhandari-p1';
@@ -1365,6 +1366,8 @@ export const registry = {
   ...supportAppSettings,
   // ---- S22 · PR 538 · desk hours, the owner told on Telegram when nobody answers, link safety (all off) (registry-support-escalation.ts, version 188). ----
   ...supportEscalationSettings,
+  // ---- S22 · PR 624 (CN-034) · the Messenger button on the shop: the store's Page (owner data) and the button (off) (registry-support-messenger.ts, version 189). ----
+  ...supportMessengerSettings,
   // ---- S11 · PR 588 · the Bengali translation gate: what a Bengali page that is not ready shows (registry-bengali.ts, version 84). ----
   ...bengaliSettings,
   // ---- S13 · PR 257 · server-side event tracking: the events, the platforms and customer matching (registry-tracking.ts, version 85). ----

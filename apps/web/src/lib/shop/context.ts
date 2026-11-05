@@ -65,6 +65,9 @@ const KEYS = [
   'home.rowFade',
   // PR 606: the bulk / corporate lane — its menu row and the bag's card (both off until the owner turns the lane on)
   'orders.bulkLane',
+  // PR 624 (CN-034): the Messenger button (off as it ships) and the store's Facebook Page it opens (owner data)
+  'support.messengerButton',
+  'contact.messenger',
 ] as const satisfies readonly Key[];
 
 type ShopKey = (typeof KEYS)[number];

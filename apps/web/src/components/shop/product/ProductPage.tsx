@@ -69,6 +69,7 @@ import { PdpGallery } from './PdpGallery';
 import { PdpNotify } from './PdpNotify';
 import { PdpPrice } from './PdpPrice';
 import { PdpQa } from './PdpQa';
+import { MessengerButton } from '../MessengerButton';
 import { PdpReviews, ReviewStars, reviewAvgText, reviewCountText } from './PdpReviews';
 import { PdpRail } from './PdpRail';
 import { PdpShare } from './PdpShare';
@@ -566,6 +567,10 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
         ) : null}
         <PdpReviews c={c} set={revSet} data={reviewData} name={m.name} qa={set['pdp.qa'].on} />
         <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} />
+        {/* PR 624: the Messenger button under the questions (nothing while it is off) */}
+        <div className="container pdp-ms">
+          <MessengerButton c={c} place="product" detail={data.slug} />
+        </div>
         <PdpRows
           c={c}
           set={rows}
