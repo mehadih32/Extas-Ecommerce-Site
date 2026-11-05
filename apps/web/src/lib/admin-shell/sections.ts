@@ -240,8 +240,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S13 · PR 262: audiences from real orders — the list and the builder (`/admin/marketing/audiences/<id>`, `new`).
       { id: 'audiences', pages: [{ href: '/admin/marketing/audiences', perm: 'marketing.audiences.read', keys: ['marketingAudiences', 'marketingAudience'] }] },
       // S13 · PR 259: the ad accounts as the platforms see them (read only; Meta first, TikTok PR 260, Google PR 261).
-      // PR 269: the growth agent (`/admin/marketing/ad-platforms/growth`) sits under Ad platforms.
-      { id: 'adPlatforms', pages: [{ href: '/admin/marketing/ad-platforms', perm: 'marketing.campaigns.read', keys: ['marketingAdPlatforms', 'marketingAdGrowth'] }] },
+      // PR 269: the growth agent (`/admin/marketing/ad-platforms/growth`) sits under Ad platforms; PR 270: so do the
+      // creative briefs (`/admin/marketing/ad-platforms/briefs`).
+      { id: 'adPlatforms', pages: [{ href: '/admin/marketing/ad-platforms', perm: 'marketing.campaigns.read', keys: ['marketingAdPlatforms', 'marketingAdGrowth', 'marketingAdBriefs'] }] },
       // S13 · PR 257: server-side event tracking (the ad platforms' server APIs; mocks until their keys are in).
       { id: 'tracking', pages: [{ href: '/admin/marketing/tracking', perm: 'ads.tracking.read', keys: ['adsTracking'] }] },
       // S13 · PR 254 (MKT-05): landing pages for ads — the list and the builder (`/admin/marketing/landing/<id>`, `new`);

@@ -1,2 +1,4 @@
 /* S13 · PR 269 — Marketing › Ad platforms › Growth agent: a small gap (the shell's tokens only). */
 .adm2 .adg-mt8{margin-top:8px}
+/* PR 270 — "Write the brief" beside an approved creative refresh: a 44 px tap at every width. */
+.adm2 .adg-brief{min-width:44px;justify-content:center;padding:0 8px}

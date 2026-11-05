@@ -36,6 +36,10 @@
     "growthAgent": {
       "label": "AI growth agent (proposals)",
       "help": "Off as it ships. On, right after each daily spend import the agent reads delivered sales against ad spend (delivered ROAS) by campaign, product and district and turns your limits into proposals — pause, lower or raise a budget, refresh a creative, build an audience. Each one waits for your approval and nothing changes until you approve. A limit of 0 keeps that kind of proposal off."
+    },
+    "creativeBrief": {
+      "label": "Creative briefs for ads",
+      "help": "Off as it ships. On, Marketing › Ad platforms › Creative briefs writes a brief for the studio from a product and, if you pick one, a platform campaign: the offer, the formats, a hook in Bengali and English, what the picture shows, the landing page and what the ads optimise for. You correct the words and send it to the studio. A brief never changes a price, a budget or a campaign."
     }
   }
 }

@@ -321,7 +321,119 @@
         "approvalHoursHelp": "Not decided by then, it runs out and nothing changes.",
         "maxProposals": "Most proposals per run",
         "maxProposalsHelp": "The most urgent come first: pause, lower, refresh, raise, audience."
-      }
+      },
+      "briefLink": "Write the brief"
+    },
+    "brief": {
+      "metaTitle": "Creative briefs · Ad platforms",
+      "title": "Creative briefs",
+      "sub": "Tirondaj writes the brief for the studio from a product and its offer: formats, hooks in both languages, what the picture shows and where the ad leads.",
+      "link": "Creative briefs (for the studio)",
+      "back": "Back to Ad platforms",
+      "note": "A brief is words for the studio only. It never changes a price, a budget or a campaign. Correct the words, then send it.",
+      "off": "Briefs are off. Switch them on in the card at the bottom of this page.",
+      "newH": "New creative brief",
+      "newD": "Pick a product and, if you like, the platform campaign it is for. The brief is written from the product's price, colours and page.",
+      "product": "Product",
+      "campaign": "Campaign (optional)",
+      "noCampaign": "No campaign",
+      "noProducts": "There are no products yet.",
+      "write": "Write the brief",
+      "writing": "Writing…",
+      "wrote": "The brief is written; it is at the top of the list.",
+      "noWrite": "Writing a brief needs the “edit campaigns” permission.",
+      "refreshH": "Approved creative refreshes",
+      "refreshD": "The growth agent proposed a new creative for these campaigns and you approved it. Write a brief for each.",
+      "refreshNone": "No approved creative refresh is waiting for a brief.",
+      "refreshFor": "For “{name}” · approved {when}",
+      "listH": "Briefs",
+      "listNone": "No brief yet.",
+      "titleOf": "Brief · {name}",
+      "campaignLine": "Campaign: {name}",
+      "offer": "Offer",
+      "offerColours": "{colours} colour(s): {list}",
+      "offerWas": "{was} → {price}",
+      "noPrice": "no price yet",
+      "formats": "Formats",
+      "fmt": {
+        "photo": "{ratio} photo",
+        "carousel": "{ratio} carousel of {cards}",
+        "video": "{ratio} video {min}–{max} s"
+      },
+      "noFormats": "none switched on",
+      "hookBn": "Hook (Bengali)",
+      "hookEn": "Hook (English)",
+      "show": "Show",
+      "landing": "Landing",
+      "optimise": {
+        "deliveredPurchase": "optimise for delivered purchase",
+        "purchase": "optimise for purchase"
+      },
+      "figures": "What the ads brought",
+      "figuresText": "{delivered} delivered order(s), {sales}, delivered ROAS {roas} ({from} – {to})",
+      "figuresNone": "No delivered order from the ads yet.",
+      "unknown": "not known",
+      "status": {
+        "DRAFT": "Draft",
+        "SENT": "Sent to the studio",
+        "SET_ASIDE": "Set aside"
+      },
+      "sentAt": "sent {when}",
+      "madeAt": "written {when}",
+      "edit": "Correct the words",
+      "save": "Save the words",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "send": "Send to the studio",
+      "setAside": "Set aside",
+      "confirmSend": "Send this brief to the studio? It can no longer be corrected after that.",
+      "confirmSetAside": "Set this brief aside? It stays in the list.",
+      "yes": "Yes, do it",
+      "cancel": "Cancel",
+      "said": {
+        "SENT": "Sent to the studio.",
+        "SET_ASIDE": "Set aside."
+      },
+      "err": {
+        "OFF": "Briefs are off; switch them on in the card below.",
+        "TAKEN": "This proposal already has its brief.",
+        "DECIDED": "This brief was already sent or set aside; the page was read again."
+      },
+      "card": {
+        "h": "Brief settings",
+        "d": "Off as it ships. The formats and numbers every new brief asks for.",
+        "readOnly": "Only someone with the “control ads” permission changes these.",
+        "on": "Briefs can be written",
+        "onHelp": "Off as it ships. Off, the page only lists the kept briefs.",
+        "photo": "4:5 photo",
+        "photoHelp": "A feed photo.",
+        "carousel": "1:1 carousel",
+        "carouselHelp": "A carousel of the product's colours.",
+        "video": "9:16 video",
+        "videoHelp": "A video for stories and reels.",
+        "carouselCards": "Carousel cards",
+        "carouselCardsHelp": "2 to 10.",
+        "videoMinSeconds": "Shortest video (seconds)",
+        "videoMinSecondsHelp": "1 to 60.",
+        "videoMaxSeconds": "Longest video (seconds)",
+        "videoMaxSecondsHelp": "Not shorter than the shortest.",
+        "noTextOnPicture": "No words on the picture",
+        "noTextOnPictureHelp": "The brief asks for a clean picture; the platform adds the text.",
+        "optimiseFor": "Ads optimise for",
+        "optimiseForHelp": "Delivered purchase uses the shop's delivered event, so the platform learns from parcels that arrived.",
+        "opt": {
+          "deliveredPurchase": "Delivered purchase",
+          "purchase": "Purchase"
+        }
+      },
+      "tpl": {
+        "hook": "{name} at {price} — pick from {colours} colours",
+        "hookOne": "{name} at {price}",
+        "show": "The {name} worn and laid flat, every colour side by side, on the house background.",
+        "noText": "No words baked into the picture."
+      },
+      "showBn": "Show (Bengali)",
+      "showEn": "Show (English)"
     }
   }
 }

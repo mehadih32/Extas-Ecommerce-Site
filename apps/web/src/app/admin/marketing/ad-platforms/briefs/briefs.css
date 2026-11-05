@@ -1,0 +1,7 @@
+/* S13 · PR 270 — Marketing › Ad platforms › Creative briefs: the brief's lines as a term/value list (the shell's tokens only). */
+.adm2 .adb-lines{display:grid;gap:6px;margin:8px 0 0}
+.adm2 .adb-lines>div{display:grid;gap:2px;min-width:0}
+@media (min-width:768px){.adm2 .adb-lines>div{grid-template-columns:180px minmax(0,1fr);gap:12px}}
+.adm2 .adb-lines dt{color:var(--ink2);font-weight:600}
+.adm2 .adb-lines dd{margin:0;overflow-wrap:anywhere}
+.adm2 .adb-mt8{margin-top:8px}
