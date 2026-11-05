@@ -45,6 +45,16 @@ describe('web push (RFC 8030 / 8291 / 8292)', () => {
     expect(decrypt(fresh, RFC.uaPrivate, RFC.auth)).toBe('নতুন মেসেজ');
   });
 
+  it('a private key whose first byte is zero (Node drops it, ~1 key in 256) still works, short or padded', () => {
+    const short = Buffer.alloc(31, 1);
+    const padded = Buffer.concat([Buffer.alloc(1), short]);
+    const pub = vapidPublicKeyOf(short.toString('base64url'));
+    expect(pub).not.toBeNull();
+    expect(vapidPublicKeyOf(padded.toString('base64url'))).toBe(pub);
+    const header = vapidAuthorization('https://push.example.com/x', { publicKey: pub!, privateKey: short.toString('base64url'), subject: 'mailto:support@example.com' }, 1_000_000);
+    expect(header).toMatch(/^vapid t=.+, k=/);
+  });
+
   it('signs a VAPID token the public key verifies, for the push service of the address only', () => {
     const keys = { ...newVapidKeys(), subject: 'mailto:support@example.com' };
     expect(vapidPublicKeyOf(keys.privateKey)).toBe(keys.publicKey);

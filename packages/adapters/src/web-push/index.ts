@@ -63,8 +63,8 @@ export const PUSH_PRIVATE_KEY = /^[A-Za-z0-9_-]{42,44}$/;
 
 /** The public key of a private VAPID key (both base64url), or null when it is not one. */
 export function vapidPublicKeyOf(privateKey: string): string | null {
-  const d = fromB64u(privateKey.trim());
-  if (d.length !== 32) return null;
+  const d = scalar32(fromB64u(privateKey.trim()));
+  if (!d) return null;
   try {
     const ecdh = createECDH('prime256v1');
     ecdh.setPrivateKey(d);
@@ -74,11 +74,17 @@ export function vapidPublicKeyOf(privateKey: string): string | null {
   }
 }
 
+/** A P-256 private key as exactly 32 bytes: Node drops leading zero bytes (about 1 key in 256), so pad them back. */
+function scalar32(d: Buffer): Buffer | null {
+  if (d.length === 0 || d.length > 32) return null;
+  return d.length === 32 ? d : Buffer.concat([Buffer.alloc(32 - d.length), d]);
+}
+
 /** A new VAPID key pair (tests, and the guide's way to make one on the server). */
 export function newVapidKeys(): { publicKey: string; privateKey: string } {
   const ecdh = createECDH('prime256v1');
   ecdh.generateKeys();
-  return { publicKey: b64u(ecdh.getPublicKey()), privateKey: b64u(ecdh.getPrivateKey()) };
+  return { publicKey: b64u(ecdh.getPublicKey()), privateKey: b64u(scalar32(ecdh.getPrivateKey())!) };
 }
 
 /**
@@ -118,7 +124,7 @@ export function encryptPush(payload: Uint8Array, target: Pick<PushTarget, 'p256d
 /** The `Authorization` header for one push service (RFC 8292): a signed VAPID token and the public key. */
 export function vapidAuthorization(endpoint: string, keys: { publicKey: string; privateKey: string; subject: string }, nowSeconds: number): string {
   const pub = fromB64u(keys.publicKey);
-  const key = createPrivateKey({ key: { kty: 'EC', crv: 'P-256', d: keys.privateKey, x: b64u(pub.subarray(1, 33)), y: b64u(pub.subarray(33, 65)) }, format: 'jwk' });
+  const key = createPrivateKey({ key: { kty: 'EC', crv: 'P-256', d: b64u(scalar32(fromB64u(keys.privateKey.trim())) ?? Buffer.alloc(0)), x: b64u(pub.subarray(1, 33)), y: b64u(pub.subarray(33, 65)) }, format: 'jwk' });
   const head = b64u(Buffer.from(JSON.stringify({ typ: 'JWT', alg: 'ES256' })));
   const claims = b64u(Buffer.from(JSON.stringify({ aud: new URL(endpoint).origin, exp: nowSeconds + VAPID_SECONDS, sub: keys.subject })));
   const signature = sign('sha256', Buffer.from(`${head}.${claims}`), { key, dsaEncoding: 'ieee-p1363' });
