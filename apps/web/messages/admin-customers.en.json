@@ -609,6 +609,13 @@
         "enabled": "Turn on the customer report",
         "quietDays": "Quiet after this many days without an order (7–730)",
         "segmentsShown": "Saved segments in the report (1–50)"
+      },
+      "approvalHistory": {
+        "title": "Customer history at approval",
+        "sub": "Off as shipped. When on, Orders › To confirm shows the caller the customer's earlier orders under the same number before he confirms: true deliveries, refusals and charge-paid returns with their reasons, returns, exchanges and cancels. The shop's own faults are shown and never counted. It only shows: nothing is confirmed, held or blocked by it.",
+        "enabled": "Show the history on the To confirm page",
+        "recent": "Latest orders listed (1–20)",
+        "reasonsShown": "Reasons named (1–20)"
       }
     },
     "auto": {

@@ -238,6 +238,13 @@ export const customerReportSettingsSchema = z
   .strict();
 export type CustomerReportSettings = z.output<typeof customerReportSettingsSchema>;
 
+/** PR 533 — the customer history summary at approval (Orders › To confirm): off as shipped; how many of his earlier
+ * orders the card lists, and how many reasons (why parcels came back) it names. Only a read: it never decides. */
+export const approvalHistorySettingsSchema = z
+  .object({ enabled: z.boolean(), recent: z.number().int().min(1).max(20), reasonsShown: z.number().int().min(1).max(20) })
+  .strict();
+export type ApprovalHistorySettings = z.output<typeof approvalHistorySettingsSchema>;
+
 export const crmSettings = {
   'customers.segments': setting({
     ...base,
@@ -351,5 +358,15 @@ export const crmSettings = {
     labelKey: 'customers.report.label',
     helpKey: 'customers.report.help',
     sortOrder: 300,
+  }),
+  'customers.approvalHistory': setting({
+    ...base,
+    version: 202,
+    schema: approvalHistorySettingsSchema,
+    default: { enabled: false, recent: 5, reasonsShown: 5 }, // hardcode-ok: registry default (off; list sizes the owner can change)
+    valueType: 'JSON',
+    labelKey: 'customers.approvalHistory.label',
+    helpKey: 'customers.approvalHistory.help',
+    sortOrder: 310,
   }),
 };

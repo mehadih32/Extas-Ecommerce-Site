@@ -62,6 +62,10 @@
     "report": {
       "label": "Customer report",
       "help": "Off as shipped. When on, Reports › Customers shows, for a period you pick, how many people bought for the first time, how many came back, how many have gone quiet and the repeat rate, overall and for each saved segment (segments need their own switch). \"Quiet after\": a buyer with no order for this many days, and none in the period, counts as quiet (churned). \"Segments in the report\": how many saved segments it splits by, newest first. It only counts: nothing is sent or changed, and no money figure is shown."
+    },
+    "approvalHistory": {
+      "label": "Customer history at approval",
+      "help": "Off as shipped. When on, Orders › To confirm shows the caller a summary of the customer's earlier orders under the same number before he confirms: orders, true deliveries (a delivery still being checked is not counted), refusals at the door and charge-paid returns with their reasons, returns after delivery, exchanges and cancels. A refusal the shop caused is shown and never counted. It only shows: it never confirms, holds or blocks."
     }
   }
 }

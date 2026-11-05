@@ -78,6 +78,9 @@ export * from './two-size';
 export * from './explain';
 export * from './export';
 export * from './phone-history';
+// S14 · PR 533: the customer history summary at approval (approval-summary.ts pure, approval-history.ts the read).
+export * from './approval-summary';
+export * from './approval-history';
 export * from './address-facts';
 export * from './risk';
 export * from './risk-panel';
