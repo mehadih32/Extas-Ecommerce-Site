@@ -2,6 +2,8 @@
 // PR 64 — Fabric & care, Size & fit, Description (Blueprint D3.6, demo 30-product.js pdp_details / pdp_acc): one box of
 // accordions in the owner's order, each closed, open, or open to its first line with "Read more" (a peeking block
 // opens fully on a tap). The words are the product's own; a block with nothing written is left out.
+// S11 · PR 225 (Blueprint C4.2 build rule): every block's words are in the page's HTML from the first response, a
+// closed one only hidden (`hidden`), so a search engine reads them while closed; nothing is ever loaded on a tap.
 import { useState, type ReactNode } from 'react';
 import { Icon } from '../Icon';
 import { nextOpen, type DetailId, type DetailOpen } from '@/lib/shop/pdp-details';
@@ -25,20 +27,18 @@ export function PdpDetails({ blocks, more }: { blocks: DetailBlockView[]; more: 
         const peek = st === 'peek';
         return (
           <div key={b.id} className={`pdp-acc${peek ? ' peek' : ''}`} data-id={b.id}>
-            <button type="button" className="pdp-acc-h" aria-expanded={open} aria-controls={open ? `pdp-acc-${b.id}` : undefined} onClick={() => tap(b.id)}>
+            <button type="button" className="pdp-acc-h" aria-expanded={open} aria-controls={`pdp-acc-${b.id}`} onClick={() => tap(b.id)}>
               {b.title}
               <Icon name={open ? 'minus' : 'plus'} size={18} />
             </button>
-            {open ? (
-              <div className="pdp-acc-b small text2" id={`pdp-acc-${b.id}`}>
-                {b.body}
-                {peek ? (
-                  <button type="button" className="link pdp-accmore" onClick={() => tap(b.id)}>
-                    {more}
-                  </button>
-                ) : null}
-              </div>
-            ) : null}
+            <div className="pdp-acc-b small text2" id={`pdp-acc-${b.id}`} hidden={!open}>
+              {b.body}
+              {peek ? (
+                <button type="button" className="link pdp-accmore" onClick={() => tap(b.id)}>
+                  {more}
+                </button>
+              ) : null}
+            </div>
           </div>
         );
       })}
