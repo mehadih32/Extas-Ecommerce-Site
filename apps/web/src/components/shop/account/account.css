@@ -353,3 +353,8 @@
 .shop .acc-ocard-r { flex-wrap: wrap; }
 .shop .acc-ocard-r .reo-c { flex-basis: 100%; }
 @media (min-width: 768px) { .shop .acc-ocard-r .reo-c { flex-basis: auto; } }
+/* S18 · PR 623 — "Your data" on Profile: the owner's notice, then one row per kind (its state, then its button). */
+.shop .acc-priv-note { margin: 6px 0 0; max-width: 72ch; }
+.shop .acc-priv-row { display: grid; gap: 6px; justify-items: start; padding: 12px 0 0; border-top: 1px solid var(--line2); }
+.shop .acc-priv-row p { margin: 0; }
+.shop .acc-priv-row .btn { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }

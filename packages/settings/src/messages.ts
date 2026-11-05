@@ -201,6 +201,8 @@ import supportMessengerEn from '../messages/support-messenger.en.json';
 // S04 · PR 622 (CN-034) — Buy again (registry v220).
 import accountReorderBn from '../messages/account-reorder.bn.json';
 import accountReorderEn from '../messages/account-reorder.en.json';
+import privacyCustomerBn from '../messages/privacy-customer.bn.json';
+import privacyCustomerEn from '../messages/privacy-customer.en.json';
 import comboSplitEn from '../messages/combo-split.en.json';
 // CN-020 (3) — "Call me" at checkout (registry v99).
 import callMeBn from '../messages/call-me.bn.json';
@@ -349,6 +351,8 @@ messages.en = mergeMessages(messages.en, supportMessengerEn);
 messages.bn = mergeMessages(messages.bn, supportMessengerBn);
 messages.en = mergeMessages(messages.en, accountReorderEn);
 messages.bn = mergeMessages(messages.bn, accountReorderBn);
+messages.en = mergeMessages(messages.en, privacyCustomerEn);
+messages.bn = mergeMessages(messages.bn, privacyCustomerBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

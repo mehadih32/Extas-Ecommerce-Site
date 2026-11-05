@@ -10,6 +10,10 @@
 //   POST /api/account/consent    {sms?, whatsapp?}          → {consent}                              PR 131: offers by SMS / WhatsApp
 //   POST /api/account/birthday   {day, month, year?} | {clear: true} → {birthday}                     PR 301: his birthday
 //                                (only while `customers.birthday` is on; the year only while it is asked)
+//   POST /api/account/privacy-request {kind: COPY|ERASURE, note?} → {request, again}            S18 · PR 623: his own
+//                                privacy request (files into PR 382's list, changes nothing; the same tap twice = one)
+//   POST /api/account/privacy-copy {}                       → {copy}                             PR 623: his data, while
+//                                staff approved a copy and its days last (the page saves it as a file)
 //   POST /api/account/cancel     {number, reasonKey, note?} → {outcome: cancelled|requested, status}  S05 · PR 144: his own
 //                                cancel (CN-020 (5)): one tap until the owner's cut-off, then a request until booking
 //   POST /api/account/cancel-state {number}                 → {mode: tap|request|requested|none, reasons}
@@ -35,6 +39,7 @@
 // sign-in brings this browser's wishlist hearts into the account (lib/shop/wishlist.ts mergeWishes).
 import { askForCode, isAccountError, normalPhone, saveBirthday, saveConsent, saveProfile, setOwnPassword, signInWithCode, signInWithPassword, signOut, type AccountsDeps } from '@extas/accounts';
 import { mockSmsOutbox } from '@extas/adapters';
+import { customerDataCopy, isCustomersError, requestFromCustomer } from '@extas/customers';
 import type { RequestContext } from '@extas/auth';
 import { addOnState, customerAddOn, customerCancel, customerCancelState, customerEdit, customerEditState, customerRemoveAddOn, customerTwoSizeAnswer, customerTwoSizeState, isOrdersError, type CustomerRef } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
@@ -70,6 +75,7 @@ export function safeNext(raw: unknown, lang: ShopLang): string {
 /** A refusal in the account's own codes (with when to try again, or tries left). */
 export function accountRefusal(e: unknown): Response {
   if (isAccountError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}), ...(e.data ?? {}) }, { status: e.status });
+  if (isCustomersError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}) }, { status: e.status });
   if (isOrdersError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}), ...(e.data && 'closed' in e.data ? { closed: e.data.closed } : {}) }, { status: e.status });
   return errorResponse(e);
 }
@@ -160,6 +166,16 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         const given = b.clear === true ? { clear: true } : { day: b.day, month: b.month, year: b.year ?? null };
         const birthday = await saveBirthday(a, { storeId: deps.storeId, customerId: auth.customer.id, birthday: given }, ctxOf(request));
         return json({ ok: true, birthday });
+      }
+      case 'privacy-request':
+      case 'privacy-copy': {
+        // S18 · PR 623: always the signed-in customer's own profile (never one named in the request)
+        const auth = await customerOfRequest(request, a, deps.storeId);
+        if (!auth) return fail(401, 'SIGNED_OUT');
+        const who = { storeId: deps.storeId, customerId: auth.customer.id };
+        if (action === 'privacy-copy') return json({ ok: true, copy: await customerDataCopy(a, who, ctxOf(request)) }, { headers: { 'cache-control': 'no-store' } });
+        const r = await requestFromCustomer(a, { ...who, request: { kind: b.kind, note: b.note ?? null } }, ctxOf(request));
+        return json({ ok: true, ...r });
       }
       case 'cancel':
       case 'cancel-state':

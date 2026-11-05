@@ -2,13 +2,14 @@
 // card (`security.write`); POST {action: 'request', phone, reason} files an erasure request, {action: 'cancel',
 // requestId} cancels one (`customers.privacy`), {action: 'erase', requestId, confirm} carries one out (the owner alone,
 // the confirmation word typed as the page shows it in either admin language). The services check every permission
-// again.
+// again. PR 623: PUT {key: 'customer', …} saves the customers' requests card; POST {action: 'approve', requestId}
+// approves a customer's copy request (`customers.privacy`).
 import { isCustomersError } from '@extas/customers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import bn from '../../../messages/admin-privacy.bn.json';
 import en from '../../../messages/admin-privacy.en.json';
-import { cancelRequest, eraseNow, fileRequest, isPrivacyPageError, privacyView, saveKeepCard } from './service';
+import { approveCopyRequest, cancelRequest, eraseNow, fileRequest, isPrivacyPageError, privacyView, saveKeepCard } from './service';
 
 /** The confirmation word in each admin language (the page shows the one of its language). */
 export const CONFIRM_WORDS = [en.prv.confirmWord, bn.prv.confirmWord] as const;
@@ -31,6 +32,7 @@ export async function privacyHandler(request: Request, deps: AdminDeps | null): 
       const b = await body(request);
       const action = str(b.action);
       if (action === 'request') await fileRequest(d, who, { phone: b.phone, reason: b.reason });
+      else if (action === 'approve') await approveCopyRequest(d, who, str(b.requestId));
       else if (action === 'cancel') await cancelRequest(d, who, str(b.requestId));
       else if (action === 'erase') await eraseNow(d, who, str(b.requestId), str(b.confirm), CONFIRM_WORDS);
       else return fail(400, 'INVALID_INPUT', ['action']);

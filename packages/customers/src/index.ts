@@ -54,6 +54,8 @@ export * from './access';
 export * from './chat-context';
 export * from './context';
 export * from './erasure';
+// S18 · PR 623 — the customer's own privacy request (copy or erasure), filed into PR 382's list
+export * from './privacy-requests';
 export * from './erp-page';
 export * from './export';
 export * from './errors';

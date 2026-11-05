@@ -4,12 +4,15 @@
 // period: they should be none), the switch for customers' erasure requests (`privacy.erasureRequests`, off), and the
 // requests themselves (`customers.privacy`; the owner alone carries one out, @extas/customers erasure.ts). Seeing needs
 // `security.read`, saving the card `security.write`. The mother store's values (the shop the admin runs).
+// S18 · PR 623: the card for customers' own requests (`privacy.customerRequests`, off; saved whole like the first
+// card), each request's kind (erasure or copy) and source (staff or the customer), and "Approve copy" for a copy request.
 import { createHash } from 'node:crypto';
 import { audit, isOwner, requirePermission, type Actor, type RequestContext } from '@extas/auth';
-import { carryOutErasure, cancelErasure, listErasureRequests, requestErasure, type ErasureRow } from '@extas/customers';
+import { approveCopy, carryOutErasure, cancelErasure, listErasureRequests, requestErasure, type ErasureRow } from '@extas/customers';
 import { phoneForms } from '@extas/orders';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { registry, storeTarget } from '@extas/settings';
+import { PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, privacyCustomerRequestsSchema, registry, storeTarget, type PrivacyCustomerRequestsSettings } from '@extas/settings';
+import { z } from 'zod';
 import type { AppResolver } from '../settings';
 
 export interface PrivacyDeps {
@@ -37,6 +40,30 @@ export interface KeepCard {
   version: string;
 }
 
+/** PR 623 — the customers' requests card: the setting laid flat (the kinds as ticks, each word its own pair). */
+export type CustomerCardValue = { enabled: boolean; kinds: Record<string, boolean>; copyDays: number } & Record<(typeof PRIVACY_REQUEST_WORDS)[number], { en: string; bn: string }>;
+export interface CustomerCard {
+  key: 'customer';
+  value: CustomerCardValue;
+  byDefault: CustomerCardValue;
+  version: string;
+}
+
+export function customerCardOf(v: PrivacyCustomerRequestsSettings): CustomerCardValue {
+  return { enabled: v.enabled, kinds: Object.fromEntries(PRIVACY_REQUEST_KINDS.map((k) => [k, v.kinds.includes(k)])), copyDays: v.copyDays, ...v.words };
+}
+
+const customerCardSchema = z
+  .object({ enabled: z.boolean(), kinds: z.record(z.string(), z.boolean()), copyDays: z.unknown() })
+  .catchall(z.unknown())
+  .transform((c): unknown => ({ enabled: c.enabled, kinds: PRIVACY_REQUEST_KINDS.filter((k) => c.kinds[k] === true), copyDays: c.copyDays, words: Object.fromEntries(PRIVACY_REQUEST_WORDS.map((w) => [w, c[w]])) }))
+  .pipe(privacyCustomerRequestsSchema);
+
+async function customerCard(deps: PrivacyDeps): Promise<CustomerCard> {
+  const v = await deps.resolver.value('privacy.customerRequests', { storeId: S });
+  return { key: 'customer', value: customerCardOf(v), byDefault: customerCardOf(registry['privacy.customerRequests'].default), version: versionOf(v) };
+}
+
 export interface PrivacyRequestRow extends Omit<ErasureRow, 'customerId'> {
   customerId: string;
   /** The person's name while not erased; the last three digits of his number. */
@@ -45,7 +72,7 @@ export interface PrivacyRequestRow extends Omit<ErasureRow, 'customerId'> {
 }
 
 export interface PrivacyView {
-  cards: { keep: KeepCard };
+  cards: { keep: KeepCard; customer: CustomerCard };
   purge: { lastRun: { status: string; at: string } | null; holding: number; overdue: number };
   /** null: the person may not see the requests (`customers.privacy`). */
   requests: PrivacyRequestRow[] | null;
@@ -86,7 +113,7 @@ const whoIn = (who: PrivacyWho) => ({ actor: who.actor, storeId: S, ctx: who.ctx
 export async function privacyView(deps: PrivacyDeps, who: PrivacyWho): Promise<PrivacyView> {
   const held = await requirePermission(deps.db, who.actor, 'security.read', { storeId: S });
   const now = deps.now?.() ?? new Date();
-  const keep = await keepCard(deps);
+  const [keep, customer] = await Promise.all([keepCard(deps), customerCard(deps)]);
   const days = keep.value.retentionDays as number;
   const [last, holding, overdue] = await Promise.all([
     deps.db.jobRun.findFirst({ where: { jobKey: PURGE_JOB, storeId: S, status: { not: 'RUNNING' } }, orderBy: { startedAt: 'desc' }, select: { status: true, finishedAt: true, startedAt: true } }),
@@ -108,7 +135,7 @@ export async function privacyView(deps: PrivacyDeps, who: PrivacyWho): Promise<P
     });
   }
   return {
-    cards: { keep },
+    cards: { keep, customer },
     purge: { lastRun: last ? { status: last.status, at: (last.finishedAt ?? last.startedAt).toISOString() } : null, holding, overdue },
     requests,
     canRequest,
@@ -121,6 +148,7 @@ const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 
 /** Saves the card whole (`security.write`); a stale version is refused with the fresh one. */
 export async function saveKeepCard(deps: PrivacyDeps, who: PrivacyWho, input: unknown): Promise<PrivacyView> {
   await requirePermission(deps.db, who.actor, 'security.write', { storeId: S });
+  if (isObj(input) && input.key === 'customer') return saveCustomerCard(deps, who, input);
   if (!isObj(input) || input.key !== 'keep' || !isObj(input.value)) throw new PrivacyPageError('INVALID_INPUT', 400, ['key', 'value']);
   const sent = input.value;
   const unknownFields = Object.keys(sent).filter((k) => !(k in KEEP_FIELDS));
@@ -145,6 +173,19 @@ export async function saveKeepCard(deps: PrivacyDeps, who: PrivacyWho, input: un
   return privacyView(deps, who);
 }
 
+/** PR 623 — saves the customers' requests card whole (`security.write`); a stale version is refused with the fresh one. */
+async function saveCustomerCard(deps: PrivacyDeps, who: PrivacyWho, input: Record<string, unknown>): Promise<PrivacyView> {
+  const parsed = customerCardSchema.safeParse(input.value);
+  if (!parsed.success) throw new PrivacyPageError('INVALID_INPUT', 400, [...new Set(parsed.error.issues.map((i) => i.path.join('.') || 'value'))]);
+  const before = await customerCard(deps);
+  if (input.version !== undefined && input.version !== before.version) throw new PrivacyPageError('STALE', 409, ['version'], { version: before.version });
+  if (versionOf(parsed.data) === before.version) return privacyView(deps, who);
+  const was = await deps.resolver.value('privacy.customerRequests', { storeId: S });
+  await deps.resolver.set('privacy.customerRequests', parsed.data, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: 'Settings › Privacy & data' });
+  await audit(deps.db, who.actor, { storeId: S, action: 'privacy.settings.save', entityType: 'Setting', entityId: 'privacy.customerRequests', before: was, after: parsed.data }, who.ctx);
+  return privacyView(deps, who);
+}
+
 /** Files a request for the customer with this number (`customers.privacy`; the service checks the switch). */
 export async function fileRequest(deps: PrivacyDeps, who: PrivacyWho, input: { phone?: unknown; reason?: unknown }): Promise<ErasureRow> {
   const phone = typeof input.phone === 'string' ? input.phone.trim() : '';
@@ -155,6 +196,9 @@ export async function fileRequest(deps: PrivacyDeps, who: PrivacyWho, input: { p
   if (!c) throw new PrivacyPageError('NOT_FOUND', 404, ['phone']);
   return requestErasure(customersDeps(deps), whoIn(who), { customerId: c.id, reason: input.reason });
 }
+
+/** PR 623 — approves a customer's copy request (`customers.privacy`): he can download it for the owner's days. */
+export const approveCopyRequest = (deps: PrivacyDeps, who: PrivacyWho, requestId: string) => approveCopy(customersDeps(deps), whoIn(who), requestId);
 
 export const cancelRequest = (deps: PrivacyDeps, who: PrivacyWho, requestId: string) => cancelErasure(customersDeps(deps), whoIn(who), requestId);
 

@@ -17,7 +17,8 @@
 //     are the shop's own labels). An audit row records who and when (never what was erased).
 //   - Kept on purpose, and said on the page: the message log and the consent history (the record of what was sent and
 //     agreed), the security log, fraud and courier-check records, and money and stock records.
-// A request can be cancelled while it waits.
+// A request can be cancelled while it waits. PR 623: a request has a kind (ERASURE; COPY from the customer's own
+// request, privacy-requests.ts) and a source (STAFF or CUSTOMER); "one waiting request" is per kind.
 import { audit, isOwner, requirePermission } from '@extas/auth';
 import { Prisma } from '@extas/db/client';
 import { CRM_CAMPAIGN_STEP, CRM_EMAIL_STEP, CRM_MESSAGE_STEP } from '@extas/settings';
@@ -43,7 +44,17 @@ export interface ErasureRow {
   requestedById: string | null;
   executedAt: Date | null;
   createdAt: Date;
+  /** PR 623: ERASURE, or COPY of his data (a copy is never carried out here). */
+  kind: string;
+  /** PR 623: STAFF, or CUSTOMER (filed from his account). */
+  source: string;
+  /** PR 623: a copy approved by staff. */
+  decidedAt: Date | null;
 }
+
+const ROW_SELECT = { id: true, customerId: true, reason: true, status: true, requestedById: true, executedAt: true, createdAt: true, kind: true, source: true, decidedAt: true } as const;
+/** PR 623: the kind every staff request and every carried-out request is. */
+export const ERASURE_KIND = 'ERASURE';
 
 const requestInput = z.object({ customerId: z.string().regex(UUID), reason: z.string().trim().min(1).max(500) }).strict();
 const carryInput = z.object({ requestId: z.string().regex(UUID), confirm: z.string().max(100), expected: z.string().min(1).max(100) }).strict();
@@ -59,7 +70,7 @@ export async function listErasureRequests(deps: CustomersDeps, who: Who, limit: 
     where: { storeId: who.storeId },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: Math.min(Math.max(1, limit), 200),
-    select: { id: true, customerId: true, reason: true, status: true, requestedById: true, executedAt: true, createdAt: true },
+    select: ROW_SELECT,
   });
 }
 
@@ -72,11 +83,11 @@ export async function requestErasure(deps: CustomersDeps, who: Who, input: unkno
   if (!found || found.family.root.erasedAt) throw new CustomersError('NOT_FOUND', 'no such customer', ['customerId']);
   const customerId = found.family.root.id;
   return deps.db.$transaction(async (tx) => {
-    const waiting = await tx.customerErasureRequest.findFirst({ where: { storeId: who.storeId, customerId, status: ERASURE_STATUS.requested }, select: { id: true } });
+    const waiting = await tx.customerErasureRequest.findFirst({ where: { storeId: who.storeId, customerId, kind: ERASURE_KIND, status: ERASURE_STATUS.requested }, select: { id: true } });
     if (waiting) throw new CustomersError('ALREADY_REQUESTED', 'a request for this person is waiting already', ['customerId'], { requestId: waiting.id });
     const row = await tx.customerErasureRequest.create({
-      data: { storeId: who.storeId, customerId, reason: v.reason, status: ERASURE_STATUS.requested, requestedById: who.actor.staffUserId ?? null },
-      select: { id: true, customerId: true, reason: true, status: true, requestedById: true, executedAt: true, createdAt: true },
+      data: { storeId: who.storeId, customerId, reason: v.reason, status: ERASURE_STATUS.requested, requestedById: who.actor.staffUserId ?? null, kind: ERASURE_KIND, source: 'STAFF' },
+      select: ROW_SELECT,
     });
     await audit(tx, who.actor, { storeId: who.storeId, action: 'customer.erasure.request', entityType: 'CustomerErasureRequest', entityId: row.id, after: { customerId } }, who.ctx);
     return row;
@@ -94,7 +105,7 @@ export async function cancelErasure(deps: CustomersDeps, who: Who, requestId: st
     const row = await tx.customerErasureRequest.update({
       where: { id: requestId },
       data: { status: ERASURE_STATUS.cancelled },
-      select: { id: true, customerId: true, reason: true, status: true, requestedById: true, executedAt: true, createdAt: true },
+      select: ROW_SELECT,
     });
     await audit(tx, who.actor, { storeId: who.storeId, action: 'customer.erasure.cancel', entityType: 'CustomerErasureRequest', entityId: requestId }, who.ctx);
     return row;
@@ -124,8 +135,9 @@ export async function carryOutErasure(deps: CustomersDeps, who: Who, input: unkn
   if (v.confirm.trim() !== v.expected.trim()) throw new CustomersError('CONFIRM_MISMATCH', 'type the confirmation word exactly', ['confirm']);
   const now = nowOf(deps);
   return deps.db.$transaction(async (tx) => {
-    const req = await tx.customerErasureRequest.findFirst({ where: { id: v.requestId, storeId: who.storeId }, select: { id: true, customerId: true, status: true } });
-    if (!req) throw new CustomersError('NOT_FOUND', 'no such request', ['requestId']);
+    const req = await tx.customerErasureRequest.findFirst({ where: { id: v.requestId, storeId: who.storeId }, select: { id: true, customerId: true, status: true, kind: true } });
+    // PR 623: only an erasure request is carried out here; a copy request is approved instead (privacy-requests.ts)
+    if (!req || req.kind !== ERASURE_KIND) throw new CustomersError('NOT_FOUND', 'no such request', ['requestId']);
     if (req.status !== ERASURE_STATUS.requested) throw new CustomersError('NOT_WAITING', 'this request is not waiting', ['requestId'], { status: req.status });
     const found = await familyOf(tx, who.storeId, req.customerId);
     if (!found) throw new CustomersError('NOT_FOUND', 'no such customer', ['customerId']);
@@ -177,7 +189,7 @@ export async function carryOutErasure(deps: CustomersDeps, who: Who, input: unkn
     const request = await tx.customerErasureRequest.update({
       where: { id: req.id },
       data: { status: ERASURE_STATUS.done, executedAt: now },
-      select: { id: true, customerId: true, reason: true, status: true, requestedById: true, executedAt: true, createdAt: true },
+      select: ROW_SELECT,
     });
     await audit(tx, who.actor, { storeId: who.storeId, action: 'customer.erasure.done', entityType: 'CustomerErasureRequest', entityId: req.id, after: { profiles: ids.length, orders: orderIds.length, addresses: addresses.count, voices: voices.length, notes: notes.count } }, who.ctx);
     return { request, profiles: ids.length, orders: orderIds.length, addresses: addresses.count, voices: voices.length, notes: notes.count };

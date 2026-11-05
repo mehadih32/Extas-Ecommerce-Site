@@ -1,7 +1,8 @@
 // S18 · PR 382 — Settings › Privacy & data on a real PostgreSQL: the page's data needs security.read (the requests only
 // with customers.privacy); the card saves the keeping period and the erasure switch (security.write); a request is filed
 // by the customer's number and carried out by the owner with the word of either admin language. A throwaway database
-// (skipped without TEST_DATABASE_ADMIN_URL). Made-up test values.
+// (skipped without TEST_DATABASE_ADMIN_URL). Made-up test values. PR 623: the customers' requests card saves whole
+// (security.write); a customer's copy request shows its kind and source and is approved, never erased.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -10,6 +11,7 @@ import { messages, prismaBackend, registry, SettingsResolver, syncSettings } fro
 import { createVault } from '@extas/vault';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
+import { requestFromCustomer } from '@extas/customers';
 import { CONFIRM_WORDS, privacyHandler } from './api';
 
 const HOST = 'admin.example.test';
@@ -34,8 +36,8 @@ const cookiesOf = (res: Response) =>
 interface Answer {
   ok: boolean;
   error?: string;
-  cards: { keep: { value: Record<string, unknown>; version: string } };
-  view: { purge: { lastRun: unknown; holding: number; overdue: number }; requests: { id: string; status: string; name: string | null; phoneEnd: string | null }[] | null; canErase: boolean };
+  cards: { keep: { value: Record<string, unknown>; version: string }; customer: { value: Record<string, unknown>; version: string } };
+  view: { purge: { lastRun: unknown; holding: number; overdue: number }; requests: { id: string; status: string; name: string | null; phoneEnd: string | null; kind: string; source: string }[] | null; canErase: boolean };
 }
 
 describe.skipIf(!HAS_TEST_DB)('Settings › Privacy & data on PostgreSQL (PR 382)', () => {
@@ -105,5 +107,23 @@ describe.skipIf(!HAS_TEST_DB)('Settings › Privacy & data on PostgreSQL (PR 382
     expect(done.a.view.requests![0]).toMatchObject({ status: 'DONE', name: null, phoneEnd: null });
     expect(await t.prisma.customer.count({ where: { phone: PHONE } })).toBe(0);
     expect((await send('POST', owner, { action: 'nope' })).status).toBe(400);
+  });
+
+  it("PR 623: the customers' requests card, and a customer's copy request approved (never erased)", async () => {
+    const g = await send('GET', owner);
+    expect(g.a.cards.customer.value).toMatchObject({ enabled: false, kinds: { COPY: true, ERASURE: true }, copyDays: 7 });
+    expect((await send('PUT', watcher, { key: 'customer', value: g.a.cards.customer.value })).status).toBe(403);
+    expect((await send('PUT', owner, { key: 'customer', value: { ...g.a.cards.customer.value, kinds: { COPY: false, ERASURE: false } } })).status).toBe(400);
+    const saved = await send('PUT', owner, { key: 'customer', value: { ...g.a.cards.customer.value, enabled: true, kinds: { COPY: true, ERASURE: false } }, version: g.a.cards.customer.version });
+    expect(saved.status).toBe(200);
+    expect((await deps.resolver.value('privacy.customerRequests', { storeId: MOTHER_STORE_ID })).kinds).toEqual(['COPY']);
+    const c = await t.prisma.customer.create({ data: { storeId: MOTHER_STORE_ID, phone: '+8801700006239', name: 'Copy buyer' } }); // hardcode-ok: made-up test number
+    const { request } = await requestFromCustomer({ db: t.prisma, settings: deps.resolver }, { storeId: MOTHER_STORE_ID, customerId: c.id, request: { kind: 'COPY' } });
+    const listed = (await send('GET', owner)).a.view.requests!.find((r) => r.id === request.id)!;
+    expect(listed).toMatchObject({ kind: 'COPY', source: 'CUSTOMER', status: 'REQUESTED', name: 'Copy buyer' });
+    expect((await send('POST', owner, { action: 'erase', requestId: request.id, confirm: CONFIRM_WORDS[0] })).status).toBe(404);
+    const ok = await send('POST', owner, { action: 'approve', requestId: request.id });
+    expect(ok.a.view.requests!.find((r) => r.id === request.id)).toMatchObject({ status: 'READY' });
+    expect(await t.prisma.customer.count({ where: { id: c.id, erasedAt: null } })).toBe(1);
   });
 });

@@ -2,7 +2,9 @@
 // S18 · PR 382 — CUS-07 erasure requests on Settings › Privacy & data: file one by the customer's mobile number and
 // what he asked; the list with Cancel (`customers.privacy`) and, for the owner only, "Erase now" behind a confirm that
 // asks for the word shown (the API checks the word, the owner and that no order is on its way). Words come from the
-// page (messages/admin-privacy.<lang>.json).
+// page (messages/admin-privacy.<lang>.json). S18 · PR 623: each request's kind (erasure, or a copy of his data) and
+// whether the customer asked from his own account; "Approve copy" on a waiting copy request (`customers.privacy`), and
+// "Erase now" only on an erasure request.
 import { useId, useState } from 'react';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -17,6 +19,9 @@ export interface RequestRow {
   reason: string | null;
   status: string;
   at: string;
+  /** PR 623: ERASURE or COPY; STAFF or CUSTOMER. */
+  kind: string;
+  source: string;
 }
 
 const API = '/api/admin/privacy';
@@ -37,8 +42,8 @@ export function PrivacyRequests({ w, effects, rows: first, on, canRequest, canEr
     return fill(w[`err.${code}`] ?? w['err.other']!, { fields: (a.data.details ?? []).join(', ') });
   };
   const take = (data: Record<string, unknown>) => {
-    const view = data.view as { requests?: { id: string; name: string | null; phoneEnd: string | null; reason: string | null; status: string; createdAt: string }[] } | undefined;
-    if (view?.requests) setRows(view.requests.map((r) => ({ id: r.id, name: r.name, phoneEnd: r.phoneEnd, reason: r.reason, status: r.status, at: r.createdAt })));
+    const view = data.view as { requests?: { id: string; name: string | null; phoneEnd: string | null; reason: string | null; status: string; createdAt: string; kind: string; source: string }[] } | undefined;
+    if (view?.requests) setRows(view.requests.map((r) => ({ id: r.id, name: r.name, phoneEnd: r.phoneEnd, reason: r.reason, status: r.status, at: r.createdAt, kind: r.kind, source: r.source })));
   };
   async function file(e: React.FormEvent) {
     e.preventDefault();
@@ -50,6 +55,12 @@ export function PrivacyRequests({ w, effects, rows: first, on, canRequest, canEr
     setPhone('');
     setReason('');
     setSaid({ text: w['req.filed']!, bad: false });
+  }
+  async function approve(r: RequestRow) {
+    const a = await call('POST', API, { action: 'approve', requestId: r.id });
+    if (a.status !== 200) return setSaid({ text: problem(a), bad: true });
+    take(a.data);
+    setSaid({ text: w['req.approved']!, bad: false });
   }
   async function cancel(r: RequestRow) {
     const a = await call('POST', API, { action: 'cancel', requestId: r.id });
@@ -102,6 +113,7 @@ export function PrivacyRequests({ w, effects, rows: first, on, canRequest, canEr
               <tr>
                 <th>{w['req.when']}</th>
                 <th>{w['req.who']}</th>
+                <th>{w['req.kind']}</th>
                 <th>{w['req.why']}</th>
                 <th>{w['req.state']}</th>
                 <th />
@@ -109,9 +121,13 @@ export function PrivacyRequests({ w, effects, rows: first, on, canRequest, canEr
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} data-testid="privacy-request-row">
+                <tr key={r.id} data-testid="privacy-request-row" data-kind={r.kind} data-source={r.source}>
                   <td className="a2-tdh">{when(r.at)}</td>
                   <td data-l={w['req.who']}>{r.name || r.phoneEnd ? `${r.name ?? ''}${r.phoneEnd ? ` ···${r.phoneEnd}` : ''}` : w['req.erased']}</td>
+                  <td data-l={w['req.kind']}>
+                    {w[`req.kinds.${r.kind}`] ?? r.kind}
+                    {r.source === 'CUSTOMER' ? <span className="a2-xs a2-mute" style={{ display: 'block' }}>{w['req.fromCustomer']}</span> : null}
+                  </td>
                   <td data-l={w['req.why']} className="a2-xs">
                     {r.reason ?? ''}
                   </td>
@@ -122,7 +138,12 @@ export function PrivacyRequests({ w, effects, rows: first, on, canRequest, canEr
                         <button type="button" className="a2-btn" onClick={() => void cancel(r)} data-testid="privacy-request-cancel">
                           {w['req.cancel']}
                         </button>
-                        {canErase && on ? (
+                        {r.kind === 'COPY' && on ? (
+                          <button type="button" className="a2-btn pri" onClick={() => void approve(r)} data-testid="privacy-request-approve">
+                            {w['req.approve']}
+                          </button>
+                        ) : null}
+                        {canErase && on && r.kind === 'ERASURE' ? (
                           <button type="button" className="a2-btn badf" onClick={() => setErasing(r)} data-testid="privacy-request-erase">
                             {w['req.erase']}
                           </button>

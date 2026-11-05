@@ -30,9 +30,9 @@ describe('PR 130 · the account API door', () => {
     expect(r.status).toBe(404);
   });
 
-  it('PR 131, PR 301: Profile, the consent, the password and the birthday answer only a signed-in customer', async () => {
+  it('PR 131, PR 301, PR 623: Profile, the consent, the password, the birthday and the privacy request answer only a signed-in customer', async () => {
     const deps = { accounts: {} as never, storeId: 1, storeName: async () => '' };
-    for (const action of ['profile', 'consent', 'password', 'birthday']) {
+    for (const action of ['profile', 'consent', 'password', 'birthday', 'privacy-request', 'privacy-copy']) {
       const r = await accountHandler(req({ body: JSON.stringify({ name: 'Rahim', addresses: [], sms: true }) }), deps, action);
       expect(r.status, action).toBe(401);
       expect(((await r.json()) as { error: string }).error).toBe('SIGNED_OUT');
