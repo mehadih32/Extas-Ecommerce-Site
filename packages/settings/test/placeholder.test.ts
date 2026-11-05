@@ -1,7 +1,7 @@
 // S18 · PR 383 — the placeholder guard: the texts that once shipped in the footer ("[your DBID number]", "[number]",
 // "[support email]") and their cousins are caught, in plain and two-language values; real values pass.
 import { describe, expect, it } from 'vitest';
-import { hasStandIn, isPlaceholderGuarded, looksLikePlaceholder, withoutPlaceholder } from '../src/placeholder';
+import { hasStandIn, isBlank, isPlaceholderGuarded, looksLikePlaceholder, withoutPlaceholder } from '../src/placeholder';
 
 describe('placeholder guard (PR 383)', () => {
   it('catches bracketed, templated and filler values', () => {
@@ -24,6 +24,16 @@ describe('placeholder guard (PR 383)', () => {
     expect(withoutPlaceholder('legal.dbid', '[your DBID number]', null)).toBeNull();
     expect(withoutPlaceholder('legal.dbid', '358912476', null)).toBe('358912476');
     expect(withoutPlaceholder('store.name', '[name]', 'x')).toBe('[name]'); // only the guarded groups
+  });
+
+  it('CN-035: a blank detail (only spaces, or every language blank) is empty, so its line is left out', () => {
+    expect(withoutPlaceholder('contact.phone', '   ', null)).toBeNull();
+    expect(withoutPlaceholder('contact.hours', { en: ' ', bn: '' }, null)).toBeNull();
+    expect(withoutPlaceholder('contact.address', { en: 'House 1', bn: '' }, null)).toEqual({ en: 'House 1', bn: '' });
+    expect(withoutPlaceholder('legal.dbid', '', null)).toBeNull();
+    expect(withoutPlaceholder('home.title', '  ', 'x')).toBe('  '); // only the guarded groups
+    expect(isBlank({})).toBe(false);
+    expect(isBlank(0)).toBe(false);
   });
 
   it('guards the owner details the shop prints: legal numbers, contacts, social links', () => {

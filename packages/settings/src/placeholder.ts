@@ -33,9 +33,25 @@ export function looksLikePlaceholder(v: unknown): boolean {
   return false;
 }
 
-/** The value as the shop should print it: a guarded key's filler becomes `empty` (the line is left out). */
+/**
+ * CN-035: a detail the owner has not typed yet may be saved as only spaces (or a two-language text with every language
+ * blank); it counts as empty, so the shop leaves its line out instead of printing an empty "Call:" or "DBID:".
+ */
+export function isBlank(v: unknown): boolean {
+  if (typeof v === 'string') return v.trim() === '';
+  if (v && typeof v === 'object' && !Array.isArray(v)) {
+    const texts = Object.values(v as Record<string, unknown>);
+    return texts.length > 0 && texts.every((x) => x == null || (typeof x === 'string' && x.trim() === ''));
+  }
+  return false;
+}
+
+/**
+ * The value as the shop should print it: a guarded key's filler, or a blank one (CN-035: store details are typed by the
+ * owner after go-live), becomes `empty` (the line is left out).
+ */
 export function withoutPlaceholder<T>(key: string, value: T, empty: T): T {
-  return isPlaceholderGuarded(key) && looksLikePlaceholder(value) ? empty : value;
+  return isPlaceholderGuarded(key) && (looksLikePlaceholder(value) || isBlank(value)) ? empty : value;
 }
 
 /**
