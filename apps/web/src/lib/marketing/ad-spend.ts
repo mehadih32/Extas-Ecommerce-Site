@@ -9,8 +9,8 @@
 // - Until the key is in and its test passes the reader is a practice copy: its example days are counted and shown,
 //   nothing is saved (A1.3).
 // - The row keeps the platform's own currency. Spend in the store's currency is copied to `spendStoreMinor`; another
-//   currency (a dollar account) is turned into the store's currency by the owner's USD rate (PR 266), else left empty
-//   and the figures say a rate is missing.
+//   currency (a dollar account) is turned into the store's currency by the owner's USD rate of that day (PR 266,
+//   lib/exchange-rate.ts), else left empty and counted (`noRate`) until he types one.
 // - Daily: `ads.spendImport` (registry v172, off as it ships) lets the background worker run it once a day from the
 //   owner's hour (packages/jobs ad-spend-import.ts → POST /api/internal/ads/spend-import with the server's internal
 //   token). "Import now" works with the switch off.
@@ -25,6 +25,7 @@ import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { adminDeps, body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { AD_READER_PLATFORMS, AdPlatformsError, readerOf, syncAdPlatform, type AdPlatformsDeps, type AdPlatformsWho } from './ad-platforms';
 import { internalCaller } from './audience-push';
+import { pricerFor, type Pricer } from '../exchange-rate';
 
 const S = MOTHER_STORE_ID;
 const DAY_MS = 86_400_000; // hardcode-ok: milliseconds in a day
@@ -52,14 +53,6 @@ export interface SpendImportOutcome {
   noRate: number;
   /** The platform's refusal, in words (nothing kept for that platform). */
   error: string | null;
-}
-
-/** The store-currency figure of one day's spend: the same currency as is; another one waits for the rate (PR 266). */
-export type Pricer = (spendMinor: number, currency: string, day: string) => { storeMinor: number; exchangeRateId: string | null } | null;
-
-export async function samePricer(deps: Pick<AdPlatformsDeps, 'resolver'>, storeId: number = S): Promise<Pricer> {
-  const store = await deps.resolver.value('store.currency', { storeId });
-  return (minor, currency) => (currency === store ? { storeMinor: minor, exchangeRateId: null } : null);
 }
 
 const dayDate = (day: string) => new Date(`${day}T00:00:00Z`);
@@ -135,7 +128,8 @@ export async function importAdSpend(deps: AdPlatformsDeps, who: AdPlatformsWho, 
     days = ok.data;
   }
   const range = spendRange(deps.now ? deps.now() : new Date(), tz, days);
-  const pricer = price ?? (await samePricer(deps));
+  // PR 266: another currency (a dollar account) by the owner's rate of that day
+  const pricer = price ?? (await pricerFor(deps.db, deps.resolver, S));
   const out: SpendImportOutcome[] = [];
   for (const p of platforms) out.push(await importOne(deps, who, p, range, pricer));
   return out;

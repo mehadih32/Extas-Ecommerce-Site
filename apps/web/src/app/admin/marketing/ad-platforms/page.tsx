@@ -4,7 +4,8 @@
 // nothing is paused and no budget changes here. Seeing needs `marketing.campaigns.read`; reading and tying need
 // `marketing.campaigns.write`. Guide: docs/admin-guide/pages/marketing/ad-platforms.md.
 // PR 265: "Import spend now" per platform, each campaign's spend over the owner's last days, and the daily import card
-// (`ads.spendImport`, off as it ships).
+// (`ads.spendImport`, off as it ships). PR 266: an account in another currency (dollars) shows the owner's rate (or that
+// none is typed yet) with a link to Money › Costs & fees, and each campaign's spend in the store's currency.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -22,6 +23,7 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { adPlatformsOverview } from '@/lib/marketing/ad-platforms';
 import { campaignSpend, spendCard, spendRange } from '@/lib/marketing/ad-spend';
+import { currentRate } from '@/lib/exchange-rate';
 import bn from '../../../../../messages/admin-ad-platforms.bn.json';
 import en from '../../../../../messages/admin-ad-platforms.en.json';
 import '../../settings-cards.css';
@@ -33,6 +35,7 @@ const HERE = '/admin/marketing/ad-platforms';
 const API = '/api/admin/marketing/ad-platforms';
 const SPEND_API = '/api/admin/marketing/ad-platforms/spend';
 const KEYS_PAGE = '/admin/integrations';
+const FEES_PAGE = '/admin/money/fees';
 const KEY = 'marketingAdPlatforms';
 
 function withScreen(view: AdminView): AdminView {
@@ -58,8 +61,11 @@ export default async function AdPlatformsPage() {
       </div>
     );
   const o = await adPlatformsOverview({ db: access.deps.db, resolver: access.deps.resolver, vault: access.deps.vault });
-  const [card, tz] = await Promise.all([spendCard(access.deps.resolver), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID })]);
+  const [card, tz, storeCur] = await Promise.all([spendCard(access.deps.resolver), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })]);
   const spend = await campaignSpend(access.deps.db, spendRange(new Date(), tz, card.value.days).from);
+  // PR 266: the owner's rate for each other currency an ad account is in
+  const foreign = [...new Set(o.platforms.flatMap((p) => p.accounts.map((a) => a.currency)).filter((c) => c && c !== storeCur))];
+  const rates = await Promise.all(foreign.map(async (base) => ({ base, rate: await currentRate(access.deps.db, MOTHER_STORE_ID, base, storeCur) })));
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
   const s = (k: string, vars?: Record<string, string | number>) => t(d, `adp.${k}`, vars);
   const when = (iso: string) => new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone }).format(new Date(iso));
@@ -94,6 +100,14 @@ export default async function AdPlatformsPage() {
         <span>{s('readOnlyNote')}</span>
       </div>
       <p className="a2-sm a2-mute a2-mt12">{sp('spendNote')}</p>
+      {rates.map((r) => (
+        <div key={r.base} className={`a2-note adp-rate a2-mt12${r.rate ? '' : ' warn'}`} role="note" data-testid={`adp-rate-${r.base}`}>
+          <span>{r.rate ? sp('rateLine', { base: r.base, rate: formatMoney(Math.round(Number(r.rate.rate) * 100), moneyOf(storeCur, view.locale)), when: when(r.rate.from), store: storeCur }) : sp('rateNone', { base: r.base })}</span>
+          <Link className="a2-sm adp-keys" href={FEES_PAGE}>
+            {sp('rateLink')}
+          </Link>
+        </div>
+      ))}
 
       {o.platforms.map((p) => (
         <section key={p.platform} className="a2-sc a2-mt12" aria-labelledby={`adp-${p.platform}-h`} data-testid={`adp-${p.platform}`} data-mode={p.mode}>
@@ -178,6 +192,12 @@ export default async function AdPlatformsPage() {
                             {spend.get(c.id) ? (
                               <>
                                 <b className="adp-nowrap">{formatMoney(spend.get(c.id)!.minor, moneyOf(c.currency, view.locale))}</b>
+                                {c.currency !== storeCur ? (
+                                  <span className="adp-nowrap" data-testid="adp-spend-store">
+                                    {' '}
+                                    {spend.get(c.id)!.storeMinor === null ? sp('noRate') : sp('inStore', { amount: formatMoney(spend.get(c.id)!.storeMinor!, moneyOf(storeCur, view.locale)) })}
+                                  </span>
+                                ) : null}
                                 <br />
                                 <span className="a2-mute">{sp('spendLine', { purchases: formatNumber(spend.get(c.id)!.purchases, view.locale) })}</span>
                               </>
