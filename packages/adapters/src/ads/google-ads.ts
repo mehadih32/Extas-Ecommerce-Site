@@ -17,7 +17,7 @@
 //   cleaned of every key.
 import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
-import { minorDigitsOf } from './tiktok-ads';
+import { countOf, DAY_RE, minorDigitsOf, spendMinorOf, type AdsSpendFacts, type AdsSpendRange } from './spend';
 import { practiceAdsReader, type AdsAccountFacts, type AdsCampaignFacts, type AdsRead, type AdsReader, type AdsSetFacts } from './meta-ads';
 
 export const GOOGLE_ADS_PROVIDER = 'googleAds';
@@ -100,6 +100,21 @@ export function googleAdGroup(row: Record<string, unknown>): AdsSetFacts {
     targeting: type ? { type } : null,
   };
 }
+
+/** One `campaign` metrics row segmented by day in our shape; null without a campaign or a day. */
+export function googleSpendRow(row: Record<string, unknown>, currency: string): AdsSpendFacts | null {
+  const c = obj(row.campaign);
+  const m = obj(row.metrics);
+  const campaignExternalId = str(c.id, 40);
+  const day = str(obj(row.segments).date, 10);
+  if (!campaignExternalId || !DAY_RE.test(day)) return null;
+  const micros = typeof m.costMicros === 'string' || typeof m.costMicros === 'number' ? Number(m.costMicros) : 0;
+  return { campaignExternalId, day, spendMinor: spendMinorOf(Number.isFinite(micros) ? micros / MICROS : 0, currency) ?? 0, impressions: countOf(m.impressions), clicks: countOf(m.clicks), purchases: countOf(m.conversions) };
+}
+
+/** PR 265: spend per campaign per day; the days are checked (YYYY-MM-DD) before they go into the query. */
+export const spendQuery = (r: AdsSpendRange) =>
+  `SELECT campaign.id, segments.date, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions FROM campaign WHERE segments.date BETWEEN '${r.from}' AND '${r.to}' ORDER BY segments.date`;
 
 const ACCOUNT_QUERY = 'SELECT customer.id, customer.descriptive_name, customer.currency_code, customer.status FROM customer LIMIT 1';
 const CAMPAIGN_QUERY =
@@ -212,6 +227,16 @@ export function createGoogleAdsClient(o: {
     account,
     campaigns: () => withCurrency(CAMPAIGN_QUERY, googleCampaign),
     adSets: () => withCurrency(AD_GROUP_QUERY, (row) => googleAdGroup(row)),
+    async spend(range: AdsSpendRange): Promise<AdsRead<AdsSpendFacts[]>> {
+      if (!DAY_RE.test(range.from) || !DAY_RE.test(range.to) || range.from > range.to) return { ok: false, error: 'not a range of days' };
+      if (!currency) {
+        const a = await account();
+        if (!a.ok) return a;
+      }
+      const r = await search(spendQuery(range));
+      if (!r.ok) return r;
+      return { ok: true, value: r.value.map((x) => googleSpendRow(x, currency ?? '')).filter((x): x is AdsSpendFacts => x !== null) };
+    },
     async check() {
       const r = await account();
       return r.ok ? { ok: true, message: `connected; customer ${r.value.name} (${r.value.currency})` } : { ok: false, message: r.error };

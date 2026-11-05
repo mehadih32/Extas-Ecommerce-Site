@@ -29,6 +29,7 @@ import { RETURNS_ERP_JOB, RETURNS_ERP_QUEUE, runReturnsErp } from './returns-erp
 import { MONEY_REPORT_JOB, MONEY_REPORT_QUEUE, runMoneyReport, type MoneyReportPayload } from './money-report';
 import { POINTS_JOB, POINTS_QUEUE, runPointsJob } from './rewards';
 import { AUDIENCE_REFRESH_JOB, AUDIENCE_REFRESH_QUEUE, runAudienceRefresh, type AudienceRefreshPayload } from './audience-refresh';
+import { AD_SPEND_IMPORT_JOB, AD_SPEND_IMPORT_QUEUE, runAdSpendImport, type AdSpendImportPayload } from './ad-spend-import';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
 export type JobOutcome = { ok: true; stats: Record<string, unknown> } | { ok: false; error: string; stats: Record<string, unknown> };
@@ -375,6 +376,23 @@ const supportEscalateJob: JobDefinition<{ storeId: number }> = {
   run: async (deps, p) => ({ ok: true, stats: compactStats(await runSupportEscalation(deps, p.storeId)) }),
 };
 
+/**
+ * S13 · PR 265 — one store's daily ad spend import for one store day (ad-spend-import.ts; planned only while it is due,
+ * the day in the run key). Safe to run twice: each campaign day is replaced, never added; off = nothing.
+ */
+const adSpendImportJob: JobDefinition<AdSpendImportPayload> = {
+  key: AD_SPEND_IMPORT_JOB,
+  queue: AD_SPEND_IMPORT_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown; day?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${AD_SPEND_IMPORT_JOB}: storeId must be a positive integer`);
+    if (typeof p.day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(p.day)) throw new Error(`${AD_SPEND_IMPORT_JOB}: day must be YYYY-MM-DD`);
+    return { storeId: p.storeId as number, day: p.day };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runAdSpendImport(deps, p)) }),
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -391,6 +409,7 @@ const definitions: JobDefinition<never>[] = [
   pointsJob as unknown as JobDefinition<never>,
   audienceRefreshJob as unknown as JobDefinition<never>,
   supportEscalateJob as unknown as JobDefinition<never>,
+  adSpendImportJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

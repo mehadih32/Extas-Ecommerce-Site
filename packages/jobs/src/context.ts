@@ -2,6 +2,7 @@
 // inventory's dependencies (the ERP connection layer with the vault's keys, PR 18/493) and a clock for tests.
 import type { Connections, TelegramLink } from '@extas/adapters';
 import type { AudienceRefreshAnswer } from './audience-refresh';
+import type { AdSpendImportAnswer } from './ad-spend-import';
 import type { PrismaClient } from '@extas/db/client';
 import type { InventoryDeps, SettingsReader } from '@extas/inventory';
 import type { MessagesDeps } from '@extas/messages';
@@ -37,6 +38,8 @@ export interface JobDeps {
   audiences?: { refresh(storeId: number): Promise<AudienceRefreshAnswer> };
   /** PR 538: the owner's Telegram bot (Keys & connections; its practice copy until connected), or none — no support escalation job. */
   telegram?: TelegramLink;
+  /** PR 265: the web app's daily ad spend import (inside the server, with the internal token), or none — none planned. */
+  adSpend?: { import(storeId: number): Promise<AdSpendImportAnswer> };
   /** Clock, for tests. */
   now?: () => Date;
 }

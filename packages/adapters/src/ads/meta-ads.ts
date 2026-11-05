@@ -11,6 +11,7 @@
 import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
 import { META_DEFAULT_API_VERSION, META_DEFAULT_BASE_URL } from './index';
+import { countOf, daysOf, spendMinorOf, type AdsSpendFacts, type AdsSpendRange } from './spend';
 
 export type AdsPlatform = 'meta' | 'google' | 'tiktok';
 
@@ -56,6 +57,8 @@ export interface AdsReader {
   account(): Promise<AdsRead<AdsAccountFacts>>;
   campaigns(): Promise<AdsRead<AdsCampaignFacts[]>>;
   adSets(): Promise<AdsRead<AdsSetFacts[]>>;
+  /** PR 265: what each campaign spent per day in the range (the account currency's minor unit). */
+  spend(range: AdsSpendRange): Promise<AdsRead<AdsSpendFacts[]>>;
 }
 
 export const META_ADS_PROVIDER = 'metaAds';
@@ -99,6 +102,19 @@ export function metaCampaign(r: Record<string, unknown>): AdsCampaignFacts {
   };
 }
 
+/** The Meta action types counted as a purchase, the first one present wins (the pixel's own name is the older one). */
+export const META_PURCHASE_ACTIONS = ['purchase', 'offsite_conversion.fb_pixel_purchase', 'omni_purchase'] as const;
+
+/** One Meta insights row (level campaign, one day) in our shape; null without a campaign or a day. */
+export function metaSpendRow(r: Record<string, unknown>, currency: string): AdsSpendFacts | null {
+  const campaignExternalId = str(r.campaign_id, 40);
+  const day = str(r.date_start, 10);
+  if (!campaignExternalId || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  const actions = Array.isArray(r.actions) ? (r.actions as Record<string, unknown>[]) : [];
+  const buy = META_PURCHASE_ACTIONS.map((k) => actions.find((a) => a.action_type === k)).find(Boolean);
+  return { campaignExternalId, day, spendMinor: spendMinorOf(r.spend, currency) ?? 0, impressions: countOf(r.impressions), clicks: countOf(r.clicks), purchases: buy ? countOf(buy.value) : 0 };
+}
+
 /** Meta's ad set row in our shape. */
 export function metaAdSet(r: Record<string, unknown>): AdsSetFacts {
   return {
@@ -135,14 +151,14 @@ export function createMetaAdsClient(o: { baseUrl: string; apiVersion: string; ad
   }
 
   /** A paged list: follows Meta's `paging.next` (same host only) up to the page guard. */
-  async function list<T>(path: string, fields: string, map: (r: Record<string, unknown>) => T): Promise<AdsRead<T[]>> {
+  async function list<T extends object>(path: string, fields: string, map: (r: Record<string, unknown>) => T | null, extra = ''): Promise<AdsRead<T[]>> {
     const out: T[] = [];
-    let url: string | null = `${root}/${account}/${path}?fields=${encodeURIComponent(fields)}&limit=${PAGE_SIZE}`;
+    let url: string | null = `${root}/${account}/${path}?fields=${encodeURIComponent(fields)}&limit=${PAGE_SIZE}${extra}`;
     for (let page = 0; url && page < META_ADS_MAX_PAGES; page += 1) {
       const r = await get(url);
       if (!r.ok) return r;
       const data = Array.isArray(r.value.data) ? (r.value.data as Record<string, unknown>[]) : [];
-      out.push(...data.map(map).filter((x) => (x as { externalId: string }).externalId));
+      out.push(...data.map(map).filter((x): x is T => x !== null && !!((x as { externalId?: string }).externalId ?? (x as { campaignExternalId?: string }).campaignExternalId)));
       const next = (r.value.paging as { next?: unknown } | undefined)?.next;
       url = typeof next === 'string' && next.startsWith(`${o.baseUrl.replace(/\/+$/, '')}/`) ? next.replace(/([?&])access_token=[^&]*&?/, '$1') : null;
     }
@@ -160,6 +176,14 @@ export function createMetaAdsClient(o: { baseUrl: string; apiVersion: string; ad
     },
     campaigns: () => list('campaigns', 'id,name,status,effective_status,objective,daily_budget,lifetime_budget,start_time,stop_time', metaCampaign),
     adSets: () => list('adsets', 'id,campaign_id,name,status,effective_status,daily_budget,targeting', metaAdSet),
+    // PR 265: insights per campaign per day (time_increment=1), in the account's currency
+    async spend(range: AdsSpendRange): Promise<AdsRead<AdsSpendFacts[]>> {
+      if (!daysOf(range).length) return { ok: false, error: 'not a range of days' };
+      const a = await reader.account();
+      if (!a.ok) return a;
+      const extra = `&level=campaign&time_increment=1&time_range=${encodeURIComponent(JSON.stringify({ since: range.from, until: range.to }))}`;
+      return list('insights', 'campaign_id,spend,impressions,clicks,actions,date_start', (x) => metaSpendRow(x, a.value.currency), extra);
+    },
     async check() {
       const r = await reader.account();
       return r.ok ? { ok: true, message: `connected; ad account ${r.value.name} (${r.value.currency})` } : { ok: false, message: r.error };
@@ -184,6 +208,8 @@ export function practiceAdsReader(provider: string, platform: AdsPlatform, curre
         { externalId: 'practice-2', name: 'Practice — retargeting the bag', status: 'PAUSED', objective: 'OUTCOME_SALES', dailyBudgetMinor: null, lifetimeBudgetMinor: 1_500_000, startAt: start, stopAt: new Date(start.getTime() + 30 * day) },
       ],
     }),
+    // PR 265: an example day per day of the range for the first campaign (shown, never saved)
+    spend: async (range) => ({ ok: true, value: daysOf(range).map((d, i) => ({ campaignExternalId: 'practice-1', day: d, spendMinor: 60_000 + (i % 3) * 5_000, impressions: 9_000 + i * 100, clicks: 180 + i, purchases: 4 + (i % 2) })) }),
     adSets: async () => ({ ok: true, value: [{ externalId: 'practice-1a', campaignExternalId: 'practice-1', name: 'Practice — Dhaka, 20–40', status: 'ACTIVE', dailyBudgetMinor: null, targeting: { geo_locations: { countries: ['BD'] }, age_min: 20, age_max: 40 } }] }),
   };
 }

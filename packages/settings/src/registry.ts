@@ -106,6 +106,7 @@ import { crmSettings } from './registry-crm';
 import { marketingSettings } from './registry-marketing';
 import { adsAudiencesSettings } from './registry-ads-audiences';
 import { adsRefusedSettings } from './registry-ads-refused';
+import { adsSpendSettings } from './registry-ads-spend';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1384,6 +1385,8 @@ export const registry = {
   ...adsAudiencesSettings,
   // ---- S13 · CN-031 lane B · PR 264 · the refused-parcel exclusion list and the daily audience refresh (registry-ads-refused.ts, version 171). ----
   ...adsRefusedSettings,
+  // ---- S13 · CN-031 lane B · PR 265 · the daily ad spend import (registry-ads-spend.ts, version 172). ----
+  ...adsSpendSettings,
   // ---- S16 · CN-031 lane B · PR 347 · the costs report's longest period and day rows (registry-finance.ts, versions 160–169). ----
   ...financeSettings,
 } satisfies RegistryShape;
