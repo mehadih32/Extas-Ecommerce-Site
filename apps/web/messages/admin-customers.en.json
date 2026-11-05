@@ -602,6 +602,13 @@
         "sub": "Off as shipped. When on, customers may give their birthday in My account › Profile, and it shows on their customer page. Nothing is sent or given for it: birthday wishes stay parked.",
         "enabled": "Show the birthday box in My account",
         "askYear": "Ask for the year too"
+      },
+      "report": {
+        "title": "Customer report",
+        "sub": "Off as shipped. When on, Reports › Customers counts new, returning and quiet buyers and the repeat rate, overall and per saved segment. It only counts: nothing is sent or changed.",
+        "enabled": "Turn on the customer report",
+        "quietDays": "Quiet after this many days without an order (7–730)",
+        "segmentsShown": "Saved segments in the report (1–50)"
       }
     },
     "auto": {
@@ -992,6 +999,50 @@
         "noSendRight": "Scheduling needs the right to send campaigns."
       },
       "noCostWhy": "The cost shows once a message on this channel was costed in the last 30 days (the practice sender costs nothing)."
+    },
+    "rep": {
+      "metaTitle": "Customers report",
+      "title": "Customers",
+      "sub": "Who buys for the first time, who buys again and who went quiet",
+      "period": {
+        "label": "Period",
+        "d7": "7 days",
+        "d30": "30 days",
+        "d90": "90 days"
+      },
+      "range": "Orders placed from {from} to {to}",
+      "off": "The customer report is off. Turn it on in Customers › Customer settings.",
+      "offLink": "Open Customer settings",
+      "kpi": {
+        "new": "New buyers",
+        "newNote": "first order ever in this period",
+        "returning": "Returning buyers",
+        "returningNote": "ordered before, and again in this period",
+        "quiet": "Quiet {n}+ days",
+        "quietNote": "ordered before, nothing in {n} days (churned)",
+        "repeat": "Repeat rate",
+        "repeatNote": "{n} of {of} buyers have 2+ orders"
+      },
+      "segs": {
+        "title": "By segment",
+        "sub": "Each saved segment: its people now, and the period’s new, returning and quiet buyers among them",
+        "name": "Segment",
+        "people": "People",
+        "new": "New",
+        "returning": "Returning",
+        "quiet": "Quiet",
+        "repeat": "Repeat rate",
+        "none": "No saved segments yet.",
+        "off": "Saved segments are off. Turn them on in Customers › Segments to split this report by segment.",
+        "more": "{n} older segments are not shown (Customer settings › Saved segments in the report).",
+        "open": "Open Segments"
+      },
+      "support": {
+        "title": "Support",
+        "plan": "Plan",
+        "sub": "Chats per agent and channel, chats that became orders, first response and solved. These figures start with the Support inbox (S22); nothing is shown until then."
+      },
+      "note": "Counts only, from placed orders (drafts and archived orders left out). One person is counted once over his merged profiles and his guest orders by number."
     }
   }
 }

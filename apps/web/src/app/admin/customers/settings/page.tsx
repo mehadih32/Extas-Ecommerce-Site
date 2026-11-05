@@ -77,6 +77,16 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
       { name: 'askYear', kind: 'bool' },
     ],
   },
+  {
+    // PR 303 — the customer report (Reports › Customers): when a buyer counts as quiet, how many segments it splits by
+    key: 'customers.report',
+    card: 'report',
+    fields: [
+      { name: 'enabled', kind: 'bool' },
+      { name: 'quietDays', kind: 'int' },
+      { name: 'segmentsShown', kind: 'int' },
+    ],
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {

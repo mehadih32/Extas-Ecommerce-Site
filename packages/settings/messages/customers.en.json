@@ -58,6 +58,10 @@
     "birthday": {
       "label": "Birthday field",
       "help": "Off as shipped. When on, My account › Profile has a small \"Birthday\" box: a signed-in customer may give the day and the month (the year only when \"Ask for the year\" is on), change it or clear it, and his customer page shows it. Nothing is sent or given for it: birthday wishes and gifts are a separate module that stays parked until you ask for it. Erasing a customer clears it."
+    },
+    "report": {
+      "label": "Customer report",
+      "help": "Off as shipped. When on, Reports › Customers shows, for a period you pick, how many people bought for the first time, how many came back, how many have gone quiet and the repeat rate, overall and for each saved segment (segments need their own switch). \"Quiet after\": a buyer with no order for this many days, and none in the period, counts as quiet (churned). \"Segments in the report\": how many saved segments it splits by, newest first. It only counts: nothing is sent or changed, and no money figure is shown."
     }
   }
 }

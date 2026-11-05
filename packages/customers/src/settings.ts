@@ -10,7 +10,7 @@ import { allow, parse, setting, type CustomersDeps, type Who } from './context';
 import { CustomersError } from './errors';
 
 /** The settings the Customer settings page edits, in its order (later CRM PRs add theirs). */
-export const CRM_PAGE_SETTINGS = ['customers.journey', 'customers.aiWriter', 'customers.sendAdvice', 'customers.points', 'customers.export', 'customers.birthday'] as const satisfies readonly Key[];
+export const CRM_PAGE_SETTINGS = ['customers.journey', 'customers.aiWriter', 'customers.sendAdvice', 'customers.points', 'customers.export', 'customers.birthday', 'customers.report'] as const satisfies readonly Key[];
 
 /** PR 296 — settings that set a money rate (points into wallet credit): saving them also needs `settings.write`, as the
  * Money section's own rules do. */

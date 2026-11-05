@@ -46,6 +46,8 @@
 // people who stopped ordering (the owner's rule, a saved segment), shown with its reach and estimated cost, scheduled by
 // a person with the send key, queued at the throttle for the Messages engine (offers: his yes, the quiet hours, the
 // weekly cap, the gap between win-backs, the stop line), with each campaign's results; off as shipped.
+// PR 303: the customer report (report.ts) — Reports › Customers: new, returning and quiet (churned) buyers over a period
+// and the repeat rate, overall and per saved segment; counts only, `reports.read`; off as shipped (`customers.report`).
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,
 // total spent (Sales), orders and first and last order; the shop never pushes it, the ERP asks when the owner clicks.
 export * from './access';
@@ -65,6 +67,7 @@ export * from './merge';
 export * from './notes';
 export * from './people-sql';
 export * from './profile';
+export * from './report';
 export * from './rewards';
 export * from './pure';
 export * from './segments';
