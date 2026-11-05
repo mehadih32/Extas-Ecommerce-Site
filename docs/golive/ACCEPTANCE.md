@@ -39,3 +39,7 @@ itself and are not repeated here.
 - Device gate at 0 failures on phones, tablets and desktop; the journeys; the Lighthouse budget; the screenshots looked at.
 - A real iPhone (Safari) and a real Android (Chrome) — also its own item.
 - The 70-order real-life journey simulation (`docs/qa/SIMULATION-PLAN.md`, CN-013) — also its own item.
+
+## Needed before go-live, and soon after (CN-035, 6 Nov 2026)
+
+Only the lines marked **Needed before go-live** on Settings → System → Go-live block the switch of the main domain. **Soon after go-live** (the owner does these from the admin once the shop is live; the page shows each as yellow until it is done): the outside security review (skipped by the owner), the store's own details and legal numbers, Google Drive and Azure Blob backups and the restore drill, live payment / courier / SMS keys, Telegram. Nothing is ever shown to a customer as a placeholder: an empty detail is hidden.

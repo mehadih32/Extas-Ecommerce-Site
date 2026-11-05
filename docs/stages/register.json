@@ -2005,6 +2005,15 @@
    "registerAnchor": "build-status",
    "prs": [],
    "stages": []
+  },
+  {
+   "id": "CN-035",
+   "date": "",
+   "title": "owner, in Bengali: go live as soon as the running steps finish; the owner's own set-up steps no longer hold the site back",
+   "text": "No new PR numbers; the total stays 624 (618 active, 6 parked).",
+   "registerAnchor": "build-status",
+   "prs": [],
+   "stages": []
   }
  ],
  "prs": [
@@ -27754,7 +27763,15 @@
      "Accepted today: deepmerge-ts (Prisma CLI config only), tinypool (vitest 3, test runner only) until 2027-01-29"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-035)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
+     "text": "**PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row \"Needed before go-live\" or \"Soon after go-live\"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are \"Soon after\" and never block the switch; a yellow \"Off-server backup: not connected\" line returns daily until it is connected."
+    }
+   ],
    "mentions": [],
    "blueprint": [
     {
@@ -27877,7 +27894,15 @@
      "a scan test"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-035)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
+     "text": "**PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row \"Needed before go-live\" or \"Soon after go-live\"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are \"Soon after\" and never block the switch; a yellow \"Off-server backup: not connected\" line returns daily until it is connected."
+    }
+   ],
    "mentions": [],
    "blueprint": [
     {
@@ -28402,6 +28427,13 @@
      "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
      "text": "**PR 391, 396** — Updated 31 Oct 2026 (CN-030): going live with Drive means pressing Connect Google Drive and entering the code at google.com/device; restore is one click from the list of backups in the connected Drive, with the typed confirmation and the PIN, staging first."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-035)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
+     "text": "**PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row \"Needed before go-live\" or \"Soon after go-live\"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are \"Soon after\" and never block the switch; a yellow \"Off-server backup: not connected\" line returns daily until it is connected."
     }
    ],
    "mentions": [],
@@ -28539,6 +28571,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 1):** `state/smoke.json` `at` is ISO time with its offset (`atText` for people), so the smoke item is green right after a passing smoke test; three automatic items, no owner setting flipped: `testPayments` (red while a live, paused or primary store has test payments on or offers a method whose gateway is still MOCK, naming store and method), `rateLimit` (red unless `security.rateLimit.mode` is `enforce`), `staffTwoFactor` (red unless staff 2FA is required or every active staff member with a non-read permission has it; shows how many are missing); the guide lists them (#71)"
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-035)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
+     "text": "**PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row \"Needed before go-live\" or \"Soon after go-live\"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are \"Soon after\" and never block the switch; a yellow \"Off-server backup: not connected\" line returns daily until it is connected."
     }
    ],
    "mentions": [
@@ -28689,6 +28728,13 @@
      "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
      "text": "**PR 395, 507** — Updated 31 Oct 2026 (CN-030): Google Drive backup is one click with the owner's own Google client (\"TVs and Limited Input devices\", scope `drive.file`, device-code sign-in, no redirect, no service account), the same way as the Extas ERP; the Backups screen shows account, folder, free space, client, Disconnect and \"Change the Google client (advanced)\" with the PIN; secrets only in the vault; one connection per store."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-035)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
+     "text": "**PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row \"Needed before go-live\" or \"Soon after go-live\"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are \"Soon after\" and never block the switch; a yellow \"Off-server backup: not connected\" line returns daily until it is connected."
     }
    ],
    "mentions": [],
@@ -28775,6 +28821,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 2):** after the swap the restored database is migrated with the live version's migrate image (`state/last-good-deploy.json` .migrate, the same one-shot run as a deploy) before the shop's containers start again; a failed migration undoes the swap; INT, TERM and HUP exit into the undo trap, so a cancelled or timed-out run puts the live database back too (#72)"
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-035)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
+     "text": "**PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row \"Needed before go-live\" or \"Soon after go-live\"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are \"Soon after\" and never block the switch; a yellow \"Off-server backup: not connected\" line returns daily until it is connected."
     }
    ],
    "mentions": [],
@@ -28931,7 +28984,15 @@
     ],
     "tests": []
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-035)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
+     "text": "**PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row \"Needed before go-live\" or \"Soon after go-live\"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are \"Soon after\" and never block the switch; a yellow \"Off-server backup: not connected\" line returns daily until it is connected."
+    }
+   ],
    "mentions": [
     509,
     383
@@ -28986,7 +29047,15 @@
      "setting v77 `golive.connections`, PAYMENT, COURIER, SMS): the go-live automatic row `connections` passes only for a connection switched on, LIVE and with a passing last test (Keys & connections moves it from mock to live)"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-035)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
+     "text": "**PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row \"Needed before go-live\" or \"Soon after go-live\"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are \"Soon after\" and never block the switch; a yellow \"Off-server backup: not connected\" line returns daily until it is connected."
+    }
+   ],
    "mentions": [],
    "blueprint": [
     {
@@ -29281,6 +29350,13 @@
      "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
      "text": "**PR 395, 507** — Updated 31 Oct 2026 (CN-030): Google Drive backup is one click with the owner's own Google client (\"TVs and Limited Input devices\", scope `drive.file`, device-code sign-in, no redirect, no service account), the same way as the Extas ERP; the Backups screen shows account, folder, free space, client, Disconnect and \"Change the Google client (advanced)\" with the PIN; secrets only in the vault; one connection per store."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-035)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-624",
+     "text": "**PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row \"Needed before go-live\" or \"Soon after go-live\"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are \"Soon after\" and never block the switch; a yellow \"Off-server backup: not connected\" line returns daily until it is connected."
     }
    ],
    "mentions": [

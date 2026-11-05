@@ -698,6 +698,8 @@ Once every Launch row is merged and live, the build carries straight on with the
 
 Total ~~289 (as of 31 Oct 2026)~~ 292 (1 Nov 2026, with CN-034's PR 622–624); the table above is the order, the "Left" counts move as PRs are built.
 
+> **6 Nov 2026 (CN-035):** the owner's own set-up steps (outside security review, store details, Drive and Azure Blob backups, live keys) no longer hold go-live back; they become "Soon after go-live" rows on the go-live page. Only the "Needed before go-live" rows block the switch (PR 587).
+
 ## Launch lanes (CN-031)
 
 The 46 open Launch rows are built by three builders at the same time on their own git worktrees; `qa-gate` reviews in batches.

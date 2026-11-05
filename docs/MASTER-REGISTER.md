@@ -844,6 +844,18 @@ the server.*
 >
 > **(6) Where it is written.** The rows of "CN-034 additions" below; the stage table (S04 42, S18 15, S22 14) and "How this reached 624"; dated lines on PR 382 and 426; Blueprint Appendix A, E0, E1 and E3; `docs/LAUNCH-TRACK.md` (After launch and its priority order); the totals in CLAUDE.md, README.md and `docs/README.md`.
 
+> **CN-035 · 6 Nov 2026 (owner, in Bengali: go live as soon as the running steps finish; the owner's own set-up steps no longer hold the site back).** No new PR numbers; the total stays 624 (618 active, 6 parked).
+>
+> **(1) What no longer holds go-live back.** (a) The independent outside security review of PR 381 is **skipped by the owner**; the automatic parts of PR 381 (dependency scanning in CI, the security checks) stay. (b) Each store's own details (phone, address, legal numbers, contacts, delivery charges) are typed by the owner in the admin after go-live; an empty field is simply not shown on the live site (never a placeholder, PR 383), and the go-live page lists it as "Owner data: to fill in", not as a blocker (PR 399). (c) Google Drive and Azure Blob backups (PR 391, 395, 396, 507) are connected by the owner **after** go-live, from the admin; until then the go-live page shows "Off-server backup: not connected" as a yellow line that comes back every day on the Dashboard and in the daily Telegram line (when Telegram is connected). The on-server backups and the server's own provider snapshot keep running; the restore drill (PR 507) starts when Drive is connected. (d) The small open questions in `BLOCKED.md` keep their shipped default and are settled later.
+>
+> **(2) What still must be true before the main domain is switched.** Everything that protects a real order and the shop itself: the automatic checks and smoke test green, the CN-013 journeys and the go-live gate journeys green, the 70-order simulation's money lines, the ERP link and the books tie working, the redirects and the sitemap ready, the runbook and the rollback plan rehearsed (PR 398), and the Cloudflare certificate (PR 397). A connection (payment, courier, SMS, Telegram) is "live" only after its own passing test (PR 400); a connection without its key stays on its mock, which is allowed at go-live (cash on delivery needs no key; without an SMS key the customer gets no message, which the go-live page says plainly).
+>
+> **(3) How the go-live page shows it.** Every row is marked **Needed before go-live** or **Soon after go-live** (with its reason), and only the first group blocks the switch (PR 393, 399, 400). Rows moved to "Soon after": the outside security review, store details and legal numbers, Drive and Azure Blob backups and their restore drill, live payment / courier / SMS keys and Telegram. The owner's three go-live steps stay his: the explicit go-ahead for the switch of the main domain (PR 587, CLAUDE.md), removing the password and `noindex` on the main domain only (PR 403), and the typed confirmation.
+>
+> **(4) The order of work.** The running steps first (the After-launch priority order of CN-031 continues without waiting), then, as one run and without waiting for the owner: the go-live page change of (3), the full go-live gate on staging, the rehearsal of the runbook, and PR 587 prepared up to the point where only the owner's go-ahead is missing. The switch itself is done only when he says "go live".
+>
+> **(5) Where it is written.** Updated lines on PR 381, 383, 391, 393, 395, 396, 399, 400 and 507 (CN-035) and `docs/golive/ACCEPTANCE.md`.
+
 ## The stage table
 
 | # | Stage | PRs | Range | Status |
@@ -985,6 +997,9 @@ the server.*
 - **PR 610** — Updated 31 Oct 2026 (CN-033): `erp.orders.bGradeOpen` (off as shipped): while off no B-grade replacement is asked for before sending, and a `422` naming `bGradeSkus` holds the order with `B_GRADE_CLOSED` and an admin message instead of failing it; it goes again when the switch is on.
 - **PR 614** — Updated 31 Oct 2026 (CN-033): a refused exchange parcel keeps its new piece on a deadline (`WAITING_RETURN`): billed in full the night after the deadline, credited if it comes back later and is approved; the risk list says "new piece not back". The practice ERP follows this rule, its old "cancelled, no bill" behind a practice-ERP switch.
 - **PR 621** — Updated 31 Oct 2026 (CN-033): `switchOver.read` and `costOfGoods.read` say "not built in the ERP (decision 30 Oct 2026)" on fresh-start; `exchanges.refused` expects "not billed, not cancelled" after the refusal and, on the practice ERP, the bill after the deadline and the credit after a late approved return; the B-grade line of `orders.billAtShipment` is sent only while `erp.orders.bGradeOpen` is on.
+
+**Scope added to existing PRs, 6 Nov 2026 (CN-035):**
+- **PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row "Needed before go-live" or "Soon after go-live"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are "Soon after" and never block the switch; a yellow "Off-server backup: not connected" line returns daily until it is connected.
 
 **Scope added to existing PRs, 1 Nov 2026 (CN-034; new PR 622–624):**
 - **PR 382 (S18, privacy and data)** — Updated 1 Nov 2026 (CN-034): a customer's own request from his account (PR 623) files into this screen as a request like the ones staff enter; nothing about carrying one out changes (owner only, the typed word, never while an order is on its way).

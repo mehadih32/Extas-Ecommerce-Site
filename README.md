@@ -2781,6 +2781,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| direct | CN-035 (docs only) | 6 Nov | Go-live is no longer held by the owner's own set-up steps: the outside security review is skipped; store details, Drive and Azure backups and live keys come after go-live; the go-live page shows Needed before go-live / Soon after go-live. |
 | #80 | PR [624](docs/stages/S22.md#pr-624) | 5 Nov | Messenger button on the shop beside WhatsApp, with where it was tapped, and taps on the support buttons counted (`support.messengerButton`, off; CN-034; migration `0130`). |
 | #80 | PR [538](docs/stages/S22.md#pr-538) | 5 Nov | Support escalation on Telegram when nobody answers, desk hours, risky links shown as words with a danger mark (off; migration `0119`). |
 | #80 | PR [436](docs/stages/S22.md#pr-436) | 5 Nov | Support analytics per channel, person and AI: timers, late tickets, chat → order and delivered Sales (migration `0118`). |
@@ -3108,6 +3109,7 @@ the register.
 | CN-032 | 31 Oct | A page never stays blank in one browser because of what it saved: browser translation off, a self-mending safety net, and a "Start fresh" page that clears only this site's data in that browser (PR 12) | [register](docs/MASTER-REGISTER.md#build-status) |
 | CN-033 | 31 Oct | The shop follows the ERP's 30 Oct retail decisions: switch-over as a fresh start (no moved orders, no cost-of-goods), B-grade lines held until the ERP opens them, a refused exchange parcel billed at the deadline and credited when it comes back approved (PR 610, 614, 619, 621) | [register](docs/MASTER-REGISTER.md#build-status) |
 | CN-034 | 1 Nov | One final customer 360° analysis before go-live, "add whatever I missed": three gaps no PR covered become PR 622 Buy again (S04), 623 the customer's own privacy request into the staff screen (S18) and 624 a Messenger button (S22), each off by default and After launch; total 624 PRs (618 active) | [register](docs/MASTER-REGISTER.md#build-status) · [analysis](docs/qa/FINAL-ANALYSIS-2026-11.md) |
+| CN-035 | 6 Nov | Go-live not held by the owner's own set-up steps; go-live page: Needed before / Soon after go-live | [track](docs/LAUNCH-TRACK.md) |
 
 ---
 
