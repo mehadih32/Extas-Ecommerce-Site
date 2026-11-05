@@ -842,6 +842,16 @@ check "backup: a diff has no snapshot of its own" "$(find "$L" -name '*.snar' | 
 rm "$M/p/two.webp"; echo "photo five" > "$M/five.jpg"
 "${BENV[@]}" EXTAS_BACKUP_STAMP="$C" "$B/extas-backup" daily >/dev/null 2>&1
 check "backup: a diff carries everything since the full one" "$(cut -c67- "$L/media-$C.sha256" | sort | tr '\n' ' ')" "./five.jpg ./p/four.avif "
+# CN-035 (PR 391): with both places connected the nightly run keeps no "told" mark. With Drive not connected (a copy of
+# the root and the remote, so the backups the later checks count stay as they are) one yellow line a day names it.
+check "backup (CN-035): Blob and Drive connected — no off-server line" "$([ -f "$BR/state/backup-offsite-told" ] && echo told || echo none)" "none"
+T2="$T/offsite-root"; cp -a "$BR" "$T2"; cp -a "$T/remote" "$T/remote2"; mkdir -p "$T2/logs"
+{ cat "$T/server.conf"; printf 'EXTAS_ROOT=%s\n' "$T2"; } > "$T/server2.conf"
+printf 'RCLONE_CONFIG_BLOB_TYPE=test\n' > "$T2/config/secrets/backup.env"
+OENV=("${BENV[@]}" EXTAS_CONFIG_FILE="$T/server2.conf" FAKE_REMOTE="$T/remote2" FAKE_WAL="$T2/backups/wal")
+"${OENV[@]}" EXTAS_BACKUP_STAMP="$(stamp '5 minutes ago')" "$B/extas-backup" daily >/dev/null 2>&1 || true
+"${OENV[@]}" EXTAS_BACKUP_STAMP="$(stamp '4 minutes ago')" "$B/extas-backup" daily >/dev/null 2>&1 || true
+check "backup (CN-035): Drive not connected — one yellow line a day, naming it" "$(grep -c 'সার্ভারের বাইরের ব্যাকআপ: সংযুক্ত নয় (Google Drive)' "$T2/logs/alerts.log" 2>/dev/null || true):$(cat "$T2/state/backup-offsite-told")" "1:$(date +%F)"
 # The full backup disk of 31 Oct 2026 (PR 8 fix): every base backup carries its own WAL; the WAL archive is gzip and
 # kept only BACKUP_KEEP_LOCAL_WAL_DAYS, also when no base backup exists; a full disk is pruned before the backup
 check "backup: the base backup carries its WAL (-X stream)" "$(ls "$BR/backups/base/$C" | tr '\n' ' ')" "base.tar.gz pg_wal.tar.gz "

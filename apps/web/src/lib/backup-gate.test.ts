@@ -1,7 +1,7 @@
 // S19 · PR 391 — the backups' go-live checks: every one passes only on a fresh good copy, a LIVE connection and a
 // recent passed drill of that place; a stale, failed or missing one says which.
 import { describe, expect, it } from 'vitest';
-import { backupGateChecks, GATE_CHECKS, type GateInput } from './backup-gate';
+import { backupGateChecks, GATE_CHECKS, SOON_AFTER, type GateInput } from './backup-gate';
 
 const now = new Date('2026-10-31T12:00:00Z');
 const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
@@ -34,8 +34,17 @@ const failing = (i: GateInput) =>
 describe('backup go-live checks (PR 391)', () => {
   it('all good: ready, every check in order', () => {
     const r = backupGateChecks(input());
-    expect(r.ready).toBe(true);
+    expect(r).toMatchObject({ ready: true, complete: true, offSite: [] });
     expect(r.checks.map((c) => c.key)).toEqual([...GATE_CHECKS]);
+  });
+
+  it('CN-035: only the server\'s own copy is needed for real orders; Blob, Drive, the drill and Telegram come soon after', () => {
+    expect(SOON_AFTER).toEqual(GATE_CHECKS.filter((k) => k !== 'local'));
+    const fresh = backupGateChecks(input({ live: { blob: false, drive: false, telegram: false }, drill: null }));
+    expect(fresh).toMatchObject({ ready: true, complete: false, offSite: ['blob', 'drive'] });
+    expect(fresh.checks.filter((c) => !c.soon).map((c) => c.key)).toEqual(['local']);
+    expect(backupGateChecks(input({ live: { blob: true, drive: false, telegram: true } })).offSite).toEqual(['drive']);
+    expect(backupGateChecks(input({ backups: { local: null, blob: good(), drive: good() } }))).toMatchObject({ ready: false, complete: false });
   });
 
   it('a copy older than the hours, or a failed one, fails its own check only', () => {
@@ -59,7 +68,7 @@ describe('backup go-live checks (PR 391)', () => {
 
   it('nothing on the server yet (a new installation): not ready, nothing crashes', () => {
     const r = backupGateChecks({ now, gate: { freshHours: 36, drillDays: 35 }, live: { blob: false, drive: false, telegram: false }, backups: { local: null, blob: null, drive: null }, drill: null });
-    expect(r.ready).toBe(false);
+    expect(r).toMatchObject({ ready: false, complete: false, offSite: ['blob', 'drive'] });
     expect(r.checks.every((c) => !c.ok)).toBe(true);
   });
 

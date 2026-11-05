@@ -215,7 +215,7 @@
   },
   "gate": {
     "title": "Backups ready for real orders",
-    "sub": "Each copy away from the server connected, its newest copy no older than {hours} hours, and brought back by the restore drill within {days} days.",
+    "sub": "The server's own copy of last night is needed before go-live. The copies away from the server come soon after go-live: each connected, its newest copy no older than {hours} hours, and brought back by the restore drill within {days} days.",
     "ready": "Ready",
     "notReady": "{n} still to do",
     "ok": "Done",
@@ -241,6 +241,14 @@
       "drillBlob": "Press \"Run the restore drill now\" once Blob has a copy.",
       "drillDrive": "Press \"Run the restore drill now\" once Drive has a copy.",
       "telegram": "Keys & connections → Telegram: the bot's token and the chat, press Test."
+    },
+    "readySoon": "Ready for real orders · {n} soon after go-live",
+    "soon": "Soon after go-live",
+    "offSite": {
+      "title": "Off-server backup: not connected.",
+      "text": "Not connected yet: {places}. The server keeps its own copy every night meanwhile; connect them soon after go-live (this line comes back every day until then).",
+      "blob": "Azure Blob",
+      "drive": "Google Drive"
     }
   },
   "restore": {

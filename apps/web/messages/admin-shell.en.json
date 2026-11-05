@@ -566,6 +566,12 @@
       "whyWhat": "Return reasons",
       "adsSales": "Every day: ads vs sales",
       "adsSalesSub": "delivered sales per day; ad spend joins it later"
+    },
+    "offSite": {
+      "title": "Off-server backup: not connected.",
+      "text": "Not connected yet: {places}. The server keeps its own copy every night; connect them in Settings → System → Backups.",
+      "blob": "Azure Blob",
+      "drive": "Google Drive"
     }
   },
   "look": {

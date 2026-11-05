@@ -236,18 +236,44 @@ export default async function BackupsPage() {
               })}
             </div>
           </div>
-          <span className={`a2-pill ${gate.ready ? "ok" : "warn"}`}>
-            {c(gate.ready ? "gate.ready" : "gate.notReady", {
-              n: gate.checks.filter((x) => !x.ok).length,
-            })}
+          <span className={`a2-pill ${gate.complete ? "ok" : "warn"}`}>
+            {c(
+              gate.complete
+                ? "gate.ready"
+                : gate.ready
+                  ? "gate.readySoon"
+                  : "gate.notReady",
+              {
+                n: gate.checks.filter((x) => !x.ok && (gate.ready || !x.soon))
+                  .length,
+              },
+            )}
           </span>
         </div>
+        {gate.offSite.length ? (
+          <div
+            className="a2-note warn a2-mt12"
+            role="status"
+            data-testid="bk-offsite"
+          >
+            <ShellIcon name="alert" size={15} />
+            <span>
+              <b>{c("gate.offSite.title")}</b>{" "}
+              {c("gate.offSite.text", {
+                places: gate.offSite
+                  .map((k) => c(`gate.offSite.${k}`))
+                  .join(", "),
+              })}
+            </span>
+          </div>
+        ) : null}
         {gate.checks.map((check) => (
           <div
             key={check.key}
             className="a2-rule"
             data-testid={`bk-gate-${check.key}`}
             data-ok={check.ok ? "yes" : "no"}
+            data-soon={check.soon ? "yes" : undefined}
           >
             <span>
               <b className="a2-blk">{c(`gate.check.${check.key}`)}</b>
@@ -259,8 +285,10 @@ export default async function BackupsPage() {
                   : c(`gate.fix.${check.key}`)}
               </span>
             </span>
-            <span className={`a2-pill ${check.ok ? "ok" : "line"}`}>
-              {c(check.ok ? "gate.ok" : "gate.todo")}
+            <span
+              className={`a2-pill ${check.ok ? "ok" : check.soon ? "warn" : "line"}`}
+            >
+              {c(check.ok ? "gate.ok" : check.soon ? "gate.soon" : "gate.todo")}
             </span>
           </div>
         ))}

@@ -11,9 +11,10 @@ import { dayStart, daysPeriod, groupLines, kpi, kpiByDay, lines, sumLines, ymdIn
 import { imageSources, type ImageSource } from '@extas/media';
 import type { QueueRow } from '../admin-shell/queues';
 import type { ShellViewer } from '../admin-shell/sections';
+import { OFF_SITE, offSiteMissing } from '../backup-gate';
 import { chartWindow, shiftDay, type DashRange } from './range';
 
-export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues'] as const;
+export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite'] as const;
 export type DashPart = (typeof DASH_PARTS)[number];
 
 /** The keys a part needs (any one of them); the owner holds every key. */
@@ -24,6 +25,7 @@ export const PART_KEYS: Readonly<Record<DashPart, readonly string[]>> = {
   delivery: ['orders.read', 'delivery.read'],
   lowStock: ['inventory.read'],
   queues: [],
+  offSite: ['system.read'],
 };
 
 export const mayRead = (part: DashPart, v: ShellViewer) => v.owner || PART_KEYS[part].length === 0 || PART_KEYS[part].some((k) => v.perms.has(k));
@@ -136,6 +138,11 @@ export interface DashboardData {
   top: TopRow[] | null;
   lowStock: LowRow[] | null;
   queues: QueueRow[] | null;
+  /**
+   * CN-035 (PR 391): the places away from the server not connected yet (Azure Blob, Google Drive), for the yellow
+   * "Off-server backup: not connected" line that is back every day until both are; empty = connected; null = not read.
+   */
+  offSite: ('blob' | 'drive')[] | null;
 }
 
 const OPEN = {
@@ -371,6 +378,14 @@ async function top(c: DashCtx, n: number): Promise<TopRow[]> {
   });
 }
 
+async function offSite(c: DashCtx): Promise<('blob' | 'drive')[]> {
+  const live = await c.db.integration.findMany({
+    where: { storeId: null, archivedAt: null, enabled: true, mode: 'LIVE', provider: { in: [OFF_SITE.blob.provider, OFF_SITE.drive.provider] } },
+    select: { kind: true, provider: true },
+  });
+  return offSiteMissing(live);
+}
+
 async function lowStock(c: DashCtx): Promise<LowRow[]> {
   const alerts = await c.db.lowStockAlert.findMany({ where: { resolvedAt: null }, orderBy: [{ available: 'asc' }, { createdAt: 'asc' }], take: 200, select: { variantId: true, available: true } });
   if (!alerts.length) return [];
@@ -418,13 +433,14 @@ export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Pr
   const parts = new Set(wanted.filter((p) => mayRead(p, c.viewer)));
   const chart = chartWindow(c.range, c.s.chartMinDays);
   const on = <T>(p: DashPart, f: () => Promise<T>): Promise<T | null> => (parts.has(p) ? f() : Promise.resolve(null));
-  const [m, st, dl, tp, ls, qs] = await Promise.all([
+  const [m, st, dl, tp, ls, qs, off] = await Promise.all([
     on('money', () => money(c, chart)),
     on('stages', () => stages(c)),
     on('delivery', () => delivery(c)),
     on('top', () => top(c, c.s.topProducts)),
     on('lowStock', () => lowStock(c)),
     on('queues', () => c.queues()),
+    on('offSite', () => offSite(c)),
   ]);
-  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs };
+  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off };
 }

@@ -41,7 +41,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import bn from '../../messages/admin-backups.bn.json';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { t, type Dict } from './i18n';
-import { backupGateChecks } from './backup-gate';
+import { backupGateChecks, OFF_SITE } from './backup-gate';
 import { runtimeState, type RuntimeState } from './status';
 
 const PIN_MAX_DIGITS = 12;
@@ -117,7 +117,7 @@ export async function backupGateNow(deps: Pick<AdminDeps, 'db' | 'resolver' | 'n
   const [gate, rows] = await Promise.all([
     deps.resolver.value('backups.gate'),
     deps.db.integration.findMany({
-      where: { storeId: null, archivedAt: null, enabled: true, mode: 'LIVE', provider: { in: ['azureBlob', 'googleDrive', 'telegram'] } },
+      where: { storeId: null, archivedAt: null, enabled: true, mode: 'LIVE', provider: { in: [OFF_SITE.blob.provider, OFF_SITE.drive.provider, 'telegram'] } },
       select: { provider: true, kind: true },
     }),
   ]);
@@ -125,7 +125,7 @@ export async function backupGateNow(deps: Pick<AdminDeps, 'db' | 'resolver' | 'n
   return backupGateChecks({
     now: deps.now ? deps.now() : new Date(),
     gate,
-    live: { blob: has('STORAGE', 'azureBlob'), drive: has('GOOGLE_DRIVE', 'googleDrive'), telegram: has('TELEGRAM', 'telegram') },
+    live: { blob: has(OFF_SITE.blob.kind, OFF_SITE.blob.provider), drive: has(OFF_SITE.drive.kind, OFF_SITE.drive.provider), telegram: has('TELEGRAM', 'telegram') },
     backups: state.backups,
     drill: state.drill,
     restoreTest: state.restoreTest,

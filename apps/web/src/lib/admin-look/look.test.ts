@@ -175,6 +175,8 @@ describe('the look registry', () => {
     expect(mayRead('delivery', v(['delivery.read']))).toBe(true);
     expect(mayRead('queues', v([]))).toBe(true);
     expect(mayRead('lowStock', { perms: new Set(), owner: true })).toBe(true);
+    expect(mayRead('offSite', v(['orders.read']))).toBe(false); // CN-035: the backup line is for who sees System
+    expect(mayRead('offSite', v(['system.read']))).toBe(true);
     expect(Object.keys(PART_KEYS).sort()).toEqual([...DASH_PARTS].sort());
   });
   it('ships the team default off nothing: the standard design, a personal choice allowed, the guide as a panel', () => {

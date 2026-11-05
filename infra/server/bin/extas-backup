@@ -310,6 +310,17 @@ daily() {
   else status daily drive off "not connected — add the key in Keys & connections"; fi
   rm -rf "$work"
   prune_files
+  # CN-035 (PR 391): the copies away from the server are connected by the owner soon after go-live. Until Blob and Drive
+  # are both connected, one yellow line a day goes to Telegram (tg sends nothing until Telegram itself is connected; it
+  # follows "Telegram on failure"), the same words as the Dashboard's line. "Back up now" the same day does not repeat it.
+  local offsite="" told="$STATE/backup-offsite-told"
+  blob_on || offsite="Azure Blob"
+  drive_on || offsite="${offsite:+$offsite, }Google Drive"
+  if [ -z "$offsite" ]; then rm -f "$told"
+  elif [ "${BACKUP_TELEGRAM_FAIL:-yes}" = yes ] && [ "$(cat "$told" 2>/dev/null)" != "$(date +%F)" ]; then
+    tg "সার্ভারের বাইরের ব্যাকআপ: সংযুক্ত নয় ($offsite)। সার্ভার প্রতি রাতে নিজের কপি রাখে; সেটিংস → সিস্টেম → ব্যাকআপ থেকে সংযুক্ত করুন।"
+    date +%F > "$told"
+  fi
   # PR 507: a good night on Telegram only when the owner asked for it (a failure always comes from extas-monitor).
   if [ $rc -eq 0 ] && [ "${BACKUP_TELEGRAM_OK:-no}" = yes ]; then tg "${BACKUP_TELEGRAM_OK_TEXT:-backup ok}"; fi
   exit $rc

@@ -318,6 +318,8 @@
 .adm2 .a3-meta{font-size:12px;color:var(--mute);margin-top:5px}
 .adm2 .a3-tip2{display:flex;gap:9px;align-items:center;background:var(--g0);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink2);margin-top:10px}
 .adm2 .a3-tip2 svg{color:var(--gold);flex:none}
+/* CN-035 (PR 391): the yellow "Off-server backup: not connected" line under the Dashboard header, a 44px tap target */
+.adm2 .a3-offsite{min-height:44px;align-items:center;margin:0 0 14px;text-decoration:none;color:var(--ink)}
 .adm2 .a3-prob{display:flex;gap:12px;padding:9px 0;border-top:1px solid var(--ln2);align-items:flex-start}
 .adm2 .a3-prob:first-child{border-top:0;padding-top:0}
 .adm2 .a3-prob b{font-weight:600;font-size:14px;display:block;line-height:1.35}
