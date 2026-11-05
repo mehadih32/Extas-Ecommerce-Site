@@ -87,6 +87,16 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
       { name: 'segmentsShown', kind: 'int' },
     ],
   },
+  {
+    // PR 533 — the customer history at approval (Orders › To confirm): how many earlier orders and reasons it shows
+    key: 'customers.approvalHistory',
+    card: 'approvalHistory',
+    fields: [
+      { name: 'enabled', kind: 'bool' },
+      { name: 'recent', kind: 'int' },
+      { name: 'reasonsShown', kind: 'int' },
+    ],
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {

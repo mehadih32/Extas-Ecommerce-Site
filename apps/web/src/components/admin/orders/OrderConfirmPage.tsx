@@ -6,6 +6,7 @@
 // come with their PRs (148 and the call-task screens); nothing here is a sample.
 import Link from 'next/link';
 import type { AdminView } from '@/lib/admin-page';
+import type { ApprovalCard } from '@/lib/admin-orders/approval';
 import type { OrderDetailView } from '@/lib/admin-orders/detail';
 import type { OrderListData } from '@/lib/admin-orders/list';
 import { listHref, type ListQuery } from '@/lib/admin-orders/model';
@@ -23,7 +24,56 @@ export const pickHref = (query: ListQuery, id: string) => {
   return `${base}${base.includes('?') ? '&' : '?'}order=${id}`;
 };
 
-export function OrderConfirmPage({ view, query, list, chosen, oldest, open }: { view: AdminView; query: ListQuery; list: OrderListData; chosen: OrderDetailView | null; oldest: string | null; open: string | null }) {
+/** PR 533 — the customer history at approval (only while the owner's `customers.approvalHistory` is on). */
+function HistoryCard({ h }: { h: ApprovalCard }) {
+  return (
+    <section className="a2-card" data-testid="approval-history">
+      <h2 className="a2-h3">{h.title}</h2>
+      <div className="a2-xs a2-mute">{h.sub}</div>
+      {h.tiles ? (
+        <>
+          <div className="a2-hist a2-mt12">
+            {h.tiles.map((x) => (
+              <div key={x.key} data-k={x.key} data-tone={x.tone}>
+                <b>{x.value}</b>
+                <span>{x.label}</span>
+              </div>
+            ))}
+          </div>
+          {h.reasons.length || h.noReason ? (
+            <>
+              <h3 className="a2-sm a2-mt12">{h.reasonsTitle}</h3>
+              {h.reasons.map((r, i) => (
+                <div key={i} className="a2-rule">
+                  <span>{r.label}</span>
+                  <b className="a2-num">{r.value}</b>
+                </div>
+              ))}
+              {h.noReason ? <div className="a2-xs a2-mute">{h.noReason}</div> : null}
+            </>
+          ) : null}
+          <h3 className="a2-sm a2-mt12">{h.recentTitle}</h3>
+          {h.recent.map((r) => (
+            <div key={r.number} className="a2-rule">
+              <span>
+                <Link className="a2-lnk" href={r.href}>
+                  {r.number}
+                </Link>
+                <span className="a2-xs a2-mute">{` · ${r.placed}${r.extra ? ` · ${r.extra}` : ''}`}</span>
+              </span>
+              <b className={`a2-pill ${r.tone}`}>{r.outcome}</b>
+            </div>
+          ))}
+        </>
+      ) : (
+        <div className="a2-sm a2-mt12">{h.first}</div>
+      )}
+      <div className="a2-xs a2-mute a2-mt12">{h.note}</div>
+    </section>
+  );
+}
+
+export function OrderConfirmPage({ view, query, list, chosen, oldest, open, history = null }: { view: AdminView; query: ListQuery; list: OrderListData; chosen: OrderDetailView | null; oldest: string | null; open: string | null; history?: ApprovalCard | null }) {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const toConfirm = list.counts.toConfirm ?? 0;
@@ -58,6 +108,7 @@ export function OrderConfirmPage({ view, query, list, chosen, oldest, open }: { 
           </div>
         ) : null}
       </section>
+      {history ? <HistoryCard h={history} /> : null}
       {chosen.bands
         .filter((b) => b.specs.length)
         .map((b) => (

@@ -1535,6 +1535,39 @@
       "sure": "How sure: {p}",
       "play": "Play the recording",
       "notKept": "The recording was not kept (the owner's switch)."
+    },
+    "appr": {
+      "title": "Customer history",
+      "sub": "{phone} · first order {since}",
+      "noPhone": "No phone number on this order, so no history to read.",
+      "first": "First order from this number: nothing earlier to read.",
+      "tile": {
+        "orders": "orders",
+        "delivered": "truly delivered",
+        "refused": "refused at the door",
+        "chargePaid": "refused, charge paid",
+        "checking": "delivery being checked",
+        "returned": "returned after delivery",
+        "exchanges": "exchanges",
+        "cancelled": "cancelled",
+        "open": "still open",
+        "ourFault": "our fault (not counted)",
+        "noAnswer": "calls not answered"
+      },
+      "reasons": "Why parcels came back",
+      "noReason": "{n} with no reason recorded",
+      "recent": "Latest orders",
+      "exchange": "exchange",
+      "out": {
+        "delivered": "Delivered",
+        "checking": "Being checked",
+        "refused": "Refused",
+        "chargePaid": "Refused, charge paid",
+        "ourFault": "Our fault",
+        "cancelled": "Cancelled",
+        "open": "Open"
+      },
+      "note": "Only shows his history: it never confirms, holds or blocks. You decide."
     }
   }
 }

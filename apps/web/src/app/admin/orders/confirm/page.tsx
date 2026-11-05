@@ -1,6 +1,8 @@
 // PR 141 — ORD-02 To confirm at /admin/orders/confirm (docs/BACKEND-ARCHITECTURE.md §5.3, demo V12.3): the call queue
 // (`?view=toConfirm|cancelRequests|awaitingAdvance`, `?order=<id>` the chosen order, `?do=` a command's dialog). It
 // needs `orders.confirm` in the store (the demo's key for this page); the order service checks every command again.
+// PR 533: the chosen order's customer history card (orders, true deliveries, refusals and charge-paid returns with
+// their reasons, exchanges) while the owner's `customers.approvalHistory` is on.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -12,6 +14,7 @@ import { readDeps } from '@/components/admin/orders/OrderListPage';
 import { ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
+import { approvalCard } from '@/lib/admin-orders/approval';
 import { DO_PERM, commandTexts, loadOrderDetail } from '@/lib/admin-orders/detail';
 import { ageText, loadOrderList, parseListQuery } from '@/lib/admin-orders/list';
 import { listHref } from '@/lib/admin-orders/model';
@@ -49,12 +52,14 @@ export default async function ConfirmQueuePage({ searchParams }: { searchParams:
   const [list, oldest] = await Promise.all([loadOrderList(rd, who, view, 'confirm', q), od.viewOldest(rd, who, 'toConfirm')]);
   const want = one(sp.order);
   const pick = list.rows.find((r) => r.id === want) ?? list.rows[0];
-  const chosen = pick ? await loadOrderDetail(rd, who, view, pick.id, perms) : null;
+  // PR 533: the customer history at approval, beside the call card (null while the owner's switch is off)
+  const [chosen, hist] = pick ? await Promise.all([loadOrderDetail(rd, who, view, pick.id, perms), perms.has('orders.read') ? od.approvalHistory(rd, who, pick.id) : null]) : [null, null];
+  const history = hist ? approvalCard(view, hist, new Map((await od.reasonLists(rd, who.storeId)).refusal.map((r) => [r.key, view.lang === 'bn' ? r.bn || r.en : r.en]))) : null;
   const wantDo = one(sp.do) ?? null;
   const open = wantDo && DO_PERM[wantDo] && perms.has(DO_PERM[wantDo]) ? wantDo : null;
   return (
     <CommandsProvider texts={commandTexts(view)}>
-      <OrderConfirmPage view={view} query={q} list={list} chosen={chosen} oldest={oldest ? ageText(view, oldest, now) : null} open={open} />
+      <OrderConfirmPage view={view} query={q} list={list} chosen={chosen} oldest={oldest ? ageText(view, oldest, now) : null} open={open} history={history} />
     </CommandsProvider>
   );
 }

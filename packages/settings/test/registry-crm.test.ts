@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { aiWriterSettingsSchema, BIRTHDAY_NO_YEAR, birthdayDate, birthdayParts, birthdaySettingsSchema, CRM_CAMPAIGN_STEP, customerReportSettingsSchema, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema, winbackSettingsSchema } from '../src/registry-crm';
+import { aiWriterSettingsSchema, approvalHistorySettingsSchema, BIRTHDAY_NO_YEAR, birthdayDate, birthdayParts, birthdaySettingsSchema, CRM_CAMPAIGN_STEP, customerReportSettingsSchema, customerExportSettingsSchema, pointsSettingsSchema, sendAdviceSettingsSchema, CRM_MESSAGE_STEP, crmSettings, JOURNEY_KIND_KEYS, journeySettingsSchema, journeysSettingsSchema, segmentSettingsSchema, winbackSettingsSchema } from '../src/registry-crm';
 
 describe('CRM settings (v190–209)', () => {
   it('every key is in the registry in the customers group, labelled in English and Bengali, its default valid', () => {
@@ -122,5 +122,14 @@ describe('CRM settings (v190–209)', () => {
     expect(customerReportSettingsSchema.safeParse({ ...s.default, quietDays: 3 }).success).toBe(false);
     expect(customerReportSettingsSchema.safeParse({ ...s.default, segmentsShown: 0 }).success).toBe(false);
     expect(customerReportSettingsSchema.safeParse({ ...s.default, send: true }).success).toBe(false);
+  });
+
+  it('PR 533: the customer history at approval is off as shipped (v202); it only shows, its list sizes stay in range', () => {
+    const s = crmSettings['customers.approvalHistory'];
+    expect(s.version).toBe(202);
+    expect(s.default).toEqual({ enabled: false, recent: 5, reasonsShown: 5 });
+    expect(approvalHistorySettingsSchema.safeParse({ ...s.default, recent: 0 }).success).toBe(false);
+    expect(approvalHistorySettingsSchema.safeParse({ ...s.default, reasonsShown: 21 }).success).toBe(false);
+    expect(approvalHistorySettingsSchema.safeParse({ ...s.default, autoConfirm: true }).success).toBe(false);
   });
 });
