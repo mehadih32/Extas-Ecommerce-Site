@@ -232,7 +232,7 @@ export async function discountWasFor(deps: RulesDeps, input: { storeId: number; 
   ]);
   const f = (await scopeFacts(deps.db, input.storeId, [v.productId])).get(v.productId)!;
   const q = quote(
-    rules.filter((r) => r.actions.some((a) => a.type === 'discount' && a.target === 'lines' && !a.requiresCoupon && !a.minSubtotalParam)),
+    rules.filter((r) => r.actions.some((a) => a.type === 'discount' && a.target === 'lines' && !a.requiresCoupon && !a.minSubtotalParam && !a.minQuantityParam)),
     { now, lines: [{ id: v.id, variantId: v.id, unitPriceMinor: v.priceMinor, quantity: 1, ...f, floorMinor: floorMinorOf(v.shopPriceMinor, floorPercent, roundingStepMinor) }], bandKey: null, paymentMethod: null, couponCode: null, couponRuleIds: [], customer: { loggedIn: false, deliveredOrders: null }, source: null, weekday: null, hour: null },
     { maxPercentOff, roundingStepMinor },
   );

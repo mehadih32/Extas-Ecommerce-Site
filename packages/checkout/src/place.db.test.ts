@@ -146,6 +146,18 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
   });
 
   describe('review R1 B1 · the code is redeemed in the order’s own transaction', () => {
+    it('PR 271, SIM-F-009: a guest’s free-delivery code ships free, is kept on the order and counts against its limit', async () => {
+      await f.freeDeliveryCoupon('TEST-FREE', { usageLimit: 1 });
+      const a = await shown('code-free-a', { code: 'test-free' });
+      expect(a.q.bag.code).toEqual({ state: 'freeDelivery', code: 'TEST-FREE' });
+      expect(a.q.totals.deliveryMinor).toBe(0);
+      const o = await orderOf((await a.place()).orderId);
+      expect(o.couponCode).toBe('TEST-FREE');
+      expect(await f.t.prisma.coupon.findFirstOrThrow({ where: { storeId: f.S, code: 'TEST-FREE' }, select: { usedCount: true } })).toEqual({ usedCount: 1 });
+      const b = await shown('code-free-b', { code: 'test-free', phone: '01800000271' });
+      expect(b.q.bag.code).toMatchObject({ state: 'refused', reason: 'USED_UP' });
+    });
+
     it('a code with one use in all: the first order redeems it; the next is refused with the checkout as it is now', async () => {
       await f.coupon('TEST-ONCE', 10_000, { usageLimit: 1 });
       const a = await shown('code-once-a', { code: 'test-once' });

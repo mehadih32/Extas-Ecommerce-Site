@@ -72,9 +72,11 @@ function slotsOf(a: Action): string[] {
     case 'exchangePolicy':
       return ['exchangePolicy'];
     case 'setTier':
-      return ['setTier'];
+      // PR 271: a set price behind a code meets no standing set price (it works only when a customer types the code).
+      return a.requiresCoupon ? [] : ['setTier'];
     case 'freeDelivery':
     case 'discount':
+    case 'buyGet':
       return [];
   }
 }

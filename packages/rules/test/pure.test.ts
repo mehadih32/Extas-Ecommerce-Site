@@ -36,6 +36,7 @@ import {
   startTimer,
   timerRemaining,
   tokensIn,
+  unlocksWithCoupon,
   type CartFacts,
   type CheckLimits,
   type LineFact,
@@ -609,5 +610,84 @@ describe('PR 609 · the selling-price floor holds every offer (catalogue.floor.m
     expect(q.itemsMinor).toBe(160000);
     expect(q.applied[0]).toMatchObject({ effect: 'setTier', amountMinor: 20000, separateMinor: 180000, setMinor: 160000 });
     expect(q.floorHeld[0]!.heldMinor).toBe(10000);
+  });
+});
+
+describe('PR 271 · the coupon engine, fully dynamic (answer 20)', () => {
+  const int = (key: string, value: number | null) => ({ key, type: 'int' as const, value, labelEn: key });
+  const pctP = (key: string, value: number | null) => ({ key, type: 'percent' as const, value, labelEn: key });
+  const buyGet = (buy: number, get: number, pct: number, max: number | null = null, requiresCoupon = true) =>
+    rule({
+      kind: 'discount',
+      params: [int('buy', buy), int('get', get), pctP('pct', pct), ...(max === null ? [] : [int('max', max)])],
+      actions: [{ type: 'buyGet', buyParam: 'buy', getParam: 'get', percentParam: 'pct', ...(max === null ? {} : { maxGroupsParam: 'max' }), requiresCoupon }],
+    });
+  it('buy one, get one: the cheaper piece of each pair is free, only with the code', () => {
+    const bogo = buyGet(1, 1, 100);
+    const lines = [line('a', 200000), line('b', 150000), line('c', 90000)];
+    expect(quote([bogo], cart(lines), ENGINE).waiting).toEqual([{ rule: expect.objectContaining({ id: bogo.id }), why: 'COUPON' }]);
+    const q = quote([bogo], cart(lines, { couponRuleIds: [bogo.id] }), ENGINE);
+    // dearest first: (2000, 1500) → 1500 free; 900 is alone and pays
+    expect(q.discountMinor).toBe(150000);
+    expect(q.lines.find((l) => l.id === 'b')!.discountMinor).toBe(150000);
+    expect(q.applied[0]).toMatchObject({ effect: 'discount', amountMinor: 150000 });
+  });
+  it('buy 2, the 3rd at a percentage; quantities count piece by piece; the owner caps the groups', () => {
+    const q = quote([buyGet(2, 1, 50)], cart([line('a', 100000, 6)], { couponRuleIds: [] }), ENGINE);
+    expect(q.discountMinor).toBe(0);
+    const r = buyGet(2, 1, 50);
+    expect(quote([r], cart([line('a', 100000, 6)], { couponRuleIds: [r.id] }), ENGINE).discountMinor).toBe(100000); // two groups of 3
+    const capped = buyGet(2, 1, 50, 1);
+    expect(quote([capped], cart([line('a', 100000, 6)], { couponRuleIds: [capped.id] }), ENGINE).discountMinor).toBe(50000);
+  });
+  it('too few pieces: the code waits and says how many more', () => {
+    const r = buyGet(2, 1, 100);
+    const q = quote([r], cart([line('a', 100000)], { couponRuleIds: [r.id] }), ENGINE);
+    expect(q.discountMinor).toBe(0);
+    expect(q.waiting).toEqual([{ rule: expect.objectContaining({ id: r.id }), why: 'MIN_QUANTITY', morePieces: 2 }]);
+  });
+  it('an empty number does nothing (the owner has not typed it), and the floor still holds', () => {
+    const r = rule({ kind: 'discount', params: [int('buy', 1), int('get', null), pctP('pct', 100)], actions: [{ type: 'buyGet', buyParam: 'buy', getParam: 'get', percentParam: 'pct', requiresCoupon: false }] });
+    expect(quote([r], cart([line('a', 1000, 4)]), ENGINE).discountMinor).toBe(0);
+    const free = buyGet(1, 1, 100, null, false);
+    const q = quote([free], cart([line('a', 100000, 2, { floorMinor: 60000 })]), ENGINE);
+    expect(q.discountMinor).toBe(80000); // 2 × ৳1,000 may not go below 2 × ৳600
+    expect(q.floorHeld[0]).toMatchObject({ heldMinor: 20000 });
+  });
+  it('"buy 2, get 5% off": a percentage that waits for a number of pieces', () => {
+    const r = rule({ kind: 'discount', params: [pctP('pct', 5), int('n', 2)], actions: [{ type: 'discount', mode: 'percent', param: 'pct', target: 'lines', minQuantityParam: 'n', requiresCoupon: true, showWas: false }] });
+    expect(quote([r], cart([line('a', 100000)], { couponRuleIds: [r.id] }), ENGINE).waiting).toEqual([{ rule: expect.objectContaining({ id: r.id }), why: 'MIN_QUANTITY', morePieces: 1 }]);
+    expect(quote([r], cart([line('a', 100000, 2)], { couponRuleIds: [r.id] }), ENGINE).discountMinor).toBe(10000);
+  });
+  it('free delivery and a set price may wait for a code too', () => {
+    const fd = rule({ kind: 'discount', actions: [{ type: 'freeDelivery', requiresCoupon: true }] });
+    const lines = [line('a', 50000)];
+    const without = quote([delivery(), fd], cart(lines), ENGINE);
+    expect(without.delivery).toMatchObject({ free: false, chargeMinor: 8000 });
+    expect(without.waiting).toEqual([{ rule: expect.objectContaining({ id: fd.id }), why: 'COUPON' }]);
+    expect(quote([delivery(), fd], cart(lines, { couponRuleIds: [fd.id] }), ENGINE).delivery).toMatchObject({ free: true, chargeMinor: 0, reason: 'FREE_CAMPAIGN', freeRule: expect.objectContaining({ id: fd.id }) });
+    const set = rule({ kind: 'setTier', params: [money('t2', 150000)], actions: [{ type: 'setTier', tiers: [{ quantity: 2, param: 't2' }], requiresCoupon: true }] });
+    const two = [line('a', 100000), line('b', 100000)];
+    expect(quote([set], cart(two), ENGINE).discountMinor).toBe(0);
+    expect(quote([set], cart(two, { couponRuleIds: [set.id] }), ENGINE).discountMinor).toBe(50000);
+  });
+  it('a coupon may unlock any shape that asks for a code; a code-only set price meets no standing set price', () => {
+    expect(unlocksWithCoupon(buyGet(1, 1, 100))).toBe(true);
+    expect(unlocksWithCoupon(rule({ kind: 'discount', actions: [{ type: 'freeDelivery', requiresCoupon: true }] }))).toBe(true);
+    expect(unlocksWithCoupon(rule({ kind: 'discount', actions: [{ type: 'freeDelivery' }] }))).toBe(false);
+    expect(needsOwnerOk(buyGet(1, 1, 100))).toBe(true);
+    const tier = (requiresCoupon?: boolean) => rule({ kind: 'setTier', params: [money('t2', 150000)], actions: [{ type: 'setTier', tiers: [{ quantity: 2, param: 't2' }], ...(requiresCoupon ? { requiresCoupon } : {}) }] });
+    const both = detectConflicts({ rules: [tier(), tier()], currency: 'BDT', now: NOW });
+    expect(both.some((c) => c.kind === 'SAME_SLOT' && c.slot === 'setTier')).toBe(true);
+    expect(detectConflicts({ rules: [tier(), tier(true)], currency: 'BDT', now: NOW }).filter((c) => c.slot === 'setTier')).toEqual([]);
+  });
+  it('the coupon shapes are templates: each one asks for a code and starts empty', async () => {
+    const shapes = TEMPLATES.filter((t) => t.id === 'coupon' || t.id.startsWith('coupon-'));
+    expect(shapes.map((t) => t.id).sort()).toEqual(['coupon', 'coupon-buy-get', 'coupon-free-delivery', 'coupon-percent', 'coupon-pieces', 'coupon-set-price']);
+    for (const t of shapes) {
+      const c = await contentFromTemplate(t, { value: async () => null });
+      expect(unlocksWithCoupon(c)).toBe(true);
+      expect(c.params.every((p) => p.value === null)).toBe(true);
+    }
   });
 });

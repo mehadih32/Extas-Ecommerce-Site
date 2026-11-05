@@ -155,8 +155,11 @@ export const actionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('deliveryCharge'), byBand }).strict(),
   /** PR 210 — free delivery when the items come to at least the param (after discounts). */
   z.object({ type: z.literal('freeDeliveryOver'), param: keySchema }).strict(),
-  /** PR 210, 214 — free delivery while the rule's conditions and window hold (a campaign). */
-  z.object({ type: z.literal('freeDelivery') }).strict(),
+  /**
+   * PR 210, 214 — free delivery while the rule's conditions and window hold (a campaign). PR 271: or only with a coupon
+   * (`requiresCoupon`), a free-delivery code.
+   */
+  z.object({ type: z.literal('freeDelivery'), requiresCoupon: z.boolean().optional() }).strict(),
   /** PR 211 — the exchange window (hours from delivery), exchanges per item, the charge per band, the reasons. */
   z
     .object({
@@ -177,6 +180,8 @@ export const actionSchema = z.discriminatedUnion('type', [
         .min(1)
         .max(10)
         .refine((t) => new Set(t.map((x) => x.quantity)).size === t.length, { message: 'each tier needs its own quantity' }),
+      /** PR 271 — a set price unlocked by a code only (it then never counts as the shop's standing set price). */
+      requiresCoupon: z.boolean().optional(),
     })
     .strict(),
   /** PR 213 — a discount: a percentage or an amount, on the lines in scope or on the order; optionally only with a coupon. */
@@ -191,6 +196,23 @@ export const actionSchema = z.discriminatedUnion('type', [
       requiresCoupon: z.boolean(),
       /** May show a struck "was" price (only through the honesty guard, was-price.ts). */
       showWas: z.boolean(),
+      /** PR 271 — only when the bag holds at least this many pieces in scope (an int param): "buy 2, get 5% off". */
+      minQuantityParam: keySchema.optional(),
+    })
+    .strict(),
+  /**
+   * PR 271 — buy some, get some: for every `buyParam` pieces in scope, `getParam` more (the cheapest of each group) at
+   * `percentParam` off (100 = free). Buy-one-get-one is 1 / 1 / 100; "buy 2, the 3rd at half price" is 2 / 1 / 50. An
+   * optional `maxGroupsParam` caps how many groups one order gets. Every number is the owner's param.
+   */
+  z
+    .object({
+      type: z.literal('buyGet'),
+      buyParam: keySchema,
+      getParam: keySchema,
+      percentParam: keySchema,
+      maxGroupsParam: keySchema.optional(),
+      requiresCoupon: z.boolean(),
     })
     .strict(),
   /** PR 214 — order-by cut-off date per band (datetime params). */
@@ -211,8 +233,8 @@ export const KIND_SPECS: Record<RuleKind, KindSpec> = {
   delivery: { actions: ['deliveryCharge', 'freeDeliveryOver', 'freeDelivery'], slots: ['short', 'full', 'progress', 'unlocked'] },
   exchange: { actions: ['exchangePolicy'], slots: ['short', 'full'] },
   setTier: { actions: ['setTier'], slots: ['short', 'full', 'badge'] },
-  discount: { actions: ['discount'], slots: ['short', 'full', 'badge'] },
-  festive: { actions: ['cutoff', 'freeDelivery', 'discount'], slots: ['short', 'full', 'after'] },
+  discount: { actions: ['discount', 'buyGet', 'freeDelivery'], slots: ['short', 'full', 'badge'] },
+  festive: { actions: ['cutoff', 'freeDelivery', 'discount', 'buyGet'], slots: ['short', 'full', 'after'] },
   payment: { actions: ['cod'], slots: ['short', 'full'] },
   policy: { actions: [], slots: ['short', 'full'] },
   fulfilment: { actions: [], slots: ['short', 'full'] },
@@ -240,6 +262,14 @@ export function actionParamNeeds(a: Action): { param: string; type: ParamType; w
         { param: a.param, type: a.mode === 'percent' ? 'percent' : 'money', where: 'discount' },
         ...(a.maxParam ? [{ param: a.maxParam, type: 'money' as const, where: 'discount.max' }] : []),
         ...(a.minSubtotalParam ? [{ param: a.minSubtotalParam, type: 'money' as const, where: 'discount.minSubtotal' }] : []),
+        ...(a.minQuantityParam ? [{ param: a.minQuantityParam, type: 'int' as const, where: 'discount.minQuantity' }] : []),
+      ];
+    case 'buyGet':
+      return [
+        { param: a.buyParam, type: 'int', where: 'buyGet.buy' },
+        { param: a.getParam, type: 'int', where: 'buyGet.get' },
+        { param: a.percentParam, type: 'percent', where: 'buyGet.percent' },
+        ...(a.maxGroupsParam ? [{ param: a.maxGroupsParam, type: 'int' as const, where: 'buyGet.maxGroups' }] : []),
       ];
     case 'cutoff':
       return Object.entries(a.byBand).map(([band, param]) => ({ param, type: 'datetime', where: `cutoff.${band}` }));
@@ -292,6 +322,15 @@ export interface Rule extends RuleContent {
 }
 
 export const needsOwnerOk = (r: Pick<RuleContent, 'actions'>): boolean => r.actions.some(movesMoney);
+
+/** PR 271 — does the action wait for a coupon code (discount, buy-get, free delivery or a set price)? */
+export const asksForCoupon = (a: Action): boolean => 'requiresCoupon' in a && a.requiresCoupon === true;
+
+/**
+ * PR 271 — the offer shapes a coupon may unlock: any rule with at least one action that waits for a code. A new shape
+ * is a new template (data/templates.json) built from these blocks, never new code.
+ */
+export const unlocksWithCoupon = (r: Pick<RuleContent, 'actions'>): boolean => r.actions.some(asksForCoupon);
 
 export const paramOf = (r: Pick<RuleContent, 'params'>, key: string): Param | undefined => r.params.find((p) => p.key === key) as Param | undefined;
 

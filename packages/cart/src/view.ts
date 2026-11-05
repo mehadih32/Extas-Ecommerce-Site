@@ -368,6 +368,9 @@ export async function bagView(
     check: quote.coupon,
     appliedMinor: offers.filter((o) => o.code).reduce((s, o) => s + o.amountMinor, 0),
     moreMinor,
+    // PR 271: a buy-get or few-pieces code waiting for pieces; a free-delivery code.
+    morePieces: couponRuleId ? (quote.waiting.find((w) => w.rule.id === couponRuleId && w.why === 'MIN_QUANTITY')?.morePieces ?? null) : null,
+    freeDelivery: couponRuleId !== null && quote.delivery.freeRule?.id === couponRuleId,
     setApplied: sets.length > 0 || quote.applied.some((a) => a.effect === 'setTier'),
     otherApplied: quote.applied.some((a) => a.effect === 'discount' && a.rule.id !== couponRuleId),
     referral,

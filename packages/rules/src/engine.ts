@@ -5,8 +5,10 @@
 // The order of work:
 //   1. live rules (active, not archived, inside their window) whose conditions hold for this cart;
 //   2. set tiers (PR 212): any N in scope for a set price, grouped so the customer pays the least;
-//   3. discounts (PR 213): percentage or amount, on lines or on the order, with a coupon when the rule needs one; a
-//      line takes one offer unless every offer on it may combine ("stackable"); a set tier never combines;
+//   3. buy some, get some (PR 271): for every N pieces in scope, M more of the cheapest at a percentage off (100 = free);
+//      then discounts (PR 213): percentage or amount, on lines or on the order, with a coupon when the rule needs one
+//      (PR 271: and, if set, a smallest number of pieces); a line takes one offer unless every offer on it may combine
+//      ("stackable"); a set tier never combines. PR 271: a set price or free delivery may also wait for a coupon;
 //   4. delivery (PR 210): the charge of the customer's band from the first delivery rule in the resolution order;
 //      free when a free-delivery rule holds (over a threshold, a campaign, or every product is free-delivery); an
 //      unknown band or a charge the owner has not set gives "no charge known" (null), never a made-up number;
@@ -18,7 +20,7 @@
 //
 // Money is integer minor units throughout. Every rounding is down, so a discount is never larger than its rule says.
 import { conditionHolds, inScope, resolutionOrder, type ConditionFacts, type ScopeFacts } from './match';
-import { isLive, valueOf, type Action, type Rule } from './model';
+import { asksForCoupon, isLive, valueOf, type Action, type Rule } from './model';
 
 export interface LineFact extends ScopeFacts {
   id: string;
@@ -126,7 +128,7 @@ export interface Quote {
   totalKnown: boolean;
   applied: Applied[];
   /** Rules that would apply but wait for something (a coupon, a larger cart). */
-  waiting: { rule: RuleRef; why: 'COUPON' | 'MIN_SUBTOTAL' }[];
+  waiting: { rule: RuleRef; why: 'COUPON' | 'MIN_SUBTOTAL' | 'MIN_QUANTITY'; /** MIN_QUANTITY: how many more pieces. */ morePieces?: number }[];
   /** PR 609: how much of each offer the selling-price floor held back (empty when no floor stopped anything). */
   floorHeld: { rule: RuleRef; heldMinor: number }[];
 }
@@ -302,6 +304,10 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
   // ---- 2. set tiers ----
   for (const { rule, action } of actions('setTier')) {
     if (action.type !== 'setTier') continue;
+    if (action.requiresCoupon && !f.couponRuleIds.includes(rule.id)) {
+      waiting.push({ rule: ref(rule), why: 'COUPON' });
+      continue;
+    }
     const tiers = action.tiers.flatMap((t) => {
       const v = valueOf<number>(rule, t.param);
       return v === null ? [] : [{ quantity: t.quantity, priceMinor: v }];
@@ -340,7 +346,48 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
     if (total > 0) applied.push({ rule: ref(rule), kind: rule.kind, effect: 'setTier', amountMinor: total, separateMinor: separate, setMinor: inSets + heldHere });
   }
 
-  // ---- 3. discounts ----
+  // ---- 3a. buy some, get some (PR 271) ----
+  for (const { rule, action } of actions('buyGet')) {
+    if (action.type !== 'buyGet') continue;
+    if (action.requiresCoupon && !f.couponRuleIds.includes(rule.id)) {
+      waiting.push({ rule: ref(rule), why: 'COUPON' });
+      continue;
+    }
+    const buy = valueOf<number>(rule, action.buyParam);
+    const get = valueOf<number>(rule, action.getParam);
+    const pct = valueOf<number>(rule, action.percentParam);
+    if (buy === null || get === null || pct === null || buy < 1 || get < 1 || pct <= 0) continue;
+    const eligible = lines.filter((s) => inScope(rule.scope, s.fact) && lineAccepts(s, rule.stackable));
+    // One unit per piece at what it costs now; the dearest first, so each group's free (or cheaper) pieces are its cheapest.
+    const units = eligible.flatMap((s, li) => Array.from({ length: s.fact.quantity }, () => ({ li, p: Math.floor(net(s) / s.fact.quantity) }))).sort((a, b) => b.p - a.p);
+    const size = buy + get;
+    if (units.length < size) {
+      if (units.length > 0) waiting.push({ rule: ref(rule), why: 'MIN_QUANTITY', morePieces: size - units.length });
+      continue;
+    }
+    const cap = action.maxGroupsParam ? valueOf<number>(rule, action.maxGroupsParam) : null;
+    const groups = Math.min(Math.floor(units.length / size), cap !== null && cap >= 0 ? cap : Number.POSITIVE_INFINITY);
+    const want = new Array<number>(eligible.length).fill(NOTHING);
+    const step = limits.roundingStepMinor ?? 1;
+    for (let g = 0; g < groups; g++) {
+      for (let j = g * size + buy; j < (g + 1) * size; j++) want[units[j]!.li]! += percentCut(units[j]!.p, Math.min(pct, 100), step);
+    }
+    let total = NOTHING;
+    eligible.forEach((s, i) => {
+      const w = Math.max(NOTHING, Math.min(want[i]!, net(s)));
+      if (w <= 0) return;
+      // PR 609: never below the line's floor.
+      const c = Math.min(w, room(s));
+      hold(rule, w - c);
+      if (c <= 0) return;
+      s.discount += c;
+      s.offers.push({ rule: ref(rule), kind: 'discount', amountMinor: c, stackable: rule.stackable });
+      total += c;
+    });
+    if (total > 0) applied.push({ rule: ref(rule), kind: rule.kind, effect: 'discount', amountMinor: total });
+  }
+
+  // ---- 3b. discounts ----
   for (const { rule, action } of actions('discount')) {
     if (action.type !== 'discount') continue;
     if (action.requiresCoupon && !f.couponRuleIds.includes(rule.id)) {
@@ -355,6 +402,13 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
     const eligibleTotal = sum(eligible.map(net));
     if (min !== null && eligibleTotal < min) {
       waiting.push({ rule: ref(rule), why: 'MIN_SUBTOTAL' });
+      continue;
+    }
+    // PR 271: "buy 2, get 5% off" — the pieces in scope must reach the owner's number.
+    const minPieces = action.minQuantityParam ? valueOf<number>(rule, action.minQuantityParam) : null;
+    const pieces = sum(eligible.map((s) => s.fact.quantity));
+    if (minPieces !== null && pieces < minPieces) {
+      waiting.push({ rule: ref(rule), why: 'MIN_QUANTITY', morePieces: minPieces - pieces });
       continue;
     }
     let cuts: number[];
@@ -414,7 +468,9 @@ export function quote(rules: readonly Rule[], f: CartFacts, limits: EngineLimits
       delivery.reason = delivery.baseChargeMinor === null ? 'NOT_SET' : 'CHARGED';
     } else delivery.reason = 'NO_RULE';
   }
-  const campaign = actions('freeDelivery').find(({ rule }) => allInScope(rule));
+  // PR 271: a free-delivery code counts only when its coupon was typed and accepted.
+  for (const { rule, action } of actions('freeDelivery')) if (asksForCoupon(action) && !f.couponRuleIds.includes(rule.id)) waiting.push({ rule: ref(rule), why: 'COUPON' });
+  const campaign = actions('freeDelivery').find(({ rule, action }) => allInScope(rule) && (!asksForCoupon(action) || f.couponRuleIds.includes(rule.id)));
   const over = actions('freeDeliveryOver').find(({ action, rule }) => action.type === 'freeDeliveryOver' && valueOf<number>(rule, action.param) !== null);
   if (over && over.action.type === 'freeDeliveryOver') {
     delivery.freeOverMinor = valueOf<number>(over.rule, over.action.param);

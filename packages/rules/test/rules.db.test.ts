@@ -482,6 +482,42 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
     for (const c of [open, members, guests]) await setCouponEnabled(deps(), as(owner), c.id, { enabled: false });
   });
 
+  it('PR 271, SIM-F-009 acceptance: every coupon shape works for a guest with a public code; a members-only code refuses him in words', async () => {
+    const shape = async (templateId: string, key: string, values: Record<string, unknown>) => {
+      const r = await createRule(deps(), as(writer), { templateId, key });
+      await saveDraft(deps(), as(writer), r.id, { content: withValues(r.live!, values, { status: 'ACTIVE' }) });
+      await publishRule(deps(), as(owner), r.id);
+      return r;
+    };
+    const bogo = await shape('coupon-buy-get', 'bogo-coupon', { buy: 1, get: 1, percentOff: 100, maxGroups: 1 });
+    const free = await shape('coupon-free-delivery', 'free-delivery-coupon', {});
+    const codes = [
+      await createCoupon(deps(), as(writer), { code: 'sample-bogo', ruleId: bogo.id }),
+      await createCoupon(deps(), as(writer), { code: 'sample-free', ruleId: free.id }),
+      await createCoupon(deps(), as(writer), { code: 'sample-bogo-members', ruleId: bogo.id, audience: 'MEMBERS' }),
+    ];
+    expect(codes.every((c) => !c.enabled && c.audience === (c.code.endsWith('MEMBERS') ? 'MEMBERS' : 'ALL'))).toBe(true);
+    for (const c of codes) await setCouponEnabled(deps(), as(owner), c.id, { enabled: true });
+    const bag = (quantity: number, couponCode: string | null) => quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity }], bandKey: 'dhaka-city', couponCode });
+    // a guest (no account): buy one, get one — the second polo is free; with one polo the code waits for one more
+    const plain = await bag(2, null);
+    const two = await bag(2, 'sample-bogo');
+    expect(two.coupon).toMatchObject({ ok: true, code: 'SAMPLE-BOGO' });
+    expect(two.applied.some((x) => x.rule.id === bogo.id && x.effect === 'discount' && (x.amountMinor ?? 0) > 0)).toBe(true);
+    expect(two.discountMinor).toBeGreaterThan(plain.discountMinor);
+    expect((await bag(1, 'sample-bogo')).waiting).toContainEqual({ rule: expect.objectContaining({ id: bogo.id }), why: 'MIN_QUANTITY', morePieces: 1 });
+    // a guest's free-delivery code
+    const fd = await bag(1, 'sample-free');
+    expect(fd.coupon!.ok).toBe(true);
+    expect(fd.delivery).toMatchObject({ free: true, chargeMinor: 0, freeRule: expect.objectContaining({ id: free.id }) });
+    expect((await bag(1, null)).delivery.freeRule?.id).not.toBe(free.id);
+    // members only: the guest is told, a signed-in member gets it
+    expect((await bag(2, 'sample-bogo-members')).coupon).toMatchObject({ ok: false, reason: 'MEMBERS_ONLY' });
+    const member = await quoteCart(deps(), { storeId: A, lines: [{ variantId: ids.poloV!, quantity: 2 }], couponCode: 'sample-bogo-members', customerId: '00000000-0000-4000-8000-000000000271' });
+    expect(member.coupon!.ok).toBe(true);
+    for (const c of codes) await setCouponEnabled(deps(), as(owner), c.id, { enabled: false });
+  });
+
   it('PR 213 follow-up, SIM-F-050: a first-order code reads his order history by phone — logged in or not; the order being placed and cancelled ones do not count', async () => {
     const rule = await createRule(deps(), as(writer), { templateId: 'coupon', key: 'first-order-coupon' });
     await saveDraft(deps(), as(writer), rule.id, { content: withValues(rule.live!, { amountOff: 10000, minOrder: 10000 }, { status: 'ACTIVE' }) });

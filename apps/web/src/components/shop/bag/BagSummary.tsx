@@ -21,6 +21,10 @@ export function codeMessage(c: ShopContext, code: CodeState): { text: string; ok
       return { text: t('bag.code.added', { code: code.code }), ok: true, login: false };
     case 'needsMore':
       return { text: t('bag.code.needsMore', { code: code.code, amount: c.money(code.moreMinor) }), ok: false, login: false };
+    case 'needsPieces':
+      return { text: t('bag.code.needsPieces', { code: code.code, count: code.pieces }), ok: false, login: false };
+    case 'freeDelivery':
+      return { text: t('bag.code.freeDelivery', { code: code.code }), ok: true, login: false };
     case 'betterOffer':
       return { text: t(code.by === 'set' ? 'bag.code.betterSet' : 'bag.code.betterOffer', { code: code.code }), ok: false, login: false };
     case 'notForItems':
