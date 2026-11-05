@@ -4,6 +4,7 @@
 // nothing is paused and no budget changes here. Seeing needs `marketing.campaigns.read`; reading and tying need
 // `marketing.campaigns.write`. Guide: docs/admin-guide/pages/marketing/ad-platforms.md.
 // PR 269: a link to the growth agent's page (ad-platforms/growth: delivered ROAS and proposals that wait for the owner).
+// PR 270: a link to the creative briefs (ad-platforms/briefs: briefs for the studio from a product and a campaign).
 // PR 268: with the owner's switch on, each campaign's "Change" fold (pause, start again, a new daily budget — always after a
 // confirm; more spend waits for the owner's approval), the requests waiting for him and the latest changes, and the
 // switch's card (lib/marketing/campaign-control.ts). Practice writers only: no real budget or campaign changes.
@@ -50,6 +51,7 @@ const CONTROL_API = '/api/admin/marketing/ad-platforms/control';
 const KEYS_PAGE = '/admin/integrations';
 const FEES_PAGE = '/admin/money/fees';
 const GROWTH_PAGE = '/admin/marketing/ad-platforms/growth';
+const BRIEFS_PAGE = '/admin/marketing/ad-platforms/briefs';
 const KEY = 'marketingAdPlatforms';
 
 function withScreen(view: AdminView): AdminView {
@@ -186,9 +188,12 @@ export default async function AdPlatformsPage() {
       <div className="a2-note" role="note">
         <span>{s('readOnlyNote')}</span>
       </div>
-      <p className="a2-mt12">
+      <p className="adp-read">
         <Link className="a2-sm adp-keys" href={GROWTH_PAGE} data-testid="adp-growth-link">
           {s('growth.link')}
+        </Link>
+        <Link className="a2-sm adp-keys" href={BRIEFS_PAGE} data-testid="adp-briefs-link">
+          {s('brief.link')}
         </Link>
       </p>
       <p className="a2-sm a2-mute a2-mt12">{sp('spendNote')}</p>

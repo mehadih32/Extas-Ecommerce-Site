@@ -33,6 +33,8 @@ export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/marketing/ad-platforms/growth';
 const BACK = '/admin/marketing/ad-platforms';
+/** PR 270: an approved creative refresh is written up as a brief there. */
+const BRIEFS = '/admin/marketing/ad-platforms/briefs';
 const API = '/api/admin/marketing/ad-platforms/growth';
 const KEY = 'marketingAdGrowth';
 
@@ -212,6 +214,14 @@ export default async function GrowthAgentPage() {
               return (
                 <li key={p.id} className="a2-sm" data-status={st}>
                   <span className={`a2-pill ${pill(st)}`}>{g(`status.${st}`)}</span> {what(p)} <span className="a2-mute">· {when(p.createdAt)}</span>
+                  {p.type === 'refreshCreative' && p.status === 'APPROVED' ? (
+                    <>
+                      {' '}
+                      <Link className="a2-sm adp-keys adg-brief" href={BRIEFS} data-testid="adg-brief-link">
+                        {g('briefLink')}
+                      </Link>
+                    </>
+                  ) : null}
                 </li>
               );
             })}
