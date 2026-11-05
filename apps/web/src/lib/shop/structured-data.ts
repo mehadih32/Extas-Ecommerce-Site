@@ -7,6 +7,8 @@
 // only while every piece can be sold), and the struck price beside an offer only where the page shows it struck.
 // S11 · PR 223 (C12.4): the product's rating and reviews, only from its real approved review rows and only what the
 // page itself shows (the summary box's average and count, the cards the page draws), never a made-up number.
+// S11 · PR 224 (C4, C12.4): the questions a page really answers (the product's answered questions, the FAQ page) as
+// FAQPage, optional: Google shows no FAQ rich result for any site since 7 May 2026, so nothing is promised by it.
 import type { ImageSource } from '@extas/media';
 
 export interface LdCrumb {
@@ -288,6 +290,28 @@ export function setLd(origin: URL | string, s: LdSet): Ld | null {
     itemCondition: `${CONTEXT}/NewCondition`,
   };
   return out;
+}
+
+// ---- PR 224 · the questions a page answers (FAQPage, optional markup) ----
+
+export interface LdQuestion {
+  question: string;
+  /** The answer as plain text, as the page shows it. */
+  answer: string;
+}
+
+/** FAQPage from the questions and answers the page itself shows; a question without both words is left out. */
+export function faqLd(origin: URL | string, href: string, items: readonly LdQuestion[]): Ld | null {
+  const seen = new Set<string>();
+  const main = items.flatMap((x) => {
+    const q = x.question.trim();
+    const a = x.answer.trim();
+    if (!q || !a || seen.has(q)) return [];
+    seen.add(q);
+    return [{ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } }];
+  });
+  if (!main.length) return null;
+  return { '@context': CONTEXT, '@type': 'FAQPage', url: absolute(origin, href), mainEntity: main };
 }
 
 /** The largest copy of a photo (any format the browser is given), for a search engine to fetch. */

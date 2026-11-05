@@ -11,8 +11,8 @@ describe('storefront follow-up settings (v25)', () => {
   it('every key is in the registry at version 25, public, with both labels; only the owner`s own words are owner data', () => {
     for (const [key, spec] of Object.entries(storefrontFuSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      // PR 222 (S11) extended the structured data (v64), PR 223 added its reviews part (v205)
-      expect(spec.version, key).toBe(key === 'seo.structuredData' ? 205 : 25);
+      // PR 222 (S11) extended the structured data (v64), PR 223 added its reviews part (v205), PR 224 its FAQ part (v206)
+      expect(spec.version, key).toBe(key === 'seo.structuredData' ? 206 : 25);
       expect(spec.isPublic, key).toBe(true);
       expect(spec.isOwnerData, key).toBe(OWNER_DATA.includes(key));
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
@@ -28,12 +28,12 @@ describe('storefront follow-up settings (v25)', () => {
     expect(cardDeskSchema.safeParse({ altView: true, quickAdd: true, touch: true }).success).toBe(false);
   });
 
-  it('follow-ups 35, 61: the structured data is on (it says only what the page shows); PR 223`s reviews part is off', () => {
-    expect(storefrontFuSettings['seo.structuredData'].default).toEqual({ breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false });
+  it('follow-ups 35, 61: the structured data is on (it says only what the page shows); PR 223`s reviews and PR 224`s FAQ parts are off', () => {
+    expect(storefrontFuSettings['seo.structuredData'].default).toEqual({ breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false, faq: false });
     expect(structuredDataSchema.safeParse({ breadcrumbs: true, itemList: true, product: true, rating: true }).success).toBe(false);
     // PR 222: a value saved before the home page, set page and struck-price parts existed reads them as on
-    // PR 223: a value saved before the reviews part existed reads it as off
-    expect(structuredDataSchema.parse({ breadcrumbs: false, itemList: true, product: true })).toEqual({ breadcrumbs: false, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false });
+    // PR 223, 224: a value saved before the reviews and FAQ parts existed reads them as off
+    expect(structuredDataSchema.parse({ breadcrumbs: false, itemList: true, product: true })).toEqual({ breadcrumbs: false, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false, faq: false });
   });
 
   it('follow-up 62: the size words are the owner`s (empty), "Your size" is off; only real size keys take a word', () => {

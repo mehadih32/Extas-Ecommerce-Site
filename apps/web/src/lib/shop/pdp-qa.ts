@@ -4,6 +4,7 @@
 // (pdp-qa-load.ts); nothing here makes one up. No answered question: the block is only the WhatsApp ask, and without a
 // WhatsApp number there is no block at all.
 import type { PdpQaSettings } from '@extas/settings';
+import type { LdQuestion } from './structured-data';
 
 export interface QaRow {
   id: string;
@@ -39,4 +40,13 @@ export function qaView(rows: readonly QaRow[], set: PdpQaSettings, hasWhatsapp: 
   const rest = folded.slice(set.shown);
   const ask = !wa ? null : featured && folded.length ? 'split' : featured ? 'featured' : 'list';
   return { kind: 'list', featured, first, rest, ask };
+}
+
+/**
+ * S11 · PR 224: the questions the block shows (the open one, the folded ones and those behind "See all questions"),
+ * as search engines and AI assistants are told about them; nothing while the block shows none.
+ */
+export function qaLdItems(view: QaView | null): LdQuestion[] {
+  if (!view || view.kind !== 'list') return [];
+  return [...(view.featured ? [view.featured] : []), ...view.first, ...view.rest].map((r) => ({ question: r.question, answer: r.answer }));
 }

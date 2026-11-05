@@ -8,6 +8,7 @@ import type { ShopT } from './dict';
 import { hrefIn, type ShopLang } from './lang';
 import { telHref, waHref } from './links';
 import { ROUTES } from './routes';
+import type { LdQuestion } from './structured-data';
 
 /** The pages this route draws, in the demo's order (PG_ORDER without "Ways to pay" and "Careers", still to come). */
 export const HELP_SLUGS = ['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact'] as const satisfies readonly HelpSlug[];
@@ -196,4 +197,10 @@ export function helpTopics(set: PagesHelpSettings, shown: ReadonlySet<HelpSlug>,
   return set.topics
     .filter((s) => shown.has(s))
     .map((s) => ({ slug: s, href: hrefIn(lang, ROUTES.help(s)), label: titles[s], icon: HELP_ICON[s], current: s === current }));
+}
+
+/** S11 · PR 224: the questions the FAQ page shows, each answer as the plain text of its blocks (for FAQ data). */
+export function helpFaqItems(m: HelpModel): LdQuestion[] {
+  if (m.soon) return [];
+  return m.qa.map((x) => ({ question: x.q, answer: x.a.map((b) => (b.kind === 'ul' ? b.items.join('\n') : b.text)).join('\n') }));
 }

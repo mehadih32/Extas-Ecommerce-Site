@@ -2,7 +2,7 @@
 // lowest and highest, in stock only with a piece to sell, and never a rating.
 import type { ImageSource } from '@extas/media';
 import { describe, expect, it } from 'vitest';
-import { breadcrumbLd, itemListLd, largestUrl, ldJson, majorPrice, organizationLd, productLd, reviewsPart, setInStock, setLd, websiteLd, type LdProduct, type LdReviews, type LdSet, type LdShop } from './structured-data';
+import { breadcrumbLd, faqLd, itemListLd, largestUrl, ldJson, majorPrice, organizationLd, productLd, reviewsPart, setInStock, setLd, websiteLd, type LdProduct, type LdReviews, type LdSet, type LdShop } from './structured-data';
 
 const origin = new URL('https://shop.example.test');
 const base: LdProduct = {
@@ -199,5 +199,21 @@ describe('structured data', () => {
       // a product without a price sends nothing, rating included
       expect(productLd(origin, { ...base, variants: [{ priceMinor: null, stock: 1 }], reviews: real })).toBeNull();
     });
+  });
+
+  it('S11 · PR 224: FAQPage from the questions the page shows; none without a real answer', () => {
+    const ld = faqLd(origin, '/bn/help/faq', [
+      { question: ' Do you deliver outside Dhaka? ', answer: ' Yes, sample answer. ' },
+      { question: 'No answer?', answer: '  ' },
+      { question: 'Do you deliver outside Dhaka?', answer: 'A second copy' },
+    ]);
+    expect(ld).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      url: 'https://shop.example.test/bn/help/faq',
+      mainEntity: [{ '@type': 'Question', name: 'Do you deliver outside Dhaka?', acceptedAnswer: { '@type': 'Answer', text: 'Yes, sample answer.' } }],
+    });
+    expect(faqLd(origin, '/help/faq', [])).toBeNull();
+    expect(faqLd(origin, '/help/faq', [{ question: 'Q?', answer: '' }])).toBeNull();
   });
 });

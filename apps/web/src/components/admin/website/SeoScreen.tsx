@@ -172,7 +172,7 @@ export function IndexingCard({ d, value, defaults, version, canWrite, pageTypes 
 // ---- PR 222 · data for search engines (`seo.structuredData`) ----
 
 /** The parts of the structured data, in the order the card lists them. */
-export const SD_PARTS = ["breadcrumbs", "itemList", "product", "wasPrice", "combo", "organization", "website", "reviews"] as const;
+export const SD_PARTS = ["breadcrumbs", "itemList", "product", "wasPrice", "combo", "organization", "website", "reviews", "faq"] as const;
 export type SeoStructuredValue = Record<(typeof SD_PARTS)[number], boolean>;
 
 export function StructuredDataCard({ d, value, defaults, version, canWrite }: { d: Dict; value: SeoStructuredValue; defaults: SeoStructuredValue; version: number; canWrite: boolean }) {
