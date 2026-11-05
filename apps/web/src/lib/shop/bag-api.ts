@@ -8,6 +8,7 @@ import { randomBytes } from 'node:crypto';
 import {
   addItem,
   bagCount,
+  buyAgain,
   CartError,
   changeVariant,
   findBag,
@@ -192,6 +193,30 @@ export async function setHandler(request: Request, deps: BagApiDeps | null): Pro
     const replaceGroupKey = (b.replaceGroupKey as string | undefined) || undefined;
     const r = await addSetToBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, slug: b.slug as string, choices, addKey: (b.addKey as string | undefined) || undefined, replaceGroupKey });
     return answer(deps, bag, { added: r.added, groupKey: r.groupKey, lineId: r.lines[0]?.id ?? null, setPriceMinor: r.setPriceMinor }, r.added ? 201 : 200);
+  } catch (e) {
+    return refusal(e);
+  }
+}
+
+/**
+ * POST /api/bag/reorder — PR 622 (CN-034) "Buy again" ({number}): the past order's lines back in this browser's bag at
+ * today's price and stock, for the signed-in customer whose order it is or the browser that placed it (`customerId`
+ * is read from his sign-in cookie by the route). Answers what went in, what is sold out (with the sizes in stock) and
+ * what is no longer sold; refuses NOT_FOUND (not his) and NOT_OFFERED (`account.reorder` off or not on this state).
+ */
+export async function reorderHandler(request: Request, deps: BagApiDeps | null, customerId: string | null): Promise<Response> {
+  const stop = await guard(request, deps, ['POST']);
+  if (stop || !deps) return stop ?? noBag();
+  try {
+    const b = await body(request);
+    if (typeof b.number !== 'string' || !b.number.trim() || b.number.length > 40) return fail(400, 'INVALID_INPUT', ['number']);
+    const sent = readCookie(request, BAG_COOKIE);
+    const known = sent && visitorIdSchema.safeParse(sent).success ? sent : null;
+    // nobody to own the order: no sign-in and no bag cookie (nothing is made for him)
+    if (!known && !customerId) return fail(404, 'NOT_FOUND', ['number']);
+    const bag = (await bagOf(request, deps, true))!;
+    const r = await buyAgain(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, number: b.number.trim(), visitorId: known, customerId });
+    return answer(deps, bag, { reorder: r }, r.pieces > 0 ? 201 : 200);
   } catch (e) {
     return refusal(e);
   }

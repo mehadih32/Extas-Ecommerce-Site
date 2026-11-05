@@ -2656,21 +2656,24 @@ model ComboTemplateScore {
 
 /// @stage S04 · PR 105 — a bag, kept across sessions.
 model Cart {
-  id               String     @id @default(uuid(7)) @db.Uuid
-  storeId          Int
-  store            Store      @relation(fields: [storeId], references: [id])
-  customerId       String?    @db.Uuid
-  customer         Customer?  @relation(fields: [customerId], references: [id])
-  visitorId        String
-  status           CartStatus @default(ACTIVE)
-  couponCode       String?
+  id                 String     @id @default(uuid(7)) @db.Uuid
+  storeId            Int
+  store              Store      @relation(fields: [storeId], references: [id])
+  customerId         String?    @db.Uuid
+  customer           Customer?  @relation(fields: [customerId], references: [id])
+  visitorId          String
+  status             CartStatus @default(ACTIVE)
+  couponCode         String?
   /// PR 110 — the customer's answers to the "same product in two sizes" card, by size group ("other", "keep", "help").
-  sizeAnswers      Json?
-  lastActivityAt   DateTime   @default(now()) @db.Timestamptz(3)
-  convertedOrderId String?    @db.Uuid
-  mergedIntoId     String?    @db.Uuid
-  createdAt        DateTime   @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime   @updatedAt @db.Timestamptz(3)
+  sizeAnswers        Json?
+  lastActivityAt     DateTime   @default(now()) @db.Timestamptz(3)
+  convertedOrderId   String?    @db.Uuid
+  /// PR 622 (CN-034) — the past order whose "Buy again" last filled this bag (copied to the order at checkout while a
+  /// line it put in is still ordered).
+  reorderFromOrderId String?    @db.Uuid
+  mergedIntoId       String?    @db.Uuid
+  createdAt          DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime   @updatedAt @db.Timestamptz(3)
 
   items CartItem[]
 
@@ -2929,6 +2932,9 @@ model Order {
   adCampaignId             String?            @db.Uuid
   landingPageId            String?            @db.Uuid
   supportRefCode           String?
+  /// PR 622 (CN-034) — "bought again from #…": the past order whose "Buy again" filled the bag this order was placed
+  /// from (staff see it on the order; reports count it). Null: an ordinary order.
+  reorderOfOrderId         String?            @db.Uuid
   referrer                 String?
   visitorId                String?
   ip                       String?
@@ -2993,6 +2999,7 @@ model Order {
   @@index([storeId, customerId, placedAt(sort: Desc)], map: "idx_order_customer_history")
   // PR 603: order list filters — date, status, courier, store.
   @@index([storeId, placedAt(sort: Desc)], map: "idx_order_list_date")
+  @@index([storeId, reorderOfOrderId])
   @@index([storeId, status, placedAt(sort: Desc)], map: "idx_order_list_status")
   @@index([storeId, courierAccountId, status, placedAt(sort: Desc)], map: "idx_order_list_courier")
   // PR 155 (follow-up 93, migration 0012): Sales = DELIVERED orders on the delivered day (@extas/metrics).

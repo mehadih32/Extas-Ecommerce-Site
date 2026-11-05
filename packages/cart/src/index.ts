@@ -9,7 +9,9 @@
 //   (view.ts).
 // - The pure rules behind them, safe in client code: size groups and flags, the ladder, the slot's choice, the panel's
 //   fill rule and the code box's state (pure.ts, also `@extas/cart/pure`).
+// - PR 622 (CN-034) "Buy again": a past order's lines back in the bag at today's price and stock (reorder.ts).
 export * from './context';
 export * from './pure';
 export * from './cart';
 export * from './view';
+export * from './reorder';

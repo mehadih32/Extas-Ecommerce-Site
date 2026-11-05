@@ -603,6 +603,46 @@
         "enabled": "Show the birthday box in My account",
         "askYear": "Ask for the year too"
       },
+      "reorder": {
+        "title": "Buy again",
+        "sub": "A past order offers \"Buy again\": its items go back in the bag at today's price, offers and stock. Nothing is ordered until the customer checks out, so the delivery charge, COD and offers stay the checkout's own. Off as it ships. Off: no button anywhere.",
+        "enabled": "Show \"Buy again\"",
+        "inList": "Also on My orders",
+        "states": "Orders that offer it",
+        "opt": {
+          "PLACED": "New · to confirm",
+          "AWAITING_ADVANCE": "Waiting for advance",
+          "CONFIRMED": "Confirmed",
+          "ON_HOLD": "On hold",
+          "PROCESSING": "Picking",
+          "PACKED": "Packed",
+          "HANDED_OVER": "Handed over",
+          "IN_TRANSIT": "In transit",
+          "DELIVERED": "Delivered",
+          "PARTIALLY_DELIVERED": "Partly delivered",
+          "RETURNED": "Returned",
+          "CANCELLED": "Cancelled"
+        },
+        "words": "Its words",
+        "w": {
+          "button": "Button",
+          "hint": "Line beside the button",
+          "added": "Notice: items added ({n} = pieces)",
+          "soldOut": "Notice: size sold out ({name}, {size})",
+          "inStock": "Notice: sizes in stock ({sizes})",
+          "gone": "Notice: no longer sold ({name})",
+          "nothing": "Notice: nothing can be bought",
+          "goBag": "Link to the bag"
+        }
+      },
+      "inLang": {
+        "en": "{label} (English)",
+        "bn": "{label} (Bengali)"
+      },
+      "kpi": {
+        "reordered": "Orders from \"Buy again\"",
+        "days": "last {n} days"
+      },
       "report": {
         "title": "Customer report",
         "sub": "Off as shipped. When on, Reports › Customers counts new, returning and quiet buyers and the repeat rate, overall and per saved segment. It only counts: nothing is sent or changed.",

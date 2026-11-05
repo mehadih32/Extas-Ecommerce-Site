@@ -109,5 +109,26 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('the customer journey on P
     expect(saved.canWrite).toBe(true);
     expect(await f.t.prisma.auditLog.count({ where: { action: 'customer.settings.save', entityId: 'customers.journey' } })).toBe(1);
   });
+
+  it('PR 622: "Buy again" sits on the same page — its card saved through its schema, and the orders from it in the last 30 days counted', async () => {
+    const p = f.t.prisma;
+    const base = { storeId: f.S, source: 'WEBSITE' as const, currency: 'BDT', status: 'PLACED' as const, subtotalMinor: 5_000, discountMinor: 0, deliveryChargeMinor: 0, totalMinor: 5_000, paymentMethod: 'COD' as const, customerId: a, phone: N.a };
+    await p.order.create({ data: { ...base, number: 'J622-1', placedAt: ago(3), idempotencyKey: 'j622-1', reorderOfOrderId: orderId } });
+    await p.order.create({ data: { ...base, number: 'J622-2', placedAt: ago(40), idempotencyKey: 'j622-2', reorderOfOrderId: orderId } });
+    const deps = () => ({ ...f.customersDeps(), settings: { ...f.customersDeps().settings, set: async (key: string, value: unknown) => void f.overrides.set(key, value) } });
+    const screen = await crmSettingsScreen(deps(), f.viewer);
+    expect(screen.reordered).toBe(1); // the one 40 days ago is outside the window; J288-1 was not bought again
+    expect(screen.values['account.reorder']).toMatchObject({ enabled: false, states: ['DELIVERED'], inList: true });
+    const role = await createRole(p, SYSTEM, { key: 'j622-settings', nameEn: 'crm', nameBn: 'crm', permissions: ['customers.read', 'customers.settings'] });
+    const u = await p.staffUser.create({ data: { email: 'j622s@example.com', displayName: 'CRM', passwordHash: 'not-a-login' } });
+    await p.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: f.S } });
+    const owner = { actor: { staffUserId: u.id }, storeId: f.S };
+    const v = screen.values['account.reorder'];
+    await expect(saveCrmSetting(deps(), owner, { key: 'account.reorder', value: { ...v, states: [] } })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    await expect(saveCrmSetting(deps(), owner, { key: 'account.reorder', value: { ...v, states: ['DRAFT'] } })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    const saved = await saveCrmSetting(deps(), owner, { key: 'account.reorder', value: { ...v, enabled: true, words: { ...v.words, button: { en: 'Order again', bn: 'আবার অর্ডার' } } } });
+    expect(saved.values['account.reorder']).toMatchObject({ enabled: true, words: { button: { en: 'Order again' } } });
+    expect(await p.auditLog.count({ where: { action: 'customer.settings.save', entityId: 'account.reorder' } })).toBe(1);
+  });
 });
 

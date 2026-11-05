@@ -18,12 +18,14 @@ import { readPageSettings, type ShopContext } from '@/lib/shop/context';
 import { dateText } from '@/lib/shop/account-view';
 import { plural } from '@/lib/shop/bag-model';
 import { hrefIn } from '@/lib/shop/lang';
+import { reorderViewOf, type ReorderView } from '@/lib/shop/reorder-view';
 import { ROUTES } from '@/lib/shop/routes';
 import { POINTS_REASONS, type MyPoints } from '@extas/customers';
 import { Icon } from '../Icon';
 import { RedeemPoints } from './RedeemPoints';
 import { ProductCard } from '../ProductCard';
 import { nameOf, Thumb } from '../bag/BagLines';
+import { BuyAgain } from './BuyAgain';
 
 /** The four pictures of the parcel's journey after "Placed" (demo note 44): a tick, the box, the courier, at the door. */
 const FLOW: [Exclude<(typeof TRACK_STEPS)[number], 'placed'>, ShopIcon][] = [
@@ -78,7 +80,7 @@ export function TrackFlow({ c, o }: { c: ShopContext; o: OrderCard }) {
   );
 }
 
-function OrderCardView({ c, o, cards, invoice }: { c: ShopContext; o: OrderCard; cards: Map<string, ShopCard>; invoice: boolean }) {
+function OrderCardView({ c, o, cards, invoice, reorder }: { c: ShopContext; o: OrderCard; cards: Map<string, ShopCard>; invoice: boolean; reorder: ReorderView | null }) {
   const t = c.t;
   const href = hrefIn(c.lang, ROUTES.order(o.number));
   return (
@@ -126,6 +128,7 @@ function OrderCardView({ c, o, cards, invoice }: { c: ShopContext; o: OrderCard;
           {t('account.orders.track')}
           <Icon name="right" size={15} />
         </a>
+        {reorder?.inList && reorder.offered(o.status) ? <BuyAgain number={o.number} words={reorder.words} lang={c.lang} bagHref={hrefIn(c.lang, ROUTES.bag)} compact /> : null}
       </div>
     </article>
   );
@@ -187,9 +190,11 @@ export async function OrdersTab({ c, history: h, filters }: { c: ShopContext; hi
   const ids = [...new Set(orders.flatMap((o) => o.lines.flatMap((l) => (l.productId ? [l.productId] : []))))];
   const [cards, more] = await Promise.all([
     ids.length ? cardsByIds(c.storeId, ids) : Promise.resolve(new Map<string, ShopCard>()),
-    readPageSettings(['account.invoice'] as const, c.storeId),
+    readPageSettings(['account.invoice', 'account.reorder'] as const, c.storeId),
   ]);
   const invoice = more['account.invoice'].enabled;
+  // PR 622 (CN-034): "Buy again" on the cards too, while the owner offers it there
+  const reorder = more['account.reorder'].enabled ? reorderViewOf(c, more['account.reorder']) : null;
   const chips = filters && (h.counts.all > h.perPage || h.show !== 'all');
   return (
     <section aria-labelledby="ao-h" data-testid="acc-orders" data-show={h.show} data-page={h.page}>
@@ -203,7 +208,7 @@ export async function OrdersTab({ c, history: h, filters }: { c: ShopContext; hi
       {orders.length ? (
         <div className="stack s12">
           {orders.map((o) => (
-            <OrderCardView key={o.number} c={c} o={o} cards={cards} invoice={invoice} />
+            <OrderCardView key={o.number} c={c} o={o} cards={cards} invoice={invoice} reorder={reorder} />
           ))}
         </div>
       ) : h.counts.all > 0 ? (

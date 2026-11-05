@@ -31,7 +31,9 @@ export type CartErrorCode =
   /** The product is not on sale (not published, no price, archived). */
   | 'NOT_FOR_SALE'
   /** More than one line may hold (`inventory.reservation.maxUnitsPerLine`). */
-  | 'TOO_MANY';
+  | 'TOO_MANY'
+  /** PR 622: "Buy again" is off, or not offered on an order in this state (`account.reorder`). */
+  | 'NOT_OFFERED';
 
 /** One error type for every refusal of the bag. The `code` is stable; the shop turns it into words from its dictionary. */
 export class CartError extends Error {
@@ -50,6 +52,8 @@ export class CartError extends Error {
     switch (this.code) {
       case 'NOT_FOUND':
         return 404;
+      case 'NOT_OFFERED':
+        return 403;
       case 'CART_NOT_OPEN':
       case 'OUT_OF_STOCK':
       case 'NOT_FOR_SALE':

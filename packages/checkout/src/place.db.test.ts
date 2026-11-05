@@ -7,7 +7,8 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { defaultSecurityPolicy, loginCustomer } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { findBag, setBagCode } from '@extas/cart';
+import { buyAgain, findBag, REORDER_SOURCE, setBagCode } from '@extas/cart';
+import { registry } from '@extas/settings';
 import { noteHold, openErpLink, sweepReservations, type InventoryDeps } from '@extas/inventory';
 import { captureDraft, checkoutPaused, payAction, payView, placeOrder, type PlaceInput } from './place';
 import { checkoutQuote, viewOf, type CheckoutRequest } from './quote';
@@ -55,6 +56,30 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
     return { ...bag, q, input, place: (more: Partial<PlaceInput> = {}) => placeOrder(f.deps(), { storeId: f.S, visitorId: bag.visitorId, customerId: opts.customerId ?? null, ip: '192.0.2.125', input: { ...input, ...more } }) };
   }
   const orderOf = (id: string) => f.t.prisma.order.findUniqueOrThrow({ where: { id }, include: { items: true, events: true, payments: true } });
+
+  describe('PR 622 (CN-034) · "bought again from #…"', () => {
+    it('an order placed from a "Buy again" bag names the past order and its line says so; an ordinary order names none', async () => {
+      const a = await shown('reorder', { phone: '01800000622' });
+      const first = await a.place();
+      expect((await orderOf(first.orderId)).reorderOfOrderId).toBeNull();
+      await f.t.prisma.order.update({ where: { id: first.orderId }, data: { status: 'DELIVERED' } });
+      set({ 'account.reorder': { ...registry['account.reorder'].default, enabled: true } });
+      try {
+        const bag = await f.bag('reorder', []);
+        expect(bag.cartId).not.toBe(a.cartId);
+        const past = await orderOf(first.orderId);
+        expect(await buyAgain(f.deps(), { storeId: f.S, cartId: bag.cartId, number: past.number, visitorId: bag.visitorId, customerId: null })).toMatchObject({ pieces: 1 });
+        const req: CheckoutRequest = { storeId: f.S, cartId: bag.cartId, lang: 'en', customerId: null, address: { line: FORM.address, confirmed: null }, payment: null, details: { name: FORM.name, phone: '01800000623' } };
+        const q = await checkoutQuote(f.deps(), req);
+        const placed = await placeOrder(f.deps(), { storeId: f.S, visitorId: bag.visitorId, customerId: null, ip: '192.0.2.62', input: { idempotencyKey: randomUUID(), lang: 'en', form: { ...FORM, phone: '01800000623' }, fingerprint: q.fingerprint } });
+        const second = await orderOf(placed.orderId);
+        expect(second.reorderOfOrderId).toBe(first.orderId);
+        expect(second.items.map((i) => i.addedVia)).toEqual([REORDER_SOURCE]);
+      } finally {
+        f.overrides.delete('account.reorder');
+      }
+    });
+  });
 
   describe('PR 505 follow-up (go-live gate SIM-F-025/F-047) · the order keeps the language it was placed in', () => {
     it('a Bengali checkout writes bn, an English one en (his messages follow it)', async () => {
