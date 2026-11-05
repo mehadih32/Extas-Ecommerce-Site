@@ -48,3 +48,6 @@ export * from './group-profit';
 // S16 · PR 355: `profitByChannel` — the period's delivered orders by ad platform / organic / other channel, with returns,
 // contribution, ad spend and profit after ads (channels.ts).
 export * from './channels';
+// S13 · PR 267: `adCostPerOrder` — ad spend per order and per delivered order by campaign, platform and for the shop, and
+// `adAlertHits` — the owner's alert rules held against them (ad-cost.ts).
+export * from './ad-cost';

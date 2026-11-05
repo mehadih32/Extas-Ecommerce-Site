@@ -86,6 +86,68 @@
       "rateLink": "Change the rate on Money › Costs & fees",
       "inStore": "≈ {amount}",
       "noRate": "no rate yet"
+    },
+    "alerts": {
+      "h": "Cost per order and alerts",
+      "d": "The last {days} days ({from} to {to}): what the ads cost for each order placed and each order delivered. Orders count on the day placed, delivered ones on the day delivered, returned ones on the day they came back.",
+      "col": {
+        "where": "Where",
+        "spend": "Spend",
+        "purchases": "Platform's purchases",
+        "orders": "Orders",
+        "delivered": "Delivered",
+        "returned": "Came back",
+        "perOrder": "Per order",
+        "perDelivered": "Per delivered order"
+      },
+      "scopeShop": "Whole shop (all ads)",
+      "unknown": "Not known yet",
+      "unknownNote": "Some spend is in another currency with no dollar rate for its day yet, so it is not counted as zero: type the rate on Money › Costs & fees.",
+      "noFigures": "No ad spend and no order from an ad in these days yet.",
+      "rulesH": "Alert rules",
+      "rulesD": "Each rule is off when you add it. A rule that is on is checked after each daily spend import and sent to your Telegram when crossed (switch \"Send alerts\" below). An alert never pauses a campaign or changes a budget.",
+      "noRules": "No rule yet.",
+      "metric": {
+        "costPerOrder": "Cost per order",
+        "costPerDelivered": "Cost per delivered order"
+      },
+      "state": {
+        "over": "Over the limit now: {value}",
+        "noOrders": "Spent {spend}, nothing counted yet",
+        "ok": "Within the limit now",
+        "unknown": "Not known yet (no dollar rate)"
+      },
+      "ruleLine": "{metric} · {where} · limit {limit}",
+      "gone": "A campaign no longer listed",
+      "enabled": "Rule on",
+      "limit": "Limit ({currency})",
+      "saveLimit": "Save limit",
+      "archive": "Put away",
+      "addH": "Add a rule",
+      "addMetric": "What to watch",
+      "addWhere": "For",
+      "addLimit": "Limit ({currency})",
+      "add": "Add rule (off)",
+      "working": "Saving…",
+      "done": "Saved.",
+      "card": {
+        "h": "Send alerts",
+        "d": "Off as it ships. The table and each rule's state above show with it off too.",
+        "on": "Send alerts to my Telegram",
+        "onHelp": "Right after each daily spend import (Daily spend import card), the rules that are on and crossed go to your Telegram in one message.",
+        "days": "Days the figures cover",
+        "daysHelp": "Today included (1 to 90). Delivered parcels take a few days, so a week or more reads better.",
+        "lang": "Language of the message",
+        "bn": "বাংলা",
+        "en": "English",
+        "readOnly": "You can see this card; changing it needs the \"Change campaigns\" permission."
+      },
+      "tg": {
+        "head": "Ad cost alert ({from} to {to}):",
+        "over": "{where}: {metric} {value}, over your limit {limit}",
+        "noOrders": "{where}: {metric} — spent {spend} and nothing counted yet, over your limit {limit}",
+        "foot": "Nothing was paused or changed. See Marketing › Ad platforms."
+      }
     }
   }
 }

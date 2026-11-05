@@ -12,3 +12,16 @@
 /* PR 266 — the dollar-rate note: the words first, the Costs & fees link under them on a phone, beside them when wide. */
 .adm2 .adp-rate{flex-wrap:wrap}
 .adm2 .adp-rate>span{flex:1 1 260px;min-width:0}
+/* PR 267 — cost per order and the alert rules: a campaign row indented under its platform; each rule a block with its
+   switch, limit and "Put away"; the add form one field per line on a phone, side by side when wide. */
+.adm2 .adp-camp{padding-left:20px}
+.adm2 .adp-rules{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:10px}
+.adm2 .adp-rule{border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.adm2 .adp-rule .a2-pill{margin-top:6px}
+.adm2 .adp-rule-ctl{margin-top:8px}
+.adm2 .adp-rule-limit{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+.adm2 .adp-rule-limit .a2-lbl{flex:1 1 100%}
+.adm2 .adp-rule-limit .a2-inp{flex:1 1 120px;max-width:200px}
+.adm2 .adp-rule-limit .a2-btn,.adm2 .adp-add .a2-btn{min-height:44px}
+.adm2 .adp-add{display:grid;gap:8px;margin-top:8px}
+@media (min-width:768px){.adm2 .adp-add{grid-template-columns:repeat(3,minmax(0,1fr))}.adm2 .adp-add .adp-read{grid-column:1/-1}}

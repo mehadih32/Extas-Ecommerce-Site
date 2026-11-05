@@ -16,6 +16,7 @@
 //   token). "Import now" works with the switch off.
 // - Read only on the platforms: nothing pauses a campaign or changes a budget (rule 6). Audited
 //   (marketing.adSpend.import, counts only).
+// - PR 267: the daily hook then checks the owner's cost alerts (ad-alerts.ts `sendCostAlerts`).
 import { createHash } from 'node:crypto';
 import { adsSpendImportSchema, storeTarget, type AdsSpendImportSettings } from '@extas/settings';
 import type { AdsPlatform, AdsSpendFacts, AdsSpendRange } from '@extas/adapters';
@@ -26,6 +27,7 @@ import { adminDeps, body, errorResponse, fail, guardAdmin, json, type AdminDeps 
 import { AD_READER_PLATFORMS, AdPlatformsError, readerOf, syncAdPlatform, type AdPlatformsDeps, type AdPlatformsWho } from './ad-platforms';
 import { internalCaller } from './audience-push';
 import { pricerFor, type Pricer } from '../exchange-rate';
+import { sendCostAlerts } from './ad-alerts';
 
 const S = MOTHER_STORE_ID;
 const DAY_MS = 86_400_000; // hardcode-ok: milliseconds in a day
@@ -175,7 +177,7 @@ export async function campaignSpend(db: Pick<PrismaClient, 'adSpendDaily'>, from
  * /api/internal/ads/spend-import — POST {storeId?} from the background worker with the server's internal token
  * (CACHE_HOOK_TOKEN in `x-extas-cache-hook`); without it the answer is "not found". Counts only in the answer.
  */
-export async function spendImportHook(request: Request, deps: AdminDeps | null = adminDeps(), extra: Partial<AdPlatformsDeps> = {}): Promise<Response> {
+export async function spendImportHook(request: Request, deps: AdminDeps | null = adminDeps(), extra: Partial<AdPlatformsDeps> & { send?: (text: string) => Promise<void> } = {}): Promise<Response> {
   if (request.method.toUpperCase() !== 'POST' || !internalCaller(request)) return fail(404, 'not-found');
   if (!deps) return fail(503, 'database-not-configured');
   try {
@@ -187,7 +189,9 @@ export async function spendImportHook(request: Request, deps: AdminDeps | null =
     if (!s.on) return json({ ok: true, skipped: 'off', results: [] });
     const d: AdPlatformsDeps = { db: deps.db, resolver: deps.resolver, vault: deps.vault, ...extra };
     const results = await importAdSpend(d, { actor: SYSTEM, ctx: { source: 'ad-spend-import' } }, {});
-    return json({ ok: true, skipped: null, results: results.map((r) => ({ platform: r.platform, practice: r.practice, rows: r.rows, unknown: r.unknown, noRate: r.noRate, error: r.error ? 'PLATFORM' : null })) });
+    // PR 267: right after the import, the owner's crossed cost alerts go to his Telegram (`ads.costAlerts`, off as shipped)
+    const alerts = await sendCostAlerts({ ...d, send: extra.send });
+    return json({ ok: true, skipped: null, alerts, results: results.map((r) => ({ platform: r.platform, practice: r.practice, rows: r.rows, unknown: r.unknown, noRate: r.noRate, error: r.error ? 'PLATFORM' : null })) });
   } catch (e) {
     return errorResponse(e);
   }
