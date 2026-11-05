@@ -9,6 +9,7 @@
 // Follow-ups 260, 261 and S05 · PR 150: the edit card, the two-size question and "What happened" (lib/shop/account-order.ts).
 // Review R3 (M3): the delivery line as the checkout gave it ("ships from …" after the holiday, "may arrive after Eid")
 // and the late flag on the same promise clock as the courier's (`currentEta`, `currentPromise`).
+// PR 622 (CN-034): "Buy again" under the lines, while the owner offers it on the order's state (`account.reorder`).
 import type { Metadata } from 'next';
 import { OrderPage, OrderPrompt } from '@/components/shop/account/OrderPage';
 import { orderExtras } from '@/lib/shop/account-order';
@@ -16,6 +17,7 @@ import { orderReviewBox } from '@/lib/shop/account-review';
 import { accountReceipt, checkoutSettings, currentEta, currentPromise } from '@/lib/shop/checkout';
 import { invoiceNumber } from '@/lib/shop/invoice';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
+import { reorderViewOf } from '@/lib/shop/reorder-view';
 import { shopMetadata } from '@/lib/shop/meta';
 
 export const dynamic = 'force-dynamic';
@@ -33,7 +35,7 @@ export default async function Order({ params, searchParams }: { params: Promise<
   const [{ receipt, signedIn }, s, track] = await Promise.all([
     accountReceipt(c, number),
     checkoutSettings(c.storeId),
-    readPageSettings(['account.track.welcome', 'account.track.late', 'account.track.exactAmount', 'account.track.courier', 'account.invoice', 'account.history'] as const, c.storeId),
+    readPageSettings(['account.track.welcome', 'account.track.late', 'account.track.exactAmount', 'account.track.courier', 'account.invoice', 'account.history', 'account.reorder'] as const, c.storeId),
   ]);
   if (!receipt) return <OrderPrompt c={c} number={number} signedIn={signedIn} />;
   const [review, extras, eta, promise] = await Promise.all([
@@ -42,6 +44,7 @@ export default async function Order({ params, searchParams }: { params: Promise<
     currentEta(c, receipt.number),
     currentPromise(c, receipt.number),
   ]);
+  const reo = reorderViewOf(c, track['account.reorder']);
   return (
     <OrderPage
       c={c}
@@ -54,6 +57,7 @@ export default async function Order({ params, searchParams }: { params: Promise<
       extras={extras}
       eta={eta}
       promise={promise}
+      reorder={reo.offered(receipt.status) ? { words: reo.words, hint: track['account.reorder'].words.hint[c.lang === 'bn' ? 'bn' : 'en'] } : null}
     />
   );
 }

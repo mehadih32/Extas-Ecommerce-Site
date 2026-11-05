@@ -5,13 +5,15 @@
 // dictionary: `cus.set.<card>.<field>` and, for a choice, `cus.set.<card>.opt.<value>`. Without `customers.settings` the
 // card shows the values only. PR 289: `url` sends the whole value to another page's own settings route (Messages ›
 // Automations), and a `lang` field is one line of words in each language ({bn, en}). PR 296: a `money` field is typed in
-// whole units of the store's currency and kept in minor units (×100), like the Money section's cards.
+// whole units of the store's currency and kept in minor units (×100), like the Money section's cards. PR 622: a `words`
+// field is an object of several words, each in both languages (`cus.set.<card>.w.<word>`, "(English)/(Bengali)"
+// from `cus.set.inLang`).
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
 
-export type CrmField = { name: string; kind: 'bool' } | { name: string; kind: 'int' } | { name: string; kind: 'multi'; options: readonly string[] } | { name: string; kind: 'lang'; max: number } | { name: string; kind: 'money' };
+export type CrmField = { name: string; kind: 'bool' } | { name: string; kind: 'int' } | { name: string; kind: 'multi'; options: readonly string[] } | { name: string; kind: 'lang'; max: number } | { name: string; kind: 'money' } | { name: string; kind: 'words'; keys: readonly string[]; max: number };
 const LANGS = ['bn', 'en'] as const;
 
 export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWrite, url }: { dict: Dict; settingKey: string; card: string; fields: readonly CrmField[]; value: Record<string, unknown>; canWrite: boolean; url?: string }) {
@@ -72,6 +74,22 @@ export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWr
                 );
               })}
             </span>
+          ) : f.kind === 'words' ? (
+            <fieldset key={f.name} className="crm-multi a2-stack" style={{ gap: 8 }}>
+              <legend className="a2-xs a2-mute">{label(f.name)}</legend>
+              {f.keys.map((k) => {
+                const all = (v[f.name] as Record<string, Record<string, string>> | undefined) ?? {};
+                const cur = all[k] ?? {};
+                return LANGS.map((l) => (
+                  <span key={`${k}-${l}`} className="a2-stack" style={{ gap: 4 }}>
+                    <label className="a2-xs a2-mute" htmlFor={`${uid}-${f.name}-${k}-${l}`}>
+                      {t(d, `cus.set.inLang.${l}`, { label: label(`w.${k}`) })}
+                    </label>
+                    <input id={`${uid}-${f.name}-${k}-${l}`} className="a2-inp" maxLength={f.max} value={cur[l] ?? ''} disabled={!canWrite} onChange={(e) => setV({ ...v, [f.name]: { ...all, [k]: { ...cur, [l]: e.target.value } } })} data-testid={`crm-${card}-${f.name}-${k}-${l}`} />
+                  </span>
+                ));
+              })}
+            </fieldset>
           ) : f.kind === 'int' || f.kind === 'money' ? (
             <span key={f.name} className="a2-stack" style={{ gap: 4 }}>
               <label className="a2-xs a2-mute" htmlFor={`${uid}-${f.name}`}>

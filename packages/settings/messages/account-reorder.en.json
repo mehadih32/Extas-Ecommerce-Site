@@ -1,0 +1,8 @@
+{
+  "account": {
+    "reorder": {
+      "label": "Buy again",
+      "help": "\"Buy again\" on a past order's page (and, when chosen, on its card in My orders) puts the order's items back in the bag at today's price, offers and stock. A sold-out size is shown with the sizes still in stock; a product no longer sold is named and left out; a set comes back as its set only while it is still offered. Nothing is ordered until the customer checks out. Off as it ships."
+    }
+  }
+}

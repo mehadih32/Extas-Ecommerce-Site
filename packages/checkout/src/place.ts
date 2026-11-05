@@ -44,7 +44,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { linkOrderAccount } from '@extas/accounts';
 import { applyOutcome, PAYMENT_CALL_REASON, PAYMENT_EVENTS, PAYMENT_FLAGS } from '@extas/payments';
-import { findBag } from '@extas/cart';
+import { findBag, REORDER_SOURCE } from '@extas/cart';
 import { redeemCoupon, RulesError } from '@extas/rules';
 import type { Prisma } from '@extas/db/client';
 import { hasAddressDetail } from '@extas/delivery';
@@ -487,6 +487,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
       const account = await linkOrderAccount(tx, { storeId, phone: check.phone.e164, name: d.form.name, placedAt: now, signedInCustomerId: customerId, autoCreate: autoCreate && !gift });
       const ownerId = account?.customerId ?? null;
       const rows = orderLinesOf(q, lines);
+      // PR 622 (CN-034): "bought again from #…" — the past order whose "Buy again" filled this bag, while a line it put in is ordered
+      const reorderOf = rows.some((r) => r.source === REORDER_SOURCE) ? ((await tx.cart.findUnique({ where: { id: cartId }, select: { reorderFromOrderId: true } }))?.reorderFromOrderId ?? null) : null;
       const variants = await tx.productVariant.findMany({ where: { storeId, id: { in: [...new Set(rows.map((r) => r.variantId))] } }, select: { id: true, sku: true } });
       const sku = new Map(variants.map((v) => [v.id, v.sku]));
       // PR 254: an item put in the bag from a landing page carries that page; the order keeps it (MKT-05)
@@ -540,6 +542,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           idempotencyKey: d.idempotencyKey,
           note: note || null,
           flags,
+          reorderOfOrderId: reorderOf,
           ...(gift
             ? {
                 isGift: true,

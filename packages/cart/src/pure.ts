@@ -243,3 +243,6 @@ export function codeStateOf(f: CodeFacts): CodeState {
   if (f.otherApplied) return { state: 'betterOffer', code, by: 'offer' };
   return { state: 'notForItems', code };
 }
+
+// PR 622 (CN-034): "Buy again" — which lines come back and what today's catalogue says about each.
+export * from './reorder-pure';

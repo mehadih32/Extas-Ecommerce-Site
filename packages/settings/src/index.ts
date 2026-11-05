@@ -118,6 +118,8 @@ export * from './registry-support-app';
 export * from './registry-support-escalation';
 // S22 · PR 624 (CN-034) — the Messenger button on the shop and the store's Page (registry-support-messenger.ts, version 189).
 export * from './registry-support-messenger';
+// S04 · PR 622 (CN-034) — Buy again on a past order (registry-account-reorder.ts, version 220).
+export * from './registry-account-reorder';
 export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).

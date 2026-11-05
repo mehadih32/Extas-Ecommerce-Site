@@ -316,6 +316,8 @@ export async function getOrder(deps: OrdersDeps, who: Who, orderId: string): Pro
       giftNote: true,
       giftDeliverAfter: true,
       giftHidePrices: true,
+      // PR 622 (CN-034): "bought again from #…"
+      reorderOfOrderId: true,
     },
   });
   if (!o) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);

@@ -343,3 +343,13 @@
 /* S14 · PR 296 — the owner's points rule under the balance (My account › Rewards). */
 .shop .acc-rw-rule { margin: 8px 0 0; padding: 0 0 0 18px; }
 .shop .acc-rw-rule li { margin: 2px 0; }
+/* PR 622 (CN-034) — "Buy again": on the order page under the lines, and on a My orders card when the owner chooses */
+.shop .reo { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 0; }
+.shop .reo .btn { min-height: 44px; }
+.shop .reo-say { max-width: 360px; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line2); color: var(--ink); text-align: left; display: grid; gap: 4px; }
+.shop .reo-say.reo-bad { border-color: var(--bad); background: var(--badbg); }
+.shop .reo-go { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-weight: 600; color: var(--ink); }
+.shop .ord-reotext { min-width: 0; flex: 1 1 200px; }
+.shop .acc-ocard-r { flex-wrap: wrap; }
+.shop .acc-ocard-r .reo-c { flex-basis: 100%; }
+@media (min-width: 768px) { .shop .acc-ocard-r .reo-c { flex-basis: auto; } }

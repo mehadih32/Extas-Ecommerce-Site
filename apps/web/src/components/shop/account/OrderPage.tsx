@@ -53,6 +53,7 @@ import { Icon, WaGlyph } from '../Icon';
 import { MessengerButton } from '../MessengerButton';
 import { nameOf, Thumb } from '../bag/BagLines';
 import { AccountCrumbs } from './AccountShell';
+import { BuyAgain, type BuyAgainWords } from './BuyAgain';
 import { LateTag, StatusTag } from './AccountTabs';
 import { OrderCancelCard } from './OrderCancelCard';
 import { OrderEditCard } from './OrderEditCard';
@@ -154,6 +155,7 @@ export async function OrderPage({
   extras = null,
   eta = [],
   promise = null,
+  reorder = null,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -170,6 +172,8 @@ export async function OrderPage({
   eta?: string[];
   /** Review R3 (M3): the promise the late flag counts against (null: the band's hours from the placing). */
   promise?: { from: string; hoursMax: number | null; afterEid: boolean } | null;
+  /** PR 622 (CN-034): "Buy again" and its words, while the owner offers it on this order's state (null: not offered). */
+  reorder?: { words: BuyAgainWords; hint: string } | null;
 }) {
   const t = c.t;
   const words = checkoutWords(c);
@@ -442,6 +446,15 @@ export async function OrderPage({
                   <Icon name="doc" size={16} />
                   {t('account.invoice.get')}
                 </a>
+              </div>
+            ) : null}
+            {reorder ? (
+              <div className="ord-invrow ord-reorow" data-testid="order-reorder">
+                <div className="ord-reotext">
+                  <b className="small">{reorder.words.button}</b>
+                  <div className="xs muted">{reorder.hint}</div>
+                </div>
+                <BuyAgain number={r.number} words={reorder.words} lang={c.lang} bagHref={hrefIn(c.lang, ROUTES.bag)} />
               </div>
             ) : null}
           </section>

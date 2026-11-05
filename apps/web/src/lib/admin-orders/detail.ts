@@ -112,6 +112,8 @@ export interface OrderDetailView {
   total: string;
   placed: string;
   source: string;
+  /** PR 622 (CN-034): the past order whose "Buy again" this order came from (null: an ordinary order). */
+  reorderOf: { id: string; number: string } | null;
   chips: Chip[];
   flags: Chip[];
   items: { id: string; name: string; sub: string; qty: string; total: string; removed: boolean }[];
@@ -726,6 +728,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const m = (n: number) => formatMoney(n, money);
   const dt = new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: view.timeZone, numberingSystem: 'latn' });
   const matchedIds = [...new Set(detail.reviews.flatMap((r) => r.matchedOrderIds))];
+  const reorderOfId = typeof detail.order.reorderOfOrderId === 'string' ? detail.order.reorderOfOrderId : null;
   const editable = detail.allowed.includes('edit') && perms.has('orders.edit');
   // PR 146: the two-size question, while it is open and the order may still change
   const askTwoSize = o.flags.includes('TWO_SIZES') && detail.allowed.includes('twoSizeAnswer') && perms.has('orders.edit');
@@ -735,7 +738,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     od.orderHistory(deps, who, o.id, HISTORY_SHOWN),
     od.reasonLists(deps, who.storeId),
     od.staffNames(deps, who, [...detail.timeline.map((e) => (e.actorType === 'STAFF' ? e.actorId : null)), ...detail.notes.map((n) => n.authorId)]),
-    od.orderNumbers(deps, who, matchedIds),
+    od.orderNumbers(deps, who, reorderOfId ? [...matchedIds, reorderOfId] : matchedIds),
     deps.settings.value('orders.notes.maxChars', { storeId: who.storeId }) as Promise<number>,
     editable ? od.editChoices(deps, who, o.id) : Promise.resolve(null),
     deps.settings.value('orders.callOutcomes', { storeId: who.storeId }) as Promise<CallOutcomes>,
@@ -974,6 +977,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     total: m(o.totalMinor),
     placed: dt.format(o.placedAt),
     source: t(d, `orders.source.${o.source}`),
+    reorderOf: reorderOfId ? (matchedRows.find((r) => r.id === reorderOfId) ?? null) : null,
     chips,
     flags,
     items: detail.items.map((i) => ({

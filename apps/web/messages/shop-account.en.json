@@ -781,6 +781,10 @@
         "walletAdded": "(added)",
         "lineTag": "Exchange · {exchange} · {status}"
       }
+    },
+    "reorder": {
+      "error": "That did not go through. Please try again.",
+      "off": "“Buy again” is not available on this order now."
     }
   }
 }

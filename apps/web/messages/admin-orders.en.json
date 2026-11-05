@@ -1536,6 +1536,7 @@
       "play": "Play the recording",
       "notKept": "The recording was not kept (the owner's switch)."
     },
+    "reorderOf": "Bought again from #{number}",
     "appr": {
       "title": "Customer history",
       "sub": "{phone} · first order {since}",

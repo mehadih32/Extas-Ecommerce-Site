@@ -1,14 +1,17 @@
 // S14 · PR 288 onwards — Customers › More › Customer settings at /admin/customers/settings (CUS section settings,
 // docs/ADMIN-ARCHITECTURE.md: settings inside their section, rare options under More): one card per CRM feature, each
-// off as shipped — the journey view first (PR 288); later CRM PRs add their cards here. Seeing needs `customers.read`;
+// off as shipped — the journey view first (PR 288); later CRM PRs add their cards here. PR 622 (CN-034): "Buy again"
+// (`account.reorder`) with how many orders came from it in the last 30 days, above the cards. Seeing needs `customers.read`;
 // saving needs `customers.settings`, which the API checks again (schema-checked, audited).
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { JOURNEY_KINDS } from '@extas/customers/pure';
+import { REORDER_STATES, REORDER_WORDS, REORDER_WORDS_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { CrmSettingCard, type CrmField } from '@/components/admin/customers/CrmSettingCard';
+import { formatNumber } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withCustomers } from '@/lib/admin-customers/i18n';
@@ -97,6 +100,17 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
       { name: 'reasonsShown', kind: 'int' },
     ],
   },
+  {
+    // PR 622 (CN-034) — "Buy again" on a past order (the order page, and My orders when `inList`); fills the bag only
+    key: 'account.reorder',
+    card: 'reorder',
+    fields: [
+      { name: 'enabled', kind: 'bool' },
+      { name: 'inList', kind: 'bool' },
+      { name: 'states', kind: 'multi', options: REORDER_STATES },
+      { name: 'words', kind: 'words', keys: REORDER_WORDS, max: REORDER_WORDS_MAX },
+    ],
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -124,6 +138,15 @@ export default async function CustomerSettingsPage() {
     <div className="a2-z" data-testid="customer-settings">
       <PageHead view={view} place={locateKey('customersSettings')} title={t(d, 'cus.set.title')} sub={t(d, 'cus.set.sub')} />
       <SectionTabs view={view} current="customersSettings" />
+      <div className="a2-kpis a2-mt12">
+        <div className="a2-card a2-kpi" data-testid="customer-settings-reordered" data-count={s.reordered}>
+          <div className="a2-kl">{t(d, 'cus.set.kpi.reordered')}</div>
+          <div className="a2-kv">{formatNumber(s.reordered, view.locale)}</div>
+          <div className="a2-kf">
+            <span className="a2-kn">{t(d, 'cus.set.kpi.days', { n: formatNumber(cu.REORDER_COUNT_DAYS, view.locale) })}</span>
+          </div>
+        </div>
+      </div>
       <div className="a2-row a2-r2 a2-mt12">
         {CARDS.map((c) => (
           <CrmSettingCard key={c.key} dict={cdict} settingKey={c.key} card={c.card} fields={c.fields} value={s.values[c.key] as unknown as Record<string, unknown>} canWrite={s.canWrite} />

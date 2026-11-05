@@ -78,6 +78,11 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
       <Chips chips={o.chips} />
       {/* a2-mute, not a2-faint: when it was faint, Lighthouse's colour contrast failed on it (it is real information). */}
       <span className="a2-mute">{`${o.placed} · ${o.source}`}</span>
+      {o.reorderOf ? (
+        <Link className="a2-lnk a2-xs" href={`/admin/orders/${o.reorderOf.id}`} data-testid="order-reorder-of">
+          {t(d, 'orders.reorderOf', { number: o.reorderOf.number })}
+        </Link>
+      ) : null}
     </span>
   );
   const crumb = (
