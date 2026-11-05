@@ -14,6 +14,9 @@
 // (components/shop/category/CatResting, `seo.urlPolicy.retiredCategoryPage`), never "page not found".
 // S11 · PR 227: a filter page the owner named (`seo.filterPages`) is the one exception to "a filtered page stays out":
 // listed under its own name and address while it shows enough styles (lib/seo/filter-pages).
+// S11 · PR 226: each category's own content block (its heading and text under the grid, `category.seo`, PR 45/227)
+// and its questions; the questions the page shows also go as FAQ data while `seo.structuredData.faq` is on (PR 224,
+// optional, off as shipped).
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
@@ -34,7 +37,7 @@ import { filterPageListed, filterPagePath, filterPageStyles, namedFilterPage, si
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { ROUTES } from '@/lib/shop/routes';
 import { categoryName, requirementsMet } from '@/lib/shop/shell-model';
-import { breadcrumbLd, itemListLd, type LdCrumb } from '@/lib/shop/structured-data';
+import { breadcrumbLd, faqLd, itemListLd, type LdCrumb, type LdQuestion } from '@/lib/shop/structured-data';
 import './category.css';
 
 const KEYS = ['category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages'] as const;
@@ -159,12 +162,13 @@ export default async function CategoryPage(props: Props) {
     ...(parent ? [{ name: categoryName(parent, c.lang), href: hrefIn(c.lang, ROUTES.category(parent.slug)) }] : []),
     { name, href: basePath },
   ];
-  const ldOf = (cards: readonly ShopCard[]) =>
+  const ldOf = (cards: readonly ShopCard[], questions: readonly LdQuestion[] = []) =>
     here ? (
       <JsonLd
         data={[
           sd.breadcrumbs ? breadcrumbLd(here, crumbs) : null,
           sd.itemList ? itemListLd(here, name, cards.map((k) => ({ name: productName(k, c.lang), href: hrefIn(c.lang, productPath(c.s['naming.productPathPrefix'], k.slug)) }))) : null,
+          sd.faq ? faqLd(here, basePath, questions) : null,
         ]}
       />
     ) : null;
@@ -200,6 +204,8 @@ export default async function CategoryPage(props: Props) {
     .filter((q) => q.on && requirementsMet(q.requires, c.flags))
     .map((q) => ({ id: `g-${q.id}`, q: t.label(q.q, c.vars), a: paragraphs(t.label(q.a, c.vars)) }));
   const faq = [...own, ...general];
+  // PR 226: exactly the questions this block shows, each answer as its paragraphs
+  const faqItems: LdQuestion[] = faq.map((x) => ({ question: x.q, answer: x.a.join('\n') }));
   const info =
     text.length || faq.length ? (
       <section className={`cat-info${text.length && faq.length ? '' : ' cat-info-one'}`}>
@@ -232,7 +238,7 @@ export default async function CategoryPage(props: Props) {
         hrefFor={(st: CatState) => `${basePath}${queryOf(st, defaultSort)}`}
         version={(st: CatState) => queryOf(st, defaultSort)}
         waName={name}
-        after={(shown) => ldOf(shown)}
+        after={(shown) => ldOf(shown, faqItems)}
       />
       {info}
       {/* follow-up 21: the cards' back view and Quick add (computer with a mouse), and the panel it opens */}
