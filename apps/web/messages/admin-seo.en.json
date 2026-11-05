@@ -170,7 +170,7 @@
       "organization": "The shop itself on the home page (name, logo, contact, social pages)",
       "website": "The website's name on the home page",
       "reviews": "A product's star rating and reviews, from real approved reviews only",
-      "faq": "Questions and answers (FAQ) — the product's answered questions and the FAQ page; optional, Google shows no FAQ result for it since 7 May 2026"
+      "faq": "Questions and answers (FAQ) — the product's answered questions, a collection page's questions and the FAQ page; optional, Google shows no FAQ result for it since 7 May 2026"
     },
     "never": "A star rating goes only from real approved reviews, exactly as the product page shows them (the average, the count and the review cards); a product with none sends none. Never a price the page does not show."
   },
