@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ImageSource } from '@extas/media';
 import { registry } from '@extas/settings';
-import { heightParts, pdpReviewsView, ratingLineOf, type PdpReviewRow } from './pdp-reviews';
+import { heightParts, ldReviewsOf, pdpReviewsView, ratingLineOf, type PdpReviewRow } from './pdp-reviews';
 
 const SET = registry['pdp.reviews'].default; // the shipped defaults, never numbers written here
 const PHOTO: ImageSource = {
@@ -96,5 +96,20 @@ describe('the product page reviews block (PR 65)', () => {
     expect(heightParts(40)).toBeNull();
     expect(heightParts(300)).toBeNull();
     expect(heightParts(Number.NaN)).toBeNull();
+  });
+});
+
+describe('S11 · PR 223: the reviews search engines are told about are the ones the block shows', () => {
+  it('nothing without the block; with it, its own average and count, and only the cards it draws', () => {
+    expect(ldReviewsOf(null)).toBeNull();
+    expect(ldReviewsOf(pdpReviewsView([], { average: 0, total: 0 }, SET))).toBeNull();
+    const rows = Array.from({ length: SET.max + 2 }, (_, i) => row(`r${i}`, { rating: 4, publishedAt: '2026-11-01', name: i === 0 ? null : 'Sample buyer' }));
+    const ld = ldReviewsOf(pdpReviewsView(rows, { average: 4.2, total: 9 }, SET))!;
+    expect(ld.average).toBe(4.2);
+    expect(ld.total).toBe(9);
+    expect(ld.reviews).toHaveLength(SET.max);
+    expect(ld.reviews[0]).toEqual({ rating: 4, author: null, title: null, body: 'Sample review: the fit was right.', published: '2026-11-01' });
+    // the reviews block switched off: nothing, whatever rows exist
+    expect(ldReviewsOf(pdpReviewsView(rows, { average: 4.2, total: 9 }, { ...SET, on: false }))).toBeNull();
   });
 });

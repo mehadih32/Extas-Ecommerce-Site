@@ -30,7 +30,7 @@ export const cardDeskSchema = z
 /**
  * The data for search engines (JSON-LD) the shop's pages carry, each from what the page itself shows: the breadcrumb
  * trail (sent even when the visible trail is off), the category page's list of products, and the product page's
- * product with its price and stock. Never a rating until real reviews exist (PR 223). On: it says only what is true.
+ * product with its price and stock. A rating only from real approved reviews the page shows (PR 223, off as shipped).
  */
 export const structuredDataSchema = z
   .object({
@@ -49,6 +49,9 @@ export const structuredDataSchema = z
     combo: z.boolean().default(true),
     /** The struck price beside an offer, only when the page itself shows it struck (the honest-price rule, PR 38). */
     wasPrice: z.boolean().default(true),
+    // S11 · PR 223 (registry v205): off as shipped; a value saved before it existed reads it as off.
+    /** The product's rating and reviews, only from its real approved reviews and only what the reviews block shows. */
+    reviews: z.boolean().default(false),
   })
   .strict();
 
@@ -140,9 +143,9 @@ export const storefrontFuSettings = {
     ...json,
     group: 'naming',
     schema: structuredDataSchema,
-    default: { breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true },
-    // PR 222 added the home page, set page and struck-price parts (registry v64)
-    version: 64,
+    default: { breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false },
+    // PR 222 added the home page, set page and struck-price parts (registry v64); PR 223 the reviews part (v205)
+    version: 205,
     labelKey: 'seo.structuredData.label',
     helpKey: 'seo.structuredData.help',
     sortOrder: 900,

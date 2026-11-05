@@ -2,7 +2,7 @@
 // lowest and highest, in stock only with a piece to sell, and never a rating.
 import type { ImageSource } from '@extas/media';
 import { describe, expect, it } from 'vitest';
-import { breadcrumbLd, itemListLd, largestUrl, ldJson, majorPrice, organizationLd, productLd, setInStock, setLd, websiteLd, type LdProduct, type LdSet, type LdShop } from './structured-data';
+import { breadcrumbLd, itemListLd, largestUrl, ldJson, majorPrice, organizationLd, productLd, reviewsPart, setInStock, setLd, websiteLd, type LdProduct, type LdReviews, type LdSet, type LdShop } from './structured-data';
 
 const origin = new URL('https://shop.example.test');
 const base: LdProduct = {
@@ -157,5 +157,47 @@ describe('structured data', () => {
     expect((setLd(origin, { ...set, wasPrice: false })!.offers as Record<string, unknown>).priceSpecification).toBeUndefined();
     expect(setLd(origin, { ...set, payMinor: null })).toBeNull();
     expect(JSON.stringify(setLd(origin, set))).not.toContain('aggregateRating');
+  });
+
+  describe('S11 · PR 223: a rating only from real review rows', () => {
+    const real: LdReviews = {
+      average: 4.333,
+      total: 3,
+      reviews: [
+        { rating: 5, author: ' Sample buyer ', title: 'Good fit', body: ' Sample review. ', published: '2026-11-01' },
+        { rating: 4, author: null, title: null, body: 'No name given', published: null },
+        { rating: 4, author: 'Sample two', title: null, body: '', published: 'yesterday' },
+      ],
+    };
+
+    it('the page`s own average and count, and each named card as a Review', () => {
+      const ld = productLd(origin, { ...base, reviews: real })!;
+      expect(ld.aggregateRating).toEqual({ '@type': 'AggregateRating', ratingValue: '4.3', reviewCount: 3, bestRating: 5, worstRating: 1 });
+      expect(ld.review).toEqual([
+        {
+          '@type': 'Review',
+          reviewRating: { '@type': 'Rating', ratingValue: 5, bestRating: 5, worstRating: 1 },
+          author: { '@type': 'Person', name: 'Sample buyer' },
+          name: 'Good fit',
+          reviewBody: 'Sample review.',
+          datePublished: '2026-11-01',
+        },
+        // a card without a name is not sent alone (it still counts in the average); an odd date is left out
+        { '@type': 'Review', reviewRating: { '@type': 'Rating', ratingValue: 4, bestRating: 5, worstRating: 1 }, author: { '@type': 'Person', name: 'Sample two' } },
+      ]);
+    });
+
+    it('nothing at all without a real review: none passed, a zero count, an average outside 1–5, a bad star', () => {
+      for (const r of [null, undefined, { ...real, total: 0 }, { ...real, average: 0 }, { ...real, average: 6 }, { ...real, average: Number.NaN }, { ...real, total: 1.5 }]) {
+        expect(JSON.stringify(productLd(origin, { ...base, reviews: r }))).not.toMatch(/aggregateRating|"review"/);
+      }
+      expect(reviewsPart({ ...real, reviews: [{ rating: 7, author: 'X', title: null, body: 'x', published: null }] })).toEqual({
+        aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.3', reviewCount: 3, bestRating: 5, worstRating: 1 },
+      });
+      // never more reviews than the count says
+      expect((reviewsPart({ average: 5, total: 1, reviews: [real.reviews[0]!, real.reviews[0]!] }).review as unknown[]).length).toBe(1);
+      // a product without a price sends nothing, rating included
+      expect(productLd(origin, { ...base, variants: [{ priceMinor: null, stock: 1 }], reviews: real })).toBeNull();
+    });
   });
 });
