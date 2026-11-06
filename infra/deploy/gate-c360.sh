@@ -116,6 +116,8 @@ if [ -z "$mig" ] || ! docker image inspect "$mig" >/dev/null 2>&1; then
 fi
 [ -n "$mig" ] || { log "FAIL: no migrate image on this server (deploy first)"; exit 1; }
 grep -E '^(DATABASE_DIRECT_URL|VAULT_MASTER_KEY)=' "$SEC/app.env" > "$work/db.env"
+# CN-035 gate run: helper.ts cleanup tells the web processes' page cache when it archives the test products
+grep -E '^REDIS_CACHE_URL=' "$SEC/app-connections.env" 2>/dev/null | head -n 1 >> "$work/db.env" || true
 
 # helper <action> <json>: one helper.ts action; its one-line JSON answer on stdout.
 helper() {

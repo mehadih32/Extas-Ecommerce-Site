@@ -18,9 +18,16 @@
 //    at any moment leaves a record the close can put back from; the close keeps what it did on the row (`closed`), so
 //    every later close (the shell's trap, the workflow's last step) can say it in the report; and `strayCod` puts back a
 //    switch-on that the gate's own setting-change line shows was never put back (a run of older code, a lost row).
+// 4. CN-035 gate run (6 Nov): the shop's page cache lives in the web processes (PR 602); a change made here emits its
+//    cache event in this process only, where nobody listens, so a collection page kept for `cache.pages.categoryMinutes`
+//    still listed an archived GATE TEST product and the go-live-gate journeys run five minutes later opened its "Not on
+//    sale" page. The archive now tells the web processes over the cache bus (REDIS_CACHE_URL, the same channel their own
+//    clears use): every page of the archived products and every category list of the store. Without the address (a
+//    test, an older server) it says so in the result and the pages expire on their own.
 // Every change is an audit line as the system actor. No price, discount, charge or COD amount is ever changed, and no
 // real payment key or connection is touched.
 import { audit } from '@extas/auth';
+import { redisBus, tags } from '@extas/cache';
 import { unpublishProduct, updateProduct, type Who } from '@extas/catalogue';
 import type { PrismaClient } from '@extas/db/client';
 import { recomputeVariantStock } from '@extas/inventory';
@@ -167,7 +174,7 @@ export async function setTestStock(k: Kit, d: TestData, runId: string, variantId
 }
 
 /** The test products unpublished and archived, their colours, sizes, shelf and warehouse archived (nothing deleted). */
-export async function archiveProducts(k: Kit, d: TestData, runId: string): Promise<{ productsArchived: number; extrasArchived: number; fails: string[] }> {
+export async function archiveProducts(k: Kit, d: TestData, runId: string): Promise<{ productsArchived: number; extrasArchived: number; fails: string[]; cachePurge: string }> {
   const S = k.storeId;
   let productsArchived = 0;
   const fails: string[] = [];
@@ -193,7 +200,25 @@ export async function archiveProducts(k: Kit, d: TestData, runId: string): Promi
     await audit(tx, k.who.actor, { action: `${k.source}.cleanup`, entityType: 'Product', storeId: S, after: { run: runId, productsArchived, colours: c.count, sizes: z.count, categories: g.count, shelves: l.count, warehouses: w.count } }, k.who.ctx);
     return c.count + z.count + g.count + l.count + w.count;
   });
-  return { productsArchived, extrasArchived, fails };
+  const cachePurge = await purgeShopPages(S, products.map((p) => p.id));
+  return { productsArchived, extrasArchived, fails, cachePurge };
+}
+
+/**
+ * Tells the web processes to drop their kept pages of these products and every category list of the store (the cache
+ * bus of PR 602). One publish, then the connection is closed; a failure is a note, never a failed clean-up.
+ */
+export async function purgeShopPages(storeId: number, productIds: readonly string[], url = process.env.REDIS_CACHE_URL ?? ''): Promise<string> {
+  if (!url) return 'the shop pages were not told (no REDIS_CACHE_URL here): they expire on their own';
+  const bus = redisBus({ url, origin: 'gate-cleanup', day: () => new Date().toISOString().slice(0, 10), keepDays: () => 1 });
+  try {
+    await bus.publish({ tags: [tags.listing(storeId), ...productIds.map((id) => tags.product(storeId, id))], everything: false });
+    return `the shop's web processes told to drop the pages of ${productIds.length} test product(s) and every category list (cache bus)`;
+  } catch (e) {
+    return `the shop pages could not be told (${errText(e)}): they expire on their own`;
+  } finally {
+    await bus.close().catch(() => undefined);
+  }
 }
 
 // ---- 2 and 3. the run's mock-payment grant, and cash on delivery with the owner's OK ----
