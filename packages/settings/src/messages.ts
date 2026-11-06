@@ -216,6 +216,8 @@ import contactFormBn from '../messages/contact-form.bn.json';
 import contactFormEn from '../messages/contact-form.en.json';
 import marketingBn from '../messages/marketing.bn.json';
 import marketingEn from '../messages/marketing.en.json';
+import journalEn from '../messages/journal.en.json';
+import journalBn from '../messages/journal.bn.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -316,6 +318,9 @@ messages.bn = mergeMessages(messages.bn, contactFormBn);
 // S13 · CN-031 lane B — marketing: landing pages (registry-marketing.ts).
 messages.en = mergeMessages(messages.en, marketingEn);
 messages.bn = mergeMessages(messages.bn, marketingBn);
+// S12 · CN-031 lane A — the journal (registry-journal.ts, versions 222–229).
+messages.en = mergeMessages(messages.en, journalEn);
+messages.bn = mergeMessages(messages.bn, journalBn);
 // S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
 messages.en = mergeMessages(messages.en, financeEn);
 messages.bn = mergeMessages(messages.bn, financeBn);

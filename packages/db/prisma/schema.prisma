@@ -6709,6 +6709,9 @@ model BlogCategory {
   nameEn     String
   nameBn     String?
   isPillar   Boolean        @default(false)
+  /// PR 239: the category page's short introduction, in both languages (empty = none).
+  introEn    String?
+  introBn    String?
   sortOrder  Int            @default(0)
   archivedAt DateTime?      @db.Timestamptz(3)
   createdAt  DateTime       @default(now()) @db.Timestamptz(3)
@@ -6767,6 +6770,15 @@ model BlogPost {
   aiAssisted       Boolean        @default(false)
   sourceUrls       String[]
   factSources      Json?
+  /// PR 239: the search description (meta), the focus keyword and the one-line answer at the top of the article.
+  metaDescription  String?
+  focusKeyword     String?
+  quickAnswer      String?
+  /// PR 239: the article's main photo (a media library asset) and the products its product block shows, in order.
+  heroAssetId      String?        @db.Uuid
+  productIds       String[]       @db.Uuid
+  /// PR 239: the staff member who wrote it (a reviewer pass by the same person can be refused, `blog.journal`).
+  writerStaffId    String?        @db.Uuid
   scheduledAt      DateTime?      @db.Timestamptz(3)
   publishedAt      DateTime?      @db.Timestamptz(3)
   contentUpdatedAt DateTime?      @db.Timestamptz(3)

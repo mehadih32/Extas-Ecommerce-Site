@@ -148,6 +148,8 @@ export * from './registry-attribution';
 export * from './registry-contact-form';
 // S13 · CN-031 lane B — marketing: landing pages (registry-marketing.ts, versions 168–179).
 export * from './registry-marketing';
+// S12 · CN-031 lane A — the journal (registry-journal.ts, versions 222–229).
+export * from './registry-journal';
 // S13 · CN-031 lane B · PR 263 — audiences sent to the ad platforms (registry-ads-audiences.ts, version 170).
 export * from './registry-ads-audiences';
 // S13 · CN-031 lane B · PR 264 — the refused-parcel exclusion list and the daily audience refresh (registry-ads-refused.ts, version 171).

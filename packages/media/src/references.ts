@@ -38,6 +38,8 @@ export const MEDIA_REFERENCES: readonly MediaReference[] = [
   ref('SeoMeta', 'ogImageAssetId'),
   ref('SitemapBuild', 'fileAssetId'),
   ref('BlogAuthor', 'avatarAssetId'),
+  // PR 239: an article's main photo.
+  ref('BlogPost', 'heroAssetId'),
   ref('HouseAd', 'creativeAssetId'),
   ref('ImageSourcingRequest', 'assetId'),
   ref('CompetitorReport', 'reportAssetId'),
