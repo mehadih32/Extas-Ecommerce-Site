@@ -30,7 +30,7 @@ export default async function NewProductPage() {
   const access = await pageAccess('catalogue.write', deps, MOTHER_STORE_ID);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
-  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} />;
+  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} ready />;
 
   const c = catalogueAccess(access);
   const [tree, fabrics] = await Promise.all([cat.categoryTree(c.deps, c.who), cat.listFabrics(c.deps, c.who)]);

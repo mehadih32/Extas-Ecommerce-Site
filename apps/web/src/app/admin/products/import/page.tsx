@@ -36,7 +36,7 @@ export default async function LinkImportPage({ searchParams }: { searchParams: S
   const access = await pageAccess('catalogue.import', deps, MOTHER_STORE_ID);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(IMPORT_HOME)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
-  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} />;
+  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} ready />;
 
   const c = catalogueAccess(access);
   const d = view.dict;
