@@ -1,0 +1,72 @@
+/* PR 648 (CN-036, lane C) — the Help section in the Lumen look (docs/demo/admin-look/LUMEN-SPEC.md §4 "Help: Guides"):
+   Help & manual, the Site manual, Build progress, one PR's card, Reported problems, Blueprint & files and one file.
+   Each page root carries .lm-hb and data-lm-ready; the shared a2-* skin comes from lumen-sections.css. Every colour,
+   radius, font and shadow is a --lm-* token; text at least 14 px; taps at least 44 px on phones. */
+
+/* ---------- Help & manual: one card per section, in a grid ---------- */
+[data-lm-look] .lm-hb .lm-hb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 16px; }
+[data-lm-look] .lm-hb .a2-helprow.lm-hb-sec { display: flex; flex-direction: column; align-items: stretch; gap: 14px; padding: 18px 20px; margin: 0; border-top: 0; }
+[data-lm-look] .lm-hb .lm-hb-top { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+[data-lm-look] .lm-hb .lm-hb-top .a2-tki { width: 44px; height: 44px; border-radius: var(--lm-r-ctl); background: var(--lm-acbg); color: var(--lm-ac-ink); }
+[data-lm-look] .lm-hb .lm-hb-top .a2-ht { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; line-height: 1.35; }
+[data-lm-look] .lm-hb .lm-hb-top .a2-ht b { font: 700 1.15rem / 1.25 var(--lm-font-disp); color: var(--lm-ink); overflow-wrap: anywhere; }
+[data-lm-look] .lm-hb .lm-hb-top .a2-ht i { font-style: normal; font-size: var(--lm-fs-card); color: var(--lm-ink2); overflow-wrap: anywhere; }
+[data-lm-look] .lm-hb .lm-hb-top .a2-pill { flex: none; }
+[data-lm-look] .lm-hb .lm-hb-act { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+[data-lm-look] .lm-hb .lm-hb-act > * { flex: 1 1 auto; justify-content: center; }
+[data-lm-look] .lm-hb .a2-helpask { margin-bottom: 16px; padding: 16px 20px; }
+
+/* ---------- Build progress: the stages as a grid of rows with their meter ---------- */
+[data-lm-look] .lm-hb [data-testid='build-stages'] .bd-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 0 32px; }
+[data-lm-look] .lm-hb .bd-row { border-bottom-color: var(--lm-ln); }
+[data-lm-look] .lm-hb [data-testid='build-stages'] .bd-row:last-child { border-bottom: 1px solid var(--lm-ln); }
+[data-lm-look] .lm-hb .bd-row .bd-main a { color: var(--lm-ink); }
+[data-lm-look] .lm-hb .bd-row .bd-main a:hover { color: var(--lm-ac-ink); }
+[data-lm-look] .lm-hb .bd-meter .bd-bar { height: 8px; border-radius: var(--lm-r-pill); background: var(--lm-chip); }
+[data-lm-look] .lm-hb .bd-meter .bd-bar i { border-radius: inherit; background: var(--lm-c2); }
+[data-lm-look] .lm-hb .bd-form { border: 0; border-radius: var(--lm-r-box); background: var(--lm-sf2); }
+
+/* one PR's card, problems, files: the facts, the timeline and the file contents at Lumen's 14 px, AA links */
+[data-lm-look] .lm-hb .bd-facts { font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-hb .bd-facts dt { color: var(--lm-ink2); }
+[data-lm-look] .lm-hb .bd-tl .bd-when { font-size: var(--lm-fs-card); color: var(--lm-ink2); }
+[data-lm-look] .lm-hb .bd-tl > li { border-bottom-color: var(--lm-ln); }
+[data-lm-look] .lm-hb .bd-toc a { font-size: var(--lm-fs-card); color: var(--lm-ink2); border-radius: var(--lm-r-ctl); }
+[data-lm-look] .lm-hb .bd-toc a:hover { background: var(--lm-hover); color: var(--lm-ink); }
+[data-lm-look] .lm-hb .bd-toc a.on { background: var(--lm-acbg); color: var(--lm-ac-ink); }
+[data-lm-look] .lm-hb .bd-toc a .bd-dot { color: var(--lm-warn); }
+[data-lm-look] .lm-hb .bd-doc mark { background: var(--lm-warnbg); color: var(--lm-ink); }
+[data-lm-look] .lm-hb .bk-warn { color: var(--lm-bad); }
+
+/* the guides' own text (manual chapters, a file read here): code, boxes and tables in tokens, 14 px at least */
+[data-lm-look] .lm-hb .a2-guidebody { color: var(--lm-ink2); }
+[data-lm-look] .lm-hb .a2-guidebody :is(h3, h4, .a2-gpt, strong, b) { color: var(--lm-ink); }
+[data-lm-look] .lm-hb .a2-guidebody h3 { font-family: var(--lm-font-disp); border-bottom-color: var(--lm-ln); }
+[data-lm-look] .lm-hb .a2-guidebody :is(code, pre) { font-family: var(--lm-font-mono); font-size: var(--lm-fs-card); background: var(--lm-chip); color: var(--lm-ink); }
+[data-lm-look] .lm-hb .a2-guidebody pre code { background: transparent; }
+[data-lm-look] .lm-hb .a2-guidebody a { color: var(--lm-ac-ink); }
+[data-lm-look] .lm-hb :is(.a2-gtbl table, .a2-gbox-t, .a2-gpl) { font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-hb .a2-gtbl :is(th, td) { border-color: var(--lm-ln); }
+[data-lm-look] .lm-hb .a2-gpages button.on { background: var(--lm-ink); border-color: var(--lm-ink); color: var(--lm-sf); }
+
+/* ---------- the Site manual ---------- */
+[data-lm-look] .lm-hb .a2-man-toc .n { width: 28px; height: 28px; flex-basis: 28px; font-size: var(--lm-fs-card); background: var(--lm-acbg); color: var(--lm-ac-ink); }
+[data-lm-look] .lm-hb .a2-man-toc ol > li > a { border-radius: var(--lm-r-ctl); color: var(--lm-ink2); }
+[data-lm-look] .lm-hb .a2-man-toc ol > li > a:hover { background: var(--lm-hover); }
+[data-lm-look] .lm-hb .a2-man-toc li.on > a { background: var(--lm-acbg); color: var(--lm-ink); }
+[data-lm-look] .lm-hb :is(.a2-man-tt b, .a2-man-tt i, .a2-man-toc ul, .a2-man-top, .a2-man-hits a i, .a2-man-note, .a2-man-nd, .a2-man-shot figcaption, .a2-man-shot small) { font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-hb .a2-man-tt i, [data-lm-look] .lm-hb .a2-man-hits a i, [data-lm-look] .lm-hb .a2-man-nd, [data-lm-look] .lm-hb .a2-man-note { color: var(--lm-ink2); }
+[data-lm-look] .lm-hb .a2-man-chh h2 { font: 800 var(--lm-fs-h1-phone) / 1.2 var(--lm-font-disp); color: var(--lm-ink); }
+[data-lm-look] .lm-hb :is(.a2-man-sec > h2, .a2-man-ph h2) { font-family: var(--lm-font-disp); font-size: 1.25rem; }
+[data-lm-look] .lm-hb .a2-man-top, [data-lm-look] .lm-hb .a2-man-hits a b { color: var(--lm-ac-ink); }
+[data-lm-look] .lm-hb .a2-man-hits li, [data-lm-look] .lm-hb .a2-man-new li { border-top-color: var(--lm-ln); }
+[data-lm-look] .lm-hb .a2-man-find .a2-btn.on { background: var(--lm-ink); border-color: var(--lm-ink); color: var(--lm-sf); }
+[data-lm-look] .lm-hb .a2-man-find :is(.a2-inp, .a2-btn) { height: auto; }
+[data-lm-look] .lm-hb .a2-man-pic { border-color: var(--lm-ln); border-radius: var(--lm-r-box); background: var(--lm-sf2); }
+[data-lm-look] .lm-hb .a2-man-mk { border-color: var(--lm-bad); }
+[data-lm-look] .lm-hb :is(.a2-man-mk b, .a2-man-mkl b) { background: var(--lm-bad); color: var(--lm-sf); font-size: var(--lm-fs-card); min-width: 24px; height: 24px; border-radius: var(--lm-r-pill); }
+
+@media (max-width: 759px) {
+  [data-lm-look] .lm-hb .a2-helprow.lm-hb-sec { padding: 16px; }
+  [data-lm-look] .lm-hb [data-testid='build-stages'] .bd-rows { gap: 0; }
+}

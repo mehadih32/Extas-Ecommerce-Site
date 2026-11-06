@@ -42,7 +42,7 @@ export default async function BuildFilesPage({ searchParams }: { searchParams: S
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="bf-page">
         <ShellState view={view} kind="denied" permission="build.read" />
       </div>
     );
@@ -60,7 +60,7 @@ export default async function BuildFilesPage({ searchParams }: { searchParams: S
   const readHref = (f: DocFile) => `${HERE}/read?path=${encodeURIComponent(f.path)}${hits ? `&f=${encodeURIComponent(q)}` : ''}`;
 
   return (
-    <div className="a2-z" data-testid="bf-page">
+    <div className="a2-z lm-hb" data-lm-ready="" data-testid="bf-page">
       <PageHead view={view} place={locateKey(KEY)} title={c('files.title')} sub={c('files.sub')} />
       <SectionTabs view={view} current={KEY} />
 

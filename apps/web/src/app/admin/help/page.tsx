@@ -4,6 +4,8 @@
 // (GET /api/admin/help/<slug>). Reading needs `help.read`.
 // S18 · PR 387: each row also opens the section's chapter in the Site manual (/admin/help/manual).
 // S02 · PR 599: "Ask for a new feature" (Help & Build › Feature requests) for whoever may see the build's pages.
+// PR 648 (CN-036): in the Lumen look (data-lm-ready, light and dark): every section is its own card in a grid (icon, name,
+// what it is for, Ready / Planned, then its three doors: the guide, the manual chapter, the section), lumen-help.css.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -33,7 +35,7 @@ export default async function HelpPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="help" text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="help">
         <ShellState view={view} kind="denied" permission="help.read" />
       </div>
     );
@@ -44,7 +46,7 @@ export default async function HelpPage() {
   const sections = SHELL_SECTIONS.filter((x) => x.id !== 'help' && sectionVisible(x, viewer));
 
   return (
-    <div className="a2-z" data-testid="help">
+    <div className="a2-z lm-hb" data-lm-ready="" data-testid="help">
       <PageHead view={view} place={here} title={t(d, 'help.title')} sub={t(d, 'help.sub')} />
       {viewer.owner || viewer.perms.has('build.read') ? (
         <section className="a2-card a2-helpask" data-testid="help-ask">
@@ -54,29 +56,33 @@ export default async function HelpPage() {
           </Link>
         </section>
       ) : null}
-      <section className="a2-card" aria-label={t(d, 'help.title')}>
+      <section className="lm-hb-grid" aria-label={t(d, 'help.title')}>
         {sections.map((sec) => {
           const place: ShellPlace = { section: sec, tab: null, page: null };
           const tabs = visibleTabs(sec, viewer);
           const ready = sec.id === 'dashboard' || tabs.length > 0;
           return (
-            <div key={sec.id} className="a2-helprow" id={sec.guide} data-testid="help-row" data-section={sec.id}>
-              <span className="a2-tki info">
-                <ShellIcon name={sec.icon} size={16} />
+            <div key={sec.id} className="a2-card a2-helprow lm-hb-sec" id={sec.guide} data-testid="help-row" data-section={sec.id}>
+              <span className="lm-hb-top">
+                <span className="a2-tki info">
+                  <ShellIcon name={sec.icon} size={18} />
+                </span>
+                <span className="a2-ht">
+                  <b>{t(d, `shell.sec.${sec.id}`)}</b>
+                  <i>{t(d, `shell.purpose.${sec.id}`)}</i>
+                </span>
+                <span className={`a2-pill ${ready ? 'ok' : 'line'}`}>{ready ? t(d, 'help.built') : t(d, 'help.planned')}</span>
               </span>
-              <span className="a2-ht">
-                <b>{t(d, `shell.sec.${sec.id}`)}</b>
-                <i>{t(d, `shell.purpose.${sec.id}`)}</i>
+              <span className="lm-hb-act">
+                <PlaceGuide view={view} place={place} overview />
+                {/* S18 · PR 387: the section's chapter in the Site manual. */}
+                <Link className="a2-btn" href={`/admin/help/manual?c=${sec.id}`} data-testid="help-read">
+                  {t(d, 'help.read')}
+                </Link>
+                <Link className="a2-btn pri" href={sectionHome(sec, viewer)}>
+                  {t(d, 'help.open')}
+                </Link>
               </span>
-              <span className={`a2-pill ${ready ? 'ok' : 'line'}`}>{ready ? t(d, 'help.built') : t(d, 'help.planned')}</span>
-              <PlaceGuide view={view} place={place} overview />
-              {/* S18 · PR 387: the section's chapter in the Site manual. */}
-              <Link className="a2-btn" href={`/admin/help/manual?c=${sec.id}`} data-testid="help-read">
-                {t(d, 'help.read')}
-              </Link>
-              <Link className="a2-btn" href={sectionHome(sec, viewer)}>
-                {t(d, 'help.open')}
-              </Link>
             </div>
           );
         })}

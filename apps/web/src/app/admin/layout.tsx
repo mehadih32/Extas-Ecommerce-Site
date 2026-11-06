@@ -31,6 +31,8 @@ import './look.css';
 import './lumen-shell.css';
 import './lumen-patterns.css';
 import './lumen-sections.css';
+// PR 648 (CN-036, lane C): each section moved by lane C keeps its own Lumen rules in its own file (lumen-help.css …).
+import './lumen-help.css';
 import { cookies } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { adminLookSettings, adminPatternsSettings, BUILT_ADMIN_LOOKS } from '@extas/settings';

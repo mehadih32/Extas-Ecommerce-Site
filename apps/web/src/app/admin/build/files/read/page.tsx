@@ -51,7 +51,7 @@ export default async function BuildFilePage({ searchParams }: { searchParams: Se
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="bfr-page">
         <ShellState view={view} kind="denied" permission="build.read" />
       </div>
     );
@@ -67,7 +67,7 @@ export default async function BuildFilePage({ searchParams }: { searchParams: Se
   );
   if (!dir || !doc)
     return (
-      <div className="a2-z" data-testid="bfr-page">
+      <div className="a2-z lm-hb" data-lm-ready="" data-testid="bfr-page">
         <PageHead view={view} place={locateKey(KEY)} crumb={back} title={c('files.title')} />
         <section className="a2-card a2-mt12">
           <p className="a2-sm a2-mute" data-testid="bfr-none">
@@ -91,7 +91,7 @@ export default async function BuildFilePage({ searchParams }: { searchParams: Se
   const dl = `${API}?path=${encodeURIComponent(path)}`;
 
   return (
-    <div className="a2-z" data-testid="bfr-page" data-path={path} data-part={i}>
+    <div className="a2-z lm-hb" data-lm-ready="" data-testid="bfr-page" data-path={path} data-part={i}>
       <PageHead
         view={view}
         place={locateKey(KEY)}

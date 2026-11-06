@@ -56,7 +56,7 @@ export default async function ManualPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="manual">
         <ShellState view={view} kind="denied" permission="help.read" />
       </div>
     );
@@ -75,7 +75,7 @@ export default async function ManualPage(props: Props) {
   );
   if (!outline.length)
     return (
-      <div className="a2-z" data-testid="manual">
+      <div className="a2-z lm-hb" data-lm-ready="" data-testid="manual">
         {head}
         <p className="a2-card" data-testid="manual-nodocs">
           {s('noDocs')}
@@ -173,7 +173,7 @@ export default async function ManualPage(props: Props) {
   }
 
   return (
-    <div className="a2-z" data-testid="manual">
+    <div className="a2-z lm-hb" data-lm-ready="" data-testid="manual">
       {head}
       <form className="a2-card a2-man-find" role="search" action={HERE} method="get" data-testid="manual-search">
         <label className="a2-sr" htmlFor="man-q">

@@ -40,7 +40,7 @@ export default async function BuildProblemsPage({ searchParams }: { searchParams
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="bp-page">
         <ShellState view={view} kind="denied" permission="build.read" />
       </div>
     );
@@ -55,7 +55,7 @@ export default async function BuildProblemsPage({ searchParams }: { searchParams
   const someone = c('problems.row.someone');
 
   return (
-    <div className="a2-z" data-testid="bp-page" data-view={v.view}>
+    <div className="a2-z lm-hb" data-lm-ready="" data-testid="bp-page" data-view={v.view}>
       <PageHead view={view} place={locateKey(KEY)} title={c('problems.title')} sub={c('problems.sub')} />
       <SectionTabs view={view} current={KEY} />
 

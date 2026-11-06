@@ -3,6 +3,8 @@
 // the next deploy without being typed twice. Counts on top (in the plan, built, to build, parked), a search by number
 // or words with a stage and status filter, the stage list with how much of each is built, and each PR's card one tap
 // away. Seeing it needs `build.read` (the owner). Read-only.
+// PR 648 (CN-036): in the Lumen look (data-lm-ready, light and dark): the counts are summary tiles, the stages a grid of
+// rows with their built meter (lumen-help.css); the search, filters, lists and links are unchanged.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -10,6 +12,8 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
+import { buildTiles } from '@/components/admin/build/tiles';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -43,7 +47,7 @@ export default async function BuildPage({ searchParams }: { searchParams: Search
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="build-page">
         <ShellState view={view} kind="denied" permission="build.read" />
       </div>
     );
@@ -53,7 +57,7 @@ export default async function BuildPage({ searchParams }: { searchParams: Search
   const data = dir ? await readRegister(dir) : null;
   if (!data)
     return (
-      <div className="a2-z" data-testid="build-page">
+      <div className="a2-z lm-hb" data-lm-ready="" data-testid="build-page">
         <PageHead view={view} place={locateKey(KEY)} title={c('title')} />
         <SectionTabs view={view} current={KEY} />
         <section className="a2-card a2-mt12">
@@ -74,7 +78,7 @@ export default async function BuildPage({ searchParams }: { searchParams: Search
   const line = (p: RegPr) => (view.lang === 'bn' && typeof bn[String(p.n)] === 'string' && bn[String(p.n)]!.trim() ? bn[String(p.n)]! : p.title);
 
   return (
-    <div className="a2-z" data-testid="build-page">
+    <div className="a2-z lm-hb" data-lm-ready="" data-testid="build-page">
       <PageHead
         view={view}
         place={locateKey(KEY)}
@@ -89,32 +93,13 @@ export default async function BuildPage({ searchParams }: { searchParams: Search
       />
       <SectionTabs view={view} current={KEY} />
 
-      <div className="a2-kpis a2-mt12" data-testid="build-kpis">
-        <div className="a2-card a2-kpi" data-testid="build-kpi-prs" data-n={all.length}>
-          <div className="a2-kl">{c('kpi.prs')}</div>
-          <b className="a2-kv">{all.length}</b>
-          <div className="a2-kf">
-            <span className="a2-kn">{c('kpi.prsNote', { n: reg.stages.length })}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="build-kpi-done" data-n={counts.live + counts.merged}>
-          <div className="a2-kl">{c('kpi.done')}</div>
-          <b className="a2-kv">{counts.live + counts.merged}</b>
-          <div className="a2-kf">
-            <span className="a2-kn">{c('kpi.doneNote', { live: counts.live })}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="build-kpi-todo" data-n={counts.todo}>
-          <div className="a2-kl">{c('kpi.todo')}</div>
-          <b className="a2-kv">{counts.todo}</b>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="build-kpi-parked" data-n={counts.parked}>
-          <div className="a2-kl">{c('kpi.parked')}</div>
-          <b className="a2-kv">{counts.parked}</b>
-          <div className="a2-kf">
-            <span className="a2-kn">{c('kpi.parkedNote')}</span>
-          </div>
-        </div>
+      {/* PR 648 (CN-036): the four counts as Lumen summary tiles (components/admin/lumen/SummaryTiles.tsx). */}
+      <div className="a2-mt12" data-testid="build-kpis">
+        <SummaryTiles
+          label={c('title')}
+          testId="build-kpi"
+          tiles={buildTiles(view.locale, { prs: all.length, stages: reg.stages.length, live: counts.live, merged: counts.merged, todo: counts.todo, parked: counts.parked }, c)}
+        />
       </div>
 
       <section className="a2-card a2-mt12" aria-label={c('filter.q')}>
