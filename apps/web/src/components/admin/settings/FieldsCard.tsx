@@ -10,6 +10,8 @@ import { useId, useState } from 'react';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
 import { ShellIcon } from '../shell/ShellIcon';
+import { useShellText } from '../shell/ShellText';
+import { commonSaveError } from '@/lib/admin-shell/save-errors';
 
 type Json = Record<string, unknown>;
 
@@ -56,6 +58,7 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
 export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: { url: string; screen: FieldsCardScreen; fields: FieldsCardField[]; texts: FieldsCardTexts; canEdit: boolean; testId: string }) {
   const id = useId();
+  const shell = useShellText();
   const [base, setBase] = useState(screen);
   const [draft, setDraft] = useState<Json>(screen.value);
   const [busy, setBusy] = useState(false);
@@ -95,7 +98,8 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: {
       if (g.status === 200) fresh(g.data.cards as Record<string, FieldsCardScreen>);
     }
     const fieldsText = (a.data.details ?? []).join(', ');
-    setSaid({ text: (x.err[code] ?? x.err.other ?? code).replace('{fields}', fieldsText), bad: true });
+    // follow-up 508: the page's own words first, then the admin's shared words for no permission / gone / signed out
+    setSaid({ text: (x.err[code] ?? commonSaveError(shell.dict, code) ?? x.err.other ?? code).replace('{fields}', fieldsText), bad: true });
   }
 
   const field = (f: FieldsCardField) => {

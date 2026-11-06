@@ -112,7 +112,8 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
   const [model, view, guideMode] = await Promise.all([shellModel(theme, look?.prefs.seen ?? null), adminView(), guideChoice().catch(() => null)]);
   for (const href of adminFontPreloads(view.lang, model !== null)) preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
   // The error page draws in the browser: it gets the system states' words here (lib/admin-shell, SH-07).
-  const text = { lang: view.lang, dict: { shell: { state: (view.dict.shell as Dict).state } } as Dict, inShell: model !== null };
+  // follow-up 508: and the shared words for a refused save (no permission, gone, signed out) that every settings card uses
+  const text = { lang: view.lang, dict: { shell: { state: (view.dict.shell as Dict).state, saveErr: (view.dict.shell as Dict).saveErr } } as Dict, inShell: model !== null };
   return (
     <ShellTextProvider value={text}>
       {model ? (
