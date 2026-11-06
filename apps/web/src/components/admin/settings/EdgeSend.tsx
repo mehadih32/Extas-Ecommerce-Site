@@ -2,9 +2,12 @@
 // S18 · PR 386 — "Send to Cloudflare" on Settings › Sign-in & security › Cloudflare protection: writes the saved plan's
 // rules to Cloudflare (the mock while practising), then reads the page again so "At Cloudflare" shows the result.
 // The words come from the page; the API checks `security.write` again.
+// PR 647 (CN-036): a message that the work went through speaks through the admin's one toast (showToast, no Undo);
+// a refusal stays written beside the button.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface EdgeSendTexts {
   send: string;
@@ -24,7 +27,8 @@ export function EdgeSend({ url, texts: x, disabled }: { url: string; texts: Edge
     const a = await call('POST', url, { action: 'send' });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: x.sent, bad: false });
+      setSaid(null);
+      showToast({ text: x.sent });
       router.refresh();
       return;
     }

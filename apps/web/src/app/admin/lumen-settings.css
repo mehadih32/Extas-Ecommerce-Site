@@ -1,0 +1,33 @@
+/* PR 647 (CN-036, lane C) — the Settings section in the Lumen look (docs/demo/admin-look/LUMEN-SPEC.md §4 "Settings:
+   General · Alerts", §3 item 6 settings cards): store details, policies, privacy, sign-in and security, Cloudflare
+   protection, the ERP link, System (backups, cache, go-live), Keys & connections and the Server page. Each a2 page root
+   carries .lm-st and data-lm-ready (the .ad pages: AdminFrame `ready`); the shared skin comes from lumen-sections.css.
+   Admin look (PR 630) and Shimmer (PR 598) were built in Lumen and are not touched. Every colour, radius, font and
+   shadow is a --lm-* token; text at least 14 px; taps at least 44 px on phones. */
+
+/* the settings cards: one switch per card, the number fields fold out under it */
+[data-lm-look] .lm-st .a2-sc { border: 0; border-radius: var(--lm-r-card); background: var(--lm-sf); box-shadow: var(--lm-sh); padding: 20px 22px; }
+[data-lm-look] .lm-st .a2-sc + .a2-sc { margin-top: 16px; }
+[data-lm-look] .lm-st .a2-scb { border-top-color: var(--lm-ln); }
+[data-lm-look] .lm-st :is(.a2-scw, .a2-def, .a2-chipn, .a2-chipt, .a2-ckb, .a2-swl) { font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-st :is(.a2-scw, .a2-def) { color: var(--lm-ink2); }
+[data-lm-look] .lm-st .a2-sw.on::before { background: var(--lm-ok); }
+[data-lm-look] .lm-st .a2-sw:focus-visible { outline-color: var(--lm-focus); }
+[data-lm-look] .lm-st .a2-chipn { background: var(--lm-acbg); color: var(--lm-ac-ink); border-color: transparent; }
+[data-lm-look] .lm-st .a2-chipt { background: var(--lm-sf); color: var(--lm-ink2); border-color: var(--lm-ln); }
+[data-lm-look] .lm-st .a2-chipt.on { background: var(--lm-ink); color: var(--lm-sf); border-color: var(--lm-ink); }
+[data-lm-look] .lm-st details.a2-more-opts > summary { color: var(--lm-ink2); font-size: var(--lm-fs-card); min-height: var(--lm-tap); display: flex; align-items: center; }
+[data-lm-look] .lm-st .a2-kv.a2-kvw { font: 700 1.2rem / 1.3 var(--lm-font-disp); }
+[data-lm-look] .lm-st .a2-note.bad { background: var(--lm-badbg); color: var(--lm-bad); }
+/* the ERP link page's call log and its rows drawn with the older .ad parts: Lumen's 14 px, ink tokens */
+[data-lm-look] .lm-st :is(.ad-row-name, .ad-mini) { font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-st .ad-mini { color: var(--lm-ink2); }
+/* a figure that is a word ("Shop's own", "Report only") wraps inside its tile instead of pushing a 320 px phone wide */
+[data-lm-look] .lm-st .a2-kpi { min-width: 0; }
+[data-lm-look] .lm-st .a2-kv { white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 759px) {
+  [data-lm-look] .lm-st .a2-kv { font-size: var(--lm-fs-h1-phone); }
+}
+
+/* a pill with a sentence in it ("On hold: the ERP takes no new orders") wraps inside a 320 px phone instead of running past the screen edge */
+[data-lm-look] .lm-st .a2-pill { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }

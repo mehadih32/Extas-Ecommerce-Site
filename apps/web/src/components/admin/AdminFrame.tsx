@@ -44,7 +44,9 @@ export function SystemTabs({ view, current }: { view: AdminView; current: string
 }
 
 /** A page that cannot be shown: no access (the shell's denied state names the key) or no database. */
-export async function AdminNotice({ view, current, text }: { view: AdminView; current: string; text: string }) {
+/** `ready` (PR 647): the page is in the Lumen look, so its no-access state is drawn ready too (the deploy's read-only
+ *  smoke account sees that state and checks the mark). */
+export async function AdminNotice({ view, current, text, ready }: { view: AdminView; current: string; text: string; ready?: boolean }) {
   const kind = text === t(view.dict, 'page.noAccess') ? 'denied' : 'unavailable';
   const state = <ShellState view={view} kind={kind} />;
   if ((await shellSession()).kind !== 'ok') {
@@ -57,7 +59,7 @@ export async function AdminNotice({ view, current, text }: { view: AdminView; cu
     );
   }
   return (
-    <AdminFrame view={view} current={current}>
+    <AdminFrame view={view} current={current} ready={ready}>
       <div className="a2-z">{state}</div>
     </AdminFrame>
   );

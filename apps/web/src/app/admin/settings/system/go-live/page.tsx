@@ -59,7 +59,7 @@ export default async function GoLivePage() {
     );
   if (access.kind === "forbidden")
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="golive-page">
         <ShellState view={view} kind="denied" permission="system.read" />
       </div>
     );
@@ -70,7 +70,7 @@ export default async function GoLivePage() {
   const canSign = access.guard.permissions?.has("system.golive") ?? false;
 
   return (
-    <div className="a2-z" data-testid="golive-page">
+    <div className="a2-z lm-st" data-lm-ready="" data-testid="golive-page">
       <PageHead
         view={view}
         place={locateKey(KEY)}

@@ -72,7 +72,7 @@ export default async function CachePage() {
     );
   if (access.kind === "forbidden")
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="cache-page">
         <ShellState view={view} kind="denied" permission="system.read" />
       </div>
     );
@@ -104,7 +104,7 @@ export default async function CachePage() {
   const layers = ["browser", "cdn", "server", "redis"] as const;
 
   return (
-    <div className="a2-z" data-testid="cache-page">
+    <div className="a2-z lm-st" data-lm-ready="" data-testid="cache-page">
       <PageHead
         view={view}
         place={locateKey(KEY)}

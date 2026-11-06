@@ -53,7 +53,7 @@ export default async function PoliciesPage({ searchParams }: { searchParams: Pro
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="policies-page">
         <ShellState view={view} kind="denied" permission="settings.read" />
       </div>
     );
@@ -100,7 +100,7 @@ export default async function PoliciesPage({ searchParams }: { searchParams: Pro
   const state = !page.on ? s('now.off') : page.shows ? s('now.shows') : s('now.soon');
 
   return (
-    <div className="a2-z" data-testid="policies-page">
+    <div className="a2-z lm-st" data-lm-ready="" data-testid="policies-page">
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
 

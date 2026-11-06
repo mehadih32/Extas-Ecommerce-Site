@@ -5,10 +5,13 @@
 // page (messages/admin-privacy.<lang>.json). S18 · PR 623: each request's kind (erasure, or a copy of his data) and
 // whether the customer asked from his own account; "Approve copy" on a waiting copy request (`customers.privacy`), and
 // "Erase now" only on an erasure request.
+// PR 647 (CN-036): a message that the work went through speaks through the admin's one toast (showToast, no Undo);
+// a refusal stays written beside the button.
 import { useId, useState } from 'react';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
 import { ConfirmDialog } from './ConfirmDialog';
+import { showToast } from '../lumen/Toast';
 
 type Words = Record<string, string>;
 
@@ -54,13 +57,15 @@ export function PrivacyRequests({ w, effects, rows: first, on, canRequest, canEr
     take(a.data);
     setPhone('');
     setReason('');
-    setSaid({ text: w['req.filed']!, bad: false });
+    setSaid(null);
+    showToast({ text: w['req.filed']! });
   }
   async function approve(r: RequestRow) {
     const a = await call('POST', API, { action: 'approve', requestId: r.id });
     if (a.status !== 200) return setSaid({ text: problem(a), bad: true });
     take(a.data);
-    setSaid({ text: w['req.approved']!, bad: false });
+    setSaid(null);
+    showToast({ text: w['req.approved']! });
   }
   async function cancel(r: RequestRow) {
     const a = await call('POST', API, { action: 'cancel', requestId: r.id });
@@ -173,7 +178,8 @@ export function PrivacyRequests({ w, effects, rows: first, on, canRequest, canEr
             if (a.status !== 200) return problem(a);
             take(a.data);
             setErasing(null);
-            setSaid({ text: w['req.done']!, bad: false });
+            setSaid(null);
+            showToast({ text: w['req.done']! });
             return null;
           }}
         />

@@ -49,7 +49,7 @@ export default async function EdgePage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="edge-page">
         <ShellState view={view} kind="denied" permission="security.read" />
       </div>
     );
@@ -95,7 +95,7 @@ export default async function EdgePage() {
   const rows = [...v.rules.map((r) => ({ ref: r.ref, st: diff.get(r.ref) ?? 'ok' })), ...extras.map((x) => ({ ref: x.ref, st: 'extra' as const }))];
 
   return (
-    <div className="a2-z" data-testid="edge-page">
+    <div className="a2-z lm-st" data-lm-ready="" data-testid="edge-page">
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
 

@@ -79,7 +79,7 @@ export default async function BackupsPage() {
     );
   if (access.kind === "forbidden")
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="backups-page">
         <ShellState view={view} kind="denied" permission="system.read" />
       </div>
     );
@@ -181,7 +181,7 @@ export default async function BackupsPage() {
   ];
 
   return (
-    <div className="a2-z" data-testid="backups-page">
+    <div className="a2-z lm-st" data-lm-ready="" data-testid="backups-page">
       <PageHead
         view={view}
         place={locateKey(KEY)}

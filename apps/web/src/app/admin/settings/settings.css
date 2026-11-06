@@ -3,8 +3,8 @@
    Only what the shell's own stylesheet (../shell.css) does not have yet. */
 /* the switch: a 44 × 44 tap box (device gate) with the 40 × 23 track and its knob drawn inside */
 .adm2 .a2-sw{width:44px;height:44px;border-radius:12px;background:none;position:relative;flex:none;padding:0}
-.adm2 .a2-sw::before{content:"";position:absolute;top:10.5px;left:2px;width:40px;height:23px;border-radius:12px;background:#D7D2C7;transition:background .15s}
-.adm2 .a2-sw::after{content:"";position:absolute;top:13px;left:4.5px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s}
+.adm2 .a2-sw::before{content:"";position:absolute;top:10.5px;left:2px;width:40px;height:23px;border-radius:12px;background:color-mix(in srgb,var(--lm-ink2) 45%,var(--lm-sf));transition:background .15s}
+.adm2 .a2-sw::after{content:"";position:absolute;top:13px;left:4.5px;width:18px;height:18px;border-radius:50%;background:var(--lm-on-ac);box-shadow:var(--lm-sh-sm);transition:left .15s}
 .adm2 .a2-sw.on::before{background:var(--g)}.adm2 .a2-sw.on::after{left:21.5px}
 .adm2 .a2-sw:disabled{opacity:.55;cursor:not-allowed}
 .adm2 .a2-sw:focus-visible{outline:2px solid var(--g);outline-offset:0}

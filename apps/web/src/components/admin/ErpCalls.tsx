@@ -127,5 +127,12 @@ export function ErpCalls({ dict, initial, canWrite, locale, timeZone, storeId, l
     </section>
   );
   // In the new shell the rows keep the classic colours and sizes (`.ad`'s own variables), inside the shell's card.
-  return a2 ? <div className="ad ad-embed">{card}</div> : card;
+  // PR 647 (CN-036): in the new shell the embed follows the page into dark mode (data-lm-ready).
+  return a2 ? (
+    <div className="ad ad-embed" data-lm-ready="">
+      {card}
+    </div>
+  ) : (
+    card
+  );
 }
