@@ -472,6 +472,11 @@
       "sizeHow": "How exchange works",
       "sizeRemove": "Exchange on arrival — take this out",
       "sizeKeep": "No, I want both"
+    },
+    "login": {
+      "before": "Ordered before?",
+      "link": "Log in",
+      "after": "for your saved address."
     }
   },
   "notFound": {
@@ -998,7 +1003,18 @@
       "text": "A test page with the sample catalogue: add an item and see the added-to-bag panel. The product page shows the same panel.",
       "fill": "Fill a sample bag"
     },
-    "gift": "Send as a gift"
+    "gift": "Send as a gift",
+    "waSend": {
+      "button": "Send my bag on WhatsApp",
+      "title": "Send my bag on WhatsApp",
+      "intro": "WhatsApp opens with this message, ready for you to send:",
+      "open": "Open WhatsApp and send",
+      "back": "Back to my bag",
+      "hello": "Hi {store}, I would like to order:",
+      "total": "Bag total: {amount} (delivery as per my address)",
+      "totalFree": "Bag total: {amount} (free delivery)",
+      "please": "Please place this order for me."
+    }
   },
   "chat": {
     "open": "Chat with us",

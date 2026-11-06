@@ -5,19 +5,21 @@
 // shipped value and its switch; Save writes every marked change at once. Seeing needs `website.read`; saving
 // `website.eye.write` (the API checks again; audited `website.eye.save`). lib/website/eye-admin.ts,
 // components/admin/website/EyeList.tsx. Guide: docs/admin-guide/pages/website/eye-toggles.md.
+// Follow-up 679: under the list, "Door note words" (DoorNoteCard): the owner's own words for checkout's door note.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { EYE_AREAS } from '@extas/settings';
+import { DOOR_NOTE_MAX, EYE_AREAS } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { DoorNoteCard } from '@/components/admin/website/DoorNoteCard';
 import { EyeList, type EyeListRow, type EyeListTexts } from '@/components/admin/website/EyeList';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
-import { eyeView } from '@/lib/website/eye-admin';
+import { doorNoteView, eyeView } from '@/lib/website/eye-admin';
 import bn from '../../../../../messages/admin-eye.bn.json';
 import en from '../../../../../messages/admin-eye.en.json';
 import '../../settings-cards.css';
@@ -54,7 +56,7 @@ export default async function EyeTogglesPage(props: { searchParams: Promise<Reco
       </div>
     );
   const g = (k: string, vars?: Record<string, string | number>) => t(d, `ey.${k}`, vars);
-  const v = await eyeView({ db: access.deps.db, resolver: access.deps.resolver });
+  const [v, door] = await Promise.all([eyeView({ db: access.deps.db, resolver: access.deps.resolver }), doorNoteView({ db: access.deps.db, resolver: access.deps.resolver })]);
   const canEdit = access.guard.permissions?.has('website.eye.write') ?? false;
   const labels = (view.lang === 'bn' ? bn : en).ey.labels as Record<string, string>;
   const rows: EyeListRow[] = v.rows.map((r) => ({ id: r.id, area: r.area, label: labels[r.id] ?? r.id, areaLabel: g(`area.${r.area}`), screenLabel: g(`screen.${r.screen}`), shown: r.shown, def: r.def }));
@@ -97,6 +99,25 @@ export default async function EyeTogglesPage(props: { searchParams: Promise<Reco
         areas={EYE_AREAS.map((a) => ({ id: a, label: g(`area.${a}`) }))}
         texts={texts}
         initial={{ q: (sp.get('q') ?? '').slice(0, 120), area: sp.get('where') ?? '', show: sp.get('show') ?? 'all' }}
+      />
+      {/* follow-up 679: the door note's words — only the owner's (empty as shipped: nothing shows) */}
+      <DoorNoteCard
+        api={`${API}/door-note`}
+        initial={door}
+        max={DOOR_NOTE_MAX}
+        canEdit={canEdit}
+        texts={{
+          title: g('door.title'),
+          text: g('door.text'),
+          en: g('door.en'),
+          bn: g('door.bn'),
+          count: g('door.count', { n: '{n}', max: '{max}' }),
+          save: g('door.save'),
+          saving: g('door.saving'),
+          saved: g('door.saved'),
+          empty: g('door.empty'),
+          err: texts.err,
+        }}
       />
     </div>
   );

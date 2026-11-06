@@ -33,6 +33,12 @@ const D41: Record<string, [string, boolean]> = {
   'thanks.nextSteps': ['thanks.page:nextSteps', false],
   'upsell.bag': ['bag.upsell.enabled:', true],
   'upsell.why': ['bag.upsell.reasons:', true],
+  // follow-up 679 (registry v265). `upsell.thanks` (D4.1 On) is a new part of the thank-you page and ships off
+  // (CLAUDE.md: new optional parts off; the owner switches it on in Eye-toggles); the demo's door note words are
+  // the owner's own and ship empty.
+  'checkout.helpStripDesktop': ['checkout.helpStripDesktop:', false],
+  'bag.waSendBag': ['bag.waSendBag:', false],
+  'upsell.setLine': ['bag.upsell.setLine:', true],
 };
 
 describe('eye-toggles (PR 80)', () => {

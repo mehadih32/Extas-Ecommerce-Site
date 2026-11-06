@@ -159,7 +159,24 @@
       "account.invoice:download": "\"Download invoice\"",
       "search.help:on": "Help answers in search results",
       "search.results:didYouMean": "\"Did you mean …?\"",
-      "search.results:whatsapp": "\"Ask us on WhatsApp\" when nothing is found"
+      "search.results:whatsapp": "\"Ask us on WhatsApp\" when nothing is found",
+      "bag.upsell.setLine:": "\"Buy 2 and save\" line in that row",
+      "bag.waSendBag:": "\"Send my bag on WhatsApp\"",
+      "checkout.helpStripDesktop:": "Checkout help strip on a computer",
+      "checkout.loginNudge:": "\"Ordered before? Log in\" on checkout",
+      "checkout.doorNote:": "Door note under the delivery area (your words)",
+      "thanks.upsell:enabled": "\"You may also like\" on the thank-you page"
+    },
+    "door": {
+      "title": "Door note words",
+      "text": "The door note shows only your own words, under the delivery area once it is settled. Write only what your Cash on Delivery and return rules really do. Empty: nothing shows, even with the switch on.",
+      "en": "English",
+      "bn": "Bengali",
+      "count": "{n} of {max} letters",
+      "save": "Save words",
+      "saving": "Saving …",
+      "saved": "Door note words saved",
+      "empty": "No words yet: nothing shows on checkout."
     }
   }
 }

@@ -68,3 +68,14 @@ export function askKey(field: Field, check: FormCheck): 'name' | 'phone' | 'phon
 export function stillAsked(ask: Field | null, check: FormCheck): Field | null {
   return ask && !check.ok && check.all[ask] ? ask : null;
 }
+
+/**
+ * Follow-up 679 — the door note under the settled delivery area: only while its switch is on and only the owner's own
+ * words (in the page's language; English when the Bengali is not written). No words: null, nothing is drawn — the
+ * shop never ships a Cash on Delivery or refusal promise of its own.
+ */
+export function doorNoteOf(on: boolean, text: { en: string; bn: string }, lang: ShopLang): string | null {
+  if (!on) return null;
+  const own = (lang === 'bn' ? text.bn.trim() : '') || text.en.trim();
+  return own || null;
+}

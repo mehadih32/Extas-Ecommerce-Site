@@ -11,7 +11,7 @@ import { disconnectPrisma, MOTHER_STORE_ID } from '@extas/db/client';
 import { EYE_TOGGLES, messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
-import { eyeTogglesHandler, type EyeView } from './eye-admin';
+import { doorNoteHandler, eyeTogglesHandler, type EyeView } from './eye-admin';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -117,5 +117,27 @@ describe.skipIf(!HAS_TEST_DB)('Website › Eye-toggles on PostgreSQL (PR 81)', (
     expect((await api('PUT', { body: { version: v, shown: { [NOTE]: true } } })).a).toMatchObject({ ok: false, error: 'STALE' });
     expect((await value('pdp.colour')).note).toBe(false);
     expect((await api('GET')).a.rows.find((r) => r.id === 'pdp.colour:trueColourLink')).toMatchObject({ shown: true, def: false });
+  });
+
+  it('follow-up 679: the door note words ship empty, are only the owner\'s, saved trimmed and audited; the list keeps its version', async () => {
+    const door = async (method: string, o: { body?: unknown; cookie?: string } = {}) => {
+      const res = await doorNoteHandler(req(method, { path: '/api/admin/website/eye-toggles/door-note', body: o.body, cookie: o.cookie ?? owner }), admin);
+      return { status: res.status, a: (await res.json()) as { ok: boolean; error?: string; details?: string[]; text?: { en: string; bn: string }; changed?: boolean } };
+    };
+    expect((await door('GET', { cookie: desk })).a).toMatchObject({ ok: true, text: { en: '', bn: '' } });
+    expect((await door('PUT', { cookie: desk, body: { en: 'x', bn: '' } })).status).toBe(403);
+    const v = (await api('GET')).a.version;
+    const put = await door('PUT', { body: { en: '  Sample owner words  ', bn: '' } });
+    expect(put.a).toMatchObject({ ok: true, changed: true, text: { en: 'Sample owner words', bn: '' } });
+    expect(await resolver.value('checkout.doorNote.text', { storeId: S })).toEqual({ en: 'Sample owner words', bn: '' });
+    expect((await door('PUT', { body: { en: 'Sample owner words', bn: '' } })).a).toMatchObject({ ok: true, changed: false });
+    expect((await door('PUT', { body: { en: 'x'.repeat(161), bn: '' } })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['en'] });
+    expect((await door('PUT', { body: { en: 'x' } })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    const log = await t.prisma.auditLog.findMany({ where: { action: 'website.doorNote.save' } });
+    expect(log).toHaveLength(1);
+    expect(log[0]!.before).toEqual({ en: '', bn: '' });
+    // the words are not an eye-toggle: the list's version is unchanged, the switch is still off as shipped
+    expect((await api('GET')).a.version).toBe(v);
+    expect((await api('GET')).a.rows.find((r) => r.id === 'checkout.doorNote:')).toMatchObject({ shown: false, def: false });
   });
 });

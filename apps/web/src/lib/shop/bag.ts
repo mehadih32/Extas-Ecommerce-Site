@@ -29,6 +29,9 @@ const KEYS = [
   'bag.lowStockAt',
   'bag.trust.securePayment',
   'bag.whatsappHelp',
+  // follow-up 679 (registry v265): "Send my bag on WhatsApp" and the set line's switch
+  'bag.waSendBag',
+  'bag.upsell.setLine',
   'bag.tiers.phonePreview',
   'bag.code.enabled',
   'bag.freeProgress.enabled',

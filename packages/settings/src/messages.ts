@@ -236,6 +236,9 @@ import seasonalEn from '../messages/seasonal.en.json';
 import seasonalBn from '../messages/seasonal.bn.json';
 import seasonalReturnEn from '../messages/seasonal-return.en.json';
 import seasonalReturnBn from '../messages/seasonal-return.bn.json';
+// S02 · PR 80 follow-up 679 (registry v265) — the demo's eye-toggle parts the shop now draws.
+import eyePartsEn from '../messages/eye-parts.en.json';
+import eyePartsBn from '../messages/eye-parts.bn.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -365,6 +368,9 @@ messages.bn = mergeMessages(messages.bn, seasonalBn);
 // S12 · PR 530 (registry v251): the seasonal pages' yearly return.
 messages.en = mergeMessages(messages.en, seasonalReturnEn);
 messages.bn = mergeMessages(messages.bn, seasonalReturnBn);
+// S02 · PR 80 follow-up 679 (registry v265): the eye-toggle parts (registry-eye-parts.ts).
+messages.en = mergeMessages(messages.en, eyePartsEn);
+messages.bn = mergeMessages(messages.bn, eyePartsBn);
 // S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
 messages.en = mergeMessages(messages.en, financeEn);
 messages.bn = mergeMessages(messages.bn, financeBn);

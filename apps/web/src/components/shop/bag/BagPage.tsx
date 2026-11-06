@@ -8,6 +8,8 @@
 // S02 · PR 77: the left column's parts (free delivery bar, lines, offer, WhatsApp, bulk, saved) come in the owner's order
 // and on his screens (`layout.bag`, Website › Page layouts); the lines always show.
 // PR 610 (CN-029 Phase 3 qa-gate I3): while checkout is paused (the ERP holds the account) a calm line under the title.
+// Follow-up 679 (registry v265): "Send my bag on WhatsApp" under Checkout (`bag.waSendBag`, off) and the set line's own
+// switch (`bag.upsell.setLine`, on as before).
 import './bag.css';
 import { Fragment, type ReactNode } from 'react';
 import type { BagView } from '@extas/cart';
@@ -19,6 +21,7 @@ import { ROUTES } from '@/lib/shop/routes';
 import { plural, reassurance } from '@/lib/shop/bag-model';
 import type { BagSettings } from '@/lib/shop/bag';
 import { waHref } from '@/lib/shop/links';
+import { bagWaMessage } from '@/lib/shop/bag-wa';
 import { Icon, WaGlyph } from '../Icon';
 import { BulkBagCard } from '../bulk/BulkBagCard';
 import { BagActions, type BagWords } from './BagActions';
@@ -94,6 +97,9 @@ export async function BagPage({ c, view, s, btpl = null, paused = false, linkCod
   const upsellShown = picks.cards.length > 0 || view.tiers !== null;
   const wa = s['bag.whatsappHelp'] ? waHref(c.s['contact.whatsapp'], t('bag.wa.message', c.vars)) : null;
   const isBlocked = view.blocked.length > 0;
+  const waMessage = s['bag.waSendBag'] ? bagWaMessage(view, { t, money: c.money, num: c.num, lang: c.lang, store: c.storeName }) : null;
+  const waSendHref = waMessage ? waHref(c.s['contact.whatsapp'], waMessage) : null;
+  const waSend = waMessage && waSendHref ? { href: waSendHref, message: waMessage } : null;
   const left: Record<BagSectionId, () => ReactNode> = {
     free: () => (s['bag.freeProgress.enabled'] ? <FreeBar c={c} free={view.free} /> : null),
     lines: () => (
@@ -168,7 +174,7 @@ export async function BagPage({ c, view, s, btpl = null, paused = false, linkCod
             ) : null}
           </div>
           <aside className="sticky-d">
-            <BagSummary c={c} view={view} codeOn={s['bag.code.enabled']} trust={trust} blocked={isBlocked} gift={s['checkout.gift'].enabled} />
+            <BagSummary c={c} view={view} codeOn={s['bag.code.enabled']} trust={trust} blocked={isBlocked} gift={s['checkout.gift'].enabled} waSend={waSend} />
           </aside>
         </div>
       </div>
@@ -182,6 +188,7 @@ export async function BagPage({ c, view, s, btpl = null, paused = false, linkCod
           style={s['bag.upsell.style']}
           phoneLadder={s['bag.tiers.phonePreview']}
           reasons={s['bag.upsell.reasons']}
+          setLine={s['bag.upsell.setLine']}
           trust={trust}
         />
       ) : null}

@@ -101,6 +101,11 @@ const KEYS = [
   'checkout.transitDuplicate',
   // PR 559: the phone-entry risk check
   'checkout.phoneRisk',
+  // follow-up 679 (registry v265): "Ordered before? Log in", the door note (the owner's words), the help strip on a computer
+  'checkout.loginNudge',
+  'checkout.doorNote',
+  'checkout.doorNote.text',
+  'checkout.helpStripDesktop',
 ] as const satisfies readonly Key[];
 
 type CheckoutKey = (typeof KEYS)[number];
