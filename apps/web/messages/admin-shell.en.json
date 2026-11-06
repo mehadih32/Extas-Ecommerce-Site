@@ -372,7 +372,23 @@
       "range": "Time range",
       "chartHelp": "move over the chart, or focus it and use the arrow keys, to read each point",
       "noData": "No figures for this time yet.",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "done": "Done.",
+      "failed": "That did not work. Nothing was changed; try again or open the page.",
+      "someFailed": "{n} of {of} done. Open the rest one by one.",
+      "waiting": "{n} waiting for you",
+      "filter": "Filter",
+      "pickAll": "Tick every row shown",
+      "pick": "Tick {what}",
+      "openWhat": "Open {what}",
+      "showMore": "Show {n} more",
+      "bulk": "What to do with the ticked rows",
+      "picked": "{n} ticked",
+      "clear": "Clear",
+      "openPage": "Open its page",
+      "prev": "Previous",
+      "next": "Next",
+      "position": "{n} of {of}"
     }
   },
   "dash": {
