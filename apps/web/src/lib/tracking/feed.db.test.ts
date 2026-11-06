@@ -18,7 +18,7 @@ import type { AdminDeps } from '../admin-auth';
 import { trackingHandler, type TrackingOverview } from './admin';
 import { recordFeedSteps } from './feed';
 import { hashId } from './model';
-import type { TrackingDeps } from './service';
+import { sendEvents, type TrackingDeps } from './service';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -194,6 +194,31 @@ describe.skipIf(!HAS_TEST_DB)('the deep conversion feed on PostgreSQL (PR 532)',
     expect(google.some((g) => g.events[0]!.params.event_id === `qualified-${o.number}`)).toBe(false);
     expect(JSON.stringify(mockAdOutbox.all().map((m) => m.payload))).not.toMatch(/8801712|sample@example|Sample buyer/);
     expect(a.overview.recorded).toMatchObject({ qualified: expect.any(Number), shipped: expect.any(Number), returned: expect.any(Number) });
+  });
+
+  it('PR 532 follow-up (662): the extra data is kept at the first send; a retry later sends it as it was then', async () => {
+    const o = await order({ steps: [{ to: 'HANDED_OVER', hoursAgo: 30 }] });
+    mockAdOutbox.clear();
+    await recordFeedSteps(deps, S);
+    const first = await ev(`shipped-${o.number}`);
+    expect(first!.extra).toMatchObject({ courier: { outcome: 'with_courier', payment: 'cod' }, intent: { channel: 'facebook' } });
+    // the order changes afterwards (paid another way, came from elsewhere); the platform's copy is tried again
+    await t.prisma.order.update({ where: { id: o.id }, data: { paymentMethod: 'BKASH', utmSource: 'google' } });
+    await t.prisma.trackedEvent.update({ where: { id: first!.id }, data: { pending: true, deliveries: { meta: { state: 'failed', attempts: 1 } } } });
+    mockAdOutbox.clear();
+    await sendEvents(deps, { ids: [first!.id] });
+    const again = sentTo('meta').find((d) => d.event_id === `shipped-${o.number}`)!;
+    expect(again.custom_data).toMatchObject({ outcome: 'with_courier', payment: 'cod', channel: 'facebook' });
+    expect((await ev(`shipped-${o.number}`))!.extra).toEqual(first!.extra);
+    // a part switched off since: it stops for what still waits
+    await set('ads.conversionFeed', { enrich: { courier: true, intent: false } });
+    await t.prisma.trackedEvent.update({ where: { id: first!.id }, data: { pending: true, deliveries: { meta: { state: 'failed', attempts: 1 } } } });
+    mockAdOutbox.clear();
+    await sendEvents(deps, { ids: [first!.id] });
+    const third = sentTo('meta').find((d) => d.event_id === `shipped-${o.number}`)!;
+    expect(third.custom_data).toMatchObject({ outcome: 'with_courier' });
+    expect(third.custom_data).not.toHaveProperty('channel');
+    await set('ads.conversionFeed', { enrich: { courier: true, intent: true } });
   });
 
   it('enrichment switched off: the events go plain', async () => {

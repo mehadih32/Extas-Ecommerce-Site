@@ -9872,6 +9872,9 @@ model TrackedEvent {
   deliveries Json     @default("{}")
   /// Some ticked platform still waits for it (a failure is tried again up to the owner's number of attempts).
   pending    Boolean  @default(true)
+  /// PR 532 follow-up (662): the deep feed's courier outcome and visitor intent `{ courier?, intent? }`, frozen at the
+  /// event's first send (right after it is recorded), so a retry later carries the same facts; null = not read yet.
+  extra      Json?
   occurredAt DateTime @db.Timestamptz(3)
   createdAt  DateTime @default(now()) @db.Timestamptz(3)
   updatedAt  DateTime @updatedAt @db.Timestamptz(3)
