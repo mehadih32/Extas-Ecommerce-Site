@@ -16,6 +16,7 @@ import { shopTheme, todayIn, type ShopTheme } from './theme';
 import { shopStoreId } from './store-id';
 import { bulkTrial, tryBulkOn } from './try-bulk';
 import { tryContactNumber } from './try-contact';
+import { trySlogan } from './try-slogan';
 
 const KEYS = [
   'store.name',
@@ -207,9 +208,11 @@ export const shopContext = cache(async (): Promise<ShopContext> => {
   const lang: ShopLang = isShopLang(h.get(LANG_HEADER)) ? (h.get(LANG_HEADER) as ShopLang) : 'en';
   const path = h.get(PATH_HEADER) || '/';
   const storeId = shopStoreId();
-  const [{ values: read, live }, { cats, storeName: rowName }, tryNumber, tryBulk] = await Promise.all([readSettings(storeId), readCategories(storeId), tryContactNumber(), tryBulkOn()]);
+  const [{ values: read, live }, { cats, storeName: rowName }, tryNumber, tryBulk, tryWords] = await Promise.all([readSettings(storeId), readCategories(storeId), tryContactNumber(), tryBulkOn(), trySlogan()]);
   // follow-up 59: a test server draws with the sample contact when the gate asks (lib/shop/try-contact; never live)
-  const withContact: ShopSettings = tryNumber ? { ...read, 'contact.whatsapp': read['contact.whatsapp'] ?? tryNumber, 'contact.phone': read['contact.phone'] ?? tryNumber } : read;
+  const withNumber: ShopSettings = tryNumber ? { ...read, 'contact.whatsapp': read['contact.whatsapp'] ?? tryNumber, 'contact.phone': read['contact.phone'] ?? tryNumber } : read;
+  // follow-up 111: and with a long sample slogan when the gate asks (lib/shop/try-slogan; never live; his own one kept)
+  const withContact: ShopSettings = tryWords ? { ...withNumber, 'brand.slogan': withNumber['brand.slogan'] ?? tryWords } : withNumber;
   // PR 606: a test server's bulk trial (POST /api/shop/try-bulk) draws the lane as if it were on (never live)
   const bulk: ShopSettings = tryBulk ? { ...withContact, 'orders.bulkLane': bulkTrial(withContact['orders.bulkLane']) } : withContact;
   // PR 83: a running A/B test's version B (words, parts shown or hidden) for this visitor, laid over the settings
