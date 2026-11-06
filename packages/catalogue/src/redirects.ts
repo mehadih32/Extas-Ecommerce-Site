@@ -7,7 +7,8 @@ import { CatalogueError } from './errors';
 import { normalizePath } from './text';
 import { logChange, type Tx, type Who } from './context';
 
-export type RedirectSource = 'product-slug' | 'category-slug' | 'collection-slug';
+/** Follow-up 176: + 'combo-slug' (a fixed combo whose link changed, @extas/combos updateCombo). */
+export type RedirectSource = 'product-slug' | 'category-slug' | 'collection-slug' | 'combo-slug';
 
 export interface MovedLink {
   from: string;

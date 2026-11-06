@@ -128,6 +128,23 @@ describe.skipIf(!HAS_TEST_DB)('combos on PostgreSQL (S03)', () => {
       await updateCombo(deps(), as('writer'), ids.pair!, { ...input(), setPriceMinor: 150000 }, next.version);
     });
 
+    it('follow-up 176: a combo whose link changes keeps its old link as a permanent forward, and the old link comes back in use without a chain', async () => {
+      const c = await getCombo(deps(), as('writer'), ids.pair!);
+      const moved = await updateCombo(deps(), as('writer'), ids.pair!, { ...input(), slug: 'test-polo-duo', setPriceMinor: 150000 }, c.version);
+      expect(moved.slug).toBe('test-polo-duo');
+      const fwd = await t.prisma.redirect.findUnique({ where: { storeId_fromPath: { storeId: S, fromPath: '/combo/test-polo-pair' } } });
+      expect(fwd).toMatchObject({ toPath: '/combo/test-polo-duo', enabled: true, source: 'combo-slug', statusCode: registry['naming.redirectStatusCode'].default });
+      // back to the first link: it is in use again, so it stops forwarding; the second link now forwards to it
+      const back = await updateCombo(deps(), as('writer'), ids.pair!, { ...input(), setPriceMinor: 150000 }, moved.version);
+      expect(back.slug).toBe('test-polo-pair');
+      expect((await t.prisma.redirect.findUnique({ where: { storeId_fromPath: { storeId: S, fromPath: '/combo/test-polo-pair' } } }))?.enabled).toBe(false);
+      expect(await t.prisma.redirect.findUnique({ where: { storeId_fromPath: { storeId: S, fromPath: '/combo/test-polo-duo' } } })).toMatchObject({ toPath: '/combo/test-polo-pair', enabled: true });
+      // an unchanged link writes nothing
+      const n = await t.prisma.redirect.count({ where: { storeId: S } });
+      await updateCombo(deps(), as('writer'), ids.pair!, { ...input(), setPriceMinor: 150000 }, back.version);
+      expect(await t.prisma.redirect.count({ where: { storeId: S } })).toBe(n);
+    });
+
     it('PR 609: with a floor margin set, a set price below its pieces\' buying prices + margin is refused', async () => {
       // Bought from the ERP at 70000 a piece; floor 20%: a pair may not sell below 2 × 84000 = 168000.
       await t.prisma.productVariant.updateMany({ where: { productId: ids['essential-pique-polo']! }, data: { shopPriceMinor: 70000 } });
