@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { storefrontSettings, type DesktopNav } from '@extas/settings';
 import { shopT } from './dict';
-import { SIGNUP_LIST_LIVE, deskNavItems, footerColumns, footerDeskColumns, joinShown, phoneMenuRows, type Flags, type ShopCategory } from './shell-model';
+import { SIGNUP_LIST_LIVE, deskNavItems, footerColumns, footerDeskColumns, joinShown, payMarks, phoneMenuRows, type Flags, type ShopCategory } from './shell-model';
 
 const menu = storefrontSettings['shell.menu'].default;
 const nav = storefrontSettings['shell.desktopNav'].default as DesktopNav;
@@ -123,5 +123,45 @@ describe('CN-017 · every promise in customer copy is kept, or it is not shown',
     expect(joinShown(footer, flags(false))).toBe(false);
     expect(joinShown(footer, flags(true))).toBe(true);
     expect(joinShown({ ...footer, join: { on: false, requires: ['signupList'] } }, flags(true))).toBe(false);
+  });
+});
+
+describe('PR 40 follow-up (6 Nov) · the footer`s payment marks are what the checkout offers now', () => {
+  const flags = (cod: boolean): Flags => ({ cod, freeDelivery: false, exchange: false, whatsapp: false, hotline: false, signupList: false });
+  const offer = (o: Partial<{ cod: boolean; mobile: string[]; card: string[]; online: boolean }>) => ({ cod: false, mobile: [], card: [], online: false, ...o });
+  const every = [
+    { id: 'bkash', on: true },
+    { id: 'nagad', on: true },
+    { id: 'rocket', on: true },
+    { id: 'upay', on: true },
+    { id: 'visa', on: true },
+    { id: 'mc', on: true },
+    { id: 'amex', on: true },
+    { id: 'bank', on: true },
+    { id: 'ssl', on: true },
+    { id: 'cod', requires: ['cod'], on: true },
+  ] as typeof footer.pay;
+
+  it('Cash on Delivery only (go-live): only the COD mark, never bKash, Nagad, Visa or Mastercard', () => {
+    expect(payMarks(footer, flags(true), offer({ cod: true }))).toEqual(['cod']);
+  });
+  it('everything off: no mark at all (the row is not drawn)', () => {
+    expect(payMarks(footer, flags(false), offer({}))).toEqual([]);
+  });
+  it('each mark follows its own method: wallets, card types and Pay online', () => {
+    const o = offer({ cod: true, mobile: ['bkash', 'upay'], card: ['mastercard', 'bank'], online: true });
+    expect(payMarks({ ...footer, pay: every }, flags(true), o)).toEqual(['bkash', 'upay', 'mc', 'bank', 'ssl', 'cod']);
+    expect(payMarks({ ...footer, pay: every }, flags(true), offer({ card: ['visa', 'amex'] }))).toEqual(['visa', 'amex']);
+  });
+  it('a mark the owner switched off stays off even while its method is offered', () => {
+    const pay = footer.pay.map((x) => (x.id === 'bkash' ? { ...x, on: false } : x));
+    expect(payMarks({ ...footer, pay }, flags(true), offer({ cod: true, mobile: ['bkash', 'nagad'] }))).toEqual(['nagad', 'cod']);
+  });
+  it('the COD mark keeps its requirement: the owner`s COD switch', () => {
+    expect(payMarks(footer, flags(false), offer({ cod: true }))).toEqual([]);
+  });
+  it('the offer cannot be read: Cash on Delivery by the owner`s switch only, no prepaid mark on a guess', () => {
+    expect(payMarks(footer, flags(true), null)).toEqual(['cod']);
+    expect(payMarks(footer, flags(false), null)).toEqual([]);
   });
 });
