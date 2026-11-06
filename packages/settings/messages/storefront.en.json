@@ -5,7 +5,8 @@
     "slider": "Sliding rows",
     "home": "Home page",
     "categoryPage": "Category pages",
-    "productPage": "Product page"
+    "productPage": "Product page",
+    "experiments": "A/B tests"
   },
   "theme": {
     "schedule": {
@@ -255,6 +256,12 @@
     "bag": {
       "label": "Bag page sections",
       "help": "Which parts the bag shows beside the summary, in which order and on which screens: the free delivery bar, the bag's products, the offer, WhatsApp help, the bulk order card and saved for later. The products always show. Change it on Website › Page layouts."
+    }
+  },
+  "experiments": {
+    "module": {
+      "label": "A/B tests",
+      "help": "While on, a running test shows version B (other words, or a part shown or hidden) to its share of visitors and counts who added to the bag or ordered; off, every visitor sees the shop as it is and nothing is counted. \"How sure\" is the confidence a result needs before a winner is offered; \"Visitors before a result\" is how many each version needs; \"Keep a visitor for\" is how many days a new visitor keeps seeing the same version. A test never changes a price, a discount, COD or a delivery charge."
     }
   }
 }

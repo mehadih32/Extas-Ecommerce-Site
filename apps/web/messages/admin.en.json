@@ -126,6 +126,8 @@
     "healthSpeed": "Speed",
     "reportsTeam": "Team",
     "reportsAreas": "Sales by area",
+    "reportsExperiments": "Experiments",
+    "reportsExperiment": "A/B test",
     "healthSmoke": "Smoke runs",
     "healthHistory": "Run history",
     "healthFixes": "Fixes to approve",

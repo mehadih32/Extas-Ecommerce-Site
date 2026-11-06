@@ -325,7 +325,11 @@
       }
     },
     "reports": {
-      "read": "See Reports › Delivery & RTO (courier performance, late parcels, RTO cost)"
+      "read": "See Reports › Delivery & RTO (courier performance, late parcels, RTO cost)",
+      "experiments": {
+        "read": "See the A/B tests of the shop and their results: visitors, who added to the bag or ordered, the difference and how sure it is (Reports → Experiments)",
+        "write": "Write, start, pause and end A/B tests of the shop's words and shown or hidden parts, keep the winner, archive a test, and set the module's switch and numbers (Reports → Experiments)"
+      }
     },
     "marketing": {
       "landing": {

@@ -419,6 +419,12 @@ export const PERMISSIONS = {
   // S08 · PR 192 (REP-06) — Reports › Delivery & RTO: courier performance (on time, refused, by zone), parcels past
   // their promise and the RTO cost book. Seeing only.
   'reports.read': { group: 'reports' },
+  // S02 · PR 83 (BACKEND-ARCHITECTURE REP-08) — Reports → Experiments: see the A/B tests and their results
+  // (`reports.experiments.read`); write, start, pause, end, keep a winner and archive them, and set the module's switch
+  // and numbers (`reports.experiments.write`). A test changes only words and shown or hidden parts of shop pages, never a
+  // price, a discount, COD or a delivery charge; keeping B also needs the Website permission of what B changes.
+  'reports.experiments.read': { group: 'reports' },
+  'reports.experiments.write': { group: 'reports' },
   // S13 · PR 254 (Blueprint MKT-05) — Marketing › Landing pages: see the pages and the orders each brought
   // (`marketing.landing.read`); create, edit, publish, take down and archive them (`marketing.landing.write`). A page shows
   // the product's own live prices; nothing here changes a price, a discount or an order.

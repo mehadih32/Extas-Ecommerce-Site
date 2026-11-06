@@ -6,6 +6,7 @@ import { cache } from 'react';
 import { headers } from 'next/headers';
 import { getPrisma } from '@extas/db/client';
 import { registry, withoutPlaceholder, type Key, type Value } from '@extas/settings';
+import { shopOverlay, withOverlay } from '../experiments/shop';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import { shopT, type ShopT, type Vars } from './dict';
 import { formatMoney, isShopLang, LANG_HEADER, PATH_HEADER, THEME_HEADER, toBnDigits, type ShopLang } from './lang';
@@ -110,8 +111,9 @@ export async function readPageSettings<K extends Key>(keys: readonly K[], storeI
   const resolver = settingsResolver();
   if (!resolver) return defaults();
   try {
-    const vals = await withTimeout(Promise.all(keys.map((k) => resolver.value(k, { storeId }))), settingsTimeoutMs());
-    return Object.fromEntries(keys.map((k, i) => [k, printable(k, vals[i] as Value<typeof k>)])) as { [P in K]: Value<P> };
+    const [vals, ov] = await Promise.all([withTimeout(Promise.all(keys.map((k) => resolver.value(k, { storeId }))), settingsTimeoutMs()), shopOverlay(storeId)]);
+    // PR 83: a running A/B test's version B for this visitor (only on a shop page; null elsewhere)
+    return withOverlay(Object.fromEntries(keys.map((k, i) => [k, printable(k, vals[i] as Value<typeof k>)])) as { [P in K]: Value<P> }, ov);
   } catch (e) {
     console.warn(`shop: page settings unavailable, drawing with the defaults (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return defaults();
@@ -201,7 +203,9 @@ export const shopContext = cache(async (): Promise<ShopContext> => {
   // follow-up 59: a test server draws with the sample contact when the gate asks (lib/shop/try-contact; never live)
   const withContact: ShopSettings = tryNumber ? { ...read, 'contact.whatsapp': read['contact.whatsapp'] ?? tryNumber, 'contact.phone': read['contact.phone'] ?? tryNumber } : read;
   // PR 606: a test server's bulk trial (POST /api/shop/try-bulk) draws the lane as if it were on (never live)
-  const s: ShopSettings = tryBulk ? { ...withContact, 'orders.bulkLane': bulkTrial(withContact['orders.bulkLane']) } : withContact;
+  const bulk: ShopSettings = tryBulk ? { ...withContact, 'orders.bulkLane': bulkTrial(withContact['orders.bulkLane']) } : withContact;
+  // PR 83: a running A/B test's version B (words, parts shown or hidden) for this visitor, laid over the settings
+  const s = withOverlay(bulk, await shopOverlay(storeId));
   return composeContext({ lang, path, storeId, s, live, cats, rowName, preview: h.get(THEME_HEADER) });
 });
 

@@ -1,0 +1,35 @@
+/* S02 · PR 83 — Reports › Experiments: a card per A/B test (name and state, the two versions in a table, a meter for
+   how sure the result is, what B changes, the preview links and the steps), and the test's editor (two columns that
+   become one on a phone, a row per part or word of version B). Every control at a 44px tap size, the shell's tokens. */
+.adm2 .xpb-mt6{margin-top:6px}
+.adm2 .xpb-mt12{margin-top:12px}
+.adm2 .xpb-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.adm2 .xpb-name{margin:0;min-width:0;overflow-wrap:anywhere}
+.adm2 .xpb-name .a2-lnk{display:inline-flex;align-items:center;min-height:44px}
+.adm2 .xpb-r{text-align:right}
+.adm2 .xpb-tbl td,.adm2 .xpb-tbl th{white-space:nowrap}
+.adm2 .xpb-tbl tbody tr{cursor:default}
+.adm2 .xpb-sure{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.adm2 .xpb-meter{display:inline-block;width:120px;max-width:40vw;height:8px;border-radius:8px;background:var(--ln);overflow:hidden}
+.adm2 .xpb-meter i{display:block;height:100%;background:var(--warn)}
+.adm2 .xpb-meter i.ok{background:var(--ok)}
+.adm2 .xpb-changes{margin:6px 0 0;padding-left:18px;display:grid;gap:4px;font-size:13px;overflow-wrap:anywhere}
+.adm2 .xpb-wrap{display:flex;flex-wrap:wrap;gap:8px}
+.adm2 .xpb-wrap .a2-btn{min-height:44px;display:inline-flex;align-items:center}
+.adm2 .xpb-steps{margin-top:8px}
+.adm2 .xpb-bad{color:var(--bad)}
+.adm2 .xpb-warn{color:var(--warn)}
+.adm2 .xpb-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.adm2 .xpb-bar .a2-btn{min-height:44px;display:inline-flex;align-items:center}
+.adm2 .xpb-g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 14px}
+@media (max-width:760px){.adm2 .xpb-g2{grid-template-columns:minmax(0,1fr)}}
+.adm2 .xpb-editor .a2-inp,.adm2 .xpb-editor .a2-sel,.adm2 .xpb-editor .a2-btn{min-height:44px}
+.adm2 .xpb-rows{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.adm2 .xpb-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--ln2);min-width:0}
+.adm2 .xpb-grow{flex:1 1 200px;min-width:0;overflow-wrap:anywhere}
+.adm2 .xpb-word{display:grid;gap:6px;padding:8px 0;border-top:1px solid var(--ln2);min-width:0}
+.adm2 .xpb-key{overflow-wrap:anywhere}
+.adm2 .xpb-self{justify-self:start}
+.adm2 .xpb-add{display:flex;flex-wrap:wrap;gap:8px}
+.adm2 .xpb-add .a2-sel{flex:1 1 240px;min-width:0;max-width:100%}
+.adm2 .xpb-tbl th.xpb-r{text-align:right}

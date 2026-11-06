@@ -114,6 +114,8 @@
     { "id": "money/vat", "route": "/admin/money/vat" },
     { "id": "reports/team", "route": "/admin/reports/team" },
     { "id": "reports/areas", "route": "/admin/reports/areas" },
+    { "id": "reports/experiments", "route": "/admin/reports/experiments" },
+    { "id": "reports/experiment", "route": "/admin/reports/experiments/[id]" },
     { "id": "money/month-end", "route": "/admin/money/month-end" },
     { "id": "money/books-account", "route": "/admin/money/books" },
     { "id": "money/books-match", "route": "/admin/money/books/match" },
