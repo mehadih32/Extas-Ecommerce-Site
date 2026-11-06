@@ -423,6 +423,11 @@
       "cancel": "Cancel",
       "yesOn": "Yes, turn it on",
       "yesOff": "Yes, turn it off"
+    },
+    "saveErr": {
+      "FORBIDDEN": "You do not have permission to change this. Ask the owner to give your role the right.",
+      "NOT_FOUND": "This is not there any more. Reload the page.",
+      "UNAUTHENTICATED": "You have been signed out. Sign in again, then save."
     }
   },
   "dash": {
