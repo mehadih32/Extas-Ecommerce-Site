@@ -286,6 +286,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     tabs: [
       // S02 · PR 76 (WEB-02) — Page layouts: each shop page's sections, their order, show / hide and screens.
       { id: 'layouts', pages: [{ href: '/admin/website/layouts', perm: 'website.read', keys: ['websiteLayouts'] }] },
+      // S02 · PR 78 (WEB-05) — Words & language: every word the shop shows, in English and Bengali, with the owner's own.
+      { id: 'words', pages: [{ href: '/admin/website/words', perm: 'website.read', keys: ['websiteWords'] }] },
       {
         id: 'seo',
         guide: 'seo',

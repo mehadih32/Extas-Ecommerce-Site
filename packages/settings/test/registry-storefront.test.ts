@@ -7,6 +7,7 @@ import {
   homeHeroSchema,
   homeHeroSlidesSchema,
   homeSectionsSchema,
+  labelOverridesSchema,
   logoStyleSchema,
   menuSchema,
   shopPathSchema,
@@ -80,6 +81,16 @@ describe('storefront settings (v16)', () => {
   it('the slider snap range is ordered', () => {
     const e = storefrontSettings['slider.engine'].default;
     expect(sliderEngineSchema.safeParse({ ...e, snapMinMs: 500, snapMaxMs: 100 }).success).toBe(false);
+  });
+
+  it('PR 78: an owner word may sit at any shop dictionary key, also one with "_" after the first part or of one part', () => {
+    expect(labelOverridesSchema.safeParse({ 'account.status.ON_HOLD': { en: 'Sample hold' } }).success).toBe(true);
+    expect(labelOverridesSchema.safeParse({ 'home.hero.title': { bn: 'নমুনা' } }).success).toBe(true);
+    expect(labelOverridesSchema.safeParse({ skip: { en: 'Sample skip' } }).success).toBe(true);
+    expect(labelOverridesSchema.safeParse({ ON_HOLD: { en: 'x' } }).success).toBe(false);
+    expect(labelOverridesSchema.safeParse({ 'home..title': { en: 'x' } }).success).toBe(false);
+    expect(labelOverridesSchema.safeParse({ 'Home.title': { en: 'x' } }).success).toBe(false);
+    expect(labelOverridesSchema.safeParse({ 'home.title': { en: 'x'.repeat(301) } }).success).toBe(false);
   });
 
   it('owner data has no default', () => {

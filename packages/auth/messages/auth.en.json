@@ -271,9 +271,12 @@
       "manage": "Change the SEO settings, write AI drafts of titles and descriptions, and accept or discard a draft (Website → SEO)"
     },
     "website": {
-      "read": "See the shop's page layouts: which sections each page shows, in which order and on which screens (Website → Page layouts)",
+      "read": "See the shop's page layouts: which sections each page shows, in which order and on which screens (Website → Page layouts), and every word the shop shows with your own (Website → Words & language)",
       "layout": {
         "write": "Move, show or hide the sections of a shop page and choose their screens (phone, computer or both), or put a page back to its default order"
+      },
+      "words": {
+        "write": "Change any word the shop shows, in English and Bengali, one by one or from a CSV file, or give a word back to the shop's own (Website → Words & language)"
       }
     },
     "fixedcosts": {

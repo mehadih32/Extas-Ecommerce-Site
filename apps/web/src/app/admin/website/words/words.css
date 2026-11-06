@@ -1,0 +1,25 @@
+/* S02 · PR 78 — Website › Words & language: the search row (wraps on a phone), one card per word (key, place, the
+   shop's and your word in both languages side by side on a computer, stacked on a phone), the "Change" fold and the
+   page links; every control at a 44px tap size, the shell's tokens only. */
+.adm2 .wdb-mt6{margin-top:6px}
+.adm2 .wdb-search{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto;gap:10px 12px;align-items:end}
+.adm2 .wdb-search .a2-inp,.adm2 .wdb-search .a2-sel{min-height:44px}
+@media (max-width:760px){.adm2 .wdb-search{grid-template-columns:minmax(0,1fr)}}
+.adm2 .wdb-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.adm2 .wdb-row{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--ln);border-radius:var(--r);background:var(--sf);min-width:0}
+.adm2 .wdb-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-width:0}
+.adm2 .wdb-key{overflow-wrap:anywhere;color:var(--ink2)}
+.adm2 .wdb-langs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 16px}
+@media (max-width:600px){.adm2 .wdb-langs{grid-template-columns:minmax(0,1fr)}}
+.adm2 .wdb-lang{display:grid;gap:2px;min-width:0}
+.adm2 .wdb-text{overflow-wrap:anywhere;white-space:pre-wrap}
+.adm2 details.wdb-fold>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-weight:600;color:var(--g)}
+.adm2 .wdb-form{display:grid;gap:8px;padding-top:4px}
+.adm2 .wdb-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.adm2 .wdb-bar .a2-btn{min-height:44px}
+.adm2 .wdb-go{margin-top:0}
+.adm2 .wdb-msg{margin:0}
+.adm2 .wdb-pager{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:12px}
+.adm2 .wdb-pager .a2-btn{min-height:44px}
+.adm2 .wdb-import{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--ln)}
+.adm2 .wdb-file{min-height:44px;width:100%;min-width:0;max-width:100%;font-size:13.5px}

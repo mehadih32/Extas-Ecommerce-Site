@@ -281,9 +281,11 @@ export const footerSchema = z
 /** A page key for the Bengali translation gate (PR 588): `home`, `help/faq`, `collections/new-in` … */
 export const pageKeySchema = z.string().regex(/^[a-z0-9]+(?:[/-][a-z0-9]+)*$/).max(120);
 
+// PR 78 (Words & language): a later part of a key may hold "_" (the shop's own `account.status.ON_HOLD` and its kind)
+// and a key may be one part (`skip`), so every word of the shop dictionary can be changed; the first part is as before.
 export const labelOverridesSchema = z
   .record(
-    z.string().regex(/^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9]+)+$/),
+    z.string().regex(/^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9_]+)*$/),
     z.object({ en: z.string().trim().min(1).max(300).optional(), bn: z.string().trim().min(1).max(300).optional() }).strict(),
   )
   .refine((r) => Object.keys(r).length <= 5000, { message: 'too many words' });

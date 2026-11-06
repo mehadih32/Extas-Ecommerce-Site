@@ -319,6 +319,8 @@
       "/admin/website/layouts?page=category",
       "/admin/website/layouts?page=product",
       "/admin/website/layouts?page=bag",
+      "/admin/website/words",
+      "/admin/website/words?show=changed",
       "/admin/marketing/referrals",
       "/admin/marketing/youtube",
       "/admin/marketing/outreach",
