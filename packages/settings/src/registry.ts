@@ -98,6 +98,7 @@ import { blogImageSettings } from './registry-blog-images';
 import { houseAdSettings } from './registry-house-ads';
 import { blogPipelineSettings } from './registry-blog-pipeline';
 import { geoGuideSettings } from './registry-geo-guide';
+import { merchantFeedSettings } from './registry-merchant-feed';
 import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
 import { erpRetailSettings } from './registry-erp-retail';
@@ -1487,6 +1488,8 @@ export const registry = {
   ...blogPipelineSettings,
   // PR 569 · geography-led ad guidance, advice only, off (registry-geo-guide.ts, version 255).
   ...geoGuideSettings,
+  // PR 589 · the Google Merchant Center product feed, off (registry-merchant-feed.ts, version 256).
+  ...merchantFeedSettings,
   // ---- S12 · CN-031 lane A · PR 246 · seasonal landing pages (registry-seasonal.ts, version 228). ----
   ...seasonalSettings,
   // PR 530 · the seasonal pages' yearly return, off (registry-seasonal-return.ts, version 251).

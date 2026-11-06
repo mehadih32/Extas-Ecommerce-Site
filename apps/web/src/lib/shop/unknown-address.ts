@@ -26,6 +26,7 @@ export const OWN_TOP_SEGMENTS: readonly string[] = [
   'combo',
   'combos',
   'email',
+  'feeds',
   'fresh-start',
   'help',
   'journal',

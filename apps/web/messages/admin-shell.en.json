@@ -53,7 +53,8 @@
         "festive": "Festive cut-off",
         "calendar": "Calendar",
         "report": "Report",
-        "geoGuide": "Where to advertise"
+        "geoGuide": "Where to advertise",
+        "merchantFeed": "Merchant feed"
       },
       "reports": {
         "health": "Site health",

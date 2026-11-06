@@ -145,6 +145,8 @@ import blogPipelineBn from '../messages/blog-pipeline.bn.json';
 import blogPipelineEn from '../messages/blog-pipeline.en.json';
 import geoGuideBn from '../messages/geo-guide.bn.json';
 import geoGuideEn from '../messages/geo-guide.en.json';
+import merchantFeedBn from '../messages/merchant-feed.bn.json';
+import merchantFeedEn from '../messages/merchant-feed.en.json';
 // S18 · PR 379 (registry v74): the quiet bot check on sign-in and checkout.
 import botCheckBn from '../messages/bot-check.bn.json';
 import botCheckEn from '../messages/bot-check.en.json';
@@ -297,6 +299,9 @@ messages.bn = mergeMessages(messages.bn, blogPipelineBn);
 // S13 · PR 569 (registry v255): geography-led ad guidance.
 messages.en = mergeMessages(messages.en, geoGuideEn);
 messages.bn = mergeMessages(messages.bn, geoGuideBn);
+// S13 · PR 589 (registry v256): the Merchant Center feed.
+messages.en = mergeMessages(messages.en, merchantFeedEn);
+messages.bn = mergeMessages(messages.bn, merchantFeedBn);
 messages.en = mergeMessages(messages.en, botCheckEn);
 messages.bn = mergeMessages(messages.bn, botCheckBn);
 messages.en = mergeMessages(messages.en, adminAccessEn);
