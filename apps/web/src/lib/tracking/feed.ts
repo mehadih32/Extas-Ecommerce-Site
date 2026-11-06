@@ -27,8 +27,13 @@ export interface FeedRun extends StepRun {
   notYet?: number;
 }
 
-/** Reads the store's order timeline of the look-back and records each new courier step and qualified sale. */
-export async function recordFeedSteps(deps: TrackingDeps, storeId: number, o: { send?: boolean } = {}): Promise<FeedRun> {
+/**
+ * Reads the store's order timeline of the look-back and records each new courier step and qualified sale.
+ * Follow-up 663: the whole window is read, `page` rows at a time (oldest first, by time then id), so a busy look-back
+ * no longer stops at its oldest 500 rows; the window's end is fixed at the run's start. Each order and step is judged
+ * at its first row in the window, as before.
+ */
+export async function recordFeedSteps(deps: TrackingDeps, storeId: number, o: { send?: boolean; page?: number } = {}): Promise<FeedRun> {
   const at = { storeId };
   const [t, dp, feed] = await Promise.all([deps.resolver.value('ads.tracking', at), deps.resolver.value('ads.deliveredPurchase', at), deps.resolver.value('ads.conversionFeed', at)]);
   if (!t.on || !dp.on || !feed.on) return { scanned: 0, recorded: 0, skipped: 'off' };
@@ -39,96 +44,117 @@ export async function recordFeedSteps(deps: TrackingDeps, storeId: number, o: { 
   if (!steps.length || !sources.length) return { scanned: 0, recorded: 0, skipped: 'nothing-ticked' };
   const now = deps.now ? deps.now() : new Date();
   const states = [...new Set(steps.flatMap((s) => [...FEED_STATES[s]]))];
-  const timeline = await deps.db.orderEvent.findMany({
-    where: { storeId, toStatus: { in: states }, createdAt: { gte: new Date(now.getTime() - dp.lookbackHours * 3_600_000), lte: now }, order: { source: { in: sources } } },
-    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-    take: STEP_SCAN_MAX,
-    select: { orderId: true, toStatus: true, createdAt: true, data: true },
-  });
-  if (!timeline.length) return { scanned: 0, recorded: 0 };
-  const orders = new Map(
-    (
-      await deps.db.order.findMany({
-        where: { storeId, id: { in: [...new Set(timeline.map((e) => e.orderId))] } },
-        select: {
-          id: true,
-          number: true,
-          currency: true,
-          phone: true,
-          email: true,
-          isGift: true,
-          customerId: true,
-          status: true,
-          flags: true,
-          internalFlags: true,
-          items: { select: { id: true, productId: true, sku: true, productName: true, colourName: true, sizeLabel: true, quantity: true, unitPriceMinor: true, lineTotalMinor: true, status: true } },
-        },
-      })
-    ).map((x) => [x.id, x]),
-  );
-  // the first time each order reached each step
-  const firsts = new Map<string, (typeof timeline)[number] & { step: FeedTrackingEvent }>();
-  for (const e of timeline) {
-    const order = orders.get(e.orderId);
-    if (!order || !e.toStatus) continue;
-    for (const step of steps) {
-      if (!FEED_STATES[step].includes(e.toStatus)) continue;
-      const id = stepEventId(step, order.number);
-      if (!firsts.has(id)) firsts.set(id, { ...e, step });
-    }
-  }
-  const had = new Set((await deps.db.trackedEvent.findMany({ where: { storeId, eventId: { in: [...firsts.keys()] } }, select: { eventId: true } })).map((r) => r.eventId));
-  const todo = [...firsts.entries()].filter(([id]) => !had.has(id));
-  if (!todo.length) return { scanned: timeline.length, recorded: 0 };
-  const orderIds = [...new Set(todo.map(([, e]) => e.orderId))];
-  const bought = new Map((await deps.db.trackedEvent.findMany({ where: { storeId, name: 'purchase', test: false, orderId: { in: orderIds } }, select: { orderId: true, url: true, userData: true } })).map((r) => [r.orderId, r]));
-  const phones = [...new Set(orderIds.map((id) => orders.get(id)!.phone).filter((p): p is string => !!p))];
-  const blocked = new Set(feed.holdBlocked && phones.length ? (await deps.db.riskBlock.findMany({ where: { storeId, phone: { in: phones }, undoneAt: null }, select: { phone: true } })).map((b) => b.phone) : []);
-  const pids = [...new Set(orderIds.flatMap((id) => orders.get(id)!.items.map((i) => i.productId)).filter((x): x is string => !!x))];
-  const cats = new Map((pids.length ? await deps.db.product.findMany({ where: { storeId, id: { in: pids } }, select: { id: true, category: { select: { nameEn: true } } } }) : []).map((p) => [p.id, p.category?.nameEn ?? null]));
+  const page = Math.max(1, o.page ?? STEP_SCAN_MAX);
+  const inWindow = { storeId, toStatus: { in: states }, createdAt: { gte: new Date(now.getTime() - dp.lookbackHours * 3_600_000), lte: now }, order: { source: { in: sources } } };
   const flagsHeld = heldFlags(feed);
+  const run: FeedRun = { scanned: 0, recorded: 0 };
+  // the event ids already judged in an earlier page of this run (an order's later rows of the same step are not)
+  const judged = new Set<string>();
 
-  const run: FeedRun = { scanned: timeline.length, recorded: 0 };
-  for (const [eventId, e] of todo) {
-    const order = orders.get(e.orderId)!;
-    let when = e.createdAt;
-    if (e.step === 'qualified') {
-      const held = heldBackOf({ ...order, blocked: !!order.phone && blocked.has(order.phone) }, flagsHeld, feed.holdBlocked, BLOCKLIST_FLAG);
-      if (held) {
-        (run.held ??= {})[held] = (run.held[held] ?? 0) + 1;
-        continue;
-      }
-      const q = qualifiedAt(e, feed.holdHours, now);
-      if (!q) {
-        run.notYet = (run.notYet ?? 0) + 1;
-        continue;
-      }
-      when = q;
-    }
-    const user = stepUser(t, bought.get(order.id)?.userData, order);
-    if (!IDENTITY.some((k) => user[k])) {
-      run.unmatched = (run.unmatched ?? 0) + 1;
-      continue;
-    }
-    const kept = e.toStatus === 'PARTIALLY_DELIVERED' ? keptOf(e.data) : null;
-    const lines = order.items.filter((i) => (kept ? kept.includes(i.id) : i.status === 'ACTIVE'));
-    const items: StoredItem[] = lines.map((i) => ({ id: i.productId ?? i.sku, sku: i.sku, name: i.productName, category: i.productId ? (cats.get(i.productId) ?? null) : null, colour: i.colourName, size: i.sizeLabel, quantity: i.quantity, priceMinor: i.unitPriceMinor }));
-    const r = await recordEvent(deps, {
-      storeId,
-      name: e.step,
-      eventId,
-      url: bought.get(order.id)?.url ?? null,
-      items,
-      valueMinor: lines.reduce((n, i) => n + i.lineTotalMinor, 0),
-      currency: order.currency,
-      orderId: order.id,
-      shopper: {},
-      user,
-      occurredAt: when,
-      sendLater: true,
-      ...(e.step === 'qualified' ? { platforms: generous } : {}),
+  /** The next `page` rows of the window after the row given (oldest first, by time then id). */
+  const rowsAfter = (after: { createdAt: Date; id: string } | null) =>
+    deps.db.orderEvent.findMany({
+      where: { ...inWindow, ...(after ? { OR: [{ createdAt: { gt: after.createdAt } }, { createdAt: after.createdAt, id: { gt: after.id } }] } : {}) },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      take: page,
+      select: { id: true, orderId: true, toStatus: true, createdAt: true, data: true },
     });
-    if (r.recorded) run.recorded += 1;
+
+  /** One page of the timeline: each order's first row of each step not judged yet, recorded when new. */
+  const readPage = async (timeline: Awaited<ReturnType<typeof rowsAfter>>) => {
+    const orders = new Map(
+      (
+        await deps.db.order.findMany({
+          where: { storeId, id: { in: [...new Set(timeline.map((e) => e.orderId))] } },
+          select: {
+            id: true,
+            number: true,
+            currency: true,
+            phone: true,
+            email: true,
+            isGift: true,
+            customerId: true,
+            status: true,
+            flags: true,
+            internalFlags: true,
+            items: { select: { id: true, productId: true, sku: true, productName: true, colourName: true, sizeLabel: true, quantity: true, unitPriceMinor: true, lineTotalMinor: true, status: true } },
+          },
+        })
+      ).map((x) => [x.id, x]),
+    );
+    // the first time each order reached each step
+    const firsts = new Map<string, (typeof timeline)[number] & { step: FeedTrackingEvent }>();
+    for (const e of timeline) {
+      const order = orders.get(e.orderId);
+      if (!order || !e.toStatus) continue;
+      for (const step of steps) {
+        if (!FEED_STATES[step].includes(e.toStatus)) continue;
+        const id = stepEventId(step, order.number);
+        if (!firsts.has(id) && !judged.has(id)) firsts.set(id, { ...e, step });
+      }
+    }
+    for (const id of firsts.keys()) judged.add(id);
+    const had = new Set((await deps.db.trackedEvent.findMany({ where: { storeId, eventId: { in: [...firsts.keys()] } }, select: { eventId: true } })).map((r) => r.eventId));
+    const todo = [...firsts.entries()].filter(([id]) => !had.has(id));
+    if (!todo.length) return;
+    const orderIds = [...new Set(todo.map(([, e]) => e.orderId))];
+    const bought = new Map((await deps.db.trackedEvent.findMany({ where: { storeId, name: 'purchase', test: false, orderId: { in: orderIds } }, select: { orderId: true, url: true, userData: true } })).map((r) => [r.orderId, r]));
+    const phones = [...new Set(orderIds.map((id) => orders.get(id)!.phone).filter((p): p is string => !!p))];
+    const blocked = new Set(feed.holdBlocked && phones.length ? (await deps.db.riskBlock.findMany({ where: { storeId, phone: { in: phones }, undoneAt: null }, select: { phone: true } })).map((b) => b.phone) : []);
+    const pids = [...new Set(orderIds.flatMap((id) => orders.get(id)!.items.map((i) => i.productId)).filter((x): x is string => !!x))];
+    const cats = new Map((pids.length ? await deps.db.product.findMany({ where: { storeId, id: { in: pids } }, select: { id: true, category: { select: { nameEn: true } } } }) : []).map((p) => [p.id, p.category?.nameEn ?? null]));
+    for (const [eventId, e] of todo) {
+      const order = orders.get(e.orderId)!;
+      let when = e.createdAt;
+      if (e.step === 'qualified') {
+        const held = heldBackOf({ ...order, blocked: !!order.phone && blocked.has(order.phone) }, flagsHeld, feed.holdBlocked, BLOCKLIST_FLAG);
+        if (held) {
+          (run.held ??= {})[held] = (run.held[held] ?? 0) + 1;
+          continue;
+        }
+        const q = qualifiedAt(e, feed.holdHours, now);
+        if (!q) {
+          run.notYet = (run.notYet ?? 0) + 1;
+          continue;
+        }
+        when = q;
+      }
+      const user = stepUser(t, bought.get(order.id)?.userData, order);
+      if (!IDENTITY.some((k) => user[k])) {
+        run.unmatched = (run.unmatched ?? 0) + 1;
+        continue;
+      }
+      const kept = e.toStatus === 'PARTIALLY_DELIVERED' ? keptOf(e.data) : null;
+      const lines = order.items.filter((i) => (kept ? kept.includes(i.id) : i.status === 'ACTIVE'));
+      const items: StoredItem[] = lines.map((i) => ({ id: i.productId ?? i.sku, sku: i.sku, name: i.productName, category: i.productId ? (cats.get(i.productId) ?? null) : null, colour: i.colourName, size: i.sizeLabel, quantity: i.quantity, priceMinor: i.unitPriceMinor }));
+      const r = await recordEvent(deps, {
+        storeId,
+        name: e.step,
+        eventId,
+        url: bought.get(order.id)?.url ?? null,
+        items,
+        valueMinor: lines.reduce((n, i) => n + i.lineTotalMinor, 0),
+        currency: order.currency,
+        orderId: order.id,
+        shopper: {},
+        user,
+        occurredAt: when,
+        sendLater: true,
+        ...(e.step === 'qualified' ? { platforms: generous } : {}),
+      });
+      if (r.recorded) run.recorded += 1;
+    }
+  };
+
+  let after: { createdAt: Date; id: string } | null = null;
+  for (;;) {
+    const timeline = await rowsAfter(after);
+    if (!timeline.length) break;
+    run.scanned += timeline.length;
+    await readPage(timeline);
+    if (timeline.length < page) break;
+    const last = timeline[timeline.length - 1]!;
+    after = { createdAt: last.createdAt, id: last.id };
   }
   if (o.send !== false && run.recorded) await sendEvents(deps, { storeId });
   return run;
