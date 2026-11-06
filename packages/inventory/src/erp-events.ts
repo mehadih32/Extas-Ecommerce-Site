@@ -30,6 +30,7 @@ import { createHash } from 'node:crypto';
 import type { Prisma } from '@extas/db/client';
 import { ERP_CLAIM_REASONS, movesMoney, type ErpV6Event, type ErpV6EventType } from '@extas/adapters';
 import { nowOf, setting, TX, type Db, type InventoryDeps, type Tx } from './context';
+import { wakeShopPriceHeld } from './erp-orders-v6';
 import { ERP_ORDER_EVENT_HANDLERS } from './erp-orders-v6-events';
 import { applyShopPrice } from './shop-price';
 
@@ -307,7 +308,7 @@ const pieceDecided: ErpEventHandler = {
 // after a webhook) is ignored (OLDER), never applied over the newer price; applyShopPrice also refuses a price older
 // than the one the variant holds (an import's read counts too), with the variant's row locked.
 const shopPriceChanged: ErpEventHandler = {
-  async apply({ tx, row, now }) {
+  async apply({ deps, tx, row, now }) {
     const d = dataOf(row);
     const sku = textOf(d.sku);
     const price = textOf(typeof d.shopPrice === 'number' ? String(d.shopPrice) : d.shopPrice);
@@ -320,7 +321,10 @@ const shopPriceChanged: ErpEventHandler = {
       if (newer) return { status: 'IGNORED', result: { older: 1, why: 'OLDER', newer: newer.eventId } };
     }
     const k = await applyShopPrice(tx, row.storeId, sku, price, now, { asOf: row.occurredAt });
-    if (k === 'changed' || k === 'first') return { status: 'APPLIED', result: { [k]: 1 } };
+    // Follow-up 532: the ERP has a price for the SKU now — it sells again and the orders held for it go at once.
+    const wake = k === 'unknown' || k === 'older' ? { freed: 0, woken: 0 } : await wakeShopPriceHeld(deps, tx, row.storeId, sku);
+    const woke = wake.freed || wake.woken ? { freed: wake.freed, woken: wake.woken } : null;
+    if (k === 'changed' || k === 'first' || woke) return { status: 'APPLIED', result: { [k]: 1, ...woke } };
     return { status: 'IGNORED', result: { [k]: 1, why: k === 'unknown' ? 'UNKNOWN_SKU' : k === 'older' ? 'OLDER' : 'SAME' } };
   },
 };

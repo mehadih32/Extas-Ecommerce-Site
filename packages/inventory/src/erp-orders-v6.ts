@@ -552,6 +552,29 @@ export async function wakeHeld(db: Db, storeId: number, where: { reason?: HeldRe
 }
 
 /**
+ * Follow-up 532 (PR 609, 610): the ERP now has a shop price for `sku` (`shop-price.changed`). The SKU sells again at once
+ * (`shopPriceMissingAt` cleared), and every order HELD for NO_SHOP_PRICE that named it, and has no other SKU still
+ * waiting for a price, goes again now with a new key, instead of after `erp.orders.refusedRetryMinutes` (the order
+ * check stays the fallback). An old revision is superseded, a cancelled order the ERP never had is never sent.
+ */
+export async function wakeShopPriceHeld(deps: InventoryDeps, db: Db, storeId: number, sku: string): Promise<{ freed: number; woken: number }> {
+  const freed = (await db.productVariant.updateMany({ where: { storeId, sku, shopPriceMissingAt: { not: null } }, data: { shopPriceMissingAt: null } })).count;
+  const held = await db.erpPush.findMany({ where: { storeId, status: 'HELD', heldReason: 'NO_SHOP_PRICE' }, orderBy: { createdAt: 'asc' }, take: 200 });
+  const wake: string[] = [];
+  const inTx = { ...deps, db } as InventoryDeps;
+  for (const row of held) {
+    const eo = await erpOrderForRow(db, row);
+    const details: Record<string, unknown> = isObj(eo?.refusalDetails) ? (eo.refusalDetails as Record<string, unknown>) : {};
+    const skus = Array.isArray(details.skus) ? details.skus.filter((x): x is string => typeof x === 'string') : [];
+    if (!skus.includes(sku)) continue;
+    if (await db.productVariant.count({ where: { storeId, sku: { in: skus }, shopPriceMissingAt: { not: null } } })) continue;
+    if (await cancelledBeforeSent(inTx, row)) continue;
+    wake.push(row.id);
+  }
+  return { freed, woken: wake.length ? await wakeHeld(db, storeId, { ids: wake }) : 0 };
+}
+
+/**
  * Does checkout pause for this store now? Only in v6, only while `erp.hold.pauseCheckout` is on, and only while the
  * ERP said the account is on hold (409 ACCOUNT_ON_HOLD, `account.hold`, or `GET /account`) and has not released it.
  */

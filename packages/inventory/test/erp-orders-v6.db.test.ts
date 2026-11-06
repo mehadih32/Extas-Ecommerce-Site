@@ -330,6 +330,30 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
     expect((await t.prisma.productVariant.findFirstOrThrow({ where: { storeId: storeA, sku: 'TEE-NAVY-M' }, select: { shopPriceMissingAt: true } })).shopPriceMissingAt).toBeNull();
   });
 
+  it('Follow-up 532: shop-price.changed lets the SKU sell again and sends the order held for its price at once (no wait)', async () => {
+    world.setShopPrice('TEE-NAVY-M', null);
+    world.v6().takeEvents();
+    const o = order(storeA, [{ sku: 'TEE-NAVY-M', unit: 900 }]);
+    await enqueueOrderPush(deps(), o.input);
+    expect((await relayErpPushes(deps(), { storeId: storeA })).held).toBe(1);
+    expect((await pushOf(storeA, o.orderId)).heldReason).toBe('NO_SHOP_PRICE');
+    const missing = async () => (await t.prisma.productVariant.findFirstOrThrow({ where: { storeId: storeA, sku: 'TEE-NAVY-M' }, select: { shopPriceMissingAt: true } })).shopPriceMissingAt;
+    expect(await missing()).not.toBeNull();
+    // A price for another SKU wakes nothing.
+    world.setShopPrice('POLO-NAVY-M', 660);
+    await deliverAll();
+    expect((await pushOf(storeA, o.orderId)).status).toBe('HELD');
+    // The ERP's own event for this SKU: it sells again and the order goes now, with a new key, before the owner's wait.
+    world.setShopPrice('TEE-NAVY-M', 950);
+    await deliverAll();
+    expect(await missing()).toBeNull();
+    const row = await pushOf(storeA, o.orderId);
+    expect([row.status, row.heldReason, row.keyRound]).toEqual(['PENDING', null, 1]);
+    const ev = await t.prisma.erpEvent.findFirstOrThrow({ where: { storeId: storeA, type: 'shop-price.changed', data: { path: ['sku'], equals: 'TEE-NAVY-M' } }, orderBy: { receivedAt: 'desc' } });
+    expect([ev.status, ev.result]).toEqual(['APPLIED', expect.objectContaining({ freed: 1, woken: 1 })]);
+    expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(1);
+  });
+
   it('PR 610 (qa-gate): NO_SHOP_PRICE, then the order is cancelled — after the wait the order check lets the SKU sell again', async () => {
     const s = await createSize(catDeps(), { actor: SYSTEM, storeId: storeA }, { label: 'S' });
     const tee = await t.prisma.product.findFirstOrThrow({ where: { storeId: storeA, erpStyleCode: 'TEE' }, select: { id: true } });
