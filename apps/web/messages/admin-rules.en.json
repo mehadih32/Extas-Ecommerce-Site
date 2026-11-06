@@ -250,7 +250,8 @@
       "order": "Order {number}",
       "none": "No orders in these days.",
       "earlier": "Earlier runs",
-      "earlierLine": "v{version} · {days} days · {orders} orders · {difference}"
+      "earlierLine": "v{version} · {days} days · {orders} orders · {difference}",
+      "floorHeld": "In {n} orders this offer stopped at the lowest price allowed over the buying price, so customers get {amount} less discount in all than the rule says."
     },
     "coupons": {
       "title": "Coupons — {name}",

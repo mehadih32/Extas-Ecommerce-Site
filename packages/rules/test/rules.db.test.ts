@@ -682,10 +682,18 @@ describe.skipIf(!HAS_TEST_DB)('Smart Rules on PostgreSQL (S10)', () => {
       const q = await quoteCart(deps(), { storeId: A, lines: line });
       expect([q.discountMinor, q.itemsMinor, q.floorHeld.map((h) => [h.rule.key, h.heldMinor])]).toEqual([16000, 84000, [['polo-sale', 4000]]]);
       expect(await discountWasFor(deps(), { storeId: A, variantId: ids.poloV! })).toMatchObject({ priceMinor: 100000, discountedMinor: 84000 });
+      // Follow-up 521: the simulator prices with the same floor and says how often the offer stopped at it
+      const sale = await t.prisma.smartRule.findFirstOrThrow({ where: { storeId: A, key: 'polo-sale' } });
+      const sim = await simulateRule(deps(), as(reader), sale.id, { days: 366 });
+      expect(sim.floorHeldOrders).toBeGreaterThan(0);
+      expect(sim.floorHeldMinor % 4000).toBe(0);
+      expect(sim.floorHeldMinor).toBeGreaterThan(0);
       // Another store's floor setting never reaches this store.
       overrides.delete('catalogue.floor.minMarginPercent');
       overrides.set(`catalogue.floor.minMarginPercent@${B}`, 20);
       expect((await quoteCart(deps(), { storeId: A, lines: line })).discountMinor).toBe(20000);
+      const sale2 = await t.prisma.smartRule.findFirstOrThrow({ where: { storeId: A, key: 'polo-sale' } });
+      expect(await simulateRule(deps(), as(reader), sale2.id, { days: 366 })).toMatchObject({ floorHeldOrders: 0, floorHeldMinor: 0 });
     } finally {
       overrides.delete('catalogue.floor.minMarginPercent');
       overrides.delete(`catalogue.floor.minMarginPercent@${B}`);
