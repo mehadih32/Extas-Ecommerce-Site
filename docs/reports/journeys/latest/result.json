@@ -1,0 +1,539 @@
+{
+  "at": "2026-11-06 06:23 (Asia/Dhaka)",
+  "base": "https://new.extas.com.bd",
+  "sha": "b5bbe1ad07ce",
+  "kind": "run now",
+  "group": "",
+  "ok": true,
+  "ui": {
+    "kinds": [],
+    "issues": 0
+  },
+  "journeys": 8,
+  "failed": 0,
+  "steps": 58,
+  "skipped": 4,
+  "problems": [],
+  "rows": [
+    {
+      "journey": "customer",
+      "screen": "phone",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open /",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "follow a[href^='/collections/']",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "follow a.pcard-lnk",
+          "ok": true,
+          "skipped": "nothing matches a.pcard-lnk (the shop has none yet)",
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "click .size-pill:not(.out):not([disabled])",
+          "ok": true,
+          "skipped": "step 3 found nothing",
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "open /search",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 6,
+          "what": "open /bag",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 7,
+          "what": "open /checkout",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 8,
+          "what": "open /account/orders/0",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 9,
+          "what": "open /account/orders/0/invoice",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    },
+    {
+      "journey": "customer",
+      "screen": "desktop",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open /",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "follow a[href^='/collections/']",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "follow a.pcard-lnk",
+          "ok": true,
+          "skipped": "nothing matches a.pcard-lnk (the shop has none yet)",
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "click .size-pill:not(.out):not([disabled])",
+          "ok": true,
+          "skipped": "step 3 found nothing",
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "open /search",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 6,
+          "what": "open /bag",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 7,
+          "what": "open /checkout",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 8,
+          "what": "open /account/orders/0",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 9,
+          "what": "open /account/orders/0/invoice",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    },
+    {
+      "journey": "admin",
+      "screen": "phone",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open /admin?home=1",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "open /admin/products",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "open /admin/orders",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "open /admin/stock",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "open /admin/orders/packing",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 6,
+          "what": "open /admin/reports/health",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 7,
+          "what": "open /admin/reports/health/problems",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    },
+    {
+      "journey": "admin",
+      "screen": "desktop",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open /admin?home=1",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "open /admin/products",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "open /admin/orders",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "open /admin/stock",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "open /admin/orders/packing",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 6,
+          "what": "open /admin/reports/health",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 7,
+          "what": "open /admin/reports/health/problems",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    },
+    {
+      "journey": "accountant",
+      "screen": "phone",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open /admin/money/books",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "open /admin/money/books?view=payments",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "open /admin/orders/packing/invoices",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "open /admin/money/costs",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "PUT /api/admin/health → 403",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 6,
+          "what": "POST /api/admin/health → 403",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 7,
+          "what": "PUT /api/admin/edge → 403",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 8,
+          "what": "POST /api/admin/auth/totp → 403",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    },
+    {
+      "journey": "accountant",
+      "screen": "desktop",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open /admin/money/books",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "open /admin/money/books?view=payments",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "open /admin/orders/packing/invoices",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "open /admin/money/costs",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "PUT /api/admin/health → 403",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 6,
+          "what": "POST /api/admin/health → 403",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 7,
+          "what": "PUT /api/admin/edge → 403",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 8,
+          "what": "POST /api/admin/auth/totp → 403",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    },
+    {
+      "journey": "warehouse",
+      "screen": "phone",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open /admin/stock",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "open /admin/stock/counts",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "open /admin/orders/packing/picking",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "open /admin/orders/packing",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "open /admin/orders/returns",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    },
+    {
+      "journey": "warehouse",
+      "screen": "desktop",
+      "ok": true,
+      "steps": [
+        {
+          "n": 1,
+          "what": "open /admin/stock",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 2,
+          "what": "open /admin/stock/counts",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 3,
+          "what": "open /admin/orders/packing/picking",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 4,
+          "what": "open /admin/orders/packing",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        },
+        {
+          "n": 5,
+          "what": "open /admin/orders/returns",
+          "ok": true,
+          "skipped": null,
+          "problems": [],
+          "screenshot": null
+        }
+      ]
+    }
+  ]
+}
