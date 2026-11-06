@@ -1,13 +1,13 @@
 // PR 72 / 73 — the search's pure parts: the query an address asks for, the results page's addresses (words kept with the
 // category page's filters), the help pages as search entries (follow-up 73: only pages that say something, found by their
 // title and the owner's words), the line under each, and the window's chips and words.
-import { matchHelp } from '@extas/search';
+import { matchHelp, pickHelpLine } from '@extas/search';
 import { searchSettings, shopMoreSettings } from '@extas/settings';
 import { describe, expect, it } from 'vitest';
 import { parseState } from './category-model';
 import { shopT } from './dict';
 import { HELP_SLUGS, helpModel, type HelpFacts, type HelpModel } from './help-pages';
-import { fillQ, helpAnswer, helpEntries, queryFrom, searchChips, searchHref, searchPanelProps, MAX_QUERY } from './search-model';
+import { fillQ, helpAnswer, helpEntries, helpLines, queryFrom, searchChips, searchHref, searchPanelProps, MAX_QUERY } from './search-model';
 
 const helpSet = searchSettings['search.help'].default;
 const match = searchSettings['search.match'].default;
@@ -113,5 +113,25 @@ describe('the search window', () => {
     expect(ids('how to pay')).toEqual(['payment']);
     expect(items.get('payment')).toMatchObject({ title: 'Ways to pay', href: '/help/payment', answer: 'Cash on Delivery' });
     expect(helpSet.keywords.terms).not.toContain('bkash');
+  });
+
+  it('S12 · PR 248: a page is found by its live rules` keys and answers with the rule line the query names', () => {
+    const all = models();
+    all.delivery = helpModel({
+      slug: 'delivery', set: pages, text: null, lang: 'en', t: shopT('en'), facts: none,
+      rules: [
+        { key: 'delivery-fee', short: 'Inside Dhaka 2–3 days, outside 3–5 days', full: 'We deliver everywhere.' },
+        { key: 'festive', short: 'Order before the Eid cut-off', full: 'Couriers slow down before Eid.' },
+      ],
+    });
+    const { entries, lines } = helpEntries(all, [...HELP_SLUGS], helpSet, 'en');
+    expect(entries.find((e) => e.id === 'delivery')!.keywords).toEqual(expect.arrayContaining(['delivery fee', 'festive']));
+    expect(matchHelp('festive', entries, helpSet.weak, new Set(), match).hits[0]?.id).toBe('delivery');
+    expect(pickHelpLine('festive', lines.get('delivery')!, helpSet.weak)).toBe('Order before the Eid cut-off');
+    expect(pickHelpLine('slow couriers', lines.get('delivery')!, helpSet.weak)).toBe('Order before the Eid cut-off');
+    expect(helpLines({ qa: [{ id: 'own-x', q: ' Do you have a shop? ', a: [] }], sections: [], methods: [{ id: 'mobile', title: 'Mobile banking', sub: 'bKash · Nagad', marks: ['bkash', 'nagad'] }] })).toEqual([
+      { text: 'Do you have a shop?', keys: [' Do you have a shop? '] },
+      { text: 'Mobile banking — bKash · Nagad', keys: ['Mobile banking', 'bKash · Nagad', 'bkash', 'nagad'] },
+    ]);
   });
 });

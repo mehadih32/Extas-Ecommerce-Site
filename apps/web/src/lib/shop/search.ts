@@ -5,8 +5,9 @@
 // (07-help-search.js hs_products): the products are searched with every word; only when that finds nothing and a help
 // page took some of the words are they searched again without them ("polo delivery" → the delivery page, and polos).
 // Without a database (CI, a computer without one) the catalogue is empty and help still answers.
+// S12 · PR 248: a found page answers with the line the query names (its live rule, question or way to pay; pickHelpLine).
 import { getPrisma } from '@extas/db/client';
-import { matchHelp, meiliFromEnv, restAfterHelp, searchCatalogue, type CatalogueAnswer, type SettingsReader } from '@extas/search';
+import { matchHelp, meiliFromEnv, pickHelpLine, restAfterHelp, searchCatalogue, type CatalogueAnswer, type SettingsReader } from '@extas/search';
 import { registry, type Key, type SearchPanelSettings, type SearchResultsSettings, type Value } from '@extas/settings';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import { readPageSettings, type ShopContext } from './context';
@@ -77,9 +78,13 @@ export async function runSearch(c: ShopContext, q: string, opts: { helpMax: (p: 
   let rest: string | null = null;
   if (help) {
     const order = [...new Set([...help.set.topics, ...HELP_SLUGS])];
-    const { entries, items } = helpEntries(help.models, order, helpSet, c.lang);
+    const { entries, items, lines } = helpEntries(help.models, order, helpSet, c.lang);
     const m = matchHelp(q, entries, helpSet.weak, found?.vocab ?? new Set(), set['search.match']);
-    hits = m.hits.flatMap((h) => (items.has(h.id) ? [items.get(h.id)!] : []));
+    // PR 248: each page answers with the line of its live rules (or questions, or ways to pay) the query names
+    hits = m.hits.flatMap((h) => {
+      const it = items.get(h.id);
+      return it ? [{ ...it, answer: pickHelpLine(q, lines.get(h.id) ?? [], helpSet.weak) ?? it.answer }] : [];
+    });
     if (hits.length && !found?.products.length) {
       const left = restAfterHelp(m);
       if (left && left !== q) {

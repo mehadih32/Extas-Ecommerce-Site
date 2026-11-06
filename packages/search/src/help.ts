@@ -108,3 +108,41 @@ export function matchHelp(
 export function restAfterHelp(m: HelpMatch): string {
   return m.words.filter((_, i) => !m.used.has(i)).join(' ');
 }
+
+/** S12 · PR 248 — one line a found help page can answer with: its text, and the words that point at it. */
+export interface HelpLine {
+  text: string;
+  /** A live rule's key and its own words, a question's words, a way to pay's names (each read as search reads words). */
+  keys: readonly string[];
+}
+
+/**
+ * S12 · PR 248 — the line of a found help page that answers this query: the live rule (or question, or way to pay) that
+ * shares the most words with it — "cod" on the delivery page answers with the Cash on Delivery rule's own line, not the
+ * page's first one. A word several lines share counts less (shared by two: half); a weak word counts a quarter; the
+ * last word may be cut short while typing (3+ letters). Equal lines keep the page's order. No line shares a word: null
+ * (the page's first line answers, as before).
+ */
+export function pickHelpLine(q: string, lines: readonly HelpLine[], weak: readonly string[] = []): string | null {
+  const T = words(q);
+  if (!T.length) return null;
+  const W = new Set(weak.flatMap(words));
+  const sets = lines.map((l) => new Set(l.keys.flatMap(words)));
+  const hitOf = (K: Set<string>, t: string, last: boolean) => (K.has(t) ? 1 : last && letters(t) >= 3 && [...K].some((k) => k.startsWith(t)) ? 0.5 : 0);
+  // a word most lines share ("delivery" on the delivery page) says less than one only this line has ("eid")
+  const shared = T.map((t, i) => sets.filter((K) => hitOf(K, t, i === T.length - 1) > 0).length || 1);
+  let best: string | null = null;
+  let top = 0;
+  sets.forEach((K, n) => {
+    let s = 0;
+    T.forEach((t, i) => {
+      const hit = hitOf(K, t, i === T.length - 1) / shared[i]!;
+      s += W.has(t) ? hit / 4 : hit;
+    });
+    if (s > top) {
+      top = s;
+      best = lines[n]!.text;
+    }
+  });
+  return best;
+}
