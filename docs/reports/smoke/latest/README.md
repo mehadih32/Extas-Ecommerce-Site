@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-06 23:39 (Asia/Dhaka)
+# Smoke test · 2026-11-07 00:46 (Asia/Dhaka)
 
 > **বাংলায়:** 0টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
 
-Site: https://new.extas.com.bd · commit `5f36db1893eb` · after deploy · result **FAIL** (506 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `09b0afdba8ae` · after deploy · result **FAIL** (504 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -254,8 +254,7 @@ Site: https://new.extas.com.bd · commit `5f36db1893eb` · after deploy · resul
 | `/admin/website/blog/sold` | phone | 200 | `/admin/website/blog/sold` | ok | — |
 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | phone | 200 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | ok | — |
 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | phone | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
-| `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | phone | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
-| `/admin/reports/health/history/01a1b1a1-9301-7a23-b21a-920a260b7725` | phone | 200 | `/admin/reports/health/history/01a1b1a1-9301-7a23-b21a-920a260b7725` | ok | — |
+| `/admin/reports/health/history/01a1b1fa-f39b-7230-889b-15003fea1ff2` | phone | 200 | `/admin/reports/health/history/01a1b1fa-f39b-7230-889b-15003fea1ff2` | ok | — |
 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893?tab=wallet` | phone | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -507,16 +506,13 @@ Site: https://new.extas.com.bd · commit `5f36db1893eb` · after deploy · resul
 | `/admin/website/blog/sold` | desktop | 200 | `/admin/website/blog/sold` | ok | — |
 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | desktop | 200 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | ok | — |
 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | desktop | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
-| `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | desktop | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
-| `/admin/reports/health/history/01a1b1a1-9301-7a23-b21a-920a260b7725` | desktop | 200 | `/admin/reports/health/history/01a1b1a1-9301-7a23-b21a-920a260b7725` | ok | — |
+| `/admin/reports/health/history/01a1b1fa-f39b-7230-889b-15003fea1ff2` | desktop | 200 | `/admin/reports/health/history/01a1b1fa-f39b-7230-889b-15003fea1ff2` | ok | — |
 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893?tab=wallet` | desktop | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
 Other problems:
 
-- check (PR 632): Orders › Today's queue (To confirm) draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
-- check (PR 632): Orders › Call list draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
 - check (PR 633): Orders › Returns › QC draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
 - check (PR 633): Orders › Returns › Hand-back draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
 - check (PR 634): Products › Add product draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.

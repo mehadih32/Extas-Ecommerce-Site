@@ -1,15 +1,13 @@
 {
-  "at": "2026-11-06 23:39 (Asia/Dhaka)",
+  "at": "2026-11-07 00:46 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "5f36db1893eb",
+  "sha": "09b0afdba8ae",
   "kind": "after deploy",
   "rolledBack": true,
   "ok": false,
-  "pages": 506,
+  "pages": 504,
   "failed": 0,
   "problems": [
-    "check (PR 632): Orders › Today's queue (To confirm) draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
-    "check (PR 632): Orders › Call list draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
     "check (PR 633): Orders › Returns › QC draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
     "check (PR 633): Orders › Returns › Hand-back draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
     "check (PR 634): Products › Add product draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
