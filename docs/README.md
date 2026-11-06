@@ -208,6 +208,7 @@ the pages are out of date.
 | [`admin-guide/pages/website/eye-toggles.md`](admin-guide/pages/website/eye-toggles.md) | Page guide (CN-026 six parts): Website › More › Eye-toggles (`/admin/website/eye-toggles`): every show/hide switch of the shop pages by place, search, filters, Save all / Discard / Back to as shipped (PR 80, 81) |
 | [`admin-guide/pages/website/side-canvas.md`](admin-guide/pages/website/side-canvas.md) | Page guide (CN-026 six parts): Website › Side canvas (`/admin/website/side-canvas`): the master switch, the zones in the desktop gutters, the approval map (PR 596) |
 | [`admin-guide/pages/website/launch-default.md`](admin-guide/pages/website/launch-default.md) | Page guide (CN-026 six parts): Website › More › Launch default (`/admin/website/launch-default`): save the shop look, restore, undo, named looks, the restore log (PR 597) |
+| [`admin-guide/pages/website/page-edit.md`](admin-guide/pages/website/page-edit.md) | Page guide (CN-026 six parts): Website › More › On-page edit (`/admin/website/page-edit`): the switch, the phone options and checks, the publishes and open drafts; the owner's bar on the shop (PR 600) |
 | [`admin-guide/pages/reports/experiments.md`](admin-guide/pages/reports/experiments.md) | Page guide (CN-026 six parts): Reports › More › Experiments (`/admin/reports/experiments`): the A/B module card, the tests list, a new test; never prices, offers, payment or delivery (PR 83) |
 | [`admin-guide/pages/reports/experiment.md`](admin-guide/pages/reports/experiment.md) | Page guide (CN-026 six parts): one A/B test (`/admin/reports/experiments/<id>`): version B, start, pause, end, keep B or A, the result and its confidence, preview links (PR 83) |
 | [`admin-guide/pages/reports/health-problems.md`](admin-guide/pages/reports/health-problems.md) | Page guide (CN-026 six parts): Reports › Site health › Customer problems (`/admin/reports/health/problems`): what visitors ran into, Urgent first, and the recorder card (PR 423) |
@@ -322,6 +323,7 @@ the pages are out of date.
 | [`reports/2026-11-06-S18.md`](reports/2026-11-06-S18.md) | S18 stage report: done with PR 623, the customer's own privacy request (15/15) |
 | [`reports/2026-11-06-S11.md`](reports/2026-11-06-S11.md) | S11 stage report: done with PR 223–226, 230, 231, 237 and 238, data for search engines from real rows, the AI summary, links between pages, SEO health and the Organic report (22/22) |
 | [`reports/2026-11-06-S14.md`](reports/2026-11-06-S14.md) | S14 stage report: done with PR 535, the legacy customer import (24/24) |
+| [`reports/2026-11-06-S02.md`](reports/2026-11-06-S02.md) | S02 stage report: done with PR 600, the on-page edit mode (58/58) |
 | [`reports/2026-11-06-admin-look-size.md`](reports/2026-11-06-admin-look-size.md) | The admin look Lumen, size report (CN-036, Bengali): 149 admin pages, 26 shared parts, what is already close to the patterns, and the PR split 625–653 |
 | [`reports/server/latest.md`](reports/server/latest.md) | The newest machine report from the `server-setup` workflow (no secrets) |
 | `reports/server/2026-10-20-*-setup.md` | Earlier machine reports, one per setup run |
