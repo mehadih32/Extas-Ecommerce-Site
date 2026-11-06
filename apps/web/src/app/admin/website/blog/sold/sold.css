@@ -1,0 +1,19 @@
+/* S12 · PR 253 — Website › Blog & journal › What articles sold, drawn in Lumen: only --lm-* tokens (theme/lumen.css). */
+.sd-page { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.sd-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.sd-span, .sd-note { color: var(--lm-ink2); margin: 0; }
+.sd-off { border-left: 4px solid var(--lm-warn); color: var(--lm-ink); margin: 0; }
+.sd-off a { color: var(--lm-ac-ink); min-height: 44px; display: inline-flex; align-items: center; }
+.sd-row { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sd-t { color: var(--lm-ink); font-weight: 700; overflow-wrap: anywhere; }
+.sd-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: var(--lm-ink2); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.sd-pill { display: inline-flex; align-items: center; border-radius: var(--lm-r-pill); padding: 2px 10px; background: var(--lm-chip); color: var(--lm-ink2); font-size: 0.8rem; font-weight: 700; }
+.sd-pill.ok { background: var(--lm-okbg); color: var(--lm-ok); }
+.sd-pill.warn { background: var(--lm-warnbg); color: var(--lm-warn); }
+.sd-tbl { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.sd-tbl th, .sd-tbl td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--lm-ln); vertical-align: top; }
+.sd-tbl th { color: var(--lm-ink2); font-weight: 700; }
+.sd-tbl .r { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sd-tbl a { color: var(--lm-ac-ink); min-height: 44px; display: inline-flex; align-items: center; overflow-wrap: anywhere; }
+.sd-tw { overflow-x: auto; max-width: 100%; }
+.sd-page .bd-crumb { display: inline-flex; align-items: center; min-height: 44px; color: var(--lm-ink2); }

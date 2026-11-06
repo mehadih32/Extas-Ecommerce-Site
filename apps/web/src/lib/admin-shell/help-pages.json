@@ -104,6 +104,7 @@
     { "id": "website/blog-performance", "route": "/admin/website/blog/performance" },
     { "id": "website/blog-comments", "route": "/admin/website/blog/comments" },
     { "id": "website/blog-shared", "route": "/admin/website/blog/shared" },
+    { "id": "website/blog-sold", "route": "/admin/website/blog/sold" },
     { "id": "money/overview", "route": "/admin/money" },
     { "id": "money/refunds", "route": "/admin/money/refunds" },
     { "id": "money/cost-ledger", "route": "/admin/money/cost-ledger" },
