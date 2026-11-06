@@ -1,7 +1,9 @@
 // S13 · PR 589 — the Merchant Center feed on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): only published
 // products of a shown category; the cheapest live variant's price; the brand, else the shop's name; absolute links; a
 // product without a photo counted as left out; sold-out kept while `outOfStock`, left out otherwise; the card needs
-// `marketing.campaigns.write`, is audited and refuses a bad country; signed out 401. Every value is made up.
+// `marketing.campaigns.write`, is audited and refuses a bad country; signed out 401; PR 589 follow-up: each live size and
+// colour read with its names, price, stock and its own page address once the card lists one item per size and colour.
+// Every value is made up.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, createRole, defaultSecurityPolicy, hashPassword, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -99,5 +101,26 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Merchant feed on PostgreSQL (PR 589
     expect(ok.j.screen.card.value).toMatchObject({ on: true, outOfStock: false, country: 'BD' });
     expect(ok.j.screen.total).toBe(1);
     expect(await t.prisma.auditLog.count({ where: { action: 'ads.merchantFeed.settings' } })).toBe(1);
+  });
+
+  it('PR 589 follow-up: reads each live size and colour once the card lists one item per size and colour', async () => {
+    const before = (await feedProducts(t.prisma, deps.resolver, ORIGIN)).products;
+    expect(before.every((p) => p.variants === undefined)).toBe(true);
+    const navy = await t.prisma.colour.create({ data: { storeId: S, key: 'navy-589', nameEn: 'Sample navy', hex: '#1f2a44' } });
+    const m = await t.prisma.size.create({ data: { storeId: S, key: 'm-589', label: 'M', sortOrder: 2 } });
+    const s = await t.prisma.size.create({ data: { storeId: S, key: 's-589', label: 'S', sortOrder: 1 } });
+    const polo = await t.prisma.product.findFirstOrThrow({ where: { slug: 'polo-589' }, select: { id: true } });
+    await t.prisma.productVariant.update({ where: { storeId_sku: { storeId: S, sku: 'polo-589-0' } }, data: { colourId: navy.id, sizeId: m.id } });
+    await t.prisma.productVariant.update({ where: { storeId_sku: { storeId: S, sku: 'polo-589-1' } }, data: { colourId: navy.id, sizeId: s.id, inStock: false } });
+    const ok = await api('PUT', { key: 'ads.merchantFeed', on: true, values: { variants: 'on' } });
+    expect(ok.status).toBe(200);
+    expect(ok.j.screen.card.value).toMatchObject({ variants: true });
+    expect(ok.j.screen).toMatchObject({ inFeed: 0, items: 0 }); // no photo yet: left out as before
+    const p = (await feedProducts(t.prisma, deps.resolver, ORIGIN)).products.find((x) => x.id === polo.id)!;
+    expect(p.variants!.map((v) => [v.size, v.colour, v.priceMinor, v.inStock])).toEqual([
+      ['S', 'Sample navy', 150_000, false],
+      ['M', 'Sample navy', 180_000, true],
+    ]); // by size order; the variant without a price is not read
+    expect(p.variants![1]!.link).toMatch(/^https:\/\/shop\.example\.test\/.+polo-589\?color=navy-589&s=m-589$/);
   });
 });

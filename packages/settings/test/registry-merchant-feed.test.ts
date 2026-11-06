@@ -5,11 +5,11 @@ import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
 import { MERCHANT_FEED_DEFAULT, merchantFeedSchema, merchantFeedSettings } from '../src/registry-merchant-feed';
 
-describe('merchant feed (v256)', () => {
-  it('is in the registry at version 256, per store, labelled in English and Bengali, its default valid', () => {
+describe('merchant feed (v256, v259)', () => {
+  it('is in the registry at version 259 (PR 589 follow-up), per store, labelled in English and Bengali, its default valid', () => {
     const s = merchantFeedSettings['ads.merchantFeed'];
     expect(registry['ads.merchantFeed']).toBe(s);
-    expect(s.version).toBe(256);
+    expect(s.version).toBe(259);
     expect(s.scope).toBe('store');
     expect(s.schema.safeParse(s.default).success).toBe(true);
     for (const lang of ['en', 'bn'] as const) {
@@ -19,7 +19,7 @@ describe('merchant feed (v256)', () => {
   });
 
   it('ships off for Bangladesh', () => {
-    expect(MERCHANT_FEED_DEFAULT).toEqual({ on: false, country: 'BD', maxItems: 5000, outOfStock: true });
+    expect(MERCHANT_FEED_DEFAULT).toEqual({ on: false, country: 'BD', maxItems: 5000, outOfStock: true, variants: false });
   });
 
   it('takes a two-letter country only, bounded numbers, and no key or budget field', () => {
@@ -30,5 +30,14 @@ describe('merchant feed (v256)', () => {
     expect(ok({ maxItems: 0 })).toBe(false);
     expect(ok({ apiKey: 'x' })).toBe(false);
     expect(ok({ dailyBudget: 1 })).toBe(false);
+  });
+
+  it('PR 589 follow-up: one item per size and colour is off as shipped, and a value saved before v259 reads as off', () => {
+    const { variants: _v, ...before } = MERCHANT_FEED_DEFAULT;
+    const read = merchantFeedSchema.safeParse(before);
+    expect(read.success).toBe(true);
+    expect(read.data?.variants).toBe(false);
+    expect(merchantFeedSchema.safeParse({ ...MERCHANT_FEED_DEFAULT, variants: true }).success).toBe(true);
+    expect(merchantFeedSchema.safeParse({ ...MERCHANT_FEED_DEFAULT, variants: 'yes' }).success).toBe(false);
   });
 });

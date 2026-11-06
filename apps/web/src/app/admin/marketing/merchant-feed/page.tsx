@@ -3,6 +3,8 @@
 // feed's address on the shop's own domain, how many products are in it and why others are left out, the first products,
 // the card `ads.merchantFeed` (off as shipped) and the Bangladesh test's steps. No key, nothing sent, no ad spend.
 // Seeing needs `marketing.campaigns.read`; the card `marketing.campaigns.write`.
+// PR 589 follow-up: the card chooses one item per product or per size and colour (`variants`); the tiles then count the
+// items too, and the first products show how many items each makes.
 // Guide: docs/admin-guide/pages/marketing/merchant-feed.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -62,6 +64,7 @@ export default async function MerchantFeedPage() {
     { key: 'in', label: l('tIn'), value: r.inFeed, shown: num(r.inFeed), format: fmt, icon: 'check' },
     { key: 'total', label: l('tTotal'), value: r.total, shown: num(r.total), format: fmt, icon: 'box' },
     { key: 'out', label: l('tOut'), value: out, shown: num(out), format: fmt, icon: 'alert' },
+    ...(set.variants ? [{ key: 'items', label: l('tItems'), value: r.items, shown: num(r.items), format: fmt, icon: 'layers' } satisfies SummaryTile] : []),
   ];
   const reasons = FEED_REASONS.filter((k) => r.left[k] > 0);
 
@@ -111,6 +114,7 @@ export default async function MerchantFeedPage() {
                     <tr>
                       <th scope="col">{l('colProduct')}</th>
                       <th scope="col">{l('colPrice')}</th>
+                      {set.variants ? <th scope="col">{l('colItems')}</th> : null}
                       <th scope="col">{l('colStock')}</th>
                       <th scope="col">{l('colState')}</th>
                     </tr>
@@ -120,6 +124,7 @@ export default async function MerchantFeedPage() {
                       <tr key={x.id}>
                         <th scope="row">{x.title}</th>
                         <td>{x.price ?? '—'}</td>
+                        {set.variants ? <td>{num(x.items)}</td> : null}
                         <td>{l(x.availability)}</td>
                         <td>{x.reasons.length ? <span className="mf-pill warn">{x.reasons.map((k) => l(`s_${k}`)).join(' · ')}</span> : <span className="mf-pill ok">{l('yes')}</span>}</td>
                       </tr>
@@ -152,6 +157,16 @@ export default async function MerchantFeedPage() {
                       options: [
                         { value: 'on', label: l('keep') },
                         { value: 'off', label: l('drop') },
+                      ],
+                    },
+                    {
+                      name: 'variants',
+                      label: l('variants'),
+                      kind: 'select',
+                      value: set.variants ? 'on' : 'off',
+                      options: [
+                        { value: 'off', label: l('perProduct') },
+                        { value: 'on', label: l('perVariant') },
                       ],
                     },
                   ],
