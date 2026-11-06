@@ -53,7 +53,9 @@ export type ErpSiteCode =
   | 'SHARED_SECRET'
   | 'RATE_LIMITED'
   | 'BAD_QUERY'
-  | 'SERVER_ERROR';
+  | 'SERVER_ERROR'
+  // follow-up 526: the same signature was answered already, inside its allowed age (`erp.siteApi.refuseReplays` on)
+  | 'REPLAYED';
 
 /** The SecurityEvent kind of a verified caller's call. */
 export const ERP_SITE_CALL_EVENT = 'erp.site-call';
@@ -77,9 +79,11 @@ export interface ErpSiteGuard {
   logMinutes: number | null;
   /** Round 2: `system.integrationKeyCacheSeconds` as last read (how often an over-limit call may refresh the secrets). */
   refreshSeconds: number | null;
+  /** Follow-up 526: the signatures answered, until when each may still verify (ms); only verified calls are kept. */
+  seen: Map<string, number>;
 }
 
-export const newErpSiteGuard = (kind: string = ERP_SITE_REFUSED_EVENT): ErpSiteGuard => ({ kind, pending: new Map(), pendingFrom: null, flushedAt: 0, budget: newRefusalBudget(), perMinute: null, logMinutes: null, refreshSeconds: null });
+export const newErpSiteGuard = (kind: string = ERP_SITE_REFUSED_EVENT): ErpSiteGuard => ({ kind, pending: new Map(), pendingFrom: null, flushedAt: 0, budget: newRefusalBudget(), perMinute: null, logMinutes: null, refreshSeconds: null, seen: new Map() });
 
 const holder = globalThis as unknown as { __erpSiteGuard?: ErpSiteGuard };
 /** This process's guard. */
@@ -177,11 +181,12 @@ export async function checkErpSiteCall(deps: WebhookDeps, call: ErpSiteCall, gua
   // Cut off already (the limits as last read): nothing is read at all.
   if (overBudget(guard.budget, address, now, guard.perMinute) && !signedByKnown(guard.budget, signedKnown) && !probeOpen(guard.budget, now, guard.refreshSeconds)) return refuse(guard, now, endpoint, 429, 'RATE_LIMITED');
   // The limits and the allowed age: settings only, before any store, connection or vault is read.
-  const [maxAge, perMinute, logMinutes, refreshSeconds] = await Promise.all([
+  const [maxAge, perMinute, logMinutes, refreshSeconds, refuseReplays] = await Promise.all([
     setting(deps, null, 'erp.siteApi.maxAgeSeconds'),
     setting(deps, null, 'erp.siteApi.refusedPerMinute'),
     setting(deps, null, 'erp.siteApi.refusedLogMinutes'),
     setting(deps, null, 'system.integrationKeyCacheSeconds'),
+    setting(deps, null, 'erp.siteApi.refuseReplays'),
   ]);
   Object.assign(guard, { perMinute, logMinutes, refreshSeconds });
   // A signature too old or too far ahead is refused before any store, connection or vault is read (counted for its
@@ -220,6 +225,14 @@ export async function checkErpSiteCall(deps: WebhookDeps, call: ErpSiteCall, gua
     // back, so an outage never uses up an address's budget.
     giveBack(guard.budget, slot);
     throw e;
+  }
+  // Follow-up 526: a signature answered once is refused inside the window it could still verify in (both sides of the
+  // shop's clock), when the switch is on. Only verified calls are kept, so a flood of bad ones cannot fill the list.
+  if (verdict.ok && refuseReplays) {
+    const key = `${call.timestamp} ${call.signature}`;
+    for (const [k, until] of guard.seen) if (until <= now) guard.seen.delete(k);
+    if ((guard.seen.get(key) ?? 0) > now) verdict = { ok: false, endpoint, status: 401, code: 'REPLAYED' };
+    else guard.seen.set(key, now + 2 * maxAge * 1000);
   }
   // A verified call gives its slot back; a refused one keeps it (it was counted when it was taken).
   if (verdict.ok) {

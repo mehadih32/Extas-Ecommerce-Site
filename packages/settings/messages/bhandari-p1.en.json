@@ -58,6 +58,10 @@
       "searchMaxChars": {
         "label": "ERP calls: the longest customer search",
         "help": "A \"Customers\" call whose search is longer than this many characters is refused."
+      },
+      "refuseReplays": {
+        "label": "ERP calls: refuse a signature used before",
+        "help": "When on, a call from the ERP whose exact signature the shop already answered within the allowed age is refused, so a copied call cannot be sent again. Off as shipped: switch it on once the ERP signs every retry anew."
       }
     }
   }
