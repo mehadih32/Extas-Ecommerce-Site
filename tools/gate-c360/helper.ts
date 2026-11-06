@@ -280,7 +280,7 @@ async function cleanup(deps: Deps, a: Args): Promise<Args> {
   done.closedOtps = (await db.otpChallenge.updateMany({ where: { storeId: STORE, phone, consumedAt: null, expiresAt: { gt: now } }, data: { expiresAt: now } })).count;
   // the GATE TEST products archived (never deleted); a later run opens them again
   const archived = await archiveProducts(kitOf(deps), testData(), 'gate-c360');
-  return { ok: archived.fails.length === 0, ...done, productsArchived: archived.productsArchived, notes: archived.fails };
+  return { ok: archived.fails.length === 0, ...done, productsArchived: archived.productsArchived, notes: [...archived.fails, archived.cachePurge] };
 }
 
 export async function runAction(action: string, args: Args): Promise<Args> {

@@ -491,6 +491,6 @@ export class Oracle {
     }
     // the run's mock-payment grant closed and cash on delivery put back (the shell's trap runs the same again)
     const mockPay = await this.closeRun().catch((e: unknown) => ({ ok: false, closed: 0, codRestored: 0, notes: [`the run's grant: ${errText(e)}`] })); // hardcode-ok: a count, not a business number
-    return { ...out, ok: failed.length === 0 && productFails.length === 0 && mockPay.ok === true, productsArchived, extrasArchived: extras, courierArchived, mockPay, notes: [...productFails.map((f) => `could not archive: ${f}`), ...mockPay.notes], courierProvider: this.courierProvider };
+    return { ...out, ok: failed.length === 0 && productFails.length === 0 && mockPay.ok === true, productsArchived, extrasArchived: extras, courierArchived, mockPay, notes: [...productFails.map((f) => `could not archive: ${f}`), archived.cachePurge, ...mockPay.notes], courierProvider: this.courierProvider };
   }
 }

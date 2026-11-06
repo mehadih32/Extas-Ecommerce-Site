@@ -203,6 +203,8 @@ pay_hash="$(printf '%s' "$pay_token" | sha256sum | cut -d' ' -f1)"
   echo "GATE_PREVIEW_HOST=$preview"
   echo "GATE_RUN_MINUTES=$((limit_min + 15))"
   echo "GATE_ALLOW_COD=$ALLOW_COD"
+  # CN-035 gate run: the archive of the test products tells the web processes' page cache (tools/gate-orders/lib/test-shop.ts)
+  grep -E '^REDIS_CACHE_URL=' "$SEC/app-connections.env" 2>/dev/null | head -n 1 || true
 } > "$work/oracle.env"
 grep -q '^DATABASE_URL=' "$work/oracle.env" || { log "FAIL: no database address in the server's secrets"; exit 1; }
 {
