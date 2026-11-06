@@ -428,4 +428,23 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 617 on PostgreSQL: the daily summary
     expect(qm[1]!.fromState).toBe(qm[0]!.toState);
     expect((await t.prisma.erpPipelinePiece.findUniqueOrThrow({ where: { id: q.id } })).state).toBe(qm[1]!.toState);
   });
+  it('follow-up 568: on the practice ERP without its data a summary waiting to go says it waits for the ERP key; with the real key, or with practice data on, it does not', async () => {
+    expect((await summaryLog(deps(), { actor: SYSTEM, storeId: B })).every((r) => !r.waitsForKey)).toBe(true);
+    await t.prisma.integration.updateMany({ where: { storeId: B, kind: 'ERP' }, data: { mode: 'MOCK' } });
+    try {
+      // A day later on the practice ERP: the summary is built and waits (nothing is sent to a practice ERP without data).
+      clock = new Date(clock.getTime() + 86_400_000);
+      const r = await summaryTick(deps(), B);
+      expect([r.built > 0, r.sent]).toEqual([true, 0]);
+      const log = await summaryLog(deps(), { actor: SYSTEM, storeId: B });
+      expect(log.filter((r) => r.state === 'WAITING').length).toBeGreaterThan(0);
+      expect(log.filter((r) => r.waitsForKey).map((r) => r.date)).toEqual(log.filter((r) => r.state === 'WAITING').map((r) => r.date));
+      expect(log.filter((r) => r.state !== 'WAITING').every((r) => !r.waitsForKey)).toBe(true);
+      overrides.set('erp.mock.stockEnabled', true);
+      expect((await summaryLog(deps(), { actor: SYSTEM, storeId: B })).every((r) => !r.waitsForKey)).toBe(true);
+    } finally {
+      overrides.delete('erp.mock.stockEnabled');
+      await t.prisma.integration.updateMany({ where: { storeId: B, kind: 'ERP' }, data: { mode: 'LIVE' } });
+    }
+  });
 });

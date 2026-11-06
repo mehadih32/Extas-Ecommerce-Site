@@ -148,13 +148,13 @@ export default async function BooksDailyPage() {
               </thead>
               <tbody>
                 {log.map((r) => (
-                  <tr key={r.date} data-testid="bd-summary-row" data-state={r.state}>
+                  <tr key={r.date} data-testid="bd-summary-row" data-state={r.waitsForKey ? 'WAITING_KEY' : r.state}>
                     <td className="a2-tdh">
                       <b>{day(r.date)}</b>
                     </td>
                     <td data-l={b('col.state')}>
                       <span className={`a2-pill ${sendTone(r.state)}`} title={r.lastError ?? undefined}>
-                        {b(`sendState.${r.state}`)}
+                        {b(r.waitsForKey ? 'sendState.WAITING_KEY' : `sendState.${r.state}`)}
                       </span>
                     </td>
                     <td className="r" data-l={b('col.profit')}>

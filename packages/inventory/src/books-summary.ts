@@ -741,6 +741,9 @@ export interface SummaryLogRow {
   builtAt: Date;
   versions: number;
   state: 'ACCEPTED' | 'WAITING' | 'RETRYING' | 'REFUSED';
+  /** Follow-up 568: WAITING only because the practice ERP is in use without its data (`erp.mock.stockEnabled` off): the
+   *  summaries go once the real ERP's key is in (Settings → Keys & connections), not by waiting. */
+  waitsForKey: boolean;
   tries: number;
   lastTryAt: Date | null;
   lastError: string | null;
@@ -807,10 +810,13 @@ export async function summaryLog(deps: InventoryDeps, who: Who, opts: { days?: n
   }
   const states = await sendStates(deps.db, link.id, latest.map((v) => v.id));
   const prior = await priorPeriodByDay(deps.db, { linkId: link.id, storeId: who.storeId, from, to: today });
+  const erp = await resolveErp(deps, who.storeId);
+  const practiceOnly = erp.state === 'mock' && behaviourOf('books.send', erp) !== 'run';
   return latest.map((v) => {
     const s = states.get(v.id);
     const status = s?.lastStatus ?? null;
     const refused = !s?.accepted && !!s?.refused;
+    const state = s?.accepted ? 'ACCEPTED' : refused ? 'REFUSED' : s?.tries ? 'RETRYING' : 'WAITING';
     return {
       date: v.date,
       version: v.version,
@@ -819,7 +825,8 @@ export async function summaryLog(deps: InventoryDeps, who: Who, opts: { days?: n
       incomplete: v.incomplete,
       builtAt: v.createdAt,
       versions: count.get(v.date) ?? 1,
-      state: s?.accepted ? 'ACCEPTED' : refused ? 'REFUSED' : s?.tries ? 'RETRYING' : 'WAITING',
+      state,
+      waitsForKey: practiceOnly && state === 'WAITING',
       tries: s?.tries ?? 0,
       lastTryAt: s?.lastAt ?? null,
       lastError: s?.lastError ?? null,

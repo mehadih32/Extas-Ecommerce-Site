@@ -75,7 +75,8 @@
       "ACCEPTED": "Accepted",
       "WAITING": "Waiting to send",
       "RETRYING": "Trying again",
-      "REFUSED": "Refused by the ERP"
+      "REFUSED": "Refused by the ERP",
+      "WAITING_KEY": "Waiting for the ERP key"
     },
     "complete": "Complete",
     "priorPeriod": "+ Earlier-month corrections {amount} (the shop's own figure, not sent to the ERP)",
