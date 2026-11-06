@@ -275,4 +275,14 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect((await camp('GET', '')).body.screen.campaigns).toContainEqual(expect.objectContaining({ id, kind: 'blast' }));
     expect(await f.t.prisma.auditLog.count({ where: { action: 'campaign.settings', entityId: 'customers.blast' } })).toBe(2);
   });
+  it('follow-up 302: My account\'s order history (filters, "What happened") is a card on Customer settings, saved and audited', async () => {
+    const screen = await api('GET', 'settings');
+    expect(screen.body.screen.values['account.history']).toEqual({ filters: true, timeline: true });
+    expect((await api('PUT', 'settings', { cookie: reader, body: { key: 'account.history', value: { filters: true, timeline: false } } })).status).toBe(403);
+    expect((await api('PUT', 'settings', { body: { key: 'account.history', value: { filters: 'yes', timeline: false } } })).status).toBe(400);
+    const saved = await api('PUT', 'settings', { body: { key: 'account.history', value: { filters: true, timeline: false } } });
+    expect(saved.status).toBe(200);
+    expect(saved.body.screen.values['account.history']).toEqual({ filters: true, timeline: false });
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'customer.settings.save', entityId: 'account.history' } })).toBe(1);
+  });
 });

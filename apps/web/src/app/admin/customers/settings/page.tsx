@@ -114,6 +114,15 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
     ],
   },
   {
+    // follow-up 302 (PR 150) — My account's order history: the groups as chips (filters) and each order's "What happened"
+    key: 'account.history',
+    card: 'history',
+    fields: [
+      { name: 'filters', kind: 'bool' },
+      { name: 'timeline', kind: 'bool' },
+    ],
+  },
+  {
     // PR 534 — customer grading: the switch, the verified mark's true deliveries (0 = none), how many grades are kept;
     // "good customer from" (the owner's grades) is added on the page
     key: 'customers.grades',

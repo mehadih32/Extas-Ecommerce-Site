@@ -691,6 +691,12 @@
         "sub": "Off as shipped. When on, people who hold \"Import old customers\" can bring in the old shop's order list on Customers › More › Import old customers: a preview first, then history only — nothing here is overwritten, no order is made and no message is sent.",
         "enabled": "Allow the import",
         "maxRows": "Most rows in one file (1–50000)"
+      },
+      "history": {
+        "title": "Order history in My account",
+        "sub": "What a customer sees of his own orders. On as it ships. Only his orders, never your team's notes, flags, holds or names.",
+        "filters": "Group chips on My orders (All, On the way, Delivered, Cancelled & returned) once his orders fill more than one page",
+        "timeline": "\"What happened\" on each order's page (placed, confirmed, packed, with the courier, delivered, and every change)"
       }
     },
     "auto": {
