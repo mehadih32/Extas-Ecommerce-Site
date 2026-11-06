@@ -86,6 +86,7 @@
     { "id": "website/blog", "route": "/admin/website/blog" },
     { "id": "website/blog-editor", "route": "/admin/website/blog/[id]" },
     { "id": "website/blog-shelves", "route": "/admin/website/blog/shelves" },
+    { "id": "website/blog-plan", "route": "/admin/website/blog/plan" },
     { "id": "money/overview", "route": "/admin/money" },
     { "id": "money/refunds", "route": "/admin/money/refunds" },
     { "id": "money/cost-ledger", "route": "/admin/money/cost-ledger" },

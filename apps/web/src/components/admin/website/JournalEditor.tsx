@@ -103,7 +103,7 @@ export function JournalEditor(p: {
     if (a.status === 401) return c('err.unauthorized');
     const code = a.data.error ?? 'other';
     const k = `err.${code}`;
-    const txt = c(k, { fields: fieldWords(a.data.details ?? []) });
+    const txt = c(k, { fields: fieldWords(a.data.details ?? []), paths: (a.data.details ?? []).join(', ') });
     return txt === `jr.${k}` ? c('err.other') : txt;
   }
 

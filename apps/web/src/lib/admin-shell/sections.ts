@@ -284,6 +284,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         pages: [
           { href: '/admin/website/blog', perm: 'blog.read', keys: ['blog', 'blogPost'] },
           { href: '/admin/website/blog/shelves', perm: 'blog.read', keys: ['blogShelves'] },
+          // S12 · PR 242 — the topic plan: clusters (pillar + supporting articles), planned topics, required links.
+          { href: '/admin/website/blog/plan', perm: 'blog.read', keys: ['blogPlan'] },
         ],
       },
     ],
