@@ -3,7 +3,7 @@
 // general words, "did you mean" and "what some of the words find".
 import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
-import { matchHelp, restAfterHelp } from './help';
+import { matchHelp, pickHelpLine, restAfterHelp, type HelpLine } from './help';
 import { didYouMean, isGeneral, matchDocs, partialMatch, queryWords, vocabulary, wordLists, type SearchDoc } from './match';
 import { fingerprint, norm, slips, words } from './text';
 
@@ -142,5 +142,26 @@ describe('help pages in search (follow-up 73, demo helpMatch)', () => {
     expect(h.hits[0]!.id).toBe('delivery');
     expect(restAfterHelp(h)).toBe('polo');
     expect(help('').hits).toEqual([]);
+  });
+});
+
+describe('S12 · PR 248 — the line a found help page answers with', () => {
+  const lines: HelpLine[] = [
+    { text: 'Inside Dhaka 2–3 days, outside 3–5 days', keys: ['Inside Dhaka 2–3 days, outside 3–5 days', 'delivery'] },
+    { text: 'Cash on Delivery up to a limit', keys: ['Cash on Delivery up to a limit', 'cod', 'Larger orders pay ahead.'] },
+    { text: 'Order before the Eid cut-off', keys: ['Order before the Eid cut-off', 'festive'] },
+  ];
+  it('the rule the query names: its key or its own words; equal lines keep the page`s order', () => {
+    expect(pickHelpLine('cod', lines)).toBe('Cash on Delivery up to a limit');
+    expect(pickHelpLine('cash on delivery', lines)).toBe('Cash on Delivery up to a limit');
+    expect(pickHelpLine('eid delivery', lines)).toBe('Order before the Eid cut-off');
+    expect(pickHelpLine('delivery', lines)).toBe('Inside Dhaka 2–3 days, outside 3–5 days');
+    expect(pickHelpLine('fest', lines)).toBe('Order before the Eid cut-off');
+  });
+  it('no shared word (or only a weak one against a stronger), nothing typed: null — the page`s first line stays', () => {
+    expect(pickHelpLine('delivary', lines)).toBeNull();
+    expect(pickHelpLine('', lines)).toBeNull();
+    expect(pickHelpLine('cod', [])).toBeNull();
+    expect(pickHelpLine('order delivery', lines, ['order'])).toBe('Inside Dhaka 2–3 days, outside 3–5 days');
   });
 });

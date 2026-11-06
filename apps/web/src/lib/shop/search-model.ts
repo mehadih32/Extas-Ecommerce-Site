@@ -4,7 +4,7 @@
 // owner's words for it (`search.help.keywords`), with its first line as the answer under the title (demo
 // 07-help-search.js hs_answer: the page's first rule line, its first question, its first paragraph, else its lede).
 import type { ImageSource } from '@extas/media';
-import type { HelpEntry } from '@extas/search';
+import type { HelpEntry, HelpLine } from '@extas/search';
 import type { CategorySort, HelpSlug, SearchHelpSettings, SearchPanelSettings, ShopIcon } from '@extas/settings';
 import { queryOf, type CatState, type SearchParams } from './category-model';
 import type { ShopContext } from './context';
@@ -188,24 +188,46 @@ export interface SuggestAnswer {
   failed?: boolean;
 }
 
+/** The rule a section or question comes from (`rule-<key>`), as words: "no-return" → "no return". */
+const ruleWords = (id: string): string[] => (id.startsWith('rule-') ? [id.slice('rule-'.length).replace(/-/g, ' ')] : []);
+
+/**
+ * S12 · PR 248 — the lines a found page may answer with (search.ts picks the one the query names, `pickHelpLine`): each
+ * question, each way to pay, and each section's line (a live rule's own one-line text) with its rule's key and words.
+ */
+export function helpLines(m: Pick<HelpModel, 'qa' | 'sections'> & Partial<Pick<HelpModel, 'methods'>>): HelpLine[] {
+  const out: HelpLine[] = [];
+  for (const x of m.qa) if (x.q.trim()) out.push({ text: x.q.trim(), keys: [x.q, ...ruleWords(x.id)] });
+  for (const x of m.methods ?? []) out.push({ text: `${x.title} — ${x.sub}`, keys: [x.title, x.sub, ...x.marks] });
+  for (const s of m.sections) {
+    const line = s.title?.trim() || firstText(s.blocks);
+    if (line) out.push({ text: line, keys: [line, ...ruleWords(s.id), ...s.blocks.flatMap((b) => (b.kind === 'ul' ? b.items : [b.text]))] });
+  }
+  return out;
+}
+
 /**
  * The help pages search can offer, in the help centre's order: only pages that have something to say (a page that
  * says "Coming soon" is no answer), each found by its title and the owner's words for it. Off (`search.help.on`): none.
+ * S12 · PR 248: also by the keys of the live rules it shows ("festive", "no return"), and with the lines it may answer with.
  */
 export function helpEntries(
   models: Readonly<Record<HelpSlug, HelpModel>>,
   order: readonly HelpSlug[],
   set: SearchHelpSettings,
   lang: ShopLang,
-): { entries: HelpEntry[]; items: Map<string, HelpItem> } {
+): { entries: HelpEntry[]; items: Map<string, HelpItem>; lines: Map<string, HelpLine[]> } {
   const entries: HelpEntry[] = [];
   const items = new Map<string, HelpItem>();
-  if (!set.on) return { entries, items };
+  const lines = new Map<string, HelpLine[]>();
+  if (!set.on) return { entries, items, lines };
   for (const slug of order) {
     const m = models[slug];
     if (!m || m.soon || items.has(slug)) continue;
-    entries.push({ id: slug, keywords: [m.title, ...(set.keywords[slug] ?? [])] });
+    const rules = [...m.qa, ...m.sections].flatMap((x) => ruleWords(x.id));
+    entries.push({ id: slug, keywords: [m.title, ...(set.keywords[slug] ?? []), ...new Set(rules)] });
     items.set(slug, { slug, title: m.title, answer: helpAnswer(m), href: hrefIn(lang, ROUTES.help(slug)) });
+    lines.set(slug, helpLines(m));
   }
-  return { entries, items };
+  return { entries, items, lines };
 }
