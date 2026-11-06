@@ -194,7 +194,18 @@ describe('what a dialog sends', () => {
     const s = spec();
     expect(bodyOf(s, { reasonCode: 'OUT_OF_STOCK', note: '  ' })).toEqual({ reasonCode: 'OUT_OF_STOCK', version: 3 });
     expect(bodyOf(s, { reasonCode: 'OUT_OF_STOCK', note: ' late ' })).toEqual({ reasonCode: 'OUT_OF_STOCK', note: 'late', version: 3 });
-    expect(startOf(s.fields[0]!)).toBe('OUT_OF_STOCK');
+    // follow-up 458: the reason starts empty ("Pick a reason") and must be picked, never the list's first line
+    expect(startOf(s.fields[0]!)).toBe('');
+    expect(s.fields[0]!.options?.[0]).toEqual({ value: '', label: 'Pick a reason' });
+    expect(missingOf(s, { reasonCode: '', note: '' })).toEqual(['reasonCode']);
+  });
+
+  it('follow-up 458: the hold dialog\'s reason starts empty too', () => {
+    const hold = commandSpecs(view('en'), order(), ['hold'], OWNER, reasons).more.find((x) => x.id === 'hold')!;
+    const f = hold.fields.find((x) => x.name === 'reasonKey')!;
+    expect(startOf(f)).toBe('');
+    expect(missingOf(hold, { reasonKey: '', note: '' })).toEqual(['reasonKey']);
+    expect(missingOf(hold, { reasonKey: reasons.hold[0]!.key, note: 'x' })).toEqual([]);
   });
 
   it('"Other" needs the note before it can be sent', () => {
