@@ -111,7 +111,7 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
   const name = (en_: string, bn_: string | null) => (view.lang === 'bn' ? bn_ || en_ : en_);
 
   return (
-    <div className="a2-z" data-testid="inc-page">
+    <div className="a2-z" data-testid="inc-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note inc-mt8" role="note">

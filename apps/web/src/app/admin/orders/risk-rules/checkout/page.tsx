@@ -64,7 +64,7 @@ export default async function CheckoutAdvancePage() {
   const live = list.layers.filter((l) => l.enabled).length;
 
   return (
-    <div className="a2-z" data-testid="advance-page">
+    <div className="a2-z" data-testid="advance-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
 

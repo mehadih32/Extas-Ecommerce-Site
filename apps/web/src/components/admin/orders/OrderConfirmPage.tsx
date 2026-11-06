@@ -149,7 +149,7 @@ export function OrderConfirmPage({ view, query, list, chosen, oldest, open, hist
     </>
   ) : null;
   return (
-    <div className="a2-z" data-testid="orders-confirm">
+    <div className="a2-z" data-testid="orders-confirm" data-lm-ready="">
       <PageHead view={view} place={locateKey('ordersConfirm')} title={t(d, 'orders.page.confirm')} sub={sub} />
       <SectionTabs view={view} current="ordersConfirm" />
       <ViewChips view={view} page="confirm" query={query} counts={list.counts} />
