@@ -114,7 +114,13 @@
     {"pr": 633, "what": "Orders › Returns › QC draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/orders/returns/qc", "selector": "[data-testid=returns-qc][data-lm-ready]", "attribute": "data-testid", "equals": "returns-qc"},
     {"pr": 633, "what": "Orders › Returns › Hand-back draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/orders/returns/handback", "selector": "[data-testid=handback-page][data-lm-ready]", "attribute": "data-testid", "equals": "handback-page"},
     {"pr": 633, "what": "Orders › Returns › Refused draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/orders/returns/refused", "selector": "[data-testid=returns-refused][data-lm-ready]", "attribute": "data-testid", "equals": "returns-refused"},
-    {"pr": 633, "what": "Orders › Returns › ERP lists draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/orders/returns/erp", "selector": "[data-testid=erp-returns-page][data-lm-ready]", "attribute": "data-testid", "equals": "erp-returns-page"}
+    {"pr": 633, "what": "Orders › Returns › ERP lists draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/orders/returns/erp", "selector": "[data-testid=erp-returns-page][data-lm-ready]", "attribute": "data-testid", "equals": "erp-returns-page"},
+    {"pr": 634, "what": "Products › All products draws in the Lumen look (summary tiles) and follows dark mode (CN-036)", "page": "/admin/products", "selector": ".ad[data-lm-ready] [data-testid=products-kpi]", "attribute": "data-testid", "equals": "products-kpi"},
+    {"pr": 634, "what": "Products › Add product draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/new", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 634, "what": "Products › Ready to publish draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/queue", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 634, "what": "Products › Import from a link draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/import", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 634, "what": "Products › Import from the ERP draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/erp-import", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 634, "what": "Products › Product audit draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/audit", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"}
   ],
   "figures": [
     { "pr": 155, "path": "/admin/combos?tab=report", "selectors": ["[data-testid=cb-kpi-ordered]", "[data-testid=cb-kpi-sales]"], "value": "b" },

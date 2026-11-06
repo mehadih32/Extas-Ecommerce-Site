@@ -1,6 +1,8 @@
 // PR 21 — the product list (demo #/admin/products, 90-admin-catalog.js): the counters, search, status and category
 // chips, one row per product with its photo, colours, sizes, price, stock and what it still misses (PR 26, 29), and the
 // bulk bar (publish, take off, check again, archive, restore). Needs `catalogue.read`; every action is checked again.
+// PR 634 (CN-036): in the Lumen look (data-lm-ready, light and dark): the counters are Lumen summary tiles, a bulk
+// publish, take-off, archive or restore offers Undo in the one toast (reversible only; prices are never touched here).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -8,9 +10,13 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { adminProductList, ADMIN_STATUS_FILTERS, type AdminStatusFilter } from '@extas/catalogue';
 import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
 import { Icon } from '@/components/admin/Icon';
+import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { ProductList } from '@/components/admin/products/ProductList';
+import { AUDIT_HOME } from '@/components/admin/products/tools-model';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import type { CountFormat } from '@/lib/admin-lumen/model';
+import type { ShellIconName } from '@/lib/admin-shell/icons';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { catalogueAccess, one, pageParam, photosOf, PRODUCTS_HOME, storeMoney } from '@/lib/admin-products';
@@ -68,16 +74,20 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   };
   const num = (n: number) => formatNumber(n, view.locale);
   const counts = list.counts;
-  const kpis = [
-    { value: counts.products, label: 'products.kpi.products', sub: t(d, 'products.kpi.productsSub', { n: num(counts.categories) }) },
-    { value: counts.live, label: 'products.kpi.live', sub: t(d, 'products.kpi.liveSub', { n: num(counts.ready) }), tone: 'ok' },
-    { value: counts.lowStockSizes, label: 'products.kpi.lowStock', sub: t(d, 'products.kpi.lowStockSub', { n: num(lowPieces) }), tone: 'warn' },
-    { value: counts.needPhotos, label: 'products.kpi.needPhotos', sub: t(d, 'products.kpi.needPhotosSub', { n: num(photoMin) }), tone: 'warn' },
+  // PR 634 (CN-036): the four figures are the Lumen summary tiles (components/admin/lumen/SummaryTiles.tsx); a tile
+  // opens the list on what it counts. The same figures and lines as before; no change mark (they are counts, not periods).
+  const countFmt: CountFormat = { kind: 'number', locale: view.locale };
+  const tile = (key: string, value: number, vs: string, icon: ShellIconName, href?: string): SummaryTile => ({ key, label: t(d, `products.kpi.${key}`), value, shown: num(value), format: countFmt, vs, icon, href });
+  const tiles: SummaryTile[] = [
+    tile('products', counts.products, t(d, 'products.kpi.productsSub', { n: num(counts.categories) }), 'shirt', href({ status: undefined, category: undefined, q: undefined, page: 1 })),
+    tile('live', counts.live, t(d, 'products.kpi.liveSub', { n: num(counts.ready) }), 'eye', href({ status: 'live', page: 1 })),
+    tile('lowStock', counts.lowStockSizes, t(d, 'products.kpi.lowStockSub', { n: num(lowPieces) }), 'alert'),
+    tile('needPhotos', counts.needPhotos, t(d, 'products.kpi.needPhotosSub', { n: num(photoMin) }), 'file', `${AUDIT_HOME}?check=photos`),
   ];
   const canWrite = c.can('catalogue.write');
 
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <div className="ad-hd pa-hd">
         <div className="pa-hd-text">
           <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>
@@ -95,15 +105,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         <SystemTabs view={view} current={KEY} group="catalogue" />
       </div>
 
-      <div className="pa-kpis">
-        {kpis.map((k) => (
-          <div key={k.label} className="pa-kpi">
-            <div className={`pa-kpi-v${k.tone ? ` ${k.tone}` : ''}`}>{num(k.value)}</div>
-            <div className="pa-kpi-l">{t(d, k.label)}</div>
-            <div className="pa-kpi-s">{k.sub}</div>
-          </div>
-        ))}
-      </div>
+      <SummaryTiles tiles={tiles} label={t(d, 'products.title')} testId="products-kpi" />
 
       <form className="pa-sbar" role="search" action={PRODUCTS_HOME} method="get">
         <label className="pa-search">

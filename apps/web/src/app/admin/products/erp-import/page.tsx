@@ -50,7 +50,7 @@ export default async function ErpImportPage() {
   const state = link.state === 'mock' ? 'practice' : link.state;
 
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <div className="ad-hd pa-hd">
         <div className="pa-hd-text">
           <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>

@@ -196,3 +196,53 @@
 /* the invoice preview is paper: a light island in dark mode too, its words in the island's own ink */
 [data-lm-look] [data-lm-ready] .inv-preview { color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] .inv-preview .a2-mute { color: var(--lm-ink2); }
+
+/* ---------- the Lumen skin of the older .ad frame (PR 634, Products) ----------
+   A page drawn in the older .ad frame (AdminFrame, the ad-* and pa-* parts) whose frame carries data-lm-ready (the
+   frame's `ready`) follows dark mode and takes the Lumen shape and type here: the frame's small text sizes become
+   Lumen's 14 px, cards 22 px with the soft shadow, round chips, coral primary buttons, Bricolage headings. The frame's
+   colours already read the theme's tokens (admin.css maps them); only the parts that drew text in the hero navy
+   (which disappears on dark) are moved to the ink tokens. */
+[data-lm-look] .ad[data-lm-ready] {
+  --ad-fs-small: var(--lm-fs-card);
+  --ad-fs-mini: var(--lm-fs-card);
+  --ad-fs-h1: var(--lm-fs-h1-phone);
+  --ad-fs-h1-desk: var(--lm-fs-h1);
+  background: transparent;
+  min-height: 0;
+}
+[data-lm-look] .ad[data-lm-ready] .ad-h1 { font-family: var(--lm-font-disp); letter-spacing: -0.02em; color: var(--lm-ink); }
+[data-lm-look] .ad[data-lm-ready] .ad-eyebrow { color: var(--lm-ink2); letter-spacing: 0.08em; }
+[data-lm-look] .ad[data-lm-ready] .ad-intro { color: var(--lm-ink2); }
+[data-lm-look] .ad[data-lm-ready] .ad-card { border: 0; border-radius: var(--lm-r-card); box-shadow: var(--lm-sh); background: var(--lm-sf); }
+[data-lm-look] .ad[data-lm-ready] .ad-card h2 { font-family: var(--lm-font-disp); color: var(--lm-ink); }
+[data-lm-look] .ad[data-lm-ready] .ad-chip { border-radius: var(--lm-r-pill); border-color: transparent; background: var(--lm-sf); color: var(--lm-ink2); box-shadow: var(--lm-sh-sm); font-weight: 600; }
+[data-lm-look] .ad[data-lm-ready] .ad-chip:hover { background: var(--lm-hover); color: var(--lm-ink); }
+[data-lm-look] .ad[data-lm-ready] .ad-chip[aria-current='page'],
+[data-lm-look] .ad[data-lm-ready] .ad-chip[aria-pressed='true'] { background: var(--lm-ink); border-color: var(--lm-ink); color: var(--lm-sf); }
+[data-lm-look] .ad[data-lm-ready] .ad-btn { border-radius: var(--lm-r-ctl); }
+[data-lm-look] .ad[data-lm-ready] .ad-btn-primary:not(:disabled) { background: var(--lm-pri); border-color: var(--lm-pri-line); color: var(--lm-on-ac); box-shadow: var(--lm-pri-sh); }
+[data-lm-look] .ad[data-lm-ready] .ad-btn-primary:hover:not(:disabled) { background: var(--lm-pri); border-color: var(--lm-pri-line); filter: brightness(1.05); }
+[data-lm-look] .ad[data-lm-ready] .ad-btn-ghost { background: var(--lm-sf); border-color: var(--lm-ln); color: var(--lm-ink); }
+[data-lm-look] .ad[data-lm-ready] .ad-btn-ghost:hover:not(:disabled) { background: var(--lm-hover); }
+[data-lm-look] .ad[data-lm-ready] .ad-btn:disabled { background: var(--lm-chip); border-color: var(--lm-ln); color: var(--lm-ink2); }
+[data-lm-look] .ad[data-lm-ready] .ad-input { border-color: var(--lm-ln); border-radius: var(--lm-r-ctl); background: var(--lm-inp); color: var(--lm-ink); }
+[data-lm-look] .ad[data-lm-ready] :is(.ad-btn, .ad-chip, .ad-input):focus-visible { outline: 2px solid var(--lm-focus); outline-offset: 2px; }
+/* the frame's and the product pages' smaller fixed sizes: 14 px */
+[data-lm-look] .ad[data-lm-ready] :is(.ad-sub, .ad-tag, .pa-kpi-l, .pa-miss, .pa-pl) { font-size: var(--lm-fs-card); }
+/* text that was drawn in the hero navy: the ink tokens, readable in light and dark */
+[data-lm-look] .ad[data-lm-ready] :is(.pa-kpi-v, .pa-g-title, .pa-big, .pa-back-in) { color: var(--lm-ink); }
+[data-lm-look] .ad[data-lm-ready] .pa-status.s-PUBLISHED { background: var(--lm-okbg); color: var(--lm-ok); }
+[data-lm-look] .ad[data-lm-ready] .pa-back { color: var(--lm-ac-ink); }
+/* links and the place line ("Products › All products") on a ready .ad page: 14 px, the accent ink that keeps AA in dark */
+[data-lm-look] .ad[data-lm-ready] .a2-crumb { font-size: var(--lm-fs-card); }
+[data-lm-look] .ad[data-lm-ready] :is(.pa-link, .ad-note a) { color: var(--lm-ac-ink); }
+/* phones and touch screens: every tap at least 44 px (fields, product names, the place link, colour chips, the ✕) */
+@media (max-width: 759px), (pointer: coarse) {
+  [data-lm-look] .ad[data-lm-ready] .a2-crumb a,
+  [data-lm-look] .ad[data-lm-ready] .ad-note a { display: inline-flex; align-items: center; min-height: var(--lm-tap); min-width: var(--lm-tap); }
+  [data-lm-look] .ad[data-lm-ready] .ad-input { min-height: var(--lm-tap); }
+  [data-lm-look] .ad[data-lm-ready] a.pa-nm { display: flex; align-items: center; min-height: var(--lm-tap); }
+  [data-lm-look] .ad[data-lm-ready] .pa-col { min-height: var(--lm-tap); }
+  [data-lm-look] .ad[data-lm-ready] .pa-x { min-width: var(--lm-tap); min-height: var(--lm-tap); margin: -10px -12px -10px -4px; }
+}

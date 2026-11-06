@@ -27,9 +27,11 @@ export function Brand({ view, logo }: { view: AdminView; logo: 'side' | 'top' })
   );
 }
 
-export function AdminFrame({ view, current, children }: { view: AdminView; current: string; children: ReactNode }) {
+/** `ready` (CN-036, PR 634+): the page is moved into the Lumen look, so its frame follows dark mode (data-lm-ready)
+ *  instead of staying a light island. */
+export function AdminFrame({ view, current, ready, children }: { view: AdminView; current: string; ready?: boolean; children: ReactNode }) {
   return (
-    <div className="ad" lang={view.lang}>
+    <div className="ad" lang={view.lang} data-lm-ready={ready ? '' : undefined}>
       <PageCrumb view={view} current={current} />
       {children}
     </div>

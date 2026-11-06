@@ -11,7 +11,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { call, type Answer } from '../api';
 import { Icon } from '../Icon';
 import { formatMoney, formatNumber, refusalText, type Money } from './model';
-import { useToast } from './useToast';
+import { say } from './useToast';
 
 interface Props {
   dict: Dict;
@@ -38,7 +38,6 @@ export function ErpImport({ dict: d, money, canWrite, canSeePrices, changes: ini
   const [preview, setPreview] = useState<ErpStylePreview | null>(null);
   const [done, setDone] = useState<ErpStyleImportResult | null>(null);
   const [changes, setChanges] = useState(initial);
-  const [toast, say] = useToast();
   const num = (n: number) => formatNumber(n, money.locale);
   const price = (minor: number | null) => (minor === null ? t(d, 'stock.erpImport.none') : formatMoney(minor, money));
   const sep = t(d, 'checks.sep');
@@ -265,11 +264,6 @@ export function ErpImport({ dict: d, money, canWrite, canSeePrices, changes: ini
           <p className="pa-empty">{t(d, 'stock.erpImport.changes.empty')}</p>
         )}
       </section>
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
-        </div>
-      ) : null}
     </>
   );
 }

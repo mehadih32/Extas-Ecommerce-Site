@@ -8,7 +8,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { Icon } from '../Icon';
 import { nameIn, refusalText, type CategoryOption, type FabricOption, type Lang } from './model';
-import { useToast } from './useToast';
+import { say } from './useToast';
 
 interface Props {
   dict: Dict;
@@ -22,7 +22,6 @@ export function NewProductForm({ dict: d, lang, categories, fabrics, cancelHref 
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const [toast, say] = useToast();
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -138,11 +137,6 @@ export function NewProductForm({ dict: d, lang, categories, fabrics, cancelHref 
           </button>
         </div>
       </div>
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
-        </div>
-      ) : null}
     </form>
   );
 }
