@@ -120,7 +120,14 @@
     {"pr": 634, "what": "Products › Ready to publish draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/queue", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
     {"pr": 634, "what": "Products › Import from a link draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/import", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
     {"pr": 634, "what": "Products › Import from the ERP draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/erp-import", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
-    {"pr": 634, "what": "Products › Product audit draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/audit", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"}
+    {"pr": 634, "what": "Products › Product audit draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/audit", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 635, "what": "Products › Stock draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/stock", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 635, "what": "Products › Stock counts draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/stock/counts", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 635, "what": "Products › Stock movements draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/stock/movements", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 635, "what": "Products › Combos & sets draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/combos", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 635, "what": "Products › Size charts draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/size-charts", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 635, "what": "Products › Back in stock draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/back-in-stock", "selector": ".ad[data-lm-ready] h1.ad-h1", "attribute": "class", "equals": "ad-h1"},
+    {"pr": 635, "what": "Products › Reviews draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/products/reviews", "selector": "[data-testid=product-reviews][data-lm-ready]", "attribute": "data-testid", "equals": "product-reviews"}
   ],
   "figures": [
     { "pr": 155, "path": "/admin/combos?tab=report", "selectors": ["[data-testid=cb-kpi-ordered]", "[data-testid=cb-kpi-sales]"], "value": "b" },

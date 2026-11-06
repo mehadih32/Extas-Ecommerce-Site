@@ -54,3 +54,15 @@ describe('the product list bulk bar Undo', () => {
     expect(BULK_UNDO.recheck).toBeUndefined();
   });
 });
+
+// PR 635 (CN-036): Products part 2 — stock, stock counts, combos, size charts, back-in-stock and reviews speak through
+// the same one toast; none of them draws its own .ad-toast any more.
+describe('the products section has one toast', () => {
+  it('no product-section screen draws its own .ad-toast', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const here = join(__dirname, '..');
+    const files = ['products/ProductList.tsx', 'products/ProductForm.tsx', 'products/LinkImport.tsx', 'products/ErpImport.tsx', 'products/QueueButton.tsx', 'products/NewProductForm.tsx', 'products/InterestList.tsx', 'stock/StockActions.tsx', 'stock/AuditStart.tsx', 'stock/AuditScreen.tsx', 'combos/CombosScreen.tsx', 'SizeCharts.tsx', 'reviews/ReviewActions.tsx'];
+    for (const f of files) expect(readFileSync(join(here, f), 'utf8'), f).not.toContain('ad-toast');
+  });
+});

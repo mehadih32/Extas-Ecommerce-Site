@@ -44,7 +44,7 @@ export default async function StockCountsPage() {
   const canCount = s.can('inventory.audit');
 
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <div className="ad-hd pa-hd">
         <div className="pa-hd-text">
           <div className="ad-eyebrow">{t(d, 'stock.eyebrow')}</div>

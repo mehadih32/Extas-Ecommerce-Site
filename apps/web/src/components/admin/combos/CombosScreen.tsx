@@ -15,7 +15,7 @@ import { FixedTab } from './FixedTab';
 import { COMBOS_TABS, currencySymbol, money, nameIn, type CombosTab, type Lang } from './model';
 import { RulesTab } from './RulesTab';
 import { RuleWizard } from './RuleWizard';
-import { useToast } from '../products/useToast';
+import { say } from '../products/useToast';
 
 export interface CombosScreenProps {
   dict: Dict;
@@ -66,7 +66,6 @@ export function CombosScreen(props: CombosScreenProps) {
     setRules(props.rules);
   }
   const [editing, setEditing] = useState<{ combo: ComboView | null } | null>(null);
-  const [toast, say] = useToast();
   const fmt = (minor: number | null) => money(minor, locale, currency);
   const symbol = currencySymbol(locale, currency);
   const hexes = Object.fromEntries(props.products.flatMap((p) => p.colours.map((c) => [c.id, c.hex])));
@@ -169,9 +168,6 @@ export function CombosScreen(props: CombosScreenProps) {
           }}
         />
       ) : null}
-      <div className="ad-toast-slot" aria-live="polite" role="status">
-        {toast ? <div className="ad-toast">{toast}</div> : null}
-      </div>
     </div>
   );
 }

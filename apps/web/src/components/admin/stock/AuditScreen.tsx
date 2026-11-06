@@ -9,7 +9,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { call, type Answer } from '../api';
 import { Icon } from '../Icon';
 import { formatNumber, nameIn } from '../products/model';
-import { useToast } from '../products/useToast';
+import { say, sayBad } from '../products/useToast';
 import { linesToShow, stockRefusal } from './text';
 
 export interface ReasonChoice {
@@ -28,7 +28,6 @@ export function AuditScreen({ dict: d, lang, locale, initial, reasons, canCount,
   const [qty, setQty] = useState('1');
   const [busy, setBusy] = useState(false);
   const [last, setLast] = useState<{ code: string; known: boolean; counted: number } | null>(null);
-  const [toast, say] = useToast();
   const input = useRef<HTMLInputElement>(null);
   const num = (n: number) => formatNumber(n, locale);
   const open = audit.status === 'COUNTING' || audit.status === 'REVIEW';
@@ -45,7 +44,7 @@ export function AuditScreen({ dict: d, lang, locale, initial, reasons, canCount,
     try {
       const a = await fn();
       if (a.status !== 200) {
-        say(stockRefusal(d, a.data.error, a.data.details));
+        sayBad(stockRefusal(d, a.data.error, a.data.details));
         return;
       }
       if (a.data.audit) setAudit(a.data.audit as AuditView);
@@ -221,11 +220,6 @@ export function AuditScreen({ dict: d, lang, locale, initial, reasons, canCount,
           )}
         </section>
       </div>
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
-        </div>
-      ) : null}
     </>
   );
 }

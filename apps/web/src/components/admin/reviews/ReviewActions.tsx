@@ -2,9 +2,12 @@
 // S14 · PR 295 — one review's buttons on Products › Reviews: publish, hide, refuse, back to the queue, and the verified
 // mark. Each calls the reviews API (PR 65), which checks `reviews.moderate` again; publishing a photo review pays the
 // owner's photo reward only while he has switched it on with his own amount, and the answer says what went to the
-// wallet. Shown only to someone with `reviews.moderate`.
+// wallet. Shown only to someone with `reviews.moderate`. PR 635 (CN-036): the words after a button worked are the
+// admin's one toast (showToast); a refusal stays beside the buttons. No Undo here: publishing can pay the photo reward
+// (money), so it is never taken back by a toast.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { showToast } from '@/components/admin/lumen/Toast';
 import { t, type Dict } from '@/lib/i18n';
 
 type State = 'PENDING' | 'APPROVED' | 'HIDDEN' | 'REJECTED';
@@ -41,7 +44,7 @@ export function ReviewActions({ dict: d, id, state, verified, currency, locale }
       const res = await fetch(`/api/admin/reviews/${id}/${path}`, { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       const data = (await res.json().catch(() => ({ ok: false }))) as { ok?: boolean; error?: string; reward?: { amountMinor: number } | null };
       if (!data.ok) return setMsg({ ok: false, text: t(d, 'rev.act.failed', { code: data.error ?? String(res.status) }) });
-      setMsg({ ok: true, text: data.reward ? t(d, 'rev.act.paid', { amount: money(data.reward.amountMinor) }) : t(d, 'rev.act.saved') });
+      showToast({ text: data.reward ? t(d, 'rev.act.paid', { amount: money(data.reward.amountMinor) }) : t(d, 'rev.act.saved'), tone: 'ok' });
       router.refresh();
     } catch {
       setMsg({ ok: false, text: t(d, 'rev.act.failed', { code: 'network' }) });

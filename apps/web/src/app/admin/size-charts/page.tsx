@@ -85,7 +85,7 @@ export default async function SizeChartsPage() {
   }));
   const dict = view.dict;
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <div className="ad-hd">
         <h1 className="ad-h1">{t(dict, 'sizeCharts.title')}</h1>
         <p className="ad-intro sc-intro">{t(dict, 'sizeCharts.intro')}</p>

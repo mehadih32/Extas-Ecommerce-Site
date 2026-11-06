@@ -10,6 +10,7 @@ import { bothUnits, parsePasted, sortSizes, suggestRow } from '@extas/catalogue/
 import { t, type Dict } from '@/lib/i18n';
 import { call, errorText, type Answer } from './api';
 import { Icon } from './Icon';
+import { showToast } from './lumen/Toast';
 
 export interface SizeChartCategory {
   id: string;
@@ -45,7 +46,6 @@ interface Draft {
 type Modal = { kind: 'paste' } | { kind: 'copy'; fromId: string } | { kind: 'new' } | { kind: 'change' } | null;
 
 const API = '/api/admin/catalogue/size-charts';
-const TOAST_MS = 3200;
 const DESKTOP = '(min-width: 1024px)';
 
 const draftOf = (c: SizeChartDetail): Draft => ({
@@ -70,21 +70,16 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
   const [cm, setCm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [modal, setModal] = useState<Modal>(null);
-  const [toast, setToast] = useState({ text: '', seq: 0 });
   const editorRef = useRef<HTMLDivElement>(null);
 
-  const say = useCallback((text: string) => setToast((o) => ({ text, seq: o.seq + 1 })), []);
-  useEffect(() => {
-    if (!toast.text) return;
-    const id = setTimeout(() => setToast((o) => ({ ...o, text: '' })), TOAST_MS);
-    return () => clearTimeout(id);
-  }, [toast]);
+  // PR 635 (CN-036): the size chart screen speaks through the admin's one toast (showToast, read out by screen readers).
+  const say = useCallback((text: string) => showToast({ text }), []);
   const sayError = (a: Answer) => {
     const code = a.data.error ?? '';
     const own = t(dict, `sizeCharts.errors.${code}`, {
       fields: (a.data.details ?? []).join(', '),
     });
-    say(own.startsWith('sizeCharts.') ? errorText(dict, a) : own);
+    showToast({ text: own.startsWith('sizeCharts.') ? errorText(dict, a) : own, tone: 'bad' });
   };
 
   const reloadList = useCallback(async () => {
@@ -803,9 +798,6 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
           </div>
         </Sheet>
       ) : null}
-      <div className="ad-toast-slot" aria-live="polite" role="status">
-        {toast.text ? <div className="ad-toast">{toast.text}</div> : null}
-      </div>
     </>
   );
 }

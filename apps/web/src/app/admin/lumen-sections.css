@@ -246,3 +246,16 @@
   [data-lm-look] .ad[data-lm-ready] .pa-col { min-height: var(--lm-tap); }
   [data-lm-look] .ad[data-lm-ready] .pa-x { min-width: var(--lm-tap); min-height: var(--lm-tap); margin: -10px -12px -10px -4px; }
 }
+
+/* Products part 2 (PR 635): stock, stock counts and movements, combos, size charts, back-in-stock and reviews.
+   Their own small sizes become Lumen's 14 px, and their text drawn in the hero navy moves to the ink tokens. */
+[data-lm-look] .ad[data-lm-ready] :is(.cb-tag, .cb-pill, .cb-items span, .cb-info, .cb-chip-n, .cb-cnt, .cb-link code, .cb-steps button, .cb-sn, .sc-tag, .sc-type, .sc-num, .sc-tbl th, .sc-auto, .ad-input.sc-mono) { font-size: var(--lm-fs-card); }
+[data-lm-look] .ad[data-lm-ready] :is(.cb-tag, .cb-pick-n, .cb-live b, .sc-tag, .sc-cov.ok) { color: var(--lm-ink); }
+[data-lm-look] .ad[data-lm-ready] :is(.cb-pill.ok, .st-st.s-SENT, .st-st.s-SUCCEEDED, .st-st.s-COMPLETED) { background: var(--lm-okbg); color: var(--lm-ok); }
+[data-lm-look] .ad[data-lm-ready] .sc-link { color: var(--lm-ac-ink); }
+[data-lm-look] .ad[data-lm-ready] .ad-chip[aria-current='page'] .cb-chip-n { background: transparent; color: inherit; }
+@media (max-width: 759px), (pointer: coarse) {
+  [data-lm-look] .ad[data-lm-ready] a.st-name { display: flex; align-items: center; min-height: var(--lm-tap); }
+  [data-lm-look] .ad[data-lm-ready] .sc-link { display: inline-flex; align-items: center; min-height: var(--lm-tap); }
+  [data-lm-look] .ad[data-lm-ready] .sc-x { min-width: var(--lm-tap); min-height: var(--lm-tap); }
+}
