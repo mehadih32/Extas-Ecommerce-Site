@@ -4,6 +4,9 @@
 // Every price is the shop's own; a struck price only where the shop shows one (the card's `wasMinor`, PR 38).
 // PR 589 follow-up: with `ads.merchantFeed.variants` on, a product goes in as one item per live size and colour
 // (Google's variants: the items share `item_group_id` = the product, each with its colour, size, price, photo and stock).
+// PR 589 follow-up (707): a size-and-colour item carries its own struck price as the product page shows it for that size
+// (the loader reads it only while `salePrice` is on), and every item may carry the shop's gender and age group for
+// clothes (`gender`, `ageGroup`; empty = the field is not sent).
 import { majorPrice } from '../shop/structured-data';
 
 export interface FeedProduct {
@@ -34,7 +37,17 @@ export interface FeedVariant {
   /** The photo of this colour (else the product's main photo), absolute. */
   image: string | null;
   priceMinor: number | null;
+  /** PR 589 follow-up: this size's struck price as its page shows it (PR 38 rule), else null. */
+  wasMinor?: number | null;
   inStock: boolean;
+}
+
+/** PR 589 follow-up: Google's apparel values the card offers (empty = not sent). */
+export const FEED_GENDERS = ['male', 'female', 'unisex'] as const;
+export const FEED_AGE_GROUPS = ['newborn', 'infant', 'toddler', 'kids', 'adult'] as const;
+export interface FeedExtras {
+  gender?: string;
+  ageGroup?: string;
 }
 
 export const FEED_REASONS = ['noImage', 'noPrice', 'noDescription', 'soldOut'] as const;
@@ -67,6 +80,9 @@ export interface FeedItem {
   groupId: string | null;
   colour: string | null;
   size: string | null;
+  /** PR 589 follow-up: the shop's gender and age group for clothes (null: not sent). */
+  gender: string | null;
+  ageGroup: string | null;
 }
 
 /** Plain words from an article-like description (tags out, spaces folded), at most Google's 5,000 characters. */
@@ -89,15 +105,18 @@ export function variantTitle(title: string, v: Pick<FeedVariant, 'colour' | 'siz
  * PR 589 follow-up: `perVariant` lists a product that may go in as one item per size and colour with a price (a sold-out
  * one only while `outOfStock`); a product without such a list stays one item.
  */
-export function feedItems(products: readonly FeedProduct[], currency: string, outOfStock: boolean, perVariant = false): { items: FeedItem[]; left: Record<FeedReason, number> } {
+export function feedItems(products: readonly FeedProduct[], currency: string, outOfStock: boolean, perVariant = false, extras: FeedExtras = {}): { items: FeedItem[]; left: Record<FeedReason, number> } {
   const left: Record<FeedReason, number> = { noImage: 0, noPrice: 0, noDescription: 0, soldOut: 0 }; // hardcode-ok: counters starting at zero
   const items: FeedItem[] = [];
   const money = (minor: number) => `${majorPrice(minor, currency)} ${currency}`;
+  // a struck price only above the price asked (the shop's own rule decides whether there is one at all)
+  const prices = (now: number, was: number | null | undefined) => (was != null && was > now ? { price: money(was), salePrice: money(now) } : { price: money(now), salePrice: null });
+  const gender = (FEED_GENDERS as readonly string[]).includes(extras.gender ?? '') ? extras.gender! : null;
+  const ageGroup = (FEED_AGE_GROUPS as readonly string[]).includes(extras.ageGroup ?? '') ? extras.ageGroup! : null;
   for (const p of products) {
     const why = reasonsOf(p, outOfStock);
     for (const r of why) left[r] += 1;
     if (why.length) continue;
-    const struck = p.wasMinor != null && p.wasMinor > p.priceMinor!;
     const sold = perVariant ? (p.variants ?? []).filter((v) => v.priceMinor != null && v.priceMinor > 0 && (v.inStock || outOfStock)) : [];
     if (sold.length) {
       for (const v of sold)
@@ -108,13 +127,14 @@ export function feedItems(products: readonly FeedProduct[], currency: string, ou
           link: v.link,
           image: v.image ?? p.image!,
           availability: v.inStock ? 'in_stock' : 'out_of_stock',
-          price: money(v.priceMinor!),
-          salePrice: null,
+          ...prices(v.priceMinor!, v.wasMinor),
           brand: p.brand,
           productType: p.category,
           groupId: p.id,
           colour: v.colour,
           size: v.size,
+          gender,
+          ageGroup,
         });
       continue;
     }
@@ -125,13 +145,14 @@ export function feedItems(products: readonly FeedProduct[], currency: string, ou
       link: p.link,
       image: p.image!,
       availability: p.inStock ? 'in_stock' : 'out_of_stock',
-      price: money(struck ? p.wasMinor! : p.priceMinor!),
-      salePrice: struck ? money(p.priceMinor!) : null,
+      ...prices(p.priceMinor!, p.wasMinor),
       brand: p.brand,
       productType: p.category,
       groupId: null,
       colour: null,
       size: null,
+      gender,
+      ageGroup,
     });
   }
   return { items, left };
@@ -146,7 +167,8 @@ export function feedXml(head: { title: string; link: string; country: string }, 
     (i) =>
       `<item>${tag('g:id', i.id)}${tag('g:title', i.title)}${tag('g:description', i.description)}${tag('g:link', i.link)}${tag('g:image_link', i.image)}` +
       `${tag('g:availability', i.availability)}${tag('g:price', i.price)}${tag('g:sale_price', i.salePrice)}${tag('g:brand', i.brand)}` +
-      `${tag('g:condition', 'new')}${tag('g:product_type', i.productType)}${tag('g:item_group_id', i.groupId)}${tag('g:color', i.colour)}${tag('g:size', i.size)}<g:shipping>${tag('g:country', head.country)}</g:shipping></item>`,
+      `${tag('g:condition', 'new')}${tag('g:product_type', i.productType)}${tag('g:item_group_id', i.groupId)}${tag('g:color', i.colour)}${tag('g:size', i.size)}` +
+      `${tag('g:gender', i.gender)}${tag('g:age_group', i.ageGroup)}<g:shipping>${tag('g:country', head.country)}</g:shipping></item>`,
   );
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel>${tag('title', head.title)}${tag('link', head.link)}\n${lines.join('\n')}\n</channel></rss>\n`;
 }

@@ -61,4 +61,27 @@ describe('merchant feed', () => {
       expect(feedXml({ title: 'x', link: 'https://shop.example/', country: 'BD' }, feedItems([V], 'BDT', true).items)).not.toContain('g:item_group_id');
     });
   });
+
+  describe('struck price, gender and age group (PR 589 follow-up 707)', () => {
+    const V: FeedProduct = {
+      ...P,
+      variants: [
+        { id: 'v1', colour: 'Navy', size: 'M', link: 'https://shop.example/p/sample-polo?color=navy&s=m', image: null, priceMinor: 150_000, wasMinor: 180_000, inStock: true },
+        { id: 'v2', colour: 'Navy', size: 'L', link: 'https://shop.example/p/sample-polo?color=navy&s=l', image: null, priceMinor: 160_000, wasMinor: 150_000, inStock: true },
+      ],
+    };
+    it('a size-and-colour item takes its own struck price only above its price; never one it was not given', () => {
+      const { items } = feedItems([V], 'BDT', true, true);
+      expect(items[0]).toMatchObject({ price: '1800.00 BDT', salePrice: '1500.00 BDT' });
+      expect(items[1]).toMatchObject({ price: '1600.00 BDT', salePrice: null });
+      expect(feedItems([{ ...V, variants: V.variants!.map((v) => ({ ...v, wasMinor: null })) }], 'BDT', true, true).items.every((i) => i.salePrice === null)).toBe(true);
+    });
+    it('sends gender and age group only when set to one of Google`s values', () => {
+      const xml = (extras: Record<string, string>) => feedXml({ title: 'x', link: 'https://shop.example/', country: 'BD' }, feedItems([P], 'BDT', true, false, extras).items);
+      expect(xml({})).not.toMatch(/g:gender|g:age_group/);
+      expect(xml({ gender: '', ageGroup: '' })).not.toMatch(/g:gender|g:age_group/);
+      expect(xml({ gender: 'male', ageGroup: 'adult' })).toContain('<g:gender>male</g:gender><g:age_group>adult</g:age_group>');
+      expect(xml({ gender: 'men', ageGroup: 'grown' })).not.toMatch(/g:gender|g:age_group/);
+    });
+  });
 });

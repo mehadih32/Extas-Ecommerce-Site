@@ -141,7 +141,7 @@ export * from './registry-house-ads';
 export * from './registry-blog-pipeline';
 // S13 · PR 569 — geography-led ad guidance, advice only (registry-geo-guide.ts, version 255).
 export * from './registry-geo-guide';
-// S13 · PR 589 — the Google Merchant Center product feed (registry-merchant-feed.ts, version 256).
+// S13 · PR 589 — the Google Merchant Center product feed (registry-merchant-feed.ts, version 256; follow-ups 259, 260).
 export * from './registry-merchant-feed';
 // S18 · PR 379 — the quiet bot check (registry-bot-check.ts, version 74).
 export * from './registry-bot-check';

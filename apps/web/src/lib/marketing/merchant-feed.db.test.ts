@@ -123,4 +123,28 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Merchant feed on PostgreSQL (PR 589
     ]); // by size order; the variant without a price is not read
     expect(p.variants![1]!.link).toMatch(/^https:\/\/shop\.example\.test\/.+polo-589\?color=navy-589&s=m-589$/);
   });
+
+  it('PR 589 follow-up 707: the struck price only while the card sends it and the shop shows one (a real compare-at / MRP)', async () => {
+    const polo = await t.prisma.product.findFirstOrThrow({ where: { slug: 'polo-589' }, select: { id: true } });
+    await t.prisma.productVariant.update({ where: { storeId_sku: { storeId: S, sku: 'polo-589-1' } }, data: { compareAtMinor: 200_000 } });
+    const read = async () => (await feedProducts(t.prisma, deps.resolver, ORIGIN)).products.find((x) => x.id === polo.id)!;
+    expect((await api('PUT', { key: 'ads.merchantFeed', on: true, values: { salePrice: 'on', gender: 'male', ageGroup: 'adult' } })).j.screen.card.value).toMatchObject({ salePrice: true, gender: 'male', ageGroup: 'adult' });
+    // no struck-price source chosen anywhere (as shipped): the shop shows none, so the feed sends none
+    expect((await read()).wasMinor).toBeNull();
+    // the product's own source (the owner's choice, PR 38: product → category → store)
+    await t.prisma.product.update({ where: { id: polo.id }, data: { wasPriceSource: 'MRP' } });
+    // MRP on the brand's own goods: the compare-at shows, on the card's (cheapest) variant and on its own size
+    const p = await read();
+    expect(p.wasMinor).toBe(200_000);
+    expect(p.variants!.find((v) => v.size === 'S')).toMatchObject({ priceMinor: 150_000, wasMinor: 200_000 });
+    expect(p.variants!.find((v) => v.size === 'M')!.wasMinor).toBeNull();
+    // the shop's own label: no MRP struck price (the PR 38 honesty rule)
+    await t.prisma.brand.updateMany({ where: { slug: 'sample-brand-589' }, data: { isOwnLabel: true } });
+    expect((await read()).wasMinor).toBeNull();
+    await t.prisma.brand.updateMany({ where: { slug: 'sample-brand-589' }, data: { isOwnLabel: false } });
+    // the card's switch off: none, whatever the shop shows
+    await api('PUT', { key: 'ads.merchantFeed', on: true, values: { salePrice: 'off' } });
+    expect((await read()).wasMinor).toBeNull();
+    await t.prisma.product.update({ where: { id: polo.id }, data: { wasPriceSource: null } });
+  });
 });

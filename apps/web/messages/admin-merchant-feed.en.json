@@ -49,6 +49,21 @@
     "s_noImage": "No photo",
     "s_noPrice": "No price",
     "s_noDescription": "No description",
-    "s_soldOut": "Sold out"
+    "s_soldOut": "Sold out",
+    "salePrice": "Struck price",
+    "salePriceOff": "Price asked only",
+    "salePriceOn": "As the product page shows it",
+    "salePriceHint": "Only where the product page shows a struck price (a real MRP or an earlier price). Nothing is made up.",
+    "gender": "Gender (clothes)",
+    "ageGroup": "Age group (clothes)",
+    "notSent": "Not sent",
+    "g_male": "Men",
+    "g_female": "Women",
+    "g_unisex": "Unisex",
+    "a_newborn": "Newborn",
+    "a_infant": "Infant",
+    "a_toddler": "Toddler",
+    "a_kids": "Kids",
+    "a_adult": "Adults"
   }
 }
