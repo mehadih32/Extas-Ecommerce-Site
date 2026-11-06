@@ -12,10 +12,11 @@
 // - `late`     no good pull for `inventory.admin.lateAfterMinutes`;
 // - `ok`.
 // PR 610 (ERP contract v6): the ERP account's hold and its warning (`erpHold`, null in v5), the documents HELD, and the
-// SKUs not sold for want of a shop price at the ERP (`noShopPrice`, qa-gate).
+// SKUs not sold for want of a shop price at the ERP (`noShopPrice`, qa-gate). Follow-up 539: the documents HELD longer
+// than `erp.orders.heldAlertAfterHours` (`heldLong`, null while that is empty).
 import { allow, nowOf, setting, type InventoryDeps, type Who } from './context';
 import { erpEventProblems } from './erp-events';
-import { erpHoldNotice, noShopPriceSkus, type ErpHoldNotice } from './erp-orders-v6';
+import { erpHoldNotice, heldTooLong, noShopPriceSkus, type ErpHoldNotice } from './erp-orders-v6';
 import { pushCounts, type PushCounts } from './erp-push';
 import { resolveErp, type ErpLinkState } from './guard';
 import { holdSummary, type HoldSummary } from './reservations';
@@ -47,6 +48,8 @@ export interface SyncHealth {
   erpHold: ErpHoldNotice | null;
   /** PR 610 (qa-gate): the SKUs not sold because the ERP has no shop price for them yet (409 NO_SHOP_PRICE, v6). */
   noShopPrice: { count: number; skus: string[]; since: string | null };
+  /** Follow-up 539: documents still HELD `erp.orders.heldAlertAfterHours` after they were queued (null = the alert is off). */
+  heldLong: { count: number; hours: number; since: string | null } | null;
   holds: HoldSummary;
   lowStockOpen: number;
   auditsOpen: number;
@@ -75,12 +78,13 @@ export async function syncHealth(deps: InventoryDeps, who: Who): Promise<SyncHea
     setting(deps, null, 'inventory.admin.lateAfterMinutes'),
     setting(deps, null, 'inventory.admin.listSize'),
   ]);
-  const [runs, pushes, events, erpHold, noShopPrice, holds, lowStockOpen, auditsOpen, state] = await Promise.all([
+  const [runs, pushes, events, erpHold, noShopPrice, heldLong, holds, lowStockOpen, auditsOpen, state] = await Promise.all([
     db.erpSyncRun.findMany({ where: { storeId: who.storeId }, orderBy: [{ startedAt: 'desc' }, { id: 'desc' }], take: recentN }),
     pushCounts(db, who.storeId),
     erpEventProblems(db, who.storeId),
     erpHoldNotice(deps, who.storeId),
     noShopPriceSkus(db, who.storeId, listSize),
+    heldTooLong(deps, who.storeId),
     holdSummary(db, now),
     db.lowStockAlert.count({ where: { resolvedAt: null } }),
     db.stockAudit.count({ where: { status: { in: ['COUNTING', 'REVIEW'] } } }),
@@ -109,6 +113,7 @@ export async function syncHealth(deps: InventoryDeps, who: Who): Promise<SyncHea
     events,
     erpHold,
     noShopPrice,
+    heldLong,
     holds,
     lowStockOpen,
     auditsOpen,

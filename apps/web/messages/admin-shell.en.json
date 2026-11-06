@@ -481,6 +481,7 @@
       "lowStock": "Low-stock sizes",
       "countsReview": "Stock counts to review",
       "erpFailed": "ERP documents that failed",
+      "erpHeldLong": "ERP orders still refused after hours",
       "jobsDead": "Background jobs that stopped",
       "sub": "{n} waiting · oldest {age}",
       "ordersReturns": "Returns & exchanges",

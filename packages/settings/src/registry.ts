@@ -131,6 +131,7 @@ import { adminThemeSettings } from './registry-admin-theme';
 import { adminPatternsSettings } from './registry-admin-patterns';
 import { adminTodaySettings } from './registry-admin-today';
 import { erpReplaySettings } from './registry-erp-replay';
+import { erpHeldSettings } from './registry-erp-held';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
@@ -1503,6 +1504,8 @@ export const registry = {
   ...adminTodaySettings,
   // ---- Follow-up 526 (PR 620) · the ERP's signed calls: refuse a signature used before, off (registry-erp-replay.ts, version 238). ----
   ...erpReplaySettings,
+  // ---- Follow-up 539 (PR 610) · an alert for documents the ERP keeps refusing, off (registry-erp-held.ts, version 239). ----
+  ...erpHeldSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
