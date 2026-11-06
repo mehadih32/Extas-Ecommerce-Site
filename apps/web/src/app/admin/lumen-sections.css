@@ -135,7 +135,8 @@
 [data-lm-look] [data-lm-ready] .a2-view { min-height: 40px; height: auto; padding: 0 16px; border: 0; border-radius: var(--lm-r-pill); background: var(--lm-sf); color: var(--lm-ink2); font-weight: 600; box-shadow: var(--lm-sh-sm); }
 [data-lm-look] [data-lm-ready] .a2-view:hover { background: var(--lm-hover); color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] .a2-view.on { background: var(--lm-ink); color: var(--lm-sf); }
-[data-lm-look] [data-lm-ready] .a2-view .a2-cnt, [data-lm-look] [data-lm-ready] .a2-cnt { background: transparent; color: inherit; opacity: 0.75; font-weight: 700; }
+/* PR 632 follow-up (contrast audit): the view's count at full strength (faded, it was 3.3:1 light, 3.5:1 dark) */
+[data-lm-look] [data-lm-ready] .a2-view .a2-cnt, [data-lm-look] [data-lm-ready] .a2-cnt { background: transparent; color: inherit; opacity: 1; font-weight: 700; }
 [data-lm-look] [data-lm-ready] .a2-btn { min-height: 40px; height: auto; border-radius: var(--lm-r-ctl); border-color: var(--lm-ln); background: var(--lm-sf); color: var(--lm-ink); box-shadow: var(--lm-sh-sm); }
 [data-lm-look] [data-lm-ready] .a2-btn:hover { background: var(--lm-hover); border-color: var(--lm-ln); }
 [data-lm-look] [data-lm-ready] .a2-btn.pri { background: var(--lm-pri); border-color: var(--lm-pri-line); color: var(--lm-on-ac); box-shadow: var(--lm-pri-sh); }
