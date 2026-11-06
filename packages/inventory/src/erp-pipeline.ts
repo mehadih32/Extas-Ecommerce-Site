@@ -45,6 +45,12 @@ interface PieceRow {
  * True when it moved.
  */
 export async function movePiece(tx: Tx, piece: PieceRow, to: ErpPieceState, businessDate: string, cause: string): Promise<boolean> {
+  // Follow-up 559 (a): the piece's row is locked and its state read again first, so two runs moving the same piece at
+  // once (a courier result and a hand-back, two pipeline runs) take turns, and each move starts from the state the other
+  // left — the move's `fromState` is never a stale read.
+  const [locked] = await tx.$queryRaw<{ state: ErpPieceState }[]>`SELECT "state" FROM "ErpPipelinePiece" WHERE "id" = ${piece.id}::uuid FOR UPDATE`;
+  if (!locked) return false;
+  piece.state = locked.state;
   if (piece.state === to || !canMove(piece.state, to)) return false;
   const known = await tx.erpPipelineMove.findUnique({ where: { pieceId_cause: { pieceId: piece.id, cause } }, select: { id: true } });
   if (known) return false;

@@ -16,7 +16,7 @@ import { SYSTEM, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { tieRemainder, type CostSummaryLine } from '@extas/erp-types';
 import { registry, type Key, type Value } from '@extas/settings';
-import { booksSummaryStatus, inventorySchedule, openErpLink, pendingVersions, recordErpEvent, summaryCheck, summaryLog, summaryTick, tieLinesOf, type InventoryDeps, type SettingsReader } from '../src';
+import { booksSummaryStatus, inventorySchedule, movePiece, openErpLink, pendingVersions, recordErpEvent, summaryCheck, summaryLog, summaryTick, tieLinesOf, type InventoryDeps, type SettingsReader } from '../src';
 
 const BASE = 'https://erp.example.test';
 /** A moment on a Dhaka day: `hour` is the local (UTC+6) hour. */
@@ -404,5 +404,28 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 617 on PostgreSQL: the daily summary
     const r = await summaryCheck(deps(), A);
     expect(r.rebuilt).toBe(0);
     expect(await versions(A, '2026-11-02')).toHaveLength(1);
+  });
+  it('follow-up 559 (a): a pipeline move locks the piece and starts from its state now, never from a stale read; two at once take turns', async () => {
+    const p = await piece(A, 'B559-1', 'B559-1-1', 50_000, [[null, 'BILLED', '2026-10-01']]);
+    const stale = { id: p.id, storeId: p.storeId, linkId: p.linkId, lineId: p.lineId, state: 'BILLED' as const, buyingPriceMinor: p.buyingPriceMinor };
+    expect(await t.prisma.$transaction((tx) => movePiece(tx, { ...stale }, 'RETURNING', '2026-10-02', 'test:559:a'))).toBe(true);
+    // A second run that read the piece before that move: its move starts from RETURNING, as the piece is now.
+    expect(await t.prisma.$transaction((tx) => movePiece(tx, { ...stale }, 'WAITING_CHECK', '2026-10-03', 'test:559:b'))).toBe(true);
+    const moves = await t.prisma.erpPipelineMove.findMany({ where: { pieceId: p.id, cause: { startsWith: 'test:559' } }, orderBy: { createdAt: 'asc' } });
+    expect(moves.map((m) => [m.fromState, m.toState])).toEqual([['BILLED', 'RETURNING'], ['RETURNING', 'WAITING_CHECK']]);
+    // A stale read asking for a move the piece can no longer make (WAITING_CHECK → RETURNING) does nothing.
+    expect(await t.prisma.$transaction((tx) => movePiece(tx, { ...stale }, 'RETURNING', '2026-10-04', 'test:559:c'))).toBe(false);
+    // Two runs at once on a fresh piece: one move each, in turn, every fromState true.
+    const q = await piece(A, 'B559-2', 'B559-2-1', 50_000, [[null, 'BILLED', '2026-10-01']]);
+    const fresh = { id: q.id, storeId: q.storeId, linkId: q.linkId, lineId: q.lineId, state: 'BILLED' as const, buyingPriceMinor: q.buyingPriceMinor };
+    const both = await Promise.all([
+      t.prisma.$transaction((tx) => movePiece(tx, { ...fresh }, 'RETURNING', '2026-10-02', 'test:559:d')),
+      t.prisma.$transaction((tx) => movePiece(tx, { ...fresh }, 'WAITING_CHECK', '2026-10-02', 'test:559:e')),
+    ]);
+    expect(both).toEqual([true, true]);
+    const qm = await t.prisma.erpPipelineMove.findMany({ where: { pieceId: q.id, cause: { startsWith: 'test:559' } }, orderBy: { createdAt: 'asc' } });
+    expect(qm.length).toBe(2);
+    expect(qm[1]!.fromState).toBe(qm[0]!.toState);
+    expect((await t.prisma.erpPipelinePiece.findUniqueOrThrow({ where: { id: q.id } })).state).toBe(qm[1]!.toState);
   });
 });
