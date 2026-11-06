@@ -23,6 +23,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { AdCampaignLink, AdPlatformRead, AdSpendImport } from '@/components/admin/marketing/AdPlatformControls';
 import { AlertRuleAdd, AlertRuleControls, type AlertTexts } from '@/components/admin/marketing/AdAlertControls';
 import { AdCampaignControl, AdControlDecide, type ControlTexts } from '@/components/admin/marketing/AdControlControls';
+import { CampaignExtra, type CampaignExtraTexts } from '@/components/admin/marketing/AdCampaignBuilder';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -52,6 +53,8 @@ const KEYS_PAGE = '/admin/integrations';
 const FEES_PAGE = '/admin/money/fees';
 const GROWTH_PAGE = '/admin/marketing/ad-platforms/growth';
 const BRIEFS_PAGE = '/admin/marketing/ad-platforms/briefs';
+const BUILDER_PAGE = '/admin/marketing/ad-platforms/campaigns';
+const BUILDER_API = '/api/admin/marketing/ad-platforms/campaigns';
 const KEY = 'marketingAdPlatforms';
 
 function withScreen(view: AdminView): AdminView {
@@ -84,6 +87,8 @@ export default async function AdPlatformsPage() {
   const rates = await Promise.all(foreign.map(async (base) => ({ base, rate: await currentRate(access.deps.db, MOTHER_STORE_ID, base, storeCur) })));
   const al = await alertsOverview({ db: access.deps.db, resolver: access.deps.resolver });
   const ctl = await controlOverview({ db: access.deps.db, resolver: access.deps.resolver });
+  // PR 531: schedule and duplicate in each campaign's fold while the campaign builder is on
+  const builderOn = (await access.deps.resolver.value('ads.campaignBuilder', { storeId: MOTHER_STORE_ID })).enabled;
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
   const canControl = access.guard.permissions?.has('marketing.ads.control') ?? false;
   const canApprove = access.guard.permissions?.has('marketing.ads.approve') ?? false;
@@ -154,7 +159,7 @@ export default async function AdPlatformsPage() {
   // PR 268: the campaign controls
   const cp = (k: string, vars?: Record<string, string | number>) => s(`control.${k}`, vars);
   const controlOn = ctl.card.value.on;
-  const ctlErr = { ...errs, OFF: cp('err.OFF'), WAITING: cp('err.WAITING'), DECIDED: cp('err.DECIDED'), EXPIRED: cp('err.EXPIRED') };
+  const ctlErr = { ...errs, OFF: cp('err.OFF'), WAITING: cp('err.WAITING'), DECIDED: cp('err.DECIDED'), EXPIRED: cp('err.EXPIRED'), BUILDER_OFF: cp('err.BUILDER_OFF') };
   const ctlSaid = Object.fromEntries(['WAITING', 'PRACTICE', 'APPLIED', 'FAILED', 'REJECTED'].map((k) => [k, cp(`said.${k}`)]));
   const controlTexts: ControlTexts = {
     fold: cp('fold'),
@@ -168,9 +173,36 @@ export default async function AdPlatformsPage() {
     said: ctlSaid,
     err: ctlErr,
   };
+  const extraTexts: CampaignExtraTexts = {
+    schedule: cp('schedule'),
+    start: cp('start'),
+    end: cp('end'),
+    scheduleHelp: cp('scheduleHelp'),
+    scheduleGo: cp('scheduleGo'),
+    confirmSchedule: cp('confirmSchedule'),
+    now: cp('now'),
+    noEnd: cp('noEnd'),
+    duplicate: cp('duplicate'),
+    duplicated: cp('duplicated'),
+    openDrafts: cp('openDrafts'),
+    waiting: cp('said.WAITING'),
+    yes: cp('yes'),
+    cancel: cp('cancel'),
+    err: { ...ctlErr, ...Object.fromEntries(['CONTROL_OFF', 'LOCKED'].map((k) => [k, s(`build.err.${k}`)])) },
+    field: Object.fromEntries(['startAt', 'endAt'].map((k) => [k, s(`build.field.${k}`)])),
+  };
+  const at = (iso: string | null, none: string) => (iso ? when(iso) : none);
   const whatOf = (r: ControlRow) => {
     const m = moneyOf(r.currency, view.locale);
-    const what = r.change.kind === 'budget' ? cp('what.budget', { from: r.fromDailyMinor === null ? s('none') : formatMoney(r.fromDailyMinor, m), to: formatMoney(r.change.dailyBudgetMinor, m) }) : cp(`what.${r.change.kind}`);
+    const ch = r.change;
+    const what =
+      ch.kind === 'budget'
+        ? cp('what.budget', { from: r.fromDailyMinor === null ? s('none') : formatMoney(r.fromDailyMinor, m), to: formatMoney(ch.dailyBudgetMinor, m) })
+        : ch.kind === 'create'
+          ? `${cp('what.create', { budget: formatMoney(ch.dailyBudgetMinor, m) })} · ${at(ch.startAt, cp('now'))} → ${at(ch.endAt, cp('noEnd'))}`
+          : ch.kind === 'schedule'
+            ? cp('what.schedule', { from: at(ch.startAt, cp('now')), to: at(ch.endAt, cp('noEnd')) })
+            : cp(`what.${ch.kind}`);
     return `${r.platform ? s(`platform.${r.platform}`) : ''} · ${r.campaignName ?? ap('gone')}: ${what}`;
   };
   const controlCardFields: FieldsCardField[] = [
@@ -194,6 +226,9 @@ export default async function AdPlatformsPage() {
         </Link>
         <Link className="a2-sm adp-keys" href={BRIEFS_PAGE} data-testid="adp-briefs-link">
           {s('brief.link')}
+        </Link>
+        <Link className="a2-sm adp-keys" href={BUILDER_PAGE} data-testid="adp-builder-link">
+          {s('build.link')}
         </Link>
       </p>
       <p className="a2-sm a2-mute a2-mt12">{sp('spendNote')}</p>
@@ -309,7 +344,9 @@ export default async function AdPlatformsPage() {
                           {controlOn ? (
                             <td data-l={cp('fold')}>
                               {canControl && !c.gone ? (
-                                <AdCampaignControl url={CONTROL_API} adCampaignId={c.id} name={c.name} paused={isPaused(c.status)} dailyBudgetMinor={c.dailyBudgetMinor} scale={10 ** moneyOf(c.currency, view.locale).digits} none={s('none')} currency={c.currency} locale={view.locale} texts={controlTexts} />
+                                <AdCampaignControl url={CONTROL_API} adCampaignId={c.id} name={c.name} paused={isPaused(c.status)} dailyBudgetMinor={c.dailyBudgetMinor} scale={10 ** moneyOf(c.currency, view.locale).digits} none={s('none')} currency={c.currency} locale={view.locale} texts={controlTexts}>
+                                  {builderOn ? <CampaignExtra controlUrl={CONTROL_API} builderUrl={BUILDER_API} draftsHref={BUILDER_PAGE} adCampaignId={c.id} name={c.name} texts={extraTexts} /> : null}
+                                </AdCampaignControl>
                               ) : (
                                 <span className="a2-sm a2-mute">{canControl ? s('gone') : cp('noControl')}</span>
                               )}

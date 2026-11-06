@@ -331,6 +331,7 @@ model Store {
   adAlertRules            AdAlertRule[]
   adGuardrails            AdGuardrail[]
   adChangeRequests        AdChangeRequest[]
+  adCampaignDrafts        AdCampaignDraft[]
   serverEvents            ServerEvent[]
   audiences               Audience[]
   audienceSyncs           AudienceSync[]
@@ -7186,6 +7187,7 @@ model AdAccount {
   updatedAt     DateTime   @updatedAt @db.Timestamptz(3)
 
   campaigns AdCampaign[]
+  drafts    AdCampaignDraft[]
   spend     AdSpendDaily[]
 
   @@unique([storeId, platform, externalId])
@@ -7218,6 +7220,9 @@ model AdCampaign {
   archivedAt          DateTime? @db.Timestamptz(3)
   createdAt           DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt           DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 531: the schedule the shop last sent and the platform took (null = from now / until stopped, or not known).
+  startAt             DateTime? @db.Timestamptz(3)
+  endAt               DateTime? @db.Timestamptz(3)
 
   adSets AdSet[]
 
@@ -7355,6 +7360,38 @@ model AdChangeRequest {
   error             String?
   createdAt         DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
+}
+
+/// @stage S13 · PR 531 — a new platform campaign written in the shop (or a duplicate of one) before it exists on the
+/// platform. Its launch always waits for the owner's approval (an AdChangeRequest `create`); kept, set aside, never deleted.
+model AdCampaignDraft {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store     @relation(fields: [storeId], references: [id])
+  adAccountId      String    @db.Uuid
+  adAccount        AdAccount @relation(fields: [adAccountId], references: [id])
+  /// The shop's own campaign (Marketing › Campaigns) it belongs to.
+  campaignId       String?   @db.Uuid
+  /// The platform campaign it was duplicated from.
+  copyOfId         String?   @db.Uuid
+  name             String
+  /// sales | traffic | awareness | leads (each platform's own word when sent).
+  objective        String
+  dailyBudgetMinor Int?
+  currency         String
+  startAt          DateTime? @db.Timestamptz(3)
+  endAt            DateTime? @db.Timestamptz(3)
+  /// DRAFT | WAITING | PRACTICE | CREATED | FAILED | REJECTED | EXPIRED
+  status           String    @default("DRAFT")
+  changeRequestId  String?   @db.Uuid
+  /// The platform campaign it became (a live launch).
+  adCampaignId     String?   @db.Uuid
+  createdById      String?   @db.Uuid
+  archivedAt       DateTime? @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, archivedAt, status])
 }
 
 /// @stage S13 · PR 257, 258, 532 — a server-side conversion event (view → delivered), de-duplicated by event id.
