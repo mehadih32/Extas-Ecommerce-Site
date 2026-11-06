@@ -31,14 +31,13 @@ import { waHref } from '@/lib/shop/links';
 import { ROUTES } from '@/lib/shop/routes';
 import { dayText, nextSteps, placedText, thanksSubKey } from '@/lib/shop/thanks-model';
 import type { LookData } from '@/lib/shop/thanks-look';
-import { openColours } from '@/lib/shop/thanks-look-model';
 import { Icon, WaGlyph } from '../Icon';
 import { nameOf, Thumb } from '../bag/BagLines';
 import { CopyNumber, RetryPayment } from './ThanksActions';
-import { ThanksLook, type LookRowView } from './ThanksLook';
 import { Upsell } from '../bag/Upsell';
 import type { ShopCard } from '@/lib/shop/catalogue';
 import type { Reassurance } from '@/lib/shop/bag-model';
+import { lookBlockOf } from './look-block';
 
 export function ThanksNotFound({ c }: { c: ShopContext }) {
   return (
@@ -253,46 +252,7 @@ export async function ThanksPage({
     );
 
   // PR 128 · the look's rows, drawn here (pictures, names, prices in the shop's money) and acted on in ThanksLook
-  const lookRows: LookRowView[] = [];
-  for (const x of look?.rows ?? []) {
-    const card = cards.get(x.productId);
-    const p = look!.products.get(x.productId);
-    if (!card || !p) continue;
-    const name = productName(card, c.lang);
-    const line = x.kind === 'added' ? r.lines.find((l) => l.id === x.lineId) : undefined;
-    const open = openColours(p);
-    const thumbs: Record<string, React.ReactNode> = {};
-    // an added line is drawn in its own colour; a suggestion in each colour he can pick
-    const drawn = line?.colour ? card.colours.filter((k) => k.key === line.colour!.key) : card.colours;
-    for (const k of drawn.length ? drawn : [{ key: '', hex: line?.colour?.hex ?? '' }])
-      thumbs[k.key] = <Thumb c={c} card={card} colourKey={k.key || undefined} hex={k.hex} alt={name} />;
-    lookRows.push({
-      key: x.kind === 'added' ? x.lineId : x.productId,
-      kind: x.kind,
-      lineId: x.kind === 'added' ? x.lineId : null,
-      name,
-      href: hrefIn(c.lang, productPath(c.s['naming.productPathPrefix'], card.slug)),
-      thumbs,
-      colours: card.colours.filter((k) => open.includes(k.key)).map((k) => ({ key: k.key, name: colourName(k, c.lang), hex: k.hex })),
-      sizes: p.sizes,
-      variants: p.variants.map((v) => ({ ...v, pay: m(v.payMinor) })),
-      detail: line ? [line.colour ? colourName(line.colour, c.lang) : null, line.size, line.quantity > 1 ? `×${n(line.quantity)}` : null].filter(Boolean).join(' · ') || null : null,
-      amount: line ? m(line.amountMinor) : null,
-    });
-  }
-  const lookBlock =
-    look && lookRows.length ? (
-      <ThanksLook
-        number={r.number}
-        words={words}
-        rows={lookRows}
-        open={look.state.open}
-        full={look.state.lines.length >= look.state.maxLines}
-        until={look.state.open ? w(look.until === 'confirmed' ? 'ty.lookUntilPack' : 'ty.lookUntilConfirm') : null}
-        newTotal={look.state.lines.length && pay.kind === 'cod' ? m(look.state.dueMinor) : null}
-        fullNote={w('ty.lookFull', { count: n(look.state.maxLines) })}
-      />
-    ) : null;
+  const lookBlock = look ? lookBlockOf(c, r, look, cards, words) : null;
 
   const row = (k: string, v: React.ReactNode, cls = '', testId?: string) => (
     <div className={`ty-r${cls ? ` ${cls}` : ''}`} data-testid={testId}>

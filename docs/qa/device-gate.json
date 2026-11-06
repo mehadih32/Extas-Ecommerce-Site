@@ -122,6 +122,12 @@
       "expect": ["[data-testid=\"ty-page\"]", "[data-testid=\"ty-look\"]", "[data-testid=\"ty-look-row\"]", "[data-testid=\"ty-look-add\"]"]
     },
     {
+      "$comment": "PR 128 follow-up 217 — \"Complete your look\" on the order's page in My account while the add-on window is open (the same try-look fill: the sample order TRY-128 belongs to this browser's sample visitor).",
+      "paths": ["/account/orders/TRY-128", "/bn/account/orders/TRY-128"],
+      "fill": "/api/shop/try-look",
+      "expect": ["[data-testid=\"ty-look\"]", "[data-testid=\"ty-look-row\"]", "[data-testid=\"ty-look-add\"]"]
+    },
+    {
       "$comment": "PR 605 — the gift checkout (POST /api/shop/try-gift, test servers only: the sample bag, and this browser draws /checkout?gift=1 and the bag as if gift mode were on; nothing written to the settings). The \"Sending a gift\" card's boxes (16 px text), its date box, the hide-prices tick and \"Not a gift?\" keep their 44 px taps; the bag's \"Send as a gift\" link under Checkout too.",
       "paths": ["/checkout?gift=1", "/bn/checkout?gift=1"],
       "fill": "/api/shop/try-gift",

@@ -1,6 +1,6 @@
 // PR 128 — the thank-you page's "Complete your look" rows and choices, without a database.
 import { describe, expect, it } from 'vitest';
-import { firstChoice, lookRows, lookShown, openColours, pickVariant, type LookProduct } from './thanks-look-model';
+import { firstChoice, lookOnOrderPage, lookRows, lookShown, openColours, pickVariant, type LookProduct } from './thanks-look-model';
 
 const v = (id: string, colour: string, size: string, stock = 3, payMinor = 120000) => ({ id, colour, size, stock, payMinor });
 const chino: LookProduct = { id: 'chino', variants: [v('k30', 'khaki', '30', 0), v('k32', 'khaki', '32'), v('n30', 'navy', '30'), v('n32', 'navy', '32')] };
@@ -28,6 +28,12 @@ describe('PR 128 · complete your look', () => {
     expect(lookShown([{ kind: 'add', productId: 'belt' }], true)).toBe(true);
     expect(lookShown([{ kind: 'add', productId: 'belt' }], false)).toBe(false);
     expect(lookShown([{ kind: 'added', productId: 'belt', lineId: 'L' }], false)).toBe(true);
+  });
+
+  it('follow-up 217 · on the order page in My account only while the add-on window is open', () => {
+    expect(lookOnOrderPage([{ kind: 'add', productId: 'belt' }], true)).toBe(true);
+    expect(lookOnOrderPage([{ kind: 'added', productId: 'belt', lineId: 'L' }], false)).toBe(false);
+    expect(lookOnOrderPage([], true)).toBe(false);
   });
 
   it('opens on the first colour and size with stock; a colour change keeps the size when it is there', () => {

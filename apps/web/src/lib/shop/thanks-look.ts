@@ -13,6 +13,7 @@ import { addOnState, type AddOnState, type OrdersDeps } from '@extas/orders';
 import type { AddOnSettings, Key, Value } from '@extas/settings';
 import { liveDiscountFor } from '../rules-public';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
+import { signedIn } from './account';
 import { visitorId } from './bag';
 import { readPageSettings } from './context';
 import { lookRows, lookShown, type LookProduct, type LookRow } from './thanks-look-model';
@@ -54,8 +55,9 @@ export async function thanksLook(storeId: number, r: Receipt): Promise<LookData 
 
 async function read(storeId: number, r: Receipt, settings: OrdersDeps['settings'], max: number, until: AddOnSettings['until'], kinds: Value<'inventory.sellableLocationKinds'>): Promise<LookData | null> {
   const db = getPrisma();
-  const visitor = await visitorId();
-  const state = await addOnState({ db, settings }, { storeId, customerId: null, visitorId: visitor }, r.number);
+  // follow-up 217: the order's page in My account reads it for the signed-in customer whose order it is (any device)
+  const [visitor, me] = await Promise.all([visitorId(), signedIn()]);
+  const state = await addOnState({ db, settings }, { storeId, customerId: me?.customer.id ?? null, visitorId: visitor }, r.number);
   const added = r.lines.filter((l) => l.isAddOn).map((l) => ({ id: l.id, productId: l.productId }));
   if (!state.open && !added.length) return null;
   const own = [...new Set(r.lines.filter((l) => !l.isAddOn && l.productId).map((l) => l.productId!))];
