@@ -14,6 +14,7 @@ import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
 import { noteBotSignals } from '../security/bot-check';
 import { ATTRIBUTION_COOKIE, keptTouch, orderAttributionOf } from '../tracking/attribution';
+import { clickCookieOf, creditAdOrder } from '../journal/house-ads';
 import { creditOrder } from '../journal/performance';
 import { READ_COOKIE } from '../journal/performance-model';
 import { trackPurchase } from '../tracking/shop';
@@ -307,6 +308,8 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
       await orderLanded(deps, r.orderId);
       // PR 250: the journal articles this browser read before ordering get the order (`blog.performance`; never fails it)
       await creditOrder(deps.checkout.db, deps.checkout.settings, { storeId: deps.storeId, orderId: r.orderId, cookie: readCookie(request, READ_COOKIE) });
+      // PR 592: the house ad this browser clicked last within the credit days gets the order (`blog.houseAds`; never fails it)
+      await creditAdOrder(deps.checkout.db, deps.checkout.settings, { storeId: deps.storeId, orderId: r.orderId, cookie: clickCookieOf(request) });
       // PR 257: the purchase goes to the ad platforms from the server while tracking is on (quiet, never stops the order)
       await trackPurchase(request, { storeId: deps.storeId, orderId: r.orderId });
     }

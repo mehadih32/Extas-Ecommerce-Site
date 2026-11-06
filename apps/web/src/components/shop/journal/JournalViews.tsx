@@ -4,7 +4,11 @@
 // product block of live product cards (fitted like the category page's, CardFits) — where the writer put `[products]`, else under the words).
 // S12 · PR 249: "Read next" under the article — links to the live articles of its plan, then its topic (internal links;
 // `blog.journal.relatedArticles`, none while 0).
+// S12 · PR 592: house ads (`blog.houseAds`, off as shipped: none) — on the list at the top (the journal's own, or a
+// topic's) and after card N; in an article after paragraph N, at its end, beside it on a wide screen, and the popup and
+// slim bar (HouseAdFloat). Every place is empty unless the owner put a running ad there.
 import type { ImageSource } from '@extas/media/delivery';
+import { Fragment, type ReactNode } from 'react';
 import { ArticleBody } from '@/components/journal/ArticleBody';
 import { ResponsiveImage } from '@/components/media/ResponsiveImage';
 import { CardFits } from '@/components/shop/CardFits';
@@ -15,10 +19,13 @@ import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { ROUTES } from '@/lib/shop/routes';
 import { blocks, contents } from '@/lib/journal/blocks';
+import type { ShopAd } from '@/lib/journal/house-ads';
 import type { LivePost } from '@/lib/journal/journal';
 import { byline } from '@/lib/journal/model';
 import type { Topic } from '@/lib/journal/shop';
 import '@/components/journal/article.css';
+import { HouseAd, HouseAdsAt } from './HouseAd';
+import { HouseAdFloat } from './HouseAdFloat';
 import './journal.css';
 
 const topicName = (c: ShopContext, x: { nameEn: string; nameBn: string | null }) => (c.lang === 'bn' && x.nameBn ? x.nameBn : x.nameEn);
@@ -56,7 +63,8 @@ function Meta({ c, p, aiNote }: { c: ShopContext; p: LivePost; aiNote?: { en: st
   );
 }
 
-export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: number; page: number; pages: number; topics: Topic[]; topic: Topic | null }) {
+export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: number; page: number; pages: number; topics: Topic[]; topic: Topic | null; ads?: readonly ShopAd[] }) {
+  const ads = p.ads ?? [];
   const { c } = p;
   const t = c.t;
   const mains = p.topics.filter((x) => !x.parentId);
@@ -84,12 +92,14 @@ export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: numbe
           })}
         </nav>
       ) : null}
+      <HouseAdsAt c={c} ads={ads} slot={p.topic ? 'topic' : 'listTop'} />
       {p.posts.length ? (
         <>
           <p className="small text2">{p.total === 1 ? t('journal.count1') : t('journal.count', { n: c.num(p.total) })}</p>
           <div className="jn-grid">
-            {p.posts.map((x) => (
-              <article key={x.id} className={`jn-card${x.featured && p.page === 1 ? ' feat' : ''}`} data-testid="jn-card">
+            {p.posts.map((x, i) => (
+              <Fragment key={x.id}>
+              <article className={`jn-card${x.featured && p.page === 1 ? ' feat' : ''}`} data-testid="jn-card">
                 {x.category ? <div className="jn-kicker small">{x.featured && p.page === 1 ? `${t('journal.featured')} · ` : ''}{topicName(c, x.category)}</div> : null}
                 <h2 className="jn-ct">
                   <a href={hrefIn(c.lang, ROUTES.article(x.slug))}>{x.title}</a>
@@ -97,6 +107,8 @@ export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: numbe
                 {x.excerpt ? <p className="text2 jn-ex">{x.excerpt}</p> : null}
                 <Meta c={c} p={x} />
               </article>
+              <HouseAdsAt c={c} ads={ads} slot="listBetween" after={i + 1} />
+              </Fragment>
             ))}
           </div>
           {p.pages > 1 ? (
@@ -135,9 +147,36 @@ export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: numbe
   );
 }
 
-export function JournalArticle(p: { c: ShopContext; post: LivePost; cards: ShopCard[]; aiNote: { en: string; bn: string }; related?: LivePost[]; photo?: { image: ImageSource; alt: string; studio: boolean } | null }) {
+/** The article's popup and slim bar (only when the owner put a running ad there). */
+function Floats({ c, ads, searchWords, searchGuard }: { c: ShopContext; ads: readonly ShopAd[]; searchWords: readonly string[]; searchGuard: boolean }) {
+  const pop = ads.find((a) => a.slot === 'popup');
+  const bar = ads.find((a) => a.slot === 'bar');
+  if (!pop && !bar) return null;
+  return (
+    <HouseAdFloat
+      popup={pop && pop.popup ? { id: pop.placeId, rule: pop.popup.trigger, cap: pop.popup.cap, node: <HouseAd c={c} ad={pop} /> } : null}
+      bar={bar ? { id: bar.placeId, node: <HouseAd c={c} ad={bar} /> } : null}
+      searchWords={searchWords}
+      searchGuard={searchGuard}
+      words={{ close: c.t('journal.ad.close'), popup: c.t('journal.ad.popup', { shop: c.storeName }) }}
+    />
+  );
+}
+
+export function JournalArticle(p: {
+  c: ShopContext;
+  post: LivePost;
+  cards: ShopCard[];
+  aiNote: { en: string; bn: string };
+  related?: LivePost[];
+  photo?: { image: ImageSource; alt: string; studio: boolean } | null;
+  ads?: { list: readonly ShopAd[]; searchWords: readonly string[]; searchGuard: boolean };
+}) {
   const { c, post } = p;
   const t = c.t;
+  const ads = p.ads?.list ?? [];
+  const side = ads.find((a) => a.slot === 'sidebar');
+  const inline = (n: number): ReactNode => <HouseAdsAt c={c} ads={ads} slot="inline" after={n} />;
   const parts = contents(blocks(post.body));
   const hasSlot = /^\s*\[products\]\s*$/im.test(post.body);
   const shop = p.cards.length ? (
@@ -155,6 +194,7 @@ export function JournalArticle(p: { c: ShopContext; post: LivePost; cards: ShopC
   return (
     <div className="container jn-page" data-testid="journal-article">
       <Crumbs c={c} items={[{ label: t('journal.home'), href: ROUTES.home }, { label: t('journal.title'), href: ROUTES.journal }, ...(post.category ? [{ label: topicName(c, post.category), href: ROUTES.journalTopic(post.category.slug) }] : [])]} />
+      <div className={side ? 'jn-withside' : undefined}>
       <article className="jn-article">
         <h1 className="h1 jn-title">{post.title}</h1>
         <Meta c={c} p={post} aiNote={p.aiNote} />
@@ -184,8 +224,15 @@ export function JournalArticle(p: { c: ShopContext; post: LivePost; cards: ShopC
             </ol>
           </nav>
         ) : null}
-        <ArticleBody body={post.body} products={shop} boxWords={{ tip: t('journal.tip'), note: t('journal.note') }} />
+        <ArticleBody body={post.body} products={shop} boxWords={{ tip: t('journal.tip'), note: t('journal.note') }} afterParagraph={ads.length ? inline : undefined} />
+        <HouseAdsAt c={c} ads={ads} slot="end" />
       </article>
+      {side ? (
+        <div className="jn-side">
+          <HouseAd c={c} ad={side} />
+        </div>
+      ) : null}
+      </div>
       {!hasSlot ? shop : null}
       {p.related?.length ? (
         <section className="jn-related" aria-labelledby="jn-rel-h" data-testid="jn-related">
@@ -211,6 +258,7 @@ export function JournalArticle(p: { c: ShopContext; post: LivePost; cards: ShopC
           </a>
         </p>
       ) : null}
+      {p.ads ? <Floats c={c} ads={ads} searchWords={p.ads.searchWords} searchGuard={p.ads.searchGuard} /> : null}
     </div>
   );
 }

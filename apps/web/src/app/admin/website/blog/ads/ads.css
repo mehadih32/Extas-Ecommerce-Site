@@ -1,0 +1,42 @@
+/* S12 · PR 592 — Website › Blog & journal › House ads and one ad's page, drawn in Lumen: only --lm-* tokens. */
+.ha-page { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ha-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.ha-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 1100px) {
+  .ha-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); }
+}
+.ha-off { border-left: 4px solid var(--lm-warn); color: var(--lm-ink); margin: 0; }
+.ha-ro { color: var(--lm-ink2); margin: 0; }
+.ha-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.ha-span { color: var(--lm-ink2); margin: 0; font-size: 0.9rem; }
+.ha-row { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ha-row-h { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.ha-name { color: var(--lm-ink); font-weight: 700; overflow-wrap: anywhere; }
+a.ha-name { display: inline-flex; align-items: center; min-height: 44px; color: var(--lm-ac-ink); }
+.ha-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--lm-ink2); font-size: 0.85rem; min-width: 0; overflow-wrap: anywhere; }
+.ha-tg { color: var(--lm-ink); }
+.ha-pill { display: inline-flex; align-items: center; border-radius: var(--lm-r-pill); padding: 2px 10px; background: var(--lm-chip); color: var(--lm-ink2); font-size: 0.78rem; font-weight: 700; }
+.ha-pill.ok { background: var(--lm-okbg); color: var(--lm-ok); }
+.ha-pill.warn { background: var(--lm-warnbg); color: var(--lm-warn); }
+.ha-table-w { overflow-x: auto; max-width: 100%; }
+.ha-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; color: var(--lm-ink); }
+.ha-table th, .ha-table td { text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--lm-ln); vertical-align: top; }
+.ha-table td { text-align: end; white-space: nowrap; }
+.ha-table thead th { color: var(--lm-ink2); font-weight: 700; font-size: 0.8rem; }
+.ha-table tbody th { display: flex; flex-direction: column; gap: 2px; font-weight: 400; }
+.ha-how { margin: 8px 0 0; padding-left: 20px; color: var(--lm-ink2); display: flex; flex-direction: column; gap: 6px; }
+.adm2 .a2-crumb a.ha-crumb { display: inline-flex; align-items: center; min-height: 44px; color: var(--lm-ink2); }
+/* one ad's page */
+.ha-form { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ha-two { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 640px) { .ha-two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ha-fl-bad .lm-inp { border-color: var(--lm-bad); }
+.ha-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ha-pv { border: 1px solid var(--lm-ln); border-radius: var(--lm-r-box); padding: 12px; background: var(--lm-sf); display: flex; flex-direction: column; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.ha-pv-l { color: var(--lm-ink2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+.ha-pv-t { color: var(--lm-ink); font-weight: 700; }
+.ha-pv-x { color: var(--lm-ink2); font-size: 0.9rem; }
+.ha-pv-b { align-self: flex-start; border: 1px solid var(--lm-ink); border-radius: var(--lm-r-pill); padding: 6px 14px; color: var(--lm-ink); font-weight: 700; font-size: 0.85rem; }
+.ha-places { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ha-place { border: 1px solid var(--lm-ln); border-radius: var(--lm-r-box); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ha-place-h { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--lm-ink); font-weight: 700; }

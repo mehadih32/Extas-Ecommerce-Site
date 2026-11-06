@@ -26,6 +26,7 @@
 export * from './pure';
 // S12 · PR 250: `kpiByArticle` / `kpiFromArticles` — Sales and Ordered value of the orders that read a journal article
 // before ordering (metrics.ts; the shop writes BlogOrderRead when the order lands).
+// S12 · PR 592: `kpiByHouseAdPlace` — the orders credited to a house ad click, by the ad's place (metrics.ts).
 export * from './metrics';
 export * from './views';
 export * from './money';

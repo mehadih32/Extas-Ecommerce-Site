@@ -314,6 +314,8 @@ model Store {
   contentClusters         ContentCluster[]
   houseAds                HouseAd[]
   houseAdPlacements       HouseAdPlacement[]
+  houseAdDailyStats       HouseAdDailyStat[]
+  houseAdOrderClicks      HouseAdOrderClick[]
   helpArticles            HelpArticle[]
   blogComments            BlogComment[]
   blogPostDailyStats      BlogPostDailyStat[]
@@ -6974,28 +6976,80 @@ model HouseAd {
   startsAt        DateTime? @db.Timestamptz(3)
   endsAt          DateTime? @db.Timestamptz(3)
   archivedAt      DateTime? @db.Timestamptz(3)
+  /// PR 592: the ad's own words in both languages (shown under the label "<shop> offer"); Bengali falls back to English.
+  headlineEn      String?
+  headlineBn      String?
+  textEn          String?
+  textBn          String?
+  ctaEn           String?
+  ctaBn           String?
   createdAt       DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime  @updatedAt @db.Timestamptz(3)
 
   placements HouseAdPlacement[]
+
+  @@index([storeId, enabled])
 }
 
 /// @stage S12 · PR 592 — where a house ad shows (slot, post, category, after paragraph N, popup trigger and cap).
 model HouseAdPlacement {
-  id             String   @id @default(uuid(7)) @db.Uuid
+  id             String    @id @default(uuid(7)) @db.Uuid
   storeId        Int
-  store          Store    @relation(fields: [storeId], references: [id])
-  adId           String   @db.Uuid
-  ad             HouseAd  @relation(fields: [adId], references: [id])
+  store          Store     @relation(fields: [storeId], references: [id])
+  adId           String    @db.Uuid
+  ad             HouseAd   @relation(fields: [adId], references: [id])
   slot           String
-  postId         String?  @db.Uuid
-  blogCategoryId String?  @db.Uuid
+  postId         String?   @db.Uuid
+  blogCategoryId String?   @db.Uuid
   afterParagraph Int?
   trigger        Json?
   frequencyCap   Json?
-  enabled        Boolean  @default(false)
-  createdAt      DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+  enabled        Boolean   @default(false)
+  /// PR 592: a place taken away is set aside (switched off and kept), never deleted.
+  archivedAt     DateTime? @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, slot, enabled])
+  @@index([adId])
+}
+
+/// @stage S12 · PR 592 — one house ad place's day of clicks (the shop day in the store's time zone), counted while
+/// `blog.houseAds` is on. Orders and money are never kept here: the report reads them through @extas/metrics from the
+/// orders credited to a click (HouseAdOrderClick).
+model HouseAdDailyStat {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store    @relation(fields: [storeId], references: [id])
+  placementId String   @db.Uuid
+  adId        String   @db.Uuid
+  slot        String
+  day         DateTime @db.Date
+  clicks      Int      @default(0)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([placementId, day])
+  @@index([storeId, day])
+}
+
+/// @stage S12 · PR 592 — an order placed by a browser within `blog.houseAds.creditDays` after its last house ad click
+/// (the shop's own click cookie: place ids and times only, nothing about the person). Written once when the order lands;
+/// never changed, never deleted.
+/// @append-only
+model HouseAdOrderClick {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store    @relation(fields: [storeId], references: [id])
+  orderId     String   @db.Uuid
+  adId        String   @db.Uuid
+  placementId String   @db.Uuid
+  slot        String
+  clickedAt   DateTime @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([orderId])
+  @@index([storeId, placementId])
 }
 
 /// @stage S12 · PR 247, 248 — a help article whose one-line answer is drawn from the live rules.

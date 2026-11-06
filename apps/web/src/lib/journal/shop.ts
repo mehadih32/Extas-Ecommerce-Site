@@ -5,10 +5,15 @@
 // S12 · PR 249: an article also reads its live twin in the other language (hreflang) and "Read next" (internal links:
 // its plan's articles, then its topic's; `blog.journal.relatedArticles`, 0 as shipped). The journal's own page kind in
 // `seo.indexing` (off as shipped) decides whether search engines may list it.
+// S12 · PR 592: `journalAds` — a journal page's house ads (`blog.houseAds`, off as shipped: none), with the search
+// sites' match words the popup's search guard reads.
 import { cache } from 'react';
 import { getPrisma } from '@extas/db/client';
+import { settingsResolver } from '@/lib/settings';
 import { liveCardsByIds, type ShopCard } from '@/lib/shop/catalogue';
 import { readPageSettings, type ShopContext } from '@/lib/shop/context';
+import { pageAds, type ShopAd } from './house-ads';
+import type { HouseAdSlot } from './house-ads-model';
 import { liveCategories, liveJournal, livePost, liveRelated, liveTwinSlug, type LivePost } from './journal';
 
 export const journalSettings = async (storeId: number) => (await readPageSettings(['blog.journal'] as const, storeId))['blog.journal'];
@@ -58,4 +63,27 @@ export const journalArticle = cache(async (c: ShopContext, slug: string): Promis
 /** Whether the other language has a live article at this link (the language switch's target). */
 export async function journalHasOther(c: ShopContext, slug: string): Promise<boolean> {
   return !!(await livePost(getPrisma(), c.storeId, c.lang === 'bn' ? 'en' : 'bn', slug));
+}
+
+/**
+ * A journal page's house ads: an article's (its id, topic and the topic's parent, its products) or a list's (a topic's
+ * or the journal's). None while `blog.houseAds` is off or without a database; never fails the page.
+ */
+export async function journalAds(c: ShopContext, on: { post?: Pick<LivePost, 'id' | 'categoryId' | 'productIds'>; topic?: { id: string; parentId: string | null } | null }, slots: readonly HouseAdSlot[]): Promise<{ list: ShopAd[]; searchWords: string[]; searchGuard: boolean }> {
+  const resolver = settingsResolver();
+  const none = { list: [], searchWords: [], searchGuard: true };
+  if (!resolver) return none;
+  const db = getPrisma();
+  let categoryIds: string[] = [];
+  if (on.post?.categoryId) {
+    const cat = await db.blogCategory.findFirst({ where: { id: on.post.categoryId, storeId: c.storeId }, select: { id: true, parentId: true } }).catch(() => null);
+    categoryIds = cat ? [cat.id, ...(cat.parentId ? [cat.parentId] : [])] : [];
+  } else if (on.topic) categoryIds = [on.topic.id, ...(on.topic.parentId ? [on.topic.parentId] : [])];
+  const page = { postId: on.post?.id ?? null, categoryIds, productIds: on.post?.productIds ?? [] };
+  const { ads, set } = await pageAds(db, resolver, { storeId: c.storeId, lang: c.lang, page, slots, now: new Date() }, { cards: (ids) => liveCardsByIds(c.storeId, ids) });
+  if (!set || !ads.length) return none;
+  const needWords = set.searchGuard && ads.some((a) => a.slot === 'popup');
+  const organic = needWords ? await resolver.value('seo.organic', { storeId: c.storeId }).catch(() => null) : null;
+  const searchWords = organic ? organic.sources.filter((x) => x.kind === 'search').flatMap((x) => [...x.match]) : [];
+  return { list: ads, searchWords, searchGuard: set.searchGuard };
 }

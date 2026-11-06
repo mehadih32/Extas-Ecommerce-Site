@@ -1,6 +1,7 @@
 // S12 · PR 240, 241 — an article's blocks drawn as HTML (lib/journal/blocks.ts): the editor's preview and the shop's
 // article page use this one component, so the writer sees what the reader gets. The product block is a slot: the shop
 // passes the product cards, the preview a placeholder. No state, so it runs on the server and in the editor alike.
+// PR 592: `afterParagraph(n)` — what the shop puts after the n-th paragraph (a house ad); never before the first.
 import { Fragment, type ReactNode } from 'react';
 import { blocks, type Inline } from '@/lib/journal/blocks';
 
@@ -23,10 +24,13 @@ function Line({ s }: { s: Inline[] }) {
   );
 }
 
-export function ArticleBody({ body, products, boxWords }: { body: string; products?: ReactNode; boxWords: { tip: string; note: string } }) {
+export function ArticleBody({ body, products, boxWords, afterParagraph }: { body: string; products?: ReactNode; boxWords: { tip: string; note: string }; afterParagraph?: (n: number) => ReactNode }) {
+  const list = blocks(body);
+  // each block's paragraph number so far (what comes after the n-th paragraph)
+  const paraNo = list.reduce<number[]>((acc, b) => [...acc, (acc[acc.length - 1] ?? 0) + (b.t === 'p' ? 1 : 0)], []);
   return (
     <div className="jr-body">
-      {blocks(body).map((b, i) => {
+      {list.map((b, i) => {
         switch (b.t) {
           case 'h2':
             return (
@@ -36,12 +40,17 @@ export function ArticleBody({ body, products, boxWords }: { body: string; produc
             );
           case 'h3':
             return <h3 key={i}>{b.s}</h3>;
-          case 'p':
+          case 'p': {
+            const extra = afterParagraph?.(paraNo[i] ?? 0);
             return (
-              <p key={i}>
-                <Line s={b.s} />
-              </p>
+              <Fragment key={i}>
+                <p>
+                  <Line s={b.s} />
+                </p>
+                {extra ?? null}
+              </Fragment>
             );
+          }
           case 'ul':
           case 'ol': {
             const L = b.t;
