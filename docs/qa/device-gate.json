@@ -177,7 +177,7 @@
       "expect": ["[data-testid=\"hdr-wa\"]"]
     },
     {
-      "$comment": "PR 85 follow-up 111 — the shop with a long slogan (POST /api/shop/try-slogan, test servers only: sample words near the 120-letter limit in both languages; CI's sample database has none, it is the owner's data). The header's slogan steps (full, short, hidden) and the footer's wrap must keep the page one screen wide and the words whole.",
+      "$comment": "PR 85 follow-up 111 — the shop with a long slogan (POST /api/shop/try-slogan, test servers only: sample words near the 120-letter limit in both languages; CI's sample database has none, it is the owner's data). The header's slogan steps (full, short, hidden) and the footer's wrap must keep the page one screen wide and the words whole. PR 40 follow-up: on a computer the nav row folds its last categories into More, then steps the slogan down (short, then hidden), so no nav item is narrower than its words (NAV-WORDS-SQUEEZED).",
       "paths": ["/", "/bn", "/collections/polos", "/bn/collections/polos"],
       "fill": "/api/shop/try-slogan",
       "expect": [".sb-slog"]
