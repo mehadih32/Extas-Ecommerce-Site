@@ -17,6 +17,8 @@
 # one, must pass its health check and the smoke test, then Caddy switches its upstream with a graceful reload (open
 # requests finish). If anything fails before or right after the switch, the old colour keeps or takes back the
 # traffic and the run fails. Every run writes state/last-deploy.json for the status page and the admin Server page.
+# PR 4 follow-up (691): between the smoke test and the switch, every web replica of the new colour opens each smoke page
+# once (warm, tools/warm.mjs; DEPLOY_WARM_SECONDS in server.conf, 0 = off) so no visitor pays a page's first load.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
@@ -160,6 +162,23 @@ smoke() { # smoke <color>: health + the status page, straight to the new replica
   docker exec extas-caddy wget -qO /dev/null "http://app-$c:$APP_PORT/status" || return 1
 }
 
+warm() { # warm <color>: every web replica of the new colour opens each smoke page once (tools/warm.mjs), in parallel
+  # PR 4 follow-up (691): the first admin views after a deploy took about 4 s each against about 1 s later, because each
+  # fresh replica loads and compiles a page's server code on its first request. Paid here, before any traffic moves,
+  # never by the smoke test or the owner. Signed out, no query strings, nothing written; never fails the deploy.
+  local c="$1" secs="${DEPLOY_WARM_SECONDS:-240}" cfg ids id
+  [ "$secs" -gt 0 ] 2>/dev/null || { log "warm-up off (DEPLOY_WARM_SECONDS=$secs)"; return 0; }
+  cfg="$(cat "$REPO/docs/qa/smoke.json" 2>/dev/null)" || { log "warm-up skipped: no docs/qa/smoke.json"; return 0; }
+  ids="$(app "$c" ps -q web 2>/dev/null)" || true
+  [ -n "$ids" ] || { log "warm-up skipped: no web replica of $c found"; return 0; }
+  for id in $ids; do
+    docker exec -i -e WARM_CONFIG="$cfg" -e WARM_BUDGET_SECONDS="$secs" -e WARM_PORT="$APP_PORT" -e WARM_NAME="app-$c ${id:0:12}" \
+      "$id" node --input-type=module - < "$REPO/tools/warm.mjs" 2>&1 | tail -n 1 | sed 's/^/[warm] /' &
+  done
+  wait || true
+  return 0
+}
+
 verify_live() { # through Caddy's internal port: every answer must come from the new colour
   local c="$1" i body
   for i in $(seq 1 20); do
@@ -297,6 +316,7 @@ if ! smoke "$NEW"; then
   die "smoke test failed (live version unchanged)"
 fi
 log "new colour $NEW healthy and smoke-tested"
+warm "$NEW" || true
 
 # ---- 2. switch Caddy (graceful: open requests finish on the old colour) ---------------------------------------
 cp "$SITES/upstream.caddy" "$SITES/upstream.caddy.before" 2>/dev/null || true
