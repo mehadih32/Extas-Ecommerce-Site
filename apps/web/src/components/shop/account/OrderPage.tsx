@@ -26,6 +26,8 @@
 // order (demo 60-account.js ord_line, ord_exchanges), while the owner has the account's exchange on.
 // PR 144 follow-up (go-live gate customer 360°, 1 Nov): "Cancel this order" under the edit card, as the owner's cancel
 // rule allows it now (one tap, a request the team answers, or "you asked"); never once a courier is booked.
+// Follow-up 217 (PR 128): "Complete your look" under the items too, while the order's add-on window is open (the thank-you
+// page's block, `thanks.look`; "Add" puts a real line on this parcel through /api/account/parcel-add).
 // Review R3 (M3): the delivered step says what the checkout said ("ships from …" for an order placed in the holiday
 // break, "may arrive after Eid") instead of the hours, and the late flag counts on the courier's own promise clock
 // (from the first day back; never late after Eid).
@@ -34,6 +36,8 @@ import './account.css';
 import './exchange.css';
 import type { ReactNode } from 'react';
 import type { Receipt } from '@extas/checkout';
+import type { LookData } from '@/lib/shop/thanks-look';
+import { lookOnOrderPage } from '@/lib/shop/thanks-look-model';
 import type { OrderReviewBox } from '@/lib/shop/account-review';
 import type { OrderExtras } from '@/lib/shop/account-order';
 import { phoneNormalizeBD } from '@/lib/phone-bd';
@@ -52,6 +56,7 @@ import { ROUTES } from '@/lib/shop/routes';
 import { Icon, WaGlyph } from '../Icon';
 import { MessengerButton } from '../MessengerButton';
 import { nameOf, Thumb } from '../bag/BagLines';
+import { lookBlockOf } from '../checkout/look-block';
 import { AccountCrumbs } from './AccountShell';
 import { BuyAgain, type BuyAgainWords } from './BuyAgain';
 import { LateTag, StatusTag } from './AccountTabs';
@@ -156,6 +161,7 @@ export async function OrderPage({
   eta = [],
   promise = null,
   reorder = null,
+  look = null,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -174,6 +180,8 @@ export async function OrderPage({
   promise?: { from: string; hoursMax: number | null; afterEid: boolean; afterFestive?: boolean } | null;
   /** PR 622 (CN-034): "Buy again" and its words, while the owner offers it on this order's state (null: not offered). */
   reorder?: { words: BuyAgainWords; hint: string } | null;
+  /** Follow-up 217 (PR 128): "Complete your look", drawn only while the order's add-on window is open (null: off or nothing). */
+  look?: LookData | null;
 }) {
   const t = c.t;
   const words = checkoutWords(c);
@@ -189,7 +197,9 @@ export async function OrderPage({
   const units = r.lines.reduce((s, l) => s + l.quantity, 0);
   // PR 186: the new pieces of his exchanges are drawn too
   const newIds = (extras?.exchange?.exchanges ?? []).flatMap((x) => x.items.flatMap((i) => (i.newProductId ? [i.newProductId] : [])));
-  const cards = await cardsByIds(c.storeId, [...r.lines.map((l) => l.productId).filter((x): x is string => !!x), ...newIds]);
+  const lookOpen = look && lookOnOrderPage(look.rows, look.state.open) ? look : null;
+  const cards = await cardsByIds(c.storeId, [...r.lines.map((l) => l.productId).filter((x): x is string => !!x), ...newIds, ...(lookOpen ? lookOpen.products.keys() : [])]);
+  const lookBlock = lookOpen ? lookBlockOf(c, r, lookOpen, cards, words) : null;
   const wa = waOn ? waHref(c.s['contact.whatsapp'], t('account.order.helpMsg', { ...c.vars, number: r.number })) : null;
   const pay = r.pay;
   const waNumber = waOn ? c.s['contact.whatsapp'] : null;
@@ -477,6 +487,7 @@ export async function OrderPage({
               </div>
             ) : null}
           </section>
+          {lookBlock ? <div className="ord-look">{lookBlock}</div> : null}
           {xs && xs.exchanges.length ? (
             <section className="card" aria-labelledby="ox-h" data-testid="order-exchanges">
               <div className="ord-cardhd">

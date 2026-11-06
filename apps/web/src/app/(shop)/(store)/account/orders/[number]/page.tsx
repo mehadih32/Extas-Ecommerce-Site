@@ -10,6 +10,7 @@
 // Review R3 (M3): the delivery line as the checkout gave it ("ships from …" after the holiday, "may arrive after Eid")
 // and the late flag on the same promise clock as the courier's (`currentEta`, `currentPromise`).
 // PR 622 (CN-034): "Buy again" under the lines, while the owner offers it on the order's state (`account.reorder`).
+// Follow-up 217 (PR 128): "Complete your look" while the add-on window is open (`thanks.look`, `orders.addOn`).
 import type { Metadata } from 'next';
 import { OrderPage, OrderPrompt } from '@/components/shop/account/OrderPage';
 import { orderExtras } from '@/lib/shop/account-order';
@@ -19,6 +20,7 @@ import { invoiceNumber } from '@/lib/shop/invoice';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { reorderViewOf } from '@/lib/shop/reorder-view';
 import { shopMetadata } from '@/lib/shop/meta';
+import { thanksLook } from '@/lib/shop/thanks-look';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,11 +40,12 @@ export default async function Order({ params, searchParams }: { params: Promise<
     readPageSettings(['account.track.welcome', 'account.track.late', 'account.track.exactAmount', 'account.track.courier', 'account.invoice', 'account.history', 'account.reorder'] as const, c.storeId),
   ]);
   if (!receipt) return <OrderPrompt c={c} number={number} signedIn={signedIn} />;
-  const [review, extras, eta, promise] = await Promise.all([
+  const [review, extras, eta, promise, look] = await Promise.all([
     orderReviewBox(c, receipt.number),
     orderExtras(c, receipt.number, receipt.status, { timeline: track['account.history'].timeline }),
     currentEta(c, receipt.number),
     currentPromise(c, receipt.number),
+    thanksLook(c.storeId, receipt),
   ]);
   const reo = reorderViewOf(c, track['account.reorder']);
   return (
@@ -58,6 +61,7 @@ export default async function Order({ params, searchParams }: { params: Promise<
       eta={eta}
       promise={promise}
       reorder={reo.offered(receipt.status) ? { words: reo.words, hint: track['account.reorder'].words.hint[c.lang === 'bn' ? 'bn' : 'en'] } : null}
+      look={look}
     />
   );
 }

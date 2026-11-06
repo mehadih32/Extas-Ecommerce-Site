@@ -45,6 +45,9 @@ export function lookRows(input: { suggested: readonly string[]; added: readonly 
 /** Whether the block is drawn at all: something to show, and the window open or a piece already added. */
 export const lookShown = (rows: readonly LookRow[], open: boolean) => rows.length > 0 && (open || rows.some((r) => r.kind === 'added'));
 
+/** Follow-up 217: the order's page in My account draws the block only while the add-on window is open (the thank-you page keeps it for what was added). */
+export const lookOnOrderPage = (rows: readonly LookRow[], open: boolean) => open && lookShown(rows, open);
+
 /** The colours with something to sell, in the product's order. */
 export const openColours = (p: Pick<LookProduct, 'variants'>) => [...new Set(p.variants.filter((v) => v.stock > 0).map((v) => v.colour))];
 

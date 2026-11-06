@@ -358,3 +358,14 @@
 .shop .acc-priv-row { display: grid; gap: 6px; justify-items: start; padding: 12px 0 0; border-top: 1px solid var(--line2); }
 .shop .acc-priv-row p { margin: 0; }
 .shop .acc-priv-row .btn { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
+
+/* Follow-up 217 (PR 128): "Complete your look" on the order page — the thank-you page's rows (checkout.css .ty-look) */
+.shop .ord-look .ty-look { display: flex; gap: 12px; align-items: center; padding: 12px 0px; border-top: 1px solid var(--line2); }
+.shop .ord-look .co-th { width: 60px; flex-shrink: 0; position: relative; }
+.shop .ord-look .pimg-label { display: none; }
+.shop .ord-look .ty-sw { width: 30px; height: 30px; position: relative; }
+.shop .ord-look .ty-sw::before { content: ""; position: absolute; inset: -7px; }
+.shop .ord-look .ty-sws { gap: 14px; }
+.shop .ord-look .ty-look select.input { min-height: 44px; padding: 8px 10px !important; font-size: 16px !important; }
+.shop .ord-look .ty-look .link { min-height: 44px; display: inline-flex; align-items: center; }
+.shop .ord-look .btn-sm { min-height: 44px; font-size: 14px; font-weight: 700; }
