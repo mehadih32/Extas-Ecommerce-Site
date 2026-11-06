@@ -3,6 +3,7 @@
 // (`?view=&q=&source=&sort=&page=`, so a link opens the same list), the table and "More". Reading needs `customers.read`
 // in the store (the numbers are masked without `customers.phone`); the customers service checks the key again. PR 299:
 // "Export" is shown when the owner turned the export on and the person holds its own key `customers.export`.
+// Follow-up 702 (PR 636): a name opens his page with this list beside him (`?list=`, the list split).
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -13,7 +14,7 @@ import { moneyOf } from '@/components/admin/products/model';
 import { ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withCustomers } from '@/lib/admin-customers/i18n';
-import { customersHref, parseCustomerQuery } from '@/lib/admin-customers/model';
+import { customerHref, customersHref, parseCustomerQuery } from '@/lib/admin-customers/model';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { customersDeps } from '@/lib/customers-api';
@@ -37,7 +38,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Se
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="customers" text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="customers-list" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="customers.read" />
       </div>
     );
@@ -49,5 +50,5 @@ export default async function CustomersPage({ searchParams }: { searchParams: Se
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
     cu.canExport(cd, who),
   ]);
-  return <CustomerListPage view={view} data={data} query={query} settings={settings} money={moneyOf(currency, view.locale)} hrefOf={(id) => `/admin/customers/${id}`} exportLimits={exportOk ? { ...cu.EXPORT_REASON } : null} />;
+  return <CustomerListPage view={view} data={data} query={query} settings={settings} money={moneyOf(currency, view.locale)} hrefOf={(id) => customerHref(id, query)} exportLimits={exportOk ? { ...cu.EXPORT_REASON } : null} />;
 }

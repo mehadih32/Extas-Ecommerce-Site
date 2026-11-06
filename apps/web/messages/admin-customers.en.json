@@ -1283,6 +1283,19 @@
       "undo": "Undo this import",
       "undoConfirm": "Undo this import? Its old orders, and the new customers it made that have not ordered since, are archived (never deleted).",
       "undoDone": "Undone: {records} old orders archived, {archived} new customers archived, {kept} kept (they ordered or were merged since)."
+    },
+    "split": {
+      "aria": "This list of customers",
+      "full": "Full list",
+      "prev": "Previous",
+      "next": "Next",
+      "pos": "{n} of {of}",
+      "stepsAria": "Previous and next customer in the list",
+      "orders": "{n} orders",
+      "order1": "{n} order",
+      "empty": "No one in this list.",
+      "newer": "Newer",
+      "more": "More"
     }
   }
 }

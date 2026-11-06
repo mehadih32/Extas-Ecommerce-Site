@@ -1,7 +1,7 @@
 // S14 · PR 285 — the Customers list's address: read from the page's search params (unknown views, sorts and pages left
 // out) and written back without the defaults, so a link opens the same list.
 import { describe, expect, it } from 'vitest';
-import { customersHref, parseCustomerQuery, share } from './model';
+import { customerHref, customersHref, listOf, listParam, parseCustomerQuery, placeIn, share } from './model';
 
 describe('the Customers list address (PR 285)', () => {
   it('reads only what it knows', () => {
@@ -27,5 +27,28 @@ describe('the Customers list address (PR 285)', () => {
   it('a share is a whole percent, or nothing when there is nothing to share', () => {
     expect(share(1, 3)).toBe(33);
     expect(share(0, 0)).toBeNull();
+  });
+});
+
+describe('the customer page remembers the list it was opened from (follow-up 702, PR 636)', () => {
+  it('reads the list back from the page address, and only what the list knows', () => {
+    expect(listOf({})).toEqual({});
+    expect(listOf({ list: 'view=atrisk&q=rahim&page=2', tab: 'orders', page: '3' })).toEqual({ view: 'atrisk', q: 'rahim', page: 2 });
+    expect(listOf({ list: 'view=nobody&sort=phone' })).toEqual({});
+    expect(listParam({})).toBe('');
+    expect(listParam({ view: 'refused', q: 'a&b' })).toBe('view=refused&q=a%26b');
+    expect(listOf({ list: listParam({ view: 'refused', q: 'a&b' }) })).toEqual({ view: 'refused', q: 'a&b' });
+  });
+  it('writes his page address with the tab, page, merged-from and list', () => {
+    expect(customerHref('c1')).toBe('/admin/customers/c1');
+    expect(customerHref('c1', {}, { tab: 'overview', page: 1 })).toBe('/admin/customers/c1');
+    expect(customerHref('c1', { view: 'atrisk' }, { tab: 'orders', page: 2 })).toBe('/admin/customers/c1?tab=orders&page=2&list=view%3Datrisk');
+    expect(customerHref('c 1', {}, { from: 'c0' })).toBe('/admin/customers/c%201?from=c0');
+  });
+  it('finds his place, the one before and the one after', () => {
+    expect(placeIn(['a', 'b', 'c'], 'b')).toEqual({ n: 2, of: 3, prev: 'a', next: 'c' });
+    expect(placeIn(['a', 'b', 'c'], 'a')).toEqual({ n: 1, of: 3, prev: null, next: 'b' });
+    expect(placeIn(['a', 'b', 'c'], 'c')).toEqual({ n: 3, of: 3, prev: 'b', next: null });
+    expect(placeIn(['a'], 'z')).toBeNull();
   });
 });
