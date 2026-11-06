@@ -25,10 +25,12 @@ export type FieldsCardField =
   // SIM-F-048 (PR 550 follow-up): a list of rows (at most `max`); a choice column takes each value once across the rows
   | { kind: 'rows'; path: string; label: string; help?: string; max: number; add: string; remove: string; empty: string; columns: FieldsCardColumn[] };
 
-/** One column of a `rows` field: a choice (each value once across the rows), or a whole number (empty = null when `optional`). */
+/** One column of a `rows` field: a choice (each value once across the rows), or a whole number (empty = null when `optional`).
+ * PR 246: or a short text (`lang` marks a Bengali one). */
 export type FieldsCardColumn =
   | { kind: 'select'; key: string; label: string; pick: string; options: { value: string; label: string }[] }
-  | { kind: 'number'; key: string; label: string; min: number; max: number; optional?: boolean };
+  | { kind: 'number'; key: string; label: string; min: number; max: number; optional?: boolean }
+  | { kind: 'text'; key: string; label: string; max: number; lang?: string };
 
 export interface FieldsCardTexts {
   h: string;
@@ -172,7 +174,7 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: {
     if (f.kind === 'rows') {
       const rows = (Array.isArray(draft[f.path]) ? draft[f.path] : []) as Json[];
       const put = (next: Json[]) => edit(f.path, next);
-      const blank = Object.fromEntries(f.columns.map((c) => [c.key, c.kind === 'select' ? '' : null]));
+      const blank = Object.fromEntries(f.columns.map((c) => [c.key, c.kind === 'number' ? null : '']));
       return (
         <div className="a2-fld full" role="group" aria-labelledby={`${fid}-l`} key={f.path} data-testid={`${testId}-${f.path}`}>
           <span className="a2-lbl" id={`${fid}-l`}>
@@ -205,6 +207,15 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: {
                     </div>
                   );
                 }
+                if (c.kind === 'text')
+                  return (
+                    <div className="a2-fld" key={c.key}>
+                      <label className="a2-lbl" htmlFor={cid}>
+                        {c.label}
+                      </label>
+                      <input id={cid} className="a2-inp" value={String(r[c.key] ?? '')} maxLength={c.max} lang={c.lang} disabled={off} onChange={(e) => set(e.target.value)} data-testid={`${testId}-${f.path}-${c.key}`} />
+                    </div>
+                  );
                 return (
                   <div className="a2-fld" key={c.key}>
                     <label className="a2-lbl" htmlFor={cid}>

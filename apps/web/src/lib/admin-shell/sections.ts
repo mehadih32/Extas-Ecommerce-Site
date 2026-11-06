@@ -249,7 +249,15 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'tracking', pages: [{ href: '/admin/marketing/tracking', perm: 'ads.tracking.read', keys: ['adsTracking'] }] },
       // S13 · PR 254 (MKT-05): landing pages for ads — the list and the builder (`/admin/marketing/landing/<id>`, `new`);
       // PR 255: the templates and the parts library (`/admin/marketing/landing/templates`).
-      { id: 'landing', pages: [{ href: '/admin/marketing/landing', perm: 'marketing.landing.read', keys: ['marketingLanding', 'marketingLandingPage', 'marketingLandingTemplates'] }] },
+      // S12 · PR 246: the permanent seasonal pages (Eid, winter, Puja) — the list and the editor
+      // (`/admin/marketing/landing/seasonal/<id>`, `new`).
+      {
+        id: 'landing',
+        pages: [
+          { href: '/admin/marketing/landing', perm: 'marketing.landing.read', keys: ['marketingLanding', 'marketingLandingPage', 'marketingLandingTemplates'] },
+          { href: '/admin/marketing/landing/seasonal', perm: 'marketing.landing.read', keys: ['marketingSeasonal', 'marketingSeasonalPage'] },
+        ],
+      },
       // S13 · PR 273: referrals — the programme, friends' orders with their invite codes and the sharers' rewards.
       { id: 'referrals', pages: [{ href: '/admin/marketing/referrals', perm: 'marketing.campaigns.read', keys: ['marketingReferrals'] }] },
       // S13 · PR 278: YouTube — the channel, the videos with their products and tracked links, the orders they brought.

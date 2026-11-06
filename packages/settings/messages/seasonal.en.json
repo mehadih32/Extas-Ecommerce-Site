@@ -1,0 +1,8 @@
+{
+  "marketing": {
+    "seasonal": {
+      "label": "Seasonal pages",
+      "help": "Off as it ships. When on, the shop shows each seasonal page you made live in Marketing › Landing pages › Seasonal pages at its own link (/collections/<link>), for its occasion (Eid, winter, Puja or one you add): its words, the products of the seasonal collection you picked, the newest journal articles of the category you picked and, for the occasions you list, the Eid order-by line from Rules › Eid while that rule is on. The page is kept for good and used again each year: change its words and products, then make it live again. With “Keep the link when taken down” a page that was live once and is taken down still answers at its link and says it comes back for its occasion."
+    }
+  }
+}
