@@ -97,6 +97,12 @@
       "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-history-chips\"]", "[data-testid=\"acc-ocard\"]"]
     },
     {
+      "$comment": "Follow-up 301 (PR 150) — My orders with more than a full page (account.lists.orders + 1 older sample orders, /api/account/try-history): the first page with \"Older\", the second with \"Newer\", the chips at a full page.",
+      "paths": ["/account/orders", "/bn/account/orders", "/account/orders?page=2", "/bn/account/orders?page=2"],
+      "fill": "/api/account/try-history",
+      "expect": ["[data-testid=\"acc-history-pager\"]", "[data-testid=\"acc-history-chips\"]", "[data-testid=\"acc-ocard\"]"]
+    },
+    {
       "$comment": "S05 · PR 150 — \"What happened\" on the sample order's page, opened (TRY-131, the same fill): the order's life, oldest first.",
       "paths": ["/account/orders/TRY-131?life=1", "/bn/account/orders/TRY-131?life=1"],
       "fill": "/api/account/try",

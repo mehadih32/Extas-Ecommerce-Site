@@ -6,7 +6,8 @@ import { createTestDatabase, HAS_TEST_DB, type TestDatabase } from '@extas/auth/
 import { disconnectPrisma } from '@extas/db/client';
 import { seedSample } from '@extas/seed';
 import { registry, type Key, type Value } from '@extas/settings';
-import { TRY_ACCOUNT_PHONE, TRY_ORDER_NUMBER, trySignIn } from './account-try';
+import { orderHistory } from '@extas/accounts';
+import { TRY_ACCOUNT_PHONE, TRY_HISTORY_PREFIX, TRY_ORDER_NUMBER, tryHistoryOrders, trySignIn } from './account-try';
 
 describe.skipIf(!HAS_TEST_DB)('the sample sign-in for test pages on PostgreSQL (follow-up 179)', () => {
   let t: TestDatabase;
@@ -35,5 +36,18 @@ describe.skipIf(!HAS_TEST_DB)('the sample sign-in for test pages on PostgreSQL (
     expect(runs.map((r) => r.status)).toEqual(['fulfilled', 'fulfilled', 'fulfilled', 'fulfilled']);
     expect(await t.prisma.customer.count({ where: { storeId: S, phone: TRY_ACCOUNT_PHONE } })).toBe(1);
     expect(await t.prisma.order.count({ where: { storeId: S, number: TRY_ORDER_NUMBER } })).toBe(1);
+  });
+  it('follow-up 301: the history fill gives him one page more than a full one, once, so the pager is measured', async () => {
+    const a = { db: t.prisma, settings };
+    await trySignIn(a, { storeId: S }, { source: 'test' });
+    await Promise.all([tryHistoryOrders(a, S), tryHistoryOrders(a, S)]);
+    const perPage = registry['account.lists'].default.orders;
+    expect(await t.prisma.order.count({ where: { storeId: S, number: { startsWith: TRY_HISTORY_PREFIX } } })).toBe(perPage + 1);
+    const me = await t.prisma.customer.findUniqueOrThrow({ where: { storeId_phone: { storeId: S, phone: TRY_ACCOUNT_PHONE } }, select: { id: true } });
+    const h = await orderHistory({ db: t.prisma, settings } as never, { storeId: S, customerId: me.id });
+    expect(h.pages).toBeGreaterThan(1);
+    expect(h.cards).toHaveLength(perPage);
+    // the sample orders the other gate pages open stay the newest
+    expect(h.cards[0]?.number).toMatch(/^TRY-(131|65)$/);
   });
 });
