@@ -47,7 +47,7 @@ export default async function BuildPrPage({ params }: { params: Params }) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="bpr-page">
         <ShellState view={view} kind="denied" permission="build.read" />
       </div>
     );
@@ -65,7 +65,7 @@ export default async function BuildPrPage({ params }: { params: Params }) {
   );
   if (!data || !pr)
     return (
-      <div className="a2-z" data-testid="bpr-page">
+      <div className="a2-z lm-hb" data-lm-ready="" data-testid="bpr-page">
         <PageHead view={view} place={locateKey(KEY)} crumb={back} title={c('pr.metaTitle', { n: n || raw.slice(0, 8) })} />
         <section className="a2-card a2-mt12">
           <p className="a2-sm a2-mute" data-testid="bpr-none">
@@ -85,7 +85,7 @@ export default async function BuildPrPage({ params }: { params: Params }) {
   const someone = c('problems.row.someone');
 
   return (
-    <div className="a2-z" data-testid="bpr-page" data-pr={n} data-state={pr.state}>
+    <div className="a2-z lm-hb" data-lm-ready="" data-testid="bpr-page" data-pr={n} data-state={pr.state}>
       <PageHead view={view} place={locateKey(KEY)} crumb={back} title={c('pr.title', { n, title: pr.title })} />
       <SectionTabs view={view} current={KEY} />
 

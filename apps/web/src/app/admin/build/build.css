@@ -43,7 +43,7 @@
 .adm2 .bd-toc a .bd-dot { color: var(--warn); }
 .adm2 .bd-pick { display: none; }
 .adm2 .bd-doc { overflow-wrap: anywhere; }
-.adm2 .bd-doc mark { background: #FBE7A1; color: inherit; border-radius: 3px; padding: 0 1px; }
+.adm2 .bd-doc mark { background: var(--lm-warnbg); color: inherit; border-radius: 3px; padding: 0 1px; }
 .adm2 .bd-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
 .adm2 .bd-find { display: flex; gap: 8px; }
 .adm2 .bd-find .a2-inp { flex: 1; }

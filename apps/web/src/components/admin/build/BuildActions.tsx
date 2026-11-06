@@ -3,9 +3,12 @@
 // PR number unless the card gives it, what is wrong, where it was seen) and posts it to /api/admin/build/problems; a
 // reported problem's status (being fixed, fixed with how, closed with why, open again) is set the same way. The server
 // checks `build.report`, the PR number against the register and the note again; the page is read again after.
+// PR 648 (CN-036): a report or a status that went through speaks through the admin's one toast (showToast, no Undo: a
+// report is a record); a refusal stays written beside the button.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { errWords, post, type Words } from '@/components/admin/money/RefundActions';
+import { showToast } from '@/components/admin/lumen/Toast';
 
 const API = '/api/admin/build/problems';
 const fill = (s: string | undefined, vars: Record<string, string> = {}) => (s ?? '').replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? `{${k}}`);
@@ -40,7 +43,8 @@ export function ReportProblem({ w, pr, page, primary, testId }: { w: Words; pr?:
       setOpen(false);
       setNote('');
       if (!pr) setNum('');
-      setSaid({ text: fill(w['report.done'], { n }), bad: false });
+      setSaid(null);
+      showToast({ text: fill(w['report.done'], { n }) });
       return router.refresh();
     }
     setSaid({ text: errWords(w, a.error), bad: true });
@@ -107,7 +111,8 @@ export function ProblemStatus({ w, id, status, testId }: { w: Words; id: string;
     setBusy(false);
     if (!a.error) {
       setTo(null);
-      setSaid({ text: w['status.done'] ?? '', bad: false });
+      setSaid(null);
+      showToast({ text: w['status.done'] ?? '' });
       return router.refresh();
     }
     setSaid({ text: errWords(w, a.error), bad: true });
