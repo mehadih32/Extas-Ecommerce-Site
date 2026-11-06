@@ -345,6 +345,25 @@ export async function OrderPage({
                 </div>
               </div>
             ) : null}
+            {extras?.cancelNote ? (
+              // follow-up 314: why it was cancelled, in the cancel notice's own plain words; a duplicate names his order that goes ahead
+              <div className="ord-news warn mt16" role="status" data-testid="order-cancel-note">
+                <span className="ord-news-i">
+                  <Icon name="info" size={18} />
+                </span>
+                <div>
+                  <div className="bold small">{t('account.order.cancelWhy')}</div>
+                  <div className="xs text2" style={{ marginTop: 2 }}>
+                    {extras.cancelNote.reason}
+                  </div>
+                  {extras.cancelNote.kept ? (
+                    <a className="btn btn-sm btn-secondary mt8" href={hrefIn(c.lang, ROUTES.order(extras.cancelNote.kept.number))} data-testid="order-cancel-kept">
+                      {t('account.order.cancelKept', { number: extras.cancelNote.kept.number })}
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
             <div className="ord-meta">
               {r.shipment ? (
                 <>

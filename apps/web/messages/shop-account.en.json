@@ -323,7 +323,9 @@
       "promptText": "Log in with the mobile number you used for this order.",
       "notYours": "This order is not in your account",
       "notYoursText": "Log in with the mobile number used for order {number}.",
-      "back": "All my orders"
+      "back": "All my orders",
+      "cancelWhy": "Why it was cancelled",
+      "cancelKept": "Your order #{number} goes ahead"
     },
     "track": {
       "button": "Track your order",

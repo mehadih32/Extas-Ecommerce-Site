@@ -11,7 +11,7 @@
 //   rule allows it now (`orders.cancel.customer`; nothing drawn when it allows none, e.g. once the courier is booked).
 // A test server's browser that asked for the cards (POST /api/account/try-cards) reads the two switches as on. Without
 // a database, or when a read is slow or fails, that part is simply not drawn — the page never guesses.
-import { orderLifecycle, orderRefunds, type CustomerRefund, type LifeStep } from '@extas/accounts';
+import { orderCancelNote, orderLifecycle, orderRefunds, type CancelNote, type CustomerRefund, type LifeStep } from '@extas/accounts';
 import { customerCancelState, customerEditState, customerExchangeState, customerTwoSizeState, type CustomerEditState, type CustomerExchangeState, type CustomerRef, type CustomerTwoSizeState, type OrdersDeps } from '@extas/orders';
 import { settingsTimeoutMs, withTimeout } from '../settings';
 import { accountDeps, signedIn } from './account';
@@ -40,9 +40,11 @@ export interface OrderExtras {
   refunds: CustomerRefund[] | null;
   /** PR 186: the pieces he may still exchange and his exchanges on this order (null: off, a guest, or none of it). */
   exchange: CustomerExchangeState | null;
+  /** Follow-up 314: why his cancelled order was cancelled, and a duplicate's order that goes ahead (null: none). */
+  cancelNote: CancelNote | null;
 }
 
-const NONE: OrderExtras = { edit: null, cancel: null, twoSize: null, life: null, refunds: null, exchange: null };
+const NONE: OrderExtras = { edit: null, cancel: null, twoSize: null, life: null, refunds: null, exchange: null, cancelNote: null };
 
 /** States after which there is nothing to change or answer (the edit card is not drawn at all). */
 const ENDED = new Set(['CANCELLED', 'RETURNED']);
@@ -65,7 +67,7 @@ export async function orderExtras(c: Pick<ShopContext, 'storeId' | 'lang'>, numb
   if (!who.customerId && !who.visitorId) return NONE;
   const settings = trial ? cardsTrialSettings(deps.settings) : deps.settings;
   const od: OrdersDeps = { db: deps.db, settings, ...(deps.now ? { now: deps.now } : {}) };
-  const [edit, cancel, twoSize, life, refunds, exchange] = await Promise.all([
+  const [edit, cancel, twoSize, life, refunds, exchange, cancelNote] = await Promise.all([
     ENDED.has(status)
       ? null
       : part('edit card', async () => {
@@ -82,7 +84,8 @@ export async function orderExtras(c: Pick<ShopContext, 'storeId' | 'lang'>, numb
     opts.timeline ? part('timeline', () => orderLifecycle(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId, lang: c.lang === 'bn' ? 'bn' : 'en' })) : null,
     part('refunds', () => orderRefunds(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId })),
     who.customerId ? part('exchange part', () => customerExchangeState(od, { ...who, visitorId: null }, number)) : null,
+    status === 'CANCELLED' ? part('cancel note', () => orderCancelNote(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId, lang: c.lang === 'bn' ? 'bn' : 'en' })) : null,
   ]);
   const hasExchange = !!exchange && exchange.closed !== 'OFF' && (exchange.open || exchange.exchanges.length > 0);
-  return { edit, cancel, twoSize: twoSize?.open ? twoSize : null, life, refunds: refunds?.length ? refunds : null, exchange: hasExchange ? exchange : null };
+  return { edit, cancel, twoSize: twoSize?.open ? twoSize : null, life, refunds: refunds?.length ? refunds : null, exchange: hasExchange ? exchange : null, cancelNote };
 }

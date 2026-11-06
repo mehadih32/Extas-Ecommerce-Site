@@ -14,6 +14,8 @@
 //   see it: its steps and the timeline rows about him or his parcel, never the team's own (lifecycle.ts).
 // - Gate F-041 (PR 172 follow-up) the refunds of his own order as he may see them: amount, how it goes back and where it
 //   stands, never the team's notes (refunds.ts).
+// - Follow-up 314 (PR 546) why his cancelled order was cancelled, in the cancel notice's plain words, and for a
+//   duplicate his order that goes ahead (cancel-note.ts).
 export * from './context';
 export * from './identity';
 export * from './codes';
@@ -25,3 +27,4 @@ export * from './offers';
 export * from './lifecycle';
 export * from './history';
 export * from './refunds';
+export * from './cancel-note';
