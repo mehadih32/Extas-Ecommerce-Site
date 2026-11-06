@@ -137,9 +137,9 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Experiments on PostgreSQL (PR 83)', (
 
   it('counts each visitor once and a bag line only after he was counted; a winner only when sure; keep B writes it', async () => {
     const test = (await api('GET')).a.tests!.find((x) => x.name === 'Colour note on')!;
-    const cart = async (visitor: string, before: boolean) => {
+    const cart = async (visitor: string, before: boolean, raisedAt?: Date) => {
       const c = await t.prisma.cart.create({ data: { storeId: S, visitorId: visitor } });
-      await t.prisma.cartItem.create({ data: { storeId: S, cartId: c.id, variantId: randomUUID(), quantity: 1, unitPriceMinor: 100, ...(before ? { createdAt: new Date(Date.now() - 86_400_000) } : {}) } });
+      await t.prisma.cartItem.create({ data: { storeId: S, cartId: c.id, variantId: randomUUID(), quantity: 1, unitPriceMinor: 100, ...(before ? { createdAt: new Date(Date.now() - 86_400_000) } : {}), ...(raisedAt ? { raisedAt } : {}) } });
     };
     // 40 visitors in A (4 add to the bag), 40 in B (20 add, plus one whose bag line was before he was counted)
     const rows = [...Array.from({ length: 40 }, (_, i) => ({ v: `visitor-a-${i}-xxxxxxxxxx`, variant: 'a' })), ...Array.from({ length: 40 }, (_, i) => ({ v: `visitor-b-${i}-xxxxxxxxxx`, variant: 'b' }))];
@@ -147,10 +147,13 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Experiments on PostgreSQL (PR 83)', (
     for (let i = 0; i < 4; i++) await cart(`visitor-a-${i}-xxxxxxxxxx`, false);
     for (let i = 0; i < 20; i++) await cart(`visitor-b-${i}-xxxxxxxxxx`, false);
     await cart('visitor-b-39-xxxxxxxxxx', true);
+    // PR 83 follow-up (683): an older bag line whose quantity he raised after he was counted counts; one raised before does not
+    await cart('visitor-a-38-xxxxxxxxxx', true, new Date());
+    await cart('visitor-a-39-xxxxxxxxxx', true, new Date(Date.now() - 86_400_000));
     recordSeen(S, test.id, 'visitor-a-0-xxxxxxxxxx', 'a');
     await new Promise((r) => setTimeout(r, 200));
     const now = (await api('GET', { id: test.id })).a.test!;
-    expect(now.a).toEqual({ n: 40, c: 4 });
+    expect(now.a).toEqual({ n: 40, c: 5 });
     expect(now.bTally).toEqual({ n: 40, c: 20 });
     expect(now.verdict.enough).toBe(true);
     expect(now.verdict.confidence!).toBeGreaterThan(0.99);

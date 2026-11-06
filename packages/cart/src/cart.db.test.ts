@@ -110,6 +110,8 @@ describe.skipIf(!HAS_TEST_DB)('the bag on PostgreSQL (S04)', () => {
       expect(await addItem(deps(), { storeId: S, cartId, variantId: v.id })).toMatchObject({ added: false, reason: 'ALREADY' });
       overrides.set('bag.duplicateAdd', 'qty');
       expect(await addItem(deps(), { storeId: S, cartId, variantId: v.id })).toMatchObject({ added: true, lineId: first.lineId, quantity: 2 });
+      // PR 83 follow-up (683): the same item again makes the line grow (raisedAt)
+      expect((await t.prisma.cartItem.findUniqueOrThrow({ where: { id: first.lineId } })).raisedAt).toBeInstanceOf(Date);
       overrides.delete('bag.duplicateAdd');
       expect(await bagCount(t.prisma, S, cartId)).toBe(2);
       // The line keeps the price it was added at; the item is the store's own.
@@ -125,6 +127,11 @@ describe.skipIf(!HAS_TEST_DB)('the bag on PostgreSQL (S04)', () => {
       expect(await code(setQuantity(deps(), { storeId: S, cartId, lineId: add.lineId, quantity: 3 }))).toBe('TOO_MANY');
       overrides.delete('inventory.reservation.maxUnitsPerLine');
       expect(await setQuantity(deps(), { storeId: S, cartId, lineId: add.lineId, quantity: 2 })).toMatchObject({ quantity: 2 });
+      // PR 83 follow-up (683): a raised quantity marks the line as grown; a lowered one does not move the mark
+      const raised = (await t.prisma.cartItem.findUniqueOrThrow({ where: { id: add.lineId } })).raisedAt;
+      expect(raised).toBeInstanceOf(Date);
+      await setQuantity(deps(), { storeId: S, cartId, lineId: add.lineId, quantity: 1 });
+      expect((await t.prisma.cartItem.findUniqueOrThrow({ where: { id: add.lineId } })).raisedAt).toEqual(raised);
       const polo = await t.prisma.productVariant.findUniqueOrThrow({ where: { id: v.id }, select: { productId: true } });
       await t.prisma.product.update({ where: { id: polo.productId }, data: { status: 'DRAFT' } });
       expect(await code(addItem(deps(), { storeId: S, cartId, variantId: variant('essential-pique-polo', 'navy', 'L').id }))).toBe('NOT_FOR_SALE');

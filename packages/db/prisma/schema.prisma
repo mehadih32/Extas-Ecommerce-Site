@@ -2727,6 +2727,9 @@ model CartItem {
   source         String?
   /// PR 105 — taken out of the bag (archived, never deleted: "Undo" brings the same line back).
   removedAt      DateTime? @db.Timestamptz(3)
+  /// PR 83 follow-up (683): the last time the shopper made this line grow (the same item added again, a raised
+  /// quantity, back from "saved for later"); an A/B test's "added to the bag" counts it like a new line. Null: never.
+  raisedAt       DateTime? @db.Timestamptz(3)
   createdAt      DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
 

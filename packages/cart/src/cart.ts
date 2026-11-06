@@ -121,14 +121,15 @@ export async function addItem(deps: CartDeps, input: z.input<typeof addItemSchem
       if (guardMs > 0 && now.getTime() - same.updatedAt.getTime() < guardMs) return { added: false, reason: 'REPEAT', lineId: same.id, quantity: same.quantity };
       if (mode === 'block') return { added: false, reason: 'ALREADY', lineId: same.id, quantity: same.quantity };
       await checkStock(deps, tx, d.storeId, d.cartId, v, d.quantity);
-      const r = await tx.cartItem.update({ where: { id: same.id }, data: { quantity: same.quantity + d.quantity, updatedAt: now } });
+      // PR 83 follow-up (683): a line that grows is an "added to the bag" too (raisedAt)
+      const r = await tx.cartItem.update({ where: { id: same.id }, data: { quantity: same.quantity + d.quantity, updatedAt: now, raisedAt: now } });
       await touch(tx, deps, d.cartId);
       return { added: true, lineId: r.id, quantity: r.quantity };
     }
     await checkStock(deps, tx, d.storeId, d.cartId, v, d.quantity);
     if (same) {
       // The same item saved for later comes back into the bag instead of making a second line.
-      const r = await tx.cartItem.update({ where: { id: same.id }, data: { savedForLater: false, quantity: d.quantity, unitPriceMinor: v.priceMinor, updatedAt: now } });
+      const r = await tx.cartItem.update({ where: { id: same.id }, data: { savedForLater: false, quantity: d.quantity, unitPriceMinor: v.priceMinor, updatedAt: now, raisedAt: now } });
       await touch(tx, deps, d.cartId);
       return { added: true, lineId: r.id, quantity: r.quantity };
     }
@@ -151,7 +152,7 @@ export async function setQuantity(deps: CartDeps, input: z.input<typeof quantity
       const v = await saleVariant(tx, d.storeId, l.variantId);
       await checkStock(deps, tx, d.storeId, d.cartId, v, d.quantity, l.id);
     }
-    const r = await tx.cartItem.update({ where: { id: l.id }, data: { quantity: d.quantity } });
+    const r = await tx.cartItem.update({ where: { id: l.id }, data: { quantity: d.quantity, ...(d.quantity > l.quantity ? { raisedAt: nowOf(deps) } : {}) } });
     await touch(tx, deps, d.cartId);
     return { lineId: r.id, quantity: r.quantity };
   }, TX);
