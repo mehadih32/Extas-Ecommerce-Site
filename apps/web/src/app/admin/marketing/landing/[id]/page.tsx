@@ -52,7 +52,7 @@ export default async function LandingBuilderPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="landing-builder" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.landing.read" />
       </div>
     );
@@ -82,7 +82,7 @@ export default async function LandingBuilderPage(props: Props) {
   const words = { lp: (d as Record<string, Dict>).lp ?? {} } as Dict;
 
   return (
-    <div className="a2-z" data-testid="landing-builder">
+    <div className="a2-z" data-testid="landing-builder" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={page ? page.titleEn : s('newTitle')} sub={page ? s('b.stats', { orders: page.orders, delivered: page.delivered }) : undefined} />
       <SectionTabs view={view} current={KEY} />
       <LandingBuilder words={words} page={start} products={choices.products} campaigns={choices.campaigns} origin={domain?.origin ?? ''} canWrite={canWrite} listHref={LIST} templates={templates} templatesHref={`${LIST}/templates`} />

@@ -6,6 +6,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface AlertTexts {
   enabled: string;
@@ -35,7 +36,7 @@ function useSend(url: string, x: AlertTexts) {
       setSaid({ text: x.err[code] ?? x.err.other ?? code, bad: true });
       return false;
     }
-    setSaid({ text: x.done, bad: false });
+    showToast({ text: x.done, tone: 'ok' });
     router.refresh();
     return true;
   }

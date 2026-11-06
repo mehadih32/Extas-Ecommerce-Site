@@ -9,7 +9,7 @@ import type { NoticeView } from '@extas/rules';
 import { checkNotice, noticeInputSchema, render, ruleLookup, type NoticeLimits, type Rule } from '@extas/rules/pure';
 import { call } from '../api';
 import { Icon } from '../Icon';
-import { useToast } from '../products/useToast';
+import { say, sayBad } from '../products/useToast';
 import { t, type Dict } from '@/lib/i18n';
 import { RULES_API } from './RuleSheets';
 import { langCtx, nameIn, othersMap, rulesRefusal, type Lang, type PlaceOption, type RulesEnv } from './model';
@@ -57,7 +57,6 @@ export function NoticesScreen(props: NoticesScreenProps) {
   const [forms, setForms] = useState<Record<string, NoticeForm>>({});
   const [archivedOn, setArchivedOn] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [toast, say] = useToast();
 
   const formFor = (id: string): NoticeForm => {
     if (forms[id]) return forms[id];
@@ -68,7 +67,7 @@ export function NoticesScreen(props: NoticesScreenProps) {
   const put = (n: NoticeView) => setList((l) => (l.some((x) => x.id === n.id) ? l.map((x) => (x.id === n.id ? n : x)) : [n, ...l]));
   const fail = (a: { data: { error?: string; details?: string[] } }) => {
     const codes = (a.data.details ?? []).map((c) => t(d, `rules.notices.issues.${c}`)).filter((s) => !s.startsWith('rules.'));
-    say(a.data.error === 'NOTICE_INVALID' && codes.length ? codes.join(' ') : rulesRefusal(d, a.data.error, a.data.details ?? []));
+    sayBad(a.data.error === 'NOTICE_INVALID' && codes.length ? codes.join(' ') : rulesRefusal(d, a.data.error, a.data.details ?? []));
   };
 
   const live = (text: string, ruleId: string) => {
@@ -371,9 +370,6 @@ export function NoticesScreen(props: NoticesScreenProps) {
           {shown.length ? shown.map(card) : <div className="ad-card rl-empty">{tt('empty')}</div>}
         </div>
         <div className="rl-desk">{selInView ? editor(selInView, 'd') : <div className="ad-card rl-empty">{tt('pick')}</div>}</div>
-      </div>
-      <div className="ad-toast-slot" aria-live="polite" role="status">
-        {toast ? <div className="ad-toast">{toast}</div> : null}
       </div>
     </div>
   );

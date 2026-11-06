@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface ReferralRewardTexts {
   give: string;
@@ -29,7 +30,7 @@ export function ReferralReward({ url, id, texts: x }: { url: string; id: string;
       const code = a.status === 0 ? 'network' : String(a.data.error ?? 'other');
       return setOut({ text: x.err[code] ?? x.err.other ?? code, bad: true });
     }
-    setOut({ text: x.given, bad: false });
+    showToast({ text: x.given, tone: 'ok' });
     router.refresh();
   }
   return (

@@ -30,7 +30,7 @@ export default async function RulesPage() {
   const access = await pageAccess('rules.read', deps, MOTHER_STORE_ID);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
-  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} />;
+  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} ready />;
 
   const a = rulesAccess(access);
   const [views, conflicts, templates, env, places, scopes, notices, aiEnabled, simDays] = await Promise.all([
@@ -48,7 +48,7 @@ export default async function RulesPage() {
   const noticeNames = Object.fromEntries(notices.map((n) => [n.id, (view.lang === 'bn' ? n.nameBn : null) ?? n.nameEn ?? n.key ?? n.id]));
 
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <RulesScreen
         dict={view.dict}
         lang={view.lang}

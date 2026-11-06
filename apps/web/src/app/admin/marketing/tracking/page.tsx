@@ -58,7 +58,7 @@ export default async function TrackingPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="tracking-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="ads.tracking.read" />
       </div>
     );
@@ -127,7 +127,7 @@ export default async function TrackingPage(props: Props) {
   ];
 
   return (
-    <div className="a2-z" data-testid="tracking-page">
+    <div className="a2-z" data-testid="tracking-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
 

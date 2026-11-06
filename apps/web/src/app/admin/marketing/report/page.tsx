@@ -53,7 +53,7 @@ export default async function MarketingReportPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="mr-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.campaigns.read" />
       </div>
     );
@@ -88,7 +88,7 @@ export default async function MarketingReportPage(props: Props) {
   const r = o.report;
 
   return (
-    <div className="a2-z" data-testid="mr-page" data-from={q.from} data-to={q.to}>
+    <div className="a2-z" data-testid="mr-page" data-lm-ready="" data-from={q.from} data-to={q.to}>
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note a2-mt12" role="note">

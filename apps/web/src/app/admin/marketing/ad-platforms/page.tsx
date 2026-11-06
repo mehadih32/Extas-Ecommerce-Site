@@ -75,7 +75,7 @@ export default async function AdPlatformsPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="adp-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.campaigns.read" />
       </div>
     );
@@ -214,7 +214,7 @@ export default async function AdPlatformsPage() {
   const pill = (state: string) => (state === 'over' || state === 'noOrders' ? 'bad' : state === 'unknown' ? 'warn' : 'g');
 
   return (
-    <div className="a2-z" data-testid="adp-page">
+    <div className="a2-z" data-testid="adp-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note" role="note">

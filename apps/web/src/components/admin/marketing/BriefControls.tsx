@@ -7,6 +7,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 type Out = { text: string; bad: boolean } | null;
 const errText = (a: { status: number; data: Record<string, unknown> }, err: Record<string, string>) => {
@@ -46,7 +47,7 @@ export function BriefNew({ url, uid, products, campaigns, fixed, texts: x }: { u
     const a = await call('POST', url, body);
     setBusy(false);
     if (a.status !== 200) return setOut({ text: errText(a, x.err), bad: true });
-    setOut({ text: x.wrote, bad: false });
+    showToast({ text: x.wrote, tone: 'ok' });
     router.refresh();
   }
   return (
@@ -112,7 +113,7 @@ export function BriefEdit({ url, id, max, hooks, show, texts: x }: { url: string
     const a = await call('POST', url, { action: 'edit', id, hooks: { bn: v.hookBn, en: v.hookEn }, show: { bn: v.showBn, en: v.showEn } });
     setBusy(false);
     if (a.status !== 200) return setOut({ text: errText(a, x.err), bad: true });
-    setOut({ text: x.saved, bad: false });
+    showToast({ text: x.saved, tone: 'ok' });
     router.refresh();
   }
   const field = (k: keyof typeof v, rows: number) => (
@@ -167,7 +168,7 @@ export function BriefStep({ url, id, texts: x }: { url: string; id: string; text
     setAsk(null);
     if (a.status !== 200) return setOut({ text: errText(a, x.err), bad: true });
     const st = String(a.data.status ?? '');
-    setOut({ text: x.said[st] ?? st, bad: false });
+    showToast({ text: x.said[st] ?? st, tone: 'ok' });
     router.refresh();
   }
   const pick = (k: 'send' | 'setAside') => (setOut(null), setAsk(k));

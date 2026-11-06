@@ -58,7 +58,7 @@ export default async function AudiencePage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="audience-editor" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.audiences.read" />
       </div>
     );
@@ -104,7 +104,7 @@ export default async function AudiencePage(props: Props) {
     const r = refused.value;
     const whenWords = r.days ? s('lastDays', { days: r.days }) : s('anyTime');
     return (
-      <div className="a2-z" data-testid="audience-editor">
+      <div className="a2-z" data-testid="audience-editor" data-lm-ready="">
         <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={s('excl.name')} sub={`${s('kind.EXCLUSION')} · ${r.on ? s('state.ACTIVE') : s('excl.off')}`} />
         <SectionTabs view={view} current={KEY} />
         <section className="a2-card a2-sc a2-mt12" aria-labelledby="au-excl-h" data-testid="au-excl">
@@ -139,7 +139,7 @@ export default async function AudiencePage(props: Props) {
   const grades = choices.grades.map((g) => ({ id: g.id, name: (view.lang === 'bn' && g.nameBn) || g.nameEn }));
 
   return (
-    <div className="a2-z" data-testid="audience-editor">
+    <div className="a2-z" data-testid="audience-editor" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={a ? a.name : s(kind === 'LOOKALIKE' ? 'lal.newTitle' : 'newTitle')} sub={a ? `${s(`kind.${kind}`)} · ${s(`state.${a.state}`)}` : undefined} />
       <SectionTabs view={view} current={KEY} />
       <AudienceBuilder words={words} audience={start} sizes={choices.sizes} grades={grades} canWrite={canWrite} listHref={LIST} />

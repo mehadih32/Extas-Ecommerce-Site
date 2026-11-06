@@ -53,7 +53,7 @@ export default async function CampaignsPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="campaigns-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.campaigns.read" />
       </div>
     );
@@ -77,7 +77,7 @@ export default async function CampaignsPage(props: Props) {
   const pill = (st: string) => (st === 'RUNNING' ? ' ok' : st === 'PAUSED' ? ' warn' : '');
 
   return (
-    <div className="a2-z" data-testid="campaigns-page">
+    <div className="a2-z" data-testid="campaigns-page" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

@@ -41,14 +41,14 @@ export default async function EidPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="eid-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="rules.read" />
       </div>
     );
   const a = rulesAccess(access);
   const [screen, ctx] = await Promise.all([rl.getEidScreen(a.deps, a.who), rl.textContext(a.deps, a.storeId)]);
   return (
-    <div className="a2-z" data-testid="eid-page">
+    <div className="a2-z" data-testid="eid-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'eta.eid.title')} sub={t(d, 'eta.eid.sub')} />
       <SectionTabs view={view} current={KEY} />
       <EidScreen d={d} lang={view.lang} timeZone={ctx.timeZone} currency={ctx.currency} data={screen} />
