@@ -104,7 +104,7 @@ export default async function HandbackPage({ searchParams }: { searchParams: Sea
   );
 
   return (
-    <div className="a2-z" data-testid="handback-page" data-model={desk.model}>
+    <div className="a2-z" data-testid="handback-page" data-model={desk.model} data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

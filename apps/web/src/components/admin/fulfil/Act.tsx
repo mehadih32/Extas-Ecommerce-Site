@@ -2,10 +2,12 @@
 // S08 · PR 554, 179–181 — the small client parts of the courier and fulfilment pages: a button that sends one command to
 // the admin API and reloads the page's data (with an optional question first and an optional note field), a form that
 // adds a courier account, and the courier-place picker of a courier's page. Every refusal is shown in words from the
-// page's messages (`ful.err.<code>`), never the server's own wording.
+// page's messages (`ful.err.<code>`), never the server's own wording. PR 633 (CN-036): the words after a command worked
+// are the admin's one toast (showToast, read out by screen readers); a refusal stays beside its button.
 import { useRouter } from 'next/navigation';
 import { useId, useState, type ReactNode } from 'react';
 import { call } from '@/components/admin/api';
+import { showToast } from '@/components/admin/lumen/Toast';
 import { fulError } from '@/lib/admin-fulfil/words';
 import { t, type Dict } from '@/lib/i18n';
 
@@ -57,7 +59,7 @@ export function Act({ dict, url, method = 'POST', body, label, busyLabel, ask, n
     setOpen(false);
     setText('');
     const words = done?.(a.data) ?? null;
-    if (words) setMsg({ ok: true, text: words });
+    if (words) showToast({ text: words, tone: 'ok' });
     const href = openAfter?.(a.data) ?? null;
     if (href) window.open(href, '_blank', 'noopener');
     router.refresh();

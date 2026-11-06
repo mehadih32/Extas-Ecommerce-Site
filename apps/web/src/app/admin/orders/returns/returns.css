@@ -1,12 +1,12 @@
 /* S08 · PR 185 — the Returns & exchanges board (demo V12.2 r12-zzzzz-adm2.css a2-board / a2-col / a2-colh / a2-bc, with
    the demo's tablet and phone widths: four 260px columns, then four 82vw columns that snap one at a time). */
 .adm2 .a2-board{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:14px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px}
-.adm2 .a2-col{background:#EFECE4;border-radius:12px;padding:10px;min-width:0}
+.adm2 .a2-col{background:var(--sf2);border-radius:12px;padding:10px;min-width:0}
 .adm2 .a2-colh{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 10px;font-size:13px;font-weight:650;color:var(--ink2)}
 .adm2 .a2-bc{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:12px;box-shadow:var(--sh);display:block;width:100%;text-align:left;color:inherit;text-decoration:none}
 .adm2 .a2-bc+.a2-bc{margin-top:8px}
-.adm2 .a2-bc:hover{border-color:#D3CBBB}
-.adm2 .a2-bc.on{border-color:var(--g6);box-shadow:0 0 0 2px rgba(45,106,93,.15)}
+.adm2 .a2-bc:hover{border-color:var(--faint)}
+.adm2 .a2-bc.on{border-color:var(--g6);box-shadow:0 0 0 2px var(--g1)}
 .adm2 .rt-nowrap{flex-wrap:nowrap}
 .adm2 .rt-empty{padding:6px}
 .adm2 .rt-ml{margin-left:6px}
@@ -23,7 +23,7 @@
   .adm2 .rt-form{grid-template-columns:minmax(0,1fr)}
 }
 /* PR 187 — Receive & QC: one card per piece, the two outcomes side by side across the card. */
-.adm2 .rt-piece{background:#FDFCFA}
+.adm2 .rt-piece{background:var(--sf2)}
 /* the crumb back to the board: the arrow beside its words on every width */
 .adm2 .rt-crumb{display:inline-flex;align-items:center;gap:4px}
 .adm2 .rt-seg{display:flex;width:100%}

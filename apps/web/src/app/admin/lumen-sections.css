@@ -158,10 +158,11 @@
 @media (max-width: 759px), (pointer: coarse) {
   [data-lm-look] [data-lm-ready] :is(.a2-btn, .a2-view, .a2-tab, .a2-inp, .a2-sel) { min-height: var(--lm-tap); }
   [data-lm-look] [data-lm-ready] :is(.a2-inp, .a2-sel, .a2-ta) { font-size: 16px; }
-  [data-lm-look] [data-lm-ready] :is(.lm-back, .dg-link) { display: inline-flex; align-items: center; gap: 6px; min-height: var(--lm-tap); }
+  [data-lm-look] [data-lm-ready] :is(.lm-back, .dg-link, .rt-crumb) { display: inline-flex; align-items: center; gap: 6px; min-height: var(--lm-tap); }
   /* an order line with its 14 px tag wraps under the name on a small phone instead of pushing the page wide */
   [data-lm-look] [data-lm-ready] .a2-prow { flex-wrap: wrap; }
   [data-lm-look] [data-lm-ready] .a2-prt { flex-basis: 50%; }
+  [data-lm-look] [data-lm-ready] .a2-prt b { white-space: normal; overflow-wrap: anywhere; }
 }
 /* the shell's smaller pieces on a ready page: Lumen's 14 px minimum (counts, card hints, figures' notes, order lines,
    the names under the order numbers, the tab links) and the links in the accent ink that keeps AA in dark too */
@@ -190,3 +191,8 @@
 [data-lm-look] [data-lm-ready] .a2-qi.on { background: var(--lm-acbg); box-shadow: inset 0 0 0 2px var(--lm-ac-ink); }
 [data-lm-look] [data-lm-ready] .a2-qi b { font-size: var(--lm-fs-card); font-weight: 700; color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] .a2-qi span { font-size: var(--lm-fs-card); color: var(--lm-ink2); }
+/* Orders part 2 (PR 633): the returns board's column heads and the QC check lines at Lumen's 14 px */
+[data-lm-look] [data-lm-ready] :is(.a2-colh, .rt-check, .rt-crumb) { font-size: var(--lm-fs-card); }
+/* the invoice preview is paper: a light island in dark mode too, its words in the island's own ink */
+[data-lm-look] [data-lm-ready] .inv-preview { color: var(--lm-ink); }
+[data-lm-look] [data-lm-ready] .inv-preview .a2-mute { color: var(--lm-ink2); }

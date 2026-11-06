@@ -174,7 +174,7 @@ export default async function PackPage({ searchParams }: Props) {
   const shut = !!order?.blocked && order.blocked !== 'WEIGHT_REQUIRED' && order.blocked !== 'WEIGHT_GAP';
 
   return (
-    <div className="a2-z" data-testid="pack-page">
+    <div className="a2-z" data-testid="pack-page" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey('packingPack')}

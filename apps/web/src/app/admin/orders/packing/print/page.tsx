@@ -151,7 +151,7 @@ export default async function PrintRunPage() {
   ];
 
   return (
-    <div className="a2-z" data-testid="print-run">
+    <div className="a2-z" data-testid="print-run" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey('packingPrint')}

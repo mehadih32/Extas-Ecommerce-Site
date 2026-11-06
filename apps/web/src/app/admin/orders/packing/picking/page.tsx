@@ -110,7 +110,7 @@ export default async function PickingPage({ searchParams }: { searchParams: Sear
   ];
 
   return (
-    <div className="a2-z" data-testid="picking-page">
+    <div className="a2-z" data-testid="picking-page" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey('packingPicking')}

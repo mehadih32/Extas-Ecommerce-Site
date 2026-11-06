@@ -95,7 +95,7 @@ export default async function ReturnsQcPage({ searchParams }: { searchParams: Se
   const tone = (s: string | null) => (s === 'RESTOCKED' ? 'ok' : s === 'ERP_FAILED' || s === 'LOSS_RECORDED' ? 'bad' : 'warn');
 
   return (
-    <div className="a2-z" data-testid="returns-qc">
+    <div className="a2-z" data-testid="returns-qc" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

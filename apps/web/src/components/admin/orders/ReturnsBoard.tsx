@@ -486,7 +486,7 @@ function OptionFacts({ view, o, m }: { view: AdminView; o: ExchangeChoices['opti
 
 export function ReturnsBoard({ view, data, head, tabs }: { view: AdminView; data: ReturnsData; head: React.ReactNode; tabs: React.ReactNode }) {
   return (
-    <div className="a2-z" data-testid="orders-returns">
+    <div className="a2-z" data-testid="orders-returns" data-lm-ready="">
       {head}
       {tabs}
       {data.chosen ? (
