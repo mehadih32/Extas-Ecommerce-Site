@@ -7,6 +7,8 @@
 // `seo.indexing` (off as shipped) decides whether search engines may list it.
 // S12 · PR 592: `journalAds` — a journal page's house ads (`blog.houseAds`, off as shipped: none), with the search
 // sites' match words the popup's search guard reads.
+// S12 · PR 592 follow-up: `journalLinks` — which browsing parts are on (tags, author and reviewer pages, search, RSS;
+// each off as shipped); `journalBrowseFoot` — the popular tags and the people for "More ways to browse".
 import { cache } from 'react';
 import { getPrisma } from '@extas/db/client';
 import { settingsResolver } from '@/lib/settings';
@@ -15,6 +17,7 @@ import { readPageSettings, type ShopContext } from '@/lib/shop/context';
 import { pageAds, type ShopAd } from './house-ads';
 import type { HouseAdSlot } from './house-ads-model';
 import { liveCategories, liveJournal, livePost, liveRelated, liveTwinSlug, switchTarget, type LivePost } from './journal';
+import { livePeople, popularTags } from './browse';
 
 export const journalSettings = async (storeId: number) => (await readPageSettings(['blog.journal'] as const, storeId))['blog.journal'];
 
@@ -90,3 +93,21 @@ export async function journalAds(c: ShopContext, on: { post?: Pick<LivePost, 'id
 
 /** Follow-up 659: the language switch's landing — the other language's article at this link and its live twin here. */
 export const journalSwitchTarget = (c: ShopContext, slug: string) => switchTarget(getPrisma(), c.storeId, c.lang, slug);
+
+/** PR 592 follow-up — which of the journal's browsing parts are on (`blog.journal`; each off as shipped). */
+export function journalLinks(s: { tags: boolean; authorPages: boolean; search: boolean; rss: boolean }) {
+  return { tags: s.tags, people: s.authorPages, search: s.search, rss: s.rss };
+}
+
+/** How many tags "More ways to browse" shows at most. */
+const BROWSE_TAGS = 12; // hardcode-ok: a list length, not a business number
+
+/** PR 592 follow-up — "More ways to browse": the popular tags and the people (only what is on; never fails the page). */
+export async function journalBrowseFoot(c: ShopContext, links: ReturnType<typeof journalLinks>) {
+  const db = getPrisma();
+  const [tags, people] = await Promise.all([
+    links.tags ? popularTags(db, c.storeId, c.lang, BROWSE_TAGS).catch(() => []) : Promise.resolve([]),
+    links.people ? livePeople(db, c.storeId, c.lang).catch(() => []) : Promise.resolve([]),
+  ]);
+  return { tags, people };
+}

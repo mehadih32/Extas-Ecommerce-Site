@@ -33,6 +33,11 @@
 //          orders). Off as it ships: with `count` on, an article page counts each browser once a day by where it came
 //          from, and the shop's own read cookie (article ids and times only) lets an order credit the articles read in the
 //          `windowDays` before it — the last one read (`credit: 'last'`, totals never counted twice) or every one.
+//   v257 · PR 592 follow-up (lane C) `blog.journal` — the journal as a full section (C11.5): `tags` (an article's tags
+//          and a page per tag), `authorPages` (a page per author and expert reviewer, linked from the byline),
+//          `search` (the journal's own search box and results page, never listed by search engines) and `rss` (the
+//          journal's RSS feed at /journal/rss.xml and /bn/journal/rss.xml, the newest `rssItems` articles). Each is off
+//          as it ships, and a value saved before they existed reads them off.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -40,9 +45,10 @@ const V242 = 223;
 const V244 = 224;
 const V528 = 225;
 const V243 = 226;
-const V249 = 229;
+// PR 249 changed `blog.journal` at v229 (now v257, below)
 const V245 = 227;
 const V250 = 233;
+const V592F = 257;
 
 const wpm = z.int().min(60).max(400);
 const note = z.string().trim().max(200);
@@ -67,6 +73,16 @@ export const blogJournalSchema = z
     reviewByAnother: z.boolean(),
     /** The honest line on an AI author's byline and page; empty = the shop's own words. */
     aiNote: z.object({ en: note, bn: note }).strict(),
+    /** PR 592 follow-up (registry v257): an article's tags show, each with its own page (off as shipped). */
+    tags: z.boolean().default(false),
+    /** PR 592 follow-up: each author and expert reviewer has a page, linked from the byline (off as shipped). */
+    authorPages: z.boolean().default(false),
+    /** PR 592 follow-up: the journal's own search box and results page (off as shipped). */
+    search: z.boolean().default(false),
+    /** PR 592 follow-up: the RSS feed of the newest articles (off as shipped). */
+    rss: z.boolean().default(false),
+    /** PR 592 follow-up: how many of the newest articles the RSS feed carries. */
+    rssItems: z.int().min(5).max(100).default(20),
   })
   .strict();
 export type BlogJournalSettings = z.output<typeof blogJournalSchema>;
@@ -75,7 +91,7 @@ export const journalSettings = {
   'blog.journal': setting({
     scope: 'store',
     schema: blogJournalSchema,
-    default: { on: false, perPage: 12, wordsPerMinuteEn: 200, wordsPerMinuteBn: 150, minMinutes: 2, relatedProducts: 4, relatedArticles: 0, reviewByAnother: false, aiNote: { en: '', bn: '' } },
+    default: { on: false, perPage: 12, wordsPerMinuteEn: 200, wordsPerMinuteBn: 150, minMinutes: 2, relatedProducts: 4, relatedArticles: 0, reviewByAnother: false, aiNote: { en: '', bn: '' }, tags: false, authorPages: false, search: false, rss: false, rssItems: 20 },
     valueType: 'JSON',
     group: 'blog',
     labelKey: 'blog.journal.label',
@@ -83,8 +99,8 @@ export const journalSettings = {
     isOwnerData: false,
     isPublic: false,
     sortOrder: 10,
-    // PR 239 shipped it at v222; PR 249 added relatedArticles (v229)
-    version: V249,
+    // PR 239 shipped it at v222; PR 249 added relatedArticles (v229); the PR 592 follow-up tags, author pages, search and RSS (v257)
+    version: V592F,
   }),
 };
 

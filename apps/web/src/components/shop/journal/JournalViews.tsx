@@ -7,6 +7,11 @@
 // S12 · PR 592: house ads (`blog.houseAds`, off as shipped: none) — on the list at the top (the journal's own, or a
 // topic's) and after card N; in an article after paragraph N, at its end, beside it on a wide screen, and the popup and
 // slim bar (HouseAdFloat). Every place is empty unless the owner put a running ad there.
+// S12 · PR 592 follow-up (demo 73-blog.js bfTag, bfAuthorPage, bfSearchPage, bfBrowse) — the list also draws a tag's
+// page, a search's results and a person's articles (`heading`); the search box under the title (`blog.journal.search`);
+// "More ways to browse" at the foot of the journal's first page (popular tags, the authors and reviewers, the RSS feed);
+// an article's tags (`blog.journal.tags`) and its expert reviewer, the names linked to their pages while
+// `blog.journal.authorPages` is on.
 import type { ImageSource } from '@extas/media/delivery';
 import { Fragment, type ReactNode } from 'react';
 import { ArticleBody } from '@/components/journal/ArticleBody';
@@ -43,16 +48,50 @@ function Crumbs({ c, items }: { c: ShopContext; items: { label: string; href?: s
   );
 }
 
-function Meta({ c, p, aiNote }: { c: ShopContext; p: LivePost; aiNote?: { en: string; bn: string } }) {
+/** Which of the journal's browsing parts are on (each off as shipped). */
+export interface JournalLinks {
+  tags: boolean;
+  people: boolean;
+  search: boolean;
+  rss: boolean;
+}
+const NO_LINKS: JournalLinks = { tags: false, people: false, search: false, rss: false };
+
+/** A person's name, linked to their page while author pages are on. */
+function PersonName({ c, links, person }: { c: ShopContext; links: JournalLinks; person: { slug: string; displayName: string } }) {
+  return links.people ? (
+    <a className="jn-who" href={hrefIn(c.lang, ROUTES.journalAuthor(person.slug))}>
+      {person.displayName}
+    </a>
+  ) : (
+    <>{person.displayName}</>
+  );
+}
+
+function Meta({ c, p, aiNote, links = NO_LINKS }: { c: ShopContext; p: LivePost; aiNote?: { en: string; bn: string }; links?: JournalLinks }) {
   const t = c.t;
   const b = byline(p.author, c.lang, aiNote ?? { en: '', bn: '' }, t('journal.aiNote', { shop: c.storeName }));
+  const [before, after] = t('journal.by', { name: '\u0001' }).split('\u0001');
   return (
     <div className="jn-meta small text2">
-      {b.name ? <span data-testid="jn-by">{t('journal.by', { name: b.name })}</span> : null}
+      {b.name && p.author ? (
+        <span data-testid="jn-by">
+          {before}
+          <PersonName c={c} links={links} person={p.author} />
+          {after}
+        </span>
+      ) : null}
       {b.ai ? <span className="jn-pill">{t('journal.aiPill')}</span> : null}
       <span>{t('journal.readMin', { n: c.num(p.readingMinutes) })}</span>
       {p.publishedAt ? <span>{t('journal.published', { date: dateText(c, p.publishedAt) })}</span> : null}
       {p.contentUpdatedAt ? <span>{t('journal.updated', { date: dateText(c, p.contentUpdatedAt) })}</span> : null}
+      {aiNote && p.reviewer ? (
+        <span data-testid="jn-reviewer">
+          {t('journal.reviewedBy', { name: '\u0001' }).split('\u0001')[0]}
+          <PersonName c={c} links={links} person={p.reviewer} />
+          {t('journal.reviewedBy', { name: '\u0001' }).split('\u0001')[1]}
+        </span>
+      ) : null}
       {aiNote && b.note ? (
         <p className="jn-honest" data-testid="jn-honest">
           {b.note}
@@ -63,20 +102,137 @@ function Meta({ c, p, aiNote }: { c: ShopContext; p: LivePost; aiNote?: { en: st
   );
 }
 
-export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: number; page: number; pages: number; topics: Topic[]; topic: Topic | null; ads?: readonly ShopAd[] }) {
+/** PR 592 follow-up: the journal's own search box (a plain form: it works without JavaScript). */
+export function JournalSearchBox({ c, q }: { c: ShopContext; q: string }) {
+  const t = c.t;
+  return (
+    <form className="jn-search" role="search" action={hrefIn(c.lang, ROUTES.journalSearch)} method="get" data-testid="jn-search">
+      <label className="sr" htmlFor="jn-q">
+        {t('journal.search.label')}
+      </label>
+      <input id="jn-q" name="q" type="search" className="input" defaultValue={q} placeholder={t('journal.search.ph')} maxLength={80} autoComplete="off" enterKeyHint="search" />
+      <button type="submit" className="btn btn-primary">
+        {t('journal.search.go')}
+      </button>
+    </form>
+  );
+}
+
+/** PR 592 follow-up: "More ways to browse" — popular tags, the authors and reviewers, the RSS feed (only the parts that are on). */
+export function JournalBrowse({ c, links, tags, people }: { c: ShopContext; links: JournalLinks; tags: readonly { slug: string; name: string }[]; people: readonly { slug: string; displayName: string; isAiAuthor: boolean }[] }) {
+  const t = c.t;
+  const showTags = links.tags && tags.length > 0;
+  const showPeople = links.people && people.length > 0;
+  if (!showTags && !showPeople && !links.rss) return null;
+  return (
+    <section className="jn-browse" aria-labelledby="jn-browse-h" data-testid="jn-browse">
+      <h2 className="h3" id="jn-browse-h">
+        {t('journal.browse')}
+      </h2>
+      <div className="jn-browse-g">
+        {showTags ? (
+          <div>
+            <h3 className="small jn-browse-t">{t('journal.popularTags')}</h3>
+            <JournalTags c={c} tags={tags} />
+          </div>
+        ) : null}
+        {showPeople ? (
+          <div>
+            <h3 className="small jn-browse-t">{t('journal.people')}</h3>
+            <ul className="jn-rows">
+              {people.map((x) => (
+                <li key={x.slug}>
+                  <a href={hrefIn(c.lang, ROUTES.journalAuthor(x.slug))}>
+                    <span>{x.displayName}</span>
+                    {x.isAiAuthor ? <span className="jn-pill">{t('journal.aiPill')}</span> : null}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {links.rss ? (
+          <div>
+            <h3 className="small jn-browse-t">{t('journal.rss')}</h3>
+            <ul className="jn-rows">
+              <li>
+                <a href={hrefIn(c.lang, ROUTES.journalRss)} type="application/rss+xml" data-testid="jn-rss">
+                  <span>{t('journal.rssLink')}</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+/** PR 592 follow-up: a row of tags, each linked to its page. */
+function JournalTags({ c, tags }: { c: ShopContext; tags: readonly { slug: string; name: string }[] }) {
+  return (
+    <ul className="jn-tags" aria-label={c.t('journal.tags')}>
+      {tags.map((x) => (
+        <li key={x.slug}>
+          <a className="jn-tag" href={hrefIn(c.lang, ROUTES.journalTag(x.slug))}>
+            #{x.name}
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** PR 592 follow-up: the page the list draws when it is not the journal's own or a topic's. */
+export interface ListHeading {
+  title: string;
+  intro: string | null;
+  /** The page's address without /bn (the pager keeps it, with `query`). */
+  base: string;
+  query?: Record<string, string>;
+  testId: string;
+  /** Under the count line: the person's own header, the search's result line … */
+  lead?: ReactNode;
+  /** The topic chips show (the journal's tag and search pages); a person's page has none. */
+  chips?: boolean;
+  /** Said when nothing is found (else the journal's own empty card). */
+  empty?: ReactNode;
+}
+
+export function JournalList(p: {
+  c: ShopContext;
+  posts: LivePost[];
+  total: number;
+  page: number;
+  pages: number;
+  topics: Topic[];
+  topic: Topic | null;
+  ads?: readonly ShopAd[];
+  heading?: ListHeading;
+  links?: JournalLinks;
+  q?: string;
+  foot?: ReactNode;
+}) {
   const ads = p.ads ?? [];
   const { c } = p;
   const t = c.t;
-  const mains = p.topics.filter((x) => !x.parentId);
-  const base = p.topic ? ROUTES.journalTopic(p.topic.slug) : ROUTES.journal;
-  const pageHref = (n: number) => hrefIn(c.lang, n > 1 ? `${base}?page=${n}` : base);
-  const title = p.topic ? topicName(c, p.topic) : t('journal.title');
-  const intro = p.topic ? (c.lang === 'bn' && p.topic.introBn ? p.topic.introBn : p.topic.introEn) : t('journal.dek');
+  const links = p.links ?? NO_LINKS;
+  const h = p.heading;
+  const mains = h && !h.chips ? [] : p.topics.filter((x) => !x.parentId);
+  const base = h ? h.base : p.topic ? ROUTES.journalTopic(p.topic.slug) : ROUTES.journal;
+  const pageHref = (n: number) => {
+    const q = new URLSearchParams({ ...(h?.query ?? {}), ...(n > 1 ? { page: String(n) } : {}) }).toString();
+    return hrefIn(c.lang, q ? `${base}?${q}` : base);
+  };
+  const title = h ? h.title : p.topic ? topicName(c, p.topic) : t('journal.title');
+  const intro = h ? h.intro : p.topic ? (c.lang === 'bn' && p.topic.introBn ? p.topic.introBn : p.topic.introEn) : t('journal.dek');
   return (
-    <div className="container jn-page" data-testid="journal-list">
-      <Crumbs c={c} items={[{ label: t('journal.home'), href: ROUTES.home }, ...(p.topic ? [{ label: t('journal.title'), href: ROUTES.journal }] : []), { label: title }]} />
+    <div className="container jn-page" data-testid={h ? h.testId : 'journal-list'}>
+      <Crumbs c={c} items={[{ label: t('journal.home'), href: ROUTES.home }, ...(p.topic || h ? [{ label: t('journal.title'), href: ROUTES.journal }] : []), { label: title }]} />
       <h1 className="h1">{title}</h1>
       {intro ? <p className="text2 jn-dek">{intro}</p> : null}
+      {links.search ? <JournalSearchBox c={c} q={p.q ?? ''} /> : null}
+      {h?.lead}
       {mains.length ? (
         <nav className="jn-chips" aria-label={t('journal.topics')}>
           <a className={`jn-chip${p.topic ? '' : ' on'}`} href={hrefIn(c.lang, ROUTES.journal)} aria-current={p.topic ? undefined : 'page'}>
@@ -95,7 +251,7 @@ export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: numbe
       <HouseAdsAt c={c} ads={ads} slot={p.topic ? 'topic' : 'listTop'} />
       {p.posts.length ? (
         <>
-          <p className="small text2">{p.total === 1 ? t('journal.count1') : t('journal.count', { n: c.num(p.total) })}</p>
+          {h?.testId === 'journal-search' ? null : <p className="small text2">{p.total === 1 ? t('journal.count1') : t('journal.count', { n: c.num(p.total) })}</p>}
           <div className="jn-grid">
             {p.posts.map((x, i) => (
               <Fragment key={x.id}>
@@ -105,7 +261,7 @@ export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: numbe
                   <a href={hrefIn(c.lang, ROUTES.article(x.slug))}>{x.title}</a>
                 </h2>
                 {x.excerpt ? <p className="text2 jn-ex">{x.excerpt}</p> : null}
-                <Meta c={c} p={x} />
+                <Meta c={c} p={x} links={links} />
               </article>
               <HouseAdsAt c={c} ads={ads} slot="listBetween" after={i + 1} />
               </Fragment>
@@ -127,6 +283,8 @@ export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: numbe
             </nav>
           ) : null}
         </>
+      ) : h?.empty ? (
+        h.empty
       ) : (
         <div className="card center jn-empty" data-testid="jn-empty">
           <h2 className="h3">{t('journal.empty')}</h2>
@@ -143,6 +301,7 @@ export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: numbe
           </div>
         </div>
       )}
+      {p.foot}
     </div>
   );
 }
@@ -171,8 +330,10 @@ export function JournalArticle(p: {
   related?: LivePost[];
   photo?: { image: ImageSource; alt: string; studio: boolean } | null;
   ads?: { list: readonly ShopAd[]; searchWords: readonly string[]; searchGuard: boolean };
+  links?: JournalLinks;
 }) {
   const { c, post } = p;
+  const links = p.links ?? NO_LINKS;
   const t = c.t;
   const ads = p.ads?.list ?? [];
   const side = ads.find((a) => a.slot === 'sidebar');
@@ -197,7 +358,7 @@ export function JournalArticle(p: {
       <div className={side ? 'jn-withside' : undefined}>
       <article className="jn-article">
         <h1 className="h1 jn-title">{post.title}</h1>
-        <Meta c={c} p={post} aiNote={p.aiNote} />
+        <Meta c={c} p={post} aiNote={p.aiNote} links={links} />
         {p.photo ? (
           // PR 547: the article's main photo (own pictures only); a studio picture always says so
           <figure className="jn-photo" data-testid="jn-photo">
@@ -225,6 +386,11 @@ export function JournalArticle(p: {
           </nav>
         ) : null}
         <ArticleBody body={post.body} products={shop} boxWords={{ tip: t('journal.tip'), note: t('journal.note') }} afterParagraph={ads.length ? inline : undefined} />
+        {links.tags && post.tags.length ? (
+          <div className="jn-art-tags" data-testid="jn-tags">
+            <JournalTags c={c} tags={post.tags} />
+          </div>
+        ) : null}
         <HouseAdsAt c={c} ads={ads} slot="end" />
       </article>
       {side ? (

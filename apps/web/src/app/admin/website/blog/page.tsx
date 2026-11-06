@@ -177,6 +177,12 @@ export default async function BlogBoardPage(props: Props) {
             { kind: 'number', path: 'wordsPerMinuteBn', label: s('card.wpmBn'), min: 60, max: 400 },
             { kind: 'switch', path: 'reviewByAnother', label: s('card.reviewByAnother') },
             { kind: 'pair', path: 'aiNote', label: { en: s('card.aiNote'), bn: s('card.aiNote') }, max: 200 },
+            // PR 592 follow-up: tags, author and reviewer pages, search and RSS (each off as shipped)
+            { kind: 'switch', path: 'tags', label: s('card.tags') },
+            { kind: 'switch', path: 'authorPages', label: s('card.authorPages') },
+            { kind: 'switch', path: 'search', label: s('card.search') },
+            { kind: 'switch', path: 'rss', label: s('card.rss') },
+            { kind: 'number', path: 'rssItems', label: s('card.rssItems'), min: 5, max: 100 },
           ]}
           texts={texts}
           canEdit={canPublish}

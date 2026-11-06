@@ -38,6 +38,11 @@ export const ROUTES = {
   /** PR 241: one article (`/journal/<link>`, in Bengali `/bn/journal/<link>`) and one topic (a journal category). */
   article: (slug: string) => `/journal/${encodeURIComponent(slug)}`,
   journalTopic: (slug: string) => `/journal/topic/${encodeURIComponent(slug)}`,
+  /** PR 592 follow-up: a tag's page, an author's or reviewer's page, the journal's search and its RSS feed. */
+  journalTag: (slug: string) => `/journal/tag/${encodeURIComponent(slug)}`,
+  journalAuthor: (slug: string) => `/journal/author/${encodeURIComponent(slug)}`,
+  journalSearch: '/journal/search',
+  journalRss: '/journal/rss.xml',
   help: (slug: string) => `/help/${slug}`,
   category: (slug: string) => `/collections/${slug}`,
   /** PR 606: the bulk / corporate enquiry (only while the owner has `orders.bulkLane` on; otherwise "page not found"). */

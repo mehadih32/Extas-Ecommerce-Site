@@ -104,6 +104,47 @@ export const slugify = (s: string) =>
     .slice(0, SLUG_MAX)
     .replace(/-+$/g, '');
 
+/**
+ * PR 592 follow-up — the journal's own pages under /journal/… that an article's link may not take (the address would
+ * open the page, never the article).
+ */
+export const RESERVED_SLUGS: readonly string[] = ['topic', 'tag', 'author', 'search'];
+
+/** PR 592 follow-up — tags: at most this many on one article, each at most this long. */
+export const TAGS_MAX = 12; // hardcode-ok: a list length, not a business number
+export const TAG_MAX = 40; // hardcode-ok: the length of a word, not a business number
+
+/** One tag as it is kept: spaces folded, no leading "#". */
+export const tagName = (s: string) => s.trim().replace(/^#+/, '').replace(/\s+/g, ' ').trim().slice(0, TAG_MAX);
+
+/**
+ * A tag's link: its Latin letters and digits (slugify), else (a Bengali tag) "t-" and a short hash of its name, so a
+ * tag's address never carries Bengali letters and the same name always gets the same link.
+ */
+export function tagSlug(name: string): string {
+  const latin = slugify(name);
+  if (latin) return latin;
+  let h = 0x811c9dc5; // FNV-1a, 32 bit — hardcode-ok: the hash's own constants
+  for (const ch of name.toLowerCase()) {
+    h ^= ch.codePointAt(0)!;
+    h = Math.imul(h, 0x01000193); // hardcode-ok
+  }
+  return `t-${(h >>> 0).toString(16).padStart(8, '0')}`;
+}
+
+/** The tags typed (a list or one line split at commas): kept once each by their link, in the order typed. */
+export function tagList(input: readonly string[] | string): { name: string; slug: string }[] {
+  const raw = typeof input === 'string' ? input.split(/[,،]/) : input;
+  const out: { name: string; slug: string }[] = [];
+  for (const x of raw) {
+    const name = tagName(x);
+    if (!name) continue;
+    const slug = tagSlug(name);
+    if (!out.some((t) => t.slug === slug)) out.push({ name, slug });
+  }
+  return out;
+}
+
 /** The article's words, without the figure and product-block markers and the format signs (Bengali counted alike). */
 export function wordCount(body: string): number {
   return body
@@ -159,6 +200,10 @@ export const postInputSchema = z
       .default([])
       .refine((a) => new Set(a).size === a.length),
     featured: z.boolean().default(false),
+    /** PR 592 follow-up: the expert reviewer (an author record, never the article's own author). */
+    reviewerAuthorId: uuid.nullish().transform((v) => v ?? null),
+    /** PR 592 follow-up: the article's tags (names; their links are made from them). */
+    tags: z.array(z.string().max(TAG_MAX * 2)).max(TAGS_MAX * 2).default([]),
   })
   .strict();
 export type PostInput = z.output<typeof postInputSchema>;
@@ -166,7 +211,7 @@ export type PostInput = z.output<typeof postInputSchema>;
 /** The link an input ends up with, or null when none can be made (a Bengali title and no link typed). */
 export function slugOf(input: Pick<PostInput, 'slug' | 'title'>): string | null {
   const s = input.slug ? input.slug.toLowerCase() : slugify(input.title);
-  return s && SLUG_RE.test(s) ? s : null;
+  return s && SLUG_RE.test(s) && !RESERVED_SLUGS.includes(s) ? s : null;
 }
 
 export const categoryInputSchema = z

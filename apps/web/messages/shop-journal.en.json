@@ -32,6 +32,33 @@
     "note": "Note:",
     "more": "More in {topic}",
     "related": "Read next",
+    "reviewedBy": "Reviewed by {name}",
+    "tags": "Tags",
+    "tagged": "Tagged “{tag}”",
+    "taggedDek": "Articles about {tag}.",
+    "browse": "More ways to browse",
+    "popularTags": "Popular tags",
+    "people": "Authors and reviewers",
+    "rss": "RSS feed",
+    "rssLink": "Follow new articles in a feed reader",
+    "search": {
+      "label": "Search the journal",
+      "ph": "Search articles",
+      "go": "Search",
+      "title": "Search the journal",
+      "results": "{n} articles for “{q}”",
+      "result1": "One article for “{q}”",
+      "none": "No articles match “{q}”.",
+      "try": "Try one of these",
+      "start": "Type a word to search the journal: care, fit, fabric …"
+    },
+    "person": {
+      "ai": "AI author · {shop} journal",
+      "wrote": "Articles by {name}",
+      "reviewed": "Reviewed by {name}",
+      "none": "No live articles yet.",
+      "reviewerLine": "Checked by {line}"
+    },
     "cm": {
       "h": "Comments",
       "none": "No comments yet — be the first.",

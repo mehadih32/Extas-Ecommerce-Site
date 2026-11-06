@@ -6,6 +6,8 @@
 // publish, take down and put away ask once more); and the review history. Saving sends the version it was read at
 // (STALE = someone changed it; the page is read again). Without `blog.write` everything is read-only; the publishing
 // steps need `blog.publish`.
+// PR 592 follow-up: the expert reviewer (an author record, never the article's own author) and the tags (one line, split
+// at commas).
 import { useRouter } from 'next/navigation';
 import { useId, useState, type ReactNode } from 'react';
 import { ArticleBody } from '@/components/journal/ArticleBody';
@@ -25,6 +27,8 @@ export interface EditorPost {
   featured: boolean;
   categoryId: string | null;
   authorId: string | null;
+  reviewerAuthorId: string | null;
+  tags: string[];
   metaDescription: string | null;
   focusKeyword: string | null;
   quickAnswer: string | null;
@@ -71,6 +75,8 @@ export function JournalEditor(p: {
   const [slugTouched, setSlugTouched] = useState(!!pg.id);
   const [categoryId, setCategoryId] = useState(pg.categoryId ?? '');
   const [authorId, setAuthorId] = useState(pg.authorId ?? '');
+  const [reviewerId, setReviewerId] = useState(pg.reviewerAuthorId ?? '');
+  const [tags, setTags] = useState(pg.tags.join(', '));
   const [excerpt, setExcerpt] = useState(pg.excerpt ?? '');
   const [body, setBody] = useState(pg.body);
   const [quick, setQuick] = useState(pg.quickAnswer ?? '');
@@ -119,6 +125,8 @@ export function JournalEditor(p: {
       body,
       categoryId: categoryId || null,
       authorId: authorId || null,
+      reviewerAuthorId: reviewerId || null,
+      tags: tags.split(/[,،]/).map((x) => x.trim()).filter(Boolean),
       metaDescription: meta,
       focusKeyword: keyword,
       quickAnswer: quick,
@@ -260,6 +268,29 @@ export function JournalEditor(p: {
                   </option>
                 ))}
               </select>,
+            )}
+          </div>
+          <div className="jr-g2">
+            {fld(
+              'rv',
+              c('e.reviewer'),
+              <select id={`${id}-rv`} className="a2-sel" value={reviewerId} disabled={off} aria-describedby={`${id}-rv-h`} onChange={(e) => touch(setReviewerId)(e.target.value)} data-testid="jr-reviewer">
+                <option value="">{c('e.reviewerNone')}</option>
+                {p.authors
+                  .filter((x) => x.id !== authorId)
+                  .map((x) => (
+                    <option key={x.id} value={x.id}>
+                      {x.isAiAuthor ? `${x.displayName} (${c('e.ai')})` : x.displayName}
+                    </option>
+                  ))}
+              </select>,
+              c('e.reviewerHelp'),
+            )}
+            {fld(
+              'tg',
+              c('e.tags'),
+              <input id={`${id}-tg`} className="a2-inp" value={tags} maxLength={600} lang={locale} disabled={off} aria-describedby={`${id}-tg-h`} onChange={(e) => touch(setTags)(e.target.value)} data-testid="jr-tags" />,
+              c('e.tagsHelp'),
             )}
           </div>
           {fld('ex', c('e.excerpt'), <textarea id={`${id}-ex`} className="a2-inp" value={excerpt} maxLength={300} lang={locale} disabled={off} onChange={(e) => touch(setExcerpt)(e.target.value)} />)}

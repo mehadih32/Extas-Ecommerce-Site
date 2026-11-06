@@ -66,7 +66,12 @@
       "wpmEn": "Words a minute, English",
       "wpmBn": "Words a minute, Bengali",
       "reviewByAnother": "Nobody passes the review of his own article",
-      "aiNote": "Honest line beside an AI author (empty = the shop's own words)"
+      "aiNote": "Honest line beside an AI author (empty = the shop's own words)",
+      "tags": "Show tags, each with its own page",
+      "authorPages": "A page for each author and reviewer",
+      "search": "Search box and results page",
+      "rss": "RSS feed of the newest articles",
+      "rssItems": "Articles in the RSS feed"
     },
     "e": {
       "back": "← Blog & journal",
@@ -79,6 +84,11 @@
       "categoryNone": "No category",
       "author": "Author",
       "authorNone": "No author",
+      "reviewer": "Reviewed by",
+      "reviewerNone": "No reviewer",
+      "reviewerHelp": "The expert who checked the article (someone other than its author). Their name shows under the title and, while author pages are on, links to their page.",
+      "tags": "Tags",
+      "tagsHelp": "Words that group articles, split by commas (for example: polo, washing). While tags are on, each tag has its own page.",
       "ai": "AI",
       "excerpt": "Short summary (cards and lists)",
       "body": "Text",
@@ -139,6 +149,8 @@
       "readOnly": "You can see this article; changing it needs the writer's or publisher's permission."
     },
     "f": {
+      "reviewerAuthorId": "reviewer",
+      "tags": "tags",
       "title": "title",
       "slug": "link",
       "body": "text",
