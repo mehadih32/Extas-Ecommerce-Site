@@ -1,0 +1,11 @@
+{
+  "groups": {
+    "blog": "Blog and journal"
+  },
+  "blog": {
+    "journal": {
+      "label": "The journal (blog)",
+      "help": "Off as it ships: the shop's /journal page keeps saying “Coming soon”. You can still write, review and publish articles in Website › Blog & journal; once this is on, the published ones appear on the shop in their language. Reading time is the article's words over the words a reader reads in a minute (English and Bengali separately), never less than the shortest time you set. The product block under an article shows at most the number you set (0 = none). With “review by another person” on, nobody can pass the review of an article he wrote himself. The honest line is shown with an AI author's name; leave it empty for the shop's own words."
+    }
+  }
+}

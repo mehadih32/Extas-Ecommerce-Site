@@ -317,6 +317,13 @@ export const PERMISSIONS = {
   // (`seo.manage`). Nothing here touches a price, an order or a customer.
   'seo.read': { group: 'seo' },
   'seo.manage': { group: 'seo' },
+  // S12 · PR 239 (Blueprint WEB-03) — Website → Blog & journal: see the articles, categories and authors (`blog.read`);
+  // write and edit articles, send them through review, and add, change or put away categories and authors (`blog.write`);
+  // publish, schedule, take down an article and switch the journal on (`blog.publish`). Nothing here touches a price,
+  // an order or a customer.
+  'blog.read': { group: 'blog' },
+  'blog.write': { group: 'blog' },
+  'blog.publish': { group: 'blog' },
   // CN-028 · PR 612, 614 (CN-029 Phase 0; docs/RETAIL-ERP-MODEL.md §12) — returns and exchanges through the ERP: count
   // and note the parcels a courier hands back and send the return list (`returns.handback`, packers and the desk; the
   // shop never decides whether a piece can be sold again, the owner does in the ERP); approve an exchange within 72
