@@ -264,6 +264,14 @@
     "categoryOwn": {
       "label": "One category's own layout",
       "help": "A category page that has its own order of sections instead of the one for all category pages. Switch it off and the category follows all category pages again; its own order is kept."
+    },
+    "sideCanvas": {
+      "label": "Side canvas",
+      "help": "The empty space left and right of the page on wide computer screens: zones with a product, a category, a picture or a small offer button. Off as shipped, so the shop looks as it does today until you approve it. Gap = free space kept from the page's content; float = how far a floating zone drifts while scrolling; narrowest window = below this width nothing shows. Change it on Website › Side canvas."
+    },
+    "sideZones": {
+      "label": "Side canvas zones",
+      "help": "The zones drawn on Website › Side canvas: their side, pages, days, place, size, how they move and what they hold. They show only while the side canvas is on, only where the space is wide enough, never over the page's content."
     }
   },
   "experiments": {

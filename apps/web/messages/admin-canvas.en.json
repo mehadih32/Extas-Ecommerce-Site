@@ -1,0 +1,112 @@
+{
+  "sc": {
+    "metaTitle": "Side canvas",
+    "title": "Side canvas",
+    "sub": "The empty space left and right of the page on wide computer screens.",
+    "note": "Zones show only on a computer with a mouse, only where the space beside the page is wide enough, never over the page. Phones and tablets never show or load them.",
+    "readOnly": "You can see this page. Changing it needs the permission to change page layouts.",
+    "master": {
+      "title": "Side canvas on the shop",
+      "on": "On: customers on wide computer screens see your zones that are switched on.",
+      "off": "Off: the shop looks as it does today. Your zones are kept; draw them and check the map first.",
+      "ask": "Turn the side canvas on? After Save, customers on wide computer screens will see your zones. Turn it on only after you approved the map below.",
+      "yes": "Turn on",
+      "no": "Not now",
+      "gap": "Free space from the page (px)",
+      "float": "Float distance (px)",
+      "minWidth": "Narrowest window that shows it (px)"
+    },
+    "zones": {
+      "title": "Zones",
+      "sub": "Each zone sits on the left or the right, on the pages and days you choose.",
+      "none": "No zone yet. Add one on the left or the right."
+    },
+    "addLeft": "Add a zone on the left",
+    "addRight": "Add a zone on the right",
+    "hideNote": "A zone is never deleted: switch it off to hide it. A new zone and a copy start hidden.",
+    "show": "Show",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "copyName": "{name} (copy)",
+    "duplicated": "Copied. The copy starts hidden.",
+    "state": {
+      "off": "Hidden",
+      "soon": "Starts later",
+      "live": "Showing",
+      "ended": "Ended"
+    },
+    "side": {
+      "left": "Left",
+      "right": "Right"
+    },
+    "pages": {
+      "both": "Home and category pages",
+      "home": "Home page",
+      "categories": "Category pages"
+    },
+    "mode": {
+      "fixed": "Fixed: scrolls with the page",
+      "sticky": "Sticky: stays in view",
+      "float": "Floating: stays in view, drifts gently"
+    },
+    "kind": {
+      "product": "A product",
+      "category": "A category",
+      "image": "An image",
+      "teaser": "Offer button"
+    },
+    "style": {
+      "full": "Straight on the page, no frame",
+      "card": "On a card"
+    },
+    "formTitle": "Edit zone",
+    "f": {
+      "name": "Name in this list",
+      "side": "Side",
+      "pages": "Pages",
+      "from": "First day",
+      "to": "Last day",
+      "top": "Distance from under the header (px)",
+      "width": "Standard width (px)",
+      "height": "Standard height (px)",
+      "mode": "How it moves",
+      "kind": "What it shows",
+      "product": "Product",
+      "category": "Category",
+      "choose": "Choose…",
+      "image": "Image address",
+      "imageHint": "An https:// address or a shop path. Keep a picture small (about 150 KB).",
+      "style": "Look",
+      "href": "Link",
+      "hrefHint": "Empty = the product's or category's own page. A shop path like /collections/polo, or a full https:// address.",
+      "text": "Words (a line under the picture, or the offer button's words)",
+      "alt": "Picture description (for screen readers)",
+      "en": "English",
+      "bn": "Bengali",
+      "cats": "Only these categories",
+      "catsHint": "Pick none to show it on every category page.",
+      "weightNote": "The zone scales down to the room each screen gives and hides when even half its size does not fit.",
+      "done": "Done"
+    },
+    "map": {
+      "title": "Approval map",
+      "subOn": "Where each zone that is switched on sits on two common computer screens.",
+      "subOff": "Check where each zone would sit before you turn the side canvas on. Nothing changes on the shop while it is off.",
+      "at": "{w} px wide · {g} px each side",
+      "out": "Too wide here: {names}",
+      "note": "Grey band = header; the middle box = the page's content. Drawn from what you see above, before Save."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "discard": "Discard changes",
+    "unsaved": "Unsaved changes: the shop still shows the saved side canvas.",
+    "err": {
+      "INVALID_INPUT": "Something is not right. Check the zones' addresses, sizes and days.",
+      "STALE": "Someone saved a moment ago. Reload the page.",
+      "forbidden": "You do not have permission to change page layouts.",
+      "network": "No connection. Try again.",
+      "other": "Could not save. Try again."
+    }
+  }
+}

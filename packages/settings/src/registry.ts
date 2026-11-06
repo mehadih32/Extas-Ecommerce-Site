@@ -131,6 +131,7 @@ import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
 import { layoutSettings } from './registry-layouts';
 import { layoutBlockSettings } from './registry-layout-blocks';
+import { sideCanvasSettings } from './registry-side-canvas';
 import { frontEditSettings } from './registry-front-edit';
 import { experimentsSettings } from './registry-experiments';
 import { incompleteSettings } from './registry-incomplete';
@@ -1447,6 +1448,8 @@ export const registry = {
   ...layoutSettings,
   // S02 · PR 595 · the owner's own sections and each category's own layout (registry-layout-blocks.ts, version 244).
   ...layoutBlockSettings,
+  // S02 · PR 596 · the side canvas: its switch (off) and its zones (registry-side-canvas.ts, version 245).
+  ...sideCanvasSettings,
   // S02 · PR 79 · editing the shop's words on the shop page (registry-front-edit.ts, version 242).
   ...frontEditSettings,
   // S02 · PR 83 · the A/B test module's switch and numbers (registry-experiments.ts, version 243).

@@ -290,6 +290,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'words', pages: [{ href: '/admin/website/words', perm: 'website.read', keys: ['websiteWords'] }] },
       // S02 · PR 81 (WEB-06) — Eye-toggles: every part of a shop page that can be shown or hidden, in one searchable list.
       { id: 'eye', more: true, pages: [{ href: '/admin/website/eye-toggles', perm: 'website.read', keys: ['websiteEyeToggles'] }] },
+      { id: 'canvas', more: true, pages: [{ href: '/admin/website/side-canvas', perm: 'website.read', keys: ['websiteSideCanvas'] }] },
       {
         id: 'seo',
         guide: 'seo',
