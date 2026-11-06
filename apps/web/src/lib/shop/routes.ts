@@ -35,6 +35,9 @@ export const ROUTES = {
   /** PR 98, 100: "Build your own set"; a set group's own builder is `/combos/build-your-own/<rule key>`. */
   buildSet: '/combos/build-your-own',
   journal: '/journal',
+  /** PR 241: one article (`/journal/<link>`, in Bengali `/bn/journal/<link>`) and one topic (a journal category). */
+  article: (slug: string) => `/journal/${encodeURIComponent(slug)}`,
+  journalTopic: (slug: string) => `/journal/topic/${encodeURIComponent(slug)}`,
   help: (slug: string) => `/help/${slug}`,
   category: (slug: string) => `/collections/${slug}`,
   /** PR 606: the bulk / corporate enquiry (only while the owner has `orders.bulkLane` on; otherwise "page not found"). */
@@ -61,7 +64,7 @@ export const COMING_SOON: ReadonlyArray<{ key: string; path: string; deep: boole
   // ~~{ key: 'account', path: '/account', deep: true },~~ — built: PR 131 (My account and its sections)
   // ~~{ key: 'account', path: '/account/orders', deep: true }, // one order's own page, PR 134~~ — built: PR 134
   // ~~{ key: 'combos', path: '/combos', deep: true },~~ built: PR 103 (the landing page), PR 98, 100 (the set builder), PR 572 (a rule's own page)
-  { key: 'journal', path: '/journal', deep: true },
+  // ~~{ key: 'journal', path: '/journal', deep: true },~~ built: PR 241 (app/(shop)/(store)/journal: the list, a topic, an article; "Coming soon" itself while `blog.journal` is off)
   { key: 'help', path: '/help', deep: true },
 ];
 

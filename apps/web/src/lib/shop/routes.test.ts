@@ -11,7 +11,8 @@ describe('coming-soon pages (CN-010)', () => {
     // ~~ROUTES.order('T-1001')~~ PR 134 built the order page
     // ~~ROUTES.combos~~ PR 103 built the sets landing page; ~~a rule's own list is still to come~~ PR 572 built it
     // ~~ROUTES.buildSet~~ PR 98, 100 built the set builder
-    for (const p of [ROUTES.journal, ROUTES.help('payment')])
+    // ~~ROUTES.journal~~ PR 241 built the journal (it says "Coming soon" itself while switched off)
+    for (const p of [ROUTES.help('payment')])
       expect(comingSoon(p, '/p'), p).not.toBeNull();
     // ~~expect(comingSoon('/collections/polos', '/p')).toBe('collections');~~ PR 45 built the category pages
     for (const p of [ROUTES.newIn, ROUTES.category('polos')]) expect(comingSoon(p, '/p'), p).toBeNull();
