@@ -68,6 +68,7 @@ docs file (CN-011).
 | Path | What it is |
 |---|---|
 | [`demo/EXTAS-demo-V12.2.html`](demo/EXTAS-demo-V12.2.html) | **The UI truth** (23 Oct: owner Notes 54–58, CN-012/014): one HTML file, download and open in a browser |
+| [`demo/admin-look/LUMEN-SPEC.md`](demo/admin-look/LUMEN-SPEC.md) | **The default admin look "Lumen"** (owner, 6 Nov 2026): tokens, shell, patterns, section map and safety rules. The clickable prototype is `demo/admin-look/ADMIN-LOOKS-V1.html` (+ `lumen.css.txt`); looks ক, খ, গ in it are planned, not built |
 | [`demo/EXTAS-demo-V12.1.html`](demo/EXTAS-demo-V12.1.html) | V12.1 (CN-008), kept as history |
 | [`demo/EXTAS-demo-V12.html`](demo/EXTAS-demo-V12.html) | V12, kept as history |
 | Public share build (no file here) | A slim build of V12.2 (the docs data left out, under 2 MB; owner Note 58), published as a claude.ai artifact that the owner shares himself. The full V12.2 file above stays the UI truth; the link is the owner's and is not written in the repo |
