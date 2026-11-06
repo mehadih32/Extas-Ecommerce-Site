@@ -4172,8 +4172,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Lumen theme layer (CN-036, Lane A foundation, Launch row; batch 12; settings registry v234 `admin.theme` {look lumen, accent coral, reduceMotion off}; no migration): `app/admin/theme/lumen.css` holds every admin colour, radius, font, shadow and motion time as a `--lm-*` token, light as the default and dark on `[data-lm-mode=dark]`; the accent is mixed into every accent token so text on it stays readable; the old variables of shell.css, look.css and admin.css read the tokens; Plus Jakarta Sans and Bricolage Grotesque self-hosted (woff2); each person's light/dark, motion and accent kept on their staff account (`StaffUser.adminPrefs.theme`); hardcode guard reads .css and adds the rule `admin-style-literal` with a per-file baseline ratchet (section PRs lower it, a new file has none; on integration PR 282's calendar bar colour became a token)",
+    "note": "Lumen theme layer (CN-036, Lane A foundation, Launch row; batch 12; settings registry v234 `admin.theme` {look lumen, accent coral, reduceMotion off}; no migration): `app/admin/theme/lumen.css` holds every admin colour, radius, font, shadow and motion time as a `--lm-*` token, light as the default and dark on `[data-lm-mode=dark]`; the accent is mixed into every accent token so text on it stays readable; the old variables of shell.css, look.css and admin.css read the tokens; Plus Jakarta Sans and Bricolage Grotesque self-hosted (woff2); each person's light/dark, motion and accent kept on their staff account (`StaffUser.adminPrefs.theme`); hardcode guard reads .css and adds the rule `admin-style-literal` with a per-file baseline ratchet (section PRs lower it, a new file has none; on integration PR 282's calendar bar colour became a token); **follow-ups (6 Nov, #92; follow-ups 671, 672, 690):** the old admin toast's styles (`.a2-toast`, `.a2-toast-slot` with their colour literals) are gone from shell.css (guard baseline 104 → 101); contrast AA in both themes for every ready accent swatch — accent ink 72% → 66%, brand 78% → 66% (deep 62 → 56), primary button 80/70% → 70/60%, logo 70/58% (the white letter was 2.7:1), placeholders in the quieter ink: the light accent is a little darker, so all six swatches reach AA; `lib/admin-lumen/contrast.ts` and `theme/lumen-contrast.test.ts` check every text/background token pair in light, dark and the island for the six swatches and that no Lumen text is faded with opacity. Measured: the dark submenu is 7.28:1 (already AA, 672) and the Bengali sidebar fits at 1024 px (690). An accent typed in by hand is not checked yet (follow-up 718)",
     "github": [
+     "#92, 6 Nov",
      "#86, 6 Nov"
     ]
    },
@@ -4183,15 +4184,21 @@
      "admin.theme"
     ],
     "code": [
-     "app/admin/theme/lumen.css"
+     "app/admin/theme/lumen.css",
+     "lib/admin-lumen/contrast.ts",
+     "theme/lumen-contrast.test.ts"
     ],
     "names": [
      "--lm-*",
      "[data-lm-mode=dark]",
      "StaffUser.adminPrefs.theme",
-     "admin-style-literal"
+     "admin-style-literal",
+     ".a2-toast",
+     ".a2-toast-slot"
     ],
-    "tests": []
+    "tests": [
+     "`lib/admin-lumen/contrast.ts` and `theme/lumen-contrast.test.ts` check every text/background token pair in light, dark and the island for the six swatches and that no Lumen text is faded with opacity"
+    ]
    },
    "updates": [
     {
@@ -4288,8 +4295,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "shared patterns 1 (CN-036, Lane A foundation, Launch row; batch 12; registry **v236** `admin.patterns` {undoSeconds 5, pageStep 12} — lane A's v235 was already PR 652's, moved on integration; no migration): summary tiles with count-up and delta, the hero chart in plain SVG (hover and keyboard read-out, range switch, previous period dashed), the one toast with Undo only for reversible shop actions (money, refunds, COD, prices, discounts, blocking and deleting never get Undo; the clock pauses for mouse, touch and keyboard each), empty state and skeleton",
+    "note": "shared patterns 1 (CN-036, Lane A foundation, Launch row; batch 12; registry **v236** `admin.patterns` {undoSeconds 5, pageStep 12} — lane A's v235 was already PR 652's, moved on integration; no migration): summary tiles with count-up and delta, the hero chart in plain SVG (hover and keyboard read-out, range switch, previous period dashed), the one toast with Undo only for reversible shop actions (money, refunds, COD, prices, discounts, blocking and deleting never get Undo; the clock pauses for mouse, touch and keyboard each), empty state and skeleton; **follow-up (6 Nov, #92):** the form + live preview's badge (`.lm-prev-badge`) at 14 px; a test keeps every shared pattern's text at 14 px or more",
     "github": [
+     "#92, 6 Nov",
      "#86, 6 Nov"
     ]
    },
@@ -4299,8 +4307,12 @@
      "admin.patterns"
     ],
     "code": [],
-    "names": [],
-    "tests": []
+    "names": [
+     ".lm-prev-badge"
+    ],
+    "tests": [
+     "a test keeps every shared pattern's text at 14 px or more"
+    ]
    },
    "updates": [
     {
@@ -4337,8 +4349,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "shared patterns 2 (CN-036, Lane A foundation, Launch row; batch 12; no setting, no migration): queue with one clear button per row and Undo only for reversible actions (\"do all\" only when every action is reversible; guarded ones open their own page), list view with filter chips, search, \"Show more\", bulk bar and drawer, list + detail split (drawer under 1024 px, previous/next)",
+    "note": "shared patterns 2 (CN-036, Lane A foundation, Launch row; batch 12; no setting, no migration): queue with one clear button per row and Undo only for reversible actions (\"do all\" only when every action is reversible; guarded ones open their own page), list view with filter chips, search, \"Show more\", bulk bar and drawer, list + detail split (drawer under 1024 px, previous/next); **follow-up (6 Nov, #92):** a list chip's count at full strength (it was faded to 3.3:1 on a light card), and the list search pattern no longer restyles the sidebar search of the same class name",
     "github": [
+     "#92, 6 Nov",
      "#86, 6 Nov"
     ]
    },
@@ -4427,8 +4440,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Settings › General › Admin look (CN-036, Lane A foundation, Launch row; batch 12; `admin.theme` gains the accent swatches, no version change; no migration): the four looks of ADMIN-LOOKS-V1 — ঘ Lumen in use, ক খ গ shown as \"Planned\" (not selectable; PR 649–651 parked); light or dark (the shell follows), accent swatches or any colour per person (the person's accent wins over the team's), Reduce motion per person; the team's accent and reduce motion with `settings.write`; the page marks itself ready for dark, the CN-025 designs part kept as a light island; guide settings/look.md",
+    "note": "Settings › General › Admin look (CN-036, Lane A foundation, Launch row; batch 12; `admin.theme` gains the accent swatches, no version change; no migration): the four looks of ADMIN-LOOKS-V1 — ঘ Lumen in use, ক খ গ shown as \"Planned\" (not selectable; PR 649–651 parked); light or dark (the shell follows), accent swatches or any colour per person (the person's accent wins over the team's), Reduce motion per person; the team's accent and reduce motion with `settings.write`; the page marks itself ready for dark, the CN-025 designs part kept as a light island; guide settings/look.md; **follow-up (6 Nov, #92; follow-up 712):** the Admin look page's pills at 14 px; the section check also catches rem/em sizes under 14 px",
     "github": [
+     "#92, 6 Nov",
      "#86, 6 Nov"
     ]
    },
@@ -4520,8 +4534,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Lumen section Orders part 1 (CN-036, Lane A, Launch row; batch 14; no setting, no migration): To confirm and the call queue, incomplete orders, the digest, All orders, Order view and the risk rules pages in the Lumen look (8 pages ready for dark), KPI summary tiles, order commands through the one toast; every feature, permission and route kept",
+    "note": "Lumen section Orders part 1 (CN-036, Lane A, Launch row; batch 14; no setting, no migration): To confirm and the call queue, incomplete orders, the digest, All orders, Order view and the risk rules pages in the Lumen look (8 pages ready for dark), KPI summary tiles, order commands through the one toast; every feature, permission and route kept; **follow-up (6 Nov, #92):** a view tab's count (`.a2-cnt`) at full strength in the Lumen look (it was 3.3:1 light, 3.5:1 dark)",
     "github": [
+     "#92, 6 Nov",
      "#89, 6 Nov"
     ]
    },
@@ -4529,7 +4544,9 @@
     "routes": [],
     "settings": [],
     "code": [],
-    "names": [],
+    "names": [
+     ".a2-cnt"
+    ],
     "tests": []
    },
    "updates": [],
@@ -4603,8 +4620,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Lumen section Products part 1 (CN-036, Lane A, Launch row; batch 14; no setting, no migration): All products, Add product, the product page, import from a link, import from the ERP, the publish queue and the audit in the Lumen look (7 pages), summary tiles, the one toast; bulk Undo only for publish, take off, archive and restore; **follow-up (6 Nov, #91):** Add product, Import from a link and Import from the ERP draw their no-access state in the ready `.ad` frame and their smoke checks wait for `.ad[data-lm-ready]` (the read-only smoke account has neither `catalogue.write` nor `catalogue.import`; same rolled-back deploy); new guard test `lib/admin-lumen/readonly-smoke.test.ts`: a Lumen smoke check on a page behind a permission the check account lacks fails CI unless the page's no-access state carries what the check waits for",
+    "note": "Lumen section Products part 1 (CN-036, Lane A, Launch row; batch 14; no setting, no migration): All products, Add product, the product page, import from a link, import from the ERP, the publish queue and the audit in the Lumen look (7 pages), summary tiles, the one toast; bulk Undo only for publish, take off, archive and restore; **follow-up (6 Nov, #91):** Add product, Import from a link and Import from the ERP draw their no-access state in the ready `.ad` frame and their smoke checks wait for `.ad[data-lm-ready]` (the read-only smoke account has neither `catalogue.write` nor `catalogue.import`; same rolled-back deploy); new guard test `lib/admin-lumen/readonly-smoke.test.ts`: a Lumen smoke check on a page behind a permission the check account lacks fails CI unless the page's no-access state carries what the check waits for; **follow-up (6 Nov, #92):** the product list chips' counts (`.pa-chip-n`) at full strength in the Lumen look (3.0:1 light before)",
     "github": [
+     "#92, 6 Nov",
      "#91, 6 Nov",
      "#89, 6 Nov"
     ]
@@ -4620,7 +4638,8 @@
     ],
     "names": [
      ".ad",
-     ".ad[data-lm-ready]"
+     ".ad[data-lm-ready]",
+     ".pa-chip-n"
     ],
     "tests": [
      "new guard test `lib/admin-lumen/readonly-smoke.test.ts`: a Lumen smoke check on a page behind a permission the check account lacks fails CI unless the page's no-access state carries what the check waits for"
@@ -4688,8 +4707,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Lumen section Customers (CN-036, Lane A, Launch row; batch 14; no setting, no migration): All customers, the customer page, segments and one segment, loyalty & wallet, to review, import and the customer settings in the Lumen look (8 pages), summary tiles on the list, success messages through the one toast, no Undo, blocking keeps its confirm; the list and the customer page stay two routes (no split view yet)",
+    "note": "Lumen section Customers (CN-036, Lane A, Launch row; batch 14; no setting, no migration): All customers, the customer page, segments and one segment, loyalty & wallet, to review, import and the customer settings in the Lumen look (8 pages), summary tiles on the list, success messages through the one toast, no Undo, blocking keeps its confirm; the list and the customer page stay two routes (no split view yet); **follow-up (6 Nov, #92; follow-up 702):** Customers as a list + detail split (LUMEN-SPEC §3 item 4): from 1280 px a customer's page has the list he was opened from on the left (`?list=` keeps the view, search, filters and page), Previous / Next at every width, the phone keeps the full page",
     "github": [
+     "#92, 6 Nov",
      "#89, 6 Nov"
     ]
    },
@@ -4697,7 +4717,9 @@
     "routes": [],
     "settings": [],
     "code": [],
-    "names": [],
+    "names": [
+     "?list="
+    ],
     "tests": []
    },
    "updates": [],
@@ -4836,8 +4858,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Lumen section Website (CN-036, Lane A, Launch row; batch 15; no setting, no migration): Page layouts, Words & language, Eye toggles, SEO (search settings, redirects & 404, collection pages, Bengali pages, SEO health, organic report) and Blog & journal (board, article editor, categories & authors, topic plan and briefs, publish calendar, performance) in the Lumen look (16 pages); the article preview a light island; done lines of 12 website screens to the one toast; blog.css literals to tokens (baseline removed). There are no separate Pages, Banners or Menus admin pages: sections are Page layouts, words are Words & language, show/hide is Eye toggles",
+    "note": "Lumen section Website (CN-036, Lane A, Launch row; batch 15; no setting, no migration): Page layouts, Words & language, Eye toggles, SEO (search settings, redirects & 404, collection pages, Bengali pages, SEO health, organic report) and Blog & journal (board, article editor, categories & authors, topic plan and briefs, publish calendar, performance) in the Lumen look (16 pages); the article preview a light island; done lines of 12 website screens to the one toast; blog.css literals to tokens (baseline removed). There are no separate Pages, Banners or Menus admin pages: sections are Page layouts, words are Words & language, show/hide is Eye toggles; **follow-up (6 Nov, #92; follow-up 705):** the blog pages' back link (\"← Blog & journal\" on shelves, plan, briefs, calendar, performance and an article) is a full 44 px tap at every width",
     "github": [
+     "#92, 6 Nov",
      "#91, 6 Nov"
     ]
    },
@@ -4986,8 +5009,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Lumen section Reports part 1 (CN-036, Lane C, Launch row; batch 15; no setting, no migration): team, delivery, customers, stopped, fraud, areas, flags and learning reports, with Experiments beside them, in the Lumen look (`lumen-reports.css`), every message through the one toast",
+    "note": "Lumen section Reports part 1 (CN-036, Lane C, Launch row; batch 15; no setting, no migration): team, delivery, customers, stopped, fraud, areas, flags and learning reports, with Experiments beside them, in the Lumen look (`lumen-reports.css`), every message through the one toast; **follow-up (6 Nov, #92; follow-up 713, part):** the report figures rows (delivery, customers, stopped, fraud, flags, learning, areas) are the shared Lumen summary tiles (`lib/admin-lumen/figures.ts`); Stopped's risk-rules link is 44 px",
     "github": [
+     "#92, 6 Nov",
      "#91, 6 Nov"
     ]
    },
@@ -4995,7 +5019,8 @@
     "routes": [],
     "settings": [],
     "code": [
-     "lumen-reports.css"
+     "lumen-reports.css",
+     "lib/admin-lumen/figures.ts"
     ],
     "names": [],
     "tests": []
@@ -5025,8 +5050,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Lumen section Reports part 2 (CN-036, Lane C, Launch row; batch 15; no setting, no migration): Site health, customer problems and one problem, speed, smoke runs, run history and one run, and fixes to approve in the Lumen look (9 pages, their no-access states ready too)",
+    "note": "Lumen section Reports part 2 (CN-036, Lane C, Launch row; batch 15; no setting, no migration): Site health, customer problems and one problem, speed, smoke runs, run history and one run, and fixes to approve in the Lumen look (9 pages, their no-access states ready too); **follow-up (6 Nov, #92; follow-up 713, part):** Site health's figures rows (overview, run history and one run, fixes, smoke runs, customer problems and one problem, speed) are the shared summary tiles, their test ids kept",
     "github": [
+     "#92, 6 Nov",
      "#91, 6 Nov"
     ]
    },
@@ -5035,7 +5061,9 @@
     "settings": [],
     "code": [],
     "names": [],
-    "tests": []
+    "tests": [
+     "follow-up 713, part):** Site health's figures rows (overview, run history and one run, fixes, smoke runs, customer problems and one problem, speed) are the shared summary tiles, their test ids kept"
+    ]
    },
    "updates": [],
    "mentions": [],
@@ -5099,8 +5127,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Lumen section Settings (CN-036, Lane C, Launch row; batch 15; no setting, no migration): store details, policies, privacy, sign-in and security, Cloudflare protection, the ERP link, System (backups, cache, go-live), Keys & connections and the Server page in the Lumen look (`lumen-settings.css`); one toast in Keys, Security, Privacy and Edge; settings.css holds no colour literal any more (its hardcode baseline removed on integration). The Admin look chooser of PR 630 is kept as built",
+    "note": "Lumen section Settings (CN-036, Lane C, Launch row; batch 15; no setting, no migration): store details, policies, privacy, sign-in and security, Cloudflare protection, the ERP link, System (backups, cache, go-live), Keys & connections and the Server page in the Lumen look (`lumen-settings.css`); one toast in Keys, Security, Privacy and Edge; settings.css holds no colour literal any more (its hardcode baseline removed on integration). The Admin look chooser of PR 630 is kept as built; **follow-up (6 Nov, #92; follow-up 713, part):** a settings card (FieldsCard, used in every section) says \"saved\" through the admin's one toast; a refusal stays beside its field",
     "github": [
+     "#92, 6 Nov",
      "#91, 6 Nov"
     ]
    },
@@ -8549,8 +8578,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "page builder coverage for every storefront page, not only the home page (After launch, Lane B, batch 11; registry v241 `layout.product`, `layout.bag`; no migration): Website › Page layouts also covers the product page (alternatives, reviews, questions, Messenger, the rows under the first screen; the first screen stays fixed for the phone gate) and the bag (free-delivery bar, offer, WhatsApp, bulk, saved; the lines locked); account, checkout, thank-you page, header and footer keep their own switches for now (follow-up 666)",
+    "note": "page builder coverage for every storefront page, not only the home page (After launch, Lane B, batch 11; registry v241 `layout.product`, `layout.bag`; no migration): Website › Page layouts also covers the product page (alternatives, reviews, questions, Messenger, the rows under the first screen; the first screen stays fixed for the phone gate) and the bag (free-delivery bar, offer, WhatsApp, bulk, saved; the lines locked); account, checkout, thank-you page, header and footer keep their own switches for now (follow-up 666); **follow-up (6 Nov, #92; follow-up 667):** Page layouts: the product pages pick which product \"Open the page\" and the phone + computer preview show (the first by name until one is picked)",
     "github": [
+     "#92, 6 Nov",
      "#85, 6 Nov"
     ]
    },
@@ -8589,8 +8619,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "label dictionary — every visible word editable by the owner, in both languages (After launch, Lane B, batch 12; no registry version: `language.labels` key pattern widened to \"_\" and one-part keys; new permission `website.words.write`; no migration): Website › Words & language (`/admin/website/words`): all 2254 shop words with the shop's and the owner's English and Bengali, search, 50 named places, \"Changed by you\" and \"Bengali still in English\" filters, 40 per page, Change and \"Back to the shop's word\" per row, CSV export and import; API GET `website.read` / PUT `website.words.write` (slot check, 300 letters, unknown key refused, STALE version check, audited `website.words.save`)",
+    "note": "label dictionary — every visible word editable by the owner, in both languages (After launch, Lane B, batch 12; no registry version: `language.labels` key pattern widened to \"_\" and one-part keys; new permission `website.words.write`; no migration): Website › Words & language (`/admin/website/words`): all 2254 shop words with the shop's and the owner's English and Bengali, search, 50 named places, \"Changed by you\" and \"Bengali still in English\" filters, 40 per page, Change and \"Back to the shop's word\" per row, CSV export and import; API GET `website.read` / PUT `website.words.write` (slot check, 300 letters, unknown key refused, STALE version check, audited `website.words.save`); **follow-ups (6 Nov, #92; follow-ups 674, 677, 678):** every word says when it last changed, from the settings' own change history (674); \"The admin's words (read only)\" lists every word of the admin pages with its English and Bengali, its key and file, searched and paged (677; batch 15's four admin word files included); an owner's word with a number or a time claim is marked \"Check: number or date\", has its own filter and is named back in the one toast after its save — a warning only, the save stands (678)",
     "github": [
+     "#92, 6 Nov",
      "#86, 6 Nov"
     ]
    },
@@ -8633,8 +8664,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "front-end editing — open the page, change a label, publish (After launch, Lane B, batch 12; registry v242 `language.frontEdit` {enabled off}; no migration): the Words & language card \"Edit on the shop page\" and \"Edit on the shop\" (`/?words=edit`); while on, a signed-in admin's shop tab gets a small panel listing the page's words, tap a word to open and outline it, live preview, Publish (n) through the dictionary's own save (same checks, STALE, audit), back to the shop's word, discard; off, the shop draws nothing for it; a customer sees only a sign-in line",
+    "note": "front-end editing — open the page, change a label, publish (After launch, Lane B, batch 12; registry v242 `language.frontEdit` {enabled off}; no migration): the Words & language card \"Edit on the shop page\" and \"Edit on the shop\" (`/?words=edit`); while on, a signed-in admin's shop tab gets a small panel listing the page's words, tap a word to open and outline it, live preview, Publish (n) through the dictionary's own save (same checks, STALE, audit), back to the shop's word, discard; off, the shop draws nothing for it; a customer sees only a sign-in line; **follow-up (6 Nov, #92; follow-up 676):** Edit on the shop: a word with {slots} or \"",
     "github": [
+     "#92, 6 Nov",
      "#86, 6 Nov"
     ]
    },
@@ -8674,8 +8706,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "field-level show and hide — the eye-toggle system, with its defaults (After launch, Lane B, batch 13; no registry version, no migration): `packages/settings/src/eye-toggles.ts` lists 104 eye-toggles in 11 places (header, footer, home, product cards, category, product page, reviews, bag, checkout and thank-you, my account, search), each pointing at the yes/no value inside the setting the shop already reads, so its default is that setting's registry default; readEye / writeEye change one value and keep the rest; guard `eyeToggleProblems`: every yes/no value of the shop page settings is an eye-toggle or named in NOT_EYE with its reason",
+    "note": "field-level show and hide — the eye-toggle system, with its defaults (After launch, Lane B, batch 13; no registry version, no migration): `packages/settings/src/eye-toggles.ts` lists 104 eye-toggles in 11 places (header, footer, home, product cards, category, product page, reviews, bag, checkout and thank-you, my account, search), each pointing at the yes/no value inside the setting the shop already reads, so its default is that setting's registry default; readEye / writeEye change one value and keep the rest; guard `eyeToggleProblems`: every yes/no value of the shop page settings is an eye-toggle or named in NOT_EYE with its reason; **follow-up (6 Nov, #92; follow-up 680):** D4.1's \"account.* On\" checked against the registry: every account block it names ships On; the offer banner and the profile photo (later feature switches) stay off, written beside the list and pinned by a test",
     "github": [
+     "#92, 6 Nov",
      "#87, 6 Nov"
     ]
    },
@@ -8688,7 +8721,9 @@
     "names": [
      "eyeToggleProblems"
     ],
-    "tests": []
+    "tests": [
+     "the offer banner and the profile photo (later feature switches) stay off, written beside the list and pinned by a test"
+    ]
    },
    "updates": [],
    "mentions": [],
@@ -8816,8 +8851,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "A/B test module for the storefront (After launch, Lane B, batch 13; registry v243 `experiments.module` {enabled off, confidence 95, minVisitors 100, cookieDays 30}; migration `0163_ab_test_winner`; permissions `reports.experiments.read` / `.write`): Reports › More › Experiments (`/admin/reports/experiments`, one test `/<id>`, `new`): version B = eye-toggles shown or hidden and shop words in English and Bengali — **never prices, offers, payment or delivery** (those toggles are left out, money words refused); goal added to the bag or ordered; start (module on, confirm, clash guard), pause, end, keep B or A only at the owner's confidence (keep B writes the words and switches), archive and restore, nothing deleted, every step audited; the shop gives a new visitor (not a bot) his version by a hash, counts him once (AbAssignment), preview `?abPreview=<id>.a` or `.b`; built in the older admin look (Lumen was not on main yet; moves with the Reports section)",
+    "note": "A/B test module for the storefront (After launch, Lane B, batch 13; registry v243 `experiments.module` {enabled off, confidence 95, minVisitors 100, cookieDays 30}; migration `0163_ab_test_winner`; permissions `reports.experiments.read` / `.write`): Reports › More › Experiments (`/admin/reports/experiments`, one test `/<id>`, `new`): version B = eye-toggles shown or hidden and shop words in English and Bengali — **never prices, offers, payment or delivery** (those toggles are left out, money words refused); goal added to the bag or ordered; start (module on, confirm, clash guard), pause, end, keep B or A only at the owner's confidence (keep B writes the words and switches), archive and restore, nothing deleted, every step audited; the shop gives a new visitor (not a bot) his version by a hash, counts him once (AbAssignment), preview `?abPreview=<id>.a` or `.b`; built in the older admin look (Lumen was not on main yet; moves with the Reports section); **follow-up (6 Nov, #92; follow-up 683, part):** a raised quantity (the same item again, or back from saved for later) counts as \"added to the bag\" in an A/B test (`CartItem.raisedAt`, migration `0175_cart_item_raised_at`); an order from another device is still not counted",
     "github": [
+     "#92, 6 Nov",
      "#87, 6 Nov"
     ]
    },
@@ -8836,11 +8872,14 @@
      ".write",
      "new",
      "?abPreview=<id>.a",
-     ".b"
+     ".b",
+     "CartItem.raisedAt",
+     "0175_cart_item_raised_at"
     ],
     "tests": [
      "A/B test module for the storefront (After launch, Lane B, batch 13",
-     "permissions `reports.experiments.read` / `.write`): Reports › More › Experiments (`/admin/reports/experiments`, one test `/<id>`, `new`): version B = eye-toggles shown or hidden and shop words in English and Bengali — **never prices, offers, payment or delivery** (those toggles are left out, money words refused)"
+     "permissions `reports.experiments.read` / `.write`): Reports › More › Experiments (`/admin/reports/experiments`, one test `/<id>`, `new`): version B = eye-toggles shown or hidden and shop words in English and Bengali — **never prices, offers, payment or delivery** (those toggles are left out, money words refused)",
+     "follow-up 683, part):** a raised quantity (the same item again, or back from saved for later) counts as \"added to the bag\" in an A/B test (`CartItem.raisedAt`, migration `0175_cart_item_raised_at`)"
     ]
    },
    "updates": [],
@@ -8936,8 +8975,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-22",
-    "note": "storefront side of mobile hardening (the CI device gate itself is the infra agent's PR 85 commit): storefront pages in `lighthouserc.json`, so the device gate and the Lighthouse budget both cover them; invisible 44 × 44 tap layers (logo, language pill, \"see all\", desktop row on touch, header icons under 375 px, the V12.2 phone social tiles, the 404 category chips) with the demo's drawn sizes unchanged; finger-sized footer rows on touch screens of desktop width; the floating WhatsApp button's missing styles; zoom tests (pinch zoom allowed, touch-action) — device gate 0 fails in 217 storefront checks. 23 Oct (audit follow-up): the CI device gate signs in on the sample data (postgres service, a gate owner with a generated password) and checks the admin controls that only show with data (`.pa-x`, `.pa-col`, `.pa-kind`, `.sc-item`, `a.st-name`) at 44 × 44; 0 fails in 620 checks; when the gate fails, CI prints and keeps the app's log",
+    "note": "storefront side of mobile hardening (the CI device gate itself is the infra agent's PR 85 commit): storefront pages in `lighthouserc.json`, so the device gate and the Lighthouse budget both cover them; invisible 44 × 44 tap layers (logo, language pill, \"see all\", desktop row on touch, header icons under 375 px, the V12.2 phone social tiles, the 404 category chips) with the demo's drawn sizes unchanged; finger-sized footer rows on touch screens of desktop width; the floating WhatsApp button's missing styles; zoom tests (pinch zoom allowed, touch-action) — device gate 0 fails in 217 storefront checks. 23 Oct (audit follow-up): the CI device gate signs in on the sample data (postgres service, a gate owner with a generated password) and checks the admin controls that only show with data (`.pa-x`, `.pa-col`, `.pa-kind`, `.sc-item`, `a.st-name`) at 44 × 44; 0 fails in 620 checks; when the gate fails, CI prints and keeps the app's log; **follow-up (6 Nov, #92):** a local gate run at 127.0.0.1 runs the shop's scripts (`allowedDevOrigins`, dev only), and a page whose scripts never ran is reported as NO-SCRIPTS instead of cut text (the phone footer \"cut-off\" was a dev server that never hydrated)",
     "github": [
+     "#92, 6 Nov",
      "#37, 24 Oct",
      "#25, 23 Oct",
      "#24, 23 Oct",
@@ -8956,7 +8996,8 @@
      ".pa-col",
      ".pa-kind",
      ".sc-item",
-     "a.st-name"
+     "a.st-name",
+     "allowedDevOrigins"
     ],
     "tests": [
      "storefront side of mobile hardening (the CI device gate itself is the infra agent's PR 85 commit): storefront pages in `lighthouserc.json`, so the device gate and the Lighthouse budget both cover them",
@@ -9296,8 +9337,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "page layout builder — the owner's own sections on the home and category pages (After launch, Lane B, batch 14; registry v244 `layout.blocks` and `layout.categoryOwn`, both empty as shipped; no migration, no new permission): Website › Page layouts (`/admin/website/layouts`, now Lumen) adds sections of ten types (banner, offer strip — words only, never a price —, product row or grid, set row, category tiles, reviews, journal, own text in the journal's safe format, spacer), each with its switch (new ones and copies start hidden), whole days, screens and place; edit, duplicate, hidden never deleted; one category's own order with its switch (`?page=category&cat=`); phone and computer preview; save checks the version and is audited `website.layout.save`; a section with nothing true to show draws nothing",
+    "note": "page layout builder — the owner's own sections on the home and category pages (After launch, Lane B, batch 14; registry v244 `layout.blocks` and `layout.categoryOwn`, both empty as shipped; no migration, no new permission): Website › Page layouts (`/admin/website/layouts`, now Lumen) adds sections of ten types (banner, offer strip — words only, never a price —, product row or grid, set row, category tiles, reviews, journal, own text in the journal's safe format, spacer), each with its switch (new ones and copies start hidden), whole days, screens and place; edit, duplicate, hidden never deleted; one category's own order with its switch (`?page=category&cat=`); phone and computer preview; save checks the version and is audited `website.layout.save`; a section with nothing true to show draws nothing; **follow-up (6 Nov, #92; follow-up 693):** PR 76's old `LayoutEditor.tsx` is marked unused (kept, nothing deleted) and a guard test fails if any file imports it again",
     "github": [
+     "#92, 6 Nov",
      "#89, 6 Nov"
     ]
    },
@@ -9310,11 +9352,15 @@
      "layout.categoryOwn",
      "website.layout.save"
     ],
-    "code": [],
+    "code": [
+     "LayoutEditor.tsx"
+    ],
     "names": [
      "?page=category&cat="
     ],
-    "tests": []
+    "tests": [
+     "follow-up 693):** PR 76's old `LayoutEditor.tsx` is marked unused (kept, nothing deleted) and a guard test fails if any file imports it again"
+    ]
    },
    "updates": [
     {
@@ -9325,7 +9371,9 @@
      "text": "**In demo (19 Oct, Shilpi A360-05 + Sawdagor A360-04):** `#/admin/layout` \"পেজ সাজান\" — page picker (home · all categories · per-category override), drag + ↑/↓ reorder, on/off, edit, duplicate, hide-never-delete, add-section type picker (10 types incl. product row from category/tag/manual, combo row from a combo rule, safe rich text, spacer), whole-day Asia/Dhaka dates, phone/desktop/both, live phone + desktop preview; example \"নতুন অফার\" above the reviews. Built-ins point at today's renderers (HOME_SECTIONS / CAT_SECTIONS); default layout = pixel-identical pages (gate 0 px). Files: 96c-layout-builder.js, r12-zlb.css."
     }
    ],
-   "mentions": [],
+   "mentions": [
+    76
+   ],
    "blueprint": [
     {
      "section": "D10. Page and site building tools (V2 · S02 · PR 595–600)",
@@ -9363,8 +9411,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "side canvas — zones in the empty left and right gutters on desktop (After launch, Lane B, batch 14; registry v245 `layout.sideCanvas` {off, gap 16, float 40, narrowest window 1280} and `layout.sideZones`; no migration): Website › Side canvas (Lumen): the master switch with a confirm, the zone list and form (left or right, home / categories / chosen categories, days, place and size, fixed / sticky / float, a product's or category's picture, an image or a small offer button), the approval map at 1440 and 1920 px with the shop's real widths; one fit rule shared with the shop (scaled to the room, hidden when it would cover content, mouse computers only); no HTML at all while off; audited `website.sidecanvas.save`",
+    "note": "side canvas — zones in the empty left and right gutters on desktop (After launch, Lane B, batch 14; registry v245 `layout.sideCanvas` {off, gap 16, float 40, narrowest window 1280} and `layout.sideZones`; no migration): Website › Side canvas (Lumen): the master switch with a confirm, the zone list and form (left or right, home / categories / chosen categories, days, place and size, fixed / sticky / float, a product's or category's picture, an image or a small offer button), the approval map at 1440 and 1920 px with the shop's real widths; one fit rule shared with the shop (scaled to the room, hidden when it would cover content, mouse computers only); no HTML at all while off; audited `website.sidecanvas.save`; **follow-up (6 Nov, #92):** Side canvas's approval map at 14 px: a zone drawn to scale shows its number, a legend names it",
     "github": [
+     "#92, 6 Nov",
      "#89, 6 Nov"
     ]
    },
@@ -9468,8 +9517,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "launch default — save the whole shop look and bring it back (After launch, Lane B, batch 14; no registry version, no migration — LayoutSnapshot / LayoutRestore of the schema): Website › More › Launch default (`/admin/website/launch-default`, Lumen): back to launch default, save the look as the launch default or a named look, restore, rename, set aside / bring back (never deleted), the restore log with Undo on the newest step; a look holds layouts, the owner's sections, category orders, side canvas, sweeps and which house ads are on — never money (announcement, flash sale, bag, checkout, prices, offers, delivery, COD left out); every restore saves the current look first and is undoable; back to launch default pauses running A/B tests; audited `website.look.*`; **follow-up (6 Nov, #91; follow-up 696):** the shop's hash-forward script is drawn the React way (`HashForwardScript`: it runs from the server's HTML, the browser's copy is an inert data block), so no \"Encountered a script tag\" warning",
+    "note": "launch default — save the whole shop look and bring it back (After launch, Lane B, batch 14; no registry version, no migration — LayoutSnapshot / LayoutRestore of the schema): Website › More › Launch default (`/admin/website/launch-default`, Lumen): back to launch default, save the look as the launch default or a named look, restore, rename, set aside / bring back (never deleted), the restore log with Undo on the newest step; a look holds layouts, the owner's sections, category orders, side canvas, sweeps and which house ads are on — never money (announcement, flash sale, bag, checkout, prices, offers, delivery, COD left out); every restore saves the current look first and is undoable; back to launch default pauses running A/B tests; audited `website.look.*`; **follow-up (6 Nov, #91; follow-up 696):** the shop's hash-forward script is drawn the React way (`HashForwardScript`: it runs from the server's HTML, the browser's copy is an inert data block), so no \"Encountered a script tag\" warning; **follow-ups (6 Nov, #92; follow-up 695):** Page layouts and Side canvas each get \"Snapshots of this page\" (save under a name and restore, the page as it is saved first so a restore is undone the same way); Launch default's look tags at 14 px",
     "github": [
+     "#92, 6 Nov",
      "#91, 6 Nov",
      "#89, 6 Nov"
     ]
@@ -22253,8 +22303,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "article SEO: schema, meta, internal links (After launch, batch 10; registry v229: `seo.indexing` journal kind off, `seo.structuredData.article` off, `blog.journal.relatedArticles` 0): the journal list, topics with live articles and live articles may be listed once ticked; article description, canonical, hreflang twin, Open Graph article; BlogPosting JSON-LD (an AI author sent as the shop) and BreadcrumbList; the journal in the sitemap (English with its Bengali twin, Bengali-only under `/bn`); \"Read next\" under an article (its plan first, then its topic, same language); PR 241's noindex replaced by the page kind",
+    "note": "article SEO: schema, meta, internal links (After launch, batch 10; registry v229: `seo.indexing` journal kind off, `seo.structuredData.article` off, `blog.journal.relatedArticles` 0): the journal list, topics with live articles and live articles may be listed once ticked; article description, canonical, hreflang twin, Open Graph article; BlogPosting JSON-LD (an AI author sent as the shop) and BreadcrumbList; the journal in the sitemap (English with its Bengali twin, Bengali-only under `/bn`); \"Read next\" under an article (its plan first, then its topic, same language); PR 241's noindex replaced by the page kind; **follow-up (6 Nov, #92; follow-up 659):** the article page's language switch lands on the twin article's own link (a redirect to the live twin in this language, else this language's journal, else \"page not found\")",
     "github": [
+     "#92, 6 Nov",
      "#84, 6 Nov"
     ]
    },
@@ -22412,8 +22463,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "the content calendar shared with the social studio, on the journal's side (After launch, Lane C, batch 13; no setting, no migration): Website › Blog & journal › Shared calendar (`/admin/website/blog/shared`, Lumen): the same calendar as Marketing › Calendar (PR 282) — articles beside plan lines, campaigns, ads, message sends, seasonal windows and festive cut-offs, day by day; social posts only while S23 is shown (closed by the owner, CN-036); read-only; `calendarOverview` gains `always`",
+    "note": "the content calendar shared with the social studio, on the journal's side (After launch, Lane C, batch 13; no setting, no migration): Website › Blog & journal › Shared calendar (`/admin/website/blog/shared`, Lumen): the same calendar as Marketing › Calendar (PR 282) — articles beside plan lines, campaigns, ads, message sends, seasonal windows and festive cut-offs, day by day; social posts only while S23 is shown (closed by the owner, CN-036); read-only; `calendarOverview` gains `always`; **follow-up (6 Nov, #92; follow-up 710):** the Shared calendar's date lines and lane pills at 14 px",
     "github": [
+     "#92, 6 Nov",
      "#87, 6 Nov"
     ]
    },
@@ -22777,8 +22829,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "blog as a full section with our own house ads (After launch, Lane C, batch 15; registry v253 `blog.houseAds`, off; migration `0171_house_ads`): Website › Blog & journal › House ads (`/admin/website/blog/ads`, one ad at `…/ads/<id>`, Lumen): banner, product, set or category ads with words in both languages, dates and weight, each with its places (list top, topic, between cards, after paragraph N, article end, popup with trigger and cap, slim bar, sidebar); new ads and places start off, set aside never deleted; the journal picks ads by relevance within the per-page limits and never pops up on a search visitor; clicks through `/api/shop/house-ad` (nofollow sponsored, counted per place per day) and an order within the credit window credited to the place (`kpiByHouseAdPlace`). Tags, author pages, search, RSS and impression counts not built",
+    "note": "blog as a full section with our own house ads (After launch, Lane C, batch 15; registry v253 `blog.houseAds`, off; migration `0171_house_ads`): Website › Blog & journal › House ads (`/admin/website/blog/ads`, one ad at `…/ads/<id>`, Lumen): banner, product, set or category ads with words in both languages, dates and weight, each with its places (list top, topic, between cards, after paragraph N, article end, popup with trigger and cap, slim bar, sidebar); new ads and places start off, set aside never deleted; the journal picks ads by relevance within the per-page limits and never pops up on a search visitor; clicks through `/api/shop/house-ad` (nofollow sponsored, counted per place per day) and an order within the credit window credited to the place (`kpiByHouseAdPlace`). Tags, author pages, search, RSS and impression counts not built; **follow-ups (6 Nov, #92; follow-up 706):** the journal as a full section — tags with their own pages, author and reviewer pages, the journal's search and its RSS feed (registry v257, each off; migration `0172_blog_reviewer_tags`; the new pages answer \"page not found\" through `shopNotFound`); house ad views counted per place with the click rate on the report (registry v258 `countViews`, off; migration `0173_house_ad_views`); the House ads pages' card text at 14 px",
     "github": [
+     "#92, 6 Nov",
      "#91, 6 Nov"
     ]
    },
@@ -22795,7 +22848,11 @@
     ],
     "names": [
      "0171_house_ads",
-     "kpiByHouseAdPlace"
+     "kpiByHouseAdPlace",
+     "0172_blog_reviewer_tags",
+     "shopNotFound",
+     "countViews",
+     "0173_house_ad_views"
     ],
     "tests": []
    },
@@ -23122,8 +23179,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-01",
-    "note": "delivered-purchase optimisation (After launch, batch 5; Blueprint C6.2 point 1; settings `ads.deliveredPurchase` v169, off, rides on `ads.tracking`): each order's confirmation and delivery from its own timeline go once per step to the ad platforms (`confirmed-<n>`, `delivered-<n>`), valued at the pieces kept, with the purchase's browser facts; the owner may tell them a purchase means the delivery; a clock in the server process and \"Send waiting now\"; Marketing › Tracking \"Delivered sales (cash on delivery)\" card; no money, order or budget changes",
+    "note": "delivered-purchase optimisation (After launch, batch 5; Blueprint C6.2 point 1; settings `ads.deliveredPurchase` v169, off, rides on `ads.tracking`): each order's confirmation and delivery from its own timeline go once per step to the ad platforms (`confirmed-<n>`, `delivered-<n>`), valued at the pieces kept, with the purchase's browser facts; the owner may tell them a purchase means the delivery; a clock in the server process and \"Send waiting now\"; Marketing › Tracking \"Delivered sales (cash on delivery)\" card; no money, order or budget changes; **follow-up (6 Nov, #92; follow-up 717):** the delivered-purchase run reads the whole look-back window, 500 rows at a time (oldest first by time then id, the window's end fixed at the run's start), no longer only its oldest 500 timeline rows; each order and step still judged once",
     "github": [
+     "#92, 6 Nov",
      "#78, 1 Nov"
     ]
    },
@@ -24186,8 +24244,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "seasonal homepage switching, scheduled (After launch, batch 10; `marketing.seasonalHome` v215, off; migration `0160_seasonal_home`): Marketing › Seasonal home (`/admin/marketing/seasonal`) — the home page saved as a named look (LayoutSnapshot scope `home`), its sections, hero lines and hero collection changed, scheduled for a window on the shop's clock (no overlaps); inside the window the home page draws with the look (each value re-checked), after it or \"Stop\" the owner's own home settings, never written; stopped windows kept, looks set aside, never deleted",
+    "note": "seasonal homepage switching, scheduled (After launch, batch 10; `marketing.seasonalHome` v215, off; migration `0160_seasonal_home`): Marketing › Seasonal home (`/admin/marketing/seasonal`) — the home page saved as a named look (LayoutSnapshot scope `home`), its sections, hero lines and hero collection changed, scheduled for a window on the shop's clock (no overlaps); inside the window the home page draws with the look (each value re-checked), after it or \"Stop\" the owner's own home settings, never written; stopped windows kept, looks set aside, never deleted; **follow-ups (6 Nov, #92; follow-ups 650–652):** a note in the admin's bell when a seasonal home window starts and when it ends or is stopped (registry v249 `marketing.seasonalHome.notes`, off, 7 days); adding a window and setting a look aside run in one transaction under a per-store lock (no overlap from two saves at once); Launch default never lists, restores or renames a home look (pinned by a db test)",
     "github": [
+     "#92, 6 Nov",
      "#84, 6 Nov"
     ]
    },
@@ -24196,14 +24255,17 @@
      "/admin/marketing/seasonal"
     ],
     "settings": [
-     "marketing.seasonalHome"
+     "marketing.seasonalHome",
+     "marketing.seasonalHome.notes"
     ],
     "code": [],
     "names": [
      "0160_seasonal_home",
      "home"
     ],
-    "tests": []
+    "tests": [
+     "Launch default never lists, restores or renames a home look (pinned by a db test)"
+    ]
    },
    "updates": [],
    "mentions": [],
@@ -24230,8 +24292,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "festive cut-off banners and the delivery promise (After launch, batch 10; `marketing.festiveCutoff` v216, off; home, product, checkout ticked; no migration): the festive Smart Rules' \"order by …\" words on the home page (with a clock), under the product's stock line and at checkout and the thank-you page, where a band past its time shows the \"after\" words in place of the hours promise; Marketing › Festive cut-off (`/admin/marketing/festive`) lists each rule's bands and what the shop says now; no date, hour, price or charge invented",
+    "note": "festive cut-off banners and the delivery promise (After launch, batch 10; `marketing.festiveCutoff` v216, off; home, product, checkout ticked; no migration): the festive Smart Rules' \"order by …\" words on the home page (with a clock), under the product's stock line and at checkout and the thank-you page, where a band past its time shows the \"after\" words in place of the hours promise; Marketing › Festive cut-off (`/admin/marketing/festive`) lists each rule's bands and what the shop says now; no date, hour, price or charge invented; **follow-ups (6 Nov, #92; follow-ups 653–655):** the festive cut-off reaches the order's late flag (an order placed past its band's cut-off, switch on and checkout ticked, has no hours promise and is never late — so it is no longer an apology-credit candidate either, as after Eid; no money moves), the receipt's promise (no hours past the cut-off) and the bag (the rule's words under the Eid lines; the tick now reads \"Bag, checkout and thank-you page\"); off as shipped",
     "github": [
+     "#92, 6 Nov",
      "#84, 6 Nov"
     ]
    },
@@ -24271,8 +24334,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "marketing calendar across ads, content and social (After launch, batch 10; `marketing.calendar` v217, off, 60 days; migration `0161_marketing_calendar`): Marketing › Calendar (`/admin/marketing/calendar`, More options) — campaigns, landing pages, ad campaigns, message sends, seasonal home windows, festive cut-offs, blog and social posts day by day on the shop's clock, lane chips and \"At a glance\" (also a card on Marketing › Campaigns); never starts, sends or changes anything; the owner's plan lines (CalendarEntry kind plan) the only writes, never deleted",
+    "note": "marketing calendar across ads, content and social (After launch, batch 10; `marketing.calendar` v217, off, 60 days; migration `0161_marketing_calendar`): Marketing › Calendar (`/admin/marketing/calendar`, More options) — campaigns, landing pages, ad campaigns, message sends, seasonal home windows, festive cut-offs, blog and social posts day by day on the shop's clock, lane chips and \"At a glance\" (also a card on Marketing › Campaigns); never starts, sends or changes anything; the owner's plan lines (CalendarEntry kind plan) the only writes, never deleted; **follow-ups (6 Nov, #92; follow-up 656):** a plan line may name its campaign (shown with it and linking there; no migration) and a month grid view (`?view=month`, weeks from the locale's first weekday), its words at 14 px, long names wrapping, dots on phones and 44 px links (found by the browser check)",
     "github": [
+     "#92, 6 Nov",
      "#84, 6 Nov"
     ]
    },
@@ -24285,7 +24349,8 @@
     ],
     "code": [],
     "names": [
-     "0161_marketing_calendar"
+     "0161_marketing_calendar",
+     "?view=month"
     ],
     "tests": []
    },
@@ -24319,8 +24384,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "marketing report: spend, revenue, by channel, by campaign (After launch, batch 10; `marketing.report` v218, off, up to 366 days, results within 7 days; no migration): Marketing › Report (`/admin/marketing/report`, More options) — for any period Ordered value and Sales (delivered) apart, by channel with each ad platform's imported spend and delivered ROAS, by campaign (an order once, through its ad campaign or landing page), per message send with its cost and orders; every figure from `@extas/metrics` `marketingReport`; read-only",
+    "note": "marketing report: spend, revenue, by channel, by campaign (After launch, batch 10; `marketing.report` v218, off, up to 366 days, results within 7 days; no migration): Marketing › Report (`/admin/marketing/report`, More options) — for any period Ordered value and Sales (delivered) apart, by channel with each ad platform's imported spend and delivered ROAS, by campaign (an order once, through its ad campaign or landing page), per message send with its cost and orders; every figure from `@extas/metrics` `marketingReport`; read-only; **follow-up (6 Nov, #92; follow-up 657, part):** Marketing report: \"Download CSV\" (the whole period as one spreadsheet-safe table), the message spend and count over every send of the period (not the first 200), the sends list paged 200 at a time; the split by product or district is still open",
     "github": [
+     "#92, 6 Nov",
      "#84, 6 Nov"
     ]
    },
@@ -24416,8 +24482,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "deep conversion feed (After launch, batch 10; `ads.conversionFeed` v232, off, rides on `ads.tracking` and `ads.deliveredPurchase`: generous Meta, hold 2 hours, intent 7 days; no migration, PR 257's TrackedEvent): `shipped-<number>` and `returned-<number>` from the order timeline to every ticked platform; the qualified sale (`qualified-<number>`: delivered at once, or with the courier untouched for the owner's hours; held back when cancelled, flagged or blocked) as the purchase only on the generous platforms, where the order placed and the delivery go as their own events, so one order is never two purchases; every order event enriched with the courier outcome and the visitor's intent, never a name, address, phone or e-mail; Meta custom_data, GA4 params, TikTok properties; the feed card on Marketing › Tracking (audited); metrics guard allows `feed.ts` (one order's event value, not a sales figure)",
+    "note": "deep conversion feed (After launch, batch 10; `ads.conversionFeed` v232, off, rides on `ads.tracking` and `ads.deliveredPurchase`: generous Meta, hold 2 hours, intent 7 days; no migration, PR 257's TrackedEvent): `shipped-<number>` and `returned-<number>` from the order timeline to every ticked platform; the qualified sale (`qualified-<number>`: delivered at once, or with the courier untouched for the owner's hours; held back when cancelled, flagged or blocked) as the purchase only on the generous platforms, where the order placed and the delivery go as their own events, so one order is never two purchases; every order event enriched with the courier outcome and the visitor's intent, never a name, address, phone or e-mail; Meta custom_data, GA4 params, TikTok properties; the feed card on Marketing › Tracking (audited); metrics guard allows `feed.ts` (one order's event value, not a sales figure); **follow-ups (6 Nov, #92; follow-ups 661–664):** the feed run reads the whole look-back window page by page (663); an event's extra data is kept at its first send, so a retry sends the facts as they were (662; `TrackedEvent.extra`, migration `0174_tracked_event_extra`); a returned parcel withdraws the purchase GA4 already counted through its refund while `withdrawOnReturn` is on (661; registry v261, off; Meta and TikTok keep the returned event); the thank-you page can share the order's server event ids with a browser pixel (664; registry v262 `shareIds`, off; drawn by the inert `SharedEventIds` block)",
     "github": [
+     "#92, 6 Nov",
      "#84, 6 Nov"
     ]
    },
@@ -24434,7 +24501,12 @@
     "names": [
      "shipped-<number>",
      "returned-<number>",
-     "qualified-<number>"
+     "qualified-<number>",
+     "TrackedEvent.extra",
+     "0174_tracked_event_extra",
+     "withdrawOnReturn",
+     "shareIds",
+     "SharedEventIds"
     ],
     "tests": []
    },
@@ -24538,8 +24610,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Google Merchant Center feed and the Bangladesh test (After launch, Lane C, batch 15; registry v256 `ads.merchantFeed`, off; no migration): `/feeds/merchant.xml` (only while on and only on the shop's own domain) — every published product of a shown category with Google's fields (title, plain description, link, the largest front photo, the cheapest live variant's price, stock, brand else the shop's name, category, condition, shipping country); a product without photo, price or description is left out and counted; Marketing › Merchant feed (`/admin/marketing/merchant-feed`, Lumen): the address to paste into Merchant Center, counts, left-out reasons, the first products and the Bangladesh test steps (the test itself is the owner's step after go-live). One item per product (no per-size or colour items yet), no struck price, no ad spend. On integration `feeds` joined the shop's own folders, so the PR 40 follow-up's 404 never answers the feed",
+    "note": "Google Merchant Center feed and the Bangladesh test (After launch, Lane C, batch 15; registry v256 `ads.merchantFeed`, off; no migration): `/feeds/merchant.xml` (only while on and only on the shop's own domain) — every published product of a shown category with Google's fields (title, plain description, link, the largest front photo, the cheapest live variant's price, stock, brand else the shop's name, category, condition, shipping country); a product without photo, price or description is left out and counted; Marketing › Merchant feed (`/admin/marketing/merchant-feed`, Lumen): the address to paste into Merchant Center, counts, left-out reasons, the first products and the Bangladesh test steps (the test itself is the owner's step after go-live). One item per product (no per-size or colour items yet), no struck price, no ad spend. On integration `feeds` joined the shop's own folders, so the PR 40 follow-up's 404 never answers the feed; **follow-ups (6 Nov, #92; follow-up 707):** one item per size and colour (Google's variants for clothes; registry v259 `variants`, off); the struck price where the product page shows one, and the shop's gender and age group for clothes (registry v260; off and empty as shipped); the Merchant feed page's card text at 14 px",
     "github": [
+     "#92, 6 Nov",
      "#91, 6 Nov"
     ]
    },
@@ -24553,7 +24626,8 @@
     ],
     "code": [],
     "names": [
-     "feeds"
+     "feeds",
+     "variants"
     ],
     "tests": [
      "Google Merchant Center feed and the Bangladesh test (After launch, Lane C, batch 15",
