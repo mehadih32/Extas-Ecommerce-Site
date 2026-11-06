@@ -1,0 +1,70 @@
+{
+  "bb": {
+    "metaTitle": "Bag tier box",
+    "title": "Bag tier box",
+    "sub": "The \"take more, pay less\" box on the bag: Take 2 | Take 3 | Take 4.",
+    "note": "The tiers and their prices come from your Build-your-own-set rules in Smart Rules. This page only decides whether and how the bag shows them; it never changes a price.",
+    "readOnly": "You can look at this page; changing it needs permission to change combos.",
+    "master": {
+      "title": "Show the \"take more, pay less\" box on the bag",
+      "on": "On: a computer shows the box beside the suggestions when something in the bag is covered by a running rule.",
+      "off": "Off: the bag shows no tier box. The rules' prices still apply at checkout."
+    },
+    "f": {
+      "from": "Shows from (first day, empty = now)",
+      "to": "Shows until (last day, empty = no end)",
+      "max": "Tiers shown (up to 4)",
+      "phone": "Full box on the phone too",
+      "phoneHint": "The box is made for computers; on a phone the bag shows one short line. Switch this on to try the full box on a phone.",
+      "en": "English",
+      "bn": "Bengali"
+    },
+    "rules": {
+      "title": "Build-your-own-set rules",
+      "sub": "Each rule's tiers and prices, read only. Switch a rule off to keep its tiers out of the box (the rule itself keeps working). Words: your own text for a tier.",
+      "none": "No Build-your-own-set rule yet. Make one in Smart Rules; it shows here.",
+      "open": "Change prices, days and products in Smart Rules"
+    },
+    "state": {
+      "live": "Running",
+      "soon": "Starts later",
+      "ended": "Ended",
+      "off": "Paused",
+      "draft": "Draft"
+    },
+    "all": "All products",
+    "missing": "(removed)",
+    "except": "except {names}",
+    "products": "{n} products",
+    "days": "{from} to {to}",
+    "tier": "Take {n}",
+    "notOffered": "not offered",
+    "show": "Show on the bag",
+    "words": "Words",
+    "wordsHint": "Empty = the shop's own words (\"{n} polos\"). Up to 60 letters. English is used when Bengali is empty.",
+    "done": "Done",
+    "pv": {
+      "title": "Preview",
+      "sub": "The box for \"{name}\", with today's draft, before you save.",
+      "none": "Nothing to preview: no rule with a price is switched on here.",
+      "desktop": "Computer",
+      "phone": "Phone (one short line)",
+      "phoneFull": "Phone (full box switched on)",
+      "head": "Buy more, pay less",
+      "row": "{n} pieces",
+      "note": "The saving each customer sees is worked out against the price of the item in their own bag."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved. The bag shows it now.",
+    "discard": "Discard changes",
+    "unsaved": "You have changes that are not saved yet.",
+    "err": {
+      "INVALID_INPUT": "Something is not right. Check the days (the last day after the first) and the words.",
+      "STALE": "Someone saved a moment ago. Reload the page.",
+      "forbidden": "You do not have permission to change combos.",
+      "network": "No connection. Try again.",
+      "other": "Could not save. Try again."
+    }
+  }
+}

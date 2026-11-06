@@ -9,7 +9,7 @@ import { bagSets, liveSetTiers, productFacts, setSummary, type BagSet, type Prod
 import { cachedActiveRules, inScope, liveRuleValue, quoteCart, ruleTextFor, ruleTextsFor, scopeFacts, type CartQuote } from '@extas/rules';
 import { sizeAnswersOf } from './cart';
 import { checkStoreId, nowOf, setting, type CartDeps } from './context';
-import { answerFor, codeStateOf, inDays, ladderOf, offerSlotOf, sizeGroups, type CodeState, type Ladder, type OfferSlot, type SizeAnswer, type SizeGroup } from './pure';
+import { answerFor, codeStateOf, inDays, ladderOf, offerSlotOf, sizeGroups, tierWordsOf, type CodeState, type Ladder, type OfferSlot, type SizeAnswer, type SizeGroup } from './pure';
 
 export type BagLang = 'en' | 'bn';
 
@@ -135,6 +135,8 @@ export interface BagTierBox extends Named {
   category: (Named & { slug: string }) | null;
   ladder: Ladder;
   inBag: number;
+  /** PR 598 — the owner's own words per tier, by pieces (`bag.tiers.rules`); a tier not listed says the shop's own. */
+  words: Record<number, { en: string; bn: string }>;
 }
 
 export interface BagView {
@@ -434,25 +436,29 @@ export async function bagView(
 /** The "take more, pay less" box: the first live set-tier rule that covers a loose item in the bag. */
 async function tierBox(deps: CartDeps, storeId: number, items: readonly BagItem[], rules: Awaited<ReturnType<typeof liveSetTiers>>): Promise<BagTierBox | null> {
   if (!items.length || !rules.length) return null;
-  const [on, startsOn, endsOn, max, timeZone] = await Promise.all([
+  const [on, startsOn, endsOn, max, timeZone, box] = await Promise.all([
     setting(deps, storeId, 'bag.tiers.enabled'),
     setting(deps, storeId, 'bag.tiers.startsOn'),
     setting(deps, storeId, 'bag.tiers.endsOn'),
     setting(deps, storeId, 'bag.tiers.max'),
     setting(deps, storeId, 'store.timeZone'),
+    setting(deps, storeId, 'bag.tiers.rules'),
   ]);
   const today = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(nowOf(deps));
   if (!on || !inDays(today, startsOn, endsOn)) return null;
+  // PR 598: a rule the owner kept off the box is skipped (the rule itself, its set builder and its prices are untouched).
+  const shown = rules.filter((r) => !box.hidden.includes(r.key));
+  if (!shown.length) return null;
   const facts = await scopeFacts(deps.db, storeId, [...new Set(items.map((i) => i.productId))]);
   for (const i of items) {
     const f = facts.get(i.productId);
-    const rule = f ? rules.find((r) => inScope(r.scope, f)) : undefined;
+    const rule = f ? shown.find((r) => inScope(r.scope, f)) : undefined;
     if (!rule) continue;
     const inBag = items.filter((x) => facts.get(x.productId) && inScope(rule.scope, facts.get(x.productId)!)).reduce((s, x) => s + x.quantity, 0);
     const ladder = ladderOf({ tiers: rule.tiers, unitPriceMinor: i.unitPriceMinor, inBag, max });
     if (!ladder) continue;
     const cat = i.categoryId ? await deps.db.category.findFirst({ where: { id: i.categoryId, storeId }, select: { slug: true, nameEn: true, nameBn: true } }) : null;
-    return { ruleKey: rule.key, nameEn: rule.nameEn, nameBn: rule.nameBn, category: cat ? { slug: cat.slug, nameEn: cat.nameEn, nameBn: cat.nameBn } : null, ladder, inBag };
+    return { ruleKey: rule.key, nameEn: rule.nameEn, nameBn: rule.nameBn, category: cat ? { slug: cat.slug, nameEn: cat.nameEn, nameBn: cat.nameBn } : null, ladder, inBag, words: tierWordsOf(rule.key, box.labels) };
   }
   return null;
 }

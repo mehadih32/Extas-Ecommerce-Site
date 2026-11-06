@@ -112,7 +112,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     tabs: [
       { id: 'all', pages: [{ href: '/admin/products', perm: 'catalogue.read', keys: ['products', 'productNew', 'product'] }] },
       { id: 'queue', pages: [{ href: '/admin/products/queue', perm: 'catalogue.read', keys: ['publishQueue'] }] },
-      { id: 'combos', guide: 'combos', pages: [{ href: '/admin/combos', perm: 'combos.read', keys: ['combos'] }] },
+      // S02 · PR 598 — the bag's "Take 2 | Take 3 | Take 4" box (its switch, days, rules shown, own words), beside the combos.
+      { id: 'combos', guide: 'combos', pages: [{ href: '/admin/combos', perm: 'combos.read', keys: ['combos'] }, { href: '/admin/combos/bag-box', perm: 'combos.read', keys: ['combosBagBox'] }] },
       {
         id: 'stock',
         guide: 'stock',
@@ -485,6 +486,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/settings/system/go-live', perm: 'system.read', keys: ['golive'] },
         ],
       },
+      // S02 · PR 598 — Settings › More › Shimmer: every shimmer's switch, speed and strength (demo 89t-shimmer.js).
+      { id: 'shimmer', more: true, guide: 'settings', pages: [{ href: '/admin/settings/shimmer', perm: 'settings.read', keys: ['settingsShimmer'] }] },
       // PR 12 (CN-025): Settings → Admin look (the page designs, where the guide opens).
       { id: 'look', guide: 'admin-look', pages: [{ href: '/admin/settings/look', perm: 'settings.read', keys: ['adminLook'] }] },
     ],

@@ -47,6 +47,13 @@ export function OfferSlot({ c, slot, cod, upsellShown }: { c: ShopContext; slot:
   );
 }
 
+/** PR 598 — the owner's own words for a tier (`bag.tiers.rules`), in the page's language (English when Bengali is empty). */
+export function ownTierWords(tiers: NonNullable<BagView['tiers']>, quantity: number, lang: string): string | null {
+  const w = tiers.words?.[quantity];
+  if (!w) return null;
+  return (lang === 'bn' && w.bn) || w.en || w.bn || null;
+}
+
 /** PR 109 — "Buy more polos, pay less": the tier rule's ladder (computer; on the phone only when switched on). */
 export function Ladder({ c, tiers, phone }: { c: ShopContext; tiers: NonNullable<BagView['tiers']>; phone: boolean }) {
   const t = c.t;
@@ -58,7 +65,7 @@ export function Ladder({ c, tiers, phone }: { c: ShopContext; tiers: NonNullable
       <div className="bgc-th1">{t('bag.tiers.title', { cat: catName })}</div>
       {tiers.ladder.rows.map((r) => (
         <div key={r.quantity} className="bgc-lr">
-          <b>{t('bag.tiers.row', { n: c.num(r.quantity), cat: catName })}</b>
+          <b>{ownTierWords(tiers, r.quantity, c.lang) ?? t('bag.tiers.row', { n: c.num(r.quantity), cat: catName })}</b>
           <span className="price">{c.money(r.priceMinor)}</span>
           {r.saveMinor ? <span className="bgc-ts">{t('bag.tiers.save', { amount: c.money(r.saveMinor) })}</span> : null}
         </div>
@@ -95,7 +102,7 @@ export function PhoneTier({ c, tiers }: { c: ShopContext; tiers: NonNullable<Bag
         <Icon name="layers" size={18} />
       </span>
       <span className="grow">
-        <b>{c.t('bag.tiers.phoneTitle', { q: c.num(row.quantity) })}</b>
+        <b>{ownTierWords(tiers, row.quantity, c.lang) ?? c.t('bag.tiers.phoneTitle', { q: c.num(row.quantity) })}</b>
         <span>{c.t('bag.tiers.phoneText', { q: c.num(row.quantity), price: c.money(row.priceMinor), saving: c.money(row.saveMinor) })}</span>
       </span>
       <Icon name="right" size={18} />

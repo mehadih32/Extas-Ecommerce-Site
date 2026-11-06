@@ -64,7 +64,7 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
   // Token values are checked (hex colours, known font stacks), so they are safe inside a style element.
   const css = `.shop{${c.theme.css}}html,body{background:${c.theme.tokens.bg};overscroll-behavior-x:none;overscroll-behavior-y:none}`;
   // PR 86: the owner's sweep switches, as one small stylesheet of fixed selectors ('' while every sweep is as designed).
-  const sweep = sweepCss(c.s['shop.sweep']);
+  const sweep = sweepCss(c.s['shop.sweep'], c.s['shop.shimmer']);
   return (
     <div id="app" className="shop" data-theme={c.theme.choice.preset} lang={c.lang} data-large-text={c.s['theme.largeText'] ? '1' : undefined}>
       {hashLinks.forward ? <script data-hash-forward="" dangerouslySetInnerHTML={{ __html: hashScript(hashRulesFor(c.s['naming.productPathPrefix'])) }} /> : null}

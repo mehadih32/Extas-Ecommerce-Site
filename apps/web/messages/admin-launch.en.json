@@ -107,7 +107,8 @@
         "layout_sideCanvas": "The side canvas switch and its numbers",
         "layout_sideZones": "The side canvas zones",
         "shop_sweep": "The light sweeps",
-        "pdp_sweep": "The product page's light sweep"
+        "pdp_sweep": "The product page's light sweep",
+        "shop_shimmer": "The shimmers' speed and strength"
       },
       "ads": "Which house ads and their places are switched on",
       "not": "Not part of a look: words, eye-toggles, the announcement bar, the flash sale, the bag and checkout, prices, offers, delivery and payments."

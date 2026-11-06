@@ -91,6 +91,10 @@
       "phonePreview": {
         "label": "Show the tiers on the phone too",
         "help": "The tier box is for computers; on the phone it is a preview for the owner to try."
+      },
+      "rules": {
+        "label": "Tier box: rules shown and own words",
+        "help": "Which Build-your-own-set rules show their tiers in the bag's \"Take 2 | Take 3 | Take 4\" box, and your own words for a tier (empty = \"Take {n}\"). The tiers and prices are the rules' own; change them in Smart Rules. Change this on Products › Combos › Bag tier box."
       }
     },
     "twoSizes": {

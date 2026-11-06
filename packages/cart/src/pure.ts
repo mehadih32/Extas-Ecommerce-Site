@@ -141,6 +141,23 @@ export function ladderOf(i: LadderInput): Ladder | null {
   return { rows, next: up ? { quantity: up.quantity, priceMinor: up.priceMinor, more: up.quantity - i.inBag } : null, progress: Math.min(100, Math.floor((Math.max(0, i.inBag) * 100) / top)) };
 }
 
+/**
+ * PR 598 — the owner's own words for a rule's tiers (`bag.tiers.rules.labels`, keyed `<rule key>:<pieces>`), by pieces.
+ * A tier with no words in either language is left out, so the shop says its own "Take {n}".
+ */
+export function tierWordsOf(ruleKey: string, labels: Readonly<Record<string, { en: string; bn: string }>>): Record<number, { en: string; bn: string }> {
+  const out: Record<number, { en: string; bn: string }> = {};
+  for (const [k, w] of Object.entries(labels)) {
+    const at = k.lastIndexOf(':');
+    if (at < 1 || k.slice(0, at) !== ruleKey) continue;
+    const n = Number(k.slice(at + 1));
+    const en = w.en.trim();
+    const bn = w.bn.trim();
+    if (Number.isInteger(n) && n > 0 && (en || bn)) out[n] = { en, bn };
+  }
+  return out;
+}
+
 /** Is a day (`YYYY-MM-DD`) inside the window? Empty ends are open; the last day still counts. */
 export function inDays(today: string, startsOn: string | null, endsOn: string | null): boolean {
   return (!startsOn || today >= startsOn) && (!endsOn || today <= endsOn);

@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { motionSettings, SHOP_SWEEPS, type ShopSweepSettings } from '@extas/settings';
-import { sweepCss, SWEEP_TARGETS } from './sweep';
+import { motionSettings, shimmerSettings, SHIMMERS, SHOP_SWEEPS, type ShopShimmerSettings, type ShopSweepSettings } from '@extas/settings';
+import { SHIMMER_TARGETS, shimmerFactors, sweepCss, SWEEP_TARGETS } from './sweep';
 import { sweepClass } from './sweep-class';
 
 const DEF = motionSettings['shop.sweep'].default;
@@ -70,5 +70,42 @@ describe('PR 86 · the light-sweep switches', () => {
   it('a word gets its sweep through one shared class', () => {
     expect(sweepClass(true)).toBe(' sweep');
     expect(sweepClass(false)).toBe('');
+  });
+});
+
+describe('PR 598 · the Shimmer control (speed and strength)', () => {
+  const TUNE = shimmerSettings['shop.shimmer'].default;
+  const tuned = (items: ShopShimmerSettings['items']): ShopShimmerSettings => ({ ...TUNE, items });
+
+  it('as shipped it writes nothing at all, and every shimmer has a designed pass time per selector', () => {
+    expect(sweepCss(DEF, TUNE)).toBe('');
+    for (const id of SHIMMERS) {
+      const t = SHIMMER_TARGETS[id];
+      expect(t.dur.length === 1 || t.dur.length === t.sel.length).toBe(true);
+      for (const d of t.dur) expect(shopCss()).toMatch(new RegExp(`animation:\\s*[a-zA-Z]*\\s*${String(d).replace('.', '\\.')}s`));
+    }
+  });
+
+  it('slow and soft: the designed time times the factor and a share of the light, only without reduced motion', () => {
+    const css = sweepCss(DEF, tuned({ logo: { speed: 'slow', strength: 'soft' } }));
+    expect(css).toBe('@media (prefers-reduced-motion:no-preference){html body .hdr .logo::after{animation-duration:5.1s!important;opacity:0.5!important}}');
+    expect(shimmerFactors(tuned({ logo: { speed: 'fast', strength: 'medium' } }), 'logo')).toEqual({ time: 0.65, light: 0.75 });
+  });
+
+  it('a switched-off shimmer is not tuned, and the master switch off tunes nothing', () => {
+    expect(sweepCss(withItem('logo', false), tuned({ logo: { speed: 'slow', strength: 'soft' } }))).not.toContain('opacity');
+    expect(sweepCss({ ...DEF, on: false }, tuned({ pdpWords: { speed: 'fast', strength: 'full' } }))).not.toContain('animation-duration');
+  });
+
+  it('the product page words and size boxes are tuned too', () => {
+    const css = sweepCss(DEF, tuned({ pdpWords: { speed: 'fast', strength: 'full' }, pdpPills: { speed: 'normal', strength: 'medium' } }));
+    expect(css).toContain('html body .sweep.sweep.sweep::after{animation-duration:2.08s!important;opacity:1!important}');
+    expect(css).toContain('html body .pdp-page .pdp-pills.shine .size-pill::after{animation-duration:4.6s!important;opacity:0.75!important}');
+  });
+
+  it('green buttons tuned: the checkout and Order Now buttons keep their own designed time', () => {
+    const css = sweepCss(DEF, tuned({ buttons: { speed: 'slow', strength: 'soft' } }));
+    expect(css).toContain('html body .btn-primary:not(:disabled)::after{animation-duration:10.5s!important;opacity:0.5!important}');
+    expect(css).toContain('html body .co-confirm.btn-primary:not(:disabled)::after{animation-duration:6.5s!important;opacity:1!important}');
   });
 });

@@ -233,6 +233,12 @@ describe.skipIf(!HAS_TEST_DB)('the bag on PostgreSQL (S04)', () => {
       overrides.set('bag.tiers.endsOn', '2026-10-22');
       expect((await bagView(deps(), { storeId: S, cartId: id, lang: 'en' })).tiers).toBeNull();
       overrides.delete('bag.tiers.endsOn');
+      // PR 598: the owner's own words for a tier; a rule kept off the box shows no box, its price stays the rule's.
+      overrides.set('bag.tiers.rules', { hidden: [], labels: { 'any-polos:2': { en: 'Pair up', bn: '' } } });
+      expect((await bagView(deps(), { storeId: S, cartId: id, lang: 'en' })).tiers?.words).toEqual({ 2: { en: 'Pair up', bn: '' } });
+      overrides.set('bag.tiers.rules', { hidden: ['any-polos'], labels: {} });
+      expect((await bagView(deps(), { storeId: S, cartId: id, lang: 'en' })).tiers).toBeNull();
+      overrides.delete('bag.tiers.rules');
       // Two polos: the set tier applies, the summary says so and the saving is the engine's.
       await addItem(deps(), { storeId: S, cartId: id, variantId: variant('essential-pique-polo', 'navy', 'M').id });
       const two = await bagView(deps(), { storeId: S, cartId: id, lang: 'en' });

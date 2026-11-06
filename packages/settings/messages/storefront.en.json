@@ -242,6 +242,10 @@
     "sweep": {
       "label": "Light sweeps across the shop",
       "help": "The slow light that crosses the green buttons, the logo, the announcement strip, the footer's payment row, the bag, the checkout and the account's offer banner, each on its own switch, plus one switch that stops every sweep at once (the product page's own words and size boxes too). All on as designed, except the Add to Bag sweep. The checkout and Order Now buttons keep their sweep when \"all other green buttons\" is off. A customer who asked for less motion never sees any sweep."
+    },
+    "shimmer": {
+      "label": "Shimmer speed and strength",
+      "help": "How fast and how bright each shimmer of the shop runs: slow, as designed or fast; as designed, medium or soft (never brighter than designed). The four factors are under More options. Switch shimmers on or off with \"Light sweeps across the shop\". Change it on Settings › Shimmer."
     }
   },
   "layout": {
