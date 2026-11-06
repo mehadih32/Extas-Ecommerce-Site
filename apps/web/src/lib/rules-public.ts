@@ -54,7 +54,8 @@ export const etaBanner = (input: { storeId: number; locale?: string }) => safe<s
  * PR 281 — the live festive rules' words for one shop place (the home page's festive section, the product page, and —
  * follow-up 655 — the bag, which reads checkout's tick with no band known yet): the
  * short words before the last order times, the "after" words once they passed. Empty while Marketing › Festive cut-off
- * is off (as shipped) or the place is unticked. With a product, only the rules whose scope covers it.
+ * is off (as shipped) or the place is unticked. With a product, only the rules whose scope covers it. `band`: the
+ * customer's band when the shop knows it (lib/shop/known-band) — his own time; without it every band's time.
  */
-export const festiveLines = (input: { storeId: number; place: 'home' | 'product' | 'checkout'; locale?: string; productId?: string }) =>
-  safe<rl.FestiveLine[]>([], (d) => rl.festiveFor(d, input.storeId, { place: input.place, locale: input.locale, productId: input.productId }));
+export const festiveLines = (input: { storeId: number; place: 'home' | 'product' | 'checkout'; locale?: string; productId?: string; band?: string | null }) =>
+  safe<rl.FestiveLine[]>([], (d) => rl.festiveFor(d, input.storeId, { place: input.place, locale: input.locale, productId: input.productId, band: input.band ?? null }));

@@ -110,8 +110,9 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Festive cut-off on PostgreSQL (PR 2
       { band: 'dhaka-city', bandName: null, at: times.cutoffDhakaCity, passed: false },
       { band: 'dhaka-sub-area', bandName: null, at: times.cutoffDhakaCity, passed: false },
     ]);
-    expect(row.now.en).toMatch(/^Order by .+ for delivery before the festival/);
-    expect(row.now.bn).toContain('উৎসবের আগে পেতে');
+    // with no band known, the line the shop draws names every area's time (the template's full words)
+    expect(row.now.en).toMatch(/^Inside Dhaka: order by .+ Outside Dhaka: order by /);
+    expect(row.now.bn).toContain('ঢাকার বাইরে:');
     // after every time: the after words
     expect((await api('GET', undefined, owner, Date.parse('2027-03-08T06:00:00Z'))).a.rules[0]).toMatchObject({ state: 'closed', now: { en: 'Orders placed now arrive after the festival.' } });
     // the shop (its own clock and its own settings reader, first read here, after the switch): the home page ticked, the product page not

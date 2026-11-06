@@ -6,14 +6,17 @@
 // delivery before the festival" while a band's time is ahead, its "after" words once every band passed — while
 // Marketing › Festive cut-off is on with checkout ticked (the bag is checkout's first step; off as shipped: nothing).
 // Words only: no charge, price or Cash on Delivery changes.
+// Follow-up (PR 281 / 214): with the customer's band known (his saved address or his started checkout), the festive
+// line names his own last order time; otherwise every band's (never only Dhaka city's later time).
 import type { ShopContext } from '@/lib/shop/context';
 import { etaBanner, festiveLines } from '@/lib/rules-public';
+import { knownBand } from '@/lib/shop/known-band';
 import { Icon } from './Icon';
 
 /** `wrap`: a class for a box around the strip (the home page's container), drawn only when there is a strip. */
 export async function EtaBanner({ c, testId, wrap, festive = false }: { c: ShopContext; testId: string; wrap?: string; festive?: boolean }) {
   const locale = c.lang === 'bn' ? 'bn-BD' : 'en-BD';
-  const [eta, cut] = await Promise.all([etaBanner({ storeId: c.storeId, locale }), festive ? festiveLines({ storeId: c.storeId, place: 'checkout', locale }) : Promise.resolve([])]);
+  const [eta, cut] = await Promise.all([etaBanner({ storeId: c.storeId, locale }), festive ? knownBand(c.storeId).then((band) => festiveLines({ storeId: c.storeId, place: 'checkout', locale, band })) : Promise.resolve([])]);
   const lines = [...eta, ...cut.map((f) => f.text).filter((t) => t && !eta.includes(t))];
   if (!lines.length) return null;
   const strip = (
