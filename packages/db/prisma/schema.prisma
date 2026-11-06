@@ -7551,10 +7551,13 @@ model YoutubeVideo {
   views            Int            @default(0)
   attributedOrders Int            @default(0)
   publishedAt      DateTime?      @db.Timestamptz(3)
+  /// PR 278 — set aside instead of deleted (migration 0128).
+  archivedAt       DateTime?      @db.Timestamptz(3)
   createdAt        DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime       @updatedAt @db.Timestamptz(3)
 
   @@unique([channelId, externalId])
+  @@index([storeId, archivedAt])
 }
 
 /// @stage S13 · PR 279 — an SEO outreach prospect.

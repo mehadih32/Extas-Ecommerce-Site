@@ -1,0 +1,12 @@
+/* S13 · PR 278 — Marketing › YouTube: the totals as a small grid, the tracked links (long addresses wrap) (the shell's tokens only). */
+.adm2 .yt-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;margin:8px 0 0}
+@media (min-width:768px){.adm2 .yt-totals{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.adm2 .yt-totals>div{display:grid;gap:2px;min-width:0}
+.adm2 .yt-totals dt{color:var(--ink2)}
+.adm2 .yt-totals dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.adm2 .yt-mt8{margin-top:8px}
+.adm2 .yt-break{overflow-wrap:anywhere;word-break:break-all}
+.adm2 .yt-links{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px}
+.adm2 .yt-links>li{display:grid;gap:4px;min-width:0}
+.adm2 .yt-links>li>span:last-child,.adm2 .yt-links .a2-btn{justify-self:start}
+.adm2 details.a2-more-opts>summary{display:flex;align-items:center;min-height:44px;cursor:pointer}

@@ -58,3 +58,5 @@ export * from './ad-return';
 // video site and AI assistant (organic.ts; the pure source matcher is organic-sources.ts, also in ./pure).
 export * from './organic';
 export * from './organic-sources';
+// S13 · PR 278: `campaignTagFigures` — placed and delivered orders and their Sales value per kept campaign tag (campaign-tags.ts).
+export * from './campaign-tags';
