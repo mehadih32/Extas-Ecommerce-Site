@@ -1,7 +1,7 @@
 // PR 153, F-043 — the order timers. They never change an order: an order held longer than `orders.hold.reviewHours`,
 // or waiting for an advance past its deadline (`orders.advance.waitHours`), gets one call task for a person, and a
 // timeline row says so. Nothing is cancelled or released by a timer (CN-018). Both are off (0) by default. The worker
-// runs `orderFollowUps` on a schedule (wired with the jobs, follow-up in PROGRESS.md); a test or the admin may run it.
+// runs `orderFollowUps` once an hour per store while a timer is on (@extas/jobs order-followups.ts, follow-up 192).
 import { nowOf, setting, TX, type OrdersDeps } from './context';
 import { eventRow, systemBy } from './service';
 

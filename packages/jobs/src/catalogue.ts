@@ -9,7 +9,7 @@
 // default locations. PR 196 adds the ERP webhook job (one stored event applied), PR 72 the search index job
 // (search.ts), PR 148 the message engine's run (messages.ts), PR 170 the sweep of open online payments (payments.ts),
 // PR 407 the invoice run (invoices.ts), PR 296 the points run (rewards.ts), PR 534 the grading run (grades.ts).
-// PR 538 the support escalation sweep (support-escalation.ts).
+// PR 538 the support escalation sweep (support-escalation.ts). PR 153 (follow-up 192) the order timers (order-followups.ts).
 // A later stage adds its job here with its key, queue and function.
 import { ERP_WEBHOOK_JOB, INVENTORY_QUEUE, processErpWebhook, runInventoryJob, type InventoryJob } from '@extas/inventory';
 import type { JobDeps } from './context';
@@ -28,6 +28,7 @@ import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 import { RETURNS_ERP_JOB, RETURNS_ERP_QUEUE, runReturnsErp } from './returns-erp';
 import { MONEY_REPORT_JOB, MONEY_REPORT_QUEUE, runMoneyReport, type MoneyReportPayload } from './money-report';
 import { POINTS_JOB, POINTS_QUEUE, runPointsJob } from './rewards';
+import { ORDER_FOLLOW_UPS_JOB, ORDER_FOLLOW_UPS_QUEUE, runOrderFollowUps } from './order-followups';
 import { GRADES_JOB, GRADES_QUEUE, runGradesJob } from './grades';
 import { AUDIENCE_REFRESH_JOB, AUDIENCE_REFRESH_QUEUE, runAudienceRefresh, type AudienceRefreshPayload } from './audience-refresh';
 import { AD_SPEND_IMPORT_JOB, AD_SPEND_IMPORT_QUEUE, runAdSpendImport, type AdSpendImportPayload } from './ad-spend-import';
@@ -397,6 +398,23 @@ const supportEscalateJob: JobDefinition<{ storeId: number }> = {
  * S13 · PR 265 — one store's daily ad spend import for one store day (ad-spend-import.ts; planned only while it is due,
  * the day in the run key). Safe to run twice: each campaign day is replaced, never added; off = nothing.
  */
+/**
+ * PR 153 follow-up 192 — one store's order timers (packages/orders `orderFollowUps`; planned by order-followups.ts once
+ * an hour while a timer is on): a call task for an order held too long or an advance past its deadline. Safe to run
+ * twice: an order with an open task of the same reason gets no second one.
+ */
+const orderFollowUpsJob: JobDefinition<{ storeId: number }> = {
+  key: ORDER_FOLLOW_UPS_JOB,
+  queue: ORDER_FOLLOW_UPS_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${ORDER_FOLLOW_UPS_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runOrderFollowUps(deps, p.storeId)) }),
+};
+
 const adSpendImportJob: JobDefinition<AdSpendImportPayload> = {
   key: AD_SPEND_IMPORT_JOB,
   queue: AD_SPEND_IMPORT_QUEUE,
@@ -428,6 +446,7 @@ const definitions: JobDefinition<never>[] = [
   audienceRefreshJob as unknown as JobDefinition<never>,
   supportEscalateJob as unknown as JobDefinition<never>,
   adSpendImportJob as unknown as JobDefinition<never>,
+  orderFollowUpsJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

@@ -12,6 +12,7 @@ import { pointsPlanner } from './rewards';
 import { gradesPlanner } from './grades';
 import { searchPlanner, searchRunKey } from './search';
 import { supportEscalationPlanner } from './support-escalation';
+import { orderFollowUpsPlanner } from './order-followups';
 import { errorLine, MAX_ERROR } from './context';
 import { withDeadline } from './runs';
 import { LeaderLock, type LockStore } from './leader';
@@ -61,7 +62,7 @@ describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     // PR 351: + 'money.report.send' (its own queue 'reports'). PR 264: + 'audiences.refresh' (the same queue). PR 265: + 'ads.spend.import' (the same queue).
     expect([...JOBS.keys()].sort()).toEqual(
-      ['ads.spend.import', 'audiences.refresh', 'courier.track', 'money.report.send', 'courier.zones', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate'].sort(),
+      ['ads.spend.import', 'audiences.refresh', 'courier.track', 'money.report.send', 'courier.zones', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.followUps.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('money.report.send')!.queue).toBe('reports');
@@ -345,5 +346,32 @@ describe('PR 534 · the grading planner', () => {
     const now = new Date('2026-11-05T10:30:00Z');
     expect(await gradesPlanner(deps, now)).toEqual([{ queue: 'customers', name: 'customers.grades.run', payload: { storeId: 2 }, key: `customers.grades.run/2/${Math.floor(now.getTime() / 86_400_000)}` }]);
     expect(() => JOBS.get('customers.grades.run')!.parse({ storeId: 0 })).toThrow(/positive integer/);
+  });
+});
+
+describe('PR 153 follow-up 192 · the order timers on the schedule', () => {
+  it('is a job of its own queue that needs a store', () => {
+    const job = jobDefinition('orders.followUps.run')!;
+    expect(job.queue).toBe('orders');
+    expect(() => job.parse({})).toThrow(/positive integer/);
+    expect(job.storeOf(job.parse({ storeId: 4 }))).toBe(4);
+  });
+  it('plans one run an hour for each live store with a timer on, none while both are 0 (as shipped)', async () => {
+    const values: Record<number, Record<string, number>> = {
+      1: { 'orders.hold.reviewHours': 0, 'orders.advance.waitHours': 0 },
+      2: { 'orders.hold.reviewHours': 24, 'orders.advance.waitHours': 0 },
+      3: { 'orders.hold.reviewHours': 0, 'orders.advance.waitHours': 6 },
+    };
+    const deps = {
+      db: { store: { findMany: async () => [{ id: 1 }, { id: 2 }, { id: 3 }] } },
+      settings: { value: async (k: string, o: { storeId: number }) => values[o.storeId]![k] },
+    } as unknown as Parameters<typeof orderFollowUpsPlanner>[0];
+    const now = new Date('2026-11-06T10:30:00Z');
+    const hour = Math.floor(now.getTime() / 3_600_000);
+    expect(await orderFollowUpsPlanner(deps, now)).toEqual([
+      { queue: 'orders', name: 'orders.followUps.run', payload: { storeId: 2 }, key: `orders.followUps.run/2/${hour}` },
+      { queue: 'orders', name: 'orders.followUps.run', payload: { storeId: 3 }, key: `orders.followUps.run/3/${hour}` },
+    ]);
+    expect(await orderFollowUpsPlanner({ ...deps, settings: { value: async () => 0 } } as never, now)).toEqual([]);
   });
 });

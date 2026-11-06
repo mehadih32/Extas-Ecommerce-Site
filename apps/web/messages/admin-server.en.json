@@ -67,6 +67,7 @@
       "search_index": "Search index",
       "messages_run": "Customer messages",
       "orders_pii_purge": "Clearing kept IP, device and location",
+      "orders_followUps_run": "Order timers (held orders to review, advance payments overdue)",
       "customers_points_run": "Giving points for delivered orders",
       "orders_returns_erp": "Returns and exchanges with the ERP",
       "payments_pending_sweep": "Unfinished online payments",
