@@ -1,0 +1,29 @@
+/* Follow-up 702 (PR 636, CN-036, LUMEN-SPEC §3 item 4 "List + detail split"): one customer's page with the list he was
+   opened from on his left (CustomerRail) from 1280 px wide, where the floating sidebar, the list and his page all fit;
+   below that the list is not drawn and his page is a full page, as before. His page sits in a container, so its own two
+   columns (main + side) stack when the split leaves it narrow (1366 px), and stay side by side when there is room
+   (1920 px). Lumen tokens only; every row a 44 px tap; text at Lumen's 14 px. */
+.adm2 .cus-rail { display: none; }
+.adm2 .cus-split-main { min-width: 0; container-type: inline-size; }
+@media (min-width: 1280px) {
+  .adm2 .cus-split { display: grid; grid-template-columns: clamp(260px, 26%, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .adm2 .cus-rail { display: flex; flex-direction: column; position: sticky; top: 84px; max-height: calc(100vh - 100px); margin-top: 12px; padding: 8px; }
+}
+.adm2 .cus-rail-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; font-size: var(--lm-fs-card); }
+.adm2 .cus-rail-h b { font-weight: 700; }
+.adm2 .cus-rail-q { margin: 0; padding: 4px 10px 8px; color: var(--lm-ink2); font-size: var(--lm-fs-card); overflow-wrap: anywhere; }
+.adm2 .cus-rail-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow-y: auto; }
+.adm2 .cus-rail-list a { display: flex; align-items: center; gap: 10px; min-height: var(--lm-tap); padding: 8px 10px; border-radius: var(--lm-r-ctl); color: var(--lm-ink); text-decoration: none; }
+.adm2 .cus-rail-list a:hover { background: var(--lm-hover); }
+.adm2 .cus-rail-list a.on { background: var(--lm-acbg); color: var(--lm-ac-ink); }
+.adm2 .cus-rail-list a:focus-visible { outline: 2px solid var(--lm-focus); outline-offset: 1px; }
+.adm2 .cus-rail-t { flex: 1; min-width: 0; }
+.adm2 .cus-rail-t b { display: block; font-weight: 700; font-size: var(--lm-fs-card); overflow-wrap: anywhere; }
+.adm2 .cus-rail-t small { display: block; color: var(--lm-ink2); font-size: var(--lm-fs-card); overflow-wrap: anywhere; }
+.adm2 .cus-rail-list a.on small { color: var(--lm-ac-ink); }
+.adm2 .cus-rail-f { display: flex; justify-content: space-between; gap: 8px; padding: 8px 8px 4px; }
+.adm2 .cus-rail-f .lm-btn, .adm2 .cus-rail-h .lm-btn, .adm2 .cus-steps .lm-btn { min-height: var(--lm-tap); }
+.adm2 .cus-steps { margin-top: 12px; }
+@container (max-width: 900px) {
+  .adm2 .cus-split-main .a2-dgrid { grid-template-columns: minmax(0, 1fr); }
+}

@@ -34,10 +34,11 @@ export function journeyText(view: AdminView, r: JourneyRow, money: Money): strin
   return text;
 }
 
-export function JourneyCard({ view, journey, money, stamp, canOrders, canSupport, here }: { view: AdminView; journey: CustomerJourney; money: Money; stamp: Intl.DateTimeFormat; canOrders: boolean; canSupport: boolean; here: string }) {
+export function JourneyCard({ view, journey, money, stamp, canOrders, canSupport, here, pageHref: hrefOf }: { view: AdminView; journey: CustomerJourney; money: Money; stamp: Intl.DateTimeFormat; canOrders: boolean; canSupport: boolean; here: string; pageHref?: (page: number) => string }) {
   const d = view.dict;
   const href = (r: JourneyRow) => (r.ref?.type === 'order' && canOrders ? `/admin/orders/${r.ref.id}` : r.ref?.type === 'conversation' && canSupport ? `/admin/support/c/${r.ref.id}` : null);
-  const pageHref = (p: number) => `${here}?tab=journey${p > 1 ? `&page=${p}` : ''}`;
+  // follow-up 702: the page passes its own address maker, which keeps the list he was opened from
+  const pageHref = (p: number) => (hrefOf ? hrefOf(p) : `${here}?tab=journey${p > 1 ? `&page=${p}` : ''}`);
   if (!journey.enabled)
     return (
       <section className="a2-card" data-testid="cus-journey-off">

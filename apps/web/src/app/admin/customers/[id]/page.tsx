@@ -15,6 +15,10 @@
 // checks each permission and rule again and audits it; no line is ever changed or removed.
 // S14 · PR 297: on the side, first, "Tags & notes" (TagsNotes): his tags and the team's notes, pinned first; "Note or
 // #tag" adds either one, a tag comes off and a note is put away (`customers.notes`; archived, never deleted).
+// Follow-up 702 (PR 636, CN-036, LUMEN-SPEC §3 item 4): list + detail split — on a wide screen the list he was opened
+// from (`?list=`, the list's own query; the default list for a deep link) sits on his left (CustomerRail), and
+// "Previous" / "Next" move one tap along it at every width; on a phone his page stays a full page. Every link on the
+// page keeps the list.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -25,6 +29,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { ApologyGive } from '@/components/admin/money/RefundActions';
 import { WalletAdjust, WalletReverse } from '@/components/admin/money/WalletTools';
 import { sourceLabel } from '@/components/admin/customers/CustomerList';
+import { CustomerRail, CustomerSteps } from '@/components/admin/customers/CustomerRail';
 import { MergeWith, PhoneButtons } from '@/components/admin/customers/CustomerTools';
 import { JourneyCard } from '@/components/admin/customers/JourneyCard';
 import { TagsNotes } from '@/components/admin/customers/TagsNotes';
@@ -35,6 +40,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { withCustomers } from '@/lib/admin-customers/i18n';
+import { customerHref, customersHref, listOf } from '@/lib/admin-customers/model';
 import { lookWord } from '@/lib/admin-customers/words';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -46,6 +52,7 @@ import { flatWords, refundWords } from '@/lib/money-words';
 import { paymentsDeps } from '@/lib/payments-api';
 import '../../money/money.css';
 import './notes.css';
+import './split.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -118,12 +125,13 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   const [{ id }, sp, plain, access] = await Promise.all([params, searchParams, adminView(deps), pageAccess('customers.read', deps, MOTHER_STORE_ID)]);
   const view = withCustomers(plain);
   const d = view.dict;
-  const here = `/admin/customers/${encodeURIComponent(id)}`;
+  const list = listOf(sp);
+  const here = customerHref(id, list);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(here)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="customer" text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="customer-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="customers.read" />
       </div>
     );
@@ -144,7 +152,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
         </section>
       </div>
     );
-  if (sv.redirectedFrom) redirect(`/admin/customers/${sv.id}?from=${encodeURIComponent(sv.redirectedFrom)}`);
+  if (sv.redirectedFrom) redirect(customerHref(sv.id, list, { from: sv.redirectedFrom }));
   await cu.logAccess(access.deps.db, MOTHER_STORE_ID, sv.id, who.actor.staffUserId, 'profile.open');
 
   const canWallet = perms.has('payments.view');
@@ -160,7 +168,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   const profiles = [sv.customer, ...sv.members];
   // the owner's "0 lines" hides the "Who looked" card (the log itself is always written)
   const { accessLogShown } = (await access.deps.resolver.value('customers.profile', { storeId: MOTHER_STORE_ID })) as { accessLogShown: number };
-  const [orders, exchanges, support, looks, wallets, currency, ledger, journey, tn] = await Promise.all([
+  const [orders, exchanges, support, looks, wallets, currency, ledger, journey, tn, rail] = await Promise.all([
     cu.customerOrders(cd, who, sv.id, tab === 'orders' ? { page } : {}),
     tab === 'overview' || tab === 'exchanges' ? cu.customerExchanges(cd, who, sv.id) : Promise.resolve([]),
     tab === 'support' ? cu.customerSupport(cd, who, sv.id) : Promise.resolve([]),
@@ -175,6 +183,8 @@ export default async function CustomerPage({ params, searchParams }: { params: P
     tab === 'journey' ? cu.customerJourney(cd, who, sv.id, { page }) : Promise.resolve(null),
     // PR 297: his tags and the team's notes
     cu.tagsAndNotes(cd, who, sv.id),
+    // follow-up 702: the list beside him (the same read and masking as All customers)
+    cu.customerList(cd, who, list),
   ]);
   // PR 534: the grade and verified mark his history earns, beside his number (only while the owner's grading is on)
   const mark = cu.customerMark(await cu.customerGrading(cd, MOTHER_STORE_ID), sv.history);
@@ -193,7 +203,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
     ? t(d, 'cus.profile.subSource', { phone: phoneText, source: sourceLabel(view, c.firstSource), since: when.format(c.createdAt) })
     : t(d, 'cus.profile.sub', { phone: phoneText, since: when.format(c.createdAt) });
   const mergedFrom = from ? profiles.find((p) => p.id === from) : null;
-  const tabHref = (x: Tab) => (x === 'overview' ? here : `${here}?tab=${x}`);
+  const tabHref = (x: Tab, p?: number) => customerHref(sv.id, list, { tab: x, page: p });
   const bday = profiles.map((p) => p.birthday).find((b) => b !== null) ?? null;
   const yesNo = (v: boolean | null) => t(d, `cus.profile.consent.${v === null ? 'unknown' : v ? 'yes' : 'no'}`);
 
@@ -318,12 +328,12 @@ export default async function CustomerPage({ params, searchParams }: { params: P
       {all && (orders.page > 1 || orders.hasMore) ? (
         <div className="a2-gap8 a2-mt12">
           {orders.page > 1 ? (
-            <Link className="a2-btn sm" href={`${here}?tab=orders${orders.page > 2 ? `&page=${orders.page - 1}` : ''}`}>
+            <Link className="a2-btn sm" href={tabHref('orders', orders.page - 1)}>
               {t(d, 'cus.profile.orders.newer')}
             </Link>
           ) : null}
           {orders.hasMore ? (
-            <Link className="a2-btn sm" href={`${here}?tab=orders&page=${orders.page + 1}`} data-testid="cus-orders-older">
+            <Link className="a2-btn sm" href={tabHref('orders', orders.page + 1)} data-testid="cus-orders-older">
               {t(d, 'cus.profile.orders.older')}
             </Link>
           ) : null}
@@ -563,7 +573,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
         view={view}
         place={locateKey('customer')}
         crumb={
-          <Link href="/admin/customers">
+          <Link href={customersHref(list)}>
             <ShellIcon name="cl" size={12} />
             {t(d, 'cus.profile.crumb')}
           </Link>
@@ -578,6 +588,10 @@ export default async function CustomerPage({ params, searchParams }: { params: P
         right={sv.viewer.merge ? <MergeWith dict={cdict} customerId={sv.id} /> : null}
       />
       <SectionTabs view={view} current="customer" />
+      <div className="cus-split" data-testid="cus-split">
+      <CustomerRail view={view} data={rail} list={list} current={sv.id} />
+      <div className="cus-split-main">
+      <CustomerSteps view={view} data={rail} list={list} current={sv.id} />
       {mergedFrom ? (
         <div className="a2-band locked a2-mt12" data-testid="cus-merged-band">
           <ShellIcon name="info" size={16} />
@@ -610,12 +624,14 @@ export default async function CustomerPage({ params, searchParams }: { params: P
           ) : tab === 'exchanges' ? (
             exchangeCard
           ) : tab === 'journey' && journey ? (
-            <JourneyCard view={view} journey={journey} money={money} stamp={stamp} canOrders={sv.viewer.orders} canSupport={perms.has('support.read')} here={here} />
+            <JourneyCard view={view} journey={journey} money={money} stamp={stamp} canOrders={sv.viewer.orders} canSupport={perms.has('support.read')} here={here} pageHref={(p) => tabHref('journey', p)} />
           ) : (
             supportCard
           )}
         </div>
         <div className="a2-dside a2-stack">{side}</div>
+      </div>
+      </div>
       </div>
     </div>
   );
