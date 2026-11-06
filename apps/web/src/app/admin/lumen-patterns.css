@@ -145,11 +145,13 @@
 [data-lm-look] .lm-list-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
 [data-lm-look] .lm-chips { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
 [data-lm-look] .lm-chip { border: 0; background: var(--lm-sf); color: var(--lm-ink2); box-shadow: var(--lm-sh-sm); border-radius: var(--lm-r-pill); min-height: 38px; padding: 0 14px; font: inherit; font-weight: 700; font-size: var(--lm-fs-card); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-[data-lm-look] .lm-chip i { font-style: normal; opacity: 0.75; font-variant-numeric: tabular-nums; }
+/* PR 628 follow-up (contrast audit): the chip's count at full strength (at 0.75 it was 3.3:1 on a light card) */
+[data-lm-look] .lm-chip i { font-style: normal; font-variant-numeric: tabular-nums; }
 [data-lm-look] .lm-chip.on { background: var(--lm-ink); color: var(--lm-bg); }
-[data-lm-look] .lm-search { display: flex; align-items: center; gap: 8px; background: var(--lm-inp); box-shadow: inset 0 0 0 1px var(--lm-ln); border-radius: var(--lm-r-ctl); padding: 0 12px; min-height: var(--lm-tap); color: var(--lm-ink2); flex: 1 1 220px; max-width: 360px; min-width: 0; }
-[data-lm-look] .lm-search input { border: 0; background: transparent; color: var(--lm-ink); font: inherit; font-size: 16px; width: 100%; min-width: 0; outline: none; min-height: var(--lm-tap); }
-[data-lm-look] .lm-search:focus-within { outline: 2px solid var(--lm-focus); outline-offset: 2px; }
+/* PR 628 follow-up: the list search, not the shell's sidebar search of the same name (it stretched to fill a tall sidebar) */
+[data-lm-look] .lm-search:not(.lm-side *) { display: flex; align-items: center; gap: 8px; background: var(--lm-inp); box-shadow: inset 0 0 0 1px var(--lm-ln); border-radius: var(--lm-r-ctl); padding: 0 12px; min-height: var(--lm-tap); color: var(--lm-ink2); flex: 1 1 220px; max-width: 360px; min-width: 0; }
+[data-lm-look] .lm-search:not(.lm-side *) input { border: 0; background: transparent; color: var(--lm-ink); font: inherit; font-size: 16px; width: 100%; min-width: 0; outline: none; min-height: var(--lm-tap); }
+[data-lm-look] .lm-search:not(.lm-side *):focus-within { outline: 2px solid var(--lm-focus); outline-offset: 2px; }
 [data-lm-look] .lm-rows { padding: 4px 8px 4px 12px; }
 [data-lm-look] .lm-lr { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--lm-ln); cursor: pointer; border-radius: var(--lm-r-sm); }
 [data-lm-look] .lm-lr:first-child { border-top: 0; }
@@ -170,7 +172,7 @@
 [data-lm-look] .lm-bulk .lm-btn:focus-visible { outline-color: var(--lm-bg); }
 @media (max-width: 759px) {
   [data-lm-look] .lm-chip { min-height: var(--lm-tap); }
-  [data-lm-look] .lm-search { max-width: none; }
+  [data-lm-look] .lm-search:not(.lm-side *) { max-width: none; }
   [data-lm-look] .lm-bulk { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   [data-lm-look] .lm-bulk .lm-btn { min-height: var(--lm-tap); }
 }
