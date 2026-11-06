@@ -590,9 +590,6 @@
 .adm2 .a2-menu-o{min-width:260px}
 .adm2 .a2-dlgf-fields{gap:12px}
 .adm2 .a2-ph .a2-phr{flex-wrap:wrap}
-.a2-toast-slot{position:fixed;left:0;right:0;bottom:calc(92px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;pointer-events:none;z-index:96;padding:0 16px}
-.a2-toast{background:#12302A;color:#fff;padding:11px 16px;border-radius:10px;font-size:13.5px;box-shadow:0 18px 48px rgba(10,30,26,.18);max-width:100%}
-@media (min-width:1024px){.a2-toast-slot{bottom:28px}}
 .adm2 .a2-mt6{margin-top:6px}
 .adm2 .a2-start{align-items:start}
 .adm2 .a2-callband.bad{border-color:#E9C9C3;background:#FFF8F6}
