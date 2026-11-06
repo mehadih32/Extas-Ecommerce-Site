@@ -388,7 +388,20 @@
       "openPage": "Open its page",
       "prev": "Previous",
       "next": "Next",
-      "position": "{n} of {of}"
+      "position": "{n} of {of}",
+      "choose": "Choose…",
+      "readyTitle": "Ready to publish?",
+      "readyCount": "{n} of {of} done",
+      "checkDone": "done",
+      "checkMissing": "still missing",
+      "publishOff": "Publish turns on when every line above is ticked.",
+      "preview": "In the shop",
+      "previewEmpty": "The name shows here as you type",
+      "saved": "{what}: saved.",
+      "askSure": "This changes how the shop works for buyers. Are you sure?",
+      "cancel": "Cancel",
+      "yesOn": "Yes, turn it on",
+      "yesOff": "Yes, turn it off"
     }
   },
   "dash": {
