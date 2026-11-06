@@ -1,0 +1,106 @@
+# PR 414 follow-up (follow-up 668, CN-036) — the 70-order real-life journey simulation (docs/qa/SIMULATION-PLAN.md §3
+# and docs/qa/SIMULATION-REPORT.md P2.2, a go-live gate per CN-013) on the preview site, ON the VM through the
+# self-hosted runner (CN-003), BY HAND ONLY: GitHub › Actions › simulation › Run workflow. It never runs on a schedule, a
+# push or a pull request. It is the gate-orders machinery with the simulation's scenario set
+# (GATE_PLAN=simulation bash infra/deploy/gate-orders.sh; tools/simulation): the same host guard (only the preview host
+# of server.conf, never a host the shop sells on), the same oracle on the mocks, the same safety net for the owner's
+# cash on delivery and the same clean-up (every test order cancelled, the test products archived; nothing deleted, no
+# money moved, no message to a real buyer). A row whose payment method or courier is switched off on the shop is a SKIP
+# with its reason, never a FAIL. The report (README.md in Bengali and English, result.json, orders.md) is committed to
+# docs/reports/simulation/latest/ with [skip ci]; state/simulation.json is what the go-live page shows beside its
+# "simulation" row (a person still confirms that row).
+name: simulation
+
+on:
+  workflow_dispatch:
+    inputs:
+      orders:
+        description: "all, or a list of the plan's order numbers such as 1,13,55 (1–70)"
+        required: false
+        default: "all"
+      # As gate-orders: cash on delivery is the owner's switch. Only he says yes here; the run then switches it on for
+      # this run alone and puts the exact earlier value back at the end. Otherwise the COD rows are a SKIP when it is off.
+      allow_cod:
+        description: "Switch cash on delivery on for this run only, and put it back after (the owner's OK)"
+        required: false
+        type: boolean
+        default: false
+
+# The lane of gate-orders: both place test orders on the same GATE TEST shelf, so they never run at the same time, and a
+# by-hand run never replaces a deploy or another server job waiting in their groups.
+concurrency:
+  group: extas-gate-orders
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  simulation:
+    runs-on: [self-hosted, extas-vm]
+    # SIMULATION_TIMEOUT_MIN of server.conf (240) stops the run itself; this leaves room for the clean-up and the report
+    timeout-minutes: 290
+    steps:
+      # The run comes from the version that is live, not from the newest main (as in gate-orders.yml).
+      - name: Find the live version
+        id: live
+        run: |
+          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          if printf '%s' "$live" | grep -Eq '^[0-9a-f]{40}$'; then echo "sha=$live" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.live.outputs.sha || github.sha }}
+
+      - name: The 70 orders on the preview site (mocks only)
+        id: sim
+        continue-on-error: true
+        env:
+          LIVE: ${{ steps.live.outputs.sha }}
+          ORDERS: ${{ inputs.orders }}
+          ALLOW_COD: ${{ inputs.allow_cod }}
+        run: |
+          [ -f tools/simulation/scenarios.mjs ] || { echo "the live version has no simulation yet: deploy first"; exit 1; }
+          cod=no; [ "$ALLOW_COD" = true ] && cod=yes
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" GATE_PLAN=simulation GATE_ALLOW_COD="$cod" bash infra/deploy/gate-orders.sh "$RUNNER_TEMP/simulation" "${ORDERS:-all}" "$LIVE"
+
+      # As gate-orders.yml (if: always(), so also after a cancelled job): what any run left open is closed and cash on
+      # delivery put back from its own record.
+      - name: Close what a run left open (cash on delivery, the test-pay grant)
+        if: always()
+        continue-on-error: true
+        run: |
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" GATE_PLAN=simulation bash infra/deploy/gate-orders.sh --sweep "$RUNNER_TEMP/simulation"
+
+      - name: Commit the report
+        if: always()
+        env:
+          RESULT: ${{ steps.sim.outcome }}
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/simulation"
+          [ -f "$out/result.json" ] || { echo "the run wrote no report"; exit 1; }
+          dest="docs/reports/simulation/latest"
+          sudo chown -R "$(id -u):$(id -g)" "$out"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            rm -rf "$dest" && mkdir -p "$dest"
+            cp "$out/README.md" "$out/result.json" "$dest/"
+            [ ! -f "$out/orders.md" ] || cp "$out/orders.md" "$dest/"
+            find "$out" -maxdepth 1 -name 'scenario-*.jpg' -exec cp {} "$dest/" \;
+            git add -A "$dest"
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "simulation report: ${RESULT} [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail when an order failed
+        if: steps.sim.outcome == 'failure'
+        run: |
+          echo "A simulation order failed, or the clean-up did not finish. See docs/reports/simulation/latest/README.md."
+          exit 1

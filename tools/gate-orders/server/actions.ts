@@ -246,6 +246,19 @@ export class Oracle {
     return id;
   }
 
+  /**
+   * Follow-up 668 (the simulation): read only — the couriers the shop has a connection for (adapter keys) and its own
+   * courier accounts by kind, switched on or off (the run's own account left out). Nothing else leaves here.
+   */
+  async couriers(): Promise<Json> {
+    const { couriers, providers } = await listCouriers(this.g.shipping, this.g.who, { includeArchived: true });
+    const mine = courierName(this.data);
+    return {
+      providers,
+      accounts: couriers.filter((c) => c.name !== mine).map((c) => ({ provider: c.providerKey, enabled: c.enabled && !c.archived })),
+    };
+  }
+
   private parcelOf(merchantRef: string | null): CourierParcel | null {
     return merchantRef ? (this.world.byRef(merchantRef) ?? null) : null;
   }

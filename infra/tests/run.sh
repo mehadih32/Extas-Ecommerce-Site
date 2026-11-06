@@ -1966,6 +1966,10 @@ case "$*" in
     cp "$envf" "$T_DIR/shop.env"
     [ "$FAKE_SHOP" = crash ] && exit 3
     if [ "$FAKE_SHOP" = hang ]; then sleep 30 & wait; exit 0; fi
+    if [ "${FAKE_SIM:-0}" = 1 ]; then
+      printf '{"kind":"simulation","at":"x","ok":true,"scenarios":70,"passed":40,"failed":0,"skipped":30,"orders":44,"started":true,"cleanup":{"ok":%s},"simulation":{"planned":70}}\n' "$FAKE_CLEAN" > "$mnt/result.json"
+      echo "# The 70-order simulation" > "$mnt/README.md"; echo "# details" > "$mnt/orders.md"; exit 0
+    fi
     printf '{"kind":"gate-orders","at":"x","ok":true,"scenarios":18,"passed":16,"failed":0,"skipped":2,"orders":30,"started":true,"cleanup":{"ok":%s}}\n' "$FAKE_CLEAN" > "$mnt/result.json"
     echo "# Go-live gate" > "$mnt/README.md"; exit 0 ;;
 esac
@@ -2061,6 +2065,22 @@ check "workflows: gate-orders is by hand only, on the VM, in its own lane" \
 check "workflows: gate-orders holds no secret" "$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/gate-orders.yml)" "0"
 check "workflows: gate-orders' allow_cod is a yes/no input, off by default" \
   "$(grep -A4 '^      allow_cod:' ../../.github/workflows/gate-orders.yml | grep -c -e 'type: boolean' -e 'default: false')" "2"
+# Follow-up 668 (CN-036): the 70-order simulation is the same run with GATE_PLAN=simulation — the same guard, oracle,
+# grant, safety net and clean-up; its summary is state/simulation.json (the go-live page's evidence), never the gate's.
+rm -f "$T/root/state/gate-orders.json" "$T/root/state/simulation.json"; : > "$T/docker.log"
+rc=0; go GATE_PLAN=everything bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
+check "simulation (668): an unknown scenario set is refused before docker" "$rc:$(wc -l < "$T/docker.log" | tr -d ' ')" "2:0"
+rc=0; go FAKE_CLEAN=true FAKE_SIM=1 GATE_PLAN=simulation bash ../deploy/gate-orders.sh "$T/out" 1,13,55 >/dev/null 2>&1 || rc=$?
+check "simulation (668): a finished run exits 0, records state/simulation.json (with its time and the plan's size) and leaves the gate's own summary alone" \
+  "$rc:$(jq -c '{exit,ok,orders,cleanup,planned}' "$T/root/state/simulation.json"):$(jq -r '.iso | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T")' "$T/root/state/simulation.json"):$([ -f "$T/root/state/gate-orders.json" ] && echo gate || echo none)" \
+  '0:{"exit":0,"ok":true,"orders":44,"cleanup":true,"planned":70}:true:none'
+check "simulation (668): the browser run gets the plan; the report keeps orders.md; the time limit is server.conf's" \
+  "$(grep -c -e '-e GATE_PLAN=simulation' "$T/docker.log"):$([ -f "$T/out/orders.md" ] && echo orders):$(grep -c '^SIMULATION_TIMEOUT_MIN=[0-9]' ../config/server.conf):$(grep -c '^GATE_RUN_MINUTES=255$' "$T/oracle.env")" "1:orders:1:1"
+W=../../.github/workflows/simulation.yml
+check "workflows: simulation is by hand only, on the VM, in gate-orders' lane, no secret, allow_cod off by default" \
+  "$(grep -c '^  workflow_dispatch:' $W):$(grep -cE '^\s+(schedule|push|pull_request):' $W):$(grep -c 'runs-on: \[self-hosted, extas-vm\]' $W):$(grep -c 'group: extas-gate-orders' $W):$(grep -ciE 'secrets\.|api[_-]?key' $W):$(grep -A4 '^      allow_cod:' $W | grep -c -e 'type: boolean' -e 'default: false')" "1:0:1:1:0:2"
+check "workflows: simulation runs gate-orders.sh with GATE_PLAN=simulation, sweeps always and commits to its own report folder" \
+  "$(grep -c 'GATE_PLAN=simulation GATE_ALLOW_COD="$cod" bash infra/deploy/gate-orders.sh "$RUNNER_TEMP/simulation"' $W):$(grep -c 'GATE_PLAN=simulation bash infra/deploy/gate-orders.sh --sweep' $W):$(grep -c 'dest="docs/reports/simulation/latest"' $W):$(grep -c 'docs/reports/simulation/\*\*' ../../.github/workflows/ci.yml)" "1:1:1:1"
 rm -rf "$T"
 # S19 · PR 587 (CN-035): the go-live check is by hand, read-only, and never applies the switch.
 check "workflows: golive-check is by hand only, on the VM, in its own lane, no secret" \

@@ -27,6 +27,7 @@ on:
       - "docs/reports/gate-c360/**"
       - "docs/reports/golive/**"
       - "docs/reports/redirect-import/**"
+      - "docs/reports/simulation/**"
   # CN-023: nightly.yml (every night and by hand) calls this workflow; its run is named "nightly", so deploy.yml
   # (which follows "ci" runs) never starts for it.
   workflow_call:
