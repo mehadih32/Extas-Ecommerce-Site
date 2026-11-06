@@ -219,6 +219,23 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 · the order journey to the ERP v6 (P
     expect((await partialBoxView(f.shippingDeps(), f.shipper, o.orderId))!).toMatchObject({ open: false, handedBack: true });
   });
 
+  it('Follow-up 537: a door record of the partial (PR 166) starts the box — kept lines and what the rider collected — and the saved box wins after', async () => {
+    const o = await booked(await confirmed('e6-door', [{ variantId: f.v.skyM }, { variantId: f.v.teeM }]), 'partial');
+    await relay();
+    for (let i = 0; i < 4; i++) await read(o.shipmentId); // … PARTIALLY_DELIVERED
+    expect((await partialBoxView(f.shippingDeps(), f.shipper, o.orderId))!.door).toBeNull();
+    const eo = await erpOrder(o.orderId);
+    const [first] = await erpOrderLinesOf(db(), eo.id);
+    // The team records the rider's report at the door: the first piece kept, 450 collected.
+    await db().codCollection.create({ data: { storeId: f.S, orderId: o.orderId, shipmentId: o.shipmentId, outcome: 'PARTIAL', expectedMinor: 90_000, collectedMinor: 45_000, keptItemIds: [first!.orderItemId!], source: 'staff', idempotencyKey: `door-${o.orderId}`, occurredAt: f.clock.now } });
+    let box = (await partialBoxView(f.shippingDeps(), f.shipper, o.orderId))!;
+    expect(box).toMatchObject({ required: true, mark: null, door: { keptLineIds: [`${o.number}-1`], paidMinor: 45_000, at: f.clock.now.toISOString() } });
+    // Once a person saves the box, the box is the record and the door start goes.
+    await savePartialDelivery(f.shippingDeps(), f.shipper, { orderId: o.orderId, keptLineIds: [`${o.number}-1`], paidMinor: 45_000, discountGivenMinor: 0, phoneConfirmed: true, note: null });
+    box = (await partialBoxView(f.shippingDeps(), f.shipper, o.orderId))!;
+    expect([box.door, box.mark?.keptLineIds]).toEqual([null, [`${o.number}-1`]]);
+  });
+
   it('PR 610: a short line (a Return-stock piece that failed the packing check) — the admin decides; REPLACE goes to the ERP and the line is open again', async () => {
     erp.setStock(sku.skyL!, 'SAMPLE-WH-1', { onHand: 0, returnStock: 1 });
     const o = await confirmed('e6-short', [{ variantId: f.v.skyL }, { variantId: f.v.skyM }]);

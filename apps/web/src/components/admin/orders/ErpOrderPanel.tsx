@@ -132,6 +132,11 @@ export async function ErpOrderPanel({ orderId, currency, view: given }: { orderI
               ) : null}
             </div>
           ) : null}
+          {v.box.fromDoor ? (
+            <div className="a2-note a2-mt12" data-testid="erp-box-from-door">
+              {v.box.fromDoor}
+            </div>
+          ) : null}
           <ErpPartialBox box={v.box} texts={boxTexts(view!)} orderId={orderId} />
           {v.box.last ? <div className="a2-xs a2-mute a2-mt12">{v.box.last}</div> : null}
           <div className="a2-note a2-mt12">
