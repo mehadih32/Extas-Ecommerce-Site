@@ -57,6 +57,10 @@ it('every gate check has its scenario; one that was asked but stopped before the
   for (const s of Object.values(GATE_SCENARIO)) expect(SCENARIOS.some((x) => x.id === s)).toBe(true);
   expect(unreachedGate('1', 'w', ['5', '6'])).toMatchObject({ verdict: 'FAIL', detail: expect.stringMatching(/scenario 5 stopped/) });
   expect(unreachedGate('1', 'w', ['6'])).toMatchObject({ verdict: 'SKIP', detail: expect.stringMatching(/\(5\) was not asked/) });
+  // 6 Nov (COD only): a scenario skipped by the shop's settings makes its gate check a SKIP, never a FAIL
+  const rows = [{ id: '5', verdict: 'SKIP', checks: [{ id: 'paid ahead', verdict: 'SKIP', detail: 'bKash is not offered at the checkout' }] }];
+  expect(unreachedGate('1', 'w', ['5'], rows)).toMatchObject({ verdict: 'SKIP', detail: expect.stringMatching(/\(5\) was skipped: bKash is not offered/) });
+  expect(unreachedGate('1', 'w', ['5'], [{ id: '5', verdict: 'FAIL', checks: [] }])).toMatchObject({ verdict: 'FAIL' });
 });
 
 it('live run 1 Nov: the cash-on-delivery scenarios are marked, and their gate check names the owner\'s setting', () => {

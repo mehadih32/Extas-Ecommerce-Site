@@ -32,9 +32,15 @@ export const GATE_CHECKS = {
 /** The scenario that proves each gate check. */
 export const GATE_SCENARIO = { 1: "5", 4: "15", 7: "18", 21: "6", 23: "18", 24: "18" };
 
-/** A gate check its scenario never reached: not asked is a SKIP; asked but stopped before it is a FAIL. */
-export function unreachedGate(id, what, pickedIds) {
+/**
+ * A gate check its scenario never reached: not asked is a SKIP; asked but stopped before it is a FAIL. 6 Nov (COD only,
+ * the owner's go-live card): a scenario that was itself a SKIP by the shop's own settings (bKash not offered) proves
+ * nothing either way, so its gate check is a SKIP with the scenario's reason, never a FAIL.
+ */
+export function unreachedGate(id, what, pickedIds, rows = []) {
   const s = GATE_SCENARIO[id];
+  const row = rows.find((r) => r.id === s);
+  if (row?.verdict === "SKIP") return { id, what, verdict: "SKIP", detail: `its scenario (${s}) was skipped: ${row.checks?.find((c) => c.verdict === "SKIP")?.detail ?? "see its row"}` };
   return pickedIds.includes(s) ? { id, what, verdict: "FAIL", detail: `scenario ${s} stopped before this check (see its row)` } : { id, what, verdict: "SKIP", detail: `its scenario (${s}) was not asked in this run` };
 }
 
