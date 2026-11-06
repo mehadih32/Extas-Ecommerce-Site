@@ -132,6 +132,8 @@ export interface OrderDetailView {
   canNote: boolean;
   /** Follow-up 180: the invoice, for those with `orders.invoice` (null: no button). */
   invoice: string | null;
+  /** Follow-up 500: the order to print the invoice of (paper, roll, picture), for those with `orders.invoice`. */
+  invoicePrint: { orderId: string; number: string } | null;
   noteMax: number;
   noteUrl: string;
   /** CN-020 (4): the address the customer spoke at checkout (null: typed). `audio`: the recording to play, if kept. */
@@ -1005,6 +1007,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     more: specs.more,
     canNote,
     invoice: perms.has('orders.invoice') ? invoiceHref(o.number) : null,
+    invoicePrint: perms.has('orders.invoice') ? { orderId: o.id, number: o.number } : null,
     noteMax,
     noteUrl: commandUrl(o.id, 'notes'),
     voice: await voiceOf(deps, who, view, o),

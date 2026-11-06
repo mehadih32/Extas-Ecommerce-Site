@@ -15,7 +15,7 @@ import { COMMAND_PATHS, KNOWN_ERRORS, commandUrl, errorKey, newKey, refundReques
 import { editBody } from '../orders-api';
 import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, exchangeIntentLine, rebookSpecs, returnReasonSpecs, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
 import { flagChips } from './list';
-import { invoiceHref } from './model';
+import { INVOICE_PRINT_URL, invoiceHref, invoicePrints } from './model';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec } from './spec';
 
 const view = (lang: 'en' | 'bn'): AdminView => ({ lang, dict: adminDicts[lang], locale: lang, timeZone: 'Asia/Dhaka', storeName: null });
@@ -111,6 +111,19 @@ describe('which buttons an order shows', () => {
         for (const d of [en, bn] as Dict[]) expect(t(d, `orders.cmd.${s.id}.${part}`), `${s.id}.${part}`).not.toBe(`orders.cmd.${s.id}.${part}`);
       }
     }
+  });
+
+  it('follow-up 500: "Print invoice" offers paper, roll and picture from the Invoices page\'s own file route, for this order only', () => {
+    const p = invoicePrints(ID, 'EX 1/2');
+    expect(INVOICE_PRINT_URL).toBe('/api/admin/invoices/file');
+    expect(p.map((x) => x.key)).toEqual(['page', 'roll', 'jpg']);
+    expect(p.map((x) => x.body)).toEqual([
+      { orderIds: [ID], layout: 'page', format: 'pdf' },
+      { orderIds: [ID], layout: 'roll', format: 'pdf' },
+      { orderIds: [ID], layout: 'page', format: 'jpg' },
+    ]);
+    expect(p.map((x) => x.fileName)).toEqual(['invoice-EX-1-2.pdf', 'invoice-EX-1-2-roll.pdf', 'invoice-EX-1-2.jpg']);
+    for (const d of [en, bn] as Dict[]) expect(t(d, 'orders.detail.printInvoice')).not.toBe('orders.detail.printInvoice');
   });
 
   it('follow-up 180: the staff "Get invoice" opens the order\'s invoice page, its number made safe for an address', () => {
