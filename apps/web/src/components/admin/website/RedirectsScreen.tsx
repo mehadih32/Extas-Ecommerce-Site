@@ -9,6 +9,7 @@ import { call, errorText } from "@/components/admin/api";
 import type { Dict } from "@/lib/i18n";
 import { ShellIcon } from "../shell/ShellIcon";
 import { SeoCard, SeoSaveRow, SeoSwitch, seoText, useSeoSave } from "./SeoScreen";
+import { showToast } from "../lumen/Toast";
 
 const r = (d: Dict, key: string, vars: Record<string, string | number> = {}) => seoText(d, `rd.${key}`, vars);
 const errs = (d: Dict) => (d.seo ?? {}) as Dict;
@@ -40,7 +41,7 @@ export function AddRedirect({ d, canWrite }: { d: Dict; canWrite: boolean }) {
     setBusy(false);
     if (a.status === 200 && a.data.ok) {
       const row = a.data.row as { fromPath: string; toPath: string };
-      setNote({ ok: true, text: r(d, "add.done", { from: row.fromPath, to: row.toPath }) });
+      showToast({ text: r(d, "add.done", { from: row.fromPath, to: row.toPath, tone: 'ok' }) });
       setFrom("");
       setTo("");
       router.refresh();
@@ -117,7 +118,7 @@ export function ImportCard({ d, canWrite, keepMonths }: { d: Dict; canWrite: boo
     setBusy(false);
     if (a.status === 200 && a.data.ok) {
       if (commit) {
-        setNote({ ok: true, text: r(d, "imp.done", { n: Number(a.data.written ?? 0) }) });
+        showToast({ text: r(d, "imp.done", { n: Number(a.data.written ?? 0), tone: 'ok' }) });
         setChecked(null);
         setText("");
         router.refresh();

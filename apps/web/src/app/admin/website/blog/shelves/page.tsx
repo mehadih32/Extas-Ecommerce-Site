@@ -44,7 +44,7 @@ export default async function JournalShelvesPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="blog-shelves" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="blog.read" />
       </div>
     );
@@ -59,7 +59,7 @@ export default async function JournalShelvesPage() {
   );
 
   return (
-    <div className="a2-z" data-testid="blog-shelves">
+    <div className="a2-z" data-testid="blog-shelves" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={s('sh.title')} sub={s('sh.sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="jr-grid a2-mt12">

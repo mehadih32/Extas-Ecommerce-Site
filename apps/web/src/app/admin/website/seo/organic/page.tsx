@@ -49,7 +49,7 @@ export default async function SeoOrganicPage() {
   if (access.kind === "unavailable" || !deps) return <AdminNotice view={view} current={KEY} text={t(d, "page.noDb")} />;
   if (access.kind === "forbidden")
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="og-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="seo.read" />
       </div>
     );
@@ -71,7 +71,7 @@ export default async function SeoOrganicPage() {
   const notKnown = sales.rows.find((r) => r.kind === "notKnown");
 
   return (
-    <div className="a2-z" data-testid="og-page">
+    <div className="a2-z" data-testid="og-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={s("title")} sub={s("sub")} />
       <SectionTabs view={view} current={KEY} />
 

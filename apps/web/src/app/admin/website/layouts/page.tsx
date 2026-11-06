@@ -63,7 +63,7 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="ly-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="website.read" />
       </div>
     );

@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { LayoutDevice } from '@extas/settings';
 import { moveRow, type LayoutRow } from '@/lib/shop/layout-rows';
+import { showToast } from '../lumen/Toast';
 
 const API = '/api/admin/website/layouts';
 const DEVICES: readonly LayoutDevice[] = ['both', 'phone', 'desktop'];
@@ -71,7 +72,7 @@ export function LayoutEditor({ page, rows: saved, defaults, locked, version, nam
       const res = await fetch(API, { method: 'PUT', credentials: 'same-origin', cache: 'no-store', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ page, sections, version }) });
       const data = (await res.json().catch(() => ({ ok: false }))) as { ok?: boolean; error?: string; details?: string[] };
       if (data.ok) {
-        setMsg({ ok: true, text: w.saved });
+        showToast({ text: w.saved, tone: 'ok' });
         router.refresh();
       } else {
         const code = data.error ?? (res.status === 403 ? 'forbidden' : res.status === 401 ? 'unauthorized' : 'other');

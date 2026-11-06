@@ -186,7 +186,12 @@
     {"pr": 639, "what": "Messages › Order journey draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/messages/journey", "selector": "[data-testid=messages-journey][data-lm-ready]", "attribute": "data-testid", "equals": "messages-journey"},
     {"pr": 639, "what": "Messages › Templates draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/messages/templates", "selector": "[data-testid=messages-templates][data-lm-ready]", "attribute": "data-testid", "equals": "messages-templates"},
     {"pr": 639, "what": "Messages › Campaigns draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/messages/campaigns", "selector": "[data-testid=messages-campaigns][data-lm-ready]", "attribute": "data-testid", "equals": "messages-campaigns"},
-    {"pr": 639, "what": "Messages › Message log draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/messages/log", "selector": "[data-testid=messages-log][data-lm-ready]", "attribute": "data-testid", "equals": "messages-log"}
+    {"pr": 639, "what": "Messages › Message log draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/messages/log", "selector": "[data-testid=messages-log][data-lm-ready]", "attribute": "data-testid", "equals": "messages-log"},
+    {"pr": 640, "what": "Website › Page layouts draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/website/layouts", "selector": "[data-testid=ly-page][data-lm-ready]", "attribute": "data-testid", "equals": "ly-page"},
+    {"pr": 640, "what": "Website › SEO draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/website/seo", "selector": "[data-testid=seo-page][data-lm-ready]", "attribute": "data-testid", "equals": "seo-page"},
+    {"pr": 640, "what": "Website › Redirects & 404 draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/website/seo/redirects", "selector": "[data-testid=rd-page][data-lm-ready]", "attribute": "data-testid", "equals": "rd-page"},
+    {"pr": 640, "what": "Website › Blog & journal draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/website/blog", "selector": "[data-testid=blog-board][data-lm-ready]", "attribute": "data-testid", "equals": "blog-board"},
+    {"pr": 640, "what": "Website › Publish calendar draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/website/blog/calendar", "selector": "[data-testid=blog-calendar][data-lm-ready]", "attribute": "data-testid", "equals": "blog-calendar"}
   ],
   "figures": [
     { "pr": 155, "path": "/admin/combos?tab=report", "selectors": ["[data-testid=cb-kpi-ordered]", "[data-testid=cb-kpi-sales]"], "value": "b" },

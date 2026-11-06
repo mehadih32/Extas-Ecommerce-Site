@@ -80,7 +80,7 @@ export default async function SeoPage() {
   if (access.kind === "unavailable" || !deps) return <AdminNotice view={view} current={KEY} text={t(view.dict, "page.noDb")} />;
   if (access.kind === "forbidden")
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="seo-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="seo.read" />
       </div>
     );
@@ -105,7 +105,7 @@ export default async function SeoPage() {
   const altExample = altTextFor({ name: en.at.sampleName, colour: en.at.sampleColour, role: "FRONT" }, (k, v) => shopEn.t(k, v), snap.values["seo.altText"].maxLength) ?? "";
 
   return (
-    <div className="a2-z" data-testid="seo-page">
+    <div className="a2-z" data-testid="seo-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={c("title")} sub={c("sub")} />
       <SectionTabs view={view} current={KEY} />
 

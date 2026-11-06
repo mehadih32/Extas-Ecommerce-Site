@@ -57,7 +57,7 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="wd-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="website.read" />
       </div>
     );
@@ -109,7 +109,7 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
   const shopHome = `${view.lang === 'bn' ? '/bn' : '/'}?${EDIT_PARAM}`;
 
   return (
-    <div className="a2-z" data-testid="wd-page">
+    <div className="a2-z" data-testid="wd-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note a2-mt12" role="note">

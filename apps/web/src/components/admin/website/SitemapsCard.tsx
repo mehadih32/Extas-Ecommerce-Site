@@ -8,6 +8,7 @@ import { useState } from "react";
 import { call, errorText } from "@/components/admin/api";
 import type { Dict } from "@/lib/i18n";
 import { SeoCard, SeoSaveRow, SeoSwitch, seoText, useSeoSave } from "./SeoScreen";
+import { showToast } from "../lumen/Toast";
 
 export interface SitemapsValue {
   enabled: boolean;
@@ -73,7 +74,7 @@ export function SitemapsCard({
     setMaking(false);
     if (a.status === 200 && a.data.ok) {
       setState(a.data.sitemaps as SitemapsState);
-      setMade({ ok: true, text: sm(d, "madeNow") });
+      showToast({ text: sm(d, "madeNow"), tone: 'ok' });
       return;
     }
     setMade({ ok: false, text: errorText((d.seo ?? {}) as Dict, a) });

@@ -8,6 +8,7 @@ import { call, errorText } from "@/components/admin/api";
 import type { Dict } from "@/lib/i18n";
 import { ShellIcon } from "../shell/ShellIcon";
 import { SeoCard, SeoSaveRow, SeoSwitch, seoText } from "./SeoScreen";
+import { showToast } from "../lumen/Toast";
 
 type Pair = { en: string; bn: string };
 type PageTemplate = { title: Pair; description: Pair };
@@ -57,7 +58,7 @@ function useSeoSaveKeys<T extends object>(d: Dict, initial: T, versions: Record<
     setSaved(next);
     setValue(next);
     setVer(nextVer);
-    setNote({ ok: true, text: seoText(d, keys.length ? "indexing.saved" : "indexing.unchanged") });
+    showToast({ text: seoText(d, keys.length ? "indexing.saved" : "indexing.unchanged"), tone: 'ok' });
     if (keys.length) router.refresh();
   };
   return { value, setValue, busy, note, save };
@@ -234,7 +235,7 @@ export function AiDraftsCard({ d, value, defaults, version, canWrite, initial }:
     if (a.status === 200 && a.data.ok) {
       setState(a.data as unknown as SeoDraftsView);
       const made = typeof a.data.made === "number" ? a.data.made : null;
-      setNote({ ok: true, text: made === null ? seoText(d, "ai.decided") : seoText(d, "ai.made", { n: made }) });
+      showToast({ text: made === null ? seoText(d, "ai.decided") : seoText(d, "ai.made", { n: made, tone: 'ok' }) });
       router.refresh();
       return;
     }

@@ -16,6 +16,7 @@ import { KEYWORDS_MAX, QUERY_MAX } from '@/lib/journal/clusters-model';
 import { TITLE_MAX } from '@/lib/journal/model';
 import type { BriefScreen } from '@/lib/journal/briefs';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 const EDITOR = '/admin/website/blog';
 const HERE = '/admin/website/blog/briefs';
@@ -56,7 +57,7 @@ export function BriefForm(p: { words: Dict; screen: BriefScreen; canWrite: boole
     const a = await call('POST', `/api/admin/blog/briefs/${b.id}`, { action: 'draft', version: b.version });
     setBusy(false);
     if (a.status === 200 && typeof a.data.postId === 'string') {
-      setSaid({ text: l(a.data.practice ? 'ai.donePractice' : 'ai.done'), bad: false });
+      showToast({ text: l(a.data.practice ? 'ai.donePractice' : 'ai.done'), tone: 'ok' });
       return router.push(`${EDITOR}/${a.data.postId}`);
     }
     const code = a.status === 0 ? 'network' : a.status === 401 ? 'unauthorized' : (a.data.error ?? 'other');
@@ -89,7 +90,7 @@ export function BriefForm(p: { words: Dict; screen: BriefScreen; canWrite: boole
     const a = await call(isNew ? 'POST' : 'PUT', isNew ? '/api/admin/blog/briefs' : `/api/admin/blog/briefs/${b.id}`, payload);
     setBusy(false);
     if (a.status === 200 || a.status === 201) {
-      setSaid({ text: l('saved'), bad: false });
+      showToast({ text: l('saved'), tone: 'ok' });
       setForce(false);
       if (isNew && typeof a.data.id === 'string') return router.push(`${HERE}/${a.data.id}`);
       return router.refresh();

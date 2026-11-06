@@ -7,6 +7,7 @@ import { useId, useState } from 'react';
 import { t, type Dict } from '@/lib/i18n';
 import type { AuthorView, CategoryView } from '@/lib/journal/journal';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 type Kind = 'categories' | 'authors';
 type Row = CategoryView | AuthorView;
@@ -50,7 +51,7 @@ export function JournalShelf(p: { kind: Kind; words: Dict; rows: Row[]; canWrite
     setBusy(false);
     if (a.status === 200 || a.status === 201) {
       setOpen(null);
-      setSaid({ text: c('e.saved'), bad: false });
+      showToast({ text: c('e.saved'), tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errText(a), bad: true });

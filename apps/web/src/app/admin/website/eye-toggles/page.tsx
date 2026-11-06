@@ -49,7 +49,7 @@ export default async function EyeTogglesPage(props: { searchParams: Promise<Reco
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="ey-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="website.read" />
       </div>
     );
@@ -83,7 +83,7 @@ export default async function EyeTogglesPage(props: { searchParams: Promise<Reco
   };
 
   return (
-    <div className="a2-z" data-testid="ey-page">
+    <div className="a2-z" data-testid="ey-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note a2-mt12" role="note">

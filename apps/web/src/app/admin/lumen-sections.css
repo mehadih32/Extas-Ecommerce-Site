@@ -298,3 +298,18 @@
 [data-lm-look] [data-lm-ready] .a2-var { border-color: var(--lm-ln); }
 [data-lm-look] [data-lm-ready] .a2-js.off .a2-jn { background: var(--lm-chip); color: var(--lm-ink2); }
 [data-lm-look] [data-lm-ready] .a2-js.on { border-color: var(--lm-ok); }
+
+/* Website (PR 640): layouts, words, eye toggles, SEO (settings, redirects, categories, Bengali, health, organic) and the
+   blog (board, editor, shelves, plan, briefs, calendar, performance). Their small sizes become Lumen's 14 px (field
+   notes, tick labels, the plan's gaps, the calendar's times and day numbers); text drawn in the shell's brand green,
+   which goes dark on dark, takes the accent ink; a count inside the chosen view chip reads in the chip's own ink;
+   the "More options" fold is a 44 px tap on phones. The article preview shows the shop: a light island. */
+[data-lm-look] [data-lm-ready] :is(.a2-def, .a2-ckb, .pl-gaps, .cal-time, .cal-dn) { font-size: var(--lm-fs-card); }
+[data-lm-look] [data-lm-ready] :is(.lyb-pick .a2-btn[aria-current='page'], details.wdb-fold > summary) { color: var(--lm-ac-ink); border-color: var(--lm-ac-ink); }
+[data-lm-look] [data-lm-ready] .a2-view.on .a2-mute { color: inherit; opacity: 0.75; }
+@media (max-width: 759px), (pointer: coarse) {
+  [data-lm-look] [data-lm-ready] summary.a2-sch { display: flex; align-items: center; min-height: var(--lm-tap); }
+}
+[data-lm-look] [data-lm-ready] .cal-n { font-size: var(--lm-fs-card); }
+/* a page's long state pill (Bengali pages: "Shop words (always there)") wraps on a phone instead of pushing it wide */
+[data-lm-look] [data-lm-ready][data-testid='bengali-page'] .a2-pill { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
