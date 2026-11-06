@@ -70,17 +70,21 @@
   --lm-inp: #ffffff;
   --lm-chip: #eaeef6;
   --lm-hover: #f4f6fb;
-  /* the accent, mixed so text stays AA: ink = accent-coloured text on a card, brand = a surface under white text */
+  /* the accent, mixed so text stays AA: ink = accent-coloured text on a card, brand = a surface under white text.
+     PR 625 follow-up (contrast audit): the mixes are deep enough for every ready swatch of Settings › Admin look (teal,
+     the lightest, decides): ink 72% → 66%, brand 78% → 66% (the older pages also use it as text on light tints), the
+     primary button 80/70% → 70/60%, the logo 85% light/80% → 70/58% (white letter was 2.7:1). Checked for each swatch
+     in light, dark and the island by theme/lumen-contrast.test.ts. */
   --lm-ac: var(--lm-accent);
   --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
-  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 72%, #000000);
-  --lm-brand: color-mix(in srgb, var(--lm-accent) 78%, #000000);
-  --lm-brand-deep: color-mix(in srgb, var(--lm-accent) 62%, #000000);
+  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 66%, #000000);
+  --lm-brand: color-mix(in srgb, var(--lm-accent) 66%, #000000);
+  --lm-brand-deep: color-mix(in srgb, var(--lm-accent) 56%, #000000);
   --lm-on-ac: #ffffff;
-  --lm-pri: linear-gradient(180deg, color-mix(in srgb, var(--lm-accent) 80%, #000000), color-mix(in srgb, var(--lm-accent) 70%, #000000));
-  --lm-pri-line: color-mix(in srgb, var(--lm-accent) 66%, #000000);
+  --lm-pri: linear-gradient(180deg, color-mix(in srgb, var(--lm-accent) 70%, #000000), color-mix(in srgb, var(--lm-accent) 60%, #000000));
+  --lm-pri-line: color-mix(in srgb, var(--lm-accent) 56%, #000000);
   --lm-pri-sh: 0 1px 0 rgba(255, 255, 255, 0.3) inset, 0 8px 18px color-mix(in srgb, var(--lm-accent) 32%, transparent);
-  --lm-logo: linear-gradient(145deg, color-mix(in srgb, var(--lm-accent) 85%, #ffffff), color-mix(in srgb, var(--lm-accent) 80%, #000000));
+  --lm-logo: linear-gradient(145deg, color-mix(in srgb, var(--lm-accent) 70%, #000000), color-mix(in srgb, var(--lm-accent) 58%, #000000));
   --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);
   /* states (text + tint), each AA on its tint */
   --lm-ok: #0b7a50;
@@ -169,7 +173,7 @@
   --lm-hover: #f4f6fb;
   --lm-ac: var(--lm-accent);
   --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
-  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 72%, #000000);
+  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 66%, #000000);
   --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);
   --lm-ok: #0b7a50;
   --lm-okbg: #dcf4e9;
@@ -227,4 +231,11 @@
 [data-lm-look] :focus-visible {
   outline: 2px solid var(--lm-focus);
   outline-offset: 2px;
+}
+
+/* ---- placeholders (PR 625 follow-up, contrast audit): the quieter ink, AA on every field in both modes (the browser's
+   own placeholder is the ink at half strength, 3.3:1) ---- */
+[data-lm-look] ::placeholder {
+  color: var(--lm-ink2);
+  opacity: 1;
 }
