@@ -10,6 +10,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { AiCopyHelper } from './AiCopyHelper';
 import { emailPost } from './emailPost';
 import { SendAdviceBox } from './SendAdviceBox';
+import { showToast } from '../lumen/Toast';
 
 export interface EmailSendFormProps {
   dict: Dict;
@@ -70,7 +71,7 @@ export function EmailSendForm(p: EmailSendFormProps) {
     const r = await emailPost(d, `/api/admin/messages/email/sends${p.id ? `/${p.id}` : ''}`, { name, segmentId: segmentId || null, templateId: templateId || null, locale, subject, body, ...(p.version ? { version: p.version } : {}) });
     setBusy(false);
     if (!r.ok) return setMsg({ ok: false, text: r.text });
-    setMsg({ ok: true, text: x('saved') });
+    showToast({ text: x('saved'), tone: 'ok' });
     const id = (r.data.editor as { send?: { id: string } } | undefined)?.send?.id;
     if (!p.id && id) router.push(`/admin/messages/email/${id}`);
     else router.refresh();

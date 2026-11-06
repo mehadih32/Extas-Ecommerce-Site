@@ -13,6 +13,7 @@ import { msgError } from '@/lib/admin-messages/i18n';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
+import { showToast } from '../lumen/Toast';
 
 const URL = '/api/admin/messages/journey';
 
@@ -44,7 +45,7 @@ export function JourneyForm({ dict, screen, steps, templateKeys }: { dict: Dict;
     setBusy(false);
     if (a.status === 200) {
       fresh(a.data.journey as JourneyScreen);
-      return setSaid({ text: t(dict, 'msg.saved'), bad: false });
+      return showToast({ text: t(dict, 'msg.saved'), tone: 'ok' });
     }
     const code = a.status === 0 ? 'network' : a.data.error;
     if (code === 'STALE') {

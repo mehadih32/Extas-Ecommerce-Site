@@ -182,7 +182,11 @@
     {"pr": 638, "what": "Marketing › Campaigns draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/marketing/campaigns", "selector": "[data-testid=campaigns-page][data-lm-ready]", "attribute": "data-testid", "equals": "campaigns-page"},
     {"pr": 638, "what": "Marketing › Ad platforms draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/marketing/ad-platforms", "selector": "[data-testid=adp-page][data-lm-ready]", "attribute": "data-testid", "equals": "adp-page"},
     {"pr": 638, "what": "Marketing › Landing pages draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/marketing/landing", "selector": "[data-testid=landing-page][data-lm-ready]", "attribute": "data-testid", "equals": "landing-page"},
-    {"pr": 638, "what": "Marketing › Report draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/marketing/report", "selector": "[data-testid=mr-page][data-lm-ready]", "attribute": "data-testid", "equals": "mr-page"}
+    {"pr": 638, "what": "Marketing › Report draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/marketing/report", "selector": "[data-testid=mr-page][data-lm-ready]", "attribute": "data-testid", "equals": "mr-page"},
+    {"pr": 639, "what": "Messages › Order journey draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/messages/journey", "selector": "[data-testid=messages-journey][data-lm-ready]", "attribute": "data-testid", "equals": "messages-journey"},
+    {"pr": 639, "what": "Messages › Templates draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/messages/templates", "selector": "[data-testid=messages-templates][data-lm-ready]", "attribute": "data-testid", "equals": "messages-templates"},
+    {"pr": 639, "what": "Messages › Campaigns draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/messages/campaigns", "selector": "[data-testid=messages-campaigns][data-lm-ready]", "attribute": "data-testid", "equals": "messages-campaigns"},
+    {"pr": 639, "what": "Messages › Message log draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/messages/log", "selector": "[data-testid=messages-log][data-lm-ready]", "attribute": "data-testid", "equals": "messages-log"}
   ],
   "figures": [
     { "pr": 155, "path": "/admin/combos?tab=report", "selectors": ["[data-testid=cb-kpi-ordered]", "[data-testid=cb-kpi-sales]"], "value": "b" },

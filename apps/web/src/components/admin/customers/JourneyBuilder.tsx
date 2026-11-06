@@ -12,6 +12,7 @@ import type { Money } from '@/components/admin/products/model';
 import { cusError } from '@/lib/admin-customers/words';
 import { rowCondition, startValue, draftRows, type DraftRow } from '@/lib/admin-customers/segment-draft';
 import { t, type Dict } from '@/lib/i18n';
+import { showToast } from '../lumen/Toast';
 
 type DraftStep = { kind: 'wait'; days: string } | { kind: 'check'; row: DraftRow } | { kind: 'send'; channel: JourneyChannel; template: string };
 
@@ -96,7 +97,7 @@ export function JourneyBuilder(p: JourneyBuilderProps) {
         setMsg({ ok: false, text: cusError(d, data.error, (data.details ?? []).join(', ')) });
         return;
       }
-      setMsg({ ok: true, text: x('saved') });
+      showToast({ text: x('saved'), tone: 'ok' });
       if (!p.id && data.editor) router.push(`/admin/messages/automations/${data.editor.journey.id}`);
       else router.refresh();
     } catch {

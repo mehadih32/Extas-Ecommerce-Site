@@ -11,6 +11,7 @@ import { msgError } from '@/lib/admin-messages/i18n';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
+import { showToast } from '../lumen/Toast';
 
 const URL = '/api/admin/messages/consent';
 export const CONSENT_ACTION_KEYS = ['stopAll', 'allowAll', 'stopOffers', 'allowOffers'] as const;
@@ -47,7 +48,7 @@ export function ConsentForm({ dict, config, version, canEdit, choices }: { dict:
     setBusy(false);
     if (a.status === 200) {
       fresh(a.data.consent as { config: ConsentSettings; version: string });
-      return setSaid({ text: t(dict, 'msg.saved'), bad: false });
+      return showToast({ text: t(dict, 'msg.saved'), tone: 'ok' });
     }
     const code = a.status === 0 ? 'network' : a.data.error;
     if (code === 'STALE') {
@@ -171,7 +172,7 @@ export function ConsentRecordForm({ dict, phone, channels: all }: { dict: Dict; 
     const a = await call('POST', `${URL}/record`, { phone: number, channels, action });
     setBusy(false);
     if (a.status !== 200) return setSaid({ text: a.status === 0 ? msgError(dict, 'network') : msgError(dict, a.data.error, (a.data.details ?? []).join(', ')), bad: true });
-    setSaid({ text: x('recorded'), bad: false });
+    showToast({ text: x('recorded'), tone: 'ok' });
     const p = (a.data.record as { screen: { lookup: { phone: string } | null } }).screen.lookup?.phone ?? number;
     router.push(`/admin/messages/consent?phone=${encodeURIComponent(p)}`);
     router.refresh();
