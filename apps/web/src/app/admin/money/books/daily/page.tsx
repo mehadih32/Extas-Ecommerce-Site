@@ -54,7 +54,7 @@ export default async function BooksDailyPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-bk" data-lm-ready="" data-testid="bd-page">
         <ShellState view={view} kind="denied" permission="books.read" />
       </div>
     );
@@ -100,7 +100,7 @@ export default async function BooksDailyPage() {
   };
 
   return (
-    <div className="a2-z" data-testid="bd-page" data-state={card.state}>
+    <div className="a2-z lm-bk" data-lm-ready="" data-testid="bd-page" data-state={card.state}>
       <PageHead view={view} place={locateKey(KEY)} title={b('title')} sub={b('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-row a2-r21 a2-start">

@@ -431,7 +431,8 @@
       "/admin/money/books",
       "/admin/money/books/match",
       "/admin/money/books/differences",
-      "/admin/money/books/closes"
+      "/admin/money/books/closes",
+      "/admin/money/month-end"
     ],
     "discover": [
       {
@@ -465,10 +466,10 @@
       "/admin/messages/email/new": ["[data-testid=\"messages-email-send\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/messages/email/templates/new": ["[data-testid=\"messages-email-template\"]", "[data-testid=\"a2-tabs\"]"],
       "/email/unsubscribe/00000000-0000-7000-8000-000000000000": ["[data-testid=\"email-unsubscribe\"]"],
-      "/admin/money/books": ["[data-testid=\"books-account\"]", "[data-testid=\"a2-tabs\"]"],
-      "/admin/money/books/match": ["[data-testid=\"books-match\"]", "[data-testid=\"a2-tabs\"]"],
-      "/admin/money/books/differences": ["[data-testid=\"books-differences\"]", "[data-testid=\"a2-tabs\"]"],
-      "/admin/money/books/closes": ["[data-testid=\"books-closes\"]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/money/books": ["[data-testid=\"books-account\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/money/books/match": ["[data-testid=\"books-match\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/money/books/differences": ["[data-testid=\"books-differences\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/money/books/closes": ["[data-testid=\"books-closes\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
       "/admin/messages/log": ["[data-testid=\"messages-log\"]", "[data-testid=\"log-counts\"]", "[data-testid=\"log-filters\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/messages/channels": ["[data-testid=\"messages-channels\"]", "[data-testid=\"channel-row\"]", "[data-testid=\"ch-save\"]", "[data-testid=\"wa-templates\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/messages/consent": ["[data-testid=\"messages-consent\"]", "[data-testid=\"consent-counts\"]", "[data-testid=\"consent-lookup\"]", "[data-testid=\"cs-save\"]", "[data-testid=\"a2-tabs\"]"],
@@ -500,7 +501,7 @@
       "/admin/build/pr/594": ["[data-testid=\"bpr-page\"][data-lm-ready]", "[data-testid=\"bpr-does\"]", "[data-testid=\"bpr-problems\"]", "[data-testid=\"bpr-updates\"]"],
       "/admin/build/problems": ["[data-testid=\"bp-page\"][data-lm-ready]", "[data-testid=\"bp-views\"]", "[data-testid=\"bp-list\"]"],
       "/admin/build/files": ["[data-testid=\"bf-page\"][data-lm-ready]", "[data-testid=\"bf-search\"]", "[data-testid=\"bf-list\"]"],
-      "/admin/money/books/daily": ["[data-testid=\"bd-page\"]", "[data-testid=\"a2-tabs\"]", "[data-testid=\"bd-status-card\"]", "[data-testid=\"bd-checks\"]", "[data-testid=\"bd-needs\"]", "[data-testid=\"bd-summaries\"]"],
+      "/admin/money/books/daily": ["[data-testid=\"bd-page\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]", "[data-testid=\"bd-status-card\"]", "[data-testid=\"bd-checks\"]", "[data-testid=\"bd-needs\"]", "[data-testid=\"bd-summaries\"]"],
       "/admin/money/costs": ["[data-testid=\"costs-page\"]", "[data-testid=\"a2-tabs\"]", "[data-testid=\"fc-card\"]", "[data-testid=\"fc-months\"]", "[data-testid=\"cl-card\"]"],
       "/admin/customers": ["[data-testid=\"customers-list\"][data-lm-ready]", "[data-testid=\"cus-kpis-atrisk\"]", "[data-testid=\"cus-views\"]", "[data-testid=\"cus-row\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin?home=1&state=notfound": ["[data-testid=\"a2-state\"]"],
@@ -509,6 +510,7 @@
       "/admin/size-charts": [".ad[data-lm-ready]", ".sc-item"],
       "/admin/stock": [".ad[data-lm-ready]", "a.st-name"],
       "/admin/server": [".ad[data-lm-ready]", "[data-worker-state]"],
+      "/admin/money/month-end": ["[data-testid=\"month-end\"][data-lm-ready]"],
       "/admin/reports/team": ["[data-testid=\"team-page\"][data-lm-ready]"],
       "/admin/reports/delivery": ["[data-testid=\"delivery-report\"][data-lm-ready]"],
       "/admin/reports/customers": ["[data-testid=\"customers-report\"][data-lm-ready]"],

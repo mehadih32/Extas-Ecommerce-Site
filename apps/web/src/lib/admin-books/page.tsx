@@ -69,7 +69,7 @@ export const booksHref = (storeId: number, path: string): string => withStore(st
 export const diffStatusCellClass = (adjust: boolean): string | undefined => (adjust ? 'a2-tdw' : undefined);
 
 /** Opens a books page for `perm`, or answers the element to show instead (no access, no database). */
-export async function openBooksPage(o: { perm: PermissionKey; here: string; current: string; title: string; sub: string; storeId?: number }): Promise<BooksPageCtx | { el: ReactElement }> {
+export async function openBooksPage(o: { perm: PermissionKey; here: string; current: string; title: string; sub: string; storeId?: number; testId?: string }): Promise<BooksPageCtx | { el: ReactElement }> {
   const deps = adminDeps();
   const storeId = o.storeId ?? MOTHER_STORE_ID;
   const [plain, access] = await Promise.all([adminView(deps), pageAccess(o.perm, deps, storeId)]);
@@ -80,7 +80,8 @@ export async function openBooksPage(o: { perm: PermissionKey; here: string; curr
   if (access.kind === 'forbidden')
     return {
       el: (
-        <div className="a2-z">
+        // PR 643 (CN-036): the no-access state is drawn ready (Lumen, dark mode) and carries the page's own test id
+        <div className="a2-z lm-bk" data-lm-ready="" data-testid={o.testId}>
           <ShellState view={view} kind="denied" permission={o.perm} />
         </div>
       ),
@@ -128,7 +129,7 @@ export function ResultPill({ d, result }: { d: Dict; result: string | null }) {
 /** The page when the store is still on v5 or has no ERP link: the books start at the switch. */
 export function BooksOff({ ctx, model, testId }: { ctx: BooksPageCtx; model: 'v5' | 'v6'; testId: string }) {
   return (
-    <div className="a2-z" data-testid={testId}>
+    <div className="a2-z lm-bk" data-lm-ready="" data-testid={testId}>
       {ctx.head}
       <section className="a2-card a2-mt12" data-testid="books-off">
         <p className="a2-sm a2-mute">{t(ctx.d, model === 'v5' ? 'bk.v5' : 'bk.noLink')}</p>
