@@ -203,7 +203,8 @@
       "BRIEF_MISSING": "This topic needs its brief before writing starts: press “Brief”.",
       "AI_OFF": "AI drafting is off: turn on AI for the shop and “AI first drafts” first.",
       "DAILY_LIMIT": "Today’s AI drafts are used up ({fields} a day). Try again tomorrow, or write it by hand.",
-      "AI_UNAVAILABLE": "The AI writer did not answer; try again in a while."
+      "AI_UNAVAILABLE": "The AI writer did not answer; try again in a while.",
+      "DAY_FULL": "That day already has the most articles a day (Calendar card). Pick another day."
     },
     "pl": {
       "meta": "Topic plan",
@@ -411,6 +412,68 @@
           "enabled": "Offer “Write the first draft with AI”",
           "dailyMax": "Most AI drafts in a day"
         }
+      }
+    },
+    "cal": {
+      "meta": "Calendar · Blog & journal",
+      "title": "Publish calendar",
+      "sub": "When each finished article goes live: the publishing times of the days ahead, the month, and the articles waiting for a time.",
+      "kTomorrow": "For tomorrow",
+      "kTomorrowS": "at least {n}",
+      "kReady": "Finished, waiting",
+      "kReadyS": "all review steps passed",
+      "kSlots": "Publishing times a day",
+      "kFree": "Free times",
+      "kFreeS": "next {n} days",
+      "fewSlots": "Only {n} publishing times a day, but the target is {target} — add more times in the card below.",
+      "ahead": "The days ahead",
+      "aheadSub": "Each publishing time with its article, or free. Times are in the shop's time zone ({tz}).",
+      "fill": "Fill the free times",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "low": "too few",
+      "free": "Free",
+      "noTimes": "No free time left today.",
+      "live": "Live",
+      "scheduled": "Scheduled",
+      "prev": "Previous month",
+      "next": "Next month",
+      "thisMonth": "This month",
+      "nPosts": "{n} articles",
+      "legend": "Green number: live. Blue: some are scheduled. Tap a day to see its articles.",
+      "dayEmpty": "No article on this day.",
+      "ready": "Finished, waiting for a time",
+      "readySub": "Articles that passed all three review steps. Highest priority topic first.",
+      "readyNone": "No finished article is waiting.",
+      "blocked": "Cannot be placed: {what}",
+      "placeOne": "Give it the next free time",
+      "gap": {
+        "title": "title",
+        "slug": "link",
+        "body": "words"
+      },
+      "placed": "{n} placed in free times.",
+      "skippedN": "{n} skipped (something missing).",
+      "noneReady": "No finished article to place.",
+      "noFree": "No free time left in the days ahead.",
+      "how": "How it works",
+      "how1": "An article that passes its last review step (SEO) waits here as finished.",
+      "how2": "“Fill the free times” gives each finished article with nothing missing the next free time; an unfinished one is never used to fill a time.",
+      "how3": "A scheduled article goes live by itself at its time. Change or remove its time in the article's editor.",
+      "how4": "With “Place by itself” on, a finished article takes the next free time straight away.",
+      "card": {
+        "h": "Publishing times and numbers",
+        "d": "The day's publishing times and how many articles a day.",
+        "slots": "Publishing times (comma separated, 24-hour, e.g. 09:00, 12:00)",
+        "slotsHelp": "Bangladesh time. Each time once.",
+        "perDayMin": "At least a day",
+        "perDayTarget": "Target a day (the fill stops here)",
+        "perDayMax": "Most a day (scheduling by hand stops here)",
+        "daysAhead": "Days ahead to fill and show",
+        "leadMinutes": "Not closer than (minutes from now)",
+        "autoFill": "Place by itself",
+        "autoFillHelp": "Off as it ships. When on, a finished article takes the next free time as soon as its last review step passes.",
+        "weekStart": "Week starts on"
       }
     }
   }

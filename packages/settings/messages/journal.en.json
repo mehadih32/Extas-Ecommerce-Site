@@ -22,6 +22,10 @@
     "aiDraft": {
       "label": "AI first drafts from the brief",
       "help": "Off as it ships. When on (and AI is on for the whole shop), a saved brief in Website › Blog & journal › Brief offers “Write the first draft with AI”: the draft is written in the brief's language from the brief alone and lands on the board as an article in writing, marked as AI-assisted; a person edits it and it passes the three review steps before anyone can publish it. Until an AI provider's key is entered the practice writer serves and says so. At most the number you set in a day."
+    },
+    "schedule": {
+      "label": "Publish calendar",
+      "help": "The day’s publishing times (Bangladesh time, comma separated) and how many articles a day: at least the first number (a day under it is flagged on the calendar), the fill stops at the target, and never more than the most. “Fill the free times” in Website › Blog & journal › Calendar places the finished articles (all three review steps passed, nothing missing) in the free times of the days ahead you set, never closer to now than the minutes you set; an empty time is never filled with an unfinished article. “Place by itself” is off as it ships: when on, an article is placed in the next free time as soon as its last review step passes."
     }
   }
 }
