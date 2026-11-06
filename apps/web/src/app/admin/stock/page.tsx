@@ -68,7 +68,7 @@ export default async function StockPage() {
   const lowMore = Math.max(0, low.total - low.items.length);
 
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <div className="ad-hd pa-hd">
         <div className="pa-hd-text">
           <div className="ad-eyebrow">{t(d, 'stock.eyebrow')}</div>

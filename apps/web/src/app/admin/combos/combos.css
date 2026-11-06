@@ -4,8 +4,8 @@
    design-token file belongs to the design owner (S02). Phone first: one column; two from 768 px, three from 1180 px. */
 
 .ad {
-  --cb-card-line: #e6e3de;
-  --cb-art-bg: #ece9e3;
+  --cb-card-line: var(--lm-ln);
+  --cb-art-bg: var(--lm-sf2);
   --cb-art-gap: 6px;
   --cb-art-ratio: 4 / 3;
   --cb-art-thumb: 64px;
@@ -153,7 +153,7 @@
   --cb-ex-thumb: 76px;
   --cb-done-dot: 52px;
   --cb-money-max: 240px;
-  --cb-foot-shadow: 0 6px 20px rgb(0 0 0 / 7%);
+  --cb-foot-shadow: var(--lm-sh);
 }
 
 /* ---------- inner tabs (demo zo_tabs) ---------- */
@@ -327,7 +327,7 @@
 .cb-report-name { overflow-wrap: anywhere; }
 .cb-report-pair { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .cb-dots { display: inline-flex; flex-shrink: 0; }
-.cb-dots i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.2); margin-right: -4px; }
+.cb-dots i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--lm-swatch-ring); margin-right: -4px; }
 @media (min-width: 1024px) {
   /* Seven tiles (PR 155 added Ordered value beside Sales): four a row, so money never squeezes into a narrow tile. */
   .cb-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }

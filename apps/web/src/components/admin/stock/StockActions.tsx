@@ -10,7 +10,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { Icon } from '../Icon';
 import { formatNumber } from '../products/model';
-import { useToast } from '../products/useToast';
+import { say, sayBad } from '../products/useToast';
 import { stockRefusal } from './text';
 
 const KINDS: MismatchKind[] = ['MISSING_IN_SHOP', 'MISSING_IN_ERP', 'ON_HAND_DIFFERS', 'RESERVED_DIFFERS'];
@@ -22,7 +22,6 @@ type Job = { (): Promise<string | null> };
 function useRun(dict: Dict) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
-  const [toast, say] = useToast();
   const run = async (name: string, fn: Job) => {
     setBusy(name);
     try {
@@ -30,12 +29,12 @@ function useRun(dict: Dict) {
       if (text) say(text);
       router.refresh();
     } catch {
-      say(t(dict, 'errors.server-error'));
+      sayBad(t(dict, 'errors.server-error'));
     } finally {
       setBusy(null);
     }
   };
-  return { busy, toast, run };
+  return { busy, run };
 }
 
 function pullText(d: Dict, r: StockPullResult | ProductResyncResult, locale: string): string {
@@ -45,7 +44,7 @@ function pullText(d: Dict, r: StockPullResult | ProductResyncResult, locale: str
 }
 
 export function ResyncButtons({ dict: d, locale }: Props) {
-  const { busy, toast, run } = useRun(d);
+  const { busy, run } = useRun(d);
   const [sku, setSku] = useState('');
 
   const all = () =>
@@ -82,17 +81,12 @@ export function ResyncButtons({ dict: d, locale }: Props) {
           {t(d, busy === 'one' ? 'stock.resync.running' : 'stock.resync.one')}
         </button>
       </form>
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
-        </div>
-      ) : null}
     </div>
   );
 }
 
 export function ReconcileButton({ dict: d, locale }: Props) {
-  const { busy, toast, run } = useRun(d);
+  const { busy, run } = useRun(d);
   const [result, setResult] = useState<ReconcileResult | null>(null);
   const num = (n: number) => formatNumber(n, locale);
 
@@ -139,17 +133,12 @@ export function ReconcileButton({ dict: d, locale }: Props) {
           {result.unknownSku ? <p className="ad-mini">{t(d, 'stock.reconcile.unknown', { n: num(result.unknownSku) })}</p> : null}
         </div>
       ) : null}
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
-        </div>
-      ) : null}
     </div>
   );
 }
 
 export function RetryDocuments({ dict: d, locale, count }: Props & { count: number }) {
-  const { busy, toast, run } = useRun(d);
+  const { busy, run } = useRun(d);
   const go = () =>
     run('retry', async () => {
       const a = await call('POST', '/api/admin/inventory/pushes/retry', { all: true });
@@ -162,11 +151,6 @@ export function RetryDocuments({ dict: d, locale, count }: Props & { count: numb
         <Icon name="sync" size={16} />
         {t(d, 'stock.docs.retry', { n: formatNumber(count, locale) })}
       </button>
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
-        </div>
-      ) : null}
     </>
   );
 }
@@ -179,7 +163,7 @@ interface Style {
 
 /** PR 204 — asks the ERP which of its styles the shop does not have yet (only on a press: the page never waits on it). */
 export function NewStylesButton({ dict: d, locale }: Props) {
-  const { busy, toast, run } = useRun(d);
+  const { busy, run } = useRun(d);
   const [styles, setStyles] = useState<{ state: string; styles: Style[]; truncated: boolean } | null>(null);
   const num = (n: number) => formatNumber(n, locale);
   const go = () =>
@@ -215,11 +199,6 @@ export function NewStylesButton({ dict: d, locale }: Props) {
             <p className="ad-mini ok">{t(d, 'stock.queue.stylesNoneNew')}</p>
           )}
           {styles.truncated ? <p className="ad-mini">{t(d, 'stock.queue.truncated')}</p> : null}
-        </div>
-      ) : null}
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
         </div>
       ) : null}
     </div>

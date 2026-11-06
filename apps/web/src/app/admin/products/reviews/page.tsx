@@ -116,7 +116,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
   ];
 
   return (
-    <div className="a2-z" data-testid="product-reviews">
+    <div className="a2-z" data-testid="product-reviews" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'rev.title')} sub={t(d, 'rev.sub')} />
       <SectionTabs view={view} current={KEY} />
       {!canModerate ? <p className="a2-xs a2-mute a2-mt12">{t(d, 'rev.readOnly')}</p> : null}

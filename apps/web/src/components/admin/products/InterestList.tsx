@@ -8,7 +8,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { formatNumber, refusalText } from './model';
 import { contactOf } from './tools-model';
-import { useToast } from './useToast';
+import { say, sayBad } from './useToast';
 
 interface Props {
   dict: Dict;
@@ -22,7 +22,6 @@ export function InterestList({ dict: d, locale, timeZone, state, rows }: Props) 
   const router = useRouter();
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const [toast, say] = useToast();
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone, numberingSystem: 'latn' }).format(new Date(iso));
   const all = rows.length > 0 && picked.length === rows.length;
   const actions: InterestAction[] = state === 'archived' ? ['restore'] : state === 'told' ? ['archive'] : ['told', 'archive'];
@@ -31,7 +30,7 @@ export function InterestList({ dict: d, locale, timeZone, state, rows }: Props) 
     setBusy(true);
     try {
       const a = await call('POST', '/api/admin/catalogue/back-in-stock/requests', { action, ids: picked });
-      if (a.status !== 200) return say(refusalText(d, a.data.error, a.data.details));
+      if (a.status !== 200) return sayBad(refusalText(d, a.data.error, a.data.details));
       say(t(d, 'interest.done', { n: formatNumber((a.data.result as { changed: number }).changed, locale) }));
       setPicked([]);
       router.refresh();
@@ -84,11 +83,6 @@ export function InterestList({ dict: d, locale, timeZone, state, rows }: Props) 
               ))}
             </div>
           </div>
-        </div>
-      ) : null}
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
         </div>
       ) : null}
     </>

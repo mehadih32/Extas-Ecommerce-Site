@@ -67,7 +67,7 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
   const upsellRule = editRule?.upsell ? (rules.find((r) => r.id === editRule.upsell!.id) ?? null) : null;
 
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <CombosScreen
         dict={view.dict}
         lang={view.lang}

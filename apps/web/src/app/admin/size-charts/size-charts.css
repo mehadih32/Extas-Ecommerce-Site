@@ -3,13 +3,13 @@
    stylesheet. The few values this screen adds sit in the block below, once. */
 
 .ad {
-  --sc-gold: #8a6420;
-  --sc-gold-bg: #f6efdf;
-  --sc-cov-ok-line: #d5e1dc;
-  --sc-cov-bad-bg: #fbf6ec;
-  --sc-cov-bad-line: #ead9bc;
-  --sc-cov-bad-ink: #5e3e14;
-  --sc-tile-on: #f6f9f8;
+  --sc-gold: var(--lm-warn);
+  --sc-gold-bg: var(--lm-warnbg);
+  --sc-cov-ok-line: var(--lm-ln);
+  --sc-cov-bad-bg: var(--lm-warnbg);
+  --sc-cov-bad-line: color-mix(in srgb, var(--lm-warn) 30%, var(--lm-warnbg));
+  --sc-cov-bad-ink: var(--lm-warn);
+  --sc-tile-on: var(--lm-sf2);
   --sc-list-w: 340px;
   --sc-in-w: 76px;
   --sc-in-w-phone: 54px;

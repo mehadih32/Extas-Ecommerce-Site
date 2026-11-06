@@ -6,7 +6,7 @@ import { useState, type FormEvent } from 'react';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { Icon } from '../Icon';
-import { useToast } from '../products/useToast';
+import { say, sayBad } from '../products/useToast';
 import { countHref, stockRefusal } from './text';
 
 export interface LocationChoice {
@@ -18,7 +18,6 @@ export function AuditStart({ dict: d, locations }: { dict: Dict; locations: Loca
   const router = useRouter();
   const [locationId, setLocationId] = useState(locations[0]?.id ?? '');
   const [busy, setBusy] = useState(false);
-  const [toast, say] = useToast();
 
   const go = async (e: FormEvent) => {
     e.preventDefault();
@@ -26,7 +25,7 @@ export function AuditStart({ dict: d, locations }: { dict: Dict; locations: Loca
     setBusy(true);
     try {
       const a = await call('POST', '/api/admin/inventory/audits', { locationId });
-      if (a.status !== 201) return say(stockRefusal(d, a.data.error, a.data.details));
+      if (a.status !== 201) return sayBad(stockRefusal(d, a.data.error, a.data.details));
       router.push(countHref((a.data.audit as { id: string }).id));
     } finally {
       setBusy(false);
@@ -51,11 +50,6 @@ export function AuditStart({ dict: d, locations }: { dict: Dict; locations: Loca
           {t(d, 'stock.counts.start')}
         </button>
       </div>
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
-        </div>
-      ) : null}
     </form>
   );
 }

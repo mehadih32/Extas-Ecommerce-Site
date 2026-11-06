@@ -80,7 +80,7 @@ export default async function StockMovementsPage({ searchParams }: { searchParam
   const signed = (n: number) => (n > 0 ? t(d, 'stock.count.plus', { n: num(n) }) : num(n));
 
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <div className="ad-hd pa-hd">
         <div className="pa-hd-text">
           <div className="ad-eyebrow">{t(d, 'stock.eyebrow')}</div>

@@ -1,7 +1,7 @@
 /* S14 · PR 295 — Products › Reviews: a review card's stars, words, photos and buttons (44px taps on a phone). */
 .adm2 .rev-card{display:flex;flex-direction:column;gap:8px}
 .adm2 .rev-card.s-HIDDEN,.adm2 .rev-card.s-REJECTED{opacity:.72}
-.adm2 .rev-card.s-PENDING{border-left:3px solid var(--warn,#C08A3E)}
+.adm2 .rev-card.s-PENDING{border-left:3px solid var(--lm-warn)}
 .adm2 .rev-head{flex-wrap:wrap;gap:8px}
 .adm2 .rev-who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .adm2 .rev-stars{color:var(--g);letter-spacing:1px;font-size:15px}
