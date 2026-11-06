@@ -26,6 +26,10 @@
 // before the page draws, so he sees the same version every time (the page reads it from a request header this once);
 // `?abPreview=<test id>.a|b` hands a preview of one test's version to the page and keeps it from page to page until the
 // browser closes (`?abPreview=off` stops it). Neither answer is ever cached.
+// PR 40 follow-up (6 Nov): an address the shop has no page for at all (lib/shop/unknown-address: not under a folder of
+// its own, not a product address, not "Coming soon") answers HTTP 404 from here, and the request carries this
+// process's mark in NOT_FOUND_HEADER, so the catch-all page draws the shop's not-found page on the server (Next draws a
+// page's own notFound() only in the browser). A browser's own copy of the header is always dropped.
 import { NextResponse, type NextRequest } from 'next/server';
 import { shopCacheHeaders } from './lib/cache-policy';
 import { AB_PREVIEW_COOKIE, AB_PREVIEW_HEADER, AB_PREVIEW_PARAM, AB_VISITOR_HEADER, BOT, newVisitorId, previewCookie, previewOf, visitorIdOf } from './lib/experiments/edge';
@@ -38,12 +42,15 @@ import { BAG_COOKIE, bagCookie } from './lib/shop/bag-model';
 import { isShopPath, LANG_HEADER, PATH_HEADER, REWRITE_MARK_HEADER, THEME_HEADER } from './lib/shop/lang';
 import { requestLang, rewriteMark } from './lib/shop/rewrite-mark';
 import { shopStoreId } from './lib/shop/store-id';
+import { NOT_FOUND_HEADER, unknownAddressNow } from './lib/shop/unknown-address';
 import { ATTRIBUTION_COOKIE, fromElsewhere, hasTags, landingCookie } from './lib/tracking/attribution';
 
 /** A permanent move (HTTP's own code for it; search engines carry the page's rank over). */
 const PERMANENT = 301;
 /** PR 588: a move for now (the Bengali page opens once it is marked ready). */
 const TEMPORARY = 307;
+/** PR 40 follow-up: HTTP's own code for "no page at this address". */
+const NOT_FOUND = 404;
 
 function withCacheHeaders(res: NextResponse, req: NextRequest): NextResponse {
   const h = shopCacheHeaders(req.nextUrl.pathname, req.cookies.getAll().map((c) => c.name));
@@ -151,13 +158,18 @@ export async function proxy(req: NextRequest) {
   else h.delete(THEME_HEADER);
   const ab = await abHeaders(req, h, req.headers.get(REWRITE_MARK_HEADER) === rewriteMark());
   h.delete(REWRITE_MARK_HEADER);
+  // PR 40 follow-up: an address with no page at all answers 404 here, marked for the catch-all page
+  h.delete(NOT_FOUND_HEADER);
+  const missing = (req.method === 'GET' || req.method === 'HEAD') && (await unknownAddressNow(shopStoreId(), path));
+  if (missing) h.set(NOT_FOUND_HEADER, rewriteMark());
+  const status = missing ? NOT_FOUND : undefined;
   if (lang === 'bn' && pathname !== path) {
     h.set(REWRITE_MARK_HEADER, rewriteMark());
     const url = req.nextUrl.clone();
     url.pathname = path;
-    return withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h } }), req)), ab), req);
+    return withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h }, status }), req)), ab), req);
   }
-  return withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.next({ request: { headers: h } }), req)), ab), req);
+  return withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.next({ request: { headers: h }, status }), req)), ab), req);
 }
 
 export const config = {

@@ -8,6 +8,11 @@ import { NextRequest } from 'next/server';
 vi.mock('./lib/seo/redirect-table', () => ({ redirectTable: async () => ({}), forwardOf: () => null, countRedirectHit: () => {} }));
 vi.mock('./lib/seo/bengali-gate', () => ({ bengaliGateSends: async () => false }));
 vi.mock('./lib/shop/store-id', () => ({ shopStoreId: () => 1 }));
+// PR 40 follow-up: the unknown-address check without the database (the prefix as the registry ships it)
+vi.mock('./lib/shop/unknown-address', async (orig) => {
+  const real = await orig<typeof import('./lib/shop/unknown-address')>();
+  return { ...real, unknownAddressNow: async (_s: number, path: string) => real.unknownAddress(path, '/p') };
+});
 
 const { proxy } = await import('./proxy');
 
@@ -57,5 +62,28 @@ describe('the shop language through the proxy', () => {
     const res = await proxy(new NextRequest(`${BASE}/collections/new-in`));
     expect(handed(res, 'x-extas-lang')).toBe('en');
     expect(res.headers.get('x-middleware-rewrite')).toBeNull();
+  });
+});
+
+describe('an address the shop has no page for answers 404 from the proxy (PR 40 follow-up)', () => {
+  it('marks it with this process`s mark and answers 404, in English and Bengali', async () => {
+    const en = await proxy(new NextRequest(`${BASE}/no-such-page`));
+    expect(en.status).toBe(404);
+    expect(handed(en, 'x-extas-not-found')).toMatch(/^[0-9a-f-]{36}$/);
+    const bn = await proxy(new NextRequest(`${BASE}/bn/no-such-page`));
+    expect(bn.status).toBe(404);
+    expect(new URL(bn.headers.get('x-middleware-rewrite')!).pathname).toBe('/no-such-page');
+    expect(handed(bn, 'x-extas-not-found')).toBe(handed(en, 'x-extas-not-found'));
+  });
+
+  it('a page of the shop, a product address and a form post are left alone, and a browser`s own mark is dropped', async () => {
+    for (const path of ['/', '/collections/polos', '/p/polo', '/bn/p/polo/navy', '/help/careers']) {
+      const res = await proxy(new NextRequest(`${BASE}${path}`, { headers: { 'x-extas-not-found': 'x' } }));
+      expect(res.status, path).toBe(200);
+      expect(handed(res, 'x-extas-not-found'), path).toBeNull();
+    }
+    const post = await proxy(new NextRequest(`${BASE}/no-such-page`, { method: 'POST' }));
+    expect(post.status).toBe(200);
+    expect(handed(post, 'x-extas-not-found')).toBeNull();
   });
 });
