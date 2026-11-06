@@ -2,6 +2,9 @@
 // which shop words a page shows: the edit panel on the shop page sends the texts it sees (text, placeholders, labels for
 // screen readers) and gets back every dictionary word whose text, in the page's language, is one of them — the owner's
 // word when he has one, else the shop's; a {slot} matches whatever the shop filled in. Pure: no database.
+// PR 79 follow-up (676, 6 Nov): `previewText` — what a text on the page becomes with the owner's draft, also for a word
+// with {slots} (the values the shop filled in are kept) or "|" pieces (each piece by its place), so the panel previews
+// every word at once, not only exact ones.
 import type { LabelOverrides } from '../shop/dict';
 import { defaultWord, WORD_KEYS, wordRow, type WordLang, type WordRow } from './words';
 
@@ -45,4 +48,35 @@ export function matchWords(labels: LabelOverrides | null, lang: WordLang, texts:
     if (seen.size) out.push({ ...wordRow(key, labels), seen: [...seen] });
   }
   return out;
+}
+
+/** The values the shop filled into a word's {slots} on one text of the page, or null when the text is not this word. */
+function slotValues(word: string, text: string): Record<string, string> | null {
+  if (!/\{\w+\}/.test(word)) return word === text ? {} : null;
+  const names = [...word.matchAll(/\{(\w+)\}/g)].map((m) => m[1]!);
+  const m = new RegExp(`^${word.split(/\{\w+\}/).map(escape).join('(.+?)')}$`, 'su').exec(text);
+  if (!m) return null;
+  const vars: Record<string, string> = {};
+  names.forEach((n, i) => {
+    if (!(n in vars)) vars[n] = m[i + 1]!;
+  });
+  return vars;
+}
+
+/**
+ * What one text of the page shows with a draft: `word` is the word the page was drawn with (the owner's or the shop's),
+ * `draft` the word to preview. Each "|" piece maps to the draft's piece at the same place, and the {slots} keep the
+ * values the shop filled in. Null when the text is not this word, or the draft has another number of pieces (seen after
+ * Publish).
+ */
+export function previewText(word: string, draft: string, text: string): string | null {
+  const was = normText(word).split('|').map(normText);
+  const next = normText(draft).split('|').map(normText);
+  if (was.length !== next.length) return null;
+  const seen = normText(text);
+  for (let i = 0; i < was.length; i++) {
+    const vars = slotValues(was[i]!, seen);
+    if (vars) return next[i]!.replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all);
+  }
+  return null;
 }
