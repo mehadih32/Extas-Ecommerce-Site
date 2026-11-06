@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-06 21:59 (Asia/Dhaka)
+# Smoke test · 2026-11-06 23:39 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (480টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** 0টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
 
-Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result **PASS** (480 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `5f36db1893eb` · after deploy · result **FAIL** (506 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -71,8 +71,15 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result 
 | `/admin/messages/journey` | phone | 200 | `/admin/messages/journey` | ok | — |
 | `/admin/money/books` | phone | 200 | `/admin/money/books` | ok | — |
 | `/admin/orders` | phone | 200 | `/admin/orders` | ok | — |
+| `/admin/orders/01a1b1a7-7f98-7840-b464-2ee05f4f01ea` | phone | 200 | `/admin/orders/01a1b1a7-7f98-7840-b464-2ee05f4f01ea` | ok | — |
+| `/admin/orders/01a1b1a7-9574-7400-ba35-27e8ba67404b` | phone | 200 | `/admin/orders/01a1b1a7-9574-7400-ba35-27e8ba67404b` | ok | — |
+| `/admin/orders/01a1b1a7-aac5-73d2-8a14-6cf4de2e0d86` | phone | 200 | `/admin/orders/01a1b1a7-aac5-73d2-8a14-6cf4de2e0d86` | ok | — |
+| `/admin/orders/01a1b1a7-c483-7551-9bc1-c7981877b702` | phone | 200 | `/admin/orders/01a1b1a7-c483-7551-9bc1-c7981877b702` | ok | — |
+| `/admin/orders/01a1b1a7-e730-7050-84b7-fd9fe0d4d641` | phone | 200 | `/admin/orders/01a1b1a7-e730-7050-84b7-fd9fe0d4d641` | ok | — |
+| `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | phone | 200 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | ok | — |
 | `/admin/orders/confirm` | phone | 200 | `/admin/orders/confirm` | ok | — |
 | `/admin/products` | phone | 200 | `/admin/products` | ok | — |
+| `/admin/products/queue` | phone | 200 | `/admin/products/queue` | ok | — |
 | `/admin/reports/health` | phone | 200 | `/admin/reports/health` | ok | — |
 | `/admin/rules` | phone | 200 | `/admin/rules` | ok | — |
 | `/admin/settings/store` | phone | 200 | `/admin/settings/store` | ok | — |
@@ -81,7 +88,6 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result 
 | `/admin/support` | phone | 200 | `/admin/support` | ok | — |
 | `/admin/website/layouts` | phone | 200 | `/admin/website/layouts` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
-| `/admin/products/queue` | phone | 200 | `/admin/products/queue` | ok | — |
 | `/admin/products/import` | phone | 200 | `/admin/products/import` | ok | — |
 | `/admin/products/audit` | phone | 200 | `/admin/products/audit` | ok | — |
 | `/admin/products/back-in-stock` | phone | 200 | `/admin/products/back-in-stock` | ok | — |
@@ -198,6 +204,7 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result 
 | `/admin/marketing/landing/new` | phone | 200 | `/admin/marketing/landing/new` | ok | — |
 | `/admin/marketing/landing/templates` | phone | 200 | `/admin/marketing/landing/templates` | ok | — |
 | `/admin/marketing/landing/seasonal` | phone | 200 | `/admin/marketing/landing/seasonal` | ok | — |
+| `/admin/marketing/landing/seasonal/yearly` | phone | 200 | `/admin/marketing/landing/seasonal/yearly` | ok | — |
 | `/admin/marketing/campaigns` | phone | 200 | `/admin/marketing/campaigns` | ok | — |
 | `/admin/marketing/campaigns/new` | phone | 200 | `/admin/marketing/campaigns/new` | ok | — |
 | `/admin/marketing/ad-platforms` | phone | 200 | `/admin/marketing/ad-platforms` | ok | — |
@@ -206,11 +213,17 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result 
 | `/admin/marketing/ad-platforms/campaigns` | phone | 200 | `/admin/marketing/ad-platforms/campaigns` | ok | — |
 | `/admin/website/words` | phone | 200 | `/admin/website/words` | ok | — |
 | `/admin/website/eye-toggles` | phone | 200 | `/admin/website/eye-toggles` | ok | — |
+| `/admin/website/side-canvas` | phone | 200 | `/admin/website/side-canvas` | ok | — |
+| `/admin/website/launch-default` | phone | 200 | `/admin/website/launch-default` | ok | — |
+| `/admin/settings/shimmer` | phone | 200 | `/admin/settings/shimmer` | ok | — |
+| `/admin/combos/bag-box` | phone | 200 | `/admin/combos/bag-box` | ok | — |
+| `/admin/build/requests` | phone | 200 | `/admin/build/requests` | ok | — |
 | `/admin/reports/experiments` | phone | 200 | `/admin/reports/experiments` | ok | — |
 | `/admin/reports/experiments/new` | phone | 200 | `/admin/reports/experiments/new` | ok | — |
 | `/admin/website/layouts?page=category` | phone | 200 | `/admin/website/layouts` | ok | — |
 | `/admin/website/layouts?page=product` | phone | 200 | `/admin/website/layouts` | ok | — |
 | `/admin/website/layouts?page=bag` | phone | 200 | `/admin/website/layouts` | ok | — |
+| `/admin/website/layouts?page=category&cat=polos` | phone | 200 | `/admin/website/layouts` | ok | — |
 | `/admin/marketing/referrals` | phone | 200 | `/admin/marketing/referrals` | ok | — |
 | `/admin/marketing/youtube` | phone | 200 | `/admin/marketing/youtube` | ok | — |
 | `/admin/marketing/outreach` | phone | 200 | `/admin/marketing/outreach` | ok | — |
@@ -239,11 +252,11 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result 
 | `/admin/website/blog/comments` | phone | 200 | `/admin/website/blog/comments` | ok | — |
 | `/admin/website/blog/shared` | phone | 200 | `/admin/website/blog/shared` | ok | — |
 | `/admin/website/blog/sold` | phone | 200 | `/admin/website/blog/sold` | ok | — |
-| `/admin/orders/01a1b195-4930-7f13-83ae-87c4ca79862b` | phone | 200 | `/admin/orders/01a1b195-4930-7f13-83ae-87c4ca79862b` | ok | — |
-| `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | phone | 200 | `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | ok | — |
+| `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | phone | 200 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | ok | — |
+| `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | phone | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | phone | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
-| `/admin/reports/health/history/01a1b189-0365-7b73-81c3-7bfd39c87c86` | phone | 200 | `/admin/reports/health/history/01a1b189-0365-7b73-81c3-7bfd39c87c86` | ok | — |
-| `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df?tab=wallet` | phone | 200 | `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | ok | — |
+| `/admin/reports/health/history/01a1b1a1-9301-7a23-b21a-920a260b7725` | phone | 200 | `/admin/reports/health/history/01a1b1a1-9301-7a23-b21a-920a260b7725` | ok | — |
+| `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893?tab=wallet` | phone | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -311,8 +324,15 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result 
 | `/admin/messages/journey` | desktop | 200 | `/admin/messages/journey` | ok | — |
 | `/admin/money/books` | desktop | 200 | `/admin/money/books` | ok | — |
 | `/admin/orders` | desktop | 200 | `/admin/orders` | ok | — |
+| `/admin/orders/01a1b1a7-7f98-7840-b464-2ee05f4f01ea` | desktop | 200 | `/admin/orders/01a1b1a7-7f98-7840-b464-2ee05f4f01ea` | ok | — |
+| `/admin/orders/01a1b1a7-9574-7400-ba35-27e8ba67404b` | desktop | 200 | `/admin/orders/01a1b1a7-9574-7400-ba35-27e8ba67404b` | ok | — |
+| `/admin/orders/01a1b1a7-aac5-73d2-8a14-6cf4de2e0d86` | desktop | 200 | `/admin/orders/01a1b1a7-aac5-73d2-8a14-6cf4de2e0d86` | ok | — |
+| `/admin/orders/01a1b1a7-c483-7551-9bc1-c7981877b702` | desktop | 200 | `/admin/orders/01a1b1a7-c483-7551-9bc1-c7981877b702` | ok | — |
+| `/admin/orders/01a1b1a7-e730-7050-84b7-fd9fe0d4d641` | desktop | 200 | `/admin/orders/01a1b1a7-e730-7050-84b7-fd9fe0d4d641` | ok | — |
+| `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | desktop | 200 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | ok | — |
 | `/admin/orders/confirm` | desktop | 200 | `/admin/orders/confirm` | ok | — |
 | `/admin/products` | desktop | 200 | `/admin/products` | ok | — |
+| `/admin/products/queue` | desktop | 200 | `/admin/products/queue` | ok | — |
 | `/admin/reports/health` | desktop | 200 | `/admin/reports/health` | ok | — |
 | `/admin/rules` | desktop | 200 | `/admin/rules` | ok | — |
 | `/admin/settings/store` | desktop | 200 | `/admin/settings/store` | ok | — |
@@ -321,7 +341,6 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result 
 | `/admin/support` | desktop | 200 | `/admin/support` | ok | — |
 | `/admin/website/layouts` | desktop | 200 | `/admin/website/layouts` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
-| `/admin/products/queue` | desktop | 200 | `/admin/products/queue` | ok | — |
 | `/admin/products/import` | desktop | 200 | `/admin/products/import` | ok | — |
 | `/admin/products/audit` | desktop | 200 | `/admin/products/audit` | ok | — |
 | `/admin/products/back-in-stock` | desktop | 200 | `/admin/products/back-in-stock` | ok | — |
@@ -438,6 +457,7 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result 
 | `/admin/marketing/landing/new` | desktop | 200 | `/admin/marketing/landing/new` | ok | — |
 | `/admin/marketing/landing/templates` | desktop | 200 | `/admin/marketing/landing/templates` | ok | — |
 | `/admin/marketing/landing/seasonal` | desktop | 200 | `/admin/marketing/landing/seasonal` | ok | — |
+| `/admin/marketing/landing/seasonal/yearly` | desktop | 200 | `/admin/marketing/landing/seasonal/yearly` | ok | — |
 | `/admin/marketing/campaigns` | desktop | 200 | `/admin/marketing/campaigns` | ok | — |
 | `/admin/marketing/campaigns/new` | desktop | 200 | `/admin/marketing/campaigns/new` | ok | — |
 | `/admin/marketing/ad-platforms` | desktop | 200 | `/admin/marketing/ad-platforms` | ok | — |
@@ -446,11 +466,17 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result 
 | `/admin/marketing/ad-platforms/campaigns` | desktop | 200 | `/admin/marketing/ad-platforms/campaigns` | ok | — |
 | `/admin/website/words` | desktop | 200 | `/admin/website/words` | ok | — |
 | `/admin/website/eye-toggles` | desktop | 200 | `/admin/website/eye-toggles` | ok | — |
+| `/admin/website/side-canvas` | desktop | 200 | `/admin/website/side-canvas` | ok | — |
+| `/admin/website/launch-default` | desktop | 200 | `/admin/website/launch-default` | ok | — |
+| `/admin/settings/shimmer` | desktop | 200 | `/admin/settings/shimmer` | ok | — |
+| `/admin/combos/bag-box` | desktop | 200 | `/admin/combos/bag-box` | ok | — |
+| `/admin/build/requests` | desktop | 200 | `/admin/build/requests` | ok | — |
 | `/admin/reports/experiments` | desktop | 200 | `/admin/reports/experiments` | ok | — |
 | `/admin/reports/experiments/new` | desktop | 200 | `/admin/reports/experiments/new` | ok | — |
 | `/admin/website/layouts?page=category` | desktop | 200 | `/admin/website/layouts` | ok | — |
 | `/admin/website/layouts?page=product` | desktop | 200 | `/admin/website/layouts` | ok | — |
 | `/admin/website/layouts?page=bag` | desktop | 200 | `/admin/website/layouts` | ok | — |
+| `/admin/website/layouts?page=category&cat=polos` | desktop | 200 | `/admin/website/layouts` | ok | — |
 | `/admin/marketing/referrals` | desktop | 200 | `/admin/marketing/referrals` | ok | — |
 | `/admin/marketing/youtube` | desktop | 200 | `/admin/marketing/youtube` | ok | — |
 | `/admin/marketing/outreach` | desktop | 200 | `/admin/marketing/outreach` | ok | — |
@@ -479,12 +505,22 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result 
 | `/admin/website/blog/comments` | desktop | 200 | `/admin/website/blog/comments` | ok | — |
 | `/admin/website/blog/shared` | desktop | 200 | `/admin/website/blog/shared` | ok | — |
 | `/admin/website/blog/sold` | desktop | 200 | `/admin/website/blog/sold` | ok | — |
-| `/admin/orders/01a1b195-4930-7f13-83ae-87c4ca79862b` | desktop | 200 | `/admin/orders/01a1b195-4930-7f13-83ae-87c4ca79862b` | ok | — |
-| `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | desktop | 200 | `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | ok | — |
+| `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | desktop | 200 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | ok | — |
+| `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | desktop | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | desktop | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
-| `/admin/reports/health/history/01a1b189-0365-7b73-81c3-7bfd39c87c86` | desktop | 200 | `/admin/reports/health/history/01a1b189-0365-7b73-81c3-7bfd39c87c86` | ok | — |
-| `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df?tab=wallet` | desktop | 200 | `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | ok | — |
+| `/admin/reports/health/history/01a1b1a1-9301-7a23-b21a-920a260b7725` | desktop | 200 | `/admin/reports/health/history/01a1b1a1-9301-7a23-b21a-920a260b7725` | ok | — |
+| `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893?tab=wallet` | desktop | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
+
+Other problems:
+
+- check (PR 632): Orders › Today's queue (To confirm) draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
+- check (PR 632): Orders › Call list draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
+- check (PR 633): Orders › Returns › QC draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
+- check (PR 633): Orders › Returns › Hand-back draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
+- check (PR 634): Products › Add product draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
+- check (PR 634): Products › Import from a link draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
+- check (PR 634): Products › Import from the ERP draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
 
 Database (PR 139): ok: 35 tables append-only; the app connects as extas_app.

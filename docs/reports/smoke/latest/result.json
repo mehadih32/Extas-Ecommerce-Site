@@ -1,13 +1,21 @@
 {
-  "at": "2026-11-06 21:59 (Asia/Dhaka)",
+  "at": "2026-11-06 23:39 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "4689df67c695",
-  "kind": "acceptance",
-  "rolledBack": false,
-  "ok": true,
-  "pages": 480,
+  "sha": "5f36db1893eb",
+  "kind": "after deploy",
+  "rolledBack": true,
+  "ok": false,
+  "pages": 506,
   "failed": 0,
-  "problems": [],
+  "problems": [
+    "check (PR 632): Orders › Today's queue (To confirm) draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 632): Orders › Call list draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 633): Orders › Returns › QC draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 633): Orders › Returns › Hand-back draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 634): Products › Add product draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 634): Products › Import from a link draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 634): Products › Import from the ERP draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded."
+  ],
   "database": {
     "appendOnly": "ok: 35 tables append-only",
     "appRole": "extas_app"

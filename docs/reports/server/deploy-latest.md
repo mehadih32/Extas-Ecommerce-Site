@@ -4,13 +4,13 @@ Written by `deploy.yml` after every deploy (`infra/deploy/deploy-report.sh`). Hi
 
 | | |
 |---|---|
-| Commit | `4689df67c695` |
-| Time (Asia/Dhaka) | 2026-11-06 21:45 |
-| Result | **OK** |
+| Commit | `5f36db1893eb` |
+| Time (Asia/Dhaka) | 2026-11-06 23:50 |
+| Result | **FAILED, ROLLED BACK** |
 | Database migration | ok |
-| Health check on new.extas.com.bd | OK — HTTP 200 from https://new.extas.com.bd/api/health, version 4689df67c695, colour blue |
-| Smoke test (every page) | OK — 480 page views, signed out and as the admin, phone and desktop (storefront pictures: `docs/reports/smoke/latest/`; the admin pictures stay on the server) |
-| Docs on the server | `4689df67c695` — README.md + docs/ (2395 files) |
+| Health check on new.extas.com.bd | OK — HTTP 200 from https://new.extas.com.bd/api/health, version 5f36db1893eb, colour green |
+| Smoke test (every page) | FAILED — check (PR 632): Orders › Today's queue (To confirm) draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.; check (PR 632): Orders › Call list draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.; |
+| Docs on the server | `5f36db1893eb` — README.md + docs/ (2415 files) |
 | Main disk (/) | 118 GB free after the clean-up (was 118 GB), at least 15 GB needed |
-| Live colour | blue |
-| Run log | https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/42242415311 |
+| What failed | The new version went live, but the smoke test found a problem (check (PR 632): Orders › Today's queue (To confirm) draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.; check (PR 632): Orders › Call list draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.;), so the previous version was put back automatically. The fix comes before any new work. |
+| Run log | https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/42262707992 |
