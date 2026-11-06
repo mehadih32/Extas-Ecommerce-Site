@@ -12,6 +12,7 @@ import './bag.css';
 import { Fragment, type ReactNode } from 'react';
 import type { BagView } from '@extas/cart';
 import { bagPickCards, cardsByIds } from '@/lib/shop/catalogue';
+import { builderGroupHref } from '@/lib/shop/build';
 import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { ROUTES } from '@/lib/shop/routes';
@@ -66,10 +67,11 @@ export async function BagPage({ c, view, s, btpl = null, paused = false, linkCod
   const empty = !view.items.length && !view.sets.length;
   const savedOn = s['bag.saved.enabled'];
   const pictureIds = [...view.items, ...view.saved.items].map((i) => i.productId).concat([...view.sets, ...view.saved.sets].flatMap((x) => x.pieces.map((p) => p.productId).filter((id): id is string => !!id)));
-  const [cards, picks, looks] = await Promise.all([
+  const [cards, picks, looks, builderHref] = await Promise.all([
     cardsByIds(c.storeId, pictureIds),
     !empty && s['bag.upsell.enabled'] ? bagPickCards(c.storeId, view.productIds, s['bag.upsell.count']) : Promise.resolve({ cards: [], from: 'none' as const }),
     bagSetLooks(c.storeId, view.sets, btpl),
+    view.tiers && s['bag.upsell.enabled'] ? builderGroupHref(c, view.tiers.ruleKey) : Promise.resolve(null),
   ]);
   const trust = reassurance(c.flags, { securePayment: s['bag.trust.securePayment'], originalLine: s['bag.upsell.originalLine'] });
   const words = bagWords(c);
@@ -176,6 +178,7 @@ export async function BagPage({ c, view, s, btpl = null, paused = false, linkCod
           cards={picks.cards}
           from={picks.from}
           tiers={view.tiers}
+          builderHref={builderHref}
           style={s['bag.upsell.style']}
           phoneLadder={s['bag.tiers.phonePreview']}
           reasons={s['bag.upsell.reasons']}

@@ -11,7 +11,7 @@ import { cartDeps, visitorId } from './bag';
 import { testPagesOn } from './bag-api';
 import { readPageSettings, type ShopContext } from './context';
 import { keysOf, SHOP_DICTS } from './dict';
-import { BUILD_VIEWS, type BuildCard, type BuildEnv, type BuildView } from './build-model';
+import { BUILD_VIEWS, builderGroupPath, type BuildCard, type BuildEnv, type BuildView } from './build-model';
 import { hrefIn } from './lang';
 import { productData, type ProductData } from './product';
 import { toModel } from './product-view';
@@ -102,6 +102,20 @@ export async function buildEntry(c: Pick<ShopContext, 'storeId'>): Promise<{ qua
     return { quantities: [...new Set(b.groups.flatMap((g) => g.tiers.map((t) => t.quantity)))].sort((x, y) => x - y) };
   } catch (e) {
     console.warn(`shop: set builder entry unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    return null;
+  }
+}
+
+/** Follow-up 244: where the bag's tier box for this set tier rule leads — the builder's own page for the rule while the
+ * builder is open and has it, else null (the box keeps its category link). One read of the rules. */
+export async function builderGroupHref(c: Pick<ShopContext, 'storeId' | 'lang'>, ruleKey: string): Promise<string | null> {
+  const deps = cartDeps();
+  if (!deps) return null;
+  try {
+    const path = builderGroupPath(await withTimeout(builderOffer(deps, c.storeId), settingsTimeoutMs() * 2), ruleKey);
+    return path ? hrefIn(c.lang, path) : null;
+  } catch (e) {
+    console.warn(`shop: set builder link unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return null;
   }
 }

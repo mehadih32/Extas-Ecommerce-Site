@@ -3,6 +3,7 @@
 // price. Every set price is @extas/combos' (`tierQuote` through `checkBuild`); nothing here works one out.
 import type { BuildVariant, PricedTier, TierQuote } from '@extas/combos/pure';
 import type { ShopLang } from './lang';
+import { ROUTES } from './routes';
 import type { PdpShot } from './product-model';
 
 export const BUILD_VIEWS = ['front', 'back', 'detail'] as const;
@@ -108,3 +109,13 @@ export const buildWord = (words: Readonly<Record<string, string>>, key: string, 
 
 /** The next picture view (a picture tap turns it in place: front → back → detail). */
 export const nextView = (v: BuildView): BuildView => BUILD_VIEWS[(BUILD_VIEWS.indexOf(v) + 1) % BUILD_VIEWS.length]!;
+
+/**
+ * Follow-up 244 (PR 98 with 109, 598): the builder's own page for a set tier rule (`/combos/build-your-own/<rule key>`),
+ * for the bag's tier box, or null while the builder is closed or the rule is not one of its groups (the box then keeps
+ * its category link).
+ */
+export function builderGroupPath(offer: { open: boolean; groups: readonly { key: string }[] } | null, ruleKey: string): string | null {
+  if (!offer?.open || !offer.groups.some((g) => g.key === ruleKey)) return null;
+  return `${ROUTES.buildSet}/${encodeURIComponent(ruleKey)}`;
+}
