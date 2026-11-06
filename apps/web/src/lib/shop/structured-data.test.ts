@@ -2,7 +2,7 @@
 // lowest and highest, in stock only with a piece to sell, and never a rating.
 import type { ImageSource } from '@extas/media';
 import { describe, expect, it } from 'vitest';
-import { breadcrumbLd, faqLd, itemListLd, largestUrl, ldJson, majorPrice, organizationLd, productLd, reviewsPart, setInStock, setLd, websiteLd, type LdProduct, type LdReviews, type LdSet, type LdShop } from './structured-data';
+import { articleLd, breadcrumbLd, faqLd, itemListLd, largestUrl, ldJson, majorPrice, organizationLd, productLd, reviewsPart, setInStock, setLd, websiteLd, type LdArticle, type LdProduct, type LdReviews, type LdSet, type LdShop } from './structured-data';
 
 const origin = new URL('https://shop.example.test');
 const base: LdProduct = {
@@ -217,3 +217,47 @@ describe('structured data', () => {
     expect(faqLd(origin, '/help/faq', [{ question: 'Q?', answer: '' }])).toBeNull();
   });
 });
+
+describe('PR 249 · articleLd (BlogPosting, only what the article page shows, an honest byline)', () => {
+  const a: LdArticle = {
+    href: '/bn/journal/polo-dhowa',
+    headline: ' পোলো কীভাবে ধোবেন ',
+    description: 'ঠান্ডা পানিতে, উল্টো করে।',
+    lang: 'bn',
+    published: '2026-11-02T06:00:00.000Z',
+    modified: null,
+    section: 'যত্ন',
+    author: { name: 'Suta', ai: true },
+    shop: 'Sample store',
+  };
+  const shop = { '@type': 'Organization', name: 'Sample store', url: 'https://shop.example.test/' };
+  it('an AI author is sent as the shop itself, never as a person', () => {
+    expect(articleLd(origin, a)).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: 'পোলো কীভাবে ধোবেন',
+      url: 'https://shop.example.test/bn/journal/polo-dhowa',
+      mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://shop.example.test/bn/journal/polo-dhowa' },
+      inLanguage: 'bn',
+      author: shop,
+      publisher: shop,
+      description: 'ঠান্ডা পানিতে, উল্টো করে।',
+      datePublished: '2026-11-02T06:00:00.000Z',
+      dateModified: '2026-11-02T06:00:00.000Z',
+      articleSection: 'যত্ন',
+    });
+  });
+  it('a staff author by the name the page shows; a real edit moves dateModified; empty parts are left out', () => {
+    const ld = articleLd(origin, { ...a, author: { name: 'Rafi', ai: false }, modified: '2026-11-05T06:00:00.000Z', description: null, section: null })!;
+    expect(ld.author).toEqual({ '@type': 'Person', name: 'Rafi' });
+    expect(ld.dateModified).toBe('2026-11-05T06:00:00.000Z');
+    expect(ld).not.toHaveProperty('description');
+    expect(ld).not.toHaveProperty('articleSection');
+    expect(articleLd(origin, { ...a, author: null })!.author).toEqual(shop);
+  });
+  it('nothing without the shop`s name or a headline', () => {
+    expect(articleLd(origin, { ...a, shop: ' ' })).toBeNull();
+    expect(articleLd(origin, { ...a, headline: '' })).toBeNull();
+  });
+});
+

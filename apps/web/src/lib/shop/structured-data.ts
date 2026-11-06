@@ -9,6 +9,9 @@
 // page itself shows (the summary box's average and count, the cards the page draws), never a made-up number.
 // S11 · PR 224 (C4, C12.4): the questions a page really answers (the product's answered questions, the FAQ page) as
 // FAQPage, optional: Google shows no FAQ rich result for any site since 7 May 2026, so nothing is promised by it.
+// S12 · PR 249 (C11.3, C12.4): a journal article as BlogPosting, only what the article page shows — its headline, the
+// description the page carries, its dates, language and topic — with an honest byline: an AI author is never sent as a
+// person (the shop itself is named), a staff author by the name the page shows.
 import type { ImageSource } from '@extas/media';
 
 export interface LdCrumb {
@@ -325,4 +328,46 @@ export function largestUrl(src: ImageSource | null | undefined): string | null {
 /** One `<script type="application/ld+json">` body: JSON with `<` escaped, so a name can never close the script. */
 export function ldJson(data: Ld | readonly Ld[]): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+// ---- PR 249 · a journal article (BlogPosting) ----
+
+export interface LdArticle {
+  /** The article's address in the page's language. */
+  href: string;
+  headline: string;
+  description: string | null;
+  lang: 'en' | 'bn';
+  /** ISO dates as the page shows them (published, and "updated" only on a real edit). */
+  published: string | null;
+  modified: string | null;
+  /** The topic's name, as the page's trail shows it. */
+  section: string | null;
+  /** The byline: a staff author by name; an AI author or none is the shop itself (never an invented person). */
+  author: { name: string; ai: boolean } | null;
+  /** The shop's name (`store.name`); without one, nothing is sent. */
+  shop: string;
+}
+
+export function articleLd(origin: URL | string, a: LdArticle): Ld | null {
+  const shop = a.shop.trim();
+  const headline = a.headline.trim();
+  if (!shop || !headline) return null;
+  const url = absolute(origin, a.href);
+  const org = { '@type': 'Organization', name: shop, url: absolute(origin, '/') };
+  const out: Ld = {
+    '@context': CONTEXT,
+    '@type': 'BlogPosting',
+    headline,
+    url,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    inLanguage: a.lang,
+    author: a.author && !a.author.ai && a.author.name.trim() ? { '@type': 'Person', name: a.author.name.trim() } : org,
+    publisher: org,
+  };
+  if (a.description?.trim()) out.description = a.description.trim();
+  if (a.published) out.datePublished = a.published;
+  if (a.modified ?? a.published) out.dateModified = a.modified ?? a.published;
+  if (a.section?.trim()) out.articleSection = a.section.trim();
+  return out;
 }

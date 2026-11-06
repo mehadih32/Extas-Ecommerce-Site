@@ -25,15 +25,19 @@ import { tokensOf } from './schemas';
 const V = 64;
 
 /** The kinds of shop page the SEO rules know (lib/seo in the web app maps every page to one). */
-export const SEO_PAGE_TYPES = ['home', 'category', 'product', 'combo', 'comboList', 'combosHub', 'setBuilder', 'help', 'search'] as const;
+export const SEO_PAGE_TYPES = ['home', 'category', 'product', 'combo', 'comboList', 'combosHub', 'setBuilder', 'help', 'search', 'journal'] as const;
 export type SeoPageType = (typeof SEO_PAGE_TYPES)[number];
+/** S12 · PR 249 (registry v229): the journal's kind (its list, topics and articles), off as shipped; a value saved
+ * before it existed reads it as off. */
+const LATER_KINDS = { journal: false } as const satisfies Partial<Record<SeoPageType, boolean>>;
+const pageKind = (k: SeoPageType) => (k in LATER_KINDS ? z.boolean().default(LATER_KINDS[k as keyof typeof LATER_KINDS]) : z.boolean());
 
 export const seoIndexingSchema = z
   .object({
     /** Open the shop to search engines (only ever on the store's primary domain). */
     searchEngines: z.boolean(),
     /** Which kinds of page may be listed once the shop is open. */
-    pages: z.object(Object.fromEntries(SEO_PAGE_TYPES.map((k) => [k, z.boolean()])) as Record<SeoPageType, z.ZodBoolean>).strict(),
+    pages: z.object(Object.fromEntries(SEO_PAGE_TYPES.map((k) => [k, pageKind(k)])) as Record<SeoPageType, z.ZodBoolean>).strict(),
     /** hreflang x-default: the English twin, or none. */
     xDefault: z.enum(['en', 'none']),
   })
@@ -42,7 +46,7 @@ export type SeoIndexing = z.output<typeof seoIndexingSchema>;
 
 export const SEO_INDEXING_DEFAULT: SeoIndexing = {
   searchEngines: false,
-  pages: { home: true, category: true, product: true, combo: true, comboList: true, combosHub: true, setBuilder: false, help: true, search: false },
+  pages: { home: true, category: true, product: true, combo: true, comboList: true, combosHub: true, setBuilder: false, help: true, search: false, journal: false },
   xDefault: 'en',
 };
 
@@ -104,6 +108,8 @@ export const seoSettings = {
     ...base,
     schema: seoIndexingSchema,
     default: SEO_INDEXING_DEFAULT,
+    // S12 · PR 249 added the journal's kind (off as shipped)
+    version: 229,
     labelKey: 'seo.indexing.label',
     helpKey: 'seo.indexing.help',
     sortOrder: 10,

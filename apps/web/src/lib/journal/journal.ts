@@ -520,10 +520,16 @@ export interface LivePost {
   contentUpdatedAt: string | null;
   category: { slug: string; nameEn: string; nameBn: string | null } | null;
   author: { slug: string; displayName: string; isAiAuthor: boolean; reviewerLine: string | null } | null;
+  /** PR 249: the article's twin in the other language (either side may name the other), its plan and its topic. */
+  twinPostId: string | null;
+  clusterId: string | null;
+  categoryId: string | null;
 }
 
 const LIVE_SELECT = {
   ...POST_SELECT,
+  twinPostId: true,
+  clusterId: true,
   category: { select: { slug: true, nameEn: true, nameBn: true, archivedAt: true } },
   author: { select: { slug: true, displayName: true, isAiAuthor: true, reviewerLine: true, archivedAt: true } },
 } satisfies Prisma.BlogPostSelect;
@@ -553,6 +559,9 @@ function liveOf(p: Prisma.BlogPostGetPayload<{ select: typeof LIVE_SELECT }>): L
     contentUpdatedAt: iso(p.contentUpdatedAt),
     category: p.category && !p.category.archivedAt ? { slug: p.category.slug, nameEn: p.category.nameEn, nameBn: p.category.nameBn } : null,
     author: p.author && !p.author.archivedAt ? { slug: p.author.slug, displayName: p.author.displayName, isAiAuthor: p.author.isAiAuthor, reviewerLine: p.author.reviewerLine } : null,
+    twinPostId: p.twinPostId,
+    clusterId: p.clusterId,
+    categoryId: p.categoryId,
   };
 }
 
@@ -570,6 +579,44 @@ export async function liveJournal(db: Db, storeId: number, locale: 'en' | 'bn', 
 export async function livePost(db: Db, storeId: number, locale: 'en' | 'bn', slug: string, now: Date = new Date()): Promise<LivePost | null> {
   const p = await db.blogPost.findFirst({ where: { ...liveWhere(storeId, locale, now), slug }, select: LIVE_SELECT });
   return p ? liveOf(p) : null;
+}
+
+/** PR 249 — the link of the article's live twin in the other language (null = none live): the twin it names, or one naming it. */
+export async function liveTwinSlug(db: Db, storeId: number, post: Pick<LivePost, 'id' | 'locale' | 'twinPostId'>, now: Date = new Date()): Promise<string | null> {
+  const other = post.locale === 'bn' ? 'en' : 'bn';
+  const t = await db.blogPost.findFirst({
+    where: { ...liveWhere(storeId, other, now), OR: [{ twinPostId: post.id }, ...(post.twinPostId ? [{ id: post.twinPostId }] : [])] },
+    orderBy: [{ publishedAt: 'desc' }, { id: 'asc' }],
+    select: { slug: true },
+  });
+  return t?.slug ?? null;
+}
+
+/**
+ * PR 249 — "Read next": other live articles in the article's language, those of its own plan (cluster) first, then those
+ * of its topic, newest first, at most `max` (0 = none). Internal links between articles that belong together.
+ */
+export async function liveRelated(db: Db, storeId: number, post: Pick<LivePost, 'id' | 'locale' | 'clusterId' | 'categoryId'>, max: number, now: Date = new Date()): Promise<LivePost[]> {
+  if (max <= 0 || (!post.clusterId && !post.categoryId)) return [];
+  const base: Prisma.BlogPostWhereInput = { ...liveWhere(storeId, post.locale, now), id: { not: post.id } };
+  const order: Prisma.BlogPostOrderByWithRelationInput[] = [{ publishedAt: 'desc' }, { id: 'desc' }];
+  const same = post.clusterId ? await db.blogPost.findMany({ where: { ...base, clusterId: post.clusterId }, orderBy: order, take: max, select: LIVE_SELECT }) : [];
+  const more =
+    same.length < max && post.categoryId
+      ? await db.blogPost.findMany({ where: { ...base, categoryId: post.categoryId, id: { notIn: [post.id, ...same.map((x) => x.id)] } }, orderBy: order, take: max - same.length, select: LIVE_SELECT })
+      : [];
+  return [...same, ...more].map(liveOf);
+}
+
+/** PR 249 — every live article of the store (both languages) for the sitemap: its link, language, twin and last change. */
+export async function liveSitemapPosts(db: Db, storeId: number, take: number, now: Date = new Date()) {
+  const where = (locale: 'en' | 'bn') => liveWhere(storeId, locale, now);
+  const sel = { id: true, slug: true, twinPostId: true, publishedAt: true, scheduledAt: true, contentUpdatedAt: true } as const;
+  const [en, bn] = await Promise.all([
+    db.blogPost.findMany({ where: where('en'), orderBy: [{ publishedAt: 'desc' }, { id: 'asc' }], take, select: sel }),
+    db.blogPost.findMany({ where: where('bn'), orderBy: [{ publishedAt: 'desc' }, { id: 'asc' }], take, select: sel }),
+  ]);
+  return { en, bn };
 }
 
 /** The categories not put away (for the shop's category chips and pages). */

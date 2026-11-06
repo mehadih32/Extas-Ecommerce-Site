@@ -17,7 +17,8 @@ export const PRIVATE_FAMILIES: readonly string[] = [...new Set([ROUTES.bag, ROUT
 
 /**
  * The kind of a page from its page key (`home`, `collections/<slug>`, `<product prefix>/<slug>`, `combo/<slug>`,
- * `combos`, `combos/build-your-own`, `combos/<rule>`, `help-<slug>`, `search`); null = a page that is never listed.
+ * `combos`, `combos/build-your-own`, `combos/<rule>`, `help-<slug>`, `search`; PR 249: `journal`, `journal/topic/<slug>`,
+ * `journal/<slug>`); null = a page that is never listed.
  */
 export function pageTypeOf(pageKey: string, productPathPrefix: string): SeoPageType | null {
   const prefix = productPathPrefix.replace(/^\/+|\/+$/g, '');
@@ -26,6 +27,7 @@ export function pageTypeOf(pageKey: string, productPathPrefix: string): SeoPageT
   const combos = ROUTES.combos.slice(1);
   const builder = ROUTES.buildSet.slice(1);
   const search = ROUTES.search.slice(1);
+  const journal = ROUTES.journal.slice(1);
   if (pageKey === 'home') return 'home';
   if (pageKey === search) return 'search';
   if (pageKey === combos) return 'combosHub';
@@ -34,6 +36,7 @@ export function pageTypeOf(pageKey: string, productPathPrefix: string): SeoPageT
   if (pageKey.startsWith(`${combo}/`)) return 'combo';
   if (pageKey.startsWith(`${category}/`)) return 'category';
   if (pageKey.startsWith('help-')) return 'help';
+  if (pageKey === journal || pageKey.startsWith(`${journal}/`)) return 'journal';
   if (prefix && pageKey.startsWith(`${prefix}/`)) return 'product';
   return null;
 }
@@ -64,6 +67,15 @@ export function robotsOf(i: RobotsInput): { index: boolean; follow: true } {
 export function languagesOf(path: string, o: { indexable: boolean; bnReady: boolean; xDefault: SeoIndexing['xDefault'] }): Record<string, string> | undefined {
   if (!o.indexable || !o.bnReady) return undefined;
   return { en: hrefIn('en', path), bn: hrefIn('bn', path), ...(o.xDefault === 'en' ? { 'x-default': hrefIn('en', path) } : {}) };
+}
+
+/**
+ * PR 249 — hreflang for a page whose twins have their own addresses (a journal article and its Bengali twin each have
+ * their own link): both named only while the page may be listed, Bengali is on and the twin is live; x-default → English.
+ */
+export function twinLanguagesOf(paths: { en: string | null; bn: string | null }, o: { indexable: boolean; bnOn: boolean; xDefault: SeoIndexing['xDefault'] }): Record<string, string> | undefined {
+  if (!o.indexable || !o.bnOn || !paths.en || !paths.bn) return undefined;
+  return { en: hrefIn('en', paths.en), bn: hrefIn('bn', paths.bn), ...(o.xDefault === 'en' ? { 'x-default': hrefIn('en', paths.en) } : {}) };
 }
 
 /**

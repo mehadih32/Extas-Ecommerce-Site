@@ -55,6 +55,9 @@ export const structuredDataSchema = z
     // S11 · PR 224 (registry v206): optional markup, off as shipped; Google shows no FAQ rich result since 7 May 2026.
     /** FAQPage from the questions a page really answers: the product's answered questions and the FAQ page. */
     faq: z.boolean().default(false),
+    // S12 · PR 249 (registry v229): off as shipped; a value saved before it existed reads it as off.
+    /** BlogPosting on a journal article: its headline, description, dates, language, topic and honest byline, all as the page shows them. */
+    article: z.boolean().default(false),
   })
   .strict();
 
@@ -146,10 +149,10 @@ export const storefrontFuSettings = {
     ...json,
     group: 'naming',
     schema: structuredDataSchema,
-    default: { breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false, faq: false },
+    default: { breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false, faq: false, article: false },
     // PR 222 added the home page, set page and struck-price parts (registry v64); PR 223 the reviews part (v205);
-    // PR 224 the FAQ part (v206)
-    version: 206,
+    // PR 224 the FAQ part (v206); PR 249 the journal article part (v229)
+    version: 229,
     labelKey: 'seo.structuredData.label',
     helpKey: 'seo.structuredData.help',
     sortOrder: 900,

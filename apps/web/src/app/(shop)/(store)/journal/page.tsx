@@ -1,7 +1,8 @@
 // S12 · PR 241 (Blueprint C11.4, demo 73-blog.js #/journal) — the journal at /journal and /bn/journal: the live articles
 // of the page's language, featured first, then the newest, one page at a time (`blog.journal.perPage`), with the topic
-// chips. While `blog.journal` is off (as it ships) the address keeps saying "Coming soon". Not listed by search engines
-// yet (Article SEO, PR 249, gives the journal its page kind).
+// chips. While `blog.journal` is off (as it ships) the address keeps saying "Coming soon". ~~Not listed by search engines
+// yet (Article SEO, PR 249, gives the journal its page kind).~~ PR 249: listed only while the journal's page kind is
+// ticked in `seo.indexing` (off as shipped), with the journal's own line as its description; a later page (?page=2) never.
 import type { Metadata } from 'next';
 import { ComingSoon } from '@/components/shop/ComingSoon';
 import { JournalList } from '@/components/shop/journal/JournalViews';
@@ -13,10 +14,10 @@ export const dynamic = 'force-dynamic';
 
 type Props = { searchParams: Promise<{ page?: string | string[] }> };
 
-export async function generateMetadata(): Promise<Metadata> {
-  const c = await shopContext();
-  const on = (await journalSettings(c.storeId)).on;
-  return shopMetadata(c, on ? 'journal' : 'soon-journal', on ? c.t('journal.title') : c.t('soon.title'), { index: false });
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const [c, sp] = await Promise.all([shopContext(), props.searchParams]);
+  if (!(await journalSettings(c.storeId)).on) return shopMetadata(c, 'soon-journal', c.t('soon.title'), { index: false });
+  return shopMetadata(c, 'journal', c.t('journal.title'), { index: pageOf(sp.page) === 1, own: { body: c.t('journal.dek', c.vars) } });
 }
 
 export default async function Journal(props: Props) {

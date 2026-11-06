@@ -6,14 +6,23 @@ import { blogAiDraftSchema, blogScheduleSchema, blogBriefSchema, blogJournalSche
 describe('blog.journal (PR 239)', () => {
   const spec = registry['blog.journal'];
 
-  it('ships off, per store, at version 222, with a default the schema accepts', () => {
+  it('ships off, per store, at version 222 (229 since PR 249), with a default the schema accepts', () => {
     expect(spec.scope).toBe('store');
-    expect(spec.version).toBe(222);
+    // PR 249 added "Read next" (relatedArticles, v229)
+    expect(spec.version).toBe(229);
     expect(spec.default.on).toBe(false);
     expect(spec.default.reviewByAnother).toBe(false);
     expect(spec.default.aiNote).toEqual({ en: '', bn: '' });
     expect(blogJournalSchema.safeParse(spec.default).success).toBe(true);
     expect(spec.isOwnerData).toBe(false);
+  });
+
+  it('PR 249: "Read next" ships off (0), stays within 0–6, and a value saved before it existed reads 0', () => {
+    expect(spec.default.relatedArticles).toBe(0);
+    const { relatedArticles: _gone, ...old } = spec.default;
+    expect(blogJournalSchema.parse(old).relatedArticles).toBe(0);
+    expect(blogJournalSchema.safeParse({ ...spec.default, relatedArticles: 7 }).success).toBe(false);
+    expect(blogJournalSchema.safeParse({ ...spec.default, relatedArticles: -1 }).success).toBe(false);
   });
 
   it('keeps every number within its range and refuses unknown fields', () => {
