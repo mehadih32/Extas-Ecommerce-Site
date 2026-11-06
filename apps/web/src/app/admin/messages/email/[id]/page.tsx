@@ -47,7 +47,7 @@ export default async function EmailSendPage({ params }: { params: Params }) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="messages-email-send" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="messages.journey.read" />
       </div>
     );
@@ -87,7 +87,7 @@ export default async function EmailSendPage({ params }: { params: Params }) {
   };
 
   return (
-    <div className="a2-z" data-testid="messages-email-send">
+    <div className="a2-z" data-testid="messages-email-send" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

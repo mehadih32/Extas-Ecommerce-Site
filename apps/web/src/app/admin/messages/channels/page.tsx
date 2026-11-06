@@ -48,7 +48,7 @@ export default async function ChannelsPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="messages-channels" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="messages.channels.read" />
       </div>
     );
@@ -64,7 +64,7 @@ export default async function ChannelsPage() {
   const providerName = (p: string) => [`msg.provider.${p}`, `connections.${p}.name`].map((k) => [k, t(d, k)]).find(([k, v]) => k !== v)?.[1] ?? p;
 
   return (
-    <div className="a2-z" data-testid="messages-channels">
+    <div className="a2-z" data-testid="messages-channels" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={x('title')} sub={x('sub')} />
       <SectionTabs view={view} current={KEY} />
       <section className="a2-sc a2-mt12" aria-labelledby="mc-prov" data-testid="channels-providers">

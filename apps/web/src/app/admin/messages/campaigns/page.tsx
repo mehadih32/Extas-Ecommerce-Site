@@ -60,7 +60,7 @@ export default async function CampaignsPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="messages-campaigns" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="messages.journey.read" />
       </div>
     );
@@ -84,7 +84,7 @@ export default async function CampaignsPage() {
   const tone = (st: cu.CampaignStatus) => (st === 'SENT' ? 'ok' : st === 'SENDING' || st === 'SCHEDULED' ? 'info' : st === 'PAUSED' ? 'warn' : 'line');
 
   return (
-    <div className="a2-z" data-testid="messages-campaigns">
+    <div className="a2-z" data-testid="messages-campaigns" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

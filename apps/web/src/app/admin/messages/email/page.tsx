@@ -56,7 +56,7 @@ export default async function EmailPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="messages-email" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="messages.journey.read" />
       </div>
     );
@@ -76,7 +76,7 @@ export default async function EmailPage() {
   const tone = (st: cu.EmailSendStatus) => (st === 'SENT' ? 'ok' : st === 'SENDING' || st === 'SCHEDULED' ? 'info' : st === 'PAUSED' ? 'warn' : 'line');
 
   return (
-    <div className="a2-z" data-testid="messages-email">
+    <div className="a2-z" data-testid="messages-email" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { call } from '@/components/admin/api';
 import { msgError } from '@/lib/admin-messages/i18n';
 import type { Dict } from '@/lib/i18n';
+import { showToast } from '../lumen/Toast';
 
 export interface MsgActProps {
   dict: Dict;
@@ -44,7 +45,8 @@ export function MsgAct({ dict, url, method = 'POST', body, label, busyLabel, ask
     }
     const outcome = (outcomeOf ? (a.data[outcomeOf] as { outcome?: string } | undefined)?.outcome : undefined) ?? 'ok';
     const words = done ? (done[outcome] ?? done.ok ?? null) : null;
-    if (words) setMsg({ ok: GOOD.has(outcome), text: words });
+    if (words && GOOD.has(outcome)) showToast({ text: words, tone: 'ok' });
+    else if (words) setMsg({ ok: false, text: words });
     router.refresh();
   };
   return (

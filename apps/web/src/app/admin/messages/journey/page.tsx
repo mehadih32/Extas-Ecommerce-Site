@@ -45,7 +45,7 @@ export default async function JourneyPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="messages-journey" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="messages.journey.read" />
       </div>
     );
@@ -62,7 +62,7 @@ export default async function JourneyPage() {
   const x = (k: string) => t(d, `msg.journey.${k}`);
 
   return (
-    <div className="a2-z" data-testid="messages-journey">
+    <div className="a2-z" data-testid="messages-journey" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={x('title')} sub={x('sub')} />
       <SectionTabs view={view} current={KEY} />
       {!screen.config.enabled ? (

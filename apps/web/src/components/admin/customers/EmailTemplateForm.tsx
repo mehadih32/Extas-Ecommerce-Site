@@ -8,6 +8,7 @@ import type { EmailLocale } from '@extas/customers';
 import { t, type Dict } from '@/lib/i18n';
 import { AiCopyHelper } from './AiCopyHelper';
 import { emailPost } from './emailPost';
+import { showToast } from '../lumen/Toast';
 
 export interface EmailTemplateFormProps {
   dict: Dict;
@@ -44,7 +45,7 @@ export function EmailTemplateForm(p: EmailTemplateFormProps) {
     const r = await emailPost(d, `/api/admin/messages/email/templates${p.id ? `/${p.id}` : ''}`, { name, locale, subject, body, ...(p.version ? { version: p.version } : {}) });
     setBusy(false);
     if (!r.ok) return setMsg({ ok: false, text: r.text });
-    setMsg({ ok: true, text: x('saved') });
+    showToast({ text: x('saved'), tone: 'ok' });
     const id = (r.data.editor as { template?: { id: string } } | undefined)?.template?.id;
     if (!p.id && id) router.push(`/admin/messages/email/templates/${id}`);
     else router.refresh();

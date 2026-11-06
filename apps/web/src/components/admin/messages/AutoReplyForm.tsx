@@ -9,6 +9,7 @@ import type { AutoReplyConfig } from '@extas/messages';
 import { msgError } from '@/lib/admin-messages/i18n';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 const URL = '/api/admin/messages/templates/auto-reply';
 type A = AutoReplyConfig['autoReply'];
@@ -31,7 +32,7 @@ export function AutoReplyForm({ dict, config, version, templates, whenOptions, c
     const r = await call('PUT', URL, { version, autoReply: next });
     setBusy(false);
     if (r.status === 200) {
-      setSaid({ text: t(dict, 'msg.saved'), bad: false });
+      showToast({ text: t(dict, 'msg.saved'), tone: 'ok' });
       router.refresh();
       return;
     }

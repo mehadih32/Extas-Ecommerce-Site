@@ -290,3 +290,11 @@
 @media (max-width: 759px), (pointer: coarse) {
   [data-lm-look] .ad[data-lm-ready] .rl-topics .ad-chip { min-height: var(--lm-tap); }
 }
+
+/* Marketing part 2 (PR 639): the customer messages pages (journey, automations, campaigns, e-mail, templates, the send
+   log, channels, consent). The journey's step numbers and the {token} chips drew in the shell's green at 12–13 px:
+   Lumen's 14 px in the ok tokens, AA in light and dark. */
+[data-lm-look] [data-lm-ready] :is(.a2-jn, .a2-var) { font-size: var(--lm-fs-card); background: var(--lm-okbg); color: var(--lm-ok); }
+[data-lm-look] [data-lm-ready] .a2-var { border-color: var(--lm-ln); }
+[data-lm-look] [data-lm-ready] .a2-js.off .a2-jn { background: var(--lm-chip); color: var(--lm-ink2); }
+[data-lm-look] [data-lm-ready] .a2-js.on { border-color: var(--lm-ok); }

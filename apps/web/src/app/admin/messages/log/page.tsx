@@ -55,7 +55,7 @@ export default async function MessageLogPage({ searchParams }: { searchParams: S
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="messages-log" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="messages.log.view" />
       </div>
     );
@@ -79,7 +79,7 @@ export default async function MessageLogPage({ searchParams }: { searchParams: S
   const col = (k: string) => t(d, `msg.log.col.${k}`);
 
   return (
-    <div className="a2-z" data-testid="messages-log">
+    <div className="a2-z" data-testid="messages-log" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'msg.log.title')} sub={t(d, 'msg.log.sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-kpis k6 a2-mt12" data-testid="log-counts">

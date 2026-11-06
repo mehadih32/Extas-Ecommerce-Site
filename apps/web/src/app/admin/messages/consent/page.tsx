@@ -45,7 +45,7 @@ export default async function ConsentPage({ searchParams }: { searchParams: Prom
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="messages-consent" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="messages.consent.view" />
       </div>
     );
@@ -113,7 +113,7 @@ export default async function ConsentPage({ searchParams }: { searchParams: Prom
   );
 
   return (
-    <div className="a2-z" data-testid="messages-consent">
+    <div className="a2-z" data-testid="messages-consent" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={x('title')} sub={x('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-kpis k6 a2-mt12" data-testid="consent-counts">

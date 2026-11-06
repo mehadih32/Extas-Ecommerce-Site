@@ -12,6 +12,7 @@ import { useId, useState } from 'react';
 import type { CampaignChannel, CampaignKind, CampaignTemplate, WinbackRule } from '@extas/customers';
 import { t, type Dict } from '@/lib/i18n';
 import { emailPost } from './emailPost';
+import { showToast } from '../lumen/Toast';
 
 export interface CampaignFormProps {
   dict: Dict;
@@ -78,7 +79,7 @@ export function CampaignForm(p: CampaignFormProps) {
     const r = await emailPost(d, `/api/admin/messages/campaigns/items${p.id ? `/${p.id}` : ''}`, { ...(p.id ? {} : { kind: p.kind }), name, channel, templateId, segmentId: seg, rule, ...(p.version ? { version: p.version } : {}) });
     setBusy(false);
     if (!r.ok) return setMsg({ ok: false, text: r.text });
-    setMsg({ ok: true, text: x('saved') });
+    showToast({ text: x('saved'), tone: 'ok' });
     const id = (r.data.editor as { campaign?: { id: string } } | undefined)?.campaign?.id;
     if (!p.id && id) router.push(`/admin/messages/campaigns/${id}`);
     else router.refresh();

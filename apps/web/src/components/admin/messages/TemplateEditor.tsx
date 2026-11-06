@@ -10,6 +10,7 @@ import { BLOCKING_PROBLEMS, previewTemplate, templateProblems, waBodyProblems, t
 import { label, msgError } from '@/lib/admin-messages/i18n';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 const URL = '/api/admin/messages/templates';
 const WA_TONE: Record<string, string> = { APPROVED: 'ok', PENDING: 'warn', REJECTED: 'bad', PAUSED: 'warn', DISABLED: 'bad', none: 'line' };
@@ -54,7 +55,7 @@ function Words({ dict, channel, locale, body, subject, sample, hasHost }: { dict
               {x(`sample.${p.sample}`)}
               {p.ok && p.smsParts ? ` · ${x('parts', { n: String(p.smsParts) })}` : ''}
             </div>
-            <div className="a2-phone">
+            <div className="a2-phone lm-island">
               {p.ok ? (
                 <div className={`a2-bub${channel === 'WHATSAPP' ? ' wa' : ''}`} lang={locale}>
                   {p.subject ? <b className="a2-blk">{p.subject}</b> : null}
@@ -88,7 +89,7 @@ export function TemplateEditor({ dict, row, sample, hasHost, canEdit }: { dict: 
     const a = await call(method, url, payload);
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: ok, bad: false });
+      showToast({ text: ok, tone: 'ok' });
       router.refresh();
       return;
     }
@@ -158,7 +159,7 @@ export function TemplateAdd({ dict, tplKey, channel, locale, draft, sample, hasH
     const a = await call('POST', URL, { key: tplKey, channel, locale, body, ...(channel === 'EMAIL' ? { subject } : {}) });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: x('added'), bad: false });
+      showToast({ text: x('added'), tone: 'ok' });
       router.refresh();
       return;
     }
