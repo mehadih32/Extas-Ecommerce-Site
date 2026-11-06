@@ -287,6 +287,8 @@ export function commandSpecs(
     return s && s !== o.status ? [t(d, 'orders.eff.to', { st: st(s) })] : [];
   };
   const opts = (list: od.ReasonOption[]): FieldOption[] => list.map((r) => ({ value: r.key, label: nameOf(view, r), ...(r.noteRequired ? { noteRequired: true } : {}) }));
+  // follow-up 458: a reason list starts on an empty "Pick a reason", so a reason is always a person's choice
+  const pick = (list: od.ReasonOption[]): FieldOption[] => [{ value: '', label: t(d, 'orders.dlg.pickReason') }, ...opts(list)];
   const note = (required = false, noteFor?: string): FieldSpec => ({ name: 'note', kind: 'textarea', label: t(d, required ? 'orders.dlg.reasonRequired' : 'orders.dlg.noteOptional'), required, ...(noteFor ? { noteFor, labelNeeded: t(d, 'orders.dlg.note') } : {}), maxLength: 2000, placeholder: t(d, 'orders.dlg.notePh') });
   const paid = o.paidMinor;
   const refund = paid > 0 ? [t(d, 'orders.eff.refundReq', { amount: formatMoney(paid, moneyOf(o.currency, view.locale)) })] : [];
@@ -326,9 +328,9 @@ export function commandSpecs(
     if (has('refuseCancelRequest')) request.push(base('refuseCancelRequest', 'refuseRequest', { effects: [t(d, 'orders.eff.refuseKeep')], fields: [note()] }));
   }
   if (has('edit') && may(perms, 'edit') && editStart) more.push(...editSpecs(view, o, editStart, reasons));
-  if (has('hold') && may(perms, 'hold')) more.push(base('hold', 'hold', { icon: 'clock', effects: [...to('hold'), t(d, 'orders.eff.holdStock')], fields: [{ name: 'reasonKey', kind: 'select', label: t(d, 'orders.dlg.reason'), options: opts(reasons.hold) }, note(false, 'reasonKey')] }));
+  if (has('hold') && may(perms, 'hold')) more.push(base('hold', 'hold', { icon: 'clock', effects: [...to('hold'), t(d, 'orders.eff.holdStock')], fields: [{ name: 'reasonKey', kind: 'select', label: t(d, 'orders.dlg.reason'), required: true, options: pick(reasons.hold) }, note(false, 'reasonKey')] }));
   if (has('cancel') && !o.cancelRequested && may(perms, 'cancel'))
-    more.push(base('cancel', 'cancel', { icon: 'x', tone: 'bad', effects: cancelFx, fields: [{ name: 'reasonCode', kind: 'select', label: t(d, 'orders.dlg.reason'), options: opts(reasons.cancel) }, note(false, 'reasonCode')], okTone: 'badf', doneRefund: tt('cancel.doneRefund', { n: '{n}' }) }));
+    more.push(base('cancel', 'cancel', { icon: 'x', tone: 'bad', effects: cancelFx, fields: [{ name: 'reasonCode', kind: 'select', label: t(d, 'orders.dlg.reason'), required: true, options: pick(reasons.cancel) }, note(false, 'reasonCode')], okTone: 'badf', doneRefund: tt('cancel.doneRefund', { n: '{n}' }) }));
   if (has('cancelAfterBooking') && may(perms, 'cancelAfterBooking'))
     more.push(base('cancelAfterBooking', 'cancelAfterBooking', { icon: 'uturn', tone: 'bad', effects: [t(d, 'orders.eff.cabParcel'), t(d, 'orders.eff.cabPending'), t(d, 'orders.eff.cabNext')], fields: [{ name: 'reasonCode', kind: 'select', label: t(d, 'orders.dlg.reason'), options: opts(reasons.cancel), value: reasons.cancel.some((r) => r.key === 'CUSTOMER_CHANGE_AFTER_BOOKING') ? 'CUSTOMER_CHANGE_AFTER_BOOKING' : undefined }, note(false, 'reasonCode')], okTone: 'badf' }));
   if (has('setFlags') && may(perms, 'flags') && reasons.flags.length)
@@ -460,7 +462,7 @@ export function reviewSpecs(view: AdminView, alertId: string, number: string, ma
     ...extra,
   });
   const out = [spec('approve', { tone: 'pri', effects: [t(d, 'orders.eff.reviewApprove')] })];
-  if (perms.has('orders.hold')) out.push(spec('hold', { effects: [t(d, 'orders.eff.to', { st: t(d, 'orders.st.ON_HOLD') })], fields: [{ name: 'holdReasonKey', kind: 'select', label: t(d, 'orders.dlg.reason'), options: reasons.hold.map((r) => ({ value: r.key, label: nameOf(view, r), ...(r.noteRequired ? { noteRequired: true } : {}) })), value: risk ? reasons.hold[0]?.key : reasons.hold.some((r) => r.key === 'possible-duplicate') ? 'possible-duplicate' : undefined }, { name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), labelNeeded: t(d, 'orders.dlg.note'), noteFor: 'holdReasonKey', maxLength: 2000 }] }));
+  if (perms.has('orders.hold')) out.push(spec('hold', { effects: [t(d, 'orders.eff.to', { st: t(d, 'orders.st.ON_HOLD') })], fields: [{ name: 'holdReasonKey', kind: 'select', label: t(d, 'orders.dlg.reason'), required: true, options: [{ value: '', label: t(d, 'orders.dlg.pickReason') }, ...reasons.hold.map((r) => ({ value: r.key, label: nameOf(view, r), ...(r.noteRequired ? { noteRequired: true } : {}) }))], value: risk ? reasons.hold[0]?.key : reasons.hold.some((r) => r.key === 'possible-duplicate') ? 'possible-duplicate' : undefined }, { name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), labelNeeded: t(d, 'orders.dlg.note'), noteFor: 'holdReasonKey', maxLength: 2000 }] }));
   out.push(spec('ask', { effects: [t(d, 'orders.eff.reviewAsk')] }));
   if (perms.has('orders.merge') && matched.length) out.push(spec('merge', { effects: [t(d, 'orders.eff.merge')], fields: [{ name: 'mergeWith', kind: 'select', label: t(d, 'orders.dlg.mergeWith'), options: matched.map((m) => ({ value: m.id, label: m.number })) }, { name: 'note', kind: 'textarea', label: t(d, 'orders.dlg.noteOptional'), maxLength: 2000 }] }));
   if (perms.has('orders.cancel')) out.push(spec('decline', { tone: 'bad', okTone: 'badf', effects: [t(d, 'orders.eff.to', { st: t(d, 'orders.st.CANCELLED') }), ...(risk ? [t(d, 'orders.eff.reviewDecline')] : []), t(d, 'orders.eff.cancelStock'), ...(paid ? [t(d, 'orders.eff.refundReq', { amount: paid })] : [])] }));
