@@ -7,8 +7,13 @@
 // Nothing found is said honestly: "No results for …", the nearest word the shop knows, what part of the words finds,
 // the owner's popular words or the categories, WhatsApp, and the newest styles — never labelled "popular" (the shop
 // has no such figures yet). A search page is never a page for search engines (noindex, follow).
+// Follow-up 118: the cards get the category page's back view and Quick add on a computer (CardDeskMount) and the
+// added-to-bag panel it opens (AddedSlot, `?added=`), on the results and on the nothing-found picks alike. No
+// ItemList JSON-LD: the page is noindex.
 import type { Metadata } from 'next';
 import { cache } from 'react';
+import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
+import { CardDeskMount } from '@/components/shop/CardDeskMount';
 import { CatListing, type ListingRow } from '@/components/shop/category/CatListing';
 import { Icon, WaGlyph } from '@/components/shop/Icon';
 import { ProductCard } from '@/components/shop/ProductCard';
@@ -87,6 +92,7 @@ export default async function SearchPage(props: Props) {
         pg.soldOut === 'hide' ? 'hide' : 'show',
       )
     : [];
+  const closeHref = closeHrefOf(hrefIn(c.lang, ROUTES.search), sp);
   const plural = (count: number, one: string, many: string) => (count === 1 ? t(one) : t(many, { n: c.num(count) }));
   const panel = searchPanelProps(c, set['search.panel']);
   const chips = searchChips(c.lang, set['search.panel'].popular, c.cats);
@@ -181,6 +187,8 @@ export default async function SearchPage(props: Props) {
             gridId="search-grid"
           />
         </div>
+        <CardDeskMount c={c} />
+        <AddedSlot c={c} added={sp.added} closeHref={closeHref} />
       </div>
     );
   }
@@ -260,6 +268,8 @@ export default async function SearchPage(props: Props) {
           <Cards c={c} cards={picks} testId="search-picks-grid" />
         </section>
       ) : null}
+      <CardDeskMount c={c} />
+      <AddedSlot c={c} added={sp.added} closeHref={closeHref} />
     </div>
   );
 }
