@@ -311,6 +311,9 @@
   [data-lm-look] [data-lm-ready] summary.a2-sch { display: flex; align-items: center; min-height: var(--lm-tap); }
 }
 [data-lm-look] [data-lm-ready] .cal-n { font-size: var(--lm-fs-card); }
+/* the blog pages' back link ("← Blog & journal": shelves, plan, briefs, calendar, performance, an article) is a 44 px
+   tap at every width, in the muted ink (follow-up on PR 640; the build page had its own rule, the other blog pages too) */
+[data-lm-look] [data-lm-ready] .bd-crumb { display: inline-flex; align-items: center; min-height: var(--lm-tap); color: var(--lm-ink2); }
 /* a page's long state pill (Bengali pages: "Shop words (always there)") wraps on a phone instead of pushing it wide */
 [data-lm-look] [data-lm-ready][data-testid='bengali-page'] .a2-pill { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
 

@@ -22,4 +22,9 @@ describe('the Website screens speak through the one toast', () => {
   it('the article preview stays a light island in dark mode', () => {
     expect(read('JournalEditor.tsx')).toContain('jr-preview lm-island');
   });
+
+  it("the blog pages' back link is a 44 px tap in a token (follow-up)", () => {
+    const css = readFileSync(join(here, '..', '..', '..', 'app', 'admin', 'lumen-sections.css'), 'utf8');
+    expect(css).toMatch(/\[data-lm-ready\] \.bd-crumb \{[^}]*min-height: var\(--lm-tap\)/);
+  });
 });
