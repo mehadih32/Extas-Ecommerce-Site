@@ -54,3 +54,7 @@ export * from './ad-cost';
 // S13 · PR 269: `adDeliveredReturn` — delivered sales and delivered ROAS by platform campaign, product and district, the
 // campaign's spend shared out over its delivered orders (ad-return.ts), for the AI growth agent.
 export * from './ad-return';
+// S11 · PR 238: `organicSales` — the period's Sales split into organic and the rest, the organic orders by search engine,
+// video site and AI assistant (organic.ts; the pure source matcher is organic-sources.ts, also in ./pure).
+export * from './organic';
+export * from './organic-sources';

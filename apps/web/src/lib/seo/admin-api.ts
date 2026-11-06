@@ -55,6 +55,8 @@ export const SEO_KEYS = [
   'seo.answerPack',
   // PR 231: the links between pages
   'seo.internalLinks',
+  // PR 238: the organic report
+  'seo.organic',
 ] as const satisfies readonly Key[];
 export type SeoKey = (typeof SEO_KEYS)[number];
 

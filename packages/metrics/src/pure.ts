@@ -165,3 +165,6 @@ export function groupLines(rows: readonly LineRow[], key: (r: LineRow) => string
   }
   return out;
 }
+
+// S11 · PR 238: the organic source matcher, pure (the shop's proxy reads it without the database).
+export * from './organic-sources';

@@ -270,6 +270,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/website/seo/bengali', perm: 'seo.read', keys: ['seoBengali'] },
           // S11 · PR 237 — SEO health: what is missing, page by page.
           { href: '/admin/website/seo/health', perm: 'seo.read', keys: ['seoHealth'] },
+          // S11 · PR 238 — the organic report: Sales from search, video and AI assistants; clicks and positions.
+          { href: '/admin/website/seo/organic', perm: 'seo.read', keys: ['seoOrganic'] },
         ],
       },
     ],
