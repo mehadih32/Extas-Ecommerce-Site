@@ -2,9 +2,10 @@
 // PR 73 — the results page's own search box (demo 21-category.js PAGES.search `.srch-form`, with 07-help-search.js's
 // live suggestions under it): a plain form to the same page, so a new word starts a new search with the filters reset
 // (demo D-016). While the words differ from the page's, the suggestions show under the box.
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Icon } from '../Icon';
 import { hasAny, SuggestList, useSuggest } from './Suggest';
+import { suggestItems, suggestKey } from './suggest-keys';
 import type { SearchPanelProps } from '@/lib/shop/search-model';
 import './search.css';
 
@@ -14,6 +15,7 @@ export function SearchForm({ q: start, p }: { q: string; p: SearchPanelProps }) 
   const same = q.trim() === start.trim();
   const got = useSuggest(same ? '' : q, p);
   const a = got && got !== 'failed' && hasAny(got) ? got : null;
+  const list = useRef<HTMLFormElement>(null);
   return (
     <>
       <form className="srch-form" role="search" action={p.resultsUrl} method="get" data-testid="search-page-form">
@@ -26,6 +28,10 @@ export function SearchForm({ q: start, p }: { q: string; p: SearchPanelProps }) 
           className="input"
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => {
+            // follow-up 106: ↓ / ↑ through the suggestions, Enter opens the highlighted one
+            if (suggestKey(e.key, e.currentTarget, suggestItems(list.current), 'sg-p')) e.preventDefault();
+          }}
           placeholder={w.placeholder}
           autoComplete="off"
           enterKeyHint="search"
@@ -36,7 +42,7 @@ export function SearchForm({ q: start, p }: { q: string; p: SearchPanelProps }) 
         </button>
       </form>
       {a ? (
-        <form className="hs-sugg" role="search" action={p.resultsUrl} method="get" data-testid="search-suggest" aria-live="polite">
+        <form ref={list} className="hs-sugg" role="search" action={p.resultsUrl} method="get" data-testid="search-suggest" aria-live="polite">
           <input type="hidden" name="q" value={q.trim()} />
           <SuggestList a={a} w={w} lang={p.lang} products={p.phoneProducts} />
         </form>
