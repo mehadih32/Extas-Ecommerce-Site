@@ -141,6 +141,8 @@ import blogImagesBn from '../messages/blog-images.bn.json';
 import blogImagesEn from '../messages/blog-images.en.json';
 import houseAdsBn from '../messages/house-ads.bn.json';
 import houseAdsEn from '../messages/house-ads.en.json';
+import blogPipelineBn from '../messages/blog-pipeline.bn.json';
+import blogPipelineEn from '../messages/blog-pipeline.en.json';
 // S18 · PR 379 (registry v74): the quiet bot check on sign-in and checkout.
 import botCheckBn from '../messages/bot-check.bn.json';
 import botCheckEn from '../messages/bot-check.en.json';
@@ -287,6 +289,9 @@ messages.bn = mergeMessages(messages.bn, blogImagesBn);
 // S12 · PR 592 (registry v253): the journal's house ads.
 messages.en = mergeMessages(messages.en, houseAdsEn);
 messages.bn = mergeMessages(messages.bn, houseAdsBn);
+// S12 · PR 591 (registry v254): the blog content pipeline.
+messages.en = mergeMessages(messages.en, blogPipelineEn);
+messages.bn = mergeMessages(messages.bn, blogPipelineBn);
 messages.en = mergeMessages(messages.en, botCheckEn);
 messages.bn = mergeMessages(messages.bn, botCheckBn);
 messages.en = mergeMessages(messages.en, adminAccessEn);

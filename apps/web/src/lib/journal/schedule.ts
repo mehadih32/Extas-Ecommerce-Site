@@ -10,6 +10,7 @@
 //   empty time is never filled with an unfinished article (C11.1). Audited as blog.post.schedule with by 'calendar'.
 // - Scheduling by hand in the editor is refused on a day already at `perDayMax` (DAY_FULL); publishing now is the
 //   publisher's own call and is not counted against it.
+// - PR 591: with `blog.pipeline` on, a day fills only up to its pace (pipeline.ts `pacer`) instead of `perDayTarget`.
 // - With `autoFill` (off as it ships) an article is placed by itself when its last review step passes (journal.ts).
 // - Seeing needs `blog.read`; filling and the card `blog.publish`. The card is saved with its version (STALE).
 import { audit, can } from '@extas/auth';
@@ -18,6 +19,7 @@ import { blogScheduleSchema, storeTarget, type BlogScheduleSettings } from '@ext
 import { body, fail, guardAdmin, isUuid, json, type AdminDeps } from '../admin-auth';
 import { JournalError, LIST_MAX, answer, linkGapsFor, versionOf, type JournalWho } from './journal';
 import { isLive, issuesOf, publishGaps, type BlogState } from './model';
+import { pacer } from './pipeline';
 import { DAY_RE, MONTH_RE, addDays, dayOf, daysAhead, fillPlan, freeTimes, monthGrid, shiftMonth, slotAt, slotsOf, timeOf, type Ready } from './schedule-model';
 
 const S = MOTHER_STORE_ID;
@@ -98,14 +100,17 @@ async function settingsOf(resolver: Resolver, storeId: number) {
 }
 
 /** The days ahead with their articles and free times (shared by the screen and the fill). */
-async function upcoming(db: Db, s: BlogScheduleSettings, timeZone: string, now: Date, storeId: number) {
+async function upcoming(db: Db, resolver: Resolver, s: BlogScheduleSettings, timeZone: string, now: Date, storeId: number) {
   const today = dayOf(now, timeZone);
+  // PR 591: while the pipeline is on, each day fills only up to its pace (3 a day at the start, 5 while healthy)
+  const pace = await pacer(db, resolver, s, timeZone, now, storeId);
   const placed = await placedBetween(db, slotAt(today, '00:00', timeZone), slotAt(addDays(today, s.daysAhead), '00:00', timeZone), storeId);
   const plans = daysAhead(
     placed.map((r) => ({ at: atOf(r) })),
     s,
     now,
     timeZone,
+    pace.on ? (day) => pace.of(day).perDay : undefined,
   );
   return { today, placed, plans };
 }
@@ -132,7 +137,7 @@ async function readyPosts(db: Db, resolver: Resolver, now: Date, storeId: number
 /** Website › Blog & journal › Calendar: the days ahead, the month, the finished articles and the card. */
 export async function publishCalendar(db: Db, resolver: Resolver, now: Date = new Date(), opts: { month?: string | null; day?: string | null } = {}, storeId: number = S): Promise<CalendarScreen> {
   const { s, timeZone } = await settingsOf(resolver, storeId);
-  const { today, placed, plans } = await upcoming(db, s, timeZone, now, storeId);
+  const { today, placed, plans } = await upcoming(db, resolver, s, timeZone, now, storeId);
   const ready = await readyPosts(db, resolver, now, storeId);
   const pickedDay = opts.day && DAY_RE.test(opts.day) ? opts.day : null;
   const month = opts.month && MONTH_RE.test(opts.month) ? opts.month : (pickedDay ?? today).slice(0, 7);
@@ -181,7 +186,7 @@ export async function publishCalendar(db: Db, resolver: Resolver, now: Date = ne
 export async function fillCalendar(db: Db, resolver: Resolver, who: JournalWho, input: { onlyId?: string | null; byItself?: boolean }, now: Date = new Date(), storeId: number = S): Promise<{ placed: number; skipped: number; free: number }> {
   if (!input.byItself && !(await can(db, who.actor, 'blog.publish', { storeId }))) throw new JournalError('FORBIDDEN', 403, ['blog.publish']);
   const { s, timeZone } = await settingsOf(resolver, storeId);
-  const { plans } = await upcoming(db, s, timeZone, now, storeId);
+  const { plans } = await upcoming(db, resolver, s, timeZone, now, storeId);
   const free = freeTimes(plans);
   const all = (await readyPosts(db, resolver, now, storeId)).filter((r) => !input.onlyId || r.id === input.onlyId);
   const fit = all.filter((r) => !r.gaps.length);
