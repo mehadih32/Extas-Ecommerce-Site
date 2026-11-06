@@ -246,6 +246,10 @@
     "shimmer": {
       "label": "Shimmer speed and strength",
       "help": "How fast and how bright each shimmer of the shop runs: slow, as designed or fast; as designed, medium or soft (never brighter than designed). The four factors are under More options. Switch shimmers on or off with \"Light sweeps across the shop\". Change it on Settings › Shimmer."
+    },
+    "pageEdit": {
+      "label": "On-page edit mode",
+      "help": "While on, the signed-in owner sees a thin bar on every shop page: turn Edit mode on, point at a section, press Edit and change its own settings in the side panel; the draft shows in place, Publish puts it live and it can be undone. On a phone only texts and offers. A change made on a computer asks \"Apply to phone too?\" and checks every phone size first. Prices, offers and money are only shown, with a link to their own page; the checkout's payment steps are locked. Customers never see it."
     }
   },
   "layout": {

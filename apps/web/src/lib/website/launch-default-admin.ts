@@ -253,7 +253,8 @@ export interface RestoreDone {
   adsOff: number;
 }
 
-async function applyLook(deps: LookDeps, who: LookWho, target: { id: string; name: string; payload: unknown }, opts: { version: unknown; reason: string; undoOf: RestoreMeta & { id: string } | null; pause: boolean }): Promise<RestoreDone> {
+/** PR 600: also the on-page edit mode's publish (lib/website/page-edit-admin.ts), so it is undone the same way. */
+export async function applyLook(deps: LookDeps, who: LookWho, target: { id: string; name: string; payload: unknown }, opts: { version: unknown; reason: string; undoOf: RestoreMeta & { id: string } | null; pause: boolean }): Promise<RestoreDone> {
   const current = await freshLook(deps, opts.version);
   const saved = lookOf(target.payload);
   const plan = planRestore(saved, current.settings);

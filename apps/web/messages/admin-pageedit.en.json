@@ -1,0 +1,68 @@
+{
+  "pe": {
+    "metaTitle": "On-page edit",
+    "title": "On-page edit",
+    "sub": "Change a shop page while you look at it: only you, the owner, see the bar.",
+    "readOnly": "You can look at this page; changing it needs permission to change page layouts.",
+    "master": {
+      "title": "On-page edit mode",
+      "on": "On: when you are signed in as the owner, every shop page shows a thin bar with Edit mode.",
+      "off": "Off: no shop page loads anything for it.",
+      "who": "Only the owner (super admin) sees the bar. Customers and other staff never do. Prices, offers and money are shown with a link to their own page; the bag and the checkout's payment steps are locked."
+    },
+    "open": "Open the shop",
+    "phone": {
+      "title": "Phone and computer",
+      "sub": "How a change made on a computer reaches phones.",
+      "phoneLight": "Light version on a phone",
+      "phoneLightHint": "On a phone the panel shows texts and offers only, with no moving or numbers.",
+      "askPhone": "Ask \"Apply to phone too?\"",
+      "askPhoneHint": "Yes checks every phone size first and publishes only when they pass and you say OK; No keeps the change to computers where it can (a section shown or hidden)."
+    },
+    "checks": {
+      "title": "Automatic phone checks",
+      "sideways": "Nothing scrolls sideways",
+      "cut": "No text cut off",
+      "taps": "Everything big enough to tap (in the changed sections)",
+      "buyFold": "Buy button on the first screen (product pages)",
+      "farm": "These run in your own browser on each phone size. A check on real phones (device farm) and the AI reviewer are not available here."
+    },
+    "more": {
+      "title": "More options",
+      "sub": "Sizes the checks use and the phone screens they run on.",
+      "tapMinPx": "Smallest tap size (px)",
+      "inlineLinkMinPx": "Smallest height of a link inside text (px)",
+      "waitMs": "Wait for each phone preview (milliseconds)",
+      "phones": "Phone screens checked",
+      "name": "Name",
+      "w": "Width (px)",
+      "h": "Height (px)",
+      "remove": "Remove",
+      "removeOne": "Remove {name}",
+      "add": "Add a phone screen",
+      "newPhone": "New phone",
+      "reset": "Back to the 10 most used in Bangladesh"
+    },
+    "log": {
+      "title": "On-page publishes",
+      "sub": "Every publish from the shop page. Each one is also on Website › Launch default, where the newest can be undone.",
+      "drafts": "Open drafts: {n}",
+      "someone": "someone",
+      "undone": "undone",
+      "empty": "Nothing published from a shop page yet.",
+      "undoWhere": "Undo on Website › Launch default"
+    },
+    "unsaved": "You have changes that are not saved.",
+    "save": "Save",
+    "saving": "Saving…",
+    "discard": "Discard changes",
+    "saved": "Saved.",
+    "err": {
+      "STALE": "Someone saved this page in between. It was loaded again; make your change again.",
+      "INVALID_INPUT": "A value does not fit. Check the sizes and names.",
+      "forbidden": "You do not have permission to change this.",
+      "network": "No connection. Try again.",
+      "other": "That did not work. Try again."
+    }
+  }
+}

@@ -11,6 +11,8 @@
 // S06 · PR 556: while the in-transit duplicate notice is on, the visit's campaign is kept in the tab (CampaignKeep).
 // S02 · PR 79: while `language.frontEdit` is on, the switch for editing the page's words (WordsEditLoader; the panel
 // itself loads only on a page opened with ?words=edit).
+// S02 · PR 600: while `shop.pageEdit` is on, the signed-in owner's on-page edit bar (PageEditBar; lib/website/page-edit-
+// shop decides, from the admin session, so a customer's page carries nothing for it).
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -26,6 +28,9 @@ import { VitalsReporter } from '@/components/shop/VitalsReporter';
 import { TrackingBeacon } from '@/components/shop/TrackingBeacon';
 import { CampaignKeep } from '@/components/shop/CampaignKeep';
 import { WordsEditLoader } from '@/components/shop/WordsEditLoader';
+import { PageEditBar } from '@/components/shop/PageEditBar';
+import { pageKindOf } from '@/lib/website/page-edit-model';
+import { pageEditState } from '@/lib/website/page-edit-shop';
 import { BENGALI_FONT_COOKIE, bengaliFontFaces, bengaliFontUrls, shopThemeFontPreloads } from '@/lib/shop/font-preload';
 import { hrefIn } from '@/lib/shop/lang';
 import { ROUTES } from '@/lib/shop/routes';
@@ -51,6 +56,8 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
     'checkout.transitDuplicate': transit,
     'language.frontEdit': frontEdit,
   } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking', 'checkout.transitDuplicate', 'language.frontEdit'] as const, c.storeId);
+  // PR 600: the owner's on-page edit bar (null for everyone else; nothing is read without an admin session)
+  const pageEdit = await pageEditState();
   const trackView = tracking.on && tracking.events.view;
   const trackCheckout = tracking.on && tracking.events.checkout;
   // The Bengali shop switched off: its addresses lead to the English twin.
@@ -87,6 +94,7 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
       {children}
       {vitals.collect ? <VitalsReporter share={vitals.share} /> : null}
       {frontEdit.enabled ? <WordsEditLoader /> : null}
+      {pageEdit ? <PageEditBar edit={pageEdit.edit} page={pageKindOf(c.path, c.s['naming.productPathPrefix'])} lang={c.lang} /> : null}
     </div>
   );
 }

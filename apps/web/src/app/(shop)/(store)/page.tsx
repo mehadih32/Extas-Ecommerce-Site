@@ -105,11 +105,11 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
   // ~~shown.map(({ id, dev }) => <LayoutPart …>)~~ PR 595: the page's own sections with the owner's sections in between
   const sections = items.map((it) =>
     it.kind === 'sec' ? (
-      <LayoutPart key={it.row.id} id={it.row.id} dev={it.row.dev ?? 'both'}>
+      <LayoutPart key={it.row.id} id={it.row.id} dev={it.row.dev ?? 'both'} page="home">
         {draw[it.row.id as HomeSectionId]?.()}
       </LayoutPart>
     ) : (
-      <LayoutPart key={`lb-${it.block.id}`} id={`lb-${it.block.id}`} dev={it.block.dev}>
+      <LayoutPart key={`lb-${it.block.id}`} id={`lb-${it.block.id}`} dev={it.block.dev} page="home">
         <PageBlock c={c} block={it.block} got={got.get(it.block.id) ?? { kind: 'none' }} />
       </LayoutPart>
     ),

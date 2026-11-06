@@ -331,6 +331,7 @@
       "/admin/website/eye-toggles?show=hidden&where=product",
       "/admin/website/side-canvas",
       "/admin/website/launch-default",
+      "/admin/website/page-edit",
       "/admin/settings/shimmer",
       "/admin/combos/bag-box",
       "/admin/build/requests",

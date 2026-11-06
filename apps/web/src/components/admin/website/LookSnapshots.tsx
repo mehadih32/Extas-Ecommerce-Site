@@ -68,7 +68,7 @@ export function LookSnapshots(p: { view: LookView; canEdit: boolean; lang: 'en' 
     return parts.join(' ');
   };
 
-  const label = (s: SnapRow) => (s.auto ? g(s.auto.kind === 'undo' ? 'auto.undo' : 'auto.restore', { name: s.name }) : s.name);
+  const label = (s: SnapRow) => (s.auto ? g(s.auto.kind === 'undo' ? 'auto.undo' : s.auto.kind === 'edit' ? 'auto.edit' : 'auto.restore', { name: s.name }) : s.name);
 
   const confirmBox = (a: Ask) => {
     const qid = `${uid}-q`;

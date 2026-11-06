@@ -1,0 +1,54 @@
+/* S02 · PR 600 — the owner's on-page edit bar and side panel (components/shop/PageEditPanel), loaded only for him: one
+   card at the right of a computer, a sheet at the foot of a phone, above everything on the page; the section under the
+   mouse outlined with its Edit button; the "Apply to phone too?" dialog with every phone size's result and a scaled
+   preview. The shop's own tokens (light and dark themes); every control at the 44px tap size; text inputs at 16px so a
+   phone never zooms. */
+.pge{position:fixed;z-index:2147483000;left:8px;right:8px;bottom:8px;max-height:62vh;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line);border-radius:var(--radius,12px);background:var(--surface);color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.22);font-size:14px;line-height:1.4;box-sizing:border-box}
+@media (min-width:1024px){.pge{left:auto;right:16px;bottom:16px;width:400px;max-height:calc(100vh - 32px)}}
+.pge.pge-small{left:auto;width:auto;padding:6px;overflow:visible}
+.pge *,.pge-dlg *{box-sizing:border-box}
+.pge-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.pge-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
+.pge-edit{flex:1 1 auto;justify-content:flex-end}
+.pge-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.pge-mute{margin:0;color:var(--muted);font-size:12.5px;overflow-wrap:anywhere}
+.pge-note{margin:0;font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid var(--line)}
+.pge-title{margin:0;font-size:16px;font-weight:700;overflow-wrap:anywhere}
+.pge-chg{display:inline-block;margin-left:4px;padding:0 6px;border-radius:999px;background:var(--brand);color:var(--brand-ink);font-size:11px;font-weight:600;vertical-align:middle}
+.pge-btn{min-height:44px;min-width:44px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;cursor:pointer}
+.pge-btn:disabled{opacity:.5;cursor:default}
+.pge-pri{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.pge-link{display:inline-flex;align-items:center;min-height:44px;color:var(--brand);text-decoration:underline;overflow-wrap:anywhere}
+.pge-sw{position:relative;flex:0 0 auto;width:52px;height:44px;border:0;background:transparent;cursor:pointer;padding:0}
+.pge-sw>span{position:absolute;left:4px;top:11px;width:44px;height:22px;border-radius:999px;background:var(--line);transition:background .15s}
+.pge-sw>span::after{content:"";position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+.pge-sw.on>span{background:var(--brand)}
+.pge-sw.on>span::after{transform:translateX(22px)}
+.pge-sw:disabled{opacity:.5}
+.pge-side{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:10px;min-width:0}
+.pge-fields{display:grid;gap:10px;min-width:0}
+.pge-lbl{font-size:13px;font-weight:600;overflow-wrap:anywhere}
+.pge-fld{display:grid;gap:6px;min-width:0;margin:0;padding:0;border:0;font-size:13px;font-weight:600}
+.pge-fld legend{padding:0;margin-bottom:4px}
+.pge-fld select,.pge-fld input,.pge-fld textarea{width:100%;min-width:0;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;font-weight:400}
+.pge-fld .pge-acts input{flex:1 1 90px;width:auto}
+.pge-fld textarea{resize:vertical}
+.pge-words{padding:10px;border:1px solid var(--line);border-radius:10px}
+.pge-sub{display:grid;gap:4px;font-weight:400}
+.pge-links ul{list-style:none;margin:0;padding:0;display:grid}
+.pge-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.pge-item{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.pge-item:hover,.pge-item:focus-visible{border-color:var(--brand)}
+.pge-chk{display:flex;align-items:center;gap:10px;min-height:44px;font-size:13.5px;cursor:pointer}
+.pge-chk input{width:22px;height:22px}
+.pge-outline{position:fixed;z-index:2147482990;pointer-events:none;outline:2px dashed var(--brand);outline-offset:-2px;border-radius:6px;background:color-mix(in srgb,var(--brand) 6%,transparent)}
+.pge-editbtn{position:absolute;top:8px;right:8px;pointer-events:auto;max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 0 0 2px var(--surface),0 4px 12px rgba(0,0,0,.25)}
+.pge-dlg{position:fixed;inset:0;z-index:2147483100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45)}
+.pge-dlg-in{display:flex;flex-direction:column;gap:10px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:16px;border-radius:var(--radius,12px);background:var(--surface);color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.pge-prev .pge-dlg-in{width:auto;max-width:100%;align-items:center}
+.pge-results li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;font-size:13px}
+.pge-results li.bad{border-color:var(--sale)}
+.pge-frame{overflow:hidden;border:1px solid var(--line);border-radius:12px}
+.pge-frame iframe{display:block;border:0;transform-origin:0 0;background:var(--bg,var(--surface))}
+.pge-probe{position:fixed;left:-20000px;top:0;border:0;pointer-events:none;opacity:0}
+.pge-room{display:block;box-sizing:content-box;min-height:6rem;padding-bottom:32px}

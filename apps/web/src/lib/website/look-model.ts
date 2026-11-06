@@ -47,7 +47,8 @@ export interface LookRows {
 
 /** A look saved by the system just before a restore or an undo, so that step can itself be undone. */
 export interface LookAuto {
-  kind: 'restore' | 'undo';
+  /** PR 600: 'edit' = the look an on-page edit published (Website › Launch default lists it as saved by itself). */
+  kind: 'restore' | 'undo' | 'edit';
   /** The name of the look that was restored (shown as "Before restoring …"). */
   of: string;
 }
@@ -74,7 +75,7 @@ export function lookOf(payload: unknown): LookPayload {
   for (const k of LOOK_KEYS) if (k in raw) settings[k] = raw[k];
   const rows = p.rows && typeof p.rows === 'object' ? (p.rows as Record<string, unknown>) : {};
   const a = p.auto && typeof p.auto === 'object' ? (p.auto as Record<string, unknown>) : null;
-  const auto: LookAuto | undefined = a && (a.kind === 'restore' || a.kind === 'undo') ? { kind: a.kind, of: typeof a.of === 'string' ? a.of : '' } : undefined;
+  const auto: LookAuto | undefined = a && (a.kind === 'restore' || a.kind === 'undo' || a.kind === 'edit') ? { kind: a.kind, of: typeof a.of === 'string' ? a.of : '' } : undefined;
   return { scope: LOOK_SCOPE, settings, rows: { houseAds: ids(rows.houseAds), placements: ids(rows.placements) }, ...(auto ? { auto } : {}) };
 }
 

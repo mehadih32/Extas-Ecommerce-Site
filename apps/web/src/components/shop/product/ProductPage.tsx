@@ -620,7 +620,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
         </div>
         {/* PR 77: the sections under the first screen in the owner's order and on his screens (`layout.product`) */}
         {shownSections<ProductSectionId>('product', set['layout.product']).map(({ id, dev }) => (
-          <LayoutPart key={id} id={id} dev={dev}>
+          <LayoutPart key={id} id={id} dev={dev} page="product">
             {foot[id]()}
           </LayoutPart>
         ))}

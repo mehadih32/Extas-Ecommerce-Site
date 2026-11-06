@@ -7,6 +7,7 @@ import { headers } from 'next/headers';
 import { getPrisma } from '@extas/db/client';
 import { registry, withoutPlaceholder, type Key, type Value } from '@extas/settings';
 import { shopOverlay, withOverlay } from '../experiments/shop';
+import { pageEditOverlay } from '../website/page-edit-shop';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import { shopT, type ShopT, type Vars } from './dict';
 import { formatMoney, isShopLang, LANG_HEADER, PATH_HEADER, THEME_HEADER, toBnDigits, type ShopLang } from './lang';
@@ -117,9 +118,10 @@ export async function readPageSettings<K extends Key>(keys: readonly K[], storeI
   const resolver = settingsResolver();
   if (!resolver) return defaults();
   try {
-    const [vals, ov] = await Promise.all([withTimeout(Promise.all(keys.map((k) => resolver.value(k, { storeId }))), settingsTimeoutMs()), shopOverlay(storeId)]);
+    const [vals, ov, edit] = await Promise.all([withTimeout(Promise.all(keys.map((k) => resolver.value(k, { storeId }))), settingsTimeoutMs()), shopOverlay(storeId), pageEditOverlay()]);
     // PR 83: a running A/B test's version B for this visitor (only on a shop page; null elsewhere)
-    return withOverlay(Object.fromEntries(keys.map((k, i) => [k, printable(k, vals[i] as Value<typeof k>)])) as { [P in K]: Value<P> }, ov);
+    // PR 600: the signed-in owner's on-page edit draft, while his Edit mode is on (null for everyone else)
+    return withOverlay(withOverlay(Object.fromEntries(keys.map((k, i) => [k, printable(k, vals[i] as Value<typeof k>)])) as { [P in K]: Value<P> }, ov), edit);
   } catch (e) {
     console.warn(`shop: page settings unavailable, drawing with the defaults (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return defaults();
@@ -211,7 +213,9 @@ export const shopContext = cache(async (): Promise<ShopContext> => {
   // PR 606: a test server's bulk trial (POST /api/shop/try-bulk) draws the lane as if it were on (never live)
   const bulk: ShopSettings = tryBulk ? { ...withContact, 'orders.bulkLane': bulkTrial(withContact['orders.bulkLane']) } : withContact;
   // PR 83: a running A/B test's version B (words, parts shown or hidden) for this visitor, laid over the settings
-  const s = withOverlay(bulk, await shopOverlay(storeId));
+  const [ab, edit] = await Promise.all([shopOverlay(storeId), pageEditOverlay()]);
+  // PR 600: the signed-in owner's on-page edit draft, while his Edit mode is on (null for everyone else)
+  const s = withOverlay(withOverlay(bulk, ab), edit);
   return composeContext({ lang, path, storeId, s, live, cats, rowName, preview: h.get(THEME_HEADER) });
 });
 
