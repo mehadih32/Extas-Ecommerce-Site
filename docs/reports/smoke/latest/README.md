@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-07 00:46 (Asia/Dhaka)
+# Smoke test · 2026-11-07 02:43 (Asia/Dhaka)
 
-> **বাংলায়:** 0টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (516টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `09b0afdba8ae` · after deploy · result **FAIL** (504 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `6309ce1b7e77` · after deploy · result **PASS** (516 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -215,6 +215,7 @@ Site: https://new.extas.com.bd · commit `09b0afdba8ae` · after deploy · resul
 | `/admin/website/eye-toggles` | phone | 200 | `/admin/website/eye-toggles` | ok | — |
 | `/admin/website/side-canvas` | phone | 200 | `/admin/website/side-canvas` | ok | — |
 | `/admin/website/launch-default` | phone | 200 | `/admin/website/launch-default` | ok | — |
+| `/admin/website/page-edit` | phone | 200 | `/admin/website/page-edit` | ok | — |
 | `/admin/settings/shimmer` | phone | 200 | `/admin/settings/shimmer` | ok | — |
 | `/admin/combos/bag-box` | phone | 200 | `/admin/combos/bag-box` | ok | — |
 | `/admin/build/requests` | phone | 200 | `/admin/build/requests` | ok | — |
@@ -252,9 +253,14 @@ Site: https://new.extas.com.bd · commit `09b0afdba8ae` · after deploy · resul
 | `/admin/website/blog/comments` | phone | 200 | `/admin/website/blog/comments` | ok | — |
 | `/admin/website/blog/shared` | phone | 200 | `/admin/website/blog/shared` | ok | — |
 | `/admin/website/blog/sold` | phone | 200 | `/admin/website/blog/sold` | ok | — |
+| `/admin/website/blog/ads` | phone | 200 | `/admin/website/blog/ads` | ok | — |
+| `/admin/website/blog/ads/new` | phone | 200 | `/admin/website/blog/ads/new` | ok | — |
+| `/admin/website/blog/pipeline` | phone | 200 | `/admin/website/blog/pipeline` | ok | — |
+| `/admin/marketing/geo-guide` | phone | 200 | `/admin/marketing/geo-guide` | ok | — |
+| `/admin/marketing/merchant-feed` | phone | 200 | `/admin/marketing/merchant-feed` | ok | — |
 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | phone | 200 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | ok | — |
 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | phone | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
-| `/admin/reports/health/history/01a1b1fa-f39b-7230-889b-15003fea1ff2` | phone | 200 | `/admin/reports/health/history/01a1b1fa-f39b-7230-889b-15003fea1ff2` | ok | — |
+| `/admin/reports/health/history/01a1b237-e51d-72a3-b001-2c3ee6d6304a` | phone | 200 | `/admin/reports/health/history/01a1b237-e51d-72a3-b001-2c3ee6d6304a` | ok | — |
 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893?tab=wallet` | phone | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -467,6 +473,7 @@ Site: https://new.extas.com.bd · commit `09b0afdba8ae` · after deploy · resul
 | `/admin/website/eye-toggles` | desktop | 200 | `/admin/website/eye-toggles` | ok | — |
 | `/admin/website/side-canvas` | desktop | 200 | `/admin/website/side-canvas` | ok | — |
 | `/admin/website/launch-default` | desktop | 200 | `/admin/website/launch-default` | ok | — |
+| `/admin/website/page-edit` | desktop | 200 | `/admin/website/page-edit` | ok | — |
 | `/admin/settings/shimmer` | desktop | 200 | `/admin/settings/shimmer` | ok | — |
 | `/admin/combos/bag-box` | desktop | 200 | `/admin/combos/bag-box` | ok | — |
 | `/admin/build/requests` | desktop | 200 | `/admin/build/requests` | ok | — |
@@ -504,19 +511,16 @@ Site: https://new.extas.com.bd · commit `09b0afdba8ae` · after deploy · resul
 | `/admin/website/blog/comments` | desktop | 200 | `/admin/website/blog/comments` | ok | — |
 | `/admin/website/blog/shared` | desktop | 200 | `/admin/website/blog/shared` | ok | — |
 | `/admin/website/blog/sold` | desktop | 200 | `/admin/website/blog/sold` | ok | — |
+| `/admin/website/blog/ads` | desktop | 200 | `/admin/website/blog/ads` | ok | — |
+| `/admin/website/blog/ads/new` | desktop | 200 | `/admin/website/blog/ads/new` | ok | — |
+| `/admin/website/blog/pipeline` | desktop | 200 | `/admin/website/blog/pipeline` | ok | — |
+| `/admin/marketing/geo-guide` | desktop | 200 | `/admin/marketing/geo-guide` | ok | — |
+| `/admin/marketing/merchant-feed` | desktop | 200 | `/admin/marketing/merchant-feed` | ok | — |
 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | desktop | 200 | `/admin/orders/01a1b1a8-7b18-71b2-99e4-0e497364279e` | ok | — |
 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | desktop | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
-| `/admin/reports/health/history/01a1b1fa-f39b-7230-889b-15003fea1ff2` | desktop | 200 | `/admin/reports/health/history/01a1b1fa-f39b-7230-889b-15003fea1ff2` | ok | — |
+| `/admin/reports/health/history/01a1b237-e51d-72a3-b001-2c3ee6d6304a` | desktop | 200 | `/admin/reports/health/history/01a1b237-e51d-72a3-b001-2c3ee6d6304a` | ok | — |
 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893?tab=wallet` | desktop | 200 | `/admin/customers/01a1b1a8-7b15-77f2-be3b-8d0eb9fe7893` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
-Other problems:
-
-- check (PR 633): Orders › Returns › QC draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
-- check (PR 633): Orders › Returns › Hand-back draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
-- check (PR 634): Products › Add product draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
-- check (PR 634): Products › Import from a link draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
-- check (PR 634): Products › Import from the ERP draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.
-
-Database (PR 139): ok: 35 tables append-only; the app connects as extas_app.
+Database (PR 139): ok: 36 tables append-only; the app connects as extas_app.
