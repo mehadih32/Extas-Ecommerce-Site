@@ -130,7 +130,12 @@ export async function commentsScreen(db: Db, resolver: Resolver, now: Date = new
   };
 }
 
-/** Show, hide, or put back the ticked comments (`blog.publish`); returns how many changed. */
+/**
+ * Show, hide, or put back the ticked comments (`blog.publish`); returns how many changed. PR 251 follow-up (688): no
+ * page cache keeps an article (the page renders on every request and Cloudflare is told `no-store` for the journal),
+ * so the change shows on the article's next view with nothing to purge; comments-cache.test.ts fails the day an
+ * article page starts being kept, and that change must purge the article here.
+ */
 export async function moveComments(db: Db, who: JournalWho, input: unknown, now: Date = new Date(), storeId: number = S): Promise<number> {
   const o = (input ?? {}) as { ids?: unknown; to?: unknown };
   const ids = Array.isArray(o.ids) ? [...new Set(o.ids.filter((x): x is string => typeof x === 'string' && isUuid(x)))] : [];
