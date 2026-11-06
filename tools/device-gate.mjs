@@ -402,6 +402,8 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
     await page
       .waitForFunction(() => !document.querySelector('.shop') || document.documentElement.getAttribute('data-shell-fits') === 'done', null, { timeout: rules.fitsMs ?? 5000 })
       .catch(() => undefined);
+    // follow-up 46: the hero's pins are fitted by the slider itself (not the shell): measure them once it says so
+    await page.waitForFunction(heroSettled, undefined, { timeout: rules.fitsMs ?? 5000 }).catch(() => undefined);
     const noScripts = scriptsVerdict(...(await page.evaluate(() => [Boolean(document.querySelector('.shop')), document.documentElement.getAttribute('data-shell-fits')])));
     if (noScripts) issues.push(noScripts);
     else {
@@ -438,6 +440,14 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
  * config allows it); a busy runner still marks "pending", so only a page with no mark at all is this verdict.
  * `shop`: the page has the shop's root; `mark`: the attribute's value (null when absent). Null = measure the page.
  */
+/**
+ * Follow-up 46: every hero slider on the page has fitted its pins and started its row (HeroSlider marks
+ * `data-hero-fit="done"`); a page with no hero is settled. Runs in the page (waitForFunction), so it reads `document`.
+ */
+export function heroSettled(doc = globalThis.document) {
+  return [...doc.querySelectorAll('[data-hero-slider]')].every((b) => b.getAttribute('data-hero-fit') === 'done');
+}
+
 export function scriptsVerdict(shop, mark) {
   if (!shop || mark != null) return null;
   return { k: 'NO-SCRIPTS', d: "the shop's scripts never ran (no data-shell-fits mark): its layout is not measured" };

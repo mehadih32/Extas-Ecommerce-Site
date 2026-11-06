@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deviceList, filledPlan, firstScreenFor, langCookieOf, markdownReport, openedPlan, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
+import { deviceList, filledPlan, firstScreenFor, heroSettled, langCookieOf, markdownReport, openedPlan, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -202,5 +202,15 @@ describe('device gate', () => {
     const md = markdownReport([ok, bad], { base: 'b', seconds: 1 });
     expect(md).toMatch(/FAIL — 1 of 2/);
     expect(md).toContain('| p 360×800 | /admin/x → /admin/login | TAP-TOO-SMALL | chip 56×36 |');
+  });
+});
+
+describe('follow-up 46 · the hero pins are measured after the slider fitted them', () => {
+  const doc = (marks) => ({ querySelectorAll: () => marks.map((m) => ({ getAttribute: () => m })) });
+  it('waits while a hero slider has not marked its fit, and passes a page with no hero', () => {
+    expect(heroSettled(doc([]))).toBe(true);
+    expect(heroSettled(doc(['done']))).toBe(true);
+    expect(heroSettled(doc([null]))).toBe(false);
+    expect(heroSettled(doc(['done', null]))).toBe(false);
   });
 });
