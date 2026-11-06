@@ -198,6 +198,8 @@ export * from './registry-marketing-calendar';
 export * from './registry-marketing-report';
 // S02 · PR 76 — the page builder: the category page's sections, order, screens (registry-layouts.ts, version 240).
 export * from './registry-layouts';
+// S02 · PR 79 — the switch for editing the shop's words on the shop page (registry-front-edit.ts, version 242).
+export * from './registry-front-edit';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

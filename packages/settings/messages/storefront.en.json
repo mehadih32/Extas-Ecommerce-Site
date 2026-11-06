@@ -93,6 +93,10 @@
     "labels": {
       "label": "Your own words",
       "help": "Change any word or sentence of the shop, in English and Bengali. Empty: the shop's own words are used."
+    },
+    "frontEdit": {
+      "label": "Edit words on the shop page",
+      "help": "While on, Website › Words & language opens the shop with a panel of that page's words: tap a word on the page or in the list, change it in English and Bengali, then Publish. Only signed-in staff who may change words see the panel; customers never do."
     }
   },
   "slider": {

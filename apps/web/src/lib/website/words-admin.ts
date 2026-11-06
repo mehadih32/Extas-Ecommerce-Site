@@ -42,9 +42,11 @@ export type WordsView = WordList & { version: string };
 /** The same words give the same version whatever order the database keeps their keys in (jsonb sorts them its way). */
 const canonical = (v: unknown): unknown =>
   v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canonical((v as Record<string, unknown>)[k])])) : v;
-const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(canonical(v ?? null))).digest('hex').slice(0, 16);
+/** The version of the saved words (PR 79's shop panel publishes with it too). */
+export const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(canonical(v ?? null))).digest('hex').slice(0, 16);
 
-async function labelsOf(deps: WordsDeps): Promise<LabelOverrides | null> {
+/** The owner's words as saved (null: none). */
+export async function labelsOf(deps: WordsDeps): Promise<LabelOverrides | null> {
   return ((await deps.resolver.value('language.labels', { storeId: S })) ?? null) as LabelOverrides | null;
 }
 
