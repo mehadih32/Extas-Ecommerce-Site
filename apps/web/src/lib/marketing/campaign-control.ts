@@ -12,15 +12,22 @@
 //   nothing and the request is kept as PRACTICE, so no real budget or campaign changes. A live writer's success updates
 //   the campaign's own row (status or daily budget). Every request, decision and outcome is kept and audited
 //   (marketing.adControl.*); nothing is deleted.
+// - PR 531 (full campaign control): a campaign's schedule (start and end on the shop's clock) and the launch of a new
+//   campaign written on Marketing › Ad platforms › New campaigns (AdCampaignDraft, lib/marketing/campaign-builder.ts)
+//   go through the same request and approval: both are always more spend, so they always wait for the owner, and both
+//   need the campaign builder switched on (`ads.campaignBuilder`). Approved, a launch is created through the platform's
+//   writer (practice: nothing reaches the platform and the shop keeps no campaign); a live create keeps the new
+//   campaign's row and the draft remembers it.
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { practiceCampaignWriter, type AdsPlatform, type CampaignChange, type CampaignWriter } from '@extas/adapters';
+import { OBJECTIVE_WORDS, practiceCampaignWriter, type AdsPlatform, type AdsRead, type CampaignChange, type CampaignObjective, type CampaignWriter } from '@extas/adapters';
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID, type Prisma } from '@extas/db/client';
 import { adsCampaignControlSchema, storeTarget, type AdsCampaignControlSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { t, type Dict } from '../i18n';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
+import { utcToWall, wallToUtc } from '../shop/seasonal-home-model';
 import { AdPlatformsError, type AdPlatformsDeps, type AdPlatformsWho } from './ad-platforms';
 import en from '../../../messages/admin-ad-platforms.en.json';
 
@@ -38,12 +45,30 @@ export interface ControlDeps extends AdPlatformsDeps {
   writers?: Partial<Record<AdsPlatform, CampaignWriter>>;
 }
 
+/** PR 531: a new campaign's launch, as the owner approves it (the draft is locked while it waits). */
+export interface CreateChange {
+  kind: 'create';
+  draftId: string;
+  name: string;
+  platform: AdsPlatform;
+  objective: CampaignObjective;
+  dailyBudgetMinor: number;
+  startAt: string | null;
+  endAt: string | null;
+  copyOfExternalId: string | null;
+}
+export type ControlChange = CampaignChange | CreateChange;
+
+const WALL_MAX = 40; // hardcode-ok: the longest date-and-time text the form sends
 const changeSchema = z
   .object({
     action: z.literal('change'),
     adCampaignId: z.string().uuid(),
-    change: z.enum(['pause', 'resume', 'budget']),
+    change: z.enum(['pause', 'resume', 'budget', 'schedule']),
     dailyBudgetMinor: z.number().int().min(1).max(INT_MAX).optional(),
+    /** PR 531: the schedule, typed on the shop's clock (YYYY-MM-DDTHH:mm); empty = from now / until stopped. */
+    startAt: z.string().max(WALL_MAX).nullable().optional(),
+    endAt: z.string().max(WALL_MAX).nullable().optional(),
     /** The page's confirm step. */
     confirm: z.literal(true),
   })
@@ -53,15 +78,16 @@ const decideSchema = z.object({ action: z.literal('decide'), id: z.string().uuid
 /** Whether a platform status word means paused (Meta PAUSED, TikTok CAMPAIGN_STATUS_DISABLE, Google PAUSED). */
 export const isPaused = (status: string) => /PAUSE|DISABLE/i.test(status);
 
-/** More spend: starting again, or a daily budget above the one now (or where there was none). */
-export function isIncrease(change: CampaignChange, nowDailyMinor: number | null): boolean {
-  if (change.kind === 'resume') return true;
+/** More spend: starting again, or a daily budget above the one now (or where there was none); PR 531: every schedule and
+ * every new campaign (a schedule can start a campaign or make it run longer). */
+export function isIncrease(change: ControlChange, nowDailyMinor: number | null): boolean {
+  if (change.kind === 'resume' || change.kind === 'schedule' || change.kind === 'create') return true;
   if (change.kind === 'pause') return false;
   return nowDailyMinor === null || change.dailyBudgetMinor > nowDailyMinor;
 }
 
 interface Payload {
-  change: CampaignChange;
+  change: ControlChange;
   fromDailyMinor: number | null;
   fromStatus: string;
   currency: string;
@@ -73,31 +99,102 @@ const campaignOf = (db: ControlDeps['db'], id: string) =>
   db.adCampaign.findFirst({ where: { id, storeId: S, archivedAt: null }, select: { id: true, externalId: true, name: true, status: true, dailyBudgetMinor: true, currency: true, adAccount: { select: { platform: true, externalId: true } } } });
 type Campaign = NonNullable<Awaited<ReturnType<typeof campaignOf>>>;
 
+const wallText = (iso: string | null, timeZone: string, none: string) => (iso ? utcToWall(new Date(iso), timeZone).replace('T', ' ') : none);
+
 /** The words of the request for the owner's queue (English: the queue page will show them in his language). */
-function describe(c: Campaign, p: Payload): string {
+function describe(c: { name: string; platform: AdsPlatform }, p: Payload, timeZone: string): string {
   const d = en as unknown as Dict;
   const m = moneyOf(p.currency, 'en-GB');
-  const what = p.change.kind === 'budget' ? t(d, 'adp.control.ask.budget', { from: p.fromDailyMinor === null ? t(d, 'adp.none') : formatMoney(p.fromDailyMinor, m), to: formatMoney(p.change.dailyBudgetMinor, m) }) : t(d, `adp.control.ask.${p.change.kind}`);
-  return `${t(d, `adp.platform.${PLATFORM[c.adAccount.platform] ?? 'meta'}`)} · ${c.name}: ${what}`;
+  const ch = p.change;
+  const what =
+    ch.kind === 'create'
+      ? t(d, 'adp.control.ask.create', { budget: formatMoney(ch.dailyBudgetMinor, m), from: wallText(ch.startAt, timeZone, t(d, 'adp.control.now')), to: wallText(ch.endAt, timeZone, t(d, 'adp.control.noEnd')) })
+      : ch.kind === 'schedule'
+        ? t(d, 'adp.control.ask.schedule', { from: wallText(ch.startAt, timeZone, t(d, 'adp.control.now')), to: wallText(ch.endAt, timeZone, t(d, 'adp.control.noEnd')) })
+        : describeChange(ch, p, d, m);
+  return `${t(d, `adp.platform.${c.platform}`)} · ${c.name}: ${what}`;
+}
+function describeChange(ch: CampaignChange, p: Payload, d: Dict, m: ReturnType<typeof moneyOf>): string {
+  const what = ch.kind === 'budget' ? t(d, 'adp.control.ask.budget', { from: p.fromDailyMinor === null ? t(d, 'adp.none') : formatMoney(p.fromDailyMinor, m), to: formatMoney(ch.dailyBudgetMinor, m) }) : t(d, `adp.control.ask.${ch.kind}`);
+  return what;
+}
+
+/** PR 531: an approved launch, created through the platform's writer; a live create keeps the new campaign's row. */
+async function applyCreate(deps: ControlDeps, who: AdPlatformsWho, requestId: string, ch: CreateChange, currency: string): Promise<ControlStatus> {
+  const now = deps.now ? deps.now() : new Date();
+  const draft = await deps.db.adCampaignDraft.findFirst({ where: { id: ch.draftId, storeId: S }, select: { id: true, adAccountId: true, campaignId: true, archivedAt: true, adAccount: { select: { externalId: true, archivedAt: true } } } });
+  let practice = true;
+  let r: AdsRead<{ externalId: string }>;
+  if (!draft || draft.archivedAt || draft.adAccount.archivedAt) r = { ok: false, error: 'draft gone' };
+  else if (ch.endAt && new Date(ch.endAt) <= now) r = { ok: false, error: 'schedule passed' };
+  else {
+    const writer = deps.writers?.[ch.platform] ?? practiceCampaignWriter(ch.platform);
+    practice = writer.practice;
+    r = writer.create
+      ? await writer.create({ accountExternalId: draft.adAccount.externalId, currency, name: ch.name, objective: ch.objective, dailyBudgetMinor: ch.dailyBudgetMinor, startAt: ch.startAt, endAt: ch.endAt, copyOfExternalId: ch.copyOfExternalId })
+      : { ok: false, error: 'cannot create' };
+  }
+  const status: ControlStatus = !r.ok ? 'FAILED' : practice ? 'PRACTICE' : 'APPLIED';
+  await deps.db.$transaction(async (tx) => {
+    await tx.adChangeRequest.update({ where: { id: requestId }, data: { status, appliedAt: r.ok ? now : null, error: r.ok ? null : r.error.slice(0, 500) } }); // hardcode-ok: the kept error's length
+    let made: string | null = null;
+    if (r.ok && status === 'APPLIED' && draft) {
+      made = (await tx.adCampaign.create({ data: { storeId: S, adAccountId: draft.adAccountId, campaignId: draft.campaignId, externalId: r.value.externalId, name: ch.name, status: 'ACTIVE', objective: OBJECTIVE_WORDS[ch.platform][ch.objective], dailyBudgetMinor: ch.dailyBudgetMinor, currency, startAt: ch.startAt ? new Date(ch.startAt) : null, endAt: ch.endAt ? new Date(ch.endAt) : null } })).id;
+    }
+    if (draft) await tx.adCampaignDraft.update({ where: { id: draft.id }, data: { status: status === 'APPLIED' ? 'CREATED' : status, adCampaignId: made } });
+  });
+  await audit(deps.db, who.actor, { storeId: S, action: 'marketing.adControl.apply', entityType: 'AdChangeRequest', entityId: requestId, after: { status, change: ch, practice } }, who.ctx);
+  return status;
 }
 
 /** Sends the change through the platform's writer and keeps the outcome (the campaign's row only after a live send). */
-async function apply(deps: ControlDeps, who: AdPlatformsWho, requestId: string, c: Campaign, p: Payload): Promise<ControlStatus> {
+async function apply(deps: ControlDeps, who: AdPlatformsWho, requestId: string, c: Campaign | null, p: Payload): Promise<ControlStatus> {
+  if (p.change.kind === 'create') return applyCreate(deps, who, requestId, p.change, p.currency);
+  if (!c) {
+    await deps.db.adChangeRequest.update({ where: { id: requestId }, data: { status: 'FAILED', error: 'campaign gone' } });
+    return 'FAILED';
+  }
   const platform = PLATFORM[c.adAccount.platform];
   if (!platform) throw new AdPlatformsError('INVALID_INPUT', 400, ['platform']);
   const writer = deps.writers?.[platform] ?? practiceCampaignWriter(platform);
-  const r = await writer.change({ campaignExternalId: c.externalId, accountExternalId: c.adAccount.externalId, currency: c.currency, change: p.change });
+  const change = p.change;
+  const r = await writer.change({ campaignExternalId: c.externalId, accountExternalId: c.adAccount.externalId, currency: c.currency, change });
   const status: ControlStatus = !r.ok ? 'FAILED' : writer.practice ? 'PRACTICE' : 'APPLIED';
   const now = deps.now ? deps.now() : new Date();
   await deps.db.$transaction(async (tx) => {
     await tx.adChangeRequest.update({ where: { id: requestId }, data: { status, appliedAt: r.ok ? now : null, error: r.ok ? null : r.error.slice(0, 500) } }); // hardcode-ok: the kept error's length
-    if (status === 'APPLIED') await tx.adCampaign.update({ where: { id: c.id }, data: p.change.kind === 'budget' ? { dailyBudgetMinor: p.change.dailyBudgetMinor } : { status: p.change.kind === 'pause' ? 'PAUSED' : 'ACTIVE' } });
+    if (status === 'APPLIED') await tx.adCampaign.update({ where: { id: c.id }, data: change.kind === 'budget' ? { dailyBudgetMinor: change.dailyBudgetMinor } : change.kind === 'schedule' ? { startAt: change.startAt ? new Date(change.startAt) : null, endAt: change.endAt ? new Date(change.endAt) : null } : { status: change.kind === 'pause' ? 'PAUSED' : 'ACTIVE' } });
   });
-  await audit(deps.db, who.actor, { storeId: S, action: 'marketing.adControl.apply', entityType: 'AdChangeRequest', entityId: requestId, after: { status, change: p.change, practice: writer.practice } }, who.ctx);
+  await audit(deps.db, who.actor, { storeId: S, action: 'marketing.adControl.apply', entityType: 'AdChangeRequest', entityId: requestId, after: { status, change, practice: writer.practice } }, who.ctx);
   return status;
 }
 
-/** POST {action: 'change', adCampaignId, change, dailyBudgetMinor?, confirm: true}. */
+/**
+ * PR 531: a schedule typed on the shop's clock → two instants. Empty = from now / until stopped. A start must still be
+ * ahead, an end ahead and after the start (else INVALID_INPUT naming the field).
+ */
+export function scheduleOf(startWall: unknown, endWall: unknown, timeZone: string, now: Date): { startAt: string | null; endAt: string | null } {
+  const start = wallToUtc(startWall, timeZone);
+  const end = wallToUtc(endWall, timeZone);
+  if (start === undefined || (start && start <= now)) throw new AdPlatformsError('INVALID_INPUT', 400, ['startAt']);
+  if (end === undefined || (end && (end <= now || (start && end <= start)))) throw new AdPlatformsError('INVALID_INPUT', 400, ['endAt']);
+  return { startAt: start ? start.toISOString() : null, endAt: end ? end.toISOString() : null };
+}
+
+/** PR 531: the launch request of a draft (always waits for the owner; the builder checks the draft first). */
+export async function askLaunch(tx: Prisma.TransactionClient, deps: Pick<ControlDeps, 'resolver' | 'now'>, by: string | null, ch: CreateChange, currency: string, timeZone: string): Promise<string> {
+  const settings = await deps.resolver.value('ads.campaignControl', { storeId: S });
+  const now = deps.now ? deps.now() : new Date();
+  const p: Payload = { change: ch, fromDailyMinor: null, fromStatus: 'NEW', currency };
+  const row = await tx.adChangeRequest.create({ data: { storeId: S, adCampaignId: null, action: 'create', payload: p as unknown as Prisma.InputJsonValue, requestedById: by, status: 'WAITING' } });
+  const ask = await tx.aiApprovalRequest.create({
+    data: { storeId: S, kind: CONTROL_KIND, title: describe(ch, p, timeZone), payload: { adChangeRequestId: row.id, ...p } as unknown as Prisma.InputJsonValue, refType: 'AdChangeRequest', refId: row.id, channel: 'admin', expiresAt: new Date(now.getTime() + settings.approvalHours * HOUR_MS) },
+  });
+  await tx.adChangeRequest.update({ where: { id: row.id }, data: { approvalRequestId: ask.id } });
+  return row.id;
+}
+
+/** POST {action: 'change', adCampaignId, change, dailyBudgetMinor?, startAt?, endAt?, confirm: true}. */
 export async function requestCampaignChange(deps: ControlDeps, who: AdPlatformsWho, input: unknown): Promise<{ id: string; status: ControlStatus }> {
   const settings = await deps.resolver.value('ads.campaignControl', { storeId: S });
   if (!settings.on) throw new AdPlatformsError('OFF', 409);
@@ -106,17 +203,22 @@ export async function requestCampaignChange(deps: ControlDeps, who: AdPlatformsW
   const c = await campaignOf(deps.db, ok.data.adCampaignId);
   if (!c) throw new AdPlatformsError('NOT_FOUND', 404);
   if (ok.data.change === 'budget' && (ok.data.dailyBudgetMinor === undefined || ok.data.dailyBudgetMinor === c.dailyBudgetMinor)) throw new AdPlatformsError('INVALID_INPUT', 400, ['dailyBudgetMinor']);
-  const change: CampaignChange = ok.data.change === 'budget' ? { kind: 'budget', dailyBudgetMinor: ok.data.dailyBudgetMinor! } : { kind: ok.data.change };
+  const now = deps.now ? deps.now() : new Date();
+  const timeZone = (await deps.resolver.value('store.timeZone', { storeId: S })) as string;
+  let change: CampaignChange;
+  if (ok.data.change === 'schedule') {
+    if (!(await deps.resolver.value('ads.campaignBuilder', { storeId: S })).enabled) throw new AdPlatformsError('BUILDER_OFF', 409);
+    change = { kind: 'schedule', ...scheduleOf(ok.data.startAt, ok.data.endAt, timeZone, now) };
+  } else change = ok.data.change === 'budget' ? { kind: 'budget', dailyBudgetMinor: ok.data.dailyBudgetMinor! } : { kind: ok.data.change };
   if (await deps.db.adChangeRequest.findFirst({ where: { storeId: S, adCampaignId: c.id, status: 'WAITING' }, select: { id: true } })) throw new AdPlatformsError('WAITING', 409);
   const p: Payload = { change, fromDailyMinor: c.dailyBudgetMinor, fromStatus: c.status, currency: c.currency };
   const increase = isIncrease(change, c.dailyBudgetMinor);
-  const now = deps.now ? deps.now() : new Date();
   const by = who.actor.staffUserId ?? null;
   const id = await deps.db.$transaction(async (tx) => {
     const row = await tx.adChangeRequest.create({ data: { storeId: S, adCampaignId: c.id, action: change.kind, payload: p as unknown as Prisma.InputJsonValue, requestedById: by, status: increase ? 'WAITING' : 'SENDING' } });
     if (increase) {
       const ask = await tx.aiApprovalRequest.create({
-        data: { storeId: S, kind: CONTROL_KIND, title: describe(c, p), payload: { adChangeRequestId: row.id, ...p } as unknown as Prisma.InputJsonValue, refType: 'AdChangeRequest', refId: row.id, channel: 'admin', expiresAt: new Date(now.getTime() + settings.approvalHours * HOUR_MS) },
+        data: { storeId: S, kind: CONTROL_KIND, title: describe({ name: c.name, platform: PLATFORM[c.adAccount.platform] ?? 'meta' }, p, timeZone), payload: { adChangeRequestId: row.id, ...p } as unknown as Prisma.InputJsonValue, refType: 'AdChangeRequest', refId: row.id, channel: 'admin', expiresAt: new Date(now.getTime() + settings.approvalHours * HOUR_MS) },
       });
       await tx.adChangeRequest.update({ where: { id: row.id }, data: { approvalRequestId: ask.id } });
     }
@@ -156,6 +258,9 @@ export async function decideCampaignChange(deps: ControlDeps, who: AdPlatformsWh
   const row = await deps.db.adChangeRequest.findFirst({ where: { id: ok.data.id, storeId: S } });
   if (!row) throw new AdPlatformsError('NOT_FOUND', 404);
   if (row.status !== 'WAITING' || !row.approvalRequestId) throw new AdPlatformsError('DECIDED', 409);
+  const p = row.payload as unknown as Payload;
+  // PR 531: a launch or a schedule is only approved while the builder is on
+  if ((p.change.kind === 'create' || p.change.kind === 'schedule') && ok.data.decision === 'approve' && !(await deps.resolver.value('ads.campaignBuilder', { storeId: S })).enabled) throw new AdPlatformsError('BUILDER_OFF', 409);
   const now = deps.now ? deps.now() : new Date();
   const ask = await deps.db.aiApprovalRequest.findUnique({ where: { id: row.approvalRequestId }, select: { expiresAt: true } });
   const expired = !!ask?.expiresAt && ask.expiresAt <= now;
@@ -165,16 +270,13 @@ export async function decideCampaignChange(deps: ControlDeps, who: AdPlatformsWh
     const claimed = await tx.aiApprovalRequest.updateMany({ where: { id: row.approvalRequestId!, status: 'PENDING' }, data: { status, decidedById: expired ? null : (who.actor.staffUserId ?? null), decidedAt: now } });
     if (claimed.count !== 1) throw new AdPlatformsError('DECIDED', 409);
     await tx.adChangeRequest.update({ where: { id: row.id }, data: { status: status === 'APPROVED' ? 'SENDING' : status } });
+    if (p.change.kind === 'create' && status !== 'APPROVED') await tx.adCampaignDraft.updateMany({ where: { id: p.change.draftId, storeId: S }, data: { status } });
   });
   await audit(deps.db, who.actor, { storeId: S, action: 'marketing.adControl.decide', entityType: 'AdChangeRequest', entityId: row.id, after: { decision: status } }, who.ctx);
   if (status === 'EXPIRED') throw new AdPlatformsError('EXPIRED', 409);
   if (status === 'REJECTED') return { id: row.id, status: 'REJECTED' };
   const c = row.adCampaignId ? await campaignOf(deps.db, row.adCampaignId) : null;
-  if (!c) {
-    await deps.db.adChangeRequest.update({ where: { id: row.id }, data: { status: 'FAILED', error: 'campaign gone' } });
-    return { id: row.id, status: 'FAILED' };
-  }
-  return { id: row.id, status: await apply(deps, who, row.id, c, row.payload as unknown as Payload) };
+  return { id: row.id, status: await apply(deps, who, row.id, c, p) };
 }
 type ApprovalOutcome = 'APPROVED' | 'REJECTED' | 'EXPIRED';
 
@@ -183,7 +285,7 @@ export interface ControlRow {
   adCampaignId: string | null;
   campaignName: string | null;
   platform: AdsPlatform | null;
-  change: CampaignChange;
+  change: ControlChange;
   fromDailyMinor: number | null;
   currency: string;
   status: ControlStatus | 'SENDING';
@@ -201,7 +303,7 @@ export interface ControlOverview {
 /** The card, the requests waiting for the owner, and the newest requests. */
 export async function controlOverview(deps: Pick<ControlDeps, 'db' | 'resolver'>): Promise<ControlOverview> {
   const value = await deps.resolver.value('ads.campaignControl', { storeId: S });
-  const rows = await deps.db.adChangeRequest.findMany({ where: { storeId: S, action: { in: ['pause', 'resume', 'budget'] } }, orderBy: { createdAt: 'desc' }, take: RECENT });
+  const rows = await deps.db.adChangeRequest.findMany({ where: { storeId: S, action: { in: ['pause', 'resume', 'budget', 'schedule', 'create'] } }, orderBy: { createdAt: 'desc' }, take: RECENT });
   const waitingRows = await deps.db.adChangeRequest.findMany({ where: { storeId: S, status: 'WAITING' }, orderBy: { createdAt: 'asc' } });
   const ids = [...new Set([...rows, ...waitingRows].map((r) => r.adCampaignId).filter((x): x is string => !!x))];
   const camps = new Map((ids.length ? await deps.db.adCampaign.findMany({ where: { storeId: S, id: { in: ids } }, select: { id: true, name: true, adAccount: { select: { platform: true } } } }) : []).map((c) => [c.id, c]));
@@ -211,7 +313,8 @@ export async function controlOverview(deps: Pick<ControlDeps, 'db' | 'resolver'>
     const p = r.payload as unknown as Payload;
     const c = r.adCampaignId ? camps.get(r.adCampaignId) : undefined;
     const exp = r.approvalRequestId ? expiry.get(r.approvalRequestId) : null;
-    return { id: r.id, adCampaignId: r.adCampaignId, campaignName: c?.name ?? null, platform: c ? (PLATFORM[c.adAccount.platform] ?? null) : null, change: p.change, fromDailyMinor: p.fromDailyMinor, currency: p.currency, status: r.status as ControlRow['status'], createdAt: r.createdAt.toISOString(), expiresAt: exp ? exp.toISOString() : null, error: r.error };
+    const made = p.change.kind === 'create' ? p.change : null;
+    return { id: r.id, adCampaignId: r.adCampaignId, campaignName: made ? made.name : (c?.name ?? null), platform: made ? made.platform : c ? (PLATFORM[c.adAccount.platform] ?? null) : null, change: p.change, fromDailyMinor: p.fromDailyMinor, currency: p.currency, status: r.status as ControlRow['status'], createdAt: r.createdAt.toISOString(), expiresAt: exp ? exp.toISOString() : null, error: r.error };
   };
   return { card: { key: 'control', value, version: versionOf(value) }, waiting: waitingRows.map(view), recent: rows.map(view) };
 }

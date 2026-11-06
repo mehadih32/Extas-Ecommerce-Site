@@ -5,7 +5,7 @@
 // (POST {action: 'decide', confirm: true}). The API checks the permission, the switch and the rule again; the page is
 // read again after each. Words come from the page; the budget is typed in taka and sent in the minor unit (`scale`).
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { call } from '../api';
 
 const fill = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
@@ -72,7 +72,7 @@ const Out = ({ out, id }: { out: { text: string; bad: boolean } | null; id: stri
     </span>
   ) : null;
 
-export function AdCampaignControl({ url, adCampaignId, name, paused, dailyBudgetMinor, scale, none, currency, locale, texts: x }: { url: string; adCampaignId: string; name: string; paused: boolean; dailyBudgetMinor: number | null; scale: number; none: string; currency: string; locale: string; texts: ControlTexts }) {
+export function AdCampaignControl({ url, adCampaignId, name, paused, dailyBudgetMinor, scale, none, currency, locale, texts: x, children }: { url: string; adCampaignId: string; name: string; paused: boolean; dailyBudgetMinor: number | null; scale: number; none: string; currency: string; locale: string; texts: ControlTexts; children?: ReactNode }) {
   const { ask, setAsk, busy, out, setOut, go } = useAsk(url, x.said, x.err);
   const [budget, setBudget] = useState('');
   const n = Number(budget);
@@ -121,6 +121,8 @@ export function AdCampaignControl({ url, adCampaignId, name, paused, dailyBudget
         </div>
         <Confirm ask={ask} busy={busy} yes={x.yes} cancel={x.cancel} onYes={() => void go()} onNo={() => setAsk(null)} id="adp-ctl-confirm" />
         <Out out={out} id="adp-ctl-said" />
+        {/* PR 531: schedule and duplicate */}
+        {children}
       </div>
     </details>
   );

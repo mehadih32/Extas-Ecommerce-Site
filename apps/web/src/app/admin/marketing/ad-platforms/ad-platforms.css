@@ -34,3 +34,10 @@
 .adm2 .adp-confirm{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .adm2 .adp-confirm p{margin:0}
 .adm2 .adp-log{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+/* PR 531 — the schedule row keeps to its fold on a phone: its help line takes a whole row, a date field never pushes it wider. */
+.adm2 .adp-rule-limit p{flex:1 1 100%;min-width:0;margin:0}
+.adm2 .adp-ctl-body{grid-template-columns:minmax(0,1fr)}
+.adm2 .adp-ctl input[type='datetime-local'],.adm2 .adp-add input[type='datetime-local']{min-width:0;width:100%;max-width:100%;box-sizing:border-box}
+.adm2 .adp-rule-limit input[type='datetime-local']{max-width:none}
+/* PR 531 — New campaigns' "Set aside" fold: a 44 px tap target. */
+.adm2 details.adc-fold>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--ink2)}

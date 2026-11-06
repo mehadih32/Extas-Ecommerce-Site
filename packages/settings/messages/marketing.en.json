@@ -61,6 +61,10 @@
       "label": "Campaign controls (pause and budget)",
       "help": "Off as it ships. On, Marketing › Ad platforms shows pause and budget controls for each platform campaign: pausing or lowering the daily budget happens after a confirm step; starting again or raising the budget waits for your approval and nothing changes until you approve. Until a platform is connected for changes, every change goes to its practice copy."
     },
+    "campaignBuilder": {
+      "label": "Campaign builder (new, duplicate, schedule, launch)",
+      "help": "Off as it ships. On, Marketing › Ad platforms › New campaigns lets your ads staff write a new campaign or duplicate one as a draft, and schedule when a campaign starts and ends. Launching a campaign and every schedule change always wait for your approval: nothing starts and no money is spent until you approve. Needs the campaign controls on too. Until a platform is connected for changes, everything goes to its practice copy."
+    },
     "growthAgent": {
       "label": "AI growth agent (proposals)",
       "help": "Off as it ships. On, right after each daily spend import the agent reads delivered sales against ad spend (delivered ROAS) by campaign, product and district and turns your limits into proposals — pause, lower or raise a budget, refresh a creative, build an audience. Each one waits for your approval and nothing changes until you approve. A limit of 0 keeps that kind of proposal off."

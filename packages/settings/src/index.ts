@@ -160,6 +160,8 @@ export * from './registry-ads-refused';
 export * from './registry-ads-spend';
 export * from './registry-ads-alerts';
 export * from './registry-ads-control';
+// S13 · PR 531 — the campaign builder switch (registry-ads-builder.ts, version 219).
+export * from './registry-ads-builder';
 // S13 · PR 269 — the AI growth agent's limits (registry-ads-growth.ts, version 175).
 export * from './registry-ads-growth';
 // S13 · PR 270 — the ad creative brief's settings (registry-ads-brief.ts, version 176).

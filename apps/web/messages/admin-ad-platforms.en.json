@@ -176,7 +176,8 @@
         "OFF": "Campaign controls are off.",
         "WAITING": "A request for this campaign already waits for the owner.",
         "DECIDED": "It was already decided.",
-        "EXPIRED": "It ran out; nothing changed."
+        "EXPIRED": "It ran out; nothing changed.",
+        "BUILDER_OFF": "The campaign builder is off."
       },
       "waitingH": "Waiting for the owner's approval",
       "waitingNone": "Nothing waits.",
@@ -199,12 +200,16 @@
       "what": {
         "pause": "Pause",
         "resume": "Start again",
-        "budget": "Daily budget {from} → {to}"
+        "budget": "Daily budget {from} → {to}",
+        "create": "Launch, daily budget {budget}",
+        "schedule": "Schedule {from} → {to}"
       },
       "ask": {
         "pause": "pause",
         "resume": "start again",
-        "budget": "daily budget {from} → {to}"
+        "budget": "daily budget {from} → {to}",
+        "create": "launch a new campaign, daily budget {budget}, {from} → {to}",
+        "schedule": "schedule {from} → {to}"
       },
       "noControl": "Changing a campaign needs the \"Control ads\" permission.",
       "card": {
@@ -215,7 +220,18 @@
         "hours": "Hours an increase waits for approval",
         "hoursHelp": "1 to 720. After that the request runs out and nothing changes.",
         "readOnly": "You can see this card; changing it needs the \"Approve ad budget increases\" permission."
-      }
+      },
+      "now": "from now",
+      "noEnd": "until stopped",
+      "schedule": "Schedule (on the shop's clock)",
+      "start": "Starts",
+      "end": "Ends",
+      "scheduleGo": "Ask to schedule",
+      "scheduleHelp": "Empty start = from now; empty end = until stopped. Every schedule waits for the owner's approval.",
+      "confirmSchedule": "Ask the owner to schedule “{name}”: {from} → {to}? Nothing changes until he approves.",
+      "duplicate": "Duplicate as a new draft",
+      "duplicated": "A draft copy was made.",
+      "openDrafts": "Open the drafts"
     },
     "growth": {
       "metaTitle": "Growth agent · Ad platforms",
@@ -434,6 +450,99 @@
       },
       "showBn": "Show (Bengali)",
       "showEn": "Show (English)"
+    },
+    "build": {
+      "metaTitle": "New campaigns — Ad platforms",
+      "title": "New campaigns",
+      "sub": "Write a new campaign or a copy of one, give it a budget and dates, and ask to launch it. Nothing starts and no money is spent until the owner approves.",
+      "link": "New campaigns",
+      "back": "← Ad platforms",
+      "note": "Launching always waits for the owner's approval. Until a platform is connected for changes, an approved launch goes to its practice copy: nothing reaches the platform.",
+      "off": "The campaign builder is off. The owner can switch it on in the card at the bottom of this page.",
+      "controlOff": "The campaign controls on Ad platforms are off, so a draft cannot be launched yet.",
+      "noWrite": "Writing and launching campaigns needs the \"Control ads\" permission.",
+      "noAccounts": "No ad account yet. Read the platform first on Ad platforms.",
+      "newH": "New campaign",
+      "newD": "Saved as a draft. Nothing is sent anywhere until it is launched and approved.",
+      "account": "Ad account",
+      "campaign": "Shop campaign (optional)",
+      "noCampaign": "None",
+      "name": "Name",
+      "objective": "What it is for",
+      "obj": {
+        "sales": "Sales",
+        "traffic": "Visits to the shop",
+        "awareness": "Being seen",
+        "leads": "Messages and sign-ups"
+      },
+      "budget": "Daily budget (in the ad account's currency)",
+      "budgetHelp": "A whole amount above 0. Empty is allowed in a draft, but a launch needs it.",
+      "start": "Starts (shop's clock)",
+      "end": "Ends (shop's clock)",
+      "scheduleHelp": "Empty start = when approved; empty end = until stopped. Both must be ahead.",
+      "save": "Save draft",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "edit": "Change",
+      "duplicate": "Duplicate",
+      "launch": "Launch…",
+      "confirmLaunch": "Ask the owner to launch “{name}” with a daily budget of {budget}, {from} → {to}? Nothing starts until he approves.",
+      "archive": "Set aside",
+      "restore": "Bring back",
+      "yes": "Yes, go ahead",
+      "cancel": "Cancel",
+      "listH": "Drafts",
+      "listNone": "No draft yet.",
+      "asideH": "Set aside",
+      "asideNone": "Nothing set aside.",
+      "status": {
+        "DRAFT": "Draft",
+        "WAITING": "Waiting for the owner",
+        "PRACTICE": "Practice copy",
+        "CREATED": "Created on the platform",
+        "FAILED": "Refused",
+        "REJECTED": "Rejected",
+        "EXPIRED": "Ran out"
+      },
+      "accountLine": "{platform} · {account}",
+      "budgetLine": "Daily budget {budget}",
+      "noBudget": "No daily budget yet (needed to launch)",
+      "scheduleLine": "{from} → {to}",
+      "now": "when approved",
+      "noEnd": "until stopped",
+      "copyOf": "Copy of “{name}”",
+      "campaignLine": "Shop campaign: {name}",
+      "expires": "Runs out {when}",
+      "ranOut": "The owner did not answer in time; change it or launch it again.",
+      "copyName": "{name} copy",
+      "said": {
+        "WAITING": "Waiting for the owner's approval.",
+        "saved": "Saved.",
+        "duplicated": "A draft copy was made.",
+        "archived": "Set aside.",
+        "restored": "Brought back."
+      },
+      "err": {
+        "OFF": "The campaign builder is off.",
+        "CONTROL_OFF": "The campaign controls are off.",
+        "LOCKED": "It waits for the owner or was already created; it cannot change now.",
+        "WAITING": "Its launch already waits for the owner."
+      },
+      "field": {
+        "adAccountId": "Pick an ad account.",
+        "campaignId": "That shop campaign is not there.",
+        "name": "Type a name.",
+        "dailyBudgetMinor": "Type a daily budget above 0.",
+        "startAt": "The start must be a time still ahead.",
+        "endAt": "The end must be ahead and after the start."
+      },
+      "card": {
+        "h": "Campaign builder",
+        "d": "Off as it ships. Only the owner can switch it.",
+        "enabled": "Allow new campaigns, copies, schedules and launches",
+        "enabledHelp": "On, your ads staff can write drafts, duplicate campaigns and schedule them. A launch and every schedule always wait for your approval.",
+        "readOnly": "You can see this card; changing it needs the \"Approve ad budget increases\" permission."
+      }
     }
   }
 }
