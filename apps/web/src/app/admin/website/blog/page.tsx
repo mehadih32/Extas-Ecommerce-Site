@@ -49,7 +49,7 @@ export default async function BlogBoardPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="blog-board" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="blog.read" />
       </div>
     );
@@ -80,7 +80,7 @@ export default async function BlogBoardPage(props: Props) {
   const pill = (c: BlogColumn) => (c === 'published' ? ' ok' : c === 'off' || c === 'review' ? ' warn' : '');
 
   return (
-    <div className="a2-z" data-testid="blog-board">
+    <div className="a2-z" data-testid="blog-board" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

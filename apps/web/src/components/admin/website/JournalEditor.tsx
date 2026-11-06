@@ -12,6 +12,7 @@ import { ArticleBody } from '@/components/journal/ArticleBody';
 import { t, type Dict } from '@/lib/i18n';
 import { readingMinutes, slugify, wordCount, type BlogAction, type BlogState } from '@/lib/journal/model';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface EditorPost {
   id: string | null;
@@ -127,7 +128,7 @@ export function JournalEditor(p: {
     setBusy(false);
     if (a.status === 200 || a.status === 201) {
       setDirty(false);
-      setSaid({ text: c('e.saved'), bad: false });
+      showToast({ text: c('e.saved'), tone: 'ok' });
       const nid = (a.data.post as { id?: string } | undefined)?.id;
       if (!pg.id && nid) return router.replace(`${p.listHref}/${nid}`);
       return router.refresh();
@@ -145,7 +146,7 @@ export function JournalEditor(p: {
     setBusy(false);
     if (a.status === 200) {
       setNote('');
-      setSaid({ text: c(`state.${(a.data.post as { status: BlogState }).status}`), bad: false });
+      showToast({ text: c(`state.${(a.data.post as { status: BlogState }).status}`), tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errText(a), bad: true });
@@ -298,7 +299,7 @@ export function JournalEditor(p: {
             </button>
           </div>
           {preview ? (
-            <div className="jr-preview a2-mt12" lang={locale} data-testid="jr-preview">
+            <div className="jr-preview lm-island a2-mt12" lang={locale} data-testid="jr-preview">
               <h1>{title}</h1>
               {quick ? <p className="jr-answer">{quick}</p> : null}
               <ArticleBody body={body} boxWords={{ tip: c('e.tip'), note: c('e.note') }} products={<div className="jr-prods">{c('e.productsHere', { n: picked.length })}</div>} />

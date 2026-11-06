@@ -7,6 +7,7 @@
 import { useMemo, useState } from 'react';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
+import { showToast } from '../lumen/Toast';
 
 export interface EyeListRow {
   id: string;
@@ -92,7 +93,7 @@ export function EyeList(props: { api: string; rows: EyeListRow[]; version: strin
     setBusy(false);
     if (a.status === 200) {
       fresh(a.data as never);
-      return setSaid({ text: x.saved, bad: false });
+      return showToast({ text: x.saved, tone: 'ok' });
     }
     const code = a.status === 0 ? 'network' : (a.data.error ?? 'other');
     if (code === 'STALE') {

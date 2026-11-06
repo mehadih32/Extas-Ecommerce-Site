@@ -49,7 +49,7 @@ export default async function PerformancePage({ searchParams }: { searchParams: 
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="blog-performance" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="blog.read" />
       </div>
     );
@@ -97,7 +97,7 @@ export default async function PerformancePage({ searchParams }: { searchParams: 
   );
 
   return (
-    <div className="a2-z" data-testid="blog-performance">
+    <div className="a2-z" data-testid="blog-performance" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={l('title')} sub={l('sub')} />
       <SectionTabs view={view} current={KEY} />
       <nav className="pf-periods a2-mt12" aria-label={l('periodLabel')} data-testid="pf-periods">

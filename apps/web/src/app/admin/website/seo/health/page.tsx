@@ -51,7 +51,7 @@ export default async function SeoHealthPage(props: Props) {
   if (access.kind === "unavailable" || !deps) return <AdminNotice view={view} current={KEY} text={t(d, "page.noDb")} />;
   if (access.kind === "forbidden")
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="hl-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="seo.read" />
       </div>
     );
@@ -67,7 +67,7 @@ export default async function SeoHealthPage(props: Props) {
   const said = (i: HealthIssue, n: number) => (i === "photoNoAlt" ? s(`issue.${i}`, { n: num(n) }) : s(`issue.${i}`));
 
   return (
-    <div className="a2-z" data-testid="hl-page">
+    <div className="a2-z" data-testid="hl-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={s("title")} sub={s("sub")} />
       <SectionTabs view={view} current={KEY} />
 

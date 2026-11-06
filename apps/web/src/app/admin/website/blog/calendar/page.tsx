@@ -49,7 +49,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="blog-calendar" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="blog.read" />
       </div>
     );
@@ -100,7 +100,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const heads = WEEK.map((i) => weekday.format(SUNDAY + ((set.weekStart + i) % 7) * DAY_MS));
 
   return (
-    <div className="a2-z" data-testid="blog-calendar">
+    <div className="a2-z" data-testid="blog-calendar" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={l('title')} sub={l('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="pl-kpis a2-mt12" data-testid="cal-kpis">

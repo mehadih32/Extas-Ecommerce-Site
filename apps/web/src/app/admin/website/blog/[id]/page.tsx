@@ -49,7 +49,7 @@ export default async function JournalEditorPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="blog-editor" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="blog.read" />
       </div>
     );
@@ -94,7 +94,7 @@ export default async function JournalEditorPage(props: Props) {
   const words = { jr: (d as Record<string, Dict>).jr ?? {} } as Dict;
 
   return (
-    <div className="a2-z" data-testid="blog-editor">
+    <div className="a2-z" data-testid="blog-editor" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

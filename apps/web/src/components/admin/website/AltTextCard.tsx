@@ -8,6 +8,7 @@ import { useState } from "react";
 import { call, errorText } from "@/components/admin/api";
 import type { Dict } from "@/lib/i18n";
 import { SeoCard, SeoSaveRow, SeoSwitch, seoText, useSeoSave } from "./SeoScreen";
+import { showToast } from "../lumen/Toast";
 
 export interface AltTextValue {
   autoApply: boolean;
@@ -35,7 +36,7 @@ export function AltTextCard({ d, value, defaults, limits, version, canWrite, mis
     setFilling(false);
     if (a.status === 200 && a.data.ok) {
       setLeft(Number(a.data.missing));
-      setDone({ ok: true, text: at(d, "filled", { n: n(Number(a.data.filled)) }) });
+      showToast({ text: at(d, "filled", { n: n(Number(a.data.filled)), tone: 'ok' }) });
       return;
     }
     setDone({ ok: false, text: errorText((d.seo ?? {}) as Dict, a) });

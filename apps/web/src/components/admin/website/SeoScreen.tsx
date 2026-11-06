@@ -7,6 +7,7 @@ import { useState, type ReactNode } from "react";
 import { call, errorText } from "@/components/admin/api";
 import { t, type Dict } from "@/lib/i18n";
 import { ShellIcon } from "../shell/ShellIcon";
+import { showToast } from "../lumen/Toast";
 
 export const seoText = (d: Dict, key: string, vars: Record<string, string | number> = {}) => t(d, `seo.${key}`, vars);
 
@@ -60,7 +61,7 @@ export function useSeoSave<V>(d: Dict, key: string, initial: V, version: number)
       const changed = versions[key] !== ver;
       setValue(values[key] as V);
       setVer(versions[key] ?? ver);
-      setNote({ ok: true, text: seoText(d, changed ? "indexing.saved" : "indexing.unchanged") });
+      showToast({ text: seoText(d, changed ? "indexing.saved" : "indexing.unchanged"), tone: 'ok' });
       router.refresh();
       return;
     }

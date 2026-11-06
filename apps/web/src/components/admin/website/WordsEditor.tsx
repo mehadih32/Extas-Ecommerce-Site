@@ -7,6 +7,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import type { WordRow } from '@/lib/website/words';
+import { showToast } from '../lumen/Toast';
 
 const API = '/api/admin/website/dictionary';
 
@@ -79,7 +80,7 @@ function WordItem({ row, where, canEdit, version, setVersion, w }: RowProps) {
     setOwn(saved);
     setDraft(saved);
     if (a.version) setVersion(a.version);
-    setMsg({ ok: true, text: done });
+    showToast({ text: done, tone: 'ok' });
   }
 
   const shown = (lang: 'en' | 'bn') => (
@@ -210,7 +211,7 @@ export function WordsEditor({ rows, version: read, canEdit, where, w, file, head
     if (!a.ok) return setMsg({ ok: false, text: errText(w.err, a.error, a.details) });
     const n = a.changed?.length ?? 0;
     if (a.version) setVersion(a.version);
-    setMsg({ ok: true, text: n ? file.imported.replace('{n}', String(n)) : file.importNone });
+    showToast({ text: n ? file.imported.replace('{n}', String(n)) : file.importNone, tone: 'ok' });
     router.refresh();
   }
 

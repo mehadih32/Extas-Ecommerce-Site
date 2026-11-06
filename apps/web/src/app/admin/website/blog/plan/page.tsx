@@ -50,7 +50,7 @@ export default async function TopicPlanPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="blog-plan" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="blog.read" />
       </div>
     );
@@ -86,7 +86,7 @@ export default async function TopicPlanPage() {
   );
 
   return (
-    <div className="a2-z" data-testid="blog-plan">
+    <div className="a2-z" data-testid="blog-plan" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={l('title')} sub={l('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="pl-kpis a2-mt12" data-testid="pl-kpis">

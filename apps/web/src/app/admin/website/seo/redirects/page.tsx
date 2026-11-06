@@ -57,7 +57,7 @@ export default async function RedirectsPage(props: Props) {
   if (access.kind === "unavailable" || !deps) return <AdminNotice view={view} current={KEY} text={t(view.dict, "page.noDb")} />;
   if (access.kind === "forbidden")
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="rd-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="seo.read" />
       </div>
     );
@@ -71,7 +71,7 @@ export default async function RedirectsPage(props: Props) {
   const nf = snap.notFound;
 
   return (
-    <div className="a2-z" data-testid="rd-page">
+    <div className="a2-z" data-testid="rd-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={c("title")} sub={c("sub")} />
       <SectionTabs view={view} current={KEY} />
 

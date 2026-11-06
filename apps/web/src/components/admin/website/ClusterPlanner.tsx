@@ -11,6 +11,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { alikeLevel, closest, type LinkGap } from '@/lib/journal/clusters-model';
 import type { Plan, PlanCluster, PlanPost, PlanTopic } from '@/lib/journal/clusters';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 type Said = { text: string; bad: boolean } | null;
 const EDITOR = '/admin/website/blog';
@@ -48,7 +49,7 @@ export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; 
     const a = await call(method, url, body);
     setBusy(false);
     if (a.status === 200 || a.status === 201) {
-      setSaid({ text: c('e.saved'), bad: false });
+      showToast({ text: c('e.saved'), tone: 'ok' });
       done?.(a.data as Record<string, unknown>);
       return router.refresh();
     }
@@ -61,7 +62,7 @@ export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; 
   const topicAct = (x: PlanTopic, action: string) =>
     send('POST', `/api/admin/blog/topics/${x.id}`, { action, version: x.version }, (d) => {
       if (action === 'start' && typeof d.postId === 'string') {
-        setSaid({ text: l('started'), bad: false });
+        showToast({ text: l('started'), tone: 'ok' });
         router.push(`${EDITOR}/${d.postId}`);
       }
     });
@@ -267,7 +268,7 @@ export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; 
                       className="a2-btn pri"
                       disabled={busy}
                       onClick={() =>
-                        send('POST', '/api/admin/blog/topics/batch', { month: q.month }, (d) => setSaid({ text: l('batchDone', { n: Number(d.approved) || 0, held: Number(d.held) || 0 }), bad: false }))
+                        send('POST', '/api/admin/blog/topics/batch', { month: q.month }, (d) => showToast({ text: l('batchDone', { n: Number(d.approved) || 0, held: Number(d.held) || 0 }), tone: 'ok' }))
                       }
                       data-testid="pl-batch-approve"
                     >
