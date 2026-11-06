@@ -64,7 +64,30 @@ with the owner's new go-ahead.
 - No money is moved, no price, discount or COD rule changed as part of the switch (hard rule 6).
 - Keys are never pasted into chat, logs or this file (hard rule 2).
 
-## 4. Owner's part
+## 4. PR 587 — prepared up to the owner's "go live" (CN-035)
+Everything below is ready and has been run only in its read-only or dry-run form. Nothing here switches the main
+domain until the owner says "go live" (CLAUDE.md).
+
+1. **The go-live check** (any time; read-only): Actions → **golive-check** → Run workflow, `domain` = the main domain.
+   It reads the go-live list on staging (every "Needed before go-live" row and its state), the WordPress redirect map
+   (rows, live or not, every target opens with 200 and never forwards again) and the sitemap (every address's path
+   opens on staging), and validates the main domain's Caddy block, **open**, in a copy inside the Caddy container.
+   Report: `docs/reports/golive/latest/README.md`. It never asks the main domain and changes nothing.
+2. **The redirect map** (before the day): Website → SEO → Redirects → Import, kind **WordPress**, the old shop's
+   addresses (49 in its sitemap on 19 Oct 2026, docs/owner/GOOGLE-TRAFFIC-PLAN.md §1.6 F1) each with its new page; the
+   check first, then "Write". The rows stay off until go-live day: `seo.redirects.wordpressMapLive` is switched on in
+   step 6 of the day. Keep them at least 12 months.
+3. **The server half of the switch** (runbook step 4), staged, NOT run:
+   `node tools/golive-switch.mjs --domain <main domain>` shows the two server.conf lines it will write
+   (`EXTAS_EXTRA_HOSTS` = the main domain and `www.`, `EXTAS_MAIN_OPEN="yes"`) and writes nothing. Only on the owner's
+   own "go live" it runs again with the typed confirmation `--confirm "GO LIVE <main domain>"`; then commit
+   `PR 587: go live — <main domain>` and push: server setup re-runs and must show "PR 403 · main domain: open", while
+   new.extas.com.bd keeps its password and `noindex` (its own block, always). Undo: `--undo --confirm "UNDO <main domain>"`.
+4. **The day**, in the order of section 1: step 2 (backup), step 3, step 4 (the command above), step 5 (DNS, the
+   owner's account), step 6 with the WordPress map switched on and a crawl of the old addresses, step 7
+   (Actions → smoke, host `main`), steps 8 and 9.
+
+## 5. Owner's part
 - The go-ahead for the day and the quiet hour (the only decision).
 - If the Cloudflare account is his alone: the DNS change of step 5 (and its undo), with the team on the phone.
 - Checking his own data on the live site (legal numbers, contacts, charges — PR 399).
