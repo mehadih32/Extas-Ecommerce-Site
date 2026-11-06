@@ -1,7 +1,7 @@
 {
   "kind": "gate-orders",
-  "at": "2026-11-06 15:25 (Asia/Dhaka)",
-  "sha": "ce460ee40386",
+  "at": "2026-11-06 22:13 (Asia/Dhaka)",
+  "sha": "4689df67c695",
   "host": "new.extas.com.bd",
   "scenarios": 18,
   "passed": 14,
@@ -31,34 +31,34 @@
       "network": "4g",
       "verdict": "PASS",
       "orders": [
-        "1077"
+        "1144"
       ],
       "addresses": [
         "dhk-dhanmondi"
       ],
       "timings": {
         "firstLoad": {
-          "ms": 787,
-          "lcpMs": 732,
+          "ms": 1220,
+          "lcpMs": 1144,
           "status": 200
         },
         "productPage": {
-          "ms": 906,
-          "lcpMs": 864,
+          "ms": 812,
+          "lcpMs": 748,
           "status": 200
         },
         "addToBag": {
-          "ms": 315,
-          "serverMs": 99
+          "ms": 233,
+          "serverMs": 13
         },
         "checkoutOpen": {
-          "ms": 1228,
-          "lcpMs": 776
+          "ms": 1178,
+          "lcpMs": 712
         },
         "submit": {
-          "ms": 1639,
-          "serverMs": 333,
-          "lcpMs": 684
+          "ms": 1310,
+          "serverMs": 2,
+          "lcpMs": 676
         }
       },
       "over": [],
@@ -66,7 +66,7 @@
         {
           "id": "placed",
           "verdict": "PASS",
-          "detail": "order 1077"
+          "detail": "order 1144"
         },
         {
           "id": "one line",
@@ -88,34 +88,34 @@
       "network": "slow-3g",
       "verdict": "PASS",
       "orders": [
-        "1078"
+        "1145"
       ],
       "addresses": [
         "sub-tongi"
       ],
       "timings": {
         "firstLoad": {
-          "ms": 11052,
-          "lcpMs": 8212,
+          "ms": 11123,
+          "lcpMs": 8300,
           "status": 200
         },
         "productPage": {
-          "ms": 11913,
-          "lcpMs": 9232,
+          "ms": 12002,
+          "lcpMs": 9452,
           "status": 200
         },
         "addToBag": {
-          "ms": 2097,
-          "serverMs": 21
+          "ms": 2094,
+          "serverMs": 24
         },
         "checkoutOpen": {
-          "ms": 12582,
-          "lcpMs": 9084
+          "ms": 12634,
+          "lcpMs": 9088
         },
         "submit": {
-          "ms": 14150,
-          "serverMs": 38,
-          "lcpMs": 8580
+          "ms": 14219,
+          "serverMs": 36,
+          "lcpMs": 8788
         }
       },
       "over": [],
@@ -123,7 +123,7 @@
         {
           "id": "placed",
           "verdict": "PASS",
-          "detail": "order 1078"
+          "detail": "order 1145"
         },
         {
           "id": "three lines",
@@ -140,48 +140,42 @@
       "network": "wifi",
       "verdict": "PASS",
       "orders": [
-        "1079"
+        "1146"
       ],
       "addresses": [
         "out-chattogram"
       ],
       "timings": {
         "firstLoad": {
-          "ms": 347,
-          "lcpMs": 320,
+          "ms": 749,
+          "lcpMs": 692,
           "status": 200
         },
         "productPage": {
-          "ms": 316,
-          "lcpMs": 312,
+          "ms": 331,
+          "lcpMs": 320,
           "status": 200
         },
         "addToBag": {
-          "ms": 117,
-          "serverMs": 63
+          "ms": 104,
+          "serverMs": 47
         },
         "checkoutOpen": {
-          "ms": 765,
-          "lcpMs": 628
+          "ms": 373,
+          "lcpMs": 256
         },
         "submit": {
-          "ms": 1449,
-          "serverMs": 844,
-          "lcpMs": 224
+          "ms": 739,
+          "serverMs": 171,
+          "lcpMs": 196
         }
       },
-      "over": [
-        {
-          "step": "submit",
-          "valueMs": 844,
-          "limitMs": 600
-        }
-      ],
+      "over": [],
       "checks": [
         {
           "id": "placed",
           "verdict": "PASS",
-          "detail": "order 1079"
+          "detail": "order 1146"
         },
         {
           "id": "eight lines",
@@ -198,34 +192,34 @@
       "network": "fast-3g",
       "verdict": "PASS",
       "orders": [
-        "1080"
+        "1147"
       ],
       "addresses": [
         "out-rajshahi"
       ],
       "timings": {
         "firstLoad": {
-          "ms": 3137,
-          "lcpMs": 2344,
+          "ms": 3215,
+          "lcpMs": 2504,
           "status": 200
         },
         "productPage": {
-          "ms": 3343,
-          "lcpMs": 2544,
+          "ms": 3364,
+          "lcpMs": 2636,
           "status": 200
         },
         "addToBag": {
-          "ms": 650,
-          "serverMs": 40
+          "ms": 642,
+          "serverMs": 33
         },
         "checkoutOpen": {
-          "ms": 3508,
-          "lcpMs": 2540
+          "ms": 3533,
+          "lcpMs": 2508
         },
         "submit": {
-          "ms": 4215,
+          "ms": 4224,
           "serverMs": 14,
-          "lcpMs": 2452
+          "lcpMs": 2420
         }
       },
       "over": [],
@@ -233,7 +227,7 @@
         {
           "id": "placed",
           "verdict": "PASS",
-          "detail": "order 1080"
+          "detail": "order 1147"
         },
         {
           "id": "quantity 2 on one line",
@@ -298,14 +292,14 @@
       "network": "4g",
       "verdict": "PASS",
       "orders": [
-        "1081",
-        "1082",
-        "1083",
-        "1084",
-        "1085",
-        "1086",
-        "1087",
-        "1088"
+        "1148",
+        "1149",
+        "1150",
+        "1151",
+        "1152",
+        "1153",
+        "1154",
+        "1155"
       ],
       "addresses": [
         "dhk-mirpur",
@@ -319,27 +313,27 @@
       ],
       "timings": {
         "firstLoad": {
-          "ms": 845,
-          "lcpMs": 760,
+          "ms": 965,
+          "lcpMs": 892,
           "status": 200
         },
         "productPage": {
-          "ms": 1241,
-          "lcpMs": 1212,
+          "ms": 1010,
+          "lcpMs": 980,
           "status": 200
         },
         "addToBag": {
-          "ms": 331,
-          "serverMs": 102
+          "ms": 297,
+          "serverMs": 63
         },
         "checkoutOpen": {
-          "ms": 1391,
-          "lcpMs": 844
+          "ms": 1371,
+          "lcpMs": 824
         },
         "submit": {
-          "ms": 1602,
-          "serverMs": 132,
-          "lcpMs": 804
+          "ms": 1554,
+          "serverMs": 147,
+          "lcpMs": 752
         }
       },
       "over": [],
@@ -347,42 +341,42 @@
         {
           "id": "order 1",
           "verdict": "PASS",
-          "detail": "order 1081"
+          "detail": "order 1148"
         },
         {
           "id": "order 2",
           "verdict": "PASS",
-          "detail": "order 1082"
+          "detail": "order 1149"
         },
         {
           "id": "order 3",
           "verdict": "PASS",
-          "detail": "order 1083"
+          "detail": "order 1150"
         },
         {
           "id": "order 4",
           "verdict": "PASS",
-          "detail": "order 1084"
+          "detail": "order 1151"
         },
         {
           "id": "order 5",
           "verdict": "PASS",
-          "detail": "order 1085"
+          "detail": "order 1152"
         },
         {
           "id": "order 6",
           "verdict": "PASS",
-          "detail": "order 1086"
+          "detail": "order 1153"
         },
         {
           "id": "order 7",
           "verdict": "PASS",
-          "detail": "order 1087"
+          "detail": "order 1154"
         },
         {
           "id": "order 8",
           "verdict": "PASS",
-          "detail": "order 1088"
+          "detail": "order 1155"
         },
         {
           "id": "eight orders for the one number",
@@ -414,33 +408,33 @@
       "network": "fast-3g",
       "verdict": "PASS",
       "orders": [
-        "1089"
+        "1156"
       ],
       "addresses": [
         "out-bogura-bn"
       ],
       "timings": {
         "firstLoad": {
-          "ms": 3164,
-          "lcpMs": 2552,
+          "ms": 3307,
+          "lcpMs": 2648,
           "status": 200
         },
         "productPage": {
-          "ms": 3411,
-          "lcpMs": 2640,
+          "ms": 3428,
+          "lcpMs": 2752,
           "status": 200
         },
         "addToBag": {
-          "ms": 662,
-          "serverMs": 45
+          "ms": 682,
+          "serverMs": 65
         },
         "checkoutOpen": {
-          "ms": 3954,
-          "lcpMs": 2524
+          "ms": 3977,
+          "lcpMs": 2608
         },
         "submit": {
-          "ms": 4647,
-          "serverMs": 8,
+          "ms": 4673,
+          "serverMs": 21,
           "lcpMs": 2464
         }
       },
@@ -449,7 +443,7 @@
         {
           "id": "placed",
           "verdict": "PASS",
-          "detail": "order 1089"
+          "detail": "order 1156"
         },
         {
           "id": "the order is in Bengali",
@@ -466,34 +460,34 @@
       "network": "4g",
       "verdict": "PASS",
       "orders": [
-        "1090"
+        "1157"
       ],
       "addresses": [
         "out-coxs-bazar"
       ],
       "timings": {
         "firstLoad": {
-          "ms": 793,
-          "lcpMs": 720,
+          "ms": 1047,
+          "lcpMs": 988,
           "status": 200
         },
         "productPage": {
-          "ms": 772,
-          "lcpMs": 704,
+          "ms": 774,
+          "lcpMs": 708,
           "status": 200
         },
         "addToBag": {
-          "ms": 215,
-          "serverMs": 5
+          "ms": 222,
+          "serverMs": 10
         },
         "checkoutOpen": {
-          "ms": 1076,
-          "lcpMs": 668
+          "ms": 1060,
+          "lcpMs": 676
         },
         "submit": {
-          "ms": 1278,
-          "serverMs": 8,
-          "lcpMs": 660
+          "ms": 1270,
+          "serverMs": 9,
+          "lcpMs": 656
         }
       },
       "over": [],
@@ -506,7 +500,7 @@
         {
           "id": "placed after the fix",
           "verdict": "PASS",
-          "detail": "order 1090"
+          "detail": "order 1157"
         },
         {
           "id": "exactly one order",
@@ -523,34 +517,34 @@
       "network": "4g",
       "verdict": "PASS",
       "orders": [
-        "1091"
+        "1158"
       ],
       "addresses": [
         "dhk-uttara"
       ],
       "timings": {
         "firstLoad": {
-          "ms": 764,
-          "lcpMs": 692,
+          "ms": 782,
+          "lcpMs": 696,
           "status": 200
         },
         "productPage": {
-          "ms": 792,
-          "lcpMs": 736,
+          "ms": 805,
+          "lcpMs": 744,
           "status": 200
         },
         "addToBag": {
-          "ms": 228,
-          "serverMs": 6
+          "ms": 229,
+          "serverMs": 11
         },
         "checkoutOpen": {
-          "ms": 1153,
-          "lcpMs": 708
+          "ms": 1158,
+          "lcpMs": 704
         },
         "submit": {
-          "ms": 1340,
-          "serverMs": 6,
-          "lcpMs": 668
+          "ms": 1370,
+          "serverMs": 8,
+          "lcpMs": 684
         }
       },
       "over": [],
@@ -558,7 +552,7 @@
         {
           "id": "placed",
           "verdict": "PASS",
-          "detail": "order 1091"
+          "detail": "order 1158"
         },
         {
           "id": "exactly one order",
@@ -575,32 +569,32 @@
       "network": "fast-3g",
       "verdict": "PASS",
       "orders": [
-        "1092"
+        "1159"
       ],
       "addresses": [
         "out-cumilla"
       ],
       "timings": {
         "firstLoad": {
-          "ms": 3163,
-          "lcpMs": 2384,
+          "ms": 3181,
+          "lcpMs": 2416,
           "status": 200
         },
         "productPage": {
-          "ms": 3376,
-          "lcpMs": 2728,
+          "ms": 3388,
+          "lcpMs": 2584,
           "status": 200
         },
         "addToBag": {
-          "ms": 632,
-          "serverMs": 13
+          "ms": 639,
+          "serverMs": 17
         },
         "checkoutOpen": {
-          "ms": 3613,
-          "lcpMs": 2624
+          "ms": 3642,
+          "lcpMs": 2572
         },
         "submit": {
-          "ms": 4247,
+          "ms": 4259,
           "serverMs": 15,
           "lcpMs": 2492
         }
@@ -615,7 +609,7 @@
         {
           "id": "placed on the second press",
           "verdict": "PASS",
-          "detail": "order 1092"
+          "detail": "order 1159"
         },
         {
           "id": "exactly one order",
@@ -632,8 +626,8 @@
       "network": "wifi",
       "verdict": "PASS",
       "orders": [
-        "1093",
-        "1094"
+        "1160",
+        "1161"
       ],
       "addresses": [
         "dhk-mohammadpur-bn",
@@ -641,27 +635,27 @@
       ],
       "timings": {
         "firstLoad": {
-          "ms": 965,
-          "lcpMs": 956,
+          "ms": 318,
+          "lcpMs": 296,
           "status": 200
         },
         "productPage": {
-          "ms": 351,
-          "lcpMs": 340,
+          "ms": 824,
+          "lcpMs": 816,
           "status": 200
         },
         "addToBag": {
-          "ms": 139,
-          "serverMs": 86
+          "ms": 235,
+          "serverMs": 178
         },
         "checkoutOpen": {
-          "ms": 359,
-          "lcpMs": 228
+          "ms": 558,
+          "lcpMs": 424
         },
         "submit": {
-          "ms": 742,
-          "serverMs": 160,
-          "lcpMs": 208
+          "ms": 1068,
+          "serverMs": 266,
+          "lcpMs": 408
         }
       },
       "over": [],
@@ -669,7 +663,7 @@
         {
           "id": "guest order",
           "verdict": "PASS",
-          "detail": "order 1093"
+          "detail": "order 1160"
         },
         {
           "id": "signed in with the code",
@@ -679,7 +673,7 @@
         {
           "id": "signed-in order",
           "verdict": "PASS",
-          "detail": "order 1094"
+          "detail": "order 1161"
         },
         {
           "id": "both orders are the same customer's",
@@ -696,9 +690,9 @@
       "network": "4g",
       "verdict": "PASS",
       "orders": [
-        "1095",
-        "1096",
-        "1097"
+        "1162",
+        "1163",
+        "1164"
       ],
       "addresses": [
         "dhk-motijheel-mixed",
@@ -707,27 +701,27 @@
       ],
       "timings": {
         "firstLoad": {
-          "ms": 1196,
-          "lcpMs": 1124,
+          "ms": 768,
+          "lcpMs": 700,
           "status": 200
         },
         "productPage": {
-          "ms": 769,
-          "lcpMs": 704,
+          "ms": 811,
+          "lcpMs": 748,
           "status": 200
         },
         "addToBag": {
-          "ms": 220,
-          "serverMs": 9
+          "ms": 223,
+          "serverMs": 10
         },
         "checkoutOpen": {
-          "ms": 1063,
-          "lcpMs": 684
+          "ms": 1060,
+          "lcpMs": 688
         },
         "submit": {
-          "ms": 1370,
-          "serverMs": 95,
-          "lcpMs": 656
+          "ms": 1438,
+          "serverMs": 156,
+          "lcpMs": 668
         }
       },
       "over": [],
@@ -735,7 +729,7 @@
         {
           "id": "dhaka order",
           "verdict": "PASS",
-          "detail": "order 1095"
+          "detail": "order 1162"
         },
         {
           "id": "dhaka charge",
@@ -745,7 +739,7 @@
         {
           "id": "suburb order",
           "verdict": "PASS",
-          "detail": "order 1096"
+          "detail": "order 1163"
         },
         {
           "id": "suburb charge",
@@ -755,7 +749,7 @@
         {
           "id": "outside order",
           "verdict": "PASS",
-          "detail": "order 1097"
+          "detail": "order 1164"
         },
         {
           "id": "outside charge",
@@ -791,34 +785,34 @@
       "network": "4g",
       "verdict": "PASS",
       "orders": [
-        "1098"
+        "1165"
       ],
       "addresses": [
         "dhk-banani-long"
       ],
       "timings": {
         "firstLoad": {
-          "ms": 774,
+          "ms": 770,
           "lcpMs": 700,
           "status": 200
         },
         "productPage": {
-          "ms": 908,
-          "lcpMs": 852,
+          "ms": 792,
+          "lcpMs": 732,
           "status": 200
         },
         "addToBag": {
-          "ms": 260,
-          "serverMs": 37
+          "ms": 226,
+          "serverMs": 9
         },
         "checkoutOpen": {
-          "ms": 1227,
-          "lcpMs": 764
+          "ms": 1153,
+          "lcpMs": 716
         },
         "submit": {
-          "ms": 1481,
-          "serverMs": 135,
-          "lcpMs": 716
+          "ms": 1303,
+          "serverMs": 10,
+          "lcpMs": 676
         }
       },
       "over": [],
@@ -826,7 +820,7 @@
         {
           "id": "placed",
           "verdict": "PASS",
-          "detail": "order 1098"
+          "detail": "order 1165"
         },
         {
           "id": "the admin added a piece",
@@ -872,10 +866,10 @@
       "network": "wifi",
       "verdict": "PASS",
       "orders": [
-        "1099"
+        "1166"
       ],
       "addresses": [
-        "dhk-badda"
+        "dhk-khilgaon-pasted"
       ],
       "timings": null,
       "over": [],
@@ -888,7 +882,7 @@
         {
           "id": "the other is told clearly",
           "verdict": "PASS",
-          "detail": "reached the checkout; reached the checkout; OUT_OF_STOCK, placed"
+          "detail": "reached the checkout; reached the checkout; placed, sent back to the bag, which says the piece is sold out"
         }
       ],
       "shot": null
@@ -900,34 +894,34 @@
       "network": "4g",
       "verdict": "PASS",
       "orders": [
-        "1100"
+        "1167"
       ],
       "addresses": [
         "out-patuakhali-mixed"
       ],
       "timings": {
         "firstLoad": {
-          "ms": 818,
-          "lcpMs": 740,
+          "ms": 943,
+          "lcpMs": 880,
           "status": 200
         },
         "productPage": {
-          "ms": 971,
-          "lcpMs": 904,
+          "ms": 768,
+          "lcpMs": 696,
           "status": 200
         },
         "addToBag": {
-          "ms": 249,
-          "serverMs": 36
+          "ms": 223,
+          "serverMs": 11
         },
         "checkoutOpen": {
-          "ms": 1112,
-          "lcpMs": 748
+          "ms": 1052,
+          "lcpMs": 664
         },
         "submit": {
-          "ms": 1439,
-          "serverMs": 133,
-          "lcpMs": 708
+          "ms": 1272,
+          "serverMs": 5,
+          "lcpMs": 648
         }
       },
       "over": [],
@@ -935,7 +929,7 @@
         {
           "id": "2.1 kg order",
           "verdict": "PASS",
-          "detail": "order 1100"
+          "detail": "order 1167"
         },
         {
           "id": "the courier gets 2.1 kg",
@@ -955,8 +949,8 @@
     {
       "id": "1",
       "what": "A mock-bKash-paid order: no message asks for money and the sticker says collect 0",
-      "verdict": "FAIL",
-      "detail": "scenario 5 stopped before this check (see its row)"
+      "verdict": "SKIP",
+      "detail": "its scenario (5) was skipped: bKash is not offered at the checkout (Payments › mobile wallets)"
     },
     {
       "id": "4",
@@ -991,31 +985,31 @@
   ],
   "addressRows": [
     {
-      "number": "1077",
+      "number": "1144",
       "addressId": "dhk-dhanmondi",
       "quirk": "",
       "phoneFormat": "bengali",
       "stages": {
         "stored": {
           "name": "GATE TEST Karim",
-          "phone": "+8801400003489",
+          "phone": "+8801400009459",
           "address": "House 12, Road 7, Dhanmondi, Dhaka 1209"
         },
         "admin": {
           "name": "GATE TEST Karim",
-          "phone": "+8801400003489",
+          "phone": "+8801400009459",
           "address": "House 12, Road 7, Dhanmondi, Dhaka 1209"
         },
         "courier": {
           "name": "GATE TEST Karim",
-          "phone": "01400003489",
+          "phone": "01400009459",
           "address": "House 12, Road 7, Dhanmondi, Dhaka 1209",
           "codMinor": 50000,
           "weightGrams": 700
         },
         "sticker": {
           "name": "GATE TEST Karim",
-          "phone": "01400003489",
+          "phone": "01400009459",
           "address": "House 12, Road 7, Dhanmondi, Dhaka 1209",
           "collectMinor": 50000,
           "gift": null,
@@ -1028,31 +1022,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1078",
+      "number": "1145",
       "addressId": "sub-tongi",
       "quirk": "",
       "phoneFormat": "plus880",
       "stages": {
         "stored": {
           "name": "GATE TEST Nasrin",
-          "phone": "+8801500003590",
+          "phone": "+8801500009560",
           "address": "House 2, Station Road, Tongi, Gazipur 1710"
         },
         "admin": {
           "name": "GATE TEST Nasrin",
-          "phone": "+8801500003590",
+          "phone": "+8801500009560",
           "address": "House 2, Station Road, Tongi, Gazipur 1710"
         },
         "courier": {
           "name": "GATE TEST Nasrin",
-          "phone": "01500003590",
+          "phone": "01500009560",
           "address": "House 2, Station Road, Tongi, Gazipur 1710",
           "codMinor": 150000,
           "weightGrams": 2100
         },
         "sticker": {
           "name": "GATE TEST Nasrin",
-          "phone": "01500003590",
+          "phone": "01500009560",
           "address": "House 2, Station Road, Tongi, Gazipur 1710",
           "collectMinor": 150000,
           "gift": null,
@@ -1065,31 +1059,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1079",
+      "number": "1146",
       "addressId": "out-chattogram",
       "quirk": "",
       "phoneFormat": "880",
       "stages": {
         "stored": {
           "name": "GATE TEST Sumon",
-          "phone": "+8801600003691",
+          "phone": "+8801600009661",
           "address": "House 3, Road 1, Panchlaish, Chattogram 4203"
         },
         "admin": {
           "name": "GATE TEST Sumon",
-          "phone": "+8801600003691",
+          "phone": "+8801600009661",
           "address": "House 3, Road 1, Panchlaish, Chattogram 4203"
         },
         "courier": {
           "name": "GATE TEST Sumon",
-          "phone": "01600003691",
+          "phone": "01600009661",
           "address": "House 3, Road 1, Panchlaish, Chattogram 4203",
           "codMinor": 525000,
           "weightGrams": 4100
         },
         "sticker": {
           "name": "GATE TEST Sumon",
-          "phone": "01600003691",
+          "phone": "01600009661",
           "address": "House 3, Road 1, Panchlaish, Chattogram 4203",
           "collectMinor": 525000,
           "gift": null,
@@ -1102,31 +1096,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1080",
+      "number": "1147",
       "addressId": "out-rajshahi",
       "quirk": "",
       "phoneFormat": "spaced",
       "stages": {
         "stored": {
           "name": "GATE TEST Farhana",
-          "phone": "+8801700003792",
+          "phone": "+8801700009762",
           "address": "Shaheb Bazar, Boalia, Rajshahi 6100"
         },
         "admin": {
           "name": "GATE TEST Farhana",
-          "phone": "+8801700003792",
+          "phone": "+8801700009762",
           "address": "Shaheb Bazar, Boalia, Rajshahi 6100"
         },
         "courier": {
           "name": "GATE TEST Farhana",
-          "phone": "01700003792",
+          "phone": "01700009762",
           "address": "Shaheb Bazar, Boalia, Rajshahi 6100",
           "codMinor": 100000,
           "weightGrams": 1400
         },
         "sticker": {
           "name": "GATE TEST Farhana",
-          "phone": "01700003792",
+          "phone": "01700009762",
           "address": "Shaheb Bazar, Boalia, Rajshahi 6100",
           "collectMinor": 100000,
           "gift": null,
@@ -1139,31 +1133,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1081",
+      "number": "1148",
       "addressId": "dhk-mirpur",
       "quirk": "",
       "phoneFormat": "local",
       "stages": {
         "stored": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
         },
         "admin": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
         },
         "courier": {
           "name": "GATE TEST Jamal",
-          "phone": "01800003893",
+          "phone": "01800009863",
           "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka",
           "codMinor": 75000,
           "weightGrams": 400
         },
         "sticker": {
           "name": "GATE TEST Jamal",
-          "phone": "01800003893",
+          "phone": "01800009863",
           "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka",
           "collectMinor": 75000,
           "gift": null,
@@ -1176,19 +1170,19 @@
       "verdict": "PASS"
     },
     {
-      "number": "1082",
+      "number": "1149",
       "addressId": "out-khulna",
       "quirk": "",
       "phoneFormat": "bengali",
       "stages": {
         "stored": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "House 11, Sonadanga, Khulna 9100"
         },
         "admin": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "House 11, Sonadanga, Khulna 9100"
         },
         "courier": null,
@@ -1200,19 +1194,19 @@
       "verdict": "PASS"
     },
     {
-      "number": "1083",
+      "number": "1150",
       "addressId": "sub-fatullah",
       "quirk": "",
       "phoneFormat": "plus880",
       "stages": {
         "stored": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "Fatullah Bazar, Fatullah, Narayanganj 1420"
         },
         "admin": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "Fatullah Bazar, Fatullah, Narayanganj 1420"
         },
         "courier": null,
@@ -1224,19 +1218,19 @@
       "verdict": "PASS"
     },
     {
-      "number": "1084",
+      "number": "1151",
       "addressId": "out-barishal",
       "quirk": "",
       "phoneFormat": "880",
       "stages": {
         "stored": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "Sadar Road, Barishal Kotwali, Barishal"
         },
         "admin": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "Sadar Road, Barishal Kotwali, Barishal"
         },
         "courier": null,
@@ -1248,19 +1242,19 @@
       "verdict": "PASS"
     },
     {
-      "number": "1085",
+      "number": "1152",
       "addressId": "out-sylhet",
       "quirk": "",
       "phoneFormat": "spaced",
       "stages": {
         "stored": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "House 4, Jalalabad, Sylhet 3100"
         },
         "admin": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "House 4, Jalalabad, Sylhet 3100"
         },
         "courier": null,
@@ -1272,19 +1266,19 @@
       "verdict": "PASS"
     },
     {
-      "number": "1086",
+      "number": "1153",
       "addressId": "out-rangpur",
       "quirk": "",
       "phoneFormat": "local",
       "stages": {
         "stored": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "Jahaj Company More, Rangpur Kotwali, Rangpur"
         },
         "admin": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "Jahaj Company More, Rangpur Kotwali, Rangpur"
         },
         "courier": null,
@@ -1296,19 +1290,19 @@
       "verdict": "PASS"
     },
     {
-      "number": "1087",
+      "number": "1154",
       "addressId": "dhk-gulshan",
       "quirk": "",
       "phoneFormat": "bengali",
       "stages": {
         "stored": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "House 5, Road 90, Gulshan 2, Dhaka 1212"
         },
         "admin": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "House 5, Road 90, Gulshan 2, Dhaka 1212"
         },
         "courier": null,
@@ -1320,19 +1314,19 @@
       "verdict": "PASS"
     },
     {
-      "number": "1088",
+      "number": "1155",
       "addressId": "out-mymensingh",
       "quirk": "",
       "phoneFormat": "plus880",
       "stages": {
         "stored": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "Ganginarpar, Mymensingh Kotwali, Mymensingh 2200"
         },
         "admin": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801800003893",
+          "phone": "+8801800009863",
           "address": "Ganginarpar, Mymensingh Kotwali, Mymensingh 2200"
         },
         "courier": null,
@@ -1344,31 +1338,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1089",
+      "number": "1156",
       "addressId": "out-bogura-bn",
       "quirk": "bengali",
       "phoneFormat": "bengali",
       "stages": {
         "stored": {
           "name": "গেট টেস্ট সুমন",
-          "phone": "+8801900003994",
+          "phone": "+8801900009964",
           "address": "গাবতলী বাজার, গাবতলী, বগুড়া"
         },
         "admin": {
           "name": "গেট টেস্ট সুমন",
-          "phone": "+8801900003994",
+          "phone": "+8801900009964",
           "address": "গাবতলী বাজার, গাবতলী, বগুড়া"
         },
         "courier": {
           "name": "গেট টেস্ট সুমন",
-          "phone": "01900003994",
+          "phone": "01900009964",
           "address": "গাবতলী বাজার, গাবতলী, বগুড়া",
           "codMinor": 198000,
           "weightGrams": 1200
         },
         "sticker": {
           "name": "গেট টেস্ট সুমন",
-          "phone": "01900003994",
+          "phone": "01900009964",
           "address": "গাবতলী বাজার, গাবতলী, বগুড়া",
           "collectMinor": 198000,
           "gift": null,
@@ -1381,31 +1375,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1090",
+      "number": "1157",
       "addressId": "out-coxs-bazar",
       "quirk": "",
       "phoneFormat": "spaced",
       "stages": {
         "stored": {
           "name": "GATE TEST Tanvir",
-          "phone": "+8801300004095",
+          "phone": "+8801300000065",
           "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar"
         },
         "admin": {
           "name": "GATE TEST Tanvir",
-          "phone": "+8801300004095",
+          "phone": "+8801300000065",
           "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar"
         },
         "courier": {
           "name": "GATE TEST Tanvir",
-          "phone": "01300004095",
+          "phone": "01300000065",
           "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar",
           "codMinor": 99000,
           "weightGrams": 600
         },
         "sticker": {
           "name": "GATE TEST Tanvir",
-          "phone": "01300004095",
+          "phone": "01300000065",
           "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar",
           "collectMinor": 99000,
           "gift": null,
@@ -1418,31 +1412,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1091",
+      "number": "1158",
       "addressId": "dhk-uttara",
       "quirk": "",
       "phoneFormat": "local",
       "stages": {
         "stored": {
           "name": "GATE TEST Rahim",
-          "phone": "+8801400004196",
+          "phone": "+8801400000166",
           "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230"
         },
         "admin": {
           "name": "GATE TEST Rahim",
-          "phone": "+8801400004196",
+          "phone": "+8801400000166",
           "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230"
         },
         "courier": {
           "name": "GATE TEST Rahim",
-          "phone": "01400004196",
+          "phone": "01400000166",
           "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230",
           "codMinor": 50000,
           "weightGrams": 700
         },
         "sticker": {
           "name": "GATE TEST Rahim",
-          "phone": "01400004196",
+          "phone": "01400000166",
           "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230",
           "collectMinor": 50000,
           "gift": null,
@@ -1455,31 +1449,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1092",
+      "number": "1159",
       "addressId": "out-cumilla",
       "quirk": "",
       "phoneFormat": "bengali",
       "stages": {
         "stored": {
           "name": "GATE TEST Karim",
-          "phone": "+8801500004297",
+          "phone": "+8801500000267",
           "address": "Kandirpar, Cumilla Adarsha Sadar, Cumilla"
         },
         "admin": {
           "name": "GATE TEST Karim",
-          "phone": "+8801500004297",
+          "phone": "+8801500000267",
           "address": "Kandirpar, Cumilla Adarsha Sadar, Cumilla"
         },
         "courier": {
           "name": "GATE TEST Karim",
-          "phone": "01500004297",
+          "phone": "01500000267",
           "address": "Kandirpar, Cumilla Adarsha Sadar, Cumilla",
           "codMinor": 50000,
           "weightGrams": 700
         },
         "sticker": {
           "name": "GATE TEST Karim",
-          "phone": "01500004297",
+          "phone": "01500000267",
           "address": "Kandirpar, Cumilla Adarsha Sadar, Cumilla",
           "collectMinor": 50000,
           "gift": null,
@@ -1492,31 +1486,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1093",
+      "number": "1160",
       "addressId": "dhk-mohammadpur-bn",
       "quirk": "bengali",
       "phoneFormat": "plus880",
       "stages": {
         "stored": {
           "name": "GATE TEST Nasrin",
-          "phone": "+8801600004398",
+          "phone": "+8801600000368",
           "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা"
         },
         "admin": {
           "name": "GATE TEST Nasrin",
-          "phone": "+8801600004398",
+          "phone": "+8801600000368",
           "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা"
         },
         "courier": {
           "name": "GATE TEST Nasrin",
-          "phone": "01600004398",
+          "phone": "01600000368",
           "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা",
           "codMinor": 50000,
           "weightGrams": 700
         },
         "sticker": {
           "name": "GATE TEST Nasrin",
-          "phone": "01600004398",
+          "phone": "01600000368",
           "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা",
           "collectMinor": 50000,
           "gift": null,
@@ -1529,19 +1523,19 @@
       "verdict": "PASS"
     },
     {
-      "number": "1094",
+      "number": "1161",
       "addressId": "out-jashore",
       "quirk": "",
       "phoneFormat": "880",
       "stages": {
         "stored": {
           "name": "GATE TEST Nasrin",
-          "phone": "+8801600004398",
+          "phone": "+8801600000368",
           "address": "Doratana More, Jashore Sadar, Jashore"
         },
         "admin": {
           "name": "GATE TEST Nasrin",
-          "phone": "+8801600004398",
+          "phone": "+8801600000368",
           "address": "Doratana More, Jashore Sadar, Jashore"
         },
         "courier": null,
@@ -1553,31 +1547,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1095",
+      "number": "1162",
       "addressId": "dhk-motijheel-mixed",
       "quirk": "mixed",
       "phoneFormat": "spaced",
       "stages": {
         "stored": {
           "name": "GATE TEST Sumon",
-          "phone": "+8801700004499",
+          "phone": "+8801700000469",
           "address": "৪৫ নম্বর বিল্ডিং, Motijheel C/A, ঢাকা"
         },
         "admin": {
           "name": "GATE TEST Sumon",
-          "phone": "+8801700004499",
+          "phone": "+8801700000469",
           "address": "৪৫ নম্বর বিল্ডিং, Motijheel C/A, ঢাকা"
         },
         "courier": {
           "name": "GATE TEST Sumon",
-          "phone": "01700004499",
+          "phone": "01700000469",
           "address": "৪৫ নম্বর বিল্ডিং, Motijheel C/A, ঢাকা",
           "codMinor": 50000,
           "weightGrams": 700
         },
         "sticker": {
           "name": "GATE TEST Sumon",
-          "phone": "01700004499",
+          "phone": "01700000469",
           "address": "৪৫ নম্বর বিল্ডিং, Motijheel C/A, ঢাকা",
           "collectMinor": 50000,
           "gift": null,
@@ -1590,31 +1584,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1096",
+      "number": "1163",
       "addressId": "sub-savar",
       "quirk": "",
       "phoneFormat": "local",
       "stages": {
         "stored": {
           "name": "GATE TEST Farhana",
-          "phone": "+8801800004600",
+          "phone": "+8801800000570",
           "address": "House 14, Bank Colony, Savar, Dhaka 1340"
         },
         "admin": {
           "name": "GATE TEST Farhana",
-          "phone": "+8801800004600",
+          "phone": "+8801800000570",
           "address": "House 14, Bank Colony, Savar, Dhaka 1340"
         },
         "courier": {
           "name": "GATE TEST Farhana",
-          "phone": "01800004600",
+          "phone": "01800000570",
           "address": "House 14, Bank Colony, Savar, Dhaka 1340",
           "codMinor": 50000,
           "weightGrams": 700
         },
         "sticker": {
           "name": "GATE TEST Farhana",
-          "phone": "01800004600",
+          "phone": "01800000570",
           "address": "House 14, Bank Colony, Savar, Dhaka 1340",
           "collectMinor": 50000,
           "gift": null,
@@ -1627,31 +1621,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1097",
+      "number": "1164",
       "addressId": "out-kushtia",
       "quirk": "",
       "phoneFormat": "bengali",
       "stages": {
         "stored": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801900004701",
+          "phone": "+8801900000671",
           "address": "NS Road, Kushtia Sadar, Kushtia"
         },
         "admin": {
           "name": "GATE TEST Jamal",
-          "phone": "+8801900004701",
+          "phone": "+8801900000671",
           "address": "NS Road, Kushtia Sadar, Kushtia"
         },
         "courier": {
           "name": "GATE TEST Jamal",
-          "phone": "01900004701",
+          "phone": "01900000671",
           "address": "NS Road, Kushtia Sadar, Kushtia",
           "codMinor": 50000,
           "weightGrams": 700
         },
         "sticker": {
           "name": "GATE TEST Jamal",
-          "phone": "01900004701",
+          "phone": "01900000671",
           "address": "NS Road, Kushtia Sadar, Kushtia",
           "collectMinor": 50000,
           "gift": null,
@@ -1664,31 +1658,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1098",
+      "number": "1165",
       "addressId": "dhk-banani-long",
       "quirk": "long",
       "phoneFormat": "plus880",
       "stages": {
         "stored": {
           "name": "GATE TEST Ruma",
-          "phone": "+8801300004802",
+          "phone": "+8801300000772",
           "address": "House 48, 3rd floor (opposite the green gate, beside the pharmacy, ask the guard for the GATE TEST parcel), Road 11, Block F, Banani, Dhaka 1213"
         },
         "admin": {
           "name": "GATE TEST Ruma",
-          "phone": "+8801300004802",
+          "phone": "+8801300000772",
           "address": "House 48, 3rd floor (opposite the green gate, beside the pharmacy, ask the guard for the GATE TEST parcel), Road 11, Block F, Banani, Dhaka 1213"
         },
         "courier": {
           "name": "GATE TEST Ruma",
-          "phone": "01300004802",
+          "phone": "01300000772",
           "address": "House 48, 3rd floor (opposite the green gate, beside the pharmacy, ask the guard for the GATE TEST parcel), Road 11, Block F, Banani, Dhaka 1213",
           "codMinor": 150000,
           "weightGrams": 800
         },
         "sticker": {
           "name": "GATE TEST Ruma",
-          "phone": "01300004802",
+          "phone": "01300000772",
           "address": "House 48, 3rd floor (opposite the green gate, beside the pharmacy, ask the guard for the GATE TEST parcel), Road 11, Block F, Banani, Dhaka 1213",
           "collectMinor": 150000,
           "gift": null,
@@ -1701,32 +1695,32 @@
       "verdict": "PASS"
     },
     {
-      "number": "1099",
-      "addressId": "dhk-badda",
-      "quirk": "",
-      "phoneFormat": "spaced",
+      "number": "1166",
+      "addressId": "dhk-khilgaon-pasted",
+      "quirk": "pasted",
+      "phoneFormat": "880",
       "stages": {
         "stored": {
-          "name": "GATE TEST Rahim",
-          "phone": "+8801500005004",
-          "address": "House 7, Link Road, Badda, Dhaka 1212"
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801400000873",
+          "address": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219"
         },
         "admin": {
-          "name": "GATE TEST Rahim",
-          "phone": "+8801500005004",
-          "address": "House 7, Link Road, Badda, Dhaka 1212"
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801400000873",
+          "address": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219"
         },
         "courier": {
-          "name": "GATE TEST Rahim",
-          "phone": "01500005004",
-          "address": "House 7, Link Road, Badda, Dhaka 1212",
+          "name": "GATE TEST Tanvir",
+          "phone": "01400000873",
+          "address": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219",
           "codMinor": 75000,
           "weightGrams": 400
         },
         "sticker": {
-          "name": "GATE TEST Rahim",
-          "phone": "01500005004",
-          "address": "House 7, Link Road, Badda, Dhaka 1212",
+          "name": "GATE TEST Tanvir",
+          "phone": "01400000873",
+          "address": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219",
           "collectMinor": 75000,
           "gift": null,
           "practice": true
@@ -1738,31 +1732,31 @@
       "verdict": "PASS"
     },
     {
-      "number": "1100",
+      "number": "1167",
       "addressId": "out-patuakhali-mixed",
       "quirk": "mixed",
       "phoneFormat": "local",
       "stages": {
         "stored": {
           "name": "GATE TEST Karim",
-          "phone": "+8801600005105",
+          "phone": "+8801600001075",
           "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী"
         },
         "admin": {
           "name": "GATE TEST Karim",
-          "phone": "+8801600005105",
+          "phone": "+8801600001075",
           "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী"
         },
         "courier": {
           "name": "GATE TEST Karim",
-          "phone": "01600005105",
+          "phone": "01600001075",
           "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী",
           "codMinor": 150000,
           "weightGrams": 2100
         },
         "sticker": {
           "name": "GATE TEST Karim",
-          "phone": "01600005105",
+          "phone": "01600001075",
           "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী",
           "collectMinor": 150000,
           "gift": null,
@@ -1781,11 +1775,11 @@
       "cls": "phone",
       "orders": 1,
       "steps": {
-        "firstLoad": 11052,
-        "productPage": 11913,
-        "addToBag": 2097,
-        "checkoutOpen": 12582,
-        "submit": 14150
+        "firstLoad": 11123,
+        "productPage": 12002,
+        "addToBag": 2094,
+        "checkoutOpen": 12634,
+        "submit": 14219
       }
     },
     {
@@ -1793,11 +1787,11 @@
       "cls": "phone",
       "orders": 3,
       "steps": {
-        "firstLoad": 3163,
-        "productPage": 3376,
-        "addToBag": 650,
-        "checkoutOpen": 3613,
-        "submit": 4247
+        "firstLoad": 3215,
+        "productPage": 3388,
+        "addToBag": 642,
+        "checkoutOpen": 3642,
+        "submit": 4259
       }
     },
     {
@@ -1805,11 +1799,11 @@
       "cls": "desktop",
       "orders": 1,
       "steps": {
-        "firstLoad": 818,
-        "productPage": 971,
-        "addToBag": 249,
-        "checkoutOpen": 1112,
-        "submit": 1439
+        "firstLoad": 943,
+        "productPage": 768,
+        "addToBag": 223,
+        "checkoutOpen": 1052,
+        "submit": 1272
       }
     },
     {
@@ -1817,11 +1811,11 @@
       "cls": "phone",
       "orders": 6,
       "steps": {
-        "firstLoad": 787,
-        "productPage": 792,
-        "addToBag": 228,
+        "firstLoad": 782,
+        "productPage": 805,
+        "addToBag": 226,
         "checkoutOpen": 1153,
-        "submit": 1370
+        "submit": 1310
       }
     },
     {
@@ -1829,11 +1823,11 @@
       "cls": "desktop",
       "orders": 1,
       "steps": {
-        "firstLoad": 347,
-        "productPage": 316,
-        "addToBag": 117,
-        "checkoutOpen": 765,
-        "submit": 1449
+        "firstLoad": 749,
+        "productPage": 331,
+        "addToBag": 104,
+        "checkoutOpen": 373,
+        "submit": 739
       }
     },
     {
@@ -1841,22 +1835,22 @@
       "cls": "phone",
       "orders": 1,
       "steps": {
-        "firstLoad": 965,
-        "productPage": 351,
-        "addToBag": 139,
-        "checkoutOpen": 359,
-        "submit": 742
+        "firstLoad": 318,
+        "productPage": 824,
+        "addToBag": 235,
+        "checkoutOpen": 558,
+        "submit": 1068
       }
     }
   ],
   "cleanup": {
     "ok": true,
-    "orders": 100,
+    "orders": 167,
     "cancelled": 21,
-    "alreadyClosed": 79,
+    "alreadyClosed": 146,
     "failed": [],
     "refundRequests": 10,
-    "tagged": "87 of 100 test orders carry an internal \"GATE TEST\" note (the order flags take only the owner's own list)",
+    "tagged": "153 of 167 test orders carry an internal \"GATE TEST\" note (the order flags take only the owner's own list)",
     "productsArchived": 3,
     "extrasArchived": 10,
     "courierArchived": true,
@@ -1867,7 +1861,7 @@
       "notes": [],
       "runs": [
         {
-          "run": "20261106092524",
+          "run": "20261106161334",
           "cod": "not touched"
         }
       ]

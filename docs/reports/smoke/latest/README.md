@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-06 21:26 (Asia/Dhaka)
+# Smoke test · 2026-11-06 21:59 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (480টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `4689df67c695` · after deploy · result **PASS** (480 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `4689df67c695` · acceptance · result **PASS** (480 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -239,11 +239,11 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · after deploy · resul
 | `/admin/website/blog/comments` | phone | 200 | `/admin/website/blog/comments` | ok | — |
 | `/admin/website/blog/shared` | phone | 200 | `/admin/website/blog/shared` | ok | — |
 | `/admin/website/blog/sold` | phone | 200 | `/admin/website/blog/sold` | ok | — |
-| `/admin/orders/01a1b032-d25d-70a0-b458-65294d975ba5` | phone | 200 | `/admin/orders/01a1b032-d25d-70a0-b458-65294d975ba5` | ok | — |
-| `/admin/customers/01a1b032-d25a-7191-8fbd-45590858cc74` | phone | 200 | `/admin/customers/01a1b032-d25a-7191-8fbd-45590858cc74` | ok | — |
+| `/admin/orders/01a1b195-4930-7f13-83ae-87c4ca79862b` | phone | 200 | `/admin/orders/01a1b195-4930-7f13-83ae-87c4ca79862b` | ok | — |
+| `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | phone | 200 | `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | ok | — |
 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | phone | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
-| `/admin/reports/health/history/01a1b087-679d-75b3-bf8d-46e4f8ad56c3` | phone | 200 | `/admin/reports/health/history/01a1b087-679d-75b3-bf8d-46e4f8ad56c3` | ok | — |
-| `/admin/customers/01a1b032-d25a-7191-8fbd-45590858cc74?tab=wallet` | phone | 200 | `/admin/customers/01a1b032-d25a-7191-8fbd-45590858cc74` | ok | — |
+| `/admin/reports/health/history/01a1b189-0365-7b73-81c3-7bfd39c87c86` | phone | 200 | `/admin/reports/health/history/01a1b189-0365-7b73-81c3-7bfd39c87c86` | ok | — |
+| `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df?tab=wallet` | phone | 200 | `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -479,11 +479,11 @@ Site: https://new.extas.com.bd · commit `4689df67c695` · after deploy · resul
 | `/admin/website/blog/comments` | desktop | 200 | `/admin/website/blog/comments` | ok | — |
 | `/admin/website/blog/shared` | desktop | 200 | `/admin/website/blog/shared` | ok | — |
 | `/admin/website/blog/sold` | desktop | 200 | `/admin/website/blog/sold` | ok | — |
-| `/admin/orders/01a1b032-d25d-70a0-b458-65294d975ba5` | desktop | 200 | `/admin/orders/01a1b032-d25d-70a0-b458-65294d975ba5` | ok | — |
-| `/admin/customers/01a1b032-d25a-7191-8fbd-45590858cc74` | desktop | 200 | `/admin/customers/01a1b032-d25a-7191-8fbd-45590858cc74` | ok | — |
+| `/admin/orders/01a1b195-4930-7f13-83ae-87c4ca79862b` | desktop | 200 | `/admin/orders/01a1b195-4930-7f13-83ae-87c4ca79862b` | ok | — |
+| `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | desktop | 200 | `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | ok | — |
 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | desktop | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
-| `/admin/reports/health/history/01a1b087-679d-75b3-bf8d-46e4f8ad56c3` | desktop | 200 | `/admin/reports/health/history/01a1b087-679d-75b3-bf8d-46e4f8ad56c3` | ok | — |
-| `/admin/customers/01a1b032-d25a-7191-8fbd-45590858cc74?tab=wallet` | desktop | 200 | `/admin/customers/01a1b032-d25a-7191-8fbd-45590858cc74` | ok | — |
+| `/admin/reports/health/history/01a1b189-0365-7b73-81c3-7bfd39c87c86` | desktop | 200 | `/admin/reports/health/history/01a1b189-0365-7b73-81c3-7bfd39c87c86` | ok | — |
+| `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df?tab=wallet` | desktop | 200 | `/admin/customers/01a1b195-492b-7ec1-af15-9e09c90d51df` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
