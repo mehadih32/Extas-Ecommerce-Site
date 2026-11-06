@@ -6,12 +6,13 @@ import { registry } from '../src/registry';
 import { conversionFeedSchema, conversionFeedSettings, heldFlags } from '../src/registry-conversion-feed';
 import { ALL_TRACKING_EVENTS, FEED_TRACKING_EVENTS } from '../src/registry-tracking';
 
-describe('ads.conversionFeed (v232, v261)', () => {
+describe('ads.conversionFeed (v232, v261, v262)', () => {
   const spec = conversionFeedSettings['ads.conversionFeed'];
-  it('is in the registry at version 261 (PR 532 follow-up 661), store-level, off, Facebook generous, labelled in English and Bengali', () => {
+  it('is in the registry at version 262 (PR 532 follow-up 664), store-level, off, Facebook generous, labelled in English and Bengali', () => {
     expect(registry['ads.conversionFeed']).toBe(spec);
-    expect(spec.version).toBe(261);
+    expect(spec.version).toBe(262);
     expect(spec.default.withdrawOnReturn).toBe(false);
+    expect(spec.default.shareIds).toBe(false);
     expect(spec.isOwnerData).toBe(false);
     expect(spec.default.on).toBe(false);
     expect(spec.default.generous).toEqual({ meta: true, google: false, tiktok: false });
@@ -31,8 +32,9 @@ describe('ads.conversionFeed (v232, v261)', () => {
   });
 
   it('PR 532 follow-up 661: a value saved before v261 reads with the withdrawal off', () => {
-    const { withdrawOnReturn: _w, ...before } = spec.default;
+    const { withdrawOnReturn: _w, shareIds: _s, ...before } = spec.default;
     expect(conversionFeedSchema.parse(before).withdrawOnReturn).toBe(false);
+    expect(conversionFeedSchema.parse(before).shareIds).toBe(false);
     expect(conversionFeedSchema.safeParse({ ...spec.default, withdrawOnReturn: 'yes' }).success).toBe(false);
   });
 

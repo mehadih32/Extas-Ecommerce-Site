@@ -126,6 +126,8 @@ export default async function TrackingPage(props: Props) {
     { kind: 'number', path: 'intentDays', label: s('feed.days'), help: s('feed.daysHelp'), min: 1, max: 30 },
     // PR 532 follow-up (661)
     { kind: 'switch', path: 'withdrawOnReturn', label: s('feed.withdraw'), help: s('feed.withdrawHelp') },
+    // PR 532 follow-up (664)
+    { kind: 'switch', path: 'shareIds', label: s('feed.share'), help: s('feed.shareHelp') },
   ];
 
   return (

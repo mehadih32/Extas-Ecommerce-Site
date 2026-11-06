@@ -181,7 +181,7 @@ export * from './registry-ads-alerts';
 export * from './registry-ads-control';
 // S13 · PR 531 — the campaign builder switch (registry-ads-builder.ts, version 219).
 export * from './registry-ads-builder';
-// S13 · PR 532 — the deep conversion feed (registry-conversion-feed.ts, version 232; follow-up 661 v261).
+// S13 · PR 532 — the deep conversion feed (registry-conversion-feed.ts, version 232; follow-ups 661 v261, 664 v262).
 export * from './registry-conversion-feed';
 // S13 · PR 269 — the AI growth agent's limits (registry-ads-growth.ts, version 175).
 export * from './registry-ads-growth';

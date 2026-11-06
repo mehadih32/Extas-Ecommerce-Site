@@ -169,7 +169,9 @@
       "days": "Days of visits counted for the intent",
       "daysHelp": "The products seen, bag adds and checkouts of the same visitor or customer in these days before the order.",
       "withdraw": "A returned parcel takes the purchase back",
-      "withdrawHelp": "Off: a parcel that came back goes as its own “returned” event everywhere. On: where the platform can take a purchase back (Google Analytics’ refund, the same order number), a returned parcel withdraws the purchase it already counted; Meta and TikTok cannot, so there it stays the returned event. Only what the ad platforms are told changes; no money moves."
+      "withdrawHelp": "Off: a parcel that came back goes as its own “returned” event everywhere. On: where the platform can take a purchase back (Google Analytics’ refund, the same order number), a returned parcel withdraws the purchase it already counted; Meta and TikTok cannot, so there it stays the returned event. Only what the ad platforms are told changes; no money moves.",
+      "share": "Share the event ids with a browser pixel",
+      "shareHelp": "Off: nothing is added to the thank-you page. On: the thank-you page carries one hidden data block (id “extas-event-ids”, no code) listing, for each ticked platform, every event the shop's server will send for that order with its name and id. A pixel you add through a tag manager can fire its event under the same id, so the platform counts the two once. Only the order number and event names; never a name, phone, e-mail or amount."
     }
   }
 }

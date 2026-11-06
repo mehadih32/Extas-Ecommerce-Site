@@ -1,6 +1,7 @@
 // PR 597 follow-up (696) — the hash forwarder's script: in the server's HTML it is a script the browser runs; a copy
 // React makes in the browser is an inert data block, so React 19 never warns "Encountered a script tag while rendering
-// React component". No shop component draws an executable script any other way (JSON-LD is a data block already).
+// React component". No shop component draws an executable script any other way (JSON-LD is a data block already;
+// so is the order's shared event ids block, PR 532 follow-up 664).
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -38,7 +39,8 @@ describe('the hash forwarder drawn the React way (696)', () => {
     walk(join(root, 'app/(shop)'));
     walk(join(root, 'components/shop'));
     const raw = files.filter((p) => /<script\b/.test(readFileSync(p, 'utf8'))).map((p) => p.slice(root.length));
-    expect(raw.sort()).toEqual(['components/shop/HashForwardScript.tsx', 'components/shop/JsonLd.tsx']);
+    expect(raw.sort()).toEqual(['components/shop/HashForwardScript.tsx', 'components/shop/JsonLd.tsx', 'components/shop/SharedEventIds.tsx']);
     expect(readFileSync(join(root, 'components/shop/JsonLd.tsx'), 'utf8')).toMatch(/<script key=\{i\} type="application\/ld\+json"/);
+    expect(readFileSync(join(root, 'components/shop/SharedEventIds.tsx'), 'utf8')).toMatch(/<script type="application\/json"/);
   });
 });
