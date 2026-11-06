@@ -1,7 +1,7 @@
 {
-  "at": "2026-11-06 15:43 (Asia/Dhaka)",
-  "sha": "ce460ee40386",
-  "ok": false,
+  "at": "2026-11-06 21:59 (Asia/Dhaka)",
+  "sha": "4689df67c695",
+  "ok": true,
   "problems": [],
   "goLive": {
     "rows": [
@@ -10,11 +10,11 @@
         "pr": 393,
         "kind": "auto",
         "when": "before",
-        "ok": false,
-        "at": "2026-11-06T14:49:06+06:00",
+        "ok": true,
+        "at": "2026-11-06T21:26:16+06:00",
         "title": "Every page opens (smoke test)",
         "vars": {
-          "pages": 0,
+          "pages": 480,
           "failed": 0
         }
       },
@@ -23,11 +23,11 @@
         "pr": 393,
         "kind": "auto",
         "when": "before",
-        "ok": false,
-        "at": "2026-11-06T15:43:35+06:00",
+        "ok": true,
+        "at": "2026-11-06T21:59:08+06:00",
         "title": "The server's health check is clean",
         "vars": {
-          "problems": 1
+          "problems": 0
         }
       },
       {
@@ -48,7 +48,7 @@
         "kind": "auto",
         "when": "before",
         "ok": true,
-        "at": "2026-11-06T15:43:36+06:00",
+        "at": "2026-11-06T21:01:00+06:00",
         "title": "Every server item of A2.9 in place",
         "vars": {
           "steps": 25,
@@ -63,7 +63,7 @@
         "kind": "auto",
         "when": "before",
         "ok": false,
-        "at": "2026-11-06T15:42:08+06:00",
+        "at": "2026-11-06T20:59:07+06:00",
         "title": "Cloudflare Origin certificate on the server",
         "vars": {
           "names": "—",
@@ -123,11 +123,11 @@
         "pr": 393,
         "kind": "auto",
         "when": "before",
-        "ok": false,
+        "ok": true,
         "at": null,
         "title": "Request limits enforce",
         "vars": {
-          "mode": "observe"
+          "mode": "enforce"
         }
       },
       {
@@ -171,7 +171,8 @@
         "ok": false,
         "at": null,
         "title": "Staging acceptance list walked through",
-        "vars": {}
+        "vars": {},
+        "evidence": null
       },
       {
         "key": "realPhones",
@@ -191,7 +192,11 @@
         "ok": false,
         "at": null,
         "title": "The real-life journey simulation passed on staging",
-        "vars": {}
+        "vars": {},
+        "evidence": {
+          "ok": false,
+          "at": "2026-11-06T21:45:56+06:00"
+        }
       },
       {
         "key": "offServer",
@@ -265,13 +270,10 @@
       }
     ],
     "blockers": [
-      "smoke",
-      "health",
       "originCert",
       "sslStrict",
       "indexing",
       "searchConsole",
-      "rateLimit",
       "staffTwoFactor",
       "runbook",
       "qaGate",
@@ -281,22 +283,20 @@
     ]
   },
   "redirects": {
-    "rows": 0,
+    "rows": 45,
     "live": false,
     "expected": 49,
-    "checked": 0,
-    "problems": [
-      "no WordPress row yet: load the old shop's addresses (Website › SEO › Redirects › Import, kind WordPress)"
-    ]
+    "checked": 4,
+    "problems": []
   },
   "sitemap": {
     "indexStatus": 200,
     "files": 4,
-    "urls": 3,
+    "urls": 4,
     "hosts": [
       "new.extas.com.bd"
     ],
-    "checked": 3,
+    "checked": 4,
     "problems": []
   },
   "switch": {
