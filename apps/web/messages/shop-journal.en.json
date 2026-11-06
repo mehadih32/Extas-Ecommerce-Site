@@ -29,6 +29,7 @@
     "answer": "Quick answer",
     "tip": "Tip:",
     "note": "Note:",
-    "more": "More in {topic}"
+    "more": "More in {topic}",
+    "related": "Read next"
   }
 }

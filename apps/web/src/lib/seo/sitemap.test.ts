@@ -59,3 +59,19 @@ describe('sitemaps (PR 228)', () => {
     expect(Object.values(capSet(set, 100)).flat()).toHaveLength(4);
   });
 });
+
+describe('PR 249 · journal articles: a twin at its own link, a Bengali-only article alone', () => {
+  it('writes an English article and its Bengali twin at the twin`s own link, paired', () => {
+    const xml = urlsetXml(origin, [{ path: '/journal/how-to-wash-a-polo', bn: true, bnPath: '/journal/polo-dhowa' }], 'en', true);
+    expect(xml.match(/<loc>[^<]*<\/loc>/g)).toEqual(['<loc>https://shop.example.test/journal/how-to-wash-a-polo</loc>', '<loc>https://shop.example.test/bn/journal/polo-dhowa</loc>']);
+    expect(xml).toContain('hreflang="bn" href="https://shop.example.test/bn/journal/polo-dhowa"');
+  });
+  it('writes a Bengali-only article under /bn alone, with no pair; it counts as one address', () => {
+    const only: SitemapEntry = { path: '/journal/panjabi-bachai', bn: false, only: 'bn' };
+    const xml = urlsetXml(origin, [only], 'en', true);
+    expect(xml.match(/<loc>[^<]*<\/loc>/g)).toEqual(['<loc>https://shop.example.test/bn/journal/panjabi-bachai</loc>']);
+    expect(xml).not.toContain('hreflang');
+    expect(filesOf([only, only, only], 3)).toHaveLength(1);
+  });
+});
+

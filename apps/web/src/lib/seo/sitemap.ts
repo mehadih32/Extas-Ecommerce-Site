@@ -22,6 +22,10 @@ export interface SitemapEntry {
   lastmod?: Date | null;
   /** The Bengali twin passed the gate: write both twins with their hreflang pair. */
   bn: boolean;
+  /** PR 249: the Bengali twin's own path when it differs (a journal article's twin has its own link). */
+  bnPath?: string;
+  /** PR 249: the page exists in Bengali only (`path` is written under /bn, alone, with no pair). */
+  only?: 'bn';
 }
 
 export type SitemapSet = Record<SitemapKind, SitemapEntry[]>;
@@ -70,12 +74,12 @@ export function urlsetXml(origin: URL, entries: readonly SitemapEntry[], xDefaul
   const out: string[] = ['<?xml version="1.0" encoding="UTF-8"?>', `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${pairs ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' : ''}>`];
   for (const e of entries) {
     const en = abs(origin, hrefIn('en', e.path));
-    const bn = abs(origin, hrefIn('bn', e.path));
-    const pair = pairs && e.bn
+    const bn = abs(origin, hrefIn('bn', e.bnPath ?? e.path));
+    const pair = pairs && e.bn && !e.only
       ? [`<xhtml:link rel="alternate" hreflang="en" href="${xmlEscape(en)}"/>`, `<xhtml:link rel="alternate" hreflang="bn" href="${xmlEscape(bn)}"/>`, ...(xDefault === 'en' ? [`<xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(en)}"/>`] : [])]
       : [];
     const mod = e.lastmod ? `<lastmod>${day(e.lastmod)}</lastmod>` : '';
-    for (const loc of e.bn ? [en, bn] : [en]) out.push(`<url><loc>${xmlEscape(loc)}</loc>${mod}${pair.join('')}</url>`);
+    for (const loc of e.only === 'bn' ? [bn] : e.bn ? [en, bn] : [en]) out.push(`<url><loc>${xmlEscape(loc)}</loc>${mod}${pair.join('')}</url>`);
   }
   out.push('</urlset>');
   return `${out.join('\n')}\n`;

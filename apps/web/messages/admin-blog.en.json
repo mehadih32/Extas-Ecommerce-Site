@@ -61,6 +61,7 @@
       "perPage": "Articles on one page",
       "minMinutes": "Shortest reading time (minutes)",
       "relatedProducts": "Products in an article's product block (0 = none)",
+      "relatedArticles": "\"Read next\" links under an article (0 = none)",
       "wpmEn": "Words a minute, English",
       "wpmBn": "Words a minute, Bengali",
       "reviewByAnother": "Nobody passes the review of his own article",

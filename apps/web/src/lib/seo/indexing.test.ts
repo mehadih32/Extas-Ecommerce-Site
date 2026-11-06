@@ -3,7 +3,7 @@
 // ready twins (with x-default → English); capitals move to lower case except in private addresses.
 import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
-import { languagesOf, lowerCaseTarget, pageIndexable, pageTypeOf, PRIVATE_FAMILIES, robotsOf } from './indexing';
+import { languagesOf, lowerCaseTarget, pageIndexable, pageTypeOf, PRIVATE_FAMILIES, robotsOf, twinLanguagesOf } from './indexing';
 
 const policy = registry['seo.indexing'].default;
 const open = { ...policy, searchEngines: true };
@@ -71,3 +71,27 @@ describe('lowerCaseTarget', () => {
     expect(lowerCaseTarget('/p/%E0%A6%AA')).toBeNull();
   });
 });
+
+describe('PR 249 · the journal`s page kind and its twins at their own links', () => {
+  it('the journal, a topic and an article are the journal`s kind, off as shipped', () => {
+    for (const k of ['journal', 'journal/topic/care', 'journal/how-to-wash-a-polo']) expect(pageTypeOf(k, '/p/'), k).toBe('journal');
+    expect(pageTypeOf('journalist', '/p/')).toBeNull();
+    expect(policy.pages.journal).toBe(false);
+    expect(pageIndexable(policy, 'journal')).toBe(false);
+    expect(pageIndexable({ ...policy, pages: { ...policy.pages, journal: true } }, 'journal')).toBe(true);
+  });
+  it('hreflang names both twins at their own links only when listable, Bengali on and the twin live', () => {
+    const paths = { en: '/journal/how-to-wash-a-polo', bn: '/journal/polo-dhowa' };
+    expect(twinLanguagesOf(paths, { indexable: true, bnOn: true, xDefault: 'en' })).toEqual({
+      en: '/journal/how-to-wash-a-polo',
+      bn: '/bn/journal/polo-dhowa',
+      'x-default': '/journal/how-to-wash-a-polo',
+    });
+    expect(twinLanguagesOf(paths, { indexable: true, bnOn: true, xDefault: 'none' })).toEqual({ en: '/journal/how-to-wash-a-polo', bn: '/bn/journal/polo-dhowa' });
+    expect(twinLanguagesOf({ ...paths, bn: null }, { indexable: true, bnOn: true, xDefault: 'en' })).toBeUndefined();
+    expect(twinLanguagesOf({ ...paths, en: null }, { indexable: true, bnOn: true, xDefault: 'en' })).toBeUndefined();
+    expect(twinLanguagesOf(paths, { indexable: false, bnOn: true, xDefault: 'en' })).toBeUndefined();
+    expect(twinLanguagesOf(paths, { indexable: true, bnOn: false, xDefault: 'en' })).toBeUndefined();
+  });
+});
+

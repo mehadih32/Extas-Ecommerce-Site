@@ -42,3 +42,12 @@
 .shop .jr-body .jn-shop { font-size: 15px; line-height: 1.5; max-width: none; }
 .shop .jr-body .jn-shop h2 { font-size: 15px; line-height: 1.3; margin: 0 0 12px; }
 .shop .jn-more { text-align: center; margin-top: 24px; }
+/* PR 249 — "Read next": links to the articles that belong with this one (each a full 44 px tap row). */
+.shop .jn-related { margin: 28px 0 0; }
+.shop .jn-related .h3 { margin: 0 0 8px; }
+.shop .jn-related ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.shop .jn-related li { border-bottom: 1px solid var(--line); }
+.shop .jn-related a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 10px 0; color: inherit; text-decoration: none; }
+.shop .jn-related a:hover .jn-rel-t, .shop .jn-related a:focus-visible .jn-rel-t { text-decoration: underline; }
+.shop .jn-related .jn-rel-m { flex: none; }
+

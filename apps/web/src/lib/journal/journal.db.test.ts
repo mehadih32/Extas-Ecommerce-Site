@@ -3,7 +3,8 @@
 // refused, another store's product refused), the three review passes with their history, the writer refused on his own
 // article while `reviewByAnother` is on, a writer without `blog.publish` refused publishing, an edit under review sent
 // back to writing, scheduling and the shop's read (live once its time comes, only its language), take down and put
-// away; signed out 401. Every value is made up.
+// away; signed out 401. PR 249: an article's live twin either way, "Read next" (its plan first, then its topic, never
+// itself, another language or a post not live) and the sitemap's live articles. Every value is made up.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, createRole, defaultSecurityPolicy, syncAuth, SYSTEM, type Actor } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -12,7 +13,7 @@ import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncS
 import { createVault } from '@extas/vault';
 import type { AdminDeps } from '../admin-auth';
 import { loginHandler } from '../admin-api';
-import { journalAction, journalHandler, liveJournal, livePost, saveJournalPost, shelfHandler } from './journal';
+import { journalAction, journalHandler, liveJournal, livePost, liveRelated, liveSitemapPosts, liveTwinSlug, saveJournalPost, shelfHandler } from './journal';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -177,6 +178,39 @@ describe.skipIf(!HAS_TEST_DB)('Website › Blog & journal on PostgreSQL (PR 239)
     expect(list.list.counts.writing).toBe(3);
     expect(list.choices.products.map((p: any) => p.id)).toEqual([productId]);
     expect(await t.prisma.auditLog.count({ where: { action: { startsWith: 'blog.' } } })).toBeGreaterThan(10);
+  });
+
+  it('PR 249: the live twin either way, "Read next" (plan first, then topic, newest first) and the sitemap`s articles', async () => {
+    const at = (h: number) => new Date(Date.UTC(2026, 10, 1, h));
+    const plan = '0190f000-0000-7000-8000-000000000249';
+    const mk = (slug: string, locale: 'en' | 'bn', o: { h: number; clusterId?: string | null; categoryId?: string | null; status?: 'PUBLISHED' | 'DRAFT'; twinPostId?: string }) =>
+      t.prisma.blogPost.create({
+        data: { storeId: S, slug, locale, title: slug, body: 'Words.', status: o.status ?? 'PUBLISHED', publishedAt: at(o.h), clusterId: o.clusterId ?? null, categoryId: o.categoryId ?? null, twinPostId: o.twinPostId ?? null },
+        select: { id: true },
+      });
+    const pillar = await mk('seo-pillar', 'en', { h: 1, clusterId: plan, categoryId: careId });
+    const sib = await mk('seo-sibling', 'en', { h: 2, clusterId: plan });
+    await mk('seo-sibling-draft', 'en', { h: 5, clusterId: plan, status: 'DRAFT' });
+    const topicNew = await mk('seo-topic-new', 'en', { h: 4, categoryId: careId });
+    const topicOld = await mk('seo-topic-old', 'en', { h: 3, categoryId: careId });
+    const twin = await mk('seo-pillar-bn', 'bn', { h: 2, clusterId: plan, categoryId: careId, twinPostId: pillar.id });
+    await mk('seo-bn-alone', 'bn', { h: 3 });
+    const now = new Date('2026-11-06T09:00:00Z');
+    const p = (await livePost(t.prisma, S, 'en', 'seo-pillar', now))!;
+    expect(p).toMatchObject({ clusterId: plan, categoryId: careId, twinPostId: null });
+    expect(await liveTwinSlug(t.prisma, S, p, now)).toBe('seo-pillar-bn');
+    const b = (await livePost(t.prisma, S, 'bn', 'seo-pillar-bn', now))!;
+    expect(await liveTwinSlug(t.prisma, S, b, now)).toBe('seo-pillar');
+    expect(await liveTwinSlug(t.prisma, S, (await livePost(t.prisma, S, 'bn', 'seo-bn-alone', now))!, now)).toBeNull();
+    expect((await liveRelated(t.prisma, S, p, 3, now)).map((x) => x.id)).toEqual([sib.id, topicNew.id, topicOld.id]);
+    expect((await liveRelated(t.prisma, S, p, 2, now)).map((x) => x.id)).toEqual([sib.id, topicNew.id]);
+    expect(await liveRelated(t.prisma, S, p, 0, now)).toEqual([]);
+    expect((await liveRelated(t.prisma, S, b, 3, now)).map((x) => x.id)).toEqual([]);
+    expect((await liveRelated(t.prisma, S + 1, p, 3, now)).length).toBe(0);
+    const map = await liveSitemapPosts(t.prisma, S, 100, now);
+    expect(map.en.map((x) => x.slug)).toEqual(expect.arrayContaining(['seo-pillar', 'seo-sibling', 'seo-topic-new', 'seo-topic-old']));
+    expect(map.en.map((x) => x.slug)).not.toContain('seo-sibling-draft');
+    expect(map.bn.find((x) => x.id === twin.id)?.twinPostId).toBe(pillar.id);
   });
 
   it('switches the journal on only for a publisher, at its version; refuses a signed-out caller', async () => {

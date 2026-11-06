@@ -170,6 +170,8 @@ export default async function BlogBoardPage(props: Props) {
             { kind: 'switch', path: 'on', label: s('card.on') },
             { kind: 'number', path: 'perPage', label: s('card.perPage'), min: 6, max: 48 },
             { kind: 'number', path: 'relatedProducts', label: s('card.relatedProducts'), min: 0, max: 8 },
+            // PR 249: "Read next" links under an article (0 as shipped)
+            { kind: 'number', path: 'relatedArticles', label: s('card.relatedArticles'), min: 0, max: 6 },
             { kind: 'number', path: 'minMinutes', label: s('card.minMinutes'), min: 1, max: 10 },
             { kind: 'number', path: 'wordsPerMinuteEn', label: s('card.wpmEn'), min: 60, max: 400 },
             { kind: 'number', path: 'wordsPerMinuteBn', label: s('card.wpmBn'), min: 60, max: 400 },

@@ -2,6 +2,8 @@
 // (featured first, then the newest; topic chips; pages) and one article (topic, title, the one-line answer, the honest
 // byline with the reading time and dates, the contents for a long article, the words drawn by ArticleBody and the
 // product block of live product cards (fitted like the category page's, CardFits) — where the writer put `[products]`, else under the words).
+// S12 · PR 249: "Read next" under the article — links to the live articles of its plan, then its topic (internal links;
+// `blog.journal.relatedArticles`, none while 0).
 import { ArticleBody } from '@/components/journal/ArticleBody';
 import { CardFits } from '@/components/shop/CardFits';
 import { ProductCard } from '@/components/shop/ProductCard';
@@ -131,7 +133,7 @@ export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: numbe
   );
 }
 
-export function JournalArticle(p: { c: ShopContext; post: LivePost; cards: ShopCard[]; aiNote: { en: string; bn: string } }) {
+export function JournalArticle(p: { c: ShopContext; post: LivePost; cards: ShopCard[]; aiNote: { en: string; bn: string }; related?: LivePost[] }) {
   const { c, post } = p;
   const t = c.t;
   const parts = contents(blocks(post.body));
@@ -176,6 +178,23 @@ export function JournalArticle(p: { c: ShopContext; post: LivePost; cards: ShopC
         <ArticleBody body={post.body} products={shop} boxWords={{ tip: t('journal.tip'), note: t('journal.note') }} />
       </article>
       {!hasSlot ? shop : null}
+      {p.related?.length ? (
+        <section className="jn-related" aria-labelledby="jn-rel-h" data-testid="jn-related">
+          <h2 className="h3" id="jn-rel-h">
+            {t('journal.related')}
+          </h2>
+          <ul>
+            {p.related.map((r) => (
+              <li key={r.id}>
+                <a href={hrefIn(c.lang, ROUTES.article(r.slug))}>
+                  <span className="jn-rel-t">{r.title}</span>
+                  <span className="jn-rel-m small text2">{t('journal.readMin', { n: c.num(r.readingMinutes) })}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {post.category ? (
         <p className="jn-more">
           <a className="btn btn-secondary" href={hrefIn(c.lang, ROUTES.journalTopic(post.category.slug))}>

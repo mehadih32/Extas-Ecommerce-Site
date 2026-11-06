@@ -10,7 +10,8 @@ describe('SEO settings (v64)', () => {
   it('every key is in the registry at version 64, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(seoSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(64);
+      // PR 249 added the journal's page kind to seo.indexing (v229)
+      expect(spec.version, key).toBe(key === 'seo.indexing' ? 229 : 64);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.group, key).toBe('seo');
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
@@ -56,5 +57,15 @@ describe('SEO settings (v64)', () => {
     expect(d.batchMax).toBeGreaterThan(0);
     expect(seoAiDraftsSchema.safeParse({ ...d, batchMax: 0 }).success).toBe(false);
     expect(seoAiDraftsSchema.safeParse({ ...d, subjects: { ...d.subjects, combo: true } }).success).toBe(false);
+  });
+});
+
+describe('PR 249 · the journal`s page kind (v229)', () => {
+  it('ships off, and a value saved before it existed reads it as off', () => {
+    const spec = seoSettings['seo.indexing'];
+    expect(spec.default.pages.journal).toBe(false);
+    const { journal: _gone, ...pages } = spec.default.pages;
+    expect(spec.schema.parse({ ...spec.default, pages }).pages.journal).toBe(false);
+    expect(spec.schema.parse({ ...spec.default, pages: { ...pages, journal: true } }).pages.journal).toBe(true);
   });
 });

@@ -32,11 +32,11 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V239 = 222;
 const V242 = 223;
 const V244 = 224;
 const V528 = 225;
 const V243 = 226;
+const V249 = 229;
 const V245 = 227;
 
 const wpm = z.int().min(60).max(400);
@@ -55,6 +55,9 @@ export const blogJournalSchema = z
     minMinutes: z.int().min(1).max(10),
     /** Products the article's product block shows at most (0 = no block). */
     relatedProducts: z.int().min(0).max(8),
+    /** S12 · PR 249 (registry v229): "Read next" — other live articles of the same plan (cluster), then the same topic,
+     * linked under an article (0 = none, as shipped; a value saved before it existed reads 0). */
+    relatedArticles: z.int().min(0).max(6).default(0),
     /** A person may not pass the review steps of an article he wrote himself. */
     reviewByAnother: z.boolean(),
     /** The honest line on an AI author's byline and page; empty = the shop's own words. */
@@ -67,7 +70,7 @@ export const journalSettings = {
   'blog.journal': setting({
     scope: 'store',
     schema: blogJournalSchema,
-    default: { on: false, perPage: 12, wordsPerMinuteEn: 200, wordsPerMinuteBn: 150, minMinutes: 2, relatedProducts: 4, reviewByAnother: false, aiNote: { en: '', bn: '' } },
+    default: { on: false, perPage: 12, wordsPerMinuteEn: 200, wordsPerMinuteBn: 150, minMinutes: 2, relatedProducts: 4, relatedArticles: 0, reviewByAnother: false, aiNote: { en: '', bn: '' } },
     valueType: 'JSON',
     group: 'blog',
     labelKey: 'blog.journal.label',
@@ -75,7 +78,8 @@ export const journalSettings = {
     isOwnerData: false,
     isPublic: false,
     sortOrder: 10,
-    version: V239,
+    // PR 239 shipped it at v222; PR 249 added relatedArticles (v229)
+    version: V249,
   }),
 };
 

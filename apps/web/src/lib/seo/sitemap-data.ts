@@ -7,6 +7,9 @@
 // - products: every published product of a shown collection (a sold-out one only while `seo.urlPolicy` keeps sold-out
 //   pages listed);
 // - combos: the owner's featured sets (not drafts) and each colour-pair list on sale.
+// - PR 249 · journal (in pages, while the journal is on and its kind is ticked): the journal, each topic with a live
+//   article, and every live article — an English one with its live Bengali twin at the twin's own link, a Bengali one
+//   without an English twin alone under /bn (a Bengali article is written in Bengali and passed its review steps).
 // A page's Bengali twin is named only once it passed the translation gate (`language.bengali.readyPages`, PR 588).
 // The whole set is kept `seo.sitemaps.cacheMinutes` in this process (a new product shows within that time, or at once
 // after "Make the sitemaps now" in the admin) and never holds more than `seo.sitemaps.maxUrls` addresses.
@@ -23,6 +26,7 @@ import { productPath } from '../shop/home-model';
 import { ROUTES } from '../shop/routes';
 import { settingsTimeoutMs, withTimeout } from '../settings';
 import { filterPagePath } from './filter-pages';
+import { liveSitemapPosts } from '../journal/journal';
 import { capSet, type SitemapSet } from './sitemap';
 
 const KEYS = [
@@ -38,6 +42,8 @@ const KEYS = [
   'language.bengali.enabled',
   'language.bengali.readyPages',
   'naming.productPathPrefix',
+  // PR 249: the journal's switch
+  'blog.journal',
 ] as const;
 
 export type SitemapSettings = Awaited<ReturnType<typeof sitemapSettings>>;
@@ -68,6 +74,28 @@ export async function collectSitemap(storeId: number, set: SitemapSettings): Pro
   if (on.setBuilder && deps) {
     const b = await withTimeout(setBuilder(deps, { storeId, cartId: null, preview: false }), timeout).catch(() => null);
     if (b?.groups.length) add('pages', ROUTES.buildSet, ROUTES.buildSet.slice(1));
+  }
+
+  // ---- PR 249 · the journal ----
+  if (on.journal && set['blog.journal'].on) {
+    const bnOn = set['language.bengali.enabled'];
+    const posts = await withTimeout(liveSitemapPosts(db, storeId, set['seo.sitemaps'].maxUrls), timeout);
+    add('pages', ROUTES.journal, ROUTES.journal.slice(1));
+    const live = await db.blogPost.findMany({
+      where: { storeId, archivedAt: null, id: { in: [...posts.en, ...posts.bn].map((p) => p.id) }, category: { archivedAt: null } },
+      select: { category: { select: { slug: true } } },
+      distinct: ['categoryId'],
+    });
+    for (const t of live) if (t.category) add('pages', ROUTES.journalTopic(t.category.slug), `journal/topic/${t.category.slug}`);
+    const bnById = new Map(posts.bn.map((p) => [p.id, p]));
+    const paired = new Set<string>();
+    for (const p of posts.en) {
+      const twin = (p.twinPostId ? bnById.get(p.twinPostId) : undefined) ?? posts.bn.find((b) => b.twinPostId === p.id);
+      if (twin && bnOn) paired.add(twin.id);
+      const when = p.contentUpdatedAt ?? p.publishedAt ?? p.scheduledAt;
+      out.pages.push({ path: ROUTES.article(p.slug), lastmod: when, bn: Boolean(twin && bnOn), ...(twin && bnOn ? { bnPath: ROUTES.article(twin.slug) } : {}) });
+    }
+    if (bnOn) for (const b of posts.bn) if (!paired.has(b.id)) out.pages.push({ path: ROUTES.article(b.slug), lastmod: b.contentUpdatedAt ?? b.publishedAt ?? b.scheduledAt, bn: false, only: 'bn' });
   }
 
   // ---- collections (and the named filter pages) ----
