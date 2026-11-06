@@ -1,21 +1,19 @@
 {
-  "at": "2026-11-06 06:21 (Asia/Dhaka)",
+  "at": "2026-11-06 15:40 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "b5bbe1ad07ce",
+  "sha": "ce460ee40386",
   "kind": "run now",
   "group": "go-live-gate",
-  "ok": false,
+  "ok": true,
   "ui": {
     "kinds": [],
     "issues": 0
   },
   "journeys": 4,
-  "failed": 1,
+  "failed": 0,
   "steps": 60,
-  "skipped": 3,
-  "problems": [
-    "gate-shop (desktop) step 11 follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034: .size-pill is not on the page"
-  ],
+  "skipped": 4,
+  "problems": [],
   "rows": [
     {
       "journey": "gate-shop",
@@ -115,7 +113,7 @@
     {
       "journey": "gate-shop",
       "screen": "desktop",
-      "ok": false,
+      "ok": true,
       "steps": [
         {
           "n": 1,
@@ -200,12 +198,10 @@
         {
           "n": 11,
           "what": "follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034",
-          "ok": false,
-          "skipped": null,
-          "problems": [
-            ".size-pill is not on the page"
-          ],
-          "screenshot": "gate-shop-desktop-11.jpg"
+          "ok": true,
+          "skipped": "nothing matches a.pcard-lnk (the shop has none yet)",
+          "problems": [],
+          "screenshot": null
         }
       ]
     },

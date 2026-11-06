@@ -1,8 +1,8 @@
-# Journeys — FAIL
+# Journeys — PASS
 
-2026-11-06 06:21 (Asia/Dhaka) · https://new.extas.com.bd · run now · b5bbe1ad07ce · group go-live-gate
+2026-11-06 15:40 (Asia/Dhaka) · https://new.extas.com.bd · run now · ce460ee40386 · group go-live-gate
 
-4 journeys (journey × screen), 1 failed; 60 steps, 3 skipped.
+4 journeys (journey × screen), 0 failed; 60 steps, 4 skipped.
 
 UI checks: off.
 
@@ -20,7 +20,7 @@ UI checks: off.
 - ok 10. follow a[href^='/collections/'] · SIM-F-035, SIM-F-046
 - skip 11. follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034 (nothing matches a.pcard-lnk (the shop has none yet))
 
-## gate-shop · desktop — FAIL
+## gate-shop · desktop — pass
 
 - ok 1. open / (unless rules.eid.enabled / delivery.holiday.enabled) · SIM-F-019
 - ok 2. open /bn · SIM-F-025, SIM-F-047
@@ -32,7 +32,7 @@ UI checks: off.
 - ok 8. open /account/login · SIM-F-039
 - ok 9. open / · SIM-F-035, SIM-F-046
 - ok 10. follow a[href^='/collections/'] · SIM-F-035, SIM-F-046
-- **FAIL** 11. follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034 — .size-pill is not on the page ([picture](gate-shop-desktop-11.jpg))
+- skip 11. follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034 (nothing matches a.pcard-lnk (the shop has none yet))
 
 ## gate-admin · phone — pass
 
