@@ -51,7 +51,7 @@ export default async function SeasonalPagesPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="seasonal-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.landing.read" />
       </div>
     );
@@ -83,7 +83,7 @@ export default async function SeasonalPagesPage(props: Props) {
   ];
 
   return (
-    <div className="a2-z" data-testid="seasonal-page">
+    <div className="a2-z" data-testid="seasonal-page" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

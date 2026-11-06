@@ -12,6 +12,7 @@ import { useId, useState, type ReactNode } from 'react';
 import { t, type Dict } from '@/lib/i18n';
 import { LANDING_SECTIONS, sectionsOf, slugify, type LandingSection, type LandingSectionKey, type PageState } from '@/lib/marketing/landing-model';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface BuilderPage {
   id: string | null;
@@ -143,7 +144,7 @@ export function LandingBuilder(p: {
     setBusy(false);
     if (a.status === 201) {
       setTplName('');
-      return setTplSaid({ text: c('t.savedAs', { name: (a.data.template as { name?: string } | undefined)?.name ?? '' }), bad: false });
+      return showToast({ text: c('t.savedAs', { name: (a.data.template as { name?: string } | undefined)?.name ?? '' }), tone: 'ok' });
     }
     setTplSaid({ text: errText(a), bad: true });
   }
@@ -157,7 +158,7 @@ export function LandingBuilder(p: {
     setBusy(false);
     if (a.status === 200 || a.status === 201) {
       setDirty(false);
-      setSaid({ text: c('b.saved'), bad: false });
+      showToast({ text: c('b.saved'), tone: 'ok' });
       const nid = (a.data.page as { id?: string } | undefined)?.id;
       if (!pg.id && nid) return router.replace(`${p.listHref}/${nid}`);
       return router.refresh();
@@ -174,7 +175,7 @@ export function LandingBuilder(p: {
     const a = await call('POST', `${API}/${pg.id}`, { action: s, version: pg.version });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: c(`state.${(a.data.page as { state: PageState }).state}`), bad: false });
+      showToast({ text: c(`state.${(a.data.page as { state: PageState }).state}`), tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errText(a), bad: true });
@@ -185,7 +186,7 @@ export function LandingBuilder(p: {
   async function copy() {
     try {
       await navigator.clipboard.writeText(link);
-      setSaid({ text: c('b.copied'), bad: false });
+      showToast({ text: c('b.copied'), tone: 'ok' });
     } catch {
       setSaid({ text: link, bad: false });
     }
@@ -414,7 +415,7 @@ export function LandingBuilder(p: {
             {c('b.preview')}
           </h2>
           <p className="a2-cs">{c('b.previewSub')}</p>
-          <div className="lp-phone a2-mt12" aria-hidden="true" data-testid="lp-preview">
+          <div className="lp-phone lm-island a2-mt12" aria-hidden="true" data-testid="lp-preview">
             <div className="lp-phs">
               {LANDING_SECTIONS.filter((k) => on[k]).map((k) =>
                 k === 'hero' ? (

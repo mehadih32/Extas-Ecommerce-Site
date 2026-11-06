@@ -11,6 +11,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { BUDGET_KINDS, CAMPAIGN_CHANNELS, CAMPAIGN_OBJECTIVES, OFFER_KINDS, budgetLocked, stepsFor, type CampaignAction, type CampaignChannel, type CampaignCreative, type CampaignOffer, type CampaignState } from '@/lib/marketing/campaign-model';
 import { toMajor, toMinor, type Money } from '../products/model';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface EditorCampaign {
   id: string | null;
@@ -106,7 +107,7 @@ export function CampaignEditor(p: { words: Dict; campaign: EditorCampaign; audie
     setBusy(false);
     if (a.status === 200 || a.status === 201) {
       setDirty(false);
-      setSaid({ text: c('saved'), bad: false });
+      showToast({ text: c('saved'), tone: 'ok' });
       const nid = (a.data.campaign as { id?: string } | undefined)?.id;
       if (!cp.id && nid) return router.replace(`${p.listHref}/${nid}`);
       return router.refresh();
@@ -123,7 +124,7 @@ export function CampaignEditor(p: { words: Dict; campaign: EditorCampaign; audie
     const a = await call('POST', `${API}/${cp.id}`, { action: s, version: cp.version });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: c(`state.${(a.data.campaign as { state: CampaignState }).state}`), bad: false });
+      showToast({ text: c(`state.${(a.data.campaign as { state: CampaignState }).state}`), tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errText(a), bad: true });

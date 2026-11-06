@@ -10,6 +10,7 @@ import { eidBanner, eidBannerLines, eidStatus, formatDay, minorPerMajor, type Ba
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
+import { showToast } from '../lumen/Toast';
 
 export interface EidBandOption {
   key: string;
@@ -106,7 +107,7 @@ export function EidScreen({ d, lang, timeZone, currency, data }: { d: Dict; lang
     setBusy('');
     if (a.status === 200 && a.data.eid) {
       fresh(a.data.eid as EidScreenData);
-      return setSaid({ where: 'dates', text: w('saved'), bad: false });
+      return showToast({ text: w('saved'), tone: 'ok' });
     }
     setSaid({ where: 'dates', text: failText(a), bad: true });
   }
@@ -119,7 +120,7 @@ export function EidScreen({ d, lang, timeZone, currency, data }: { d: Dict; lang
     setAsking(false);
     if (a.status === 200 && a.data.eid) {
       fresh(a.data.eid as EidScreenData);
-      return setSaid({ where: 'switch', text: w(on ? 'switchedOff' : 'switchedOn'), bad: false });
+      return showToast({ text: w(on ? 'switchedOff' : 'switchedOn'), tone: 'ok' });
     }
     setSaid({ where: 'switch', text: failText(a), bad: true });
   }
@@ -133,7 +134,7 @@ export function EidScreen({ d, lang, timeZone, currency, data }: { d: Dict; lang
     setBusy('');
     if (a.status === 200 && a.data.eid) {
       fresh(a.data.eid as EidScreenData);
-      return setSaid({ where: 'pre', text: w('saved'), bad: false });
+      return showToast({ text: w('saved'), tone: 'ok' });
     }
     setSaid({ where: 'pre', text: failText(a), bad: true });
   }

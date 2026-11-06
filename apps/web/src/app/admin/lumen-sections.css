@@ -277,3 +277,16 @@
 /* Delivery (PR 637): zones & charges, couriers, one courier and the delivery settings — the area list, the answer
    lines and the zone buttons at Lumen's 14 px; the settings cards' switch labels too */
 [data-lm-look] [data-lm-ready] :is(.dz-li, .dz-said, .dz-zboth, .dz-zbtn b, .dz-zbtn span, .a2-swl) { font-size: var(--lm-fs-card); }
+
+/* Marketing part 1 (PR 638): campaigns, audiences, ad platforms, tracking, landing pages, referrals, YouTube, outreach,
+   seasonal home, festive cut-offs, the calendar and the report (a2 pages), and Smart Rules, Notices and Eid dates
+   (Smart Rules in the .ad frame). Their own small sizes become Lumen's 14 px; the landing parts' numbers get a round
+   badge big enough for 14 px. The shop's phone preview stays a light island (it shows the shop, which is light). */
+[data-lm-look] [data-lm-ready] :is(.cp-chip, .mc-t, .mc-head .mc-b span, .lp-pn) { font-size: var(--lm-fs-card); }
+[data-lm-look] [data-lm-ready] .lp-pn { width: 28px; height: 28px; }
+[data-lm-look] .ad[data-lm-ready] :is(.rl-tag, .rl-mini .k, .rl-pill, .rl-prev, .rl-hint, .rl-chip, .rl-add) { font-size: var(--lm-fs-card); }
+/* Smart Rules' links and marks drew in the brand colour that goes dark on dark: the accent ink, AA in light and dark */
+[data-lm-look] .ad[data-lm-ready] :is(.rl-add, .rl-link, .rl-nt-cta, .rl-does svg, .rl-place svg) { color: var(--lm-ac-ink); }
+@media (max-width: 759px), (pointer: coarse) {
+  [data-lm-look] .ad[data-lm-ready] .rl-topics .ad-chip { min-height: var(--lm-tap); }
+}

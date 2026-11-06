@@ -4,6 +4,7 @@
 // tracked link. The API checks everything again; nothing here posts to YouTube.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
+import { showToast } from '../lumen/Toast';
 
 const API = '/api/admin/marketing/youtube';
 
@@ -129,7 +130,7 @@ export function YoutubeChannelForm({ texts, w }: { texts: YoutubeFormTexts; w: C
             const r = await post(texts, { action: 'channel.add', link, name });
             setBusy(false);
             if (!r.ok) return setMsg({ ok: false, text: r.text });
-            setMsg({ ok: true, text: w.added });
+            showToast({ text: w.added, tone: 'ok' });
             setLink('');
             setName('');
             router.refresh();
@@ -218,7 +219,7 @@ export function YoutubeVideoForm({ texts, w, channels }: { texts: YoutubeFormTex
             const r = await post(texts, { action: 'video.add', channelId, link, title, publishedOn: day, products });
             setBusy(false);
             if (!r.ok) return setMsg({ ok: false, text: r.text });
-            setMsg({ ok: true, text: w.added });
+            showToast({ text: w.added, tone: 'ok' });
             setLink('');
             setTitle('');
             setDay('');
@@ -268,7 +269,7 @@ export function YoutubeVideoEdit({ texts, id, title: t0, products: p0, w }: { te
             const r = await post(texts, { action: 'video.update', id, title, products });
             setBusy(false);
             if (!r.ok) return setMsg({ ok: false, text: r.text });
-            setMsg({ ok: true, text: w.saved });
+            showToast({ text: w.saved, tone: 'ok' });
             router.refresh();
           }}
         >

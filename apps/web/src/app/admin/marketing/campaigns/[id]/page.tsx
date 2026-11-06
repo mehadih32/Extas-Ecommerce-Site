@@ -50,7 +50,7 @@ export default async function CampaignPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="campaign-editor" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.campaigns.read" />
       </div>
     );
@@ -75,7 +75,7 @@ export default async function CampaignPage(props: Props) {
   const money = moneyOf(c?.budgetCurrency ?? currency, view.locale);
 
   return (
-    <div className="a2-z" data-testid="campaign-editor">
+    <div className="a2-z" data-testid="campaign-editor" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={c ? c.name : s('newTitle')} sub={c ? s('stats', { pages: c.pages, orders: c.orders, delivered: c.delivered }) : undefined} />
       <SectionTabs view={view} current={KEY} />
       <CampaignEditor words={words} campaign={start} audiences={choices.audiences} coupons={choices.coupons} money={money} canWrite={canWrite} listHref={LIST} landingHref="/admin/marketing/landing" />

@@ -1,28 +1,28 @@
 /* S10 · PR 209, 216, 217 — Smart Rules and Notices & pop-ups, drawn after the approved V12 demo
    (docs/demo/src/81-admin-rules.js: rl-grid, rl-card, rl-ed, rl-prev, rl-code, rl-sets, rl-hint, rl-chip, rl-checks,
    rl-ai, rl-conflict, rl-actions, rl-done, rl-place; tag / seg / switch from styles.css). Only the admin's own tokens
-   (admin.css) and the screen's values below are used; the shared design-token file belongs to the design owner (S02).
+   (admin.css) and the Lumen theme tokens (theme/lumen.css, PR 638: they follow dark mode) are used; the shared design-token file belongs to the design owner (S02).
    Phone first: one column with the editor under the tapped card; from 1024 px the list (420 px) and the editor. */
 
 .ad {
-  --rl-card-line: #e6e3de;
-  --rl-hover: #fafaf8;
-  --rl-ed-inset: #fcfcfa;
-  --rl-prev-bg: #f4f3f0;
-  --rl-code-bg: #eef3f1;
-  --rl-code-ink: #15302b;
-  --rl-hint-line: #d5e1dc;
-  --rl-x-bg: #fbf6ec;
-  --rl-x-line: #ead9bc;
-  --rl-gold-ink: #8a6420;
-  --rl-conflict-ink: #5e3e14;
-  --rl-add-line: #b9b3aa;
-  --rl-pill-bg: #f2f1ee;
+  --rl-card-line: var(--lm-ln);
+  --rl-hover: var(--lm-hover);
+  --rl-ed-inset: var(--lm-sf2);
+  --rl-prev-bg: var(--lm-sf2);
+  --rl-code-bg: var(--lm-okbg);
+  --rl-code-ink: var(--lm-ok);
+  --rl-hint-line: var(--lm-ln);
+  --rl-x-bg: var(--lm-warnbg);
+  --rl-x-line: var(--lm-ln);
+  --rl-gold-ink: var(--lm-warn);
+  --rl-conflict-ink: var(--lm-warn);
+  --rl-add-line: var(--lm-ln);
+  --rl-pill-bg: var(--lm-chip);
   --rl-list-w: 420px;
   --rl-pill-radius: 10px;
   --rl-chip-radius: 16px;
   --rl-small-radius: 6px;
-  --rl-mono: ui-monospace, Menlo, Consolas, monospace;
+  --rl-mono: var(--lm-font-mono);
 }
 
 /* ---------- head ---------- */

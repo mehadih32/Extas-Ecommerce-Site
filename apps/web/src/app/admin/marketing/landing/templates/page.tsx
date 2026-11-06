@@ -48,7 +48,7 @@ export default async function LandingTemplatesPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="landing-templates" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.landing.read" />
       </div>
     );
@@ -94,7 +94,7 @@ export default async function LandingTemplatesPage() {
   );
 
   return (
-    <div className="a2-z" data-testid="landing-templates">
+    <div className="a2-z" data-testid="landing-templates" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={s('t.title')} sub={s('t.sub')} />
       <SectionTabs view={view} current={KEY} />
 

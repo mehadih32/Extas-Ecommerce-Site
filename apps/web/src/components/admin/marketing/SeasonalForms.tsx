@@ -5,6 +5,7 @@
 // {action, …} to /api/admin/marketing/seasonal (`marketing.campaigns.write`); the API checks everything again.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
+import { showToast } from '../lumen/Toast';
 
 const API = '/api/admin/marketing/seasonal';
 
@@ -52,7 +53,7 @@ function useSend(texts: SeasonalFormTexts) {
       setMsg({ ok: false, text: r.text });
       return false;
     }
-    if (done) setMsg({ ok: true, text: done });
+    if (done) showToast({ text: done, tone: 'ok' });
     router.refresh();
     return true;
   };

@@ -10,7 +10,7 @@ import type { ConflictView, PublishResult, RulePreview, RuleView } from '@extas/
 import { RULE_KINDS, type RuleContent, type Target } from '@extas/rules/pure';
 import { call, type Answer } from '../api';
 import { Icon } from '../Icon';
-import { useToast } from '../products/useToast';
+import { say, sayBad } from '../products/useToast';
 import { t, type Dict } from '@/lib/i18n';
 import { RuleEditor, type Perms } from './RuleEditor';
 import { CouponsSheet, HistorySheet, NewRuleSheet, PreviewSheet, RULES_API, ScopeSheet, SimulateSheet, type TemplateItem } from './RuleSheets';
@@ -70,7 +70,6 @@ export function RulesScreen(props: RulesScreenProps) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ id: string; version: number } | null>(null);
   const [sheet, setSheet] = useState<SheetState>(null);
-  const [toast, say] = useToast();
 
   const byId = useMemo(() => new Map(views.map((v) => [v.id, v])), [views]);
   const visible = views.filter((v) => v.archived === archivedOn);
@@ -99,7 +98,7 @@ export function RulesScreen(props: RulesScreenProps) {
       const { [id]: _gone, ...rest } = e;
       return rest;
     });
-  const fail = (a: Answer) => say(rulesRefusal(d, a.data.error, a.data.details ?? []));
+  const fail = (a: Answer) => sayBad(rulesRefusal(d, a.data.error, a.data.details ?? []));
   const reloadConflicts = async () => {
     const a = await call('GET', `${RULES_API}/conflicts`);
     if (a.status === 200 && Array.isArray(a.data.conflicts)) setConflicts(a.data.conflicts as ConflictView[]);
@@ -469,9 +468,6 @@ export function RulesScreen(props: RulesScreenProps) {
       {sheet?.type === 'simulate' && sheetView && sheetCand ? <SimulateSheet d={d} lang={lang} env={env} view={sheetView} name={nameOf(sheet.id)} cand={sheetCand} dirty={dirty(sheet.id)} defaultDays={props.simDays} onClose={() => setSheet(null)} /> : null}
       {sheet?.type === 'coupons' && sheetView ? <CouponsSheet d={d} lang={lang} view={sheetView} name={nameOf(sheet.id)} perms={perms} onClose={() => setSheet(null)} /> : null}
 
-      <div className="ad-toast-slot" aria-live="polite" role="status">
-        {toast ? <div className="ad-toast">{toast}</div> : null}
-      </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface PushSyncLine {
   key: string;
@@ -48,7 +49,7 @@ export function AudiencePush(p: { words: Dict; audienceId: string; version: stri
     setBusy(false);
     if (r.status === 200) {
       setResults(r.data.results as Result[]);
-      setSaid({ text: a('done'), bad: false });
+      showToast({ text: a('done'), tone: 'ok' });
       return router.refresh();
     }
     const code = r.status === 0 ? 'network' : r.status === 401 ? 'unauthorized' : r.status === 403 ? 'forbidden' : (r.data.error ?? 'other');

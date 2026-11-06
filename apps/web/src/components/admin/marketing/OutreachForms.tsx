@@ -4,6 +4,7 @@
 // `marketing.campaigns.write`). The API checks everything again; nothing here sends anything to anyone.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
+import { showToast } from '../lumen/Toast';
 
 const API = '/api/admin/marketing/outreach';
 
@@ -115,7 +116,7 @@ export function OutreachAddForm({ texts, w }: { texts: OutreachFormTexts; w: Add
             const r = await post(texts, { action: 'prospect.add', site, contact, notes });
             setBusy(false);
             if (!r.ok) return setMsg({ ok: false, text: r.text });
-            setMsg({ ok: true, text: w.added });
+            showToast({ text: w.added, tone: 'ok' });
             setSite('');
             setContact('');
             setNotes('');
@@ -211,7 +212,7 @@ export function OutreachEditForm({ texts, id, value, stages, w }: { texts: Outre
             const r = await post(texts, { action: 'prospect.update', id, ...v });
             setBusy(false);
             if (!r.ok) return setMsg({ ok: false, text: r.text });
-            setMsg({ ok: true, text: w.saved });
+            showToast({ text: w.saved, tone: 'ok' });
             router.refresh();
           }}
         >

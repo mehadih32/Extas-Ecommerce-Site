@@ -51,7 +51,7 @@ export default async function SeasonalHomePage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="sh-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.campaigns.read" />
       </div>
     );
@@ -135,7 +135,7 @@ export default async function SeasonalHomePage() {
   };
 
   return (
-    <div className="a2-z" data-testid="sh-page">
+    <div className="a2-z" data-testid="sh-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note or-mt8" role="note">

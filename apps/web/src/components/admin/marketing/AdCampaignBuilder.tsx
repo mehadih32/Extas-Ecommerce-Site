@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call, type Answer } from '../api';
+import { showToast } from '../lumen/Toast';
 
 const fill = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
 type Out = { text: string; bad: boolean } | null;
@@ -94,7 +95,7 @@ export function DraftForm({ url, uid, accounts, campaigns, objectives, nameMax, 
     const a = await call('POST', url, { action: 'draft.save', id: v.id, version: v.version, adAccountId: v.adAccountId, campaignId: v.campaignId || null, name: v.name, objective: v.objective, dailyBudgetMinor: Number.isNaN(minor) ? -1 : minor, startAt: v.startWall || null, endAt: v.endWall || null });
     setBusy(false);
     if (a.status !== 200) return setOut({ text: errText(a, x), bad: true });
-    setOut({ text: x.saved, bad: false });
+    showToast({ text: x.saved, tone: 'ok' });
     if (!v.id) {
       setV(initial);
       setBudget('');
@@ -204,7 +205,7 @@ export function DraftStep({ url, id, canDup, canLaunch, launchText, archived, ca
     setBusy(false);
     setAsk(false);
     if (a.status !== 200) return setOut({ text: errText(a, x), bad: true });
-    setOut({ text: x.said[said] ?? said, bad: false });
+    showToast({ text: x.said[said] ?? said, tone: 'ok' });
     router.refresh();
   }
   return (
@@ -265,7 +266,7 @@ export function CampaignExtra({ controlUrl, builderUrl, draftsHref, adCampaignId
     setBusy(false);
     setAsk(false);
     if (a.status !== 200) return setOut({ text: errText(a, x), bad: true });
-    setOut({ text: ok, bad: false });
+    showToast({ text: ok, tone: 'ok' });
     setMade(dup);
     router.refresh();
   }

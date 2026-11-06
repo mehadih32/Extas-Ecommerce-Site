@@ -52,7 +52,7 @@ export default async function ReferralsPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="ref-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.campaigns.read" />
       </div>
     );
@@ -87,7 +87,7 @@ export default async function ReferralsPage() {
   const rewardText = (r: number) => formatMoney(r, m);
 
   return (
-    <div className="a2-z" data-testid="ref-page">
+    <div className="a2-z" data-testid="ref-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note ref-mt8" role="note">

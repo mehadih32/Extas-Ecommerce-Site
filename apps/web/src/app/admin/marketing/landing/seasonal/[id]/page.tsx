@@ -50,7 +50,7 @@ export default async function SeasonalEditorPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="seasonal-editor" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.landing.read" />
       </div>
     );
@@ -80,7 +80,7 @@ export default async function SeasonalEditorPage(props: Props) {
   const lang = view.lang === 'bn' ? 'bn' : 'en';
 
   return (
-    <div className="a2-z" data-testid="seasonal-editor">
+    <div className="a2-z" data-testid="seasonal-editor" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={page ? page.titleEn : s('newTitle')} />
       <SectionTabs view={view} current={KEY} />
       <SeasonalEditor

@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 const fill = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
 
@@ -34,7 +35,7 @@ export function AdPlatformRead({ url, platform, texts: x }: { url: string; platf
       return;
     }
     const o = a.data.outcome as { practice: boolean; campaigns: number; adSets: number; gone: number };
-    setSaid({ text: fill(o.practice ? x.practice : x.done, { campaigns: o.campaigns, adSets: o.adSets, gone: o.gone }), bad: false });
+    showToast({ text: fill(o.practice ? x.practice : x.done, { campaigns: o.campaigns, adSets: o.adSets, gone: o.gone }), tone: 'ok' });
     router.refresh();
   }
   return (
@@ -114,7 +115,7 @@ export function AdSpendImport({ url, platform, texts: x }: { url: string; platfo
     }
     const vars = { rows: r.rows, from: r.range.from, to: r.range.to, unknown: r.unknown, noRate: r.noRate };
     const text = r.practice ? fill(x.practice, vars) : `${fill(x.done, vars)}${r.unknown ? fill(x.unknown, vars) : ''}${r.noRate ? fill(x.noRate, vars) : ''}`;
-    setSaid({ text, bad: false });
+    showToast({ text, tone: 'ok' });
     router.refresh();
   }
   return (

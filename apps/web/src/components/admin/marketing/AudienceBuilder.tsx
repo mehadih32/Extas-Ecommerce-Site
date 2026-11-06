@@ -12,6 +12,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 import { t, type Dict } from '@/lib/i18n';
 import { AUDIENCE_DAYS_MAX, AUDIENCE_RULES, AUDIENCE_RULES_MAX, RULE_NEEDS, type AudienceAction, type AudienceRuleKind, type AudienceState } from '@/lib/marketing/audience-model';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface EditorAudience {
   id: string | null;
@@ -131,7 +132,7 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
     setBusy(false);
     if (r.status === 200 || r.status === 201) {
       setDirty(false);
-      setSaid({ text: a('saved'), bad: false });
+      showToast({ text: a('saved'), tone: 'ok' });
       const nid = (r.data.audience as { id?: string } | undefined)?.id;
       if (!au.id && nid) return router.replace(`${p.listHref}/${nid}`);
       return router.refresh();
@@ -148,7 +149,7 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
     const r = await call('POST', `${API}/${au.id}`, { action: s, version: au.version });
     setBusy(false);
     if (r.status === 200) {
-      setSaid({ text: a(`stepDone.${s}`), bad: false });
+      showToast({ text: a(`stepDone.${s}`), tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errText(r), bad: true });

@@ -10,15 +10,15 @@
 .adm2 .lp-part{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding:2px 0}
 .adm2 .lp-part:first-of-type{border-top:0}
 .adm2 .lp-part.off>span{color:var(--ink3)}
-.adm2 .lp-pn{flex:none;width:22px;height:22px;border-radius:50%;background:#F1EFEA;font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.adm2 .lp-pn{flex:none;width:22px;height:22px;border-radius:50%;background:var(--lm-chip);font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .adm2 .lp-acts{display:flex;flex-wrap:wrap;gap:8px}
 .adm2 .lp-acts .a2-btn{min-height:44px}
-.adm2 .lp-phone{border:8px solid #1d1d1f;border-radius:28px;max-width:280px;margin:0 auto;overflow:hidden;background:#fff}
+.adm2 .lp-phone{border:8px solid var(--lm-ink);border-radius:28px;max-width:280px;margin:0 auto;overflow:hidden;background:var(--lm-sf)}
 .adm2 .lp-phs{display:grid;gap:6px;padding:10px;min-height:360px;align-content:start}
-.adm2 .lp-ph-hero{border-radius:10px;padding:18px 12px;background:#F1EFEA;display:grid;gap:4px}
+.adm2 .lp-ph-hero{border-radius:10px;padding:18px 12px;background:var(--lm-chip);display:grid;gap:4px}
 .adm2 .lp-ph-hero b{font-size:15px;line-height:1.25;overflow-wrap:anywhere}
 .adm2 .lp-ph-part{border:1px dashed var(--line);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--ink2)}
-.adm2 .lp-ph-form{border-radius:8px;padding:10px;background:var(--ink,#1d1d1f);color:#fff;font-size:12.5px;font-weight:700;text-align:center}
+.adm2 .lp-ph-form{border-radius:8px;padding:10px;background:var(--lm-ink);color:var(--lm-sf);font-size:12.5px;font-weight:700;text-align:center}
 .adm2 .lp-said{margin-top:8px}
 .adm2 textarea.a2-inp{min-height:88px;resize:vertical}
 .adm2 .lp-views .a2-view{min-width:44px;justify-content:center}
@@ -26,7 +26,7 @@
 /* S13 · PR 255 — templates: the builder's "Start from a template" picks, the Templates page's tiles and the parts library. */
 .adm2 .lp-tpls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media(min-width:1024px){.adm2 .lp-tpls{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.adm2 .lp-tpl{display:grid;gap:3px;align-content:start;text-align:left;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit;cursor:pointer;min-width:0;overflow-wrap:anywhere}
+.adm2 .lp-tpl{display:grid;gap:3px;align-content:start;text-align:left;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--lm-sf);color:var(--ink);font:inherit;cursor:pointer;min-width:0;overflow-wrap:anywhere}
 .adm2 .lp-tpl.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .adm2 .lp-tpl:disabled{cursor:default;opacity:.7}
 .adm2 .lp-tlink{display:inline-flex;align-items:center;min-height:44px;margin-top:4px}
@@ -37,3 +37,5 @@
 .adm2 .lp-chips{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:2px 0;padding:0}
 .adm2 details.lp-more>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--ink2)}
 .adm2 td .lp-pn{display:inline-flex;vertical-align:middle}
+/* PR 638 (CN-036): the phone preview shows the shop, which stays light: a light island in dark mode, white inside */
+.adm2 .a2-z .lp-phone.lm-island{background:var(--lm-sf);border-radius:28px}

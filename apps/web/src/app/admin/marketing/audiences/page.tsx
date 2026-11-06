@@ -56,7 +56,7 @@ export default async function AudiencesPage(props: Props) {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="audiences-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="marketing.audiences.read" />
       </div>
     );
@@ -113,7 +113,7 @@ export default async function AudiencesPage(props: Props) {
   const rows = list.filter((r) => (v === 'archived' ? r.state === 'ARCHIVED' : r.state !== 'ARCHIVED'));
 
   return (
-    <div className="a2-z" data-testid="audiences-page">
+    <div className="a2-z" data-testid="audiences-page" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

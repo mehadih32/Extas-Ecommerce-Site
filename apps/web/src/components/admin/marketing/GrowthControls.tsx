@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 const fill = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
 
@@ -22,7 +23,7 @@ export function GrowthRun({ url, texts: x }: { url: string; texts: { run: string
       setOut({ text: x.err[code] ?? x.err.other ?? code, bad: true });
       return;
     }
-    setOut({ text: fill(x.ran, { made: Number(a.data.made ?? 0), waiting: Number(a.data.waiting ?? 0) }), bad: false });
+    showToast({ text: fill(x.ran, { made: Number(a.data.made ?? 0), waiting: Number(a.data.waiting ?? 0) }), tone: 'ok' });
     router.refresh();
   }
   return (
