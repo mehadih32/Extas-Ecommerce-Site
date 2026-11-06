@@ -101,7 +101,8 @@
         "email": "E-mail"
       },
       "website": {
-        "seo": "SEO"
+        "seo": "SEO",
+        "blog": "Blog & journal"
       },
       "support": {
         "inbox": "Inbox",

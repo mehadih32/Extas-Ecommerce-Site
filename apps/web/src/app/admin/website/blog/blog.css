@@ -1,0 +1,35 @@
+/* S12 · PR 240 — Website › Blog & journal: the board, the article editor and the categories and authors. */
+.adm2 .jr-acts{display:flex;flex-wrap:wrap;gap:8px}
+.adm2 .jr-acts .a2-btn{min-height:44px}
+.adm2 .jr-views{flex-wrap:wrap}
+.adm2 .jr-views .a2-view{min-width:44px;min-height:44px;justify-content:center;gap:4px}
+.adm2 .jr-name{display:inline-flex;align-items:center;min-height:44px;overflow-wrap:anywhere}
+.adm2 .jr-slug{display:block;margin-top:-8px;overflow-wrap:anywhere}
+.adm2 .jr-empty{padding:18px}
+.adm2 .jr-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media(min-width:1024px){.adm2 .jr-grid{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}}
+.adm2 .jr-stack{display:grid;gap:12px;align-content:start;min-width:0}
+.adm2 .jr-g2{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+@media(min-width:768px){.adm2 .jr-g2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.adm2 textarea.a2-inp{min-height:88px;resize:vertical}
+.adm2 textarea.jr-text{min-height:320px;font-family:inherit;line-height:1.6}
+.adm2 .jr-chips{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:6px 0 0;padding:0}
+.adm2 .jr-chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:0 4px 0 12px;min-height:44px;font-size:13px;max-width:100%;overflow-wrap:anywhere}
+.adm2 .jr-chip button{min-width:44px;min-height:44px;border:0;background:none;cursor:pointer;font:inherit;color:var(--ink2)}
+.adm2 .jr-steps{display:flex;flex-wrap:wrap;gap:8px}
+.adm2 .jr-steps .a2-btn{min-height:44px}
+.adm2 .jr-said{margin-top:8px}
+.adm2 .jr-hist{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.adm2 .jr-hist li{border-top:1px solid var(--line);padding-top:6px;font-size:13px;overflow-wrap:anywhere}
+.adm2 .jr-preview{border:1px solid var(--line);border-radius:10px;padding:16px;background:#fff;min-width:0}
+.adm2 .jr-preview h1{font-size:24px;line-height:1.25;margin:0 0 8px;overflow-wrap:anywhere}
+.adm2 .jr-answer{font-weight:600;margin:0 0 12px}
+.adm2 .jr-prods{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin:0 0 1em;font-size:14px;color:var(--ink2)}
+.adm2 .jr-toggle{min-height:44px}
+.adm2 .jr-shelf{list-style:none;margin:8px 0 0;padding:0;display:grid}
+.adm2 .jr-shelf>li{border-top:1px solid var(--line);padding:8px 0;display:grid;gap:6px;min-width:0}
+.adm2 .jr-shelf>li.sub{padding-inline-start:18px}
+.adm2 .jr-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+.adm2 .jr-row .a2-btn{min-height:44px}
+.adm2 .jr-row b{overflow-wrap:anywhere}
+.adm2 .jr-form{display:grid;gap:10px;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:8px}

@@ -1,0 +1,52 @@
+/* S12 · PR 240, 241 — an article's words (ArticleBody): the reading column of Blueprint C11.4 — 18 px on phones,
+   19 px from a desktop width, Bengali line height 1.85, about 70 characters a line. Used by the shop's article page
+   and the editor's preview. Colours come from the theme tokens. */
+.jr-body {
+  font-size: 18px;
+  line-height: 1.7;
+  max-width: 68ch;
+  overflow-wrap: anywhere;
+}
+.jr-body:lang(bn),
+.jr-body [lang='bn'] {
+  line-height: 1.85;
+}
+@media (min-width: 1024px) {
+  .jr-body {
+    font-size: 19px;
+  }
+}
+.jr-body h2 {
+  font-size: 1.35em;
+  line-height: 1.3;
+  margin: 1.4em 0 0.5em;
+  scroll-margin-top: 80px;
+}
+.jr-body h3 {
+  font-size: 1.12em;
+  line-height: 1.35;
+  margin: 1.2em 0 0.4em;
+}
+.jr-body p,
+.jr-body ul,
+.jr-body ol {
+  margin: 0 0 1em;
+}
+.jr-body ul,
+.jr-body ol {
+  padding-inline-start: 1.3em;
+}
+.jr-body li + li {
+  margin-top: 0.35em;
+}
+.jr-body a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.jr-box {
+  border-inline-start: 3px solid currentColor;
+  padding: 0.7em 1em;
+  margin: 0 0 1em;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  border-radius: 6px;
+}
