@@ -49,6 +49,18 @@ export function hiddenAdminParts(shown: Partial<ClosedStagesShown> | null | unde
   return new Set(hiddenStages(shown).flatMap((s) => [...CLOSED_STAGE_PARTS[s].sections, ...CLOSED_STAGE_PARTS[s].tabs, ...CLOSED_STAGE_PARTS[s].widgets]));
 }
 
+/**
+ * PR 652 follow-up (669): the closed stage a hidden admin part (a section id, `<section>.<tab>` or a widget) belongs
+ * to, so its address can say "closed by the owner for now" instead of "no access"; null for a part of no closed stage.
+ */
+export function closedStageOfPart(part: string): ClosedStage | null {
+  for (const s of CLOSED_STAGES) {
+    const p = CLOSED_STAGE_PARTS[s];
+    if (p.sections.includes(part) || p.tabs.includes(part) || p.widgets.includes(part)) return s;
+  }
+  return null;
+}
+
 /** The shop addresses of the hidden stages. */
 export function hiddenShopPaths(shown: Partial<ClosedStagesShown> | null | undefined): string[] {
   return hiddenStages(shown).flatMap((s) => [...CLOSED_STAGE_PARTS[s].shop]);

@@ -2,15 +2,18 @@
 // Support, Marketing, Website, Money, Reports, AI Center, Settings): its honest placeholder at the section's own address
 // (what it is for, the pages planned, and links to what of it is ready now), never a sample screen. Only someone who
 // may open the section sees it (AI Center: owners only); any other address under /admin is "page not found".
+// PR 652 follow-up (669): a section of a stage the owner closed (lib/stages/closed.ts) says "closed by the owner for
+// now" to everyone who may open the admin, the owner too, instead of the no-access state.
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { Placeholder, ShellState } from '@/components/admin/shell/ShellParts';
+import { ClosedState, Placeholder, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { placeholderSections, sectionVisible, type ShellViewer } from '@/lib/admin-shell/sections';
 import { shellSession } from '@/lib/admin-shell/session';
+import { closedStageOfPart } from '@/lib/stages/closed';
 import { t } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
@@ -35,6 +38,7 @@ export default async function SectionPlaceholder({ params }: { params: Params })
   if (access.kind !== 'ok') return <AdminNotice view={view} current={section.id} text={t(view.dict, 'page.noDb')} />;
   const s = await shellSession();
   const viewer: ShellViewer = s.kind === 'ok' ? { perms: s.perms, owner: s.owner, hidden: s.hidden } : { perms: new Set(), owner: false };
+  if (viewer.hidden?.has(section.id)) return <ClosedState view={view} section={section} stage={closedStageOfPart(section.id)} />;
   if (!sectionVisible(section, viewer))
     return (
       <div className="a2-z">

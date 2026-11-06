@@ -3,7 +3,9 @@
 //   - SectionTabs: the section's built tabs the person may open ("More ▾" for the rest), and a tab's own pages as chips;
 //   - PageHead: the header of the shell's own pages (crumb, title, line under it, guide, buttons on the right);
 //   - ShellState: not found, could not load, no access, empty, no database — each with its way back;
-//   - Placeholder: a section with nothing built yet says so, lists what will come and links to what is ready.
+//   - Placeholder: a section with nothing built yet says so, lists what will come and links to what is ready;
+//   - ClosedState (PR 652 follow-up, 669): a section of a stage the owner closed, opened by its address, says
+//     "closed by the owner for now" (to everyone, the owner too) instead of "no access", in the Lumen look.
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { authLabel } from '@extas/auth';
@@ -11,6 +13,7 @@ import type { AdminView } from '@/lib/admin-page';
 import { deniedMemo, shellSession } from '@/lib/admin-shell/session';
 import { guideOf, locateKey, sectionHome, visiblePages, visibleTabs, type ShellPlace, type ShellSection, type ShellViewer } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
+import { EmptyState } from '@/components/admin/lumen/EmptyState';
 import { GuideButton, MoreTabs, SearchButton } from './ShellButtons';
 import { ShellIcon } from './ShellIcon';
 
@@ -229,3 +232,22 @@ export function Placeholder({ view, section, viewer }: { view: AdminView; sectio
   );
 }
 
+/**
+ * PR 652 follow-up (669): a section of a closed stage opened by its address. Not "no access" (nobody lacks a key): the
+ * owner has closed the stage until it is finished; what is built is kept and comes back with the stage's switch.
+ */
+export function ClosedState({ view, section, stage }: { view: AdminView; section: ShellSection; stage: string | null }) {
+  const name = secName(view, section.id);
+  return (
+    <div className="a2-z" data-lm-ready="" data-testid="closed-stage" data-stage={stage ?? ''} data-section={section.id}>
+      <EmptyState
+        tone="calm"
+        icon="lock"
+        testId="a2-state"
+        title={t(view.dict, 'shell.state.closed.title')}
+        text={t(view.dict, stage ? 'shell.state.closed.body' : 'shell.state.closed.bodyPlain', { section: name, stage: stage ?? '' })}
+        action={{ label: t(view.dict, 'shell.state.closed.back'), href: '/admin?home=1' }}
+      />
+    </div>
+  );
+}

@@ -330,6 +330,12 @@
         "bodyPlain": "Ask the owner to add the permission this page needs to your role.",
         "back": "Back to my start page"
       },
+      "closed": {
+        "title": "Closed by the owner for now",
+        "body": "{section} is part of stage {stage}, which the owner has closed until it is finished. Nothing built here is lost: it comes back when the owner opens the stage again.",
+        "bodyPlain": "The owner has closed this part until it is finished. Nothing built here is lost: it comes back when the owner opens it again.",
+        "back": "Back to Dashboard"
+      },
       "empty": {
         "title": "Nothing here yet"
       },
