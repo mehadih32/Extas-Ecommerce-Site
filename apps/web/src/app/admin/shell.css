@@ -408,6 +408,7 @@
 .adm2 .a2-needs > .a2-ch { padding: 0 8px; margin-bottom: 6px; }
 .adm2 .a2-helprow { display: flex; align-items: center; gap: 12px; padding: 10px 8px; flex-wrap: wrap; }
 .adm2 .a2-helprow + .a2-helprow { border-top: 1px solid var(--ln2); }
+.adm2 .a2-helpask { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 12px; } /* PR 599 */
 .adm2 .a2-helprow > .a2-ht { flex: 1 1 200px; display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
 .adm2 .a2-helprow b { font-weight: 600; font-size: 13.5px; }
 .adm2 .a2-helprow i { font-style: normal; font-size: 12.5px; color: var(--mute); }

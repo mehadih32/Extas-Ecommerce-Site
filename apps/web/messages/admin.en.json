@@ -128,6 +128,7 @@
     "build": "Build progress",
     "buildPr": "PR card",
     "buildProblems": "Reported problems",
+    "buildRequests": "Feature requests",
     "buildFiles": "Blueprint & files",
     "buildFile": "Read a file",
     "healthSpeed": "Speed",

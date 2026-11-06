@@ -1,0 +1,97 @@
+{
+  "fr": {
+    "metaTitle": "Feature requests",
+    "title": "Feature requests",
+    "sub": "Ask for something new the shop cannot do yet. The build team adds it to the PR register and builds it; nobody edits code by hand.",
+    "readOnly": "You can see the requests; asking for one needs permission to report on the build.",
+    "ways": {
+      "title": "First: can it be done already?",
+      "sub": "Most changes need no new feature. Check these first.",
+      "switches": {
+        "title": "Switches and settings",
+        "text": "Every optional feature has an on/off switch and its numbers in its own section. The Site manual explains each one.",
+        "go": "Open the Site manual"
+      },
+      "rules": {
+        "title": "Smart Rules and automations",
+        "text": "Offers, prices with your OK, delivery rules, messages that go out by themselves.",
+        "go": "Open Smart Rules"
+      },
+      "keys": {
+        "title": "Integrations",
+        "text": "Couriers, payments, messages and other services: type their key in and switch them on.",
+        "go": "Open Keys & connections"
+      },
+      "words": {
+        "title": "Words on the shop",
+        "text": "Every word the shop shows, in English and Bengali.",
+        "go": "Open Words & language"
+      }
+    },
+    "ask": {
+      "heading": "Ask for a new feature",
+      "sub": "Say what you need in your own words. You will see here when it is in the register, built, or already possible.",
+      "title": "A short name",
+      "need": "What should it do?",
+      "needHint": "Who uses it, what happens step by step, and why it helps. Plain words are fine.",
+      "section": "Which part of the admin",
+      "sectionAny": "Not sure",
+      "when": "How soon",
+      "note": "A request never changes the shop by itself.",
+      "send": "Send the request",
+      "sending": "Sending…",
+      "sent": "Sent. The build team will put it in the register."
+    },
+    "when": {
+      "SOON": "Soon: it holds up daily work",
+      "LATER": "Later: a good idea"
+    },
+    "views": "Which requests",
+    "view": {
+      "open": "Open",
+      "done": "Done",
+      "all": "All"
+    },
+    "none": {
+      "open": "No open request.",
+      "done": "Nothing done yet.",
+      "all": "No request yet."
+    },
+    "status": {
+      "NEW": "New",
+      "REGISTERED": "In the register",
+      "BUILT": "Built",
+      "POSSIBLE": "Already possible",
+      "DECLINED": "Not built"
+    },
+    "row": {
+      "n": "F-{n}",
+      "by": "Asked by {who}, {at}",
+      "pr": "PR {n} in the register",
+      "status": "Status by {who}, {at}",
+      "someone": "someone"
+    },
+    "st": {
+      "change": "Change status",
+      "status": "Status",
+      "pr": "Register PR number",
+      "note": "Note (optional)",
+      "where": "Where it can be done already",
+      "why": "Why it will not be built",
+      "save": "Save status",
+      "cancel": "Cancel",
+      "saved": "Status saved."
+    },
+    "more": "Showing the newest {n}.",
+    "err": {
+      "INVALID_INPUT": "Something is missing. A short name (3 letters or more) and what it should do (10 letters or more).",
+      "PR_NEEDED": "Give the register PR number.",
+      "NOTE_NEEDED": "Say where it is possible already, or why it will not be built.",
+      "SAME_STATUS": "Nothing changed.",
+      "NOT_FOUND": "This request is not here any more. Reload the page.",
+      "forbidden": "You do not have permission for this.",
+      "network": "No connection. Try again.",
+      "other": "Could not save. Try again."
+    }
+  }
+}

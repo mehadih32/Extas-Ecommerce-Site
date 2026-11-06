@@ -6,6 +6,13 @@
 //                                                              its status: OPEN, FIXING, FIXED (how), CLOSED (why) (`build.report`)
 //   GET  /api/admin/build/files?path=<docs path>&v=<copy id>   one Markdown file of the deploy's docs copy, or one of its
 //                                                              kept versions, as a download (`build.read`)
+//   GET  /api/admin/build/requests?view=open|done|all[&format=md] the feature requests, or the open ones as Markdown for
+//                                                              the build team's register flow (`build.read`)
+//   POST /api/admin/build/requests {action: 'ask', title, need, section?, page?, when?}
+//                                                              ask for a new feature (`build.report`, PR 599)
+//   POST /api/admin/build/requests {action: 'status', id, status, pr?, note?}
+//                                                              its status: in the register / built (PR n), already
+//                                                              possible (where), not built (why) (`build.report`)
 // The register and the files are read from the server's docs copy (lib/build-register.ts, lib/build-files.ts).
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
@@ -13,6 +20,7 @@ import { guideDir } from './admin-shell/guide';
 import { readDoc, readDocVersion } from './build-files';
 import { isBuildProblemError, listProblems, reportProblem, setProblemStatus } from './build-problems';
 import { docsRoot, readRegister } from './build-register';
+import { askFeature, isFeatureRequestError, listRequests, requestsMarkdown, setRequestStatus } from './feature-requests';
 
 /** The docs copy the app reads (null when the deploy has none). */
 export function docsDir(): string | null {
@@ -42,6 +50,30 @@ export async function buildProblemsHandler(request: Request, deps: AdminDeps | n
     return fail(422, 'INVALID_INPUT', ['action']);
   } catch (e) {
     if (isBuildProblemError(e)) return json({ ok: false, error: e.code, details: e.details }, { status: e.status });
+    return errorResponse(e);
+  }
+}
+
+/** PR 599 — Help & Build › Feature requests ("request a feature": into the register flow, never a code edit). */
+export async function buildRequestsHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  const method = request.method.toUpperCase();
+  if (method !== 'GET' && method !== 'POST') return fail(405, 'method-not-allowed');
+  const g = await guardAdmin(request, deps, { permission: method === 'GET' ? 'build.read' : 'build.report', storeId: MOTHER_STORE_ID });
+  if (g instanceof Response) return g;
+  const who = { actor: g.actor, storeId: MOTHER_STORE_ID, ctx: g.ctx };
+  try {
+    if (method === 'GET') {
+      const q = new URL(request.url).searchParams;
+      const list = await listRequests(deps!.db, MOTHER_STORE_ID, { view: q.get('view') ?? undefined });
+      if (q.get('format') === 'md') return new Response(requestsMarkdown(list.rows, 'Feature requests'), { headers: { 'content-type': 'text/markdown; charset=utf-8', 'cache-control': 'no-store' } });
+      return json({ ok: true, ...list });
+    }
+    const { action, ...rest } = await body(request);
+    if (action === 'ask') return json({ ok: true, request: await askFeature(deps!.db, who, rest) }, { status: 201 });
+    if (action === 'status') return json({ ok: true, request: await setRequestStatus(deps!.db, who, rest) });
+    return fail(422, 'INVALID_INPUT', ['action']);
+  } catch (e) {
+    if (isFeatureRequestError(e)) return json({ ok: false, error: e.code, details: e.details }, { status: e.status });
     return errorResponse(e);
   }
 }

@@ -3,6 +3,7 @@
 // are ready or still planned, and a link into it. The guides are read from the server's deployed copy of the docs
 // (GET /api/admin/help/<slug>). Reading needs `help.read`.
 // S18 · PR 387: each row also opens the section's chapter in the Site manual (/admin/help/manual).
+// S02 · PR 599: "Ask for a new feature" (Help & Build › Feature requests) for whoever may see the build's pages.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -45,6 +46,14 @@ export default async function HelpPage() {
   return (
     <div className="a2-z" data-testid="help">
       <PageHead view={view} place={here} title={t(d, 'help.title')} sub={t(d, 'help.sub')} />
+      {viewer.owner || viewer.perms.has('build.read') ? (
+        <section className="a2-card a2-helpask" data-testid="help-ask">
+          <span className="a2-sm">{t(d, 'help.askLine')}</span>
+          <Link className="a2-btn" href="/admin/build/requests" data-testid="help-ask-go">
+            {t(d, 'help.ask')}
+          </Link>
+        </section>
+      ) : null}
       <section className="a2-card" aria-label={t(d, 'help.title')}>
         {sections.map((sec) => {
           const place: ShellPlace = { section: sec, tab: null, page: null };

@@ -507,6 +507,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'build', pages: [{ href: '/admin/build', perm: 'build.read', keys: ['build', 'buildPr'] }] },
       { id: 'problems', pages: [{ href: '/admin/build/problems', perm: 'build.read', keys: ['buildProblems'] }] },
       { id: 'files', pages: [{ href: '/admin/build/files', perm: 'build.read', keys: ['buildFiles', 'buildFile'] }] },
+      // S02 · PR 599 — Feature requests: "request a feature" into the PR register flow (never a code edit).
+      { id: 'requests', pages: [{ href: '/admin/build/requests', perm: 'build.read', keys: ['buildRequests'] }] },
     ],
   },
 ];

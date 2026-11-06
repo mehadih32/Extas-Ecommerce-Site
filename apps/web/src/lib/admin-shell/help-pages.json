@@ -165,6 +165,7 @@
     { "id": "help/build", "route": "/admin/build" },
     { "id": "help/build-pr", "route": "/admin/build/pr/[n]" },
     { "id": "help/build-problems", "route": "/admin/build/problems" },
+    { "id": "help/build-requests", "route": "/admin/build/requests" },
     { "id": "help/build-files", "route": "/admin/build/files" },
     { "id": "help/build-file", "route": "/admin/build/files/read" }
   ],

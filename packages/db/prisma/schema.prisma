@@ -410,6 +410,7 @@ model Store {
   siteAuditFindings       SiteAuditFinding[]
   customerProblems        CustomerProblem[]
   buildProblems           BuildProblem[]
+  featureRequests         FeatureRequest[]
   problemRecords          ProblemRecord[]
   trackedEvents           TrackedEvent[]
   supportChannels         SupportChannel[]
@@ -9702,6 +9703,54 @@ enum BuildProblemStatus {
   FIXING
   FIXED
   CLOSED
+}
+
+/// @stage S02 · PR 599 — a new function asked for from inside the admin (Help & Build › Feature requests, "request a
+/// feature"): a short name, what it should do in the person's own words, the admin section it belongs to, the admin
+/// address it was asked from and how soon. The build team gives it a status: in the register (with the PR number),
+/// built, already possible (with where: a switch, a Smart Rule, an integration) or not built (why). It never changes the
+/// shop by itself, and nothing is deleted: closing keeps the row and its note.
+model FeatureRequest {
+  id            String                @id @default(uuid(7)) @db.Uuid
+  storeId       Int
+  store         Store                 @relation(fields: [storeId], references: [id])
+  /// F-1, F-2 … in the order asked, per store.
+  number        Int
+  title         String
+  need          String
+  /// The admin section it belongs to (the shell's section id), when the person chose one.
+  section       String?
+  /// The admin address it was asked from, when there was one.
+  page          String?
+  urgency       FeatureRequestUrgency @default(LATER)
+  status        FeatureRequestStatus  @default(NEW)
+  /// The register PR it became (in the register, built).
+  prNumber      Int?
+  /// Where it is already possible, or why it is not built.
+  statusNote    String?
+  statusById    String?               @db.Uuid
+  statusAt      DateTime?             @db.Timestamptz(3)
+  requestedById String?               @db.Uuid
+  createdAt     DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime              @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, number])
+  @@index([storeId, status, createdAt])
+}
+
+/// Soon (it blocks daily work) · Later (a good idea for later).
+enum FeatureRequestUrgency {
+  SOON
+  LATER
+}
+
+/// New · In the register (PR n) · Built · Already possible (where) · Not built (why).
+enum FeatureRequestStatus {
+  NEW
+  REGISTERED
+  BUILT
+  POSSIBLE
+  DECLINED
 }
 
 /// @stage S21 · PR 423 (CN-015) — one report from a visitor's browser, for counting visitors and the date view. The
