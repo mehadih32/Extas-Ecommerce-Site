@@ -268,6 +268,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'seasonal', pages: [{ href: '/admin/marketing/seasonal', perm: 'marketing.campaigns.read', keys: ['marketingSeasonalHome'] }] },
       // S13 · PR 281: Festive cut-off — where the live festive Smart Rules' last-order words show on the shop.
       { id: 'festive', pages: [{ href: '/admin/marketing/festive', perm: 'marketing.campaigns.read', keys: ['marketingFestive'] }] },
+      // S13 · PR 282: the marketing calendar — campaigns, ads, sends, seasonal home, festive cut-offs, blog, social and the owner's plan lines (More options).
+      { id: 'calendar', more: true, pages: [{ href: '/admin/marketing/calendar', perm: 'marketing.campaigns.read', keys: ['marketingCalendar'] }] },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,

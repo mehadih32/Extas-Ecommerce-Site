@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { CalendarBars, calendarWords } from '@/components/admin/marketing/CalendarView';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
@@ -15,12 +16,16 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
+import { calendarOverview } from '@/lib/marketing/calendar';
 import { campaignList } from '@/lib/marketing/campaigns';
+import calBn from '../../../../../messages/admin-calendar.bn.json';
+import calEn from '../../../../../messages/admin-calendar.en.json';
 import bn from '../../../../../messages/admin-campaigns.bn.json';
 import en from '../../../../../messages/admin-campaigns.en.json';
 import '../../settings-cards.css';
 import '../landing/landing.css';
 import './campaigns.css';
+import '../calendar/calendar.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +34,7 @@ const KEY = 'marketingCampaigns';
 const VIEWS = ['all', 'running', 'planned', 'ended', 'archived'] as const;
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
+  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? calBn : calEn) as unknown as Dict), ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -56,7 +61,8 @@ export default async function CampaignsPage(props: Props) {
   const num = (n: number) => formatNumber(n, view.locale);
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
   const v = (VIEWS as readonly string[]).includes(sp.v ?? '') ? (sp.v as (typeof VIEWS)[number]) : 'all';
-  const [l, currency, timeZone] = await Promise.all([campaignList(access.deps.db), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID })]);
+  // PR 282: the marketing calendar's view (only while `marketing.calendar` is on)
+  const [l, currency, timeZone, cal] = await Promise.all([campaignList(access.deps.db), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }), calendarOverview({ db: access.deps.db, resolver: access.deps.resolver })]);
   const money = moneyOf(currency, view.locale);
   const day = (iso: string | null) => (iso ? new Intl.DateTimeFormat(view.locale, { timeZone, day: 'numeric', month: 'short', numberingSystem: 'latn' }).format(new Date(iso)) : '…');
   const rows = l.rows.filter((r) =>
@@ -102,6 +108,19 @@ export default async function CampaignsPage(props: Props) {
           </div>
         ))}
       </div>
+      {cal.settings.enabled ? (
+        <section className="a2-card a2-mt12" aria-labelledby="cp-cal-h" data-testid="cp-calendar">
+          <h2 className="a2-h3" id="cp-cal-h">
+            {t(d, 'mc.campaignsCard.h', { days: cal.range.days })}
+          </h2>
+          <div className="a2-mt12">
+            <CalendarBars items={cal.items} range={cal.range} locale={view.locale} bn={view.lang === 'bn'} w={calendarWords(d)} testId="cp-cal-bars" />
+          </div>
+          <Link className="a2-lnk mc-open" href="/admin/marketing/calendar" data-testid="cp-cal-open">
+            {t(d, 'mc.campaignsCard.open')}
+          </Link>
+        </section>
+      ) : null}
       <nav className="a2-views lp-views a2-mt12" aria-label={s('title')}>
         {VIEWS.map((n) => (
           <Link key={n} className={`a2-view${v === n ? ' on' : ''}`} href={n === 'all' ? HERE : `${HERE}?v=${n}`} aria-current={v === n ? 'page' : undefined}>

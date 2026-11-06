@@ -26,6 +26,10 @@
     "festiveCutoff": {
       "label": "Festive cut-off banners",
       "help": "Off as it ships. On, your live festive Smart Rules (each with its last order time per delivery band) speak on the shop: before the time their short words, for example \"Order by 6 Mar for delivery before the festival\"; after it their \"after\" words. Places: the home page's festive section, under the product page's stock line, and at checkout and on the thank-you page, where a band already past its time gets the \"after\" words instead of the usual hours promise. The heading and the link of the home section are optional, in both languages. Every date and word comes from the rule; nothing is made up."
+    },
+    "calendar": {
+      "label": "Marketing calendar",
+      "help": "Off as it ships. On, Marketing › Calendar shows in one place, day by day on the shop's clock, what is planned across marketing: campaigns, the ads running, message sends, seasonal home windows, festive cut-offs, blog and social posts, and your own plan lines such as \"Eid\" or \"Winter sale\". \"Days\" is how many days one view shows; the Campaigns page shows the same view. The calendar only reads: it never starts, stops or sends anything."
     }
   },
   "ads": {
