@@ -6,7 +6,7 @@
 //   which sections show and in what order, the hero's three lines in both languages (empty = the usual words), and the
 //   collection whose products slide in the hero. Nothing on the live home page changes while he edits.
 // - Windows: a look is scheduled from a start until an end (empty = until stopped), typed on the shop's clock
-//   (`store.timeZone`). Two windows may not overlap. Inside a window the home page shows the look (lib/shop/
+//   (`store.timeZone`). Two windows may not overlap (checked and saved under one lock, follow-up 651). Inside a window the home page shows the look (lib/shop/
 //   seasonal-home); after it, the home page is the owner's own home settings again by itself, because nothing is ever
 //   written to those settings. "Stop" ends a live or upcoming window at once; stopped windows are kept, never deleted.
 // - Stopping a window and setting a look aside work even while the switch is off; everything else needs it on. A look
@@ -160,6 +160,20 @@ export async function saveSeasonalHomeCard(deps: SeasonalHomeDeps, who: AdPlatfo
   return { key: 'seasonalHome', value: ok.data, version: versionOf(ok.data) };
 }
 
+type Db = Pick<PrismaClient, 'layoutSnapshot' | 'scheduledLayoutSwitch'>;
+
+/**
+ * The seasonal windows' one lock (follow-up 651): adding a window (the overlap check and the save) and setting a look
+ * aside run inside one transaction holding a per-store advisory lock, so two saves at the same moment are taken one
+ * after the other and the second sees the first.
+ */
+async function underWindowLock<T>(db: PrismaClient, fn: (tx: Db) => Promise<T>): Promise<T> {
+  return db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`seasonal-home:${S}`}, 0))`;
+    return fn(tx);
+  });
+}
+
 /** A hero line from the editor: both languages (the owner's words), both empty (the usual words), else undefined. */
 function lineOf(v: unknown): { en: string; bn: string } | null | undefined {
   const o = v && typeof v === 'object' ? (v as Record<string, unknown>) : {};
@@ -186,7 +200,7 @@ export async function seasonalHomeAction(deps: SeasonalHomeDeps, who: AdPlatform
     if (!row) throw new SeasonalHomeError('NOT_FOUND', 404, [action.startsWith('window') ? 'lookId' : 'id']);
     return row;
   };
-  const busy = async (lookId: string) => (await deps.db.scheduledLayoutSwitch.findMany({ where: { storeId: S, snapshotId: lookId, status: 'SCHEDULED' } })).some((w) => windowState(w, now) !== 'ENDED');
+  const busy = async (db: Db, lookId: string) => (await db.scheduledLayoutSwitch.findMany({ where: { storeId: S, snapshotId: lookId, status: 'SCHEDULED' } })).some((w) => windowState(w, now) !== 'ENDED');
 
   if (action === 'look.save') {
     const name = str(b.name, NAME_MAX + 1);
@@ -225,8 +239,11 @@ export async function seasonalHomeAction(deps: SeasonalHomeDeps, who: AdPlatform
   }
   if (action === 'look.archive' || action === 'look.restore') {
     const row = await findLook(id);
-    if (action === 'look.archive' && !row.archivedAt && (await busy(row.id))) throw new SeasonalHomeError('IN_USE', 409, ['id']);
-    await deps.db.layoutSnapshot.update({ where: { id: row.id }, data: { archivedAt: action === 'look.archive' ? (row.archivedAt ?? now) : null } });
+    // under the windows' lock (follow-up 651): a window can never be added to a look being set aside at the same moment
+    await underWindowLock(deps.db, async (tx) => {
+      if (action === 'look.archive' && !row.archivedAt && (await busy(tx, row.id))) throw new SeasonalHomeError('IN_USE', 409, ['id']);
+      await tx.layoutSnapshot.update({ where: { id: row.id }, data: { archivedAt: action === 'look.archive' ? (row.archivedAt ?? now) : null } });
+    });
     await log('LayoutSnapshot', row.id, { archived: action === 'look.archive' });
     return { id: row.id };
   }
@@ -239,10 +256,15 @@ export async function seasonalHomeAction(deps: SeasonalHomeDeps, who: AdPlatform
     const revertAt = wallToUtc(b.ends, tz);
     const bad = [!applyAt ? 'starts' : '', revertAt === undefined || (revertAt && applyAt && revertAt.getTime() <= applyAt.getTime()) || (revertAt && revertAt.getTime() <= now.getTime()) ? 'ends' : ''].filter(Boolean);
     if (bad.length) throw new SeasonalHomeError('INVALID_INPUT', 400, bad);
-    const others = await deps.db.scheduledLayoutSwitch.findMany({ where: { storeId: S, status: 'SCHEDULED' }, select: { id: true, applyAt: true, revertAt: true, status: true } });
     const w = { applyAt: applyAt!, revertAt: revertAt ?? null };
-    if (others.some((o) => windowState(o, now) !== 'ENDED' && overlaps(o, w))) throw new SeasonalHomeError('OVERLAP', 409, ['starts', 'ends']);
-    const row = await deps.db.scheduledLayoutSwitch.create({ data: { storeId: S, snapshotId: look.id, applyAt: w.applyAt, revertAt: w.revertAt, status: 'SCHEDULED' } });
+    // the overlap check and the save run under one lock (follow-up 651): two saves at the same moment cannot both pass
+    const row = await underWindowLock(deps.db, async (tx) => {
+      const still = await tx.layoutSnapshot.findFirst({ where: { id: look.id, archivedAt: null }, select: { id: true } });
+      if (!still) throw new SeasonalHomeError('NOT_FOUND', 404, ['lookId']);
+      const others = await tx.scheduledLayoutSwitch.findMany({ where: { storeId: S, status: 'SCHEDULED' }, select: { id: true, applyAt: true, revertAt: true, status: true } });
+      if (others.some((o) => windowState(o, now) !== 'ENDED' && overlaps(o, w))) throw new SeasonalHomeError('OVERLAP', 409, ['starts', 'ends']);
+      return tx.scheduledLayoutSwitch.create({ data: { storeId: S, snapshotId: look.id, applyAt: w.applyAt, revertAt: w.revertAt, status: 'SCHEDULED' } });
+    });
     await log('ScheduledLayoutSwitch', row.id, { lookId: look.id, lookName: look.name, applyAt: w.applyAt.toISOString(), revertAt: w.revertAt?.toISOString() ?? null });
     return { id: row.id };
   }
