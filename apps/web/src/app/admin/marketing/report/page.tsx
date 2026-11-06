@@ -130,6 +130,13 @@ export default async function MarketingReportPage(props: Props) {
           <p className="a2-xs a2-mute a2-mt12" data-testid="mr-period">
             {g('period', { from: dayText(q.from), to: dayText(q.to) })}
           </p>
+          {/* follow-up 657: the whole report as one CSV file (the reader key is enough) */}
+          <p className="a2-xs a2-mt6">
+            <a className="a2-lnk" href={`${API}?format=csv&from=${q.from}&to=${q.to}`} download data-testid="mr-csv">
+              {g('csv')}
+            </a>
+            <span className="a2-mute"> · {g('csvHelp')}</span>
+          </p>
           {notes
             .filter((n) => n !== 'byMonth')
             .map((n) => (
@@ -224,6 +231,21 @@ export default async function MarketingReportPage(props: Props) {
                 <b className="a2-sm">{roas(roasOf(x.salesMinor, x.costMinor))}</b>
               </div>
             ))}
+            {o.sendsPages > 1 ? (
+              <nav className="ct-actions a2-mt12" aria-label={g('send.h')} data-testid="mr-send-pager">
+                <span className="a2-xs a2-mute">{g('send.page', { from: r.sendsOffset + 1, to: r.sendsOffset + r.sends.length, total: r.sendsTotal })}</span>
+                {o.sendsPage > 1 ? (
+                  <Link className="a2-btn" href={`${HERE}?from=${q.from}&to=${q.to}&sends=${o.sendsPage - 1}#mr-send-h`} data-testid="mr-send-prev">
+                    {g('send.prev')}
+                  </Link>
+                ) : null}
+                {o.sendsPage < o.sendsPages ? (
+                  <Link className="a2-btn" href={`${HERE}?from=${q.from}&to=${q.to}&sends=${o.sendsPage + 1}#mr-send-h`} data-testid="mr-send-next">
+                    {g('send.next')}
+                  </Link>
+                ) : null}
+              </nav>
+            ) : null}
             {r.sends.length ? (
               <Link className="a2-lnk a2-mt12" href="/admin/messages/campaigns">
                 {g('send.open')}

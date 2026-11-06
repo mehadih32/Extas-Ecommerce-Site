@@ -12,6 +12,8 @@
 //   - Message sends (SMS, WhatsApp, e-mail: Broadcast) started in the period: their cost (Broadcast.costMinor, or the
 //     delivery log's costs while the send has none) and what the receivers ordered within `resultDays` of their message
 //     (placed; delivered and their Sales value), as the e-mail and win-back pages count it.
+//     Follow-up 657: the message spend and the count are read over every send of the period (never only the listed
+//     ones); the list itself is one page (`sendsOffset`, `sendsMax`), and marketingSendsPage reads any page (the CSV).
 //   - Delivered ROAS in percent = Sales × 100 ÷ spend; null while the spend is unknown or zero.
 // Read-only, store-scoped, archived orders left out, minor units.
 import { Prisma } from '@extas/db/client';
@@ -76,8 +78,11 @@ export interface MarketingReport {
   campaigns: MarketingCampaignRow[];
   /** Spend of ad campaigns tied to no campaign (null when unknown). */
   untiedSpendMinor: number | null;
-  /** Sends started in the period, newest first. */
+  /** Sends started in the period, newest first: one page of them (from `sendsOffset`). */
   sends: MarketingSendRow[];
+  /** Follow-up 657: every send started in the period (the pages together) and where this page starts. */
+  sendsTotal: number;
+  sendsOffset: number;
 }
 
 const NONE: MarketingFigure = Object.freeze({ orders: 0, orderedMinor: 0, delivered: 0, salesMinor: 0 });
@@ -89,12 +94,12 @@ const asPlatform = (v: string): ChannelPlatform | 'OTHER' => CHANNEL_PLATFORMS.f
 
 type Signals = { source: string; adPlatform: string | null; campaignPlatform: string | null; utmSource: string | null; utmMedium: string | null };
 
-/** The marketing report of one store over the days `from`–`to`. `sendsMax` caps the sends listed (a list-length guard). */
+/** The marketing report of one store over the days `from`–`to`. `sendsMax` is one page of sends (a list-length guard), from `sendsOffset`. */
 export async function marketingReport(
   db: Db,
   storeId: number,
   days: { from: string; to: string },
-  o: { currency: string; timeZone: string; rules: ChannelRules; resultDays: number; sendsMax: number },
+  o: { currency: string; timeZone: string; rules: ChannelRules; resultDays: number; sendsMax: number; sendsOffset?: number },
 ): Promise<MarketingReport> {
   const period = daysPeriod(days.from, days.to, o.timeZone);
   const byChannel = (basis: Basis) => db.$queryRaw<(Signals & { n: bigint; v: bigint })[]>`
@@ -112,7 +117,8 @@ export async function marketingReport(
       LEFT JOIN "Page" p ON p."id" = o."landingPageId" AND p."storeId" = o."storeId"
      WHERE ${basisWhere(basis, storeId, period)} AND COALESCE(c."campaignId", p."campaignId") IS NOT NULL
      GROUP BY 1`;
-  const [shop, chOrdered, chSales, cOrdered, cSales, spend, sends] = await Promise.all([
+  const sendsOffset = Math.max(0, Math.floor(o.sendsOffset ?? 0));
+  const [shop, chOrdered, chSales, cOrdered, cSales, spend, sends, allSends] = await Promise.all([
     kpi(db, storeId, period),
     byChannel('ordered'),
     byChannel('sales'),
@@ -127,7 +133,8 @@ export async function marketingReport(
         LEFT JOIN "AdCampaign" c ON c."id" = s."adCampaignId" AND c."storeId" = s."storeId"
        WHERE s."storeId" = ${storeId} AND s."date" >= ${days.from}::date AND s."date" <= ${days.to}::date
        GROUP BY 1, 2`,
-    marketingSends(db, storeId, period, o.resultDays, o.sendsMax),
+    marketingSends(db, storeId, period, o.resultDays, o.sendsMax, sendsOffset),
+    sendsSum(db, storeId, period),
   ]);
 
   const channels = new Map<ChannelKey, MarketingChannelRow>();
@@ -162,7 +169,7 @@ export async function marketingReport(
   for (const x of channels.values()) x.roasPercent = roasOf(x.salesMinor, x.spendMinor);
   for (const x of campaigns.values()) x.roasPercent = roasOf(x.salesMinor, x.spendMinor);
 
-  const messageSpend = sends.reduce((a, s) => a + s.costMinor, 0);
+  const messageSpend = allSends.costMinor;
   const total = addSpend(adSpend, messageSpend);
   const order = (k: MarketingChannelRow['kind']) => (k === 'ads' ? 0 : k === 'organic' ? 1 : 2);
   return {
@@ -178,11 +185,32 @@ export async function marketingReport(
     campaigns: [...campaigns.values()].sort((a, b) => b.salesMinor - a.salesMinor || b.orderedMinor - a.orderedMinor || (b.spendMinor ?? 0) - (a.spendMinor ?? 0) || a.id.localeCompare(b.id)),
     untiedSpendMinor: untied,
     sends,
+    sendsTotal: allSends.count,
+    sendsOffset,
   };
 }
 
+/** Which sends a report reads: sending or sent, started (or scheduled) in the period. */
+const sendsIn = (storeId: number, period: { from: Date; to: Date }) => Prisma.sql`x."storeId" = ${storeId} AND x."status" IN ('SENDING', 'SENT')
+         AND COALESCE(x."startedAt", x."scheduledAt") >= ${period.from} AND COALESCE(x."startedAt", x."scheduledAt") < ${period.to}`;
+
+/** Follow-up 657: every send of the period counted and costed (its own cost, or its delivery log's while it has none). */
+async function sendsSum(db: Db, storeId: number, period: { from: Date; to: Date }): Promise<{ count: number; costMinor: number }> {
+  const [r] = await db.$queryRaw<{ n: number; cost: bigint | null }[]>(Prisma.sql`
+    SELECT count(*)::int AS "n",
+           sum(COALESCE(x."costMinor", (SELECT sum(l."costMinor") FROM "NotificationLog" l WHERE l."storeId" = x."storeId" AND l."broadcastId" = x."id"), 0))::bigint AS "cost"
+      FROM "Broadcast" x
+     WHERE ${sendsIn(storeId, period)}`);
+  return { count: r?.n ?? 0, costMinor: Number(r?.cost ?? 0) };
+}
+
+/** Follow-up 657: one page of the period's sends (newest first), as the report lists them — for the CSV's every row. */
+export function marketingSendsPage(db: Db, storeId: number, days: { from: string; to: string }, o: { timeZone: string; resultDays: number; offset: number; max: number }): Promise<MarketingSendRow[]> {
+  return marketingSends(db, storeId, daysPeriod(days.from, days.to, o.timeZone), o.resultDays, o.max, o.offset);
+}
+
 /** The message sends started in the period (sending or sent), each with its cost and its receivers' orders. */
-async function marketingSends(db: Db, storeId: number, period: { from: Date; to: Date }, resultDays: number, max: number): Promise<MarketingSendRow[]> {
+async function marketingSends(db: Db, storeId: number, period: { from: Date; to: Date }, resultDays: number, max: number, offset = 0): Promise<MarketingSendRow[]> {
   const sales = [...SALES_STATUSES];
   const notPlaced = [...NOT_PLACED_STATUSES];
   const rows = await db.$queryRaw<
@@ -191,10 +219,9 @@ async function marketingSends(db: Db, storeId: number, period: { from: Date; to:
     WITH b AS (
       SELECT x."id", x."name", x."channel"::text AS "channel", x."kind", x."status", COALESCE(x."startedAt", x."scheduledAt") AS "at", x."sentCount" AS "sent", x."costMinor" AS "cost"
         FROM "Broadcast" x
-       WHERE x."storeId" = ${storeId} AND x."status" IN ('SENDING', 'SENT')
-         AND COALESCE(x."startedAt", x."scheduledAt") >= ${period.from} AND COALESCE(x."startedAt", x."scheduledAt") < ${period.to}
+       WHERE ${sendsIn(storeId, period)}
        ORDER BY 6 DESC, x."id" DESC
-       LIMIT ${max}
+       LIMIT ${max} OFFSET ${offset}
     ),
     got AS (
       SELECT DISTINCT l."broadcastId" AS "bid", o."id", o."status"::text AS "st", o."totalMinor" AS "total"
