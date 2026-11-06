@@ -16,6 +16,8 @@ describe('Lumen section checks', () => {
 
   it('finds fixed sizes under 14 px only', () => {
     expect(smallSizes('.a { font-size: 12px } .b { font: 700 13.5px/1 var(--lm-font) } .c { font-size: 14px } .d { font-size: var(--lm-fs-card) }')).toHaveLength(2);
+    // rem/em under 0.875 (14 px at the 16 px root) are small too; 0.875rem, 1.2rem and a line height are not
+    expect(smallSizes('.p { font-size: 0.8rem } .q { font: 600 .7rem/1 x } .r { font-size: 0.85em } .s { font-size: 0.875rem } .t { font: 700 1.2rem / 1.3 x }')).toEqual(['font-size: 0.8rem', 'font: 600 .7rem', 'font-size: 0.85em']);
   });
 
   it('finds a no-access wrapper without the page testid or the ready mark', () => {

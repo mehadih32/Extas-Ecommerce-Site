@@ -1,9 +1,12 @@
 // PR 630 (CN-036) — Settings › Admin look, the theme part: four looks with only Lumen selectable (ক খ গ "Planned", no
 // button), light or dark, the accent swatches (coral first) and "Reduce motion" as the person's own; the team's part
 // only for someone who may change settings; words in both languages.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { ADMIN_ACCENT_PRESETS, ADMIN_THEME_LOOKS } from '@extas/settings';
+import { smallSizes, styleLiterals } from '@/lib/admin-lumen/section-check';
 import bn from '../../../../messages/admin-shell.bn.json';
 import en from '../../../../messages/admin-shell.en.json';
 import { ThemeChooser, type ThemeChooserProps } from './ThemeChooser';
@@ -58,5 +61,14 @@ describe('Admin look: theme', () => {
     expect(html).toContain('পরিকল্পনায়');
     const th = JSON.stringify(words(bn as unknown as typeof en));
     expect(th).not.toMatch(/[০-৯]/);
+  });
+});
+
+describe('Admin look page styles (PR 630 follow-up)', () => {
+  it('its pills ("In use", "Planned", "Yours") and every other text are at least 14 px, in tokens', () => {
+    const css = readFileSync(join(__dirname, '..', '..', '..', 'app', 'admin', 'settings', 'look', 'look-theme.css'), 'utf8');
+    expect(smallSizes(css)).toEqual([]);
+    expect(styleLiterals(css)).toEqual([]);
+    expect(css).toMatch(/\.lm-pill \{[^}]*font-size: var\(--lm-fs-card\)/);
   });
 });

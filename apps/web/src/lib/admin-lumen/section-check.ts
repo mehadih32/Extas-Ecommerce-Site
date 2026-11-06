@@ -19,10 +19,11 @@ export function styleLiterals(css: string): string[] {
   return [...body.matchAll(/#[0-9A-Fa-f]{3,8}\b|\b(?:rgba?|hsla?)\(|font-family:\s*['"]|\bfont:[^;{}]*'[A-Z]/g)].map((m) => m[0]);
 }
 
-/** Fixed font sizes under 14 px in a stylesheet (px values only; tokens and rem are the theme's). */
+/** Font sizes under 14 px in a stylesheet: px values under 14, and rem/em under 0.875 (14 px at the 16 px root; PR 630
+ *  follow-up: 0.8rem pills slipped past a px-only check). Tokens (var(--lm-fs-*)) are the theme's and pass. */
 export function smallSizes(css: string): string[] {
   const body = css.replace(/\/\*[\s\S]*?\*\//g, '');
-  return [...body.matchAll(/font(?:-size)?:[^;{}]*?\b(\d+(?:\.\d+)?)px/g)].filter((m) => Number(m[1]) < 14).map((m) => m[0]);
+  return [...body.matchAll(/font(?:-size)?:[^;{}]*?(?<![\w.-])(\d*\.?\d+)(px|r?em)\b/g)].filter((m) => Number(m[1]) < (m[2] === 'px' ? 14 : 0.875)).map((m) => m[0]);
 }
 
 /** The no-access wrappers (a root holding the "denied" state) that do not carry the page's own data-testid and the
