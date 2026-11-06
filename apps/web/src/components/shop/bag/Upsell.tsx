@@ -1,6 +1,7 @@
 // PR 114 — "You may also like" under the bag (demo 72-upsell.js): products from the same categories as the bag (else the
 // newest), never what is already in it; the tier ladder beside them (PR 109) and the reasons to buy here, each reason
-// only when its setting or flag backs it (CN-018).
+// only when its setting or flag backs it (CN-018). Follow-up 679: the set line has its own switch (`bag.upsell.setLine`),
+// and the thank-you page draws the same block (`thanks.upsell`, off) with no tiers and no sub-line.
 import type { BagView } from '@extas/cart';
 import type { ShopCard } from '@/lib/shop/catalogue';
 import type { ShopContext } from '@/lib/shop/context';
@@ -22,7 +23,10 @@ export function Upsell({
   style,
   phoneLadder,
   reasons,
+  setLine = true,
   trust,
+  testId = 'bag-upsell',
+  rowId = 'bg-upsrow',
 }: {
   c: ShopContext;
   cards: ShopCard[];
@@ -33,13 +37,18 @@ export function Upsell({
   style: 'side' | 'current';
   phoneLadder: boolean;
   reasons: boolean;
+  /** Follow-up 679: the phone's set line ("Buy 2 and save …", `bag.upsell.setLine`, on as shipped). */
+  setLine?: boolean;
   trust: Reassurance;
+  /** Follow-up 679: the same block on the thank-you page (`thanks.upsell`) under its own names. */
+  testId?: string;
+  rowId?: string;
 }) {
   const t = c.t;
   if (!cards.length && !tiers) return null;
   const why = reasons && (trust.cod || trust.exchange || trust.original);
   return (
-    <section className={`ups ups-st-${style}${tiers ? '' : ' ups-notier'}`} id="bg-ups" data-testid="bag-upsell">
+    <section className={`ups ups-st-${style}${tiers ? '' : ' ups-notier'}`} id={testId === 'bag-upsell' ? 'bg-ups' : undefined} data-testid={testId}>
       <div className="container">
         <div className="ups-hd">
           <h2>{t('bag.ups.title')}</h2>
@@ -49,10 +58,10 @@ export function Upsell({
         </div>
         {from !== 'none' ? <p className="ups-sub">{from === 'same' ? t('bag.ups.sub') : t('bag.ups.subNew')}</p> : null}
         {tiers ? <Ladder c={c} tiers={tiers} phone={phoneLadder} builderHref={builderHref} /> : null}
-        {tiers && !phoneLadder ? <PhoneTier c={c} tiers={tiers} builderHref={builderHref} /> : null}
+        {tiers && !phoneLadder && setLine ? <PhoneTier c={c} tiers={tiers} builderHref={builderHref} /> : null}
         {cards.length ? (
           // The cards' badges fit like the category page's (CARD_FIT), so a long badge on a narrow phone steps down, never cut.
-          <CardFits className="ups-row mt12" style={{ ['--n' as string]: Math.min(4, cards.length) }} id="bg-upsrow">
+          <CardFits className="ups-row mt12" style={{ ['--n' as string]: Math.min(4, cards.length) }} id={rowId}>
             {cards.map((card) => (
               <ProductCard key={card.id} card={card} c={c} />
             ))}

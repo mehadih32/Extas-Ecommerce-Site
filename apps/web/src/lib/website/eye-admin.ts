@@ -8,7 +8,7 @@
 // `website.eye.write`. Hiding deletes nothing: switching it back on shows the part again. No price, order or customer.
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { EYE_KEYS, EYE_TOGGLES, eyeDefault, eyeToggle, readEye, registry, storeTarget, writeEye, type EyeArea, type EyeScreen, type SettingSpec } from '@extas/settings';
+import { doorNoteTextSchema, EYE_KEYS, EYE_TOGGLES, eyeDefault, eyeToggle, readEye, registry, storeTarget, writeEye, type DoorNoteText, type EyeArea, type EyeScreen, type SettingSpec } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { versionOf } from './words-admin';
 
@@ -99,6 +99,43 @@ export async function saveEye(deps: EyeDeps, who: EyeWho, input: unknown): Promi
     await audit(deps.db, who.actor, { storeId: S, action: 'website.eye.save', entityType: 'Setting', entityId: keys.join(','), before: pick(before), after: pick(next) }, who.ctx);
   }
   return { rows: rowsOf(next), version: versionOf(next), changed };
+}
+
+// ---- Follow-up 679 (registry v265): the door note's words ----
+// The door note (checkout, under the settled delivery area) speaks about refusing at the door — a Cash on Delivery
+// promise — so its words are only ever the owner's: `checkout.doorNote.text` ships empty and the shop draws nothing
+// until he writes them here. A save writes only the words (the switch stays in the list), trimmed, each language at
+// most DOOR_NOTE_MAX letters; audited `website.doorNote.save` with before and after. `website.eye.write` to save.
+
+/** The door note's words as they are now (empty strings: none written). */
+export const doorNoteView = (deps: EyeDeps): Promise<DoorNoteText> => deps.resolver.value('checkout.doorNote.text', { storeId: S });
+
+/** PUT {en, bn}: the door note's own words (either may be empty). Answers the words as saved. */
+export async function saveDoorNote(deps: EyeDeps, who: EyeWho, input: unknown): Promise<{ text: DoorNoteText; changed: boolean }> {
+  const parsed = doorNoteTextSchema.safeParse(input);
+  if (!parsed.success) throw new EyeError('INVALID_INPUT', 400, [...new Set(parsed.error.issues.map((i) => String(i.path[0] ?? 'text')))]);
+  const before = await doorNoteView(deps);
+  const next = parsed.data;
+  if (before.en === next.en && before.bn === next.bn) return { text: before, changed: false };
+  await deps.resolver.set('checkout.doorNote.text', next, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: 'Website › Eye-toggles › Door note words' });
+  await audit(deps.db, who.actor, { storeId: S, action: 'website.doorNote.save', entityType: 'Setting', entityId: 'checkout.doorNote.text', before, after: next }, who.ctx);
+  return { text: next, changed: true };
+}
+
+/** /api/admin/website/eye-toggles/door-note — GET the words (`website.read`); PUT new words (`website.eye.write`). */
+export async function doorNoteHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  const method = request.method.toUpperCase();
+  if (method !== 'GET' && method !== 'PUT') return fail(405, 'method-not-allowed');
+  const b = method === 'GET' ? {} : await body(request).catch(() => ({}) as Record<string, unknown>);
+  const g = await guardAdmin(request, deps, { permission: method === 'GET' ? 'website.read' : 'website.eye.write', storeId: S });
+  if (g instanceof Response) return g;
+  const d: EyeDeps = { db: deps!.db, resolver: deps!.resolver };
+  try {
+    if (method === 'GET') return json({ ok: true, text: await doorNoteView(d) });
+    return json({ ok: true, ...(await saveDoorNote(d, { actor: g.actor, ctx: g.ctx }, b)) });
+  } catch (e) {
+    return answer(e);
+  }
 }
 
 const answer = (e: unknown): Response => (e instanceof EyeError ? json({ ok: false, error: e.code, details: e.details }, { status: e.status }) : errorResponse(e));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { confirmedOf, hoursOf, named, placeLine } from './checkout-model';
+import { confirmedOf, doorNoteOf, hoursOf, named, placeLine } from './checkout-model';
 
 const p = { id: 'a1', nameEn: 'Mirpur 12', nameBn: 'মিরপুর ১২', parentEn: 'Dhaka', parentBn: 'ঢাকা' };
 
@@ -83,5 +83,20 @@ describe('a refused Confirm (PR 124)', () => {
     const fixed = checkForm({ name: 'Rahim', phone: '01712345678', address: 'House 4, Road 2' }, limits);
     expect(stillAsked('phone', fixed)).toBeNull();
     expect(stillAsked(null, bad)).toBeNull();
+  });
+});
+
+describe('doorNoteOf (follow-up 679)', () => {
+  const words = { en: 'Sample owner words', bn: 'নমুনা লেখা' };
+  it('only while on and only the owner\'s words: as shipped (empty) nothing at all', () => {
+    expect(doorNoteOf(false, words, 'en')).toBeNull();
+    expect(doorNoteOf(true, { en: '', bn: '' }, 'en')).toBeNull();
+    expect(doorNoteOf(true, { en: '  ', bn: ' ' }, 'bn')).toBeNull();
+  });
+  it('in the page language, English when the Bengali is not written', () => {
+    expect(doorNoteOf(true, words, 'en')).toBe('Sample owner words');
+    expect(doorNoteOf(true, words, 'bn')).toBe('নমুনা লেখা');
+    expect(doorNoteOf(true, { en: 'Sample owner words', bn: '' }, 'bn')).toBe('Sample owner words');
+    expect(doorNoteOf(true, { en: '', bn: 'নমুনা লেখা' }, 'en')).toBeNull();
   });
 });

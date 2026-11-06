@@ -10,6 +10,7 @@ import { ROUTES } from '@/lib/shop/routes';
 import type { Reassurance } from '@/lib/shop/bag-model';
 import { Icon } from '../Icon';
 import { nameOf } from './BagLines';
+import { SendBagWa } from './SendBagWa';
 
 /** The code box's line for its state, or null when there is nothing to say. */
 export function codeMessage(c: ShopContext, code: CodeState): { text: string; ok: boolean; login: boolean } | null {
@@ -34,7 +35,7 @@ export function codeMessage(c: ShopContext, code: CodeState): { text: string; ok
   }
 }
 
-export function BagSummary({ c, view, codeOn, trust, blocked, gift = false }: { c: ShopContext; view: BagView; codeOn: boolean; trust: Reassurance; blocked: boolean; gift?: boolean }) {
+export function BagSummary({ c, view, codeOn, trust, blocked, gift = false, waSend = null }: { c: ShopContext; view: BagView; codeOn: boolean; trust: Reassurance; blocked: boolean; gift?: boolean; waSend?: { href: string; message: string } | null }) {
   const t = c.t;
   const s = view.summary;
   const msg = codeMessage(c, view.code);
@@ -169,6 +170,14 @@ export function BagSummary({ c, view, codeOn, trust, blocked, gift = false }: { 
           <Icon name="right" size={18} />
         </a>
       )}
+      {/* follow-up 679: "Send my bag on WhatsApp" (`bag.waSendBag`, off; the store's own number; he sends it himself) */}
+      {waSend ? (
+        <SendBagWa
+          href={waSend.href}
+          message={waSend.message}
+          words={{ button: t('bag.waSend.button'), title: t('bag.waSend.title'), intro: t('bag.waSend.intro'), open: t('bag.waSend.open'), back: t('bag.waSend.back'), close: t('cat.close') }}
+        />
+      ) : null}
       {gift && !blocked ? (
         <a className="bg-gift" href={`${checkout}?gift=1`} data-testid="bag-gift">
           <Icon name="gift" size={16} />

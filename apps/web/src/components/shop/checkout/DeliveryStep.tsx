@@ -37,10 +37,19 @@ export interface DeliveryStepProps {
   onChange: () => void;
   /** PR 193: the lines in place of the hours promise (the holiday, the Eid date of this place); empty: the usual one. */
   eta?: string[];
+  /** Follow-up 679: the door note under the settled area — the owner's own words (null: off or none written). */
+  doorNote?: string | null;
 }
 
-export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, hasAddress, lang, w, m, n, onPick, onChange, eta = [] }: DeliveryStepProps) {
+export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, hasAddress, lang, w, m, n, onPick, onChange, eta = [], doorNote = null }: DeliveryStepProps) {
   const found = delivery.state === 'found' && !reading ? delivery : null;
+  // follow-up 679 (demo `.co-door`): only once the area is settled, and only the owner's words
+  const door =
+    found && doorNote ? (
+      <p className="co-door" data-testid="co-door">
+        {doorNote}
+      </p>
+    ) : null;
   const promiseOf = (b: Pick<BandOut, 'hoursMin' | 'hoursMax'>, key: 'del.promise' | 'del.promiseAny') => {
     // PR 193: the holiday or the Eid date speaks instead of the hours
     if (eta.length) return eta.join(' ');
@@ -71,6 +80,7 @@ export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, h
             </p>
           </div>
         ) : null}
+        {door}
       </>
     );
   }
@@ -78,7 +88,7 @@ export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, h
   if (found) {
     const where = placeLine(lang, found.place);
     const promise = found.band.priced || eta.length ? promiseOf(found.band, 'del.promise') : null;
-    return (
+    const box = (
       <div className="co-zone mt16" data-testid="co-zone-box">
         <Icon name="truck" size={22} />
         <div className="grow">
@@ -107,6 +117,14 @@ export function DeliveryStep({ delivery, charge, rates, freeGapMinor, reading, h
           </div>
         ) : null}
       </div>
+    );
+    return door ? (
+      <>
+        {box}
+        {door}
+      </>
+    ) : (
+      box
     );
   }
 

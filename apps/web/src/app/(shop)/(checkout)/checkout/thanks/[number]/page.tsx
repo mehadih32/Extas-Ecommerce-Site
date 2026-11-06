@@ -6,12 +6,15 @@
 // PR 193: the holiday's "ships from …" or "may arrive after Eid" in place of the hours, as the checkout said it.
 // PR 532 follow-up (664): while the owner shares them, the order's server event ids as one inert data block for a
 // browser pixel (lib/tracking/shared-ids, drawn by components/shop/SharedEventIds), read only once the order is known to be his.
+// Follow-up 679: "You may also like" (`thanks.upsell`, off as shipped): the order's categories, never what is in it.
 import type { Metadata } from 'next';
 import { Celebrate } from '@/components/shop/checkout/Celebrate';
 import { ThanksNotFound, ThanksPage } from '@/components/shop/checkout/ThanksPage';
 import { SharedEventIds } from '@/components/shop/SharedEventIds';
 import { CELEBRATE_QUERY, celebrationFor } from '@/lib/shop/celebrate';
 import { checkoutSettings, currentEta, currentReceipt } from '@/lib/shop/checkout';
+import { bagPickCards } from '@/lib/shop/catalogue';
+import { reassurance } from '@/lib/shop/bag-model';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
 import { thanksLook } from '@/lib/shop/thanks-look';
@@ -30,16 +33,21 @@ export default async function Thanks({ params, searchParams }: { params: Promise
   const [r, s, more] = await Promise.all([
     currentReceipt(c, decodeURIComponent(number)),
     checkoutSettings(c.storeId),
-    readPageSettings(['thanks.page', 'account.invoice', 'thanks.celebrate'], c.storeId),
+    readPageSettings(['thanks.page', 'account.invoice', 'thanks.celebrate', 'thanks.upsell', 'bag.upsell.reasons', 'bag.trust.securePayment', 'bag.upsell.originalLine'], c.storeId),
   ]);
   if (!r) return <ThanksNotFound c={c} />;
-  const [look, eta, ids] = await Promise.all([thanksLook(c.storeId, r), currentEta(c, r.number), orderSharedIds(c.storeId, r.number)]);
+  const ups = more['thanks.upsell'];
+  const inOrder = r.lines.map((i) => i.productId).filter((id): id is string => !!id);
+  const [look, eta, ids, picks] = await Promise.all([thanksLook(c.storeId, r), currentEta(c, r.number), orderSharedIds(c.storeId, r.number), ups.enabled ? bagPickCards(c.storeId, inOrder, ups.count) : Promise.resolve(null)]);
+  const upsell = picks?.cards.length
+    ? { cards: picks.cards, reasons: more['bag.upsell.reasons'], trust: reassurance(c.flags, { securePayment: more['bag.trust.securePayment'], originalLine: more['bag.upsell.originalLine'] }) }
+    : null;
   const q = (await searchParams)[CELEBRATE_QUERY];
   const cel = more['thanks.celebrate'];
   const plan = celebrationFor(cel, c.today, r.number, typeof q === 'string' ? q : null, cel.text?.[c.lang] || c.t('celebrate.text'));
   return (
     <>
-      <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} accountCard={s['account.thanksCard.enabled']} invoice={more['account.invoice'].enabled} look={look} eta={eta} />
+      <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} accountCard={s['account.thanksCard.enabled']} invoice={more['account.invoice'].enabled} look={look} eta={eta} upsell={upsell} />
       {plan ? <Celebrate plan={plan} /> : null}
       <SharedEventIds ids={ids} />
     </>

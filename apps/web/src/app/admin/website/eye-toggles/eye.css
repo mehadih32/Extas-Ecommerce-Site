@@ -14,3 +14,9 @@
 .adm2 .eyb-bar{position:sticky;bottom:0;z-index:2;background:var(--sf);border-top:1px solid var(--ln);padding:8px 0;margin-top:12px;flex-wrap:wrap;gap:8px}
 .adm2 .eyb-bar .a2-btn{min-height:44px}
 @media (max-width:767px){.adm2 .eyb-bar{bottom:72px;padding:8px 10px;border:1px solid var(--ln);border-radius:12px;box-shadow:var(--lm-sh)}.adm2 .eyb-bar .a2-gap8{display:flex;flex-direction:row;gap:8px;width:100%}.adm2 .eyb-bar .a2-gap8>.a2-btn{flex:1 1 0;min-width:0}}
+/* Follow-up 679 — the door note words card: two fields side by side on a computer, one under the other on a phone. */
+.adm2 .eyb-door{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+@media (max-width:760px){.adm2 .eyb-door{grid-template-columns:minmax(0,1fr)}}
+.adm2 .eyb-door .a2-ta{min-height:64px;width:100%}
+.adm2 .eyb-doorbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.adm2 .eyb-doorbar .a2-btn{min-height:44px}

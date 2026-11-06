@@ -475,3 +475,6 @@ var(--text2) 0 42%, #C6BFB2 49%, #EFEBE3 51%, #C6BFB2 53%, var(--text2) 60% 100%
 }
 /* CN-029 Phase 3 qa-gate I3 (PR 610): the calm "not taking new orders" line on the bag and the checkout (PausedNote). */
 .shop .sh-paused { gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+/* S02 · PR 80 follow-up 679 — "Send my bag on WhatsApp": the message preview as a chat bubble (demo 50-bag.js .bg-wa). */
+.shop .bg-wa-intro { margin: 0px 0px 12px; }
+.shop .bg-wa { background: var(--brand-tint); border: 1px solid var(--brand-line); border-radius: 12px 12px 12px 3px; padding: 12px 14px; white-space: pre-line; font-size: 14px; line-height: 1.55; color: var(--ink); overflow-wrap: anywhere; }

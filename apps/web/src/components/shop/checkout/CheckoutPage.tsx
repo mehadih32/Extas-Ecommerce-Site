@@ -6,12 +6,17 @@
 // PR 610 (qa-gate I3): `paused` — checkout is paused now (the ERP holds the account): the form says so from the start.
 // S06 · PR 556: while the in-transit duplicate notice is on (never on a gift), each bag line's picture and name go to the
 // form for the notice (TransitNotice).
+// Follow-up 679 (registry v265, demo 51-checkout.js): "Ordered before? Log in" for a visitor not signed in
+// (`checkout.loginNudge`), the door note in the owner's own words (`checkout.doorNote` + its text; empty: none) and the
+// help strip on a computer only with `checkout.helpStripDesktop` (else phones and tablets, the demo's `.co-help-m`).
 import '../bag/bag.css';
 import './checkout.css';
 import type { CheckoutPrefill } from '@extas/accounts';
 import { fieldOrder, giftDateWindow, storeToday, viewOf, type CheckoutQuote } from '@extas/checkout';
 import { cardsByIds, colourName } from '@/lib/shop/catalogue';
 import { checkoutWords, type CheckoutSettings } from '@/lib/shop/checkout';
+import { doorNoteOf } from '@/lib/shop/checkout-model';
+import { signedIn } from '@/lib/shop/account';
 import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { waHref } from '@/lib/shop/links';
@@ -73,6 +78,7 @@ export async function CheckoutPage({ c, quote, s, prefill = null, gift = false, 
       }
     : null;
   const wa = s['checkout.help.enabled'] ? waHref(c.s['contact.whatsapp'], c.t('checkout.help.message', c.vars)) : null;
+  const login = s['checkout.loginNudge'] && !giftCfg && !(await signedIn()) ? `${hrefIn(c.lang, ROUTES.login)}?next=${encodeURIComponent(hrefIn(c.lang, ROUTES.checkout))}` : null;
   return (
     <div className="co-page" data-bag-root="" data-testid="co-page">
       <CheckoutForm
@@ -81,6 +87,9 @@ export async function CheckoutPage({ c, quote, s, prefill = null, gift = false, 
         money={{ currency: c.s['store.currency'], lang: c.lang, bnDigits: c.bnDigits }}
         lines={<CheckoutLines c={c} view={view} cards={cards} manyMin={s['checkout.manyOfOne.enabled'] ? s['checkout.manyOfOne.min'] : null} />}
         wa={wa}
+        helpDesktop={s['checkout.helpStripDesktop']}
+        login={login}
+        doorNote={doorNoteOf(s['checkout.doorNote'], s['checkout.doorNote.text'], c.lang)}
         fields={fieldOrder(s['checkout.fieldOrder'])}
         limits={{ nameMin: s['checkout.form.nameMin'], addressMin: s['checkout.form.addressMin'] }}
         settle={{ settleMs: s['delivery.resolver.settleMs'], minWords: s['delivery.resolver.minWords'] }}

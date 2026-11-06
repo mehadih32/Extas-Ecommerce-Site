@@ -36,6 +36,9 @@ import { Icon, WaGlyph } from '../Icon';
 import { nameOf, Thumb } from '../bag/BagLines';
 import { CopyNumber, RetryPayment } from './ThanksActions';
 import { ThanksLook, type LookRowView } from './ThanksLook';
+import { Upsell } from '../bag/Upsell';
+import type { ShopCard } from '@/lib/shop/catalogue';
+import type { Reassurance } from '@/lib/shop/bag-model';
 
 export function ThanksNotFound({ c }: { c: ShopContext }) {
   return (
@@ -107,6 +110,7 @@ export async function ThanksPage({
   invoice = false,
   look = null,
   eta = [],
+  upsell = null,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -118,6 +122,8 @@ export async function ThanksPage({
   invoice?: boolean;
   /** PR 128: "Complete your look" (null: off, or nothing honest to show). */
   look?: LookData | null;
+  /** Follow-up 679: "You may also like" (`thanks.upsell`, off): cards from the order's categories, and the reasons. */
+  upsell?: { cards: ShopCard[]; reasons: boolean; trust: Reassurance } | null;
   /** PR 193: the lines in place of the hours promise (placed during the holiday, or past its place's Eid date). */
   eta?: string[];
 }) {
@@ -404,6 +410,11 @@ export async function ThanksPage({
             {timeline ? <div style={{ order: 5 }}>{timeline}</div> : null}
             <div style={{ order: 6 }}>{items}</div>
             {note ? <div style={{ order: 7 }}>{note}</div> : null}
+            {upsell && upsell.cards.length ? (
+              <div style={{ order: 9 }} className="ty-ups">
+                <Upsell c={c} cards={upsell.cards} from="none" tiers={null} style="current" phoneLadder={false} reasons={upsell.reasons} trust={upsell.trust} testId="ty-upsell" rowId="ty-upsrow" />
+              </div>
+            ) : null}
             <div style={{ order: 10 }}>
               <div className="ty-endbtns">
                 <a className="btn btn-ghost btn-block ty-keep" href={hrefIn(c.lang, ROUTES.home)} data-testid="ty-keep">

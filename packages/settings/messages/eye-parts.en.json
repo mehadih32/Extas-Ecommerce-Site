@@ -1,0 +1,38 @@
+{
+  "checkout": {
+    "loginNudge": {
+      "label": "Checkout: \"Ordered before? Log in\"",
+      "help": "Under the checkout's first heading, for a visitor who is not signed in: a line with a link to log in for his saved address and offers."
+    },
+    "doorNote": {
+      "label": "Checkout: door note",
+      "help": "A short line under the settled delivery area, in your own words (Door note words). Nothing shows until you write them.",
+      "text": {
+        "label": "Door note words",
+        "help": "Your own words for the door note, in English and Bengali (up to 160 letters each). Empty: nothing shows. Write only what your Cash on Delivery and return rules really do."
+      }
+    },
+    "helpStripDesktop": {
+      "label": "Checkout: help strip on a computer",
+      "help": "The \"Need help with your order?\" strip on a computer too. Off: phones and tablets only."
+    }
+  },
+  "bag": {
+    "waSendBag": {
+      "label": "Bag: \"Send my bag on WhatsApp\"",
+      "help": "A button under Checkout that shows the bag as a message and opens WhatsApp with it, to the store's own number. Nothing is sent by itself."
+    },
+    "upsell": {
+      "setLine": {
+        "label": "Bag: the set line in \"You may also like\"",
+        "help": "The one-line \"Buy 2 and save\" offer inside the bag's upsell, when a take-more-pay-less offer applies."
+      }
+    }
+  },
+  "thanks": {
+    "upsell": {
+      "label": "Thank-you page: \"You may also like\"",
+      "help": "Products from the order's categories (never what is in it) on the thank-you page, with how many cards."
+    }
+  }
+}

@@ -209,6 +209,8 @@ export * from './registry-outreach';
 export * from './registry-seasonal-home';
 // S13 · PR 281 — festive cut-off words on the shop: the switch, where, the heading and the link (registry-festive-cutoff.ts, version 216).
 export * from './registry-festive-cutoff';
+// S02 · PR 80 follow-up 679 — the demo's eye-toggle parts: login line, door note, desktop help strip, send the bag on WhatsApp, the set line, the thank-you upsell (registry-eye-parts.ts, version 265).
+export * from './registry-eye-parts';
 // S13 · PR 282 — the marketing calendar: the switch and how many days one view shows (registry-marketing-calendar.ts, version 217).
 export * from './registry-marketing-calendar';
 // S13 · PR 283 — the marketing report: the switch, the longest period and a message send's result days (registry-marketing-report.ts, version 218).

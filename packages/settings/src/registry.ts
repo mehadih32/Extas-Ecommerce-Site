@@ -136,6 +136,7 @@ import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
 import { festiveCutoffSettings } from './registry-festive-cutoff';
+import { eyePartSettings } from './registry-eye-parts';
 import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
 import { layoutSettings } from './registry-layouts';
@@ -1453,6 +1454,8 @@ export const registry = {
   ...outreachSettings,
   ...seasonalHomeSettings,
   ...festiveCutoffSettings,
+  // S02 · PR 80 follow-up 679 (v265): the demo's eye-toggle parts
+  ...eyePartSettings,
   ...marketingCalendarSettings,
   ...marketingReportSettings,
   // S02 · PR 76 · the page builder: the category page's sections (registry-layouts.ts, version 240).

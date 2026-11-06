@@ -75,6 +75,12 @@ export interface CheckoutFormProps {
   lines: ReactNode;
   /** The WhatsApp help link, or null when the help line is off or there is no number. */
   wa: string | null;
+  /** Follow-up 679: the help strip on a computer too (`checkout.helpStripDesktop`); off: phones and tablets only. */
+  helpDesktop?: boolean;
+  /** Follow-up 679: the log-in link of "Ordered before? Log in" (null: off, or he is signed in). */
+  login?: string | null;
+  /** Follow-up 679: the door note's words, the owner's own (null: off or none written). */
+  doorNote?: string | null;
   fields: Field[];
   limits: FormLimits;
   /** When the address counts as finished (`delivery.resolver.settleMs`, `delivery.resolver.minWords`). */
@@ -127,6 +133,9 @@ export function CheckoutForm({
   money,
   lines,
   wa,
+  helpDesktop = false,
+  login = null,
+  doorNote = null,
   fields,
   limits,
   settle: timing,
@@ -567,7 +576,8 @@ export function CheckoutForm({
   return (
     <form id="co-form" noValidate data-testid="co-form" onSubmit={submit} onKeyDown={nextOnEnter} onFocusCapture={readAutofill} data-ready={check.ok ? '1' : '0'}>
       {wa ? (
-        <div className="co-help">
+        // follow-up 679: on a computer only with `checkout.helpStripDesktop` (demo: `.co-help-m` hides it from 1024 px)
+        <div className={helpDesktop ? 'co-help' : 'co-help co-help-m'} data-testid="co-help">
           <div className="container row between" style={{ gap: 12 }}>
             <span className="co-helpt">
               <span className="co-hl">{w('help.long')}</span>
@@ -639,6 +649,15 @@ export function CheckoutForm({
                 <h2 className="h2">{w(giftCfg ? 'gift.receiver' : 'heading')}</h2>
               </div>
               {giftCfg ? <p className="small text2 mt8">{w('gift.receiverSub')}</p> : null}
+              {login ? (
+                <p className="xs muted co-sub" data-testid="co-login">
+                  {w('login.before')}{' '}
+                  <a href={login} data-testid="co-login-link">
+                    {w('login.link')}
+                  </a>{' '}
+                  {w('login.after')}
+                </p>
+              ) : null}
               <div className="stack s16 mt16">
                 <DetailsFields
                   fields={fields}
@@ -698,6 +717,7 @@ export function CheckoutForm({
                 onPick={(band, areaId) => pick(band.id, areaId)}
                 onChange={changeBand}
                 eta={view.eta.lines}
+                doorNote={doorNote}
               />
             </section>
             <PaymentStep pay={view.pay} due={view.advance ? m(view.advance.amountMinor) : amount} advance={view.advance} preorder={view.eta.preorder} restPlus={t.known ? '' : ` ${w('sum.plusDelivery')}`} open={payOpens(form.address)} covered={covered} w={w} m={m} n={n} onChoose={choosePay} wa={wa} />
