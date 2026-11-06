@@ -1,16 +1,16 @@
 # Go-live check (PR 587) — before the owner's "go live"
 
-**সারকথা:** চালুর আগে দরকারি 16টার 5টা হয়ে গেছে, 11টা বাকি। রিডাইরেক্ট: 0টা পুরনো লিংক (এখনো বন্ধ — চালুর দিনে চালু হবে)। সাইটম্যাপ: 3টা ঠিকানা, 0টা সমস্যা। ডোমেইন বদলের মহড়া (শুধু কপিতে): ঠিক আছে। কিছুই বদলানো হয়নি।
+**সারকথা:** চালুর আগে দরকারি 16টার 3টা হয়ে গেছে, 13টা বাকি। রিডাইরেক্ট: 0টা পুরনো লিংক (এখনো বন্ধ — চালুর দিনে চালু হবে)। সাইটম্যাপ: 3টা ঠিকানা, 0টা সমস্যা। ডোমেইন বদলের মহড়া (শুধু কপিতে): ঠিক আছে। কিছুই বদলানো হয়নি।
 
-- Run: 2026-11-06 12:12 (Asia/Dhaka) · version `21f4d9a583e6` · host: the staging host only (read-only check account) · result **NOT READY**
+- Run: 2026-11-06 15:43 (Asia/Dhaka) · version `ce460ee40386` · host: the staging host only (read-only check account) · result **NOT READY**
 - Nothing was changed: no setting, no sign-off, no server file. The main domain was never asked.
 
-## Needed before go-live (5/16 done)
+## Needed before go-live (3/16 done)
 
 | | Row | PR | Kind | Detail |
 |---|---|---|---|---|
-| ✅ | Every page opens (smoke test) (`smoke`) | 393 | auto | pages: 418 · failed: 0 |
-| ✅ | The server's health check is clean (`health`) | 393 | auto | problems: 0 |
+| ❌ | Every page opens (smoke test) (`smoke`) | 393 | auto | pages: 0 · failed: 0 |
+| ❌ | The server's health check is clean (`health`) | 393 | auto | problems: 1 |
 | ✅ | Last night's backup on the server (`backups`) | 393 | auto | todo: 0 |
 | ✅ | Every server item of A2.9 in place (`server`) | 394 | auto | steps: 25 · fail: 0 · warn: 0 · failed: — |
 | ❌ | Cloudflare Origin certificate on the server (`originCert`) | 397 | auto | names: — · days: 0 · missing: — · error: — |
