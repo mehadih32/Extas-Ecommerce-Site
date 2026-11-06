@@ -7,7 +7,7 @@ import { afterEach, expect, it } from 'vitest';
 import { DEVICES, NETWORKS } from '../gate-orders/lib/profiles.mjs';
 import { DATA } from '../gate-orders/lib/test-data.mjs';
 import { planOf } from '../gate-orders/shop.mjs';
-import { courierOf, courierState, payOf, payState, simulationMarkdown, simulationSummary, tableRows } from './lib.mjs';
+import { courierOf, courierState, payOf, payState, PERSON_REVIEW, simulationMarkdown, simulationSummary, tableRows } from './lib.mjs';
 import { writeSimulationReport } from './report.mjs';
 import { NOT_A_CODE, PLAN, PLAN_DATA, pickScenarios, resetMemory, SCENARIOS } from './scenarios.mjs';
 
@@ -121,7 +121,7 @@ function fakePage(codeBox) {
 }
 
 /** A stand-in for the run's `x` (shop.mjs): the shop answers as a healthy shop with cash on delivery on. */
-function fakeX({ sw = COD_ONLY, couriers = NO_COURIER_ACCOUNTS, status = 'PLACED', canBook = null, codeBox = { state: 'refused', said: 'GATETESTNOTACODE is not a code we know.' } } = {}) {
+function fakeX({ sw = COD_ONLY, couriers = NO_COURIER_ACCOUNTS, status = 'PLACED', canBook = null, codeBox = { state: 'refused', said: 'GATETESTNOTACODE is not a code we know.' }, reviews = null } = {}) {
   const calls = [];
   let n = 0;
   let nextOrder = 1000;
@@ -148,7 +148,9 @@ function fakeX({ sw = COD_ONLY, couriers = NO_COURIER_ACCOUNTS, status = 'PLACED
       const number = String(++nextOrder);
       const qty = spec.qty ?? 1;
       for (const v of spec.items) stock[v.id] = (stock[v.id] ?? 10) - qty;
-      orders.set(number, { phone: spec.customer.phone, items: spec.items.map((v) => ({ sku: 'GATE', quantity: qty, id: v.id })), lang: spec.lang, status });
+      // the shop's duplicate check (PR 145, on by default): his earlier order still open → a review a person decides
+      const open = [...orders.entries()].filter(([, o]) => o.phone === spec.customer.phone && o.status !== 'CANCELLED').map(([k]) => k);
+      orders.set(number, { phone: spec.customer.phone, items: spec.items.map((v) => ({ sku: 'GATE', quantity: qty, id: v.id })), lang: spec.lang, status, reviews: reviews ? reviews(open) : [] });
       return { number, next: `/checkout/thanks/${number}` };
     },
     call: async (a, b = {}) => {
@@ -166,7 +168,15 @@ function fakeX({ sw = COD_ONLY, couriers = NO_COURIER_ACCOUNTS, status = 'PLACED
         for (const i of o.items) stock[i.id] += i.quantity;
         return { outcome: 'cancelled' };
       }
-      if (a === 'book') return { booked: true, courier: { codMinor: 150000 }, sticker: { collectMinor: 150000 } };
+      if (a === 'approveDuplicateReview') {
+        const o = orders.get(b.number);
+        const ours = (v) => !v.risk && v.section === 'duplicate' && v.matches.every((m) => b.his.includes(m));
+        const decided = o.reviews.filter(ours);
+        o.reviews = o.reviews.filter((v) => !ours(v));
+        return { decided, left: o.reviews };
+      }
+      // the shop refuses to confirm an order in review (pure.ts guard: IN_REVIEW), as the go-live run met it
+      if (a === 'book') return orders.get(b.number).reviews.length ? { booked: false, code: 'IN_REVIEW', error: 'IN_REVIEW: confirm is not open for this order (PLACED)' } : { booked: true, courier: { codMinor: 150000 }, sticker: { collectMinor: 150000 } };
       throw new Error(`unexpected ${a}`);
     },
   };
@@ -228,6 +238,35 @@ it('reads a code\'s answer from the bag page\'s code box, not from the POST that
   expect(none.find((c) => c.id.startsWith('a code that is not his'))).toMatchObject({ verdict: 'SKIP', detail: expect.stringMatching(/no code box/) });
 });
 
+// rows 04, 33, 39, 46, 50, 67 of the go-live run (fdf63ee8): the repeat buyer's new order waited in the
+// possible-duplicate review beside his own earlier, still open test order, and the run tried to confirm it
+it('a repeat buyer held for a duplicate review: the run decides "not a duplicate" as the person, then books', async () => {
+  const { x, calls } = fakeX({ reviews: (open) => (open.length ? [{ section: 'duplicate', risk: false, matches: open }] : []) });
+  const first = await scenario(3).run(x);
+  expect(first.every((c) => c.verdict === 'PASS'), JSON.stringify(first)).toBe(true);
+  expect(calls).not.toContain('approveDuplicateReview');
+  const rep = await scenario(4).run(x);
+  expect(rep.find((c) => c.id === PERSON_REVIEW)).toMatchObject({ verdict: 'PASS', detail: expect.stringMatching(/beside 1001; decided by the run as the person/) });
+  expect(rep.find((c) => c.id === 'booked with the courier')?.verdict).toBe('PASS');
+  expect(rep.every((c) => c.verdict === 'PASS'), JSON.stringify(rep)).toBe(true);
+});
+
+it('never decides a risk review or a review that names someone else\'s order: it stays a person\'s, and the booking says so', async () => {
+  for (const kind of [{ section: 'soft', risk: true, matches: [] }, { section: 'duplicate', risk: false, matches: ['999'] }]) {
+    const { x, calls } = fakeX({ reviews: (open) => (open.length ? [kind] : []) });
+    await scenario(3).run(x);
+    const rep = await scenario(4).run(x);
+    expect(calls, JSON.stringify(kind)).not.toContain('approveDuplicateReview');
+    expect(rep.find((c) => c.id === PERSON_REVIEW)).toBeUndefined();
+    expect(rep.find((c) => c.id === 'booked with the courier')).toMatchObject({ verdict: 'FAIL', detail: expect.stringMatching(/IN_REVIEW/) });
+  }
+  // a duplicate review of his and a risk review beside it: the risk one is left for a person — a FAIL with its words
+  const { x } = fakeX({ reviews: (open) => (open.length ? [{ section: 'duplicate', risk: false, matches: open }, { section: 'soft', risk: true, matches: [] }] : []) });
+  await scenario(3).run(x);
+  const rep = await scenario(4).run(x);
+  expect(rep.find((c) => c.id === PERSON_REVIEW)).toMatchObject({ verdict: 'FAIL', detail: expect.stringMatching(/left for a person: soft \(risk\)/) });
+});
+
 it('the owner\'s coupon and booking blocked by a real courier are SKIPs with their reasons', async () => {
   const { x } = fakeX({ canBook: 'a real courier is switched on (COURIER (steadfast)): no test parcel is booked' });
   const checks = await scenario(44).run(x);
@@ -244,18 +283,22 @@ it('writes the Bengali and English report, result.json with the counts, and orde
       { id: '2', title: 't', verdict: 'SKIP', orders: [], checks: [{ id: 'payment method', verdict: 'SKIP', detail: 'bKash is switched off on the shop (Payments › mobile wallets)' }] },
       { id: '9', title: 't', verdict: 'SKIP', orders: [], checks: [{ id: 'payment method', verdict: 'SKIP', detail: 'bKash is switched off on the shop (Payments › mobile wallets)' }] },
       { id: '5', title: 't', verdict: 'SKIP', orders: [], checks: [{ id: 'courier', verdict: 'SKIP', detail: 'the shop has no RedX courier (no connection for it in this build)' }] },
+      { id: '4', title: 't', verdict: 'PASS', orders: ['1002'], checks: [{ id: PERSON_REVIEW, verdict: 'PASS', detail: 'x' }] },
     ];
-    const run = { at: '2026-11-06 20:00 (Asia/Dhaka)', sha: 'abc', asked: '1,2,5,9', rows, problems: ['token sekret-123 seen'], cleanup: { ok: true, cancelled: 1, salesOk: true }, payment: { cod: 'on (the owner\'s setting)', mockPay: 'x' }, providers: { live: [] }, gateChecks: [], addressRows: [] };
+    const run = { at: '2026-11-06 20:00 (Asia/Dhaka)', sha: 'abc', asked: '1,2,4,5,9', rows, problems: ['token sekret-123 seen'], cleanup: { ok: true, cancelled: 1, salesOk: true }, payment: { cod: 'on (the owner\'s setting)', mockPay: 'x' }, providers: { live: [] }, gateChecks: [], addressRows: [] };
     writeSimulationReport(dir, run, ['sekret-123']);
     const res = JSON.parse(readFileSync(join(dir, 'result.json'), 'utf8'));
     expect(res.kind).toBe('simulation');
     expect(res.ok).toBe(true);
-    expect(res.simulation).toMatchObject({ planned: 70, asked: 4, passed: 1, failed: 0, skipped: 3, orders: 1 });
+    expect(res.simulation).toMatchObject({ planned: 70, asked: 5, passed: 2, failed: 0, skipped: 3, orders: 2 });
     expect(res.simulation.skipReasons[0]).toEqual({ why: 'bKash is switched off on the shop (Payments › mobile wallets)', rows: [2, 9] });
     expect(res.rows.find((r) => r.id === '1').plan).toMatchObject({ persona: 'FT', pay: 'cod', courier: 'steadfast' });
     const md = readFileSync(join(dir, 'README.md'), 'utf8');
     expect(md).toMatch(/^# The 70-order real-life journey simulation/);
-    expect(md).toContain('পরিকল্পনার 70টা অর্ডারের মধ্যে 4টা চালানো হয়েছে: 1টা পাস, 0টা ফেল, 3টা বাদ');
+    expect(md).toContain('পরিকল্পনার 70টা অর্ডারের মধ্যে 5টা চালানো হয়েছে: 2টা পাস, 0টা ফেল, 3টা বাদ');
+    // the person's step the run played is said in both languages, with its rows
+    expect(md).toContain('"ডুপ্লিকেট নয়" দিয়েছে, তারপর বুক করেছে (অর্ডার 04)');
+    expect(md).toMatch(/A person's step played by the run: rows 04 — .*acting as the person who reviews/);
     expect(md).toContain('| 02, 09 | 2 |');
     expect(md).toContain('— not asked');
     expect(md).not.toContain('sekret-123');

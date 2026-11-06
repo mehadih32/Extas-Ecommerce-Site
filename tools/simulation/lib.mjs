@@ -96,6 +96,16 @@ export function courierState(courier, facts) {
   return { book: true, note: mine.length ? `${label} is on; booked on the run's own mock courier account` : `the shop has no ${label} account yet (its keys come later); booked on the run's own mock courier account` };
 }
 
+/**
+ * The check a row carries when the run played a person's step: a repeat buyer's new order waited in the
+ * possible-duplicate review (PR 145) beside his own earlier test order, and the run, as the person who reviews, decided
+ * "not a duplicate" through the review's own decision. The report names these rows in Bengali and English.
+ */
+export const PERSON_REVIEW = "held for a person's duplicate review; the run, as that person, decided \"not a duplicate\"";
+
+/** The rows where the run acted as the person who reviews (PERSON_REVIEW passed). */
+export const personReviewRows = (sum) => sum.table.filter((t) => t.checks.some((c) => c.id === PERSON_REVIEW && c.verdict === "PASS")).map((t) => t.plan.n);
+
 const nn = (n) => String(n).padStart(2, "0");
 export const rowTitle = (r) => `Order ${nn(r.n)} · ${r.persona} · ${r.place || AREA_LABEL[r.area] || r.area} · ${r.items} · ${PAY_LABEL[r.pay] ?? r.pay}${r.courier ? ` · ${COURIER_LABEL[r.courier] ?? r.courier}` : ""}`;
 
@@ -134,6 +144,8 @@ export function bengaliSummary(sum, cleanupOk) {
   if (sum.skipped) L.push("বাদ পড়া অর্ডারগুলো ফেল নয়: দোকানে ওই পেমেন্ট বা কুরিয়ার এখন বন্ধ (আপনার সিদ্ধান্ত: এখন শুধু ক্যাশ অন ডেলিভারি)। কারণ নিচের টেবিলে।");
   L.push(cleanupOk ? "সব টেস্ট অর্ডার বাতিল আর টেস্ট পণ্য আর্কাইভ করা হয়েছে; কিছু মোছা হয়নি, কোনো টাকা নড়েনি, কোনো আসল কাস্টমারকে মেসেজ যায়নি।" : "টেস্ট অর্ডার পরিষ্কার পুরো হয়নি — নিচে দেখুন; পরের রান শুরুতেই বাকিগুলো বাতিল করবে।");
   L.push("দরজার ঘটনা, কুরিয়ারের টাকা মেলানো, চ্যাট আর রিভিউ মেশিন খেলতে পারে না — সেগুলো নিচের \"মানুষের কাজ\" তালিকায়।");
+  const held = personReviewRows(sum);
+  if (held.length) L.push(`পুরনো কাস্টমারের আগের অর্ডার খোলা থাকায় নতুন অর্ডার "সম্ভাব্য ডুপ্লিকেট" রিভিউতে আটকেছে — এটা ঠিক আচরণ, একজন মানুষ সিদ্ধান্ত দেন। এই রান সেই মানুষের হয়ে অ্যাডমিনের নিজের বোতামে "ডুপ্লিকেট নয়" দিয়েছে, তারপর বুক করেছে (অর্ডার ${held.map(nn).join(", ")})।`);
   L.push(`ফলাফলটা Go-live পাতায় "simulation" লাইনের পাশে দেখা যাবে। নিশ্চিত করা (Confirm) একজন মানুষের কাজ — এই রান নিজে কিছু নিশ্চিত করে না।`);
   return L;
 }
@@ -155,6 +167,8 @@ export function simulationMarkdown(res, sum, run = {}) {
   L.push("- Plan: docs/qa/SIMULATION-PLAN.md §3 (orders 1–50) and docs/qa/SIMULATION-REPORT.md P2.2 (orders 51–70), as tools/simulation/plan.json plays them: the GATE TEST shelf's pieces in the plan's basket sizes, the test addresses of tools/gate-orders, sample customers with made-up numbers. A row whose payment method or courier is switched off on the shop is a SKIP with the reason, never a FAIL.");
   if (res.providers) L.push(`- Providers: ${(res.providers.live ?? []).length ? `a real connection is switched on for ${res.providers.live.map((p) => `${p.kind} (${p.provider})`).join(", ")} — every check that would reach it is a SKIP` : "every payment, courier, message and ERP connection is on its mock; nothing left the server"}.`);
   if (res.payment) L.push(`- Payments: cash on delivery — ${cell(res.payment.cod)}; the practice wallet page — ${cell(res.payment.mockPay)}. No price, discount, COD amount or real payment key is touched.`);
+  const held = personReviewRows(sum);
+  if (held.length) L.push(`- A person's step played by the run: rows ${held.map(nn).join(", ")} — the repeat buyer's new order waited in the possible-duplicate review (PR 145) beside his own earlier test order, still open; the run, acting as the person who reviews, decided "not a duplicate" through the review's own decision (the admin's button, \`orders.risk.decide\`, its note on the decision log), then confirmed and booked. Any other review is left for a person.`);
   for (const p of res.problems ?? []) L.push(`- Problem: ${cell(p)}`);
   L.push("");
   if (sum.skipReasons.length) {
