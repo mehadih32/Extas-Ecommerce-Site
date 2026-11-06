@@ -22,7 +22,7 @@ import { tickedPlatforms, type ConversionFeedSettings, type TrackingSettings } f
 import type { Vault } from '@extas/vault';
 import { adminDeps } from '../admin-auth';
 import type { AppResolver } from '../settings';
-import { feedExtras, type Extra } from './feed-extras';
+import { extraFor, feedExtras, storedParts, type Extra, type ExtraParts } from './feed-extras';
 import { afterSend, generousOn, hashEmail, hashId, hashPhone, isFeedStep, isOrderStep, records, recordsFeed, recordsStep, stillWaiting, toAdEvent, valueOf, waitingFor, withoutContact, EVENT_ID, type AnyTrackingEvent, type Deliveries, type StoredItem } from './model';
 
 export interface TrackingDeps {
@@ -208,11 +208,23 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
   const orderIds = [...new Set(mine.map((r) => r.orderId).filter((x): x is string => !!x))];
   const numbers = new Map((orderIds.length ? await deps.db.order.findMany({ where: { id: { in: orderIds } }, select: { id: true, number: true } }) : []).map((x) => [x.id, x.number]));
   // PR 532: the courier outcome and the visitor's intent of each order event, read once for the batch
-  // (an enrichment that fails never holds the send up: the events then go plain)
+  // (an enrichment that fails never holds the send up: the events then go plain). PR 532 follow-up (662): an event that
+  // already has its parts keeps them (read at its first send); the others are read now and kept with this send.
   const extras = new Map<string, Extra>();
+  const frozen = new Map<string, ExtraParts>();
   for (const [sid, feed] of feedOf) {
+    const rowsHere = mine.filter((r) => r.storeId === sid);
+    for (const r of rowsHere) {
+      const kept = r.extra == null ? null : storedParts(r.extra);
+      const x = kept ? extraFor(kept, feed) : null;
+      if (x) extras.set(r.id, x);
+    }
     try {
-      for (const [id, x] of await feedExtras(deps.db, sid, mine.filter((r) => r.storeId === sid), feed)) extras.set(id, x);
+      for (const [id, parts] of await feedExtras(deps.db, sid, rowsHere.filter((r) => r.extra == null), feed)) {
+        frozen.set(id, parts);
+        const x = extraFor(parts, feed);
+        if (x) extras.set(id, x);
+      }
     } catch (e) {
       console.warn(`tracking: the feed's enrichment failed (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     }
@@ -256,7 +268,8 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
   for (const r of mine) {
     const d = next.get(r.id)!;
     const pending = Object.values(d).some((x) => stillWaiting(x, maxOf.get(r.storeId) ?? 1));
-    await deps.db.trackedEvent.update({ where: { id: r.id }, data: { deliveries: d as Prisma.InputJsonValue, pending } });
+    const keep = frozen.get(r.id);
+    await deps.db.trackedEvent.update({ where: { id: r.id }, data: { deliveries: d as Prisma.InputJsonValue, pending, ...(keep ? { extra: keep as Prisma.InputJsonValue } : {}) } });
   }
   return out;
 }

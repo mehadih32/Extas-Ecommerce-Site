@@ -7,6 +7,10 @@
 //   the order, the payment kind) and the visitor's intent (channel, medium and campaign of the visit, an ad click, a
 //   landing page, a returning customer, the products seen, bag adds and checkouts before the order). Never a name, an
 //   address, a phone or an e-mail. Read at the send, so switching enrichment off stops it for what still waits.
+// - PR 532 follow-up (662): ~~read again at every send~~ read once, at the event's first send (right after it is
+//   recorded), and kept on the event (`TrackedEvent.extra`, its two parts apart); a retry hours later sends the facts
+//   as they were then (the courier then, the payment kind then), not the order as it is by now. Switching a part off
+//   still stops it for what waits (`extraFor`).
 import { Prisma, type PrismaClient } from '@extas/db/client';
 import type { ConversionFeedSettings } from '@extas/settings';
 import type { OrderState as OrderStatus } from '@extas/orders/pure';
@@ -64,6 +68,31 @@ export function outcomeOf(name: string, o: { status: OrderStatus; deliveredAt: D
 
 export type Extra = Record<string, string | number | boolean>;
 
+/** PR 532 follow-up (662): the two parts of an event's enrichment, as kept on the event. */
+export interface ExtraParts {
+  courier?: Extra;
+  intent?: Extra;
+}
+
+const isExtra = (x: unknown): x is Extra =>
+  !!x && typeof x === 'object' && !Array.isArray(x) && Object.values(x as object).every((v) => typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean');
+
+/** The kept parts of a stored event (null: never read, or not in the kept shape). */
+export function storedParts(raw: unknown): ExtraParts | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const o = raw as Record<string, unknown>;
+  const out: ExtraParts = {};
+  if (isExtra(o.courier)) out.courier = o.courier;
+  if (isExtra(o.intent)) out.intent = o.intent;
+  return out;
+}
+
+/** What an event carries now: its kept parts, each only while its enrichment is on (null: nothing). */
+export function extraFor(parts: ExtraParts, feed: Pick<ConversionFeedSettings, 'enrich'>): Extra | null {
+  const out: Extra = { ...(feed.enrich.courier ? parts.courier : {}), ...(feed.enrich.intent ? parts.intent : {}) };
+  return Object.keys(out).length ? out : null;
+}
+
 export interface ExtraOrder {
   placedAt: Date;
   status: OrderStatus;
@@ -116,11 +145,11 @@ export function intentExtra(o: ExtraOrder, counts: IntentCounts, returning: bool
 const INTENT_EVENTS = { view: 'views', addToBag: 'bagAdds', checkout: 'checkouts' } as const;
 
 /**
- * The enrichment of each order event row (row id → extra), read in one go for a send batch. Rows without an order, test
- * rows and everything while both enrichments are off get nothing.
+ * The enrichment of each order event row (row id → its parts), read in one go for a send batch. Rows without an order,
+ * test rows and everything while both enrichments are off get nothing.
  */
-export async function feedExtras(db: PrismaClient, storeId: number, rows: readonly { id: string; name: string; orderId: string | null; test: boolean; occurredAt: Date }[], feed: ConversionFeedSettings): Promise<Map<string, Extra>> {
-  const out = new Map<string, Extra>();
+export async function feedExtras(db: PrismaClient, storeId: number, rows: readonly { id: string; name: string; orderId: string | null; test: boolean; occurredAt: Date }[], feed: ConversionFeedSettings): Promise<Map<string, ExtraParts>> {
+  const out = new Map<string, ExtraParts>();
   if (!feed.enrich.courier && !feed.enrich.intent) return out;
   const mine = rows.filter((r) => r.orderId && !r.test);
   if (!mine.length) return out;
@@ -189,11 +218,13 @@ export async function feedExtras(db: PrismaClient, storeId: number, rows: readon
     const o = byId.get(r.orderId!);
     if (!o) continue;
     const eo: ExtraOrder = { ...o, deliveredAt: firstAtDoor.get(o.id) ?? o.deliveredAt, courier: o.courierAccountId ? (couriers.get(o.courierAccountId) ?? null) : null };
-    const extra: Extra = {
-      ...(feed.enrich.courier ? courierExtra(r.name, r.occurredAt, eo) : {}),
-      ...(feed.enrich.intent ? intentExtra(eo, counts.get(o.id) ?? { views: 0, bagAdds: 0, checkouts: 0 }, returning.get(o.id) ?? false) : {}),
-    };
-    if (Object.keys(extra).length) out.set(r.id, extra);
+    const parts: ExtraParts = {};
+    if (feed.enrich.courier) {
+      const c = courierExtra(r.name, r.occurredAt, eo);
+      if (Object.keys(c).length) parts.courier = c;
+    }
+    if (feed.enrich.intent) parts.intent = intentExtra(eo, counts.get(o.id) ?? { views: 0, bagAdds: 0, checkouts: 0 }, returning.get(o.id) ?? false);
+    if (parts.courier || parts.intent) out.set(r.id, parts);
   }
   return out;
 }

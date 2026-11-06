@@ -2,7 +2,7 @@
 // the names on a generous platform (never two purchases for one order), and the outcome and intent it carries.
 import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
-import { courierExtra, heldBackOf, intentExtra, outcomeOf, qualifiedAt, type ExtraOrder } from './feed-extras';
+import { courierExtra, extraFor, heldBackOf, intentExtra, outcomeOf, qualifiedAt, storedParts, type ExtraOrder } from './feed-extras';
 import { adNameOf, generousOn, recordsFeed, toAdEvent } from './model';
 
 const H = 3_600_000;
@@ -98,5 +98,16 @@ describe('the outcome and the intent', () => {
     expect(x).toEqual({ channel: 'facebook', medium: 'paid', campaign: 'Winter polo', ad_click: true, landing_page: true, returning_customer: true, views: 4, bag_adds: 2, checkouts: 1 });
     expect(intentExtra({ ...o, utmSource: null, utmMedium: null, utmCampaign: null, adPlatform: null, landingPageId: null }, { views: 0, bagAdds: 0, checkouts: 0 }, false)).toMatchObject({ channel: 'direct', ad_click: false, landing_page: false });
     expect(intentExtra({ ...o, utmSource: null, adPlatform: null, referrer: 'https://example.test/' }, { views: 0, bagAdds: 0, checkouts: 0 }, false).channel).toBe('referral');
+  });
+
+  it('PR 532 follow-up (662): reads the kept parts and sends each only while its enrichment is on', () => {
+    expect(storedParts(null)).toBeNull();
+    expect(storedParts([1])).toBeNull();
+    expect(storedParts({ courier: { outcome: 'delivered' }, intent: { views: 2, nested: { x: 1 } } })).toEqual({ courier: { outcome: 'delivered' } });
+    const parts = { courier: { outcome: 'returned', payment: 'cod' }, intent: { channel: 'facebook' } };
+    expect(extraFor(parts, { enrich: { courier: true, intent: true } })).toEqual({ outcome: 'returned', payment: 'cod', channel: 'facebook' });
+    expect(extraFor(parts, { enrich: { courier: false, intent: true } })).toEqual({ channel: 'facebook' });
+    expect(extraFor(parts, { enrich: { courier: false, intent: false } })).toBeNull();
+    expect(extraFor({}, { enrich: { courier: true, intent: true } })).toBeNull();
   });
 });
