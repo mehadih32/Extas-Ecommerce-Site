@@ -1,6 +1,6 @@
 # EXTAS — Launch track
 
-**CN-027 · 24 Oct 2026.** The build order until go-live and after it. Generated from `docs/MASTER-REGISTER.md` (Build status: total 243/615 on 25 Oct 2026) and Blueprint Appendix A. Counted in PRs, never in days. **25 Oct 2026 (CN-028):** PR 607–619 and 621 (Retail and the ERP supplier model) are added to Launch, PR 620 to After launch. **1 Nov 2026 (CN-034):** PR 622–624 (Buy again, the customer's own privacy request, the Messenger button; from the go-live gate's customer 360° run) are added to After launch.
+**CN-027 · 24 Oct 2026.** The build order until go-live and after it. Generated from `docs/MASTER-REGISTER.md` (Build status: total 243/615 on 25 Oct 2026) and Blueprint Appendix A. Counted in PRs, never in days. **25 Oct 2026 (CN-028):** PR 607–619 and 621 (Retail and the ERP supplier model) are added to Launch, PR 620 to After launch. **1 Nov 2026 (CN-034):** PR 622–624 (Buy again, the customer's own privacy request, the Messenger button; from the go-live gate's customer 360° run) are added to After launch. **6 Nov 2026 (CN-036):** PR 625–648 (the new default admin look Lumen) and 652–653 (closed stages hidden by a switch, the redirect import from the old public sitemap) are added to **Launch** — the owner wants the admin look before go-live; PR 649–651 (three further admin looks) are parked. The order after go-live is now serial (see "Order of work after go-live (CN-036)").
 
 ## বাংলায় সংক্ষেপে
 
@@ -8,6 +8,7 @@
 - **Launch-এ আছে:** দোকান ঘোরা, প্রোডাক্ট, কম্বো, ব্যাগ, চেকআউট আর কাস্টমার অ্যাকাউন্ট (বেশিরভাগ বানানো শেষ); অর্ডার; পেমেন্ট, অগ্রিম আর রিফান্ডের হিসাব; কুরিয়ার বুকিং আর ট্র্যাকিং; QC-সহ রিটার্ন আর এক্সচেঞ্জ; COD মেলানো; ঝুঁকির বেসিক নিয়ম; অর্ডারের SMS আর WhatsApp; প্রতিদিন দোকান চালানোর অ্যাডমিন পেজ; সিকিউরিটি; ব্যাকআপ, রিস্টোর পরীক্ষা আর মনিটরিং; গুগলে আসার বেসিক SEO; নীতিমালার পেজ; আর গো-লাইভের কাজ, সাথে 70-অর্ডারের সিমুলেশন আবার চালানো (CN-013)।
 - **হিসাব:** Launch-এ মোট 305টা PR, এর মধ্যে 222টা বানানো শেষ। **লাইভে যাওয়ার আগে আর 83টা PR বাকি।** (২৫ অক্টোবর: রিটেইল আর ERP-র নতুন হিসাবের 14টা PR যোগ হয়েছে, CN-028।) সবচেয়ে বেশি বাকি কুরিয়ার-রিটার্নে (16টা), গো-লাইভে (15টা), SEO-তে (14টা), সিকিউরিটিতে (9টা) আর পেমেন্টে (8টা)।
 - **লাইভের পরে (~~310~~ 313টা PR, 21টা আগেই বানানো, বাকি ~~289~~ 292টা; ১ নভেম্বর: পুরনো অর্ডার আবার কেনা, কাস্টমারের নিজের প্রাইভেসি অনুরোধ আর Messenger বাটন — নতুন 3টা PR, CN-034):** পুরো অ্যাড কন্ট্রোল, ফটো-ভিডিও স্টুডিও, AI এজেন্ট আর স্কিল, মাল্টি-স্টোর, বড় রিপোর্ট, লয়্যালটি আর রেফারেল, A/B টেস্ট, কম্পিটিটর টুল, ব্লগ, আর ডিফল্টের বাইরের বাড়তি অ্যাডমিন ডিজাইন।
+- **৬ নভেম্বর (CN-036):** লাইভের আগে অ্যাডমিনের নতুন চেহারা "Lumen" (PR 625–648) আর গো-লাইভের 2টা কাজ (652: বন্ধ স্টেজ লুকানোর সুইচ, 653: পুরনো সাইটম্যাপ থেকে রিডাইরেক্ট) Launch-এ যোগ হলো — মোট 26টা। বাকি 3টা চেহারা (649–651) তোলা থাকল। লাইভের পরে ক্রম: S02 → S12 → S13 → S15 → S25 → S24 (সবার শেষে)। S17, S23, S26, S27 আপনি না বলা পর্যন্ত বন্ধ।
 - **আপনাকে কিছু করতে হবে না।** Launch শেষ হলে বিল্ড নিজে থেকেই লাইভের পরের লিস্ট আগের ক্রমে বানাতে থাকবে। যা বানানো হয়নি, তা বন্ধ বা লুকানো থাকবে। টাকা, দাম, COD বা মেইন ডোমেইন বদলানো আগের মতোই আপনার লিখিত OK ছাড়া হবে না।
 
 ## The rule (CN-027)
@@ -28,7 +29,9 @@
 | **After launch** | 21 | 313 | 292 |
 | Active total | 243 | 618 | 375 |
 
-Parked (not counted): S26 handover pack, PR 513–518, and S27 (unnumbered). They stay in the parking lot until the owner says so.
+**6 Nov 2026 (CN-036):** 26 Launch rows added (625–648, 652, 653): Launch 304/331 by the register (the table above is the 25 Oct snapshot); the active total is 644.
+
+Parked (not counted): S26 handover pack, PR 513–518, and S27 (unnumbered); since 6 Nov 2026 also the admin looks PR 649–651 (CN-036). They stay in the parking lot until the owner says so.
 
 **Launch left, by stage (25 Oct 2026):** S01 1 · S05 1 · S08 15 · S09 2 · S11 14 · S13 1 · S14 7 · S16 9 · S17 1 · S18 9 · S19 17 · S20 1 · S21 3 · S22 2 = 83.
 
@@ -143,8 +146,34 @@ Build order, top to bottom. Group A finishes the stages already in progress (S02
 | 101 | 507 | S19 | Backup settings and restore drills, Google Drive (with PR 395) | to build |
 | 102 | 619 | S19 | Switch-over to the ERP model — switch date, opening balance, old-order list, backfill, the ERP link page (CN-028; 25 Oct 2026) | to build |
 | 103 | 621 | S19 | ERP v6 acceptance suite against the demo ERP — the contract checklist and the books drills, run every night (CN-028; 25 Oct 2026) | to build |
+| 104 | 625 | S00 | Lumen theme layer, tokens and self-hosted fonts *(CN-036; Lane A; before go-live)* | to build |
+| 105 | 626 | S00 | Lumen shell *(CN-036; Lane A; before go-live)* | to build |
+| 106 | 627 | S00 | Shared patterns 1: tiles and hero chart, toast and Undo, empty state, skeleton *(CN-036; Lane A; before go-live)* | to build |
+| 107 | 628 | S00 | Shared patterns 2: queue, list with filter and bulk, list and detail split, drawer *(CN-036; Lane A; before go-live)* | to build |
+| 108 | 629 | S00 | Shared patterns 3: form with live preview and readiness checklist, settings switch cards *(CN-036; Lane A; before go-live)* | to build |
+| 109 | 630 | S00 | Settings › General › Admin look: four looks, only Lumen selectable *(CN-036; Lane A; before go-live)* | to build |
+| 110 | 631 | S00 | Lumen section: Today (Home) *(CN-036; Lane A; before go-live)* | to build |
+| 111 | 632 | S00 | Lumen section: Orders 1 (Today's queue, All orders, Order view) *(CN-036; Lane A; before go-live)* | to build |
+| 112 | 633 | S00 | Lumen section: Orders 2 (Dispatch, Returns) *(CN-036; Lane A; before go-live)* | to build |
+| 113 | 634 | S00 | Lumen section: Products 1 (All products, Add product with live preview) *(CN-036; Lane A; before go-live)* | to build |
+| 114 | 635 | S00 | Lumen section: Products 2 (Stock, Collections and the rest) *(CN-036; Lane A; before go-live)* | to build |
+| 115 | 636 | S00 | Lumen section: Customers *(CN-036; Lane A; before go-live)* | to build |
+| 116 | 637 | S00 | Lumen section: Delivery *(CN-036; Lane A; before go-live)* | to build |
+| 117 | 638 | S00 | Lumen section: Marketing 1 (campaigns, coupons, ads, Smart Rules) *(CN-036; Lane A; before go-live)* | to build |
+| 118 | 639 | S00 | Lumen section: Marketing 2 (messages to customers) *(CN-036; Lane A; before go-live)* | to build |
+| 119 | 640 | S00 | Lumen section: Website *(CN-036; Lane A; before go-live)* | to build |
+| 120 | 641 | S00 | Lumen section: Support *(CN-036; Lane A; before go-live)* | to build |
+| 121 | 642 | S00 | Lumen section: Money 1 (Overview, Cashbook, Payouts, profit) *(CN-036; Lane A; before go-live)* | to build |
+| 122 | 643 | S00 | Lumen section: Money 2 (Books, month end) *(CN-036; Lane A; before go-live)* | to build |
+| 123 | 644 | S00 | Lumen section: Reports 1 (business reports) *(CN-036; Lane A; before go-live)* | to build |
+| 124 | 645 | S00 | Lumen section: Reports 2 (Site health) *(CN-036; Lane A; before go-live)* | to build |
+| 125 | 646 | S00 | Lumen section: AI Center *(CN-036; Lane A; before go-live)* | to build |
+| 126 | 647 | S00 | Lumen section: Settings *(CN-036; Lane A; before go-live)* | to build |
+| 127 | 648 | S00 | Lumen section: Help *(CN-036; Lane A; before go-live)* | to build |
+| 128 | 652 | S19 | Closed stages hidden by a switch *(CN-036; Lane C; before go-live)* | to build |
+| 129 | 653 | S19 | Redirect import from the old public sitemap (read-only) *(CN-036; Lane C; before go-live)* | to build |
 | — | gate | CN-013 | **The 70-order real-life journey simulation rerun on new.extas.com.bd** (CN-013, CN-017 findings as acceptance tests, §13); real orders start only after it passes | to run |
-| 104 | 587 | S19 | WordPress → new site migration (extas.com.bd) *(go-live day, after the gate)* | to build |
+| 130 | 587 | S19 | WordPress → new site migration (extas.com.bd) *(go-live day, after the gate; after the admin look is merged and the go-live check is green, on the owner's typed "go live", CN-036)* | to build |
 
 <details><summary>Launch PRs already built (201)</summary>
 
@@ -681,20 +710,40 @@ Built automatically right after the Launch list, in the existing order: E3 waves
 
 </details>
 
+## Order of work after go-live (CN-036)
+
+**6 Nov 2026 (owner, CN-036).** This replaces the CN-031 priority order below (kept as history).
+
+1. Work already running (the batch 10 merge, lane B's PR 532, any open PR or worktree) is finished and merged first; nothing is aborted or lost.
+2. **Admin look first, before go-live:** Lane A builds PR 625–630 alone (theme layer, shell, shared patterns, Settings › Admin look), then 631–648 one section after another: Today, Orders, Products, Customers, Delivery, Marketing, Website, Support, Money, Reports, AI Center, Settings, Help. Until 625–630 are merged no new S12 or S13 PR starts.
+3. **Go-live** with whatever is built and tested, once the admin look is merged and the go-live check is green (Lane C: rate limits enforced, full gate, 70-order simulation, acceptance run, PR 652 and 653, indexing switch ready, Search Console prepared, full smoke over every admin page in the new look). The owner types "go live" himself; any hour once green.
+4. **Then the stages one after the other**, PR number order inside a stage, every new admin page in Lumen:
+
+| Order | Stage | Left |
+|---:|---|---:|
+| 1 | S02 storefront (Lane B starts at once, no admin work) | 13 |
+| 2 | S12 content and blog (finished) | 14 |
+| 3 | S13 marketing and ads (finished) | 9 |
+| 4 | S15 AI control room | 48 |
+| 5 | S25 video and campaign studio | 10 |
+| 6 | S24 virtual photoshoot studio (the very last) | 38 |
+
+**Closed until the owner says so:** S17 multi-store, S23 social studio, S26 and S27 (handover pack), and the parked admin looks 649–651. Built parts stay; half-built S17, S23 and unfinished S12 parts are hidden from menu, sitemap, search and robots by PR 652's switch. Open follow-ups in `PROGRESS.md` keep the CN-016 rule.
+
 ## After launch: priority order (CN-031)
 
-Once every Launch row is merged and live, the build carries straight on with these stage groups, in this order, one after the other, never waiting. Inside a stage the PR number order stays. After each group a short whole-site review runs (CN-031 § 4).
+~~Once every Launch row is merged and live, the build carries straight on with these stage groups, in this order, one after the other, never waiting. Inside a stage the PR number order stays. After each group a short whole-site review runs (CN-031 § 4).~~ Superseded 6 Nov 2026 by the CN-036 order above; the table stays as history.
 
 | Order | Stages | Why first | Left |
 |---:|---|---|---:|
-| 1 | S07 payments (2), S08 courier, returns, exchange (5), S06 fraud and location (14) | Money in and out, parcels and the duplicate / fake COD losses | 21 |
-| 2 | S18 compliance (6, with 623 from CN-034), S21 site health (11), S16 finance (13), S20 fulfilment and documents (8) | The site stays safe, the books close, daily packing and invoices run | 38 |
-| 3 | S22 support (12, with 624 from CN-034), S14 CRM (17), S04 Buy again (1, 622 from CN-034) | Customers get answers, repeat buyers are known and can buy again in one tap | 30 |
-| 4 | S13 marketing and ads (34), S11 SEO (8), S12 content and blog (22) | Cheaper traffic and more orders | 64 |
-| 5 | S02 storefront extras (13) | Page builder, more templates, polish | 13 |
-| 6 | S17 multi-store (23) | The second and third shop on the same stock | 23 |
-| 7 | S15 AI control room (48) | AI agents and skills, always off until the owner turns them on | 48 |
-| 8 | S23 social studio (7), S25 video studio (10), S24 photoshoot studio (38) | Creative studios | 55 |
+| ~~1~~ | S07 payments (2), S08 courier, returns, exchange (5), S06 fraud and location (14) | Money in and out, parcels and the duplicate / fake COD losses | 21 |
+| ~~2~~ | S18 compliance (6, with 623 from CN-034), S21 site health (11), S16 finance (13), S20 fulfilment and documents (8) | The site stays safe, the books close, daily packing and invoices run | 38 |
+| ~~3~~ | S22 support (12, with 624 from CN-034), S14 CRM (17), S04 Buy again (1, 622 from CN-034) | Customers get answers, repeat buyers are known and can buy again in one tap | 30 |
+| ~~4~~ | S13 marketing and ads (34), S11 SEO (8), S12 content and blog (22) | Cheaper traffic and more orders | 64 |
+| ~~5~~ | S02 storefront extras (13) | Page builder, more templates, polish | 13 |
+| ~~6~~ | S17 multi-store (23) | The second and third shop on the same stock | 23 |
+| ~~7~~ | S15 AI control room (48) | AI agents and skills, always off until the owner turns them on | 48 |
+| ~~8~~ | S23 social studio (7), S25 video studio (10), S24 photoshoot studio (38) | Creative studios | 55 |
 
 Total ~~289 (as of 31 Oct 2026)~~ 292 (1 Nov 2026, with CN-034's PR 622–624); the table above is the order, the "Left" counts move as PRs are built.
 
@@ -709,6 +758,16 @@ The 46 open Launch rows are built by three builders at the same time on their ow
 | A · reach and growth | 426; 227, 228, 229, 232, 233, 234, 235, 236, 527, 586, 588; 257 | Redirects and permanent URLs (235, 527, 586) first, because the main-domain switch needs them |
 | B · safety and health | 378–386; 362; 413, 414, 423 | Security before the go-live checks that depend on it |
 | C · money and go-live | 342–346; 391–403, 507; then 587 after the gate | Drive backup (CN-030) and Telegram alerts early; 399 and 403 are the owner's steps, written as BLOCKED items without stopping the lane |
+
+## Lanes (CN-036, 6 Nov 2026)
+
+Three builders plus `qa-gate`, each on its own worktree.
+
+| Lane | Rows | Notes |
+|---|---|---|
+| A · admin look (the main job) | 625–630 (alone, merged first), then 631–648 in section order | Size report `docs/reports/2026-11-06-admin-look-size.md`; each PR updates its page guides, screenshots, smoke and device-gate lists; 390 / 768 / 1366 / 1920 px, light and dark, EN and বাং |
+| B · storefront | S02's 13 open rows, as in the register | No admin work; then S12 → S13 (after 625–630 are merged) → S15 → S25 → S24 |
+| C · go-live gate (infra-prohori + qa-gate) | rate limits enforced (PR 378), 652, 653, the full gate, the 70-order simulation, the acceptance run, indexing switch ready (PR 401), Search Console prepared (PR 233); after Lane A: full smoke in the new look, the go-live check, the Bengali report; then 587 on the owner's "go live" | Then S12 → S13 → S15 → S25 → S24 with lane B; rollback stays 43 s |
 
 ## Why these are After launch
 
