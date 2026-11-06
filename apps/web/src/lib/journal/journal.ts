@@ -12,6 +12,9 @@
 //   down, editing a live article and the journal's switch need `blog.publish`. Every change is audited. Nothing here
 //   touches a price, an order or a customer.
 // - The shop reads only live articles (model.ts isLive) of its own store, and only while `blog.journal.on`.
+// - PR 592 follow-up: an article carries its tags (BlogTag, made from the names typed, one link per name; a tag no
+//   article uses any more stays and simply shows nothing) and its expert reviewer (an author record, never the article's
+//   own author); the shop reads both with the article.
 import { audit, can, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
 import { blogJournalSchema, storeTarget, type BlogJournalSettings } from '@extas/settings';
@@ -34,6 +37,8 @@ import {
   publishGaps,
   readingMinutes,
   slugOf,
+  TAGS_MAX,
+  tagList,
   wordCount,
   type BlogAction,
   type BlogColumn,
@@ -82,6 +87,7 @@ const POST_SELECT = {
   readingMinutes: true,
   categoryId: true,
   authorId: true,
+  reviewerAuthorId: true,
   metaDescription: true,
   focusKeyword: true,
   quickAnswer: true,
@@ -110,6 +116,9 @@ export interface PostView {
   readingMinutes: number;
   categoryId: string | null;
   authorId: string | null;
+  /** PR 592 follow-up: the expert reviewer (an author record) and the tags' names. */
+  reviewerAuthorId: string | null;
+  tags: string[];
   metaDescription: string | null;
   focusKeyword: string | null;
   quickAnswer: string | null;
@@ -127,7 +136,7 @@ export interface PostView {
 }
 
 const iso = (d: Date | null) => (d ? d.toISOString() : null);
-function viewOf(p: PostRow, now: Date, reviews: PostView['reviews'] = []): PostView {
+function viewOf(p: PostRow, now: Date, reviews: PostView['reviews'] = [], tags: string[] = []): PostView {
   const status = p.status as BlogState;
   return {
     id: p.id,
@@ -143,6 +152,8 @@ function viewOf(p: PostRow, now: Date, reviews: PostView['reviews'] = []): PostV
     readingMinutes: p.readingMinutes ?? 0,
     categoryId: p.categoryId,
     authorId: p.authorId,
+    reviewerAuthorId: p.reviewerAuthorId,
+    tags,
     metaDescription: p.metaDescription,
     focusKeyword: p.focusKeyword,
     quickAnswer: p.quickAnswer,
@@ -202,14 +213,37 @@ export async function journalPost(db: Db, id: string, now: Date = new Date(), st
   if (!isUuid(id)) return null;
   const p = await db.blogPost.findFirst({ where: { id, storeId }, select: POST_SELECT });
   if (!p) return null;
-  const reviews = await db.blogPostReview.findMany({ where: { storeId, postId: id }, orderBy: { createdAt: 'asc' }, select: { stage: true, verdict: true, notes: true, reviewerId: true, createdAt: true } });
+  const [reviews, tags] = await Promise.all([
+    db.blogPostReview.findMany({ where: { storeId, postId: id }, orderBy: { createdAt: 'asc' }, select: { stage: true, verdict: true, notes: true, reviewerId: true, createdAt: true } }),
+    db.blogPostTag.findMany({ where: { storeId, postId: id }, orderBy: { createdAt: 'asc' }, select: { tag: { select: { name: true } } } }),
+  ]);
   const ids = [...new Set(reviews.map((r) => r.reviewerId).filter((x): x is string => !!x))];
   const names = ids.length ? new Map((await db.staffUser.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } })).map((u) => [u.id, u.displayName])) : new Map<string, string>();
   return viewOf(
     p,
     now,
     reviews.map((r) => ({ stage: r.stage, verdict: r.verdict, notes: r.notes, reviewer: r.reviewerId ? (names.get(r.reviewerId) ?? null) : null, at: r.createdAt.toISOString() })),
+    tags.map((t) => t.tag.name),
   );
+}
+
+/**
+ * PR 592 follow-up — an article's tags become exactly the ones typed (by link; a new name makes its tag, a known one
+ * keeps its first spelling). A tag taken off an article stays (with no article it shows nothing).
+ */
+async function setPostTags(tx: Prisma.TransactionClient, storeId: number, postId: string, names: readonly string[]): Promise<boolean> {
+  const want = tagList(names).slice(0, TAGS_MAX);
+  const have = await tx.blogPostTag.findMany({ where: { storeId, postId }, select: { id: true, tag: { select: { slug: true } } } });
+  const keep = new Set(want.map((t) => t.slug));
+  const gone = have.filter((h) => !keep.has(h.tag.slug)).map((h) => h.id);
+  const had = new Set(have.map((h) => h.tag.slug));
+  const add = want.filter((t) => !had.has(t.slug));
+  if (gone.length) await tx.blogPostTag.deleteMany({ where: { id: { in: gone } } });
+  for (const t of add) {
+    const tag = await tx.blogTag.upsert({ where: { storeId_slug: { storeId, slug: t.slug } }, create: { storeId, slug: t.slug, name: t.name }, update: {}, select: { id: true } });
+    await tx.blogPostTag.create({ data: { storeId, postId, tagId: tag.id } });
+  }
+  return gone.length > 0 || add.length > 0;
 }
 
 /** What the editor's choices offer: the categories and authors not put away, and the products not archived. */
@@ -229,14 +263,17 @@ export async function saveJournalPost(db: Db, resolver: Resolver, who: JournalWh
   const d = ok.data;
   const slug = slugOf(d);
   if (!slug) throw new JournalError('INVALID_INPUT', 400, ['slug']);
-  const [category, author, hero, products, settings] = await Promise.all([
+  const [category, author, reviewer, hero, products, settings] = await Promise.all([
     d.categoryId ? db.blogCategory.findFirst({ where: { id: d.categoryId, storeId, archivedAt: null }, select: { id: true } }) : null,
     d.authorId ? db.blogAuthor.findFirst({ where: { id: d.authorId, storeId, archivedAt: null }, select: { id: true } }) : null,
+    d.reviewerAuthorId ? db.blogAuthor.findFirst({ where: { id: d.reviewerAuthorId, storeId, archivedAt: null }, select: { id: true } }) : null,
     d.heroAssetId ? db.mediaAsset.findFirst({ where: { id: d.heroAssetId, storeId }, select: { id: true } }) : null,
     d.productIds.length ? db.product.count({ where: { storeId, id: { in: d.productIds } } }) : 0,
     resolver.value('blog.journal', { storeId }),
   ]);
-  const bad = [d.categoryId && !category && 'categoryId', d.authorId && !author && 'authorId', d.heroAssetId && !hero && 'heroAssetId', products !== d.productIds.length && 'productIds'].filter((x): x is string => !!x);
+  // PR 592 follow-up: the reviewer is someone else than the article's author (nobody reviews his own article)
+  const reviewerBad = d.reviewerAuthorId && (!reviewer || d.reviewerAuthorId === d.authorId);
+  const bad = [d.categoryId && !category && 'categoryId', d.authorId && !author && 'authorId', reviewerBad && 'reviewerAuthorId', d.heroAssetId && !hero && 'heroAssetId', products !== d.productIds.length && 'productIds'].filter((x): x is string => !!x);
   if (bad.length) throw new JournalError('INVALID_INPUT', 400, bad);
 
   const before = id ? await db.blogPost.findFirst({ where: { id, storeId }, select: POST_SELECT }) : null;
@@ -256,6 +293,7 @@ export async function saveJournalPost(db: Db, resolver: Resolver, who: JournalWh
     body: d.body,
     categoryId: d.categoryId,
     authorId: d.authorId,
+    reviewerAuthorId: d.reviewerAuthorId,
     metaDescription: d.metaDescription,
     focusKeyword: d.focusKeyword,
     quickAnswer: d.quickAnswer,
@@ -268,14 +306,19 @@ export async function saveJournalPost(db: Db, resolver: Resolver, who: JournalWh
   const wordsChanged = !!before && (before.title !== d.title || (before.body ?? '') !== d.body || before.excerpt !== d.excerpt || before.quickAnswer !== d.quickAnswer);
   let savedId: string;
   try {
-    if (before) {
-      const data: Prisma.BlogPostUpdateInput = { ...fields };
-      if (wordsChanged && editSendsBack(status)) data.status = 'DRAFT';
-      if (wordsChanged && status === 'PUBLISHED') data.contentUpdatedAt = now;
-      savedId = (await db.blogPost.update({ where: { id: before.id }, data, select: { id: true } })).id;
-    } else {
-      savedId = (await db.blogPost.create({ data: { storeId, status: 'DRAFT', writerStaffId: who.actor.staffUserId, sourceUrls: [], ...fields }, select: { id: true } })).id;
-    }
+    savedId = await db.$transaction(async (tx) => {
+      if (before) {
+        const data: Prisma.BlogPostUpdateInput = { ...fields };
+        if (wordsChanged && editSendsBack(status)) data.status = 'DRAFT';
+        if (wordsChanged && status === 'PUBLISHED') data.contentUpdatedAt = now;
+        const sid = (await tx.blogPost.update({ where: { id: before.id }, data, select: { id: true } })).id;
+        await setPostTags(tx, storeId, sid, d.tags);
+        return sid;
+      }
+      const sid = (await tx.blogPost.create({ data: { storeId, status: 'DRAFT', writerStaffId: who.actor.staffUserId, sourceUrls: [], ...fields }, select: { id: true } })).id;
+      await setPostTags(tx, storeId, sid, d.tags);
+      return sid;
+    });
   } catch (e) {
     if (isUnique(e)) throw new JournalError('SLUG_TAKEN', 409, ['slug']);
     throw e;
@@ -512,6 +555,8 @@ export interface LivePost {
   body: string;
   quickAnswer: string | null;
   metaDescription: string | null;
+  /** PR 592 follow-up: the focus keyword (the journal's search reads it). */
+  focusKeyword: string | null;
   heroAssetId: string | null;
   productIds: string[];
   featured: boolean;
@@ -520,28 +565,33 @@ export interface LivePost {
   contentUpdatedAt: string | null;
   category: { slug: string; nameEn: string; nameBn: string | null } | null;
   author: { slug: string; displayName: string; isAiAuthor: boolean; reviewerLine: string | null } | null;
+  /** PR 592 follow-up: the expert reviewer (none while put away) and the tags, in the order they were added. */
+  reviewer: { slug: string; displayName: string; isAiAuthor: boolean } | null;
+  tags: { slug: string; name: string }[];
   /** PR 249: the article's twin in the other language (either side may name the other), its plan and its topic. */
   twinPostId: string | null;
   clusterId: string | null;
   categoryId: string | null;
 }
 
-const LIVE_SELECT = {
+export const LIVE_SELECT = {
   ...POST_SELECT,
   twinPostId: true,
   clusterId: true,
   category: { select: { slug: true, nameEn: true, nameBn: true, archivedAt: true } },
   author: { select: { slug: true, displayName: true, isAiAuthor: true, reviewerLine: true, archivedAt: true } },
+  reviewer: { select: { slug: true, displayName: true, isAiAuthor: true, archivedAt: true } },
+  tags: { orderBy: { createdAt: 'asc' }, select: { tag: { select: { slug: true, name: true } } } },
 } satisfies Prisma.BlogPostSelect;
 
-const liveWhere = (storeId: number, locale: 'en' | 'bn', now: Date): Prisma.BlogPostWhereInput => ({
+export const liveWhere = (storeId: number, locale: 'en' | 'bn', now: Date): Prisma.BlogPostWhereInput => ({
   storeId,
   locale,
   archivedAt: null,
   OR: [{ status: 'PUBLISHED' }, { status: 'SCHEDULED', scheduledAt: { lte: now } }],
 });
 
-function liveOf(p: Prisma.BlogPostGetPayload<{ select: typeof LIVE_SELECT }>): LivePost {
+export function liveOf(p: Prisma.BlogPostGetPayload<{ select: typeof LIVE_SELECT }>): LivePost {
   return {
     id: p.id,
     locale: p.locale === 'bn' ? 'bn' : 'en',
@@ -551,6 +601,7 @@ function liveOf(p: Prisma.BlogPostGetPayload<{ select: typeof LIVE_SELECT }>): L
     body: p.body ?? '',
     quickAnswer: p.quickAnswer,
     metaDescription: p.metaDescription,
+    focusKeyword: p.focusKeyword,
     heroAssetId: p.heroAssetId,
     productIds: p.productIds,
     featured: p.featured,
@@ -559,6 +610,8 @@ function liveOf(p: Prisma.BlogPostGetPayload<{ select: typeof LIVE_SELECT }>): L
     contentUpdatedAt: iso(p.contentUpdatedAt),
     category: p.category && !p.category.archivedAt ? { slug: p.category.slug, nameEn: p.category.nameEn, nameBn: p.category.nameBn } : null,
     author: p.author && !p.author.archivedAt ? { slug: p.author.slug, displayName: p.author.displayName, isAiAuthor: p.author.isAiAuthor, reviewerLine: p.author.reviewerLine } : null,
+    reviewer: p.reviewer && !p.reviewer.archivedAt ? { slug: p.reviewer.slug, displayName: p.reviewer.displayName, isAiAuthor: p.reviewer.isAiAuthor } : null,
+    tags: p.tags.map((t) => t.tag),
     twinPostId: p.twinPostId,
     clusterId: p.clusterId,
     categoryId: p.categoryId,

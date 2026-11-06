@@ -80,6 +80,8 @@ export default async function JournalEditorPage(props: Props) {
     featured: false,
     categoryId: null,
     authorId: null,
+    reviewerAuthorId: null,
+    tags: [],
     metaDescription: null,
     focusKeyword: null,
     quickAnswer: null,

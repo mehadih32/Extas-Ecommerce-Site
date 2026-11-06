@@ -6768,7 +6768,9 @@ model BlogAuthor {
   createdAt     DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime  @updatedAt @db.Timestamptz(3)
 
-  posts BlogPost[]
+  posts         BlogPost[] @relation("BlogPostAuthor")
+  /// PR 592 follow-up: the articles this person reviewed (their page lists them under "Reviewed").
+  reviewedPosts BlogPost[] @relation("BlogPostReviewer")
 
   @@unique([storeId, slug])
 }
@@ -6781,7 +6783,11 @@ model BlogPost {
   categoryId       String?        @db.Uuid
   category         BlogCategory?  @relation(fields: [categoryId], references: [id])
   authorId         String?        @db.Uuid
-  author           BlogAuthor?    @relation(fields: [authorId], references: [id])
+  author           BlogAuthor?    @relation("BlogPostAuthor", fields: [authorId], references: [id])
+  /// PR 592 follow-up (migration 0172): the expert reviewer the owner names on the article ("Reviewed by", their own page);
+  /// never the article's own author.
+  reviewerAuthorId String?        @db.Uuid
+  reviewer         BlogAuthor?    @relation("BlogPostReviewer", fields: [reviewerAuthorId], references: [id])
   clusterId        String?        @db.Uuid
   topicId          String?        @db.Uuid
   /// The Bengali twin (PR 588) or the English original.
@@ -6820,6 +6826,7 @@ model BlogPost {
 
   @@unique([storeId, locale, slug])
   @@index([storeId, status, publishedAt])
+  @@index([reviewerAuthorId])
 }
 
 enum BlogPostStatus {
@@ -6879,6 +6886,7 @@ model BlogPostTag {
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
   @@unique([postId, tagId])
+  @@index([tagId])
 }
 
 /// @stage S12 · PR 242, 244, 591 — a topic in the topic bank (from search demand, support, site search or the owner).

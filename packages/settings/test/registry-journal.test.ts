@@ -6,10 +6,10 @@ import { blogAiDraftSchema, blogScheduleSchema, blogBriefSchema, blogJournalSche
 describe('blog.journal (PR 239)', () => {
   const spec = registry['blog.journal'];
 
-  it('ships off, per store, at version 222 (229 since PR 249), with a default the schema accepts', () => {
+  it('ships off, per store, at version 222 (229 since PR 249, 257 since the PR 592 follow-up), with a default the schema accepts', () => {
     expect(spec.scope).toBe('store');
-    // PR 249 added "Read next" (relatedArticles, v229)
-    expect(spec.version).toBe(229);
+    // PR 249 added "Read next" (relatedArticles, v229); the PR 592 follow-up tags, author pages, search and RSS (v257)
+    expect(spec.version).toBe(257);
     expect(spec.default.on).toBe(false);
     expect(spec.default.reviewByAnother).toBe(false);
     expect(spec.default.aiNote).toEqual({ en: '', bn: '' });
@@ -23,6 +23,14 @@ describe('blog.journal (PR 239)', () => {
     expect(blogJournalSchema.parse(old).relatedArticles).toBe(0);
     expect(blogJournalSchema.safeParse({ ...spec.default, relatedArticles: 7 }).success).toBe(false);
     expect(blogJournalSchema.safeParse({ ...spec.default, relatedArticles: -1 }).success).toBe(false);
+  });
+
+  it('PR 592 follow-up: tags, author pages, search and RSS ship off, and a value saved before them reads them off', () => {
+    expect(spec.default).toMatchObject({ tags: false, authorPages: false, search: false, rss: false, rssItems: 20 });
+    const { tags: _t, authorPages: _a, search: _s, rss: _r, rssItems: _n, ...old } = spec.default;
+    expect(blogJournalSchema.parse(old)).toMatchObject({ tags: false, authorPages: false, search: false, rss: false, rssItems: 20 });
+    expect(blogJournalSchema.safeParse({ ...spec.default, rssItems: 4 }).success).toBe(false);
+    expect(blogJournalSchema.safeParse({ ...spec.default, rssItems: 101 }).success).toBe(false);
   });
 
   it('keeps every number within its range and refuses unknown fields', () => {

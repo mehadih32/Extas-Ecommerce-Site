@@ -111,3 +111,29 @@
 /* above the phone's bottom navigation; at the very bottom where that navigation is gone */
 @media (min-width: 1024px) { .shop .ha-strip { bottom: 0; } }
 body.ha-strip-on { padding-bottom: 76px; }
+
+/* S12 · PR 592 follow-up (demo r12-zblogfe.css bf-search, bf-tag, bf-browse, bf-auth) — the journal's search box, tags,
+   "More ways to browse" and a person's header. Every tap target 44 px; the search field 16 px (no zoom on a phone). */
+.shop .jn-search { display: flex; gap: 8px; margin: 16px 0 0; max-width: 560px; }
+.shop .jn-search .input { flex: 1 1 auto; min-width: 0; min-height: 44px; font-size: 16px; }
+.shop .jn-search .btn { flex: none; min-height: 44px; }
+.shop .jn-tags { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; }
+.shop .jn-tag { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; justify-content: center; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px; color: inherit; text-decoration: none; overflow-wrap: anywhere; }
+.shop .jn-tag:hover, .shop .jn-tag:focus-visible { border-color: var(--ink); }
+.shop .jn-art-tags { margin: 20px 0 0; }
+.shop .jn-meta .jn-who { color: inherit; text-decoration: underline; text-underline-offset: 2px; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
+.shop .jn-browse { margin: 32px 0 0; border-top: 1px solid var(--line); padding-top: 20px; }
+.shop .jn-browse .h3 { margin: 0 0 12px; }
+.shop .jn-browse-g { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+@media (min-width: 768px) { .shop .jn-browse-g { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.shop .jn-browse-t { margin: 0 0 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text2); }
+.shop .jn-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.shop .jn-rows li { border-bottom: 1px solid var(--line); }
+.shop .jn-rows a { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 6px 0; color: inherit; text-decoration: none; }
+.shop .jn-rows a:hover span:first-child, .shop .jn-rows a:focus-visible span:first-child { text-decoration: underline; }
+.shop .jn-person { display: grid; gap: 6px; margin: 12px 0 0; max-width: 64ch; }
+.shop .jn-person p { margin: 0; }
+.shop .jn-resc { margin: 16px 0 0; }
+.shop .jn-noresult { margin: 16px 0 0; display: grid; gap: 10px; }
+.shop .jn-noresult p { margin: 0; }
+.shop .jn-sub { margin: 28px 0 0; }

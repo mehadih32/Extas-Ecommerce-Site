@@ -5,7 +5,7 @@
 import type { Metadata } from 'next';
 import { ComingSoon } from '@/components/shop/ComingSoon';
 import { JournalList } from '@/components/shop/journal/JournalViews';
-import { journalAds, journalPage, journalSettings, pageOf } from '@/lib/journal/shop';
+import { journalAds, journalLinks, journalPage, journalSettings, pageOf } from '@/lib/journal/shop';
 import { shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
 import { shopNotFound } from '@/lib/shop/not-found';
@@ -26,9 +26,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function JournalTopic(props: Props) {
   const [c, { slug }, sp] = await Promise.all([shopContext(), props.params, props.searchParams]);
-  if (!(await journalSettings(c.storeId)).on) return <ComingSoon c={c} soonKey="journal" />;
+  const s = await journalSettings(c.storeId);
+  if (!s.on) return <ComingSoon c={c} soonKey="journal" />;
   const data = await journalPage(c, pageOf(sp.page), slug);
   if (!data) shopNotFound(c);
   const ads = await journalAds(c, { topic: data.topic }, ['topic', 'listBetween']);
-  return <JournalList c={c} posts={data.posts} total={data.total} page={data.page} pages={data.pages} topics={data.topics} topic={data.topic} ads={ads.list} />;
+  // PR 592 follow-up: the search box and the bylines' links while their switches are on
+  return <JournalList c={c} posts={data.posts} total={data.total} page={data.page} pages={data.pages} topics={data.topics} topic={data.topic} ads={ads.list} links={journalLinks(s)} />;
 }

@@ -15,6 +15,8 @@
 // shown and the comment box (JournalComments); nothing a reader writes shows before a person presses Show.
 // S12 · PR 592 — the article's house ads (`blog.houseAds`, off as shipped: none): after paragraph N, at the end, beside
 // it on a wide screen, the popup and the slim bar.
+// S12 · PR 592 follow-up — the article's tags (`blog.journal.tags`) and its expert reviewer, the names linked to their
+// pages while `blog.journal.authorPages` is on.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getPrisma } from '@extas/db/client';
@@ -25,7 +27,7 @@ import { JournalComments } from '@/components/shop/journal/JournalComments';
 import { JournalArticle } from '@/components/shop/journal/JournalViews';
 import { shownComments } from '@/lib/journal/comments';
 import { articlePhoto } from '@/lib/journal/images';
-import { journalAds, journalArticle, journalSettings, journalSwitchTarget } from '@/lib/journal/shop';
+import { journalAds, journalArticle, journalLinks, journalSettings, journalSwitchTarget } from '@/lib/journal/shop';
 import { byline } from '@/lib/journal/model';
 import { settingsResolver } from '@/lib/settings';
 import { signedIn } from '@/lib/shop/account';
@@ -111,7 +113,7 @@ export default async function JournalPost(props: Props) {
   return (
     <>
       <JsonLd data={ld} />
-      <JournalArticle c={c} post={post} cards={a.cards} aiNote={a.settings.aiNote} related={a.related} photo={photo} ads={ads.list.length ? ads : undefined} />
+      <JournalArticle c={c} post={post} cards={a.cards} aiNote={a.settings.aiNote} related={a.related} photo={photo} ads={ads.list.length ? ads : undefined} links={journalLinks(a.settings)} />
       {/* PR 250: counted only while the owner counts readers (Website › Blog & journal › Performance) */}
       {page['blog.performance'].count ? <ArticleRead postId={post.id} /> : null}
       {/* PR 251: only while the owner has switched comments on (Website › Blog & journal › Comments) */}
