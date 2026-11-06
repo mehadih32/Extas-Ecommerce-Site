@@ -66,6 +66,11 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('the customer beside a sup
     await order(f.S, null, GUEST, 'PLACED');
     const courier = await p.courierAccount.create({ data: { storeId: f.S, providerKey: 'sample', name: 'Sample Courier' } });
     await p.shipment.create({ data: { storeId: f.S, orderId: transit, courierAccountId: courier.id, status: 'IN_TRANSIT', trackingCode: 'TRK-428', idempotencyKey: 'c428-ship' } });
+    // follow-up 506: one exchange on a delivered order, three notes (one pinned, one archived)
+    await p.exchange.create({ data: { storeId: f.S, orderId: ids['DELIVERED-1']!, customerId: a, number: 'X428-1', reason: 'size', tier: 1 } });
+    await p.customerNote.create({ data: { storeId: f.S, customerId: a, body: 'Prefers a call after 6 pm', createdAt: new Date(Date.UTC(2026, 9, 2)) } });
+    await p.customerNote.create({ data: { storeId: f.S, customerId: a, body: 'Size L in kurtas', pinned: true, createdAt: new Date(Date.UTC(2026, 9, 1)) } });
+    await p.customerNote.create({ data: { storeId: f.S, customerId: a, body: 'Old note', archivedAt: new Date(), createdAt: new Date(Date.UTC(2026, 9, 3)) } });
   });
   afterAll(async () => f?.t.drop());
 
@@ -84,6 +89,12 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('the customer beside a sup
     expect(c.live[1]!.parcel).toEqual({ status: 'IN_TRANSIT', courier: 'Sample Courier', trackingCode: 'TRK-428' });
     expect(c.recent.map((o) => o.number)).toEqual(['C428-6', 'C428-5']);
     expect(c.you).toEqual({ history: true, customer: true, orders: true });
+    // follow-up 506: his exchanges and the team's notes, pinned first, archived ones never
+    expect(c.exchanges).toBe(1);
+    expect(c.notes.map((x) => [x.body, x.pinned])).toEqual([
+      ['Size L in kurtas', true],
+      ['Prefers a call after 6 pm', false],
+    ]);
   });
 
   it('no customer linked: found by the chat number in any form; a guest number shows its orders only', async () => {
@@ -105,6 +116,8 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('the customer beside a sup
     expect(c.history).toBeNull();
     expect(c.ratios).toBeNull();
     expect(c.risk).toBeNull();
+    expect(c.exchanges).toBeNull();
+    expect(c.notes).toEqual([]);
     expect(c.you).toEqual({ history: false, customer: false, orders: false });
   });
 
