@@ -346,6 +346,15 @@ export interface SearchInput {
 
 const KINDS = ['IMAGE', 'VIDEO', 'AUDIO', 'PDF', 'DOCUMENT', 'OTHER'] as const;
 
+/**
+ * Follow-up 504 (PR 425): folders whose files are never offered as shop pictures — `support` holds the customers' and
+ * the team's chat files. The library and every picture picker leave them out; a search asks for one by name to see it.
+ */
+export const PRIVATE_MEDIA_FOLDERS: readonly string[] = ['support'];
+
+/** The where-part that leaves the private folders out (a file with no folder stays in). */
+export const publicMediaWhere = (): Prisma.MediaAssetWhereInput => ({ OR: [{ folder: null }, { folder: { notIn: [...PRIVATE_MEDIA_FOLDERS] } }] });
+
 /** PR 37 — search the library: words in the file name, the alt texts, the folder or a tag; newest first. */
 export async function searchMedia(deps: MediaDeps, actor: Actor, input: SearchInput): Promise<{ items: MediaSummary[]; nextCursor: string | null }> {
   await requirePermission(deps.db, actor, 'media.read', { storeId: input.storeId });
@@ -359,6 +368,7 @@ export async function searchMedia(deps: MediaDeps, actor: Actor, input: SearchIn
   if (archived === 'only') and.push({ archivedAt: { not: null } });
   if (input.kind) and.push({ kind: input.kind as (typeof KINDS)[number] });
   if (input.folder) and.push({ folder: input.folder });
+  else and.push(publicMediaWhere());
   if (input.tag) and.push({ tags: { has: input.tag.trim().toLowerCase() } });
   if (input.usage === 'used') and.push({ productMedia: { some: { archivedAt: null } } });
   if (input.usage === 'unused') and.push({ productMedia: { none: { archivedAt: null } } });
@@ -491,7 +501,8 @@ export async function findOrphans(deps: MediaDeps, actor: Actor, input: { storeI
   ]);
   const before = new Date(nowOf(deps).getTime() - graceDays * DAY_MS);
   const rows = await deps.db.mediaAsset.findMany({
-    where: { storeId: input.storeId, archivedAt: null, createdAt: { lt: before } },
+    // follow-up 504: a chat file (private folder) is kept with its conversation, never an orphan of the library
+    where: { storeId: input.storeId, archivedAt: null, createdAt: { lt: before }, ...publicMediaWhere() },
     include: COUNTS,
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     take,
@@ -535,7 +546,7 @@ export async function archiveOrphans(deps: MediaDeps, actor: Actor, input: { sto
       if (!a) out.skipped.push({ id, why: 'NOT_FOUND' });
       else if (a.archivedAt) out.skipped.push({ id, why: 'ALREADY_ARCHIVED' });
       else if (a.createdAt >= before) out.skipped.push({ id, why: 'TOO_NEW' });
-      else if (uses.has(id)) out.skipped.push({ id, why: 'IN_USE' });
+      else if (uses.has(id) || (a.folder !== null && PRIVATE_MEDIA_FOLDERS.includes(a.folder))) out.skipped.push({ id, why: 'IN_USE' });
       else {
         // Archive only if nothing changed since the check (no concurrent archive, still not archived).
         const n = await tx.mediaAsset.updateMany({ where: { id, archivedAt: null }, data: { archivedAt: now } });

@@ -32,6 +32,7 @@ import {
   requirePhotoSet,
   restoreMedia,
   searchMedia,
+  PRIVATE_MEDIA_FOLDERS,
   sha256,
   storeGeneratedFile,
   updateMedia,
@@ -312,6 +313,21 @@ function suite(name: string, makeStorage: () => Promise<{ storage: Storage; clea
         const pdf = await storeGeneratedFile(deps, { storeId: s, kind: 'PDF', body: new TextEncoder().encode('%PDF-1.7 sample'), contentType: 'application/pdf', name: 'invoice sample 1001', extension: 'pdf', folder: 'invoices' });
         expect([pdf.kind, pdf.status, pdf.folder]).toEqual(['PDF', 'stored', 'invoices']);
         expect(await pendingAssets(deps, { storeId: s, take: 50 })).toEqual([]);
+      });
+
+      it('follow-up 504: files in the support folder (customers\' and replies\' files) never show in the library unless asked for', async () => {
+        const s = stores[0];
+        const sup = await storeGeneratedFile(deps, { storeId: s, kind: 'IMAGE', body: await photo(400, 500), contentType: 'image/jpeg', name: 'support file', extension: 'jpg', folder: 'support', fileName: 'kurta.jpg' });
+        const all = (await searchMedia(deps, actor, { storeId: s, take: 50 })).items.map((i) => i.id);
+        expect(all).not.toContain(sup.id);
+        expect((await searchMedia(deps, actor, { storeId: s, q: 'kurta', take: 50 })).items.map((i) => i.id)).not.toContain(sup.id);
+        expect((await searchMedia(deps, actor, { storeId: s, q: 'support', take: 50 })).items.map((i) => i.id)).not.toContain(sup.id);
+        expect((await searchMedia(deps, actor, { storeId: s, folder: 'support', take: 50 })).items.map((i) => i.id)).toEqual([sup.id]);
+        expect(PRIVATE_MEDIA_FOLDERS).toContain('support');
+        // never an orphan: the clean-up neither lists nor archives it, however old
+        now = new Date(now.getTime() + 400 * DAY);
+        expect((await findOrphans(deps, actor, { storeId: s })).items.map((i) => i.id)).not.toContain(sup.id);
+        expect((await archiveOrphans(deps, actor, { storeId: s, assetIds: [sup.id], reason: 'tidy' })).skipped).toEqual([{ id: sup.id, why: 'IN_USE' }]);
       });
     }
 

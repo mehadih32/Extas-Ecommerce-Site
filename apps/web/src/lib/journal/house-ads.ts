@@ -18,7 +18,7 @@
 // - Never money: an ad points at what the shop sells at its own price; nothing here changes a price, an offer or COD.
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
-import { imageSources, type ImageSource } from '@extas/media';
+import { imageSources, publicMediaWhere, type ImageSource } from '@extas/media';
 import { kpiByHouseAdPlace, lastDays, NO_ORDERS } from '@extas/metrics';
 import { ymdIn } from '@extas/metrics/pure';
 import { houseAdsSchema, storeTarget, type HouseAdsSettings } from '@extas/settings';
@@ -456,7 +456,7 @@ export async function adOptions(db: Db, storeId: number = S): Promise<AdOptions>
     db.category.findMany({ where: { storeId, isVisible: true, archivedAt: null }, orderBy: { nameEn: 'asc' }, take: OPTIONS_MAX, select: { id: true, nameEn: true } }),
     db.blogCategory.findMany({ where: { storeId, archivedAt: null }, orderBy: { nameEn: 'asc' }, take: OPTIONS_MAX, select: { id: true, nameEn: true } }),
     db.blogPost.findMany({ where: { storeId, archivedAt: null, status: { in: ['PUBLISHED', 'SCHEDULED'] } }, orderBy: { updatedAt: 'desc' }, take: OPTIONS_MAX, select: { id: true, title: true, locale: true } }),
-    db.mediaAsset.findMany({ where: { storeId, archivedAt: null, kind: 'IMAGE' }, orderBy: { createdAt: 'desc' }, take: OPTIONS_MAX, select: { id: true, altEn: true, originalFileName: true } }),
+    db.mediaAsset.findMany({ where: { storeId, archivedAt: null, kind: 'IMAGE', ...publicMediaWhere() }, orderBy: { createdAt: 'desc' }, take: OPTIONS_MAX, select: { id: true, altEn: true, originalFileName: true } }),
   ]);
   const n = (x: { id: string; nameEn: string }) => ({ id: x.id, name: x.nameEn });
   return {

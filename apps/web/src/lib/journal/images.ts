@@ -13,7 +13,7 @@
 // - Seeing needs `blog.read`; picking `blog.write`; the card `blog.publish`.
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { imageSources, type ImageSource } from '@extas/media';
+import { imageSources, publicMediaWhere, type ImageSource } from '@extas/media';
 import { blogImagesSchema, storeTarget, type BlogImagesSettings } from '@extas/settings';
 import { body, fail, guardAdmin, isUuid, json, type AdminDeps } from '../admin-auth';
 import { JournalError, answer, versionOf, type JournalWho } from './journal';
@@ -67,7 +67,7 @@ export async function photoScreen(db: Db, resolver: Resolver, id: string, storeI
           select: { productId: true, product: { select: { nameEn: true, nameBn: true } }, asset: { select: ASSET } },
         })
       : Promise.resolve([]),
-    db.mediaAsset.findMany({ where: { storeId, archivedAt: null, kind: 'IMAGE', ...studioOk }, orderBy: { createdAt: 'desc' }, take: set.perSource * 2, select: ASSET }),
+    db.mediaAsset.findMany({ where: { storeId, archivedAt: null, kind: 'IMAGE', ...studioOk, ...publicMediaWhere() }, orderBy: { createdAt: 'desc' }, take: set.perSource * 2, select: ASSET }),
     post.heroAssetId ? db.mediaAsset.findFirst({ where: { id: post.heroAssetId, storeId }, select: ASSET }) : Promise.resolve(null),
   ]);
   const bn = post.locale === 'bn';
