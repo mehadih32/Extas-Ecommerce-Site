@@ -38,6 +38,7 @@ import { aov, can, prevText, rangeText, type DashProps } from './common';
 const NEED_ICON: Record<string, ShellIconName> = {
   ordersConfirm: 'phone',
   ordersPrepaid: 'wallet',
+  ordersAwaitingAdvance: 'wallet',
   ordersReview: 'shield',
   ordersCancelRequests: 'x',
   ordersCancelPending: 'uturn',

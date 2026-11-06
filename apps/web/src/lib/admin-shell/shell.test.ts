@@ -265,6 +265,16 @@ describe('waiting work and badges', () => {
   });
 });
 
+describe('follow-up 224 · the orders awaiting their advance', () => {
+  it('is a "Needs you now" row that opens the list view and counts in the Orders badge, for those who may read orders', () => {
+    expect(QUEUES.find((q) => q.id === 'ordersAwaitingAdvance')).toMatchObject({ perm: 'orders.read', href: '/admin/orders?view=awaitingAdvance', section: 'orders', badge: true, group: 'orders' });
+    const counts: QueueCount[] = [{ id: 'ordersAwaitingAdvance', n: 2, oldest: '2026-11-01T00:00:00.000Z' }];
+    expect(visibleQueues(counts, viewer(['orders.read'])).map((r) => r.id)).toEqual(['ordersAwaitingAdvance']);
+    expect(badgesFrom(visibleQueues(counts, viewer(['orders.read'])))).toEqual({ orders: 2 });
+    expect(visibleQueues(counts, viewer(['inventory.read']))).toEqual([]);
+  });
+});
+
 describe('search query and the Dashboard helpers', () => {
   it('reads the mode prefix, trims, and keeps the digits (Bengali digits too)', () => {
     expect(parseQuery('  Stock ')).toMatchObject({ mode: '', q: 'stock' });

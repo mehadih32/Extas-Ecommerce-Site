@@ -4,6 +4,7 @@
 // The order rows (follow-up 200, S05): orders to confirm and duplicate reviews (the Orders badge), the customers'
 // cancel requests and cancels waiting for the courier; parcels to book and returns come with S07/S08. PR 541: the
 // prepaid orders to confirm without a call (SIM-F-020), and the review row counts risk reviews beside duplicates.
+// Follow-up 224 (PR 140): the orders awaiting their advance, as a row and in the Orders badge.
 // CN-028 · PR 616: the books differences past their timing window (MISMATCH), on Money → Books → Differences.
 // CN-029 Phase 3 qa-gate I4 (PR 619; docs/RETAIL-ERP-MODEL.md §8): the ERP account's hold (v6 only) — one urgent row
 // from when the hold began, until the ERP releases it; it stops new orders, so it leads the dashboard's card.
@@ -20,7 +21,7 @@ import type { ShellViewer } from './sections';
 import type { TodoGroup } from './todo';
 import { waitingProposals } from '../admin-health/fixes';
 
-export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'agentFixes';
+export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'agentFixes';
 
 export interface QueueDef {
   id: QueueId;
@@ -38,6 +39,8 @@ export interface QueueDef {
 export const QUEUES: readonly QueueDef[] = [
   { id: 'ordersConfirm', perm: 'orders.confirm', href: '/admin/orders/confirm', section: 'orders', tone: 'warn', icon: 'phone', badge: true, group: 'orders' },
   { id: 'ordersPrepaid', perm: 'orders.confirm', href: '/admin/orders/confirm?view=prepaid', section: 'orders', tone: 'info', icon: 'wallet', badge: true, group: 'orders' },
+  // follow-up 224 (PR 140): orders waiting for their advance payment, with the Orders badge
+  { id: 'ordersAwaitingAdvance', perm: 'orders.read', href: '/admin/orders?view=awaitingAdvance', section: 'orders', tone: 'warn', icon: 'wallet', badge: true, group: 'orders' },
   { id: 'ordersReview', perm: 'orders.risk.read', href: '/admin/orders?view=inReview', section: 'orders', tone: 'warn', icon: 'shield', badge: true, group: 'orders' },
   { id: 'ordersCancelRequests', perm: 'orders.confirm', href: '/admin/orders/confirm?view=cancelRequests', section: 'orders', tone: 'bad', icon: 'x', badge: false, group: 'orders' },
   { id: 'ordersCancelPending', perm: 'orders.read', href: '/admin/orders?view=cancelPending', section: 'orders', tone: 'bad', icon: 'uturn', badge: false, group: 'orders' },
@@ -74,7 +77,7 @@ const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 export async function countQueues(deps: QueueDeps, storeId: number): Promise<QueueCount[]> {
   const { db } = deps;
   const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold, fixes] = await Promise.all([
-    orderQueueCounts(db, storeId, ['toConfirm', 'prepaid', 'inReview', 'cancelRequests', 'cancelPending']),
+    orderQueueCounts(db, storeId, ['toConfirm', 'prepaid', 'awaitingAdvance', 'inReview', 'cancelRequests', 'cancelPending']),
     db.publishQueueItem.count({ where: { storeId, status: 'OPEN' } }),
     db.publishQueueItem.findFirst({ where: { storeId, status: 'OPEN' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
     db.lowStockAlert.count({ where: { resolvedAt: null } }),
@@ -97,6 +100,7 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
   return [
     o('ordersConfirm', 'toConfirm'),
     o('ordersPrepaid', 'prepaid'),
+    o('ordersAwaitingAdvance', 'awaitingAdvance'),
     o('ordersReview', 'inReview'),
     o('ordersCancelRequests', 'cancelRequests'),
     o('ordersCancelPending', 'cancelPending'),
