@@ -27,6 +27,8 @@
     "shopWord": "Shop's word",
     "yours": "Your word",
     "changed": "Changed",
+    "when": "Last changed {at}",
+    "justNow": "Changed just now",
     "untr": "Bengali in English",
     "change": "Change",
     "ownEn": "Your English",

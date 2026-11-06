@@ -4,6 +4,8 @@
 // shop's word), Save and "Back to the shop's word". A save sends only that word with the version the page was read at
 // (PUT /api/admin/website/dictionary, `website.words.write`; the API checks everything again). The file card downloads
 // every word as CSV; its import sends the whole file and reloads the page. Words: messages/admin-words.<lang>.json.
+// PR 78 follow-up (674): each row says when the word last changed (the page hands the time already written out), and
+// "Changed just now" after a save here.
 import { useRouter } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import type { WordRow } from '@/lib/website/words';
@@ -17,6 +19,9 @@ export interface WordsEditorWords {
   shopWord: string;
   yours: string;
   changed: string;
+  /** PR 78 follow-up (674): "Last changed {at}" and "Changed just now". */
+  when: string;
+  justNow: string;
   untr: string;
   change: string;
   ownEn: string;
@@ -54,14 +59,17 @@ const slotsOf = (s: string) => [...new Set([...s.matchAll(/\{\w+\}/g)].map((m) =
 interface RowProps {
   row: WordRow;
   where: string;
+  /** When the word last changed, written out (none: never). */
+  when?: string;
   canEdit: boolean;
   version: string;
   setVersion: (v: string) => void;
   w: WordsEditorWords;
 }
 
-function WordItem({ row, where, canEdit, version, setVersion, w }: RowProps) {
+function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProps) {
   const [own, setOwn] = useState<Own>(row.own);
+  const [lastText, setLastText] = useState(when ? w.when.replace('{at}', when) : '');
   const [draft, setDraft] = useState<Own>(row.own);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
@@ -80,6 +88,7 @@ function WordItem({ row, where, canEdit, version, setVersion, w }: RowProps) {
     setOwn(saved);
     setDraft(saved);
     if (a.version) setVersion(a.version);
+    if (a.changed?.includes(row.key)) setLastText(w.justNow);
     showToast({ text: done, tone: 'ok' });
   }
 
@@ -108,6 +117,11 @@ function WordItem({ row, where, canEdit, version, setVersion, w }: RowProps) {
           </span>
         ) : null}
         {row.untranslated && !(own.bn || own.en) ? <span className="a2-pill warn">{w.untr}</span> : null}
+        {lastText ? (
+          <span className="a2-xs a2-mute" data-testid="wd-when">
+            {lastText}
+          </span>
+        ) : null}
       </div>
       <div className="wdb-langs">
         {shown('en')}
@@ -174,6 +188,8 @@ export interface WordsImportWords {
 
 interface Props {
   rows: WordRow[];
+  /** PR 78 follow-up (674): when each word on the page last changed, written out. */
+  when?: Record<string, string>;
   version: string;
   canEdit: boolean;
   where: Record<string, string>;
@@ -190,7 +206,7 @@ interface Props {
  * The list of one page of words and the file card. Every save answers the new version of the saved words, which the
  * next save (a row or an import) sends; after an import the page reloads and the rows show the new words.
  */
-export function WordsEditor({ rows, version: read, canEdit, where, w, file, head, children }: Props) {
+export function WordsEditor({ rows, when = {}, version: read, canEdit, where, w, file, head, children }: Props) {
   const router = useRouter();
   const [version, setVersion] = useState(read);
   const [seen, setSeen] = useState(read);
@@ -221,7 +237,7 @@ export function WordsEditor({ rows, version: read, canEdit, where, w, file, head
         {head}
         <ul className="wdb-list" data-testid="wd-list">
         {rows.map((r) => (
-          <WordItem key={`${r.key}:${read}`} row={r} where={where[r.group] ?? r.group} canEdit={canEdit} version={version} setVersion={setVersion} w={w} />
+          <WordItem key={`${r.key}:${read}`} row={r} where={where[r.group] ?? r.group} when={when[r.key]} canEdit={canEdit} version={version} setVersion={setVersion} w={w} />
         ))}
         </ul>
         {children}

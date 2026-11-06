@@ -8,10 +8,13 @@
 // PR 79 (front-end editing): the "Edit on the shop page" card (`language.frontEdit`, off as shipped; FieldsCard on
 // /api/admin/website/front-edit) and "Edit on the shop", which opens the shop's home with ?words=edit (the panel of
 // components/shop/WordsEditPanel).
+// PR 78 follow-up (674): each row says when the word last changed (lib/website/words-admin lastChanged), in the
+// admin's language and the store's time zone.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { dateTime } from '@/components/admin/stock/text';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { FieldsCard, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { WordsEditor, type WordsEditorWords } from '@/components/admin/website/WordsEditor';
@@ -74,6 +77,8 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
     shopWord: g('shopWord'),
     yours: g('yours'),
     changed: g('changed'),
+    when: g('when', { at: '{at}' }),
+    justNow: g('justNow'),
     untr: g('untr'),
     change: g('change'),
     ownEn: g('ownEn'),
@@ -185,6 +190,7 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
           </>
         }
         rows={v.rows}
+        when={Object.fromEntries(Object.entries(v.lastChanged).map(([k, at]) => [k, dateTime(at, view.locale, view.timeZone)]))}
         version={v.version}
         canEdit={canEdit}
         where={where}

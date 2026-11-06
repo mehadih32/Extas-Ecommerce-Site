@@ -4,10 +4,13 @@
 // (lib/website/words.ts), refused when someone saved the words in between (STALE, also a save from Orders › Invoices,
 // which keeps its words in the same setting), and audited (`website.words.save`, before and after of the changed words
 // only). Seeing needs `website.read`, saving `website.words.write`. Nothing here touches a price, an order or a customer.
+// PR 78 follow-up (674, 6 Nov): each word on the page carries when it last changed (WEB-05 "last changed"), read from
+// the settings' own change history (SettingChange of `language.labels`: every writer — this page, the shop panel,
+// Orders › Invoices, an on-page edit, a kept A/B version — leaves a row with the words before and after).
 import { createHash } from 'node:crypto';
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import { CsvSyntaxError, parseCsv, uncell, writeCsv } from '@extas/catalogue';
-import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
+import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
 import { storeTarget } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import type { LabelOverrides } from '../shop/dict';
@@ -37,7 +40,8 @@ export interface WordsWho {
   ctx: RequestContext;
 }
 
-export type WordsView = WordList & { version: string };
+/** PR 78 follow-up (674): when each word on the page last changed (ISO time; a word never changed has none). */
+export type WordsView = WordList & { version: string; lastChanged: Record<string, string> };
 
 /** The same words give the same version whatever order the database keeps their keys in (jsonb sorts them its way). */
 const canonical = (v: unknown): unknown =>
@@ -56,10 +60,25 @@ export function wordQueryOf(sp: { get(name: string): string | null }): WordQuery
   return { q: (sp.get('q') ?? '').slice(0, 120), group: sp.get('where') ?? '', show: isWordShow(show) ? show : 'all', p: Number(sp.get('p') ?? 1) };
 }
 
+/**
+ * PR 78 follow-up (674): when each of these words last changed — the newest change of `language.labels` whose words
+ * before and after differ at that key (one query for the whole page; a word never changed is left out).
+ */
+export async function lastChanged(db: PrismaClient, keys: readonly string[]): Promise<Record<string, string>> {
+  if (!keys.length) return {};
+  const rows = await db.$queryRaw<{ k: string; at: Date }[]>(Prisma.sql`
+    SELECT k, max(sc."createdAt") AS at
+    FROM "SettingChange" sc CROSS JOIN unnest(${[...keys]}::text[]) AS k
+    WHERE sc.key = 'language.labels' AND sc."storeId" = ${S} AND (sc."oldValue" -> k) IS DISTINCT FROM (sc."newValue" -> k)
+    GROUP BY k`);
+  return Object.fromEntries(rows.map((r) => [r.k, new Date(r.at).toISOString()]));
+}
+
 /** One page of the words with the version they were read at. */
 export async function wordsView(deps: WordsDeps, query: WordQuery): Promise<WordsView> {
   const labels = await labelsOf(deps);
-  return { ...wordList(labels, query, WORDS_PAGE_SIZE), version: versionOf(labels) };
+  const list = wordList(labels, query, WORDS_PAGE_SIZE);
+  return { ...list, version: versionOf(labels), lastChanged: await lastChanged(deps.db, list.rows.map((r) => r.key)) };
 }
 
 /** Every word as CSV (key, where, the shop's English and Bengali, the owner's English and Bengali). */
