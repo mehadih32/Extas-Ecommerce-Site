@@ -14,7 +14,7 @@ import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
 import { storeTarget } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import type { LabelOverrides } from '../shop/dict';
-import { applyWords, isWordShow, patchFromCsv, WORD_CSV_HEADER, wordCsvRows, wordList, type WordList, type WordPatch, type WordQuery } from './words';
+import { applyWords, isWordShow, patchFromCsv, WORD_CSV_HEADER, wordCsvRows, wordList, wordRow, type WordList, type WordPatch, type WordQuery } from './words';
 
 const S = MOTHER_STORE_ID;
 /** Words on one page of the list. */
@@ -90,7 +90,7 @@ export async function wordsCsv(deps: WordsDeps): Promise<string> {
  * PUT {version, words: {key: {en?, bn?}}} or {version, csv}: saves the change. Every word is checked first; one bad word
  * refuses the whole save (nothing half-saved). Answers the saved rows' new state and the new version.
  */
-export async function saveWords(deps: WordsDeps, who: WordsWho, input: unknown): Promise<{ version: string; changed: string[]; saved: LabelOverrides }> {
+export async function saveWords(deps: WordsDeps, who: WordsWho, input: unknown): Promise<{ version: string; changed: string[]; saved: LabelOverrides; claims: string[] }> {
   const o = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
   if (typeof o.version !== 'string') throw new WordsError('INVALID_INPUT', 400, ['version']);
   let patch: WordPatch;
@@ -118,7 +118,9 @@ export async function saveWords(deps: WordsDeps, who: WordsWho, input: unknown):
     const pick = (l: LabelOverrides | null) => Object.fromEntries(r.changed.map((k) => [k, l?.[k] ?? null]));
     await audit(deps.db, who.actor, { storeId: S, action: 'website.words.save', entityType: 'Setting', entityId: 'language.labels', before: pick(before), after: pick(r.next) }, who.ctx);
   }
-  return { version: versionOf(r.next), changed: r.changed, saved: Object.fromEntries(Object.keys(patch).map((k) => [k, r.next?.[k] ?? {}])) };
+  // PR 78 follow-up (678): the saved words that now make a number or a time claim (a warning; the save stands)
+  const claims = r.changed.filter((k) => wordRow(k, r.next).claim);
+  return { version: versionOf(r.next), changed: r.changed, saved: Object.fromEntries(Object.keys(patch).map((k) => [k, r.next?.[k] ?? {}])), claims };
 }
 
 const answer = (e: unknown): Response => (e instanceof WordsError ? json({ ok: false, error: e.code, details: e.details }, { status: e.status }) : errorResponse(e));

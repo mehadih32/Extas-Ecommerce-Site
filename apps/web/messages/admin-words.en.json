@@ -13,7 +13,8 @@
     "showOpt": {
       "all": "All words",
       "changed": "Changed by you",
-      "untranslated": "Bengali still in English"
+      "untranslated": "Bengali still in English",
+      "claims": "Numbers and dates to check"
     },
     "find": "Find",
     "clear": "Clear",
@@ -29,6 +30,8 @@
     "changed": "Changed",
     "when": "Last changed {at}",
     "justNow": "Changed just now",
+    "claim": "Check: number or date",
+    "claimSaved": "It has a number or a time (\"this week\", \"today\"): change it when it stops being true.",
     "untr": "Bengali in English",
     "change": "Change",
     "ownEn": "Your English",
