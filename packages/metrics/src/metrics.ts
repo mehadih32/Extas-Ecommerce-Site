@@ -106,6 +106,15 @@ export function kpiByArticle(db: Db, storeId: number, period: Period): Promise<K
   return breakdown(db, storeId, period, () => Prisma.sql`r."postId"::text`, Prisma.sql`JOIN "BlogOrderRead" r ON r."orderId" = o."id" AND r."storeId" = o."storeId"`);
 }
 
+/**
+ * S12 · PR 592 — by house ad place: the orders placed by a browser within `blog.houseAds.creditDays` after its last
+ * house ad click (the HouseAdOrderClick rows the shop wrote when each order landed), key = the place's id. An order
+ * credits one click only (the last), so the rows of an ad's places may be added up for the ad.
+ */
+export function kpiByHouseAdPlace(db: Db, storeId: number, period: Period): Promise<KpiRow[]> {
+  return breakdown(db, storeId, period, () => Prisma.sql`h."placementId"::text`, Prisma.sql`JOIN "HouseAdOrderClick" h ON h."orderId" = o."id" AND h."storeId" = o."storeId"`);
+}
+
 /** S12 · PR 250 — every order that read at least one article, each order once (the report's headline beside `kpi`). */
 export async function kpiFromArticles(db: Db, storeId: number, period: Period): Promise<Kpi> {
   const read = Prisma.sql`JOIN (SELECT DISTINCT "orderId" FROM "BlogOrderRead" WHERE "storeId" = ${storeId}) r ON r."orderId" = o."id"`;

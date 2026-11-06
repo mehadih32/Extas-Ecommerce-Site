@@ -135,6 +135,8 @@ export * from './registry-closed-stages';
 export * from './registry-blog-comments';
 // S12 · PR 547 — the journal articles' main photo, own pictures only (registry-blog-images.ts, version 252).
 export * from './registry-blog-images';
+// S12 · PR 592 — the journal's house ads and popup rules (registry-house-ads.ts, version 253).
+export * from './registry-house-ads';
 // S18 · PR 379 — the quiet bot check (registry-bot-check.ts, version 74).
 export * from './registry-bot-check';
 // S18 · PR 380 — the admin address list and the new-login notes (registry-admin-access.ts, version 78).

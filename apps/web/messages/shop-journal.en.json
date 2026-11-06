@@ -51,6 +51,12 @@
       "failed": "Could not send. Please try again.",
       "reader": "Reader",
       "chars": "{n} of {max}"
+    },
+    "ad": {
+      "label": "{shop} offer",
+      "go": "Have a look",
+      "close": "Close",
+      "popup": "An offer from {shop}"
     }
   }
 }

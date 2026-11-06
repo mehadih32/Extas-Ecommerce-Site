@@ -1,0 +1,8 @@
+{
+  "blog": {
+    "houseAds": {
+      "label": "House ads in the journal",
+      "help": "Off (as shipped): no house ad shows anywhere and nothing is counted. On: our own banners, products, combos or categories show in the places picked on Website › Blog & journal › House ads (never an outside ad network), within their dates, by weight, the most relevant first. At most the set number on one article page, never before the first paragraph, never the same ad twice. A phone visitor from a search engine never gets a popup on the first screen. Clicks are counted per ad and place; an order within the set days after a click counts for that ad. Nothing here changes a price or an offer."
+    }
+  }
+}

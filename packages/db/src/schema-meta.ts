@@ -237,6 +237,8 @@ export const APPEND_ONLY_LOCKED = [
   'SupportEscalation',
   // S12 · PR 250 (migration 0150_content_performance): each order's credit to the journal article it read, written once.
   'BlogOrderRead',
+  // S12 · PR 592 (migration 0171_house_ads): each order's credit to the house ad click before it, written once.
+  'HouseAdOrderClick',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';

@@ -1,11 +1,11 @@
 // S12 · PR 241 (demo 73-blog.js #/journal/topic/<id>) — one journal topic at /journal/topic/<link> (and /bn/…): its
 // introduction and the live articles of it and its sub-topics, in the page's language. Off: "Coming soon"; a topic that
 // does not exist or is put away: the shop's "page not found". PR 249: listed only while the journal's page kind is
-// ticked in `seo.indexing` (off as shipped).
+// ticked in `seo.indexing` (off as shipped). PR 592: the topic's house ads at the top and between the cards (off as shipped).
 import type { Metadata } from 'next';
 import { ComingSoon } from '@/components/shop/ComingSoon';
 import { JournalList } from '@/components/shop/journal/JournalViews';
-import { journalPage, journalSettings, pageOf } from '@/lib/journal/shop';
+import { journalAds, journalPage, journalSettings, pageOf } from '@/lib/journal/shop';
 import { shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
 import { shopNotFound } from '@/lib/shop/not-found';
@@ -29,5 +29,6 @@ export default async function JournalTopic(props: Props) {
   if (!(await journalSettings(c.storeId)).on) return <ComingSoon c={c} soonKey="journal" />;
   const data = await journalPage(c, pageOf(sp.page), slug);
   if (!data) shopNotFound(c);
-  return <JournalList c={c} posts={data.posts} total={data.total} page={data.page} pages={data.pages} topics={data.topics} topic={data.topic} />;
+  const ads = await journalAds(c, { topic: data.topic }, ['topic', 'listBetween']);
+  return <JournalList c={c} posts={data.posts} total={data.total} page={data.page} pages={data.pages} topics={data.topics} topic={data.topic} ads={ads.list} />;
 }

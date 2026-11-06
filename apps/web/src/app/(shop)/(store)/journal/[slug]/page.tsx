@@ -12,6 +12,8 @@
 // (ArticleRead: the article's id and where the reader came from), for Website › Blog & journal › Performance.
 // S12 · PR 251 — while `blog.comments.on` (off as shipped: the journal runs without comments) the comments a person has
 // shown and the comment box (JournalComments); nothing a reader writes shows before a person presses Show.
+// S12 · PR 592 — the article's house ads (`blog.houseAds`, off as shipped: none): after paragraph N, at the end, beside
+// it on a wide screen, the popup and the slim bar.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getPrisma } from '@extas/db/client';
@@ -22,7 +24,7 @@ import { JournalComments } from '@/components/shop/journal/JournalComments';
 import { JournalArticle } from '@/components/shop/journal/JournalViews';
 import { shownComments } from '@/lib/journal/comments';
 import { articlePhoto } from '@/lib/journal/images';
-import { journalArticle, journalHasOther, journalSettings } from '@/lib/journal/shop';
+import { journalAds, journalArticle, journalHasOther, journalSettings } from '@/lib/journal/shop';
 import { byline } from '@/lib/journal/model';
 import { settingsResolver } from '@/lib/settings';
 import { signedIn } from '@/lib/shop/account';
@@ -68,7 +70,10 @@ export default async function JournalPost(props: Props) {
   const [comments, me] = talk.on ? await Promise.all([shownComments(getPrisma(), c.storeId, post.id, talk.shown), talk.who === 'signedIn' ? signedIn() : Promise.resolve(null)]) : [[], null];
   // PR 547: the main photo while the owner shows them (Website › Blog & journal › Main photo); never fails the page
   const resolver = settingsResolver();
-  const photo = resolver ? await articlePhoto(getPrisma(), resolver, c.storeId, post.heroAssetId, c.lang).catch(() => null) : null;
+  const [photo, ads] = await Promise.all([
+    resolver ? articlePhoto(getPrisma(), resolver, c.storeId, post.heroAssetId, c.lang).catch(() => null) : null,
+    journalAds(c, { post }, ['inline', 'end', 'popup', 'bar', 'sidebar']),
+  ]);
   const sd = page['seo.structuredData'];
   const origin = sd.article || sd.breadcrumbs ? await shopOrigin() : undefined;
   const href = hrefIn(c.lang, ROUTES.article(post.slug));
@@ -101,7 +106,7 @@ export default async function JournalPost(props: Props) {
   return (
     <>
       <JsonLd data={ld} />
-      <JournalArticle c={c} post={post} cards={a.cards} aiNote={a.settings.aiNote} related={a.related} photo={photo} />
+      <JournalArticle c={c} post={post} cards={a.cards} aiNote={a.settings.aiNote} related={a.related} photo={photo} ads={ads.list.length ? ads : undefined} />
       {/* PR 250: counted only while the owner counts readers (Website › Blog & journal › Performance) */}
       {page['blog.performance'].count ? <ArticleRead postId={post.id} /> : null}
       {/* PR 251: only while the owner has switched comments on (Website › Blog & journal › Comments) */}

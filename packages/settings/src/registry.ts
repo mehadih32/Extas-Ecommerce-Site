@@ -95,6 +95,7 @@ import { webSecuritySettings } from './registry-web-security';
 import { closedStageSettings } from './registry-closed-stages';
 import { blogCommentSettings } from './registry-blog-comments';
 import { blogImageSettings } from './registry-blog-images';
+import { houseAdSettings } from './registry-house-ads';
 import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
 import { erpRetailSettings } from './registry-erp-retail';
@@ -1478,6 +1479,8 @@ export const registry = {
   ...blogCommentSettings,
   // PR 547 · the journal articles' main photo, own pictures only, off (registry-blog-images.ts, version 252).
   ...blogImageSettings,
+  // PR 592 · the journal's house ads and popup rules, off (registry-house-ads.ts, version 253).
+  ...houseAdSettings,
   // ---- S12 · CN-031 lane A · PR 246 · seasonal landing pages (registry-seasonal.ts, version 228). ----
   ...seasonalSettings,
   // PR 530 · the seasonal pages' yearly return, off (registry-seasonal-return.ts, version 251).

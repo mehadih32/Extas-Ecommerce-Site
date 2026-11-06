@@ -333,6 +333,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/website/blog/shared', perm: 'blog.read', keys: ['blogShared'] },
           // S12 · PR 253 — what articles sold: the products bought after reading each article (its own or besides).
           { href: '/admin/website/blog/sold', perm: 'blog.read', keys: ['blogSold'] },
+          // S12 · PR 592 — house ads: our own offers in the journal's places (`/admin/website/blog/ads/<id>`, `new`), clicks and orders.
+          { href: '/admin/website/blog/ads', perm: 'blog.read', keys: ['blogAds', 'blogAd'] },
         ],
       },
     ],
