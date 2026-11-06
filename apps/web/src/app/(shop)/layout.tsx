@@ -2,7 +2,8 @@
 // (PR 84), the owner's sweep switches (PR 86) and the shop's own stylesheet and fonts. The admin and the progress page
 // never load any of it.
 // S11 · PR 586: the hash forwarder, first in the page: a demo `#/…` link moves on to its live address before anything
-// else draws (lib/seo/hash-forward, `seo.hashLinks`).
+// else draws (lib/seo/hash-forward, `seo.hashLinks`). PR 597 follow-up (696): drawn by HashForwardScript, so a copy
+// React makes in the browser (the shop's "page not found") is inert and React does not warn about a script tag.
 // S21 · PR 423 (CN-015): the privacy-safe problem recorder (components/shop/ProblemProbe) while `health.problems` is on.
 // S11 · PR 233: every shop page carries the Search Console and Bing verification codes as their meta tags
 // (lib/seo/verification, `seo.verification`; none while no code is set).
@@ -23,6 +24,7 @@ import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { hashRulesFor, hashScript } from '@/lib/seo/hash-forward';
 import { verificationMetadata } from '@/lib/seo/verification';
 import { BengaliFontWarm } from '@/components/shop/BengaliFontWarm';
+import { HashForwardScript } from '@/components/shop/HashForwardScript';
 import { ProblemProbe } from '@/components/shop/ProblemProbe';
 import { VitalsReporter } from '@/components/shop/VitalsReporter';
 import { TrackingBeacon } from '@/components/shop/TrackingBeacon';
@@ -74,7 +76,7 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
   const sweep = sweepCss(c.s['shop.sweep'], c.s['shop.shimmer']);
   return (
     <div id="app" className="shop" data-theme={c.theme.choice.preset} lang={c.lang} data-large-text={c.s['theme.largeText'] ? '1' : undefined}>
-      {hashLinks.forward ? <script data-hash-forward="" dangerouslySetInnerHTML={{ __html: hashScript(hashRulesFor(c.s['naming.productPathPrefix'])) }} /> : null}
+      {hashLinks.forward ? <HashForwardScript code={hashScript(hashRulesFor(c.s['naming.productPathPrefix']))} /> : null}
       {fonts.map((href) => (
         <link key={href} rel="preload" href={href} as="font" type="font/woff2" crossOrigin="anonymous" />
       ))}
