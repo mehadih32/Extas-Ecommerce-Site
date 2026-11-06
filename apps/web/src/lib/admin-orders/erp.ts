@@ -57,6 +57,8 @@ export interface ErpBoxView {
   /** The form's starting values in whole taka (the last saved box, else the courier's figure). */
   start: { kept: string[]; paid: number; discount: number; phone: boolean; note: string };
   last: string | null;
+  /** Follow-up 537: "Started from the door record of …" while the box was never saved and a door record exists. */
+  fromDoor: string | null;
   digits: number;
 }
 
@@ -115,6 +117,7 @@ function boxView(view: AdminView, orderId: string, box: PartialBoxView, digits: 
   if (!box.open && !box.handedBack) return null;
   const unit = 10 ** digits;
   const m = box.mark;
+  const door = m ? null : box.door;
   return {
     url: `/api/admin/orders/${orderId}/erp/partial-delivery`,
     required: box.required,
@@ -125,8 +128,9 @@ function boxView(view: AdminView, orderId: string, box: PartialBoxView, digits: 
     lines: box.lines.filter((l) => l.state !== 'CANCELLED').map((l) => ({ lineId: l.lineId, sku: l.sku, price: amount(l.customerPriceMinor), kept: l.kept, fromReturn: l.fromReturnStock })),
     start: m
       ? { kept: m.keptLineIds, paid: Math.round(m.paidMinor / unit), discount: Math.round(m.discountGivenMinor / unit), phone: m.phoneConfirmed, note: m.note ?? '' }
-      : { kept: [], paid: Math.round((box.collectedMinor ?? 0) / unit), discount: 0, phone: false, note: '' }, // hardcode-ok: an empty form starts with no discount (the staff type the real one)
+      : { kept: door?.keptLineIds ?? [], paid: Math.round((door?.paidMinor ?? box.collectedMinor ?? 0) / unit), discount: 0, phone: false, note: '' }, // hardcode-ok: an empty form starts with no discount (the staff type the real one)
     last: m ? t(view.dict, 'erpOrder.box.last', { at: when(m.at) }) : null,
+    fromDoor: door ? t(view.dict, 'erpOrder.box.fromDoor', { at: when(door.at) }) : null,
     digits,
   };
 }

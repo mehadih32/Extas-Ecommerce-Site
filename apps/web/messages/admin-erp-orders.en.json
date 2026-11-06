@@ -82,6 +82,7 @@
       "save": "Save and send",
       "saved": "Saved and sent to the ERP",
       "last": "Last saved {at}",
+      "fromDoor": "Started from the door record of {at}: check it, add any discount promised by phone, then save.",
       "money": "The delivery charge and anything underpaid stay in our own books; only the amount paid goes to the ERP."
     },
     "err": {

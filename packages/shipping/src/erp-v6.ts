@@ -61,17 +61,26 @@ const SELECT = {
   courierAccount: { select: { providerKey: true } },
 } as const;
 
-/** The kept lines from the shop's own door record (PR 166: kept order items → every piece of them). */
-async function doorMark(deps: Base, erpOrderId: string, s: { storeId: number; orderId: string; id: string }): Promise<DeliveryMark | null> {
+/**
+ * The shop's own latest door record of a partial delivery for this parcel (PR 166), as the ERP's line ids (kept order
+ * items → every piece of them), with what the rider collected. Null when there is none or it names no kept piece.
+ */
+async function doorRecord(deps: Base, erpOrderId: string, s: { storeId: number; orderId: string; id: string }): Promise<{ keptLineIds: string[]; collectedMinor: number; at: Date } | null> {
   const door = await deps.db.codCollection.findFirst({
     where: { storeId: s.storeId, orderId: s.orderId, outcome: 'PARTIAL', state: { in: ['RECORDED', 'APPROVED'] }, OR: [{ shipmentId: s.id }, { shipmentId: null }] },
     orderBy: { createdAt: 'desc' },
-    select: { keptItemIds: true },
+    select: { keptItemIds: true, collectedMinor: true, occurredAt: true },
   });
   if (!door?.keptItemIds.length) return null;
   const lines = await erpOrderLinesOf(deps.db, erpOrderId);
   const kept = lines.filter((l) => l.orderItemId && door.keptItemIds.includes(l.orderItemId) && l.state !== 'REMOVED' && l.state !== 'CANCELLED').map((l) => l.lineId);
-  return kept.length ? { keptLineIds: kept, discountGivenMinor: 0, phoneConfirmed: false, note: null, markedById: null } : null; // hardcode-ok: a door record carries no phone discount
+  return kept.length ? { keptLineIds: kept, collectedMinor: door.collectedMinor, at: door.occurredAt } : null;
+}
+
+/** The kept lines from the shop's own door record (PR 166: kept order items → every piece of them). */
+async function doorMark(deps: Base, erpOrderId: string, s: { storeId: number; orderId: string; id: string }): Promise<DeliveryMark | null> {
+  const door = await doorRecord(deps, erpOrderId, s);
+  return door ? { keptLineIds: door.keptLineIds, discountGivenMinor: 0, phoneConfirmed: false, note: null, markedById: null } : null; // hardcode-ok: a door record carries no phone discount
 }
 
 /** Sends what the ERP does not know yet about one parcel (safe to run any number of times). */
@@ -174,6 +183,9 @@ export interface PartialBoxView {
   collectedMinor: number | null;
   lines: { lineId: string; sku: string; customerPriceMinor: number; kept: boolean; fromReturnStock: boolean; state: string }[];
   mark: { keptLineIds: string[]; paidMinor: number; discountGivenMinor: number; phoneConfirmed: boolean; note: string | null; at: string } | null;
+  /** Follow-up 537: before the box is saved, the shop's own door record (PR 166) of this partial delivery — the kept
+   *  lines and what the rider collected — so the box starts from it and staff do not type it twice. Null once saved. */
+  door: { keptLineIds: string[]; paidMinor: number; at: string } | null;
   identification: string | null;
   sentAt: string | null;
   handedBack: boolean;
@@ -190,7 +202,7 @@ export async function partialBoxView(deps: Base, who: Who, orderId: string): Pro
   const eo = await erpOrderOf(deps.db, { storeId: who.storeId, orderId });
   if (!eo) return null;
   const [s, lines, staff, last, back] = await Promise.all([
-    deps.db.shipment.findFirst({ where: { storeId: who.storeId, orderId, isExchangeLeg: false, status: { notIn: ['BOOKING_FAILED', 'CANCELLED'] } }, orderBy: { createdAt: 'desc' }, select: { status: true, codCollectedMinor: true } }),
+    deps.db.shipment.findFirst({ where: { storeId: who.storeId, orderId, isExchangeLeg: false, status: { notIn: ['BOOKING_FAILED', 'CANCELLED'] } }, orderBy: { createdAt: 'desc' }, select: { id: true, status: true, codCollectedMinor: true } }),
     erpOrderLinesOf(deps.db, eo.id),
     deps.db.erpDeliveryResult.findFirst({ where: { erpOrderId: eo.id, markedById: { not: null } }, orderBy: { createdAt: 'desc' } }),
     deps.db.erpDeliveryResult.findFirst({ where: { erpOrderId: eo.id }, orderBy: { createdAt: 'desc' }, select: { sentAt: true } }),
@@ -198,6 +210,7 @@ export async function partialBoxView(deps: Base, who: Who, orderId: string): Pro
   ]);
   const result = s ? RESULT[s.status] : undefined;
   const kept = new Set(staff?.keptLineIds ?? []);
+  const door = !staff && s && result === 'PARTIAL' ? await doorRecord(deps, eo.id, { storeId: who.storeId, orderId, id: s.id }) : null;
   return {
     required: s?.status === 'PARTIALLY_DELIVERED' && !staff,
     open: !!result && !back,
@@ -205,6 +218,7 @@ export async function partialBoxView(deps: Base, who: Who, orderId: string): Pro
     collectedMinor: s?.codCollectedMinor ?? null,
     lines: lines.filter((l) => l.state !== 'REMOVED').map((l) => ({ lineId: l.lineId, sku: l.sku, customerPriceMinor: l.customerPriceMinor, kept: kept.has(l.lineId), fromReturnStock: l.fromReturnStock, state: l.state })),
     mark: staff ? { keptLineIds: staff.keptLineIds, paidMinor: Number(staff.collectedMinor), discountGivenMinor: Number(staff.discountGivenMinor), phoneConfirmed: staff.phoneConfirmed, note: staff.note, at: staff.createdAt.toISOString() } : null,
+    door: door ? { keptLineIds: door.keptLineIds, paidMinor: door.collectedMinor, at: door.at.toISOString() } : null,
     identification: eo.identification,
     sentAt: last?.sentAt?.toISOString() ?? null,
     handedBack: back,

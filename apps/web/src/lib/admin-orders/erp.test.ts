@@ -43,6 +43,7 @@ const BOX: PartialBoxView = {
     { lineId: 'T-1001-2', sku: 'POLO-NAVY-L', customerPriceMinor: 53_400, kept: false, fromReturnStock: false, state: 'OPEN' },
   ],
   mark: null,
+  door: null,
   identification: null,
   sentAt: null,
   handedBack: false,
@@ -91,6 +92,14 @@ describe('PR 610, 611 · the ERP part of the order page', () => {
     expect(v.box).toMatchObject({ required: true, open: true, url: `/api/admin/orders/${ID}/erp/partial-delivery`, start: { kept: [], paid: 593, discount: 0, phone: false }, digits: 2, collected: '৳593' });
     const saved = erpPanelView(view('en'), ID, 'BDT', ERP, { ...BOX, required: false, mark: { keptLineIds: ['T-1001-2'], paidMinor: 53_400, discountGivenMinor: 2_000, phoneConfirmed: true, note: 'kept one', at: '2026-10-24T10:00:00.000Z' } })!;
     expect(saved.box).toMatchObject({ required: false, start: { kept: ['T-1001-2'], paid: 534, discount: 20, phone: true, note: 'kept one' } });
+    expect(v.box!.fromDoor).toBeNull();
+    // Follow-up 537: never saved, but the shop's door record names the kept piece — the box starts from it, and says so.
+    const door = erpPanelView(view('en'), ID, 'BDT', ERP, { ...BOX, door: { keptLineIds: ['T-1001-1'], paidMinor: 53_300, at: '2026-10-24T09:00:00.000Z' } })!;
+    expect(door.box).toMatchObject({ start: { kept: ['T-1001-1'], paid: 533, discount: 0, phone: false } });
+    expect(door.box!.fromDoor).toContain('door record');
+    // Once the box is saved, the saved box wins and the door line goes.
+    const both = erpPanelView(view('en'), ID, 'BDT', ERP, { ...BOX, door: { keptLineIds: ['T-1001-1'], paidMinor: 53_300, at: '2026-10-24T09:00:00.000Z' }, mark: { keptLineIds: ['T-1001-2'], paidMinor: 53_400, discountGivenMinor: 0, phoneConfirmed: false, note: null, at: '2026-10-24T10:00:00.000Z' } })!;
+    expect([both.box!.start.kept, both.box!.fromDoor]).toEqual([['T-1001-2'], null]);
     expect(saved.box!.last).toMatch(/^Last saved /);
     // Handed back: shown closed; before any courier result: not shown.
     expect(erpPanelView(view('en'), ID, 'BDT', ERP, { ...BOX, open: false, handedBack: true })!.box).toMatchObject({ open: false, closed: expect.any(String) });
