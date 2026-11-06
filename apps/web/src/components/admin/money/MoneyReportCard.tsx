@@ -9,6 +9,7 @@ import { useId, useState } from 'react';
 import { t, type Dict } from '@/lib/i18n';
 import type { MoneyReportView } from '@/lib/money-report-api';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export function MoneyReportCard(p: { dict: Dict; view: MoneyReportView; canEdit: boolean; nextDayText: string | null }) {
   const id = useId();
@@ -27,7 +28,8 @@ export function MoneyReportCard(p: { dict: Dict; view: MoneyReportView; canEdit:
     const a = await call('PUT', '/api/admin/money/profit/report', { value: v, version: p.view.version });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: c('saved'), bad: false });
+      setSaid(null);
+      showToast({ text: c('saved'), tone: 'ok' });
       return router.refresh();
     }
     const code = a.status === 0 ? 'network' : String(a.data.error ?? 'other');

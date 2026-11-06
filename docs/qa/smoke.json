@@ -194,7 +194,11 @@
     {"pr": 640, "what": "Website › Publish calendar draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/website/blog/calendar", "selector": "[data-testid=blog-calendar][data-lm-ready]", "attribute": "data-testid", "equals": "blog-calendar"},
     {"pr": 641, "what": "Support › Inbox draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/support", "selector": "[data-testid=support-inbox][data-lm-ready]", "attribute": "data-testid", "equals": "support-inbox"},
     {"pr": 641, "what": "Support › Rider issues draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/support/rider-issues", "selector": "[data-testid=rider-issues][data-lm-ready]", "attribute": "data-testid", "equals": "rider-issues"},
-    {"pr": 641, "what": "Support › Support settings draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/support/settings", "selector": "[data-testid=support-settings][data-lm-ready]", "attribute": "data-testid", "equals": "support-settings"}
+    {"pr": 641, "what": "Support › Support settings draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/support/settings", "selector": "[data-testid=support-settings][data-lm-ready]", "attribute": "data-testid", "equals": "support-settings"},
+    {"pr": 642, "what": "Money › Overview draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/money", "selector": "[data-testid=money-overview][data-lm-ready]", "attribute": "data-testid", "equals": "money-overview"},
+    {"pr": 642, "what": "Money › Expenses draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/money/expenses", "selector": "[data-testid=expenses-page][data-lm-ready]", "attribute": "data-testid", "equals": "expenses-page"},
+    {"pr": 642, "what": "Money › Refunds & wallet draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/money/refunds", "selector": "[data-testid=refunds-page][data-lm-ready]", "attribute": "data-testid", "equals": "refunds-page"},
+    {"pr": 642, "what": "Money › Profit & loss draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/money/profit", "selector": "[data-testid=money-profit][data-lm-ready]", "attribute": "data-testid", "equals": "money-profit"}
   ],
   "figures": [
     { "pr": 155, "path": "/admin/combos?tab=report", "selectors": ["[data-testid=cb-kpi-ordered]", "[data-testid=cb-kpi-sales]"], "value": "b" },

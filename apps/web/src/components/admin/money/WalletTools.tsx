@@ -7,6 +7,7 @@
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { typedMinor } from '@/lib/admin-books/money';
+import { showToast } from '../lumen/Toast';
 import { errWords, newKey, post, type Words } from './RefundActions';
 
 const fill = (s: string | undefined, vars: Record<string, string> = {}) => (s ?? '').replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? `{${k}}`);
@@ -50,7 +51,8 @@ export function WalletAdjust(p: WalletAdjustProps) {
       setKey(newKey());
       setOpen(false);
       reset();
-      setSaid({ text: p.w['wallet.adjust.done'] ?? '', bad: false });
+      setSaid(null);
+      showToast({ text: p.w['wallet.adjust.done'] ?? '', tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errWords(p.w, a.error), bad: true });
@@ -141,7 +143,8 @@ export function WalletReverse(p: WalletReverseProps) {
     setBusy(false);
     if (!a.error) {
       setOpen(false);
-      setSaid({ text: p.w['wallet.reverse.done'] ?? '', bad: false });
+      setSaid(null);
+      showToast({ text: p.w['wallet.reverse.done'] ?? '', tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errWords(p.w, a.error), bad: true });

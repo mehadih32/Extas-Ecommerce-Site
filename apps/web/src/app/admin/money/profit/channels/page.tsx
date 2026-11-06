@@ -50,7 +50,7 @@ export default async function ProfitChannelsPage({ searchParams }: { searchParam
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="profit-channels" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="books.read" />
       </div>
     );
@@ -89,7 +89,7 @@ export default async function ProfitChannelsPage({ searchParams }: { searchParam
   ];
 
   return (
-    <div className="a2-z" data-testid="profit-channels" data-from={q.from} data-to={q.to}>
+    <div className="a2-z" data-testid="profit-channels" data-lm-ready="" data-from={q.from} data-to={q.to}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
 

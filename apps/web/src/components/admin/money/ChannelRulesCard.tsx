@@ -7,6 +7,7 @@ import { useId, useState } from 'react';
 import type { ReportChannels } from '@extas/settings';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 const PLATFORMS = ['META', 'GOOGLE', 'YOUTUBE', 'TIKTOK'] as const;
 const words = (s: string) => [...new Set(s.split(/[,\n]/).map((w) => w.trim().toLowerCase()).filter(Boolean))];
@@ -30,7 +31,8 @@ export function ChannelRulesCard(p: { dict: Dict; rules: ReportChannels; version
     const a = await call('PUT', '/api/admin/money/profit/channels/rules', { value, version: p.version });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: c('saved'), bad: false });
+      setSaid(null);
+      showToast({ text: c('saved'), tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: a.status === 409 ? c('stale') : c('bad'), bad: true });

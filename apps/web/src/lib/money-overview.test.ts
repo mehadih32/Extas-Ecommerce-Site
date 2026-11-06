@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import bn from '../../messages/admin-money.bn.json';
 import en from '../../messages/admin-money.en.json';
-import { overviewOf } from './money-overview';
+import { dayIn, overviewOf, receivedByDay } from './money-overview';
 
 const now = new Date('2026-10-31T12:00:00Z');
 const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000);
@@ -64,5 +64,37 @@ describe('money overview (PR 342)', () => {
     const keys = (o: object, p = ''): string[] =>
       Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? keys(v, `${p}${k}.`) : [`${p}${k}`]));
     expect(keys(bn).sort()).toEqual(keys(en).sort());
+  });
+});
+
+describe('cash received day by day (PR 642, the Lumen hero chart)', () => {
+  it('the last N calendar days in the shop time zone, oldest first; empty days are 0; future or unpaid rows are left out', () => {
+    // now = 2026-10-31 18:00 in Dhaka (UTC+6). 19:30Z on the 30th is already the 31st in Dhaka.
+    const days = receivedByDay(
+      now,
+      [
+        { method: 'COD', amountMinor: 1_000, paidAt: new Date('2026-10-31T01:00:00Z') },
+        { method: 'COD', amountMinor: 2_000, paidAt: new Date('2026-10-30T19:30:00Z') },
+        { method: 'BKASH', amountMinor: 500, paidAt: new Date('2026-10-29T10:00:00Z') },
+        { method: 'CARD', amountMinor: 9_999, paidAt: new Date('2026-10-20T10:00:00Z') },
+        { method: 'CARD', amountMinor: 7, paidAt: null },
+        { method: 'CARD', amountMinor: 8, paidAt: new Date(now.getTime() + 60_000) },
+      ],
+      3,
+      'Asia/Dhaka',
+    );
+    expect(days).toEqual([
+      { day: '2026-10-29', minor: 500, count: 1 },
+      { day: '2026-10-30', minor: 0, count: 0 },
+      { day: '2026-10-31', minor: 3_000, count: 2 },
+    ]);
+  });
+
+  it('30 days add up to the month window when every payment is inside it; a bad zone falls back to UTC', () => {
+    const rows = [1, 5, 20, 29].map((d) => ({ method: 'COD', amountMinor: d * 100, paidAt: hoursAgo(d * 24 - 1) }));
+    const days = receivedByDay(now, rows, 30, 'UTC');
+    expect(days).toHaveLength(30);
+    expect(days.reduce((s, d) => s + d.minor, 0)).toBe(5_500);
+    expect(dayIn(now, 'Not/AZone')).toBe('2026-10-31');
   });
 });

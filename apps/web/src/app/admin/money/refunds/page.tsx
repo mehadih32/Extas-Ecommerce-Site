@@ -53,7 +53,7 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="refunds-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="payments.view" />
       </div>
     );
@@ -107,7 +107,7 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
   };
 
   return (
-    <div className="a2-z" data-testid="refunds-page" data-view={v.view}>
+    <div className="a2-z" data-testid="refunds-page" data-lm-ready="" data-view={v.view}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
 

@@ -8,6 +8,8 @@
 //   - refunds waiting: money owed to customers (requested or approved, not yet paid out) and failed payouts, always in
 //     view (F-041). Approving or paying a refund stays on its own screen and is the owner's (CLAUDE.md rule 6).
 // Nothing here moves, approves or changes anything. Amounts are minor units of the store's currency.
+// PR 642 (CN-036): the same 30 days of received cash also come day by day in the shop's time zone (`received.daily`,
+// oldest first, a day with nothing is 0), for the Lumen hero chart of Money › Overview. The same rows, nothing new.
 import type { PrismaClient } from '@extas/db/client';
 
 type Db = Pick<PrismaClient, 'payment' | 'codCollection' | 'refund' | 'shipment'>;
@@ -44,9 +46,49 @@ export interface RefundRow {
 
 export interface MoneyOverview {
   at: string;
-  received: { windows: { key: string; minor: number; count: number }[]; byMethod: { method: string; minor: number; count: number }[] };
+  received: { windows: { key: string; minor: number; count: number }[]; byMethod: { method: string; minor: number; count: number }[]; daily?: ReceivedDay[] };
   cod: { minor: number; parcels: number; oldestDays: number | null; byCourier: { courier: string | null; minor: number; parcels: number }[] };
   refunds: { waitingMinor: number; waiting: number; oldestDays: number | null; failedMinor: number; failed: number };
+}
+
+/** One calendar day (YYYY-MM-DD in the shop's time zone) of received cash. */
+export interface ReceivedDay {
+  day: string;
+  minor: number;
+  count: number;
+}
+
+/** A moment's calendar day in a time zone (YYYY-MM-DD); a bad zone falls back to UTC. */
+export function dayIn(d: Date, timeZone: string): string {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  } catch {
+    return d.toISOString().slice(0, 10);
+  }
+}
+
+/** The last `days` calendar days up to today (shop time zone), oldest first, each with what arrived on it (pure). */
+export function receivedByDay(now: Date, payments: readonly PaymentRow[], days: number, timeZone: string): ReceivedDay[] {
+  const n = Math.max(1, Math.floor(days));
+  const today = dayIn(now, timeZone);
+  const out: ReceivedDay[] = [];
+  const at = new Map<string, ReceivedDay>();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(`${today}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - i);
+    const row = { day: d.toISOString().slice(0, 10), minor: 0, count: 0 };
+    out.push(row);
+    at.set(row.day, row);
+  }
+  for (const p of payments) {
+    if (!p.paidAt || p.paidAt.getTime() > now.getTime()) continue;
+    const row = at.get(dayIn(p.paidAt, timeZone));
+    if (row) {
+      row.minor += p.amountMinor;
+      row.count += 1;
+    }
+  }
+  return out;
 }
 
 const sortDesc = <T extends { minor: number }>(a: T[]) => a.sort((x, y) => y.minor - x.minor);
@@ -94,7 +136,7 @@ export function overviewOf(now: Date, payments: readonly PaymentRow[], cod: read
 }
 
 /** The overview of one store now, from the database. */
-export async function moneyOverview(db: Db, storeId: number, now = new Date()): Promise<MoneyOverview> {
+export async function moneyOverview(db: Db, storeId: number, now = new Date(), timeZone?: string): Promise<MoneyOverview> {
   const since = new Date(now.getTime() - RECEIVED_WINDOWS[2].hours * HOUR_MS);
   const [payments, cod, refunds] = await Promise.all([
     db.payment.findMany({
@@ -116,10 +158,14 @@ export async function moneyOverview(db: Db, storeId: number, now = new Date()): 
     ? await db.shipment.findMany({ where: { id: { in: shipmentIds } }, select: { id: true, courierAccount: { select: { name: true } } } })
     : [];
   const courierOf = new Map(shipments.map((s) => [s.id, s.courierAccount.name]));
-  return overviewOf(
+  const paid = payments.map((p) => ({ method: p.method, amountMinor: p.receivedMinor ?? p.amountMinor, paidAt: p.paidAt }));
+  const o = overviewOf(
     now,
-    payments.map((p) => ({ method: p.method, amountMinor: p.receivedMinor ?? p.amountMinor, paidAt: p.paidAt })),
+    paid,
     owed.map((c) => ({ collectedMinor: c.collectedMinor, chargeCollectedMinor: c.chargeCollectedMinor, occurredAt: c.occurredAt, courier: c.shipmentId ? (courierOf.get(c.shipmentId) ?? null) : null })),
     refunds.map((r) => ({ status: r.status, amountMinor: r.amountMinor, createdAt: r.createdAt })),
   );
+  // 30 calendar days ending today (shop time zone), each fully inside the fetched 30 × 24 hours.
+  if (timeZone) o.received.daily = receivedByDay(now, paid, RECEIVED_WINDOWS[2].hours / 24, timeZone);
+  return o;
 }

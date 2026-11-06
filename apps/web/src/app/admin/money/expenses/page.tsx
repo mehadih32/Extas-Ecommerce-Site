@@ -48,7 +48,7 @@ export default async function ExpensesPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="expenses-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="books.read" />
       </div>
     );
@@ -61,7 +61,7 @@ export default async function ExpensesPage() {
   const v = await expensesView(access.deps.db, MOTHER_STORE_ID, today.slice(0, 7));
   const canEdit = access.guard.permissions?.has('fixedcosts.write') ?? false;
   return (
-    <div className="a2-z" data-testid="expenses-page" data-linked={fixed.linked ? 'yes' : 'no'}>
+    <div className="a2-z" data-testid="expenses-page" data-lm-ready="" data-linked={fixed.linked ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyExpenses.title')} sub={t(view.dict, 'moneyExpenses.sub')} />
       <SectionTabs view={view} current={KEY} />
       <ExpensesScreen dict={view.dict} lang={view.lang === 'bn' ? 'bn' : 'en'} money={moneyOf(currency, view.locale)} view={v} lines={inv.COST_LINE_ORDER} today={today} openFrom={openFrom} linked={fixed.linked} canEdit={canEdit} receipts={receipts} />

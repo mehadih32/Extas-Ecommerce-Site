@@ -13,6 +13,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { typedMinor } from '@/lib/admin-books/money';
 import type { FeesView } from '@/lib/fees-api';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 import { formatMoney, toMajor, type Money } from '../products/model';
 
 export interface FeesScreenProps {
@@ -40,7 +41,8 @@ export function FeesScreen(p: FeesScreenProps) {
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<{ where: string; text: string; bad: boolean } | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
-  const tell = (where: string, text: string, bad: boolean) => setSaid({ where, text, bad });
+  // PR 642 (CN-036): a good outcome goes to the admin's one toast; a refusal stays beside the card it is about.
+  const tell = (where: string, text: string, bad: boolean) => (bad ? setSaid({ where, text, bad }) : (setSaid(null), showToast({ text, tone: 'ok' })));
 
   const [fees, setFees] = useState<FeeRow[]>((p.view.gatewayFees.value ?? []).map((f) => ({ provider: f.provider, percent: String(f.percentBps / 100), fixed: f.fixedMinor ? String(toMajor(f.fixedMinor, p.money)) : '' })));
   const [pack, setPack] = useState(p.view.packaging.value ? String(toMajor(p.view.packaging.value.perOrderMinor, p.money)) : '');

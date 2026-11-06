@@ -42,14 +42,14 @@ export default async function FeesPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="fees-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="books.read" />
       </div>
     );
   const v = await feesView(access.deps.db, access.deps, MOTHER_STORE_ID);
   const canEdit = access.guard.permissions?.has('costs.write') ?? false;
   return (
-    <div className="a2-z" data-testid="fees-page">
+    <div className="a2-z" data-testid="fees-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyFees.title')} sub={t(view.dict, 'moneyFees.sub')} />
       <SectionTabs view={view} current={KEY} />
       <FeesScreen dict={view.dict} lang={view.lang === 'bn' ? 'bn' : 'en'} money={moneyOf(v.currency, view.locale)} view={v} canEdit={canEdit} />

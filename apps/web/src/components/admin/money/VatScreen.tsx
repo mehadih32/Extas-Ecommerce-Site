@@ -12,6 +12,7 @@ import type { VatFound, VatView } from '@/lib/vat-api';
 import { bpsToPercent, percentToBps } from '@/lib/vat-percent';
 import type { VatRate } from '@extas/metrics';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface VatScreenProps {
   dict: Dict;
@@ -40,7 +41,8 @@ export function VatScreen(p: VatScreenProps) {
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<{ where: string; text: string; bad: boolean } | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
-  const tell = (where: string, text: string, bad: boolean) => setSaid({ where, text, bad });
+  // PR 642 (CN-036): a good outcome goes to the admin's one toast; a refusal stays beside the card it is about.
+  const tell = (where: string, text: string, bad: boolean) => (bad ? setSaid({ where, text, bad }) : (setSaid(null), showToast({ text, tone: 'ok' })));
 
   const [sys, setSys] = useState(p.view.system.value);
   const saved = p.view.rates.value;

@@ -50,7 +50,7 @@ export default async function VatPage({ searchParams }: { searchParams: Promise<
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="vat-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="books.read" />
       </div>
     );
@@ -79,7 +79,7 @@ export default async function VatPage({ searchParams }: { searchParams: Promise<
     return n ? (view.lang === 'bn' && n.nameBn ? n.nameBn : n.nameEn) : (id ?? '');
   };
   return (
-    <div className="a2-z" data-testid="vat-page">
+    <div className="a2-z" data-testid="vat-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyVat.title')} sub={t(view.dict, 'moneyVat.sub')} />
       <SectionTabs view={view} current={KEY} />
       {/* Keyed by the saved versions, so the fields start again from what was saved after each save. */}

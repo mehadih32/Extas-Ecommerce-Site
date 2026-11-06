@@ -46,7 +46,7 @@ export default async function CostsPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="costs-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="books.read" />
       </div>
     );
@@ -58,7 +58,7 @@ export default async function CostsPage() {
   const today = screen.fixed.today;
   const openFrom = [screen.fixed.startDay ?? today, inv.addDays(today, -resendDays)].sort().at(-1)!;
   return (
-    <div className="a2-z" data-testid="costs-page" data-linked={screen.fixed.linked ? 'yes' : 'no'}>
+    <div className="a2-z" data-testid="costs-page" data-lm-ready="" data-linked={screen.fixed.linked ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyCosts.title')} sub={t(view.dict, 'moneyCosts.sub')} />
       <SectionTabs view={view} current={KEY} />
       <CostsScreen dict={view.dict} locale={view.locale} money={moneyOf(currency, view.locale)} fixed={screen.fixed} entries={screen.entries.rows} entriesMore={screen.entries.more} entriesLimit={screen.entries.limit} noCostLines={screen.noCostLines} lines={inv.COST_LINE_ORDER} openFrom={openFrom} canEdit={canEdit} />

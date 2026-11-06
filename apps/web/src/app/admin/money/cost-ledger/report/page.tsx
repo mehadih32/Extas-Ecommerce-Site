@@ -49,7 +49,7 @@ export default async function CostReportPage({ searchParams }: { searchParams: P
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="cost-report" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="books.read" />
       </div>
     );
@@ -90,7 +90,7 @@ export default async function CostReportPage({ searchParams }: { searchParams: P
   });
 
   return (
-    <div className="a2-z" data-testid="cost-report" data-from={q.from} data-to={q.to} data-by={q.by} data-group={q.group}>
+    <div className="a2-z" data-testid="cost-report" data-lm-ready="" data-from={q.from} data-to={q.to} data-by={q.by} data-group={q.group}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
 
