@@ -10,6 +10,7 @@
 // CN-029 Phase 3 qa-gate I4 (PR 619; docs/RETAIL-ERP-MODEL.md §8): the ERP account's hold (v6 only) — one urgent row
 // from when the hold began, until the ERP releases it; it stops new orders, so it leads the dashboard's card.
 // S21 · PR 420 (B7.3): agent fixes and new skills waiting for the owner's OK (Reports › Site health › Fixes to approve).
+// Follow-up 509 (PR 425, 431): customers waiting for the team's answer in Support (the Support badge) and late chats.
 // Counts are kept for `admin.shell.badgeCacheSeconds` per store (one count for everyone; the keys filter per person).
 import type { PrismaClient } from '@extas/db/client';
 import type { PermissionKey } from '@extas/auth';
@@ -22,7 +23,7 @@ import type { ShellViewer } from './sections';
 import type { TodoGroup } from './todo';
 import { waitingProposals } from '../admin-health/fixes';
 
-export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersTwoSizes' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'agentFixes';
+export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersTwoSizes' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'agentFixes' | 'supportWaiting' | 'supportLate';
 
 export interface QueueDef {
   id: QueueId;
@@ -52,6 +53,9 @@ export const QUEUES: readonly QueueDef[] = [
   { id: 'erpFailed', perm: 'inventory.read', href: '/admin/stock#st-docs', section: 'products', tone: 'bad', icon: 'sync', badge: false, group: 'stock' },
   { id: 'erpHold', perm: 'erp.account.read', href: '/admin/money/books', section: 'money', tone: 'bad', icon: 'alert', badge: false, group: 'urgent' },
   { id: 'booksDifferences', perm: 'books.read', href: '/admin/money/books/differences', section: 'money', tone: 'bad', icon: 'wallet', badge: false, group: 'money' },
+  // follow-up 509: customers waiting for an answer (the Support badge, longest first) and chats past their timer (PR 431)
+  { id: 'supportWaiting', perm: 'support.read', href: '/admin/support', section: 'support', tone: 'warn', icon: 'headset', badge: true, group: 'messages' },
+  { id: 'supportLate', perm: 'support.read', href: '/admin/support?view=late', section: 'support', tone: 'bad', icon: 'clock', badge: false, group: 'messages' },
   { id: 'jobsDead', perm: 'system.read', href: '/admin/server', section: 'reports', tone: 'bad', icon: 'alert', badge: true, group: 'system' },
   { id: 'agentFixes', perm: 'health.fixes.approve', href: '/admin/reports/health/fixes', section: 'reports', tone: 'warn', icon: 'shield', badge: false, group: 'system' },
 ];
@@ -78,7 +82,12 @@ const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 /** Every queue of the store, counted now (no cache, no key filter). */
 export async function countQueues(deps: QueueDeps, storeId: number): Promise<QueueCount[]> {
   const { db } = deps;
-  const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold, fixes] = await Promise.all([
+  // follow-up 509: an open chat whose customer waits (the team owes an answer), never a blocked person's; late = PR 431's
+  // timer ran out (the inbox's Late view)
+  const now = (deps.now ?? (() => new Date()))();
+  const waitingWhere = { storeId, status: 'OPEN', waitingSince: { not: null }, contact: { blockedAt: null } };
+  const lateWhere = { storeId, status: 'OPEN', slaDueAt: { lt: now }, contact: { blockedAt: null } };
+  const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold, fixes, waitN, waitOld, lateN, lateOld] = await Promise.all([
     orderQueueCounts(db, storeId, ['toConfirm', 'prepaid', 'awaitingAdvance', 'twoSizes', 'inReview', 'cancelRequests', 'cancelPending']),
     db.publishQueueItem.count({ where: { storeId, status: 'OPEN' } }),
     db.publishQueueItem.findFirst({ where: { storeId, status: 'OPEN' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
@@ -95,7 +104,11 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     // v6 only (null on v5 or with no ERP link); a hold is one row, counted from when it began
     erpHoldNotice({ db, settings: deps.settings as Parameters<typeof erpHoldNotice>[0]['settings'], now: deps.now }, storeId),
     // PR 420: proposals waiting on the owner (this store's fixes and the shared skills), oldest first
-    waitingProposals(db, storeId, (deps.now ?? (() => new Date()))()),
+    waitingProposals(db, storeId, now),
+    db.conversation.count({ where: waitingWhere }),
+    db.conversation.findFirst({ where: waitingWhere, orderBy: { waitingSince: 'asc' }, select: { waitingSince: true } }),
+    db.conversation.count({ where: lateWhere }),
+    db.conversation.findFirst({ where: lateWhere, orderBy: { waitingSince: { sort: 'asc', nulls: 'last' } }, select: { waitingSince: true, slaDueAt: true } }),
   ]);
   const dead = jobs.failed.filter((r) => r.status === 'DEAD_LETTERED').map((r) => r.startedAt).sort();
   const o = (id: QueueId, view: string): QueueCount => ({ id, n: orders[view]?.n ?? 0, oldest: iso(orders[view]?.oldest) });
@@ -115,6 +128,8 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     { id: 'booksDifferences', n: booksN, oldest: iso(booksOld?.firstSeenAt) },
     { id: 'jobsDead', n: jobs.failedCounts.dead, oldest: dead[0] ?? null },
     { id: 'agentFixes', n: fixes.n, oldest: iso(fixes.oldest) },
+    { id: 'supportWaiting', n: waitN, oldest: iso(waitOld?.waitingSince) },
+    { id: 'supportLate', n: lateN, oldest: iso(lateOld?.waitingSince ?? lateOld?.slaDueAt) },
   ];
 }
 
