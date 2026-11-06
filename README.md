@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬১৮টা PR-এর মধ্যে ৪২৮টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬১৮টা PR-এর মধ্যে ৪৪১টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -40,12 +40,12 @@ documents to it ([how](#how-it-is-built)).
 
 | Item | Now |
 |---|---|
-| Launch | **Launch 304/305** · every buildable Launch row is built (#70); PR [403](docs/stages/S19.md#pr-403) built in #71: the main domain's own switch, shipped closed (opening it on go-live day stays the owner's step, BLOCKED 25). Review round 1 (#71) and round 2 (#72) fixes merged. 1 left: PR [587](docs/stages/S19.md#pr-587) (the main-domain switch, after the CN-013 go-live gate). Batch 4 (#73): the 13 go-live gate fixes (SIM-F-004, 019, 025, 031, 041, 046, 047, 048, 050, 051, 052, 053, 054) as follow-ups on built Launch rows, with the review round 3 fixes folded in. The go-live gate journeys (#74, PR [414](docs/stages/S21.md#pr-414) follow-up): CN-013 phase 2 runs on new.extas.com.bd as the journeys workflow's `go-live-gate` group, ordering and changing nothing; of its 38 live checks 8 are proved by the journeys, 24 by CI tests and 6 need a real test order. The After-launch list runs meanwhile, by priority (CN-031): #73 built 30 rows (S06 9, S07 2, S08 5, S18 4, S21 10); S07 and S08 are done (S18 was done until CN-034 added PR [623](docs/stages/S18.md#pr-623)). The go-live gate test orders and customer 360° runs (#75, PR [414](docs/stages/S21.md#pr-414) follow-ups): two by-hand workflows on the preview, 18 test-order scenarios and one customer's whole life cycle; four customer gaps they found are fixed (PR [257](docs/stages/S13.md#pr-257), 144, 75, 425 follow-ups) and three more are filed as After-launch PR [622–624](docs/stages/README.md) (CN-034). Batch 5 (#78) built 43 After-launch rows (S06 5, S13 7, S14 5, S16 13, S20 8, S21 1, S22 4) and follow-ups on PR [417](docs/stages/S21.md#pr-417), 559 and 562; S06, S16, S20 and S21 are done; Launch is unchanged. Batch 6 (#80) built 19 After-launch rows (S13 3, S14 8, S22 8) and a follow-up on PR [293](docs/stages/S14.md#pr-293); S22 is done; Launch is unchanged |
-| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 33/33** (wave 2) · **S04 42/42** · **S05 21/21** · **S07 10/10** · **S08 26/26** (wave 3) · **S11 14/22** · **S13 16/35** (wave 5) · **S16 22/22** · **S21 14/14** (wave 6) · **S17 1/24** · **S18 15/15** · **S19 16/17** (wave 8) · **S14 23/24** · **S20 9/9** · **S22 14/14** (wave 4) · total **428/618** active PRs |
-| Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups); since 31 Oct 17:25 (#68) also Website › SEO › Redirects & 404, Settings › Sign-in & security and Settings › System › Backups; since 31 Oct 19:14 (#69) also Settings › Store details, Privacy & data, Policies & texts, Cloudflare protection, Settings › System › Go-live (restore, first-week watch), Reports › Site health and Money › Overview; since 31 Oct 22:46 (#70) also Website › SEO (collection pages, sitemaps, robots.txt, photo descriptions, Search Console and Bing, real visitors' speed, language pairs, Bengali pages), Marketing › Tracking, Money › Cost ledger, Expenses, Costs & fees and Month-end, Reports › Site health › Customer problems and journeys, and the Support channels; since 1 Nov 02:36 (#71) also the review round 1 fixes (Set delivery area on an order, test payments off by default, staging always on its own locked block); since 1 Nov 04:21 (#72) also the review round 2 fixes (`/status` on the preview host only, the unpaid hold's end, the Caddy body limits); since 1 Nov 10:43 (#73) also batch 4 (Refunds & wallet, the Wallet tab, Fraud & RTO, Today's digest, Calls to make, Stopped by the engine, Decisions & learning, Delivery & RTO, Rider issues, Delivery › Settings, Eid order-by dates, the Site manual, Speed, Smoke runs, Run history, Fixes to approve, Checklist audit); since 1 Nov 16:37 (#75) also "Cancel this order" on the customer's order page, the UTM tags kept on the order and Bengali digits in the inbox search; since 1 Nov 19:02 (#76) also the go-live gate's own practice payments. #77 (the gate runs' safety net) and batch 5 (#78: Reports › Flag outcomes, Sales by area and Team; Money › Profit & loss, Profit by group and by channel, VAT, the Costs report; Orders › Packing print run, picking list, handover and invoice designs; Marketing › Landing pages, Templates, Campaigns and Ad platforms; Customers › Segments and Customer settings, the Journey tab; Messages › Automations and E-mail; Help & Build › Build progress, Reported problems, Blueprint & files; the Support chat's Same person, Customer, Products and Chat bag cards — every new switch off) go live with the next deploy. Batch 6 (#80: Marketing › Audiences; Customers › Loyalty & wallet, tags and notes, export; Messages › Campaigns; Products › Reviews; My account › Rewards and Birthday; Support tickets, AI drafts, follow-ups, block list, the support app, Support analytics, escalation and desk hours; the shop's Messenger button — every new switch off) goes live with the next deploy. Batch 7 (#81: Reports › Customers; the customer history and grade on Orders › To confirm; customer grades on Customer settings, the list and the customer page; Marketing › Ad platforms' spend import, dollar rate, cost per order and alerts, campaign controls and the Growth agent; "Buy again" on the shop and its card on Customer settings; "Your data" on My account › Profile; the go-live page in "Needed before" and "Soon after" groups — every new switch off) goes live with the next deploy |
-| Last deploy | 1 Nov 2026, 22:02 (Dhaka) · commit `0f6ac8a` (#77 go-live gate runs fixed after the second live run) · **success**, smoke test 320 pages OK; batch 5 (#78), #79, batch 6 (#80) and batch 7 (#81) go live with the next deploy |
+| Launch | **Launch 304/305** · every buildable Launch row is built (#70); PR [403](docs/stages/S19.md#pr-403) built in #71: the main domain's own switch, shipped closed (opening it on go-live day stays the owner's step, BLOCKED 25). Review round 1 (#71) and round 2 (#72) fixes merged. 1 left: PR [587](docs/stages/S19.md#pr-587) (the main-domain switch, after the CN-013 go-live gate). Batch 4 (#73): the 13 go-live gate fixes (SIM-F-004, 019, 025, 031, 041, 046, 047, 048, 050, 051, 052, 053, 054) as follow-ups on built Launch rows, with the review round 3 fixes folded in. The go-live gate journeys (#74, PR [414](docs/stages/S21.md#pr-414) follow-up): CN-013 phase 2 runs on new.extas.com.bd as the journeys workflow's `go-live-gate` group, ordering and changing nothing; of its 38 live checks 8 are proved by the journeys, 24 by CI tests and 6 need a real test order. The After-launch list runs meanwhile, by priority (CN-031): #73 built 30 rows (S06 9, S07 2, S08 5, S18 4, S21 10); S07 and S08 are done (S18 was done until CN-034 added PR [623](docs/stages/S18.md#pr-623)). The go-live gate test orders and customer 360° runs (#75, PR [414](docs/stages/S21.md#pr-414) follow-ups): two by-hand workflows on the preview, 18 test-order scenarios and one customer's whole life cycle; four customer gaps they found are fixed (PR [257](docs/stages/S13.md#pr-257), 144, 75, 425 follow-ups) and three more are filed as After-launch PR [622–624](docs/stages/README.md) (CN-034). Batch 5 (#78) built 43 After-launch rows (S06 5, S13 7, S14 5, S16 13, S20 8, S21 1, S22 4) and follow-ups on PR [417](docs/stages/S21.md#pr-417), 559 and 562; S06, S16, S20 and S21 are done; Launch is unchanged. Batch 6 (#80) built 19 After-launch rows (S13 3, S14 8, S22 8) and a follow-up on PR [293](docs/stages/S14.md#pr-293); S22 is done; Launch is unchanged. Batch 7 (#81) built 10 After-launch rows (S04 1, S13 5, S14 3, S18 1) and the CN-035 follow-ups; S04 and S18 are done. Batch 8 (#82) built 13 After-launch rows (S11 8, S13 4, S14 1); S11 and S14 are done; PR [587](docs/stages/S19.md#pr-587) is **prepared, waits for the owner's go-live word** (the read-only go-live check and the typed-word switch tool; the main-domain switch itself is not done), so Launch stays 304/305 |
+| Stages | **S0A 12/12 · S00 19/19 · S01 23/23 · S09 19/19** (wave 1 done) · **S10 12/12** · **S02 45/58** · **S03 22/22** · **S06 33/33** (wave 2) · **S04 42/42** · **S05 21/21** · **S07 10/10** · **S08 26/26** (wave 3) · **S11 22/22** · **S13 20/35** (wave 5) · **S16 22/22** · **S21 14/14** (wave 6) · **S17 1/24** · **S18 15/15** · **S19 16/17** (wave 8) · **S14 24/24** · **S20 9/9** · **S22 14/14** (wave 4) · total **441/618** active PRs |
+| Live on the preview | Bengali progress page (`/status`), admin sign-in, Keys & connections, products (list, new, edit, publish queue, import from a link, audit, back-in-stock), size charts, stock and ERP pages (practice ERP until the owner adds the ERP keys), Smart Rules (`/admin/rules`, notices and pop-ups); since 31 Oct 17:25 (#68) also Website › SEO › Redirects & 404, Settings › Sign-in & security and Settings › System › Backups; since 31 Oct 19:14 (#69) also Settings › Store details, Privacy & data, Policies & texts, Cloudflare protection, Settings › System › Go-live (restore, first-week watch), Reports › Site health and Money › Overview; since 31 Oct 22:46 (#70) also Website › SEO (collection pages, sitemaps, robots.txt, photo descriptions, Search Console and Bing, real visitors' speed, language pairs, Bengali pages), Marketing › Tracking, Money › Cost ledger, Expenses, Costs & fees and Month-end, Reports › Site health › Customer problems and journeys, and the Support channels; since 1 Nov 02:36 (#71) also the review round 1 fixes (Set delivery area on an order, test payments off by default, staging always on its own locked block); since 1 Nov 04:21 (#72) also the review round 2 fixes (`/status` on the preview host only, the unpaid hold's end, the Caddy body limits); since 1 Nov 10:43 (#73) also batch 4 (Refunds & wallet, the Wallet tab, Fraud & RTO, Today's digest, Calls to make, Stopped by the engine, Decisions & learning, Delivery & RTO, Rider issues, Delivery › Settings, Eid order-by dates, the Site manual, Speed, Smoke runs, Run history, Fixes to approve, Checklist audit); since 1 Nov 16:37 (#75) also "Cancel this order" on the customer's order page, the UTM tags kept on the order and Bengali digits in the inbox search; since 1 Nov 19:02 (#76) also the go-live gate's own practice payments. #77 (the gate runs' safety net) and batch 5 (#78: Reports › Flag outcomes, Sales by area and Team; Money › Profit & loss, Profit by group and by channel, VAT, the Costs report; Orders › Packing print run, picking list, handover and invoice designs; Marketing › Landing pages, Templates, Campaigns and Ad platforms; Customers › Segments and Customer settings, the Journey tab; Messages › Automations and E-mail; Help & Build › Build progress, Reported problems, Blueprint & files; the Support chat's Same person, Customer, Products and Chat bag cards — every new switch off) go live with the next deploy. Batch 6 (#80: Marketing › Audiences; Customers › Loyalty & wallet, tags and notes, export; Messages › Campaigns; Products › Reviews; My account › Rewards and Birthday; Support tickets, AI drafts, follow-ups, block list, the support app, Support analytics, escalation and desk hours; the shop's Messenger button — every new switch off) goes live with the next deploy. Batch 7 (#81: Reports › Customers; the customer history and grade on Orders › To confirm; customer grades on Customer settings, the list and the customer page; Marketing › Ad platforms' spend import, dollar rate, cost per order and alerts, campaign controls and the Growth agent; "Buy again" on the shop and its card on Customer settings; "Your data" on My account › Profile; the go-live page in "Needed before" and "Soon after" groups — every new switch off) goes live with the next deploy. Batch 8 (#82: Customers › Import old customers and the customer page's "Old shop orders"; Website › SEO's summary for AI assistants (`/llms.txt`), links between pages, SEO health and the Organic report; review and FAQ data for search engines; Marketing › Ad platforms › Creative briefs, coupon shapes, links and single-use codes, Marketing › Referrals and the invite code on My account › For you — every new switch off) goes live with the next deploy |
+| Last deploy | 1 Nov 2026, 22:02 (Dhaka) · commit `0f6ac8a` (#77 go-live gate runs fixed after the second live run) · **success**, smoke test 320 pages OK; batch 5 (#78), #79, batch 6 (#80), batch 7 (#81) and batch 8 (#82) go live with the next deploy |
 | Smoke test | Every built page, phone and desktop, as a customer and as the admin, after every deploy and every night: [latest result](docs/reports/smoke/latest/README.md) (CN-016) |
-| Waiting on the owner | 15 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17–28); none stops the build ([table below](#what-waits-on-the-owner)). Batch 5 (#78), batch 6 (#80) and batch 7 (#81) add none (batch 6: every new switch off; the Messenger Page name, desk hours and the Telegram bot are owner data typed in later; batch 7: the ad controls and the growth agent ship off with practice copies only, and every budget raise waits for his approval): its new switches ship off and the VAT rates, ad keys and courier fraud-check keys are the owner's own data, typed in later. 28 whether a repeat refuser's delivery-charge advance is given back when his parcel comes back, or kept (today kept, `payments.refunds.rtoAdvance`; a money decision; PR [163](docs/stages/S06.md#pr-163), 542). 27 whether typing a phone number at checkout may keep showing that customer's saved area, or only after the SMS code (review round 1; PR [555](docs/stages/S06.md#pr-555)). 26 whether old customer-problem records may ever be cleaned up (deleting data needs his OK; PR [423](docs/stages/S21.md#pr-423)). For go-live: 22 lock the Blob backups (cannot be undone, a cost; PR [385](docs/stages/S18.md#pr-385)), 23 connect Azure Blob and Google Drive (PR [391](docs/stages/S19.md#pr-391)), 24 type his own store data (PR [399](docs/stages/S19.md#pr-399)), 25 the day and time to switch extas.com.bd (PR [403](docs/stages/S19.md#pr-403)). 21 asks whether an outside security expert (a cost) checks the site before real money (PR [381](docs/stages/S18.md#pr-381)); 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
+| Waiting on the owner | 15 items open in [`BLOCKED.md`](BLOCKED.md) (13, 14, 15, 17–28); none stops the build ([table below](#what-waits-on-the-owner)). Batch 5 (#78), batch 6 (#80), batch 7 (#81) and batch 8 (#82) add none (batch 6: every new switch off; the Messenger Page name, desk hours and the Telegram bot are owner data typed in later; batch 7: the ad controls and the growth agent ship off with practice copies only, and every budget raise waits for his approval; batch 8: every coupon, code and referral ships off with no amount, switching one on is his OK, and PR [587](docs/stages/S19.md#pr-587)'s main-domain switch waits for his go-live word, BLOCKED 25): its new switches ship off and the VAT rates, ad keys and courier fraud-check keys are the owner's own data, typed in later. 28 whether a repeat refuser's delivery-charge advance is given back when his parcel comes back, or kept (today kept, `payments.refunds.rtoAdvance`; a money decision; PR [163](docs/stages/S06.md#pr-163), 542). 27 whether typing a phone number at checkout may keep showing that customer's saved area, or only after the SMS code (review round 1; PR [555](docs/stages/S06.md#pr-555)). 26 whether old customer-problem records may ever be cleaned up (deleting data needs his OK; PR [423](docs/stages/S21.md#pr-423)). For go-live: 22 lock the Blob backups (cannot be undone, a cost; PR [385](docs/stages/S18.md#pr-385)), 23 connect Azure Blob and Google Drive (PR [391](docs/stages/S19.md#pr-391)), 24 type his own store data (PR [399](docs/stages/S19.md#pr-399)), 25 the day and time to switch extas.com.bd (PR [403](docs/stages/S19.md#pr-403)). 21 asks whether an outside security expert (a cost) checks the site before real money (PR [381](docs/stages/S18.md#pr-381)); 18 and 19 are money questions from follow-ups 39 (a set's price in the free-delivery limit) and 121 (the band charge in the COD limit); nothing changes until he says so |
 | Next | The CN-022 foundation items (worker PR [6](docs/stages/S0A.md#pr-6), ERP webhook PR [196](docs/stages/S09.md#pr-196), one "Sales" KPI PR [155](docs/stages/S05.md#pr-155), append-only audit log PR [139](docs/stages/S05.md#pr-139)) are live (deploy 23 Oct 17:35); the back-office follow-ups 80, 82, 92, 93, 54, 16 and 14 (ERP webhook through the preview gate, worker on rollback, KPI report views, band charge in the rules engine, shortage cards, hardcode-guard cases) go live with the next deploy; the new 14-section admin shell (PR 12: sidebar, tabs, search palette, guide panel, the Dashboard with Delivered sales / Ordered value and Needs you now, role start pages; with the V12.4 look, Settings › Admin look and the V12.4 Dashboard on real data, CN-025) is built and goes live with the next deploy, and the first S05 order screens sit on it (PR [140](docs/stages/S05.md#pr-140), 141, 152, 154: the order list with its views and search, one order with every command, the To confirm call queue, and Confirm / Hold / Release on many orders at once); next the duplicate review, packing and order settings tabs and the rest of S05 (PR [142](docs/stages/S05.md#pr-142), 143, 146, 148–151); S02 continues (templates T2 / T3, Find my size, its learning and the product-page reviews built: PR [50–52](docs/stages/S02.md), 58, 59, 65; next PR [67](docs/stages/S02.md#pr-67) …; the reviews queue and the size report go on the new admin shell, follow-ups 230, 231); S04 after checkout: customer accounts built (PR [129–135](docs/stages/S04.md), 137; the live SMS sender waits for its key); "Add to this parcel", "Complete your look", the address rules and gift mode built (PR [127](docs/stages/S04.md#pr-127), 128, 561, 563, 565, 605); next PR [566](docs/stages/S04.md#pr-566) and 606; refunds and returns come with S07 and S08 (BACKEND-ARCHITECTURE, approved in CN-022); S03: the shop's combo pages are built (PR [91–95](docs/stages/S03.md), 102, 103: the combo page, the sets landing page, the set offer on the product page); next the set builder (PR [98](docs/stages/S03.md#pr-98), 100) and the templates 572–574, 576 |
 | Last update | 6 Nov 2026 |
 
@@ -72,10 +72,10 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S08](docs/stages/S08.md) | [Courier, returns, exchange](docs/stages/S08.md) | [3](docs/stages/README.md#wave-3) | [175–193](docs/stages/S08.md), [525–526](docs/stages/S08.md), [564](docs/stages/S08.md#pr-564), [611–614](docs/stages/S08.md) | 26 / 26 | **Done** |
 | [S09](docs/stages/S09.md) | [Inventory & ERP sync](docs/stages/S09.md) | [1](docs/stages/README.md#wave-1) | [194–207](docs/stages/S09.md), [497–499](docs/stages/S09.md), [607–608](docs/stages/S09.md) | 19 / 19 | **Done** |
 | [S10](docs/stages/S10.md) | [Smart Rules](docs/stages/S10.md) | [2](docs/stages/README.md#wave-2) | [208–219](docs/stages/S10.md) | 12 / 12 | **Done** |
-| [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 14 / 22 | In progress |
+| [S11](docs/stages/S11.md) | [SEO engine](docs/stages/S11.md) | [5](docs/stages/README.md#wave-5) | [220–238](docs/stages/S11.md), [527](docs/stages/S11.md#pr-527), [586](docs/stages/S11.md#pr-586), [588](docs/stages/S11.md#pr-588) | 22 / 22 | **Done** |
 | [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 0 / 22 | Not started |
-| [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 16 / 35 | In progress |
-| [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 23 / 24 | In progress |
+| [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 20 / 35 | In progress |
+| [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 24 / 24 | **Done** |
 | [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 0 / 48 | Not started |
 | [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 22 / 22 | **Done** |
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 1 / 24 | In progress |
@@ -89,7 +89,7 @@ owner's word (handover pack). Waves are the build order from Blueprint
 | [S25](docs/stages/S25.md) | [Video & Campaign Creative Studio](docs/stages/S25.md) | [7](docs/stages/README.md#wave-7) | [481–490](docs/stages/S25.md) | 0 / 10 | Not started |
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) |
-| | **Total** | | **624 PRs** | **428 / 618 active** | 6 parked |
+| | **Total** | | **624 PRs** | **441 / 618 active** | 6 parked |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
@@ -1613,7 +1613,7 @@ charged by itself, and no price or COD changes.
   [settings/keys](docs/admin-guide/pages/settings/keys.md); tests on PostgreSQL (SIM-F-015 and SIM-F-016 acceptance), the
   adapters against stand-in servers, the checkout API.
 
-### S14 · CRM & customers — In progress (23/24)
+### S14 · CRM & customers — Done (24/24)
 
 > **বাংলায় সংক্ষেপে:** কাস্টমারের সেকশন তৈরি: সব কাস্টমারের তালিকা (ফোন দিয়ে প্রতিটা মানুষের এক সারি, ভাগ, খোঁজা), একজন
 > কাস্টমারের নিজের পাতা (সব অর্ডার, বিক্রি শুধু ডেলিভারি হওয়া, বদল, সাপোর্ট) আর "যাচাই বাকি" — একই মানুষের দুইটা প্রোফাইল একজন
@@ -1727,6 +1727,21 @@ migration; job `customers.grades.run`.
   from" grade feeds the good-customer override only while it is on; never blocks or changes COD.
 - Guides: [reports/customers](docs/admin-guide/pages/reports/customers.md), [orders/confirm](docs/admin-guide/pages/orders/confirm.md),
   [customers/settings](docs/admin-guide/pages/customers/settings.md); DB tests in customers, orders and the web API.
+
+**Built (PR [535](docs/stages/S14.md#pr-535); 6 Nov, #82, After launch): the legacy customer import.** S14 is done
+(24/24, [report](docs/reports/2026-11-06-S14.md)). `customers.legacyImport` (v204, `registry-crm.ts`) ships off (5,000 rows
+at most); migration `0146_legacy_customer_import`; new permission `customers.import`.
+> নতুন (#82): পুরোনো দোকানের অর্ডারের তালিকা (CSV) আগে দেখে নিয়ে, আপনি নিশ্চিত করলে শুধু ইতিহাস হিসেবে আনা হয়; কোনো কাস্টমার বা অর্ডার বদলায় না, কাউকে মেসেজ যায় না, ফিরিয়ে নিলে আর্কাইভ হয়, মোছে না। শুরুতে বন্ধ।
+- **Import (Customers › More › Import old customers, `/admin/customers/import`):** choose the old shop's order list as a
+  CSV; the preview (nothing saved) guesses the columns, the status meanings and the date order from the admin's own words,
+  reads Bengali digits and BD numbers, and counts new people, people already here by phone, the same old order twice,
+  orders brought in before and bad numbers; "Bring in" only after a confirm.
+- **What it writes:** old orders as `LegacyOrderRecord` history (never an `Order`: no stock, no money, never in Sales); new
+  profiles marked as imported with no consent; an existing customer is never overwritten; no message goes. An import's
+  undo archives its records and the profiles it made, never deletes; every step audited.
+- **Customer page:** an "Old shop orders" card with the counts (delivered, returned, cancelled); a card on Customer settings.
+- Guides: [customers/import](docs/admin-guide/pages/customers/import.md), [customers/settings](docs/admin-guide/pages/customers/settings.md),
+  [customers/customer](docs/admin-guide/pages/customers/customer.md); tests: the pure CSV reader, DB import and undo, the API.
 Register: [S14](docs/MASTER-REGISTER.md#s14--crm--customers--pr-284303).
 
 - **Go-live gate (1 Nov, #73; PR 505 follow-up, SIM-F-031, F-025/F-047):** the thank-you page says "Order placed" until the shop confirms; `Order.lang` (migration `0083`) and `messages.language` "customer" (the new default) send each order's messages in the language it was placed in.
@@ -1885,7 +1900,7 @@ v159, v180–v189; migrations `0114_support_tickets` – `0119_support_escalatio
   [support/settings](docs/admin-guide/pages/support/settings.md), [support/app](docs/admin-guide/pages/support/app.md),
   [support/analytics](docs/admin-guide/pages/support/analytics.md). Report: [S22 done](docs/reports/2026-11-05-S22.md).
 
-### S11 · SEO engine — In progress (14/22)
+### S11 · SEO engine — Done (22/22)
 
 > **বাংলায়:** দোকানের ঠিকানার নিয়ম, প্রতিটা পাতার সার্চের শিরোনাম আর বিবরণ, আর Google-এর জন্য পাতার তথ্য (দাম, স্টক, পথ, দোকানের পরিচয়) তৈরি। আপনি চালু না করা পর্যন্ত Google-এ দোকান আসে না, AI খসড়াও বন্ধ।
 
@@ -2001,13 +2016,44 @@ Built (PR [220](docs/stages/S11.md#pr-220), 221, 222; 29 Oct; not deployed yet):
   `tools/vitals-lab.test.mjs`, `tools/hreflang-check.test.mjs`, `packages/settings/test/registry-seo-reach.test.ts`;
   checked in a real browser at 390, 768, 1366 and 1920 px in English and Bengali.
 
-Planned — see register PRs 223–226, 230, 231, 237, 238: [S11](docs/MASTER-REGISTER.md#s11--seo-engine--pr-220238).
+~~Planned — see register PRs 223–226, 230, 231, 237, 238~~ Built in #82 (below); S11 is done ([report](docs/reports/2026-11-06-S11.md)):
+[S11](docs/MASTER-REGISTER.md#s11--seo-engine--pr-220238).
+
+**Built (PR [223](docs/stages/S11.md#pr-223)–226, 230, 231, 237, 238; 6 Nov, #82, After launch): data for search
+engines from real rows, the AI-assistant summary, links between pages, SEO health and the Organic report.** Settings
+registry v205–v209 (`registry-storefront-fu.ts`, `registry-seo-reach.ts`); no migration.
+> নতুন (#82): সার্চ ইঞ্জিনকে রেটিং আর প্রশ্নোত্তর শুধু আসল রিভিউ আর প্রশ্ন থেকে; পণ্যের পাতার সব লেখা প্রথম থেকেই পাতায়; AI সহকারীর জন্য দোকানের সারাংশ (/llms.txt); কালেকশনের নিচে "আরও কালেকশন"; SEO-তে কী বাকি তার তালিকা আর সার্চ থেকে বিক্রির রিপোর্ট। নতুন সুইচ শুরুতে বন্ধ।
+- **Review data (223):** the `reviews` part of `seo.structuredData` (v205, off) — a product page sends its star rating and reviews only
+  from its approved, published reviews and only what its reviews block shows; no review or a bad number sends nothing,
+  never a made-up rating.
+- **FAQ data (224, 226):** the `faq` part of `seo.structuredData` (v206, off) — the product's answered questions, the FAQ page's and a
+  collection's shown questions as FAQPage data; the admin says plainly that Google shows no FAQ rich result since 7 May
+  2026.
+- **Page words in the HTML (225, 226):** the product page's folded words (Fabric & care, Size & fit, Description, the
+  delivery, exchange and returns rules) and each collection's own heading, text and questions are in the first response,
+  only hidden while closed; nothing loads on a tap.
+- **Summary for AI assistants (230):** `seo.answerPack` (v207: on, summary empty) — `/llms.txt`: the shop's name, the
+  owner's own summary, the collections with their search lines, the rule pages and the contact details filled in;
+  answered only while the shop is open to search engines on its own domain.
+- **Links between pages (231):** `seo.internalLinks` (v208: off, 6 at most) — "More collections" under a collection page
+  (its sub- or sister collections, then the other main ones; only shown ones with styles).
+- **SEO health (237):** Website › SEO › SEO health (`/admin/website/seo/health`): what is missing page by page (a product
+  with no description or photo description, a collection with no text, search line or style), counted per issue with
+  filters and "Open"; every deploy's smoke test also checks the canonical's language and no `#` links.
+- **Organic report (238):** `seo.organic` (v209: 28 days, target 50%, 10 searches) — Website › SEO › Organic report
+  (`/admin/website/seo/organic`): the share of Sales from search engines, YouTube and AI assistants against the owner's
+  target, by site, and with Search Console or Bing connected the clicks, times shown, position and top searches; an
+  untagged visit from a listed site is kept as its source (an ad click is never replaced).
+- Guides: [website/seo](docs/admin-guide/pages/website/seo.md), [website/seo-categories](docs/admin-guide/pages/website/seo-categories.md),
+  [website/seo-health](docs/admin-guide/pages/website/seo-health.md), [website/seo-organic](docs/admin-guide/pages/website/seo-organic.md),
+  [products/reviews](docs/admin-guide/pages/products/reviews.md), [marketing/tracking](docs/admin-guide/pages/marketing/tracking.md);
+  tests beside the code (structured data, llms.txt, links, health, organic sources).
 
 ### S12 · Content & blog — Not started
 
 Planned — see register PRs 239–253, 528–530, 547, 591–593: [S12](docs/MASTER-REGISTER.md#s12--content--blog--pr-239253).
 
-### S13 · Marketing & ads — In progress (16/35)
+### S13 · Marketing & ads — In progress (20/35)
 
 **Built (PR [257](docs/stages/S13.md#pr-257); 31 Oct, CN-031 lane B; not deployed yet): server-side event tracking.**
 
@@ -2096,7 +2142,32 @@ is changed.
 - Guides: [marketing/ad-platforms](docs/admin-guide/pages/marketing/ad-platforms.md), [marketing/ad-growth](docs/admin-guide/pages/marketing/ad-growth.md),
   [money/fees](docs/admin-guide/pages/money/fees.md).
 
-Planned — see register PRs ~~254–256, 258–283~~ ~~262–283~~ ~~265–283~~ 270–283, 531–532, 548, 569, 589: [S13](docs/MASTER-REGISTER.md#s13--marketing--ads--pr-254283).
+**Built (PR [270](docs/stages/S13.md#pr-270)–273; 6 Nov, #82, After launch): creative briefs, the coupon engine,
+coupon distribution and the referral programme.** Every switch is off and no amount is set anywhere; settings registry
+v176–v178 (`registry-ads-brief.ts`, `registry-coupons-distribution.ts`, `registry-referrals.ts`); migration
+`0124_referral_uses`.
+> নতুন (#82): পণ্য থেকে বিজ্ঞাপনের ব্রিফ; কুপন এখন যেকোনো অফারের রূপে (টাকা বা শতাংশ ছাড়, ফ্রি ডেলিভারি, একটা কিনলে একটা); কুপনের সীমা, লিংকে কুপন আর একবার-ব্যবহারের কোড; বন্ধুকে আমন্ত্রণ কোড আর ডেলিভারির পরে আপনার অনুমতিতে পুরস্কার। সব শুরুতে বন্ধ, কোনো টাকার অঙ্ক বসানো নেই।
+- **Creative briefs (270):** `ads.creativeBrief` (v176, off) — Marketing › Ad platforms › Creative briefs (`/admin/marketing/ad-platforms/briefs`): a brief
+  from a product (and a campaign): the offer from live prices, the formats (4:5, 1:1, 9:16), a hook in Bengali and English,
+  the landing page and what the ads brought back; an approved growth-agent "refresh the creative" proposal is written up
+  once; "Send to the studio" or "Set aside" after a confirm; no price, budget or campaign changes.
+- **Coupon engine (271):** a code unlocks any offer shape that asks for one — fixed or percentage off, free delivery, buy
+  some get some, a percentage from a few pieces, a set price — each a rule template (templates v2), so a new shape needs
+  no new code; who may use it stays per coupon; the bag says "add N more pieces" and "free delivery" in words (SIM-F-009:
+  a guest's public codes work, a members-only one refuses him in words).
+- **Distribution and limits (272):** `rules.coupons.distribution` (v177, both parts off) — limits, who and the window
+  changed from the coupon's row (never below the uses made; while on, that is the owner's OK); a code in a link
+  (`/bag?code=…`, "Copy link"); "Make single-use codes" in a batch, all off, switched on together with his OK and
+  downloaded as a CSV.
+- **Referral programme (273):** `referrals.programme` (v178, off, no rule, no reward) — a signed-in customer's invite code on
+  My account › For you (Copy, Share on WhatsApp); a friend's first order gets the Smart Rule the owner picks; a number that
+  ordered before and the customer's own code are refused in words; Marketing › Referrals (`/admin/marketing/referrals`):
+  codes, friends' orders, delivered, and "Give reward" into the sharer's wallet once after a confirm, only with the wallet
+  permission.
+- Guides: [marketing/ad-briefs](docs/admin-guide/pages/marketing/ad-briefs.md), [marketing/rules](docs/admin-guide/pages/marketing/rules.md),
+  [marketing/referrals](docs/admin-guide/pages/marketing/referrals.md); DB tests in rules, the bag and checkout, the web API.
+
+Planned — see register PRs ~~254–256, 258–283~~ ~~262–283~~ ~~265–283~~ ~~270–283~~ 274–283, 531–532, 548, 569, 589: [S13](docs/MASTER-REGISTER.md#s13--marketing--ads--pr-254283).
 
 ### S23 · Social & content studio — Not started
 
@@ -2484,6 +2555,11 @@ files inside the admin.** Migration `0092_build_problems` (a table and an enum o
   [help/build-problems](docs/admin-guide/pages/help/build-problems.md), [help/build-files](docs/admin-guide/pages/help/build-files.md),
   [help/build-file](docs/admin-guide/pages/help/build-file.md); device gate 0 fails in 217 checks over the build pages.
 
+**Follow-ups (6 Nov, #82, CN-035):** the go-live gates' clean-up tells the shop's page cache when it archives the GATE
+TEST products, so no collection page lists an archived test product, and the go-live-gate journeys start five minutes
+after gate-orders (PR 414); after a rollback the deploy report names the docs copy on the server (PR 594).
+> নতুন (#82): পরীক্ষার পণ্য সরানোর পরে কালেকশনের পাতায় আর দেখায় না; ফিরে যাওয়ার পরে রিপোর্টে কাগজপত্রের কপির নাম ঠিক।
+
 ### S24 · Virtual Photoshoot Studio — Not started
 
 Planned — see register PRs 444–480, 539: [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
@@ -2675,7 +2751,19 @@ to Telegram until Blob and Drive are connected (PR 391); the restore drill (PR 5
 key no SMS goes) are soon-after rows. Guide [settings/go-live](docs/admin-guide/pages/settings/go-live.md).
 > নতুন (#81): গো-লাইভ পাতায় দুই ভাগ — "লাইভের আগে লাগবে" আর "লাইভের পরে শিগগির"; শুধু প্রথম ভাগ মূল ডোমেইন চালু আটকায়।
 
-Planned — see register PR 587 (the main-domain switch and the WordPress migration on go-live day; ~~403~~ built 31 Oct in
+**Prepared (PR [587](docs/stages/S19.md#pr-587); 6 Nov, #82, CN-035): the WordPress → new site migration, up to the
+owner's "go live".** Not done: the main-domain switch waits for his go-live word (BLOCKED 25), so S19 stays 16/17 and
+Launch 304/305. The go-live check (`golive-check.yml`, by hand, read-only on staging as the check account): every
+Settings › System › Go-live row in its group with its state, the WordPress redirect map and its targets, every sitemap
+address, the main domain's Caddy block validated open in a copy. `tools/golive-switch.mjs` shows the two `server.conf`
+lines of the switch and writes them only with the typed "GO LIVE <domain>". Runbook section 4.
+> নতুন (#82): পুরোনো WordPress থেকে নতুন সাইটে যাওয়ার সব প্রস্তুতি তৈরি; মূল ডোমেইন বদল শুধু আপনার "গো লাইভ" কথার পরে।
+
+**Follow-up (6 Nov, #82, CN-035): the rollback rehearsal (PR 398).** Deploy "Go back to the previous version" on staging:
+43 s to the older version answering, forward again in 3 min 31 s with its smoke test passing (408 page views), recorded
+in the runbook (section 5); the go-live page's "runbook" sign-off stays a person's press.
+
+Planned — see register PR 587 (the main-domain switch and the WordPress migration on go-live day; prepared in #82, above; ~~403~~ built 31 Oct in
 #71, opened by the owner on go-live day; ~~391, 393, 394, 396–402~~ built 31 Oct; ~~backup settings and monthly restore drills,~~ built in PR 507): [Blueprint Appendix A](docs/BLUEPRINT.md#appendix-a--every-pr-1604).
 
 **Built (PR 619): the switch-over to the ERP model and each store's own ERP link** (CN-028, CN-029 Phase 2; migration
@@ -2856,6 +2944,23 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #82 | PR [398](docs/stages/S19.md#pr-398) | 6 Nov | Follow-up (CN-035): the rollback rehearsal on staging — back to the older version in 43 s, forward again in 3 min 31 s with the smoke test passing, recorded in the runbook. |
+| #82 | PR [594](docs/stages/S21.md#pr-594) | 6 Nov | Follow-up (CN-035): after a rollback the deploy report names the docs copy on the server. |
+| #82 | PR [414](docs/stages/S21.md#pr-414) | 6 Nov | Follow-up (CN-035): the gates' clean-up tells the page cache when it archives the GATE TEST products; the go-live-gate journeys start five minutes after gate-orders. |
+| #82 | PR [587](docs/stages/S19.md#pr-587) | 6 Nov | **Prepared, waits for the owner's go-live word** (not done): the read-only go-live check (`golive-check.yml`) and `tools/golive-switch.mjs`, which writes the main-domain switch only with the typed "GO LIVE <domain>"; runbook section 4. |
+| #82 | PR [273](docs/stages/S13.md#pr-273) | 6 Nov | Referral programme: the invite code on My account › For you, the friend's first-order offer from the owner's rule, "Give reward" into the wallet after a confirm (`referrals.programme`, off; migration `0124`). |
+| #82 | PR [272](docs/stages/S13.md#pr-272) | 6 Nov | Coupon limits, who and window changed from the row, a code in a link and single-use code batches as a CSV (`rules.coupons.distribution`, off). |
+| #82 | PR [271](docs/stages/S13.md#pr-271) | 6 Nov | Coupon engine, fully dynamic: any offer shape behind a code from rule templates, the bag's words in plain language; every coupon made off. |
+| #82 | PR [270](docs/stages/S13.md#pr-270) | 6 Nov | Ad creative briefs from a product and a campaign; "Send to the studio" after a confirm; nothing about prices or budgets changes (`ads.creativeBrief`, off). |
+| #82 | PR [238](docs/stages/S11.md#pr-238) | 6 Nov | Organic report: the share of Sales from search engines, YouTube and AI assistants against the owner's target, and Search Console / Bing figures when connected (`seo.organic`). |
+| #82 | PR [237](docs/stages/S11.md#pr-237) | 6 Nov | SEO health: what is missing page by page, with filters and "Open"; the smoke test checks canonical language and `#` links. |
+| #82 | PR [231](docs/stages/S11.md#pr-231) | 6 Nov | Links between pages: "More collections" under a collection page (`seo.internalLinks`, off). |
+| #82 | PR [230](docs/stages/S11.md#pr-230) | 6 Nov | Answer-engine pack: `/llms.txt`, the shop's summary for AI assistants from the owner's own words (`seo.answerPack`). |
+| #82 | PR [226](docs/stages/S11.md#pr-226) | 6 Nov | Category SEO block: each collection's text and questions in the HTML, the questions as FAQ data while that part is on. |
+| #82 | PR [225](docs/stages/S11.md#pr-225) | 6 Nov | Product page words (fabric, size, description, delivery and returns rules) in the HTML from the first response. |
+| #82 | PR [224](docs/stages/S11.md#pr-224) | 6 Nov | FAQ data from the real answered questions; optional, off; Google shows no FAQ rich result since 7 May 2026. |
+| #82 | PR [223](docs/stages/S11.md#pr-223) | 6 Nov | Review data only from approved, published reviews and only what the page shows; never a made-up rating (off). |
+| #82 | PR [535](docs/stages/S14.md#pr-535) | 6 Nov | Legacy customer import: the old shop's CSV previewed, then brought in as history after a confirm; never overwrites, undo archives (`customers.legacyImport`, off; migration `0146`). |
 | #81 | PR [534](docs/stages/S14.md#pr-534) | 6 Nov | Customer grading: the owner's own grades and a verified mark, a pill on the list, the customer page and To confirm; feeds the good-customer override only when he picks a grade (`customers.grades`, off; job `customers.grades.run`). |
 | #81 | PR [383](docs/stages/S18.md#pr-383) | 6 Nov | Follow-up (CN-035): a store detail of only spaces, or every language blank, counts as empty and is not shown. |
 | #81 | PR [381](docs/stages/S18.md#pr-381) | 6 Nov | Follow-up (CN-035): the outside security review is a "Soon after go-live" sign-off and never holds back the switch; the automatic checks keep running. |
