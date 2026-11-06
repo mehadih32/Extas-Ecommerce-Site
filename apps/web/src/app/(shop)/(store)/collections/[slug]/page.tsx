@@ -49,11 +49,12 @@ import { categoryName, requirementsMet } from '@/lib/shop/shell-model';
 import { relatedCollections } from '@/lib/seo/internal-links';
 import { breadcrumbLd, faqLd, itemListLd, type LdCrumb, type LdQuestion } from '@/lib/shop/structured-data';
 import { LayoutPart } from '@/components/shop/LayoutPart';
-import { shownSections } from '@/lib/shop/layouts';
+import { blockContent, blocksOf, categoryRows, pageItems } from '@/lib/shop/blocks';
+import { PageBlock } from '@/components/shop/blocks/PageBlock';
 import type { CategorySectionId } from '@extas/settings';
 import './category.css';
 
-const KEYS = ['marketing.seasonal', 'layout.category', 'category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages', 'seo.internalLinks'] as const;
+const KEYS = ['marketing.seasonal', 'layout.category', 'layout.categoryOwn', 'layout.blocks', 'category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages', 'seo.internalLinks'] as const;
 
 /** The "New in" page's own link name, from the routing table (`/collections/new-in`). */
 const NEW_IN = ROUTES.newIn.split('/').pop()!;
@@ -284,13 +285,23 @@ export default async function CategoryPage(props: Props) {
       />
   );
   const parts: Record<CategorySectionId, ReactNode> = { head: hd, listing, info, related: more };
+  // ~~shownSections('category', set['layout.category'])~~ PR 595: this category's own order while it has one, with the
+  // owner's sections for every category page and for this one in between, on their days and screens
+  const items = pageItems('category', categoryRows(set['layout.categoryOwn'], slug, set['layout.category']), blocksOf(set['layout.blocks'], 'category', slug), c.today);
+  const got = await blockContent(c, items);
   return (
     <div className="container">
-      {shownSections<CategorySectionId>('category', set['layout.category']).map(({ id, dev }) => (
-        <LayoutPart key={id} id={id} dev={dev}>
-          {parts[id]}
-        </LayoutPart>
-      ))}
+      {items.map((it) =>
+        it.kind === 'sec' ? (
+          <LayoutPart key={it.row.id} id={it.row.id} dev={it.row.dev ?? 'both'}>
+            {parts[it.row.id as CategorySectionId]}
+          </LayoutPart>
+        ) : (
+          <LayoutPart key={`lb-${it.block.id}`} id={`lb-${it.block.id}`} dev={it.block.dev}>
+            <PageBlock c={c} block={it.block} got={got.get(it.block.id) ?? { kind: 'none' }} bare />
+          </LayoutPart>
+        ),
+      )}
       {/* follow-up 21: the cards' back view and Quick add (computer with a mouse), and the panel it opens */}
       <CardDeskMount c={c} />
       <AddedSlot c={c} added={sp.added} closeHref={closeHrefOf(basePath, sp)} />

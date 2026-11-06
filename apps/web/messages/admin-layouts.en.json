@@ -2,8 +2,8 @@
   "ly": {
     "metaTitle": "Page layouts",
     "title": "Page layouts",
-    "sub": "Which sections each shop page shows, in which order and on which screens.",
-    "note": "A section shows on the shop only when it has something to show. Your changes go live as soon as you save.",
+    "sub": "Which sections each shop page shows, in which order, on which screens and on which days.",
+    "note": "A section shows on the shop only when it has something to show. Your changes go live as soon as you save. On the home page and the category pages you can also add your own sections.",
     "pages": "Pages",
     "page": {
       "home": "Home page",
@@ -15,7 +15,8 @@
       "home": "Sections of the home page",
       "category": "Sections of every category page",
       "product": "Sections under every product page's photos and buy column",
-      "bag": "Sections of the bag beside the summary"
+      "bag": "Sections of the bag beside the summary",
+      "one": "Sections of the {name} page"
     },
     "count": "{on} of {all} shown",
     "open": "Open the page",
@@ -103,6 +104,123 @@
     "fixedNote": {
       "product": "The photos, the buy column and the buy bar stay as they are, so the first screen keeps its size and the buy button.",
       "bag": "The summary and the phone's checkout bar stay as they are."
-    }
+    },
+    "whichCat": "Which category pages",
+    "allCats": "All category pages",
+    "openCat": "Show",
+    "prev": {
+      "title": "See the page",
+      "show": "Show phone and computer preview",
+      "hide": "Hide the preview",
+      "phone": "Phone (390 px)",
+      "desktop": "Computer (1366 px)",
+      "note": "This is the page as customers see it now. Save first to see your changes here."
+    },
+    "own": {
+      "title": "Own layout for this category",
+      "on": "On: this category shows its sections in its own order, set below.",
+      "off": "Off: this category follows the order of all category pages. Its own sections below still show.",
+      "shared": "{n} section(s) you added for all category pages also show here."
+    },
+    "copyName": "{name} (copy)",
+    "duplicated": "Copied. The copy starts hidden: switch it on and press Save.",
+    "days": "{from} to {to}",
+    "state": {
+      "off": "Hidden",
+      "soon": "Starts later",
+      "live": "Showing",
+      "ended": "Ended"
+    },
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "add": "Add a section",
+    "whatKind": "New section: what kind?",
+    "hideNote": "A section you add is never deleted: switch it off to hide it, and on again any time. A new section starts hidden.",
+    "type": {
+      "banner": "Banner",
+      "offerStrip": "Offer strip",
+      "productRow": "Product row",
+      "productGrid": "Product grid",
+      "comboRow": "Set row",
+      "categoryTiles": "Category tiles",
+      "reviews": "Reviews",
+      "journal": "Journal",
+      "richText": "Your text",
+      "spacer": "Spacer"
+    },
+    "typeHint": {
+      "banner": "A big offer or announcement: words, a button and a product's picture",
+      "offerStrip": "A slim one-line offer bar (words only)",
+      "productRow": "A row of products customers slide sideways",
+      "productGrid": "Products in a few rows",
+      "comboRow": "Sets on sale, from one set rule or all of them",
+      "categoryTiles": "Picture tiles of the categories you pick",
+      "reviews": "Approved customer reviews",
+      "journal": "The newest journal articles",
+      "richText": "Your own text: paragraphs, bold and links, never code",
+      "spacer": "A little gap between two sections"
+    },
+    "tone": {
+      "brand": "Brand colour",
+      "dark": "Dark",
+      "light": "Light"
+    },
+    "src": {
+      "newest": "The newest products",
+      "category": "One category",
+      "tag": "One tag",
+      "manual": "Products I pick"
+    },
+    "field": {
+      "page": "page",
+      "sections": "sections",
+      "blocks": "your sections",
+      "cat": "category",
+      "own": "own layout"
+    },
+    "f": {
+      "en": "English",
+      "bn": "Bengali",
+      "title": "Title",
+      "name": "Name in this list",
+      "nameHint": "Only you see it, for example \"Eid offer\". Customers never see it.",
+      "place": "Where it goes",
+      "above": "Above: {name}",
+      "atEnd": "At the end of the page",
+      "from": "First day",
+      "to": "Last day",
+      "daysHint": "Whole days in the shop's time zone. Leave empty to show it every day.",
+      "done": "Done",
+      "eyebrow": "Small line above the title",
+      "text": "Text",
+      "cta": "Button words",
+      "href": "Link",
+      "hrefHint": "A page of the shop like /collections/polo, or a full https:// address.",
+      "link": "Link words",
+      "picture": "Picture from a product",
+      "noPicture": "No picture",
+      "stripNote": "The strip only shows words. It never changes a price or a discount.",
+      "sub": "Line under the title",
+      "source": "Which products",
+      "cat": "Category",
+      "tag": "Tag",
+      "choose": "Choose…",
+      "ids": "Your products",
+      "idsHint": "{n} picked, shown in the order you pick them.",
+      "find": "Find a product",
+      "limit": "How many at most",
+      "more": "\"View all\" words",
+      "moreHref": "\"View all\" link",
+      "rule": "Which sets",
+      "allSets": "Every set on sale",
+      "cats": "Categories",
+      "catsHint": "Pick none to show every category that has products.",
+      "body": "Your text",
+      "bodyHint": "A blank line starts a new paragraph. **Bold** and [words](/link) work. Code and HTML are shown as plain text.",
+      "phone": "Space on a phone (px)",
+      "desktop": "Space on a computer (px)",
+      "tone": "Colour"
+    },
+    "formTitle": "Edit section: {type}"
   }
 }

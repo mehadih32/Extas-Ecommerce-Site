@@ -58,6 +58,8 @@ const KEYS = [
   'language.labels',
   'slider.engine',
   'home.sections',
+  // S02 · PR 595: the owner's own sections (Website › Page layouts)
+  'layout.blocks',
   'home.hero',
   'home.heroSlides',
   'home.categories',

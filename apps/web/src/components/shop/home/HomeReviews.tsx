@@ -25,7 +25,8 @@ function Stars({ rating, size, label }: { rating: number; size: number; label: s
   );
 }
 
-export function HomeReviews({ c, row }: { c: ShopContext; row: ReviewRow }) {
+// S02 · PR 595: an owner's own reviews section (Website › Page layouts) draws the same cards under his title, on its own track.
+export function HomeReviews({ c, row, title, trackId = 'hm-revtrack' }: { c: ShopContext; row: ReviewRow; title?: string; trackId?: string }) {
   if (!row.reviews.length) return null;
   const set = c.s['home.reviews'];
   const fixed = row.average.toFixed(1);
@@ -43,8 +44,8 @@ export function HomeReviews({ c, row }: { c: ShopContext; row: ReviewRow }) {
     <section className="section">
       <div className="container">
         <SecHd
-          title={c.t('home.reviews.title')}
-          sub={c.t('home.reviews.sub')}
+          title={title ?? c.t('home.reviews.title')}
+          sub={title === undefined ? c.t('home.reviews.sub') : undefined}
           aside={
             set.summary ? (
               <div className="row hide-m" style={{ gap: 8 }}>
@@ -53,7 +54,7 @@ export function HomeReviews({ c, row }: { c: ShopContext; row: ReviewRow }) {
             ) : undefined
           }
         />
-        <SmoothRow id="hm-revtrack" className="hm-hscroll c3 hm-revs" engine={c.s['slider.engine']}>
+        <SmoothRow id={trackId} className="hm-hscroll c3 hm-revs" engine={c.s['slider.engine']}>
           {row.reviews.map((r) => (
             <figure key={r.id} className="card hm-rev">
               <div className="row between">

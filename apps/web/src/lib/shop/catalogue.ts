@@ -646,3 +646,51 @@ export function bagPickCards(storeId: number, inBag: readonly string[], count: n
     return rows.length ? { cards: await toCards(storeId, rows), from: 'new' as const } : none;
   });
 }
+
+// ---- S02 · PR 595 · the owner's product rows and grids (Website › Page layouts) ----
+
+/** Where a section's products come from: a category (its sub-categories too), a tag, the owner's own pick, the newest. */
+export interface CardPick {
+  source: 'category' | 'tag' | 'manual' | 'newest';
+  cat: string;
+  tag: string;
+  /** Product link names, in the owner's order (`manual`). */
+  ids: readonly string[];
+}
+
+/**
+ * PR 595 · a section's products as cards, at most `limit`, only those a customer may see now (published, not archived,
+ * in a visible category): a category's in the owner's order (pinned first), a tag's and the newest newest first, the
+ * owner's pick in his order. Nothing found = an empty list (the section is not drawn).
+ */
+export function pickCards(storeId: number, pick: CardPick, limit: number): Promise<ShopCard[]> {
+  return guarded('section products', [] as ShopCard[], async () => {
+    const visible = { storeId, ...live, category: { isVisible: true, archivedAt: null } };
+    const newest = [{ publishedAt: 'desc' as const }, { sortRank: 'desc' as const }, { nameEn: 'asc' as const }];
+    if (pick.source === 'manual') {
+      if (!pick.ids.length) return [];
+      const rows = await rowsOf({ where: { ...visible, slug: { in: [...new Set(pick.ids)] } } });
+      const bySlug = new Map((await toCards(storeId, rows)).map((c) => [c.slug, c]));
+      return pick.ids.flatMap((s) => (bySlug.has(s) ? [bySlug.get(s)!] : [])).slice(0, limit);
+    }
+    if (pick.source === 'tag') {
+      if (!pick.tag) return [];
+      const tagged = await getPrisma().productTag.findMany({ where: { storeId, archivedAt: null, tag: { slug: pick.tag, archivedAt: null } }, select: { productId: true } });
+      if (!tagged.length) return [];
+      return toCards(storeId, await rowsOf({ where: { ...visible, id: { in: tagged.map((t) => t.productId) } }, orderBy: newest, take: limit }));
+    }
+    if (pick.source === 'category') {
+      if (!pick.cat) return [];
+      const listings = await getPrisma().categoryProduct.findMany({
+        where: { storeId, isVisible: true, product: live, category: { archivedAt: null, isVisible: true, OR: [{ slug: pick.cat }, { parent: { slug: pick.cat } }] } },
+        orderBy: [{ pinned: 'desc' }, { sortRank: 'desc' }],
+        select: { productId: true },
+      });
+      const ids = [...new Set(listings.map((l) => l.productId))].slice(0, limit);
+      if (!ids.length) return [];
+      const byId = new Map((await toCards(storeId, await rowsOf({ where: { ...visible, id: { in: ids } } }))).map((c) => [c.id, c]));
+      return ids.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
+    }
+    return toCards(storeId, await rowsOf({ where: visible, orderBy: newest, take: limit }));
+  });
+}
