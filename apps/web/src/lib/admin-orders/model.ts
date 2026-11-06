@@ -115,3 +115,16 @@ export const orderHref = (id: string) => `/admin/orders/${id}`;
 
 /** One order's invoice (PR 136; the staff open it with `orders.invoice`, follow-up 180). */
 export const invoiceHref = (number: string) => `/account/orders/${encodeURIComponent(number)}/invoice`;
+
+/** Follow-up 500: the Invoices page's file route (PR 407), which the order page's "Print invoice" uses too. */
+export const INVOICE_PRINT_URL = '/api/admin/invoices/file';
+
+/** Follow-up 500: one order's invoice on paper, on the roll, or as the chat picture — the bodies the file route takes. */
+export function invoicePrints(orderId: string, number: string): { key: 'page' | 'roll' | 'jpg'; body: { orderIds: string[]; layout: 'page' | 'roll'; format: 'pdf' | 'jpg' }; fileName: string }[] {
+  const safe = number.replace(/[^A-Za-z0-9_-]+/g, '-');
+  return [
+    { key: 'page', body: { orderIds: [orderId], layout: 'page', format: 'pdf' }, fileName: `invoice-${safe}.pdf` },
+    { key: 'roll', body: { orderIds: [orderId], layout: 'roll', format: 'pdf' }, fileName: `invoice-${safe}-roll.pdf` },
+    { key: 'jpg', body: { orderIds: [orderId], layout: 'page', format: 'jpg' }, fileName: `invoice-${safe}.jpg` },
+  ];
+}

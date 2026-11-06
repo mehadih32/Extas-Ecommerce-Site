@@ -15,6 +15,8 @@ import { ShellIcon } from '../shell/ShellIcon';
 import { AlertExplain } from './AlertExplain';
 import { ErpOrderPanel } from './ErpOrderPanel';
 import { ArchiveNote, CommandButton, DetailGrid, MoreMenu, NoteForm } from './OrderCommands';
+import { InvoicePrintMenu } from './InvoicePrintMenu';
+import { invoicePrintDict, withInvoice } from '@/lib/admin-invoices/i18n';
 import { Chips } from './OrderTable';
 import { RiskPanel } from './RiskPanel';
 import { SupportExplain } from './SupportExplain';
@@ -57,6 +59,22 @@ function Buttons({ specs, size, open }: { specs: CommandSpec[]; size?: 'sm'; ope
   );
 }
 
+// Follow-up 500: "Print invoice" (paper, roll, picture) with the print button's own words.
+function InvoicePrint({ view, at }: { view: AdminView; at: { orderId: string; number: string } }) {
+  const iv = withInvoice(view);
+  const d = iv.dict;
+  return (
+    <InvoicePrintMenu
+      dict={invoicePrintDict(iv, t(d, 'orders.detail.invoiceOff'))}
+      orderId={at.orderId}
+      number={at.number}
+      label={t(d, 'orders.detail.printInvoice')}
+      labels={{ page: t(d, 'inv.one.page'), roll: t(d, 'inv.one.roll'), jpg: t(d, 'inv.one.jpg') }}
+      busyLabel={t(d, 'inv.printing')}
+    />
+  );
+}
+
 // S16 · PR 348: `extra` — cards the page adds after the money card (the order's profit, for people who may see the books).
 export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminView; o: OrderDetailView; open: string | null; notice?: ReactNode; extra?: ReactNode }) {
   const d = view.dict;
@@ -70,6 +88,7 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
           {t(d, 'orders.detail.invoice')}
         </a>
       ) : null}
+      {o.invoicePrint ? <InvoicePrint view={view} at={o.invoicePrint} /> : null}
       <MoreMenu label={more} specs={o.more} open={open} />
     </>
   );

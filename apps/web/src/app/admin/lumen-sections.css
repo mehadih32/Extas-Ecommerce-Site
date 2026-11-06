@@ -194,6 +194,9 @@
 [data-lm-look] [data-lm-ready] .a2-qi span { font-size: var(--lm-fs-card); color: var(--lm-ink2); }
 /* Orders part 2 (PR 633): the returns board's column heads and the QC check lines at Lumen's 14 px */
 [data-lm-look] [data-lm-ready] :is(.a2-colh, .rt-check, .rt-crumb) { font-size: var(--lm-fs-card); }
+/* follow-up 500: the order page's "Print invoice" menu — paper, roll and picture one under another, each a full tap */
+[data-lm-look] [data-lm-ready] .oi-print { display: flex; flex-direction: column; gap: 4px; min-width: 200px; }
+[data-lm-look] [data-lm-ready] .oi-print .a2-btn { width: 100%; justify-content: flex-start; min-height: var(--lm-tap); }
 /* the invoice preview is paper: a light island in dark mode too, its words in the island's own ink */
 [data-lm-look] [data-lm-ready] .inv-preview { color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] .inv-preview .a2-mute { color: var(--lm-ink2); }

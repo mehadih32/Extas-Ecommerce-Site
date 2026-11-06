@@ -28,7 +28,7 @@ import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { printedAt } from '@/lib/admin-fulfil/handover';
 import { adminDeps } from '@/lib/admin-auth';
-import { withInvoice } from '@/lib/admin-invoices/i18n';
+import { invoicePrintDict, withInvoice } from '@/lib/admin-invoices/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -88,8 +88,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
   const later = Math.max(0, list.counts[current] - batch.length);
   const ids = batch.map((r) => r.orderId);
   // the print button's words, with this page's own refusal for "invoices are off"
-  const ful = d.ful as Dict;
-  const fd: Dict = { ful: { ...ful, err: { ...(ful.err as Dict), INVOICE_OFF: t(d, 'inv.err.INVOICE_OFF') } } };
+  const fd = invoicePrintDict(view);
   const link = (v: od.InvoiceListView) => `${HERE}?view=${v}${q ? `&q=${encodeURIComponent(q)}` : ''}`;
 
   // ---- the settings cards: words and fields from here, values from the API ----
