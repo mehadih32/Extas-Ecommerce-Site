@@ -5,12 +5,19 @@
 // team default" (settings.write). Then where the guide opens on a computer (`admin.guideOpens`: a side panel, a pop-up
 // window or its own page; a phone always uses a full-screen sheet), the team's choice and, while allowed, the person's
 // own. Reading needs settings.read; every change is checked again by PUT /api/admin/look.
+// PR 630 (CN-036): first on the page, the Lumen theme (ThemeChooser): the four looks of ADMIN-LOOKS-V1.html (ঘ Lumen in
+// use, the only one selectable; ক খ গ "Planned" until PR 649–651), light or dark, the accent colour and "Reduce
+// motion", each the person's own (StaffUser.adminPrefs.theme); with settings.write the team's accent and "Reduce
+// motion" (`admin.theme`). The CN-025 page designs A/B/C below stay exactly as built. The page is drawn in Lumen in
+// dark mode too (data-lm-ready); the older CN-025 part below stays a light island (.lm-island) until its own section PR.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { ADMIN_ACCENT_PRESETS, ADMIN_THEME_LOOKS } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { GuideChoice, LookUse, type GuideOption } from '@/components/admin/look/LookPicker';
+import { ThemeChooser } from '@/components/admin/look/ThemeChooser';
 import { LOOK_PAGES } from '@/components/admin/look/registry';
 import { previewHref, wordsIn } from '@/components/admin/look/types';
 import { PageHead, SectionTabs } from '@/components/admin/shell/ShellParts';
@@ -22,12 +29,23 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { shellSession } from '@/lib/admin-shell/session';
-import { t } from '@/lib/i18n';
+import { t, type Dict } from '@/lib/i18n';
+import './look-theme.css';
 
 export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/settings/look';
 const KEY = 'adminLook';
+
+/** The plain words of one dictionary branch (the theme part's labels). */
+function wordsOf(node: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!node || typeof node !== 'object') return out;
+  for (const [k, v] of Object.entries(node)) {
+    if (typeof v === 'string') out[k] = v;
+  }
+  return out;
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = await adminView();
@@ -50,14 +68,25 @@ export default async function AdminLookPage() {
   const guideMine = look.guide.perPerson ? (look.prefs.guide ?? null) : null;
   const guideNow = guideModeOf(look.guide, look.prefs);
   const modes = ['panel', 'popup', 'page'] as const;
+  const teamTheme = canTeam && session.kind === 'ok' ? ((await session.deps.resolver.value('admin.theme', { storeId: MOTHER_STORE_ID }).catch(() => null)) as { accent: string; reduceMotion: boolean } | null) : null;
+  const themeWords = wordsOf(((d.look as Dict) ?? {}).theme);
+  themeWords.failed = failed;
   const teamOptions: GuideOption[] = modes.map((m) => ({ value: m, label: tt(`guide.${m}`) }));
   const mineOptions: GuideOption[] = [{ value: null, label: tt('guide.followTeam') }, ...teamOptions];
 
   return (
-    <div className="a2-z" data-testid="admin-look">
+    <div className="a2-z" data-testid="admin-look" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={tt('title')} sub={tt('sub')} />
       <SectionTabs view={view} current={KEY} />
-      <div className="a3-lookw">
+      <ThemeChooser
+        looks={ADMIN_THEME_LOOKS.map((l) => ({ id: l.id, letter: l.letter, built: l.built, name: tt(`theme.looks.${l.id}.name`), desc: tt(`theme.looks.${l.id}.desc`) }))}
+        now={look.theme}
+        mine={{ accent: look.prefs.theme?.accent ?? null }}
+        team={teamTheme ? { accent: teamTheme.accent, reduceMotion: teamTheme.reduceMotion } : null}
+        swatches={ADMIN_ACCENT_PRESETS.map((p) => ({ id: p.id, hex: p.hex, name: tt(`theme.swatch.${p.id}`) }))}
+        words={themeWords}
+      />
+      <div className="a3-lookw lm-island">
         {LOOK_PAGES.map((pg) => {
           const keys = pg.designs.map((x) => x.key);
           const mine = look.prefs.look[pg.id] ?? null;

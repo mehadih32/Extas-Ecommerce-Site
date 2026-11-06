@@ -26,6 +26,19 @@ export type AdminThemeLookId = (typeof ADMIN_THEME_LOOKS)[number]['id'];
 /** The looks a person or the team may choose now (the parked ones show as "Planned"). */
 export const BUILT_ADMIN_LOOKS = ADMIN_THEME_LOOKS.filter((l) => l.built).map((l) => l.id);
 
+/**
+ * PR 630 (CN-036): the accent colours Settings › Admin look offers as ready swatches (coral first, the shipped one);
+ * any other #RRGGBB can be typed in too. The theme layer keeps text on any accent readable.
+ */
+export const ADMIN_ACCENT_PRESETS = [
+  { id: 'coral', hex: '#FF5A36' },
+  { id: 'teal', hex: '#12B5A6' },
+  { id: 'violet', hex: '#7C5CFF' },
+  { id: 'sky', hex: '#2E9BFF' },
+  { id: 'rose', hex: '#E8456B' },
+  { id: 'green', hex: '#11845A' },
+] as const;
+
 /** A colour as #RRGGBB. */
 export const accentSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 

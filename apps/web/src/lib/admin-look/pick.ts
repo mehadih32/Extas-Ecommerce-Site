@@ -27,6 +27,7 @@ export const themePrefsSchema = z.object({
   look: z.string().regex(/^[a-z]{2,20}$/).optional(),
   mode: z.enum(['light', 'dark']).optional(),
   motion: z.enum(['full', 'reduce']).optional(),
+  accent: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
 });
 
 const prefsSchema = z.object({

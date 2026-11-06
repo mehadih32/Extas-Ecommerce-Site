@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { registry, registryVersion } from '../src/index';
 import { messages } from '../src/messages';
-import { ADMIN_THEME_LOOKS, BUILT_ADMIN_LOOKS, adminThemeSchema, adminThemeSettings } from '../src/registry-admin-theme';
+import { ADMIN_ACCENT_PRESETS, ADMIN_THEME_LOOKS, BUILT_ADMIN_LOOKS, accentSchema, adminThemeSchema, adminThemeSettings } from '../src/registry-admin-theme';
 
 describe('admin theme setting (v234)', () => {
   it('is in the registry at version 234, private, never owner data, with labels in both languages', () => {
@@ -35,5 +35,11 @@ describe('admin theme setting (v234)', () => {
     for (const accent of ['#12B5A6', '#7c5cff']) expect(adminThemeSchema.safeParse({ look: 'lumen', accent, reduceMotion: false }).success).toBe(true);
     for (const accent of ['red', '#FFF', '#12B5A6;x', 'url(x)', '#12B5A699']) expect(adminThemeSchema.safeParse({ look: 'lumen', accent, reduceMotion: true }).success, accent).toBe(false);
     expect(adminThemeSchema.safeParse({ look: 'lumen', accent: '#FF5A36', reduceMotion: false, extra: 1 }).success).toBe(false);
+  });
+
+  it('offers ready accent swatches, coral first (the shipped default), each a valid colour', () => {
+    expect(ADMIN_ACCENT_PRESETS[0]).toEqual({ id: 'coral', hex: adminThemeSettings['admin.theme'].default.accent });
+    expect(new Set(ADMIN_ACCENT_PRESETS.map((p) => p.id)).size).toBe(ADMIN_ACCENT_PRESETS.length);
+    for (const p of ADMIN_ACCENT_PRESETS) expect(accentSchema.safeParse(p.hex).success, p.id).toBe(true);
   });
 });

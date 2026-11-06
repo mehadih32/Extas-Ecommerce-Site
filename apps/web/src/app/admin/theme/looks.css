@@ -1,0 +1,8 @@
+/* PR 630 (CN-036) — the small pictures of the four admin looks on Settings › Admin look (ADMIN-LOOKS-V1.html): each
+   look's page, card, ink and accent colours, so the owner sees what a planned look would be like before it is built
+   (PR 649–651). Only the picture: a planned look draws nothing else. Lumen's picture reads the live tokens, so it
+   shows the person's own accent. */
+.lm-lookpv { --pv-bg: var(--lm-bg); --pv-sf: var(--lm-sf); --pv-ink: var(--lm-ink); --pv-ac: var(--lm-accent); }
+.lm-lookpv[data-look='clear'] { --pv-bg: #f5f5f2; --pv-sf: #ffffff; --pv-ink: #15171c; --pv-ac: #1f4bd8; }
+.lm-lookpv[data-look='night'] { --pv-bg: #10110f; --pv-sf: #191a17; --pv-ink: #f3efe5; --pv-ac: #d9ae52; }
+.lm-lookpv[data-look='studio'] { --pv-bg: #e8edef; --pv-sf: #ffffff; --pv-ink: #0d1b26; --pv-ac: #0b6b73; }

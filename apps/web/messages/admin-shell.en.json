@@ -674,6 +674,58 @@
       "followTeam": "Follow the team",
       "phone": "On a phone the guide always opens as a full-screen sheet.",
       "note": "The choice is saved now. Until the guide’s next step is built it still opens as a side panel."
+    },
+    "theme": {
+      "title": "Admin look",
+      "sub": "How the admin looks to you: the look, light or dark, the accent colour and motion. Buyers never see any of this.",
+      "looksTitle": "Look",
+      "inUse": "In use",
+      "planned": "Planned",
+      "plannedNote": "Not built yet; it is built when the owner asks for it.",
+      "use": "Use this look",
+      "mode": "Light or dark",
+      "light": "Light",
+      "dark": "Dark",
+      "modeNote": "Only for you. The moon button at the top does the same.",
+      "accent": "Accent colour",
+      "accentNote": "Buttons, links and highlights take this colour; text on it is kept readable.",
+      "own": "Another colour",
+      "mine": "Only for you",
+      "followTeam": "Use the team's colour",
+      "teamAccent": "Make it the team's colour",
+      "teamNow": "The team's colour",
+      "motion": "Reduce motion",
+      "motionNote": "Stops the count-ups, the chart drawing in and rows sliding away, only for you. Your device's own setting is always followed too.",
+      "motionTeam": "Reduce motion for everyone",
+      "motionTeamNote": "Off as shipped. Each person can still reduce it for themselves.",
+      "forTeam": "For the whole team",
+      "saved": "Saved.",
+      "looks": {
+        "lumen": {
+          "name": "Lumen",
+          "desc": "Calm, bright and alive: big numbers, soft cards, coral accent. The default."
+        },
+        "clear": {
+          "name": "Clear Day",
+          "desc": "Paper white with a deep blue accent."
+        },
+        "night": {
+          "name": "Night Atelier",
+          "desc": "Dark and warm, with a gold accent."
+        },
+        "studio": {
+          "name": "Studio",
+          "desc": "Cool grey-blue with a teal accent."
+        }
+      },
+      "swatch": {
+        "coral": "Coral",
+        "teal": "Teal",
+        "violet": "Violet",
+        "sky": "Sky",
+        "rose": "Rose",
+        "green": "Green"
+      }
     }
   }
 }

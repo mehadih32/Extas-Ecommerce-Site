@@ -1,7 +1,7 @@
 // PR 625 (CN-036) — the admin theme: the team's look and accent, each person's light or dark and "Reduce motion", the
 // attributes the theme layer reads, and the stored prefs (a broken theme part never loses the rest).
 import { describe, expect, it } from 'vitest';
-import { readPrefs, withGuide, withLook } from './pick';
+import { readPrefs, withGuide, withLook, type LookPrefs } from './pick';
 import { DEFAULT_THEME, themeAttrs, themeOf, themeStyle, withTheme } from './theme';
 
 const BUILT = ['lumen'];
@@ -45,5 +45,18 @@ describe('admin theme (PR 625)', () => {
   it('a broken stored theme is dropped, the rest of the prefs kept', () => {
     expect(readPrefs({ look: { dashboard: 'B' }, theme: { mode: 'sepia' } })).toEqual({ look: { dashboard: 'B' } });
     expect(readPrefs({ theme: 'dark' })).toEqual({ look: {} });
+  });
+});
+
+describe('a person’s own accent (PR 630)', () => {
+  it('wins over the team’s when it is a #RRGGBB colour, and is kept and cleared like the other parts', () => {
+    expect(themeOf(team, { accent: '#7C5CFF' }, BUILT).accent).toBe('#7C5CFF');
+    expect(themeOf(team, { accent: 'red' }, BUILT).accent).toBe('#12B5A6');
+    expect(themeStyle(themeOf(team, { accent: '#7C5CFF' }, BUILT))).toEqual({ '--lm-accent': '#7C5CFF' });
+    const p = withTheme<LookPrefs>({ look: {} }, { accent: '#7C5CFF', mode: 'dark' });
+    expect(p.theme).toEqual({ accent: '#7C5CFF', mode: 'dark' });
+    expect(readPrefs(p).theme).toEqual({ accent: '#7C5CFF', mode: 'dark' });
+    expect(withTheme(p, { accent: null }).theme).toEqual({ mode: 'dark' });
+    expect(readPrefs({ theme: { accent: 'url(x)', mode: 'dark' } })).toEqual({ look: {} });
   });
 });
