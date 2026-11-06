@@ -154,7 +154,7 @@ export default async function RiskRulesPage() {
   const checkNames = fraudChecks.map((p) => t(d, `connections.${p}.name`)).join(', ');
   const count = (x: number) => String(x);
   return (
-    <div className="a2-z" data-testid="risk-rules">
+    <div className="a2-z" data-testid="risk-rules" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'orders.page.riskRules')} sub={t(d, 'orders.rr.sub')} />
       <SectionTabs view={view} current={KEY} />
       <RiskLevels screen={levelsScreen(view, data)} texts={levelsTexts(view)} canEdit={canEdit} />

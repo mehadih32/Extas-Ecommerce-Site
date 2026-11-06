@@ -2,6 +2,8 @@
 // today, to confirm with the oldest's age, waiting for an advance, cancel pending courier), the saved views of the
 // order service with their counts, the search and filters, the table (cards on a phone), and the next page. Everything
 // is read through @extas/orders with the person's own keys (the same checks as the admin API); nothing is a sample.
+// PR 632 (CN-036): in the Lumen look (data-lm-ready, light and dark): the four figures are Lumen summary tiles, the
+// views, filters, table and bulk bar take the Lumen skin (app/admin/lumen-sections.css). Routes, filters and keys unchanged.
 import Link from 'next/link';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { kpi, lastDays } from '@extas/metrics';
@@ -19,6 +21,9 @@ import { RISK_SECTIONS } from '@extas/settings';
 import { t, type Dict } from '@/lib/i18n';
 import { PageHead, SectionTabs } from '../shell/ShellParts';
 import { ShellIcon } from '../shell/ShellIcon';
+import { SummaryTiles, type SummaryTile } from '../lumen/SummaryTiles';
+import type { CountFormat } from '@/lib/admin-lumen/model';
+import type { ShellIconName } from '@/lib/admin-shell/icons';
 import { OrderFilters, type FilterSelect } from './OrderFilters';
 import { OrderTable } from './OrderTable';
 
@@ -44,33 +49,16 @@ async function Kpis({ view, a, counts, now }: { view: AdminView; a: ListAccess; 
     a.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
     counts.toConfirm ? od.viewOldest(deps, a.who, 'toConfirm') : Promise.resolve(null),
   ]);
-  const tile = (id: string, label: string, value: string, note: string, href?: string) => {
-    const body = (
-      <>
-        <div className="a2-kl">{label}</div>
-        <div className="a2-kv">{value}</div>
-        <div className="a2-kf">
-          <span className="a2-kn">{note}</span>
-        </div>
-      </>
-    );
-    return href ? (
-      <Link key={id} className="a2-card a2-kpi" href={href} data-testid={`orders-kpi-${id}`}>
-        {body}
-      </Link>
-    ) : (
-      <div key={id} className="a2-card a2-kpi" data-testid={`orders-kpi-${id}`}>
-        {body}
-      </div>
-    );
-  };
-  const tiles = [
-    today ? tile('today', t(d, 'orders.kpi.today'), n(today.ordered.orders), t(d, 'orders.kpi.todayNote', { v: formatMoney(today.ordered.valueMinor, moneyOf(currency, view.locale)) })) : null,
-    tile('toConfirm', t(d, 'orders.kpi.toConfirm'), n(counts.toConfirm ?? 0), oldest ? t(d, 'orders.kpi.toConfirmOld', { age: ageText(view, oldest, now) }) : t(d, 'orders.kpi.toConfirmNone'), listHref('all', { view: 'toConfirm' })),
-    tile('advance', t(d, 'orders.kpi.advance'), n(counts.awaitingAdvance ?? 0), t(d, 'orders.kpi.advanceNote'), listHref('all', { view: 'awaitingAdvance' })),
-    tile('cancelPending', t(d, 'orders.kpi.cancelPending'), n(counts.cancelPending ?? 0), t(d, 'orders.kpi.cancelPendingNote'), listHref('all', { view: 'cancelPending' })),
-  ].filter(Boolean);
-  return <div className="a2-kpis">{tiles}</div>;
+  // PR 632 (CN-036): the Lumen summary tiles (components/admin/lumen/SummaryTiles.tsx) with the same four figures.
+  const num: CountFormat = { kind: 'number', locale: view.locale };
+  const tile = (key: string, label: string, value: number, vs: string, href?: string, icon?: ShellIconName): SummaryTile => ({ key, label, value, shown: n(value), format: num, vs, href, icon });
+  const tiles: SummaryTile[] = [
+    ...(today ? [tile('today', t(d, 'orders.kpi.today'), today.ordered.orders, t(d, 'orders.kpi.todayNote', { v: formatMoney(today.ordered.valueMinor, moneyOf(currency, view.locale)) }), undefined, 'bag')] : []),
+    tile('toConfirm', t(d, 'orders.kpi.toConfirm'), counts.toConfirm ?? 0, oldest ? t(d, 'orders.kpi.toConfirmOld', { age: ageText(view, oldest, now) }) : t(d, 'orders.kpi.toConfirmNone'), listHref('all', { view: 'toConfirm' }), 'phone'),
+    tile('advance', t(d, 'orders.kpi.advance'), counts.awaitingAdvance ?? 0, t(d, 'orders.kpi.advanceNote'), listHref('all', { view: 'awaitingAdvance' }), 'wallet'),
+    tile('cancelPending', t(d, 'orders.kpi.cancelPending'), counts.cancelPending ?? 0, t(d, 'orders.kpi.cancelPendingNote'), listHref('all', { view: 'cancelPending' }), 'uturn'),
+  ];
+  return <SummaryTiles tiles={tiles} label={t(d, 'orders.page.all')} testId="orders-kpi" />;
 }
 
 /**
@@ -151,7 +139,7 @@ export async function OrderListPage({ view, a, query, now }: { view: AdminView; 
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   const shown = formatNumber(data.rows.length, view.locale);
   return (
-    <div className="a2-z" data-testid="orders-list">
+    <div className="a2-z" data-testid="orders-list" data-lm-ready="">
       <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} />
       <SectionTabs view={view} current="orders" />
       <Kpis view={view} a={a} counts={data.counts} now={now} />

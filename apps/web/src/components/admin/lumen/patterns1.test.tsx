@@ -41,6 +41,9 @@ describe('summary tiles', () => {
     expect(html).toMatch(/lm-dl ok[^]*12\.4%/);
     expect(html).toMatch(/lm-dl bad[^]*50\.0%/);
     expect(html).toContain('<span class="lm-dl flat">—</span>');
+    // PR 632: a count with no period (delta left out) has no change mark at all
+    const plain = renderToStaticMarkup(<SummaryTiles label="x" tiles={[{ key: 'q', label: 'Queue', value: 2, shown: '2', format: num }]} />);
+    expect(plain).not.toContain('lm-dl');
     expect(html).not.toMatch(colour);
   });
 });

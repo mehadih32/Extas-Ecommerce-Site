@@ -99,7 +99,12 @@
     {"pr": 626, "what": "the admin draws in the Lumen look with its theme layer (CN-036, PR 625-626)", "page": "/admin?home=1", "selector": "[data-testid=a2-shell]", "attribute": "data-lm-look", "equals": "lumen"},
     {"pr": 626, "what": "the Lumen top bar carries the bell for the notifications panel, closed until pressed (CN-036)", "page": "/admin?home=1", "selector": "[data-testid=a2-bell]", "attribute": "aria-expanded", "equals": "false"},
     {"pr": 631, "what": "Today opens in the Lumen look (design B) and follows dark mode (CN-036)", "page": "/admin?home=1", "selector": "[data-testid=dash]", "attribute": "data-design", "equals": "B"},
-    {"pr": 631, "what": "Today's design A (the V12.4 Calm overview) still opens as a choice (CN-025, nothing deleted)", "page": "/admin?home=1&design=A", "selector": "[data-testid=dash]", "attribute": "data-design", "equals": "A"}
+    {"pr": 631, "what": "Today's design A (the V12.4 Calm overview) still opens as a choice (CN-025, nothing deleted)", "page": "/admin?home=1&design=A", "selector": "[data-testid=dash]", "attribute": "data-design", "equals": "A"},
+    {"pr": 632, "what": "Orders › All orders draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/orders", "selector": "[data-testid=orders-list][data-lm-ready]", "attribute": "data-testid", "equals": "orders-list"},
+    {"pr": 632, "what": "Orders › Today's queue (To confirm) draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/orders/confirm", "selector": "[data-testid=orders-confirm][data-lm-ready]", "attribute": "data-testid", "equals": "orders-confirm"},
+    {"pr": 632, "what": "Orders › Call list draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/orders/confirm/calls", "selector": "[data-testid=calls-page][data-lm-ready]", "attribute": "data-testid", "equals": "calls-page"},
+    {"pr": 632, "what": "Orders › Incomplete draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/orders/incomplete", "selector": "[data-testid=inc-page][data-lm-ready]", "attribute": "data-testid", "equals": "inc-page"},
+    {"pr": 632, "what": "Orders › Risk rules draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/orders/risk-rules", "selector": "[data-testid=risk-rules][data-lm-ready]", "attribute": "data-testid", "equals": "risk-rules"}
   ],
   "figures": [
     { "pr": 155, "path": "/admin/combos?tab=report", "selectors": ["[data-testid=cb-kpi-ordered]", "[data-testid=cb-kpi-sales]"], "value": "b" },

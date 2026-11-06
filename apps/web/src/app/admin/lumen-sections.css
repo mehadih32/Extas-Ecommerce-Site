@@ -113,3 +113,80 @@
 }
 /* the older V12.4 pieces reused on Today (the change mark, an empty card line): Lumen's 14 px minimum */
 [data-lm-look] .lm-today :is(.a3-dl0, .a3-dl, .a3-empty span, .a3-empty b) { font-size: var(--lm-fs-card); }
+
+/* ---------- the Lumen skin of the older admin parts (PR 632) ----------
+   A section page marked data-lm-ready that still draws with the shell's a2-* parts (header, cards, figures, view
+   chips, tables, buttons, tags, notes, fields, the bulk bar) gets the Lumen shape, type and colours here, in light and
+   dark: cards 22 px with the soft shadow, Bricolage figures, round chips, coral primary buttons, text at least 14 px. */
+[data-lm-look] [data-lm-ready] .a2-ph { margin-bottom: 14px; }
+[data-lm-look] [data-lm-ready] .a2-h1 { font: 800 var(--lm-fs-h1) / 1.15 var(--lm-font-disp); letter-spacing: -0.02em; color: var(--lm-ink); }
+[data-lm-look] [data-lm-ready] :is(.a2-subt, .a2-kl, .a2-sm, .a2-xs, .a2-note, .a2-tab, .a2-view, .a2-tbl, .a2-btn, .a2-inp, .a2-sel, .a2-ta, .a2-lbl, .a2-lnk, .a2-chkl) { font-size: var(--lm-fs-card); }
+[data-lm-look] [data-lm-ready] .a2-subt { color: var(--lm-ink2); margin-top: 6px; }
+[data-lm-look] [data-lm-ready] .a2-card { background: var(--lm-sf); border: 0; border-radius: var(--lm-r-card); box-shadow: var(--lm-sh); }
+[data-lm-look] [data-lm-ready] .a2-h3 { font: 700 1.2rem / 1.3 var(--lm-font-disp); color: var(--lm-ink); }
+[data-lm-look] [data-lm-ready] .a2-h4 { font-family: var(--lm-font-disp); color: var(--lm-ink); }
+[data-lm-look] [data-lm-ready] .a2-kv { font: 800 2rem / 1.1 var(--lm-font-disp); letter-spacing: -0.02em; color: var(--lm-ink); }
+[data-lm-look] [data-lm-ready] .a2-mute { color: var(--lm-ink2); }
+[data-lm-look] [data-lm-ready] .a2-tabs { border-bottom: 0; gap: 4px; padding: 4px; background: var(--lm-sf); border-radius: var(--lm-r-box); box-shadow: var(--lm-sh-sm); width: fit-content; max-width: 100%; }
+[data-lm-look] [data-lm-ready] .a2-tab { border-bottom: 0; margin: 0; border-radius: var(--lm-r-ctl); color: var(--lm-ink2); font-weight: 600; min-height: 40px; }
+[data-lm-look] [data-lm-ready] .a2-tab:hover { background: var(--lm-hover); color: var(--lm-ink); }
+[data-lm-look] [data-lm-ready] .a2-tab[aria-current], [data-lm-look] [data-lm-ready] .a2-tab.on { background: var(--lm-ink); color: var(--lm-sf); }
+[data-lm-look] [data-lm-ready] .a2-tab .a2-cnt { background: var(--lm-chip); color: var(--lm-ink2); }
+[data-lm-look] [data-lm-ready] .a2-view { min-height: 40px; height: auto; padding: 0 16px; border: 0; border-radius: var(--lm-r-pill); background: var(--lm-sf); color: var(--lm-ink2); font-weight: 600; box-shadow: var(--lm-sh-sm); }
+[data-lm-look] [data-lm-ready] .a2-view:hover { background: var(--lm-hover); color: var(--lm-ink); }
+[data-lm-look] [data-lm-ready] .a2-view.on { background: var(--lm-ink); color: var(--lm-sf); }
+[data-lm-look] [data-lm-ready] .a2-view .a2-cnt, [data-lm-look] [data-lm-ready] .a2-cnt { background: transparent; color: inherit; opacity: 0.75; font-weight: 700; }
+[data-lm-look] [data-lm-ready] .a2-btn { min-height: 40px; height: auto; border-radius: var(--lm-r-ctl); border-color: var(--lm-ln); background: var(--lm-sf); color: var(--lm-ink); box-shadow: var(--lm-sh-sm); }
+[data-lm-look] [data-lm-ready] .a2-btn:hover { background: var(--lm-hover); border-color: var(--lm-ln); }
+[data-lm-look] [data-lm-ready] .a2-btn.pri { background: var(--lm-pri); border-color: var(--lm-pri-line); color: var(--lm-on-ac); box-shadow: var(--lm-pri-sh); }
+[data-lm-look] [data-lm-ready] .a2-btn.pri:hover { filter: brightness(1.05); }
+[data-lm-look] [data-lm-ready] .a2-pill { font-size: var(--lm-fs-card); padding: 2px 10px; border-radius: var(--lm-r-pill); background: var(--lm-chip); color: var(--lm-ink2); }
+[data-lm-look] [data-lm-ready] .a2-pill:is(.ok, .good) { background: var(--lm-okbg); color: var(--lm-ok); }
+[data-lm-look] [data-lm-ready] .a2-pill:is(.warn, .gold) { background: var(--lm-warnbg); color: var(--lm-warn); }
+[data-lm-look] [data-lm-ready] .a2-pill.bad { background: var(--lm-badbg); color: var(--lm-bad); }
+[data-lm-look] [data-lm-ready] .a2-pill.info { background: var(--lm-infobg); color: var(--lm-info); }
+[data-lm-look] [data-lm-ready] .a2-note { border-radius: var(--lm-r-ctl); background: var(--lm-sf2); color: var(--lm-ink2); }
+[data-lm-look] [data-lm-ready] :is(.a2-inp, .a2-sel, .a2-ta) { min-height: 40px; border-radius: var(--lm-r-ctl); border-color: var(--lm-ln); background: var(--lm-inp); color: var(--lm-ink); }
+[data-lm-look] [data-lm-ready] .a2-tblw { border-radius: var(--lm-r-card); }
+[data-lm-look] [data-lm-ready] .a2-tbl th { color: var(--lm-ink2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: var(--lm-fs-card); background: var(--lm-sf2); }
+[data-lm-look] [data-lm-ready] .a2-tbl td { border-color: var(--lm-ln); }
+[data-lm-look] [data-lm-ready] .a2-tbl tbody tr:hover td { background: var(--lm-hover); }
+[data-lm-look] [data-lm-ready] .a2-bulk { border-radius: var(--lm-r-box); background: var(--lm-hero); color: var(--lm-on-hero); }
+[data-lm-look] [data-lm-ready] .a2-bulk b { color: var(--lm-on-hero); }
+[data-lm-look] [data-lm-ready] .a2-state { background: var(--lm-sf); border-radius: var(--lm-r-card); box-shadow: var(--lm-sh); border: 0; }
+[data-lm-look] [data-lm-ready] .a2-state .a2-sti { background: var(--lm-chip); color: var(--lm-ink2); }
+@media (max-width: 759px), (pointer: coarse) {
+  [data-lm-look] [data-lm-ready] :is(.a2-btn, .a2-view, .a2-tab, .a2-inp, .a2-sel) { min-height: var(--lm-tap); }
+  [data-lm-look] [data-lm-ready] :is(.a2-inp, .a2-sel, .a2-ta) { font-size: 16px; }
+  [data-lm-look] [data-lm-ready] :is(.lm-back, .dg-link) { display: inline-flex; align-items: center; gap: 6px; min-height: var(--lm-tap); }
+  /* an order line with its 14 px tag wraps under the name on a small phone instead of pushing the page wide */
+  [data-lm-look] [data-lm-ready] .a2-prow { flex-wrap: wrap; }
+  [data-lm-look] [data-lm-ready] .a2-prt { flex-basis: 50%; }
+}
+/* the shell's smaller pieces on a ready page: Lumen's 14 px minimum (counts, card hints, figures' notes, order lines,
+   the names under the order numbers, the tab links) and the links in the accent ink that keeps AA in dark too */
+[data-lm-look] [data-lm-ready] :is(.a2-cnt, .a2-scd, .a2-kn, .a2-cs, .a2-pru, .a2-prs, .a2-prt b, .a2-prt span, .a2-cell span, .fr-day, .a2-nowrap, .a2-seg a, .a2-seg button, .a2-h4, .a2-mono, .a2-pill, .a2-btn.sm, .a2-trend, .a2-help, .a2-kv2, .a2-tblf, .a2-bulk .a2-bskip, .a2-eff, .a2-lock, .a2-tli b, .a2-tli span, .a2-tli p, .a2-tot, .a2-rule, .a2-onote p, .a2-hist span, .a2-swl, .a2-state p, .a2-band, .a2-legend, .a2-fresh, .a2-kf .a2-kn, .a2-tkt b, .a2-tkt span, .a2-tkl, .a2-probs, .a2-pg, .a2-pi span, .a2-ms, .a2-sm, .a2-xs) { font-size: var(--lm-fs-card); }
+[data-lm-look] [data-lm-ready] .a2-lnk { color: var(--lm-ac-ink); }
+/* the shell's fixed light colours (segmented sub-tabs, bands, team notes, the call card's warning bands, soft chips):
+   tokens on a ready page so dark mode reads them */
+[data-lm-look] [data-lm-ready] .a2-seg { background: var(--lm-chip); }
+[data-lm-look] [data-lm-ready] .a2-seg :is(a, button).on { background: var(--lm-sf); color: var(--lm-ink); box-shadow: var(--lm-sh-sm); }
+[data-lm-look] [data-lm-ready] :is(.a2-band.mock, .a2-band.partial, .a2-band.stale) { background: var(--lm-warnbg); color: var(--lm-warn); border-color: var(--lm-ln); }
+[data-lm-look] [data-lm-ready] .a2-band.locked { background: var(--lm-infobg); color: var(--lm-info); }
+[data-lm-look] [data-lm-ready] .a2-band.off { background: var(--lm-chip); color: var(--lm-ink2); }
+[data-lm-look] [data-lm-ready] .a2-band.bad { background: var(--lm-badbg); color: var(--lm-bad); }
+[data-lm-look] [data-lm-ready] .a2-onote { background: var(--lm-warnbg); border-color: var(--lm-ln); color: var(--lm-ink); }
+[data-lm-look] [data-lm-ready] .a2-callband.bad { background: var(--lm-badbg); border-color: var(--lm-ln); }
+[data-lm-look] [data-lm-ready] .a2-callband.stale { background: var(--lm-warnbg); border-color: var(--lm-ln); }
+[data-lm-look] [data-lm-ready] :is(.a2-trend.flat, .a2-ms.estimated, .a2-tki.mute, .a2-tkl) { background: var(--lm-chip); color: var(--lm-ink2); }
+/* the shell keeps desktop fields at 13.5 px with two ids and !important; a ready page lifts them to 14 px */
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  [data-lm-look] [data-lm-ready] :is(.a2-inp, .a2-sel, .a2-ta):not(#a2z):not(#a2z) { font-size: var(--lm-fs-card) !important; }
+}
+/* the call queue's rows (Today's queue): the Lumen queue row, the chosen one in the accent tint */
+[data-lm-look] [data-lm-ready] .a2-q { gap: 8px; }
+[data-lm-look] [data-lm-ready] .a2-qi { border: 0; border-radius: var(--lm-r-box); background: var(--lm-sf); box-shadow: var(--lm-sh-sm); padding: 12px 14px; min-height: var(--lm-tap); }
+[data-lm-look] [data-lm-ready] .a2-qi:hover { background: var(--lm-hover); }
+[data-lm-look] [data-lm-ready] .a2-qi.on { background: var(--lm-acbg); box-shadow: inset 0 0 0 2px var(--lm-ac-ink); }
+[data-lm-look] [data-lm-ready] .a2-qi b { font-size: var(--lm-fs-card); font-weight: 700; color: var(--lm-ink); }
+[data-lm-look] [data-lm-ready] .a2-qi span { font-size: var(--lm-fs-card); color: var(--lm-ink2); }

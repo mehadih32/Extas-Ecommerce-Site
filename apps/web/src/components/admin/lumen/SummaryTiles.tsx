@@ -17,7 +17,8 @@ export interface SummaryTile {
   /** The final figure as written (৳1,23,456 / 1,234). */
   shown: string;
   format: CountFormat;
-  /** Change against the period before as a fraction (null: nothing to compare). */
+  /** Change against the period before as a fraction (null: nothing to compare, drawn "—"; left out: a count with no
+   *  period, no change mark at all — PR 632). */
   delta?: number | null;
   /** The change as written ("12.4%"); the sign is drawn as ▲/▼. */
   deltaText?: string;
@@ -54,7 +55,7 @@ export function SummaryTiles({ tiles, label, testId = 'lm-tiles' }: { tiles: rea
             </span>
             <CountUp className="lm-tile-n" value={tl.value} shown={tl.shown} format={tl.format} />
             <span className="lm-tile-f">
-              <Delta x={tl.delta} text={tl.deltaText} good={tl.good} vs={tl.vs} />
+              {tl.delta !== undefined ? <Delta x={tl.delta} text={tl.deltaText} good={tl.good} vs={tl.vs} /> : null}
               {tl.vs ? (
                 <small className="lm-tile-vs" aria-hidden="true">
                   {tl.vs}

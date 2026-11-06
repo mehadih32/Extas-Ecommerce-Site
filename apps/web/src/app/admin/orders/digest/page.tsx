@@ -149,7 +149,7 @@ export default async function OrdersDigestPage({ searchParams }: { searchParams:
   );
 
   return (
-    <div className="a2-z" data-testid="digest-page">
+    <div className="a2-z" data-testid="digest-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={w('title')} sub={w('sub')} />
       <SectionTabs view={view} current={KEY} />
 

@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from 'react';
 import { newKey, refundRequestsOf, send } from '@/lib/admin-orders/commands';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec, type CommandTexts, type FieldSpec } from '@/lib/admin-orders/spec';
+import { showToast } from '../lumen/Toast';
 import { ShellIcon } from '../shell/ShellIcon';
 
 interface Ctx {
@@ -17,30 +18,14 @@ interface Ctx {
 }
 const CommandsContext = createContext<Ctx | null>(null);
 
-const TOAST_MS = 3600;
-
-/** The page's dialog words and its one message line ("Confirmed", "Reloaded …"), read out by screen readers. */
+/**
+ * The page's dialog words and its one message line ("Confirmed", "Reloaded …"). PR 632 (CN-036, follow-up 670): the line
+ * is the admin's one toast (components/admin/lumen/Toast.tsx, read out by screen readers), no longer a toast of its own;
+ * an order command has no Undo here (its own reverse command, where one exists, stays a button on the order).
+ */
 export function CommandsProvider({ texts, children }: { texts: CommandTexts; children: ReactNode }) {
-  const [toast, setToast] = useState('');
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(timer.current), []);
-  const say = useCallback((text: string) => {
-    clearTimeout(timer.current);
-    setToast(text);
-    timer.current = setTimeout(() => setToast(''), TOAST_MS);
-  }, []);
-  return (
-    <CommandsContext.Provider value={{ texts, say }}>
-      {children}
-      <div className="a2-toast-slot" role="status" aria-live="polite">
-        {toast ? (
-          <div className="a2-toast" data-testid="orders-toast">
-            {toast}
-          </div>
-        ) : null}
-      </div>
-    </CommandsContext.Provider>
-  );
+  const say = useCallback((text: string) => showToast({ text }), []);
+  return <CommandsContext.Provider value={{ texts, say }}>{children}</CommandsContext.Provider>;
 }
 
 function useCommands(): Ctx {

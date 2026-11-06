@@ -86,7 +86,7 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
     </span>
   );
   const crumb = (
-    <Link href="/admin/orders" className="a2-lnk">
+    <Link href="/admin/orders" className="a2-lnk lm-back">
       <ShellIcon name="cl" size={14} />
       {t(d, 'orders.page.all')}
     </Link>
@@ -244,7 +244,7 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
   );
 
   return (
-    <div className="a2-z" data-testid="order-detail" data-order={o.number}>
+    <div className="a2-z" data-testid="order-detail" data-order={o.number} data-lm-ready="">
       <PageHead view={view} place={locateKey('order')} title={title} sub={sub} right={right} crumb={crumb} />
       {notice}
       {o.bands.map((b) => (
