@@ -221,6 +221,33 @@ describe.skipIf(!HAS_TEST_DB)('the deep conversion feed on PostgreSQL (PR 532)',
     await set('ads.conversionFeed', { enrich: { courier: true, intent: true } });
   });
 
+  it('PR 532 follow-up (661): a returned parcel withdraws the purchase GA4 already took, only while allowed', async () => {
+    const gaOf = (eventId: string) =>
+      mockAdOutbox
+        .all()
+        .filter((m) => m.platform === 'google')
+        .flatMap((m) => m.payload as { events: { name: string; params: Record<string, unknown> }[] }[])
+        .find((g) => g.events[0]!.params.event_id === eventId)?.events[0];
+    const took = async (o: { number: string }) => t.prisma.trackedEvent.update({ where: { storeId_eventId: { storeId: S, eventId: `purchase-${o.number}` } }, data: { deliveries: { google: { state: 'mock', attempts: 1 } } } });
+    // off as it ships: the return goes as its own event
+    const a = await order({ steps: [{ to: 'HANDED_OVER', hoursAgo: 20 }, { to: 'RETURNED', hoursAgo: 2 }] });
+    await took(a);
+    mockAdOutbox.clear();
+    await recordFeedSteps(deps, S);
+    expect(gaOf(`returned-${a.number}`)).toMatchObject({ name: 'order_returned' });
+    // on: GA4 (it took the order's purchase) gets its refund with the same order number; Meta keeps the return
+    await set('ads.conversionFeed', { withdrawOnReturn: true });
+    const b = await order({ steps: [{ to: 'HANDED_OVER', hoursAgo: 20 }, { to: 'RETURNED', hoursAgo: 2 }] });
+    const c = await order({ steps: [{ to: 'HANDED_OVER', hoursAgo: 20 }, { to: 'RETURNED', hoursAgo: 2 }] });
+    await took(b); // c's purchase never reached GA4: nothing to take back there
+    mockAdOutbox.clear();
+    await recordFeedSteps(deps, S);
+    expect(gaOf(`returned-${b.number}`)).toMatchObject({ name: 'refund', params: { transaction_id: b.number, value: 2400 } });
+    expect(gaOf(`returned-${c.number}`)).toMatchObject({ name: 'order_returned' });
+    expect(sentTo('meta').find((d) => d.event_id === `returned-${b.number}`)).toMatchObject({ event_name: 'OrderReturned' });
+    await set('ads.conversionFeed', { withdrawOnReturn: false });
+  });
+
   it('enrichment switched off: the events go plain', async () => {
     await set('ads.conversionFeed', { enrich: { courier: false, intent: false } });
     const o = await order({ steps: [{ to: 'DELIVERED', hoursAgo: 1 }] });

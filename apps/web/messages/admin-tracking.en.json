@@ -167,7 +167,9 @@
       "enrich_courier": "The courier outcome (what happened, the courier, the days, the payment kind)",
       "enrich_intent": "The visitor's intent (channel, campaign, ad click, returning customer, products seen, bag adds, checkouts)",
       "days": "Days of visits counted for the intent",
-      "daysHelp": "The products seen, bag adds and checkouts of the same visitor or customer in these days before the order."
+      "daysHelp": "The products seen, bag adds and checkouts of the same visitor or customer in these days before the order.",
+      "withdraw": "A returned parcel takes the purchase back",
+      "withdrawHelp": "Off: a parcel that came back goes as its own “returned” event everywhere. On: where the platform can take a purchase back (Google Analytics’ refund, the same order number), a returned parcel withdraws the purchase it already counted; Meta and TikTok cannot, so there it stays the returned event. Only what the ad platforms are told changes; no money moves."
     }
   }
 }

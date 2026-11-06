@@ -16,14 +16,14 @@
 //   outcome and the visitor's intent while the feed enriches (feed-extras.ts). Never personal data in either.
 import { randomUUID } from 'node:crypto';
 import { after } from 'next/server';
-import { AD_PLATFORM_CONNECTION, adEventAdapters, createConnections, type AdEventSender, type AdPlatform, type AdUser, type Connections } from '@extas/adapters';
+import { AD_PLATFORM_CONNECTION, AD_WITHDRAWS, adEventAdapters, createConnections, type AdEventSender, type AdPlatform, type AdUser, type Connections } from '@extas/adapters';
 import { Prisma, type PrismaClient } from '@extas/db/client';
 import { tickedPlatforms, type ConversionFeedSettings, type TrackingSettings } from '@extas/settings';
 import type { Vault } from '@extas/vault';
 import { adminDeps } from '../admin-auth';
 import type { AppResolver } from '../settings';
 import { extraFor, feedExtras, storedParts, type Extra, type ExtraParts } from './feed-extras';
-import { afterSend, generousOn, hashEmail, hashId, hashPhone, isFeedStep, isOrderStep, records, recordsFeed, recordsStep, stillWaiting, toAdEvent, valueOf, waitingFor, withoutContact, EVENT_ID, type AnyTrackingEvent, type Deliveries, type StoredItem } from './model';
+import { adNameOf, afterSend, generousOn, hashEmail, hashId, hashPhone, isFeedStep, isOrderStep, records, recordsFeed, recordsStep, stillWaiting, toAdEvent, valueOf, waitingFor, withoutContact, EVENT_ID, type AnyTrackingEvent, type Deliveries, type StoredItem } from './model';
 
 export interface TrackingDeps {
   db: PrismaClient;
@@ -229,6 +229,22 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
       console.warn(`tracking: the feed's enrichment failed (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     }
   }
+  // PR 532 follow-up (661): a parcel that came back withdraws the purchase a platform already took for its order, on a
+  // platform that can (GA4's refund) and only while the owner allows it (`withdrawOnReturn`); elsewhere it stays the
+  // returned event. "Took": that platform has the order's event that went under its purchase name, sent or practised.
+  const backIds = [...new Set(mine.filter((r) => r.name === 'returned' && r.orderId && !r.test && feedOf.get(r.storeId)?.withdrawOnReturn).map((r) => r.orderId!))];
+  const bought = backIds.length
+    ? await deps.db.trackedEvent.findMany({ where: { orderId: { in: backIds }, test: false, name: { in: ['purchase', 'delivered', 'qualified'] } }, select: { storeId: true, orderId: true, name: true, deliveries: true } })
+    : [];
+  const withdraws = (r: (typeof rows)[number], platform: AdPlatform): boolean =>
+    r.name === 'returned' &&
+    AD_WITHDRAWS[platform] &&
+    backIds.includes(r.orderId ?? '') &&
+    bought.some((b) => {
+      if (b.orderId !== r.orderId || b.storeId !== r.storeId) return false;
+      const d = ((b.deliveries ?? {}) as Deliveries)[platform];
+      return (d?.state === 'sent' || d?.state === 'mock') && adNameOf(b.name, meansOf.get(b.storeId) ?? 'placed', generousOf.get(b.storeId)?.has(platform)) === 'purchase';
+    });
   const conns = await connectionsOf(deps);
   const next = new Map(mine.map((r) => [r.id, { ...((r.deliveries ?? {}) as Deliveries) }]));
   const now = nowOf(deps);
@@ -246,7 +262,7 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
           const link = await conns.use<AdEventSender>(AD_PLATFORM_CONNECTION[platform].kind, { storeId: sid, provider: AD_PLATFORM_CONNECTION[platform].provider });
           tally.mode = link.mode;
           const r = await link.api.send(
-            group.map((g) => toAdEvent(g, g.orderId ? (numbers.get(g.orderId) ?? null) : null, meansOf.get(g.storeId) ?? 'placed', { generous: generousOf.get(g.storeId)?.has(platform), extra: extras.get(g.id) })),
+            group.map((g) => toAdEvent(g, g.orderId ? (numbers.get(g.orderId) ?? null) : null, meansOf.get(g.storeId) ?? 'placed', { generous: generousOf.get(g.storeId)?.has(platform), extra: extras.get(g.id), withdraw: withdraws(g, platform) })),
             { test },
           );
           result = r.ok ? { ok: true, mode: link.mode } : { ok: false, error: r.error };
