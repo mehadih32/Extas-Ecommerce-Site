@@ -305,6 +305,8 @@
       "/admin/marketing/landing",
       "/admin/marketing/landing/new",
       "/admin/marketing/landing/templates",
+      "/admin/marketing/landing/seasonal",
+      "/admin/marketing/landing/seasonal/new",
       "/admin/marketing/campaigns",
       "/admin/marketing/campaigns/new",
       "/admin/marketing/audiences",

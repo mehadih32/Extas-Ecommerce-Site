@@ -75,6 +75,8 @@
     { "id": "marketing/landing", "route": "/admin/marketing/landing" },
     { "id": "marketing/landing-builder", "route": "/admin/marketing/landing/[id]" },
     { "id": "marketing/landing-templates", "route": "/admin/marketing/landing/templates" },
+    { "id": "marketing/seasonal", "route": "/admin/marketing/landing/seasonal" },
+    { "id": "marketing/seasonal-editor", "route": "/admin/marketing/landing/seasonal/[id]" },
     { "id": "marketing/campaigns", "route": "/admin/marketing/campaigns" },
     { "id": "marketing/campaign", "route": "/admin/marketing/campaigns/[id]" },
     { "id": "marketing/audiences", "route": "/admin/marketing/audiences" },

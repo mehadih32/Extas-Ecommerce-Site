@@ -1,0 +1,15 @@
+{
+  "seasonal": {
+    "orderBy": "Order in time",
+    "timer": "Ends in",
+    "products": "Shop the collection",
+    "productsNone": "The collection is being restocked. Have a look at what is new meanwhile.",
+    "reasons": "Why it works",
+    "articles": "Guides for the season",
+    "readMore": "Read the guide",
+    "restingTitle": "{name} is coming back",
+    "restingLine": "This page returns for {occasion}. Until then, have a look at what is new.",
+    "seeNew": "See what is new",
+    "home": "Back to the shop"
+  }
+}

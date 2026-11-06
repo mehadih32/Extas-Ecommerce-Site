@@ -116,6 +116,7 @@ import { adsBriefSettings } from './registry-ads-brief';
 import { couponDistributionSettings } from './registry-coupons-distribution';
 import { referralSettings } from './registry-referrals';
 import { aiDraftSettings, approvalSettings, briefSettings, clusterSettings, journalSettings, scheduleSettings } from './registry-journal';
+import { seasonalSettings } from './registry-seasonal';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { incompleteSettings } from './registry-incomplete';
@@ -1427,6 +1428,8 @@ export const registry = {
   ...briefSettings,
   ...aiDraftSettings,
   ...scheduleSettings,
+  // ---- S12 · CN-031 lane A · PR 246 · seasonal landing pages (registry-seasonal.ts, version 228). ----
+  ...seasonalSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

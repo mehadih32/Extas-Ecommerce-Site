@@ -35,6 +35,9 @@ import ctplEn from '../../../messages/shop-ctpl.en.json';
 // S13 · PR 254 — the landing page's words (/l/<slug>).
 import landingBn from '../../../messages/shop-landing.bn.json';
 import landingEn from '../../../messages/shop-landing.en.json';
+// S12 · PR 246 — the seasonal pages' words (/collections/<slug>).
+import seasonalBn from '../../../messages/shop-seasonal.bn.json';
+import seasonalEn from '../../../messages/shop-seasonal.en.json';
 import paylinkBn from '../../../messages/shop-paylink.bn.json';
 import paylinkEn from '../../../messages/shop-paylink.en.json';
 import reachBn from '../../../messages/shop-reach.bn.json';
@@ -52,8 +55,8 @@ function withMore(base: Dict, more: Dict): Dict {
 }
 
 export const SHOP_DICTS: Record<ShopLang, Dict> = {
-  en: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(en, moreEn), searchEn), fuEn), finderEn), accountEn), comboEn), buildEn), bulkEn), ctplEn), paylinkEn), reachEn), landingEn), journalEn),
-  bn: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(bn, moreBn), searchBn), fuBn), finderBn), accountBn), comboBn), buildBn), bulkBn), ctplBn), paylinkBn), reachBn), landingBn), journalBn),
+  en: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(en, moreEn), searchEn), fuEn), finderEn), accountEn), comboEn), buildEn), bulkEn), ctplEn), paylinkEn), reachEn), landingEn), journalEn), seasonalEn),
+  bn: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(bn, moreBn), searchBn), fuBn), finderBn), accountBn), comboBn), buildBn), bulkBn), ctplBn), paylinkBn), reachBn), landingBn), journalBn), seasonalBn),
 };
 
 export type LabelOverrides = Record<string, { en?: string; bn?: string }>;

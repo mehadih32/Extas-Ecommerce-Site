@@ -1,0 +1,24 @@
+/* S12 · PR 246 — the seasonal page /collections/<slug> (Eid, winter, Puja): one column, the products in the shop's own
+   grid; tokens only; tap targets 44px. */
+.sn-wrap{padding:14px 0 8px}
+.sn-hero{margin-bottom:24px}
+.sn-occ{display:inline-block;margin:10px 0 0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sn-title{font-size:30px;line-height:1.15;margin:6px 0 8px;font-family:var(--font-display);overflow-wrap:anywhere}
+.sn-offer{font-size:16px;font-weight:600;margin:0 0 8px}
+.sn-intro{font-size:15px;line-height:1.55;color:var(--ink);max-width:68ch;margin:0}
+.sn-s{margin-bottom:34px;min-width:0}
+.sn-cut{padding:14px 16px}
+.sn-cut .h3{margin:0 0 6px}
+.sn-cl{margin:4px 0 0;font-size:14px}
+.sn-none{font-size:14px;color:var(--muted)}
+.sn-lnk{display:inline-flex;align-items:center;min-height:44px;color:var(--ink);text-decoration:underline}
+.sn-ben,.sn-posts{display:grid;gap:10px;list-style:none;margin:0;padding:0}
+.sn-ben>li{padding:16px;font-size:14px;color:var(--ink)}
+.sn-post{padding:0}
+.sn-pl{display:grid;gap:6px;padding:16px;min-height:44px;color:var(--ink);text-decoration:none}
+.sn-ex{font-size:14px;color:var(--muted)}
+.sn-more{font-size:13px;text-decoration:underline}
+.sn-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.sn-btn{min-height:48px;display:inline-flex;align-items:center;justify-content:center}
+@media(min-width:768px){.sn-ben,.sn-posts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px){.sn-wrap{padding:28px 0 24px}.sn-title{font-size:42px}.sn-s{margin-bottom:52px}}

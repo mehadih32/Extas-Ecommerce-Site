@@ -11,6 +11,8 @@
 - [ল্যান্ডিং পেজ](landing.md) — বিজ্ঞাপনের পেজ, প্রতিটা পেজ থেকে অর্ডার, মূল সুইচ (`/admin/marketing/landing`)
 - [ল্যান্ডিং পেজ বানানো](landing-builder.md) — শিরোনাম, প্রোডাক্ট, লিংক, অংশ, পাবলিশ (`/admin/marketing/landing/<id>`)
 - [ল্যান্ডিং পেজের টেমপ্লেট](landing-templates.md) — তৈরি আর নিজের টেমপ্লেট, অংশের তালিকা (`/admin/marketing/landing/templates`)
+- [উৎসবের পেজ](seasonal.md) — ঈদ, শীত, পূজার স্থায়ী পেজ, প্রতি বছর আবার লাইভ; সেটিং কার্ড (`/admin/marketing/landing/seasonal`)
+- [উৎসবের পেজ বানানো](seasonal-editor.md) — শিরোনাম, উৎসব, লিংক, অংশ, কালেকশন, গাইড; লাইভ, বন্ধ, আর্কাইভ (`/admin/marketing/landing/seasonal/<id>`)
 - [ক্যাম্পেইন](campaigns.md) — প্রতিটা প্রচার, তার সময়, পরিকল্পিত বাজেট আর পেজ থেকে অর্ডার (`/admin/marketing/campaigns`)
 - [একটা ক্যাম্পেইন](campaign.md) — অডিয়েন্স, অফার, বিজ্ঞাপনের লেখা, সময়, বাজেট আর ধাপ (`/admin/marketing/campaigns/<id>`)
 - [অডিয়েন্স](audiences.md) — আসল অর্ডার থেকে বানানো দল, কতজন আর কোন ক্যাম্পেইনে (`/admin/marketing/audiences`)

@@ -19,6 +19,8 @@
 // optional, off as shipped).
 // S11 · PR 231: "More collections" under the page — its sub-collections or sisters, then the other main collections,
 // as plain links (lib/seo/internal-links, `seo.internalLinks`, off as shipped).
+// S12 · PR 246: a link no category answers at may be a seasonal page's (components/shop/seasonal/SeasonalPage,
+// `marketing.seasonal`, off as shipped): the page while it is live, its resting page once it was live and is down.
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
@@ -27,6 +29,7 @@ import { CardDeskMount } from '@/components/shop/CardDeskMount';
 import { CatFaq, CatSeoText } from '@/components/shop/category/CatInfo';
 import { CatListing, type ListingRow } from '@/components/shop/category/CatListing';
 import { CatResting } from '@/components/shop/category/CatResting';
+import { SeasonalPage } from '@/components/shop/seasonal/SeasonalPage';
 import { JsonLd } from '@/components/shop/JsonLd';
 import { categoryData, productName, type ShopCard } from '@/lib/shop/catalogue';
 import { isRefined, paragraphs, parseState, placeSoldOut, queryOf, type CatState, type SearchParams } from '@/lib/shop/category-model';
@@ -37,13 +40,15 @@ import { categoryDraftTexts } from '@/lib/seo/page-texts';
 import { restingCategory } from '@/lib/seo/url-policy';
 import { filterPageListed, filterPagePath, filterPageStyles, namedFilterPage, singleFilter } from '@/lib/seo/filter-pages';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
+import { getPrisma } from '@extas/db/client';
+import { servedSeasonal } from '@/lib/marketing/seasonal';
 import { ROUTES } from '@/lib/shop/routes';
 import { categoryName, requirementsMet } from '@/lib/shop/shell-model';
 import { relatedCollections } from '@/lib/seo/internal-links';
 import { breadcrumbLd, faqLd, itemListLd, type LdCrumb, type LdQuestion } from '@/lib/shop/structured-data';
 import './category.css';
 
-const KEYS = ['category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages', 'seo.internalLinks'] as const;
+const KEYS = ['marketing.seasonal', 'category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages', 'seo.internalLinks'] as const;
 
 /** The "New in" page's own link name, from the routing table (`/collections/new-in`). */
 const NEW_IN = ROUTES.newIn.split('/').pop()!;
@@ -67,6 +72,16 @@ async function page(props: Props) {
   return { c, slug, set, state, data, defaultSort: sorts[0]! };
 }
 
+/** PR 246: the seasonal page at this link (switch on; live, or resting once it was live), else null. */
+const seasonalFor = cache(async (storeId: number, slug: string, set: Awaited<ReturnType<typeof settingsFor>>['marketing.seasonal']) => {
+  if (!set.enabled || !process.env.DATABASE_URL) return null;
+  try {
+    return await servedSeasonal(getPrisma(), storeId, slug, set);
+  } catch {
+    return null;
+  }
+});
+
 /** PR 527: the collection's resting page when it has none of its own (switch on, a past on the shop), else null. */
 const restingFor = cache(async (storeId: number, slug: string, on: boolean) => (on ? restingCategory(storeId, slug) : null));
 
@@ -77,6 +92,8 @@ function titleOf(c: ShopContext, data: NonNullable<Awaited<ReturnType<typeof pag
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { c, slug, set, state, data, defaultSort } = await page(props);
   if (!data) {
+    const sea = await seasonalFor(c.storeId, slug, set['marketing.seasonal']);
+    if (sea) return shopMetadata(c, `collections/${slug}`, (c.lang === 'bn' && sea.page.titleBn) || sea.page.titleEn, { index: sea.serve === 'live' || set['seo.urlPolicy'].retiredIndexed });
     const rest = await restingFor(c.storeId, slug, set['seo.urlPolicy'].retiredCategoryPage);
     return rest ? shopMetadata(c, `collections/${slug}`, categoryName(rest, c.lang), { index: set['seo.urlPolicy'].retiredIndexed }) : {};
   }
@@ -114,6 +131,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function CategoryPage(props: Props) {
   const [{ c, slug, set, state: asked, data, defaultSort }, sp] = await Promise.all([page(props), props.searchParams]);
   if (!data) {
+    const sea = await seasonalFor(c.storeId, slug, set['marketing.seasonal']);
+    if (sea) return <SeasonalPage c={c} served={sea} set={set['marketing.seasonal']} />;
     const rest = await restingFor(c.storeId, slug, set['seo.urlPolicy'].retiredCategoryPage);
     if (!rest) notFound();
     return <CatResting c={c} cat={rest} max={set['seo.urlPolicy'].alternativesMax} />;
