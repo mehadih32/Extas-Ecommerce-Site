@@ -431,6 +431,11 @@
      "date": "19 Oct",
      "source": "Scope added to existing PRs (round 15, no new PR numbers)",
      "text": "**Home hero buttons** — labels, links, style and on/off of each button are dashboard settings (page builder, S02)."
+    },
+    {
+     "date": "",
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-036; new PR 625–653)",
+     "text": "**S12, S13 and the other open stages** — Updated 6 Nov 2026, 14:55 (CN-036 update): the order is the Lumen foundation and S02 in parallel → S12 → S13 → the other open stages by the priority list of `docs/LAUNCH-TRACK.md`; ~~S15 → S25 → S24 after S13~~ (closed)."
     }
    ],
    "page": "docs/stages/S02.md",
@@ -986,7 +991,13 @@
     592,
     593
    ],
-   "notes": [],
+   "notes": [
+    {
+     "date": "",
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-036; new PR 625–653)",
+     "text": "**S12, S13 and the other open stages** — Updated 6 Nov 2026, 14:55 (CN-036 update): the order is the Lumen foundation and S02 in parallel → S12 → S13 → the other open stages by the priority list of `docs/LAUNCH-TRACK.md`; ~~S15 → S25 → S24 after S13~~ (closed)."
+    }
+   ],
    "page": "docs/stages/S12.md",
    "registerAnchor": "s12--content--blog--pr-239253"
   },
@@ -1047,7 +1058,13 @@
     569,
     589
    ],
-   "notes": [],
+   "notes": [
+    {
+     "date": "",
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-036; new PR 625–653)",
+     "text": "**S12, S13 and the other open stages** — Updated 6 Nov 2026, 14:55 (CN-036 update): the order is the Lumen foundation and S02 in parallel → S12 → S13 → the other open stages by the priority list of `docs/LAUNCH-TRACK.md`; ~~S15 → S25 → S24 after S13~~ (closed)."
+    }
+   ],
    "page": "docs/stages/S13.md",
    "registerAnchor": "s13--marketing--ads--pr-254283"
   },
@@ -1119,9 +1136,9 @@
    "range": "304–341, 506, 577–585",
    "total": 48,
    "done": 0,
-   "state": "Not started",
+   "state": "Closed",
    "parked": false,
-   "registerStatus": "locked",
+   "registerStatus": "locked; Closed (owner, 6 Nov; CN-036) — built parts stay, half-built parts hidden by PR 652",
    "intro": "Every AI switch, schedule, cap and report lives here, whatever stage the engine itself sits in.",
    "bn": {
     "name": "AI কন্ট্রোল রুম",
@@ -1182,7 +1199,13 @@
     584,
     585
    ],
-   "notes": [],
+   "notes": [
+    {
+     "date": "",
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-036; new PR 625–653)",
+     "text": "**S12, S13 and the other open stages** — Updated 6 Nov 2026, 14:55 (CN-036 update): the order is the Lumen foundation and S02 in parallel → S12 → S13 → the other open stages by the priority list of `docs/LAUNCH-TRACK.md`; ~~S15 → S25 → S24 after S13~~ (closed)."
+    }
+   ],
    "page": "docs/stages/S15.md",
    "registerAnchor": "s15--ai-360-control-room--pr-304341"
   },
@@ -1252,9 +1275,9 @@
    "range": "356–377, 511–512",
    "total": 24,
    "done": 1,
-   "state": "In progress",
+   "state": "Closed",
    "parked": false,
-   "registerStatus": "settings open",
+   "registerStatus": "settings open; Closed (owner, 6 Nov; CN-036) — built parts stay, half-built parts hidden by PR 652",
    "intro": "",
    "bn": {
     "name": "একাধিক দোকান",
@@ -1524,9 +1547,9 @@
    "range": "437–443",
    "total": 7,
    "done": 0,
-   "state": "Not started",
+   "state": "Closed",
    "parked": false,
-   "registerStatus": "locked",
+   "registerStatus": "locked; Closed (owner, 6 Nov; CN-036) — built parts stay, half-built parts hidden by PR 652",
    "intro": "",
    "bn": {
     "name": "সোশ্যাল আর কনটেন্ট স্টুডিও",
@@ -1556,9 +1579,9 @@
    "range": "444–480, 539",
    "total": 38,
    "done": 0,
-   "state": "Not started",
+   "state": "Closed",
    "parked": false,
-   "registerStatus": "locked",
+   "registerStatus": "locked; Closed (owner, 6 Nov; CN-036) — built parts stay, half-built parts hidden by PR 652",
    "intro": "",
    "bn": {
     "name": "ভার্চুয়াল ফটোশুট স্টুডিও",
@@ -1608,7 +1631,13 @@
     480,
     539
    ],
-   "notes": [],
+   "notes": [
+    {
+     "date": "",
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-036; new PR 625–653)",
+     "text": "**S12, S13 and the other open stages** — Updated 6 Nov 2026, 14:55 (CN-036 update): the order is the Lumen foundation and S02 in parallel → S12 → S13 → the other open stages by the priority list of `docs/LAUNCH-TRACK.md`; ~~S15 → S25 → S24 after S13~~ (closed)."
+    }
+   ],
    "page": "docs/stages/S24.md",
    "registerAnchor": "the-stage-table"
   },
@@ -1619,9 +1648,9 @@
    "range": "481–490",
    "total": 10,
    "done": 0,
-   "state": "Not started",
+   "state": "Closed",
    "parked": false,
-   "registerStatus": "locked",
+   "registerStatus": "locked; Closed (owner, 6 Nov; CN-036) — built parts stay, half-built parts hidden by PR 652",
    "intro": "",
    "bn": {
     "name": "ভিডিও আর ক্যাম্পেইন ক্রিয়েটিভ",
@@ -1643,7 +1672,13 @@
     489,
     490
    ],
-   "notes": [],
+   "notes": [
+    {
+     "date": "",
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-036; new PR 625–653)",
+     "text": "**S12, S13 and the other open stages** — Updated 6 Nov 2026, 14:55 (CN-036 update): the order is the Lumen foundation and S02 in parallel → S12 → S13 → the other open stages by the priority list of `docs/LAUNCH-TRACK.md`; ~~S15 → S25 → S24 after S13~~ (closed)."
+    }
+   ],
    "page": "docs/stages/S25.md",
    "registerAnchor": "the-stage-table"
   },
@@ -1656,7 +1691,7 @@
    "done": 0,
    "state": "Parked",
    "parked": true,
-   "registerStatus": "parked — handover pack",
+   "registerStatus": "parked — handover pack; Closed (owner, 6 Nov; CN-036)",
    "intro": "",
    "bn": {
     "name": "ইনস্টলেশন, ডকুমেন্টেশন আর বিতরণ",
@@ -1687,7 +1722,7 @@
    "done": 0,
    "state": "Parked",
    "parked": true,
-   "registerStatus": "parked — handover pack; numbered when approved",
+   "registerStatus": "parked — handover pack; numbered when approved; Closed (owner, 6 Nov; CN-036)",
    "intro": "",
    "bn": {
     "name": "ERP ছাড়া স্টক মডিউল",
@@ -4807,7 +4842,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-036; new PR 625–653)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
+     "text": "**PR 646 (Lumen section: AI Center)** — Updated 6 Nov 2026, 14:55 (CN-036 update): built into the shell, hidden by PR 652's switch while S15 is closed."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "শিগগির — এখনো বানানো হয়নি। “ভিত্তি — কোড, সেটিংস আর লগইন” ধাপের অংশ: সব কাজের গোড়া: কোডের কাঠামো, ডাটাবেসের নকশা, সেটিংস, চাবির লকার আর অ্যাডমিন লগইন।",
@@ -28498,6 +28541,13 @@
      "source": "Scope added to existing PRs (owner server spec, CN-001; review/SERVER-SETUP-SPEC-OWNER.md; new PR 601–604)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
      "text": "**PR 362 (per-store domain, certificate and Cloudflare routing)** — Cloudflare in front of all three domains: static files (images, CSS, JS, fonts) cached long with hashed names; category and product pages a few minutes (duration in settings); cart, checkout, account and admin never cached; instant purge on price, stock, setting or new product (PR 602); Brotli and gzip, HTTP/3, free SSL, bot and DDoS protection; Full (strict) with an Origin certificate (PR 7); keys in the vault (PR 493)."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-036; new PR 625–653)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
+     "text": "**S15, S17, S23, S24, S25, S26, S27** — Updated 6 Nov 2026, 14:55 (CN-036 update): closed until the owner says so; built parts stay (S17 · PR 362); every half-built part is hidden from the admin menu, sitemap, search and robots by PR 652's switch, off as shipped; with S15 closed the AI Center section and the round assistant button are not shown. Work in flight on a closed stage stops at a clean point and is listed in `PROGRESS.md` under \"Parked\" (none on 6 Nov)."
     }
    ],
    "mentions": [
@@ -31253,7 +31303,7 @@
    "title": "Closed stages hidden by a switch (CN-036; 6 Nov 2026)",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**Closed stages hidden by a switch** (CN-036; S19; Lane C, before go-live). Every half-built part of the closed stages S17 (multi-store) and S23 (social studio), and any S12 part not yet finished, is hidden from the admin menu, the sitemap, the site search and robots by a switch, off (hidden) as shipped. Built parts stay (nothing deleted); a stage's switch is turned on when the stage is finished. A test proves no hidden page is in the sitemap, the search or a menu.",
+   "scope": "**Closed stages hidden by a switch** (CN-036; S19; Lane C, before go-live). Every half-built part of the closed stages S17 (multi-store) and S23 (social studio), and any S12 part not yet finished, is hidden from the admin menu, the sitemap, the site search and robots by a switch, off (hidden) as shipped. Built parts stay (nothing deleted); a stage's switch is turned on when the stage is finished. A test proves no hidden page is in the sitemap, the search or a menu. ·",
    "scopeRewritten": false,
    "filedUnder": "CN-036 additions — the admin look Lumen and two go-live items (6 Nov 2026)",
    "registerAnchor": "cn-036-additions--the-admin-look-lumen-and-two-go-live-items-6-nov-2026",
@@ -31272,9 +31322,23 @@
     {
      "date": "",
      "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#cn-036-additions--the-admin-look-lumen-and-two-go-live-items-6-nov-2026",
+     "text": "**Updated 6 Nov 2026, 14:55 (CN-036 update):** the closed stages are S15, S17, S23, S24, S25, S26 and S27; S12 is open and is not hidden."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
      "source": "Scope added to existing PRs, 6 Nov 2026 (CN-036; new PR 625–653)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
      "text": "**S17, S23, S26, S27** — Updated 6 Nov 2026 (CN-036): closed until the owner says so; built parts stay, half-built parts hidden by PR 652's switch."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 6 Nov 2026 (CN-036; new PR 625–653)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
+     "text": "**S15, S17, S23, S24, S25, S26, S27** — Updated 6 Nov 2026, 14:55 (CN-036 update): closed until the owner says so; built parts stay (S17 · PR 362); every half-built part is hidden from the admin menu, sitemap, search and robots by PR 652's switch, off as shipped; with S15 closed the AI Center section and the round assistant button are not shown. Work in flight on a closed stage stops at a clean point and is listed in `PROGRESS.md` under \"Parked\" (none on 6 Nov)."
     }
    ],
    "mentions": [],

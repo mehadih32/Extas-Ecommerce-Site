@@ -1165,6 +1165,10 @@ to read code or open GitHub.
 > **(7) Reporting.** After each PR: `PROGRESS.md` and the register row; after each lane step a short Bengali report in `docs/reports/` and in chat, then carry on. Done means it works on new.extas.com.bd in a real browser at phone and desktop widths, as admin, in light and dark; staging always runs the newest merged look.
 >
 > **(8) Where it is written.** The register rows of "CN-036 additions" (625–653; 649–651 in the parking lot); the stage table (S00 43 active plus 649–651, S19 19) and "How this reached 653"; dated lines on PR 12, 233, 235, 378, 401, 414, 494 and 587; Blueprint (this note, E0–E3, Appendix A); `docs/LAUNCH-TRACK.md` (Launch rows, the CN-036 order and lanes); the totals in README.md and `docs/README.md`.
+>
+> **Update · 6 Nov 2026, 14:55 Dhaka (owner, build thread; replaces the stage order of (3) and (5)).** The register has grown to 653 PRs, so the scope is cut. **To be finished:** the admin look jobs (625–648 and every new design PR filed for it), S02 storefront, S12 blog, S13 marketing, and every other open stage not on the closed list. **Order:** the Lumen foundation (625–630) and S02 in parallel → S12 → S13 → the other open stages by the priority list of `docs/LAUNCH-TRACK.md`. **Closed until the owner says so:** S15 AI control room, S17 multi-store, S23 social studio, S24 virtual photoshoot, S25 video campaign, S26 and S27 handover pack. Built parts of a closed stage stay (nothing deleted); every half-built part is hidden from the admin menu, sitemap, search and robots by PR 652's switch (`stages.closedShown`, one per closed stage, off as shipped), so with S15 closed the AI Center section and the round assistant button are not shown (PR 646 builds the AI Center in Lumen, hidden while S15 is closed). Work on a closed stage already in flight stops at a clean point (finished only when nearly done, otherwise set aside with its branch kept) and is listed in `PROGRESS.md` under "Parked"; none was in flight on 6 Nov. New admin pages in S12, S13 and later stages are built in Lumen from the start, using the shared patterns. Go-live is unchanged.
+>
+> **Recount (6 Nov 2026, before batch 11).** 653 PRs: 644 active, 9 parked (S26 and 649–651; S27 unnumbered). **Closed stages: 127 active PRs** (S15 48, S17 24, S23 7, S24 38, S25 10), 1 of them built (S17 · PR 362, the launch slice, kept) and **126 closed, not to be built** until the owner says so. **Open stages: 517 active PRs, 465 built, 52 still to build** (S00 24 — the Lumen PRs 625–648; S02 13; S12 9; S13 3; S19 3 — 652, 653 and PR 587, the switch on the owner's "go live"). The Progress line keeps counting every active PR; the line under it counts open and closed. Written in: the stage table (closed stages marked "Closed (owner, 6 Nov)"), the dated lines below, README (status dashboard, the 28-stage table and the feature headings), `docs/LAUNCH-TRACK.md` (order and counts), `PROGRESS.md` ("Parked") and Blueprint (this note, the E0 stage table).
 
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.
@@ -2371,19 +2375,19 @@ next free number but is built inside its stage (PR 491 is built at S00 time). Th
 | S12 | Content & blog | 22 | 239–253, 528–530, 547, 591–593 | 14 | **answered 18 Oct** | Doot (+ 5 authors) |
 | S13 | Marketing & ads | 35 | 254–283, 531–532, 548, 569, 589 | 30 | **answered 18 Oct** | Doot; paid ads Tirondaj |
 | S14 | CRM & customers | 24 | 284–303, 505, 533–535 | 23 | locked | Doot |
-| S15 | AI 360 Control Room | 48 | 304–341, 506, 577–585 | 34 | locked | Gyani |
+| S15 | AI 360 Control Room | 48 | 304–341, 506, 577–585 | 34 | locked; **Closed (owner, 6 Nov; CN-036)** | Gyani |
 | S16 | Finance, costs & reports | 22 | 342–355, 504, 536–537, 568, 615–618 | 14 | **answered 18 Oct** | Gyani |
-| S17 | Multi-store | 24 | 356–377, 511–512 | 22 | settings open | Prohori |
+| S17 | Multi-store | 24 | 356–377, 511–512 | 22 | settings open; **Closed (owner, 6 Nov; CN-036)** | Prohori |
 | S18 | Compliance, security, manual | 15 | 378–390, 620, 623 | 12 | settings open; **623 filed 1 Nov** | Prohori |
 | S19 | Deploy, backup, go-live | 19 | 391–403, 507, 587, 619, 621, 652–653 | 14 | locked; **652–653 (CN-036, 6 Nov 2026)** | Prohori |
 | S20 | Fulfilment & documents | 9 | 404–412 | 7 | locked | Bhandari |
 | S21 | Site Health & Audit | 14 | 413–424, 570, 594 | 10 | locked | Prohori |
 | S22 | Support (all-in-one) | 14 | 425–436, 538, 624 | 12 | locked; **624 filed 1 Nov** | Gyani |
-| S23 | Social & content studio | 7 | 437–443 | 9 | locked | Doot |
-| S24 | Virtual Photoshoot Studio | 38 | 444–480, 539 | 37 | locked | Gyani |
-| S25 | Video & Campaign Creative Studio | 10 | 481–490 | 10 | locked | Gyani |
-| S26 | Installation, documentation & distribution | 6 | 513–518 | — | **parked** — handover pack | — (parked) |
-| S27 | No-ERP stock module | parked | — | — | **parked** — handover pack; numbered when approved | — (parked) |
+| S23 | Social & content studio | 7 | 437–443 | 9 | locked; **Closed (owner, 6 Nov; CN-036)** | Doot |
+| S24 | Virtual Photoshoot Studio | 38 | 444–480, 539 | 37 | locked; **Closed (owner, 6 Nov; CN-036)** | Gyani |
+| S25 | Video & Campaign Creative Studio | 10 | 481–490 | 10 | locked; **Closed (owner, 6 Nov; CN-036)** | Gyani |
+| S26 | Installation, documentation & distribution | 6 | 513–518 | — | **parked** — handover pack; **Closed (owner, 6 Nov; CN-036)** | — (parked) |
+| S27 | No-ERP stock module | parked | — | — | **parked** — handover pack; numbered when approved; **Closed (owner, 6 Nov; CN-036)** | — (parked) |
 | | **Total** | **653** | | **473** | 644 active · 9 parked (S26 and PR 649–651) | |
 
 Shilpi (A360-05) owns the design layer of every customer-facing surface and reviews what Sawdagor builds;
