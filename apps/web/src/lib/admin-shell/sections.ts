@@ -323,6 +323,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/website/blog/comments', perm: 'blog.read', keys: ['blogComments'] },
           // S12 · PR 252 — the shared calendar: articles beside plans, campaigns and cut-offs (social while S23 is shown).
           { href: '/admin/website/blog/shared', perm: 'blog.read', keys: ['blogShared'] },
+          // S12 · PR 253 — what articles sold: the products bought after reading each article (its own or besides).
+          { href: '/admin/website/blog/sold', perm: 'blog.read', keys: ['blogSold'] },
         ],
       },
     ],

@@ -599,6 +599,46 @@
       "emptyText": "Articles with a day, campaigns, plans and cut-offs come here.",
       "noteSocial": "The social studio reads this same calendar: its posts are here beside the articles. Read-only — open an item to change it.",
       "noteClosed": "Social posts come here too once the social studio is opened. Read-only — open an item to change it."
+    },
+    "sd": {
+      "meta": "What articles sold",
+      "title": "What articles sold",
+      "sub": "The products bought after reading each article: from its own product block, or besides.",
+      "periodLabel": "Period",
+      "days": "{n} days",
+      "span": "{from} – {to} · {days} days · {tz}",
+      "off": "Counting is off, so nothing is counted here yet. Turn on \"Count readers and orders\" on the Performance page.",
+      "openPerf": "Open Performance",
+      "tiles": "Articles and products",
+      "tArticles": "Articles that sold",
+      "tProducts": "Different products",
+      "tBlock": "From the article's own products",
+      "list": "By article",
+      "all": "All",
+      "chipBlock": "Sold its own products",
+      "chipBesides": "Other products too",
+      "search": "Search articles or products",
+      "empty": "No sales from articles yet",
+      "emptyText": "Orders placed after reading an article come here, with their products.",
+      "notLive": "not live",
+      "nProducts": "{n} products",
+      "ordered": "{n} ordered",
+      "delivered": "{n} delivered",
+      "sales": "Sales {v}",
+      "detailSub": "{from} – {to}",
+      "noProduct": "(a line without a product)",
+      "inBlock": "in the article",
+      "besides": "bought besides",
+      "openArticle": "Open the article",
+      "col": {
+        "product": "Product",
+        "ordered": "Ordered",
+        "delivered": "Delivered",
+        "sales": "Sales"
+      },
+      "noteLast": "Each order goes to the last article read before it, so the articles' rows can be added up.",
+      "noteEvery": "Each order goes to every article read before it: an order can be under several articles, so do not add the rows up.",
+      "noMoney": "Amounts are shown only with the reports permission; here, pieces only."
     }
   }
 }

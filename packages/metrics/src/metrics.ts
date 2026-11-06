@@ -113,6 +113,51 @@ export async function kpiFromArticles(db: Db, storeId: number, period: Period): 
   return { sales: sales!.get('') ?? { ...NO_ORDERS }, ordered: ordered!.get('') ?? { ...NO_ORDERS } };
 }
 
+/** S12 · PR 253 — one article's sold product on one basis: the pieces, the lines' value and the orders they came in. */
+export interface ArticleLineFigure {
+  pieces: number;
+  valueMinor: number;
+  orders: number;
+}
+export interface ArticleProductRow {
+  postId: string;
+  /** null = a line without a product (a set's own line, a removed product). */
+  productId: string | null;
+  ordered: ArticleLineFigure;
+  sales: ArticleLineFigure;
+}
+const NO_LINES: ArticleLineFigure = { pieces: 0, valueMinor: 0, orders: 0 };
+
+/**
+ * S12 · PR 253 — what the articles actually sold: for each article and product, the counted order lines of the orders
+ * that read the article (BlogOrderRead), on both bases — Ordered value (placed in the period) and Sales (delivered in the
+ * period, delivered orders only), with the same line rule as `lines`. With `credit: 'every'` a line is under each article
+ * its order read, so rows of different articles are not added up.
+ */
+export async function linesByArticle(db: Db, storeId: number, period: Period): Promise<ArticleProductRow[]> {
+  type Row = { postId: string; productId: string | null; pieces: bigint | number; value: bigint | number; orders: bigint | number };
+  const read = (basis: Basis) => db.$queryRaw<Row[]>`
+    SELECT r."postId"::text AS "postId", oi."productId"::text AS "productId",
+           COALESCE(sum(oi."quantity"), 0)::bigint AS "pieces", COALESCE(sum(oi."lineTotalMinor"), 0)::bigint AS "value",
+           count(DISTINCT o."id")::bigint AS "orders"
+    FROM "OrderItem" oi
+    JOIN "Order" o ON o."id" = oi."orderId"
+    JOIN "BlogOrderRead" r ON r."orderId" = o."id" AND r."storeId" = o."storeId"
+    WHERE ${basisWhere(basis, storeId, period)} AND oi."storeId" = ${storeId} AND oi."status"::text = ${COUNTED_LINE_STATUS}
+    GROUP BY 1, 2`;
+  const [ordered, sales] = await Promise.all(BASES.map((b) => read(b)));
+  const out = new Map<string, ArticleProductRow>();
+  for (const [basis, rows] of [['ordered', ordered!], ['sales', sales!]] as const) {
+    for (const r of rows) {
+      const k = `${r.postId}|${r.productId ?? ''}`;
+      const row = out.get(k) ?? { postId: r.postId, productId: r.productId, ordered: { ...NO_LINES }, sales: { ...NO_LINES } };
+      row[basis] = { pieces: Number(r.pieces), valueMinor: Number(r.value), orders: Number(r.orders) };
+      out.set(k, row);
+    }
+  }
+  return [...out.values()].sort((a, b) => a.postId.localeCompare(b.postId) || (a.productId ?? '').localeCompare(b.productId ?? ''));
+}
+
 /** By payment method ('' = none recorded). */
 export function kpiByPaymentMethod(db: Db, storeId: number, period: Period): Promise<KpiRow[]> {
   return breakdown(db, storeId, period, () => Prisma.sql`COALESCE(o."paymentMethod"::text, '')`);
