@@ -60,6 +60,9 @@ const KEYS = [
   'home.sections',
   // S02 · PR 595: the owner's own sections (Website › Page layouts)
   'layout.blocks',
+  // S02 · PR 596: the side canvas (off as shipped) and its zones
+  'layout.sideCanvas',
+  'layout.sideZones',
   'home.hero',
   'home.heroSlides',
   'home.categories',

@@ -1,0 +1,37 @@
+/* S02 · PR 596 — Website › Side canvas in the Lumen look (--lm-* tokens only, light and dark): the master switch card,
+   the zone list and form, and the approval map (the page at 1440 and 1920 px, scaled to the card, every zone where it
+   would sit). Every control at the Lumen tap size (44px). */
+[data-lm-look] .scx-page, [data-lm-look] .scx { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+[data-lm-look] .scx-note { margin: 0; }
+[data-lm-look] .scx-card { display: flex; flex-direction: column; gap: 10px; }
+[data-lm-look] .scx-card > h2 { font: 700 1.15rem/1.3 var(--lm-font-disp); color: var(--lm-ink); margin: 0; }
+[data-lm-look] .scx-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+[data-lm-look] .scx-li { display: grid; gap: 8px; min-width: 0; }
+[data-lm-look] .scx-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 12px; border-radius: var(--lm-r-box); background: var(--lm-sf2); box-shadow: inset 0 0 0 1px var(--lm-ln); min-width: 0; }
+[data-lm-look] .scx-row.off .scx-name b { color: var(--lm-ink2); }
+[data-lm-look] .scx-name { display: grid; gap: 2px; flex: 1 1 220px; min-width: 0; overflow-wrap: anywhere; color: var(--lm-ink); }
+[data-lm-look] .scx-acts, [data-lm-look] .scx-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+[data-lm-look] .scx-acts .lm-btn.sm { min-height: var(--lm-tap); }
+[data-lm-look] .scx-tag { display: inline-block; padding: 1px 8px; border-radius: var(--lm-r-pill); background: var(--lm-chip); color: var(--lm-ink); font-weight: 700; }
+[data-lm-look] .scx-tag.st-live { background: var(--lm-okbg); color: var(--lm-ok); }
+[data-lm-look] .scx-tag.st-soon { background: var(--lm-infobg); color: var(--lm-info); }
+[data-lm-look] .scx-tag.st-ended { background: var(--lm-warnbg); color: var(--lm-warn); }
+[data-lm-look] .scx-form { display: flex; flex-direction: column; gap: 14px; box-shadow: inset 0 0 0 1px var(--lm-ln); }
+[data-lm-look] .scx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; min-width: 0; }
+[data-lm-look] .scx-words { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 8px; grid-column: 1 / -1; min-width: 0; }
+[data-lm-look] .scx-words > legend { font-size: var(--lm-fs-card); font-weight: 700; color: var(--lm-ink); padding: 0; margin-bottom: 6px; }
+[data-lm-look] .scx-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 4px 12px; }
+[data-lm-look] .scx-cat { display: flex; align-items: center; gap: 10px; min-height: var(--lm-tap); color: var(--lm-ink); cursor: pointer; }
+[data-lm-look] .scx-cat input { width: 20px; height: 20px; flex: none; accent-color: var(--lm-brand); }
+[data-lm-look] .scx-maps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+[data-lm-look] .scx-fig { margin: 0; display: grid; gap: 6px; min-width: 0; }
+[data-lm-look] .scx-pg { position: relative; width: 100%; overflow: hidden; border-radius: var(--lm-r-box); background: var(--lm-bg); box-shadow: inset 0 0 0 1px var(--lm-ln); }
+[data-lm-look] .scx-head { position: absolute; top: 0; left: 0; right: 0; background: var(--lm-chip); }
+[data-lm-look] .scx-content { position: absolute; bottom: 0; background: var(--lm-sf2); box-shadow: inset 0 0 0 1px var(--lm-ln); }
+[data-lm-look] .scx-zone { position: absolute; display: grid; place-items: center; border-radius: var(--lm-r-sm); background: var(--lm-acbg); box-shadow: inset 0 0 0 2px var(--lm-ac); color: var(--lm-ink); font-size: 0.62rem; font-weight: 700; text-align: center; overflow: hidden; }
+[data-lm-look] .scx-zone span { padding: 2px; overflow-wrap: anywhere; }
+[data-lm-look] .scx-out { color: var(--lm-warn); }
+[data-lm-look] .scx-save { position: sticky; bottom: 0; display: grid; gap: 6px; padding: 10px 0 4px; background: var(--lm-bg); z-index: 2; }
+@media (max-width: 759px) {
+  [data-lm-look] .scx-save { bottom: calc(var(--lm-tap) + 24px); }
+}

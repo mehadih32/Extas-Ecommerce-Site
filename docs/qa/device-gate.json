@@ -327,6 +327,7 @@
       "/admin/website/blog/sold",
       "/admin/website/eye-toggles",
       "/admin/website/eye-toggles?show=hidden&where=product",
+      "/admin/website/side-canvas",
       "/admin/reports/experiments",
       "/admin/reports/experiments?show=archived",
       "/admin/reports/experiments/new",

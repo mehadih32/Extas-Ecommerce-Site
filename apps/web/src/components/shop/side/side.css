@@ -1,0 +1,13 @@
+/* S02 · PR 596 — the side canvas: zones start hidden (display: none, so their lazy pictures never load) and show only
+   where the fitter placed them (data-fit). A card zone sits on a white card; a full zone straight on the page
+   background, no frame. Transform and opacity only; nothing on a phone or a tablet. */
+.shop .sc-zone { display: none; position: fixed; z-index: 5; color: var(--ink); text-decoration: none; overflow: hidden; transition: opacity 0.25s ease; }
+.shop .sc-zone[data-fit] { display: flex; flex-direction: column; gap: 6px; }
+.shop .sc-zone[data-off] { opacity: 0; pointer-events: none; }
+.shop .sc-card { background: var(--surface); border-radius: var(--card-radius); box-shadow: 0 0 0 1px var(--line); padding: 8px; }
+.shop .sc-full { background: transparent; }
+.shop .sc-zone .pimg, .shop .sc-img { flex: 1 1 auto; min-height: 0; width: 100%; object-fit: cover; border-radius: var(--radius); }
+.shop .sc-full .pimg { background: transparent; }
+.shop .sc-line { font-size: 0.8rem; font-weight: 600; text-align: center; overflow-wrap: anywhere; }
+.shop .sc-teaser { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; height: 100%; padding: 8px; text-align: center; font-weight: 700; background: var(--brand); color: var(--brand-ink); border-radius: var(--card-radius); overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .shop .sc-zone { transition: none; } }

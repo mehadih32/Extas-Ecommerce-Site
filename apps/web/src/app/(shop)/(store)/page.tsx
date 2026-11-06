@@ -41,6 +41,8 @@ import { heroSlidePicks, type HeroPick } from '@/lib/shop/home-model';
 import { shownSections } from '@/lib/shop/layouts';
 import { blockContent, blocksOf, pageItems } from '@/lib/shop/blocks';
 import { PageBlock } from '@/components/shop/blocks/PageBlock';
+import { SideCanvas } from '@/components/shop/side/SideCanvas';
+import { sideItems } from '@/lib/shop/side-canvas';
 import { JsonLd } from '@/components/shop/JsonLd';
 import { shopLd } from '@/lib/seo/shop-ld';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
@@ -81,13 +83,15 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
     .catch(() => []);
   // PR 595: the owner's own sections live today (`layout.blocks`), placed among the page's own, and what they show
   const items = pageItems('home', c.s['home.sections'], blocksOf(c.s['layout.blocks'], 'home'), c.today);
-  const [slides, leads, cards, reviews, flash, got] = await Promise.all([
+  const [slides, leads, cards, reviews, flash, got, side] = await Promise.all([
     want('hero') ? heroPicks(c) : Promise.resolve([]),
     want('categories') ? categoryLeads(c.storeId, c.cats.map((k) => k.slug)) : Promise.resolve({}),
     want('new-in') ? newestCards(c.storeId, newIn.count, newIn.order) : Promise.resolve([]),
     want('reviews') ? homeReviews(c.storeId, rev.count, rev.minRating) : Promise.resolve({ reviews: [], average: 0, total: 0 }),
     want('flash-sale') ? homeFlash(c, search) : Promise.resolve(null),
     blockContent(c, items),
+    // PR 596: the side canvas's zones for the home page (none while it is off, as shipped)
+    sideItems(c, 'home', null),
   ]);
   const ld = <JsonLd data={await ldBlocks} />;
   const draw: Partial<Record<HomeSectionId, () => ReactNode>> = {
@@ -119,6 +123,7 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
     <>
       {(want('new-in') && cards.length) || flash ? <CardDeskMount c={c} /> : null}
       <AddedSlot c={c} added={search.added} closeHref={closeHrefOf(hrefIn(c.lang, '/'), search)} />
+      <SideCanvas c={c} items={side} set={c.s['layout.sideCanvas']} />
     </>
   );
   // H9 · the sliding rows fade at both edges unless the owner switched it off

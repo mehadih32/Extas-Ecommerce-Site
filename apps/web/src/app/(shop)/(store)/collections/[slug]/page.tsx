@@ -51,6 +51,8 @@ import { breadcrumbLd, faqLd, itemListLd, type LdCrumb, type LdQuestion } from '
 import { LayoutPart } from '@/components/shop/LayoutPart';
 import { blockContent, blocksOf, categoryRows, pageItems } from '@/lib/shop/blocks';
 import { PageBlock } from '@/components/shop/blocks/PageBlock';
+import { SideCanvas } from '@/components/shop/side/SideCanvas';
+import { sideItems } from '@/lib/shop/side-canvas';
 import type { CategorySectionId } from '@extas/settings';
 import './category.css';
 
@@ -288,7 +290,8 @@ export default async function CategoryPage(props: Props) {
   // ~~shownSections('category', set['layout.category'])~~ PR 595: this category's own order while it has one, with the
   // owner's sections for every category page and for this one in between, on their days and screens
   const items = pageItems('category', categoryRows(set['layout.categoryOwn'], slug, set['layout.category']), blocksOf(set['layout.blocks'], 'category', slug), c.today);
-  const got = await blockContent(c, items);
+  // PR 596: the side canvas's zones for this category page (none while it is off, as shipped)
+  const [got, side] = await Promise.all([blockContent(c, items), sideItems(c, 'category', slug)]);
   return (
     <div className="container">
       {items.map((it) =>
@@ -305,6 +308,7 @@ export default async function CategoryPage(props: Props) {
       {/* follow-up 21: the cards' back view and Quick add (computer with a mouse), and the panel it opens */}
       <CardDeskMount c={c} />
       <AddedSlot c={c} added={sp.added} closeHref={closeHrefOf(basePath, sp)} />
+      <SideCanvas c={c} items={side} set={c.s['layout.sideCanvas']} />
     </div>
   );
 }

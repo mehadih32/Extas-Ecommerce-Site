@@ -1024,5 +1024,8 @@
     "button": "Unsubscribe from offer e-mails",
     "done": "Done. You will get no more offer e-mails from us. E-mails about your orders still come.",
     "unknown": "We could not find this e-mail. If you want no more offer e-mails, write to us and we stop them."
+  },
+  "side": {
+    "label": "Offers beside the page"
   }
 }

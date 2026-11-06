@@ -109,7 +109,8 @@
       "cat": "Category pages",
       "bag": "Bag",
       "chat": "Chat",
-      "emailUnsub": "Unsubscribe from e-mails"
+      "emailUnsub": "Unsubscribe from e-mails",
+      "side": "Side canvas"
     },
     "fe": {
       "h": "Edit on the shop page",
