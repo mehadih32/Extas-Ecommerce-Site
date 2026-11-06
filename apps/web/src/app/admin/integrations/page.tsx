@@ -31,13 +31,13 @@ export default async function IntegrationsPage() {
   const [view, access] = await Promise.all([adminView(deps), pageAccess('vault.read', deps)]);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
-  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} />;
+  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} ready />;
 
   const connections = await listConnections(access.deps.db, access.deps.vault);
   const canWrite = access.guard.permissions?.has('vault.write') ?? false;
   const d = view.dict;
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <div className="ad-hd">
         <div className="ad-eyebrow">{t(d, 'integrations.eyebrow')}</div>
         <h1 className="ad-h1">{t(d, 'integrations.title')}</h1>

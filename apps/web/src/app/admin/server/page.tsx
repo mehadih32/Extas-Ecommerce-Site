@@ -41,7 +41,7 @@ export default async function ServerPage() {
   const [view, access] = await Promise.all([adminView(deps), pageAccess('system.read', deps)]);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(SERVER_HOME)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
-  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} />;
+  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} ready />;
 
   const s = await workerStatus({ db: access.deps.db, settings: access.deps.resolver, now: access.deps.now });
   const { 'seo.vitals': vitalsSet } = await readPageSettings(['seo.vitals'] as const, MOTHER_STORE_ID);
@@ -54,7 +54,7 @@ export default async function ServerPage() {
   const failedMore = Math.max(0, s.failedCounts.retrying + s.failedCounts.dead - s.failed.length);
 
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <div className="ad-hd">
         <div className="ad-eyebrow">{t(d, 'server.eyebrow')}</div>
         <h1 className="ad-h1">{t(d, 'server.title')}</h1>

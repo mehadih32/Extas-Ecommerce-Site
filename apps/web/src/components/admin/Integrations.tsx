@@ -5,7 +5,10 @@
 // key is never shown again. Save runs the test; only a pass takes a connection out of mock (the server decides).
 // CN-029 · PR 619: with `storeId` the card lists that store's own connections (the ERP link page): every call carries
 // `?storeId=`, so the keys are saved in the vault under that store and its row is that store's.
+// PR 647 (CN-036): every message (tested, connected, removed, a refusal) goes through the admin's one toast (showToast,
+// no Undo: a key change is never undone from a toast); removing a key keeps its confirmation.
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { showToast } from './lumen/Toast';
 import type { ConnectionView } from '@/lib/integrations';
 import { t, type Dict } from '@/lib/i18n';
 import { call, errorText, type Answer } from './api';
@@ -30,7 +33,6 @@ interface Props {
 /** The API path for a connection call, for a store when one is given. */
 const apiOf = (path: string, storeId?: number) => (storeId == null ? path : `${path}?storeId=${storeId}`);
 
-const TOAST_MS = 3200;
 const MIN_KEY_CHARS = 1;
 
 export function Integrations({ dict, initial, canWrite, vaultReady, locale, timeZone, storeId, title, sub, look = 'classic' }: Props) {
@@ -39,18 +41,11 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
   const [rows, setRows] = useState(initial);
   const [open, setOpen] = useState<ConnectionView | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [toast, setToast] = useState('');
   const opener = useRef<HTMLButtonElement | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const name = (id: string) => t(dict, `connections.${id}.name`);
   const when = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone }).format(new Date(iso));
-  const say = (text: string) => {
-    clearTimeout(toastTimer.current);
-    setToast(text);
-    toastTimer.current = setTimeout(() => setToast(''), TOAST_MS);
-  };
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
+  const say = (text: string, bad = false) => showToast({ text, tone: bad ? 'bad' : 'ok' });
 
   const reload = useCallback(async () => {
     const a = await call('GET', apiOf('/api/admin/integrations', storeId));
@@ -70,13 +65,14 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
 
   const onTest = async (c: ConnectionView) => {
     const a = await act(c, { action: 'test' });
-    if (a.status !== 200) return say(errorText(dict, a));
-    say(t(dict, (a.data.test as { ok?: boolean } | undefined)?.ok ? 'integrations.toast.testOk' : 'integrations.toast.testFail'));
+    if (a.status !== 200) return say(errorText(dict, a), true);
+    const ok = (a.data.test as { ok?: boolean } | undefined)?.ok;
+    say(t(dict, ok ? 'integrations.toast.testOk' : 'integrations.toast.testFail'), !ok);
   };
   const onRemove = async (c: ConnectionView) => {
     if (!window.confirm(t(dict, 'integrations.removeConfirm', { name: name(c.id) }))) return;
     const a = await act(c, { action: 'remove' });
-    say(a.status === 200 ? t(dict, 'integrations.toast.removed') : errorText(dict, a));
+    say(a.status === 200 ? t(dict, 'integrations.toast.removed') : errorText(dict, a), a.status !== 200);
   };
   const close = () => {
     setOpen(null);
@@ -185,18 +181,21 @@ export function Integrations({ dict, initial, canWrite, vaultReady, locale, time
             setOpen(null);
             opener.current?.focus();
             const ok = (a.data.test as { ok?: boolean } | undefined)?.ok;
-            say(ok ? t(dict, 'integrations.toast.connected', { name: name(open.id) }) : t(dict, 'integrations.toast.savedFailed'));
+            say(ok ? t(dict, 'integrations.toast.connected', { name: name(open.id) }) : t(dict, 'integrations.toast.savedFailed'), !ok);
           }}
         />
       ) : null}
-      <div className="ad-toast-slot" aria-live="polite" role="status">
-        {toast ? <div className="ad-toast">{toast}</div> : null}
-      </div>
     </>
   );
   // In the new shell the rows, the add-key sheet and the toast still take the classic colours and sizes (`.ad`'s own
-  // variables), inside the shell's card.
-  return a2 ? <div className="ad ad-embed">{body}</div> : body;
+  // variables), inside the shell's card. PR 647 (CN-036): the embed follows the page into dark mode (data-lm-ready).
+  return a2 ? (
+    <div className="ad ad-embed" data-lm-ready="">
+      {body}
+    </div>
+  ) : (
+    body
+  );
 }
 
 /** The add-key sheet: plain settings first (shown again when saved), then the keys (never shown again). */

@@ -3,11 +3,14 @@
 // switch and one address a line, "Add my address", saved whole like any card; the server refuses a list that is on
 // without the address it is saved from) and "Your logins" (the device list with "Log out" per device and "Log out
 // everywhere else" behind a confirm; /api/admin/auth/sessions, PR 15). Words come from the page.
+// PR 647 (CN-036): a message that the work went through speaks through the admin's one toast (showToast, no Undo);
+// a refusal stays written beside the button.
 import { useEffect, useId, useState } from 'react';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
 import { ConfirmDialog } from './ConfirmDialog';
 import { deviceName } from '@/lib/admin-security/device';
+import { showToast } from '../lumen/Toast';
 
 type Words = Record<string, string>;
 const fill = (s: string, v: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (m, k: string) => (k in v ? String(v[k]) : m));
@@ -43,7 +46,9 @@ export function AllowlistCard({ screen, ip, breakGlass, canEdit, w }: { screen: 
     const cards = a.data.cards as Record<string, AllowlistScreen> | undefined;
     if (a.status === 200 && cards?.allowlist) {
       reset(cards.allowlist);
-      return setSaid({ text: w.saved!, bad: false });
+      setSaid(null);
+      showToast({ text: w.saved! });
+      return;
     }
     const code = a.status === 0 ? 'network' : (a.data.error ?? 'other');
     if (code === 'STALE') {
@@ -202,7 +207,8 @@ export function DevicesCard({ w, locale, timeZone }: { w: Words; locale: string;
             const a = await call('POST', '/api/admin/auth/sessions', { all: true });
             if (a.status !== 200) return w['devices.error']!;
             setAsking(false);
-            setSaid(fill(w['devices.allDone']!, { n: Number(a.data.revoked ?? 0) }));
+            setSaid(null);
+            showToast({ text: fill(w['devices.allDone']!, { n: Number(a.data.revoked ?? 0) }) });
             await load();
             return null;
           }}
