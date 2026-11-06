@@ -37,7 +37,7 @@ export default async function HelpPage() {
       </div>
     );
   const s = await shellSession();
-  const viewer: ShellViewer = s.kind === 'ok' ? { perms: s.perms, owner: s.owner } : { perms: new Set(), owner: false };
+  const viewer: ShellViewer = s.kind === 'ok' ? { perms: s.perms, owner: s.owner, hidden: s.hidden } : { perms: new Set(), owner: false };
   const d = view.dict;
   const here = locateKey('help');
   const sections = SHELL_SECTIONS.filter((x) => x.id !== 'help' && sectionVisible(x, viewer));

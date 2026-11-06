@@ -63,7 +63,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="dashboard" text={t(view.dict, 'page.noDb')} />;
   const session = await shellSession();
   if (session.kind !== 'ok') return <AdminNotice view={view} current="dashboard" text={t(view.dict, 'page.noDb')} />;
-  const viewer: ShellViewer = { perms: session.perms, owner: session.owner };
+  const viewer: ShellViewer = { perms: session.perms, owner: session.owner, hidden: session.hidden };
   const home = one(sp.home) === '1';
 
   if (access.kind === 'forbidden') {

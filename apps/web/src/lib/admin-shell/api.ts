@@ -21,6 +21,7 @@ import { todoItems } from './model';
 import { badgesFrom, cachedQueues, visibleQueues } from './queues';
 import { adminSearch } from './search';
 import type { ShellViewer } from './sections';
+import { hiddenPartsOf } from '../stages/closed';
 
 interface ShellCall {
   g: Guarded;
@@ -33,8 +34,8 @@ async function shellCall(request: Request, deps: AdminDeps | null, permission?: 
   if (g instanceof Response) return g;
   const d = deps as AdminDeps;
   const staffUserId = g.actor.staffUserId as string;
-  const [perms, owner] = await Promise.all([g.permissions ?? permissionsFor(d.db, staffUserId, { storeId: MOTHER_STORE_ID }), isOwner(d.db, staffUserId)]);
-  return { g, deps: d, viewer: { perms, owner } };
+  const [perms, owner, hidden] = await Promise.all([g.permissions ?? permissionsFor(d.db, staffUserId, { storeId: MOTHER_STORE_ID }), isOwner(d.db, staffUserId), hiddenPartsOf(d)]);
+  return { g, deps: d, viewer: { perms, owner, hidden } };
 }
 
 const shellSettings = async (deps: AdminDeps) =>

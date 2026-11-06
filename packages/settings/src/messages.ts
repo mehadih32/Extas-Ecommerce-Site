@@ -133,6 +133,8 @@ import switchoverEn from '../messages/switchover.en.json';
 // S18 · PR 378 (registry v73): the page protection policy and the per-address request limits.
 import webSecurityBn from '../messages/web-security.bn.json';
 import webSecurityEn from '../messages/web-security.en.json';
+import closedStagesBn from '../messages/closed-stages.bn.json';
+import closedStagesEn from '../messages/closed-stages.en.json';
 // S18 · PR 379 (registry v74): the quiet bot check on sign-in and checkout.
 import botCheckBn from '../messages/bot-check.bn.json';
 import botCheckEn from '../messages/bot-check.en.json';
@@ -266,6 +268,8 @@ messages.en = mergeMessages(messages.en, switchoverEn);
 messages.bn = mergeMessages(messages.bn, switchoverBn);
 messages.en = mergeMessages(messages.en, webSecurityEn);
 messages.bn = mergeMessages(messages.bn, webSecurityBn);
+messages.en = mergeMessages(messages.en, closedStagesEn);
+messages.bn = mergeMessages(messages.bn, closedStagesBn);
 messages.en = mergeMessages(messages.en, botCheckEn);
 messages.bn = mergeMessages(messages.bn, botCheckBn);
 messages.en = mergeMessages(messages.en, adminAccessEn);

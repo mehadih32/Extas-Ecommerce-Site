@@ -41,7 +41,7 @@ async function shellModel(): Promise<ShellModel | null> {
   const view = await adminView(s.deps);
   const shell = (await s.deps.resolver.value('admin.shell', { storeId: MOTHER_STORE_ID }).catch(() => null)) as { badgeCacheSeconds: number } | null;
   const seconds = shell?.badgeCacheSeconds ?? 0;
-  const viewer = { perms: s.perms, owner: s.owner };
+  const viewer = { perms: s.perms, owner: s.owner, hidden: s.hidden };
   const scope = { storeId: MOTHER_STORE_ID };
   const [counts, todo, startPages, jar] = await Promise.all([
     cachedQueues({ db: s.deps.db, settings: s.deps.resolver, now: s.deps.now }, MOTHER_STORE_ID, seconds).catch(() => []),
@@ -58,7 +58,7 @@ async function shellModel(): Promise<ShellModel | null> {
     dict: { shell: view.dict.shell as Dict, dash: { queue: (view.dict.dash as Dict).queue, age: (view.dict.dash as Dict).age } as Dict },
     storeName: view.storeName,
     me: { name: staff.displayName, initials: initialsOf(staff.displayName), role: role ? (view.lang === 'bn' ? role.nameBn : role.nameEn) : t(view.dict, 'shell.me.staff') },
-    viewer: { perms: [...s.perms], owner: s.owner },
+    viewer: { perms: [...s.perms], owner: s.owner, hidden: [...s.hidden] },
     badges: badgesFrom(rows),
     badgeSeconds: seconds,
     langLabels: { group: labels.group, en: labels.en, enShort: labels.enShort, bn: labels.bn, bnShort: labels.bnShort },

@@ -495,6 +495,11 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
 export interface ShellViewer {
   perms: ReadonlySet<string>;
   owner: boolean;
+  /**
+   * S19 · PR 652: the parts of the closed stages hidden by their switch (lib/stages/closed.ts): section ids and
+   * `<section>.<tab>` ids, hidden from everyone, the owner too (the menu, the admin search, the manual, start pages).
+   */
+  hidden?: ReadonlySet<string>;
 }
 
 export const sectionById = (id: string) => SHELL_SECTIONS.find((s) => s.id === id) ?? null;
@@ -504,10 +509,11 @@ const pageVisible = (p: ShellPage, v: ShellViewer) => v.owner || v.perms.has(p.p
 /** A tab's pages the person may open (the first is where the tab leads). */
 export const visiblePages = (t: ShellTab, v: ShellViewer) => t.pages.filter((p) => pageVisible(p, v));
 
-export const visibleTabs = (s: ShellSection, v: ShellViewer) => s.tabs.filter((t) => visiblePages(t, v).length > 0);
+export const visibleTabs = (s: ShellSection, v: ShellViewer) => s.tabs.filter((t) => !v.hidden?.has(`${s.id}.${t.id}`) && visiblePages(t, v).length > 0);
 
 /** A menu entry shows only to someone who holds a key in it (§5.0); a section with no key yet, to the owner. */
 export function sectionVisible(s: ShellSection, v: ShellViewer): boolean {
+  if (v.hidden?.has(s.id)) return false;
   if (v.owner) return true;
   if (s.ownerOnly) return false;
   if (s.perms?.some((k) => v.perms.has(k))) return true;

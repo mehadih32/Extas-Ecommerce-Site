@@ -28,6 +28,7 @@ import { settingsTimeoutMs, withTimeout } from '../settings';
 import { filterPagePath } from './filter-pages';
 import { liveSitemapPosts } from '../journal/journal';
 import { capSet, type SitemapSet } from './sitemap';
+import { hiddenShopPaths, isHiddenPath } from '../stages/closed';
 
 const KEYS = [
   'seo.indexing',
@@ -44,6 +45,8 @@ const KEYS = [
   'naming.productPathPrefix',
   // PR 249: the journal's switch
   'blog.journal',
+  // S19 · PR 652: the closed stages' shop pages stay out while their switch is off
+  'stages.closedShown',
 ] as const;
 
 export type SitemapSettings = Awaited<ReturnType<typeof sitemapSettings>>;
@@ -57,7 +60,10 @@ export async function collectSitemap(storeId: number, set: SitemapSettings): Pro
   const out: SitemapSet = { pages: [], collections: [], products: [], combos: [] };
   if (!process.env.DATABASE_URL) return out;
   const ready = new Set(set['language.bengali.enabled'] ? set['language.bengali.readyPages'] : []);
-  const add = (kind: keyof SitemapSet, path: string, pageKey: string, lastmod: Date | null = null) => out[kind].push({ path, lastmod, bn: ready.has(pageKey) });
+  const hidden = hiddenShopPaths(set['stages.closedShown']);
+  const add = (kind: keyof SitemapSet, path: string, pageKey: string, lastmod: Date | null = null) => {
+    if (!isHiddenPath(path, hidden)) out[kind].push({ path, lastmod, bn: ready.has(pageKey) });
+  };
   const on = set['seo.indexing'].pages;
   const db = getPrisma();
   const timeout = settingsTimeoutMs() * 10;

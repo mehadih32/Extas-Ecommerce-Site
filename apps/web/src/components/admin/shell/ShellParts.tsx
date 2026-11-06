@@ -18,7 +18,7 @@ const NOBODY: ShellViewer = { perms: new Set(), owner: false };
 
 export async function shellViewer(): Promise<ShellViewer> {
   const s = await shellSession();
-  return s.kind === 'ok' ? { perms: s.perms, owner: s.owner } : NOBODY;
+  return s.kind === 'ok' ? { perms: s.perms, owner: s.owner, hidden: s.hidden } : NOBODY;
 }
 
 const secName = (view: AdminView, id: string) => t(view.dict, `shell.sec.${id}`);
