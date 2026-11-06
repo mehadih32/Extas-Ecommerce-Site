@@ -321,6 +321,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/website/blog/performance', perm: 'blog.read', keys: ['blogPerformance'] },
           // S12 · PR 251 — readers' comments: the waiting queue, Show / Hide, the card (off = the journal without comments).
           { href: '/admin/website/blog/comments', perm: 'blog.read', keys: ['blogComments'] },
+          // S12 · PR 252 — the shared calendar: articles beside plans, campaigns and cut-offs (social while S23 is shown).
+          { href: '/admin/website/blog/shared', perm: 'blog.read', keys: ['blogShared'] },
         ],
       },
     ],

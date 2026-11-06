@@ -322,6 +322,7 @@
       "/admin/website/words",
       "/admin/website/words?show=changed",
       "/admin/website/blog/comments",
+      "/admin/website/blog/shared",
       "/admin/website/eye-toggles",
       "/admin/website/eye-toggles?show=hidden&where=product",
       "/admin/reports/experiments",
