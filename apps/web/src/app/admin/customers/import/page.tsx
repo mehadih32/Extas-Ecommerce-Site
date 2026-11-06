@@ -47,7 +47,7 @@ export default async function CustomerImportPage() {
   const screen = { ...s, imports: s.imports.map((x) => ({ ...x, createdAt: x.createdAt.toISOString(), undoneAt: x.undoneAt ? x.undoneAt.toISOString() : null })) };
   const cdict: Dict = { cus: d.cus as Dict };
   return (
-    <div className="a2-z" data-testid="customer-import">
+    <div className="a2-z" data-testid="customer-import" data-lm-ready="">
       <PageHead view={view} place={locateKey('customersImport')} title={t(d, 'cus.imp.title')} sub={t(d, 'cus.imp.sub')} />
       <SectionTabs view={view} current="customersImport" />
       {!s.enabled ? (

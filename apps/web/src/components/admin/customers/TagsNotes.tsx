@@ -9,6 +9,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { call } from '@/components/admin/api';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
+import { showToast } from '@/components/admin/lumen/Toast';
 
 export interface TagsNotesData {
   tags: { id: string; name: string }[];
@@ -34,7 +35,7 @@ export function TagsNotes({ dict: d, customerId, data }: { dict: Dict; customerI
       setMsg({ ok: false, text: r.status === 0 ? cusError(d, 'network') : cusError(d, r.data.error, (r.data.details ?? []).join(', ')) });
       return false;
     }
-    if (done) setMsg({ ok: true, text: done });
+    if (done) showToast({ text: done, tone: 'ok' });
     router.refresh();
     return true;
   };

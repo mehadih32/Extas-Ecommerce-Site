@@ -8,6 +8,7 @@ import { useId, useState } from 'react';
 import type { GradeRow } from '@extas/customers';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
+import { showToast } from '@/components/admin/lumen/Toast';
 
 type Form = { nameEn: string; nameBn: string; minDelivered: string; maxRefused: string; minRefused: string; sortOrder: string };
 const EMPTY: Form = { nameEn: '', nameBn: '', minDelivered: '0', maxRefused: '', minRefused: '0', sortOrder: '0' };
@@ -51,7 +52,7 @@ export function GradesEditor({ dict: d, grades, canWrite, enabled, lang }: { dic
         setMsg({ ok: false, text: errText(data.error, data.details) });
         return false;
       }
-      setMsg({ ok: true, text: ok(data) });
+      showToast({ text: ok(data), tone: 'ok' });
       router.refresh();
       return true;
     } catch {

@@ -160,7 +160,7 @@ export default async function CustomerSettingsPage() {
   const gradeChoices = [{ value: '', label: t(d, 'cus.set.grades.goodNone') }, ...gs.grades.filter((g) => !g.archived).map((g) => ({ value: g.key, label: (view.lang === 'bn' && g.nameBn) || g.nameEn }))];
   const fieldsOf = (c: (typeof CARDS)[number]): readonly CrmField[] => (c.key === 'customers.grades' ? [...c.fields, { name: 'goodFrom', kind: 'choice', options: gradeChoices }] : c.fields);
   return (
-    <div className="a2-z" data-testid="customer-settings">
+    <div className="a2-z" data-testid="customer-settings" data-lm-ready="">
       <PageHead view={view} place={locateKey('customersSettings')} title={t(d, 'cus.set.title')} sub={t(d, 'cus.set.sub')} />
       <SectionTabs view={view} current="customersSettings" />
       <div className="a2-kpis a2-mt12">

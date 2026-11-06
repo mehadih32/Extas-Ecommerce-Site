@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
+import { showToast } from '@/components/admin/lumen/Toast';
 
 export type CrmField = { name: string; kind: 'bool' } | { name: string; kind: 'int' } | { name: string; kind: 'multi'; options: readonly string[] } | { name: string; kind: 'lang'; max: number } | { name: string; kind: 'money' } | { name: string; kind: 'words'; keys: readonly string[]; max: number } | { name: string; kind: 'choice'; options: readonly { value: string; label: string }[] };
 const LANGS = ['bn', 'en'] as const;
@@ -41,7 +42,7 @@ export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWr
         setMsg({ ok: false, text: cusError(d, data.error, (data.details ?? []).join(', ')) });
         return;
       }
-      setMsg({ ok: true, text: t(d, 'cus.set.saved') });
+      showToast({ text: t(d, 'cus.set.saved'), tone: 'ok' });
       router.refresh();
     } catch {
       setMsg({ ok: false, text: cusError(d, 'network') });

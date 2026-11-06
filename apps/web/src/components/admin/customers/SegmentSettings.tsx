@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
+import { showToast } from '@/components/admin/lumen/Toast';
 
 export interface SegmentSettingsValue {
   enabled: boolean;
@@ -38,7 +39,7 @@ export function SegmentSettings({ dict: d, value, canWrite }: { dict: Dict; valu
         setMsg({ ok: false, text: cusError(d, data.error, (data.details ?? []).join(', ')) });
         return;
       }
-      setMsg({ ok: true, text: t(d, 'cus.seg.set.saved') });
+      showToast({ text: t(d, 'cus.seg.set.saved'), tone: 'ok' });
       router.refresh();
     } catch {
       setMsg({ ok: false, text: cusError(d, 'network') });

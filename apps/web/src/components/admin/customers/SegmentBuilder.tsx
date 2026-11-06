@@ -13,6 +13,7 @@ import { formatMoney, formatNumber, type Money } from '@/components/admin/produc
 import { cusError } from '@/lib/admin-customers/words';
 import { draftDefinition, rowCondition, startValue, type DraftRow } from '@/lib/admin-customers/segment-draft';
 import { t, type Dict } from '@/lib/i18n';
+import { showToast } from '@/components/admin/lumen/Toast';
 
 export interface SegmentBuilderProps {
   dict: Dict;
@@ -89,7 +90,7 @@ export function SegmentBuilder(p: SegmentBuilderProps) {
         setMsg({ ok: false, text: cusError(d, data.error, (data.details ?? []).join(', ')) });
         return;
       }
-      setMsg({ ok: true, text: t(d, 'cus.seg.b.saved') });
+      showToast({ text: t(d, 'cus.seg.b.saved'), tone: 'ok' });
       if (p.id) router.refresh();
       else router.push(`/admin/customers/segments/${data.segment.segment.id}`);
     } catch {
