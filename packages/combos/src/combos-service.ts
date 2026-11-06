@@ -5,7 +5,7 @@
 // out of a combo is archived. Every change writes an audit row in the same transaction.
 import type { Prisma } from '@extas/db/client';
 import { actorId, allow, allowPrice, found, logChange, nowOf, parse, setting, TX, type CombosDeps, type Db, type Who } from './context';
-import { setFloorMinor } from '@extas/catalogue';
+import { CatalogueError, moveLink, setFloorMinor } from '@extas/catalogue';
 import { comboSplitSchema, SET_SPLIT_MODES, SET_SPLIT_PRICE_RULES, type ComboSplitSettings, type SetSplitMode, type SetSplitPriceRule } from '@extas/settings';
 import { z } from 'zod';
 import { CombosError } from './errors';
@@ -240,6 +240,9 @@ const sameItems = (rows: ComboRow['items'], d: FixedComboData) =>
     return r.productId === i.productId && r.fixedVariantId === i.fixedVariantId && r.quantity === i.quantity && r.labelEn === i.labelEn && r.labelBn === i.labelBn && r.allowedColourIds.join() === i.colourIds.join() && r.allowedSizeIds.join() === i.sizeIds.join();
   });
 
+/** A combo's own page on the shop (the web app's ROUTES.combo). */
+export const comboPath = (slug: string): string => `/combo/${encodeURIComponent(slug)}`;
+
 async function slugFree(db: Db, storeId: number, slug: string, except?: string): Promise<void> {
   const other = await db.combo.findFirst({ where: { storeId, slug, ...(except ? { id: { not: except } } : {}) }, select: { id: true } });
   if (other) throw new CombosError('SLUG_TAKEN', 'that combo link is already used', ['slug']);
@@ -302,8 +305,18 @@ export async function updateCombo(deps: CombosDeps, who: Who, id: string, input:
   if (before.autoRuleId) throw new CombosError('INVALID_INPUT', 'a generated pair is changed through its rule', ['autoRuleId']);
   if (d.setPriceMinor !== before.setPriceMinor) await allowPrice(deps, who);
   if (version !== undefined && version !== before.version) throw new CombosError('STALE', 'the combo was changed by someone else', [`version ${before.version}`]);
+  const statusCode = d.slug !== before.slug ? await setting(deps, who.storeId, 'naming.redirectStatusCode') : 0;
   await deps.db.$transaction(async (tx) => {
     await slugFree(tx, who.storeId, d.slug, id);
+    // follow-up 176: a changed link keeps the old one as a forward (no chains; an old link in use again stops forwarding)
+    if (d.slug !== before.slug) {
+      try {
+        await moveLink(tx, who, comboPath(before.slug), comboPath(d.slug), 'combo-slug', statusCode, nowOf(deps));
+      } catch (e) {
+        if (e instanceof CatalogueError && e.code === 'SLUG_TAKEN') throw new CombosError('SLUG_TAKEN', 'that combo link is an old link that forwards to another page', ['slug']);
+        throw e;
+      }
+    }
     await checkItems(tx, who.storeId, d);
     await assertSetFloor(tx, deps, who.storeId, d.items, d.setPriceMinor);
     const moved = await tx.combo.updateMany({
