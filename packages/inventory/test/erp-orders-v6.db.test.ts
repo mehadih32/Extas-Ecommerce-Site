@@ -26,6 +26,7 @@ import {
   erpOrderLinesOf,
   erpOrderOf,
   erpOrderView,
+  heldTooLong,
   holdCart,
   orderLinkOf,
   pushCounts,
@@ -352,6 +353,38 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
     const ev = await t.prisma.erpEvent.findFirstOrThrow({ where: { storeId: storeA, type: 'shop-price.changed', data: { path: ['sku'], equals: 'TEE-NAVY-M' } }, orderBy: { receivedAt: 'desc' } });
     expect([ev.status, ev.result]).toEqual(['APPLIED', expect.objectContaining({ freed: 1, woken: 1 })]);
     expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(1);
+  });
+
+  it('Follow-up 539 (b): an order the ERP keeps refusing raises one alert after the owner\'s hours (off when empty); it keeps being asked', async () => {
+    world.setShopPrice('TEE-NAVY-M', null);
+    world.v6().takeEvents();
+    const o = order(storeA, [{ sku: 'TEE-NAVY-M', unit: 900 }]);
+    await enqueueOrderPush(deps(), o.input);
+    expect((await relayErpPushes(deps(), { storeId: storeA })).held).toBe(1);
+    // The row's queue time is the database's own clock; put it on the test's clock.
+    const row = await t.prisma.erpPush.update({ where: { id: (await pushOf(storeA, o.orderId)).id }, data: { createdAt: clock } });
+    // Off as shipped: no alert, on the stock page or anywhere.
+    expect(await heldTooLong(deps(), storeA)).toBeNull();
+    expect((await syncHealth(deps(), { actor: SYSTEM, storeId: storeA })).heldLong).toBeNull();
+    overrides.set(`erp.orders.heldAlertAfterHours@${storeA}`, 2);
+    const older = async () => t.prisma.erpPush.count({ where: { storeId: storeA, status: 'HELD', createdAt: { lte: new Date(clock.getTime() - 2 * 3_600_000) } } });
+    const before = await heldTooLong(deps(), storeA);
+    expect(before).toMatchObject({ hours: 2, count: await older() });
+    // Two hours and a minute later, still refused: it counts, oldest first; the order check still asks again.
+    clock = new Date(clock.getTime() + 121 * 60_000);
+    const after = (await heldTooLong(deps(), storeA))!;
+    expect(after.count).toBe(before!.count + 1);
+    expect(after.count).toBe(await older());
+    expect(new Date(after.since!).getTime()).toBeLessThanOrEqual(row.createdAt.getTime());
+    expect((await syncHealth(deps(), { actor: SYSTEM, storeId: storeA })).heldLong).toEqual(after);
+    // In store B (its own setting, empty) nothing shows.
+    expect(await heldTooLong(deps(), storeB)).toBeNull();
+    // The ERP gets the shop price: the order goes (follow-up 532) and the alert clears for it.
+    world.setShopPrice('TEE-NAVY-M', 950);
+    await deliverAll();
+    expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBeGreaterThanOrEqual(1);
+    expect((await heldTooLong(deps(), storeA))!.count).toBe(before!.count);
+    overrides.delete(`erp.orders.heldAlertAfterHours@${storeA}`);
   });
 
   it('PR 610 (qa-gate): NO_SHOP_PRICE, then the order is cancelled — after the wait the order check lets the SKU sell again', async () => {

@@ -188,6 +188,15 @@ export default async function StockPage() {
               </div>
             </div>
           ) : null}
+          {/* Follow-up 539: documents the ERP keeps refusing, past the owner's hours (none while that setting is empty) */}
+          {health.heldLong?.count ? (
+            <div className="ad-row" data-testid="st-erp-held-long">
+              <div className="ad-row-main">
+                <div className="ad-row-name">{t(d, 'erpOrder.title')}</div>
+                <div className="ad-mini st-err">{t(d, 'erpOrder.hold.heldLong', { count: num(health.heldLong.count), hours: num(health.heldLong.hours) })}</div>
+              </div>
+            </div>
+          ) : null}
           {canSync ? (
             <div className="st-card-acts">
               <ResyncButtons dict={d} locale={view.locale} />

@@ -826,6 +826,20 @@ export async function noShopPriceSkus(db: Db, storeId: number, take: number): Pr
   return { count, skus: rows.map((r) => r.sku), since: rows[0]?.shopPriceMissingAt?.toISOString() ?? null };
 }
 
+/**
+ * Follow-up 539 (b): the documents the ERP keeps refusing for now — still HELD `erp.orders.heldAlertAfterHours` after they
+ * were queued — for the stock page's line and the "Needs you now" row. Null while the setting is empty (off). The
+ * order check keeps waking them; this only tells a person.
+ */
+export async function heldTooLong(deps: Pick<InventoryDeps, 'db' | 'settings' | 'now'>, storeId: number): Promise<{ count: number; hours: number; since: string | null } | null> {
+  const hours = await setting(deps as InventoryDeps, storeId, 'erp.orders.heldAlertAfterHours');
+  if (hours == null) return null;
+  const now = nowOf(deps as InventoryDeps);
+  const where = { storeId, status: 'HELD' as const, createdAt: { lte: new Date(now.getTime() - hours * 3_600_000) } };
+  const [count, oldest] = await Promise.all([deps.db.erpPush.count({ where }), deps.db.erpPush.findFirst({ where, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })]);
+  return { count, hours, since: oldest?.createdAt.toISOString() ?? null };
+}
+
 /** A shipment HELD behind a short line goes again once no line of its order is short. */
 export async function wakeLineWaiting(db: Db, storeId: number, erpOrderId: string): Promise<number> {
   const eo = await db.erpOrder.findUnique({ where: { id: erpOrderId }, select: { orderId: true } });

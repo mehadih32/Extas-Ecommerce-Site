@@ -12,6 +12,10 @@
       "catchUpBatch": {
         "label": "Orders checked with the ERP per run",
         "help": "How many open orders one check reads from the ERP."
+      },
+      "heldAlertAfterHours": {
+        "label": "Alert when the ERP keeps refusing an order for (hours)",
+        "help": "Empty = no alert. An order the ERP refused for now (short of stock, no shop price, the account on hold) is sent again by itself until the ERP takes it. With a number here, one still waiting that many hours after it was queued shows on the stock page and in \"Needs you now\". The shop keeps sending it either way."
       }
     }
   }

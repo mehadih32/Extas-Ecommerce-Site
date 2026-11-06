@@ -21,7 +21,8 @@
       "warn": "The ERP will hold new orders on {date} ({days} days left) unless a payment reaches it.",
       "settings": "ERP connection settings",
       "noShopPrice": "Not sold: the ERP has no shop price yet for {skus}. Set the shop price in the ERP. They sell again when the ERP takes an order with them, or after the wait when no order is waiting for them.",
-      "noShopPriceMore": "{skus} and {count} more"
+      "noShopPriceMore": "{skus} and {count} more",
+      "heldLong": "{count} waiting for the ERP longer than {hours} hours. The shop keeps sending them; look at why the ERP refuses (stock, shop price, account)."
     },
     "row": {
       "number": "ERP order",
