@@ -161,15 +161,19 @@ describe.skipIf(!HAS_TEST_DB)('Website › Launch default on PostgreSQL (PR 597)
     expect(await t.prisma.layoutSnapshot.count({ where: { isLaunchDefault: true } })).toBe(1);
   });
 
-  it('leaves values that no longer fit as they are, never lists home looks, refuses junk and a looker', async () => {
+  it('leaves values that no longer fit as they are, never lists, restores, renames or sets aside home looks, refuses junk and a looker', async () => {
     const bad = await t.prisma.layoutSnapshot.create({ data: { storeId: S, name: 'Old look', payload: { scope: 'shop', settings: { 'home.rowFade': 'yes', 'layout.blocks': 'junk' }, rows: {} } } });
-    await t.prisma.layoutSnapshot.create({ data: { storeId: S, name: 'Seasonal home look', payload: { scope: 'home', settings: {} } } });
+    const home = await t.prisma.layoutSnapshot.create({ data: { storeId: S, name: 'Seasonal home look', payload: { scope: 'home', settings: {} } } });
     const before = await blocks();
     const r = await step({ action: 'restore', id: bad.id });
     expect(r.a.ok).toBe(true);
     expect(r.a.done!.kept).toEqual(expect.arrayContaining(['home.rowFade', 'layout.blocks', 'home.hero']));
     expect(await blocks()).toEqual(before);
     expect(r.a.looks.some((l) => l.name === 'Seasonal home look')).toBe(false);
+    // follow-up 652: a home look (Marketing › Seasonal home, scope 'home') is never restored, renamed or set aside here
+    for (const action of ['restore', 'rename', 'archive'] as const) expect((await step({ action, id: home.id, name: 'Renamed' })).a).toMatchObject({ ok: false, error: 'not-found' });
+    expect(await t.prisma.layoutSnapshot.findUnique({ where: { id: home.id } })).toMatchObject({ name: 'Seasonal home look', archivedAt: null, isLaunchDefault: false });
+    expect(await t.prisma.layoutRestore.count({ where: { snapshotId: home.id } })).toBe(0);
     expect((await step({ action: 'restore', id: 'not-an-id' })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
     expect((await step({ action: 'save', name: '   ' })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
     expect((await step({ action: 'drop' })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
