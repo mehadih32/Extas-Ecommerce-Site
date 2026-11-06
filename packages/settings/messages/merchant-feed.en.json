@@ -2,7 +2,7 @@
   "ads": {
     "merchantFeed": {
       "label": "Google Merchant Center feed",
-      "help": "Off (as shipped): the feed address answers “not found”. On: every published product of a shown category, with its title, description, link, main photo, price, stock, brand and category, at /feeds/merchant.xml on the shop's own domain. Paste that address into Merchant Center as a scheduled fetch; no key is needed and nothing is sent from the shop. No ad spend starts from here."
+      "help": "Off (as shipped): the feed address answers “not found”. On: every published product of a shown category, with its title, description, link, main photo, price, stock, brand and category — one item per product, or (when chosen) one per size and colour grouped by product, as Merchant Center asks for clothes — at /feeds/merchant.xml on the shop's own domain. Paste that address into Merchant Center as a scheduled fetch; no key is needed and nothing is sent from the shop. No ad spend starts from here."
     }
   }
 }
