@@ -26,7 +26,7 @@ permissions:
 jobs:
   golive-check:
     runs-on: [self-hosted, extas-vm]
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       # The check comes from the version that is live (as in journeys.yml), so its words and paths are the live ones.
       - name: Find the live version

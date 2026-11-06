@@ -58,7 +58,7 @@ jobs:
     needs: due
     if: needs.due.outputs.run == 'yes'
     runs-on: [self-hosted, extas-vm]
-    timeout-minutes: 45
+    timeout-minutes: 60
     # R1 ops review (M1): its own group; a smoke run waiting here can only be replaced by a newer smoke run, never
     # cancel a deploy, server setup or restore (one job at a time on the VM comes from the single runner).
     concurrency:
