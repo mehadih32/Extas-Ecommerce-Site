@@ -172,7 +172,7 @@ async function main() {
         const p = targetProblem(t, res.status(), res.headers().location);
         if (p) result.redirects.problems.push(p);
       }
-      if (result.redirects.rows === 0) result.redirects.problems.push("no WordPress row yet: load the old shop's addresses (Website › SEO › Redirects › Import, kind WordPress)");
+      if (result.redirects.rows === 0) result.redirects.problems.push("no WordPress row yet: load the old shop's addresses (GitHub › Actions › redirect-import with commit on, PR 653; or Website › SEO › Redirects › Import, kind WordPress)");
     }
 
     // 3. the sitemap

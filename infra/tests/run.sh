@@ -2070,4 +2070,12 @@ check "golive check (587): the dry run writes only into the Caddy container's /t
 check "golive check (587): the browser half asks only the staging host" \
   "$(grep -c 'BASE="https://$EXTAS_STAGING_HOST"' ../deploy/golive-check.sh):$(grep -c 'ctx.request.get(onBase(base, path)' ../../tools/golive-check.mjs)" "1:1"
 
+# S19 · PR 653 (CN-036): the redirect import only GETs the old site's public sitemap, by hand, and writes nothing there.
+check "workflows: redirect-import is by hand only, on the VM, in its own lane, no secret, commit off by default" \
+  "$(grep -c '^  workflow_dispatch:' ../../.github/workflows/redirect-import.yml):$(grep -cE '^\s+(schedule|push|pull_request):' ../../.github/workflows/redirect-import.yml):$(grep -c 'runs-on: \[self-hosted, extas-vm\]' ../../.github/workflows/redirect-import.yml):$(grep -c 'group: extas-redirect-import' ../../.github/workflows/redirect-import.yml):$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/redirect-import.yml):$(grep -A3 '^      commit:' ../../.github/workflows/redirect-import.yml | grep -c -e 'type: boolean' -e 'default: false')" "1:0:1:1:0:2"
+check "redirect import (653): one curl, GET only, https only, no redirect, no cookie, no body; never the staging host" \
+  "$(grep -cE '^\s*curl ' ../deploy/redirect-import.sh):$(grep -cE "curl -sS -X GET --proto '=https' --max-redirs 0" ../deploy/redirect-import.sh):$(grep -A1 -E '^\s*curl ' ../deploy/redirect-import.sh | grep -cE -- '(-X|--request) (POST|PUT|PATCH|DELETE)|--data| -d | -b | -u | -F |--cookie|--user|--form|-T '):$(grep -c '"$OLD" = "${EXTAS_STAGING_HOST,,}"' ../deploy/redirect-import.sh)" "1:1:0:1"
+rc=0; out="$(EXTAS_CONFIG_FILE=/nonexistent bash ../deploy/redirect-import.sh /tmp/x new.example.test dry 2>&1)" || rc=$?
+check "redirect import (653): refuses to run without the server's configuration" "$([ "$rc" -ne 0 ] && echo refused)" "refused"
+
 exit $fail
