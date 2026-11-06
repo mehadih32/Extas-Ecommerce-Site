@@ -123,6 +123,43 @@
       "forbidden": "You do not have the permission for this.",
       "network": "No connection. Nothing changed; try again.",
       "other": "Could not do that. Nothing changed; try again."
+    },
+    "page": {
+      "title": "Snapshots of this page",
+      "sub": "Keep this page as it is now under a name, and bring it back later. Only this page changes; the whole shop look is under Website › Launch default.",
+      "save": "Save snapshot",
+      "restore": "Restore",
+      "none": "No snapshots of this page yet.",
+      "someone": "Someone",
+      "defaultName": "Snapshot {at}",
+      "before": "Before restoring “{name}”",
+      "tagAuto": "Saved by itself",
+      "ask": {
+        "saveTitle": "Save this page as a snapshot",
+        "saveNote": "What is saved now on this page is kept. Changes you have not saved yet are not in it.",
+        "name": "Name",
+        "nameHint": "For example: Eid 2027",
+        "restoreTitle": "Restore “{name}” on this page?",
+        "first": "This page as it is now is saved first (“Before restoring …”), so you can bring it back.",
+        "kept": "Sections and zones made since stay, switched off. Nothing is deleted.",
+        "draft": "Changes on this page that are not saved yet are lost.",
+        "money": "Prices, offers, delivery charges and Cash on Delivery never change.",
+        "no": "Cancel",
+        "save": "Save"
+      },
+      "done": {
+        "saved": "Snapshot “{name}” saved.",
+        "restored": "“{name}” is back on this page.",
+        "hidden": "{n} newer kept, switched off."
+      },
+      "err": {
+        "STALE": "This page changed meanwhile. It was reloaded; try again.",
+        "INVALID_INPUT": "That did not fit this page. Nothing changed.",
+        "not-found": "That snapshot is not there any more.",
+        "forbidden": "You do not have the permission for this.",
+        "network": "No connection. Nothing changed; try again.",
+        "other": "Could not do that. Nothing changed; try again."
+      }
     }
   }
 }

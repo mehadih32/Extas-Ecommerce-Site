@@ -4,11 +4,14 @@
 // 1440 and 1920 px (components/admin/website/SideEditor.tsx). Seeing needs `website.read`; saving
 // `website.layout.write` (the API checks again; audited website.sidecanvas.save). lib/website/side-canvas-admin.ts.
 // Guide: docs/admin-guide/pages/website/side-canvas.md.
+// PR 597 follow-up (695, 6 Nov): "Snapshots of this page" — save the side canvas under a name and restore it
+// (components/admin/website/PageSnapshots.tsx, lib/website/page-snapshots.ts; words in admin-launch.<lang>.json).
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageSnapshots } from '@/components/admin/website/PageSnapshots';
 import { SideEditor } from '@/components/admin/website/SideEditor';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -17,9 +20,12 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { todayIn } from '@/lib/shop/theme';
 import { layoutChoices } from '@/lib/website/layouts-admin';
+import { pageSnaps } from '@/lib/website/page-snapshots';
 import { sideView } from '@/lib/website/side-canvas-admin';
 import bn from '../../../../../messages/admin-canvas.bn.json';
 import en from '../../../../../messages/admin-canvas.en.json';
+import launchBn from '../../../../../messages/admin-launch.bn.json';
+import launchEn from '../../../../../messages/admin-launch.en.json';
 import './side-canvas.css';
 
 export const dynamic = 'force-dynamic';
@@ -50,7 +56,8 @@ export default async function SideCanvasPage() {
       </div>
     );
   const g = (k: string) => t(d, `sc.${k}`);
-  const [sv, choices, tz] = await Promise.all([sideView({ db: access.deps.db, resolver: access.deps.resolver }), layoutChoices(access.deps.db), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID })]);
+  const ld = { db: access.deps.db, resolver: access.deps.resolver };
+  const [sv, choices, tz, snaps] = await Promise.all([sideView(ld), layoutChoices(access.deps.db), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }), pageSnaps(ld, { kind: 'side' })]);
   const canEdit = access.guard.permissions?.has('website.layout.write') ?? false;
   return (
     <div className="a2-z scx-page" data-testid="sc-page" data-lm-ready="">
@@ -71,6 +78,7 @@ export default async function SideCanvasPage() {
         lang={view.lang === 'bn' ? 'bn' : 'en'}
         w={((d.sc as Dict) ?? {}) as never}
       />
+      <PageSnapshots key={`${snaps.version}:${snaps.snaps[0]?.id ?? ''}`} view={snaps} canEdit={canEdit} lang={view.lang === 'bn' ? 'bn' : 'en'} tz={String(tz)} w={(view.lang === 'bn' ? launchBn : launchEn).ld.page as never} />
     </div>
   );
 }
