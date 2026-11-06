@@ -243,6 +243,12 @@ export function ErpImport({ dict: d, money, canWrite, canSeePrices, changes: ini
                       {t(d, 'stock.erpImport.changes.selling', { price: price(c.priceMinor) })}
                       {c.floorMinor !== null ? `${t(d, 'products.row.metaSep')}${t(d, 'stock.erpImport.changes.floor', { price: price(c.floorMinor) })}` : ''}
                     </div>
+                    {/* follow-up 528: a fixed-price set with this piece that no longer clears the floor */}
+                    {(c.setsBelowFloor ?? []).map((x) => (
+                      <div key={x.id} className="ad-mini" data-testid="shop-price-set-below">
+                        <span className="pa-miss">{t(d, 'stock.erpImport.changes.setBelow', { name: x.name, price: price(x.setPriceMinor), floor: price(x.floorMinor) })}</span>
+                      </div>
+                    ))}
                   </div>
                   <div className="pa-job-st">
                     {c.belowCost ? <span className="pa-miss">{t(d, 'stock.erpImport.changes.belowCost')}</span> : c.belowFloor ? <span className="pa-miss">{t(d, 'stock.erpImport.changes.belowFloor')}</span> : null}

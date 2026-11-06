@@ -10,7 +10,7 @@
 //   older than that is ignored ('older'), so an event that arrives late never undoes a newer price. A first price is
 //   stamped too and counts as seen at once (there is nothing to look at). How many changes the list shows is
 //   `catalogue.shopPrice.changesShown`.
-import { allow as allowCatalogue, floorOf, floorPercent, type CatalogueDeps } from '@extas/catalogue';
+import { allow as allowCatalogue, floorOf, floorPercent, setFloorMinor, type CatalogueDeps } from '@extas/catalogue';
 import { z } from 'zod';
 import type { PrismaClient } from '@extas/db/client';
 import { allow, logChange, nowOf, parse, setting, TX, type Db, type InventoryDeps, type Tx, type Who } from './context';
@@ -70,6 +70,9 @@ export interface ShopPriceChange {
   belowFloor: boolean;
   /** The selling price no longer covers the buying price at all. */
   belowCost: boolean;
+  /** Follow-up 528: fixed-price sets with this piece whose set price is now below the floor over their pieces' buying
+   *  prices (re-checked here, not only when the set price is edited); empty while the floor is off. */
+  setsBelowFloor: { id: string; name: string; setPriceMinor: number; floorMinor: number }[];
   changedAt: string;
 }
 
@@ -94,6 +97,19 @@ export async function shopPriceChanges(deps: InventoryDeps, who: Who, opts: { li
     }),
     floorPercent(deps, who),
   ]);
+  // Follow-up 528: the sets these pieces are in (a fixed piece, or any colour/size of its product), checked against the floor
+  const sets =
+    percent != null && rows.length
+      ? await deps.db.combo.findMany({
+          where: { storeId: who.storeId, archivedAt: null, setPriceMinor: { not: null }, items: { some: { archivedAt: null, OR: [{ fixedVariantId: { in: rows.map((r) => r.id) } }, { productId: { in: rows.map((r) => r.productId) } }] } } },
+          select: { id: true, nameEn: true, setPriceMinor: true, items: { where: { archivedAt: null }, select: { productId: true, fixedVariantId: true, quantity: true } } },
+        })
+      : [];
+  const below: { id: string; name: string; setPriceMinor: number; floorMinor: number; items: (typeof sets)[number]['items'] }[] = [];
+  for (const c of sets) {
+    const floor = await setFloorMinor(deps.db, catDeps(deps), who, c.items);
+    if (floor !== null && c.setPriceMinor! < floor) below.push({ id: c.id, name: c.nameEn, setPriceMinor: c.setPriceMinor!, floorMinor: floor, items: c.items });
+  }
   return {
     total,
     items: rows.map((r) => {
@@ -110,6 +126,7 @@ export async function shopPriceChanges(deps: InventoryDeps, who: Who, opts: { li
         floorMinor: floor,
         belowFloor: floor !== null && r.priceMinor !== null && r.priceMinor < floor,
         belowCost: r.priceMinor !== null && r.priceMinor < r.shopPriceMinor!,
+        setsBelowFloor: below.filter((c) => c.items.some((i) => i.fixedVariantId === r.id || (!i.fixedVariantId && i.productId === r.productId))).map(({ items: _items, ...c }) => c),
         changedAt: r.shopPriceChangedAt!.toISOString(),
       };
     }),

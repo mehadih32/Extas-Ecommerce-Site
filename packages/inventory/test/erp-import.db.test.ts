@@ -182,6 +182,20 @@ describe.skipIf(!HAS_TEST_DB)('PR 609 on PostgreSQL: import by style code, the b
     const list = await shopPriceChanges(deps(), who());
     expect(list.total).toBe(1);
     expect(list.items[0]).toMatchObject({ sku, previousMinor: 70000, shopPriceMinor: 76000, priceMinor: 150_000, floorMinor: null, belowFloor: false, belowCost: false });
+    expect(list.items[0]!.setsBelowFloor).toEqual([]);
+
+    // Follow-up 528: a fixed-price set with this piece whose price no longer clears the floor is named beside it
+    const set = await t.prisma.combo.create({ data: { storeId: storeA, slug: 'fu528-set', nameEn: 'Sample polo pair', type: 'FIXED_SET', pieceCount: 2, setPriceMinor: 160_000, status: 'RUNNING', items: { create: [{ storeId: storeA, position: 1, fixedVariantId: variant.id, quantity: 2, allowedColourIds: [], allowedSizeIds: [] }] } } });
+    await t.prisma.combo.create({ data: { storeId: storeA, slug: 'fu528-ok', nameEn: 'Sample polo pair (fine)', type: 'FIXED_SET', pieceCount: 2, setPriceMinor: 190_000, status: 'RUNNING', items: { create: [{ storeId: storeA, position: 1, fixedVariantId: variant.id, quantity: 2, allowedColourIds: [], allowedSizeIds: [] }] } } });
+    overrides.set('catalogue.floor.minMarginPercent', 20);
+    try {
+      const withFloor = await shopPriceChanges(deps(), who());
+      // two pieces bought at 76000 each: floor 2 × 76000 × 1.2 = 182400; 160000 is below it, 190000 is not
+      expect(withFloor.items[0]!.setsBelowFloor).toEqual([{ id: set.id, name: 'Sample polo pair', setPriceMinor: 160_000, floorMinor: 182_400 }]);
+    } finally {
+      overrides.delete('catalogue.floor.minMarginPercent');
+      await t.prisma.combo.updateMany({ where: { storeId: storeA, slug: { startsWith: 'fu528-' } }, data: { archivedAt: clock } });
+    }
 
     // The same through variant.changed (v6 reads only the shop price there, never the ERP's retail price or cost).
     clock = new Date(clock.getTime() + 60_000);
