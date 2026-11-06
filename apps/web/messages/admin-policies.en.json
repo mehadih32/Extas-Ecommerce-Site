@@ -23,7 +23,8 @@
       "privacy": "Privacy",
       "terms": "Terms",
       "story": "Our story",
-      "contact": "Contact"
+      "contact": "Contact",
+      "payment": "Ways to pay"
     },
     "now": {
       "h": "On the shop now",
@@ -33,6 +34,9 @@
       "rules": "Rules this page reads",
       "noRules": "No rules: the page says only your words.",
       "live": "Live",
+      "methods": "Ways to pay the checkout offers now (the page lists exactly these)",
+      "noMethods": "None open: switch a payment method on and connect its gateway, or the page says \"Coming soon\".",
+      "m": {"cod": "Cash on Delivery", "mobile": "Mobile banking", "card": "Card & bank", "online": "Pay online"},
       "notLive": "Not live",
       "gone": "Rule not found",
       "open": "Open on the shop",

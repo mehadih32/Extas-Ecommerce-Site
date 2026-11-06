@@ -9,7 +9,7 @@ import { createFirstOwner, defaultSecurityPolicy, SYSTEM, syncAuth } from '@exta
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { createRule } from '@extas/rules';
-import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
+import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import { createVault } from '@extas/vault';
 import { loginHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
@@ -73,13 +73,23 @@ describe.skipIf(!HAS_TEST_DB)('Settings › Policies & texts on PostgreSQL (PR 3
   it('starts with the defaults and none of his words; a sign-in is needed', async () => {
     expect((await policiesHandler(call('GET'), deps)).status).toBe(401);
     const g = await send('GET');
-    expect(g.a.view.pages.map((p) => p.slug)).toEqual(['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact']);
+    expect(g.a.view.pages.map((p) => p.slug)).toEqual(['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact', 'payment']);
     expect(g.a.view.pages.every((p) => !p.own)).toBe(true);
     expect(g.a.view.cards.terms.value).toMatchObject({ on: true, details: 'legal', title: null, body: null });
     expect(g.a.view.cards.exchange.value.rules).toEqual({ exchange: true, 'no-return': true, 'exchange-order': true });
     expect(g.a.view.values.some((v) => v.token === '{exchange.windowHours}' && !v.live)).toBe(true);
     // nothing live, nothing written: the terms page says "Coming soon"
     expect(g.a.view.pages.find((p) => p.slug === 'terms')!.shows).toBe(false);
+  });
+
+  it('S12 · PR 247: "Ways to pay" names the methods the checkout offers now — none as shipped, then Cash on Delivery once it is on', async () => {
+    const pay = async () => (await send('GET')).a.view.pages.find((p) => p.slug === 'payment')!;
+    expect(await pay()).toMatchObject({ on: true, methods: [], shows: false });
+    expect((await send('GET')).a.view.pages.find((p) => p.slug === 'terms')!.methods).toBeNull();
+    await deps.resolver.set('payment.cod.enabled', true, storeTarget(MOTHER_STORE_ID), { actorId: null, reason: 'test: COD only', ownerApproved: true });
+    // the wallets and cards stay off the list: their gateways are still the practice one and test payments are off
+    expect(await pay()).toMatchObject({ methods: ['cod'], shows: true });
+    await deps.resolver.set('payment.cod.enabled', false, storeTarget(MOTHER_STORE_ID), { actorId: null, reason: 'test: back', ownerApproved: true });
   });
 
   it('saves his words with a rule token, refuses a token that names nothing and a stand-in', async () => {

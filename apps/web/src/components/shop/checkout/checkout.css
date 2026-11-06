@@ -255,21 +255,7 @@
 .shop .co-chip-t { overflow: hidden; text-overflow: ellipsis; }
 .shop .co-chip.warn { background: rgb(255, 241, 220); color: rgb(138, 83, 0); box-shadow: rgb(240, 207, 152) 0px 0px 0px 1px inset; }
 @media (max-width: 479px) { .shop .co-chip-w { display: none; } }
-.shop .pmk { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 22px; min-width: 38px; padding: 0px 6px; border-radius: 4px; font: 800 10.5px / 1 Archivo, Arial, sans-serif; letter-spacing: 0.03em; border: 1px solid var(--line); background: rgb(255, 255, 255); color: rgb(34, 34, 34); white-space: nowrap; flex-shrink: 0; box-sizing: border-box; }
-.shop .pmk b { font-weight: 800; }
-.shop .pmk-bkash { background: rgb(226, 19, 110); border-color: rgb(226, 19, 110); color: rgb(255, 255, 255); }
-.shop .pmk-nagad { background: linear-gradient(90deg, rgb(247, 148, 29), rgb(236, 28, 36)); border-color: transparent; color: rgb(255, 255, 255); }
-.shop .pmk-rocket { background: rgb(140, 52, 148); border-color: rgb(140, 52, 148); color: rgb(255, 255, 255); }
-.shop .pmk-visa { color: rgb(26, 31, 113); }
-.shop .pmk-visa b { font-style: italic; font-weight: 900; font-size: 12px; letter-spacing: 0.06em; }
-.shop .pmk-amex { background: rgb(46, 119, 188); border-color: rgb(46, 119, 188); color: rgb(255, 255, 255); letter-spacing: 0.06em; }
-.shop .pmk-mastercard { padding: 0px 4px; }
-.shop .pmk-bank { color: rgb(36, 67, 95); gap: 3px; }
-.shop .pmk-bank b { font-size: 9.5px; letter-spacing: 0.08em; }
-.shop .pmk-ssl { color: rgb(27, 60, 143); gap: 0px; }
-.shop .pmk-ssl i { font-style: normal; font-weight: 700; font-size: 8px; letter-spacing: 0.04em; margin-left: 2px; color: rgb(42, 98, 201); }
-.shop .pmk-cod { color: var(--ink); background: var(--surface); gap: 5px; }
-.shop .pmk-cod b { font-size: 10.5px; }
+/* PR 247: the payment marks (.pmk-*) moved to paymark.css, imported by PayMark */
 .shop .co-pmks { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
 .shop .co-po-mk { display: inline-flex; flex-shrink: 0; align-items: center; }
 .shop .co-po-mk:empty { display: none; }
@@ -285,10 +271,6 @@
 .shop .co-flit::after { content: ""; position: absolute; top: 0px; bottom: 0px; left: 0px; width: 45%; transform: translateX(-140%); background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.75), transparent); animation: 6.5s ease-in-out 1.4s 4 normal none running n54Flit; }
 @media (prefers-reduced-motion: reduce) { .shop .co-flit::after { animation: auto ease 0s 1 normal none running none; display: none; } }
 .shop .co-tsep { margin: 0px 0.3em; }
-.shop .pmk-bkash { background: rgb(255, 255, 255); border-color: rgb(243, 194, 216); color: rgb(226, 19, 110); }
-.shop .pmk-nagad { background: rgb(255, 255, 255); border-color: rgb(248, 205, 176); color: rgb(236, 91, 36); }
-.shop .pmk-rocket { background: rgb(255, 255, 255); border-color: rgb(220, 192, 224); color: rgb(140, 52, 148); }
-.shop .pmk-amex { background: rgb(255, 255, 255); border-color: rgb(187, 211, 236); color: rgb(46, 119, 188); }
 .shop .co-pmtb { flex-direction: column; align-items: flex-start; gap: 6px; min-height: 58px; }
 .shop .co-pmtb span { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; overflow-wrap: anywhere; }
 .shop .trial-ln { display: flex; align-items: flex-start; gap: 7px; margin: 9px 0px 0px; font-size: 12.5px; line-height: 1.4; color: var(--text2); min-width: 0px; }

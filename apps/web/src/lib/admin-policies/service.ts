@@ -6,7 +6,10 @@
 // rule and leaves a line out while it cannot (packages/rules text.ts `fillPolicyText`). A token that names no rule or
 // value, or a stand-in like "[your email]", is refused on save. Seeing needs `settings.read`, saving
 // `settings.write` (checked here again). The audit row names the fields that changed, never the owner's words.
+// S12 · PR 247: "Ways to pay" joins the pages; its "On the shop now" card names the methods the checkout offers now
+// (packages/checkout `paySettings`, the same reading as the shop's page), which alone are enough for it to show.
 import { createHash } from 'node:crypto';
+import { openMethods, paySettings } from '@extas/checkout';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { formatValue, isLive, langContext, langOf, loadRules, policyTokenState, textContext, tokensIn, WINDOW_TOKENS, type PolicyTokenState, type Rule, type WindowedParams } from '@extas/rules';
@@ -17,6 +20,8 @@ export interface PoliciesDeps {
   db: PrismaClient;
   resolver: AppResolver;
   now?: () => Date;
+  /** PR 247: the mode a payment provider's gateway runs in (lib/payments-gateway `paymentModeOf`); without it only test payments count. */
+  paymentMode?: (storeId: number, provider: string) => Promise<'MOCK' | 'SANDBOX' | 'LIVE'>;
 }
 export interface PoliciesWho {
   actor: Actor;
@@ -63,6 +68,8 @@ export interface PolicyPage {
   tokens: PolicyToken[];
   /** Has something to say on the shop now (else "Coming soon"). */
   shows: boolean;
+  /** Ways to pay (PR 247): the methods the checkout offers now, in its order (null on every other page). */
+  methods: string[] | null;
 }
 
 /** A rule's value the owner may quote. */
@@ -150,7 +157,13 @@ async function contactSet(deps: PoliciesDeps): Promise<boolean> {
   return v.some(Boolean);
 }
 
-function pageOf(l: Loaded, slug: HelpSlug, lang: string, reach: { contact: boolean }): PolicyPage {
+/** PR 247 — the methods the checkout offers now (cod, mobile, card, online), as the shop's "Ways to pay" reads them. */
+async function payNow(deps: PoliciesDeps): Promise<string[]> {
+  const p = await paySettings({ settings: deps.resolver, paymentMode: deps.paymentMode }, S);
+  return openMethods(p, p.cod);
+}
+
+function pageOf(l: Loaded, slug: HelpSlug, lang: string, reach: { contact: boolean; pay: string[] }): PolicyPage {
   const c = cardOf(l, slug).value;
   const rules = l.help.pages[slug].rules.map((key) => {
     const r = l.rules.find((x) => x.key === key);
@@ -161,9 +174,10 @@ function pageOf(l: Loaded, slug: HelpSlug, lang: string, reach: { contact: boole
   const ownFaq = slug === 'faq' && (l.text?.faq ?? []).some((x) => x.on);
   const faqRules = slug === 'faq' && l.rules.some((r) => l.live.has(r.key) && r.placements.includes('faq'));
   const contact = slug === 'contact' && reach.contact;
-  // the same test as the shop's (lib/shop/help-pages): rules, his body or questions, or ways to reach the shop
-  const said = rules.some((r) => r.live) || c.body !== null || ownFaq || faqRules || contact;
-  return { slug, on: c.on, own, rules, details: c.details, tokens, shows: c.on && said };
+  const methods = slug === 'payment' ? reach.pay : null;
+  // the same test as the shop's (lib/shop/help-pages): rules, his body or questions, ways to reach the shop, ways to pay
+  const said = rules.some((r) => r.live) || c.body !== null || ownFaq || faqRules || contact || !!methods?.length;
+  return { slug, on: c.on, own, rules, details: c.details, tokens, shows: c.on && said, methods };
 }
 
 async function formCard(deps: PoliciesDeps): Promise<FormCard> {
@@ -175,7 +189,7 @@ async function formCard(deps: PoliciesDeps): Promise<FormCard> {
 export async function policiesView(deps: PoliciesDeps, who: PoliciesWho, lang: string): Promise<PoliciesView> {
   await requirePermission(deps.db, who.actor, 'settings.read', { storeId: S });
   const l = await load(deps);
-  const reach = { contact: await contactSet(deps) };
+  const reach = { contact: await contactSet(deps), pay: await payNow(deps) };
   const ctx = langContext(await textContext({ settings: deps.resolver }, S), langOf(lang));
   const listed = new Set(POLICY_PAGES.flatMap((s) => l.help.pages[s].rules));
   const ruleChoices = [...l.rules.map((r) => ({ value: r.key, label: `${nameOf(r, lang)} (${r.key})` })), ...[...listed].filter((k) => !l.all.has(k)).map((k) => ({ value: k, label: k }))];

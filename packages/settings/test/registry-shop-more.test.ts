@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { messages, lookup } from '../src/messages';
 import { registry } from '../src/registry';
+import { searchHelpSchema, searchSettings } from '../src/registry-search';
 import { HELP_PAGES, pagesHelpSchema, pagesTextSchema, pdpFitSchema, pdpIconsSchema, pdpRowsSchema, shellMenuSubsSchema, shopMoreSettings, wishListSchema } from '../src/registry-shop-more';
 
 describe('third storefront batch settings (v23)', () => {
@@ -77,6 +78,27 @@ describe('third storefront batch settings (v23)', () => {
     const words = { pages: { story: { title: null, lede: null, body: { en: 'Made here.', bn: 'এখানে তৈরি।' } } }, faq: [{ id: 'q1', on: true, q: { en: 'Q?', bn: 'প্রশ্ন?' }, a: { en: 'A.', bn: 'উত্তর।' } }] };
     expect(pagesTextSchema.safeParse(words).success).toBe(true);
     expect(pagesTextSchema.safeParse({ ...words, pages: { careers: words.pages.story } }).success).toBe(false);
+  });
+
+  it('S12 · PR 247: "Ways to pay" joins at the end, on, reading no rule; help settings saved before it still parse and get it', () => {
+    const h = shopMoreSettings['pages.help'].default;
+    expect(HELP_PAGES.at(-1)).toBe('payment');
+    expect(h.pages.payment).toEqual({ on: true, rules: [], details: 'none' });
+    const { payment, ...before } = h.pages;
+    void payment;
+    const old = pagesHelpSchema.safeParse({ ...h, pages: { ...before, delivery: { ...h.pages.delivery, on: false } } });
+    expect(old.success).toBe(true);
+    expect(old.data?.pages.payment).toEqual({ on: true, rules: [], details: 'none' });
+    expect(old.data?.pages.delivery.on).toBe(false);
+    expect(pagesHelpSchema.safeParse({ ...h, topics: ['payment', 'faq'] }).success).toBe(true);
+    // search: every page has its words; the payment words moved from Terms; saved words without "payment" still parse
+    const k = searchSettings['search.help'].default.keywords;
+    expect(HELP_PAGES.every((p) => (k[p]?.length ?? 0) > 0)).toBe(true);
+    expect(k.payment).toEqual(expect.arrayContaining(['bkash', 'nagad', 'card', 'পেমেন্ট', 'বিকাশ']));
+    expect(k.terms).not.toContain('payment');
+    const { payment: kp, ...kOld } = k;
+    void kp;
+    expect(searchHelpSchema.safeParse({ ...searchSettings['search.help'].default, keywords: kOld }).success).toBe(true);
   });
 
   it('PR 71: the wishlist keeps up to 100, shows 4 newest on an empty computer page, and the bag moves to it (demo R16)', () => {

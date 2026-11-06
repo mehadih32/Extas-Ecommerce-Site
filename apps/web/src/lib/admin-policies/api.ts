@@ -5,6 +5,7 @@
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, readCookie, type AdminDeps } from '../admin-auth';
 import { ADMIN_LANG_COOKIE, pickAdminLang } from '../admin-i18n';
+import { paymentModeOf } from '../payments-gateway';
 import { FORM_CARD, isPoliciesError, policiesView, saveContactForm, savePolicyPage } from './service';
 
 export async function policiesHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
@@ -12,7 +13,7 @@ export async function policiesHandler(request: Request, deps: AdminDeps | null):
   if (method !== 'GET' && method !== 'PUT') return fail(405, 'method-not-allowed');
   const g = await guardAdmin(request, deps, { permission: 'settings.read', storeId: MOTHER_STORE_ID });
   if (g instanceof Response) return g;
-  const d = { db: deps!.db, resolver: deps!.resolver, now: deps!.now };
+  const d = { db: deps!.db, resolver: deps!.resolver, now: deps!.now, paymentMode: paymentModeOf };
   const who = { actor: g.actor, ctx: g.ctx };
   try {
     const locale = (await d.resolver.value('store.locale', { storeId: MOTHER_STORE_ID }).catch(() => null)) as string | null;

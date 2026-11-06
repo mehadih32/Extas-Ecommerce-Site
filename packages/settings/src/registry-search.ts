@@ -82,7 +82,7 @@ export const searchHelpSchema = z
     /** Help pages answer in the panel and on the results page. */
     on: z.boolean(),
     /** Words that find each help page (English, Banglish, Bengali, common misspellings), besides its own title. */
-    keywords: z.record(z.enum(HELP_PAGES), wordList(120)),
+    keywords: z.partialRecord(z.enum(HELP_PAGES), wordList(120)),
     /** Words too general to decide alone ("policy", "charge"): they still find pages, but a more exact word wins. */
     weak: wordList(60),
   })
@@ -159,8 +159,16 @@ const HELP_KEYWORDS: Record<HelpSlug, string[]> = {
   ],
   privacy: ['privacy', 'privacy policy', 'personal data', 'personal information', 'my data', 'delete my data', 'policy', 'প্রাইভেসি', 'গোপনীয়তা'],
   terms: [
-    'terms', 'terms and conditions', 'conditions', 'tnc', 'rules', 'policy', 'payment', 'pay', 'payment method', 'how to pay', 'bkash', 'nagad', 'card',
-    'শর্ত', 'শর্তাবলী', 'নিয়ম', 'পেমেন্ট', 'বিকাশ', 'নগদ',
+    'terms', 'terms and conditions', 'conditions', 'tnc', 'rules', 'policy', 'শর্ত', 'শর্তাবলী', 'নিয়ম',
+    // ~~'payment', 'pay', 'payment method', 'how to pay', 'bkash', 'nagad', 'card', 'পেমেন্ট', 'বিকাশ', 'নগদ'~~ moved to "Ways to pay" (PR 247)
+  ],
+  // S12 · PR 247: "Ways to pay" answers the payment words (it lists exactly what the checkout offers)
+  payment: [
+    'payment', 'pay', 'payment method', 'payment methods', 'payment option', 'ways to pay', 'how to pay', 'how can i pay', 'pay online', 'online payment',
+    'bkash', 'nagad', 'rocket', 'upay', 'mobile banking', 'card', 'card payment', 'credit card', 'debit card', 'visa', 'mastercard', 'amex',
+    'internet banking', 'net banking', 'bank', 'advance payment', 'pay first', 'payment koro', 'taka kivabe dibo', 'bikash', 'nogod', 'paymnet', 'payement',
+    'পেমেন্ট', 'পেমেন্টের উপায়', 'কিভাবে টাকা দেব', 'কীভাবে টাকা দেব', 'টাকা দেওয়া', 'বিকাশ', 'নগদ', 'রকেট', 'মোবাইল ব্যাংকিং', 'কার্ড',
+    'ভিসা', 'মাস্টারকার্ড', 'ব্যাংক', 'নেট ব্যাংকিং', 'অনলাইন পেমেন্ট', 'অগ্রিম',
   ],
   story: ['about', 'about us', 'our story', 'story', 'who are you', 'company', 'made in bangladesh', 'আমাদের সম্পর্কে'],
 };

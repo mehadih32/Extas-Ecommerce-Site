@@ -19,6 +19,7 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { DETAILS, isPolicyPage, POLICY_PAGES, policiesView, wordMax } from '@/lib/admin-policies/service';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { ROUTES } from '@/lib/shop/routes';
+import { paymentModeOf } from '@/lib/payments-gateway';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-policies.bn.json';
 import en from '../../../../../messages/admin-policies.en.json';
@@ -56,7 +57,7 @@ export default async function PoliciesPage({ searchParams }: { searchParams: Pro
         <ShellState view={view} kind="denied" permission="settings.read" />
       </div>
     );
-  const v = await policiesView({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx }, view.lang);
+  const v = await policiesView({ db: access.deps.db, resolver: access.deps.resolver, paymentMode: paymentModeOf }, { actor: access.guard.actor, ctx: access.guard.ctx }, view.lang);
   const canEdit = access.guard.permissions?.has('settings.write') ?? false;
   const s = (k: string, vars?: Record<string, string | number>) => t(d, `pol.${k}`, vars);
   const num = (n: number) => formatNumber(n, view.locale);
@@ -147,6 +148,24 @@ export default async function PoliciesPage({ searchParams }: { searchParams: Pro
             {state}
           </span>
         </div>
+        {page.methods ? (
+          <>
+            {/* PR 247: "Ways to pay" lists exactly these — the checkout's switches and connected gateways */}
+            <p className="a2-sm a2-mt12">{s('now.methods')}</p>
+            {page.methods.length ? (
+              <ul className="a2-stack a2-mt12" style={{ gap: 6 }} data-testid="pol-page-methods">
+                {page.methods.map((m) => (
+                  <li key={m} className="a2-gap8">
+                    <span className="a2-pill ok">{s('now.live')}</span>
+                    <span className="a2-sm">{s(`now.m.${m}`)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="a2-sm a2-mute">{s('now.noMethods')}</p>
+            )}
+          </>
+        ) : null}
         <p className="a2-sm a2-mt12">{s('now.rules')}</p>
         {page.rules.length ? (
           <ul className="a2-stack a2-mt12" style={{ gap: 6 }}>

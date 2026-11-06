@@ -186,7 +186,8 @@ export const shellMenuSubsSchema = z
 
 // ---- PR 75 · the help pages (Blueprint D3.17, C12 `/help/<slug>`; demo 71-pages.js, desktop help centre D-017) ----
 
-export const HELP_PAGES = ['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact'] as const;
+// S12 · PR 247: "Ways to pay" (`payment`) joins at the end — the list is never reordered (stored topic lists keep their order).
+export const HELP_PAGES = ['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact', 'payment'] as const;
 export type HelpSlug = (typeof HELP_PAGES)[number];
 const helpSlugSchema = z.enum(HELP_PAGES);
 /** A Smart Rule's key (packages/rules: lower-case words and dashes). */
@@ -202,6 +203,9 @@ const helpPageSchema = z
   })
   .strict();
 
+/** S12 · PR 247 — "Ways to pay" as stored before it existed: filled in on read, so an owner's saved help settings stay valid. */
+export const HELP_PAYMENT_PAGE_DEFAULT = { on: true, rules: [] as string[], details: 'none' as const };
+
 /**
  * The help pages: which are shown, which live Smart Rules each one reads (their texts, in this order — the rules are
  * the owner's policy, so a page never words a charge or a window itself), and which of the store's details follow the
@@ -212,7 +216,20 @@ const helpPageSchema = z
 export const pagesHelpSchema = z
   .object({
     pages: z
-      .object({ faq: helpPageSchema, delivery: helpPageSchema, exchange: helpPageSchema, privacy: helpPageSchema, terms: helpPageSchema, story: helpPageSchema, contact: helpPageSchema })
+      .object({
+        faq: helpPageSchema,
+        delivery: helpPageSchema,
+        exchange: helpPageSchema,
+        privacy: helpPageSchema,
+        terms: helpPageSchema,
+        story: helpPageSchema,
+        contact: helpPageSchema,
+        /**
+         * S12 · PR 247 — "Ways to pay": the methods the checkout offers now (its own switches and gateways, read live —
+         * a method switched off is never listed), then the rules ticked here and the owner's words.
+         */
+        payment: helpPageSchema.default(HELP_PAYMENT_PAGE_DEFAULT),
+      })
       .strict(),
     /** The computer's help centre (the topic list and the "Still stuck?" card); off: the phone's single column. */
     desk: z.boolean(),
@@ -350,6 +367,7 @@ export const shopMoreSettings = {
         terms: { on: true, rules: [], details: 'legal' },
         story: { on: true, rules: [], details: 'none' },
         contact: { on: true, rules: [], details: 'none' },
+        payment: HELP_PAYMENT_PAGE_DEFAULT,
       },
       desk: true,
       topics: ['delivery', 'exchange', 'faq', 'contact'],

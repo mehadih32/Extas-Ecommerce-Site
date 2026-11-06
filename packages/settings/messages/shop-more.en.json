@@ -40,7 +40,7 @@
   "pages": {
     "help": {
       "label": "Help pages",
-      "help": "The help pages at /help/…: questions and answers, delivery, exchange and returns, privacy, terms, our story and contact. Switch each one on or off, and choose which live Smart Rules it shows (their texts, in this order: a rule that is not live is left out). The FAQ also shows every live rule placed on \"FAQ\". Store details: under privacy the e-mail and hotline, under terms the registered name, address, trade licence and DBID (each only when filled in). A page with nothing to show says \"Coming soon\". On a computer the pages sit in a help centre with the topics on the left (choose which, in order) and WhatsApp and the hotline on the right. \"Still need a hand?\" adds the WhatsApp button under each page."
+      "help": "The help pages at /help/…: questions and answers, delivery, exchange and returns, privacy, terms, our story, contact and ways to pay. Switch each one on or off, and choose which live Smart Rules it shows (their texts, in this order: a rule that is not live is left out). The FAQ also shows every live rule placed on \"FAQ\". Store details: under privacy the e-mail and hotline, under terms the registered name, address, trade licence and DBID (each only when filled in). \"Ways to pay\" lists exactly the methods the checkout offers now (a method switched off, or whose payment gateway is not connected, is never listed), then its rules and your words. A page with nothing to show says \"Coming soon\". On a computer the pages sit in a help centre with the topics on the left (choose which, in order) and WhatsApp and the hotline on the right. \"Still need a hand?\" adds the WhatsApp button under each page."
     },
     "text": {
       "label": "Words on the help pages",
