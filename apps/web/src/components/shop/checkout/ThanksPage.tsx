@@ -14,6 +14,7 @@
 // PR 193: `eta` — "ships from …" (placed during the holiday) or "may arrive after Eid" replaces the hours promise.
 // PR 127: a line added after placing ("Add to this parcel") carries the demo's "Added" tag (ty_items).
 // PR 605: a gift says who it is for, who sends it, its note and its day, and that the receiver's invoice hides prices.
+// Follow-up 238 (PR 65): "Rate & review" under the items of a delivered order, while he may still review a line.
 // PR 128: "Complete your look" in the right column (demo ty_look, block 4) while the owner has it on (`thanks.look`):
 // only pieces the shop's running combos pair with this order, Add while "Add to this parcel" is open for it.
 import '../bag/bag.css';
@@ -37,6 +38,8 @@ import { CopyNumber, RetryPayment } from './ThanksActions';
 import { Upsell } from '../bag/Upsell';
 import type { ShopCard } from '@/lib/shop/catalogue';
 import type { Reassurance } from '@/lib/shop/bag-model';
+import { askReview } from '@/lib/shop/review-link';
+import { RateReviewLink } from '../account/RateReviewLink';
 import { lookBlockOf } from './look-block';
 
 export function ThanksNotFound({ c }: { c: ShopContext }) {
@@ -110,6 +113,7 @@ export async function ThanksPage({
   look = null,
   eta = [],
   upsell = null,
+  reviewOn = false,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -125,6 +129,8 @@ export async function ThanksPage({
   upsell?: { cards: ShopCard[]; reasons: boolean; trust: Reassurance } | null;
   /** PR 193: the lines in place of the hours promise (placed during the holiday, or past its place's Eid date). */
   eta?: string[];
+  /** Follow-up 238: the shop takes reviews (`reviews.submit`); a delivered order then offers "Rate & review". */
+  reviewOn?: boolean;
 }) {
   const words = checkoutWords(c);
   const w = (k: string, vars: Record<string, string> = {}) => fill(words[k] ?? k, vars);
@@ -294,6 +300,11 @@ export async function ThanksPage({
           );
         })}
       </div>
+      {reviewOn && askReview(r.status) ? (
+        <div className="ty-rate">
+          <RateReviewLink number={r.number} href={hrefIn(c.lang, ROUTES.order(r.number))} label={c.t('account.review.cta')} testId="ty-rate-review" />
+        </div>
+      ) : null}
       <div style={{ borderTop: '1px solid var(--line2)', marginTop: 6, paddingTop: 8 }}>
         {row(w('sum.subtotal'), m(r.subtotalMinor))}
         {r.discountMinor > 0 ? row(w('ty.discount'), `−${m(r.discountMinor)}`, 'disc') : null}
