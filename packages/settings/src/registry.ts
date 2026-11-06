@@ -120,6 +120,7 @@ import { couponDistributionSettings } from './registry-coupons-distribution';
 import { referralSettings } from './registry-referrals';
 import { aiDraftSettings, approvalSettings, briefSettings, clusterSettings, journalSettings, performanceSettings, scheduleSettings } from './registry-journal';
 import { seasonalSettings } from './registry-seasonal';
+import { adminThemeSettings } from './registry-admin-theme';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
@@ -1452,6 +1453,8 @@ export const registry = {
   ...performanceSettings,
   // ---- S12 · CN-031 lane A · PR 246 · seasonal landing pages (registry-seasonal.ts, version 228). ----
   ...seasonalSettings,
+  // ---- S00 · CN-036 lane A · PR 625 · the admin theme layer: look, accent, reduce motion (registry-admin-theme.ts, version 234). ----
+  ...adminThemeSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

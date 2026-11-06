@@ -19,6 +19,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type CSSProperties, type ReactNode } from 'react';
 import { ADMIN_LANG_COOKIE, ADMIN_LOGIN } from '@/lib/admin-nav';
 import { resolveGuideMode } from '@/lib/admin-shell/help-pages';
+import { DEFAULT_THEME, themeAttrs, themeOnRoot, themeStyle } from '@/lib/admin-look/theme';
 import { RAIL_COOKIE, viewerOf, type ShellModel, type TodoItem } from '@/lib/admin-shell/model';
 import { locate, sectionHome, sectionVisible, SHELL_GROUPS, SHELL_SECTIONS, visiblePages, visibleTabs, type ShellSection } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
@@ -81,6 +82,9 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
     if (guide?.path) setGuide({ ...guide, path: pathname });
   }
   const phone = useSyncExternalStore(onPhoneChange, isPhone, () => false);
+  // PR 625 (CN-036): the person's theme on the shell's root (server-drawn, no flash) and on <html> for the dialogs.
+  const theme = model.theme ?? DEFAULT_THEME;
+  useEffect(() => themeOnRoot(theme), [theme]);
   const mode = resolveGuideMode(guideMode, phone);
 
   const remember = () => {
@@ -300,7 +304,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
     ) : null;
 
   return (
-    <div className={`adm2 a3s${guide && mode === 'side' ? ' a2-gopen' : ''}`} translate="no" lang={model.lang} data-testid="a2-shell">
+    <div className={`adm2 a3s${guide && mode === 'side' ? ' a2-gopen' : ''}`} translate="no" lang={model.lang} data-testid="a2-shell" {...themeAttrs(theme)} style={themeStyle(theme) as CSSProperties}>
       <a className="a2-skip" href="#main">
         {tt('nav.skip')}
       </a>

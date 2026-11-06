@@ -33,6 +33,7 @@ export * from './registry-pdp-templates';
 export * from './registry-accounts';
 export * from './registry-motion';
 export * from './registry-admin-look';
+export * from './registry-admin-theme';
 export * from './registry-admin-shell';
 export { messages, lookup, pair, type MessageTree, type SettingsMessages, type LabelPair } from './messages';
 export * from './registry-orders';

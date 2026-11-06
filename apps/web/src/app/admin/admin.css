@@ -19,37 +19,37 @@
 @import './orders/returns/returns.css';
 
 .ad {
-  /* colours (demo "classic" theme + admin shell) */
-  --ad-bg: #f2f1ee;
-  --ad-surface: #ffffff;
-  --ad-surface2: #fafaf8;
-  --ad-ink: #171715;
-  --ad-text2: #54504a;
-  --ad-muted: #6e675e;
-  --ad-line: #e6e3de;
-  --ad-line2: #efede8;
-  --ad-input: #d8d4cd;
-  --ad-brand: #1f4e46;
-  --ad-brand-dark: #15302b;
-  --ad-brand-ink: #ffffff;
-  --ad-brand-tint: #eef3f1;
-  --ad-side-ink: #dde8e4;
-  --ad-side-dim: #9fbdb4;
-  --ad-on-dark: rgba(255, 255, 255, 0.12);
-  --ad-on-dark-hover: rgba(255, 255, 255, 0.1);
-  --ad-sale: #b4453c;
-  --ad-warn: #8a5a1e;
-  --ad-warn-bg: #f6efdf;
-  --ad-warn-line: #e7d3ae;
-  --ad-dot-off: #c9c3b8;
-  --ad-disabled-ink: #5c564e;
-  --ad-overlay: rgba(15, 15, 14, 0.55);
-  --ad-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-  --ad-toast-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  --ad-lang-bg-main: #e9e5df;
+  /* colours, type and shape: since PR 625 (CN-036) the theme layer's tokens (theme/lumen.css) */
+  --ad-bg: var(--lm-bg);
+  --ad-surface: var(--lm-sf);
+  --ad-surface2: var(--lm-sf2);
+  --ad-ink: var(--lm-ink);
+  --ad-text2: var(--lm-ink2);
+  --ad-muted: var(--lm-ink2);
+  --ad-line: var(--lm-ln);
+  --ad-line2: var(--lm-ln2);
+  --ad-input: color-mix(in srgb, var(--lm-ink2) 35%, var(--lm-sf));
+  --ad-brand: var(--lm-brand);
+  --ad-brand-dark: var(--lm-hero-solid);
+  --ad-brand-ink: var(--lm-on-hero);
+  --ad-brand-tint: var(--lm-acbg);
+  --ad-side-ink: var(--lm-on-hero);
+  --ad-side-dim: var(--lm-on-hero2);
+  --ad-on-dark: var(--lm-on-hero-soft);
+  --ad-on-dark-hover: var(--lm-on-hero-soft);
+  --ad-sale: var(--lm-bad);
+  --ad-warn: var(--lm-warn);
+  --ad-warn-bg: var(--lm-warnbg);
+  --ad-warn-line: color-mix(in srgb, var(--lm-warn) 30%, var(--lm-warnbg));
+  --ad-dot-off: var(--lm-cprev);
+  --ad-disabled-ink: var(--lm-ink2);
+  --ad-overlay: var(--lm-scrim);
+  --ad-shadow: var(--lm-sh2);
+  --ad-toast-shadow: var(--lm-sh-toast);
+  --ad-lang-bg-main: var(--lm-chip);
   /* type */
-  --ad-font-body: var(--a2-font, var(--font-instrument), var(--font-bengali)), system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --ad-font-display: var(--font-archivo), var(--font-bengali), system-ui, sans-serif;
+  --ad-font-body: var(--a2-font, var(--lm-font));
+  --ad-font-display: var(--lm-font-disp);
   --ad-fs-body: 15px;
   --ad-fs-small: 13px;
   --ad-fs-mini: 12px;
@@ -57,12 +57,12 @@
   --ad-fs-h1-desk: 34px;
   --ad-fs-h2: 17px;
   /* shape and space */
-  --ad-radius: 8px;
-  --ad-btn-radius: 10px;
-  --ad-side-radius: 6px;
-  --ad-pill: 999px;
-  --ad-modal-radius: 14px;
-  --ad-modal-radius-desk: 12px;
+  --ad-radius: var(--lm-r-ctl);
+  --ad-btn-radius: var(--lm-r-ctl);
+  --ad-side-radius: var(--lm-r-ctl);
+  --ad-pill: var(--lm-r-pill);
+  --ad-modal-radius: var(--lm-r-panel);
+  --ad-modal-radius-desk: var(--lm-r-panel);
   --ad-gutter: 16px;
   --ad-side-w: 240px;
   --ad-top-h: 60px;

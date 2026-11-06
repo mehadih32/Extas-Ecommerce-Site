@@ -9,7 +9,12 @@
 // PR 12 (CN-025): the V12.4 shell (top bar, rail, To-do drawer) and its design language (look.css), the drawer's waiting
 // lists (only what the person may open), "Mine" (`admin.todo`), the rail's own expanded / collapsed choice (a cookie) and
 // where the guide opens for this person (`admin.guideOpens`, CN-026 (b)).
+// PR 625 (CN-036): the theme layer (theme/lumen.css) — every colour, radius, font, shadow and motion time as a token —
+// and this person's theme (look, light or dark, motion, the team's accent) on the shell's root, or on the page's own
+// wrapper when there is no shell (the sign-in page).
 import { preload } from 'react-dom';
+import type { CSSProperties } from 'react';
+import './theme/lumen.css';
 import '../../fonts/admin.css';
 import '../../fonts/admin-ui.css';
 import './admin.css';
@@ -19,9 +24,10 @@ import './shell.css';
 import './look.css';
 import { cookies } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { adminLookSettings } from '@extas/settings';
+import { adminLookSettings, BUILT_ADMIN_LOOKS } from '@extas/settings';
 import { guideModeOf } from '@/lib/admin-look/pick';
 import { lookState } from '@/lib/admin-look/prefs';
+import { themeAttrs, themeOf, themeStyle, type AdminTheme } from '@/lib/admin-look/theme';
 import { AdminShell } from '@/components/admin/shell/AdminShell';
 import { ShellTextProvider } from '@/components/admin/shell/ShellText';
 import { langLabels } from '@/components/admin/AdminFrame';
@@ -35,7 +41,7 @@ import { t } from '@/lib/i18n';
 
 type TodoSetting = { laterHours: number; mine: Record<string, string[]> };
 
-async function shellModel(): Promise<ShellModel | null> {
+async function shellModel(theme: AdminTheme): Promise<ShellModel | null> {
   const s = await shellSession();
   if (s.kind !== 'ok') return null;
   const view = await adminView(s.deps);
@@ -66,6 +72,7 @@ async function shellModel(): Promise<ShellModel | null> {
     todoMine: mineOf(s.roles, todo.mine, startPages, rows),
     laterHours: todo.laterHours,
     railExpanded: jar.get(RAIL_COOKIE)?.value === '1',
+    theme,
   };
 }
 
@@ -81,7 +88,10 @@ async function guideChoice(): Promise<string> {
 }
 
 export default async function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [model, view, guideMode] = await Promise.all([shellModel(), adminView(), guideChoice().catch(() => null)]);
+  const theme = await lookState()
+    .then((l) => l.theme)
+    .catch(() => themeOf(null, undefined, BUILT_ADMIN_LOOKS));
+  const [model, view, guideMode] = await Promise.all([shellModel(theme), adminView(), guideChoice().catch(() => null)]);
   for (const href of adminFontPreloads(view.lang)) preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
   // The error page draws in the browser: it gets the system states' words here (lib/admin-shell, SH-07).
   const text = { lang: view.lang, dict: { shell: { state: (view.dict.shell as Dict).state } } as Dict, inShell: model !== null };
@@ -92,7 +102,9 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
           {children}
         </AdminShell>
       ) : (
-        <div>{children}</div>
+        <div {...themeAttrs(theme)} style={themeStyle(theme) as CSSProperties}>
+          {children}
+        </div>
       )}
     </ShellTextProvider>
   );

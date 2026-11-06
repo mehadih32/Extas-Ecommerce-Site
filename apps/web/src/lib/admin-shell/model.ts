@@ -3,6 +3,7 @@
 // counted for this request. The shell asks GET /api/admin/shell/badges again as the person moves between pages.
 import type { AdminSectionId } from '@extas/settings';
 import type { AdminLang } from '../admin-i18n';
+import type { AdminTheme } from '../admin-look/theme';
 import type { Dict } from '../i18n';
 import type { ShellIconName } from './icons';
 import type { QueueRow } from './queues';
@@ -36,6 +37,8 @@ export interface ShellModel {
   laterHours: number;
   /** The rail is drawn expanded (the person's own choice, a cookie). */
   railExpanded: boolean;
+  /** PR 625 (CN-036): the theme this person's admin is drawn in (look, light or dark, motion, accent); none = Lumen light. */
+  theme?: AdminTheme;
 }
 
 /** One waiting list in the "To do" drawer. */

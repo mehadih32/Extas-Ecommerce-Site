@@ -10,7 +10,7 @@
 .adm2 .mc-b{position:relative;height:22px;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(100%/8.57 - 1px),var(--ln2) calc(100%/8.57 - 1px),var(--ln2) calc(100%/8.57));border-radius:6px}
 .adm2 .mc-head .mc-b{background:none;height:18px}
 .adm2 .mc-head .mc-b span{position:absolute;top:0;font-size:11px;color:var(--mute);white-space:nowrap;transform:translateX(-2px)}
-.adm2 .mc-b i{position:absolute;top:3px;bottom:3px;border-radius:5px;background:#D7D2C7}
+.adm2 .mc-b i{position:absolute;top:3px;bottom:3px;border-radius:5px;background:var(--lm-cprev)}
 .adm2 .mc-b i.live{background:var(--g)}
 .adm2 .mc-b i.scheduled{background:var(--info)}
 .adm2 .mc-b i.ended{background:var(--ln)}

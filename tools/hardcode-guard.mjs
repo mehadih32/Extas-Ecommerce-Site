@@ -2,6 +2,9 @@
 // number that belongs in settings, the vault or a messages file (CLAUDE.md rules 1, 2 and 4). The rules live in
 // tools/hardcode-guard.json. Comments are not scanned for "code" rules; secret rules scan everything.
 //   node tools/hardcode-guard.mjs [paths…]     (no paths = the configured roots)
+// PR 625 (CN-036, PR 494 updated 6 Nov 2026): stylesheets (.css) are read only by the rules marked `css`, and a rule may
+// carry a `baseline` (file → how many findings it already had when the rule came): a file may keep up to that many (the
+// pages not yet moved into the admin look, each section PR lowers its number), never more, and a new file none.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, extname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,6 +38,7 @@ export function scan(file, text, rules) {
   for (const rule of rules) {
     if (rule.onlyRe && !rule.onlyRe.test(file)) continue;
     if (rule.code && isJson) continue;
+    if (file.endsWith('.css') && !rule.css) continue;
     const lines = rule.everywhere || isJson ? raw : code;
     lines.forEach((line, i) => {
       if (OPT_OUT.test(raw[i])) return;
@@ -61,6 +65,18 @@ function* walk(dir, cfg) {
   }
 }
 
+/** The findings left once each rule's baseline is allowed per file (a file over its baseline keeps all its findings). */
+export function overBaseline(findings, rules) {
+  const byRule = new Map(rules.map((r) => [r.id, r]));
+  const count = new Map();
+  for (const f of findings) count.set(`${f.rule}\0${f.file}`, (count.get(`${f.rule}\0${f.file}`) ?? 0) + 1);
+  return findings.filter((f) => {
+    const base = byRule.get(f.rule)?.baseline;
+    if (!base) return true;
+    return count.get(`${f.rule}\0${f.file}`) > (base[f.file] ?? 0);
+  });
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const rules = compile(config.rules);
   const targets = process.argv.slice(2);
@@ -68,7 +84,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ? targets
     : config.scan.roots.filter((r) => { try { return statSync(join(root, r)).isDirectory(); } catch { return false; } })
         .flatMap((r) => [...walk(join(root, r), config.scan)]);
-  const findings = files.flatMap((f) => scan(f, readFileSync(join(root, f), 'utf8'), rules));
+  const findings = overBaseline(
+    files.flatMap((f) => scan(f, readFileSync(join(root, f), 'utf8'), rules)),
+    rules,
+  );
   for (const f of findings) console.log(`${f.file}:${f.line}  [${f.rule}] ${f.what}: ${f.text}`);
   console.log(`hardcode guard: ${files.length} files, ${findings.length} finding(s)`);
   process.exit(findings.length ? 1 : 0);

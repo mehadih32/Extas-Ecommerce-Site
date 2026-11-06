@@ -127,6 +127,27 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
     expect(await deps.resolver.value('admin.guideOpens', scope)).toEqual({ desktop: 'page', phone: 'sheet', perPerson: true });
   });
 
+  it('PR 625: a person’s light or dark and Reduce motion stay on their account (always their own); the team’s look, accent and motion need settings.write', async () => {
+    const owners = await t.prisma.staffUser.findFirst({ where: { email: 'owner@example.com' }, select: { id: true } });
+    await deps.resolver.set('admin.look', { pages: {}, perPerson: false }, storeTarget(MOTHER_STORE_ID), { actorId: owners!.id, reason: 'test: one design for everyone' });
+    expect((await lookHandler(call({ scope: 'me', theme: { mode: 'dark' } }, staff), catalog, deps)).status).toBe(200);
+    expect((await lookHandler(call({ scope: 'me', theme: { motion: 'reduce', look: 'lumen' } }, staff), catalog, deps)).status).toBe(200);
+    const prefs = () => t.prisma.staffUser.findUnique({ where: { id: staffId }, select: { adminPrefs: true } }).then((r) => readPrefs(r?.adminPrefs));
+    expect((await prefs()).theme).toEqual({ mode: 'dark', motion: 'reduce', look: 'lumen' });
+    for (const theme of [{ mode: 'sepia' }, { look: 'studio' }, {}, { accent: '#000000' }, 'dark']) expect((await lookHandler(call({ scope: 'me', theme }, staff), catalog, deps)).status, JSON.stringify(theme)).toBe(400);
+    expect((await lookHandler(call({ scope: 'me', theme: { mode: null, motion: null, look: null } }, staff), catalog, deps)).status).toBe(200);
+    expect((await prefs()).theme).toBeUndefined();
+    await deps.resolver.set('admin.look', adminLookSettings['admin.look'].default, storeTarget(MOTHER_STORE_ID), { actorId: owners!.id, reason: 'test: back' });
+    // The team's: settings.write, checked, through the change log.
+    expect((await lookHandler(call({ scope: 'team', theme: { accent: '#12B5A6' } }, staff), catalog, deps)).status).toBe(403);
+    expect((await lookHandler(call({ scope: 'team', theme: { accent: 'teal' } }, owner), catalog, deps)).status).toBe(400);
+    expect((await lookHandler(call({ scope: 'team', theme: { look: 'clear' } }, owner), catalog, deps)).status).toBe(400);
+    expect((await lookHandler(call({ scope: 'team', theme: { accent: '#12B5A6', reduceMotion: true } }, owner), catalog, deps)).status).toBe(200);
+    expect(await deps.resolver.value('admin.theme', scope)).toEqual({ look: 'lumen', accent: '#12B5A6', reduceMotion: true });
+    const log = await t.prisma.settingChange.findFirst({ where: { key: 'admin.theme' }, orderBy: { createdAt: 'desc' } });
+    expect(log?.actorId).toBe(owners!.id);
+  });
+
   it('the Dashboard loader reads every part on an empty shop: zeros and empty lists, never a sample', async () => {
     const s = (await deps.resolver.value('admin.dashboardDesigns', scope)) as DashDesignSettings;
     const now = new Date();

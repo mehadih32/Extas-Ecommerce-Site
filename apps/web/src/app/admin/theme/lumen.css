@@ -1,0 +1,225 @@
+/* PR 625 (CN-036) — the admin's theme layer: every colour, radius, font, shadow and motion time the admin draws with is a
+   token here (--lm-*), and nowhere else (the hardcode guard's admin rule, tools/hardcode-guard.json, fails a colour or a
+   font family written in an admin page or style outside this folder). The spec is docs/demo/admin-look/LUMEN-SPEC.md §1.
+   - A look is one block of tokens on [data-lm-look=<id>]; light is the default mode and [data-lm-mode=dark] the dark one
+     (the moon button, remembered per person: StaffUser.adminPrefs.theme). The parked looks (PR 649–651: clear, night,
+     studio) are each one more block here plus an optional shell variant, so building one stays a small job.
+   - The accent is a setting (admin.theme.accent; coral as shipped): the shell puts it on its root as --lm-accent, and
+     every accent token is mixed from it, so any accent the owner picks keeps text on it readable (AA): --lm-ac-ink for
+     accent-coloured text, --lm-brand for a surface that carries white text.
+   - Motion: [data-lm-motion=reduce] (the person's "Reduce motion", or the team's) and the system's
+     prefers-reduced-motion both stop every animation and transition in the admin.
+   - Tokens sit on :root as well as on the shell's root, because dialogs open in document.body (outside the shell); the
+     shell copies its look, mode and motion onto <html> so they match.
+   - Pages not yet moved into the look (their section PR, 631–648) keep drawing with their old variables, which now
+     read these tokens (shell.css, look.css, admin.css map them). In dark mode such a page stays a light "island" (its
+     own .ad frame keeps the light tokens) until its section PR marks it ready (data-lm-ready), so nothing is shown
+     half-done in dark. */
+
+:root,
+[data-lm-look] {
+  /* shape */
+  --lm-r-card: 22px;
+  --lm-r-side: 24px;
+  --lm-r-panel: 20px;
+  --lm-r-box: 16px;
+  --lm-r-ctl: 12px;
+  --lm-r-sm: 9px;
+  --lm-r-pill: 999px;
+  /* type */
+  --lm-font: 'EXTAS Admin Sans', 'EXTAS Admin Bangla', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --lm-font-disp: 'EXTAS Admin Display', 'EXTAS Admin Sans', 'EXTAS Admin Bangla', system-ui, sans-serif;
+  --lm-font-bn: 'EXTAS Admin Bangla', 'EXTAS Admin Sans', system-ui, sans-serif;
+  --lm-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --lm-fs-body: 15px;
+  --lm-fs-card: 14px;
+  --lm-fs-h1: 1.9rem;
+  --lm-fs-h1-phone: 1.5rem;
+  --lm-fs-big: 3.4rem;
+  --lm-fs-big-phone: 2.4rem;
+  /* motion (0s under "Reduce motion") */
+  --lm-t-fast: 0.15s;
+  --lm-t: 0.25s;
+  --lm-t-in: 0.35s;
+  --lm-t-count: 0.7s;
+  --lm-t-draw: 1s;
+  --lm-ease-spring: cubic-bezier(0.3, 1.4, 0.5, 1);
+  --lm-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* size */
+  --lm-side-w: 248px;
+  --lm-side-w-icons: 72px;
+  --lm-side-inset: 12px;
+  --lm-tap: 44px;
+}
+
+/* ---- ঘ Lumen, light (the default) ---- */
+:root,
+[data-lm-look='lumen'] {
+  --lm-accent: #ff5a36;
+  --lm-bg: #eceff5;
+  --lm-sf: #ffffff;
+  --lm-sf2: #f4f6fb;
+  --lm-ln: #e2e7f0;
+  --lm-ln2: #edf0f6;
+  --lm-ink: #0e1a38;
+  --lm-ink2: #5b6885;
+  --lm-faint: #5b6885;
+  --lm-inp: #ffffff;
+  --lm-chip: #eaeef6;
+  --lm-hover: #f4f6fb;
+  /* the accent, mixed so text stays AA: ink = accent-coloured text on a card, brand = a surface under white text */
+  --lm-ac: var(--lm-accent);
+  --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
+  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 72%, #000000);
+  --lm-brand: color-mix(in srgb, var(--lm-accent) 78%, #000000);
+  --lm-brand-deep: color-mix(in srgb, var(--lm-accent) 62%, #000000);
+  --lm-on-ac: #ffffff;
+  --lm-pri: linear-gradient(180deg, color-mix(in srgb, var(--lm-accent) 80%, #000000), color-mix(in srgb, var(--lm-accent) 70%, #000000));
+  --lm-pri-line: color-mix(in srgb, var(--lm-accent) 66%, #000000);
+  --lm-pri-sh: 0 1px 0 rgba(255, 255, 255, 0.3) inset, 0 8px 18px color-mix(in srgb, var(--lm-accent) 32%, transparent);
+  --lm-logo: linear-gradient(145deg, color-mix(in srgb, var(--lm-accent) 85%, #ffffff), color-mix(in srgb, var(--lm-accent) 80%, #000000));
+  --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);
+  /* states (text + tint), each AA on its tint */
+  --lm-ok: #0b7a50;
+  --lm-okbg: #dcf4e9;
+  --lm-warn: #9c5a00;
+  --lm-warnbg: #fff0d2;
+  --lm-bad: #c02535;
+  --lm-badbg: #ffe4e8;
+  --lm-info: #1a63bf;
+  --lm-infobg: #e1edff;
+  /* data colours (charts) */
+  --lm-c1: var(--lm-accent);
+  --lm-c2: #12b5a6;
+  --lm-c3: #7c5cff;
+  --lm-c4: #f5a524;
+  --lm-c5: #2e9bff;
+  --lm-c2-rgb: 18, 181, 166;
+  --lm-cprev: #b6bfd1;
+  /* the hero card (dark in both modes) and what sits on it */
+  --lm-hero: linear-gradient(135deg, #0e1a38, #1b2c66);
+  --lm-hero-solid: #14234f;
+  --lm-hero-glow: radial-gradient(520px 220px at 88% -10%, color-mix(in srgb, var(--lm-accent) 50%, transparent), transparent 62%);
+  --lm-on-hero: #ffffff;
+  --lm-on-hero2: rgba(255, 255, 255, 0.72);
+  --lm-on-hero-soft: rgba(255, 255, 255, 0.1);
+  --lm-on-hero-line: rgba(255, 255, 255, 0.16);
+  --lm-ok-on-hero: #6fe3b5;
+  /* shadows and overlays */
+  --lm-sh: 0 1px 2px rgba(14, 26, 56, 0.05), 0 10px 28px rgba(14, 26, 56, 0.07);
+  --lm-sh-sm: 0 1px 2px rgba(14, 26, 56, 0.06);
+  --lm-sh2: 0 30px 70px rgba(8, 13, 31, 0.4);
+  --lm-sh-drawer: -20px 0 50px rgba(8, 13, 31, 0.3);
+  --lm-sh-toast: 0 16px 40px rgba(8, 13, 31, 0.4);
+  --lm-scrim: rgba(8, 13, 31, 0.45);
+  --lm-glass: rgba(236, 239, 245, 0.86);
+  color-scheme: light;
+}
+
+/* ---- ঘ Lumen, dark (the moon button) ---- */
+[data-lm-look='lumen'][data-lm-mode='dark'] {
+  --lm-bg: #080d1f;
+  --lm-sf: #111936;
+  --lm-sf2: #18224a;
+  --lm-ln: #243059;
+  --lm-ln2: #1b2550;
+  --lm-ink: #eef2ff;
+  --lm-ink2: #9ba8cb;
+  --lm-faint: #9ba8cb;
+  --lm-inp: #0c1330;
+  --lm-chip: #1a2450;
+  --lm-hover: #18224a;
+  --lm-ac: color-mix(in srgb, var(--lm-accent) 90%, #ffffff);
+  --lm-acbg: color-mix(in srgb, var(--lm-accent) 18%, #141018);
+  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 78%, #ffffff);
+  --lm-focus: color-mix(in srgb, var(--lm-accent) 78%, #ffffff);
+  --lm-ok: #4cd3a0;
+  --lm-okbg: #10332a;
+  --lm-warn: #f5b94d;
+  --lm-warnbg: #3a2c0c;
+  --lm-bad: #ff7a89;
+  --lm-badbg: #3c1a22;
+  --lm-info: #7db3ff;
+  --lm-infobg: #142b52;
+  --lm-cprev: #4a5a8a;
+  --lm-hero: linear-gradient(135deg, #16224f, #0e1740);
+  --lm-hero-solid: #16224f;
+  --lm-sh: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.35);
+  --lm-sh-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --lm-glass: rgba(8, 13, 31, 0.86);
+  color-scheme: dark;
+}
+
+/* ---- the light island: a page not yet moved into the look keeps the light tokens in dark mode ---- */
+[data-lm-look='lumen'][data-lm-mode='dark'] .ad:not([data-lm-ready]) {
+  --lm-bg: #eceff5;
+  --lm-sf: #ffffff;
+  --lm-sf2: #f4f6fb;
+  --lm-ln: #e2e7f0;
+  --lm-ln2: #edf0f6;
+  --lm-ink: #0e1a38;
+  --lm-ink2: #5b6885;
+  --lm-faint: #5b6885;
+  --lm-inp: #ffffff;
+  --lm-chip: #eaeef6;
+  --lm-hover: #f4f6fb;
+  --lm-ac: var(--lm-accent);
+  --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
+  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 72%, #000000);
+  --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);
+  --lm-ok: #0b7a50;
+  --lm-okbg: #dcf4e9;
+  --lm-warn: #9c5a00;
+  --lm-warnbg: #fff0d2;
+  --lm-bad: #c02535;
+  --lm-badbg: #ffe4e8;
+  --lm-info: #1a63bf;
+  --lm-infobg: #e1edff;
+  --lm-cprev: #b6bfd1;
+  --lm-sh: 0 1px 2px rgba(14, 26, 56, 0.05), 0 10px 28px rgba(14, 26, 56, 0.07);
+  --lm-sh-sm: 0 1px 2px rgba(14, 26, 56, 0.06);
+  color-scheme: light;
+  color: var(--lm-ink);
+  background: var(--lm-bg);
+  border-radius: var(--lm-r-card);
+}
+
+/* ---- motion: the person's or the team's "Reduce motion", and the system's setting ---- */
+[data-lm-motion='reduce'] {
+  --lm-t-fast: 0s;
+  --lm-t: 0s;
+  --lm-t-in: 0s;
+  --lm-t-count: 0s;
+  --lm-t-draw: 0s;
+}
+[data-lm-motion='reduce'] *,
+[data-lm-motion='reduce'] *::before,
+[data-lm-motion='reduce'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-lm-look] {
+    --lm-t-fast: 0s;
+    --lm-t: 0s;
+    --lm-t-in: 0s;
+    --lm-t-count: 0s;
+    --lm-t-draw: 0s;
+  }
+  [data-lm-look] *,
+  [data-lm-look] *::before,
+  [data-lm-look] *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- the focus ring, visible on every control in both modes ---- */
+[data-lm-look] :focus-visible {
+  outline: 2px solid var(--lm-focus);
+  outline-offset: 2px;
+}
