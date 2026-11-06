@@ -1,0 +1,14 @@
+/* S12 · PR 252 — Website › Blog & journal › Shared calendar, drawn in Lumen: only --lm-* tokens (theme/lumen.css). */
+.sc-page { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.sc-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sc-span { color: var(--lm-ink2); margin: 0; }
+.sc-row { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sc-when { color: var(--lm-ink2); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.sc-t { color: var(--lm-ink); font-weight: 700; overflow-wrap: anywhere; }
+.sc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.sc-meta a { color: var(--lm-ac-ink); min-height: 44px; display: inline-flex; align-items: center; }
+.sc-pill { display: inline-flex; align-items: center; border-radius: var(--lm-r-pill); padding: 2px 10px; background: var(--lm-chip); color: var(--lm-ink2); font-size: 0.8rem; font-weight: 700; }
+.sc-pill.live { background: var(--lm-okbg); color: var(--lm-ok); }
+.sc-pill.scheduled { background: var(--lm-warnbg); color: var(--lm-warn); }
+.sc-note { color: var(--lm-ink2); margin: 0; }
+.sc-page .bd-crumb { display: inline-flex; align-items: center; min-height: 44px; color: var(--lm-ink2); }

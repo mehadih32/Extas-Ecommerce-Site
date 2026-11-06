@@ -584,6 +584,21 @@
       "how2": "On: a reader writes under a live article (signed in only, unless you allow anyone with a name), within the length and the day's number in the card.",
       "how3": "Each comment waits here. Only Show puts it under its article; Hide takes it away again. Undo puts back what you just did.",
       "how4": "Nothing is deleted: a hidden comment stays here under Hidden. Only the first word of a name is shown."
+    },
+    "sc": {
+      "meta": "Shared calendar",
+      "title": "Shared calendar",
+      "sub": "One calendar for the journal, the social studio and Marketing: what is coming, day by day, before you choose a day for an article.",
+      "move": "Which days",
+      "others": "Everything else",
+      "tiles": "The calendar at a glance",
+      "list": "Day by day",
+      "search": "Search by name",
+      "open": "Open",
+      "empty": "Nothing on these days",
+      "emptyText": "Articles with a day, campaigns, plans and cut-offs come here.",
+      "noteSocial": "The social studio reads this same calendar: its posts are here beside the articles. Read-only — open an item to change it.",
+      "noteClosed": "Social posts come here too once the social studio is opened. Read-only — open an item to change it."
     }
   }
 }

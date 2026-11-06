@@ -208,15 +208,18 @@ const settingsOf = async (deps: CalendarDeps) => (await deps.resolver.value('mar
 const zoneOf = async (deps: CalendarDeps) => (await deps.resolver.value('store.timeZone', { storeId: S })) as string;
 const ENTRY_SELECT = { id: true, kind: true, refType: true, refId: true, title: true, titleBn: true, note: true, date: true, endDate: true, archivedAt: true, updatedAt: true } as const;
 
-/** GET: the settings and, while on, the view from `from` (the shop's today unless another day is asked for). */
-export async function calendarOverview(deps: CalendarDeps, ask: { from?: unknown } = {}): Promise<CalendarOverview> {
+/**
+ * GET: the settings and, while on, the view from `from` (the shop's today unless another day is asked for). S12 · PR 252:
+ * `always` draws the view whatever the switch (the journal's read-only shared calendar).
+ */
+export async function calendarOverview(deps: CalendarDeps, ask: { from?: unknown; always?: boolean } = {}): Promise<CalendarOverview> {
   const now = deps.now?.() ?? new Date();
   const [settings, timeZone] = await Promise.all([settingsOf(deps), zoneOf(deps)]);
   const today = dayAt(now, timeZone);
   const range = calendarRange(today, settings.days, ask.from);
   const lanes = Object.fromEntries(CALENDAR_LANES.map((l) => [l, 0])) as Record<CalendarLane, number>;
   const base = { settings, card: { key: 'calendar' as const, value: settings, version: versionOf(settings) }, timeZone, today, range, lanes };
-  if (!settings.enabled) return { ...base, items: [], undated: 0, plans: [], setAside: [] };
+  if (!settings.enabled && !ask.always) return { ...base, items: [], undated: 0, plans: [], setAside: [] };
   const fromAt = wallToUtc(`${range.from}T00:00`, timeZone)!;
   const toAt = wallToUtc(`${addDays(range.to, 1)}T00:00`, timeZone)!;
   const ctx: CalendarSourceCtx = { db: deps.db, resolver: deps.resolver, now, timeZone, today, range, fromAt, toAt };
