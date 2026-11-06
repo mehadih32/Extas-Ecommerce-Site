@@ -22,7 +22,7 @@ docs file (CN-011).
 | [`RETAIL-ERP-MODEL.md`](RETAIL-ERP-MODEL.md) | **CN-028 (25 Oct 2026)** — Retail as the ERP's separate buyer: who keeps which books, the two ledgers, the day/week/month/year/lifetime match engine, exchange and return flow, hold, switch-over, settings, permissions and requests to the ERP (supersedes the parts of the ERP sync that CN-028 names) |
 | [`erp/`](erp/) | The ERP project's own contract text, kept as received: `site-changes-v5.md` (history) and `site-changes-v6.md` (controlling) |
 | [`golive/ACCEPTANCE.md`](golive/ACCEPTANCE.md) | The staging acceptance list walked before real orders (PR 393); confirmed on Settings → System → Go-live |
-| [`golive/RUNBOOK.md`](golive/RUNBOOK.md) | The go-live runbook and rollback plan for the main-domain switch (PR 398); rehearsed and confirmed on Settings → System → Go-live |
+| [`golive/RUNBOOK.md`](golive/RUNBOOK.md) | The go-live runbook and rollback plan for the main-domain switch (PR 398); rehearsed and confirmed on Settings → System → Go-live; section 4 is PR 587 prepared up to the owner's "go live" (the go-live check, the redirect map, `tools/golive-switch.mjs` with its typed confirmation) |
 | [`SERVER.md`](SERVER.md) | The server in plain Bengali: what runs, the three disks, restart, RAM/CPU split, alerts, restore, where to see status (PR 10 runbook) |
 | [`README.md`](README.md) | This index |
 
@@ -284,6 +284,7 @@ the pages are out of date.
 | [`reports/smoke/latest/README.md`](reports/smoke/latest/README.md) | The newest smoke test (after every deploy and every night): each page and screen, its result and picture (CN-016) |
 | `reports/erp-acceptance/latest/` | The newest ERP v6 acceptance run against the demo ERP (every night and before every release; "waiting for the demo key" until the owner types it): README.md with a Bengali summary line and report.json (PR 621) |
 | `reports/gate-orders/latest/` | The newest go-live test-order run on the preview site (by hand only: GitHub › Actions › gate-orders; `tools/gate-orders/`, `infra/deploy/gate-orders.sh`): 18 scenarios on phones and desktops over throttled networks, the six gate checks 1, 4, 7, 21, 23, 24, every address typed → stored → admin → courier → sticker, timings, and the clean-up (every test order cancelled, the test products archived, nothing deleted). README.md with a Bengali summary line and result.json (PR 414 follow-up, CN-013 phase 2) |
+| `reports/golive/latest/` | The newest go-live check before the owner's "go live" (by hand only: GitHub › Actions › golive-check; `tools/golive-check.mjs`, `infra/deploy/golive-check.sh`): every row of Settings → System → Go-live in its group (Needed before / Soon after) with its state, the WordPress redirect map and the sitemap checked on staging, and the main-domain switch validated in a copy. Read-only. README.md with a Bengali summary line and result.json (PR 587, CN-035) |
 
 ## Where the docs also live (CN-011)
 

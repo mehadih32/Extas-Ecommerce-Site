@@ -2058,5 +2058,12 @@ check "workflows: gate-orders holds no secret" "$(grep -ciE 'secrets\.|api[_-]?k
 check "workflows: gate-orders' allow_cod is a yes/no input, off by default" \
   "$(grep -A4 '^      allow_cod:' ../../.github/workflows/gate-orders.yml | grep -c -e 'type: boolean' -e 'default: false')" "2"
 rm -rf "$T"
+# S19 · PR 587 (CN-035): the go-live check is by hand, read-only, and never applies the switch.
+check "workflows: golive-check is by hand only, on the VM, in its own lane, no secret" \
+  "$(grep -c '^  workflow_dispatch:' ../../.github/workflows/golive-check.yml):$(grep -cE '^\s+(schedule|push|pull_request):' ../../.github/workflows/golive-check.yml):$(grep -c 'runs-on: \[self-hosted, extas-vm\]' ../../.github/workflows/golive-check.yml):$(grep -c 'group: extas-golive-check' ../../.github/workflows/golive-check.yml):$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/golive-check.yml)" "1:0:1:1:0"
+check "golive check (587): the dry run writes only into the Caddy container's /tmp copy, never server.conf, sites/ or a reload" \
+  "$(grep -cE 'cat > /tmp/golive-dry/sites/hosts.caddy' ../deploy/golive-check.sh):$(grep -cE '> */etc/caddy|tee [^|]*/etc/caddy|caddy reload|caddyfile_copy_inplace|write_file|> *"?\$CONF|EXTAS_MAIN_OPEN=' ../deploy/golive-check.sh)" "1:0"
+check "golive check (587): the browser half asks only the staging host" \
+  "$(grep -c 'BASE="https://$EXTAS_STAGING_HOST"' ../deploy/golive-check.sh):$(grep -c 'ctx.request.get(onBase(base, path)' ../../tools/golive-check.mjs)" "1:1"
 
 exit $fail
