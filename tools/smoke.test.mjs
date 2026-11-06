@@ -2,7 +2,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { adminLinks, adminPaths, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, rowsFile, shotDir, totpCode, withQuery } from './smoke.mjs';
+import { adminLinks, adminPaths, visitLine, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, rowsFile, shotDir, totpCode, withQuery } from './smoke.mjs';
 
 it('PR 6: an extra check passes on the expected value or answer, and says what it saw otherwise', () => {
   const page = { pr: 6, what: 'worker fresh', page: '/admin/server', selector: '[data-worker-state]', attribute: 'data-worker-state', equals: 'ok' };
@@ -201,4 +201,13 @@ it('gate F-054: a found page can be opened at one of its tabs', () => {
   expect(withQuery('/admin/customers/a1', '?tab=wallet')).toBe('/admin/customers/a1?tab=wallet');
   expect(withQuery('/admin/customers/a1', undefined)).toBe('/admin/customers/a1');
   expect(withQuery('/admin/customers/a1', '  ')).toBe('/admin/customers/a1');
+});
+
+it('writes a progress line every 50 page views and a slow page at once, with what was still open', () => {
+  expect(visitLine(3, '/admin', 'phone', 900, [], 0, 5_000)).toEqual([]);
+  expect(visitLine(50, '/admin', 'phone', 900, [], 0, 61_000)).toEqual(['smoke: 50 page views in 61 s']);
+  expect(visitLine(7, '/admin/orders', 'desktop', 15_400, ['/a', '/b', '/c', '/d', '/e'], 0)).toEqual([
+    'smoke: slow /admin/orders (desktop) 15.4 s; still open: /a, /b, /c, /d',
+  ]);
+  expect(visitLine(8, '/x', 'phone', 8_000, [], 0)).toEqual(['smoke: slow /x (phone) 8.0 s']);
 });

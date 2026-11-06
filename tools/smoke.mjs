@@ -374,6 +374,23 @@ export function shotDir(path, out, privateOut) {
   return /^\/admin(\/|$)/.test(path) ? privateOut || null : out || null;
 }
 
+/** Page views so far and when the run began, for the progress lines (follow-up, 6 Nov 2026). */
+const pace = { views: 0, since: Date.now() };
+
+/** A line in the log every 50 page views, and at once for a page that took 8 s or more (with what was still open). */
+export function visitLine(n, path, screen, ms, open, since, now = Date.now()) {
+  const lines = [];
+  if (ms >= 8_000)
+    lines.push(`smoke: slow ${path} (${screen}) ${(ms / 1000).toFixed(1)} s${open.length ? `; still open: ${open.slice(0, 4).join(", ")}` : ""}`);
+  if (n % 50 === 0) lines.push(`smoke: ${n} page views in ${Math.round((now - since) / 1000)} s`);
+  return lines;
+}
+
+function logVisit(path, screen, ms, open) {
+  pace.views += 1;
+  for (const line of visitLine(pace.views, path, screen, ms, open, pace.since)) console.log(line);
+}
+
 /**
  * Opens one path on one screen; returns its row for the report. `dirs` is {out, privateOut} (null: no picture). PR 388:
  * `before` runs before the picture and adds to the row; `file` is the picture's name wherever it went.
@@ -382,6 +399,15 @@ async function visit(page, base, ignore, path, screen, dirs, before) {
   let status = 0;
   let landed = path;
   let problems = [];
+  // Follow-up (6 Nov 2026): a run that hits the time limit says nothing about why, so each page's time is counted
+  // and a slow page is written to the log at once, with the requests still open when its wait ended.
+  const started = Date.now();
+  const open = new Set();
+  const onReq = (r) => open.add(r);
+  const onDone = (r) => open.delete(r);
+  page.on("request", onReq);
+  page.on("requestfinished", onDone);
+  page.on("requestfailed", onDone);
   const watch = await watched(page, base, ignore, async () => {
     const r = await page.goto(`${base}${path}`, { waitUntil: "load" });
     status = r?.status() ?? 0;
@@ -390,7 +416,12 @@ async function visit(page, base, ignore, path, screen, dirs, before) {
       .catch(() => {});
     landed = new URL(page.url()).pathname;
     problems = pageProblems(path, status, await page.innerText("body"));
+  }).finally(() => {
+    page.off("request", onReq);
+    page.off("requestfinished", onDone);
+    page.off("requestfailed", onDone);
   });
+  logVisit(path, screen, Date.now() - started, [...open].map((r) => r.url().replace(base, "")));
   problems.push(...watch.map((w) => `${path}: ${w}`));
   if (path.startsWith("/admin") && landed.startsWith("/admin/login"))
     problems.push(`${path}: sent back to the sign-in page`);
@@ -442,6 +473,8 @@ export async function previewCookie(browser, base, httpCredentials) {
 
 export async function runSmoke(opts) {
   const { chromium, request: requestApi } = require("playwright");
+  pace.views = 0;
+  pace.since = Date.now();
   const config = JSON.parse(
     readFileSync(opts.config ?? join(root, "docs/qa/smoke.json"), "utf8"),
   );
