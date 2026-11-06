@@ -49,6 +49,7 @@ export default async function Journal(props: Props) {
       topics={data.topics}
       topic={null}
       ads={ads.list}
+      countViews={ads.countViews}
       links={links}
       foot={foot ? <JournalBrowse c={c} links={links} tags={foot.tags} people={foot.people} /> : null}
     />

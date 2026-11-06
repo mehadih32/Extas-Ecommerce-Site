@@ -2,6 +2,7 @@
 // (its own, or its product's photo), its headline, line and button words, in the page's language. The whole card is
 // one link through the shop's click counter (/api/shop/house-ad), marked sponsored and not followed by search engines.
 // No state, so the list pages, the article and the popup share it.
+// PR 592 follow-up: the card carries its place's id (`data-ha-place`), which HouseAdViews watches to count views.
 import { ResponsiveImage } from '@/components/media/ResponsiveImage';
 import type { ShopContext } from '@/lib/shop/context';
 import type { ShopAd } from '@/lib/journal/house-ads';
@@ -9,7 +10,7 @@ import type { ShopAd } from '@/lib/journal/house-ads';
 export function HouseAd({ c, ad, className = '' }: { c: ShopContext; ad: ShopAd; className?: string }) {
   const t = c.t;
   return (
-    <aside className={`ha ha-${ad.slot}${ad.image ? '' : ' ha-noimg'} ${className}`.trim()} aria-label={t('journal.ad.label', { shop: c.storeName })} data-testid="house-ad" data-slot={ad.slot}>
+    <aside className={`ha ha-${ad.slot}${ad.image ? '' : ' ha-noimg'} ${className}`.trim()} aria-label={t('journal.ad.label', { shop: c.storeName })} data-testid="house-ad" data-slot={ad.slot} data-ha-place={ad.placeId}>
       <span className="ha-lbl small">{t('journal.ad.label', { shop: c.storeName })}</span>
       <a className="ha-a" href={ad.href} rel="nofollow sponsored">
         {ad.image ? (

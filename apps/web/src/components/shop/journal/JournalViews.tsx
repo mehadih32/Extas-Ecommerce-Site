@@ -12,6 +12,7 @@
 // "More ways to browse" at the foot of the journal's first page (popular tags, the authors and reviewers, the RSS feed);
 // an article's tags (`blog.journal.tags`) and its expert reviewer, the names linked to their pages while
 // `blog.journal.authorPages` is on.
+// PR 592 follow-up: while `blog.houseAds.countViews` is on, HouseAdViews counts how often each place on the page is seen.
 import type { ImageSource } from '@extas/media/delivery';
 import { Fragment, type ReactNode } from 'react';
 import { ArticleBody } from '@/components/journal/ArticleBody';
@@ -31,6 +32,10 @@ import type { Topic } from '@/lib/journal/shop';
 import '@/components/journal/article.css';
 import { HouseAd, HouseAdsAt } from './HouseAd';
 import { HouseAdFloat } from './HouseAdFloat';
+import { HouseAdViews } from './HouseAdViews';
+
+/** PR 592 follow-up: where a page reports the house ad places it saw. */
+export const AD_VIEWS_URL = '/api/shop/house-ad/seen';
 import './journal.css';
 
 const topicName = (c: ShopContext, x: { nameEn: string; nameBn: string | null }) => (c.lang === 'bn' && x.nameBn ? x.nameBn : x.nameEn);
@@ -208,6 +213,8 @@ export function JournalList(p: {
   topics: Topic[];
   topic: Topic | null;
   ads?: readonly ShopAd[];
+  /** PR 592 follow-up: count the ads' views (`blog.houseAds.countViews`). */
+  countViews?: boolean;
   heading?: ListHeading;
   links?: JournalLinks;
   q?: string;
@@ -302,6 +309,7 @@ export function JournalList(p: {
         </div>
       )}
       {p.foot}
+      {p.countViews && ads.length ? <HouseAdViews url={AD_VIEWS_URL} /> : null}
     </div>
   );
 }
@@ -329,7 +337,7 @@ export function JournalArticle(p: {
   aiNote: { en: string; bn: string };
   related?: LivePost[];
   photo?: { image: ImageSource; alt: string; studio: boolean } | null;
-  ads?: { list: readonly ShopAd[]; searchWords: readonly string[]; searchGuard: boolean };
+  ads?: { list: readonly ShopAd[]; searchWords: readonly string[]; searchGuard: boolean; countViews?: boolean };
   links?: JournalLinks;
 }) {
   const { c, post } = p;
@@ -425,6 +433,7 @@ export function JournalArticle(p: {
         </p>
       ) : null}
       {p.ads ? <Floats c={c} ads={ads} searchWords={p.ads.searchWords} searchGuard={p.ads.searchGuard} /> : null}
+      {p.ads?.countViews && ads.length ? <HouseAdViews url={AD_VIEWS_URL} /> : null}
     </div>
   );
 }

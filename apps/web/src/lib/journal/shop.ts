@@ -72,9 +72,9 @@ export async function journalHasOther(c: ShopContext, slug: string): Promise<boo
  * A journal page's house ads: an article's (its id, topic and the topic's parent, its products) or a list's (a topic's
  * or the journal's). None while `blog.houseAds` is off or without a database; never fails the page.
  */
-export async function journalAds(c: ShopContext, on: { post?: Pick<LivePost, 'id' | 'categoryId' | 'productIds'>; topic?: { id: string; parentId: string | null } | null }, slots: readonly HouseAdSlot[]): Promise<{ list: ShopAd[]; searchWords: string[]; searchGuard: boolean }> {
+export async function journalAds(c: ShopContext, on: { post?: Pick<LivePost, 'id' | 'categoryId' | 'productIds'>; topic?: { id: string; parentId: string | null } | null }, slots: readonly HouseAdSlot[]): Promise<{ list: ShopAd[]; searchWords: string[]; searchGuard: boolean; countViews: boolean }> {
   const resolver = settingsResolver();
-  const none = { list: [], searchWords: [], searchGuard: true };
+  const none = { list: [], searchWords: [], searchGuard: true, countViews: false };
   if (!resolver) return none;
   const db = getPrisma();
   let categoryIds: string[] = [];
@@ -88,7 +88,8 @@ export async function journalAds(c: ShopContext, on: { post?: Pick<LivePost, 'id
   const needWords = set.searchGuard && ads.some((a) => a.slot === 'popup');
   const organic = needWords ? await resolver.value('seo.organic', { storeId: c.storeId }).catch(() => null) : null;
   const searchWords = organic ? organic.sources.filter((x) => x.kind === 'search').flatMap((x) => [...x.match]) : [];
-  return { list: ads, searchWords, searchGuard: set.searchGuard };
+  // PR 592 follow-up: the page counts its places' views only while `countViews` is on
+  return { list: ads, searchWords, searchGuard: set.searchGuard, countViews: set.countViews };
 }
 
 /** Follow-up 659: the language switch's landing — the other language's article at this link and its live twin here. */

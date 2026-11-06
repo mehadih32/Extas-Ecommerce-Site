@@ -23,7 +23,7 @@ a.ha-name { display: inline-flex; align-items: center; min-height: 44px; color: 
 .ha-table th, .ha-table td { text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--lm-ln); vertical-align: top; }
 .ha-table td { text-align: end; white-space: nowrap; }
 .ha-table thead th { color: var(--lm-ink2); font-weight: 700; font-size: 0.8rem; }
-.ha-table tbody th { display: flex; flex-direction: column; gap: 2px; font-weight: 400; }
+.ha-table tbody th { display: flex; flex-direction: column; gap: 2px; font-weight: 400; min-width: 9rem; } /* PR 592 follow-up: the ad's name keeps its width; the table scrolls on a phone */
 .ha-how { margin: 8px 0 0; padding-left: 20px; color: var(--lm-ink2); display: flex; flex-direction: column; gap: 6px; }
 .adm2 .a2-crumb a.ha-crumb { display: inline-flex; align-items: center; min-height: 44px; color: var(--lm-ink2); }
 /* one ad's page */

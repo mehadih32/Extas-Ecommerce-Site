@@ -12,11 +12,14 @@
 //     on the first screen (Google's intrusive-interstitial guidance): only after scrolling past it.
 //   - A click is counted per ad and place each shop day; an order placed by that browser within `creditDays` after its
 //     last ad click counts for that ad and place (the click cookie: place ids and times only, nothing about the person).
+//   PR 592 follow-up (registry v258): `countViews` (off as shipped) also counts how often each place is seen — on the
+//   reader's screen for a moment, once per page view — so the House ads page shows views and the click rate. Nothing
+//   about the reader is kept: a place id and a day.
 //   Never money: an ad shows what the shop already sells at its own price; nothing here changes a price or an offer.
 import { z } from 'zod';
 import { setting } from './define';
 
-const V253 = 253;
+const V258 = 258;
 
 export const houseAdsSchema = z
   .object({
@@ -38,11 +41,13 @@ export const houseAdsSchema = z
     searchGuard: z.boolean(),
     /** An order within this many days after an ad click counts for that ad (the last click). */
     creditDays: z.int().min(1).max(30),
+    /** PR 592 follow-up (v258): count each place's views (on screen for a moment, once per page view); off as shipped. */
+    countViews: z.boolean().default(false),
   })
   .strict();
 export type HouseAdsSettings = z.output<typeof houseAdsSchema>;
 
-export const HOUSE_ADS_DEFAULT: HouseAdsSettings = { on: false, maxPerPage: 3, inlineMax: 1, popupScrollPct: 50, popupSeconds: 0, capTimes: 1, capDays: 7, searchGuard: true, creditDays: 7 };
+export const HOUSE_ADS_DEFAULT: HouseAdsSettings = { on: false, maxPerPage: 3, inlineMax: 1, popupScrollPct: 50, popupSeconds: 0, capTimes: 1, capDays: 7, searchGuard: true, creditDays: 7, countViews: false };
 
 export const houseAdSettings = {
   'blog.houseAds': setting({
@@ -56,6 +61,7 @@ export const houseAdSettings = {
     isOwnerData: false,
     isPublic: false,
     sortOrder: 90,
-    version: V253,
+    // PR 592 shipped it at v253; its follow-up added countViews (v258)
+    version: V258,
   }),
 };

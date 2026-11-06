@@ -32,5 +32,5 @@ export default async function JournalTopic(props: Props) {
   if (!data) shopNotFound(c);
   const ads = await journalAds(c, { topic: data.topic }, ['topic', 'listBetween']);
   // PR 592 follow-up: the search box and the bylines' links while their switches are on
-  return <JournalList c={c} posts={data.posts} total={data.total} page={data.page} pages={data.pages} topics={data.topics} topic={data.topic} ads={ads.list} links={journalLinks(s)} />;
+  return <JournalList c={c} posts={data.posts} total={data.total} page={data.page} pages={data.pages} topics={data.topics} topic={data.topic} ads={ads.list} countViews={ads.countViews} links={journalLinks(s)} />;
 }

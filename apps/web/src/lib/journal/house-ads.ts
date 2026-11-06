@@ -12,6 +12,9 @@
 //   `pickForPage`); a click goes through /api/shop/house-ad, which counts it once per place and shop day, keeps the
 //   click cookie for `creditDays` and sends the reader on to the ad's page. When an order lands (checkout-api.ts)
 //   `creditAdOrder` writes HouseAdOrderClick for the last click in the window. Neither ever fails the page or the order.
+// - PR 592 follow-up: while `countViews` is on (off as shipped) the pages also count how often each place is seen
+//   (HouseAdViews → /api/shop/house-ad/seen, `recordViews`: once per place and page view, into the same day row as the
+//   clicks); the House ads page shows the views and the click rate (clicks ÷ views) beside the clicks.
 // - Never money: an ad points at what the shop sells at its own price; nothing here changes a price, an offer or COD.
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
@@ -181,6 +184,61 @@ export async function recordClick(db: Db, settings: Reader, input: { storeId: nu
   return { target, cookie: bagCookie(AD_CLICK_COOKIE, serializeClick(p.id, input.now.getTime()), set.creditDays) };
 }
 
+/** How many places one page view may report seen. */
+export const VIEWS_MAX = 12; // hardcode-ok: a list length (an article shows a handful of places at most)
+
+/**
+ * PR 592 follow-up — the places a page view saw: each running place counted once as a view for the shop day, only while
+ * `blog.houseAds.on` and `countViews`. Returns how many were counted.
+ */
+export async function recordViews(db: Db, settings: Reader, input: { storeId: number; placeIds: readonly string[]; now: Date }): Promise<number> {
+  const ids = [...new Set(input.placeIds.filter((x) => isUuid(x)))].slice(0, VIEWS_MAX);
+  if (!ids.length) return 0;
+  const set = await settings.value(KEY, { storeId: input.storeId });
+  if (!set.on || !set.countViews) return 0;
+  const places = await db.houseAdPlacement.findMany({ where: { id: { in: ids }, storeId: input.storeId, enabled: true, archivedAt: null }, select: { id: true, slot: true, ad: true } });
+  const running = places.filter((p) => isRunning(p.ad, input.now));
+  if (!running.length) return 0;
+  const timeZone = await settings.value('store.timeZone', { storeId: input.storeId });
+  const day = new Date(`${ymdIn(input.now, timeZone)}T00:00:00Z`);
+  for (const p of running) {
+    const where = { placementId_day: { placementId: p.id, day } };
+    try {
+      await db.houseAdDailyStat.upsert({ where, create: { storeId: input.storeId, placementId: p.id, adId: p.ad.id, slot: p.slot, day, views: 1 }, update: { views: { increment: 1 } } });
+    } catch (e) {
+      // two first counts of the day at once: the other one made the row
+      if (!isUnique(e)) throw e;
+      await db.houseAdDailyStat.update({ where, data: { views: { increment: 1 } } });
+    }
+  }
+  return running.length;
+}
+
+/** POST /api/shop/house-ad/seen {p: [place ids]} — count the views; only from the shop's own pages; always 204. */
+export async function viewsHandler(request: Request, deps: { db: Db; settings: Reader; storeId: number; now?: () => Date } | null): Promise<Response> {
+  const done = () => new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } });
+  if (request.method.toUpperCase() !== 'POST') return fail(405, 'method-not-allowed');
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host');
+  if (origin && host) {
+    try {
+      if (new URL(origin).host !== host) return done();
+    } catch {
+      return done();
+    }
+  }
+  if (!deps) return done();
+  try {
+    const raw = (await request.text()).slice(0, 4096); // hardcode-ok: a dozen ids fit many times over
+    const o = JSON.parse(raw) as { p?: unknown };
+    const ids = Array.isArray(o.p) ? o.p.filter((x): x is string => typeof x === 'string') : [];
+    await recordViews(deps.db, deps.settings, { storeId: deps.storeId, placeIds: ids, now: deps.now?.() ?? new Date() });
+  } catch (e) {
+    if (!(e instanceof SyntaxError)) console.warn(`house ad views: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+  return done();
+}
+
 /** GET /api/shop/house-ad?p=<place>&l=bn — count the click and send the reader on (always somewhere in the shop). */
 export async function clickHandler(request: Request, deps: { db: Db; settings: Reader; storeId: number; now?: () => Date } | null): Promise<Response> {
   const url = new URL(request.url);
@@ -243,6 +301,8 @@ export interface PlaceRow {
   enabled: boolean;
   aside: boolean;
   clicks: number;
+  /** PR 592 follow-up: views (0 while they are not counted). */
+  views: number;
   ordered: Figure;
   sales: Figure;
 }
@@ -267,6 +327,7 @@ export interface AdRow {
   creativeAssetId: string | null;
   places: PlaceRow[];
   clicks: number;
+  views: number;
   ordered: Figure;
   sales: Figure;
 }
@@ -277,7 +338,7 @@ export interface AdsScreen {
   to: string;
   days: number;
   ads: AdRow[];
-  totals: { running: number; placesOn: number; clicks: number; orders: number };
+  totals: { running: number; placesOn: number; clicks: number; views: number; orders: number };
   card: { key: string; value: HouseAdsSettings; version: string };
 }
 
@@ -302,10 +363,11 @@ export async function adsScreen(db: Db, resolver: Resolver, now: Date, opts: { d
   const { from, to, period } = lastDays(days, now, timeZone);
   const [ads, clicks, kpis] = await Promise.all([
     db.houseAd.findMany({ where: { storeId }, orderBy: [{ archivedAt: { sort: 'asc', nulls: 'first' } }, { createdAt: 'desc' }], take: LIST_MAX, include: { placements: { orderBy: { createdAt: 'asc' } } } }),
-    db.houseAdDailyStat.groupBy({ by: ['placementId'], where: { storeId, day: { gte: new Date(`${from}T00:00:00Z`), lte: new Date(`${to}T00:00:00Z`) } }, _sum: { clicks: true } }),
+    db.houseAdDailyStat.groupBy({ by: ['placementId'], where: { storeId, day: { gte: new Date(`${from}T00:00:00Z`), lte: new Date(`${to}T00:00:00Z`) } }, _sum: { clicks: true, views: true } }),
     kpiByHouseAdPlace(db, storeId, period),
   ]);
   const clickOf = new Map(clicks.map((c) => [c.placementId, c._sum.clicks ?? 0]));
+  const viewOf = new Map(clicks.map((c) => [c.placementId, c._sum.views ?? 0]));
   const kpiOf = new Map(kpis.map((k) => [k.key, k]));
   const places = ads.flatMap((a) => a.placements);
   const postIds = [...new Set(places.map((p) => p.postId).filter((x): x is string => !!x))];
@@ -317,7 +379,7 @@ export async function adsScreen(db: Db, resolver: Resolver, now: Date, opts: { d
   ]);
   const postOf = new Map(posts.map((p) => [p.id, p]));
   const catOf = new Map(cats.map((c) => [c.id, c.nameEn]));
-  const totals = { running: 0, placesOn: 0, clicks: 0, orders: 0 };
+  const totals = { running: 0, placesOn: 0, clicks: 0, views: 0, orders: 0 };
   const rows: AdRow[] = ads.map((a) => {
     const state = adState(a, now);
     if (state === 'running') totals.running += 1;
@@ -325,6 +387,8 @@ export async function adsScreen(db: Db, resolver: Resolver, now: Date, opts: { d
       const k = kpiOf.get(p.id);
       const n = clickOf.get(p.id) ?? 0;
       totals.clicks += n;
+      const seen = viewOf.get(p.id) ?? 0;
+      totals.views += seen;
       totals.orders += k?.ordered.orders ?? 0;
       if (p.enabled && !p.archivedAt && !a.archivedAt) totals.placesOn += 1;
       const post = p.postId ? postOf.get(p.postId) : undefined;
@@ -342,6 +406,7 @@ export async function adsScreen(db: Db, resolver: Resolver, now: Date, opts: { d
         enabled: p.enabled,
         aside: !!p.archivedAt,
         clicks: n,
+        views: seen,
         ordered: fig(k?.ordered ?? NO_ORDERS),
         sales: fig(k?.sales ?? NO_ORDERS),
       };
@@ -366,6 +431,7 @@ export async function adsScreen(db: Db, resolver: Resolver, now: Date, opts: { d
       creativeAssetId: a.creativeAssetId,
       places: pr,
       clicks: pr.reduce((n, p) => n + p.clicks, 0),
+      views: pr.reduce((n, p) => n + p.views, 0),
       ordered: pr.reduce((f, p) => add(f, p.ordered), { orders: 0, valueMinor: 0 }),
       sales: pr.reduce((f, p) => add(f, p.sales), { orders: 0, valueMinor: 0 }),
     };
@@ -521,6 +587,8 @@ export async function saveAdSettings(db: Db, resolver: Resolver, who: JournalWho
     const values = { ...((o.values && typeof o.values === 'object' ? o.values : {}) as Record<string, unknown>) };
     // the card's choice "never / allowed" for the search guard arrives as its option's value
     if (values.searchGuard === 'on' || values.searchGuard === 'off') values.searchGuard = values.searchGuard === 'on';
+    // PR 592 follow-up: "count views" arrives the same way
+    if (values.countViews === 'on' || values.countViews === 'off') values.countViews = values.countViews === 'on';
     next = { ...before, ...values, on: o.on };
   }
   else {

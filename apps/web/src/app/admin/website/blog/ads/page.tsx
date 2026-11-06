@@ -22,6 +22,7 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { AD_REPORT_DAYS, adsScreen, type AdRow } from '@/lib/journal/house-ads';
+import { clickRate } from '@/lib/journal/house-ads-model';
 import bn from '../../../../../../messages/admin-house-ads.bn.json';
 import en from '../../../../../../messages/admin-house-ads.en.json';
 import './ads.css';
@@ -67,9 +68,18 @@ export default async function HouseAdsPage(props: { searchParams: Promise<{ days
   const m = (minor: number) => formatMoney(minor, money);
   const dayText = (ymd: string) => new Intl.DateTimeFormat(view.locale, { day: 'numeric', month: 'short', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${ymd}T00:00:00Z`));
   const fmt = { kind: 'number', locale: view.locale } as const;
+  // PR 592 follow-up: the views tile and the report's views and rate columns show once views are counted (or were)
+  const showViews = set.countViews || r.totals.views > 0;
+  // PR 592 follow-up: clicks over views, "—" while nothing was seen
+  const rate = (clicks: number, views: number) => {
+    const x = clickRate(clicks, views);
+    return x === null ? '—' : l('ratePct', { n: new Intl.NumberFormat(view.locale, { numberingSystem: 'latn', maximumFractionDigits: 1 }).format(x) });
+  };
   const tiles: SummaryTile[] = [
     { key: 'running', label: l('tRunning'), value: r.totals.running, shown: num(r.totals.running), format: fmt, icon: 'check' },
     { key: 'places', label: l('tPlaces'), value: r.totals.placesOn, shown: num(r.totals.placesOn), format: fmt, icon: 'eye' },
+    // PR 592 follow-up: views (counted only while "Count views" is on) beside the clicks
+    ...(showViews ? [{ key: 'views', label: l('tViews'), value: r.totals.views, shown: num(r.totals.views), format: fmt, icon: 'eye' } satisfies SummaryTile] : []),
     { key: 'clicks', label: l('tClicks'), value: r.totals.clicks, shown: num(r.totals.clicks), format: fmt, icon: 'zap' },
     { key: 'orders', label: l('tOrders'), value: r.totals.orders, shown: num(r.totals.orders), format: fmt, icon: 'bag' },
   ];
@@ -97,13 +107,14 @@ export default async function HouseAdsPage(props: { searchParams: Promise<{ days
           <span>{dates(a)}</span>
           <span>{l('weight', { n: num(a.weight) })}</span>
           <span>{placesText(a.places.filter((p) => !p.aside).length)}</span>
+          {a.views ? <span>{l('viewsN', { n: num(a.views) })}</span> : null}
           <span>{l('clicksN', { n: num(a.clicks) })}</span>
           <span>{l('ordersN', { n: num(a.ordered.orders) })}</span>
         </span>
       </div>
     ),
   }));
-  const reportRows = r.ads.flatMap((a) => a.places.filter((p) => p.clicks > 0 || p.ordered.orders > 0).map((p) => ({ a, p })));
+  const reportRows = r.ads.flatMap((a) => a.places.filter((p) => p.clicks > 0 || p.views > 0 || p.ordered.orders > 0).map((p) => ({ a, p })));
 
   return (
     <div className="a2-z ha-page" data-testid="blog-ads" data-lm-ready="">
@@ -183,7 +194,9 @@ export default async function HouseAdsPage(props: { searchParams: Promise<{ days
                   <thead>
                     <tr>
                       <th scope="col">{l('colAd')}</th>
+                      {showViews ? <th scope="col">{l('colViews')}</th> : null}
                       <th scope="col">{l('colClicks')}</th>
+                      {showViews ? <th scope="col">{l('colRate')}</th> : null}
                       <th scope="col">{l('colOrders')}</th>
                       {canMoney ? <th scope="col">{l('colOrdered')}</th> : null}
                       {canMoney ? <th scope="col">{l('colSales')}</th> : null}
@@ -196,7 +209,9 @@ export default async function HouseAdsPage(props: { searchParams: Promise<{ days
                           <span className="ha-name">{a.name}</span>
                           <span className="ha-meta">{t(d, `ha.e.slot_${p.slot}`)}</span>
                         </th>
+                        {showViews ? <td>{num(p.views)}</td> : null}
                         <td>{num(p.clicks)}</td>
+                        {showViews ? <td>{rate(p.clicks, p.views)}</td> : null}
                         <td>{num(p.ordered.orders)}</td>
                         {canMoney ? <td>{m(p.ordered.valueMinor)}</td> : null}
                         {canMoney ? <td>{m(p.sales.valueMinor)}</td> : null}
@@ -240,6 +255,17 @@ export default async function HouseAdsPage(props: { searchParams: Promise<{ days
                       ],
                     },
                     { name: 'creditDays', label: l('creditDays'), kind: 'number', value: set.creditDays, min: 1, max: 30, step: 1, unit: l('unitDays') },
+                    // PR 592 follow-up: count how often each place is seen (off as shipped)
+                    {
+                      name: 'countViews',
+                      label: l('countViews'),
+                      kind: 'select',
+                      value: set.countViews ? 'on' : 'off',
+                      options: [
+                        { value: 'off', label: l('viewsOff') },
+                        { value: 'on', label: l('viewsOn') },
+                      ],
+                    },
                   ],
                 },
               ]}
