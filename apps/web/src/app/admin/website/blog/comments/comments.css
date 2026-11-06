@@ -14,4 +14,6 @@
 .cm-pill.warn { background: var(--lm-warnbg); color: var(--lm-warn); }
 .cm-how { margin: 8px 0 0; padding-left: 20px; color: var(--lm-ink2); display: flex; flex-direction: column; gap: 6px; }
 .cm-ro { color: var(--lm-ink2); margin: 0; }
-.cm-page .bd-crumb { display: inline-flex; align-items: center; min-height: 44px; color: var(--lm-ink2); }
+/* PR 251 follow-up (689): the back link is a full 44 px tap at every width; `.adm2` outranks the shell's 32 px place
+   link on tablets and touch screens (shell.css `.adm2 .a2-crumb a`). */
+.adm2 .cm-page .bd-crumb, .cm-page .bd-crumb { display: inline-flex; align-items: center; min-height: 44px; color: var(--lm-ink2); }
