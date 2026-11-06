@@ -5,9 +5,11 @@
 // PR 606: the bulk / corporate card under the WhatsApp card, while the owner has the lane on (bulk/BulkBagCard).
 // PR 574: each set in its bag template (B1–B5, `combos.template.bag`; the current look by default), `?btpl=` previews
 // another with the template bar while `combos.template.preview` is on.
+// S02 · PR 77: the left column's parts (free delivery bar, lines, offer, WhatsApp, bulk, saved) come in the owner's order
+// and on his screens (`layout.bag`, Website › Page layouts); the lines always show.
 // PR 610 (CN-029 Phase 3 qa-gate I3): while checkout is paused (the ERP holds the account) a calm line under the title.
 import './bag.css';
-import { Fragment } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import type { BagView } from '@extas/cart';
 import { bagPickCards, cardsByIds } from '@/lib/shop/catalogue';
 import type { ShopContext } from '@/lib/shop/context';
@@ -32,6 +34,9 @@ import { Upsell } from './Upsell';
 import { BagSummary } from './BagSummary';
 import { PausedNote } from '../checkout/PausedNote';
 import { EtaBanner } from '../EtaBanner';
+import { LayoutPart } from '../LayoutPart';
+import { shownSections } from '@/lib/shop/layouts';
+import type { BagSectionId } from '@extas/settings';
 
 export function bagWords(c: ShopContext): BagWords {
   const t = c.t;
@@ -87,6 +92,47 @@ export async function BagPage({ c, view, s, btpl = null, paused = false, linkCod
   const upsellShown = picks.cards.length > 0 || view.tiers !== null;
   const wa = s['bag.whatsappHelp'] ? waHref(c.s['contact.whatsapp'], t('bag.wa.message', c.vars)) : null;
   const isBlocked = view.blocked.length > 0;
+  const left: Record<BagSectionId, () => ReactNode> = {
+    free: () => (s['bag.freeProgress.enabled'] ? <FreeBar c={c} free={view.free} /> : null),
+    lines: () => (
+      <div className="card bg-lines">
+        {view.sets.map((x) => {
+          const draw = looks.draw.get(x.groupKey) ?? 'current';
+          return draw === 'current' ? (
+            <SetLine key={x.groupKey} c={c} set={x} cards={cards} />
+          ) : (
+            <BagSetCard key={x.groupKey} c={c} set={x} cards={cards} draw={draw} nudge={looks.nudges.get(x.groupKey) ?? null} lowStockAt={s['bag.lowStockAt']} />
+          );
+        })}
+        {view.items.map((i) => (
+          <Fragment key={i.lineId}>
+            <ItemLine c={c} item={i} card={cards.get(i.productId)} blocked={blocked.get(i.lineId)} lowStockAt={s['bag.lowStockAt']} toWish={s['wish.list'].fromBag} />
+            {(groupsAfter.get(i.lineId) ?? []).map((g) => (
+              <SizesCard key={g.key} c={c} group={g} items={view.items} policyLine={view.policyLine} />
+            ))}
+          </Fragment>
+        ))}
+      </div>
+    ),
+    offer: () => <OfferSlot c={c} slot={view.slot} cod={c.flags.cod} upsellShown={upsellShown} />,
+    whatsapp: () =>
+      wa ? (
+        <div className="card p16 row" style={{ gap: 12 }} data-testid="bag-wa">
+          <span className="bg-ic">
+            <WaGlyph size={20} />
+          </span>
+          <div className="grow">
+            <div className="h3">{t('bag.wa.title')}</div>
+            <div className="small text2">{t('bag.wa.text')}</div>
+          </div>
+          <a className="btn btn-secondary btn-sm" href={wa} target="_blank" rel="noopener">
+            {t('bag.wa.button')}
+          </a>
+        </div>
+      ) : null,
+    bulk: () => <BulkBagCard c={c} view={view} />,
+    saved: () => (savedOn ? <SavedBox c={c} saved={view.saved} cards={cards} keepDays={s['bag.keepDays']} /> : null),
+  };
   return (
     <div className="bg-page" data-bag-root="" data-testid="bag-page">
       <div className="container bg-wrap">
@@ -108,42 +154,12 @@ export async function BagPage({ c, view, s, btpl = null, paused = false, linkCod
         <EtaBanner c={c} testId="bag-eta" />
         <div className="split-side">
           <div className="stack s16" style={{ minWidth: 0 }}>
-            {s['bag.freeProgress.enabled'] ? <FreeBar c={c} free={view.free} /> : null}
-            <div className="card bg-lines">
-              {view.sets.map((x) => {
-                const draw = looks.draw.get(x.groupKey) ?? 'current';
-                return draw === 'current' ? (
-                  <SetLine key={x.groupKey} c={c} set={x} cards={cards} />
-                ) : (
-                  <BagSetCard key={x.groupKey} c={c} set={x} cards={cards} draw={draw} nudge={looks.nudges.get(x.groupKey) ?? null} lowStockAt={s['bag.lowStockAt']} />
-                );
-              })}
-              {view.items.map((i) => (
-                <Fragment key={i.lineId}>
-                  <ItemLine c={c} item={i} card={cards.get(i.productId)} blocked={blocked.get(i.lineId)} lowStockAt={s['bag.lowStockAt']} toWish={s['wish.list'].fromBag} />
-                  {(groupsAfter.get(i.lineId) ?? []).map((g) => (
-                    <SizesCard key={g.key} c={c} group={g} items={view.items} policyLine={view.policyLine} />
-                  ))}
-                </Fragment>
-              ))}
-            </div>
-            <OfferSlot c={c} slot={view.slot} cod={c.flags.cod} upsellShown={upsellShown} />
-            {wa ? (
-              <div className="card p16 row" style={{ gap: 12 }} data-testid="bag-wa">
-                <span className="bg-ic">
-                  <WaGlyph size={20} />
-                </span>
-                <div className="grow">
-                  <div className="h3">{t('bag.wa.title')}</div>
-                  <div className="small text2">{t('bag.wa.text')}</div>
-                </div>
-                <a className="btn btn-secondary btn-sm" href={wa} target="_blank" rel="noopener">
-                  {t('bag.wa.button')}
-                </a>
-              </div>
-            ) : null}
-            <BulkBagCard c={c} view={view} />
-            {savedOn ? <SavedBox c={c} saved={view.saved} cards={cards} keepDays={s['bag.keepDays']} /> : null}
+            {/* PR 77: the left column's parts in the owner's order and on his screens (`layout.bag`; the lines always) */}
+            {shownSections<BagSectionId>('bag', s['layout.bag']).map(({ id, dev }) => (
+              <LayoutPart key={id} id={id} dev={dev}>
+                {left[id]()}
+              </LayoutPart>
+            ))}
             {looks.preview && view.sets.length ? (
               <PreviewBar c={c} kind="bag" list={BAG_TEMPLATES} current={looks.preview} hrefOf={(t) => `${bagHref}?btpl=${t}`} chosen={bagHref} />
             ) : null}

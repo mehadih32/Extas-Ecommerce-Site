@@ -317,6 +317,8 @@
       "/admin/marketing/ad-platforms/campaigns",
       "/admin/website/layouts",
       "/admin/website/layouts?page=category",
+      "/admin/website/layouts?page=product",
+      "/admin/website/layouts?page=bag",
       "/admin/marketing/referrals",
       "/admin/marketing/youtube",
       "/admin/marketing/outreach",

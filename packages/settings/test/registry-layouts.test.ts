@@ -3,10 +3,10 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { CATEGORY_SECTIONS, categoryLayoutSchema, layoutSettings } from '../src/registry-layouts';
+import { BAG_SECTIONS, bagLayoutSchema, CATEGORY_SECTIONS, categoryLayoutSchema, layoutSettings, PRODUCT_SECTIONS, productLayoutSchema } from '../src/registry-layouts';
 import { HOME_SECTIONS, homeSectionsSchema } from '../src/registry-storefront';
 
-describe('layout.category (v240)', () => {
+describe('layout.* (v240, v241)', () => {
   it('is in the registry at version 240, store-level, public, today\'s order, labelled in English and Bengali', () => {
     const spec = layoutSettings['layout.category'];
     expect(registry['layout.category']).toBe(spec);
@@ -28,4 +28,18 @@ describe('layout.category (v240)', () => {
     expect(homeSectionsSchema.safeParse(HOME_SECTIONS.map((id) => ({ id, on: true }))).success).toBe(true);
     expect(homeSectionsSchema.safeParse([{ id: 'hero', on: true, dev: 'phone' }]).success).toBe(true);
   });
+
+  it('PR 77 (v241): the product page and bag lists, today\'s order, labelled; the bag\'s lines never hide', () => {
+    for (const [key, ids] of [['layout.product', PRODUCT_SECTIONS], ['layout.bag', BAG_SECTIONS]] as const) {
+      const spec = layoutSettings[key];
+      expect(registry[key]).toBe(spec);
+      expect(spec.version).toBe(241);
+      expect(spec.isPublic).toBe(true);
+      expect(spec.default).toEqual(ids.map((id) => ({ id, on: true })));
+      for (const lang of ['en', 'bn'] as const) expect(lookup(messages[lang], spec.labelKey)).toBeTruthy();
+    }
+    expect(bagLayoutSchema.safeParse([{ id: 'lines', on: false }]).success).toBe(false);
+    expect(productLayoutSchema.safeParse(PRODUCT_SECTIONS.map((id) => ({ id, on: false }))).success).toBe(true);
+  });
 });
+

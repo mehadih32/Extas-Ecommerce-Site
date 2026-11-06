@@ -43,6 +43,8 @@ const KEYS = [
   'checkout.gift',
   // PR 272: a code in a link (/bag?code=…) goes into the bag while `links` is on
   'rules.coupons.distribution',
+  // PR 77: the left column's parts, their order and screens (Website › Page layouts)
+  'layout.bag',
 ] as const satisfies readonly Key[];
 
 type BagKey = (typeof KEYS)[number];

@@ -1,7 +1,7 @@
 // S02 · PR 76 — the page builder's model: the full list keeps the saved order, adds what the save does not name
 // (hidden, or shown when locked), drops strangers and twins; the shown list carries each section's screens; moves.
 import { describe, expect, it } from 'vitest';
-import { CATEGORY_SECTIONS, categoryLayoutSchema, HOME_SECTIONS, homeSectionsSchema, registry } from '@extas/settings';
+import { BAG_SECTIONS, bagLayoutSchema, CATEGORY_SECTIONS, categoryLayoutSchema, HOME_SECTIONS, homeSectionsSchema, PRODUCT_SECTIONS, productLayoutSchema, registry } from '@extas/settings';
 import { defaultLayout, deviceClass, fullLayout, isLayoutPage, moveRow, shownSections } from './layouts';
 
 describe('page layouts (PR 76)', () => {
@@ -41,5 +41,16 @@ describe('page layouts (PR 76)', () => {
     expect(categoryLayoutSchema.safeParse([{ id: 'info', on: true, dev: 'tablet' }]).success).toBe(false);
     expect(categoryLayoutSchema.safeParse([{ id: 'related', on: false, dev: 'phone' }]).success).toBe(true);
     expect(homeSectionsSchema.safeParse([{ id: 'hero', on: true, dev: 'desktop' }, { id: 'reviews', on: true }]).success).toBe(true);
+  });
+
+  it('PR 77: the product page\'s foot and the bag\'s left column draw today\'s order; the bag\'s lines never hide', () => {
+    expect(defaultLayout('product').map((r) => r.id)).toEqual([...PRODUCT_SECTIONS]);
+    expect(defaultLayout('bag').map((r) => r.id)).toEqual([...BAG_SECTIONS]);
+    expect(fullLayout('bag', [{ id: 'saved', on: true }, { id: 'lines', on: false }]).slice(0, 2)).toEqual([
+      { id: 'saved', on: true },
+      { id: 'lines', on: true },
+    ]);
+    expect(bagLayoutSchema.safeParse([{ id: 'lines', on: false }]).success).toBe(false);
+    expect(productLayoutSchema.safeParse([{ id: 'rows', on: false, dev: 'phone' }]).success).toBe(true);
   });
 });
