@@ -1,7 +1,8 @@
 // S12 · PR 241 (Blueprint C11.4, demo 73-blog.js the article page) — one article at /journal/<link> (English) or
 // /bn/journal/<link> (Bengali): live only (published, or scheduled and its time has come), in the page's own language,
 // with its honest byline and the product block of live products (`blog.journal.relatedProducts` at most). Off: "Coming
-// soon"; no such live article: the shop's "page not found" (one only in the other language: this language's journal).
+// soon"; no such live article: the shop's "page not found" (one only in the other language: its live twin here —
+// follow-up 659 — else this language's journal).
 // ~~Not listed by search engines until PR 249 (Article SEO).~~
 // S12 · PR 249 (C11.2, C12.1, C12.4) — Article SEO: the journal's page kind (`seo.indexing`, off as shipped) decides
 // listing; the search description is the article's own (else its one-line answer or summary, cut to the limit); the
@@ -24,7 +25,7 @@ import { JournalComments } from '@/components/shop/journal/JournalComments';
 import { JournalArticle } from '@/components/shop/journal/JournalViews';
 import { shownComments } from '@/lib/journal/comments';
 import { articlePhoto } from '@/lib/journal/images';
-import { journalAds, journalArticle, journalHasOther, journalSettings } from '@/lib/journal/shop';
+import { journalAds, journalArticle, journalSettings, journalSwitchTarget } from '@/lib/journal/shop';
 import { byline } from '@/lib/journal/model';
 import { settingsResolver } from '@/lib/settings';
 import { signedIn } from '@/lib/shop/account';
@@ -61,9 +62,13 @@ export default async function JournalPost(props: Props) {
   const [c, { slug }] = await Promise.all([shopContext(), props.params]);
   if (!(await journalSettings(c.storeId)).on) return <ComingSoon c={c} soonKey="journal" />;
   const a = await journalArticle(c, slug);
-  // The language switch on an article that is only in the other language opens this language's journal instead.
-  if (!a && (await journalHasOther(c, slug))) redirect(hrefIn(c.lang, ROUTES.journal));
-  if (!a) shopNotFound(c);
+  // The language switch (the same link in the other language) on an article not in this language here: follow-up 659 —
+  // its live twin's own link in this language, else this language's journal.
+  if (!a) {
+    const other = await journalSwitchTarget(c, slug);
+    if (other) redirect(hrefIn(c.lang, other.twin ? ROUTES.article(other.twin) : ROUTES.journal));
+    shopNotFound(c);
+  }
   const { post } = a;
   const page = await readPageSettings(['seo.structuredData', 'blog.performance', 'blog.comments'] as const, c.storeId);
   const talk = page['blog.comments'];

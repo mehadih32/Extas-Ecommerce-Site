@@ -593,6 +593,16 @@ export async function liveTwinSlug(db: Db, storeId: number, post: Pick<LivePost,
 }
 
 /**
+ * Follow-up 659 (PR 249) — where the language switch lands on an article that is not in `locale` at this link: the live
+ * article of the other language at this link, and its live twin's own link in `locale` (twin null: no live twin, so the
+ * journal in `locale`). Null: no live article at this link in either language.
+ */
+export async function switchTarget(db: Db, storeId: number, locale: 'en' | 'bn', slug: string, now: Date = new Date()): Promise<{ twin: string | null } | null> {
+  const other = await livePost(db, storeId, locale === 'bn' ? 'en' : 'bn', slug, now);
+  return other ? { twin: await liveTwinSlug(db, storeId, other, now) } : null;
+}
+
+/**
  * PR 249 — "Read next": other live articles in the article's language, those of its own plan (cluster) first, then those
  * of its topic, newest first, at most `max` (0 = none). Internal links between articles that belong together.
  */

@@ -13,7 +13,7 @@ import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncS
 import { createVault } from '@extas/vault';
 import type { AdminDeps } from '../admin-auth';
 import { loginHandler } from '../admin-api';
-import { journalAction, journalHandler, liveJournal, livePost, liveRelated, liveSitemapPosts, liveTwinSlug, saveJournalPost, shelfHandler } from './journal';
+import { journalAction, journalHandler, liveJournal, livePost, liveRelated, liveSitemapPosts, liveTwinSlug, saveJournalPost, shelfHandler, switchTarget } from './journal';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -202,6 +202,11 @@ describe.skipIf(!HAS_TEST_DB)('Website › Blog & journal on PostgreSQL (PR 239)
     const b = (await livePost(t.prisma, S, 'bn', 'seo-pillar-bn', now))!;
     expect(await liveTwinSlug(t.prisma, S, b, now)).toBe('seo-pillar');
     expect(await liveTwinSlug(t.prisma, S, (await livePost(t.prisma, S, 'bn', 'seo-bn-alone', now))!, now)).toBeNull();
+    // follow-up 659: the language switch lands on the twin's own link; no twin: the journal; nothing live: none
+    expect(await switchTarget(t.prisma, S, 'bn', 'seo-pillar', now)).toEqual({ twin: 'seo-pillar-bn' });
+    expect(await switchTarget(t.prisma, S, 'en', 'seo-pillar-bn', now)).toEqual({ twin: 'seo-pillar' });
+    expect(await switchTarget(t.prisma, S, 'en', 'seo-bn-alone', now)).toEqual({ twin: null });
+    expect(await switchTarget(t.prisma, S, 'bn', 'no-such-article', now)).toBeNull();
     expect((await liveRelated(t.prisma, S, p, 3, now)).map((x) => x.id)).toEqual([sib.id, topicNew.id, topicOld.id]);
     expect((await liveRelated(t.prisma, S, p, 2, now)).map((x) => x.id)).toEqual([sib.id, topicNew.id]);
     expect(await liveRelated(t.prisma, S, p, 0, now)).toEqual([]);
