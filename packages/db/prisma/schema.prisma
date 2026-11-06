@@ -7573,6 +7573,12 @@ model OutreachProspect {
   archivedAt DateTime? @db.Timestamptz(3)
   createdAt  DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 279 — the day to follow up (UTC midnight of that day), and when the link went live (migration 0129).
+  nextStepAt DateTime? @db.Timestamptz(3)
+  liveAt     DateTime? @db.Timestamptz(3)
+
+  @@unique([storeId, site])
+  @@index([storeId, archivedAt, status])
 }
 
 /// @stage S13 · PR 280 — a scheduled seasonal homepage switch (applies a snapshot, then reverts).

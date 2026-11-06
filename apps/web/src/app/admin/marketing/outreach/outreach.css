@@ -1,0 +1,14 @@
+/* S13 · PR 279 — Marketing › SEO outreach: the stage counts as a small grid, long addresses and notes wrap, the folds
+   and buttons keep a 44px tap height (the shell's tokens only). */
+.adm2 .or-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;margin:8px 0 0}
+@media (min-width:768px){.adm2 .or-totals{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1366px){.adm2 .or-totals{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.adm2 .or-totals>div{display:grid;gap:2px;min-width:0}
+.adm2 .or-totals dt{color:var(--ink2)}
+.adm2 .or-totals dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.adm2 .or-mt8{margin-top:8px}
+.adm2 .or-break{overflow-wrap:anywhere;word-break:break-word}
+.adm2 .or-notes{white-space:pre-wrap;overflow-wrap:anywhere}
+.adm2 .or-acts{flex-wrap:wrap}
+.adm2 .or-break a{display:inline-flex;align-items:center;min-height:44px}
+.adm2 details.a2-more-opts>summary{display:flex;align-items:center;min-height:44px;cursor:pointer}
