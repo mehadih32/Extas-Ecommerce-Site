@@ -9,13 +9,13 @@ import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { ROUTES } from '@/lib/shop/routes';
 import type { ShownComment } from '@/lib/journal/comments';
-import { shownName } from '@/lib/journal/comments-model';
+import { BODY_MIN, shownName } from '@/lib/journal/comments-model';
 import { CommentForm, type CommentFormWords } from './CommentForm';
 
 const FORM_WORDS = ['write', 'label', 'name', 'send', 'sending', 'note', 'thanks', 'again', 'signIn', 'limit', 'invalid', 'needName', 'closed', 'failed', 'chars'] as const;
 
 export function JournalComments({ c, postId, slug, settings, comments, canWrite }: { c: ShopContext; postId: string; slug: string; settings: BlogCommentsSettings; comments: ShownComment[]; canWrite: boolean }) {
-  const w = Object.fromEntries(FORM_WORDS.map((k) => [k, k === 'invalid' ? c.t('journal.cm.invalid', { n: c.num(settings.maxChars) }) : k === 'chars' ? c.t('journal.cm.chars', { n: '{n}', max: '{max}' }) : c.t(`journal.cm.${k}`)])) as unknown as CommentFormWords;
+  const w = Object.fromEntries(FORM_WORDS.map((k) => [k, k === 'invalid' ? c.t('journal.cm.invalid', { min: c.num(BODY_MIN), n: c.num(settings.maxChars) }) : k === 'chars' ? c.t('journal.cm.chars', { n: '{n}', max: '{max}' }) : c.t(`journal.cm.${k}`)])) as unknown as CommentFormWords;
   const signIn = `${hrefIn(c.lang, ROUTES.login)}?next=${encodeURIComponent(hrefIn(c.lang, ROUTES.article(slug)))}`;
   return (
     <section className="jn-comments" aria-labelledby="jn-cm-h" data-testid="jn-comments">

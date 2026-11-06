@@ -57,8 +57,6 @@ const NOT_A_CLAIM: Record<string, string> = {
   'ctpl.bag.nudge': "B3's \"add 1 more\" to the rule's 3-piece set; the count and price are slots, PR 574",
   'ctpl.bag.add1': "B3's \"add 1 more\" button, PR 574",
   'ctpl.bag.pick': "B3's third colour of the 3-piece set; the count and price are slots, PR 574",
-  'journal.cm.limit': "the day's comment limit of blog.comments reached (\"today\" is the limit's own day, not a promise), PR 251",
-  'journal.cm.invalid': 'the comment length rule (2 letters at least; the longest is a slot from blog.comments), PR 251',
 };
 
 const DIGIT = /[0-9০-৯]/;
