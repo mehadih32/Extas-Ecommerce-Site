@@ -317,6 +317,11 @@ export const PERMISSIONS = {
   // (`seo.manage`). Nothing here touches a price, an order or a customer.
   'seo.read': { group: 'seo' },
   'seo.manage': { group: 'seo' },
+  // S02 · PR 76 (Blueprint D1.3; BACKEND-ARCHITECTURE WEB-02) — Website → Page layouts: see which sections each shop page
+  // shows, in which order and on which screens (`website.read`); move, show, hide them and choose their screens
+  // (`website.layout.write`). Nothing here touches a price, an order or a customer.
+  'website.read': { group: 'seo' },
+  'website.layout.write': { group: 'seo' },
   // S12 · PR 239 (Blueprint WEB-03) — Website → Blog & journal: see the articles, categories and authors (`blog.read`);
   // write and edit articles, send them through review, and add, change or put away categories and authors (`blog.write`);
   // publish, schedule, take down an article and switch the journal on (`blog.publish`). Nothing here touches a price,

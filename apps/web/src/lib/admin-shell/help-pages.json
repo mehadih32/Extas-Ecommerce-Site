@@ -86,6 +86,7 @@
     { "id": "marketing/campaign", "route": "/admin/marketing/campaigns/[id]" },
     { "id": "marketing/audiences", "route": "/admin/marketing/audiences" },
     { "id": "marketing/audience", "route": "/admin/marketing/audiences/[id]" },
+    { "id": "website/layouts", "route": "/admin/website/layouts" },
     { "id": "website/seo", "route": "/admin/website/seo" },
     { "id": "website/redirects", "route": "/admin/website/seo/redirects" },
     { "id": "website/seo-categories", "route": "/admin/website/seo/categories" },

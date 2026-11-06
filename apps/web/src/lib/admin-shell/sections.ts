@@ -284,6 +284,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'site',
     // PR 235: Redirects & 404 is the SEO tab's second page (demo WEB-04a). PR 227: Collection pages is the third.
     tabs: [
+      // S02 · PR 76 (WEB-02) — Page layouts: each shop page's sections, their order, show / hide and screens.
+      { id: 'layouts', pages: [{ href: '/admin/website/layouts', perm: 'website.read', keys: ['websiteLayouts'] }] },
       {
         id: 'seo',
         guide: 'seo',

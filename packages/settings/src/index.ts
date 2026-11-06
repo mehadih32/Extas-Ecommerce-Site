@@ -194,6 +194,8 @@ export * from './registry-festive-cutoff';
 export * from './registry-marketing-calendar';
 // S13 · PR 283 — the marketing report: the switch, the longest period and a message send's result days (registry-marketing-report.ts, version 218).
 export * from './registry-marketing-report';
+// S02 · PR 76 — the page builder: the category page's sections, order, screens (registry-layouts.ts, version 240).
+export * from './registry-layouts';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

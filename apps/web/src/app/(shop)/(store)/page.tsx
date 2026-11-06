@@ -16,6 +16,8 @@
 // cut-off is on with the home page ticked (off as shipped: nothing drawn, the phone gate's page unchanged).
 // S13 · PR 280: while a seasonal window is live (Marketing › Seasonal home, off as shipped), its look's home settings
 // (sections, hero, the hero's pictures, the rows) stand in for the owner's own; after the window, his own again.
+// S02 · PR 76: the owner arranges the sections on Website › Page layouts; a section may keep to phones or to computers
+// (LayoutPart: a wrapper the style sheet hides; none when it shows on both, so the page is the same as before).
 import type { Metadata } from 'next';
 import { Fragment, type ReactNode } from 'react';
 import type { HomeSectionId } from '@extas/settings';
@@ -27,12 +29,14 @@ import { HomeHeroSlides } from '@/components/shop/home/HomeHeroSlides';
 import { HomeNewIn } from '@/components/shop/home/HomeNewIn';
 import { HomeReviews } from '@/components/shop/home/HomeReviews';
 import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
+import { LayoutPart } from '@/components/shop/LayoutPart';
 import { CardDeskMount } from '@/components/shop/CardDeskMount';
 import { EtaBanner } from '@/components/shop/EtaBanner';
 import { categoryLeads, heroCategoryCards, heroCollectionCards, newestCards } from '@/lib/shop/catalogue';
 import { shopContext, type ShopContext } from '@/lib/shop/context';
 import { homeFlash } from '@/lib/shop/flash';
-import { heroSlidePicks, homeSectionsOn, type HeroPick } from '@/lib/shop/home-model';
+import { heroSlidePicks, type HeroPick } from '@/lib/shop/home-model';
+import { shownSections } from '@/lib/shop/layouts';
 import { JsonLd } from '@/components/shop/JsonLd';
 import { shopLd } from '@/lib/seo/shop-ld';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
@@ -61,7 +65,9 @@ type Search = Record<string, string | string[] | undefined>;
 export default async function Home(props: { searchParams: Promise<Search> }) {
   const [own, search] = await Promise.all([shopContext(), props.searchParams]);
   const c = await seasonalHome(own);
-  const on = homeSectionsOn(c.s['home.sections']);
+  // ~~homeSectionsOn(c.s['home.sections'])~~ PR 76: the shown sections with their screens
+  const shown = shownSections<HomeSectionId>('home', c.s['home.sections']);
+  const on = shown.map((x) => x.id);
   const want = (id: HomeSectionId) => on.includes(id);
   const newIn = c.s['home.newIn'];
   const rev = c.s['home.reviews'];
@@ -85,7 +91,11 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
     'flash-sale': () => <HomeFlash c={c} sale={flash} />,
     reviews: () => <HomeReviews c={c} row={reviews} />,
   };
-  const sections = on.map((id) => <Fragment key={id}>{draw[id]?.()}</Fragment>);
+  const sections = shown.map(({ id, dev }) => (
+    <LayoutPart key={id} id={id} dev={dev}>
+      {draw[id]?.()}
+    </LayoutPart>
+  ));
   // PR 193: the Eid order-by dates / pre-order line and the holiday notice, under the hero (nothing while both are off)
   const eta = <EtaBanner c={c} testId="home-eta" wrap="container sh-etawrap" />;
   const at = on.indexOf('hero') + 1;

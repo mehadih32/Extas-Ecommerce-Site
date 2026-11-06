@@ -322,8 +322,17 @@ export const HOME_SECTIONS = [
 ] as const;
 export type HomeSectionId = (typeof HOME_SECTIONS)[number];
 
+/**
+ * S02 · PR 76 — the page builder: on which screens a section shows. `both` (or no word: as before PR 76), `phone`
+ * (below the computer width) or `desktop` (the computer width and up). Hidden by the shop's style sheet only.
+ */
+export const LAYOUT_DEVICES = ['both', 'phone', 'desktop'] as const;
+export const layoutDeviceSchema = z.enum(LAYOUT_DEVICES);
+export type LayoutDevice = (typeof LAYOUT_DEVICES)[number];
+
 export const homeSectionsSchema = z
-  .array(z.object({ id: z.enum(HOME_SECTIONS), on: z.boolean() }).strict())
+  // ~~z.object({ id, on })~~ PR 76: each section may also name its screens (`dev`, optional; none = both)
+  .array(z.object({ id: z.enum(HOME_SECTIONS), on: z.boolean(), dev: layoutDeviceSchema.optional() }).strict())
   .max(HOME_SECTIONS.length)
   .refine(uniqueIds, UNIQUE);
 
