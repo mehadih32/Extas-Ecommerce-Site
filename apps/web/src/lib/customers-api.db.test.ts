@@ -251,4 +251,28 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect((await camp('GET', 'items/00000000-0000-7000-8000-000000000000')).status).toBe(404);
     expect((await camp('DELETE', `items/${id}`)).status).toBe(405);
   });
+
+  it('PR 277: a blast — its own switch on its own card; a saved segment unless "every customer" is allowed; no lapse rule', async () => {
+    const camp = async (method: string, path: string, opts: { body?: unknown; cookie?: string } = {}) => {
+      const parts = path.split('/').filter(Boolean);
+      const res = await campaignsRoute(call(method, `/api/admin/messages/campaigns/${parts.join('/')}`, { ...opts, cookie: opts.cookie ?? owner }), deps, parts);
+      return { status: res.status, body: (await res.json()) as Record<string, any> };
+    };
+    const tpl = await f.t.prisma.notificationTemplate.create({ data: { storeId: f.S, key: 'crm.api277', name: 'Eid drop', channel: 'SMS', locale: 'en', body: 'New Eid panjabis, {customerName}' } });
+    const draft = { kind: 'blast', name: 'Eid', channel: 'SMS', templateId: tpl.id, segmentId: null, rule: null };
+    expect((await camp('POST', 'items', { body: draft })).body).toMatchObject({ ok: false, error: 'SWITCHED_OFF' });
+    expect((await camp('PUT', 'settings/blast', { body: { enabled: true, extra: 1 } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    expect((await camp('PUT', 'settings/blast', { body: { enabled: true }, cookie: reader })).status).toBe(403);
+    expect((await camp('PUT', 'settings/blast', { body: { enabled: true } })).body).toMatchObject({ ok: true, screen: { blastOn: true, blast: { enabled: true, allowEveryone: false } } });
+    expect((await camp('POST', 'items', { body: draft })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['segmentId'] });
+    expect((await camp('POST', 'items', { body: { ...draft, rule: { lapsedDays: 90, maxLapsedDays: null, minDelivered: 1 } } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['rule'] });
+    await camp('PUT', 'settings/blast', { body: { allowEveryone: true } });
+    const made = await camp('POST', 'items', { body: draft });
+    expect(made.status).toBe(201);
+    expect(made.body.editor).toMatchObject({ kind: 'blast', on: true, campaign: { kind: 'blast', status: 'DRAFT', rule: null }, audience: { recent: 0 } });
+    const id = made.body.editor.campaign.id as string;
+    expect((await camp('POST', `items/${id}`, { body: { ...draft, kind: 'winback' } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['kind'] });
+    expect((await camp('GET', '')).body.screen.campaigns).toContainEqual(expect.objectContaining({ id, kind: 'blast' }));
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'campaign.settings', entityId: 'customers.blast' } })).toBe(2);
+  });
 });

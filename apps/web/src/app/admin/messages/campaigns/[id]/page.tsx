@@ -4,6 +4,8 @@
 // results: queued, sent, delivered, failed, waiting, left out by reason, the cost, and the orders the receivers placed
 // within the result days (their value only once delivered). Pause, resume and cancel (`messages.campaigns.send`, cancel
 // asked first). Seeing needs `messages.journey.read`.
+// PR 277: the same page for a campaign to a group (a blast; "new?kind=blast" for a new one): its segment instead of the
+// rule, no win-back gap step, its own switch.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -38,10 +40,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 type Params = Promise<{ id: string }>;
+type Search = Promise<{ kind?: string | string[] }>;
 
-export default async function CampaignPage({ params }: { params: Params }) {
+export default async function CampaignPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   const deps = adminDeps();
-  const [plain, { id }, access] = await Promise.all([adminView(deps), params, pageAccess('messages.journey.read', deps, MOTHER_STORE_ID)]);
+  const [plain, { id }, sp, access] = await Promise.all([adminView(deps), params, searchParams, pageAccess('messages.journey.read', deps, MOTHER_STORE_ID)]);
   const view = withCustomers(withMessages(plain));
   const d = view.dict;
   const here = `${BASE}/${encodeURIComponent(id)}`;
@@ -55,7 +58,8 @@ export default async function CampaignPage({ params }: { params: Params }) {
     );
   const who: cu.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const isNew = id === 'new';
-  const [e, currency] = await Promise.all([cu.campaignEditor(customersDeps(access.deps), who, isNew ? null : id), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>]);
+  const newKind: cu.CampaignKind = sp.kind === cu.BLAST_KIND ? cu.BLAST_KIND : cu.WINBACK_KIND;
+  const [e, currency] = await Promise.all([cu.campaignEditor(customersDeps(access.deps), who, isNew ? null : id, newKind), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>]);
   if (!e || (!isNew && !e.campaign))
     return (
       <div className="a2-z">
@@ -88,6 +92,7 @@ export default async function CampaignPage({ params }: { params: Params }) {
   };
   const tplName = c?.templateId ? (e.templates.find((tp) => tp.id === c.templateId)?.name ?? '') : '';
   const rule = c?.rule ?? { lapsedDays: e.settings.defaultLapsedDays, maxLapsedDays: null, minDelivered: 1 };
+  const isBlast = e.kind === cu.BLAST_KIND;
 
   return (
     <div className="a2-z" data-testid="messages-campaign">
@@ -95,13 +100,13 @@ export default async function CampaignPage({ params }: { params: Params }) {
         view={view}
         place={locateKey(KEY)}
         crumb={back}
-        title={c ? c.name : x('newTitle')}
-        sub={c ? `${t(d, `cus.mail.status.${c.status}`)} · ${t(d, `msg.channel.${c.channel}`)}${c.scheduledAt && c.status === 'SCHEDULED' ? ` · ${x('at', { when: when(c.scheduledAt) })}` : ''}` : x('newSub')}
+        title={c ? c.name : x(isBlast ? 'newBlastTitle' : 'newTitle')}
+        sub={c ? `${x(`kind.${c.kind}`)} · ${t(d, `cus.mail.status.${c.status}`)} · ${t(d, `msg.channel.${c.channel}`)}${c.scheduledAt && c.status === 'SCHEDULED' ? ` · ${x('at', { when: when(c.scheduledAt) })}` : ''}` : x(isBlast ? 'newBlastSub' : 'newSub')}
         right={
           c && e.canSend ? (
             <span className="a2-gap8">
               {c.status === 'SCHEDULED' || c.status === 'SENDING' ? <CustomerAct dict={cdict} url={api} body={{ action: 'pause' }} label={x('pause')} tone="ghost" testId="wb-pause" /> : null}
-              {c.status === 'PAUSED' && e.settings.enabled ? <CustomerAct dict={cdict} url={api} body={{ action: 'resume' }} label={x('resume')} tone="pri" testId="wb-resume" /> : null}
+              {c.status === 'PAUSED' && e.on ? <CustomerAct dict={cdict} url={api} body={{ action: 'resume' }} label={x('resume')} tone="pri" testId="wb-resume" /> : null}
               {c.status === 'SCHEDULED' || c.status === 'SENDING' || c.status === 'PAUSED' ? (
                 <CustomerAct dict={cdict} url={api} body={{ action: 'cancel' }} label={x('cancel')} ask={{ title: x('cancelAsk'), effects: [x('cancelEff1'), x('cancelEff2')], confirm: x('cancelYes') }} tone="bad" testId="wb-cancel" />
               ) : null}
@@ -110,9 +115,9 @@ export default async function CampaignPage({ params }: { params: Params }) {
         }
       />
       <SectionTabs view={view} current={KEY} />
-      {!e.settings.enabled && (!c || c.status === 'DRAFT') ? (
+      {!e.on && (!c || c.status === 'DRAFT') ? (
         <section className="a2-card a2-mt12" data-testid="wb-off">
-          <h2 className="a2-h3">{x('offTitle')}</h2>
+          <h2 className="a2-h3">{x(`offKind.${e.kind}`)}</h2>
           <p className="a2-sm a2-mute a2-mt6">{x(e.canWrite ? 'offBody' : 'offAsk')}</p>
         </section>
       ) : null}
@@ -122,7 +127,7 @@ export default async function CampaignPage({ params }: { params: Params }) {
           {a ? (
             <ul className="wb-steps a2-sm a2-mt6">
               <li>
-                <span>{x('step.people')}</span>
+                <span>{x(isBlast ? (c?.segmentId ? 'step.peopleBlast' : 'step.peopleAll') : 'step.people')}</span>
                 <b>{n(a.people)}</b>
               </li>
               <li>
@@ -133,10 +138,12 @@ export default async function CampaignPage({ params }: { params: Params }) {
                 <span>{x('step.reachable')}</span>
                 <b>{n(a.reachable)}</b>
               </li>
-              <li>
-                <span>{x('step.recent', { days: n(e.settings.gapDays) })}</span>
-                <b>{a.recent > 0 ? `−${n(a.recent)}` : n(0)}</b>
-              </li>
+              {isBlast ? null : (
+                <li>
+                  <span>{x('step.recent', { days: n(e.settings.gapDays) })}</span>
+                  <b>{a.recent > 0 ? `−${n(a.recent)}` : n(0)}</b>
+                </li>
+              )}
               <li data-testid="wb-willget">
                 <span className="a2-b">{x('step.willGet')}</span>
                 <b>{n(a.willGet)}</b>
@@ -152,10 +159,12 @@ export default async function CampaignPage({ params }: { params: Params }) {
           <p className="a2-xs a2-mute a2-mt6">{x('offerNote')}</p>
         </section>
       ) : null}
-      {e.settings.enabled && (!c || c.status === 'DRAFT') ? (
+      {e.on && (!c || c.status === 'DRAFT') ? (
         <CampaignForm
-          key={c ? c.version : 'new'}
+          key={c ? c.version : `new-${e.kind}`}
           dict={cdict}
+          kind={e.kind}
+          allowEveryone={e.blast.allowEveryone}
           id={c?.id ?? null}
           version={c?.version ?? null}
           name={c?.name ?? ''}
@@ -176,7 +185,7 @@ export default async function CampaignPage({ params }: { params: Params }) {
         <section className="a2-card a2-mt12" data-testid="wb-words">
           <p className="a2-xs a2-mute">{x('draftOnly')}</p>
           <p className="a2-sm a2-mt6">
-            {[c.rule ? x('ruleLine', { days: n(c.rule.lapsedDays), max: c.rule.maxLapsedDays === null ? x('f.noLimit') : n(c.rule.maxLapsedDays), min: n(c.rule.minDelivered) }) : '', c.segmentName ?? x('f.everyone'), tplName].filter(Boolean).join(' · ')}
+            {[c.rule ? x('ruleLine', { days: n(c.rule.lapsedDays), max: c.rule.maxLapsedDays === null ? x('f.noLimit') : n(c.rule.maxLapsedDays), min: n(c.rule.minDelivered) }) : '', c.segmentName ?? x(isBlast ? 'f.everyoneBlast' : 'f.everyone'), tplName].filter(Boolean).join(' · ')}
           </p>
         </section>
       ) : null}

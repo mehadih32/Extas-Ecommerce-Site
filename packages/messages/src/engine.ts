@@ -38,7 +38,7 @@
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
 import type { Prisma } from '@extas/db/client';
 import { codToCollect, dueOf } from '@extas/orders/pure';
-import { CRM_CAMPAIGN_STEP, CRM_EMAIL_STEP, CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings, type WinbackSettings } from '@extas/settings';
+import { CAMPAIGN_BLAST_KIND, CAMPAIGN_WINBACK_KIND, CRM_CAMPAIGN_STEP, CRM_EMAIL_STEP, CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings, type WinbackSettings } from '@extas/settings';
 import { bagsOf, orderedSinceBy, usableOffer } from './cart-recovery';
 import { consentBlock, offerConsent } from './consent';
 import { recordSendCost } from './costs';
@@ -545,16 +545,23 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
  * (CANCELLED, WINBACK_OFF), a paused one waits; at most `customers.winback.perCustomerPerWeek` offers by phone (journey
  * and campaign messages together) in seven days (CAP_WEEK); never a second win-back within `gapDays` (CAP_GAP); its
  * own stop line; the campaign's sent, failed and cost follow.
+ *
+ * PR 277 — a blast's message (the same step; its campaign's kind `blast`) goes the same way under its own switch
+ * (`customers.blast`; off: BLAST_OFF) with the same weekly cap and stop line; the win-back gap is not its rule, and the
+ * gap counts win-backs only.
  */
 async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, opts: SendOptions): Promise<SendOutcome> {
   const channel = row.channel as MessageChannel;
   const campaign = row.step === CRM_CAMPAIGN_STEP;
   let wb: WinbackSettings | null = null;
+  let blast = false;
   if (campaign) {
-    const b = row.broadcastId ? await deps.db.broadcast.findFirst({ where: { id: row.broadcastId, storeId: c.storeId }, select: { status: true } }) : null;
+    const b = row.broadcastId ? await deps.db.broadcast.findFirst({ where: { id: row.broadcastId, storeId: c.storeId }, select: { status: true, kind: true } }) : null;
     if (!b || b.status === 'CANCELLED') return close(deps, c, row, 'SKIPPED', 'CANCELLED').then(() => 'SKIPPED');
+    blast = b.kind === CAMPAIGN_BLAST_KIND;
     wb = await setting(deps, c.storeId, 'customers.winback');
-    if (!wb.enabled) return close(deps, c, row, 'SKIPPED', 'WINBACK_OFF').then(() => 'SKIPPED');
+    if (blast && !(await setting(deps, c.storeId, 'customers.blast')).enabled) return close(deps, c, row, 'SKIPPED', 'BLAST_OFF').then(() => 'SKIPPED');
+    if (!blast && !wb.enabled) return close(deps, c, row, 'SKIPPED', 'WINBACK_OFF').then(() => 'SKIPPED');
     if (b.status === 'PAUSED') {
       await deps.db.notificationLog.update({ where: { id: row.id }, data: { sendAfter: new Date(c.now.getTime() + PAUSE_WAIT_MS), reason: 'PAUSED' } });
       return 'WAITING';
@@ -577,8 +584,12 @@ async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, o
     // PR 300: offers by phone in seven days, automations and campaigns together; one win-back per gap
     const week = await deps.db.notificationLog.count({ where: { storeId: c.storeId, customerId: row.customerId, step: { in: [CRM_MESSAGE_STEP, CRM_CAMPAIGN_STEP] }, channel: { in: ['SMS', 'WHATSAPP'] }, status: { in: ['SENT', 'DELIVERED'] }, sentAt: { gte: weekAgo } } });
     if (week >= wb.perCustomerPerWeek) return close(deps, c, row, 'BLOCKED_BY_GUARD', 'CAP_WEEK', { recipient: to }).then(() => 'BLOCKED');
-    const gap = await deps.db.notificationLog.count({ where: { storeId: c.storeId, customerId: row.customerId, step: CRM_CAMPAIGN_STEP, status: { in: ['SENT', 'DELIVERED'] }, sentAt: { gte: new Date(c.now.getTime() - wb.gapDays * 86_400_000) } } });
-    if (gap > 0) return close(deps, c, row, 'BLOCKED_BY_GUARD', 'CAP_GAP', { recipient: to }).then(() => 'BLOCKED');
+    if (!blast) {
+      // PR 277: the gap counts win-backs only (a blast is not a win-back)
+      const since = new Date(c.now.getTime() - wb.gapDays * 86_400_000);
+      const gap = await deps.db.$queryRaw<{ n: bigint }[]>`SELECT count(*) AS n FROM "NotificationLog" l JOIN "Broadcast" bc ON bc."id" = l."broadcastId" AND bc."kind" = ${CAMPAIGN_WINBACK_KIND} WHERE l."storeId" = ${c.storeId} AND l."customerId" = ${row.customerId}::uuid AND l."step" = ${CRM_CAMPAIGN_STEP} AND l."status"::text IN ('SENT', 'DELIVERED') AND l."sentAt" >= ${since}`;
+      if (Number(gap[0]?.n ?? 0) > 0) return close(deps, c, row, 'BLOCKED_BY_GUARD', 'CAP_GAP', { recipient: to }).then(() => 'BLOCKED');
+    }
   } else {
     const week = await deps.db.notificationLog.count({ where: { storeId: c.storeId, customerId: row.customerId, step: CRM_MESSAGE_STEP, status: 'SENT', sentAt: { gte: weekAgo } } });
     if (week >= cfg.perCustomerPerWeek) return close(deps, c, row, 'BLOCKED_BY_GUARD', 'CAP_WEEK', { recipient: to }).then(() => 'BLOCKED');

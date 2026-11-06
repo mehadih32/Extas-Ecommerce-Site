@@ -1,11 +1,13 @@
-// S14 · PR 300 — Messages › Campaigns' API (win-back campaigns; @extas/customers winback.ts). Every route signs the staff
+// S14 · PR 300 — Messages › Campaigns' API (win-back campaigns and, PR 277, blasts; @extas/customers winback.ts). Every route signs the staff
 // member in and checks the store; the service checks the permission again (seeing: `messages.journey.read`; drafts and
 // the settings: `messages.campaigns.write`; schedule, pause, resume and cancel: `messages.campaigns.send`), and every
 // change is audited there.
 //
 //   GET   /api/admin/messages/campaigns                   the campaigns and the settings
 //   PUT   /api/admin/messages/campaigns/settings          the page's settings card (`customers.winback`)
-//   POST  /api/admin/messages/campaigns/items             {name, channel, templateId, segmentId, rule} a draft
+//   PUT   /api/admin/messages/campaigns/settings/blast    PR 277: the blast's card (`customers.blast`)
+//   POST  /api/admin/messages/campaigns/items             {kind?, name, channel, templateId, segmentId, rule} a draft
+//                                                         (kind `winback` unless said; PR 277 `blast`: rule null)
 //   GET   /api/admin/messages/campaigns/items/:id         one campaign with its audience and results
 //   POST  /api/admin/messages/campaigns/items/:id         {…, version} a change of a draft
 //   POST  /api/admin/messages/campaigns/items/:id/state   {action: schedule|pause|resume|cancel, at?, version?}
@@ -35,7 +37,7 @@ export async function campaignsRoute(request: Request, deps: AdminDeps | null, p
   const [what, id, sub, more] = path;
   if (more !== undefined) return fail(404, 'not-found');
   if (!what) return m === 'GET' ? handle(request, deps, cu.CAMPAIGN_READ, async (d, who) => ({ screen: await cu.campaignsScreen(d, who) })) : notAllowed();
-  if (what === 'settings' && !id) return m === 'PUT' ? handle(request, deps, cu.CAMPAIGN_WRITE, async (d, who) => ({ screen: await cu.saveCampaignSettings(d, who, await body(request)) })) : notAllowed();
+  if (what === 'settings' && !sub && (!id || id === 'blast')) return m === 'PUT' ? handle(request, deps, cu.CAMPAIGN_WRITE, async (d, who) => ({ screen: await cu.saveCampaignSettings(d, who, await body(request), id ? 'customers.blast' : 'customers.winback') })) : notAllowed();
   if (what === 'items') {
     if (!id) return m === 'POST' ? handle(request, deps, cu.CAMPAIGN_WRITE, async (d, who) => ({ editor: await cu.saveCampaign(d, who, null, await body(request)) }), 201) : notAllowed();
     if (!sub) {
