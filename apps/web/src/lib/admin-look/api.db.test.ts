@@ -148,6 +148,14 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
     expect(log?.actorId).toBe(owners!.id);
   });
 
+  it('PR 626: "Mark all read" keeps its time on the person’s account; the team has none', async () => {
+    const at = '2026-11-06T09:30:00.000Z';
+    expect((await lookHandler(call({ scope: 'me', seen: at }, staff), catalog, deps)).status).toBe(200);
+    expect(readPrefs((await t.prisma.staffUser.findUnique({ where: { id: staffId }, select: { adminPrefs: true } }))?.adminPrefs).seen).toBe(at);
+    expect((await lookHandler(call({ scope: 'me', seen: 'yesterday' }, staff), catalog, deps)).status).toBe(400);
+    expect((await lookHandler(call({ scope: 'team', seen: at }, owner), catalog, deps)).status).toBe(400);
+  });
+
   it('the Dashboard loader reads every part on an empty shop: zeros and empty lists, never a sample', async () => {
     const s = (await deps.resolver.value('admin.dashboardDesigns', scope)) as DashDesignSettings;
     const now = new Date();

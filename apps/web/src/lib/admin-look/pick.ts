@@ -18,6 +18,8 @@ export interface LookPrefs {
   guide?: GuideDesktop;
   /** PR 625 (CN-036): their own admin look, light or dark (the moon button) and "Reduce motion" (theme.ts). */
   theme?: ThemePrefs;
+  /** PR 626 (CN-036): when they last pressed "Mark all read" in the notifications panel (ISO time). */
+  seen?: string;
 }
 
 /** PR 625 (CN-036): one person's theme choices as stored (theme.ts). */
@@ -31,6 +33,7 @@ const prefsSchema = z.object({
   look: z.record(z.string().regex(/^[a-z][a-z0-9-]{1,39}$/), z.string().regex(/^[A-Z]$/)).optional(),
   guide: z.enum(['panel', 'popup', 'page']).optional(),
   theme: themePrefsSchema.optional().catch(undefined),
+  seen: z.iso.datetime().optional().catch(undefined),
 });
 
 /** The stored JSON as prefs (anything unreadable becomes "no choice"). */
@@ -38,7 +41,7 @@ export function readPrefs(raw: unknown): LookPrefs {
   const p = prefsSchema.safeParse(raw ?? {});
   if (!p.success) return { look: {} };
   const theme = cleanTheme(p.data.theme);
-  return { look: { ...(p.data.look ?? {}) }, ...(p.data.guide ? { guide: p.data.guide } : {}), ...(theme ? { theme } : {}) };
+  return { look: { ...(p.data.look ?? {}) }, ...(p.data.guide ? { guide: p.data.guide } : {}), ...(theme ? { theme } : {}), ...(p.data.seen ? { seen: p.data.seen } : {}) };
 }
 
 /** The prefs with one page's design set (a key) or cleared (null = follow the team). */
@@ -54,6 +57,7 @@ export function withGuide(prefs: LookPrefs, guide: GuideDesktop | null): LookPre
   const out: LookPrefs = { look: { ...prefs.look } };
   if (guide) out.guide = guide;
   if (prefs.theme) out.theme = { ...prefs.theme };
+  if (prefs.seen) out.seen = prefs.seen;
   return out;
 }
 

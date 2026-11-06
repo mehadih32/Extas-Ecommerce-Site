@@ -11,6 +11,7 @@
 //   { scope: "me",   theme: { mode?, motion?, look? } }   the person's light or dark (the moon button), their own
 //                                    "Reduce motion" and look (only a built look); null clears a part. Always their own
 //                                    choice (no per-person switch): it changes only how the admin looks to them.
+//   { scope: "me",   seen: ISO time }  PR 626: the notifications panel's "Mark all read" (a note newer than it is unread).
 //   { scope: "team", theme: { look?, accent?, reduceMotion? } }   the team's look, accent colour and "Reduce motion"
 //                                    (`admin.theme`), settings.write, through the settings resolver (the change log).
 // The page and the design are checked against the look registry; nothing here touches money, orders or customers.
@@ -31,7 +32,8 @@ type TeamTheme = Partial<AdminTheme>;
 type Ask =
   | { kind: 'look'; page: string; design: string | null }
   | { kind: 'guide'; guide: GuideDesktop | null }
-  | { kind: 'theme'; me: MeTheme; team: TeamTheme };
+  | { kind: 'theme'; me: MeTheme; team: TeamTheme }
+  | { kind: 'seen'; at: string };
 
 const builtLook = z.string().refine((v) => (BUILT_ADMIN_LOOKS as readonly string[]).includes(v));
 const meThemeSchema = z
@@ -41,6 +43,10 @@ const meThemeSchema = z
 const teamThemeSchema = adminThemeSchema.partial().strict().refine((v) => Object.keys(v).length > 0);
 
 function readAsk(b: Record<string, unknown>, catalog: LookCatalog): Ask | string {
+  if ('seen' in b) {
+    const p = z.iso.datetime().safeParse(b.seen);
+    return p.success && b.scope === 'me' ? { kind: 'seen', at: p.data } : 'seen';
+  }
   if ('theme' in b) {
     const schema = b.scope === 'team' ? teamThemeSchema : meThemeSchema;
     const p = schema.safeParse(b.theme);
@@ -83,10 +89,11 @@ export async function lookHandler(request: Request, catalog: LookCatalog, deps: 
       if (ask.kind === 'look' && !team.perPerson) return fail(403, 'PER_PERSON_OFF');
       if (ask.kind === 'guide' && !guide.perPerson) return fail(403, 'PER_PERSON_OFF');
       const prefs = readPrefs(row?.adminPrefs);
-      const next = ask.kind === 'look' ? withLook(prefs, ask.page, ask.design) : ask.kind === 'guide' ? withGuide(prefs, ask.guide) : withTheme(prefs, ask.me);
+      const next = ask.kind === 'look' ? withLook(prefs, ask.page, ask.design) : ask.kind === 'guide' ? withGuide(prefs, ask.guide) : ask.kind === 'seen' ? { ...prefs, seen: ask.at } : withTheme(prefs, ask.me);
       await d.db.staffUser.update({ where: { id: actorId }, data: { adminPrefs: next as object } });
       return json({ ok: true, scope, prefs: next });
     }
+    if (ask.kind === 'seen') return fail(400, 'VALIDATION', ['scope']);
     if (ask.kind === 'theme') {
       const cur = (await d.resolver.value('admin.theme', scopeOf)) as AdminTheme;
       const next = adminThemeSchema.parse({ ...cur, ...ask.team });

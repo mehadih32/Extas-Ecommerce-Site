@@ -9,6 +9,9 @@
 // PR 12 (CN-025): the V12.4 shell (top bar, rail, To-do drawer) and its design language (look.css), the drawer's waiting
 // lists (only what the person may open), "Mine" (`admin.todo`), the rail's own expanded / collapsed choice (a cookie) and
 // where the guide opens for this person (`admin.guideOpens`, CN-026 (b)).
+// PR 626 (CN-036): the Lumen shell's model adds whether the AI Center shows (lib/admin-shell/stages.ts: S15's part
+// hidden by PR 652's closed-stage switch, and `ai.enabled`)
+// and when the person last read their notes; the sidebar is full width unless the person collapsed it (cookie "0").
 // PR 625 (CN-036): the theme layer (theme/lumen.css) — every colour, radius, font, shadow and motion time as a token —
 // and this person's theme (look, light or dark, motion, the team's accent) on the shell's root, or on the page's own
 // wrapper when there is no shell (the sign-in page).
@@ -22,6 +25,7 @@ import './admin.css';
 import './products/products.css';
 import './shell.css';
 import './look.css';
+import './lumen-shell.css';
 import { cookies } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { adminLookSettings, BUILT_ADMIN_LOOKS } from '@extas/settings';
@@ -35,13 +39,14 @@ import { adminFontPreloads } from '@/lib/admin-fonts';
 import { adminView } from '@/lib/admin-page';
 import { initialsOf, mineOf, RAIL_COOKIE, todoItems, type ShellModel } from '@/lib/admin-shell/model';
 import { badgesFrom, cachedQueues, visibleQueues } from '@/lib/admin-shell/queues';
+import { aiCenterShown } from '@/lib/admin-shell/stages';
 import { shellSession } from '@/lib/admin-shell/session';
 import type { Dict } from '@/lib/i18n';
 import { t } from '@/lib/i18n';
 
 type TodoSetting = { laterHours: number; mine: Record<string, string[]> };
 
-async function shellModel(theme: AdminTheme): Promise<ShellModel | null> {
+async function shellModel(theme: AdminTheme, notesSeenAt: string | null): Promise<ShellModel | null> {
   const s = await shellSession();
   if (s.kind !== 'ok') return null;
   const view = await adminView(s.deps);
@@ -71,8 +76,10 @@ async function shellModel(theme: AdminTheme): Promise<ShellModel | null> {
     todo: todoItems(rows),
     todoMine: mineOf(s.roles, todo.mine, startPages, rows),
     laterHours: todo.laterHours,
-    railExpanded: jar.get(RAIL_COOKIE)?.value === '1',
+    railExpanded: jar.get(RAIL_COOKIE)?.value !== '0',
     theme,
+    aiShown: !s.hidden.has('ai') && aiCenterShown(s.hidden, (await s.deps.resolver.value('ai.enabled', scope).catch(() => false)) === true),
+    notesSeenAt,
   };
 }
 
@@ -88,10 +95,9 @@ async function guideChoice(): Promise<string> {
 }
 
 export default async function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const theme = await lookState()
-    .then((l) => l.theme)
-    .catch(() => themeOf(null, undefined, BUILT_ADMIN_LOOKS));
-  const [model, view, guideMode] = await Promise.all([shellModel(theme), adminView(), guideChoice().catch(() => null)]);
+  const look = await lookState().catch(() => null);
+  const theme = look?.theme ?? themeOf(null, undefined, BUILT_ADMIN_LOOKS);
+  const [model, view, guideMode] = await Promise.all([shellModel(theme, look?.prefs.seen ?? null), adminView(), guideChoice().catch(() => null)]);
   for (const href of adminFontPreloads(view.lang)) preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
   // The error page draws in the browser: it gets the system states' words here (lib/admin-shell, SH-07).
   const text = { lang: view.lang, dict: { shell: { state: (view.dict.shell as Dict).state } } as Dict, inShell: model !== null };

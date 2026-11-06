@@ -20,7 +20,8 @@
     "groups": {
       "daily": "Daily work",
       "grow": "Grow",
-      "business": "Business"
+      "business": "Business",
+      "system": "System"
     },
     "tab": {
       "products": {
@@ -201,7 +202,9 @@
       "collapse": "Collapse the menu",
       "expandShort": "Expand",
       "collapseShort": "Collapse",
-      "todo": "To do"
+      "todo": "To do",
+      "waitingIn": "{section}, {n} waiting",
+      "pagesOf": "Show the pages of {section}"
     },
     "top": {
       "search": "Search pages, settings, orders, products, customers…",
@@ -220,7 +223,9 @@
       "todoWaiting": "To do, {n} lists waiting",
       "todoTitle": "To do (T)",
       "home": "Admin home",
-      "storeTitle": "One store until more stores are added"
+      "storeTitle": "One store until more stores are added",
+      "dark": "Switch to dark",
+      "light": "Switch to light"
     },
     "me": {
       "menu": "Account menu",
@@ -291,7 +296,11 @@
         "first": "First answer is late",
         "resolve": "Solution is late",
         "unowned": "Nobody has taken it"
-      }
+      },
+      "unread": "{n} unread",
+      "allRead": "All read",
+      "markAll": "Mark all read",
+      "new": "(new)"
     },
     "state": {
       "notfound": {

@@ -7,7 +7,7 @@
    small text on their light backgrounds passes WCAG AA 4.5:1 (Lighthouse accessibility). */
 /* PR 625 (CN-036): the shell's variables read the theme layer's tokens (theme/lumen.css); a page's own .ad frame
    reads them again so a page not yet moved into the look stays a light island in dark mode. */
-.adm2,.adm2 .ad{--bg:var(--lm-bg);--sf:var(--lm-sf);--sf2:var(--lm-sf2);--ln:var(--lm-ln);--ln2:var(--lm-ln2);--ink:var(--lm-ink);--ink2:var(--lm-ink2);--mute:var(--lm-ink2);--faint:var(--lm-faint);
+.adm2,.adm2 .ad,.adm2 .lm-ct{--bg:var(--lm-bg);--sf:var(--lm-sf);--sf2:var(--lm-sf2);--ln:var(--lm-ln);--ln2:var(--lm-ln2);--ink:var(--lm-ink);--ink2:var(--lm-ink2);--mute:var(--lm-ink2);--faint:var(--lm-faint);
  --g:var(--lm-brand);--g9:var(--lm-hero-solid);--g8:var(--lm-brand-deep);--g6:var(--lm-ac-ink);--g1:var(--lm-acbg);--g0:var(--lm-hover);--gold:var(--lm-c4);--goldbg:var(--lm-warnbg);--goldink:var(--lm-warn);
  --ok:var(--lm-ok);--okbg:var(--lm-okbg);--warn:var(--lm-warn);--warnbg:var(--lm-warnbg);--bad:var(--lm-bad);--badbg:var(--lm-badbg);--info:var(--lm-info);--infobg:var(--lm-infobg);
  --r:var(--lm-r-ctl);--sh:var(--lm-sh);--sh2:var(--lm-sh2)}

@@ -1,6 +1,9 @@
 // PR 12 — the new admin's line icons, the demo's own paths (V12.3 97o-adm2-shell.js A2_IC): 24 × 24, stroked with the
 // text colour. Drawn by components/admin/shell/ShellIcon.tsx.
 export const SHELL_ICONS = {
+  // PR 626 (CN-036): the moon and the sun of the light / dark button.
+  moon: 'M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z',
+  sun: 'M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
   grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
   bag: 'M5.5 8h13l-1 12.5h-11zM9 8V7a3 3 0 0 1 6 0v1',
   shirt: 'M8.5 3.5 4 6 2.5 10.5l3 1.3V20.5h13v-8.7l3-1.3L20 6l-4.5-2.5a3.5 3.5 0 0 1-7 0z',

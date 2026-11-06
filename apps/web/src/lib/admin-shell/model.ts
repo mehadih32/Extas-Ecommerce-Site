@@ -36,9 +36,14 @@ export interface ShellModel {
   /** "Later" puts a list aside for this many hours (`admin.todo.laterHours`). */
   laterHours: number;
   /** The rail is drawn expanded (the person's own choice, a cookie). */
+  /** The sidebar is full width (PR 626: the default; the cookie's "0" is the person's collapse to icons). */
   railExpanded: boolean;
   /** PR 625 (CN-036): the theme this person's admin is drawn in (look, light or dark, motion, accent); none = Lumen light. */
   theme?: AdminTheme;
+  /** PR 626 (CN-036): the AI Center section and the assistant button show (S15 open and AI on, stages.ts). */
+  aiShown?: boolean;
+  /** PR 626: when this person last pressed "Mark all read" (ISO), from their account. */
+  notesSeenAt?: string | null;
 }
 
 /** One waiting list in the "To do" drawer. */
