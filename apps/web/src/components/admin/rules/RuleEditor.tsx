@@ -9,6 +9,7 @@ import { actionParamNeeds, KIND_SPECS, needsOwnerOk, unlocksWithCoupon, type Par
 import { Icon } from '../Icon';
 import { t, type Dict } from '@/lib/i18n';
 import {
+  floorHintPercent,
   isoToLocalInput,
   issuesOf,
   issueText,
@@ -19,6 +20,7 @@ import {
   nameIn,
   numberFromInput,
   offStatus,
+  takesOffPrice,
   targetKey,
   targetName,
   tokenLines,
@@ -98,7 +100,9 @@ export function RuleEditor(p: EditorProps) {
   const params = [...cand.params].sort((a, b) => Number(used.has(b.key)) - Number(used.has(a.key)));
   // PR 271: every offer shape that waits for a code gets its coupons here (discount, buy-get, free delivery, set price).
   const coupons = unlocksWithCoupon(cand);
-  const hasDiscount = cand.actions.some((a) => a.type === 'discount' || a.type === 'setTier' || a.type === 'buyGet');
+  const hasDiscount = takesOffPrice(cand);
+  // PR 609 follow-up 529: say beforehand that a line stops at the selling-price floor (the bag and checkout hold it).
+  const floorPct = floorHintPercent(cand, env);
   const textOf = (slot: TextSlot) => (textLang === 'en' ? (cand.text[slot]?.en ?? '') : (cand.text[slot]?.bn ?? ''));
   const set = (next: RuleContent) => {
     if (canEdit) p.onChange(next);
@@ -405,6 +409,12 @@ export function RuleEditor(p: EditorProps) {
           ) : (
             <div className="ad-mini">{tt('editor.noActions')}</div>
           )}
+          {floorPct != null ? (
+            <div className="rl-hint" data-testid="rule-floor-hint">
+              <Icon name="info" size={15} />
+              <span>{tt('editor.floorHint', { percent: floorPct })}</span>
+            </div>
+          ) : null}
         </div>
 
         <div className="rl-sec">

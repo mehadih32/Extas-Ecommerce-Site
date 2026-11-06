@@ -111,6 +111,7 @@
       "stackable": "Can be combined with other discounts",
       "does": "What it does",
       "noActions": "Text only — this rule changes no price or charge.",
+      "floorHint": "Never below the selling-price floor: a piece's price after this offer stops at its buying price plus {percent}%. \"Try on past orders\" shows how often that happens.",
       "actions": {
         "deliveryCharge": "Sets the delivery charge per area",
         "freeDeliveryOver": "Free delivery over an amount",
