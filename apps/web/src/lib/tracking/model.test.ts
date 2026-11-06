@@ -79,6 +79,8 @@ describe('delivered-purchase in the model (PR 258)', () => {
   it('a purchase means the order placed as built; once it means the delivery, the names swap', () => {
     expect([adNameOf('purchase', 'placed'), adNameOf('delivered', 'placed'), adNameOf('confirmed', 'placed')]).toEqual(['purchase', 'delivered', 'confirmed']);
     expect([adNameOf('purchase', 'delivered'), adNameOf('delivered', 'delivered'), adNameOf('confirmed', 'delivered'), adNameOf('view', 'delivered')]).toEqual(['placed', 'purchase', 'confirmed', 'view']);
+    // PR 532 follow-up (661): a returned parcel goes as the withdrawal only when the send says so, and only the return
+    expect([adNameOf('returned', 'placed'), adNameOf('returned', 'placed', true, true), adNameOf('shipped', 'placed', false, true)]).toEqual(['returned', 'refund', 'shipped']);
     expect(adNameOf('something-else', 'placed')).toBe('view');
     expect(toAdEvent(row('delivered'), 'EX1001', 'delivered')).toMatchObject({ name: 'purchase', eventId: 'delivered-EX1001', value: 2450, orderNumber: 'EX1001' });
   });

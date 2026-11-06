@@ -3,6 +3,7 @@
 // stand-in platforms, and no key in any answer.
 import { describe, expect, it } from 'vitest';
 import {
+  AD_WITHDRAWS,
   adEventAdapters,
   allAdapters,
   createGoogleClient,
@@ -109,6 +110,10 @@ describe('the deep conversion feed on each platform (PR 532)', () => {
     expect(names(step('shipped'))).toEqual(['OrderShipped', 'order_shipped', 'OrderShipped']);
     expect(names(step('returned'))).toEqual(['OrderReturned', 'order_returned', 'OrderReturned']);
     expect(names(step('qualified'))).toEqual(['QualifiedSale', 'qualified_sale', 'QualifiedSale']);
+    // PR 532 follow-up (661): only GA4 can withdraw a purchase (its refund, the same transaction id)
+    expect(names(step('refund'))).toEqual(['OrderReturned', 'refund', 'OrderReturned']);
+    expect(AD_WITHDRAWS).toEqual({ meta: false, google: true, tiktok: false });
+    expect((googleEvents([step('refund')]) as { events: { params: Record<string, unknown> }[] }[])[0]!.events[0]!.params).toMatchObject({ transaction_id: 'EX1001', value: 2450 });
   });
 
   it('the outcome and intent ride as custom parameters on all three, never over a platform field', () => {

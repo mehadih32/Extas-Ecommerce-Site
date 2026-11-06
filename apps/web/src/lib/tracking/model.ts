@@ -82,7 +82,9 @@ export const generousOn = (dp: DeliveredPurchaseSettings, feed: ConversionFeedSe
  * takes the platforms' purchase name and the order placed becomes a plain "order placed", so the ads learn from parcels
  * accepted, not from COD orders refused at the door. Read at the send, so a change applies to what still waits.
  */
-export function adNameOf(name: string, means: PurchaseMeans, generous = false): AdEventName {
+export function adNameOf(name: string, means: PurchaseMeans, generous = false, withdraw = false): AdEventName {
+  // PR 532 follow-up (661): a parcel that came back withdraws the purchase the platform already took (GA4's refund)
+  if (withdraw && name === 'returned') return 'refund';
   // PR 532 (§59.2): on a generous platform the qualified sale is the purchase; the order placed and the delivery go
   // under their own names (never two purchases for one order)
   if (generous) {
@@ -182,14 +184,14 @@ export interface StoredEventRow {
 const asItems = (v: unknown): StoredItem[] => (Array.isArray(v) ? (v as StoredItem[]) : []);
 
 /** The row as the adapters take it (money in the major unit; the order number for a purchase or an order step). */
-export function toAdEvent(row: StoredEventRow, orderNumber: string | null, means: PurchaseMeans = 'placed', o: { generous?: boolean; extra?: Record<string, string | number | boolean> } = {}): AdEvent {
+export function toAdEvent(row: StoredEventRow, orderNumber: string | null, means: PurchaseMeans = 'placed', o: { generous?: boolean; extra?: Record<string, string | number | boolean>; withdraw?: boolean } = {}): AdEvent {
   const currency = row.currency;
   const major = (m: number | null) => (m == null || !currency ? null : toMajor(m, currency));
   const items: AdItem[] = asItems(row.items).map((i) => ({ id: i.id, sku: i.sku, name: i.name, category: i.category, colour: i.colour, size: i.size, quantity: i.quantity, price: major(i.priceMinor) }));
   const user = (row.userData && typeof row.userData === 'object' ? row.userData : {}) as AdUser;
   return {
     eventId: row.eventId,
-    name: adNameOf(row.name, means, o.generous),
+    name: adNameOf(row.name, means, o.generous, o.withdraw),
     at: row.occurredAt,
     url: row.url,
     value: major(row.valueMinor),

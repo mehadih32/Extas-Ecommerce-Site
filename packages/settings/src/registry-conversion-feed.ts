@@ -12,11 +12,16 @@
 //   before the order). Never a name, an address, a phone or an e-mail: contact data leaves only as PR 257's hashes,
 //   only while customer matching is on.
 // Off as it ships; every number editable. No money moves, no budget, price, order or COD changes.
+// PR 532 follow-up 661 (registry v261) — `withdrawOnReturn`: a parcel that came back withdraws the purchase a platform
+//   already took for its order, where the platform can (GA4's own `refund`, the same transaction id); Meta and TikTok
+//   cannot take a purchase back, so there it stays the "returned" event. Off as it ships (the return goes as its own
+//   event everywhere, as before); a value saved before reads as off. It changes only what the ad platforms are told.
 import { z } from 'zod';
 import { setting } from './define';
 import { dictionaryKeySchema } from './schemas';
 
-const V = 232;
+// const V = 232; — replaced by V661 below (PR 532 follow-up 661)
+const V661 = 261;
 
 export const conversionFeedSchema = z
   .object({
@@ -36,6 +41,8 @@ export const conversionFeedSchema = z
     enrich: z.object({ courier: z.boolean(), intent: z.boolean() }).strict(),
     /** How many days before the order the visitor's product views, bag adds and checkouts are counted. */
     intentDays: z.number().int().min(1).max(30),
+    /** PR 532 follow-up 661: a parcel that came back withdraws the purchase already sent, where the platform can. */
+    withdrawOnReturn: z.boolean().default(false),
   })
   .strict();
 export type ConversionFeedSettings = z.output<typeof conversionFeedSchema>;
@@ -56,6 +63,7 @@ export const conversionFeedSettings = {
       holdBlocked: true,
       enrich: { courier: true, intent: true },
       intentDays: 7,
+      withdrawOnReturn: false,
     },
     valueType: 'JSON',
     group: 'ads',
@@ -64,6 +72,6 @@ export const conversionFeedSettings = {
     isOwnerData: false,
     isPublic: false,
     sortOrder: 12,
-    version: V,
+    version: V661,
   }),
 };

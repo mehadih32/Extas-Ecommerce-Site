@@ -124,6 +124,8 @@ export default async function TrackingPage(props: Props) {
     { kind: 'switch', path: 'holdBlocked', label: s('feed.blocked'), help: s('feed.blockedHelp') },
     { kind: 'checks', path: 'enrich', label: s('feed.enrich'), options: (['courier', 'intent'] as const).map((k) => ({ value: k, label: s(`feed.enrich_${k}`) })) },
     { kind: 'number', path: 'intentDays', label: s('feed.days'), help: s('feed.daysHelp'), min: 1, max: 30 },
+    // PR 532 follow-up (661)
+    { kind: 'switch', path: 'withdrawOnReturn', label: s('feed.withdraw'), help: s('feed.withdrawHelp') },
   ];
 
   return (

@@ -19,7 +19,9 @@ export const AD_EVENT_NAMES = ['view', 'addToBag', 'checkout', 'purchase'] as co
  *  the delivery (the delivered event then goes under the platform's purchase name, `purchase`). */
 /** PR 532 (deep conversion feed): handed to the courier, came back, and the §59.2 qualified sale (on a platform that
  *  takes it as its purchase the event goes as `purchase`; elsewhere under its own custom name). */
-export const AD_ORDER_EVENT_NAMES = ['placed', 'confirmed', 'delivered', 'shipped', 'returned', 'qualified'] as const;
+/** PR 532 follow-up (661): `refund` — a parcel that came back, sent as the withdrawal of the order's purchase on a
+ *  platform that has one (GA4's own `refund`, same transaction id); never produced for a platform without one. */
+export const AD_ORDER_EVENT_NAMES = ['placed', 'confirmed', 'delivered', 'shipped', 'returned', 'qualified', 'refund'] as const;
 export type AdEventName = (typeof AD_EVENT_NAMES)[number] | (typeof AD_ORDER_EVENT_NAMES)[number];
 export type AdPlatform = 'meta' | 'google' | 'tiktok';
 
@@ -93,9 +95,13 @@ export interface AdEventSender {
 
 // PR 258: the order steps are custom events on Meta and Google, and on TikTok too except "placed" (its own PlaceAnOrder).
 // PR 532: the courier steps and the qualified sale are custom events everywhere.
-export const META_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'Purchase', placed: 'OrderPlaced', confirmed: 'OrderConfirmed', delivered: 'OrderDelivered', shipped: 'OrderShipped', returned: 'OrderReturned', qualified: 'QualifiedSale' };
-export const GOOGLE_EVENT: Record<AdEventName, string> = { view: 'view_item', addToBag: 'add_to_cart', checkout: 'begin_checkout', purchase: 'purchase', placed: 'order_placed', confirmed: 'order_confirmed', delivered: 'order_delivered', shipped: 'order_shipped', returned: 'order_returned', qualified: 'qualified_sale' };
-export const TIKTOK_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'CompletePayment', placed: 'PlaceAnOrder', confirmed: 'OrderConfirmed', delivered: 'OrderDelivered', shipped: 'OrderShipped', returned: 'OrderReturned', qualified: 'QualifiedSale' };
+// PR 532 follow-up (661): only GA4 can take a purchase back (its `refund` event); Meta and TikTok keep the return as
+// "OrderReturned" (the name is listed for completeness: a withdrawal is never made for them, AD_WITHDRAWS).
+export const META_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'Purchase', placed: 'OrderPlaced', confirmed: 'OrderConfirmed', delivered: 'OrderDelivered', shipped: 'OrderShipped', returned: 'OrderReturned', qualified: 'QualifiedSale', refund: 'OrderReturned' };
+export const GOOGLE_EVENT: Record<AdEventName, string> = { view: 'view_item', addToBag: 'add_to_cart', checkout: 'begin_checkout', purchase: 'purchase', placed: 'order_placed', confirmed: 'order_confirmed', delivered: 'order_delivered', shipped: 'order_shipped', returned: 'order_returned', qualified: 'qualified_sale', refund: 'refund' };
+export const TIKTOK_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'CompletePayment', placed: 'PlaceAnOrder', confirmed: 'OrderConfirmed', delivered: 'OrderDelivered', shipped: 'OrderShipped', returned: 'OrderReturned', qualified: 'QualifiedSale', refund: 'OrderReturned' };
+/** PR 532 follow-up (661): which platforms can withdraw a purchase already sent (a platform's API fact, not a choice). */
+export const AD_WITHDRAWS: Readonly<Record<AdPlatform, boolean>> = { meta: false, google: true, tiktok: false };
 
 /** PR 532: the longest custom text a platform keeps (GA4's parameter value limit, the strictest). */
 const EXTRA_TEXT_MAX = 100; // hardcode-ok: a platform's own field limit, not a business number
