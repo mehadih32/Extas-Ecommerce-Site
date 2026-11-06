@@ -94,7 +94,8 @@
       "subOff": "Check where each zone would sit before you turn the side canvas on. Nothing changes on the shop while it is off.",
       "at": "{w} px wide · {g} px each side",
       "out": "Too wide here: {names}",
-      "note": "Grey band = header; the middle box = the page's content. Drawn from what you see above, before Save."
+      "note": "Grey band = header; the middle box = the page's content. Drawn from what you see above, before Save.",
+      "legend": "The zones on the map, by number"
     },
     "save": "Save",
     "saving": "Saving…",
