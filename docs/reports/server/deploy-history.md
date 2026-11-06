@@ -90,3 +90,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-06 06:44 | `0dd2bba855de` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-06 08:27 | `21f4d9a583e6` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-06 12:57 | `ce460ee40386` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-06 15:04 | `d1be8551b448` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (the smoke test did not finish (exit 124)), so the previous version was put back automatically. The fix comes before any new work. |
