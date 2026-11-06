@@ -250,6 +250,32 @@ describe.skipIf(!HAS_TEST_DB)('PR 620 on PostgreSQL: the ERP`s signed calls to t
     expect(brief(await call(hook.b))).toEqual({ ok: false, status: 401, code: 'BAD_SIGNATURE' });
   });
 
+  it('follow-up 526: with the replay switch on, the same signed call answered once is refused inside its window; off, it passes', async () => {
+    overrides.set(`erp.siteApi.enabled@${storeA}`, true);
+    overrides.set(`erp.model@${storeA}`, 'v6');
+    const h = signedErpSiteCall(signing.a, 'GET', `${PATH}?${QUERY}`, clock).headers;
+    const again = (g: ErpSiteGuard) => checkErpSiteCall(deps(), { method: 'GET', path: PATH, query: QUERY, signature: h[ERP_SIGNATURE_HEADER]!, timestamp: h[ERP_TIMESTAMP_HEADER]! }, g).then(brief);
+    expect(registry['erp.siteApi.refuseReplays'].default).toBe(false);
+    expect([await again(guard), await again(guard)]).toEqual([
+      { ok: true, store: storeA, endpoint: 'customers' },
+      { ok: true, store: storeA, endpoint: 'customers' },
+    ]);
+    overrides.set('erp.siteApi.refuseReplays', true);
+    try {
+      const g = newErpSiteGuard();
+      expect(await again(g)).toEqual({ ok: true, store: storeA, endpoint: 'customers' });
+      expect(await again(g)).toEqual({ ok: false, status: 401, code: 'REPLAYED' });
+      // a fresh signature (a new moment) is a new call
+      const later = new Date(clock.getTime() + 1000);
+      const h2 = signedErpSiteCall(signing.a, 'GET', `${PATH}?${QUERY}`, later).headers;
+      expect(brief(await checkErpSiteCall({ ...deps(), now: () => later }, { method: 'GET', path: PATH, query: QUERY, signature: h2[ERP_SIGNATURE_HEADER]!, timestamp: h2[ERP_TIMESTAMP_HEADER]! }, g))).toEqual({ ok: true, store: storeA, endpoint: 'customers' });
+      // only verified calls are remembered
+      expect(g.seen.size).toBe(2);
+    } finally {
+      overrides.delete('erp.siteApi.refuseReplays');
+    }
+  });
+
   it('§16: each secret answers for its own store only; a signing secret replaces the webhook secret for these calls', async () => {
     overrides.set(`erp.siteApi.enabled@${storeB}`, true);
     expect(brief(await call(signing.a))).toEqual({ ok: true, store: storeA, endpoint: 'customers' });

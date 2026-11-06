@@ -130,6 +130,7 @@ import { seasonalReturnSettings } from './registry-seasonal-return';
 import { adminThemeSettings } from './registry-admin-theme';
 import { adminPatternsSettings } from './registry-admin-patterns';
 import { adminTodaySettings } from './registry-admin-today';
+import { erpReplaySettings } from './registry-erp-replay';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
@@ -1500,6 +1501,8 @@ export const registry = {
   ...adminPatternsSettings,
   // ---- S00 · CN-036 lane A · PR 631 · the Lumen Today page: live feed rows, the monthly goal ring (registry-admin-today.ts, version 237). ----
   ...adminTodaySettings,
+  // ---- Follow-up 526 (PR 620) · the ERP's signed calls: refuse a signature used before, off (registry-erp-replay.ts, version 238). ----
+  ...erpReplaySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

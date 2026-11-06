@@ -257,7 +257,8 @@
         "SHARED_SECRET": "Refused: two stores have the same secret",
         "BAD_QUERY": "Refused: the question was not clear",
         "SERVER_ERROR": "The shop could not answer",
-        "RATE_LIMITED": "Refused: too many wrong calls this minute"
+        "RATE_LIMITED": "Refused: too many wrong calls this minute",
+        "REPLAYED": "Refused: this signed call was sent before"
       }
     },
     "managedOn": "connected",
