@@ -476,6 +476,63 @@
         "autoFillHelp": "Off as it ships. When on, a finished article takes the next free time as soon as its last review step passes.",
         "weekStart": "Week starts on"
       }
+    },
+    "perf": {
+      "meta": "Performance · Blog & journal",
+      "title": "Content performance",
+      "sub": "Which articles bring readers, and which bring orders.",
+      "span": "{from} – {to} ({days} days, shop time zone {tz})",
+      "days": "{n} days",
+      "periodLabel": "Period",
+      "off": "Counting is off, so readers and orders from articles stay at 0. Turn on “Count readers and orders” in the card below; counting starts from that moment (nothing before it can be recovered).",
+      "kReaders": "Readers",
+      "kReadersS": "{n} from search, video or AI",
+      "kOrders": "Orders after reading",
+      "kOrdersS": "of {n} orders placed in the shop",
+      "kOrdered": "Ordered value from articles",
+      "kOrderedS": "{pct} of the shop’s ordered value",
+      "kSales": "Sales from articles",
+      "kSalesS": "delivered orders only · {n} orders",
+      "kSalesC": "Delivered orders from articles",
+      "kSalesCS": "delivered in the period",
+      "noShare": "no orders in the shop yet",
+      "list": "Article by article",
+      "listSub": "Live articles, and any article that had readers or orders in the period. Sales first, then Ordered value, then readers.",
+      "col": {
+        "article": "Article",
+        "readers": "Readers",
+        "search": "From search",
+        "shop": "From the shop",
+        "other": "Other",
+        "orders": "Orders",
+        "ordered": "Ordered value",
+        "sales": "Sales",
+        "sold": "Delivered",
+        "per100": "Orders per 100 readers"
+      },
+      "noOrders": "Readers, no orders yet",
+      "notLive": "Not live now",
+      "none": "No live articles yet, and no article had readers or orders in this period.",
+      "rules": "Sales counts only delivered orders, on the day each was delivered; Ordered value counts every placed order on the day it was placed. An order counts for an article when the same browser read it in the {w} days before ordering.",
+      "creditLast": "Only the last article read gets the order, so the rows add up to the total.",
+      "creditEvery": "Every article read gets the order, so one order can be in several rows; the total above counts it once.",
+      "noMoney": "Amounts need the “See reports” permission; you see order counts.",
+      "how": "How it works",
+      "how1": "Turn on counting in the card. From then on each article page counts its readers: the same browser once a day.",
+      "how2": "Where a reader came from: a search engine, video site or AI assistant from the SEO organic list; another page of the shop; or anything else.",
+      "how3": "When someone orders, the articles that browser read in the last days you set get the order. Only article ids and times are kept in the browser — nothing about the person.",
+      "how4": "Use it to see which topics bring buyers: write more like the top rows, and give the “readers, no orders yet” articles better product links.",
+      "card": {
+        "h": "Counting and the report",
+        "d": "Off as it ships. Only article ids and times are kept in the reader’s browser.",
+        "count": "Count readers and orders",
+        "countHelp": "The article pages count readers, and orders credit the articles read before them.",
+        "windowDays": "Days before an order that a read still counts",
+        "credit": "Which articles get an order",
+        "creditLast": "Only the last article read",
+        "creditEvery": "Every article read",
+        "days": "Days the report shows when it opens"
+      }
     }
   }
 }

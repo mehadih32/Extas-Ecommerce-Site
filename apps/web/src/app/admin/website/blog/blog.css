@@ -75,3 +75,8 @@
 .adm2 .cal-picked{border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
 .adm2 .cal-ready{list-style:none;margin:8px 0 0;padding:0;display:grid}
 .adm2 .cal-ready li{border-top:1px solid var(--line);padding:4px 0;display:grid;gap:4px;min-width:0}
+/* S12 · PR 250 — Performance: the period buttons and the article link in the table (44px taps). */
+.adm2 .pf-periods{display:flex;flex-wrap:wrap;gap:6px}
+.adm2 .pf-periods .a2-btn{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+.adm2 .pf-art{min-width:180px}
+.adm2 .pf-title{display:inline-flex;align-items:center;min-height:44px;min-width:44px;margin-right:6px;overflow-wrap:anywhere}

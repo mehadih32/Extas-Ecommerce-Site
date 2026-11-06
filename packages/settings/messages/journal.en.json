@@ -26,6 +26,10 @@
     "schedule": {
       "label": "Publish calendar",
       "help": "The day’s publishing times (Bangladesh time, comma separated) and how many articles a day: at least the first number (a day under it is flagged on the calendar), the fill stops at the target, and never more than the most. “Fill the free times” in Website › Blog & journal › Calendar places the finished articles (all three review steps passed, nothing missing) in the free times of the days ahead you set, never closer to now than the minutes you set; an empty time is never filled with an unfinished article. “Place by itself” is off as it ships: when on, an article is placed in the next free time as soon as its last review step passes."
+    },
+    "performance": {
+      "label": "Content performance",
+      "help": "Off as it ships. When on, each article page counts its readers (every browser once a day) by where they came from — a search engine, video site or AI assistant from the SEO organic list, the shop’s own pages, or anywhere else — and an order credits the articles that browser read in the days you set before ordering: only the last article read (totals never count an order twice) or every article read. Website › Blog & journal › Performance shows readers, orders, Ordered value and Sales (delivered orders only) per article. Only article ids and times are kept in the browser, nothing about the person."
     }
   }
 }

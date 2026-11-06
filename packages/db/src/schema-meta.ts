@@ -235,6 +235,8 @@ export const APPEND_ONLY_LOCKED = [
   'ShelfBin',
   // S22 · PR 538 (migration 0119_support_escalation): each time the owner was told nobody answered a waiting customer.
   'SupportEscalation',
+  // S12 · PR 250 (migration 0150_content_performance): each order's credit to the journal article it read, written once.
+  'BlogOrderRead',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';

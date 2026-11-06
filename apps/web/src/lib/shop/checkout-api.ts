@@ -14,6 +14,8 @@ import { hrefIn, isShopLang, type ShopLang } from './lang';
 import { ROUTES } from './routes';
 import { noteBotSignals } from '../security/bot-check';
 import { ATTRIBUTION_COOKIE, keptTouch, orderAttributionOf } from '../tracking/attribution';
+import { creditOrder } from '../journal/performance';
+import { READ_COOKIE } from '../journal/performance-model';
 import { trackPurchase } from '../tracking/shop';
 import { isSupportError, requestCallBack } from '@extas/support';
 import { phoneNormalizeBD } from '../phone-bd';
@@ -303,6 +305,8 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     if (!r.replay) {
       await noteBotSignals({ db: deps.checkout.db, settings: deps.checkout.settings }, { form: 'checkout', sent: human, storeId: deps.storeId, ip });
       await orderLanded(deps, r.orderId);
+      // PR 250: the journal articles this browser read before ordering get the order (`blog.performance`; never fails it)
+      await creditOrder(deps.checkout.db, deps.checkout.settings, { storeId: deps.storeId, orderId: r.orderId, cookie: readCookie(request, READ_COOKIE) });
       // PR 257: the purchase goes to the ad platforms from the server while tracking is on (quiet, never stops the order)
       await trackPurchase(request, { storeId: deps.storeId, orderId: r.orderId });
     }

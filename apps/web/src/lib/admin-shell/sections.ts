@@ -303,6 +303,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/website/blog/plan', perm: 'blog.read', keys: ['blogPlan', 'blogBrief'] },
           // S12 · PR 245 — the publish calendar: the days ahead, the month, the finished articles waiting for a time.
           { href: '/admin/website/blog/calendar', perm: 'blog.read', keys: ['blogCalendar'] },
+          // S12 · PR 250 — content performance: each article's readers and the orders that read it (Sales and Ordered value).
+          { href: '/admin/website/blog/performance', perm: 'blog.read', keys: ['blogPerformance'] },
         ],
       },
     ],
