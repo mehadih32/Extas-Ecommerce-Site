@@ -21,7 +21,11 @@
     },
     "seasonalHome": {
       "label": "Seasonal home-page switching",
-      "help": "Off as it ships. On, Marketing › Seasonal home keeps your saved home-page looks (for example \"Eid 2027\": which sections show and in what order, the hero's words, the collection whose products slide in the hero) and the windows you schedule them for. Inside a window the home page shows that look; when the window ends the home page is your own home settings again by itself. Two windows may not overlap; a stopped schedule is kept, never deleted. Prices, offers and the checkout never change."
+      "help": "Off as it ships. On, Marketing › Seasonal home keeps your saved home-page looks (for example \"Eid 2027\": which sections show and in what order, the hero's words, the collection whose products slide in the hero) and the windows you schedule them for. Inside a window the home page shows that look; when the window ends the home page is your own home settings again by itself. Two windows may not overlap; a stopped schedule is kept, never deleted. Prices, offers and the checkout never change.",
+      "notes": {
+        "label": "Seasonal home notes in the bell",
+        "help": "Off as it ships. On, the people who may see marketing get a note in the admin's bell when a seasonal home window starts (the home page now shows its look) and when it ends or is stopped (the home page is your own again), each kept for \"Days\" days. Only while seasonal home-page switching is on. Nothing is sent outside the admin."
+      }
     },
     "festiveCutoff": {
       "label": "Festive cut-off banners",

@@ -307,6 +307,11 @@
         "resolve": "Solution is late",
         "unowned": "Nobody has taken it"
       },
+      "seasonal": {
+        "started": "Seasonal home: a look started",
+        "ended": "Seasonal home: a look ended",
+        "stopped": "Seasonal home: a look was stopped"
+      },
       "unread": "{n} unread",
       "allRead": "All read",
       "markAll": "Mark all read",

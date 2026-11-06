@@ -203,7 +203,7 @@ export * from './registry-blast';
 export * from './registry-youtube';
 // S13 · PR 279 — the SEO outreach pipeline's switch, its follow-up gap and the owner's pitch words (registry-outreach.ts, version 214).
 export * from './registry-outreach';
-// S13 · PR 280 — seasonal home-page switching's switch (registry-seasonal-home.ts, version 215).
+// S13 · PR 280 — seasonal home-page switching's switch (registry-seasonal-home.ts, version 215); its bell notes (version 249).
 export * from './registry-seasonal-home';
 // S13 · PR 281 — festive cut-off words on the shop: the switch, where, the heading and the link (registry-festive-cutoff.ts, version 216).
 export * from './registry-festive-cutoff';

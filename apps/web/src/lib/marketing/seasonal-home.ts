@@ -16,7 +16,7 @@
 import { createHash } from 'node:crypto';
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { HOME_SECTIONS, homeSectionsSchema, registry, seasonalHomeSettingsSchema, storeTarget, type HomeSectionId, type SeasonalHomeSettings, type ShopLabel, type Value } from '@extas/settings';
+import { HOME_SECTIONS, homeSectionsSchema, registry, seasonalHomeNotesSchema, seasonalHomeSettingsSchema, storeTarget, type HomeSectionId, type SeasonalHomeNotes, type SeasonalHomeSettings, type ShopLabel, type Value } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { HOME_LOOK_SCOPE, lookOf, lookPayload, overlaps, SEASONAL_HOME_KEYS, utcToWall, wallToUtc, windowState, type HomeLook, type WindowState } from '../shop/seasonal-home-model';
 import type { AdPlatformsWho } from './ad-platforms';
@@ -80,6 +80,8 @@ export interface WindowRow {
 export interface SeasonalHomeOverview {
   settings: SeasonalHomeSettings;
   card: { key: 'seasonalHome'; value: SeasonalHomeSettings; version: string };
+  /** Follow-up 650: the bell notes' card (`marketing.seasonalHome.notes`). */
+  notesCard: { key: 'seasonalHomeNotes'; value: SeasonalHomeNotes; version: string };
   timeZone: string;
   /** The window the home page shows now, if any. */
   live: WindowRow | null;
@@ -89,6 +91,7 @@ export interface SeasonalHomeOverview {
 }
 
 const settingsOf = async (deps: SeasonalHomeDeps): Promise<SeasonalHomeSettings> => (await deps.resolver.value('marketing.seasonalHome', { storeId: S })) as SeasonalHomeSettings;
+const notesOf = async (deps: SeasonalHomeDeps): Promise<SeasonalHomeNotes> => (await deps.resolver.value('marketing.seasonalHome.notes', { storeId: S })) as SeasonalHomeNotes;
 const zoneOf = async (deps: SeasonalHomeDeps): Promise<string> => (await deps.resolver.value('store.timeZone', { storeId: S })) as string;
 
 /** The look's home settings, every key filled: the look's own value, else the owner's own setting. */
@@ -115,7 +118,7 @@ function lookRow(r: { id: string; name: string; archivedAt: Date | null; payload
 
 /** Marketing › Seasonal home: the switch, the look on the home page now, the looks and the windows. */
 export async function seasonalHomeOverview(deps: SeasonalHomeDeps): Promise<SeasonalHomeOverview> {
-  const [settings, timeZone] = await Promise.all([settingsOf(deps), zoneOf(deps)]);
+  const [settings, timeZone, notes] = await Promise.all([settingsOf(deps), zoneOf(deps), notesOf(deps)]);
   const now = deps.now?.() ?? new Date();
   const [snaps, wins, cols] = await Promise.all([
     deps.db.layoutSnapshot.findMany({ where: { storeId: S, isLaunchDefault: false, payload: { path: ['scope'], equals: HOME_LOOK_SCOPE } }, orderBy: [{ archivedAt: { sort: 'asc', nulls: 'first' } }, { createdAt: 'desc' }], take: LOOKS_SHOWN }),
@@ -137,6 +140,7 @@ export async function seasonalHomeOverview(deps: SeasonalHomeDeps): Promise<Seas
   return {
     settings,
     card: { key: 'seasonalHome', value: settings, version: versionOf(settings) },
+    notesCard: { key: 'seasonalHomeNotes', value: notes, version: versionOf(notes) },
     timeZone,
     live: settings.enabled ? (windows.find((w) => w.state === 'LIVE' && liveLooks.has(w.lookId)) ?? null) : null,
     looks,
@@ -145,9 +149,23 @@ export async function seasonalHomeOverview(deps: SeasonalHomeDeps): Promise<Seas
   };
 }
 
-/** PUT: the settings card ({key: 'seasonalHome', value, version}). Audited. */
-export async function saveSeasonalHomeCard(deps: SeasonalHomeDeps, who: AdPlatformsWho, input: unknown): Promise<SeasonalHomeOverview['card']> {
+/** PUT: the bell notes' card ({key: 'seasonalHomeNotes', value, version}; follow-up 650). Audited. */
+async function saveNotesCard(deps: SeasonalHomeDeps, who: AdPlatformsWho, o: Record<string, unknown>): Promise<SeasonalHomeOverview['notesCard']> {
+  const before = await notesOf(deps);
+  if (o.version !== versionOf(before)) throw new SeasonalHomeError('STALE', 409);
+  const ok = seasonalHomeNotesSchema.safeParse(o.value);
+  if (!ok.success) throw new SeasonalHomeError('INVALID_INPUT', 400, [...new Set(ok.error.issues.map((i) => String(i.path[0] ?? 'value')))]);
+  if (versionOf(ok.data) !== versionOf(before)) {
+    await deps.resolver.set('marketing.seasonalHome.notes', ok.data, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: 'Marketing › Seasonal home: notes' });
+    await audit(deps.db, who.actor, { storeId: S, action: 'seasonalHome.notes', entityType: 'Setting', entityId: 'marketing.seasonalHome.notes', before: { ...before }, after: { ...ok.data } }, who.ctx);
+  }
+  return { key: 'seasonalHomeNotes', value: ok.data, version: versionOf(ok.data) };
+}
+
+/** PUT: a settings card ({key: 'seasonalHome' | 'seasonalHomeNotes', value, version}). Audited. */
+export async function saveSeasonalHomeCard(deps: SeasonalHomeDeps, who: AdPlatformsWho, input: unknown): Promise<SeasonalHomeOverview['card'] | SeasonalHomeOverview['notesCard']> {
   const o = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+  if (o.key === 'seasonalHomeNotes') return saveNotesCard(deps, who, o);
   if (o.key !== 'seasonalHome') throw new SeasonalHomeError('INVALID_INPUT', 400, ['key']);
   const before = await settingsOf(deps);
   if (o.version !== versionOf(before)) throw new SeasonalHomeError('STALE', 409);
@@ -292,8 +310,14 @@ export async function seasonalHomeHandler(request: Request, deps: AdminDeps | nu
   const d: SeasonalHomeDeps = { db: deps!.db, resolver: deps!.resolver, ...(now ? { now } : {}) };
   const who = { actor: g.actor, ctx: g.ctx };
   try {
-    if (method === 'GET') return json({ ok: true, ...(await seasonalHomeOverview(d)) });
-    if (method === 'PUT') return json({ ok: true, cards: { seasonalHome: await saveSeasonalHomeCard(d, who, b) } });
+    if (method === 'GET') {
+      const o = await seasonalHomeOverview(d);
+      return json({ ok: true, ...o, cards: { seasonalHome: o.card, seasonalHomeNotes: o.notesCard } });
+    }
+    if (method === 'PUT') {
+      const card = await saveSeasonalHomeCard(d, who, b);
+      return json({ ok: true, cards: { [card.key]: card } });
+    }
     return json({ ok: true, ...(await seasonalHomeAction(d, who, b as Record<string, unknown>)) });
   } catch (e) {
     return answer(e);
