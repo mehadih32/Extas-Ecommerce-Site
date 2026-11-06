@@ -83,6 +83,13 @@ export const CAT_TOOLS_FIT: FitRule = { sel: '.cat-ptools.cat-ph', min: 10.5, co
  */
 export const FLASH_HEAD_FIT: FitRule = { sel: '.hm-flash-hd', min: 12, box: true, collapse: true };
 
+/**
+ * PR 56 follow-up (114) · the word under a size button (`pdp.sizeWords`, the owner may write up to 16 letters): it steps its
+ * type down first (never under 9 px, 11 px on a desktop), and when even that cannot hold it, it takes two lines (.fit-x)
+ * instead of being cut with "…".
+ */
+export const SIZE_WORD_FIT: FitRule = { sel: '.pdp-page .size-pill .size-w', min: 9, minDesk: 11, collapse: true };
+
 /** The product card's two tight spots (demo 21-category.js): the swatches-and-fit line, and the picture's badge. */
 export const CARD_FIT: readonly FitRule[] = [
   { sel: '.pcard .pinfo>.row.between', min: 10, collapse: true },

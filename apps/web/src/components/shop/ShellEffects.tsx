@@ -13,7 +13,7 @@
 //   · the footer columns step their type down instead of cutting a word (L05)
 //   · the hero pictures' pins keep the whole name and the price (PR 43, HERO_PIN_FIT)
 import { useEffect } from 'react';
-import { HERO_PIN_FIT, fitAll, type FitRule } from '@/lib/shop/fit';
+import { HERO_PIN_FIT, SIZE_WORD_FIT, fitAll, type FitRule } from '@/lib/shop/fit';
 import { series, type Cancel } from '@/lib/shop/later';
 
 const FOOTER_FIT: FitRule[] = [{ sel: '.ftr-s3 .ftr-cols', min: 11, collapse: true }];
@@ -240,12 +240,17 @@ export function ShellEffects() {
       const root = shopRoot();
       if (root) fitAll(root, [HERO_PIN_FIT]);
     });
+    // follow-up 114: the words under the product page's size buttons (smaller type, then two lines; never "…")
+    const words = safe(() => {
+      const root = shopRoot();
+      if (root) fitAll(root, [SIZE_WORD_FIT]);
+    });
     // `data-shell-fits` says whether the fits have run on the page as it stands (the device gate measures after them)
     const html = document.documentElement;
     const pending = () => html.setAttribute('data-shell-fits', 'pending');
     const done = () => html.setAttribute('data-shell-fits', 'done');
     pending();
-    let stop: Cancel = series([header, floating, footer, bars, done]);
+    let stop: Cancel = series([header, floating, footer, words, bars, done]);
     let raf = 0;
     let full = false;
     const tick = (all: boolean) => {
@@ -259,7 +264,7 @@ export function ShellEffects() {
         if (!f) return;
         stop();
         pending();
-        stop = series([header, pins, footer, bars, done]);
+        stop = series([header, pins, footer, words, bars, done]);
       });
     };
     const onScroll = () => tick(false);
