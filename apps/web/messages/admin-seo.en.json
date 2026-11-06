@@ -616,5 +616,86 @@
     "noneHere": "No page has this.",
     "more": "And {n} more: pick one kind above to see them.",
     "deploy": "Every deploy also checks the built pages themselves: each language pair is complete and named back, the canonical is in the page's own language, and no link is a \"#\" stand-in."
+  },
+  "og": {
+    "metaTitle": "Organic report · Admin",
+    "title": "Organic report",
+    "sub": "How much of the shop's Sales comes from search engines, YouTube and AI assistants instead of ads, and how the shop does in Google's and Bing's results.",
+    "span": "Last {days} days: {from} – {to}. Sales = delivered orders, on their delivered day.",
+    "kpi": {
+      "share": "Organic share of Sales",
+      "target": "Your target: {n}%",
+      "noTarget": "No target set",
+      "organic": "Organic Sales",
+      "organicOrders": "Organic orders",
+      "organicFoot": "{n} of {all} delivered orders",
+      "ai": "Orders from AI assistants",
+      "aiFoot": "{v} in Sales",
+      "aiFootOrders": "ChatGPT, Perplexity, Gemini and the others",
+      "clicks": "Clicks from search results",
+      "clicksFoot": "{engines}",
+      "clicksNone": "Connect Search Console or Bing to see them"
+    },
+    "sources": "Where organic orders came from",
+    "col": {
+      "source": "Came from",
+      "kind": "Kind",
+      "orders": "Orders",
+      "sales": "Sales",
+      "share": "Share of organic",
+      "query": "Search",
+      "clicks": "Clicks",
+      "shown": "Shown",
+      "position": "Avg. position"
+    },
+    "kind": {
+      "search": "Search engine",
+      "video": "Video",
+      "ai": "AI assistant",
+      "otherSite": "Another site",
+      "notKnown": "Not known"
+    },
+    "row": {
+      "otherSite": "Other sites and links",
+      "notKnown": "Not known (typed in, saved or from an app)"
+    },
+    "none": "No organic order in these days yet.",
+    "notKnownNote": "\"Not known\": the visitor typed the address, used a bookmark or came from an app that sends no address. Such orders still count as organic because no ad brought them.",
+    "keepOn": "Visits from the sites in the list below are remembered even without a tag, the same way and for as long as an ad click, but never in place of an ad click already remembered.",
+    "keepOff": "Untagged visits from search engines and AI assistants are not remembered now (switched off below), so most such orders show as \"Not known\". ChatGPT's links still say so themselves.",
+    "results": "In search results",
+    "engine": {
+      "google": "Google Search Console",
+      "bing": "Bing Webmaster Tools"
+    },
+    "engineLine": "{clicks} clicks · shown {shown} times · average position {position}",
+    "noQueries": "No search in these days yet.",
+    "status": {
+      "practice": "Not connected: add the key in Keys & connections, then the clicks, positions and top searches show here.",
+      "noDomain": "The shop has no domain of its own yet, so there is nothing to look up.",
+      "noProperty": "Connected, but the account has no property for the shop's own address. Add it in the engine and verify it (Website › SEO › Search Console and Bing).",
+      "unreachable": "The engine did not answer just now. Open the page again later."
+    },
+    "connect": "Open Keys & connections",
+    "set": {
+      "where": "Website › SEO › Organic report",
+      "title": "Report settings",
+      "desc": "How many days the report covers, your target, and which sites count as search engines, video sites and AI assistants.",
+      "days": "Days covered",
+      "daysHint": "As shipped {v} ({min}–{max}).",
+      "targetPct": "Target share of Sales from organic (%)",
+      "targetPctHint": "As shipped {v}% ({min}–{max}; 0 = no target).",
+      "top": "Searches listed per engine",
+      "topHint": "As shipped {v} ({min}–{max}).",
+      "keep": "Remember untagged visits from these sites",
+      "keepHint": "A plain Google result or an AI answer carries no tag; with this on, the site it came from is remembered until the order, but never in place of an ad click already remembered.",
+      "sources": {
+        "search": "Search engines",
+        "video": "Video sites",
+        "ai": "AI assistants"
+      },
+      "sourcesHint": "One site per line: the name, a colon, then the addresses that name it, separated by commas (a full address such as perplexity.ai, or one word of it such as google). AI assistants are checked first, then video, then search engines.",
+      "bad": "{box}: line {lines} needs a name, a colon and at least one address."
+    }
   }
 }

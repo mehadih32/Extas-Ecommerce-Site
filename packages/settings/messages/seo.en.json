@@ -66,6 +66,10 @@
     "internalLinks": {
       "label": "Links between pages",
       "help": "Plain links between the shop's own pages that shoppers and search engines follow: under a collection page, \"More collections\" (its sister collections, then the other main collections; only shown ones with styles). Off as shipped; up to 6 as shipped (1–12)."
+    },
+    "organic": {
+      "label": "Organic report",
+      "help": "The organic report under Website › SEO: the last days' Sales from visits that came from search engines, YouTube and AI assistants (not from an ad), against your target, by each site; with Google Search Console or Bing connected, the clicks, how often the shop was shown, its average position and the top searches. An untagged visit from a listed site is kept as where the visitor came from, but never replaces a visit already kept. As shipped: 28 days (7–90), target 50% (0 = none), 10 searches (1–25), keeping such visits on, the common engines and assistants listed."
     }
   },
   "defaults": {

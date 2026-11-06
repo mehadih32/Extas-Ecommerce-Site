@@ -12,9 +12,15 @@
 //   the tags in with the order (@extas/checkout attribution.ts writes Order.utmSource / utmMedium / utmCampaign /
 //   adPlatform / referrer). Nothing in it changes a price, a discount, COD or the order's source.
 // - The tracking hooks (lib/tracking/shop.ts) take the click's `fbc` when the pixel left none.
-// The settings are read only when a tagged address arrives or an order is placed; a slow or missing read keeps nothing.
-import { attributionData, type AttributionPlatform, type OrderAttribution } from '@extas/checkout/attribution';
-import type { AttributionSettings } from '@extas/settings';
+// - PR 238 (`seo.organic.keepReferrals`, on as shipped): a visit without tags whose Referer is one of the listed search
+//   engines, video sites or AI assistants (a plain Google result, a Perplexity answer) is kept the same way, with only
+//   the other site's address, so the organic report can say where an organic order came from. It only fills an empty
+//   cookie: a visit already kept (an ad click, a tagged link) is never replaced by it.
+// The settings are read only when a tagged address or another site's visit arrives, or an order is placed; a slow or
+// missing read keeps nothing.
+import { attributionData, cleanReferrer, type AttributionPlatform, type OrderAttribution } from '@extas/checkout/attribution';
+import { hostOf, sourceNamed } from '@extas/metrics/pure';
+import type { AttributionSettings, SeoOrganic } from '@extas/settings';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 
 export const ATTRIBUTION_COOKIE = '__Host-extas_src';
@@ -58,6 +64,20 @@ export function touchOf(params: URLSearchParams, referer: string | null, ownHost
   const fbc = fbclid && CLICK_ID.test(fbclid) ? `fb.1.${now}.${fbclid}` : null;
   if (!tags.utmSource && !tags.utmMedium && !tags.utmCampaign && !tags.adPlatform) return null;
   return { ...tags, referrer, fbc, at: now };
+}
+
+/** Whether a Referer is another site's address (a cheap check before any setting is read). */
+export function fromElsewhere(referer: string | null, ownHost: string): boolean {
+  const host = hostOf(referer);
+  return host !== null && host !== ownHost.toLowerCase().replace(/:\d+$/, '');
+}
+
+/** PR 238: an untagged visit from a listed search engine, video site or AI assistant, or null. */
+export function referralTouch(referer: string | null, ownHost: string, organic: Pick<SeoOrganic, 'keepReferrals' | 'sources'>, now: number): Touch | null {
+  if (!organic.keepReferrals || !fromElsewhere(referer, ownHost)) return null;
+  const referrer = cleanReferrer(referer);
+  if (!referrer || sourceNamed(hostOf(referrer), organic.sources) === null) return null;
+  return { utmSource: null, utmMedium: null, utmCampaign: null, adPlatform: null, referrer, fbc: null, at: now };
 }
 
 /** The cookie's value: the visit as url-safe base64 JSON. */
@@ -119,7 +139,7 @@ async function settingsOf(storeId: number, reader?: AttributionReader | null): P
  * the settings not readable now).
  */
 export async function landingCookie(o: { storeId: number; params: URLSearchParams; referer: string | null; host: string; cookie: string | null; now?: number }): Promise<string | null> {
-  if (!hasTags(o.params)) return null;
+  if (!hasTags(o.params)) return referralCookie(o);
   const now = o.now ?? Date.now();
   const arrived = touchOf(o.params, o.referer, o.host, now);
   if (!arrived) return null;
@@ -127,6 +147,24 @@ export async function landingCookie(o: { storeId: number; params: URLSearchParam
   if (!s) return null;
   const next = nextTouch(decodeTouch(o.cookie), arrived, s, now);
   return next ? attributionCookie(encodeTouch(next), s.keepDays) : null;
+}
+
+/** PR 238: the Set-Cookie line for an untagged visit from a listed site, only while no visit is kept (null otherwise). */
+async function referralCookie(o: { storeId: number; referer: string | null; host: string; cookie: string | null; now?: number }): Promise<string | null> {
+  if (!fromElsewhere(o.referer, o.host)) return null;
+  const now = o.now ?? Date.now();
+  const r = settingsResolver();
+  if (!r) return null;
+  let s: AttributionSettings;
+  let organic: SeoOrganic;
+  try {
+    [s, organic] = await withTimeout(Promise.all([r.value('ads.attribution', { storeId: o.storeId }), r.value('seo.organic', { storeId: o.storeId })]), settingsTimeoutMs());
+  } catch {
+    return null;
+  }
+  if (!s.on || stillKept(decodeTouch(o.cookie), s, now)) return null;
+  const arrived = referralTouch(o.referer, o.host, organic, now);
+  return arrived ? attributionCookie(encodeTouch(arrived), s.keepDays) : null;
 }
 
 /** For the checkout and the tracking hooks: the visit this browser's cookie still counts (null: none). */

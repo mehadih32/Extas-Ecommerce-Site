@@ -5,6 +5,7 @@ import { generateKeyPairSync, createVerify } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
   allAdapters,
+  bingDay,
   bingWebmaster,
   bingWebmasterAdapter,
   connectionCatalogue,
@@ -13,6 +14,7 @@ import {
   googleSearchConsoleAdapter,
   mockSearchEngine,
   mockSearchEngineLog,
+  topQueries,
   type Fetch,
 } from '../src';
 
@@ -31,6 +33,10 @@ function fakeGoogle(opts: { refuseToken?: boolean } = {}) {
     }
     if (url.endsWith('/sites')) return new Response(JSON.stringify({ siteEntry: [{ siteUrl: 'https://shop.example.test/' }, { siteUrl: 'sc-domain:shop.example.test' }] }), { status: 200 });
     if (url.includes('/sitemaps/')) return new Response(null, { status: 204 });
+    if (url.endsWith('/searchAnalytics/query')) {
+      const b = JSON.parse(String(init?.body)) as { dimensions?: string[] };
+      return new Response(JSON.stringify(b.dimensions ? { rows: [{ keys: ['polo shirt bd'], clicks: 12, impressions: 300, position: 4.26 }] } : { rows: [{ clicks: 40, impressions: 2000, position: 9.04 }] }), { status: 200 });
+    }
     return new Response('{}', { status: 404 });
   };
   return { f, calls };
@@ -107,5 +113,39 @@ describe('Search Console and Bing (PR 233)', () => {
       expect(row).toMatchObject({ kind: 'SEARCH_CONSOLE', adapter: true, exclusive: false, targetMode: 'LIVE' });
       expect(row.secrets.map((s) => s.field)).toEqual([...a.secrets]);
     }
+  });
+
+  it('PR 238: the mock has no results; Google totals and top searches for the span; Bing adds up its weeks in the span', async () => {
+    expect(await mockSearchEngine('googleSearchConsole').performance('https://shop.example.test/', { start: '2026-10-01', end: '2026-10-28' }, 10)).toEqual({ clicks: 0, impressions: 0, position: null, queries: [] });
+    const g = fakeGoogle();
+    const p = await googleSearchConsole(KEY_JSON, g.f).performance('https://shop.example.test/', { start: '2026-10-01', end: '2026-10-28' }, 5);
+    expect(p).toEqual({ clicks: 40, impressions: 2000, position: 9, queries: [{ query: 'polo shirt bd', clicks: 12, impressions: 300, position: 4.3 }] });
+    const q = g.calls.filter((c) => c.url.endsWith('/searchAnalytics/query'));
+    expect(q.map((c) => JSON.parse(c.body))).toEqual([{ startDate: '2026-10-01', endDate: '2026-10-28' }, { startDate: '2026-10-01', endDate: '2026-10-28', dimensions: ['query'], rowLimit: 5 }]);
+    expect(q[0]!.url).toContain(encodeURIComponent('https://shop.example.test/'));
+
+    const urls: string[] = [];
+    const week = (ymd: string) => `/Date(${Date.parse(`${ymd}T00:00:00Z`)})/`;
+    const f: Fetch = async (url) => {
+      urls.push(url);
+      return new Response(
+        JSON.stringify({
+          d: [
+            { Query: 'polo', Clicks: 3, Impressions: 100, AvgImpressionPosition: 5, Date: week('2026-10-05') },
+            { Query: 'polo', Clicks: 1, Impressions: 100, AvgImpressionPosition: 7, Date: week('2026-10-12') },
+            { Query: 'panjabi', Clicks: 0, Impressions: 50, AvgImpressionPosition: -1, Date: week('2026-10-12') },
+            { Query: 'old', Clicks: 9, Impressions: 9, AvgImpressionPosition: 1, Date: week('2026-09-01') },
+          ],
+        }),
+        { status: 200 },
+      );
+    };
+    const b = await bingWebmaster(BING_KEY, f).performance('https://shop.example.test/', { start: '2026-10-01', end: '2026-10-28' }, 10);
+    expect(b).toEqual({ clicks: 4, impressions: 250, position: 6, queries: [{ query: 'polo', clicks: 4, impressions: 200, position: 6 }, { query: 'panjabi', clicks: 0, impressions: 50, position: null }] });
+    expect(urls[0]).toBe(`https://ssl.bing.com/webmaster/api.svc/json/GetQueryStats?siteUrl=${encodeURIComponent('https://shop.example.test/')}&apikey=${BING_KEY}`);
+    await expect(bingWebmaster(BING_KEY, async () => new Response('', { status: 401 })).performance('https://shop.example.test/', { start: '2026-10-01', end: '2026-10-28' }, 10)).rejects.toThrow('Bing did not give the results (401)');
+    expect(bingDay('/Date(1730419200000-0700)/')).toBe('2024-11-01');
+    expect(bingDay('2024-11-01')).toBeNull();
+    expect(topQueries([], 3)).toEqual({ clicks: 0, impressions: 0, position: null, queries: [] });
   });
 });

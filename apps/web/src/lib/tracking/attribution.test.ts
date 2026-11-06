@@ -4,11 +4,12 @@
 // the cookie on a tagged page and keeps that answer out of every cache. Every value is a made-up test value.
 import { describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
-import type { AttributionSettings } from '@extas/settings';
+import { SEO_ORGANIC_DEFAULT, type AttributionSettings, type SeoOrganic } from '@extas/settings';
 
 let cfg: AttributionSettings = { on: true, keepDays: 30, touch: 'last' };
+let organic: SeoOrganic = SEO_ORGANIC_DEFAULT;
 vi.mock('../settings', () => ({
-  settingsResolver: () => ({ value: async (key: string) => (key === 'ads.attribution' ? cfg : undefined) }),
+  settingsResolver: () => ({ value: async (key: string) => (key === 'ads.attribution' ? cfg : key === 'seo.organic' ? organic : undefined) }),
   settingsTimeoutMs: () => 1_000,
   withTimeout: <T,>(p: Promise<T>) => p,
 }));
@@ -16,7 +17,7 @@ vi.mock('../seo/redirect-table', () => ({ redirectTable: async () => ({}), forwa
 vi.mock('../seo/bengali-gate', () => ({ bengaliGateSends: async () => false }));
 vi.mock('../shop/store-id', () => ({ shopStoreId: () => 1 }));
 
-const { ATTRIBUTION_COOKIE, decodeTouch, encodeTouch, hasTags, keptTouch, landingCookie, nextTouch, orderAttributionOf, stillKept, touchOf } = await import('./attribution');
+const { ATTRIBUTION_COOKIE, decodeTouch, encodeTouch, fromElsewhere, hasTags, keptTouch, landingCookie, nextTouch, orderAttributionOf, referralTouch, stillKept, touchOf } = await import('./attribution');
 const { proxy } = await import('../../proxy');
 
 const NOW = Date.UTC(2026, 10, 1, 6, 0, 0); // hardcode-ok: a made-up test time
@@ -92,5 +93,38 @@ describe('the proxy keeps the tags of a tagged shop page (PR 257 follow-up)', ()
   it('an untagged page sets nothing', async () => {
     const res = await proxy(new NextRequest('http://127.0.0.1:3000/p/essential-pique-polo'));
     expect(res.headers.get('set-cookie')).toBeNull();
+  });
+});
+
+describe('an untagged visit from a listed search engine or AI assistant (PR 238)', () => {
+  it("is kept with only the other site's address, never from the shop itself or an unlisted site, never with the switch off", () => {
+    expect(fromElsewhere('https://www.google.com/', 'shop.test')).toBe(true);
+    expect(fromElsewhere('https://shop.test/collections/polos', 'shop.test')).toBe(false);
+    expect(fromElsewhere('http://shop.test:3000/', 'SHOP.test:3000')).toBe(false);
+    expect(fromElsewhere(null, 'shop.test')).toBe(false);
+    expect(referralTouch('https://www.perplexity.ai/search/abc?q=polo', 'shop.test', organic, NOW)).toEqual({ utmSource: null, utmMedium: null, utmCampaign: null, adPlatform: null, referrer: 'https://www.perplexity.ai', fbc: null, at: NOW });
+    expect(referralTouch('https://blog.example.test/post', 'shop.test', organic, NOW)).toBeNull();
+    expect(referralTouch('https://www.google.com/', 'shop.test', { ...organic, keepReferrals: false }, NOW)).toBeNull();
+  });
+
+  it('only fills an empty cookie: an ad click already kept stays', async () => {
+    const line = await landingCookie({ storeId: 1, params: q(''), referer: 'https://www.google.com/', host: 'shop.test', cookie: null, now: NOW });
+    expect(decodeTouch(line!.split(';')[0]!.split('=')[1]!)).toMatchObject({ utmSource: null, referrer: 'https://www.google.com' });
+    const ad = encodeTouch({ utmSource: 'facebook', utmMedium: 'paid_social', utmCampaign: null, adPlatform: 'META', referrer: null, fbc: null, at: NOW - DAY });
+    expect(await landingCookie({ storeId: 1, params: q(''), referer: 'https://www.google.com/', host: 'shop.test', cookie: ad, now: NOW })).toBeNull();
+    cfg = { ...cfg, on: false };
+    try {
+      expect(await landingCookie({ storeId: 1, params: q(''), referer: 'https://www.google.com/', host: 'shop.test', cookie: null, now: NOW })).toBeNull();
+    } finally {
+      cfg = { ...cfg, on: true };
+    }
+  });
+
+  it('the proxy sets it for a page opened from a Google result, and nothing for a page opened from the shop itself', async () => {
+    const res = await proxy(new NextRequest('http://127.0.0.1:3000/p/essential-pique-polo', { headers: { referer: 'https://www.google.com.bd/' } }));
+    expect(decodeTouch((res.headers.get('set-cookie') ?? '').split(';')[0]!.split('=')[1]!)).toMatchObject({ referrer: 'https://www.google.com.bd' });
+    expect(res.headers.get('cache-control')).toBe('private, no-store');
+    const own = await proxy(new NextRequest('http://127.0.0.1:3000/p/essential-pique-polo', { headers: { referer: 'http://127.0.0.1:3000/' } }));
+    expect(own.headers.get('set-cookie')).toBeNull();
   });
 });

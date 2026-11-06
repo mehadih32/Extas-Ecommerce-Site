@@ -324,6 +324,69 @@ export const seoInternalLinksSchema = z
 export type SeoInternalLinks = z.output<typeof seoInternalLinksSchema>;
 export const SEO_INTERNAL_LINKS_DEFAULT: SeoInternalLinks = { relatedCollections: false, max: 6 };
 
+// ---- S11 · PR 238 · the organic performance report (Blueprint C4.1, C4.3, C4 build list 5; registry v209) ----
+
+export const SEO_ORGANIC_LIMITS = { days: { min: 7, max: 90 }, top: { min: 1, max: 25 }, targetPct: { min: 0, max: 100 }, sources: 20, match: 10, name: 40 } as const;
+export const SEO_ORGANIC_KINDS = ['search', 'video', 'ai'] as const;
+
+/** One site organic visits come from: its name on the report, its kind and the words that name it (a host, or one word of a host). */
+export const seoOrganicSourceSchema = z
+  .object({
+    name: z.string().trim().min(1).max(SEO_ORGANIC_LIMITS.name),
+    kind: z.enum(SEO_ORGANIC_KINDS),
+    match: z
+      .array(
+        z
+          .string()
+          .trim()
+          .toLowerCase()
+          .regex(/^[a-z0-9]([a-z0-9.-]{0,61}[a-z0-9])?$/),
+      )
+      .min(1)
+      .max(SEO_ORGANIC_LIMITS.match),
+  })
+  .strict();
+
+/**
+ * Website → SEO → Organic report (`/admin/website/seo/organic`): the last `days` days' Sales from organic visits against
+ * the owner's `targetPct` (Blueprint C4.1: 50% of sales from organic; 0 shows no target), split by the listed search
+ * engines, video sites and AI assistants (which assistant sent the buyer: ChatGPT's links say so themselves); and, with
+ * Google Search Console or Bing connected, the clicks, the times the shop was shown, its average position and the `top`
+ * searches. `keepReferrals`: an untagged visit from a listed site (a plain Google result, a Perplexity answer) is kept as
+ * where the visitor came from, the same way and for as long as a tagged visit (`ads.attribution`); it never replaces a
+ * visit already kept, so an ad click keeps its order. On as shipped (C4.3: "track referrals from AI assistants
+ * separately"). The list is editable; the shipped one names the common engines and assistants.
+ */
+export const seoOrganicSchema = z
+  .object({
+    days: z.int().min(SEO_ORGANIC_LIMITS.days.min).max(SEO_ORGANIC_LIMITS.days.max),
+    targetPct: z.int().min(SEO_ORGANIC_LIMITS.targetPct.min).max(SEO_ORGANIC_LIMITS.targetPct.max),
+    top: z.int().min(SEO_ORGANIC_LIMITS.top.min).max(SEO_ORGANIC_LIMITS.top.max),
+    keepReferrals: z.boolean(),
+    sources: z.array(seoOrganicSourceSchema).max(SEO_ORGANIC_LIMITS.sources),
+  })
+  .strict();
+export type SeoOrganic = z.output<typeof seoOrganicSchema>;
+export type SeoOrganicSource = z.output<typeof seoOrganicSourceSchema>;
+export const SEO_ORGANIC_DEFAULT: SeoOrganic = {
+  days: 28,
+  targetPct: 50,
+  top: 10,
+  keepReferrals: true,
+  sources: [
+    { name: 'Google', kind: 'search', match: ['google'] },
+    { name: 'Bing', kind: 'search', match: ['bing.com', 'bing'] },
+    { name: 'DuckDuckGo', kind: 'search', match: ['duckduckgo.com', 'duckduckgo'] },
+    { name: 'Yahoo', kind: 'search', match: ['yahoo'] },
+    { name: 'YouTube', kind: 'video', match: ['youtube.com', 'youtu.be', 'youtube'] },
+    { name: 'ChatGPT', kind: 'ai', match: ['chatgpt.com', 'chat.openai.com', 'chatgpt'] },
+    { name: 'Perplexity', kind: 'ai', match: ['perplexity.ai', 'perplexity'] },
+    { name: 'Gemini', kind: 'ai', match: ['gemini.google.com', 'bard.google.com', 'gemini'] },
+    { name: 'Claude', kind: 'ai', match: ['claude.ai'] },
+    { name: 'Copilot', kind: 'ai', match: ['copilot.microsoft.com', 'copilot'] },
+  ],
+};
+
 export const seoReachSettings = {
   // ---- PR 235 · redirects and the 404 report ----
   'seo.redirects': setting({
@@ -451,5 +514,15 @@ export const seoReachSettings = {
     labelKey: 'seo.internalLinks.label',
     helpKey: 'seo.internalLinks.help',
     sortOrder: 52,
+  }),
+  // ---- PR 238 · the organic performance report ----
+  'seo.organic': setting({
+    ...base,
+    version: 209,
+    schema: seoOrganicSchema,
+    default: SEO_ORGANIC_DEFAULT,
+    labelKey: 'seo.organic.label',
+    helpKey: 'seo.organic.help',
+    sortOrder: 53,
   }),
 };

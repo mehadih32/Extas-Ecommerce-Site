@@ -31,7 +31,7 @@ import { countRedirectHit, forwardOf, redirectTable } from './lib/seo/redirect-t
 import { isShopPath, LANG_HEADER, PATH_HEADER, REWRITE_MARK_HEADER, THEME_HEADER } from './lib/shop/lang';
 import { requestLang, rewriteMark } from './lib/shop/rewrite-mark';
 import { shopStoreId } from './lib/shop/store-id';
-import { ATTRIBUTION_COOKIE, hasTags, landingCookie } from './lib/tracking/attribution';
+import { ATTRIBUTION_COOKIE, fromElsewhere, hasTags, landingCookie } from './lib/tracking/attribution';
 
 /** A permanent move (HTTP's own code for it; search engines carry the page's rank over). */
 const PERMANENT = 301;
@@ -61,10 +61,12 @@ function withPageCsp(res: NextResponse): NextResponse {
   return res;
 }
 
-/** PR 257 follow-up: the campaign tags of a tagged shop address, kept in the shop's own cookie (and never cached). */
+/** PR 257 follow-up: the campaign tags of a tagged shop address, kept in the shop's own cookie (and never cached); PR 238: an untagged visit from a listed search engine or AI assistant too. */
 async function withAttribution(res: NextResponse, req: NextRequest): Promise<NextResponse> {
-  if (req.method !== 'GET' || !hasTags(req.nextUrl.searchParams)) return res;
+  if (req.method !== 'GET') return res;
   const host = (req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? req.nextUrl.host).split(',')[0]!.trim();
+  // PR 238: an untagged visit from another site is looked at too (kept only from a listed search engine or AI assistant)
+  if (!hasTags(req.nextUrl.searchParams) && !fromElsewhere(req.headers.get('referer'), host)) return res;
   const line = await landingCookie({ storeId: shopStoreId(), params: req.nextUrl.searchParams, referer: req.headers.get('referer'), host, cookie: req.cookies.get(ATTRIBUTION_COOKIE)?.value ?? null });
   if (!line) return res;
   res.headers.append('set-cookie', line);

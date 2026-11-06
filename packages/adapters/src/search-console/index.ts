@@ -6,6 +6,10 @@
 // - Google: a service account's JSON key (Google Cloud → IAM → Service accounts → Keys), with the service account's
 //   e-mail added as a user of the Search Console property. The adapter signs its own short-lived token request (RS256,
 //   node:crypto) and calls the Search Console API (`webmasters/v3`).
+// - PR 238: how the shop does in each engine's results (the organic report, Website › SEO › Organic report): clicks,
+//   how often the shop was shown, its average position and the top searches over a span of days. Google answers with
+//   the Search Analytics query (`searchAnalytics/query`); Bing with its query stats (`GetQueryStats`, kept per week by
+//   Bing, so a span takes the weeks that start in it). The mock has nothing to tell.
 // - Bing: the API key from Bing Webmaster Tools → Settings → API access. It is part of the address (`?apikey=`), so no
 //   error, message or log line ever carries the address: every failure is said in words.
 import { createSign } from 'node:crypto';
@@ -24,13 +28,67 @@ const TOKEN_SECONDS = 3600;
 
 export type SubmitResult = { ok: true } | { ok: false; error: string };
 
+/** One search over the span: clicks, times shown, average position (1 = first). */
+export interface SearchQueryRow {
+  query: string;
+  clicks: number;
+  impressions: number;
+  position: number | null;
+}
+
+/** How the shop did in an engine's results over a span of days. */
+export interface SearchPerformance {
+  clicks: number;
+  impressions: number;
+  /** Average position over the times shown (1 = first); null when never shown. */
+  position: number | null;
+  /** The top searches by clicks (then times shown). */
+  queries: SearchQueryRow[];
+}
+
+/** A span of days, both included (YYYY-MM-DD). */
+export interface SearchSpan {
+  start: string;
+  end: string;
+}
+
 export interface SearchEngineApi {
   provider: string;
   /** The properties the account may manage, as the engine writes them (`https://shop.example/`, `sc-domain:shop.example`). */
   sites(): Promise<string[]>;
   /** Hands the sitemap's address to the engine for one property. */
   submitSitemap(site: string, sitemap: string): Promise<SubmitResult>;
+  /** PR 238: how the property did in the results over the span, with at most `top` searches. */
+  performance(site: string, span: SearchSpan, top: number): Promise<SearchPerformance>;
 }
+
+/** The searches of a span, added up per search and cut to the top ones (clicks, then times shown, then the words). */
+export function topQueries(rows: readonly SearchQueryRow[], top: number): SearchPerformance {
+  const by = new Map<string, { clicks: number; impressions: number; weighted: number; placed: number }>();
+  for (const r of rows) {
+    const q = r.query.trim();
+    if (!q) continue;
+    const x = by.get(q) ?? by.set(q, { clicks: 0, impressions: 0, weighted: 0, placed: 0 }).get(q)!;
+    x.clicks += r.clicks;
+    x.impressions += r.impressions;
+    if (r.position !== null) {
+      x.weighted += r.position * r.impressions;
+      x.placed += r.impressions;
+    }
+  }
+  const all = [...by].map(([query, x]) => ({ query, clicks: x.clicks, impressions: x.impressions, position: positionOf(x.weighted, x.placed) }));
+  const clicks = all.reduce((n, r) => n + r.clicks, 0);
+  const impressions = all.reduce((n, r) => n + r.impressions, 0);
+  const weighted = [...by.values()].reduce((n, x) => n + x.weighted, 0);
+  const placed = [...by.values()].reduce((n, x) => n + x.placed, 0);
+  all.sort((a, b) => b.clicks - a.clicks || b.impressions - a.impressions || a.query.localeCompare(b.query));
+  return { clicks, impressions, position: positionOf(weighted, placed), queries: all.slice(0, Math.max(0, top)) };
+}
+
+/** An average position over the times shown with a position, one decimal; null when none. */
+const positionOf = (weighted: number, placed: number) => (placed > 0 && weighted > 0 ? Math.round((weighted / placed) * 10) / 10 : null);
+
+const NOTHING: SearchPerformance = { clicks: 0, impressions: 0, position: null, queries: [] };
 
 export type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -66,6 +124,9 @@ export function mockSearchEngine(provider: string): SearchEngineApi {
       list.push({ at: new Date(), provider, site, sitemap });
       if (list.length > MOCK_KEEP) list.splice(0, list.length - MOCK_KEEP);
       return { ok: true };
+    },
+    async performance() {
+      return { ...NOTHING, queries: [] };
     },
   };
 }
@@ -135,6 +196,26 @@ export function googleSearchConsole(keyJson: string, fetchImpl: Fetch = fetch, n
         return { ok: false, error: e instanceof AdapterError ? e.message : 'Search Console could not be reached' };
       }
     },
+    async performance(site, span, top) {
+      const query = async (extra: Record<string, unknown>) => {
+        const res = await fetchImpl(`${GOOGLE_API}/sites/${encodeURIComponent(site)}/searchAnalytics/query`, {
+          method: 'POST',
+          headers: { authorization: `Bearer ${await bearer()}`, 'content-type': 'application/json' },
+          body: JSON.stringify({ startDate: span.start, endDate: span.end, ...extra }),
+        });
+        if (!res.ok) throw new AdapterError(`Search Console did not give the results (${await said(res)})`);
+        return ((await res.json()) as { rows?: { keys?: string[]; clicks?: number; impressions?: number; position?: number }[] }).rows ?? [];
+      };
+      const [total, byQuery] = await Promise.all([query({}), top > 0 ? query({ dimensions: ['query'], rowLimit: top }) : Promise.resolve([])]);
+      const t = total[0];
+      const impressions = Number(t?.impressions ?? 0);
+      return {
+        clicks: Number(t?.clicks ?? 0),
+        impressions,
+        position: impressions > 0 && t?.position ? Math.round(t.position * 10) / 10 : null,
+        queries: byQuery.flatMap((r) => (r.keys?.[0] ? [{ query: r.keys[0], clicks: Number(r.clicks ?? 0), impressions: Number(r.impressions ?? 0), position: r.position ? Math.round(r.position * 10) / 10 : null }] : [])),
+      };
+    },
   };
 }
 
@@ -145,11 +226,11 @@ export const BING_KEY = /^[A-Za-z0-9]{16,64}$/;
 
 export function bingWebmaster(apiKey: string, fetchImpl: Fetch = fetch): SearchEngineApi {
   if (!BING_KEY.test(apiKey)) throw new AdapterError('the Bing API key is letters and digits only');
-  const url = (method: string) => `${BING_API}/${method}?apikey=${apiKey}`;
+  const url = (method: string, q: Record<string, string>) => `${BING_API}/${method}?${new URLSearchParams({ ...q, apikey: apiKey }).toString()}`;
   // never the address in a message: it carries the key
-  const call = async (method: string, init?: RequestInit) => {
+  const call = async (method: string, init?: RequestInit, q: Record<string, string> = {}) => {
     try {
-      return await fetchImpl(url(method), init);
+      return await fetchImpl(url(method, q), init);
     } catch {
       throw new AdapterError('Bing Webmaster could not be reached');
     }
@@ -170,7 +251,25 @@ export function bingWebmaster(apiKey: string, fetchImpl: Fetch = fetch): SearchE
         return { ok: false, error: e instanceof AdapterError ? e.message : 'Bing Webmaster could not be reached' };
       }
     },
+    async performance(site, span, top) {
+      const res = await call('GetQueryStats', undefined, { siteUrl: site });
+      if (!res.ok) throw new AdapterError(`Bing did not give the results (${res.status})`);
+      const j = (await res.json()) as { d?: { Query?: string; Clicks?: number; Impressions?: number; AvgImpressionPosition?: number; Date?: string }[] };
+      const rows = (j.d ?? []).flatMap((r) => {
+        const day = bingDay(r.Date);
+        if (!day || day < span.start || day > span.end || !r.Query) return [];
+        const position = typeof r.AvgImpressionPosition === 'number' && r.AvgImpressionPosition > 0 ? r.AvgImpressionPosition : null;
+        return [{ query: r.Query, clicks: Number(r.Clicks ?? 0), impressions: Number(r.Impressions ?? 0), position }];
+      });
+      return topQueries(rows, top);
+    },
   };
+}
+
+/** Bing's date (`/Date(1730419200000)/`, sometimes with a zone) as YYYY-MM-DD, or null. */
+export function bingDay(v: string | undefined): string | null {
+  const m = /^\/Date\((-?\d+)(?:[+-]\d{4})?\)\/$/.exec(v ?? '');
+  return m ? new Date(Number(m[1])).toISOString().slice(0, 10) : null;
 }
 
 // ------------------------------------------------------------------------------------------------------ adapters
