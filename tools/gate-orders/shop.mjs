@@ -388,7 +388,7 @@ async function gateRun(env, run, secrets) {
         row.verdict = scenarioVerdict(row.checks);
       }
     }
-    for (const [id, what] of Object.entries(GATE_CHECKS)) run.gateChecks.push(gates.get(id) ?? unreachedGate(id, what, picked.map((s) => s.id)));
+    for (const [id, what] of Object.entries(GATE_CHECKS)) run.gateChecks.push(gates.get(id) ?? unreachedGate(id, what, picked.map((s) => s.id), run.rows));
   } finally {
     await browser.close().catch(() => null);
     // ---- 5. the clean-up: every test order cancelled, the test products archived; then the sales check ----
