@@ -18,6 +18,7 @@ import {
   changeText,
   clashCounts,
   conflictText,
+  floorHintPercent,
   isoToLocalInput,
   issueText,
   keyFromTitle,
@@ -30,6 +31,7 @@ import {
   paramLabels,
   rulesRefusal,
   sameContent,
+  takesOffPrice,
   targetName,
   tokenLines,
   withParam,
@@ -193,5 +195,22 @@ describe('Smart Rules screen helpers', () => {
     expect(bar.frequencyCap).toBeNull();
     const back = formOf({ ...input, key: input.key, nameEn: input.nameEn, nameBn: null, titleEn: null, titleBn: null, contentBn: null, ruleId: null, priority: 0, startsAt: '2026-12-20T12:00:00.000Z', endsAt: null, cta: null, timing: input.timing, frequencyCap: input.frequencyCap, placement: input.placement }, 'Asia/Dhaka');
     expect(back).toMatchObject({ kind: 'popup', trigger: 'time', delay: '20', capPer: 'day', pages: ['product'], startsAt: '2026-12-20T18:00' });
+  });
+});
+
+describe('PR 609 follow-up 529 — the selling-price floor hint in the offer editor', () => {
+  const off: RuleContent = { ...RULE, kind: 'discount', actions: [{ type: 'discount', mode: 'percent', param: 'pct', target: 'lines', requiresCoupon: false, showWas: false }] };
+  it('shows the floor only when it is on and the rule takes money off a price', () => {
+    expect(takesOffPrice(off)).toBe(true);
+    expect(takesOffPrice(RULE)).toBe(false);
+    expect(floorHintPercent(off, { ...ENV, floorPercent: 15 })).toBe(15);
+    expect(floorHintPercent(off, { ...ENV, floorPercent: 0 })).toBe(0);
+    expect(floorHintPercent(off, { ...ENV, floorPercent: null })).toBeNull();
+    expect(floorHintPercent(off, ENV)).toBeNull();
+    expect(floorHintPercent(RULE, { ...ENV, floorPercent: 15 })).toBeNull();
+    expect(floorHintPercent({ ...RULE, actions: [{ type: 'freeDelivery' }] }, { ...ENV, floorPercent: 15 })).toBeNull();
+  });
+  it('words the hint in both languages with the margin', () => {
+    for (const d of [en, bn] as Dict[]) expect(t(d, 'rules.editor.floorHint', { percent: 12 })).toContain('12');
   });
 });

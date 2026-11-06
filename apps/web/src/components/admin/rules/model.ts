@@ -30,7 +30,21 @@ export interface RulesEnv {
   limits: CheckLimits;
   /** The store's other rules by key (their live values and window), for `{rule-key.param}` tokens. */
   others: Record<string, WindowedParams>;
+  /** PR 609 follow-up 529: the store's lowest margin over the buying price (`catalogue.floor.minMarginPercent`; null = off). */
+  floorPercent?: number | null;
 }
+
+/** The actions that take money off a price (the ones the selling-price floor can stop). */
+const PRICE_ACTIONS = new Set<RuleContent['actions'][number]['type']>(['discount', 'setTier', 'buyGet']);
+
+/** True when a rule takes money off a price. */
+export const takesOffPrice = (rule: RuleContent): boolean => rule.actions.some((a) => PRICE_ACTIONS.has(a.type));
+
+/**
+ * PR 609 follow-up 529: the floor margin the editor warns about before a rule goes live — the store's floor when it is
+ * on and the rule takes money off a price, else null (the bag and checkout stop such a line at the floor, PR 609).
+ */
+export const floorHintPercent = (rule: RuleContent, env: RulesEnv): number | null => (env.floorPercent != null && takesOffPrice(rule) ? env.floorPercent : null);
 
 export const othersMap = (env: RulesEnv, self?: RuleContent): Map<string, WindowedParams> => {
   const m = new Map(Object.entries(env.others));

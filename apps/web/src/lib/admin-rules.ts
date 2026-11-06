@@ -33,10 +33,16 @@ export function rulesAccess(access: Ok): RulesAccess {
 
 /** The editor's text context, limits and the other rules' values (for `{rule-key.param}`), as the server checks them. */
 export async function rulesEnv(a: RulesAccess): Promise<RulesEnv> {
-  const [ctx, limits, { rules }] = await Promise.all([rl.textContext(a.deps, a.storeId), rl.checkLimits(a.deps, a.storeId), rl.loadRules(a.deps.db, a.storeId)]);
+  const [ctx, limits, { rules }, floor] = await Promise.all([
+    rl.textContext(a.deps, a.storeId),
+    rl.checkLimits(a.deps, a.storeId),
+    rl.loadRules(a.deps.db, a.storeId),
+    // PR 609 follow-up 529: the editor says beforehand that an offer stops at the selling-price floor.
+    a.deps.settings.value('catalogue.floor.minMarginPercent', { storeId: a.storeId }),
+  ]);
   const others: Record<string, WindowedParams> = {};
   for (const [k, r] of rl.othersByKey(rules)) others[k] = { params: r.params, startsAt: r.startsAt ?? null, endsAt: r.endsAt ?? null };
-  return { ctx, limits: { ...limits, placements: [...limits.placements] }, others };
+  return { ctx, limits: { ...limits, placements: [...limits.placements] }, others, floorPercent: typeof floor === 'number' ? floor : null };
 }
 
 /** The store's places (the `rules.placements` setting). */
