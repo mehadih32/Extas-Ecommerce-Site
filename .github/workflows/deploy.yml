@@ -51,7 +51,7 @@ jobs:
     runs-on: [self-hosted, extas-vm]
     # ~~30~~ 40 minutes (PR 621): the build, the migration, the ERP acceptance (at most ERP_ACCEPTANCE_TIMEOUT_MIN) and the
     # new colour all fit, so the job is never cut off between the migration and the switch.
-    timeout-minutes: 40
+    timeout-minutes: 55
     env:
       SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
