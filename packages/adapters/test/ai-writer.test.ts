@@ -1,7 +1,7 @@
 // S11 · PR 221 — the practice AI writer: only the facts it was given, cut to the store's limits, marked as practice;
 // no live mode, no key, not in Keys & connections until a provider comes.
 import { describe, expect, it } from 'vitest';
-import { aiWriterAdapters, allAdapters, cutTo, mockAiWriterAdapter, type AiCampaignInput, type AiSeoInput } from '../src';
+import { aiWriterAdapters, allAdapters, cutTo, mockAiWriterAdapter, practiceArticle, type AiArticleInput, type AiCampaignInput, type AiSeoInput } from '../src';
 
 const ctx = { mode: 'MOCK' as const, config: {}, storeId: 1, secret: async () => null };
 const input = (over: Partial<AiSeoInput['facts']> = {}, max = { title: 60, description: 155 }): AiSeoInput => ({
@@ -90,5 +90,45 @@ describe('practice campaign writer (PR 293)', () => {
     const d = await w.draftCampaign(camp({ voice: { greeting: '', signOff: '', style: '' }, words: ['link'] }));
     expect(new Set(d.versions.map((v) => `${v.subject}|${v.body}`)).size).toBe(d.versions.length);
     await expect(w.draftCampaign(camp({ brief: '  ' }))).rejects.toThrow();
+  });
+});
+
+describe('practice article writer (PR 243)', () => {
+  const brief: AiArticleInput = {
+    locale: 'bn',
+    title: 'পোলোর কলার কেন কুঁচকায়',
+    query: 'পোলো কলার কুঁচকানো',
+    keywords: ['পোলো কলার', 'পোলোর যত্ন'],
+    intent: 'howto',
+    wordCount: 900,
+    outline: ['কেন হয়', 'কী করবেন'],
+    mustInclude: 'ঠান্ডা পানিতে ধোবেন\nউল্টো করে শুকাবেন',
+    links: ['/collections/polos', 'https://example.com/x'],
+    notes: 'সহজ ভাষায়',
+  };
+
+  it('writes only the brief’s words, in the editor’s format, and says it is practice', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftArticle(brief);
+    expect(d.practice).toBe(true);
+    expect(d.excerpt).toBe('পোলো কলার কুঁচকানো');
+    expect(d.body.split('\n\n')).toEqual([
+      'পোলো কলার কুঁচকানো',
+      '- ঠান্ডা পানিতে ধোবেন\n- উল্টো করে শুকাবেন',
+      '## কেন হয়',
+      'পোলো কলার কুঁচকানো',
+      '## কী করবেন',
+      'পোলো কলার কুঁচকানো',
+      '- [/collections/polos](/collections/polos)',
+      'পোলো কলার · পোলোর যত্ন',
+      '> note: সহজ ভাষায়',
+    ]);
+    expect(practiceArticle({ ...brief, query: null, mustInclude: null, outline: [], links: [], notes: null }).body).toBe('পোলোর কলার কেন কুঁচকায়\n\nপোলো কলার · পোলোর যত্ন');
+  });
+
+  it('refuses to write without a brief', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    await expect(w.draftArticle({ ...brief, keywords: [] })).rejects.toThrow('brief');
+    await expect(w.draftArticle({ ...brief, title: ' ' })).rejects.toThrow('brief');
   });
 });

@@ -3,6 +3,7 @@
 // its language, how many words and the keywords, chosen before a single word is written, and what helps the writer;
 // beside it the brief card (`blog.brief`: "Start writing needs the brief" off as it ships). Seeing needs `blog.read`,
 // writing `blog.write`, the card `blog.publish`. Guide: docs/admin-guide/pages/website/blog-brief.md.
+// PR 243: the AI first draft from the brief (in the form) and its card (`blog.aiDraft`, off as shipped).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -107,6 +108,17 @@ export default async function BlogBriefPage(props: Props) {
             texts={texts}
             canEdit={canPublish}
             testId="br-settings"
+          />
+          <FieldsCard
+            url="/api/admin/blog/briefs"
+            screen={{ key: screen.aiCard.key, value: screen.aiCard.value, version: screen.aiCard.version }}
+            fields={[
+              { kind: 'switch', path: 'enabled', label: l('ai.card.enabled') },
+              { kind: 'number', path: 'dailyMax', label: l('ai.card.dailyMax'), min: 1, max: 50 },
+            ]}
+            texts={{ ...texts, h: l('ai.card.h'), d: l('ai.card.d') }}
+            canEdit={canPublish}
+            testId="br-ai-settings"
           />
         </div>
       </div>

@@ -1,7 +1,7 @@
 // S12 · PR 239 — `blog.journal`: off as it ships, every number the owner's within its range, and its words in both
 // languages.
 import { describe, expect, it } from 'vitest';
-import { blogBriefSchema, blogJournalSchema, lookup, messages, registry } from '../src/index';
+import { blogAiDraftSchema, blogBriefSchema, blogJournalSchema, lookup, messages, registry } from '../src/index';
 
 describe('blog.journal (PR 239)', () => {
   const spec = registry['blog.journal'];
@@ -55,6 +55,32 @@ describe('blog.brief (PR 528)', () => {
     expect(ok({ wordsMin: 1000, wordsDefault: 900 })).toBe(false);
     expect(ok({ wordsMax: 800, wordsDefault: 900 })).toBe(false);
     expect(ok({ requireForStart: true, wordsMin: 100, wordsDefault: 100, wordsMax: 10_000 })).toBe(true);
+    expect(ok({ extra: 1 })).toBe(false);
+  });
+
+  it('has its words in English and Bengali', () => {
+    for (const k of [spec.labelKey, spec.helpKey ?? '']) {
+      expect(lookup(messages.en, k), k).toBeTruthy();
+      expect(lookup(messages.bn, k), k).toBeTruthy();
+    }
+  });
+});
+
+describe('blog.aiDraft (PR 243)', () => {
+  const spec = registry['blog.aiDraft'];
+
+  it('ships off, per store, at version 226, with a default the schema accepts', () => {
+    expect(spec.scope).toBe('store');
+    expect(spec.version).toBe(226);
+    expect(spec.default.enabled).toBe(false);
+    expect(blogAiDraftSchema.safeParse(spec.default).success).toBe(true);
+  });
+
+  it('keeps the daily number in range and refuses unknown fields', () => {
+    const ok = (v: object) => blogAiDraftSchema.safeParse({ ...spec.default, ...v }).success;
+    expect(ok({ dailyMax: 0 })).toBe(false);
+    expect(ok({ dailyMax: 51 })).toBe(false);
+    expect(ok({ enabled: true, dailyMax: 50 })).toBe(true);
     expect(ok({ extra: 1 })).toBe(false);
   });
 

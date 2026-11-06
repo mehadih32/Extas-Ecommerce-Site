@@ -200,7 +200,10 @@
       "LINKS_MISSING": "Required links missing (Topic plan): {paths}. Add them to the words first.",
       "ALIKE": "A very close article or topic exists: {fields}. Press again to add it anyway.",
       "BRIEF_TAKEN": "That topic has its brief already; open it from the Topic plan.",
-      "BRIEF_MISSING": "This topic needs its brief before writing starts: press “Brief”."
+      "BRIEF_MISSING": "This topic needs its brief before writing starts: press “Brief”.",
+      "AI_OFF": "AI drafting is off: turn on AI for the shop and “AI first drafts” first.",
+      "DAILY_LIMIT": "Today’s AI drafts are used up ({fields} a day). Try again tomorrow, or write it by hand.",
+      "AI_UNAVAILABLE": "The AI writer did not answer; try again in a while."
     },
     "pl": {
       "meta": "Topic plan",
@@ -385,6 +388,29 @@
         "wordsDefault": "A new brief starts at (words)",
         "wordsMin": "Fewest words a brief may ask",
         "wordsMax": "Most words a brief may ask"
+      },
+      "ai": {
+        "h": "AI first draft",
+        "d": "Writes a first draft of the article from this brief, in its language. A person still edits it and it passes the three review steps.",
+        "go": "Write the first draft with AI",
+        "going": "Writing…",
+        "done": "The draft is ready; the editor opens.",
+        "donePractice": "Practice draft ready (no AI key yet); the editor opens.",
+        "used": "{n} of {max} drafts in the last 24 hours.",
+        "b_aiOff": "AI is off for the whole shop (AI section).",
+        "b_off": "AI drafts are off — turn them on in the card below.",
+        "b_notSaved": "Save the brief first.",
+        "b_missing": "The brief still lacks something (above).",
+        "b_notApproved": "The topic waits for the owner’s yes first.",
+        "b_started": "The article is already started; open it.",
+        "b_limit": "Today’s AI drafts are used up.",
+        "practiceBox": "Practice text from the practice writer — no AI key is entered yet. Rewrite it before the review.",
+        "card": {
+          "h": "AI drafts from the brief",
+          "d": "Off as it ships. It also needs AI on for the whole shop.",
+          "enabled": "Offer “Write the first draft with AI”",
+          "dailyMax": "Most AI drafts in a day"
+        }
       }
     }
   }

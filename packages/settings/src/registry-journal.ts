@@ -19,6 +19,9 @@
 //          before a word is written. A new brief starts at `wordsDefault` words and may ask between `wordsMin` and
 //          `wordsMax`. With `requireForStart` (off as it ships) "Start writing" on a topic needs its brief first; an AI
 //          draft (PR 243) always needs one.
+//   v226 · PR 243 `blog.aiDraft` — AI drafting from the brief (S12 answer 11), in the brief's language, one article at a
+//          time. Off as it ships, and it also needs AI for the whole shop (`ai.enabled`); until an AI provider's key is
+//          entered the practice writer serves. At most `dailyMax` drafts in a day (the last 24 hours).
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -26,6 +29,7 @@ const V239 = 222;
 const V242 = 223;
 const V244 = 224;
 const V528 = 225;
+const V243 = 226;
 
 const wpm = z.int().min(60).max(400);
 const note = z.string().trim().max(200);
@@ -159,5 +163,31 @@ export const briefSettings = {
     isPublic: false,
     sortOrder: 40,
     version: V528,
+  }),
+};
+
+export const blogAiDraftSchema = z
+  .object({
+    /** The brief page offers "Write the first draft with AI". */
+    enabled: z.boolean(),
+    /** The most AI drafts in a day (the last 24 hours). */
+    dailyMax: z.int().min(1).max(50),
+  })
+  .strict();
+export type BlogAiDraftSettings = z.output<typeof blogAiDraftSchema>;
+
+export const aiDraftSettings = {
+  'blog.aiDraft': setting({
+    scope: 'store',
+    schema: blogAiDraftSchema,
+    default: { enabled: false, dailyMax: 6 },
+    valueType: 'JSON',
+    group: 'blog',
+    labelKey: 'blog.aiDraft.label',
+    helpKey: 'blog.aiDraft.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 50,
+    version: V243,
   }),
 };
