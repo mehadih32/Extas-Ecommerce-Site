@@ -127,4 +127,34 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Report on PostgreSQL (PR 283)', () 
     const outside = (await api('GET', undefined, { path: '/api/admin/marketing/report?from=2027-02-01&to=2027-02-28' })).a.report!;
     expect(outside).toMatchObject({ shop: { orders: 0, salesMinor: 0 }, adSpendMinor: 0, messageSpendMinor: 0, campaigns: [], sends: [] });
   });
+
+  it('follow-up 657: the sends are paged and the message spend counts every one; the CSV carries the whole report', async () => {
+    await t.prisma.broadcast.createMany({ data: Array.from({ length: 201 }, (_, i) => ({ storeId: S, name: `Sample blast ${i + 1}`, channel: 'EMAIL' as const, status: 'SENT' as const, startedAt: new Date(at(11).getTime() + i * 60_000), sentCount: 1, costMinor: 10 })) });
+    const first = (await api('GET', undefined, { cookie: desk })).a;
+    expect(first.report!.sends).toHaveLength(200);
+    expect(first).toMatchObject({ sendsPage: 1, sendsPages: 2, report: { sendsTotal: 202, messageSpendMinor: 2_000 + 201 * 10 } });
+    const second = (await api('GET', undefined, { cookie: desk, path: '/api/admin/marketing/report?sends=2' })).a;
+    expect(second.report!.sends.map((x) => x.name)).toEqual(['Sample blast 1', 'Sample SMS']);
+    expect(second).toMatchObject({ sendsPage: 2, report: { messageSpendMinor: 4_010 } });
+    expect((await api('GET', undefined, { path: '/api/admin/marketing/report?sends=9' })).a.sendsPage).toBe(2);
+    expect((await api('GET', undefined, { path: '/api/admin/marketing/report?sends=abc' })).a.sendsPage).toBe(1);
+    // the CSV: one table, every send (not one page), spreadsheet-safe; the reader key is enough
+    const res = await reportHandler(req('GET', { cookie: desk, path: '/api/admin/marketing/report?format=csv&from=2027-03-01&to=2027-03-20' }), admin, () => new Date(T0));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/csv');
+    expect(res.headers.get('content-disposition')).toContain('marketing-report-2027-03-01-2027-03-20.csv');
+    const rows = (await res.text()).trim().split('\r\n');
+    expect(rows[0]).toBe('section,key,name,orders,orderedMinor,delivered,salesMinor,spendMinor,roasPercent,sent,startedAt,currency');
+    expect(rows[1]).toBe('shop,,,2,30000,1,25000,14010,178,,,BDT');
+    expect(rows[2]).toBe('messages,,,,,,,4010,,202,,BDT');
+    expect(rows.find((r) => r.startsWith('channel,ads:META,'))).toBe('channel,ads:META,,2,30000,1,25000,10000,250,,,BDT');
+    expect(rows.find((r) => r.startsWith('campaign,'))).toMatch(/^campaign,[0-9a-f-]{36},Sample Eid,2,30000,1,25000,10000,250,,,BDT$/);
+    expect(rows.filter((r) => r.startsWith('send,'))).toHaveLength(202);
+    expect(rows.some((r) => r.startsWith('#'))).toBe(false);
+    // off: no file
+    const v = (await api('GET')).a.card.version;
+    await api('PUT', { key: 'report', value: { enabled: false, maxDays: 30, resultDays: 7 }, version: v });
+    const off = await reportHandler(req('GET', { cookie: desk, path: '/api/admin/marketing/report?format=csv' }), admin, () => new Date(T0));
+    expect(off.status).toBe(409);
+  });
 });

@@ -5,7 +5,7 @@
 // drafts never counted. Values made up.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import { marketingReport, roasOf } from './marketing-report';
+import { marketingReport, marketingSendsPage, roasOf } from './marketing-report';
 
 const days = { from: '2026-10-01', to: '2026-10-31' };
 const rules = { paidMediums: ['cpc', 'paid'], platforms: [{ platform: 'META' as const, sources: ['facebook'] }] };
@@ -131,6 +131,18 @@ describe.skipIf(!HAS_TEST_DB)('PR 283 · marketing report (real PostgreSQL)', ()
     expect(short.sends.find((s) => s.channel === 'SMS')).toMatchObject({ orders: 0, salesMinor: 0 });
   });
 
+  it('follow-up 657: the message spend and count cover every send, the list is one page; any page can be read', async () => {
+    const one = await marketingReport(t.prisma, S, days, { ...opts, sendsMax: 1 });
+    expect(one.sends.map((s) => s.name)).toEqual(['Sample e-mail']);
+    expect(one).toMatchObject({ sendsTotal: 2, sendsOffset: 0, messageSpendMinor: 570, spendMinor: 61_570 });
+    const two = await marketingReport(t.prisma, S, days, { ...opts, sendsMax: 1, sendsOffset: 1 });
+    expect(two.sends.map((s) => s.name)).toEqual(['Sample Eid SMS']);
+    expect(two).toMatchObject({ sendsTotal: 2, sendsOffset: 1, messageSpendMinor: 570 });
+    expect((await marketingReport(t.prisma, S, days, { ...opts, sendsMax: 1, sendsOffset: 5 })).sends).toEqual([]);
+    const page = await marketingSendsPage(t.prisma, S, days, { timeZone: 'Asia/Dhaka', resultDays: 7, offset: 1, max: 10 });
+    expect(page).toEqual(two.sends);
+  });
+
   it('makes the spend unknown, never zero, when a dollar day has no rate', async () => {
     await t.prisma.adSpendDaily.updateMany({ where: { storeId: S, currency: 'USD' }, data: { spendStoreMinor: null } });
     const r = await marketingReport(t.prisma, S, days, opts);
@@ -148,6 +160,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 283 · marketing report (real PostgreSQL)', ()
     expect(r.shop).toMatchObject({ orders: 1, delivered: 1, salesMinor: 80_000 });
     expect(r.campaigns).toEqual([]);
     expect(r.sends).toEqual([]);
+    expect(r).toMatchObject({ sendsTotal: 0, messageSpendMinor: 0 });
     expect(r.adSpendMinor).toBe(0);
     expect(r.adsImported).toBe(false);
   });

@@ -82,7 +82,10 @@
       "empty": "No message send started in this period.",
       "line": "{channel} · {day} · {sent} sent · cost {cost}",
       "result": "{orders} ordered · {delivered} delivered · {sales}",
-      "open": "Open message campaigns"
+      "open": "Open message campaigns",
+      "page": "Sends {from}–{to} of {total}",
+      "prev": "Newer sends",
+      "next": "Older sends"
     },
     "sendChannel": {
       "SMS": "SMS",
@@ -116,6 +119,8 @@
       "unauthorized": "Please sign in again.",
       "network": "No connection. Try again.",
       "other": "Something went wrong. Try again."
-    }
+    },
+    "csv": "Download CSV",
+    "csvHelp": "The whole report for this period as one spreadsheet file: the shop, each channel, campaign and message send (amounts in paisa, times in UTC)."
   }
 }
