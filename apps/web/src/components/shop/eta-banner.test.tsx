@@ -16,6 +16,8 @@ vi.mock('@/lib/rules-public', () => ({
   },
 }));
 vi.mock('./Icon', () => ({ Icon: () => null }));
+let band: string | null = null;
+vi.mock('@/lib/shop/known-band', () => ({ knownBand: async () => band }));
 
 const { EtaBanner } = await import('./EtaBanner');
 const c = (lang: 'en' | 'bn') => ({ storeId: 1, lang }) as unknown as ShopContext;
@@ -29,11 +31,12 @@ describe('EtaBanner — the festive cut-off words on the bag (follow-up 655)', (
     calls.length = 0;
     eta = [];
     festive = [];
+    band = null;
   });
 
   it('draws nothing while both are empty (as shipped)', async () => {
     expect(await draw(EtaBanner({ c: c('en'), testId: 'bag-eta', festive: true }))).toBe('');
-    expect(calls).toEqual([{ storeId: 1, place: 'checkout', locale: 'en-BD' }]);
+    expect(calls).toEqual([{ storeId: 1, place: 'checkout', locale: 'en-BD', band: null }]);
   });
 
   it('the bag: the Eid / holiday lines, then the festive words (checkout’s tick, in his language), never twice', async () => {
@@ -43,7 +46,7 @@ describe('EtaBanner — the festive cut-off words on the bag (follow-up 655)', (
       { key: 'eid', name: 'Eid', text: 'Order by 6 Mar for delivery before Eid', state: 'open' },
     ];
     const html = await draw(EtaBanner({ c: c('bn'), testId: 'bag-eta', festive: true }));
-    expect(calls).toEqual([{ storeId: 1, place: 'checkout', locale: 'bn-BD' }]);
+    expect(calls).toEqual([{ storeId: 1, place: 'checkout', locale: 'bn-BD', band: null }]);
     expect(html).toContain('data-testid="bag-eta"');
     expect(html.match(/<p>/g)).toHaveLength(2);
     expect(html.indexOf('before Eid')).toBeLessThan(html.indexOf('before the festival'));
@@ -53,5 +56,11 @@ describe('EtaBanner — the festive cut-off words on the bag (follow-up 655)', (
     festive = [{ key: 'festive', name: 'Festival', text: 'Orders placed now arrive after the festival.', state: 'closed' }];
     expect(await draw(EtaBanner({ c: c('en'), testId: 'home-eta' }))).toBe('');
     expect(calls).toEqual([]);
+  });
+
+  it('follow-up (PR 281 / 214): the customer\'s known band goes with the ask, so the line names his own time', async () => {
+    band = 'outside-dhaka';
+    await draw(EtaBanner({ c: c('en'), testId: 'bag-eta', festive: true }));
+    expect(calls).toEqual([{ storeId: 1, place: 'checkout', locale: 'en-BD', band: 'outside-dhaka' }]);
   });
 });

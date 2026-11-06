@@ -53,8 +53,12 @@ describe.skipIf(!HAS_TEST_DB)('Festive cut-off words on PostgreSQL (PR 281)', ()
     await turn({ enabled: true, places: { home: true, product: false, checkout: true }, title: null, linkHref: null, linkLabel: null });
     const [home] = await festiveFor(deps(), A, { place: 'home', locale: 'en-BD' });
     expect(home).toMatchObject({ key: 'festive', state: 'open', name: 'Festival delivery cut-off' });
-    expect(home!.text).toMatch(/^Order by .+ for delivery before the festival \(inside Dhaka\)$/);
-    expect((await festiveFor(deps(), A, { place: 'home', locale: 'bn-BD' }))[0]!.text).toContain('উৎসবের আগে পেতে');
+    // no band known: the template's full words (each area with its time), never only the Dhaka-city time
+    expect(home!.text).toMatch(/^Inside Dhaka: order by .+\. Outside Dhaka: order by .+\. Orders after that arrive after the festival\.$/);
+    expect((await festiveFor(deps(), A, { place: 'home', locale: 'bn-BD' }))[0]!.text).toContain('ঢাকার বাইরে:');
+    // his band known: Dhaka city reads the short words with its own time; outside Dhaka, whose time is earlier, the full words
+    expect((await festiveFor(deps(), A, { place: 'home', locale: 'en-BD', band: 'dhaka-city' }))[0]!.text).toMatch(/^Order by .+ for delivery before the festival \(inside Dhaka\)$/);
+    expect((await festiveFor(deps(), A, { place: 'home', locale: 'en-BD', band: 'outside-dhaka' }))[0]!.text).toMatch(/^Inside Dhaka: .+ Outside Dhaka: order by /);
     expect(await festiveFor(deps(), A, { place: 'product' })).toEqual([]);
     clock = at('2027-03-08');
     expect((await festiveFor(deps(), A, { place: 'home', locale: 'en-BD' })).map((l) => [l.state, l.text])).toEqual([['closed', 'Orders placed now arrive after the festival.']]);

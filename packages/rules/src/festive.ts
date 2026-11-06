@@ -5,8 +5,12 @@
 // any band's time is still ahead and closed once every one passed. With a band (checkout, the thank-you page) only that
 // band's time counts ('*' covers every band); a closed band's words stand in for the usual hours promise (SIM-F-019:
 // never the usual promise past a cut-off). Every date and word is the owner's, in the rule; nothing here invents one.
-import { isLive, valueOf, type Rule } from './model';
-import { ruleText, type TextContext, type WindowedParams } from './text';
+// Follow-up (lane B, builder 41's finding): an open line names the time of every band it speaks for — with a band, that
+// band's own time; without one, every band's time — so a customer never reads another area's later time as his own
+// (the template's short words name only the Dhaka-city time). The short words when they do; else the full words (the
+// template's lists each area); else no line. Words only: no charge, rule or Cash on Delivery change.
+import { isLive, valueOf, type Rule, type TextSlot } from './model';
+import { langOf, pick, ruleText, tokensIn, type TextContext, type WindowedParams } from './text';
 
 /** One band's last order time, as the rule holds it (an ISO date-time). */
 export interface FestiveCut {
@@ -38,6 +42,37 @@ export function festiveCuts(rule: Pick<Rule, 'actions' | 'params'>): FestiveCut[
   return out;
 }
 
+/** The params of the timed cut-offs a line speaks for: the band's own (or '*'), or every band's when it is not known. */
+function cutParams(rule: Pick<Rule, 'actions' | 'params'>, band: string | null): Set<string> {
+  const out = new Set<string>();
+  for (const a of rule.actions) {
+    if (a.type !== 'cutoff') continue;
+    for (const [b, param] of Object.entries(a.byBand)) {
+      const at = valueOf<string>(rule, param);
+      if ((band === null || b === band || b === '*') && at && !Number.isNaN(new Date(at).getTime())) out.add(param);
+    }
+  }
+  return out;
+}
+
+/** Whether a slot's words (in the customer's language) name every one of these params of the rule itself. */
+function namesAll(rule: Pick<Rule, 'text'>, slot: TextSlot, params: ReadonlySet<string>, locale: string): boolean {
+  const t = pick(rule.text[slot], langOf(locale));
+  if (!t) return false;
+  const named = new Set(tokensIn(t.text).filter((x) => x.rule === null).map((x) => x.key));
+  return [...params].every((p) => named.has(p));
+}
+
+/**
+ * The words an open line uses: the short words when they name the time of every band the line speaks for (the
+ * customer's band, or every band when it is not known), else the full words when they do, else none (null).
+ */
+export function openSlot(rule: Rule, band: string | null, locale: string): TextSlot | null {
+  const params = cutParams(rule, band);
+  for (const slot of ['short', 'full'] as const) if (namesAll(rule, slot, params, locale)) return slot;
+  return null;
+}
+
 /** Open (with the next time ahead) or closed, for one band or for every band; none: no time applies. */
 export function festiveState(cuts: readonly FestiveCut[], band: string | null, now: Date): FestiveState {
   const mine = band === null ? cuts : cuts.filter((c) => c.band === band || c.band === '*');
@@ -65,7 +100,9 @@ export function festiveLinesOf(rules: readonly Rule[], ask: FestiveAsk, ctx: Tex
     if (r.kind !== 'festive' || !isLive(r, ask.now) || !r.placements.includes(ask.placement)) continue;
     const st = festiveState(festiveCuts(r), ask.band, ask.now);
     if (st.state === 'none' || (want !== 'both' && st.state !== want)) continue;
-    const t = ruleText(r, st.state === 'open' ? 'short' : 'after', ctx, { others });
+    const slot = st.state === 'open' ? openSlot(r, ask.band, ctx.locale) : 'after';
+    if (!slot) continue;
+    const t = ruleText(r, slot, ctx, { others });
     if (!t?.ok) continue;
     out.push({ key: r.key, name: (bn && r.nameBn?.trim()) || r.nameEn, text: t.text.trim(), state: st.state });
   }
