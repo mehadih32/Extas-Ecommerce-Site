@@ -17,7 +17,7 @@
 [data-lm-look] .ldx-chips { gap: 6px; }
 [data-lm-look] .ldx-acts .lm-btn.sm, [data-lm-look] .ldx-more, [data-lm-look] .ldx-ask .lm-btn { min-height: var(--lm-tap); }
 [data-lm-look] .ldx-more { align-self: flex-start; }
-[data-lm-look] .ldx-tag { display: inline-block; padding: 1px 8px; border-radius: var(--lm-r-pill); background: var(--lm-chip); color: var(--lm-ink); font-weight: 600; font-size: 0.85em; }
+[data-lm-look] .ldx-tag { display: inline-block; padding: 1px 8px; border-radius: var(--lm-r-pill); background: var(--lm-chip); color: var(--lm-ink); font-weight: 600; font-size: var(--lm-fs-card); }
 [data-lm-look] .ldx-tag.st-launch { background: var(--lm-okbg); color: var(--lm-ok); }
 [data-lm-look] .ldx-tag.st-auto { background: var(--lm-infobg); color: var(--lm-info); }
 [data-lm-look] .ldx-tag.st-aside { background: var(--lm-warnbg); color: var(--lm-warn); }
