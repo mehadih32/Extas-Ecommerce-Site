@@ -332,7 +332,8 @@ export async function tryFillHandler(request: Request, deps: BagApiDeps | null):
 const RESTORE_CODE = /^[A-Za-z0-9_-]{8,40}$/;
 
 /**
- * GET /api/bag/back/<code> — PR 275: the link in an unfinished checkout's follow-up. Puts that checkout's bag (every
+ * GET /api/bag/back/<code> — PR 275: the link in an unfinished checkout's follow-up (PR 276: or in a signed-in customer's
+ * left-bag recovery message, Cart.restoreCode). Puts that checkout's bag (every
  * line still in it, at today's price and stock) into this browser's bag — the same browser's own bag needs nothing,
  * a second tap adds nothing — and, when the offer with a code went to him, puts the code on the bag; then opens the bag
  * in the message's language (`?l=en`, else Bengali). An unknown or finished checkout just opens the bag. Nothing is
@@ -350,12 +351,15 @@ export async function bagBackHandler(request: Request, deps: BagApiDeps | null, 
   if (!deps || !RESTORE_CODE.test(code)) return go();
   try {
     const d = await deps.cart.db.checkoutDraft.findFirst({ where: { storeId: deps.storeId, restoreCode: code }, select: { id: true, cartId: true, convertedOrderId: true } });
-    if (!d?.cartId || d.convertedOrderId) return go();
+    // PR 276: or a signed-in customer's left bag (its recovery message's link), while that bag is still open
+    const left = d ? null : await deps.cart.db.cart.findFirst({ where: { storeId: deps.storeId, restoreCode: code, status: 'ACTIVE' }, select: { id: true } });
+    const from = d ? (d.convertedOrderId ? null : d.cartId) : (left?.id ?? null);
+    if (!from) return go();
     const bag = (await bagOf(request, deps, true))!;
-    await restoreBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, fromCartId: d.cartId }).catch((e: unknown) => {
+    await restoreBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, fromCartId: from }).catch((e: unknown) => {
       if (!(e instanceof CartError)) throw e;
     });
-    const offer = await deps.cart.db.recoveryMessage.findFirst({ where: { storeId: deps.storeId, checkoutDraftId: d.id, offerCouponId: { not: null }, sentAt: { not: null } }, orderBy: { sentAt: 'desc' }, select: { offerCouponId: true } });
+    const offer = await deps.cart.db.recoveryMessage.findFirst({ where: { storeId: deps.storeId, ...(d ? { checkoutDraftId: d.id } : { cartId: from, kind: 'CART' }), offerCouponId: { not: null }, sentAt: { not: null } }, orderBy: { sentAt: 'desc' }, select: { offerCouponId: true } });
     const coupon = offer?.offerCouponId ? await deps.cart.db.coupon.findFirst({ where: { id: offer.offerCouponId, storeId: deps.storeId, enabled: true }, select: { code: true } }) : null;
     if (coupon) await setBagCode(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, code: coupon.code });
     const [count, days] = await Promise.all([bagCount(deps.cart.db, deps.storeId, bag.cartId), deps.cart.settings.value('bag.keepDays', { storeId: deps.storeId })]);

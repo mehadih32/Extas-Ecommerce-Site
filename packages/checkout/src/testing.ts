@@ -30,7 +30,7 @@ export interface CheckoutFixture {
   /** Switches a sample Smart Rule on (the owner's OK, as in the admin); `off` takes it back. */
   switchRule: (key: string, on?: boolean) => Promise<void>;
   /** A live coupon rule taking `amountOffMinor` off, and its code switched on with these limits (as in the admin). */
-  coupon: (code: string, amountOffMinor: number, limits?: { usageLimit?: number; perCustomerLimit?: number }) => Promise<void>;
+  coupon: (code: string, amountOffMinor: number, limits?: { usageLimit?: number; perCustomerLimit?: number; audience?: 'ALL' | 'GUESTS' | 'MEMBERS' | 'FIRST_ORDER' }) => Promise<void>;
   /** PR 271: a live free-delivery code (the coupon-free-delivery shape), switched on with these limits. */
   freeDeliveryCoupon: (code: string, limits?: { usageLimit?: number; perCustomerLimit?: number }) => Promise<void>;
 }

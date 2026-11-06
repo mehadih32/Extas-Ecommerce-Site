@@ -2674,11 +2674,16 @@ model Cart {
   /// line it put in is still ordered).
   reorderFromOrderId String?    @db.Uuid
   mergedIntoId       String?    @db.Uuid
+  /// PR 276 — recovery messages claimed for this left bag (a signed-in customer's; two at most, ever).
+  recoveryCount      Int        @default(0)
+  /// PR 276 — the random code of the recovery message's link that puts this bag back in any browser (/api/bag/back/<code>).
+  restoreCode        String?
   createdAt          DateTime   @default(now()) @db.Timestamptz(3)
   updatedAt          DateTime   @updatedAt @db.Timestamptz(3)
 
   items CartItem[]
 
+  @@unique([storeId, restoreCode])
   @@index([storeId, visitorId, status])
   @@index([storeId, customerId, status])
   @@index([storeId, status, lastActivityAt])
@@ -2771,10 +2776,10 @@ model CheckoutDraft {
 
   flagEvents CheckoutFlagEvent[]
 
+  @@unique([storeId, restoreCode])
   @@index([storeId, phone])
   @@index([storeId, convertedOrderId, lastActivityAt])
   @@index([storeId, assignedToId])
-  @@unique([storeId, restoreCode])
 }
 
 /// @stage S04 · PR 558, 560 — the Parameter for Checkout: what counts as a flag, the layers, and what each asks for.
@@ -7474,6 +7479,7 @@ model RecoveryMessage {
 
   @@index([storeId, kind, createdAt])
   @@index([storeId, checkoutDraftId])
+  @@index([storeId, cartId])
 }
 
 /// @stage S13 · PR 277 — a campaign blast with its audience and throttle (consent respected, B5.7).

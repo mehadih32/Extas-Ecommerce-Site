@@ -39,12 +39,13 @@
 import type { Prisma } from '@extas/db/client';
 import { codToCollect, dueOf } from '@extas/orders/pure';
 import { CRM_CAMPAIGN_STEP, CRM_EMAIL_STEP, CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings, type WinbackSettings } from '@extas/settings';
+import { bagsOf, orderedSinceBy, usableOffer } from './cart-recovery';
 import { consentBlock, offerConsent } from './consent';
 import { recordSendCost } from './costs';
 import { recordReviewRequest, REVIEW_STEP, reviewAskBlock } from './review-requests';
 import { emailHeaders, emailHtml, emailLinks, emailText, emailUrls } from './email-html';
 import { nowOf, setting, TX, type MessagesDeps, type OutgoingMessage, type SendResult } from './context';
-import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, bagBackLink, FOLLOW_UP_STEP, FOLLOW_UP_TEMPLATES, followUpTick, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, EVENT_TOKENS, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, STEP_EVENT_TYPES, templateValues, tokensIn, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
+import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, bagBackLink, CART_RECOVERY_STEP, CART_RECOVERY_TEMPLATES, FOLLOW_UP_STEP, FOLLOW_UP_TEMPLATES, followUpTick, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, EVENT_TOKENS, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, STEP_EVENT_TYPES, templateValues, tokensIn, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
 
 /** How long a claimed row is held by one run before another may take it again (a run that died mid-send). */
 const CLAIM_LEASE_MS = 10 * 60_000;
@@ -408,6 +409,7 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   if (row.step === CRM_MESSAGE_STEP || row.step === CRM_CAMPAIGN_STEP) return sendJourneyMessage(deps, c, row, opts);
   if (row.step === CRM_EMAIL_STEP) return sendOfferEmail(deps, c, row, opts);
   if (row.step === FOLLOW_UP_STEP) return sendFollowUp(deps, c, row, opts);
+  if (row.step === CART_RECOVERY_STEP) return sendCartRecovery(deps, c, row, opts);
   const cfg = await wordsKeyOf(deps, c, row);
   if (!cfg || !row.orderId) return close(deps, c, row, 'SKIPPED', 'UNKNOWN_STEP').then(() => 'SKIPPED');
   if (!cfg.on) return close(deps, c, row, 'SKIPPED', 'STEP_OFF').then(() => 'SKIPPED');
@@ -697,13 +699,68 @@ async function sendFollowUp(deps: MessagesDeps, c: RunContext, row: Row, opts: S
   if (rm.offerCouponId && !coupon) return skip('OFFER_GONE');
   const pieces = d.cartId ? ((await deps.db.cartItem.aggregate({ where: { storeId: c.storeId, cartId: d.cartId, removedAt: null, savedForLater: false }, _sum: { quantity: true } }))._sum.quantity ?? 0) : 0;
   if (pieces <= 0) return skip('EMPTY_BAG');
-  const t = await templateOf(deps, c.storeId, coupon ? FOLLOW_UP_TEMPLATES.offer : FOLLOW_UP_TEMPLATES.reminder, channel, c.locale);
-  if (!t) return skip('NO_TEMPLATE');
+  return bagMessage(deps, c, row, opts, { templates: FOLLOW_UP_TEMPLATES, name: d.name, pieces, restoreCode: d.restoreCode, offerCode: coupon?.code ?? null, recoveryId: rm.id });
+}
+
+/**
+ * PR 276 — a signed-in customer's left bag's recovery message (queued by `planCartRecovery`, cart-recovery.ts): checked
+ * again as it goes — the switch still on, the bag still open and nothing ordered by him since it began, outside the
+ * quiet hours, his yes for offers on this channel, something still in the bag, and for the offer its code still usable
+ * by him (the rules engine's coupon check). The words are the bag's reminder or offer template with the link that puts
+ * his bag back; an SMS gets the offers' stop line. Its RecoveryMessage row gets the time it went.
+ */
+async function sendCartRecovery(deps: MessagesDeps, c: RunContext, row: Row, opts: SendOptions): Promise<SendOutcome> {
+  const skip = (reason: string) => close(deps, c, row, 'SKIPPED', reason).then((): SendOutcome => 'SKIPPED');
+  const channel = row.channel as MessageChannel;
+  const cfg = await setting(deps, c.storeId, 'orders.cartRecovery');
+  if (!cfg.enabled) return skip('SWITCHED_OFF');
+  const rm = await deps.db.recoveryMessage.findFirst({ where: { storeId: c.storeId, notificationLogId: row.id }, select: { id: true, cartId: true, offerCouponId: true } });
+  const cart = rm?.cartId ? await deps.db.cart.findFirst({ where: { id: rm.cartId, storeId: c.storeId }, select: { status: true, customerId: true, restoreCode: true, createdAt: true, customer: { select: { name: true } } } }) : null;
+  if (!rm || !cart?.customerId || !row.recipient) return skip('NO_RECIPIENT');
+  if (cart.status === 'CONVERTED') return skip('ORDERED');
+  if (cart.status !== 'ACTIVE') return skip('BAG_CLOSED');
+  const who = { phone: row.recipient, customerId: cart.customerId };
+  if (await orderedSinceBy(deps, c.storeId, who, cart.createdAt)) return skip('ORDERED');
+  const until = quietUntil(c.quiet, c.now, c.timeZone);
+  if (until) {
+    await deps.db.notificationLog.update({ where: { id: row.id }, data: { sendAfter: until, reason: 'QUIET_HOURS' } });
+    return 'WAITING';
+  }
+  const refused = await offerConsent(deps.db, c.storeId, { channel, phone: who.phone, customerId: who.customerId, tick: { value: null, at: new Date(0) } });
+  if (refused) return skip(refused);
+  let offerCode: string | null = null;
+  if (rm.offerCouponId) {
+    const coupon = await deps.db.coupon.findFirst({ where: { id: rm.offerCouponId, storeId: c.storeId }, select: { code: true } });
+    const usable = coupon ? await usableOffer(deps.db, c.storeId, coupon.code, who, c.now) : null;
+    if (!usable || usable.id !== rm.offerCouponId) return skip('OFFER_GONE');
+    offerCode = usable.code;
+  }
+  const pieces = (await bagsOf(deps.db, c.storeId, [rm.cartId!])).get(rm.cartId!)?.pieces ?? 0;
+  if (pieces <= 0) return skip('EMPTY_BAG');
+  return bagMessage(deps, c, row, opts, { templates: CART_RECOVERY_TEMPLATES, name: cart.customer?.name ?? null, pieces, restoreCode: cart.restoreCode, offerCode, recoveryId: rm.id });
+}
+
+/**
+ * PR 275/276 — the words and the send of a bag's recovery message (an unfinished checkout's follow-up or a left bag's):
+ * the reminder's or the offer's template with the bag's count and the link that puts it back (and the code offered);
+ * an SMS gets the offers' stop line; the RecoveryMessage row gets the time it went.
+ */
+async function bagMessage(
+  deps: MessagesDeps,
+  c: RunContext,
+  row: Row,
+  opts: SendOptions,
+  m: { templates: { reminder: string; offer: string }; name: string | null; pieces: number; restoreCode: string | null; offerCode: string | null; recoveryId: string },
+): Promise<SendOutcome> {
+  const channel = row.channel as MessageChannel;
+  const purpose = m.offerCode ? m.templates.offer : m.templates.reminder;
+  const t = await templateOf(deps, c.storeId, purpose, channel, c.locale);
+  if (!t) return close(deps, c, row, 'SKIPPED', 'NO_TEMPLATE').then((): SendOutcome => 'SKIPPED');
   const lang = t.locale === 'en' ? 'en' : 'bn';
   const currency = await setting(deps, c.storeId, 'store.currency');
   const input: RenderInput = {
     storeName: c.storeName,
-    customerName: d.name?.trim() || '',
+    customerName: m.name?.trim() || '',
     orderNumber: '',
     senderName: '',
     currency,
@@ -711,23 +768,23 @@ async function sendFollowUp(deps: MessagesDeps, c: RunContext, row: Row, opts: S
     link: null,
     amountLine: c.amountLine[lang],
     exactAmount: null,
-    followUp: { bagCount: pieces, link: bagBackLink(c.host, d.restoreCode, lang), offerCode: coupon?.code ?? null },
+    followUp: { bagCount: m.pieces, link: bagBackLink(c.host, m.restoreCode, lang), offerCode: m.offerCode },
   };
   const words = render(t.body, channel === 'EMAIL' ? (t.subject ?? '') : null, input);
   if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: row.recipient, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');
   const stop = (await setting(deps, c.storeId, 'customers.journeys')).stopLine[lang].trim();
   const text = stop && channel === 'SMS' ? `${words.text}\n${stop}` : words.text;
   return deliverOffer(deps, c, row, opts, {
-    to: row.recipient,
+    to: row.recipient!,
     text,
     subject: words.subject,
     template: t,
-    purpose: coupon ? FOLLOW_UP_TEMPLATES.offer : FOLLOW_UP_TEMPLATES.reminder,
+    purpose,
     lang,
     input,
     currency,
     onSent: async (tx) => {
-      await tx.recoveryMessage.update({ where: { id: rm.id }, data: { sentAt: c.now } });
+      await tx.recoveryMessage.update({ where: { id: m.recoveryId }, data: { sentAt: c.now } });
     },
   });
 }
@@ -882,7 +939,7 @@ export async function sendDue(deps: MessagesDeps, storeId: number): Promise<Send
   const rows = await deps.db.notificationLog.findMany({
     // PR 289, 290, 300: a customer journey's message, an e-mail send's e-mail and a campaign's message have no order (the
     // step says what it is)
-    where: { storeId, status: 'QUEUED', sendAfter: { lte: c.now }, step: { not: null }, OR: [{ orderId: { not: null } }, { step: { in: [CRM_MESSAGE_STEP, CRM_EMAIL_STEP, CRM_CAMPAIGN_STEP, FOLLOW_UP_STEP] } }] },
+    where: { storeId, status: 'QUEUED', sendAfter: { lte: c.now }, step: { not: null }, OR: [{ orderId: { not: null } }, { step: { in: [CRM_MESSAGE_STEP, CRM_EMAIL_STEP, CRM_CAMPAIGN_STEP, FOLLOW_UP_STEP, CART_RECOVERY_STEP] } }] },
     orderBy: [{ sendAfter: 'asc' }, { id: 'asc' }],
     take: engine.batchSize,
     select: ROW_SELECT,

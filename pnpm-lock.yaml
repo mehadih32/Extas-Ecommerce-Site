@@ -855,6 +855,9 @@ importers:
       '@extas/orders':
         specifier: workspace:*
         version: link:../orders
+      '@extas/rules':
+        specifier: workspace:*
+        version: link:../rules
       '@extas/seed':
         specifier: workspace:*
         version: link:../seed

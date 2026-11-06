@@ -110,6 +110,10 @@
     "followUp": {
       "label": "Incomplete orders: follow-up messages",
       "help": "The reminder to a customer who left checkout after typing his number: once, about an hour later, by WhatsApp or SMS (only the ways he said yes to offers on), with a link that puts his bag back; then, only if the offer is switched on and a code is picked, one offer. Two messages at most, ever. Off as it ships."
+    },
+    "cartRecovery": {
+      "label": "Abandoned bags: recovery messages",
+      "help": "A signed-in customer who left things in his bag and did not reach the checkout gets one reminder (about two hours later, by WhatsApp or SMS, only where he said yes to offers) with a link that puts his bag back; then, only if the offer is switched on with a live code and the offer rules allow it (bag worth, once per customer in the days, the code usable by him), one offer. Two messages at most per bag. Bags with no account and no number are reached only on the site and by ad retargeting. Off as it ships."
     }
   },
   "defaults": {

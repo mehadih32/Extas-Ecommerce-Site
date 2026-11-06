@@ -3,7 +3,8 @@
 // with the bag, its worth, how long ago and which visit brought them; WhatsApp and Call), handed to a teammate or marked
 // handled; prepaid orders whose payment failed or got no answer; how many bags were left with no number; and the card
 // that switches the keeping on (off as it ships). PR 275: the follow-up card (the reminder with the bag's link, then
-// at most one offer; off as it ships) and, on each row, what went to him. Seeing needs `orders.read`; acting `orders.confirm`; the card
+// at most one offer; off as it ships) and, on each row, what went to him. PR 276: the left-bag card (a signed-in
+// customer's bag left before the checkout's number box: the same two messages, the offer under the offer rules). Seeing needs `orders.read`; acting `orders.confirm`; the card
 // `settings.write`. lib/admin-orders/incomplete.ts. Guide: docs/admin-guide/pages/orders/incomplete.md.
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -90,6 +91,21 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
     { kind: 'switch', path: 'offer', label: fu('offer'), help: fu('offerHelp') },
     { kind: 'number', path: 'offerAfterHours', label: fu('offerAfterHours'), help: fu('offerAfterHoursHelp'), min: 1, max: 168 }, // hardcode-ok: the setting's own bounds
     { kind: 'text', path: 'offerCode', label: fu('offerCode'), help: fu('offerCodeHelp'), max: 40 }, // hardcode-ok: the setting's own bound
+  ];
+  const bg = (k: string, vars?: Record<string, string | number>) => g(`bag.${k}`, vars);
+  const bagTexts: FieldsCardTexts = { ...cardTexts, h: bg('h'), d: bg('d') };
+  const bagFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: bg('enabled'), help: bg('enabledHelp') },
+    { kind: 'number', path: 'firstAfterMinutes', label: bg('firstAfterMinutes'), help: bg('firstAfterMinutesHelp'), min: 30, max: 2_880 }, // hardcode-ok: the setting's own bounds
+    { kind: 'select', path: 'channels', label: fu('channels'), help: fu('channelsHelp'), options: FOLLOW_UP_CHANNEL_ORDERS.map((v) => ({ value: v, label: fu(`ch.${v}`) })) },
+    { kind: 'number', path: 'minBag', label: bg('minBag'), help: bg('minBagHelp'), min: 0, max: 1_000_000 }, // hardcode-ok: the setting's own bounds (taka)
+    { kind: 'number', path: 'catchUpHours', label: bg('catchUpHours'), help: bg('catchUpHoursHelp'), min: 1, max: 168 }, // hardcode-ok: the setting's own bounds
+    { kind: 'number', path: 'creditDays', label: bg('creditDays'), help: bg('creditDaysHelp'), min: 1, max: 30 }, // hardcode-ok: the setting's own bounds
+    { kind: 'switch', path: 'offer', label: bg('offer'), help: bg('offerHelp') },
+    { kind: 'number', path: 'offerAfterHours', label: fu('offerAfterHours'), help: fu('offerAfterHoursHelp'), min: 1, max: 168 }, // hardcode-ok: the setting's own bounds
+    { kind: 'text', path: 'offerCode', label: fu('offerCode'), help: fu('offerCodeHelp'), max: 40 }, // hardcode-ok: the setting's own bound
+    { kind: 'number', path: 'offerMinBag', label: bg('offerMinBag'), help: bg('offerMinBagHelp'), min: 0, max: 1_000_000 }, // hardcode-ok: the setting's own bounds (taka)
+    { kind: 'number', path: 'offerOncePerDays', label: bg('offerOncePerDays'), help: bg('offerOncePerDaysHelp'), min: 1, max: 365 }, // hardcode-ok: the setting's own bounds
   ];
   const actTexts = { assign: g('assign'), nobody: g('nobody'), assignSave: g('assignSave'), assigned: g('assigned2'), markHandled: g('markHandled'), noteLabel: g('noteLabel'), notePlaceholder: g('notePlaceholder'), save: g('save'), cancel: g('cancel'), reopen: g('reopen'), done: g('done'), err };
   const name = (en_: string, bn_: string | null) => (view.lang === 'bn' ? bn_ || en_ : en_);
@@ -233,6 +249,11 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
           {g('noPhone.h')}
         </h2>
         <p className="a2-sm">{o.noPhone.bags ? g('noPhone.text', { n: n(o.noPhone.bags), value: formatMoney(o.noPhone.valueMinor, m) }) : g('noPhone.none')}</p>
+        {o.noPhone.bags ? (
+          <p className="a2-sm a2-mute inc-wrap" data-testid="inc-nophone-signed">
+            {g('noPhone.signedIn', { n: n(o.noPhone.signedIn) })}
+          </p>
+        ) : null}
       </section>
 
       <div className="a2-mt12">
@@ -243,6 +264,12 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
           {fu('stats', { sent: n(o.followUp.sent), recovered: n(o.followUp.recovered) })}
         </p>
         <FieldsCard url={API} screen={{ key: o.followUp.card.key, value: o.followUp.card.value, version: o.followUp.card.version }} fields={fuFields} texts={fuTexts} canEdit={canSet} testId="inc-fu-card" />
+      </div>
+      <div className="a2-mt12" data-testid="inc-bags">
+        <p className="a2-sm a2-mute inc-wrap" data-testid="inc-bags-stats">
+          {bg('stats', { sent: n(o.cartRecovery.sent), recovered: n(o.cartRecovery.recovered) })}
+        </p>
+        <FieldsCard url={API} screen={{ key: o.cartRecovery.card.key, value: o.cartRecovery.card.value, version: o.cartRecovery.card.version }} fields={bagFields} texts={bagTexts} canEdit={canSet} testId="inc-bag-card" />
       </div>
     </div>
   );
