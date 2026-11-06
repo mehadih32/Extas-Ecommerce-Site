@@ -10,6 +10,8 @@
 //   the desktop keeps the active filters as removable chips over the grid.
 // What the shopper chose lives in the address (lib/shop/category-model), so the server draws exactly that page and a
 // filtered page can be shared; such a page stays out of search engines (its clean address is the canonical one).
+// - S02 · PR 76: the heading, the listing, the text with the questions and More collections come in the owner's order
+//   and on his screens (`layout.category`, Website › Page layouts; the heading and the listing always show).
 // S11 · PR 527: a collection archived after it had products on the shop answers with its resting page
 // (components/shop/category/CatResting, `seo.urlPolicy.retiredCategoryPage`), never "page not found".
 // S11 · PR 227: a filter page the owner named (`seo.filterPages`) is the one exception to "a filtered page stays out":
@@ -23,7 +25,7 @@
 // `marketing.seasonal`, off as shipped): the page while it is live, its resting page once it was live and is down.
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { cache } from 'react';
+import { cache, type ReactNode } from 'react';
 import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
 import { CardDeskMount } from '@/components/shop/CardDeskMount';
 import { CatFaq, CatSeoText } from '@/components/shop/category/CatInfo';
@@ -46,9 +48,12 @@ import { ROUTES } from '@/lib/shop/routes';
 import { categoryName, requirementsMet } from '@/lib/shop/shell-model';
 import { relatedCollections } from '@/lib/seo/internal-links';
 import { breadcrumbLd, faqLd, itemListLd, type LdCrumb, type LdQuestion } from '@/lib/shop/structured-data';
+import { LayoutPart } from '@/components/shop/LayoutPart';
+import { shownSections } from '@/lib/shop/layouts';
+import type { CategorySectionId } from '@extas/settings';
 import './category.css';
 
-const KEYS = ['marketing.seasonal', 'category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages', 'seo.internalLinks'] as const;
+const KEYS = ['marketing.seasonal', 'layout.category', 'category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages', 'seo.internalLinks'] as const;
 
 /** The "New in" page's own link name, from the routing table (`/collections/new-in`). */
 const NEW_IN = ROUTES.newIn.split('/').pop()!;
@@ -262,10 +267,9 @@ export default async function CategoryPage(props: Props) {
     </nav>
   ) : null;
 
-  return (
-    <div className="container">
-      {hd}
-      <CatListing
+  // S02 · PR 76: the sections in the owner's order and on his screens (Website › Page layouts, `layout.category`)
+  const listing = (
+    <CatListing
         c={c}
         scope={slug}
         rows={rows}
@@ -278,8 +282,15 @@ export default async function CategoryPage(props: Props) {
         waName={name}
         after={(shown) => ldOf(shown, faqItems)}
       />
-      {info}
-      {more}
+  );
+  const parts: Record<CategorySectionId, ReactNode> = { head: hd, listing, info, related: more };
+  return (
+    <div className="container">
+      {shownSections<CategorySectionId>('category', set['layout.category']).map(({ id, dev }) => (
+        <LayoutPart key={id} id={id} dev={dev}>
+          {parts[id]}
+        </LayoutPart>
+      ))}
       {/* follow-up 21: the cards' back view and Quick add (computer with a mouse), and the panel it opens */}
       <CardDeskMount c={c} />
       <AddedSlot c={c} added={sp.added} closeHref={closeHrefOf(basePath, sp)} />

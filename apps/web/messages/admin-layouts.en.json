@@ -1,0 +1,80 @@
+{
+  "ly": {
+    "metaTitle": "Page layouts",
+    "title": "Page layouts",
+    "sub": "Which sections each shop page shows, in which order and on which screens.",
+    "note": "A section shows on the shop only when it has something to show. Your changes go live as soon as you save.",
+    "pages": "Pages",
+    "page": {
+      "home": "Home page",
+      "category": "Category pages"
+    },
+    "cardH": {
+      "home": "Sections of the home page",
+      "category": "Sections of every category page"
+    },
+    "count": "{on} of {all} shown",
+    "open": "Open the page",
+    "seasonal": "While a Seasonal home look is live (Marketing › Seasonal home), that look's own sections show instead of this list.",
+    "sec": {
+      "hero": "Hero",
+      "festive": "Festive line",
+      "categories": "Categories",
+      "new-in": "New in",
+      "sets": "Sets & combos",
+      "size-finder": "Size finder",
+      "flash-sale": "Flash sale",
+      "shop-the-look": "Shop the look",
+      "reviews": "Reviews",
+      "journal": "Journal",
+      "head": "Heading",
+      "listing": "Products",
+      "info": "Your text and questions",
+      "related": "More collections"
+    },
+    "hint": {
+      "hero": "The big panel at the top with its pictures",
+      "festive": "Shows only while a festive cut-off is live",
+      "categories": "Category tiles",
+      "new-in": "The newest styles",
+      "sets": "Shows once combos are on the shop",
+      "size-finder": "Shows once Find my size is on",
+      "flash-sale": "Shows only while a flash sale runs",
+      "shop-the-look": "Shows once looks are on the shop",
+      "reviews": "Approved reviews only",
+      "journal": "Shows once the journal is on",
+      "head": "Breadcrumb, title and count",
+      "listing": "Filters, sort and the product grid",
+      "info": "Shows only when the page has text or questions",
+      "related": "Links to other collections"
+    },
+    "always": "Always shown",
+    "show": "Show",
+    "screens": "Screens",
+    "dev": {
+      "both": "Phone and computer",
+      "phone": "Phone only",
+      "desktop": "Computer only"
+    },
+    "up": "Move up",
+    "down": "Move down",
+    "drag": "Drag to move, or use the arrows",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved. The shop shows the new layout now.",
+    "discard": "Discard changes",
+    "reset": "Back to the default order",
+    "resetHelp": "Puts every section back in the shop's own order, shown on both screens. Nothing changes until you press Save.",
+    "unsaved": "Unsaved changes: the shop still shows the saved layout.",
+    "readOnly": "You can see this page. Changing it needs the permission to change page layouts.",
+    "err": {
+      "INVALID_INPUT": "Something in the list is not right ({fields}). Reload the page and try again.",
+      "LOCKED": "The heading and the products are always shown.",
+      "STALE": "Someone saved this page a moment ago. Reload the page to see the newest layout.",
+      "forbidden": "You do not have permission to change page layouts.",
+      "unauthorized": "Your session ended. Sign in again.",
+      "network": "No connection. Check the internet and try again.",
+      "other": "Could not save. Try again."
+    }
+  }
+}

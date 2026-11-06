@@ -1,0 +1,20 @@
+/* S02 · PR 76 — Website › Page layouts: the page picker and the section list (a row per section: number, name and what
+   it shows, then Show, its screens and ▲ ▼, wrapping under the name on a phone), every control at a 44px tap size, the
+   shell's tokens only. */
+.adm2 .lyb-pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.adm2 .lyb-pick .a2-btn{min-height:44px}
+.adm2 .lyb-pick .a2-btn[aria-current="page"]{border-color:var(--g);color:var(--g);font-weight:600}
+.adm2 .lyb-mt6{margin-top:6px}
+.adm2 .lyb-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.adm2 .lyb-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--ln);border-radius:var(--r);background:var(--sf);min-width:0}
+.adm2 .lyb-row.off .lyb-name b{opacity:.6}
+.adm2 .lyb-row.drag{opacity:.5}
+.adm2 .lyb-row[draggable="true"]{cursor:grab}
+.adm2 .lyb-num{flex:0 0 auto;min-width:24px;text-align:center;font-weight:600;color:var(--mute)}
+.adm2 .lyb-name{display:grid;gap:2px;flex:1 1 180px;min-width:0;overflow-wrap:anywhere}
+.adm2 .lyb-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0}
+.adm2 .lyb-show{min-height:44px}
+.adm2 .lyb-dev{min-height:44px;max-width:100%}
+.adm2 .lyb-mv{min-width:44px;min-height:44px;justify-content:center}
+.adm2 .lyb-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.adm2 .lyb-bar .a2-btn{min-height:44px}

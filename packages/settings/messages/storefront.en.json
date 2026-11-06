@@ -104,7 +104,7 @@
   "home": {
     "sections": {
       "label": "Home page sections",
-      "help": "Which parts the home page shows and in what order: the hero, categories, new in, sets, size finder, flash sale, shop the look, reviews and the journal. A part with nothing to show yet stays hidden on its own."
+      "help": "Which parts the home page shows, in what order and on which screens (phone, computer or both): the hero, categories, new in, sets, size finder, flash sale, shop the look, reviews and the journal. A part with nothing to show yet stays hidden on its own. Change it on Website › Page layouts."
     },
     "hero": {
       "label": "Home hero",
@@ -237,6 +237,12 @@
     "sweep": {
       "label": "Light sweeps across the shop",
       "help": "The slow light that crosses the green buttons, the logo, the announcement strip, the footer's payment row, the bag, the checkout and the account's offer banner, each on its own switch, plus one switch that stops every sweep at once (the product page's own words and size boxes too). All on as designed, except the Add to Bag sweep. The checkout and Order Now buttons keep their sweep when \"all other green buttons\" is off. A customer who asked for less motion never sees any sweep."
+    }
+  },
+  "layout": {
+    "category": {
+      "label": "Category page sections",
+      "help": "Which parts a category page shows, in which order and on which screens: the heading (breadcrumb, title, count), the products (filters, sort, grid), your text with the questions, and More collections. The heading and the products are always shown; they can still move. Change it on Website › Page layouts."
     }
   }
 }

@@ -270,6 +270,12 @@
       "read": "See the SEO page: which pages search engines may list, the title and description templates, the AI drafts and the structured data",
       "manage": "Change the SEO settings, write AI drafts of titles and descriptions, and accept or discard a draft (Website → SEO)"
     },
+    "website": {
+      "read": "See the shop's page layouts: which sections each page shows, in which order and on which screens (Website → Page layouts)",
+      "layout": {
+        "write": "Move, show or hide the sections of a shop page and choose their screens (phone, computer or both), or put a page back to its default order"
+      }
+    },
     "fixedcosts": {
       "write": "Set a month’s fixed costs (salary, rent, utilities, other)"
     },

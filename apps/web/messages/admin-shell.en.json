@@ -108,6 +108,7 @@
         "email": "E-mail"
       },
       "website": {
+        "layouts": "Page layouts",
         "seo": "SEO",
         "blog": "Blog & journal"
       },
