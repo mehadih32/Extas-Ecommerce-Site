@@ -34,6 +34,8 @@
 //   POST /api/account/try-cards                             → {next}   test servers only (follow-ups 260, 261): the same,
 //                                plus the two-size sample order TRY-146, and this browser reads the customer's edit and the
 //                                two-size question as on (lib/shop/try-cards.ts; nothing written to the settings)
+//   POST /api/account/try-history                           → {next}   test servers only (follow-up 301): the same, plus
+//                                one page more than a full history of older delivered sample orders (TRY-H…)
 //
 // The session cookie is `__Host-extas_c`, the device cookie `__Host-extas_dev` (lib/shop/account.ts). Follow-up 71: a
 // sign-in brings this browser's wishlist hearts into the account (lib/shop/wishlist.ts mergeWishes).
@@ -45,7 +47,7 @@ import { addOnState, customerAddOn, customerCancel, customerCancelState, custome
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE } from './bag-model';
 import { mergeWishes, visitorOf } from './wishlist';
-import { tryOpen, trySignIn } from './account-try';
+import { tryHistoryOrders, tryOpen, trySignIn } from './account-try';
 import { cardsTrialSettings, tryCardsCookie, tryCardsOnRequest, tryTwoSizeOrder } from './try-cards';
 import { accountCookie, CUSTOMER_COOKIE, clearAccountCookie, customerOfRequest, DEVICE_COOKIE, newDeviceToken } from './account';
 import { hrefIn, isShopLang, type ShopLang } from './lang';
@@ -225,7 +227,8 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
         return json({ ok: true, code: m?.text.match(/\d{4,8}/)?.[0] ?? null });
       }
       case 'try':
-      case 'try-cards': {
+      case 'try-cards':
+      case 'try-history': {
         // CI only (PR 131): the device gate and the journeys measure My account signed in, as the sample customer.
         if (!(await tryOpen(a, deps.storeId))) return fail(404, 'not-found');
         const device = readCookie(request, DEVICE_COOKIE) ?? newDeviceToken();
@@ -236,6 +239,8 @@ export async function accountHandler(request: Request, deps: AccountApiDeps | nu
           await tryTwoSizeOrder(a, deps.storeId);
           headers.append('set-cookie', tryCardsCookie());
         }
+        // follow-up 301: one page more than a full history, so the gate measures the pager
+        if (action === 'try-history') await tryHistoryOrders(a, deps.storeId);
         return json({ ok: true, next: hrefIn(lang, ROUTES.account) }, { headers });
       }
       default:
