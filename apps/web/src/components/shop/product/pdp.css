@@ -752,6 +752,8 @@
 .shop .pdp-page .pdp-ystag { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); max-width: calc(100% + 14px); overflow: hidden; text-overflow: ellipsis; background: var(--gold-bg); color: var(--gold); font-size: 11px; font-weight: 700; line-height: 1; letter-spacing: 0px; text-decoration: none; padding: 3px 7px; border-radius: 10px; white-space: nowrap; border: 1px solid var(--surface); z-index: 1; }
 .shop .pdp-page .pdp-pills.worded .size-pill { flex-direction: column; gap: 2px; line-height: 1.1; }
 .shop .pdp-page .size-w { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; font-weight: 600; letter-spacing: 0px; color: var(--text2); text-decoration: none; }
+/* follow-up 114: a word too long even at the floor takes two lines (lib/shop/fit SIZE_WORD_FIT), never "…" */
+.shop .pdp-page .size-w.fit-x { white-space: normal; overflow-wrap: anywhere; text-overflow: clip; line-height: 1.15; }
 .shop .pdp-page .size-pill.on .size-w { color: inherit; }
 .shop .pdp-page .size-pill.out .size-w { color: inherit; }
 .shop .pdp-page .pdp-ysout { color: var(--warn); }
