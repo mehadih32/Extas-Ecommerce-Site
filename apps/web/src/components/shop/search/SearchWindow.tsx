@@ -2,11 +2,12 @@
 // PR 72 — the search window itself, loaded on the first open (SearchPanel), so no page carries its code until a shopper
 // asks for it: the phone's bottom window or the computer's panel under the header, the live suggestions, Esc, the
 // close button, a press outside, the keyboard kept inside, the page under it held still.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '../Icon';
 import { DESK, OPENER, type Mode } from './search-open';
 import { DeskBody, hasAny, SuggestList, useSuggest } from './Suggest';
+import { suggestItems, suggestKey } from './suggest-keys';
 import { toBnDigits } from '@/lib/shop/lang';
 import type { SearchPanelProps } from '@/lib/shop/search-model';
 import './search.css';
@@ -15,7 +16,12 @@ export default function SearchWindow({ p, mode, host, close }: { p: SearchPanelP
   const [q, setQ] = useState('');
   const box = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
+  const list = useRef<HTMLDivElement>(null);
   const w = p.words;
+  // follow-up 106: ↓ / ↑ through the suggestions, Enter opens the highlighted one
+  const onArrows = (e: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (suggestKey(e.key, e.currentTarget, suggestItems(list.current), mode === 'desk' ? 'sg-d' : 'sg-m')) e.preventDefault();
+  };
   const num = useCallback((n: number) => (p.lang === 'bn' && p.bnDigits ? toBnDigits(String(n)) : String(n)), [p.lang, p.bnDigits]);
   const got = useSuggest(q, p);
 
@@ -93,12 +99,13 @@ export default function SearchWindow({ p, mode, host, close }: { p: SearchPanelP
               enterKeyHint="search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
+              onKeyDown={onArrows}
               data-testid="search-input"
             />
             <button type="button" className="iconbtn dsk-s-x" aria-label={w.close} onClick={() => close(true)}>
               <Icon name="close" size={18} />
             </button>
-            <div className="dsk-s-body" aria-live="polite">
+            <div ref={list} className="dsk-s-body" aria-live="polite">
               <DeskBody q={q} got={got} p={p} num={num} />
             </div>
           </form>
@@ -141,11 +148,12 @@ export default function SearchWindow({ p, mode, host, close }: { p: SearchPanelP
                 enterKeyHint="search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
+                onKeyDown={onArrows}
                 data-testid="search-input"
               />
               <button className="btn btn-primary">{w.go}</button>
             </div>
-            <div className="hs-sugg" data-testid="search-suggest" aria-live="polite" hidden={!a && got !== 'failed'}>
+            <div ref={list} className="hs-sugg" data-testid="search-suggest" aria-live="polite" hidden={!a && got !== 'failed'}>
               {a ? <SuggestList a={a} w={w} lang={p.lang} products={p.phoneProducts} /> : got === 'failed' ? <p className="hs-fail small text2">{w.failed}</p> : null}
             </div>
             {!a && (p.popular.length || p.categories.length) ? (
