@@ -1,6 +1,7 @@
-/* PR 645 (CN-036, lane C) — the Reports section in the Lumen look (docs/demo/admin-look/LUMEN-SPEC.md §3 item 1 "summary
-   tiles + hero chart", §4 Reports): part 2, Site health (overview, customer problems and one problem, speed, smoke runs,
-   run history and one run, fixes to approve). Each page root carries .lm-rp and data-lm-ready; the shared a2-* skin
+/* PR 645, 644 (CN-036, lane C) — the Reports section in the Lumen look (docs/demo/admin-look/LUMEN-SPEC.md §3 item 1
+   "summary tiles + hero chart", §4 Reports): part 2, Site health (overview, customer problems and one problem, speed,
+   smoke runs, run history and one run, fixes to approve); part 1, the team, delivery, customers, stopped, fraud, areas,
+   flags and learning reports, with Experiments beside them. Each page root carries .lm-rp and data-lm-ready; the shared a2-* skin
    comes from lumen-sections.css. Every colour, radius, font and shadow is a --lm-* token; text at least 14 px; taps at
    least 44 px on phones. */
 
@@ -17,3 +18,23 @@
 [data-lm-look] .lm-rp .hs-pre { font: var(--lm-fs-card) / 1.5 var(--lm-font-mono); color: var(--lm-ink2); }
 [data-lm-look] .lm-rp .a2-sc { border: 0; border-radius: var(--lm-r-card); background: var(--lm-sf); box-shadow: var(--lm-sh); }
 [data-lm-look] .lm-rp :is(.a2-scw, .a2-def) { font-size: var(--lm-fs-card); color: var(--lm-ink2); }
+
+/* part 1 (PR 644): the report tables, their notes and groups at Lumen's 14 px, in tokens */
+[data-lm-look] .lm-rp :is(.fr-tbl th[scope=row], .fr-gh, .lrn-people td, .stp-list td, .xpb-changes) { font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-rp :is(.cr-sub, .fr-inc) { font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-rp .cr-sub { color: var(--lm-ink2); }
+[data-lm-look] .lm-rp .fr-inc, [data-lm-look] .lm-rp .flg-tbl tr[data-warn=yes] th[scope=row] { color: var(--lm-warn); }
+[data-lm-look] .lm-rp .a2-tbl tbody th[scope=row] { text-transform: none; letter-spacing: normal; font-weight: 600; color: var(--lm-ink); background: transparent; }
+[data-lm-look] .lm-rp .a2-tbl tr.fr-total th[scope=row] { background: var(--lm-sf2); }
+[data-lm-look] .lm-rp .fr-tw { border-color: var(--lm-ln); border-radius: var(--lm-r-box); }
+[data-lm-look] .lm-rp .fr-tbl :is(th[scope=row], td) { border-bottom-color: var(--lm-ln); }
+[data-lm-look] .lm-rp .fr-tbl tr.fr-total :is(th, td) { background: var(--lm-sf2); }
+[data-lm-look] .lm-rp .fr-tbl tr.fr-unknown th { color: var(--lm-ink2); }
+[data-lm-look] .lm-rp .fr-sum b { font-family: var(--lm-font-disp); color: var(--lm-ink); }
+[data-lm-look] .lm-rp .cr-rows > li { border-color: var(--lm-ln); border-radius: var(--lm-r-box); background: var(--lm-sf2); }
+[data-lm-look] .lm-rp .xpb-meter { border-radius: var(--lm-r-pill); background: var(--lm-chip); }
+[data-lm-look] .lm-rp .xpb-meter i { background: var(--lm-warn); }
+[data-lm-look] .lm-rp .xpb-meter i.ok { background: var(--lm-ok); }
+[data-lm-look] .lm-rp .xpb-bad { color: var(--lm-bad); }
+[data-lm-look] .lm-rp .xpb-warn { color: var(--lm-warn); }
+[data-lm-look] .lm-rp .ar-map { border-radius: var(--lm-r-box); background: var(--lm-sf2); }

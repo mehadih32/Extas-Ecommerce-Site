@@ -54,7 +54,7 @@ export default async function LearningReportPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="" data-testid="learning-page">
         <ShellState view={view} kind="denied" permission="risk.report" />
       </div>
     );
@@ -94,7 +94,7 @@ export default async function LearningReportPage() {
   ];
 
   return (
-    <div className="a2-z" data-testid="learning-page">
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="learning-page">
       <PageHead view={view} place={locateKey(KEY)} title={w('title')} sub={w('sub')} />
       <SectionTabs view={view} current={KEY} />
       <p className="a2-cs fr-showing" data-testid="learning-showing">

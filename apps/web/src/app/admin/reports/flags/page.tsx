@@ -91,7 +91,7 @@ export default async function FlagOutcomesPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="" data-testid="flags-page">
         <ShellState view={view} kind="denied" permission="risk.report" />
       </div>
     );
@@ -125,7 +125,7 @@ export default async function FlagOutcomesPage() {
   ];
 
   return (
-    <div className="a2-z" data-testid="flags-page">
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="flags-page">
       <PageHead view={view} place={locateKey(KEY)} title={w('title')} sub={w('sub')} />
       <SectionTabs view={view} current={KEY} />
       <p className="a2-cs fr-showing" data-testid="flags-showing">

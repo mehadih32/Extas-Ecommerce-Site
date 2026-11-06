@@ -1,4 +1,4 @@
-// PR 645 (CN-036) — the Reports section in the Lumen look: every page root is marked ready (so it follows dark
+// PR 645, 644 (CN-036) — the Reports section in the Lumen look: every page root is marked ready (so it follows dark
 // mode), the section's styles hold no colour literal or font family and keep text at 14 px or more, and messages that
 // the work went through use the one toast while approving or rejecting a fix keeps its confirmation.
 import { readFileSync } from 'node:fs';
@@ -32,5 +32,32 @@ describe('Reports part 2: Site health in the Lumen look (PR 645)', () => {
       expect(src, f).not.toContain('undo:');
     }
     expect(comp('settings/ProposalDecide.tsx')).toContain('ConfirmDialog');
+  });
+});
+
+const PART1 = ['team', 'delivery', 'customers', 'stopped', 'fraud', 'areas', 'flags', 'learning', 'experiments', 'experiments/[id]'].map((p) => `reports/${p}/page.tsx`);
+
+describe('Reports part 1: the reports and Experiments in the Lumen look (PR 644)', () => {
+  it.each(PART1)('%s: every page root and the no-access wrapper are ready, the main one carries the section class', (p) => {
+    const src = readAdmin(p);
+    expect(unreadyRoots(src)).toEqual([]);
+    expect(unmarkedDenied(src)).toEqual([]);
+    expect(src).toMatch(/className="a2-z lm-rp" data-lm-ready="" data-testid="/);
+  });
+
+  it('the report styles it lifts to 14 px are in tokens, and the old files keep no colour literal', () => {
+    const css = readAdmin('lumen-reports.css');
+    for (const k of ['.fr-tbl th[scope=row]', '.lrn-people td', '.stp-list td', '.xpb-changes', '.cr-sub', '.fr-inc']) expect(css).toContain(k);
+    for (const f of ['reports/fraud/fraud.css', 'reports/learning/learning.css', 'reports/stopped/stopped.css', 'reports/flags/flags.css', 'reports/experiments/experiments.css', 'reports/delivery/report.css']) expect(styleLiterals(readAdmin(f)), f).toEqual([]);
+  });
+
+  it('saving the team badges and an experiment speaks through the one toast; a problem stays inline', () => {
+    for (const f of ['reports/TeamBadgesCard.tsx', 'reports/ExperimentEditor.tsx']) {
+      const src = comp(f);
+      expect(src, f).toContain('showToast(');
+      expect(src, f).not.toMatch(/bad: false/);
+      expect(src, f).toMatch(/bad: true/);
+      expect(src, f).not.toContain('undo:');
+    }
   });
 });

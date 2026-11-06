@@ -4,8 +4,10 @@
 // of shop pages shown or hidden (only the eye-toggles that are not about prices, offers, payment or delivery) and shop
 // words in English and/or Bengali (found by "Find a word"; the server refuses money words again). A new test is saved as
 // a draft (nothing is shown until it is started); a draft is saved with the version it was read at (STALE = read again).
+// PR 644 (CN-036): "created" and "saved" speak through the admin's one toast (showToast, no Undo); a problem stays inline.
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, type ReactNode } from 'react';
+import { showToast } from '../lumen/Toast';
 
 export interface EditorEye {
   id: string;
@@ -87,11 +89,13 @@ export function ExperimentEditor(p: { api: string; listHref: string; test: Edito
     }
     setBusy(false);
     if (status === 201 && data.id) {
-      setSaid({ text: w('created'), bad: false });
+      setSaid(null);
+      showToast({ text: w('created') });
       return router.push(`${p.listHref}/${data.id}`);
     }
     if (status === 200) {
-      setSaid({ text: w('saved'), bad: false });
+      setSaid(null);
+      showToast({ text: w('saved') });
       return router.refresh();
     }
     const code = data.error ?? 'other';

@@ -52,7 +52,7 @@ export default async function ExperimentsPage(props: { searchParams: Promise<Rec
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="" data-testid="xp-page">
         <ShellState view={view} kind="denied" permission="reports.experiments.read" />
       </div>
     );
@@ -76,7 +76,7 @@ export default async function ExperimentsPage(props: { searchParams: Promise<Rec
   const shopHome = lang === 'bn' ? '/bn' : '/';
 
   return (
-    <div className="a2-z" data-testid="xp-page">
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="xp-page">
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note a2-mt12" role="note">

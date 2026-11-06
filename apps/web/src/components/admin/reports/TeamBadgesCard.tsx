@@ -2,11 +2,13 @@
 // S16 · PR 352 — the badge settings on Reports → Team: on/off, the period (the week Saturday to Friday, or the month),
 // the "most in each" badge and a minimum per measure (empty = none; none as shipped). Saving asks once more ("Save" →
 // "Yes, save") and sends the version it was read at. Without `staff.performance` it is read-only. Recognition only.
+// PR 644 (CN-036): "saved" speaks through the admin's one toast (showToast, no Undo); a problem stays on the card.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { t, type Dict } from '@/lib/i18n';
 import type { TeamBadgesSettings } from '@extas/settings';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 const MEASURES = ['confirmed', 'packed', 'handedOver', 'replies'] as const;
 
@@ -41,7 +43,8 @@ export function TeamBadgesCard(p: { dict: Dict; value: TeamBadgesSettings; versi
     const a = await call('PUT', '/api/admin/reports/team', { value: { ...v, mins: out }, version: p.version });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: c('card.saved'), bad: false });
+      setSaid(null);
+      showToast({ text: c('card.saved') });
       return router.refresh();
     }
     const k = `reportsTeam.card.err.${a.status === 0 ? 'network' : String(a.data.error ?? 'other')}`;

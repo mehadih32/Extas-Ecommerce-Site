@@ -42,7 +42,7 @@ export default async function CustomersReportPage({ searchParams }: { searchPara
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="" data-testid="customers-report">
         <ShellState view={view} kind="denied" permission="reports.read" />
       </div>
     );
@@ -66,7 +66,7 @@ export default async function CustomersReportPage({ searchParams }: { searchPara
     : [];
 
   return (
-    <div className="a2-z" data-testid="customers-report" data-days={days} data-on={r.enabled ? 'yes' : 'no'}>
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="customers-report" data-days={days} data-on={r.enabled ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
       {!tot ? (
