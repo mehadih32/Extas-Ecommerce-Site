@@ -9,7 +9,7 @@
 // The bag is S04's (PR 105–114): the buttons are its <AddToBag>, which adds through the bag's API and then does what
 // `bag.addBehaviour` says (the added-to-bag panel through `?added=<line>`, which the page draws on the server with
 // <AddedPanel>; a short message; or the bag page). "Order Now" adds the same way and goes straight to checkout.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AddToBag, type AddWords } from '../bag/AddToBag';
 import { Icon } from '../Icon';
 import { NO_COLOUR, priceFor, variantFor } from '@/lib/shop/product-model';
@@ -110,10 +110,10 @@ export function PdpBuy({ links }: { links: BuyLinks }) {
 }
 
 /** The computer's slim bar, drawn at the page's level (inside the sticky buy column the footer painted over it). */
-export function PdpDeskBar({ links, lang }: { links: BuyLinks; lang: 'en' | 'bn' }) {
+export function PdpDeskBar({ links, lang, rating = null }: { links: BuyLinks; lang: 'en' | 'bn'; rating?: ReactNode }) {
   const { m, set } = usePdp();
   if (!m.onSale || !set.buy.desktopBar) return null;
-  return <DeskBar links={links} lang={lang} />;
+  return <DeskBar links={links} lang={lang} rating={rating} />;
 }
 
 /** The phone's buy bar, held at the bottom of the screen (drawn after the page so it sits over everything). */
@@ -129,7 +129,7 @@ export function PdpPhoneBar({ links }: { links: BuyLinks }) {
   );
 }
 
-function DeskBar({ links, lang }: { links: BuyLinks; lang: 'en' | 'bn' }) {
+function DeskBar({ links, lang, rating }: { links: BuyLinks; lang: 'en' | 'bn'; rating: ReactNode }) {
   const { m, choice, w } = usePdp();
   const bar = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState(false);
@@ -197,8 +197,9 @@ function DeskBar({ links, lang }: { links: BuyLinks; lang: 'en' | 'bn' }) {
             )}
           </div>
         </div>
-        {links.freeDelivery || links.cod ? (
-          <div className="ob-bm">
+        {rating || links.freeDelivery || links.cod ? (
+          <div className="ob-bm" data-testid="dkb-mid">
+            {rating}
             {links.freeDelivery ? (
               <span className="ob-bm-i ob-bm-d">
                 <Icon name="truck" size={15} />
