@@ -503,3 +503,5 @@
 .shop .co-tr-acts { display: flex; gap: 10px; margin-top: 14px; }
 .shop .co-tr-acts .btn { flex: 1 1 0; min-height: 44px; justify-content: center; }
 @media (max-width: 480px) { .shop .co-tr-acts { flex-direction: column; } }
+/* Follow-up 238 (PR 65): "Rate & review" under a delivered order's items */
+.shop .ty-rate { margin-top: 8px; }

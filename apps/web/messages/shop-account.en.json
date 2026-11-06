@@ -442,6 +442,7 @@
     },
     "review": {
       "cta": "Rate & review",
+      "ctaName": "Rate and review order {number}",
       "title": "Rate & review",
       "line": "Tell other buyers how it fits.",
       "rating": "Your rating",
