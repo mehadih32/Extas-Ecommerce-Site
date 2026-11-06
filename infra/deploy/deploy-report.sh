@@ -79,6 +79,9 @@ dsha="$(jq -r '.sha // ""' "$DOCS_JSON" 2>/dev/null || true)"
 case "${DOCS:-}" in
   success)
     if [ -n "$dsha" ] && [ "${dsha:0:12}" = "$short" ]; then docs="\`$short\` — README.md + docs/ ($(jq -r '.files' "$DOCS_JSON") files)"
+    # CN-035 rehearsal (6 Nov): a rollback copies the docs of the newest main (this run's commit) while the app goes back
+    # to the older version, so the two stamps differ by design; say which copy is on the server.
+    elif [ -n "$dsha" ] && [ "${ROLLBACK:-false}" = true ]; then docs="\`${dsha:0:12}\` (the newest docs; the app went back to \`$short\`) — README.md + docs/ ($(jq -r '.files' "$DOCS_JSON") files)"
     else docs="copied, but its record is missing"; fi ;;
   failure) docs="FAILED — the server keeps the previous copy${dsha:+ (\`${dsha:0:12}\`)}" ;;
 esac
