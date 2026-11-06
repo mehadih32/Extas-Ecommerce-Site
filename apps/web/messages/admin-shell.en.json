@@ -468,6 +468,7 @@
       "ordersConfirm": "Orders to confirm",
       "ordersPrepaid": "Prepaid orders to confirm (no call needed)",
       "ordersAwaitingAdvance": "Orders waiting for their advance payment",
+      "ordersTwoSizes": "Orders with 2 sizes of one piece (2 sizes — check)",
       "ordersReview": "Orders in review (duplicate or risk)",
       "ordersCancelRequests": "Customers asking to cancel",
       "ordersCancelPending": "Cancels waiting for the courier",

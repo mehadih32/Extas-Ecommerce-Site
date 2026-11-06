@@ -39,6 +39,7 @@ const NEED_ICON: Record<string, ShellIconName> = {
   ordersConfirm: 'phone',
   ordersPrepaid: 'wallet',
   ordersAwaitingAdvance: 'wallet',
+  ordersTwoSizes: 'shirt',
   ordersReview: 'shield',
   ordersCancelRequests: 'x',
   ordersCancelPending: 'uturn',

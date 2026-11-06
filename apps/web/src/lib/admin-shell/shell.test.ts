@@ -275,6 +275,18 @@ describe('follow-up 224 · the orders awaiting their advance', () => {
   });
 });
 
+describe('follow-up 266 · the orders flagged "2 sizes — check"', () => {
+  it('is a "Needs you now" row that opens the twoSizes list view and counts in the Orders badge', () => {
+    expect(QUEUES.find((q) => q.id === 'ordersTwoSizes')).toMatchObject({ perm: 'orders.read', href: '/admin/orders?view=twoSizes', section: 'orders', badge: true, group: 'orders' });
+    const counts: QueueCount[] = [
+      { id: 'ordersTwoSizes', n: 3, oldest: '2026-11-01T00:00:00.000Z' },
+      { id: 'ordersAwaitingAdvance', n: 1, oldest: '2026-11-02T00:00:00.000Z' },
+    ];
+    expect(badgesFrom(visibleQueues(counts, viewer(['orders.read'])))).toEqual({ orders: 4 });
+    expect(visibleQueues(counts, viewer(['inventory.read']))).toEqual([]);
+  });
+});
+
 describe('search query and the Dashboard helpers', () => {
   it('reads the mode prefix, trims, and keeps the digits (Bengali digits too)', () => {
     expect(parseQuery('  Stock ')).toMatchObject({ mode: '', q: 'stock' });
