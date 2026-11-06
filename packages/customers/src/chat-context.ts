@@ -11,7 +11,7 @@ import { requirePermission } from '@extas/auth';
 import { historyOptions, pastOrdersOf, phoneForms, summarizeHistory, type PhoneSummary } from '@extas/orders';
 import type { Prisma } from '@extas/db/client';
 import { checkStoreId, type CustomersDeps, type Who } from './context';
-import { familyOf, familyOrderWhere, type Family } from './family';
+import { familyOf, familyOrderWhere, profilesOf, type Family } from './family';
 import { HISTORY_MAX } from './view';
 import { chatRatios, type ChatRatios } from './pure';
 
@@ -42,6 +42,10 @@ export interface ChatContext {
   live: ChatOrder[];
   /** The latest few orders, newest first (`recent` of them). */
   recent: ChatOrder[];
+  /** Follow-up 506: exchanges asked for on his orders (any state); with `customers.read` only (else null). */
+  exchanges: number | null;
+  /** Follow-up 506: the team's notes on him (pinned first, then newest; `recent` of them); with `customers.read` only. */
+  notes: { body: string; pinned: boolean; at: Date }[];
   /** What the reader may open: the customer's single view, the order page. */
   you: { history: boolean; customer: boolean; orders: boolean };
 }
@@ -70,7 +74,7 @@ export async function chatContextOf(deps: CustomersDeps, who: Who, ref: { custom
   checkStoreId(who.storeId);
   const held = await requirePermission(deps.db, who.actor, 'support.read', { storeId: who.storeId });
   const you = { history: held.has('customers.read'), customer: held.has('customers.read'), orders: held.has('orders.read') };
-  const empty: ChatContext = { matchedBy: null, customer: null, orders: 0, history: null, ratios: null, risk: null, live: [], recent: [], you };
+  const empty: ChatContext = { matchedBy: null, customer: null, orders: 0, history: null, ratios: null, risk: null, exchanges: null, notes: [], you, live: [], recent: [] };
   const { family, forms, matchedBy } = await personOfChat(deps, who.storeId, ref);
   let where: Prisma.OrderWhereInput;
   if (family) where = familyOrderWhere(who.storeId, family);
@@ -92,7 +96,18 @@ export async function chatContextOf(deps: CustomersDeps, who: Who, ref: { custom
   const card = (o: (typeof rows)[number]): ChatOrder => ({ id: o.id, number: o.number, status: o.status, placedAt: o.placedAt, totalMinor: o.totalMinor, parcel: parcelOf.get(o.id) ?? null });
   let history: PhoneSummary | null = null;
   let risk: ChatContext['risk'] = null;
+  let exchanges: number | null = null;
+  let notes: ChatContext['notes'] = [];
   if (you.history) {
+    const people = family ? profilesOf(family).map((m) => m.id) : [];
+    const [x, ns] = await Promise.all([
+      rows.length ? deps.db.exchange.count({ where: { storeId: who.storeId, orderId: { in: rows.map((o) => o.id) } } }) : Promise.resolve(0),
+      people.length && opts.recent > 0
+        ? deps.db.customerNote.findMany({ where: { storeId: who.storeId, customerId: { in: people }, archivedAt: null }, orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }], take: opts.recent, select: { body: true, pinned: true, createdAt: true } })
+        : Promise.resolve([]),
+    ]);
+    exchanges = x;
+    notes = ns.map((m) => ({ body: m.body, pinned: m.pinned, at: m.createdAt }));
     const [past, hopts, bands] = await Promise.all([pastOrdersOf(deps, who.storeId, rows), historyOptions(deps, who.storeId), deps.settings.value('risk.bands', { storeId: who.storeId })]);
     history = summarizeHistory(past, { ourFault: hopts.ourFault, noAnswerOutcomes: hopts.noAnswerOutcomes });
     const scored = liveRows.find((o) => o.riskScore !== null) ?? rows.find((o) => o.riskScore !== null);
@@ -108,6 +123,8 @@ export async function chatContextOf(deps: CustomersDeps, who: Who, ref: { custom
     history,
     ratios: history ? chatRatios(history) : null,
     risk,
+    exchanges,
+    notes,
     live: liveRows.map(card),
     recent: rows.slice(0, opts.recent).map(card),
     you,

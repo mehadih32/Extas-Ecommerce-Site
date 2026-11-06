@@ -3,7 +3,8 @@
 // refused at the door, returned after delivery, cancelled, each with its share —, the risk score of his latest scored
 // order, the orders still on their way with their courier parcel, his latest orders, each a link to its order page, and
 // "Open customer". The counts and the risk only reach a person with `customers.read` (the service leaves them out
-// otherwise); an order link only for a person with `orders.read`. A server component: nothing here changes anything.
+// otherwise); an order link only for a person with `orders.read`. Follow-up 506: his exchanges asked for and the team's
+// notes (pinned first), with `customers.read` only. A server component: nothing here changes anything.
 import Link from 'next/link';
 import type { ChatContext, ChatOrder } from '@extas/customers';
 import { formatMoney, formatNumber, type Money } from '@/components/admin/products/model';
@@ -73,6 +74,12 @@ export function CustomerContext({ ctx, d, lang, locale, money, timeZone }: { ctx
                   <span>{n(h.ourFault)}</span>
                 </>
               ) : null}
+              {ctx.exchanges !== null ? (
+                <>
+                  <span>{c('exchanges')}</span>
+                  <span data-testid="support-context-exchanges">{n(ctx.exchanges)}</span>
+                </>
+              ) : null}
               <span>{c('risk')}</span>
               <span data-testid="support-context-risk">
                 {ctx.risk ? (
@@ -105,6 +112,22 @@ export function CustomerContext({ ctx, d, lang, locale, money, timeZone }: { ctx
               <ul className="sp-same">{recent.map((o) => row(o, 'support-context-recent'))}</ul>
             </>
           ) : null}
+        </>
+      ) : null}
+      {ctx.notes.length ? (
+        <>
+          <h3 className="a2-lbl a2-mt12" style={{ marginBottom: 6 }}>
+            {c('notes')}
+          </h3>
+          <ul className="sp-same" data-testid="support-context-notes">
+            {ctx.notes.map((x, i) => (
+              <li key={i} className="sp-same-row">
+                {x.pinned ? <span className="a2-pill line">{c('pinned')}</span> : null}
+                <span>{x.body}</span>
+                <span className="a2-xs a2-mute">{printedAt(x.at.toISOString(), timeZone)}</span>
+              </li>
+            ))}
+          </ul>
         </>
       ) : null}
       {ctx.customer && ctx.you.customer ? (

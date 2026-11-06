@@ -632,7 +632,10 @@
       "live": "On the way now",
       "liveNone": "No order on its way.",
       "recent": "Latest orders",
-      "open": "Open customer"
+      "open": "Open customer",
+      "exchanges": "Exchanges asked for",
+      "notes": "Team notes",
+      "pinned": "Pinned"
     },
     "prod": {
       "button": "Products",
