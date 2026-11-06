@@ -73,7 +73,7 @@ export default async function DeliveryPage() {
   const choices = bands.map((b) => ({ id: b.id, name: nameOf(view.lang, b) }));
 
   return (
-    <div className="a2-z" data-testid="delivery-zones" lang={view.lang}>
+    <div className="a2-z" data-testid="delivery-zones" data-lm-ready="" lang={view.lang}>
       <PageHead view={view} place={locateKey(KEY)} title={t(dict, 'delivery.title')} sub={t(dict, 'delivery.pageSub')} />
       <SectionTabs view={view} current={KEY} />
       {source === null || source === 'sample' ? (

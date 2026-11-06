@@ -273,3 +273,7 @@
 [data-lm-look] [data-lm-ready] :is(a.a2-prow:hover b, .a2-crumb a:hover) { color: var(--lm-ac-ink); }
 /* a line's name at Lumen's 14 px wraps instead of being cut with "…" (a long segment or product name in a narrow card) */
 [data-lm-look] [data-lm-ready] .a2-prt b { white-space: normal; overflow-wrap: anywhere; }
+
+/* Delivery (PR 637): zones & charges, couriers, one courier and the delivery settings — the area list, the answer
+   lines and the zone buttons at Lumen's 14 px; the settings cards' switch labels too */
+[data-lm-look] [data-lm-ready] :is(.dz-li, .dz-said, .dz-zboth, .dz-zbtn b, .dz-zbtn span, .a2-swl) { font-size: var(--lm-fs-card); }

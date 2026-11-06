@@ -55,7 +55,7 @@ export default async function CouriersPage() {
   const provider = (p: string) => t(d, `courier.providers.${p}`);
 
   return (
-    <div className="a2-z" data-testid="couriers">
+    <div className="a2-z" data-testid="couriers" data-lm-ready="">
       <PageHead view={view} place={locateKey('couriers')} title={t(d, 'ful.couriers.title')} sub={t(d, 'ful.couriers.sub')} />
       <SectionTabs view={view} current="couriers" />
       {can ? (
