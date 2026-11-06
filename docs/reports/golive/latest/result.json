@@ -1,0 +1,305 @@
+{
+  "at": "2026-11-06 08:28 (Asia/Dhaka)",
+  "sha": "21f4d9a583e6",
+  "ok": false,
+  "problems": [],
+  "goLive": {
+    "rows": [
+      {
+        "key": "smoke",
+        "pr": 393,
+        "kind": "auto",
+        "when": "before",
+        "ok": true,
+        "at": "2026-11-06T08:20:11+06:00",
+        "title": "Every page opens (smoke test)",
+        "vars": {
+          "pages": 418,
+          "failed": 0
+        }
+      },
+      {
+        "key": "health",
+        "pr": 393,
+        "kind": "auto",
+        "when": "before",
+        "ok": true,
+        "at": "2026-11-06T08:27:23+06:00",
+        "title": "The server's health check is clean",
+        "vars": {
+          "problems": 0
+        }
+      },
+      {
+        "key": "backups",
+        "pr": 393,
+        "kind": "auto",
+        "when": "before",
+        "ok": true,
+        "at": null,
+        "title": "Last night's backup on the server",
+        "vars": {
+          "todo": 0
+        }
+      },
+      {
+        "key": "server",
+        "pr": 394,
+        "kind": "auto",
+        "when": "before",
+        "ok": true,
+        "at": "2026-11-06T05:40:27+06:00",
+        "title": "Every server item of A2.9 in place",
+        "vars": {
+          "steps": 25,
+          "fail": 0,
+          "warn": 0,
+          "failed": "—"
+        }
+      },
+      {
+        "key": "originCert",
+        "pr": 397,
+        "kind": "auto",
+        "when": "before",
+        "ok": false,
+        "at": "2026-11-06T05:39:15+06:00",
+        "title": "Cloudflare Origin certificate on the server",
+        "vars": {
+          "names": "—",
+          "days": 0,
+          "missing": "—",
+          "error": "—"
+        }
+      },
+      {
+        "key": "sslStrict",
+        "pr": 397,
+        "kind": "signoff",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "Cloudflare SSL/TLS mode is Full (strict)",
+        "vars": {}
+      },
+      {
+        "key": "indexing",
+        "pr": 401,
+        "kind": "auto",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "Main domain open to search engines",
+        "vars": {
+          "hosts": "—",
+          "on": "off"
+        }
+      },
+      {
+        "key": "searchConsole",
+        "pr": 401,
+        "kind": "signoff",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "Search Console on the main domain, sitemap sent",
+        "vars": {}
+      },
+      {
+        "key": "testPayments",
+        "pr": 400,
+        "kind": "auto",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "Test payments off, every online method on a real gateway",
+        "vars": {
+          "stores": "—",
+          "methods": ": bkash, : nagad, : rocket, : visa, : mastercard, : amex, : bank, : online"
+        }
+      },
+      {
+        "key": "rateLimit",
+        "pr": 393,
+        "kind": "auto",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "Request limits enforce",
+        "vars": {
+          "mode": "observe"
+        }
+      },
+      {
+        "key": "staffTwoFactor",
+        "pr": 393,
+        "kind": "auto",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "Two-step sign-in for every staff member who can change things",
+        "vars": {
+          "without": 1,
+          "required": "off"
+        }
+      },
+      {
+        "key": "runbook",
+        "pr": 398,
+        "kind": "signoff",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "Go-live runbook read, rollback rehearsed",
+        "vars": {}
+      },
+      {
+        "key": "qaGate",
+        "pr": 393,
+        "kind": "signoff",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "QA gate green (Blueprint Appendix C)",
+        "vars": {}
+      },
+      {
+        "key": "acceptance",
+        "pr": 393,
+        "kind": "signoff",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "Staging acceptance list walked through",
+        "vars": {}
+      },
+      {
+        "key": "realPhones",
+        "pr": 393,
+        "kind": "signoff",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "Real iPhone and real Android",
+        "vars": {}
+      },
+      {
+        "key": "simulation",
+        "pr": 393,
+        "kind": "signoff",
+        "when": "before",
+        "ok": false,
+        "at": null,
+        "title": "The real-life journey simulation passed on staging",
+        "vars": {}
+      },
+      {
+        "key": "offServer",
+        "pr": 391,
+        "kind": "auto",
+        "when": "after",
+        "ok": false,
+        "at": null,
+        "title": "Off-server backup (Azure Blob and Google Drive)",
+        "vars": {
+          "todo": 4
+        }
+      },
+      {
+        "key": "restoreDrill",
+        "pr": 507,
+        "kind": "auto",
+        "when": "after",
+        "ok": false,
+        "at": "2026-11-01T03:30:40+06:00",
+        "title": "Restore drill of the off-server copies",
+        "vars": {
+          "todo": 2
+        }
+      },
+      {
+        "key": "ownerData",
+        "pr": 399,
+        "kind": "auto",
+        "when": "after",
+        "ok": false,
+        "at": null,
+        "title": "Store details and legal numbers (owner data)",
+        "vars": {
+          "stores": 1,
+          "missing": "contact.phone, contact.address, delivery band"
+        }
+      },
+      {
+        "key": "connections",
+        "pr": 400,
+        "kind": "auto",
+        "when": "after",
+        "ok": false,
+        "at": null,
+        "title": "Live payment, courier and SMS keys",
+        "vars": {
+          "live": "—",
+          "missing": "PAYMENT, COURIER, SMS"
+        }
+      },
+      {
+        "key": "telegram",
+        "pr": 400,
+        "kind": "auto",
+        "when": "after",
+        "ok": false,
+        "at": null,
+        "title": "Telegram connected",
+        "vars": {}
+      },
+      {
+        "key": "securityReview",
+        "pr": 381,
+        "kind": "signoff",
+        "when": "after",
+        "ok": false,
+        "at": null,
+        "title": "Outside security review",
+        "vars": {}
+      }
+    ],
+    "blockers": [
+      "originCert",
+      "sslStrict",
+      "indexing",
+      "searchConsole",
+      "testPayments",
+      "rateLimit",
+      "staffTwoFactor",
+      "runbook",
+      "qaGate",
+      "acceptance",
+      "realPhones",
+      "simulation"
+    ]
+  },
+  "redirects": {
+    "rows": 0,
+    "live": false,
+    "expected": 49,
+    "checked": 0,
+    "problems": [
+      "no WordPress row yet: load the old shop's addresses (Website › SEO › Redirects › Import, kind WordPress)"
+    ]
+  },
+  "sitemap": {
+    "indexStatus": 200,
+    "files": 4,
+    "urls": 3,
+    "hosts": [
+      "new.extas.com.bd"
+    ],
+    "checked": 3,
+    "problems": []
+  },
+  "switch": {
+    "ok": true,
+    "detail": "the live Caddy configuration with extas.com.bd www.extas.com.bd OPEN (no preview password, no noindex) validates; the staging host's own block keeps both (checked in a copy, nothing applied)"
+  }
+}
