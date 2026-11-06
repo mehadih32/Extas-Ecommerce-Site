@@ -4,10 +4,11 @@
 // the middle bands' place (D-020): ~~one design~~ the owner's reference layout by default (H13, CN-008), the earlier
 // desktop footer kept as `shell.footer.deskStyle` 'classic'. Every word is the dictionary's or the owner's; the numbers and addresses are his
 // settings. A promise or a payment mark for Cash on Delivery shows only once he has switched it on, and a contact
-// button only once its number is set.
+// button only once its number is set. PR 40 follow-up (6 Nov): a payment mark shows only while the checkout offers its
+// method (the layout passes the marks, shell-model payMarks over the checkout's live `paySettings`).
 import type { ShopContext } from '@/lib/shop/context';
 import { safeExternal, telHref, waHref } from '@/lib/shop/links';
-import { footerColumns, footerDeskColumns, footerPromises, joinShown, payMarks, type FooterColumn } from '@/lib/shop/shell-model';
+import { footerColumns, footerDeskColumns, footerPromises, joinShown, type FooterColumn, type PayMarkId } from '@/lib/shop/shell-model';
 import { GarmentIcon, Icon, PayMark, SocialMark, WaGlyph } from './Icon';
 import { JoinForm, type JoinWords } from './JoinForm';
 import { LangSwitch } from './LangSwitch';
@@ -25,8 +26,7 @@ function Links({ col }: { col: FooterColumn }) {
   ));
 }
 
-function Pay({ c, suffix = '' }: { c: ShopContext; suffix?: string }) {
-  const ids = payMarks(c.s['shell.footer'], c.flags);
+function Pay({ c, ids, suffix = '' }: { c: ShopContext; ids: readonly PayMarkId[]; suffix?: string }) {
   if (!ids.length) return null;
   const n = ids.length;
   const cols = n <= 5 ? n : Math.ceil(n / 2);
@@ -91,7 +91,8 @@ function HoursLine({ c }: { c: ShopContext }) {
   );
 }
 
-export function StoreFooter({ c }: { c: ShopContext }) {
+/** `pay`: the marks to show, worked out by the layout from the checkout's live methods (shell-model payMarks). */
+export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkId[] }) {
   const t = c.t;
   const F = c.s['shell.footer'];
   const K = F.contact;
@@ -199,11 +200,11 @@ export function StoreFooter({ c }: { c: ShopContext }) {
               ) : null}
             </div>
             <SocRow c={c} wa={wa} />
-            <Pay c={c} />
+            <Pay c={c} ids={pay} />
           </div>
         </div>
       </div>
-      {ref ? <DeskRef c={c} join={join} wa={wa} tel={tel} hot={hot} /> : null}      {F.desktop && !ref ? (
+      {ref ? <DeskRef c={c} join={join} wa={wa} tel={tel} hot={hot} pay={pay} /> : null}      {F.desktop && !ref ? (
         <div className="ftr-s ftr-d hide-m" data-testid="ftr-desk">
           <div className="container">
             <div className="ftr-d-top">
@@ -229,7 +230,7 @@ export function StoreFooter({ c }: { c: ShopContext }) {
             <div className="ftr-d-contact">
               <div className="ftr-d-cl">
                 {socLinks.length ? <div className="ftr-d-soc">{socLinks}</div> : null}
-                <Pay c={c} suffix="-d" />
+                <Pay c={c} ids={pay} suffix="-d" />
               </div>
               <div className="ftr-d-reach">
                 {wa ? (
@@ -284,14 +285,13 @@ export function StoreFooter({ c }: { c: ShopContext }) {
 
 /** H13 (CN-008) · the desktop footer in the owner's reference layout (demo ftrDeskRef): brand + Join on the left, the
  * link columns between dividers, WhatsApp, hours, hotline, social and payment badges on the right. */
-function DeskRef({ c, join, wa, tel, hot }: { c: ShopContext; join: JoinWords; wa: string | null; tel: string | null; hot: string }) {
+function DeskRef({ c, join, wa, tel, hot, pay }: { c: ShopContext; join: JoinWords; wa: string | null; tel: string | null; hot: string; pay: readonly PayMarkId[] }) {
   const t = c.t;
   const F = c.s['shell.footer'];
   const K = F.contact;
   const cols = footerDeskColumns(F, c.cats, t, c.vars, { combos: c.s['shell.desktopNav'].combos });
   const slogan = c.s['brand.slogan'] ? c.s['brand.slogan'][c.lang] || c.s['brand.slogan'].en : '';
   const soc = networks(c, wa);
-  const pay = payMarks(F, c.flags);
   // V12.2 (Note 58 C, demo ftrCols2): the social row and the payment row share one column count, so they line up
   const nCols = Math.max(soc.length, pay.length, 1);
   return (

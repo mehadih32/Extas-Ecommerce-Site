@@ -6,6 +6,7 @@
 // the WhatsApp disc does not take.
 // PR 624 (CN-034): while the Messenger button and its counting are on, one listener counts taps on the shop's support
 // buttons (SupportTaps: channel and place only).
+// PR 40 follow-up (6 Nov): the footer's payment marks follow the checkout's live methods (lib/shop/pay-offer).
 import { StoreFooter } from '@/components/shop/StoreFooter';
 import { StoreHeader } from '@/components/shop/StoreHeader';
 import { BottomNav } from '@/components/shop/BottomNav';
@@ -20,6 +21,8 @@ import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { fabClass, fabPage, fabShows } from '@/lib/shop/fab';
 import { waHref } from '@/lib/shop/links';
 import { searchPanelProps } from '@/lib/shop/search-model';
+import { shopPayOffer } from '@/lib/shop/pay-offer';
+import { payMarks } from '@/lib/shop/shell-model';
 
 export default async function StoreLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const c = await shopContext();
@@ -27,7 +30,9 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
   // switches it on, the kinds of page he ticked show it (never the home page, the product page or the bag by default:
   // C3, §49.4, demo FAB_PAGES).
   // ~~C3: off the home page and the bag, every other page has it whenever the number is set~~
-  const more = await readPageSettings(['shell.fab', 'shell.menuSubs', 'search.panel', 'support.liveChat'] as const, c.storeId);
+  const [more, offer] = await Promise.all([readPageSettings(['shell.fab', 'shell.menuSubs', 'search.panel', 'support.liveChat'] as const, c.storeId), shopPayOffer(c.storeId)]);
+  // PR 40 follow-up (6 Nov): the footer's payment marks are the methods the checkout offers now, never more
+  const pay = payMarks(c.s['shell.footer'], c.flags, offer);
   const fabSet = more['shell.fab'];
   const waLink = waHref(c.s['contact.whatsapp'], c.t('fab.message', c.vars));
   const fab = fabShows(fabSet, fabPage(c.path, c.s['naming.productPathPrefix']), waLink) ? waLink : null;
@@ -48,7 +53,7 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
         <main className="page" id="main" tabIndex={-1}>
           {children}
         </main>
-        <StoreFooter c={c} />
+        <StoreFooter c={c} pay={pay} />
         <BottomNav c={c} bagCount={bagCount} />
       </div>
       {fab ? (

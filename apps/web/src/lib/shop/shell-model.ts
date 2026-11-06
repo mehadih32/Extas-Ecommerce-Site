@@ -2,8 +2,9 @@
 // footer show, in what order, with what words and addresses. Plain functions over the settings (`shell.*`) and the
 // catalogue's categories, so the rules are unit-tested and the components only draw. The order and the rules are the
 // approved demo's (docs/demo/src/03-layout.js deskNavItems, phoneMenuHTML, storeFooter, bottomNav).
-import type { DesktopNav, ShellAnnounce, ShellFooter, ShellMenu, ShopIcon, ShopLabel } from '@extas/settings';
+import type { DesktopNav, PAY_MARKS, ShellAnnounce, ShellFooter, ShellMenu, ShopIcon, ShopLabel } from '@extas/settings';
 import type { ShopT, Vars } from './dict';
+import type { PayOffer } from './help-pages';
 import { hrefIn, type ShopLang } from './lang';
 
 export type Requirement = 'cod' | 'freeDelivery' | 'exchange' | 'whatsapp' | 'hotline' | 'signupList';
@@ -347,8 +348,32 @@ export function footerPromises(f: ShellFooter, flags: Flags, t: ShopT, vars: Var
     .map((x) => ({ id: x.id, icon: x.icon, parts: t.label(x.text, vars).split('|') }));
 }
 
-export function payMarks(f: ShellFooter, flags: Flags) {
-  return f.pay.filter((x) => x.on && requirementsMet(x.requires, flags)).map((x) => x.id);
+export type PayMarkId = (typeof PAY_MARKS)[number];
+
+/** PR 40 follow-up (6 Nov) — the checkout method each footer mark stands for (wallet, card type, "Pay online"). */
+const MARK_OFFERED: Record<PayMarkId, (p: PayOffer) => boolean> = {
+  cod: (p) => p.cod,
+  bkash: (p) => p.mobile.includes('bkash'),
+  nagad: (p) => p.mobile.includes('nagad'),
+  rocket: (p) => p.mobile.includes('rocket'),
+  upay: (p) => p.mobile.includes('upay'),
+  visa: (p) => p.card.includes('visa'),
+  mc: (p) => p.card.includes('mastercard'),
+  amex: (p) => p.card.includes('amex'),
+  bank: (p) => p.card.includes('bank'),
+  ssl: (p) => p.online,
+};
+
+/**
+ * The footer's "Payment methods we accept": a mark the owner keeps on, whose requirement is met, and — PR 40 follow-up
+ * (6 Nov, go-live is Cash on Delivery only) — whose method the checkout offers now (`offer`, the checkout's own
+ * `paySettings`, the same reading as /help/payment). When the offer cannot be read (null) only Cash on Delivery may
+ * show, by the owner's switch; a prepaid mark never shows on a guess.
+ * ~~every mark the owner keeps on whose requirement is met (bKash, Nagad, Visa, Mastercard showed with those methods off)~~
+ */
+export function payMarks(f: ShellFooter, flags: Flags, offer: PayOffer | null): PayMarkId[] {
+  const offered = (id: PayMarkId) => (offer ? MARK_OFFERED[id](offer) : id === 'cod' && flags.cod);
+  return f.pay.filter((x) => x.on && requirementsMet(x.requires, flags) && offered(x.id)).map((x) => x.id);
 }
 
 /** "Get new drops first" shows only when it is on and the list behind it keeps the number (CN-017, SIGNUP_LIST_LIVE). */
