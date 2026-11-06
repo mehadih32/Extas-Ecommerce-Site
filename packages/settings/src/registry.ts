@@ -137,6 +137,7 @@ import { layoutBlockSettings } from './registry-layout-blocks';
 import { sideCanvasSettings } from './registry-side-canvas';
 import { shimmerSettings } from './registry-shimmer';
 import { frontEditSettings } from './registry-front-edit';
+import { pageEditSettings } from './registry-page-edit';
 import { experimentsSettings } from './registry-experiments';
 import { incompleteSettings } from './registry-incomplete';
 import { followUpSettings } from './registry-follow-up';
@@ -1458,6 +1459,8 @@ export const registry = {
   ...shimmerSettings,
   // S02 · PR 79 · editing the shop's words on the shop page (registry-front-edit.ts, version 242).
   ...frontEditSettings,
+  // S02 · PR 600 · the on-page edit mode (registry-page-edit.ts, version 248).
+  ...pageEditSettings,
   // S02 · PR 83 · the A/B test module's switch and numbers (registry-experiments.ts, version 243).
   ...experimentsSettings,
   // ---- S16 · CN-031 lane B · PR 347 · the costs report's longest period and day rows (registry-finance.ts, versions 160–169). ----

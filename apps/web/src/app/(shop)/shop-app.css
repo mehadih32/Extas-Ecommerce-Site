@@ -172,6 +172,6 @@ html .shop .ftr { position: relative; z-index: 39; }
 }
 /* S02 · PR 76 — a section the owner keeps to phones or to computers (Website › Page layouts): the wrapper takes no box
  * (display: contents), so the page draws as before; the computer width is the shop's own (1024 px). */
-.shop .ly-phone, .shop .ly-desk { display: contents; }
+.shop .ly-phone, .shop .ly-desk, .shop .pe-sec { display: contents; }
 @media (min-width: 1024px) { .shop .ly-phone { display: none; } }
 @media (max-width: 1023.98px) { .shop .ly-desk { display: none; } }

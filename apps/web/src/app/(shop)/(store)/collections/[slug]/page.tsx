@@ -300,11 +300,11 @@ export default async function CategoryPage(props: Props) {
     <div className="container">
       {items.map((it) =>
         it.kind === 'sec' ? (
-          <LayoutPart key={it.row.id} id={it.row.id} dev={it.row.dev ?? 'both'}>
+          <LayoutPart key={it.row.id} id={it.row.id} dev={it.row.dev ?? 'both'} page="category">
             {parts[it.row.id as CategorySectionId]}
           </LayoutPart>
         ) : (
-          <LayoutPart key={`lb-${it.block.id}`} id={`lb-${it.block.id}`} dev={it.block.dev}>
+          <LayoutPart key={`lb-${it.block.id}`} id={`lb-${it.block.id}`} dev={it.block.dev} page="category">
             <PageBlock c={c} block={it.block} got={got.get(it.block.id) ?? { kind: 'none' }} bare />
           </LayoutPart>
         ),

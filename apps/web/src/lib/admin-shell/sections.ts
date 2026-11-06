@@ -296,6 +296,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'canvas', more: true, pages: [{ href: '/admin/website/side-canvas', perm: 'website.read', keys: ['websiteSideCanvas'] }] },
       // S02 · PR 597 (WEB-07) — Launch default: save the whole shop look, restore it or a named look, undo a restore.
       { id: 'launch', more: true, pages: [{ href: '/admin/website/launch-default', perm: 'website.read', keys: ['websiteLaunchDefault'] }] },
+      // S02 · PR 600 — On-page edit: the owner's bar on the shop (off as shipped), phone checks and the phone screens.
+      { id: 'pageEdit', more: true, pages: [{ href: '/admin/website/page-edit', perm: 'website.read', keys: ['websitePageEdit'] }] },
       {
         id: 'seo',
         guide: 'seo',

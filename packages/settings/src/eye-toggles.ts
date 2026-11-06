@@ -193,6 +193,7 @@ export const NOT_EYE: Readonly<Record<string, NotEyeReason>> = {
   'shell.footer:desktop': 'behaviour', // the computer footer's own design or the phone bands stretched
   'search.panel:desktopPanel': 'behaviour', // a panel under the header or the phone's window
   'layout.sideCanvas:': 'own-page', // the side canvas: its own page, switched on only after the owner approves its map (PR 596)
+  'shop.pageEdit:': 'own-page', // the owner's on-page edit mode: its own page, Website › More › On-page edit (PR 600)
 };
 
 /** The settings groups whose every yes/no value must be an eye-toggle or in NOT_EYE. */

@@ -207,6 +207,8 @@ export * from './registry-marketing-report';
 export * from './registry-layouts';
 // S02 · PR 79 — the switch for editing the shop's words on the shop page (registry-front-edit.ts, version 242).
 export * from './registry-front-edit';
+// S02 · PR 600 — the on-page edit mode's switch, phone checks and phone sizes (registry-page-edit.ts, version 248).
+export * from './registry-page-edit';
 // S02 · PR 595 — the page layout builder's own sections and per-category layouts (registry-layout-blocks.ts, version 244).
 export * from './registry-layout-blocks';
 // S02 · PR 596 — the side canvas's switch and zones (registry-side-canvas.ts, version 245).

@@ -1,0 +1,170 @@
+{
+  "pge": {
+    "bar": {
+      "label": "Owner",
+      "edit": "Edit mode",
+      "on": "Edit mode is on: point at a section and press Edit.",
+      "onPhone": "Edit mode is on: open Sections to change texts.",
+      "off": "Only you see this bar.",
+      "sections": "Sections",
+      "publish": "Publish",
+      "publishN": "Publish ({n})",
+      "undo": "Undo last publish",
+      "discard": "Throw away draft",
+      "hide": "Hide bar",
+      "show": "Owner bar",
+      "words": "Edit words on this page",
+      "wordsOff": "Words: Website › Words & language",
+      "locked": "This page is locked here: its payment steps and the bag's structure never change from the shop page.",
+      "draftNone": "No draft. Changes show here first, only for you.",
+      "draftN": "Draft: {n} setting(s) changed (only you see them)"
+    },
+    "edit": "Edit",
+    "close": "Close",
+    "back": "All sections",
+    "save": "Save to draft",
+    "saving": "Saving…",
+    "en": "English",
+    "bn": "Bengali",
+    "up": "Move up",
+    "down": "Move down",
+    "changed": "changed in your draft",
+    "light": "Phone: texts and offers only. Use a computer for the rest.",
+    "hidden": "hidden",
+    "shown": "shown",
+    "moneyTitle": "Prices, offers and money are changed only in their own place:",
+    "moreTitle": "Everything else about it:",
+    "dev": {
+      "both": "Phone and computer",
+      "phone": "Phone only",
+      "desktop": "Computer only"
+    },
+    "f": {
+      "show": "Show this section",
+      "dev": "Screens",
+      "move": "Order on the page",
+      "eyebrow": "Small line above the title",
+      "title": "Title",
+      "sub": "Line under the title",
+      "shopButton": "First button's words",
+      "shopButtonOn": "Show the first button",
+      "setsButton": "Sets button's words",
+      "setsButtonOn": "Show the sets button",
+      "slides": "Pictures in the slider",
+      "speed": "Slider speed",
+      "inStockOnly": "Only products in stock",
+      "maxCategories": "Categories shown",
+      "count": "How many shown",
+      "minRating": "Lowest star rating shown",
+      "summary": "Show the average and count",
+      "w": {
+        "title": "Title",
+        "sub": "Line under the title",
+        "eyebrow": "Small line above",
+        "text": "Text",
+        "cta": "Button words",
+        "link": "Link words",
+        "more": "\"See more\" words",
+        "body": "Text"
+      },
+      "n": {
+        "limit": "How many shown",
+        "phone": "Space on a phone (px)",
+        "desktop": "Space on a computer (px)"
+      }
+    },
+    "sec": {
+      "home": {
+        "hero": "Top banner",
+        "festive": "Festive line",
+        "categories": "Categories",
+        "new-in": "New in",
+        "sets": "Sets",
+        "size-finder": "Size finder",
+        "flash-sale": "Flash sale",
+        "shop-the-look": "Shop the look",
+        "reviews": "Reviews",
+        "journal": "Journal"
+      },
+      "category": {
+        "head": "Heading",
+        "listing": "Products",
+        "info": "About this category",
+        "related": "Related categories"
+      },
+      "product": {
+        "alternatives": "Other choices",
+        "reviews": "Reviews",
+        "questions": "Questions",
+        "messenger": "Messenger button",
+        "rows": "More products"
+      },
+      "own": "Your section: {name}",
+      "ownNoName": "Your own section"
+    },
+    "money": {
+      "prices": "Product prices: Products",
+      "rules": "Offers and discounts: Smart Rules",
+      "sets": "Sets and their prices: Combos",
+      "flash": "Flash sale offers: Smart Rules",
+      "bagBox": "Bag tier box: Combos › Bag tier box"
+    },
+    "more": {
+      "layouts": "Website › Page layouts",
+      "layoutsCat": "Website › Page layouts (a category with its own order is changed there)",
+      "reviews": "Products › Reviews",
+      "combos": "Products › Combos",
+      "rules": "Smart Rules",
+      "festive": "Marketing › Festive cut-off",
+      "blog": "Website › Blog & journal"
+    },
+    "pub": {
+      "title": "Apply to phone too?",
+      "sub": "You changed this on a computer.",
+      "yes": "Yes, check phones first",
+      "no": "No, computers only",
+      "cancel": "Cancel",
+      "noSub": "A section shown or hidden changes on computers only; texts, numbers and order show on phones too, so they stay in your draft.",
+      "checking": "Checking {done} of {n} phone sizes…",
+      "pass": "passed",
+      "fail": "needs a look",
+      "open": "Open",
+      "closePreview": "Close preview",
+      "ok": "I looked at the phones and it is OK",
+      "go": "Publish to phone and computer",
+      "allPass": "Every phone size passed.",
+      "someFail": "Some phone sizes need a look. Fix the draft, or answer No.",
+      "farm": "Real phones (device farm): not available here, so only these browser checks run.",
+      "phoneConfirm": "Publish your draft now?",
+      "phoneGo": "Publish",
+      "issue": {
+        "load": "did not load in time",
+        "sideways": "page scrolls sideways",
+        "cut": "text cut off",
+        "taps": "something too small to tap",
+        "buyFold": "buy button below the first screen"
+      }
+    },
+    "done": {
+      "published": "Published. You can undo it.",
+      "held": "Published for computers. {n} change(s) stay in your draft (they show on phones too).",
+      "undone": "Undone: the shop is back as it was.",
+      "discarded": "Draft thrown away (kept in the history).",
+      "saved": "Saved in your draft."
+    },
+    "err": {
+      "STALE": "Someone changed this since. Open the section again.",
+      "INVALID_INPUT": "That does not fit. Check the value.",
+      "LOCKED": "This part is locked here.",
+      "NOTHING_TO_PUBLISH": "Nothing to publish.",
+      "PHONE_CHECKS_NEEDED": "Run the phone checks and tick OK first.",
+      "ASK_PHONE": "Choose phone or computer first.",
+      "OWNER_ONLY": "Only the owner can edit here.",
+      "PAGE_EDIT_OFF": "On-page editing is switched off.",
+      "NOT_ALLOWED": "That can no longer be undone.",
+      "UNAUTHENTICATED": "Sign in to the admin again.",
+      "network": "No connection. Try again.",
+      "other": "That did not work. Try again."
+    }
+  }
+}

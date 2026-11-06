@@ -45,7 +45,8 @@
     },
     "auto": {
       "restore": "Before restoring {name}",
-      "undo": "Before undoing {name}"
+      "undo": "Before undoing {name}",
+      "edit": "Published on the shop page (on-page edit)"
     },
     "sum": {
       "sections": "Own sections {on}/{all} on",

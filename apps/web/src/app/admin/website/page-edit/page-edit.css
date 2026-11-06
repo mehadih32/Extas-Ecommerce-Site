@@ -1,0 +1,23 @@
+/* S02 · PR 600 — Website › On-page edit in the Lumen look (--lm-* tokens only, light and dark): the switch card, the
+   phone options and checks, More options (tap sizes, wait, phone screens), the on-page publishes and the save bar. Every
+   control at the Lumen tap size (44px). */
+[data-lm-look] .pex-page, [data-lm-look] .pex { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+[data-lm-look] .pex-card { display: flex; flex-direction: column; gap: 10px; }
+[data-lm-look] .pex-card > h2 { font: 700 1.15rem/1.3 var(--lm-font-disp); color: var(--lm-ink); margin: 0; }
+[data-lm-look] .pex-h3 { font: 700 1rem/1.3 var(--lm-font-disp); color: var(--lm-ink); margin: 6px 0 0; }
+[data-lm-look] .pex-open { margin: 0; }
+[data-lm-look] .pex-open .lm-btn { display: inline-flex; align-items: center; min-height: var(--lm-tap); }
+[data-lm-look] .pex-more > summary { display: flex; align-items: center; min-height: var(--lm-tap); cursor: pointer; font-weight: 700; color: var(--lm-ink); }
+[data-lm-look] .pex-more > .lm-hint { margin: 0 0 6px; }
+[data-lm-look] .pex-phones { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+[data-lm-look] .pex-phone { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; padding: 10px 12px; border-radius: var(--lm-r-box); background: var(--lm-sf2); box-shadow: inset 0 0 0 1px var(--lm-ln); min-width: 0; }
+[data-lm-look] .pex-phone .lm-fl { flex: 1 1 110px; min-width: 0; }
+[data-lm-look] .pex-phone .pex-name { flex: 3 1 220px; }
+[data-lm-look] .pex-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; color: var(--lm-ink); overflow-wrap: anywhere; }
+[data-lm-look] .pex-link { display: inline-flex; align-items: center; min-height: var(--lm-tap); color: var(--lm-ac-ink); font-weight: 700; }
+[data-lm-look] .pex-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+[data-lm-look] .pex-save { position: sticky; bottom: 0; display: grid; gap: 6px; padding: 10px 0 4px; background: var(--lm-bg); z-index: 2; }
+[data-lm-look] .pex-save .pex-bar { margin-top: 0; }
+@media (max-width: 759px) {
+  [data-lm-look] .pex-save { bottom: calc(var(--lm-tap) + 24px); }
+}
