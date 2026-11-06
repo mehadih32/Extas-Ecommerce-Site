@@ -1,10 +1,27 @@
 // PR 75 — what the help pages read, on the server: the settings, the store's details and the live Smart Rules' texts
 // (lib/rules-public: without a database, or when it is slow, a rule simply says nothing and its page may say
 // "Coming soon"). Every page is worked out, so the help centre lists only the pages that have something to say.
+// S12 · PR 247: "Ways to pay" reads what the checkout offers now — the checkout's own `paySettings` (the owner's
+// switches and each gateway), never a list of its own; without a database, or when it is slow, it lists nothing.
+import { paySettings } from '@extas/checkout';
 import type { HelpSlug, PagesHelpSettings } from '@extas/settings';
 import { placeTexts, policyFiller, ruleText } from '../rules-public';
+import { settingsTimeoutMs, withTimeout } from '../settings';
+import { checkoutDeps } from './checkout';
 import { readPageSettings, type ShopContext } from './context';
-import { fillPagesText, HELP_SLUGS, helpModel, type HelpFacts, type HelpModel, type RuleWords } from './help-pages';
+import { fillPagesText, HELP_SLUGS, helpModel, type HelpFacts, type HelpModel, type PayOffer, type RuleWords } from './help-pages';
+
+/** PR 247 — the methods the checkout offers this store now, or null when they cannot be read. */
+async function payOffer(storeId: number): Promise<PayOffer | null> {
+  const deps = checkoutDeps();
+  if (!deps) return null;
+  try {
+    const p = await withTimeout(paySettings(deps, storeId), settingsTimeoutMs());
+    return { cod: p.cod, mobile: p.mobile, card: p.card, online: p.online };
+  } catch {
+    return null;
+  }
+}
 
 export interface HelpData {
   set: PagesHelpSettings;
@@ -47,7 +64,8 @@ export async function loadHelp(c: ShopContext): Promise<HelpData> {
   );
   // PR 384: the owner's `{rule-key.param}` tokens read the live rules; a line that cannot be filled is left out
   const text = fillPagesText(s['pages.text'], await policyFiller({ storeId: c.storeId, locale: c.lang }));
-  const models = Object.fromEntries(HELP_SLUGS.map((slug, i) => [slug, helpModel({ slug, set, text, lang: c.lang, t: c.t, rules: rules[i]!, facts })])) as Record<HelpSlug, HelpModel>;
+  const pay = set.pages.payment.on ? await payOffer(c.storeId) : null;
+  const models = Object.fromEntries(HELP_SLUGS.map((slug, i) => [slug, helpModel({ slug, set, text, lang: c.lang, t: c.t, rules: rules[i]!, facts, pay })])) as Record<HelpSlug, HelpModel>;
   const form = { on: s['pages.contactForm'].enabled, maxChars: s['pages.contactForm'].maxChars };
   // PR 75 follow-up: the form is something true to say, so a shown contact page with it is never "Coming soon"
   if (form.on && set.pages.contact.on && models.contact.soon) models.contact = { ...models.contact, soon: false };

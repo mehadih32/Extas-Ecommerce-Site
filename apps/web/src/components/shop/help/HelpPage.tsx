@@ -3,6 +3,7 @@
 // keyboard), the rules' texts and the owner's words in a card, the store's details, the ways to reach the shop on the
 // contact page, and "Still need a hand?" with WhatsApp. On a computer: the topic list on the left, the breadcrumb, and
 // "Still stuck?" with WhatsApp and the hotline on the right. Server-drawn, no script of its own.
+// S12 · PR 247: "Ways to pay" lists the methods the checkout offers now, each with the checkout's name, line and marks.
 import './help.css';
 import type { HelpSlug } from '@extas/settings';
 import type { ShopContext } from '@/lib/shop/context';
@@ -15,6 +16,7 @@ import { Icon, WaGlyph } from '../Icon';
 import { contactFormWords } from '@/lib/shop/contact-form-words';
 import { ContactForm } from './ContactForm';
 import { MessengerButton } from '../MessengerButton';
+import { PayMark } from '../checkout/PayMark';
 
 function Blocks({ blocks }: { blocks: TextBlock[] }) {
   return (
@@ -121,6 +123,24 @@ export function HelpPage({ c, slug, data }: { c: ShopContext; slug: HelpSlug; da
               </div>
             ) : null}
           </div>
+        </div>
+      ) : null}
+
+      {m.methods.length ? (
+        <div className="card pg-pay" data-testid="help-pay">
+          {m.methods.map((x) => (
+            <div key={x.id} className="pg-pm" data-testid={`help-pay-${x.id}`}>
+              <span className="pg-pm-tx">
+                <b>{x.title}</b>
+                <span>{x.sub}</span>
+              </span>
+              <span className="pg-pm-mk">
+                {x.marks.map((id) => (
+                  <PayMark key={id} id={id} name={t(`checkout.pm.${id}`)} short={t(`checkout.mk.${id}`)} />
+                ))}
+              </span>
+            </div>
+          ))}
         </div>
       ) : null}
 

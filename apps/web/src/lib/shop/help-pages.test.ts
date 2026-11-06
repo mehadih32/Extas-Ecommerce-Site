@@ -3,14 +3,15 @@
 import { shopMoreSettings, type PagesTextSettings } from '@extas/settings';
 import { describe, expect, it } from 'vitest';
 import { shopT } from './dict';
-import { fillPagesText, HELP_SLUGS, helpFaqItems, helpModel, helpTopics, isHelpSlug, textBlocks, type HelpFacts, type RuleWords } from './help-pages';
+import { fillPagesText, HELP_SLUGS, helpFaqItems, helpModel, helpTopics, isHelpSlug, payMethods, textBlocks, type HelpFacts, type PayOffer, type RuleWords } from './help-pages';
 import { BUILT_INSIDE, comingSoon } from './routes';
 
 const set = shopMoreSettings['pages.help'].default;
 const none: HelpFacts = { whatsapp: null, phone: null, email: null, address: null, hours: null, registeredName: null, tradeLicence: null, dbid: null, waText: 'Hi' };
 const exchange: RuleWords = { key: 'exchange', short: 'Exchange within 72 hours for size or fault', full: 'You can exchange for a different SIZE.\nItems must be unworn.' };
-const model = (slug: (typeof HELP_SLUGS)[number], o: { rules?: RuleWords[]; text?: PagesTextSettings; facts?: Partial<HelpFacts>; lang?: 'en' | 'bn'; s?: typeof set } = {}) =>
-  helpModel({ slug, set: o.s ?? set, text: o.text ?? null, lang: o.lang ?? 'en', t: shopT(o.lang ?? 'en'), rules: o.rules ?? [], facts: { ...none, ...o.facts } });
+const model = (slug: (typeof HELP_SLUGS)[number], o: { rules?: RuleWords[]; text?: PagesTextSettings; facts?: Partial<HelpFacts>; lang?: 'en' | 'bn'; s?: typeof set; pay?: PayOffer | null } = {}) =>
+  helpModel({ slug, set: o.s ?? set, text: o.text ?? null, lang: o.lang ?? 'en', t: shopT(o.lang ?? 'en'), rules: o.rules ?? [], facts: { ...none, ...o.facts }, pay: o.pay });
+const codOnly: PayOffer = { cod: true, mobile: [], card: [], online: false };
 
 describe('the owner`s words as blocks', () => {
   it('paragraphs, headings and lists, never markup', () => {
@@ -102,13 +103,14 @@ describe('a help page', () => {
     ]);
   });
 
-  it('the seven pages have their route; Ways to pay, Careers and the size guide are still coming', () => {
+  it('the eight pages have their route (Ways to pay since PR 247); Careers and the size guide are still coming', () => {
+    expect(HELP_SLUGS).toContain('payment');
     for (const s of HELP_SLUGS) {
       expect(isHelpSlug(s)).toBe(true);
       expect(BUILT_INSIDE).toContain(`/help/${s}`);
       expect(comingSoon(`/help/${s}`, '/p/')).toBeNull();
     }
-    for (const s of ['payment', 'careers', 'size-guide']) {
+    for (const s of ['careers', 'size-guide']) {
       expect(isHelpSlug(s)).toBe(false);
       expect(comingSoon(`/help/${s}`, '/p/')).toBe('help');
     }
@@ -138,5 +140,43 @@ describe('the owner`s policy words filled from the rules (PR 384)', () => {
     expect(model('exchange', { text: filled, lang: 'bn' }).sections[0]!.blocks).toEqual([{ kind: 'p', text: '72 ঘণ্টার মধ্যে।' }]);
     expect(model('faq', { text: filled }).qa).toEqual([]);
     expect(fillPagesText(null, fill)).toBeNull();
+  });
+});
+
+describe('S12 · PR 247 — "Ways to pay" lists exactly what the checkout offers', () => {
+  it('Cash on Delivery only (the staging shop on 6 Nov): one method, no wallet or card named anywhere', () => {
+    const m = model('payment', { pay: codOnly });
+    expect(m.soon).toBe(false);
+    expect(m.title).toBe('Ways to pay');
+    expect(m.methods).toEqual([{ id: 'cod', title: 'Cash on Delivery', sub: 'Pay when it reaches you', marks: ['cod'] }]);
+    expect(JSON.stringify(m)).not.toMatch(/bKash|Nagad|Visa|Mastercard|Pay online/);
+  });
+
+  it('every open method in the checkout`s order, with its wallets and cards in the owner`s order and the checkout`s words', () => {
+    const m = model('payment', { pay: { cod: true, mobile: ['nagad', 'bkash'], card: ['visa'], online: true }, lang: 'bn' });
+    expect(m.methods.map((x) => x.id)).toEqual(['cod', 'mobile', 'card', 'online']);
+    expect(m.methods[1]).toEqual({ id: 'mobile', title: 'মোবাইল ব্যাংকিং', sub: 'নগদ · বিকাশ', marks: ['nagad', 'bkash'] });
+    expect(m.methods[3]!.marks).toEqual(['ssl']);
+  });
+
+  it('a method switched off is never listed; nothing open (or unreadable) and nothing else to say: "Coming soon"', () => {
+    expect(payMethods({ cod: false, mobile: ['bkash'], card: [], online: false }, shopT('en')).map((x) => x.id)).toEqual(['mobile']);
+    expect(model('payment', { pay: { cod: false, mobile: [], card: [], online: false } }).soon).toBe(true);
+    expect(model('payment', { pay: null }).soon).toBe(true);
+    expect(model('payment').methods).toEqual([]);
+  });
+
+  it('switched off by the owner: "Coming soon" even with methods open; other pages never list methods', () => {
+    const off = { ...set, pages: { ...set.pages, payment: { ...set.pages.payment, on: false } } };
+    expect(model('payment', { pay: codOnly, s: off }).soon).toBe(true);
+    expect(model('delivery', { pay: codOnly }).methods).toEqual([]);
+  });
+
+  it('the rules ticked for it and the owner`s words follow the methods', () => {
+    const cod: RuleWords = { key: 'cod', short: 'Cash on Delivery up to a limit', full: 'Larger orders pay ahead.' };
+    const withCod = { ...set, pages: { ...set.pages, payment: { ...set.pages.payment, rules: ['cod'] } } };
+    const m = model('payment', { pay: codOnly, s: withCod, rules: [cod] });
+    expect(m.sections.map((x) => x.id)).toEqual(['rule-cod']);
+    expect(m.lede).toBe('Every way you can pay — the same choices you see at checkout.');
   });
 });

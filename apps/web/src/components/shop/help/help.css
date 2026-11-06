@@ -40,7 +40,15 @@
 .shop .pg-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .shop .pg-in { color: var(--brand) !important; font-weight: 600; text-decoration: underline; display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; }
 .shop .pg-body { margin-top: 0; }
-.shop .pg-qa + .pg-body, .shop .pg-contact + .pg-body { margin-top: 16px; }
+.shop .pg-qa + .pg-body, .shop .pg-contact + .pg-body, .shop .pg-pay + .pg-body { margin-top: 16px; }
+/* S12 · PR 247 — "Ways to pay": one row per method the checkout offers, its marks beside it (below it when narrow) */
+.shop .pg .pg-pay { padding: 4px 16px; }
+.shop .pg-pm { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; padding: 14px 0; min-height: 60px; border-bottom: 1px solid var(--line2); box-sizing: border-box; }
+.shop .pg-pm:last-child { border-bottom: 0; }
+.shop .pg-pm-tx { min-width: 0; flex: 1 1 180px; }
+.shop .pg-pm-tx b { display: block; font-size: 15px; color: var(--ink); }
+.shop .pg-pm-tx span { display: block; font-size: 13px; color: var(--text2); line-height: 1.5; overflow-wrap: anywhere; }
+.shop .pg-pm-mk { display: flex; flex-wrap: wrap; gap: 5px; }
 .shop .pg-hand { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 /* the computer's help centre */
 @media (min-width: 1024px) {

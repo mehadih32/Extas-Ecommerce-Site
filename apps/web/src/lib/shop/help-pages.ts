@@ -3,6 +3,10 @@
 // live Smart Rules' own texts (the owner's policy — never a charge, a window or a promise written here), the owner's
 // own words (`pages.text`, owner data, empty by default) and the store's details from settings (each only when filled
 // in). A page with none of these says "Coming soon" (CN-010, CN-017). Plain functions, unit-tested; HelpPage draws.
+// S12 · PR 247 — the help articles as structured content: every page is the same parts (title, line, questions, rule
+// sections, the owner's words, details, ways to reach us) and "Ways to pay" adds its methods — exactly the ones the
+// checkout offers now (packages/checkout `paySettings`: the owner's switches and each gateway; a method switched off is
+// never listed), named with the checkout's own words and marks. Delivery, exchange and returns read the live rules.
 import type { HelpSlug, PagesHelpSettings, PagesTextSettings, ShopIcon } from '@extas/settings';
 import type { ShopT } from './dict';
 import { hrefIn, type ShopLang } from './lang';
@@ -10,8 +14,8 @@ import { telHref, waHref } from './links';
 import { ROUTES } from './routes';
 import type { LdQuestion } from './structured-data';
 
-/** The pages this route draws, in the demo's order (PG_ORDER without "Ways to pay" and "Careers", still to come). */
-export const HELP_SLUGS = ['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact'] as const satisfies readonly HelpSlug[];
+/** The pages this route draws, in the demo's order (PG_ORDER without "Careers", still to come; "Ways to pay": PR 247). */
+export const HELP_SLUGS = ['faq', 'delivery', 'exchange', 'payment', 'privacy', 'terms', 'story', 'contact'] as const satisfies readonly HelpSlug[];
 
 export const isHelpSlug = (s: string): s is HelpSlug => (HELP_SLUGS as readonly string[]).includes(s);
 
@@ -24,10 +28,17 @@ const TITLE: Record<HelpSlug, string> = {
   terms: 'help.terms',
   story: 'help.story',
   contact: 'help.contact',
+  payment: 'help.payment',
 };
-export const HELP_ICON: Record<HelpSlug, ShopIcon> = { faq: 'info', delivery: 'box', exchange: 'swap', privacy: 'lock', terms: 'doc', story: 'spark', contact: 'phone' };
-/** The shop's own line under the title, only where it describes what the page reads (rules, contact details). */
-const LEDE: Partial<Record<HelpSlug, string>> = { faq: 'helpPage.lede.faq', delivery: 'helpPage.lede.delivery', exchange: 'helpPage.lede.exchange', contact: 'helpPage.lede.contact' };
+export const HELP_ICON: Record<HelpSlug, ShopIcon> = { faq: 'info', delivery: 'box', exchange: 'swap', privacy: 'lock', terms: 'doc', story: 'spark', contact: 'phone', payment: 'cash' };
+/** The shop's own line under the title, only where it describes what the page reads (rules, contact details, methods). */
+const LEDE: Partial<Record<HelpSlug, string>> = {
+  faq: 'helpPage.lede.faq',
+  delivery: 'helpPage.lede.delivery',
+  exchange: 'helpPage.lede.exchange',
+  contact: 'helpPage.lede.contact',
+  payment: 'helpPage.lede.payment',
+};
 
 export type TextBlock = { kind: 'h'; text: string } | { kind: 'p'; text: string } | { kind: 'ul'; items: string[] };
 
@@ -107,6 +118,27 @@ export interface HelpChannel {
   external: boolean;
 }
 
+/**
+ * S12 · PR 247 — what the checkout offers now, store-wide (packages/checkout `PaySettings`): Cash on Delivery by the
+ * owner's switch, and the wallets, cards and "Pay online" whose switch is on and whose gateway is connected (or test
+ * payments on). An order's own rules may still close Cash on Delivery on that order; the page shows the rules ticked for it.
+ */
+export interface PayOffer {
+  cod: boolean;
+  mobile: readonly string[];
+  card: readonly string[];
+  online: boolean;
+}
+
+/** One way to pay on "Ways to pay": the checkout's own name for it, its line, and the marks it shows. */
+export interface HelpPayMethod {
+  id: 'cod' | 'mobile' | 'card' | 'online';
+  title: string;
+  sub: string;
+  /** PayMark ids, in the owner's order. */
+  marks: string[];
+}
+
 export interface HelpModel {
   slug: HelpSlug;
   title: string;
@@ -119,6 +151,8 @@ export interface HelpModel {
   details: { title: string; lines: string[] } | null;
   /** Contact: the ways to reach the shop that are filled in. */
   channels: HelpChannel[];
+  /** Ways to pay (PR 247): the methods the checkout offers now, in the checkout's order; empty elsewhere. */
+  methods: HelpPayMethod[];
   /** Nothing true to say yet (or switched off): the page says "Coming soon". */
   soon: boolean;
 }
@@ -141,7 +175,29 @@ export function fillPagesText(text: PagesTextSettings, fill: (s: string) => stri
   return { pages, faq: text.faq.map((x) => ({ ...x, q: pair(x.q)!, a: pair(x.a)! })) };
 }
 
-export function helpModel(input: { slug: HelpSlug; set: PagesHelpSettings; text: PagesTextSettings; lang: ShopLang; t: ShopT; rules: readonly RuleWords[]; facts: HelpFacts }): HelpModel {
+/** PR 247 — the methods "Ways to pay" lists: exactly the open ones, with the checkout's words (`checkout.pay.*`, `checkout.pm.*`). */
+export function payMethods(pay: PayOffer | null | undefined, t: ShopT): HelpPayMethod[] {
+  if (!pay) return [];
+  const names = (ids: readonly string[]) => ids.map((id) => t(`checkout.pm.${id}`)).join(' · ');
+  const out: HelpPayMethod[] = [];
+  if (pay.cod) out.push({ id: 'cod', title: t('checkout.pay.cod'), sub: t('checkout.pay.codSub'), marks: ['cod'] });
+  if (pay.mobile.length) out.push({ id: 'mobile', title: t('checkout.pay.mobile'), sub: names(pay.mobile), marks: [...pay.mobile] });
+  if (pay.card.length) out.push({ id: 'card', title: t('checkout.pay.card'), sub: names(pay.card), marks: [...pay.card] });
+  if (pay.online) out.push({ id: 'online', title: t('checkout.pay.online'), sub: t('checkout.pay.onlineSub'), marks: ['ssl'] });
+  return out;
+}
+
+export function helpModel(input: {
+  slug: HelpSlug;
+  set: PagesHelpSettings;
+  text: PagesTextSettings;
+  lang: ShopLang;
+  t: ShopT;
+  rules: readonly RuleWords[];
+  facts: HelpFacts;
+  /** PR 247: what the checkout offers now ("Ways to pay" only; null: it could not be read, nothing is listed). */
+  pay?: PayOffer | null;
+}): HelpModel {
   const { slug, set, lang, t, facts } = input;
   const page = set.pages[slug];
   const words = input.text?.pages[slug];
@@ -187,9 +243,11 @@ export function helpModel(input: { slug: HelpSlug; set: PagesHelpSettings; text:
     if (lines.length) details = { title: t('helpPage.details.legal'), lines: [lines.join(' · ')] };
   }
 
+  const methods = slug === 'payment' ? payMethods(input.pay, t) : [];
+
   // the store's details alone are no page: something of the page's own must be there
-  const said = qa.length > 0 || sections.length > 0 || channels.length > 0;
-  return { slug, title, lede, qa, sections, details, channels, soon: !page.on || !said };
+  const said = qa.length > 0 || sections.length > 0 || channels.length > 0 || methods.length > 0;
+  return { slug, title, lede, qa, sections, details, channels, methods, soon: !page.on || !said };
 }
 
 /** The help centre's topic list (computer): the chosen pages that have something to say, in the chosen order. */

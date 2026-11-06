@@ -28,7 +28,7 @@ export async function GET(): Promise<Response> {
   const pages: LlmsPage[] = HELP_SLUGS.flatMap((slug) => {
     const m = help.models[slug];
     if (m.soon) return [];
-    const lines = [...m.qa.map((q) => q.q), ...m.sections.flatMap((s) => (s.title ? [s.title] : []))];
+    const lines = [...m.qa.map((q) => q.q), ...m.methods.map((x) => `${x.title}: ${x.sub}`), ...m.sections.flatMap((s) => (s.title ? [s.title] : []))];
     return [{ title: m.title, href: ROUTES.help(slug), lines }];
   });
   const hours = c.s['contact.hours']?.en ?? null;

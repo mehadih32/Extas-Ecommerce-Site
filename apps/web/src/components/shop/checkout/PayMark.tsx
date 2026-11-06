@@ -1,5 +1,6 @@
 // PR 120 — a payment brand mark drawn in CSS and inline SVG, exactly as the demo draws it (51-checkout.js co_pmk): no
-// image files, no network. The brand colours sit in checkout.css (.pmk-*); the names come from the shop dictionary.
+// image files, no network. The brand colours sit in paymark.css (.pmk-*, PR 247); the names come from the shop dictionary.
+import './paymark.css';
 const MC = (
   <svg viewBox="0 0 40 24" width="30" height="18" aria-hidden="true">
     <circle cx="15" cy="12" r="9" fill="#EB001B" />

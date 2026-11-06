@@ -5,15 +5,15 @@ import { comingSoon, ROUTES } from './routes';
 describe('coming-soon pages (CN-010)', () => {
   it('every page a later PR builds is coming, and every link the shell carries lands somewhere', () => {
     // ~~ROUTES.bag~~ PR 107 built the bag
-    // ~~ROUTES.wishlist~~ PR 71 built the wishlist; ~~ROUTES.help('faq')~~ PR 75 built the help pages (Ways to pay is still to come)
+    // ~~ROUTES.wishlist~~ PR 71 built the wishlist; ~~ROUTES.help('faq')~~ PR 75 built the help pages (~~Ways to pay is still to come~~ PR 247 built it; Careers still to come)
     // ~~ROUTES.search~~ PR 73 built the results page
     // ~~ROUTES.account, ROUTES.login, ROUTES.orders~~ PR 130 / 131 built the login and My account
     // ~~ROUTES.order('T-1001')~~ PR 134 built the order page
     // ~~ROUTES.combos~~ PR 103 built the sets landing page; ~~a rule's own list is still to come~~ PR 572 built it
     // ~~ROUTES.buildSet~~ PR 98, 100 built the set builder
     // ~~ROUTES.journal~~ PR 241 built the journal (it says "Coming soon" itself while switched off)
-    for (const p of [ROUTES.help('payment')])
-      expect(comingSoon(p, '/p'), p).not.toBeNull();
+    for (const p of [ROUTES.help('careers')]) expect(comingSoon(p, '/p'), p).not.toBeNull();
+    expect(comingSoon(ROUTES.help('payment'), '/p')).toBeNull();
     // ~~expect(comingSoon('/collections/polos', '/p')).toBe('collections');~~ PR 45 built the category pages
     for (const p of [ROUTES.newIn, ROUTES.category('polos')]) expect(comingSoon(p, '/p'), p).toBeNull();
     // ~~expect(comingSoon('/account/orders/T-1001/', '/p')).toBe('account');~~ PR 134

@@ -140,9 +140,11 @@ function firstText(blocks: readonly TextBlock[]): string | null {
 }
 
 /** The line under a help page's title in search: the first thing the page says. */
-export function helpAnswer(m: Pick<HelpModel, 'qa' | 'sections' | 'lede' | 'channels'>): string | null {
+export function helpAnswer(m: Pick<HelpModel, 'qa' | 'sections' | 'lede' | 'channels'> & Partial<Pick<HelpModel, 'methods'>>): string | null {
   const q = m.qa[0]?.q?.trim();
   if (q) return q;
+  // PR 247: "Ways to pay" answers with the methods the checkout offers now (drawn first on its page)
+  if (m.methods?.length) return m.methods.map((x) => x.title).join(' · ');
   for (const s of m.sections) {
     const line = s.title?.trim() || firstText(s.blocks);
     if (line) return line;

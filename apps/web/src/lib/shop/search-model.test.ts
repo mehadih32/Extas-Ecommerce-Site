@@ -102,4 +102,16 @@ describe('the search window', () => {
     const withWa = searchPanelProps({ ...c, s: { 'contact.whatsapp': '+8801700000000' }, flags: { whatsapp: true } } as unknown as Parameters<typeof searchPanelProps>[0], searchSettings['search.panel'].default);
     expect(withWa.wa).toEqual({ number: '+8801700000000', message: 'Hi Shop, I am looking for {q}' });
   });
+
+  it('S12 · PR 247: payment words find "Ways to pay" (no longer Terms), answered with the methods the checkout offers now', () => {
+    const all = models();
+    all.payment = helpModel({ slug: 'payment', set: pages, text: null, lang: 'en', t: shopT('en'), rules: [], facts: none, pay: { cod: true, mobile: [], card: [], online: false } });
+    const { entries, items } = helpEntries(all, [...HELP_SLUGS], helpSet, 'en');
+    const ids = (q: string) => matchHelp(q, entries, helpSet.weak, new Set(['polo']), match).hits.map((h) => h.id);
+    expect(ids('bkash')).toEqual(['payment']);
+    expect(ids('পেমেন্ট')).toEqual(['payment']);
+    expect(ids('how to pay')).toEqual(['payment']);
+    expect(items.get('payment')).toMatchObject({ title: 'Ways to pay', href: '/help/payment', answer: 'Cash on Delivery' });
+    expect(helpSet.keywords.terms).not.toContain('bkash');
+  });
 });
