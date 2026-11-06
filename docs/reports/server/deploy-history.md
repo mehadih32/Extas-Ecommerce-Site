@@ -88,3 +88,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-06 06:08 | `b5bbe1ad07ce` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-06 06:34 | `419e6d86338a` | rollback | OK | skipped (rollback: the database stays as it is) | OK | — |
 | 2026-11-06 06:44 | `0dd2bba855de` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-06 08:27 | `21f4d9a583e6` | deploy | OK | ok | OK, smoke OK | — |

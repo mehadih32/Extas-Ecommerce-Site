@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-06 07:41 (Asia/Dhaka)
+# Smoke test · 2026-11-06 08:20 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (408টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (418টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `0dd2bba855de` · nightly · result **PASS** (408 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `21f4d9a583e6` · after deploy · result **PASS** (418 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -144,6 +144,8 @@ Site: https://new.extas.com.bd · commit `0dd2bba855de` · nightly · result **P
 | `/admin/marketing/tracking` | phone | 200 | `/admin/marketing/tracking` | ok | — |
 | `/admin/website/seo/redirects` | phone | 200 | `/admin/website/seo/redirects` | ok | — |
 | `/admin/website/seo/categories` | phone | 200 | `/admin/website/seo/categories` | ok | — |
+| `/admin/website/seo/health` | phone | 200 | `/admin/website/seo/health` | ok | — |
+| `/admin/website/seo/organic` | phone | 200 | `/admin/website/seo/organic` | ok | — |
 | `/admin/orders/returns/qc` | phone | 200 | `/admin/orders/returns/qc` | ok | — |
 | `/admin/products/new` | phone | 200 | `/admin/products/new` | ok | — |
 | `/admin/help/manual` | phone | 200 | `/admin/help/manual` | ok | — |
@@ -193,6 +195,8 @@ Site: https://new.extas.com.bd · commit `0dd2bba855de` · nightly · result **P
 | `/admin/marketing/campaigns/new` | phone | 200 | `/admin/marketing/campaigns/new` | ok | — |
 | `/admin/marketing/ad-platforms` | phone | 200 | `/admin/marketing/ad-platforms` | ok | — |
 | `/admin/marketing/ad-platforms/growth` | phone | 200 | `/admin/marketing/ad-platforms/growth` | ok | — |
+| `/admin/marketing/ad-platforms/briefs` | phone | 200 | `/admin/marketing/ad-platforms/briefs` | ok | — |
+| `/admin/marketing/referrals` | phone | 200 | `/admin/marketing/referrals` | ok | — |
 | `/admin/orders?source=SUPPORT` | phone | 200 | `/admin/orders` | ok | — |
 | `/admin/products/reviews` | phone | 200 | `/admin/products/reviews` | ok | — |
 | `/admin/products/reviews?view=photo` | phone | 200 | `/admin/products/reviews` | ok | — |
@@ -203,10 +207,11 @@ Site: https://new.extas.com.bd · commit `0dd2bba855de` · nightly · result **P
 | `/admin/support?view=late` | phone | 200 | `/admin/support` | ok | — |
 | `/admin/support/app` | phone | 200 | `/admin/support/app` | ok | — |
 | `/admin/support/analytics` | phone | 200 | `/admin/support/analytics` | ok | — |
+| `/admin/customers/import` | phone | 200 | `/admin/customers/import` | ok | — |
 | `/admin/orders/01a1ae36-386e-73e0-90fe-8a6d92f101de` | phone | 200 | `/admin/orders/01a1ae36-386e-73e0-90fe-8a6d92f101de` | ok | — |
 | `/admin/customers/01a1ae36-386b-75c3-aa54-34da1f8152c9` | phone | 200 | `/admin/customers/01a1ae36-386b-75c3-aa54-34da1f8152c9` | ok | — |
 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | phone | 200 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | ok | — |
-| `/admin/reports/health/history/01a1ae50-e57f-7272-bb81-e9036079ef69` | phone | 200 | `/admin/reports/health/history/01a1ae50-e57f-7272-bb81-e9036079ef69` | ok | — |
+| `/admin/reports/health/history/01a1ae8a-b2bb-78e0-bf6d-2f8744bdf2d0` | phone | 200 | `/admin/reports/health/history/01a1ae8a-b2bb-78e0-bf6d-2f8744bdf2d0` | ok | — |
 | `/admin/customers/01a1ae36-386b-75c3-aa54-34da1f8152c9?tab=wallet` | phone | 200 | `/admin/customers/01a1ae36-386b-75c3-aa54-34da1f8152c9` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -348,6 +353,8 @@ Site: https://new.extas.com.bd · commit `0dd2bba855de` · nightly · result **P
 | `/admin/marketing/tracking` | desktop | 200 | `/admin/marketing/tracking` | ok | — |
 | `/admin/website/seo/redirects` | desktop | 200 | `/admin/website/seo/redirects` | ok | — |
 | `/admin/website/seo/categories` | desktop | 200 | `/admin/website/seo/categories` | ok | — |
+| `/admin/website/seo/health` | desktop | 200 | `/admin/website/seo/health` | ok | — |
+| `/admin/website/seo/organic` | desktop | 200 | `/admin/website/seo/organic` | ok | — |
 | `/admin/orders/returns/qc` | desktop | 200 | `/admin/orders/returns/qc` | ok | — |
 | `/admin/products/new` | desktop | 200 | `/admin/products/new` | ok | — |
 | `/admin/help/manual` | desktop | 200 | `/admin/help/manual` | ok | — |
@@ -397,6 +404,8 @@ Site: https://new.extas.com.bd · commit `0dd2bba855de` · nightly · result **P
 | `/admin/marketing/campaigns/new` | desktop | 200 | `/admin/marketing/campaigns/new` | ok | — |
 | `/admin/marketing/ad-platforms` | desktop | 200 | `/admin/marketing/ad-platforms` | ok | — |
 | `/admin/marketing/ad-platforms/growth` | desktop | 200 | `/admin/marketing/ad-platforms/growth` | ok | — |
+| `/admin/marketing/ad-platforms/briefs` | desktop | 200 | `/admin/marketing/ad-platforms/briefs` | ok | — |
+| `/admin/marketing/referrals` | desktop | 200 | `/admin/marketing/referrals` | ok | — |
 | `/admin/orders?source=SUPPORT` | desktop | 200 | `/admin/orders` | ok | — |
 | `/admin/products/reviews` | desktop | 200 | `/admin/products/reviews` | ok | — |
 | `/admin/products/reviews?view=photo` | desktop | 200 | `/admin/products/reviews` | ok | — |
@@ -407,10 +416,11 @@ Site: https://new.extas.com.bd · commit `0dd2bba855de` · nightly · result **P
 | `/admin/support?view=late` | desktop | 200 | `/admin/support` | ok | — |
 | `/admin/support/app` | desktop | 200 | `/admin/support/app` | ok | — |
 | `/admin/support/analytics` | desktop | 200 | `/admin/support/analytics` | ok | — |
+| `/admin/customers/import` | desktop | 200 | `/admin/customers/import` | ok | — |
 | `/admin/orders/01a1ae36-386e-73e0-90fe-8a6d92f101de` | desktop | 200 | `/admin/orders/01a1ae36-386e-73e0-90fe-8a6d92f101de` | ok | — |
 | `/admin/customers/01a1ae36-386b-75c3-aa54-34da1f8152c9` | desktop | 200 | `/admin/customers/01a1ae36-386b-75c3-aa54-34da1f8152c9` | ok | — |
 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | desktop | 200 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | ok | — |
-| `/admin/reports/health/history/01a1ae50-e57f-7272-bb81-e9036079ef69` | desktop | 200 | `/admin/reports/health/history/01a1ae50-e57f-7272-bb81-e9036079ef69` | ok | — |
+| `/admin/reports/health/history/01a1ae8a-b2bb-78e0-bf6d-2f8744bdf2d0` | desktop | 200 | `/admin/reports/health/history/01a1ae8a-b2bb-78e0-bf6d-2f8744bdf2d0` | ok | — |
 | `/admin/customers/01a1ae36-386b-75c3-aa54-34da1f8152c9?tab=wallet` | desktop | 200 | `/admin/customers/01a1ae36-386b-75c3-aa54-34da1f8152c9` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
