@@ -10,6 +10,10 @@
     "clusters": {
       "label": "Topic plan: link rules",
       "help": "Which links the articles of a cluster must carry in Website › Blog & journal › Topic plan: a supporting article to its pillar article and to the cluster's shop page, the pillar to every live article of its cluster. The plan always shows what is missing; with “refuse publishing” on (off as it ships) such an article cannot be published or scheduled until the links are in. A new topic is compared word by word with every article and topic: from the first number it is “a little alike”, from the second “very close” and it needs a second press to add."
+    },
+    "approval": {
+      "label": "Topic plan: approval",
+      "help": "Who decides which articles get written. “The owner” (as it ships): a topic from a writer waits for your yes; you can approve a whole month's topics with one press. “By itself”: such a topic is approved at once — a very close one still waits for you while “hold very close topics” is on — and with “publish by itself” an article from an approved topic goes live as soon as its last review step passes. The Topic plan shows what was decided by itself over the days you set."
     }
   }
 }

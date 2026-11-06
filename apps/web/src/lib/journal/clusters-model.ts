@@ -217,3 +217,26 @@ export const clusterInputSchema = z
   })
   .strict();
 export type ClusterInput = z.output<typeof clusterInputSchema>;
+
+// ---- the approval queue (PR 244) ----
+
+/** The monthly batch a topic belongs to: its year and month in the shop's time zone (`2026-11`). */
+export function monthOf(at: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone, year: 'numeric', month: '2-digit' }).formatToParts(at);
+  return `${parts.find((p) => p.type === 'year')?.value}-${parts.find((p) => p.type === 'month')?.value}`;
+}
+
+/**
+ * A new topic from someone who may not decide (a writer, later an AI author): with `blog.approval.mode` 'owner' it waits
+ * for the owner's yes; with 'auto' it is approved by itself, except a very close one while `holdAlike` is on.
+ */
+export function autoDecision(s: { mode: 'owner' | 'auto'; holdAlike: boolean }, level: AlikeLevel): 'approved' | 'proposed' {
+  if (s.mode !== 'auto') return 'proposed';
+  return s.holdAlike && level === 'warn' ? 'proposed' : 'approved';
+}
+
+/** The owner's "Approve the whole batch": every proposed topic of the month, a very close one held for him alone. */
+export function batchSplit<T extends { status: string; batchMonth: string | null; level: AlikeLevel }>(topics: T[], month: string): { approve: T[]; held: T[] } {
+  const open = topics.filter((t) => t.status === 'proposed' && t.batchMonth === month);
+  return { approve: open.filter((t) => t.level !== 'warn'), held: open.filter((t) => t.level === 'warn') };
+}

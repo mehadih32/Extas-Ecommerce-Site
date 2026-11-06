@@ -299,6 +299,28 @@
         "proposed": "Proposed",
         "approved": "Approved",
         "rejected": "Turned down"
+      },
+      "queue": "Waiting for your yes",
+      "queueOwner": "Topics from the writers wait here, month by month. Say yes or no one by one, or approve a whole month at once; a very close one is held for you.",
+      "queueAuto": "Topics are approved by themselves now; only the ones held for you (very close to an article or topic) wait here.",
+      "queueEmpty": "Nothing is waiting for you.",
+      "batchOf": "{month} · {n} topics",
+      "approveAll": "Approve the whole month",
+      "batchDone": "{n} approved; {held} held for you (very close).",
+      "noMonth": "Earlier",
+      "digest": "Decided by itself (last {n} days)",
+      "digestEmpty": "Nothing was decided by itself in these days.",
+      "dgTopic": "Topic approved",
+      "dgPost": "Article published",
+      "acard": {
+        "h": "Who approves",
+        "d": "Who decides which articles get written, and whether finished articles go live by themselves. The owner decides, as it ships.",
+        "mode": "Who approves topics",
+        "modeOwner": "The owner (month by month)",
+        "modeAuto": "By itself, with a digest",
+        "holdAlike": "Hold very close topics for the owner",
+        "autoPublish": "Publish by itself once the last check passes (only with “By itself”)",
+        "digestDays": "Days the digest covers"
       }
     },
     "plan": "Topic plan"

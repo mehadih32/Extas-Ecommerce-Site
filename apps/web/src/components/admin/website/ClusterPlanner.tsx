@@ -17,7 +17,7 @@ const EDITOR = '/admin/website/blog';
 /** An input field's word on the screen. */
 const FIELD: Record<string, string> = { title: 'topic', clusterId: 'cluster', authorId: 'author', categoryId: 'category', targetPath: 'target', postId: 'pick' };
 
-export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; canPublish: boolean; lang: 'en' | 'bn'; part: 'clusters' | 'forms' }) {
+export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; canPublish: boolean; lang: 'en' | 'bn'; part: 'queue' | 'clusters' | 'forms' }) {
   const id = useId();
   const router = useRouter();
   const c = (k: string, vars?: Record<string, string | number>) => t(p.words, `jr.${k}`, vars);
@@ -229,6 +229,69 @@ export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; 
       {said.text}
     </p>
   ) : null;
+
+  if (p.part === 'queue') {
+    // PR 244: the topics waiting for the owner's yes, month by month, and what was decided by itself lately.
+    const monthName = (m: string) => {
+      const [y, mo] = m.split('-').map(Number);
+      return y && mo ? new Intl.DateTimeFormat(p.lang === 'bn' ? 'bn-BD' : 'en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, mo - 1, 1))) : l('noMonth');
+    };
+    const when = (iso: string) => new Intl.DateTimeFormat(p.lang === 'bn' ? 'bn-BD' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+    return (
+      <>
+        <section className="a2-card a2-sc" aria-labelledby={`${id}-q`} data-testid="pl-queue">
+          <h2 className="a2-h3" id={`${id}-q`}>
+            {l('queue')}
+          </h2>
+          <p className="a2-cs">{plan.approval.value.mode === 'auto' ? l('queueAuto') : l('queueOwner')}</p>
+          {plan.queue.length ? (
+            plan.queue.map((q) => (
+              <div key={q.month} className="pl-batch" data-testid="pl-batch">
+                <div className="jr-row">
+                  <b>{l('batchOf', { month: monthName(q.month), n: q.topics.length })}</b>
+                  {p.canPublish && q.month ? (
+                    <button
+                      type="button"
+                      className="a2-btn pri"
+                      disabled={busy}
+                      onClick={() =>
+                        send('POST', '/api/admin/blog/topics/batch', { month: q.month }, (d) => setSaid({ text: l('batchDone', { n: Number(d.approved) || 0, held: Number(d.held) || 0 }), bad: false }))
+                      }
+                      data-testid="pl-batch-approve"
+                    >
+                      {l('approveAll')}
+                    </button>
+                  ) : null}
+                </div>
+                <ul className="jr-shelf">{q.topics.map(topicRow)}</ul>
+              </div>
+            ))
+          ) : (
+            <p className="a2-sm a2-mute">{l('queueEmpty')}</p>
+          )}
+          {saidLine}
+        </section>
+        {plan.approval.value.mode === 'auto' || plan.digest.items.length ? (
+          <section className="a2-card a2-sc" aria-labelledby={`${id}-dg`} data-testid="pl-digest">
+            <h2 className="a2-h3" id={`${id}-dg`}>
+              {l('digest', { n: plan.digest.days })}
+            </h2>
+            {plan.digest.items.length ? (
+              <ul className="jr-hist">
+                {plan.digest.items.map((x) => (
+                  <li key={`${x.kind}-${x.id}-${x.at}`}>
+                    <span className="a2-pill">{l(x.kind === 'topic' ? 'dgTopic' : 'dgPost')}</span> {x.kind === 'post' ? <Link href={`${EDITOR}/${x.id}`}>{x.title}</Link> : x.title} <span className="a2-xs a2-mute">· {when(x.at)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="a2-sm a2-mute">{l('digestEmpty')}</p>
+            )}
+          </section>
+        ) : null}
+      </>
+    );
+  }
 
   if (p.part === 'forms') {
     const addTopic = () =>

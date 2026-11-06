@@ -1,7 +1,7 @@
 // S12 · PR 242 — the cluster planner's pure rules: shop paths compared alike (Bengali prefix, query, slash), the links
 // an article carries, the gaps of a cluster per rule, alike topics and their level, and the topic moves.
 import { describe, expect, it } from 'vitest';
-import { alikeLevel, closest, clusterGaps, linksOf, normPath, topicInputSchema, clusterInputSchema, topicNext, tokens } from './clusters-model';
+import { alikeLevel, autoDecision, batchSplit, closest, clusterGaps, linksOf, monthOf, normPath, topicInputSchema, clusterInputSchema, topicNext, tokens } from './clusters-model';
 
 const rules = { linkPillar: true, linkTarget: true, pillarLinksAll: true };
 
@@ -79,5 +79,24 @@ describe('topics and clusters (PR 242)', () => {
     expect(clusterInputSchema.safeParse({ name: 'Polo care', targetPath: '/collections/polos' }).success).toBe(true);
     expect(clusterInputSchema.safeParse({ name: 'Polo care', targetPath: 'https://example.com' }).success).toBe(false);
     expect(clusterInputSchema.safeParse({ name: 'Polo care', targetPath: '' }).data?.targetPath).toBeNull();
+  });
+});
+
+describe('the approval queue (PR 244)', () => {
+  it('puts a topic in the month of the shop’s time zone', () => {
+    expect(monthOf(new Date('2026-11-30T19:00:00Z'), 'Asia/Dhaka')).toBe('2026-12');
+    expect(monthOf(new Date('2026-11-30T17:00:00Z'), 'Asia/Dhaka')).toBe('2026-11');
+  });
+  it('approves by itself only in automatic mode, holding a very close topic while asked to', () => {
+    expect(autoDecision({ mode: 'owner', holdAlike: true }, 'none')).toBe('proposed');
+    expect(autoDecision({ mode: 'auto', holdAlike: true }, 'near')).toBe('approved');
+    expect(autoDecision({ mode: 'auto', holdAlike: true }, 'warn')).toBe('proposed');
+    expect(autoDecision({ mode: 'auto', holdAlike: false }, 'warn')).toBe('approved');
+  });
+  it('splits a month’s batch into the approved and the held', () => {
+    const t = (status: string, batchMonth: string, level: 'none' | 'near' | 'warn') => ({ status, batchMonth, level });
+    const r = batchSplit([t('proposed', '2026-11', 'none'), t('proposed', '2026-11', 'warn'), t('approved', '2026-11', 'none'), t('proposed', '2026-10', 'none')], '2026-11');
+    expect(r.approve).toHaveLength(1);
+    expect(r.held).toHaveLength(1);
   });
 });
