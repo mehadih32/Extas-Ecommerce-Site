@@ -93,4 +93,14 @@ describe.skipIf(!HAS_TEST_DB)('Festive cut-off words on PostgreSQL (PR 281)', ()
     await turn({ enabled: true, places: { home: true, product: true, checkout: false }, title: null, linkHref: null, linkLabel: null });
     expect((await festiveAfterCheck(deps(), A))('outside-dhaka', at('2027-03-05'))).toBe(false);
   });
+
+  it('follow-up 655: the bag reads checkout with no band yet — the short words while any band is open, the after words once all passed', async () => {
+    await turn({ enabled: true, places: { home: false, product: false, checkout: true }, title: null, linkHref: null, linkLabel: null });
+    clock = at('2027-03-05');
+    expect((await festiveFor(deps(), A, { place: 'checkout', locale: 'en-BD' })).map((l) => l.state)).toEqual(['open']);
+    clock = at('2027-03-08');
+    expect((await festiveFor(deps(), A, { place: 'checkout', locale: 'en-BD' })).map((l) => [l.state, l.text])).toEqual([['closed', 'Orders placed now arrive after the festival.']]);
+    await turn({ enabled: true, places: { home: true, product: true, checkout: false }, title: null, linkHref: null, linkLabel: null });
+    expect(await festiveFor(deps(), A, { place: 'checkout' })).toEqual([]);
+  });
 });

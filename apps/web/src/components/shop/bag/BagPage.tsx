@@ -150,8 +150,9 @@ export async function BagPage({ c, view, s, btpl = null, paused = false, linkCod
         </div>
         {/* PR 610 (qa-gate I3): checkout is paused now — said before he goes on, and it stays */}
         {paused ? <PausedNote title={t('checkout.paused.title')} text={t('checkout.paused.text')} testId="bag-paused" /> : null}
-        {/* PR 193: the Eid order-by date per band (or the pre-order line) and the holiday notice, before he goes on */}
-        <EtaBanner c={c} testId="bag-eta" />
+        {/* PR 193: the Eid order-by date per band (or the pre-order line) and the holiday notice, before he goes on;
+            follow-up 655: the festive cut-off words too (Marketing › Festive cut-off, checkout ticked; off: none) */}
+        <EtaBanner c={c} testId="bag-eta" festive />
         <div className="split-side">
           <div className="stack s16" style={{ minWidth: 0 }}>
             {/* PR 77: the left column's parts in the owner's order and on his screens (`layout.bag`; the lines always) */}
