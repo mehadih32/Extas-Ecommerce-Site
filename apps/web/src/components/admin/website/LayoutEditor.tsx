@@ -5,7 +5,8 @@
 // /api/admin/website/layouts, `website.layout.write`; the API checks everything again); "Back to the default order" and
 // "Discard changes" only change the draft. Every word comes from messages/admin-layouts.<lang>.json.
 // ~~Used by Website › Page layouts~~ PR 595: the page uses LayoutBuilder.tsx (Lumen, the owner's own sections); this
-// list is kept as it was built (nothing deleted) and no page draws it.
+// list is kept as it was built (nothing deleted) and no page draws it. Unused since PR 595 (follow-up 693): nothing
+// imports it (layout-editor-unused.test.ts); it moves out with the next Website section PR (640).
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { LayoutDevice } from '@extas/settings';
@@ -15,6 +16,7 @@ import { showToast } from '../lumen/Toast';
 const API = '/api/admin/website/layouts';
 const DEVICES: readonly LayoutDevice[] = ['both', 'phone', 'desktop'];
 
+/** @deprecated Unused since PR 595 — Website › Page layouts draws LayoutBuilder.tsx. */
 export interface LayoutEditorWords {
   count: string;
   always: string;
@@ -50,6 +52,7 @@ type Msg = { ok: boolean; text: string } | null;
 
 const same = (a: readonly LayoutRow[], b: readonly LayoutRow[]) => JSON.stringify(a.map((r) => [r.id, r.on, r.dev ?? 'both'])) === JSON.stringify(b.map((r) => [r.id, r.on, r.dev ?? 'both']));
 
+/** @deprecated Unused since PR 595 — Website › Page layouts draws LayoutBuilder.tsx. */
 export function LayoutEditor({ page, rows: saved, defaults, locked, version, names, hints, canEdit, w }: Props) {
   const router = useRouter();
   const [rows, setRows] = useState(saved);
