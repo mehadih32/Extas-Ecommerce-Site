@@ -64,6 +64,7 @@ import { HeartButton } from '../HeartButton';
 import { JsonLd } from '../JsonLd';
 import { Bold } from './Bold';
 import { PdpBuy, PdpDeskBar, PdpPhoneBar, type BuyLinks } from './PdpBuy';
+import { PdpBarRating } from './PdpBarRating';
 import { PdpColour } from './PdpColour';
 import { PdpDetails, type DetailBlockView } from './PdpDetails';
 import { ghostListed, retiredForGood } from '@/lib/seo/url-policy';
@@ -626,7 +627,20 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
         ))}
         {rows.recent ? <PdpRecentMark id={m.productId} keep={rows.recentKeep} days={rows.recentDays} /> : null}
         <PdpPhoneBar links={links} />
-        <PdpDeskBar links={links} lang={lang} />
+        <PdpDeskBar
+          links={links}
+          lang={lang}
+          rating={
+            ratingLine ? (
+              <PdpBarRating
+                average={ratingLine.average}
+                avgText={reviewAvgText(c, ratingLine.average)}
+                countText={`(${c.num(ratingLine.total)})`}
+                label={t('reviews.stars', { n: reviewAvgText(c, ratingLine.average) })}
+              />
+            ) : null
+          }
+        />
         {view && added && bagCards ? (
           <AddedPanel
             c={c}
