@@ -171,6 +171,12 @@
       "expect": ["[data-testid=\"hdr-wa\"]"]
     },
     {
+      "$comment": "PR 85 follow-up 111 — the shop with a long slogan (POST /api/shop/try-slogan, test servers only: sample words near the 120-letter limit in both languages; CI's sample database has none, it is the owner's data). The header's slogan steps (full, short, hidden) and the footer's wrap must keep the page one screen wide and the words whole.",
+      "paths": ["/", "/bn", "/collections/polos", "/bn/collections/polos"],
+      "fill": "/api/shop/try-slogan",
+      "expect": [".sb-slog"]
+    },
+    {
       "$comment": "PR 574 — the bag templates B1, B2, B4 and the preview bar, through their preview links (`?btpl=`, previews on by default), on a bag the test server fills with three sample sets (POST /api/bag/try?sets=3, test servers only, sample data): B1 the grouped card, B2 a size per piece in the bag, B4 the pieces at their own prices with the combo discount.",
       "paths": ["/bag?btpl=B1"],
       "fill": "/api/bag/try?sets=3",
