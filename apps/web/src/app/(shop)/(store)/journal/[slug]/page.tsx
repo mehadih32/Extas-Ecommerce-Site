@@ -13,7 +13,7 @@
 // S12 · PR 251 — while `blog.comments.on` (off as shipped: the journal runs without comments) the comments a person has
 // shown and the comment box (JournalComments); nothing a reader writes shows before a person presses Show.
 import type { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { getPrisma } from '@extas/db/client';
 import { ComingSoon } from '@/components/shop/ComingSoon';
 import { JsonLd } from '@/components/shop/JsonLd';
@@ -31,6 +31,7 @@ import { hrefIn } from '@/lib/shop/lang';
 import { ROUTES } from '@/lib/shop/routes';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { articleLd, breadcrumbLd } from '@/lib/shop/structured-data';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,7 +61,7 @@ export default async function JournalPost(props: Props) {
   const a = await journalArticle(c, slug);
   // The language switch on an article that is only in the other language opens this language's journal instead.
   if (!a && (await journalHasOther(c, slug))) redirect(hrefIn(c.lang, ROUTES.journal));
-  if (!a) notFound();
+  if (!a) shopNotFound(c);
   const { post } = a;
   const page = await readPageSettings(['seo.structuredData', 'blog.performance', 'blog.comments'] as const, c.storeId);
   const talk = page['blog.comments'];

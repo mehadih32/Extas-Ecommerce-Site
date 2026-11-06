@@ -2,13 +2,13 @@
 // for the customer whose order it is, the browser that placed it, or a staff member with `orders.invoice`; anyone else
 // gets the order page's log-in prompt. Switched off by the owner (`account.invoice`): no such page.
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { InvoicePage } from '@/components/shop/account/InvoicePage';
 import { OrderPrompt } from '@/components/shop/account/OrderPage';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { invoiceNumber } from '@/lib/shop/invoice';
 import { loadInvoice } from '@/lib/shop/invoice-load';
 import { shopMetadata } from '@/lib/shop/meta';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +25,7 @@ export default async function Invoice({ params }: { params: Promise<{ number: st
   const number = await numberOf(params);
   const c = await shopContext();
   const inv = await loadInvoice(c, number);
-  if (inv.kind === 'off') notFound();
+  if (inv.kind === 'off') shopNotFound(c);
   if (inv.kind === 'prompt') return <OrderPrompt c={c} number={number} signedIn={inv.signedIn} />;
   return <InvoicePage c={c} r={inv.receipt} v={inv.view} download={inv.download} />;
 }

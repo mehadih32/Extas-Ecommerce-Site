@@ -24,7 +24,6 @@
 // S12 · PR 246: a link no category answers at may be a seasonal page's (components/shop/seasonal/SeasonalPage,
 // `marketing.seasonal`, off as shipped): the page while it is live, its resting page once it was live and is down.
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { cache, type ReactNode } from 'react';
 import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
 import { CardDeskMount } from '@/components/shop/CardDeskMount';
@@ -55,6 +54,7 @@ import { SideCanvas } from '@/components/shop/side/SideCanvas';
 import { sideItems } from '@/lib/shop/side-canvas';
 import type { CategorySectionId } from '@extas/settings';
 import './category.css';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 const KEYS = ['marketing.seasonal', 'marketing.seasonalReturn', 'store.timeZone', 'layout.category', 'layout.categoryOwn', 'layout.blocks', 'category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages', 'seo.internalLinks'] as const;
 
@@ -146,7 +146,7 @@ export default async function CategoryPage(props: Props) {
     const sea = await seasonalFor(c.storeId, slug, set);
     if (sea) return <SeasonalPage c={c} served={sea} set={set['marketing.seasonal']} />;
     const rest = await restingFor(c.storeId, slug, set['seo.urlPolicy'].retiredCategoryPage);
-    if (!rest) notFound();
+    if (!rest) shopNotFound(c);
     return <CatResting c={c} cat={rest} max={set['seo.urlPolicy'].alternativesMax} />;
   }
   const t = c.t;

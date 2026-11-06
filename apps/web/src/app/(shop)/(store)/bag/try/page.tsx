@@ -2,7 +2,6 @@
 // sample items with the shop's real Add button, and the added-to-bag panel exactly as the product page (PR 49) will
 // mount it — the button opens `?added=<line>`, and this page draws <AddedPanel> for that line.
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { productFacts, type ProductFact } from '@extas/combos';
 import { AddedPanel } from '@/components/shop/bag/AddedPanel';
 import { AddToBag } from '@/components/shop/bag/AddToBag';
@@ -13,6 +12,7 @@ import { bagSettings, cartDeps, currentBag } from '@/lib/shop/bag';
 import { reassurance } from '@/lib/shop/bag-model';
 import { bagPickCards, cardsByIds, colourName, productName } from '@/lib/shop/catalogue';
 import { shopContext } from '@/lib/shop/context';
+import { shopNotFound } from '@/lib/shop/not-found';
 import { hrefIn } from '@/lib/shop/lang';
 import { ROUTES } from '@/lib/shop/routes';
 
@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function TryBag({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  if (!testPagesOn()) notFound();
+  if (!testPagesOn()) shopNotFound(await shopContext());
   const c = await shopContext();
   const t = c.t;
   const deps = cartDeps();

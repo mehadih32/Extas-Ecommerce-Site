@@ -3,12 +3,12 @@
 // order, a log-in prompt that comes back here (`?line=` keeps the piece he tapped on the order page). Switched off by the
 // owner (`orders.exchange.account`, off by default): no such page.
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { ExchangePage, ExchangePrompt } from '@/components/shop/account/ExchangePage';
 import { exchangeLoad } from '@/lib/shop/account-exchange';
 import { accountReceipt, checkoutSettings } from '@/lib/shop/checkout';
 import { shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +25,7 @@ export default async function Exchange({ params, searchParams }: { params: Promi
   const line = typeof lineParam === 'string' && /^[0-9a-f-]{36}$/i.test(lineParam) ? lineParam : null;
   const c = await shopContext();
   const load = await exchangeLoad(c, number);
-  if (load.kind === 'off') notFound();
+  if (load.kind === 'off') shopNotFound(c);
   if (load.kind !== 'state') return <ExchangePrompt c={c} number={number} signedIn={load.kind === 'notHis'} line={line} />;
   const [{ receipt }, s] = await Promise.all([accountReceipt(c, load.state.number), checkoutSettings(c.storeId)]);
   return <ExchangePage c={c} state={load.state} receipt={receipt} waOn={s['checkout.help.enabled']} initialLine={line} />;

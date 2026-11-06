@@ -4,13 +4,13 @@
 // Every price is the product's own live price; the promises (delivery, exchange, returns, "try it on in front of the
 // rider") are the shop's own live rules and switches — SIM-F-034: the try-on line the checkout shows is on this page too.
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { getPrisma } from '@extas/db/client';
 import { LandingPage } from '@/components/shop/landing/LandingPage';
 import { publishedLanding } from '@/lib/marketing/landing';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +39,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function LandingRoute(props: Props) {
   const [c, { slug }] = await Promise.all([shopContext(), props.params]);
   const page = await pageFor(c.storeId, decodeURIComponent(slug));
-  if (!page) notFound();
+  if (!page) shopNotFound(c);
   return <LandingPage c={c} page={page} />;
 }

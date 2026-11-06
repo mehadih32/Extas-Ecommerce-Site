@@ -12,7 +12,6 @@
 // switched off, ended or not started yet keeps its page: it says so in Bengali and English and shows the combos on
 // sale now. Every price is the one @extas/combos gave the pair (CN-009: a struck price only behind the owner's switch).
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { cache, type ReactNode } from 'react';
 import { filterColours, filterPairs, offerNumbers, pricesVary, shownCount, styleGroups, type ListPair, type ListPiece } from '@extas/combos/rule-page-model';
 import type { RulePage } from '@extas/combos';
@@ -36,6 +35,7 @@ import { HubPicture, type SetPart } from './SetPicture';
 import './combos.css';
 import './combo-list.css';
 import { PreviewBar } from './PreviewBar';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 const inLang = (lang: 'en' | 'bn', en: string | null | undefined, bn: string | null | undefined) => (lang === 'bn' && bn?.trim()) || en?.trim() || '';
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? null;
@@ -645,7 +645,7 @@ async function Ended({ c, d, title }: { c: ShopContext; d: RuleData; title: stri
 export async function RuleList({ ruleKey, search }: { ruleKey: string; search: Search }) {
   const c = await shopContext();
   const [d, set] = await Promise.all([dataFor(ruleKey), readListSettings(c.storeId)]);
-  if (!d || d === 'missing') notFound();
+  if (!d || d === 'missing') shopNotFound(c);
   const q = parseListQuery(search);
   const tpl: ListTemplate = listTemplateOf(d.page, set, one(search.tpl));
   const w = drawOf(c, d);

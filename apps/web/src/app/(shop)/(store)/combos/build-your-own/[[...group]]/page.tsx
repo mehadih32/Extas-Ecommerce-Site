@@ -1,8 +1,9 @@
 // PR 98, 100 — "Build your own set" at /combos/build-your-own and /combos/build-your-own/<group> (and /bn/…), in the
 // store shell. The group is a set tier rule's key; an unknown one opens the first group with a note.
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { BuildPage, buildMetadata, type BuildSearch } from '@/components/shop/build/BuildPage';
+import { shopContext } from '@/lib/shop/context';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function BuildYourOwn(props: Props) {
   const group = await groupOf(props);
-  if (group === undefined) notFound();
+  if (group === undefined) shopNotFound(await shopContext());
   return <BuildPage group={group} search={await props.searchParams} />;
 }

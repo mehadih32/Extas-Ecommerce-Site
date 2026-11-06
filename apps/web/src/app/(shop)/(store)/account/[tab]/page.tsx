@@ -2,11 +2,12 @@
 // have their own pages). An old or loose word for a section goes to the section it means (/account/addresses → Profile);
 // any other word is "page not found" (demo R15 bug 9b).
 import type { Metadata } from 'next';
-import { notFound, permanentRedirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import { ACCOUNT_TABS, type AccountTab } from '@extas/settings';
 import { AccountSection } from '@/components/shop/account/AccountSection';
 import { ACCOUNT_ALIAS, accountMetadata, tabHref } from '@/lib/shop/account-view';
 import { shopContext } from '@/lib/shop/context';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,6 @@ export default async function Section({ params }: { params: Promise<{ tab: strin
   const { tab } = await params;
   const alias = ACCOUNT_ALIAS[tab];
   if (alias) permanentRedirect(tabHref(await shopContext(), alias));
-  if (!isSection(tab)) notFound();
+  if (!isSection(tab)) shopNotFound(await shopContext());
   return <AccountSection tab={tab} />;
 }

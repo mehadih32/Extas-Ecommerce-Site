@@ -7,7 +7,6 @@
 // S13 · PR 273: For you's "Invite a friend" card (his invite code) while the referral programme runs.
 // S05 · PR 150: My orders is the whole history — a page of one group at a time, from the address's `show` and `page`.
 import type { ReactNode } from 'react';
-import { notFound } from 'next/navigation';
 import { isOrderShow, liveOffers, offerBanner, orderHistory, pageOf, profileView, walletView } from '@extas/accounts';
 import type { AccountTab } from '@extas/settings';
 import { customerPrivacyState, pointsOf, PRIVACY_NOTE_MAX } from '@extas/customers';
@@ -27,6 +26,7 @@ import { InviteCard } from './InviteCard';
 import { OfferBanner, OfferCards } from './OfferBanner';
 import { BirthdayForm, DetailsForm, PasswordForm, Preferences } from './ProfileForms';
 import { PrivacyCard } from './PrivacyCard';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 export async function AccountSection({ tab, query = {} }: { tab: Exclude<AccountTab, 'wishlist'>; query?: { show?: unknown; page?: unknown } }) {
   const c = await shopContext();
@@ -36,7 +36,7 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
     const s = await readPageSettings(['account.autoCreate.enabled'] as const, c.storeId);
     return <LoginPrompt c={c} here={hrefIn(c.lang, c.path)} autoCreate={s['account.autoCreate.enabled']} />;
   }
-  if (!page.tabs.includes(tab)) notFound();
+  if (!page.tabs.includes(tab)) shopNotFound(c);
   const who = { storeId: c.storeId, customerId: page.me.customer.id };
   const s = await readPageSettings(['account.lists', 'account.addresses.max', 'account.login', 'checkout.wallet.enabled', 'account.offerBanner', 'account.history', 'customers.birthday'] as const, c.storeId);
   let body: ReactNode;
@@ -87,7 +87,7 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
       break;
     case 'profile': {
       const [p, privacy] = await Promise.all([profileView(deps, who), customerPrivacyState({ db: deps.db, settings: deps.settings, now: deps.now }, who)]);
-      if (!p) notFound();
+      if (!p) shopNotFound(c);
       const words = accountWords(c, ['profile.']);
       // PR 301: the month names in the page's language (Western digits stay the shop's rule)
       const monthName = new Intl.DateTimeFormat(c.lang === 'bn' ? 'bn-BD' : 'en-GB', { month: 'long', timeZone: 'UTC' });
