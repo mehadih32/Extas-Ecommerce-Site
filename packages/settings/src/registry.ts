@@ -97,6 +97,7 @@ import { blogCommentSettings } from './registry-blog-comments';
 import { blogImageSettings } from './registry-blog-images';
 import { houseAdSettings } from './registry-house-ads';
 import { blogPipelineSettings } from './registry-blog-pipeline';
+import { geoGuideSettings } from './registry-geo-guide';
 import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
 import { erpRetailSettings } from './registry-erp-retail';
@@ -1484,6 +1485,8 @@ export const registry = {
   ...houseAdSettings,
   // PR 591 · the blog content pipeline: pace, queue and health, off (registry-blog-pipeline.ts, version 254).
   ...blogPipelineSettings,
+  // PR 569 · geography-led ad guidance, advice only, off (registry-geo-guide.ts, version 255).
+  ...geoGuideSettings,
   // ---- S12 · CN-031 lane A · PR 246 · seasonal landing pages (registry-seasonal.ts, version 228). ----
   ...seasonalSettings,
   // PR 530 · the seasonal pages' yearly return, off (registry-seasonal-return.ts, version 251).

@@ -52,7 +52,8 @@
         "seasonal": "Seasonal home",
         "festive": "Festive cut-off",
         "calendar": "Calendar",
-        "report": "Report"
+        "report": "Report",
+        "geoGuide": "Where to advertise"
       },
       "reports": {
         "health": "Site health",

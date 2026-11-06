@@ -143,6 +143,8 @@ import houseAdsBn from '../messages/house-ads.bn.json';
 import houseAdsEn from '../messages/house-ads.en.json';
 import blogPipelineBn from '../messages/blog-pipeline.bn.json';
 import blogPipelineEn from '../messages/blog-pipeline.en.json';
+import geoGuideBn from '../messages/geo-guide.bn.json';
+import geoGuideEn from '../messages/geo-guide.en.json';
 // S18 · PR 379 (registry v74): the quiet bot check on sign-in and checkout.
 import botCheckBn from '../messages/bot-check.bn.json';
 import botCheckEn from '../messages/bot-check.en.json';
@@ -292,6 +294,9 @@ messages.bn = mergeMessages(messages.bn, houseAdsBn);
 // S12 · PR 591 (registry v254): the blog content pipeline.
 messages.en = mergeMessages(messages.en, blogPipelineEn);
 messages.bn = mergeMessages(messages.bn, blogPipelineBn);
+// S13 · PR 569 (registry v255): geography-led ad guidance.
+messages.en = mergeMessages(messages.en, geoGuideEn);
+messages.bn = mergeMessages(messages.bn, geoGuideBn);
 messages.en = mergeMessages(messages.en, botCheckEn);
 messages.bn = mergeMessages(messages.bn, botCheckBn);
 messages.en = mergeMessages(messages.en, adminAccessEn);

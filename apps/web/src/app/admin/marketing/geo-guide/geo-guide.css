@@ -1,0 +1,27 @@
+/* S13 · PR 569 — Marketing › Where to advertise, drawn in Lumen: only --lm-* tokens. */
+.gg-page { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.gg-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.gg-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 1100px) {
+  .gg-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); }
+}
+.gg-off { border-left: 4px solid var(--lm-warn); color: var(--lm-ink); margin: 0; }
+.gg-ro { color: var(--lm-ink2); margin: 0; }
+.gg-span { color: var(--lm-ink2); margin: 0; font-size: 0.9rem; }
+.gg-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.gg-table-w { overflow-x: auto; max-width: 100%; }
+.gg-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; color: var(--lm-ink); }
+.gg-table th, .gg-table td { text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--lm-ln); vertical-align: middle; }
+.gg-table td { text-align: end; white-space: nowrap; }
+.gg-table thead th { color: var(--lm-ink2); font-weight: 700; font-size: 0.8rem; }
+.gg-table tbody th { font-weight: 600; min-width: 96px; overflow-wrap: normal; word-break: keep-all; }
+.gg-table td.gg-word { text-align: start; }
+.gg-pill { white-space: nowrap; }
+.gg-pill { display: inline-flex; align-items: center; border-radius: var(--lm-r-pill); padding: 2px 10px; background: var(--lm-chip); color: var(--lm-ink2); font-size: 0.78rem; font-weight: 700; }
+.gg-pill.ok { background: var(--lm-okbg); color: var(--lm-ok); }
+.gg-pill.warn { background: var(--lm-warnbg); color: var(--lm-warn); }
+.gg-copy { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; min-width: 0; }
+.gg-h3 { margin: 0; font-size: 0.95rem; color: var(--lm-ink); }
+.gg-line { margin: 0; padding: 8px 10px; border: 1px solid var(--lm-ln); border-radius: var(--lm-r-box); background: var(--lm-sf); color: var(--lm-ink); user-select: all; overflow-wrap: anywhere; }
+.gg-lbl { color: var(--lm-ink2); font-size: 0.75rem; font-weight: 700; user-select: none; }
+.gg-how { margin: 8px 0 0; padding-left: 20px; color: var(--lm-ink2); display: flex; flex-direction: column; gap: 6px; }

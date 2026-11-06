@@ -139,6 +139,8 @@ export * from './registry-blog-images';
 export * from './registry-house-ads';
 // S12 · PR 591 — the blog content pipeline: pace, queue and health (registry-blog-pipeline.ts, version 254).
 export * from './registry-blog-pipeline';
+// S13 · PR 569 — geography-led ad guidance, advice only (registry-geo-guide.ts, version 255).
+export * from './registry-geo-guide';
 // S18 · PR 379 — the quiet bot check (registry-bot-check.ts, version 74).
 export * from './registry-bot-check';
 // S18 · PR 380 — the admin address list and the new-login notes (registry-admin-access.ts, version 78).
