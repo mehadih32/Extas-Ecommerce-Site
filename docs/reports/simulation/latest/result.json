@@ -1,0 +1,5929 @@
+{
+  "kind": "simulation",
+  "at": "2026-11-06 21:45 (Asia/Dhaka)",
+  "sha": "4689df67c695",
+  "host": "new.extas.com.bd",
+  "scenarios": 70,
+  "passed": 35,
+  "failed": 7,
+  "skipped": 28,
+  "ok": false,
+  "orders": 42,
+  "started": true,
+  "finished": true,
+  "providers": {
+    "live": []
+  },
+  "payment": {
+    "mockPay": "the run's own grant: its browser only, on the preview host, closed at the end",
+    "cod": "on (the owner's setting)"
+  },
+  "budget": {
+    "page": 2500,
+    "press": 600,
+    "source": "lighthouserc.json ci.assert.assertions"
+  },
+  "rows": [
+    {
+      "id": "1",
+      "title": "Order 01 · FT · Mirpur 10 · Polo Duo (2× M) · cash on delivery · Steadfast",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1102"
+      ],
+      "addresses": [
+        "dhk-mirpur"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 776,
+          "lcpMs": 712,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 822,
+          "lcpMs": 772,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 227,
+          "serverMs": 11
+        },
+        "checkoutOpen": {
+          "ms": 1146,
+          "lcpMs": 708
+        },
+        "submit": {
+          "ms": 1367,
+          "serverMs": 73,
+          "lcpMs": 680
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1102"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 2",
+          "verdict": "PASS",
+          "detail": "2"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 100000 of 100000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "100000 vs due 100000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "100000 vs due 100000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D1",
+        "persona": "FT",
+        "area": "city",
+        "items": "Polo Duo (2× M)",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "SMS + WhatsApp, the call, delivered in 24 h, review request on D+2 (switch on/off)"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Order 02 · FT · Dhanmondi · textured-knit-polo L · bKash · Pathao",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "bKash is switched off on the shop (Payments › mobile wallets)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D1",
+        "persona": "FT",
+        "area": "city",
+        "items": "textured-knit-polo L",
+        "pay": "bkash",
+        "courier": "pathao",
+        "person": "callback, paid badge on the sticker"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Order 03 · FT · Uttara · essential-pique-polo M and L · cash on delivery · Steadfast",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1103"
+      ],
+      "addresses": [
+        "dhk-uttara"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 934,
+          "lcpMs": 860,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 803,
+          "lcpMs": 724,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 220,
+          "serverMs": 9
+        },
+        "checkoutOpen": {
+          "ms": 1074,
+          "lcpMs": 684
+        },
+        "submit": {
+          "ms": 2102,
+          "serverMs": 832,
+          "lcpMs": 652
+        }
+      },
+      "over": [
+        {
+          "step": "submit",
+          "valueMs": 832,
+          "limitMs": 600
+        }
+      ],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1103"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "2 line(s)",
+          "verdict": "PASS",
+          "detail": "2 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 100000 of 100000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "100000 vs due 100000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "100000 vs due 100000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D1",
+        "persona": "FT",
+        "area": "city",
+        "items": "essential-pique-polo M and L",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "two-sizes follow-up; partial acceptance at the door (keeps L, returns M)"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Order 04 · RP · Mohammadpur · everyday-crew-tee ×3 (S, M, L) · cash on delivery · Pathao",
+      "device": "desktop-1366",
+      "network": "wifi",
+      "verdict": "FAIL",
+      "orders": [
+        "1104"
+      ],
+      "addresses": [
+        "dhk-mohammadpur-bn"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 1013,
+          "lcpMs": 932,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 720,
+          "lcpMs": 712,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 102,
+          "serverMs": 47
+        },
+        "checkoutOpen": {
+          "ms": 361,
+          "lcpMs": 260
+        },
+        "submit": {
+          "ms": 754,
+          "serverMs": 172,
+          "lcpMs": 212
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "FAIL",
+          "detail": "oracle book: IN_REVIEW: IN_REVIEW: confirm is not open for this order (PLACED)"
+        }
+      ],
+      "shot": "scenario-4.jpg",
+      "plan": {
+        "day": "D2",
+        "persona": "RP",
+        "area": "city",
+        "items": "everyday-crew-tee ×3 (S, M, L)",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "signed in, saved size, wallet ৳100 applied"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Order 05 · OD · Agrabad, Chattogram · Oxford shirt + slim chino · cash on delivery · RedX",
+      "device": "android-low",
+      "network": "fast-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D2",
+        "persona": "OD",
+        "area": "outside",
+        "items": "Oxford shirt + slim chino",
+        "pay": "cod",
+        "courier": "redx",
+        "person": "delivered day 3"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Order 06 · OD + 3G · village near Kurigram bazar · classic-cotton-panjabi XL · cash on delivery · Steadfast",
+      "device": "android-low",
+      "network": "slow-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1105"
+      ],
+      "addresses": [
+        "out-bhola-no-thana"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 11289,
+          "lcpMs": 8756,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 12010,
+          "lcpMs": 9620,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 2081,
+          "serverMs": 23
+        },
+        "checkoutOpen": {
+          "ms": 12612,
+          "lcpMs": 9136
+        },
+        "submit": {
+          "ms": 14199,
+          "serverMs": 14,
+          "lcpMs": 8820
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1105"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 50000 of 50000"
+        },
+        {
+          "id": "never held over the address (PR 563)",
+          "verdict": "PASS",
+          "detail": "PLACED"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "50000 vs due 50000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "50000 vs due 50000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D2",
+        "persona": "OD + 3G",
+        "area": "outside",
+        "items": "classic-cotton-panjabi XL",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "rider cannot find the house and calls; delivered day 6"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Order 07 · FR · Gulshan 2 · heavyweight-hoodie ×2 · cash on delivery",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1106"
+      ],
+      "addresses": [
+        "dhk-gulshan"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 1250,
+          "lcpMs": 1176,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 835,
+          "lcpMs": 772,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 232,
+          "serverMs": 12
+        },
+        "checkoutOpen": {
+          "ms": 1141,
+          "lcpMs": 704
+        },
+        "submit": {
+          "ms": 1311,
+          "serverMs": 22,
+          "lcpMs": 676
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1106"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 2",
+          "verdict": "PASS",
+          "detail": "2"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 100000 of 100000"
+        },
+        {
+          "id": "no automatic block (a person decides)",
+          "verdict": "PASS",
+          "detail": "PLACED"
+        },
+        {
+          "id": "cancelled before packing",
+          "verdict": "PASS",
+          "detail": "CANCELLED"
+        },
+        {
+          "id": "the stock is released",
+          "verdict": "PASS",
+          "detail": "37→39"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D3",
+        "persona": "FR",
+        "area": "city",
+        "items": "heavyweight-hoodie ×2",
+        "pay": "cod",
+        "courier": null,
+        "person": "5/5 cancelled courier history, advance asked, abandons; flag-outcome report"
+      }
+    },
+    {
+      "id": "8",
+      "title": "Order 08 · FR (prank) · Badda · polo-chino combo · cash on delivery",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1107"
+      ],
+      "addresses": [
+        "dhk-badda"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 775,
+          "lcpMs": 700,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 805,
+          "lcpMs": 740,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 211,
+          "serverMs": 5
+        },
+        "checkoutOpen": {
+          "ms": 1168,
+          "lcpMs": 716
+        },
+        "submit": {
+          "ms": 1348,
+          "serverMs": 36,
+          "lcpMs": 676
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1107"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "2 line(s)",
+          "verdict": "PASS",
+          "detail": "2 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 100000 of 100000"
+        },
+        {
+          "id": "no automatic block (a person decides)",
+          "verdict": "PASS",
+          "detail": "PLACED"
+        },
+        {
+          "id": "cancelled before packing",
+          "verdict": "PASS",
+          "detail": "CANCELLED"
+        },
+        {
+          "id": "the stock is released",
+          "verdict": "PASS",
+          "detail": "39→40, 39→40"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D3",
+        "persona": "FR (prank)",
+        "area": "city",
+        "items": "polo-chino combo",
+        "pay": "cod",
+        "courier": null,
+        "person": "the call: \"I didn't order\"; identity graph notes the device"
+      }
+    },
+    {
+      "id": "9",
+      "title": "Order 09 · GF · pays in Dhanmondi, ships to Zindabazar, Sylhet · classic-cotton-panjabi L (gift) · bKash · Pathao",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "bKash is switched off on the shop (Payments › mobile wallets)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D3",
+        "persona": "GF",
+        "area": "outside",
+        "items": "classic-cotton-panjabi L (gift)",
+        "pay": "bkash",
+        "courier": "pathao",
+        "person": "receiver unreachable once, delivered on the 2nd attempt"
+      }
+    },
+    {
+      "id": "10",
+      "title": "Order 10 · BK · Tejgaon office · 40 logo polos, 4 sizes · bank transfer / advance",
+      "device": "desktop-1920",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "a bank transfer or an advance is not a checkout method: a person records it (the plan's bulk and bank-paid orders)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D4",
+        "persona": "BK",
+        "area": "city",
+        "items": "40 logo polos, 4 sizes",
+        "pay": "bank",
+        "courier": null,
+        "person": "bulk enquiry and a human quote (no cart order)"
+      }
+    },
+    {
+      "id": "11",
+      "title": "Order 11 · AN · Mirpur 2 · heavy-cotton-tee black XL · cash on delivery · Steadfast",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1108"
+      ],
+      "addresses": [
+        "dhk-mirpur"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 759,
+          "lcpMs": 700,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 773,
+          "lcpMs": 704,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 213,
+          "serverMs": 5
+        },
+        "checkoutOpen": {
+          "ms": 1082,
+          "lcpMs": 676
+        },
+        "submit": {
+          "ms": 1278,
+          "serverMs": 5,
+          "lcpMs": 652
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1108"
+        },
+        {
+          "id": "his orders in this run: 2",
+          "verdict": "PASS",
+          "detail": "2 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 50000 of 50000"
+        },
+        {
+          "id": "one customer for the repeat buyer",
+          "verdict": "PASS",
+          "detail": "the same customer"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "50000 vs due 50000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "50000 vs due 50000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D4",
+        "persona": "AN",
+        "area": "city",
+        "items": "heavy-cotton-tee black XL",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "\"colour faded\" on WhatsApp and Facebook, free replacement, B-grade"
+      }
+    },
+    {
+      "id": "12",
+      "title": "Order 12 · EL · Lalbagh, Old Dhaka · classic-cotton-panjabi XXL · cash on delivery · Pathao",
+      "device": "iphone-se",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1109"
+      ],
+      "addresses": [
+        "dhk-lalbagh"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 1357,
+          "lcpMs": 1292,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 779,
+          "lcpMs": 712,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 213,
+          "serverMs": 6
+        },
+        "checkoutOpen": {
+          "ms": 1075,
+          "lcpMs": 688
+        },
+        "submit": {
+          "ms": 1282,
+          "serverMs": 15,
+          "lcpMs": 656
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1109"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 50000 of 50000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Pathao account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "50000 vs due 50000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "50000 vs due 50000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D4",
+        "persona": "EL",
+        "area": "city",
+        "items": "classic-cotton-panjabi XXL",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "gives up on the address, sends the bag on WhatsApp, agent keys the order"
+      }
+    },
+    {
+      "id": "13",
+      "title": "Order 13 · BN · Fatullah, Narayanganj · Polo Duo · cash on delivery · Steadfast",
+      "device": "android-mid",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1110"
+      ],
+      "addresses": [
+        "sub-siddhirganj-bn"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 3139,
+          "lcpMs": 2524,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3430,
+          "lcpMs": 2796,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 664,
+          "serverMs": 47
+        },
+        "checkoutOpen": {
+          "ms": 4044,
+          "lcpMs": 2672
+        },
+        "submit": {
+          "ms": 4679,
+          "serverMs": 20,
+          "lcpMs": 2524
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1110"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 2",
+          "verdict": "PASS",
+          "detail": "2"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 150000 of 150000"
+        },
+        {
+          "id": "the order is in Bengali",
+          "verdict": "PASS",
+          "detail": "bn"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "150000 vs due 150000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "150000 vs due 150000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D5",
+        "persona": "BN",
+        "area": "sub",
+        "items": "Polo Duo",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "Bengali SMS"
+      }
+    },
+    {
+      "id": "14",
+      "title": "Order 14 · AB · Savar · linen-blend-shirt + leather-look-belt · cash on delivery · RedX",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D5",
+        "persona": "AB",
+        "area": "sub",
+        "items": "linen-blend-shirt + leather-look-belt",
+        "pay": "cod",
+        "courier": "redx",
+        "person": "leaves, one consented follow-up, comes back"
+      }
+    },
+    {
+      "id": "15",
+      "title": "Order 15 · FT · Tongi, Gazipur · jersey-zip-polo + cotton-socks-3 · cash on delivery · Pathao",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "FAIL",
+      "orders": [
+        "1111"
+      ],
+      "addresses": [
+        "sub-tongi"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 970,
+          "lcpMs": 892,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 966,
+          "lcpMs": 904,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 210,
+          "serverMs": 6
+        },
+        "checkoutOpen": {
+          "ms": 1188,
+          "lcpMs": 720
+        },
+        "submit": {
+          "ms": 1301,
+          "serverMs": 7,
+          "lcpMs": 680
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1111"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "2 line(s)",
+          "verdict": "PASS",
+          "detail": "2 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 150000 of 150000"
+        },
+        {
+          "id": "a code that is not his is refused with a reason",
+          "verdict": "FAIL",
+          "detail": "HTTP 200"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Pathao account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "150000 vs due 150000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "150000 vs due 150000"
+        }
+      ],
+      "shot": "scenario-15.jpg",
+      "plan": {
+        "day": "D5",
+        "persona": "FT",
+        "area": "sub",
+        "items": "jersey-zip-polo + cotton-socks-3",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "the better-offer explanation"
+      }
+    },
+    {
+      "id": "16",
+      "title": "Order 16 · RP · Uttara · hoodie-jogger set · Nagad · Steadfast",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "Nagad is switched off on the shop (Payments › mobile wallets)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D6",
+        "persona": "RP",
+        "area": "city",
+        "items": "hoodie-jogger set",
+        "pay": "nagad",
+        "courier": "steadfast",
+        "person": "Nagad fails once, then the retry"
+      }
+    },
+    {
+      "id": "17",
+      "title": "Order 17 · OD · Rajshahi city · 2 polos + slim-chino · cash on delivery · RedX",
+      "device": "android-low",
+      "network": "fast-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D6",
+        "persona": "OD",
+        "area": "outside",
+        "items": "2 polos + slim-chino",
+        "pay": "cod",
+        "courier": "redx",
+        "person": "wrong phone, merge from WhatsApp, phone corrected with a log"
+      }
+    },
+    {
+      "id": "18",
+      "title": "Order 18 · FT · Mohammadpur · contrast-collar-polo M · cash on delivery",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1112"
+      ],
+      "addresses": [
+        "dhk-shyamoli"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 993,
+          "lcpMs": 928,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 903,
+          "lcpMs": 836,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 491,
+          "serverMs": 269
+        },
+        "checkoutOpen": {
+          "ms": 1209,
+          "lcpMs": 764
+        },
+        "submit": {
+          "ms": 1559,
+          "serverMs": 137,
+          "lcpMs": 736
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1112"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s) after a double tap"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 75000 of 75000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D6",
+        "persona": "FT",
+        "area": "city",
+        "items": "contrast-collar-polo M",
+        "pay": "cod",
+        "courier": null,
+        "person": "reorders 10 min later; cancellation notice with a tracking link"
+      }
+    },
+    {
+      "id": "19",
+      "title": "Order 19 · OD · Masterpara, Gabtali, Bogura · relaxed-twill-trousers 34 · cash on delivery · Pathao",
+      "device": "android-low",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1113"
+      ],
+      "addresses": [
+        "out-bogura-bn"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 3363,
+          "lcpMs": 2748,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3454,
+          "lcpMs": 2892,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 660,
+          "serverMs": 25
+        },
+        "checkoutOpen": {
+          "ms": 3815,
+          "lcpMs": 2668
+        },
+        "submit": {
+          "ms": 4333,
+          "serverMs": 16,
+          "lcpMs": 2572
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1113"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 75000 of 75000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Pathao account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "75000 vs due 75000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "75000 vs due 75000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D7",
+        "persona": "OD",
+        "area": "outside",
+        "items": "relaxed-twill-trousers 34",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "courier zone id"
+      }
+    },
+    {
+      "id": "20",
+      "title": "Order 20 · FT · Dhanmondi · striped-rib-polo L · cash on delivery",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1114"
+      ],
+      "addresses": [
+        "dhk-dhanmondi"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 746,
+          "lcpMs": 684,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 793,
+          "lcpMs": 724,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 225,
+          "serverMs": 11
+        },
+        "checkoutOpen": {
+          "ms": 1062,
+          "lcpMs": 684
+        },
+        "submit": {
+          "ms": 1339,
+          "serverMs": 75,
+          "lcpMs": 660
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1114"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 75000 of 75000"
+        },
+        {
+          "id": "cancelled before packing",
+          "verdict": "PASS",
+          "detail": "CANCELLED"
+        },
+        {
+          "id": "the stock is released",
+          "verdict": "PASS",
+          "detail": "39→40"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D7",
+        "persona": "FT",
+        "area": "city",
+        "items": "striped-rib-polo L",
+        "pay": "cod",
+        "courier": null,
+        "person": "cancels on WhatsApp 2 h later"
+      }
+    },
+    {
+      "id": "21",
+      "title": "Order 21 · RP · Gulshan 1 · 6 items: 2 polos, 2 tees, slim-chino, belt · card · Steadfast",
+      "device": "desktop-1366",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "card payment is switched off on the shop (Payments › cards)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D7",
+        "persona": "RP",
+        "area": "city",
+        "items": "6 items: 2 polos, 2 tees, slim-chino, belt",
+        "pay": "card",
+        "courier": "steadfast",
+        "person": "packing 6 items, weight over 1 kg"
+      }
+    },
+    {
+      "id": "22",
+      "title": "Order 22 · FT · Khulna · long-sleeve-polo XL · cash on delivery · RedX",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D8",
+        "persona": "FT",
+        "area": "outside",
+        "items": "long-sleeve-polo XL",
+        "pay": "cod",
+        "courier": "redx",
+        "person": "try-on at the door, returns, XXL re-ship linked"
+      }
+    },
+    {
+      "id": "23",
+      "title": "Order 23 · OD · Cox's Bazar · Polo Duo · cash on delivery · Steadfast",
+      "device": "android-low",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1115"
+      ],
+      "addresses": [
+        "out-coxs-bazar"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 3317,
+          "lcpMs": 2632,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3425,
+          "lcpMs": 2844,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 643,
+          "serverMs": 21
+        },
+        "checkoutOpen": {
+          "ms": 3825,
+          "lcpMs": 2700
+        },
+        "submit": {
+          "ms": 4339,
+          "serverMs": 17,
+          "lcpMs": 2548
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1115"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 2",
+          "verdict": "PASS",
+          "detail": "2"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 150000 of 150000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "150000 vs due 150000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "150000 vs due 150000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D8",
+        "persona": "OD",
+        "area": "outside",
+        "items": "Polo Duo",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "bargaining at the door, the call logged"
+      }
+    },
+    {
+      "id": "24",
+      "title": "Order 24 · FT · Mirpur 11 · heavyweight-hoodie L · cash on delivery · Pathao",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1116"
+      ],
+      "addresses": [
+        "dhk-mirpur"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 1224,
+          "lcpMs": 1156,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 808,
+          "lcpMs": 744,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 224,
+          "serverMs": 3
+        },
+        "checkoutOpen": {
+          "ms": 1158,
+          "lcpMs": 704
+        },
+        "submit": {
+          "ms": 1371,
+          "serverMs": 5,
+          "lcpMs": 748
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1116"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 75000 of 75000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Pathao account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "75000 vs due 75000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "75000 vs due 75000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D8",
+        "persona": "FT",
+        "area": "city",
+        "items": "heavyweight-hoodie L",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "rider asks ৳50 extra; goodwill credit is an owner proposal"
+      }
+    },
+    {
+      "id": "25",
+      "title": "Order 25 · OD · Sylhet · oxford-cotton-shirt + slim-chino · cash on delivery · RedX",
+      "device": "android-low",
+      "network": "fast-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D9",
+        "persona": "OD",
+        "area": "outside",
+        "items": "oxford-cotton-shirt + slim-chino",
+        "pay": "cod",
+        "courier": "redx",
+        "person": "courier loses the parcel; claim and re-ship"
+      }
+    },
+    {
+      "id": "26",
+      "title": "Order 26 · RP · Badda · polo-chino combo · bKash · Steadfast",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "bKash is switched off on the shop (Payments › mobile wallets)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D9",
+        "persona": "RP",
+        "area": "city",
+        "items": "polo-chino combo",
+        "pay": "bkash",
+        "courier": "steadfast",
+        "person": "damaged parcel, replacement, courier claim"
+      }
+    },
+    {
+      "id": "27",
+      "title": "Order 27 · FT · Mymensingh · 2 everyday-crew-tee · cash on delivery · Pathao",
+      "device": "android-mid",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1117"
+      ],
+      "addresses": [
+        "out-mymensingh"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 3255,
+          "lcpMs": 2572,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3392,
+          "lcpMs": 2740,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 620,
+          "serverMs": 18
+        },
+        "checkoutOpen": {
+          "ms": 3614,
+          "lcpMs": 2596
+        },
+        "submit": {
+          "ms": 4282,
+          "serverMs": 17,
+          "lcpMs": 2500
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1117"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 2",
+          "verdict": "PASS",
+          "detail": "2"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 198000 of 198000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Pathao account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "198000 vs due 198000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "198000 vs due 198000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D9",
+        "persona": "FT",
+        "area": "outside",
+        "items": "2 everyday-crew-tee",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "phone off, not available twice, RTO cost"
+      }
+    },
+    {
+      "id": "28",
+      "title": "Order 28 · AN · Chattogram · jersey-zip-polo · cash on delivery · RedX",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D10",
+        "persona": "AN",
+        "area": "outside",
+        "items": "jersey-zip-polo",
+        "pay": "cod",
+        "courier": "redx",
+        "person": "6 days late; threatens a Facebook post"
+      }
+    },
+    {
+      "id": "29",
+      "title": "Order 29 · FT · Uttara · pocket-tee M · cash on delivery · Steadfast",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1118"
+      ],
+      "addresses": [
+        "dhk-uttara"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 776,
+          "lcpMs": 712,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 981,
+          "lcpMs": 916,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 250,
+          "serverMs": 37
+        },
+        "checkoutOpen": {
+          "ms": 1140,
+          "lcpMs": 748
+        },
+        "submit": {
+          "ms": 1506,
+          "serverMs": 140,
+          "lcpMs": 752
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1118"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 99000 of 99000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "99000 vs due 99000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "99000 vs due 99000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D10",
+        "persona": "FT",
+        "area": "city",
+        "items": "pocket-tee M",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "photo review on D+2, moderation, verified-buyer mark"
+      }
+    },
+    {
+      "id": "30",
+      "title": "Order 30 · GF · pays in Gulshan, ships to Rangpur · hoodie set · bKash · Pathao",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "bKash is switched off on the shop (Payments › mobile wallets)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D10",
+        "persona": "GF",
+        "area": "outside",
+        "items": "hoodie set",
+        "pay": "bkash",
+        "courier": "pathao",
+        "person": "delivery on a date (birthday)"
+      }
+    },
+    {
+      "id": "31",
+      "title": "Order 31 · BN + EL · Cumilla · classic-cotton-panjabi + slim-chino · cash on delivery · RedX",
+      "device": "android-mid",
+      "network": "fast-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D10",
+        "persona": "BN + EL",
+        "area": "outside",
+        "items": "classic-cotton-panjabi + slim-chino",
+        "pay": "cod",
+        "courier": "redx",
+        "person": "size asked on Messenger, agent builds the order in chat"
+      }
+    },
+    {
+      "id": "32",
+      "title": "Order 32 · FT · Dhanmondi · textured-knit-polo M · cash on delivery · Steadfast",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1119"
+      ],
+      "addresses": [
+        "dhk-dhanmondi"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 1006,
+          "lcpMs": 928,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 963,
+          "lcpMs": 896,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 256,
+          "serverMs": 28
+        },
+        "checkoutOpen": {
+          "ms": 1211,
+          "lcpMs": 756
+        },
+        "submit": {
+          "ms": 1466,
+          "serverMs": 124,
+          "lcpMs": 720
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1119"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 99000 of 99000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "99000 vs due 99000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "99000 vs due 99000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D10",
+        "persona": "FT",
+        "area": "city",
+        "items": "textured-knit-polo M",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "D+1 size exchange M→L from My account, QC good"
+      }
+    },
+    {
+      "id": "33",
+      "title": "Order 33 · RP · Mohammadpur · slim-chino 32 · cash on delivery · Pathao",
+      "device": "desktop-1366",
+      "network": "wifi",
+      "verdict": "FAIL",
+      "orders": [
+        "1120"
+      ],
+      "addresses": [
+        "dhk-mohammadpur-bn"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 307,
+          "lcpMs": 288,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 314,
+          "lcpMs": 308,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 102,
+          "serverMs": 46
+        },
+        "checkoutOpen": {
+          "ms": 382,
+          "lcpMs": 248
+        },
+        "submit": {
+          "ms": 730,
+          "serverMs": 158,
+          "lcpMs": 200
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "FAIL",
+          "detail": "oracle book: IN_REVIEW: IN_REVIEW: confirm is not open for this order (PLACED)"
+        }
+      ],
+      "shot": "scenario-33.jpg",
+      "plan": {
+        "day": "D10",
+        "persona": "RP",
+        "area": "city",
+        "items": "slim-chino 32",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "exchange asked on D+4 (window passed)"
+      }
+    },
+    {
+      "id": "34",
+      "title": "Order 34 · 3G · Barishal · Polo Duo · cash on delivery · Steadfast",
+      "device": "android-low",
+      "network": "slow-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1121"
+      ],
+      "addresses": [
+        "out-barishal"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 11273,
+          "lcpMs": 8712,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 11991,
+          "lcpMs": 9604,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 2074,
+          "serverMs": 13
+        },
+        "checkoutOpen": {
+          "ms": 12629,
+          "lcpMs": 9116
+        },
+        "submit": {
+          "ms": 14219,
+          "serverMs": 31,
+          "lcpMs": 8640
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1121"
+        },
+        {
+          "id": "the lost answer leaves him on the checkout",
+          "verdict": "PASS",
+          "detail": "/checkout"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s) after a lost answer and a second press"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 2",
+          "verdict": "PASS",
+          "detail": "2"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 198000 of 198000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "198000 vs due 198000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "198000 vs due 198000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D10",
+        "persona": "3G",
+        "area": "outside",
+        "items": "Polo Duo",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": ""
+      }
+    },
+    {
+      "id": "35",
+      "title": "Order 35 · FR · Mirpur 1 · heavyweight-hoodie ×3 · cash on delivery",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1122"
+      ],
+      "addresses": [
+        "dhk-mirpur"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 1258,
+          "lcpMs": 1188,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 837,
+          "lcpMs": 772,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 229,
+          "serverMs": 7
+        },
+        "checkoutOpen": {
+          "ms": 1154,
+          "lcpMs": 712
+        },
+        "submit": {
+          "ms": 1416,
+          "serverMs": 113,
+          "lcpMs": 684
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1122"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 3",
+          "verdict": "PASS",
+          "detail": "3"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 297000 of 297000"
+        },
+        {
+          "id": "no automatic block (a person decides)",
+          "verdict": "PASS",
+          "detail": "PLACED"
+        },
+        {
+          "id": "cancelled before packing",
+          "verdict": "PASS",
+          "detail": "CANCELLED"
+        },
+        {
+          "id": "the stock is released",
+          "verdict": "PASS",
+          "detail": "37→40"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D10",
+        "persona": "FR",
+        "area": "city",
+        "items": "heavyweight-hoodie ×3",
+        "pay": "cod",
+        "courier": null,
+        "person": "identity graph match, hold and advance request; a block only proposed"
+      }
+    },
+    {
+      "id": "36",
+      "title": "Order 36 · FT · Mohakhali · classic-cotton-panjabi ×2 · cash on delivery · Pathao",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1123"
+      ],
+      "addresses": [
+        "dhk-mohakhali"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 767,
+          "lcpMs": 688,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 820,
+          "lcpMs": 756,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 224,
+          "serverMs": 4
+        },
+        "checkoutOpen": {
+          "ms": 1162,
+          "lcpMs": 720
+        },
+        "submit": {
+          "ms": 1302,
+          "serverMs": 4,
+          "lcpMs": 676
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1123"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 2",
+          "verdict": "PASS",
+          "detail": "2"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 198000 of 198000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Pathao account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "198000 vs due 198000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "198000 vs due 198000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D11",
+        "persona": "FT",
+        "area": "city",
+        "items": "classic-cotton-panjabi ×2",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "Eid cut-off banner and the \"before Eid\" promise"
+      }
+    },
+    {
+      "id": "37",
+      "title": "Order 37 · OD · Dinajpur · classic-cotton-panjabi M · cash on delivery · RedX",
+      "device": "android-low",
+      "network": "fast-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D11",
+        "persona": "OD",
+        "area": "outside",
+        "items": "classic-cotton-panjabi M",
+        "pay": "cod",
+        "courier": "redx",
+        "person": "after the outside-Dhaka cut-off; arrives after Eid"
+      }
+    },
+    {
+      "id": "38",
+      "title": "Order 38 · GF · pays in Dhaka, ships to Khulna · classic-cotton-panjabi XL (gift) · bKash · Steadfast",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "bKash is switched off on the shop (Payments › mobile wallets)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D11",
+        "persona": "GF",
+        "area": "outside",
+        "items": "classic-cotton-panjabi XL (gift)",
+        "pay": "bkash",
+        "courier": "steadfast",
+        "person": "courier peak delay; sender and receiver informed"
+      }
+    },
+    {
+      "id": "39",
+      "title": "Order 39 · RP · Gazipur · panjabi ×2 (sizes for sons) + polo · cash on delivery · Pathao",
+      "device": "desktop-1366",
+      "network": "wifi",
+      "verdict": "FAIL",
+      "orders": [
+        "1124"
+      ],
+      "addresses": [
+        "sub-tongi"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 379,
+          "lcpMs": 360,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 310,
+          "lcpMs": 308,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 109,
+          "serverMs": 51
+        },
+        "checkoutOpen": {
+          "ms": 343,
+          "lcpMs": 244
+        },
+        "submit": {
+          "ms": 756,
+          "serverMs": 180,
+          "lcpMs": 200
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "FAIL",
+          "detail": "oracle book: IN_REVIEW: IN_REVIEW: confirm is not open for this order (PLACED)"
+        }
+      ],
+      "shot": "scenario-39.jpg",
+      "plan": {
+        "day": "D12",
+        "persona": "RP",
+        "area": "sub",
+        "items": "panjabi ×2 (sizes for sons) + polo",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "one size oversold at peak, resolution card at packing"
+      }
+    },
+    {
+      "id": "40",
+      "title": "Order 40 · BK · Narayanganj factory · 25 panjabis for staff Eid gift · bank transfer / advance",
+      "device": "desktop-1920",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "a bank transfer or an advance is not a checkout method: a person records it (the plan's bulk and bank-paid orders)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D12",
+        "persona": "BK",
+        "area": "sub",
+        "items": "25 panjabis for staff Eid gift",
+        "pay": "bank",
+        "courier": null,
+        "person": "bulk enquiry, human quote, advance, split delivery"
+      }
+    },
+    {
+      "id": "41",
+      "title": "Order 41 · FT · Sylhet · classic-cotton-panjabi L · cash on delivery · RedX",
+      "device": "android-mid",
+      "network": "fast-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D12",
+        "persona": "FT",
+        "area": "outside",
+        "items": "classic-cotton-panjabi L",
+        "pay": "cod",
+        "courier": "redx",
+        "person": "call queue backlog at 100 orders a day"
+      }
+    },
+    {
+      "id": "42",
+      "title": "Order 42 · FR · Shyamoli · 4 panjabis · cash on delivery · Steadfast",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1125"
+      ],
+      "addresses": [
+        "dhk-shyamoli"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 778,
+          "lcpMs": 704,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 795,
+          "lcpMs": 732,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 207,
+          "serverMs": 3
+        },
+        "checkoutOpen": {
+          "ms": 1155,
+          "lcpMs": 716
+        },
+        "submit": {
+          "ms": 1324,
+          "serverMs": 11,
+          "lcpMs": 680
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1125"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "4 line(s)",
+          "verdict": "PASS",
+          "detail": "4 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 200000 of 200000"
+        },
+        {
+          "id": "no automatic block (a person decides)",
+          "verdict": "PASS",
+          "detail": "PLACED"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "200000 vs due 200000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "200000 vs due 200000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D13",
+        "persona": "FR",
+        "area": "city",
+        "items": "4 panjabis",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "refuses at the door, RTO, learning loop and the ads exclusion list"
+      }
+    },
+    {
+      "id": "43",
+      "title": "Order 43 · AB · Chattogram · classic-cotton-panjabi M · bKash, then cash on delivery · RedX",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D13",
+        "persona": "AB",
+        "area": "outside",
+        "items": "classic-cotton-panjabi M",
+        "pay": "bkash-cod",
+        "courier": "redx",
+        "person": "comes back from the follow-up"
+      }
+    },
+    {
+      "id": "44",
+      "title": "Order 44 · BN · Rajshahi · panjabi + belt, coupon EID · cash on delivery · Pathao",
+      "device": "android-mid",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1126"
+      ],
+      "addresses": [
+        "out-rajshahi"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 3290,
+          "lcpMs": 2620,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3434,
+          "lcpMs": 2788,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 689,
+          "serverMs": 76
+        },
+        "checkoutOpen": {
+          "ms": 3970,
+          "lcpMs": 2612
+        },
+        "submit": {
+          "ms": 4658,
+          "serverMs": 15,
+          "lcpMs": 2472
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "the owner's coupon",
+          "verdict": "SKIP",
+          "detail": "the owner has no open coupon without a use limit (his codes are his; the run makes none)"
+        },
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1126"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "2 line(s)",
+          "verdict": "PASS",
+          "detail": "2 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 125000 of 125000"
+        },
+        {
+          "id": "the order is in Bengali",
+          "verdict": "PASS",
+          "detail": "bn"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Pathao account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "125000 vs due 125000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "125000 vs due 125000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D13",
+        "persona": "BN",
+        "area": "outside",
+        "items": "panjabi + belt, coupon EID",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "the same total on SMS, invoice and sticker"
+      }
+    },
+    {
+      "id": "45",
+      "title": "Order 45 · OD + 3G · Rangpur → village for Eid · classic-cotton-panjabi L · cash on delivery · Steadfast",
+      "device": "android-low",
+      "network": "slow-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1127"
+      ],
+      "addresses": [
+        "out-rangpur"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 11116,
+          "lcpMs": 8528,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 12060,
+          "lcpMs": 9144,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 2090,
+          "serverMs": 17
+        },
+        "checkoutOpen": {
+          "ms": 12609,
+          "lcpMs": 9064
+        },
+        "submit": {
+          "ms": 14210,
+          "serverMs": 26,
+          "lcpMs": 8652
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1127"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 75000 of 75000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Steadfast account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "75000 vs due 75000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "75000 vs due 75000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D14",
+        "persona": "OD + 3G",
+        "area": "outside",
+        "items": "classic-cotton-panjabi L",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "address change after the courier is booked"
+      }
+    },
+    {
+      "id": "46",
+      "title": "Order 46 · RP · Uttara · everyday-crew-tee ×3 · cash on delivery · Pathao",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "FAIL",
+      "orders": [
+        "1128"
+      ],
+      "addresses": [
+        "dhk-uttara"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 740,
+          "lcpMs": 668,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 774,
+          "lcpMs": 708,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 215,
+          "serverMs": 3
+        },
+        "checkoutOpen": {
+          "ms": 1061,
+          "lcpMs": 684
+        },
+        "submit": {
+          "ms": 1283,
+          "serverMs": 15,
+          "lcpMs": 664
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "FAIL",
+          "detail": "oracle book: IN_REVIEW: IN_REVIEW: confirm is not open for this order (PLACED)"
+        }
+      ],
+      "shot": "scenario-46.jpg",
+      "plan": {
+        "day": "D16",
+        "persona": "RP",
+        "area": "city",
+        "items": "everyday-crew-tee ×3",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "came from a product-life reminder; points earned"
+      }
+    },
+    {
+      "id": "47",
+      "title": "Order 47 · AN · Dhanmondi · linen-blend-shirt white M · card · Steadfast",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "card payment is switched off on the shop (Payments › cards)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D16",
+        "persona": "AN",
+        "area": "city",
+        "items": "linen-blend-shirt white M",
+        "pay": "card",
+        "courier": "steadfast",
+        "person": "wrong item packed, free exchange, root cause"
+      }
+    },
+    {
+      "id": "48",
+      "title": "Order 48 · OD · Khulna · hoodie-jogger set · cash on delivery · RedX",
+      "device": "android-low",
+      "network": "fast-3g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "courier",
+          "verdict": "SKIP",
+          "detail": "the shop has no RedX courier (no connection for it in this build)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D17",
+        "persona": "OD",
+        "area": "outside",
+        "items": "hoodie-jogger set",
+        "pay": "cod",
+        "courier": "redx",
+        "person": "partial on a set at the door"
+      }
+    },
+    {
+      "id": "49",
+      "title": "Order 49 · FT · Savar · slim-chino 30 + belt · cash on delivery · Pathao",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1129"
+      ],
+      "addresses": [
+        "sub-savar"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 775,
+          "lcpMs": 696,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 875,
+          "lcpMs": 812,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 213,
+          "serverMs": 9
+        },
+        "checkoutOpen": {
+          "ms": 1169,
+          "lcpMs": 728
+        },
+        "submit": {
+          "ms": 1366,
+          "serverMs": 64,
+          "lcpMs": 676
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1129"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "2 line(s)",
+          "verdict": "PASS",
+          "detail": "2 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 150000 of 150000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop has no Pathao account yet (its keys come later); booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "150000 vs due 150000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "150000 vs due 150000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "D17",
+        "persona": "FT",
+        "area": "sub",
+        "items": "slim-chino 30 + belt",
+        "pay": "cod",
+        "courier": "pathao",
+        "person": "\"Add to this parcel\" before packing"
+      }
+    },
+    {
+      "id": "50",
+      "title": "Order 50 · RP (VIP) · Gulshan 2 · Office Trio · cash on delivery · Steadfast",
+      "device": "desktop-1920",
+      "network": "wifi",
+      "verdict": "FAIL",
+      "orders": [
+        "1130"
+      ],
+      "addresses": [
+        "dhk-gulshan"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 303,
+          "lcpMs": 288,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 1176,
+          "lcpMs": 1172,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 238,
+          "serverMs": 178
+        },
+        "checkoutOpen": {
+          "ms": 545,
+          "lcpMs": 440
+        },
+        "submit": {
+          "ms": 1265,
+          "serverMs": 300,
+          "lcpMs": 584
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "FAIL",
+          "detail": "oracle book: IN_REVIEW: IN_REVIEW: confirm is not open for this order (PLACED)"
+        }
+      ],
+      "shot": "scenario-50.jpg",
+      "plan": {
+        "day": "D18",
+        "persona": "RP (VIP)",
+        "area": "city",
+        "items": "Office Trio",
+        "pay": "cod",
+        "courier": "steadfast",
+        "person": "invoice copy, review, referral code for a friend"
+      }
+    },
+    {
+      "id": "51",
+      "title": "Order 51 · Prepaid · bKash · Dhaka city · Textured knit polo M · bKash · the shop's choice",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "bKash is switched off on the shop (Payments › mobile wallets)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D1",
+        "persona": "Prepaid · bKash",
+        "area": "city",
+        "items": "Textured knit polo M",
+        "pay": "bkash",
+        "courier": "any",
+        "person": "prepaid reward"
+      }
+    },
+    {
+      "id": "52",
+      "title": "Order 52 · Prepaid · card · Dhaka city · Oxford shirt L + chino 32 · card · the shop's choice",
+      "device": "desktop-1366",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "card payment is switched off on the shop (Payments › cards)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D1",
+        "persona": "Prepaid · card",
+        "area": "city",
+        "items": "Oxford shirt L + chino 32",
+        "pay": "card",
+        "courier": "any",
+        "person": "own-size exchange L→XL"
+      }
+    },
+    {
+      "id": "53",
+      "title": "Order 53 · Prepaid · internet banking · Dhaka city · Heavyweight hoodie L · bank transfer / advance · the shop's choice",
+      "device": "desktop-1366",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "a bank transfer or an advance is not a checkout method: a person records it (the plan's bulk and bank-paid orders)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D2",
+        "persona": "Prepaid · internet banking",
+        "area": "city",
+        "items": "Heavyweight hoodie L",
+        "pay": "bank",
+        "courier": "any",
+        "person": "cancelled on request; refund record"
+      }
+    },
+    {
+      "id": "54",
+      "title": "Order 54 · Prepaid · Nagad · Outside Dhaka · Contrast polo M · Nagad · the shop's choice",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "Nagad is switched off on the shop (Payments › mobile wallets)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D2",
+        "persona": "Prepaid · Nagad",
+        "area": "outside",
+        "items": "Contrast polo M",
+        "pay": "nagad",
+        "courier": "any",
+        "person": "our-mistake free exchange"
+      }
+    },
+    {
+      "id": "55",
+      "title": "Order 55 · Risk · hard, pays full advance · Outside Dhaka · Panjabi ×3 · cash on delivery · the shop's choice",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1131"
+      ],
+      "addresses": [
+        "out-tangail"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 782,
+          "lcpMs": 712,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 806,
+          "lcpMs": 736,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 221,
+          "serverMs": 3
+        },
+        "checkoutOpen": {
+          "ms": 1158,
+          "lcpMs": 716
+        },
+        "submit": {
+          "ms": 1309,
+          "serverMs": 9,
+          "lcpMs": 684
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1131"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 3",
+          "verdict": "PASS",
+          "detail": "3"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 297000 of 297000"
+        },
+        {
+          "id": "no automatic block (a person decides)",
+          "verdict": "PASS",
+          "detail": "PLACED"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "297000 vs due 297000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "297000 vs due 297000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D3",
+        "persona": "Risk · hard, pays full advance",
+        "area": "outside",
+        "items": "Panjabi ×3",
+        "pay": "cod",
+        "courier": "any",
+        "person": "the full advance paid by bKash outside the checkout is recorded (F-040)"
+      }
+    },
+    {
+      "id": "56",
+      "title": "Order 56 · Risk · hard, refuses advance · Dhaka city · Hoodie ×2 · cash on delivery · the shop's choice",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1132"
+      ],
+      "addresses": [
+        "dhk-jatrabari"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 1014,
+          "lcpMs": 908,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 937,
+          "lcpMs": 876,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 246,
+          "serverMs": 26
+        },
+        "checkoutOpen": {
+          "ms": 1207,
+          "lcpMs": 764
+        },
+        "submit": {
+          "ms": 1470,
+          "serverMs": 137,
+          "lcpMs": 716
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1132"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 2",
+          "verdict": "PASS",
+          "detail": "2"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 198000 of 198000"
+        },
+        {
+          "id": "no automatic block (a person decides)",
+          "verdict": "PASS",
+          "detail": "PLACED"
+        },
+        {
+          "id": "cancelled before packing",
+          "verdict": "PASS",
+          "detail": "CANCELLED"
+        },
+        {
+          "id": "the stock is released",
+          "verdict": "PASS",
+          "detail": "37→39"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D3",
+        "persona": "Risk · hard, refuses advance",
+        "area": "city",
+        "items": "Hoodie ×2",
+        "pay": "cod",
+        "courier": "any",
+        "person": "held, advance refused, declined with a reason and a notice"
+      }
+    },
+    {
+      "id": "57",
+      "title": "Order 57 · Risk · soft, pays delivery charge · Dhaka city · Pocket tee L + crew tee L · cash on delivery · the shop's choice",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1133"
+      ],
+      "addresses": [
+        "dhk-bashundhara"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 936,
+          "lcpMs": 868,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 773,
+          "lcpMs": 704,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 217,
+          "serverMs": 7
+        },
+        "checkoutOpen": {
+          "ms": 1070,
+          "lcpMs": 688
+        },
+        "submit": {
+          "ms": 1282,
+          "serverMs": 11,
+          "lcpMs": 652
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1133"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "2 line(s)",
+          "verdict": "PASS",
+          "detail": "2 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 198000 of 198000"
+        },
+        {
+          "id": "no automatic block (a person decides)",
+          "verdict": "PASS",
+          "detail": "PLACED"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "198000 vs due 198000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "198000 vs due 198000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D4",
+        "persona": "Risk · soft, pays delivery charge",
+        "area": "city",
+        "items": "Pocket tee L + crew tee L",
+        "pay": "cod",
+        "courier": "any",
+        "person": "the ৳120 advance recorded, not collected twice (F-040)"
+      }
+    },
+    {
+      "id": "58",
+      "title": "Order 58 · Risk · false positive · Outside Dhaka · Long-sleeve polo L · cash on delivery · the shop's choice",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1134"
+      ],
+      "addresses": [
+        "out-jashore"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 772,
+          "lcpMs": 704,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 903,
+          "lcpMs": 836,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 245,
+          "serverMs": 26
+        },
+        "checkoutOpen": {
+          "ms": 1226,
+          "lcpMs": 768
+        },
+        "submit": {
+          "ms": 1545,
+          "serverMs": 216,
+          "lcpMs": 708
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1134"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 99000 of 99000"
+        },
+        {
+          "id": "no automatic block (a person decides)",
+          "verdict": "PASS",
+          "detail": "PLACED"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "99000 vs due 99000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "99000 vs due 99000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D4",
+        "persona": "Risk · false positive",
+        "area": "outside",
+        "items": "Long-sleeve polo L",
+        "pay": "cod",
+        "courier": "any",
+        "person": "override with a note"
+      }
+    },
+    {
+      "id": "59",
+      "title": "Order 59 · Older 50+ · বাংলা · 150% text · Outside Dhaka · Panjabi XL (bag kept 2 days) · cash on delivery · the shop's choice",
+      "device": "android-mid",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1135"
+      ],
+      "addresses": [
+        "out-kushtia"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 3318,
+          "lcpMs": 2648,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3438,
+          "lcpMs": 2796,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 656,
+          "serverMs": 40
+        },
+        "checkoutOpen": {
+          "ms": 4049,
+          "lcpMs": 2604
+        },
+        "submit": {
+          "ms": 4659,
+          "serverMs": 12,
+          "lcpMs": 2520
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1135"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 99000 of 99000"
+        },
+        {
+          "id": "the order is in Bengali",
+          "verdict": "PASS",
+          "detail": "bn"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "99000 vs due 99000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "99000 vs due 99000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D5",
+        "persona": "Older 50+ · বাংলা · 150% text",
+        "area": "outside",
+        "items": "Panjabi XL (bag kept 2 days)",
+        "pay": "cod",
+        "courier": "any",
+        "person": "150% text, the bag kept for 2 days"
+      }
+    },
+    {
+      "id": "60",
+      "title": "Order 60 · Son orders for his father · Outside Dhaka · Panjabi XL + twill 36 · cash on delivery · the shop's choice",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1136"
+      ],
+      "addresses": [
+        "out-netrokona"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 974,
+          "lcpMs": 912,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 804,
+          "lcpMs": 736,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 231,
+          "serverMs": 10
+        },
+        "checkoutOpen": {
+          "ms": 1154,
+          "lcpMs": 712
+        },
+        "submit": {
+          "ms": 1314,
+          "serverMs": 5,
+          "lcpMs": 676
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1136"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "2 line(s)",
+          "verdict": "PASS",
+          "detail": "2 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 198000 of 198000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "198000 vs due 198000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "198000 vs due 198000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D5",
+        "persona": "Son orders for his father",
+        "area": "outside",
+        "items": "Panjabi XL + twill 36",
+        "pay": "cod",
+        "courier": "any",
+        "person": "the father pays at the door; receiver on the sticker (F-045)"
+      }
+    },
+    {
+      "id": "61",
+      "title": "Order 61 · Daughter's gift to her mother · Outside Dhaka · Linen shirt L · bKash · the shop's choice",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "bKash is switched off on the shop (Payments › mobile wallets)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D6",
+        "persona": "Daughter's gift to her mother",
+        "area": "outside",
+        "items": "Linen shirt L",
+        "pay": "bkash",
+        "courier": "any",
+        "person": "the sticker names the receiver"
+      }
+    },
+    {
+      "id": "62",
+      "title": "Order 62 · Older 40+ · voice note, wants a call · Outside Dhaka · Oxford shirt ×2 XL · cash on delivery · the shop's choice",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1137"
+      ],
+      "addresses": [
+        "out-faridpur"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 805,
+          "lcpMs": 708,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 917,
+          "lcpMs": 848,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 258,
+          "serverMs": 38
+        },
+        "checkoutOpen": {
+          "ms": 1217,
+          "lcpMs": 772
+        },
+        "submit": {
+          "ms": 1481,
+          "serverMs": 125,
+          "lcpMs": 728
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1137"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 2",
+          "verdict": "PASS",
+          "detail": "2"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 100000 of 100000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "100000 vs due 100000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "100000 vs due 100000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D6",
+        "persona": "Older 40+ · voice note, wants a call",
+        "area": "outside",
+        "items": "Oxford shirt ×2 XL",
+        "pay": "cod",
+        "courier": "any",
+        "person": "voice note and a call-back request; agent keys the order"
+      }
+    },
+    {
+      "id": "63",
+      "title": "Order 63 · Rural · Kurigram union · borrowed phone · Outside Dhaka · Crew tee ×2 L · cash on delivery · the shop's choice",
+      "device": "android-low",
+      "network": "slow-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1138"
+      ],
+      "addresses": [
+        "out-dinajpur-bn"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 11230,
+          "lcpMs": 8776,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 12112,
+          "lcpMs": 9752,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 2181,
+          "serverMs": 114
+        },
+        "checkoutOpen": {
+          "ms": 14044,
+          "lcpMs": 9200
+        },
+        "submit": {
+          "ms": 15736,
+          "serverMs": 36,
+          "lcpMs": 8716
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1138"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "quantity 2",
+          "verdict": "PASS",
+          "detail": "2"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 100000 of 100000"
+        },
+        {
+          "id": "the order is in Bengali",
+          "verdict": "PASS",
+          "detail": "bn"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "100000 vs due 100000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "100000 vs due 100000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D7",
+        "persona": "Rural · Kurigram union · borrowed phone",
+        "area": "outside",
+        "items": "Crew tee ×2 L",
+        "pay": "cod",
+        "courier": "any",
+        "person": "contact person and call time; delivered on day 4"
+      }
+    },
+    {
+      "id": "64",
+      "title": "Order 64 · Rural · Sunamganj haor · Outside Dhaka · Heavy tee XL · cash on delivery · the shop's choice",
+      "device": "android-low",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1139"
+      ],
+      "addresses": [
+        "out-sreemangal"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 3247,
+          "lcpMs": 2548,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3469,
+          "lcpMs": 2876,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 670,
+          "serverMs": 38
+        },
+        "checkoutOpen": {
+          "ms": 4200,
+          "lcpMs": 2784
+        },
+        "submit": {
+          "ms": 4716,
+          "serverMs": 5,
+          "lcpMs": 2588
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1139"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 50000 of 50000"
+        },
+        {
+          "id": "the order is in Bengali",
+          "verdict": "PASS",
+          "detail": "bn"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "50000 vs due 50000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "50000 vs due 50000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D7",
+        "persona": "Rural · Sunamganj haor",
+        "area": "outside",
+        "items": "Heavy tee XL",
+        "pay": "cod",
+        "courier": "any",
+        "person": "a failed attempt recorded, then delivered"
+      }
+    },
+    {
+      "id": "65",
+      "title": "Order 65 · Expat in Dubai, card · Dhaka city · Panjabi ×2 · card · the shop's choice",
+      "device": "desktop-1366",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "card payment is switched off on the shop (Payments › cards)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D8",
+        "persona": "Expat in Dubai, card",
+        "area": "city",
+        "items": "Panjabi ×2",
+        "pay": "card",
+        "courier": "any",
+        "person": "RTO (brother away); refund record"
+      }
+    },
+    {
+      "id": "66",
+      "title": "Order 66 · Corporate, after a quote · Dhaka city · 30 logo polos at the quoted price · bank transfer / advance",
+      "device": "desktop-1920",
+      "network": "wifi",
+      "verdict": "SKIP",
+      "orders": [],
+      "addresses": [],
+      "timings": null,
+      "over": [],
+      "checks": [
+        {
+          "id": "payment method",
+          "verdict": "SKIP",
+          "detail": "a bank transfer or an advance is not a checkout method: a person records it (the plan's bulk and bank-paid orders)"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D8",
+        "persona": "Corporate, after a quote",
+        "area": "city",
+        "items": "30 logo polos at the quoted price",
+        "pay": "bank",
+        "courier": null,
+        "person": "the quote turned into an order (PR 606)"
+      }
+    },
+    {
+      "id": "67",
+      "title": "Order 67 · Repeat buyer expects the refund · Dhaka city · Heavyweight hoodie L · cash on delivery · the shop's choice",
+      "device": "iphone",
+      "network": "4g",
+      "verdict": "FAIL",
+      "orders": [
+        "1140"
+      ],
+      "addresses": [
+        "dhk-khilgaon-pasted"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 740,
+          "lcpMs": 684,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 798,
+          "lcpMs": 728,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 215,
+          "serverMs": 3
+        },
+        "checkoutOpen": {
+          "ms": 1063,
+          "lcpMs": 684
+        },
+        "submit": {
+          "ms": 1429,
+          "serverMs": 163,
+          "lcpMs": 656
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "run",
+          "verdict": "FAIL",
+          "detail": "oracle book: IN_REVIEW: IN_REVIEW: confirm is not open for this order (PLACED)"
+        }
+      ],
+      "shot": "scenario-67.jpg",
+      "plan": {
+        "day": "P2-D9",
+        "persona": "Repeat buyer expects the refund",
+        "area": "city",
+        "items": "Heavyweight hoodie L",
+        "pay": "cod",
+        "courier": "any",
+        "person": "the wallet refund shows (F-041)"
+      }
+    },
+    {
+      "id": "68",
+      "title": "Order 68 · Coupon audience mismatch · Dhaka sub-area · Zip polo L + WELCOME100 · cash on delivery · the shop's choice",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1141"
+      ],
+      "addresses": [
+        "sub-ashulia"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 767,
+          "lcpMs": 692,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 1324,
+          "lcpMs": 1272,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 296,
+          "serverMs": 69
+        },
+        "checkoutOpen": {
+          "ms": 1485,
+          "lcpMs": 1044
+        },
+        "submit": {
+          "ms": 1466,
+          "serverMs": 135,
+          "lcpMs": 716
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "the owner's coupon",
+          "verdict": "SKIP",
+          "detail": "the owner has no open coupon without a use limit (his codes are his; the run makes none)"
+        },
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1141"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 50000 of 50000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "50000 vs due 50000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "50000 vs due 50000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D9",
+        "persona": "Coupon audience mismatch",
+        "area": "sub",
+        "items": "Zip polo L + WELCOME100",
+        "pay": "cod",
+        "courier": "any",
+        "person": "who can use a coupon, first order only (F-050)"
+      }
+    },
+    {
+      "id": "69",
+      "title": "Order 69 · Flexible set, keep one piece · Outside Dhaka · Hoodie-jogger set XL · cash on delivery · the shop's choice",
+      "device": "android-low",
+      "network": "fast-3g",
+      "verdict": "PASS",
+      "orders": [
+        "1142"
+      ],
+      "addresses": [
+        "out-patuakhali-mixed"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 3221,
+          "lcpMs": 2504,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 3431,
+          "lcpMs": 2756,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 638,
+          "serverMs": 18
+        },
+        "checkoutOpen": {
+          "ms": 3880,
+          "lcpMs": 2720
+        },
+        "submit": {
+          "ms": 4334,
+          "serverMs": 7,
+          "lcpMs": 2528
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1142"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "2 line(s)",
+          "verdict": "PASS",
+          "detail": "2 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 100000 of 100000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "100000 vs due 100000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "100000 vs due 100000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D10",
+        "persona": "Flexible set, keep one piece",
+        "area": "outside",
+        "items": "Hoodie-jogger set XL",
+        "pay": "cod",
+        "courier": "any",
+        "person": "keeps one piece at the door (F-051)"
+      }
+    },
+    {
+      "id": "70",
+      "title": "Order 70 · Late 6 days + rider asks ৳30 more · Outside Dhaka · Twill 32, Bandarban · cash on delivery · the shop's choice",
+      "device": "android-mid",
+      "network": "4g",
+      "verdict": "PASS",
+      "orders": [
+        "1143"
+      ],
+      "addresses": [
+        "out-coxs-bazar"
+      ],
+      "timings": {
+        "firstLoad": {
+          "ms": 802,
+          "lcpMs": 732,
+          "status": 200
+        },
+        "productPage": {
+          "ms": 807,
+          "lcpMs": 768,
+          "status": 200
+        },
+        "addToBag": {
+          "ms": 228,
+          "serverMs": 11
+        },
+        "checkoutOpen": {
+          "ms": 1138,
+          "lcpMs": 704
+        },
+        "submit": {
+          "ms": 1331,
+          "serverMs": 32,
+          "lcpMs": 680
+        }
+      },
+      "over": [],
+      "checks": [
+        {
+          "id": "placed",
+          "verdict": "PASS",
+          "detail": "order 1143"
+        },
+        {
+          "id": "one order for this shopper",
+          "verdict": "PASS",
+          "detail": "1 order(s)"
+        },
+        {
+          "id": "1 line(s)",
+          "verdict": "PASS",
+          "detail": "1 lines"
+        },
+        {
+          "id": "cash on delivery: the rider collects the order's due",
+          "verdict": "PASS",
+          "detail": "COD, due 75000 of 75000"
+        },
+        {
+          "id": "booked with the courier",
+          "verdict": "PASS",
+          "detail": "the shop's courier choice; booked on the run's own mock courier account"
+        },
+        {
+          "id": "the courier collects the order's due",
+          "verdict": "PASS",
+          "detail": "75000 vs due 75000"
+        },
+        {
+          "id": "the sticker says collect the order's due",
+          "verdict": "PASS",
+          "detail": "75000 vs due 75000"
+        }
+      ],
+      "shot": null,
+      "plan": {
+        "day": "P2-D10",
+        "persona": "Late 6 days + rider asks ৳30 more",
+        "area": "outside",
+        "items": "Twill 32, Bandarban",
+        "pay": "cod",
+        "courier": "any",
+        "person": "late 6 days, rider overcharge refund and apology credit (F-054)"
+      }
+    }
+  ],
+  "gateChecks": [],
+  "addressRows": [
+    {
+      "number": "1102",
+      "addressId": "dhk-mirpur",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801400008673",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
+        },
+        "admin": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801400008673",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
+        },
+        "courier": {
+          "name": "GATE TEST Karim",
+          "phone": "01400008673",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka",
+          "codMinor": 100000,
+          "weightGrams": 1400
+        },
+        "sticker": {
+          "name": "GATE TEST Karim",
+          "phone": "01400008673",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka",
+          "collectMinor": 100000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1103",
+      "addressId": "dhk-uttara",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801500008774",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230"
+        },
+        "admin": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801500008774",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230"
+        },
+        "courier": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01500008774",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230",
+          "codMinor": 100000,
+          "weightGrams": 1400
+        },
+        "sticker": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01500008774",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230",
+          "collectMinor": 100000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1104",
+      "addressId": "dhk-mohammadpur-bn",
+      "quirk": "bengali",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801500008774",
+          "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা"
+        },
+        "admin": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801500008774",
+          "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1105",
+      "addressId": "out-bhola-no-thana",
+      "quirk": "missingThana",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801600008875",
+          "address": "Char Fasson Road, Bhola"
+        },
+        "admin": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801600008875",
+          "address": "Char Fasson Road, Bhola"
+        },
+        "courier": {
+          "name": "GATE TEST Sumon",
+          "phone": "01600008875",
+          "address": "Char Fasson Road, Bhola",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "GATE TEST Sumon",
+          "phone": "01600008875",
+          "address": "Char Fasson Road, Bhola",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1106",
+      "addressId": "dhk-gulshan",
+      "quirk": "",
+      "phoneFormat": "local",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801700008976",
+          "address": "House 5, Road 90, Gulshan 2, Dhaka 1212"
+        },
+        "admin": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801700008976",
+          "address": "House 5, Road 90, Gulshan 2, Dhaka 1212"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1107",
+      "addressId": "dhk-badda",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801800009077",
+          "address": "House 7, Link Road, Badda, Dhaka 1212"
+        },
+        "admin": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801800009077",
+          "address": "House 7, Link Road, Badda, Dhaka 1212"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1108",
+      "addressId": "dhk-mirpur",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801800009077",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
+        },
+        "admin": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801800009077",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
+        },
+        "courier": {
+          "name": "GATE TEST Jamal",
+          "phone": "01800009077",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "GATE TEST Jamal",
+          "phone": "01800009077",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1109",
+      "addressId": "dhk-lalbagh",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801900009178",
+          "address": "23/1 Fort Road, Lalbagh, Dhaka 1211"
+        },
+        "admin": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801900009178",
+          "address": "23/1 Fort Road, Lalbagh, Dhaka 1211"
+        },
+        "courier": {
+          "name": "GATE TEST Ruma",
+          "phone": "01900009178",
+          "address": "23/1 Fort Road, Lalbagh, Dhaka 1211",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "GATE TEST Ruma",
+          "phone": "01900009178",
+          "address": "23/1 Fort Road, Lalbagh, Dhaka 1211",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1110",
+      "addressId": "sub-siddhirganj-bn",
+      "quirk": "bengali",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "গেট টেস্ট ফারহানা",
+          "phone": "+8801300009279",
+          "address": "বাড়ি ৭, সিদ্ধিরগঞ্জ, নারায়ণগঞ্জ"
+        },
+        "admin": {
+          "name": "গেট টেস্ট ফারহানা",
+          "phone": "+8801300009279",
+          "address": "বাড়ি ৭, সিদ্ধিরগঞ্জ, নারায়ণগঞ্জ"
+        },
+        "courier": {
+          "name": "গেট টেস্ট ফারহানা",
+          "phone": "01300009279",
+          "address": "বাড়ি ৭, সিদ্ধিরগঞ্জ, নারায়ণগঞ্জ",
+          "codMinor": 150000,
+          "weightGrams": 800
+        },
+        "sticker": {
+          "name": "গেট টেস্ট ফারহানা",
+          "phone": "01300009279",
+          "address": "বাড়ি ৭, সিদ্ধিরগঞ্জ, নারায়ণগঞ্জ",
+          "collectMinor": 150000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1111",
+      "addressId": "sub-tongi",
+      "quirk": "",
+      "phoneFormat": "local",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801400009380",
+          "address": "House 2, Station Road, Tongi, Gazipur 1710"
+        },
+        "admin": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801400009380",
+          "address": "House 2, Station Road, Tongi, Gazipur 1710"
+        },
+        "courier": {
+          "name": "GATE TEST Rahim",
+          "phone": "01400009380",
+          "address": "House 2, Station Road, Tongi, Gazipur 1710",
+          "codMinor": 150000,
+          "weightGrams": 800
+        },
+        "sticker": {
+          "name": "GATE TEST Rahim",
+          "phone": "01400009380",
+          "address": "House 2, Station Road, Tongi, Gazipur 1710",
+          "collectMinor": 150000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1112",
+      "addressId": "dhk-shyamoli",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801500009481",
+          "address": "House 6, Ring Road, Shyamoli, Dhaka 1207"
+        },
+        "admin": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801500009481",
+          "address": "House 6, Ring Road, Shyamoli, Dhaka 1207"
+        },
+        "courier": {
+          "name": "GATE TEST Karim",
+          "phone": "01500009481",
+          "address": "House 6, Ring Road, Shyamoli, Dhaka 1207",
+          "codMinor": 75000,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Karim",
+          "phone": "01500009481",
+          "address": "House 6, Ring Road, Shyamoli, Dhaka 1207",
+          "collectMinor": 75000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1113",
+      "addressId": "out-bogura-bn",
+      "quirk": "bengali",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801600009582",
+          "address": "গাবতলী বাজার, গাবতলী, বগুড়া"
+        },
+        "admin": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801600009582",
+          "address": "গাবতলী বাজার, গাবতলী, বগুড়া"
+        },
+        "courier": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01600009582",
+          "address": "গাবতলী বাজার, গাবতলী, বগুড়া",
+          "codMinor": 75000,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01600009582",
+          "address": "গাবতলী বাজার, গাবতলী, বগুড়া",
+          "collectMinor": 75000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1114",
+      "addressId": "dhk-dhanmondi",
+      "quirk": "",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801700009683",
+          "address": "House 12, Road 7, Dhanmondi, Dhaka 1209"
+        },
+        "admin": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801700009683",
+          "address": "House 12, Road 7, Dhanmondi, Dhaka 1209"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1115",
+      "addressId": "out-coxs-bazar",
+      "quirk": "",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801800009784",
+          "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar"
+        },
+        "admin": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801800009784",
+          "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar"
+        },
+        "courier": {
+          "name": "GATE TEST Farhana",
+          "phone": "01800009784",
+          "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar",
+          "codMinor": 150000,
+          "weightGrams": 800
+        },
+        "sticker": {
+          "name": "GATE TEST Farhana",
+          "phone": "01800009784",
+          "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar",
+          "collectMinor": 150000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1116",
+      "addressId": "dhk-mirpur",
+      "quirk": "",
+      "phoneFormat": "local",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801900009885",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
+        },
+        "admin": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801900009885",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
+        },
+        "courier": {
+          "name": "GATE TEST Jamal",
+          "phone": "01900009885",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka",
+          "codMinor": 75000,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Jamal",
+          "phone": "01900009885",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka",
+          "collectMinor": 75000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1117",
+      "addressId": "out-mymensingh",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801300009986",
+          "address": "Ganginarpar, Mymensingh Kotwali, Mymensingh 2200"
+        },
+        "admin": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801300009986",
+          "address": "Ganginarpar, Mymensingh Kotwali, Mymensingh 2200"
+        },
+        "courier": {
+          "name": "GATE TEST Ruma",
+          "phone": "01300009986",
+          "address": "Ganginarpar, Mymensingh Kotwali, Mymensingh 2200",
+          "codMinor": 198000,
+          "weightGrams": 1200
+        },
+        "sticker": {
+          "name": "GATE TEST Ruma",
+          "phone": "01300009986",
+          "address": "Ganginarpar, Mymensingh Kotwali, Mymensingh 2200",
+          "collectMinor": 198000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1118",
+      "addressId": "dhk-uttara",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801400000087",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801400000087",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230"
+        },
+        "courier": {
+          "name": "GATE TEST Tanvir",
+          "phone": "01400000087",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230",
+          "codMinor": 99000,
+          "weightGrams": 600
+        },
+        "sticker": {
+          "name": "GATE TEST Tanvir",
+          "phone": "01400000087",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230",
+          "collectMinor": 99000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1119",
+      "addressId": "dhk-dhanmondi",
+      "quirk": "",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801500000188",
+          "address": "House 12, Road 7, Dhanmondi, Dhaka 1209"
+        },
+        "admin": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801500000188",
+          "address": "House 12, Road 7, Dhanmondi, Dhaka 1209"
+        },
+        "courier": {
+          "name": "GATE TEST Rahim",
+          "phone": "01500000188",
+          "address": "House 12, Road 7, Dhanmondi, Dhaka 1209",
+          "codMinor": 99000,
+          "weightGrams": 600
+        },
+        "sticker": {
+          "name": "GATE TEST Rahim",
+          "phone": "01500000188",
+          "address": "House 12, Road 7, Dhanmondi, Dhaka 1209",
+          "collectMinor": 99000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1120",
+      "addressId": "dhk-mohammadpur-bn",
+      "quirk": "bengali",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801500000188",
+          "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা"
+        },
+        "admin": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801500000188",
+          "address": "বাড়ি ১৫, রোড ৩, মোহাম্মদপুর, ঢাকা"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1121",
+      "addressId": "out-barishal",
+      "quirk": "",
+      "phoneFormat": "local",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801600000289",
+          "address": "Sadar Road, Barishal Kotwali, Barishal"
+        },
+        "admin": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801600000289",
+          "address": "Sadar Road, Barishal Kotwali, Barishal"
+        },
+        "courier": {
+          "name": "GATE TEST Karim",
+          "phone": "01600000289",
+          "address": "Sadar Road, Barishal Kotwali, Barishal",
+          "codMinor": 198000,
+          "weightGrams": 1200
+        },
+        "sticker": {
+          "name": "GATE TEST Karim",
+          "phone": "01600000289",
+          "address": "Sadar Road, Barishal Kotwali, Barishal",
+          "collectMinor": 198000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1122",
+      "addressId": "dhk-mirpur",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801700000390",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
+        },
+        "admin": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801700000390",
+          "address": "Flat 4B, House 22, Road 3, Block C, Mirpur DOHS, Dhaka"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1123",
+      "addressId": "dhk-mohakhali",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801800000491",
+          "address": "House 410, Road 25, Mohakhali DOHS, Dhaka"
+        },
+        "admin": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801800000491",
+          "address": "House 410, Road 25, Mohakhali DOHS, Dhaka"
+        },
+        "courier": {
+          "name": "GATE TEST Sumon",
+          "phone": "01800000491",
+          "address": "House 410, Road 25, Mohakhali DOHS, Dhaka",
+          "codMinor": 198000,
+          "weightGrams": 1200
+        },
+        "sticker": {
+          "name": "GATE TEST Sumon",
+          "phone": "01800000491",
+          "address": "House 410, Road 25, Mohakhali DOHS, Dhaka",
+          "collectMinor": 198000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1124",
+      "addressId": "sub-tongi",
+      "quirk": "",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801800000491",
+          "address": "House 2, Station Road, Tongi, Gazipur 1710"
+        },
+        "admin": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801800000491",
+          "address": "House 2, Station Road, Tongi, Gazipur 1710"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1125",
+      "addressId": "dhk-shyamoli",
+      "quirk": "",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801900000592",
+          "address": "House 6, Ring Road, Shyamoli, Dhaka 1207"
+        },
+        "admin": {
+          "name": "GATE TEST Farhana",
+          "phone": "+8801900000592",
+          "address": "House 6, Ring Road, Shyamoli, Dhaka 1207"
+        },
+        "courier": {
+          "name": "GATE TEST Farhana",
+          "phone": "01900000592",
+          "address": "House 6, Ring Road, Shyamoli, Dhaka 1207",
+          "codMinor": 200000,
+          "weightGrams": 2800
+        },
+        "sticker": {
+          "name": "GATE TEST Farhana",
+          "phone": "01900000592",
+          "address": "House 6, Ring Road, Shyamoli, Dhaka 1207",
+          "collectMinor": 200000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1126",
+      "addressId": "out-rajshahi",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "গেট টেস্ট নাসরিন",
+          "phone": "+8801300000693",
+          "address": "Shaheb Bazar, Boalia, Rajshahi 6100"
+        },
+        "admin": {
+          "name": "গেট টেস্ট নাসরিন",
+          "phone": "+8801300000693",
+          "address": "Shaheb Bazar, Boalia, Rajshahi 6100"
+        },
+        "courier": {
+          "name": "গেট টেস্ট নাসরিন",
+          "phone": "01300000693",
+          "address": "Shaheb Bazar, Boalia, Rajshahi 6100",
+          "codMinor": 125000,
+          "weightGrams": 1100
+        },
+        "sticker": {
+          "name": "গেট টেস্ট নাসরিন",
+          "phone": "01300000693",
+          "address": "Shaheb Bazar, Boalia, Rajshahi 6100",
+          "collectMinor": 125000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1127",
+      "addressId": "out-rangpur",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801400000794",
+          "address": "Jahaj Company More, Rangpur Kotwali, Rangpur"
+        },
+        "admin": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801400000794",
+          "address": "Jahaj Company More, Rangpur Kotwali, Rangpur"
+        },
+        "courier": {
+          "name": "GATE TEST Ruma",
+          "phone": "01400000794",
+          "address": "Jahaj Company More, Rangpur Kotwali, Rangpur",
+          "codMinor": 75000,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Ruma",
+          "phone": "01400000794",
+          "address": "Jahaj Company More, Rangpur Kotwali, Rangpur",
+          "collectMinor": 75000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1128",
+      "addressId": "dhk-uttara",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801400000794",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230"
+        },
+        "admin": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801400000794",
+          "address": "House 31, Road 15, Sector 7, Uttara, Dhaka 1230"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1129",
+      "addressId": "sub-savar",
+      "quirk": "",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801500000895",
+          "address": "House 14, Bank Colony, Savar, Dhaka 1340"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801500000895",
+          "address": "House 14, Bank Colony, Savar, Dhaka 1340"
+        },
+        "courier": {
+          "name": "GATE TEST Tanvir",
+          "phone": "01500000895",
+          "address": "House 14, Bank Colony, Savar, Dhaka 1340",
+          "codMinor": 150000,
+          "weightGrams": 800
+        },
+        "sticker": {
+          "name": "GATE TEST Tanvir",
+          "phone": "01500000895",
+          "address": "House 14, Bank Colony, Savar, Dhaka 1340",
+          "collectMinor": 150000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1130",
+      "addressId": "dhk-gulshan",
+      "quirk": "",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801500000895",
+          "address": "House 5, Road 90, Gulshan 2, Dhaka 1212"
+        },
+        "admin": {
+          "name": "GATE TEST Tanvir",
+          "phone": "+8801500000895",
+          "address": "House 5, Road 90, Gulshan 2, Dhaka 1212"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1131",
+      "addressId": "out-tangail",
+      "quirk": "",
+      "phoneFormat": "local",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801600000996",
+          "address": "Victoria Road, Tangail Sadar, Tangail"
+        },
+        "admin": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801600000996",
+          "address": "Victoria Road, Tangail Sadar, Tangail"
+        },
+        "courier": {
+          "name": "GATE TEST Rahim",
+          "phone": "01600000996",
+          "address": "Victoria Road, Tangail Sadar, Tangail",
+          "codMinor": 297000,
+          "weightGrams": 1800
+        },
+        "sticker": {
+          "name": "GATE TEST Rahim",
+          "phone": "01600000996",
+          "address": "Victoria Road, Tangail Sadar, Tangail",
+          "collectMinor": 297000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1132",
+      "addressId": "dhk-jatrabari",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801700001097",
+          "address": "House 8, Lane 2, Jatrabari, Dhaka 1204"
+        },
+        "admin": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801700001097",
+          "address": "House 8, Lane 2, Jatrabari, Dhaka 1204"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1133",
+      "addressId": "dhk-bashundhara",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801800001198",
+          "address": "House 210, Road 5, Block D, Bashundhara R/A, Dhaka 1229"
+        },
+        "admin": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801800001198",
+          "address": "House 210, Road 5, Block D, Bashundhara R/A, Dhaka 1229"
+        },
+        "courier": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01800001198",
+          "address": "House 210, Road 5, Block D, Bashundhara R/A, Dhaka 1229",
+          "codMinor": 198000,
+          "weightGrams": 1200
+        },
+        "sticker": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01800001198",
+          "address": "House 210, Road 5, Block D, Bashundhara R/A, Dhaka 1229",
+          "collectMinor": 198000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1134",
+      "addressId": "out-jashore",
+      "quirk": "",
+      "phoneFormat": "880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801900001299",
+          "address": "Doratana More, Jashore Sadar, Jashore"
+        },
+        "admin": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801900001299",
+          "address": "Doratana More, Jashore Sadar, Jashore"
+        },
+        "courier": {
+          "name": "GATE TEST Sumon",
+          "phone": "01900001299",
+          "address": "Doratana More, Jashore Sadar, Jashore",
+          "codMinor": 99000,
+          "weightGrams": 600
+        },
+        "sticker": {
+          "name": "GATE TEST Sumon",
+          "phone": "01900001299",
+          "address": "Doratana More, Jashore Sadar, Jashore",
+          "collectMinor": 99000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1135",
+      "addressId": "out-kushtia",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "+8801300001400",
+          "address": "NS Road, Kushtia Sadar, Kushtia"
+        },
+        "admin": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "+8801300001400",
+          "address": "NS Road, Kushtia Sadar, Kushtia"
+        },
+        "courier": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "01300001400",
+          "address": "NS Road, Kushtia Sadar, Kushtia",
+          "codMinor": 99000,
+          "weightGrams": 600
+        },
+        "sticker": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "01300001400",
+          "address": "NS Road, Kushtia Sadar, Kushtia",
+          "collectMinor": 99000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1136",
+      "addressId": "out-netrokona",
+      "quirk": "",
+      "phoneFormat": "local",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801400001501",
+          "address": "Teribazar, Netrokona Sadar, Netrokona"
+        },
+        "admin": {
+          "name": "GATE TEST Jamal",
+          "phone": "+8801400001501",
+          "address": "Teribazar, Netrokona Sadar, Netrokona"
+        },
+        "courier": {
+          "name": "GATE TEST Jamal",
+          "phone": "01400001501",
+          "address": "Teribazar, Netrokona Sadar, Netrokona",
+          "codMinor": 198000,
+          "weightGrams": 1200
+        },
+        "sticker": {
+          "name": "GATE TEST Jamal",
+          "phone": "01400001501",
+          "address": "Teribazar, Netrokona Sadar, Netrokona",
+          "collectMinor": 198000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1137",
+      "addressId": "out-faridpur",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801500001602",
+          "address": "Jhiltuli, Faridpur Sadar, Faridpur"
+        },
+        "admin": {
+          "name": "GATE TEST Ruma",
+          "phone": "+8801500001602",
+          "address": "Jhiltuli, Faridpur Sadar, Faridpur"
+        },
+        "courier": {
+          "name": "GATE TEST Ruma",
+          "phone": "01500001602",
+          "address": "Jhiltuli, Faridpur Sadar, Faridpur",
+          "codMinor": 100000,
+          "weightGrams": 1400
+        },
+        "sticker": {
+          "name": "GATE TEST Ruma",
+          "phone": "01500001602",
+          "address": "Jhiltuli, Faridpur Sadar, Faridpur",
+          "collectMinor": 100000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1138",
+      "addressId": "out-dinajpur-bn",
+      "quirk": "bengali",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "গেট টেস্ট ফারহানা",
+          "phone": "+8801600001703",
+          "address": "বালুবাড়ি, দিনাজপুর সদর, দিনাজপুর"
+        },
+        "admin": {
+          "name": "গেট টেস্ট ফারহানা",
+          "phone": "+8801600001703",
+          "address": "বালুবাড়ি, দিনাজপুর সদর, দিনাজপুর"
+        },
+        "courier": {
+          "name": "গেট টেস্ট ফারহানা",
+          "phone": "01600001703",
+          "address": "বালুবাড়ি, দিনাজপুর সদর, দিনাজপুর",
+          "codMinor": 100000,
+          "weightGrams": 1400
+        },
+        "sticker": {
+          "name": "গেট টেস্ট ফারহানা",
+          "phone": "01600001703",
+          "address": "বালুবাড়ি, দিনাজপুর সদর, দিনাজপুর",
+          "collectMinor": 100000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1139",
+      "addressId": "out-sreemangal",
+      "quirk": "",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "+8801700001804",
+          "address": "Tea Resort Road, Sreemangal, Moulvibazar"
+        },
+        "admin": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "+8801700001804",
+          "address": "Tea Resort Road, Sreemangal, Moulvibazar"
+        },
+        "courier": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "01700001804",
+          "address": "Tea Resort Road, Sreemangal, Moulvibazar",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "গেট টেস্ট রহিম",
+          "phone": "01700001804",
+          "address": "Tea Resort Road, Sreemangal, Moulvibazar",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1140",
+      "addressId": "dhk-khilgaon-pasted",
+      "quirk": "pasted",
+      "phoneFormat": "spaced",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801700001804",
+          "address": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219"
+        },
+        "admin": {
+          "name": "GATE TEST Rahim",
+          "phone": "+8801700001804",
+          "address": "Flat 5A\nHouse 120, Khilgaon Taltola\nDhaka 1219"
+        },
+        "courier": null,
+        "sticker": null
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "dhaka-city · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1141",
+      "addressId": "sub-ashulia",
+      "quirk": "",
+      "phoneFormat": "local",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801800001905",
+          "address": "Baipail, Ashulia, Savar, Dhaka"
+        },
+        "admin": {
+          "name": "GATE TEST Karim",
+          "phone": "+8801800001905",
+          "address": "Baipail, Ashulia, Savar, Dhaka"
+        },
+        "courier": {
+          "name": "GATE TEST Karim",
+          "phone": "01800001905",
+          "address": "Baipail, Ashulia, Savar, Dhaka",
+          "codMinor": 50000,
+          "weightGrams": 700
+        },
+        "sticker": {
+          "name": "GATE TEST Karim",
+          "phone": "01800001905",
+          "address": "Baipail, Ashulia, Savar, Dhaka",
+          "collectMinor": 50000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1142",
+      "addressId": "out-patuakhali-mixed",
+      "quirk": "mixed",
+      "phoneFormat": "bengali",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801900002006",
+          "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী"
+        },
+        "admin": {
+          "name": "GATE TEST Nasrin",
+          "phone": "+8801900002006",
+          "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী"
+        },
+        "courier": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01900002006",
+          "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী",
+          "codMinor": 100000,
+          "weightGrams": 1400
+        },
+        "sticker": {
+          "name": "GATE TEST Nasrin",
+          "phone": "01900002006",
+          "address": "সদর রোড, Patuakhali Sadar, পটুয়াখালী",
+          "collectMinor": 100000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    },
+    {
+      "number": "1143",
+      "addressId": "out-coxs-bazar",
+      "quirk": "",
+      "phoneFormat": "plus880",
+      "stages": {
+        "stored": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801300002107",
+          "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar"
+        },
+        "admin": {
+          "name": "GATE TEST Sumon",
+          "phone": "+8801300002107",
+          "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar"
+        },
+        "courier": {
+          "name": "GATE TEST Sumon",
+          "phone": "01300002107",
+          "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar",
+          "codMinor": 75000,
+          "weightGrams": 400
+        },
+        "sticker": {
+          "name": "GATE TEST Sumon",
+          "phone": "01300002107",
+          "address": "Kolatoli Road, Cox's Bazar Sadar, Cox's Bazar",
+          "collectMinor": 75000,
+          "gift": null,
+          "practice": true
+        }
+      },
+      "diffs": [],
+      "place": "OK",
+      "band": "outside-dhaka · 0",
+      "verdict": "PASS"
+    }
+  ],
+  "timings": [
+    {
+      "network": "slow-3g",
+      "cls": "phone",
+      "orders": 4,
+      "steps": {
+        "firstLoad": 11230,
+        "productPage": 12010,
+        "addToBag": 2081,
+        "checkoutOpen": 12612,
+        "submit": 14210
+      }
+    },
+    {
+      "network": "fast-3g",
+      "cls": "phone",
+      "orders": 8,
+      "steps": {
+        "firstLoad": 3255,
+        "productPage": 3431,
+        "addToBag": 656,
+        "checkoutOpen": 3880,
+        "submit": 4339
+      }
+    },
+    {
+      "network": "4g",
+      "cls": "phone",
+      "orders": 26,
+      "steps": {
+        "firstLoad": 782,
+        "productPage": 808,
+        "addToBag": 224,
+        "checkoutOpen": 1154,
+        "submit": 1348
+      }
+    },
+    {
+      "network": "wifi",
+      "cls": "desktop",
+      "orders": 4,
+      "steps": {
+        "firstLoad": 307,
+        "productPage": 314,
+        "addToBag": 102,
+        "checkoutOpen": 361,
+        "submit": 754
+      }
+    }
+  ],
+  "cleanup": {
+    "ok": true,
+    "orders": 143,
+    "cancelled": 37,
+    "alreadyClosed": 106,
+    "failed": [],
+    "refundRequests": 10,
+    "tagged": "129 of 143 test orders carry an internal \"GATE TEST\" note (the order flags take only the owner's own list)",
+    "productsArchived": 3,
+    "extrasArchived": 10,
+    "courierArchived": true,
+    "mockPay": {
+      "ok": true,
+      "closed": 1,
+      "codRestored": 0,
+      "notes": [],
+      "runs": [
+        {
+          "run": "20261106154556",
+          "cod": "not touched"
+        }
+      ]
+    },
+    "notes": [
+      "the shop's web processes told to drop the pages of 3 test product(s) and every category list (cache bus)"
+    ],
+    "courierProvider": "steadfast",
+    "salesOk": true,
+    "salesDetail": "0 test orders counted as sales, 0 test pieces in sales by SKU (delivered only)"
+  },
+  "problems": [],
+  "simulation": {
+    "version": 1,
+    "planned": 70,
+    "asked": 70,
+    "passed": 35,
+    "failed": 7,
+    "skipped": 28,
+    "orders": 42,
+    "skipReasons": [
+      {
+        "why": "the shop has no RedX courier (no connection for it in this build)",
+        "rows": [
+          5,
+          14,
+          17,
+          22,
+          25,
+          28,
+          31,
+          37,
+          41,
+          43,
+          48
+        ]
+      },
+      {
+        "why": "bKash is switched off on the shop (Payments › mobile wallets)",
+        "rows": [
+          2,
+          9,
+          26,
+          30,
+          38,
+          51,
+          61
+        ]
+      },
+      {
+        "why": "a bank transfer or an advance is not a checkout method: a person records it (the plan's bulk and bank-paid orders)",
+        "rows": [
+          10,
+          40,
+          53,
+          66
+        ]
+      },
+      {
+        "why": "card payment is switched off on the shop (Payments › cards)",
+        "rows": [
+          21,
+          47,
+          52,
+          65
+        ]
+      },
+      {
+        "why": "Nagad is switched off on the shop (Payments › mobile wallets)",
+        "rows": [
+          16,
+          54
+        ]
+      }
+    ]
+  },
+  "safetyNet": {
+    "cod": "cash on delivery not touched",
+    "grant": "test-pay grant closed",
+    "start": "nothing left open by an earlier run"
+  }
+}
