@@ -415,7 +415,9 @@ export async function draftHandler(request: Request, deps: CheckoutApiDeps | nul
     const { visitor } = await bagOfRequest(request, deps);
     if (!visitor) return json({ ok: true, kept: false });
     const customerId = await customerOf(request, deps);
-    return json({ ok: true, ...(await captureDraft(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, input: b })) });
+    // PR 274: the visit's campaign tags, read from the shop's own cookie exactly as the order reads them
+    const attribution = orderAttributionOf(await keptTouch(readCookie(request, ATTRIBUTION_COOKIE), deps.storeId, deps.checkout.settings));
+    return json({ ok: true, ...(await captureDraft(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, attribution, input: b })) });
   } catch (e) {
     return refusal(e);
   }

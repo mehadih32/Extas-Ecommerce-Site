@@ -11,6 +11,7 @@ import type { AdminDeps } from '@/lib/admin-auth';
 import type { AdminView } from '@/lib/admin-page';
 import { BULK_COMMANDS, BULK_PERM } from '@/lib/admin-orders/bulk';
 import { FILTER_STATES, ageText, loadOrderList } from '@/lib/admin-orders/list';
+import { incompleteOpenCount } from '@/lib/admin-orders/incomplete';
 import { LIST_PAGES, listHref, type ListPageId, type ListQuery } from '@/lib/admin-orders/model';
 import { locateKey } from '@/lib/admin-shell/sections';
 import type { FieldOption } from '@/lib/admin-orders/spec';
@@ -72,8 +73,11 @@ async function Kpis({ view, a, counts, now }: { view: AdminView; a: ListAccess; 
   return <div className="a2-kpis">{tiles}</div>;
 }
 
-/** The saved views: only the order service's own, each with its count. */
-export function ViewChips({ view, page, query, counts }: { view: AdminView; page: ListPageId; query: ListQuery; counts: Record<string, number> }) {
+/**
+ * The saved views: only the order service's own, each with its count. PR 274: All orders ends with "Incomplete" (typed
+ * at checkout, not placed), its own page, with the open count.
+ */
+export function ViewChips({ view, page, query, counts, incomplete }: { view: AdminView; page: ListPageId; query: ListQuery; counts: Record<string, number>; incomplete?: number | null }) {
   return (
     <nav className="a2-views" aria-label={t(view.dict, 'orders.list.viewsAria')} data-testid="orders-views">
       {LIST_PAGES[page].views.map((v) => {
@@ -85,6 +89,12 @@ export function ViewChips({ view, page, query, counts }: { view: AdminView; page
           </Link>
         );
       })}
+      {incomplete !== undefined && incomplete !== null ? (
+        <Link className="a2-view" href="/admin/orders/incomplete" data-view="incomplete">
+          {t(view.dict, 'orders.view.incomplete')}
+          <span className="a2-cnt">{formatNumber(incomplete, view.locale)}</span>
+        </Link>
+      ) : null}
     </nav>
   );
 }
@@ -136,7 +146,7 @@ export function filterSelects(view: AdminView, q: ListQuery, bands: readonly Fie
 export async function OrderListPage({ view, a, query, now }: { view: AdminView; a: ListAccess; query: ListQuery; now: Date }) {
   const d = view.dict;
   const page: ListPageId = 'all';
-  const data = await loadOrderList(readDeps(a.deps), a.who, view, page, query);
+  const [data, incomplete] = await Promise.all([loadOrderList(readDeps(a.deps), a.who, view, page, query), incompleteOpenCount({ db: a.deps.db, resolver: a.deps.resolver })]);
   const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section);
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   const shown = formatNumber(data.rows.length, view.locale);
@@ -145,7 +155,7 @@ export async function OrderListPage({ view, a, query, now }: { view: AdminView; 
       <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} />
       <SectionTabs view={view} current="orders" />
       <Kpis view={view} a={a} counts={data.counts} now={now} />
-      <ViewChips view={view} page={page} query={query} counts={data.counts} />
+      <ViewChips view={view} page={page} query={query} counts={data.counts} incomplete={incomplete} />
       <OrderFilters
         key={listHref(page, query)}
         action={LIST_PAGES[page].base}

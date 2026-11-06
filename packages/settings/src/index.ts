@@ -166,6 +166,8 @@ export * from './registry-ads-brief';
 export * from './registry-coupons-distribution';
 // S13 · PR 273 — the referral programme: switch, window, the friend's rule, the sharer's reward (registry-referrals.ts, version 178).
 export * from './registry-referrals';
+// S13 · PR 274 — when an unfinished checkout counts as left on Orders › Incomplete (registry-incomplete.ts, version 179).
+export * from './registry-incomplete';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

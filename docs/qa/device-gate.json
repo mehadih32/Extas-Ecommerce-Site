@@ -313,6 +313,7 @@
       "/admin/marketing/ad-platforms/growth",
       "/admin/marketing/ad-platforms/briefs",
       "/admin/marketing/referrals",
+      "/admin/orders/incomplete",
       "/admin/help/manual",
       "/admin/orders/risk-rules",
       "/pay/0",
