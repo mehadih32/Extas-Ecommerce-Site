@@ -338,9 +338,25 @@ export async function journalAction(db: Db, resolver: Resolver, who: JournalWho,
       await tx.blogPostReview.create({ data: { storeId, postId: before.id, stage: step ? step.stage : 'writing', reviewerId: who.actor.staffUserId, verdict: step ? 'pass' : 'back', notes } });
     }
   });
-  const after = (await journalPost(db, before.id, now, storeId))!;
-  await audit(db, who.actor, { storeId, action: `blog.post.${action}`, entityType: 'BlogPost', entityId: before.id, before: { status: from }, after: { status: after.status } }, who.ctx);
-  return after;
+  await audit(db, who.actor, { storeId, action: `blog.post.${action}`, entityType: 'BlogPost', entityId: before.id, before: { status: from }, after: { status: to } }, who.ctx);
+  if (action === 'pass' && to === 'SEO_CHECKED') await autoPublish(db, resolver, who, before.id, now, storeId);
+  return (await journalPost(db, before.id, now, storeId))!;
+}
+
+/**
+ * PR 244: with `blog.approval` in 'auto' mode and `autoPublish` on, an article written from an approved topic goes live
+ * as soon as its last review step passes — only when nothing is missing (its words, and its required links while
+ * `blog.clusters.requireLinks` is on). Otherwise it waits for a publisher, as before. Audited as decided by itself.
+ */
+async function autoPublish(db: Db, resolver: Resolver, who: JournalWho, id: string, now: Date, storeId: number): Promise<void> {
+  const approval = await resolver.value('blog.approval', { storeId });
+  if (approval.mode !== 'auto' || !approval.autoPublish) return;
+  const post = await db.blogPost.findFirst({ where: { id, storeId, status: 'SEO_CHECKED' }, select: { id: true, topicId: true, title: true, body: true, slug: true, publishedAt: true } });
+  if (!post?.topicId) return;
+  const topic = await db.blogTopic.findFirst({ where: { id: post.topicId, storeId, status: 'approved', archivedAt: null }, select: { id: true } });
+  if (!topic || publishGaps(post).length || (await linkGapsFor(db, resolver, id, now, storeId)).length) return;
+  const moved = await db.blogPost.updateMany({ where: { id, storeId, status: 'SEO_CHECKED' }, data: { status: 'PUBLISHED', publishedAt: post.publishedAt ?? now } });
+  if (moved.count) await audit(db, who.actor, { storeId, action: 'blog.post.autoPublish', entityType: 'BlogPost', entityId: id, before: { status: 'SEO_CHECKED' }, after: { status: 'PUBLISHED', title: post.title } }, who.ctx);
 }
 
 /** The shop paths an article of a cluster still has to link to, only while `blog.clusters.requireLinks` is on. */

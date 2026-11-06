@@ -115,7 +115,7 @@ import { adsGrowthSettings } from './registry-ads-growth';
 import { adsBriefSettings } from './registry-ads-brief';
 import { couponDistributionSettings } from './registry-coupons-distribution';
 import { referralSettings } from './registry-referrals';
-import { clusterSettings, journalSettings } from './registry-journal';
+import { approvalSettings, clusterSettings, journalSettings } from './registry-journal';
 import {
   bankAccountsSchema,
   dictionaryKeySchema,
@@ -1411,6 +1411,7 @@ export const registry = {
   // ---- S12 · CN-031 lane A · PR 239 onwards · the journal (blog) (registry-journal.ts, versions 222–229). ----
   ...journalSettings,
   ...clusterSettings,
+  ...approvalSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

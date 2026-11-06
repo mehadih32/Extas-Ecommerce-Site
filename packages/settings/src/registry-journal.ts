@@ -10,11 +10,17 @@
 //          shown on the planner always; `requireLinks` refuses publishing or scheduling while one is missing (off as
 //          it ships). A new topic is compared word by word with every article and topic: from `dupNear` % it is
 //          "a little alike", from `dupWarn` % "very close" and it needs a second press to add.
+//   v224 · PR 244 `blog.approval` — the approval queue (S12 answer 11; 19 Oct: the owner approves the topic list as a
+//          monthly batch, not each post). `mode` 'owner' (as it ships): a topic from anyone but the owner waits for his
+//          yes, month by month; 'auto': it is approved by itself (a very close one still waits while `holdAlike`), and
+//          with `autoPublish` an article from an approved topic goes live as soon as its last review step passes. The
+//          plan shows a digest of what was decided by itself over the last `digestDays` days.
 import { z } from 'zod';
 import { setting } from './define';
 
 const V239 = 222;
 const V242 = 223;
+const V244 = 224;
 
 const wpm = z.int().min(60).max(400);
 const note = z.string().trim().max(200);
@@ -88,5 +94,35 @@ export const clusterSettings = {
     isPublic: false,
     sortOrder: 20,
     version: V242,
+  }),
+};
+
+export const blogApprovalSchema = z
+  .object({
+    /** 'owner': topics wait for the owner's yes (month by month); 'auto': approved by themselves. */
+    mode: z.enum(['owner', 'auto']),
+    /** In automatic mode a very close topic still waits for the owner. */
+    holdAlike: z.boolean(),
+    /** In automatic mode an article from an approved topic goes live once its last review step passes. */
+    autoPublish: z.boolean(),
+    /** The days the digest of what was decided by itself covers. */
+    digestDays: z.int().min(1).max(31),
+  })
+  .strict();
+export type BlogApprovalSettings = z.output<typeof blogApprovalSchema>;
+
+export const approvalSettings = {
+  'blog.approval': setting({
+    scope: 'store',
+    schema: blogApprovalSchema,
+    default: { mode: 'owner', holdAlike: true, autoPublish: false, digestDays: 1 },
+    valueType: 'JSON',
+    group: 'blog',
+    labelKey: 'blog.approval.label',
+    helpKey: 'blog.approval.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 30,
+    version: V244,
   }),
 };

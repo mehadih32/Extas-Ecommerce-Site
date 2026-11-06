@@ -3,6 +3,9 @@
 // pointing at one shop page) with the links each article still lacks, the topics still to write (the owner's yes or
 // no; "Start writing" makes the draft inside the cluster), the articles in no cluster, the forms for a new topic and a
 // new cluster, and the link rules card (`blog.clusters`: refusing to publish is off as it ships).
+// PR 244 (S12 answer 11; 19 Oct): the approval queue on top — the topics waiting for the owner's yes, month by month,
+// with "Approve the whole month" (a very close one held), the digest of what was decided by itself, and the card
+// `blog.approval` (the owner decides as it ships; "by itself" approves topics and can publish finished articles).
 // Seeing needs `blog.read`, changing `blog.write`, deciding topics and the card `blog.publish`.
 // Guide: docs/admin-guide/pages/website/blog-plan.md.
 import type { Metadata } from 'next';
@@ -97,6 +100,7 @@ export default async function TopicPlanPage() {
       </div>
       <div className="jr-grid a2-mt12">
         <div className="jr-stack">
+          <ClusterPlanner part="queue" words={words} plan={plan} canWrite={canWrite} canPublish={canPublish} lang={view.lang} />
           <ClusterPlanner part="clusters" words={words} plan={plan} canWrite={canWrite} canPublish={canPublish} lang={view.lang} />
         </div>
         <div className="jr-stack">
@@ -115,6 +119,27 @@ export default async function TopicPlanPage() {
             texts={texts}
             canEdit={canPublish}
             testId="pl-settings"
+          />
+          <FieldsCard
+            url="/api/admin/blog/clusters"
+            screen={{ key: plan.approval.key, value: plan.approval.value, version: plan.approval.version }}
+            fields={[
+              {
+                kind: 'select',
+                path: 'mode',
+                label: l('acard.mode'),
+                options: [
+                  { value: 'owner', label: l('acard.modeOwner') },
+                  { value: 'auto', label: l('acard.modeAuto') },
+                ],
+              },
+              { kind: 'switch', path: 'holdAlike', label: l('acard.holdAlike') },
+              { kind: 'switch', path: 'autoPublish', label: l('acard.autoPublish') },
+              { kind: 'number', path: 'digestDays', label: l('acard.digestDays'), min: 1, max: 31 },
+            ]}
+            texts={{ ...texts, h: l('acard.h'), d: l('acard.d') }}
+            canEdit={canPublish}
+            testId="pl-approval"
           />
           <section className="a2-card a2-sc" aria-labelledby="pl-how">
             <h2 className="a2-h3" id="pl-how">

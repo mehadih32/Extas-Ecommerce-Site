@@ -3,7 +3,9 @@
 // cannot approve it), a very close topic held until the second press, "Start writing" making the draft inside the
 // cluster (category, writer, focus keyword; the pillar topic becomes the pillar), the links each article lacks, the
 // publish refused while `blog.clusters.requireLinks` is on and a link is missing, articles joining and leaving, the
-// cluster put away and restored (stale refused); signed out 401. Every value is made up.
+// cluster put away and restored (stale refused); signed out 401. PR 244: the approval queue month by month (the whole
+// month approved at once, a very close one held), topics approved by themselves in automatic mode, an article from an
+// approved topic published by itself once its last check passes, and the digest of both. Every value is made up.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, createRole, defaultSecurityPolicy, syncAuth, SYSTEM, type Actor } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -12,7 +14,7 @@ import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncS
 import { createVault } from '@extas/vault';
 import type { AdminDeps } from '../admin-auth';
 import { loginHandler } from '../admin-api';
-import { planHandler, saveTopic, topicAction } from './clusters';
+import { approveBatch, planHandler, saveTopic, topicAction } from './clusters';
 import { journalHandler } from './journal';
 
 const HOST = 'admin.example.test';
@@ -187,5 +189,44 @@ describe.skipIf(!HAS_TEST_DB)('Website › Blog & journal › Topic plan on Post
     expect(await t.prisma.contentCluster.count()).toBe(1);
     const audits = await t.prisma.auditLog.count({ where: { action: { startsWith: 'blog.cluster' } } });
     expect(audits).toBeGreaterThanOrEqual(6);
+  });
+
+  it('PR 244: queues topics month by month, approves a whole month, approves and publishes by itself in automatic mode', async () => {
+    const who = { actor: writer, ctx };
+    const add = (title: string, query: string, force = false) => saveTopic(t.prisma, deps.resolver, who, null, { title, query, locale: 'en', clusterId, force }, clock.now);
+    await add('Five outfits with a navy polo', 'navy polo outfit');
+    await add('Pique or jersey polo for the heat', 'pique vs jersey polo');
+    await add('The complete polo care guide again', 'polo shirt care', true);
+    let p = (await plan('clusters', 'GET', null)).j.plan;
+    const nov = p.queue.find((q: any) => q.month === '2026-11');
+    expect(nov.topics.map((x: any) => x.title).sort()).toEqual(['Five outfits with a navy polo', 'Pique or jersey polo for the heat', 'The complete polo care guide again']);
+    expect(await code(approveBatch(t.prisma, deps.resolver, who, { month: '2026-11' }, clock.now))).toBe('FORBIDDEN');
+    const batch = await api('POST', '/api/admin/blog/topics/batch', (r) => planHandler(r, deps, 'batch', null), { month: '2026-11' });
+    expect(batch.j).toMatchObject({ approved: 2, held: 1 });
+    expect(batch.j.plan.queue.map((q: any) => q.topics.length)).toEqual([1]);
+
+    // automatic mode: a writer's topic is approved by itself and shows in the digest; a very close one is still held
+    const ap = batch.j.plan.approval;
+    expect(ap.value).toMatchObject({ mode: 'owner', autoPublish: false });
+    expect((await plan('clusters', 'PUT', null, { key: 'approval', value: { ...ap.value, mode: 'auto', autoPublish: true }, version: ap.version })).status).toBe(200);
+    await add('Linen shirt care in the monsoon', 'linen shirt care');
+    await add('Linen shirt care in monsoon rain', 'linen shirt care', true);
+    p = (await plan('clusters', 'GET', null)).j.plan;
+    const linen = p.clusters[0].topics.find((x: any) => x.title === 'Linen shirt care in the monsoon');
+    expect(linen.status).toBe('approved');
+    expect(p.clusters[0].topics.find((x: any) => x.title === 'Linen shirt care in monsoon rain').status).toBe('proposed');
+    expect(p.digest.items.map((x: any) => `${x.kind}:${x.title}`)).toEqual(['topic:Linen shirt care in the monsoon']);
+
+    // an article from the approved topic goes live as soon as its last review step passes
+    const postId = (await plan('topics', 'POST', linen.id, { action: 'start', version: linen.version })).j.postId;
+    let post = (await posts('GET', postId)).j.post;
+    post = (await posts('PUT', postId, { version: post.version, locale: 'en', title: post.title, slug: post.slug, body: 'Wash linen cold and dry it in the shade.' })).j.post;
+    for (const _ of [1, 2, 3]) post = (await posts('POST', postId, { action: 'pass', version: post.version })).j.post;
+    expect(post).toMatchObject({ status: 'PUBLISHED', live: true });
+    p = (await plan('clusters', 'GET', null)).j.plan;
+    expect(p.digest.items[0]).toMatchObject({ kind: 'post', id: postId, title: 'Linen shirt care in the monsoon' });
+    // the owner mode again: the next article waits at its last check
+    const ap2 = p.approval;
+    await plan('clusters', 'PUT', null, { key: 'approval', value: { ...ap2.value, mode: 'owner' }, version: ap2.version });
   });
 });

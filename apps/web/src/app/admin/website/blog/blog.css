@@ -33,7 +33,7 @@
 .adm2 .jr-row .a2-btn{min-height:44px}
 .adm2 .jr-row b{overflow-wrap:anywhere}
 .adm2 .jr-form{display:grid;gap:10px;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:8px}
-/* S12 · PR 242 — Website › Blog & journal › Topic plan: the counts, a cluster's rows, the missing links. */
+/* S12 · PR 242, 244 — Website › Blog & journal › Topic plan: the counts, a cluster's rows, the missing links, the monthly batches. */
 .adm2 .pl-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media(min-width:768px){.adm2 .pl-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .adm2 .pl-k{padding:12px 14px;min-width:0}
@@ -46,3 +46,4 @@
 .adm2 .pl-add{align-items:flex-end}
 .adm2 .pl-add .a2-fld{flex:1 1 220px;min-width:0}
 .adm2 .pl-how{margin:8px 0 0;padding-inline-start:18px;display:grid;gap:6px}
+.adm2 .pl-batch{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;display:grid;gap:4px}
