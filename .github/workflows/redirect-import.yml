@@ -1,0 +1,95 @@
+# S19 · PR 653 (CN-036) — the old shop's addresses into the WordPress map of the redirect table, ON the VM through the
+# self-hosted runner (CN-003), BY HAND ONLY: GitHub › Actions › redirect-import › Run workflow. Toward the old site it
+# only GETs its public sitemap files (infra/deploy/redirect-import.sh), never anything else, never a login. `commit`
+# off = a dry run that writes nothing; on = the pairs are filed as Redirect rows (source `wordpress`, audited as the
+# system), which forward only once `seo.redirects.wordpressMapLive` is switched on at the go-live switch (PR 587). Every
+# address keeps a page: one without a twin goes to its nearest category or the home page and is listed for the owner
+# (Website › SEO › Redirects). The report is committed to docs/reports/redirect-import/latest/ with [skip ci].
+name: redirect-import
+
+on:
+  workflow_dispatch:
+    inputs:
+      old_site:
+        description: "The old shop's host name (its public sitemap is read, GET only)"
+        required: true
+      commit:
+        description: "Write the rows (off = a dry run that writes nothing)"
+        type: boolean
+        default: false
+      reason:
+        description: "Why (kept in the audit log)"
+        required: false
+        default: "PR 653: the old shop's public sitemap into the WordPress redirect map"
+
+concurrency:
+  group: extas-redirect-import
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  redirect-import:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 20
+    steps:
+      - name: Find the live version
+        id: live
+        run: |
+          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          if printf '%s' "$live" | grep -Eq '^[0-9a-f]{40}$'; then echo "sha=$live" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.live.outputs.sha || github.sha }}
+
+      # A live version from before this workflow has no import: it comes from this run's own commit.
+      - name: The import from this commit when the live version has none
+        run: |
+          [ -f infra/deploy/redirect-import.sh ] && [ -f tools/redirect-import/server/import.ts ] && exit 0
+          git fetch -q origin "$GITHUB_SHA"
+          git checkout -q "$GITHUB_SHA" -- infra/deploy/redirect-import.sh tools/redirect-import
+
+      - name: Old public sitemap → new pages
+        id: run
+        continue-on-error: true
+        env:
+          LIVE: ${{ steps.live.outputs.sha }}
+          OLD_SITE: ${{ github.event.inputs.old_site }}
+          COMMIT: ${{ github.event.inputs.commit }}
+          REASON: ${{ github.event.inputs.reason }}
+        run: |
+          mode=dry; [ "$COMMIT" = true ] && mode=commit
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" IMPORT_REASON="$REASON" bash infra/deploy/redirect-import.sh "$RUNNER_TEMP/redirect-import" "$OLD_SITE" "$mode" "$LIVE"
+
+      - name: Commit the report
+        if: always()
+        env:
+          RESULT: ${{ steps.run.outcome }}
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/redirect-import"
+          [ -f "$out/README.md" ] || { echo "the import wrote no report"; exit 1; }
+          dest="docs/reports/redirect-import/latest"
+          sudo chown -R "$(id -u):$(id -g)" "$out"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            rm -rf "$dest" && mkdir -p "$dest"
+            cp "$out/README.md" "$out/result.json" "$dest/"
+            git add -A "$dest"
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "redirect-import report: ${RESULT} [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail when the import could not run
+        if: steps.run.outcome == 'failure'
+        run: |
+          echo "The import could not finish. See docs/reports/redirect-import/latest/README.md."
+          exit 1
