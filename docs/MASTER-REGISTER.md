@@ -33,6 +33,8 @@ the server.*
 
 **Progress: S0A 12/12 · S00 19/43 · S01 23/23 · S09 19/19 · S10 12/12 · S02 45/58 · S03 22/22 · S04 42/42 · S05 21/21 · S06 33/33 · S07 10/10 · S08 26/26 · S11 22/22 · S12 13/22 · S13 32/35 · S14 24/24 · S16 22/22 · S17 1/24 · S18 15/15 · S19 16/19 · S20 9/9 · S21 14/14 · S22 14/14 · total 466/644**
 
+**Open / closed (CN-036 update, owner 6 Nov 2026 14:55):** open stages 517 active · 465 built · **52 to build** · closed stages (S15, S17, S23, S24, S25) 127 active · 1 built · **126 closed** · parked 9 (S26, 649–651; S27 unnumbered)
+
 | PR | Stage | State | Date | Note |
 |---|---|---|---|---|
 | 1 | S0A | live | 2026-10-20 | specs recorded from the VM by every setup run (`docs/reports/server/latest.md`) |
@@ -921,6 +923,10 @@ the server.*
 > **(7) Reporting.** After each PR: `PROGRESS.md` and the register row; after each lane step a short Bengali report in `docs/reports/` and in chat, then carry on. Done means it works on new.extas.com.bd in a real browser at phone and desktop widths, as admin, in light and dark; staging always runs the newest merged look.
 >
 > **(8) Where it is written.** The rows of "CN-036 additions" below (625–653; 649–651 in the parking lot); the stage table (S00 43 active plus 649–651, S19 19) and "How this reached 653"; dated lines on PR 12, 233, 235, 378, 401, 414, 494 and 587; Blueprint (this note, E0–E3, Appendix A); `docs/LAUNCH-TRACK.md` (Launch rows, the CN-036 order and lanes); the totals in README.md and `docs/README.md`.
+>
+> **Update · 6 Nov 2026, 14:55 Dhaka (owner, build thread; replaces the stage order of (3) and (5)).** The register has grown to 653 PRs, so the scope is cut. **To be finished:** the admin look jobs (625–648 and every new design PR filed for it), S02 storefront, S12 blog, S13 marketing, and every other open stage not on the closed list. **Order:** the Lumen foundation (625–630) and S02 in parallel → S12 → S13 → the other open stages by the priority list of `docs/LAUNCH-TRACK.md`. **Closed until the owner says so:** S15 AI control room, S17 multi-store, S23 social studio, S24 virtual photoshoot, S25 video campaign, S26 and S27 handover pack. Built parts of a closed stage stay (nothing deleted); every half-built part is hidden from the admin menu, sitemap, search and robots by PR 652's switch (`stages.closedShown`, one per closed stage, off as shipped), so with S15 closed the AI Center section and the round assistant button are not shown (PR 646 builds the AI Center in Lumen, hidden while S15 is closed). Work on a closed stage already in flight stops at a clean point (finished only when nearly done, otherwise set aside with its branch kept) and is listed in `PROGRESS.md` under "Parked"; none was in flight on 6 Nov. New admin pages in S12, S13 and later stages are built in Lumen from the start, using the shared patterns. Go-live is unchanged.
+>
+> **Recount (6 Nov 2026, before batch 11).** 653 PRs: 644 active, 9 parked (S26 and 649–651; S27 unnumbered). **Closed stages: 127 active PRs** (S15 48, S17 24, S23 7, S24 38, S25 10), 1 of them built (S17 · PR 362, the launch slice, kept) and **126 closed, not to be built** until the owner says so. **Open stages: 517 active PRs, 465 built, 52 still to build** (S00 24 — the Lumen PRs 625–648; S02 13; S12 9; S13 3; S19 3 — 652, 653 and PR 587, the switch on the owner's "go live"). The Progress line keeps counting every active PR; the line under it counts open and closed. Written in: the stage table (closed stages marked "Closed (owner, 6 Nov)"), the dated lines below, README (status dashboard, the 28-stage table and the feature headings), `docs/LAUNCH-TRACK.md` (order and counts), `PROGRESS.md` ("Parked") and Blueprint (this note).
 
 ## The stage table
 
@@ -942,19 +948,19 @@ the server.*
 | S12 | Content & blog | 22 | 239–253, 528–530, 547, 591–593 | **answered 18 Oct** |
 | S13 | Marketing & ads | 35 | 254–283, 531–532, 548, 569, 589 | **answered 18 Oct** |
 | S14 | CRM & customers | 24 | 284–303, 505, 533–535 | locked |
-| S15 | AI 360 Control Room | 48 | 304–341, 506, 577–585 | locked |
+| S15 | AI 360 Control Room | 48 | 304–341, 506, 577–585 | locked; **Closed (owner, 6 Nov; CN-036)** — built parts stay, half-built parts hidden by PR 652 |
 | S16 | Finance, costs & reports | 22 | 342–355, 504, 536–537, 568, 615–618 | **answered 18 Oct** |
-| S17 | Multi-store | 24 | 356–377, 511–512 | settings open |
+| S17 | Multi-store | 24 | 356–377, 511–512 | settings open; **Closed (owner, 6 Nov; CN-036)** — built parts stay, half-built parts hidden by PR 652 |
 | S18 | Compliance, security, manual | 15 | 378–390, 620, 623 | settings open; **623 filed 1 Nov** |
 | S19 | Deploy, backup, go-live | 19 | 391–403, 507, 587, 619, 621, 652–653 | locked; **652–653 filed 6 Nov (CN-036)** |
 | S20 | Fulfilment & documents | 9 | 404–412 | locked |
 | S21 | Site Health & Audit | 14 | 413–424, 570, 594 | locked |
 | S22 | Support (all-in-one) | 14 | 425–436, 538, 624 | locked; **624 filed 1 Nov** |
-| S23 | Social & content studio | 7 | 437–443 | locked |
-| S24 | Virtual Photoshoot Studio | 38 | 444–480, 539 | locked |
-| S25 | Video & Campaign Creative Studio | 10 | 481–490 | locked |
-| S26 | Installation, documentation & distribution | 6 | 513–518 | **parked** — handover pack |
-| S27 | No-ERP stock module | parked | — | **parked** — handover pack; numbered when approved |
+| S23 | Social & content studio | 7 | 437–443 | locked; **Closed (owner, 6 Nov; CN-036)** — built parts stay, half-built parts hidden by PR 652 |
+| S24 | Virtual Photoshoot Studio | 38 | 444–480, 539 | locked; **Closed (owner, 6 Nov; CN-036)** — built parts stay, half-built parts hidden by PR 652 |
+| S25 | Video & Campaign Creative Studio | 10 | 481–490 | locked; **Closed (owner, 6 Nov; CN-036)** — built parts stay, half-built parts hidden by PR 652 |
+| S26 | Installation, documentation & distribution | 6 | 513–518 | **parked** — handover pack; **Closed (owner, 6 Nov; CN-036)** |
+| S27 | No-ERP stock module | parked | — | **parked** — handover pack; numbered when approved; **Closed (owner, 6 Nov; CN-036)** |
 | | **Total** | **653** | | 644 active · 9 parked (S26 and PR 649–651) |
 
 ### How this reached 653
@@ -1076,6 +1082,9 @@ the server.*
 - **PR 587 (S19, WordPress → new site migration)** — Updated 6 Nov 2026 (CN-036): go-live comes after the admin look is merged and the go-live check is green (full gate, the 70-order simulation, the acceptance run, the redirect map of PR 653, the closed-stage switch of PR 652); the owner types "go live" himself; any hour once green; rollback stays 43 s.
 - **S12, S13, S15, S25, S24** — Updated 6 Nov 2026 (CN-036): the stages run in this serial order after S02 (S24 last); every new admin page of them is built in Lumen with the shared patterns from the start; no new S12 or S13 PR starts before PR 625–630 are merged.
 - **S17, S23, S26, S27** — Updated 6 Nov 2026 (CN-036): closed until the owner says so; built parts stay, half-built parts hidden by PR 652's switch.
+- **S12, S13 and the other open stages** — Updated 6 Nov 2026, 14:55 (CN-036 update): the order is the Lumen foundation and S02 in parallel → S12 → S13 → the other open stages by the priority list of `docs/LAUNCH-TRACK.md`; ~~S15 → S25 → S24 after S13~~ (closed).
+- **S15, S17, S23, S24, S25, S26, S27** — Updated 6 Nov 2026, 14:55 (CN-036 update): closed until the owner says so; built parts stay (S17 · PR 362); every half-built part is hidden from the admin menu, sitemap, search and robots by PR 652's switch, off as shipped; with S15 closed the AI Center section and the round assistant button are not shown. Work in flight on a closed stage stops at a clean point and is listed in `PROGRESS.md` under "Parked" (none on 6 Nov).
+- **PR 646 (Lumen section: AI Center)** — Updated 6 Nov 2026, 14:55 (CN-036 update): built into the shell, hidden by PR 652's switch while S15 is closed.
 
 **Scope added to existing PRs, 6 Nov 2026 (CN-035):**
 - **PR 381, 383, 391, 393, 395, 396, 399, 400, 507** — Updated 6 Nov 2026 (CN-035): the go-live page marks every row "Needed before go-live" or "Soon after go-live"; the outside security review, the stores' own details and legal numbers (empty fields are not shown), the Drive and Azure Blob backups with their restore drill, and the live payment / courier / SMS / Telegram keys are "Soon after" and never block the switch; a yellow "Off-server backup: not connected" line returns daily until it is connected.
@@ -1531,7 +1540,7 @@ The owner's largest single input. Scenarios A–M are recorded in `PENDING_CHANG
 | 649 | **Admin look ক Clear Day** (CN-036; S00; **parked** until the owner says "build ক"). Its token set and optional shell variant on the theme layer of PR 625, as mocked in `docs/demo/admin-look/ADMIN-LOOKS-V1.html`; then selectable in Settings › Admin look (PR 630). |
 | 650 | **Admin look খ Night Atelier** (CN-036; S00; **parked** until the owner says "build খ"). Its token set and optional shell variant on the theme layer of PR 625, as mocked in `ADMIN-LOOKS-V1.html`; then selectable in Settings › Admin look. |
 | 651 | **Admin look গ Studio** (CN-036; S00; **parked** until the owner says "build গ"). Its token set and optional shell variant on the theme layer of PR 625, as mocked in `ADMIN-LOOKS-V1.html`; then selectable in Settings › Admin look. |
-| 652 | **Closed stages hidden by a switch** (CN-036; S19; Lane C, before go-live). Every half-built part of the closed stages S17 (multi-store) and S23 (social studio), and any S12 part not yet finished, is hidden from the admin menu, the sitemap, the site search and robots by a switch, off (hidden) as shipped. Built parts stay (nothing deleted); a stage's switch is turned on when the stage is finished. A test proves no hidden page is in the sitemap, the search or a menu. |
+| 652 | **Closed stages hidden by a switch** (CN-036; S19; Lane C, before go-live). Every half-built part of the closed stages S17 (multi-store) and S23 (social studio), and any S12 part not yet finished, is hidden from the admin menu, the sitemap, the site search and robots by a switch, off (hidden) as shipped. Built parts stay (nothing deleted); a stage's switch is turned on when the stage is finished. A test proves no hidden page is in the sitemap, the search or a menu. · **Updated 6 Nov 2026, 14:55 (CN-036 update):** the closed stages are S15, S17, S23, S24, S25, S26 and S27; S12 is open and is not hidden. |
 | 653 | **Redirect import from the old site's public sitemap** (CN-036; S19; Lane C, before go-live; feeds PR 235's redirect manager and PR 587). The WordPress redirect map has 0 rows. A read-only import reads the old site's public sitemap (49 addresses seen), matches each address to its new twin (product, category, page, post) and files the pairs as Redirect rows for review in Website › SEO › Redirects; an address without a twin goes to its nearest category or the home page and is listed. Only public GET requests to the sitemap; nothing on the old WordPress site is touched. The go-live check (PR 587) reads the map. |
 
 ### S06 additions — the approval loop (review round, 18 Oct)

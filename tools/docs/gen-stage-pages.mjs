@@ -183,6 +183,8 @@ for (const [id, name, count, range, status] of tableAfter(register, '## The stag
     range: plainMd(range),
     status: plainMd(status),
     parked: /parked/i.test(status),
+    // CN-036 update (owner, 6 Nov 2026): a stage the owner closed until he says so
+    closed: /closed \(owner/i.test(status),
     prs,
   });
 }
@@ -597,7 +599,7 @@ const stateLabel = (p) => {
 const doneText = (s) => (s.parked ? `— / ${s.total || '—'}` : `${s.done} / ${s.total}`);
 const waveName = (key) => (key === 'parked' ? 'Parked' : `Wave ${key}`);
 const waveAnchor = (key) => (key === 'parked' ? 'parked' : `wave-${key}`);
-const stageState = (s) => (s.parked ? 'Parked' : s.done === s.total && s.total ? 'Done' : s.done ? 'In progress' : 'Not started');
+const stageState = (s) => (s.parked ? 'Parked' : s.done === s.total && s.total ? 'Done' : s.closed ? 'Closed' : s.done ? 'In progress' : 'Not started');
 const prLink = (n, from) => {
   const st = stageOf.get(n);
   if (!st) return `PR ${n}`;
