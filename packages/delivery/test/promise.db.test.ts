@@ -4,9 +4,12 @@
 // gazetteer place is read for the order pages (itself, or the district above it). Charges never change.
 // Review R3 (customer M2/M3): the one promise clock every "late" reads — the district's hours, counted from the first
 // day back for an order placed in the holiday break, none for "may arrive after Eid".
+// Follow-up 653: none either for an order placed past its band's festive cut-off (PR 281, the switch on, checkout
+// ticked): the checkout said the festive rule's "after" words, so it is never late.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { districtHours, districtPromises, orderPromises, promiseDueBy, quoteLine, resolveLine, zonedMidnight } from '../src';
+import { createRule, publishRule, saveDraft } from '@extas/rules';
+import { districtHours, districtPromises, hoursPromised, orderPromises, promiseDueBy, quoteLine, resolveLine, zonedMidnight } from '../src';
 import { registry } from '@extas/settings';
 import { setUp, type Fixture } from './fixture';
 
@@ -97,6 +100,36 @@ describe.skipIf(!HAS_TEST_DB)('the delivery promise per district on PostgreSQL (
       expect((await one(new Date('2027-03-10T06:00:00Z'))).afterEid).toBe(false);
     } finally {
       for (const k of ['rules.eid.enabled', 'rules.eid.eidDate', 'rules.eid.bandDates']) f.overrides.delete(k);
+    }
+  });
+
+  it('follow-up 653: past its band\'s festive cut-off an order has no hours promise and is never late; off or before it, the hours stand', async () => {
+    const actor = await f.staff('festive-promise@example.com', ['rules.read', 'rules.write', 'rules.publish'], f.A);
+    const rdeps = { ...f.deps(), now: () => new Date('2027-03-01T06:00:00Z') };
+    const who = { actor, storeId: f.A };
+    const r = await createRule(rdeps, who, { templateId: 'festive' });
+    const times: Record<string, string> = { cutoffDhakaCity: '2027-03-06T23:59:00+06:00', cutoffOutsideDhaka: '2027-03-03T23:59:00+06:00' }; // hardcode-ok: test dates
+    await saveDraft(rdeps, who, r.id, { content: { ...r.live!, params: r.live!.params.map((p) => (times[p.key] ? { ...p, value: times[p.key] } : p)), status: 'ACTIVE' } });
+    await publishRule(rdeps, who, r.id);
+    const band = { key: 'outside-dhaka', hoursMin: 48, hoursMax: 72 };
+    const one = async (placedAt: Date, key = band.key) => (await orderPromises(f.deps(), f.A, [{ id: 'o', placedAt, areaId: null, band: { ...band, key } }])).get('o')!;
+    const late = new Date('2027-03-05T06:00:00Z'); // past outside Dhaka's time, before Dhaka city's
+    // off as shipped: the hours stand
+    expect(await one(late)).toMatchObject({ afterFestive: false, hoursMax: 72 });
+    f.overrides.set('marketing.festiveCutoff', { enabled: true, places: { home: false, product: false, checkout: true }, title: null, linkHref: null, linkLabel: null });
+    try {
+      const after = await one(late);
+      expect(after.afterFestive).toBe(true);
+      expect(hoursPromised(after)).toBe(false);
+      expect(promiseDueBy(after)).toBeNull();
+      // before the band's time, or another band still open: the hours promise stands
+      expect(promiseDueBy(await one(new Date('2027-03-02T06:00:00Z')))).toEqual(new Date(Date.parse('2027-03-02T06:00:00Z') + 72 * 3_600_000));
+      expect((await one(late, 'dhaka-city')).afterFestive).toBe(false);
+      // checkout not ticked: the checkout kept its hours, so the clock does too
+      f.overrides.set('marketing.festiveCutoff', { enabled: true, places: { home: true, product: true, checkout: false }, title: null, linkHref: null, linkLabel: null });
+      expect((await one(late)).afterFestive).toBe(false);
+    } finally {
+      f.overrides.delete('marketing.festiveCutoff');
     }
   });
 });

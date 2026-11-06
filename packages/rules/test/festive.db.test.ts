@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, SYSTEM, syncAuth, type Actor } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
-import { checkoutEta, createRule, festiveFor, publishRule, saveDraft, type RulesDeps, type Who } from '../src';
+import { checkoutEta, createRule, festiveAfterCheck, festiveFor, publishRule, saveDraft, type RulesDeps, type Who } from '../src';
 
 const at = (day: string, time = '12:00') => new Date(`${day}T${time}:00+06:00`);
 
@@ -77,5 +77,20 @@ describe.skipIf(!HAS_TEST_DB)('Festive cut-off words on PostgreSQL (PR 281)', ()
     const cat = await t.prisma.category.create({ data: { storeId: A, slug: 'festive-tops', nameEn: 'Sample tops' } });
     const p = await t.prisma.product.create({ data: { storeId: A, slug: 'festive-sample', nameEn: 'Sample panjabi', categoryId: cat.id } });
     expect((await festiveFor(deps(), A, { place: 'product', productId: p.id })).map((l) => l.state)).toEqual(['open']);
+  });
+
+  it('follow-up 653: the promise clock\'s check says the same as the checkout — after words for that band past its time, only while checkout is ticked', async () => {
+    await turn({ enabled: false, places: { home: true, product: true, checkout: true }, title: null, linkHref: null, linkLabel: null });
+    expect((await festiveAfterCheck(deps(), A))('outside-dhaka', at('2027-03-05'))).toBe(false);
+    await turn({ enabled: true, places: { home: false, product: false, checkout: true }, title: null, linkHref: null, linkLabel: null });
+    const after = await festiveAfterCheck(deps(), A);
+    for (const [band, day] of [['outside-dhaka', '2027-03-05'], ['outside-dhaka', '2027-03-02'], ['dhaka-city', '2027-03-05'], ['dhaka-city', '2027-03-08']] as const) {
+      const said = (await checkoutEta(deps(), A, { place: { band, areaId: null }, at: at(day) })).lines.length > 0;
+      expect(after(band, at(day))).toBe(said);
+    }
+    expect(after('outside-dhaka', at('2027-03-05'))).toBe(true);
+    expect(after('outside-dhaka', at('2027-03-02'))).toBe(false);
+    await turn({ enabled: true, places: { home: true, product: true, checkout: false }, title: null, linkHref: null, linkLabel: null });
+    expect((await festiveAfterCheck(deps(), A))('outside-dhaka', at('2027-03-05'))).toBe(false);
   });
 });

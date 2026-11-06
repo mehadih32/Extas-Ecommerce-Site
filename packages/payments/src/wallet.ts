@@ -17,7 +17,7 @@
 // The checkout's own wallet debit (@extas/checkout place.ts) and the review reward (@extas/catalogue reviews.ts) write
 // the same ledger the same way; wallet.guard.test.ts keeps every other writer out.
 import { Prisma } from '@extas/db/client';
-import { orderPromises } from '@extas/delivery/promise';
+import { hoursPromised, orderPromises } from '@extas/delivery/promise';
 import { z } from 'zod';
 import { allow, KEY, nowOf, parse, setting, TX, UUID, type Db, type PaymentsDeps, type Tx, type Who } from './context';
 import { PaymentsError } from './errors';
@@ -297,14 +297,14 @@ type ApologyOrder = Prisma.OrderGetPayload<{ select: typeof APOLOGY_ORDER }>;
 /**
  * Review R3 (customer M2/M3): how late each order came against the promise the checkout gave it (@extas/delivery
  * `orderPromises`: the district's own hours, counted from the shop's first day back after a holiday break, none for
- * "may arrive after Eid"), the same clock as the courier's late flag.
+ * "may arrive after Eid" or a festive rule's "after" words), the same clock as the courier's late flag.
  */
 async function lateHoursFor(deps: Pick<PaymentsDeps, 'db' | 'settings'>, storeId: number, orders: readonly ApologyOrder[], now: Date): Promise<Map<string, number | null>> {
   const promises = await orderPromises(deps, storeId, orders.map((o) => ({ id: o.id, placedAt: o.placedAt, areaId: o.areaId, band: o.deliveryBand })));
   return new Map(
     orders.map((o) => {
       const p = promises.get(o.id);
-      return [o.id, p && !p.afterEid ? lateHoursOf({ placedAt: p.from, deliveredAt: o.deliveredAt, hoursMax: p.hoursMax }, now) : null];
+      return [o.id, p && hoursPromised(p) ? lateHoursOf({ placedAt: p.from, deliveredAt: o.deliveredAt, hoursMax: p.hoursMax }, now) : null];
     }),
   );
 }
