@@ -51,6 +51,8 @@ export interface BuyLinks {
   /** The bag's messages after a press (S04's `AddWords` without the button's own words). */
   bagWords: Omit<AddWords, 'label'>;
   checkoutHref: string;
+  /** Follow-up 210 (PR 605): the checkout opened as a gift while gift mode is on, else null (lib/shop/gift-link). */
+  giftHref?: string | null;
   /** "Call to order": the shop's phone link and its hours (null: switched off or no number). */
   call: { href: string; hours: string | null } | null;
   freeDelivery: boolean;
@@ -89,6 +91,25 @@ function Pair({ where, links }: { where: 'col' | 'bar' | 'desk'; links: BuyLinks
   );
 }
 
+/** Follow-up 210: "Send as a gift" before a size is chosen — it marks the sizes, as the buy buttons do. */
+export function PdpGiftNeedSize({ label, onNeedSize }: { label: string; onNeedSize: () => void }) {
+  return (
+    <button type="button" className="pdp-gift" data-testid="pdp-gift" onClick={onNeedSize}>
+      <Icon name="gift" size={16} />
+      {label}
+    </button>
+  );
+}
+
+/** Follow-up 210 (PR 605, CN-020 (2)): the small "Send as a gift" link under the buttons: the chosen piece goes into the bag and the checkout opens as a gift. */
+function PdpGift({ href, words }: { href: string; words: Omit<AddWords, 'label'> }) {
+  const { m, choice, w, needSize } = usePdp();
+  const v = variantFor(m, choice);
+  const label = w('buy.gift');
+  if (!v) return <PdpGiftNeedSize label={label} onNeedSize={needSize} />;
+  return <AddToBag variantId={v.id} behaviour="page" bagHref={href} words={{ ...words, label }} source="gift" className="pdp-gift" testId="pdp-gift" icon={<Icon name="gift" size={16} />} />;
+}
+
 export function PdpBuy({ links }: { links: BuyLinks }) {
   const { m, set, w } = usePdp();
   if (!m.onSale) return null;
@@ -97,6 +118,11 @@ export function PdpBuy({ links }: { links: BuyLinks }) {
       <div className={`pdp-sec pdp-dk pdp-ctas cta1 add-s1${set.buy.orderNow ? '' : ' one'}`}>
         <Pair where="col" links={links} />
       </div>
+      {links.giftHref ? (
+        <div className="pdp-sec pdp-giftsec">
+          <PdpGift href={links.giftHref} words={links.bagWords} />
+        </div>
+      ) : null}
       {links.call ? (
         <div className="pdp-sec pdp-callsec">
           <a className="btn btn-ghost btn-block pdp-call" href={links.call.href} data-testid="call-to-order">

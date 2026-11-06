@@ -140,6 +140,12 @@
       "expect": ["[data-testid=\"bag-summary\"]", "[data-testid=\"bag-gift\"]"]
     },
     {
+      "$comment": "PR 605 follow-up 210 — the product page's \"Send as a gift\" link under the buttons (the same gift-trial fill), its 44 px tap in both languages.",
+      "paths": ["/p/essential-pique-polo", "/bn/p/essential-pique-polo"],
+      "fill": "/api/shop/try-gift",
+      "expect": ["[data-testid=\"pdp-gift\"]"]
+    },
+    {
       "$comment": "PR 606 — the bulk / corporate enquiry page (POST /api/shop/try-bulk, test servers only: the sample bag, and this browser draws the lane as if the owner had it on; nothing written to the settings). Its boxes (16 px text), the logo tick and Send keep their 44 px taps; from the bag, the bag's pieces show beside the form.",
       "paths": ["/bulk-order", "/bn/bulk-order", "/bulk-order?from=bag", "/bn/bulk-order?from=bag"],
       "fill": "/api/shop/try-bulk",
