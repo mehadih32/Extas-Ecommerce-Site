@@ -70,7 +70,7 @@ export default async function CallsPage({ searchParams }: { searchParams: Search
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="calls-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="orders.confirm" />
       </div>
     );
