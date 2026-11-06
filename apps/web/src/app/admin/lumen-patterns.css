@@ -92,7 +92,7 @@
 .lm-toast-x { color: var(--lm-bg); opacity: 0.8; }
 .lm-toast-u:hover, .lm-toast-x:hover { background: color-mix(in srgb, var(--lm-bg) 14%, transparent); }
 .lm-toast :focus-visible { outline-color: var(--lm-bg); }
-[data-lm-look] .ad-toast, [data-lm-look] .a2-toast { background: var(--lm-ink); color: var(--lm-bg); border-radius: var(--lm-r-box); box-shadow: var(--lm-sh-toast); font-family: var(--lm-font); font-size: var(--lm-fs-card); font-weight: 600; }
+[data-lm-look] .ad-toast { background: var(--lm-ink); color: var(--lm-bg); border-radius: var(--lm-r-box); box-shadow: var(--lm-sh-toast); font-family: var(--lm-font); font-size: var(--lm-fs-card); font-weight: 600; }
 @media (max-width: 759px) {
   .lm-toast-slot { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   .lm-toast-u, .lm-toast-x { min-height: var(--lm-tap); min-width: var(--lm-tap); }
