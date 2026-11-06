@@ -52,6 +52,14 @@ describe('Settings section in the Lumen look (PR 647)', () => {
     for (const f of ['Integrations.tsx', 'settings/SecurityScreen.tsx', 'settings/PrivacyRequests.tsx', 'settings/EdgeSend.tsx']) expect(comp(f), f).not.toContain('undo:');
   });
 
+  it('a settings card (FieldsCard, every section) says "saved" through the one toast; a refusal stays beside Save (follow-up)', () => {
+    const src = comp('settings/FieldsCard.tsx');
+    expect(src).toContain("showToast({ text: x.saved, tone: 'ok' })");
+    expect(src).not.toMatch(/bad: false/);
+    expect(src).toMatch(/bad: true/);
+    expect(src).not.toContain('undo:');
+  });
+
   it('Admin look and Shimmer keep their own Lumen build', () => {
     expect(readAdmin('settings/look/page.tsx')).toContain('data-testid="admin-look" data-lm-ready=""');
     expect(readAdmin('settings/shimmer/page.tsx')).toContain('data-testid="sh-page" data-lm-ready=""');

@@ -8,6 +8,7 @@
 // so. A person without the page's write permission sees it locked.
 import { useId, useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 import { ShellIcon } from '../shell/ShellIcon';
 
 type Json = Record<string, unknown>;
@@ -83,7 +84,10 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: {
     setBusy(false);
     if (a.status === 200) {
       fresh(a.data.cards as Record<string, FieldsCardScreen>);
-      return setSaid({ text: x.saved, bad: false });
+      // Lumen (CN-036): a save that went through speaks through the admin's one toast (a settings save, no Undo);
+      // a refusal stays beside the Save button, where the person is looking.
+      setSaid(null);
+      return showToast({ text: x.saved, tone: 'ok' });
     }
     const code = a.status === 0 ? 'network' : (a.data.error ?? 'other');
     if (code === 'STALE') {
