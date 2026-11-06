@@ -1,19 +1,21 @@
 {
-  "at": "2026-11-01 11:37 (Asia/Dhaka)",
+  "at": "2026-11-06 06:21 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "98d378e6b4a0",
+  "sha": "b5bbe1ad07ce",
   "kind": "run now",
   "group": "go-live-gate",
-  "ok": true,
+  "ok": false,
   "ui": {
     "kinds": [],
     "issues": 0
   },
   "journeys": 4,
-  "failed": 0,
+  "failed": 1,
   "steps": 60,
-  "skipped": 8,
-  "problems": [],
+  "skipped": 3,
+  "problems": [
+    "gate-shop (desktop) step 11 follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034: .size-pill is not on the page"
+  ],
   "rows": [
     {
       "journey": "gate-shop",
@@ -113,7 +115,7 @@
     {
       "journey": "gate-shop",
       "screen": "desktop",
-      "ok": true,
+      "ok": false,
       "steps": [
         {
           "n": 1,
@@ -198,10 +200,12 @@
         {
           "n": 11,
           "what": "follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034",
-          "ok": true,
-          "skipped": "nothing matches a.pcard-lnk (the shop has none yet)",
-          "problems": [],
-          "screenshot": null
+          "ok": false,
+          "skipped": null,
+          "problems": [
+            ".size-pill is not on the page"
+          ],
+          "screenshot": "gate-shop-desktop-11.jpg"
         }
       ]
     },
@@ -302,7 +306,7 @@
           "n": 12,
           "what": "follow [data-testid=cus-row] a[href^='/admin/customers/'] · SIM-F-054",
           "ok": true,
-          "skipped": "nothing matches [data-testid=cus-row] a[href^='/admin/customers/'] (the shop has none yet)",
+          "skipped": null,
           "problems": [],
           "screenshot": null
         },
@@ -310,7 +314,7 @@
           "n": 13,
           "what": "follow [data-testid=cus-wallet-open] · SIM-F-054",
           "ok": true,
-          "skipped": "step 12 found nothing",
+          "skipped": null,
           "problems": [],
           "screenshot": null
         },
@@ -461,7 +465,7 @@
           "n": 12,
           "what": "follow [data-testid=cus-row] a[href^='/admin/customers/'] · SIM-F-054",
           "ok": true,
-          "skipped": "nothing matches [data-testid=cus-row] a[href^='/admin/customers/'] (the shop has none yet)",
+          "skipped": null,
           "problems": [],
           "screenshot": null
         },
@@ -469,7 +473,7 @@
           "n": 13,
           "what": "follow [data-testid=cus-wallet-open] · SIM-F-054",
           "ok": true,
-          "skipped": "step 12 found nothing",
+          "skipped": null,
           "problems": [],
           "screenshot": null
         },

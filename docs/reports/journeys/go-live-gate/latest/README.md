@@ -1,8 +1,8 @@
-# Journeys — PASS
+# Journeys — FAIL
 
-2026-11-01 11:37 (Asia/Dhaka) · https://new.extas.com.bd · run now · 98d378e6b4a0 · group go-live-gate
+2026-11-06 06:21 (Asia/Dhaka) · https://new.extas.com.bd · run now · b5bbe1ad07ce · group go-live-gate
 
-4 journeys (journey × screen), 0 failed; 60 steps, 8 skipped.
+4 journeys (journey × screen), 1 failed; 60 steps, 3 skipped.
 
 UI checks: off.
 
@@ -20,7 +20,7 @@ UI checks: off.
 - ok 10. follow a[href^='/collections/'] · SIM-F-035, SIM-F-046
 - skip 11. follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034 (nothing matches a.pcard-lnk (the shop has none yet))
 
-## gate-shop · desktop — pass
+## gate-shop · desktop — FAIL
 
 - ok 1. open / (unless rules.eid.enabled / delivery.holiday.enabled) · SIM-F-019
 - ok 2. open /bn · SIM-F-025, SIM-F-047
@@ -32,7 +32,7 @@ UI checks: off.
 - ok 8. open /account/login · SIM-F-039
 - ok 9. open / · SIM-F-035, SIM-F-046
 - ok 10. follow a[href^='/collections/'] · SIM-F-035, SIM-F-046
-- skip 11. follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034 (nothing matches a.pcard-lnk (the shop has none yet))
+- **FAIL** 11. follow a.pcard-lnk · SIM-F-035, SIM-F-046, SIM-F-034 — .size-pill is not on the page ([picture](gate-shop-desktop-11.jpg))
 
 ## gate-admin · phone — pass
 
@@ -47,8 +47,8 @@ UI checks: off.
 - ok 9. open /admin/money · SIM-F-028, SIM-F-041
 - ok 10. open /admin/money/refunds · SIM-F-041, SIM-F-054, SIM-F-056
 - ok 11. open /admin/customers · SIM-F-054
-- skip 12. follow [data-testid=cus-row] a[href^='/admin/customers/'] · SIM-F-054 (nothing matches [data-testid=cus-row] a[href^='/admin/customers/'] (the shop has none yet))
-- skip 13. follow [data-testid=cus-wallet-open] · SIM-F-054 (step 12 found nothing)
+- ok 12. follow [data-testid=cus-row] a[href^='/admin/customers/'] · SIM-F-054
+- ok 13. follow [data-testid=cus-wallet-open] · SIM-F-054
 - ok 14. open /admin/combos?tab=fixed · SIM-F-051
 - ok 15. open /admin/delivery/settings · SIM-F-019, SIM-F-047, SIM-F-048
 - ok 16. open /admin/support/settings · SIM-F-046
@@ -69,8 +69,8 @@ UI checks: off.
 - ok 9. open /admin/money · SIM-F-028, SIM-F-041
 - ok 10. open /admin/money/refunds · SIM-F-041, SIM-F-054, SIM-F-056
 - ok 11. open /admin/customers · SIM-F-054
-- skip 12. follow [data-testid=cus-row] a[href^='/admin/customers/'] · SIM-F-054 (nothing matches [data-testid=cus-row] a[href^='/admin/customers/'] (the shop has none yet))
-- skip 13. follow [data-testid=cus-wallet-open] · SIM-F-054 (step 12 found nothing)
+- ok 12. follow [data-testid=cus-row] a[href^='/admin/customers/'] · SIM-F-054
+- ok 13. follow [data-testid=cus-wallet-open] · SIM-F-054
 - ok 14. open /admin/combos?tab=fixed · SIM-F-051
 - ok 15. open /admin/delivery/settings · SIM-F-019, SIM-F-047, SIM-F-048
 - ok 16. open /admin/support/settings · SIM-F-046
