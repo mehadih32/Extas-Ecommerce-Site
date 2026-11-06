@@ -168,4 +168,25 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Seasonal home on PostgreSQL (PR 280
     expect(await t.prisma.layoutSnapshot.count()).toBe(2);
     expect(await t.prisma.auditLog.count({ where: { action: { startsWith: 'seasonalHome.window.' } } })).toBe(4);
   });
+
+  it('two saves at the same moment never overlap: the check and the save run under one lock (follow-up 651)', async () => {
+    const g = (await api('GET')).a;
+    expect((await api('PUT', { key: 'seasonalHome', value: { enabled: true }, version: g.card.version })).a.ok).toBe(true);
+    const tries = await Promise.all(
+      ['2027-05-01T00:00', '2027-05-01T06:00', '2027-05-01T12:00', '2027-05-01T18:00', '2027-05-02T00:00'].map((starts, i) =>
+        api('POST', { action: 'window.add', lookId: i % 2 ? ids.winter : ids.eid, starts, ends: '2027-05-05T00:00' }),
+      ),
+    );
+    expect(tries.filter((x) => x.a.ok)).toHaveLength(1);
+    expect(tries.filter((x) => !x.a.ok).map((x) => x.a.error)).toEqual(['OVERLAP', 'OVERLAP', 'OVERLAP', 'OVERLAP']);
+    const live = await t.prisma.scheduledLayoutSwitch.findMany({ where: { status: 'SCHEDULED', applyAt: { gte: new Date('2027-04-30T00:00:00Z') } } });
+    expect(live).toHaveLength(1);
+    // setting a look aside and scheduling it at the same moment: never a window on a look set aside
+    const free = (await api('POST', { action: 'look.save', name: 'Puja' })).a.id!;
+    const [arch, add] = await Promise.all([api('POST', { action: 'look.archive', id: free }), api('POST', { action: 'window.add', lookId: free, starts: '2027-06-01T00:00', ends: '2027-06-02T00:00' })]);
+    const set = await t.prisma.scheduledLayoutSwitch.count({ where: { snapshotId: free } });
+    const aside = (await t.prisma.layoutSnapshot.findUnique({ where: { id: free } }))!.archivedAt !== null;
+    expect(aside && set > 0).toBe(false);
+    expect([arch.a.ok, add.a.ok].filter(Boolean)).toHaveLength(1);
+  });
 });
