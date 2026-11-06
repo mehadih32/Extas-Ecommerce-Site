@@ -120,6 +120,7 @@ import { seasonalSettings } from './registry-seasonal';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
+import { festiveCutoffSettings } from './registry-festive-cutoff';
 import { incompleteSettings } from './registry-incomplete';
 import { followUpSettings } from './registry-follow-up';
 import { cartRecoverySettings } from './registry-cart-recovery';
@@ -1421,6 +1422,7 @@ export const registry = {
   ...youtubeSettings,
   ...outreachSettings,
   ...seasonalHomeSettings,
+  ...festiveCutoffSettings,
   // ---- S16 · CN-031 lane B · PR 347 · the costs report's longest period and day rows (registry-finance.ts, versions 160–169). ----
   ...financeSettings,
   // ---- S12 · CN-031 lane A · PR 239 onwards · the journal (blog) (registry-journal.ts, versions 222–229). ----

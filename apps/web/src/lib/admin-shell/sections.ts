@@ -266,6 +266,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'outreach', pages: [{ href: '/admin/marketing/outreach', perm: 'marketing.campaigns.read', keys: ['marketingOutreach'] }] },
       // S13 · PR 280: Seasonal home — saved home-page looks and the windows they show in (the home page switches by itself).
       { id: 'seasonal', pages: [{ href: '/admin/marketing/seasonal', perm: 'marketing.campaigns.read', keys: ['marketingSeasonalHome'] }] },
+      // S13 · PR 281: Festive cut-off — where the live festive Smart Rules' last-order words show on the shop.
+      { id: 'festive', pages: [{ href: '/admin/marketing/festive', perm: 'marketing.campaigns.read', keys: ['marketingFestive'] }] },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,

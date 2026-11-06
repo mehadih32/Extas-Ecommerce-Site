@@ -22,6 +22,10 @@
     "seasonalHome": {
       "label": "Seasonal home-page switching",
       "help": "Off as it ships. On, Marketing › Seasonal home keeps your saved home-page looks (for example \"Eid 2027\": which sections show and in what order, the hero's words, the collection whose products slide in the hero) and the windows you schedule them for. Inside a window the home page shows that look; when the window ends the home page is your own home settings again by itself. Two windows may not overlap; a stopped schedule is kept, never deleted. Prices, offers and the checkout never change."
+    },
+    "festiveCutoff": {
+      "label": "Festive cut-off banners",
+      "help": "Off as it ships. On, your live festive Smart Rules (each with its last order time per delivery band) speak on the shop: before the time their short words, for example \"Order by 6 Mar for delivery before the festival\"; after it their \"after\" words. Places: the home page's festive section, under the product page's stock line, and at checkout and on the thank-you page, where a band already past its time gets the \"after\" words instead of the usual hours promise. The heading and the link of the home section are optional, in both languages. Every date and word comes from the rule; nothing is made up."
     }
   },
   "ads": {

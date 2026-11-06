@@ -1065,6 +1065,14 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 .shop .sh-eta-l p { margin: 0; }
 .shop .sh-etawrap { margin-top: 14px; }
 .shop .bg-wrap > .sh-eta { margin-bottom: 16px; }
+/* PR 281 · the home page's festive section (demo 20-home.js hm_festive, styles.css .tint): the live festive rule's words */
+.shop .tint { background: var(--brand-tint); border: 1px solid var(--brand-line); border-radius: var(--radius); }
+.shop .hm-festive { margin-top: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; color: var(--ink); }
+.shop .hm-festive > svg { color: var(--brand); flex-shrink: 0; }
+.shop .hm-festive p { margin: 0; overflow-wrap: anywhere; }
+.shop.shop[data-theme="festive"] .hm-festive > svg { color: var(--gold); }
+/* PR 281 · the product page's festive line, under the stock line */
+.shop .pdp-festive { margin-top: 10px; }
 
 /* PR 624 (CN-034): the Messenger button — the WhatsApp button's shape, the hint under it on one line that steps down to
    two only when the words need it; the header icon is the computer's (hide-m). */

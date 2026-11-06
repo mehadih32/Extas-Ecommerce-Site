@@ -9,10 +9,18 @@
 //   place's date (SIM-F-019: never the normal promise then) — and the pre-order offer, which exists only while the
 //   owner switched pre-order on with its advance (CN-018; `rules.approve`). The checkout takes that advance through its
 //   existing advance path (PR 560), never a new way to take money.
+// - PR 281 · festiveFor: the live festive Smart Rules' words for a place (festive.ts), only while Marketing › Festive
+//   cut-off is on (`marketing.festiveCutoff`, off as shipped) and that place is ticked; checkoutEta adds, for the
+//   settled band, the "after" words of a festive rule already past that band's time in place of the usual promise.
 import { eidConfig, storefrontEid } from './eid-service';
 import { eidStatus, lateLine, preorderLine, preorderOffer, type EidConfig } from './eid';
 import { holidayNotice, holidayPromise, holidayStatus, type HolidayConfig } from './holiday';
 import { nowOf, setting, textContext, type RulesDeps } from './context';
+import { cachedActiveRules, othersByKey } from './core';
+import { festiveLinesOf, type FestiveLine } from './festive';
+import { scopeFacts } from './facts';
+import { inScope, resolutionOrder } from './match';
+import type { FestiveCutoffPlace } from '@extas/settings';
 import type { TextContext } from './text';
 
 type Deps = Pick<RulesDeps, 'db' | 'settings' | 'now'>;
@@ -25,6 +33,28 @@ export async function storefrontBanner(deps: Deps, storeId: number, opts: { loca
   const [eid, holiday, ctx] = await Promise.all([storefrontEid(deps, storeId, { locale: opts.locale }), holidayConfig(deps, storeId), textContext(deps, storeId, opts.locale)]);
   const notice = holidayNotice(holiday, holidayStatus(holiday, nowOf(deps), ctx.timeZone), ctx);
   return [...(eid.banner ?? []), ...(notice ? [notice] : [])];
+}
+
+/** Where each shop place reads its festive rules from (a rule's placements: the home page is `announcement`). */
+const FESTIVE_PLACEMENT: Record<FestiveCutoffPlace, string> = { home: 'announcement', product: 'product', checkout: 'checkout' };
+
+/**
+ * PR 281 — the live festive rules' lines for one shop place, while the switch is on and the place ticked (else empty).
+ * `band` null: the address is not known (every band counts); `want` 'closed': only the lines past the band's time;
+ * `productId`: only the rules whose scope covers that product (a product page).
+ */
+export async function festiveFor(
+  deps: Deps,
+  storeId: number,
+  opts: { place: FestiveCutoffPlace; band?: string | null; locale?: string; at?: Date; want?: 'open' | 'closed' | 'both'; productId?: string },
+): Promise<FestiveLine[]> {
+  const set = await setting(deps, storeId, 'marketing.festiveCutoff');
+  if (!set.enabled || !set.places[opts.place]) return [];
+  const [rules, ctx] = await Promise.all([cachedActiveRules(deps, storeId), textContext(deps, storeId, opts.locale)]);
+  const facts = opts.productId ? (await scopeFacts(deps.db, storeId, [opts.productId])).get(opts.productId) : undefined;
+  if (opts.productId && !facts) return [];
+  const sorted = rules.filter((r) => !facts || inScope(r.scope, facts)).sort(resolutionOrder);
+  return festiveLinesOf(sorted, { placement: FESTIVE_PLACEMENT[opts.place], band: opts.band ?? null, now: opts.at ?? nowOf(deps), want: opts.want }, ctx, othersByKey(rules));
 }
 
 /** One place, as the checkout settled it: its band key and its gazetteer place (null when the customer chose the band). */
@@ -86,6 +116,9 @@ export async function checkoutEta(deps: Deps, storeId: number, opts: { place?: E
       lines.push(lateLine(config, ctx));
       if (status.preorder) preorder = preorderAsk(config, ctx);
     }
+    // PR 281: a festive rule already past this band's last order time says its "after" words instead of the promise
+    const festive = await festiveFor(deps, storeId, { place: 'checkout', band: opts.place.band, locale: opts.locale, at: now, want: 'closed' });
+    for (const f of festive) if (!lines.includes(f.text)) lines.push(f.text);
   }
   return { lines, preorder };
 }
