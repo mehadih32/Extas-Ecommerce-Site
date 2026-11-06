@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deviceList, filledPlan, firstScreenFor, heroSettled, langCookieOf, markdownReport, openedPlan, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
+import { deviceList, filledPlan, firstScreenFor, heroSettled, langCookieOf, markdownReport, navWordsSqueezed, openedPlan, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -212,5 +212,20 @@ describe('follow-up 46 · the hero pins are measured after the slider fitted the
     expect(heroSettled(doc(['done']))).toBe(true);
     expect(heroSettled(doc([null]))).toBe(false);
     expect(heroSettled(doc(['done', null]))).toBe(false);
+  });
+});
+
+describe('PR 40 follow-up · a computer nav item is never narrower than its words', () => {
+  const item = (text, box, words, hidden = false) => ({ text, box, words, hidden, textContent: ` ${text} `, getBoundingClientRect: () => ({ width: box }) });
+  const doc = (items) => ({
+    querySelectorAll: () => items,
+    createRange: () => {
+      let on = null;
+      return { selectNodeContents: (a) => (on = a), getBoundingClientRect: () => ({ width: on.words }) };
+    },
+  });
+  it('fails an item squeezed under its words, passes whole ones, hidden ones and a pixel of rounding', () => {
+    expect(navWordsSqueezed(doc([item('New in', 42, 41.5), item('Polos', 45, 45.8), item('More', 0, 30), item('Sets', 32, 40, true)]))).toEqual([]);
+    expect(navWordsSqueezed(doc([item('T-Shirts', 32, 52), item('Shirts', 37, 37)]))).toEqual([{ k: 'NAV-WORDS-SQUEEZED', d: 'T-Shirts 32<52' }]);
   });
 });

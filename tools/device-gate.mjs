@@ -6,6 +6,7 @@
 //   - NO-SCRIPTS: a shop page whose own scripts never ran is reported as that, not measured (PR 85 follow-up);
 //   - STICKS-OUT-LEFT: nothing is cut off at the left edge;
 //   - TAB-LABEL-SQUEEZED: an admin section tab is never narrower than its label (follow-up 466: the Orders tabs at 390 px);
+//   - NAV-WORDS-SQUEEZED: a computer nav item is never narrower than its words (PR 40 follow-up: a long slogan);
 //   - TAP-TOO-SMALL (touch sizes): every tap target at least 44 × 44 (inline text links at least 32 tall), measured as
 //     the area that really takes the tap (elementFromPoint), so invisible padding counts;
 //   - INPUT-FONT-UNDER-16 (touch sizes): every form field at least 16 px (no iPhone zoom on focus).
@@ -409,6 +410,7 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
     else {
       // Layout first, taps last: the tap probe scrolls the page.
       issues.push(...(await page.evaluate(matrix.pageChecks, device.w)).issues);
+      issues.push(...(await page.evaluate(navWordsSqueezed)));
       issues.push(...(await page.evaluate(appChecks, {
         inputFont: rules.inputFontGroups.includes(device.group),
         taps: rules.tapGroups.includes(device.group),
@@ -446,6 +448,22 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
  */
 export function heroSettled(doc = globalThis.document) {
   return [...doc.querySelectorAll('[data-hero-slider]')].every((b) => b.getAttribute('data-hero-fit') === 'done');
+}
+
+// PR 40 follow-up: the computer's nav row. Its items may shrink to 32 px (demo r12-zfix.css), so an item narrower than
+// its own words lets them run into the next one ("T-ShirtsShirts") while no box overlaps and nothing is cut: the words
+// (a Range over the item, not its 44 px tap layer) must fit the item's box. Runs in the page (Playwright), alone.
+export function navWordsSqueezed(doc = globalThis.document) {
+  const out = [];
+  for (const a of doc.querySelectorAll('.hdr .nav-d .nav-i')) {
+    const box = a.getBoundingClientRect();
+    if (a.hidden || !box.width) continue;
+    const words = doc.createRange();
+    words.selectNodeContents(a);
+    const w = words.getBoundingClientRect().width;
+    if (w > box.width + 1) out.push(`${a.textContent.trim().slice(0, 24)} ${Math.round(box.width)}<${Math.round(w)}`);
+  }
+  return out.length ? [{ k: 'NAV-WORDS-SQUEEZED', d: out.slice(0, 5).join(', ') + (out.length > 5 ? ` (+${out.length - 5})` : '') }] : [];
 }
 
 export function scriptsVerdict(shop, mark) {

@@ -16,6 +16,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 import type { DesktopNav } from '@extas/settings';
 import type { DeskNavItem } from '@/lib/shop/shell-model';
+import { deskSloganSteps, fitDeskRow, wordsSqueezed } from '@/lib/shop/desk-nav-fit';
 
 export interface MegaData {
   title: string;
@@ -120,8 +121,8 @@ export function DeskNav({
     const all = Array.from(el.querySelectorAll<HTMLElement>(cm ? '.nav-i[data-fixfold]' : '.nav-i[data-fold]:not([data-fixfold])'));
     const moreEl = el.querySelector<HTMLElement>('.nav-more');
     const fixed = cm ? 0 : el.querySelectorAll('.nav-i[data-fixfold]').length;
-    all.forEach((a) => a.classList.remove('nav-folded'));
-    if (moreEl) moreEl.hidden = fixed === 0;
+    // follow-up: the desktop slogan sits in the logo, in the flow, so a long one takes the row's room (lib/shop/desk-nav-fit)
+    const slogan = logo?.querySelector<HTMLElement>('.sb-slog-desk') ?? null;
     // H4 'priority' (priority-plus): the row keeps clear air beside the logo and the icons; catsMore keeps 28 px.
     const air = el.dataset.layout === 'priority' ? 44 : cm ? 28 : 14;
     const over = () => {
@@ -139,14 +140,32 @@ export function DeskNav({
       // own boxes are what the shopper sees.
       const lastRight = Math.max(n.left, ...Array.from(el.querySelectorAll<HTMLElement>('.nav-i')).filter((a) => a.offsetParent && !a.hidden).map((a) => a.getBoundingClientRect().right));
       const overflow = lastRight - (n.right + 1);
-      return Math.max(intoIcons, intoLogo, iconsOut, overflow) > 0;
+      // follow-up: the items may shrink to 32 px (demo r12-zfix.css); one narrower than its own words lets them run
+      // into the next item's ("T-ShirtsShirts") while no box overlaps, so that counts as not fitting too (the demo's
+      // scrollWidth test meant this; the words are measured, not the 44 px tap layer).
+      const squeezed = Array.from(el.querySelectorAll<HTMLElement>('.nav-i')).some((a) => {
+        if (!a.offsetParent || a.hidden) return false;
+        const words = document.createRange();
+        words.selectNodeContents(a);
+        return wordsSqueezed(words.getBoundingClientRect().width, a.getBoundingClientRect().width);
+      });
+      return squeezed || Math.max(intoIcons, intoLogo, iconsOut, overflow) > 0;
     };
     const out = new Set<string>();
-    for (let k = all.length - 1; k >= 0 && over(); k--) {
-      all[k]!.classList.add('nav-folded');
-      out.add(all[k]!.dataset.nav!);
-      if (moreEl) moreEl.hidden = false;
-    }
+    const foldUntilFits = () => {
+      out.clear();
+      all.forEach((a) => a.classList.remove('nav-folded'));
+      if (moreEl) moreEl.hidden = fixed === 0;
+      for (let k = all.length - 1; k >= 0 && over(); k--) {
+        all[k]!.classList.add('nav-folded');
+        out.add(all[k]!.dataset.nav!);
+        if (moreEl) moreEl.hidden = false;
+      }
+      return !over();
+    };
+    // the demo's fold first, with the full slogan; the slogan steps down (short, then none) only while that is not enough
+    if (slogan) fitDeskRow(deskSloganSteps(Boolean(slogan.querySelector('.sb-ss'))), (step) => slogan.setAttribute('data-l', String(step)), foldUntilFits);
+    else foldUntilFits();
     setFolded((prev) => (prev.size === out.size && [...out].every((x) => prev.has(x)) ? prev : out));
     setMeasured(true);
   }, []);

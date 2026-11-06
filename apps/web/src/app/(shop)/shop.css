@@ -626,6 +626,8 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 @media (min-width: 1024px) { html .shop .hm-hrow.hm-jrow.hm-jfixed .hm-art > .hm-more { margin-top: auto; align-self: flex-start; } }
 @media (min-width: 1024px) { html .shop .hdr .logo.hide-m { font-size: 29px !important; } }
 @media (min-width: 1024px) { html .shop .hdr .logo.hide-m.sb-hasslog .sb-slog { font-size: 11px; } }
+/* PR 40 follow-up: the desktop slogan steps down like the phone one when the nav row does not fit (DeskNav fit) */
+@media (min-width: 1024px) { .shop .hdr .logo.hide-m.sb-hasslog .sb-slog[data-l="2"] { display: none; } }
 /* V12.2 (Note 54 #15, demo r12-zz-ownerA.css): ten refined text logos in the same eleven slots (0 = the wordmark, unchanged).
  * ~~1 wide and bold with a bar · 2 in a box · 3 solid block · 4 classic serif · 5 heavy and light · 6 between two lines ·
  * 7 sport slant · 8 round badge · 9 coloured middle letter · 10 outline letters~~ (V12.1, the owner: "they look cheap") */
