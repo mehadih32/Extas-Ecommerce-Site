@@ -151,6 +151,24 @@ describe.skipIf(!HAS_TEST_DB)('PR 614 · an exchange through the ERP (PostgreSQL
     expect((await exchangeWatch(d(), f.staff)).rows).toEqual([]);
   });
 
+  it('follow-up 541: the replacing piece goes with its own grade — a B-grade SKU as B (once the ERP opened B grade), never sent as A', async () => {
+    f.v6();
+    erp().bGradeOpen = true;
+    await db().productVariant.update({ where: { id: f.v.skyL }, data: { grade: 'B' } });
+    try {
+      const { exchangeId } = await opened('xv-bgrade');
+      const r = await approveExchangeV6(d(), f.staff, exchangeId);
+      expect(r).toMatchObject({ status: 'SENT' });
+      const push = await db().erpPush.findFirstOrThrow({ where: { storeId: f.S, referenceId: r.newOrderId!, documentType: 'order.create' } });
+      const body = (push.requestBody as { body?: { items?: { sku: string; grade: string }[] }; items?: { sku: string; grade: string }[] });
+      const items = body.body?.items ?? body.items ?? [];
+      expect(items.map((i) => [i.sku, i.grade])).toEqual([[skyL, 'B']]);
+    } finally {
+      await db().productVariant.update({ where: { id: f.v.skyL }, data: { grade: 'A' } });
+      erp().bGradeOpen = false;
+    }
+  });
+
   it('only within the window from the courier`s "delivered" as the ERP has it: 72 h − 1 ms is open, 72 h is closed', async () => {
     const { o, exchangeId } = await opened('xv-late');
     const start = f.clock.now;
