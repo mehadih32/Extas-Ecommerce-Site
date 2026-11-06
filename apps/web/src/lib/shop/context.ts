@@ -33,6 +33,7 @@ const KEYS = [
   'theme.fonts',
   'theme.largeText',
   'shop.sweep',
+  'shop.shimmer',
   'contact.phone',
   'contact.whatsapp',
   'contact.email',

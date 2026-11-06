@@ -1,7 +1,7 @@
 // The bag's pure rules: size groups and their flags (PR 110, SIM-F-036), the ladder and the offer slot (PR 109), the
 // panel's fill rule (PR 106, CN-012) and the code box's state (PR 112, SIM-F-009).
 import { describe, expect, it } from 'vitest';
-import { answerFor, codeStateOf, inDays, ladderOf, offerSlotOf, picksThatFit, sizeFlags, sizeGroups, type CodeFacts, type SizeLine } from './pure';
+import { answerFor, codeStateOf, inDays, ladderOf, offerSlotOf, picksThatFit, sizeFlags, sizeGroups, tierWordsOf, type CodeFacts, type SizeLine } from './pure';
 
 const line = (lineId: string, size: string, order: number, productId = 'shirt', colourId: string | null = 'sky'): SizeLine => ({ lineId, productId, colourId, sizeId: `s-${size}`, sizeOrder: order, sizeLabel: size });
 
@@ -121,5 +121,20 @@ describe('PR 112 · the code box, SIM-F-009', () => {
     expect(codeStateOf(facts({ morePieces: 1 }))).toEqual({ state: 'needsPieces', code: 'EID', pieces: 1 });
     expect(codeStateOf(facts({ freeDelivery: true }))).toEqual({ state: 'freeDelivery', code: 'EID' });
     expect(codeStateOf(facts({ appliedMinor: 500, freeDelivery: true }))).toEqual({ state: 'applied', code: 'EID', amountMinor: 500 });
+  });
+});
+
+describe('PR 598 · the tier box: the owner\'s own words per tier', () => {
+  it('takes only this rule\'s words, by pieces, and leaves empty ones to the shop', () => {
+    const labels = {
+      'polo-set:2': { en: 'Pair up', bn: 'জোড়া নিন' },
+      'polo-set:3': { en: '  ', bn: '' },
+      'polo-set:4': { en: '', bn: 'চারটা' },
+      'tee-set:2': { en: 'Two tees', bn: '' },
+      'polo-set:x': { en: 'bad', bn: '' },
+    };
+    expect(tierWordsOf('polo-set', labels)).toEqual({ 2: { en: 'Pair up', bn: 'জোড়া নিন' }, 4: { en: '', bn: 'চারটা' } });
+    expect(tierWordsOf('tee-set', labels)).toEqual({ 2: { en: 'Two tees', bn: '' } });
+    expect(tierWordsOf('none', labels)).toEqual({});
   });
 });

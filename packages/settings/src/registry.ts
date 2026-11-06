@@ -132,6 +132,7 @@ import { marketingReportSettings } from './registry-marketing-report';
 import { layoutSettings } from './registry-layouts';
 import { layoutBlockSettings } from './registry-layout-blocks';
 import { sideCanvasSettings } from './registry-side-canvas';
+import { shimmerSettings } from './registry-shimmer';
 import { frontEditSettings } from './registry-front-edit';
 import { experimentsSettings } from './registry-experiments';
 import { incompleteSettings } from './registry-incomplete';
@@ -1450,6 +1451,8 @@ export const registry = {
   ...layoutBlockSettings,
   // S02 · PR 596 · the side canvas: its switch (off) and its zones (registry-side-canvas.ts, version 245).
   ...sideCanvasSettings,
+  // S02 · PR 598 · the shimmers' speed and strength, the bag tier box's rules and words (registry-shimmer.ts, versions 246–247).
+  ...shimmerSettings,
   // S02 · PR 79 · editing the shop's words on the shop page (registry-front-edit.ts, version 242).
   ...frontEditSettings,
   // S02 · PR 83 · the A/B test module's switch and numbers (registry-experiments.ts, version 243).

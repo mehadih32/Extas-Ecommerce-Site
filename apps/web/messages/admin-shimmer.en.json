@@ -1,0 +1,86 @@
+{
+  "sh": {
+    "metaTitle": "Shimmer",
+    "title": "Shimmer",
+    "sub": "Every travelling light on the shop: on or off, speed and strength.",
+    "readOnly": "You can look at this page; changing it needs permission to change settings.",
+    "master": {
+      "title": "All shimmers on the shop",
+      "on": "On: each shimmer below follows its own switch.",
+      "off": "Off: no shimmer anywhere on the shop.",
+      "motion": "A phone or computer set to reduce motion never shows any shimmer, whatever the switches say."
+    },
+    "list": {
+      "title": "Each shimmer",
+      "sub": "As designed: every shimmer on except Add to Bag, normal speed, full strength. Strength never goes above the designed level, which keeps the words under the light easy to read."
+    },
+    "item": {
+      "checkout": "Checkout button (bag, checkout)",
+      "continueShopping": "\"Continue shopping\" on the bag (computer)",
+      "freeLabel": "\"FREE\" delivery label (computer)",
+      "addToBag": "Add to Bag button (computer)",
+      "orderNow": "Order Now button",
+      "buttons": "All other green buttons",
+      "logo": "Logo in the header",
+      "pdpWords": "Product page words (free delivery, colour, size, all colours, in stock)",
+      "pdpPills": "Size boxes on the product page",
+      "checkoutHelp": "Checkout help strip (\"Need help with your order?\")",
+      "checkoutNeed": "Checkout button while something is still missing",
+      "accountOffer": "My account offer banner",
+      "announce": "Top announcement strip",
+      "footerPay": "Footer payment row"
+    },
+    "where": {
+      "checkout": "Bag and checkout",
+      "continueShopping": "Bag",
+      "freeLabel": "Bag",
+      "addToBag": "Product page",
+      "orderNow": "Product page",
+      "buttons": "Whole shop",
+      "logo": "Whole shop",
+      "pdpWords": "Product page",
+      "pdpPills": "Product page",
+      "checkoutHelp": "Checkout",
+      "checkoutNeed": "Checkout",
+      "accountOffer": "My account",
+      "announce": "Whole shop",
+      "footerPay": "Whole shop"
+    },
+    "offByDesign": "off at the start",
+    "see": "See it",
+    "show": "On",
+    "speed": "Speed",
+    "strength": "Strength",
+    "speedOpt": {
+      "slow": "Slow",
+      "normal": "Normal",
+      "fast": "Fast"
+    },
+    "strengthOpt": {
+      "full": "Full",
+      "medium": "Medium",
+      "soft": "Soft"
+    },
+    "more": {
+      "title": "More options",
+      "sub": "What slow, fast, medium and soft mean. Slow and fast multiply each shimmer's designed pass time; medium and soft are a share of its designed brightness.",
+      "slow": "Slow = designed time ×",
+      "fast": "Fast = designed time ×",
+      "medium": "Medium = designed brightness ×",
+      "soft": "Soft = designed brightness ×"
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved. The shop shows it now.",
+    "discard": "Discard changes",
+    "unsaved": "You have changes that are not saved yet.",
+    "reset": "Speed and strength as designed",
+    "err": {
+      "INVALID_INPUT": "Something is not right. Check the numbers under More options.",
+      "STALE": "Someone saved a moment ago. Reload the page.",
+      "forbidden": "You do not have permission to change settings.",
+      "network": "No connection. Try again.",
+      "other": "Could not save. Try again."
+    }
+  }
+}

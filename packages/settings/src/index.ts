@@ -206,6 +206,8 @@ export * from './registry-front-edit';
 export * from './registry-layout-blocks';
 // S02 · PR 596 — the side canvas's switch and zones (registry-side-canvas.ts, version 245).
 export * from './registry-side-canvas';
+// S02 · PR 598 — the shimmers' speed and strength; the bag tier box's rules and words (registry-shimmer.ts, versions 246–247).
+export * from './registry-shimmer';
 // S02 · PR 83 — the A/B test module's switch and numbers (registry-experiments.ts, version 243).
 export * from './registry-experiments';
 // S02 · PR 80 — the eye-toggle list: every part of a shop page the owner can show or hide on its own (eye-toggles.ts).

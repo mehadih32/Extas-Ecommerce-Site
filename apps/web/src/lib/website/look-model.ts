@@ -31,6 +31,8 @@ export const LOOK_KEYS = [
   'layout.sideZones',
   'shop.sweep',
   'pdp.sweep',
+  // PR 598 — the shimmers' speed and strength (Settings › Shimmer).
+  'shop.shimmer',
 ] as const satisfies readonly (keyof typeof registry)[];
 export type LookKey = (typeof LOOK_KEYS)[number];
 

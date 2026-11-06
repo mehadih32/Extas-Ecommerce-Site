@@ -1,0 +1,23 @@
+/* S02 · PR 598 — Settings › Shimmer in the Lumen look (--lm-* tokens only, light and dark): the master switch card, the
+   list of shimmers (name and where, switch, speed, strength), More options and the save bar. Every control at the Lumen
+   tap size (44px). */
+[data-lm-look] .shx-page, [data-lm-look] .shx { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+[data-lm-look] .shx-card { display: flex; flex-direction: column; gap: 10px; }
+[data-lm-look] .shx-card > h2 { font: 700 1.15rem/1.3 var(--lm-font-disp); color: var(--lm-ink); margin: 0; }
+[data-lm-look] .shx-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+[data-lm-look] .shx-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 12px; border-radius: var(--lm-r-box); background: var(--lm-sf2); box-shadow: inset 0 0 0 1px var(--lm-ln); min-width: 0; }
+[data-lm-look] .shx-row.off .shx-name b { color: var(--lm-ink2); }
+[data-lm-look] .shx-name { display: grid; gap: 2px; flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; color: var(--lm-ink); }
+[data-lm-look] .shx-see { display: inline-flex; align-items: center; min-height: var(--lm-tap); min-width: var(--lm-tap); color: var(--lm-ac-ink); font-weight: 700; }
+[data-lm-look] .shx-ctl { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; min-width: 0; }
+[data-lm-look] .shx-ctl .lm-sw { align-self: center; }
+[data-lm-look] .shx-sel { min-width: 140px; flex: 1 1 140px; }
+[data-lm-look] .shx-more > summary { display: flex; align-items: center; min-height: var(--lm-tap); cursor: pointer; font-weight: 700; color: var(--lm-ink); }
+[data-lm-look] .shx-more > .lm-hint { margin: 0 0 6px; }
+[data-lm-look] .shx-more > .lm-btn { margin-top: 10px; }
+[data-lm-look] .shx-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+[data-lm-look] .shx-save { position: sticky; bottom: 0; display: grid; gap: 6px; padding: 10px 0 4px; background: var(--lm-bg); z-index: 2; }
+@media (max-width: 759px) {
+  [data-lm-look] .shx-save { bottom: calc(var(--lm-tap) + 24px); }
+  [data-lm-look] .shx-ctl { width: 100%; }
+}
