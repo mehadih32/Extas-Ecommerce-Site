@@ -3,6 +3,10 @@ import type { NextConfig } from 'next';
 const config: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
+  // PR 85 follow-up (7 Nov): `next dev` opened at 127.0.0.1 (the device gate's and the smoke test's local base) ran no
+  // client script — Next 16 blocks its dev resources for another origin than localhost — so nothing hydrated and the
+  // gate measured the footer's unfitted first paint ("Track my order" cut at 390 px). Dev only; a build ignores it.
+  allowedDevOrigins: ['127.0.0.1'],
   reactStrictMode: true,
   // The repository root holds the docs the status page is generated from.
   outputFileTracingRoot: new URL('../../', import.meta.url).pathname,

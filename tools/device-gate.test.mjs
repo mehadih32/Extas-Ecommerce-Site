@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deviceList, filledPlan, firstScreenFor, langCookieOf, markdownReport, openedPlan, pickLinks, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
+import { deviceList, filledPlan, firstScreenFor, langCookieOf, markdownReport, openedPlan, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -181,6 +181,18 @@ describe('device gate', () => {
   it('picks distinct same-site links from a page, the first N', () => {
     expect(pickLinks(['/admin/products/a?x=1', '/admin/products/a', '//evil.test/x', 'https://x.test/y', '/admin/products/b', '/admin/products/c'], 2)).toEqual(['/admin/products/a', '/admin/products/b']);
     expect(pickLinks([], 3)).toEqual([]);
+  });
+
+  it('PR 85 follow-up · a shop page whose scripts never ran is NO-SCRIPTS, not measured; a slow one ("pending") is measured', () => {
+    expect(scriptsVerdict(true, null)).toMatchObject({ k: 'NO-SCRIPTS' });
+    expect(scriptsVerdict(true, 'pending')).toBeNull();
+    expect(scriptsVerdict(true, 'done')).toBeNull();
+    expect(scriptsVerdict(false, null)).toBeNull();
+  });
+
+  it('PR 85 follow-up · the dev server lets a page opened at 127.0.0.1 run its scripts (local gate runs)', () => {
+    const cfg = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../apps/web/next.config.ts'), 'utf8');
+    expect(cfg).toMatch(/allowedDevOrigins:\s*\[[^\]]*'127\.0\.0\.1'/);
   });
 
   it('reports PASS at 0 fails and lists every failure otherwise', () => {

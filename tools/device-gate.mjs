@@ -3,6 +3,7 @@
 // tablet (docs/qa/device-matrix.js TABLETS, portrait + landscape) and desktop size (docs/qa/devices-desktop.json):
 //   - the demo gate's layout checks, reused from docs/qa/device-matrix.js (pageChecks): PAGE-WIDER-THAN-PHONE,
 //     HORIZONTAL-SCROLL, STICKS-OUT-RIGHT, TEXT-CUT-OFF, TAPS-OVERLAP; plus JS-ERROR and PAGE-STATUS;
+//   - NO-SCRIPTS: a shop page whose own scripts never ran is reported as that, not measured (PR 85 follow-up);
 //   - STICKS-OUT-LEFT: nothing is cut off at the left edge;
 //   - TAB-LABEL-SQUEEZED: an admin section tab is never narrower than its label (follow-up 466: the Orders tabs at 390 px);
 //   - TAP-TOO-SMALL (touch sizes): every tap target at least 44 × 44 (inline text links at least 32 tall), measured as
@@ -401,15 +402,19 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
     await page
       .waitForFunction(() => !document.querySelector('.shop') || document.documentElement.getAttribute('data-shell-fits') === 'done', null, { timeout: rules.fitsMs ?? 5000 })
       .catch(() => undefined);
-    // Layout first, taps last: the tap probe scrolls the page.
-    issues.push(...(await page.evaluate(matrix.pageChecks, device.w)).issues);
-    issues.push(...(await page.evaluate(appChecks, {
-      inputFont: rules.inputFontGroups.includes(device.group),
-      taps: rules.tapGroups.includes(device.group),
-      tapMinPx: rules.tapMinPx,
-      inlineLinkMinPx: rules.inlineLinkMinPx,
-      inputMinFontPx: rules.inputMinFontPx,
-    })));
+    const noScripts = scriptsVerdict(...(await page.evaluate(() => [Boolean(document.querySelector('.shop')), document.documentElement.getAttribute('data-shell-fits')])));
+    if (noScripts) issues.push(noScripts);
+    else {
+      // Layout first, taps last: the tap probe scrolls the page.
+      issues.push(...(await page.evaluate(matrix.pageChecks, device.w)).issues);
+      issues.push(...(await page.evaluate(appChecks, {
+        inputFont: rules.inputFontGroups.includes(device.group),
+        taps: rules.tapGroups.includes(device.group),
+        tapMinPx: rules.tapMinPx,
+        inlineLinkMinPx: rules.inlineLinkMinPx,
+        inputMinFontPx: rules.inputMinFontPx,
+      })));
+    }
   } catch (e) {
     issues.push({ k: 'PAGE-LOAD', d: String(e).split('\n')[0].slice(0, 160) });
   }
@@ -425,6 +430,19 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
 }
 
 /** A short Markdown report of a run. */
+/**
+ * PR 85 follow-up (7 Nov) · a shop page whose own scripts never ran has no `data-shell-fits` mark at all (ShellEffects
+ * sets it to "pending" the moment it starts): its after-paint fits are missing, so the footer columns, the phone header
+ * and the hero pins show their unfitted first paint and every "cut" word measured there is the missing script, not the
+ * page. Seen with `next dev` opened at 127.0.0.1 (Next 16 blocks its dev scripts for another origin unless the
+ * config allows it); a busy runner still marks "pending", so only a page with no mark at all is this verdict.
+ * `shop`: the page has the shop's root; `mark`: the attribute's value (null when absent). Null = measure the page.
+ */
+export function scriptsVerdict(shop, mark) {
+  if (!shop || mark != null) return null;
+  return { k: 'NO-SCRIPTS', d: "the shop's scripts never ran (no data-shell-fits mark): its layout is not measured" };
+}
+
 export function markdownReport(results, { base, seconds }) {
   const failing = results.filter((r) => r.issues.length);
   const groups = ['phone', 'tablet', 'desktop'].map((g) => {
