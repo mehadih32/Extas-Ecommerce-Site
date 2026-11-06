@@ -2017,6 +2017,8 @@ model LayoutSnapshot {
   updatedAt       DateTime  @updatedAt @db.Timestamptz(3)
 
   restores LayoutRestore[]
+  /// PR 280 — the seasonal home-page windows that show this look (migration 0160).
+  switches ScheduledLayoutSwitch[]
 }
 
 /// @stage S02 · PR 597 — every restore of a snapshot, itself undoable.
@@ -7626,15 +7628,21 @@ model OutreachProspect {
 
 /// @stage S13 · PR 280 — a scheduled seasonal homepage switch (applies a snapshot, then reverts).
 model ScheduledLayoutSwitch {
-  id         String    @id @default(uuid(7)) @db.Uuid
+  id         String         @id @default(uuid(7)) @db.Uuid
   storeId    Int
-  store      Store     @relation(fields: [storeId], references: [id])
-  snapshotId String    @db.Uuid
-  applyAt    DateTime  @db.Timestamptz(3)
-  revertAt   DateTime? @db.Timestamptz(3)
+  store      Store          @relation(fields: [storeId], references: [id])
+  snapshotId String         @db.Uuid
+  /// PR 280 — the look this window shows (migration 0160).
+  snapshot   LayoutSnapshot @relation(fields: [snapshotId], references: [id])
+  applyAt    DateTime       @db.Timestamptz(3)
+  revertAt   DateTime?      @db.Timestamptz(3)
+  /// PR 280 — SCHEDULED, or STOPPED (kept, never deleted; `stoppedAt` says when).
   status     String
-  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+  stoppedAt  DateTime?      @db.Timestamptz(3)
+  createdAt  DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime       @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, status, applyAt])
 }
 
 /// @stage S13 · PR 548; S15 · PR 335–337 — a saved competitor or market page studied on a schedule.

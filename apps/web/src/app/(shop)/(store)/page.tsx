@@ -12,6 +12,8 @@
 //   that ticks; no sale, nothing drawn (lib/shop/flash). A test server's `?try=flash` draws the trial sale.
 // ~~Until the home page is built, it shows the store shell with one sliding row: the live categories.~~
 // S11 · PR 221: its search title and description (`seo.titles.home`); PR 222: the shop's Organization and WebSite JSON-LD.
+// S13 · PR 280: while a seasonal window is live (Marketing › Seasonal home, off as shipped), its look's home settings
+// (sections, hero, the hero's pictures, the rows) stand in for the owner's own; after the window, his own again.
 import type { Metadata } from 'next';
 import { Fragment, type ReactNode } from 'react';
 import type { HomeSectionId } from '@extas/settings';
@@ -33,6 +35,7 @@ import { shopLd } from '@/lib/seo/shop-ld';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { hrefIn } from '@/lib/shop/lang';
 import { homeReviews } from '@/lib/shop/reviews';
+import { seasonalHome } from '@/lib/shop/seasonal-home';
 
 export async function generateMetadata(): Promise<Metadata> {
   // PR 221: the home page's search title and description (`seo.titles.home`; the shop's name until the owner writes more)
@@ -53,7 +56,8 @@ async function heroPicks(c: ShopContext): Promise<HeroPick[]> {
 type Search = Record<string, string | string[] | undefined>;
 
 export default async function Home(props: { searchParams: Promise<Search> }) {
-  const [c, search] = await Promise.all([shopContext(), props.searchParams]);
+  const [own, search] = await Promise.all([shopContext(), props.searchParams]);
+  const c = await seasonalHome(own);
   const on = homeSectionsOn(c.s['home.sections']);
   const want = (id: HomeSectionId) => on.includes(id);
   const newIn = c.s['home.newIn'];

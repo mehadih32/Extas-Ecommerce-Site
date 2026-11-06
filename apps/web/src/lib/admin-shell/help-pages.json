@@ -72,6 +72,7 @@
     { "id": "marketing/referrals", "route": "/admin/marketing/referrals" },
     { "id": "marketing/youtube", "route": "/admin/marketing/youtube" },
     { "id": "marketing/outreach", "route": "/admin/marketing/outreach" },
+    { "id": "marketing/seasonal-home", "route": "/admin/marketing/seasonal" },
     { "id": "marketing/landing", "route": "/admin/marketing/landing" },
     { "id": "marketing/landing-builder", "route": "/admin/marketing/landing/[id]" },
     { "id": "marketing/landing-templates", "route": "/admin/marketing/landing/templates" },

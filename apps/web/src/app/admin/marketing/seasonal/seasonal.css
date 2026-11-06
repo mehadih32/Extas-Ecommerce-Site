@@ -1,0 +1,10 @@
+/* S13 · PR 280 — Marketing › Seasonal home: the look editor's section list (a row per section: show it, move it up or
+   down), the hero lines' English and Bengali boxes side by side from a tablet up, every control at a 44px tap size
+   (the shell's tokens only). */
+.adm2 .sh-fs{border:0;padding:0;margin:0;min-width:0}
+.adm2 .sh-secs{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px}
+.adm2 .sh-sec{display:flex;align-items:center;gap:8px;min-width:0}
+.adm2 .sh-sec .a2-btn{min-width:44px;min-height:44px;justify-content:center}
+.adm2 .sh-grow{flex:1 1 auto;min-width:0;min-height:44px}
+.adm2 .sh-pair{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+@media (min-width:768px){.adm2 .sh-pair{grid-template-columns:repeat(2,minmax(0,1fr))}}
