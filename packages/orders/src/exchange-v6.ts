@@ -422,6 +422,9 @@ async function sendPlanned(deps: OrdersDeps, by: By, storeId: number, linkRowId:
   const key = `exchange:${link.exchangeId}:a${attempt}`;
   const order = await db.order.findUniqueOrThrow({ where: { id: ex.orderId }, select: { customerName: true, phone: true, shippingAddressText: true } });
   const digits = await digitsOf(db, storeId);
+  // follow-up 541: each replacing piece goes with its own grade (a B-grade line is the factory's own SKU, PR 609); the
+  // ERP refuses a B-grade line until it opens B grade (CN-033), as it does for any order
+  const grades = new Map((await db.productVariant.findMany({ where: { storeId, sku: { in: [...want.keys()] } }, select: { sku: true, grade: true } })).map((v) => [v.sku, v.grade]));
   const body: ErpSalesOrderV6 = {
     channel: 'WEBSITE',
     status: 'CONFIRMED',
@@ -436,7 +439,7 @@ async function sendPlanned(deps: OrdersDeps, by: By, storeId: number, linkRowId:
       replacesLineId: l.oldLineId,
       sku: l.newSku,
       quantity: 1,
-      grade: 'A' as const,
+      grade: grades.get(l.newSku) ?? 'A',
       unitPrice: minorToDecimal(l.customerPaysMinor, digits),
       discount: minorToDecimal(0, digits),
       customerPrice: wholeTaka(l.customerPaysMinor, digits),
