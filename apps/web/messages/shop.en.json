@@ -682,6 +682,7 @@
       "order": "Order Now",
       "call": "Call to order",
       "callHours": "Call to order · {hours}",
+      "gift": "Send as a gift",
       "bar": "Buy {name}",
       "size": "Size **{size}**"
     },

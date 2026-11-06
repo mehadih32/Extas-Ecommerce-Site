@@ -27,6 +27,8 @@ import { reassurance } from '@/lib/shop/bag-model';
 import { bagPickCards, cardsByIds } from '@/lib/shop/catalogue';
 import { keysOf, SHOP_DICTS } from '@/lib/shop/dict';
 import { readPageSettings, shopContext, type ShopContext } from '@/lib/shop/context';
+import { giftCheckoutHref } from '@/lib/shop/gift-link';
+import { tryGiftOn } from '@/lib/shop/try-gift';
 import { hrefIn } from '@/lib/shop/lang';
 import { telHref, waHref } from '@/lib/shop/links';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
@@ -129,6 +131,8 @@ const KEYS = [
   'combos.pdpOffer',
   // PR 527: a page that cannot be bought keeps its rank and shows what can be bought now
   'seo.urlPolicy',
+  // follow-up 210 (PR 605): "Send as a gift" under the buttons while gift mode is on
+  'checkout.gift',
 ] as const;
 
 export type ProductSearch = Record<string, string | string[] | undefined>;
@@ -372,6 +376,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
       notForSale: t('bag.toast.notForSale'),
     },
     checkoutHref: hrefIn(lang, ROUTES.checkout),
+    giftHref: giftCheckoutHref(hrefIn(lang, ROUTES.checkout), set['checkout.gift'].enabled || (await tryGiftOn())),
     call: buy.callToOrder && phone ? { href: phone, hours: c.s['contact.hours']?.[lang] ?? null } : null,
     freeDelivery: data.freeDelivery,
     cod: c.flags.cod,
