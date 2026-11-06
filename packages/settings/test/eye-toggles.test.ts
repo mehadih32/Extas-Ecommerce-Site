@@ -48,6 +48,13 @@ describe('eye-toggles (PR 80)', () => {
     }
   });
 
+  it("keeps D4.1's account.* On, except the two later feature switches that ship off (register PR 132/133; follow-up 680)", () => {
+    const later = new Set(['account.offerBanner:enabled', 'account.photo:enabled']);
+    const account = EYE_TOGGLES.filter((t) => t.area === 'account');
+    expect(account.length).toBeGreaterThan(later.size);
+    for (const t of account) expect(eyeDefault(t, reg), t.id).toBe(!later.has(t.id));
+  });
+
   it('gives every eye-toggle a known place and a unique id', () => {
     expect(new Set(EYE_TOGGLES.map((t) => t.id)).size).toBe(EYE_TOGGLES.length);
     for (const t of EYE_TOGGLES) expect(EYE_AREAS).toContain(t.area);

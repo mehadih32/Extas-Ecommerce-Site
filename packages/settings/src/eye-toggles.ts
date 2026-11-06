@@ -138,7 +138,9 @@ export const EYE_TOGGLES: readonly EyeToggle[] = [
   e('checkout.help.enabled', '', 'checkout'),
   e('thanks.page', 'nextSteps', 'checkout'),
   e('thanks.page', 'noteBack', 'checkout'),
-  // My account
+  // My account. Blueprint D4.1 says `account.*` On; every block it named is On. The offer banner and the photo came
+  // later (register PR 132/133, 23 Oct) as feature switches, off, and stay off (follow-up 680): the banner shows the
+  // wallet and the owner's coupons (money, his call) and the photo is a new optional feature (CLAUDE.md: off by default).
   e('account.thanksCard.enabled', '', 'account'),
   e('account.offerBanner', 'enabled', 'account'),
   e('account.photo', 'enabled', 'account'),
