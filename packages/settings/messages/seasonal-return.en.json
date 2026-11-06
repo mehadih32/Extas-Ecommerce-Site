@@ -1,0 +1,8 @@
+{
+  "marketing": {
+    "seasonalReturn": {
+      "label": "Seasonal pages come back each year",
+      "help": "Off as it ships: a seasonal page goes live only when you press “Make live”. On: a page that was live once, is taken down (not put away), has “Comes back each year” ticked and has nothing missing shows live again on the shop from the set number of days before its occasion's dates until the set number of days after them, then rests again by itself. Type the dates in Marketing › Landing pages › Seasonal pages › Each year: “every year” repeats the same month and day (a season such as winter); Eid and Puja move, so type each year's dates. With no dates nothing comes back."
+    }
+  }
+}

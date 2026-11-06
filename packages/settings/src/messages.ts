@@ -224,6 +224,8 @@ import journalEn from '../messages/journal.en.json';
 import journalBn from '../messages/journal.bn.json';
 import seasonalEn from '../messages/seasonal.en.json';
 import seasonalBn from '../messages/seasonal.bn.json';
+import seasonalReturnEn from '../messages/seasonal-return.en.json';
+import seasonalReturnBn from '../messages/seasonal-return.bn.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -335,6 +337,9 @@ messages.bn = mergeMessages(messages.bn, journalBn);
 // S12 · CN-031 lane A · PR 246 — seasonal landing pages (registry-seasonal.ts, version 228).
 messages.en = mergeMessages(messages.en, seasonalEn);
 messages.bn = mergeMessages(messages.bn, seasonalBn);
+// S12 · PR 530 (registry v251): the seasonal pages' yearly return.
+messages.en = mergeMessages(messages.en, seasonalReturnEn);
+messages.bn = mergeMessages(messages.bn, seasonalReturnBn);
 // S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
 messages.en = mergeMessages(messages.en, financeEn);
 messages.bn = mergeMessages(messages.bn, financeBn);

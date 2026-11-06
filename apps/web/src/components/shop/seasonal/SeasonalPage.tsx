@@ -61,6 +61,11 @@ export async function SeasonalPage({ c, served, set }: { c: ShopContext; served:
           <p className="sn-occ">{occasion}</p>
           <h1 className="sn-title">{t('seasonal.restingTitle', { name: title })}</h1>
           <p className="sn-intro">{t('seasonal.restingLine', { occasion })}</p>
+          {served.returnsOn ? (
+            <p className="sn-intro" data-testid="seasonal-returns-on">
+              {t('seasonal.restingOn', { date: new Intl.DateTimeFormat(c.lang === 'bn' ? 'bn-BD' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC', numberingSystem: c.lang === 'bn' && c.bnDigits ? 'beng' : 'latn' }).format(new Date(`${served.returnsOn}T00:00:00Z`)) })}
+            </p>
+          ) : null}
           <div className="sn-acts">
             <a className="btn primary sn-btn" href={hrefIn(lang, ROUTES.newIn)}>
               {t('seasonal.seeNew')}

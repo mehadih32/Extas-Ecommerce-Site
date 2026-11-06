@@ -121,6 +121,7 @@ import { couponDistributionSettings } from './registry-coupons-distribution';
 import { referralSettings } from './registry-referrals';
 import { aiDraftSettings, approvalSettings, briefSettings, clusterSettings, journalSettings, performanceSettings, scheduleSettings } from './registry-journal';
 import { seasonalSettings } from './registry-seasonal';
+import { seasonalReturnSettings } from './registry-seasonal-return';
 import { adminThemeSettings } from './registry-admin-theme';
 import { adminPatternsSettings } from './registry-admin-patterns';
 import { youtubeSettings } from './registry-youtube';
@@ -1472,6 +1473,8 @@ export const registry = {
   ...blogCommentSettings,
   // ---- S12 · CN-031 lane A · PR 246 · seasonal landing pages (registry-seasonal.ts, version 228). ----
   ...seasonalSettings,
+  // PR 530 · the seasonal pages' yearly return, off (registry-seasonal-return.ts, version 251).
+  ...seasonalReturnSettings,
   // ---- S00 · CN-036 lane A · PR 625 · the admin theme layer: look, accent, reduce motion (registry-admin-theme.ts, version 234). ----
   ...adminThemeSettings,
   // ---- S00 · CN-036 lane A · PR 627 · the shared Lumen patterns: Undo seconds, "Show more" step (registry-admin-patterns.ts, version 236). ----

@@ -10,6 +10,7 @@
     "restingTitle": "{name} is coming back",
     "restingLine": "This page returns for {occasion}. Until then, have a look at what is new.",
     "seeNew": "See what is new",
-    "home": "Back to the shop"
+    "home": "Back to the shop",
+    "restingOn": "It is back on {date}."
   }
 }

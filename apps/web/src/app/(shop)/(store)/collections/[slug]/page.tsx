@@ -56,7 +56,7 @@ import { sideItems } from '@/lib/shop/side-canvas';
 import type { CategorySectionId } from '@extas/settings';
 import './category.css';
 
-const KEYS = ['marketing.seasonal', 'layout.category', 'layout.categoryOwn', 'layout.blocks', 'category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages', 'seo.internalLinks'] as const;
+const KEYS = ['marketing.seasonal', 'marketing.seasonalReturn', 'store.timeZone', 'layout.category', 'layout.categoryOwn', 'layout.blocks', 'category.page', 'category.filters', 'category.toolbar', 'category.sort', 'category.newIn', 'category.faq', 'category.faqOwn', 'category.seo', 'seo.structuredData', 'seo.urlPolicy', 'seo.filterPages', 'seo.internalLinks'] as const;
 
 /** The "New in" page's own link name, from the routing table (`/collections/new-in`). */
 const NEW_IN = ROUTES.newIn.split('/').pop()!;
@@ -80,11 +80,15 @@ async function page(props: Props) {
   return { c, slug, set, state, data, defaultSort: sorts[0]! };
 }
 
-/** PR 246: the seasonal page at this link (switch on; live, or resting once it was live), else null. */
-const seasonalFor = cache(async (storeId: number, slug: string, set: Awaited<ReturnType<typeof settingsFor>>['marketing.seasonal']) => {
+/**
+ * PR 246: the seasonal page at this link (switch on; live, or resting once it was live), else null. PR 530: a taken-down
+ * page inside its occasion's window with its yearly return on (`marketing.seasonalReturn`, off as shipped) is live.
+ */
+const seasonalFor = cache(async (storeId: number, slug: string, all: Awaited<ReturnType<typeof settingsFor>>) => {
+  const set = all['marketing.seasonal'];
   if (!set.enabled || !process.env.DATABASE_URL) return null;
   try {
-    return await servedSeasonal(getPrisma(), storeId, slug, set);
+    return await servedSeasonal(getPrisma(), storeId, slug, set, { set: all['marketing.seasonalReturn'], timeZone: all['store.timeZone'] });
   } catch {
     return null;
   }
@@ -100,7 +104,7 @@ function titleOf(c: ShopContext, data: NonNullable<Awaited<ReturnType<typeof pag
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { c, slug, set, state, data, defaultSort } = await page(props);
   if (!data) {
-    const sea = await seasonalFor(c.storeId, slug, set['marketing.seasonal']);
+    const sea = await seasonalFor(c.storeId, slug, set);
     if (sea) return shopMetadata(c, `collections/${slug}`, (c.lang === 'bn' && sea.page.titleBn) || sea.page.titleEn, { index: sea.serve === 'live' || set['seo.urlPolicy'].retiredIndexed });
     const rest = await restingFor(c.storeId, slug, set['seo.urlPolicy'].retiredCategoryPage);
     return rest ? shopMetadata(c, `collections/${slug}`, categoryName(rest, c.lang), { index: set['seo.urlPolicy'].retiredIndexed }) : {};
@@ -139,7 +143,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function CategoryPage(props: Props) {
   const [{ c, slug, set, state: asked, data, defaultSort }, sp] = await Promise.all([page(props), props.searchParams]);
   if (!data) {
-    const sea = await seasonalFor(c.storeId, slug, set['marketing.seasonal']);
+    const sea = await seasonalFor(c.storeId, slug, set);
     if (sea) return <SeasonalPage c={c} served={sea} set={set['marketing.seasonal']} />;
     const rest = await restingFor(c.storeId, slug, set['seo.urlPolicy'].retiredCategoryPage);
     if (!rest) notFound();

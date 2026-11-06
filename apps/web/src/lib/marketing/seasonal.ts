@@ -6,7 +6,8 @@
 //   way a landing page is (landing.ts, PR 254): every field and part with the version it was read at (STALE when
 //   someone else changed it in between). Its link is /collections/<slug>, so a link that is a category's (live or
 //   retired, PR 527) or the "New in" page's is refused (SLUG_TAKEN). Its occasion is one of the owner's
-//   (`marketing.seasonal`), kept in Page.recurrence; PR 530 adds the yearly return there.
+//   (`marketing.seasonal`), kept in Page.recurrence; PR 530 adds the yearly return there ({occasion, returns}, kept
+//   when the page is saved; seasonal-return.ts).
 // - Kept for good and used again each year: publish (its collection and journal category must be set while those
 //   parts are on; Page.publishedAt keeps the last time it went live), take down, archive and restore change its state
 //   only — nothing is ever deleted.
@@ -15,9 +16,11 @@
 import { createHash } from 'node:crypto';
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
-import { seasonalSettingsSchema, storeTarget, type SeasonalSettings } from '@extas/settings';
+import { seasonalSettingsSchema, storeTarget, type SeasonalReturnSettings, type SeasonalSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
+import { dayOf } from '../journal/schedule-model';
 import { ROUTES } from '../shop/routes';
+import { isBack, nextSpan, returnsOf, spanNow } from './seasonal-return-model';
 import {
   SEASONAL_ACTIONS,
   SEASONAL_SECTIONS,
@@ -81,6 +84,8 @@ export interface SeasonalPageView {
   introEn: string | null;
   introBn: string | null;
   occasion: string | null;
+  /** PR 530: "comes back each year" ticked (Page.recurrence.returns). */
+  returns: boolean;
   state: PageState;
   lastLive: string | null;
   sections: SeasonalSection[];
@@ -102,6 +107,7 @@ const viewOf = (p: PageRow): SeasonalPageView => ({
   introEn: p.bodyEn,
   introBn: p.bodyBn,
   occasion: occasionOf(p.recurrence),
+  returns: returnsOf(p.recurrence),
   state: stateOf(p),
   lastLive: p.publishedAt?.toISOString() ?? null,
   sections: seasonalSectionsOf(p.sections),
@@ -175,7 +181,7 @@ export async function saveSeasonal(db: Db, resolver: Resolver, who: SeasonalWho,
   if (taken) throw new SeasonalError('SLUG_TAKEN', 409, ['slug']);
   if (before && before.version !== d.version) throw new SeasonalError('STALE', 409);
   if (before?.state === 'archived') throw new SeasonalError('ARCHIVED', 409);
-  const fields = { slug: d.slug, titleEn: d.titleEn, titleBn: d.titleBn, bodyEn: d.introEn, bodyBn: d.introBn, recurrence: { occasion: d.occasion } };
+  const fields = { slug: d.slug, titleEn: d.titleEn, titleBn: d.titleBn, bodyEn: d.introEn, bodyBn: d.introBn, recurrence: { occasion: d.occasion, ...(before?.returns ? { returns: true } : {}) } };
   let pageId: string;
   try {
     pageId = await db.$transaction(async (tx) => {
@@ -253,15 +259,33 @@ export async function saveSeasonalSettings(db: Db, resolver: Resolver, who: Seas
 export interface ServedSeasonal {
   serve: SeasonalServe;
   page: SeasonalPageView;
+  /** PR 530: the first shop day of its next return (a resting page with its yearly return on), else null. */
+  returnsOn?: string | null;
 }
 
-/** The shop's read at /collections/<slug>: the page (live) or its resting page (live once, now down), else null. */
-export async function servedSeasonal(db: Db, storeId: number, slug: string, set: Pick<SeasonalSettings, 'enabled' | 'offSeason'>): Promise<ServedSeasonal | null> {
+/** PR 530: what the shop needs to know of the yearly return (absent = no return). */
+export interface ServeReturn {
+  set: SeasonalReturnSettings;
+  timeZone: string;
+  now?: Date;
+}
+
+/**
+ * The shop's read at /collections/<slug>: the page (live, or back for its occasion by its yearly return) or its resting
+ * page (live once, now down, with the day it comes back when known), else null.
+ */
+export async function servedSeasonal(db: Db, storeId: number, slug: string, set: Pick<SeasonalSettings, 'enabled' | 'offSeason'>, ret?: ServeReturn): Promise<ServedSeasonal | null> {
   if (!set.enabled) return null;
   const p = await db.page.findFirst({ where: { storeId, kind: 'SEASONAL', slug }, select: PAGE_SELECT });
   if (!p) return null;
-  const serve = seasonalServe(p, set);
-  return serve ? { serve, page: viewOf(p) } : null;
+  const page = viewOf(p);
+  const today = ret ? dayOf(ret.now ?? new Date(), ret.timeZone) : null;
+  const rp = { ...p, occasion: page.occasion, returns: page.returns, ready: publishIssues(page.sections).length === 0 };
+  const back = !!ret && !!today && isBack(rp, ret.set, today);
+  const serve = seasonalServe(p, set, back);
+  if (!serve) return null;
+  const returnsOn = serve === 'resting' && ret?.set.on && today && page.returns && !p.archivedAt && rp.ready && !spanNow(page.occasion, ret.set, today) ? (nextSpan(page.occasion, ret.set, today)?.from ?? null) : null;
+  return { serve, page, returnsOn };
 }
 
 const answer = (e: unknown): Response => (e instanceof SeasonalError ? json({ ok: false, error: e.code, ...(e.details ? { details: e.details } : {}) }, { status: e.status }) : errorResponse(e));
