@@ -121,6 +121,7 @@ import { referralSettings } from './registry-referrals';
 import { aiDraftSettings, approvalSettings, briefSettings, clusterSettings, journalSettings, performanceSettings, scheduleSettings } from './registry-journal';
 import { seasonalSettings } from './registry-seasonal';
 import { adminThemeSettings } from './registry-admin-theme';
+import { adminPatternsSettings } from './registry-admin-patterns';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
@@ -1455,6 +1456,8 @@ export const registry = {
   ...seasonalSettings,
   // ---- S00 · CN-036 lane A · PR 625 · the admin theme layer: look, accent, reduce motion (registry-admin-theme.ts, version 234). ----
   ...adminThemeSettings,
+  // ---- S00 · CN-036 lane A · PR 627 · the shared Lumen patterns: Undo seconds, "Show more" step (registry-admin-patterns.ts, version 236). ----
+  ...adminPatternsSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

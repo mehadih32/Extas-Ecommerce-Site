@@ -20,6 +20,8 @@
 // page), a full-screen sheet on a phone; `guideMode` is the person's choice (Settings → Admin look).
 // The waiting lists are counted again when a page changes and the count is older than `admin.shell.badgeCacheSeconds`
 // (GET /api/admin/shell/badges). The sign-in page has no shell.
+// PR 627 (CN-036): the shell provides the shared Lumen patterns' words and numbers (LumenProvider) and mounts the one
+// toast (ToastHost; any admin screen calls showToast).
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type CSSProperties, type ReactNode } from 'react';
@@ -31,6 +33,8 @@ import { RAIL_COOKIE, viewerOf, type ShellModel, type TodoItem } from '@/lib/adm
 import { locate, sectionHome, sectionVisible, SHELL_SECTIONS, visiblePages, visibleTabs, type ShellSection } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 import { ChartTips } from '../look/ChartTips';
+import { LUMEN_DEFAULTS, LumenProvider } from '../lumen/context';
+import { ToastHost } from '../lumen/Toast';
 import { GUIDE_EVENT, PALETTE_EVENT, TODO_EVENT, type GuideRequest } from './events';
 import { GuidePanel } from './GuidePanel';
 import { NotificationsPanel, noteUnread, type ShellNote } from './NotificationsPanel';
@@ -66,6 +70,8 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const router = useRouter();
   const [, start] = useTransition();
   const d = model.dict;
+  // PR 627 (CN-036): the shared patterns' words and numbers (components/admin/lumen/context.tsx).
+  const lumen = useMemo(() => ({ dict: d, undoSeconds: model.patterns?.undoSeconds ?? LUMEN_DEFAULTS.undoSeconds, pageStep: model.patterns?.pageStep ?? LUMEN_DEFAULTS.pageStep }), [d, model.patterns]);
   const tt = (k: string, vars?: Record<string, string | number>) => t(d, `shell.${k}`, vars);
   const viewer = useMemo(() => viewerOf(model), [model]);
   const [col, setCol] = useState(!model.railExpanded);
@@ -376,6 +382,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const dark = mode === 'dark';
 
   return (
+    <LumenProvider value={lumen}>
     <div className={`adm2 a3s lm-shell${col ? ' lm-col' : ''}${guide && guideAs === 'side' ? ' a2-gopen' : ''}`} translate="no" lang={model.lang} data-testid="a2-shell" {...themeAttrs(theme)} style={themeStyle(theme) as CSSProperties}>
       <a className="a2-skip" href="#main">
         {tt('nav.skip')}
@@ -541,6 +548,8 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
         />
       ) : null}
       <ChartTips />
+      <ToastHost />
     </div>
+    </LumenProvider>
   );
 }

@@ -363,6 +363,16 @@
         "messages": "Messages",
         "system": "System"
       }
+    },
+    "lm": {
+      "undo": "Undo",
+      "undone": "Done — it is back as it was.",
+      "undoFailed": "Could not undo. Open the page and check.",
+      "close": "Close",
+      "range": "Time range",
+      "chartHelp": "move over the chart, or focus it and use the arrow keys, to read each point",
+      "noData": "No figures for this time yet.",
+      "loading": "Loading…"
     }
   },
   "dash": {
