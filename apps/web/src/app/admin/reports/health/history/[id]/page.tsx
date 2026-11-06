@@ -51,7 +51,7 @@ export default async function HistoryRunPage({ params }: { params: Promise<{ id:
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="history-run-page">
         <ShellState view={view} kind="denied" permission="health.read" />
       </div>
     );
@@ -72,7 +72,7 @@ export default async function HistoryRunPage({ params }: { params: Promise<{ id:
     f.page || f.device ? s('where', { page: f.page ?? '—', screen: f.device ? s(`screen.${f.device}`) : '—' }) : null;
 
   return (
-    <div className="a2-z" data-testid="history-run-page" data-ok={String(run.ok)}>
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="history-run-page" data-ok={String(run.ok)}>
       <PageHead
         view={view}
         place={locateKey(KEY)}

@@ -3,9 +3,12 @@
 // POST {status, note, version} to the problem's API, then the page reloads its data. The words and the choices come
 // from the page; the API checks `health.problems.manage` (and `health.problems.approve` for the owner's steps) again.
 // Changing a status only records who is doing what: it never blocks anyone or changes the shop.
+// PR 645 (CN-036): a message that the work went through speaks through the admin's one toast (showToast, no Undo);
+// a refusal stays written beside the button.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface ProblemStatusTexts {
   pick: string;
@@ -54,7 +57,8 @@ export function ProblemStatusForm({
     const a = await call('POST', url, { status: next, note: text, version });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: x.saved, bad: false });
+      setSaid(null);
+      showToast({ text: x.saved });
       router.refresh();
       return;
     }

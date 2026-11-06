@@ -57,7 +57,7 @@ export default async function CustomerProblemPage({ params }: { params: Promise<
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="problem-page">
         <ShellState view={view} kind="denied" permission="health.read" />
       </div>
     );
@@ -76,7 +76,7 @@ export default async function CustomerProblemPage({ params }: { params: Promise<
   } catch (e) {
     if (isProblemsError(e) && e.code === 'NOT_FOUND')
       return (
-        <div className="a2-z" data-testid="problem-missing">
+        <div className="a2-z lm-rp" data-lm-ready="" data-testid="problem-missing">
           <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('d.notFound')} />
           <Link className="a2-btn" href={LIST}>
             {s('d.backToList')}
@@ -124,7 +124,7 @@ export default async function CustomerProblemPage({ params }: { params: Promise<
   };
 
   return (
-    <div className="a2-z" data-testid="problem-page" data-severity={r.severity} data-status={r.status}>
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="problem-page" data-severity={r.severity} data-status={r.status}>
       <PageHead view={view} place={locateKey(KEY)} title={s(`kind.${r.kind}`)} sub={s('where', { step: s(`step.${r.step}`), path: r.path })} />
       <SectionTabs view={view} current={KEY} />
       <p>
