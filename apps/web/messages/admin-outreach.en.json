@@ -1,0 +1,99 @@
+{
+  "or": {
+    "metaTitle": "SEO outreach · Marketing",
+    "title": "SEO outreach",
+    "sub": "The websites you ask for a link to your shop, each along the way: found, asked, answered, link live — or said no.",
+    "note": "Links from real websites help Google trust your shop. This page only keeps your list; you write to people yourself. Nothing is sent from the shop and no money is spent.",
+    "offTitle": "SEO outreach is off",
+    "offBody": "Turn it on in the settings card at the bottom of this page.",
+    "offAsk": "Ask the owner or a manager to turn SEO outreach on.",
+    "stage": {
+      "FOUND": "Found",
+      "ASKED": "Asked",
+      "ANSWERED": "Answered",
+      "LIVE": "Link live",
+      "DECLINED": "Said no"
+    },
+    "totals": {
+      "h": "Where things stand",
+      "due": "Follow up due",
+      "all": "Sites in the list"
+    },
+    "list": {
+      "empty": "None here.",
+      "due": "Follow up due",
+      "next": "Follow up on {when}",
+      "live": "Live since {when}",
+      "liveLink": "Where your link is",
+      "open": "Open the site",
+      "writeEn": "Write in English",
+      "writeBn": "Write in Bengali",
+      "noPitch": "Write your pitch in the settings card to get a “Write to them” button.",
+      "edit": "Move along or change",
+      "archive": "Set aside",
+      "restore": "Bring back",
+      "archivedH": "Set aside",
+      "notes": "Notes"
+    },
+    "add": {
+      "h": "Add a site",
+      "site": "Website address",
+      "sitePh": "https://www.example.com",
+      "contact": "Who to write to (name, e-mail or page)",
+      "contactPh": "Editor name, editor@example.com",
+      "notes": "Notes",
+      "add": "Add the site",
+      "added": "Added."
+    },
+    "edit": {
+      "stage": "Stage",
+      "contact": "Who to write to",
+      "notes": "Notes",
+      "linkUrl": "Page where your link is live",
+      "linkUrlPh": "https://www.example.com/the-article",
+      "linkHelp": "Needed for “Link live”; it must be a page on this site.",
+      "nextStepOn": "Follow-up day",
+      "nextHelp": "Empty when you mark it “Asked” = set by itself from the settings.",
+      "save": "Save",
+      "saved": "Saved."
+    },
+    "f": {
+      "site": "Website address",
+      "status": "Stage",
+      "linkUrl": "Page where your link is live",
+      "nextStepOn": "Follow-up day",
+      "id": "Site"
+    },
+    "err": {
+      "INVALID_INPUT": "Please check: {fields}.",
+      "EXISTS": "This site is already in the list (maybe set aside).",
+      "SWITCHED_OFF": "SEO outreach is off. Turn it on in the settings card first.",
+      "NOT_FOUND": "This site is no longer in the list (or it is set aside). Reload the page.",
+      "STALE": "Someone changed this meanwhile. Reload the page and try again.",
+      "forbidden": "You don't have permission for this.",
+      "unauthorized": "Please sign in again.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    },
+    "card": {
+      "h": "SEO outreach settings",
+      "d": "The switch, the follow-up gap and your own pitch words.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Unsaved changes",
+      "readOnly": "Only someone who may change marketing can change these.",
+      "pairHelp": "Write it in both languages, or leave both empty (then there is no “Write to them” button).",
+      "on": "SEO outreach on",
+      "onHelp": "Off as it ships. Off, nothing can be added or changed; the list only shows.",
+      "followUpDays": "Follow-up days",
+      "followUpDaysHelp": "When you mark a site “Asked” without a day, the follow-up day is set this many days later. 0 = none.",
+      "pitchSubject": "Pitch subject",
+      "pitchBody": "Pitch text",
+      "pitchHelp": "Your first e-mail. {site} becomes the site, {shop} your shop's address. “Write to them” opens your own e-mail app with it; you press send yourself.",
+      "en": "English",
+      "bn": "Bengali"
+    }
+  }
+}

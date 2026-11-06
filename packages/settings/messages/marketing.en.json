@@ -14,6 +14,10 @@
     "youtube": {
       "label": "YouTube module",
       "help": "Off as it ships. On, Marketing › YouTube lets you add your channel and your videos (by their links), tie each video to the products it shows, and copy each product's tracked link for the video's description. Orders placed through those links are counted for the video (placed, delivered, delivered value). \"Source\" and \"Medium\" are the campaign tags the link carries; \"Campaign prefix\" goes before the video's id. Nothing is posted to YouTube and no money is spent."
+    },
+    "outreach": {
+      "label": "SEO outreach pipeline",
+      "help": "Off as it ships. On, Marketing › SEO outreach keeps the websites you ask for a link to your shop, each along the pipeline: found, asked, answered, link live or said no — with the person to write to, your notes, the day to follow up and the page where your link went live. \"Follow-up days\" sets the follow-up day by itself when you mark a site as asked (0 = none). The pitch words are your own first e-mail ({site} = the site, {shop} = your shop's address); \"Write to them\" only opens your own e-mail app with them, and you press send yourself. Nothing is sent from the shop."
     }
   },
   "ads": {
