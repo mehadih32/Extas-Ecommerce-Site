@@ -22,7 +22,7 @@ week PR 402.
 - [ ] The main domain is added to the store as its primary domain (Settings → Stores, PR 362), so the shop builds its
       addresses, sitemap and canonical links on it.
 - [ ] The redirect map of every old WordPress address to its new page is loaded and checked on staging (PR 587).
-- [ ] **Rehearsal on staging:** run the deploy workflow with "Go back to the previous version" (rollback) once, check
+- [x] **Rehearsal on staging** (done 6 Nov 2026, 11 min 38 s; section 5)**:** run the deploy workflow with "Go back to the previous version" (rollback) once, check
       new.extas.com.bd works on the older version, then run it again without the box to come back. Write the time it took.
 - [ ] Agree a quiet hour with the owner (few orders on the old shop) and who watches the shop during it.
 
@@ -87,7 +87,18 @@ domain until the owner says "go live" (CLAUDE.md).
    owner's account), step 6 with the WordPress map switched on and a crawl of the old addresses, step 7
    (Actions → smoke, host `main`), steps 8 and 9.
 
-## 5. Owner's part
+## 5. Rehearsal record (PR 398)
+The rollback rehearsal of section 0 on staging, run by the build (Actions → Deploy, "Go back to the previous version",
+then a normal run). Seen in it and fixed: the rollback's deploy report said the docs copy's record was missing (PR 594
+follow-up). The smoke test runs only after a deploy forward; on the way back the health check proves the older version
+answers. The go-live page's "Go-live runbook read, rollback rehearsed" is still pressed by a person after
+reading this file.
+
+| Date | Back one version | Forward again | Total | Staging after each | Runs |
+|---|---|---|---|---|---|
+| 2026-11-06 06:33 (Asia/Dhaka) | `b5bbe1ad07ce` → `419e6d86338a`: 43 s from the press to the older version answering (the switch itself 33 s; no build, no migration) | → `0dd2bba855de` (main, the same code as `b5bbe1ad07ce`): 3 min 31 s to the new version answering (build 2 min 35 s, migration and switch 44 s), then the smoke test 6 min 41 s | 11 min 38 s | health check HTTP 200 on the older version (blue); smoke test PASS, 408 page views, 0 failed, on the newer one (green); no moment without a live version (blue/green) | [back](https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/42137694308), [forward](https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/42137851514) |
+
+## 6. Owner's part
 - The go-ahead for the day and the quiet hour (the only decision).
 - If the Cloudflare account is his alone: the DNS change of step 5 (and its undo), with the team on the phone.
 - Checking his own data on the live site (legal numbers, contacts, charges — PR 399).
