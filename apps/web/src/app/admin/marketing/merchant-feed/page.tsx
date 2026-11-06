@@ -5,6 +5,8 @@
 // Seeing needs `marketing.campaigns.read`; the card `marketing.campaigns.write`.
 // PR 589 follow-up: the card chooses one item per product or per size and colour (`variants`); the tiles then count the
 // items too, and the first products show how many items each makes.
+// PR 589 follow-up 707: the card also chooses whether the struck price goes in (only where the product page shows one)
+// and the shop's gender and age group for clothes (empty = not sent).
 // Guide: docs/admin-guide/pages/marketing/merchant-feed.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -19,7 +21,7 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { feedScreen } from '@/lib/marketing/merchant-feed';
-import { FEED_REASONS } from '@/lib/marketing/merchant-feed-model';
+import { FEED_AGE_GROUPS, FEED_GENDERS, FEED_REASONS } from '@/lib/marketing/merchant-feed-model';
 import { siteAddress } from '@/lib/seo/site';
 import bn from '../../../../../messages/admin-merchant-feed.bn.json';
 import en from '../../../../../messages/admin-merchant-feed.en.json';
@@ -168,6 +170,31 @@ export default async function MerchantFeedPage() {
                         { value: 'off', label: l('perProduct') },
                         { value: 'on', label: l('perVariant') },
                       ],
+                    },
+                    {
+                      name: 'salePrice',
+                      label: l('salePrice'),
+                      kind: 'select',
+                      value: set.salePrice ? 'on' : 'off',
+                      options: [
+                        { value: 'off', label: l('salePriceOff') },
+                        { value: 'on', label: l('salePriceOn') },
+                      ],
+                      hint: l('salePriceHint'),
+                    },
+                    {
+                      name: 'gender',
+                      label: l('gender'),
+                      kind: 'select',
+                      value: set.gender,
+                      options: [{ value: '', label: l('notSent') }, ...FEED_GENDERS.map((g) => ({ value: g, label: l(`g_${g}`) }))],
+                    },
+                    {
+                      name: 'ageGroup',
+                      label: l('ageGroup'),
+                      kind: 'select',
+                      value: set.ageGroup,
+                      options: [{ value: '', label: l('notSent') }, ...FEED_AGE_GROUPS.map((g) => ({ value: g, label: l(`a_${g}`) }))],
                     },
                   ],
                 },

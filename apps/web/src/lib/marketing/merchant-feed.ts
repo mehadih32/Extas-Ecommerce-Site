@@ -8,19 +8,26 @@
 // - PR 589 follow-up: while `variants` is on, each product also reads its live sizes and colours (a price set, not put
 //   away): each one becomes its own item with its colour and size names, its price and stock, the photo of its colour
 //   (else the product's main one) and the product page opened on it (`?color=<colour>&s=<size>`, as the shop's own links).
-// - No struck price is sent yet: the feed's price is the price the customer pays, as on the page.
+// - ~~No struck price is sent yet: the feed's price is the price the customer pays, as on the page.~~ PR 589 follow-up
+//   707: while `salePrice` is on, a product (its cheapest live variant, as the card) and each size-and-colour item carry
+//   the struck price their page shows — the shop's own PR 38 rule (@extas/catalogue wasPriceFor, the source chosen per
+//   product → category → parents → store): a real compare-at / MRP or a real former price, never a made-up one; with
+//   no source chosen there is none. Google gets it as `price`, the price asked as `sale_price`. `gender` and `ageGroup`
+//   go on every item when set (empty: not sent).
 // - /feeds/merchant.xml serves it while on and on the shop's own domain; Merchant Center fetches it on its own schedule
 //   (no key, nothing sent from the shop, no ad spend). Marketing › Merchant feed shows the address, the counts, why a
 //   product is left out, the first items and the card (`marketing.campaigns.read`; the card `marketing.campaigns.write`).
 // - The Bangladesh test itself (target country in Merchant Center after go-live, the result written down) is the
 //   owner's step in Merchant Center: the page's guide walks through it.
 import { audit, can } from '@extas/auth';
+import { wasPriceFor } from '@extas/catalogue';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { imageSources } from '@extas/media';
 import { merchantFeedSchema, storeTarget, type MerchantFeedSettings } from '@extas/settings';
 import { body as readBody, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { JournalError, answer, versionOf, type JournalWho } from '../journal/journal';
 import { issuesOf } from '../journal/model';
+import { sourceOf, type PriceRules } from '../shop/catalogue';
 import { productPath } from '../shop/home-model';
 import { COLOUR_QUERY, SIZE_QUERY } from '../shop/routes';
 import { absolute } from '../shop/structured-data';
@@ -33,6 +40,18 @@ type Db = PrismaClient;
 type Resolver = AdminDeps['resolver'];
 /** How many items the admin page shows as a sample. */
 const SAMPLE = 20; // hardcode-ok: a list length, not a business number
+
+/** PR 589 follow-up 707: the shop's struck-price rules (as `priceRules` in lib/shop/catalogue, on these deps). */
+async function feedPriceRules(db: Db, resolver: Resolver, storeId: number): Promise<PriceRules> {
+  const at = { storeId };
+  const [store, historyDays, mrpOwnLabel, cats] = await Promise.all([
+    resolver.value('catalogue.wasPrice.defaultSource', at),
+    resolver.value('catalogue.wasPrice.historyDays', at),
+    resolver.value('catalogue.wasPrice.mrpOwnLabel', at),
+    db.category.findMany({ where: { storeId }, select: { id: true, parentId: true, wasPriceSource: true } }),
+  ]);
+  return { store: store ?? null, historyDays, mrpOwnLabel, cats: new Map(cats.map((c) => [c.id, { source: c.wasPriceSource, parentId: c.parentId }])) };
+}
 
 /** The feed's products, ready for the model (links and photos absolute against `origin`). */
 export async function feedProducts(db: Db, resolver: Resolver, origin: URL | string, storeId: number = S): Promise<{ set: MerchantFeedSettings; currency: string; storeName: string; products: FeedProduct[] }> {
@@ -48,9 +67,11 @@ export async function feedProducts(db: Db, resolver: Resolver, origin: URL | str
       feedTitle: true,
       descriptionEn: true,
       inStock: true,
-      brand: { select: { name: true } },
+      categoryId: true,
+      wasPriceSource: true,
+      brand: { select: { name: true, isOwnLabel: true } },
       category: { select: { nameEn: true } },
-      variants: { where: { archivedAt: null, active: true, priceMinor: { not: null } }, orderBy: { priceMinor: 'asc' }, take: 1, select: { priceMinor: true } },
+      variants: { where: { archivedAt: null, active: true, priceMinor: { not: null } }, orderBy: { priceMinor: 'asc' }, take: 1, select: { id: true, priceMinor: true, compareAtMinor: true } },
       media: { where: { archivedAt: null, role: 'FRONT' }, orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], take: 1, select: { assetId: true } },
     },
   });
@@ -61,11 +82,32 @@ export async function feedProducts(db: Db, resolver: Resolver, origin: URL | str
         db.productVariant.findMany({
           where: { storeId, productId: { in: ids }, archivedAt: null, active: true, priceMinor: { not: null } },
           orderBy: [{ sortOrder: 'asc' }, { sku: 'asc' }],
-          select: { id: true, productId: true, priceMinor: true, inStock: true, colourId: true, colour: { select: { key: true, nameEn: true } }, size: { select: { key: true, label: true, sortOrder: true } } },
+          select: { id: true, productId: true, priceMinor: true, compareAtMinor: true, inStock: true, colourId: true, colour: { select: { key: true, nameEn: true } }, size: { select: { key: true, label: true, sortOrder: true } } },
         }),
         db.productMedia.findMany({ where: { storeId, productId: { in: ids }, archivedAt: null, role: 'FRONT', colourId: { not: null } }, orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], select: { productId: true, colourId: true, assetId: true } }),
       ])
     : [[], []];
+  // PR 589 follow-up 707: each product's struck-price source, and the recorded prices of the variants that need them
+  const rules = set.salePrice && rows.length ? await feedPriceRules(db, resolver, storeId) : null;
+  const sourceById = new Map(rows.map((p) => [p.id, rules ? sourceOf(rules, p) : null]));
+  const historyIds = rules
+    ? [...new Set([...rows.flatMap((p) => (sourceById.get(p.id) === 'PRICE_HISTORY' ? p.variants.map((v) => v.id) : [])), ...sizes.filter((v) => sourceById.get(v.productId) === 'PRICE_HISTORY').map((v) => v.id)])]
+    : [];
+  const history = historyIds.length ? await db.priceHistory.findMany({ where: { storeId, variantId: { in: historyIds } }, select: { variantId: true, priceMinor: true, effectiveFrom: true } }) : [];
+  const now = new Date();
+  const wasOf = (p: (typeof rows)[number], v: { id: string; priceMinor: number | null; compareAtMinor: number | null } | undefined): number | null =>
+    rules && v && v.priceMinor != null
+      ? wasPriceFor({
+          source: sourceById.get(p.id) ?? null,
+          priceMinor: v.priceMinor,
+          compareAtMinor: v.compareAtMinor,
+          brand: p.brand,
+          mrpOwnLabel: rules.mrpOwnLabel,
+          history: history.filter((h) => h.variantId === v.id),
+          historyDays: rules.historyDays,
+          now,
+        }).wasMinor
+      : null;
   const colourPhoto = new Map<string, string>();
   for (const m of colourPhotos) if (!colourPhoto.has(`${m.productId}:${m.colourId}`)) colourPhoto.set(`${m.productId}:${m.colourId}`, m.assetId);
   const assetIds = [...new Set([...rows.flatMap((p) => p.media.map((m) => m.assetId)), ...colourPhoto.values()])];
@@ -100,6 +142,7 @@ export async function feedProducts(db: Db, resolver: Resolver, origin: URL | str
               link: absolute(origin, query ? `${page}?${query}` : page),
               image: (v.colourId ? photoUrl(colourPhoto.get(`${p.id}:${v.colourId}`)) : null) ?? main,
               priceMinor: v.priceMinor,
+              wasMinor: wasOf(p, v),
               inStock: v.inStock,
             };
           })
@@ -111,7 +154,7 @@ export async function feedProducts(db: Db, resolver: Resolver, origin: URL | str
       link: absolute(origin, page),
       image: main,
       priceMinor: p.variants[0]?.priceMinor ?? null,
-      wasMinor: null,
+      wasMinor: wasOf(p, p.variants[0]),
       inStock: p.inStock,
       brand: p.brand?.name ?? shop,
       category: p.category?.nameEn ?? null,
@@ -139,7 +182,7 @@ export interface FeedScreen {
 export async function feedScreen(db: Db, resolver: Resolver, origin: URL | null, storeId: number = S): Promise<FeedScreen> {
   const base = origin ?? 'https://shop.invalid';
   const { set, currency, products } = await feedProducts(db, resolver, base, storeId);
-  const { items, left } = feedItems(products, currency, set.outOfStock, set.variants);
+  const { items, left } = feedItems(products, currency, set.outOfStock, set.variants, { gender: set.gender, ageGroup: set.ageGroup });
   // a product's items: itself, or (PR 589 follow-up) its sizes and colours
   const byProduct = new Map<string, FeedItem[]>();
   for (const i of items) byProduct.set(i.groupId ?? i.id, [...(byProduct.get(i.groupId ?? i.id) ?? []), i]);
@@ -168,6 +211,8 @@ export async function saveFeedSettings(db: Db, resolver: Resolver, who: JournalW
   if (values.outOfStock === 'on' || values.outOfStock === 'off') values.outOfStock = values.outOfStock === 'on';
   // PR 589 follow-up: "one item per product / per size and colour" likewise
   if (values.variants === 'on' || values.variants === 'off') values.variants = values.variants === 'on';
+  // PR 589 follow-up 707: "send the struck price / the price asked only" likewise
+  if (values.salePrice === 'on' || values.salePrice === 'off') values.salePrice = values.salePrice === 'on';
   const ok = merchantFeedSchema.safeParse({ ...before, ...values, on: o.on });
   if (!ok.success) throw new JournalError('INVALID_INPUT', 400, issuesOf(ok.error));
   if (versionOf(ok.data) === versionOf(before)) return;
