@@ -13,6 +13,7 @@
 // price or COD, or blocks anyone; the offer is the owner's own code, used only after he switched it on.
 import { randomBytes } from 'node:crypto';
 import { FOLLOW_UP_CEILING, FOLLOW_UP_STEPS, type FollowUpSettings, type MessageChannel } from '@extas/settings';
+import { followedSince } from './cart-recovery';
 import { offerConsent } from './consent';
 import { setting, TX, nowOf, type MessagesDeps } from './context';
 import { orderedSince } from './engine';
@@ -83,7 +84,8 @@ export async function planFollowUps(deps: MessagesDeps, storeId: number): Promis
     if (!attempt || !d.phone) continue;
     if (attempt === 2 && !coupon) continue;
     if (await orderedSince(deps, storeId, d.phone, d.createdAt)) continue;
-    if (attempt === 1 && (await recentlyFollowed(deps, storeId, d.phone, d.id, new Date(now.getTime() - cfg.phoneGapDays * 1_440 * MINUTE)))) continue;
+    // PR 276: one ladder per number, whichever it was (an unfinished checkout's, or a left bag's)
+    if (attempt === 1 && (await followedSince(deps.db, storeId, d.phone, new Date(now.getTime() - cfg.phoneGapDays * 1_440 * MINUTE)))) continue;
     // the offer goes the way the reminder went while he still says yes there; otherwise the first way he says yes on
     const order: MessageChannel[] = attempt === 2 && first ? [first.channel as MessageChannel, ...cfg.channels.filter((c) => c !== first.channel)] : [...cfg.channels];
     let channel: MessageChannel | null = null;
@@ -111,11 +113,4 @@ export async function planFollowUps(deps: MessagesDeps, storeId: number): Promis
     else out.offers++;
   }
   return out;
-}
-
-/** Did another unfinished checkout of this number get a follow-up since that time (one ladder per person)? */
-async function recentlyFollowed(deps: Pick<MessagesDeps, 'db'>, storeId: number, phone: string, draftId: string, since: Date): Promise<boolean> {
-  const others = await deps.db.checkoutDraft.findMany({ where: { storeId, phone, id: { not: draftId }, followUpCount: { gt: 0 } }, select: { id: true } });
-  if (!others.length) return false;
-  return (await deps.db.recoveryMessage.count({ where: { storeId, kind: FOLLOW_UP_KIND, checkoutDraftId: { in: others.map((o) => o.id) }, createdAt: { gte: since } } })) > 0;
 }

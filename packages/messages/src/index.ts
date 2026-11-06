@@ -27,11 +27,14 @@
 //
 // PR 275: an unfinished checkout's follow-up (follow-up.ts): one reminder with the link that puts his bag back, then at
 // most one offer with the owner's code — two messages ever, only with his yes for offers, off as shipped.
+// PR 276: a signed-in customer's left bag (cart-recovery.ts): the same two-message ladder with the bag's link, its offer
+// under the offer rules (bag worth, once per customer in the days, the code usable by him); off as shipped.
 //
 // `./pure` holds the rules without a database (tests, the admin screen's preview).
 import { setting, type MessagesDeps } from './context';
 import { planMessages, sendDue, type PlanResult, type SendRunResult } from './engine';
 import { planFollowUps, type FollowUpPlan } from './follow-up';
+import { planCartRecovery } from './cart-recovery';
 import { selfConfirmTimers, type SelfConfirmTimerResult } from './self-confirm';
 
 export * from './context';
@@ -49,10 +52,13 @@ export * from './templates';
 export * from './email-html';
 export * from './email-track';
 export * from './follow-up';
+export * from './cart-recovery';
 
 export interface RunResult {
   plan: PlanResult;
   followUp: FollowUpPlan;
+  /** PR 276 — the left bags' recovery messages queued by this run. */
+  cartRecovery: FollowUpPlan;
   send: SendRunResult;
   selfConfirm: SelfConfirmTimerResult;
 }
@@ -62,7 +68,8 @@ export async function runMessages(deps: MessagesDeps, storeId: number): Promise<
   if (!(await setting(deps, storeId, 'messages.enabled'))) return null;
   const plan = await planMessages(deps, storeId);
   const followUp = await planFollowUps(deps, storeId);
+  const cartRecovery = await planCartRecovery(deps, storeId);
   const send = await sendDue(deps, storeId);
   const selfConfirm = await selfConfirmTimers(deps, storeId);
-  return { plan, followUp, send, selfConfirm };
+  return { plan, followUp, cartRecovery, send, selfConfirm };
 }

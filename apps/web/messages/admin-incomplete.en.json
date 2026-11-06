@@ -19,7 +19,27 @@
     },
     "left": "Left {age} ago",
     "noName": "No name typed",
-    "bag": "Bag",
+    "bag": {
+      "h": "Left-bag messages (signed-in customers)",
+      "d": "For a signed-in customer who left things in his bag and never reached the checkout's number box: one reminder with a link that brings his bag back, then at most one offer under the offer rules. Two messages per bag, ever, and only where he said yes to offers.",
+      "enabled": "Send the left-bag reminder",
+      "enabledHelp": "When on, a signed-in customer's left bag gets one reminder by WhatsApp or SMS (only where he said yes to offers), with a link that puts his bag back on any phone. Off as it ships.",
+      "firstAfterMinutes": "Reminder after (minutes)",
+      "firstAfterMinutesHelp": "Minutes after the bag last changed.",
+      "minBag": "Only bags worth at least (taka)",
+      "minBagHelp": "Bag prices; 0 means any bag.",
+      "catchUpHours": "Not for bags older than (hours)",
+      "catchUpHoursHelp": "A bag left longer ago than this gets no reminder (switching on never messages old bags).",
+      "creditDays": "Count an order as brought back within (days)",
+      "creditDaysHelp": "An order he places within these days of a message counts as the bag coming back.",
+      "offer": "Send one offer after the reminder",
+      "offerHelp": "The second and last message, with your code, only when the offer rules below allow it and the code works for him (its dates, uses and per-customer limit). Needs the permission to approve offers. Off as it ships.",
+      "offerMinBag": "Offer only for bags worth at least (taka)",
+      "offerMinBagHelp": "Bag prices; 0 means any bag the reminder went to. Lowering it needs the permission to approve offers.",
+      "offerOncePerDays": "At most one offer per customer in (days)",
+      "offerOncePerDaysHelp": "Counts offers from both follow-ups, so nobody learns to leave a bag for a code. Lowering it needs the permission to approve offers.",
+      "stats": "In the kept days: {sent} left-bag messages sent · {recovered} of those bags then came back as an order."
+    },
     "bagEmpty": "Bag now empty",
     "more": "+{n} more",
     "worth": "Worth {value}",
@@ -59,8 +79,9 @@
     },
     "noPhone": {
       "h": "Bags without a number",
-      "text": "Bags left without a phone number: {n} (about {value} at bag prices). Nobody can be contacted for these.",
-      "none": "No bags were left without a number."
+      "text": "Bags left without a checkout number: {n} (about {value} at bag prices).",
+      "none": "No bags were left without a number.",
+      "signedIn": "{n} of them belong to signed-in customers with a number on their account: the left-bag messages below can reach them. The rest can only be reached on the site (the bag stays in their browser) and by ad retargeting — nobody can message them."
     },
     "card": {
       "h": "Unfinished checkouts",

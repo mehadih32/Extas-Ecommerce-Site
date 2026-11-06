@@ -153,6 +153,8 @@ const linkToken = () => randomBytes(18).toString('base64url');
 
 const DEVICE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DAY_MS = 86_400_000;
+/** PR 276 — RecoveryMessage.kind of a left bag's recovery (@extas/messages cart-recovery.ts `CART_RECOVERY_KIND`). */
+const CART_RECOVERY_KIND = 'CART';
 
 /** PR 159: a coordinate kept only as finely as the owner allows (`risk.capture.gpsDecimals`). */
 export function roundPoint(v: number, decimals: number): number {
@@ -669,6 +671,12 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
         await tx.checkoutDraft.updateMany({ where: { id: { in: ids }, storeId, convertedOrderId: null }, data: { convertedOrderId: o.id, lastStep: 'placed', lastActivityAt: now } });
         await tx.recoveryMessage.updateMany({ where: { storeId, checkoutDraftId: { in: ids }, sentAt: { not: null }, recoveredOrderId: null }, data: { recoveredOrderId: o.id } });
       }
+      // PR 276: a left bag's recovery answered — the recovery messages that went for this bag, or for another bag of his
+      // (the link opened in another browser), within the owner's days, count as bringing it back
+      const owners = [...new Set([customerId, ownerId].filter((x): x is string => !!x))];
+      const bags = await tx.cart.findMany({ where: { storeId, OR: [{ id: cartId }, ...(owners.length ? [{ customerId: { in: owners } }] : [])] }, select: { id: true } });
+      const creditSince = new Date(now.getTime() - (await setting(deps, storeId, 'orders.cartRecovery')).creditDays * DAY_MS);
+      await tx.recoveryMessage.updateMany({ where: { storeId, kind: CART_RECOVERY_KIND, cartId: { in: bags.map((b) => b.id) }, sentAt: { not: null, gte: creditSince }, recoveredOrderId: null }, data: { recoveredOrderId: o.id } });
       await tx.idempotencyKey.update({
         where: { scope_key: { scope, key: d.idempotencyKey } },
         data: { completedAt: now, responseStatus: 201, responseBody: { orderId: o.id, number } },

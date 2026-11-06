@@ -1115,6 +1115,70 @@
       "name": "Incomplete-order offer with a code",
       "enabled": true,
       "body": "Hi {customerName}, your bag is still kept. Open this link and code {offerCode} is added for you: {bagLink}\n— {storeName}"
+    },
+    {
+      "key": "cart.recovery",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Left-bag reminder with the bag link",
+      "enabled": true,
+      "body": "{storeName}: আপনার ব্যাগে {bagCount}টা পণ্য রাখা আছে। এখানে ব্যাগটা দেখুন: {bagLink}"
+    },
+    {
+      "key": "cart.recovery",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Left-bag reminder with the bag link",
+      "enabled": true,
+      "body": "{storeName}: you left {bagCount} item(s) in your bag. See your bag here: {bagLink}"
+    },
+    {
+      "key": "cart.recovery",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Left-bag reminder with the bag link",
+      "enabled": true,
+      "body": "{customerName}, আপনার ব্যাগে {bagCount}টা পণ্য রেখে গেছেন। এই লিংকে ব্যাগটা পাবেন, যেকোনো ফোনে: {bagLink}\n— {storeName}"
+    },
+    {
+      "key": "cart.recovery",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Left-bag reminder with the bag link",
+      "enabled": true,
+      "body": "Hi {customerName}, you left {bagCount} item(s) in your bag. This link opens it on any phone: {bagLink}\n— {storeName}"
+    },
+    {
+      "key": "cart.recoveryOffer",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Left-bag offer with a code",
+      "enabled": true,
+      "body": "{storeName}: আপনার ব্যাগটা এখনো রাখা আছে। কোড {offerCode} দিয়ে অফারসহ অর্ডার করুন: {bagLink}"
+    },
+    {
+      "key": "cart.recoveryOffer",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Left-bag offer with a code",
+      "enabled": true,
+      "body": "{storeName}: your bag is still kept. Use code {offerCode} for your offer: {bagLink}"
+    },
+    {
+      "key": "cart.recoveryOffer",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Left-bag offer with a code",
+      "enabled": true,
+      "body": "{customerName}, আপনার ব্যাগটা এখনো রাখা আছে। এই লিংকে গেলে কোড {offerCode} নিজে থেকেই বসে যাবে: {bagLink}\n— {storeName}"
+    },
+    {
+      "key": "cart.recoveryOffer",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Left-bag offer with a code",
+      "enabled": true,
+      "body": "Hi {customerName}, your bag is still kept. Open this link and code {offerCode} is added for you: {bagLink}\n— {storeName}"
     }
   ]
 }

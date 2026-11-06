@@ -43,7 +43,7 @@ describe.skipIf(!HAS_TEST_DB)('Orders › Incomplete on PostgreSQL (PR 274, SIM-
   let owner = '';
   let reader = '';
   let ownerId = '';
-  type Answer = IncompleteOverview & { ok: boolean; error?: string; details?: string[]; cards?: { incomplete?: IncompleteOverview['card']; followUp?: IncompleteOverview['followUp']['card'] }; id?: string };
+  type Answer = IncompleteOverview & { ok: boolean; error?: string; details?: string[]; cards?: { incomplete?: IncompleteOverview['card']; followUp?: IncompleteOverview['followUp']['card']; cartRecovery?: IncompleteOverview['cartRecovery']['card'] }; id?: string };
   const api = async (method: string, o: { body?: unknown; cookie?: string; view?: string } = {}) => {
     const res = await incompleteHandler(req(method, { body: o.body, cookie: o.cookie ?? owner, path: `/api/admin/orders/incomplete${o.view ? `?view=${o.view}` : ''}` }), admin, { now: () => T0 });
     return { status: res.status, a: (await res.json()) as Answer };
@@ -130,7 +130,7 @@ describe.skipIf(!HAS_TEST_DB)('Orders › Incomplete on PostgreSQL (PR 274, SIM-
     ]);
     expect(g.a.rows[0]).toMatchObject({ phone: '+8801711000241', name: 'Sample visitor-hot-41', valueMinor: 300_000, lines: [{ nameEn: 'Sample polo', nameBn: 'স্যাম্পল পোলো', quantity: 2 }], more: 0, channel: { platform: 'META', source: 'facebook', campaign: 'eid-polo', landing: true }, assignedTo: null, handled: null });
     expect(g.a.rows[1]!.valueMinor).toBe(250_000);
-    expect(g.a.noPhone).toEqual({ bags: 1, valueMinor: 220_000 });
+    expect(g.a.noPhone).toEqual({ bags: 1, valueMinor: 220_000, signedIn: 0 });
     expect(g.a.unpaid.map((u) => [u.number, u.state])).toEqual([
       ['S-2741', 'failed'],
       ['S-2742', 'pending'],
@@ -185,5 +185,37 @@ describe.skipIf(!HAS_TEST_DB)('Orders › Incomplete on PostgreSQL (PR 274, SIM-
     const after = await api('GET');
     expect(after.a.rows.find((r) => r.id === row.id)!.followUps).toEqual({ sent: 1, last: { at: sentAt.toISOString(), channel: 'SMS', offer: false } });
     expect(after.a.followUp).toMatchObject({ sent: 1, recovered: 0 });
+  });
+
+  it('PR 276: the left-bag card is off as shipped; worths in taka kept in paisa; the offer needs a live code; signed-in bags are counted; the card counts what went and came back', async () => {
+    const g = await api('GET', { cookie: reader });
+    expect(g.a.cartRecovery).toMatchObject({ sent: 0, recovered: 0 });
+    expect(g.a.cartRecovery.card.value).toEqual({ enabled: false, firstAfterMinutes: 120, channels: 'WHATSAPP,SMS', minBag: 0, catchUpHours: 24, creditDays: 7, offer: false, offerAfterHours: 24, offerCode: '', offerMinBag: 0, offerOncePerDays: 30 });
+    const v0 = g.a.cartRecovery.card.version;
+    const on = { ...g.a.cartRecovery.card.value, enabled: true, channels: 'SMS', minBag: 1_500 };
+    expect((await api('PUT', { cookie: reader, body: { key: 'cartRecovery', value: on, version: v0 } })).status).toBe(403);
+    expect((await api('PUT', { body: { key: 'cartRecovery', value: { ...on, minBag: -1, firstAfterMinutes: 10, offerOncePerDays: 0 }, version: v0 } })).a).toMatchObject({ error: 'INVALID_INPUT', details: ['firstAfterMinutes', 'minBag', 'offerOncePerDays'] });
+    expect((await api('PUT', { body: { key: 'cartRecovery', value: { ...on, offer: true }, version: v0 } })).a).toMatchObject({ error: 'INVALID_INPUT', details: ['offerCode'] });
+    expect((await api('PUT', { body: { key: 'cartRecovery', value: { ...on, offer: true, offerCode: 'NOPE276' }, version: v0 } })).a).toMatchObject({ error: 'INVALID_INPUT', details: ['offerCode'] });
+    const saved = await api('PUT', { body: { key: 'cartRecovery', value: on, version: v0 } });
+    expect(saved.a.cards?.cartRecovery?.value).toMatchObject({ enabled: true, channels: 'SMS', minBag: 1_500, offer: false });
+    expect(await admin.resolver.value('orders.cartRecovery', { storeId: S })).toMatchObject({ enabled: true, channels: ['SMS'], minBagMinor: 150_000 });
+    expect((await api('PUT', { body: { key: 'cartRecovery', value: on, version: v0 } })).a.error).toBe('STALE');
+    await t.prisma.coupon.create({ data: { storeId: S, code: 'BAG276', kind: 'AMOUNT_OFF', value: { amountMinor: 5_000 }, enabled: true } });
+    const offer = await api('PUT', { body: { key: 'cartRecovery', value: { ...saved.a.cards!.cartRecovery!.value, offer: true, offerCode: 'bag276', offerMinBag: 2_000 }, version: saved.a.cards!.cartRecovery!.version } });
+    expect(offer.a.cards?.cartRecovery?.value).toMatchObject({ offer: true, offerCode: 'BAG276', offerMinBag: 2_000 });
+    expect((await admin.resolver.value('orders.cartRecovery', { storeId: S })).offer).toMatchObject({ enabled: true, couponCode: 'BAG276', minBagMinor: 200_000 });
+    expect(await t.prisma.auditLog.count({ where: { action: 'incomplete.cartRecovery' } })).toBe(2);
+
+    // a signed-in customer's left bag (his number on his account) is counted apart from the rest
+    const before = (await api('GET')).a.noPhone;
+    const who = await t.prisma.customer.create({ data: { storeId: S, phone: '+8801711000276', name: 'Sample signed-in' } });
+    const v = await t.prisma.productVariant.findFirstOrThrow({ where: { storeId: S, sku: 'SAMPLE-274-M' } });
+    const c = await t.prisma.cart.create({ data: { storeId: S, visitorId: 'visitor-signed-276', customerId: who.id, lastActivityAt: new Date(T0.getTime() - 60 * MIN) } });
+    await t.prisma.cartItem.create({ data: { storeId: S, cartId: c.id, variantId: v.id, quantity: 1, unitPriceMinor: 150_000 } });
+    const after = await api('GET');
+    expect(after.a.noPhone).toMatchObject({ bags: before.bags + 1, signedIn: before.signedIn + 1 });
+    await t.prisma.recoveryMessage.create({ data: { storeId: S, kind: 'CART', cartId: c.id, attempt: 1, channel: 'SMS', sentAt: new Date(T0.getTime() - 30 * MIN) } });
+    expect((await api('GET')).a.cartRecovery).toMatchObject({ sent: 1, recovered: 0 });
   });
 });

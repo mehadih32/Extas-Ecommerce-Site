@@ -56,7 +56,8 @@
       "crmJourney": "Automation message",
       "crmEmail": "Offer e-mail",
       "crmCampaign": "Win-back campaign",
-      "checkoutFollowUp": "Incomplete-order follow-up"
+      "checkoutFollowUp": "Incomplete-order follow-up",
+      "cartRecovery": "Left-bag recovery"
     },
     "reason": {
       "MASTER_OFF": "The messages master switch was off",
@@ -98,7 +99,8 @@
       "ORDERED": "He ordered since",
       "HANDLED": "Marked handled by the team",
       "OFFER_GONE": "The offer code is no longer live",
-      "EMPTY_BAG": "His bag is empty now"
+      "EMPTY_BAG": "His bag is empty now",
+      "BAG_CLOSED": "The bag was merged or closed"
     },
     "log": {
       "title": "Message log",

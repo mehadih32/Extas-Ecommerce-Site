@@ -170,6 +170,8 @@ export * from './registry-referrals';
 export * from './registry-incomplete';
 // S13 · PR 275 — the follow-up ladder of an unfinished checkout, at most two messages (registry-follow-up.ts, version 210).
 export * from './registry-follow-up';
+// S13 · PR 276 — abandoned-bag recovery of signed-in customers, with the offer rules (registry-cart-recovery.ts, version 211).
+export * from './registry-cart-recovery';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

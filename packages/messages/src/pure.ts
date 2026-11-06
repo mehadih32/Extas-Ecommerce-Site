@@ -34,6 +34,10 @@ export const ADVANCE_REQUEST = 'advanceRequest';
 export const FOLLOW_UP_STEP = 'checkoutFollowUp';
 /** PR 275 — the follow-up's two templates (Messages › Templates). */
 export const FOLLOW_UP_TEMPLATES = { reminder: 'checkout.followUp', offer: 'checkout.followUpOffer' } as const;
+/** PR 276 — the message log's step of a left bag's recovery (a signed-in customer's bag; the reminder, then at most one offer). */
+export const CART_RECOVERY_STEP = 'cartRecovery';
+/** PR 276 — the left bag's two templates (Messages › Templates). */
+export const CART_RECOVERY_TEMPLATES = { reminder: 'cart.recovery', offer: 'cart.recoveryOffer' } as const;
 export const ADVANCE_RESEND_EVENT = 'order.advanceResend';
 
 const dataOf = (e: Pick<TimelineEvent, 'data'>): Record<string, unknown> => (e.data && typeof e.data === 'object' && !Array.isArray(e.data) ? (e.data as Record<string, unknown>) : {});
@@ -424,6 +428,22 @@ export function followUpTick(data: unknown, channel: MessageChannel): boolean | 
   return typeof v === 'boolean' ? v : null;
 }
 
+/**
+ * PR 276 — a bag's worth at bag prices (paisa): each loose line its pieces at its price, a shop's set once at its set
+ * price (the same count as Orders › Incomplete's).
+ */
+export function bagWorthMinor(lines: readonly { quantity: number; unitPriceMinor: number; comboGroupKey: string | null; setPriceMinor: number | null }[]): number {
+  const sets = new Set<string>();
+  let sum = 0;
+  for (const l of lines) {
+    if (l.comboGroupKey && l.setPriceMinor !== null) {
+      if (!sets.has(l.comboGroupKey)) sum += l.setPriceMinor;
+      sets.add(l.comboGroupKey);
+    } else sum += l.quantity * l.unitPriceMinor;
+  }
+  return sum;
+}
+
 /** PR 275 — the link of an unfinished checkout's follow-up that puts his bag back in any browser (then opens the bag). */
 export const bagBackLink = (host: string | null, code: string | null, lang: 'bn' | 'en'): string | null => (host && code ? `https://${host}/api/bag/back/${encodeURIComponent(code)}${lang === 'en' ? '?l=en' : ''}` : null);
 
@@ -650,6 +670,8 @@ export interface TemplateUseSettings {
   autoReply: { enabled: boolean; template: string };
   /** PR 275 — the unfinished checkout's follow-up: its two templates, the ways it may go, and whether it (and its offer) is on. */
   followUp?: { template: string; offerTemplate: string; channels: readonly MessageChannel[]; on: boolean; offerOn: boolean };
+  /** PR 276 — the left bag's recovery: the same shape as the follow-up's. */
+  cartRecovery?: { template: string; offerTemplate: string; channels: readonly MessageChannel[]; on: boolean; offerOn: boolean };
 }
 
 const stepChannels = (s: JourneyStepConfig): MessageChannel[] => [...new Set<MessageChannel>([s.channel, ...(s.fallback !== 'NONE' ? [s.fallback] : []), ...(s.email ? (['EMAIL'] as const) : [])])];
@@ -667,9 +689,10 @@ export function templateUses(c: TemplateUseSettings): Map<string, TemplateUse[]>
   add(c.advance.template, { use: 'advanceRequest', channels: adv, on: adv.length > 0 });
   for (const k of c.consentTemplates) add(k, { use: 'consentReply', channels: ['SMS', 'WHATSAPP'], on: c.consentReplyOn });
   add(c.autoReply.template, { use: 'autoReply', channels: ['WHATSAPP'], on: c.autoReply.enabled });
-  if (c.followUp) {
-    add(c.followUp.template, { use: FOLLOW_UP_STEP, channels: [...c.followUp.channels], on: c.followUp.on });
-    add(c.followUp.offerTemplate, { use: FOLLOW_UP_STEP, channels: [...c.followUp.channels], on: c.followUp.on && c.followUp.offerOn });
+  for (const [use, f] of [[FOLLOW_UP_STEP, c.followUp], [CART_RECOVERY_STEP, c.cartRecovery]] as const) {
+    if (!f) continue;
+    add(f.template, { use, channels: [...f.channels], on: f.on });
+    add(f.offerTemplate, { use, channels: [...f.channels], on: f.on && f.offerOn });
   }
   return out;
 }
