@@ -39,6 +39,9 @@ import paylinkBn from '../../../messages/shop-paylink.bn.json';
 import paylinkEn from '../../../messages/shop-paylink.en.json';
 import reachBn from '../../../messages/shop-reach.bn.json';
 import reachEn from '../../../messages/shop-reach.en.json';
+// S12 · PR 241: the journal's words (`journal.*`).
+import journalBn from '../../../messages/shop-journal.bn.json';
+import journalEn from '../../../messages/shop-journal.en.json';
 import type { ShopLabel } from '@extas/settings';
 import type { Dict } from '../i18n';
 import type { ShopLang } from './lang';
@@ -49,8 +52,8 @@ function withMore(base: Dict, more: Dict): Dict {
 }
 
 export const SHOP_DICTS: Record<ShopLang, Dict> = {
-  en: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(en, moreEn), searchEn), fuEn), finderEn), accountEn), comboEn), buildEn), bulkEn), ctplEn), paylinkEn), reachEn), landingEn),
-  bn: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(bn, moreBn), searchBn), fuBn), finderBn), accountBn), comboBn), buildBn), bulkBn), ctplBn), paylinkBn), reachBn), landingBn),
+  en: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(en, moreEn), searchEn), fuEn), finderEn), accountEn), comboEn), buildEn), bulkEn), ctplEn), paylinkEn), reachEn), landingEn), journalEn),
+  bn: withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(withMore(bn, moreBn), searchBn), fuBn), finderBn), accountBn), comboBn), buildBn), bulkBn), ctplBn), paylinkBn), reachBn), landingBn), journalBn),
 };
 
 export type LabelOverrides = Record<string, { en?: string; bn?: string }>;
