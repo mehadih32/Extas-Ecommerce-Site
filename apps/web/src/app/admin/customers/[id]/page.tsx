@@ -134,7 +134,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   const sv = await cu.customerView(cd, who, id, { log: false });
   if (!sv)
     return (
-      <div className="a2-z" data-testid="customer-missing">
+      <div className="a2-z" data-testid="customer-missing" data-lm-ready="">
         <PageHead view={view} place={locateKey('customer')} title={t(d, 'shell.tab.customers.all')} />
         <section className="a2-card a2-mt12">
           <p className="a2-sm">{t(d, 'cus.profile.notFound')}</p>
@@ -558,7 +558,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   );
 
   return (
-    <div className="a2-z" data-testid="customer-page" data-customer={sv.id}>
+    <div className="a2-z" data-testid="customer-page" data-lm-ready="" data-customer={sv.id}>
       <PageHead
         view={view}
         place={locateKey('customer')}

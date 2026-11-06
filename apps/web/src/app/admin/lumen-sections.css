@@ -259,3 +259,17 @@
   [data-lm-look] .ad[data-lm-ready] .sc-link { display: inline-flex; align-items: center; min-height: var(--lm-tap); }
   [data-lm-look] .ad[data-lm-ready] .sc-x { min-width: var(--lm-tap); min-height: var(--lm-tap); }
 }
+
+/* Customers (PR 636): the person's initials in the list and on his page, and the place line / back link above a
+   ready a2 page, at Lumen's 14 px with AA colours, 44 px taps on phones */
+[data-lm-look] [data-lm-ready] .a2-av,
+[data-lm-look] [data-lm-ready] .a2-av.g { width: 36px; height: 36px; font: 700 var(--lm-fs-card) / 1 var(--lm-font); background: var(--lm-acbg); color: var(--lm-ac-ink); }
+[data-lm-look] [data-lm-ready] .a2-crumb { font-size: var(--lm-fs-card); }
+[data-lm-look] [data-lm-ready] .a2-crumb a { display: inline-flex; align-items: center; gap: 4px; }
+@media (max-width: 759px), (pointer: coarse) {
+  [data-lm-look] [data-lm-ready] .a2-crumb a { min-height: var(--lm-tap); }
+}
+/* hovered links on a ready page (an order or segment line, the place line): the accent ink, AA in light and dark */
+[data-lm-look] [data-lm-ready] :is(a.a2-prow:hover b, .a2-crumb a:hover) { color: var(--lm-ac-ink); }
+/* a line's name at Lumen's 14 px wraps instead of being cut with "…" (a long segment or product name in a narrow card) */
+[data-lm-look] [data-lm-ready] .a2-prt b { white-space: normal; overflow-wrap: anywhere; }

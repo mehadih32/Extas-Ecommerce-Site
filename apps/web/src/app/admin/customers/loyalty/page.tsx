@@ -88,7 +88,7 @@ export default async function LoyaltyPage() {
     reason === cu.POINTS_REASONS.order && orderNumber ? t(d, 'cus.loy.points.ORDER_DELIVERED', { n: orderNumber }) : reason === cu.POINTS_REASONS.redeem ? t(d, 'cus.loy.points.REDEEMED') : t(d, 'cus.loy.points.other');
 
   return (
-    <div className="a2-z" data-testid="customer-loyalty">
+    <div className="a2-z" data-testid="customer-loyalty" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'cus.loy.title')} sub={t(d, 'cus.loy.sub')} />
       <SectionTabs view={view} current={KEY} />
       {!pointsOn ? (

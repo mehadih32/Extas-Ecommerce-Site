@@ -431,7 +431,7 @@
       { "from": "/collections/panjabi", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] },
       { "from": "/collections/hoodies", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] },
       { "from": "/bn/collections/tshirts", "selector": ".grid a.pcard-lnk", "take": 1, "required": true, "expect": [".pdp-name", "[data-testid=\"add-to-bag\"]", ".pdp-pills"] },
-      { "from": "/admin/customers", "selector": "[data-testid=\"cus-row\"] a.a2-b", "take": 1, "required": true, "expect": ["[data-testid=\"customer-page\"]", "[data-testid=\"cus-tabs\"]", "[data-testid=\"cus-profile-kpis\"]", "[data-testid=\"cus-history\"]", "[data-testid=\"cus-orders\"]", "[data-testid=\"a2-tabs\"]"] }
+      { "from": "/admin/customers", "selector": "[data-testid=\"cus-row\"] a.a2-b", "take": 1, "required": true, "expect": ["[data-testid=\"customer-page\"][data-lm-ready]", "[data-testid=\"cus-tabs\"]", "[data-testid=\"cus-profile-kpis\"]", "[data-testid=\"cus-history\"]", "[data-testid=\"cus-orders\"]", "[data-testid=\"a2-tabs\"]"] }
     ],
     "expect": {
       "/admin/orders/packing": ["[data-testid=\"pack-page\"][data-lm-ready]", "[data-testid=\"pack-steps\"]", "[data-testid=\"pack-settings\"]", "[data-testid=\"a2-tabs\"]"],
@@ -484,7 +484,7 @@
       "/admin/build/files": ["[data-testid=\"bf-search\"]", "[data-testid=\"bf-list\"]"],
       "/admin/money/books/daily": ["[data-testid=\"bd-page\"]", "[data-testid=\"a2-tabs\"]", "[data-testid=\"bd-status-card\"]", "[data-testid=\"bd-checks\"]", "[data-testid=\"bd-needs\"]", "[data-testid=\"bd-summaries\"]"],
       "/admin/money/costs": ["[data-testid=\"costs-page\"]", "[data-testid=\"a2-tabs\"]", "[data-testid=\"fc-card\"]", "[data-testid=\"fc-months\"]", "[data-testid=\"cl-card\"]"],
-      "/admin/customers": ["[data-testid=\"customers-list\"]", "[data-testid=\"cus-kpis\"]", "[data-testid=\"cus-views\"]", "[data-testid=\"cus-row\"]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/customers": ["[data-testid=\"customers-list\"][data-lm-ready]", "[data-testid=\"cus-kpis-atrisk\"]", "[data-testid=\"cus-views\"]", "[data-testid=\"cus-row\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin?home=1&state=notfound": ["[data-testid=\"a2-state\"]"],
       "/admin/delivery/zones": ["[data-testid=\"dz-bands\"]", "[data-testid=\"dl-band\"]", "[data-testid=\"dz-sub-switch\"]", "[data-testid=\"dz-areas\"]", "[data-testid=\"dz-try\"]"],
       "/admin/products": ["a.pa-nm", ".ad[data-lm-ready] [data-testid=\"products-kpi\"]"],

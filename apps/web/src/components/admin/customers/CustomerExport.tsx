@@ -8,6 +8,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
 import { ShellIcon } from '../shell/ShellIcon';
+import { showToast } from '@/components/admin/lumen/Toast';
 
 export interface ExportQuery {
   view?: string;
@@ -48,7 +49,7 @@ export function CustomerExport({ dict: d, query, limits: REASON }: { dict: Dict;
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1_000);
-      setMsg({ ok: true, text: t(d, 'cus.exp.done', { n: res.headers.get('x-rows') ?? '0' }) });
+      showToast({ text: t(d, 'cus.exp.done', { n: res.headers.get('x-rows') ?? '0' }), tone: 'ok' });
       setReason('');
       setOpen(false);
     } catch {

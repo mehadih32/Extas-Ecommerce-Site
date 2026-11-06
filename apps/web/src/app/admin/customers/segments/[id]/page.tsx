@@ -78,7 +78,7 @@ export default async function SegmentPage({ params, searchParams }: { params: Pa
     </Link>
   );
   return (
-    <div className="a2-z" data-testid="customer-segment">
+    <div className="a2-z" data-testid="customer-segment" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey('customersSegments')}

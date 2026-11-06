@@ -55,7 +55,7 @@ export default async function SegmentsPage() {
   const sub = (r: cu.SegmentRow) => [r.readable ? t(d, 'cus.seg.conds', { n: formatNumber(r.conditions, view.locale) }) : t(d, 'cus.seg.unreadable'), t(d, 'cus.seg.changed', { at: when.format(r.updatedAt) })].join(' · ');
 
   return (
-    <div className="a2-z" data-testid="customers-segments">
+    <div className="a2-z" data-testid="customers-segments" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey('customersSegments')}

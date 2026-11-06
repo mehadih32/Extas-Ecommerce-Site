@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useRef, useState } from 'react';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
+import { showToast } from '@/components/admin/lumen/Toast';
 
 export interface CustomerActProps {
   dict: Dict;
@@ -66,7 +67,7 @@ export function CustomerAct({ dict, url, body, label, busyLabel, ask, note, tone
     key.current = freshKey();
     setOpen(false);
     setText('');
-    if (done) setMsg({ ok: true, text: done });
+    if (done) showToast({ text: done, tone: 'ok' });
     router.refresh();
   };
 

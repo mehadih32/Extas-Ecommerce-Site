@@ -11,11 +11,14 @@ import type { CustomerList as ListData, CustomerRow, CustomerView } from '@extas
 import { OrderFilters, type FilterSelect } from '@/components/admin/orders/OrderFilters';
 import { formatMoney, formatNumber, type Money } from '@/components/admin/products/model';
 import { customersHref, CUSTOMERS_BASE, share, type CustomerQuery } from '@/lib/admin-customers/model';
+import type { CountFormat } from '@/lib/admin-lumen/model';
 import type { AdminView } from '@/lib/admin-page';
+import type { ShellIconName } from '@/lib/admin-shell/icons';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { PageHead, SectionTabs } from '../shell/ShellParts';
 import { ShellIcon } from '../shell/ShellIcon';
+import { SummaryTiles, type SummaryTile } from '../lumen/SummaryTiles';
 import { CustomerExport } from './CustomerExport';
 import { GradePill } from './GradePill';
 import { initials } from './PairCard';
@@ -62,40 +65,36 @@ export function PersonCell({ view, r, href }: { view: AdminView; r: Pick<Custome
   );
 }
 
-function Kpis({ view, data, s, segment }: { view: AdminView; data: ListData; s: ListSettings; segment?: string }) {
+/** PR 636 (CN-036): the four figures as Lumen summary tiles (components/admin/lumen/SummaryTiles.tsx); every tile but
+ *  "People" opens the list on its view, as before. */
+export function customerKpiTiles(view: AdminView, data: ListData, s: ListSettings, segment?: string): SummaryTile[] {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const c = data.counts;
   const all = c.all ?? 0;
   const pct = share(c.returning ?? 0, all);
-  const tile = (id: CustomerView | 'people', label: string, value: string, note: string) => {
-    const body = (
-      <>
-        <div className="a2-kl">{label}</div>
-        <div className="a2-kv">{value}</div>
-        <div className="a2-kf">
-          <span className="a2-kn">{note}</span>
-        </div>
-      </>
-    );
-    return id === 'people' ? (
-      <div key={id} className="a2-card a2-kpi" data-testid={`cus-kpi-${id}`}>
-        {body}
-      </div>
-    ) : (
-      <Link key={id} className="a2-card a2-kpi" href={customersHref({ segment }, { view: id })} data-testid={`cus-kpi-${id}`}>
-        {body}
-      </Link>
-    );
-  };
-  return (
-    <div className="a2-kpis" data-testid="cus-kpis">
-      {tile('people', t(d, 'cus.list.kpi.people'), n(all), t(d, 'cus.list.kpi.peopleNote'))}
-      {tile('returning', t(d, 'cus.list.kpi.returning'), pct === null ? t(d, 'cus.list.none') : `${n(pct)}%`, t(d, 'cus.list.kpi.returningNote', { n: n(s.returningMinOrders) }))}
-      {tile('atrisk', t(d, 'cus.list.kpi.atrisk'), n(c.atrisk ?? 0), t(d, 'cus.list.kpi.atriskNote', { n: n(s.atRiskDays) }))}
-      {tile('refused', t(d, 'cus.list.kpi.refused'), n(c.refused ?? 0), t(d, 'cus.list.kpi.refusedNote'))}
-    </div>
-  );
+  const num: CountFormat = { kind: 'number', locale: view.locale };
+  const tile = (id: CustomerView | 'people', label: string, value: number, shown: string, vs: string, icon: ShellIconName, format: CountFormat = num): SummaryTile => ({
+    key: id,
+    label,
+    value,
+    shown,
+    format,
+    vs,
+    icon,
+    href: id === 'people' ? undefined : customersHref({ segment }, { view: id }),
+  });
+  const tiles: SummaryTile[] = [
+    tile('people', t(d, 'cus.list.kpi.people'), all, n(all), t(d, 'cus.list.kpi.peopleNote'), 'users'),
+    tile('returning', t(d, 'cus.list.kpi.returning'), (pct ?? 0) / 100, pct === null ? t(d, 'cus.list.none') : `${n(pct)}%`, t(d, 'cus.list.kpi.returningNote', { n: n(s.returningMinOrders) }), 'refresh', { kind: 'percent', locale: view.locale }),
+    tile('atrisk', t(d, 'cus.list.kpi.atrisk'), c.atrisk ?? 0, n(c.atrisk ?? 0), t(d, 'cus.list.kpi.atriskNote', { n: n(s.atRiskDays) }), 'clock'),
+    tile('refused', t(d, 'cus.list.kpi.refused'), c.refused ?? 0, n(c.refused ?? 0), t(d, 'cus.list.kpi.refusedNote'), 'uturn'),
+  ];
+  return tiles;
+}
+
+function Kpis({ view, data, s, segment }: { view: AdminView; data: ListData; s: ListSettings; segment?: string }) {
+  return <SummaryTiles tiles={customerKpiTiles(view, data, s, segment)} label={t(view.dict, 'cus.list.kpi.people')} testId="cus-kpis" />;
 }
 
 export function CustomerTable({ view, rows, money, when, hrefOf }: { view: AdminView; rows: CustomerRow[]; money: Money; when: Intl.DateTimeFormat; hrefOf?: (id: string) => string }) {
@@ -169,7 +168,7 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
   const current = data.query.view;
   const all = current === 'all' && !filtered;
   return (
-    <div className="a2-z" data-testid="customers-list">
+    <div className="a2-z" data-testid="customers-list" data-lm-ready="">
       <PageHead view={view} place={locateKey('customers')} title={t(d, 'cus.list.title')} sub={t(d, 'cus.list.sub')} />
       <SectionTabs view={view} current="customers" />
       {query.segment ? (

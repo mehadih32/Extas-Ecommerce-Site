@@ -10,6 +10,7 @@ import { useId, useState } from 'react';
 import type { LegacyField, LegacyImportScreen, LegacyOutcome, LegacyPreview } from '@extas/customers';
 import { cusError } from '@/lib/admin-customers/words';
 import { t, type Dict } from '@/lib/i18n';
+import { showToast } from '@/components/admin/lumen/Toast';
 
 /** The screen as the page passes it (dates as ISO text). */
 export type ImportScreenProps = Omit<LegacyImportScreen, 'imports'> & { imports: (Omit<LegacyImportScreen['imports'][number], 'createdAt' | 'undoneAt'> & { createdAt: string; undoneAt: string | null })[] };
@@ -84,7 +85,7 @@ export function LegacyImport({ dict: d, screen, locale, timeZone }: { dict: Dict
     setAsk(null);
     if (!r) return;
     const c = r.result.counts;
-    setMsg({ ok: true, text: w('done', { n: n(c.toImport), people: n(c.newPeople), matched: n(c.matched) }) });
+    showToast({ text: w('done', { n: n(c.toImport), people: n(c.newPeople), matched: n(c.matched) }), tone: 'ok' });
     setPrev(null);
     setFile(null);
     router.refresh();
@@ -96,7 +97,7 @@ export function LegacyImport({ dict: d, screen, locale, timeZone }: { dict: Dict
     setBusy(null);
     setAsk(null);
     if (!r) return;
-    setMsg({ ok: true, text: w('undoDone', { records: n(r.result.records), archived: n(r.result.profilesArchived), kept: n(r.result.profilesKept) }) });
+    showToast({ text: w('undoDone', { records: n(r.result.records), archived: n(r.result.profilesArchived), kept: n(r.result.profilesKept) }), tone: 'ok' });
     router.refresh();
   };
 

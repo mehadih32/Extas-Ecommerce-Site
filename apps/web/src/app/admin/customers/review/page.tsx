@@ -85,7 +85,7 @@ export default async function CustomersReviewPage({ searchParams }: { searchPara
   const moreLeft = suggest.total - suggest.pairs.length > 0;
 
   return (
-    <div className="a2-z" data-testid="customers-review">
+    <div className="a2-z" data-testid="customers-review" data-lm-ready="">
       <PageHead view={view} place={locateKey('customersReview')} title={t(d, 'cus.review.title')} sub={t(d, 'cus.review.sub')} />
       <SectionTabs view={view} current="customersReview" />
       {!canMerge ? <p className="a2-xs a2-mute a2-mt12">{t(d, 'cus.review.readOnly')}</p> : null}
