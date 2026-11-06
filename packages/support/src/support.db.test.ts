@@ -12,6 +12,8 @@ import {
   replyToConversation,
   saveSupportSetting,
   setConversationStatus,
+  setConversationSubject,
+  linkConversationOrder,
   supportFile,
   supportInbox,
   supportSettingsView,
@@ -212,6 +214,37 @@ describe.skipIf(!HAS_TEST_DB)('PR 425 · the support core (PostgreSQL)', () => {
     const c = await t.prisma.conversation.findUniqueOrThrow({ where: { id: ids.conv } });
     expect(c).toMatchObject({ status: 'OPEN', resolvedAt: null, waitingSince: clock.now });
     expect((await supportThread(deps(), who.agent, ids.conv!)).events.slice(-2).map((e) => e.kind)).toEqual(['REOPENED', 'RECEIVED']);
+  });
+
+  it('follow-up 507: the subject is edited and an order linked by its number or unlinked, each logged; a stale screen, a reader and an unknown number are refused', async () => {
+    const order = await t.prisma.order.create({ data: { storeId: S, number: 'S507-1', source: 'WEBSITE', currency: 'BDT', status: 'PLACED', placedAt: clock.now, subtotalMinor: 1000, discountMinor: 0, deliveryChargeMinor: 0, totalMinor: 1000, paymentMethod: 'COD', phone: '+1 555 0100 789', idempotencyKey: 's507-1' } });
+    await t.prisma.order.create({ data: { storeId: S2, number: 'S507-2', source: 'WEBSITE', currency: 'BDT', status: 'PLACED', placedAt: clock.now, subtotalMinor: 1000, discountMinor: 0, deliveryChargeMinor: 0, totalMinor: 1000, paymentMethod: 'COD', phone: '+1 555 0100 789', idempotencyKey: 's507-2' } });
+    let th = await supportThread(deps(), who.agent, ids.conv!);
+    const before = th.subject;
+    tick(1);
+    expect(await setConversationSubject(deps(), who.agent, { conversationId: ids.conv, subject: '  Size of the blue kurta  ', version: th.version })).toEqual({ changed: true, subject: 'Size of the blue kurta' });
+    expect(await code(setConversationSubject(deps(), who.agent, { conversationId: ids.conv, subject: 'Again', version: th.version }))).toBe('STALE');
+    expect(await code(setConversationSubject(deps(), who.reader, { conversationId: ids.conv, subject: 'x' }))).toBe('FORBIDDEN');
+    th = await supportThread(deps(), who.agent, ids.conv!);
+    expect(th.subject).toBe('Size of the blue kurta');
+    expect(await setConversationSubject(deps(), who.agent, { conversationId: ids.conv, subject: 'Size of the blue kurta', version: th.version })).toEqual({ changed: false, subject: 'Size of the blue kurta' });
+    expect(await code(linkConversationOrder(deps(), who.agent, { conversationId: ids.conv, orderNumber: 'NOPE-1', version: th.version }))).toBe('ORDER_NOT_FOUND');
+    // another store's order is not there for this store
+    expect(await code(linkConversationOrder(deps(), who.agent, { conversationId: ids.conv, orderNumber: 'S507-2', version: th.version }))).toBe('ORDER_NOT_FOUND');
+    tick(1);
+    expect(await linkConversationOrder(deps(), who.agent, { conversationId: ids.conv, orderNumber: ' s507-1 ', version: th.version })).toEqual({ changed: true, order: { id: order.id, number: 'S507-1' } });
+    th = await supportThread(deps(), who.agent, ids.conv!);
+    expect(th.order).toMatchObject({ id: order.id, number: 'S507-1' });
+    tick(1);
+    expect(await linkConversationOrder(deps(), who.agent, { conversationId: ids.conv, orderNumber: null, version: th.version })).toEqual({ changed: true, order: null });
+    th = await supportThread(deps(), who.agent, ids.conv!);
+    expect(th.order).toBeNull();
+    const ev = th.events.filter((e) => e.kind === 'SUBJECT' || e.kind === 'ORDER_LINKED');
+    expect(ev.map((e) => [e.kind, e.actor.name, e.data])).toEqual([
+      ['SUBJECT', 'Sample agent', { from: before, to: 'Size of the blue kurta' }],
+      ['ORDER_LINKED', 'Sample agent', { from: null, to: order.id, number: 'S507-1' }],
+      ['ORDER_LINKED', 'Sample agent', { from: order.id, to: null, number: null, fromNumber: 'S507-1' }],
+    ]);
   });
 
   it('the who-did-what log can never be changed or removed', async () => {

@@ -141,7 +141,8 @@
       "firstReply": "First reply",
       "solvedAt": "Solved",
       "none": "—",
-      "saved": "Saved."
+      "saved": "Saved.",
+      "subject": "Subject"
     },
     "log": {
       "h": "Who did what",
@@ -180,7 +181,11 @@
       "UNBLOCKED": "{name} took this person off the support block list",
       "ESCALATED": "The owner was told on Telegram: no answer for {minutes} min",
       "ESCALATED_PRACTICE": "The owner's line went to the practice copy (Telegram not connected): no answer for {minutes} min",
-      "ESCALATED_FAILED": "The owner's line could not be sent (Telegram): no answer for {minutes} min"
+      "ESCALATED_FAILED": "The owner's line could not be sent (Telegram): no answer for {minutes} min",
+      "SUBJECT": "{name} changed the subject",
+      "SUBJECT_CLEARED": "{name} cleared the subject",
+      "ORDER_LINKED": "{name} linked order {number}",
+      "ORDER_UNLINKED": "{name} unlinked order {number}"
     },
     "err": {
       "STALE": "Someone changed this conversation in between; it was read again.",
@@ -222,7 +227,8 @@
       "FOLLOW_UP_GONE": "This follow-up was already sent, skipped or closed, or the customer wrote meanwhile; it was read again.",
       "BLOCK_OFF": "The support block list is switched off in Support settings.",
       "BLOCKED": "This person is on the support block list; no reply goes out.",
-      "PUSH_OFF": "Notifications are switched off in Support settings."
+      "PUSH_OFF": "Notifications are switched off in Support settings.",
+      "ORDER_NOT_FOUND": "No order with this number in this shop."
     },
     "set": {
       "title": "Support settings",
@@ -902,6 +908,20 @@
       "open": "Desk open · until {time}",
       "closed": "Desk closed · opens {time}",
       "never": "Desk closed · no open day set"
+    },
+    "topic": {
+      "subject": "Subject",
+      "subjectHelp": "A few words on what the chat is about (at most 80 characters). Leave it empty to clear it.",
+      "subjectSave": "Save subject",
+      "order": "Linked order",
+      "orderNumber": "Order number",
+      "orderHelp": "Type the order's number to link this chat to it. The order itself does not change.",
+      "orderLink": "Link order",
+      "orderUnlink": "Unlink order",
+      "none": "None yet",
+      "savedSubject": "Subject saved.",
+      "savedOrder": "Order linked.",
+      "savedUnlink": "Order unlinked."
     }
   }
 }

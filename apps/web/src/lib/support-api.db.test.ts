@@ -170,6 +170,17 @@ describe.skipIf(!HAS_TEST_DB)('Support admin API on PostgreSQL', () => {
     expect((await api('POST', ['files'], { cookie: reader, form: new FormData() })).status).toBe(403);
     expect((await api('PUT', ['settings'], { cookie: reader, body: {} })).status).toBe(403);
     expect((await j('GET', ['settings'], { cookie: reader })).status).toBe(200);
+    // follow-up 507: the subject and the linked order are a replier's, never a reader's
+    expect((await api('POST', ['c', conversationId, 'topic'], { cookie: reader, body: { action: 'subject', subject: 'x' } })).status).toBe(403);
+  });
+
+  it('follow-up 507: the subject edited and an unknown order number refused through the topic route; an unknown action is refused', async () => {
+    const res = await j('POST', ['c', conversationId, 'topic'], { body: { action: 'subject', subject: 'Navy panjabi size' } });
+    expect(res.body).toMatchObject({ ok: true, changed: true, subject: 'Navy panjabi size' });
+    expect((await j('GET', ['c', conversationId])).body.thread.subject).toBe('Navy panjabi size');
+    const none = await j('POST', ['c', conversationId, 'topic'], { body: { action: 'order', orderNumber: 'NO-SUCH-1' } });
+    expect([none.status, none.body.error]).toEqual([422, 'ORDER_NOT_FOUND']);
+    expect((await j('POST', ['c', conversationId, 'topic'], { body: { action: 'other' } })).status).toBe(400);
   });
 
   it('the settings: read with their versions, a card saved whole, a stale save refused', async () => {

@@ -85,6 +85,10 @@ export function logLine(dict: Dict, e: { kind: string; actor: { type: string; na
   else if (e.kind === 'UNBLOCKED') line = t(dict, 'sup.log.UNBLOCKED', { name });
   // PR 538: the owner told on Telegram that nobody answered (or the practice copy took it, or it could not go)
   else if (e.kind === 'ESCALATED') line = t(dict, d.ok !== true ? 'sup.log.ESCALATED_FAILED' : d.practice === true ? 'sup.log.ESCALATED_PRACTICE' : 'sup.log.ESCALATED', { minutes: typeof d.minutes === 'number' ? String(d.minutes) : '' });
+  // follow-up 507: the subject changed or cleared (never its words here: the thread shows them through the privacy
+  // lens), an order linked or unlinked by a person
+  else if (e.kind === 'SUBJECT') line = t(dict, d.to ? 'sup.log.SUBJECT' : 'sup.log.SUBJECT_CLEARED', { name });
+  else if (e.kind === 'ORDER_LINKED') line = d.to ? t(dict, 'sup.log.ORDER_LINKED', { name, number: typeof d.number === 'string' ? d.number : '' }) : t(dict, 'sup.log.ORDER_UNLINKED', { name, number: typeof d.fromNumber === 'string' ? d.fromNumber : '' });
   else line = e.kind;
   return d.auto === true ? `${line} ${t(dict, 'sup.log.auto')}` : line;
 }
