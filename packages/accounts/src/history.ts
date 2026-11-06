@@ -57,9 +57,14 @@ const LIFE_SELECT = {
 
 /**
  * One order's life for the customer whose order it is (his account, or the browser that placed it; anyone else gets
- * null, like a missing order). The added and removed pieces are named as the order stored them.
+ * null, like a missing order). The added, removed and resized pieces are named as the order stored them; follow-up 300:
+ * on the Bengali page (`lang` 'bn') with the product's and the colour's Bengali names where the catalogue has them (the
+ * size from the SKU the row names, so a resized line still reads its old size), else the stored English words.
  */
-export async function orderLifecycle(deps: AccountsDeps, input: { storeId: number; number: string; customerId: string | null; visitorId: string | null }): Promise<LifeStep[] | null> {
+export async function orderLifecycle(
+  deps: AccountsDeps,
+  input: { storeId: number; number: string; customerId: string | null; visitorId: string | null; lang?: 'en' | 'bn' },
+): Promise<LifeStep[] | null> {
   checkStoreId(input.storeId);
   const o = await deps.db.order.findUnique({ where: { storeId_number: { storeId: input.storeId, number: input.number } }, select: LIFE_SELECT });
   const his = !!o && o.status !== 'DRAFT' && !o.archivedAt && ((!!input.customerId && o.customerId === input.customerId) || (!!input.visitorId && o.visitorId === input.visitorId));
@@ -83,9 +88,77 @@ export async function orderLifecycle(deps: AccountsDeps, input: { storeId: numbe
     ? await deps.db.orderItem.findMany({ where: { storeId: input.storeId, orderId: o.id, id: { in: itemIds } }, select: { id: true, productName: true, colourName: true, sizeLabel: true } })
     : [];
   const labelOf = new Map(items.map((i) => [i.id, [i.productName, i.colourName, i.sizeLabel].filter(Boolean).join(' · ')]));
+  const bn = input.lang === 'bn' ? await bengaliLabels(deps, input.storeId, o.id, rows) : null;
   const events: LifeEventRow[] = rows.map((r) => {
     const itemId = (r.data as { itemId?: unknown } | null)?.itemId;
-    return { type: r.type, actorType: r.actorType, at: r.createdAt, data: r.data, line: typeof itemId === 'string' ? (labelOf.get(itemId) ?? null) : null };
+    const line = typeof itemId === 'string' ? (bn?.item(itemId, null) ?? labelOf.get(itemId) ?? null) : null;
+    return { type: r.type, actorType: r.actorType, at: r.createdAt, data: bn && r.type === 'order.edit' ? bn.edit(r.data) : r.data, line };
   });
   return lifecycleOf({ status: o.status as OrderState, times: o }, events);
+}
+
+const rec = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
+const str = (v: unknown): string | null => (typeof v === 'string' && v ? v : null);
+
+/**
+ * Follow-up 300 — the Bengali words for the pieces the rows name: each line's product and colour in Bengali (the stored
+ * English when the catalogue has none, or the variant is gone), with the size of the SKU the row names. Two queries.
+ */
+async function bengaliLabels(deps: AccountsDeps, storeId: number, orderId: string, rows: readonly { type: string; data: unknown }[]) {
+  const ids = new Set<string>();
+  const skus = new Set<string>();
+  for (const r of rows) {
+    const d = rec(r.data);
+    if (r.type === 'order.addLine' || r.type === 'order.removeLine') {
+      const id = str(d.itemId);
+      if (id) ids.add(id);
+      const sku = str(d.sku);
+      if (sku) skus.add(sku);
+    }
+    if (r.type === 'order.edit')
+      for (const l of Array.isArray(d.lines) ? d.lines : []) {
+        const x = rec(l);
+        const id = str(x.lineId);
+        if (id) ids.add(id);
+        for (const k of [x.sku, x.toSku]) if (str(k)) skus.add(k as string);
+      }
+  }
+  const items = ids.size
+    ? await deps.db.orderItem.findMany({
+        where: { storeId, orderId, id: { in: [...ids] } },
+        select: { id: true, sku: true, variantId: true, productName: true, colourName: true, sizeLabel: true },
+      })
+    : [];
+  const variantIds = items.flatMap((i) => (i.variantId ? [i.variantId] : []));
+  const vs =
+    variantIds.length || skus.size
+      ? await deps.db.productVariant.findMany({
+          where: { storeId, OR: [{ id: { in: variantIds } }, { sku: { in: [...skus] } }] },
+          select: { id: true, sku: true, product: { select: { nameBn: true } }, colour: { select: { nameBn: true } }, size: { select: { label: true } } },
+        })
+      : [];
+  const sizeOf = new Map(vs.map((v) => [v.sku, v.size?.label ?? null]));
+  const lookOf = new Map(vs.map((v) => [v.id, v]));
+  const byId = new Map(items.map((i) => [i.id, i]));
+  /** One piece in Bengali: its line's names with the size of `sku` (the line's own SKU when null). */
+  const item = (id: string, sku: string | null): string | null => {
+    const i = byId.get(id);
+    if (!i) return null;
+    const size = sizeOf.get(sku ?? i.sku) ?? (sku ? null : i.sizeLabel);
+    const v = i.variantId ? lookOf.get(i.variantId) : undefined;
+    return [v?.product.nameBn || i.productName, v?.colour?.nameBn || i.colourName, size].filter(Boolean).join(' · ');
+  };
+  /** An edit row with its lines' words in Bengali (a line the order no longer has keeps the stored words). */
+  const edit = (data: unknown): unknown => {
+    const d = rec(data);
+    if (!Array.isArray(d.lines)) return data;
+    const lines = d.lines.map((l) => {
+      const x = rec(l);
+      const id = str(x.lineId);
+      if (!id || !byId.has(id)) return l;
+      return { ...x, label: item(id, str(x.sku)) ?? x.label, ...(x.toLabel !== undefined ? { toLabel: (str(x.toSku) ? item(id, str(x.toSku)) : null) ?? x.toLabel } : {}) };
+    });
+    return { ...d, lines };
+  };
+  return { item, edit };
 }
