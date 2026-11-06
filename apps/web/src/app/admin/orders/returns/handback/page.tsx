@@ -55,7 +55,7 @@ export default async function HandbackPage({ searchParams }: { searchParams: Sea
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="handback-page" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="returns.handback" />
       </div>
     );
