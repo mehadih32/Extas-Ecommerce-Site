@@ -1,6 +1,6 @@
-# Server report — 2026-11-06 17:50 +06
+# Server report — 2026-11-06 21:01 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `e9d63a28e97e1b4cd80450cc827748d8f7145040`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `4689df67c695f7133a406ae07ef0751d755d8997`. Overall: **PASS**.
 
 ## Machine
 
@@ -61,7 +61,7 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · restore test | OK | base 20261106-0230, 398 tables restored (live has 398); photos: the archive holds no photo yet; docs: docs-20261106-0230.tar.gz back with README, blueprint and register, COMMIT 491ac5771af6 matches |
-| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: none |
+| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: রাতের পেজ-পরীক্ষা ব্যর্থ: the smoke test did not finish (exit 124) |
 | PR 392 · vault keys for the server | INFO | every 2 min: ok — unchanged |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
 | public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
@@ -76,7 +76,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 | Folder | On the OS disk | Note |
 |---|---|---|
 | `/var/lib/containerd` | 0.0 GB | own volume here (52G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (156M used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (158M used on it) |
 | `/home/ghrunner/actions-runner` | 2.6 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 1.3 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
@@ -113,7 +113,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 | Folder | On the OS disk | Note |
 |---|---|---|
 | `/var/lib/containerd` | 0.0 GB | own volume here (52G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (156M used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (158M used on it) |
 | `/home/ghrunner/actions-runner` | 2.6 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 1.3 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
