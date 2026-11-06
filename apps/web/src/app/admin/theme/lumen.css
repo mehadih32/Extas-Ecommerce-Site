@@ -12,9 +12,9 @@
    - Tokens sit on :root as well as on the shell's root, because dialogs open in document.body (outside the shell); the
      shell copies its look, mode and motion onto <html> so they match.
    - Pages not yet moved into the look (their section PR, 631–648) keep drawing with their old variables, which now
-     read these tokens (shell.css, look.css, admin.css map them). In dark mode such a page stays a light "island" (its
-     own .ad frame keeps the light tokens) until its section PR marks it ready (data-lm-ready), so nothing is shown
-     half-done in dark. */
+     read these tokens (shell.css, look.css, admin.css map them). In dark mode such a page stays a light "island" (the
+     shell's content area, PR 626 .lm-ct, and a page's own .ad frame keep the light tokens) until its section PR marks
+     its root data-lm-ready, so a page with an old fixed colour is never shown half-done in dark. */
 
 :root,
 [data-lm-look] {
@@ -151,7 +151,7 @@
 }
 
 /* ---- the light island: a page not yet moved into the look keeps the light tokens in dark mode ---- */
-[data-lm-look='lumen'][data-lm-mode='dark'] .ad:not([data-lm-ready]) {
+[data-lm-look='lumen'][data-lm-mode='dark'] :is(.ad:not([data-lm-ready]), .lm-ct:not(:has(> [data-lm-ready]))) {
   --lm-bg: #eceff5;
   --lm-sf: #ffffff;
   --lm-sf2: #f4f6fb;
