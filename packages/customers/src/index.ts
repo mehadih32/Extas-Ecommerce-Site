@@ -46,6 +46,9 @@
 // people who stopped ordering (the owner's rule, a saved segment), shown with its reach and estimated cost, scheduled by
 // a person with the send key, queued at the throttle for the Messages engine (offers: his yes, the quiet hours, the
 // weekly cap, the gap between win-backs, the stop line), with each campaign's results; off as shipped.
+// PR 277: the campaign blast (winback.ts, Broadcast kind `blast`) — the same builder, run and engine for one message to a
+// saved segment (or every customer, only when allowed), with no lapse rule and no win-back gap; its own switch
+// (`customers.blast`, off as shipped); an e-mail campaign is Messages › E-mail.
 // PR 303: the customer report (report.ts) — Reports › Customers: new, returning and quiet (churned) buyers over a period
 // and the repeat rate, overall and per saved segment; counts only, `reports.read`; off as shipped (`customers.report`).
 // CN-028 · PR 620: the ERP's live customer list (erp-page.ts): one row per person who ordered, with his address, number,

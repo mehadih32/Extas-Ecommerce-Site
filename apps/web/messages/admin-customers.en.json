@@ -611,6 +611,12 @@
           "en": "Stop line (English)"
         }
       },
+      "blast": {
+        "title": "Campaign to a group",
+        "sub": "Off as shipped. The weekly cap, the throttle, the result days and the stop line come from Campaign settings.",
+        "enabled": "Campaigns to a group on",
+        "allowEveryone": "May go to every customer (not only a saved segment)"
+      },
       "birthday": {
         "title": "Birthday field",
         "sub": "Off as shipped. When on, customers may give their birthday in My account › Profile, and it shows on their customer page. Nothing is sent or given for it: birthday wishes stay parked.",
@@ -987,12 +993,25 @@
     },
     "wb": {
       "title": "Campaigns",
-      "sub": "Win-back: a message to the people who stopped ordering. Who it names → which text → when. Before it goes you see how many it reaches and what it costs.",
+      "sub": "Win-back: a message to the people who stopped ordering. To a group: one message to a saved segment. Who it names → which text → when. Before it goes you see how many it reaches and what it costs.",
       "new": "New win-back campaign",
+      "newBlast": "New campaign to a group",
+      "emailLink": "E-mail campaign",
+      "kind": {
+        "winback": "Win-back",
+        "blast": "To a group"
+      },
+      "offKind": {
+        "winback": "Win-back campaigns are off",
+        "blast": "Campaigns to a group are off"
+      },
+      "newBlastTitle": "New campaign to a group",
+      "newBlastSub": "Which group → which text → save → when.",
+      "everyoneLine": "every customer",
       "offerNote": "Every campaign message is an offer: it goes only to customers who said yes to offers on that channel, never in the quiet hours, and never more often than your limits.",
-      "offTitle": "Win-back campaigns are off",
-      "offBody": "Turn them on under \"More options\" below. Nothing is sent until a person with the send right schedules a campaign.",
-      "offAsk": "Ask the owner or a manager to turn win-back campaigns on.",
+      "offTitle": "Campaigns are off",
+      "offBody": "Turn win-back campaigns or campaigns to a group on under \"More options\" below. Nothing is sent until a person with the send right schedules a campaign.",
+      "offAsk": "Ask the owner or a manager to turn campaigns on.",
       "list": "Campaigns",
       "none": "No campaigns yet.",
       "more": "More options (settings)",
@@ -1007,6 +1026,8 @@
       "reachProblem": "This campaign cannot be counted (its segment was archived, saved segments are off, or it must be saved again).",
       "step": {
         "people": "Customers it names (no order for the days you set, enough deliveries)",
+        "peopleBlast": "Customers in the group",
+        "peopleAll": "All customers",
         "withPhone": "With a phone number",
         "reachable": "Said yes to offers on this channel",
         "recent": "Had a win-back in the last {days} days (left out)",
@@ -1072,7 +1093,14 @@
         "scheduleEff2": "It waits for the quiet hours to end and goes at the throttle",
         "scheduleEff3": "You can pause or cancel it any time; messages already sent stay sent",
         "scheduleYes": "Yes, schedule",
-        "noSendRight": "Scheduling needs the right to send campaigns."
+        "noSendRight": "Scheduling needs the right to send campaigns.",
+        "namePhBlast": "e.g. Eid · the new panjabis",
+        "blastSegment": "The saved segment it goes to",
+        "pickSegment": "Pick a segment",
+        "everyoneBlast": "Every customer",
+        "noSegments": "Save a segment first under Customers › Segments (saved segments must be on).",
+        "emailNote": "For an e-mail campaign use Messages › E-mail (its own switch and its own unsubscribe link).",
+        "emailGo": "Open Messages › E-mail"
       },
       "noCostWhy": "The cost shows once a message on this channel was costed in the last 30 days (the practice sender costs nothing)."
     },

@@ -1,7 +1,9 @@
 // S14 · PR 300 — Messages › Campaigns at /admin/messages/campaigns (the CN-019 control centre's campaign tab; demo MSG-02;
 // ADMIN-ARCHITECTURE §4.6): the store's win-back campaigns, newest first, each with its state, its channel, its rule and
 // how many were queued, sent and failed and what it cost; "New win-back campaign"; the settings under "More options".
-// Off as shipped (`customers.winback`): the page then says so. Seeing needs `messages.journey.read`; drafts and the
+// PR 277: a second type, the campaign to a group (a blast to a saved segment; its own switch `customers.blast` on its
+// own card), "New campaign to a group", and "E-mail campaign" opens Messages › E-mail (PR 290).
+// Off as shipped (`customers.winback`, `customers.blast`): while both are off the page says so. Seeing needs `messages.journey.read`; drafts and the
 // settings need `messages.campaigns.write`, scheduling `messages.campaigns.send` (the API checks again). Every message is
 // an offer: only with the customer's yes for offers on that channel. A campaign never makes an offer or a discount.
 import type { Metadata } from 'next';
@@ -39,6 +41,10 @@ const FIELDS: readonly CrmField[] = [
   { name: 'defaultLapsedDays', kind: 'int' },
   { name: 'stopLine', kind: 'lang', max: 120 },
 ];
+const BLAST_FIELDS: readonly CrmField[] = [
+  { name: 'enabled', kind: 'bool' },
+  { name: 'allowEveryone', kind: 'bool' },
+];
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = withCustomers(withMessages(await adminView()));
@@ -66,9 +72,10 @@ export default async function CampaignsPage() {
   const x = (k: string, v?: Record<string, string>) => t(d, `cus.wb.${k}`, v);
   const line = (r: cu.CampaignRow) =>
     [
+      x(`kind.${r.kind}`),
       t(d, `msg.channel.${r.channel}`),
       r.rule ? x('ruleShort', { days: n(r.rule.lapsedDays) }) : '',
-      r.segmentName ?? '',
+      r.segmentName ?? (r.kind === cu.BLAST_KIND ? x('everyoneLine') : ''),
       r.status === 'DRAFT' ? '' : x('sentLine', { queued: n(r.queued), sent: n(r.sent), failed: n(r.failed), cost: formatMoney(r.costMinor, moneyOf(currency, view.locale)) }),
       r.finishedAt ? x('finishedAt', { when: when(r.finishedAt) }) : r.startedAt ? x('startedAt', { when: when(r.startedAt) }) : r.scheduledAt && r.status === 'SCHEDULED' ? x('at', { when: when(r.scheduledAt) }) : '',
     ]
@@ -84,11 +91,21 @@ export default async function CampaignsPage() {
         title={x('title')}
         sub={x('sub')}
         right={
-          s.enabled && s.canWrite ? (
-            <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="wb-new">
-              {x('new')}
+          <span className="a2-gap8">
+            {s.winbackOn && s.canWrite ? (
+              <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="wb-new">
+                {x('new')}
+              </Link>
+            ) : null}
+            {s.blastOn && s.canWrite ? (
+              <Link className="a2-btn pri" href={`${HERE}/new?kind=blast`} data-testid="wb-new-blast">
+                {x('newBlast')}
+              </Link>
+            ) : null}
+            <Link className="a2-btn" href="/admin/messages/email" data-testid="wb-email">
+              {x('emailLink')}
             </Link>
-          ) : null
+          </span>
         }
       />
       <SectionTabs view={view} current={KEY} />
@@ -124,6 +141,7 @@ export default async function CampaignsPage() {
         <summary className="a2-sm a2-b">{x('more')}</summary>
         <div className="a2-row a2-r2 a2-mt12">
           <CrmSettingCard dict={cdict} settingKey="customers.winback" card="winback" fields={FIELDS} value={s.settings as unknown as Record<string, unknown>} canWrite={s.canWrite} url="/api/admin/messages/campaigns/settings" />
+          <CrmSettingCard dict={cdict} settingKey="customers.blast" card="blast" fields={BLAST_FIELDS} value={s.blast as unknown as Record<string, unknown>} canWrite={s.canWrite} url="/api/admin/messages/campaigns/settings/blast" />
         </div>
       </details>
     </div>

@@ -3,7 +3,7 @@
 // goes through the engine as an offer — never without the customer's yes for offers on the channel; a paused campaign
 // waits, a cancelled one or win-back switched off skips it; at most the weekly cap of offers by phone (journey and
 // campaign messages together), never a second win-back within the gap; the campaign's own stop line; the campaign's
-// sent count follows. The sender is a stand-in: nothing is ever sent to a real number. Every value is a made-up value.
+// sent count follows. PR 277: a blast under its own switch, with no win-back gap. The sender is a stand-in: nothing is ever sent to a real number. Every value is a made-up value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
@@ -92,5 +92,35 @@ describe.skipIf(!HAS_TEST_DB)('PR 300 · a win-back campaign message through the
     const x = await queue(c, '+8801700003003');
     await run();
     expect(await row(x.id)).toMatchObject({ status: 'SKIPPED', reason: 'CANCELLED' });
+  });
+
+  it('PR 277: a blast goes under its own switch (BLAST_OFF while off, even with win-back on); no win-back gap for it, and it is no win-back for the next one', async () => {
+    const C = '+8801700003004';
+    const c = (await db().customer.create({ data: { storeId: f.S, phone: C, name: 'Blast' } })).id;
+    await db().consentRecord.create({ data: { storeId: f.S, customerId: c, phone: C, channel: 'SMS', granted: true, scope: 'MARKETING', source: 'checkout' } });
+    const bl = (await db().broadcast.create({ data: { storeId: f.S, kind: 'blast', name: 'Eid', channel: 'SMS', status: 'SENDING', templateId: tpl } })).id;
+    f.overrides.set('customers.winback', { ...ON, perCustomerPerWeek: 3 });
+    const off = await queue(c, C, bl);
+    await run();
+    expect(await row(off.id)).toMatchObject({ status: 'SKIPPED', reason: 'BLAST_OFF' });
+    f.overrides.set('customers.blast', { enabled: true, allowEveryone: false });
+    f.overrides.set('customers.winback', { ...ON, enabled: false, perCustomerPerWeek: 2 });
+    const before = outbox.length;
+    const one = await queue(c, C, bl);
+    await run();
+    expect(await row(one.id)).toMatchObject({ status: 'SENT' });
+    expect(outbox[before]!.text).toContain('Reply STOP for no offers');
+    const two = await queue(c, C, bl);
+    await run();
+    expect(await row(two.id)).toMatchObject({ status: 'SENT' }); // no gap for a blast; the weekly cap (2) still counts
+    const three = await queue(c, C, bl);
+    await run();
+    expect(await row(three.id)).toMatchObject({ status: 'BLOCKED_BY_GUARD', reason: 'CAP_WEEK' });
+    // a win-back after two blasts: the blasts are not win-backs (no CAP_GAP); only the weekly cap would hold it
+    f.overrides.set('customers.winback', { ...ON, perCustomerPerWeek: 5 });
+    const wbc = (await db().broadcast.create({ data: { storeId: f.S, kind: 'winback', name: 'Back', channel: 'SMS', status: 'SENDING', templateId: tpl, rule: { lapsedDays: 90, maxLapsedDays: null, minDelivered: 1 } } })).id;
+    const w = await queue(c, C, wbc);
+    await run();
+    expect(await row(w.id)).toMatchObject({ status: 'SENT' });
   });
 });

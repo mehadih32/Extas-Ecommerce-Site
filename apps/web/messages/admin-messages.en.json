@@ -95,6 +95,7 @@
       "SWITCHED_OFF": "E-mail marketing is switched off",
       "ERASED": "The customer was erased",
       "WINBACK_OFF": "Win-back campaigns are switched off",
+      "BLAST_OFF": "Campaigns to a group are switched off",
       "CAP_GAP": "He had a win-back a short while ago (the gap between win-backs)",
       "ORDERED": "He ordered since",
       "HANDLED": "Marked handled by the team",

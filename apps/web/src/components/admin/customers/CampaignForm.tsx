@@ -4,14 +4,21 @@
 // than M days, at least K delivered orders, inside a saved segment or everyone); "Save draft"
 // (`messages.campaigns.write`). Once saved, "Schedule" (now or at a time; `messages.campaigns.send`) asks first, with how
 // many it reaches and the estimated cost. The API checks everything again; nothing is sent from here, only scheduled.
+// PR 277: a campaign to a group (`kind` blast) has no rule: it names one saved segment (or every customer, only when
+// the owner allowed it), and points to Messages › E-mail for an e-mail campaign.
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
-import type { CampaignChannel, CampaignTemplate, WinbackRule } from '@extas/customers';
+import type { CampaignChannel, CampaignKind, CampaignTemplate, WinbackRule } from '@extas/customers';
 import { t, type Dict } from '@/lib/i18n';
 import { emailPost } from './emailPost';
 
 export interface CampaignFormProps {
   dict: Dict;
+  /** PR 277: `blast` — a campaign to a group (no rule; a saved segment, or every customer when allowed). */
+  kind: CampaignKind;
+  /** A blast may name every customer (`customers.blast.allowEveryone`). */
+  allowEveryone: boolean;
   id: string | null;
   version: string | null;
   name: string;
@@ -31,6 +38,8 @@ export interface CampaignFormProps {
 }
 
 const INT = /^\d+$/;
+/** The segment choice that means every customer (a blast, only when allowed). */
+const ALL = '*';
 
 export function CampaignForm(p: CampaignFormProps) {
   const d = p.dict;
@@ -40,7 +49,8 @@ export function CampaignForm(p: CampaignFormProps) {
   const [name, setName] = useState(p.name);
   const [channel, setChannel] = useState<CampaignChannel>(p.channel);
   const [templateId, setTemplateId] = useState(p.templateId ?? '');
-  const [segmentId, setSegmentId] = useState(p.segmentId ?? '');
+  const blast = p.kind === 'blast';
+  const [segmentId, setSegmentId] = useState(p.segmentId ?? (blast && p.id && p.allowEveryone ? ALL : ''));
   const [lapsed, setLapsed] = useState(String(p.rule.lapsedDays));
   const [maxLapsed, setMaxLapsed] = useState(p.rule.maxLapsedDays === null ? '' : String(p.rule.maxLapsedDays));
   const [minDelivered, setMinDelivered] = useState(String(p.rule.minDelivered));
@@ -51,17 +61,21 @@ export function CampaignForm(p: CampaignFormProps) {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const ruleNow = `${lapsed}|${maxLapsed}|${minDelivered}`;
   const ruleWas = `${p.rule.lapsedDays}|${p.rule.maxLapsedDays ?? ''}|${p.rule.minDelivered}`;
-  const changed = name !== p.name || channel !== p.channel || templateId !== (p.templateId ?? '') || segmentId !== (p.segmentId ?? '') || ruleNow !== ruleWas;
+  const segWas = p.segmentId ?? (blast && p.id && p.allowEveryone ? ALL : '');
+  const changed = name !== p.name || channel !== p.channel || templateId !== (p.templateId ?? '') || segmentId !== segWas || (!blast && ruleNow !== ruleWas);
   const choices = p.templates.filter((tp) => tp.channel === channel);
   const picked = choices.find((tp) => tp.id === templateId) ?? null;
 
   const save = async () => {
-    const bad = [!INT.test(lapsed.trim()) ? x('lapsed') : '', maxLapsed.trim() && !INT.test(maxLapsed.trim()) ? x('maxLapsed') : '', !INT.test(minDelivered.trim()) ? x('minDelivered') : '', !templateId ? x('template') : ''].filter(Boolean);
-    if (bad.length) return setMsg({ ok: false, text: t(d, 'cus.err.INVALID_INPUT', { fields: bad.join(', ') }) });
+    const bad = blast
+      ? [!segmentId ? x('blastSegment') : '', !templateId ? x('template') : '']
+      : [!INT.test(lapsed.trim()) ? x('lapsed') : '', maxLapsed.trim() && !INT.test(maxLapsed.trim()) ? x('maxLapsed') : '', !INT.test(minDelivered.trim()) ? x('minDelivered') : '', !templateId ? x('template') : ''];
+    if (bad.some(Boolean)) return setMsg({ ok: false, text: t(d, 'cus.err.INVALID_INPUT', { fields: bad.filter(Boolean).join(', ') }) });
     setBusy(true);
     setMsg(null);
-    const rule = { lapsedDays: Number(lapsed.trim()), maxLapsedDays: maxLapsed.trim() ? Number(maxLapsed.trim()) : null, minDelivered: Number(minDelivered.trim()) };
-    const r = await emailPost(d, `/api/admin/messages/campaigns/items${p.id ? `/${p.id}` : ''}`, { name, channel, templateId, segmentId: segmentId || null, rule, ...(p.version ? { version: p.version } : {}) });
+    const rule = blast ? null : { lapsedDays: Number(lapsed.trim()), maxLapsedDays: maxLapsed.trim() ? Number(maxLapsed.trim()) : null, minDelivered: Number(minDelivered.trim()) };
+    const seg = segmentId && segmentId !== ALL ? segmentId : null;
+    const r = await emailPost(d, `/api/admin/messages/campaigns/items${p.id ? `/${p.id}` : ''}`, { ...(p.id ? {} : { kind: p.kind }), name, channel, templateId, segmentId: seg, rule, ...(p.version ? { version: p.version } : {}) });
     setBusy(false);
     if (!r.ok) return setMsg({ ok: false, text: r.text });
     setMsg({ ok: true, text: x('saved') });
@@ -89,30 +103,53 @@ export function CampaignForm(p: CampaignFormProps) {
         <label className="a2-lbl" htmlFor={`${uid}-n`}>
           {x('name')}
         </label>
-        <input id={`${uid}-n`} className="a2-inp" value={name} maxLength={80} placeholder={x('namePh')} disabled={!p.canWrite} onChange={(e) => setName(e.target.value)} />
+        <input id={`${uid}-n`} className="a2-inp" value={name} maxLength={80} placeholder={x(blast ? 'namePhBlast' : 'namePh')} disabled={!p.canWrite} onChange={(e) => setName(e.target.value)} />
       </div>
       <h2 className="a2-h3">{x('who')}</h2>
-      <div className="wb-rule">
-        <div className="a2-fld">
-          <label className="a2-lbl" htmlFor={`${uid}-l`}>
-            {x('lapsed')}
-          </label>
-          <input id={`${uid}-l`} className="a2-inp" inputMode="numeric" value={lapsed} disabled={!p.canWrite} onChange={(e) => setLapsed(e.target.value)} data-testid="wb-lapsed" />
+      {blast ? (
+        p.segmentsOn || p.allowEveryone ? (
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor={`${uid}-g`}>
+              {x('blastSegment')}
+            </label>
+            <select id={`${uid}-g`} className="a2-sel" value={segmentId} disabled={!p.canWrite} onChange={(e) => setSegmentId(e.target.value)} data-testid="wb-segment">
+              <option value="">{x('pickSegment')}</option>
+              {p.segments.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+              {p.allowEveryone ? <option value={ALL}>{x('everyoneBlast')}</option> : null}
+            </select>
+            {!p.segments.length ? <p className="a2-xs a2-mute a2-mt6">{x('noSegments')}</p> : null}
+          </div>
+        ) : (
+          <p className="a2-xs a2-mute">{x('noSegments')}</p>
+        )
+      ) : null}
+      {blast ? null : (
+        <div className="wb-rule">
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor={`${uid}-l`}>
+              {x('lapsed')}
+            </label>
+            <input id={`${uid}-l`} className="a2-inp" inputMode="numeric" value={lapsed} disabled={!p.canWrite} onChange={(e) => setLapsed(e.target.value)} data-testid="wb-lapsed" />
+          </div>
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor={`${uid}-m`}>
+              {x('maxLapsed')}
+            </label>
+            <input id={`${uid}-m`} className="a2-inp" inputMode="numeric" value={maxLapsed} placeholder={x('noLimit')} disabled={!p.canWrite} onChange={(e) => setMaxLapsed(e.target.value)} />
+          </div>
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor={`${uid}-k`}>
+              {x('minDelivered')}
+            </label>
+            <input id={`${uid}-k`} className="a2-inp" inputMode="numeric" value={minDelivered} disabled={!p.canWrite} onChange={(e) => setMinDelivered(e.target.value)} />
+          </div>
         </div>
-        <div className="a2-fld">
-          <label className="a2-lbl" htmlFor={`${uid}-m`}>
-            {x('maxLapsed')}
-          </label>
-          <input id={`${uid}-m`} className="a2-inp" inputMode="numeric" value={maxLapsed} placeholder={x('noLimit')} disabled={!p.canWrite} onChange={(e) => setMaxLapsed(e.target.value)} />
-        </div>
-        <div className="a2-fld">
-          <label className="a2-lbl" htmlFor={`${uid}-k`}>
-            {x('minDelivered')}
-          </label>
-          <input id={`${uid}-k`} className="a2-inp" inputMode="numeric" value={minDelivered} disabled={!p.canWrite} onChange={(e) => setMinDelivered(e.target.value)} />
-        </div>
-      </div>
-      {p.segmentsOn ? (
+      )}
+      {blast ? null : p.segmentsOn ? (
         <div className="a2-fld">
           <label className="a2-lbl" htmlFor={`${uid}-g`}>
             {x('segment')}
@@ -148,6 +185,14 @@ export function CampaignForm(p: CampaignFormProps) {
           <option value="SMS">{t(d, 'msg.channel.SMS')}</option>
           <option value="WHATSAPP">{t(d, 'msg.channel.WHATSAPP')}</option>
         </select>
+        {blast ? (
+          <>
+            <p className="a2-xs a2-mute a2-mt6">{x('emailNote')}</p>
+            <Link className="a2-btn a2-mt6" href="/admin/messages/email" data-testid="wb-email-go">
+              {x('emailGo')}
+            </Link>
+          </>
+        ) : null}
       </div>
       <div className="a2-fld">
         <label className="a2-lbl" htmlFor={`${uid}-t`}>
