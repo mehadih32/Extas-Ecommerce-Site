@@ -291,6 +291,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S02 · PR 81 (WEB-06) — Eye-toggles: every part of a shop page that can be shown or hidden, in one searchable list.
       { id: 'eye', more: true, pages: [{ href: '/admin/website/eye-toggles', perm: 'website.read', keys: ['websiteEyeToggles'] }] },
       { id: 'canvas', more: true, pages: [{ href: '/admin/website/side-canvas', perm: 'website.read', keys: ['websiteSideCanvas'] }] },
+      // S02 · PR 597 (WEB-07) — Launch default: save the whole shop look, restore it or a named look, undo a restore.
+      { id: 'launch', more: true, pages: [{ href: '/admin/website/launch-default', perm: 'website.read', keys: ['websiteLaunchDefault'] }] },
       {
         id: 'seo',
         guide: 'seo',

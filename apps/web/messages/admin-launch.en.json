@@ -1,0 +1,126 @@
+{
+  "ld": {
+    "metaTitle": "Launch default",
+    "title": "Launch default",
+    "sub": "Save the whole shop look and bring it back in one step — useful after a festival.",
+    "note": "A look holds the page layouts, your own sections, each category's own order, the side canvas, the light sweeps and which house ads are on. Restoring never deletes anything and never changes a price, an offer, a delivery charge or Cash on Delivery.",
+    "readOnly": "You can see this page. Saving or restoring a look needs the permission to change page layouts.",
+    "someone": "Someone",
+    "restore": "Restore",
+    "undo": "Undo",
+    "rename": "Rename",
+    "archive": "Set aside",
+    "unarchive": "Bring back",
+    "seasonLive": "A seasonal home look (Marketing › Seasonal home) is showing on the home page now. It is not part of a saved look: it stays until its window ends or you stop it there.",
+    "launch": {
+      "title": "Launch default",
+      "sub": "The look the shop opened with. \"Back to launch default\" returns the whole look to it at any time.",
+      "none": "No launch default yet. On launch day, press \"Save this look as the launch default\".",
+      "back": "Back to launch default",
+      "save": "Save this look as the launch default",
+      "defaultName": "Launch default"
+    },
+    "looks": {
+      "title": "Saved looks",
+      "sub": "Looks you saved by name (for example \"Eid 2027\"), and the looks saved by themselves just before each restore.",
+      "save": "Save the look as it is now",
+      "none": "Nothing saved yet.",
+      "showAside": "Show looks set aside ({n})",
+      "hideAside": "Hide looks set aside"
+    },
+    "log": {
+      "title": "Restore log",
+      "sub": "Every restore and undo, newest first. The newest one can be undone.",
+      "none": "No restore yet.",
+      "restore": "Restored “{name}”",
+      "launch": "Back to launch default (“{name}”)",
+      "undo": "Undid the last restore",
+      "undone": "undone",
+      "paused": "{n} A/B tests paused"
+    },
+    "tag": {
+      "launch": "launch default",
+      "auto": "saved by itself",
+      "aside": "set aside"
+    },
+    "auto": {
+      "restore": "Before restoring {name}",
+      "undo": "Before undoing {name}"
+    },
+    "sum": {
+      "sections": "Own sections {on}/{all} on",
+      "canvasOn": "Side canvas on · {on} zones on",
+      "canvasOff": "Side canvas off",
+      "own": "Categories with own order: {n}",
+      "ads": "House ads on: {n}"
+    },
+    "ask": {
+      "launchTitle": "Go back to the launch default “{name}”?",
+      "restoreTitle": "Restore the look “{name}”?",
+      "undoTitle": "Undo the last restore?",
+      "saveTitle": "Save the look as it is now",
+      "saveLaunchTitle": "Save this look as the launch default",
+      "renameTitle": "Rename this look",
+      "first": "The look as it is now is saved first, so you can undo this.",
+      "kept": "Sections, side zones, category orders and house ads made since are kept, switched off. Nothing is deleted.",
+      "tests": "The {n} running A/B tests are paused (kept; Undo lets them run again).",
+      "noTests": "No A/B test is running.",
+      "money": "Prices, offers, delivery charges and Cash on Delivery do not change.",
+      "undoBack": "The shop's look goes back to how it was just before that restore.",
+      "saveNote": "Saves the page layouts, your sections, the side canvas, the light sweeps and which house ads are on. Nothing on the shop changes.",
+      "saveLaunchNote": "This becomes the launch default. An earlier launch default stays in Saved looks. Nothing on the shop changes.",
+      "reason": "Why (optional, shown in the log)",
+      "reasonHint": "For example: Eid is over",
+      "name": "Name",
+      "nameHint": "For example: Eid 2027",
+      "no": "Cancel",
+      "save": "Save"
+    },
+    "done": {
+      "restored": "Restored “{name}”.",
+      "undone": "Undone: the look is back.",
+      "parts": "{n} parts changed.",
+      "hidden": "{n} newer parts kept, switched off.",
+      "paused": "{n} A/B tests paused.",
+      "resumed": "{n} A/B tests running again.",
+      "saved": "Saved “{name}”.",
+      "savedLaunch": "Saved as the launch default: “{name}”.",
+      "renamed": "Renamed to “{name}”.",
+      "aside": "“{name}” set aside.",
+      "back": "“{name}” brought back."
+    },
+    "keys": {
+      "title": "What a look holds",
+      "sub": "These parts of the shop are saved in a look and brought back by a restore:",
+      "k": {
+        "home_sections": "Home page sections, their order and screens",
+        "home_hero": "The hero's words and buttons",
+        "home_heroSlides": "The hero's pictures",
+        "home_categories": "The home page's category tiles",
+        "home_newIn": "The New in row",
+        "home_reviews": "The reviews row",
+        "home_rowFade": "The rows' soft edge",
+        "layout_category": "The category page's sections",
+        "layout_categoryOwn": "Each category's own order",
+        "layout_product": "The product page's sections",
+        "layout_blocks": "Your own sections (banners, rows, tiles, text …)",
+        "layout_sideCanvas": "The side canvas switch and its numbers",
+        "layout_sideZones": "The side canvas zones",
+        "shop_sweep": "The light sweeps",
+        "pdp_sweep": "The product page's light sweep"
+      },
+      "ads": "Which house ads and their places are switched on",
+      "not": "Not part of a look: words, eye-toggles, the announcement bar, the flash sale, the bag and checkout, prices, offers, delivery and payments."
+    },
+    "err": {
+      "STALE": "The shop's look changed meanwhile. The page was reloaded; try again.",
+      "NO_LAUNCH_DEFAULT": "There is no launch default yet.",
+      "NOT_ALLOWED": "This step is not possible any more. The page was reloaded.",
+      "INVALID_INPUT": "Please check the name.",
+      "not-found": "That look is not there any more.",
+      "forbidden": "You do not have the permission for this.",
+      "network": "No connection. Nothing changed; try again.",
+      "other": "Could not do that. Nothing changed; try again."
+    }
+  }
+}
