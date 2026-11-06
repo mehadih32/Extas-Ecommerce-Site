@@ -221,6 +221,8 @@
 [data-lm-look] .ad[data-lm-ready] .ad-chip:hover { background: var(--lm-hover); color: var(--lm-ink); }
 [data-lm-look] .ad[data-lm-ready] .ad-chip[aria-current='page'],
 [data-lm-look] .ad[data-lm-ready] .ad-chip[aria-pressed='true'] { background: var(--lm-ink); border-color: var(--lm-ink); color: var(--lm-sf); }
+/* PR 634 follow-up (contrast audit): the product chips' counts at full strength (products.css fades them to 0.7: 3.0:1 light, 4.2:1 dark) */
+[data-lm-look] .ad[data-lm-ready] .pa-chip-n { opacity: 1; }
 [data-lm-look] .ad[data-lm-ready] .ad-btn { border-radius: var(--lm-r-ctl); }
 [data-lm-look] .ad[data-lm-ready] .ad-btn-primary:not(:disabled) { background: var(--lm-pri); border-color: var(--lm-pri-line); color: var(--lm-on-ac); box-shadow: var(--lm-pri-sh); }
 [data-lm-look] .ad[data-lm-ready] .ad-btn-primary:hover:not(:disabled) { background: var(--lm-pri); border-color: var(--lm-pri-line); filter: brightness(1.05); }
