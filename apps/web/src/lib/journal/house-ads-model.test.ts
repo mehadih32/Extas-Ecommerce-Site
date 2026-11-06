@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { HOUSE_ADS_DEFAULT } from '@extas/settings';
 import {
+  clickRate,
   adInputSchema,
   adState,
   capWindow,
@@ -196,5 +197,15 @@ describe('the click an order credits', () => {
     expect(creditedClick(at(7.01), placed, 7)).toBeNull();
     expect(creditedClick(at(-0.1), placed, 7)).toBeNull();
     expect(creditedClick(null, placed, 7)).toBeNull();
+  });
+});
+
+describe('click rate (PR 592 follow-up)', () => {
+  it('is clicks over views in per cent, one decimal, none without views, never over 100', () => {
+    expect(clickRate(3, 200)).toBe(1.5);
+    expect(clickRate(1, 3)).toBe(33.3);
+    expect(clickRate(0, 50)).toBe(0);
+    expect(clickRate(4, 0)).toBeNull();
+    expect(clickRate(5, 2)).toBe(100);
   });
 });

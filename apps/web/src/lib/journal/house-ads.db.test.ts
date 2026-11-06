@@ -13,7 +13,7 @@ import { createVault } from '@extas/vault';
 import type { AdminDeps } from '../admin-auth';
 import { loginHandler } from '../admin-api';
 import { AD_CLICK_COOKIE } from './house-ads-model';
-import { adsHandler, adsScreen, clickHandler, creditAdOrder, pageAds } from './house-ads';
+import { adsHandler, adsScreen, clickHandler, creditAdOrder, pageAds, viewsHandler } from './house-ads';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -159,6 +159,27 @@ describe.skipIf(!HAS_TEST_DB)('Website › Blog & journal › House ads on Postg
     expect(ad.clicks).toBe(2);
     expect(ad.ordered.orders).toBe(1);
     expect(screen.totals).toMatchObject({ clicks: 2, orders: 1 });
+  });
+
+  it('follow-up: views are counted only while "count views" is on, once per place a report, only from the shop\'s own pages', async () => {
+    const seen = (p: unknown, origin = `https://${HOST}`) =>
+      viewsHandler(new Request(`https://${HOST}/api/shop/house-ad/seen`, { method: 'POST', headers: { host: HOST, origin, 'content-type': 'text/plain' }, body: JSON.stringify({ p }) }), { db: t.prisma, settings: deps.resolver, storeId: S, now: () => clock.now });
+    const views = async () => (await t.prisma.houseAdDailyStat.findFirstOrThrow({ where: { placementId: ids.end } })).views;
+    expect((await seen([ids.end])).status).toBe(204);
+    expect(await views()).toBe(0); // off as shipped
+    await set({ countViews: true });
+    await seen([ids.end, ids.end, 'not-an-id', '00000000-0000-7000-8000-00000000abcd']);
+    await seen([ids.end]);
+    expect(await views()).toBe(2);
+    await seen([ids.end], 'https://elsewhere.example');
+    expect(await views()).toBe(2);
+    expect((await viewsHandler(new Request(`https://${HOST}/api/shop/house-ad/seen`, { method: 'POST', headers: { host: HOST }, body: '{broken' }), { db: t.prisma, settings: deps.resolver, storeId: S })).status).toBe(204);
+    const screen = (await api('GET', undefined, '/api/admin/blog/ads?days=7')).body.screen!;
+    const ad = screen.ads.find((a) => a.id === ids.ad)!;
+    expect(ad.views).toBe(2);
+    expect(ad.places.find((x) => x.id === ids.end)).toMatchObject({ views: 2, clicks: 2 });
+    expect(screen.totals.views).toBe(2);
+    await set({ countViews: false });
   });
 
   it('set aside switches off and keeps the ad (never deleted); bring back leaves it off', async () => {

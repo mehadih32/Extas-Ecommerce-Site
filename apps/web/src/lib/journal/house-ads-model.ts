@@ -301,3 +301,12 @@ export function fromSearchSite(referrer: string, words: readonly string[]): bool
   const host = hostOf(referrer);
   return !!host && words.some((w) => matchesWord(host, w));
 }
+
+/**
+ * PR 592 follow-up — the click rate of a place or an ad: clicks over views, in per cent with one decimal; null while
+ * nothing was seen (views not counted, or none yet), never more than 100 (a click whose view was not counted).
+ */
+export function clickRate(clicks: number, views: number): number | null {
+  if (views <= 0) return null;
+  return Math.min(100, Math.round((clicks / views) * 1000) / 10); // hardcode-ok: per cent with one decimal
+}
