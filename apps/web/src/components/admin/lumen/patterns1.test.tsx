@@ -46,6 +46,27 @@ describe('summary tiles', () => {
     expect(plain).not.toContain('lm-dl');
     expect(html).not.toMatch(colour);
   });
+
+  it('draws a word figure smaller, a figure that is news in its tone, keeps data-* marks and a row class (Lumen follow-up)', () => {
+    const out = renderToStaticMarkup(
+      <SummaryTiles
+        label="Health"
+        testId="health"
+        className="a2-mt12"
+        tiles={[
+          { key: 'overall', label: 'Overall', value: 0, shown: 'Fine', format: num, word: true, tone: 'ok', data: { state: 'fine' }, extra: 'checked 2 min ago' },
+          { key: 'failed', label: 'Failed', value: 2, shown: '2', format: num, tone: 'bad', data: { n: 2 } },
+        ]}
+      />,
+    );
+    expect(out).toContain('class="lm-tiles a2-mt12"');
+    expect(out).toMatch(/data-testid="health-overall" data-state="fine"/);
+    expect(out).toContain('class="lm-tile-n w ok"');
+    expect(out).toContain('class="lm-tile-n bad"');
+    expect(out).toContain('data-n="2"');
+    expect(out).toContain('<span class="lm-tile-x">checked 2 min ago</span>');
+    expect(out).not.toMatch(colour);
+  });
 });
 
 describe('hero chart', () => {

@@ -22,6 +22,9 @@ export interface FraudKpi {
   label: string;
   value: string;
   foot: string;
+  /** The number behind the figure (minor units for money; null: none), for the tile's count-up (Lumen, PR 644). */
+  n: number | null;
+  kind: 'count' | 'money';
 }
 
 export interface FraudScreen {
@@ -54,13 +57,15 @@ export function fraudScreen(r: FraudReport, f: FraudFormat): FraudScreen {
   const any = r.caught.any;
   const saved = r.avoided.likelyMinor ?? r.avoided.upToMinor;
   const kpis: FraudKpi[] = [
-    { id: 'caught', label: w('kpi.caught'), value: num(any.orders), foot: w('kpi.caughtFoot', { n: num(r.stopped) }) },
-    { id: 'wrong', label: w('kpi.wrong'), value: num(r.wrong.orders), foot: r.wrong.rate === null ? w('kpi.wrongNone') : w('kpi.wrongFoot', { rate: f.pct(r.wrong.rate) }) },
-    { id: 'missed', label: w('kpi.missed'), value: num(r.missed), foot: w('kpi.missedFoot') },
+    { id: 'caught', label: w('kpi.caught'), n: any.orders, kind: 'count', value: num(any.orders), foot: w('kpi.caughtFoot', { n: num(r.stopped) }) },
+    { id: 'wrong', label: w('kpi.wrong'), n: r.wrong.orders, kind: 'count', value: num(r.wrong.orders), foot: r.wrong.rate === null ? w('kpi.wrongNone') : w('kpi.wrongFoot', { rate: f.pct(r.wrong.rate) }) },
+    { id: 'missed', label: w('kpi.missed'), n: r.missed, kind: 'count', value: num(r.missed), foot: w('kpi.missedFoot') },
     {
       id: 'saved',
       label: w('kpi.saved'),
       value: saved === null ? '—' : money(saved),
+      n: saved,
+      kind: 'money',
       foot: r.avoided.upToMinor === null ? (r.stopped ? w('kpi.savedNoCost') : w('kpi.savedNone')) : r.avoided.likelyMinor === null ? w('kpi.savedUpOnly') : w('kpi.savedFoot', { upTo: money(r.avoided.upToMinor) }),
     },
   ];

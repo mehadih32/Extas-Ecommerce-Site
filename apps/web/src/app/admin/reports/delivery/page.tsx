@@ -13,11 +13,13 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { SwitchButton } from '@/components/admin/courier-report/Parts';
 import { PerfTable, pct } from '@/components/admin/courier-report/PerfTable';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles, type ReportFigure } from '@/lib/admin-lumen/figures';
 import { withCourierReport } from '@/lib/admin-courier-report';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { orderHref } from '@/lib/admin-orders/model';
@@ -90,11 +92,11 @@ export default async function DeliveryReportPage({ searchParams }: { searchParam
     }
     return k;
   };
-  const kpis: { l: string; v: string; note: string; id: string }[] = [
-    { id: 'success', l: c('kpi.success'), v: pct(tot.successRate, view.locale), note: c('kpi.successNote', { n: n(tot.delivered), of: n(tot.parcels) }) },
-    { id: 'onTime', l: c('kpi.onTime'), v: pct(tot.onTimeRate, view.locale), note: c('kpi.onTimeNote', { n: n(tot.onTime), of: n(tot.promised) }) },
-    { id: 'refused', l: c('kpi.refused'), v: pct(tot.refusalRate, view.locale), note: c('kpi.refusedNote', { n: n(tot.refused) }) },
-    { id: 'late', l: c('kpi.late'), v: n(perf.lateNow.count), note: c('kpi.lateNote') },
+  const kpis: ReportFigure[] = [
+    { id: 'success', label: c('kpi.success'), value: pct(tot.successRate, view.locale), n: tot.successRate, kind: 'percent', foot: c('kpi.successNote', { n: n(tot.delivered), of: n(tot.parcels) }) },
+    { id: 'onTime', label: c('kpi.onTime'), value: pct(tot.onTimeRate, view.locale), n: tot.onTimeRate, kind: 'percent', foot: c('kpi.onTimeNote', { n: n(tot.onTime), of: n(tot.promised) }) },
+    { id: 'refused', label: c('kpi.refused'), value: pct(tot.refusalRate, view.locale), n: tot.refusalRate, kind: 'percent', foot: c('kpi.refusedNote', { n: n(tot.refused) }) },
+    { id: 'late', label: c('kpi.late'), value: n(perf.lateNow.count), n: perf.lateNow.count, foot: c('kpi.lateNote') },
   ];
 
   return (
@@ -108,15 +110,7 @@ export default async function DeliveryReportPage({ searchParams }: { searchParam
           </Link>
         ))}
       </nav>
-      <div className="a2-kpis" data-testid="delivery-kpis">
-        {kpis.map((k) => (
-          <div key={k.id} className="a2-card a2-kpi" data-kpi={k.id}>
-            <div className="a2-kl">{k.l}</div>
-            <div className="a2-kv">{k.v}</div>
-            <div className="a2-kn">{k.note}</div>
-          </div>
-        ))}
-      </div>
+      <SummaryTiles className="a2-mt12" tiles={figureTiles(kpis, { locale: view.locale })} label={c('title')} testId="delivery-kpis" />
       {perf.practiceLeftOut ? <p className="a2-xs a2-mute">{c('practice', { n: n(perf.practiceLeftOut) })}</p> : null}
       {perf.cut ? <p className="a2-xs cr-warn">{c('cut', { n: n(sh.PERFORMANCE_MAX_PARCELS) })}</p> : null}
 

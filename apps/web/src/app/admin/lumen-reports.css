@@ -38,3 +38,5 @@
 [data-lm-look] .lm-rp .xpb-bad { color: var(--lm-bad); }
 [data-lm-look] .lm-rp .xpb-warn { color: var(--lm-warn); }
 [data-lm-look] .lm-rp .ar-map { border-radius: var(--lm-r-box); background: var(--lm-sf2); }
+/* the Stopped report's "Open Risk rules" link is a 44 px tap (follow-up on PR 644; it was 36 px on phones) */
+[data-lm-look] .lm-rp .stp-link { display: inline-flex; align-items: center; min-height: var(--lm-tap); }

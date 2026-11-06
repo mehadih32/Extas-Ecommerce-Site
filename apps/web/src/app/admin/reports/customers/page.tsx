@@ -10,9 +10,11 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { pct } from '@/components/admin/courier-report/PerfTable';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles, type ReportFigure } from '@/lib/admin-lumen/figures';
 import { withCustomers } from '@/lib/admin-customers/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -56,12 +58,12 @@ export default async function CustomersReportPage({ searchParams }: { searchPara
   const n = (x: number) => new Intl.NumberFormat(view.locale, { numberingSystem: 'latn' }).format(x);
   const day = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, dateStyle: 'medium', numberingSystem: 'latn' });
   const tot = r.totals;
-  const kpis = tot
+  const kpis: ReportFigure[] = tot
     ? [
-        { id: 'new', l: c('kpi.new'), v: n(tot.newBuyers), note: c('kpi.newNote') },
-        { id: 'returning', l: c('kpi.returning'), v: n(tot.returning), note: c('kpi.returningNote') },
-        { id: 'quiet', l: c('kpi.quiet', { n: n(r.quietDays) }), v: n(tot.quiet), note: c('kpi.quietNote', { n: n(r.quietDays) }) },
-        { id: 'repeat', l: c('kpi.repeat'), v: pct(tot.repeatRate, view.locale), note: c('kpi.repeatNote', { n: n(tot.repeaters), of: n(tot.buyers) }) },
+        { id: 'new', label: c('kpi.new'), value: n(tot.newBuyers), n: tot.newBuyers, foot: c('kpi.newNote') },
+        { id: 'returning', label: c('kpi.returning'), value: n(tot.returning), n: tot.returning, foot: c('kpi.returningNote') },
+        { id: 'quiet', label: c('kpi.quiet', { n: n(r.quietDays) }), value: n(tot.quiet), n: tot.quiet, foot: c('kpi.quietNote', { n: n(r.quietDays) }) },
+        { id: 'repeat', label: c('kpi.repeat'), value: pct(tot.repeatRate, view.locale), n: tot.repeatRate, kind: 'percent', foot: c('kpi.repeatNote', { n: n(tot.repeaters), of: n(tot.buyers) }) },
       ]
     : [];
 
@@ -90,15 +92,7 @@ export default async function CustomersReportPage({ searchParams }: { searchPara
           <p className="a2-xs a2-mute" data-testid="report-range">
             {c('range', { from: day.format(r.from), to: day.format(r.to) })}
           </p>
-          <div className="a2-kpis" data-testid="customers-kpis">
-            {kpis.map((k) => (
-              <div key={k.id} className="a2-card a2-kpi" data-kpi={k.id}>
-                <div className="a2-kl">{k.l}</div>
-                <div className="a2-kv">{k.v}</div>
-                <div className="a2-kn">{k.note}</div>
-              </div>
-            ))}
-          </div>
+          <SummaryTiles className="a2-mt12" tiles={figureTiles(kpis, { locale: view.locale })} label={c('title')} testId="customers-kpis" />
           <div className="a2-row a2-r21 a2-mt12">
             <section className="a2-card" data-testid="report-segments">
               <div className="a2-ch">

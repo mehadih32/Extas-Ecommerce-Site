@@ -11,12 +11,14 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { readDeps } from '@/components/admin/orders/OrderListPage';
 import { formatNumber } from '@/components/admin/products/model';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles } from '@/lib/admin-lumen/figures';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { learningCard } from '@/lib/admin-reports/learning-api';
@@ -107,17 +109,7 @@ export default async function LearningReportPage() {
         </div>
       ))}
 
-      <div className="a2-kpis a2-mt12" data-testid="learning-kpis">
-        {screen.kpis.map((k) => (
-          <div key={k.id} className="a2-card a2-kpi" data-kpi={k.id}>
-            <div className="a2-kl">{k.label}</div>
-            <div className="a2-kv">{k.value}</div>
-            <div className="a2-kf">
-              <span className="a2-kn">{k.foot}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      <SummaryTiles className="a2-mt12" tiles={figureTiles(screen.kpis, { locale: view.locale })} label={w('title')} testId="learning-kpis" />
 
       <section className="a2-card" aria-labelledby="lrn-sug-h" data-testid="learning-suggestions">
         <div className="a2-ch">

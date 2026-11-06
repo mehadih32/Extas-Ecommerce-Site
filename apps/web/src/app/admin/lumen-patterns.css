@@ -32,6 +32,12 @@
 [data-lm-look] .lm-tile-n { font: 800 2.1rem/1.1 var(--lm-font-disp); letter-spacing: -0.02em; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 [data-lm-look] .lm-tile-f { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 [data-lm-look] .lm-tile-vs { color: var(--lm-ink2); font-size: var(--lm-fs-card); }
+/* a figure that is a word, a figure that is itself news, and the note under it (Lumen follow-up, PR 644) */
+[data-lm-look] .lm-tile-n.w { font-size: var(--lm-fs-h1-phone); line-height: 1.25; letter-spacing: normal; }
+[data-lm-look] .lm-tile-n.ok { color: var(--lm-ok); }
+[data-lm-look] .lm-tile-n.warn { color: var(--lm-warn); }
+[data-lm-look] .lm-tile-n.bad { color: var(--lm-bad); }
+[data-lm-look] .lm-tile-x { color: var(--lm-ink2); font-size: var(--lm-fs-card); overflow-wrap: anywhere; }
 
 /* ---------- the hero chart (PR 627) ---------- */
 [data-lm-look] .lm-hero { position: relative; background: var(--lm-hero-glow), var(--lm-hero); color: var(--lm-on-hero); border-radius: var(--lm-r-card); box-shadow: var(--lm-sh); padding: 20px 22px 16px; min-width: 0; overflow: hidden; }

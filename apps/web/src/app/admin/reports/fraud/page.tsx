@@ -11,11 +11,13 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { daysPeriod, lastDays, ymdIn } from '@extas/metrics';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles } from '@/lib/admin-lumen/figures';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { reportCard } from '@/lib/admin-reports/fraud-api';
@@ -142,17 +144,7 @@ export default async function FraudReportPage({ searchParams }: { searchParams: 
         </div>
       ))}
 
-      <div className="a2-kpis a2-mt12" data-testid="fraud-kpis">
-        {screen.kpis.map((k) => (
-          <div key={k.id} className="a2-card a2-kpi" data-kpi={k.id}>
-            <div className="a2-kl">{k.label}</div>
-            <div className="a2-kv">{k.value}</div>
-            <div className="a2-kf">
-              <span className="a2-kn">{k.foot}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      <SummaryTiles className="a2-mt12" tiles={figureTiles(screen.kpis, { locale: view.locale, money: { kind: 'money', ...money } })} label={w('title')} testId="fraud-kpis" />
 
       <section className="a2-card" aria-labelledby="fr-caught-h" data-testid="fraud-caught">
         <div className="a2-ch">
