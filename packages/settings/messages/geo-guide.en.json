@@ -1,0 +1,8 @@
+{
+  "ads": {
+    "geoGuide": {
+      "label": "Where to advertise (district guidance)",
+      "help": "Advice only. Off (as shipped): the page shows each district's delivered and returned orders. On: each district also gets a word — more, hold, less or too few — from its return rate and number of orders, and the page lists the districts to aim at and to leave out, ready to copy into an ad platform's location targeting. Nothing changes a budget or a campaign by itself."
+    }
+  }
+}
