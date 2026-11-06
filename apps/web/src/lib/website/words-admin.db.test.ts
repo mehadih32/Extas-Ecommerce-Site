@@ -2,7 +2,8 @@
 // (`language.labels`); a row save and a CSV import change only their words (the invoice's words untouched), back to the
 // shop's word removes the owner's; the shop reads them (`shopT`); refused: a word the shop lacks, a {slot} its word lacks,
 // a save after another save (also one from Orders › Invoices); seeing needs `website.read`, saving `website.words.write`;
-// audited once per save that changes something; the CSV export is every word.
+// audited once per save that changes something; the CSV export is every word. PR 78 follow-up (674): each word on the page
+// carries when it last changed (the settings' change history), a word never changed none.
 // A throwaway database (skipped without TEST_DATABASE_ADMIN_URL). Sample values only.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
@@ -132,5 +133,16 @@ describe.skipIf(!HAS_TEST_DB)('Website › Words & language on PostgreSQL (PR 78
     expect(put.a).toMatchObject({ ok: true, changed: [KEY, 'account.status.ON_HOLD'] });
     expect(await labels()).toEqual({ 'account.invoice.title': { en: 'Sample invoice' }, [KEY]: { bn: 'নমুনা চেকআউট' }, 'account.status.ON_HOLD': { bn: 'নমুনা অপেক্ষা' } });
     expect((await api('PUT', { cookie: desk, body: { version: put.a.version, csv: file } })).status).toBe(403);
+  });
+
+  it('each word on the page carries when it last changed; a word never changed has none (674)', async () => {
+    const changed = (await api('GET', { q: 'show=changed' })).a;
+    expect(Object.keys(changed.lastChanged).sort()).toEqual(['account.invoice.title', 'account.status.ON_HOLD', KEY].sort());
+    const newest = await t.prisma.settingChange.findFirst({ where: { key: 'language.labels' }, orderBy: { createdAt: 'desc' } });
+    expect(changed.lastChanged[KEY]).toBe(newest!.createdAt.toISOString());
+    expect(changed.lastChanged['account.invoice.title']! < changed.lastChanged[KEY]!).toBe(true);
+    const first = (await api('GET', { cookie: desk })).a;
+    const never = first.rows.find((r) => !(r.key in changed.lastChanged))!;
+    expect(first.lastChanged[never.key]).toBeUndefined();
   });
 });
