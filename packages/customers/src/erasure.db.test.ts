@@ -2,7 +2,8 @@
 // erasure requests are off until switched on; a request changes nothing; only the owner carries one out, with the word
 // typed exactly, never while an order is on its way; then every profile of the person and his orders lose the
 // personal details while the money stays, his sign-in is closed, and the request is done (once); review R3 (M1): his
-// spoken addresses lose their words and recordings, the library rows archived. Made-up test values.
+// spoken addresses lose their words and recordings, the library rows archived; PR 251 follow-up (687): his journal
+// comments lose his name and his words and are archived (off the article), someone else's stay. Made-up test values.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { OWNER_ROLE_KEY } from '@extas/auth';
 import { cancelErasure, carryOutErasure, listErasureRequests, requestErasure } from './erasure';
@@ -94,8 +95,19 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('erasure requests on Postg
     const n1 = await f.t.prisma.customerNote.create({ data: { storeId: f.S, customerId: a, body: 'Call +8801700003821 after 6 pm', pinned: true } });
     const n2 = await f.t.prisma.customerNote.create({ data: { storeId: f.S, customerId: b, body: 'Gate 2, House 1' } });
 
+    // PR 251 follow-up (687): his journal comments under an article (one shown, one waiting, from both his profiles)
+    const post = await f.t.prisma.blogPost.create({ data: { storeId: f.S, locale: 'en', slug: 'e382-post', title: 'Sample post', body: 'Sample.', status: 'PUBLISHED', publishedAt: new Date(Date.UTC(2026, 8, 1)) } });
+    const comment = (customerId: string | null, name: string, body: string, status: 'APPROVED' | 'PENDING') => f.t.prisma.blogComment.create({ data: { storeId: f.S, postId: post.id, customerId, name, body, status, fromHash: customerId ? null : 'hash-other' }, select: { id: true } });
+    const c1 = await comment(a, 'Rahim', 'Call me on +8801700003821', 'APPROVED');
+    const c2 = await comment(b, 'Rahim 2', 'I live at House 1, Road 2', 'PENDING');
+    const c3 = await comment(null, 'Someone else', 'Nice article', 'APPROVED');
+
     const done = await carryOutErasure(d, owner, { requestId: r.id, confirm: ` ${WORD} `, expected: WORD });
-    expect(done).toMatchObject({ profiles: 2, orders: 4, addresses: 1, voices: 2, notes: 2, request: { status: 'DONE' } });
+    expect(done).toMatchObject({ profiles: 2, orders: 4, addresses: 1, voices: 2, notes: 2, comments: 2, request: { status: 'DONE' } });
+    for (const c of [c1, c2]) expect(await f.t.prisma.blogComment.findUniqueOrThrow({ where: { id: c.id } })).toMatchObject({ name: null, body: '', fromHash: null, archivedAt: expect.any(Date) });
+    expect(await f.t.prisma.blogComment.findUniqueOrThrow({ where: { id: c3.id } })).toMatchObject({ name: 'Someone else', body: 'Nice article', archivedAt: null });
+    // nothing of his is left for a search: no comment row carries his name or his words
+    expect(await f.t.prisma.blogComment.count({ where: { OR: [{ name: { contains: 'Rahim' } }, { body: { contains: 'House 1' } }, { body: { contains: '+8801700003821' } }] } })).toBe(0);
     for (const n of [n1, n2]) expect(await f.t.prisma.customerNote.findUniqueOrThrow({ where: { id: n.id } })).toMatchObject({ body: '', pinned: false, archivedAt: expect.any(Date) });
     const p = f.t.prisma;
     for (const v of [onOrder, left]) expect(await p.checkoutVoice.findUniqueOrThrow({ where: { id: v.id } })).toMatchObject({ transcript: null, assetId: null });
