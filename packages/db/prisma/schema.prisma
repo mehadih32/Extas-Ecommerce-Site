@@ -7059,19 +7059,30 @@ model BlogOrderRead {
   @@index([storeId, postId])
 }
 
-/// @stage S12 · PR 251 — a blog comment (only if comments are switched on).
+/// @stage S12 · PR 251 — a blog comment (only if comments are switched on). PENDING waits for a person with
+/// `blog.publish`; APPROVED is shown under the article; HIDDEN is hidden again (never deleted). `prevStatus` is the
+/// status before the last change, so Undo puts it back. `fromHash` (a guest's address, hashed) only counts a day's limit.
 model BlogComment {
-  id         String       @id @default(uuid(7)) @db.Uuid
-  storeId    Int
-  store      Store        @relation(fields: [storeId], references: [id])
-  postId     String       @db.Uuid
-  customerId String?      @db.Uuid
-  name       String?
-  body       String
-  status     ReviewStatus @default(PENDING)
-  archivedAt DateTime?    @db.Timestamptz(3)
-  createdAt  DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt  DateTime     @updatedAt @db.Timestamptz(3)
+  id          String        @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store         @relation(fields: [storeId], references: [id])
+  postId      String        @db.Uuid
+  customerId  String?       @db.Uuid
+  name        String?
+  body        String
+  status      ReviewStatus  @default(PENDING)
+  prevStatus  ReviewStatus?
+  fromHash    String?
+  decidedAt   DateTime?     @db.Timestamptz(3)
+  decidedById String?       @db.Uuid
+  archivedAt  DateTime?     @db.Timestamptz(3)
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, status, createdAt])
+  @@index([postId, status, createdAt])
+  @@index([customerId, createdAt])
+  @@index([fromHash, createdAt])
 }
 
 /// @stage S12 · PR 547 — an image request for a post: own photos first, free libraries, AI generation only with

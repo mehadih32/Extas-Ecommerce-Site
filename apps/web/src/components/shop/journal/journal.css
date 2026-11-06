@@ -51,3 +51,19 @@
 .shop .jn-related a:hover .jn-rel-t, .shop .jn-related a:focus-visible .jn-rel-t { text-decoration: underline; }
 .shop .jn-related .jn-rel-m { flex: none; }
 
+
+/* S12 · PR 251 — readers' comments under an article (only while `blog.comments.on`). */
+.shop .jn-comments { margin: 28px 0 0; max-width: 720px; }
+.shop .jn-comments .h3 { margin: 0 0 8px; }
+.shop .jn-cm-list { list-style: none; margin: 0 0 16px; padding: 0; border-top: 1px solid var(--line); }
+.shop .jn-cm-list li { border-bottom: 1px solid var(--line); padding: 12px 0; }
+.shop .jn-cm-who { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.shop .jn-cm-body { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.shop .jn-cm-form { display: flex; flex-direction: column; gap: 10px; }
+.shop .jn-cm-form .h4 { margin: 0; }
+.shop .jn-cm-f { display: flex; flex-direction: column; gap: 4px; }
+.shop .jn-cm-area { min-height: 112px; resize: vertical; font-size: 16px; }
+.shop .jn-cm-count { align-self: flex-end; }
+.shop .jn-cm-send { align-self: flex-start; min-height: 44px; }
+.shop .jn-cm-said { margin: 0; }
+.shop .jn-cm-said a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; }
