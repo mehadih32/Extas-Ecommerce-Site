@@ -56,7 +56,7 @@ export default async function FixesPage({ searchParams }: { searchParams: Promis
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="fixes-page">
         <ShellState view={view} kind="denied" permission="health.read" />
       </div>
     );
@@ -96,7 +96,7 @@ export default async function FixesPage({ searchParams }: { searchParams: Promis
   const where = (r: ProposalRow) => (r.fix && (r.fix.page || r.fix.device) ? s('where', { page: r.fix.page ?? '—', screen: r.fix.device ? s(`screen.${r.fix.device}`) : '—' }) : null);
 
   return (
-    <div className="a2-z" data-testid="fixes-page" data-proposals={String(v.gate.proposals)}>
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="fixes-page" data-proposals={String(v.gate.proposals)}>
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
 

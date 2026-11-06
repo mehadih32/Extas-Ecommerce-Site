@@ -52,7 +52,7 @@ export default async function SpeedPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="speed-page">
         <ShellState view={view} kind="denied" permission="health.read" />
       </div>
     );
@@ -99,7 +99,7 @@ export default async function SpeedPage() {
   const fields: FieldsCardField[] = [{ kind: 'number', path: 'months', label: s('card.months'), min: 1, max: 36 }];
 
   return (
-    <div className="a2-z" data-testid="speed-page">
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="speed-page">
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
 

@@ -51,7 +51,7 @@ export default async function SmokeRunsPage({ searchParams }: { searchParams: Pr
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-lm-ready="" data-testid="smoke-page">
         <ShellState view={view} kind="denied" permission="health.read" />
       </div>
     );
@@ -90,7 +90,7 @@ export default async function SmokeRunsPage({ searchParams }: { searchParams: Pr
   };
 
   return (
-    <div className="a2-z" data-testid="smoke-page">
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="smoke-page">
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
 

@@ -2,9 +2,12 @@
 // S21 · PR 414 — "Run now" on Reports › Site health: records the press (POST {action: 'run'}); the server's hourly
 // check starts the saved browser journeys and the page shows the run when it is done. The words come from the page;
 // the API checks `settings.write` again.
+// PR 645 (CN-036): a message that the work went through speaks through the admin's one toast (showToast, no Undo);
+// a refusal stays written beside the button.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface JourneysRunTexts {
   run: string;
@@ -26,7 +29,8 @@ export function JourneysRun({ url, texts: x, waiting, testId = 'journeys-run' }:
     const a = await call('POST', url, { action: 'run' });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: x.asked, bad: false });
+      setSaid(null);
+      showToast({ text: x.asked });
       router.refresh();
       return;
     }
