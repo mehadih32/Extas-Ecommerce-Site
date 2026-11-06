@@ -33,6 +33,7 @@ import { adSpendImportHookFromEnv, adSpendImportPlanner } from './ad-spend-impor
 import { paymentsPlanner } from './payments';
 import { searchPlanner } from './search';
 import { supportEscalationPlanner } from './support-escalation';
+import { orderFollowUpsPlanner } from './order-followups';
 import { webhookPlanner } from './webhooks';
 import { startWorker } from './worker';
 
@@ -108,8 +109,8 @@ async function main(): Promise<void> {
     // each store's sweep of open online payments per slot; PR 176: each store's courier tracking read per slot; PR 182:
     // each store's packing photos past their days to keep, archived once a day; PR 407: each store's invoice run per slot
     // CN-028 · PR 612–614: each v6 store's returns and exchanges with its own ERP per slot; S16 · PR 351: each store's
-    // money report to the owner, once per period while it is due; PR 296: each store's points run per hour while its points are on; S13 · PR 264: each store's audience refresh, once a day; PR 538: each store's support escalation sweep per minute; PR 265: each store's ad spend import, once a day; PR 534: each store's grading run once a day while it is on
-    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner, invoicePlanner, returnsErpPlanner, moneyReportPlanner, pointsPlanner, audienceRefreshPlanner, supportEscalationPlanner, adSpendImportPlanner, gradesPlanner],
+    // money report to the owner, once per period while it is due; PR 296: each store's points run per hour while its points are on; S13 · PR 264: each store's audience refresh, once a day; PR 538: each store's support escalation sweep per minute; PR 265: each store's ad spend import, once a day; PR 534: each store's grading run once a day while it is on; PR 153 (follow-up 192): each store's order timers once an hour while one is on
+    planners: [webhookPlanner, searchPlanner, messagesPlanner, piiPlanner, paymentsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner, invoicePlanner, returnsErpPlanner, moneyReportPlanner, pointsPlanner, audienceRefreshPlanner, supportEscalationPlanner, adSpendImportPlanner, gradesPlanner, orderFollowUpsPlanner],
   });
   let stopping = false;
   const stop = (signal: string) => {
