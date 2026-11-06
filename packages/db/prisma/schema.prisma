@@ -6865,9 +6865,23 @@ model BlogTopic {
   status       String
   batchMonth   String?
   approvedById String?   @db.Uuid
+  /// PR 242: the cluster it belongs to, its language, what people type into a search engine, how soon (1 urgent ·
+  /// 2 normal · 3 later; the topic form always sets it, no schema default), whether it is the cluster's pillar
+  /// article, who writes it, the article it became, who proposed it and when it was decided.
+  clusterId    String?   @db.Uuid
+  locale       String    @default("en")
+  query        String?
+  priority     Int
+  isPillar     Boolean   @default(false)
+  authorId     String?   @db.Uuid
+  postId       String?   @db.Uuid
+  proposedById String?   @db.Uuid
+  decidedAt    DateTime? @db.Timestamptz(3)
   archivedAt   DateTime? @db.Timestamptz(3)
   createdAt    DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, clusterId])
 }
 
 /// @stage S12 · PR 528, 529 — the brief every post starts from (word count, keywords, topic, language, source link).
@@ -6895,6 +6909,12 @@ model ContentCluster {
   name         String
   pillarPostId String?   @db.Uuid
   keywords     String[]
+  /// PR 242: the Bengali name, the journal category it lives in, the shop page every article of it links to (a
+  /// collection or a product) and its place in the list.
+  nameBn       String?
+  categoryId   String?   @db.Uuid
+  targetPath   String?
+  sortOrder    Int       @default(0)
   archivedAt   DateTime? @db.Timestamptz(3)
   createdAt    DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime  @updatedAt @db.Timestamptz(3)

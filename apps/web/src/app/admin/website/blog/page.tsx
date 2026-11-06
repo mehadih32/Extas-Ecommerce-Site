@@ -88,6 +88,9 @@ export default async function BlogBoardPage(props: Props) {
         sub={s('sub')}
         right={
           <div className="jr-acts">
+            <Link className="a2-btn" href={`${HERE}/plan`} data-testid="jr-plan-link">
+              {s('plan')}
+            </Link>
             <Link className="a2-btn" href={`${HERE}/shelves`} data-testid="jr-shelves-link">
               {s('shelves')}
             </Link>

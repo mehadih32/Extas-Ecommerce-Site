@@ -33,3 +33,16 @@
 .adm2 .jr-row .a2-btn{min-height:44px}
 .adm2 .jr-row b{overflow-wrap:anywhere}
 .adm2 .jr-form{display:grid;gap:10px;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:8px}
+/* S12 · PR 242 — Website › Blog & journal › Topic plan: the counts, a cluster's rows, the missing links. */
+.adm2 .pl-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(min-width:768px){.adm2 .pl-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.adm2 .pl-k{padding:12px 14px;min-width:0}
+.adm2 .pl-k.warn{border-color:var(--warn,#b7791f)}
+.adm2 .pl-v{font-size:24px;font-weight:700;line-height:1.2}
+.adm2 .pl-main{min-width:0;flex:1 1 240px;display:grid;gap:4px}
+.adm2 .pl-main b,.adm2 .pl-q{overflow-wrap:anywhere}
+.adm2 .pl-gaps{margin:0;padding-inline-start:18px;font-size:13px;color:var(--bad,#b42318);display:grid;gap:2px;overflow-wrap:anywhere}
+.adm2 .pl-off{opacity:.7}
+.adm2 .pl-add{align-items:flex-end}
+.adm2 .pl-add .a2-fld{flex:1 1 220px;min-width:0}
+.adm2 .pl-how{margin:8px 0 0;padding-inline-start:18px;display:grid;gap:6px}

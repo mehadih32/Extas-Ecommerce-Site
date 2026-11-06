@@ -5,10 +5,16 @@
 //          the article's words over the words a reader reads a minute in its language, never less than `minMinutes`.
 //          `reviewByAnother`: a person may not pass his own article's review steps (C11.2 "never the writer").
 //          `aiNote`: the honest line on an AI author's page and byline; empty = the shop's own words (C11.3).
+//   v223 · PR 242 `blog.clusters` — the topical cluster planner (C4.5, C11.2): which links an article of a cluster must
+//          carry (to its pillar article, to the cluster's shop page; the pillar to each live article of its cluster),
+//          shown on the planner always; `requireLinks` refuses publishing or scheduling while one is missing (off as
+//          it ships). A new topic is compared word by word with every article and topic: from `dupNear` % it is
+//          "a little alike", from `dupWarn` % "very close" and it needs a second press to add.
 import { z } from 'zod';
 import { setting } from './define';
 
 const V239 = 222;
+const V242 = 223;
 
 const wpm = z.int().min(60).max(400);
 const note = z.string().trim().max(200);
@@ -47,5 +53,40 @@ export const journalSettings = {
     isPublic: false,
     sortOrder: 10,
     version: V239,
+  }),
+};
+
+export const blogClustersSchema = z
+  .object({
+    /** Publishing or scheduling an article of a cluster is refused while a required link is missing. */
+    requireLinks: z.boolean(),
+    /** A supporting article must link to its cluster's pillar article. */
+    linkPillar: z.boolean(),
+    /** A supporting article must link to its cluster's shop page (a collection or a product). */
+    linkTarget: z.boolean(),
+    /** The pillar article must link to every live supporting article of its cluster. */
+    pillarLinksAll: z.boolean(),
+    /** From this word overlap (%) a new topic is "a little alike" an article or topic. */
+    dupNear: z.int().min(10).max(100),
+    /** From this word overlap (%) it is "very close" and needs a second press to add. */
+    dupWarn: z.int().min(10).max(100),
+  })
+  .strict()
+  .refine((v) => v.dupNear <= v.dupWarn, { path: ['dupNear'] });
+export type BlogClustersSettings = z.output<typeof blogClustersSchema>;
+
+export const clusterSettings = {
+  'blog.clusters': setting({
+    scope: 'store',
+    schema: blogClustersSchema,
+    default: { requireLinks: false, linkPillar: true, linkTarget: true, pillarLinksAll: true, dupNear: 40, dupWarn: 60 },
+    valueType: 'JSON',
+    group: 'blog',
+    labelKey: 'blog.clusters.label',
+    helpKey: 'blog.clusters.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 20,
+    version: V242,
   }),
 };

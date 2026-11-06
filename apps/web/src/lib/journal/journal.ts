@@ -39,6 +39,7 @@ import {
   type BlogColumn,
   type BlogState,
 } from './model';
+import { clusterGaps } from './clusters-model';
 
 const S = MOTHER_STORE_ID;
 type Db = PrismaClient;
@@ -58,7 +59,7 @@ export class JournalError extends Error {
   }
 }
 
-const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0, 16);
+export const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0, 16);
 const isUnique = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002';
 /** How many articles the board lists (newest change first). */
 export const LIST_MAX = 500; // hardcode-ok: a list length, not a business number
@@ -317,6 +318,9 @@ export async function journalAction(db: Db, resolver: Resolver, who: JournalWho,
   if (action === 'schedule' || action === 'publish') {
     const gaps = publishGaps({ title: before.title, body: before.body, slug: before.slug });
     if (gaps.length) throw new JournalError('NOT_READY', 409, gaps);
+    // PR 242: with `blog.clusters.requireLinks` on, an article of a cluster goes live only with its required links.
+    const missing = await linkGapsFor(db, resolver, before.id, now, storeId);
+    if (missing.length) throw new JournalError('LINKS_MISSING', 409, missing);
   }
   if (action === 'unschedule' && before.scheduledAt && before.publishedAt?.getTime() === before.scheduledAt.getTime()) data.publishedAt = null;
   if (action === 'publish') {
@@ -337,6 +341,21 @@ export async function journalAction(db: Db, resolver: Resolver, who: JournalWho,
   const after = (await journalPost(db, before.id, now, storeId))!;
   await audit(db, who.actor, { storeId, action: `blog.post.${action}`, entityType: 'BlogPost', entityId: before.id, before: { status: from }, after: { status: after.status } }, who.ctx);
   return after;
+}
+
+/** The shop paths an article of a cluster still has to link to, only while `blog.clusters.requireLinks` is on. */
+export async function linkGapsFor(db: Db, resolver: Resolver, postId: string, now: Date, storeId: number = S): Promise<string[]> {
+  const rules = await resolver.value('blog.clusters', { storeId });
+  if (!rules.requireLinks) return [];
+  const post = await db.blogPost.findFirst({ where: { id: postId, storeId }, select: { clusterId: true } });
+  if (!post?.clusterId) return [];
+  const [cluster, members] = await Promise.all([
+    db.contentCluster.findFirst({ where: { id: post.clusterId, storeId, archivedAt: null }, select: { pillarPostId: true, targetPath: true } }),
+    db.blogPost.findMany({ where: { storeId, clusterId: post.clusterId, archivedAt: null }, select: { id: true, slug: true, title: true, body: true, status: true, scheduledAt: true, archivedAt: true } }),
+  ]);
+  if (!cluster) return [];
+  const gaps = clusterGaps(cluster, members.map((m) => ({ id: m.id, slug: m.slug, title: m.title, body: m.body, live: isLive({ status: m.status as BlogState, scheduledAt: m.scheduledAt, archivedAt: m.archivedAt }, now) })), rules);
+  return (gaps.get(postId) ?? []).map((g) => g.path);
 }
 
 /** PUT {key: 'journal', value, version}: the journal's switch and numbers (`blog.publish`; audited). */
@@ -539,7 +558,7 @@ export async function liveCategories(db: Db, storeId: number) {
 
 // ---- the admin API ----
 
-const answer = (e: unknown): Response => (e instanceof JournalError ? json({ ok: false, error: e.code, ...(e.details ? { details: e.details } : {}) }, { status: e.status }) : errorResponse(e));
+export const answer = (e: unknown): Response => (e instanceof JournalError ? json({ ok: false, error: e.code, ...(e.details ? { details: e.details } : {}) }, { status: e.status }) : errorResponse(e));
 
 /**
  * /api/admin/blog/posts[/<id>] — GET the board (`blog.read`) with the editor's choices, or one article; POST a new
