@@ -1,10 +1,11 @@
 // S02 · PR 78 — the pure part of Website › Words & language: every dictionary word is listed (also the `_` keys), the
 // search, place and filters, paging, a change applied (empty or the shop's own text = back to the shop's word, an unknown
 // key, a too long word and a {slot} the shop's word lacks refused, other owner words untouched), and the CSV round trip.
+// PR 78 follow-up (678): a number or a time claim in the owner's word is marked (a warning, never a refusal).
 import { parseCsv, uncell, writeCsv } from '@extas/catalogue';
 import { describe, expect, it } from 'vitest';
 import { keysOf, SHOP_DICTS, shopT } from '../shop/dict';
-import { applyWords, defaultWord, patchFromCsv, untranslated, WORD_CSV_HEADER, WORD_GROUPS, WORD_KEYS, wordCsvRows, wordList } from './words';
+import { applyWords, claimsOf, defaultWord, ownClaim, patchFromCsv, untranslated, WORD_CSV_HEADER, WORD_GROUPS, WORD_KEYS, wordCsvRows, wordList } from './words';
 
 const KEY = 'checkout.title';
 const SLOT = keysOf(SHOP_DICTS.en).find((k) => /\{\w+\}/.test(defaultWord('en', k)))!;
@@ -94,5 +95,20 @@ describe('Words & language (PR 78)', () => {
   it('the shop shows the owner\'s word over its own, in each language', () => {
     expect(shopT('bn', { [KEY]: { bn: 'নমুনা' } })(KEY)).toBe('নমুনা');
     expect(shopT('en', { [KEY]: { bn: 'নমুনা' } })(KEY)).toBe(defaultWord('en', KEY));
+  });
+
+  it('marks an owner`s word with a number or a time claim the shop`s word lacks; never refuses it (678)', () => {
+    expect([...claimsOf('Only 3 left this week')].sort()).toEqual(['number', 'time']);
+    expect([...claimsOf('আজই অর্ডার করুন, ৫০% ছাড়')].sort()).toEqual(['number', 'time']);
+    expect(claimsOf('Bag, {n} items').size).toBe(0);
+    expect(claimsOf('Weekly picks for you').size).toBe(0);
+    expect(ownClaim('Delivery in 2 days', 'Fast delivery')).toBe(true);
+    expect(ownClaim('', 'Fast delivery')).toBe(false);
+    expect(ownClaim('100% genuine', '100%| original')).toBe(false); // the shop`s word has the number already
+    const labels = { 'nav.newIn': { en: 'New this week', bn: '' } };
+    const r = wordList(labels, { show: 'claims' }, 40);
+    expect(r).toMatchObject({ claims: 1, total: 1 });
+    expect(r.rows[0]).toMatchObject({ key: 'nav.newIn', claim: true });
+    expect(applyWords(null, { 'nav.newIn': { en: 'New this week' } }).bad).toEqual([]);
   });
 });

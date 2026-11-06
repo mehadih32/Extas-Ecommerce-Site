@@ -3,7 +3,8 @@
 // shop's word removes the owner's; the shop reads them (`shopT`); refused: a word the shop lacks, a {slot} its word lacks,
 // a save after another save (also one from Orders › Invoices); seeing needs `website.read`, saving `website.words.write`;
 // audited once per save that changes something; the CSV export is every word. PR 78 follow-up (674): each word on the page
-// carries when it last changed (the settings' change history), a word never changed none.
+// carries when it last changed (the settings' change history), a word never changed none. PR 78 follow-up (678): a save
+// names back the words that now make a number or a time claim (a warning only).
 // A throwaway database (skipped without TEST_DATABASE_ADMIN_URL). Sample values only.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
@@ -145,4 +146,15 @@ describe.skipIf(!HAS_TEST_DB)('Website › Words & language on PostgreSQL (PR 78
     const never = first.rows.find((r) => !(r.key in changed.lastChanged))!;
     expect(first.lastChanged[never.key]).toBeUndefined();
   });
+
+  it('a saved word with a number or a time claim is named back as a warning; the save stands (678)', async () => {
+    const v = (await api('GET')).a.version;
+    const put = await api('PUT', { body: { version: v, words: { [KEY]: { en: 'Pay this week, 10% off' } } } });
+    expect(put.a).toMatchObject({ ok: true, changed: [KEY], claims: [KEY] });
+    expect((await labels())?.[KEY]?.en).toBe('Pay this week, 10% off');
+    const listed = (await api('GET', { q: 'show=claims' })).a;
+    expect(listed.rows.map((r) => r.key)).toEqual([KEY]);
+    expect(listed.claims).toBe(1);
+  });
 });
+

@@ -6,6 +6,8 @@
 // every word as CSV; its import sends the whole file and reloads the page. Words: messages/admin-words.<lang>.json.
 // PR 78 follow-up (674): each row says when the word last changed (the page hands the time already written out), and
 // "Changed just now" after a save here.
+// PR 78 follow-up (678): a word of the owner's with a number or a time claim the shop's word lacks carries "Check:
+// number or date" and, right after its save, the reminder to change it when it stops being true (never a refusal).
 import { useRouter } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import type { WordRow } from '@/lib/website/words';
@@ -22,6 +24,9 @@ export interface WordsEditorWords {
   /** PR 78 follow-up (674): "Last changed {at}" and "Changed just now". */
   when: string;
   justNow: string;
+  /** PR 78 follow-up (678): the claim pill and the reminder after a save. */
+  claim: string;
+  claimSaved: string;
   untr: string;
   change: string;
   ownEn: string;
@@ -39,7 +44,7 @@ export interface WordsEditorWords {
 type Msg = { ok: boolean; text: string } | null;
 type Own = { en: string; bn: string };
 
-async function put(payload: Record<string, unknown>): Promise<{ ok: boolean; error?: string; details?: (string | number)[]; version?: string; changed?: string[]; saved?: Record<string, { en?: string; bn?: string }> }> {
+async function put(payload: Record<string, unknown>): Promise<{ ok: boolean; error?: string; details?: (string | number)[]; version?: string; changed?: string[]; claims?: string[]; saved?: Record<string, { en?: string; bn?: string }> }> {
   try {
     const res = await fetch(API, { method: 'PUT', credentials: 'same-origin', cache: 'no-store', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
     const a = (await res.json().catch(() => ({}))) as Record<string, unknown>;
@@ -70,6 +75,7 @@ interface RowProps {
 function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProps) {
   const [own, setOwn] = useState<Own>(row.own);
   const [lastText, setLastText] = useState(when ? w.when.replace('{at}', when) : '');
+  const [claim, setClaim] = useState(row.claim);
   const [draft, setDraft] = useState<Own>(row.own);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
@@ -89,7 +95,10 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
     setDraft(saved);
     if (a.version) setVersion(a.version);
     if (a.changed?.includes(row.key)) setLastText(w.justNow);
-    showToast({ text: done, tone: 'ok' });
+    const claimed = !!a.claims?.includes(row.key);
+    setClaim(claimed);
+    // follow-up 678's soft claim warning rides on the one toast (the row keeps its "Check" pill)
+    showToast(claimed ? { text: `${done} ${w.claimSaved}`, tone: 'info' } : { text: done, tone: 'ok' });
   }
 
   const shown = (lang: 'en' | 'bn') => (
@@ -117,6 +126,11 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
           </span>
         ) : null}
         {row.untranslated && !(own.bn || own.en) ? <span className="a2-pill warn">{w.untr}</span> : null}
+        {claim ? (
+          <span className="a2-pill warn" data-testid="wd-claim">
+            {w.claim}
+          </span>
+        ) : null}
         {lastText ? (
           <span className="a2-xs a2-mute" data-testid="wd-when">
             {lastText}

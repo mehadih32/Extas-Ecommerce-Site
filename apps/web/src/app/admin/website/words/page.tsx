@@ -12,6 +12,7 @@
 // admin's language and the store's time zone.
 // PR 78 follow-up (677): "The admin's words" (?set=admin): every word of the admin pages (lib/website/admin-words), read
 // only, searched and paged; the shop's words stay the default list.
+// PR 78 follow-up (678): "Numbers and dates to check" in Show (the owner's words with a count or a time claim).
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -84,6 +85,8 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
     changed: g('changed'),
     when: g('when', { at: '{at}' }),
     justNow: g('justNow'),
+    claim: g('claim'),
+    claimSaved: g('claimSaved'),
     untr: g('untr'),
     change: g('change'),
     ownEn: g('ownEn'),
