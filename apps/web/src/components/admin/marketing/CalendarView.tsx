@@ -99,6 +99,8 @@ export interface MonthWords {
  */
 export function CalendarMonth({ items, weeks, today, locale, bn, w, mw, perDay, testId = 'mc-month' }: { items: CalendarItem[]; weeks: { day: string; out: boolean }[][]; today: string; locale: string; bn: boolean; w: CalendarViewWords; mw: MonthWords; perDay: number; testId?: string }) {
   const dow = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' });
+  // phones: the narrow day names (a 14 px short name does not fit a seventh of a phone)
+  const dowNarrow = new Intl.DateTimeFormat(locale, { weekday: 'narrow', timeZone: 'UTC' });
   const num = new Intl.NumberFormat(locale, { numberingSystem: 'latn' });
   const long = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', timeZone: 'UTC', numberingSystem: 'latn' });
   const at = (day: string) => new Date(`${day}T00:00:00Z`);
@@ -107,8 +109,13 @@ export function CalendarMonth({ items, weeks, today, locale, bn, w, mw, perDay, 
       <div className="mc-month" role="table">
         <div className="mc-week mc-dow" role="row">
           {(weeks[0] ?? []).map((c) => (
-            <span key={c.day} role="columnheader">
-              {dow.format(at(c.day))}
+            <span key={c.day} role="columnheader" aria-label={dow.format(at(c.day))}>
+              <span className="mc-dw-s" aria-hidden="true">
+                {dow.format(at(c.day))}
+              </span>
+              <span className="mc-dw-n" aria-hidden="true">
+                {dowNarrow.format(at(c.day))}
+              </span>
             </span>
           ))}
         </div>
@@ -117,6 +124,8 @@ export function CalendarMonth({ items, weeks, today, locale, bn, w, mw, perDay, 
             {week.map((c) => {
               const on = c.out ? [] : itemsOn(items, c.day);
               const shown = on.slice(0, perDay);
+              // phones draw every item as a dot (no "+n more" words there): the rest are dots only
+              const rest = on.slice(perDay);
               return (
                 <div key={c.day} role="cell" className={`mc-day${c.out ? ' out' : ''}${c.day === today ? ' today' : ''}`} aria-label={`${long.format(at(c.day))}${on.length ? ` · ${on.map((i) => itemTitle(i, bn)).join(', ')}` : ''}`} data-testid="mc-day" data-day={c.day} data-n={on.length}>
                   <span className="mc-dn" aria-hidden="true">
@@ -126,6 +135,9 @@ export function CalendarMonth({ items, weeks, today, locale, bn, w, mw, perDay, 
                     <span key={i.id} className={`mc-chip ${i.state}`} data-lane={i.lane} title={`${w.lane[i.lane] ?? i.lane} · ${itemTitle(i, bn)} · ${w.state[i.state] ?? i.state}`} aria-hidden="true">
                       <span className="mc-ct">{itemTitle(i, bn)}</span>
                     </span>
+                  ))}
+                  {rest.map((i) => (
+                    <span key={i.id} className={`mc-chip mc-x ${i.state}`} data-lane={i.lane} aria-hidden="true" />
                   ))}
                   {on.length > shown.length ? (
                     <span className="mc-more" aria-hidden="true">
