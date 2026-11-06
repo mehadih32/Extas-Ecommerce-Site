@@ -12,6 +12,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { typedMinor } from '@/lib/admin-books/money';
 import type { ExpenseHeadRow, ExpensesView } from '@/lib/expenses-api';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 import { formatMoney, type Money } from '../products/model';
 
 export interface ExpensesScreenProps {
@@ -78,7 +79,8 @@ export function ExpensesScreen(p: ExpensesScreenProps) {
       setNote('');
       setReceipt(null);
       setFileKey((k) => k + 1);
-      setSaid({ text: c('entry.added'), bad: false });
+      setSaid(null);
+      showToast({ text: c('entry.added'), tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errText(a.status === 0 ? 'network' : a.data.error), bad: true });
@@ -96,7 +98,8 @@ export function ExpensesScreen(p: ExpensesScreenProps) {
       const data = (await res.json().catch(() => ({}))) as { error?: string; file?: { id: string; fileName: string | null } };
       if (res.status === 201 && data.file) {
         setReceipt({ id: data.file.id, name: data.file.fileName ?? f.name });
-        setSaid({ text: c('entry.receiptAdded', { name: data.file.fileName ?? f.name }), bad: false });
+        setSaid(null);
+        showToast({ text: c('entry.receiptAdded', { name: data.file.fileName ?? f.name }), tone: 'ok' });
       } else {
         setFileKey((k) => k + 1);
         setSaid({ text: errText(data.error), bad: true });
@@ -114,7 +117,8 @@ export function ExpensesScreen(p: ExpensesScreenProps) {
     setBusy(false);
     if (a.status === 201) {
       setUndo(null);
-      setSaid({ text: c('list.reversedNow'), bad: false });
+      setSaid(null);
+      showToast({ text: c('list.reversedNow'), tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errText(a.status === 0 ? 'network' : a.data.error), bad: true });
@@ -127,7 +131,8 @@ export function ExpensesScreen(p: ExpensesScreenProps) {
     if (a.status === 201) {
       setHEn('');
       setHBn('');
-      setHSaid({ text: c('heads.added'), bad: false });
+      setHSaid(null);
+      showToast({ text: c('heads.added'), tone: 'ok' });
       return router.refresh();
     }
     setHSaid({ text: errText(a.status === 0 ? 'network' : a.data.error), bad: true });

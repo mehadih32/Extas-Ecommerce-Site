@@ -13,6 +13,7 @@ import { useId, useMemo, useState } from 'react';
 import type { CostEntryRow, FixedCostsView } from '@extas/inventory';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 import { typedMinor } from '@/lib/admin-books/money';
 import { formatMoney, toMajor, type Money } from '../products/model';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -97,7 +98,8 @@ export function CostsScreen(p: CostsScreenProps) {
     setFBusy(false);
     if (a.status === 200) {
       const r = a.data.result as { changed: boolean; version: number };
-      setFSaid({ text: r.changed ? c('fixed.saved', { n: r.version }) : c('fixed.same'), bad: false });
+      setFSaid(null);
+      showToast({ text: r.changed ? c('fixed.saved', { n: r.version }) : c('fixed.same'), tone: 'ok' });
       setDraft((d) => ({ ...d, from: null }));
       return router.refresh();
     }
@@ -126,7 +128,8 @@ export function CostsScreen(p: CostsScreenProps) {
       setReqKey(newKey());
       setAmount('');
       setENote('');
-      setESaid({ text: (a.data.result as { resummarised: boolean }).resummarised ? c('lines.addedResent') : c('lines.added'), bad: false });
+      setESaid(null);
+      showToast({ text: (a.data.result as { resummarised: boolean }).resummarised ? c('lines.addedResent') : c('lines.added'), tone: 'ok' });
       return router.refresh();
     }
     setESaid({ text: errText(a.status === 0 ? 'network' : a.data.error), bad: true });
@@ -139,7 +142,8 @@ export function CostsScreen(p: CostsScreenProps) {
     setEBusy(false);
     if (a.status === 201) {
       setUndo(null);
-      setESaid({ text: c('lines.reversedOk'), bad: false });
+      setESaid(null);
+      showToast({ text: c('lines.reversedOk'), tone: 'ok' });
       return router.refresh();
     }
     setESaid({ text: errText(a.status === 0 ? 'network' : a.data.error), bad: true });
@@ -149,7 +153,8 @@ export function CostsScreen(p: CostsScreenProps) {
     const a = await call('PUT', '/api/admin/costs/no-cost-lines', { value: never });
     setEBusy(false);
     if (a.status === 200) {
-      setNSaid({ text: c('lines.neverSaved'), bad: false });
+      setNSaid(null);
+      showToast({ text: c('lines.neverSaved'), tone: 'ok' });
       return router.refresh();
     }
     setNSaid({ text: errText(a.status === 0 ? 'network' : a.data.error), bad: true });

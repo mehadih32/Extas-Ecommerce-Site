@@ -47,6 +47,17 @@
       "UPAY": "Upay",
       "ONLINE": "Online"
     },
-    "asOf": "As of {at}"
+    "asOf": "As of {at}",
+    "hero": {
+      "title": "Cash received, day by day",
+      "series": "Received",
+      "prev": "The days before",
+      "r7": "7 days",
+      "r30": "30 days",
+      "vs7": "vs the 7 days before ({amount})",
+      "payments": "Payments",
+      "perDay": "A day on average",
+      "tiles": "Cash received by window"
+    }
   }
 }

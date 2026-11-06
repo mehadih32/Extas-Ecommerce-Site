@@ -9,6 +9,7 @@ import { useId, useState } from 'react';
 import { t, type Dict } from '@/lib/i18n';
 import { typedMinor } from '@/lib/admin-books/money';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 import { formatMoney, type Money } from '../products/model';
 
 export interface PrepaidRow {
@@ -72,7 +73,8 @@ export function PrepaidCard(p: PrepaidCardProps) {
       setAmount('');
       setCredits('');
       setNote('');
-      setSaid({ text: c('prepaid.added', { balance: m(Number(a.data.balanceMinor ?? 0)) }), bad: false });
+      setSaid(null);
+      showToast({ text: c('prepaid.added', { balance: m(Number(a.data.balanceMinor ?? 0)) }), tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errText(a.status === 0 ? 'network' : a.data.error), bad: true });
@@ -85,7 +87,8 @@ export function PrepaidCard(p: PrepaidCardProps) {
     setBusy(false);
     if (a.status === 200) {
       setLow('');
-      setSaid({ text: lowMinor === null ? c('prepaid.lowCleared') : c('prepaid.lowSaved', { low: m(lowMinor) }), bad: false });
+      setSaid(null);
+      showToast({ text: lowMinor === null ? c('prepaid.lowCleared') : c('prepaid.lowSaved', { low: m(lowMinor) }), tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errText(a.status === 0 ? 'network' : a.data.error), bad: true });

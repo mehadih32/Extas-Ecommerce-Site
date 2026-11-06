@@ -5,9 +5,12 @@
 // permission, the owner's rules and four eyes again and writes the audit row; the page is read again after. A payout and
 // the apology are sent with a request key kept until they are written, so a double tap records them once. Money back by
 // bKash or the bank is sent by a person first; "Mark paid" only records its reference (CLAUDE.md rule 6).
+// PR 642 (CN-036): the "done" line goes to the admin's one toast with no Undo (lib/admin-lumen/safety.ts: refunds and
+// payouts are guarded); the [confirm] tick, the four eyes and the request key stay as they were.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { typedMinor } from '@/lib/admin-books/money';
+import { showToast } from '../lumen/Toast';
 
 export type Words = Record<string, string>;
 
@@ -102,7 +105,8 @@ export function RefundActions(p: RefundActionsProps) {
     if (!a.error) {
       setKey(newKey());
       setOpen(null);
-      setSaid({ text: p.w[`done.${open}`] ?? '', bad: false });
+      setSaid(null);
+      showToast({ text: p.w[`done.${open}`] ?? '', tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errWords(p.w, a.error), bad: true });
@@ -197,7 +201,8 @@ export function ApologyGive(p: ApologyGiveProps) {
     setBusy(false);
     if (!a.error) {
       setOpen(false);
-      setSaid({ text: p.w['done.apology'] ?? '', bad: false });
+      setSaid(null);
+      showToast({ text: p.w['done.apology'] ?? '', tone: 'ok' });
       return router.refresh();
     }
     setSaid({ text: errWords(p.w, a.error), bad: true });

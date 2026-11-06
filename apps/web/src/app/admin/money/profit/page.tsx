@@ -53,7 +53,7 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="money-profit" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="books.read" />
       </div>
     );
@@ -107,7 +107,7 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
   ];
 
   return (
-    <div className="a2-z" data-testid="money-profit" data-from={q.from} data-to={q.to}>
+    <div className="a2-z" data-testid="money-profit" data-lm-ready="" data-from={q.from} data-to={q.to}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
 

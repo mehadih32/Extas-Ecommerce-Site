@@ -45,7 +45,7 @@ export default async function CostLedgerPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="cost-ledger" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="books.read" />
       </div>
     );
@@ -70,7 +70,7 @@ export default async function CostLedgerPage() {
   );
 
   return (
-    <div className="a2-z" data-testid="cost-ledger">
+    <div className="a2-z" data-testid="cost-ledger" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
       <p className="a2-xs a2-mute a2-mt12">{c('asOf', { at: when(o.at) })}</p>
