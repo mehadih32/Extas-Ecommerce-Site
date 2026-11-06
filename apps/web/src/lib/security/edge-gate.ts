@@ -140,7 +140,14 @@ export function clientAddress(h: OriginHeaders): string {
   return h.get('cf-connecting-ip') ?? h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? h.get('x-real-ip') ?? 'unknown';
 }
 
-export type GateAnswer = { kind: 'pass' } | { kind: 'refuse'; status: 403 | 429; error: string; retryAfterSeconds?: number };
+/**
+ * `drop` (PR 378 follow-up, CN-036 enforce): a browser's report over its limit (page-speed figures, problem and policy
+ * reports, the tracking beacon) is answered "204 nothing to do" and never reaches its handler, so nothing is stored —
+ * the page sent it as fire-and-forget and is never told it failed. Many phones share one mobile-network address in
+ * Bangladesh, and the smoke and gate runs open hundreds of pages from the server's one address: a 429 there would only
+ * show as a failed request.
+ */
+export type GateAnswer = { kind: 'pass' } | { kind: 'drop' } | { kind: 'refuse'; status: 403 | 429; error: string; retryAfterSeconds?: number };
 
 export interface GateRequest {
   method: string;
@@ -173,6 +180,7 @@ export function apiGate(
     (opts.log ?? console.warn)(`rate-limit (${policy.rate.mode}): ${bucket} over ${limit}/min from address ${addressTag(ip)}`);
   }
   if (policy.rate.mode === 'observe') return { kind: 'pass' };
+  if (bucket === 'report') return { kind: 'drop' };
   return { kind: 'refuse', status: 429, error: 'RATE_LIMITED', retryAfterSeconds: Math.max(1, Math.ceil((resetAt - now) / 1000)) };
 }
 

@@ -93,6 +93,21 @@ describe('per-address limits', () => {
     expect(at(70_000).kind).toBe('pass'); // a new minute
   });
 
+  it('enforce drops a browser report over its limit quietly (204 in the proxy, never a 429 a page would show)', () => {
+    const counter = new RateCounter();
+    const p = policy('enforce', { report: 1 });
+    const send = (path: string) => apiGate(req('POST', path, ok), { policy: p, now: 5_000, counter, log: () => {} });
+    expect(send('/api/shop/vitals').kind).toBe('pass');
+    expect(send('/api/shop/vitals')).toEqual({ kind: 'drop' });
+    expect(send('/api/problems')).toEqual({ kind: 'drop' });
+    expect(send('/api/shop/track')).toEqual({ kind: 'drop' });
+    // a change the person made is still told to try again
+    const q = policy('enforce', { shopWrite: 1 });
+    const bag = () => apiGate(req('POST', '/api/bag/lines', ok), { policy: q, now: 5_000, counter, log: () => {} });
+    expect(bag().kind).toBe('pass');
+    expect(bag()).toMatchObject({ kind: 'refuse', status: 429 });
+  });
+
   it('counts each address on its own, and nothing while off or before the settings were read', () => {
     const counter = new RateCounter();
     const p = policy('enforce', { shopWrite: 1 });

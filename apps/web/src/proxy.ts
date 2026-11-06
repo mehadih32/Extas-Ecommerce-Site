@@ -50,6 +50,8 @@ function gateApi(req: NextRequest): NextResponse {
   const a = apiGate({ method: req.method, path: req.nextUrl.pathname, url: req.url, headers: req.headers });
   if (a.kind === 'pass') return NextResponse.next();
   const headers: Record<string, string> = { 'cache-control': 'no-store' };
+  // PR 378 follow-up: a report over its limit is dropped quietly (nothing stored, nothing for the page to show)
+  if (a.kind === 'drop') return new NextResponse(null, { status: 204, headers });
   if (a.retryAfterSeconds) headers['retry-after'] = String(a.retryAfterSeconds);
   return NextResponse.json({ ok: false, error: a.error }, { status: a.status, headers });
 }
