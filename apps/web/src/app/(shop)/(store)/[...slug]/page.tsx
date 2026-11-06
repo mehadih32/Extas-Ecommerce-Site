@@ -3,14 +3,17 @@
 // so it cannot be a folder of its own. CN-010 (owner): a page a later PR builds (search, account, help …; the list is
 // the routing table's COMING_SOON) shows "Coming soon" inside the store shell; every other address gets the shop's
 // own "page not found". ~~Every unknown address: notFound().~~ The words are the dictionary's.
+// PR 40 follow-up (6 Nov): an address the proxy already answered HTTP 404 for (lib/shop/unknown-address) draws the
+// shop's not-found page here, on the server, in the shop's shell; any other miss throws (drawn in the browser, 404 too).
 import type { Metadata } from 'next';
 import { ComingSoon } from '@/components/shop/ComingSoon';
+import { NotFoundView, notFoundMetadata } from '@/components/shop/NotFoundView';
 import { ProductPage, productMetadata, type ProductSearch } from '@/components/shop/product/ProductPage';
 import { shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
 import { productRoute } from '@/lib/shop/product-model';
 import { comingSoon } from '@/lib/shop/routes';
-import { shopNotFound } from '@/lib/shop/not-found';
+import { countMissing, markedMissing, shopNotFound } from '@/lib/shop/not-found';
 
 type Props = { searchParams: Promise<ProductSearch> };
 
@@ -18,7 +21,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const c = await shopContext();
   if (productRoute(c.path, c.s['naming.productPathPrefix'])) return productMetadata(c, await props.searchParams);
   const key = comingSoon(c.path, c.s['naming.productPathPrefix']);
-  if (!key) return {};
+  if (!key) return (await markedMissing()) ? notFoundMetadata(c) : {};
   return { ...(await shopMetadata(c, `soon-${key}`, c.t('soon.title'))), robots: { index: false, follow: true } };
 }
 
@@ -26,6 +29,10 @@ export default async function Soon(props: Props) {
   const c = await shopContext();
   if (productRoute(c.path, c.s['naming.productPathPrefix'])) return <ProductPage search={await props.searchParams} />;
   const key = comingSoon(c.path, c.s['naming.productPathPrefix']);
-  if (!key) shopNotFound(c);
+  if (!key) {
+    if (!(await markedMissing())) shopNotFound(c);
+    countMissing(c);
+    return <NotFoundView c={c} />;
+  }
   return <ComingSoon c={c} soonKey={key} />;
 }

@@ -83,6 +83,8 @@
     {"pr": 12, "what": "Needs you now answers from the real queues (DSH-01)", "request": {"method": "GET", "path": "/api/admin/dashboard/queues"}, "status": 200, "field": "queues"},
     {"pr": 12, "what": "an admin address that does not exist answers 404 (SH-07)", "request": {"method": "GET", "path": "/admin/no-such-page"}, "status": 404},
     {"pr": 12, "what": "the 404 page is the shell's own 'page not found' state (SH-07)", "page": "/admin/no-such-page", "selector": "[data-testid=a2-state]", "attribute": "data-state", "equals": "notfound"},
+    {"pr": 40, "what": "a shop address with no page answers 404 (PR 40 follow-up: the proxy answers it, the catch-all draws it on the server)", "request": {"method": "GET", "path": "/no-such-page-smoke"}, "status": 404},
+    {"pr": 40, "what": "the shop's 404 is the shop's own not-found page, in Bengali too (PR 40 follow-up)", "page": "/bn/no-such-page-smoke", "selector": "main [data-testid=shop-notfound]", "attribute": "data-testid", "equals": "shop-notfound"},
     {"pr": 12, "what": "the 'no access' state draws inside the shell (SH-07)", "page": "/admin?home=1&state=denied", "selector": "[data-testid=a2-state]", "attribute": "data-state", "equals": "denied"},
     {"pr": 12, "what": "the 'could not load' state draws inside the shell (SH-07)", "page": "/admin?home=1&state=error", "selector": "[data-testid=a2-state]", "attribute": "data-state", "equals": "error"},
     {"pr": 12, "what": "the old delivery address lands on the Delivery section's Zones tab (permanent redirect)", "page": "/admin/delivery", "selector": "[data-testid=delivery-zones]", "attribute": "data-testid", "equals": "delivery-zones"},
