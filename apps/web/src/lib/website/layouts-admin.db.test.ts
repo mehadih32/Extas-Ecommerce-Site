@@ -78,6 +78,9 @@ describe.skipIf(!HAS_TEST_DB)('Website › Page layouts on PostgreSQL (PR 76)', 
     expect(h.a.rows.every((r) => r.on)).toBe(true);
     const c = await api('GET', { page: 'category' });
     expect(c.a).toMatchObject({ page: 'category', locked: ['head', 'listing'], rows: [{ id: 'head', on: true }, { id: 'listing', on: true }, { id: 'info', on: true }, { id: 'related', on: true }] });
+    // PR 77: the product page's foot and the bag's left column
+    expect((await api('GET', { page: 'product' })).a.rows.map((r) => r.id)).toEqual(['alternatives', 'reviews', 'questions', 'messenger', 'rows']);
+    expect((await api('GET', { page: 'bag' })).a).toMatchObject({ locked: ['lines'], rows: [{ id: 'free' }, { id: 'lines' }, { id: 'offer' }, { id: 'whatsapp' }, { id: 'bulk' }, { id: 'saved' }] });
     expect((await api('GET', { page: 'nowhere' })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['page'] });
     expect((await api('PUT', { cookie: desk, body: { page: 'category', sections: c.a.rows, version: c.a.version } })).status).toBe(403);
   });
@@ -111,6 +114,10 @@ describe.skipIf(!HAS_TEST_DB)('Website › Page layouts on PostgreSQL (PR 76)', 
     expect((await put(c.rows.map((r) => ({ ...r, dev: 'tablet' })))).a).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
     expect((await put(c.rows.map((r) => (r.id === 'listing' ? { ...r, on: false } : r)))).a).toMatchObject({ ok: false, error: 'LOCKED' });
     expect((await put(c.rows, 'old')).a).toMatchObject({ ok: false, error: 'STALE' });
+    const bag = (await api('GET', { page: 'bag' })).a;
+    expect((await api('PUT', { body: { page: 'bag', sections: bag.rows.map((r) => (r.id === 'lines' ? { ...r, on: false } : r)), version: bag.version } })).a).toMatchObject({ ok: false, error: 'LOCKED' });
+    const bagRows = [...bag.rows].reverse().map((r) => (r.id === 'saved' ? { ...r, dev: 'desktop' } : r));
+    expect((await api('PUT', { body: { page: 'bag', sections: bagRows, version: bag.version } })).a.rows[0]).toEqual({ id: 'saved', on: true, dev: 'desktop' });
     expect((await api('PUT', { body: { page: 'checkout', sections: [], version: c.version } })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['page'] });
   });
 });

@@ -7,11 +7,15 @@
     "pages": "Pages",
     "page": {
       "home": "Home page",
-      "category": "Category pages"
+      "category": "Category pages",
+      "product": "Product pages",
+      "bag": "Bag"
     },
     "cardH": {
       "home": "Sections of the home page",
-      "category": "Sections of every category page"
+      "category": "Sections of every category page",
+      "product": "Sections under every product page's photos and buy column",
+      "bag": "Sections of the bag beside the summary"
     },
     "count": "{on} of {all} shown",
     "open": "Open the page",
@@ -30,7 +34,17 @@
       "head": "Heading",
       "listing": "Products",
       "info": "Your text and questions",
-      "related": "More collections"
+      "related": "More collections",
+      "alternatives": "Other styles",
+      "questions": "Questions & answers",
+      "messenger": "Messenger button",
+      "rows": "Wear it with · You may also like · Recently viewed",
+      "free": "Free delivery bar",
+      "lines": "Products in the bag",
+      "offer": "Offer",
+      "whatsapp": "WhatsApp help",
+      "bulk": "Bulk order card",
+      "saved": "Saved for later"
     },
     "hint": {
       "hero": "The big panel at the top with its pictures",
@@ -46,7 +60,17 @@
       "head": "Breadcrumb, title and count",
       "listing": "Filters, sort and the product grid",
       "info": "Shows only when the page has text or questions",
-      "related": "Links to other collections"
+      "related": "Links to other collections",
+      "alternatives": "Shows only when the product is off sale",
+      "questions": "Answered questions only",
+      "messenger": "Shows only while the Messenger button is on",
+      "rows": "Other styles from the shop",
+      "free": "Shows only while the free delivery bar is on",
+      "lines": "The products, sets and size cards",
+      "offer": "The one offer the bag can show",
+      "whatsapp": "Shows only with the shop's WhatsApp number",
+      "bulk": "Shows only while bulk orders are on",
+      "saved": "Shows only while saved for later is on"
     },
     "always": "Always shown",
     "show": "Show",
@@ -69,12 +93,16 @@
     "readOnly": "You can see this page. Changing it needs the permission to change page layouts.",
     "err": {
       "INVALID_INPUT": "Something in the list is not right ({fields}). Reload the page and try again.",
-      "LOCKED": "The heading and the products are always shown.",
+      "LOCKED": "A section marked \"Always shown\" cannot be hidden.",
       "STALE": "Someone saved this page a moment ago. Reload the page to see the newest layout.",
       "forbidden": "You do not have permission to change page layouts.",
       "unauthorized": "Your session ended. Sign in again.",
       "network": "No connection. Check the internet and try again.",
       "other": "Could not save. Try again."
+    },
+    "fixedNote": {
+      "product": "The photos, the buy column and the buy bar stay as they are, so the first screen keeps its size and the buy button.",
+      "bag": "The summary and the phone's checkout bar stay as they are."
     }
   }
 }

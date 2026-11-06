@@ -243,6 +243,14 @@
     "category": {
       "label": "Category page sections",
       "help": "Which parts a category page shows, in which order and on which screens: the heading (breadcrumb, title, count), the products (filters, sort, grid), your text with the questions, and More collections. The heading and the products are always shown; they can still move. Change it on Website › Page layouts."
+    },
+    "product": {
+      "label": "Product page sections",
+      "help": "Which parts show under the photos and the buy column of every product page, in which order and on which screens: other styles (only when the product is off sale), reviews, questions, the Messenger button and the rows of other styles. The photos, the buy column and the buy bar stay as they are. Change it on Website › Page layouts."
+    },
+    "bag": {
+      "label": "Bag page sections",
+      "help": "Which parts the bag shows beside the summary, in which order and on which screens: the free delivery bar, the bag's products, the offer, WhatsApp help, the bulk order card and saved for later. The products always show. Change it on Website › Page layouts."
     }
   }
 }

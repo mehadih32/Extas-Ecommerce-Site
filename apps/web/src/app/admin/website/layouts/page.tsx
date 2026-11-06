@@ -1,5 +1,6 @@
 // S02 · PR 76 (register "Page builder — sections, drag order, show/hide, per page"; Blueprint D1.3, D4.2;
-// BACKEND-ARCHITECTURE WEB-02) — Website › Page layouts at /admin/website/layouts (?page=home | category): the page
+// BACKEND-ARCHITECTURE WEB-02) — Website › Page layouts at /admin/website/layouts (?page=home | category | product | bag,
+// PR 77): the page
 // picker, then the page's sections in order (Show, screens, ▲ ▼, drag on a computer), Save, Discard changes and "Back to
 // the default order", and "Open the page". The defaults draw today's pages. Seeing needs `website.read`; saving
 // `website.layout.write` (the API checks again; audited). lib/website/layouts-admin.ts, components/admin/website/
@@ -27,8 +28,11 @@ export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/website/layouts';
 const KEY = 'websiteLayouts';
-/** The shop page each layout opens: the home page, and the "New in" page (every shop has it) for the category pages. */
-const OPEN: Record<LayoutPage, string> = { home: ROUTES.home, category: ROUTES.newIn };
+/**
+ * The shop page each layout opens: the home page, the "New in" page (every shop has it) for the category pages and,
+ * PR 77, for the product pages (a product is one tap away there), and the bag.
+ */
+const OPEN: Record<LayoutPage, string> = { home: ROUTES.home, category: ROUTES.newIn, product: ROUTES.newIn, bag: ROUTES.bag };
 
 function withScreen(view: AdminView): AdminView {
   return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
@@ -101,6 +105,7 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
           {g(`cardH.${page}`)}
         </h2>
         {page === 'home' ? <p className="a2-xs a2-mute lyb-mt6">{g('seasonal')}</p> : null}
+        {page === 'product' || page === 'bag' ? <p className="a2-xs a2-mute lyb-mt6">{g(`fixedNote.${page}`)}</p> : null}
         {!canEdit ? <p className="a2-xs a2-mute lyb-mt6">{g('readOnly')}</p> : null}
         <LayoutEditor key={page} page={page} rows={lv.rows} defaults={lv.defaults} locked={lv.locked} version={lv.version} names={names} hints={hints} canEdit={canEdit} w={w} />
         <div className="lyb-bar">

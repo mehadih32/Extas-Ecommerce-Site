@@ -17,10 +17,12 @@
 // (`?s=`); its reference (`?r=`) goes to the support beacon (SupportRefBeacon), which credits an order to the chat.
 // S13 · PR 281: under the stock line, the live festive rule's cut-off words for this product (Marketing › Festive
 // cut-off, off as shipped: nothing drawn).
+// S02 · PR 77: the sections under the first screen (other styles, reviews, questions, Messenger, the rows) come in the
+// owner's order and on his screens (`layout.product`, Website › Page layouts); the first screen itself stays fixed.
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { cache } from 'react';
+import { cache, type ReactNode } from 'react';
 import { bagSettings, currentBag } from '@/lib/shop/bag';
 import { reassurance } from '@/lib/shop/bag-model';
 import { bagPickCards, cardsByIds } from '@/lib/shop/catalogue';
@@ -86,9 +88,14 @@ import { PdpT3Card } from './PdpT3Card';
 import { Icon } from '../Icon';
 import { PdpStock } from './PdpStock';
 import { PdpTrust } from './PdpTrust';
+import { LayoutPart } from '../LayoutPart';
+import { shownSections } from '@/lib/shop/layouts';
+import type { ProductSectionId } from '@extas/settings';
 import './pdp.css';
 
 const KEYS = [
+  // PR 77: the sections under the first screen, in the owner's order and on his screens (Website › Page layouts)
+  'layout.product',
   'seo.structuredData',
   'pdp.sizeWords',
   'pdp.usualSize',
@@ -461,6 +468,35 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
     />
   ) : null;
 
+  const foot: Record<ProductSectionId, () => ReactNode> = {
+    alternatives: () =>
+      !m.onSale && set['seo.urlPolicy'].alternatives ? (
+        <PdpAlternatives
+          c={c}
+          productId={m.productId}
+          category={cat ? { slug: cat.slug, name: categoryName(cat, lang) } : null}
+          max={set['seo.urlPolicy'].alternativesMax}
+          speed={rows.pairSpeed}
+        />
+      ) : null,
+    reviews: () => <PdpReviews c={c} set={revSet} data={reviewData} name={m.name} qa={set['pdp.qa'].on} />,
+    questions: () => <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} />,
+    // PR 624: the Messenger button under the questions (nothing while it is off)
+    messenger: () => (
+      <div className="container pdp-ms">
+        <MessengerButton c={c} place="product" detail={data.slug} />
+      </div>
+    ),
+    rows: () => (
+      <PdpRows
+        c={c}
+        set={rows}
+        product={{ id: m.productId, categorySlug: data.category?.slug ?? null, garment: data.garment }}
+        diagramFor={set['catalogue.sizeCharts.diagramFor']}
+        recentIds={recentIds}
+      />
+    ),
+  };
   return (
     <PdpRoot env={env} initial={{ colour, size: openSize }}>
       <div className={`pdp-page pdp-tpl-${tpl}${tplClass}`} data-testid="pdp" data-template={tpl} data-state={data.state}>
@@ -582,28 +618,12 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
             </div>
           </div>
         </div>
-        {!m.onSale && set['seo.urlPolicy'].alternatives ? (
-          <PdpAlternatives
-            c={c}
-            productId={m.productId}
-            category={cat ? { slug: cat.slug, name: categoryName(cat, lang) } : null}
-            max={set['seo.urlPolicy'].alternativesMax}
-            speed={rows.pairSpeed}
-          />
-        ) : null}
-        <PdpReviews c={c} set={revSet} data={reviewData} name={m.name} qa={set['pdp.qa'].on} />
-        <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} />
-        {/* PR 624: the Messenger button under the questions (nothing while it is off) */}
-        <div className="container pdp-ms">
-          <MessengerButton c={c} place="product" detail={data.slug} />
-        </div>
-        <PdpRows
-          c={c}
-          set={rows}
-          product={{ id: m.productId, categorySlug: data.category?.slug ?? null, garment: data.garment }}
-          diagramFor={set['catalogue.sizeCharts.diagramFor']}
-          recentIds={recentIds}
-        />
+        {/* PR 77: the sections under the first screen in the owner's order and on his screens (`layout.product`) */}
+        {shownSections<ProductSectionId>('product', set['layout.product']).map(({ id, dev }) => (
+          <LayoutPart key={id} id={id} dev={dev}>
+            {foot[id]()}
+          </LayoutPart>
+        ))}
         {rows.recent ? <PdpRecentMark id={m.productId} keep={rows.recentKeep} days={rows.recentDays} /> : null}
         <PdpPhoneBar links={links} />
         <PdpDeskBar links={links} lang={lang} />
