@@ -1,11 +1,11 @@
 # Go-live check (PR 587) — before the owner's "go live"
 
-**সারকথা:** চালুর আগে দরকারি 16টার 4টা হয়ে গেছে, 12টা বাকি। রিডাইরেক্ট: 0টা পুরনো লিংক (এখনো বন্ধ — চালুর দিনে চালু হবে)। সাইটম্যাপ: 3টা ঠিকানা, 0টা সমস্যা। ডোমেইন বদলের মহড়া (শুধু কপিতে): ঠিক আছে। কিছুই বদলানো হয়নি।
+**সারকথা:** চালুর আগে দরকারি 16টার 5টা হয়ে গেছে, 11টা বাকি। রিডাইরেক্ট: 0টা পুরনো লিংক (এখনো বন্ধ — চালুর দিনে চালু হবে)। সাইটম্যাপ: 3টা ঠিকানা, 0টা সমস্যা। ডোমেইন বদলের মহড়া (শুধু কপিতে): ঠিক আছে। কিছুই বদলানো হয়নি।
 
-- Run: 2026-11-06 08:28 (Asia/Dhaka) · version `21f4d9a583e6` · host: the staging host only (read-only check account) · result **NOT READY**
+- Run: 2026-11-06 12:12 (Asia/Dhaka) · version `21f4d9a583e6` · host: the staging host only (read-only check account) · result **NOT READY**
 - Nothing was changed: no setting, no sign-off, no server file. The main domain was never asked.
 
-## Needed before go-live (4/16 done)
+## Needed before go-live (5/16 done)
 
 | | Row | PR | Kind | Detail |
 |---|---|---|---|---|
@@ -17,7 +17,7 @@
 | ❌ | Cloudflare SSL/TLS mode is Full (strict) (`sslStrict`) | 397 | signoff | — |
 | ❌ | Main domain open to search engines (`indexing`) | 401 | auto | hosts: — · on: off |
 | ❌ | Search Console on the main domain, sitemap sent (`searchConsole`) | 401 | signoff | — |
-| ❌ | Test payments off, every online method on a real gateway (`testPayments`) | 400 | auto | stores: — · methods: : bkash, : nagad, : rocket, : visa, : mastercard, : amex, : bank, : online |
+| ✅ | Test payments off, every online method on a real gateway (`testPayments`) | 400 | auto | stores: — · methods: — |
 | ❌ | Request limits enforce (`rateLimit`) | 393 | auto | mode: observe |
 | ❌ | Two-step sign-in for every staff member who can change things (`staffTwoFactor`) | 393 | auto | without: 1 · required: off |
 | ❌ | Go-live runbook read, rollback rehearsed (`runbook`) | 398 | signoff | — |
