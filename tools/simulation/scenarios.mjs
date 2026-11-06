@@ -12,7 +12,7 @@
 import { readFileSync } from "node:fs";
 import { DATA } from "../gate-orders/lib/test-data.mjs";
 import { check, fail, pass, skip } from "../gate-orders/lib/verdict.mjs";
-import { loseNextAnswer, submit } from "../gate-orders/lib/shopper.mjs";
+import { inLang, loseNextAnswer, submit } from "../gate-orders/lib/shopper.mjs";
 import { courierState, payState, rowTitle } from "./lib.mjs";
 
 export const PLAN_DATA = JSON.parse(readFileSync(new URL("./plan.json", import.meta.url), "utf8"));
@@ -45,9 +45,14 @@ export function addressOf(row, data = DATA) {
   return a;
 }
 
-/** POSTs a code to the bag as the storefront's own code box does, and returns the shop's answer. */
-async function tryCode(sh, code) {
-  return sh.page.evaluate(async (c) => {
+/**
+ * The code box as the customer uses it (PR 112): the box POSTs the code, which only keeps it on the bag (HTTP 200 for any
+ * code), and the bag page then says whether it works — `[data-testid="bag-code"]` `data-state` ("refused" for a code
+ * that is not his) and its words in `[data-testid="bag-code-msg"]`. The answer is read from the bag page the customer
+ * sees, never from the POST's status. `state` null: the shop shows no code box (the owner's switch).
+ */
+async function tryCode(sh, code, lang = "en") {
+  const posted = await sh.page.evaluate(async (c) => {
     const r = await fetch("/api/bag/code", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: c }), credentials: "same-origin" });
     let body = null;
     try {
@@ -57,6 +62,20 @@ async function tryCode(sh, code) {
     }
     return { status: r.status, ok: r.ok && body?.ok !== false, error: body?.error ?? null };
   }, code);
+  if (!posted.ok) return { ...posted, state: null, said: null };
+  await sh.page.goto(new URL(inLang(lang, "/bag"), sh.page.url()).href, { waitUntil: "load" });
+  const box = sh.page.locator('[data-testid="bag-code"]').first();
+  const state = (await box.count()) ? await box.getAttribute("data-state") : null;
+  const msg = sh.page.locator('[data-testid="bag-code-msg"]').first();
+  const said = (await msg.count()) ? (await msg.innerText()).replace(/\s+/g, " ").trim() : null;
+  return { status: posted.status, ok: state !== "refused", state, said, error: state === "refused" ? `the code box says: ${said || "(no words)"}` : null };
+}
+
+/** The check of a code that is not his: refused on the bag with words, and not on the order. */
+export function refusedCheck(answer, o) {
+  if (!answer) return skip("a code that is not his is refused", "the code box was not reached");
+  if (answer.status < 400 && answer.state === null) return skip("a code that is not his is refused", "the shop shows no code box on the bag (the owner's switch)");
+  return check("a code that is not his is refused with a reason", !answer.ok && !!(answer.state === "refused" ? answer.said : answer.error) && !o.couponApplied, answer.error ?? `HTTP ${answer.status}, the code box says "${answer.state}"${o.couponApplied ? ", and the order took it" : ""}`);
 }
 
 /** One plan row as a scenario of the run. */
@@ -92,12 +111,12 @@ export function rowScenario(row) {
       if (p.how !== "cod") spec.pay = p.how;
       let codeAnswer = null;
       let ownerCode = null;
-      if (row.checks.includes("couponRefused")) spec.beforeCheckout = async (s) => (codeAnswer = await tryCode(s, NOT_A_CODE));
+      if (row.checks.includes("couponRefused")) spec.beforeCheckout = async (s) => (codeAnswer = await tryCode(s, NOT_A_CODE, row.lang));
       if (row.checks.includes("ownerCoupon")) {
         ownerCode = x.sw.coupon?.code ?? null;
         if (ownerCode) {
           x.secret(ownerCode);
-          spec.beforeCheckout = async (s) => (codeAnswer = await tryCode(s, ownerCode));
+          spec.beforeCheckout = async (s) => (codeAnswer = await tryCode(s, ownerCode, row.lang));
         } else out.push(skip("the owner's coupon", "the owner has no open coupon without a use limit (his codes are his; the run makes none)"));
       }
       if (row.checks.includes("doubleTap")) spec.submitOpts = { double: true };
@@ -133,7 +152,7 @@ export function rowScenario(row) {
       if (row.lang === "bn") out.push(check("the order is in Bengali", o.lang === "bn", String(o.lang)));
       if (row.checks.includes("noBlock")) out.push(check("no automatic block (a person decides)", !CLOSED.includes(o.status), o.status));
       if (row.checks.includes("addressUnclear")) out.push(check("never held over the address (PR 563)", !CLOSED.includes(o.status), `${o.status}${o.addressUnclear ? ", in the address queue" : ""}`));
-      if (row.checks.includes("couponRefused")) out.push(codeAnswer ? check("a code that is not his is refused with a reason", !codeAnswer.ok && !o.couponApplied, codeAnswer.error ?? `HTTP ${codeAnswer.status}`) : skip("a code that is not his is refused", "the code box was not reached"));
+      if (row.checks.includes("couponRefused")) out.push(refusedCheck(codeAnswer, o));
       if (ownerCode) out.push(codeAnswer ? check("the owner's coupon answers (taken with a discount, or refused with a reason)", o.couponApplied ? o.discountMinor > 0 : !codeAnswer.ok && !!codeAnswer.error, o.couponApplied ? `discount ${o.discountMinor}` : String(codeAnswer.error)) : skip("the owner's coupon", "the code box was not reached"));
       if (repeat) {
         const ids = [repeat.customerId, o.customerId];
