@@ -6899,6 +6899,19 @@ model BlogBrief {
   createdById String?  @db.Uuid
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  /// PR 528: what people type into a search engine, what they want (info · buy · compare · how-to), the outline (one
+  /// heading a line), the facts the article must carry, the links it must make, the photos it needs, a note for the
+  /// writer and who saved it last. One brief per topic.
+  query       String?
+  intent      String   @default("info")
+  outline     String[] @default([])
+  mustInclude String?
+  links       String[] @default([])
+  shotList    String[] @default([])
+  notes       String?
+  updatedById String?  @db.Uuid
+
+  @@unique([storeId, topicId])
 }
 
 /// @stage S12 · PR 242 — a topical cluster (pillar and its posts).

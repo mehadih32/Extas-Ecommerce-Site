@@ -14,6 +14,8 @@ import { call } from '../api';
 
 type Said = { text: string; bad: boolean } | null;
 const EDITOR = '/admin/website/blog';
+/** PR 528: a topic's brief. */
+const BRIEF = '/admin/website/blog/briefs';
 /** An input field's word on the screen. */
 const FIELD: Record<string, string> = { title: 'topic', clusterId: 'cluster', authorId: 'author', categoryId: 'category', targetPath: 'target', postId: 'pick' };
 
@@ -201,11 +203,21 @@ export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; 
             <div className="a2-xs a2-mute">
               <span className={`a2-pill${x.status === 'approved' ? ' ok' : x.status === 'proposed' ? ' warn' : ''}`}>{x.postColumn ? c(`views.${x.postColumn}`) : l(`st.${x.status}`)}</span> <span className="a2-pill">{l(`p${x.priority}`)}</span> <span className="a2-pill">{l(x.locale)}</span>
               {x.isPillar ? <span className="a2-pill"> {l('pillarTopic')}</span> : null}
+              {x.briefId ? <span className="a2-pill ok"> {l('briefOk')}</span> : null}
               {x.archived ? ` · ${l('archived')}` : ''}
             </div>
             {x.alike ? <div className={`a2-xs ${x.alike.level === 'warn' ? 'a2-bad' : 'a2-mute'}`}>{l(x.alike.level === 'warn' ? 'alikeWarn' : 'alikeNear', { n: x.alike.score, title: x.alike.title })}</div> : null}
           </div>
           <div className="jr-steps">
+            {x.briefId ? (
+              <Link className="a2-btn" href={`${BRIEF}/${x.briefId}`} data-testid="pl-t-brief">
+                {l('brief')}
+              </Link>
+            ) : !x.archived && x.status !== 'rejected' && p.canWrite ? (
+              <Link className="a2-btn" href={`${BRIEF}/new?topic=${x.id}`} data-testid="pl-t-brief">
+                {l('briefNew')}
+              </Link>
+            ) : null}
             {x.postId ? (
               <Link className="a2-btn" href={`${EDITOR}/${x.postId}`}>
                 {l('open')}

@@ -198,7 +198,9 @@
       "NOT_FOUND": "Not found.",
       "other": "Something went wrong; try again.",
       "LINKS_MISSING": "Required links missing (Topic plan): {paths}. Add them to the words first.",
-      "ALIKE": "A very close article or topic exists: {fields}. Press again to add it anyway."
+      "ALIKE": "A very close article or topic exists: {fields}. Press again to add it anyway.",
+      "BRIEF_TAKEN": "That topic has its brief already; open it from the Topic plan.",
+      "BRIEF_MISSING": "This topic needs its brief before writing starts: press “Brief”."
     },
     "pl": {
       "meta": "Topic plan",
@@ -321,8 +323,69 @@
         "holdAlike": "Hold very close topics for the owner",
         "autoPublish": "Publish by itself once the last check passes (only with “By itself”)",
         "digestDays": "Days the digest covers"
-      }
+      },
+      "brief": "Brief",
+      "briefNew": "Write the brief",
+      "briefOk": "brief ready"
     },
-    "plan": "Topic plan"
+    "plan": "Topic plan",
+    "br": {
+      "meta": "Brief · Blog & journal",
+      "title": "Brief",
+      "titleNew": "New brief",
+      "sub": "Chosen before a single word is written: the topic, its language, how many words and the keywords. The rest helps the writer.",
+      "back": "← Topic plan",
+      "must": "Before writing",
+      "help": "Helps the writer",
+      "topic": "Topic",
+      "topicPick": "Choose a topic from the plan",
+      "topicNew": "— a new topic —",
+      "topicTitle": "New topic’s title",
+      "topicNewHelp": "A new topic joins the Topic plan; a writer’s waits for the owner’s yes.",
+      "language": "Language",
+      "en": "English",
+      "bn": "Bengali",
+      "words": "Words (about)",
+      "wordsHelp": "Between {min} and {max}.",
+      "keywords": "Keywords",
+      "keywordsHelp": "Separated by commas; the first one leads.",
+      "query": "What people search",
+      "intent": "What the reader wants",
+      "i_info": "To know (a guide or an answer)",
+      "i_buy": "To buy (which one to choose)",
+      "i_compare": "To compare (this or that)",
+      "i_howto": "How to do something",
+      "outline": "Outline",
+      "outlineHelp": "One heading a line.",
+      "mustInclude": "Facts it must carry",
+      "mustIncludeHelp": "Sizes, care steps, prices from the live rules — only what is true.",
+      "links": "Shop links it must make",
+      "linksHelp": "One shop path a line, e.g. /collections/polos.",
+      "shotList": "Photos it needs",
+      "shotListHelp": "One photo a line; our own photos first.",
+      "imagePolicy": "Pictures",
+      "img_own": "Our own photos only",
+      "img_library": "Own photos first, then the picture library",
+      "img_aiAsk": "An AI picture only with a yes each time",
+      "notes": "Note for the writer",
+      "save": "Save the brief",
+      "saving": "Saving…",
+      "saved": "Brief saved.",
+      "addAnyway": "Save anyway (very close topic)",
+      "status": "Status",
+      "ready": "Ready to write from",
+      "missing": "Still missing: {fields}",
+      "openPost": "Open the article",
+      "topicState": "Topic: {state}",
+      "none": "No open topic. Add one on the Topic plan, or type a new one here.",
+      "card": {
+        "h": "Brief rules",
+        "d": "How a new brief starts, and whether writing waits for one. As it ships writing does not wait.",
+        "requireForStart": "“Start writing” needs the brief first",
+        "wordsDefault": "A new brief starts at (words)",
+        "wordsMin": "Fewest words a brief may ask",
+        "wordsMax": "Most words a brief may ask"
+      }
+    }
   }
 }
