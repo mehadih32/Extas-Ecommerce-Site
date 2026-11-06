@@ -13,6 +13,12 @@
 // his sign-off, how he talks), from what the owner says the message is about. The practice writer joins only what it was
 // given — the greeting, the brief, the link word, the sign-off — in a different order and length per version; a live
 // provider (PR 306) gets the same input. A person picks one version and still saves and schedules it himself.
+//
+// S12 · PR 243 — the AI article writer: a first draft of a journal article from its brief (PR 528) in the brief's
+// language — English or Bengali, chosen per article —, never without a brief. The practice writer joins only the brief's
+// own words (the title, the search phrase, the outline as headings, the facts, the shop links, the note) into the
+// editor's writing format and says it is practice text; a live provider (PR 306) gets the same input. The draft is an
+// article in writing: a person still edits it and it passes the three review steps before anyone can publish it.
 import { z } from 'zod';
 import { AdapterError, defineAdapter } from '../define';
 
@@ -66,10 +72,45 @@ export interface AiCampaignDraft {
   practice: boolean;
 }
 
+/** PR 243 — what an article draft is written from: its brief (PR 528). */
+export interface AiArticleInput {
+  /** The language to write in (the brief's). */
+  locale: 'en' | 'bn';
+  /** The topic's title. */
+  title: string;
+  /** What people type into a search engine. */
+  query: string | null;
+  /** The keywords, the first one leading. */
+  keywords: string[];
+  /** What the reader wants: info · buy · compare · howto. */
+  intent: string;
+  /** About how many words. */
+  wordCount: number;
+  /** The headings, in order. */
+  outline: string[];
+  /** The facts it must carry (only these are claims). */
+  mustInclude: string | null;
+  /** The shop paths it must link to. */
+  links: string[];
+  /** A note for the writer. */
+  notes: string | null;
+}
+
+export interface AiArticleDraft {
+  /** A short summary under the title. */
+  excerpt: string;
+  /** The words in the editor's writing format (`## ` headings, `- ` bullets, `[words](/path)` links). */
+  body: string;
+  /** True for the mock's practice text. */
+  practice: boolean;
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
   draftCampaign(input: AiCampaignInput): Promise<AiCampaignDraft>;
+  /** PR 243 — a journal article's first draft from its brief. */
+  draftArticle(input: AiArticleInput): Promise<AiArticleDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */
@@ -130,6 +171,26 @@ export function practiceCampaign(input: AiCampaignInput): AiCampaignDraft {
   return { versions: versions.filter((v, i) => versions.findIndex((w) => w.body === v.body && w.subject === v.subject) === i), practice: true };
 }
 
+/**
+ * PR 243 — the mock's article: only the brief's own words, in the editor's format — the search phrase (or title) as
+ * the opening line, the facts, one heading per outline line, the shop links as a list, the keywords last.
+ */
+export function practiceArticle(input: AiArticleInput): AiArticleDraft {
+  const clean = (x: string) => x.trim().replace(/\s+/gu, ' ');
+  const lines = (xs: string[]) => xs.map(clean).filter(Boolean);
+  const facts = lines((input.mustInclude ?? '').split(/\r?\n/u));
+  const lead = clean(input.query ?? '') || clean(input.title);
+  const parts: string[] = [lead];
+  if (facts.length) parts.push(facts.map((f) => `- ${f}`).join('\n'));
+  for (const h of lines(input.outline)) parts.push(`## ${h}`, lead);
+  const links = lines(input.links).filter((l) => /^\/(?!\/)\S*$/u.test(l));
+  if (links.length) parts.push(links.map((l) => `- [${l}](${l})`).join('\n'));
+  const keys = lines(input.keywords);
+  if (keys.length) parts.push(keys.join(' · '));
+  if (input.notes?.trim()) parts.push(`> note: ${clean(input.notes)}`);
+  return { excerpt: cutTo(lead, 300), body: parts.join('\n\n'), practice: true };
+}
+
 export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>>({
   kind: 'AI_PROVIDER',
   provider: 'mockAiWriter',
@@ -148,6 +209,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftCampaign(input) {
         if (!input.brief.trim()) throw new AdapterError('a campaign draft needs what the message is about');
         return practiceCampaign(input);
+      },
+      async draftArticle(input) {
+        if (!input.title.trim() || !input.keywords.length || !(input.wordCount > 0)) throw new AdapterError('an article draft needs its brief');
+        return practiceArticle(input);
       },
     };
   },

@@ -4,6 +4,9 @@
 // keywords), then what helps the writer (search phrase, intent, outline, facts, shop links, photos, pictures, a note).
 // Saves with the version it was read at; a new topic very close to another needs a second press. Without `blog.write`
 // it is read-only.
+// PR 243: under it "Write the first draft with AI" — open only while AI is on for the shop and `blog.aiDraft` is on, the
+// brief is saved with nothing missing, its topic approved and not started, and today's drafts are not used up; otherwise
+// it says why. The draft lands in the editor as an article in writing.
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
@@ -47,6 +50,20 @@ export function BriefForm(p: { words: Dict; screen: BriefScreen; canWrite: boole
   const on = (k: keyof typeof f) => (v: string) => setF((x) => ({ ...x, [k]: v }));
   const off = busy || !p.canWrite;
   const locked = !!b.postId; // the topic stays once the article is started
+
+  async function draftAi() {
+    setBusy(true);
+    const a = await call('POST', `/api/admin/blog/briefs/${b.id}`, { action: 'draft', version: b.version });
+    setBusy(false);
+    if (a.status === 200 && typeof a.data.postId === 'string') {
+      setSaid({ text: l(a.data.practice ? 'ai.donePractice' : 'ai.done'), bad: false });
+      return router.push(`${EDITOR}/${a.data.postId}`);
+    }
+    const code = a.status === 0 ? 'network' : a.status === 401 ? 'unauthorized' : (a.data.error ?? 'other');
+    const txt = c(`err.${code}`, { fields: (a.data.details ?? []).map((x) => (code === 'NOT_READY' ? l(x) : x)).join(', ') });
+    setSaid({ text: txt === `jr.err.${code}` ? c('err.other') : txt, bad: true });
+    if (code === 'STALE') router.refresh();
+  }
 
   async function save() {
     setBusy(true);
@@ -183,6 +200,26 @@ export function BriefForm(p: { words: Dict; screen: BriefScreen; canWrite: boole
           <p className={`a2-sm jr-said${said.bad ? ' a2-bad' : ''}`} role="status">
             {said.text}
           </p>
+        ) : null}
+      </section>
+      <section className="a2-card a2-sc" aria-labelledby={`${id}-ai`} data-testid="br-ai">
+        <h2 className="a2-h3" id={`${id}-ai`}>
+          {l('ai.h')}
+        </h2>
+        <p className="a2-sm a2-mute">{l('ai.d')}</p>
+        <p className="a2-xs a2-mute" data-testid="br-ai-used">
+          {l('ai.used', { n: p.screen.ai.used, max: p.screen.ai.dailyMax })}
+        </p>
+        {p.screen.ai.block ? (
+          <p className="a2-sm" data-testid="br-ai-block">
+            {l(`ai.b_${p.screen.ai.block}`)}
+          </p>
+        ) : p.canWrite ? (
+          <div className="jr-steps">
+            <button type="button" className="a2-btn pri" disabled={busy} onClick={draftAi} data-testid="br-ai-go">
+              {busy ? l('ai.going') : l('ai.go')}
+            </button>
+          </div>
         ) : null}
       </section>
     </div>

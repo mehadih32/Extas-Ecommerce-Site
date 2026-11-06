@@ -18,6 +18,10 @@
     "brief": {
       "label": "Blog brief form",
       "help": "Every article starts from a brief in Website › Blog & journal › Brief: the topic, its language, how many words and the keywords are chosen before a word is written. A new brief starts at the word count you set and may ask for between the fewest and the most words you set. With “Start writing needs a brief” on (off as it ships) a topic cannot become an article until its brief is saved. An AI draft always needs a brief."
+    },
+    "aiDraft": {
+      "label": "AI first drafts from the brief",
+      "help": "Off as it ships. When on (and AI is on for the whole shop), a saved brief in Website › Blog & journal › Brief offers “Write the first draft with AI”: the draft is written in the brief's language from the brief alone and lands on the board as an article in writing, marked as AI-assisted; a person edits it and it passes the three review steps before anyone can publish it. Until an AI provider's key is entered the practice writer serves and says so. At most the number you set in a day."
     }
   }
 }
