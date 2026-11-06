@@ -20,7 +20,6 @@
 /* PR 417 — the Speed page: a value over its target, and a measured page's path. */
 .adm2 .sp-bad{color:var(--bad);font-weight:600}
 .adm2 .sp-path{overflow-wrap:anywhere}
-.adm2 .a2-kv.sp-kvt{white-space:normal;overflow-wrap:anywhere;font-size:16px}
 .adm2 .sp-tbl tbody tr{cursor:default}
 /* PR 418 — the Smoke runs page: each screen's result, its problems and the picture link (44px to tap). */
 .adm2 .sk-views{align-items:center}

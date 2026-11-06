@@ -7,11 +7,13 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { ProblemStatusForm } from '@/components/admin/settings/ProblemStatusForm';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
-import { SEV_PILL, STATUS_PILL } from '@/lib/admin-problems/pills';
+import { figureTiles } from '@/lib/admin-lumen/figures';
+import { SEV_TONE, STATUS_PILL } from '@/lib/admin-problems/pills';
 import { isProblemsError, NOTE_MAX, NOTE_NEEDED, OWNER_STATUSES, PROBLEM_STATUSES, problemDetail, type ProblemDetail } from '@/lib/admin-problems/service';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -133,29 +135,19 @@ export default async function CustomerProblemPage({ params }: { params: Promise<
         </Link>
       </p>
 
-      <div className="a2-kpis a2-mt12">
-        <div className="a2-card a2-kpi">
-          <div className="a2-kl">{s('col.problem')}</div>
-          <div className="a2-kv a2-sm a2-kvw">
-            <span className={`a2-pill ${SEV_PILL[r.severity]}`}>{s(`sev.${r.severity}`)}</span>
-          </div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s('d.firstSeen', { at: at(r.firstSeenAt) })}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi">
-          <div className="a2-kl">{s('col.who')}</div>
-          <div className="a2-kv">{num(r.visitors)}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s('d.count', { n: num(r.records) })}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi">
-          <div className="a2-kl">{s('col.last')}</div>
-          <div className="a2-kv a2-kvw pb-kvt">{at(r.lastSeenAt)}</div>
-          <div className="a2-kf">{r.back ? <span className="a2-kn pb-back">{s('back')}</span> : null}</div>
-        </div>
-      </div>
+      <SummaryTiles
+        className="a2-mt12"
+        tiles={figureTiles(
+          [
+            { id: 'severity', label: s('col.problem'), value: s(`sev.${r.severity}`), kind: 'word', tone: SEV_TONE[r.severity], foot: s('d.firstSeen', { at: at(r.firstSeenAt) }), data: { severity: r.severity } },
+            { id: 'who', label: s('col.who'), value: num(r.visitors), n: r.visitors, foot: s('d.count', { n: num(r.records) }) },
+            { id: 'last', label: s('col.last'), value: at(r.lastSeenAt), kind: 'word', tone: r.back ? 'bad' : undefined, foot: r.back ? s('back') : undefined },
+          ],
+          { locale: view.locale },
+        )}
+        label={s(`kind.${r.kind}`)}
+        testId="problem-kpi"
+      />
 
       <section className="a2-sc a2-mt12" aria-labelledby="pb-what-h">
         <h2 className="a2-h3" id="pb-what-h">

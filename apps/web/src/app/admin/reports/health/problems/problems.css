@@ -5,7 +5,6 @@
 .adm2 .pb-trend{list-style:none;margin:0;padding:0;display:flex;align-items:flex-end;gap:4px;height:72px}
 .adm2 .pb-trend li{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}
 .adm2 .pb-bar{display:block;width:100%;min-height:2px;border-radius:3px 3px 0 0;background:var(--g)}
-.adm2 .a2-kv.pb-kvt{font-size:16px;line-height:1.35;font-weight:600;white-space:normal;overflow-wrap:anywhere}
 .adm2 .pb-what{min-width:220px}
 .adm2 .pb-kind{font-weight:600;color:var(--ink);margin-top:4px}
 .adm2 .pb-path,.adm2 .pb-detail{overflow-wrap:anywhere}

@@ -9,11 +9,13 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { ProposalDecide, type ProposalDecideTexts } from '@/components/admin/settings/ProposalDecide';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles } from '@/lib/admin-lumen/figures';
 import { fixesView, FIX_SHOWS, type ProposalRow } from '@/lib/admin-health/fixes';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -109,36 +111,27 @@ export default async function FixesPage({ searchParams }: { searchParams: Promis
         </div>
       ) : null}
 
-      <div className="a2-kpis a2-mt12">
-        <div className="a2-card a2-kpi" data-testid="fixes-kpi-fixes" data-n={v.waitingFixes}>
-          <div className="a2-kl">{s('kpi.fixes')}</div>
-          <div className="a2-kv">{num(v.waitingFixes)}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s('kpi.fixesFoot')}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="fixes-kpi-skills" data-n={v.waitingSkills}>
-          <div className="a2-kl">{s('kpi.skills')}</div>
-          <div className="a2-kv">{num(v.waitingSkills)}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s('kpi.skillsFoot')}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="fixes-kpi-approved">
-          <div className="a2-kl">{s('kpi.approved', { days: num(v.recentDays) })}</div>
-          <div className="a2-kv">{num(v.approvedRecent)}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s('kpi.approvedFoot')}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="fixes-kpi-gate" data-on={String(v.gate.proposals)}>
-          <div className="a2-kl">{s('kpi.gate')}</div>
-          <div className="a2-kv sp-kvt">{s(v.gate.proposals ? 'kpi.on' : 'kpi.off')}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{v.gate.expireDays ? s('kpi.expire', { days: num(v.gate.expireDays) }) : s('kpi.noExpire')}</span>
-          </div>
-        </div>
-      </div>
+      <SummaryTiles
+        className="a2-mt12"
+        tiles={figureTiles(
+          [
+            { id: 'fixes', label: s('kpi.fixes'), value: num(v.waitingFixes), n: v.waitingFixes, foot: s('kpi.fixesFoot'), data: { n: v.waitingFixes } },
+            { id: 'skills', label: s('kpi.skills'), value: num(v.waitingSkills), n: v.waitingSkills, foot: s('kpi.skillsFoot'), data: { n: v.waitingSkills } },
+            { id: 'approved', label: s('kpi.approved', { days: num(v.recentDays) }), value: num(v.approvedRecent), n: v.approvedRecent, foot: s('kpi.approvedFoot') },
+            {
+              id: 'gate',
+              label: s('kpi.gate'),
+              value: s(v.gate.proposals ? 'kpi.on' : 'kpi.off'),
+              kind: 'word',
+              foot: v.gate.expireDays ? s('kpi.expire', { days: num(v.gate.expireDays) }) : s('kpi.noExpire'),
+              data: { on: String(v.gate.proposals) },
+            },
+          ],
+          { locale: view.locale },
+        )}
+        label={s('title')}
+        testId="fixes-kpi"
+      />
 
       <nav className="a2-views sk-views a2-mt12" aria-label={s('views')}>
         {FIX_SHOWS.map((show) => (

@@ -12,3 +12,9 @@ export const STATUS_PILL = {
   NEEDS_OWNER: 'bad',
   WAITING_OWNER_CHECK: 'warn',
 } as const;
+/** The figure colour of each severity on a problem's summary tile (Lumen follow-up, PR 645): the theme's bad/warn. */
+export const SEV_TONE: Readonly<Record<keyof typeof SEV_PILL, 'bad' | 'warn' | undefined>> = {
+  URGENT: 'bad',
+  IMPORTANT: 'warn',
+  CAN_WAIT: undefined,
+};

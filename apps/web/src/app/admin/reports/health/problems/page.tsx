@@ -8,10 +8,12 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles } from '@/lib/admin-lumen/figures';
 import { parseWhen, VIEWS } from '@/lib/admin-problems/days';
 import { SEV_PILL, STATUS_PILL } from '@/lib/admin-problems/pills';
 import { problemsView, type ProblemRow } from '@/lib/admin-problems/service';
@@ -242,39 +244,19 @@ export default async function CustomerProblemsPage({ searchParams }: { searchPar
       </form>
       {typeof when === 'object' ? <p className="a2-sm a2-mute a2-mt12">{s('dayShown', { day: day(when.day) })}</p> : null}
 
-      <div className="a2-kpis a2-mt12">
-        <div className="a2-card a2-kpi" data-testid="problems-kpi-open" data-urgent={v.open.urgent}>
-          <div className="a2-kl">{s('kpi.open')}</div>
-          <div className="a2-kv">{num(v.open.total)}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">
-              {s('kpi.openFoot', {
-                urgent: num(v.open.urgent),
-                important: num(v.open.important),
-              })}
-            </span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="problems-kpi-visitors">
-          <div className="a2-kl">{s('kpi.visitors')}</div>
-          <div className="a2-kv">{num(v.visitors)}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">
-              {s('kpi.visitorsFoot', {
-                from: day(v.firstDay),
-                to: day(v.lastDay),
-              })}
-            </span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="problems-kpi-recorder" data-on={v.enabled ? 'yes' : 'no'}>
-          <div className="a2-kl">{s('kpi.recorder')}</div>
-          <div className="a2-kv a2-sm a2-kvw">{s(v.enabled ? 'kpi.on' : 'kpi.off')}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s('kpi.recorderFoot')}</span>
-          </div>
-        </div>
-      </div>
+      <SummaryTiles
+        className="a2-mt12"
+        tiles={figureTiles(
+          [
+            { id: 'open', label: s('kpi.open'), value: num(v.open.total), n: v.open.total, foot: s('kpi.openFoot', { urgent: num(v.open.urgent), important: num(v.open.important) }), data: { urgent: v.open.urgent } },
+            { id: 'visitors', label: s('kpi.visitors'), value: num(v.visitors), n: v.visitors, foot: s('kpi.visitorsFoot', { from: day(v.firstDay), to: day(v.lastDay) }) },
+            { id: 'recorder', label: s('kpi.recorder'), value: s(v.enabled ? 'kpi.on' : 'kpi.off'), kind: 'word', foot: s('kpi.recorderFoot'), data: { on: v.enabled ? 'yes' : 'no' } },
+          ],
+          { locale: view.locale },
+        )}
+        label={s('title')}
+        testId="problems-kpi"
+      />
 
       {!v.enabled ? (
         <div className="a2-note a2-mt12" role="note" data-testid="problems-off">

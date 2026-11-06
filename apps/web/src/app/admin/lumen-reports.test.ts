@@ -84,3 +84,29 @@ describe('Reports part 1: the figures rows are the shared summary tiles (PR 644 
     expect(src).not.toMatch(/a2-kpi\b/);
   });
 });
+
+describe('Reports part 2: Site health figures rows are the shared summary tiles (PR 645 follow-up)', () => {
+  const ROWS: [string, string][] = [
+    ['', 'health'],
+    ['/history', 'history-kpi'],
+    ['/history/[id]', 'history-run'],
+    ['/fixes', 'fixes-kpi'],
+    ['/smoke', 'smoke-kpi'],
+    ['/problems', 'problems-kpi'],
+    ['/problems/[id]', 'problem-kpi'],
+    ['/speed', 'speed-kpi'],
+  ];
+  it.each(ROWS)('reports/health%s: <SummaryTiles> with figureTiles, no old a2-kpi tile', (page, testId) => {
+    const src = readAdmin(`reports/health${page}/page.tsx`);
+    expect(src).toContain('<SummaryTiles');
+    expect(src).toContain('figureTiles(');
+    expect(src).toContain(`testId="${testId}"`);
+    expect(src).not.toMatch(/a2-kpi\b/);
+  });
+
+  it('the smoke checks still find their tiles (history-kpi-kept, problems-kpi-open), and the old figure skin is gone', () => {
+    expect(readAdmin('reports/health/history/page.tsx')).toContain("id: 'kept'");
+    expect(readAdmin('reports/health/problems/page.tsx')).toContain("id: 'open'");
+    expect(readAdmin('lumen-reports.css')).not.toMatch(/\.a2-kpi|\.a2-kv/);
+  });
+});
