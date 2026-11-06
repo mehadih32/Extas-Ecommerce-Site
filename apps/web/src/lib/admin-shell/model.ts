@@ -23,7 +23,7 @@ export interface ShellModel {
   dict: Dict;
   storeName: string | null;
   me: { name: string; initials: string; role: string };
-  viewer: { perms: string[]; owner: boolean };
+  viewer: { perms: string[]; owner: boolean; hidden?: string[] };
   badges: Partial<Record<AdminSectionId, number>>;
   /** How long a badge count is good for (`admin.shell.badgeCacheSeconds`). */
   badgeSeconds: number;
@@ -69,7 +69,7 @@ export function mineOf(roles: readonly { key: string }[], mine: Record<string, s
   return null;
 }
 
-export const viewerOf = (m: Pick<ShellModel, 'viewer'>): ShellViewer => ({ perms: new Set(m.viewer.perms), owner: m.viewer.owner });
+export const viewerOf = (m: Pick<ShellModel, 'viewer'>): ShellViewer => ({ perms: new Set(m.viewer.perms), owner: m.viewer.owner, hidden: new Set(m.viewer.hidden ?? []) });
 
 /** Two letters for the avatar: the first letters of the first two words of the name. */
 export function initialsOf(name: string): string {

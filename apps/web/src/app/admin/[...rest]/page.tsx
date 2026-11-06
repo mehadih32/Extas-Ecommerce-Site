@@ -34,7 +34,7 @@ export default async function SectionPlaceholder({ params }: { params: Params })
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(section.base)}`);
   if (access.kind !== 'ok') return <AdminNotice view={view} current={section.id} text={t(view.dict, 'page.noDb')} />;
   const s = await shellSession();
-  const viewer: ShellViewer = s.kind === 'ok' ? { perms: s.perms, owner: s.owner } : { perms: new Set(), owner: false };
+  const viewer: ShellViewer = s.kind === 'ok' ? { perms: s.perms, owner: s.owner, hidden: s.hidden } : { perms: new Set(), owner: false };
   if (!sectionVisible(section, viewer))
     return (
       <div className="a2-z">

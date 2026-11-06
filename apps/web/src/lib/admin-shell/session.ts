@@ -7,6 +7,7 @@ import { headers } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { isOwner, permissionsFor, type PermissionKey } from '@extas/auth';
 import { adminDeps, guardAdmin, type AdminDeps, type Guarded } from '../admin-auth';
+import { hiddenPartsOf } from '../stages/closed';
 
 export interface ShellRole {
   key: string;
@@ -15,7 +16,7 @@ export interface ShellRole {
 }
 
 export type ShellSession =
-  | { kind: 'ok'; guard: Guarded; deps: AdminDeps; perms: Set<PermissionKey>; owner: boolean; roles: ShellRole[] }
+  | { kind: 'ok'; guard: Guarded; deps: AdminDeps; perms: Set<PermissionKey>; owner: boolean; roles: ShellRole[]; hidden: Set<string> }
   | { kind: 'login' }
   | { kind: 'password' }
   | { kind: 'unavailable' };
@@ -61,8 +62,8 @@ export const shellSession = cache(async (): Promise<ShellSession> => {
   }
   const staffUserId = g.actor.staffUserId as string;
   try {
-    const [perms, owner, roles] = await Promise.all([permissionsIn(staffUserId, MOTHER_STORE_ID), isOwner(deps.db, staffUserId), rolesOf(deps, staffUserId)]);
-    return { kind: 'ok', guard: g, deps, perms, owner, roles };
+    const [perms, owner, roles, hidden] = await Promise.all([permissionsIn(staffUserId, MOTHER_STORE_ID), isOwner(deps.db, staffUserId), rolesOf(deps, staffUserId), hiddenPartsOf(deps)]);
+    return { kind: 'ok', guard: g, deps, perms, owner, roles, hidden };
   } catch {
     return { kind: 'unavailable' };
   }

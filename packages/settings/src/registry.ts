@@ -92,6 +92,7 @@ import { bhandariP1Settings } from './registry-bhandari-p1';
 import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
 import { webSecuritySettings } from './registry-web-security';
+import { closedStageSettings } from './registry-closed-stages';
 import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
 import { erpRetailSettings } from './registry-erp-retail';
@@ -1332,6 +1333,8 @@ export const registry = {
   ...seoReachSettings,
   // ---- S18 · PR 378 · the page protection policy (report only by default), the outside addresses pages may use, the per-address request limits (observe by default) (registry-web-security.ts, version 73). ----
   ...webSecuritySettings,
+  // ---- S19 · PR 652 · the closed stages hidden by a switch, all off as shipped (registry-closed-stages.ts, version 235). ----
+  ...closedStageSettings,
   // ---- S18 · PR 379 · the quiet bot check on sign-in and checkout: observe only, a note in the security log, never a refusal (registry-bot-check.ts, version 74). ----
   ...botCheckSettings,
   // ---- S18 · PR 380 · the admin address list (off by default), how long new-device sign-ins stay in the notifications, the security events listed (registry-admin-access.ts, version 78). ----

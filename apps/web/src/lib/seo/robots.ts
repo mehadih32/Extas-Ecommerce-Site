@@ -25,12 +25,15 @@ export interface RobotsFacts {
   searchListed: boolean;
   /** The sitemap's full address, or null (sitemaps off, or no address known). */
   sitemap: string | null;
+  /** S19 · PR 652: shop addresses of the closed stages hidden by their switch (lib/stages/closed.ts), in both languages. */
+  hidden?: readonly string[];
 }
 
 /** The robots.txt text. */
 export function robotsTxt(policy: SeoRobots, f: RobotsFacts): string {
   if (!f.open) return 'User-agent: *\nDisallow: /\n';
-  const closed = [...new Set([...closedPaths(f.searchListed), ...policy.disallow])];
+  const hidden = (f.hidden ?? []).flatMap((p) => [p, `${BN_PREFIX}${p}`]);
+  const closed = [...new Set([...closedPaths(f.searchListed), ...hidden, ...policy.disallow])];
   const lines = ['User-agent: *', ...closed.map((p) => `Disallow: ${p}`), 'Allow: /'];
   if (!policy.aiCrawlers) for (const bot of policy.aiBots) lines.push('', `User-agent: ${bot}`, 'Disallow: /');
   if (f.sitemap) lines.push('', `Sitemap: ${f.sitemap}`);

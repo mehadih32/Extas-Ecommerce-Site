@@ -126,6 +126,8 @@ export * from './registry-bhandari-p1';
 export * from './registry-books-summary';
 // S18 · PR 378 — page protection and the per-address request limits (registry-web-security.ts, version 73).
 export * from './registry-web-security';
+// S19 · PR 652 — the closed stages hidden by a switch (registry-closed-stages.ts, version 235).
+export * from './registry-closed-stages';
 // S18 · PR 379 — the quiet bot check (registry-bot-check.ts, version 74).
 export * from './registry-bot-check';
 // S18 · PR 380 — the admin address list and the new-login notes (registry-admin-access.ts, version 78).

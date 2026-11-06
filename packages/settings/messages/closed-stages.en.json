@@ -1,0 +1,8 @@
+{
+  "stages": {
+    "closedShown": {
+      "label": "Closed stages shown",
+      "help": "Stages closed until the owner says so (S15 AI control room, S17 multi-store, S23 social studio, S24 virtual photoshoot, S25 video campaign, S26, S27 handover pack). Off (the default) hides every half-built part of the stage from the admin menu, the admin search, the sitemap, the shop search and robots. Turn a stage on only when it is finished. Nothing is deleted."
+    }
+  }
+}
