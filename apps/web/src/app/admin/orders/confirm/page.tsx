@@ -39,7 +39,7 @@ export default async function ConfirmQueuePage({ searchParams }: { searchParams:
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="ordersConfirm" text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="orders-confirm" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="orders.confirm" />
       </div>
     );
