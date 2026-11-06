@@ -264,6 +264,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'youtube', pages: [{ href: '/admin/marketing/youtube', perm: 'marketing.campaigns.read', keys: ['marketingYoutube'] }] },
       // S13 · PR 279: SEO outreach — the websites asked for a link, along the pipeline, with follow-up days and live links.
       { id: 'outreach', pages: [{ href: '/admin/marketing/outreach', perm: 'marketing.campaigns.read', keys: ['marketingOutreach'] }] },
+      // S13 · PR 280: Seasonal home — saved home-page looks and the windows they show in (the home page switches by itself).
+      { id: 'seasonal', pages: [{ href: '/admin/marketing/seasonal', perm: 'marketing.campaigns.read', keys: ['marketingSeasonalHome'] }] },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,

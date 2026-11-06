@@ -180,6 +180,8 @@ export * from './registry-blast';
 export * from './registry-youtube';
 // S13 · PR 279 — the SEO outreach pipeline's switch, its follow-up gap and the owner's pitch words (registry-outreach.ts, version 214).
 export * from './registry-outreach';
+// S13 · PR 280 — seasonal home-page switching's switch (registry-seasonal-home.ts, version 215).
+export * from './registry-seasonal-home';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

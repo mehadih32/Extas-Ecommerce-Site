@@ -1,0 +1,136 @@
+{
+  "sh": {
+    "metaTitle": "Seasonal home · Marketing",
+    "title": "Seasonal home",
+    "sub": "Save home-page looks for your seasons (Eid, Puja, winter) and schedule each one. The home page switches by itself at the start and comes back at the end.",
+    "note": "Only the home page's sections, hero words and hero pictures change. Prices, offers and the checkout never change, and no money is spent. After a window ends, the home page is your own home page again by itself.",
+    "offTitle": "Seasonal home is off",
+    "offBody": "Turn it on in the settings card at the bottom of this page.",
+    "offAsk": "Ask the owner or a manager to turn Seasonal home on.",
+    "now": {
+      "h": "On the home page now",
+      "usual": "Your usual home page. No seasonal look is showing.",
+      "live": "“{look}” is showing until {until}.",
+      "open": "Open the home page"
+    },
+    "win": {
+      "h": "Schedule",
+      "empty": "Nothing scheduled yet.",
+      "clock": "Times are on your shop's clock ({tz}).",
+      "span": "{starts} → {ends}",
+      "open": "until you stop it",
+      "stop": "Stop",
+      "state": {
+        "UPCOMING": "Upcoming",
+        "LIVE": "Showing now",
+        "ENDED": "Ended",
+        "STOPPED": "Stopped"
+      },
+      "addH": "Schedule a look",
+      "look": "Look",
+      "starts": "Starts",
+      "ends": "Ends",
+      "endsHelp": "Leave the end empty to keep the look until you stop it. Two windows may not overlap.",
+      "add": "Schedule",
+      "added": "Scheduled."
+    },
+    "looks": {
+      "h": "Saved looks",
+      "empty": "No looks yet. Save the home page as it is now, then change it for the season.",
+      "archivedH": "Set aside"
+    },
+    "look": {
+      "inUse": "Scheduled",
+      "sections": "Sections",
+      "noSections": "none",
+      "heroTitle": "Hero title",
+      "usualWords": "the usual words",
+      "collection": "Hero pictures",
+      "collNone": "the categories in turns (as usual)",
+      "edit": "Change this look",
+      "archive": "Set aside",
+      "restore": "Bring back"
+    },
+    "save": {
+      "h": "Save the home page as it is now",
+      "name": "Name of the look",
+      "namePh": "Eid 2027",
+      "help": "Keeps a copy of your home page's settings now. Change the copy for the season; your live home page stays as it is.",
+      "save": "Save the look",
+      "saved": "Saved. Open “Change this look” to make it seasonal."
+    },
+    "edit": {
+      "name": "Name",
+      "sections": "Sections and their order",
+      "sectionsHelp": "Tick the sections to show; move them up or down. A section with nothing to show stays hidden by itself.",
+      "up": "Move up",
+      "down": "Move down",
+      "eyebrow": "Hero: small line above the title",
+      "title": "Hero: title",
+      "sub": "Hero: line under the title",
+      "en": "English",
+      "bn": "Bengali",
+      "lineHelp": "Write each line in both languages, or leave both boxes empty for the usual words.",
+      "collection": "Hero pictures",
+      "collHelp": "Pick a collection (for example your Eid collection) to slide its products in the hero, inside the collection's own dates.",
+      "save": "Save the look",
+      "saved": "Saved."
+    },
+    "sec": {
+      "hero": "Hero",
+      "festive": "Festive",
+      "categories": "Categories",
+      "new-in": "New in",
+      "sets": "Sets",
+      "size-finder": "Size finder",
+      "flash-sale": "Flash sale",
+      "shop-the-look": "Shop the look",
+      "reviews": "Reviews",
+      "journal": "Journal"
+    },
+    "f": {
+      "name": "name",
+      "sections": "sections",
+      "eyebrow": "small line",
+      "title": "title",
+      "sub": "line under the title",
+      "collection": "hero pictures",
+      "starts": "start",
+      "ends": "end",
+      "lookId": "look",
+      "id": "item",
+      "home.sections": "sections",
+      "home.hero": "hero",
+      "home.heroSlides": "hero pictures",
+      "home.categories": "categories row",
+      "home.newIn": "new in row",
+      "home.reviews": "reviews row"
+    },
+    "err": {
+      "INVALID_INPUT": "Please check: {fields}.",
+      "SWITCHED_OFF": "Seasonal home is off. Turn it on first.",
+      "NOT_FOUND": "Not found any more: {fields}. Reload the page.",
+      "STALE": "Someone changed this meanwhile. Reload the page.",
+      "OVERLAP": "This window overlaps another scheduled window. Pick other times or stop the other one.",
+      "IN_USE": "This look is scheduled. Stop its window first.",
+      "ENDED": "This window has already ended or was stopped.",
+      "forbidden": "You don't have permission for this.",
+      "unauthorized": "Please sign in again.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    },
+    "card": {
+      "h": "Settings",
+      "d": "Seasonal home switching. Off as it ships.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Unsaved changes",
+      "readOnly": "You can see these settings but not change them.",
+      "pairHelp": "Both languages, or both empty.",
+      "on": "Seasonal home switching",
+      "onHelp": "On: scheduled looks show on the home page inside their windows. Off: the home page is always your usual one, and nothing new can be scheduled."
+    }
+  }
+}

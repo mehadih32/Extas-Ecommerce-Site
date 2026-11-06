@@ -18,6 +18,10 @@
     "outreach": {
       "label": "SEO outreach pipeline",
       "help": "Off as it ships. On, Marketing › SEO outreach keeps the websites you ask for a link to your shop, each along the pipeline: found, asked, answered, link live or said no — with the person to write to, your notes, the day to follow up and the page where your link went live. \"Follow-up days\" sets the follow-up day by itself when you mark a site as asked (0 = none). The pitch words are your own first e-mail ({site} = the site, {shop} = your shop's address); \"Write to them\" only opens your own e-mail app with them, and you press send yourself. Nothing is sent from the shop."
+    },
+    "seasonalHome": {
+      "label": "Seasonal home-page switching",
+      "help": "Off as it ships. On, Marketing › Seasonal home keeps your saved home-page looks (for example \"Eid 2027\": which sections show and in what order, the hero's words, the collection whose products slide in the hero) and the windows you schedule them for. Inside a window the home page shows that look; when the window ends the home page is your own home settings again by itself. Two windows may not overlap; a stopped schedule is kept, never deleted. Prices, offers and the checkout never change."
     }
   },
   "ads": {
