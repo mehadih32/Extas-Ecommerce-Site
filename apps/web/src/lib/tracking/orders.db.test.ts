@@ -15,7 +15,7 @@ import { createVault } from '@extas/vault';
 import { loginHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
 import { trackingHandler, type TrackingOverview } from './admin';
-import { orderTrackingTick, recordOrderSteps } from './orders';
+import { orderTrackingTick, recordOrderSteps, STEP_SCAN_MAX } from './orders';
 import type { TrackingDeps } from './service';
 
 const HOST = 'admin.example.test';
@@ -199,5 +199,29 @@ describe.skipIf(!HAS_TEST_DB)('delivered-purchase optimisation on PostgreSQL (PR
     expect(await orderTrackingTick(deps, last, now)).toBe(1);
     expect(await orderTrackingTick(deps, last, now + 60_000)).toBe(0);
     expect(await orderTrackingTick(deps, last, now + 10 * 60_000)).toBe(1);
+  });
+
+  it('follow-up (as 663): a run reads the whole look-back page by page, not only its oldest 500 rows; each order and step judged once', async () => {
+    // the window's oldest 500+ rows are all one order's, recorded already: before, a run read only those and stopped
+    const old = await order({ steps: [{ to: 'DELIVERED', hoursAgo: 40 }] });
+    await recordOrderSteps(deps, S, { send: false });
+    expect(await step(`delivered-${old.number}`)).not.toBeNull();
+    await t.prisma.orderEvent.createMany({
+      data: Array.from({ length: STEP_SCAN_MAX + 5 }, (_, i) => ({ storeId: S, orderId: old.id, type: 'order.status', toStatus: 'DELIVERED' as const, actorType: 'SYSTEM' as const, source: 'test', createdAt: hoursAgo(39 - i * 0.07) })),
+    });
+    const later = [];
+    for (let i = 0; i < 3; i += 1) later.push(await order({ steps: [{ to: 'DELIVERED', hoursAgo: 1 - i * 0.1 }] }));
+    // a partial delivery first, the rest delivered later: judged at its first row (the kept tee), never at the later one
+    const both = await order({ steps: [{ to: 'PARTIALLY_DELIVERED', hoursAgo: 0.5, keepTee: true }, { to: 'DELIVERED', hoursAgo: 0.2 }] });
+    const run = await recordOrderSteps(deps, S, { send: false });
+    expect(run.scanned).toBeGreaterThan(STEP_SCAN_MAX);
+    expect(run.recorded).toBe(4);
+    for (const x of later) expect(await step(`delivered-${x.number}`)).not.toBeNull();
+    expect(await step(`delivered-${both.number}`)).toMatchObject({ valueMinor: 90_000 });
+    // one row a page reads the same window and records nothing twice
+    const again = await order({ steps: [{ to: 'PARTIALLY_DELIVERED', hoursAgo: 0.15, keepTee: true }, { to: 'DELIVERED', hoursAgo: 0.1 }] });
+    expect((await recordOrderSteps(deps, S, { page: 1, send: false })).recorded).toBe(1);
+    expect(await step(`delivered-${again.number}`)).toMatchObject({ valueMinor: 90_000 });
+    expect(await t.prisma.trackedEvent.count({ where: { storeId: S, eventId: `delivered-${again.number}` } })).toBe(1);
   });
 });
