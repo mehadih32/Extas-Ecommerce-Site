@@ -5,7 +5,7 @@
 .adm2 .mc-cal{display:flex;flex-direction:column;gap:7px;min-width:0}
 .adm2 .mc-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:center;min-width:0}
 .adm2 .mc-t{font-size:12.5px;font-weight:600;line-height:1.3;overflow-wrap:anywhere;min-width:0}
-.adm2 .mc-t a{color:inherit;text-decoration:none;display:inline-flex;align-items:center;min-height:44px;max-width:100%}
+.adm2 .mc-t a{color:inherit;text-decoration:none;display:inline-flex;align-items:center;min-height:44px;min-width:44px;max-width:100%}
 .adm2 .mc-t a:hover{text-decoration:underline}
 .adm2 .mc-b{position:relative;height:22px;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(100%/8.57 - 1px),var(--ln2) calc(100%/8.57 - 1px),var(--ln2) calc(100%/8.57));border-radius:6px}
 .adm2 .mc-head .mc-b{background:none;height:18px}
@@ -26,7 +26,7 @@
 .adm2 .mc-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
 .adm2 .mc-item{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;padding:10px 0;border-top:1px solid var(--ln2);min-width:0}
 .adm2 .mc-item:first-child{border-top:0}
-.adm2 .mc-item a.a2-lnk{display:inline-flex;align-items:center;min-height:44px}
+.adm2 .mc-item a.a2-lnk{display:inline-flex;align-items:center;min-height:44px;min-width:44px}
 .adm2 .mc-break{overflow-wrap:anywhere}
 .adm2 .mc-pair{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
 .adm2 .mc-fold > summary{min-height:44px;min-width:44px;display:flex;align-items:center;cursor:pointer}
@@ -41,19 +41,24 @@
    On a phone the chips become dots (the cell's label and the day-by-day list name them). Lumen tokens only. */
 .adm2 .mc-month{display:grid;gap:4px;min-width:0}
 .adm2 .mc-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;min-width:0}
-.adm2 .mc-dow span{font-size:11px;color:var(--lm-ink2);text-align:center;padding:2px 0;overflow:hidden;text-overflow:clip;white-space:nowrap}
-.adm2 .mc-day{display:flex;flex-direction:column;gap:2px;min-height:76px;min-width:0;padding:4px;border:1px solid var(--lm-ln);border-radius:var(--lm-r-sm);background:var(--lm-sf);overflow:hidden}
+.adm2 .mc-dow > span{font-size:14px;color:var(--lm-ink2);text-align:center;padding:2px 0;white-space:nowrap;min-width:0}
+.adm2 .mc-dw-n{display:none}
+.adm2 .mc-day{display:flex;flex-direction:column;gap:3px;min-height:88px;min-width:0;padding:4px;border:1px solid var(--lm-ln);border-radius:var(--lm-r-sm);background:var(--lm-sf);overflow:hidden}
 .adm2 .mc-day.out{background:transparent;opacity:.45}
 .adm2 .mc-day.today{border-color:var(--lm-accent);box-shadow:inset 0 0 0 1px var(--lm-accent)}
-.adm2 .mc-dn{font-size:11.5px;font-weight:600;color:var(--lm-ink2)}
-.adm2 .mc-chip{display:block;min-width:0;border-radius:var(--lm-r-sm);padding:1px 4px;font-size:10.5px;line-height:1.35;background:var(--lm-chip);color:var(--lm-ink)}
-.adm2 .mc-chip .mc-ct{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm2 .mc-dn{font-size:14px;font-weight:600;color:var(--lm-ink2)}
+.adm2 .mc-chip{display:block;min-width:0;border-radius:var(--lm-r-sm);padding:2px 5px;font-size:14px;line-height:1.3;background:var(--lm-chip);color:var(--lm-ink)}
+/* follow-up (browser check of 656): 14 px (Lumen: text on cards never under 14), a long name wraps to two lines, never cut sideways */
+.adm2 .mc-chip .mc-ct{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.adm2 .mc-chip.mc-x{display:none}
 .adm2 .mc-chip.live{background:var(--lm-okbg);color:var(--lm-ok)}
 .adm2 .mc-chip.scheduled{background:var(--lm-infobg);color:var(--lm-info)}
 .adm2 .mc-chip.ended{background:var(--lm-sf2);color:var(--lm-ink2)}
 .adm2 .mc-chip.off{background:transparent;border:1px dashed var(--lm-ln);color:var(--lm-ink2)}
-.adm2 .mc-more{font-size:10.5px;color:var(--lm-ink2)}
+.adm2 .mc-more{font-size:14px;color:var(--lm-ink2)}
 @media (max-width:640px){
+  .adm2 .mc-dw-s{display:none}
+  .adm2 .mc-dw-n{display:inline}
   .adm2 .mc-day{min-height:52px;padding:3px;gap:3px;flex-flow:row wrap;align-content:flex-start}
   .adm2 .mc-dn{flex:0 0 100%}
   .adm2 .mc-chip{width:8px;height:8px;padding:0;border-radius:var(--lm-r-pill)}
@@ -61,5 +66,6 @@
   .adm2 .mc-chip.scheduled{background:var(--lm-info)}
   .adm2 .mc-chip.ended{background:var(--lm-ln)}
   .adm2 .mc-chip .mc-ct{display:none}
-  .adm2 .mc-more{font-size:9.5px;line-height:8px}
+  .adm2 .mc-chip.mc-x{display:block}
+  .adm2 .mc-more{display:none}
 }
