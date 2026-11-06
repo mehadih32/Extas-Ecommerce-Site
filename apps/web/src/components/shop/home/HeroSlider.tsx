@@ -5,6 +5,8 @@
 // tap starts the touch hold — each with its own resume (L32/L33). The pins fit their words (HERO_PIN_FIT, run here
 // before the copies are made, so each copy is born fitted; ShellEffects' refit gives each copy its card's result). The
 // pictures themselves are drawn on the server and handed in as children.
+// Follow-up 46: once the pins are fitted and the row is moving, the box says so (`data-hero-fit="done"`), and the device
+// gate measures the pins only after that (under load the fit could land after the gate's settle time).
 import type { SliderEngine } from '@extas/settings';
 import { useEffect, useRef, type PointerEvent, type ReactNode } from 'react';
 import { HERO_PIN_FIT, fitAll } from '@/lib/shop/fit';
@@ -47,11 +49,13 @@ export function HeroSlider({
       () => fitAll(b, [HERO_PIN_FIT]),
       () => undo.push(bindSmoothRow(el, engine, { dir: -1, speed })),
       () => undo.push(bindRowControls(b, el, DESK)),
+      () => b.setAttribute('data-hero-fit', 'done'),
     ]);
     return () => {
       stop();
       glide.current?.();
       undo.forEach((f) => f());
+      b.removeAttribute('data-hero-fit');
     };
   }, [engine, speed]);
 
