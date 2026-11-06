@@ -54,7 +54,7 @@ export default async function StoppedReportPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="" data-testid="stopped-page">
         <ShellState view={view} kind="denied" permission="risk.report" />
       </div>
     );
@@ -99,7 +99,7 @@ export default async function StoppedReportPage() {
   ];
 
   return (
-    <div className="a2-z" data-testid="stopped-page">
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="stopped-page">
       <PageHead view={view} place={locateKey(KEY)} title={w('title')} sub={w('sub')} />
       <SectionTabs view={view} current={KEY} />
       <p className="a2-cs fr-showing" data-testid="stopped-showing">

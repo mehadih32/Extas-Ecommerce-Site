@@ -57,7 +57,7 @@ export default async function ExperimentPage(props: { params: Promise<{ id: stri
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="" data-testid="xp-one">
         <ShellState view={view} kind="denied" permission="reports.experiments.read" />
       </div>
     );
@@ -77,7 +77,7 @@ export default async function ExperimentPage(props: { params: Promise<{ id: stri
       });
   if (!isNew && !one)
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="">
         <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={g('editMeta')} />
         <ShellState view={view} kind="notfound" />
       </div>
@@ -97,7 +97,7 @@ export default async function ExperimentPage(props: { params: Promise<{ id: stri
   const texts = flat((lang === 'bn' ? bn : en).xp as unknown as Record<string, unknown>);
 
   return (
-    <div className="a2-z" data-testid="xp-one">
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="xp-one">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={r ? r.name : g('newTitle')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note a2-mt12" role="note">

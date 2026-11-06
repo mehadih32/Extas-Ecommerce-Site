@@ -43,7 +43,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="" data-testid="team-page">
         <ShellState view={view} kind="denied" permission="staff.performance" />
       </div>
     );
@@ -54,7 +54,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
   const day = (ymd: string) => new Intl.DateTimeFormat(view.locale, { day: 'numeric', month: 'short', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${ymd}T00:00:00Z`));
   const choices = s.period === 'week' ? (['thisWeek', 'lastWeek'] as const) : (['thisMonth', 'lastMonth'] as const);
   return (
-    <div className="a2-z" data-testid="team-page">
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="team-page">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
       {s.enabled ? (

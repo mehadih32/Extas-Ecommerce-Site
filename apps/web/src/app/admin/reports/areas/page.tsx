@@ -52,7 +52,7 @@ export default async function AreasPage({ searchParams }: { searchParams: Promis
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="" data-testid="areas-page">
         <ShellState view={view} kind="denied" permission="books.read" />
       </div>
     );
@@ -104,7 +104,7 @@ export default async function AreasPage({ searchParams }: { searchParams: Promis
   const csv = `/api/admin/reports/areas?from=${q.from}&to=${q.to}&level=${r.area.level}${r.area.categoryId ? `&category=${r.area.categoryId}` : ''}${r.area.productId ? `&product=${r.area.productId}` : ''}`;
 
   return (
-    <div className="a2-z" data-testid="areas-page" data-from={q.from} data-to={q.to} data-level={r.area.level}>
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="areas-page" data-from={q.from} data-to={q.to} data-level={r.area.level}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
 

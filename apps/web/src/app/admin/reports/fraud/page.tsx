@@ -56,7 +56,7 @@ export default async function FraudReportPage({ searchParams }: { searchParams: 
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="" data-testid="fraud-page">
         <ShellState view={view} kind="denied" permission="risk.report" />
       </div>
     );
@@ -109,7 +109,7 @@ export default async function FraudReportPage({ searchParams }: { searchParams: 
   ];
 
   return (
-    <div className="a2-z" data-testid="fraud-page">
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="fraud-page">
       <PageHead view={view} place={locateKey(KEY)} title={w('title')} sub={w('sub')} />
       <SectionTabs view={view} current={KEY} />
 

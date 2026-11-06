@@ -51,7 +51,7 @@ export default async function DeliveryReportPage({ searchParams }: { searchParam
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-rp" data-lm-ready="" data-testid="delivery-report">
         <ShellState view={view} kind="denied" permission="reports.read" />
       </div>
     );
@@ -98,7 +98,7 @@ export default async function DeliveryReportPage({ searchParams }: { searchParam
   ];
 
   return (
-    <div className="a2-z" data-testid="delivery-report" data-days={days}>
+    <div className="a2-z lm-rp" data-lm-ready="" data-testid="delivery-report" data-days={days}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
       <nav className="a2-views a2-mt12" aria-label={c('period.label')}>
