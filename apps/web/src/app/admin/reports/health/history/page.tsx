@@ -10,10 +10,12 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { RUN_TOOLS } from '@extas/jobs';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles } from '@/lib/admin-lumen/figures';
 import { historyView, type HistoryRow } from '@/lib/admin-health/history';
 import { runAlertsView, type RunAlertState } from '@/lib/admin-health/run-alerts';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -116,34 +118,30 @@ export default async function RunHistoryPage({ searchParams }: { searchParams: P
         </p>
       ) : null}
 
-      <div className="a2-kpis a2-mt12">
-        <div className="a2-card a2-kpi" data-testid="history-kpi-kept">
-          <div className="a2-kl">{s('kpi.kept')}</div>
-          <div className="a2-kv">{num(v.kept)}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s('kpi.keptFoot')}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="history-kpi-failed-week" data-n={v.failedWeek}>
-          <div className="a2-kl">{s('kpi.failedWeek')}</div>
-          <div className={`a2-kv${v.failedWeek ? ' sp-bad' : ''}`}>{num(v.failedWeek)}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s('kpi.failedWeekFoot')}</span>
-          </div>
-        </div>
-        {RUN_TOOLS.map((tool) => {
-          const r = v.latest[tool];
-          return (
-            <div key={tool} className="a2-card a2-kpi" data-testid={`history-kpi-last-${tool}`} data-ok={r ? String(r.ok) : 'none'}>
-              <div className="a2-kl">{s('kpi.last', { tool: s(`tool.${tool}`) })}</div>
-              <div className={`a2-kv sp-kvt${r && !r.ok ? ' sp-bad' : ''}`}>{r ? s(r.ok ? 'ok' : 'fail') : s('kpi.none')}</div>
-              <div className="a2-kf">
-                <span className="a2-kn">{r ? when(r) : ''}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <SummaryTiles
+        className="a2-mt12"
+        tiles={figureTiles(
+          [
+            { id: 'kept', label: s('kpi.kept'), value: num(v.kept), n: v.kept, foot: s('kpi.keptFoot') },
+            { id: 'failed-week', label: s('kpi.failedWeek'), value: num(v.failedWeek), n: v.failedWeek, tone: v.failedWeek ? 'bad' : undefined, foot: s('kpi.failedWeekFoot'), data: { n: v.failedWeek } },
+            ...RUN_TOOLS.map((tool) => {
+              const r = v.latest[tool];
+              return {
+                id: `last-${tool}`,
+                label: s('kpi.last', { tool: s(`tool.${tool}`) }),
+                value: r ? s(r.ok ? 'ok' : 'fail') : s('kpi.none'),
+                kind: 'word' as const,
+                tone: r && !r.ok ? ('bad' as const) : undefined,
+                foot: r ? when(r) : undefined,
+                data: { ok: r ? String(r.ok) : 'none' },
+              };
+            }),
+          ],
+          { locale: view.locale },
+        )}
+        label={s('title')}
+        testId="history-kpi"
+      />
 
       <nav className="a2-views sk-views a2-mt12" aria-label={s('col.run')}>
         {(['all', ...RUN_TOOLS] as const).map((tool) => (

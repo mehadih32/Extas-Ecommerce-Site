@@ -7,11 +7,13 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { JourneysRun, type JourneysRunTexts } from '@/components/admin/settings/JourneysRun';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles } from '@/lib/admin-lumen/figures';
 import { MONTH_METRICS, speedView } from '@/lib/admin-health/speed';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -103,31 +105,38 @@ export default async function SpeedPage() {
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
 
-      <div className="a2-kpis a2-mt12">
-        <div className="a2-card a2-kpi" data-testid="speed-kpi-lab" data-ok={v.lab ? String(v.lab.ok) : 'none'}>
-          <div className="a2-kl">{s('kpi.lab')}</div>
-          <div className={`a2-kv a2-kvw sp-kvt${v.lab && !v.lab.ok ? ' sp-bad' : ''}`}>{s(v.lab ? (v.lab.ok ? 'kpi.labOk' : 'kpi.labMiss') : 'kpi.labNone')}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{v.lab ? at(v.lab.at) : s('noMonth')}</span>
-          </div>
-        </div>
-        {(['LCP', 'INP'] as const).map((m) => {
-          const c = kpiCell(m);
-          const target = targetOf(m, tg);
-          return (
-            <div key={m} className="a2-card a2-kpi" data-testid={`speed-kpi-${m.toLowerCase()}`} data-ok={c.ok == null ? 'none' : String(c.ok)}>
-              <div className="a2-kl">{s(`kpi.${m.toLowerCase()}`)}</div>
-              <div className={`a2-kv${c.ok === false ? ' sp-bad' : ''}${c.p75 == null ? ' a2-kvw sp-kvt' : ''}`}>{c.p75 == null ? s('kpi.none') : `${c.over ? '> ' : ''}${fv(m, c.p75)}`}</div>
-              <div className="a2-kf">
-                <span className="a2-kn">
-                  {s('kpi.span', { days: num(v.real.days), n: num(c.count) })}
-                  {target != null ? ` · ${s('kpi.target', { v: fv(m, target) })}` : null}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <SummaryTiles
+        className="a2-mt12"
+        tiles={figureTiles(
+          [
+            {
+              id: 'lab',
+              label: s('kpi.lab'),
+              value: s(v.lab ? (v.lab.ok ? 'kpi.labOk' : 'kpi.labMiss') : 'kpi.labNone'),
+              kind: 'word',
+              tone: v.lab && !v.lab.ok ? 'bad' : undefined,
+              foot: v.lab ? at(v.lab.at) : s('noMonth'),
+              data: { ok: v.lab ? String(v.lab.ok) : 'none' },
+            },
+            ...(['LCP', 'INP'] as const).map((m) => {
+              const c = kpiCell(m);
+              const target = targetOf(m, tg);
+              return {
+                id: m.toLowerCase(),
+                label: s(`kpi.${m.toLowerCase()}`),
+                value: c.p75 == null ? s('kpi.none') : `${c.over ? '> ' : ''}${fv(m, c.p75)}`,
+                kind: 'word' as const,
+                tone: c.ok === false ? ('bad' as const) : undefined,
+                foot: `${s('kpi.span', { days: num(v.real.days), n: num(c.count) })}${target != null ? ` · ${s('kpi.target', { v: fv(m, target) })}` : ''}`,
+                data: { ok: c.ok == null ? 'none' : String(c.ok) },
+              };
+            }),
+          ],
+          { locale: view.locale },
+        )}
+        label={s('title')}
+        testId="speed-kpi"
+      />
 
       <section className="a2-sc a2-mt12" aria-labelledby="sp-lab-h">
         <h2 className="a2-h3" id="sp-lab-h">

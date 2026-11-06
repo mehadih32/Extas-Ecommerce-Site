@@ -9,11 +9,13 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { JOURNEY_EVERY } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { JourneysRun } from '@/components/admin/settings/JourneysRun';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles } from '@/lib/admin-lumen/figures';
 import type { HubLine } from '@/lib/admin-health/hub';
 import { hubView } from '@/lib/admin-health/service';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -111,15 +113,24 @@ export default async function HealthHubPage() {
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
 
-      <div className="a2-kpis">
-        <div className="a2-card a2-kpi" data-testid="health-overall" data-state={v.overall}>
-          <div className="a2-kl">{s('title')}</div>
-          <div className="a2-kv a2-sm a2-kvw">{s(`overall.${v.overall}`)}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s('overallFoot', { bad: count('bad'), warn: count('warn'), ok: count('ok') })}</span>
-          </div>
-        </div>
-      </div>
+      <SummaryTiles
+        tiles={figureTiles(
+          [
+            {
+              id: 'overall',
+              label: s('title'),
+              value: s(`overall.${v.overall}`),
+              kind: 'word',
+              tone: v.overall === 'off' ? undefined : v.overall,
+              foot: s('overallFoot', { bad: count('bad'), warn: count('warn'), ok: count('ok') }),
+              data: { state: v.overall },
+            },
+          ],
+          { locale: view.locale },
+        )}
+        label={s('title')}
+        testId="health"
+      />
 
       {!v.serverConnected ? (
         <div className="a2-note a2-mt12" role="note" data-testid="health-no-server">

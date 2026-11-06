@@ -7,9 +7,11 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles } from '@/lib/admin-lumen/figures';
 import { SMOKE_SLOTS, smokeRunsView, type SmokeRow } from '@/lib/admin-health/smoke-runs';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -111,38 +113,20 @@ export default async function SmokeRunsPage({ searchParams }: { searchParams: Pr
         </div>
       ) : (
         <>
-          <div className="a2-kpis a2-mt12">
-            <div className="a2-card a2-kpi" data-testid="smoke-kpi-result" data-ok={String(run.ok)}>
-              <div className="a2-kl">{s('kpi.result')}</div>
-              <div className={`a2-kv sp-kvt${run.ok ? '' : ' sp-bad'}`}>{s(run.ok ? 'kpi.ok' : 'kpi.fail')}</div>
-              <div className="a2-kf">
-                <span className="a2-kn">{s('kpi.resultFoot', { when: run.at })}</span>
-              </div>
-            </div>
-            <div className="a2-card a2-kpi" data-testid="smoke-kpi-pages">
-              <div className="a2-kl">{s('kpi.pages')}</div>
-              <div className="a2-kv">{num(v.pageCount || run.pages)}</div>
-              <div className="a2-kf">
-                <span className="a2-kn">{s('kpi.pagesFoot', { views: num(run.pages) })}</span>
-              </div>
-            </div>
-            <div className="a2-card a2-kpi" data-testid="smoke-kpi-failed" data-failed={v.failedPages}>
-              <div className="a2-kl">{s('kpi.failed')}</div>
-              <div className={`a2-kv${v.failedPages || run.failed ? ' sp-bad' : ''}`}>{num(v.failedPages)}</div>
-              <div className="a2-kf">
-                <span className="a2-kn">{s('kpi.failedFoot', { views: num(run.failed) })}</span>
-              </div>
-            </div>
-            <div className="a2-card a2-kpi" data-testid="smoke-kpi-version">
-              <div className="a2-kl">{s('kpi.version')}</div>
-              <div className="a2-kv sp-kvt">
-                <code>{run.sha || '—'}</code>
-              </div>
-              <div className="a2-kf">
-                <span className="a2-kn">{s('kpi.versionFoot', { kind: kindOf(run.kind) })}</span>
-              </div>
-            </div>
-          </div>
+          <SummaryTiles
+            className="a2-mt12"
+            tiles={figureTiles(
+              [
+                { id: 'result', label: s('kpi.result'), value: s(run.ok ? 'kpi.ok' : 'kpi.fail'), kind: 'word', tone: run.ok ? undefined : 'bad', foot: s('kpi.resultFoot', { when: run.at }), data: { ok: String(run.ok) } },
+                { id: 'pages', label: s('kpi.pages'), value: num(v.pageCount || run.pages), n: v.pageCount || run.pages, foot: s('kpi.pagesFoot', { views: num(run.pages) }) },
+                { id: 'failed', label: s('kpi.failed'), value: num(v.failedPages), n: v.failedPages, tone: v.failedPages || run.failed ? 'bad' : undefined, foot: s('kpi.failedFoot', { views: num(run.failed) }), data: { failed: v.failedPages } },
+                { id: 'version', label: s('kpi.version'), value: run.sha || '—', kind: 'word', foot: s('kpi.versionFoot', { kind: kindOf(run.kind) }) },
+              ],
+              { locale: view.locale },
+            )}
+            label={s('title')}
+            testId="smoke-kpi"
+          />
 
           {!run.ok && run.rolledBack ? (
             <div className="a2-note a2-mt12 sk-bad" role="note" data-testid="smoke-put-back">

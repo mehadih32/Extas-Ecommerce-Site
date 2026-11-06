@@ -5,13 +5,8 @@
    comes from lumen-sections.css. Every colour, radius, font and shadow is a --lm-* token; text at least 14 px; taps at
    least 44 px on phones. */
 
-/* the figures row: a figure that is a word wraps inside its tile; phones get the smaller display size */
-[data-lm-look] .lm-rp .a2-kpi { min-width: 0; }
-[data-lm-look] .lm-rp .a2-kv { white-space: normal; overflow-wrap: anywhere; }
-[data-lm-look] .lm-rp :is(.a2-kv.sp-kvt, .a2-kv.pb-kvt) { font: 700 1.2rem / 1.3 var(--lm-font-disp); }
-@media (max-width: 759px) {
-  [data-lm-look] .lm-rp .a2-kv { font-size: var(--lm-fs-h1-phone); }
-}
+/* the figures rows are the shared summary tiles (components/admin/lumen/SummaryTiles.tsx, follow-up on PR 644/645):
+   a figure that is a word is drawn smaller there, so the old a2-kpi skin is no longer needed here */
 
 /* Site health's own small parts at Lumen's 14 px, in tokens */
 [data-lm-look] .lm-rp .hl-meta { font-size: var(--lm-fs-card); color: var(--lm-ink2); }

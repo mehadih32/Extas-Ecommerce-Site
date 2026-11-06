@@ -8,9 +8,11 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles } from '@/lib/admin-lumen/figures';
 import { FIX_STATUSES } from '@/lib/admin-health/fixes';
 import { historyRunView, isHistoryError, type HistoryFinding, type HistoryRow } from '@/lib/admin-health/history';
 import type { SummaryLine } from '@/lib/admin-health/run-summary';
@@ -86,37 +88,26 @@ export default async function HistoryRunPage({ params }: { params: Promise<{ id:
         </Link>
       </p>
 
-      <div className="a2-kpis a2-mt12">
-        <div className="a2-card a2-kpi" data-testid="history-run-result" data-ok={String(run.ok)}>
-          <div className="a2-kl">{s('run.result')}</div>
-          <div className={`a2-kv sp-kvt${run.ok ? '' : ' sp-bad'}`}>{s(run.ok ? 'ok' : 'fail')}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s(`counts.${run.tool}`, { passed: num(run.passed), failed: num(run.failed) })}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="history-run-findings" data-new={fresh}>
-          <div className="a2-kl">{s('run.findings')}</div>
-          <div className={`a2-kv${v.findings.length ? ' sp-bad' : ''}`}>{num(v.findings.length)}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{v.previous ? s('run.findingsFoot', { new: num(fresh) }) : ''}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="history-run-compare">
-          <div className="a2-kl">{s('run.compare')}</div>
-          <div className="a2-kv sp-kvt">
-            {v.previous ? (
-              <Link className="sk-pic" href={`${LIST}/${v.previous.id}`} data-testid="history-run-previous">
-                {when(v.previous)}
-              </Link>
-            ) : (
-              s('run.firstRun')
-            )}
-          </div>
-          <div className="a2-kf">
-            <span className="a2-kn">{v.previous ? s('run.compareFoot', { result: s(v.previous.ok ? 'ok' : 'fail') }) : ''}</span>
-          </div>
-        </div>
-      </div>
+      <SummaryTiles
+        className="a2-mt12"
+        tiles={figureTiles(
+          [
+            { id: 'result', label: s('run.result'), value: s(run.ok ? 'ok' : 'fail'), kind: 'word', tone: run.ok ? undefined : 'bad', foot: s(`counts.${run.tool}`, { passed: num(run.passed), failed: num(run.failed) }), data: { ok: String(run.ok) } },
+            { id: 'findings', label: s('run.findings'), value: num(v.findings.length), n: v.findings.length, tone: v.findings.length ? 'bad' : undefined, foot: v.previous ? s('run.findingsFoot', { new: num(fresh) }) : undefined, data: { new: fresh } },
+            {
+              id: 'compare',
+              label: s('run.compare'),
+              value: v.previous ? when(v.previous) : s('run.firstRun'),
+              kind: 'word',
+              href: v.previous ? `${LIST}/${v.previous.id}` : undefined,
+              foot: v.previous ? s('run.compareFoot', { result: s(v.previous.ok ? 'ok' : 'fail') }) : undefined,
+            },
+          ],
+          { locale: view.locale },
+        )}
+        label={s('run.result')}
+        testId="history-run"
+      />
 
       <section className="a2-sc a2-mt12" aria-labelledby="hs-said-h" data-testid="history-said" data-streak={v.streak}>
         <h2 className="a2-h3" id="hs-said-h">
