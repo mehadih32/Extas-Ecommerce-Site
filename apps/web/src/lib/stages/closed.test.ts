@@ -4,7 +4,7 @@ import { CLOSED_STAGES, CLOSED_STAGES_SHOWN_DEFAULT } from '@extas/settings';
 import { closedPaths, robotsTxt } from '../seo/robots';
 import { adminSearch } from '../admin-shell/search';
 import { SHELL_SECTIONS, sectionById, sectionVisible, visibleTabs, type ShellViewer } from '../admin-shell/sections';
-import { CLOSED_STAGE_PARTS, hiddenAdminParts, hiddenShopPaths, hiddenStages, isHiddenPath } from './closed';
+import { CLOSED_STAGE_PARTS, closedStageOfPart, hiddenAdminParts, hiddenShopPaths, hiddenStages, isHiddenPath } from './closed';
 
 const OWNER = (hidden: Set<string>): ShellViewer => ({ perms: new Set(), owner: true, hidden });
 const ALL_SHOWN = Object.fromEntries(CLOSED_STAGES.map((s) => [s, true]));
@@ -72,5 +72,12 @@ describe('closed stages hidden by a switch (PR 652)', () => {
     expect(hiddenShopPaths(CLOSED_STAGES_SHOWN_DEFAULT)).toEqual([]);
     const plain = robotsTxt({ disallow: [], aiCrawlers: true, aiBots: [] } as never, { open: true, searchListed: false, sitemap: null, hidden: hiddenShopPaths(CLOSED_STAGES_SHOWN_DEFAULT) });
     expect(plain.split('\n').filter((l) => l.startsWith('Disallow:')).length).toBe(closedPaths(false).length);
+  });
+
+  it('names the closed stage of a hidden part, for its "closed by the owner" state (669)', () => {
+    expect(closedStageOfPart('ai')).toBe('S15');
+    expect(closedStageOfPart('assistant')).toBe('S15');
+    expect(closedStageOfPart('orders')).toBeNull();
+    for (const s of CLOSED_STAGES) for (const id of [...CLOSED_STAGE_PARTS[s].sections, ...CLOSED_STAGE_PARTS[s].tabs]) expect(closedStageOfPart(id)).toBe(s);
   });
 });
