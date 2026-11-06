@@ -9,6 +9,7 @@
 // built page. The other V12.4 designs come after launch (PROGRESS.md follow-ups 380–389).
 import { classicDesign } from './classic';
 import { dashboardA } from './dashboard/A';
+import { dashboardB } from './dashboard/B';
 import type { LookPage } from './types';
 
 export const LOOK_PAGES: readonly LookPage[] = [
@@ -17,9 +18,11 @@ export const LOOK_PAGES: readonly LookPage[] = [
     section: 'dashboard',
     icon: 'grid',
     preview: '/admin?home=1',
-    standard: 'A',
+    // PR 631 (CN-036): the Lumen "Today" (B) is the standard; A, the V12.4 "Calm overview", stays selectable.
+    standard: 'B',
     designs: [
       dashboardA,
+      dashboardB,
       // admin:design dashboard
     ],
   },

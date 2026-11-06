@@ -176,6 +176,12 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
     expect(all.lowStock).toEqual([]);
     // CN-035: a new installation has no copy away from the server yet — both places named for the yellow line
     expect(all.offSite).toEqual(['blob', 'drive']);
+    // PR 631: the live feed lists nothing on an empty shop; the goal ring is not read while the goal is off (as shipped)
+    expect(all.feed).toEqual([]);
+    expect(all.goal).toBeNull();
+    const goal = await loadDashboard({ ...ctx, today: { liveRows: 0, goal: { on: true, amountMinor: 5_000_000 } }, viewer: { perms: new Set(), owner: true } }, ['goal', 'feed']);
+    expect(goal.goal).toMatchObject({ goalMinor: 5_000_000, salesMinor: 0, to: today });
+    expect(goal.feed).toBeNull();
     // A part the person may not open is not read at all.
     const desk = await loadDashboard({ ...ctx, viewer: { perms: new Set(['orders.read']), owner: false } }, DASH_PARTS);
     expect(desk.money).toBeNull();
@@ -183,6 +189,8 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
     expect(desk.lowStock).toBeNull();
     expect(desk.offSite).toBeNull();
     expect(desk.stages).not.toBeNull();
-    expect([...desk.parts].sort()).toEqual(['delivery', 'queues', 'stages']);
+    expect(desk.goal).toBeNull();
+    expect(desk.feed).toEqual([]);
+    expect([...desk.parts].sort()).toEqual(['delivery', 'feed', 'queues', 'stages']);
   });
 });

@@ -1,0 +1,115 @@
+/* PR 631–633 (CN-036) — the Lumen section pages (docs/demo/admin-look/LUMEN-SPEC.md §4): what a section page adds to
+   the shared patterns (lumen-patterns.css). Every colour, radius, font, shadow and motion time is a --lm-* token of the
+   theme layer (theme/lumen.css); nothing here is a literal. Headings at least 24 px, text at least 14 px, taps at least
+   44 px on phones. */
+
+/* ---------- a section page's header (title, one line of what matters, page actions) ---------- */
+[data-lm-look] .lm-ph { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; margin: 0 0 18px; }
+[data-lm-look] .lm-ph-t { min-width: 0; flex: 1 1 320px; }
+[data-lm-look] .lm-ph h1 { margin: 0; font: 800 var(--lm-fs-h1) / 1.15 var(--lm-font-disp); letter-spacing: -0.02em; color: var(--lm-ink); overflow-wrap: anywhere; }
+[data-lm-look] .lm-ph .lm-sub { margin-top: 6px; font-size: var(--lm-fs-body); }
+[data-lm-look] .lm-ph-a { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
+[data-lm-look] .lm-live { color: var(--lm-ok); font-weight: 600; }
+[data-lm-look] .lm-note { margin: 8px 4px 0; color: var(--lm-ink2); font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-card-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+[data-lm-look] .lm-card-h > h2 { margin: 0; font: 700 1.5rem/1.25 var(--lm-font-disp); color: var(--lm-ink); }
+[data-lm-look] .lm-card > .lm-sub { margin: 2px 0 10px; }
+[data-lm-look] .lm-tag { display: inline-flex; align-items: center; gap: 6px; border-radius: var(--lm-r-pill); padding: 2px 12px; font-weight: 700; font-size: var(--lm-fs-card); background: var(--lm-chip); color: var(--lm-ink2); white-space: nowrap; }
+[data-lm-look] .lm-tag.ok { background: var(--lm-okbg); color: var(--lm-ok); }
+[data-lm-look] .lm-tag.warn { background: var(--lm-warnbg); color: var(--lm-warn); }
+[data-lm-look] .lm-tag.bad { background: var(--lm-badbg); color: var(--lm-bad); }
+[data-lm-look] .lm-tag.info { background: var(--lm-infobg); color: var(--lm-info); }
+[data-lm-look] .lm-banner { display: flex; align-items: flex-start; gap: 10px; padding: 14px 18px; margin: 0 0 16px; border-radius: var(--lm-r-box); background: var(--lm-infobg); color: var(--lm-ink); font-size: var(--lm-fs-card); text-decoration: none; min-height: var(--lm-tap); }
+[data-lm-look] .lm-banner.warn { background: var(--lm-warnbg); }
+[data-lm-look] .lm-banner.warn > svg { color: var(--lm-warn); flex: none; }
+[data-lm-look] .lm-tip { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 0; padding: 10px 12px; border-radius: var(--lm-r-ctl); background: var(--lm-acbg); color: var(--lm-ink); font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-tip > svg { color: var(--lm-ac-ink); flex: none; margin-top: 2px; }
+
+/* ---------- Today (PR 631) ---------- */
+[data-lm-look] .lm-today { display: flex; flex-direction: column; gap: 16px; }
+[data-lm-look] .lm-today > .lm-ph { margin-bottom: 2px; }
+[data-lm-look] .lm-today-top { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+[data-lm-look] .lm-today-top > :only-child { grid-column: 1 / -1; }
+[data-lm-look] .lm-today-g3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; align-items: start; }
+[data-lm-look] .lm-today-g3:empty { display: none; }
+[data-lm-look] .lm-today-needs .lm-qr-t small, [data-lm-look] .lm-today .lm-qr-t small { font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-need-n { display: inline-grid; place-items: center; min-width: 36px; height: 36px; padding: 0 10px; border-radius: var(--lm-r-pill); font: 800 1rem/1 var(--lm-font-disp); background: var(--lm-chip); color: var(--lm-ink); }
+[data-lm-look] .lm-need-n.warn { background: var(--lm-warnbg); color: var(--lm-warn); }
+[data-lm-look] .lm-need-n.bad { background: var(--lm-badbg); color: var(--lm-bad); }
+[data-lm-look] .lm-need-n.info { background: var(--lm-infobg); color: var(--lm-info); }
+[data-lm-look] .lm-today .lm-tile-vs { font-size: var(--lm-fs-card); }
+
+/* the order pipeline: one bar per step, each bar opens All orders on that status */
+[data-lm-look] .lm-bars { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+[data-lm-look] .lm-bars a { display: grid; grid-template-columns: minmax(84px, 7.5rem) minmax(0, 1fr) auto; grid-template-areas: 'l t n' 'l s s'; align-items: center; gap: 0 12px; padding: 8px 8px; margin: 0 -8px; border-radius: var(--lm-r-ctl); color: var(--lm-ink); text-decoration: none; min-height: var(--lm-tap); }
+[data-lm-look] .lm-bars a:hover { background: var(--lm-hover); }
+[data-lm-look] .lm-bar-l { grid-area: l; font-weight: 600; font-size: var(--lm-fs-card); overflow-wrap: anywhere; }
+[data-lm-look] .lm-bar-t { grid-area: t; display: block; height: 10px; border-radius: var(--lm-r-pill); background: var(--lm-chip); overflow: hidden; }
+[data-lm-look] .lm-bar-t i { display: block; height: 100%; border-radius: inherit; transition: width var(--lm-t-count) var(--lm-ease-out); }
+[data-lm-look] .lm-bar-t i.c1 { background: var(--lm-c1); }
+[data-lm-look] .lm-bar-t i.c2 { background: var(--lm-c2); }
+[data-lm-look] .lm-bar-t i.c3 { background: var(--lm-c3); }
+[data-lm-look] .lm-bar-t i.c4 { background: var(--lm-c4); }
+[data-lm-look] .lm-bar-t i.c5 { background: var(--lm-c5); }
+[data-lm-look] .lm-bar-n { grid-area: n; font: 800 1.15rem/1.2 var(--lm-font-disp); font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right; }
+[data-lm-look] .lm-bar-s { grid-area: s; color: var(--lm-ink2); font-size: var(--lm-fs-card); overflow-wrap: anywhere; }
+[data-lm-look] .lm-o2c { margin-top: 10px; }
+[data-lm-look] .lm-o2c b { color: var(--lm-ink); }
+
+/* the live feed of the newest orders */
+[data-lm-look] .lm-feed-l { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; }
+[data-lm-look] .lm-feed-l a { display: flex; align-items: flex-start; gap: 12px; padding: 10px 8px; margin: 0 -8px; border-radius: var(--lm-r-ctl); color: var(--lm-ink); text-decoration: none; min-height: var(--lm-tap); }
+[data-lm-look] .lm-feed-l li + li a { border-top: 1px solid var(--lm-ln); border-radius: 0; }
+[data-lm-look] .lm-feed-l a:hover { background: var(--lm-hover); }
+[data-lm-look] .lm-fdot { width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; flex: none; background: var(--lm-c2); }
+[data-lm-look] .lm-fdot.st-placed, [data-lm-look] .lm-fdot.st-awaiting_advance { background: var(--lm-c1); }
+[data-lm-look] .lm-fdot.st-cancelled, [data-lm-look] .lm-fdot.st-returned { background: var(--lm-faint); }
+[data-lm-look] .lm-feed-m { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+[data-lm-look] .lm-feed-m b { font-weight: 700; font-size: var(--lm-fs-card); overflow-wrap: anywhere; }
+[data-lm-look] .lm-feed-m small { color: var(--lm-ink2); font-size: var(--lm-fs-card); overflow-wrap: anywhere; }
+[data-lm-look] .lm-feed .lm-empty { box-shadow: none; padding: 20px 8px; }
+
+/* the monthly goal ring */
+[data-lm-look] .lm-goal > h2 { margin: 0; font: 700 1.5rem/1.25 var(--lm-font-disp); }
+[data-lm-look] .lm-goal-b { display: flex; align-items: center; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+[data-lm-look] .lm-ring { width: 112px; height: 112px; flex: none; }
+[data-lm-look] .lm-ring-bg { fill: none; stroke: var(--lm-chip); stroke-width: 10; }
+[data-lm-look] .lm-ring-fg { fill: none; stroke: var(--lm-c3); stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray var(--lm-t-count) var(--lm-ease-out); }
+[data-lm-look] .lm-ring-t { fill: var(--lm-ink); font: 800 20px var(--lm-font-disp); text-anchor: middle; dominant-baseline: central; }
+[data-lm-look] .lm-goal-x { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 140px; color: var(--lm-ink2); font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-goal-n { font: 800 1.6rem/1.15 var(--lm-font-disp); color: var(--lm-ink); overflow-wrap: anywhere; }
+
+/* the older V12.4 rows reused inside a Lumen card (top products, stock running out, couriers) */
+[data-lm-look] .lm-card.a3-B .a3-row { border-radius: var(--lm-r-ctl); min-height: var(--lm-tap); }
+[data-lm-look] .lm-card.a3-B .a3-nm b, [data-lm-look] .lm-card.a3-B .a3-ct2 b { font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-card.a3-B :is(.a3-nm span, .a3-rv span, .a3-meta) { font-size: var(--lm-fs-card); }
+
+[data-lm-look] .lm-today-set { margin-top: 4px; }
+[data-lm-look] .lm-today-set > summary { font-size: var(--lm-fs-body); }
+[data-lm-look] .lm-thumb { display: block; width: 100%; height: auto; }
+
+@media (max-width: 1023px) {
+  [data-lm-look] .lm-today-top { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 759px) {
+  [data-lm-look] .lm-ph h1 { font-size: var(--lm-fs-h1-phone); }
+  [data-lm-look] .lm-ph-a { width: 100%; }
+  [data-lm-look] .lm-today .lm-btn.sm { min-height: var(--lm-tap); }
+}
+
+/* the older V12.4 controls in a Lumen page header (view switch, dates): Lumen text size and taps */
+[data-lm-look] .lm-ph .a3-seg :is(a, button) { font-size: var(--lm-fs-card); }
+/* an empty state inside a card is calm and small (the card already has the shadow) */
+[data-lm-look] .lm-card .lm-empty { box-shadow: none; padding: 16px 8px; background: transparent; }
+[data-lm-look] .lm-card .lm-empty > b { font: 600 var(--lm-fs-card) / 1.4 var(--lm-font); }
+[data-lm-look] .lm-card .lm-empty .lm-empty-i { width: 44px; height: 44px; }
+/* the page guide button on a Lumen page: accent text that stays readable in dark mode too */
+[data-lm-look] [data-lm-ready] .a2-guide { color: var(--lm-ac-ink); background: var(--lm-acbg); border-color: transparent; }
+[data-lm-look] [data-lm-ready] .a2-guide:hover { background: var(--lm-hover); }
+[data-lm-look] .lm-today-set > summary { display: flex; align-items: center; min-height: var(--lm-tap); }
+@media (max-width: 759px), (pointer: coarse) {
+  [data-lm-look] .lm-ph :is(.a3-seg a, .a3-seg button, .a3-btn, .a2-guide) { min-height: var(--lm-tap); }
+  [data-lm-look] .lm-ph .a3-btn.ic { min-width: var(--lm-tap); }
+}
+/* the older V12.4 pieces reused on Today (the change mark, an empty card line): Lumen's 14 px minimum */
+[data-lm-look] .lm-today :is(.a3-dl0, .a3-dl, .a3-empty span, .a3-empty b) { font-size: var(--lm-fs-card); }

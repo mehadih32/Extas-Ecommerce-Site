@@ -23,6 +23,10 @@
     "patterns": {
       "label": "Admin look: toast and lists",
       "help": "How many seconds a toast keeps its Undo button (it waits while your mouse, finger or keyboard is on it), and how many more rows a list adds each time you press \"Show more\". Undo is only offered for actions that can be taken back (confirm, courier, status, hide, pause), never for money, refunds, COD, prices, discounts, blocking or deleting."
+    },
+    "today": {
+      "label": "Today page: live feed and monthly goal",
+      "help": "How many of the newest orders the live feed on Today lists (0 hides it), and the monthly goal ring: off as shipped; turn it on and type this month's goal, and the ring shows this month's Sales (delivered orders only) against it. It is only a target to look at; it changes no money, price or order."
     }
   }
 }

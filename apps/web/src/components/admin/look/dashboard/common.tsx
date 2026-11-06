@@ -3,6 +3,7 @@
 // design, so the three always agree), and small figure helpers (average order, sales per order) worked out from the
 // metrics figures without adding any money up.
 import type { ReactNode } from 'react';
+import type { AdminToday } from '@extas/settings';
 import type { DashboardData, DashDesignSettings } from '@/lib/admin-look/dashboard-data';
 import type { AdminView } from '@/lib/admin-page';
 import type { ShellPlace, ShellViewer } from '@/lib/admin-shell/sections';
@@ -34,6 +35,8 @@ export interface DashProps {
   /** The address's own choices (design B's view, a preview's design key). */
   q: { view?: string; design?: string };
   design: string;
+  /** PR 631: `admin.today` (the live feed's rows, the monthly goal) for the Lumen Today design's own settings cards. */
+  today?: AdminToday;
 }
 
 export const can = (v: ShellViewer, ...keys: string[]) => v.owner || keys.some((k) => v.perms.has(k));

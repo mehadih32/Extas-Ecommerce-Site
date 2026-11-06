@@ -2,7 +2,7 @@
   "shell": {
     "admin": "Admin",
     "sec": {
-      "dashboard": "Dashboard",
+      "dashboard": "Today",
       "orders": "Orders",
       "products": "Products",
       "customers": "Customers",
@@ -412,7 +412,7 @@
     }
   },
   "dash": {
-    "metaTitle": "Dashboard · Admin",
+    "metaTitle": "Today · Admin",
     "greet": {
       "morning": "Good morning",
       "afternoon": "Good afternoon",
@@ -640,6 +640,33 @@
       "text": "Not connected yet: {places}. The server keeps its own copy every night; connect them in Settings → System → Backups.",
       "blob": "Azure Blob",
       "drive": "Google Drive"
+    },
+    "lm": {
+      "waiting": "Waiting for you: {n}",
+      "calm": "nothing is waiting for you",
+      "open": "Open",
+      "toBook": "{n} parcels need a courier",
+      "toBookSub": "Packed, not booked with a courier yet",
+      "needs": "Needs you",
+      "needsSub": "The most pressing first. Each button opens its page.",
+      "caught": "All caught up",
+      "tiles": "Today's figures",
+      "feed": "Live",
+      "now": "now",
+      "placed": "{name} placed #{number}",
+      "someone": "A customer",
+      "noFeed": "No orders yet. New orders show here as they come in.",
+      "goal": "{month} goal",
+      "goalNone": "No goal amount yet. Type it in Page settings below.",
+      "goalAria": "{pct} of this month's goal",
+      "goalOf": "of {goal} · {n} days left",
+      "settings": "Page settings",
+      "setFeed": "Live feed of new orders",
+      "setFeedText": "The newest orders on this page, as they come in.",
+      "setRows": "Orders listed",
+      "setGoal": "Monthly goal",
+      "setGoalText": "A ring showing this month's sales (delivered orders only) against your goal. Only a target to look at.",
+      "setAmount": "Goal for the month"
     }
   },
   "look": {

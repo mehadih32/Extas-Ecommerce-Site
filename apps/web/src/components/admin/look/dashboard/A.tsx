@@ -342,7 +342,7 @@ function SoonKpi({ f, label, stage, what }: { f: Fmt; label: string; stage: stri
   );
 }
 
-function MoneyView(p: DashProps) {
+export function MoneyView(p: DashProps) {
   const { f, data } = p;
   const m = data.money;
   return (

@@ -9,13 +9,15 @@
 // brings it. The date choice is a preset (`admin.dashboard.ranges`, `?range=N`) or the person's own two dates
 // (`?from=&to=`, at most `admin.dashboardDesigns.customMaxDays`).
 // PR 495: /admin opens on the person's role start page (`admin.startPages`) unless they chose the Dashboard (?home=1).
+// PR 631 (CN-036): the Lumen "Today" (design B, components/admin/look/dashboard/B.tsx) is the standard design; it
+// also reads `admin.today` (the live feed's rows, the monthly goal ring, off as shipped).
 // `?state=denied|error|notfound|empty` shows the shell's system states here, for the smoke test and the guide.
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { ymdIn } from '@extas/metrics';
-import type { AdminSectionId } from '@extas/settings';
+import type { AdminSectionId, AdminToday } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { csvOf, type DashProps } from '@/components/admin/look/dashboard/common';
 import { fmtOf } from '@/components/admin/look/fmt';
@@ -79,13 +81,14 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
 
   const { db, resolver } = access.deps;
   const scope = { storeId: MOTHER_STORE_ID };
-  const [startPages, settings, designs, shell, currency, look] = await Promise.all([
+  const [startPages, settings, designs, shell, currency, look, todaySet] = await Promise.all([
     resolver.value('admin.startPages', scope) as Promise<Record<string, AdminSectionId>>,
     resolver.value('admin.dashboard', scope) as Promise<DashboardSettings>,
     resolver.value('admin.dashboardDesigns', scope) as Promise<DashDesignSettings>,
     resolver.value('admin.shell', scope) as Promise<{ badgeCacheSeconds: number }>,
     resolver.value('store.currency', scope) as Promise<string>,
     lookState(),
+    resolver.value('admin.today', scope) as Promise<AdminToday>,
   ]);
   if (!home) {
     const to = startHref(startSection(startPages, session.roles), viewer);
@@ -122,6 +125,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
       viewer,
       s: designs,
       range,
+      today: todaySet,
       queues: async () => visibleQueues(await cachedQueues({ db, settings: resolver, now: access.deps.now }, MOTHER_STORE_ID, shell.badgeCacheSeconds), viewer),
     },
     design.parts as readonly DashPart[],
@@ -186,6 +190,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
     sparkDays: settings.sparkDays,
     q: { view: one(sp.view), design: previewKey ?? undefined },
     design: picked.key,
+    today: todaySet,
   };
   const Render = design.Render as unknown as (p: DashProps) => ReactNode;
   return <Render {...props} />;

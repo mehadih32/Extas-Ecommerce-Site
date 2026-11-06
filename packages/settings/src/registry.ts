@@ -125,6 +125,7 @@ import { seasonalSettings } from './registry-seasonal';
 import { seasonalReturnSettings } from './registry-seasonal-return';
 import { adminThemeSettings } from './registry-admin-theme';
 import { adminPatternsSettings } from './registry-admin-patterns';
+import { adminTodaySettings } from './registry-admin-today';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
@@ -1482,6 +1483,8 @@ export const registry = {
   ...adminThemeSettings,
   // ---- S00 · CN-036 lane A · PR 627 · the shared Lumen patterns: Undo seconds, "Show more" step (registry-admin-patterns.ts, version 236). ----
   ...adminPatternsSettings,
+  // ---- S00 · CN-036 lane A · PR 631 · the Lumen Today page: live feed rows, the monthly goal ring (registry-admin-today.ts, version 237). ----
+  ...adminTodaySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
