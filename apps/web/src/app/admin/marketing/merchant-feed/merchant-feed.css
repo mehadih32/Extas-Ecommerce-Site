@@ -12,8 +12,8 @@
 .mf-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; color: var(--lm-ink); }
 .mf-table th, .mf-table td { text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--lm-ln); vertical-align: middle; }
 .mf-table td { text-align: end; white-space: nowrap; }
-.mf-table thead th { color: var(--lm-ink2); font-weight: 700; font-size: 0.8rem; }
-.mf-pill { display: inline-flex; align-items: center; border-radius: var(--lm-r-pill); padding: 2px 10px; background: var(--lm-chip); color: var(--lm-ink2); font-size: 0.78rem; font-weight: 700; white-space: nowrap; }
+.mf-table thead th { color: var(--lm-ink2); font-weight: 700; font-size: var(--lm-fs-card); }
+.mf-pill { display: inline-flex; align-items: center; border-radius: var(--lm-r-pill); padding: 2px 10px; background: var(--lm-chip); color: var(--lm-ink2); font-size: var(--lm-fs-card); font-weight: 700; white-space: nowrap; }
 .mf-pill.ok { background: var(--lm-okbg); color: var(--lm-ok); }
 .mf-pill.warn { background: var(--lm-warnbg); color: var(--lm-warn); }
 .mf-line { margin: 0; padding: 8px 10px; border: 1px solid var(--lm-ln); border-radius: var(--lm-r-box); background: var(--lm-sf); color: var(--lm-ink); user-select: all; overflow-wrap: anywhere; }
@@ -21,3 +21,4 @@
 .mf-table tbody th { font-weight: 600; min-width: 140px; overflow-wrap: anywhere; }
 .mf-table td:last-child { text-align: start; }
 .mf-list { margin: 8px 0 0; padding-left: 20px; color: var(--lm-ink); display: flex; flex-direction: column; gap: 6px; }
+/* PR 589 follow-up: card text is never under the card size (var(--lm-fs-card), 14px): the table heads and the pills. */
