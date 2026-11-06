@@ -316,7 +316,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       {
         id: 'blog',
         pages: [
-          { href: '/admin/website/blog', perm: 'blog.read', keys: ['blog', 'blogPost'] },
+          { href: '/admin/website/blog', perm: 'blog.read', keys: ['blog', 'blogPost', 'blogPhoto'] },
           { href: '/admin/website/blog/shelves', perm: 'blog.read', keys: ['blogShelves'] },
           // S12 · PR 242 — the topic plan: clusters (pillar + supporting articles), planned topics, required links.
           // PR 528 — a topic's brief (`/admin/website/blog/briefs/<id>`, `new`) belongs to the topic plan.

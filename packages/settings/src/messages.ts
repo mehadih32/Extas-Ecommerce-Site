@@ -137,6 +137,8 @@ import closedStagesBn from '../messages/closed-stages.bn.json';
 import closedStagesEn from '../messages/closed-stages.en.json';
 import blogCommentsBn from '../messages/blog-comments.bn.json';
 import blogCommentsEn from '../messages/blog-comments.en.json';
+import blogImagesBn from '../messages/blog-images.bn.json';
+import blogImagesEn from '../messages/blog-images.en.json';
 // S18 · PR 379 (registry v74): the quiet bot check on sign-in and checkout.
 import botCheckBn from '../messages/bot-check.bn.json';
 import botCheckEn from '../messages/bot-check.en.json';
@@ -277,6 +279,9 @@ messages.bn = mergeMessages(messages.bn, closedStagesBn);
 // S12 · PR 251 (registry v250): comments on articles.
 messages.en = mergeMessages(messages.en, blogCommentsEn);
 messages.bn = mergeMessages(messages.bn, blogCommentsBn);
+// S12 · PR 547 (registry v252): the journal articles' main photo.
+messages.en = mergeMessages(messages.en, blogImagesEn);
+messages.bn = mergeMessages(messages.bn, blogImagesBn);
 messages.en = mergeMessages(messages.en, botCheckEn);
 messages.bn = mergeMessages(messages.bn, botCheckBn);
 messages.en = mergeMessages(messages.en, adminAccessEn);

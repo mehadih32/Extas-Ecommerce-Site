@@ -95,7 +95,21 @@ export default async function JournalEditorPage(props: Props) {
 
   return (
     <div className="a2-z" data-testid="blog-editor">
-      <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={post ? post.title : s('newTitle')} sub={post ? s('e.count', { words: post.wordCount, min: post.readingMinutes }) : undefined} />
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        crumb={crumb}
+        title={post ? post.title : s('newTitle')}
+        sub={post ? s('e.count', { words: post.wordCount, min: post.readingMinutes }) : undefined}
+        right={
+          post ? (
+            // PR 547: the article's main photo (own pictures only)
+            <Link className="a2-btn" href={`${here}/photo`} data-testid="jr-photo-link">
+              {s('ph.open')}
+            </Link>
+          ) : undefined
+        }
+      />
       <SectionTabs view={view} current={KEY} />
       <JournalEditor
         words={words}
