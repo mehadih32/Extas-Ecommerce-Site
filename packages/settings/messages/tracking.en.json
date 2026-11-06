@@ -10,6 +10,10 @@
     "deliveredPurchase": {
       "label": "Delivered-purchase optimisation",
       "help": "For a cash-on-delivery shop the sale is the parcel the customer accepted, not the order typed in. While on (and server-side tracking is on), each order's confirmation and its delivery go to the ad platforms from the order's own timeline, with the value of the pieces kept. You may also tell the platforms that a purchase means the delivery, so the ads learn from parcels accepted and never from orders refused at the door. Off as it ships. No money moves and no ad budget changes."
+    },
+    "conversionFeed": {
+      "label": "Deep conversion feed",
+      "help": "Riding on server-side tracking and on delivered-purchase optimisation, the ad platforms also learn the courier's side of each order: handed to the courier, and came back (refused or returned). For the platforms you tick as generous (Facebook as it ships) a purchase becomes the qualified sale: delivered, or gone to the courier untouched for your hours, held back only when the order was cancelled or marked bad (a flag you tick, or a number on the blocklist). Every order event also carries the courier outcome and the visitor's intent (channel, campaign, ad click, returning customer, products seen, bag adds and checkouts before ordering) — never a name, address, phone or e-mail. Off as it ships. No money moves and no ad budget changes."
     }
   }
 }

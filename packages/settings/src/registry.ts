@@ -112,6 +112,7 @@ import { adsSpendSettings } from './registry-ads-spend';
 import { adsAlertSettings } from './registry-ads-alerts';
 import { adsControlSettings } from './registry-ads-control';
 import { adsBuilderSettings } from './registry-ads-builder';
+import { conversionFeedSettings } from './registry-conversion-feed';
 import { adsGrowthSettings } from './registry-ads-growth';
 import { adsBriefSettings } from './registry-ads-brief';
 import { couponDistributionSettings } from './registry-coupons-distribution';
@@ -1416,6 +1417,8 @@ export const registry = {
   ...adsControlSettings,
   // S13 · PR 531 · the campaign builder: drafts, duplicates, schedules and launches (registry-ads-builder.ts, version 219).
   ...adsBuilderSettings,
+  // S13 · PR 532 · the deep conversion feed: courier steps, the qualified sale, outcome and intent (registry-conversion-feed.ts, version 232).
+  ...conversionFeedSettings,
   ...adsGrowthSettings,
   ...adsBriefSettings,
   ...couponDistributionSettings,

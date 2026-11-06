@@ -8,6 +8,7 @@ import {
   createGoogleClient,
   createMetaClient,
   createTiktokClient,
+  extraOf,
   findConnection,
   googleAnalyticsConfig,
   googleEvents,
@@ -92,6 +93,37 @@ describe('the order steps on each platform (PR 258)', () => {
     const p = metaPayload([step('delivered', { system: true, url: null, user: { ext: 'c'.repeat(64) } })]) as { data: Record<string, unknown>[] };
     expect(p.data[0]).toMatchObject({ action_source: 'system_generated', user_data: { external_id: ['c'.repeat(64)] } });
     expect(p.data[0]).not.toHaveProperty('event_source_url');
+  });
+});
+
+describe('the deep conversion feed on each platform (PR 532)', () => {
+  const step = (name: AdEvent['name'], o: Partial<AdEvent> = {}): AdEvent => ({ ...EVENT, eventId: `${name}-EX1001`, name, ...o });
+  const extra = { outcome: 'delivered', courier: 'pathao', days_to_outcome: 2.5, returning_customer: true, views: 4 };
+
+  it('the courier steps and the qualified sale are custom events everywhere', () => {
+    const names = (e: AdEvent) => [
+      (metaPayload([e]) as { data: { event_name: string }[] }).data[0]!.event_name,
+      (googleEvents([e]) as { events: { name: string }[] }[])[0]!.events[0]!.name,
+      (tiktokPayload([e], { pixelCode: 'CSAMPLE1234567890' }) as { data: { event: string }[] }).data[0]!.event,
+    ];
+    expect(names(step('shipped'))).toEqual(['OrderShipped', 'order_shipped', 'OrderShipped']);
+    expect(names(step('returned'))).toEqual(['OrderReturned', 'order_returned', 'OrderReturned']);
+    expect(names(step('qualified'))).toEqual(['QualifiedSale', 'qualified_sale', 'QualifiedSale']);
+  });
+
+  it('the outcome and intent ride as custom parameters on all three, never over a platform field', () => {
+    const e = step('delivered', { extra: { ...extra, value: 1, currency: 'XXX', order_id: 'X' } });
+    const meta = (metaPayload([e]) as { data: { custom_data: Record<string, unknown> }[] }).data[0]!.custom_data;
+    expect(meta).toMatchObject({ ...extra, value: 2450, currency: 'BDT', order_id: 'EX1001' });
+    const ga = (googleEvents([e]) as { events: { params: Record<string, unknown> }[] }[])[0]!.events[0]!.params;
+    expect(ga).toMatchObject({ ...extra, value: 2450, currency: 'BDT', transaction_id: 'EX1001' });
+    const tt = (tiktokPayload([e], { pixelCode: 'CSAMPLE1234567890' }) as { data: { properties: Record<string, unknown> }[] }).data[0]!.properties;
+    expect(tt).toMatchObject({ ...extra, value: 2450, currency: 'BDT', order_id: 'EX1001' });
+  });
+
+  it('cleans the parameters: well-formed names, finite numbers, short texts', () => {
+    expect(extraOf({ extra: { ok: 'x'.repeat(150), 'Bad Key': 1, n: Number.NaN, blank: '  ', yes: false } })).toEqual({ ok: 'x'.repeat(100), yes: false });
+    expect(extraOf({})).toEqual({});
   });
 });
 

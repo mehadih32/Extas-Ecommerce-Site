@@ -17,7 +17,9 @@ import { defineAdapter, requireSecret } from '../define';
 export const AD_EVENT_NAMES = ['view', 'addToBag', 'checkout', 'purchase'] as const;
 /** PR 258 (C6.2 point 1): the order's own steps, and "placed" — the order placed while the owner counts a purchase at
  *  the delivery (the delivered event then goes under the platform's purchase name, `purchase`). */
-export const AD_ORDER_EVENT_NAMES = ['placed', 'confirmed', 'delivered'] as const;
+/** PR 532 (deep conversion feed): handed to the courier, came back, and the §59.2 qualified sale (on a platform that
+ *  takes it as its purchase the event goes as `purchase`; elsewhere under its own custom name). */
+export const AD_ORDER_EVENT_NAMES = ['placed', 'confirmed', 'delivered', 'shipped', 'returned', 'qualified'] as const;
 export type AdEventName = (typeof AD_EVENT_NAMES)[number] | (typeof AD_ORDER_EVENT_NAMES)[number];
 export type AdPlatform = 'meta' | 'google' | 'tiktok';
 
@@ -69,6 +71,11 @@ export interface AdEvent {
   user: AdUser;
   /** PR 258: an order step with no browser behind it (no browser name): Meta's `system_generated`, not `website`. */
   system?: boolean;
+  /**
+   * PR 532: the courier outcome and the visitor's intent (custom parameters: Meta custom_data, GA4 event params, TikTok
+   * properties). Never personal data; a platform's own field of the same name always wins.
+   */
+  extra?: Record<string, string | number | boolean>;
 }
 
 export type AdSendResult = { ok: true; sent: number } | { ok: false; error: string };
@@ -85,9 +92,25 @@ export interface AdEventSender {
 // --- the platforms' event names ---------------------------------------------------------------------------------
 
 // PR 258: the order steps are custom events on Meta and Google, and on TikTok too except "placed" (its own PlaceAnOrder).
-export const META_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'Purchase', placed: 'OrderPlaced', confirmed: 'OrderConfirmed', delivered: 'OrderDelivered' };
-export const GOOGLE_EVENT: Record<AdEventName, string> = { view: 'view_item', addToBag: 'add_to_cart', checkout: 'begin_checkout', purchase: 'purchase', placed: 'order_placed', confirmed: 'order_confirmed', delivered: 'order_delivered' };
-export const TIKTOK_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'CompletePayment', placed: 'PlaceAnOrder', confirmed: 'OrderConfirmed', delivered: 'OrderDelivered' };
+// PR 532: the courier steps and the qualified sale are custom events everywhere.
+export const META_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'Purchase', placed: 'OrderPlaced', confirmed: 'OrderConfirmed', delivered: 'OrderDelivered', shipped: 'OrderShipped', returned: 'OrderReturned', qualified: 'QualifiedSale' };
+export const GOOGLE_EVENT: Record<AdEventName, string> = { view: 'view_item', addToBag: 'add_to_cart', checkout: 'begin_checkout', purchase: 'purchase', placed: 'order_placed', confirmed: 'order_confirmed', delivered: 'order_delivered', shipped: 'order_shipped', returned: 'order_returned', qualified: 'qualified_sale' };
+export const TIKTOK_EVENT: Record<AdEventName, string> = { view: 'ViewContent', addToBag: 'AddToCart', checkout: 'InitiateCheckout', purchase: 'CompletePayment', placed: 'PlaceAnOrder', confirmed: 'OrderConfirmed', delivered: 'OrderDelivered', shipped: 'OrderShipped', returned: 'OrderReturned', qualified: 'QualifiedSale' };
+
+/** PR 532: the longest custom text a platform keeps (GA4's parameter value limit, the strictest). */
+const EXTRA_TEXT_MAX = 100; // hardcode-ok: a platform's own field limit, not a business number
+/** PR 532: a custom parameter's name — lower case, digits and _, at most 40 (GA4's limit). */
+const EXTRA_KEY = /^[a-z][a-z0-9_]{0,39}$/;
+/** PR 532: the event's custom parameters, cleaned (well-formed names, finite numbers, short texts). */
+export function extraOf(e: Pick<AdEvent, 'extra'>): Record<string, string | number | boolean> {
+  const out: Record<string, string | number | boolean> = {};
+  for (const [k, v] of Object.entries(e.extra ?? {})) {
+    if (!EXTRA_KEY.test(k)) continue;
+    if (typeof v === 'boolean' || (typeof v === 'number' && Number.isFinite(v))) out[k] = v;
+    else if (typeof v === 'string' && v.trim()) out[k] = v.trim().slice(0, EXTRA_TEXT_MAX);
+  }
+  return out;
+}
 
 const variantOf = (i: AdItem) => [i.colour, i.size].filter(Boolean).join(' / ') || undefined;
 const drop = <T extends Record<string, unknown>>(o: T): T => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')) as T;
@@ -113,6 +136,7 @@ export function metaPayload(events: readonly AdEvent[], o: { testEventCode?: str
           client_user_agent: e.user.ua,
         }),
         custom_data: drop({
+          ...extraOf(e),
           value: e.value ?? undefined,
           currency: e.currency ?? undefined,
           content_type: 'product',
@@ -139,6 +163,7 @@ export function googleEvents(events: readonly AdEvent[], o: { test?: boolean } =
         {
           name: GOOGLE_EVENT[e.name],
           params: drop({
+            ...extraOf(e),
             currency: e.currency ?? undefined,
             value: e.value ?? undefined,
             transaction_id: e.orderNumber ?? undefined,
@@ -167,6 +192,7 @@ export function tiktokPayload(events: readonly AdEvent[], o: { pixelCode: string
         user: drop({ email: e.user.em, phone: e.user.phPlus, external_id: e.user.ext, ttp: e.user.ttp, user_agent: e.user.ua }),
         page: e.url ? { url: e.url } : undefined,
         properties: drop({
+          ...extraOf(e),
           currency: e.currency ?? undefined,
           value: e.value ?? undefined,
           content_type: 'product',

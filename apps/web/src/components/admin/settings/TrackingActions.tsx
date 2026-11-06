@@ -2,7 +2,7 @@
 // S13 · PR 257 — Marketing › Tracking's two buttons: "Send test event" (one sample event to every platform in its test
 // mode; a practice copy sends nothing out) and "Send waiting now". POST {action} to the page's API
 // (lib/tracking/admin.ts), which checks `ads.tracking.manage` again; the answer says per platform what happened, and the
-// page is read again. Words come from the page. PR 258: "Send waiting now" also says how many new order steps it read.
+// page is read again. Words come from the page. PR 258: "Send waiting now" also says how many new order steps it read (PR 532: with the deep feed's).
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
@@ -46,7 +46,9 @@ export function TrackingActions({ url, action, events, eventLabel, testId, texts
       if (t.failed && t.error && !t.sent && !t.mock) return { text: fill(x.outcomeErr, { platform, error: t.error }), bad: true };
       return { text: fill(x.outcome, { platform, sent: t.sent, mock: t.mock, failed: t.failed }), bad: t.failed > 0 };
     });
-    const steps = (a.data.outcome as { steps?: { recorded?: number } } | undefined)?.steps?.recorded ?? 0;
+    // PR 532: the deep feed's courier steps and qualified sales count as order steps read too
+    const read = a.data.outcome as { steps?: { recorded?: number }; feed?: { recorded?: number } } | undefined;
+    const steps = (read?.steps?.recorded ?? 0) + (read?.feed?.recorded ?? 0);
     if (steps && x.steps) out.unshift({ text: fill(x.steps, { n: steps }), bad: false });
     setLines(out.length ? out : [{ text: x.outcomeNone, bad: false }]);
     router.refresh();

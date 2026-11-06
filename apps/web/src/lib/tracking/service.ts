@@ -11,15 +11,19 @@
 //   until the owner's number of attempts; the same event id lets the platform count a repeat once.
 // - PR 258: the order's own steps (confirmed, delivered) are recorded here too (lib/tracking/orders.ts), and while a
 //   purchase means the delivery each send names the events accordingly (model `adNameOf`).
+// - PR 532: the deep feed's steps (shipped, returned, qualified; lib/tracking/feed.ts) are recorded here as well; at the
+//   send a generous platform takes the qualified sale as its purchase, and every order event carries the courier
+//   outcome and the visitor's intent while the feed enriches (feed-extras.ts). Never personal data in either.
 import { randomUUID } from 'node:crypto';
 import { after } from 'next/server';
 import { AD_PLATFORM_CONNECTION, adEventAdapters, createConnections, type AdEventSender, type AdPlatform, type AdUser, type Connections } from '@extas/adapters';
 import { Prisma, type PrismaClient } from '@extas/db/client';
-import { tickedPlatforms, type TrackingSettings } from '@extas/settings';
+import { tickedPlatforms, type ConversionFeedSettings, type TrackingSettings } from '@extas/settings';
 import type { Vault } from '@extas/vault';
 import { adminDeps } from '../admin-auth';
 import type { AppResolver } from '../settings';
-import { afterSend, hashEmail, hashId, hashPhone, isOrderStep, records, recordsStep, stillWaiting, toAdEvent, valueOf, waitingFor, withoutContact, EVENT_ID, type AnyTrackingEvent, type Deliveries, type StoredItem } from './model';
+import { feedExtras, type Extra } from './feed-extras';
+import { afterSend, generousOn, hashEmail, hashId, hashPhone, isFeedStep, isOrderStep, records, recordsFeed, recordsStep, stillWaiting, toAdEvent, valueOf, waitingFor, withoutContact, EVENT_ID, type AnyTrackingEvent, type Deliveries, type StoredItem } from './model';
 
 export interface TrackingDeps {
   db: PrismaClient;
@@ -104,7 +108,11 @@ export async function recordEvent(deps: TrackingDeps, input: RecordInput): Promi
   const at = { storeId: input.storeId };
   const s = await deps.resolver.value('ads.tracking', at);
   const name = input.name;
-  const on = isOrderStep(name) ? recordsStep(s, await deps.resolver.value('ads.deliveredPurchase', at), name, input.test) : records(s, name, input.test);
+  const on = isOrderStep(name)
+    ? recordsStep(s, await deps.resolver.value('ads.deliveredPurchase', at), name, input.test)
+    : isFeedStep(name)
+      ? recordsFeed(s, await deps.resolver.value('ads.deliveredPurchase', at), await deps.resolver.value('ads.conversionFeed', at), name, input.test)
+      : records(s, name, input.test);
   if (!on) return { recorded: false };
   const currency = input.currency ?? (await deps.resolver.value('store.currency', at));
   const platforms = input.platforms ?? tickedPlatforms(s);
@@ -179,10 +187,16 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
   const maxOf = new Map<number, number>();
   // PR 258: what a purchase means for each store, read at the send (a change applies to what still waits)
   const meansOf = new Map<number, 'placed' | 'delivered'>();
+  // PR 532: each store's generous platforms and its deep feed (read at the send, like what a purchase means)
+  const generousOf = new Map<number, Set<AdPlatform>>();
+  const feedOf = new Map<number, ConversionFeedSettings>();
   for (const sid of new Set(rows.map((r) => r.storeId))) {
     maxOf.set(sid, (await deps.resolver.value('ads.tracking', { storeId: sid })).maxAttempts);
     const dp = await deps.resolver.value('ads.deliveredPurchase', { storeId: sid });
     meansOf.set(sid, dp.on ? dp.purchaseMeans : 'placed');
+    const feed = await deps.resolver.value('ads.conversionFeed', { storeId: sid });
+    generousOf.set(sid, new Set((Object.keys(AD_PLATFORM_CONNECTION) as AdPlatform[]).filter((p) => generousOn(dp, feed, p))));
+    if (dp.on && feed.on) feedOf.set(sid, feed);
   }
   // claim: a row changed since it was read is someone else's send
   const mine = [];
@@ -193,6 +207,16 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
   out.events = mine.length;
   const orderIds = [...new Set(mine.map((r) => r.orderId).filter((x): x is string => !!x))];
   const numbers = new Map((orderIds.length ? await deps.db.order.findMany({ where: { id: { in: orderIds } }, select: { id: true, number: true } }) : []).map((x) => [x.id, x.number]));
+  // PR 532: the courier outcome and the visitor's intent of each order event, read once for the batch
+  // (an enrichment that fails never holds the send up: the events then go plain)
+  const extras = new Map<string, Extra>();
+  for (const [sid, feed] of feedOf) {
+    try {
+      for (const [id, x] of await feedExtras(deps.db, sid, mine.filter((r) => r.storeId === sid), feed)) extras.set(id, x);
+    } catch (e) {
+      console.warn(`tracking: the feed's enrichment failed (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    }
+  }
   const conns = await connectionsOf(deps);
   const next = new Map(mine.map((r) => [r.id, { ...((r.deliveries ?? {}) as Deliveries) }]));
   const now = nowOf(deps);
@@ -210,7 +234,7 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
           const link = await conns.use<AdEventSender>(AD_PLATFORM_CONNECTION[platform].kind, { storeId: sid, provider: AD_PLATFORM_CONNECTION[platform].provider });
           tally.mode = link.mode;
           const r = await link.api.send(
-            group.map((g) => toAdEvent(g, g.orderId ? (numbers.get(g.orderId) ?? null) : null, meansOf.get(g.storeId) ?? 'placed')),
+            group.map((g) => toAdEvent(g, g.orderId ? (numbers.get(g.orderId) ?? null) : null, meansOf.get(g.storeId) ?? 'placed', { generous: generousOf.get(g.storeId)?.has(platform), extra: extras.get(g.id) })),
             { test },
           );
           result = r.ok ? { ok: true, mode: link.mode } : { ok: false, error: r.error };
