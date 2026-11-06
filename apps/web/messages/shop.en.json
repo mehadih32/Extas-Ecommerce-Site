@@ -851,6 +851,8 @@
       "doneKeep": "Keeping the sizes.",
       "change": "Change",
       "helpText": "Keep the size that fits you best, and we take the other out of your bag.",
+      "finderText": "Tell us your height and weight — Find my size picks the right one for you.",
+      "finder": "Find my size",
       "keepOne": "Keep {keep}, remove {other}",
       "keepOnly": "Keep only {keep}",
       "keepAll": "Keep both",

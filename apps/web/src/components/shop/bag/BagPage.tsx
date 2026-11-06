@@ -108,7 +108,7 @@ export async function BagPage({ c, view, s, btpl = null, paused = false, linkCod
           <Fragment key={i.lineId}>
             <ItemLine c={c} item={i} card={cards.get(i.productId)} blocked={blocked.get(i.lineId)} lowStockAt={s['bag.lowStockAt']} toWish={s['wish.list'].fromBag} />
             {(groupsAfter.get(i.lineId) ?? []).map((g) => (
-              <SizesCard key={g.key} c={c} group={g} items={view.items} policyLine={view.policyLine} />
+              <SizesCard key={g.key} c={c} group={g} items={view.items} policyLine={view.policyLine} finderOn={s['pdp.finder'].on} />
             ))}
           </Fragment>
         ))}
