@@ -134,11 +134,13 @@ export type SeasonalServe = 'live' | 'resting';
 /**
  * What the shop answers at a seasonal page's link: the page (switch on, published, not archived); its resting page (switch
  * on, `offSeason` on, live once and now taken down or put away — PR 527: a link that was live never answers "not found");
+ * PR 530: a taken-down page that is `back` for its occasion (its yearly return) answers live;
  * otherwise nothing (a draft never live, or the switch off).
  */
-export function seasonalServe(p: { status: string; archivedAt: Date | null; publishedAt: Date | null }, set: { enabled: boolean; offSeason: boolean }): SeasonalServe | null {
+export function seasonalServe(p: { status: string; archivedAt: Date | null; publishedAt: Date | null }, set: { enabled: boolean; offSeason: boolean }, back = false): SeasonalServe | null {
   if (!set.enabled) return null;
-  if (p.status === 'PUBLISHED' && !p.archivedAt) return 'live';
+  // PR 530: `back` — a taken-down page inside its occasion's window with its yearly return on (seasonal-return-model.ts)
+  if ((p.status === 'PUBLISHED' || back) && !p.archivedAt) return 'live';
   return set.offSeason && p.publishedAt ? 'resting' : null;
 }
 

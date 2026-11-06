@@ -257,6 +257,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         pages: [
           { href: '/admin/marketing/landing', perm: 'marketing.landing.read', keys: ['marketingLanding', 'marketingLandingPage', 'marketingLandingTemplates'] },
           { href: '/admin/marketing/landing/seasonal', perm: 'marketing.landing.read', keys: ['marketingSeasonal', 'marketingSeasonalPage'] },
+          // PR 530: the yearly return — the ticks, the switch card and the occasions' dates.
+          { href: '/admin/marketing/landing/seasonal/yearly', perm: 'marketing.landing.read', keys: ['marketingSeasonalYearly'] },
         ],
       },
       // S13 · PR 273: referrals — the programme, friends' orders with their invite codes and the sharers' rewards.

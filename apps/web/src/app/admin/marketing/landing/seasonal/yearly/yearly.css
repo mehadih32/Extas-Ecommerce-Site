@@ -1,0 +1,23 @@
+/* S12 · PR 530 — Marketing › Landing pages › Seasonal pages › Each year, drawn in Lumen: only --lm-* tokens (theme/lumen.css). */
+.sy-page { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.sy-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.sy-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 1100px) {
+  .sy-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); }
+}
+.sy-off { border-left: 4px solid var(--lm-warn); color: var(--lm-ink); margin: 0; }
+.sy-off a, .sy-sub a { color: var(--lm-ac-ink); min-height: 44px; display: inline-flex; align-items: center; }
+.sy-today, .sy-sub { color: var(--lm-ink2); margin: 0; }
+.sy-sub { display: block; font-size: 0.9rem; }
+.sy-how { margin: 8px 0 0; padding-left: 20px; color: var(--lm-ink2); display: flex; flex-direction: column; gap: 6px; }
+.sy-ro-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; color: var(--lm-ink); }
+.sy-dates { display: flex; flex-direction: column; gap: 10px; }
+.sy-dl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.sy-dr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--lm-ln); }
+@media (min-width: 700px) {
+  .sy-dr { grid-template-columns: minmax(120px, 1.2fr) minmax(140px, 1fr) minmax(140px, 1fr) auto auto; align-items: end; }
+}
+.sy-ck { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--lm-ink); }
+.sy-ck input { width: 20px; height: 20px; accent-color: var(--lm-ac); }
+.sy-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.adm2 .a2-crumb a.sy-crumb { display: inline-flex; align-items: center; min-height: 44px; color: var(--lm-ink2); }
