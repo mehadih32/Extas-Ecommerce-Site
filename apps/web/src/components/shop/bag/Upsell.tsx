@@ -18,6 +18,7 @@ export function Upsell({
   cards,
   from,
   tiers,
+  builderHref = null,
   style,
   phoneLadder,
   reasons,
@@ -27,6 +28,8 @@ export function Upsell({
   cards: ShopCard[];
   from: 'same' | 'new' | 'none';
   tiers: BagView['tiers'];
+  /** Follow-up 244: the tier rule's own builder page while the builder is open (else the box links to the category). */
+  builderHref?: string | null;
   style: 'side' | 'current';
   phoneLadder: boolean;
   reasons: boolean;
@@ -45,8 +48,8 @@ export function Upsell({
           </a>
         </div>
         {from !== 'none' ? <p className="ups-sub">{from === 'same' ? t('bag.ups.sub') : t('bag.ups.subNew')}</p> : null}
-        {tiers ? <Ladder c={c} tiers={tiers} phone={phoneLadder} /> : null}
-        {tiers && !phoneLadder ? <PhoneTier c={c} tiers={tiers} /> : null}
+        {tiers ? <Ladder c={c} tiers={tiers} phone={phoneLadder} builderHref={builderHref} /> : null}
+        {tiers && !phoneLadder ? <PhoneTier c={c} tiers={tiers} builderHref={builderHref} /> : null}
         {cards.length ? (
           // The cards' badges fit like the category page's (CARD_FIT), so a long badge on a narrow phone steps down, never cut.
           <CardFits className="ups-row mt12" style={{ ['--n' as string]: Math.min(4, cards.length) }} id="bg-upsrow">

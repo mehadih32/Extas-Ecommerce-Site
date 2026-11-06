@@ -2,7 +2,7 @@
 // from @extas/combos' quote, each card's colour and price, the shop's words and the picture's turn. Made-up values.
 import { describe, expect, it } from 'vitest';
 import { tierQuote, type BuildVariant } from '@extas/combos/pure';
-import { buildWord, cardPrice, firstColour, headline, nextView, statusOf, tabLine } from './build-model';
+import { builderGroupPath, buildWord, cardPrice, firstColour, headline, nextView, statusOf, tabLine } from './build-model';
 
 const words: Record<string, string> = {
   headFirst: 'Any {n} for {price}',
@@ -61,5 +61,18 @@ describe('the set builder page model (PR 98, 100)', () => {
     expect(buildWord(words, 'nope')).toBe('build.nope');
     expect(buildWord(words, 'tabOne', { n: 2 })).toBe('Any 2 · {price}');
     expect([nextView('front'), nextView('back'), nextView('detail')]).toEqual(['back', 'detail', 'front']);
+  });
+});
+
+describe('follow-up 244 · the bag tier box opens its own builder page', () => {
+  const offer = { open: true, groups: [{ key: 'polo-sets' }, { key: 'tee sets' }] };
+  it("is the builder's group page while the builder is open and has that rule", () => {
+    expect(builderGroupPath(offer, 'polo-sets')).toBe('/combos/build-your-own/polo-sets');
+    expect(builderGroupPath(offer, 'tee sets')).toBe('/combos/build-your-own/tee%20sets');
+  });
+  it('is nothing while the builder is closed, or the rule is not one of its groups', () => {
+    expect(builderGroupPath({ ...offer, open: false }, 'polo-sets')).toBeNull();
+    expect(builderGroupPath(offer, 'shirt-sets')).toBeNull();
+    expect(builderGroupPath(null, 'polo-sets')).toBeNull();
   });
 });

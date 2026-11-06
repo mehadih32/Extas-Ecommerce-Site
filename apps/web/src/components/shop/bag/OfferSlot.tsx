@@ -1,6 +1,7 @@
 // PR 109 — the one offer slot under the lines (a set that saves, the free-delivery gap, or "already free"; never between
 // products, never an empty box) and the tier box "Take 2 │ 3 │ 4" from the Build-your-own-set rules: the full ladder on
 // a computer, a one-line preview on the phone (the full ladder there only when `bag.tiers.phonePreview` is off).
+// Follow-up 244: both lead to the rule's own builder page (`/combos/build-your-own/<rule key>`) while the builder is open.
 import type { BagView } from '@extas/cart';
 import type { ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
@@ -55,10 +56,11 @@ export function ownTierWords(tiers: NonNullable<BagView['tiers']>, quantity: num
 }
 
 /** PR 109 — "Buy more polos, pay less": the tier rule's ladder (computer; on the phone only when switched on). */
-export function Ladder({ c, tiers, phone }: { c: ShopContext; tiers: NonNullable<BagView['tiers']>; phone: boolean }) {
+export function Ladder({ c, tiers, phone, builderHref = null }: { c: ShopContext; tiers: NonNullable<BagView['tiers']>; phone: boolean; builderHref?: string | null }) {
   const t = c.t;
   const catName = tiers.category ? inSentence(nameOf(tiers.category, c), c.lang) : t('bag.tiers.items');
-  const go = tiers.category ? hrefIn(c.lang, ROUTES.category(tiers.category.slug)) : null;
+  // follow-up 244: the rule's own builder page while the builder is open, else the category
+  const go = builderHref ?? (tiers.category ? hrefIn(c.lang, ROUTES.category(tiers.category.slug)) : null);
   const next = tiers.ladder.next;
   return (
     <div className={`bgc-ladder${phone ? '' : ' hide-m'}`} data-testid="bag-tiers" data-rule={tiers.ruleKey}>
@@ -93,11 +95,12 @@ export function Ladder({ c, tiers, phone }: { c: ShopContext; tiers: NonNullable
 }
 
 /** The phone's one-line tier preview ("Buy 2 and save · 2 for ৳ 1,500 · you save ৳ 200"). */
-export function PhoneTier({ c, tiers }: { c: ShopContext; tiers: NonNullable<BagView['tiers']> }) {
+export function PhoneTier({ c, tiers, builderHref = null }: { c: ShopContext; tiers: NonNullable<BagView['tiers']>; builderHref?: string | null }) {
   const row = tiers.ladder.rows.find((r) => r.quantity === tiers.ladder.next?.quantity) ?? tiers.ladder.rows.find((r) => r.saveMinor);
-  if (!row || !row.saveMinor || !tiers.category) return null;
+  const go = builderHref ?? (tiers.category ? hrefIn(c.lang, ROUTES.category(tiers.category.slug)) : null);
+  if (!row || !row.saveMinor || !go) return null;
   return (
-    <a className="ups-set hide-d" href={hrefIn(c.lang, ROUTES.category(tiers.category.slug))} data-testid="bag-tiers-phone">
+    <a className="ups-set hide-d" href={go} data-testid="bag-tiers-phone">
       <span className="ic">
         <Icon name="layers" size={18} />
       </span>
