@@ -1,6 +1,6 @@
 {
-  "at": "2026-11-06 21:59 (Asia/Dhaka)",
-  "sha": "4689df67c695",
+  "at": "2026-11-07 03:06 (Asia/Dhaka)",
+  "sha": "6309ce1b7e77",
   "ok": true,
   "problems": [],
   "goLive": {
@@ -11,10 +11,10 @@
         "kind": "auto",
         "when": "before",
         "ok": true,
-        "at": "2026-11-06T21:26:16+06:00",
+        "at": "2026-11-07T02:43:39+06:00",
         "title": "Every page opens (smoke test)",
         "vars": {
-          "pages": 480,
+          "pages": 516,
           "failed": 0
         }
       },
@@ -24,7 +24,7 @@
         "kind": "auto",
         "when": "before",
         "ok": true,
-        "at": "2026-11-06T21:59:08+06:00",
+        "at": "2026-11-07T03:06:11+06:00",
         "title": "The server's health check is clean",
         "vars": {
           "problems": 0
@@ -48,7 +48,7 @@
         "kind": "auto",
         "when": "before",
         "ok": true,
-        "at": "2026-11-06T21:01:00+06:00",
+        "at": "2026-11-07T02:15:39+06:00",
         "title": "Every server item of A2.9 in place",
         "vars": {
           "steps": 25,
@@ -63,7 +63,7 @@
         "kind": "auto",
         "when": "before",
         "ok": false,
-        "at": "2026-11-06T20:59:07+06:00",
+        "at": "2026-11-07T02:13:20+06:00",
         "title": "Cloudflare Origin certificate on the server",
         "vars": {
           "names": "—",
@@ -172,7 +172,10 @@
         "at": null,
         "title": "Staging acceptance list walked through",
         "vars": {},
-        "evidence": null
+        "evidence": {
+          "ok": true,
+          "at": "2026-11-06T21:59:43+06:00"
+        }
       },
       {
         "key": "realPhones",
@@ -194,8 +197,8 @@
         "title": "The real-life journey simulation passed on staging",
         "vars": {},
         "evidence": {
-          "ok": false,
-          "at": "2026-11-06T21:45:56+06:00"
+          "ok": true,
+          "at": "2026-11-07T02:52:44+06:00"
         }
       },
       {

@@ -2,14 +2,14 @@
 
 **সারকথা:** চালুর আগে দরকারি 16টার 6টা হয়ে গেছে, 10টা বাকি। রিডাইরেক্ট: 45টা পুরনো লিংক (এখনো বন্ধ — চালুর দিনে চালু হবে)। সাইটম্যাপ: 4টা ঠিকানা, 0টা সমস্যা। ডোমেইন বদলের মহড়া (শুধু কপিতে): ঠিক আছে। কিছুই বদলানো হয়নি।
 
-- Run: 2026-11-06 21:59 (Asia/Dhaka) · version `4689df67c695` · host: the staging host only (read-only check account) · result **READY except the owner's steps**
+- Run: 2026-11-07 03:06 (Asia/Dhaka) · version `6309ce1b7e77` · host: the staging host only (read-only check account) · result **READY except the owner's steps**
 - Nothing was changed: no setting, no sign-off, no server file. The main domain was never asked.
 
 ## Needed before go-live (6/16 done)
 
 | | Row | PR | Kind | Detail |
 |---|---|---|---|---|
-| ✅ | Every page opens (smoke test) (`smoke`) | 393 | auto | pages: 480 · failed: 0 |
+| ✅ | Every page opens (smoke test) (`smoke`) | 393 | auto | pages: 516 · failed: 0 |
 | ✅ | The server's health check is clean (`health`) | 393 | auto | problems: 0 |
 | ✅ | Last night's backup on the server (`backups`) | 393 | auto | todo: 0 |
 | ✅ | Every server item of A2.9 in place (`server`) | 394 | auto | steps: 25 · fail: 0 · warn: 0 · failed: — |
@@ -22,9 +22,9 @@
 | ❌ | Two-step sign-in for every staff member who can change things (`staffTwoFactor`) | 393 | auto | without: 1 · required: off |
 | ❌ | Go-live runbook read, rollback rehearsed (`runbook`) | 398 | signoff | — |
 | ❌ | QA gate green (Blueprint Appendix C) (`qaGate`) | 393 | signoff | — |
-| ❌ | Staging acceptance list walked through (`acceptance`) | 393 | signoff | no automatic run yet |
+| ❌ | Staging acceptance list walked through (`acceptance`) | 393 | signoff | last automatic run: PASS (2026-11-06T21:59:43+06:00) — a person confirms |
 | ❌ | Real iPhone and real Android (`realPhones`) | 393 | signoff | — |
-| ❌ | The real-life journey simulation passed on staging (`simulation`) | 393 | signoff | last automatic run: FAIL (2026-11-06T21:45:56+06:00) — a person confirms |
+| ❌ | The real-life journey simulation passed on staging (`simulation`) | 393 | signoff | last automatic run: PASS (2026-11-07T02:52:44+06:00) — a person confirms |
 
 ## Soon after go-live (0/6 done; they never hold the switch back)
 
