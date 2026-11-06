@@ -508,6 +508,10 @@ check "report: build failure in words" "$(grep -c 'Building the new version on t
 echo '{"result":"ok","sha":"999988887777aaaa","files":12}' > "$T/docs.json"
 rep RUN_ID=44 DEPLOY=success DOCS=success DOCS_JSON="$T/docs.json"
 check "report: the docs copy on the server" "$(grep -c '| Docs on the server | `999988887777` — README.md + docs/ (12 files) |' "$T/out/deploy-latest.md")" "1"
+echo '{"result":"ok","sha":"5555666677778888","files":12}' > "$T/docs.json"
+rep RUN_ID=44 DEPLOY=success DOCS=success DOCS_JSON="$T/docs.json" ROLLBACK=true
+check "report: a rollback names the newest docs beside the older version (CN-035 rehearsal)" "$(grep -c '| Docs on the server | `555566667777` (the newest docs; the app went back to `999988887777`) — README.md + docs/ (12 files) |' "$T/out/deploy-latest.md")" "1"
+echo '{"result":"ok","sha":"999988887777aaaa","files":12}' > "$T/docs.json"
 rep RUN_ID=44 DEPLOY=success DOCS=failure DOCS_JSON="$T/docs.json"
 check "report: a failed docs copy says what is still there" "$(grep -c 'Docs on the server | FAILED — the server keeps the previous copy' "$T/out/deploy-latest.md")" "1"
 rep RUN_ID=44 DEPLOY=success
