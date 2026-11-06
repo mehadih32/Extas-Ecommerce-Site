@@ -97,6 +97,22 @@ export function kpiByZone(db: Db, storeId: number, period: Period): Promise<KpiR
   return breakdown(db, storeId, period, () => Prisma.sql`COALESCE(z."key", '')`, Prisma.sql`LEFT JOIN "DeliveryBand" z ON z."id" = o."deliveryBandId"`);
 }
 
+/**
+ * S12 · PR 250 — by journal article: the orders placed by a browser that read the article before ordering (the
+ * BlogOrderRead rows the shop wrote when each order landed), key = the article's id. With `credit: 'every'` an order that
+ * read two articles is in both rows, so the rows are not added up: the shop's total is `kpiFromArticles`.
+ */
+export function kpiByArticle(db: Db, storeId: number, period: Period): Promise<KpiRow[]> {
+  return breakdown(db, storeId, period, () => Prisma.sql`r."postId"::text`, Prisma.sql`JOIN "BlogOrderRead" r ON r."orderId" = o."id" AND r."storeId" = o."storeId"`);
+}
+
+/** S12 · PR 250 — every order that read at least one article, each order once (the report's headline beside `kpi`). */
+export async function kpiFromArticles(db: Db, storeId: number, period: Period): Promise<Kpi> {
+  const read = Prisma.sql`JOIN (SELECT DISTINCT "orderId" FROM "BlogOrderRead" WHERE "storeId" = ${storeId}) r ON r."orderId" = o."id"`;
+  const [ordered, sales] = await Promise.all(BASES.map((b) => figures(db, b, storeId, period, Prisma.sql`''`, read)));
+  return { sales: sales!.get('') ?? { ...NO_ORDERS }, ordered: ordered!.get('') ?? { ...NO_ORDERS } };
+}
+
 /** By payment method ('' = none recorded). */
 export function kpiByPaymentMethod(db: Db, storeId: number, period: Period): Promise<KpiRow[]> {
   return breakdown(db, storeId, period, () => Prisma.sql`COALESCE(o."paymentMethod"::text, '')`);

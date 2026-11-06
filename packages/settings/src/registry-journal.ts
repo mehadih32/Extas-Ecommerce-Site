@@ -29,6 +29,10 @@
 //          nothing missing) in the free times of the next `daysAhead` days, never closer than `leadMinutes` from now.
 //          With `autoFill` (off as it ships) an article is placed by itself as soon as its last review step passes.
 //          The month view's week starts on `weekStart` (Saturday as it ships).
+//   v233 · PR 250 `blog.performance` — the content performance report (which articles bring readers and which bring
+//          orders). Off as it ships: with `count` on, an article page counts each browser once a day by where it came
+//          from, and the shop's own read cookie (article ids and times only) lets an order credit the articles read in the
+//          `windowDays` before it — the last one read (`credit: 'last'`, totals never counted twice) or every one.
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -38,6 +42,7 @@ const V528 = 225;
 const V243 = 226;
 const V249 = 229;
 const V245 = 227;
+const V250 = 233;
 
 const wpm = z.int().min(60).max(400);
 const note = z.string().trim().max(200);
@@ -250,5 +255,37 @@ export const scheduleSettings = {
     isPublic: false,
     sortOrder: 60,
     version: V245,
+  }),
+};
+
+/** Which reads an order credits: the last article read in the window, or every article read in it. */
+export const BLOG_CREDIT_RULES = ['last', 'every'] as const;
+export const blogPerformanceSchema = z
+  .object({
+    /** Count readers on the article pages and the orders that read an article. */
+    count: z.boolean(),
+    /** An order credits the articles this browser read in these many days before it. */
+    windowDays: z.int().min(1).max(90),
+    /** `last`: only the last article read gets the order; `every`: each article read in the window does. */
+    credit: z.enum(BLOG_CREDIT_RULES),
+    /** The report's period when the page opens (days back from today). */
+    days: z.int().min(1).max(365),
+  })
+  .strict();
+export type BlogPerformanceSettings = z.output<typeof blogPerformanceSchema>;
+
+export const performanceSettings = {
+  'blog.performance': setting({
+    scope: 'store',
+    schema: blogPerformanceSchema,
+    default: { count: false, windowDays: 7, credit: 'last', days: 30 },
+    valueType: 'JSON',
+    group: 'blog',
+    labelKey: 'blog.performance.label',
+    helpKey: 'blog.performance.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 70,
+    version: V250,
   }),
 };

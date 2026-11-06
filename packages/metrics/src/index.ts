@@ -24,6 +24,8 @@
 // any other package adds up order or line money on its own. Until the order state machine exists (it waits for the
 // owner's approval of the architecture draft), no order reaches DELIVERED, so Sales is 0 everywhere — that is correct.
 export * from './pure';
+// S12 · PR 250: `kpiByArticle` / `kpiFromArticles` — Sales and Ordered value of the orders that read a journal article
+// before ordering (metrics.ts; the shop writes BlogOrderRead when the order lands).
 export * from './metrics';
 export * from './views';
 export * from './money';

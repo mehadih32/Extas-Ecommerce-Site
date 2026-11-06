@@ -316,6 +316,8 @@ model Store {
   houseAdPlacements       HouseAdPlacement[]
   helpArticles            HelpArticle[]
   blogComments            BlogComment[]
+  blogPostDailyStats      BlogPostDailyStat[]
+  blogOrderReads          BlogOrderRead[]
   imageSourcingRequests   ImageSourcingRequest[]
   calendarEntries         CalendarEntry[]
   landingTemplates        LandingTemplate[]
@@ -7006,6 +7008,47 @@ model HelpArticle {
   updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
 
   @@unique([storeId, slug])
+}
+
+/// @stage S12 · PR 250 — one article's day of readers, counted as they open it while `blog.performance.count` is on:
+/// every reader once a day per browser (`readers`), split by where the visit came from (a listed search engine, video site
+/// or AI assistant from `seo.organic.sources`; the shop's own pages; anything else or nothing). Orders and money are never
+/// kept here: the report reads them through @extas/metrics from the orders that read the article (BlogOrderRead).
+model BlogPostDailyStat {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  storeId    Int
+  store      Store    @relation(fields: [storeId], references: [id])
+  postId     String   @db.Uuid
+  /// The day in the store's time zone.
+  day        DateTime @db.Date
+  readers    Int      @default(0)
+  fromSearch Int      @default(0)
+  fromShop   Int      @default(0)
+  fromOther  Int      @default(0)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([postId, day])
+  @@index([storeId, day])
+}
+
+/// @stage S12 · PR 250 — an order placed by a browser that read the article within `blog.performance.windowDays` before
+/// it (the shop's own read cookie: article ids and times only, nothing about the person). `blog.performance.credit`
+/// decides which reads get the order: the last article read, or every article read in the window. Written once when the
+/// order lands; never changed, never deleted.
+/// @append-only
+model BlogOrderRead {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  orderId   String   @db.Uuid
+  postId    String   @db.Uuid
+  /// When this browser last read the article before the order.
+  readAt    DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([orderId, postId])
+  @@index([storeId, postId])
 }
 
 /// @stage S12 · PR 251 — a blog comment (only if comments are switched on).

@@ -8,10 +8,13 @@
 // canonical is its own address and hreflang names its live twin at the twin's own address; Open Graph as an article
 // with its dates; BlogPosting and the trail as JSON-LD (`seo.structuredData.article` / `.breadcrumbs`); "Read next"
 // links (`blog.journal.relatedArticles`, 0 as shipped).
+// S12 · PR 250 — while `blog.performance.count` is on (off as shipped) the page tells the shop it was opened
+// (ArticleRead: the article's id and where the reader came from), for Website › Blog & journal › Performance.
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { ComingSoon } from '@/components/shop/ComingSoon';
 import { JsonLd } from '@/components/shop/JsonLd';
+import { ArticleRead } from '@/components/shop/journal/ArticleRead';
 import { JournalArticle } from '@/components/shop/journal/JournalViews';
 import { journalArticle, journalHasOther, journalSettings } from '@/lib/journal/shop';
 import { byline } from '@/lib/journal/model';
@@ -51,7 +54,8 @@ export default async function JournalPost(props: Props) {
   if (!a && (await journalHasOther(c, slug))) redirect(hrefIn(c.lang, ROUTES.journal));
   if (!a) notFound();
   const { post } = a;
-  const sd = (await readPageSettings(['seo.structuredData'] as const, c.storeId))['seo.structuredData'];
+  const page = await readPageSettings(['seo.structuredData', 'blog.performance'] as const, c.storeId);
+  const sd = page['seo.structuredData'];
   const origin = sd.article || sd.breadcrumbs ? await shopOrigin() : undefined;
   const href = hrefIn(c.lang, ROUTES.article(post.slug));
   const topic = topicName(c, post.category);
@@ -84,6 +88,8 @@ export default async function JournalPost(props: Props) {
     <>
       <JsonLd data={ld} />
       <JournalArticle c={c} post={post} cards={a.cards} aiNote={a.settings.aiNote} related={a.related} />
+      {/* PR 250: counted only while the owner counts readers (Website › Blog & journal › Performance) */}
+      {page['blog.performance'].count ? <ArticleRead postId={post.id} /> : null}
     </>
   );
 }

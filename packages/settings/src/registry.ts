@@ -115,7 +115,7 @@ import { adsGrowthSettings } from './registry-ads-growth';
 import { adsBriefSettings } from './registry-ads-brief';
 import { couponDistributionSettings } from './registry-coupons-distribution';
 import { referralSettings } from './registry-referrals';
-import { aiDraftSettings, approvalSettings, briefSettings, clusterSettings, journalSettings, scheduleSettings } from './registry-journal';
+import { aiDraftSettings, approvalSettings, briefSettings, clusterSettings, journalSettings, performanceSettings, scheduleSettings } from './registry-journal';
 import { seasonalSettings } from './registry-seasonal';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
@@ -1428,6 +1428,8 @@ export const registry = {
   ...briefSettings,
   ...aiDraftSettings,
   ...scheduleSettings,
+  // PR 250 · the content performance report (registry-journal.ts, version 233).
+  ...performanceSettings,
   // ---- S12 · CN-031 lane A · PR 246 · seasonal landing pages (registry-seasonal.ts, version 228). ----
   ...seasonalSettings,
 } satisfies RegistryShape;
