@@ -1,0 +1,113 @@
+# PR 393 follow-up (CN-036) — the acceptance run on the preview site, ON the VM through the self-hosted runner (CN-003),
+# BY HAND ONLY: GitHub › Actions › acceptance › Run workflow. It never runs on a schedule, a push or a pull request.
+# It is the go-live runs that already exist, one after the other on the live version, with one summary
+# (infra/deploy/acceptance.sh, tools/acceptance/summary.mjs): the smoke test of every page, the go-live gate journeys,
+# the 18 go-live test-order scenarios (gate-orders) and the customer 360° (gate-c360) — each with its own guards: the
+# preview host only, the mocks only, the server-only check account, every test order cancelled and the test products
+# archived, the owner's cash on delivery put back; nothing deleted, no money moved, no message to a real buyer. Each
+# part's report is committed to its usual folder; the summary to docs/reports/acceptance/latest/, and
+# state/acceptance.json is what the go-live page shows beside its "acceptance" row (a person still confirms that row).
+name: acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      # As gate-orders: cash on delivery is the owner's switch; only he says yes here (passed to the test orders only).
+      allow_cod:
+        description: "Switch cash on delivery on for the test orders only, and put it back after (the owner's OK)"
+        required: false
+        type: boolean
+        default: false
+
+# gate-orders' lane: the test orders inside never run beside a gate-orders or simulation run on the same GATE TEST shelf,
+# and a by-hand run never replaces a deploy or another server job waiting in their groups.
+concurrency:
+  group: extas-gate-orders
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  acceptance:
+    runs-on: [self-hosted, extas-vm]
+    # the parts' own limits (server.conf: SMOKE_TIMEOUT_MIN, JOURNEYS_TIMEOUT_MIN, GATE_ORDERS_TIMEOUT_MIN and the
+    # customer 360°'s) stop each part; this leaves room for them all and the reports
+    timeout-minutes: 330
+    steps:
+      # Every part comes from the version that is live, not from the newest main (as smoke.yml and the gates).
+      - name: Find the live version
+        id: live
+        run: |
+          live="$(sudo jq -r '.sha // ""' /srv/extas/state/last-good-deploy.json 2>/dev/null || true)"
+          if printf '%s' "$live" | grep -Eq '^[0-9a-f]{40}$'; then echo "sha=$live" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.live.outputs.sha || github.sha }}
+
+      - name: Smoke, journeys, test orders and the customer 360° (mocks only)
+        id: run
+        continue-on-error: true
+        env:
+          LIVE: ${{ steps.live.outputs.sha }}
+          ALLOW_COD: ${{ inputs.allow_cod }}
+        run: |
+          [ -f infra/deploy/acceptance.sh ] || { echo "the live version has no acceptance run yet: deploy first"; exit 1; }
+          cod=no; [ "$ALLOW_COD" = true ] && cod=yes
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" ACCEPT_ALLOW_COD="$cod" bash infra/deploy/acceptance.sh "$RUNNER_TEMP/acceptance" "$LIVE"
+
+      # As gate-orders.yml (if: always(), so also after a cancelled job): what any test-order run left open is closed and
+      # cash on delivery put back from its own record.
+      - name: Close what a run left open (cash on delivery, the test-pay grant)
+        if: always()
+        continue-on-error: true
+        run: |
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/gate-orders.sh --sweep "$RUNNER_TEMP/acceptance/gate-orders"
+
+      - name: Commit the reports
+        if: always()
+        env:
+          RESULT: ${{ steps.run.outcome }}
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/acceptance"
+          [ -f "$out/result.json" ] || { echo "the run wrote no summary"; exit 1; }
+          sudo chown -R "$(id -u):$(id -g)" "$out"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            # each part's report goes to its usual folder, as its own workflow commits it
+            if [ -f "$out/smoke/README.md" ]; then
+              rm -rf docs/reports/smoke/latest && mkdir -p docs/reports/smoke && cp -r "$out/smoke" docs/reports/smoke/latest
+              # Review R1 (security M1): admin pictures carry customers' data; they stay on the server, never in Git.
+              find docs/reports/smoke/latest -name 'admin*' -type f -delete
+            fi
+            if [ -f "$out/journeys/result.json" ]; then
+              rm -rf docs/reports/journeys/go-live-gate/latest && mkdir -p docs/reports/journeys/go-live-gate && cp -r "$out/journeys" docs/reports/journeys/go-live-gate/latest
+            fi
+            if [ -f "$out/gate-orders/result.json" ]; then
+              rm -rf docs/reports/gate-orders/latest && mkdir -p docs/reports/gate-orders/latest
+              cp "$out/gate-orders/README.md" "$out/gate-orders/result.json" docs/reports/gate-orders/latest/
+              find "$out/gate-orders" -maxdepth 1 -name 'scenario-*.jpg' -exec cp {} docs/reports/gate-orders/latest/ \;
+            fi
+            if [ -f "$out/gate-c360/result.json" ]; then
+              rm -rf docs/reports/gate-c360/latest && mkdir -p docs/reports && cp -r "$out/gate-c360" docs/reports/gate-c360/latest
+            fi
+            rm -rf docs/reports/acceptance/latest && mkdir -p docs/reports/acceptance/latest
+            cp "$out/README.md" "$out/result.json" docs/reports/acceptance/latest/
+            git add -A docs/reports/smoke/latest docs/reports/journeys/go-live-gate/latest docs/reports/gate-orders/latest docs/reports/gate-c360/latest docs/reports/acceptance/latest
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "acceptance report: ${RESULT} [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1
+
+      - name: Fail when a part failed
+        if: steps.run.outcome == 'failure'
+        run: |
+          echo "A part of the acceptance run failed or did not run. See docs/reports/acceptance/latest/README.md."
+          exit 1

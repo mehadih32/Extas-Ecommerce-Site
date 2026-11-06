@@ -2082,6 +2082,63 @@ check "workflows: simulation is by hand only, on the VM, in gate-orders' lane, n
 check "workflows: simulation runs gate-orders.sh with GATE_PLAN=simulation, sweeps always and commits to its own report folder" \
   "$(grep -c 'GATE_PLAN=simulation GATE_ALLOW_COD="$cod" bash infra/deploy/gate-orders.sh "$RUNNER_TEMP/simulation"' $W):$(grep -c 'GATE_PLAN=simulation bash infra/deploy/gate-orders.sh --sweep' $W):$(grep -c 'dest="docs/reports/simulation/latest"' $W):$(grep -c 'docs/reports/simulation/\*\*' ../../.github/workflows/ci.yml)" "1:1:1:1"
 rm -rf "$T"
+# PR 393 follow-up (CN-036): the acceptance run is the four existing go-live runs one after the other (smoke, the
+# go-live gate journeys, gate-orders with its sweep, gate-c360), a failing part never stops the next, and one summary
+# (tools/acceptance/summary.mjs) goes to the run folder and state/acceptance.json. The parts and docker are stand-ins.
+T="$(mktemp -d)"; mkdir -p "$T/infra/deploy" "$T/bin" "$T/root/state" "$T/tools"
+cp ../deploy/acceptance.sh "$T/infra/deploy/"; cp -r ../../tools/acceptance "$T/tools/"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+for p in smoke journeys gate-orders gate-c360; do
+  cat > "$T/infra/deploy/$p.sh" <<STUB
+#!/usr/bin/env bash
+echo "$p \$* GATE_PLAN=\${GATE_PLAN:-} GATE_ALLOW_COD=\${GATE_ALLOW_COD:-} SMOKE_ROLLS_BACK=\${SMOKE_ROLLS_BACK:-}" >> "\$FAKE_LOG"
+[ "\$1" = --sweep ] && exit 0
+mkdir -p "\$1"
+case "$p" in
+  smoke) echo '{"ok":true,"pages":440,"failed":0}' > "\$1/result.json"; echo "# smoke" > "\$1/README.md" ;;
+  journeys) echo '{"ok":true,"journeys":4,"steps":60,"failed":0,"skipped":4}' > "\$1/result.json" ;;
+  gate-orders) echo '{"ok":true,"scenarios":18,"passed":14,"failed":0,"skipped":4,"orders":24,"cleanup":{"ok":true}}' > "\$1/result.json" ;;
+  gate-c360) if [ "\${FAKE_C360:-ok}" = fail ]; then echo '{"ok":false,"steps":150,"pass":120,"fail":2,"skip":28}' > "\$1/result.json"; exit 1; fi
+             echo '{"ok":true,"steps":150,"pass":122,"fail":0,"skip":28}' > "\$1/result.json" ;;
+esac
+exit 0
+STUB
+done
+cat > "$T/bin/docker" <<'STUB'
+#!/usr/bin/env bash
+echo "docker $*" >> "$FAKE_LOG"
+tools=""; out=""; prev=""; args=()
+for a in "$@"; do
+  [ "$prev" = -v ] && case "$a" in *:/w/tools:ro) tools="${a%:/w/tools:ro}" ;; *:/out) out="${a%:/out}" ;; esac
+  prev="$a"
+done
+[ -n "$tools" ] || exit 0
+seen=""; for a in "$@"; do if [ -n "$seen" ]; then args+=("${a/#\/out/$out}"); fi; [ "$a" = node ] && seen=1; done
+args[0]="$tools/acceptance/summary.mjs"
+exec node "${args[@]}"
+STUB
+chmod +x "$T/bin/docker"
+acc() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" FAKE_LOG="$T/log" "$@"; }
+rc=0; acc bash "$T/infra/deploy/acceptance.sh" "$T/out" 'abc;rm' >/dev/null 2>&1 || rc=$?
+check "acceptance (393): only a commit hash is taken" "$rc:$([ -f "$T/log" ] && echo ran || echo none)" "2:none"
+rc=0; acc bash "$T/infra/deploy/acceptance.sh" "$T/out" 0123456789abcdef0123456789abcdef01234567 >/dev/null 2>&1 || rc=$?
+check "acceptance (393): every part passed — exit 0, one summary, state/acceptance.json for the go-live page" \
+  "$rc:$(jq -c '{ok,passed,total}' "$T/out/result.json"):$(jq -c '{ok,passed,total,sha,n:(.parts|length)}' "$T/root/state/acceptance.json"):$(jq -r '.at | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T")' "$T/root/state/acceptance.json"):$(grep -c '4টা অংশের সবগুলো পাস' "$T/out/README.md")" \
+  '0:{"ok":true,"passed":4,"total":4}:{"ok":true,"passed":4,"total":4,"sha":"0123456789ab","n":4}:true:1'
+check "acceptance (393): the parts run in order on the live version, the test orders as the gate's own (plan gate, all, then its sweep), the smoke never rolls back" \
+  "$(grep -v '^docker' "$T/log" | awk '{print $1}' | tr '\n' ' '):$(grep -c '^smoke .*/smoke acceptance 0123456789abcdef0123456789abcdef01234567 .*SMOKE_ROLLS_BACK=0' "$T/log"):$(grep -c '^journeys .*/journeys now 0123456789abcdef0123456789abcdef01234567 go-live-gate' "$T/log"):$(grep -c '^gate-orders .*/gate-orders all 0123456789abcdef0123456789abcdef01234567 GATE_PLAN=gate GATE_ALLOW_COD=no' "$T/log"):$(grep -c '^gate-orders --sweep .* GATE_PLAN=gate' "$T/log")" \
+  "smoke journeys gate-orders gate-orders gate-c360 :1:1:1:1"
+: > "$T/log"
+rc=0; acc FAKE_C360=fail ACCEPT_ALLOW_COD=yes bash "$T/infra/deploy/acceptance.sh" "$T/out" >/dev/null 2>&1 || rc=$?
+check "acceptance (393): a failing part fails the run but every part still ran; allow_cod reaches the test orders only" \
+  "$rc:$(jq -c '[.parts[]|.ok]' "$T/root/state/acceptance.json"):$(jq -c '.["gate-c360"]' "$T/out/exits.json"):$(grep -c 'GATE_ALLOW_COD=yes' "$T/log"):$(grep -c '^gate-c360 ' "$T/log")" \
+  "1:[true,true,true,false]:1:1:1"
+rm -rf "$T"
+W=../../.github/workflows/acceptance.yml
+check "workflows: acceptance is by hand only, on the VM, in gate-orders' lane, no secret, allow_cod off by default" \
+  "$(grep -c '^  workflow_dispatch:' $W):$(grep -cE '^\s+(schedule|push|pull_request):' $W):$(grep -c 'runs-on: \[self-hosted, extas-vm\]' $W):$(grep -c 'group: extas-gate-orders' $W):$(grep -ciE 'secrets\.|api[_-]?key' $W):$(grep -A4 '^      allow_cod:' $W | grep -c -e 'type: boolean' -e 'default: false')" "1:0:1:1:0:2"
+check "workflows: acceptance runs acceptance.sh, sweeps always, keeps admin pictures out of Git, commits its summary" \
+  "$(grep -c 'ACCEPT_ALLOW_COD="$cod" bash infra/deploy/acceptance.sh "$RUNNER_TEMP/acceptance" "$LIVE"' $W):$(grep -c 'bash infra/deploy/gate-orders.sh --sweep "$RUNNER_TEMP/acceptance/gate-orders"' $W):$(grep -c "find docs/reports/smoke/latest -name 'admin\*' -type f -delete" $W):$(grep -c 'cp "$out/README.md" "$out/result.json" docs/reports/acceptance/latest/' $W):$(grep -c 'docs/reports/acceptance/\*\*' ../../.github/workflows/ci.yml):$(grep -c 'infra/deploy/acceptance.sh' ../../.github/workflows/ci.yml)" "1:1:1:1:1:1"
 # S19 · PR 587 (CN-035): the go-live check is by hand, read-only, and never applies the switch.
 check "workflows: golive-check is by hand only, on the VM, in its own lane, no secret" \
   "$(grep -c '^  workflow_dispatch:' ../../.github/workflows/golive-check.yml):$(grep -cE '^\s+(schedule|push|pull_request):' ../../.github/workflows/golive-check.yml):$(grep -c 'runs-on: \[self-hosted, extas-vm\]' ../../.github/workflows/golive-check.yml):$(grep -c 'group: extas-golive-check' ../../.github/workflows/golive-check.yml):$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/golive-check.yml)" "1:0:1:1:0"

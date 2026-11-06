@@ -43,6 +43,8 @@ export function goLiveRows(api, titles = {}) {
     at: i.at ?? null,
     title: titles[i.key] ?? i.key,
     vars: Object.fromEntries(Object.entries(i.vars ?? {}).filter(([, v]) => typeof v === "number" || (typeof v === "string" && v.length <= 200))),
+    // CN-036: the last automatic run behind a sign-off row (simulation, acceptance): shown, never counted as the sign-off
+    ...(i.evidence !== undefined ? { evidence: i.evidence ? { ok: i.evidence.ok === true, at: i.evidence.at ?? null } : null } : {}),
   }));
   return [...rows.filter((r) => r.when === "before"), ...rows.filter((r) => r.when === "after")];
 }
@@ -64,6 +66,9 @@ const varsText = (v) =>
   Object.entries(v)
     .map(([k, x]) => `${k}: ${x}`)
     .join(" · ");
+/** A sign-off row's detail: its numbers, and the last automatic run behind it (CN-036; a person still confirms it). */
+const detailOf = (x) =>
+  [varsText(x.vars), x.evidence === undefined ? "" : x.evidence ? `last automatic run: ${x.evidence.ok ? "PASS" : "FAIL"}${x.evidence.at ? ` (${x.evidence.at})` : ""} — a person confirms` : "no automatic run yet"].filter(Boolean).join(" · ");
 
 export function reportMarkdown(r) {
   const before = r.goLive.rows.filter((x) => x.when === "before");
@@ -81,7 +86,7 @@ export function reportMarkdown(r) {
     "",
     "| | Row | PR | Kind | Detail |",
     "|---|---|---|---|---|",
-    ...before.map((x) => `| ${tick(x.ok)} | ${x.title} (\`${x.key}\`) | ${x.pr} | ${x.kind} | ${varsText(x.vars) || "—"} |`),
+    ...before.map((x) => `| ${tick(x.ok)} | ${x.title} (\`${x.key}\`) | ${x.pr} | ${x.kind} | ${detailOf(x) || "—"} |`),
     "",
     `## Soon after go-live (${after.filter((x) => x.ok).length}/${after.length} done; they never hold the switch back)`,
     "",

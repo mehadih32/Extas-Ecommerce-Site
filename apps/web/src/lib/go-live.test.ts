@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import bn from '../../messages/admin-golive.bn.json';
 import en from '../../messages/admin-golive.en.json';
-import { goLiveRoute } from './go-live-api';
-import { GO_LIVE, goLiveChecks, SIGNOFF_KEYS, type GoLiveContext } from './go-live';
+import { evidenceNow, goLiveRoute } from './go-live-api';
+import { EVIDENCE_KEYS, GO_LIVE, goLiveChecks, SIGNOFF_KEYS, type GoLiveContext } from './go-live';
 
 const now = new Date('2026-10-31T12:00:00Z');
 const ago = (min: number) => new Date(now.getTime() - min * 60_000).toISOString();
@@ -159,6 +159,34 @@ describe('go-live checklist (PR 393)', () => {
     expect(fresh.items.filter((i) => i.kind === 'signoff' && i.ok)).toEqual([]);
     const one = goLiveChecks(ctx({ signoff: { qaGate: { at: ago(5), by: 'u7' } } })).items.find((i) => i.key === 'qaGate');
     expect(one).toMatchObject({ ok: true, by: 'u7', at: ago(5) });
+  });
+
+  it('CN-036: the simulation and acceptance runs show beside their sign-offs as evidence, never as the sign-off', () => {
+    expect(EVIDENCE_KEYS.every((k) => SIGNOFF_KEYS.includes(k))).toBe(true);
+    const evidence = evidenceNow({
+      simulation: { at: '2026-11-06 20:00', iso: '2026-11-06T20:00:00+06:00', ok: true, planned: 70, passed: 41, failed: 0, skipped: 29, orders: 44 },
+      acceptance: { at: '2026-11-06T23:00:00+06:00', atText: '2026-11-06 23:00 (Asia/Dhaka)', ok: false, passed: 3, total: 4 },
+    });
+    expect(evidence).toEqual({
+      simulation: { ok: true, at: '2026-11-06T20:00:00+06:00', vars: { passed: 41, failed: 0, skipped: 29, orders: 44, planned: 70 } },
+      acceptance: { ok: false, at: '2026-11-06T23:00:00+06:00', vars: { passed: 3, total: 4 } },
+    });
+    // a passing run never confirms the row; a confirmed row stays confirmed whatever the run said
+    const unsigned = goLiveChecks(ctx({ signoff: {}, evidence })).items;
+    expect(unsigned.find((i) => i.key === 'simulation')).toMatchObject({ ok: false, evidence: evidence.simulation });
+    expect(unsigned.find((i) => i.key === 'acceptance')).toMatchObject({ ok: false, evidence: evidence.acceptance });
+    expect(goLiveChecks(ctx({ evidence })).items.find((i) => i.key === 'acceptance')).toMatchObject({ ok: true, evidence: { ok: false } });
+    // no run yet: null (the page says how to start one); other rows carry no evidence at all
+    const none = goLiveChecks(ctx({ evidence: evidenceNow({ simulation: null, acceptance: null }) })).items;
+    expect(none.find((i) => i.key === 'simulation')?.evidence).toBeNull();
+    expect(none.find((i) => i.key === 'qaGate')).not.toHaveProperty('evidence');
+    for (const d of [en, bn] as const) {
+      for (const k of EVIDENCE_KEYS) {
+        const words = (d.item as Record<string, Record<string, string>>)[k];
+        for (const w of ['runOk', 'runFail', 'runNone']) expect(words?.[w], `${k}.${w}`).toBeTruthy();
+        expect(words?.runOk).toContain('{at}');
+      }
+    }
   });
 
   it('every item has its title and how-to in English and Bengali; automatic ones also their "ok" words', () => {

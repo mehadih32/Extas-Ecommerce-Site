@@ -126,7 +126,10 @@
     "acceptance": {
       "title": "Staging acceptance list walked through",
       "how": "Every line of docs/golive/ACCEPTANCE.md checked on the staging site as a customer and as admin.",
-      "why": "Needed: what a customer and the admin do was checked on staging."
+      "why": "Needed: what a customer and the admin do was checked on staging.",
+      "runOk": "Last automatic run (acceptance workflow): passed, {at} — {passed} of {total} parts. Walk the person's lines of the list, then confirm.",
+      "runFail": "Last automatic run (acceptance workflow): not passed, {at} — {passed} of {total} parts passed. See docs/reports/acceptance/latest.",
+      "runNone": "No automatic run yet: GitHub › Actions › acceptance (by hand) runs the smoke test, the journeys, the test orders and the customer 360°."
     },
     "realPhones": {
       "title": "Real iPhone and real Android",
@@ -136,7 +139,10 @@
     "simulation": {
       "title": "The real-life journey simulation passed on staging",
       "how": "The 70-order simulation of docs/qa/SIMULATION-PLAN.md rerun on the staging site, every finding fixed (CN-013).",
-      "why": "Needed: the money and the orders add up across 70 real-life orders."
+      "why": "Needed: the money and the orders add up across 70 real-life orders.",
+      "runOk": "Last automatic run (simulation workflow): passed, {at} — {passed} passed, {failed} failed, {skipped} skipped of {planned} orders. Read its report, then confirm.",
+      "runFail": "Last automatic run (simulation workflow): not passed, {at} — {failed} failed, {passed} passed, {skipped} skipped of {planned} orders. See docs/reports/simulation/latest.",
+      "runNone": "No automatic run yet: GitHub › Actions › simulation (by hand) places the 70 orders on the mocks."
     },
     "server": {
       "title": "Every server item of A2.9 in place",

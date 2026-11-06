@@ -103,6 +103,21 @@ export function GoLiveList({
         </b>
         <span className="a2-xs a2-blk">{local(d, `item.${i.key}.why`)}</span>
         <span className="a2-xs a2-mute">{foot(i)}</span>
+        {/* CN-036: the last automatic run behind this sign-off (simulation, acceptance): evidence only, a person confirms */}
+        {i.evidence !== undefined ? (
+          <span
+            className="a2-xs a2-blk"
+            data-testid={`gl-run-${i.key}`}
+            data-run={i.evidence ? (i.evidence.ok ? "pass" : "fail") : "none"}
+          >
+            {i.evidence
+              ? local(d, `item.${i.key}.${i.evidence.ok ? "runOk" : "runFail"}`, {
+                  ...i.evidence.vars,
+                  at: i.evidence.at ? when(i.evidence.at) : "—",
+                })
+              : local(d, `item.${i.key}.runNone`)}
+          </span>
+        ) : null}
       </span>
       {i.kind === "signoff" && canSign ? (
         <button
