@@ -16,12 +16,16 @@
 //   already took for its order, where the platform can (GA4's own `refund`, the same transaction id); Meta and TikTok
 //   cannot take a purchase back, so there it stays the "returned" event. Off as it ships (the return goes as its own
 //   event everywhere, as before); a value saved before reads as off. It changes only what the ad platforms are told.
+// PR 532 follow-up 664 (registry v262) — `shareIds`: the thank-you page carries the order's server event ids (one inert
+//   data block per order: each ticked platform's event names and ids), so a browser pixel the owner adds can fire the
+//   same event under the same id and the platform counts it once. Off as it ships; a value saved before reads as off.
 import { z } from 'zod';
 import { setting } from './define';
 import { dictionaryKeySchema } from './schemas';
 
 // const V = 232; — replaced by V661 below (PR 532 follow-up 661)
-const V661 = 261;
+// const V661 = 261; — replaced by V664 below (PR 532 follow-up 664)
+const V664 = 262;
 
 export const conversionFeedSchema = z
   .object({
@@ -43,6 +47,8 @@ export const conversionFeedSchema = z
     intentDays: z.number().int().min(1).max(30),
     /** PR 532 follow-up 661: a parcel that came back withdraws the purchase already sent, where the platform can. */
     withdrawOnReturn: z.boolean().default(false),
+    /** PR 532 follow-up 664: the thank-you page shares the order's server event ids with a browser pixel. */
+    shareIds: z.boolean().default(false),
   })
   .strict();
 export type ConversionFeedSettings = z.output<typeof conversionFeedSchema>;
@@ -64,6 +70,7 @@ export const conversionFeedSettings = {
       enrich: { courier: true, intent: true },
       intentDays: 7,
       withdrawOnReturn: false,
+      shareIds: false,
     },
     valueType: 'JSON',
     group: 'ads',
@@ -72,6 +79,6 @@ export const conversionFeedSettings = {
     isOwnerData: false,
     isPublic: false,
     sortOrder: 12,
-    version: V661,
+    version: V664,
   }),
 };
