@@ -6,11 +6,13 @@
 // PR 257 follow-up (go-live gate customer 360°): the "Where an order came from" card (`ads.attribution`, on as it ships).
 // PR 258: the order's own steps (confirmed, delivered) in the counts, the table and the test event, and the
 // delivered-sales card (`ads.deliveredPurchase`, off as it ships): what a purchase means to the platforms.
+// PR 532: the courier steps and the qualified sale in the counts, the table and the test event, and the deep
+// conversion feed card (`ads.conversionFeed`, off as it ships) with its notes.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { ATTRIBUTION_TOUCHES, ORDER_TRACKING_SOURCES, PURCHASE_MEANS, tickedPlatforms } from '@extas/settings';
+import { ATTRIBUTION_TOUCHES, FEED_TRACKING_EVENTS, ORDER_TRACKING_SOURCES, PURCHASE_MEANS, tickedPlatforms } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { TrackingActions, type TrackingActionTexts } from '@/components/admin/settings/TrackingActions';
@@ -110,6 +112,19 @@ export default async function TrackingPage(props: Props) {
     { kind: 'number', path: 'lookbackHours', label: s('dp.lookback'), help: s('dp.lookbackHelp'), min: 1, max: 168 },
     { kind: 'number', path: 'everyMinutes', label: s('dp.every'), help: s('dp.everyHelp'), min: 1, max: 60 },
   ];
+  // PR 532: the deep conversion feed card
+  const feed = o.feed.value;
+  const feedTexts: FieldsCardTexts = { ...texts, h: s('feed.h'), d: s('feed.d') };
+  const feedFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'on', label: s('feed.on'), help: s('feed.onHelp') },
+    { kind: 'checks', path: 'steps', label: s('feed.steps'), options: FEED_TRACKING_EVENTS.map((e) => ({ value: e, label: s(`event.${e}`) })) },
+    { kind: 'checks', path: 'generous', label: s('feed.generous'), options: TRACKING_PLATFORMS.map((p) => ({ value: p, label: s(`platform.${p}`) })) },
+    { kind: 'number', path: 'holdHours', label: s('feed.hold'), help: s('feed.holdHelp'), min: 0, max: 72 },
+    { kind: 'checks', path: 'holdFlags', label: s('feed.flags'), options: o.flagOptions.map((f) => ({ value: f.key, label: view.lang === 'bn' ? f.bn : f.en })) },
+    { kind: 'switch', path: 'holdBlocked', label: s('feed.blocked'), help: s('feed.blockedHelp') },
+    { kind: 'checks', path: 'enrich', label: s('feed.enrich'), options: (['courier', 'intent'] as const).map((k) => ({ value: k, label: s(`feed.enrich_${k}`) })) },
+    { kind: 'number', path: 'intentDays', label: s('feed.days'), help: s('feed.daysHelp'), min: 1, max: 30 },
+  ];
 
   return (
     <div className="a2-z" data-testid="tracking-page">
@@ -128,6 +143,16 @@ export default async function TrackingPage(props: Props) {
       {dp.on && !v.on ? (
         <div className="a2-note" role="note" data-testid="tracking-dp-off">
           <span>{s('dpTrackingOff')}</span>
+        </div>
+      ) : null}
+      {feed.on && (!v.on || !dp.on) ? (
+        <div className="a2-note" role="note" data-testid="tracking-feed-off">
+          <span>{s('feedRidesOff')}</span>
+        </div>
+      ) : null}
+      {feed.on && dp.on && feed.steps.qualified && TRACKING_PLATFORMS.some((p) => feed.generous[p]) ? (
+        <div className="a2-note" role="note" data-testid="tracking-feed-generous">
+          <span>{s('feedGenerous', { platforms: TRACKING_PLATFORMS.filter((p) => feed.generous[p]).map((p) => s(`platform.${p}`)).join(', ') })}</span>
         </div>
       ) : null}
       {dp.on && dp.purchaseMeans === 'delivered' ? (
@@ -297,6 +322,7 @@ export default async function TrackingPage(props: Props) {
       <FieldsCard url={API} screen={{ key: o.card.key, value: o.card.value, version: o.card.version }} fields={fields} texts={texts} canEdit={canManage} testId="tracking-settings" />
       <FieldsCard url={API} screen={{ key: o.attribution.key, value: o.attribution.value, version: o.attribution.version }} fields={attrFields} texts={attrTexts} canEdit={canManage} testId="tracking-attribution" />
       <FieldsCard url={API} screen={{ key: o.delivered.key, value: o.delivered.value, version: o.delivered.version }} fields={dpFields} texts={dpTexts} canEdit={canManage} testId="tracking-delivered" />
+      <FieldsCard url={API} screen={{ key: o.feed.key, value: o.feed.value, version: o.feed.version }} fields={feedFields} texts={feedTexts} canEdit={canManage} testId="tracking-feed" />
     </div>
   );
 }

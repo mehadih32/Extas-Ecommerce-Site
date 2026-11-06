@@ -16,8 +16,9 @@
 import { tickedSources, type DeliveredPurchaseSettings, type TrackingSettings } from '@extas/settings';
 import type { AdUser } from '@extas/adapters';
 import type { OrderState as OrderStatus } from '@extas/orders/pure';
+import { recordFeedSteps } from './feed';
 import { recordEvent, sendEvents, trackingDeps, userDataOf, type TrackingDeps } from './service';
-import type { OrderTrackingEvent, StoredItem } from './model';
+import type { FeedTrackingEvent, OrderTrackingEvent, StoredItem } from './model';
 
 /** The order states that make each step. */
 export const STEP_STATES: Record<OrderTrackingEvent, readonly OrderStatus[]> = { confirmed: ['CONFIRMED'], delivered: ['DELIVERED', 'PARTIALLY_DELIVERED'] };
@@ -29,12 +30,12 @@ const stepOf = (status: OrderStatus | null): OrderTrackingEvent | null => {
   return null;
 };
 /** The step's event id: one per order and step. */
-export const stepEventId = (step: OrderTrackingEvent, orderNumber: string): string => `${step}-${orderNumber.replace(/[^A-Za-z0-9_.:-]/g, '-')}`;
+export const stepEventId = (step: OrderTrackingEvent | FeedTrackingEvent, orderNumber: string): string => `${step}-${orderNumber.replace(/[^A-Za-z0-9_.:-]/g, '-')}`;
 
 /** The user data a platform can match a person by (the browser name alone is not one). */
-const IDENTITY = ['ext', 'em', 'ph', 'phPlus', 'fbp', 'fbc', 'ttp', 'gaClientId'] as const;
+export const IDENTITY = ['ext', 'em', 'ph', 'phPlus', 'fbp', 'fbc', 'ttp', 'gaClientId'] as const;
 
-const keptOf = (data: unknown): string[] | null => {
+export const keptOf = (data: unknown): string[] | null => {
   const k = data && typeof data === 'object' ? (data as { keptItemIds?: unknown }).keptItemIds : undefined;
   return Array.isArray(k) && k.every((x) => typeof x === 'string') ? (k as string[]) : null;
 };
@@ -134,7 +135,7 @@ export async function recordOrderSteps(deps: TrackingDeps, storeId: number, o: {
 }
 
 /** The step's user data: the purchase event's browser facts, with the order's own id and (matching on, no gift) contact. */
-function stepUser(t: TrackingSettings, stored: unknown, order: { customerId: string | null; phone: string | null; email: string | null; isGift: boolean }): AdUser {
+export function stepUser(t: TrackingSettings, stored: unknown, order: { customerId: string | null; phone: string | null; email: string | null; isGift: boolean }): AdUser {
   const fromPurchase = (stored && typeof stored === 'object' ? stored : {}) as AdUser;
   const own = userDataOf(t, { customerId: order.customerId, ...(order.isGift ? {} : { phone: order.phone, email: order.email }) });
   return { ...fromPurchase, ...own };
@@ -146,7 +147,7 @@ function stepUser(t: TrackingSettings, stored: unknown, order: { customerId: str
 const TICK_MS = 60_000; // hardcode-ok: a technical polling period, not a business number
 const G = globalThis as unknown as { __extasOrderTracking?: { timer: ReturnType<typeof setInterval> } };
 
-/** One tick: each store whose delivered-purchase is on and due is read; quiet on any error. */
+/** One tick: each store whose delivered-purchase is on and due is read (PR 532: and its deep feed); quiet on any error. */
 export async function orderTrackingTick(deps: TrackingDeps, last: Map<number, number>, now = Date.now()): Promise<number> {
   let ran = 0;
   for (const { id } of await deps.db.store.findMany({ select: { id: true }, orderBy: { id: 'asc' } })) {
@@ -155,6 +156,8 @@ export async function orderTrackingTick(deps: TrackingDeps, last: Map<number, nu
       if (!dp.on || now - (last.get(id) ?? 0) < dp.everyMinutes * 60_000) continue;
       last.set(id, now);
       await recordOrderSteps(deps, id);
+      // PR 532: the deep feed's courier steps and qualified sales on the same clock (quiet while the feed is off)
+      await recordFeedSteps(deps, id);
       ran += 1;
     } catch (e) {
       console.warn(`tracking order steps: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);

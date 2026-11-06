@@ -11,13 +11,27 @@
 //   campaign tags and ad click ids of a visit on the order, for how many days, the first or the latest visit.
 // - PR 258: the delivered-purchase card (`ads.deliveredPurchase`): the order's own steps (confirmed, delivered) are
 //   counted and listed with the rest, can be sent as a test, and "Send waiting now" first reads the order timeline.
+// - PR 532: the deep conversion feed card (`ads.conversionFeed`): the courier steps (shipped, returned) and the §59.2
+//   qualified sale are counted, listed and testable like the rest; "Send waiting now" reads them too; the order flags
+//   the owner may tick as "marked bad" come from `orders.flags.list`.
 import { createHash } from 'node:crypto';
 import { AD_PLATFORM_CONNECTION, type AdPlatform } from '@extas/adapters';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { attributionSchema, deliveredPurchaseSchema, storeTarget, trackingSchema, type AttributionSettings, type DeliveredPurchaseSettings, type TrackingSettings } from '@extas/settings';
+import {
+  attributionSchema,
+  conversionFeedSchema,
+  deliveredPurchaseSchema,
+  storeTarget,
+  trackingSchema,
+  type AttributionSettings,
+  type ConversionFeedSettings,
+  type DeliveredPurchaseSettings,
+  type TrackingSettings,
+} from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { ALL_TRACKING_EVENTS, TRACKING_PLATFORMS, type AnyTrackingEvent, type Deliveries, type DeliveryState, type StoredItem } from './model';
+import { recordFeedSteps } from './feed';
 import { recordOrderSteps, type StepRun } from './orders';
 import { recordEvent, sendEvents, type SendOutcome, type TrackingDeps } from './service';
 
@@ -77,6 +91,9 @@ export interface TrackingOverview {
   attribution: { key: 'attribution'; value: AttributionSettings; version: string };
   /** PR 258: the delivered-purchase card. */
   delivered: { key: 'delivered'; value: DeliveredPurchaseSettings; version: string };
+  /** PR 532: the deep conversion feed card, and the order flags it may hold back as "marked bad". */
+  feed: { key: 'feed'; value: ConversionFeedSettings; version: string };
+  flagOptions: { key: string; en: string; bn: string }[];
   days: number;
   platforms: PlatformLink[];
   /** Recorded per event (test events not counted). */
@@ -97,7 +114,13 @@ const pathOf = (url: string | null) => {
 };
 
 export async function trackingOverview(deps: Pick<TrackingDeps, 'db' | 'resolver'>, days: number = TRACKING_DAYS[0]): Promise<TrackingOverview> {
-  const [value, attribution, dp] = await Promise.all([deps.resolver.value('ads.tracking', { storeId: S }), deps.resolver.value('ads.attribution', { storeId: S }), deps.resolver.value('ads.deliveredPurchase', { storeId: S })]);
+  const [value, attribution, dp, feed, flags] = await Promise.all([
+    deps.resolver.value('ads.tracking', { storeId: S }),
+    deps.resolver.value('ads.attribution', { storeId: S }),
+    deps.resolver.value('ads.deliveredPurchase', { storeId: S }),
+    deps.resolver.value('ads.conversionFeed', { storeId: S }),
+    deps.resolver.value('orders.flags.list', { storeId: S }),
+  ]);
   const now = Date.now();
   const since = new Date(now - days * 86_400_000);
   const links = await deps.db.integration.findMany({ where: { archivedAt: null, OR: TRACKING_PLATFORMS.map((p) => ({ kind: AD_PLATFORM_CONNECTION[p].kind, provider: AD_PLATFORM_CONNECTION[p].provider })) }, orderBy: { updatedAt: 'desc' } });
@@ -136,7 +159,7 @@ export async function trackingOverview(deps: Pick<TrackingDeps, 'db' | 'resolver
       deliveries: (r.deliveries ?? {}) as Deliveries,
     }),
   );
-  return { card: { key: 'tracking', value, version: versionOf(value) }, attribution: { key: 'attribution', value: attribution, version: versionOf(attribution) }, delivered: { key: 'delivered', value: dp, version: versionOf(dp) }, days, platforms, recorded, table, waiting, recent };
+  return { card: { key: 'tracking', value, version: versionOf(value) }, attribution: { key: 'attribution', value: attribution, version: versionOf(attribution) }, delivered: { key: 'delivered', value: dp, version: versionOf(dp) }, feed: { key: 'feed', value: feed, version: versionOf(feed) }, flagOptions: flags.map((f) => ({ key: f.key, en: f.en, bn: f.bn })), days, platforms, recorded, table, waiting, recent };
 }
 
 /** PR 257 follow-up: PUT {key: 'attribution', value, version} — where an order came from (audited). */
@@ -155,13 +178,18 @@ async function saveAttribution(deps: TrackingDeps, who: TrackingWho, input: { va
 /**
  * PUT {key: 'tracking', value, version}: the switch, the events, the platforms, matching and attempts; PR 258:
  * {key: 'delivered', …}: the delivered-purchase card (the order steps, what a purchase means, the sources, the
- * look-back and how often). Both audited.
+ * look-back and how often); PR 532: {key: 'feed', …}: the deep conversion feed card. All audited.
  */
 export async function saveTracking(deps: TrackingDeps, who: TrackingWho, input: unknown): Promise<TrackingOverview> {
   await requirePermission(deps.db, who.actor, 'ads.tracking.manage', { storeId: S });
   if (isObj(input) && input.key === 'attribution') return saveAttribution(deps, who, input);
-  if (!isObj(input) || (input.key !== 'tracking' && input.key !== 'delivered')) throw new TrackingError('INVALID_INPUT', 400, ['key']);
-  const card = input.key === 'tracking' ? ({ setting: 'ads.tracking', schema: trackingSchema, action: 'ads.tracking.settings' } as const) : ({ setting: 'ads.deliveredPurchase', schema: deliveredPurchaseSchema, action: 'ads.tracking.delivered' } as const);
+  if (!isObj(input) || (input.key !== 'tracking' && input.key !== 'delivered' && input.key !== 'feed')) throw new TrackingError('INVALID_INPUT', 400, ['key']);
+  const card =
+    input.key === 'tracking'
+      ? ({ setting: 'ads.tracking', schema: trackingSchema, action: 'ads.tracking.settings' } as const)
+      : input.key === 'delivered'
+        ? ({ setting: 'ads.deliveredPurchase', schema: deliveredPurchaseSchema, action: 'ads.tracking.delivered' } as const)
+        : ({ setting: 'ads.conversionFeed', schema: conversionFeedSchema, action: 'ads.tracking.feed' } as const);
   const before = await deps.resolver.value(card.setting, { storeId: S });
   if (input.version !== versionOf(before)) throw new TrackingError('STALE', 409);
   const ok = card.schema.safeParse(input.value);
@@ -169,7 +197,8 @@ export async function saveTracking(deps: TrackingDeps, who: TrackingWho, input: 
   if (versionOf(ok.data) !== versionOf(before)) {
     const by = { actorId: who.actor.staffUserId ?? null, reason: 'Marketing › Tracking' };
     if (card.setting === 'ads.tracking') await deps.resolver.set(card.setting, ok.data as TrackingSettings, storeTarget(S), by);
-    else await deps.resolver.set(card.setting, ok.data as DeliveredPurchaseSettings, storeTarget(S), by);
+    else if (card.setting === 'ads.deliveredPurchase') await deps.resolver.set(card.setting, ok.data as DeliveredPurchaseSettings, storeTarget(S), by);
+    else await deps.resolver.set(card.setting, ok.data as ConversionFeedSettings, storeTarget(S), by);
     await audit(deps.db, who.actor, { storeId: S, action: card.action, entityType: 'Setting', entityId: card.setting, before: { ...before }, after: { ...ok.data } }, who.ctx);
   }
   return trackingOverview(deps);
@@ -188,7 +217,7 @@ async function sampleItems(deps: TrackingDeps): Promise<StoredItem[]> {
 
 export interface ActionAnswer {
   overview: TrackingOverview;
-  outcome: SendOutcome & { steps?: StepRun };
+  outcome: SendOutcome & { steps?: StepRun; feed?: StepRun };
 }
 
 /** POST {action: 'test', event?} — one test event to every platform; {action: 'send'} — the waiting ones now. */
@@ -198,8 +227,10 @@ export async function trackingAction(deps: TrackingDeps, who: TrackingWho, input
   if (input.action === 'send') {
     // PR 258: the order timeline's new steps first, then everything waiting in one go
     const steps = await recordOrderSteps(deps, S, { send: false });
-    const outcome = { ...(await sendEvents(deps, { storeId: S })), steps };
-    await audit(deps.db, who.actor, { storeId: S, action: 'ads.tracking.send', entityType: 'TrackedEvent', entityId: 'waiting', after: { events: outcome.events, steps: steps.recorded } }, who.ctx);
+    // PR 532: and the deep feed's courier steps and qualified sales
+    const feed = await recordFeedSteps(deps, S, { send: false });
+    const outcome = { ...(await sendEvents(deps, { storeId: S })), steps, feed };
+    await audit(deps.db, who.actor, { storeId: S, action: 'ads.tracking.send', entityType: 'TrackedEvent', entityId: 'waiting', after: { events: outcome.events, steps: steps.recorded, feed: feed.recorded } }, who.ctx);
     return { overview: await trackingOverview(deps), outcome };
   }
   const name = input.event === undefined ? 'purchase' : input.event;
@@ -219,7 +250,7 @@ export async function trackingAction(deps: TrackingDeps, who: TrackingWho, input
 }
 
 const answer = (e: unknown): Response => (isTrackingError(e) ? json({ ok: false, error: e.code, details: e.details }, { status: e.status }) : errorResponse(e));
-const reply = (o: TrackingOverview, outcome?: SendOutcome) => json({ ok: true, overview: o, cards: { tracking: o.card, attribution: o.attribution, delivered: o.delivered }, ...(outcome ? { outcome } : {}) });
+const reply = (o: TrackingOverview, outcome?: SendOutcome) => json({ ok: true, overview: o, cards: { tracking: o.card, attribution: o.attribution, delivered: o.delivered, feed: o.feed }, ...(outcome ? { outcome } : {}) });
 
 /**
  * /api/admin/marketing/tracking — GET the overview (`ads.tracking.read`; `?days=7|30`), PUT the settings card, POST a

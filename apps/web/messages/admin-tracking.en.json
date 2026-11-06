@@ -31,7 +31,10 @@
       "purchase": "Orders placed",
       "foot": "recorded, test events not counted",
       "confirmed": "Orders confirmed",
-      "delivered": "Parcels delivered"
+      "delivered": "Parcels delivered",
+      "shipped": "Handed to the courier",
+      "returned": "Parcels back",
+      "qualified": "Qualified sales"
     },
     "tableH": "Sent per platform",
     "col": {
@@ -47,7 +50,10 @@
       "checkout": "Checkout opened",
       "purchase": "Order placed",
       "confirmed": "Order confirmed",
-      "delivered": "Parcel delivered"
+      "delivered": "Parcel delivered",
+      "shipped": "Handed to the courier",
+      "returned": "Parcel came back",
+      "qualified": "Qualified sale"
     },
     "state": {
       "sent": "sent",
@@ -142,6 +148,26 @@
       "every": "Read the order timeline every (minutes)",
       "everyHelp": "\"Send waiting now\" reads it at once too."
     },
-    "stepsRead": "{n} new order steps read from the order timeline."
+    "stepsRead": "{n} new order steps read from the order timeline.",
+    "feedRidesOff": "The deep conversion feed is switched on, but it rides on tracking and on delivered sales: nothing of it is recorded until both are on (the cards at the bottom).",
+    "feedGenerous": "On {platforms} a purchase is now the qualified sale: delivered, or with the courier untouched for your hours; an order placed goes as \"Order placed\" and a delivery as \"Parcel delivered\" there.",
+    "feed": {
+      "h": "Deep conversion feed",
+      "d": "The ad platforms also learn the courier's side of each order (handed to the courier, came back) and, on the platforms you tick as generous, the qualified sale: delivered, or with the courier untouched for your hours — held back only when cancelled or marked bad. Every order event also carries the courier outcome and the visitor's intent; never a name, address, phone or e-mail. Rides on tracking and on delivered sales (their sources, look-back and clock). Off as it ships. No money moves and no ad budget changes.",
+      "on": "Send the deep conversion feed",
+      "onHelp": "Off: no courier step and no qualified sale is recorded, and order events go without the outcome and intent.",
+      "steps": "Feed events",
+      "generous": "Platforms where a purchase is the qualified sale",
+      "hold": "Hours with the courier before it counts",
+      "holdHelp": "An order handed to the courier counts as a qualified sale after this many hours, if nobody cancelled it or marked it bad meanwhile. 0 = at once. A delivery always counts at once.",
+      "flags": "Order flags that mark an order bad (never a qualified sale)",
+      "blocked": "A number on the blocklist marks the order bad",
+      "blockedHelp": "An order from a number on the blocklist (or marked by it) is never sent as a qualified sale.",
+      "enrich": "Each order event also carries",
+      "enrich_courier": "The courier outcome (what happened, the courier, the days, the payment kind)",
+      "enrich_intent": "The visitor's intent (channel, campaign, ad click, returning customer, products seen, bag adds, checkouts)",
+      "days": "Days of visits counted for the intent",
+      "daysHelp": "The products seen, bag adds and checkouts of the same visitor or customer in these days before the order."
+    }
   }
 }

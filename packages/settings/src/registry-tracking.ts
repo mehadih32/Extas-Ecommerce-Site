@@ -47,8 +47,15 @@ export type TrackingSettings = z.output<typeof trackingSchema>;
 /** The order steps sent (read from the order timeline, never from the browser). */
 export const ORDER_TRACKING_EVENTS = ['confirmed', 'delivered'] as const;
 export type OrderTrackingEvent = (typeof ORDER_TRACKING_EVENTS)[number];
+/**
+ * PR 532 (deep conversion feed, `ads.conversionFeed` in registry-conversion-feed.ts): the courier's side of an order —
+ * handed to the courier, came back (refused or returned) — and the "qualified sale" of Blueprint §59.2 (delivered, or
+ * gone to the courier untouched; held back only when cancelled or marked bad).
+ */
+export const FEED_TRACKING_EVENTS = ['shipped', 'returned', 'qualified'] as const;
+export type FeedTrackingEvent = (typeof FEED_TRACKING_EVENTS)[number];
 /** Every event the tracking table can hold: the shopper's and the order's. */
-export const ALL_TRACKING_EVENTS = [...TRACKING_EVENTS, ...ORDER_TRACKING_EVENTS] as const;
+export const ALL_TRACKING_EVENTS = [...TRACKING_EVENTS, ...ORDER_TRACKING_EVENTS, ...FEED_TRACKING_EVENTS] as const;
 export type AnyTrackingEvent = (typeof ALL_TRACKING_EVENTS)[number];
 /** What the platforms are told a purchase is: the order placed (as built in PR 257) or the parcel delivered. */
 export const PURCHASE_MEANS = ['placed', 'delivered'] as const;

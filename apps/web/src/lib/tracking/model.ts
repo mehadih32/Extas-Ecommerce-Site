@@ -4,18 +4,21 @@ import { createHash } from 'node:crypto';
 import type { AdEvent, AdEventName, AdItem, AdPlatform, AdUser } from '@extas/adapters';
 import {
   ALL_TRACKING_EVENTS,
+  FEED_TRACKING_EVENTS,
   ORDER_TRACKING_EVENTS,
   TRACKING_EVENTS,
   TRACKING_PLATFORMS,
   type AnyTrackingEvent,
+  type ConversionFeedSettings,
   type DeliveredPurchaseSettings,
+  type FeedTrackingEvent,
   type OrderTrackingEvent,
   type PurchaseMeans,
   type TrackingEvent,
   type TrackingSettings,
 } from '@extas/settings';
 
-export { ALL_TRACKING_EVENTS, ORDER_TRACKING_EVENTS, TRACKING_EVENTS, TRACKING_PLATFORMS, type AnyTrackingEvent, type OrderTrackingEvent, type TrackingEvent };
+export { ALL_TRACKING_EVENTS, FEED_TRACKING_EVENTS, ORDER_TRACKING_EVENTS, TRACKING_EVENTS, TRACKING_PLATFORMS, type AnyTrackingEvent, type FeedTrackingEvent, type OrderTrackingEvent, type TrackingEvent };
 
 /** An event id a browser may send (the same id its pixel would use); the server makes one otherwise. */
 export const EVENT_ID = /^[A-Za-z0-9_.:-]{8,80}$/;
@@ -61,12 +64,32 @@ export const isOrderStep = (name: string): name is OrderTrackingEvent => (ORDER_
 /** PR 258: an order step is recorded while tracking and delivered-purchase are both on and the step is ticked. */
 export const recordsStep = (s: TrackingSettings, dp: DeliveredPurchaseSettings, name: OrderTrackingEvent, test = false): boolean => test || (s.on && dp.on && dp.events[name]);
 
+/** PR 532: a deep-feed step (shipped, returned, qualified), read from the order timeline. */
+export const isFeedStep = (name: string): name is FeedTrackingEvent => (FEED_TRACKING_EVENTS as readonly string[]).includes(name);
+
+/** PR 532: a feed step is recorded while tracking, delivered-purchase and the feed are all on and the step is ticked. */
+export const recordsFeed = (s: TrackingSettings, dp: DeliveredPurchaseSettings, feed: ConversionFeedSettings, name: FeedTrackingEvent, test = false): boolean =>
+  test || (s.on && dp.on && feed.on && feed.steps[name]);
+
+/**
+ * PR 532 (§59.2): whether a platform's purchase is the qualified sale now — the feed and its qualified step on, the
+ * platform ticked as generous (read at the send, like what a purchase means).
+ */
+export const generousOn = (dp: DeliveredPurchaseSettings, feed: ConversionFeedSettings, platform: AdPlatform): boolean => dp.on && feed.on && feed.steps.qualified && feed.generous[platform];
+
 /**
  * PR 258 (C6.2 point 1): the name a stored event goes under. While a purchase means the delivery, the delivered event
  * takes the platforms' purchase name and the order placed becomes a plain "order placed", so the ads learn from parcels
  * accepted, not from COD orders refused at the door. Read at the send, so a change applies to what still waits.
  */
-export function adNameOf(name: string, means: PurchaseMeans): AdEventName {
+export function adNameOf(name: string, means: PurchaseMeans, generous = false): AdEventName {
+  // PR 532 (§59.2): on a generous platform the qualified sale is the purchase; the order placed and the delivery go
+  // under their own names (never two purchases for one order)
+  if (generous) {
+    if (name === 'qualified') return 'purchase';
+    if (name === 'purchase') return 'placed';
+    if (name === 'delivered') return 'delivered';
+  }
   if (name === 'purchase') return means === 'delivered' ? 'placed' : 'purchase';
   if (name === 'delivered') return means === 'delivered' ? 'purchase' : 'delivered';
   return (ALL_TRACKING_EVENTS as readonly string[]).includes(name) ? (name as AnyTrackingEvent) : 'view';
@@ -159,14 +182,14 @@ export interface StoredEventRow {
 const asItems = (v: unknown): StoredItem[] => (Array.isArray(v) ? (v as StoredItem[]) : []);
 
 /** The row as the adapters take it (money in the major unit; the order number for a purchase or an order step). */
-export function toAdEvent(row: StoredEventRow, orderNumber: string | null, means: PurchaseMeans = 'placed'): AdEvent {
+export function toAdEvent(row: StoredEventRow, orderNumber: string | null, means: PurchaseMeans = 'placed', o: { generous?: boolean; extra?: Record<string, string | number | boolean> } = {}): AdEvent {
   const currency = row.currency;
   const major = (m: number | null) => (m == null || !currency ? null : toMajor(m, currency));
   const items: AdItem[] = asItems(row.items).map((i) => ({ id: i.id, sku: i.sku, name: i.name, category: i.category, colour: i.colour, size: i.size, quantity: i.quantity, price: major(i.priceMinor) }));
   const user = (row.userData && typeof row.userData === 'object' ? row.userData : {}) as AdUser;
   return {
     eventId: row.eventId,
-    name: adNameOf(row.name, means),
+    name: adNameOf(row.name, means, o.generous),
     at: row.occurredAt,
     url: row.url,
     value: major(row.valueMinor),
@@ -175,7 +198,9 @@ export function toAdEvent(row: StoredEventRow, orderNumber: string | null, means
     orderNumber,
     user,
     // an order step with no shopper's browser behind it (an order typed by staff, tracking switched on after it)
-    ...(isOrderStep(row.name) && !user.ua ? { system: true } : {}),
+    ...((isOrderStep(row.name) || isFeedStep(row.name)) && !user.ua ? { system: true } : {}),
+    // PR 532: the courier outcome and the visitor's intent (lib/tracking/feed.ts), only while the feed enriches
+    ...(o.extra && Object.keys(o.extra).length ? { extra: o.extra } : {}),
   };
 }
 
