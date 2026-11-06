@@ -114,7 +114,8 @@
       "inReview": "যাচাইয়ে",
       "finished": "শেষ হয়েছে",
       "prepaid": "আগে পেমেন্ট",
-      "readyToBook": "বুকের জন্য তৈরি"
+      "readyToBook": "বুকের জন্য তৈরি",
+      "incomplete": "অসম্পূর্ণ"
     },
     "st": {
       "DRAFT": "খসড়া",

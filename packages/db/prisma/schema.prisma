@@ -2741,29 +2741,37 @@ model CustomerAddress {
 
 /// @stage S04 · PR 137, 274 — a started checkout, remembered field by field (autofill, incomplete-order capture).
 model CheckoutDraft {
-  id               String   @id @default(uuid(7)) @db.Uuid
+  id               String    @id @default(uuid(7)) @db.Uuid
   storeId          Int
-  store            Store    @relation(fields: [storeId], references: [id])
-  cartId           String?  @db.Uuid
-  customerId       String?  @db.Uuid
+  store            Store     @relation(fields: [storeId], references: [id])
+  cartId           String?   @db.Uuid
+  customerId       String?   @db.Uuid
   visitorId        String
   phone            String?
   name             String?
   email            String?
   addressText      String?
-  areaId           String?  @db.Uuid
+  areaId           String?   @db.Uuid
   data             Json?
   lastStep         String?
-  lastActivityAt   DateTime @default(now()) @db.Timestamptz(3)
-  convertedOrderId String?  @db.Uuid
-  followUpCount    Int      @default(0)
-  createdAt        DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime @updatedAt @db.Timestamptz(3)
+  lastActivityAt   DateTime  @default(now()) @db.Timestamptz(3)
+  convertedOrderId String?   @db.Uuid
+  followUpCount    Int       @default(0)
+  /// PR 274 — the person it was handed to for the follow-up (Orders › Incomplete), and when.
+  assignedToId     String?   @db.Uuid
+  assignedAt       DateTime? @db.Timestamptz(3)
+  /// PR 274 — marked handled by a person (with a short note); "Open again" clears it. Nothing is deleted.
+  handledAt        DateTime? @db.Timestamptz(3)
+  handledById      String?   @db.Uuid
+  handledNote      String?
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
 
   flagEvents CheckoutFlagEvent[]
 
   @@index([storeId, phone])
   @@index([storeId, convertedOrderId, lastActivityAt])
+  @@index([storeId, assignedToId])
 }
 
 /// @stage S04 · PR 558, 560 — the Parameter for Checkout: what counts as a flag, the layers, and what each asks for.

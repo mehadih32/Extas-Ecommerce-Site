@@ -81,7 +81,8 @@
         "riskrules": "Risk rules",
         "packing": "Packing & print",
         "returns": "Returns & exchanges",
-        "digest": "Today's digest"
+        "digest": "Today's digest",
+        "incomplete": "Incomplete orders"
       },
       "customers": {
         "all": "All customers",

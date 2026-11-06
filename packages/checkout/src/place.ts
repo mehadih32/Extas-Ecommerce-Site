@@ -826,8 +826,10 @@ export const draftInputSchema = z
 /**
  * Keeps what the customer typed (once his phone number is a real Bangladeshi mobile — nothing to follow up without it)
  * as his one open checkout draft; the order marks it converted. Off by default (`checkout.capture.enabled`).
+ * PR 274: also the visit's campaign tags (`data.attribution`); a later save hands the draft back to the open list
+ * (a handled mark is cleared: he came back and left again).
  */
-export async function captureDraft(deps: CheckoutDeps, req: { storeId: number; visitorId: string; customerId?: string | null; input: unknown }): Promise<{ kept: boolean }> {
+export async function captureDraft(deps: CheckoutDeps, req: { storeId: number; visitorId: string; customerId?: string | null; attribution?: Partial<OrderAttribution> | null; input: unknown }): Promise<{ kept: boolean }> {
   checkStoreId(req.storeId);
   const { storeId, visitorId } = req;
   const d = parse(draftInputSchema, req.input, 'draft');
@@ -842,14 +844,15 @@ export async function captureDraft(deps: CheckoutDeps, req: { storeId: number; v
     phone: phone.e164,
     name: d.form.name.trim() || null,
     addressText: d.form.address.trim() || null,
-    data: { payment: d.payment ?? null, note: d.note?.trim() || null },
+    // PR 274: the campaign tags of the visit (the same cookie the order reads), for "which channel brought him"
+    data: { payment: d.payment ?? null, note: d.note?.trim() || null, attribution: { ...attributionData(req.attribution) } },
     lastStep: d.step ?? 'details',
     lastActivityAt: now,
   };
   await deps.db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`checkout-draft:${storeId}:${visitorId}`}, 0))`;
     const open = await tx.checkoutDraft.findFirst({ where: { storeId, visitorId, convertedOrderId: null }, orderBy: { createdAt: 'desc' }, select: { id: true } });
-    if (open) await tx.checkoutDraft.update({ where: { id: open.id }, data });
+    if (open) await tx.checkoutDraft.update({ where: { id: open.id }, data: { ...data, handledAt: null, handledById: null } });
     else await tx.checkoutDraft.create({ data: { storeId, visitorId, ...data } });
   }, TX);
   return { kept: true };

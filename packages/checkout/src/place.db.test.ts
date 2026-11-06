@@ -648,9 +648,13 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       try {
         expect(await captureDraft(f.deps(), { storeId: f.S, visitorId: s.visitorId, input: { ...typed, form: { ...FORM, phone: '01' } } })).toEqual({ kept: false });
         expect(await captureDraft(f.deps(), { storeId: f.S, visitorId: s.visitorId, input: typed })).toEqual({ kept: true });
-        expect(await captureDraft(f.deps(), { storeId: f.S, visitorId: s.visitorId, input: { ...typed, form: { ...FORM, name: 'Test Customer Two' } } })).toEqual({ kept: true });
+        // PR 274: a draft a person marked handled goes back to the open list when he types again; the visit's tags are kept
+        await f.t.prisma.checkoutDraft.updateMany({ where: { visitorId: s.visitorId }, data: { handledAt: new Date(), handledNote: 'called' } });
+        const tags = { utmSource: 'facebook', utmMedium: 'paid', utmCampaign: 'eid-polo', adPlatform: 'META' as const, referrer: null };
+        expect(await captureDraft(f.deps(), { storeId: f.S, visitorId: s.visitorId, attribution: tags, input: { ...typed, form: { ...FORM, name: 'Test Customer Two' } } })).toEqual({ kept: true });
         const drafts = await f.t.prisma.checkoutDraft.findMany({ where: { visitorId: s.visitorId } });
-        expect(drafts).toMatchObject([{ phone: '+8801700000125', name: 'Test Customer Two', addressText: FORM.address, cartId: s.cartId, lastStep: 'payment', convertedOrderId: null }]);
+        expect(drafts).toMatchObject([{ phone: '+8801700000125', name: 'Test Customer Two', addressText: FORM.address, cartId: s.cartId, lastStep: 'payment', convertedOrderId: null, handledAt: null, handledNote: 'called' }]);
+        expect((drafts[0]!.data as { attribution: unknown }).attribution).toEqual(tags);
         const r = await s.place();
         expect(await f.t.prisma.checkoutDraft.findUniqueOrThrow({ where: { id: drafts[0]!.id } })).toMatchObject({ convertedOrderId: r.orderId });
       } finally {

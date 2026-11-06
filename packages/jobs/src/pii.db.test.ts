@@ -13,7 +13,7 @@ import type { InventoryDeps, SettingsReader } from '@extas/inventory';
 import { registry, type Key, type Value } from '@extas/settings';
 import { jobDefinition } from './catalogue';
 import type { JobDeps } from './context';
-import { PII_PURGE_JOB, piiPlanner, purgeCustomerIps, purgeOrderPii, purgeVoice } from './pii';
+import { PII_PURGE_JOB, piiPlanner, purgeCheckoutDrafts, purgeCustomerIps, purgeOrderPii, purgeVoice } from './pii';
 
 const D = 86_400_000;
 const NOW = new Date('2026-10-24T06:00:00Z');
@@ -162,6 +162,21 @@ describe.skipIf(!HAS_TEST_DB)('PR 159 · the 180-day purge on PostgreSQL', () =>
     expect(await ips(fresh)).toEqual([null, null, null, null]);
     expect(await t.prisma.customer.count({ where: { id: c.id } })).toBe(1);
     days = 180;
+  });
+
+  it('PR 274: an unfinished checkout\'s words are wiped after the owner\'s days; the row stays, a fresh one is kept', async () => {
+    const ago = (days: number) => new Date(NOW.getTime() - days * D);
+    const draft = (days: number) =>
+      t.prisma.checkoutDraft.create({ data: { storeId, visitorId: randomUUID(), phone: '+8801700000274', name: 'Test Customer', addressText: 'House 1, Road 2', data: { note: 'sample' }, handledNote: 'called', lastStep: 'delivery', lastActivityAt: ago(days) }, select: { id: true } }); // hardcode-ok: made-up sample values
+    const old = await draft(31);
+    const fresh = await draft(5);
+    expect(await purgeCheckoutDrafts(t.prisma, storeId, NOW, 30)).toEqual({ wiped: 1, keepDays: 30 });
+    expect(await t.prisma.checkoutDraft.findUniqueOrThrow({ where: { id: old.id } })).toMatchObject({ phone: null, name: null, addressText: null, data: null, handledNote: null, lastStep: 'delivery' });
+    expect(await t.prisma.checkoutDraft.findUniqueOrThrow({ where: { id: fresh.id } })).toMatchObject({ phone: '+8801700000274', name: 'Test Customer', handledNote: 'called' });
+    expect((await purgeCheckoutDrafts(t.prisma, storeId, NOW, 30)).wiped).toBe(0);
+    // the job reads the owner's days (the registry default here) and reports the wipe
+    const out = await jobDefinition(PII_PURGE_JOB)!.run(deps(), { storeId });
+    expect(out).toMatchObject({ ok: true, stats: { drafts: { wiped: 0, keepDays: registry['checkout.capture.keepDays'].default } } });
   });
 
   it('runs as a job from the catalogue with the owner\'s days, and the planner plans one run per store and slot', async () => {

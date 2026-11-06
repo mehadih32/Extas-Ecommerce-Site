@@ -114,7 +114,8 @@
       "inReview": "In review",
       "finished": "Finished",
       "prepaid": "Prepaid",
-      "readyToBook": "Ready to book"
+      "readyToBook": "Ready to book",
+      "incomplete": "Incomplete"
     },
     "st": {
       "DRAFT": "Draft",

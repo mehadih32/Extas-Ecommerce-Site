@@ -1,0 +1,93 @@
+{
+  "inc": {
+    "metaTitle": "Incomplete orders · Orders",
+    "title": "Incomplete orders",
+    "sub": "Customers who typed their number at checkout and left without ordering, hottest first. Call or WhatsApp them, hand one to a teammate, mark it handled.",
+    "note": "Only what the customer typed is kept, and only while the switch below is on. Nothing here messages anyone or places an order.",
+    "off": "Keeping unfinished checkouts is off, so nothing new is kept. Switch it on in the card at the bottom of this page.",
+    "allLink": "All orders",
+    "viewsAria": "Lists",
+    "view": {
+      "open": "Open",
+      "mine": "Given to me",
+      "handled": "Handled"
+    },
+    "stage": {
+      "phone": "Typed phone",
+      "address": "Typed address",
+      "payment": "Reached payment"
+    },
+    "left": "Left {age} ago",
+    "noName": "No name typed",
+    "bag": "Bag",
+    "bagEmpty": "Bag now empty",
+    "more": "+{n} more",
+    "worth": "Worth {value}",
+    "line": "{qty} × {name}",
+    "channel": "Came from",
+    "landing": "a landing page",
+    "assigned": "Given to {name}",
+    "handledBy": "Handled {when} by {name}",
+    "handledOn": "Handled {when}",
+    "whatsapp": "WhatsApp",
+    "call": "Call",
+    "customer": "Customer page",
+    "assign": "Give to",
+    "nobody": "Nobody",
+    "assignSave": "Give",
+    "assigned2": "Given.",
+    "markHandled": "Mark handled",
+    "noteLabel": "Note (optional)",
+    "notePlaceholder": "What happened, for example: called, will order after payday",
+    "save": "Save",
+    "cancel": "Cancel",
+    "reopen": "Open again",
+    "done": "Saved.",
+    "empty": {
+      "open": "No incomplete orders right now.",
+      "mine": "Nothing is given to you.",
+      "handled": "Nothing handled yet."
+    },
+    "unpaid": {
+      "h": "Payments not finished",
+      "d": "Prepaid orders whose payment failed or got no answer. The order is placed; its page has \"Try again\".",
+      "empty": "No unfinished payments.",
+      "failed": "Payment failed",
+      "pending": "No answer from payment",
+      "order": "Order #{number}",
+      "open": "Open order"
+    },
+    "noPhone": {
+      "h": "Bags without a number",
+      "text": "Bags left without a phone number: {n} (about {value} at bag prices). Nobody can be contacted for these.",
+      "none": "No bags were left without a number."
+    },
+    "card": {
+      "h": "Unfinished checkouts",
+      "d": "What is kept, for how long, and when a checkout counts as left.",
+      "capture": "Keep unfinished checkouts",
+      "captureHelp": "When on, the name, phone and address a customer typed but did not order are kept for your team's follow-up. Off as it ships.",
+      "keepDays": "Keep for (days)",
+      "keepDaysHelp": "After this many days the typed details are wiped by the nightly privacy run.",
+      "leftAfterMinutes": "Counts as left after (minutes)",
+      "leftAfterMinutesHelp": "Minutes without a new word before a checkout shows here.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "readOnly": "Only someone who may change settings can change this."
+    },
+    "err": {
+      "INVALID_INPUT": "Something in it is not right. Check and try again.",
+      "STALE": "Someone else changed this. Reload the page.",
+      "NOT_FOUND": "Not found: it may have become an order.",
+      "HANDLED": "Already marked handled.",
+      "OPEN": "It is already open.",
+      "forbidden": "You do not have permission for this.",
+      "unauthorized": "Please sign in again.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    }
+  }
+}

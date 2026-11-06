@@ -13,8 +13,12 @@
 // the owner alone). Only the internet address and the location expire: the same run, by the same days, also clears
 // the IP that a customer's sign-in, a one-time code, a bulk enquiry and a consent answer kept. The rows themselves stay
 // (the consent answer, its time and channel are the record; the staff sign-in log is the security record, not here).
+// S13 · PR 274 (Blueprint C6.3: "drafts are deleted on the retention schedule like any other personal data"): the same
+// run wipes what an unfinished checkout kept (name, phone, e-mail, address, the typed extras and the team's note) once
+// the owner's `checkout.capture.keepDays` have passed since its last word. The row stays (its time, step and bag link
+// are the count of Orders › Incomplete), no order is touched.
 // This module imports `./keys`, never `./scheduler` (the scheduler imports the catalogue, which imports this).
-import type { Prisma, PrismaClient } from '@extas/db/client';
+import { Prisma, type PrismaClient } from '@extas/db/client';
 import { nowOf, type JobDeps } from './context';
 import { runKey, slotOf } from './keys';
 import type { Planner } from './worker';
@@ -122,14 +126,28 @@ export async function purgeVoice(deps: Pick<JobDeps, 'db' | 'voice'>, storeId: n
   return { wiped, files, before: before.toISOString() };
 }
 
+/**
+ * PR 274 — wipes the kept words of one store's checkout drafts whose last word is older than `keepDays` (ordered or
+ * not: an order keeps its own copy). Safe to run twice (a wiped draft holds nothing more).
+ */
+export async function purgeCheckoutDrafts(db: Pick<PrismaClient, 'checkoutDraft'>, storeId: number, now: Date, keepDays: number): Promise<{ wiped: number; keepDays: number }> {
+  const holds = [{ phone: { not: null } }, { name: { not: null } }, { email: { not: null } }, { addressText: { not: null } }, { handledNote: { not: null } }, { data: { not: Prisma.DbNull } }];
+  const r = await db.checkoutDraft.updateMany({
+    where: { storeId, lastActivityAt: { lt: new Date(now.getTime() - keepDays * DAY) }, OR: holds },
+    data: { phone: null, name: null, email: null, addressText: null, areaId: null, handledNote: null, data: Prisma.DbNull },
+  });
+  return { wiped: r.count, keepDays };
+}
+
 /** One store's purge, with the owner's days read when it runs. */
-export async function runPiiPurge(deps: JobDeps, storeId: number): Promise<{ cleared: number; links: number; before: string; retentionDays: number; customers: CustomerIpsCleared; voice: { wiped: number; files: number; retentionDays: number } }> {
-  const [cap, voiceCfg] = await Promise.all([deps.settings.value('risk.capture', { storeId }), deps.settings.value('checkout.voice', { storeId })]);
+export async function runPiiPurge(deps: JobDeps, storeId: number): Promise<{ cleared: number; links: number; before: string; retentionDays: number; customers: CustomerIpsCleared; voice: { wiped: number; files: number; retentionDays: number }; drafts: { wiped: number; keepDays: number } }> {
+  const [cap, voiceCfg, draftDays] = await Promise.all([deps.settings.value('risk.capture', { storeId }), deps.settings.value('checkout.voice', { storeId }), deps.settings.value('checkout.capture.keepDays', { storeId })]);
   const now = nowOf(deps);
   const voiceDays = voiceCfg.retentionDays ?? 30; // hardcode-ok: a value saved before v142 reads as the registry default
   const v = await purgeVoice(deps, storeId, now, voiceDays);
   const customers = await purgeCustomerIps(deps.db, storeId, now, cap.retentionDays);
-  return { ...(await purgeOrderPii(deps.db, storeId, now, cap.retentionDays)), retentionDays: cap.retentionDays, customers, voice: { wiped: v.wiped, files: v.files, retentionDays: voiceDays } };
+  const drafts = await purgeCheckoutDrafts(deps.db, storeId, now, draftDays);
+  return { ...(await purgeOrderPii(deps.db, storeId, now, cap.retentionDays)), retentionDays: cap.retentionDays, customers, voice: { wiped: v.wiped, files: v.files, retentionDays: voiceDays }, drafts };
 }
 
 /** Each live store: one purge per slot of its `purgeEveryMinutes`. */
