@@ -11,7 +11,8 @@
 //   existing advance path (PR 560), never a new way to take money.
 // - PR 281 · festiveFor: the live festive Smart Rules' words for a place (festive.ts), only while Marketing › Festive
 //   cut-off is on (`marketing.festiveCutoff`, off as shipped) and that place is ticked; checkoutEta adds, for the
-//   settled band, the "after" words of a festive rule already past that band's time in place of the usual promise.
+//   settled band, the "after" words of a festive rule already past that band's time in place of the usual promise;
+//   festiveAfterCheck tells the promise clock (@extas/delivery orderPromises) the same, so such an order is never late.
 import { eidConfig, storefrontEid } from './eid-service';
 import { eidStatus, lateLine, preorderLine, preorderOffer, type EidConfig } from './eid';
 import { holidayNotice, holidayPromise, holidayStatus, type HolidayConfig } from './holiday';
@@ -55,6 +56,22 @@ export async function festiveFor(
   if (opts.productId && !facts) return [];
   const sorted = rules.filter((r) => !facts || inScope(r.scope, facts)).sort(resolutionOrder);
   return festiveLinesOf(sorted, { placement: FESTIVE_PLACEMENT[opts.place], band: opts.band ?? null, now: opts.at ?? nowOf(deps), want: opts.want }, ctx, othersByKey(rules));
+}
+
+/**
+ * Follow-up 653/654 — whether the checkout said a festive rule's "after" words in place of the hours promise for an
+ * order of `band` placed at `at` (the same lines checkoutEta draws, read once for many orders): true = no hours were
+ * promised, so the order's late flag has nothing to count against. Off (the switch, or checkout not ticked) = never.
+ */
+export async function festiveAfterCheck(deps: Deps, storeId: number): Promise<(band: string, at: Date) => boolean> {
+  const set = await setting(deps, storeId, 'marketing.festiveCutoff');
+  if (!set.enabled || !set.places.checkout) return () => false;
+  const [rules, ctx] = await Promise.all([cachedActiveRules(deps, storeId), textContext(deps, storeId)]);
+  const festive = rules.filter((r) => r.kind === 'festive');
+  if (!festive.length) return () => false;
+  const sorted = [...festive].sort(resolutionOrder);
+  const others = othersByKey(rules);
+  return (band, at) => festiveLinesOf(sorted, { placement: FESTIVE_PLACEMENT.checkout, band, now: at, want: 'closed' }, ctx, others).length > 0;
 }
 
 /** One place, as the checkout settled it: its band key and its gazetteer place (null when the customer chose the band). */

@@ -4,7 +4,7 @@
 // and the order cards' late flag (@extas/accounts). A place with no district, or a district with no row, keeps its
 // band's hours. Reads only; nothing here changes a charge, a price or Cash on Delivery.
 import type { PrismaClient } from '@extas/db/client';
-import { eidConfig, holidayConfig } from '@extas/rules';
+import { eidConfig, festiveAfterCheck, holidayConfig } from '@extas/rules';
 import { eidStatus, holidayStatus, localParts } from '@extas/rules/pure';
 import type { DistrictPromiseSettings, Key, Value } from '@extas/settings';
 
@@ -62,8 +62,9 @@ export async function districtCodesOf(db: Pick<PrismaClient, 'geoArea'>, areaIds
 // `shipment.late` that starts the late apology, the apology credit's candidates, the courier report, the customer's
 // order cards and order page) asks this, the same promise the checkout gave: the district's own hours (above), counted
 // from when the order was placed — or, for an order placed during the owner's holiday break (`delivery.holiday`, PR
-// 193), from the day the shop ships again; an order placed past its place's Eid date ("may arrive after Eid") has no
-// hours promise, so it is never late. Reads only.
+// 193), from the day the shop ships again; an order placed past its place's Eid date ("may arrive after Eid"), or past
+// its band's festive cut-off (follow-up 653: the checkout said the festive rule's "after" words, PR 281), has no hours
+// promise, so it is never late. Reads only.
 // ---------------------------------------------------------------------------------------------------------------------
 
 /** One order as the clock reads it: when it was placed, its gazetteer place and its band (null: no band). */
@@ -82,10 +83,15 @@ export interface OrderPromise {
   from: Date;
   /** Placed past its place's Eid date: the checkout said "may arrive after Eid" instead of hours. */
   afterEid: boolean;
+  /** Placed past its band's festive cut-off (Marketing › Festive cut-off on): the checkout said the rule's "after" words instead of hours. */
+  afterFestive: boolean;
 }
 
+/** The order was promised hours (not "may arrive after Eid", not a festive rule's "after" words). */
+export const hoursPromised = (p: Pick<OrderPromise, 'afterEid' | 'afterFestive'>): boolean => !p.afterEid && !p.afterFestive;
+
 interface ClockDeps {
-  db: Pick<PrismaClient, 'geoArea'>;
+  db: PrismaClient;
   settings: RulesSettings;
 }
 
@@ -101,11 +107,12 @@ export function zonedMidnight(day: string, timeZone: string): Date {
 export async function orderPromises(deps: ClockDeps, storeId: number, orders: readonly ClockOrder[]): Promise<Map<string, OrderPromise>> {
   const out = new Map<string, OrderPromise>();
   if (!orders.length) return out;
-  const [promise, holiday, eid, timeZone] = await Promise.all([
+  const [promise, holiday, eid, timeZone, festiveAfter] = await Promise.all([
     districtPromises(deps, storeId, orders.map((o) => o.areaId)),
     holidayConfig(deps, storeId),
     eidConfig(deps, storeId),
     deps.settings.value('store.timeZone', { storeId }),
+    festiveAfterCheck(deps, storeId),
   ]);
   // the Eid date of a district (only read while the owner's Eid dates are on and have district rows)
   const eidDistrict = eid.enabled && !!eid.districtDates?.length ? (promise.districtOf.size ? promise.districtOf : await districtCodesOf(deps.db, orders.map((o) => o.areaId))) : new Map<string, string>();
@@ -115,14 +122,15 @@ export async function orderPromises(deps: ClockDeps, storeId: number, orders: re
     const h = holidayStatus(holiday, o.placedAt, timeZone);
     const from = h.state === 'on' ? zonedMidnight(h.resume, timeZone) : o.placedAt;
     const afterEid = !!o.band && eidStatus(eid, { band: o.band.key, district: o.areaId ? (eidDistrict.get(o.areaId) ?? null) : null }, o.placedAt, timeZone).state === 'closed';
-    out.set(o.id, { hoursMin: hours.hoursMin, hoursMax: hours.hoursMax, from, afterEid });
+    const afterFestive = !!o.band && festiveAfter(o.band.key, o.placedAt);
+    out.set(o.id, { hoursMin: hours.hoursMin, hoursMax: hours.hoursMax, from, afterEid, afterFestive });
   }
   return out;
 }
 
-/** When a promise was due (null: none in hours — no band hours, or "may arrive after Eid"). */
+/** When a promise was due (null: none in hours — no band hours, "may arrive after Eid" or a festive rule's "after" words). */
 export function promiseDueBy(p: OrderPromise | undefined): Date | null {
-  if (!p || p.afterEid || p.hoursMax === null || p.hoursMax <= 0) return null;
+  if (!p || !hoursPromised(p) || p.hoursMax === null || p.hoursMax <= 0) return null;
   return new Date(p.from.getTime() + p.hoursMax * HOUR_MS);
 }
 

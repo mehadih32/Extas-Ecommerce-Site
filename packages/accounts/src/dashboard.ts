@@ -5,7 +5,7 @@ import type { Prisma } from '@extas/db/client';
 import { checkStoreId, setting, type AccountsDeps } from './context';
 import { firstNameOf, lateOf, trackOf, type OrderState, type TrackView } from './pure';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
-import { orderPromises } from '@extas/delivery/promise';
+import { hoursPromised, orderPromises } from '@extas/delivery/promise';
 
 const ACTIVE_WALLET = 'ACTIVE';
 
@@ -143,11 +143,11 @@ export async function cardsOf(deps: AccountsDeps, storeId: number, where: Prisma
   const colours = await lineColours(deps, storeId, shown);
   // SIM-F-048: a district with its own promise is late against its own hours (`delivery.promise.districts`, off);
   // review R3 (M3): one promise clock with the courier's late flag — counted from the shop's first day back for an
-  // order placed during the holiday break, none for "may arrive after Eid"
+  // order placed during the holiday break, none for "may arrive after Eid" or past a festive cut-off (follow-up 653)
   const promises = await orderPromises(deps, storeId, rows.map((o) => ({ id: o.id, placedAt: o.placedAt, areaId: o.areaId, band: o.deliveryBand })));
   const promiseOf = (o: (typeof rows)[number]) => {
     const p = promises.get(o.id);
-    return p && !p.afterEid ? { placedAt: p.from, hoursMax: p.hoursMax } : { placedAt: o.placedAt, hoursMax: null };
+    return p && hoursPromised(p) ? { placedAt: p.from, hoursMax: p.hoursMax } : { placedAt: o.placedAt, hoursMax: null };
   };
   return rows.map((o) => ({
     number: o.number,
