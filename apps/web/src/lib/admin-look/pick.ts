@@ -6,6 +6,7 @@
 // CN-026 (b): where the guide opens (`admin.guideOpens`) follows the same idea: the person's own choice while
 // `perPerson` is on, else the team's. No React and no database here: the pages, the API and the tests share it.
 import { z } from 'zod';
+import { cleanTheme, type ThemePrefs } from './theme';
 
 export type GuideDesktop = 'panel' | 'popup' | 'page';
 
@@ -15,18 +16,29 @@ export interface LookPrefs {
   look: Record<string, string>;
   /** Where the guide opens on desktop, when they chose. */
   guide?: GuideDesktop;
+  /** PR 625 (CN-036): their own admin look, light or dark (the moon button) and "Reduce motion" (theme.ts). */
+  theme?: ThemePrefs;
 }
+
+/** PR 625 (CN-036): one person's theme choices as stored (theme.ts). */
+export const themePrefsSchema = z.object({
+  look: z.string().regex(/^[a-z]{2,20}$/).optional(),
+  mode: z.enum(['light', 'dark']).optional(),
+  motion: z.enum(['full', 'reduce']).optional(),
+});
 
 const prefsSchema = z.object({
   look: z.record(z.string().regex(/^[a-z][a-z0-9-]{1,39}$/), z.string().regex(/^[A-Z]$/)).optional(),
   guide: z.enum(['panel', 'popup', 'page']).optional(),
+  theme: themePrefsSchema.optional().catch(undefined),
 });
 
 /** The stored JSON as prefs (anything unreadable becomes "no choice"). */
 export function readPrefs(raw: unknown): LookPrefs {
   const p = prefsSchema.safeParse(raw ?? {});
   if (!p.success) return { look: {} };
-  return { look: { ...(p.data.look ?? {}) }, ...(p.data.guide ? { guide: p.data.guide } : {}) };
+  const theme = cleanTheme(p.data.theme);
+  return { look: { ...(p.data.look ?? {}) }, ...(p.data.guide ? { guide: p.data.guide } : {}), ...(theme ? { theme } : {}) };
 }
 
 /** The prefs with one page's design set (a key) or cleared (null = follow the team). */
@@ -41,6 +53,7 @@ export function withLook(prefs: LookPrefs, page: string, design: string | null):
 export function withGuide(prefs: LookPrefs, guide: GuideDesktop | null): LookPrefs {
   const out: LookPrefs = { look: { ...prefs.look } };
   if (guide) out.guide = guide;
+  if (prefs.theme) out.theme = { ...prefs.theme };
   return out;
 }
 

@@ -7,20 +7,46 @@
 //                                    settings.write; written through the settings resolver with the person as actor
 //                                    (the change log keeps who and when).
 //   { scope: "team", guide }         where the guide opens for the team (`admin.guideOpens.desktop`), settings.write.
+// PR 625 (CN-036) — the theme:
+//   { scope: "me",   theme: { mode?, motion?, look? } }   the person's light or dark (the moon button), their own
+//                                    "Reduce motion" and look (only a built look); null clears a part. Always their own
+//                                    choice (no per-person switch): it changes only how the admin looks to them.
+//   { scope: "team", theme: { look?, accent?, reduceMotion? } }   the team's look, accent colour and "Reduce motion"
+//                                    (`admin.theme`), settings.write, through the settings resolver (the change log).
 // The page and the design are checked against the look registry; nothing here touches money, orders or customers.
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { storeTarget } from '@extas/settings';
+import { adminThemeSchema, BUILT_ADMIN_LOOKS, storeTarget, type AdminTheme } from '@extas/settings';
+import { z } from 'zod';
 import { adminDeps, body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { readPrefs, withGuide, withLook, type GuideDesktop, type LookTeam } from './pick';
+import { withTheme } from './theme';
 
 const GUIDES: readonly GuideDesktop[] = ['panel', 'popup', 'page'];
 
 /** Page id → its design keys (components/admin/look/registry.ts lookCatalog). */
 export type LookCatalog = Record<string, readonly string[]>;
 
-type Ask = { kind: 'look'; page: string; design: string | null } | { kind: 'guide'; guide: GuideDesktop | null };
+type MeTheme = { look?: string | null; mode?: 'light' | 'dark' | null; motion?: 'full' | 'reduce' | null };
+type TeamTheme = Partial<AdminTheme>;
+type Ask =
+  | { kind: 'look'; page: string; design: string | null }
+  | { kind: 'guide'; guide: GuideDesktop | null }
+  | { kind: 'theme'; me: MeTheme; team: TeamTheme };
+
+const builtLook = z.string().refine((v) => (BUILT_ADMIN_LOOKS as readonly string[]).includes(v));
+const meThemeSchema = z
+  .object({ look: builtLook.nullable().optional(), mode: z.enum(['light', 'dark']).nullable().optional(), motion: z.enum(['full', 'reduce']).nullable().optional() })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0);
+const teamThemeSchema = adminThemeSchema.partial().strict().refine((v) => Object.keys(v).length > 0);
 
 function readAsk(b: Record<string, unknown>, catalog: LookCatalog): Ask | string {
+  if ('theme' in b) {
+    const schema = b.scope === 'team' ? teamThemeSchema : meThemeSchema;
+    const p = schema.safeParse(b.theme);
+    if (!p.success) return 'theme';
+    return b.scope === 'team' ? { kind: 'theme', me: {}, team: p.data as TeamTheme } : { kind: 'theme', me: p.data as MeTheme, team: {} };
+  }
   if ('guide' in b) {
     const g = b.guide;
     if (g === null || (typeof g === 'string' && (GUIDES as readonly string[]).includes(g))) return { kind: 'guide', guide: g as GuideDesktop | null };
@@ -57,9 +83,15 @@ export async function lookHandler(request: Request, catalog: LookCatalog, deps: 
       if (ask.kind === 'look' && !team.perPerson) return fail(403, 'PER_PERSON_OFF');
       if (ask.kind === 'guide' && !guide.perPerson) return fail(403, 'PER_PERSON_OFF');
       const prefs = readPrefs(row?.adminPrefs);
-      const next = ask.kind === 'look' ? withLook(prefs, ask.page, ask.design) : withGuide(prefs, ask.guide);
+      const next = ask.kind === 'look' ? withLook(prefs, ask.page, ask.design) : ask.kind === 'guide' ? withGuide(prefs, ask.guide) : withTheme(prefs, ask.me);
       await d.db.staffUser.update({ where: { id: actorId }, data: { adminPrefs: next as object } });
       return json({ ok: true, scope, prefs: next });
+    }
+    if (ask.kind === 'theme') {
+      const cur = (await d.resolver.value('admin.theme', scopeOf)) as AdminTheme;
+      const next = adminThemeSchema.parse({ ...cur, ...ask.team });
+      await d.resolver.set('admin.theme', next, target, { actorId, reason: `admin look: theme ${Object.keys(ask.team).join(', ')}` });
+      return json({ ok: true, scope, theme: next });
     }
     if (ask.kind === 'look') {
       const team = (await d.resolver.value('admin.look', scopeOf)) as LookTeam;

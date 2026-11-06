@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { compile, scan, stripComments } from './hardcode-guard.mjs';
+import { compile, overBaseline, scan, stripComments } from './hardcode-guard.mjs';
 
 const rules = compile(JSON.parse(readFileSync(new URL('./hardcode-guard.json', import.meta.url), 'utf8')).rules);
 const ids = (file, text) => scan(file, text, rules).map((f) => f.rule);
@@ -55,5 +55,24 @@ describe('hardcode guard', () => {
   it('allows placeholder e-mails and keeps line numbers when stripping comments', () => {
     expect(ids('a.ts', 'const e = "someone@example.com";')).toEqual([]);
     expect(stripComments('a /* x\ny */ b').split('\n')).toHaveLength(2);
+  });
+  it('PR 625: a colour or a font family in an admin page or style is caught outside the theme layer only', () => {
+    expect(ids('apps/web/src/app/admin/x/x.css', '.a{color:#FF5A36}')).toContain('admin-style-literal');
+    expect(ids('apps/web/src/app/admin/x/x.css', '.a{box-shadow:0 1px 2px rgba(0,0,0,.1)}')).toContain('admin-style-literal');
+    expect(ids('apps/web/src/app/admin/x/x.css', ".a{font:700 14px 'Archivo',sans-serif}")).toContain('admin-style-literal');
+    expect(ids('apps/web/src/components/admin/x/X.tsx', "<i style={{ color: '#12b5a6' }} />")).toContain('admin-style-literal');
+    expect(ids('apps/web/src/app/admin/x/x.css', '.a{color:var(--lm-ac-ink);border-radius:var(--lm-r-card)}')).not.toContain('admin-style-literal');
+    expect(ids('apps/web/src/app/admin/x/X.tsx', '<a href="#add-item" />')).not.toContain('admin-style-literal');
+    expect(ids('apps/web/src/app/admin/theme/lumen.css', ':root{--lm-bg:#eceff5}')).not.toContain('admin-style-literal');
+    expect(ids('apps/web/src/app/shop.css', '.a{color:#fff}')).not.toContain('admin-style-literal');
+    // only the rules marked `css` read stylesheets
+    expect(ids('apps/web/src/app/admin/x/x.css', '.a{width:120px} /* deliveryCharge = 120 */')).toEqual([]);
+  });
+  it('PR 625: a rule\'s baseline lets a file keep what it had, never more, and a new file nothing', () => {
+    const r = compile([{ id: 'x', what: 'x', pattern: '#[0-9a-f]{6}', css: true, baseline: { 'old.css': 2 } }]);
+    const f = (file, n) => scan(file, Array.from({ length: n }, () => '.a{color:#abcdef}').join('\n'), r);
+    expect(overBaseline(f('old.css', 2), r)).toEqual([]);
+    expect(overBaseline(f('old.css', 3), r)).toHaveLength(3);
+    expect(overBaseline(f('new.css', 1), r)).toHaveLength(1);
   });
 });

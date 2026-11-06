@@ -1,6 +1,7 @@
 /* PR 594 (CN-026 (a)) — the admin's own UI type, loaded only by the admin (app/admin/layout.tsx), never by the shop:
- * "EXTAS Admin Bangla" (Hind Siliguri, the Bengali block only) for all Bengali text and "EXTAS Admin Sans" (Instrument
- * Sans, one variable file for every weight) for English beside it. Self-hosted files already in the repo (OFL-1.1,
+ * "EXTAS Admin Bangla" (Hind Siliguri, the Bengali block only) for all Bengali text and "EXTAS Admin Sans" (since PR 625,
+ * CN-036: Plus Jakarta Sans, one variable file for every weight; Instrument Sans before) for English beside it, and
+ * "EXTAS Admin Display" (Bricolage Grotesque 700/800, PR 625) for headings and big numbers. Self-hosted files already in the repo (OFL-1.1,
  * licences next to them), the same files the shop uses, so a browser that has them cached loads nothing new.
  * display: optional, as in the shop — the first faces are preloaded by the layout (lib/admin-fonts.ts), so they are
  * there for the first paint; a slow first visit keeps the fallback for that page and nothing jumps (a swap moved the
@@ -10,8 +11,25 @@
   font-family: 'EXTAS Admin Sans';
   font-style: normal;
   font-display: optional;
-  font-weight: 400 700;
-  src: url('./instrument-sans/instrument-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 200 800;
+  src: url('./plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* PR 625 (CN-036) — the Lumen look's display face (headings and big numbers): Bricolage Grotesque 700 and 800. */
+@font-face {
+  font-family: 'EXTAS Admin Display';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 700;
+  src: url('./bricolage-grotesque/bricolage-grotesque-latin-700-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'EXTAS Admin Display';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 800;
+  src: url('./bricolage-grotesque/bricolage-grotesque-latin-800-normal.woff2') format('woff2');
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 @font-face {
@@ -42,8 +60,9 @@
   unicode-range: U+0964-0965,U+0980-09FE,U+200C-200D,U+25CC;
 }
 
-/* The admin's type tokens: shell.css and admin.css read these inside the admin only. */
+/* The admin's type tokens: shell.css and admin.css read these inside the admin only; since PR 625 they are the theme
+ * layer's (app/admin/theme/lumen.css --lm-font, --lm-font-bn). */
 .adm2, .ad {
-  --a2-font: 'EXTAS Admin Sans', 'EXTAS Admin Bangla', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --a2-font-bn: 'EXTAS Admin Bangla', 'EXTAS Admin Sans', system-ui, sans-serif;
+  --a2-font: var(--lm-font);
+  --a2-font-bn: var(--lm-font-bn);
 }

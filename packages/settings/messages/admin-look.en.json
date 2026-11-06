@@ -15,6 +15,10 @@
     "dashboardDesigns": {
       "label": "Dashboard designs: targets and rows",
       "help": "The order-to-courier target in hours (0 = none), how many days the sales charts cover at least and average over, how many rows the product and stock cards list, how many days the courier cards and top products cover, how many days a date range of your own may cover, and how many weeks the week-by-week lines show."
+    },
+    "theme": {
+      "label": "Admin look: colour and motion",
+      "help": "The admin look everyone sees (Lumen; the other looks show as \"Planned\" until they are built), the accent colour every button and highlight is drawn from (coral as shipped; text on it is kept readable), and whether animations are reduced for everyone. Light or dark is each person's own choice with the moon button."
     }
   }
 }

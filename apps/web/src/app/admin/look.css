@@ -3,10 +3,12 @@
    our A) and Settings → Admin look, with the demo's responsive rules. Ported by rule; the command center and the
    Orders, Confirm and Products redesigns come after launch with their follow-ups (380–382, CN-027). Every colour a design draws with is a token here (--a3-*); the small-text colours stay the
    shell's AA-safe ones (shell.css), and the faint grey is darkened to AA (4.5 : 1 on white and on the page). Every rule is under .adm2 and every class is a3-*. */
-.adm2.a3s{--bg:#F7F5F0;--side:#F1EEE6;--ln:#E8E3D8;--ln2:#F1EDE5;--ink:#18211D;--ink2:#4A544F;
- --g:#1D3B2F;--g9:#152C23;--g7:#25503F;--g6:#2F6550;--g1:#E4EEE8;--g0:#F0F5F2;--gold:#B8913F;--goldbg:#F6EEDC;--goldink:#86651F;
- --okbg:#E5F2EA;--warnbg:#FBF0DB;--badbg:#F9E6E2;--info:#2E5D8A;--infobg:#E7EEF6;
- --faint:#69706C;--a3r:14px;--a3sh:0 1px 2px rgba(24,33,29,.04),0 2px 6px rgba(24,33,29,.03);display:block;background:var(--bg);font-size:14px;--a3-c1:#1F6B54;--a3-cbad:#B7473C;--a3-cprev:#B9BDB8;--a3-grid:#EEEAE1;--a3-grid0:#DCD6CA;--a3-heat-rgb:31,107,84;--a3-heat0:#F1EEE7;--a3-ph:#EFEDE8;--a3-s1:#D9A23D;--a3-s2:#86AFA2;--a3-s3:#4E8B7A;--a3-s4:#2F6550;--a3-s5:#3E9A6C;--a3-o1:#1F6B54;--a3-o2:#6FA08D;--a3-o3:#C9A14A;--a3-o4:#C2574B;--a3-o5:#B9BDB8;--a3-f1:#9DB8AC;--a3-f2:#6FA08D;--a3-f3:#4E8B7A;--a3-f4:#2F7A62;--a3-f5:#1F5C4A;}
+.adm2.a3s,.adm2.a3s .ad{--bg:var(--lm-bg);--side:var(--lm-sf);--ln:var(--lm-ln);--ln2:var(--lm-ln2);--ink:var(--lm-ink);--ink2:var(--lm-ink2);
+ --g:var(--lm-brand);--g9:var(--lm-hero-solid);--g7:var(--lm-brand-deep);--g6:var(--lm-ac-ink);--g1:var(--lm-acbg);--g0:var(--lm-hover);--gold:var(--lm-c4);--goldbg:var(--lm-warnbg);--goldink:var(--lm-warn);
+ --okbg:var(--lm-okbg);--warnbg:var(--lm-warnbg);--badbg:var(--lm-badbg);--info:var(--lm-info);--infobg:var(--lm-infobg);
+ --faint:var(--lm-faint);--a3r:var(--lm-r-card);--a3sh:var(--lm-sh);--a3-c1:var(--lm-c1);--a3-cbad:var(--lm-bad);--a3-cprev:var(--lm-cprev);--a3-grid:var(--lm-ln2);--a3-grid0:var(--lm-ln);--a3-heat-rgb:var(--lm-c2-rgb);--a3-heat0:var(--lm-sf2);--a3-ph:var(--lm-chip);--a3-s1:var(--lm-c4);--a3-s2:var(--lm-c5);--a3-s3:var(--lm-c3);--a3-s4:var(--lm-c2);--a3-s5:var(--lm-c1);--a3-o1:var(--lm-c2);--a3-o2:var(--lm-c5);--a3-o3:var(--lm-c4);--a3-o4:var(--lm-c1);--a3-o5:var(--lm-cprev);--a3-f1:color-mix(in srgb,var(--lm-c2) 35%,var(--lm-sf));--a3-f2:color-mix(in srgb,var(--lm-c2) 55%,var(--lm-sf));--a3-f3:color-mix(in srgb,var(--lm-c2) 75%,var(--lm-sf));--a3-f4:var(--lm-c2);--a3-f5:color-mix(in srgb,var(--lm-c2) 80%,var(--lm-ink))}
+/* PR 625 (CN-036): the V12.4 variables above read the theme layer's tokens (theme/lumen.css). */
+.adm2.a3s{display:block;background:var(--bg);font-size:14px}
 .adm2.a3s .a3-num{font-variant-numeric:tabular-nums}
 .adm2 .a3-tb{position:sticky;top:0;z-index:45;height:56px;background:var(--g);display:flex;align-items:center;gap:14px;padding:0 16px 0 14px;color:#DCE8E2}
 .adm2 .a3-brand{display:flex;align-items:center;gap:10px;flex:none;color:#fff}

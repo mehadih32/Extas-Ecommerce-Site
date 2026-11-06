@@ -5,11 +5,13 @@
    pages inside the shell keep their own look (their classes still win). Additions for the real app are at the end. */
 /* Contrast: --mute, --ok, --warn and --bad are a shade darker than the demo's (#6B736E, #2E7D55, #A5670F, #B4453B) so the
    small text on their light backgrounds passes WCAG AA 4.5:1 (Lighthouse accessibility). */
-.adm2{--bg:#F6F4EF;--sf:#fff;--sf2:#FBFAF7;--ln:#E8E3D8;--ln2:#F0ECE4;--ink:#17201C;--ink2:#47514C;--mute:#646B67;--faint:#9AA09C;
- --g:#1F4E46;--g9:#12302A;--g8:#173B34;--g6:#2D6A5D;--g1:#E4EEEA;--g0:#F1F6F4;--gold:#B8913F;--goldbg:#F7F0E0;--goldink:#7A5A17;
- --ok:#25694A;--okbg:#E5F2EA;--warn:#8A5508;--warnbg:#FBF0DA;--bad:#A33A31;--badbg:#F9E6E2;--info:#2F5E8C;--infobg:#E7EEF6;
- --r:12px;--sh:0 1px 2px rgba(23,32,28,.04),0 1px 1px rgba(23,32,28,.03);--sh2:0 18px 48px rgba(10,30,26,.18),0 2px 6px rgba(0,0,0,.06);
- font-family:var(--a2-font,'Instrument Sans','Hind Siliguri',system-ui,sans-serif);color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45;
+/* PR 625 (CN-036): the shell's variables read the theme layer's tokens (theme/lumen.css); a page's own .ad frame
+   reads them again so a page not yet moved into the look stays a light island in dark mode. */
+.adm2,.adm2 .ad{--bg:var(--lm-bg);--sf:var(--lm-sf);--sf2:var(--lm-sf2);--ln:var(--lm-ln);--ln2:var(--lm-ln2);--ink:var(--lm-ink);--ink2:var(--lm-ink2);--mute:var(--lm-ink2);--faint:var(--lm-faint);
+ --g:var(--lm-brand);--g9:var(--lm-hero-solid);--g8:var(--lm-brand-deep);--g6:var(--lm-ac-ink);--g1:var(--lm-acbg);--g0:var(--lm-hover);--gold:var(--lm-c4);--goldbg:var(--lm-warnbg);--goldink:var(--lm-warn);
+ --ok:var(--lm-ok);--okbg:var(--lm-okbg);--warn:var(--lm-warn);--warnbg:var(--lm-warnbg);--bad:var(--lm-bad);--badbg:var(--lm-badbg);--info:var(--lm-info);--infobg:var(--lm-infobg);
+ --r:var(--lm-r-ctl);--sh:var(--lm-sh);--sh2:var(--lm-sh2)}
+.adm2{font-family:var(--a2-font,var(--lm-font));color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45;
  -webkit-font-smoothing:antialiased;min-height:100vh;display:flex;align-items:stretch}
 :where(.a2-z) *,:where(.a2-z) *::before,:where(.a2-z) *::after{box-sizing:border-box}
 :where(.a2-z) h1,:where(.a2-z) h2,:where(.a2-z) h3,:where(.a2-z) h4,:where(.a2-z) p,:where(.a2-z) ul,:where(.a2-z) ol,:where(.a2-z) figure{margin:0}
