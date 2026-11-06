@@ -11,12 +11,13 @@
 //   { scope: "me",   theme: { mode?, motion?, look? } }   the person's light or dark (the moon button), their own
 //                                    "Reduce motion" and look (only a built look); null clears a part. Always their own
 //                                    choice (no per-person switch): it changes only how the admin looks to them.
+//                                    PR 630: `accent` too (#RRGGBB; their own accent instead of the team's).
 //   { scope: "me",   seen: ISO time }  PR 626: the notifications panel's "Mark all read" (a note newer than it is unread).
 //   { scope: "team", theme: { look?, accent?, reduceMotion? } }   the team's look, accent colour and "Reduce motion"
 //                                    (`admin.theme`), settings.write, through the settings resolver (the change log).
 // The page and the design are checked against the look registry; nothing here touches money, orders or customers.
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { adminThemeSchema, BUILT_ADMIN_LOOKS, storeTarget, type AdminTheme } from '@extas/settings';
+import { accentSchema, adminThemeSchema, BUILT_ADMIN_LOOKS, storeTarget, type AdminTheme } from '@extas/settings';
 import { z } from 'zod';
 import { adminDeps, body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { readPrefs, withGuide, withLook, type GuideDesktop, type LookTeam } from './pick';
@@ -27,7 +28,7 @@ const GUIDES: readonly GuideDesktop[] = ['panel', 'popup', 'page'];
 /** Page id → its design keys (components/admin/look/registry.ts lookCatalog). */
 export type LookCatalog = Record<string, readonly string[]>;
 
-type MeTheme = { look?: string | null; mode?: 'light' | 'dark' | null; motion?: 'full' | 'reduce' | null };
+type MeTheme = { look?: string | null; mode?: 'light' | 'dark' | null; motion?: 'full' | 'reduce' | null; accent?: string | null };
 type TeamTheme = Partial<AdminTheme>;
 type Ask =
   | { kind: 'look'; page: string; design: string | null }
@@ -37,7 +38,7 @@ type Ask =
 
 const builtLook = z.string().refine((v) => (BUILT_ADMIN_LOOKS as readonly string[]).includes(v));
 const meThemeSchema = z
-  .object({ look: builtLook.nullable().optional(), mode: z.enum(['light', 'dark']).nullable().optional(), motion: z.enum(['full', 'reduce']).nullable().optional() })
+  .object({ look: builtLook.nullable().optional(), mode: z.enum(['light', 'dark']).nullable().optional(), motion: z.enum(['full', 'reduce']).nullable().optional(), accent: accentSchema.nullable().optional() })
   .strict()
   .refine((v) => Object.keys(v).length > 0);
 const teamThemeSchema = adminThemeSchema.partial().strict().refine((v) => Object.keys(v).length > 0);

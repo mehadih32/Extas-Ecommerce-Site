@@ -13,6 +13,8 @@ export interface ThemePrefs {
   look?: string;
   mode?: ThemeMode;
   motion?: ThemeMotion;
+  /** PR 630 (CN-036): their own accent colour (#RRGGBB) instead of the team's. */
+  accent?: string;
 }
 
 /** The team's theme (setting `admin.theme`). */
@@ -44,13 +46,14 @@ export function cleanTheme(t: ThemePrefs | undefined | null): ThemePrefs | undef
   if (t.look) out.look = t.look;
   if (t.mode) out.mode = t.mode;
   if (t.motion) out.motion = t.motion;
+  if (t.accent && HEX.test(t.accent)) out.accent = t.accent;
   return Object.keys(out).length ? out : undefined;
 }
 
 /**
  * The theme for one person: their look when it is built, else the team's (else Lumen); their light or dark (light by
- * default); motion reduced when they or the team chose it; the team's accent when it is a #RRGGBB colour (else none:
- * the stylesheet's own default accent applies).
+ * default); motion reduced when they or the team chose it; their own accent (PR 630), else the team's, when it is a
+ * #RRGGBB colour (else none: the stylesheet's own default accent applies).
  */
 export function themeOf(team: ThemeTeam | null | undefined, prefs: ThemePrefs | undefined, built: readonly string[]): AdminTheme {
   const pick = (l: string | undefined) => (l && built.includes(l) ? l : undefined);
@@ -58,7 +61,7 @@ export function themeOf(team: ThemeTeam | null | undefined, prefs: ThemePrefs | 
     look: pick(prefs?.look) ?? pick(team?.look) ?? DEFAULT_LOOK,
     mode: prefs?.mode === 'dark' ? 'dark' : 'light',
     motion: prefs?.motion === 'reduce' || (prefs?.motion !== 'full' && team?.reduceMotion) ? 'reduce' : 'full',
-    accent: team?.accent && HEX.test(team.accent) ? team.accent : '',
+    accent: prefs?.accent && HEX.test(prefs.accent) ? prefs.accent : team?.accent && HEX.test(team.accent) ? team.accent : '',
   };
 }
 
@@ -75,7 +78,7 @@ export function themeStyle(t: AdminTheme): Record<string, string> {
 /** The prefs with one person's theme part changed (null clears it: follow the team or the default again). */
 export function withTheme<P extends { theme?: ThemePrefs }>(prefs: P, patch: { [K in keyof ThemePrefs]?: ThemePrefs[K] | null }): P {
   const next: ThemePrefs = { ...(prefs.theme ?? {}) };
-  for (const k of ['look', 'mode', 'motion'] as const) {
+  for (const k of ['look', 'mode', 'motion', 'accent'] as const) {
     if (!(k in patch)) continue;
     const v = patch[k];
     if (v === null || v === undefined) delete next[k];

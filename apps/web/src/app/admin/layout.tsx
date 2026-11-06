@@ -20,6 +20,7 @@
 import { preload } from 'react-dom';
 import type { CSSProperties } from 'react';
 import './theme/lumen.css';
+import './theme/looks.css';
 import '../../fonts/admin.css';
 import '../../fonts/admin-ui.css';
 import './admin.css';
@@ -103,7 +104,7 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
   const look = await lookState().catch(() => null);
   const theme = look?.theme ?? themeOf(null, undefined, BUILT_ADMIN_LOOKS);
   const [model, view, guideMode] = await Promise.all([shellModel(theme, look?.prefs.seen ?? null), adminView(), guideChoice().catch(() => null)]);
-  for (const href of adminFontPreloads(view.lang)) preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
+  for (const href of adminFontPreloads(view.lang, model !== null)) preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
   // The error page draws in the browser: it gets the system states' words here (lib/admin-shell, SH-07).
   const text = { lang: view.lang, dict: { shell: { state: (view.dict.shell as Dict).state } } as Dict, inShell: model !== null };
   return (

@@ -134,8 +134,13 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
     expect((await lookHandler(call({ scope: 'me', theme: { motion: 'reduce', look: 'lumen' } }, staff), catalog, deps)).status).toBe(200);
     const prefs = () => t.prisma.staffUser.findUnique({ where: { id: staffId }, select: { adminPrefs: true } }).then((r) => readPrefs(r?.adminPrefs));
     expect((await prefs()).theme).toEqual({ mode: 'dark', motion: 'reduce', look: 'lumen' });
-    for (const theme of [{ mode: 'sepia' }, { look: 'studio' }, {}, { accent: '#000000' }, 'dark']) expect((await lookHandler(call({ scope: 'me', theme }, staff), catalog, deps)).status, JSON.stringify(theme)).toBe(400);
+    for (const theme of [{ mode: 'sepia' }, { look: 'studio' }, {}, { accent: 'teal' }, { accent: '#FFF' }, 'dark']) expect((await lookHandler(call({ scope: 'me', theme }, staff), catalog, deps)).status, JSON.stringify(theme)).toBe(400);
     expect((await lookHandler(call({ scope: 'me', theme: { mode: null, motion: null, look: null } }, staff), catalog, deps)).status).toBe(200);
+    expect((await prefs()).theme).toBeUndefined();
+    // PR 630: a person's own accent colour, cleared with null (then the team's applies again).
+    expect((await lookHandler(call({ scope: 'me', theme: { accent: '#7C5CFF' } }, staff), catalog, deps)).status).toBe(200);
+    expect((await prefs()).theme).toEqual({ accent: '#7C5CFF' });
+    expect((await lookHandler(call({ scope: 'me', theme: { accent: null } }, staff), catalog, deps)).status).toBe(200);
     expect((await prefs()).theme).toBeUndefined();
     await deps.resolver.set('admin.look', adminLookSettings['admin.look'].default, storeTarget(MOTHER_STORE_ID), { actorId: owners!.id, reason: 'test: back' });
     // The team's: settings.write, checked, through the change log.

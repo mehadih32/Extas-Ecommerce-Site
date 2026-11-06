@@ -87,6 +87,13 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const [fly, setFly] = useState<{ id: string; style: CSSProperties } | null>(null);
   const [openSec, setOpenSec] = useState<string | null>(null);
   const [mode, setMode] = useState<ThemeMode>(model.theme?.mode ?? 'light');
+  // PR 630: light or dark chosen on Settings › Admin look arrives with the redrawn model; follow it (the moon keeps
+  // its own instant switch).
+  const [modeFromServer, setModeFromServer] = useState(model.theme?.mode ?? 'light');
+  if ((model.theme?.mode ?? 'light') !== modeFromServer) {
+    setModeFromServer(model.theme?.mode ?? 'light');
+    setMode(model.theme?.mode ?? 'light');
+  }
   /** When the lists shown were counted (ms); set after the first paint, so the server's count is never refetched at once. */
   const counted = useRef(0);
   const opener = useRef<HTMLElement | null>(null);

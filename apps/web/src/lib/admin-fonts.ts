@@ -13,7 +13,11 @@ const BANGLA = new URL('../fonts/hind-siliguri/hind-siliguri-bengali-400-normal.
 
 const path = (u: URL) => (u.protocol === 'file:' ? u.pathname : `${u.pathname}${u.search}`);
 
-/** The font files to preload for an admin page in this language. */
-export function adminFontPreloads(lang: AdminLang): string[] {
-  return lang === 'bn' ? [path(SANS), path(DISPLAY), path(BANGLA)] : [path(SANS), path(DISPLAY)];
+/** The font files to preload for an admin page in this language. Only inside the shell (signed in): the sign-in page
+ *  has no big numbers, and with the Lumen stylesheet its LCP went over the 2.5 s budget (2.52–2.58 s in CI) while two
+ *  faces were preloaded beside it. There the faces load with the page (`font-display: optional`, nothing moves); the
+ *  Bengali face stays preloaded in Bengali, because the fallback for Bengali letters is poor. */
+export function adminFontPreloads(lang: AdminLang, inShell = true): string[] {
+  const faces = inShell ? [path(SANS), path(DISPLAY)] : [];
+  return lang === 'bn' ? [...faces, path(BANGLA)] : faces;
 }
