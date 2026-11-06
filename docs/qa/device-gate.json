@@ -331,6 +331,7 @@
       "/admin/website/launch-default",
       "/admin/settings/shimmer",
       "/admin/combos/bag-box",
+      "/admin/build/requests",
       "/admin/reports/experiments",
       "/admin/reports/experiments?show=archived",
       "/admin/reports/experiments/new",

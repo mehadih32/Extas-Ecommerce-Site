@@ -128,6 +128,7 @@
     "build": "কাজের অগ্রগতি",
     "buildPr": "PR কার্ড",
     "buildProblems": "জানানো সমস্যা",
+    "buildRequests": "নতুন ফিচারের অনুরোধ",
     "buildFiles": "ব্লুপ্রিন্ট আর ফাইল",
     "buildFile": "ফাইল পড়ুন",
     "healthSpeed": "গতি",

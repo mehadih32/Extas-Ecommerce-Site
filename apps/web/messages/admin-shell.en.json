@@ -82,7 +82,8 @@
         "book": "Site manual",
         "build": "Build progress",
         "problems": "Reported problems",
-        "files": "Blueprint & files"
+        "files": "Blueprint & files",
+        "requests": "Feature requests"
       },
       "orders": {
         "all": "All orders",
@@ -481,7 +482,9 @@
     "built": "Ready",
     "planned": "Planned",
     "open": "Open the section",
-    "read": "Read in the manual"
+    "read": "Read in the manual",
+    "askLine": "Something the shop cannot do yet? Most changes need only a switch, a Smart Rule or a key; for a truly new function, ask for it here. The build team puts it in the PR register and builds it.",
+    "ask": "Ask for a new feature"
   },
   "dsh": {
     "soon": "{what} comes with {stage}. Until then this card stays empty — no number is made up.",
