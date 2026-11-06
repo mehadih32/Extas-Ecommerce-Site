@@ -476,6 +476,12 @@ export function SimulateSheet({ d, lang, onClose, env, view, name, cand, dirty, 
             {tt('simulate.difference')}: <b>{m(res.differenceMinor, true)}</b>
           </div>
           {res.deliveryUnknown ? <div className="ad-mini">{tt('simulate.unknown', { n: res.deliveryUnknown })}</div> : null}
+          {/* follow-up 521: the offer stopped at the selling-price floor (PR 609), so a smaller discount is never a surprise */}
+          {res.floorHeldOrders ? (
+            <div className="ad-mini" data-testid="rl-sim-floor">
+              {tt('simulate.floorHeld', { n: res.floorHeldOrders, amount: m(res.floorHeldMinor) })}
+            </div>
+          ) : null}
           {res.biggest.length ? (
             <div>
               <div className="ad-label">{tt('simulate.biggest')}</div>

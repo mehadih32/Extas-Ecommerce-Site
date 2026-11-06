@@ -6,7 +6,7 @@
 import { z } from 'zod';
 import { allow, found, nowOf, parse, setting, type RulesDeps, type Who } from './context';
 import { activeRules } from './core';
-import { clockFacts, quote, type CartFacts, type Quote } from './engine';
+import { clockFacts, floorMinorOf, quote, type CartFacts, type Quote } from './engine';
 import { asJson, draftRule, toRule } from './rows';
 import { scopeFacts } from './facts';
 import { ruleContentSchema, type Rule } from './model';
@@ -50,6 +50,10 @@ export interface SimulationResult {
   codRefusedAfter: number;
   /** Orders whose delivery charge the engine cannot tell (no band, or a charge not set yet). */
   deliveryUnknown: number;
+  /** Follow-up 521 (PR 609): orders where this rule's offer stopped at the selling-price floor, and how much it held
+   *  back in all (0 when the floor is off). Missing on simulations kept before it. */
+  floorHeldOrders: number;
+  floorHeldMinor: number;
   /** The orders that change most (largest difference first). */
   biggest: SimOrder[];
   createdAt: string;
@@ -85,12 +89,14 @@ export async function simulateRule(deps: RulesDeps, who: Who, id: string, input:
   const at = base.startsAt && Date.parse(base.startsAt) > now.getTime() ? new Date(base.startsAt) : now;
   const cand: Rule = { ...base, status: 'ACTIVE', archived: false, endsAt: base.endsAt && Date.parse(base.endsAt) > at.getTime() ? base.endsAt : null };
 
-  const [days, maxOrders, maxPercentOff, timeZone, roundingStepMinor] = await Promise.all([
+  const [days, maxOrders, maxPercentOff, timeZone, roundingStepMinor, floorPercent] = await Promise.all([
     b.days ?? setting(deps, who.storeId, 'rules.simulation.defaultDays'),
     setting(deps, who.storeId, 'rules.simulation.maxOrders'),
     setting(deps, who.storeId, 'rules.discount.maxPercentOff'),
     setting(deps, who.storeId, 'store.timeZone'),
     setting(deps, who.storeId, 'checkout.money.roundingStepMinor'),
+    // follow-up 521: the same selling-price floor as the bag (PR 609; null = off)
+    setting(deps, who.storeId, 'catalogue.floor.minMarginPercent'),
   ]);
   const from = new Date(now.getTime() - days * DAY_MS);
   const live = (await activeRules(deps.db, who.storeId)).filter((r) => r.id !== row.id);
@@ -111,6 +117,11 @@ export async function simulateRule(deps: RulesDeps, who: Who, id: string, input:
   const codes = [...new Set(list.map((o) => o.couponCode?.trim().toUpperCase()).filter((x): x is string => !!x))];
   const coupons = codes.length ? await deps.db.coupon.findMany({ where: { storeId: who.storeId, code: { in: codes } }, select: { code: true, ruleId: true } }) : [];
   const couponRule = new Map(coupons.map((c) => [c.code, c.ruleId]));
+  const variantIds = [...new Set(list.flatMap((o) => o.items.map((i) => i.variantId).filter((x): x is string => !!x)))];
+  const buying = floorPercent !== null && variantIds.length ? await deps.db.productVariant.findMany({ where: { storeId: who.storeId, id: { in: variantIds } }, select: { id: true, shopPriceMinor: true } }) : [];
+  const floorOf = new Map(buying.map((v) => [v.id, floorMinorOf(v.shopPriceMinor, floorPercent, roundingStepMinor)]));
+  let heldOrders = 0;
+  let heldMinor = NOTHING;
   const clock = clockFacts(at, timeZone);
   const limits = { maxPercentOff, roundingStepMinor };
 
@@ -130,7 +141,7 @@ export async function simulateRule(deps: RulesDeps, who: Who, id: string, input:
       now: at,
       lines: o.items.map((i) => {
         const sf = i.productId ? facts.get(i.productId) : undefined;
-        return { id: i.id, variantId: i.variantId, unitPriceMinor: i.unitPriceMinor, quantity: i.quantity, productId: i.productId, categoryIds: sf?.categoryIds ?? [], collectionIds: sf?.collectionIds ?? [], freeDelivery: sf?.freeDelivery ?? null, comboId: i.comboId };
+        return { id: i.id, variantId: i.variantId, unitPriceMinor: i.unitPriceMinor, quantity: i.quantity, productId: i.productId, categoryIds: sf?.categoryIds ?? [], collectionIds: sf?.collectionIds ?? [], freeDelivery: sf?.freeDelivery ?? null, comboId: i.comboId, floorMinor: i.variantId ? (floorOf.get(i.variantId) ?? null) : null };
       }),
       bandKey: o.deliveryBand?.key ?? null,
       ...(o.deliveryBand && o.deliveryBand.archivedAt === null ? { bandChargeMinor: o.deliveryBand.enabled ? o.deliveryBand.chargeMinor : null } : {}),
@@ -151,6 +162,11 @@ export async function simulateRule(deps: RulesDeps, who: Who, id: string, input:
     if (qb.cod.allowed === false) codRefusedB++;
     if (qa.cod.allowed === false) codRefusedA++;
     if (!qa.totalKnown) unknown++;
+    const held = qa.floorHeld.filter((h) => h.rule.id === cand.id).reduce((sum, h) => sum + h.heldMinor, NOTHING);
+    if (held > 0) {
+      heldOrders++;
+      heldMinor += held;
+    }
     const diff = qa.totalMinor - qb.totalMinor;
     const isChanged = diff !== 0 || qa.delivery.chargeMinor !== qb.delivery.chargeMinor || qa.cod.allowed !== qb.cod.allowed;
     if (isChanged) {
@@ -185,6 +201,8 @@ export async function simulateRule(deps: RulesDeps, who: Who, id: string, input:
     codRefusedBefore: codRefusedB,
     codRefusedAfter: codRefusedA,
     deliveryUnknown: unknown,
+    floorHeldOrders: heldOrders,
+    floorHeldMinor: heldMinor,
     biggest: rowsOut.slice(0, BIGGEST),
   };
   const saved = await deps.db.smartRuleSimulation.create({

@@ -250,7 +250,8 @@
       "order": "অর্ডার {number}",
       "none": "এই দিনগুলোতে কোনো অর্ডার নেই।",
       "earlier": "আগের যাচাইগুলো",
-      "earlierLine": "v{version} · {days} দিন · {orders}টি অর্ডার · {difference}"
+      "earlierLine": "v{version} · {days} দিন · {orders}টি অর্ডার · {difference}",
+      "floorHeld": "{n}টা অর্ডারে এই অফার কেনা দামের ওপর সবচেয়ে কম যে দাম রাখা যায় সেখানে থেমেছে, তাই নিয়মে যা লেখা তার চেয়ে কাস্টমাররা মোট {amount} কম ছাড় পাবেন।"
     },
     "coupons": {
       "title": "কুপন — {name}",
