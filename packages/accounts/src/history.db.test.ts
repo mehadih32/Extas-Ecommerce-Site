@@ -74,4 +74,34 @@ describe.skipIf(!HAS_TEST_DB)('PR 150 · the whole order history', () => {
     expect(await orderLifecycle(f.deps(), { storeId: f.B, number: 'H-LIFE', customerId: me.id, visitorId: null })).toBeNull();
     expect(await orderLifecycle(f.deps(), { storeId: f.A, number: 'NO-SUCH', customerId: me.id, visitorId: null })).toBeNull();
   });
+  it('follow-up 300: on the Bengali page the pieces in "What happened" carry the product and colour names in Bengali', async () => {
+    const db = f.t.prisma;
+    const navy = await db.colour.create({ data: { storeId: f.A, key: 'navy-300', nameEn: 'Navy', nameBn: 'নেভি', hex: '#1F2A44' } });
+    const [m, l] = [await db.size.create({ data: { storeId: f.A, key: 'm-300', label: 'M', sortOrder: 1 } }), await db.size.create({ data: { storeId: f.A, key: 'l-300', label: 'L', sortOrder: 2 } })];
+    const polo = await db.product.create({ data: { storeId: f.A, slug: 'sample-polo-300', nameEn: 'Sample Polo', nameBn: 'স্যাম্পল পোলো' } });
+    const vm = await db.productVariant.create({ data: { storeId: f.A, productId: polo.id, colourId: navy.id, sizeId: m.id, sku: 'SP300-M', priceMinor: 100_000 } });
+    await db.productVariant.create({ data: { storeId: f.A, productId: polo.id, colourId: navy.id, sizeId: l.id, sku: 'SP300-L', priceMinor: 100_000 } });
+    const o = await f.order({ customerId: me.id, number: 'H-BN', status: 'CONFIRMED', placedAt: new Date('2026-10-23T06:00:00Z') });
+    // the line now holds the L the team changed it to; the timeline row keeps the M it was
+    const line = await db.orderItem.create({ data: { storeId: f.A, orderId: o.id, variantId: vm.id, sku: 'SP300-L', productName: 'Sample Polo', colourName: 'Navy', sizeLabel: 'L', quantity: 1, unitPriceMinor: 100_000, lineTotalMinor: 100_000 } });
+    const added = await db.orderItem.create({ data: { storeId: f.A, orderId: o.id, variantId: vm.id, sku: 'SP300-M', productName: 'Sample Polo', colourName: 'Navy', sizeLabel: 'M', quantity: 1, unitPriceMinor: 100_000, lineTotalMinor: 100_000, isAddOn: true } });
+    const row = (type: string, at: string, data: object) => db.orderEvent.create({ data: { storeId: f.A, orderId: o.id, type, actorType: 'STAFF', source: 'test', data, createdAt: new Date(at) } });
+    await row('order.addLine', '2026-10-23T07:00:00Z', { itemId: added.id, sku: 'SP300-M' });
+    await row('order.edit', '2026-10-23T08:00:00Z', { fields: [], lines: [{ lineId: line.id, kind: 'size', sku: 'SP300-M', label: 'Sample Polo · Navy · M', toSku: 'SP300-L', toLabel: 'Sample Polo · Navy · L', quantity: 1, lineTotalMinor: 100_000 }] });
+    const of = async (lang?: 'en' | 'bn') => (await orderLifecycle(f.deps(), { storeId: f.A, number: 'H-BN', customerId: me.id, visitorId: null, lang }))!.flatMap((s) => s.lines ?? []);
+    expect(await of('bn')).toEqual([
+      { from: 'স্যাম্পল পোলো · নেভি · M', to: null },
+      { from: 'স্যাম্পল পোলো · নেভি · M', to: 'স্যাম্পল পোলো · নেভি · L' },
+    ]);
+    // English (and no language) reads as the order stored it
+    const en = [
+      { from: 'Sample Polo · Navy · M', to: null },
+      { from: 'Sample Polo · Navy · M', to: 'Sample Polo · Navy · L' },
+    ];
+    expect(await of('en')).toEqual(en);
+    expect(await of()).toEqual(en);
+    // a product without a Bengali name keeps the stored English one on the Bengali page
+    await db.product.update({ where: { id: polo.id }, data: { nameBn: null } });
+    expect((await of('bn'))[0]).toEqual({ from: 'Sample Polo · নেভি · M', to: null });
+  });
 });

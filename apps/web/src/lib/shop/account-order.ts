@@ -57,7 +57,7 @@ async function part<T>(what: string, run: () => Promise<T>): Promise<T | null> {
   }
 }
 
-export async function orderExtras(c: Pick<ShopContext, 'storeId'>, number: string, status: string, opts: { timeline: boolean }): Promise<OrderExtras> {
+export async function orderExtras(c: Pick<ShopContext, 'storeId' | 'lang'>, number: string, status: string, opts: { timeline: boolean }): Promise<OrderExtras> {
   const deps = accountDeps();
   if (!deps) return NONE;
   const [me, visitor, trial] = await Promise.all([signedIn(), visitorId(), tryCardsOn()]);
@@ -79,7 +79,7 @@ export async function orderExtras(c: Pick<ShopContext, 'storeId'>, number: strin
           return st.mode === 'none' ? null : { mode: st.mode, reasons: st.reasons };
         }),
     ENDED.has(status) ? null : part('two-size question', async () => customerTwoSizeState(od, who, number)),
-    opts.timeline ? part('timeline', () => orderLifecycle(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId })) : null,
+    opts.timeline ? part('timeline', () => orderLifecycle(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId, lang: c.lang === 'bn' ? 'bn' : 'en' })) : null,
     part('refunds', () => orderRefunds(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId })),
     who.customerId ? part('exchange part', () => customerExchangeState(od, { ...who, visitorId: null }, number)) : null,
   ]);
