@@ -107,7 +107,7 @@ export default async function DeliverySettingsPage() {
     },
   ];
   return (
-    <div className="a2-z" data-testid="delivery-settings">
+    <div className="a2-z" data-testid="delivery-settings" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={h('title')} sub={h('sub')} />
       <SectionTabs view={view} current={KEY} />
       <FieldsCard url={API} screen={{ key: c.key, value: c.value, version: c.version }} fields={holiday} texts={texts} canEdit={canEdit} testId="delivery-holiday" />

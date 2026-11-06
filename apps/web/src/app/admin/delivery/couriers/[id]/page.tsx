@@ -92,7 +92,7 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
   const stats = run?.stats ?? null;
 
   return (
-    <div className="a2-z" data-testid="courier">
+    <div className="a2-z" data-testid="courier" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey('courier')}

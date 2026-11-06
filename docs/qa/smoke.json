@@ -133,7 +133,10 @@
     {"pr": 636, "what": "Customers › Loyalty draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/customers/loyalty", "selector": "[data-testid=customer-loyalty][data-lm-ready]", "attribute": "data-testid", "equals": "customer-loyalty"},
     {"pr": 636, "what": "Customers › Review draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/customers/review", "selector": "[data-testid=customers-review][data-lm-ready]", "attribute": "data-testid", "equals": "customers-review"},
     {"pr": 636, "what": "Customers › Import draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/customers/import", "selector": "[data-testid=customer-import][data-lm-ready]", "attribute": "data-testid", "equals": "customer-import"},
-    {"pr": 636, "what": "Customers › Settings draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/customers/settings", "selector": "[data-testid=customer-settings][data-lm-ready]", "attribute": "data-testid", "equals": "customer-settings"}
+    {"pr": 636, "what": "Customers › Settings draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/customers/settings", "selector": "[data-testid=customer-settings][data-lm-ready]", "attribute": "data-testid", "equals": "customer-settings"},
+    {"pr": 637, "what": "Delivery › Zones & charges draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/delivery/zones", "selector": "[data-testid=delivery-zones][data-lm-ready]", "attribute": "data-testid", "equals": "delivery-zones"},
+    {"pr": 637, "what": "Delivery › Couriers draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/delivery/couriers", "selector": "[data-testid=couriers][data-lm-ready]", "attribute": "data-testid", "equals": "couriers"},
+    {"pr": 637, "what": "Delivery › Delivery settings draws in the Lumen look and follows dark mode (CN-036)", "page": "/admin/delivery/settings", "selector": "[data-testid=delivery-settings][data-lm-ready]", "attribute": "data-testid", "equals": "delivery-settings"}
   ],
   "figures": [
     { "pr": 155, "path": "/admin/combos?tab=report", "selectors": ["[data-testid=cb-kpi-ordered]", "[data-testid=cb-kpi-sales]"], "value": "b" },
