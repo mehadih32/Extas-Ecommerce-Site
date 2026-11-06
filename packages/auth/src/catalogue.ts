@@ -322,6 +322,9 @@ export const PERMISSIONS = {
   // (`website.layout.write`). Nothing here touches a price, an order or a customer.
   'website.read': { group: 'seo' },
   'website.layout.write': { group: 'seo' },
+  // S02 · PR 78 (BACKEND-ARCHITECTURE WEB-05) — Website → Words & language: change any word the shop shows, in English and
+  // Bengali, one by one or from a CSV file, or give it back to the shop's own word. Seeing needs `website.read`.
+  'website.words.write': { group: 'seo' },
   // S12 · PR 239 (Blueprint WEB-03) — Website → Blog & journal: see the articles, categories and authors (`blog.read`);
   // write and edit articles, send them through review, and add, change or put away categories and authors (`blog.write`);
   // publish, schedule, take down an article and switch the journal on (`blog.publish`). Nothing here touches a price,
