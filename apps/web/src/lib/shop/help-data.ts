@@ -8,6 +8,7 @@ import type { HelpSlug, PagesHelpSettings } from '@extas/settings';
 import { placeTexts, policyFiller, ruleText } from '../rules-public';
 import { readPageSettings, type ShopContext } from './context';
 import { shopPayOffer } from './pay-offer';
+import { tryDeliveryOn, withSampleDelivery } from './try-delivery';
 import { fillPagesText, HELP_SLUGS, helpModel, type HelpFacts, type HelpModel, type RuleWords } from './help-pages';
 
 export interface HelpData {
@@ -41,9 +42,12 @@ export async function loadHelp(c: ShopContext): Promise<HelpData> {
     return { key, short, full };
   };
   const placed = placeTexts({ storeId: c.storeId, placement: 'faq', locale: c.lang }).then((l) => l.map((r) => ({ key: r.key, short: r.texts.short ?? null, full: r.texts.full ?? null })));
+  // PR 72 follow-up (104): a test server's gate may ask to see the sample store's delivery rule live (lib/shop/try-delivery)
+  const sampleDelivery = await tryDeliveryOn();
   const rules = await Promise.all(
     HELP_SLUGS.map(async (slug) => {
-      const listed = await Promise.all(set.pages[slug].rules.map(words));
+      const own = await Promise.all(set.pages[slug].rules.map(words));
+      const listed = sampleDelivery && slug === 'delivery' ? withSampleDelivery(own, c.lang) : own;
       if (slug !== 'faq') return listed;
       const onFaq = await placed;
       return [...onFaq, ...listed.filter((r) => !onFaq.some((x) => x.key === r.key))];

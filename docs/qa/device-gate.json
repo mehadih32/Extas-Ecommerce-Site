@@ -183,6 +183,18 @@
       "expect": [".sb-slog"]
     },
     {
+      "$comment": "PR 72 follow-up 104 — search's delivery answer: in the sample shop the delivery rule is a draft, so /help/delivery says Coming soon and search never offers it. POST /api/shop/try-delivery (test servers only) shows this browser a sample delivery rule (words that promise no amount or time) while the delivery page's own rules say nothing, so the answer card is measured in both languages.",
+      "paths": ["/search?q=delivery", "/bn/search?q=%E0%A6%A1%E0%A7%87%E0%A6%B2%E0%A6%BF%E0%A6%AD%E0%A6%BE%E0%A6%B0%E0%A6%BF"],
+      "fill": "/api/shop/try-delivery",
+      "expect": ["[data-testid=\"help-delivery\"]"]
+    },
+    {
+      "$comment": "PR 72 follow-up 104 — the delivery help page itself with the sample delivery rule (same fill), its rule section measured.",
+      "paths": ["/help/delivery", "/bn/help/delivery"],
+      "fill": "/api/shop/try-delivery",
+      "expect": ["[data-testid=\"help-rule\"]"]
+    },
+    {
       "$comment": "PR 574 — the bag templates B1, B2, B4 and the preview bar, through their preview links (`?btpl=`, previews on by default), on a bag the test server fills with three sample sets (POST /api/bag/try?sets=3, test servers only, sample data): B1 the grouped card, B2 a size per piece in the bag, B4 the pieces at their own prices with the combo discount.",
       "paths": ["/bag?btpl=B1"],
       "fill": "/api/bag/try?sets=3",
