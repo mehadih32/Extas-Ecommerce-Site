@@ -228,6 +228,7 @@
     },
     "explain": {
       "title": "The day {date}",
+      "none": "{date} is not matched yet: its lines and their sources show here once the match has closed that day.",
       "versions": "Versions of this day: {n}",
       "opening": "At day start",
       "closing": "At day end",

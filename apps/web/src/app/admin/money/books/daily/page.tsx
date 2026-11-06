@@ -150,7 +150,10 @@ export default async function BooksDailyPage() {
                 {log.map((r) => (
                   <tr key={r.date} data-testid="bd-summary-row" data-state={r.waitsForKey ? 'WAITING_KEY' : r.state}>
                     <td className="a2-tdh">
-                      <b>{day(r.date)}</b>
+                      {/* Follow-up 566: the day opens its lines with their sources (the match page's day explain, PR 616) */}
+                      <Link href={`/admin/money/books/match?day=${r.date}`} className="a2-b a2-lnk" data-testid="bd-day-link">
+                        {day(r.date)}
+                      </Link>
                     </td>
                     <td data-l={b('col.state')}>
                       <span className={`a2-pill ${sendTone(r.state)}`} title={r.lastError ?? undefined}>
