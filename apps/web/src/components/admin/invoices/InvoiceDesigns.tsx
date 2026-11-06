@@ -48,7 +48,7 @@ export function InvoiceDesigns({ dict, designs, current, version, canEdit, canPr
       </div>
       <p className="a2-xs a2-mt6">{w(`about.${pick}`)}</p>
       {canPreview ? (
-        <div className="inv-preview a2-mt12">
+        <div className="inv-preview lm-island a2-mt12">
           {!hasInvoice || broken === pick ? (
             <p className="a2-xs a2-mute" data-testid="invoice-preview-none">
               {w('noPreview')}

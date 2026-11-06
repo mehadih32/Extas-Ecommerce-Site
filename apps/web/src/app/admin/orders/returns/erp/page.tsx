@@ -122,7 +122,7 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
   );
   if (!live)
     return (
-      <div className="a2-z" data-testid="erp-returns-page" data-model={overview.model}>
+      <div className="a2-z" data-testid="erp-returns-page" data-model={overview.model} data-lm-ready="">
         {head}
         <SectionTabs view={view} current={KEY} />
         <section className="a2-card" data-testid={overview.model === 'v5' ? 'erp-returns-v5' : 'erp-returns-nolink'}>
@@ -223,7 +223,7 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
   );
 
   return (
-    <div className="a2-z" data-testid="erp-returns-page" data-model="v6">
+    <div className="a2-z" data-testid="erp-returns-page" data-model="v6" data-lm-ready="">
       {head}
       <SectionTabs view={view} current={KEY} />
       <div className="a2-row a2-r21 a2-start">

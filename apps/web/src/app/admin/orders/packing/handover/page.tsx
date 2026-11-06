@@ -104,7 +104,7 @@ export default async function HandoverPage() {
   ];
 
   return (
-    <div className="a2-z" data-testid="handover-page">
+    <div className="a2-z" data-testid="handover-page" data-lm-ready="">
       <PageHead view={view} place={locateKey('packingHandover')} title={t(d, 'ful.handover.title')} sub={t(d, 'ful.handover.sub')} />
       <SectionTabs view={view} current="packingHandover" />
       <div className="a2-kpis a2-mt12" data-testid="handover-counts">

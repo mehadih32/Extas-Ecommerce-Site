@@ -103,7 +103,7 @@ export default async function RefusedParcelsPage({ searchParams }: { searchParam
   };
 
   return (
-    <div className="a2-z" data-testid="returns-refused">
+    <div className="a2-z" data-testid="returns-refused" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}

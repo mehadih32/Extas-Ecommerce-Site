@@ -138,7 +138,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
   const screen = <K extends od.InvoiceSettingKey>(k: K) => ({ key: k, value: cards[k].value as unknown as Record<string, unknown>, version: cards[k].version });
 
   return (
-    <div className="a2-z" data-testid="invoices">
+    <div className="a2-z" data-testid="invoices" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey('packingInvoices')}

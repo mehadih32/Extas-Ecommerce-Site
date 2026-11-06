@@ -30,7 +30,7 @@ export function PickTick({ dict, lineKey, state, label, sub, words, canTick }: {
         <span className="pk-txt">
           <b>{label}</b>
           <span className="a2-xs a2-mute">{sub}</span>
-          {state === 'more' ? <span className="a2-xs" style={{ color: 'var(--warn, #8a5a00)' }}>{words.more}</span> : state === 'done' ? <span className="a2-xs a2-mute">{words.done}</span> : null}
+          {state === 'more' ? <span className="a2-xs" style={{ color: 'var(--warn)' }}>{words.more}</span> : state === 'done' ? <span className="a2-xs a2-mute">{words.done}</span> : null}
         </span>
       </button>
       {err ? (
