@@ -467,6 +467,7 @@
     "queue": {
       "ordersConfirm": "Orders to confirm",
       "ordersPrepaid": "Prepaid orders to confirm (no call needed)",
+      "ordersAwaitingAdvance": "Orders waiting for their advance payment",
       "ordersReview": "Orders in review (duplicate or risk)",
       "ordersCancelRequests": "Customers asking to cancel",
       "ordersCancelPending": "Cancels waiting for the courier",
