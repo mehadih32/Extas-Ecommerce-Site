@@ -40,6 +40,7 @@ import {
   type BlogState,
 } from './model';
 import { clusterGaps } from './clusters-model';
+import { autoPlace, dayFull } from './schedule';
 
 const S = MOTHER_STORE_ID;
 type Db = PrismaClient;
@@ -314,6 +315,8 @@ export async function journalAction(db: Db, resolver: Resolver, who: JournalWho,
     if (!at || Number.isNaN(at.getTime()) || at.getTime() <= now.getTime()) throw new JournalError('INVALID_INPUT', 400, ['scheduledAt']);
     data.scheduledAt = at;
     if (!before.publishedAt) data.publishedAt = at;
+    // PR 245: never more than `blog.schedule.perDayMax` articles on one shop-time day.
+    if (await dayFull(db, resolver, at, before.id, storeId)) throw new JournalError('DAY_FULL', 409);
   }
   if (action === 'schedule' || action === 'publish') {
     const gaps = publishGaps({ title: before.title, body: before.body, slug: before.slug });
@@ -340,6 +343,8 @@ export async function journalAction(db: Db, resolver: Resolver, who: JournalWho,
   });
   await audit(db, who.actor, { storeId, action: `blog.post.${action}`, entityType: 'BlogPost', entityId: before.id, before: { status: from }, after: { status: to } }, who.ctx);
   if (action === 'pass' && to === 'SEO_CHECKED') await autoPublish(db, resolver, who, before.id, now, storeId);
+  // PR 245: not published by itself — with `blog.schedule.autoFill` on it takes the next free time on the calendar.
+  if (action === 'pass' && to === 'SEO_CHECKED') await autoPlace(db, resolver, who, before.id, now, storeId);
   return (await journalPost(db, before.id, now, storeId))!;
 }
 

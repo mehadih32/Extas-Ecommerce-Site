@@ -1,7 +1,7 @@
 // S12 · PR 239 — `blog.journal`: off as it ships, every number the owner's within its range, and its words in both
 // languages.
 import { describe, expect, it } from 'vitest';
-import { blogAiDraftSchema, blogBriefSchema, blogJournalSchema, lookup, messages, registry } from '../src/index';
+import { blogAiDraftSchema, blogScheduleSchema, blogBriefSchema, blogJournalSchema, lookup, messages, registry } from '../src/index';
 
 describe('blog.journal (PR 239)', () => {
   const spec = registry['blog.journal'];
@@ -81,6 +81,40 @@ describe('blog.aiDraft (PR 243)', () => {
     expect(ok({ dailyMax: 0 })).toBe(false);
     expect(ok({ dailyMax: 51 })).toBe(false);
     expect(ok({ enabled: true, dailyMax: 50 })).toBe(true);
+    expect(ok({ extra: 1 })).toBe(false);
+  });
+
+  it('has its words in English and Bengali', () => {
+    for (const k of [spec.labelKey, spec.helpKey ?? '']) {
+      expect(lookup(messages.en, k), k).toBeTruthy();
+      expect(lookup(messages.bn, k), k).toBeTruthy();
+    }
+  });
+});
+
+describe('blog.schedule (PR 245)', () => {
+  const spec = registry['blog.schedule'];
+
+  it('ships with placing by itself off, per store, at version 227, with a default the schema accepts', () => {
+    expect(spec.scope).toBe('store');
+    expect(spec.version).toBe(227);
+    expect(spec.default.autoFill).toBe(false);
+    expect(blogScheduleSchema.safeParse(spec.default).success).toBe(true);
+  });
+
+  it('takes only real, distinct times and keeps at least ≤ target ≤ most', () => {
+    const ok = (v: object) => blogScheduleSchema.safeParse({ ...spec.default, ...v }).success;
+    expect(ok({ slots: '08:30' })).toBe(true);
+    expect(ok({ slots: '' })).toBe(false);
+    expect(ok({ slots: '24:00' })).toBe(false);
+    expect(ok({ slots: '9:00' })).toBe(false);
+    expect(ok({ slots: '09:00, 09:00' })).toBe(false);
+    expect(ok({ perDayMin: 6, perDayTarget: 5 })).toBe(false);
+    expect(ok({ perDayTarget: 7 })).toBe(false);
+    expect(ok({ perDayMin: 1, perDayTarget: 1, perDayMax: 1 })).toBe(true);
+    expect(ok({ daysAhead: 0 })).toBe(false);
+    expect(ok({ leadMinutes: 1441 })).toBe(false);
+    expect(ok({ weekStart: 7 })).toBe(false);
     expect(ok({ extra: 1 })).toBe(false);
   });
 

@@ -22,6 +22,13 @@
 //   v226 · PR 243 `blog.aiDraft` — AI drafting from the brief (S12 answer 11), in the brief's language, one article at a
 //          time. Off as it ships, and it also needs AI for the whole shop (`ai.enabled`); until an AI provider's key is
 //          entered the practice writer serves. At most `dailyMax` drafts in a day (the last 24 hours).
+//   v227 · PR 245 `blog.schedule` — the publish calendar (C11.1 "3 a day … then 5 a day … an empty slot is never filled
+//          with a weak post"; demo 94-admin-blog.js schedule tab). The day's publishing times (`slots`, shop time zone)
+//          and how many articles a day: at least `perDayMin` (a day under it is flagged), `perDayTarget` (the fill
+//          stops there), never more than `perDayMax`. "Fill the free times" places the finished articles (SEO checked,
+//          nothing missing) in the free times of the next `daysAhead` days, never closer than `leadMinutes` from now.
+//          With `autoFill` (off as it ships) an article is placed by itself as soon as its last review step passes.
+//          The month view's week starts on `weekStart` (Saturday as it ships).
 import { z } from 'zod';
 import { setting } from './define';
 
@@ -30,6 +37,7 @@ const V242 = 223;
 const V244 = 224;
 const V528 = 225;
 const V243 = 226;
+const V245 = 227;
 
 const wpm = z.int().min(60).max(400);
 const note = z.string().trim().max(200);
@@ -189,5 +197,54 @@ export const aiDraftSettings = {
     isPublic: false,
     sortOrder: 50,
     version: V243,
+  }),
+};
+
+/** A publishing time of day, `HH:MM` (24 hours). */
+export const SLOT_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export const blogScheduleSchema = z
+  .object({
+    /** The day's publishing times, in the shop's time zone, comma separated (`09:00, 12:00`). */
+    slots: z
+      .string()
+      .trim()
+      .max(200)
+      .refine((v) => {
+        const all = v.split(',').map((x) => x.trim());
+        return all.length >= 1 && all.length <= 24 && all.every((x) => SLOT_RE.test(x)) && new Set(all).size === all.length;
+      }),
+    /** At least this many articles a day (a day under it is flagged). */
+    perDayMin: z.int().min(1).max(24),
+    /** The fill stops at this many a day. */
+    perDayTarget: z.int().min(1).max(24),
+    /** Never more than this many a day. */
+    perDayMax: z.int().min(1).max(24),
+    /** How many days ahead the fill places articles and the calendar shows free times. */
+    daysAhead: z.int().min(1).max(60),
+    /** A free time closer than this many minutes from now is not used. */
+    leadMinutes: z.int().min(0).max(1440),
+    /** Place an article in the next free time as soon as its last review step passes. */
+    autoFill: z.boolean(),
+    /** The day the calendar's week starts on (0 Sunday … 6 Saturday). */
+    weekStart: z.int().min(0).max(6),
+  })
+  .strict()
+  .refine((v) => v.perDayMin <= v.perDayTarget && v.perDayTarget <= v.perDayMax, { path: ['perDayTarget'] });
+export type BlogScheduleSettings = z.output<typeof blogScheduleSchema>;
+
+export const scheduleSettings = {
+  'blog.schedule': setting({
+    scope: 'store',
+    schema: blogScheduleSchema,
+    default: { slots: '09:00, 12:00, 15:00, 18:00, 21:00', perDayMin: 3, perDayTarget: 5, perDayMax: 6, daysAhead: 7, leadMinutes: 15, autoFill: false, weekStart: 6 },
+    valueType: 'JSON',
+    group: 'blog',
+    labelKey: 'blog.schedule.label',
+    helpKey: 'blog.schedule.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 60,
+    version: V245,
   }),
 };

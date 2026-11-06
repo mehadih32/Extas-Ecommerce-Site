@@ -47,3 +47,31 @@
 .adm2 .pl-add .a2-fld{flex:1 1 220px;min-width:0}
 .adm2 .pl-how{margin:8px 0 0;padding-inline-start:18px;display:grid;gap:6px}
 .adm2 .pl-batch{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;display:grid;gap:4px}
+/* S12 · PR 245 — Website › Blog & journal › Calendar: the days ahead, the month view and the finished articles. */
+.adm2 .cal-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.adm2 .cal-head .a2-btn,.adm2 .cal-fill .a2-btn{min-height:44px}
+.adm2 .cal-sub{overflow-wrap:anywhere}
+.adm2 .cal-bad{color:var(--bad)}
+.adm2 .cal-days{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:8px}
+@media(min-width:768px){.adm2 .cal-days{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.adm2 .cal-day{border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.adm2 .cal-dh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.adm2 .cal-rows{list-style:none;margin:0;padding:0;display:grid}
+.adm2 .cal-rows li{display:flex;align-items:center;gap:8px;min-height:44px;border-top:1px solid var(--line);min-width:0}
+.adm2 .cal-rows li.free{color:var(--ink2)}
+.adm2 .cal-time{font-variant-numeric:tabular-nums;font-size:13px;min-width:44px}
+.adm2 .cal-title{flex:1;min-width:0;display:inline-flex;align-items:center;min-height:44px;overflow-wrap:anywhere}
+.adm2 .cal-nav{display:flex;gap:6px}
+.adm2 .cal-nav .a2-btn{min-width:44px;min-height:44px;justify-content:center}
+.adm2 .cal-grid{display:grid;gap:2px;margin:10px 0 6px;overflow-x:auto}
+.adm2 .cal-row{display:grid;grid-template-columns:repeat(7,minmax(44px,1fr));gap:2px}
+.adm2 .cal-wd{text-align:center;padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm2 .cal-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:44px;min-width:44px;border-radius:8px;border:1px solid var(--line);text-decoration:none;color:inherit;font-size:13px;line-height:1.1}
+.adm2 .cal-cell.none{border-color:transparent}
+.adm2 .cal-cell.today{border-color:var(--ink)}
+.adm2 .cal-cell.on{background:var(--infobg)}
+.adm2 .cal-n{font-size:11px;font-weight:700;color:var(--ok)}
+.adm2 .cal-n.sch{color:var(--info)}
+.adm2 .cal-picked{border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
+.adm2 .cal-ready{list-style:none;margin:8px 0 0;padding:0;display:grid}
+.adm2 .cal-ready li{border-top:1px solid var(--line);padding:4px 0;display:grid;gap:4px;min-width:0}
