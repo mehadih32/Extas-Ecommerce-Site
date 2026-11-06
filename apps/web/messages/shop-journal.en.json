@@ -30,6 +30,26 @@
     "tip": "Tip:",
     "note": "Note:",
     "more": "More in {topic}",
-    "related": "Read next"
+    "related": "Read next",
+    "cm": {
+      "h": "Comments",
+      "none": "No comments yet — be the first.",
+      "write": "Leave a comment",
+      "label": "Your comment",
+      "name": "Your name",
+      "send": "Send",
+      "sending": "Sending…",
+      "note": "Every comment is checked before it shows. Please don't write phone numbers or addresses.",
+      "thanks": "Thank you! Your comment shows here once our team has checked it.",
+      "again": "We already have this comment — it shows once checked.",
+      "signIn": "Sign in to leave a comment",
+      "limit": "You've left today's comments. Please try again tomorrow.",
+      "invalid": "Please write between 2 and {n} characters.",
+      "needName": "Please write your name.",
+      "closed": "Comments are closed now.",
+      "failed": "Could not send. Please try again.",
+      "reader": "Reader",
+      "chars": "{n} of {max}"
+    }
   }
 }

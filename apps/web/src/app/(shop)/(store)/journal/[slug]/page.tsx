@@ -10,14 +10,20 @@
 // links (`blog.journal.relatedArticles`, 0 as shipped).
 // S12 · PR 250 — while `blog.performance.count` is on (off as shipped) the page tells the shop it was opened
 // (ArticleRead: the article's id and where the reader came from), for Website › Blog & journal › Performance.
+// S12 · PR 251 — while `blog.comments.on` (off as shipped: the journal runs without comments) the comments a person has
+// shown and the comment box (JournalComments); nothing a reader writes shows before a person presses Show.
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
+import { getPrisma } from '@extas/db/client';
 import { ComingSoon } from '@/components/shop/ComingSoon';
 import { JsonLd } from '@/components/shop/JsonLd';
 import { ArticleRead } from '@/components/shop/journal/ArticleRead';
+import { JournalComments } from '@/components/shop/journal/JournalComments';
 import { JournalArticle } from '@/components/shop/journal/JournalViews';
+import { shownComments } from '@/lib/journal/comments';
 import { journalArticle, journalHasOther, journalSettings } from '@/lib/journal/shop';
 import { byline } from '@/lib/journal/model';
+import { signedIn } from '@/lib/shop/account';
 import { readPageSettings, shopContext, type ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
 import { ROUTES } from '@/lib/shop/routes';
@@ -54,7 +60,9 @@ export default async function JournalPost(props: Props) {
   if (!a && (await journalHasOther(c, slug))) redirect(hrefIn(c.lang, ROUTES.journal));
   if (!a) notFound();
   const { post } = a;
-  const page = await readPageSettings(['seo.structuredData', 'blog.performance'] as const, c.storeId);
+  const page = await readPageSettings(['seo.structuredData', 'blog.performance', 'blog.comments'] as const, c.storeId);
+  const talk = page['blog.comments'];
+  const [comments, me] = talk.on ? await Promise.all([shownComments(getPrisma(), c.storeId, post.id, talk.shown), talk.who === 'signedIn' ? signedIn() : Promise.resolve(null)]) : [[], null];
   const sd = page['seo.structuredData'];
   const origin = sd.article || sd.breadcrumbs ? await shopOrigin() : undefined;
   const href = hrefIn(c.lang, ROUTES.article(post.slug));
@@ -90,6 +98,12 @@ export default async function JournalPost(props: Props) {
       <JournalArticle c={c} post={post} cards={a.cards} aiNote={a.settings.aiNote} related={a.related} />
       {/* PR 250: counted only while the owner counts readers (Website › Blog & journal › Performance) */}
       {page['blog.performance'].count ? <ArticleRead postId={post.id} /> : null}
+      {/* PR 251: only while the owner has switched comments on (Website › Blog & journal › Comments) */}
+      {talk.on ? (
+        <div className="container jn-page">
+          <JournalComments c={c} postId={post.id} slug={post.slug} settings={talk} comments={comments} canWrite={talk.who === 'anyone' || !!me} />
+        </div>
+      ) : null}
     </>
   );
 }

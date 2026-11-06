@@ -1,0 +1,17 @@
+/* S12 · PR 251 — Website › Blog & journal › Comments, drawn in Lumen: only --lm-* tokens (theme/lumen.css). */
+.cm-page { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.cm-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.cm-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 1100px) {
+  .cm-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); }
+}
+.cm-off { border-left: 4px solid var(--lm-warn); color: var(--lm-ink); }
+.cm-body { margin: 4px 0 0; color: var(--lm-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.cm-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--lm-ink2); font-size: 0.85rem; }
+.cm-meta a { color: var(--lm-ac-ink); min-height: 44px; display: inline-flex; align-items: center; }
+.cm-pill { display: inline-flex; align-items: center; border-radius: var(--lm-r-pill); padding: 2px 10px; background: var(--lm-chip); color: var(--lm-ink2); font-size: 0.8rem; font-weight: 700; }
+.cm-pill.ok { background: var(--lm-okbg); color: var(--lm-ok); }
+.cm-pill.warn { background: var(--lm-warnbg); color: var(--lm-warn); }
+.cm-how { margin: 8px 0 0; padding-left: 20px; color: var(--lm-ink2); display: flex; flex-direction: column; gap: 6px; }
+.cm-ro { color: var(--lm-ink2); margin: 0; }
+.cm-page .bd-crumb { display: inline-flex; align-items: center; min-height: 44px; color: var(--lm-ink2); }

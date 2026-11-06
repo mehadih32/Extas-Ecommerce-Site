@@ -130,6 +130,8 @@ export * from './registry-books-summary';
 export * from './registry-web-security';
 // S19 · PR 652 — the closed stages hidden by a switch (registry-closed-stages.ts, version 235).
 export * from './registry-closed-stages';
+// S12 · PR 251 — comments on articles, or the journal without comments (registry-blog-comments.ts, version 250).
+export * from './registry-blog-comments';
 // S18 · PR 379 — the quiet bot check (registry-bot-check.ts, version 74).
 export * from './registry-bot-check';
 // S18 · PR 380 — the admin address list and the new-login notes (registry-admin-access.ts, version 78).

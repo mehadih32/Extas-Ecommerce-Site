@@ -135,6 +135,8 @@ import webSecurityBn from '../messages/web-security.bn.json';
 import webSecurityEn from '../messages/web-security.en.json';
 import closedStagesBn from '../messages/closed-stages.bn.json';
 import closedStagesEn from '../messages/closed-stages.en.json';
+import blogCommentsBn from '../messages/blog-comments.bn.json';
+import blogCommentsEn from '../messages/blog-comments.en.json';
 // S18 · PR 379 (registry v74): the quiet bot check on sign-in and checkout.
 import botCheckBn from '../messages/bot-check.bn.json';
 import botCheckEn from '../messages/bot-check.en.json';
@@ -270,6 +272,9 @@ messages.en = mergeMessages(messages.en, webSecurityEn);
 messages.bn = mergeMessages(messages.bn, webSecurityBn);
 messages.en = mergeMessages(messages.en, closedStagesEn);
 messages.bn = mergeMessages(messages.bn, closedStagesBn);
+// S12 · PR 251 (registry v250): comments on articles.
+messages.en = mergeMessages(messages.en, blogCommentsEn);
+messages.bn = mergeMessages(messages.bn, blogCommentsBn);
 messages.en = mergeMessages(messages.en, botCheckEn);
 messages.bn = mergeMessages(messages.bn, botCheckBn);
 messages.en = mergeMessages(messages.en, adminAccessEn);

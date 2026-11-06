@@ -1,0 +1,8 @@
+{
+  "blog": {
+    "comments": {
+      "label": "Comments on articles",
+      "help": "Off (as shipped) means the journal runs without comments: no comment part under an article. On: a reader may leave a comment (signed in only, or anyone with a name), at most the set length and number a day. Every comment waits until a person with the publish permission shows it on Website › Blog & journal › Comments; nothing is shown by itself. A comment is hidden, never deleted."
+    }
+  }
+}

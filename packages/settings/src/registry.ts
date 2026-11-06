@@ -93,6 +93,7 @@ import { booksSummarySettings } from './registry-books-summary';
 import { seoReachSettings } from './registry-seo-reach';
 import { webSecuritySettings } from './registry-web-security';
 import { closedStageSettings } from './registry-closed-stages';
+import { blogCommentSettings } from './registry-blog-comments';
 import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
 import { erpRetailSettings } from './registry-erp-retail';
@@ -1458,6 +1459,8 @@ export const registry = {
   ...scheduleSettings,
   // PR 250 · the content performance report (registry-journal.ts, version 233).
   ...performanceSettings,
+  // PR 251 · comments on articles, off = the journal runs without comments (registry-blog-comments.ts, version 250).
+  ...blogCommentSettings,
   // ---- S12 · CN-031 lane A · PR 246 · seasonal landing pages (registry-seasonal.ts, version 228). ----
   ...seasonalSettings,
   // ---- S00 · CN-036 lane A · PR 625 · the admin theme layer: look, accent, reduce motion (registry-admin-theme.ts, version 234). ----
