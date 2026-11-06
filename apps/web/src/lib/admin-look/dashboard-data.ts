@@ -9,12 +9,15 @@
 import { Prisma, type PrismaClient } from '@extas/db/client';
 import { dayStart, daysPeriod, groupLines, kpi, kpiByDay, lines, sumLines, ymdIn, type Kpi, type LineRow, type Period } from '@extas/metrics';
 import { imageSources, type ImageSource } from '@extas/media';
+import type { AdminToday } from '@extas/settings';
 import type { QueueRow } from '../admin-shell/queues';
 import type { ShellViewer } from '../admin-shell/sections';
 import { OFF_SITE, offSiteMissing } from '../backup-gate';
 import { chartWindow, shiftDay, type DashRange } from './range';
 
-export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite'] as const;
+// PR 631 (CN-036): 'feed' (the newest orders, Lumen Today's live feed) and 'goal' (this month's Sales against the
+// monthly goal of `admin.today`, read only while the goal is on).
+export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal'] as const;
 export type DashPart = (typeof DASH_PARTS)[number];
 
 /** The keys a part needs (any one of them); the owner holds every key. */
@@ -26,6 +29,8 @@ export const PART_KEYS: Readonly<Record<DashPart, readonly string[]>> = {
   lowStock: ['inventory.read'],
   queues: [],
   offSite: ['system.read'],
+  feed: ['orders.read'],
+  goal: ['metrics.read'],
 };
 
 export const mayRead = (part: DashPart, v: ShellViewer) => v.owner || PART_KEYS[part].length === 0 || PART_KEYS[part].some((k) => v.perms.has(k));
@@ -54,6 +59,8 @@ export interface DashCtx {
   range: DashRange;
   /** The waiting lists this person may open (the shell's own count). */
   queues: () => Promise<QueueRow[]>;
+  /** PR 631: `admin.today` (the live feed's rows, the monthly goal); none = the shipped value. */
+  today?: AdminToday;
 }
 
 export interface DashMoney {
@@ -128,6 +135,29 @@ export interface LowRow {
   image: ImageSource | null;
 }
 
+/** PR 631: one of the newest orders in the live feed (no phone or address: a name, a place, an amount). */
+export interface FeedRow {
+  id: string;
+  number: string;
+  name: string | null;
+  areaEn: string | null;
+  areaBn: string | null;
+  totalMinor: number;
+  status: string;
+  placedAt: string;
+}
+
+/** PR 631: this month's Sales (delivered orders only, M1) against the monthly goal. */
+export interface DashGoal {
+  goalMinor: number;
+  salesMinor: number;
+  /** The month so far: its first day and today (shop days). */
+  from: string;
+  to: string;
+  /** Days left in the month after today. */
+  daysLeft: number;
+}
+
 export interface DashboardData {
   parts: ReadonlySet<DashPart>;
   range: DashRange;
@@ -143,6 +173,8 @@ export interface DashboardData {
    * "Off-server backup: not connected" line that is back every day until both are; empty = connected; null = not read.
    */
   offSite: ('blob' | 'drive')[] | null;
+  feed: FeedRow[] | null;
+  goal: DashGoal | null;
 }
 
 const OPEN = {
@@ -429,11 +461,42 @@ async function lowStock(c: DashCtx): Promise<LowRow[]> {
   return out.slice(0, c.s.lowStockRows);
 }
 
+const TODAY_DEFAULT: AdminToday = { liveRows: 6, goal: { on: false, amountMinor: 0 } };
+
+/** The newest orders; null when the owner switched the feed off (0 rows), so the page shows no card at all. */
+async function feed(c: DashCtx): Promise<FeedRow[] | null> {
+  const take = (c.today ?? TODAY_DEFAULT).liveRows;
+  if (take <= 0) return null;
+  const rows = await c.db.order.findMany({
+    where: { storeId: c.storeId, archivedAt: null },
+    orderBy: [{ placedAt: 'desc' }, { id: 'desc' }],
+    take,
+    select: { id: true, number: true, customerName: true, totalMinor: true, status: true, placedAt: true, area: { select: { nameEn: true, nameBn: true } } },
+  });
+  return rows.map((r) => ({ id: r.id, number: r.number, name: r.customerName?.trim() || null, areaEn: r.area?.nameEn ?? null, areaBn: r.area?.nameBn ?? null, totalMinor: r.totalMinor, status: r.status, placedAt: r.placedAt.toISOString() }));
+}
+
+/** The month of `day` (YYYY-MM-DD): its first day and how many days follow `day` in it. */
+export function monthOf(day: string): { from: string; daysLeft: number } {
+  const [y, m, d] = day.split('-').map(Number);
+  const last = new Date(Date.UTC(y!, m!, 0)).getUTCDate();
+  return { from: `${day.slice(0, 7)}-01`, daysLeft: last - d! };
+}
+
+async function goal(c: DashCtx): Promise<DashGoal | null> {
+  const g = (c.today ?? TODAY_DEFAULT).goal;
+  if (!g.on) return null;
+  const to = ymdIn(c.now, c.timeZone);
+  const { from, daysLeft } = monthOf(to);
+  const k = await kpi(c.db, c.storeId, period(c, from, to));
+  return { goalMinor: g.amountMinor, salesMinor: k.sales.itemsMinor, from, to, daysLeft };
+}
+
 export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Promise<DashboardData> {
   const parts = new Set(wanted.filter((p) => mayRead(p, c.viewer)));
   const chart = chartWindow(c.range, c.s.chartMinDays);
   const on = <T>(p: DashPart, f: () => Promise<T>): Promise<T | null> => (parts.has(p) ? f() : Promise.resolve(null));
-  const [m, st, dl, tp, ls, qs, off] = await Promise.all([
+  const [m, st, dl, tp, ls, qs, off, fd, gl] = await Promise.all([
     on('money', () => money(c, chart)),
     on('stages', () => stages(c)),
     on('delivery', () => delivery(c)),
@@ -441,6 +504,8 @@ export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Pr
     on('lowStock', () => lowStock(c)),
     on('queues', () => c.queues()),
     on('offSite', () => offSite(c)),
+    on('feed', () => feed(c)),
+    on('goal', () => goal(c)),
   ]);
-  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off };
+  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off, feed: fd, goal: gl };
 }

@@ -97,7 +97,9 @@
     { "pr": 292, "what": "the preview gate lets the WhatsApp webhook through with no login and no cookie, and the app itself refuses the wrong verify token (the gate would answer 401)", "request": { "method": "GET", "path": "/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=smoke-wrong&hub.challenge=1", "anonymous": true }, "status": 403 },
     { "pr": 292, "what": "the WhatsApp templates with Meta's word on each answer", "request": { "method": "GET", "path": "/api/admin/messages/whatsapp/templates" }, "status": 200, "field": "templates" },
     {"pr": 626, "what": "the admin draws in the Lumen look with its theme layer (CN-036, PR 625-626)", "page": "/admin?home=1", "selector": "[data-testid=a2-shell]", "attribute": "data-lm-look", "equals": "lumen"},
-    {"pr": 626, "what": "the Lumen top bar carries the bell for the notifications panel, closed until pressed (CN-036)", "page": "/admin?home=1", "selector": "[data-testid=a2-bell]", "attribute": "aria-expanded", "equals": "false"}
+    {"pr": 626, "what": "the Lumen top bar carries the bell for the notifications panel, closed until pressed (CN-036)", "page": "/admin?home=1", "selector": "[data-testid=a2-bell]", "attribute": "aria-expanded", "equals": "false"},
+    {"pr": 631, "what": "Today opens in the Lumen look (design B) and follows dark mode (CN-036)", "page": "/admin?home=1", "selector": "[data-testid=dash]", "attribute": "data-design", "equals": "B"},
+    {"pr": 631, "what": "Today's design A (the V12.4 Calm overview) still opens as a choice (CN-025, nothing deleted)", "page": "/admin?home=1&design=A", "selector": "[data-testid=dash]", "attribute": "data-design", "equals": "A"}
   ],
   "figures": [
     { "pr": 155, "path": "/admin/combos?tab=report", "selectors": ["[data-testid=cb-kpi-ordered]", "[data-testid=cb-kpi-sales]"], "value": "b" },

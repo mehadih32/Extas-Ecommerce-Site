@@ -50,9 +50,11 @@ export interface HeroChartProps {
   /** The period before's name in the read-out ("Before"). */
   prevName?: string;
   testId?: string;
+  /** An extra class on the big number (the Today page gives its figure the class the smoke test's figure check reads). */
+  numClass?: string;
 }
 
-export function HeroChart({ title, ranges, initial, format, good = 'up', seriesName, prevName, testId = 'lm-hero' }: HeroChartProps) {
+export function HeroChart({ title, ranges, initial, format, good = 'up', seriesName, prevName, testId = 'lm-hero', numClass }: HeroChartProps) {
   const { lt } = useLumen();
   const [key, setKey] = useState(initial && ranges.some((r) => r.key === initial) ? initial : (ranges[0]?.key ?? ''));
   const [at, setAt] = useState<number | null>(null);
@@ -95,7 +97,7 @@ export function HeroChart({ title, ranges, initial, format, good = 'up', seriesN
         <div className="lm-hero-h">
           <h2 id={`${uid}-t`}>{title}</h2>
           <div className="lm-hero-big">
-            <CountUp className="lm-big" value={r.total} shown={r.shown} format={format} testId={`${testId}-total`} />
+            <CountUp className={numClass ? `lm-big ${numClass}` : 'lm-big'} value={r.total} shown={r.shown} format={format} testId={`${testId}-total`} />
             <Delta x={r.delta} text={r.deltaText} good={good} vs={r.vs} />
           </div>
           {r.vs ? <p className="lm-hero-vs">{r.vs}</p> : null}

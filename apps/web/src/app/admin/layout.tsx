@@ -30,6 +30,7 @@ import './shell.css';
 import './look.css';
 import './lumen-shell.css';
 import './lumen-patterns.css';
+import './lumen-sections.css';
 import { cookies } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { adminLookSettings, adminPatternsSettings, BUILT_ADMIN_LOOKS } from '@extas/settings';

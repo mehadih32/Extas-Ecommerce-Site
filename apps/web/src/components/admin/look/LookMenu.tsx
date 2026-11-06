@@ -4,9 +4,11 @@
 // in use ticked; choosing one saves it on the person's account (PUT /api/admin/look, scope "me") and redraws the page;
 // "Use the team default" clears it; "All designs in Settings" opens Settings → Admin look. The design list shows only
 // while the team allows a personal choice (`admin.look.perPerson`). Esc or a click outside closes it.
+// PR 631 (CN-036, follow-up 670): "saved" / "could not save" is the admin's one toast (showToast), not a note of its own.
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition } from 'react';
+import { showToast } from '@/components/admin/lumen/Toast';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import type { ShellIconName } from '@/lib/admin-shell/icons';
 
@@ -55,7 +57,6 @@ export function CsvButton({ csv, label }: { csv: Csv; label: string }) {
 
 export function LookMenu(p: LookMenuProps) {
   const [open, setOpen] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
   const [busy, start] = useTransition();
   const router = useRouter();
   const path = usePathname() ?? '/admin';
@@ -92,10 +93,10 @@ export function LookMenu(p: LookMenuProps) {
         body: JSON.stringify({ scope: 'me', page: p.page, design }),
       }).catch(() => null);
       if (!res?.ok) {
-        setNote(p.labels.failed);
+        showToast({ text: p.labels.failed, tone: 'bad' });
         return;
       }
-      setNote(p.labels.saved);
+      showToast({ text: p.labels.saved, tone: 'ok' });
       // A preview (?design=) gives way to the saved choice.
       if (search?.get('design')) {
         const q = new URLSearchParams(search.toString());
@@ -111,11 +112,6 @@ export function LookMenu(p: LookMenuProps) {
       <button ref={btn} type="button" className="a3-btn ic" aria-haspopup="menu" aria-expanded={open} aria-label={p.labels.more} title={p.labels.more} onClick={() => setOpen(!open)} disabled={busy}>
         <ShellIcon name="more" size={18} stroke={2.6} />
       </button>
-      {note ? (
-        <span className="a2-sr" role="status">
-          {note}
-        </span>
-      ) : null}
       {open ? (
         <div className="a3-mpop">
           <div className="a2-menu a3-menu" role="menu" aria-label={p.labels.more}>
