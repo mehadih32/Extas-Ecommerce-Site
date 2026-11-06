@@ -431,6 +431,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'team', pages: [{ href: '/admin/reports/team', perm: 'staff.performance', keys: ['reportsTeam'] }] },
       // S16 · PR 568: Reports → Sales by area — REP-02's area part: district, upazila/thana or inside Dhaka, with returns.
       { id: 'areas', pages: [{ href: '/admin/reports/areas', perm: 'books.read', keys: ['reportsAreas'] }] },
+      // S02 · PR 83 — REP-08 Experiments: A/B tests of the shop's words and shown or hidden parts, with how sure each result is.
+      { id: 'experiments', more: true, guide: 'analytics', pages: [{ href: '/admin/reports/experiments', perm: 'reports.experiments.read', keys: ['reportsExperiments', 'reportsExperiment'] }] },
     ],
   },
   {

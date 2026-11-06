@@ -126,6 +126,8 @@
     "healthSpeed": "গতি",
     "reportsTeam": "টিম",
     "reportsAreas": "এলাকা ধরে বিক্রি",
+    "reportsExperiments": "পরীক্ষা (A/B)",
+    "reportsExperiment": "A/B পরীক্ষা",
     "healthSmoke": "স্মোক টেস্ট",
     "healthHistory": "পরীক্ষার ইতিহাস",
     "healthFixes": "অনুমতির অপেক্ষায়",

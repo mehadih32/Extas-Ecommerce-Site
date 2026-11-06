@@ -63,7 +63,8 @@
         "flags": "Flag outcomes",
         "customers": "Customers",
         "team": "Team",
-        "areas": "Sales by area"
+        "areas": "Sales by area",
+        "experiments": "Experiments"
       },
       "settings": {
         "store": "Store details",

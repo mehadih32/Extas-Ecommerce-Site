@@ -22,12 +22,19 @@
 // request with it keeps the Bengali language and path it was given (a browser cannot know the mark).
 // S13 · PR 257 follow-up (go-live gate customer 360°): a shop page asked for with campaign tags or an ad click id keeps
 // them in the shop's own cookie while `ads.attribution` is on (lib/tracking/attribution.ts); that answer is never cached.
+// S02 · PR 83: while an A/B test runs, a visitor (not a bot) who has no random id yet gets one in the bag's own cookie
+// before the page draws, so he sees the same version every time (the page reads it from a request header this once);
+// `?abPreview=<test id>.a|b` hands a preview of one test's version to the page and keeps it from page to page until the
+// browser closes (`?abPreview=off` stops it). Neither answer is ever cached.
 import { NextResponse, type NextRequest } from 'next/server';
 import { shopCacheHeaders } from './lib/cache-policy';
+import { AB_PREVIEW_COOKIE, AB_PREVIEW_HEADER, AB_PREVIEW_PARAM, AB_VISITOR_HEADER, BOT, newVisitorId, previewCookie, previewOf, visitorIdOf } from './lib/experiments/edge';
+import { liveTests, showing } from './lib/experiments/live';
 import { apiGate, pageCspHeader } from './lib/security/edge-gate';
 import { bengaliGateSends } from './lib/seo/bengali-gate';
 import { lowerCaseTarget } from './lib/seo/indexing';
 import { countRedirectHit, forwardOf, redirectTable } from './lib/seo/redirect-table';
+import { BAG_COOKIE, bagCookie } from './lib/shop/bag-model';
 import { isShopPath, LANG_HEADER, PATH_HEADER, REWRITE_MARK_HEADER, THEME_HEADER } from './lib/shop/lang';
 import { requestLang, rewriteMark } from './lib/shop/rewrite-mark';
 import { shopStoreId } from './lib/shop/store-id';
@@ -77,6 +84,40 @@ async function withAttribution(res: NextResponse, req: NextRequest): Promise<Nex
   return res;
 }
 
+/**
+ * PR 83: the A/B test headers for a shop page. A rewrite's second pass (it carries this process's mark) keeps what the
+ * first pass gave; otherwise whatever the browser sent is dropped, a preview link is handed on, and a new visitor gets
+ * his random id while a test runs. Answers the cookie to send back (or null) and whether the answer must not be kept.
+ */
+async function abHeaders(req: NextRequest, h: Headers, marked: boolean): Promise<{ cookie: string | null; noStore: boolean }> {
+  if (marked) return { cookie: null, noStore: !!(h.get(AB_VISITOR_HEADER) || h.get(AB_PREVIEW_HEADER)) };
+  h.delete(AB_VISITOR_HEADER);
+  h.delete(AB_PREVIEW_HEADER);
+  const asked = req.nextUrl.searchParams.get(AB_PREVIEW_PARAM);
+  if (asked === 'off') return { cookie: previewCookie(null), noStore: true };
+  const fromLink = previewOf(asked);
+  const preview = fromLink ?? previewOf(req.cookies.get(AB_PREVIEW_COOKIE)?.value);
+  if (preview) {
+    h.set(AB_PREVIEW_HEADER, `${preview.id}.${preview.version}`);
+    return { cookie: fromLink ? previewCookie(`${preview.id}.${preview.version}`) : null, noStore: true };
+  }
+  if (req.method !== 'GET' || visitorIdOf(req.cookies.get(BAG_COOKIE)?.value) || BOT.test(req.headers.get('user-agent') ?? '')) return { cookie: null, noStore: false };
+  const live = await liveTests(shopStoreId());
+  if (!showing(live).length) return { cookie: null, noStore: false };
+  const id = newVisitorId();
+  h.set(AB_VISITOR_HEADER, id);
+  return { cookie: bagCookie(BAG_COOKIE, id, live.cookieDays), noStore: true };
+}
+
+function withAb(res: NextResponse, ab: { cookie: string | null; noStore: boolean }): NextResponse {
+  if (ab.cookie) res.headers.append('set-cookie', ab.cookie);
+  if (ab.noStore) {
+    res.headers.set('cache-control', 'private, no-store');
+    res.headers.set('cdn-cache-control', 'no-store');
+  }
+  return res;
+}
+
 export async function proxy(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
   if (pathname.startsWith('/api/') || pathname.startsWith('/erp-api/')) return gateApi(req);
@@ -108,14 +149,15 @@ export async function proxy(req: NextRequest) {
   const theme = searchParams.get('theme');
   if (theme && /^[a-z]{1,20}$/.test(theme)) h.set(THEME_HEADER, theme);
   else h.delete(THEME_HEADER);
+  const ab = await abHeaders(req, h, req.headers.get(REWRITE_MARK_HEADER) === rewriteMark());
   h.delete(REWRITE_MARK_HEADER);
   if (lang === 'bn' && pathname !== path) {
     h.set(REWRITE_MARK_HEADER, rewriteMark());
     const url = req.nextUrl.clone();
     url.pathname = path;
-    return withAttribution(withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h } }), req)), req);
+    return withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h } }), req)), ab), req);
   }
-  return withAttribution(withPageCsp(withCacheHeaders(NextResponse.next({ request: { headers: h } }), req)), req);
+  return withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.next({ request: { headers: h } }), req)), ab), req);
 }
 
 export const config = {

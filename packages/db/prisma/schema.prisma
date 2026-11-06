@@ -2141,7 +2141,10 @@ model LabelEntry {
   @@unique([storeId, namespace, key])
 }
 
-/// @stage S02 · PR 83 — an A/B test (off by default).
+/// @stage S02 · PR 83 — an A/B test (off by default; the module's switch is `experiments.module`). Version A is the shop as
+/// it is; `variants` = { b: { eye: { <eye-toggle id>: shown }, words: { <word key>: { en?, bn? } } } } — words and shown or
+/// hidden parts only, never a price, a discount, COD or a delivery charge (apps/web lib/experiments/model.ts).
+/// `split` = { b: <share of visitors in %> }; `goalEvent` = addToBag | order. Archived, never deleted.
 model AbTest {
   id         String       @id @default(uuid(7)) @db.Uuid
   storeId    Int
@@ -2155,6 +2158,8 @@ model AbTest {
   startsAt   DateTime?    @db.Timestamptz(3)
   endsAt     DateTime?    @db.Timestamptz(3)
   archivedAt DateTime?    @db.Timestamptz(3)
+  /// PR 83: the version a finished test kept ("a" or "b"); null while it runs or when it ended with no winner.
+  winner     String?
   createdAt  DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt  DateTime     @updatedAt @db.Timestamptz(3)
 
