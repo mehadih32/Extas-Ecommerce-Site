@@ -34,6 +34,11 @@
 #      no report at all;
 #    - `gate-orders.sh --sweep <out-dir>` is the workflow's last step (if: always(), so also after a cancelled job): the
 #      same start check once more, said in the report when it found anything.
+# 7. Follow-up 668 (CN-036): GATE_PLAN=simulation runs the 70 orders of the real-life journey simulation
+#    (tools/simulation, .github/workflows/simulation.yml) on this same machinery instead of the gate's 18 scenarios:
+#    the same host guard, oracle, grant, safety net and clean-up; at most SIMULATION_TIMEOUT_MIN minutes (server.conf);
+#    its summary goes to state/simulation.json (the go-live page's evidence beside its "simulation" row), and its
+#    report adds orders.md (every order's address round trip and timings).
 # <out-dir> gets README.md, result.json and a picture of each failed scenario; state/gate-orders.json the summary. No
 # password, token, sign-in code or connection string is printed or kept. Exit 0 = passed (or nothing could run, with
 # the reason in the report); 1 = a scenario or the clean-up failed; 2 = refused (wrong use, or the host guard).
@@ -49,6 +54,12 @@ OUT="${1:?usage: gate-orders.sh [--sweep] <out-dir> [all|1,5,7] [<commit sha>]}"
 ASKED="${2:-all}"
 SHA="${3:-}"
 ALLOW_COD="no"; [ "${GATE_ALLOW_COD:-no}" = yes ] && ALLOW_COD="yes"
+PLAN="${GATE_PLAN:-gate}"
+case "$PLAN" in
+  gate) PLAN_STATE=gate-orders.json; PLAN_TITLE="Go-live gate — test orders on the preview site"; limit_min="${GATE_ORDERS_TIMEOUT_MIN:-120}" ;;
+  simulation) PLAN_STATE=simulation.json; PLAN_TITLE="The 70-order simulation on the preview site"; limit_min="${SIMULATION_TIMEOUT_MIN:-240}" ;;
+  *) echo "usage: GATE_PLAN is gate or simulation" >&2; exit 2 ;;
+esac
 R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
 IMG="extas-smoke:$SMOKE_PLAYWRIGHT_VERSION"
 PORT=8790
@@ -88,6 +99,7 @@ oracle_up=""
 shop_pid=""
 start_note=""
 at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
+at_iso="$(TZ="$EXTAS_TIMEZONE" date -Iseconds)"   # the go-live page's time (state/<plan>.json `iso`)
 
 # ---- the report's "Safety net" (live run 2): what happened to the owner's cash on delivery and the run's grant ----
 
@@ -99,8 +111,8 @@ ensure_report() {
     cp "$work/out/README.md" "$work/out/result.json" "$OUT/"
     return 0
   fi
-  printf '# Go-live gate — test orders on the preview site\n\n**সারকথা:** পরীক্ষা শেষ হয়নি — নিচে দেখুন।\n\n- The run stopped before the browser run wrote its report.\n' > "$OUT/README.md"
-  jq -n --arg at "$at" '{kind: "gate-orders", at: $at, ok: false, scenarios: 0, passed: 0, failed: 0, skipped: 0, orders: 0, started: false, problems: ["the run stopped before the browser run wrote its report"]}' > "$OUT/result.json"
+  printf '# %s\n\n**সারকথা:** পরীক্ষা শেষ হয়নি — নিচে দেখুন।\n\n- The run stopped before the browser run wrote its report.\n' "$PLAN_TITLE" > "$OUT/README.md"
+  jq -n --arg at "$at" --arg kind "$([ "$PLAN" = gate ] && echo gate-orders || echo "$PLAN")" '{kind: $kind, at: $at, ok: false, scenarios: 0, passed: 0, failed: 0, skipped: 0, orders: 0, started: false, problems: ["the run stopped before the browser run wrote its report"]}' > "$OUT/result.json"
 }
 
 # Appends the Safety net lines to README.md and result.json (`safetyNet`): cash on delivery and the test-pay grant,
@@ -186,7 +198,6 @@ mkdir -p "$OUT" "$STATE" "$work/out" "$work/net"
 chown "${GATE_IMAGE_UID:-1000}:${GATE_IMAGE_UID:-1000}" "$work/net"   # the migrate image runs as `node`
 
 # ---- 2. the oracle: the database address (the app's own role once it has one, as erp-acceptance.sh), a random token ----
-limit_min="${GATE_ORDERS_TIMEOUT_MIN:-120}"
 [[ "$limit_min" =~ ^[0-9]{1,3}$ ]] || limit_min=120
 token="$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 pay_token="$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
@@ -253,9 +264,9 @@ if ! docker image inspect "$IMG" >/dev/null 2>&1; then
 fi
 
 # ---- 3. the browser run, on the run's own network only (no database network, no database address) ----
-log "test orders on https://$preview (scenarios: $ASKED; cash on delivery for the run: $ALLOW_COD), at most $limit_min min"
+log "test orders on https://$preview ($PLAN: $ASKED; cash on delivery for the run: $ALLOW_COD), at most $limit_min min"
 rc=0
-timeout "$((limit_min * 60))" docker run --rm --name "extas-gate-shop-$$" --ipc=host --network "$net" --env-file "$work/shop.env" -e BASE="https://$preview" -e GATE_PREVIEW_HOST="$preview" -e GATE_EXTRA_HOSTS="${EXTAS_EXTRA_HOSTS:-}" -e GATE_ORACLE_URL="http://$oracle:$PORT" -e GATE_SCENARIOS="$ASKED" -e GATE_OUT=/out -e GATE_RUN_ID="$run_id" -e GATE_SHA="${SHA:0:12}" -e GATE_AT="$at ($EXTAS_TIMEZONE)" -e GATE_LHRC=/w/lighthouserc.json -v "$REPO/tools:/w/tools:ro" -v "$REPO/lighthouserc.json:/w/lighthouserc.json:ro" -v "$work/out:/out" "$IMG" node /w/tools/gate-orders/shop.mjs &
+timeout "$((limit_min * 60))" docker run --rm --name "extas-gate-shop-$$" --ipc=host --network "$net" --env-file "$work/shop.env" -e BASE="https://$preview" -e GATE_PREVIEW_HOST="$preview" -e GATE_EXTRA_HOSTS="${EXTAS_EXTRA_HOSTS:-}" -e GATE_ORACLE_URL="http://$oracle:$PORT" -e GATE_SCENARIOS="$ASKED" -e GATE_PLAN="$PLAN" -e GATE_OUT=/out -e GATE_RUN_ID="$run_id" -e GATE_SHA="${SHA:0:12}" -e GATE_AT="$at ($EXTAS_TIMEZONE)" -e GATE_LHRC=/w/lighthouserc.json -v "$REPO/tools:/w/tools:ro" -v "$REPO/lighthouserc.json:/w/lighthouserc.json:ro" -v "$work/out:/out" "$IMG" node /w/tools/gate-orders/shop.mjs &
 shop_pid=$!   # in the background and waited for, so SIGINT/SIGTERM reach the trap at once, not after the browser run
 wait "$shop_pid" || rc=$?
 shop_pid=""
@@ -269,8 +280,8 @@ if [ ! -f "$work/out/result.json" ] || [ "$(jq -r 'if .started == true then (.cl
   oracle_run --rm --name "$oracle" -- --cleanup --out /out/cleanup.json || true
   browser_rc="$rc"; rc=1   # a run that needed the safety net failed, whatever the browser's own exit was
   if [ ! -f "$work/out/result.json" ]; then
-    printf '# Go-live gate — test orders on the preview site\n\n**সারকথা:** পরীক্ষা শেষ হয়নি; সব টেস্ট অর্ডার বাতিল করার চেষ্টা হয়েছে — নিচে দেখুন।\n\n- The browser run ended without a report (exit %s).\n' "$browser_rc" > "$work/out/README.md"
-    jq -n --arg at "$at" --argjson rc "$browser_rc" '{kind: "gate-orders", at: $at, ok: false, scenarios: 0, passed: 0, failed: 0, skipped: 0, orders: 0, started: true, problems: ["the browser run ended without a report (exit \($rc))"]}' > "$work/out/result.json"
+    printf '# %s\n\n**সারকথা:** পরীক্ষা শেষ হয়নি; সব টেস্ট অর্ডার বাতিল করার চেষ্টা হয়েছে — নিচে দেখুন।\n\n- The browser run ended without a report (exit %s).\n' "$PLAN_TITLE" "$browser_rc" > "$work/out/README.md"
+    jq -n --arg at "$at" --argjson rc "$browser_rc" --arg kind "$([ "$PLAN" = gate ] && echo gate-orders || echo "$PLAN")" '{kind: $kind, at: $at, ok: false, scenarios: 0, passed: 0, failed: 0, skipped: 0, orders: 0, started: true, problems: ["the browser run ended without a report (exit \($rc))"]}' > "$work/out/result.json"
   elif [ "$(jq -r '.finished // true' "$work/out/result.json")" = false ]; then
     printf '\n- The browser run stopped after the scenarios above (exit %s); the report is what it had written by then.\n' "$browser_rc" >> "$work/out/README.md"
   fi
@@ -283,7 +294,8 @@ if [ ! -f "$work/out/result.json" ] || [ "$(jq -r 'if .started == true then (.cl
   fi
 fi
 cp "$work/out/README.md" "$work/out/result.json" "$OUT/"
+[ ! -f "$work/out/orders.md" ] || cp "$work/out/orders.md" "$OUT/"   # the simulation's order details
 find "$work/out" -maxdepth 1 -name 'scenario-*.jpg' -size -400k -exec cp {} "$OUT/" \;   # a picture of each failed scenario
-jq -c --argjson rc "$rc" '{at, exit: $rc, ok, scenarios, passed, failed, skipped, orders, cleanup: (.cleanup.ok // false)}' "$OUT/result.json" > "$STATE/gate-orders.json"
+jq -c --argjson rc "$rc" --arg iso "$at_iso" --arg sha "${SHA:0:12}" '{at, iso: $iso, sha: $sha, exit: $rc, ok, scenarios, passed, failed, skipped, orders, cleanup: (.cleanup.ok // false)} + (if .simulation then {planned: .simulation.planned} else {} end)' "$OUT/result.json" > "$STATE/$PLAN_STATE"
 log "$(jq -r '"\(if .ok then "PASS" else "FAIL" end): \(.passed) passed, \(.failed) failed, \(.skipped) skipped, \(.orders) test orders"' "$OUT/result.json")"
 exit "$rc"

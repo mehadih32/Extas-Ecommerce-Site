@@ -14,7 +14,8 @@
 //      GATE_SCENARIOS (all | 1,5,7), GATE_OUT, GATE_RUN_ID, GATE_SHA, GATE_AT, GATE_LHRC (lighthouserc.json),
 //      SMOKE_HTTP_USER / SMOKE_HTTP_PASSWORD (the preview login), GATE_PAY_TOKEN (the run's random token: its own
 //      browser's cookie for the run's mock-payment grant, lib/run-grant.mjs), CHROMIUM_PATH (optional), GATE_LOOPBACK=1
-//      (a developer's local proof on 127.0.0.1 only; never set on the server).
+//      (a developer's local proof on 127.0.0.1 only; never set on the server), GATE_PLAN (gate | simulation: which
+//      scenario set runs, below).
 // Live run 1 Nov: cash on delivery is the owner's switch and the practice gateway's page is closed for everyone, so the
 // run pays on the mock bKash through its own grant (the oracle's openRun; closed by the clean-up and the shell's trap),
 // and a scenario that needs cash on delivery is a SKIP ("COD is off (owner's setting)") unless the owner ran it with
@@ -34,6 +35,22 @@ import { addItem, choosePay, fillDetails, inLang, openCheckout, openShopper, pay
 import { addressBook, coverage, DATA, PHONE_FORMATS, seedOf, testName, testPhone, typedPhone } from "./lib/test-data.mjs";
 import { budgetOf, overBudget, scenarioVerdict, skip } from "./lib/verdict.mjs";
 import { GATE_CHECKS, pickScenarios, SCENARIOS, unreachedGate } from "./scenarios.mjs";
+
+/**
+ * Follow-up 668 (CN-036): the scenario set of a run. `gate` (the default) is the go-live gate's 18 scenarios with its six
+ * gate checks; `simulation` is the 70 orders of the real-life journey simulation (tools/simulation, the workflow
+ * simulation.yml) on the same machinery: the host guard, the oracle, the run's grant, the owner's cash-on-delivery
+ * safety net and the clean-up are the same; only the scenarios and the report differ.
+ */
+export async function planOf(name) {
+  const n = String(name ?? "").trim() || "gate";
+  if (n === "gate") return { kind: "gate-orders", SCENARIOS, GATE_CHECKS, pickScenarios, unreachedGate, coverageGoal: true, range: `1–${SCENARIOS.length}`, writeReport };
+  if (n === "simulation") {
+    const [{ PLAN }, { writeSimulationReport }] = await Promise.all([import("../simulation/scenarios.mjs"), import("../simulation/report.mjs")]);
+    return { ...PLAN, writeReport: writeSimulationReport };
+  }
+  throw new Error(`no scenario set "${n}" (gate or simulation)`);
+}
 
 const require = createRequire(import.meta.url);
 const log = (s) => console.log(`[gate-orders ${new Date().toISOString().slice(11, 19)}] ${s}`);
@@ -101,17 +118,27 @@ export async function runGate(env = process.env) {
     log(`stray: ${errLine(e)}`);
   };
   process.on("unhandledRejection", stray);
+  let plan;
+  try {
+    plan = await planOf(env.GATE_PLAN);
+  } catch (e) {
+    plan = await planOf("gate");
+    run.problems.push(`refused to start: ${errLine(e)}`);
+    plan.refused = true;
+  }
+  plan.reset?.();
+  run.plan = plan.kind;
   run.save = () => {
     if (!env.GATE_OUT) return;
     try {
-      writeReport(env.GATE_OUT, run, secrets);
+      plan.writeReport(env.GATE_OUT, run, secrets);
     } catch (e) {
       log(`the report could not be written: ${errLine(e)}`);
     }
   };
   let exit;
   try {
-    exit = await gateRun(env, run, secrets);
+    exit = plan.refused ? STOPPED : await gateRun(env, run, secrets, plan);
   } catch (e) {
     run.problems.push(`the run stopped: ${errLine(e)}`);
     exit = STOPPED;
@@ -123,7 +150,7 @@ export async function runGate(env = process.env) {
   return exit;
 }
 
-async function gateRun(env, run, secrets) {
+async function gateRun(env, run, secrets, plan) {
   const runId = String(env.GATE_RUN_ID || run.at.replace(/\D/g, "").slice(0, 12));
   const finish = (code) => code;
 
@@ -167,8 +194,8 @@ async function gateRun(env, run, secrets) {
   const sw = f.switches;
   // an earlier run's open test orders are cancelled first (on the mocks), whatever this run can do
   let prep = await oracle.call("prepare", { setUp: false }, { timeoutMs: 300_000 });
-  const { picked, unknown } = pickScenarios(env.GATE_SCENARIOS);
-  for (const id of unknown) run.problems.push(`no scenario "${id}" (the list is 1–18)`);
+  const { picked, unknown } = plan.pickScenarios(env.GATE_SCENARIOS);
+  for (const id of unknown) run.problems.push(`no scenario "${id}" (the list is ${plan.range})`);
   if (prep.leftovers?.cancelled) run.problems.push(`an earlier run left ${prep.leftovers.cancelled} open test order(s): cancelled first`);
   if (prep.earlierRuns?.closed) run.problems.push(`an earlier run left its mock-payment grant open: closed first${prep.earlierRuns.codRestored ? " and cash on delivery put back" : ""}`);
   for (const n of prep.earlierRuns?.notes ?? []) run.problems.push(n);
@@ -183,7 +210,7 @@ async function gateRun(env, run, secrets) {
   if (policy.blockAll || !pay || !picked.length) {
     const why = policy.blockAll ?? (!pay ? way.why : "no scenario asked");
     for (const s of picked) run.rows.push({ id: s.id, title: s.title, device: s.device, network: s.network, verdict: "SKIP", orders: [], addresses: [], checks: [skip("run", why)], timed: [] });
-    for (const [id, what] of Object.entries(GATE_CHECKS)) run.gateChecks.push({ id, what, verdict: "SKIP", detail: why });
+    for (const [id, what] of Object.entries(plan.GATE_CHECKS)) run.gateChecks.push({ id, what, verdict: "SKIP", detail: why });
     const closed = grant ? await oracle.call("closeRun").catch((e) => ({ ok: false, notes: [errLine(e)] })) : { ok: true, notes: [] };
     run.cleanup = { ...prep.leftovers, ok: (prep.leftovers?.ok ?? true) && closed.ok !== false, productsArchived: 0, extrasArchived: 0, salesOk: true, salesDetail: "no order placed", notes: closed.notes ?? [] };
     return finish(0);
@@ -214,7 +241,7 @@ async function gateRun(env, run, secrets) {
       // a scenario about cash on delivery waits for the owner's switch (or a run with allow_cod)
       if (s.cod && pay !== "cod") {
         row.checks = [skip("run", COD_OFF)];
-        for (const id of s.gates ?? []) gates.set(String(id), { id: String(id), what: GATE_CHECKS[id], verdict: "SKIP", detail: COD_OFF });
+        for (const id of s.gates ?? []) gates.set(String(id), { id: String(id), what: plan.GATE_CHECKS[id], verdict: "SKIP", detail: COD_OFF });
         continue;
       }
       log(`scenario ${s.id}: ${s.title} (${s.device}, ${s.network})`);
@@ -236,7 +263,7 @@ async function gateRun(env, run, secrets) {
           customers += 1;
           return { n: customers, phone: testPhone(seed, customers) };
         },
-        gate: (id, c) => gates.set(String(id), { id: String(id), what: GATE_CHECKS[id], verdict: c.verdict, detail: c.detail }),
+        gate: (id, c) => gates.set(String(id), { id: String(id), what: plan.GATE_CHECKS[id], verdict: c.verdict, detail: c.detail }),
         booked: (number, facts) => {
           const p = placed.get(number);
           if (p && facts?.booked !== false) p.booked = facts;
@@ -374,10 +401,12 @@ async function gateRun(env, run, secrets) {
         run.problems.push(`order ${number}: ${errLine(e)}`);
       }
     }
-    run.coverage = coverage(book.used().map((id) => DATA.addresses.find((a) => a.id === id)));
+    // the simulation's rows name their own addresses (used again, as real customers do): its coverage is theirs
+    const usedIds = plan.coverageGoal ? book.used() : [...new Set(run.rows.flatMap((r) => r.addresses ?? []))];
+    run.coverage = coverage(usedIds.map((id) => DATA.addresses.find((a) => a.id === id)).filter(Boolean));
     // the owner's ask: every division and 12+ districts outside Dhaka (said when a full run fell short)
     const goal = DATA.coverageGoal;
-    if (picked.length === SCENARIOS.length && (run.coverage.divisions.length < goal.divisions || run.coverage.outsideDistricts.length < goal.outsideDistricts)) {
+    if (plan.coverageGoal && picked.length === plan.SCENARIOS.length && (run.coverage.divisions.length < goal.divisions || run.coverage.outsideDistricts.length < goal.outsideDistricts)) {
       run.problems.push(`the addresses reached ${run.coverage.divisions.length} of ${goal.divisions} divisions and ${run.coverage.outsideDistricts.length} districts outside Dhaka (asked: ${goal.outsideDistricts} or more)`);
     }
     // an address row that fails fails its scenario too
@@ -388,7 +417,7 @@ async function gateRun(env, run, secrets) {
         row.verdict = scenarioVerdict(row.checks);
       }
     }
-    for (const [id, what] of Object.entries(GATE_CHECKS)) run.gateChecks.push(gates.get(id) ?? unreachedGate(id, what, picked.map((s) => s.id), run.rows));
+    for (const [id, what] of Object.entries(plan.GATE_CHECKS)) run.gateChecks.push(gates.get(id) ?? plan.unreachedGate(id, what, picked.map((s) => s.id), run.rows));
   } finally {
     await browser.close().catch(() => null);
     // ---- 5. the clean-up: every test order cancelled, the test products archived; then the sales check ----

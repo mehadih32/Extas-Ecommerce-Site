@@ -88,6 +88,8 @@ function actions(o: Oracle): Record<string, (b: Json) => Promise<unknown>> {
     stock: (b) => o.stock(strs(b.variantIds, 'variantIds')),
     setStock: (b) => o.setStock(str(b.variantId, 'variantId'), Math.max(0, Math.min(1000, Math.floor(Number(b.qty) || 0)))),
     book: (b) => o.book(str(b.number, 'number')),
+    // follow-up 668 (the simulation): read only, which couriers the shop has and which are switched on
+    couriers: () => o.couriers(),
     check1: (b) => o.check1(str(b.number, 'number')),
     check4: (b) => o.check4(str(b.number, 'number'), str(b.variantId, 'variantId')),
     check21: (b) => o.check21(str(b.number, 'number'), str(b.phone, 'phone'), str(b.since, 'since')),
