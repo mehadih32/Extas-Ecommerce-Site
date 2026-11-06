@@ -27,7 +27,7 @@
     "place": {
       "home": "Home page",
       "product": "Product page",
-      "checkout": "Checkout and thank-you page"
+      "checkout": "Bag, checkout and thank-you page"
     },
     "card": {
       "h": "Settings",
