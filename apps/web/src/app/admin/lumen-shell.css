@@ -26,7 +26,8 @@
 .lm-shell .lm-it { flex: 1; min-width: 0; display: flex; align-items: center; gap: 11px; padding: 8px 10px; min-height: 40px; border-radius: var(--lm-r-ctl); color: var(--lm-ink2); font-weight: 600; font-size: 0.93rem; position: relative; transition: background var(--lm-t-fast), color var(--lm-t-fast); }
 .lm-shell .lm-it:hover { background: var(--lm-sf2); color: var(--lm-ink); }
 .lm-shell .lm-it.on { background: var(--lm-acbg); color: var(--lm-ac-ink); }
-.lm-shell .lm-nl { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* PR 626 follow-up: a long label (Bengali at 1024 px) wraps to a second line instead of being cut off. */
+.lm-shell .lm-nl { flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; line-height: var(--lm-lh-tight); }
 .lm-shell .lm-bd { margin-left: auto; background: var(--lm-brand); color: var(--lm-on-ac); border-radius: var(--lm-r-pill); font-size: 0.72rem; font-style: normal; padding: 0 7px; min-width: 20px; text-align: center; font-weight: 700; line-height: 1.6; }
 .lm-shell .lm-chv { flex: none; width: 28px; height: 32px; border-radius: var(--lm-r-sm); display: grid; place-items: center; color: var(--lm-ink2); transition: transform var(--lm-t); }
 .lm-shell .lm-chv:hover { background: var(--lm-sf2); color: var(--lm-ink); }

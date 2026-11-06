@@ -38,6 +38,7 @@
   --lm-fs-h1-phone: 1.5rem;
   --lm-fs-big: 3.4rem;
   --lm-fs-big-phone: 2.4rem;
+  --lm-lh-tight: 1.25; /* a label that wraps to two lines (sidebar) */
   /* motion (0s under "Reduce motion") */
   --lm-t-fast: 0.15s;
   --lm-t: 0.25s;
