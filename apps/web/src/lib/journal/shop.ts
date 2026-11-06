@@ -14,7 +14,7 @@ import { liveCardsByIds, type ShopCard } from '@/lib/shop/catalogue';
 import { readPageSettings, type ShopContext } from '@/lib/shop/context';
 import { pageAds, type ShopAd } from './house-ads';
 import type { HouseAdSlot } from './house-ads-model';
-import { liveCategories, liveJournal, livePost, liveRelated, liveTwinSlug, type LivePost } from './journal';
+import { liveCategories, liveJournal, livePost, liveRelated, liveTwinSlug, switchTarget, type LivePost } from './journal';
 
 export const journalSettings = async (storeId: number) => (await readPageSettings(['blog.journal'] as const, storeId))['blog.journal'];
 
@@ -60,7 +60,7 @@ export const journalArticle = cache(async (c: ShopContext, slug: string): Promis
   return { post, cards, settings: s, twin, related };
 });
 
-/** Whether the other language has a live article at this link (the language switch's target). */
+/** Whether the other language has a live article at this link (the switch's target until follow-up 659: journalSwitchTarget). */
 export async function journalHasOther(c: ShopContext, slug: string): Promise<boolean> {
   return !!(await livePost(getPrisma(), c.storeId, c.lang === 'bn' ? 'en' : 'bn', slug));
 }
@@ -87,3 +87,6 @@ export async function journalAds(c: ShopContext, on: { post?: Pick<LivePost, 'id
   const searchWords = organic ? organic.sources.filter((x) => x.kind === 'search').flatMap((x) => [...x.match]) : [];
   return { list: ads, searchWords, searchGuard: set.searchGuard };
 }
+
+/** Follow-up 659: the language switch's landing — the other language's article at this link and its live twin here. */
+export const journalSwitchTarget = (c: ShopContext, slug: string) => switchTarget(getPrisma(), c.storeId, c.lang, slug);
