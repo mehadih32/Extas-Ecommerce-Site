@@ -15,6 +15,7 @@ import { adminDeps, errorResponse, fail, guardAdmin, json, readCookie, type Admi
 import { ADMIN_LANG_COOKIE, adminLocale, pickAdminLang, type AdminLang } from '../admin-i18n';
 import { loginNotes } from '../admin-security/login-notes';
 import { lateChatNotes } from '../admin-support/late-notes';
+import { seasonalNotes } from '../marketing/seasonal-notes';
 import { guideDir, readGuide, readPageGuide } from './guide';
 import { guidePlace, PAGE_GUIDE_ID, sectionOfGuide, sectionPages } from './help-pages';
 import { todoItems } from './model';
@@ -95,22 +96,23 @@ export async function notificationsHandler(request: Request, deps: AdminDeps | n
   // No staff notification store yet (approvals, failed syncs and backups, mentions arrive with their PRs). PR 380: the
   // people who may see security (`security.read`) get the new-device staff sign-ins of the last
   // `security.newLoginNoteDays` days. PR 431: the people who may read support get their late chats (support.tickets).
-  // Everyone else an honest empty list, never a sample.
+  // Follow-up 650 (PR 280): the people who may see marketing get the seasonal home windows' starts and ends
+  // (`marketing.seasonalHome.notes`, off as shipped). Everyone else an honest empty list, never a sample.
   const security = c.viewer.owner || c.viewer.perms.has('security.read');
   const support = c.viewer.owner || c.viewer.perms.has('support.read');
-  if (!security && !support) return json({ ok: true, items: [], unread: 0, source: 'none' });
+  const marketing = c.viewer.owner || c.viewer.perms.has('marketing.campaigns.read');
+  if (!security && !support && !marketing) return json({ ok: true, items: [], unread: 0, source: 'none' });
   try {
     const lang = await langOf(request, c.deps);
-    const [late, logins] = await Promise.all([
+    const clock = security || marketing ? Promise.all([c.deps.resolver.value('store.locale', { storeId: MOTHER_STORE_ID }) as Promise<string>, c.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }) as Promise<string>]).then(([locale, timeZone]) => ({ locale: adminLocale(lang, locale), timeZone })) : null;
+    const [late, logins, seasonal] = await Promise.all([
       support ? lateChatNotes(c.deps, c.g, lang) : [],
-      security
-        ? Promise.all([c.deps.resolver.value('store.locale', { storeId: MOTHER_STORE_ID }) as Promise<string>, c.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }) as Promise<string>]).then(([locale, timeZone]) =>
-            loginNotes(c.deps, lang, { locale: adminLocale(lang, locale), timeZone }),
-          )
-        : [],
+      security && clock ? clock.then((o) => loginNotes(c.deps, lang, o)) : [],
+      marketing && clock ? clock.then((o) => seasonalNotes(c.deps, lang, o)) : [],
     ]);
-    const items = [...late, ...logins];
-    const source = late.length && logins.length ? 'mixed' : late.length ? 'support' : logins.length ? 'security' : 'none';
+    const items = [...late, ...logins, ...seasonal];
+    const kinds = [late.length ? 'support' : '', logins.length ? 'security' : '', seasonal.length ? 'marketing' : ''].filter(Boolean);
+    const source = kinds.length > 1 ? 'mixed' : (kinds[0] ?? 'none');
     return json({ ok: true, items, unread: items.length, source });
   } catch (e) {
     return errorResponse(e);

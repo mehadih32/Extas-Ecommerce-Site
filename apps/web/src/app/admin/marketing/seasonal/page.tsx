@@ -8,7 +8,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { HOME_SECTIONS } from '@extas/settings';
+import { HOME_SECTIONS, SEASONAL_NOTE_DAYS } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { SeasonalAct, SeasonalLookEditor, SeasonalSaveForm, SeasonalWindowForm, type SeasonalFormTexts } from '@/components/admin/marketing/SeasonalForms';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
@@ -68,6 +68,13 @@ export default async function SeasonalHomePage() {
   const c = (k: string) => g(`card.${k}`);
   const cardTexts: FieldsCardTexts = { h: c('h'), d: c('d'), save: c('save'), saving: c('saving'), saved: c('saved'), discard: c('discard'), unsaved: c('unsaved'), readOnly: c('readOnly'), pairHelp: c('pairHelp'), err };
   const cardFields: FieldsCardField[] = [{ kind: 'switch', path: 'enabled', label: c('on'), help: c('onHelp') }];
+  // follow-up 650: the bell notes' card (`marketing.seasonalHome.notes`, off as shipped)
+  const nc = (k: string) => g(`notesCard.${k}`);
+  const notesTexts: FieldsCardTexts = { ...cardTexts, h: nc('h'), d: nc('d') };
+  const notesFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: nc('on'), help: nc('onHelp') },
+    { kind: 'number', path: 'days', label: nc('days'), help: nc('daysHelp'), min: SEASONAL_NOTE_DAYS.min, max: SEASONAL_NOTE_DAYS.max },
+  ];
   const secNames = Object.fromEntries(HOME_SECTIONS.map((id) => [id, g(`sec.${id}`)]));
   const collName = (slug: string | null) => {
     if (!slug) return g('look.collNone');
@@ -200,6 +207,9 @@ export default async function SeasonalHomePage() {
 
       <div className="a2-mt12">
         <FieldsCard url={API} screen={{ key: o.card.key, value: o.card.value, version: o.card.version }} fields={cardFields} texts={cardTexts} canEdit={canWrite} testId="sh-card" />
+      </div>
+      <div className="a2-mt12">
+        <FieldsCard url={API} screen={{ key: o.notesCard.key, value: o.notesCard.value, version: o.notesCard.version }} fields={notesFields} texts={notesTexts} canEdit={canWrite} testId="sh-notes-card" />
       </div>
     </div>
   );

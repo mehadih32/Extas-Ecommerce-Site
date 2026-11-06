@@ -131,6 +131,14 @@
       "pairHelp": "Both languages, or both empty.",
       "on": "Seasonal home switching",
       "onHelp": "On: scheduled looks show on the home page inside their windows. Off: the home page is always your usual one, and nothing new can be scheduled."
+    },
+    "notesCard": {
+      "h": "Notes in the bell",
+      "d": "A note in the admin's bell when a window starts and when it ends or is stopped, for the people who may see marketing. Off as it ships.",
+      "on": "Notes in the bell",
+      "onHelp": "On: when a window starts (the home page shows its look) and when it ends or is stopped (your own home page again), a note appears in the bell. Only while seasonal home switching is on.",
+      "days": "Days",
+      "daysHelp": "How many days each note stays in the bell."
     }
   }
 }

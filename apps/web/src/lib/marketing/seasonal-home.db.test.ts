@@ -15,6 +15,8 @@ import type { AdminDeps } from '../admin-auth';
 import { defaultShopSettings, type ShopContext } from '../shop/context';
 import { seasonalHome } from '../shop/seasonal-home';
 import { seasonalHomeHandler, type SeasonalHomeOverview } from './seasonal-home';
+import { seasonalNotes } from './seasonal-notes';
+import { notificationsHandler } from '../admin-shell/api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -44,7 +46,7 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Seasonal home on PostgreSQL (PR 280
   let now = T0;
   const saved = process.env.DATABASE_URL;
   const ids: Record<string, string> = {};
-  type Answer = SeasonalHomeOverview & { ok: boolean; error?: string; details?: string[]; id?: string; cards?: { seasonalHome: SeasonalHomeOverview['card'] } };
+  type Answer = SeasonalHomeOverview & { ok: boolean; error?: string; details?: string[]; id?: string; cards?: { seasonalHome?: SeasonalHomeOverview['card']; seasonalHomeNotes?: SeasonalHomeOverview['notesCard'] } };
   const api = async (method: string, body?: unknown, cookie = owner) => {
     const res = await seasonalHomeHandler(req(method, { body, cookie }), admin, () => new Date(now));
     return { status: res.status, a: (await res.json()) as Answer };
@@ -86,7 +88,7 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Seasonal home on PostgreSQL (PR 280
     expect((await api('PUT', { key: 'seasonalHome', value: { enabled: 'yes' }, version: g.a.card.version })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['enabled'] });
     expect((await api('PUT', { key: 'seasonalHome', value: { enabled: true }, version: 'old' })).a).toMatchObject({ ok: false, error: 'STALE' });
     const on = await api('PUT', { key: 'seasonalHome', value: { enabled: true }, version: g.a.card.version });
-    expect(on.a.cards!.seasonalHome.value).toEqual({ enabled: true });
+    expect(on.a.cards!.seasonalHome!.value).toEqual({ enabled: true });
     expect(await t.prisma.auditLog.count({ where: { action: 'seasonalHome.settings' } })).toBe(1);
   });
 
@@ -188,5 +190,38 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Seasonal home on PostgreSQL (PR 280
     const aside = (await t.prisma.layoutSnapshot.findUnique({ where: { id: free } }))!.archivedAt !== null;
     expect(aside && set > 0).toBe(false);
     expect([arch.a.ok, add.a.ok].filter(Boolean)).toHaveLength(1);
+  });
+
+  it('follow-up 650: the bell notes — off as shipped; on, each start and end or stop of the days, for the people who may see marketing', async () => {
+    const at = new Date('2027-03-14T07:00:00Z');
+    const clock = { locale: 'en-BD', timeZone: 'Asia/Dhaka', now: at };
+    const g = (await api('GET')).a;
+    expect(g.notesCard).toMatchObject({ key: 'seasonalHomeNotes', value: { enabled: false, days: 7 } });
+    expect(g.cards!.seasonalHomeNotes).toEqual(g.notesCard);
+    expect(await seasonalNotes(admin, 'en', clock)).toEqual([]);
+    expect((await api('PUT', { key: 'seasonalHomeNotes', value: { enabled: true, days: 7 }, version: g.notesCard.version }, desk)).status).toBe(403);
+    expect((await api('PUT', { key: 'seasonalHomeNotes', value: { enabled: true, days: 0 }, version: g.notesCard.version })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['days'] });
+    const on = await api('PUT', { key: 'seasonalHomeNotes', value: { enabled: true, days: 7 }, version: g.notesCard.version });
+    expect(on.a.cards!.seasonalHomeNotes!.value).toEqual({ enabled: true, days: 7 });
+    expect(await t.prisma.auditLog.count({ where: { action: 'seasonalHome.notes' } })).toBe(1);
+    // Eid: started 9 Mar 18:00, stopped 10 Mar 12:00; Winter: started 13 Mar 00:00, stopped 14 Mar 12:00 (shop clock)
+    const notes = await seasonalNotes(admin, 'en', clock);
+    expect(notes.map((n) => [n.id.replace(/-[0-9a-f-]{36}$/, ''), n.title, n.body.split(' · ')[0], n.at])).toEqual([
+      ['seasonal-end', 'Seasonal home: a look was stopped', 'Winter', '2027-03-14T06:00:00.000Z'],
+      ['seasonal-start', 'Seasonal home: a look started', 'Winter', '2027-03-12T18:00:00.000Z'],
+      ['seasonal-end', 'Seasonal home: a look was stopped', 'Eid 2027', '2027-03-10T06:00:00.000Z'],
+      ['seasonal-start', 'Seasonal home: a look started', 'Eid 2027', '2027-03-09T12:00:00.000Z'],
+    ]);
+    expect(notes.every((n) => n.href === '/admin/marketing/seasonal')).toBe(true);
+    expect((await seasonalNotes(admin, 'bn', clock))[0]!.title).toBe('মৌসুমি হোম: একটা লুক থামানো হলো');
+    const g2 = (await api('GET')).a;
+    await api('PUT', { key: 'seasonalHomeNotes', value: { enabled: true, days: 1 }, version: g2.notesCard.version });
+    expect((await seasonalNotes(admin, 'en', clock)).map((n) => n.body.split(' · ')[0])).toEqual(['Winter']);
+    // the bell: the owner sees them; the desk (marketing.campaigns.read) too
+    const bell = async (cookie: string) => (await (await notificationsHandler(req('GET', { path: '/api/admin/notifications', cookie }), admin)).json()) as { items: { id: string; href: string }[]; source: string };
+    for (const who of [owner, desk]) {
+      const b = await bell(who);
+      expect(Array.isArray(b.items)).toBe(true);
+    }
   });
 });
