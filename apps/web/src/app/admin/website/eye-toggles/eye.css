@@ -1,0 +1,16 @@
+/* S02 · PR 81 — Website › Eye-toggles: the search row (wraps on a phone), one card per place with its switches (label,
+   screens and the shipped value, the switch at the right), a marked row tinted until saved, and the save bar held at
+   the bottom of the screen; every control at a 44px tap size, the shell's tokens only. */
+.adm2 .eyb-mt6{margin-top:6px}
+.adm2 .eyb-search{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto;gap:10px 12px;align-items:end}
+.adm2 .eyb-search .a2-inp,.adm2 .eyb-search .a2-sel,.adm2 .eyb-search .a2-btn{min-height:44px}
+@media (max-width:760px){.adm2 .eyb-search{grid-template-columns:minmax(0,1fr)}}
+.adm2 .eyb-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:2px}
+.adm2 .eyb-row{display:grid;gap:4px;padding:4px 8px;border-radius:var(--r);min-width:0}
+.adm2 .eyb-row+.eyb-row{border-top:1px solid var(--ln)}
+.adm2 .eyb-marked{background:var(--g0)}
+.adm2 .eyb-label{overflow-wrap:anywhere}
+.adm2 .eyb-back{justify-self:start;min-height:44px}
+.adm2 .eyb-bar{position:sticky;bottom:0;z-index:2;background:var(--sf);border-top:1px solid var(--ln);padding:8px 0;margin-top:12px;flex-wrap:wrap;gap:8px}
+.adm2 .eyb-bar .a2-btn{min-height:44px}
+@media (max-width:767px){.adm2 .eyb-bar{bottom:72px;padding:8px 10px;border:1px solid var(--ln);border-radius:12px;box-shadow:var(--lm-sh)}.adm2 .eyb-bar .a2-gap8{display:flex;flex-direction:row;gap:8px;width:100%}.adm2 .eyb-bar .a2-gap8>.a2-btn{flex:1 1 0;min-width:0}}
