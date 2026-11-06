@@ -12,6 +12,10 @@
 //   (gate check 4) and a statement that says nothing was collected (gate check 23) — no refund, price or discount moves;
 // - sample data only (tools/gate-orders/data/test-data.json), never the owner's: the run touches only orders that hold a
 //   GATE TEST piece, and it never changes a setting for the shop's visitors;
+// - follow-up (go-live simulation fdf63ee8): a repeat buyer's new order whose earlier test order is still open waits in
+//   the possible-duplicate review (PR 145, on by default) — a person's step. The run decides it as that person through
+//   the review's own decision (`decideReview` "approve", the admin's "Not a duplicate" button), only for a duplicate
+//   review whose every match is a GATE TEST order, with a note that says so; a risk review is never decided here;
 // - live run 1 Nov: it pays on the practice gateway through its run's own grant (lib/test-shop.ts openRun: its own
 //   browser only, on the preview host, closed at the end), and turns cash on delivery on for the run only with the
 //   owner's `allow_cod` (put back as it was; both written to the audit log as the system actor).
@@ -22,7 +26,7 @@ import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { variantStock } from '@extas/inventory';
 import { formatAmount, render, runContext, sampleInput, type MessagesDeps } from '@extas/messages';
 import { counts, kpi, salesBySku } from '@extas/metrics';
-import { addLine, addNote, cancelAfterBooking, cancelOrder, confirmOrder, getOrder, recordCourierCancel } from '@extas/orders';
+import { addLine, addNote, cancelAfterBooking, cancelOrder, confirmOrder, decideReview, DUPLICATE_SECTION, getOrder, recordCourierCancel, reviewKindOf } from '@extas/orders';
 import { importSettlement, orderMoney, PaymentsError, recordPayment } from '@extas/payments';
 import { addCourier, bookOrders, listCouriers, printStickers, rateFor, rebookParcel, staleParcelOf, updateCourier } from '@extas/shipping';
 import { archiveProducts, closeRuns, openRun, runState, setTestStock, setUpProducts, skuPrefix, strayCod, type Kit, type TestData } from '../lib/test-shop';
@@ -204,6 +208,7 @@ export class Oracle {
       select: { id: true, number: true, status: true, phone: true, customerName: true, shippingAddressText: true, backfilledAddress: true, addressUnclear: true, deliveryChargeMinor: true, chargeFixed: true, totalMinor: true, discountMinor: true, couponCode: true, paidMinor: true, codAmountMinor: true, paymentMethod: true, lang: true, isGift: true, customerId: true, area: { select: { code: true } }, deliveryBand: { select: { key: true, chargeMinor: true } }, items: { where: { status: 'ACTIVE' }, select: { sku: true, quantity: true } } },
     });
     const admin = await getOrder(this.g.orders, this.g.who, o.id);
+    const reviews = await this.openReviews(o.id);
     return {
       number: o.number,
       status: o.status,
@@ -226,7 +231,47 @@ export class Oracle {
       couponApplied: !!o.couponCode,
       items: o.items.map((i) => ({ sku: i.sku, quantity: i.quantity })),
       payments: admin.payments.map((p) => ({ method: p.method, status: p.status, amountMinor: p.amountMinor })),
+      // the open reviews it waits in (a person decides): the section, whether a risk section opened it, the matched orders
+      reviews: reviews.map((r) => ({ section: r.section, risk: r.risk, matches: r.matches.map((m) => m.number) })),
     };
+  }
+
+  /** The order's open reviews (duplicate or risk), with the numbers of the orders each one matched and whether each is a test order. */
+  private async openReviews(orderId: string) {
+    const alerts = await this.g.db.fraudAlert.findMany({ where: { storeId: this.S, orderId, status: 'OPEN' }, select: { id: true, summary: true, matchedOrderIds: true }, orderBy: { createdAt: 'asc' } });
+    const ids = [...new Set(alerts.flatMap((a) => a.matchedOrderIds))];
+    const prefix = skuPrefix(this.data);
+    const matched = ids.length ? await this.g.db.order.findMany({ where: { storeId: this.S, id: { in: ids } }, select: { id: true, number: true, items: { where: { sku: { startsWith: prefix } }, select: { id: true }, take: 1 } } }) : [];
+    const byId = new Map(matched.map((m) => [m.id, { number: m.number, test: m.items.length > 0 }]));
+    return alerts.map((a) => {
+      const k = reviewKindOf(a.summary);
+      return { id: a.id, section: k.section, risk: k.risk, matches: a.matchedOrderIds.map((id) => byId.get(id) ?? { number: '?', test: false }) };
+    });
+  }
+
+  /**
+   * A person's step, played by the run as that person (follow-up of the go-live simulation): the repeat buyer's new test
+   * order waits in the possible-duplicate review because his earlier test order is still open. Decided "not a duplicate"
+   * through the review's own decision (what the admin's button calls, `orders.risk.decide`), with the run's note on the
+   * decision log and the audit row. Only a duplicate review whose every match is a GATE TEST order of the given numbers;
+   * any other open review is left for a person and named in `left`.
+   */
+  async approveDuplicateReview(number: string, his: string[], note: string): Promise<Json> {
+    const o = await this.gateOrder(number);
+    const text = `${this.data.marker}: ${note}`.slice(0, 2_000);
+    const decided: Json[] = [];
+    const left: Json[] = [];
+    for (const r of await this.openReviews(o.id)) {
+      const view = { section: r.section, risk: r.risk, matches: r.matches.map((m) => m.number) };
+      const ours = !r.risk && r.section === DUPLICATE_SECTION && r.matches.length > 0 && r.matches.every((m) => m.test && his.includes(m.number));
+      if (!ours) {
+        left.push(view);
+        continue;
+      }
+      const d = await decideReview(this.g.orders, this.g.who, r.id, { decision: 'approve', note: text });
+      decided.push({ ...view, status: d.alertStatus });
+    }
+    return { decided, left };
   }
 
   // ---- the courier side (mock courier, the run's own courier account) ----

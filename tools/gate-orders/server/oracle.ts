@@ -88,6 +88,8 @@ function actions(o: Oracle): Record<string, (b: Json) => Promise<unknown>> {
     stock: (b) => o.stock(strs(b.variantIds, 'variantIds')),
     setStock: (b) => o.setStock(str(b.variantId, 'variantId'), Math.max(0, Math.min(1000, Math.floor(Number(b.qty) || 0)))),
     book: (b) => o.book(str(b.number, 'number')),
+    // a person's step the run plays as that person: a repeat buyer's possible-duplicate review decided "not a duplicate"
+    approveDuplicateReview: (b) => o.approveDuplicateReview(str(b.number, 'number'), strs(b.his, 'his'), str(b.note, 'note')),
     // follow-up 668 (the simulation): read only, which couriers the shop has and which are switched on
     couriers: () => o.couriers(),
     check1: (b) => o.check1(str(b.number, 'number')),

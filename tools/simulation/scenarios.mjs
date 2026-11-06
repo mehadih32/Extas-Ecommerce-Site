@@ -6,14 +6,17 @@
 // lost answer makes no second order), the lines and quantities, cash on delivery with the rider collecting the order's
 // due, a Bengali order in Bengali, no automatic block for a risky buyer, never held over an unclear address, a coupon
 // that is not his refused with a reason, a repeat buyer kept as one customer, the booking and the sticker at the
-// order's due, and a cancel before packing that releases the stock. A row whose payment method or courier is switched
-// off on the shop is a SKIP with its reason. Every order is cancelled at the end by the run's clean-up; nothing is
-// deleted, no money moves, no real buyer gets a message (every connection is its mock).
+// order's due, and a cancel before packing that releases the stock. A repeat buyer whose earlier test order is still
+// open waits in the possible-duplicate review (PR 145, a person's step): the run decides it "not a duplicate" as that
+// person, through the review's own decision on the oracle, only when every match is one of his own test orders, and the
+// row says so (PERSON_REVIEW); any other review is left for a person and the booking reports it. A row whose payment
+// method or courier is switched off on the shop is a SKIP with its reason. Every order is cancelled at the end by the
+// run's clean-up; nothing is deleted, no money moves, no real buyer gets a message (every connection is its mock).
 import { readFileSync } from "node:fs";
 import { DATA } from "../gate-orders/lib/test-data.mjs";
 import { check, fail, pass, skip } from "../gate-orders/lib/verdict.mjs";
 import { inLang, loseNextAnswer, submit } from "../gate-orders/lib/shopper.mjs";
-import { courierState, payState, rowTitle } from "./lib.mjs";
+import { courierState, payState, PERSON_REVIEW, rowTitle } from "./lib.mjs";
 
 export const PLAN_DATA = JSON.parse(readFileSync(new URL("./plan.json", import.meta.url), "utf8"));
 
@@ -103,6 +106,7 @@ export function rowScenario(row) {
       const repeat = row.checks.includes("repeat") && memory.last ? memory.last : null;
       const cust = repeat ? repeat.customer : x.newCustomer();
       cust.count = cust.count ?? 0;
+      cust.numbers = cust.numbers ?? [];
       const sh = await x.open(row.device, row.network, row.lang === "bn" ? { locale: "bn-BD" } : {});
       const items = piecesOf(x, row);
       const spec = { items, address: addressOf(row), customer: cust, lang: row.lang, timed: true };
@@ -134,6 +138,8 @@ export function rowScenario(row) {
       if (r.skip) return [...out, skip("placed", r.skip)];
       if (!r.number) return [...out, fail("placed", r.error ?? "no order number came back")];
       cust.count += 1;
+      const earlier = [...cust.numbers];
+      cust.numbers.push(r.number);
       out.push(pass("placed", `order ${r.number}`));
       if (p.how !== "cod") {
         const paid = await x.settle(sh, { url: r.next });
@@ -159,6 +165,14 @@ export function rowScenario(row) {
         out.push(ids.every((v) => !v) ? skip("one customer for the repeat buyer", "the shop keeps no customer record for these orders") : check("one customer for the repeat buyer", ids[0] === ids[1], ids[0] === ids[1] ? "the same customer" : "two customers"));
       }
       memory.last = { customer: cust, customerId: o.customerId };
+
+      // a repeat buyer's new order beside his earlier one still open: the shop holds it for a person (possible duplicate);
+      // the run is that person and decides "not a duplicate" through the review's own decision — never any other review
+      const his = (o.reviews ?? []).filter((v) => !v.risk && v.section === "duplicate" && v.matches.length && v.matches.every((m) => earlier.includes(m)));
+      if (repeat && his.length) {
+        const d = await x.call("approveDuplicateReview", { number: r.number, his: earlier, note: `simulation order ${row.n}: the run, acting as the person who reviews, decided "not a duplicate" — the repeat buyer's new order beside his own earlier test order ${his.flatMap((v) => v.matches).join(", ")}`.slice(0, 200) });
+        out.push(check(PERSON_REVIEW, d.decided.length === his.length && !d.left.length, d.left.length ? `left for a person: ${d.left.map((v) => `${v.section}${v.risk ? " (risk)" : ""} → ${v.matches.join(", ") || "—"}`).join("; ")}` : `his order waited in the review beside ${his.flatMap((v) => v.matches).join(", ")}; decided by the run as the person`));
+      }
 
       // 5. a cancel before packing (the shop declines or the buyer asks): stock released; else the booking
       if (row.checks.includes("cancel")) {
