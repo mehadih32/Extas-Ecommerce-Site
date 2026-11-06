@@ -99,8 +99,29 @@ it('is a scenario set of the gate-orders run beside the gate\'s own 18', async (
   await expect(planOf('everything')).rejects.toThrow(/no scenario set/);
 });
 
+/**
+ * A stand-in for the shopper's page as the real shop answers the code box (PR 112): the POST only keeps the code on the
+ * bag (HTTP 200 for any code); the bag page then shows the box's state and its words. `codeBox` null: no code box.
+ */
+function fakePage(codeBox) {
+  const at = { url: 'https://preview.example/products/x' };
+  const el = (sel) => {
+    const v = codeBox && sel === '[data-testid="bag-code"]' ? codeBox.state : codeBox && sel === '[data-testid="bag-code-msg"]' && codeBox.said ? codeBox.said : null;
+    const one = { count: async () => (v === null || !at.url.endsWith('/bag') ? 0 : 1), getAttribute: async () => v, innerText: async () => v };
+    return { first: () => one };
+  };
+  return {
+    evaluate: async () => ({ status: 200, ok: true, error: null }),
+    url: () => at.url,
+    goto: async (u) => {
+      at.url = u;
+    },
+    locator: el,
+  };
+}
+
 /** A stand-in for the run's `x` (shop.mjs): the shop answers as a healthy shop with cash on delivery on. */
-function fakeX({ sw = COD_ONLY, couriers = NO_COURIER_ACCOUNTS, status = 'PLACED', canBook = null } = {}) {
+function fakeX({ sw = COD_ONLY, couriers = NO_COURIER_ACCOUNTS, status = 'PLACED', canBook = null, codeBox = { state: 'refused', said: 'GATETESTNOTACODE is not a code we know.' } } = {}) {
   const calls = [];
   let n = 0;
   let nextOrder = 1000;
@@ -119,7 +140,7 @@ function fakeX({ sw = COD_ONLY, couriers = NO_COURIER_ACCOUNTS, status = 'PLACED
     booked: () => {},
     open: async () => {
       x.opened += 1;
-      return { page: { evaluate: async () => ({ status: 404, ok: false, error: 'checkout.CODE_NOT_FOUND' }) } };
+      return { page: fakePage(codeBox) };
     },
     settle: async () => null,
     order: async (sh, spec) => {
@@ -189,8 +210,22 @@ it('a code that is not his is refused with a reason; a repeat buyer is kept as o
   expect(rep.find((c) => c.id === 'one customer for the repeat buyer')?.verdict).toBe('PASS');
   expect(rep.find((c) => c.id.startsWith('his orders in this run'))?.verdict).toBe('PASS');
   const coupon = await scenario(15).run(x);
-  expect(coupon.find((c) => c.id === 'a code that is not his is refused with a reason')).toMatchObject({ verdict: 'PASS', detail: 'checkout.CODE_NOT_FOUND' });
+  expect(coupon.find((c) => c.id === 'a code that is not his is refused with a reason')).toMatchObject({ verdict: 'PASS', detail: 'the code box says: GATETESTNOTACODE is not a code we know.' });
   expect(NOT_A_CODE).toMatch(/^GATETEST/);
+});
+
+// row 15 of the go-live run (fdf63ee8): the code box's POST answers HTTP 200 for any code (it only keeps the code on the
+// bag, PR 112); the refusal and its words are on the bag page — the run reads them there, never the POST's status
+it('reads a code\'s answer from the bag page\'s code box, not from the POST that keeps it', async () => {
+  const id = 'a code that is not his is refused with a reason';
+  const refused = await scenario(15).run(fakeX().x);
+  expect(refused.find((c) => c.id === id)?.verdict).toBe('PASS');
+  const taken = await scenario(15).run(fakeX({ codeBox: { state: 'applied', said: 'GATETESTNOTACODE added.' } }).x);
+  expect(taken.find((c) => c.id === id)).toMatchObject({ verdict: 'FAIL', detail: expect.stringMatching(/HTTP 200, the code box says "applied"/) });
+  const mute = await scenario(15).run(fakeX({ codeBox: { state: 'refused', said: null } }).x);
+  expect(mute.find((c) => c.id === id)?.verdict, 'refused without words is not "with a reason"').toBe('FAIL');
+  const none = await scenario(15).run(fakeX({ codeBox: null }).x);
+  expect(none.find((c) => c.id.startsWith('a code that is not his'))).toMatchObject({ verdict: 'SKIP', detail: expect.stringMatching(/no code box/) });
 });
 
 it('the owner\'s coupon and booking blocked by a real courier are SKIPs with their reasons', async () => {
