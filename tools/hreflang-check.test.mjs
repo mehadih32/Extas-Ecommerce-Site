@@ -2,7 +2,7 @@
 // or foreign address, a wrong x-default, a page that does not name itself, a twin that is not there or does not name
 // the pair back each fail with words; a page with no pair is not checked.
 import { describe, expect, it } from "vitest";
-import { headLinks, pairProblems } from "./hreflang-check.mjs";
+import { headLinks, pairProblems, htmlSeoProblems } from "./hreflang-check.mjs";
 
 const O = "https://shop.example.test";
 const head = (lang, canonical, pairs) =>
@@ -46,5 +46,21 @@ describe("hreflang check", () => {
     expect(pairProblems("/p/polo", en, { status: 404, head: null })).toEqual(["/p/polo: hreflang twin answered 404"]);
     expect(pairProblems("/p/polo", en, { status: 0, head: null, error: "timeout" })).toEqual(["/p/polo: hreflang twin answered timeout"]);
     expect(pairProblems("/p/polo", en, { status: 200, head: headLinks(head("bn", `${O}/bn/p/polo`, [])) })).toEqual(["/p/polo: hreflang twin does not name the same pair back"]);
+  });
+});
+
+describe("PR 237 · a page's own SEO basics", () => {
+  const page = (lang, canonical, body = "") => `<html lang="${lang}"><head><link rel="canonical" href="${canonical}"></head><body>${body}</body></html>`;
+  it("a canonical in the page's own language is fine; a cross-language one is not", () => {
+    expect(htmlSeoProblems("/bn/p/x", page("bn", "https://shop.example.test/bn/p/x"))).toEqual([]);
+    expect(htmlSeoProblems("/p/x", page("en", "https://shop.example.test/p/x"))).toEqual([]);
+    expect(htmlSeoProblems("/bn/p/x", page("bn", "https://shop.example.test/p/x"))[0]).toMatch(/names the English page/);
+    expect(htmlSeoProblems("/p/x", page("en", "https://shop.example.test/bn/p/x"))[0]).toMatch(/names the Bengali page/);
+  });
+  it('"#" stand-in links fail; a link to a place on the page does not', () => {
+    const ok = page("en", "https://shop.example.test/p/x", '<a class="pdp-rating" href="#pdp-reviews">4.8</a>');
+    expect(htmlSeoProblems("/p/x", ok)).toEqual([]);
+    const bad = page("en", "https://shop.example.test/p/x", '<a href="#">x</a><a data-x="1" href="#/p/sample">y</a>');
+    expect(htmlSeoProblems("/p/x", bad)).toEqual(['/p/x: 2 link(s) to "#" instead of a real address']);
   });
 });

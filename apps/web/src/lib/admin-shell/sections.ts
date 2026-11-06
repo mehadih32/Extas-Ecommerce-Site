@@ -268,6 +268,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/website/seo/categories', perm: 'seo.read', keys: ['seoCategories'] },
           // S11 · PR 588 — the Bengali translation gate: the coverage report and the pages marked ready.
           { href: '/admin/website/seo/bengali', perm: 'seo.read', keys: ['seoBengali'] },
+          // S11 · PR 237 — SEO health: what is missing, page by page.
+          { href: '/admin/website/seo/health', perm: 'seo.read', keys: ['seoHealth'] },
         ],
       },
     ],
