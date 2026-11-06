@@ -14,6 +14,7 @@ import {
   findBag,
   openBag,
   removeLine,
+  restoreBag,
   restoreLine,
   saveForLater,
   setBagCode,
@@ -26,6 +27,7 @@ import { addBuiltSetToBag, addSetToBag, changeSetInBag, priceCell, priceSet, pro
 import { body, errorResponse, fail, isUuid, json, readCookie, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
 import { trackAddToBag } from '../tracking/shop';
+import { BN_PREFIX } from './lang';
 
 /** The largest request body the bag takes (a code, an id, a number). */
 export const BAG_BODY_MAX = 2_048;
@@ -323,5 +325,46 @@ export async function tryFillHandler(request: Request, deps: BagApiDeps | null):
     return answer(deps, bag, { filled: picks.length });
   } catch (e) {
     return refusal(e);
+  }
+}
+
+/** PR 275 — the follow-up link's code (CheckoutDraft.restoreCode): URL-safe, never long. */
+const RESTORE_CODE = /^[A-Za-z0-9_-]{8,40}$/;
+
+/**
+ * GET /api/bag/back/<code> — PR 275: the link in an unfinished checkout's follow-up. Puts that checkout's bag (every
+ * line still in it, at today's price and stock) into this browser's bag — the same browser's own bag needs nothing,
+ * a second tap adds nothing — and, when the offer with a code went to him, puts the code on the bag; then opens the bag
+ * in the message's language (`?l=en`, else Bengali). An unknown or finished checkout just opens the bag. Nothing is
+ * ordered and nobody else's details are shown: the link carries only the bag.
+ */
+export async function bagBackHandler(request: Request, deps: BagApiDeps | null, code: string): Promise<Response> {
+  if (request.method.toUpperCase() !== 'GET') return fail(405, 'method-not-allowed');
+  const lang = new URL(request.url).searchParams.get('l') === 'en' ? 'en' : 'bn';
+  const go = (headers = new Headers()) => {
+    headers.set('location', `${lang === 'bn' ? BN_PREFIX : ''}/bag`);
+    headers.set('cache-control', 'no-store');
+    headers.set('x-robots-tag', 'noindex');
+    return new Response(null, { status: 303, headers });
+  };
+  if (!deps || !RESTORE_CODE.test(code)) return go();
+  try {
+    const d = await deps.cart.db.checkoutDraft.findFirst({ where: { storeId: deps.storeId, restoreCode: code }, select: { id: true, cartId: true, convertedOrderId: true } });
+    if (!d?.cartId || d.convertedOrderId) return go();
+    const bag = (await bagOf(request, deps, true))!;
+    await restoreBag(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, fromCartId: d.cartId }).catch((e: unknown) => {
+      if (!(e instanceof CartError)) throw e;
+    });
+    const offer = await deps.cart.db.recoveryMessage.findFirst({ where: { storeId: deps.storeId, checkoutDraftId: d.id, offerCouponId: { not: null }, sentAt: { not: null } }, orderBy: { sentAt: 'desc' }, select: { offerCouponId: true } });
+    const coupon = offer?.offerCouponId ? await deps.cart.db.coupon.findFirst({ where: { id: offer.offerCouponId, storeId: deps.storeId, enabled: true }, select: { code: true } }) : null;
+    if (coupon) await setBagCode(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, code: coupon.code });
+    const [count, days] = await Promise.all([bagCount(deps.cart.db, deps.storeId, bag.cartId), deps.cart.settings.value('bag.keepDays', { storeId: deps.storeId })]);
+    const headers = new Headers();
+    headers.append('set-cookie', bagCookie(BAG_COOKIE, bag.visitor, days));
+    headers.append('set-cookie', bagCookie(COUNT_COOKIE, String(count), days));
+    return go(headers);
+  } catch {
+    // the link never shows an error page: the bag opens as it is
+    return go();
   }
 }

@@ -25,9 +25,13 @@
 // PR 289: a customer journey's message (step `crmJourney`, queued by @extas/customers' automations) is sent here too:
 // an offer each time (his yes for offers, the quiet hours, the weekly cap per person, the stop line).
 //
+// PR 275: an unfinished checkout's follow-up (follow-up.ts): one reminder with the link that puts his bag back, then at
+// most one offer with the owner's code — two messages ever, only with his yes for offers, off as shipped.
+//
 // `./pure` holds the rules without a database (tests, the admin screen's preview).
 import { setting, type MessagesDeps } from './context';
 import { planMessages, sendDue, type PlanResult, type SendRunResult } from './engine';
+import { planFollowUps, type FollowUpPlan } from './follow-up';
 import { selfConfirmTimers, type SelfConfirmTimerResult } from './self-confirm';
 
 export * from './context';
@@ -44,9 +48,11 @@ export * from './costs';
 export * from './templates';
 export * from './email-html';
 export * from './email-track';
+export * from './follow-up';
 
 export interface RunResult {
   plan: PlanResult;
+  followUp: FollowUpPlan;
   send: SendRunResult;
   selfConfirm: SelfConfirmTimerResult;
 }
@@ -55,7 +61,8 @@ export interface RunResult {
 export async function runMessages(deps: MessagesDeps, storeId: number): Promise<RunResult | null> {
   if (!(await setting(deps, storeId, 'messages.enabled'))) return null;
   const plan = await planMessages(deps, storeId);
+  const followUp = await planFollowUps(deps, storeId);
   const send = await sendDue(deps, storeId);
   const selfConfirm = await selfConfirmTimers(deps, storeId);
-  return { plan, send, selfConfirm };
+  return { plan, followUp, send, selfConfirm };
 }

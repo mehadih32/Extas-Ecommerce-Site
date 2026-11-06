@@ -1051,6 +1051,70 @@
       "name": "Auto-reply (a customer wrote to the shop)",
       "enabled": true,
       "body": "Thank you, we have your message. The {storeName} team will answer as soon as it can."
+    },
+    {
+      "key": "checkout.followUp",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Incomplete-order reminder with the bag link",
+      "enabled": true,
+      "body": "{storeName}: আপনার ব্যাগে {bagCount}টা পণ্য রাখা আছে। অর্ডার শেষ করতে: {bagLink}"
+    },
+    {
+      "key": "checkout.followUp",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Incomplete-order reminder with the bag link",
+      "enabled": true,
+      "body": "{storeName}: your bag still holds {bagCount} item(s). Finish your order here: {bagLink}"
+    },
+    {
+      "key": "checkout.followUp",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Incomplete-order reminder with the bag link",
+      "enabled": true,
+      "body": "{customerName}, আপনার ব্যাগে {bagCount}টা পণ্য রাখা আছে। এই লিংকে ব্যাগটা ফিরে পাবেন, অর্ডার শেষ করুন: {bagLink}\n— {storeName}"
+    },
+    {
+      "key": "checkout.followUp",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Incomplete-order reminder with the bag link",
+      "enabled": true,
+      "body": "Hi {customerName}, your bag still holds {bagCount} item(s). This link brings it back so you can finish your order: {bagLink}\n— {storeName}"
+    },
+    {
+      "key": "checkout.followUpOffer",
+      "channel": "SMS",
+      "locale": "bn",
+      "name": "Incomplete-order offer with a code",
+      "enabled": true,
+      "body": "{storeName}: আপনার ব্যাগটা এখনো রাখা আছে। কোড {offerCode} দিয়ে অফারসহ অর্ডার করুন: {bagLink}"
+    },
+    {
+      "key": "checkout.followUpOffer",
+      "channel": "SMS",
+      "locale": "en",
+      "name": "Incomplete-order offer with a code",
+      "enabled": true,
+      "body": "{storeName}: your bag is still kept. Use code {offerCode} for your offer: {bagLink}"
+    },
+    {
+      "key": "checkout.followUpOffer",
+      "channel": "WHATSAPP",
+      "locale": "bn",
+      "name": "Incomplete-order offer with a code",
+      "enabled": true,
+      "body": "{customerName}, আপনার ব্যাগটা এখনো রাখা আছে। এই লিংকে গেলে কোড {offerCode} নিজে থেকেই বসে যাবে: {bagLink}\n— {storeName}"
+    },
+    {
+      "key": "checkout.followUpOffer",
+      "channel": "WHATSAPP",
+      "locale": "en",
+      "name": "Incomplete-order offer with a code",
+      "enabled": true,
+      "body": "Hi {customerName}, your bag is still kept. Open this link and code {offerCode} is added for you: {bagLink}\n— {storeName}"
     }
   ]
 }

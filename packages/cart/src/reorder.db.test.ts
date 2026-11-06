@@ -2,6 +2,7 @@
 // sample combos; skipped without TEST_DATABASE_ADMIN_URL). Every value is a made-up test value.
 // "Buy again": today's price and stock, a sold-out size with the sizes still in stock, a product taken off sale, a set
 // still offered and one no longer offered, add-ons and gifts left out, the switch off, someone else's order, two taps.
+// PR 275: an unfinished checkout's bag put back in another browser's bag (restoreBag).
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, HAS_TEST_DB, type TestDatabase } from '@extas/auth/testing';
@@ -9,9 +10,9 @@ import { productFacts, setSummary, type ProductFact } from '@extas/combos';
 import { seedSampleCombos } from '@extas/combos/sample';
 import { seedSample } from '@extas/seed';
 import { registry, type Key, type Value } from '@extas/settings';
-import { openBag } from './cart';
+import { addItem, openBag } from './cart';
 import type { CartDeps, SettingsReader } from './context';
-import { buyAgain } from './reorder';
+import { buyAgain, restoreBag, RESTORE_SOURCE } from './reorder';
 import { REORDER_SOURCE } from './reorder-pure';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -152,5 +153,21 @@ describe.skipIf(!HAS_TEST_DB)('Buy again on PostgreSQL (PR 622)', () => {
     } finally {
       await t.prisma.combo.update({ where: { id: combo.id }, data: { status: combo.status } });
     }
+  });
+
+  it('PR 275: an unfinished checkout\'s bag goes into another browser\'s bag as it was (taken-out and saved lines stay out); the same bag or the link twice adds nothing', async () => {
+    const left = (await openBag(deps(), { storeId: S, visitorId: visitor('r1') })).cartId;
+    const shirt = variant('oxford-cotton-shirt', 'sky', 'M');
+    const other = variant('oxford-cotton-shirt', 'sky', 'S');
+    await addItem(deps(), { storeId: S, cartId: left, variantId: shirt.id, quantity: 2 });
+    const gone = await addItem(deps(), { storeId: S, cartId: left, variantId: other.id, quantity: 1 });
+    await t.prisma.cartItem.update({ where: { id: gone.lineId }, data: { removedAt: T0 } });
+    const here = (await openBag(deps(), { storeId: S, visitorId: visitor('r2') })).cartId;
+    const r = await restoreBag(deps(), { storeId: S, cartId: here, fromCartId: left });
+    expect(r).toMatchObject({ pieces: 2, again: false, soldOut: [], gone: [] });
+    expect((await bagLines(here)).map((l) => [l.variantId, l.quantity, l.source])).toEqual([[shirt.id, 2, RESTORE_SOURCE]]);
+    expect(await restoreBag(deps(), { storeId: S, cartId: here, fromCartId: left })).toMatchObject({ pieces: 0, inBag: 1 });
+    expect(await restoreBag(deps(), { storeId: S, cartId: left, fromCartId: left })).toMatchObject({ again: true, pieces: 0, inBag: 2 });
+    expect(await bagLines(here)).toHaveLength(1);
   });
 });

@@ -55,7 +55,8 @@
       "cancelDuplicate": "Cancelled as a duplicate",
       "crmJourney": "Automation message",
       "crmEmail": "Offer e-mail",
-      "crmCampaign": "Win-back campaign"
+      "crmCampaign": "Win-back campaign",
+      "checkoutFollowUp": "Incomplete-order follow-up"
     },
     "reason": {
       "MASTER_OFF": "The messages master switch was off",
@@ -93,7 +94,11 @@
       "SWITCHED_OFF": "E-mail marketing is switched off",
       "ERASED": "The customer was erased",
       "WINBACK_OFF": "Win-back campaigns are switched off",
-      "CAP_GAP": "He had a win-back a short while ago (the gap between win-backs)"
+      "CAP_GAP": "He had a win-back a short while ago (the gap between win-backs)",
+      "ORDERED": "He ordered since",
+      "HANDLED": "Marked handled by the team",
+      "OFFER_GONE": "The offer code is no longer live",
+      "EMPTY_BAG": "His bag is empty now"
     },
     "log": {
       "title": "Message log",

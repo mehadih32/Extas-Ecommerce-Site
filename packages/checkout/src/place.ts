@@ -660,7 +660,15 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
         const linked = await tx.checkoutVoice.updateMany({ where: { id: voice.id, storeId, orderId: null }, data: { orderId: o.id } });
         if (linked.count !== 1) throw new CheckoutError('INVALID_INPUT', 'the recording went into another order', ['voice']);
       }
+      const drafts = await tx.checkoutDraft.findMany({ where: { storeId, convertedOrderId: null, OR: [{ visitorId }, { phone: check.phone.e164, followUpCount: { gt: 0 } }] }, select: { id: true } });
       await tx.checkoutDraft.updateMany({ where: { storeId, visitorId, convertedOrderId: null }, data: { convertedOrderId: o.id, cartId, lastStep: 'placed', lastActivityAt: now } });
+      if (drafts.length) {
+        // PR 275: a follow-up answered — his followed-up checkout on this number (the bag's link opened in another
+        // browser) is finished by this order too, and each follow-up that went is counted as bringing it back
+        const ids = drafts.map((x) => x.id);
+        await tx.checkoutDraft.updateMany({ where: { id: { in: ids }, storeId, convertedOrderId: null }, data: { convertedOrderId: o.id, lastStep: 'placed', lastActivityAt: now } });
+        await tx.recoveryMessage.updateMany({ where: { storeId, checkoutDraftId: { in: ids }, sentAt: { not: null }, recoveredOrderId: null }, data: { recoveredOrderId: o.id } });
+      }
       await tx.idempotencyKey.update({
         where: { scope_key: { scope, key: d.idempotencyKey } },
         data: { completedAt: now, responseStatus: 201, responseBody: { orderId: o.id, number } },
@@ -820,6 +828,8 @@ export const draftInputSchema = z
     note: z.string().max(TEXT_MAX).nullable().optional(),
     /** How far he got: details, delivery, payment. */
     step: z.enum(['details', 'delivery', 'payment']).optional(),
+    /** PR 275: his offer ticks as they stand on the form (only kept while the ticks are shown). */
+    consent: consentInputSchema.nullable().optional(),
   })
   .strict();
 
@@ -828,6 +838,7 @@ export const draftInputSchema = z
  * as his one open checkout draft; the order marks it converted. Off by default (`checkout.capture.enabled`).
  * PR 274: also the visit's campaign tags (`data.attribution`); a later save hands the draft back to the open list
  * (a handled mark is cleared: he came back and left again).
+ * PR 275: and his offer ticks as the form shows them (`data.consent`), which the follow-up asks for before it messages him.
  */
 export async function captureDraft(deps: CheckoutDeps, req: { storeId: number; visitorId: string; customerId?: string | null; attribution?: Partial<OrderAttribution> | null; input: unknown }): Promise<{ kept: boolean }> {
   checkStoreId(req.storeId);
@@ -838,6 +849,8 @@ export async function captureDraft(deps: CheckoutDeps, req: { storeId: number; v
   if (!phone.ok) return { kept: false };
   const now = nowOf(deps);
   const cartId = await findBag(deps, { storeId, visitorId });
+  // PR 275: his ticks for offers as the form shows them (the follow-up asks for his yes); ticks not shown: nothing kept
+  const consent = d.consent ? consentOf(await consentSettings(deps, storeId), d.consent) : null;
   const data = {
     cartId,
     customerId: req.customerId ?? null,
@@ -845,7 +858,7 @@ export async function captureDraft(deps: CheckoutDeps, req: { storeId: number; v
     name: d.form.name.trim() || null,
     addressText: d.form.address.trim() || null,
     // PR 274: the campaign tags of the visit (the same cookie the order reads), for "which channel brought him"
-    data: { payment: d.payment ?? null, note: d.note?.trim() || null, attribution: { ...attributionData(req.attribution) } },
+    data: { payment: d.payment ?? null, note: d.note?.trim() || null, attribution: { ...attributionData(req.attribution) }, consent: consent && (consent.sms !== null || consent.whatsapp !== null) ? { ...consent } : null },
     lastStep: d.step ?? 'details',
     lastActivityAt: now,
   };

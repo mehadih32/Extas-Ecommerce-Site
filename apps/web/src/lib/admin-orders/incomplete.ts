@@ -8,16 +8,22 @@
 // them (the order's own page has "Try again"). A bag with no phone number is only counted. Nothing here messages a
 // customer, changes a price, a discount or COD, or places an order. GET `orders.read`, POST `orders.confirm`, PUT (the
 // settings card) `settings.write`; every change audited.
+// PR 275: the follow-up card (`orders.followUp`, off as it ships): the reminder with the bag's link, then at most one
+// offer with the owner's live code (two messages ever; the Messages engine sends them, with his yes for offers only);
+// each row says what went to him, and the card how many went and how many then ordered. Switching the offer on, or
+// changing its code, needs `rules.approve` too (a discount).
 import { createHash } from 'node:crypto';
-import { audit, permissionsFor } from '@extas/auth';
+import { audit, can, permissionsFor } from '@extas/auth';
 import { CHECKOUT_PAY_PURPOSES, LANDING_LINE_SOURCE, ORDER_FLAGS } from '@extas/checkout';
 import { MOTHER_STORE_ID, type Prisma, type PrismaClient } from '@extas/db/client';
-import { registry, storeTarget } from '@extas/settings';
+import { FOLLOW_UP_CEILING, registry, storeTarget, type FollowUpSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import type { AdPlatformsWho } from '../marketing/ad-platforms';
 import { bagValue, channelOf, HANDLED_NOTE_MAX, hotFirst, stageOf, viewOf, type IncompleteStage, type IncompleteView, type VisitChannel } from './incomplete-model';
 
 const S = MOTHER_STORE_ID;
+/** RecoveryMessage.kind of an unfinished checkout's follow-up (@extas/messages FOLLOW_UP_KIND). */
+const FOLLOW_UP_KIND = 'INCOMPLETE';
 const DAY = 86_400_000;
 const MINUTE = 60_000;
 /** Rows shown per list (newest kept first; the oldest beyond this wait for the next look). */
@@ -67,6 +73,8 @@ export interface IncompleteRow {
   customerId: string | null;
   assignedTo: { id: string; name: string } | null;
   handled: { at: string; by: string | null; note: string | null } | null;
+  /** PR 275 — the follow-up messages that went to him (of two at most), the last one's time and way, and whether it was the offer. */
+  followUps: { sent: number; last: { at: string; channel: string; offer: boolean } | null };
 }
 
 export interface UnpaidRow {
@@ -87,6 +95,28 @@ export interface IncompleteCard {
   version: string;
 }
 
+/** PR 275 — the follow-up card, flat for the card's fields (`orders.followUp`; the channels as one ordered choice). */
+export type FollowUpCardValue = {
+  enabled: boolean;
+  firstAfterMinutes: number;
+  channels: string;
+  minStep: FollowUpSettings['minStep'];
+  catchUpHours: number;
+  phoneGapDays: number;
+  offer: boolean;
+  offerAfterHours: number;
+  offerCode: string;
+};
+
+export interface FollowUpCard {
+  key: 'followUp';
+  value: FollowUpCardValue;
+  version: string;
+}
+
+/** The channel orders the card offers (the first one he said yes to offers on is used). */
+export const FOLLOW_UP_CHANNEL_ORDERS = ['WHATSAPP,SMS', 'SMS,WHATSAPP', 'WHATSAPP', 'SMS'] as const;
+
 export interface IncompleteOverview {
   view: IncompleteView;
   capture: boolean;
@@ -98,6 +128,8 @@ export interface IncompleteOverview {
   /** Who a draft can be handed to: active staff who may confirm orders here. */
   staff: { id: string; name: string }[];
   card: IncompleteCard;
+  /** PR 275 — the follow-up card and what it did in the kept days: messages sent, and checkouts that then ordered. */
+  followUp: { card: FollowUpCard; sent: number; recovered: number; ceiling: number };
 }
 
 const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0, 16);
@@ -110,6 +142,23 @@ async function cardOf(deps: IncompleteDeps): Promise<IncompleteCard> {
   ]);
   const value = { capture, keepDays, leftAfterMinutes: inc.leftAfterMinutes };
   return { key: 'incomplete', value, version: versionOf(value) };
+}
+
+const flat = (f: FollowUpSettings): FollowUpCardValue => ({
+  enabled: f.enabled,
+  firstAfterMinutes: f.firstAfterMinutes,
+  channels: f.channels.join(','),
+  minStep: f.minStep,
+  catchUpHours: f.catchUpHours,
+  phoneGapDays: f.phoneGapDays,
+  offer: f.offer.enabled,
+  offerAfterHours: f.offer.afterHours,
+  offerCode: f.offer.couponCode,
+});
+
+async function followUpCardOf(deps: IncompleteDeps): Promise<FollowUpCard> {
+  const value = flat(await deps.resolver.value('orders.followUp', { storeId: S }));
+  return { key: 'followUp', value, version: versionOf(value) };
 }
 
 /** The drafts the list reads: not ordered, a number kept, left (no word for the owner's minutes), within the kept days. */
@@ -142,13 +191,25 @@ export async function incompleteOverview(deps: IncompleteDeps, me: string | null
   const now = deps.now?.() ?? new Date();
   const card = await cardOf(deps);
   const base = windowWhere(card, now);
-  const [open, mine, handled, drafts, staff] = await Promise.all([
+  const [open, mine, handled, drafts, staff, followUpCard] = await Promise.all([
     deps.db.checkoutDraft.count({ where: { ...base, ...viewWhere('open', me) } }),
     deps.db.checkoutDraft.count({ where: { ...base, ...viewWhere('mine', me) } }),
     deps.db.checkoutDraft.count({ where: { ...base, ...viewWhere('handled', me) } }),
     deps.db.checkoutDraft.findMany({ where: { ...base, ...viewWhere(view, me) }, orderBy: { lastActivityAt: 'desc' }, take: ROWS_SHOWN }),
     staffOf(deps.db),
+    followUpCardOf(deps),
   ]);
+  const since = new Date(now.getTime() - card.value.keepDays * DAY);
+  const [sentFollowUps, recovered, sentToRows] = await Promise.all([
+    deps.db.recoveryMessage.count({ where: { storeId: S, kind: FOLLOW_UP_KIND, sentAt: { gte: since } } }),
+    deps.db.recoveryMessage.findMany({ where: { storeId: S, kind: FOLLOW_UP_KIND, sentAt: { gte: since }, recoveredOrderId: { not: null } }, distinct: ['checkoutDraftId'], select: { checkoutDraftId: true } }),
+    drafts.length ? deps.db.recoveryMessage.findMany({ where: { storeId: S, kind: FOLLOW_UP_KIND, checkoutDraftId: { in: drafts.map((d) => d.id) }, sentAt: { not: null } }, orderBy: { sentAt: 'asc' }, select: { checkoutDraftId: true, sentAt: true, channel: true, offerCouponId: true } }) : [],
+  ]);
+  const followUpsOf = new Map<string, IncompleteRow['followUps']>();
+  for (const f of sentToRows) {
+    const k = f.checkoutDraftId!;
+    followUpsOf.set(k, { sent: (followUpsOf.get(k)?.sent ?? 0) + 1, last: { at: f.sentAt!.toISOString(), channel: f.channel, offer: !!f.offerCouponId } });
+  }
 
   const cartIds = [...new Set(drafts.map((d) => d.cartId).filter((x): x is string => !!x))];
   const lines = cartIds.length
@@ -188,12 +249,13 @@ export async function incompleteOverview(deps: IncompleteDeps, me: string | null
         customerId: d.customerId,
         assignedTo: d.assignedToId ? { id: d.assignedToId, name: people.get(d.assignedToId) ?? '' } : null,
         handled: d.handledAt ? { at: d.handledAt.toISOString(), by: d.handledById ? (people.get(d.handledById) ?? null) : null, note: d.handledNote } : null,
+        followUps: followUpsOf.get(d.id) ?? { sent: 0, last: null },
       };
       return { stage: row.stage, lastAt: d.lastActivityAt, row };
     }),
   ).map((x) => x.row);
 
-  return { view, capture: card.value.capture, counts: { open, mine, handled }, rows, unpaid: await unpaidOf(deps, card, now), noPhone: await noPhoneOf(deps, card, now), staff, card };
+  return { view, capture: card.value.capture, counts: { open, mine, handled }, rows, unpaid: await unpaidOf(deps, card, now), noPhone: await noPhoneOf(deps, card, now), staff, card, followUp: { card: followUpCard, sent: sentFollowUps, recovered: recovered.length, ceiling: FOLLOW_UP_CEILING } };
 }
 
 /** Prepaid orders whose last checkout payment failed, or stayed unanswered past the owner's minutes (not cancelled). */
@@ -292,6 +354,47 @@ export async function saveIncompleteCard(deps: IncompleteDeps, who: IncompleteWh
   return { key: 'incomplete', value: after, version: versionOf(after) };
 }
 
+/**
+ * PR 275 — PUT {key: 'followUp', value, version}: the follow-up card (audited when it changes). The offer's code must be
+ * one of the shop's live codes; switching the offer on or changing its code is a discount, so it also needs
+ * `rules.approve` (the owner's OK); the reminder alone needs `settings.write`.
+ */
+export async function saveFollowUpCard(deps: IncompleteDeps, who: IncompleteWho, input: unknown): Promise<FollowUpCard> {
+  const o = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+  const before = await followUpCardOf(deps);
+  if (o.version !== before.version) throw new IncompleteError('STALE', 409);
+  const v = o.value && typeof o.value === 'object' ? (o.value as Record<string, unknown>) : {};
+  const order = typeof v.channels === 'string' && (FOLLOW_UP_CHANNEL_ORDERS as readonly string[]).includes(v.channels) ? v.channels.split(',') : null;
+  const parsed = registry['orders.followUp'].schema.safeParse({
+    enabled: v.enabled,
+    firstAfterMinutes: v.firstAfterMinutes,
+    channels: order,
+    minStep: v.minStep,
+    catchUpHours: v.catchUpHours,
+    phoneGapDays: v.phoneGapDays,
+    offer: { enabled: v.offer, afterHours: v.offerAfterHours, couponCode: typeof v.offerCode === 'string' ? v.offerCode : undefined },
+  });
+  if (!parsed.success) {
+    const paths = parsed.error.issues.map((i) => (i.path[0] === 'offer' ? ({ enabled: 'offer', afterHours: 'offerAfterHours', couponCode: 'offerCode' } as Record<string, string>)[String(i.path[1])] : String(i.path[0])));
+    throw new IncompleteError('INVALID_INPUT', 400, [...new Set(paths.filter((x): x is string => !!x))]);
+  }
+  const next = { ...parsed.data, offer: { ...parsed.data.offer, couponCode: parsed.data.offer.couponCode.toUpperCase() } };
+  const after = flat(next);
+  if (after.offer && !after.offerCode) throw new IncompleteError('INVALID_INPUT', 400, ['offerCode']);
+  if (after.offerCode) {
+    const live = await deps.db.coupon.findFirst({ where: { storeId: S, code: { equals: after.offerCode, mode: 'insensitive' }, enabled: true }, select: { code: true } });
+    if (!live) throw new IncompleteError('INVALID_INPUT', 400, ['offerCode']);
+    next.offer.couponCode = live.code;
+    after.offerCode = live.code;
+  }
+  const offerChanged = after.offer && (!before.value.offer || after.offerCode !== before.value.offerCode);
+  if (offerChanged && !(await can(deps.db, who.actor, 'rules.approve', { storeId: S }))) throw new IncompleteError('forbidden', 403, ['offer']);
+  if (versionOf(after) === before.version) return before;
+  await deps.resolver.set('orders.followUp', next, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: 'Orders › Incomplete' });
+  await audit(deps.db, who.actor, { storeId: S, action: 'incomplete.followUp', entityType: 'Setting', entityId: 'orders.followUp', before: { ...before.value }, after: { ...after } }, who.ctx);
+  return { key: 'followUp', value: after, version: versionOf(after) };
+}
+
 const answer = (e: unknown): Response => (e instanceof IncompleteError ? json({ ok: false, error: e.code, details: e.details }, { status: e.status }) : errorResponse(e));
 
 /** /api/admin/orders/incomplete — GET the page (`orders.read`, `?view=`); POST an action (`orders.confirm`); PUT the card (`settings.write`). */
@@ -307,8 +410,9 @@ export async function incompleteHandler(request: Request, deps: AdminDeps | null
   try {
     if (method === 'GET') {
       const o = await incompleteOverview(d, g.actor.staffUserId ?? null, new URL(request.url).searchParams.get('view'));
-      return json({ ok: true, ...o, cards: { incomplete: o.card } });
+      return json({ ok: true, ...o, cards: { incomplete: o.card, followUp: o.followUp.card } });
     }
+    if (method === 'PUT' && b.key === 'followUp') return json({ ok: true, cards: { followUp: await saveFollowUpCard(d, who, b) } });
     if (method === 'PUT') return json({ ok: true, cards: { incomplete: await saveIncompleteCard(d, who, b) } });
     return json({ ok: true, ...(await incompleteAction(d, who, b)) });
   } catch (e) {

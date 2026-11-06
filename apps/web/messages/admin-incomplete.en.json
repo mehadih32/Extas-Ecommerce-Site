@@ -3,7 +3,7 @@
     "metaTitle": "Incomplete orders · Orders",
     "title": "Incomplete orders",
     "sub": "Customers who typed their number at checkout and left without ordering, hottest first. Call or WhatsApp them, hand one to a teammate, mark it handled.",
-    "note": "Only what the customer typed is kept, and only while the switch below is on. Nothing here messages anyone or places an order.",
+    "note": "Only what the customer typed is kept, and only while the switch below is on. Nothing here places an order; a follow-up message goes only while its own switch below is on, and only to customers who said yes to offers.",
     "off": "Keeping unfinished checkouts is off, so nothing new is kept. Switch it on in the card at the bottom of this page.",
     "allLink": "All orders",
     "viewsAria": "Lists",
@@ -88,6 +88,46 @@
       "unauthorized": "Please sign in again.",
       "network": "No connection. Try again.",
       "other": "Something went wrong. Try again."
+    },
+    "fu": {
+      "h": "Follow-up messages",
+      "d": "One reminder with a link that brings his bag back, then at most one offer. Two messages per unfinished checkout, ever, and only to customers who said yes to offers on that way.",
+      "enabled": "Send the reminder",
+      "enabledHelp": "When on, a customer who typed his number and left gets one reminder by WhatsApp or SMS (only where he said yes to offers), with a link that puts his bag back. Off as it ships.",
+      "firstAfterMinutes": "Reminder after (minutes)",
+      "firstAfterMinutesHelp": "Minutes after he stopped typing.",
+      "channels": "Ways to try, in order",
+      "channelsHelp": "The first way he said yes to offers on is used; a way he refused is never used.",
+      "ch": {
+        "WHATSAPP,SMS": "WhatsApp, then SMS",
+        "SMS,WHATSAPP": "SMS, then WhatsApp",
+        "WHATSAPP": "WhatsApp only",
+        "SMS": "SMS only"
+      },
+      "minStep": "Only when he got as far as",
+      "minStepHelp": "Typed his number, typed his address, or reached payment.",
+      "step": {
+        "details": "Typed his number",
+        "delivery": "Typed his address",
+        "payment": "Reached payment"
+      },
+      "catchUpHours": "Not for checkouts older than (hours)",
+      "catchUpHoursHelp": "A checkout left longer ago than this gets no reminder (switching on never messages old visits).",
+      "phoneGapDays": "One follow-up per number in (days)",
+      "phoneGapDaysHelp": "A number that had a follow-up in these days gets no new one.",
+      "offer": "Send one offer after the reminder",
+      "offerHelp": "The second and last message, with your code. Needs the permission to approve offers. Off as it ships.",
+      "offerAfterHours": "Offer after (hours)",
+      "offerAfterHoursHelp": "Hours after the reminder went.",
+      "offerCode": "Offer code",
+      "offerCodeHelp": "One of your live codes (Rules › Coupons). The link puts it on his bag by itself.",
+      "stats": "In the kept days: {sent} follow-up messages sent · {recovered} of those checkouts then ordered.",
+      "row": "Follow-up: {sent} of {max} sent · last {when} by {channel}",
+      "rowOffer": "Follow-up: {sent} of {max} sent · last {when} by {channel} (the offer)",
+      "chName": {
+        "SMS": "SMS",
+        "WHATSAPP": "WhatsApp"
+      }
     }
   }
 }

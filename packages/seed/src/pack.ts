@@ -25,7 +25,7 @@ import { lockSeed } from './lock';
  * PR 148 follow-up (SIM-F-052/F-053): `{refundAmount}` (the refund paid out), `{exchangeOrderNumber}` and
  * `{exchangeAmountLine}` (the exchange's new parcel, and the amount line for what its rider collects; none when nothing).
  */
-export const TEMPLATE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'trackingLink', 'orderLink', 'amountDue', 'amountLine', 'exactAmountLine', 'senderName', 'cancelReason', 'keptOrderNumber', 'keptOrderLink', 'advanceAmount', 'payLink', 'refundAmount', 'exchangeOrderNumber', 'exchangeAmountLine'] as const;
+export const TEMPLATE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'trackingLink', 'orderLink', 'amountDue', 'amountLine', 'exactAmountLine', 'senderName', 'cancelReason', 'keptOrderNumber', 'keptOrderLink', 'advanceAmount', 'payLink', 'refundAmount', 'exchangeOrderNumber', 'exchangeAmountLine', 'bagCount', 'bagLink', 'offerCode'] as const;
 
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: 'lower-case words joined by -' });
 const dottedKey = z.string().regex(/^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*)*$/, { message: 'dotted camelCase key' });

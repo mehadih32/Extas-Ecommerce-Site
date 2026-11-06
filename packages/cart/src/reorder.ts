@@ -73,18 +73,27 @@ export async function buyAgain(deps: CartDeps, input: ReorderInput): Promise<Reo
   }
 
   const items: ReorderItem[] = await deps.db.orderItem.findMany({ where: { storeId: input.storeId, orderId: o.id }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: ITEM_SELECT });
+  await putBack(deps, { storeId: input.storeId, cartId: input.cartId }, items, out);
+  if (out.pieces > 0) await deps.db.cart.updateMany({ where: { id: input.cartId, storeId: input.storeId, status: 'ACTIVE' }, data: { reorderFromOrderId: o.id } });
+  return out;
+}
+
+/**
+ * Lines back in a bag through the bag's own add (today's price and stock, its duplicate rule) and a shop's set through
+ * the combos engine's set add; what cannot come back is named in `out` (sold out with the sizes in stock, or gone).
+ */
+async function putBack(deps: CartDeps, bagRef: { storeId: number; cartId: string }, items: readonly ReorderItem[], out: ReorderOutcome, source: string = REORDER_SOURCE): Promise<void> {
   const parts = reorderParts(items);
   const loose = [...parts.loose];
-  const bagRef = { storeId: input.storeId, cartId: input.cartId };
 
   // The shop's sets: as the set while it is offered, each piece on its old colour and size; otherwise piece by piece.
   for (const s of parts.sets) {
     const ids = s.pieces.map((p) => p.variantId).filter((x): x is string => !!x);
-    const vs = ids.length === s.pieces.length ? await deps.db.productVariant.findMany({ where: { storeId: input.storeId, id: { in: ids } }, select: { id: true, colourId: true, sizeId: true } }) : [];
+    const vs = ids.length === s.pieces.length ? await deps.db.productVariant.findMany({ where: { storeId: bagRef.storeId, id: { in: ids } }, select: { id: true, colourId: true, sizeId: true } }) : [];
     const byId = new Map(vs.map((v) => [v.id, v]));
     if (vs.length === new Set(ids).size && ids.length) {
       try {
-        const r = await addSetToBag(deps, { ...bagRef, comboId: s.comboId, choices: s.pieces.map((p) => ({ colourId: byId.get(p.variantId!)!.colourId, sizeId: byId.get(p.variantId!)!.sizeId })), source: REORDER_SOURCE });
+        const r = await addSetToBag(deps, { ...bagRef, comboId: s.comboId, choices: s.pieces.map((p) => ({ colourId: byId.get(p.variantId!)!.colourId, sizeId: byId.get(p.variantId!)!.sizeId })), source });
         if (r.added) {
           out.sets += 1;
           out.pieces += r.lines.length;
@@ -97,7 +106,7 @@ export async function buyAgain(deps: CartDeps, input: ReorderInput): Promise<Reo
     loose.push(...s.pieces);
   }
 
-  const facts = await productFacts(deps, input.storeId, loose.map((i) => i.productId).filter((x): x is string => !!x));
+  const facts = await productFacts(deps, bagRef.storeId, loose.map((i) => i.productId).filter((x): x is string => !!x));
   const missOf = (i: ReorderItem, f: ReorderFact | undefined, inStock: string[] = []): ReorderMiss => ({
     productId: i.productId,
     slug: f?.published ? f.slug : null,
@@ -119,7 +128,7 @@ export async function buyAgain(deps: CartDeps, input: ReorderInput): Promise<Reo
       continue;
     }
     try {
-      const r = await addItem(deps, { ...bagRef, variantId: v.variantId, quantity: v.quantity, source: REORDER_SOURCE });
+      const r = await addItem(deps, { ...bagRef, variantId: v.variantId, quantity: v.quantity, source });
       if (r.added) out.pieces += v.quantity;
       else out.inBag += 1;
     } catch (e) {
@@ -133,7 +142,39 @@ export async function buyAgain(deps: CartDeps, input: ReorderInput): Promise<Reo
       else throw e;
     }
   }
+}
 
-  if (out.pieces > 0) await deps.db.cart.updateMany({ where: { id: input.cartId, storeId: input.storeId, status: 'ACTIVE' }, data: { reorderFromOrderId: o.id } });
+/** S13 · PR 275 — where a bag line put back by a follow-up's link came from (CartItem.source). */
+export const RESTORE_SOURCE = 'follow-up';
+
+/**
+ * S13 · PR 275 — an unfinished checkout's bag back in this browser's bag (the follow-up's link, opened on any phone):
+ * every line still in that bag (not saved for later, not taken out), each through the bag's own add at today's price
+ * and stock, a shop's set as its set while it is offered. The same bag (the browser that left it) needs nothing; the
+ * same link twice adds nothing (the bag's duplicate rule). Nothing is ordered.
+ */
+export async function restoreBag(deps: CartDeps, input: { storeId: number; cartId: string; fromCartId: string }): Promise<ReorderOutcome> {
+  checkStoreId(input.storeId);
+  const out: ReorderOutcome = { number: '', pieces: 0, sets: 0, inBag: 0, again: false, soldOut: [], gone: [] };
+  if (input.cartId === input.fromCartId) return { ...out, again: true, inBag: await countOf(deps, input.storeId, input.cartId) };
+  const bag = await deps.db.cart.findFirst({ where: { id: input.cartId, storeId: input.storeId, status: 'ACTIVE' }, select: { id: true } });
+  if (!bag) throw new CartError('CART_NOT_OPEN', 'the bag is not open', ['cartId']);
+  const lines = await deps.db.cartItem.findMany({
+    where: { storeId: input.storeId, cartId: input.fromCartId, removedAt: null, savedForLater: false },
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    select: { id: true, variantId: true, quantity: true, unitPriceMinor: true, comboId: true, comboGroupKey: true },
+  });
+  if (!lines.length) return out;
+  const vs = await deps.db.productVariant.findMany({ where: { storeId: input.storeId, id: { in: [...new Set(lines.map((l) => l.variantId))] } }, select: { id: true, productId: true, colour: { select: { nameEn: true } }, size: { select: { label: true } } } });
+  const byId = new Map(vs.map((v) => [v.id, v]));
+  const items: ReorderItem[] = lines.map((l) => {
+    const v = byId.get(l.variantId);
+    return { id: l.id, variantId: v ? l.variantId : null, productId: v?.productId ?? null, productName: '', colourName: v?.colour?.nameEn ?? null, sizeLabel: v?.size?.label ?? null, quantity: l.quantity, unitPriceMinor: l.unitPriceMinor, comboId: l.comboId, comboGroupKey: l.comboGroupKey, isAddOn: false, status: 'ACTIVE' };
+  });
+  await putBack(deps, { storeId: input.storeId, cartId: input.cartId }, items, out, RESTORE_SOURCE);
   return out;
+}
+
+async function countOf(deps: CartDeps, storeId: number, cartId: string): Promise<number> {
+  return (await deps.db.cartItem.aggregate({ where: { storeId, cartId, removedAt: null, savedForLater: false }, _sum: { quantity: true } }))._sum.quantity ?? 0;
 }

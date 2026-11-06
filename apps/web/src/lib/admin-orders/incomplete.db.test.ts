@@ -5,6 +5,8 @@
 // `orders.confirm` hands one to a teammate, marks it handled with a note and opens it again (audited); a reader cannot;
 // the card saves the switch, the days and the minutes with `settings.write` only. A throwaway database (skipped
 // without TEST_DATABASE_ADMIN_URL). Sample values only.
+// PR 275: the follow-up card — off as shipped, saved with `settings.write`, the offer only with one of the shop's live
+// codes (written as the code is), audited; each row says what went to him, the card how many went and came back.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -41,7 +43,7 @@ describe.skipIf(!HAS_TEST_DB)('Orders › Incomplete on PostgreSQL (PR 274, SIM-
   let owner = '';
   let reader = '';
   let ownerId = '';
-  type Answer = IncompleteOverview & { ok: boolean; error?: string; details?: string[]; cards?: { incomplete: IncompleteOverview['card'] }; id?: string };
+  type Answer = IncompleteOverview & { ok: boolean; error?: string; details?: string[]; cards?: { incomplete?: IncompleteOverview['card']; followUp?: IncompleteOverview['followUp']['card'] }; id?: string };
   const api = async (method: string, o: { body?: unknown; cookie?: string; view?: string } = {}) => {
     const res = await incompleteHandler(req(method, { body: o.body, cookie: o.cookie ?? owner, path: `/api/admin/orders/incomplete${o.view ? `?view=${o.view}` : ''}` }), admin, { now: () => T0 });
     return { status: res.status, a: (await res.json()) as Answer };
@@ -80,7 +82,7 @@ describe.skipIf(!HAS_TEST_DB)('Orders › Incomplete on PostgreSQL (PR 274, SIM-
     expect((await api('PUT', { body: { key: 'incomplete', value, version: 'old' } })).a.error).toBe('STALE');
     const put = await api('PUT', { body: { key: 'incomplete', value, version: g.a.card.version } });
     expect(put.status).toBe(200);
-    expect(put.a.cards!.incomplete.value).toEqual(value);
+    expect(put.a.cards!.incomplete!.value).toEqual(value);
     expect(await admin.resolver.value('checkout.capture.enabled', { storeId: S })).toBe(true);
     expect(await admin.resolver.value('orders.incomplete', { storeId: S })).toEqual({ leftAfterMinutes: 45 });
     expect(await t.prisma.auditLog.count({ where: { action: 'incomplete.settings' } })).toBe(1);
@@ -156,5 +158,32 @@ describe.skipIf(!HAS_TEST_DB)('Orders › Incomplete on PostgreSQL (PR 274, SIM-
     expect((await api('POST', { body: { action: 'assign', id, staffUserId: null } })).status).toBe(200);
     expect((await api('POST', { body: { action: 'nothing', id } })).a.error).toBe('INVALID_INPUT');
     expect(await t.prisma.auditLog.count({ where: { action: { in: ['incomplete.assign', 'incomplete.handled', 'incomplete.reopen'] }, entityId: id } })).toBe(4);
+  });
+
+  it('PR 275: the follow-up card is off as shipped; the offer needs a live code; a row shows what went to him; the card counts what went and came back', async () => {
+    const g = await api('GET', { cookie: reader });
+    expect(g.a.followUp).toMatchObject({ sent: 0, recovered: 0, ceiling: 2 });
+    expect(g.a.followUp.card.value).toEqual({ enabled: false, firstAfterMinutes: 60, channels: 'WHATSAPP,SMS', minStep: 'details', catchUpHours: 24, phoneGapDays: 7, offer: false, offerAfterHours: 24, offerCode: '' });
+    const v0 = g.a.followUp.card.version;
+    const on = { ...g.a.followUp.card.value, enabled: true, channels: 'SMS,WHATSAPP', minStep: 'delivery' };
+    expect((await api('PUT', { cookie: reader, body: { key: 'followUp', value: on, version: v0 } })).status).toBe(403);
+    expect((await api('PUT', { body: { key: 'followUp', value: { ...on, channels: 'EMAIL', firstAfterMinutes: 5 }, version: v0 } })).a).toMatchObject({ error: 'INVALID_INPUT', details: ['firstAfterMinutes', 'channels'] });
+    expect((await api('PUT', { body: { key: 'followUp', value: { ...on, offer: true, offerCode: 'NOPE275' }, version: v0 } })).a).toMatchObject({ error: 'INVALID_INPUT', details: ['offerCode'] });
+    expect((await api('PUT', { body: { key: 'followUp', value: { ...on, offer: true }, version: v0 } })).a).toMatchObject({ error: 'INVALID_INPUT', details: ['offerCode'] });
+    const saved = await api('PUT', { body: { key: 'followUp', value: on, version: v0 } });
+    expect(saved.a.cards?.followUp?.value).toMatchObject({ enabled: true, channels: 'SMS,WHATSAPP', minStep: 'delivery', offer: false });
+    expect(await admin.resolver.value('orders.followUp', { storeId: S })).toMatchObject({ enabled: true, channels: ['SMS', 'WHATSAPP'], minStep: 'delivery' });
+    await t.prisma.coupon.create({ data: { storeId: S, code: 'BACK275', kind: 'AMOUNT_OFF', value: { amountMinor: 5_000 }, enabled: true } });
+    const offer = await api('PUT', { body: { key: 'followUp', value: { ...saved.a.cards!.followUp!.value, offer: true, offerCode: 'back275' }, version: saved.a.cards!.followUp!.version } });
+    expect(offer.a.cards?.followUp?.value).toMatchObject({ offer: true, offerCode: 'BACK275' });
+    expect(await t.prisma.auditLog.count({ where: { action: 'incomplete.followUp' } })).toBe(2);
+
+    const row = (await api('GET')).a.rows[0]!;
+    expect(row.followUps).toEqual({ sent: 0, last: null });
+    const sentAt = new Date(T0.getTime() - 30 * MIN);
+    await t.prisma.recoveryMessage.create({ data: { storeId: S, kind: 'INCOMPLETE', checkoutDraftId: row.id, attempt: 1, channel: 'SMS', sentAt } });
+    const after = await api('GET');
+    expect(after.a.rows.find((r) => r.id === row.id)!.followUps).toEqual({ sent: 1, last: { at: sentAt.toISOString(), channel: 'SMS', offer: false } });
+    expect(after.a.followUp).toMatchObject({ sent: 1, recovered: 0 });
   });
 });
