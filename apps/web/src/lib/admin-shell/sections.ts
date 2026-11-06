@@ -335,6 +335,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/website/blog/sold', perm: 'blog.read', keys: ['blogSold'] },
           // S12 · PR 592 — house ads: our own offers in the journal's places (`/admin/website/blog/ads/<id>`, `new`), clicks and orders.
           { href: '/admin/website/blog/ads', perm: 'blog.read', keys: ['blogAds', 'blogAd'] },
+          // S12 · PR 591 — the content pipeline: the pace (3 a day, then 5 while healthy), the queue, review and refresh.
+          { href: '/admin/website/blog/pipeline', perm: 'blog.read', keys: ['blogPipeline'] },
         ],
       },
     ],

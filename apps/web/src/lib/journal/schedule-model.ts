@@ -52,9 +52,10 @@ export interface DayPlan {
 
 /**
  * The days ahead from today (`daysAhead` of them): each day's articles counted, and its free times — a publishing
- * time with no article at that minute, not closer than `leadMinutes` from now, while the day is under its target.
+ * time with no article at that minute, not closer than `leadMinutes` from now, while the day is under its target
+ * (`targetOf(day)` when given: the pipeline's pace, PR 591).
  */
-export function daysAhead(placed: readonly Placed[], s: BlogScheduleSettings, now: Date, timeZone: string): DayPlan[] {
+export function daysAhead(placed: readonly Placed[], s: BlogScheduleSettings, now: Date, timeZone: string, targetOf?: (day: string) => number): DayPlan[] {
   const slots = slotsOf(s);
   const today = dayOf(now, timeZone);
   const earliest = now.getTime() + s.leadMinutes * MINUTE_MS;
@@ -63,11 +64,13 @@ export function daysAhead(placed: readonly Placed[], s: BlogScheduleSettings, no
     const day = addDays(today, i);
     const mine = placed.filter((p) => dayOf(p.at, timeZone) === day);
     const taken = new Set(mine.map((p) => timeOf(p.at, timeZone)));
+    // PR 591: with the pipeline on, the day's pace replaces the target (blog.pipeline, pipeline.ts)
+    const target = targetOf ? targetOf(day) : s.perDayTarget;
     let n = mine.length;
     const free: Date[] = [];
     for (const hm of slots) {
       const at = slotAt(day, hm, timeZone);
-      if (at.getTime() <= earliest || taken.has(hm) || n >= s.perDayTarget) continue;
+      if (at.getTime() <= earliest || taken.has(hm) || n >= target) continue;
       free.push(at);
       n += 1;
     }

@@ -1,0 +1,8 @@
+{
+  "blog": {
+    "pipeline": {
+      "label": "Blog content pipeline",
+      "help": "Off (as shipped): the calendar fills to its own daily target as before. On: the journal publishes the start pace (3 a day) for the first two weeks from its first live article, then the full pace (5 a day) only while it is healthy — few articles sent back in review and, when asked, Google indexing known and good. Otherwise it drops back to the start pace by itself. The pipeline page shows the queue: what to write next, what waits in review, what is stuck and which old articles need a refresh. AI writing waits for its own stage."
+    }
+  }
+}

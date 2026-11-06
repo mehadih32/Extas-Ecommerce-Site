@@ -137,6 +137,8 @@ export * from './registry-blog-comments';
 export * from './registry-blog-images';
 // S12 · PR 592 — the journal's house ads and popup rules (registry-house-ads.ts, version 253).
 export * from './registry-house-ads';
+// S12 · PR 591 — the blog content pipeline: pace, queue and health (registry-blog-pipeline.ts, version 254).
+export * from './registry-blog-pipeline';
 // S18 · PR 379 — the quiet bot check (registry-bot-check.ts, version 74).
 export * from './registry-bot-check';
 // S18 · PR 380 — the admin address list and the new-login notes (registry-admin-access.ts, version 78).

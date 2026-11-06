@@ -113,6 +113,7 @@
     { "id": "website/blog-sold", "route": "/admin/website/blog/sold" },
     { "id": "website/blog-ads", "route": "/admin/website/blog/ads" },
     { "id": "website/blog-ad", "route": "/admin/website/blog/ads/[id]" },
+    { "id": "website/blog-pipeline", "route": "/admin/website/blog/pipeline" },
     { "id": "money/overview", "route": "/admin/money" },
     { "id": "money/refunds", "route": "/admin/money/refunds" },
     { "id": "money/cost-ledger", "route": "/admin/money/cost-ledger" },
