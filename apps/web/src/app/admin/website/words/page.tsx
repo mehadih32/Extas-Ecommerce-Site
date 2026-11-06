@@ -10,6 +10,8 @@
 // components/shop/WordsEditPanel).
 // PR 78 follow-up (674): each row says when the word last changed (lib/website/words-admin lastChanged), in the
 // admin's language and the store's time zone.
+// PR 78 follow-up (677): "The admin's words" (?set=admin): every word of the admin pages (lib/website/admin-words), read
+// only, searched and paged; the shop's words stay the default list.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -25,7 +27,8 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { WORD_GROUPS, WORD_KEYS, WORD_SHOWS } from '@/lib/website/words';
 import { frontEditCard } from '@/lib/website/front-edit';
-import { wordQueryOf, wordsView } from '@/lib/website/words-admin';
+import { adminWordList } from '@/lib/website/admin-words';
+import { WORDS_PAGE_SIZE, wordQueryOf, wordsView } from '@/lib/website/words-admin';
 import bn from '../../../../../messages/admin-words.bn.json';
 import en from '../../../../../messages/admin-words.en.json';
 import '../../settings-cards.css';
@@ -66,6 +69,8 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
     );
   const g = (k: string, vars?: Record<string, string | number>) => t(d, `wd.${k}`, vars);
   const query = wordQueryOf(sp);
+  // PR 78 follow-up (677): the admin's own words, read only
+  const adminSet = sp.get('set') === 'admin';
   const wd = { db: access.deps.db, resolver: access.deps.resolver };
   const [v, fe] = await Promise.all([wordsView(wd, query), frontEditCard(wd)]);
   const canEdit = access.guard.permissions?.has('website.words.write') ?? false;
@@ -132,98 +137,183 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
         </div>
         <p className="a2-xs a2-mute wdb-mt6">{g('fe.openHelp')}</p>
       </div>
-      <form className="a2-sc a2-mt12 wdb-search" method="get" action={HERE} role="search" data-testid="wd-search">
+      <nav className="a2-seg a2-mt12 wdb-set" aria-label={g('set.label')} data-testid="wd-set">
+        <a href={HERE} className={adminSet ? undefined : 'on'} aria-current={adminSet ? undefined : 'page'} data-testid="wd-set-shop">
+          {g('set.shop')}
+        </a>
+        <a href={`${HERE}?set=admin`} className={adminSet ? 'on' : undefined} aria-current={adminSet ? 'page' : undefined} data-testid="wd-set-admin">
+          {g('set.admin')}
+        </a>
+      </nav>
+      {adminSet ? (
+        <AdminWords q={query.q ?? ''} p={query.p ?? 1} g={g} />
+      ) : (
+        <>
+        <form className="a2-sc a2-mt12 wdb-search" method="get" action={HERE} role="search" data-testid="wd-search">
+          <div className="a2-fld wdb-q">
+            <label className="a2-lbl" htmlFor="wd-q">
+              {g('search')}
+            </label>
+            <input id="wd-q" className="a2-inp" type="search" name="q" defaultValue={query.q} placeholder={g('searchPh')} maxLength={120} data-testid="wd-q" />
+          </div>
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor="wd-where">
+              {g('where')}
+            </label>
+            <select id="wd-where" className="a2-sel" name="where" defaultValue={query.group} data-testid="wd-where">
+              <option value="">{g('everywhere')}</option>
+              {WORD_GROUPS.map((k) => (
+                <option key={k} value={k}>
+                  {where[k]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor="wd-show">
+              {g('show')}
+            </label>
+            <select id="wd-show" className="a2-sel" name="show" defaultValue={query.show} data-testid="wd-show">
+              {WORD_SHOWS.map((k) => (
+                <option key={k} value={k}>
+                  {g(`showOpt.${k}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="wdb-bar wdb-go">
+            <button type="submit" className="a2-btn pri" data-testid="wd-find">
+              {g('find')}
+            </button>
+            {filtered ? (
+              <a className="a2-btn" href={HERE} data-testid="wd-clear">
+                {g('clear')}
+              </a>
+            ) : null}
+          </div>
+        </form>
+        <WordsEditor
+          head={
+            <>
+              <h2 className="a2-h3" id="wd-h">
+                {g('found', { n: v.total })}
+              </h2>
+              {!canEdit ? <p className="a2-xs a2-mute wdb-mt6">{g('readOnly')}</p> : null}
+              {v.total ? null : (
+                <p className="a2-sm wdb-mt6" data-testid="wd-none">
+                  {g('none')}
+                </p>
+              )}
+            </>
+          }
+          rows={v.rows}
+          when={Object.fromEntries(Object.entries(v.lastChanged).map(([k, at]) => [k, dateTime(at, view.locale, view.timeZone)]))}
+          version={v.version}
+          canEdit={canEdit}
+          where={where}
+          w={w}
+          file={{
+            title: g('file'),
+            sub: g('fileSub'),
+            exportHref: `${API}?format=csv`,
+            exportLabel: g('export'),
+            importLabel: g('import'),
+            importPick: g('importPick'),
+            importGo: g('importGo'),
+            importing: g('importing'),
+            imported: g('imported'),
+            importNone: g('importNone'),
+          }}
+        >
+          {v.pages > 1 ? (
+            <nav className="wdb-pager" aria-label={g('page', { p: v.p, pages: v.pages })} data-testid="wd-pager">
+              {v.p > 1 ? (
+                <a className="a2-btn" href={pageHref(v.p - 1)} rel="prev" data-testid="wd-prev">
+                  {g('prev')}
+                </a>
+              ) : null}
+              <span className="a2-xs a2-mute">{g('page', { p: v.p, pages: v.pages })}</span>
+              {v.p < v.pages ? (
+                <a className="a2-btn" href={pageHref(v.p + 1)} rel="next" data-testid="wd-next">
+                  {g('next')}
+                </a>
+              ) : null}
+            </nav>
+          ) : null}
+        </WordsEditor>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** PR 78 follow-up (677): the admin's own words, read only: a search, one card per word (file and key, both languages), pages. */
+function AdminWords({ q, p, g }: { q: string; p: number; g: (k: string, vars?: Record<string, string | number>) => string }) {
+  const list = adminWordList({ q, p }, WORDS_PAGE_SIZE);
+  const href = (n: number) => `${HERE}?set=admin${q ? `&q=${encodeURIComponent(q)}` : ''}${n > 1 ? `&p=${n}` : ''}`;
+  return (
+    <>
+      <form className="a2-sc a2-mt12 wdb-search wdb-search1" method="get" action={HERE} role="search" data-testid="wd-adm-search">
+        <input type="hidden" name="set" value="admin" />
         <div className="a2-fld wdb-q">
-          <label className="a2-lbl" htmlFor="wd-q">
+          <label className="a2-lbl" htmlFor="wd-adm-q">
             {g('search')}
           </label>
-          <input id="wd-q" className="a2-inp" type="search" name="q" defaultValue={query.q} placeholder={g('searchPh')} maxLength={120} data-testid="wd-q" />
-        </div>
-        <div className="a2-fld">
-          <label className="a2-lbl" htmlFor="wd-where">
-            {g('where')}
-          </label>
-          <select id="wd-where" className="a2-sel" name="where" defaultValue={query.group} data-testid="wd-where">
-            <option value="">{g('everywhere')}</option>
-            {WORD_GROUPS.map((k) => (
-              <option key={k} value={k}>
-                {where[k]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="a2-fld">
-          <label className="a2-lbl" htmlFor="wd-show">
-            {g('show')}
-          </label>
-          <select id="wd-show" className="a2-sel" name="show" defaultValue={query.show} data-testid="wd-show">
-            {WORD_SHOWS.map((k) => (
-              <option key={k} value={k}>
-                {g(`showOpt.${k}`)}
-              </option>
-            ))}
-          </select>
+          <input id="wd-adm-q" className="a2-inp" type="search" name="q" defaultValue={q} placeholder={g('adm.searchPh')} maxLength={120} data-testid="wd-adm-q" />
         </div>
         <div className="wdb-bar wdb-go">
-          <button type="submit" className="a2-btn pri" data-testid="wd-find">
+          <button type="submit" className="a2-btn pri">
             {g('find')}
           </button>
-          {filtered ? (
-            <a className="a2-btn" href={HERE} data-testid="wd-clear">
+          {q ? (
+            <a className="a2-btn" href={`${HERE}?set=admin`}>
               {g('clear')}
             </a>
           ) : null}
         </div>
       </form>
-      <WordsEditor
-        head={
-          <>
-            <h2 className="a2-h3" id="wd-h">
-              {g('found', { n: v.total })}
-            </h2>
-            {!canEdit ? <p className="a2-xs a2-mute wdb-mt6">{g('readOnly')}</p> : null}
-            {v.total ? null : (
-              <p className="a2-sm wdb-mt6" data-testid="wd-none">
-                {g('none')}
-              </p>
-            )}
-          </>
-        }
-        rows={v.rows}
-        when={Object.fromEntries(Object.entries(v.lastChanged).map(([k, at]) => [k, dateTime(at, view.locale, view.timeZone)]))}
-        version={v.version}
-        canEdit={canEdit}
-        where={where}
-        w={w}
-        file={{
-          title: g('file'),
-          sub: g('fileSub'),
-          exportHref: `${API}?format=csv`,
-          exportLabel: g('export'),
-          importLabel: g('import'),
-          importPick: g('importPick'),
-          importGo: g('importGo'),
-          importing: g('importing'),
-          imported: g('imported'),
-          importNone: g('importNone'),
-        }}
-      >
-        {v.pages > 1 ? (
-          <nav className="wdb-pager" aria-label={g('page', { p: v.p, pages: v.pages })} data-testid="wd-pager">
-            {v.p > 1 ? (
-              <a className="a2-btn" href={pageHref(v.p - 1)} rel="prev" data-testid="wd-prev">
+      <section className="a2-sc a2-mt12" aria-labelledby="wd-adm-h" data-testid="wd-adm">
+        <h2 className="a2-h3" id="wd-adm-h">
+          {g('adm.found', { n: list.total })}
+        </h2>
+        <p className="a2-xs a2-mute wdb-mt6">{g('adm.note')}</p>
+        {list.total ? null : <p className="a2-sm wdb-mt6">{g('none')}</p>}
+        <ul className="wdb-list">
+          {list.rows.map((r) => (
+            <li key={`${r.file}:${r.key}`} className="wdb-row" data-testid="wd-adm-row">
+              <div className="wdb-head">
+                <code className="a2-xs wdb-key">{r.key}</code>
+                <span className="a2-xs a2-mute">{r.file}</span>
+              </div>
+              <div className="wdb-langs">
+                <div className="wdb-lang" lang="en">
+                  <span className="a2-xs a2-mute">{g('en')}</span>
+                  <span className="a2-sm wdb-text">{r.en}</span>
+                </div>
+                <div className="wdb-lang" lang="bn">
+                  <span className="a2-xs a2-mute">{g('bn')}</span>
+                  <span className="a2-sm wdb-text">{r.bn}</span>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+        {list.pages > 1 ? (
+          <nav className="wdb-pager" aria-label={g('page', { p: list.p, pages: list.pages })}>
+            {list.p > 1 ? (
+              <a className="a2-btn" href={href(list.p - 1)} rel="prev">
                 {g('prev')}
               </a>
             ) : null}
-            <span className="a2-xs a2-mute">{g('page', { p: v.p, pages: v.pages })}</span>
-            {v.p < v.pages ? (
-              <a className="a2-btn" href={pageHref(v.p + 1)} rel="next" data-testid="wd-next">
+            <span className="a2-xs a2-mute">{g('page', { p: list.p, pages: list.pages })}</span>
+            {list.p < list.pages ? (
+              <a className="a2-btn" href={href(list.p + 1)} rel="next">
                 {g('next')}
               </a>
             ) : null}
           </nav>
         ) : null}
-      </WordsEditor>
-    </div>
+      </section>
+    </>
   );
 }

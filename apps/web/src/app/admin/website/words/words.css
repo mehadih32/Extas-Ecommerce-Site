@@ -23,3 +23,8 @@
 .adm2 .wdb-pager .a2-btn{min-height:44px}
 .adm2 .wdb-import{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--ln)}
 .adm2 .wdb-file{min-height:44px;width:100%;min-width:0;max-width:100%;font-size:13.5px}
+/* PR 78 follow-up (677): the switch between the shop's and the admin's words, and the admin list's one-box search. */
+.adm2 .wdb-set{display:inline-flex;flex-wrap:wrap;max-width:100%}
+.adm2 .wdb-set a{min-height:44px;display:inline-flex;align-items:center}
+.adm2 .wdb-search.wdb-search1{grid-template-columns:minmax(0,1fr) auto}
+@media (max-width:760px){.adm2 .wdb-search.wdb-search1{grid-template-columns:minmax(0,1fr)}}
