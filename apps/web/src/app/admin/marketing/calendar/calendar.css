@@ -36,3 +36,30 @@
 .adm2 .mc-chips .a2-view{flex:0 0 auto}
 .adm2 .mc-item > a,.adm2 .mc-item > span{justify-self:start}
 .adm2 .mc-row:not(.mc-head){min-height:44px}
+/* Follow-up 656 — the month view: seven columns of days (the shop locale's first weekday first), each day's number and
+   its items as small chips coloured by state (live, scheduled, ended, off); days outside the month faded, today ringed.
+   On a phone the chips become dots (the cell's label and the day-by-day list name them). Lumen tokens only. */
+.adm2 .mc-month{display:grid;gap:4px;min-width:0}
+.adm2 .mc-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;min-width:0}
+.adm2 .mc-dow span{font-size:11px;color:var(--lm-ink2);text-align:center;padding:2px 0;overflow:hidden;text-overflow:clip;white-space:nowrap}
+.adm2 .mc-day{display:flex;flex-direction:column;gap:2px;min-height:76px;min-width:0;padding:4px;border:1px solid var(--lm-ln);border-radius:var(--lm-r-sm);background:var(--lm-sf);overflow:hidden}
+.adm2 .mc-day.out{background:transparent;opacity:.45}
+.adm2 .mc-day.today{border-color:var(--lm-accent);box-shadow:inset 0 0 0 1px var(--lm-accent)}
+.adm2 .mc-dn{font-size:11.5px;font-weight:600;color:var(--lm-ink2)}
+.adm2 .mc-chip{display:block;min-width:0;border-radius:var(--lm-r-sm);padding:1px 4px;font-size:10.5px;line-height:1.35;background:var(--lm-chip);color:var(--lm-ink)}
+.adm2 .mc-chip .mc-ct{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm2 .mc-chip.live{background:var(--lm-okbg);color:var(--lm-ok)}
+.adm2 .mc-chip.scheduled{background:var(--lm-infobg);color:var(--lm-info)}
+.adm2 .mc-chip.ended{background:var(--lm-sf2);color:var(--lm-ink2)}
+.adm2 .mc-chip.off{background:transparent;border:1px dashed var(--lm-ln);color:var(--lm-ink2)}
+.adm2 .mc-more{font-size:10.5px;color:var(--lm-ink2)}
+@media (max-width:640px){
+  .adm2 .mc-day{min-height:52px;padding:3px;gap:3px;flex-flow:row wrap;align-content:flex-start}
+  .adm2 .mc-dn{flex:0 0 100%}
+  .adm2 .mc-chip{width:8px;height:8px;padding:0;border-radius:var(--lm-r-pill)}
+  .adm2 .mc-chip.live{background:var(--lm-ok)}
+  .adm2 .mc-chip.scheduled{background:var(--lm-info)}
+  .adm2 .mc-chip.ended{background:var(--lm-ln)}
+  .adm2 .mc-chip .mc-ct{display:none}
+  .adm2 .mc-more{font-size:9.5px;line-height:8px}
+}

@@ -23,7 +23,8 @@
       "open": "Open",
       "from": "from {day}",
       "until": "until stopped",
-      "marks": "Last order day: {list}"
+      "marks": "Last order day: {list}",
+      "campaign": "Campaign: {name}"
     },
     "counts": "{pages} landing pages · {orders} orders · {delivered} delivered",
     "undated": "{n} campaigns have no start date yet, so they are not on the calendar.",
@@ -62,7 +63,9 @@
       "archive": "Set aside",
       "restore": "Bring back",
       "asideH": "Set aside",
-      "asideEmpty": "Nothing set aside."
+      "asideEmpty": "Nothing set aside.",
+      "campaign": "Campaign (optional)",
+      "campaignNone": "No campaign"
     },
     "card": {
       "h": "Settings",
@@ -92,7 +95,8 @@
       "id": "line",
       "days": "days",
       "action": "action",
-      "marketing.calendar": "the calendar switch"
+      "marketing.calendar": "the calendar switch",
+      "campaignId": "campaign"
     },
     "err": {
       "INVALID_INPUT": "Please check: {fields}.",
@@ -105,6 +109,20 @@
       "unauthorized": "Please sign in again.",
       "network": "No connection. Try again.",
       "other": "Something went wrong. Try again."
+    },
+    "view": {
+      "label": "View",
+      "bars": "Bars",
+      "month": "Month"
+    },
+    "month": {
+      "h": "The month",
+      "more": "+{n} more",
+      "empty": "Nothing planned in this month.",
+      "earlier": "Previous month",
+      "later": "Next month",
+      "this": "This month",
+      "range": "{month}"
     }
   }
 }

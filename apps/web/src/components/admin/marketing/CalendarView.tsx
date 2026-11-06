@@ -3,7 +3,7 @@
 // marks), and the legend. Used on Marketing › Calendar and, the same view, on Marketing › Campaigns. Reads only.
 import Link from 'next/link';
 import { t, type Dict } from '@/lib/i18n';
-import { barOf, CALENDAR_LANES, markAt, monthMarks, type CalendarItem, type CalendarRange } from '@/lib/marketing/calendar-model';
+import { barOf, CALENDAR_LANES, itemsOn, markAt, monthMarks, type CalendarItem, type CalendarRange } from '@/lib/marketing/calendar-model';
 
 export interface CalendarViewWords {
   /** The lane names (plan, campaign, ads, …). */
@@ -80,6 +80,65 @@ export function CalendarBars({ items, range, locale, bn, w, testId = 'mc-bars' }
           {w.mark}
         </span>
       </div>
+    </div>
+  );
+}
+
+/** Follow-up 656 — the month view's words (`mc.month.*`). */
+export interface MonthWords {
+  /** "+{n} more" on a day with more items than shown. */
+  more: (n: number) => string;
+  empty: string;
+}
+
+/**
+ * Follow-up 656 — the month as a grid of weeks (the shop's own locale's first weekday): each day with its number and
+ * the items running on it (a festive rule on its band days), coloured by state; days outside the month are faded.
+ * On a phone each item is a dot with its title for screen readers, so the seven columns fit; the day-by-day list below
+ * names them. Reads only.
+ */
+export function CalendarMonth({ items, weeks, today, locale, bn, w, mw, perDay, testId = 'mc-month' }: { items: CalendarItem[]; weeks: { day: string; out: boolean }[][]; today: string; locale: string; bn: boolean; w: CalendarViewWords; mw: MonthWords; perDay: number; testId?: string }) {
+  const dow = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' });
+  const num = new Intl.NumberFormat(locale, { numberingSystem: 'latn' });
+  const long = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', timeZone: 'UTC', numberingSystem: 'latn' });
+  const at = (day: string) => new Date(`${day}T00:00:00Z`);
+  return (
+    <div data-testid={testId}>
+      <div className="mc-month" role="table">
+        <div className="mc-week mc-dow" role="row">
+          {(weeks[0] ?? []).map((c) => (
+            <span key={c.day} role="columnheader">
+              {dow.format(at(c.day))}
+            </span>
+          ))}
+        </div>
+        {weeks.map((week) => (
+          <div key={week[0]!.day} className="mc-week" role="row">
+            {week.map((c) => {
+              const on = c.out ? [] : itemsOn(items, c.day);
+              const shown = on.slice(0, perDay);
+              return (
+                <div key={c.day} role="cell" className={`mc-day${c.out ? ' out' : ''}${c.day === today ? ' today' : ''}`} aria-label={`${long.format(at(c.day))}${on.length ? ` · ${on.map((i) => itemTitle(i, bn)).join(', ')}` : ''}`} data-testid="mc-day" data-day={c.day} data-n={on.length}>
+                  <span className="mc-dn" aria-hidden="true">
+                    {num.format(Number(c.day.slice(8)))}
+                  </span>
+                  {shown.map((i) => (
+                    <span key={i.id} className={`mc-chip ${i.state}`} data-lane={i.lane} title={`${w.lane[i.lane] ?? i.lane} · ${itemTitle(i, bn)} · ${w.state[i.state] ?? i.state}`} aria-hidden="true">
+                      <span className="mc-ct">{itemTitle(i, bn)}</span>
+                    </span>
+                  ))}
+                  {on.length > shown.length ? (
+                    <span className="mc-more" aria-hidden="true">
+                      {mw.more(on.length - shown.length)}
+                    </span>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      {items.length ? null : <p className="a2-sm a2-mute a2-mt12" data-testid={`${testId}-empty`}>{mw.empty}</p>}
     </div>
   );
 }

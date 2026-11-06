@@ -27,8 +27,8 @@ export interface CalendarItem {
   marks?: { day: string; label: string }[];
   /** The admin page it is managed on (null: none yet). */
   href: string | null;
-  /** The owner's own plan line: it can be changed here. */
-  own?: { note: string | null; archived: boolean };
+  /** The owner's own plan line: it can be changed here (follow-up 656: and the campaign it is tied to, if any). */
+  own?: { note: string | null; archived: boolean; campaign?: { id: string; name: string } | null };
 }
 
 const DAY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -67,6 +67,42 @@ export interface CalendarRange {
 export function calendarRange(today: string, days: number, asked?: unknown): CalendarRange {
   const from = dayOf(asked) ?? today;
   return { from, to: addDays(from, days - 1), days };
+}
+
+/**
+ * Follow-up 656 — the month view: the whole month holding the asked real day (else today), from its 1st to its last day.
+ */
+export function monthRange(today: string, asked?: unknown): CalendarRange {
+  const base = dayOf(asked) ?? today;
+  const from = `${base.slice(0, 8)}01`;
+  const [y, m] = base.split('-').map(Number) as [number, number];
+  const next = new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10);
+  const to = addDays(next, -1);
+  return { from, to, days: daysBetween(from, to) + 1 };
+}
+
+/** The first day of the month before / after the view's month (the month view's earlier and later). */
+export const monthStep = (r: CalendarRange, n: -1 | 1): string => (n < 0 ? `${addDays(r.from, -1).slice(0, 8)}01` : addDays(r.to, 1));
+
+/** A day's weekday, 1 = Monday … 7 = Sunday (ISO). */
+export const isoWeekday = (day: string): number => new Date(ms(day)).getUTCDay() || 7; // hardcode-ok: Sunday is 7 in ISO weeks
+
+/**
+ * The month view's weeks: whole weeks from the week holding the 1st to the week holding the last day, starting on
+ * `firstDay` (1–7, the shop's own locale's first day of the week); days outside the month are marked `out`.
+ */
+export function monthWeeks(r: CalendarRange, firstDay: number): { day: string; out: boolean }[][] {
+  const start = addDays(r.from, -((isoWeekday(r.from) - firstDay + 7) % 7));
+  const weeks: { day: string; out: boolean }[][] = [];
+  for (let d = start; d <= r.to; d = addDays(d, 7)) {
+    weeks.push(Array.from({ length: 7 }, (_, n) => addDays(d, n)).map((day) => ({ day, out: day < r.from || day > r.to })));
+  }
+  return weeks;
+}
+
+/** The items on one day: a festive rule on its band days only, anything else on every day it runs. */
+export function itemsOn<T extends Pick<CalendarItem, 'starts' | 'ends' | 'open' | 'marks'>>(items: readonly T[], day: string): T[] {
+  return items.filter((i) => (i.marks?.length ? i.marks.some((m) => m.day === day) : i.starts <= day && (i.ends ?? (i.open ? day : i.starts)) >= day));
 }
 
 /** The item's last day as the view sees it (an open item runs past any view). */
@@ -131,7 +167,11 @@ export interface PlanInput {
   starts: string;
   ends: string | null;
   note: string | null;
+  /** Follow-up 656: the campaign (Marketing › Campaigns) the line belongs to, or null. */
+  campaignId: string | null;
 }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const text = (v: unknown, max: number): string | null | undefined => {
   if (v === undefined || v === null) return null;
@@ -149,13 +189,16 @@ export function planInput(b: Record<string, unknown>): { ok: true; value: PlanIn
   const starts = dayOf(b.starts);
   const endsEmpty = b.ends === undefined || b.ends === null || (typeof b.ends === 'string' && !b.ends.trim());
   const ends = endsEmpty ? null : dayOf(b.ends);
+  const noCampaign = b.campaignId === undefined || b.campaignId === null || b.campaignId === '';
+  const campaignId = !noCampaign && typeof b.campaignId === 'string' && UUID_RE.test(b.campaignId) ? b.campaignId.toLowerCase() : null;
   const bad = [
     !title ? 'title' : '',
     titleBn === undefined ? 'titleBn' : '',
     !starts ? 'starts' : '',
     (!endsEmpty && !ends) || (ends && starts && (ends < starts || daysBetween(starts, ends) >= PLAN_SPAN_MAX)) ? 'ends' : '',
     note === undefined ? 'note' : '',
+    !noCampaign && !campaignId ? 'campaignId' : '',
   ].filter(Boolean);
   if (bad.length) return { ok: false, bad };
-  return { ok: true, value: { title: title!, titleBn: titleBn ?? null, starts: starts!, ends: ends && ends !== starts ? ends : null, note: note ?? null } };
+  return { ok: true, value: { title: title!, titleBn: titleBn ?? null, starts: starts!, ends: ends && ends !== starts ? ends : null, note: note ?? null, campaignId } };
 }
