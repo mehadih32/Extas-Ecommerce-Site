@@ -1,0 +1,8 @@
+{
+  "blog": {
+    "images": {
+      "label": "Journal photos",
+      "help": "Off as it ships: the shop's article pages show no main photo. On: an article shows the main photo picked for it in Website › Blog & journal › the article › Main photo. The picker offers the shop's own pictures only, in a fixed order: the photographs of the article's own products first, then the photo library. Studio pictures (AI-made, in the library) can be picked only while “Studio pictures” is on, and are always labelled “Studio image” under the photo. There is no picture from a web address, so nothing can come from an image search."
+    }
+  }
+}

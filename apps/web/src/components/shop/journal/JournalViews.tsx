@@ -4,7 +4,9 @@
 // product block of live product cards (fitted like the category page's, CardFits) — where the writer put `[products]`, else under the words).
 // S12 · PR 249: "Read next" under the article — links to the live articles of its plan, then its topic (internal links;
 // `blog.journal.relatedArticles`, none while 0).
+import type { ImageSource } from '@extas/media/delivery';
 import { ArticleBody } from '@/components/journal/ArticleBody';
+import { ResponsiveImage } from '@/components/media/ResponsiveImage';
 import { CardFits } from '@/components/shop/CardFits';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { dateText } from '@/lib/shop/account-view';
@@ -133,7 +135,7 @@ export function JournalList(p: { c: ShopContext; posts: LivePost[]; total: numbe
   );
 }
 
-export function JournalArticle(p: { c: ShopContext; post: LivePost; cards: ShopCard[]; aiNote: { en: string; bn: string }; related?: LivePost[] }) {
+export function JournalArticle(p: { c: ShopContext; post: LivePost; cards: ShopCard[]; aiNote: { en: string; bn: string }; related?: LivePost[]; photo?: { image: ImageSource; alt: string; studio: boolean } | null }) {
   const { c, post } = p;
   const t = c.t;
   const parts = contents(blocks(post.body));
@@ -156,6 +158,13 @@ export function JournalArticle(p: { c: ShopContext; post: LivePost; cards: ShopC
       <article className="jn-article">
         <h1 className="h1 jn-title">{post.title}</h1>
         <Meta c={c} p={post} aiNote={p.aiNote} />
+        {p.photo ? (
+          // PR 547: the article's main photo (own pictures only); a studio picture always says so
+          <figure className="jn-photo" data-testid="jn-photo">
+            <ResponsiveImage image={p.photo.image} slot="main" sizes="(max-width: 767px) 100vw, 720px" alt={p.photo.alt} priority />
+            {p.photo.studio ? <figcaption className="small jn-studio">{t('journal.studioImage')}</figcaption> : null}
+          </figure>
+        ) : null}
         {post.quickAnswer ? (
           <p className="jn-answer" data-testid="jn-answer">
             <b>{t('journal.answer')}:</b> {post.quickAnswer}

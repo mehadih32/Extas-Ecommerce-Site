@@ -101,6 +101,7 @@
     { "id": "website/seo-organic", "route": "/admin/website/seo/organic" },
     { "id": "website/blog", "route": "/admin/website/blog" },
     { "id": "website/blog-editor", "route": "/admin/website/blog/[id]" },
+    { "id": "website/blog-photo", "route": "/admin/website/blog/[id]/photo" },
     { "id": "website/blog-shelves", "route": "/admin/website/blog/shelves" },
     { "id": "website/blog-plan", "route": "/admin/website/blog/plan" },
     { "id": "website/blog-brief", "route": "/admin/website/blog/briefs/[id]" },

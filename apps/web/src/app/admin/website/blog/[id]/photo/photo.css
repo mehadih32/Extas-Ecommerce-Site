@@ -1,0 +1,25 @@
+/* S12 · PR 547 — Website › Blog & journal › the article › Main photo, drawn in Lumen: only --lm-* tokens (theme/lumen.css). */
+.ph-page { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ph-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.ph-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 1100px) {
+  .ph-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); }
+}
+.ph-off { border-left: 4px solid var(--lm-warn); color: var(--lm-ink); margin: 0; }
+.ph-sub { color: var(--lm-ink2); margin: 0; font-size: 0.9rem; }
+.ph-sub a { color: var(--lm-ac-ink); min-height: 44px; display: inline-flex; align-items: center; }
+.ph-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+.ph-it { display: flex; flex-direction: column; gap: 6px; min-width: 0; border: 1px solid var(--lm-ln); border-radius: var(--lm-r-box); padding: 6px; background: var(--lm-sf); }
+.ph-it.on { border-color: var(--lm-ac); box-shadow: 0 0 0 2px var(--lm-ac); }
+.ph-img { aspect-ratio: 4 / 5; overflow: hidden; border-radius: var(--lm-r-sm); background: var(--lm-chip); display: flex; align-items: center; justify-content: center; }
+.ph-img picture, .ph-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ph-none { color: var(--lm-ink2); font-size: 0.8rem; padding: 8px; text-align: center; }
+.ph-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.ph-name { color: var(--lm-ink); font-size: 0.85rem; font-weight: 700; overflow-wrap: anywhere; width: 100%; }
+.ph-pill { display: inline-flex; align-items: center; border-radius: var(--lm-r-pill); padding: 2px 10px; background: var(--lm-chip); color: var(--lm-ink2); font-size: 0.78rem; font-weight: 700; }
+.ph-pill.ok { background: var(--lm-okbg); color: var(--lm-ok); }
+.ph-pill.warn { background: var(--lm-warnbg); color: var(--lm-warn); }
+.ph-now { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.ph-now .ph-list { width: 100%; max-width: 220px; grid-template-columns: minmax(0, 1fr); }
+.ph-how { margin: 8px 0 0; padding-left: 20px; color: var(--lm-ink2); display: flex; flex-direction: column; gap: 6px; }
+.adm2 .a2-crumb a.ph-crumb { display: inline-flex; align-items: center; min-height: 44px; color: var(--lm-ink2); }

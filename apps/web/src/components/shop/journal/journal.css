@@ -67,3 +67,7 @@
 .shop .jn-cm-send { align-self: flex-start; min-height: 44px; }
 .shop .jn-cm-said { margin: 0; }
 .shop .jn-cm-said a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; }
+/* PR 547: the article's main photo (own pictures only); a studio picture is labelled under it. */
+.shop .jn-photo { margin: 16px 0; }
+.shop .jn-photo picture, .shop .jn-photo img { display: block; width: 100%; height: auto; border-radius: 8px; }
+.shop .jn-studio { margin-top: 6px; color: var(--text2); }

@@ -21,8 +21,10 @@ import { ArticleRead } from '@/components/shop/journal/ArticleRead';
 import { JournalComments } from '@/components/shop/journal/JournalComments';
 import { JournalArticle } from '@/components/shop/journal/JournalViews';
 import { shownComments } from '@/lib/journal/comments';
+import { articlePhoto } from '@/lib/journal/images';
 import { journalArticle, journalHasOther, journalSettings } from '@/lib/journal/shop';
 import { byline } from '@/lib/journal/model';
+import { settingsResolver } from '@/lib/settings';
 import { signedIn } from '@/lib/shop/account';
 import { readPageSettings, shopContext, type ShopContext } from '@/lib/shop/context';
 import { hrefIn } from '@/lib/shop/lang';
@@ -63,6 +65,9 @@ export default async function JournalPost(props: Props) {
   const page = await readPageSettings(['seo.structuredData', 'blog.performance', 'blog.comments'] as const, c.storeId);
   const talk = page['blog.comments'];
   const [comments, me] = talk.on ? await Promise.all([shownComments(getPrisma(), c.storeId, post.id, talk.shown), talk.who === 'signedIn' ? signedIn() : Promise.resolve(null)]) : [[], null];
+  // PR 547: the main photo while the owner shows them (Website › Blog & journal › Main photo); never fails the page
+  const resolver = settingsResolver();
+  const photo = resolver ? await articlePhoto(getPrisma(), resolver, c.storeId, post.heroAssetId, c.lang).catch(() => null) : null;
   const sd = page['seo.structuredData'];
   const origin = sd.article || sd.breadcrumbs ? await shopOrigin() : undefined;
   const href = hrefIn(c.lang, ROUTES.article(post.slug));
@@ -95,7 +100,7 @@ export default async function JournalPost(props: Props) {
   return (
     <>
       <JsonLd data={ld} />
-      <JournalArticle c={c} post={post} cards={a.cards} aiNote={a.settings.aiNote} related={a.related} />
+      <JournalArticle c={c} post={post} cards={a.cards} aiNote={a.settings.aiNote} related={a.related} photo={photo} />
       {/* PR 250: counted only while the owner counts readers (Website › Blog & journal › Performance) */}
       {page['blog.performance'].count ? <ArticleRead postId={post.id} /> : null}
       {/* PR 251: only while the owner has switched comments on (Website › Blog & journal › Comments) */}
