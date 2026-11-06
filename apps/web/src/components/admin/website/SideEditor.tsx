@@ -4,7 +4,8 @@
 // place and standard size; fixed, sticky or floating; a product, a category, an image or a small offer button; on a card
 // or straight on the page) with Edit and Duplicate (hidden, never deleted), and the approval map: the page at 1440 and
 // 1920 px with every zone where it would sit (lib/shop/side-fit.ts, the shop's own rule), drawn from the draft, so the
-// owner sees it before anything changes. Save sends everything (PUT /api/admin/website/side-canvas,
+// owner sees it before anything changes. Follow-up (PR 596, Lumen 14 px): each zone on the map shows its number and a
+// legend under the maps names it. Save sends everything (PUT /api/admin/website/side-canvas,
 // `website.layout.write`; the API checks again).
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
@@ -43,6 +44,8 @@ export function SideEditor(p: { canvas: SideCanvas; zones: SideZone[]; version: 
   const [ask, setAsk] = useState(false);
   const [busy, setBusy] = useState(false);
   const dirty = JSON.stringify([canvas, zones]) !== JSON.stringify([p.canvas, p.zones]);
+  /** The zones switched on, numbered on the approval map in this order (the legend names them). */
+  const onZones = zones.filter((z) => z.on);
   const nameOf = (x: { en: string; bn: string | null }) => (p.lang === 'bn' && x.bn) || x.en;
   const patch = (id: string, q: Partial<SideZone>) => setZones(zones.map((z) => (z.id === id ? { ...z, ...q } : z)));
   const add = (side: 'left' | 'right') => {
@@ -259,7 +262,7 @@ export function SideEditor(p: { canvas: SideCanvas; zones: SideZone[]; version: 
           {MAP_WIDTHS.map((W) => {
             const CONTENT = contentAt(W);
             const side = (W - CONTENT) / 2;
-            const shown = zones.filter((z) => z.on);
+            const shown = onZones;
             const out = shown.filter((z) => !fitZone(z, W, CONTENT, canvas.gap, canvas.minWidth).show);
             return (
               <figure key={W} className="scx-fig">
@@ -267,12 +270,14 @@ export function SideEditor(p: { canvas: SideCanvas; zones: SideZone[]; version: 
                 <div className="scx-pg" style={{ aspectRatio: `${W} / ${MAP_H}` }}>
                   <div className="scx-head" style={{ height: `${(HEAD / MAP_H) * 100}%` }} />
                   <div className="scx-content" style={{ left: `${(side / W) * 100}%`, width: `${(CONTENT / W) * 100}%`, top: `${(HEAD / MAP_H) * 100}%` }} />
-                  {shown.map((z) => {
+                  {shown.map((z, i) => {
                     const f = fitZone(z, W, CONTENT, canvas.gap, canvas.minWidth);
                     if (!f.show) return null;
                     return (
                       <div key={z.id} className={`scx-zone k-${z.kind}`} title={z.name || g(`kind.${z.kind}`)} style={{ left: `${(f.x / W) * 100}%`, top: `${((HEAD + z.top) / MAP_H) * 100}%`, width: `${(f.width / W) * 100}%`, height: `${(Math.min(f.height, MAP_H - HEAD - z.top) / MAP_H) * 100}%` }}>
-                        <span>{z.name || g(`kind.${z.kind}`)}</span>
+                        {/* follow-up (PR 596): a zone drawn to scale is too small for its name at Lumen's 14 px, so it
+                            shows its number and the legend under the maps names it */}
+                        <span>{i + 1}</span>
                       </div>
                     );
                   })}
@@ -282,6 +287,16 @@ export function SideEditor(p: { canvas: SideCanvas; zones: SideZone[]; version: 
             );
           })}
         </div>
+        {onZones.length ? (
+          <ol className="scx-legend" aria-label={g('map.legend')} data-testid="sc-legend">
+            {onZones.map((z, i) => (
+              <li key={z.id}>
+                <b>{i + 1}</b>
+                {z.name || g(`kind.${z.kind}`)}
+              </li>
+            ))}
+          </ol>
+        ) : null}
         <p className="lm-hint">{g('map.note')}</p>
       </section>
 

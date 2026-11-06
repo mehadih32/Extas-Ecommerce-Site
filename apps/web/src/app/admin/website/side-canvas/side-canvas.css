@@ -28,9 +28,13 @@
 [data-lm-look] .scx-pg { position: relative; width: 100%; overflow: hidden; border-radius: var(--lm-r-box); background: var(--lm-bg); box-shadow: inset 0 0 0 1px var(--lm-ln); }
 [data-lm-look] .scx-head { position: absolute; top: 0; left: 0; right: 0; background: var(--lm-chip); }
 [data-lm-look] .scx-content { position: absolute; bottom: 0; background: var(--lm-sf2); box-shadow: inset 0 0 0 1px var(--lm-ln); }
-[data-lm-look] .scx-zone { position: absolute; display: grid; place-items: center; border-radius: var(--lm-r-sm); background: var(--lm-acbg); box-shadow: inset 0 0 0 2px var(--lm-ac); color: var(--lm-ink); font-size: 0.62rem; font-weight: 700; text-align: center; overflow: hidden; }
+[data-lm-look] .scx-zone { position: absolute; display: grid; place-items: center; border-radius: var(--lm-r-sm); background: var(--lm-acbg); box-shadow: inset 0 0 0 2px var(--lm-ac); color: var(--lm-ink); font-size: var(--lm-fs-card); font-weight: 700; text-align: center; overflow: hidden; }
 [data-lm-look] .scx-zone span { padding: 2px; overflow-wrap: anywhere; }
 [data-lm-look] .scx-out { color: var(--lm-warn); }
+/* the legend under the maps: a zone's number (as drawn on the map) and its name, at Lumen's 14 px */
+[data-lm-look] .scx-legend { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: var(--lm-fs-card); color: var(--lm-ink); }
+[data-lm-look] .scx-legend li { display: inline-flex; align-items: center; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+[data-lm-look] .scx-legend b { flex: none; display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: var(--lm-r-pill); background: var(--lm-acbg); color: var(--lm-ac-ink); font-weight: 700; }
 [data-lm-look] .scx-save { position: sticky; bottom: 0; display: grid; gap: 6px; padding: 10px 0 4px; background: var(--lm-bg); z-index: 2; }
 @media (max-width: 759px) {
   [data-lm-look] .scx-save { bottom: calc(var(--lm-tap) + 24px); }
