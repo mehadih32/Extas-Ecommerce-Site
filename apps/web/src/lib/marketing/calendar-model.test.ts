@@ -1,7 +1,7 @@
 // S13 · PR 282 — the marketing calendar's pure parts: days on the shop's clock, the view, what falls in it, bars and marks,
 // the header's month marks, the day-by-day order and the owner's plan line as typed.
 import { describe, expect, it } from 'vitest';
-import { addDays, agendaOrder, barOf, calendarRange, dayAt, dayOf, inRange, markAt, monthMarks, planInput, stateByDays, type CalendarItem } from './calendar-model';
+import { addDays, agendaOrder, barOf, calendarRange, dayAt, dayOf, inRange, isoWeekday, itemsOn, markAt, monthMarks, monthRange, monthStep, monthWeeks, planInput, stateByDays, type CalendarItem } from './calendar-model';
 
 const item = (o: Partial<CalendarItem>): CalendarItem => ({ id: 'x', lane: 'campaign', title: { en: 'X', bn: null }, starts: '2027-03-01', ends: null, open: false, state: 'live', detail: null, href: null, ...o });
 
@@ -52,11 +52,45 @@ describe('marketing calendar model (PR 282)', () => {
   });
 
   it('takes a plan line with a title, a start and an end on or after it, and names every wrong field', () => {
-    expect(planInput({ title: ' Eid ', titleBn: 'ঈদ', starts: '2027-03-08', ends: '2027-03-12', note: '' })).toEqual({ ok: true, value: { title: 'Eid', titleBn: 'ঈদ', starts: '2027-03-08', ends: '2027-03-12', note: null } });
+    expect(planInput({ title: ' Eid ', titleBn: 'ঈদ', starts: '2027-03-08', ends: '2027-03-12', note: '' })).toEqual({ ok: true, value: { title: 'Eid', titleBn: 'ঈদ', starts: '2027-03-08', ends: '2027-03-12', note: null, campaignId: null } });
     // one day: an end on the same day is no end
     expect(planInput({ title: 'Pohela Boishakh', starts: '2027-04-14', ends: '2027-04-14' })).toMatchObject({ ok: true, value: { ends: null, titleBn: null } });
     expect(planInput({ title: '', titleBn: 5, starts: '2027-02-30', ends: 'soon', note: 'x'.repeat(281) })).toEqual({ ok: false, bad: ['title', 'titleBn', 'starts', 'ends', 'note'] });
     expect(planInput({ title: 'Winter', starts: '2027-03-08', ends: '2027-03-01' })).toEqual({ ok: false, bad: ['ends'] });
     expect(planInput({ title: 'Typo', starts: '2027-03-08', ends: '2207-03-01' })).toEqual({ ok: false, bad: ['ends'] });
+  });
+
+  it('follow-up 656: a plan line may name its campaign (an id, or none)', () => {
+    const id = '0190f0f0-0000-7000-8000-00000000abcd';
+    expect(planInput({ title: 'Eid', starts: '2027-03-08', campaignId: id })).toMatchObject({ ok: true, value: { campaignId: id } });
+    expect(planInput({ title: 'Eid', starts: '2027-03-08', campaignId: '' })).toMatchObject({ ok: true, value: { campaignId: null } });
+    expect(planInput({ title: 'Eid', starts: '2027-03-08', campaignId: 'eid' })).toEqual({ ok: false, bad: ['campaignId'] });
+    expect(planInput({ title: 'Eid', starts: '2027-03-08', campaignId: 7 })).toEqual({ ok: false, bad: ['campaignId'] });
+  });
+
+  it('follow-up 656: the month view — the whole month, whole weeks from the locale\'s first day, the items of each day', () => {
+    expect(monthRange('2027-03-10')).toEqual({ from: '2027-03-01', to: '2027-03-31', days: 31 });
+    expect(monthRange('2027-03-10', '2028-02-15')).toEqual({ from: '2028-02-01', to: '2028-02-29', days: 29 });
+    expect(monthRange('2027-12-31')).toMatchObject({ from: '2027-12-01', to: '2027-12-31' });
+    const r = monthRange('2027-03-10');
+    expect([monthStep(r, -1), monthStep(r, 1)]).toEqual(['2027-02-01', '2027-04-01']);
+    expect(isoWeekday('2027-03-01')).toBe(1); // a Monday
+    expect(isoWeekday('2027-03-07')).toBe(7);
+    const monday = monthWeeks(r, 1);
+    expect(monday).toHaveLength(5);
+    expect(monday[0]![0]).toEqual({ day: '2027-03-01', out: false });
+    expect(monday[4]![6]).toEqual({ day: '2027-04-04', out: true });
+    const sunday = monthWeeks(r, 7);
+    expect(sunday[0]!.slice(0, 2)).toEqual([{ day: '2027-02-28', out: true }, { day: '2027-03-01', out: false }]);
+    expect(sunday.flat().filter((c) => !c.out)).toHaveLength(31);
+    const eid = item({ id: 'eid', starts: '2027-03-08', ends: '2027-03-12' });
+    const open = item({ id: 'open', starts: '2027-03-10', open: true });
+    const one = item({ id: 'one', starts: '2027-03-09' });
+    const fest = item({ id: 'fest', lane: 'festive', starts: '2027-03-03', ends: '2027-03-06', marks: [{ day: '2027-03-03', label: 'Outside' }, { day: '2027-03-06', label: 'City' }] });
+    const all = [eid, open, one, fest];
+    expect(itemsOn(all, '2027-03-09').map((i) => i.id)).toEqual(['eid', 'one']);
+    expect(itemsOn(all, '2027-03-20').map((i) => i.id)).toEqual(['open']);
+    expect(itemsOn(all, '2027-03-04').map((i) => i.id)).toEqual([]);
+    expect(itemsOn(all, '2027-03-06').map((i) => i.id)).toEqual(['fest']);
   });
 });

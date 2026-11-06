@@ -164,6 +164,36 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Calendar on PostgreSQL (PR 282)', (
     expect(later.a.items.map((i) => i.title.en)).toEqual(['Too late']);
   });
 
+  it('follow-up 656: a plan line names its campaign (this shop\'s, not archived), shown with it; the month view is the whole month', async () => {
+    const eid = await t.prisma.campaign.findFirstOrThrow({ where: { storeId: S, name: 'Eid push' }, select: { id: true } });
+    const gone = await t.prisma.campaign.create({ data: { storeId: S, name: 'Old push', status: 'ENDED', archivedAt: new Date(T0) } });
+    const g0 = (await api('GET')).a;
+    expect(g0.campaigns.map((c) => c.name)).toContain('Eid push');
+    expect(g0.campaigns.map((c) => c.name)).not.toContain('Old push');
+    const line = { action: 'plan.add', title: 'Eid sale', starts: '2027-03-08', ends: '2027-03-12' };
+    expect((await api('POST', { ...line, campaignId: gone.id })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['campaignId'] });
+    expect((await api('POST', { ...line, campaignId: 'eid' })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['campaignId'] });
+    const added = await api('POST', { ...line, campaignId: eid.id });
+    expect(added.a.ok).toBe(true);
+    expect(await t.prisma.calendarEntry.findUnique({ where: { id: added.a.id! } })).toMatchObject({ kind: 'plan', refType: 'Campaign', refId: eid.id });
+    const g = (await api('GET')).a;
+    expect(g.items.find((i) => i.id === `plan:${added.a.id}`)).toMatchObject({ detail: 'Eid push', href: `/admin/marketing/campaigns/${eid.id}`, own: { campaign: { id: eid.id, name: 'Eid push' } } });
+    const row = g.plans.find((p) => p.id === added.a.id)!;
+    expect(row.campaignId).toBe(eid.id);
+    // taken off again
+    expect((await api('POST', { action: 'plan.update', id: row.id, version: row.version, title: 'Eid sale', starts: '2027-03-08', ends: '2027-03-12', campaignId: null })).a.ok).toBe(true);
+    expect(await t.prisma.calendarEntry.findUnique({ where: { id: row.id } })).toMatchObject({ refType: null, refId: null });
+    expect(await t.prisma.auditLog.count({ where: { action: 'marketingCalendar.plan.add', after: { path: ['campaignId'], equals: eid.id } } })).toBe(1);
+    // the month view: 1–31 March whatever the days setting; another month by an asked day
+    const m = (await api('GET', undefined, { path: '/api/admin/marketing/calendar?view=month' })).a;
+    expect(m).toMatchObject({ view: 'month', range: { from: '2027-03-01', to: '2027-03-31', days: 31 } });
+    expect(m.items.some((i) => i.title.en === 'Eid sale')).toBe(true);
+    const may = (await api('GET', undefined, { path: '/api/admin/marketing/calendar?view=month&from=2027-05-20' })).a;
+    expect(may.range).toEqual({ from: '2027-05-01', to: '2027-05-31', days: 31 });
+    expect((await api('GET', undefined, { path: '/api/admin/marketing/calendar?view=weird' })).a.view).toBe('bars');
+    await api('POST', { action: 'plan.archive', id: row.id });
+  });
+
   it('sets a plan line aside while off, but refuses to bring it back', async () => {
     const v = (await api('GET')).a.card.version;
     await api('PUT', { key: 'calendar', value: { enabled: false, days: 30 }, version: v });

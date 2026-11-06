@@ -14,6 +14,9 @@
 // - The hook for other modules (e.g. lane A's blog publish calendar, PR 245): write a CalendarEntry row with your own
 //   kind (a lane name such as `content` or `social`) and refType/refId, and it shows here read-only in that lane; a row
 //   whose `content:<refId>` (etc.) item a source already shows is not shown twice. Or add a source to CALENDAR_SOURCES.
+// - Follow-up 656: a plan line may name the campaign it belongs to (CalendarEntry refType 'Campaign', refId; no
+//   migration), shown with the line and linking to it; and the view may be a month (`view=month`: the whole month as
+//   a grid of weeks, earlier/later by a month) instead of the bars' `days`.
 // Seeing needs `marketing.campaigns.read`; changing needs `marketing.campaigns.write`, the settings card too. Every change
 // is audited. No price, offer, discount, budget or send changes; no money moves.
 import { createHash } from 'node:crypto';
@@ -33,6 +36,7 @@ import {
   dayAt,
   dayDate,
   inRange,
+  monthRange,
   planInput,
   stateByDays,
   type CalendarItem,
@@ -48,9 +52,15 @@ const S = MOTHER_STORE_ID;
 const LANE_ROWS = 300; // hardcode-ok: a page-length guard
 const SET_ASIDE_SHOWN = 50; // hardcode-ok: a list-length guard
 const CAPTION_SHOWN = 60; // hardcode-ok: a text-length guard
+const CAMPAIGNS_SHOWN = 200; // hardcode-ok: a picker-length guard
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** The owner's own plan lines (CalendarEntry.kind). */
 export const PLAN_KIND = 'plan';
+/** Follow-up 656: a plan line's campaign is kept as CalendarEntry refType/refId. */
+export const PLAN_CAMPAIGN_REF = 'Campaign';
+/** The calendar's two views: the bars over `days` days, or one month as a grid. */
+export type CalendarViewKind = 'bars' | 'month';
+export const viewOf = (v: unknown): CalendarViewKind => (v === 'month' ? 'month' : 'bars');
 
 export class CalendarError extends Error {
   constructor(
@@ -153,12 +163,14 @@ export const CALENDAR_SOURCES: Record<Exclude<CalendarLane, 'plan'>, CalendarSou
 
 type EntryRow = { id: string; kind: string; refType: string | null; refId: string | null; title: string; titleBn: string | null; note: string | null; date: Date; endDate: Date | null; archivedAt: Date | null; updatedAt: Date };
 
-function entryItem(r: EntryRow, today: string): CalendarItem | null {
+function entryItem(r: EntryRow, today: string, campaigns: ReadonlyMap<string, string> = new Map()): CalendarItem | null {
   const own = r.kind === PLAN_KIND;
   const lane = (CALENDAR_LANES as readonly string[]).includes(r.kind) ? (r.kind as CalendarLane) : null;
   if (!lane) return null;
   const starts = dateDay(r.date);
   const ends = r.endDate ? dateDay(r.endDate) : null;
+  const cid = own && r.refType === PLAN_CAMPAIGN_REF && r.refId ? r.refId : null;
+  const campaign = cid && campaigns.has(cid) ? { id: cid, name: campaigns.get(cid)! } : null;
   return {
     id: own ? `plan:${r.id}` : r.refType && r.refId ? `${lane}:${r.refId}` : `${lane}:entry:${r.id}`,
     lane,
@@ -167,9 +179,9 @@ function entryItem(r: EntryRow, today: string): CalendarItem | null {
     ends,
     open: false,
     state: stateByDays(starts, ends ?? starts, today),
-    detail: null,
-    href: null,
-    ...(own ? { own: { note: r.note, archived: r.archivedAt !== null } } : {}),
+    detail: campaign?.name ?? null,
+    href: campaign ? `/admin/marketing/campaigns/${campaign.id}` : null,
+    ...(own ? { own: { note: r.note, archived: r.archivedAt !== null, campaign } } : {}),
   };
 }
 
@@ -181,9 +193,20 @@ export interface PlanRow {
   starts: string;
   ends: string | null;
   note: string | null;
+  /** Follow-up 656: the campaign it belongs to (null: none). */
+  campaignId: string | null;
   version: string;
 }
-const planRow = (r: EntryRow): PlanRow => ({ id: r.id, title: r.title, titleBn: r.titleBn, starts: dateDay(r.date), ends: r.endDate ? dateDay(r.endDate) : null, note: r.note, version: r.updatedAt.toISOString() });
+const planRow = (r: EntryRow): PlanRow => ({
+  id: r.id,
+  title: r.title,
+  titleBn: r.titleBn,
+  starts: dateDay(r.date),
+  ends: r.endDate ? dateDay(r.endDate) : null,
+  note: r.note,
+  campaignId: r.refType === PLAN_CAMPAIGN_REF ? r.refId : null,
+  version: r.updatedAt.toISOString(),
+});
 
 export interface CalendarOverview {
   settings: MarketingCalendarSettings;
@@ -201,6 +224,9 @@ export interface CalendarOverview {
   plans: PlanRow[];
   /** Plan lines set aside (newest first), to bring back. */
   setAside: PlanRow[];
+  /** Follow-up 656: which view this is, and the campaigns a plan line may name (not archived, newest first). */
+  view: CalendarViewKind;
+  campaigns: { id: string; name: string }[];
 }
 
 const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0, 16);
@@ -212,33 +238,40 @@ const ENTRY_SELECT = { id: true, kind: true, refType: true, refId: true, title: 
  * GET: the settings and, while on, the view from `from` (the shop's today unless another day is asked for). S12 · PR 252:
  * `always` draws the view whatever the switch (the journal's read-only shared calendar).
  */
-export async function calendarOverview(deps: CalendarDeps, ask: { from?: unknown; always?: boolean } = {}): Promise<CalendarOverview> {
+export async function calendarOverview(deps: CalendarDeps, ask: { from?: unknown; always?: boolean; view?: unknown } = {}): Promise<CalendarOverview> {
   const now = deps.now?.() ?? new Date();
   const [settings, timeZone] = await Promise.all([settingsOf(deps), zoneOf(deps)]);
   const today = dayAt(now, timeZone);
-  const range = calendarRange(today, settings.days, ask.from);
+  const view = viewOf(ask.view);
+  const range = view === 'month' ? monthRange(today, ask.from) : calendarRange(today, settings.days, ask.from);
   const lanes = Object.fromEntries(CALENDAR_LANES.map((l) => [l, 0])) as Record<CalendarLane, number>;
-  const base = { settings, card: { key: 'calendar' as const, value: settings, version: versionOf(settings) }, timeZone, today, range, lanes };
-  if (!settings.enabled && !ask.always) return { ...base, items: [], undated: 0, plans: [], setAside: [] };
+  const base = { settings, card: { key: 'calendar' as const, value: settings, version: versionOf(settings) }, timeZone, today, range, lanes, view };
+  if (!settings.enabled && !ask.always) return { ...base, items: [], undated: 0, plans: [], setAside: [], campaigns: [] };
   const fromAt = wallToUtc(`${range.from}T00:00`, timeZone)!;
   const toAt = wallToUtc(`${addDays(range.to, 1)}T00:00`, timeZone)!;
   const ctx: CalendarSourceCtx = { db: deps.db, resolver: deps.resolver, now, timeZone, today, range, fromAt, toAt };
-  const [fromSources, entries, setAside, undated] = await Promise.all([
+  const [fromSources, entries, setAside, undated, campaignRows] = await Promise.all([
     Promise.all(Object.values(CALENDAR_SOURCES).map((src) => src(ctx))),
     deps.db.calendarEntry.findMany({ where: { storeId: S, archivedAt: null, date: { lte: dayDate(range.to) }, OR: [{ endDate: { gte: dayDate(range.from) } }, { date: { gte: dayDate(range.from) } }] }, orderBy: { date: 'asc' }, take: LANE_ROWS, select: ENTRY_SELECT }),
     deps.db.calendarEntry.findMany({ where: { storeId: S, kind: PLAN_KIND, archivedAt: { not: null } }, orderBy: { archivedAt: 'desc' }, take: SET_ASIDE_SHOWN, select: ENTRY_SELECT }),
     deps.db.campaign.count({ where: { storeId: S, archivedAt: null, startsAt: null, status: { not: 'ENDED' } } }),
+    deps.db.campaign.findMany({ where: { storeId: S, archivedAt: null }, orderBy: { createdAt: 'desc' }, take: CAMPAIGNS_SHOWN, select: { id: true, name: true } }),
   ]);
+  // follow-up 656: the names of the campaigns the plan lines name (also one set aside since, still shown by its name)
+  const named = [...new Set(entries.filter((e) => e.kind === PLAN_KIND && e.refType === PLAN_CAMPAIGN_REF && e.refId).map((e) => e.refId!))];
+  const known = new Map(campaignRows.map((c) => [c.id, c.name]));
+  const missing = named.filter((id) => !known.has(id) && UUID_RE.test(id));
+  if (missing.length) for (const c of await deps.db.campaign.findMany({ where: { storeId: S, id: { in: missing } }, select: { id: true, name: true } })) known.set(c.id, c.name);
   const seen = new Set<string>();
   const items: CalendarItem[] = [];
-  for (const i of [...fromSources.flat(), ...entries.flatMap((e) => entryItem(e, today) ?? [])]) {
+  for (const i of [...fromSources.flat(), ...entries.flatMap((e) => entryItem(e, today, known) ?? [])]) {
     if (seen.has(i.id) || !inRange(i, range)) continue;
     seen.add(i.id);
     items.push(i);
     lanes[i.lane] += 1;
   }
   items.sort(agendaOrder(range));
-  return { ...base, items, undated, plans: entries.filter((e) => e.kind === PLAN_KIND).map(planRow), setAside: setAside.map(planRow) };
+  return { ...base, items, undated, plans: entries.filter((e) => e.kind === PLAN_KIND).map(planRow), setAside: setAside.map(planRow), campaigns: campaignRows };
 }
 
 /** PUT: the settings card ({key: 'calendar', value, version}). Audited. */
@@ -263,12 +296,20 @@ export async function calendarAction(deps: CalendarDeps, who: AdPlatformsWho, b:
   const settings = await settingsOf(deps);
   if (!settings.enabled && action !== 'plan.archive') throw new CalendarError('SWITCHED_OFF', 409, ['marketing.calendar']);
   const log = (id: string, after: Record<string, unknown>, before?: Record<string, unknown>) => audit(deps.db, who.actor, { storeId: S, action: `marketingCalendar.${action}`, entityType: 'CalendarEntry', entityId: id, ...(before ? { before } : {}), after }, who.ctx);
-  const fields = (v: { title: string; titleBn: string | null; starts: string; ends: string | null; note: string | null }) => ({ title: v.title, titleBn: v.titleBn, date: dayDate(v.starts), endDate: v.ends ? dayDate(v.ends) : null, note: v.note });
-  const shown = (v: { title: string; titleBn: string | null; starts: string; ends: string | null; note: string | null }) => ({ title: v.title, titleBn: v.titleBn, starts: v.starts, ends: v.ends, note: v.note });
+  type Line = { title: string; titleBn: string | null; starts: string; ends: string | null; note: string | null; campaignId: string | null };
+  const fields = (v: Line) => ({ title: v.title, titleBn: v.titleBn, date: dayDate(v.starts), endDate: v.ends ? dayDate(v.ends) : null, note: v.note, refType: v.campaignId ? PLAN_CAMPAIGN_REF : null, refId: v.campaignId });
+  const shown = (v: Line) => ({ title: v.title, titleBn: v.titleBn, starts: v.starts, ends: v.ends, note: v.note, campaignId: v.campaignId });
+  // follow-up 656: a named campaign must be this shop's and not archived
+  const campaignOk = async (v: Line) => {
+    if (!v.campaignId) return;
+    const c = await deps.db.campaign.findFirst({ where: { id: v.campaignId, storeId: S, archivedAt: null }, select: { id: true } });
+    if (!c) throw new CalendarError('INVALID_INPUT', 400, ['campaignId']);
+  };
 
   if (action === 'plan.add') {
     const p = planInput(b);
     if (!p.ok) throw new CalendarError('INVALID_INPUT', 400, p.bad);
+    await campaignOk(p.value);
     const row = await deps.db.calendarEntry.create({ data: { storeId: S, kind: PLAN_KIND, status: 'PLANNED', createdById: who.actor.staffUserId ?? null, ...fields(p.value) } });
     await log(row.id, shown(p.value));
     return { id: row.id };
@@ -282,6 +323,8 @@ export async function calendarAction(deps: CalendarDeps, who: AdPlatformsWho, b:
     if (b.version !== was.version) throw new CalendarError('STALE', 409);
     const p = planInput(b);
     if (!p.ok) throw new CalendarError('INVALID_INPUT', 400, p.bad);
+    // a campaign the line already named stays allowed even once archived (only a new choice is checked)
+    if (p.value.campaignId !== was.campaignId) await campaignOk(p.value);
     await deps.db.calendarEntry.update({ where: { id: row.id }, data: fields(p.value) });
     await log(row.id, shown(p.value), shown(was));
     return { id: row.id };
@@ -305,7 +348,10 @@ export async function calendarHandler(request: Request, deps: AdminDeps | null, 
   const d: CalendarDeps = { db: deps!.db, resolver: deps!.resolver, ...(now ? { now } : {}) };
   const who = { actor: g.actor, ctx: g.ctx };
   try {
-    if (method === 'GET') return json({ ok: true, ...(await calendarOverview(d, { from: new URL(request.url).searchParams.get('from') ?? undefined })) });
+    if (method === 'GET') {
+      const q = new URL(request.url).searchParams;
+      return json({ ok: true, ...(await calendarOverview(d, { from: q.get('from') ?? undefined, view: q.get('view') ?? undefined })) });
+    }
     if (method === 'PUT') return json({ ok: true, cards: { calendar: await saveCalendarCard(d, who, b) } });
     return json({ ok: true, ...(await calendarAction(d, who, b as Record<string, unknown>)) });
   } catch (e) {
