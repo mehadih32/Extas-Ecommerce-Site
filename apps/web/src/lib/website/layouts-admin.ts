@@ -14,7 +14,9 @@ import { audit, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { LAYOUT_DEVICES, layoutBlockSchema, registry, storeTarget, type CategoryOwn, type LayoutBlock, type LayoutDevice } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
+import { productPath } from '../shop/home-model';
 import { defaultLayout, fullLayout, isLayoutPage, PAGE_LAYOUTS, type LayoutPage, type LayoutRow, type PageLayoutDef } from '../shop/layouts';
+import { ROUTES } from '../shop/routes';
 
 const S = MOTHER_STORE_ID;
 
@@ -230,4 +232,17 @@ export async function layoutChoices(db: PrismaClient): Promise<LayoutChoices> {
     tags,
     rules: rules.map((r) => ({ id: r.id, en: r.name, bn: r.nameBn })),
   };
+}
+
+/**
+ * PR 77 follow-up (667) — the shop page "Open the page" and the preview show: the home page, the bag, one category's
+ * own page, the picked product (else the first by name) for the product pages, and "New in" for every category page
+ * (and for the product pages while the shop has no product). An unknown link name is never used.
+ */
+export function layoutOpenPath(o: { page: LayoutPage; cat: string | null; products: readonly { slug: string }[]; askedProd: string | null; productPrefix: string }): { path: string; prod: string | null } {
+  if (o.page === 'home') return { path: ROUTES.home, prod: null };
+  if (o.page === 'bag') return { path: ROUTES.bag, prod: null };
+  if (o.page === 'category') return { path: o.cat ? ROUTES.category(o.cat) : ROUTES.newIn, prod: null };
+  const prod = o.products.find((p) => p.slug === o.askedProd)?.slug ?? o.products[0]?.slug ?? null;
+  return { path: prod ? productPath(o.productPrefix, prod) : ROUTES.newIn, prod };
 }

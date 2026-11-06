@@ -9,6 +9,8 @@
 // data-lm-ready, --lm-* tokens, the one toast). The home and category pages take the owner's own sections (ten types,
 // each with its switch, whole days, screens, Edit and Duplicate; hidden, never deleted); the category picker adds "one
 // category" (?page=category&cat=<link name>) with its own order and switch; a phone + computer preview of the page.
+// PR 77 follow-up (667, 6 Nov): the product pages pick which product "Open the page" and the preview show
+// (?page=product&prod=<link name>; the first product by name until one is picked; New in while the shop has none).
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -23,9 +25,8 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { isLayoutPage, LAYOUT_PAGES, type LayoutPage } from '@/lib/shop/layouts';
-import { ROUTES } from '@/lib/shop/routes';
 import { todayIn } from '@/lib/shop/theme';
-import { layoutChoices, layoutView, type LayoutChoices } from '@/lib/website/layouts-admin';
+import { layoutChoices, layoutOpenPath, layoutView, type LayoutChoices } from '@/lib/website/layouts-admin';
 import bn from '../../../../../messages/admin-layouts.bn.json';
 import en from '../../../../../messages/admin-layouts.en.json';
 import './layouts.css';
@@ -34,11 +35,8 @@ export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/website/layouts';
 const KEY = 'websiteLayouts';
-/**
- * The shop page each layout opens: the home page, the "New in" page (every shop has it) for the category pages and,
- * PR 77, for the product pages (a product is one tap away there), and the bag. PR 595: one category opens its own page.
- */
-const OPEN: Record<LayoutPage, string> = { home: ROUTES.home, category: ROUTES.newIn, product: ROUTES.newIn, bag: ROUTES.bag };
+// ~~const OPEN: the home page, "New in" for the category and product pages, the bag~~ PR 77 follow-up (667): the
+// page each layout opens is lib/website/layouts-admin layoutOpenPath (the picked product for the product pages).
 const NONE: LayoutChoices = { cats: [], products: [], tags: [], rules: [] };
 
 function withScreen(view: AdminView): AdminView {
@@ -58,7 +56,8 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
   const asked = typeof sp.page === 'string' ? sp.page : 'home';
   const page: LayoutPage = isLayoutPage(asked) ? asked : 'home';
   const askedCat = page === 'category' && typeof sp.cat === 'string' && /^[a-z0-9-]{1,80}$/.test(sp.cat) ? sp.cat : null;
-  const here = page === 'home' ? HERE : `${HERE}?page=${page}${askedCat ? `&cat=${askedCat}` : ''}`;
+  const askedProd = page === 'product' && typeof sp.prod === 'string' && /^[a-z0-9-]{1,120}$/.test(sp.prod) ? sp.prod : null;
+  const here = page === 'home' ? HERE : `${HERE}?page=${page}${askedCat ? `&cat=${askedCat}` : ''}${askedProd ? `&prod=${askedProd}` : ''}`;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(here)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -70,14 +69,19 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
   const g = (k: string) => t(d, `ly.${k}`);
   const ld = { db: access.deps.db, resolver: access.deps.resolver };
   const takesBlocks = page === 'home' || page === 'category';
-  const [choices, tz] = await Promise.all([takesBlocks ? layoutChoices(access.deps.db) : Promise.resolve(NONE), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID })]);
+  const [choices, tz, prefix] = await Promise.all([
+    takesBlocks || page === 'product' ? layoutChoices(access.deps.db) : Promise.resolve(NONE),
+    access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }),
+    access.deps.resolver.value('naming.productPathPrefix', { storeId: MOTHER_STORE_ID }),
+  ]);
   const cat = askedCat && choices.cats.some((c) => c.slug === askedCat) ? askedCat : null;
   const lv = await layoutView(ld, page, cat);
   const canEdit = access.guard.permissions?.has('website.layout.write') ?? false;
   const starts = Object.fromEntries(BLOCK_TYPES.map((x) => [x, blockDefaults(x)])) as Record<BlockType, ReturnType<typeof blockDefaults>>;
-  const path = cat ? ROUTES.category(cat) : OPEN[page];
+  // PR 77 follow-up (667): the picked product, else the first by name
+  const { path, prod } = layoutOpenPath({ page, cat, products: choices.products, askedProd, productPrefix: prefix });
   const shopHref = view.lang === 'bn' ? `/bn${path === '/' ? '' : path}` : path;
-  const catName = (c: LayoutChoices['cats'][number]) => (view.lang === 'bn' && c.bn) || c.en;
+  const catName = (c: { en: string; bn: string | null }) => (view.lang === 'bn' && c.bn) || c.en;
   const words = ((d.ly as Dict) ?? {}) as Dict;
 
   return (
@@ -104,6 +108,24 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
               {choices.cats.map((c) => (
                 <option key={c.slug} value={c.slug}>
                   {catName(c)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button type="submit" className="lm-btn">
+            {g('openCat')}
+          </button>
+        </form>
+      ) : null}
+      {page === 'product' && choices.products.length ? (
+        <form className="lyb-catpick" method="get" action={HERE} data-testid="ly-prodpick">
+          <input type="hidden" name="page" value="product" />
+          <div className="lm-fl">
+            <label htmlFor="ly-prod">{g('whichProduct')}</label>
+            <select id="ly-prod" name="prod" className="lm-inp" defaultValue={prod ?? ''}>
+              {choices.products.map((p) => (
+                <option key={p.slug} value={p.slug}>
+                  {catName(p)}
                 </option>
               ))}
             </select>
@@ -145,7 +167,7 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
             {g('open')}
           </a>
         </div>
-        {takesBlocks ? <LayoutPreview src={shopHref} stamp={lv.version} w={{ show: g('prev.show'), hide: g('prev.hide'), phone: g('prev.phone'), desktop: g('prev.desktop'), note: g('prev.note') }} /> : null}
+        {takesBlocks || prod ? <LayoutPreview src={shopHref} stamp={lv.version} w={{ show: g('prev.show'), hide: g('prev.hide'), phone: g('prev.phone'), desktop: g('prev.desktop'), note: g('prev.note') }} /> : null}
       </section>
     </div>
   );
