@@ -7088,21 +7088,29 @@ model ImageSourcingRequest {
 }
 
 /// @stage S12 · PR 252, 282 — the shared content and marketing calendar (blog, social, ads, campaigns).
+/// PR 282: kind `plan` is the owner's own line (Marketing › Calendar); another module may write its own kind with
+/// refType/refId (e.g. PR 245's blog publish calendar: kind `content`, refType `BlogPost`) and the calendar shows it.
 model CalendarEntry {
-  id         String    @id @default(uuid(7)) @db.Uuid
-  storeId    Int
-  store      Store     @relation(fields: [storeId], references: [id])
-  date       DateTime  @db.Date
-  kind       String
-  refType    String?
-  refId      String?
-  title      String
-  status     String
-  archivedAt DateTime? @db.Timestamptz(3)
-  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+  id          String    @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store     @relation(fields: [storeId], references: [id])
+  date        DateTime  @db.Date
+  kind        String
+  refType     String?
+  refId       String?
+  title       String
+  status      String
+  archivedAt  DateTime? @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 282 (migration 0161) — the last day (inclusive; null = one day), the Bengali title, a short note, who made it.
+  endDate     DateTime? @db.Date
+  titleBn     String?
+  note        String?
+  createdById String?   @db.Uuid
 
   @@index([storeId, date])
+  @@index([storeId, kind, date])
 }
 
 // =====================================================================================================================

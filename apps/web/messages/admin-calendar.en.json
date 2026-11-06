@@ -1,0 +1,110 @@
+{
+  "mc": {
+    "metaTitle": "Calendar · Marketing",
+    "title": "Marketing calendar",
+    "sub": "Everything planned across marketing in one place, day by day: campaigns, ads, message sends, the seasonal home page, festive cut-offs, blog and social posts, and your own plan lines.",
+    "note": "The calendar only shows. Campaigns, ads, sends and posts are started, stopped and changed on their own pages (each line links there). Only your own plan lines are written here. No price, offer, budget or send changes.",
+    "offTitle": "The marketing calendar is off",
+    "offBody": "Turn it on in the settings card at the bottom of this page.",
+    "offAsk": "Ask the owner to turn it on.",
+    "range": "{from} – {to} · {days} days",
+    "earlier": "Earlier",
+    "today": "Today",
+    "later": "Later",
+    "lanesLabel": "Show",
+    "all": "All",
+    "bars": {
+      "h": "At a glance",
+      "empty": "Nothing planned in these days."
+    },
+    "list": {
+      "h": "Day by day",
+      "empty": "Nothing planned in these days for this choice.",
+      "open": "Open",
+      "from": "from {day}",
+      "until": "until stopped",
+      "marks": "Last order day: {list}"
+    },
+    "counts": "{pages} landing pages · {orders} orders · {delivered} delivered",
+    "undated": "{n} campaigns have no start date yet, so they are not on the calendar.",
+    "undatedOpen": "Open campaigns",
+    "lane": {
+      "plan": "Your plan",
+      "campaign": "Campaigns",
+      "ads": "Ads",
+      "message": "Message sends",
+      "home": "Seasonal home",
+      "festive": "Festive cut-off",
+      "content": "Blog",
+      "social": "Social"
+    },
+    "state": {
+      "live": "Live",
+      "scheduled": "Scheduled",
+      "ended": "Ended",
+      "off": "Paused or draft"
+    },
+    "mark": "Last order day",
+    "openEnd": "until stopped",
+    "plan": {
+      "h": "Add a plan line",
+      "d": "Mark a festival, a season or a sale on the calendar, for example \"Eid\", \"Pohela Boishakh\" or \"Winter sale\". It is only a note for you and the team; it does not start anything.",
+      "title": "Title (English)",
+      "titleBn": "Title (Bengali)",
+      "titleBnHelp": "Optional. Shown when the admin is in Bengali.",
+      "starts": "First day",
+      "ends": "Last day",
+      "endsHelp": "Empty for one day.",
+      "note": "Note (optional)",
+      "save": "Save",
+      "saved": "Saved",
+      "edit": "Change",
+      "archive": "Set aside",
+      "restore": "Bring back",
+      "asideH": "Set aside",
+      "asideEmpty": "Nothing set aside."
+    },
+    "card": {
+      "h": "Settings",
+      "d": "Marketing calendar. Off as it ships.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Unsaved changes",
+      "readOnly": "You can see these settings but not change them.",
+      "pairHelp": "Both languages, or both empty.",
+      "on": "Show the marketing calendar",
+      "onHelp": "Off as it ships. On, this page and the Campaigns page show the calendar.",
+      "days": "Days in one view",
+      "daysHelp": "How many days the calendar shows at a time (7 to 366)."
+    },
+    "campaignsCard": {
+      "h": "Marketing calendar · next {days} days",
+      "open": "Open the calendar"
+    },
+    "f": {
+      "title": "title",
+      "titleBn": "Bengali title",
+      "starts": "first day",
+      "ends": "last day",
+      "note": "note",
+      "id": "line",
+      "days": "days",
+      "action": "action",
+      "marketing.calendar": "the calendar switch"
+    },
+    "err": {
+      "INVALID_INPUT": "Please check: {fields}.",
+      "STALE": "Someone changed this meanwhile. Reload the page and try again.",
+      "SWITCHED_OFF": "The marketing calendar is off. Turn it on first.",
+      "NOT_FOUND": "This line is not there any more. Reload the page.",
+      "SET_ASIDE": "This line is set aside.",
+      "NOT_SET_ASIDE": "This line is not set aside.",
+      "forbidden": "You do not have permission for this.",
+      "unauthorized": "Please sign in again.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    }
+  }
+}
