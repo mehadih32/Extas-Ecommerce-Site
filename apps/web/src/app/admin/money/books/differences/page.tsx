@@ -29,7 +29,7 @@ type Filter = (typeof inv.BOOKS_DIFFERENCE_FILTERS)[number];
 export default async function BooksDifferencesPage({ searchParams }: { searchParams: Search }) {
   const sp = await searchParams;
   const plain = withBooks(await adminView());
-  const ctx = await openBooksPage({ perm: 'books.read', here: HERE, storeId: storeOfSearch(sp), current: 'booksDifferences', title: t(plain.dict, 'bk.title.differences'), sub: t(plain.dict, 'bk.sub.differences') });
+  const ctx = await openBooksPage({ perm: 'books.read', testId: 'books-differences', here: HERE, storeId: storeOfSearch(sp), current: 'booksDifferences', title: t(plain.dict, 'bk.title.differences'), sub: t(plain.dict, 'bk.sub.differences') });
   if ('el' in ctx) return ctx.el;
   const { d, bd, m, n, day, at, idp, who } = ctx;
   const status = await inv.booksStatus(idp, who);
@@ -62,7 +62,7 @@ export default async function BooksDifferencesPage({ searchParams }: { searchPar
   };
 
   return (
-    <div className="a2-z" data-testid="books-differences">
+    <div className="a2-z lm-bk" data-lm-ready="" data-testid="books-differences">
       {ctx.head}
       <nav className="a2-views a2-mt12" aria-label={t(d, 'bk.title.differences')} data-testid="books-diff-views">
         {inv.BOOKS_DIFFERENCE_FILTERS.map((v) => (

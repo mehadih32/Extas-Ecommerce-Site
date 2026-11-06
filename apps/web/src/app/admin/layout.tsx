@@ -35,6 +35,7 @@ import './lumen-sections.css';
 import './lumen-help.css';
 import './lumen-settings.css';
 import './lumen-reports.css';
+import './lumen-books.css';
 import { cookies } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { adminLookSettings, adminPatternsSettings, BUILT_ADMIN_LOOKS } from '@extas/settings';

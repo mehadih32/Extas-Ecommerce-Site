@@ -1,0 +1,23 @@
+/* PR 643 (CN-036, lane C) — Money part 2 in the Lumen look (docs/demo/admin-look/LUMEN-SPEC.md §4 Money): the books
+   (the ERP account, the day's check, match, differences, closes) and the month end. Each page root carries .lm-bk and
+   data-lm-ready; the shared a2-* skin comes from lumen-sections.css. Every colour, radius, font and shadow is a --lm-*
+   token; text at least 14 px; taps at least 44 px on phones. Every figure keeps its "explain this number" link. */
+
+/* what needs doing, the warnings and the money rows at Lumen's 14 px, in tokens */
+[data-lm-look] .lm-bk .bk-needs li { font-size: var(--lm-fs-card); border-radius: var(--lm-r-box); background: var(--lm-warnbg); color: var(--lm-ink); }
+[data-lm-look] .lm-bk .bk-needs li svg { color: var(--lm-warn); }
+[data-lm-look] .lm-bk .bk-warn { color: var(--lm-warn); }
+[data-lm-look] .lm-bk .bk-name { font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-bk .bk-letter { font-size: var(--lm-fs-card); border-radius: var(--lm-r-ctl); background: var(--lm-acbg); color: var(--lm-ac-ink); }
+[data-lm-look] .lm-bk .bk-act { color: var(--lm-ac-ink); }
+[data-lm-look] .lm-bk .a2-bkf { border-radius: var(--lm-r-box); }
+
+/* the figures row: a figure that is a word wraps inside its tile; phones get the smaller display size */
+[data-lm-look] .lm-bk .a2-kpi { min-width: 0; }
+[data-lm-look] .lm-bk .a2-kv { white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 759px) {
+  [data-lm-look] .lm-bk .a2-kv { font-size: var(--lm-fs-h1-phone); }
+}
+
+/* a pill with a sentence in it ("On hold: …") wraps inside a 320 px phone instead of running past the screen edge */
+[data-lm-look] .lm-bk .a2-pill { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }

@@ -29,7 +29,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) 
 export default async function BooksMatchPage({ searchParams }: { searchParams: Search }) {
   const sp = await searchParams;
   const plain = withBooks(await adminView());
-  const ctx = await openBooksPage({ perm: 'books.read', here: HERE, storeId: storeOfSearch(sp), current: 'booksMatch', title: t(plain.dict, 'bk.title.match'), sub: t(plain.dict, 'bk.sub.match') });
+  const ctx = await openBooksPage({ perm: 'books.read', testId: 'books-match', here: HERE, storeId: storeOfSearch(sp), current: 'booksMatch', title: t(plain.dict, 'bk.title.match'), sub: t(plain.dict, 'bk.sub.match') });
   if ('el' in ctx) return ctx.el;
   const { d, bd, m, n, day, at, idp, who } = ctx;
   const status = await inv.booksStatus(idp, who);
@@ -94,7 +94,7 @@ export default async function BooksMatchPage({ searchParams }: { searchParams: S
   if (explain) {
     const tie = explain.tie as Record<string, number | boolean>;
     return (
-      <div className="a2-z" data-testid="books-match">
+      <div className="a2-z lm-bk" data-lm-ready="" data-testid="books-match">
         {ctx.head}
         <section className="a2-card a2-mt12" data-testid="books-explain">
           <div className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }}>
@@ -210,7 +210,7 @@ export default async function BooksMatchPage({ searchParams }: { searchParams: S
   const days = states.filter((s) => s.version != null).reverse();
 
   return (
-    <div className="a2-z" data-testid="books-match">
+    <div className="a2-z lm-bk" data-lm-ready="" data-testid="books-match">
       {ctx.head}
       {kpis}
       {bar}

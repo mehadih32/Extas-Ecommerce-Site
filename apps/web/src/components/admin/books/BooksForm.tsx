@@ -7,8 +7,11 @@
 // after every try). The button is locked while it sends, and every opening of the form carries one request key
 // (`Idempotency-Key`): a double tap or a retry after a lost answer is the same request, written once. Every refusal is
 // shown in words from the page's messages (`bk.err.<code>`).
+// PR 643 (CN-036): the "done" line speaks through the admin's one toast (showToast, never with Undo: a books command is
+// written once and is put right by its own reversing entry); a refusal stays beside the button.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
+import { showToast } from '../lumen/Toast';
 import { typedMinor } from '@/lib/admin-books/money';
 import { bkError } from '@/lib/admin-books/words';
 import { t, type Dict } from '@/lib/i18n';
@@ -93,7 +96,7 @@ export function BooksForm({ dict, url, label, busyLabel, sendLabel, fields, body
     }
     setOpen(false);
     setVals(Object.fromEntries(fields.map((f) => [f.name, f.value ?? ''])));
-    if (done) setMsg({ ok: true, text: done });
+    if (done) showToast({ text: done });
     router.refresh();
   };
 

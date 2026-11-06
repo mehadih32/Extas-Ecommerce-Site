@@ -63,7 +63,7 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="booksAccount" text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z lm-bk" data-lm-ready="" data-testid="books-account">
         <ShellState view={view} kind="denied" permission="erp.account.read" />
       </div>
     );
@@ -92,7 +92,7 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
   );
   if (ov.model === 'v5' || !ov.link)
     return (
-      <div className="a2-z" data-testid="books-account">
+      <div className="a2-z lm-bk" data-lm-ready="" data-testid="books-account">
         {head}
         <section className="a2-card a2-mt12" data-testid="books-off">
           <p className="a2-sm a2-mute">{t(d, ov.model === 'v5' ? 'bk.v5' : 'bk.noLink')}</p>
@@ -134,7 +134,7 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
   const shopOnly = new Set((payments?.match?.shopOnly ?? []).map((x) => x.recordId));
 
   return (
-    <div className="a2-z" data-testid="books-account">
+    <div className="a2-z lm-bk" data-lm-ready="" data-testid="books-account">
       {head}
       <div className="a2-kpis a2-mt12" data-testid="books-kpis">
         <div className="a2-card a2-kpi">

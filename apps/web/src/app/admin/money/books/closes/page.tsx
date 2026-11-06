@@ -29,7 +29,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) 
 export default async function BooksClosesPage({ searchParams }: { searchParams: Search }) {
   const sp = await searchParams;
   const plain = withBooks(await adminView());
-  const ctx = await openBooksPage({ perm: 'books.read', here: HERE, storeId: storeOfSearch(sp), current: 'booksCloses', title: t(plain.dict, 'bk.title.closes'), sub: t(plain.dict, 'bk.sub.closes') });
+  const ctx = await openBooksPage({ perm: 'books.read', testId: 'books-closes', here: HERE, storeId: storeOfSearch(sp), current: 'booksCloses', title: t(plain.dict, 'bk.title.closes'), sub: t(plain.dict, 'bk.sub.closes') });
   if ('el' in ctx) return ctx.el;
   const { d, bd, m, n, day, at, idp, who } = ctx;
   const month = /^\d{4}-\d{2}$/.test(one(sp.month)) ? one(sp.month) : null;
@@ -72,7 +72,7 @@ export default async function BooksClosesPage({ searchParams }: { searchParams: 
   const lastYear = Number(view.today.slice(0, 4)) - 1;
 
   return (
-    <div className="a2-z" data-testid="books-closes">
+    <div className="a2-z lm-bk" data-lm-ready="" data-testid="books-closes">
       {ctx.head}
       {pinCard}
       {view.months.length ? (
