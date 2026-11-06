@@ -1,0 +1,106 @@
+{
+  "yt": {
+    "metaTitle": "YouTube · Marketing",
+    "title": "YouTube",
+    "sub": "Your channel, your videos and the products they show — and the orders each video brought through its links.",
+    "note": "Put each product's tracked link in the video's description. An order placed through it is counted for that video. Nothing is posted to YouTube and no money is spent.",
+    "offTitle": "The YouTube module is off",
+    "offBody": "Turn it on in the settings card at the bottom of this page.",
+    "offAsk": "Ask the owner or a manager to turn the YouTube module on.",
+    "keyNote": "Views and new uploads are read from YouTube once its key is in Keys & connections (coming later); until then you add videos by their links.",
+    "totals": {
+      "h": "What the videos brought",
+      "videos": "Videos",
+      "orders": "Orders through their links",
+      "delivered": "Of them delivered",
+      "value": "Delivered value"
+    },
+    "channels": {
+      "h": "Channels",
+      "empty": "No channel yet.",
+      "videos": "{n} videos",
+      "archived": "Set aside",
+      "archive": "Set aside",
+      "restore": "Bring back"
+    },
+    "addChannel": {
+      "h": "Add your channel",
+      "link": "Channel link",
+      "linkPh": "https://www.youtube.com/@yourname",
+      "name": "Name (for you)",
+      "namePh": "e.g. The shop channel",
+      "add": "Add channel",
+      "added": "Channel added."
+    },
+    "videos": {
+      "h": "Videos",
+      "empty": "No video yet.",
+      "stats": "{orders} orders · {delivered} delivered · {value} · {withProducts} with its products",
+      "noProducts": "No product tied yet: add its products to get the tracked links.",
+      "links": "Tracked links for the description",
+      "copy": "Copy",
+      "copied": "Copied",
+      "open": "Open on YouTube",
+      "edit": "Change title or products",
+      "archived": "Set aside",
+      "archive": "Set aside",
+      "restore": "Bring back",
+      "went": "went up {when}"
+    },
+    "addVideo": {
+      "h": "Add a video",
+      "channel": "Channel",
+      "link": "Video link",
+      "linkPh": "https://youtu.be/…",
+      "title": "Title",
+      "day": "Went up on (optional)",
+      "products": "Products it shows (product page links or slugs, one per line)",
+      "productsPh": "https://…/p/textured-knit-polo",
+      "add": "Add video",
+      "added": "Video added.",
+      "needChannel": "Add your channel first."
+    },
+    "editVideo": {
+      "save": "Save",
+      "saved": "Saved."
+    },
+    "card": {
+      "h": "YouTube settings",
+      "d": "Off as shipped. The tags go on every tracked link; change them only before you paste links.",
+      "on": "YouTube module on",
+      "onHelp": "While off nothing can be added; the page only reads.",
+      "utmSource": "Source tag (utm_source)",
+      "utmSourceHelp": "Letters, digits, dot, dash or underscore.",
+      "utmMedium": "Medium tag (utm_medium)",
+      "utmMediumHelp": "Letters, digits, dot, dash or underscore.",
+      "campaignPrefix": "Campaign prefix (before the video id)",
+      "campaignPrefixHelp": "e.g. yt- gives yt-<video id>; may be empty.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard",
+      "unsaved": "Unsaved changes",
+      "readOnly": "You can see these settings; changing them needs the right to write campaigns."
+    },
+    "err": {
+      "INVALID_INPUT": "Not right: {fields}",
+      "UNKNOWN_PRODUCTS": "No such product: {fields}",
+      "EXISTS": "Already added.",
+      "SWITCHED_OFF": "The YouTube module is off.",
+      "NOT_FOUND": "Not found; reload the page.",
+      "STALE": "Someone changed this; reload the page.",
+      "forbidden": "You do not have the right for this.",
+      "unauthorized": "Sign in again.",
+      "network": "No connection; try again.",
+      "other": "Something went wrong; try again."
+    },
+    "f": {
+      "link": "the link",
+      "name": "the name",
+      "title": "the title",
+      "channelId": "the channel",
+      "publishedOn": "the day",
+      "products": "the products"
+    }
+  }
+}

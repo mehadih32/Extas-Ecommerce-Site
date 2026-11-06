@@ -174,6 +174,8 @@ export * from './registry-follow-up';
 export * from './registry-cart-recovery';
 // S13 · PR 277 — the campaign blast to a saved segment (registry-blast.ts, version 212).
 export * from './registry-blast';
+// S13 · PR 278 — the YouTube module's switch and its tracked link's campaign tags (registry-youtube.ts, version 213).
+export * from './registry-youtube';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
