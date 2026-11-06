@@ -68,7 +68,7 @@ export const UNBOOKED_SHIPMENT: ReadonlySet<string> = new Set(['BOOKING_FAILED',
  * (SIM-F-020): "Prepaid" — paid orders nothing flagged, confirmed without a call — beside the call queue.
  */
 export const LIST_PAGES = {
-  all: { base: '/admin/orders', views: ['all', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'open', 'finished'] },
+  all: { base: '/admin/orders', views: ['all', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'twoSizes', 'open', 'finished'] },
   confirm: { base: '/admin/orders/confirm', views: ['toConfirm', 'prepaid', 'cancelRequests', 'awaitingAdvance'] },
 } as const;
 

@@ -16,10 +16,11 @@ import { OrdersError } from './errors';
 import { notesOf, type OrderNoteView } from './notes';
 import { allowedCommands, customerCancelMode, deliveryTarget, dueOf, FINAL_STATES, OPEN_STATES, paymentPill, type DeliveryTarget, type OrderCommand, type OrderState, type PaymentPill } from './pure';
 import { orderSearchWhere } from './search';
+import { TWO_SIZE_FLAGS } from './two-size';
 import { reviewKindOf, type StoredRuleHit } from './duplicates';
 import { factsOf, machineOf, MACHINE_SELECT, NOT_BOOKED_SHIPMENT } from './service';
 
-export const ORDER_VIEWS = ['all', 'open', 'new', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'readyToBook', 'finished'] as const;
+export const ORDER_VIEWS = ['all', 'open', 'new', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'readyToBook', 'twoSizes', 'finished'] as const;
 export type OrderView = (typeof ORDER_VIEWS)[number];
 
 /** PR 541: every payment method but cash on delivery (paid before the parcel leaves). */
@@ -31,6 +32,7 @@ const PREPAID_METHODS = ['BKASH', 'NAGAD', 'CARD', 'CASH', 'WALLET', 'BANK_TRANS
  * PR 541 (SIM-F-020): `toConfirm` is the call queue, so only orders paid at the door are in it; a prepaid order that
  * nothing flagged waits in `prepaid` (confirm and pack, no call), a flagged one in its review (`inReview`).
  * `readyToBook` (SIM-F-014, F-002): confirmed, not handed over, no cancel asked or pending, no open review, no courier.
+ * `twoSizes` (follow-up 266): flagged "2 sizes — check" and not handed over.
  */
 export function viewWhere(view: OrderView, openReviewOrderIds: string[]): Prisma.OrderWhereInput {
   switch (view) {
@@ -61,6 +63,10 @@ export function viewWhere(view: OrderView, openReviewOrderIds: string[]): Prisma
       return { cancelPending: true };
     case 'inReview':
       return { id: { in: openReviewOrderIds } };
+    case 'twoSizes':
+      // follow-up 266 (demo V12.3 "2 sizes — check"): the two-size question is open (asked, or a person must finish it)
+      // and the parcel is not with the courier yet (no answer changes a parcel that left, SIM-F-004)
+      return { flags: { has: TWO_SIZE_FLAGS.check }, status: { in: OPEN_STATES.filter((s) => s !== 'HANDED_OVER' && s !== 'IN_TRANSIT') } };
     case 'finished':
       return { status: { in: [...FINAL_STATES] } };
     default:

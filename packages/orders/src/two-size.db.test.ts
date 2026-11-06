@@ -7,7 +7,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { answerTwoSize, customerTwoSizeAnswer, customerTwoSizeState, twoSizeCheck, twoSizeQuestions } from './index';
+import { answerTwoSize, customerTwoSizeAnswer, customerTwoSizeState, listOrders, twoSizeCheck, twoSizeQuestions } from './index';
 import { setUpOrders, type OrdersFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -89,6 +89,10 @@ describe.skipIf(!HAS_TEST_DB)('PR 146 · the two-size follow-up (PostgreSQL)', (
       const before = await order(o.orderId);
       expect(before).toMatchObject({ twoSizeStatus: 'ASKED', discountMinor: 0 });
       expect(before.flags).toContain('TWO_SIZES');
+      // follow-up 266: the "2 sizes — check" list view holds it while the question is open
+      const inView = async () => (await listOrders(d(), f.staff, { view: 'twoSizes', limit: 100 })).rows.map((r) => r.id);
+      expect(await inView()).toContain(o.orderId);
+      expect((await listOrders(d(), f.staff, { limit: 1 })).counts.twoSizes).toBeGreaterThanOrEqual(1);
       expect(await twoSizeTasks(o.orderId)).toMatchObject([{ status: 'OPEN' }]);
       const st = await customerTwoSizeState(d(), me(o), o.number);
       expect(st.open).toBe(true);
@@ -105,6 +109,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 146 · the two-size follow-up (PostgreSQL)', (
       const after = await order(o.orderId);
       expect(after).toMatchObject({ twoSizeStatus: 'ANSWERED', subtotalMinor: before.subtotalMinor - s.lineTotalMinor, totalMinor: before.totalMinor - s.lineTotalMinor, codAmountMinor: before.codAmountMinor - s.lineTotalMinor, deliveryChargeMinor: before.deliveryChargeMinor });
       expect(after.flags).not.toContain('TWO_SIZES');
+      expect(await inView()).not.toContain(o.orderId);
       expect((await lineOf(o.orderId, skyS)).status).toBe('REMOVED');
       expect(await held(o.orderId, skyS)).toBe(0);
       expect(await held(o.orderId, f.v.skyM)).toBe(1);
