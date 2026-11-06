@@ -1,0 +1,403 @@
+{
+  "at": "2026-11-06 17:04 (Asia/Dhaka)",
+  "sha": "b7f58ec7bfb7",
+  "oldSite": "extas.com.bd",
+  "storeId": 1,
+  "committed": true,
+  "written": 45,
+  "unchanged": 0,
+  "repointed": 0,
+  "wordpressMapLive": false,
+  "tally": {
+    "addresses": 47,
+    "rows": 45,
+    "twins": 7,
+    "listed": 38,
+    "same": 2,
+    "own": 0
+  },
+  "rows": [
+    {
+      "from": "/",
+      "url": "https://extas.com.bd/",
+      "to": null,
+      "how": "same",
+      "twin": true
+    },
+    {
+      "from": "/shop",
+      "url": "https://extas.com.bd/shop/",
+      "to": "/",
+      "how": "shop page",
+      "twin": true,
+      "result": "new"
+    },
+    {
+      "from": "/cart",
+      "url": "https://extas.com.bd/cart/",
+      "to": "/bag",
+      "how": "bag",
+      "twin": true,
+      "result": "new"
+    },
+    {
+      "from": "/checkout",
+      "url": "https://extas.com.bd/checkout/",
+      "to": null,
+      "how": "same",
+      "twin": true
+    },
+    {
+      "from": "/my-account",
+      "url": "https://extas.com.bd/my-account/",
+      "to": "/account/login",
+      "how": "account",
+      "twin": true,
+      "result": "new"
+    },
+    {
+      "from": "/elementor-86",
+      "url": "https://extas.com.bd/elementor-86/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/erp-subscription",
+      "url": "https://extas.com.bd/erp-subscription/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/mash-fabric-trouser",
+      "url": "https://extas.com.bd/product/mash-fabric-trouser/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/diesel-t-shirt-combo",
+      "url": "https://extas.com.bd/product/diesel-t-shirt-combo/",
+      "to": "/combos",
+      "how": "nearest category",
+      "twin": false,
+      "percent": 33,
+      "result": "new"
+    },
+    {
+      "from": "/product/prada-polo-black-color",
+      "url": "https://extas.com.bd/product/prada-polo-black-color/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/prada-polo-navy-blue",
+      "url": "https://extas.com.bd/product/prada-polo-navy-blue/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/prada-polo-burnt-bricks",
+      "url": "https://extas.com.bd/product/prada-polo-burnt-bricks/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/prada-polo-off-white-color-free-home-delivery",
+      "url": "https://extas.com.bd/product/prada-polo-off-white-color-free-home-delivery/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/prada-polocombo-burnt-bricks-black",
+      "url": "https://extas.com.bd/product/prada-polocombo-burnt-bricks-black/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/2-pcs-combo-navy-blue-black",
+      "url": "https://extas.com.bd/product/2-pcs-combo-navy-blue-black/",
+      "to": "/combos",
+      "how": "nearest category",
+      "twin": false,
+      "percent": 25,
+      "result": "new"
+    },
+    {
+      "from": "/product/2-pcs-combo-navy-blue-burnt-bricks",
+      "url": "https://extas.com.bd/product/2-pcs-combo-navy-blue-burnt-bricks/",
+      "to": "/combos",
+      "how": "nearest category",
+      "twin": false,
+      "percent": 20,
+      "result": "new"
+    },
+    {
+      "from": "/product/2-pcs-combooff-white-black",
+      "url": "https://extas.com.bd/product/2-pcs-combooff-white-black/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/2-pcs-combo-off-white-burnt-bricks",
+      "url": "https://extas.com.bd/product/2-pcs-combo-off-white-burnt-bricks/",
+      "to": "/combos",
+      "how": "nearest category",
+      "twin": false,
+      "percent": 20,
+      "result": "new"
+    },
+    {
+      "from": "/product/2-pcs-combo-off-white-navy",
+      "url": "https://extas.com.bd/product/2-pcs-combo-off-white-navy/",
+      "to": "/combos",
+      "how": "nearest category",
+      "twin": false,
+      "percent": 25,
+      "result": "new"
+    },
+    {
+      "from": "/product/ralph-lauren-polo-off-white-bottle-green",
+      "url": "https://extas.com.bd/product/ralph-lauren-polo-off-white-bottle-green/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/ralph-lauren-polo-burnt-bricks",
+      "url": "https://extas.com.bd/product/ralph-lauren-polo-burnt-bricks/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/burnt-bricks-bottle-green",
+      "url": "https://extas.com.bd/product/burnt-bricks-bottle-green/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/black-burnt-bricks",
+      "url": "https://extas.com.bd/product/black-burnt-bricks/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/black-bottle-green",
+      "url": "https://extas.com.bd/product/black-bottle-green/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/black-off-white",
+      "url": "https://extas.com.bd/product/black-off-white/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/ralph-lauren-polo-burnt-bricks-color",
+      "url": "https://extas.com.bd/product/ralph-lauren-polo-burnt-bricks-color/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/ralph-lauren-polo-burnt-black-color",
+      "url": "https://extas.com.bd/product/ralph-lauren-polo-burnt-black-color/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/ralph-lauren-polo-off-white-color",
+      "url": "https://extas.com.bd/product/ralph-lauren-polo-off-white-color/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/ralph-lauren-polo-green-color",
+      "url": "https://extas.com.bd/product/ralph-lauren-polo-green-color/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/boss-tshirt",
+      "url": "https://extas.com.bd/product/boss-tshirt/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product/ralph-lauren-polo-olive-color",
+      "url": "https://extas.com.bd/product/ralph-lauren-polo-olive-color/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/step/store-checkout",
+      "url": "https://extas.com.bd/step/store-checkout/",
+      "to": "/bag",
+      "how": "checkout step",
+      "twin": true,
+      "result": "new"
+    },
+    {
+      "from": "/step/thank-you",
+      "url": "https://extas.com.bd/step/thank-you/",
+      "to": "/",
+      "how": "thank-you step",
+      "twin": true,
+      "result": "new"
+    },
+    {
+      "from": "/step/checkout-2",
+      "url": "https://extas.com.bd/step/checkout-2/",
+      "to": "/bag",
+      "how": "checkout step",
+      "twin": true,
+      "result": "new"
+    },
+    {
+      "from": "/step/thank-you-2",
+      "url": "https://extas.com.bd/step/thank-you-2/",
+      "to": "/",
+      "how": "thank-you step",
+      "twin": true,
+      "result": "new"
+    },
+    {
+      "from": "/product-category/uncategorized",
+      "url": "https://extas.com.bd/product-category/uncategorized/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product-category/t-shirt",
+      "url": "https://extas.com.bd/product-category/t-shirt/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product-category/trouser",
+      "url": "https://extas.com.bd/product-category/trouser/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product-category/trouser/mash-trouser",
+      "url": "https://extas.com.bd/product-category/trouser/mash-trouser/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product-category/polo-shirts",
+      "url": "https://extas.com.bd/product-category/polo-shirts/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product-category/polo-shirts/prada-polo",
+      "url": "https://extas.com.bd/product-category/polo-shirts/prada-polo/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product-category/polo-shirts/ralph-lauren-polo",
+      "url": "https://extas.com.bd/product-category/polo-shirts/ralph-lauren-polo/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product-category/t-shirt/combo",
+      "url": "https://extas.com.bd/product-category/t-shirt/combo/",
+      "to": "/combos",
+      "how": "nearest category",
+      "twin": false,
+      "percent": 50,
+      "result": "new"
+    },
+    {
+      "from": "/product-tag/boss-tshirt",
+      "url": "https://extas.com.bd/product-tag/boss-tshirt/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product-tag/tshirt",
+      "url": "https://extas.com.bd/product-tag/tshirt/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    },
+    {
+      "from": "/product-tag/tshirt-combo",
+      "url": "https://extas.com.bd/product-tag/tshirt-combo/",
+      "to": "/combos",
+      "how": "nearest category",
+      "twin": false,
+      "percent": 50,
+      "result": "new"
+    },
+    {
+      "from": "/author/admin",
+      "url": "https://extas.com.bd/author/admin/",
+      "to": "/",
+      "how": "home page",
+      "twin": false,
+      "result": "new"
+    }
+  ],
+  "problems": []
+}
