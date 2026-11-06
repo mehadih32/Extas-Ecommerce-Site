@@ -101,7 +101,8 @@
         "email": "ই-মেইল"
       },
       "website": {
-        "seo": "SEO"
+        "seo": "SEO",
+        "blog": "ব্লগ আর জার্নাল"
       },
       "support": {
         "inbox": "ইনবক্স",

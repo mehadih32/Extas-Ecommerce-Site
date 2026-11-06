@@ -277,6 +277,15 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/website/seo/organic', perm: 'seo.read', keys: ['seoOrganic'] },
         ],
       },
+      // S12 · PR 240 (WEB-03) — Blog & journal: the board and the article editor (`/admin/website/blog/<id>`, `new`), and
+      // the categories and authors.
+      {
+        id: 'blog',
+        pages: [
+          { href: '/admin/website/blog', perm: 'blog.read', keys: ['blog', 'blogPost'] },
+          { href: '/admin/website/blog/shelves', perm: 'blog.read', keys: ['blogShelves'] },
+        ],
+      },
     ],
   },
   // CN-028 · PR 615, 616: Books — Retail's ERP account, the books match, the differences and the closes.
