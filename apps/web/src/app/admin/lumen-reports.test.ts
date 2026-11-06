@@ -61,3 +61,26 @@ describe('Reports part 1: the reports and Experiments in the Lumen look (PR 644)
     }
   });
 });
+
+describe('Reports part 1: the figures rows are the shared summary tiles (PR 644 follow-up)', () => {
+  it('the Stopped report\'s link to the risk rules is a 44 px tap', () => {
+    expect(readAdmin('lumen-reports.css')).toMatch(/\.stp-link \{[^}]*min-height: var\(--lm-tap\)/);
+  });
+
+  const ROWS: [string, string][] = [
+    ['delivery', 'delivery-kpis'],
+    ['customers', 'customers-kpis'],
+    ['stopped', 'stopped-kpis'],
+    ['fraud', 'fraud-kpis'],
+    ['flags', 'flags-kpis'],
+    ['learning', 'learning-kpis'],
+    ['areas', 'ar-kpi'],
+  ];
+  it.each(ROWS)('reports/%s: <SummaryTiles> with figureTiles, no old a2-kpi tile', (page, testId) => {
+    const src = readAdmin(`reports/${page}/page.tsx`);
+    expect(src).toContain('<SummaryTiles ');
+    expect(src).toContain('figureTiles(');
+    expect(src).toContain(`testId="${testId}"`);
+    expect(src).not.toMatch(/a2-kpi\b/);
+  });
+});

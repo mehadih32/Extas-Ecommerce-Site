@@ -18,6 +18,9 @@ export interface FlagKpi {
   label: string;
   value: string;
   foot: string;
+  /** The number behind the figure (minor units for money), for the tile's count-up (Lumen, PR 644). */
+  n: number;
+  kind: 'count' | 'money';
 }
 
 export interface FlagTable {
@@ -57,10 +60,10 @@ export function flagScreen(r: FlagReport, f: FlagFormat): FlagScreen {
   const notes = [...(r.enabled ? [] : [w('off')]), ...(r.cut ? [w('cut')] : [])];
   const sum = (rows: FlagTally[]) => rows.reduce((a, x) => a + x.flagged, 0);
   const kpis: FlagKpi[] = [
-    { id: 'flagged', label: w('kpi.flagged'), value: num(t.flagged), foot: w('kpi.flaggedFoot', { checkout: num(sum(r.checkout)), order: num(sum(r.order)) }) },
-    { id: 'paid', label: w('kpi.paid'), value: num(t.paid), foot: w('kpi.paidFoot', { pct: share(t.paid) }) },
-    { id: 'lost', label: w('kpi.lost'), value: num(t.walked + t.left), foot: w('kpi.lostFoot', { pct: share(t.walked + t.left) }) },
-    { id: 'collected', label: w('kpi.collected'), value: f.money(t.collectedMinor), foot: w('kpi.collectedFoot', { delivered: num(t.paidDelivered), refused: num(t.paidRefused) }) },
+    { id: 'flagged', label: w('kpi.flagged'), n: t.flagged, kind: 'count', value: num(t.flagged), foot: w('kpi.flaggedFoot', { checkout: num(sum(r.checkout)), order: num(sum(r.order)) }) },
+    { id: 'paid', label: w('kpi.paid'), n: t.paid, kind: 'count', value: num(t.paid), foot: w('kpi.paidFoot', { pct: share(t.paid) }) },
+    { id: 'lost', label: w('kpi.lost'), n: t.walked + t.left, kind: 'count', value: num(t.walked + t.left), foot: w('kpi.lostFoot', { pct: share(t.walked + t.left) }) },
+    { id: 'collected', label: w('kpi.collected'), n: t.collectedMinor, kind: 'money', value: f.money(t.collectedMinor), foot: w('kpi.collectedFoot', { delivered: num(t.paidDelivered), refused: num(t.paidRefused) }) },
   ];
   const layerName = (x: FlagTally) => x.name ?? w('layer.unknown');
   const cell = (x: FlagTally, c: string): string => {

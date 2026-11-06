@@ -10,10 +10,12 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AREA_LEVELS, type AreaFigures } from '@extas/metrics';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { formatMoney, moneyOf } from '@/components/admin/products/model';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
+import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { AreaMap } from '@/components/admin/reports/AreaMap';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
+import { figureTiles, type ReportFigure } from '@/lib/admin-lumen/figures';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -89,12 +91,13 @@ export default async function AreasPage({ searchParams }: { searchParams: Promis
   };
   const s = r.sales;
   const rateText = (f: AreaFigures) => (f.returnRate === null ? c('table.noRate') : c('table.rate', { pct: ratePct(f.returnRate)! }));
-  const kpis = [
-    { key: 'sales', value: m(s.total.salesMinor), sub: c('kpi.orders', { n: s.total.delivered }) },
-    { key: 'pieces', value: String(s.total.pieces) },
-    { key: 'returned', value: String(s.total.returned) },
-    { key: 'rate', value: s.total.returnRate === null ? '—' : `${ratePct(s.total.returnRate)}%` },
-    { key: 'areas', value: String(s.rows.length) },
+  const num = (x: number) => formatNumber(x, view.locale);
+  const kpis: ReportFigure[] = [
+    { id: 'sales', label: c('kpi.sales'), value: m(s.total.salesMinor), n: s.total.salesMinor, kind: 'money', foot: c('kpi.orders', { n: num(s.total.delivered) }) },
+    { id: 'pieces', label: c('kpi.pieces'), value: num(s.total.pieces), n: s.total.pieces },
+    { id: 'returned', label: c('kpi.returned'), value: num(s.total.returned), n: s.total.returned },
+    { id: 'rate', label: c('kpi.rate'), value: s.total.returnRate === null ? '—' : `${ratePct(s.total.returnRate)}%`, n: s.total.returnRate, kind: 'percent' },
+    { id: 'areas', label: c('kpi.areas'), value: num(s.rows.length), n: s.rows.length },
   ];
   const cut = s.rows.length > limits.maxDayRows;
   const extraRows: { key: string; label: string; how: string; f: AreaFigures }[] = [
@@ -224,15 +227,7 @@ export default async function AreasPage({ searchParams }: { searchParams: Promis
         {r.category ? ` · ${nameOf(r.category)}` : ''}
         {r.product ? ` · ${nameOf(r.product)}` : ''}
       </p>
-      <div className="a2-kpis k3 a2-mt12" data-testid="ar-kpis">
-        {kpis.map((k) => (
-          <div key={k.key} className="a2-kpi" data-testid={`ar-kpi-${k.key}`}>
-            <span className="a2-xs a2-mute">{c(`kpi.${k.key}`)}</span>
-            <b className="a2-kv">{k.value}</b>
-            {k.sub ? <span className="a2-xs a2-mute">{k.sub}</span> : null}
-          </div>
-        ))}
-      </div>
+      <SummaryTiles className="a2-mt12" tiles={figureTiles(kpis, { locale: view.locale, money: { kind: 'money', ...money } })} label={c('title')} testId="ar-kpi" />
 
       <section className="a2-card a2-mt12" aria-labelledby="ar-map" data-testid="ar-map">
         <h2 className="a2-h3" id="ar-map">

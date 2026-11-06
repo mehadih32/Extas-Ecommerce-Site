@@ -29,6 +29,19 @@ export interface SummaryTile {
   icon?: ShellIconName;
   /** A small extra under the number (a spark line, a note). */
   extra?: ReactNode;
+  /** A figure that is a word ("Fine", "On") is drawn smaller so it fits its tile (Lumen follow-up, PR 644). */
+  word?: boolean;
+  /** The figure's colour when the figure itself is news (a failed run, a waiting count): the theme's ok/warn/bad. */
+  tone?: 'ok' | 'warn' | 'bad';
+  /** Extra data-* marks on the tile ({ ok: 'true' } → data-ok="true"), so a page keeps what its checks read. */
+  data?: Readonly<Record<string, string | number>>;
+}
+
+/** The data-* attributes of a tile. */
+function dataAttrs(data: SummaryTile['data']): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(data ?? {})) out[`data-${k}`] = String(v);
+  return out;
 }
 
 export function Delta({ x, text, good = 'up', vs }: { x: number | null | undefined; text?: string; good?: 'up' | 'down'; vs?: string }) {
@@ -43,9 +56,9 @@ export function Delta({ x, text, good = 'up', vs }: { x: number | null | undefin
   );
 }
 
-export function SummaryTiles({ tiles, label, testId = 'lm-tiles' }: { tiles: readonly SummaryTile[]; label: string; testId?: string }) {
+export function SummaryTiles({ tiles, label, testId = 'lm-tiles', className }: { tiles: readonly SummaryTile[]; label: string; testId?: string; className?: string }) {
   return (
-    <section className="lm-tiles" aria-label={label} data-testid={testId}>
+    <section className={className ? `lm-tiles ${className}` : 'lm-tiles'} aria-label={label} data-testid={testId}>
       {tiles.map((tl) => {
         const body = (
           <>
@@ -53,7 +66,7 @@ export function SummaryTiles({ tiles, label, testId = 'lm-tiles' }: { tiles: rea
               {tl.icon ? <ShellIcon name={tl.icon} size={18} /> : null}
               <span>{tl.label}</span>
             </span>
-            <CountUp className="lm-tile-n" value={tl.value} shown={tl.shown} format={tl.format} />
+            <CountUp className={['lm-tile-n', tl.word ? 'w' : '', tl.tone ?? ''].filter(Boolean).join(' ')} value={tl.value} shown={tl.shown} format={tl.format} />
             <span className="lm-tile-f">
               {tl.delta !== undefined ? <Delta x={tl.delta} text={tl.deltaText} good={tl.good} vs={tl.vs} /> : null}
               {tl.vs ? (
@@ -66,11 +79,11 @@ export function SummaryTiles({ tiles, label, testId = 'lm-tiles' }: { tiles: rea
           </>
         );
         return tl.href ? (
-          <Link key={tl.key} className="lm-tile lm-in" href={tl.href} data-testid={`${testId}-${tl.key}`}>
+          <Link key={tl.key} className="lm-tile lm-in" href={tl.href} data-testid={`${testId}-${tl.key}`} {...dataAttrs(tl.data)}>
             {body}
           </Link>
         ) : (
-          <div key={tl.key} className="lm-tile lm-in" data-testid={`${testId}-${tl.key}`}>
+          <div key={tl.key} className="lm-tile lm-in" data-testid={`${testId}-${tl.key}`} {...dataAttrs(tl.data)}>
             {body}
           </div>
         );

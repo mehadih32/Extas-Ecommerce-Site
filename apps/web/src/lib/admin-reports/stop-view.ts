@@ -25,6 +25,8 @@ export interface StopKpi {
   label: string;
   value: string;
   foot: string;
+  /** The count behind the figure (null: none), for the tile's count-up (Lumen, PR 644). */
+  n: number | null;
 }
 
 export interface StopRuleRow {
@@ -88,15 +90,16 @@ export function stopScreen(report: StopReport, f: StopFormat): StopScreen {
   const ended = report.rows.filter((r) => r.outcome !== 'open').length;
   const flagged = report.rules.filter((r) => r.flagged).length;
   const kpis: StopKpi[] = [
-    { id: 'stops', label: w('kpi.stops'), value: num(report.rows.length), foot: w('kpi.stopsFoot', { n: num(ended) }) },
-    { id: 'wrong', label: w('kpi.wrong'), value: num(delivered), foot: ended ? w('kpi.wrongFoot', { rate: pct(delivered / ended) }) : w('kpi.wrongNone') },
+    { id: 'stops', label: w('kpi.stops'), n: report.rows.length, value: num(report.rows.length), foot: w('kpi.stopsFoot', { n: num(ended) }) },
+    { id: 'wrong', label: w('kpi.wrong'), n: delivered, value: num(delivered), foot: ended ? w('kpi.wrongFoot', { rate: pct(delivered / ended) }) : w('kpi.wrongNone') },
     {
       id: 'flagged',
       label: w('kpi.flagged'),
       value: report.warnWrongPercent === null ? '—' : num(flagged),
+      n: report.warnWrongPercent === null ? null : flagged,
       foot: report.warnWrongPercent === null ? w('kpi.flaggedOff') : w('kpi.flaggedFoot', { pct: pct(report.warnWrongPercent / 100), n: num(report.minStops) }),
     },
-    { id: 'spared', label: w('kpi.spared'), value: num(report.spared), foot: w('kpi.sparedFoot') },
+    { id: 'spared', label: w('kpi.spared'), n: report.spared, value: num(report.spared), foot: w('kpi.sparedFoot') },
   ];
   const rules: StopRuleRow[] = STOP_RULES.map((id) => {
     const t = report.rules.find((x) => x.rule === id) ?? { stops: 0, delivered: 0, refused: 0, cancelled: 0, open: 0, wrongRate: null, flagged: false };

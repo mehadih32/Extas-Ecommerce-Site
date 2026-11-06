@@ -46,6 +46,8 @@ export interface LearningKpi {
   label: string;
   value: string;
   foot: string;
+  /** The count behind the figure, for the tile's count-up (Lumen, PR 644). */
+  n: number;
 }
 
 export interface LearningScreen {
@@ -65,10 +67,10 @@ export function learningScreen(r: LearningReport, f: LearningFormat): LearningSc
   const notes = [...(r.enabled ? [] : [w('off')]), ...(r.cut ? [w('cut', { n: num(r.decisions) })] : [])];
   const letGo = sum('letGo');
   const kpis: LearningKpi[] = [
-    { id: 'decisions', label: w('kpi.decisions'), value: num(r.decisions), foot: w('kpi.decisionsFoot', { people: num(r.people.length) }) },
-    { id: 'letGo', label: w('kpi.letGo'), value: num(letGo), foot: r.decisions ? w('kpi.letGoFoot', { pct: f.pct(letGo / r.decisions) }) : '—' },
-    { id: 'kept', label: w('kpi.kept'), value: num(sum('kept')), foot: w('kpi.keptFoot') },
-    { id: 'refused', label: w('kpi.refused'), value: num(sum('letGoRefused')), foot: w('kpi.refusedFoot') },
+    { id: 'decisions', label: w('kpi.decisions'), n: r.decisions, value: num(r.decisions), foot: w('kpi.decisionsFoot', { people: num(r.people.length) }) },
+    { id: 'letGo', label: w('kpi.letGo'), n: letGo, value: num(letGo), foot: r.decisions ? w('kpi.letGoFoot', { pct: f.pct(letGo / r.decisions) }) : '—' },
+    { id: 'kept', label: w('kpi.kept'), n: sum('kept'), value: num(sum('kept')), foot: w('kpi.keptFoot') },
+    { id: 'refused', label: w('kpi.refused'), n: sum('letGoRefused'), value: num(sum('letGoRefused')), foot: w('kpi.refusedFoot') },
   ];
   const share = (n: number, of: number) => (of ? f.pct(n / of) : '—');
   return {
