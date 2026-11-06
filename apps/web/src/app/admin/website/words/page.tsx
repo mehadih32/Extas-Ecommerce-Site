@@ -5,11 +5,15 @@
 // downloads every word as CSV and brings an edited file back. Seeing needs `website.read`; saving `website.words.write`
 // (the API checks again; audited). lib/website/words.ts, lib/website/words-admin.ts, components/admin/website/
 // WordsEditor.tsx. Guide: docs/admin-guide/pages/website/words.md.
+// PR 79 (front-end editing): the "Edit on the shop page" card (`language.frontEdit`, off as shipped; FieldsCard on
+// /api/admin/website/front-edit) and "Edit on the shop", which opens the shop's home with ?words=edit (the panel of
+// components/shop/WordsEditPanel).
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { FieldsCard, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { WordsEditor, type WordsEditorWords } from '@/components/admin/website/WordsEditor';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -17,6 +21,7 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { WORD_GROUPS, WORD_KEYS, WORD_SHOWS } from '@/lib/website/words';
+import { frontEditCard } from '@/lib/website/front-edit';
 import { wordQueryOf, wordsView } from '@/lib/website/words-admin';
 import bn from '../../../../../messages/admin-words.bn.json';
 import en from '../../../../../messages/admin-words.en.json';
@@ -28,6 +33,9 @@ export const dynamic = 'force-dynamic';
 const HERE = '/admin/website/words';
 const KEY = 'websiteWords';
 const API = '/api/admin/website/dictionary';
+/** PR 79: the switch for editing on the shop page, and the shop page it opens with the panel. */
+const FRONT_API = '/api/admin/website/front-edit';
+const EDIT_PARAM = 'words=edit';
 
 function withScreen(view: AdminView): AdminView {
   return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
@@ -55,7 +63,8 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
     );
   const g = (k: string, vars?: Record<string, string | number>) => t(d, `wd.${k}`, vars);
   const query = wordQueryOf(sp);
-  const v = await wordsView({ db: access.deps.db, resolver: access.deps.resolver }, query);
+  const wd = { db: access.deps.db, resolver: access.deps.resolver };
+  const [v, fe] = await Promise.all([wordsView(wd, query), frontEditCard(wd)]);
   const canEdit = access.guard.permissions?.has('website.words.write') ?? false;
   const where = Object.fromEntries(WORD_GROUPS.map((k) => [k, t(d, `wd.grp.${k}`) === `wd.grp.${k}` ? k : t(d, `wd.grp.${k}`)]));
   const errKeys = ['INVALID_INPUT', 'STALE', 'CSV_SYNTAX', 'CSV_COLUMNS', 'CSV_KEYS', 'forbidden', 'unauthorized', 'network', 'other'];
@@ -85,6 +94,19 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
     return next.size ? `${HERE}?${next.toString()}` : HERE;
   };
   const filtered = !!(query.q || query.group || query.show !== 'all');
+  const feTexts: FieldsCardTexts = {
+    h: g('fe.h'),
+    d: g('fe.d'),
+    save: g('fe.save'),
+    saving: g('fe.saving'),
+    saved: g('fe.saved'),
+    discard: g('fe.discard'),
+    unsaved: g('fe.unsaved'),
+    readOnly: g('fe.readOnly'),
+    pairHelp: g('fe.pairHelp'),
+    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'forbidden', 'unauthorized', 'network', 'other'].map((k) => [k, g(`err.${k}`)])),
+  };
+  const shopHome = `${view.lang === 'bn' ? '/bn' : '/'}?${EDIT_PARAM}`;
 
   return (
     <div className="a2-z" data-testid="wd-page">
@@ -96,6 +118,15 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
       <p className="a2-xs a2-mute wdb-mt6" data-testid="wd-summary">
         {g('summary', { total: WORD_KEYS.length, changed: v.changed, untr: v.untranslated })}
       </p>
+      <div className="a2-mt12" data-testid="wd-front">
+        <FieldsCard url={FRONT_API} screen={fe} fields={[{ kind: 'switch', path: 'enabled', label: g('fe.enabled'), help: g('fe.enabledHelp') }]} texts={feTexts} canEdit={canEdit} testId="wd-front-card" />
+        <div className="wdb-bar">
+          <a className="a2-btn" href={shopHome} target="_blank" rel="noopener noreferrer" data-testid="wd-front-open">
+            {g('fe.open')}
+          </a>
+        </div>
+        <p className="a2-xs a2-mute wdb-mt6">{g('fe.openHelp')}</p>
+      </div>
       <form className="a2-sc a2-mt12 wdb-search" method="get" action={HERE} role="search" data-testid="wd-search">
         <div className="a2-fld wdb-q">
           <label className="a2-lbl" htmlFor="wd-q">

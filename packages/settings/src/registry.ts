@@ -129,6 +129,7 @@ import { festiveCutoffSettings } from './registry-festive-cutoff';
 import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
 import { layoutSettings } from './registry-layouts';
+import { frontEditSettings } from './registry-front-edit';
 import { incompleteSettings } from './registry-incomplete';
 import { followUpSettings } from './registry-follow-up';
 import { cartRecoverySettings } from './registry-cart-recovery';
@@ -1441,6 +1442,8 @@ export const registry = {
   ...marketingReportSettings,
   // S02 · PR 76 · the page builder: the category page's sections (registry-layouts.ts, version 240).
   ...layoutSettings,
+  // S02 · PR 79 · editing the shop's words on the shop page (registry-front-edit.ts, version 242).
+  ...frontEditSettings,
   // ---- S16 · CN-031 lane B · PR 347 · the costs report's longest period and day rows (registry-finance.ts, versions 160–169). ----
   ...financeSettings,
   // ---- S12 · CN-031 lane A · PR 239 onwards · the journal (blog) (registry-journal.ts, versions 222–229). ----

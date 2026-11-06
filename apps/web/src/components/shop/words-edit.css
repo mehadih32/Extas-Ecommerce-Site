@@ -1,0 +1,26 @@
+/* S02 · PR 79 — the panel for editing a shop page's words (components/shop/WordsEditPanel): a sheet at the foot of a
+   phone, a column at the right of a computer, above everything on the page; the shop's own tokens; every control at a
+   44px tap size; the word being edited is outlined on the page. Loaded only with the panel. */
+.wde{position:fixed;z-index:2147483000;left:8px;right:8px;bottom:8px;max-height:62vh;display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line);border-radius:var(--radius,12px);background:var(--surface);color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.22);font-size:14px;line-height:1.4;overflow:hidden}
+@media (min-width:1024px){.wde{left:auto;right:16px;bottom:16px;width:400px;max-height:78vh}}
+.wde.wde-small{left:auto;width:auto;max-height:none;padding:6px;flex-direction:row}
+.wde-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px}
+.wde-acts,.wde-bar,.wde-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.wde-mute{color:var(--muted);font-size:12.5px}
+.wde-note{margin:0;font-size:13px}
+.wde-link{color:var(--brand);text-decoration:underline;display:inline-flex;align-items:center;min-height:44px}
+.wde-btn{min-height:44px;min-width:44px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;cursor:pointer}
+.wde-btn:disabled{opacity:.5;cursor:default}
+.wde-pri{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.wde-chk{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:13px;cursor:pointer}
+.wde-chk input{width:20px;height:20px}
+.wde-list{list-style:none;margin:0;padding:0;overflow:auto;display:grid;gap:6px;min-height:0;flex:1 1 auto}
+.wde-row{border:1px solid var(--line);border-radius:10px;min-width:0}
+.wde-row.on{border-color:var(--brand)}
+.wde-word{display:grid;gap:2px;width:100%;min-height:44px;padding:8px 10px;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.wde-text,.wde-key{overflow-wrap:anywhere}
+.wde-form{display:grid;gap:8px;padding:0 10px 10px}
+.wde-fld{display:grid;gap:4px;font-size:13px;font-weight:600}
+.wde-fld textarea{width:100%;min-width:0;box-sizing:border-box;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;font-weight:400;resize:vertical}
+.wde-fld .wde-mute{font-weight:400}
+.wde-lit{outline:2px dashed var(--brand)!important;outline-offset:2px}

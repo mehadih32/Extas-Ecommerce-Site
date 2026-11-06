@@ -1,0 +1,40 @@
+{
+  "wde": {
+    "title": "Words on this page",
+    "count": "{n} words",
+    "pick": "Tap a word on the page to change it",
+    "loading": "Looking for this page's words…",
+    "none": "No shop word found on this page. Open another page, then Look again.",
+    "signIn": "Sign in to the admin to edit the shop's words.",
+    "signInLink": "Sign in",
+    "off": "Editing on the shop page is switched off. Turn it on in Website › Words & language.",
+    "denied": "You may not see the shop's words.",
+    "readOnly": "You can see the words. Changing them needs the permission to change the shop's words.",
+    "en": "English",
+    "bn": "Bengali",
+    "yourEn": "Your English",
+    "yourBn": "Your Bengali",
+    "emptyHelp": "Empty: the shop's word",
+    "slotsHelp": "Keep these parts: {slots}",
+    "shopWord": "Shop's word",
+    "changed": "Changed",
+    "draft": "Not published",
+    "publish": "Publish ({n})",
+    "publishing": "Publishing…",
+    "published": "Published. The page reloads with the new words…",
+    "discard": "Discard changes",
+    "again": "Look again",
+    "close": "Stop editing",
+    "hide": "Hide",
+    "show": "Words ({n})",
+    "back": "Back to the shop's word",
+    "err": {
+      "INVALID_INPUT": "Not published: a word is too long (300 letters at most) or has a {part} the shop's word does not have: {details}",
+      "STALE": "Not published: someone saved words in between. Reload the page and try again.",
+      "unauthorized": "You were signed out. Sign in again.",
+      "forbidden": "You may not change the shop's words.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    }
+  }
+}

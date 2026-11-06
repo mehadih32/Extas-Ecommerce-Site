@@ -110,6 +110,21 @@
       "bag": "Bag",
       "chat": "Chat",
       "emailUnsub": "Unsubscribe from e-mails"
+    },
+    "fe": {
+      "h": "Edit on the shop page",
+      "d": "Open a shop page with a panel of its words: tap a word on the page, change it in English and Bengali, see it in place, then Publish. Only signed-in staff who may change words see the panel.",
+      "enabled": "Edit words on the shop page",
+      "enabledHelp": "Off: no shop page loads anything for it.",
+      "open": "Edit on the shop",
+      "openHelp": "Opens the home page in a new tab with the panel; move to any page from there. Switch it on and save first.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard changes",
+      "unsaved": "Not saved yet.",
+      "readOnly": "You can see this switch. Changing it needs the permission to change the shop's words.",
+      "pairHelp": "English and Bengali."
     }
   }
 }
