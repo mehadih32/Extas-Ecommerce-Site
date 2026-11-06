@@ -2,7 +2,6 @@
 // the owner has it on: the hero with the offer, the photos, why this product, the size chart with the try-on line, the
 // reviews, the order box, the questions (the shop's own delivery, exchange and returns rules) and the countdown. On a
 // phone it is one column with the order box in its place; on a desktop the order box stays beside the parts.
-import { notFound } from 'next/navigation';
 import { getPrisma } from '@extas/db/client';
 import { liveFreeOverMinor, productExchangeTerms } from '@/lib/rules-public';
 import { landingSource, secondsLeft, showsTryOn, type LandingSection } from '@/lib/marketing/landing-model';
@@ -24,6 +23,7 @@ import { LandingTimer } from './LandingTimer';
 // the product page's own styles for the parts shared with it (the rules box, the reviews, the photos)
 import '../product/pdp.css';
 import './landing.css';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 const KEYS = ['pdp.rules', 'pdp.reviews', 'pdp.gallery', 'pdp.price', 'checkout.tryOn.enabled', 'policy.exchange.summary', 'policy.returns.summary', 'policy.returns.afterDelivery'] as const;
 
@@ -41,7 +41,7 @@ export async function LandingPage({ c, page }: { c: ShopContext; page: LandingPa
   const lang = c.lang;
   const row = await getPrisma().product.findFirst({ where: { id: page.productId, storeId: c.storeId }, select: { slug: true } });
   const [set, data] = await Promise.all([readPageSettings(KEYS, c.storeId), row ? productData(c.storeId, row.slug) : Promise.resolve(null)]);
-  if (!data) notFound();
+  if (!data) shopNotFound(c);
   const m: PdpModel = toModel(data, lang, set['pdp.gallery'].drawingViews, { money: c.money, off: (n) => t('pdp.price.off', { n: c.num(n) }), save: (amount) => t('pdp.price.save', { amount }) });
   const on = (k: LandingSection['key']) => page.sections.find((s) => s.key === k && s.on) ?? null;
   const title = (lang === 'bn' && page.titleBn) || page.titleEn;

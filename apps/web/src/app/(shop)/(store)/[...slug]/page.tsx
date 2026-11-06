@@ -4,13 +4,13 @@
 // the routing table's COMING_SOON) shows "Coming soon" inside the store shell; every other address gets the shop's
 // own "page not found". ~~Every unknown address: notFound().~~ The words are the dictionary's.
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { ComingSoon } from '@/components/shop/ComingSoon';
 import { ProductPage, productMetadata, type ProductSearch } from '@/components/shop/product/ProductPage';
 import { shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
 import { productRoute } from '@/lib/shop/product-model';
 import { comingSoon } from '@/lib/shop/routes';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 type Props = { searchParams: Promise<ProductSearch> };
 
@@ -26,6 +26,6 @@ export default async function Soon(props: Props) {
   const c = await shopContext();
   if (productRoute(c.path, c.s['naming.productPathPrefix'])) return <ProductPage search={await props.searchParams} />;
   const key = comingSoon(c.path, c.s['naming.productPathPrefix']);
-  if (!key) notFound();
+  if (!key) shopNotFound(c);
   return <ComingSoon c={c} soonKey={key} />;
 }

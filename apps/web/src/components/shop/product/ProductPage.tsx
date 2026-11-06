@@ -21,7 +21,6 @@
 // owner's order and on his screens (`layout.product`, Website › Page layouts); the first screen itself stays fixed.
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
 import { cache, type ReactNode } from 'react';
 import { bagSettings, currentBag } from '@/lib/shop/bag';
 import { reassurance } from '@/lib/shop/bag-model';
@@ -92,6 +91,7 @@ import { LayoutPart } from '../LayoutPart';
 import { shownSections } from '@/lib/shop/layouts';
 import type { ProductSectionId } from '@extas/settings';
 import './pdp.css';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 const KEYS = [
   // PR 77: the sections under the first screen, in the owner's order and on his screens (Website › Page layouts)
@@ -208,7 +208,7 @@ function fitPosOf(fit: string | null, note: string | null): number | null {
 export async function ProductPage({ search }: { search: ProductSearch }) {
   const c = await shopContext();
   const p = await productPage(c, search);
-  if (!p?.data || !p.model) notFound();
+  if (!p?.data || !p.model) shopNotFound(c);
   const { data, set, colour } = p;
   const m: PdpModel = p.model;
   const t = c.t;

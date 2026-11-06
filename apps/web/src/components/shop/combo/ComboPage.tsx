@@ -9,7 +9,7 @@
 // rule made opens in its template (P1–P5, `PairPage`) once the owner picks one; "current" (the default) is this page.
 // While previews are on, `?tpl=P3` shows another template with the template bar (never indexed).
 import type { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import { comboOrderForward } from "@/lib/seo/combo-order";
 import { cache } from "react";
 import { bagSettings, currentBag } from "@/lib/shop/bag";
@@ -69,6 +69,7 @@ import "./combo.css";
 // PR 573: the pair templates' styles, with the rule pages' shared ones inlined (combo-pair.css @imports them), so this
 // route gets them in its own stylesheet instead of three more shared ones
 import "./combo-pair.css";
+import { shopNotFound } from "@/lib/shop/not-found";
 
 export type ComboSearch = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) =>
@@ -406,7 +407,7 @@ export async function ComboPage({
     const to = await comboOrderForward(c.storeId, slug, status);
     if (to) permanentRedirect(hrefIn(c.lang, to));
   }
-  if (!r || r.kind === "missing") notFound();
+  if (!r || r.kind === "missing") shopNotFound(c);
   if (!r.page.summary.onSale) return <Unavailable c={c} r={r} />;
   // PR 573 · a pair an auto rule made, in its template (P1–P5); "current" goes on below
   const pairSet = r.page.ruleId ? await readPairSettings(c.storeId) : null;

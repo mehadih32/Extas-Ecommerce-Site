@@ -3,12 +3,12 @@
 // does not exist or is put away: the shop's "page not found". PR 249: listed only while the journal's page kind is
 // ticked in `seo.indexing` (off as shipped).
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { ComingSoon } from '@/components/shop/ComingSoon';
 import { JournalList } from '@/components/shop/journal/JournalViews';
 import { journalPage, journalSettings, pageOf } from '@/lib/journal/shop';
 import { shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
+import { shopNotFound } from '@/lib/shop/not-found';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +28,6 @@ export default async function JournalTopic(props: Props) {
   const [c, { slug }, sp] = await Promise.all([shopContext(), props.params, props.searchParams]);
   if (!(await journalSettings(c.storeId)).on) return <ComingSoon c={c} soonKey="journal" />;
   const data = await journalPage(c, pageOf(sp.page), slug);
-  if (!data) notFound();
+  if (!data) shopNotFound(c);
   return <JournalList c={c} posts={data.posts} total={data.total} page={data.page} pages={data.pages} topics={data.topics} topic={data.topic} />;
 }
