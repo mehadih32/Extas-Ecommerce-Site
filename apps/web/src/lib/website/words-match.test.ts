@@ -3,7 +3,7 @@
 // never match.
 import { describe, expect, it } from 'vitest';
 import { defaultWord } from './words';
-import { matchWords, normText } from './words-match';
+import { matchWords, normText, previewText } from './words-match';
 
 const keys = (w: { key: string }[]) => w.map((x) => x.key);
 
@@ -31,5 +31,25 @@ describe('words on a shop page (PR 79)', () => {
 
   it('normalises spaces', () => {
     expect(normText('  a \n b  ')).toBe('a b');
+  });
+});
+
+describe('the preview of a draft on the page (PR 79 follow-up, 676)', () => {
+  it('an exact word becomes the draft', () => {
+    expect(previewText('New in', 'Just in', 'New in')).toBe('Just in');
+    expect(previewText('New in', 'Just in', 'Sale')).toBeNull();
+  });
+
+  it('a word with {slots} keeps the values the shop filled in, in the draft`s order', () => {
+    expect(previewText('Bag, {n} items', '{n} pieces in your bag', 'Bag, 3 items')).toBe('3 pieces in your bag');
+    expect(previewText('{a} of {b}', 'Page {a} / {b}', '2 of 9')).toBe('Page 2 / 9');
+    expect(previewText('Bag, {n} items', 'Your bag', 'Bag, 3 items')).toBe('Your bag');
+    expect(previewText('Bag, {n} items', 'x {n}', 'Wishlist')).toBeNull();
+  });
+
+  it('a word in "|" pieces maps each piece by its place; another number of pieces waits for Publish', () => {
+    expect(previewText('Cash on| Delivery', 'Pay on| arrival', 'Delivery')).toBe('arrival');
+    expect(previewText('Cash on| Delivery', 'Pay on| arrival', 'Cash on')).toBe('Pay on');
+    expect(previewText('Cash on| Delivery', 'Pay on arrival', 'Cash on')).toBeNull();
   });
 });

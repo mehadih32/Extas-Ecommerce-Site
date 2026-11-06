@@ -8,8 +8,10 @@
 // `website.words.write`; same checks, STALE, audited) and reloads the page. "Discard changes" puts the page back;
 // "Stop editing" ends the mode for this tab. Only loaded by components/shop/WordsEditLoader. Words:
 // messages/words-edit.<lang>.json (the page's language).
+// PR 79 follow-up (676, 6 Nov): a word with {slots} or "|" pieces previews at once too (lib/website/words-match
+// previewText: the values the shop filled in are kept; a draft with another number of pieces shows after Publish).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { PageWord } from '@/lib/website/words-match';
+import { previewText, type PageWord } from '@/lib/website/words-match';
 import bnWords from '../../../messages/words-edit.bn.json';
 import enWords from '../../../messages/words-edit.en.json';
 import './words-edit.css';
@@ -126,11 +128,12 @@ export function WordsEditPanel({ onClose }: { onClose: () => void }) {
     if (scroll && els[0]) els[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
   }, []);
 
-  /** Shows a word's draft on the page (exact words only; a word with {slots} is seen after Publish). */
+  /** Shows a word's draft on the page; ~~exact words only; a word with {slots} is seen after Publish~~ (676) every word. */
   const preview = (x: PageWord, d: Own) => {
-    const now = shown(x, d);
+    const drawn = x.own[lang] || x.byDefault[lang];
     for (const t of x.seen) {
-      if (/\{\w+\}/.test(x.byDefault[lang]) || x.byDefault[lang].includes('|')) continue;
+      const now = previewText(drawn, shown(x, d), t);
+      if (now === null) continue;
       for (const n of seen.current.nodes.get(t) ?? []) {
         if (!before.current.has(n)) before.current.set(n, n.nodeValue ?? '');
         const was = before.current.get(n)!;
