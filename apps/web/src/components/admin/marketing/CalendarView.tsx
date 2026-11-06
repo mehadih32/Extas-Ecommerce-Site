@@ -38,7 +38,9 @@ export function CalendarBars({ items, range, locale, bn, w, testId = 'mc-bars' }
           <span className="mc-t" />
           <div className="mc-b">
             {monthMarks(range).map((m) => (
-              <span key={m.day} style={{ left: `${m.left}%` }}>
+              // PR 282 follow-up: each date slides back by its own place (0% at the start, all of itself at the end), so
+              // the last month's date never runs past the bar at the 14 px card size
+              <span key={m.day} style={{ left: `${m.left}%`, transform: `translateX(-${m.left}%)` }}>
                 {short(m.day)}
               </span>
             ))}

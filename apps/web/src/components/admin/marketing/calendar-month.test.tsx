@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, it } from 'vitest';
 import type { CalendarItem } from '@/lib/marketing/calendar-model';
-import { CalendarMonth, type CalendarViewWords } from './CalendarView';
+import { calendarRange } from '@/lib/marketing/calendar-model';
+import { CalendarBars, CalendarMonth, type CalendarViewWords } from './CalendarView';
 
 const w: CalendarViewWords = { lane: { plan: 'Your plan' }, state: { live: 'Live', scheduled: 'Scheduled', ended: 'Ended', off: 'Off' }, mark: 'Last day', open: 'Until stopped', empty: 'Nothing' };
 const item = (id: string, title: string): CalendarItem => ({ id, lane: 'plan', title: { en: title, bn: null }, starts: '2026-11-09', ends: '2026-11-09', open: false, state: 'scheduled', detail: null, href: null });
@@ -35,4 +36,20 @@ it('the month grid keeps text at 14 px or more, wraps long names and widens its 
   expect(month).not.toMatch(/\.mc-ct\{[^}]*text-overflow:ellipsis/);
   expect(css).toMatch(/\.mc-item a\.a2-lnk\{[^}]*min-width:44px/);
   expect(css).toMatch(/\.mc-t a\{[^}]*min-width:44px/);
+});
+
+it('follow-up (PR 282): the bars view keeps text at the Lumen card size too — item names and the header dates', () => {
+  const css = readFileSync(fileURLToPath(new URL('../../../app/admin/marketing/calendar/calendar.css', import.meta.url)), 'utf8');
+  for (const [, size] of css.matchAll(/font-size:\s*([\d.]+)px/g)) expect(Number(size)).toBeGreaterThanOrEqual(14);
+  expect(css).toMatch(/\.mc-t\{[^}]*font-size:var\(--lm-fs-card\)/);
+  expect(css).toMatch(/\.mc-head \.mc-b span\{[^}]*font-size:var\(--lm-fs-card\)/);
+});
+
+it('follow-up (PR 282): a header date near the right end slides back by its own place, so it never runs past the bar', () => {
+  const html = renderToStaticMarkup(<CalendarBars items={[item('a', 'Eid')]} range={calendarRange('2026-11-07', 60)} locale="en-BD" bn={false} w={w} />);
+  const marks = [...html.matchAll(/<span style="left:([\d.]+)%;transform:translateX\(-([\d.]+)%\)">/g)];
+  expect(marks.length).toBeGreaterThan(1);
+  for (const [, left, back] of marks) expect(back).toBe(left);
+  const css = readFileSync(fileURLToPath(new URL('../../../app/admin/marketing/calendar/calendar.css', import.meta.url)), 'utf8');
+  expect(css).not.toMatch(/\.mc-head \.mc-b span\{[^}]*transform:/);
 });
