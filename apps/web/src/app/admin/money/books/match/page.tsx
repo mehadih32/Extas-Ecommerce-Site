@@ -212,6 +212,12 @@ export default async function BooksMatchPage({ searchParams }: { searchParams: S
   return (
     <div className="a2-z lm-bk" data-lm-ready="" data-testid="books-match">
       {ctx.head}
+      {/* Follow-up 566: a day asked for (from the Daily summary page) that has no day close yet says so */}
+      {/^\d{4}-\d{2}-\d{2}$/.test(asked) ? (
+        <div className="a2-note a2-mt12" role="status" data-testid="books-explain-none">
+          {t(d, 'bk.explain.none', { date: day(asked) })}
+        </div>
+      ) : null}
       {kpis}
       {bar}
       {days.length ? (
