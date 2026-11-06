@@ -69,6 +69,26 @@ export function pairProblems(path, own, twin) {
   return out;
 }
 
+/**
+ * S11 · PR 237 — the page's own SEO basics, checked on every deploy from its HTML: its canonical is in its own language
+ * (a Bengali page never names the English one, nor the other way round), and no link is a `#` stand-in (`href="#"`,
+ * the demo's `#/…` or `#!…` addresses) instead of a real address. A link to a place on the same page (`#pdp-reviews`)
+ * is fine. Empty = fine.
+ */
+export function htmlSeoProblems(path, html) {
+  const own = headLinks(html);
+  const out = [];
+  const u = own.canonical ? absolute(own.canonical) : null;
+  if (u && own.lang) {
+    const bn = u.pathname === "/bn" || u.pathname.startsWith("/bn/");
+    if (own.lang === "bn" && !bn) out.push(`${path}: canonical names the English page (${u.pathname})`);
+    if (own.lang === "en" && bn) out.push(`${path}: canonical names the Bengali page (${u.pathname})`);
+  }
+  const stand = [...html.matchAll(/<a\b[^>]*?\shref\s*=\s*["'](#[^"']*)["']/gi)].map((m) => m[1]).filter((h) => h === "#" || h.startsWith("#/") || h.startsWith("#!"));
+  if (stand.length) out.push(`${path}: ${stand.length} link(s) to "${stand[0]}" instead of a real address`);
+  return out;
+}
+
 /** Checks the pair of the page open in `page` (loaded from `base` + `path`); fetches its twin on `base`. */
 export async function pagePairProblems(page, base, path) {
   const own = headLinks(await page.content());

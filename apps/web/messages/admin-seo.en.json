@@ -572,5 +572,49 @@
     "more": "and {n} more",
     "inSitemaps": "Also name the pairs in the sitemaps",
     "inSitemapsHint": "Off: the pairs are only in each page's head, one method, as Google advises. On: the sitemaps carry the same pairs too."
+  },
+  "sh": {
+    "metaTitle": "SEO health · Admin",
+    "title": "SEO health",
+    "sub": "What is missing, page by page: product and collection pages search engines can't fully read yet, and where each one is fixed.",
+    "kpi": {
+      "pages": "Pages with something missing",
+      "pagesFoot": "of {products} published products and {collections} shown collections",
+      "bengali": "Bengali pages",
+      "bengaliOpen": "Open",
+      "bengaliFoot": "Coverage and the pages marked ready"
+    },
+    "list": "Pages with something missing",
+    "all": "All · {n}",
+    "filter": {
+      "noDescription": "No description · {n}",
+      "noPhoto": "No photo · {n}",
+      "photoNoAlt": "Photo without a description · {n}",
+      "noText": "No collection text · {n}",
+      "noSearchLine": "No search line · {n}",
+      "noStyles": "No styles · {n}"
+    },
+    "issue": {
+      "noDescription": "No description",
+      "noPhoto": "No photo",
+      "photoNoAlt": "{n} photo(s) without a description",
+      "noText": "No text under the grid",
+      "noSearchLine": "No search line of its own",
+      "noStyles": "No style in it"
+    },
+    "kind": {
+      "product": "Product",
+      "collection": "Collection"
+    },
+    "col": {
+      "page": "Page",
+      "missing": "Missing",
+      "fix": "Fix it"
+    },
+    "fix": "Open",
+    "none": "Nothing missing: every published product and shown collection has its words and photos.",
+    "noneHere": "No page has this.",
+    "more": "And {n} more: pick one kind above to see them.",
+    "deploy": "Every deploy also checks the built pages themselves: each language pair is complete and named back, the canonical is in the page's own language, and no link is a \"#\" stand-in."
   }
 }

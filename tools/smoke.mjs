@@ -23,7 +23,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { pagePairProblems } from "./hreflang-check.mjs";
+import { htmlSeoProblems, pagePairProblems } from "./hreflang-check.mjs";
 
 const require = createRequire(import.meta.url);
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -482,6 +482,8 @@ export async function runSmoke(opts) {
       const withPair = async (row) => {
         if (vp === config.viewports[0] && row.ok) {
           row.problems.push(...(await pagePairProblems(gp, opts.base, row.path)));
+          // PR 237: its canonical in its own language, and no "#" stand-in links
+          row.problems.push(...htmlSeoProblems(row.path, await gp.content()));
           row.ok = row.problems.length === 0;
         }
         return row;
