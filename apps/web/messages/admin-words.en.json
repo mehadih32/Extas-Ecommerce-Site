@@ -128,6 +128,16 @@
       "unsaved": "Not saved yet.",
       "readOnly": "You can see this switch. Changing it needs the permission to change the shop's words.",
       "pairHelp": "English and Bengali."
+    },
+    "set": {
+      "label": "Which words",
+      "shop": "The shop's words",
+      "admin": "The admin's words (read only)"
+    },
+    "adm": {
+      "searchPh": "A word in English or Bengali, its key or its file",
+      "found": "{n} admin words found",
+      "note": "The words of the admin pages, as the app has them. Here they can be read and searched; changing them is not built yet, so they look the same for every staff member."
     }
   }
 }
