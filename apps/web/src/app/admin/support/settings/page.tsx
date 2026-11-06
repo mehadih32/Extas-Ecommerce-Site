@@ -66,7 +66,7 @@ export default async function SupportSettingsPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="supportSettings" text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="support-settings" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="support.read" />
       </div>
     );
@@ -238,7 +238,7 @@ export default async function SupportSettingsPage() {
   const screen = <K extends sp.SupportSettingKey>(k: K) => ({ key: k, value: cards[k].value as unknown as Record<string, unknown>, version: cards[k].version });
 
   return (
-    <div className="a2-z" data-testid="support-settings">
+    <div className="a2-z" data-testid="support-settings" data-lm-ready="">
       <PageHead view={view} place={locateKey('supportSettings')} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current="supportSettings" />
       <ChannelsCard rows={channels.rows} canEdit={canEdit && channels.canEdit} texts={channelTexts} />

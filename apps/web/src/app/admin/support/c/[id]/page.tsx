@@ -75,7 +75,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="supportConversation" text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="support-conversation" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="support.read" />
       </div>
     );
@@ -424,7 +424,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   );
 
   return (
-    <div className="a2-z" data-testid="support-conversation">
+    <div className="a2-z" data-testid="support-conversation" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey('supportConversation')}

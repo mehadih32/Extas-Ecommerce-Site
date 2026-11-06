@@ -12,6 +12,7 @@ import type { ChatBag as Bag, ChatQuote } from '@extas/support';
 import { call } from '../api';
 import { formatMoney, nameIn, type Lang, type Money } from '../products/model';
 import { ShellIcon } from '../shell/ShellIcon';
+import { showToast } from '../lumen/Toast';
 
 export interface ChatBagTexts {
   h: string;
@@ -116,7 +117,7 @@ export function ChatBag({ url, bag: first, lang, money, texts: x }: { url: strin
     if (a.status === 200) {
       const o = a.data.order as { orderId: string; number: string; gate: string };
       setMade({ id: o.orderId, number: o.number, advance: o.gate === 'advance' });
-      setSaid({ text: (o.gate === 'advance' ? x.madeAdvance : x.made).replace('{number}', o.number), bad: false });
+      showToast({ text: (o.gate === 'advance' ? x.madeAdvance : x.made).replace('{number}', o.number), tone: 'ok' });
       setQuote(null);
       setKey(newKey());
       setBag({ ...bag, lines: [], count: 0, subtotalMinor: 0, offers: [], itemsMinor: 0, order: { id: o.orderId, number: o.number } });

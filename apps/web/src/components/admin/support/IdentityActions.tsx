@@ -7,6 +7,7 @@ import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface IdentityTexts {
   phone: string;
@@ -31,7 +32,7 @@ export function IdentityActions({ url, version, linked, together, texts: x }: { 
     const a = await call('POST', url, { ...payload, version });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: x.saved, bad: false });
+      showToast({ text: x.saved, tone: 'ok' });
       setPhone('');
       router.refresh();
       return;

@@ -313,3 +313,9 @@
 [data-lm-look] [data-lm-ready] .cal-n { font-size: var(--lm-fs-card); }
 /* a page's long state pill (Bengali pages: "Shop words (always there)") wraps on a phone instead of pushing it wide */
 [data-lm-look] [data-lm-ready][data-testid='bengali-page'] .a2-pill { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
+
+/* Support (PR 641): the inbox, a conversation, support analytics, the support app, rider issues and the support
+   settings. Their small sizes (the row's time, preview and meta, the message bubbles and who wrote them, files, the
+   facts list, choices, notes) become Lumen's 14 px; the person's initials read in the accent tokens, AA in dark too. */
+[data-lm-look] [data-lm-ready] :is(.sp-top .sp-when, .sp-prev, .sp-meta, .sp-bub, .sp-by, .sp-file, .sp-kv, .sp-same-row, .sp-opt, .sp-an-sub, .sp-link-risky .sp-link-why, .sp-desk) { font-size: var(--lm-fs-card); }
+[data-lm-look] [data-lm-ready] .sp-av { background: var(--lm-acbg); color: var(--lm-ac-ink); }

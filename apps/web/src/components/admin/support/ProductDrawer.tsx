@@ -10,6 +10,7 @@ import type { ChatProduct } from '@extas/support';
 import { call } from '../api';
 import { formatMoney, nameIn, type Lang, type Money } from '../products/model';
 import { ShellIcon } from '../shell/ShellIcon';
+import { showToast } from '../lumen/Toast';
 
 export interface ProductDrawerTexts {
   h: string;
@@ -116,7 +117,7 @@ export function ProductDrawer({
     const a = await call('POST', shareUrl, { productId: open.id, ...(chosen ? { variantId: chosen.id } : colour ? { colour } : {}), lang, requestKey: key, version });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: x.sent, bad: false });
+      showToast({ text: x.sent, tone: 'ok' });
       setKey(newKey());
       setOpen(null);
       router.refresh();
@@ -136,7 +137,7 @@ export function ProductDrawer({
     const a = await call('POST', addUrl, { action: 'add', variantId: chosen.id, lang });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: x.added, bad: false });
+      showToast({ text: x.added, tone: 'ok' });
       router.refresh();
       return;
     }

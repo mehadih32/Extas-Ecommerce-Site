@@ -44,7 +44,7 @@ export default async function RiderIssuesPage({ searchParams }: { searchParams: 
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="rider-issues" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="support.read" />
       </div>
     );
@@ -68,7 +68,7 @@ export default async function RiderIssuesPage({ searchParams }: { searchParams: 
   const pill = (s: string) => (s === 'APPROVED' ? 'ok' : s === 'REJECTED' ? 'line' : 'warn');
 
   return (
-    <div className="a2-z" data-testid="rider-issues" data-on={rules.enabled ? 'yes' : 'no'}>
+    <div className="a2-z" data-testid="rider-issues" data-lm-ready="" data-on={rules.enabled ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
       {!rules.enabled ? <div className="a2-note a2-mt12">{c('off')}</div> : null}

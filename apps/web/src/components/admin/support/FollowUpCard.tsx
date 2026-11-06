@@ -7,6 +7,7 @@
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface FollowUpTexts {
   h: string;
@@ -38,7 +39,7 @@ export function FollowUpCard({ url, id, body, version, maxChars, texts: x }: { u
     const a = await call('POST', url, action === 'send' ? { action, followUpId: id, body: text, requestKey: key, version } : { action, followUpId: id, version });
     setBusy('');
     if (a.status === 200) {
-      setSaid({ text: action === 'send' ? x.sent : x.skipped, bad: false });
+      showToast({ text: action === 'send' ? x.sent : x.skipped, tone: 'ok' });
       setKey(newKey());
       router.refresh();
       return;

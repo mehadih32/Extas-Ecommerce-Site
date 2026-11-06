@@ -39,7 +39,7 @@ export default async function SupportAppPage() {
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="supportApp" text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="support-app" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="support.read" />
       </div>
     );
@@ -55,7 +55,7 @@ export default async function SupportAppPage() {
   };
 
   return (
-    <div className="a2-z" data-testid="support-app">
+    <div className="a2-z" data-testid="support-app" data-lm-ready="">
       <PageHead view={view} place={locateKey('supportApp')} title={a('title')} sub={a('sub')} />
       <SectionTabs view={view} current="supportApp" />
       {state.enabled ? (
