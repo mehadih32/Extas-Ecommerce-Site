@@ -16,6 +16,7 @@ import { allow, holds, logChange, MessagesError, parse, setting, type MessagesDe
 import { sampleSettingsOf } from './engine';
 import {
   BLOCKING_PROBLEMS,
+  FOLLOW_UP_TEMPLATES,
   MESSAGE_TOKENS,
   previewTemplate,
   templateProblems,
@@ -97,7 +98,7 @@ const isChannel = (c: string): c is MessageChannel => (MESSAGE_CHANNELS as reado
 
 export async function templatesScreen(deps: MessagesDeps, who: Who): Promise<TemplatesScreen> {
   await allow(deps, who, 'messages.templates.read');
-  const [write, sample, journey, cancelNotice, advance, consent, auto] = await Promise.all([
+  const [write, sample, journey, cancelNotice, advance, consent, auto, followUp] = await Promise.all([
     holds(deps, who, 'messages.templates.write'),
     sampleSettingsOf(deps, who.storeId),
     setting(deps, who.storeId, 'messages.journey'),
@@ -105,6 +106,7 @@ export async function templatesScreen(deps: MessagesDeps, who: Who): Promise<Tem
     setting(deps, who.storeId, 'orders.advanceRequest'),
     setting(deps, who.storeId, 'messages.consent'),
     readGroup(deps, who.storeId, AUTO_REPLY_SETTINGS),
+    setting(deps, who.storeId, 'orders.followUp'),
   ]);
   const uses = templateUses({
     journey,
@@ -113,6 +115,7 @@ export async function templatesScreen(deps: MessagesDeps, who: Who): Promise<Tem
     consentTemplates: Object.values(CONSENT_TEMPLATES),
     consentReplyOn: consent.confirmReply,
     autoReply: auto.autoReply,
+    followUp: { template: FOLLOW_UP_TEMPLATES.reminder, offerTemplate: FOLLOW_UP_TEMPLATES.offer, channels: followUp.channels, on: followUp.enabled, offerOn: followUp.offer.enabled },
   });
   const rows = await deps.db.notificationTemplate.findMany({
     // PR 290: the owner's offer e-mails live on Messages › E-mail, not here

@@ -2,7 +2,8 @@
 // /admin/orders/incomplete: the customers who typed their number at checkout and left without ordering (hottest first,
 // with the bag, its worth, how long ago and which visit brought them; WhatsApp and Call), handed to a teammate or marked
 // handled; prepaid orders whose payment failed or got no answer; how many bags were left with no number; and the card
-// that switches the keeping on (off as it ships). Seeing needs `orders.read`; acting `orders.confirm`; the card
+// that switches the keeping on (off as it ships). PR 275: the follow-up card (the reminder with the bag's link, then
+// at most one offer; off as it ships) and, on each row, what went to him. Seeing needs `orders.read`; acting `orders.confirm`; the card
 // `settings.write`. lib/admin-orders/incomplete.ts. Guide: docs/admin-guide/pages/orders/incomplete.md.
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -15,7 +16,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
-import { incompleteOverview } from '@/lib/admin-orders/incomplete';
+import { FOLLOW_UP_CHANNEL_ORDERS, incompleteOverview } from '@/lib/admin-orders/incomplete';
 import { callLink, HANDLED_NOTE_MAX, INCOMPLETE_VIEWS, viewOf, whatsAppLink } from '@/lib/admin-orders/incomplete-model';
 import { ageText, phoneText } from '@/lib/admin-orders/list';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -77,6 +78,19 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
     { kind: 'number', path: 'keepDays', label: c('keepDays'), help: c('keepDaysHelp'), min: 1, max: 365 }, // hardcode-ok: the setting's own bounds
     { kind: 'number', path: 'leftAfterMinutes', label: c('leftAfterMinutes'), help: c('leftAfterMinutesHelp'), min: 5, max: 1_440 }, // hardcode-ok: the setting's own bounds
   ];
+  const fu = (k: string, vars?: Record<string, string | number>) => g(`fu.${k}`, vars);
+  const fuTexts: FieldsCardTexts = { ...cardTexts, h: fu('h'), d: fu('d') };
+  const fuFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: fu('enabled'), help: fu('enabledHelp') },
+    { kind: 'number', path: 'firstAfterMinutes', label: fu('firstAfterMinutes'), help: fu('firstAfterMinutesHelp'), min: 15, max: 2_880 }, // hardcode-ok: the setting's own bounds
+    { kind: 'select', path: 'channels', label: fu('channels'), help: fu('channelsHelp'), options: FOLLOW_UP_CHANNEL_ORDERS.map((v) => ({ value: v, label: fu(`ch.${v}`) })) },
+    { kind: 'select', path: 'minStep', label: fu('minStep'), help: fu('minStepHelp'), options: ['details', 'delivery', 'payment'].map((v) => ({ value: v, label: fu(`step.${v}`) })) },
+    { kind: 'number', path: 'catchUpHours', label: fu('catchUpHours'), help: fu('catchUpHoursHelp'), min: 1, max: 168 }, // hardcode-ok: the setting's own bounds
+    { kind: 'number', path: 'phoneGapDays', label: fu('phoneGapDays'), help: fu('phoneGapDaysHelp'), min: 1, max: 90 }, // hardcode-ok: the setting's own bounds
+    { kind: 'switch', path: 'offer', label: fu('offer'), help: fu('offerHelp') },
+    { kind: 'number', path: 'offerAfterHours', label: fu('offerAfterHours'), help: fu('offerAfterHoursHelp'), min: 1, max: 168 }, // hardcode-ok: the setting's own bounds
+    { kind: 'text', path: 'offerCode', label: fu('offerCode'), help: fu('offerCodeHelp'), max: 40 }, // hardcode-ok: the setting's own bound
+  ];
   const actTexts = { assign: g('assign'), nobody: g('nobody'), assignSave: g('assignSave'), assigned: g('assigned2'), markHandled: g('markHandled'), noteLabel: g('noteLabel'), notePlaceholder: g('notePlaceholder'), save: g('save'), cancel: g('cancel'), reopen: g('reopen'), done: g('done'), err };
   const name = (en_: string, bn_: string | null) => (view.lang === 'bn' ? bn_ || en_ : en_);
 
@@ -133,6 +147,11 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
                   </p>
                 ) : null}
                 {r.assignedTo && !r.handled ? <p className="a2-sm">{g('assigned', { name: r.assignedTo.name })}</p> : null}
+                {r.followUps.last ? (
+                  <p className="a2-sm a2-mute inc-wrap" data-testid="inc-followups">
+                    {fu(r.followUps.last.offer ? 'rowOffer' : 'row', { sent: n(r.followUps.sent), max: n(o.followUp.ceiling), when: ageText(view, new Date(r.followUps.last.at), now), channel: fu(`chName.${r.followUps.last.channel}`) })}
+                  </p>
+                ) : null}
                 {r.handled ? (
                   <p className="a2-sm inc-wrap" data-testid="inc-handled-line">
                     <span className="a2-pill g">{r.handled.by ? g('handledBy', { when: when(r.handled.at), name: r.handled.by }) : g('handledOn', { when: when(r.handled.at) })}</span>
@@ -218,6 +237,12 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
 
       <div className="a2-mt12">
         <FieldsCard url={API} screen={{ key: o.card.key, value: o.card.value, version: o.card.version }} fields={cardFields} texts={cardTexts} canEdit={canSet} testId="inc-card" />
+      </div>
+      <div className="a2-mt12" data-testid="inc-followup">
+        <p className="a2-sm a2-mute inc-wrap" data-testid="inc-followup-stats">
+          {fu('stats', { sent: n(o.followUp.sent), recovered: n(o.followUp.recovered) })}
+        </p>
+        <FieldsCard url={API} screen={{ key: o.followUp.card.key, value: o.followUp.card.value, version: o.followUp.card.version }} fields={fuFields} texts={fuTexts} canEdit={canSet} testId="inc-fu-card" />
       </div>
     </div>
   );

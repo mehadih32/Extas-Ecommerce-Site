@@ -106,6 +106,10 @@
     "incomplete": {
       "label": "Incomplete orders: counts as left after (minutes)",
       "help": "How many minutes after the customer stopped typing (or a payment stopped without an answer) an unfinished checkout shows on Orders › Incomplete. A customer may still be typing before that."
+    },
+    "followUp": {
+      "label": "Incomplete orders: follow-up messages",
+      "help": "The reminder to a customer who left checkout after typing his number: once, about an hour later, by WhatsApp or SMS (only the ways he said yes to offers on), with a link that puts his bag back; then, only if the offer is switched on and a code is picked, one offer. Two messages at most, ever. Off as it ships."
     }
   },
   "defaults": {

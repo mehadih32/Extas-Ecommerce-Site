@@ -30,6 +30,10 @@ export interface TimelineEvent {
  * amount and the pay link (`{advanceAmount}`, `{payLink}`), keyed by that row so a "Send again" goes again.
  */
 export const ADVANCE_REQUEST = 'advanceRequest';
+/** PR 275 — the message log's step of an unfinished checkout's follow-up (the reminder, then at most one offer). */
+export const FOLLOW_UP_STEP = 'checkoutFollowUp';
+/** PR 275 — the follow-up's two templates (Messages › Templates). */
+export const FOLLOW_UP_TEMPLATES = { reminder: 'checkout.followUp', offer: 'checkout.followUpOffer' } as const;
 export const ADVANCE_RESEND_EVENT = 'order.advanceResend';
 
 const dataOf = (e: Pick<TimelineEvent, 'data'>): Record<string, unknown> => (e.data && typeof e.data === 'object' && !Array.isArray(e.data) ? (e.data as Record<string, unknown>) : {});
@@ -278,12 +282,16 @@ export interface RenderInput {
   refundMinor?: number | null;
   /** PR 148 follow-up — the exchange's new parcel: its order number and what the rider collects for it (0: nothing). */
   exchange?: { number: string; collectMinor: number } | null;
+  /** PR 275 — an unfinished checkout's follow-up: the pieces in his bag, the link that puts the bag back, the code offered. */
+  followUp?: { bagCount: number; link: string | null; offerCode: string | null } | null;
 }
 
 export type Rendered = { ok: true; text: string; subject: string | null } | { ok: false; reason: 'AMOUNT_RULE' | 'NO_LINK' | 'NO_KEPT_ORDER' | 'NO_EVENT' | 'UNKNOWN_TOKEN'; field: string };
 
 /** PR 148 follow-up — the tokens that read the timeline row that started the message (never filled with nothing). */
 export const EVENT_TOKENS: ReadonlySet<string> = new Set(['refundAmount', 'exchangeOrderNumber', 'exchangeAmountLine']);
+/** PR 275 — the tokens of an unfinished checkout's follow-up (its bag, its bag link, the code offered): never filled with nothing. */
+export const FOLLOW_UP_TOKENS: ReadonlySet<string> = new Set(['bagCount', 'bagLink', 'offerCode']);
 
 const fill = (text: string, vars: Record<string, string>) => text.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g, (m, k: string) => vars[k] ?? m);
 const tidy = (text: string) =>
@@ -308,6 +316,9 @@ export function render(body: string, subject: string | null, v: RenderInput): Re
     if (t === 'payLink' && !v.advance?.link) return { ok: false, reason: 'NO_LINK', field: t };
     if (t === 'refundAmount' && !(v.refundMinor && v.refundMinor > 0)) return { ok: false, reason: 'NO_EVENT', field: t };
     if ((t === 'exchangeOrderNumber' || t === 'exchangeAmountLine') && !v.exchange) return { ok: false, reason: 'NO_EVENT', field: t };
+    if (FOLLOW_UP_TOKENS.has(t) && !v.followUp) return { ok: false, reason: 'NO_EVENT', field: t };
+    if (t === 'bagLink' && !v.followUp?.link) return { ok: false, reason: 'NO_LINK', field: t };
+    if (t === 'offerCode' && !v.followUp?.offerCode) return { ok: false, reason: 'NO_EVENT', field: t };
   }
   const amount = formatAmount(Math.max(0, v.dueMinor), v.currency);
   const exactWords = v.exactAmount && all.includes('exactAmountLine') ? (v.dueMinor > 0 ? v.exactAmount.due : v.exactAmount.paid) : null;
@@ -334,6 +345,9 @@ export function render(body: string, subject: string | null, v: RenderInput): Re
     exchangeOrderNumber: v.exchange?.number ?? '',
     // what the rider collects for the new parcel, in the amount line's words; nothing to collect: no line
     exchangeAmountLine: v.exchange && v.exchange.collectMinor > 0 ? fill(v.amountLine, { amount: formatAmount(v.exchange.collectMinor, v.currency) }) : '',
+    bagCount: v.followUp ? String(v.followUp.bagCount) : '',
+    bagLink: v.followUp?.link ?? '',
+    offerCode: v.followUp?.offerCode ?? '',
   };
   for (const t of all) if (!(t in vars)) return { ok: false, reason: 'UNKNOWN_TOKEN', field: t };
   return { ok: true, text: tidy(fill(body, vars)), subject: subject === null ? null : tidy(fill(subject, vars)) };
@@ -402,6 +416,17 @@ export function audienceFits(who: JourneyStepConfig['who'], paymentMethod: strin
 export const orderLink = (host: string | null, number: string): string | null => (host ? `https://${host}/account/orders/${encodeURIComponent(number)}` : null);
 
 /** PR 542 — an advance's pay link on the shop, in the message's language (the shop serves Bengali under `/bn`). */
+/** PR 275 — his tick for offers on that channel as the unfinished checkout kept it (`data.consent`; null: never asked). */
+export function followUpTick(data: unknown, channel: MessageChannel): boolean | null {
+  const c = data && typeof data === 'object' ? (data as { consent?: unknown }).consent : null;
+  if (!c || typeof c !== 'object') return null;
+  const v = (c as Record<string, unknown>)[channel === 'WHATSAPP' ? 'whatsapp' : channel === 'SMS' ? 'sms' : ''];
+  return typeof v === 'boolean' ? v : null;
+}
+
+/** PR 275 — the link of an unfinished checkout's follow-up that puts his bag back in any browser (then opens the bag). */
+export const bagBackLink = (host: string | null, code: string | null, lang: 'bn' | 'en'): string | null => (host && code ? `https://${host}/api/bag/back/${encodeURIComponent(code)}${lang === 'en' ? '?l=en' : ''}` : null);
+
 export const payLink = (host: string | null, token: string | null, lang: 'bn' | 'en'): string | null => (host && token ? `https://${host}${lang === 'bn' ? '/bn' : ''}/pay/${encodeURIComponent(token)}` : null);
 
 /** PR 292 — a template's name with WhatsApp: its key in lower case, the dots as underscores (`order.placed` → `order_placed`). */
@@ -486,6 +511,10 @@ export const SAMPLE_ORDER = {
   refundMinor: 120_000, // hardcode-ok: a sample refund for the preview, never a price or a fee
   exchangeNumber: '100236',
   exchangeCollectMinor: 10_000, // hardcode-ok: a sample exchange parcel's amount for the preview, never a fee
+  // PR 275: a sample unfinished checkout (two pieces in the bag, its link's code, a sample offer code)
+  bagCount: 2,
+  bagCode: 'sample',
+  offerCode: 'SAMPLE10',
 } as const;
 
 export interface SampleSettings {
@@ -517,6 +546,7 @@ export function sampleInput(s: SampleSettings, lang: 'bn' | 'en', sample: Sample
     advance: { amountMinor: SAMPLE_ORDER.advanceMinor, link: payLink(s.host, SAMPLE_ORDER.payToken, lang) },
     refundMinor: SAMPLE_ORDER.refundMinor,
     exchange: { number: SAMPLE_ORDER.exchangeNumber, collectMinor: SAMPLE_ORDER.exchangeCollectMinor },
+    followUp: { bagCount: SAMPLE_ORDER.bagCount, link: bagBackLink(s.host, SAMPLE_ORDER.bagCode, lang), offerCode: SAMPLE_ORDER.offerCode },
   };
 }
 
@@ -546,7 +576,7 @@ export function consentWordOf(cfg: { stopWords: readonly string[]; startWords: r
  * The `{tokens}` a template may use: exactly what `render` fills (the default pack checks the same list, @extas/seed
  * `TEMPLATE_TOKENS`). A token outside it would go out as written, so the editor refuses it.
  */
-export const MESSAGE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'amountDue', 'amountLine', 'exactAmountLine', 'trackingLink', 'orderLink', 'senderName', 'cancelReason', 'keptOrderNumber', 'keptOrderLink', 'advanceAmount', 'payLink', 'refundAmount', 'exchangeOrderNumber', 'exchangeAmountLine'] as const;
+export const MESSAGE_TOKENS = ['storeName', 'customerName', 'orderNumber', 'total', 'amountDue', 'amountLine', 'exactAmountLine', 'trackingLink', 'orderLink', 'senderName', 'cancelReason', 'keptOrderNumber', 'keptOrderLink', 'advanceAmount', 'payLink', 'refundAmount', 'exchangeOrderNumber', 'exchangeAmountLine', 'bagCount', 'bagLink', 'offerCode'] as const;
 export type MessageToken = (typeof MESSAGE_TOKENS)[number];
 
 /** The longest body and subject a template keeps (the default pack's own limits). */
@@ -564,7 +594,7 @@ export type TemplateProblem = (typeof TEMPLATE_PROBLEMS)[number];
 export const BLOCKING_PROBLEMS: ReadonlySet<TemplateProblem> = new Set(['EMPTY', 'UNKNOWN_TOKEN', 'NO_SUBJECT', 'TOO_LONG']);
 
 const BENGALI_LETTER = /[ঀ-৿]/;
-const LINKS_OF_SHOP: ReadonlySet<string> = new Set([...LINK_TOKENS, 'keptOrderLink', 'payLink', 'exactAmountLine']);
+const LINKS_OF_SHOP: ReadonlySet<string> = new Set([...LINK_TOKENS, 'keptOrderLink', 'payLink', 'exactAmountLine', 'bagLink']);
 
 export interface TemplateWords {
   channel: MessageChannel;
@@ -618,6 +648,8 @@ export interface TemplateUseSettings {
   consentTemplates: readonly string[];
   consentReplyOn: boolean;
   autoReply: { enabled: boolean; template: string };
+  /** PR 275 — the unfinished checkout's follow-up: its two templates, the ways it may go, and whether it (and its offer) is on. */
+  followUp?: { template: string; offerTemplate: string; channels: readonly MessageChannel[]; on: boolean; offerOn: boolean };
 }
 
 const stepChannels = (s: JourneyStepConfig): MessageChannel[] => [...new Set<MessageChannel>([s.channel, ...(s.fallback !== 'NONE' ? [s.fallback] : []), ...(s.email ? (['EMAIL'] as const) : [])])];
@@ -635,6 +667,10 @@ export function templateUses(c: TemplateUseSettings): Map<string, TemplateUse[]>
   add(c.advance.template, { use: 'advanceRequest', channels: adv, on: adv.length > 0 });
   for (const k of c.consentTemplates) add(k, { use: 'consentReply', channels: ['SMS', 'WHATSAPP'], on: c.consentReplyOn });
   add(c.autoReply.template, { use: 'autoReply', channels: ['WHATSAPP'], on: c.autoReply.enabled });
+  if (c.followUp) {
+    add(c.followUp.template, { use: FOLLOW_UP_STEP, channels: [...c.followUp.channels], on: c.followUp.on });
+    add(c.followUp.offerTemplate, { use: FOLLOW_UP_STEP, channels: [...c.followUp.channels], on: c.followUp.on && c.followUp.offerOn });
+  }
   return out;
 }
 

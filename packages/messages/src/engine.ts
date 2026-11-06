@@ -39,12 +39,12 @@
 import type { Prisma } from '@extas/db/client';
 import { codToCollect, dueOf } from '@extas/orders/pure';
 import { CRM_CAMPAIGN_STEP, CRM_EMAIL_STEP, CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings, type WinbackSettings } from '@extas/settings';
-import { consentBlock } from './consent';
+import { consentBlock, offerConsent } from './consent';
 import { recordSendCost } from './costs';
 import { recordReviewRequest, REVIEW_STEP, reviewAskBlock } from './review-requests';
 import { emailHeaders, emailHtml, emailLinks, emailText, emailUrls } from './email-html';
 import { nowOf, setting, TX, type MessagesDeps, type OutgoingMessage, type SendResult } from './context';
-import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, EVENT_TOKENS, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, STEP_EVENT_TYPES, templateValues, tokensIn, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
+import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, bagBackLink, FOLLOW_UP_STEP, FOLLOW_UP_TEMPLATES, followUpTick, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, EVENT_TOKENS, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, STEP_EVENT_TYPES, templateValues, tokensIn, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
 
 /** How long a claimed row is held by one run before another may take it again (a run that died mid-send). */
 const CLAIM_LEASE_MS = 10 * 60_000;
@@ -407,6 +407,7 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   if (!c.master) return close(deps, c, row, 'SKIPPED', 'MASTER_OFF').then(() => 'SKIPPED');
   if (row.step === CRM_MESSAGE_STEP || row.step === CRM_CAMPAIGN_STEP) return sendJourneyMessage(deps, c, row, opts);
   if (row.step === CRM_EMAIL_STEP) return sendOfferEmail(deps, c, row, opts);
+  if (row.step === FOLLOW_UP_STEP) return sendFollowUp(deps, c, row, opts);
   const cfg = await wordsKeyOf(deps, c, row);
   if (!cfg || !row.orderId) return close(deps, c, row, 'SKIPPED', 'UNKNOWN_STEP').then(() => 'SKIPPED');
   if (!cfg.on) return close(deps, c, row, 'SKIPPED', 'STEP_OFF').then(() => 'SKIPPED');
@@ -590,6 +591,40 @@ async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, o
   if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: to, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');
   const stop = (wb ?? cfg).stopLine[lang].trim();
   const text = stop && channel !== 'WHATSAPP' ? `${words.text}\n${stop}` : words.text;
+  return deliverOffer(deps, c, row, opts, {
+    to,
+    text,
+    subject: words.subject,
+    template: t,
+    purpose: key.key,
+    lang,
+    input,
+    currency,
+    onSent: async (tx, costMinor) => {
+      if (campaign && row.broadcastId) await tx.broadcast.update({ where: { id: row.broadcastId }, data: { sentCount: { increment: 1 }, ...(costMinor ? { costMinor: { increment: costMinor } } : {}) } });
+    },
+    onFailed: async () => {
+      if (campaign && row.broadcastId) await deps.db.broadcast.update({ where: { id: row.broadcastId }, data: { failedCount: { increment: 1 } } });
+    },
+  });
+}
+
+type TemplateRow = NonNullable<Awaited<ReturnType<typeof templateOf>>>;
+
+/**
+ * The send of an offer-like message of no order (a journey's or campaign's message, an unfinished checkout's follow-up):
+ * a live WhatsApp needs its template approved; logged, tried again on the retry waits and costed like every message.
+ * `onSent` runs inside the sent row's transaction, `onFailed` after its last failed try.
+ */
+async function deliverOffer(
+  deps: MessagesDeps,
+  c: RunContext,
+  row: Row,
+  opts: SendOptions,
+  m: { to: string; text: string; subject: string | null; template: TemplateRow; purpose: string; lang: 'bn' | 'en'; input: RenderInput; currency: string; onSent?: (tx: Prisma.TransactionClient, costMinor: number | null) => Promise<void>; onFailed?: () => Promise<void> },
+): Promise<SendOutcome> {
+  const channel = row.channel as MessageChannel;
+  const { to, text, template: t } = m;
   const attempt = row.attempts + 1;
   const sms = channel === 'SMS';
   const senderId = sms ? maskingSender(c.masking) : null;
@@ -604,9 +639,9 @@ async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, o
     let waTemplate: OutgoingMessage['template'] = null;
     if (channel === 'WHATSAPP' && sender.mode !== 'MOCK') {
       if (t.providerStatus !== 'APPROVED' || !t.providerTemplateId) return close(deps, c, row, 'SKIPPED', 'WA_TEMPLATE_NOT_APPROVED', { recipient: to, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');
-      waTemplate = { name: t.providerTemplateId, language: c.whatsapp.languageCodes[lang], params: templateValues(t.body, input) };
+      waTemplate = { name: t.providerTemplateId, language: c.whatsapp.languageCodes[m.lang], params: templateValues(t.body, m.input) };
     }
-    r = await sender.send({ to, text, subject: words.subject, purpose: key.key, ...(sms ? { senderId } : {}), ...(waTemplate ? { template: waTemplate } : {}) });
+    r = await sender.send({ to, text, subject: m.subject, purpose: m.purpose, ...(sms ? { senderId } : {}), ...(waTemplate ? { template: waTemplate } : {}) });
   } catch (e) {
     r = { ok: false, error: `${sender ? '' : 'NO_SENDER: '}${errorText(e)}` };
   }
@@ -618,8 +653,8 @@ async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, o
     await deps.db.$transaction(async (tx) => {
       await tx.notificationLog.update({ where: { id: row.id }, data: { ...tried, status: 'SENT', providerMessageId: messageId, sentAt: c.now, sendAfter: null, reason: null, error: null, costMinor } });
       await tx.notificationAttempt.create({ data: { ...tryData, ok: true, providerMessageId: messageId, costMinor } });
-      if (campaign && row.broadcastId) await tx.broadcast.update({ where: { id: row.broadcastId }, data: { sentCount: { increment: 1 }, ...(costMinor ? { costMinor: { increment: costMinor } } : {}) } });
-      if (costMinor !== null && costMinor > 0) await recordSendCost(tx, { storeId: c.storeId, channel: row.channel, costMinor, currency, logId: row.id, template: key.key, provider: sender?.provider ?? null, at: c.now });
+      await m.onSent?.(tx, costMinor);
+      if (costMinor !== null && costMinor > 0) await recordSendCost(tx, { storeId: c.storeId, channel: row.channel, costMinor, currency: m.currency, logId: row.id, template: m.purpose, provider: sender?.provider ?? null, at: c.now });
     }, TX);
     return 'SENT';
   }
@@ -630,8 +665,76 @@ async function sendJourneyMessage(deps: MessagesDeps, c: RunContext, row: Row, o
     return 'RETRYING';
   }
   await close(deps, c, row, 'FAILED', r.unreachable ? 'UNREACHABLE' : error.startsWith('NO_SENDER') ? 'NO_SENDER' : 'SEND_FAILED', { ...tried, error });
-  if (campaign && row.broadcastId) await deps.db.broadcast.update({ where: { id: row.broadcastId }, data: { failedCount: { increment: 1 } } });
+  await m.onFailed?.();
   return 'FAILED';
+}
+
+/**
+ * PR 275 — an unfinished checkout's follow-up (queued by `planFollowUps`, follow-up.ts): checked again as it goes — the
+ * switch still on, nothing ordered on that number since, not marked handled by the team, his yes for offers on this
+ * channel (or his tick on that checkout), outside the quiet hours, something still in the bag, and for the offer its
+ * code still live. The words are the reminder's or the offer's template with the link that puts his bag back; an SMS
+ * gets the offers' stop line. Its RecoveryMessage row gets the time it went.
+ */
+async function sendFollowUp(deps: MessagesDeps, c: RunContext, row: Row, opts: SendOptions): Promise<SendOutcome> {
+  const skip = (reason: string) => close(deps, c, row, 'SKIPPED', reason).then((): SendOutcome => 'SKIPPED');
+  const channel = row.channel as MessageChannel;
+  const cfg = await setting(deps, c.storeId, 'orders.followUp');
+  if (!cfg.enabled) return skip('SWITCHED_OFF');
+  const rm = await deps.db.recoveryMessage.findFirst({ where: { storeId: c.storeId, notificationLogId: row.id }, select: { id: true, checkoutDraftId: true, attempt: true, offerCouponId: true } });
+  const d = rm?.checkoutDraftId ? await deps.db.checkoutDraft.findFirst({ where: { id: rm.checkoutDraftId, storeId: c.storeId }, select: { phone: true, name: true, customerId: true, cartId: true, restoreCode: true, convertedOrderId: true, handledAt: true, createdAt: true, lastActivityAt: true, data: true } }) : null;
+  if (!rm || !d?.phone || !row.recipient) return skip('NO_RECIPIENT');
+  if (d.convertedOrderId || (await orderedSince(deps, c.storeId, d.phone, d.createdAt))) return skip('ORDERED');
+  if (d.handledAt) return skip('HANDLED');
+  const until = quietUntil(c.quiet, c.now, c.timeZone);
+  if (until) {
+    await deps.db.notificationLog.update({ where: { id: row.id }, data: { sendAfter: until, reason: 'QUIET_HOURS' } });
+    return 'WAITING';
+  }
+  const refused = await offerConsent(deps.db, c.storeId, { channel, phone: d.phone, customerId: d.customerId, tick: { value: followUpTick(d.data, channel), at: d.lastActivityAt } });
+  if (refused) return skip(refused);
+  const coupon = rm.offerCouponId ? await deps.db.coupon.findFirst({ where: { id: rm.offerCouponId, storeId: c.storeId, enabled: true }, select: { code: true } }) : null;
+  if (rm.offerCouponId && !coupon) return skip('OFFER_GONE');
+  const pieces = d.cartId ? ((await deps.db.cartItem.aggregate({ where: { storeId: c.storeId, cartId: d.cartId, removedAt: null, savedForLater: false }, _sum: { quantity: true } }))._sum.quantity ?? 0) : 0;
+  if (pieces <= 0) return skip('EMPTY_BAG');
+  const t = await templateOf(deps, c.storeId, coupon ? FOLLOW_UP_TEMPLATES.offer : FOLLOW_UP_TEMPLATES.reminder, channel, c.locale);
+  if (!t) return skip('NO_TEMPLATE');
+  const lang = t.locale === 'en' ? 'en' : 'bn';
+  const currency = await setting(deps, c.storeId, 'store.currency');
+  const input: RenderInput = {
+    storeName: c.storeName,
+    customerName: d.name?.trim() || '',
+    orderNumber: '',
+    senderName: '',
+    currency,
+    dueMinor: 0,
+    link: null,
+    amountLine: c.amountLine[lang],
+    exactAmount: null,
+    followUp: { bagCount: pieces, link: bagBackLink(c.host, d.restoreCode, lang), offerCode: coupon?.code ?? null },
+  };
+  const words = render(t.body, channel === 'EMAIL' ? (t.subject ?? '') : null, input);
+  if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: row.recipient, templateId: t.id, locale: t.locale }).then(() => 'SKIPPED');
+  const stop = (await setting(deps, c.storeId, 'customers.journeys')).stopLine[lang].trim();
+  const text = stop && channel === 'SMS' ? `${words.text}\n${stop}` : words.text;
+  return deliverOffer(deps, c, row, opts, {
+    to: row.recipient,
+    text,
+    subject: words.subject,
+    template: t,
+    purpose: coupon ? FOLLOW_UP_TEMPLATES.offer : FOLLOW_UP_TEMPLATES.reminder,
+    lang,
+    input,
+    currency,
+    onSent: async (tx) => {
+      await tx.recoveryMessage.update({ where: { id: rm.id }, data: { sentAt: c.now } });
+    },
+  });
+}
+
+/** PR 275 — has this number ordered (any order that is not a draft) since that time? */
+export async function orderedSince(deps: Pick<MessagesDeps, 'db'>, storeId: number, phone: string, since: Date): Promise<boolean> {
+  return !!(await deps.db.order.findFirst({ where: { storeId, phone, createdAt: { gte: since }, status: { not: 'DRAFT' } }, select: { id: true } }));
 }
 
 /** PR 290 — how long a paused e-mail send's queued e-mails wait before they are looked at again. */
@@ -779,7 +882,7 @@ export async function sendDue(deps: MessagesDeps, storeId: number): Promise<Send
   const rows = await deps.db.notificationLog.findMany({
     // PR 289, 290, 300: a customer journey's message, an e-mail send's e-mail and a campaign's message have no order (the
     // step says what it is)
-    where: { storeId, status: 'QUEUED', sendAfter: { lte: c.now }, step: { not: null }, OR: [{ orderId: { not: null } }, { step: { in: [CRM_MESSAGE_STEP, CRM_EMAIL_STEP, CRM_CAMPAIGN_STEP] } }] },
+    where: { storeId, status: 'QUEUED', sendAfter: { lte: c.now }, step: { not: null }, OR: [{ orderId: { not: null } }, { step: { in: [CRM_MESSAGE_STEP, CRM_EMAIL_STEP, CRM_CAMPAIGN_STEP, FOLLOW_UP_STEP] } }] },
     orderBy: [{ sendAfter: 'asc' }, { id: 'asc' }],
     take: engine.batchSize,
     select: ROW_SELECT,

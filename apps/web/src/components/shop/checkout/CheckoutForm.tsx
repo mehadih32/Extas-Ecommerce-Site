@@ -315,11 +315,12 @@ export function CheckoutForm({
   }, [backfillKey]);
   const capturePay = stored?.pay ? view.pay.chosen : null;
   const touched = edited !== null || filled(stored?.form) !== null;
-  const captureKey = capture && phoneOk && touched ? JSON.stringify([form, note, capturePay]) : null;
+  // PR 275: his offer ticks go with it (the follow-up asks for his yes)
+  const captureKey = capture && phoneOk && touched ? JSON.stringify([form, note, capturePay, consent]) : null;
   useEffect(() => {
     if (!capture || !captureKey) return;
     const step = capturePay ? 'payment' : form.address.trim() ? 'delivery' : 'details';
-    const timer = setTimeout(() => void postJson(DRAFT_URL, { form, payment: capturePay, note: note || null, step }), capture.waitMs);
+    const timer = setTimeout(() => void postJson(DRAFT_URL, { form, payment: capturePay, note: note || null, step, consent }), capture.waitMs);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the key holds everything that is sent
   }, [captureKey]);

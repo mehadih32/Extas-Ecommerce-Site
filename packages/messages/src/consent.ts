@@ -45,6 +45,20 @@ export async function consentBlock(db: Db, storeId: number, cfg: Pick<ConsentSet
   return null;
 }
 
+/**
+ * PR 275 — may an offer-like message (an unfinished checkout's follow-up) go to this number on this channel? A stop of
+ * every message wins; then his newest answer about offers — a recorded one, or his tick on the unfinished checkout
+ * itself when that is newer (`tick.at`: when he last typed there; `tick.value` null: never asked). Anything but a yes:
+ * NO_CONSENT.
+ */
+export async function offerConsent(db: Db, storeId: number, m: { channel: MessageChannel; phone: string; customerId: string | null; tick: { value: boolean | null; at: Date } }): Promise<ConsentBlock | null> {
+  const or = whoOf(m.phone, m.customerId);
+  if ((await newest(db, storeId, m.channel, 'ALL', or)) === false) return 'OPTED_OUT';
+  const r = await db.consentRecord.findFirst({ where: { storeId, channel: m.channel, scope: 'MARKETING', OR: or }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { granted: true, createdAt: true } });
+  const yes = m.tick.value !== null && (!r || r.createdAt <= m.tick.at) ? m.tick.value : (r?.granted ?? null);
+  return yes === true ? null : 'NO_CONSENT';
+}
+
 export interface ConsentChange {
   phone: string;
   customerId: string | null;
