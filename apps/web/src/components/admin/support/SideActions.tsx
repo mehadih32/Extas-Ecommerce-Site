@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface SideTexts {
   state: string;
@@ -54,7 +55,7 @@ export function SideActions({
     const a = await call('POST', `${base}/${path}`, { ...payload, version });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: x.saved, bad: false });
+      showToast({ text: x.saved, tone: 'ok' });
       router.refresh();
       return;
     }

@@ -6,6 +6,7 @@
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 
 export interface BlockTexts {
   fold: string;
@@ -32,7 +33,7 @@ export function BlockActions({ url, version, blocked, maxChars, texts: x }: { ur
     const a = await call('POST', url, action === 'block' ? { action, reason, version } : { action, version });
     setBusy(false);
     if (a.status === 200) {
-      setSaid({ text: action === 'block' ? x.blocked : x.unblocked, bad: false });
+      showToast({ text: action === 'block' ? x.blocked : x.unblocked, tone: 'ok' });
       setSure(false);
       router.refresh();
       return;

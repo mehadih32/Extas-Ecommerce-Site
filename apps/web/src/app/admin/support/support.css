@@ -23,7 +23,7 @@
 .adm2 .sp-bub{padding:9px 12px;border-radius:14px;background:var(--sf);border:1px solid var(--ln);font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
 .adm2 .sp-msg.in .sp-bub{border-bottom-left-radius:4px}
 .adm2 .sp-msg.out .sp-bub{background:var(--g0);border-color:var(--g1);border-bottom-right-radius:4px}
-.adm2 .sp-msg.note .sp-bub{background:#FFFBF2;border:1px dashed #E2CB86;border-bottom-right-radius:4px}
+.adm2 .sp-msg.note .sp-bub{background:var(--lm-warnbg);border:1px dashed var(--lm-warn);border-bottom-right-radius:4px}
 .adm2 .sp-by{font-size:11.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
 .adm2 .sp-files{display:flex;flex-wrap:wrap;gap:6px}
 .adm2 .sp-file{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 10px;border-radius:9px;border:1px solid var(--ln);background:var(--sf);font-size:12.5px;color:var(--ink);text-decoration:none;max-width:100%}
@@ -34,7 +34,7 @@
 /* the composer */
 .adm2 .sp-comp{margin-top:12px}
 .adm2 .sp-comp textarea{width:100%;min-height:96px;resize:vertical}
-.adm2 .sp-comp.note textarea{background:#FFFBF2}
+.adm2 .sp-comp.note textarea{background:var(--lm-warnbg)}
 .adm2 .sp-cbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
 .adm2 .sp-cbar .sp-grow{flex:1 1 auto}
 .adm2 .sp-attach{position:relative;overflow:hidden}

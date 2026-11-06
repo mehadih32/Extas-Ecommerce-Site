@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
+import { showToast } from '../lumen/Toast';
 
 export interface ChannelRow {
   id: string;
@@ -66,7 +67,7 @@ export function ChannelsCard({ rows: first, canEdit, texts: x }: Readonly<{ rows
     setBusy('');
     if (a.status === 200 && Array.isArray(a.data.rows)) {
       setRows(a.data.rows as ChannelRow[]);
-      setSaid({ text: ok, bad: false });
+      showToast({ text: ok, tone: 'ok' });
       return true;
     }
     const code = a.status === 0 ? 'network' : (a.data.error ?? 'other');

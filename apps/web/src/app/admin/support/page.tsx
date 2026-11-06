@@ -52,7 +52,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="supportInbox" text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="support-inbox" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="support.read" />
       </div>
     );
@@ -84,7 +84,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   const me = who.actor.staffUserId;
 
   return (
-    <div className="a2-z" data-testid="support-inbox">
+    <div className="a2-z" data-testid="support-inbox" data-lm-ready="">
       <PageHead view={view} place={locateKey('supportInbox')} title={t(d, 'sup.title')} sub={t(d, 'sup.sub')} />
       <SectionTabs view={view} current="supportInbox" />
       {desk ? (

@@ -6,6 +6,7 @@
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState } from 'react';
 import { t, type Dict } from '@/lib/i18n';
+import { showToast } from '../lumen/Toast';
 
 interface Answer {
   status: number;
@@ -190,7 +191,7 @@ export function RiderIssueForm({ dict, maxPhotos }: { dict: Dict; maxPhotos: num
     setCharged('');
     setWords('');
     setPhotos([]);
-    setMsg({ ok: true, text: c('logged') });
+    showToast({ text: c('logged'), tone: 'ok' });
     router.refresh();
   };
   return (
@@ -242,7 +243,7 @@ export function RiderSettingsForm({ dict, before }: { dict: Dict; before: { enab
     const a = await send('/api/admin/support/rider-issues/settings', { before, value: v });
     setBusy(false);
     if (!a.data.ok) return setMsg({ ok: false, text: errWords(dict, a) });
-    setMsg({ ok: true, text: c('saved') });
+    showToast({ text: c('saved'), tone: 'ok' });
     router.refresh();
   };
   const tick = (k: 'enabled' | 'proofRequired' | 'refundAsk', label: string) => (

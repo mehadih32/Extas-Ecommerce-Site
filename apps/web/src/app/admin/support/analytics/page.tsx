@@ -40,7 +40,7 @@ export default async function SupportAnalyticsPage({ searchParams }: { searchPar
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
-      <div className="a2-z">
+      <div className="a2-z" data-testid="support-analytics" data-lm-ready="">
         <ShellState view={view} kind="denied" permission="support.read" />
       </div>
     );
@@ -90,7 +90,7 @@ export default async function SupportAnalyticsPage({ searchParams }: { searchPar
   const sub = (row: sp.SupportAnalyticsRow) => (row.kind === 'channel' && row.label ? kindName(d, row.channelKind ?? '') : '');
 
   return (
-    <div className="a2-z" data-testid="support-analytics" data-scope={r.scope} data-days={r.days ?? ''}>
+    <div className="a2-z" data-testid="support-analytics" data-lm-ready="" data-scope={r.scope} data-days={r.days ?? ''}>
       <PageHead view={view} place={locateKey(KEY)} title={a('title')} sub={a('sub')} />
       <SectionTabs view={view} current={KEY} />
       <nav className="a2-views a2-mt12" aria-label={a('period.label')}>
