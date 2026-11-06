@@ -205,4 +205,23 @@ describe.skipIf(!HAS_TEST_DB)('the deep conversion feed on PostgreSQL (PR 532)',
     expect(sale.custom_data).not.toHaveProperty('outcome');
     expect(sale.custom_data).not.toHaveProperty('views');
   });
+
+  it('follow-up 663: a run reads the whole window page by page, not only its oldest rows; each order and step judged once', async () => {
+    // the window's oldest rows are all recorded already: before 663 a run read only those and never got further
+    await recordFeedSteps(deps, S, { send: false });
+    const later = [];
+    for (let i = 0; i < 4; i += 1) later.push(await order({ steps: [{ to: 'HANDED_OVER', hoursAgo: 0.5 - i * 0.05 }] }));
+    // handed over, then delivered within the hours: judged at its first row (the hand-off: not yet), never at the later one
+    const both = await order({ steps: [{ to: 'HANDED_OVER', hoursAgo: 0.3 }, { to: 'DELIVERED', hoursAgo: 0.1 }] });
+    const run = await recordFeedSteps(deps, S, { page: 2, send: false });
+    const rows = await t.prisma.orderEvent.count({ where: { storeId: S, toStatus: { in: ['HANDED_OVER', 'IN_TRANSIT', 'DELIVERED', 'PARTIALLY_DELIVERED', 'RETURNED'] }, createdAt: { gte: hoursAgo(48) } } });
+    expect(run.scanned).toBeGreaterThan(2);
+    expect(run.scanned).toBeLessThanOrEqual(rows);
+    for (const x of later) expect(await ev(`shipped-${x.number}`)).not.toBeNull();
+    expect(await ev(`shipped-${both.number}`)).not.toBeNull();
+    expect(await ev(`qualified-${both.number}`)).toBeNull();
+    // one row a page reads the same and records nothing twice
+    expect((await recordFeedSteps(deps, S, { page: 1, send: false })).recorded).toBe(0);
+    expect(await ev(`qualified-${both.number}`)).toBeNull();
+  });
 });
