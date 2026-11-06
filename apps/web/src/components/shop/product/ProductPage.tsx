@@ -15,6 +15,8 @@
 // with the rating line under the title that jumps down to them; approved reviews only, so a page with none shows none.
 // PR 429: a product link sent from a support chat opens on its colour and, when that size is in stock, its size
 // (`?s=`); its reference (`?r=`) goes to the support beacon (SupportRefBeacon), which credits an order to the chat.
+// S13 · PR 281: under the stock line, the live festive rule's cut-off words for this product (Marketing › Festive
+// cut-off, off as shipped: nothing drawn).
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
@@ -43,7 +45,7 @@ import { ruleCells } from '@/lib/shop/pdp-rules';
 import { TEMPLATE_QUERY, templateFor } from '@/lib/shop/pdp-template';
 import { beforeCutoff, clockIn, cutoffWords } from '@/lib/shop/pdp-stock';
 import { trustFacts, trustItems } from '@/lib/shop/pdp-trust';
-import { liveFreeOverMinor, productExchangeTerms } from '@/lib/rules-public';
+import { festiveLines, liveFreeOverMinor, productExchangeTerms } from '@/lib/rules-public';
 import { productData } from '@/lib/shop/product';
 import { colourPath, isOneSize, nameParts, NO_COLOUR, openingColour, productRoute, stockOf, type PdpModel } from '@/lib/shop/product-model';
 import { toModel } from '@/lib/shop/product-view';
@@ -81,6 +83,7 @@ import { PdpRows } from './PdpRows';
 import { PdpRules } from './PdpRules';
 import { PdpSizes } from './PdpSizes';
 import { PdpT3Card } from './PdpT3Card';
+import { Icon } from '../Icon';
 import { PdpStock } from './PdpStock';
 import { PdpTrust } from './PdpTrust';
 import './pdp.css';
@@ -223,9 +226,11 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
 
   // ---- PR 62 · promises, read live from Smart Rules ----
   const firstVariant = [...data.variants].filter((v) => v.priceMinor !== null).sort((a, b) => (a.priceMinor ?? 0) - (b.priceMinor ?? 0))[0];
-  const [exTerms, freeOver] = await Promise.all([
+  const [exTerms, freeOver, festive] = await Promise.all([
     productExchangeTerms({ storeId: c.storeId, productId: data.id }),
     firstVariant ? liveFreeOverMinor({ storeId: c.storeId, variantId: firstVariant.id }) : Promise.resolve(null),
+    // PR 281: the live festive rule's cut-off words under the stock line (Marketing › Festive cut-off; off: none)
+    festiveLines({ storeId: c.storeId, place: 'product', locale: lang === 'bn' ? 'bn-BD' : 'en-BD', productId: data.id }),
   ]);
   const tf = trustFacts({ exchange: exTerms, freeOverMinor: freeOver }, { exchangeOn: c.flags.exchange, windowHours: c.s['policy.exchange.windowHours'] });
   const trust = trustItems(set['pdp.trust'], { exchange: tf.exchangeHours !== null, freeDelivery: tf.freeOverMinor !== null }).map((id) => ({
@@ -540,6 +545,18 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
                 </>
               )}
               <PdpStock cutoffWords={cutWords} />
+              {festive.length ? (
+                <div className="sh-eta pdp-festive" role="note" data-testid="pdp-festive">
+                  <Icon name="clock" size={16} />
+                  <div className="sh-eta-l">
+                    {festive.map((f) => (
+                      <p key={f.key} data-state={f.state}>
+                        {f.text}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               {offer ? <SetOffer c={c} groups={offer.groups.slice(0, offerSet.max)} all={offer} /> : null}
               <PdpBuy links={links} />
               <PdpTrust items={trust} />

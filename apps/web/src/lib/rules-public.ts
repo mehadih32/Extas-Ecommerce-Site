@@ -49,3 +49,11 @@ export const policyFiller = (input: { storeId: number; locale?: string }) => saf
  * they passed) and the holiday notice; both owner switches are off as shipped, so this is empty until he sets them.
  */
 export const etaBanner = (input: { storeId: number; locale?: string }) => safe<string[]>([], (d) => rl.storefrontBanner(d, input.storeId, { locale: input.locale }));
+
+/**
+ * PR 281 — the live festive rules' words for one shop place (the home page's festive section, the product page): the
+ * short words before the last order times, the "after" words once they passed. Empty while Marketing › Festive cut-off
+ * is off (as shipped) or the place is unticked. With a product, only the rules whose scope covers it.
+ */
+export const festiveLines = (input: { storeId: number; place: 'home' | 'product'; locale?: string; productId?: string }) =>
+  safe<rl.FestiveLine[]>([], (d) => rl.festiveFor(d, input.storeId, { place: input.place, locale: input.locale, productId: input.productId }));

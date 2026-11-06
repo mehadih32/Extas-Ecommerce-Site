@@ -1,0 +1,67 @@
+{
+  "fc": {
+    "metaTitle": "Festive cut-off · Marketing",
+    "title": "Festive cut-off",
+    "sub": "Tell customers the last day to order for delivery before a festival. Before that time the shop says \"Order by …\"; after it, it says the order arrives after the festival.",
+    "note": "The dates and the words live in the festive Smart Rule (template \"Festival delivery cut-off\"). This page decides where the shop shows them. No price, offer, charge or payment changes.",
+    "offTitle": "Festive cut-off is off",
+    "offBody": "Turn it on in the settings card at the bottom of this page.",
+    "offAsk": "Ask the owner to turn it on.",
+    "rules": {
+      "h": "Festive rules switched on now",
+      "empty": "No festive rule is switched on. Make one in Smart Rules from the template \"Festival delivery cut-off\", type the last order time for each delivery band, and switch it on.",
+      "open": "Open Smart Rules",
+      "band": "Band",
+      "by": "Last order time",
+      "state": "Now",
+      "passed": "Passed",
+      "ahead": "Still open",
+      "says": "The shop says now",
+      "saysBn": "In Bengali",
+      "nothing": "Nothing — the rule has no words for this yet.",
+      "places": "Shown on",
+      "stOpen": "Open",
+      "stClosed": "Closed",
+      "stNone": "No time"
+    },
+    "place": {
+      "home": "Home page",
+      "product": "Product page",
+      "checkout": "Checkout and thank-you page"
+    },
+    "card": {
+      "h": "Settings",
+      "d": "Festive cut-off banners. Off as it ships.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Unsaved changes",
+      "readOnly": "You can see these settings but not change them.",
+      "pairHelp": "Both languages, or both empty.",
+      "on": "Show festive cut-offs on the shop",
+      "onHelp": "On: the switched-on festive rules speak on the places ticked below. Off: the shop never shows them, and checkout keeps its usual delivery promise.",
+      "places": "Where",
+      "title": {
+        "en": "Home section heading (English)",
+        "bn": "Home section heading (Bengali)"
+      },
+      "titleHelp": "Empty: the rule's own name.",
+      "linkHref": "Home section link",
+      "linkHrefHelp": "A page on your shop, for example /collections/eid. Shown on a computer only. Empty: no link.",
+      "linkLabel": {
+        "en": "Link words (English)",
+        "bn": "Link words (Bengali)"
+      },
+      "linkLabelHelp": "Needed with a link."
+    },
+    "err": {
+      "INVALID_INPUT": "Please check: {fields}.",
+      "STALE": "Someone changed this meanwhile. Reload the page.",
+      "forbidden": "You don't have permission for this.",
+      "unauthorized": "Please sign in again.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    }
+  }
+}

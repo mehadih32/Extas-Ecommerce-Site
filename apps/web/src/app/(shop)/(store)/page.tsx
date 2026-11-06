@@ -5,19 +5,22 @@
 //   (`home.heroSlides`, PR 43): the categories in turns, or a live campaign collection;
 // - categories (`home.categories`) and new in (`home.newIn`): from the catalogue;
 // - reviews (`home.reviews`): approved reviews only;
-// - festive (Smart Rules' festive window), sets and shop the look (combos, S03), size finder (Find My Size, PR 58),
+// - ~~festive (Smart Rules' festive window),~~ (PR 281, below) sets and shop the look (combos, S03), size finder (Find My Size, PR 58),
 //   ~~flash sale (PR 44)~~ and the journal (S12) join when the PRs that make their content land; until then they draw
 //   nothing. The progress page stays at /status.
 // - flash sale (PR 44, `home.flashSale`): the owner's sale while it runs, two rows sliding past each other and a clock
 //   that ticks; no sale, nothing drawn (lib/shop/flash). A test server's `?try=flash` draws the trial sale.
 // ~~Until the home page is built, it shows the store shell with one sliding row: the live categories.~~
 // S11 · PR 221: its search title and description (`seo.titles.home`); PR 222: the shop's Organization and WebSite JSON-LD.
+// S13 · PR 281: festive (HomeFestive) — the live festive Smart Rule's cut-off words, only while Marketing › Festive
+// cut-off is on with the home page ticked (off as shipped: nothing drawn, the phone gate's page unchanged).
 // S13 · PR 280: while a seasonal window is live (Marketing › Seasonal home, off as shipped), its look's home settings
 // (sections, hero, the hero's pictures, the rows) stand in for the owner's own; after the window, his own again.
 import type { Metadata } from 'next';
 import { Fragment, type ReactNode } from 'react';
 import type { HomeSectionId } from '@extas/settings';
 import { HomeCategories } from '@/components/shop/home/HomeCategories';
+import { HomeFestive } from '@/components/shop/home/HomeFestive';
 import { HomeFlash } from '@/components/shop/home/HomeFlash';
 import { HomeHero } from '@/components/shop/home/HomeHero';
 import { HomeHeroSlides } from '@/components/shop/home/HomeHeroSlides';
@@ -76,6 +79,7 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
   const ld = <JsonLd data={await ldBlocks} />;
   const draw: Partial<Record<HomeSectionId, () => ReactNode>> = {
     hero: () => <HomeHero c={c} media={slides.length ? <HomeHeroSlides c={c} picks={slides} /> : undefined} />,
+    festive: () => <HomeFestive c={c} />,
     categories: () => <HomeCategories c={c} leads={leads} />,
     'new-in': () => <HomeNewIn c={c} cards={cards} />,
     'flash-sale': () => <HomeFlash c={c} sale={flash} />,
