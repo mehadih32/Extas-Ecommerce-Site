@@ -122,6 +122,9 @@ const SELECT = { id: true, key: true, name: true, status: true, variants: true, 
 /**
  * Visitors per version and, of them, who reached the goal after they were first counted and before the test ended:
  * added to the bag (a bag line of his random id, not one saved for later) or placed an order (an order with his random id).
+ * PR 83 follow-up (683): a bag line that grew in that time (the same item again, a raised quantity, back from "saved for
+ * later": CartItem.raisedAt) counts as added too; only the line's last growth is kept, so one that grew again after the
+ * test ended counts by its new line time only.
  */
 async function tallies(db: PrismaClient, row: Row, now: Date): Promise<Record<Version, Tally>> {
   const until = row.status === 'ENDED' && row.endsAt ? row.endsAt : now;
@@ -133,7 +136,7 @@ async function tallies(db: PrismaClient, row: Row, now: Date): Promise<Record<Ve
           FROM "AbAssignment" a WHERE a."testId" = ${row.id}::uuid GROUP BY a."variant"`
       : await db.$queryRaw<{ variant: string; n: number; c: number }[]>`
           SELECT a."variant", COUNT(*)::int AS n,
-            COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM "CartItem" i JOIN "Cart" c ON c."id" = i."cartId" WHERE c."storeId" = a."storeId" AND c."visitorId" = a."visitorId" AND NOT i."savedForLater" AND i."createdAt" >= a."createdAt" AND i."createdAt" < ${until}))::int AS c
+            COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM "CartItem" i JOIN "Cart" c ON c."id" = i."cartId" WHERE c."storeId" = a."storeId" AND c."visitorId" = a."visitorId" AND NOT i."savedForLater" AND ((i."createdAt" >= a."createdAt" AND i."createdAt" < ${until}) OR (i."raisedAt" >= a."createdAt" AND i."raisedAt" < ${until}))))::int AS c
           FROM "AbAssignment" a WHERE a."testId" = ${row.id}::uuid GROUP BY a."variant"`;
   const out: Record<Version, Tally> = { a: { n: 0, c: 0 }, b: { n: 0, c: 0 } };
   for (const r of rows) if (r.variant === 'a' || r.variant === 'b') out[r.variant] = { n: r.n, c: r.c };
