@@ -14,7 +14,7 @@ docs file (CN-011).
 | File | What it is |
 |---|---|
 | [`BLUEPRINT.md`](BLUEPRINT.md) | The full build specification, V2.1 final, with every change note (CN-###) as a dated block; read it from here |
-| [`MASTER-REGISTER.md`](MASTER-REGISTER.md) | All 624 PRs in 28 stages (618 active, 6 parked): the Build status table (merged / live), change notes, the stage table, the parking lot, PR rows for S0A–S15 (S16–S25 rows are in Blueprint Appendix A) |
+| [`MASTER-REGISTER.md`](MASTER-REGISTER.md) | All 653 PRs in 28 stages (644 active, 9 parked; CN-036): the Build status table (merged / live), change notes, the stage table, the parking lot, PR rows for S0A–S15 (S16–S25 rows are in Blueprint Appendix A) |
 | [`START-HERE.md`](START-HERE.md) | How every build session runs: reading order, build order, the gates, speed targets, the go-live gate |
 | [`LAUNCH-TRACK.md`](LAUNCH-TRACK.md) | **The build order (CN-027):** the Launch list (what real orders need, built first) and the After-launch list (built automatically right after), with counts and status per PR |
 | [`CONVENTIONS.md`](CONVENTIONS.md) | Branches, PR titles, commits, what to update after every PR, code mechanics (PR 11) |
@@ -293,6 +293,7 @@ the pages are out of date.
 | [`reports/2026-11-06-S18.md`](reports/2026-11-06-S18.md) | S18 stage report: done with PR 623, the customer's own privacy request (15/15) |
 | [`reports/2026-11-06-S11.md`](reports/2026-11-06-S11.md) | S11 stage report: done with PR 223–226, 230, 231, 237 and 238, data for search engines from real rows, the AI summary, links between pages, SEO health and the Organic report (22/22) |
 | [`reports/2026-11-06-S14.md`](reports/2026-11-06-S14.md) | S14 stage report: done with PR 535, the legacy customer import (24/24) |
+| [`reports/2026-11-06-admin-look-size.md`](reports/2026-11-06-admin-look-size.md) | The admin look Lumen, size report (CN-036, Bengali): 149 admin pages, 26 shared parts, what is already close to the patterns, and the PR split 625–653 |
 | [`reports/server/latest.md`](reports/server/latest.md) | The newest machine report from the `server-setup` workflow (no secrets) |
 | `reports/server/2026-10-20-*-setup.md` | Earlier machine reports, one per setup run |
 | [`reports/smoke/latest/README.md`](reports/smoke/latest/README.md) | The newest smoke test (after every deploy and every night): each page and screen, its result and picture (CN-016) |

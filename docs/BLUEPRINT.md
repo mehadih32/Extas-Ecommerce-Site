@@ -1148,6 +1148,24 @@ to read code or open GitHub.
 >
 > **(5) Where it is written.** Updated lines on PR 381, 383, 391, 393, 395, 396, 399, 400 and 507 (CN-035) and `docs/golive/ACCEPTANCE.md`.
 
+> **CN-036 · 6 Nov 2026 (owner, 08:31 UTC, build thread: new default admin look "Lumen", serial stage order, go-live).** Twenty-nine new PR numbers, **625–653**; the total moves from 624 to **653 PRs (644 active, 9 parked)**.
+>
+> **(1) Admin look.** The default admin look is **Lumen** (`docs/demo/admin-look/LUMEN-SPEC.md`; the clickable truth is `docs/demo/admin-look/ADMIN-LOOKS-V1.html`, button "ঘ · Lumen"). Only Lumen is built now: light by default, dark by the moon button (remembered per user), accent coral as a setting. The other three looks (ক Clear Day, খ Night Atelier, গ Studio) are **parked** (PR 649–651: a token set plus a shell variant each); when the owner says "build ক" (or খ, গ) it must be a small job, so one central theme layer carries every colour, radius, font and shadow (nothing hardcoded in a page) and a per-user "Admin look" setting sits in Settings › General, listing the four looks with only Lumen selectable and the rest "Planned". What CN-025 built (admin looks A/B/C per page, `docs/demo/ADMIN2-FRAMEWORK.md`) stays exactly as it is; unfinished look variants are hidden behind a switch. The owner found the old admin crowded, template-like, plain and small; Lumen is calm, alive and readable (headings at least 24 px, body at least 14 px, generous space, one clear action per row).
+>
+> **(2) The jobs.** Lane A foundation, one builder alone and merged before any section: PR 625 theme layer, tokens and self-hosted fonts (Bricolage Grotesque, Plus Jakarta Sans, Hind Siliguri); 626 the shell; 627–629 the shared patterns of LUMEN-SPEC §3 (plain SVG charts, no chart library; `prefers-reduced-motion` and a "Reduce motion" setting); 630 Settings › Admin look. Then one PR per section in the owner's order, each keeping every feature, permission and route of today's pages and only moving them into the patterns with real data: 631 Today, 632–633 Orders, 634–635 Products, 636 Customers, 637 Delivery, 638–639 Marketing, 640 Website, 641 Support, 642–643 Money, 644–645 Reports, 646 AI Center, 647 Settings, 648 Help. Pages of `docs/BACKEND-ARCHITECTURE.md`'s tree that the prototype lacks go under the nearest section with the nearest pattern; nothing is dropped. Each section PR updates its pages' admin guides (CN-014, CN-026), screenshots, the smoke list and the device-gate list, and passes at 390, 768, 1366 and 1920 px, light and dark, English and Bengali (no cut text, no overflow), with keyboard use, a visible focus ring, AA contrast in both themes, 44 px tap targets on phones and the hardcode guard green. Lane C, before go-live: PR 652 closed stages hidden by a switch, 653 redirect import from the old public sitemap. The size report is `docs/reports/2026-11-06-admin-look-size.md`.
+>
+> **(3) Order of work.** Work already running (the batch 10 merge, lane B's PR 532 and any open PR or worktree) is finished first through its gates and merged; nothing is aborted, reverted or lost; a running PR that touches an admin page is finished in the old look and moved later by Lane A. Until the Lane A foundation (625–630) is merged no **new** S12 or S13 PR starts. **The admin look comes before go-live** (owner's choice; a visitor sees no change). The stages then run **one after the other**: **S02** storefront (13 left) → **S12** blog (14 left, finished) → **S13** marketing (9 left, finished) → **S15** AI control room (48) → **S25** video campaign (10) → **S24** virtual photoshoot (38, the very last). **Closed until the owner says so:** S17 multi-store, S23 social studio, S26 and S27 (handover pack). Built parts of a closed stage stay (nothing deleted); every half-built S17 and S23 part, and any S12 part not yet finished, is hidden from menu, sitemap, search and robots by a switch, off as shipped (PR 652). New admin pages of S12, S13, S15, S25 and S24 are built in Lumen from the start with the shared patterns.
+>
+> **(4) Go-live.** Go live with whatever is built and tested, after the admin look is merged and the go-live check is green; **the owner types "go live" himself**, and only then is the domain switched (PR 587). There are no visitors now, so the switch can happen at any hour once the check is green. The remaining stages are finished in the following run, followed by a full check of every page and every error (device gate, journeys, smoke, simulation). The small go-live items the owner does himself from the backend are listed for him, one line each. Redirects: the WordPress redirect map has 0 rows; it is built from the old site's public sitemap, read-only (49 addresses seen; PR 653); the old WordPress site is not touched. Rollback stays at 43 s.
+>
+> **(5) Lanes (three builders + `qa-gate`, each on its own worktree).** **Lane A — admin look** (the main job): the size report, then 625–630 alone, then 631–648 in order. **Lane B — S02 storefront** (13 PRs), as in the register, no admin work. **Lane C — go-live gate** (infra-prohori + qa-gate), the items that do not depend on the new look: enforce the rate limits (PR 378), the full gate, the 70-order simulation, the acceptance run, the redirect import (653), the closed-stage switch (652), the indexing switch ready for go-live (PR 401), the Search Console domain property and sitemap submit prepared (PR 233; the owner does the DNS step); when Lane A has merged the sections, the full smoke over every admin page in the new look, then the go-live check, reported in Bengali (what is green, what is not, and the owner's own steps still open: Cloudflare Origin certificate, SSL Full strict, 2FA for himself, runbook sign-off, a real iPhone and Android test, Search Console, the final "go live"). When Lanes B and C are done they continue with S12 → S13 (after the Lane A foundation is merged) → S15 → S25 → S24. Never idle (CN-031).
+>
+> **(6) Safety rules for the new look (the hard rules stay).** Undo exists only for reversible shop actions (confirm an order, assign a courier, change a status, hide, pause). Money, refunds, payouts marked received, COD changes, prices, discounts, blocking people and deleting data keep their existing confirmation and the owner's written OK (hard rule 6); no one-tap "approve all" on those. Every number a rule needs ("safe" and "risky" COD, amounts, days, limits, which sizes count as low) is a backend setting with options, off by default (CN-018); settings switches start off; policy numbers are never asked from the owner. The round assistant button exists only while AI is on, drafts and never sends to a buyer or supplier, Send acts only on the owner's press, and it is hidden by a switch until S15 is built. Nothing is deleted (Hide, Pause, Archive); no secrets in Git; additive migrations only. Admin text is simple English with the EN/বাং toggle; the Help Center and the admin guides in Bengali (চলিত, Western digits).
+>
+> **(7) Reporting.** After each PR: `PROGRESS.md` and the register row; after each lane step a short Bengali report in `docs/reports/` and in chat, then carry on. Done means it works on new.extas.com.bd in a real browser at phone and desktop widths, as admin, in light and dark; staging always runs the newest merged look.
+>
+> **(8) Where it is written.** The register rows of "CN-036 additions" (625–653; 649–651 in the parking lot); the stage table (S00 43 active plus 649–651, S19 19) and "How this reached 653"; dated lines on PR 12, 233, 235, 378, 401, 414, 494 and 587; Blueprint (this note, E0–E3, Appendix A); `docs/LAUNCH-TRACK.md` (Launch rows, the CN-036 order and lanes); the totals in README.md and `docs/README.md`.
+
 
 > **CN-010 · 20 Oct 2026 12:47 (owner, Note 53).** (1) The home address of new.extas.com.bd shows the **store** from now on: everything built so far, and a "শিগগির আসছে" (coming soon) page for anything not built yet; the progress page moves to `/status` only (it is already there). (2) S02 storefront (home, category, product page) runs **now**, beside the rest of the build, at most 3 agents at once; each page goes live on new.extas.com.bd as soon as it is merged, so the owner can see it in the browser. Design: the V12.1 demo exactly. (3) The owner's admin account is opened on the server (e-mail from chat, never committed; first password made on the server), with simple Bengali steps for reading the password. No new PR numbers: (1) lands on PR 40 (store shell) with a coming-soon page under the routing table, (2) is the S02 order, (3) is PR 15 (staff login, first owner) through `.github/workflows/owner-account.yml`.
 
@@ -2338,7 +2356,7 @@ next free number but is built inside its stage (PR 491 is built at S00 time). Th
 | # | Stage | PRs | Range | V1 count | Status (register) | Owning agent |
 |---|---|---:|---|---:|---|---|
 | S0A | Server foundation | 12 | 1–10, 601, 604 | 10 | locked; **server spec filed 19 Oct 23:33** | Prohori |
-| S00 | Foundation — repo, CI, schema, auth, **settings framework** | 19 | 11–18, 491–496, 500, 508–510, 603 | 8 | locked | Prohori |
+| S00 | Foundation — repo, CI, schema, auth, **settings framework** | 43 | 11–18, 491–496, 500, 508–510, 603, 625–651 | 8 | locked; **CN-036 (6 Nov 2026): 625–648 the admin look Lumen; 649–651 (three further looks) wait in the parking lot and are not counted** | Prohori |
 | S01 | Catalog, media & images | 23 | 19–39, 590, 609 | 19 | locked | Bhandari |
 | S02 | Storefront | 58 | 40–88, 501, 503, 595–600, 602 | 35 | locked; UI in review | Sawdagor (design: Shilpi) |
 | S03 | Combo & bundles | 22 | 89–104, 571–576 | 16 | locked; UI in review | Sawdagor |
@@ -2357,7 +2375,7 @@ next free number but is built inside its stage (PR 491 is built at S00 time). Th
 | S16 | Finance, costs & reports | 22 | 342–355, 504, 536–537, 568, 615–618 | 14 | **answered 18 Oct** | Gyani |
 | S17 | Multi-store | 24 | 356–377, 511–512 | 22 | settings open | Prohori |
 | S18 | Compliance, security, manual | 15 | 378–390, 620, 623 | 12 | settings open; **623 filed 1 Nov** | Prohori |
-| S19 | Deploy, backup, go-live | 17 | 391–403, 507, 587, 619, 621 | 14 | locked | Prohori |
+| S19 | Deploy, backup, go-live | 19 | 391–403, 507, 587, 619, 621, 652–653 | 14 | locked; **652–653 (CN-036, 6 Nov 2026)** | Prohori |
 | S20 | Fulfilment & documents | 9 | 404–412 | 7 | locked | Bhandari |
 | S21 | Site Health & Audit | 14 | 413–424, 570, 594 | 10 | locked | Prohori |
 | S22 | Support (all-in-one) | 14 | 425–436, 538, 624 | 12 | locked; **624 filed 1 Nov** | Gyani |
@@ -2366,7 +2384,7 @@ next free number but is built inside its stage (PR 491 is built at S00 time). Th
 | S25 | Video & Campaign Creative Studio | 10 | 481–490 | 10 | locked | Gyani |
 | S26 | Installation, documentation & distribution | 6 | 513–518 | — | **parked** — handover pack | — (parked) |
 | S27 | No-ERP stock module | parked | — | — | **parked** — handover pack; numbered when approved | — (parked) |
-| | **Total** | **624** | | **473** | 618 active · 6 parked | |
+| | **Total** | **653** | | **473** | 644 active · 9 parked (S26 and PR 649–651) | |
 
 Shilpi (A360-05) owns the design layer of every customer-facing surface and reviews what Sawdagor builds;
 Tirondaj (A360-07) owns the paid-ads PRs inside S13 (256–270, 278, 283, 531, 581); the five author agents
@@ -2374,7 +2392,7 @@ Tirondaj (A360-07) owns the paid-ads PRs inside S13 (256–270, 278, 283, 531, 5
 
 **Why the counts moved since V1 (473 → 600):** the 12 mis-filed PRs were re-filed into the stages that describe
 them (S08 → S02 page builder and label dictionary; S10 → S11 category SEO; S14 → S20 invoice templates; S19 → S02
-celebration overlay; S20 → S18 user manual; S23 → S02 Find My Size), and 127 PRs were added. The trail is E1. **V2.1:** four more (601–604, the owner's server spec) → **604**. **23 Oct 2026:** two more (605 gift mode, 606 bulk / corporate lane, both S04) → **606**. **25 Oct 2026:** fifteen more (607–621, Retail and the ERP supplier model; S01, S05, S08, S09, S16, S18, S19) → **621**.
+celebration overlay; S20 → S18 user manual; S23 → S02 Find My Size), and 127 PRs were added. The trail is E1. **V2.1:** four more (601–604, the owner's server spec) → **604**. **23 Oct 2026:** two more (605 gift mode, 606 bulk / corporate lane, both S04) → **606**. **25 Oct 2026:** fifteen more (607–621, Retail and the ERP supplier model; S01, S05, S08, S09, S16, S18, S19) → **621**. **1 Nov 2026:** three more (622–624, CN-034) → **624**. **6 Nov 2026:** twenty-nine more (625–653, CN-036: the admin look Lumen 625–648 and the parked looks 649–651 in S00, 652–653 go-live items in S19) → **653** (644 active, 9 parked).
 
 ## E1. How the count was arrived at (V2 trail)
 
@@ -2418,11 +2436,12 @@ The V1 trail to 473 / 483 is in E-H below. From the re-tally the register record
 | Owner's server specification — NVMe boot unit, four-layer cache, database performance pack, hardware-aware profile (owner, 19 Oct 23:33; review/SERVER-SETUP-SPEC-OWNER.md; CN-001) | +4 | 604 |
 | Gift mode (CN-014 h, next free in S04) and the bulk / corporate lane (CN-017 SIM-F-023, proposal P11), both in S04 (23 Oct 2026) | +2 | 606 |
 | Retail and the ERP supplier model (CN-028, 25 Oct 2026) | +15 | 621 |
-| Three customer-side gaps from the go-live gate's customer 360° run: Buy again, the customer's privacy request, the Messenger button (CN-034, 1 Nov 2026) | +3 | **624** |
+| Three customer-side gaps from the go-live gate's customer 360° run: Buy again, the customer's privacy request, the Messenger button (CN-034, 1 Nov 2026) | +3 | 624 |
+| The default admin look Lumen (625–648, S00), three further looks parked (649–651, S00), closed stages hidden by a switch and the redirect import from the old public sitemap (652–653, S19) (CN-036, 6 Nov 2026) | +29 | **653** |
 
 ## E2. Checks on the numbers
 
-- **Both routes agree.** The stage column sums to ~~**604** (V2.1; 600 at V2)~~ ~~**606** (23 Oct 2026)~~ ~~**621** (25 Oct 2026)~~ **624** (1 Nov 2026; 621 on 25 Oct, 606 on 23 Oct, 604 at V2.1, 600 at V2); the ranges expand to 624 distinct numbers, 1–624, with
+- **Both routes agree.** The stage column sums to ~~**604** (V2.1; 600 at V2)~~ ~~**606** (23 Oct 2026)~~ ~~**621** (25 Oct 2026)~~ ~~**624** (1 Nov 2026)~~ **653** (6 Nov 2026, CN-036; 624 on 1 Nov, 621 on 25 Oct, 606 on 23 Oct, 604 at V2.1, 600 at V2); the ranges expand to 653 distinct numbers, 1–653, with
   no gap and no duplicate (verification script, Appendix C, C9).
 - **V1's three warnings:** (1) the 12 mis-filed PRs are re-filed (above); (2) the S0A/S19 double count stays fixed;
   (3) the old "263 authoritative" section stays superseded.
@@ -2439,15 +2458,15 @@ their stages. 2–3 agents build at once (A1.4 V2).
 | Wave | Stages | New PRs built inside the wave (since V1) | Why they go together |
 |---|---|---|---|
 | 0 | S0A | 1–10 (PR 1–3 updated for the new VPS; **V2.1:** PR 1–10 carry the owner's server spec), **601 NVMe boot unit, 604 hardware-aware profile** — order in A2.9.16 | Server first; no application code before its checks pass |
-| 1 | S00, S01, S09 | 609 import from the ERP by style code (25 Oct 2026); 491–496, 500, 508–510 (settings framework, **with the schema on day one**); **603 database performance pack with the schema (V2.1)**; 590 naming and URLs; image pipeline PR 22, 24, 37 (V2.1 scope); 497–499 ERP-optional seam | Schema, settings, catalogue and the ERP link |
+| 1 | S00, S01, S09 | 609 import from the ERP by style code (25 Oct 2026); 491–496, 500, 508–510 (settings framework, **with the schema on day one**); **603 database performance pack with the schema (V2.1)**; 590 naming and URLs; image pipeline PR 22, 24, 37 (V2.1 scope); 497–499 ERP-optional seam; **625–648 the admin look Lumen (CN-036, 6 Nov 2026): built after the running work and before go-live, foundation 625–630 first, then the sections** | Schema, settings, catalogue and the ERP link |
 | 2 | S02, S03, S10 | **602 four-layer cache (V2.1)**; 501, 503 (branding, language, admin English); 595 layout builder, 597 launch default, 596 side canvas (desktop only), 598 → 599 → 600 (paused, finished here in this order); 571–576 combos | The storefront, its builder and the rules that drive it |
 | 3 | S04, S05, S07, S08 | 610 orders to the ERP v6 and 611–614 shipment, return lists, Returns section and exchange through the ERP (25 Oct 2026); 607–608 ERP contract v6 and event ledger (S09, built with them); 558, 560, 561, 563, 565, 566 checkout parameter and address rules; 605 gift mode and 606 bulk / corporate lane (23 Oct 2026); 622 Buy again (1 Nov 2026, CN-034; After launch); 541, 546 order dashboard and cancellation notice; 525, 526, 564 courier reconciliation | The money path, end to end |
 | 4 | S06, S14, S20, S22 | 502, 519–524, 540, 542–545, 549–557, 559, 562, 567 fraud and delivery-zone engines; 505, 533–535 CRM; 538 support; 624 Messenger button (1 Nov 2026, CN-034) | Everything around an order once it exists |
 | 5 | S11, S12, S13, S23 | 527, 586, 588 SEO; 528–530, 547, 591–593 blog; 531, 532, 548, 569, 589 marketing | Being found and being marketed |
 | 6 | S15, S16, S21 | 615–618 the ERP account ledger, books match, daily summary and fixed costs (25 Oct 2026; Launch, built as soon as 607–614 are in); 506, 577–585 AI 360 and agents; 504, 536, 537, 568 finance; 570 audit runner, 594 PR register | The control room and the numbers it governs |
 | 7 | S24, S25 | 539 | Imagery, once the catalogue is real |
-| 8 | S17, S18, S19 | 619 switch-over and 621 ERP acceptance suite (25 Oct 2026), 620 signed ERP calls; 623 the customer's privacy request (1 Nov 2026, CN-034); 511, 512 multi-store; 507 backup settings; 587 WordPress migration (on go-live day, with 586) | Multi-store, compliance and go-live |
-| — | S26, S27 | 513–518 (parked); S27 unnumbered | Handover pack, built only on the owner's word |
+| 8 | S17, S18, S19 | 619 switch-over and 621 ERP acceptance suite (25 Oct 2026), 620 signed ERP calls; 623 the customer's privacy request (1 Nov 2026, CN-034); 511, 512 multi-store; 507 backup settings; 587 WordPress migration (on go-live day, with 586); 652 closed stages hidden by a switch and 653 redirect import from the old public sitemap (CN-036, 6 Nov 2026, before go-live) | Multi-store, compliance and go-live |
+| — | S26, S27 | 513–518 (parked); S27 unnumbered; the admin looks 649–651 (parked, S00, CN-036) | Handover pack, built only on the owner's word |
 
 **Dependencies that cross waves (Gyani's build notes, not owner decisions):**
 - Checkout (S04, wave 3) reads the delivery bands. Build PR 549–553 and 555 at the start of wave 3, or let S04 use
@@ -6875,13 +6894,13 @@ F3 rows: buy-button colours → #61; floating WhatsApp → #62; sub-menu → #63
 
 ---
 
-# Appendix A · Every PR, 1–624
+# Appendix A · Every PR, 1–653
 
 Generated from `master/MASTER-REGISTER.md` (title, stage) and the PR register data the demo builds from it (`proto/src/04-register-data.js`, written by `tools/make-register.py` after Note 45: status, owning agent, demo file). **Status:** *Filed* = specified in the register, built in the code phase · *In demo* = a working reference exists in the demo (the register generator's reading of demo source headers; "route hint" = matched by route only) · *Parked* = S26 handover pack · *paused* = finished in the code phase (status table at the top). **165 titles are marked *(derived)*:** the register lists those PRs by range only; their titles come from V1's own item lists in order (positional, to be confirmed when the register is itemised), from agent files that name them, or from the stage's section of this specification.
 
 **V2.1 (19 Oct 23:33, CN-001):** rows 601–604 are added; rows whose scope the owner's server spec changed carry "· updated 19 Oct 23:33 (CN-001)" in the title.
 
-**1 Nov 2026:** rows 622–624 (the go-live gate's customer 360° run, CN-034) are added. **25 Oct 2026:** rows 607–621 (Retail and the ERP supplier model, CN-028) are added. **23 Oct 2026:** rows 605 (gift mode, CN-014 h) and 606 (bulk / corporate lane, CN-017 SIM-F-023) are added. The dated scope from CN-012 … CN-019 is on the register rows ("Updated 23 Oct 2026 (CN-0xx)").
+**6 Nov 2026:** rows 625–653 (the admin look Lumen and two go-live items, CN-036; 649–651 parked) are added. **1 Nov 2026:** rows 622–624 (the go-live gate's customer 360° run, CN-034) are added. **25 Oct 2026:** rows 607–621 (Retail and the ERP supplier model, CN-028) are added. **23 Oct 2026:** rows 605 (gift mode, CN-014 h) and 606 (bulk / corporate lane, CN-017 SIM-F-023) are added. The dated scope from CN-012 … CN-019 is on the register rows ("Updated 23 Oct 2026 (CN-0xx)").
 
 | PR | Title | Stage | Status | Owner | Demo reference |
 |---:|---|---|---|---|---|
@@ -7509,6 +7528,35 @@ Generated from `master/MASTER-REGISTER.md` (title, stage) and the PR register da
 | 622 | Buy again — a past order's lines back in the bag at today's price and stock, sold-out sizes shown honestly, the normal checkout; off by default (CN-034; 1 Nov 2026) | S04 | Filed | Sawdagor |  |
 | 623 | The customer's own privacy request — a copy of his data or its erasure, asked from his account, filed into PR 382's staff screen; staff approval stays; off by default (CN-034; 1 Nov 2026) | S18 | Filed | Prohori |  |
 | 624 | Messenger button on the shop — the store's own Page link beside the other support channels, from settings; off by default (CN-034; 1 Nov 2026) | S22 | Filed | Gyani |  |
+| 625 | Lumen theme layer, tokens and self-hosted fonts (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 626 | Lumen shell (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 627 | Shared patterns 1: tiles and hero chart, toast and Undo, empty state, skeleton (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 628 | Shared patterns 2: queue, list with filter and bulk, list and detail split, drawer (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 629 | Shared patterns 3: form with live preview and readiness checklist, settings switch cards (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 630 | Settings › General › Admin look: four looks, only Lumen selectable (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 631 | Lumen section: Today (Home) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 632 | Lumen section: Orders 1 (Today's queue, All orders, Order view) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 633 | Lumen section: Orders 2 (Dispatch, Returns) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 634 | Lumen section: Products 1 (All products, Add product with live preview) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 635 | Lumen section: Products 2 (Stock, Collections and the rest) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 636 | Lumen section: Customers (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 637 | Lumen section: Delivery (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 638 | Lumen section: Marketing 1 (campaigns, coupons, ads, Smart Rules) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 639 | Lumen section: Marketing 2 (messages to customers) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 640 | Lumen section: Website (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 641 | Lumen section: Support (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 642 | Lumen section: Money 1 (Overview, Cashbook, Payouts, profit) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 643 | Lumen section: Money 2 (Books, month end) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 644 | Lumen section: Reports 1 (business reports) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 645 | Lumen section: Reports 2 (Site health) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 646 | Lumen section: AI Center (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 647 | Lumen section: Settings (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 648 | Lumen section: Help (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 649 | Admin look ক Clear Day (parked) (CN-036; 6 Nov 2026) | S00 | Parked | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 650 | Admin look খ Night Atelier (parked) (CN-036; 6 Nov 2026) | S00 | Parked | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 651 | Admin look গ Studio (parked) (CN-036; 6 Nov 2026) | S00 | Parked | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 652 | Closed stages hidden by a switch (CN-036; 6 Nov 2026) | S19 | Filed | Prohori |  |
+| 653 | Redirect import from the old public sitemap (read-only) (CN-036; 6 Nov 2026) | S19 | Filed | Prohori |  |
 
 ---
 
