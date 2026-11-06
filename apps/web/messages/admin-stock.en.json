@@ -76,7 +76,8 @@
         "seen": "Seen",
         "seenAll": "Mark all as seen",
         "seenDone": "{n} marked as seen.",
-        "empty": "No buying price has changed."
+        "empty": "No buying price has changed.",
+        "setBelow": "Set \"{name}\" sells at {price}, now below its floor {floor}: check its price"
       }
     },
     "metaTitle": "Stock and ERP sync",
