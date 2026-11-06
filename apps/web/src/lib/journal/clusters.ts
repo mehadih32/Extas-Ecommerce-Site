@@ -65,6 +65,8 @@ export interface PlanTopic {
   archived: boolean;
   alike: (Alike & { level: 'near' | 'warn' }) | null;
   batchMonth: string | null;
+  /** PR 528: the topic's brief, when one is written. */
+  briefId: string | null;
   version: string;
 }
 export interface PlanCluster {
@@ -106,7 +108,7 @@ const POST_SELECT = { id: true, title: true, slug: true, locale: true, status: t
 
 /** The whole plan: clusters with their articles (and the links each lacks), topics, loose articles, the card. */
 export async function clusterPlan(db: Db, resolver: Resolver, now: Date = new Date(), storeId: number = S): Promise<Plan> {
-  const [rules, approval, clusters, posts, topics, categories, authors, collections, products, prefix] = await Promise.all([
+  const [rules, approval, clusters, posts, topics, categories, authors, collections, products, prefix, briefs] = await Promise.all([
     resolver.value('blog.clusters', { storeId }),
     resolver.value('blog.approval', { storeId }),
     db.contentCluster.findMany({ where: { storeId }, orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] }),
@@ -117,7 +119,9 @@ export async function clusterPlan(db: Db, resolver: Resolver, now: Date = new Da
     db.category.findMany({ where: { storeId, archivedAt: null }, orderBy: { nameEn: 'asc' }, take: PICK_MAX, select: { slug: true, nameEn: true } }),
     db.product.findMany({ where: { storeId, archivedAt: null }, orderBy: { nameEn: 'asc' }, take: PICK_MAX, select: { slug: true, nameEn: true } }),
     resolver.value('naming.productPathPrefix', { storeId }),
+    db.blogBrief.findMany({ where: { storeId, topicId: { not: null } }, take: LIST_MAX, select: { id: true, topicId: true } }),
   ]);
+  const briefOf = new Map(briefs.map((b) => [b.topicId, b.id]));
   const live = (p: (typeof posts)[number]) => isLive({ status: p.status as BlogState, scheduledAt: p.scheduledAt, archivedAt: p.archivedAt }, now);
   const postById = new Map(posts.map((p) => [p.id, p]));
   const pool: Comparable[] = [
@@ -144,6 +148,7 @@ export async function clusterPlan(db: Db, resolver: Resolver, now: Date = new Da
       archived: !!t.archivedAt,
       alike: a && level !== 'none' ? { ...a, level } : null,
       batchMonth: t.batchMonth,
+      briefId: briefOf.get(t.id) ?? null,
       version: t.updatedAt.toISOString(),
     };
   };
@@ -263,8 +268,11 @@ export async function clusterAction(db: Db, who: JournalWho, id: string, input: 
 
 // ---- topics ----
 
-/** Create (id null) or save a topic. A new one very close to an article or topic needs `force` (the second press). */
-export async function saveTopic(db: Db, resolver: Resolver, who: JournalWho, id: string | null, input: unknown, now: Date = new Date(), storeId: number = S): Promise<void> {
+/**
+ * Create (id null) or save a topic. A new one very close to an article or topic needs `force` (the second press).
+ * Answers the topic's id (PR 528: a brief typed with a new topic makes the topic through here).
+ */
+export async function saveTopic(db: Db, resolver: Resolver, who: JournalWho, id: string | null, input: unknown, now: Date = new Date(), storeId: number = S): Promise<string> {
   const ok = topicInputSchema.safeParse(input);
   if (!ok.success) throw new JournalError('INVALID_INPUT', 400, issuesOf(ok.error));
   const d = ok.data;
@@ -305,10 +313,15 @@ export async function saveTopic(db: Db, resolver: Resolver, who: JournalWho, id:
   }
   await audit(db, who.actor, { storeId, action: before ? 'blog.topic.save' : 'blog.topic.create', entityType: 'BlogTopic', entityId: saved.id, after: { title: saved.title, status: saved.status, clusterId: saved.clusterId } }, who.ctx);
   if (auto) await audit(db, who.actor, { storeId, action: 'blog.topic.auto', entityType: 'BlogTopic', entityId: saved.id, after: { title: saved.title, status: saved.status } }, who.ctx);
+  return saved.id;
 }
 
-/** Approve, reject, reopen, start writing, put away or restore a topic. */
-export async function topicAction(db: Db, who: JournalWho, id: string, input: unknown, now: Date = new Date(), storeId: number = S): Promise<{ postId: string | null }> {
+/**
+ * Approve, reject, reopen, start writing, put away or restore a topic. PR 528: "Start writing" takes the brief's
+ * language and keyword when the topic has one (the brief then points at the article), and with
+ * `blog.brief.requireForStart` on it is refused (BRIEF_MISSING) until the brief is saved.
+ */
+export async function topicAction(db: Db, who: JournalWho, id: string, input: unknown, now: Date = new Date(), storeId: number = S, resolver?: Resolver): Promise<{ postId: string | null }> {
   const o = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
   const action = (TOPIC_ACTIONS as readonly string[]).includes(String(o.action)) ? (o.action as TopicAction) : null;
   if (!action) throw new JournalError('INVALID_INPUT', 400, ['action']);
@@ -319,6 +332,8 @@ export async function topicAction(db: Db, who: JournalWho, id: string, input: un
   if (t.updatedAt.toISOString() !== o.version) throw new JournalError('STALE', 409);
   const to = topicNext(action, { status: t.status, postId: t.postId, archived: !!t.archivedAt });
   if (!to) throw new JournalError('WRONG_STATE', 409);
+  const brief = action === 'start' ? await db.blogBrief.findFirst({ where: { storeId, topicId: t.id } }) : null;
+  if (action === 'start' && !brief && resolver && (await resolver.value('blog.brief', { storeId })).requireForStart) throw new JournalError('BRIEF_MISSING', 409);
 
   let postId: string | null = null;
   await db.$transaction(async (tx) => {
@@ -331,15 +346,17 @@ export async function topicAction(db: Db, who: JournalWho, id: string, input: un
       const cluster = t.clusterId ? await tx.contentCluster.findFirst({ where: { id: t.clusterId, storeId, archivedAt: null } }) : null;
       // A link from the title (a Bengali title gets one from the topic, to be retyped in the editor), never taken twice.
       const base = slugify(t.title) || `article-${t.id.slice(-8)}`;
-      const taken = new Set((await tx.blogPost.findMany({ where: { storeId, locale: t.locale, slug: { startsWith: base } }, select: { slug: true } })).map((p) => p.slug));
+      const locale = brief?.language ?? t.locale;
+      const taken = new Set((await tx.blogPost.findMany({ where: { storeId, locale, slug: { startsWith: base } }, select: { slug: true } })).map((p) => p.slug));
       let slug = base;
       for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
       const post = await tx.blogPost.create({
-        data: { storeId, status: 'DRAFT', locale: t.locale, slug, title: t.title, focusKeyword: t.query, categoryId: cluster?.categoryId ?? null, authorId: t.authorId, clusterId: cluster?.id ?? null, topicId: t.id, writerStaffId: who.actor.staffUserId, sourceUrls: [], productIds: [] },
+        data: { storeId, status: 'DRAFT', locale, slug, title: t.title, focusKeyword: brief?.query ?? brief?.keywords[0] ?? t.query, categoryId: cluster?.categoryId ?? null, authorId: t.authorId, clusterId: cluster?.id ?? null, topicId: t.id, writerStaffId: who.actor.staffUserId, sourceUrls: [], productIds: [] },
         select: { id: true },
       });
       postId = post.id;
       data.postId = post.id;
+      if (brief) await tx.blogBrief.update({ where: { id: brief.id }, data: { postId: post.id } });
       if (cluster && t.isPillar && !cluster.pillarPostId) await tx.contentCluster.update({ where: { id: cluster.id }, data: { pillarPostId: post.id } });
     }
     await tx.blogTopic.update({ where: { id: t.id }, data });
@@ -415,7 +432,7 @@ export async function planHandler(request: Request, deps: AdminDeps | null, kind
       else await saveTopic(db, resolver, who, id, await body(request), now);
     } else if (method === 'POST' && id) {
       if (kind === 'clusters') await clusterAction(db, who, id, await body(request), now);
-      else extra = await topicAction(db, who, id, await body(request), now);
+      else extra = await topicAction(db, who, id, await body(request), now, S, resolver);
     } else if (method === 'POST') {
       if (kind === 'clusters') await saveCluster(db, who, null, await body(request));
       else await saveTopic(db, resolver, who, null, await body(request), now);

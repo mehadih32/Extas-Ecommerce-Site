@@ -14,6 +14,10 @@
     "approval": {
       "label": "Topic plan: approval",
       "help": "Who decides which articles get written. “The owner” (as it ships): a topic from a writer waits for your yes; you can approve a whole month's topics with one press. “By itself”: such a topic is approved at once — a very close one still waits for you while “hold very close topics” is on — and with “publish by itself” an article from an approved topic goes live as soon as its last review step passes. The Topic plan shows what was decided by itself over the days you set."
+    },
+    "brief": {
+      "label": "Blog brief form",
+      "help": "Every article starts from a brief in Website › Blog & journal › Brief: the topic, its language, how many words and the keywords are chosen before a word is written. A new brief starts at the word count you set and may ask for between the fewest and the most words you set. With “Start writing needs a brief” on (off as it ships) a topic cannot become an article until its brief is saved. An AI draft always needs a brief."
     }
   }
 }

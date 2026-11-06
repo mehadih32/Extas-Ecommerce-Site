@@ -15,12 +15,17 @@
 //          yes, month by month; 'auto': it is approved by itself (a very close one still waits while `holdAlike`), and
 //          with `autoPublish` an article from an approved topic goes live as soon as its last review step passes. The
 //          plan shows a digest of what was decided by itself over the last `digestDays` days.
+//   v225 · PR 528 `blog.brief` — the brief form (S12 answer 11): word count, keywords, topic and language are chosen
+//          before a word is written. A new brief starts at `wordsDefault` words and may ask between `wordsMin` and
+//          `wordsMax`. With `requireForStart` (off as it ships) "Start writing" on a topic needs its brief first; an AI
+//          draft (PR 243) always needs one.
 import { z } from 'zod';
 import { setting } from './define';
 
 const V239 = 222;
 const V242 = 223;
 const V244 = 224;
+const V528 = 225;
 
 const wpm = z.int().min(60).max(400);
 const note = z.string().trim().max(200);
@@ -124,5 +129,35 @@ export const approvalSettings = {
     isPublic: false,
     sortOrder: 30,
     version: V244,
+  }),
+};
+
+export const blogBriefSchema = z
+  .object({
+    /** "Start writing" on a topic needs its brief first. */
+    requireForStart: z.boolean(),
+    /** The word count a new brief starts at. */
+    wordsDefault: z.int().min(100).max(10_000),
+    /** The fewest and the most words a brief may ask for. */
+    wordsMin: z.int().min(100).max(10_000),
+    wordsMax: z.int().min(100).max(10_000),
+  })
+  .strict()
+  .refine((v) => v.wordsMin <= v.wordsDefault && v.wordsDefault <= v.wordsMax, { path: ['wordsDefault'] });
+export type BlogBriefSettings = z.output<typeof blogBriefSchema>;
+
+export const briefSettings = {
+  'blog.brief': setting({
+    scope: 'store',
+    schema: blogBriefSchema,
+    default: { requireForStart: false, wordsDefault: 900, wordsMin: 300, wordsMax: 3000 },
+    valueType: 'JSON',
+    group: 'blog',
+    labelKey: 'blog.brief.label',
+    helpKey: 'blog.brief.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 40,
+    version: V528,
   }),
 };
