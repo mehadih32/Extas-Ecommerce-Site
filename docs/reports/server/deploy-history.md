@@ -93,3 +93,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-06 15:04 | `d1be8551b448` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (the smoke test did not finish (exit 124)), so the previous version was put back automatically. The fix comes before any new work. |
 | 2026-11-06 16:20 | `0ba61d503d06` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-06 17:03 | `b7f58ec7bfb7` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-06 20:30 | `4e537e761e7e` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (the smoke test did not finish (exit 124)), so the previous version was put back automatically. The fix comes before any new work. |
