@@ -9,6 +9,8 @@
 // PR 12 (CN-025): the V12.4 shell (top bar, rail, To-do drawer) and its design language (look.css), the drawer's waiting
 // lists (only what the person may open), "Mine" (`admin.todo`), the rail's own expanded / collapsed choice (a cookie) and
 // where the guide opens for this person (`admin.guideOpens`, CN-026 (b)).
+// PR 627–629 (CN-036): the shared Lumen patterns' styles (lumen-patterns.css) and numbers (`admin.patterns`: Undo
+// seconds, "Show more" step) on the shell's model, for the one toast and the lists.
 // PR 626 (CN-036): the Lumen shell's model adds whether the AI Center shows (lib/admin-shell/stages.ts: S15's part
 // hidden by PR 652's closed-stage switch, and `ai.enabled`)
 // and when the person last read their notes; the sidebar is full width unless the person collapsed it (cookie "0").
@@ -26,9 +28,10 @@ import './products/products.css';
 import './shell.css';
 import './look.css';
 import './lumen-shell.css';
+import './lumen-patterns.css';
 import { cookies } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { adminLookSettings, BUILT_ADMIN_LOOKS } from '@extas/settings';
+import { adminLookSettings, adminPatternsSettings, BUILT_ADMIN_LOOKS } from '@extas/settings';
 import { guideModeOf } from '@/lib/admin-look/pick';
 import { lookState } from '@/lib/admin-look/prefs';
 import { themeAttrs, themeOf, themeStyle, type AdminTheme } from '@/lib/admin-look/theme';
@@ -54,11 +57,12 @@ async function shellModel(theme: AdminTheme, notesSeenAt: string | null): Promis
   const seconds = shell?.badgeCacheSeconds ?? 0;
   const viewer = { perms: s.perms, owner: s.owner, hidden: s.hidden };
   const scope = { storeId: MOTHER_STORE_ID };
-  const [counts, todo, startPages, jar] = await Promise.all([
+  const [counts, todo, startPages, jar, patterns] = await Promise.all([
     cachedQueues({ db: s.deps.db, settings: s.deps.resolver, now: s.deps.now }, MOTHER_STORE_ID, seconds).catch(() => []),
     (s.deps.resolver.value('admin.todo', scope) as Promise<TodoSetting>).catch(() => adminLookSettings['admin.todo'].default),
     (s.deps.resolver.value('admin.startPages', scope) as Promise<Record<string, string>>).catch(() => ({})),
     cookies(),
+    (s.deps.resolver.value('admin.patterns', scope) as Promise<ShellModel['patterns']>).catch(() => adminPatternsSettings['admin.patterns'].default),
   ]);
   const rows = visibleQueues(counts, viewer);
   const staff = s.guard.auth.staff;
@@ -80,6 +84,7 @@ async function shellModel(theme: AdminTheme, notesSeenAt: string | null): Promis
     theme,
     aiShown: !s.hidden.has('ai') && aiCenterShown(s.hidden, (await s.deps.resolver.value('ai.enabled', scope).catch(() => false)) === true),
     notesSeenAt,
+    patterns,
   };
 }
 

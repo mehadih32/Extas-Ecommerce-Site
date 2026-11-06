@@ -19,6 +19,10 @@
     "theme": {
       "label": "Admin look: colour and motion",
       "help": "The admin look everyone sees (Lumen; the other looks show as \"Planned\" until they are built), the accent colour every button and highlight is drawn from (coral as shipped; text on it is kept readable), and whether animations are reduced for everyone. Light or dark is each person's own choice with the moon button."
+    },
+    "patterns": {
+      "label": "Admin look: toast and lists",
+      "help": "How many seconds a toast keeps its Undo button (it waits while your mouse, finger or keyboard is on it), and how many more rows a list adds each time you press \"Show more\". Undo is only offered for actions that can be taken back (confirm, courier, status, hide, pause), never for money, refunds, COD, prices, discounts, blocking or deleting."
     }
   }
 }
