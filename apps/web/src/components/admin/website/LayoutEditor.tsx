@@ -4,6 +4,8 @@
 // computer a row can also be dragged to its place. Save sends the whole list with the version it was read at (PUT
 // /api/admin/website/layouts, `website.layout.write`; the API checks everything again); "Back to the default order" and
 // "Discard changes" only change the draft. Every word comes from messages/admin-layouts.<lang>.json.
+// ~~Used by Website › Page layouts~~ PR 595: the page uses LayoutBuilder.tsx (Lumen, the owner's own sections); this
+// list is kept as it was built (nothing deleted) and no page draws it.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { LayoutDevice } from '@extas/settings';

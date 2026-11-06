@@ -256,6 +256,14 @@
     "bag": {
       "label": "Bag page sections",
       "help": "Which parts the bag shows beside the summary, in which order and on which screens: the free delivery bar, the bag's products, the offer, WhatsApp help, the bulk order card and saved for later. The products always show. Change it on Website › Page layouts."
+    },
+    "blocks": {
+      "label": "Your own page sections",
+      "help": "Sections you add to the home page or the category pages on Website › Page layouts: banners, offer strips, product rows and grids, set rows, category tiles, reviews, the journal, your own text and spacers. Each has its own switch, its days and its screens. Empty as shipped: the pages stay as they are."
+    },
+    "categoryOwn": {
+      "label": "One category's own layout",
+      "help": "A category page that has its own order of sections instead of the one for all category pages. Switch it off and the category follows all category pages again; its own order is kept."
     }
   },
   "experiments": {

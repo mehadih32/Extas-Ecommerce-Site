@@ -4,24 +4,30 @@
 // picker, then the page's sections in order (Show, screens, ▲ ▼, drag on a computer), Save, Discard changes and "Back to
 // the default order", and "Open the page". The defaults draw today's pages. Seeing needs `website.read`; saving
 // `website.layout.write` (the API checks again; audited). lib/website/layouts-admin.ts, components/admin/website/
-// LayoutEditor.tsx. Guide: docs/admin-guide/pages/website/layouts.md.
+// ~~LayoutEditor.tsx~~ LayoutBuilder.tsx (PR 595). Guide: docs/admin-guide/pages/website/layouts.md.
+// S02 · PR 595 (register "Page layout builder (home and every category page)"): drawn in the Lumen look (CN-036;
+// data-lm-ready, --lm-* tokens, the one toast). The home and category pages take the owner's own sections (ten types,
+// each with its switch, whole days, screens, Edit and Duplicate; hidden, never deleted); the category picker adds "one
+// category" (?page=category&cat=<link name>) with its own order and switch; a phone + computer preview of the page.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { BLOCK_TYPES, blockDefaults, type BlockType } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
-import { LayoutEditor, type LayoutEditorWords } from '@/components/admin/website/LayoutEditor';
+import { LayoutBuilder } from '@/components/admin/website/LayoutBuilder';
+import { LayoutPreview } from '@/components/admin/website/LayoutPreview';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
-import { isLayoutPage, LAYOUT_PAGES, PAGE_LAYOUTS, type LayoutPage } from '@/lib/shop/layouts';
+import { isLayoutPage, LAYOUT_PAGES, type LayoutPage } from '@/lib/shop/layouts';
 import { ROUTES } from '@/lib/shop/routes';
-import { layoutView } from '@/lib/website/layouts-admin';
+import { todayIn } from '@/lib/shop/theme';
+import { layoutChoices, layoutView, type LayoutChoices } from '@/lib/website/layouts-admin';
 import bn from '../../../../../messages/admin-layouts.bn.json';
 import en from '../../../../../messages/admin-layouts.en.json';
-import '../../settings-cards.css';
 import './layouts.css';
 
 export const dynamic = 'force-dynamic';
@@ -30,9 +36,10 @@ const HERE = '/admin/website/layouts';
 const KEY = 'websiteLayouts';
 /**
  * The shop page each layout opens: the home page, the "New in" page (every shop has it) for the category pages and,
- * PR 77, for the product pages (a product is one tap away there), and the bag.
+ * PR 77, for the product pages (a product is one tap away there), and the bag. PR 595: one category opens its own page.
  */
 const OPEN: Record<LayoutPage, string> = { home: ROUTES.home, category: ROUTES.newIn, product: ROUTES.newIn, bag: ROUTES.bag };
+const NONE: LayoutChoices = { cats: [], products: [], tags: [], rules: [] };
 
 function withScreen(view: AdminView): AdminView {
   return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
@@ -50,7 +57,8 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
   const d = view.dict;
   const asked = typeof sp.page === 'string' ? sp.page : 'home';
   const page: LayoutPage = isLayoutPage(asked) ? asked : 'home';
-  const here = page === 'home' ? HERE : `${HERE}?page=${page}`;
+  const askedCat = page === 'category' && typeof sp.cat === 'string' && /^[a-z0-9-]{1,80}$/.test(sp.cat) ? sp.cat : null;
+  const here = page === 'home' ? HERE : `${HERE}?page=${page}${askedCat ? `&cat=${askedCat}` : ''}`;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(here)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -60,59 +68,84 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
       </div>
     );
   const g = (k: string) => t(d, `ly.${k}`);
-  const lv = await layoutView({ db: access.deps.db, resolver: access.deps.resolver }, page);
+  const ld = { db: access.deps.db, resolver: access.deps.resolver };
+  const takesBlocks = page === 'home' || page === 'category';
+  const [choices, tz] = await Promise.all([takesBlocks ? layoutChoices(access.deps.db) : Promise.resolve(NONE), access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID })]);
+  const cat = askedCat && choices.cats.some((c) => c.slug === askedCat) ? askedCat : null;
+  const lv = await layoutView(ld, page, cat);
   const canEdit = access.guard.permissions?.has('website.layout.write') ?? false;
-  const ids = PAGE_LAYOUTS[page].ids;
-  const names = Object.fromEntries(ids.map((id) => [id, g(`sec.${id}`)]));
-  const hints = Object.fromEntries(ids.map((id) => [id, g(`hint.${id}`)]));
-  const errKeys = ['INVALID_INPUT', 'LOCKED', 'STALE', 'forbidden', 'unauthorized', 'network', 'other'];
-  const w: LayoutEditorWords = {
-    count: g('count'),
-    always: g('always'),
-    show: g('show'),
-    screens: g('screens'),
-    dev: { both: g('dev.both'), phone: g('dev.phone'), desktop: g('dev.desktop') },
-    up: g('up'),
-    down: g('down'),
-    drag: g('drag'),
-    save: g('save'),
-    saving: g('saving'),
-    saved: g('saved'),
-    discard: g('discard'),
-    reset: g('reset'),
-    resetHelp: g('resetHelp'),
-    unsaved: g('unsaved'),
-    err: Object.fromEntries(errKeys.map((k) => [k, g(`err.${k}`)])),
-  };
-  const shopHref = view.lang === 'bn' ? `/bn${OPEN[page] === '/' ? '' : OPEN[page]}` : OPEN[page];
+  const starts = Object.fromEntries(BLOCK_TYPES.map((x) => [x, blockDefaults(x)])) as Record<BlockType, ReturnType<typeof blockDefaults>>;
+  const path = cat ? ROUTES.category(cat) : OPEN[page];
+  const shopHref = view.lang === 'bn' ? `/bn${path === '/' ? '' : path}` : path;
+  const catName = (c: LayoutChoices['cats'][number]) => (view.lang === 'bn' && c.bn) || c.en;
+  const words = ((d.ly as Dict) ?? {}) as Dict;
 
   return (
-    <div className="a2-z" data-testid="ly-page">
+    <div className="a2-z lyb-page" data-testid="ly-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
-      <div className="a2-note a2-mt12" role="note">
-        <span>{g('note')}</span>
-      </div>
-      <nav className="lyb-pick" aria-label={g('pages')} data-testid="ly-pick">
-        {LAYOUT_PAGES.map((p) => (
-          <a key={p} className="a2-btn" href={p === 'home' ? HERE : `${HERE}?page=${p}`} aria-current={p === page ? 'page' : undefined} data-testid={`ly-pick-${p}`}>
-            {g(`page.${p}`)}
+      <p className="lm-hint lyb-note" role="note">
+        {g('note')}
+      </p>
+      <nav className="lm-chips lyb-pick" aria-label={g('pages')} data-testid="ly-pick">
+        {LAYOUT_PAGES.map((x) => (
+          <a key={x} className={`lm-chip${x === page ? ' on' : ''}`} href={x === 'home' ? HERE : `${HERE}?page=${x}`} aria-current={x === page ? 'page' : undefined} data-testid={`ly-pick-${x}`}>
+            {g(`page.${x}`)}
           </a>
         ))}
       </nav>
-      <section className="a2-sc a2-mt12" aria-labelledby="ly-h" data-testid="ly-card">
-        <h2 className="a2-h3" id="ly-h">
-          {g(`cardH.${page}`)}
-        </h2>
-        {page === 'home' ? <p className="a2-xs a2-mute lyb-mt6">{g('seasonal')}</p> : null}
-        {page === 'product' || page === 'bag' ? <p className="a2-xs a2-mute lyb-mt6">{g(`fixedNote.${page}`)}</p> : null}
-        {!canEdit ? <p className="a2-xs a2-mute lyb-mt6">{g('readOnly')}</p> : null}
-        <LayoutEditor key={page} page={page} rows={lv.rows} defaults={lv.defaults} locked={lv.locked} version={lv.version} names={names} hints={hints} canEdit={canEdit} w={w} />
+      {page === 'category' && choices.cats.length ? (
+        <form className="lyb-catpick" method="get" action={HERE} data-testid="ly-catpick">
+          <input type="hidden" name="page" value="category" />
+          <div className="lm-fl">
+            <label htmlFor="ly-cat">{g('whichCat')}</label>
+            <select id="ly-cat" name="cat" className="lm-inp" defaultValue={cat ?? ''}>
+              <option value="">{g('allCats')}</option>
+              {choices.cats.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {catName(c)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button type="submit" className="lm-btn">
+            {g('openCat')}
+          </button>
+        </form>
+      ) : null}
+      <section className="lm-card lyb-card" aria-labelledby="ly-h" data-testid="ly-card">
+        <h2 id="ly-h">{cat ? g('cardH.one').replace('{name}', catName(choices.cats.find((c) => c.slug === cat)!)) : g(`cardH.${page}`)}</h2>
+        {page === 'home' ? <p className="lm-sub">{g('seasonal')}</p> : null}
+        {page === 'product' || page === 'bag' ? <p className="lm-sub">{g(`fixedNote.${page}`)}</p> : null}
+        {!canEdit ? <p className="lm-sub">{g('readOnly')}</p> : null}
+        <LayoutBuilder
+          key={`${page}:${cat ?? ''}:${lv.version}`}
+          page={page}
+          cat={cat}
+          rows={lv.rows}
+          blocks={lv.blocks}
+          defaults={lv.defaults}
+          locked={lv.locked}
+          version={lv.version}
+          own={lv.own}
+          ownRows={lv.ownRows}
+          shared={lv.shared}
+          canEdit={canEdit}
+          today={todayIn(String(tz))}
+          starts={starts}
+          choices={choices}
+          lang={view.lang === 'bn' ? 'bn' : 'en'}
+          w={words as never}
+        />
+      </section>
+      <section className="lm-card lyb-card" aria-labelledby="ly-ph" data-testid="ly-prevcard">
+        <h2 id="ly-ph">{g('prev.title')}</h2>
         <div className="lyb-bar">
-          <a className="a2-btn" href={shopHref} target="_blank" rel="noopener noreferrer" data-testid="ly-open">
+          <a className="lm-btn" href={shopHref} target="_blank" rel="noopener noreferrer" data-testid="ly-open">
             {g('open')}
           </a>
         </div>
+        {takesBlocks ? <LayoutPreview src={shopHref} stamp={lv.version} w={{ show: g('prev.show'), hide: g('prev.hide'), phone: g('prev.phone'), desktop: g('prev.desktop'), note: g('prev.note') }} /> : null}
       </section>
     </div>
   );

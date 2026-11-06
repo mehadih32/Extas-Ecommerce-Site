@@ -202,6 +202,8 @@ export * from './registry-marketing-report';
 export * from './registry-layouts';
 // S02 · PR 79 — the switch for editing the shop's words on the shop page (registry-front-edit.ts, version 242).
 export * from './registry-front-edit';
+// S02 · PR 595 — the page layout builder's own sections and per-category layouts (registry-layout-blocks.ts, version 244).
+export * from './registry-layout-blocks';
 // S02 · PR 83 — the A/B test module's switch and numbers (registry-experiments.ts, version 243).
 export * from './registry-experiments';
 // S02 · PR 80 — the eye-toggle list: every part of a shop page the owner can show or hide on its own (eye-toggles.ts).

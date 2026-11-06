@@ -18,6 +18,8 @@
 // (sections, hero, the hero's pictures, the rows) stand in for the owner's own; after the window, his own again.
 // S02 · PR 76: the owner arranges the sections on Website › Page layouts; a section may keep to phones or to computers
 // (LayoutPart: a wrapper the style sheet hides; none when it shows on both, so the page is the same as before).
+// S02 · PR 595: the owner's own sections (`layout.blocks`: banner, offer strip, product row or grid, sets, tiles, reviews,
+// journal, his text, spacer) sit among them on their days and screens (PageBlock); none as shipped = today's page.
 import type { Metadata } from 'next';
 import { Fragment, type ReactNode } from 'react';
 import type { HomeSectionId } from '@extas/settings';
@@ -37,6 +39,8 @@ import { shopContext, type ShopContext } from '@/lib/shop/context';
 import { homeFlash } from '@/lib/shop/flash';
 import { heroSlidePicks, type HeroPick } from '@/lib/shop/home-model';
 import { shownSections } from '@/lib/shop/layouts';
+import { blockContent, blocksOf, pageItems } from '@/lib/shop/blocks';
+import { PageBlock } from '@/components/shop/blocks/PageBlock';
 import { JsonLd } from '@/components/shop/JsonLd';
 import { shopLd } from '@/lib/seo/shop-ld';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
@@ -75,12 +79,15 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
   const ldBlocks = shopOrigin(c.storeId)
     .then((origin) => (origin ? shopLd(c, origin) : []))
     .catch(() => []);
-  const [slides, leads, cards, reviews, flash] = await Promise.all([
+  // PR 595: the owner's own sections live today (`layout.blocks`), placed among the page's own, and what they show
+  const items = pageItems('home', c.s['home.sections'], blocksOf(c.s['layout.blocks'], 'home'), c.today);
+  const [slides, leads, cards, reviews, flash, got] = await Promise.all([
     want('hero') ? heroPicks(c) : Promise.resolve([]),
     want('categories') ? categoryLeads(c.storeId, c.cats.map((k) => k.slug)) : Promise.resolve({}),
     want('new-in') ? newestCards(c.storeId, newIn.count, newIn.order) : Promise.resolve([]),
     want('reviews') ? homeReviews(c.storeId, rev.count, rev.minRating) : Promise.resolve({ reviews: [], average: 0, total: 0 }),
     want('flash-sale') ? homeFlash(c, search) : Promise.resolve(null),
+    blockContent(c, items),
   ]);
   const ld = <JsonLd data={await ldBlocks} />;
   const draw: Partial<Record<HomeSectionId, () => ReactNode>> = {
@@ -91,14 +98,21 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
     'flash-sale': () => <HomeFlash c={c} sale={flash} />,
     reviews: () => <HomeReviews c={c} row={reviews} />,
   };
-  const sections = shown.map(({ id, dev }) => (
-    <LayoutPart key={id} id={id} dev={dev}>
-      {draw[id]?.()}
-    </LayoutPart>
-  ));
+  // ~~shown.map(({ id, dev }) => <LayoutPart …>)~~ PR 595: the page's own sections with the owner's sections in between
+  const sections = items.map((it) =>
+    it.kind === 'sec' ? (
+      <LayoutPart key={it.row.id} id={it.row.id} dev={it.row.dev ?? 'both'}>
+        {draw[it.row.id as HomeSectionId]?.()}
+      </LayoutPart>
+    ) : (
+      <LayoutPart key={`lb-${it.block.id}`} id={`lb-${it.block.id}`} dev={it.block.dev}>
+        <PageBlock c={c} block={it.block} got={got.get(it.block.id) ?? { kind: 'none' }} />
+      </LayoutPart>
+    ),
+  );
   // PR 193: the Eid order-by dates / pre-order line and the holiday notice, under the hero (nothing while both are off)
   const eta = <EtaBanner c={c} testId="home-eta" wrap="container sh-etawrap" />;
-  const at = on.indexOf('hero') + 1;
+  const at = items.findIndex((it) => it.kind === 'sec' && it.row.id === 'hero') + 1;
   const body = [...sections.slice(0, at), <Fragment key="eta">{eta}</Fragment>, ...sections.slice(at)];
   // follow-up 21: the cards' back view and Quick add (computer with a mouse), and the added-to-bag panel it opens
   const desk = (

@@ -1,0 +1,37 @@
+/* S02 · PR 595 — the owner's own sections (Website › Page layouts; demo r12-zlb.css): banner, offer strip, sideways rows,
+   journal cards, his own text and the spacer. The shop's tokens only; every link and button at a 44px tap size. */
+.shop .lb-tight { padding: 8px 0; }
+.shop .lb-ban { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: center; border-radius: var(--card-radius); padding: 22px 20px; background: var(--brand); color: var(--brand-ink); overflow: hidden; }
+.shop .lb-ban.tone-dark { background: var(--ink); color: var(--bg); }
+.shop .lb-ban.tone-light { background: var(--brand-tint); color: var(--ink); }
+.shop .lb-ban.has-img { grid-template-columns: minmax(0, 1fr) minmax(0, 40%); }
+.shop .lb-ban-e { color: inherit; opacity: 0.85; }
+.shop .lb-ban-t { font: 700 clamp(1.3rem, 4vw, 2rem)/1.2 var(--font-display); margin: 4px 0 0; overflow-wrap: anywhere; }
+.shop .lb-ban-s { margin: 8px 0 0; opacity: 0.9; overflow-wrap: anywhere; }
+.shop .lb-ban-cta { margin-top: 14px; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; background: var(--bg); color: var(--ink); border-color: transparent; }
+.shop .lb-ban-img { border-radius: var(--radius); overflow: hidden; min-width: 0; }
+.shop .lb-strip { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px 10px; min-height: 44px; padding: 8px 14px; border-radius: var(--radius); background: var(--brand); color: var(--brand-ink); text-decoration: none; font-weight: 600; text-align: center; }
+.shop .lb-strip.tone-dark { background: var(--ink); color: var(--bg); }
+.shop .lb-strip.tone-light { background: var(--brand-tint); color: var(--ink); }
+.shop .lb-strip-t { overflow-wrap: anywhere; min-width: 0; }
+.shop .lb-strip-l { display: inline-flex; align-items: center; gap: 4px; text-decoration: underline; }
+.shop .lb-row { display: flex; gap: 12px; overflow: auto hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; padding-bottom: 4px; }
+.shop .lb-row > * { flex: 0 0 calc(50% - 6px); min-width: 0; scroll-snap-align: start; }
+.shop .lb-row-j > * { flex-basis: calc(80% - 6px); }
+.shop .lb-jcard { padding: 14px 16px; }
+.shop .lb-jcard-t { margin: 0 0 6px; font: 700 1.05rem/1.35 var(--font-display); overflow-wrap: anywhere; }
+.shop .lb-jcard-t a { color: inherit; text-decoration: none; display: inline-block; min-height: 44px; }
+.shop .lb-rt { max-width: 70ch; overflow-wrap: anywhere; }
+.shop .lb-rt p, .shop .lb-rt ul, .shop .lb-rt ol { margin: 0 0 10px; }
+.shop .lb-rt h3 { margin: 14px 0 6px; font: 700 1.1rem/1.3 var(--font-display); }
+.shop .lb-rt a { color: var(--brand); text-decoration: underline; display: inline-block; padding-block: 6px; }
+.shop .lb-spacer { height: var(--lb-sp-m, 16px); }
+@media (min-width: 1024px) {
+  .shop .lb-ban { padding: 32px 36px; }
+  .shop .lb-ban.has-img { grid-template-columns: minmax(0, 1fr) 320px; }
+  .shop .lb-row > * { flex-basis: calc(25% - 9px); }
+  .shop .lb-row-j > * { flex-basis: calc(33.333% - 8px); }
+  .shop .lb-spacer { height: var(--lb-sp-d, 32px); }
+  .shop [id^='lb-rev-'].hm-hscroll { display: flex; flex-wrap: nowrap; gap: 20px; overflow: auto hidden; scrollbar-width: none; }
+  .shop [id^='lb-rev-'].hm-hscroll > * { flex: 0 0 calc(33.3333% - 13.3333px); min-width: 0; }
+}

@@ -130,6 +130,7 @@ import { festiveCutoffSettings } from './registry-festive-cutoff';
 import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
 import { layoutSettings } from './registry-layouts';
+import { layoutBlockSettings } from './registry-layout-blocks';
 import { frontEditSettings } from './registry-front-edit';
 import { experimentsSettings } from './registry-experiments';
 import { incompleteSettings } from './registry-incomplete';
@@ -1444,6 +1445,8 @@ export const registry = {
   ...marketingReportSettings,
   // S02 · PR 76 · the page builder: the category page's sections (registry-layouts.ts, version 240).
   ...layoutSettings,
+  // S02 · PR 595 · the owner's own sections and each category's own layout (registry-layout-blocks.ts, version 244).
+  ...layoutBlockSettings,
   // S02 · PR 79 · editing the shop's words on the shop page (registry-front-edit.ts, version 242).
   ...frontEditSettings,
   // S02 · PR 83 · the A/B test module's switch and numbers (registry-experiments.ts, version 243).

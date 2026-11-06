@@ -1,20 +1,63 @@
-/* S02 · PR 76 — Website › Page layouts: the page picker and the section list (a row per section: number, name and what
-   it shows, then Show, its screens and ▲ ▼, wrapping under the name on a phone), every control at a 44px tap size, the
-   shell's tokens only. */
-.adm2 .lyb-pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.adm2 .lyb-pick .a2-btn{min-height:44px}
-.adm2 .lyb-pick .a2-btn[aria-current="page"]{border-color:var(--g);color:var(--g);font-weight:600}
-.adm2 .lyb-mt6{margin-top:6px}
-.adm2 .lyb-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
-.adm2 .lyb-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--ln);border-radius:var(--r);background:var(--sf);min-width:0}
-.adm2 .lyb-row.off .lyb-name b{opacity:.6}
-.adm2 .lyb-row.drag{opacity:.5}
-.adm2 .lyb-row[draggable="true"]{cursor:grab}
-.adm2 .lyb-num{flex:0 0 auto;min-width:24px;text-align:center;font-weight:600;color:var(--mute)}
-.adm2 .lyb-name{display:grid;gap:2px;flex:1 1 180px;min-width:0;overflow-wrap:anywhere}
-.adm2 .lyb-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0}
-.adm2 .lyb-show{min-height:44px}
-.adm2 .lyb-dev{min-height:44px;max-width:100%}
-.adm2 .lyb-mv{min-width:44px;min-height:44px;justify-content:center}
-.adm2 .lyb-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.adm2 .lyb-bar .a2-btn{min-height:44px}
+/* S02 · PR 76 — Website › Page layouts: the page picker and the section list. ~~The shell's tokens (.adm2 .lyb-*, a2-*)~~
+   PR 595: drawn in the Lumen look (CN-036) with --lm-* tokens only, light and dark: the page chips, the category
+   picker, one row per section (number, name and what it shows or the owner's section's type and days, then its switch,
+   screens, ▲ ▼, Edit, Duplicate; wrapping under the name on a phone), the section form, the ten section types, the save
+   bar and the phone + computer preview. Every control at the Lumen tap size (44px). */
+[data-lm-look] .lyb-page { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+[data-lm-look] .lyb-note { margin: 0; }
+[data-lm-look] .lyb-pick .lm-chip { min-height: var(--lm-tap); text-decoration: none; }
+[data-lm-look] .lyb-catpick { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+[data-lm-look] .lyb-catpick .lm-fl { flex: 1 1 240px; max-width: 420px; }
+[data-lm-look] .lyb-card { display: flex; flex-direction: column; gap: 10px; }
+[data-lm-look] .lyb-card > h2 { font: 700 1.15rem/1.3 var(--lm-font-disp); color: var(--lm-ink); margin: 0; }
+[data-lm-look] .lyb { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+[data-lm-look] .lyb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+[data-lm-look] .lyb-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+[data-lm-look] .lyb-li { display: grid; gap: 8px; min-width: 0; }
+[data-lm-look] .lyb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border-radius: var(--lm-r-box); background: var(--lm-sf2); box-shadow: inset 0 0 0 1px var(--lm-ln); min-width: 0; transition: background var(--lm-t-fast); }
+[data-lm-look] .lyb-row.own { background: var(--lm-acbg); }
+[data-lm-look] .lyb-row.off .lyb-name b { color: var(--lm-ink2); }
+[data-lm-look] .lyb-row.drag { opacity: 0.5; }
+[data-lm-look] .lyb-row[draggable='true'] { cursor: grab; }
+[data-lm-look] .lyb-num { flex: 0 0 auto; min-width: 24px; text-align: center; font-weight: 700; color: var(--lm-ink2); font-variant-numeric: tabular-nums; }
+[data-lm-look] .lyb-name { display: grid; gap: 2px; flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; color: var(--lm-ink); }
+[data-lm-look] .lyb-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+[data-lm-look] .lyb-dev { width: auto; max-width: 100%; }
+[data-lm-look] .lyb-mv { min-width: var(--lm-tap); min-height: var(--lm-tap); padding: 0; }
+[data-lm-look] .lyb-acts .lm-btn.sm { min-height: var(--lm-tap); }
+[data-lm-look] .lyb-tag { display: inline-block; padding: 1px 8px; border-radius: var(--lm-r-pill); background: var(--lm-chip); color: var(--lm-ink); font-weight: 700; }
+[data-lm-look] .lyb-tag.st-live { background: var(--lm-okbg); color: var(--lm-ok); }
+[data-lm-look] .lyb-tag.st-soon { background: var(--lm-infobg); color: var(--lm-info); }
+[data-lm-look] .lyb-tag.st-ended { background: var(--lm-warnbg); color: var(--lm-warn); }
+[data-lm-look] .lyb-own { margin: 0; }
+[data-lm-look] .lyb-form { display: flex; flex-direction: column; gap: 14px; box-shadow: inset 0 0 0 1px var(--lm-ln); }
+[data-lm-look] .lyb-grid, [data-lm-look] .lyb-typed { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; min-width: 0; }
+[data-lm-look] .lyb-words { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 8px; grid-column: 1 / -1; min-width: 0; }
+[data-lm-look] .lyb-words > legend { font-size: var(--lm-fs-card); font-weight: 700; color: var(--lm-ink); padding: 0; margin-bottom: 6px; }
+[data-lm-look] .lyb-typed > .lm-hint { grid-column: 1 / -1; margin: 0; }
+[data-lm-look] .lyb-pick { grid-template-columns: 1fr; }
+[data-lm-look] .lyb-plist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 4px 12px; max-height: 300px; overflow: auto; padding: 4px; border-radius: var(--lm-r-ctl); box-shadow: inset 0 0 0 1px var(--lm-ln); }
+[data-lm-look] .lyb-pitem { display: flex; align-items: center; gap: 10px; min-height: var(--lm-tap); color: var(--lm-ink); cursor: pointer; overflow-wrap: anywhere; }
+[data-lm-look] .lyb-pitem input { width: 20px; height: 20px; flex: none; accent-color: var(--lm-brand); }
+[data-lm-look] .lyb-add { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+[data-lm-look] .lyb-types { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 8px; width: 100%; }
+[data-lm-look] .lyb-type { display: grid; gap: 4px; text-align: start; min-height: var(--lm-tap); padding: 12px 14px; border: 0; border-radius: var(--lm-r-box); background: var(--lm-sf2); box-shadow: inset 0 0 0 1px var(--lm-ln); color: var(--lm-ink); font: inherit; cursor: pointer; }
+[data-lm-look] .lyb-type:hover { background: var(--lm-hover); }
+[data-lm-look] .lyb-type:focus-visible { outline: 2px solid var(--lm-focus); outline-offset: 2px; }
+[data-lm-look] .lyb-save { position: sticky; bottom: 0; display: grid; gap: 6px; padding: 10px 0 4px; background: var(--lm-sf); z-index: 2; }
+[data-lm-look] .lyb-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+[data-lm-look] .lyb-bar .lm-btn { text-decoration: none; }
+[data-lm-look] .lyb-prevw { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; width: 100%; }
+[data-lm-look] .lyb-prev { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; min-width: 0; }
+[data-lm-look] .lyb-fig { margin: 0; display: grid; gap: 6px; }
+[data-lm-look] .lyb-frame { position: relative; overflow: hidden; border-radius: var(--lm-r-box); box-shadow: var(--lm-sh-sm), inset 0 0 0 1px var(--lm-ln); background: var(--lm-bg); }
+[data-lm-look] .lyb-frame iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; pointer-events: none; }
+[data-lm-look] .lyb-frame.ph { width: 273px; height: 546px; }
+[data-lm-look] .lyb-frame.ph iframe { width: 390px; height: 780px; transform: scale(0.7); }
+[data-lm-look] .lyb-frame.dk { width: 574px; height: 378px; }
+[data-lm-look] .lyb-frame.dk iframe { width: 1366px; height: 900px; transform: scale(0.42); }
+@media (max-width: 759px) {
+  [data-lm-look] .lyb-frame.dk { width: 273px; height: 180px; }
+  [data-lm-look] .lyb-frame.dk iframe { transform: scale(0.2); }
+  [data-lm-look] .lyb-save { bottom: calc(var(--lm-tap) + 24px); }
+}
