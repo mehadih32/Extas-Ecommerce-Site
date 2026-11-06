@@ -68,14 +68,16 @@ export function parseReportQuery(sp: Record<string, string | string[] | undefine
   const base = quick ? quickPeriod(quick, today) : quickPeriod('month', today);
   let from = !quick && isDay(one('from')) ? one('from')! : base.from;
   let to = !quick && isDay(one('to')) ? one('to')! : base.to;
-  if (to > today) {
-    to = today;
-    notes.push('future');
-  }
+  // PR 283: turned round first, so a reversed period that reaches past today is still stopped at today
   if (from > to) {
     [from, to] = [to, from];
     notes.push('swapped');
   }
+  if (to > today) {
+    to = today;
+    notes.push('future');
+  }
+  if (from > to) from = to;
   if (daysBetween(from, to) > limits.maxDays) {
     from = addDays(to, -(limits.maxDays - 1));
     notes.push('tooLong');

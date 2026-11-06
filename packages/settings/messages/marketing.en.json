@@ -30,6 +30,10 @@
     "calendar": {
       "label": "Marketing calendar",
       "help": "Off as it ships. On, Marketing › Calendar shows in one place, day by day on the shop's clock, what is planned across marketing: campaigns, the ads running, message sends, seasonal home windows, festive cut-offs, blog and social posts, and your own plan lines such as \"Eid\" or \"Winter sale\". \"Days\" is how many days one view shows; the Campaigns page shows the same view. The calendar only reads: it never starts, stops or sends anything."
+    },
+    "report": {
+      "label": "Marketing report",
+      "help": "Off as it ships. On, Marketing › Report sets what marketing cost (the ad spend imported per day and the cost of message sends) against Ordered value (orders placed) and Sales (orders delivered, the only sale), for the whole shop, by channel, by campaign and per message send, with delivered ROAS (Sales for each taka spent). \"Longest period\" is the most days one report covers; \"Result days\" is how many days after a message its receiver's orders count as that send's result. The report only reads: it never changes a budget, a campaign, a price or an order."
     }
   },
   "ads": {

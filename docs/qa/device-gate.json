@@ -320,6 +320,7 @@
       "/admin/marketing/seasonal",
       "/admin/marketing/festive",
       "/admin/marketing/calendar",
+      "/admin/marketing/report",
       "/admin/orders/incomplete",
       "/admin/help/manual",
       "/admin/orders/risk-rules",

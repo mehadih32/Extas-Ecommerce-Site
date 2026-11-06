@@ -27,6 +27,9 @@ describe('cost report periods (PR 347)', () => {
     expect(parseReportQuery({ period: 'lastMonth', from: '2020-01-01', by: 'month', group: 'module' }, today, limits).q).toEqual({ from: '2026-10-01', to: '2026-10-31', by: 'month', group: 'module' });
     expect(parseReportQuery({ from: '2026-10-20', to: '2026-12-31' }, today, limits)).toEqual({ q: { from: '2026-10-20', to: today, by: 'day', group: 'service' }, notes: ['future'] });
     expect(parseReportQuery({ from: '2026-10-20', to: '2026-10-10' }, today, limits)).toEqual({ q: { from: '2026-10-10', to: '2026-10-20', by: 'day', group: 'service' }, notes: ['swapped'] });
+    // PR 283: a reversed period reaching past today is turned round, then stopped at today
+    expect(parseReportQuery({ from: '2030-01-10', to: '2026-10-10' }, today, limits).q).toMatchObject({ from: '2026-10-10', to: today });
+    expect(parseReportQuery({ from: '2030-01-10', to: '2030-01-01' }, today, limits)).toMatchObject({ q: { from: today, to: today }, notes: ['swapped', 'future'] });
   });
 
   it('cut to maxDays; by day over maxDayRows is shown by month', () => {
