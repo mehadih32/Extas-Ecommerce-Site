@@ -51,6 +51,19 @@ export interface GoLiveContext {
    * of every staff member, and how many active staff members who can change anything have no two-step sign-in.
    */
   security?: { rateLimitMode: string; twoFactorRequired: boolean; withoutTwoFactor: number };
+  /**
+   * CN-036: the last automatic run behind a row a person confirms (`simulation`: the 70-order simulation, simulation.yml;
+   * `acceptance`: the acceptance run, acceptance.yml), from the server's state files. Shown beside the row as evidence;
+   * it never confirms the row: only a person does.
+   */
+  evidence?: Partial<Record<string, GoLiveEvidence | null>>;
+}
+
+/** CN-036: an automatic run shown beside a sign-off row (its result, when, and numbers for the row's words). */
+export interface GoLiveEvidence {
+  ok: boolean;
+  at?: string;
+  vars: Record<string, string | number>;
 }
 
 export interface GoLiveResult {
@@ -65,7 +78,12 @@ export interface GoLiveResult {
   by?: string | null;
   /** Numbers for the item's words (e.g. how many pages failed). */
   vars?: Record<string, string | number>;
+  /** CN-036: for a `signoff` item, the last automatic run behind it (null: none yet); it never sets `ok`. */
+  evidence?: GoLiveEvidence | null;
 }
+
+/** CN-036: the sign-off rows an automatic run stands behind (the runs' keys in `GoLiveContext.evidence`). */
+export const EVIDENCE_KEYS: readonly string[] = ['acceptance', 'simulation'];
 
 interface GoLiveItem {
   key: string;
@@ -289,7 +307,8 @@ export function goLiveChecks(ctx: GoLiveContext): { ready: boolean; done: number
   const items = GO_LIVE.map((i): GoLiveResult => {
     if (i.check) return { key: i.key, pr: i.pr, kind: i.kind, when: i.when, ...i.check(ctx) };
     const s = ctx.signoff[i.key];
-    return { key: i.key, pr: i.pr, kind: i.kind, when: i.when, ok: Boolean(s), at: s?.at, by: s?.by ?? null };
+    const evidence = EVIDENCE_KEYS.includes(i.key) ? { evidence: ctx.evidence?.[i.key] ?? null } : {};
+    return { key: i.key, pr: i.pr, kind: i.kind, when: i.when, ok: Boolean(s), at: s?.at, by: s?.by ?? null, ...evidence };
   });
   const before = items.filter((i) => i.when === 'before');
   const after = items.filter((i) => i.when === 'after');

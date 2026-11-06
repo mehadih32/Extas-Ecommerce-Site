@@ -24,6 +24,23 @@ describe('golive-check (PR 587)', () => {
     expect(blockers(rows).map((r) => r.key)).toEqual(['runbook']);
     expect(goLiveRows(null)).toEqual([]);
   });
+  it('CN-036: a sign-off row shows the last automatic run behind it, and it stays open until a person confirms', () => {
+    const rows = goLiveRows({ items: [
+      { key: 'simulation', pr: 393, kind: 'signoff', when: 'before', ok: false, evidence: { ok: true, at: '2026-11-06T20:00:00+06:00', vars: { passed: 41 } } },
+      { key: 'acceptance', pr: 393, kind: 'signoff', when: 'before', ok: false, evidence: null },
+      { key: 'runbook', pr: 398, kind: 'signoff', when: 'before', ok: false },
+    ] });
+    expect(rows.map((r) => r.evidence)).toEqual([{ ok: true, at: '2026-11-06T20:00:00+06:00' }, null, undefined]);
+    expect(blockers(rows).map((r) => r.key)).toEqual(['simulation', 'acceptance', 'runbook']);
+    const md = reportMarkdown({
+      at: 'now', sha: 'abc', ok: false, problems: [], goLive: { rows, blockers: [] },
+      redirects: { rows: 0, live: false, expected: 49, checked: 0, problems: [] },
+      sitemap: { indexStatus: 200, files: 1, urls: 3, hosts: [], checked: 3, problems: [] },
+      switch: { ok: true, detail: 'x' },
+    });
+    expect(md).toContain('last automatic run: PASS (2026-11-06T20:00:00+06:00) — a person confirms');
+    expect(md).toContain('no automatic run yet');
+  });
   it('a target must open with 200 and never forward again', () => {
     expect(targetProblem('/p/a', 200)).toBeNull();
     expect(targetProblem('/p/a', 301, '/p/b')).toMatch(/chain/);

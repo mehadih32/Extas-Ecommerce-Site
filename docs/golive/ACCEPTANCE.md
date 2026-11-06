@@ -8,6 +8,12 @@ Source: `docs/BACKEND-ARCHITECTURE.md` §13 "Must exist before the first real or
 Blueprint A2.9.16 and Appendix C. The automatic items (smoke test, health, backups) are checked by the go-live page
 itself and are not repeated here.
 
+**The automatic part (CN-036, 6 Nov 2026):** GitHub › Actions › **acceptance** (by hand only) runs, on the live version,
+the smoke test of every page, the go-live gate journeys, the 18 go-live test-order scenarios and the customer 360° — the
+runs that already prove many lines below on the mocks — and writes one summary to `docs/reports/acceptance/latest/`. The
+go-live page shows that run beside this row; it never confirms the row. The lines a machine cannot play (real phones,
+the admin's own walk, the courier's real statement) stay a person's.
+
 > **বাংলা সারকথা:** আসল অর্ডারের আগে staging-এ (new.extas.com.bd) নিচের প্রতিটা লাইন কাস্টমার আর অ্যাডমিন হিসেবে, ফোনে আর
 > কম্পিউটারে দেখে নিতে হবে। সব ঠিক হলে "চালুর আগে" পাতায় "staging-এর গ্রহণ তালিকা দেখা হয়েছে" নিশ্চিত করুন।
 

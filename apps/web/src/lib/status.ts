@@ -48,6 +48,11 @@ export type OriginCert = {
 // CN-016: infra/deploy/smoke.sh after every deploy and every night (every built page, signed out and as the admin).
 // R1 ops review (M8): `at` is ISO with its offset (infra/deploy/smoke.sh); `atText` the same time in words for people.
 export type Smoke = { ok?: boolean; at?: string; atText?: string; kind?: string; pages?: number; failed?: number };
+// PR 414 follow-up 668 (CN-036): the last 70-order simulation run (GATE_PLAN=simulation infra/deploy/gate-orders.sh,
+// simulation.yml); `iso` is its time with the offset, `at` the same in words.
+export type SimulationRun = { at?: string; iso?: string; sha?: string; ok?: boolean; planned?: number; passed?: number; failed?: number; skipped?: number; orders?: number; cleanup?: boolean };
+// PR 393 follow-up (CN-036): the last acceptance run (infra/deploy/acceptance.sh, acceptance.yml): its parts' results.
+export type AcceptanceRun = { at?: string; atText?: string; sha?: string; ok?: boolean; passed?: number; total?: number; parts?: { key: string; ok: boolean; line: string }[] };
 
 export const buildStatus = generated as BuildStatus;
 
@@ -66,7 +71,7 @@ async function readJson<T>(name: string): Promise<T | null> {
 export type RuntimeState = Awaited<ReturnType<typeof runtimeState>>;
 
 export async function runtimeState() {
-  const [deploy, health, local, blob, drive, smoke, restoreTest, drill, staging, production, serverSetup, originCert] = await Promise.all([
+  const [deploy, health, local, blob, drive, smoke, restoreTest, drill, staging, production, serverSetup, originCert, simulation, acceptance] = await Promise.all([
     readJson<Deploy>('last-good-deploy.json'),
     readJson<Health>('health.json'),
     readJson<Backup>('backup-daily-local.json'),
@@ -79,6 +84,8 @@ export async function runtimeState() {
     readJson<RestoreProduction>('restore-production.json'),
     readJson<ServerSetup>('server-setup.json'),
     readJson<OriginCert>('origin-cert.json'),
+    readJson<SimulationRun>('simulation.json'),
+    readJson<AcceptanceRun>('acceptance.json'),
   ]);
-  return { deploy, health, backups: { local, blob, drive }, smoke, restoreTest, drill, restore: { staging, production }, serverSetup, originCert };
+  return { deploy, health, backups: { local, blob, drive }, smoke, restoreTest, drill, restore: { staging, production }, serverSetup, originCert, simulation, acceptance };
 }

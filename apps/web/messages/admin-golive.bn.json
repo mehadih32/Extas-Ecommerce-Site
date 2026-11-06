@@ -126,7 +126,10 @@
     "acceptance": {
       "title": "staging-এর গ্রহণ তালিকা দেখা হয়েছে",
       "how": "docs/golive/ACCEPTANCE.md-এর প্রতিটা লাইন staging সাইটে কাস্টমার আর অ্যাডমিন হিসেবে দেখা।",
-      "why": "দরকার: কাস্টমার আর অ্যাডমিন যা করে, staging-এ দেখা হয়েছে।"
+      "why": "দরকার: কাস্টমার আর অ্যাডমিন যা করে, staging-এ দেখা হয়েছে।",
+      "runOk": "শেষ স্বয়ংক্রিয় রান (acceptance workflow): পাস, {at} — {total}টা অংশের {passed}টা পাস। তালিকার যে লাইনগুলো মানুষকে দেখতে হয় সেগুলো দেখে তারপর নিশ্চিত করুন।",
+      "runFail": "শেষ স্বয়ংক্রিয় রান (acceptance workflow): পাস হয়নি, {at} — {total}টা অংশের {passed}টা পাস। docs/reports/acceptance/latest দেখুন।",
+      "runNone": "এখনো কোনো স্বয়ংক্রিয় রান হয়নি: GitHub › Actions › acceptance (হাতে চালাতে হয়) smoke test, journeys, টেস্ট অর্ডার আর কাস্টমারের পুরো যাত্রা একসাথে চালায়।"
     },
     "realPhones": {
       "title": "আসল iPhone আর আসল Android",
@@ -136,7 +139,10 @@
     "simulation": {
       "title": "staging-এ বাস্তব journey simulation পাস",
       "how": "docs/qa/SIMULATION-PLAN.md-এর 70 অর্ডারের simulation staging সাইটে আবার চালানো, সব সমস্যা ঠিক করা (CN-013)।",
-      "why": "দরকার: 70টা বাস্তব অর্ডারে টাকা আর অর্ডারের হিসাব মেলে।"
+      "why": "দরকার: 70টা বাস্তব অর্ডারে টাকা আর অর্ডারের হিসাব মেলে।",
+      "runOk": "শেষ স্বয়ংক্রিয় রান (simulation workflow): পাস, {at} — {planned}টা অর্ডারের {passed}টা পাস, {failed}টা ফেল, {skipped}টা বাদ। রিপোর্ট পড়ে তারপর নিশ্চিত করুন।",
+      "runFail": "শেষ স্বয়ংক্রিয় রান (simulation workflow): পাস হয়নি, {at} — {planned}টা অর্ডারের {failed}টা ফেল, {passed}টা পাস, {skipped}টা বাদ। docs/reports/simulation/latest দেখুন।",
+      "runNone": "এখনো কোনো স্বয়ংক্রিয় রান হয়নি: GitHub › Actions › simulation (হাতে চালাতে হয়) mock-এ 70টা অর্ডার দেয়।"
     },
     "server": {
       "title": "A2.9-এর সব সার্ভারের কাজ ঠিক আছে",

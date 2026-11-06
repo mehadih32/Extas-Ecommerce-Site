@@ -12,9 +12,9 @@ import { INSTALLATION } from '@extas/settings';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { backupGateNow } from './backups-api';
-import { goLiveChecks, SIGNOFF_KEYS } from './go-live';
+import { goLiveChecks, SIGNOFF_KEYS, type GoLiveEvidence } from './go-live';
 import { paymentModeOf } from './payments-gateway';
-import { runtimeState } from './status';
+import { runtimeState, type RuntimeState } from './status';
 
 type Deps = Pick<AdminDeps, 'db' | 'resolver' | 'now'>;
 
@@ -106,6 +106,22 @@ async function securityNow(deps: Deps) {
   return { rateLimitMode, twoFactorRequired, withoutTwoFactor };
 }
 
+/**
+ * CN-036: the last automatic runs behind the `simulation` and `acceptance` sign-offs, as the server wrote them
+ * (state/simulation.json, state/acceptance.json): the result, the time and the counts only.
+ */
+export function evidenceNow(state: Pick<RuntimeState, 'simulation' | 'acceptance'>): Record<string, GoLiveEvidence | null> {
+  const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+  const s = state.simulation;
+  const a = state.acceptance;
+  return {
+    simulation: s
+      ? { ok: s.ok === true, at: s.iso, vars: { passed: n(s.passed), failed: n(s.failed), skipped: n(s.skipped), orders: n(s.orders), planned: n(s.planned) } }
+      : null,
+    acceptance: a ? { ok: a.ok === true, at: a.at, vars: { passed: n(a.passed), total: n(a.total) } } : null,
+  };
+}
+
 /** The checklist now, and the names of the people who confirmed items. */
 export async function goLiveNow(deps: Deps) {
   const [state, checks, signoff] = await Promise.all([runtimeState(), deps.resolver.value('golive.checks'), deps.resolver.value('golive.signoff')]);
@@ -137,6 +153,7 @@ export async function goLiveNow(deps: Deps) {
     searchEngines: seo.searchEngines,
     payments,
     security,
+    evidence: evidenceNow(state),
   });
   const ids = [...new Set(result.items.map((i) => i.by).filter((v): v is string => Boolean(v)))];
   const people = ids.length
