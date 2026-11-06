@@ -9,7 +9,7 @@ import type { Prisma } from '@extas/db/client';
 import { z } from 'zod';
 import type { OutgoingSupportMessage } from './channels';
 import { allow, nowOf, parse, setting, SupportError, TX, type Db, type SupportDeps, type Who } from './context';
-import { CONVERSATION_STATUSES, fileKindOf, PREVIEW_CHARS, previewOf, type ConversationStatus } from './pure';
+import { CONVERSATION_STATUSES, fileKindOf, PREVIEW_CHARS, previewOf, SUBJECT_CHARS, type ConversationStatus } from './pure';
 import { mayOpen, supportLens } from './privacy';
 import { queueSupportPush } from './push';
 import { ticketOnOwner, ticketOnReply, ticketOnStatus } from './tickets';
@@ -275,6 +275,70 @@ export async function setConversationStatus(deps: SupportDeps, who: Who, input: 
     await tx.conversationEvent.create({ data: { storeId: who.storeId, conversationId: c.id, kind: 'STATUS', ...staffEvent(who, name), data: { from, to: d.status }, createdAt: now } });
     await ticketOnStatus(tx, { storeId: who.storeId, conversationId: c.id, from, to: d.status, now });
     return { changed: true, status: d.status };
+  }, TX);
+}
+
+// ------------------------------------------------------------------------------------------- subject and order (follow-up 507)
+
+export const subjectInput = z.object({ conversationId: z.uuid(), subject: z.string().max(1_000).nullable(), version: z.string().max(40).optional() }).strict();
+
+/**
+ * Follow-up 507: the conversation's subject edited by a person (`support.reply`, own chats only under PR 434): trimmed,
+ * at most SUBJECT_CHARS; an empty one clears it. The log line SUBJECT keeps the old and the new words.
+ */
+export async function setConversationSubject(deps: SupportDeps, who: Who, input: unknown): Promise<{ changed: boolean; subject: string | null }> {
+  const held = await allow(deps, who, 'support.reply');
+  const lens = await supportLens(deps, who, held);
+  const d = parse(subjectInput, input, 'subject');
+  const subject = d.subject?.replace(/\s+/g, ' ').trim() || null;
+  if (subject && [...subject].length > SUBJECT_CHARS) throw new SupportError('TOO_LONG', `a subject is at most ${SUBJECT_CHARS} characters`, ['subject']);
+  const now = nowOf(deps);
+  return deps.db.$transaction(async (tx) => {
+    const c = await lockConversation(tx, who, d.conversationId, d.version);
+    if (!mayOpen(lens, who.actor.staffUserId, c.assignedToId)) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
+    if ((c.subject ?? null) === subject) return { changed: false, subject };
+    const name = await nameOf(tx, who.actor.staffUserId);
+    await tx.conversation.update({ where: { id: c.id }, data: { subject } });
+    await tx.conversationEvent.create({ data: { storeId: who.storeId, conversationId: c.id, kind: 'SUBJECT', ...staffEvent(who, name), data: { from: c.subject ?? null, to: subject }, createdAt: now } });
+    return { changed: true, subject };
+  }, TX);
+}
+
+export const linkOrderInput = z.object({ conversationId: z.uuid(), orderNumber: z.string().max(60).nullable(), version: z.string().max(40).optional() }).strict();
+
+/**
+ * Follow-up 507: link the conversation to an order of this store by its number (any case, spaces trimmed), or unlink
+ * it (`orderNumber: null`); `support.reply`, own chats only. The log line ORDER_LINKED keeps both orders. The order
+ * itself is never changed.
+ */
+export async function linkConversationOrder(deps: SupportDeps, who: Who, input: unknown): Promise<{ changed: boolean; order: { id: string; number: string } | null }> {
+  const held = await allow(deps, who, 'support.reply');
+  const lens = await supportLens(deps, who, held);
+  const d = parse(linkOrderInput, input, 'order');
+  const wanted = d.orderNumber?.trim() || null;
+  const now = nowOf(deps);
+  return deps.db.$transaction(async (tx) => {
+    const c = await lockConversation(tx, who, d.conversationId, d.version);
+    if (!mayOpen(lens, who.actor.staffUserId, c.assignedToId)) throw new SupportError('NOT_FOUND', 'no such conversation', ['id']);
+    const order = wanted
+      ? await tx.order.findFirst({ where: { storeId: who.storeId, archivedAt: null, status: { not: 'DRAFT' }, number: { equals: wanted, mode: 'insensitive' } }, select: { id: true, number: true } })
+      : null;
+    if (wanted && !order) throw new SupportError('ORDER_NOT_FOUND', 'no order with this number in this store', ['orderNumber']);
+    if ((c.orderId ?? null) === (order?.id ?? null)) return { changed: false, order };
+    const old = c.orderId ? await tx.order.findFirst({ where: { id: c.orderId, storeId: who.storeId }, select: { number: true } }) : null;
+    const name = await nameOf(tx, who.actor.staffUserId);
+    await tx.conversation.update({ where: { id: c.id }, data: { orderId: order?.id ?? null } });
+    await tx.conversationEvent.create({
+      data: {
+        storeId: who.storeId,
+        conversationId: c.id,
+        kind: 'ORDER_LINKED',
+        ...staffEvent(who, name),
+        data: { from: c.orderId ?? null, to: order?.id ?? null, number: order?.number ?? null, ...(old ? { fromNumber: old.number } : {}) },
+        createdAt: now,
+      },
+    });
+    return { changed: true, order };
   }, TX);
 }
 

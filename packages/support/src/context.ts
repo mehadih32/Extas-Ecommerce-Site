@@ -72,6 +72,8 @@ export const SUPPORT_ERROR_CODES = [
   'BLOCKED',
   // PR 435: the support app's notifications are switched off
   'PUSH_OFF',
+  // follow-up 507: no order with this number in this store, to link the chat to
+  'ORDER_NOT_FOUND',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 

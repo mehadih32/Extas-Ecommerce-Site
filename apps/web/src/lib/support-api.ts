@@ -10,6 +10,9 @@
 //   POST  /api/admin/support/c/:id/assign       {staffId|null, version?} take, let go or give (support.reply; another
 //                                               person: support.assign)
 //   POST  /api/admin/support/c/:id/status       {status: OPEN|WAITING|SOLVED, version?} (support.reply)
+//   POST  /api/admin/support/c/:id/topic        follow-up 507: {action: subject, subject|null, version?} the subject
+//                                               edited; {action: order, orderNumber|null, version?} an order of this
+//                                               store linked by its number, or unlinked; both logged (support.reply)
 //   POST  /api/admin/support/c/:id/identity     PR 427: {action: phone|unlink|split, phone?, version?} who is writing —
 //                                               set the chat's number (and so its customer), "not this customer", "not
 //                                               the same person"; audited (support.identity)
@@ -110,7 +113,7 @@ function routeOf(path: string[], method: string): Route | null {
   if (rest.length) return null;
   if (a === undefined) return { perm: 'support.read', methods: ['GET'] };
   if (a === 'c' && isUuid(b) && c === undefined) return { perm: 'support.read', methods: ['GET'] };
-  if (a === 'c' && isUuid(b) && (c === 'messages' || c === 'assign' || c === 'status')) return { perm: 'support.reply', methods: ['POST'] };
+  if (a === 'c' && isUuid(b) && (c === 'messages' || c === 'assign' || c === 'status' || c === 'topic')) return { perm: 'support.reply', methods: ['POST'] };
   if (a === 'c' && isUuid(b) && c === 'identity') return { perm: 'support.identity', methods: ['POST'] };
   if (a === 'c' && isUuid(b) && c === 'products') return { perm: 'support.reply', methods: ['POST'] };
   if (a === 'c' && isUuid(b) && c === 'followup') return { perm: 'support.reply', methods: ['POST'] };
@@ -240,6 +243,13 @@ export async function supportRoute(request: Request, deps: AdminDeps | null, pat
         return fail(400, 'INVALID_INPUT', ['action']);
       }
       if (action === 'assign') return json({ ok: true, ...(await sp.assignConversation(sd, who, input)) });
+      // follow-up 507: the subject edited, an order linked by its number or unlinked
+      if (action === 'topic') {
+        const { action: what, ...rest } = input as { action?: unknown };
+        if (what === 'subject') return json({ ok: true, ...(await sp.setConversationSubject(sd, who, rest)) });
+        if (what === 'order') return json({ ok: true, ...(await sp.linkConversationOrder(sd, who, rest)) });
+        return fail(400, 'INVALID_INPUT', ['action']);
+      }
       if (action === 'identity') {
         const { action: what, ...rest } = input as { action?: unknown };
         if (what === 'phone') return json({ ok: true, ...(await sp.setContactPhone(sd, who, rest)) });

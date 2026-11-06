@@ -52,6 +52,14 @@ describe('the support words (PR 425)', () => {
     expect(auto).toContain(t(d, 'sup.log.auto'));
     expect(logLine(d, { kind: 'ASSIGNED', actor: { type: 'STAFF', name: 'Sample owner' }, data: { to: 'x', toName: 'Sample owner' } })).toBe(t(d, 'sup.log.TOOK', { name: 'Sample owner' }));
     expect(logLine(d, { kind: 'SOMETHING_NEW', actor: { type: 'SYSTEM', name: null }, data: null })).toBe('SOMETHING_NEW');
+    // follow-up 507: a subject change never prints the words; an order linked and unlinked by its number
+    const subj = logLine(d, { kind: 'SUBJECT', actor: { type: 'STAFF', name: 'Sample owner' }, data: { from: null, to: 'Call 01712345678' } });
+    expect(subj).toBe(t(d, 'sup.log.SUBJECT', { name: 'Sample owner' }));
+    expect(subj).not.toContain('0171');
+    expect(logLine(d, { kind: 'SUBJECT', actor: { type: 'STAFF', name: 'Sample owner' }, data: { from: 'x', to: null } })).toBe(t(d, 'sup.log.SUBJECT_CLEARED', { name: 'Sample owner' }));
+    expect(logLine(d, { kind: 'ORDER_LINKED', actor: { type: 'STAFF', name: 'Sample owner' }, data: { from: null, to: 'o1', number: 'EX-1001' } })).toBe('Sample owner linked order EX-1001');
+    expect(logLine(d, { kind: 'ORDER_LINKED', actor: { type: 'STAFF', name: 'Sample owner' }, data: { from: 'o1', to: null, number: null, fromNumber: 'EX-1001' } })).toBe('Sample owner unlinked order EX-1001');
+    for (const k of ['subject', 'subjectHelp', 'subjectSave', 'orderNumber', 'orderHelp', 'orderLink', 'orderUnlink', 'savedSubject', 'savedOrder', 'savedUnlink']) for (const x of [en, bn] as Dict[]) expect(t(x, `sup.topic.${k}`)).not.toBe(`sup.topic.${k}`);
     // PR 427: who is writing — where the number came from, by hand with the name, never the number itself
     expect(logLine(d, { kind: 'IDENTITY_PHONE', actor: { type: 'SYSTEM', name: null }, data: { via: 'channel' } })).toBe(t(d, 'sup.log.id.phoneChannel'));
     expect(logLine(d, { kind: 'IDENTITY_PHONE', actor: { type: 'SYSTEM', name: null }, data: { via: 'text' } })).toBe(t(d, 'sup.log.IDENTITY_PHONE'));

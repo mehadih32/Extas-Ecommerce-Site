@@ -37,6 +37,7 @@ import { Composer, type ComposerDraft, type ComposerProducts, type ComposerTexts
 import { CustomerContext } from '@/components/admin/support/CustomerContext';
 import { IdentityActions, type IdentityTexts } from '@/components/admin/support/IdentityActions';
 import { SideActions, type SideTexts } from '@/components/admin/support/SideActions';
+import { TopicActions, type TopicTexts } from '@/components/admin/support/TopicActions';
 import { TicketCard } from '@/components/admin/support/TicketCard';
 import { formatNumber, moneyOf } from '@/components/admin/products/model';
 import { printedAt } from '@/lib/admin-fulfil/handover';
@@ -191,6 +192,8 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const s = (k: string) => t(d, `sup.side.${k}`);
   const side: SideTexts = { state: s('state'), solve: s('solve'), wait: s('wait'), reopen: s('reopen'), owner: s('owner'), take: s('take'), letGo: s('letGo'), give: s('give'), giveGo: s('giveGo'), nobody: s('nobody'), saved: s('saved'), err: errs(d) };
   const connected = Object.keys(sd.channels ?? {}).includes(th.channel.kind) && th.channel.enabled;
+  const tp = (k: string) => t(d, `sup.topic.${k}`);
+  const topicTexts: TopicTexts = { subject: tp('subject'), subjectHelp: tp('subjectHelp'), subjectSave: tp('subjectSave'), order: tp('order'), orderNumber: tp('orderNumber'), orderHelp: tp('orderHelp'), orderLink: tp('orderLink'), orderUnlink: tp('orderUnlink'), savedSubject: tp('savedSubject'), savedOrder: tp('savedOrder'), savedUnlink: tp('savedUnlink'), err: errs(d) };
   const p = (k: string) => t(d, `sup.person.${k}`);
   const identityTexts: IdentityTexts = { phone: p('phone'), phoneHelp: p('phoneHelp'), phoneSave: p('phoneSave'), unlink: p('unlink'), split: p('split'), saved: p('saved'), badPhone: p('badPhone'), err: errs(d) };
 
@@ -332,6 +335,12 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
               <span>{s('known').replace('{n}', n(th.customer.orderCount))}</span>
             </>
           ) : null}
+          {th.subject ? (
+            <>
+              <span>{s('subject')}</span>
+              <span data-testid="support-subject-shown">{th.subject}</span>
+            </>
+          ) : null}
           {th.order ? (
             <>
               <span>{s('order')}</span>
@@ -356,6 +365,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         <div className="a2-mt12">
           <SideActions base={`${API}/c/${th.id}`} version={th.version} status={th.status} assignedId={th.assignedTo?.id ?? null} me={th.you.id} canReply={th.you.reply} canAssign={th.you.assign} staff={staff} texts={side} />
         </div>
+        {th.you.reply ? (
+          <div className="a2-mt12">
+            <TopicActions base={`${API}/c/${th.id}`} version={th.version} subject={th.subject} order={th.order} max={sp.SUBJECT_CHARS} texts={topicTexts} />
+          </div>
+        ) : null}
       </section>
       {th.ticket ? <TicketCard ticket={th.ticket} dict={d} locale={view.locale} timeZone={view.timeZone} now={new Date()} me={th.you.id} /> : null}
       {bag ? <ChatBag key={th.id} url={`${API}/c/${th.id}/cart`} bag={bag} lang={view.lang} money={moneyOf(currency, view.locale)} texts={cartTexts} /> : null}
