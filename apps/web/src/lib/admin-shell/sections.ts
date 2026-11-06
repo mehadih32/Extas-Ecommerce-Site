@@ -270,6 +270,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'festive', pages: [{ href: '/admin/marketing/festive', perm: 'marketing.campaigns.read', keys: ['marketingFestive'] }] },
       // S13 · PR 282: the marketing calendar — campaigns, ads, sends, seasonal home, festive cut-offs, blog, social and the owner's plan lines (More options).
       { id: 'calendar', more: true, pages: [{ href: '/admin/marketing/calendar', perm: 'marketing.campaigns.read', keys: ['marketingCalendar'] }] },
+      // S13 · PR 283: the marketing report — spend against Ordered value and Sales by channel, by campaign and per message send (More options).
+      { id: 'report', more: true, pages: [{ href: '/admin/marketing/report', perm: 'marketing.campaigns.read', keys: ['marketingReport'] }] },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,

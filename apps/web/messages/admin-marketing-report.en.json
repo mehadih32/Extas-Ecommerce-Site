@@ -1,0 +1,121 @@
+{
+  "mr": {
+    "metaTitle": "Marketing report",
+    "title": "Marketing report",
+    "sub": "What marketing cost, against what it brought back",
+    "note": "Sales counts delivered orders only. Ordered value (orders placed) is shown beside it, never mixed in. Spend is the ad spend imported for each day plus the cost of message sends. This page only reads: it changes no budget, campaign, price or order.",
+    "offTitle": "The marketing report is off",
+    "offBody": "Turn it on in the settings below to see spend against Ordered value and Sales, by channel, by campaign and per message send.",
+    "offAsk": "Ask the owner to turn it on.",
+    "quick": {
+      "label": "Period",
+      "today": "Today",
+      "week": "Last 7 days",
+      "month": "This month",
+      "lastMonth": "Last month",
+      "year": "This year",
+      "lastYear": "Last year"
+    },
+    "form": {
+      "label": "Choose your own dates",
+      "from": "From",
+      "to": "To",
+      "show": "Show"
+    },
+    "period": "{from} – {to}",
+    "notes": {
+      "future": "The end was in the future, so the report stops today.",
+      "swapped": "The dates were the wrong way round, so they were turned round.",
+      "tooLong": "That was longer than the longest period, so the report shows its last {days} days.",
+      "byMonth": ""
+    },
+    "kpi": {
+      "spend": "Marketing spend",
+      "spendSub": "Ads {ads} · messages {msg}",
+      "spendNone": "No ad spend imported yet",
+      "spendUnknown": "A dollar day has no rate yet, so the total is not known",
+      "ordered": "Ordered value",
+      "orderedSub": "{n} orders placed",
+      "sales": "Sales (delivered)",
+      "salesSub": "{n} orders delivered",
+      "roas": "Delivered ROAS",
+      "roasSub": "Sales for each 1 spent"
+    },
+    "roas": "ROAS {x}",
+    "noRoas": "ROAS —",
+    "line": "{orders} placed · {ordered} · {delivered} delivered · {sales}",
+    "spend": "Spend {spend}",
+    "spendUnknown": "A dollar day has no rate yet: spend not known",
+    "ch": {
+      "h": "By channel",
+      "sub": "Every order sits in one channel, by the same words as Money › Profit by channel. Ad channels carry their imported spend.",
+      "empty": "No orders and no spend in this period."
+    },
+    "channel": {
+      "ads:META": "Meta ads (Facebook, Instagram)",
+      "ads:GOOGLE": "Google ads",
+      "ads:YOUTUBE": "YouTube ads",
+      "ads:TIKTOK": "TikTok ads",
+      "ads:OTHER": "Other ads",
+      "organic": "Organic (website, no ad)",
+      "source:MESSENGER": "Messenger",
+      "source:WHATSAPP": "WhatsApp",
+      "source:LIVE_CHAT": "Live chat",
+      "source:PHONE": "Phone",
+      "source:TELEGRAM": "Telegram",
+      "source:ADMIN": "Added by staff",
+      "source:SHOWROOM": "Showroom",
+      "source:IMPORT": "Imported"
+    },
+    "camp": {
+      "h": "By campaign",
+      "sub": "A campaign's orders come through its ad campaigns or its landing pages (each order once); its spend is its ad campaigns' spend.",
+      "empty": "No campaign had an order or spend in this period.",
+      "untied": "{amount} of ad spend is on ad campaigns tied to no campaign.",
+      "archived": "set aside",
+      "open": "Open the campaign",
+      "unnamed": "A campaign"
+    },
+    "send": {
+      "h": "Message sends",
+      "sub": "Sends started in this period. Their result is what the receivers ordered within {days} days of their message.",
+      "empty": "No message send started in this period.",
+      "line": "{channel} · {day} · {sent} sent · cost {cost}",
+      "result": "{orders} ordered · {delivered} delivered · {sales}",
+      "open": "Open message campaigns"
+    },
+    "sendChannel": {
+      "SMS": "SMS",
+      "WHATSAPP": "WhatsApp",
+      "EMAIL": "E-mail",
+      "TELEGRAM": "Telegram",
+      "PUSH": "Push",
+      "MESSENGER": "Messenger"
+    },
+    "card": {
+      "h": "Settings",
+      "d": "Marketing report. Off as it ships.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Unsaved changes",
+      "readOnly": "You can see these settings but not change them.",
+      "pairHelp": "Both languages, or both empty.",
+      "on": "Show the marketing report",
+      "onHelp": "Off as it ships. On, this page shows the report.",
+      "maxDays": "Longest period (days)",
+      "maxDaysHelp": "The most days one report covers (7 to 1096). A longer choice shows its last days.",
+      "resultDays": "Result days for a message",
+      "resultDaysHelp": "How many days after a message its receiver's orders count as that send's result (1 to 60)."
+    },
+    "err": {
+      "INVALID_INPUT": "Please check: {fields}.",
+      "STALE": "Someone changed this meanwhile. Reload the page and try again.",
+      "forbidden": "You do not have permission for this.",
+      "unauthorized": "Please sign in again.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    }
+  }
+}

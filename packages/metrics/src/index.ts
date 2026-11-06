@@ -62,3 +62,5 @@ export * from './organic';
 export * from './organic-sources';
 // S13 · PR 278: `campaignTagFigures` — placed and delivered orders and their Sales value per kept campaign tag (campaign-tags.ts).
 export * from './campaign-tags';
+// S13 · PR 283 — the marketing report: spend against Ordered value and Sales, by channel, by campaign and per message send.
+export * from './marketing-report';
