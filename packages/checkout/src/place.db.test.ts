@@ -5,14 +5,15 @@
 // the unfinished checkout kept and a failed payment kept, retried, still one order. Every value is a made-up test value.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { defaultSecurityPolicy, loginCustomer } from '@extas/auth';
+import { createRole, defaultSecurityPolicy, loginCustomer, SYSTEM } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { buyAgain, findBag, REORDER_SOURCE, setBagCode } from '@extas/cart';
 import { registry } from '@extas/settings';
 import { noteHold, openErpLink, sweepReservations, type InventoryDeps } from '@extas/inventory';
 import { captureDraft, checkoutPaused, payAction, payView, placeOrder, type PlaceInput } from './place';
 import { checkoutQuote, viewOf, type CheckoutRequest } from './quote';
-import { orderReceipt } from './receipt';
+import { createRule, publishRule, saveDraft } from '@extas/rules';
+import { orderReceipt, receiptEta, receiptPromise } from './receipt';
 import { setUpCheckout, type CheckoutFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -677,6 +678,31 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
         expect((await orderReceipt({ db: f.t.prisma }, { storeId: f.S, visitorId: s.visitorId, number: r.number }))!.band).toMatchObject({ hoursMin: 24, hoursMax: 48 });
       } finally {
         f.overrides.delete('delivery.promise.districts');
+      }
+    });
+
+    it("follow-up 654: past its band's festive cut-off the receipt promises no hours (the thank-you page's after words), so his order page never says late", async () => {
+      const s = await shown('ty-festive');
+      const r = await s.place();
+      const o = await f.t.prisma.order.findUniqueOrThrow({ where: { storeId_number: { storeId: f.S, number: r.number } }, select: { placedAt: true } });
+      expect(await receiptPromise(f.deps(), f.S, r.number)).toMatchObject({ hoursMax: 48, afterEid: false, afterFestive: false });
+      // a festive rule (the PR 214 template) whose every band's last order time passed an hour before the order
+      const role = await createRole(f.t.prisma, SYSTEM, { key: 'festive-654', nameEn: 'f', nameBn: 'f', permissions: ['rules.read', 'rules.write', 'rules.publish'] });
+      const u = await f.t.prisma.staffUser.create({ data: { email: 'festive-654@example.com', displayName: 'f', passwordHash: 'not-a-login' } });
+      await f.t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: f.S } });
+      const who = { actor: { staffUserId: u.id }, storeId: f.S };
+      const rule = await createRule(f.deps(), who, { templateId: 'festive' });
+      const passed = new Date(o.placedAt.getTime() - 3_600_000).toISOString();
+      await saveDraft(f.deps(), who, rule.id, { content: { ...rule.live!, params: rule.live!.params.map((p) => (p.type === 'datetime' ? { ...p, value: passed } : p)), status: 'ACTIVE' } });
+      await publishRule(f.deps(), who, rule.id);
+      // off as shipped: the hours stand
+      expect(await receiptPromise(f.deps(), f.S, r.number)).toMatchObject({ hoursMax: 48, afterFestive: false });
+      f.overrides.set('marketing.festiveCutoff', { enabled: true, places: { home: false, product: false, checkout: true }, title: null, linkHref: null, linkLabel: null });
+      try {
+        expect(await receiptPromise(f.deps(), f.S, r.number)).toMatchObject({ hoursMax: null, afterEid: false, afterFestive: true });
+        expect((await receiptEta(f.deps(), f.S, r.number, 'en')).length).toBeGreaterThan(0);
+      } finally {
+        f.overrides.delete('marketing.festiveCutoff');
       }
     });
 

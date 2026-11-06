@@ -21,7 +21,7 @@
 // invoice hides the prices when the sender asked for it.
 import type { OrderAccountKind } from '@extas/accounts';
 import { bandExempt } from '@extas/delivery/exempt';
-import { districtHours, districtPromises, orderPromises } from '@extas/delivery/promise';
+import { districtHours, districtPromises, hoursPromised, orderPromises } from '@extas/delivery/promise';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import { CHECKOUT_PAY_PURPOSES } from './advance';
 import type { CheckoutDeps } from './context';
@@ -235,11 +235,12 @@ export async function receiptEta(deps: Pick<CheckoutDeps, 'db' | 'settings' | 'n
 /**
  * Review R3 (customer M3) — the promise his order page counts "late" against: the same clock as the courier's late flag
  * (@extas/delivery orderPromises) — the district's hours, from the shop's first day back for an order placed during the
- * holiday break; none ("may arrive after Eid") past its place's Eid date. Null: no such order, or no band.
+ * holiday break; none ("may arrive after Eid") past its place's Eid date, and none past its band's festive cut-off
+ * (follow-up 654: the checkout and thank-you page said the rule's "after" words). Null: no such order, or no band.
  */
-export async function receiptPromise(deps: Pick<CheckoutDeps, 'db' | 'settings'>, storeId: number, number: string): Promise<{ from: string; hoursMax: number | null; afterEid: boolean } | null> {
+export async function receiptPromise(deps: Pick<CheckoutDeps, 'db' | 'settings'>, storeId: number, number: string): Promise<{ from: string; hoursMax: number | null; afterEid: boolean; afterFestive: boolean } | null> {
   const o = await deps.db.order.findUnique({ where: { storeId_number: { storeId, number } }, select: { id: true, placedAt: true, areaId: true, deliveryBand: { select: { key: true, hoursMin: true, hoursMax: true } } } });
   if (!o?.deliveryBand) return null;
   const p = (await orderPromises(deps, storeId, [{ id: o.id, placedAt: o.placedAt, areaId: o.areaId, band: o.deliveryBand }])).get(o.id);
-  return p ? { from: p.from.toISOString(), hoursMax: p.afterEid ? null : p.hoursMax, afterEid: p.afterEid } : null;
+  return p ? { from: p.from.toISOString(), hoursMax: hoursPromised(p) ? p.hoursMax : null, afterEid: p.afterEid, afterFestive: p.afterFestive } : null;
 }

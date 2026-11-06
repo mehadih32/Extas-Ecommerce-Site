@@ -171,7 +171,7 @@ export async function OrderPage({
   /** Review R3 (M3): the checkout's delivery line for this order (empty: the usual hours promise). */
   eta?: string[];
   /** Review R3 (M3): the promise the late flag counts against (null: the band's hours from the placing). */
-  promise?: { from: string; hoursMax: number | null; afterEid: boolean } | null;
+  promise?: { from: string; hoursMax: number | null; afterEid: boolean; afterFestive?: boolean } | null;
   /** PR 622 (CN-034): "Buy again" and its words, while the owner offers it on this order's state (null: not offered). */
   reorder?: { words: BuyAgainWords; hint: string } | null;
 }) {

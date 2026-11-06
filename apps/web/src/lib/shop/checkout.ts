@@ -266,7 +266,7 @@ export async function currentEta(c: Pick<ShopContext, 'storeId' | 'lang'>, numbe
 }
 
 /** Review R3 (customer M3): the promise the order page counts "late" against (null: none, or the database is away). */
-export async function currentPromise(c: Pick<ShopContext, 'storeId'>, number: string): Promise<{ from: string; hoursMax: number | null; afterEid: boolean } | null> {
+export async function currentPromise(c: Pick<ShopContext, 'storeId'>, number: string): Promise<{ from: string; hoursMax: number | null; afterEid: boolean; afterFestive?: boolean } | null> {
   const deps = checkoutDeps();
   if (!deps) return null;
   try {
