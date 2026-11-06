@@ -8,7 +8,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { Icon } from '../Icon';
 import { formatNumber, refusalText } from './model';
-import { useToast } from './useToast';
+import { say, sayBad } from './useToast';
 
 type Props = { dict: Dict; locale: string; disabled?: boolean } & ({ kind: 'publish'; productId: string; name: string } | { kind: 'recheck'; productIds: string[] });
 
@@ -16,18 +16,17 @@ export function QueueButton(props: Props) {
   const { dict: d } = props;
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [toast, say] = useToast();
 
   const go = async () => {
     setBusy(true);
     try {
       if (props.kind === 'publish') {
         const a = await call('POST', `/api/admin/catalogue/products/${props.productId}/publish`, { action: 'publish' });
-        if (a.status !== 200) return say(refusalText(d, a.data.error, a.data.details));
+        if (a.status !== 200) return sayBad(refusalText(d, a.data.error, a.data.details));
         say(t(d, 'queue.published', { name: props.name }));
       } else {
         const a = await call('POST', '/api/admin/catalogue/products/bulk', { action: 'recheck', productIds: props.productIds });
-        if (a.status !== 200) return say(refusalText(d, a.data.error, a.data.details));
+        if (a.status !== 200) return sayBad(refusalText(d, a.data.error, a.data.details));
         const res = a.data.bulk as BulkResult;
         say(t(d, 'queue.rechecked', { n: formatNumber(res.done, props.locale) }));
       }
@@ -49,11 +48,6 @@ export function QueueButton(props: Props) {
           {t(d, 'queue.recheck')}
         </button>
       )}
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
-        </div>
-      ) : null}
     </>
   );
 }

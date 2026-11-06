@@ -51,7 +51,7 @@ export default async function PublishQueuePage({ searchParams }: { searchParams:
   const href = (f: string, page = 1) => `${QUEUE_HOME}?filter=${f}${page > 1 ? `&page=${page}` : ''}`;
 
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <div className="ad-hd pa-hd">
         <div className="pa-hd-text">
           <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>

@@ -36,7 +36,7 @@ export default async function NewProductPage() {
   const [tree, fabrics] = await Promise.all([cat.categoryTree(c.deps, c.who), cat.listFabrics(c.deps, c.who)]);
   const d = view.dict;
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <Link className="pa-back" href={PRODUCTS_HOME}>
         <Icon name="back" size={14} />
         {t(d, 'products.back')}

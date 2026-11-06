@@ -11,7 +11,7 @@ import { call } from '../api';
 import { Icon } from '../Icon';
 import { nameIn, type CategoryOption, type ColourOption, type FabricOption, type Lang } from './model';
 import { importErrorText, unmatchedText } from './tools-model';
-import { useToast } from './useToast';
+import { say } from './useToast';
 
 interface Props {
   dict: Dict;
@@ -48,7 +48,6 @@ export function LinkImport({ dict: d, lang, canWrite, brands, categories, fabric
   const [preview, setPreview] = useState<LinkImportPreview | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [made, setMade] = useState<string | null>(null);
-  const [toast, say] = useToast();
   const none = t(d, 'linkImport.facts.none');
 
   const read = async (e: FormEvent<HTMLFormElement>) => {
@@ -240,11 +239,6 @@ export function LinkImport({ dict: d, lang, canWrite, brands, categories, fabric
               </dl>
             </section>
           </aside>
-        </div>
-      ) : null}
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
         </div>
       ) : null}
     </>

@@ -53,7 +53,7 @@ export default async function LinkImportPage({ searchParams }: { searchParams: S
   const href = (page: number) => (page > 1 ? `${IMPORT_HOME}?page=${page}` : IMPORT_HOME);
 
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <div className="ad-hd pa-hd">
         <div className="pa-hd-text">
           <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>

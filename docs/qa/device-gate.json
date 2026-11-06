@@ -423,7 +423,7 @@
         "selector": "a.pa-nm",
         "take": 2,
         "required": true,
-        "expect": [".pa-col", ".pa-x", ".pa-kind"]
+        "expect": [".ad[data-lm-ready]", ".pa-col", ".pa-x", ".pa-kind"]
       },
       { "from": "/admin/support?view=all", "selector": "[data-testid=\"support-row\"]", "take": 1, "required": true, "expect": ["[data-testid=\"support-conversation\"]", "[data-testid=\"support-thread\"]", "[data-testid=\"support-msg\"]", "[data-testid=\"support-composer\"]", "[data-testid=\"support-log\"]"] },
       { "from": "/admin/orders", "selector": "[data-testid=\"order-row\"] a.a2-b", "take": 1, "required": true, "expect": ["[data-testid=\"order-detail\"][data-lm-ready]", "[data-testid=\"order-customer\"]", "[data-testid=\"cmd-confirm\"]", "[data-testid=\"order-invoice\"]"] },
@@ -462,7 +462,7 @@
       "/admin/support?view=all": ["[data-testid=\"support-inbox\"]", "[data-testid=\"support-row\"]", "[data-testid=\"support-search\"]"],
       "/admin/support/settings": ["[data-testid=\"support-settings\"]", "[data-testid=\"support-set-inbox\"]", "[data-testid=\"support-set-phones\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/invoices": ["[data-testid=\"invoices\"][data-lm-ready]", "[data-testid=\"invoice-row\"]", "[data-testid=\"invoice-print\"]", "[data-testid=\"a2-tabs\"]"],
-      "/admin/products/erp-import": ["[data-erp-state]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/products/erp-import": [".ad[data-lm-ready]", "[data-erp-state]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/picking": ["[data-testid=\"picking-page\"][data-lm-ready]", "[data-testid=\"picking-summary\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/handover": ["[data-testid=\"handover-page\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/returns/handback": ["[data-testid=\"handback-page\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
@@ -487,7 +487,7 @@
       "/admin/customers": ["[data-testid=\"customers-list\"]", "[data-testid=\"cus-kpis\"]", "[data-testid=\"cus-views\"]", "[data-testid=\"cus-row\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin?home=1&state=notfound": ["[data-testid=\"a2-state\"]"],
       "/admin/delivery/zones": ["[data-testid=\"dz-bands\"]", "[data-testid=\"dl-band\"]", "[data-testid=\"dz-sub-switch\"]", "[data-testid=\"dz-areas\"]", "[data-testid=\"dz-try\"]"],
-      "/admin/products": ["a.pa-nm"],
+      "/admin/products": ["a.pa-nm", ".ad[data-lm-ready] [data-testid=\"products-kpi\"]"],
       "/admin/size-charts": [".sc-item"],
       "/admin/stock": ["a.st-name"],
       "/admin/server": ["[data-worker-state]"],

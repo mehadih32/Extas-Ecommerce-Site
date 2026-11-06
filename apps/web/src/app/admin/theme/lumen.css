@@ -58,6 +58,7 @@
 :root,
 [data-lm-look='lumen'] {
   --lm-accent: #ff5a36;
+  --lm-swatch-ring: rgba(14, 26, 56, 0.18); /* the thin ring round a colour dot, so a white or black dot still shows (PR 634) */
   --lm-bg: #eceff5;
   --lm-sf: #ffffff;
   --lm-sf2: #f4f6fb;
@@ -120,6 +121,7 @@
 
 /* ---- ঘ Lumen, dark (the moon button) ---- */
 [data-lm-look='lumen'][data-lm-mode='dark'] {
+  --lm-swatch-ring: rgba(238, 242, 255, 0.3);
   --lm-bg: #080d1f;
   --lm-sf: #111936;
   --lm-sf2: #18224a;
@@ -178,6 +180,7 @@
   --lm-info: #1a63bf;
   --lm-infobg: #e1edff;
   --lm-cprev: #b6bfd1;
+  --lm-swatch-ring: rgba(14, 26, 56, 0.18);
   --lm-sh: 0 1px 2px rgba(14, 26, 56, 0.05), 0 10px 28px rgba(14, 26, 56, 0.07);
   --lm-sh-sm: 0 1px 2px rgba(14, 26, 56, 0.06);
   color-scheme: light;

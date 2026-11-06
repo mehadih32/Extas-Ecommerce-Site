@@ -3,6 +3,7 @@
 // name, category, colours and sizes, what is still missing (PR 26, 29: the stored checklist), the price from the
 // cheapest size and the stock, its status, Edit and Select. The bulk bar sends one request; each product is done on
 // its own and the refusals are listed by name (a product that does not pass its checklist is never published).
+// PR 634 (CN-036): the result is the admin's one toast; publish, take off, archive and restore offer Undo (BULK_UNDO).
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -13,7 +14,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { Icon } from '../Icon';
 import { formatMoney, formatNumber, nameIn, refusalText, type Lang, type Money } from './model';
-import { useToast } from './useToast';
+import { say, sayBad } from './useToast';
 
 type Action = 'publish' | 'unpublish' | 'recheck' | 'archive' | 'restore';
 
@@ -32,6 +33,16 @@ interface Props {
 
 const CONFIRM: Partial<Record<Action, string>> = { archive: 'products.bulk.confirmArchive', unpublish: 'products.bulk.confirmUnpublish' };
 
+/** PR 634 (CN-036): the bulk actions that are reversible shop actions, their kind (lib/admin-lumen/safety.ts) and the
+ *  action that takes them back. The toast offers Undo for these only, on the products that were done; prices,
+ *  discounts and deleting never pass through here. */
+export const BULK_UNDO: Partial<Record<Action, { kind: string; back: Action }>> = {
+  publish: { kind: 'show', back: 'unpublish' },
+  unpublish: { kind: 'hide', back: 'publish' },
+  archive: { kind: 'archive', back: 'restore' },
+  restore: { kind: 'unarchive', back: 'archive' },
+};
+
 export function statusKey(r: { status: string; archived: boolean }) {
   return r.archived ? 'ARCHIVED' : r.status;
 }
@@ -41,7 +52,6 @@ export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulk
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [refused, setRefused] = useState<{ name: string; text: string }[]>([]);
-  const [toast, say] = useToast();
   const d = dict;
   const num = (n: number) => formatNumber(n, money.locale);
   const live = picked.filter((id) => rows.some((r) => r.id === id));
@@ -62,10 +72,24 @@ export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulk
     setRefused([]);
     try {
       const a = await call('POST', '/api/admin/catalogue/products/bulk', { action, productIds: live });
-      if (a.status !== 200) return say(refusalText(d, a.data.error, a.data.details));
+      if (a.status !== 200) return sayBad(refusalText(d, a.data.error, a.data.details));
       const res = a.data.bulk as BulkResult;
       setRefused(res.results.filter((r) => !r.ok).map((r) => ({ name: nameOf(r.productId), text: refusalText(d, r.error, r.details) })));
-      say(t(d, res.failed ? 'products.bulk.someDone' : 'products.bulk.allDone', { done: num(res.done), failed: num(res.failed) }));
+      const doneIds = res.results.filter((r) => r.ok).map((r) => r.productId);
+      const back = BULK_UNDO[action];
+      const undo =
+        back && doneIds.length
+          ? {
+              kind: back.kind,
+              run: async () => {
+                const u = await call('POST', '/api/admin/catalogue/products/bulk', { action: back.back, productIds: doneIds });
+                const ok = u.status === 200 && !(u.data.bulk as BulkResult).failed;
+                router.refresh();
+                return ok;
+              },
+            }
+          : undefined;
+      say(t(d, res.failed ? 'products.bulk.someDone' : 'products.bulk.allDone', { done: num(res.done), failed: num(res.failed) }), undo);
       setPicked([]);
       router.refresh();
     } finally {
@@ -198,11 +222,6 @@ export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulk
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
         </div>
       ) : null}
     </>

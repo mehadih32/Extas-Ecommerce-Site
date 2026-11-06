@@ -68,7 +68,7 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
 
   const d = view.dict;
   return (
-    <AdminFrame view={view} current={KEY}>
+    <AdminFrame view={view} current={KEY} ready>
       <Link className="pa-back" href={PRODUCTS_HOME}>
         <Icon name="back" size={14} />
         {t(d, 'products.back')}

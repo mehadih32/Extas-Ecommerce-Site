@@ -57,7 +57,7 @@
 .pa-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: var(--ad-fs-mini); color: var(--ad-text2); margin-top: 4px; min-width: 0; }
 .pa-meta > span:last-child { overflow-wrap: anywhere; min-width: 0; }
 .pa-dots { display: inline-flex; flex-shrink: 0; }
-.pa-dots i { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--ad-surface), inset 0 0 0 1px rgba(0, 0, 0, 0.15); margin-left: -3px; }
+.pa-dots i { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--ad-surface), inset 0 0 0 1px var(--lm-swatch-ring); margin-left: -3px; }
 .pa-dots i:first-child { margin-left: 0; }
 .pa-health { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
 .pa-miss { font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 9px; background: var(--ad-warn-bg); color: var(--ad-warn); white-space: nowrap; }
@@ -120,7 +120,7 @@
 /* colours (zp-col: 36 px chips with a 20 px swatch) */
 .pa-cols { display: flex; flex-wrap: wrap; gap: 6px; }
 .pa-col { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--ad-line); background: var(--ad-surface); border-radius: 18px; padding: 5px 10px 5px 6px; font: inherit; font-size: var(--ad-fs-small); color: var(--ad-ink); cursor: pointer; min-height: 36px; white-space: nowrap; }
-.pa-col i { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15); flex-shrink: 0; }
+.pa-col i { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--lm-swatch-ring); flex-shrink: 0; }
 .pa-col.on { border-color: var(--ad-brand); box-shadow: inset 0 0 0 1px var(--ad-brand); background: var(--ad-brand-tint); cursor: default; }
 .pa-x { border: 0; background: none; padding: 2px; margin: -2px -4px -2px 0; cursor: pointer; color: var(--ad-text2); display: inline-flex; min-width: 24px; min-height: 24px; align-items: center; justify-content: center; border-radius: 50%; }
 .pa-x:hover { background: var(--ad-line2); }
@@ -142,7 +142,7 @@
 .pa-stks { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
 .pa-stk { border: 1px solid var(--ad-line2); border-radius: var(--ad-radius); padding: 10px 12px; min-width: 0; }
 .pa-stkh { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; }
-.pa-stkh i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15); }
+.pa-stkh i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--lm-swatch-ring); }
 .pa-stkh .ad-mini { margin-left: auto; }
 .pa-stkg { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 .pa-sk { display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--ad-line2); border-radius: var(--ad-radius); padding: 8px; min-width: 0; background: var(--ad-surface2); }

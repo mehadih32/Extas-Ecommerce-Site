@@ -32,7 +32,7 @@ import {
   type SizeOption,
 } from './model';
 import { statusKey } from './ProductList';
-import { useToast } from './useToast';
+import { say, sayBad } from './useToast';
 
 export interface FormCan {
   write: boolean;
@@ -75,7 +75,6 @@ export function ProductForm(props: Props) {
   const [draft, setDraft] = useState<FormState>(base);
   const [colours, setColours] = useState(props.colours);
   const [busy, setBusy] = useState<string | null>(null);
-  const [toast, say] = useToast();
   const newName = useRef<HTMLInputElement>(null);
   const newHex = useRef<HTMLInputElement>(null);
   const [extraKind, setExtraKind] = useState<string>(EXTRA_KINDS[0]);
@@ -110,7 +109,7 @@ export function ProductForm(props: Props) {
     setBusy('save');
     try {
       const a = await call('POST', `/api/admin/catalogue/products/${product.id}/form`, built.input);
-      if (a.status !== 200) return say(refusalText(d, a.data.error, a.data.details));
+      if (a.status !== 200) return sayBad(refusalText(d, a.data.error, a.data.details));
       const p = a.data.product as ProductView;
       const n = a.data.naming as NamingView;
       const next = initialState(p, n, money);
@@ -130,10 +129,10 @@ export function ProductForm(props: Props) {
     setBusy(url);
     try {
       const a = await call('POST', url, body);
-      if (a.status !== 200) return say(refusalText(d, a.data.error, a.data.details));
+      if (a.status !== 200) return sayBad(refusalText(d, a.data.error, a.data.details));
       const bulk = a.data.bulk as { results?: { ok: boolean; error?: string; details?: string[] }[] } | undefined;
       const first = bulk?.results?.[0];
-      if (first && !first.ok) return say(refusalText(d, first.error, first.details));
+      if (first && !first.ok) return sayBad(refusalText(d, first.error, first.details));
       say(t(d, done));
       router.refresh();
     } finally {
@@ -163,7 +162,7 @@ export function ProductForm(props: Props) {
     setBusy('colour');
     try {
       const a = await call('POST', '/api/admin/catalogue/colours', { nameEn, hex });
-      if (a.status !== 201) return say(refusalText(d, a.data.error, a.data.details));
+      if (a.status !== 201) return sayBad(refusalText(d, a.data.error, a.data.details));
       const created = a.data.created as { colour: ColourOption; warnings: { key: string }[] };
       setColours((list) => [...list, created.colour]);
       setDraft((s) => ({ ...s, colours: [...s.colours, created.colour.id] }));
@@ -234,10 +233,10 @@ export function ProductForm(props: Props) {
       } catch {
         up = { ok: false, error: 'network' };
       }
-      if (!up.ok || !up.asset) return say(refusalText(d, up.error, up.details));
+      if (!up.ok || !up.asset) return sayBad(refusalText(d, up.error, up.details));
       const url = `/api/admin/media/products/${product.id}`;
       const a = await call('POST', url, { action: 'attach', assetId: up.asset.id, role, colourId });
-      if (a.status !== 200) return say(refusalText(d, a.data.error, a.data.details));
+      if (a.status !== 200) return sayBad(refusalText(d, a.data.error, a.data.details));
       if (replace && replace.assetId !== up.asset.id) await call('POST', url, { action: 'detach', productMediaId: replace.id });
       say(t(d, 'products.photos.uploaded'));
       router.refresh();
@@ -728,11 +727,6 @@ export function ProductForm(props: Props) {
               {t(d, busy === 'save' ? 'products.save.saving' : 'products.save.save')}
             </button>
           </div>
-        </div>
-      ) : null}
-      {toast ? (
-        <div className="ad-toast" role="status">
-          {toast}
         </div>
       ) : null}
     </>
