@@ -30,6 +30,10 @@
     "insights": {
       "label": "What shoppers search for",
       "help": "Counts the words shoppers search on the results page, per day, and how often nothing was found — shown on Reports › Searches. Words only: never who searched, and a word that looks like a phone number or an e-mail is never kept. Off until you switch it on. The longest period the report offers, and how many words each list shows."
+    },
+    "popular": {
+      "label": "Popular words from real searches",
+      "help": "While on, and while your own popular words are empty, the search box shows the words shoppers searched most that found products: from the last days set here, each searched at least this many times, at most this many words. Needs \"What shoppers search for\" to be counting. Off until you switch it on."
     }
   }
 }

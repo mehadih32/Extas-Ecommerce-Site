@@ -100,14 +100,18 @@ export function searchChips(
   };
 }
 
+/** The popular words shown: the owner's own list; while it is empty, the words from real searches (follow-up 101), if any. */
+export const popularWordsOf = (panel: Pick<SearchPanelSettings, 'popular'>, fromSearches: readonly string[] | null | undefined): readonly string[] =>
+  panel.popular.some((w) => w.trim()) ? panel.popular : (fromSearches ?? []);
+
 /** The search window's props, from the page's context and `search.panel` (server side; `{q}` stays to be filled). */
-export function searchPanelProps(c: Pick<ShopContext, 'lang' | 'bnDigits' | 't' | 'cats' | 'vars' | 's' | 'flags'>, panel: SearchPanelSettings): SearchPanelProps {
+export function searchPanelProps(c: Pick<ShopContext, 'lang' | 'bnDigits' | 't' | 'cats' | 'vars' | 's' | 'flags'>, panel: SearchPanelSettings, fromSearches?: readonly string[] | null): SearchPanelProps {
   const t = c.t;
   const k = (key: keyof SearchWords) => t(`search.${key}`);
   const words = Object.fromEntries(
     (['title', 'label', 'placeholder', 'deskPlaceholder', 'go', 'close', 'help', 'products', 'for', 'categories', 'popular', 'seeAll', 'seeAllN', 'none', 'noneWa', 'failed'] as const).map((x) => [x, k(x)]),
   ) as unknown as SearchWords;
-  const chips = searchChips(c.lang, panel.popular, c.cats);
+  const chips = searchChips(c.lang, popularWordsOf(panel, fromSearches), c.cats);
   const number = c.s['contact.whatsapp'];
   return {
     lang: c.lang,

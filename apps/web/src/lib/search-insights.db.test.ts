@@ -9,7 +9,7 @@ import { messages, prismaBackend, registry, SettingsResolver, syncSettings } fro
 import { createVault } from '@extas/vault';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
-import { countSearch, searchReport } from './search-insights';
+import { countSearch, foundWords, searchReport } from './search-insights';
 import { insightsHandler } from './search-insights-api';
 
 const HOST = 'shop.example.test';
@@ -76,6 +76,7 @@ describe.skipIf(!HAS_TEST_DB)('search insights on PostgreSQL (follow-up 100)', (
     const got = (await (await insightsHandler(call('GET', '/api/admin/search-insights', { cookie: owner }), deps)).json()) as { cards: Record<string, { version: string; value: Record<string, unknown> }> };
     const card = got.cards['search.insights']!;
     expect(card.value).toEqual({ keep: false, days: 90, rows: 50 });
+    expect(got.cards['search.popular']!.value).toEqual({ on: false, days: 30, min: 3, max: 6 });
     const bad = await insightsHandler(call('PUT', '/api/admin/search-insights', { cookie: owner, body: { key: 'search.insights', version: card.version, value: { ...card.value, days: 2 } } }), deps);
     expect(bad.status).toBe(400);
     const ok = await insightsHandler(call('PUT', '/api/admin/search-insights', { cookie: owner, body: { key: 'search.insights', version: card.version, value: { ...card.value, keep: true } } }), deps);
@@ -85,5 +86,21 @@ describe.skipIf(!HAS_TEST_DB)('search insights on PostgreSQL (follow-up 100)', (
     expect(stale.status).toBe(409);
     expect(await t.prisma.auditLog.count({ where: { action: 'search.insights.save' } })).toBe(1);
     expect((await insightsHandler(call('GET', '/api/admin/search-insights'), deps)).status).toBe(401);
+  });
+
+  it('follow-up 101: the words that found products, searched at least `min` times, most first; the popular card saved', async () => {
+    for (let i = 0; i < 3; i += 1) await countSearch(t.prisma, S, { q: 'linen shirt', found: true, day: '2026-11-05' });
+    expect(await foundWords(t.prisma, S, { today: '2026-11-07', days: 7, min: 1, max: 6 })).toEqual(['linen shirt', 'polo']);
+    expect(await foundWords(t.prisma, S, { today: '2026-11-07', days: 7, min: 2, max: 6 })).toEqual(['linen shirt']);
+    expect(await foundWords(t.prisma, S, { today: '2026-11-07', days: 90, min: 1, max: 1 })).toEqual(['linen shirt']);
+    const got = (await (await insightsHandler(call('GET', '/api/admin/search-insights', { cookie: owner }), deps)).json()) as { cards: Record<string, { version: string; value: Record<string, unknown> }> };
+    const pop = got.cards['search.popular']!;
+    const bad = await insightsHandler(call('PUT', '/api/admin/search-insights', { cookie: owner, body: { key: 'search.popular', version: pop.version, value: { ...pop.value, max: 13 } } }), deps);
+    expect(bad.status).toBe(400);
+    const ok = await insightsHandler(call('PUT', '/api/admin/search-insights', { cookie: owner, body: { key: 'search.popular', version: pop.version, value: { ...pop.value, on: true } } }), deps);
+    expect(ok.status).toBe(200);
+    expect((await deps.resolver.value('search.popular', { storeId: S })).on).toBe(true);
+    expect(await t.prisma.auditLog.count({ where: { action: 'search.popular.save' } })).toBe(1);
+    expect((await insightsHandler(call('PUT', '/api/admin/search-insights', { cookie: owner, body: { key: 'other', version: pop.version, value: pop.value } }), deps)).status).toBe(400);
   });
 });
