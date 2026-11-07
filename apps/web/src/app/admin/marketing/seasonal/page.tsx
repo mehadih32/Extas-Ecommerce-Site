@@ -4,6 +4,8 @@
 // the saved looks (each with its sections, hero title and collection; "Change this look"; set aside / bring back),
 // "Save the home page as it is now", and the settings card (the switch). Off as shipped (`marketing.seasonalHome`).
 // Seeing needs `marketing.campaigns.read`; changing needs `marketing.campaigns.write` (the API checks again).
+// Follow-up 648: each saved look has "Preview on the home page" (the home page with `?seasonal-look=<look>` in a new tab,
+// in the admin's language), drawn with that look for signed-in staff only, before its window and with the switch off too.
 // lib/marketing/seasonal-home.ts. Guide: docs/admin-guide/pages/marketing/seasonal-home.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -19,6 +21,8 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { HERO_LINES, seasonalHomeOverview, type LookRow, type WindowRow } from '@/lib/marketing/seasonal-home';
+import { hrefIn } from '@/lib/shop/lang';
+import { previewHref } from '@/lib/shop/seasonal-home-model';
 import bn from '../../../../../messages/admin-seasonal-home.bn.json';
 import en from '../../../../../messages/admin-seasonal-home.en.json';
 import '../../settings-cards.css';
@@ -132,9 +136,15 @@ export default async function SeasonalHomePage() {
             />
           </details>
         ) : null}
-        {canWrite && !l.inUse && (on || !l.archived) ? (
+        {!l.archived || (canWrite && !l.inUse && on) ? (
           <span className="a2-gap8 or-mt8 or-acts">
-            <SeasonalAct texts={texts} body={{ action: l.archived ? 'look.restore' : 'look.archive', id: l.id }} label={g(l.archived ? 'look.restore' : 'look.archive')} testId="sh-toggle" />
+            {/* follow-up 648: see the look on the home page before its window starts (staff only, nothing changes) */}
+            {!l.archived ? (
+              <a className="a2-btn" href={previewHref(hrefIn(bnView ? 'bn' : 'en', '/'), l.id)} target="_blank" rel="noopener noreferrer" data-testid="sh-preview" title={g('look.previewHelp')}>
+                {g('look.preview')}
+              </a>
+            ) : null}
+            {canWrite && !l.inUse && (on || !l.archived) ? <SeasonalAct texts={texts} body={{ action: l.archived ? 'look.restore' : 'look.archive', id: l.id }} label={g(l.archived ? 'look.restore' : 'look.archive')} testId="sh-toggle" /> : null}
           </span>
         ) : null}
       </li>
