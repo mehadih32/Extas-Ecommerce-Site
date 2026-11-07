@@ -742,6 +742,25 @@ export function switchRunReport(raw: unknown): SwitchRunReport {
 
 const FINAL_EXCHANGE = ['SETTLED', 'BILLED', 'CREDITED', 'CANCELLED'];
 
+const KEPT_DAY_MS = 86_400_000;
+/** Rows other than an order kept at the switch; a row with no error at all counts too (`NOT` alone leaves out NULL). */
+const NOT_KEPT = { OR: [{ lastError: null }, { lastError: { not: SWITCH_V5_ORDER } }] };
+
+/**
+ * Follow-up 578 (PR 619, 530): the v5 orders kept at the switch (`erp.switchOver.queuedV5Orders` = hold) still waiting for
+ * a person more than a day after they were kept — not sent again since (a newer order row) — for "Needs you now":
+ * how many and since when (the oldest). Reads only; this store's rows only.
+ */
+export async function keptAtSwitchTooLong(db: InventoryDeps['db'], storeId: number, now: Date): Promise<{ count: number; since: string | null }> {
+  const rows = await db.erpPush.findMany({ where: { storeId, documentType: 'order.create', status: 'FAILED', lastError: SWITCH_V5_ORDER, updatedAt: { lt: new Date(now.getTime() - KEPT_DAY_MS) } }, orderBy: { updatedAt: 'asc' }, select: { referenceId: true, updatedAt: true } });
+  if (!rows.length) return { count: 0, since: null };
+  const resent = new Set(
+    (await db.erpPush.findMany({ where: { storeId, documentType: 'order.create', referenceId: { in: rows.map((r) => r.referenceId) }, ...NOT_KEPT }, select: { referenceId: true } })).map((r) => r.referenceId),
+  );
+  const waiting = rows.filter((r) => !resent.has(r.referenceId));
+  return { count: waiting.length, since: waiting[0]?.updatedAt.toISOString() ?? null };
+}
+
 /** Everything the ERP link page shows for one store (`vault.read`). Store A's page never reads store B's rows. */
 export async function erpLinkState(deps: InventoryDeps, who: Who): Promise<ErpLinkPage> {
   await requirePermission(deps.db, who.actor, 'vault.read', { storeId: who.storeId });
@@ -757,12 +776,12 @@ export async function erpLinkState(deps: InventoryDeps, who: Who): Promise<ErpLi
     db.erpPush.findMany({ where: { storeId, documentType: 'order.create', status: 'FAILED', lastError: SWITCH_V5_ORDER }, orderBy: { createdAt: 'asc' }, take: shown, select: { referenceId: true, requestBody: true, updatedAt: true } }),
     db.erpPush.count({ where: { storeId, status: 'PENDING' } }),
     db.erpPush.count({ where: { storeId, status: 'HELD' } }),
-    db.erpPush.count({ where: { storeId, status: { in: ['FAILED', 'DEAD'] }, NOT: { lastError: SWITCH_V5_ORDER } } }),
+    db.erpPush.count({ where: { storeId, status: { in: ['FAILED', 'DEAD'] }, ...NOT_KEPT } }),
   ]);
   // A held order that was sent again since (a newer order row) is no longer waiting.
   const resentIds = new Set(
     heldRows.length
-      ? (await db.erpPush.findMany({ where: { storeId, documentType: 'order.create', referenceId: { in: heldRows.map((r) => r.referenceId) }, NOT: { lastError: SWITCH_V5_ORDER } }, select: { referenceId: true } })).map((r) => r.referenceId)
+      ? (await db.erpPush.findMany({ where: { storeId, documentType: 'order.create', referenceId: { in: heldRows.map((r) => r.referenceId) }, ...NOT_KEPT }, select: { referenceId: true } })).map((r) => r.referenceId)
       : [],
   );
   const heldAtSwitch = heldRows

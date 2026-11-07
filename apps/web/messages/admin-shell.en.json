@@ -485,6 +485,7 @@
       "countsReview": "Stock counts to review",
       "erpFailed": "ERP documents that failed",
       "erpHeldLong": "ERP orders still refused after hours",
+      "erpKeptAtSwitch": "Orders kept at the ERP switch, waiting more than a day",
       "jobsDead": "Background jobs that stopped",
       "sub": "{n} waiting · oldest {age}",
       "ordersReturns": "Returns & exchanges",

@@ -272,6 +272,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 619 on PostgreSQL: the switch-over to the ERP 
     expect(state.queues.heldAtSwitch.map((o) => o.orderId)).toEqual([waiting]);
     await sendHeldV5Order(deps(), f.who(keysPerson, f.storeB), waiting);
     expect(resent).toEqual([{ storeId: f.storeB, orderId: waiting }]);
+    // Follow-up 578: sent again (a newer order row, here one with no error at all), it no longer waits on the page.
+    await f.t.prisma.erpPush.create({ data: { storeId: f.storeB, documentType: 'order.create', referenceId: waiting, idempotencyKey: `order.create:${waiting}:v6-test`, status: 'PENDING', requestBody: {} } });
+    expect((await erpLinkState(deps(), f.who(keysPerson, f.storeB))).queues.heldAtSwitch).toEqual([]);
     // Store A's held list never shows store B's order.
     expect((await erpLinkState(deps(), f.who(keysPerson, f.storeA))).queues.heldAtSwitch).toEqual([]);
     await expect(sendHeldV5Order(deps(), f.who(keysPerson, f.storeA), waiting)).rejects.toMatchObject({ code: 'NOT_FOUND' });
