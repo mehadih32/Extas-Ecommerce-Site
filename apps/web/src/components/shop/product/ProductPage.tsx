@@ -35,6 +35,8 @@ import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { productPageTexts } from '@/lib/seo/page-texts';
 import { isBottom } from '@/lib/shop/pdp-chart';
 import { sizeGroupOf, sizeWordsFor } from '@/lib/shop/usual-size';
+import { accountUsual } from '@/lib/shop/account-size';
+import { CUSTOMER_COOKIE, signedIn } from '@/lib/shop/account';
 import { canonicalFor } from '@/lib/shop/pdp-colour';
 import { careList, detailBlocks, fabricLine } from '@/lib/shop/pdp-details';
 import { finderOffered, FIT_COOKIE, readFit, sizeFor } from '@/lib/shop/pdp-finder';
@@ -363,6 +365,10 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   const linkSize = askedSize && m.sizes.some((x) => x.key === askedSize) && stockOf(m, colour, askedSize) > 0 ? askedSize : null;
   const openSize = m.sizes.length === 1 ? m.sizes[0]!.key : (linkSize ?? (keptSize && stockOf(m, colour, keptSize) > 0 ? keptSize : null));
   const supportRef = supportRefOf(one(search[REF_QUERY]));
+  // follow-up 112 · "Your size" also from a signed-in buyer's own orders (only a guest's cookie-less visit skips the read)
+  const usualSet = set['pdp.usualSize'];
+  const me = usualSet.on && m.sizes.length > 1 && jar.get(CUSTOMER_COOKIE) ? await signedIn() : null;
+  const accountKept = me ? await accountUsual(c.storeId, me.customer.id, set['catalogue.sizeCharts.diagramFor'], usualSet.days) : null;
 
   // ---- PR 49 · buttons and links; the bag is S04's (follow-up 38) ----
   const buy = set['pdp.buy'];
@@ -406,7 +412,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
       colourPaths: set['pdp.page'].colourPaths,
       sizeWords: sizeWordsFor(set['pdp.sizeWords'], lang),
       usual: set['pdp.usualSize'].on
-        ? { preselect: set['pdp.usualSize'].preselect, days: set['pdp.usualSize'].days, group: sizeGroupOf(data.garment, set['catalogue.sizeCharts.diagramFor']) }
+        ? { preselect: set['pdp.usualSize'].preselect, days: set['pdp.usualSize'].days, group: sizeGroupOf(data.garment, set['catalogue.sizeCharts.diagramFor']), account: accountKept }
         : null,
     },
     words: { ...pageWords(c, finder !== null, tpl === 'T3'), ...usualWords(c) },

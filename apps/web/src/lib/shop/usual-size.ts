@@ -4,8 +4,9 @@
 //   Bengali pages or on both.
 // - "My usual size" (`pdp.usualSize`, off): the size this browser last put in the bag, kept apart for tops and bottoms,
 //   for `days`; the box gets "Your size", and when it is sold out in this colour the colours that have it are named.
-//   Kept in this browser only (a reading that fails changes nothing); an account's own size joins with Find My Size
-//   (PR 58). Pure, except the two storage calls at the end.
+//   Kept in this browser (a reading that fails changes nothing); follow-up 112: a signed-in buyer's own orders join it
+//   (joinKept, account-size.ts), and a kept Find My Size answer (PR 58) still wins on the page. Pure, except the two
+//   storage calls at the end.
 import type { PdpSizeWordsSettings } from '@extas/settings';
 import { stockOf, type PdpModel } from './product-model';
 
@@ -58,6 +59,19 @@ export function readUsual(raw: string | null, group: SizeGroup, days: number, no
   const k = parse(raw)[group];
   if (!k || now - k.at > days * DAY_MS || k.at - now > DAY_MS) return null;
   return sizes.includes(k.size) ? k.size : null;
+}
+
+/**
+ * Follow-up 112: the browser's kept sizes joined with the account's (his own orders, account-size.ts), group by group;
+ * the newer of the two wins, so a size bought on another phone shows here and a newer bag add here still wins.
+ */
+export function joinKept(browser: string | null, account: string | null): string | null {
+  if (!account) return browser;
+  const a = parse(account);
+  const b = parse(browser);
+  const out: Store = { ...b };
+  for (const g of ['top', 'bottom'] as const) if (a[g] && (!b[g] || b[g]!.at < a[g]!.at)) out[g] = a[g];
+  return JSON.stringify(out);
 }
 
 /** The stored value after a size of that group went into the bag. */
