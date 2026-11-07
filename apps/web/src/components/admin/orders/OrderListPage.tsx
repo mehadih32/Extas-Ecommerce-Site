@@ -12,6 +12,7 @@ import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/
 import type { AdminDeps } from '@/lib/admin-auth';
 import type { AdminView } from '@/lib/admin-page';
 import { BULK_COMMANDS, BULK_PERM } from '@/lib/admin-orders/bulk';
+import { bulkFilesFor } from '@/lib/admin-orders/bulk-files';
 import { FILTER_STATES, ageText, loadOrderList } from '@/lib/admin-orders/list';
 import { incompleteOpenCount } from '@/lib/admin-orders/incomplete';
 import { LIST_PAGES, listHref, type ListPageId, type ListQuery } from '@/lib/admin-orders/model';
@@ -137,6 +138,8 @@ export async function OrderListPage({ view, a, query, now }: { view: AdminView; 
   const [data, incomplete] = await Promise.all([loadOrderList(readDeps(a.deps), a.who, view, page, query), incompleteOpenCount({ db: a.deps.db, resolver: a.deps.resolver })]);
   const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section);
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
+  // follow-up 222: the ticked orders' files (Export, Print invoices), each with its own key
+  const files = bulkFilesFor(a.perms);
   const shown = formatNumber(data.rows.length, view.locale);
   return (
     <div className="a2-z" data-testid="orders-list" data-lm-ready="">
@@ -158,7 +161,7 @@ export async function OrderListPage({ view, a, query, now }: { view: AdminView; 
       />
       {data.rows.length ? (
         <>
-          <OrderTable dict={ordersDict(view)} rows={data.rows} bulk={canBulk.length ? { commands: canBulk, holdOptions: data.holdOptions } : null} />
+          <OrderTable dict={ordersDict(view)} rows={data.rows} bulk={canBulk.length || files.length ? { commands: canBulk, holdOptions: data.holdOptions, files } : null} />
           <div className="a2-tblf a2-tblf-o" data-testid="orders-foot">
             <span>{t(d, 'orders.list.shown', { n: shown })}</span>
             <span className="a2-gap8">

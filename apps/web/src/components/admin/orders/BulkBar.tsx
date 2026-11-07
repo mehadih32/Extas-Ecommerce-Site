@@ -4,11 +4,15 @@
 // asked to cancel will be skipped"). A button opens the [confirm] dialog: what will happen, the skipped orders, the hold
 // reason; then each order runs through the order service in turn with its own key and version, and the dialog lists
 // what was not done and why. Nothing here moves money or changes a price, a discount or COD.
+// Follow-up 222: beside the commands, the files for the ticked orders — Export (CSV) and Print invoices (one PDF) —
+// each through the route that already makes it (bulk-files.ts), offered only with its own key.
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useCallback, useId, useRef, useState } from 'react';
 import { bulkPlan, runBulk, whyText, type BulkCommand, type BulkResult, type BulkRow, type SkipWhy } from '@/lib/admin-orders/bulk';
+import { bulkFileRequest, fileOutcome, type BulkFile } from '@/lib/admin-orders/bulk-files';
+import { showToast } from '../lumen/Toast';
 import type { FieldOption } from '@/lib/admin-orders/spec';
 import { t, type Dict } from '@/lib/i18n';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -19,7 +23,37 @@ export interface BulkBarProps {
   rows: (BulkRow & { href: string })[];
   commands: BulkCommand[];
   holdOptions: FieldOption[];
+  /** Follow-up 222: the files this person may make (empty: none). */
+  files?: BulkFile[];
   onClear(): void;
+}
+
+/** Follow-up 222: one file of the ticked orders, from its own route; a PDF opens in a new tab (else it downloads). */
+async function makeFile(d: Dict, file: BulkFile, ids: string[]): Promise<void> {
+  const r = bulkFileRequest(file, ids, new Date().toISOString().slice(0, 10));
+  const tab = r.type === 'pdf' ? window.open('', '_blank') : null;
+  try {
+    const res = await fetch(r.url, { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'content-type': 'application/json' }, body: JSON.stringify(r.body) });
+    const out = fileOutcome(res.status, res.headers.get('content-type') ?? '', r.type);
+    if (out !== 'file') {
+      tab?.close();
+      showToast({ text: t(d, out === 'forbidden' ? 'orders.bulk.more.fileNoRight' : 'orders.bulk.more.fileFailed'), tone: 'bad' });
+      return;
+    }
+    const href = URL.createObjectURL(await res.blob());
+    if (tab && !tab.closed) tab.location.href = href;
+    else {
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = r.fileName;
+      a.click();
+      if (r.type === 'pdf') showToast({ text: t(d, 'orders.bulk.more.popup'), tone: 'info' });
+    }
+    if (r.type === 'csv') showToast({ text: t(d, 'orders.bulk.more.fileDone', { n: String(Math.min(ids.length, 500)) }), tone: 'ok' });
+  } catch {
+    tab?.close();
+    showToast({ text: t(d, 'orders.bulk.more.fileFailed'), tone: 'bad' });
+  }
 }
 
 const words = (d: Dict, w: SkipWhy | { failed: string }) => {
@@ -160,8 +194,15 @@ function BulkDialog({ dict: d, command: c, rows, holdOptions, onClose }: { dict:
 }
 
 /** The bar under the table while orders are ticked. */
-export function BulkBar({ dict: d, rows, commands, holdOptions, onClear }: BulkBarProps) {
+export function BulkBar({ dict: d, rows, commands, holdOptions, files = [], onClear }: BulkBarProps) {
   const [open, setOpen] = useState<BulkCommand | null>(null);
+  const [making, setMaking] = useState<BulkFile | null>(null);
+  const make = async (f: BulkFile) => {
+    if (making) return;
+    setMaking(f);
+    await makeFile(d, f, rows.map((r) => r.id));
+    setMaking(null);
+  };
   const plans = commands.map((c) => ({ c, p: bulkPlan(c, rows) })).filter(({ c, p }) => c !== 'release' || p.run.length > 0);
   const skips = plans
     .filter(({ p }) => p.reasons.length)
@@ -184,6 +225,20 @@ export function BulkBar({ dict: d, rows, commands, holdOptions, onClear }: BulkB
           </button>
         );
       })}
+      {files.map((f) => (
+        <button
+          key={f}
+          type="button"
+          className="a2-btn sm"
+          onClick={() => void make(f)}
+          disabled={making !== null}
+          aria-busy={making === f || undefined}
+          aria-label={t(d, `orders.bulk.more.${f}Aria`, { n: String(rows.length) })}
+          data-testid={`bulk-${f}`}
+        >
+          {t(d, `orders.bulk.more.${f}`)}
+        </button>
+      ))}
       <button type="button" className="a2-btn sm ghost a2-bclr" onClick={onClear}>
         {t(d, 'orders.bulk.clear')}
       </button>
