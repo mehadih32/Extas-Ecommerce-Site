@@ -8,7 +8,7 @@
 // This module imports `./keys`, never `./scheduler` (the scheduler imports the catalogue, which imports this).
 import { localClock } from '@extas/inventory';
 import { nowOf, type JobDeps } from './context';
-import { runKey } from './keys';
+import { runKey, textSlot } from './keys';
 import type { Planner } from './worker';
 
 export const AUDIENCE_REFRESH_JOB = 'audiences.refresh';
@@ -47,7 +47,8 @@ export const audienceRefreshPlanner: Planner = async (deps, now) => {
     const day = audienceRefreshDue(now, tz, s);
     if (!day) continue;
     const payload = { storeId: st.id, day };
-    out.push({ queue: AUDIENCE_REFRESH_QUEUE, name: AUDIENCE_REFRESH_JOB, payload, key: runKey(AUDIENCE_REFRESH_JOB, payload, 0) });
+    // ~~key: runKey(AUDIENCE_REFRESH_JOB, payload, 0)~~ fix: slot 0 made every later period the same run as the first (skipped ever after)
+    out.push({ queue: AUDIENCE_REFRESH_QUEUE, name: AUDIENCE_REFRESH_JOB, payload, key: runKey(AUDIENCE_REFRESH_JOB, payload, textSlot(day)) });
   }
   return out;
 };

@@ -17,6 +17,7 @@ import { errorLine, MAX_ERROR } from './context';
 import { withDeadline } from './runs';
 import { LeaderLock, type LockStore } from './leader';
 import { dueRuns, runKey, seriesKey, slotOf, type TimetableEntry } from './scheduler';
+import { textSlot } from './keys';
 
 describe('PR 6 · retry wait', () => {
   const p = { maxAttempts: 5, baseMs: 30_000, maxMs: 1_800_000 };
@@ -375,5 +376,15 @@ describe('PR 153 follow-up 192 · the order timers on the schedule', () => {
       { queue: 'orders', name: 'orders.followUps.run', payload: { storeId: 3 }, key: `orders.followUps.run/3/${hour}` },
     ]);
     expect(await orderFollowUpsPlanner({ ...deps, settings: { value: async () => 0 } } as never, now)).toEqual([]);
+  });
+});
+
+describe('PR 6 · a run key for a named period', () => {
+  it('textSlot gives each period its own slot, the same for the same period on every worker', () => {
+    expect(textSlot('2026-11-01')).toBe(textSlot('2026-11-01'));
+    expect(textSlot('2026-11-01')).not.toBe(textSlot('2026-11-02'));
+    expect(textSlot('D:2026-11-07')).not.toBe(textSlot('W:2026-11-07'));
+    expect(Number.isSafeInteger(textSlot('M:2026-10'))).toBe(true);
+    expect(textSlot('M:2026-10')).toBeGreaterThanOrEqual(0);
   });
 });
