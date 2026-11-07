@@ -129,7 +129,7 @@ describe('the row’s chips', () => {
     const v = view('en');
     const none = statusChips(v, row, undefined);
     expect(none.map((c) => c.label)).toEqual(['On hold', 'Not booked', 'COD to collect']);
-    const booked = statusChips(v, { ...row, status: 'HANDED_OVER', cancelPending: true }, { shipment: { status: 'CANCEL_REQUESTED', trackingCode: 'T1', courierName: 'X' }, returnRefund: 'REFUND_REQUESTED', units: 1, firstItem: null, lines: 1 });
+    const booked = statusChips(v, { ...row, status: 'HANDED_OVER', cancelPending: true }, { shipment: { status: 'CANCEL_REQUESTED', trackingCode: 'T1', courierName: 'X', labelPrintCount: 0 }, returnRefund: 'REFUND_REQUESTED', units: 1, firstItem: null, lines: 1 });
     expect(booked.map((c) => c.label)).toEqual(['Handed over', 'Cancel pending courier', 'Cancel requested', 'COD to collect', 'Refund requested']);
     expect(booked.map((c) => c.tone)).toEqual([ORDER_TONE.HANDED_OVER, 'warn', SHIP_TONE.CANCEL_REQUESTED, PAY_TONE.COD_TO_COLLECT, 'warn']);
     expect(statusChips(view('bn'), row, undefined)[0]!.label).toBe(t(adminDicts.bn, 'orders.st.ON_HOLD'));

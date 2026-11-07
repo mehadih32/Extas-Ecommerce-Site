@@ -164,6 +164,7 @@ export async function OrderListPage({ view, a, query, now }: { view: AdminView; 
           <OrderTable dict={ordersDict(view)} rows={data.rows} bulk={canBulk.length || files.length ? { commands: canBulk, holdOptions: data.holdOptions, files } : null} />
           <div className="a2-tblf a2-tblf-o" data-testid="orders-foot">
             <span>{t(d, 'orders.list.shown', { n: shown })}</span>
+            {data.docsLine ? <span data-testid="orders-docs-line">{data.docsLine}</span> : null}
             <span className="a2-gap8">
               {query.cursor ? (
                 <Link className="a2-btn sm" href={listHref(page, query, { cursor: undefined })}>
