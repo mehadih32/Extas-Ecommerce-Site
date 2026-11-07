@@ -15,6 +15,11 @@
 //
 // Follow-up 373: a courier without a lookup by reference (`capabilities.lookupByRef: false`, Pathao) refuses `findByRef`
 // on its practice world too, so staging plays the same "check the courier's panel" path as the real one.
+//
+// Follow-up 375 (PR 176): a world lives in one process, so a parcel booked by the web app was unknown to the worker's
+// `courier.track`. With a parcel store set (`usePracticeParcelStore`; the shipping service sets one on its database),
+// each practice parcel's life — what was sent, its scenario, how far it got — is read from and written to the store,
+// so every process plays the same life. Without one (tests of this package), the world stays in memory as before.
 import { createHash } from 'node:crypto';
 import type { BookResult, CourierApi, CourierCapabilities, CourierEvent, CourierParcel, CourierPlace, CourierPlaceLevel, CourierState, StatusTable } from './contract';
 import { mapStatus } from './contract';
@@ -53,7 +58,8 @@ export interface MockVocabulary {
   table: StatusTable;
 }
 
-interface MockParcel {
+/** One practice parcel and how far its scripted life got. */
+export interface MockParcel {
   consignmentId: string;
   trackingCode: string;
   parcel: CourierParcel;
@@ -77,7 +83,18 @@ interface MockState {
   placeReads: { level: CourierPlaceLevel; parentId: string | null }[];
 }
 
-const G = globalThis as unknown as { __extasMockCourier?: Map<string, MockState> };
+/** Follow-up 375: where practice parcels are kept so every process plays the same life (the shop's database). */
+export interface PracticeParcelStore {
+  load(provider: string, consignmentId: string): Promise<MockParcel | null>;
+  save(provider: string, parcel: MockParcel): Promise<void>;
+}
+
+const G = globalThis as unknown as { __extasMockCourier?: Map<string, MockState>; __extasPracticeStore?: PracticeParcelStore | null };
+
+/** Follow-up 375: keep practice parcels in `store` from now on (null: in this process's memory only). */
+export function usePracticeParcelStore(store: PracticeParcelStore | null): void {
+  G.__extasPracticeStore = store;
+}
 const worlds = (): Map<string, MockState> => (G.__extasMockCourier ??= new Map());
 function stateOf(provider: string): MockState {
   let s = worlds().get(provider);
@@ -156,6 +173,16 @@ export function createMockCourier(provider: string, vocab: MockVocabulary, capab
   const s = stateOf(provider);
   const idOf = (ref: string) => `MOCK-${vocab.prefix}-${createHash('sha256').update(`${provider}:${ref}`).digest('hex').slice(0, 10).toUpperCase()}`;
   const stepAt = (p: MockParcel, i: number) => MOCK_SCRIPTS[p.scenario][i]!;
+  // follow-up 375: the store's copy wins (another process may have moved the parcel on); memory keeps the tests' view
+  const read = async (consignmentId: string): Promise<MockParcel | undefined> => {
+    const kept = await G.__extasPracticeStore?.load(provider, consignmentId);
+    if (kept) s.parcels.set(consignmentId, kept);
+    return kept ?? s.parcels.get(consignmentId);
+  };
+  const write = async (p: MockParcel): Promise<void> => {
+    s.parcels.set(p.consignmentId, p);
+    await G.__extasPracticeStore?.save(provider, p);
+  };
 
   function eventsOf(p: MockParcel): CourierEvent[] {
     const out: CourierEvent[] = [];
@@ -189,10 +216,10 @@ export function createMockCourier(provider: string, vocab: MockVocabulary, capab
       // like the real courier: one that charges by weight refuses a parcel without it
       if (capabilities.weightRequired && parcel.weightGrams === null) return { ok: false, error: 'the parcel weight is missing', unknown: false };
       const consignmentId = idOf(parcel.merchantRef);
-      let p = s.parcels.get(consignmentId);
+      let p = await read(consignmentId);
       if (!p) {
         p = { consignmentId, trackingCode: consignmentId.slice(-8), parcel: structuredClone(parcel), scenario: s.planned.get(parcel.merchantRef) ?? 'delivered', reached: 1, bookedAt: (s.clock ?? now)() };
-        s.parcels.set(consignmentId, p);
+        await write(p);
       }
       if (fail === 'timeout') return { ok: false, error: 'practice courier: no answer (planned timeout)', unknown: true };
       const first = vocab.say(stepAt(p, 0));
@@ -201,16 +228,18 @@ export function createMockCourier(provider: string, vocab: MockVocabulary, capab
     async findByRef(merchantRef) {
       // follow-up 373: a practice courier that cannot be asked by reference says so, like the real one
       if (capabilities.lookupByRef === false) throw new AdapterError(`practice ${provider}: no lookup by the shop reference; check the courier's panel`);
-      const p = s.parcels.get(idOf(merchantRef));
+      const p = await read(idOf(merchantRef));
       if (!p) return null;
       const raw = vocab.say(stepAt(p, p.reached - 1));
       return { consignmentId: p.consignmentId, trackingCode: p.trackingCode, status: mapStatus(vocab.table, raw).status, rawStatus: raw };
     },
     async track(ref) {
-      const p = ref.consignmentId ? s.parcels.get(ref.consignmentId) : ref.merchantRef ? s.parcels.get(idOf(ref.merchantRef)) : undefined;
+      const id = ref.consignmentId ?? (ref.merchantRef ? idOf(ref.merchantRef) : null);
+      const p = id ? await read(id) : undefined;
       if (!p) return [];
       // every read moves the practice parcel one step on, so a few polls play its whole life
       p.reached = Math.min(p.reached + 1, MOCK_SCRIPTS[p.scenario].length);
+      await write(p);
       return eventsOf(p);
     },
     async health() {

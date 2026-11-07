@@ -4,10 +4,11 @@
 // Test in Keys & connections, else Mock — the courier's practice world, where nothing leaves the server. The courier
 // for each parcel is chosen by staff when they book (PR 176); the cheapest-courier rule is PR 178.
 import { z } from 'zod';
-import { courierAdapters, type CourierApi, type Mode } from '@extas/adapters';
+import { courierAdapters, usePracticeParcelStore, type CourierApi, type Mode } from '@extas/adapters';
 import type { Prisma } from '@extas/db/client';
 import { allow, logChange, parse, TX, type Db, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
+import { practiceParcelStore } from './practice-store';
 
 /** The courier adapters an account can use (each runs on its practice world until its keys are entered). */
 export const courierProviders = (): string[] => courierAdapters.map((a) => a.provider);
@@ -63,8 +64,10 @@ export async function bookableCourier(db: Db, storeId: number, id: string): Prom
 }
 
 /** The courier's adapter for this store, in the mode its connection is in (the practice world when not keyed). */
-export async function courierApi(deps: Pick<ShippingDeps, 'connections'>, storeId: number, providerKey: string): Promise<{ api: CourierApi; mode: Mode }> {
+export async function courierApi(deps: Pick<ShippingDeps, 'connections'> & Partial<Pick<ShippingDeps, 'db'>>, storeId: number, providerKey: string): Promise<{ api: CourierApi; mode: Mode }> {
   const c = await deps.connections.use<CourierApi>('COURIER', { storeId, provider: providerKey });
+  // follow-up 375: a practice courier keeps its parcels in the database, so the web app and the worker share them
+  if (c.mode === 'MOCK' && deps.db) usePracticeParcelStore(practiceParcelStore(deps.db));
   return { api: c.api, mode: c.mode };
 }
 

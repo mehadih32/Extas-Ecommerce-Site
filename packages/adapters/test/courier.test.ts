@@ -15,7 +15,9 @@ import {
   mockCourierAdapter,
   mockCourierWorld,
   takaToMinor,
+  usePracticeParcelStore,
   type CourierApi,
+  type MockParcel,
   type CourierParcel,
   type MockScenario,
 } from '../src';
@@ -115,6 +117,44 @@ describe('the practice courier (PR 175)', () => {
     w.failNext('error');
     expect(await api.book(parcel('EX-2-2'))).toMatchObject({ ok: false, unknown: false });
     expect(await api.findByRef('EX-2-2')).toBeNull();
+  });
+
+  it('follow-up 375: with a parcel store, a parcel booked in one process plays on in another (the worker reads what the web app booked)', async () => {
+    const kept = new Map<string, MockParcel>();
+    const saves: string[] = [];
+    usePracticeParcelStore({
+      load: async (provider, id) => structuredClone(kept.get(`${provider}:${id}`) ?? null),
+      save: async (provider, p) => {
+        saves.push(`${provider}:${p.consignmentId}:${p.reached}`);
+        kept.set(`${provider}:${p.consignmentId}`, structuredClone(p));
+      },
+    });
+    try {
+      const web = await practice();
+      const w = mockCourierWorld(web.provider);
+      w.reset();
+      w.plan('EX-3-1', 'refused');
+      const b = await web.book(parcel('EX-3-1'));
+      expect(b.ok).toBe(true);
+      // "another process": its own memory is empty, only the store knows the parcel
+      w.reset();
+      const worker = await practice();
+      const first = await worker.track({ consignmentId: b.ok ? b.consignmentId : null, trackingCode: null, merchantRef: 'EX-3-1' });
+      expect(first).toHaveLength(2);
+      w.reset();
+      expect((await web.track({ consignmentId: null, trackingCode: null, merchantRef: 'EX-3-1' })).length).toBe(3);
+      expect([...kept.values()][0]).toMatchObject({ scenario: 'refused', reached: 3 });
+      expect(saves).toHaveLength(3);
+      w.reset();
+      expect(await web.findByRef('EX-3-1')).toMatchObject({ consignmentId: b.ok ? b.consignmentId : '' });
+      // a booking again of the same reference is the same parcel, from the store
+      w.reset();
+      expect(await web.book(parcel('EX-3-1'))).toMatchObject({ ok: true, consignmentId: b.ok ? b.consignmentId : '' });
+      expect(kept.size).toBe(1);
+    } finally {
+      usePracticeParcelStore(null);
+      mockCourierWorld(MOCK_COURIER_PROVIDER).reset();
+    }
   });
 
   it('refuses a parcel the courier could not deliver (no mobile number, no address, no name)', async () => {
