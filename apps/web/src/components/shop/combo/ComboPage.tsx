@@ -28,6 +28,9 @@ import {
   type ShopContext,
 } from "@/lib/shop/context";
 import { hrefIn } from "@/lib/shop/lang";
+import { liveFreeOverMinor } from "@/lib/rules-public";
+import { shopPayOffer } from "@/lib/shop/pay-offer";
+import { cardDelivery, cardPay, shopRates } from "@/lib/shop/rules-card";
 import { shopMetadata, shopOrigin } from "@/lib/shop/meta";
 import {
   breadcrumbLd,
@@ -171,22 +174,37 @@ function PairCrumbs({
   );
 }
 
-/** Size exchange · Delivery · Cash on Delivery, each only while that rule is on (demo cb_rules). */
-function Rules({
+/**
+ * Size exchange · Delivery · paying, each only while that rule is on (demo cb_rules). Follow-up 172: the delivery line
+ * from the live free-delivery limit or the store's priced bands, the paying line from what the checkout offers now
+ * (lib/shop/rules-card) — display only.
+ */
+async function Rules({
   c,
   payMinor,
   exchangeLine,
+  variantId,
 }: {
   c: ShopContext;
   payMinor: number | null;
   exchangeLine: boolean;
+  variantId: string | null;
 }) {
-  const freeOver = c.s["delivery.freeOverMinor"];
-  const free =
-    c.flags.freeDelivery &&
-    typeof freeOver === "number" &&
-    payMinor !== null &&
-    payMinor >= freeOver;
+  const [liveOver, rates, offer] = await Promise.all([
+    c.flags.freeDelivery && variantId
+      ? liveFreeOverMinor({ storeId: c.storeId, variantId })
+      : Promise.resolve(null),
+    shopRates(c.storeId),
+    shopPayOffer(c.storeId),
+  ]);
+  const del = cardDelivery({
+    freeOn: c.flags.freeDelivery,
+    liveOverMinor: liveOver,
+    settingOverMinor: c.s["delivery.freeOverMinor"],
+    payMinor,
+    rates,
+  });
+  const pay = cardPay(offer, c.flags.cod);
   const rows = [
     c.flags.exchange ? (
       <div key="ex" className="row top" style={{ gap: 12 }}>
@@ -216,23 +234,46 @@ function Rules({
         <div className="h3" style={{ marginBottom: 3 }}>
           {c.t("combo.rules.delivery")}
         </div>
-        {free ? (
+        {del.kind === "free" ? (
           <div className="small text2" data-testid="cb-free-del">
             <b className="brandc">{c.t("combo.rules.free")}</b> —{" "}
-            {c.t("combo.rules.freeOver", { amount: c.money(freeOver) })}
+            {c.t("combo.rules.freeOver", { amount: c.money(del.overMinor) })}
+          </div>
+        ) : del.kind === "rates" ? (
+          <div className="small text2" data-testid="cb-del-rates">
+            {del.rates.map((b, i) => (
+              <span key={b.id}>
+                {i ? " · " : null}
+                {(c.lang === "bn" && b.nameBn) || b.nameEn}{" "}
+                <b>{c.money(b.chargeMinor)}</b>
+              </span>
+            ))}
           </div>
         ) : (
           <div className="small text2">{c.t("combo.rules.charge")}</div>
         )}
       </div>
     </div>,
-    c.flags.cod ? (
+    pay ? (
       <div key="cod" className="row" style={{ gap: 12 }}>
         <span className="brandc">
           <Icon name="cash" size={20} />
         </span>
-        <div className="small">
-          <b>{c.t("combo.rules.cod")}</b> · {c.t("combo.rules.codText")}
+        <div className="small" data-testid="cb-pay">
+          {pay.cod ? (
+            <>
+              <b>{c.t("combo.rules.cod")}</b> · {c.t("combo.rules.codText")}
+            </>
+          ) : (
+            <b>{c.t("combo.rules.pay")}</b>
+          )}
+          {pay.others.length ? (
+            <div className="text2" data-testid="cb-pay-now">
+              {c.t(pay.cod ? "combo.rules.payAhead" : "combo.rules.payWith", {
+                list: pay.others.map((k) => c.t(k)).join(" · "),
+              })}
+            </div>
+          ) : null}
         </div>
       </div>
     ) : null,
@@ -548,6 +589,9 @@ export async function ComboPage({
                 c={c}
                 payMinor={env.firstPrice.pay}
                 exchangeLine={parts.exchangeLine}
+                variantId={
+                  env.variants.find((v) => v.priceMinor !== null)?.id ?? null
+                }
               />
             ) : null}
             {wa ? (

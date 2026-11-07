@@ -125,7 +125,11 @@
       "freeShips": "This set ships free.",
       "charge": "The delivery charge is shown at checkout.",
       "cod": "Cash on Delivery",
-      "codText": "Pay when it arrives."
+      "codText": "Pay when it arrives.",
+      "card": "Card",
+      "pay": "Ways to pay",
+      "payAhead": "Or pay ahead: {list}",
+      "payWith": "{list}"
     },
     "more": {
       "title": "More sets",
