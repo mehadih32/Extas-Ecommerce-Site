@@ -531,17 +531,23 @@ export async function unmapArea(deps: ShippingDeps, who: Who, courierAccountId: 
 /**
  * The pair a booking uses for a shop area: the area's own, else the nearest one above it (thana → upazila → district),
  * active pairs only; with `need`, only a pair that carries ids that deep. Null: no usable pair.
+ *
+ * Follow-up 415 (PR 502, 554): a place the owner merged into another keeps its pairs (archived with it, never moved);
+ * at each step of the chain, a place without a usable pair of its own uses the pair of a place merged into it (the
+ * latest merge first). Undoing the merge (follow-up 417) ends it by itself: the place is no longer merged.
  */
 export async function pairFor(db: Db, courierAccountId: string, areaId: string, need: 'city' | 'zone' | 'area' | null): Promise<{ courierCityId: string | null; courierZoneId: string | null; courierAreaId: string | null; areaId: string } | null> {
   const area = await db.geoArea.findUnique({ where: { id: areaId }, select: { ancestorIds: true } });
   const chain = [areaId, ...[...(area?.ancestorIds ?? [])].reverse()];
-  const pairs = await db.courierAreaMapping.findMany({ where: { courierAccountId, areaId: { in: chain }, archivedAt: null }, select: { areaId: true, courierCityId: true, courierZoneId: true, courierAreaId: true } });
+  const merged = await db.geoArea.findMany({ where: { mergedIntoId: { in: chain }, archivedAt: { not: null } }, orderBy: [{ archivedAt: 'desc' }, { id: 'asc' }], select: { id: true, mergedIntoId: true } });
+  const pairs = await db.courierAreaMapping.findMany({ where: { courierAccountId, areaId: { in: [...chain, ...merged.map((m) => m.id)] }, archivedAt: null }, select: { areaId: true, courierCityId: true, courierZoneId: true, courierAreaId: true } });
   const byArea = new Map(pairs.map((p) => [p.areaId, p]));
+  const usable = (p: (typeof pairs)[number] | undefined) => !!p && (!need || !!(need === 'area' ? p.courierAreaId : need === 'zone' ? p.courierZoneId : p.courierCityId));
   for (const id of chain) {
-    const p = byArea.get(id);
-    if (!p) continue;
-    if (!need) return p;
-    if (need === 'area' ? p.courierAreaId : need === 'zone' ? p.courierZoneId : p.courierCityId) return p;
+    for (const at of [id, ...merged.filter((m) => m.mergedIntoId === id).map((m) => m.id)]) {
+      const p = byArea.get(at);
+      if (usable(p)) return p!;
+    }
   }
   return null;
 }

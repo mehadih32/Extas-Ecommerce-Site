@@ -136,6 +136,29 @@ describe.skipIf(!HAS_TEST_DB)('PR 554 · courier zone sync (PostgreSQL)', () => 
     }
   });
 
+  it('follow-up 415: a place merged into another lends its pair to the place it went into, until the merge is undone', async () => {
+    f.overrides.set('delivery.courier.zoneSync', ALWAYS);
+    try {
+      const daulatpur = await area('bd.khulna.kushtia.daulatpur');
+      const bheramara = await area('bd.khulna.kushtia.bheramara');
+      // a pair of the courier's Khulna zone on Daulatpur (made directly: this test's own data)
+      await db().courierAreaMapping.create({ data: { storeId: f.S, courierAccountId: practice, areaId: daulatpur, courierCityId: '8', courierZoneId: '801' } });
+      // the owner merged Daulatpur into Bheramara (archived; its pair stays on it)
+      await db().geoArea.update({ where: { id: daulatpur }, data: { archivedAt: f.clock.now, mergedIntoId: bheramara } });
+      const orderId = await confirmedIn(bheramara);
+      expect(await book(orderId)).toMatchObject({ outcome: 'booked' });
+      expect(await db().shipment.findFirstOrThrow({ where: { orderId } })).toMatchObject({ courierCityId: '8', courierZoneId: '801' });
+      // undone: Bheramara has no pair any more and waits with its reason
+      await db().geoArea.update({ where: { id: daulatpur }, data: { archivedAt: null, mergedIntoId: null } });
+      const again = await confirmedIn(bheramara);
+      expect(await book(again)).toMatchObject({ outcome: 'skipped', code: 'AREA_UNMAPPED' });
+      // this test's own pair is taken out again, so the later tests count only theirs
+      await db().courierAreaMapping.deleteMany({ where: { courierAccountId: practice, areaId: daulatpur } });
+    } finally {
+      f.overrides.delete('delivery.courier.zoneSync');
+    }
+  });
+
   it('by default ("only when the courier needs them") an area without a pair still books, with the address only', async () => {
     const orderId = await confirmedIn(await area('bd.khulna.kushtia'));
     expect(await book(orderId)).toMatchObject({ outcome: 'booked' });
