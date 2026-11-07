@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { mockCourierWorld, STEADFAST_PROVIDER } from '@extas/adapters';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { confirmOrder } from '@extas/orders';
-import { shippingSettings } from '@extas/settings';
+import { sharedLocationSettings, shippingSettings } from '@extas/settings';
 import { bookOrders, printRun, printStickers } from './index';
 import { addDays, courierPhone, localDay } from './pure';
 import { setUpShipping, type ShippingFixture } from './testing';
@@ -79,7 +79,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 179 · the courier sticker (PostgreSQL)', () =
     const p = first.find((s) => s.shipmentId === paid.shipmentId)!;
     expect(c).toMatchObject({ orderNumber: order.number, courierName: 'Steadfast main', practice: true, consignmentId: cod.shipment.consignmentId, trackingCode: 'SF-TRK-1', collectMinor: order.totalMinor - order.walletAppliedMinor - order.paidMinor, currency: order.currency, reprint: null, gift: null });
     expect(c.collectMinor).toBeGreaterThan(0);
-    expect(c.receiver).toEqual({ name: order.customerName, phone: courierPhone(order.phone), address: order.shippingAddressText, addressLatin: null });
+    expect(c.receiver).toEqual({ name: order.customerName, phone: courierPhone(order.phone), address: order.shippingAddressText, addressLatin: null, location: null });
     expect(c.items.length).toBeGreaterThan(0);
     expect(p.collectMinor).toBe(0);
     expect(await db().shipment.findUniqueOrThrow({ where: { id: cod.shipmentId } })).toMatchObject({ labelPrintCount: 1 });
@@ -142,6 +142,28 @@ describe.skipIf(!HAS_TEST_DB)('PR 179 · the courier sticker (PostgreSQL)', () =
       expect(on.find((p) => p.shipmentId === en.shipmentId)!.receiver.addressLatin).toBeNull();
     } finally {
       f.overrides.delete('delivery.sticker.latin');
+    }
+  });
+
+  it('follow-up 324: the shared point is printed only with the owner\'s switch on and while the order keeps it; never on a gift', async () => {
+    const kept = await booked('st-loc');
+    const gone = await booked('st-loc-gone');
+    const keep = { gpsLat: '23.781', gpsLng: '90.412', piiExpiresAt: new Date(f.clock.now.getTime() + 86_400_000) };
+    await db().order.update({ where: { id: kept.orderId }, data: keep });
+    await db().order.update({ where: { id: gone.orderId }, data: { ...keep, piiExpiresAt: new Date(f.clock.now.getTime() - 1_000) } });
+    const off = await print([kept.shipmentId, gone.shipmentId]);
+    expect(off.every((p) => p.receiver.location === null)).toBe(true);
+    f.overrides.set('orders.sharedLocation', { ...sharedLocationSettings['orders.sharedLocation'].default, sticker: true });
+    try {
+      const on = await print([kept.shipmentId, gone.shipmentId], { reason: 'location line check' });
+      expect(on.find((p) => p.shipmentId === kept.shipmentId)!.receiver.location).toBe('23.781, 90.412');
+      expect(on.find((p) => p.shipmentId === gone.shipmentId)!.receiver.location).toBeNull();
+      await db().order.update({ where: { id: kept.orderId }, data: { isGift: true } });
+      const gift = await print([kept.shipmentId], { reason: 'gift location check' });
+      expect(gift[0]!.receiver.location).toBeNull();
+    } finally {
+      f.overrides.delete('orders.sharedLocation');
+      await db().order.update({ where: { id: kept.orderId }, data: { isGift: false } });
     }
   });
 

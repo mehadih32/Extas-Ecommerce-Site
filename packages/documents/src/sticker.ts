@@ -5,7 +5,8 @@
 // amount the rider collects — big, on a black band — or "paid, collect nothing", the exact-amount line when the owner
 // turned it on (never on a paid parcel), a gift's sender and "deliver on or after", every piece in a bordered box
 // (name, colour, size, quantity; no prices), the delivery note, and "REPRINT n" on a reprint. SIM-F-048: a Bengali
-// address may carry a second, smaller line in Latin letters under it (the owner's switch).
+// address may carry a second, smaller line in Latin letters under it (the owner's switch). Follow-up 324: the point the
+// customer shared for the rider, small under the address ("Location 23.781, 90.412"), when the caller passes one.
 //
 // Nothing is cut and nothing overlaps: the sticker is measured first; when it does not fit, the type is made smaller,
 // down to the owner's smallest size, and only then do the remaining pieces carry on onto a second sticker ("2/2") with
@@ -39,6 +40,8 @@ export interface StickerWords {
   practice: string;
   /** CN-018 (4): a Fixed set in the parcel ({name}): "Set {name}: deliver whole". */
   setWhole: string;
+  /** Follow-up 324: before the shared point ("Location"). */
+  location?: string;
 }
 
 export interface StickerItem {
@@ -56,8 +59,9 @@ export interface StickerInput {
   consignmentId: string | null;
   trackingCode: string | null;
   orderNumber: string;
-  /** SIM-F-048: `addressLatin` — the Bengali address again in Latin letters, printed small under it (null: none). */
-  receiver: { name: string | null; phone: string | null; address: string | null; addressLatin?: string | null };
+  /** SIM-F-048: `addressLatin` — the Bengali address again in Latin letters, printed small under it (null: none).
+   *  Follow-up 324: `location` — the point the customer shared for the rider, printed small under that (null: none). */
+  receiver: { name: string | null; phone: string | null; address: string | null; addressLatin?: string | null; location?: string | null };
   /** The amount the rider collects, formatted ("৳1,580"); null when there is nothing to collect. */
   collect: string | null;
   /** The exact-amount line (owner's switch; never on a paid parcel). */
@@ -142,6 +146,8 @@ async function partsAt(input: StickerInput, words: StickerWords, sheet: Sheet, s
   head.push(text(await shape(input.receiver.address, st('body'))));
   // SIM-F-048: the same address in Latin letters, small, under the Bengali one
   if (input.receiver.addressLatin) head.push(text(await shape(input.receiver.addressLatin, st('small'))));
+  // follow-up 324: the point the customer shared for the rider (the caller passes it only while the owner allows it)
+  if (input.receiver.location) head.push(text(await shape([words.location, input.receiver.location].filter(Boolean).join(' '), st('small'))));
   head.push(space());
   // the order number and the pieces
   const pieces = input.items.reduce((s, i) => s + i.quantity, 0);

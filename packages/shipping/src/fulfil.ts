@@ -21,7 +21,7 @@
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { bengaliToLatin } from '@extas/delivery';
-import { DELIVERY_TARGET_SELECT, deliveryTarget } from '@extas/orders';
+import { DELIVERY_TARGET_SELECT, deliveryTarget, sharedPointOf } from '@extas/orders';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
 import { fixedSetsOf, type FixedSetName } from './set-line';
@@ -51,6 +51,10 @@ export const PRINT_PARCEL_SELECT = {
       walletAppliedMinor: true,
       paidMinor: true,
       areaId: true,
+      // follow-up 324: the point the customer shared for the rider (printed only while the owner's switch is on)
+      gpsLat: true,
+      gpsLng: true,
+      piiExpiresAt: true,
       ...DELIVERY_TARGET_SELECT,
       items: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { productName: true, colourName: true, sizeLabel: true, quantity: true, productId: true, comboId: true } },
     },
@@ -145,8 +149,10 @@ export interface StickerParcel {
   consignmentId: string;
   trackingCode: string | null;
   /** SIM-F-048: `addressLatin` — a Bengali address again in Latin letters with its area and district in English (the
-   *  owner's `delivery.sticker.latin`; null when off or when the address is already in Latin letters). */
-  receiver: { name: string | null; phone: string | null; address: string | null; addressLatin: string | null };
+   *  owner's `delivery.sticker.latin`; null when off or when the address is already in Latin letters). Follow-up 324:
+   *  `location` — the point the customer shared for the rider ("23.781, 90.412"), while the order keeps it and the owner's
+   *  `orders.sharedLocation.sticker` is on (null otherwise; never on a gift). */
+  receiver: { name: string | null; phone: string | null; address: string | null; addressLatin: string | null; location: string | null };
   /** The amount the rider collects (the courier's COD, equal to the live amount due). 0: nothing to collect. */
   collectMinor: number;
   currency: string;
@@ -160,7 +166,13 @@ export interface StickerParcel {
   fixedSets: FixedSetName[];
 }
 
-const stickerOf = (s: PrintParcelRow, count: number, latin: ReadonlyMap<string, string | null> = new Map(), sets: ReadonlyMap<string, FixedSetName[]> = new Map()): StickerParcel => {
+const stickerOf = (
+  s: PrintParcelRow,
+  count: number,
+  latin: ReadonlyMap<string, string | null> = new Map(),
+  sets: ReadonlyMap<string, FixedSetName[]> = new Map(),
+  points: ReadonlyMap<string, string> = new Map(),
+): StickerParcel => {
   const booked = bookedReceiver(s.receiver);
   const gift = booked.gift ?? deliveryTarget(s.order).gift;
   return {
@@ -171,7 +183,7 @@ const stickerOf = (s: PrintParcelRow, count: number, latin: ReadonlyMap<string, 
     practice: s.mode === 'MOCK',
     consignmentId: s.consignmentId!,
     trackingCode: s.trackingCode,
-    receiver: { name: booked.name, phone: booked.phone, address: booked.address, addressLatin: latin.get(s.id) ?? null },
+    receiver: { name: booked.name, phone: booked.phone, address: booked.address, addressLatin: latin.get(s.id) ?? null, location: points.get(s.id) ?? null },
     collectMinor: s.codAmountMinor,
     currency: s.order.currency,
     items: s.order.items.map((i) => ({ name: i.productName, colour: i.colourName, size: i.sizeLabel, quantity: i.quantity })),
@@ -215,6 +227,21 @@ export async function latinLines(deps: Pick<ShippingDeps, 'db' | 'settings'>, st
   return out;
 }
 
+/**
+ * Follow-up 324: each parcel's shared point for the rider ("23.781, 90.412"), only while the owner's
+ * `orders.sharedLocation.sticker` is on and the order still keeps the point (never a gift, never past its keep date).
+ */
+export async function locationLines(deps: Pick<ShippingDeps, 'db' | 'settings' | 'now'>, storeId: number, rows: readonly PrintParcelRow[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  if (!rows.length || !(await setting(deps, storeId, 'orders.sharedLocation')).sticker) return out;
+  const now = nowOf(deps);
+  for (const r of rows) {
+    const p = sharedPointOf({ gpsLat: r.order.gpsLat, gpsLng: r.order.gpsLng, piiExpiresAt: r.order.piiExpiresAt, isGift: r.order.isGift || !!bookedReceiver(r.receiver).gift }, now);
+    if (p) out.set(r.id, p.text);
+  }
+  return out;
+}
+
 /** One press of Print: the job, whether it is a repeat of a press already done (nothing counted again), the stickers. */
 export interface StickerPrint {
   jobId: string;
@@ -243,8 +270,8 @@ async function replayPrint(deps: ShippingDeps, who: Who, job: { id: string; kind
   const rows = await deps.db.shipment.findMany({ where: { storeId: who.storeId, id: { in: job.shipmentIds } }, select: PRINT_PARCEL_SELECT });
   const prints = printsOf(job.data);
   const ordered = await inPrintOrder(deps.db, who.storeId, rows);
-  const [latin, sets] = await Promise.all([latinLines(deps, who.storeId, ordered), fixedSetLines(deps, who.storeId, ordered)]);
-  return { jobId: job.id, replay: true, parcels: ordered.map((r) => stickerOf(r, prints[r.id] ?? r.labelPrintCount, latin, sets)) };
+  const [latin, sets, points] = await Promise.all([latinLines(deps, who.storeId, ordered), fixedSetLines(deps, who.storeId, ordered), locationLines(deps, who.storeId, ordered)]);
+  return { jobId: job.id, replay: true, parcels: ordered.map((r) => stickerOf(r, prints[r.id] ?? r.labelPrintCount, latin, sets, points)) };
 }
 
 /**
@@ -291,8 +318,8 @@ export async function printStickers(deps: ShippingDeps, who: Who, input: unknown
       await tx.printJob.update({ where: { id: job.id }, data: { status: 'SUCCEEDED', printedAt: at, data: { prints } } });
       return { jobId: job.id, prints };
     }, TX);
-    const [latin, sets] = await Promise.all([latinLines(deps, who.storeId, ordered), fixedSetLines(deps, who.storeId, ordered)]);
-    return { jobId: done.jobId, replay: false, parcels: ordered.map((r) => stickerOf(r, done.prints[r.id]!, latin, sets)) };
+    const [latin, sets, points] = await Promise.all([latinLines(deps, who.storeId, ordered), fixedSetLines(deps, who.storeId, ordered), locationLines(deps, who.storeId, ordered)]);
+    return { jobId: done.jobId, replay: false, parcels: ordered.map((r) => stickerOf(r, done.prints[r.id]!, latin, sets, points)) };
   } catch (e) {
     if (!isUnique(e) || !d.requestKey) throw e;
     const again = await findJob();

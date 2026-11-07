@@ -92,6 +92,16 @@ describe('the courier sticker', () => {
     expect(plain.calls.some((c) => c.includes('·') && c.includes('Bogura'))).toBe(false);
   });
 
+  it('follow-up 324: the shared point for the rider, small under the address (after its Latin line); none without one', async () => {
+    const engine = boxText();
+    const address = 'House 4, Road 5, Dhanmondi';
+    await stickerPages(sampleSticker({ receiver: { name: 'Rahim Uddin', phone: '01711111111', address, addressLatin: null, location: '23.781, 90.412' } }), { ...SAMPLE_WORDS, location: 'Location' }, LAYOUT, engine);
+    expect(engine.calls.indexOf('Location 23.781, 90.412')).toBe(engine.calls.indexOf(address) + 1);
+    const plain = boxText();
+    await stickerPages(sampleSticker(), SAMPLE_WORDS, LAYOUT, plain);
+    expect(plain.calls.some((c) => c.includes('23.781'))).toBe(false);
+  });
+
   it('CN-018 (4): a Fixed set says "deliver whole" before the pieces; none without one', async () => {
     const engine = boxText();
     await stickerPages(sampleSticker({ fixedSets: ['Eid pair'] }), SAMPLE_WORDS, LAYOUT, engine);

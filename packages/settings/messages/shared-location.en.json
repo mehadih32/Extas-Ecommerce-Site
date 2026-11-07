@@ -1,0 +1,8 @@
+{
+  "orders": {
+    "sharedLocation": {
+      "label": "Where the team uses a shared location",
+      "help": "Off as shipped. While an order still keeps the location the customer shared for the rider: a map link on the order page, and the point printed small under the address on the courier sticker. Never on a gift, never after the keep days."
+    }
+  }
+}

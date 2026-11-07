@@ -17,7 +17,7 @@ const parcel = (over: Partial<StickerParcel> = {}): StickerParcel => ({
   practice: true,
   consignmentId: '12345678',
   trackingCode: null,
-  receiver: { name: 'Rahim', phone: '01711111111', address: 'House 4, Dhanmondi', addressLatin: null },
+  receiver: { name: 'Rahim', phone: '01711111111', address: 'House 4, Dhanmondi', addressLatin: null, location: null },
   collectMinor: 158_000,
   currency: 'BDT',
   items: [{ name: 'Linen shirt', colour: 'White', size: 'M', quantity: 1 }],

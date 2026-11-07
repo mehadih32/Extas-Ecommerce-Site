@@ -90,6 +90,8 @@ export * from './risk-panel';
 export * from './sections';
 // S05 · PR 541 follow-up 320: a prepaid order nothing flagged confirms by itself once paid (`orders.prepaid.selfConfirm`, off).
 export * from './prepaid-confirm';
+// S06 · PR 159 follow-up 324: the shared location on the order page and the sticker, while the order keeps it.
+export * from './shared-location';
 export * from './identity';
 export * from './identity-graph';
 export * from './duplicate-rules';

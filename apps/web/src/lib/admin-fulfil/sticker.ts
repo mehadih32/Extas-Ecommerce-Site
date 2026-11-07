@@ -3,7 +3,8 @@
 // the sticker's own words in the language the owner chose (messages/admin-fulfil.<lang>.json `ful.sticker.words`),
 // drawn by @extas/documents. Amounts are written as the shop writes money, in Western digits (what riders and the
 // courier's hub read). The exact-amount line is printed only when the owner turned it on and only on a parcel with
-// money to collect (never on a paid parcel, CN-014b idea 10).
+// money to collect (never on a paid parcel, CN-014b idea 10). Follow-up 324: the customer's shared point, under the
+// address, when @extas/shipping passes one (`orders.sharedLocation.sticker`, off).
 import { sharpText, stickerPages, tile, writePdf, type PdfPage, type StickerInput, type StickerLayout, type StickerWords, type TextEngine } from '@extas/documents';
 import type { StickerExactAmountSettings, StickerLayoutSettings } from '@extas/settings';
 import type { StickerParcel } from '@extas/shipping';
@@ -45,6 +46,7 @@ export function stickerWords(lang: 'en' | 'bn'): StickerWords {
     continued: w('continued'),
     practice: w('practice'),
     setWhole: w('setWhole'),
+    location: w('location'),
   };
 }
 
@@ -138,7 +140,7 @@ export function sampleParcel(dict: Dict, currency: string): StickerParcel {
     practice: true,
     consignmentId: s('consignment'),
     trackingCode: s('tracking'),
-    receiver: { name: s('name'), phone: s('phone'), address: s('address'), addressLatin: null },
+    receiver: { name: s('name'), phone: s('phone'), address: s('address'), addressLatin: null, location: null },
     collectMinor: Number(s('amountMinor')) || 0,
     currency,
     items: [

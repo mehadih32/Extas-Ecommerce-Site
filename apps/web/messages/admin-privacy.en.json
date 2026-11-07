@@ -132,6 +132,16 @@
       },
       "inEn": "{label} (English)",
       "inBn": "{label} (Bengali)"
+    },
+    "loc": {
+      "h": "Shared location: where the team uses it",
+      "d": "A customer may tap \"Share my location for the rider\" at checkout. While the order keeps that point (the days above), it can help the team and the rider. Never on a gift, never after the days. Both off as shipped.",
+      "orderPage": "Map link on the order page",
+      "orderPageHelp": "Off as shipped. On: the order's Customer card shows the point and opens it on the map below (a new tab).",
+      "sticker": "Print the point on the courier sticker",
+      "stickerHelp": "Off as shipped. On: the sticker prints \"Location 23.781, 90.412\" small under the address, for the rider.",
+      "mapLink": "Map address",
+      "mapLinkHelp": "Starts with https:// and has {lat} and {lng} in it; the point fills them in."
     }
   }
 }

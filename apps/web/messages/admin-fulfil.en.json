@@ -215,7 +215,8 @@
         "page": "{n}/{of}",
         "continued": "Continued on the next sticker",
         "practice": "PRACTICE: not a real parcel",
-        "setWhole": "SET {name}: deliver whole — no single piece kept or returned"
+        "setWhole": "SET {name}: deliver whole — no single piece kept or returned",
+        "location": "Location"
       },
       "sample": {
         "order": "SAMPLE-1",
