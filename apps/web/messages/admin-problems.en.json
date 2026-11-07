@@ -148,6 +148,15 @@
     "alert": {
       "urgent": "{store}: urgent customer problem: {kind} ({step}, {where}). {visitors} visitor(s) in the last day. See Reports › Site health › Customer problems.",
       "spike": "{store}: sudden rise: {kind} ({step}, {where}) hit {visitors} visitors in {minutes} minutes. See Reports › Site health › Customer problems."
+    },
+    "reopen": {
+      "h": "Open again when it comes back",
+      "d": "A problem marked Fixed that is reported again is flagged \"came back\". With this rule on, it goes back to New by itself once it has enough new reports after the fix. Nothing in the shop is blocked or changed.",
+      "enabled": "Open a fixed problem again when it comes back",
+      "enabledHelp": "Off: a problem that comes back is only flagged and stays Fixed until someone changes it.",
+      "records": "New reports after the fix that open it again",
+      "graceMinutes": "… not counting the first this many minutes after the fix",
+      "readOnly": "You can see the rule; changing it needs the settings permission."
     }
   }
 }

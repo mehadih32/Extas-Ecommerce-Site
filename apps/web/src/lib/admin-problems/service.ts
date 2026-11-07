@@ -6,10 +6,11 @@
 // with `health.problems.approve`. The recorder's numbers (`health.problems`) need `settings.write`. Every change is
 // audited. No name, phone, address or payment detail exists here to show; the visitor ids are never shown either.
 // PR 415: a second card, the owner's Telegram alerts (`health.alerts`, `settings.write`, audited as health.alerts.save).
+// Follow-up 596: a third, the re-open rule (`health.problems.reopen`, off; audited as health.problems.reopen.save).
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { healthAlertsSchema, healthProblemsSchema, storeTarget, type HealthAlertsSettings, type HealthProblemsSettings } from '@extas/settings';
+import { healthAlertsSchema, healthProblemsSchema, healthReopenSchema, storeTarget, type HealthAlertsSettings, type HealthProblemsSettings, type HealthReopenSettings } from '@extas/settings';
 import type { AppResolver } from '../settings';
 import type { JourneyStep, ProblemKind, Severity } from '../problems/kinds';
 import { addDays, dayOf, dayStartAt, parseWhen, windowOf, type ProblemsWhen } from './days';
@@ -85,6 +86,13 @@ export interface AlertsCard {
   version: string;
 }
 
+/** Follow-up 596: the re-open rule for a fixed problem that comes back. */
+export interface ReopenCard {
+  key: 'reopen';
+  value: HealthReopenSettings;
+  version: string;
+}
+
 export interface ProblemsView {
   when: ProblemsWhen;
   /** The view's first and last day (YYYY-MM-DD, the shop's time zone). */
@@ -97,7 +105,8 @@ export interface ProblemsView {
   glitches: ProblemRow[];
   /** Reports a day for the last two weeks, oldest first. */
   trend: { day: string; records: number }[];
-  cards: { problems: ProblemsCard; alerts: AlertsCard };
+  /** Follow-up 596: the re-open rule (`health.problems.reopen`). */
+  cards: { problems: ProblemsCard; alerts: AlertsCard; reopen: ReopenCard };
 }
 
 export interface ProblemDetail {
@@ -164,9 +173,10 @@ async function trendOf(db: PrismaClient, where: { storeId: number; problemId?: s
 export async function problemsView(deps: ProblemsDeps, who: ProblemsWho, when: ProblemsWhen): Promise<ProblemsView> {
   await requirePermission(deps.db, who.actor, 'health.read', { storeId: S });
   const now = deps.now?.() ?? new Date();
-  const [cfg, alerts, timeZone] = await Promise.all([
+  const [cfg, alerts, reopen, timeZone] = await Promise.all([
     deps.resolver.value('health.problems', { storeId: S }),
     deps.resolver.value('health.alerts', { storeId: S }),
+    deps.resolver.value('health.problems.reopen', { storeId: S }),
     deps.resolver.value('store.timeZone', { storeId: S }),
   ]);
   const win = windowOf(when, now, timeZone, cfg.showDays);
@@ -216,6 +226,7 @@ export async function problemsView(deps: ProblemsDeps, who: ProblemsWho, when: P
     cards: {
       problems: { key: 'problems', value: cfg, version: versionOf(cfg) },
       alerts: { key: 'alerts', value: alerts, version: versionOf(alerts) },
+      reopen: { key: 'reopen', value: reopen, version: versionOf(reopen) },
     },
   };
 }
@@ -342,13 +353,16 @@ export async function setProblemStatus(deps: ProblemsDeps, who: ProblemsWho, id:
 const CARDS = {
   problems: { key: 'health.problems', schema: healthProblemsSchema },
   alerts: { key: 'health.alerts', schema: healthAlertsSchema },
+  // follow-up 596
+  reopen: { key: 'health.problems.reopen', schema: healthReopenSchema },
 } as const;
 
 /** The recorder's numbers or the alerts (`settings.write`, audited). */
 export async function saveProblemsCard(deps: ProblemsDeps, who: ProblemsWho, input: unknown): Promise<ProblemsView> {
   await requirePermission(deps.db, who.actor, 'settings.write', { storeId: S });
-  if (!isObj(input) || (input.key !== 'problems' && input.key !== 'alerts')) throw new ProblemsError('INVALID_INPUT', 400, ['key']);
-  const card = CARDS[input.key];
+  // ~~if (!isObj(input) || (input.key !== 'problems' && input.key !== 'alerts')) throw …~~ follow-up 596: every card
+  if (!isObj(input) || typeof input.key !== 'string' || !Object.hasOwn(CARDS, input.key)) throw new ProblemsError('INVALID_INPUT', 400, ['key']);
+  const card = CARDS[input.key as keyof typeof CARDS];
   const before: Record<string, unknown> = await deps.resolver.value(card.key, { storeId: S });
   if (input.version !== versionOf(before)) throw new ProblemsError('STALE', 409);
   const ok = card.schema.safeParse(input.value);

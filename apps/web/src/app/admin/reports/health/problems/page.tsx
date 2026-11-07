@@ -177,6 +177,14 @@ export default async function CustomerProblemsPage({ searchParams }: { searchPar
     { kind: 'number', path: 'repeatHours', label: s('alerts.repeatHours'), min: 1, max: 168 },
   ];
 
+  // Follow-up 596: the re-open rule for a fixed problem that comes back (off as it ships)
+  const reopenTexts: FieldsCardTexts = { ...texts, h: s('reopen.h'), d: s('reopen.d'), readOnly: s('reopen.readOnly') };
+  const reopenFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('reopen.enabled'), help: s('reopen.enabledHelp') },
+    { kind: 'number', path: 'records', label: s('reopen.records'), min: 1, max: 1_000 },
+    { kind: 'number', path: 'graceMinutes', label: s('reopen.graceMinutes'), min: 0, max: 1_440 },
+  ];
+
   const table = (rows: ProblemRow[], testId: string) => (
     <div className="a2-tblw a2-mt12">
       <table className="a2-tbl" data-testid={testId}>
@@ -323,6 +331,18 @@ export default async function CustomerProblemsPage({ searchParams }: { searchPar
         texts={alertTexts}
         canEdit={canEdit}
         testId="problems-alerts"
+      />
+      <FieldsCard
+        url={API}
+        screen={{
+          key: v.cards.reopen.key,
+          value: v.cards.reopen.value,
+          version: v.cards.reopen.version,
+        }}
+        fields={reopenFields}
+        texts={reopenTexts}
+        canEdit={canEdit}
+        testId="problems-reopen"
       />
     </div>
   );

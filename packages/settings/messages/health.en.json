@@ -10,7 +10,11 @@
     },
     "problems": {
       "label": "Site health: the customer problem recorder",
-      "help": "The shop's pages report what goes wrong for a visitor — a script error, a failed or slow call to the shop's server, a page that failed, the error screen, a form field refused again and again, rage clicks, broken pictures and slow loads — never a name, phone, address or payment detail (visitor ids are random). The same cause becomes one problem on Reports › Site health › Customer problems. The numbers decide what is slow, what counts as a rage click or a stuck form, how many reports one page may send, when a problem is Urgent, how many days the lists show, and what is a short glitch."
+      "help": "The shop's pages report what goes wrong for a visitor — a script error, a failed or slow call to the shop's server, a page that failed, the error screen, a form field refused again and again, rage clicks, broken pictures and slow loads — never a name, phone, address or payment detail (visitor ids are random). The same cause becomes one problem on Reports › Site health › Customer problems. The numbers decide what is slow, what counts as a rage click or a stuck form, how many reports one page may send, when a problem is Urgent, how many days the lists show, and what is a short glitch.",
+      "reopen": {
+        "label": "Site health: a fixed customer problem that comes back",
+        "help": "A customer problem marked Fixed that is reported again is flagged \"came back\". With this rule on, once it has this many new reports that arrived more than these minutes after it was marked fixed, it goes back to New by itself (the fix note stays in the audit log). Off as it ships; nothing in the shop is changed."
+      }
     },
     "alerts": {
       "label": "Site health: Telegram alerts for customer problems",
