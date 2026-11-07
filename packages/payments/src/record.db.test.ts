@@ -4,7 +4,7 @@
 // staff: off by default, confirmed, never above the amount due, once per reference and per key, audited. Every value
 // is made up.
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { applyOutcome, orderMoney, PAYMENT_FLAGS, recordPayment, type OutcomeInput } from './index';
 import { setUpPayments, type PaymentsFixture } from './testing';
@@ -124,16 +124,23 @@ describe.skipIf(!HAS_TEST_DB)('PR 165 · the payment model', () => {
 
     it('recorded once: the due and the door amount go down by exactly that much, the order service is asked to move the order, the audit row is written', async () => {
       const moved: string[] = [];
-      const deps = f.deps({ orders: { advancePaid: async (_s, id) => void moved.push(id) } });
+      // follow-up 320: the order service is told the money came in (once, never on a replay; a failure there never fails the payment)
+      const paid: string[] = [];
+      const deps = f.deps({ orders: { advancePaid: async (_s, id) => void moved.push(id), paid: async (_s, id) => { paid.push(id); throw new Error('the order side failed'); } } });
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const r = await recordPayment(deps, f.staff, o.id, input, { idempotencyKey: 'rec-000001' });
       expect(r).toMatchObject({ number: 'R-1', amountMinor: 12_000, dueMinor: 150_000, codToCollectMinor: 150_000, advanceMet: true, replay: false });
       expect(moved).toEqual([o.id]);
+      expect(paid).toEqual([o.id]);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
       expect(await f.t.prisma.payment.findUniqueOrThrow({ where: { id: r.paymentId } })).toMatchObject({ status: 'PAID', method: 'BKASH', provider: 'manual:bkash', providerTrxId: 'BK9X7A1', recordedById: f.staffId, moneyStatus: 'PROVISIONAL' });
       expect((await orderOf(o.id)).events.map((e) => e.type)).toEqual(['payment.recorded']);
       const audit = await f.t.prisma.auditLog.findFirstOrThrow({ where: { action: 'payment.record', entityId: r.paymentId } });
       expect(audit).toMatchObject({ actorType: 'STAFF', actorId: f.staffId, before: { dueMinor: 162_000 }, after: { dueMinor: 150_000, amountMinor: 12_000, reference: 'BK9X7A1' } });
       // the same press again: the first answer, no second payment
       expect(await recordPayment(deps, f.staff, o.id, input, { idempotencyKey: 'rec-000001' })).toMatchObject({ paymentId: r.paymentId, replay: true });
+      expect(paid).toEqual([o.id]);
       expect(await code(recordPayment(deps, f.staff, o.id, { ...input, amountMinor: 11_000 }, { idempotencyKey: 'rec-000001' }))).toBe('IDEMPOTENCY_MISMATCH');
       // the same transaction under another key, typed another way: refused
       expect(await code(recordPayment(deps, f.staff, o.id, { ...input, reference: 'BK9X7A1' }, { idempotencyKey: 'rec-000002' }))).toBe('DUPLICATE_REFERENCE');

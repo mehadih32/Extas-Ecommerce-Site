@@ -33,6 +33,7 @@ import { blocklistCardScreen, blocklistCardTexts } from '@/lib/admin-orders/bloc
 import { blockProposalCard } from '@/lib/admin-orders/block-proposal-api';
 import { bundlingCard } from '@/lib/admin-orders/bundling-api';
 import { goodCustomerCard } from '@/lib/admin-orders/good-customer-api';
+import { prepaidConfirmCard } from '@/lib/admin-orders/prepaid-confirm-api';
 import { phoneRiskCards } from '@/lib/admin-orders/phone-risk-api';
 import { transitCard, transitReportFor } from '@/lib/admin-orders/transit-api';
 import { connectedFraudChecks } from '@/lib/shop/courier-fraud';
@@ -69,7 +70,7 @@ export default async function RiskRulesPage() {
   const who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const held = access.guard.permissions;
   const canEdit = held?.has('risk.rules.write') ?? false;
-  const [data, adv, bl, rf, bd, bp, gc, cancelReasons, td, tdReport, pr, fraudChecks] = await Promise.all([
+  const [data, adv, bl, rf, bd, bp, gc, cancelReasons, td, tdReport, pr, fraudChecks, pc] = await Promise.all([
     riskLevels(readDeps(access.deps), who),
     advanceSettings(readDeps(access.deps), who),
     blocklist(readDeps(access.deps), who),
@@ -83,6 +84,8 @@ export default async function RiskRulesPage() {
     phoneRiskCards(access.deps, MOTHER_STORE_ID),
     // PR 567: the courier fraud checks switched on and passed in Keys & connections
     connectedFraudChecks(access.deps.db, MOTHER_STORE_ID),
+    // follow-up 320: prepaid orders nothing flagged confirm by themselves once paid (off as shipped)
+    prepaidConfirmCard(access.deps, MOTHER_STORE_ID),
   ]);
   const d = view.dict;
   // PR 522: one parcel for one person's orders (the setting `risk.bundling`, off as shipped)
@@ -122,6 +125,10 @@ export default async function RiskRulesPage() {
     { kind: 'number', path: 'minDelivered', label: gw('minDelivered'), help: gw('minDeliveredHelp'), min: 1, max: 100 },
     { kind: 'number', path: 'maxRefused', label: gw('maxRefused'), help: gw('maxRefusedHelp'), min: 0, max: 20 },
   ];
+  // follow-up 320 (PR 541): a paid prepaid order nothing flagged confirms by itself (`orders.prepaid.selfConfirm`, off)
+  const pcw = (k: string) => t(d, `orders.rr.pc.${k}`);
+  const pcTexts: FieldsCardTexts = { ...bdTexts, h: pcw('h'), d: pcw('d'), readOnly: pcw('readOnly'), err: Object.fromEntries(Object.keys(bdTexts.err).map((c) => [c, gw(`err.${c}`)])) };
+  const pcFields: FieldsCardField[] = [{ kind: 'switch', path: 'enabled', label: pcw('enabled') }];
   // PR 556: the in-transit duplicate notice at checkout (the setting `checkout.transitDuplicate`, off as shipped) and its
   // report by campaign (risk.report); PR 557: its "another size: exchange on arrival" switch and the report's size column
   const tw = (k: string, vars?: Record<string, string | number>) => t(d, `orders.rr.td.${k}`, vars);
@@ -169,6 +176,9 @@ export default async function RiskRulesPage() {
       </div>
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/risk/good-customer" screen={{ key: gc.key, value: gc.value, version: gc.version }} fields={gcFields} texts={gcTexts} canEdit={canEdit} testId="risk-good-customer" />
+      </div>
+      <div className="a2-mt12">
+        <FieldsCard url="/api/admin/risk/prepaid-confirm" screen={{ key: pc.key, value: pc.value, version: pc.version }} fields={pcFields} texts={pcTexts} canEdit={canEdit} testId="risk-prepaid-confirm" />
       </div>
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/risk/transit" screen={{ key: td.key, value: td.value, version: td.version }} fields={tdFields} texts={tdTexts} canEdit={canEdit} testId="risk-transit" />

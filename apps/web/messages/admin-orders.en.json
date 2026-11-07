@@ -1428,6 +1428,12 @@
           "network": "No connection. Nothing was saved; try again.",
           "other": "Something went wrong. Nothing was saved; try again."
         }
+      },
+      "pc": {
+        "h": "Prepaid orders confirm by themselves",
+        "d": "When on, a prepaid order that nothing flagged (no duplicate, re-order, new identity, high or watch level) is confirmed the moment its money is in full, instead of waiting in To confirm › Prepaid for your tap. It only confirms: no money moves. An order with anything still to pay, a payment problem, a cancel request or an open review still waits for a person. Its timeline says it was confirmed by itself.",
+        "enabled": "Confirm a paid prepaid order nothing flagged by itself",
+        "readOnly": "Only someone allowed to change the risk rules can change this."
       }
     },
     "adv": {

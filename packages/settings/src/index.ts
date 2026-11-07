@@ -211,6 +211,8 @@ export * from './registry-seasonal-home';
 export * from './registry-festive-cutoff';
 // S02 · PR 80 follow-up 679 — the demo's eye-toggle parts: login line, door note, desktop help strip, send the bag on WhatsApp, the set line, the thank-you upsell (registry-eye-parts.ts, version 265).
 export * from './registry-eye-parts';
+// S05 · PR 541 follow-up 320 — prepaid orders that nothing flagged confirm by themselves once paid (registry-prepaid-confirm.ts, version 266).
+export * from './registry-prepaid-confirm';
 // S13 · PR 282 — the marketing calendar: the switch and how many days one view shows (registry-marketing-calendar.ts, version 217).
 export * from './registry-marketing-calendar';
 // S13 · PR 283 — the marketing report: the switch, the longest period and a message send's result days (registry-marketing-report.ts, version 218).

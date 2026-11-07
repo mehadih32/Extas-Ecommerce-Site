@@ -11,7 +11,7 @@
 // - `startLinkPayment`: "Pay" on a real gateway (gateway.ts `startPayment`).
 // No money moves here except what the customer pays; nothing changes a COD rule, a price or a charge.
 import { z } from 'zod';
-import { nowOf, parse, setting, TX, type PaymentsDeps } from './context';
+import { afterPaid, nowOf, parse, setting, TX, type PaymentsDeps } from './context';
 import { PaymentsError } from './errors';
 import { applyOutcome } from './outcome';
 import { startPayment, type StartResult } from './gateway';
@@ -136,6 +136,8 @@ export async function linkPayAction(deps: PaymentsDeps, input: unknown): Promise
     TX,
   );
   if (r.advanceMet && r.orderId) await deps.orders?.advancePaid?.(p.storeId, r.orderId, { actorId: null, source: PAY_LINK_SOURCE });
+  // follow-up 320: back in the queue and nothing left to pay — a prepaid order nothing flagged may confirm by itself
+  if (r.changed && r.status === 'PAID' && r.orderId) await afterPaid(deps.orders, p.storeId, r.orderId, { actorId: null, source: PAY_LINK_SOURCE });
   return { token: d.token, status: r.status as LinkPayView['status'], advanceMet: r.advanceMet };
 }
 

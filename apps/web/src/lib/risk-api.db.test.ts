@@ -295,6 +295,25 @@ describe.skipIf(!HAS_TEST_DB)('risk rules admin API on PostgreSQL (PR 544)', () 
     for (const action of ['risk.goodCustomer.save', 'risk.stopReport.save']) expect(await f.t.prisma.auditLog.count({ where: { action } }), action).toBeGreaterThanOrEqual(1);
   });
 
+  it('follow-up 320: the prepaid self-confirm card, off as shipped; a reader is refused; saved (risk.rules.write, audited); stale and bad input refused', async () => {
+    const got = await api('GET', ['prepaid-confirm']);
+    const card = got.body.cards.prepaidConfirm as { key: string; value: Record<string, unknown>; version: string };
+    expect(card).toMatchObject({ key: 'prepaidConfirm', value: { enabled: false } });
+    expect((await api('GET', ['prepaid-confirm'], { cookie: reader })).status).toBe(403);
+    expect((await api('GET', ['prepaid-confirm', 'x'])).status).toBe(404);
+    expect((await api('POST', ['prepaid-confirm'], { body: {} })).status).toBe(405);
+    expect(await api('PUT', ['prepaid-confirm'], { body: { key: 'prepaidConfirm', value: { enabled: 'yes' }, version: card.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT', details: ['enabled'] } });
+    expect(await api('PUT', ['prepaid-confirm'], { body: { key: 'other', value: card.value, version: card.version } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    const put = await api('PUT', ['prepaid-confirm'], { body: { key: 'prepaidConfirm', value: { enabled: true }, version: card.version } });
+    expect(put).toMatchObject({ status: 200, body: { cards: { prepaidConfirm: { value: { enabled: true } } } } });
+    expect(await api('PUT', ['prepaid-confirm'], { body: { key: 'prepaidConfirm', value: card.value, version: card.version } })).toMatchObject({ status: 409, body: { error: 'STALE' } });
+    expect(await deps.resolver.value('orders.prepaid.selfConfirm', { storeId: f.S })).toEqual({ enabled: true });
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'orders.prepaid.selfConfirm.save' } })).toBe(1);
+    // back off for the other tests
+    const now = put.body.cards.prepaidConfirm as typeof card;
+    expect((await api('PUT', ['prepaid-confirm'], { body: { key: 'prepaidConfirm', value: { enabled: false }, version: now.version } })).status).toBe(200);
+  });
+
   it('PR 540: the digest with the gate card (a reader sees it, cannot save); the card audited; a proposed hold decided with orders.hold', async () => {
     const got = await api('GET', ['digest']);
     expect(got.status).toBe(200);

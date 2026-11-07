@@ -6,7 +6,7 @@ import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, noteFlagShown, payAction, payView, placeOrder, saveVoiceAddress, viewOf, type CheckoutDeps, type CheckoutQuote, type PlaceNext, type VoiceHooks } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
-import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck, type CourierFraudSource } from '@extas/orders';
+import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, selfConfirmPrepaid, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck, type CourierFraudSource } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { SUPPORT_REF_COOKIE, supportRefOf } from './support-ref-model';
@@ -255,6 +255,19 @@ async function waitForAdvance(deps: LandedDeps, orderId: string): Promise<void> 
   }
 }
 
+/**
+ * S05 · PR 541 follow-up 320 — an order already paid in full when it lands (the wallet paid it all) and that nothing
+ * flagged confirms by itself while the owner's `orders.prepaid.selfConfirm` is on. It only confirms; the customer's order
+ * never fails.
+ */
+async function selfConfirmLanded(deps: LandedDeps, orderId: string): Promise<void> {
+  try {
+    await selfConfirmPrepaid({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
+  } catch (e) {
+    console.warn(`prepaid self-confirm: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+}
+
 /** What the checks after an order need: the checkout's engines and the store. */
 export type LandedDeps = Pick<CheckoutApiDeps, 'checkout' | 'storeId'>;
 
@@ -274,6 +287,7 @@ export async function orderLanded(deps: LandedDeps, orderId: string): Promise<vo
   await checkNewCustomer(deps, orderId);
   await waitForAdvance(deps, orderId);
   await checkBundling(deps, orderId);
+  await selfConfirmLanded(deps, orderId);
 }
 
 /** Where the page goes after the order or a payment answer, in its language. */

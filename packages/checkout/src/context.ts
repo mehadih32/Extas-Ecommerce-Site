@@ -34,6 +34,11 @@ export interface CheckoutDeps {
   advanceFlag?: (input: AdvanceFlagInput) => Promise<AdvanceFlag | null>;
   /** PR 560 — an order waiting for its advance has it in full now (the app passes the order service's `recordAdvance`). */
   advancePaid?: (storeId: number, orderId: string) => Promise<void>;
+  /**
+   * Follow-up 320 (PR 541) — the payment page's money came in for an order (the app passes the order service's
+   * `selfConfirmPrepaid`: a prepaid order nothing flagged confirms by itself while the owner's switch is on).
+   */
+  paid?: (storeId: number, orderId: string) => Promise<void>;
 }
 
 export type CheckoutErrorCode =

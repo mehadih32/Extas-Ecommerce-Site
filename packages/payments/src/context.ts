@@ -22,6 +22,18 @@ export interface SettingsReader {
 export interface OrderHooks {
   /** An order waiting for its advance (AWAITING_ADVANCE) now has it in full: the order service's `recordAdvance`. */
   advancePaid?(storeId: number, orderId: string, by: { actorId: string | null; source: string }): Promise<void>;
+  /**
+   * Follow-up 320 (PR 541): money for an order came in (a payment became PAID). The order service's `selfConfirmPrepaid`
+   * may confirm a prepaid order that nothing flagged, while the owner's switch is on. It only confirms; a failure never
+   * fails the payment (the caller logs it).
+   */
+  paid?(storeId: number, orderId: string, by: { actorId: string | null; source: string }): Promise<void>;
+}
+
+/** Follow-up 320: calls the `paid` hook after a payment's money is written; never throws (the money stays recorded). */
+export async function afterPaid(hooks: OrderHooks | undefined, storeId: number, orderId: string, by: { actorId: string | null; source: string }): Promise<void> {
+  if (!hooks?.paid) return;
+  await hooks.paid(storeId, orderId, by).catch((e: unknown) => console.warn(`after paid: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`));
 }
 
 /**

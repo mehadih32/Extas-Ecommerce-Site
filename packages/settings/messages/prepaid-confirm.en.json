@@ -1,0 +1,10 @@
+{
+  "orders": {
+    "prepaid": {
+      "selfConfirm": {
+        "label": "Prepaid orders confirm by themselves once paid",
+        "help": "A prepaid order that nothing flagged is confirmed the moment its money is in full, instead of waiting in To confirm › Prepaid for one tap. It only confirms: no money moves, and an order with anything still to pay, a payment problem, a cancel request or an open review waits for a person."
+      }
+    }
+  }
+}
