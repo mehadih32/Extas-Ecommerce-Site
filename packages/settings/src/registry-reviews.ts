@@ -61,6 +61,15 @@ const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: 
 /** The product page's own block: read by the page itself, so it may be public like the other `pdp.*` keys. */
 const pdpJson = { ...json, group: 'productPage', isPublic: true } as const;
 
+/** Follow-up 233 (registry v281): the shop's public reply under a published review on the product page. */
+export const pdpReviewReplySchema = z
+  .object({
+    /** Show the shop's reply ("<shop> team: …") under the review it answers. */
+    show: z.boolean(),
+  })
+  .strict();
+export type PdpReviewReplySettings = z.output<typeof pdpReviewReplySchema>;
+
 /**
  * PR 65 — the reviews block on the product page (demo 30-product.js `pdp_reviewsSection`): the summary box with the
  * average, the stars and the count, and the cards in a sliding row, the ones with a photo first (a buyer photo is the
@@ -163,6 +172,15 @@ export const reviewSettings = {
     labelKey: 'pdp.reviews.label',
     helpKey: 'pdp.reviews.help',
     sortOrder: 135,
+  }),
+  'pdp.reviewReply': setting({
+    ...pdpJson,
+    version: 281,
+    schema: pdpReviewReplySchema,
+    default: { show: false },
+    labelKey: 'pdp.reviewReply.label',
+    helpKey: 'pdp.reviewReply.help',
+    sortOrder: 136,
   }),
   'reviews.submit': setting({
     ...json,

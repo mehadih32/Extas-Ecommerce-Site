@@ -9,6 +9,8 @@
 //   POST  /api/admin/reviews                 the shop's own review {productId|comboId, rating, …} · reviews.write
 //   POST  /api/admin/reviews/:id/moderate    {action: approve|hide|reject|restore, reason?} · reviews.moderate
 //   POST  /api/admin/reviews/:id/verified    {verified: true|false} · reviews.moderate
+//   POST  /api/admin/reviews/:id/reply       {reply: string|null} · reviews.moderate (follow-up 233: the shop's
+//                                            public reply; shown on the product page only while `pdp.reviewReply`)
 //
 // Approving a review is the only thing in the whole shop that pays the photo-review reward, and only while the owner
 // has switched it on with his own amount (`reviews.photoReward`, off with no amount). The answer says what was paid.
@@ -97,6 +99,9 @@ export function reviewsHandler(request: Request, deps: AdminDeps | null, path: s
       const r = await cat.moderateReview(c.deps, c.who, id, await body(request));
       return { review: r.review, reward: r.reward };
     });
+  }
+  if (action === 'reply') {
+    return handle(request, deps, 'reviews.moderate', async (c) => ({ review: await cat.replyToReview(c.deps, c.who, id, await body(request)) }));
   }
   if (action === 'verified') {
     return handle(request, deps, 'reviews.moderate', async (c) => {

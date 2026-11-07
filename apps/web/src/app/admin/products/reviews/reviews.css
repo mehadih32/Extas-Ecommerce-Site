@@ -19,3 +19,7 @@
 /* PR 66 follow-up 184 — Products › Reviews › Questions: the answer box above the buttons. */
 .adm2 .revq-acts{display:flex;flex-direction:column;gap:8px}
 .adm2 .revq-acts textarea{width:100%;min-height:88px}
+/* PR 65 follow-up 233 — the shop's public reply on a review card, and its box. */
+.adm2 .rev-reply-shown{border-left:3px solid var(--lm-pri);padding:4px 0 4px 10px}
+.adm2 .rev-reply{display:flex;flex-direction:column;gap:8px;padding-top:8px;border-top:1px solid var(--ln2)}
+.adm2 .rev-reply textarea{width:100%;min-height:88px}

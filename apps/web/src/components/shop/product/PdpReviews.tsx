@@ -4,6 +4,7 @@
 // first. The row is the shop's one slider engine (SmoothRow / `lib/shop/slider.ts`), so a mouse resting on it, a
 // finger on it and the keyboard inside it each pause it and each start it again on their own (checklist L32/L33).
 //
+// Follow-up 233: while `pdp.reviewReply.show` (off as shipped) the shop's public reply sits under the review it answers.
 // Only approved reviews are here, and a card shows only what its review carries: the stars, the name he chose, the
 // "Verified buyer" tag when it came from an order, his height · weight · "bought L" line when he gave those, his
 // words, and his photo. With no approved review the section is not drawn at all — never an empty box, never a
@@ -49,7 +50,7 @@ function bodyLine(c: ShopContext, r: PdpReviewRow): string {
   return parts.join(' · ');
 }
 
-function Card({ c, r, name }: { c: ShopContext; r: PdpReviewRow; name: string }) {
+function Card({ c, r, name, reply }: { c: ShopContext; r: PdpReviewRow; name: string; reply: boolean }) {
   const line = bodyLine(c, r);
   const fit = r.fit ? c.t(`reviews.fit.${r.fit.toLowerCase()}`) : null;
   return (
@@ -79,6 +80,12 @@ function Card({ c, r, name }: { c: ShopContext; r: PdpReviewRow; name: string })
           <ResponsiveImage image={r.photo} slot="thumb" sizes="84px" alt={altFor(r.photo, c.lang, c.t('reviews.photoAlt', { name }))} />
         </div>
       ) : null}
+      {reply && r.reply ? (
+        <div className="pdp-rev-reply" data-testid="pdp-review-reply">
+          <div className="xs bold">{c.t('reviews.replyBy', c.vars)}</div>
+          <p className="small text2">{r.reply}</p>
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -100,7 +107,7 @@ function Summary({ c, view }: { c: ShopContext; view: PdpReviewsView }) {
 }
 
 /** The block, drawn on the server from the reviews the page already read (no script beyond the one slider engine). */
-export function PdpReviews({ c, set, data, name, qa }: { c: ShopContext; set: PdpReviewsSettings; data: ProductReviewsData; name: string; qa: boolean }) {
+export function PdpReviews({ c, set, data, name, qa, reply = false }: { c: ShopContext; set: PdpReviewsSettings; data: ProductReviewsData; name: string; qa: boolean; reply?: boolean }) {
   if (!set.on) return null;
   const view = pdpReviewsView(data.rows, { average: data.average, total: data.total }, set);
   if (!view) return null;
@@ -119,7 +126,7 @@ export function PdpReviews({ c, set, data, name, qa }: { c: ShopContext; set: Pd
           {set.summary ? <Summary c={c} view={view} /> : null}
           <SmoothRow id="sl-reviews" className="pdp-revlist pdp-slide" engine={c.s['slider.engine']} speed={set.speed}>
             {view.cards.map((r) => (
-              <Card key={r.id} c={c} r={r} name={name} />
+              <Card key={r.id} c={c} r={r} name={name} reply={reply} />
             ))}
           </SmoothRow>
         </div>

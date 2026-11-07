@@ -6,15 +6,16 @@
 //                                     STALE (`reviews.moderate`; audited, and in the settings change log with who)
 // Nothing here moves money: the photo-review reward is not on this card.
 // PR 66 follow-up 183: Products › Reviews › Questions › More options adds the "Ask a question" card (`pdp.qaAsk`: on/off,
-// who may ask, the longest question, a day's limit per person; off as shipped) on the same routes.
+// who may ask, the longest question, a day's limit per person; off as shipped) on the same routes. Follow-up 233 adds
+// "The shop's reply" (`pdp.reviewReply`: show the team's public reply under a review on the product page; off).
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { pdpQaAskSchema, reviewRequestsSchema, storeTarget } from '@extas/settings';
+import { pdpQaAskSchema, pdpReviewReplySchema, reviewRequestsSchema, storeTarget } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
-export const REVIEW_SETTING_KEYS = ['reviews.requests', 'pdp.qaAsk'] as const;
+export const REVIEW_SETTING_KEYS = ['reviews.requests', 'pdp.qaAsk', 'pdp.reviewReply'] as const;
 export type ReviewSettingKey = (typeof REVIEW_SETTING_KEYS)[number];
 
 export interface ReviewSettingCard {
@@ -40,8 +41,8 @@ class ReviewSettingsError extends Error {
   }
 }
 
-const SCHEMAS = { 'reviews.requests': reviewRequestsSchema, 'pdp.qaAsk': pdpQaAskSchema } as const;
-const WHERE: Record<ReviewSettingKey, string> = { 'reviews.requests': 'Products › Reviews › Review requests', 'pdp.qaAsk': 'Products › Reviews › Questions › Ask a question' };
+const SCHEMAS = { 'reviews.requests': reviewRequestsSchema, 'pdp.qaAsk': pdpQaAskSchema, 'pdp.reviewReply': pdpReviewReplySchema } as const;
+const WHERE: Record<ReviewSettingKey, string> = { 'reviews.requests': 'Products › Reviews › Review requests', 'pdp.qaAsk': 'Products › Reviews › Questions › Ask a question', 'pdp.reviewReply': "Products › Reviews › The shop's reply" };
 const isKey = (k: unknown): k is ReviewSettingKey => typeof k === 'string' && (REVIEW_SETTING_KEYS as readonly string[]).includes(k);
 
 const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0, 16);
@@ -66,6 +67,7 @@ export async function saveReviewSetting(deps: Deps, who: Who, input: unknown): P
   if (versionOf(ok.data) !== versionOf(before)) {
     const meta = { actorId: who.actor.staffUserId ?? null, reason: WHERE[key] };
     if (key === 'pdp.qaAsk') await deps.resolver.set('pdp.qaAsk', pdpQaAskSchema.parse(ok.data), storeTarget(S), meta);
+    else if (key === 'pdp.reviewReply') await deps.resolver.set('pdp.reviewReply', pdpReviewReplySchema.parse(ok.data), storeTarget(S), meta);
     else await deps.resolver.set('reviews.requests', reviewRequestsSchema.parse(ok.data), storeTarget(S), meta);
     await audit(deps.db, who.actor, { storeId: S, action: `${key}.save`, entityType: 'Setting', entityId: key, before: { ...before }, after: { ...ok.data } }, who.ctx);
   }

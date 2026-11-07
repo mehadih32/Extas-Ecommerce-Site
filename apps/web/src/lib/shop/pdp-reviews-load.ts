@@ -44,6 +44,7 @@ export async function productReviews(storeId: number, productId: string, take: n
               colourName: true,
               fitVerdict: true,
               publishedAt: true,
+              reply: true,
               media: { select: { assetId: true, sortOrder: true }, orderBy: { sortOrder: 'asc' }, take: 1 },
             },
           }),
@@ -68,6 +69,8 @@ export async function productReviews(storeId: number, productId: string, take: n
             photo: (r.media[0] && photos.get(r.media[0].assetId)) ?? null,
             // PR 223: the day it went public, for search engines (the page itself does not show it)
             publishedAt: r.publishedAt ? r.publishedAt.toISOString().slice(0, 10) : null,
+            // follow-up 233: the shop's reply (the block draws it only while the owner shows replies)
+            reply: r.reply?.trim() ? r.reply.trim() : null,
           })),
           average: agg._avg.rating ?? 0,
           total: agg._count._all,

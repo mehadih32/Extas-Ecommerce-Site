@@ -119,6 +119,8 @@ const KEYS = [
   'pdp.qaAsk',
   // PR 65: the reviews block under the page, and the rating line under the title
   'pdp.reviews',
+  // follow-up 233: the shop's public reply under a review (off as shipped)
+  'pdp.reviewReply',
   'pdp.fit',
   'pdp.rows',
   'pdp.icons',
@@ -487,7 +489,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
           speed={rows.pairSpeed}
         />
       ) : null,
-    reviews: () => <PdpReviews c={c} set={revSet} data={reviewData} name={m.name} qa={set['pdp.qa'].on} />,
+    reviews: () => <PdpReviews c={c} set={revSet} data={reviewData} name={m.name} qa={set['pdp.qa'].on} reply={set['pdp.reviewReply'].show} />,
     questions: () => <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} ask={set['pdp.qaAsk']} />,
     // PR 624: the Messenger button under the questions (nothing while it is off)
     messenger: () => (

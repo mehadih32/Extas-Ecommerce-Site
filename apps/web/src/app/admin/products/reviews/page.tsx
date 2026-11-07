@@ -7,6 +7,8 @@
 // (ReviewActions; the API checks again). Publishing a photo review pays the owner's photo reward only while he has
 // switched it on with his own amount (PR 65). Nothing is deleted. Adding the shop's own review and importing a file stay
 // on the reviews API until their forms are built.
+// Follow-up 233: each card shows the shop's public reply and (with `reviews.moderate`) a box to write, change or take it
+// off; More options gets "The shop's reply" (`pdp.reviewReply`, off: replies are kept but not shown on the shop).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -93,6 +95,9 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
     { kind: 'number', path: 'resultDays', label: t(d, 'rev.set.resultDays'), help: t(d, 'rev.set.resultDaysHelp'), min: 1, max: 365 },
   ];
   const card = cards['reviews.requests'];
+  const replyCard = cards['pdp.reviewReply'];
+  const replyTexts: FieldsCardTexts = { ...cardTexts, h: t(d, 'rev.reply.set.h'), d: t(d, 'rev.reply.set.d') };
+  const replyFields: FieldsCardField[] = [{ kind: 'switch', path: 'show', label: t(d, 'rev.reply.set.show'), help: t(d, 'rev.reply.set.showHelp') }];
   const productIds = [...new Set(list.reviews.map((r) => r.productId).filter((x): x is string => !!x))];
   const [products, photos] = await Promise.all([
     productIds.length ? c.deps.db.product.findMany({ where: { storeId: c.storeId, id: { in: productIds } }, select: { id: true, nameEn: true, nameBn: true } }) : Promise.resolve([]),
@@ -204,7 +209,13 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
                   </div>
                 ) : null}
                 {r.reward ? <p className="a2-xs">{t(d, 'rev.rewarded', { amount: money(r.reward.amountMinor) })}</p> : null}
-                {canModerate ? <ReviewActions dict={d} id={r.id} state={r.status} verified={r.isVerifiedPurchase} currency={currency} locale={view.locale} /> : null}
+                {r.reply ? (
+                  <div className="rev-reply-shown" data-testid="review-reply">
+                    <span className="a2-xs a2-mute">{t(d, 'rev.reply.shown')}</span>
+                    <p className="rev-body">{r.reply}</p>
+                  </div>
+                ) : null}
+                {canModerate ? <ReviewActions dict={d} id={r.id} state={r.status} verified={r.isVerifiedPurchase} currency={currency} locale={view.locale} reply={r.reply} replyMax={cat.REPLY_MAX} /> : null}
               </article>
             );
           })}
@@ -223,6 +234,9 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
         <summary className="a2-sm a2-b">{t(d, 'rev.set.more')}</summary>
         <div className="a2-mt12">
           <FieldsCard url="/api/admin/review-settings" screen={{ key: card.key, value: card.value, version: card.version }} fields={fields} texts={cardTexts} canEdit={canModerate} testId="review-requests-card" />
+        </div>
+        <div className="a2-mt12">
+          <FieldsCard url="/api/admin/review-settings" screen={{ key: replyCard.key, value: replyCard.value, version: replyCard.version }} fields={replyFields} texts={replyTexts} canEdit={canModerate} testId="review-reply-card" />
         </div>
       </details>
     </div>

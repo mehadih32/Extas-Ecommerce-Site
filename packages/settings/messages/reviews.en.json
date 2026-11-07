@@ -12,6 +12,10 @@
     "reviews": {
       "label": "Reviews on the product page",
       "help": "The reviews block under the product page: the summary box (the average, the stars and how many) and the review cards in a row that slides on its own. \"How many\" is how many cards the row carries. \"Photo reviews first\" puts the reviews with a buyer photo at the front. Only approved reviews are ever shown, and a card shows only what its review really carries — the height, weight and size line, the photo and the \"Verified buyer\" tag each have their own switch. \"Rating line\" puts the stars and the count under the product title, linked down to this block."
+    },
+    "reviewReply": {
+      "label": "The shop's reply under a review",
+      "help": "Your team's public reply (written on Products › Reviews) shows under the published review it answers, as \"<shop> team: …\". Off as shipped: replies are kept but not shown."
     }
   },
   "reviews": {

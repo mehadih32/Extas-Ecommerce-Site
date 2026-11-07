@@ -98,6 +98,22 @@
         "network": "No connection. Try again.",
         "other": "Could not save. Try again."
       }
+    },
+    "reply": {
+      "write": "Reply in public",
+      "edit": "Change the reply",
+      "label": "The shop's reply (shown under the review)",
+      "ph": "A short, polite answer every customer may read",
+      "save": "Save reply",
+      "off": "Take the reply off",
+      "cancel": "Cancel",
+      "shown": "The shop's reply",
+      "set": {
+        "h": "The shop's reply",
+        "d": "Your team's public reply under a published review on the product page, as \"<shop> team: …\".",
+        "show": "Show the shop's replies on the product page",
+        "showHelp": "Off as shipped: replies are kept here but not shown on the shop."
+      }
     }
   },
   "revq": {

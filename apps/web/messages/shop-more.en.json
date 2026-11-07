@@ -164,6 +164,7 @@
       "small": "Too small",
       "right": "Just right",
       "big": "Too big"
-    }
+    },
+    "replyBy": "{store} team"
   }
 }
