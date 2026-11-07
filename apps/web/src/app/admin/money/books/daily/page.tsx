@@ -23,7 +23,7 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { loadBooksStatus } from '@/lib/books-status-view';
+import { cardRunCheck, cardStateOf, loadBooksStatus } from '@/lib/books-status-view';
 import { inventoryDeps } from '@/lib/inventory-api';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../../messages/admin-books-daily.bn.json';
@@ -96,11 +96,20 @@ export default async function BooksDailyPage() {
         return b('need.FIXED_COSTS_MISSING', { month: month(String(v.month)) });
       case 'WAITING_CHECK_OLD':
         return b('need.WAITING_CHECK_OLD', { pieces: n(Number(v.pieces)), days: n(Number(v.days)) });
+      case 'WAITED_LONG':
+        return b('need.WAITED_LONG', { days: n(Number(v.days)), months: n(Number(v.months)) });
     }
   };
 
   return (
-    <div className="a2-z lm-bk" data-lm-ready="" data-testid="bd-page" data-state={card.state}>
+    <div
+      className="a2-z lm-bk"
+      data-lm-ready=""
+      data-testid="bd-page"
+      data-state={card.state}
+      data-waited-long={books.waitedLong.days.length || books.waitedLong.months.length ? 'yes' : 'no'}
+      data-card-run={cardRunCheck(cardStateOf(status, linked), books.matchRuns)}
+    >
       <PageHead view={view} place={locateKey(KEY)} title={b('title')} sub={b('sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-row a2-r21 a2-start">

@@ -320,11 +320,13 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 617 on PostgreSQL: the daily summary
     expect(before.card.checks.every((c) => c.result === null)).toBe(true);
     expect(before.summaries.lastAccepted).toBe('2026-11-04');
     expect(before.card.needs.map((x) => x.kind)).toContain('FIXED_COSTS_MISSING');
+    expect(before.matchRuns).toBe(0); // follow-up 569: the page's "not run yet" check
     // PR 616 writes a run, a day close and a broken tie (straight into its tables here).
     await t.prisma.booksMatchRun.create({ data: { storeId: A, linkId: links[A]!, trigger: 'NIGHTLY', fromDate: day('2026-11-04'), toDate: day('2026-11-04'), status: 'DONE', checks: { ACCOUNT: { result: 'PARTIAL', counts: {} }, TIES: { result: 'MISMATCH' }, RETURNS: 'MATCHED' }, startedAt: clock, finishedAt: clock } });
     await t.prisma.booksDifference.create({ data: { storeId: A, linkId: links[A]!, date: day('2026-11-04'), check: 'TIES', kind: 'TIE_BROKEN', key: 'tie:2026-11-04', status: 'MISMATCH', amountMinor: 65_000n, externalOrderId: 'A-9', detail: { piece: 'A-9-1' }, firstSeenAt: clock, lastSeenAt: clock } });
     const after = await booksSummaryStatus(deps(), { actor: SYSTEM, storeId: A });
     expect([after.card.state, after.card.overall, after.card.partial]).toEqual(['RAN', 'MISMATCH', true]);
+    expect(after.matchRuns).toBe(1);
     expect(after.card.checks.map((c) => c.result)).toEqual(['PARTIAL', 'MISMATCH', 'MATCHED', null, null, null]);
     expect(after.card.needs.find((x) => x.kind === 'TIE_BROKEN')!.vars).toEqual({ date: '2026-11-04', amountMinor: 65_000, order: 'A-9' });
     // Store B's card never shows A's run.

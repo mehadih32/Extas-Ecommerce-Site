@@ -7,7 +7,7 @@
 import * as inv from '@extas/inventory';
 import { formatMoney, formatNumber, type Money } from '@/components/admin/products/model';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
-import type { BooksStatusView } from '@/lib/books-status-view';
+import { cardStateOf, type BooksStatusView } from '@/lib/books-status-view';
 import { t, type Dict } from '@/lib/i18n';
 
 export function BooksStatusCard({ dict, locale, timeZone, money, status, linked: linkedHere }: { dict: Dict; locale: string; timeZone: string; money: Money; status: BooksStatusView | null; linked: boolean }) {
@@ -18,7 +18,7 @@ export function BooksStatusCard({ dict, locale, timeZone, money, status, linked:
   // Without PR 616's numbers in this build, whether the store's books have started comes from this page's own read.
   const linked = status ? status.model === 'v6' && !!status.link : linkedHere;
   const ran = linked && !!status?.lastRun;
-  const state = !linked ? 'off' : !ran ? 'notRun' : status!.open.total ? 'differs' : 'matched';
+  const state = cardStateOf(status, linkedHere);
   const tone = state === 'matched' ? 'ok' : state === 'differs' ? 'bad' : 'line';
   const fact = (label: string, value: string, testId?: string) => (
     <div data-testid={testId}>

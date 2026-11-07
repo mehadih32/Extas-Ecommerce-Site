@@ -2,7 +2,7 @@
 // `booksStatus`, or an answer of another shape, gives null ("not run yet"); a good answer is passed through.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type * as inv from '@extas/inventory';
-import { loadBooksStatus } from './books-status-view';
+import { cardRunCheck, cardStateOf, loadBooksStatus } from './books-status-view';
 
 const deps = {} as inv.InventoryDeps;
 const who = { actor: { kind: 'system' }, storeId: 1 } as unknown as inv.Who;
@@ -44,5 +44,25 @@ describe('PR 617 · the Books status card data', () => {
   it('valid → passed through', async () => {
     expect(await loadBooksStatus(deps, who, async () => good)).toEqual(good);
     expect(log).not.toHaveBeenCalled();
+  });
+});
+
+describe('follow-up 569: the card says "not run yet" only before the first match run', () => {
+  const view = (over: Record<string, unknown>) => ({ ...good, ...over }) as never;
+  it('reads the card`s state as the card draws it', () => {
+    expect(cardStateOf(null, false)).toBe('off');
+    expect(cardStateOf(null, true)).toBe('notRun');
+    expect(cardStateOf(view({ lastRun: null }), true)).toBe('notRun');
+    expect(cardStateOf(view({ model: 'v5', link: null }), true)).toBe('off');
+    expect(cardStateOf(view({}), true)).toBe('differs');
+    expect(cardStateOf(view({ open: { total: 0, byClass: {}, byCheck: {} } }), true)).toBe('matched');
+  });
+  it('ok while "not run yet" matches no run in the books; stale when the card says it and a run exists, or the other way', () => {
+    expect(cardRunCheck('notRun', 0)).toBe('ok');
+    expect(cardRunCheck('matched', 3)).toBe('ok');
+    expect(cardRunCheck('differs', 1)).toBe('ok');
+    expect(cardRunCheck('off', 0)).toBe('ok');
+    expect(cardRunCheck('notRun', 1)).toBe('stale');
+    expect(cardRunCheck('matched', 0)).toBe('stale');
   });
 });

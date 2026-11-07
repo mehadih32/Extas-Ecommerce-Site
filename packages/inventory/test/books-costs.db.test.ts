@@ -170,6 +170,14 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 618 on PostgreSQL: fixed costs and t
     await setFixedCosts(deps(), { actor: owner, storeId: A }, { month: '2026-12', ...NOV });
     expect((await summaryTick(deps(), A)).fixed).toMatchObject({ sent: 1, failed: 1 });
     expect((await fixedCostsView(deps(), { actor: viewer, storeId: A })).months[1]!.state).toBe('RETRYING');
+    // Follow-up 569: a month not taken a day after it was saved is "waited long" (the nightly smoke reads it); the
+    // accepted November is not. (Rows carry the database's own time, so "not yet a day" is the pure test's.)
+    const saved = clock;
+    clock = new Date(saved.getTime() + 25 * 3_600_000);
+    const late = await booksSummaryStatus(deps(), sys(A));
+    expect(late.waitedLong.months).toEqual(['2026-12']);
+    expect(late.card.needs.find((x) => x.kind === 'WAITED_LONG')?.vars).toMatchObject({ months: 1 });
+    clock = saved;
     clock = new Date(clock.getTime() + 30_000);
     expect((await summaryTick(deps(), A)).fixed.sent).toBe(0); // the first wait is 1 minute
     clock = new Date(clock.getTime() + 31_000);

@@ -9,6 +9,7 @@ import {
   assembleSummary,
   booksCard,
   bodyHashOf,
+  waitedLong,
   dayOpen,
   emptyDay,
   costDayCheck,
@@ -271,5 +272,33 @@ describe('the Books status card', () => {
     );
     expect(card.waitingCheck).toMatchObject({ ageDays: 10, old: true });
     expect(card.needs.map((n) => n.kind)).toEqual(['SUMMARY_REFUSED', 'SUMMARY_MISSING', 'SUMMARY_INCOMPLETE', 'FIXED_COSTS_MISSING', 'WAITING_CHECK_OLD']);
+  });
+
+  it('follow-up 569: a summary or a month that has waited for the ERP more than a day is its own row (the nightly smoke reads it)', () => {
+    const now = new Date('2026-11-20T03:30:00Z');
+    const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000);
+    const w = waitedLong({
+      now,
+      summaries: [
+        { date: '2026-11-19', state: 'WAITING', builtAt: hoursAgo(3), waitsForKey: false }, // last night's: not yet a day
+        { date: '2026-11-18', state: 'RETRYING', builtAt: hoursAgo(25), waitsForKey: false },
+        { date: '2026-11-17', state: 'REFUSED', builtAt: hoursAgo(50), waitsForKey: false },
+        { date: '2026-11-16', state: 'ACCEPTED', builtAt: hoursAgo(80), waitsForKey: false },
+        { date: '2026-11-15', state: 'WAITING', builtAt: hoursAgo(100), waitsForKey: true }, // the practice ERP without its key
+      ],
+      months: [
+        { month: '2026-11', createdAt: hoursAgo(30), accepted: false },
+        { month: '2026-12', createdAt: hoursAgo(2), accepted: false },
+        { month: '2026-10', createdAt: hoursAgo(900), accepted: true },
+      ],
+    });
+    expect(w).toEqual({ days: ['2026-11-17', '2026-11-18'], months: ['2026-11'] });
+    expect(waitedLong({ now, summaries: [], months: [] })).toEqual({ days: [], months: [] });
+    const card = booksCard(base({ waitedLong: w }));
+    expect(card.needs).toContainEqual({ kind: 'WAITED_LONG', vars: { days: 2, months: 1, first: '2026-11-17' } });
+    expect(booksCard(base({ waitedLong: { days: [], months: [] } })).needs.map((n) => n.kind)).not.toContain('WAITED_LONG');
+    expect(booksCard(base({ linked: false, waitedLong: w })).needs).toEqual([]);
+    // Only months waiting: the row names the month.
+    expect(booksCard(base({ waitedLong: { days: [], months: ['2026-11'] } })).needs).toContainEqual({ kind: 'WAITED_LONG', vars: { days: 0, months: 1, first: '2026-11' } });
   });
 });

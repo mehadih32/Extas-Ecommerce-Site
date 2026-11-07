@@ -147,14 +147,17 @@ export function checkProblem(check, observed) {
  * that kind of host; one without runs everywhere. The first-week watch smokes the main domain (an extra host), where
  * the preview-only noindex check (PR 220) is wrong by design once search engines are let in.
  */
-export function checkApplies(check, hostKind = "staging") {
+export function checkApplies(check, hostKind = "staging", run = {}) {
+  // Follow-up 569: a `nightlyOnly` check (the books waiting for the ERP more than a day) is a morning alert, never a
+  // reason to roll a deploy back, so the run after a deploy (SMOKE_ROLLS_BACK=1) leaves it out.
+  if (check.nightlyOnly && run.afterDeploy) return false;
   return !check.host || check.host === hostKind;
 }
 
 /** Runs the extra checks with the signed-in page; returns their problems. `bare` makes a request client with no cookie. */
-async function runChecks(page, base, checks, bare, hostKind) {
+async function runChecks(page, base, checks, bare, hostKind, afterDeploy = false) {
   const out = [];
-  for (const check of checks.filter((c) => checkApplies(c, hostKind))) {
+  for (const check of checks.filter((c) => checkApplies(c, hostKind, { afterDeploy }))) {
     let observed;
     try {
       if (check.request) {
@@ -610,7 +613,7 @@ export async function runSmoke(opts) {
       // The extra checks once (they test the server, not the screen size).
       if (vp === config.viewports[0])
         problems.push(
-          ...(await runChecks(page, opts.base, config.checks ?? [], () => requestApi.newContext(), opts.hostKind)),
+          ...(await runChecks(page, opts.base, config.checks ?? [], () => requestApi.newContext(), opts.hostKind, opts.afterDeploy === true)),
         );
       // PR 155: the pages that show Sales and Ordered value load, and show the two as separate figures.
       for (const f of config.figures ?? []) {
@@ -751,6 +754,8 @@ async function main() {
     chromiumPath: process.env.CHROMIUM_PATH,
     // R2 ops review (M2): staging (the preview host, the default) or extra (the main domain, infra/deploy/smoke.sh)
     hostKind: process.env.SMOKE_HOST_KIND === "extra" ? "extra" : "staging",
+    // Follow-up 569: the run after a deploy (it rolls back on failure) leaves the `nightlyOnly` checks out.
+    afterDeploy: process.env.SMOKE_ROLLS_BACK === "1",
   });
   for (const r of result.rows)
     console.log(

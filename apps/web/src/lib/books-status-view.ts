@@ -56,3 +56,23 @@ export async function loadBooksStatus(deps: inv.InventoryDeps, who: inv.Who, fn:
   }
   return parsed.data;
 }
+
+/** The card's state as BooksStatusCard draws it (follow-up 569: the page and the nightly smoke read the same). */
+export type CardState = 'off' | 'notRun' | 'differs' | 'matched';
+
+export function cardStateOf(status: BooksStatusView | null, linkedHere: boolean): CardState {
+  const linked = status ? status.model === 'v6' && !!status.link : linkedHere;
+  if (!linked) return 'off';
+  if (!status?.lastRun) return 'notRun';
+  return status.open.total ? 'differs' : 'matched';
+}
+
+/**
+ * Follow-up 569: "not run yet" is right only while the books have no match run (`matchRuns` from the books' own
+ * tables): 'stale' when the card says it after a run, or says a result with no run. The page puts it on its root
+ * (`data-card-run`) for the nightly smoke.
+ */
+export function cardRunCheck(state: CardState, matchRuns: number): 'ok' | 'stale' {
+  if (state === 'off') return 'ok';
+  return (state === 'notRun') === (matchRuns === 0) ? 'ok' : 'stale';
+}
