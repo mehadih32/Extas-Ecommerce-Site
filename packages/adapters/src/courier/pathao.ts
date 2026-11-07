@@ -113,6 +113,11 @@ export const pathaoConfig = z.object({
   storeId: z.string().trim().regex(/^\d{1,12}$/, 'Pathao store id is a number'),
   /** Only to point at another address than Pathao's own (a test server). HTTPS only. */
   baseUrl: z.url({ protocol: /^https$/, message: 'not an https address' }).max(500).optional(),
+  /**
+   * Follow-up 372: the reply Pathao's webhook page asks the shop to send back on its set-up check (the value of the
+   * `X-Pathao-Merchant-Webhook-Integration-Secret` header). Empty: the check is answered without it.
+   */
+  webhookReply: z.string().trim().max(200).regex(/^[\x21-\x7e]*$/, 'one word, no spaces').optional(),
 });
 export type PathaoConfig = z.output<typeof pathaoConfig>;
 
@@ -292,7 +297,9 @@ export const pathaoAdapter = defineAdapter<CourierApi, PathaoConfig>({
   kind: 'COURIER',
   provider: PATHAO_PROVIDER,
   modes: ['SANDBOX', 'LIVE'],
-  secrets: ['clientId', 'clientSecret', 'username', 'password'],
+  // follow-up 372: `webhookSecret` (optional) is the secret the owner sets on Pathao's webhook page; only the shop's
+  // webhook reads it (courier/webhook.ts), never a booking
+  secrets: ['clientId', 'clientSecret', 'username', 'password', 'webhookSecret'],
   configSchema: pathaoConfig,
   async create(ctx) {
     const [clientId, clientSecret, username, password] = await Promise.all(['clientId', 'clientSecret', 'username', 'password'].map((f) => requireSecret(ctx, f)));

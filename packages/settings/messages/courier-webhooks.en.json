@@ -1,0 +1,10 @@
+{
+  "delivery": {
+    "courier": {
+      "webhooks": {
+        "label": "Couriers tell the shop when a parcel moves (webhooks)",
+        "help": "Off as shipped. When on, Steadfast and Pathao may call the shop's address /api/courier/steadfast/webhook or /api/courier/pathao/webhook the moment a parcel moves; each call needs the token or secret typed into Keys & connections, is kept once, and moves the parcel and its order like a status read. The hourly read stays on as the fallback. The size is the largest call the shop reads, in KB."
+      }
+    }
+  }
+}

@@ -394,6 +394,7 @@
       "fields": {
         "apiKey": "API কী (স্টেডফাস্ট মার্চেন্ট প্যানেল → API)",
         "secretKey": "সিক্রেট কী (একই পাতায়)",
+        "webhookToken": "ওয়েবহুকের auth token — না দিলেও চলে (Steadfast-এর webhook পাতায় যে token দেবেন; ঠিকানা /api/courier/steadfast/webhook)",
         "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য"
       }
     },
@@ -406,6 +407,8 @@
         "username": "মার্চেন্ট লগইনের ই-মেইল",
         "password": "মার্চেন্ট লগইনের পাসওয়ার্ড",
         "storeId": "যে পাঠাও স্টোর থেকে পার্সেল যায় তার আইডি (মার্চেন্ট প্যানেল → Stores)",
+        "webhookSecret": "ওয়েবহুকের গোপন কোড — না দিলেও চলে (Pathao-র webhook পাতায় যে secret দেবেন; ঠিকানা /api/courier/pathao/webhook)",
+        "webhookReply": "ওয়েবহুক চালুর উত্তর — না দিলেও চলে (Pathao-র webhook পাতা দোকানকে যে কোড ফেরত পাঠাতে বলে)",
         "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য"
       }
     },

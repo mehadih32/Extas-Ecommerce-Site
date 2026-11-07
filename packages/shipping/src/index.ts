@@ -72,6 +72,8 @@ export * from './parcels';
 export * from './rto';
 export * from './booking';
 export * from './tracking';
+// Follow-up 372: the couriers' own status calls (webhooks) into the same applyEvents.
+export * from './webhooks';
 export * from './zone-match';
 export * from './zones';
 export * from './fulfil-pure';
