@@ -129,6 +129,10 @@
     "staffLoginAlerts": {
       "label": "Alert on every staff login",
       "help": "Records every staff login and every login from a new device, so you are told about it."
+    },
+    "loginLockoutByNetwork": {
+      "label": "Pause wrong passwords per network",
+      "help": "Off as it ships: too many wrong passwords pause the e-mail for everyone, so a stranger who knows it can keep its owner out. On: they pause it only for the network they came from (the same internet provider's block of addresses), and this many wrong tries from all networks together still pause it everywhere."
     }
   },
   "brand": {

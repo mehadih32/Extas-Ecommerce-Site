@@ -66,6 +66,24 @@ export function addressMark(ip: string | null | undefined): string | null {
   return (h >>> 0).toString(16).padStart(8, '0');
 }
 
+/**
+ * Follow-up 609: the network an address belongs to, for the sign-in pause counted per network — an IPv4 address by its
+ * /24 (`a.b.c`), an IPv6 address by its /48 (the first three groups, written out in full, lower case), an IPv4 address
+ * written inside IPv6 (`::ffff:a.b.c.d`) as that IPv4 address. No address is `?`; anything else is kept as it is.
+ */
+export function networkOf(ip: string | null | undefined): string {
+  const raw = (ip ?? '').trim().toLowerCase();
+  if (!raw) return '?';
+  const v4 = /^(?:::ffff:)?(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.\d{1,3}$/.exec(raw);
+  if (v4) return `${v4[1]}.${v4[2]}.${v4[3]}`;
+  if (!raw.includes(':') || !/^[0-9a-f:]+$/.test(raw)) return raw;
+  const [head = '', tail] = raw.split('::');
+  const left = head ? head.split(':') : [];
+  const right = tail === undefined || tail === '' ? [] : tail.split(':');
+  const groups = tail === undefined ? left : [...left, ...Array<string>(Math.max(0, 8 - left.length - right.length)).fill('0'), ...right];
+  return groups.slice(0, 3).map((g) => g.padStart(4, '0')).join(':');
+}
+
 /** Follow-up 586: a security event's details with `ip` swapped for its mark (`address`); every other field kept. */
 export function withAddressMark(details: Record<string, unknown>): Record<string, unknown> {
   if (!('ip' in details)) return details;

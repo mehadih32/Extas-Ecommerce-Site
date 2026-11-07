@@ -17,6 +17,8 @@ export interface SecurityPolicy {
   twoFactorChallengeMinutes: number;
   totpDriftSteps: number;
   staffLoginAlerts: boolean;
+  /** Follow-up 609: wrong tries counted per (e-mail, network) with a higher per-e-mail ceiling; off as shipped. */
+  loginLockoutByNetwork?: { enabled: boolean; emailCeiling: number };
 }
 
 const KEYS = {
@@ -33,6 +35,7 @@ const KEYS = {
   twoFactorChallengeMinutes: 'security.twoFactorChallengeMinutes',
   totpDriftSteps: 'security.totpDriftSteps',
   staffLoginAlerts: 'security.staffLoginAlerts',
+  loginLockoutByNetwork: 'security.loginLockoutByNetwork',
 } as const satisfies Record<keyof SecurityPolicy, keyof Registry>;
 
 /** The declared defaults of the security settings. */

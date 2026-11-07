@@ -30,6 +30,9 @@
     "maxHours": "Log out after this many hours in total",
     "maxAttempts": "Wrong passwords before a pause",
     "lockoutMinutes": "Pause after too many wrong passwords (minutes)",
+    "byNetwork": "Count wrong passwords per network",
+    "byNetworkHelp": "Off: wrong passwords pause the e-mail for everyone, so a stranger who knows an e-mail can keep its owner out. On: they pause it only for the network they came from; the owner on another network still signs in.",
+    "emailCeiling": "Pause the e-mail everywhere after this many wrong passwords from all networks",
     "loginAlerts": "Note every staff sign-in, and alert on a new device",
     "loginAlertsHelp": "A sign-in from a phone or computer not seen before shows in the notifications of everyone who sees security, and goes to Telegram once the bot is connected.",
     "noteDays": "Keep new-device sign-ins in the notifications (days)"
