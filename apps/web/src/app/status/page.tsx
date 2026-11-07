@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import dict from "../../../messages/status.bn.json";
 import { t } from "@/lib/i18n";
 import { dateTime, num } from "@/lib/format";
-import { buildStatus, runtimeState, type Backup } from "@/lib/status";
+import { buildStatus, erpAcceptanceLine, runtimeState, type Backup } from "@/lib/status";
 import { displaySettings } from "@/lib/settings";
 import { pageShowsDetail } from "@/lib/status-host";
 import type { DisplayOptions } from "@/lib/format";
@@ -46,12 +46,15 @@ export default async function StatusPage() {
   if (!(await pageShowsDetail())) notFound();
   const s = buildStatus;
   // Locale and time zone through the settings resolver (PR 492) when the database answers, else the environment.
-  const [{ deploy, health, backups, smoke }, d] = await Promise.all([
+  const [{ deploy, health, backups, smoke, erpAcceptance }, d] = await Promise.all([
     runtimeState(),
     displaySettings(),
   ]);
   const problems = health?.problems ?? [];
   const sha = (deploy?.sha ?? s.commit).slice(0, 7);
+  // Follow-up 575 (PR 621): the last ERP acceptance run against the demo ERP.
+  const erp = erpAcceptanceLine(erpAcceptance);
+  const erpTone = { ok: "text-ok", bad: "text-bad", warn: "text-warn", soft: "text-ink-soft" }[erp.tone];
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6 sm:py-10">
@@ -145,6 +148,11 @@ export default async function StatusPage() {
                     failed: num(Math.max(smoke.failed ?? 0, 1), d),
                   })}
             {(smoke?.atText ?? smoke?.at) ? ` · ${(smoke?.atText ?? smoke?.at ?? "").replace(/\s*\(.*\)$/, "")}` : ""}
+          </p>
+          <h3 className="mt-4 text-sm font-semibold">{t(dict, "erpTitle")}</h3>
+          <p className={`mt-1 text-sm ${erpTone}`} data-testid="status-erp" data-state={erpAcceptance?.state ?? "none"}>
+            {t(dict, erp.key, Object.fromEntries(Object.entries(erp.vars).map(([k, v]) => [k, num(v, d)])))}
+            {erpAcceptance?.at && erp.key !== "erpNone" ? ` · ${dateTime(erpAcceptance.at, d) ?? ""}` : ""}
           </p>
         </div>
         <div className="rounded-xl border border-line bg-surface p-4">
