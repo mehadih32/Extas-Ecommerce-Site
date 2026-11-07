@@ -2,7 +2,8 @@
 // status chips, when and where it was placed, the next step and "More actions"), the bands that need someone now
 // (cancel pending courier, the customer's cancel request, a hold, a booked parcel's lock), then the record cards on two
 // thirds (items and totals, customer and address with the customer's history, the courier, the risk card (PR 160), the
-// duplicate review with its alert summary (PR 521), payments and refund requests) and the timeline on one third with the team's notes. A phone gets "Details · Timeline".
+// duplicate review with its alert summary (PR 521), payments and refund requests; PR 127 follow-up 215: "Add a line" on the
+// items card and "Remove" on a line added after the order was placed) and the timeline on one third with the team's notes. A phone gets "Details · Timeline".
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import type { AdminView } from '@/lib/admin-page';
@@ -113,7 +114,7 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
   const title = `${o.number} · ${o.name ? `${o.name} · ` : ''}${o.total}`;
 
   const main = [
-    <Card key="items" testId="order-items" title={`${t(d, 'orders.items.title')} · ${o.units}`}>
+    <Card key="items" testId="order-items" title={`${t(d, 'orders.items.title')} · ${o.units}`} right={o.addLine ? <CommandButton spec={o.addLine} size="sm" open={open === o.addLine.id} /> : undefined}>
       <div className="a2-lines">
         {o.items.map((i) => (
           <div key={i.id} className={`a2-prow${i.removed ? ' a2-gone' : ''}`}>
@@ -123,6 +124,8 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
             </div>
             <span className="a2-pru">{i.qty}</span>
             <span className="a2-prs">{i.total}</span>
+            {/* PR 127 follow-up 215: a line added after the order was placed can be taken out (it stays on the record) */}
+            {i.remove ? <CommandButton spec={i.remove} size="sm" open={open === i.remove.id} /> : null}
           </div>
         ))}
       </div>

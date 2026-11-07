@@ -30,7 +30,9 @@ export type AddOnSource = (typeof ADD_ON_SOURCES)[number];
 
 const number = z.string().trim().min(1).max(40);
 const variantId = z.string().regex(UUID);
-export const addLineInput = z.object({ variantId, quantity: z.int().min(1).max(20).optional() }).strict();
+/** The most pieces of one piece a line may add (the team's "Add a line" lists 1 to this; follow-up 215). */
+export const ADD_LINE_MAX_QUANTITY = 20;
+export const addLineInput = z.object({ variantId, quantity: z.int().min(1).max(ADD_LINE_MAX_QUANTITY).optional() }).strict();
 export const customerAddInput = z.object({ number, variantId, quantity: z.int().min(1).max(20).optional(), from: z.enum(['thanks', 'account']).optional() }).strict();
 export const customerRemoveInput = z.object({ number, lineId: z.string().regex(UUID) }).strict();
 

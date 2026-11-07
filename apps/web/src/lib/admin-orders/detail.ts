@@ -24,6 +24,7 @@ import { blocklistSummary } from './blocklist-card';
 import { refuserSummary } from './refusers-card';
 import { levelSummary, riskSummary } from './risk';
 import { advanceBand, advanceSpecs, advanceSummary } from './advance';
+import { lineSpecs } from './lines';
 
 /** The key each command asks for (the admin API's own, lib/orders-api.ts). */
 export const COMMAND_PERM: Readonly<Record<CommandId, PermissionKey>> = {
@@ -63,6 +64,8 @@ export const DO_PERM: Readonly<Record<string, PermissionKey>> = {
   riskAssess: 'orders.risk.decide',
   advanceRequest: 'orders.advance.request',
   advanceResend: 'orders.advance.request',
+  // PR 127 follow-up 215
+  addLine: 'orders.lines',
 };
 
 /** How many of the customer's other orders the page lists (the counts cover all of them). */
@@ -116,7 +119,10 @@ export interface OrderDetailView {
   reorderOf: { id: string; number: string } | null;
   chips: Chip[];
   flags: Chip[];
-  items: { id: string; name: string; sub: string; qty: string; total: string; removed: boolean }[];
+  /** PR 127 follow-up 215: `remove` on a line added after the order was placed (the line stays on the record). */
+  items: { id: string; name: string; sub: string; qty: string; total: string; removed: boolean; remove?: CommandSpec }[];
+  /** PR 127 follow-up 215: "Add a line" (orders.lines, a COD order not yet booked); null when not offered. */
+  addLine: CommandSpec | null;
   units: string;
   totals: Row2[];
   customer: Row2[];
@@ -819,6 +825,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const advance = advanceSpecs(view, o, adv, detail.allowed, perms);
   if (advance.request) (adv?.proposed ? specs.primary : specs.more).push(advance.request);
   const active = detail.items.filter((i) => i.status === 'ACTIVE');
+  const lines = lineSpecs(view, o, detail.allowed, perms, detail.items.map((i) => ({ id: i.id, status: i.status, isAddOn: i.isAddOn, productName: i.productName, lineTotal: m(i.lineTotalMinor) })));
   const units = active.reduce((s, i) => s + i.quantity, 0);
   const n = (v: number) => formatNumber(v, view.locale);
 
@@ -991,7 +998,9 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       qty: `× ${n(i.quantity)}`,
       total: m(i.lineTotalMinor),
       removed: i.status !== 'ACTIVE',
+      ...(lines.remove[i.id] ? { remove: lines.remove[i.id] } : {}),
     })),
+    addLine: lines.add,
     units: t(d, units === 1 ? 'orders.list.pc' : 'orders.list.pcs', { n: n(units) }),
     totals,
     customer,

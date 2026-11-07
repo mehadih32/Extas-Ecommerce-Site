@@ -357,7 +357,12 @@
       "NOT_RETURNED": "This parcel did not come back, so it takes no return reason.",
       "ALREADY_LISTED": "This number is on the blocklist already.",
       "NOT_STALE": "This parcel already matches the order, or it has left the shop. Read the page again.",
-      "COURIER_OFF": "This courier account is switched off. Switch it on, or book with another courier."
+      "COURIER_OFF": "This courier account is switched off. Switch it on, or book with another courier.",
+      "NOT_SELLABLE": "No piece for sale has this SKU. Check the SKU on the product's page.",
+      "COD_LIMIT": "The amount due would pass the Cash on Delivery limit of this delivery area.",
+      "NOT_COD": "Lines are added or taken out on Cash on Delivery orders only.",
+      "ADD_ON_LIMIT": "This piece is already on the order as an added line.",
+      "ADD_ON_ONLY": "Only a line added after the order was placed is taken out here. Use \"Edit items & address\" for the others."
     },
     "cmd": {
       "confirm": {
@@ -1574,6 +1579,33 @@
       },
       "note": "Only shows his history: it never confirms, holds or blocks. You decide.",
       "verified": "Verified"
+    },
+    "lines": {
+      "add": {
+        "label": "Add a line",
+        "title": "Add a piece to {n}",
+        "sku": "SKU of the piece",
+        "skuPh": "As on the product's size and colour",
+        "quantity": "How many",
+        "ok": "Add the line",
+        "done": "Added to {n} · the amount due changed by that line"
+      },
+      "remove": {
+        "label": "Remove",
+        "title": "Take \"{line}\" out of {n}",
+        "ok": "Take it out",
+        "done": "Taken out of {n} · the line stays on the record"
+      },
+      "eff": {
+        "price": "It is priced as its product page prices it now; nothing already on the order is priced again.",
+        "due": "The amount due at the door grows by exactly that line; the delivery charge stays as it is.",
+        "stock": "Its pieces are held from stock.",
+        "erp": "If the ERP already has the order, it gets it again with the lines as they are now.",
+        "log": "It goes on the timeline and in the audit log with your name.",
+        "kept": "The line is marked taken out and stays on the order's record; nothing is deleted.",
+        "back": "Its pieces go back to stock.",
+        "less": "The amount due at the door goes down by {amount}."
+      }
     }
   }
 }
