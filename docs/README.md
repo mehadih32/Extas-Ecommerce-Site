@@ -325,7 +325,8 @@ the pages are out of date.
 | [`reports/2026-11-06-S14.md`](reports/2026-11-06-S14.md) | S14 stage report: done with PR 535, the legacy customer import (24/24) |
 | [`reports/2026-11-06-S02.md`](reports/2026-11-06-S02.md) | S02 stage report: done with PR 600, the on-page edit mode (58/58) |
 | [`reports/2026-11-06-admin-look-size.md`](reports/2026-11-06-admin-look-size.md) | The admin look Lumen, size report (CN-036, Bengali): 149 admin pages, 26 shared parts, what is already close to the patterns, and the PR split 625–653 |
-| [`reports/2026-11-07-golive-must-list.md`](reports/2026-11-07-golive-must-list.md) | CN-037 go-live MUST/CAN-wait list (Bengali): 2 MUST items (both in batch 20), counts of what waits, and the owner's own 10 open go-live-checklist steps |
+| [`reports/2026-11-07-golive-must-list.md`](reports/2026-11-07-golive-must-list.md) | CN-037 go-live MUST/CAN-wait list (Bengali): 3 MUST items (all fixed in PR #96/#97), counts of what waits, and the owner's own 10 open go-live-checklist steps |
+| [`reports/2026-11-07-golive-stop.md`](reports/2026-11-07-golive-stop.md) | CN-037 stop report (Bengali): all 3 MUST items live and gate-verified, the full check set green, the 10 remaining red rows are the owner's own steps, ready for go-live from the project's side |
 | [`reports/server/latest.md`](reports/server/latest.md) | The newest machine report from the `server-setup` workflow (no secrets) |
 | `reports/server/2026-10-20-*-setup.md` | Earlier machine reports, one per setup run |
 | [`reports/smoke/latest/README.md`](reports/smoke/latest/README.md) | The newest smoke test (after every deploy and every night): each page and screen, its result and picture (CN-016) |
