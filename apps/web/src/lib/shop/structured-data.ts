@@ -12,6 +12,13 @@
 // S12 · PR 249 (C11.3, C12.4): a journal article as BlogPosting, only what the article page shows — its headline, the
 // description the page carries, its dates, language and topic — with an honest byline: an AI author is never sent as a
 // person (the shop itself is named), a staff author by the name the page shows.
+// Follow-up 515 (PR 222, S08): the offer's return policy (the exchange window the page's promise row says; a size swap
+// only, or returns too) and its free delivery (only when the page promises it for this product bought alone), each
+// with its own switch, off as shipped; a delivery charge that depends on the buyer's area is never sent.
+// Follow-up 514 (PR 222, Google's variant markup): a product sold in more than one colour or size can be sent as a
+// ProductGroup (its switch, off as shipped): one Product per priced variant the page draws, each with its SKU, colour
+// and size as the page names them, the photo of its colour and its own Offer at the address that opens it; the group
+// says what it varies by. Without two priced variants that differ (or a variant without a SKU) the plain Product stays.
 import type { ImageSource } from '@extas/media';
 
 export interface LdCrumb {
@@ -53,6 +60,70 @@ export interface LdProduct {
   retired?: boolean;
   /** PR 223: the reviews block the page draws (real approved rows), or null/absent: no rating, no review sent. */
   reviews?: LdReviews | null;
+  /** Follow-up 515: the return policy the page states, or null/absent: none sent. */
+  returns?: LdReturns | null;
+  /** Follow-up 515: free delivery the page promises for this product bought alone, or null/absent: none sent. */
+  freeShipping?: LdFreeShipping | null;
+  /** Follow-up 514: the variants as a ProductGroup (`seo.structuredData.variants`), or null/absent: one Product. */
+  group?: LdGroup | null;
+}
+
+/** Follow-up 514 · one variant the page draws, as Google's variant markup reads it. */
+export interface LdGroupVariant extends LdOfferVariant {
+  sku: string;
+  /** The colour's name as the page writes it, or null (no colours). */
+  colour: string | null;
+  /** The size label as the page writes it, or null (one size). */
+  size: string | null;
+  /** The address that opens the page on this variant (path and query). */
+  href: string;
+  /** Its colour's photo (the largest copy), or none. */
+  images: string[];
+}
+
+/** Follow-up 514 · the product's variants: the group's id (the Merchant Center feed's item group) and the variants. */
+export interface LdGroup {
+  id: string;
+  variants: readonly LdGroupVariant[];
+}
+
+/** Follow-up 515 · the exchange window the page's promise row says. */
+export interface LdReturns {
+  /** The window in hours (the live exchange rule, else the policy setting); above 0. */
+  hours: number;
+  /** true: a size swap only (`policy.returns.afterDelivery` off), sent as an exchange. */
+  exchangeOnly: boolean;
+  /** The country the policy holds in (two capital letters). */
+  country: string;
+}
+
+/** Follow-up 515 · free delivery for this product bought alone (its own free delivery, or every price over the free-over amount). */
+export interface LdFreeShipping {
+  country: string;
+}
+
+const COUNTRY = /^[A-Z]{2}$/;
+
+/** Follow-up 515 · the offer's return policy and free delivery, or nothing when the page does not state them. */
+export function offerTerms(p: Pick<LdProduct, 'currency' | 'returns' | 'freeShipping'>): Ld {
+  const out: Ld = {};
+  const r = p.returns;
+  if (r && Number.isFinite(r.hours) && r.hours > 0 && COUNTRY.test(r.country))
+    out.hasMerchantReturnPolicy = {
+      '@type': 'MerchantReturnPolicy',
+      applicableCountry: r.country,
+      returnPolicyCategory: `${CONTEXT}/MerchantReturnFiniteReturnWindow`,
+      merchantReturnDays: Math.ceil(r.hours / 24),
+      ...(r.exchangeOnly ? { refundType: `${CONTEXT}/ExchangeRefund` } : {}),
+    };
+  const f = p.freeShipping;
+  if (f && COUNTRY.test(f.country))
+    out.shippingDetails = {
+      '@type': 'OfferShippingDetails',
+      shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: p.currency },
+      shippingDestination: { '@type': 'DefinedRegion', addressCountry: f.country },
+    };
+  return out;
 }
 
 /** PR 223 · one review card the page shows. */
@@ -123,6 +194,8 @@ export function itemListLd(origin: URL | string, name: string, items: readonly L
  * No priced variant: no product data at all (an offer without a price is not one).
  */
 export function productLd(origin: URL | string, p: LdProduct): Ld | null {
+  const grouped = p.group ? productGroupLd(origin, p, p.group) : null;
+  if (grouped) return grouped;
   const priced = p.variants.filter((v): v is LdOfferVariant & { priceMinor: number } => typeof v.priceMinor === 'number' && v.priceMinor >= 0);
   if (!priced.length) return null;
   const url = absolute(origin, p.href);
@@ -136,7 +209,7 @@ export function productLd(origin: URL | string, p: LdProduct): Ld | null {
   const struck = p.wasPrice && was.length === 1 && typeof was[0] === 'number' && was[0] > low ? was[0] : null;
   const offers: Ld =
     low === high
-      ? { '@type': 'Offer', url, priceCurrency: p.currency, price: majorPrice(low, p.currency), ...strikethrough(struck, p.currency), availability, itemCondition: `${CONTEXT}/NewCondition` }
+      ? { '@type': 'Offer', url, priceCurrency: p.currency, price: majorPrice(low, p.currency), ...strikethrough(struck, p.currency), availability, itemCondition: `${CONTEXT}/NewCondition`, ...offerTerms(p) }
       : {
           '@type': 'AggregateOffer',
           url,
@@ -146,13 +219,56 @@ export function productLd(origin: URL | string, p: LdProduct): Ld | null {
           offerCount: priced.length,
           availability,
           itemCondition: `${CONTEXT}/NewCondition`,
+          ...offerTerms(p),
         };
-  const out: Ld = { '@context': CONTEXT, '@type': 'Product', name: p.name, url };
+  const out: Ld = productBasics(origin, p, { '@context': CONTEXT, '@type': 'Product', name: p.name, url });
+  out.offers = offers;
+  Object.assign(out, reviewsPart(p.reviews ?? null));
+  return out;
+}
+
+/** The parts every product data carries (description, photos, brand, category), only those the page has. */
+function productBasics(origin: URL | string, p: LdProduct, out: Ld): Ld {
   if (p.description?.trim()) out.description = p.description.trim();
   if (p.images.length) out.image = p.images.map((src) => absolute(origin, src));
   if (p.brand?.trim()) out.brand = { '@type': 'Brand', name: p.brand.trim() };
   if (p.category?.trim()) out.category = p.category.trim();
-  out.offers = offers;
+  return out;
+}
+
+/**
+ * Follow-up 514 · the ProductGroup: one Product per priced variant with a SKU, each with its own Offer (price, struck
+ * price beside that variant only, stock, the page's return policy and free delivery). Null when fewer than two such
+ * variants, when a variant has no SKU, or when nothing varies — the caller then sends the plain Product.
+ */
+function productGroupLd(origin: URL | string, p: LdProduct, g: LdGroup): Ld | null {
+  const priced = g.variants.filter((v): v is LdGroupVariant & { priceMinor: number } => typeof v.priceMinor === 'number' && v.priceMinor >= 0);
+  if (priced.length < 2 || !g.id.trim() || priced.some((v) => !v.sku.trim())) return null;
+  const varies = (k: 'colour' | 'size') => new Set(priced.map((v) => v[k] ?? '')).size > 1;
+  const variesBy = [...(varies('colour') ? [`${CONTEXT}/color`] : []), ...(varies('size') ? [`${CONTEXT}/size`] : [])];
+  if (!variesBy.length || new Set(priced.map((v) => `${v.colour ?? ''}\u0000${v.size ?? ''}`)).size < priced.length) return null;
+  const terms = offerTerms(p);
+  const hasVariant = priced.map((v) => {
+    const inStock = p.onSale && v.stock > 0;
+    const was = p.wasPrice && typeof v.wasMinor === 'number' && v.wasMinor > v.priceMinor ? v.wasMinor : null;
+    const one: Ld = { '@type': 'Product', name: [p.name, v.colour, v.size].filter((x): x is string => !!x?.trim()).join(' · '), sku: v.sku.trim() };
+    if (v.colour?.trim()) one.color = v.colour.trim();
+    if (v.size?.trim()) one.size = v.size.trim();
+    if (v.images.length) one.image = v.images.map((src) => absolute(origin, src));
+    one.offers = {
+      '@type': 'Offer',
+      url: absolute(origin, v.href),
+      priceCurrency: p.currency,
+      price: majorPrice(v.priceMinor, p.currency),
+      ...strikethrough(was, p.currency),
+      availability: `${CONTEXT}/${inStock ? 'InStock' : p.retired ? 'Discontinued' : 'OutOfStock'}`,
+      itemCondition: `${CONTEXT}/NewCondition`,
+      ...terms,
+    };
+    return one;
+  });
+  const out: Ld = productBasics(origin, p, { '@context': CONTEXT, '@type': 'ProductGroup', name: p.name, url: absolute(origin, p.href), productGroupID: g.id.trim(), variesBy });
+  out.hasVariant = hasVariant;
   Object.assign(out, reviewsPart(p.reviews ?? null));
   return out;
 }

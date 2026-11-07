@@ -174,7 +174,10 @@ export function IndexingCard({ d, value, defaults, version, canWrite, pageTypes 
 
 /** The parts of the structured data, in the order the card lists them. */
 // PR 249: "article" (BlogPosting on a journal article, off as shipped)
-export const SD_PARTS = ["breadcrumbs", "itemList", "product", "wasPrice", "combo", "organization", "website", "reviews", "faq", "article"] as const;
+// Follow-up 515: "returns" and "shipping" (the offer's return policy and free delivery, off as shipped)
+// ~~export const SD_PARTS = [..., "faq", "article"] as const;~~
+// ~~export const SD_PARTS = [..., "returns", "shipping"] as const;~~ (follow-up 514 adds "variants")
+export const SD_PARTS = ["breadcrumbs", "itemList", "product", "wasPrice", "combo", "organization", "website", "reviews", "faq", "article", "returns", "shipping", "variants"] as const;
 export type SeoStructuredValue = Record<(typeof SD_PARTS)[number], boolean>;
 
 export function StructuredDataCard({ d, value, defaults, version, canWrite }: { d: Dict; value: SeoStructuredValue; defaults: SeoStructuredValue; version: number; canWrite: boolean }) {

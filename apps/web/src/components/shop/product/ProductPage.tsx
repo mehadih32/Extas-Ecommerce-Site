@@ -449,6 +449,25 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   // PR 224: the answered questions the Q&A block shows, as FAQ data (optional markup, off as shipped; same rows)
   const qaSet = set['pdp.qa'];
   const qaItems = sd.faq && qaSet.on ? qaLdItems(qaView(await answeredQuestionsOnce(c.storeId, m.productId, qaSet.max), qaSet, false)) : [];
+  // follow-up 515: the return policy and free delivery the page states (each its own switch, off as shipped), for the
+  // country the Merchant Center feed targets (one target country in the shop)
+  const country = sd.product && (sd.returns || sd.shipping) ? (await readPageSettings(['ads.merchantFeed'] as const, c.storeId))['ads.merchantFeed'].country : null;
+  const pricedLd = ldVariants.flatMap((v) => (typeof v.priceMinor === 'number' ? [v.priceMinor] : []));
+  const freeAlone = data.freeDelivery || (tf.freeOverMinor !== null && pricedLd.length > 0 && Math.min(...pricedLd) >= tf.freeOverMinor);
+  // follow-up 514: the address that opens a variant (its colour's own address while colour paths are on, else the
+  // colour and size asked in the query, as the Merchant Center feed links them) and its colour's first photo
+  const variantHref = (v: { colour: string | null; size: string | null }) => {
+    const q = new URLSearchParams();
+    const own = !!v.colour && set['pdp.page'].colourPaths;
+    if (v.colour && !own) q.set(COLOUR_QUERY, v.colour);
+    if (v.size) q.set(SIZE_QUERY, v.size);
+    const path = own ? colourPath(productHref, v.colour!) : productHref;
+    return q.size ? `${path}?${q.toString()}` : path;
+  };
+  const colourPhoto = (key: string | null) => {
+    const u = largestUrl((m.shots[key ?? NO_COLOUR] ?? [])[0]?.photo);
+    return u ? [u] : [];
+  };
   const ld = here ? (
     <JsonLd
       data={[
@@ -479,6 +498,10 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
               retired: retiredForGood(data.reason),
               // PR 223: the rating and reviews only from the real approved rows the reviews block shows (off as shipped)
               reviews: sd.reviews ? ldReviewsOf(reviewView) : null,
+              returns: sd.returns && country && tf.exchangeHours !== null ? { hours: tf.exchangeHours, exchangeOnly: !set['policy.returns.afterDelivery'], country } : null,
+              freeShipping: sd.shipping && country && freeAlone ? { country } : null,
+              // follow-up 514: the variants the page draws as a ProductGroup (off as shipped), each at the address that opens it
+              group: sd.variants ? { id: data.id, variants: ldVariants.map((v) => ({ ...v, colour: v.colour ? (m.colours.find((x) => x.key === v.colour)?.name ?? null) : null, size: v.size ? (m.sizes.find((x) => x.key === v.size)?.label ?? null) : null, href: variantHref(v), images: colourPhoto(v.colour) })) } : null,
             })
           : null,
         sd.faq ? faqLd(here, pageHref, qaItems) : null,

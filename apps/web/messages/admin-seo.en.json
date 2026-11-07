@@ -173,7 +173,10 @@
       "website": "The website's name on the home page",
       "reviews": "A product's star rating and reviews, from real approved reviews only",
       "faq": "Questions and answers (FAQ) — the product's answered questions, a collection page's questions and the FAQ page; optional, Google shows no FAQ result for it since 7 May 2026",
-      "article": "Journal articles — headline, description, dates, language, topic and an honest byline (an AI author is sent as the shop, never as a person); optional"
+      "article": "Journal articles — headline, description, dates, language, topic and an honest byline (an AI author is sent as the shop, never as a person); optional",
+      "returns": "A product's return policy — the exchange window its promise row says (a size swap only, or returns too), for the country set on the Merchant Center feed; optional",
+      "shipping": "A product's free delivery — only when its page promises free delivery for it bought alone (its own free delivery, or every price over the free-delivery amount); a charge that depends on the area is never sent; optional",
+      "variants": "A product's colours and sizes as variants (Google's variant markup) — one entry per colour and size the page sells, with its SKU, photo, price, stock and the address that opens it; optional"
     },
     "never": "A star rating goes only from real approved reviews, exactly as the product page shows them (the average, the count and the review cards); a product with none sends none. Never a price the page does not show."
   },

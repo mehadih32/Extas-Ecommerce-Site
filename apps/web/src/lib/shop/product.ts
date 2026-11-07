@@ -31,6 +31,8 @@ export interface ProductColourData {
 
 export interface ProductVariantData {
   id: string;
+  /** Follow-up 514: the variant's SKU (server side only: the product page's ProductGroup data). */
+  sku: string;
   colour: string | null;
   size: string | null;
   stock: number;
@@ -116,6 +118,7 @@ const productSelect = {
     orderBy: { sortOrder: 'asc' },
     select: {
       id: true,
+      sku: true,
       colourId: true,
       priceMinor: true,
       compareAtMinor: true,
@@ -234,6 +237,7 @@ async function readProduct(storeId: number, slug: string, now: Date): Promise<Pr
       : [];
   const variants: ProductVariantData[] = live.map((v) => ({
     id: v.id,
+    sku: v.sku,
     colour: v.colourId ? (colourKey.get(v.colourId) ?? null) : null,
     size: v.size?.key ?? null,
     stock: v.inStock ? sellableUnits(v.stockLevels, kindSet) : 0,
