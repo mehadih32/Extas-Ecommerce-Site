@@ -96,6 +96,24 @@ export interface PoliciesView {
   /** The rules a page may read (every rule not archived), for the ticks. */
   ruleChoices: { value: string; label: string }[];
   values: QuotableValue[];
+  /** Follow-up 148: what the privacy notice should say about the checkout's keeping (only what is switched on). */
+  privacy: PrivacyHint[];
+}
+
+/** Follow-up 148 — one thing the shop keeps that the owner's privacy notice should name, with how long. */
+export type PrivacyHint = { id: 'browser'; days: number } | { id: 'capture'; days: number };
+
+/**
+ * Follow-up 148: this browser keeps the last checkout's details (`checkout.autofill.browserDays` above 0), and unfinished
+ * checkouts are kept for the team (`checkout.capture.enabled`, `checkout.capture.keepDays`). The words stay his
+ * (`pages.text`): the screen suggests a line for each, it never writes one into his page.
+ */
+export function privacyHintsOf(autofill: unknown, captureOn: unknown, keepDays: unknown): PrivacyHint[] {
+  const out: PrivacyHint[] = [];
+  const days = isObj(autofill) && typeof autofill.browserDays === 'number' ? autofill.browserDays : 0;
+  if (days > 0) out.push({ id: 'browser', days });
+  if (captureOn === true) out.push({ id: 'capture', days: typeof keepDays === 'number' ? keepDays : 0 });
+  return out;
 }
 
 export class PoliciesError extends Error {
@@ -203,6 +221,7 @@ export async function policiesView(deps: PoliciesDeps, who: PoliciesWho, lang: s
     form: await formCard(deps),
     ruleChoices,
     values,
+    privacy: privacyHintsOf(...(await Promise.all([deps.resolver.value('checkout.autofill', { storeId: S }), deps.resolver.value('checkout.capture.enabled', { storeId: S }), deps.resolver.value('checkout.capture.keepDays', { storeId: S })]))),
   };
 }
 

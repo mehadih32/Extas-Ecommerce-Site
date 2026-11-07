@@ -39,3 +39,6 @@
 /* PR 302 — a rule line with a leading icon (Privacy & data, "What the shop keeps"): the icon keeps its size, long text wraps beside it. */
 .adm2 .a2-rule.a2-rule-t{align-items:flex-start}
 .adm2 .a2-rule-t>svg{flex:none;margin-top:1px}
+
+/* follow-up 148: a suggested line for the privacy notice (the owner copies it into his own words) */
+.pol-sug { margin: 0; padding-left: 10px; border-left: 3px solid var(--lm-ln); overflow-wrap: anywhere; }

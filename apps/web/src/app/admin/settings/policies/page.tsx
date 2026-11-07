@@ -205,6 +205,43 @@ export default async function PoliciesPage({ searchParams }: { searchParams: Pro
 
       <FieldsCard key={asked} url={API} screen={{ key: card.key, value: card.value, version: card.version }} fields={fields} texts={texts} canEdit={canEdit} testId="pol-card" />
 
+      {asked === 'privacy' ? (
+        <section className="a2-sc a2-mt12" aria-labelledby="pol-privacy-h" data-testid="pol-privacy-hints" data-n={v.privacy.length}>
+          {/* follow-up 148: what the checkout keeps now, with a suggested line for his own words (never written for him) */}
+          <div className="a2-sch">
+            <div>
+              <h2 className="a2-h3" id="pol-privacy-h">
+                {s('privacy.h')}
+              </h2>
+              <p className="a2-scd">{s('privacy.d')}</p>
+            </div>
+          </div>
+          {v.privacy.length ? (
+            <ul className="a2-stack a2-mt12" style={{ gap: 12 }}>
+              {v.privacy.map((h) => (
+                <li key={h.id} className="a2-stack" style={{ gap: 6 }} data-testid={`pol-privacy-${h.id}`}>
+                  <div className="a2-gap8">
+                    <span className="a2-pill ok">{s('now.live')}</span>
+                    <span className="a2-sm">
+                      <b>{s(`privacy.${h.id}`)}</b> · {s('privacy.days', { n: num(h.days) })}
+                    </span>
+                  </div>
+                  <p className="a2-sm a2-mute">{s('privacy.suggest')}</p>
+                  <blockquote className="a2-sm pol-sug" lang="en">
+                    <b>{s('privacy.sEn')}:</b> {s(`privacy.line.${h.id}.en`, { n: h.days })}
+                  </blockquote>
+                  <blockquote className="a2-sm pol-sug" lang="bn">
+                    <b>{s('privacy.sBn')}:</b> {s(`privacy.line.${h.id}.bn`, { n: new Intl.NumberFormat('bn-BD').format(h.days) })}
+                  </blockquote>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="a2-sm a2-mute a2-mt12">{s('privacy.none')}</p>
+          )}
+        </section>
+      ) : null}
+
       {asked === 'contact' ? (
         <>
           {/* PR 75 follow-up: the contact page's "Send us a message" form (`pages.contactForm`, off as shipped) */}
