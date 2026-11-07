@@ -51,4 +51,30 @@ describe('seasonal home model (PR 280)', () => {
     expect(previewHref('/', id)).toBe(`/?seasonal-look=${id}`);
     expect(previewHref('/bn', id)).toBe(`/bn?seasonal-look=${id}`);
   });
+
+  it('follow-up 649: a look brings its sections, hero lines and hero collection; the buttons, promise lines and rows stay the owner’s own now', () => {
+    const own = registry['home.hero'].default;
+    const look = lookOf(
+      lookPayload({
+        'home.sections': [{ id: 'hero', on: true }],
+        'home.hero': { ...own, title: { en: 'Eid edit', bn: 'ঈদ সংগ্রহ' }, buttons: [], trust: [] },
+        'home.heroSlides': { ...registry['home.heroSlides'].default, collection: 'eid-edit', count: 3 },
+        'home.newIn': { ...registry['home.newIn'].default, count: 2 },
+      }),
+    );
+    // the owner changed his buttons, promise lines and rows after the look was saved
+    const buttons = [{ ...own.buttons[0]!, href: '/collections/winter' }];
+    const trust = [own.trust[0]!];
+    const s = {
+      'home.sections': registry['home.sections'].default,
+      'home.hero': { ...own, buttons, trust, shift: 90 },
+      'home.heroSlides': { ...registry['home.heroSlides'].default, count: 9 },
+      'home.newIn': { ...registry['home.newIn'].default, count: 12 },
+    };
+    const got = withLook(s, look);
+    expect(got['home.sections']).toEqual([{ id: 'hero', on: true }]);
+    expect(got['home.hero']).toEqual({ ...own, buttons, trust, shift: 90, title: { en: 'Eid edit', bn: 'ঈদ সংগ্রহ' } });
+    expect(got['home.heroSlides']).toEqual({ ...registry['home.heroSlides'].default, count: 9, collection: 'eid-edit' });
+    expect(got['home.newIn'].count).toBe(12);
+  });
 });

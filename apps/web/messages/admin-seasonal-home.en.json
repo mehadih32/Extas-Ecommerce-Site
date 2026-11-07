@@ -57,7 +57,7 @@
       "h": "Save the home page as it is now",
       "name": "Name of the look",
       "namePh": "Eid 2027",
-      "help": "Keeps a copy of your home page's settings now. Change the copy for the season; your live home page stays as it is.",
+      "help": "Keeps your home page's sections, hero lines and hero pictures as they are now. Change the copy for the season; your live home page stays as it is. The hero buttons, the promise lines under them and the other rows always follow your own home page settings, so a later change to them shows in every look.",
       "save": "Save the look",
       "saved": "Saved. Open “Change this look” to make it seasonal."
     },

@@ -3,7 +3,8 @@
 // windows' states, the overlap rule, the store's wall clock).
 // - A home look is a saved LayoutSnapshot whose payload is `{ scope: 'home', settings: { <home key>: value } }`: the
 //   values of the home page's own settings (sections and order, hero words and buttons, the hero's pictures, the
-//   categories, new in and reviews rows) as they were saved and then edited for the season. Each value is checked
+//   categories, new in and reviews rows) as they were saved and then edited for the season (follow-up 649: only the
+//   sections, the hero's three lines and the hero pictures' collection are drawn from it; withLook). Each value is checked
 //   against its registry schema when it is read; a value that no longer fits is left out, so the home page keeps the
 //   owner's own setting for it (never a broken page).
 // - A window (ScheduledLayoutSwitch) shows its look from `applyAt` until `revertAt` (none = until it is stopped);
@@ -49,9 +50,23 @@ export const previewHref = (home: string, lookId: string): string => `${home}?${
 /** A look's payload as it is saved. */
 export const lookPayload = (look: HomeLook): { scope: typeof HOME_LOOK_SCOPE; settings: HomeLook } => ({ scope: HOME_LOOK_SCOPE, settings: look });
 
-/** The shop's settings with the look's values in their place (the rest unchanged). */
+/**
+ * The shop's settings with the look's own parts in their place (the rest unchanged).
+ * ~~`{ ...s, ...look }`: every saved key, as it was at save time~~ Follow-up 649: a look owns only what its editor
+ * changes — the sections and their order, the hero's three lines, and the hero pictures' collection. The hero's buttons
+ * and promise lines (and its other parts), the rest of the hero pictures' setting, and the categories, new in and
+ * reviews rows are always the owner's own settings as they are now, so a later change to them reaches every look.
+ */
 export function withLook<S extends Record<string, unknown>>(s: S, look: HomeLook): S {
-  return { ...s, ...look };
+  const out: Record<string, unknown> = { ...s };
+  if (look['home.sections']) out['home.sections'] = look['home.sections'];
+  const hero = look['home.hero'];
+  const ownHero = s['home.hero'] as Value<'home.hero'> | undefined;
+  if (hero) out['home.hero'] = ownHero ? { ...ownHero, eyebrow: hero.eyebrow, title: hero.title, sub: hero.sub } : hero;
+  const slides = look['home.heroSlides'];
+  const ownSlides = s['home.heroSlides'] as Value<'home.heroSlides'> | undefined;
+  if (slides) out['home.heroSlides'] = ownSlides ? { ...ownSlides, collection: slides.collection } : slides;
+  return out as S;
 }
 
 export interface WindowTimes {
