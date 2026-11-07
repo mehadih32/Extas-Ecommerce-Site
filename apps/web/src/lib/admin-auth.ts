@@ -27,6 +27,7 @@ import { createVault, type Vault } from '@extas/vault';
 import { addressRefused } from './admin-security/access';
 import { sameOriginRequest } from './security/same-origin';
 import { settingsResolver, settingsTimeoutMs, withTimeout, type AppResolver } from './settings';
+import { readCapped } from './read-capped';
 
 /** Cookie names. `__Host-` makes the browser insist on Secure, Path=/ and no Domain (the cookie stays on this host). */
 export const SESSION_COOKIE = '__Host-admin_sid';
@@ -167,10 +168,19 @@ export async function guardAdmin(request: Request, deps: AdminDeps | null, opts:
   }
 }
 
-/** Reads a JSON body; a missing or broken body is an empty object (the validation then names what is missing). */
+/**
+ * Follow-up 607: the most an admin JSON body may be — the edge's own limit (server.conf CADDY_BODY_MAX_MB, 25), so the
+ * app never buffers more even when it is reached some other way. Files go through their own upload routes.
+ */
+export const ADMIN_BODY_MAX = 25 * 1024 * 1024; // hardcode-ok: a body-size guard equal to the edge's default, not a business number
+
+/** Reads a JSON body; a missing, broken or too large body is an empty object (the validation then names what is missing). */
 export async function body(request: Request): Promise<Record<string, unknown>> {
   try {
-    const v = (await request.json()) as unknown;
+    // ~~const v = (await request.json()) as unknown;~~ follow-up 607: read up to the cap only
+    const text = await readCapped(request, ADMIN_BODY_MAX);
+    if (text === null) return {};
+    const v = JSON.parse(text) as unknown;
     return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
   } catch {
     return {};

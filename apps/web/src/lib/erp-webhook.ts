@@ -15,6 +15,7 @@
 import { allAdapters, createConnections, ERP_DELIVERY_HEADER, ERP_SIGNATURE_HEADER, ERP_TIMESTAMP_HEADER, type Connections } from '@extas/adapters';
 import { erpWebhookGuard, erpWebhookRequestRefusal, receiveErpWebhook, type ErpSiteGuard, type WebhookAnswer, type WebhookDeps } from '@extas/inventory';
 import { adminDeps, requestContext } from './admin-auth';
+import { readCapped } from './read-capped';
 
 const holder = globalThis as unknown as { __erpWebhookConnections?: { connections: Connections; at: number; ttlMs: number } };
 
@@ -38,24 +39,9 @@ const answer = (status: number, body: Record<string, unknown>) => Response.json(
 export const publicAnswer = (r: Pick<WebhookAnswer, 'status' | 'code' | 'eventId'>): Response =>
   r.status === 401 ? answer(401, { ok: false, code: 'UNAUTHORIZED' }) : answer(r.status, { ok: r.status < 300, code: r.code, ...(r.eventId ? { eventId: r.eventId } : {}) });
 
-/** The body as text, read at most `maxBytes` (+1 to know it is longer): null when it is longer. */
-export async function readCapped(request: Request, maxBytes: number): Promise<string | null> {
-  if (!request.body) return '';
-  const reader = request.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > maxBytes) {
-      await reader.cancel().catch(() => {});
-      return null;
-    }
-    chunks.push(value);
-  }
-  return Buffer.concat(chunks).toString('utf8');
-}
+// ~~export async function readCapped(request, maxBytes) { … }~~ follow-up 607: moved to lib/read-capped.ts (the admin
+// bodies and the speed readings read through it too); the webhooks keep importing it from here
+export { readCapped };
 
 export interface ErpWebhookRouteOptions {
   /** Builds the deps (the app's own unless a test gives them); called only once the headers pass. */

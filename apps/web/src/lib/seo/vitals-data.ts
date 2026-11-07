@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { dayIn } from '@extas/cache';
 import { getPrisma, type PrismaClient } from '@extas/db/client';
 import type { SeoVitals } from '@extas/settings';
+import { readCapped } from '../read-capped';
 import { readPageSettings } from '../shop/context';
 import { shopStoreId } from '../shop/store-id';
 import { addBuckets, BUCKETS, bucketOf, DEVICES, isVitalMetric, labMisses, p75, PAGE_KINDS, pageKindOf, targetOf, VITAL_METRICS, vitalUnits, type Device, type LabPage, type PageKind, type VitalMetric } from './vitals';
@@ -72,8 +73,9 @@ export async function vitalsHandler(request: Request): Promise<Response> {
   // ~~if (TEST_BROWSER.test(request.headers.get('user-agent') ?? '')) return none();~~ follow-up 590: counted apart below
   const test = isTestBrowser(request.headers);
   try {
-    const text = await request.text();
-    if (text.length > MAX_BODY) return none();
+    // ~~const text = await request.text(); if (text.length > MAX_BODY) return none();~~ follow-up 607: read up to the cap only
+    const text = await readCapped(request, MAX_BODY);
+    if (text === null) return none();
     const read = readingOf(JSON.parse(text));
     if (!read) return none();
     const r: VitalReading = test ? { ...read, device: TEST_DEVICE } : read;
