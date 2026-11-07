@@ -90,6 +90,8 @@ export * from './truth';
 // PR 611 (CN-028, ERP contract v6): the shipment at pickup, every courier result and the Partial delivery box.
 export * from './erp-v6';
 export * from './returns';
+// Follow-up 450: a returning parcel back at the shop (Steadfast never says returned) — the order follows.
+export * from './back-at-shop';
 export * from './packing-pure';
 export * from './packing';
 export * from './packing-issues';

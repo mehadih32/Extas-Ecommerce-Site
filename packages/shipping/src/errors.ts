@@ -37,6 +37,8 @@ export type ShippingErrorCode =
   | 'ORDER_REFUSED'
   /** PR 526: a return reason is only for a parcel that came back (`data.status`). */
   | 'NOT_RETURNED'
+  /** Follow-up 450: "Back at the shop" is only for a parcel the courier says is on its way back (`data.status`). */
+  | 'NOT_RETURNING'
   /** PR 182: the order is not at a packing step this action applies to (`data.status`). */
   | 'NOT_PACKING'
   /** PR 182: the scanned or typed code is on no line of this order (nothing is stored). */
