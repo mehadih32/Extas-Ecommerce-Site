@@ -27,7 +27,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { appChecks } from "./device-gate.mjs";
-import { pageProblems, previewCookie, signIn, watched } from "./smoke.mjs";
+import { checkContext, pageProblems, previewCookie, signIn, watched } from "./smoke.mjs";
 
 const require = createRequire(import.meta.url);
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -347,7 +347,7 @@ async function runStep(page, base, ignore, s, n, skip, out, tag, ui, settings) {
  * of its own (the signed-out journeys stay signed out). Null when they cannot be read; the steps that need them fail.
  */
 async function readSwitches(browser, base, creds, preview) {
-  const ctx = await browser.newContext(preview ? { storageState: preview } : {});
+  const ctx = await checkContext(browser, preview ? { storageState: preview } : {});
   try {
     const page = await ctx.newPage();
     await signIn(page, base, creds);
@@ -386,7 +386,7 @@ export async function runJourneys(opts) {
       for (const scr of config.screens) {
         // PR 416: a touch screen opens as a phone does (its viewport tag honoured, touch taps)
         const touch = scr.touch === true ? { isMobile: true, hasTouch: true } : {};
-        const ctx = await browser.newContext({ viewport: { width: scr.width, height: scr.height }, ...touch, ...(preview ? { storageState: preview } : {}) });
+        const ctx = await checkContext(browser, { viewport: { width: scr.width, height: scr.height }, ...touch, ...(preview ? { storageState: preview } : {}) });
         const page = await ctx.newPage();
         const steps = [];
         try {

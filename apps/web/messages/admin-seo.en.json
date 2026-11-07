@@ -504,6 +504,7 @@
     "desc": "How fast the shop really loads for its visitors (Core Web Vitals), the number Google ranks by, against the targets. Kept only as daily counts, never who visited.",
     "span": "The 75th percentile of the last {days} days ({n} page loads): three visits in four were this fast or faster.",
     "noReadings": "No reading yet in the last {days} days. Pages report once visitors open them.",
+    "testReadings": "{n} readings came from the shop's own test browsers (the check, the saved journeys, the monthly lab). They are only counted here, never in the figures above.",
     "col": {
       "metric": "Measure",
       "phone": "Phone",

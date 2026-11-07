@@ -30,6 +30,17 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ERROR_TEXT = /couldn.t load|a server error occurred|application error/i;
 const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const PREVIEW_COOKIE = "extas_preview"; // set by the preview gate (infra/stack/caddy/auth-block.sh)
+/**
+ * Follow-up 590 (PR 234): the shop's own test browsers (this smoke test, the saved journeys, the monthly lab run) send
+ * this header on every request, so the shop's speed endpoint counts their page loads apart and never in the real
+ * visitors' figures (apps/web/src/lib/seo/vitals-data.ts CHECK_HEADER). It changes nothing else on any page.
+ */
+export const CHECK_HEADERS = Object.freeze({ "x-extas-check": "1" });
+
+/** A browser context of one of the shop's own test browsers: `browser.newContext` with the check header. */
+export function checkContext(browser, options = {}) {
+  return browser.newContext({ ...options, extraHTTPHeaders: { ...(options.extraHTTPHeaders ?? {}), ...CHECK_HEADERS } });
+}
 
 /** Problems on a loaded page: a 5xx answer or the error screen. */
 export function pageProblems(path, status, text) {
@@ -459,7 +470,7 @@ async function visit(page, base, ignore, path, screen, dirs, before) {
  * PR 234: the monthly lab run passes the preview login the same way.
  */
 export async function previewCookie(browser, base, httpCredentials) {
-  const ctx = await browser.newContext({ httpCredentials });
+  const ctx = await checkContext(browser, { httpCredentials });
   try {
     await (await ctx.newPage()).goto(`${base}/`);
     const state = await ctx.storageState();
@@ -510,7 +521,8 @@ export async function runSmoke(opts) {
         hasTouch: vp.mobile,
       };
       // As a customer: signed out.
-      const guest = await browser.newContext(
+      const guest = await checkContext(
+        browser,
         preview ? { ...screen, storageState: preview } : screen,
       );
       const gp = await guest.newPage();
@@ -558,7 +570,8 @@ export async function runSmoke(opts) {
       await guest.close();
       // As admin: the sign-in itself once (a two-step code is good only once), then its session on every screen.
       const state = signedIn ?? preview;
-      const admin = await browser.newContext(
+      const admin = await checkContext(
+        browser,
         state ? { ...screen, storageState: state } : screen,
       );
       const page = await admin.newPage();

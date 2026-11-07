@@ -2,6 +2,7 @@
 // S11 · PR 234 — Website → SEO "Real visitors' speed" (`seo.vitals`): the 75th percentile of the last days for each
 // Core Web Vital on a phone and on a desktop against PR 10's targets, LCP per kind of page, the newest monthly lab run
 // (a phone over 4G) page by page, the switch, how many visits report, and under "More options" the span and the targets.
+// Follow-up 590: how many readings came from the shop's own test browsers (counted apart, never in the figures).
 // Seeing needs seo.read; saving, seo.manage. Words: messages/admin-seo.<lang>.json `vt.*`.
 import type { Dict } from "@/lib/i18n";
 import { formatVital, targetOf, VITAL_METRICS, type VitalMetric, type VitalTargets } from "@/lib/seo/vitals";
@@ -69,6 +70,11 @@ export function VitalsCard({ d, value, defaults, limits, version, canWrite, repo
       <p className="a2-xs a2-mute" data-testid="vt-span">
         {vt(d, report.total ? "span" : "noReadings", { days: n(report.days), n: n(report.total) })}
       </p>
+      {report.testReadings > 0 ? (
+        <p className="a2-xs a2-mute" data-testid="vt-test">
+          {vt(d, "testReadings", { n: n(report.testReadings) })}
+        </p>
+      ) : null}
       <div className="a2-tblw a2-mt6">
         <table className="a2-tbl" data-testid="vt-field">
           <thead>
