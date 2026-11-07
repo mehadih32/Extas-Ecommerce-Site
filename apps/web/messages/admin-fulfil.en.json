@@ -526,7 +526,8 @@
       },
       "weightPill": "Weight check: more than {p}% and {g} g off",
       "weightPillOff": "Weight check: off",
-      "settingsNote": "The check, the photo and the weight check are delivery settings (Delivery → More options).",
+      "settingsNote": "The check, the photo and the weight check are delivery settings (Delivery → Delivery settings → More options · Packing).",
+      "settingsOpen": "Open the packing settings",
       "empty": "Nothing at this step",
       "emptySub": {
         "pick": "Confirmed orders arrive here.",

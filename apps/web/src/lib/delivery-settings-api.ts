@@ -1,6 +1,14 @@
 // S08 · PR 193 — Delivery › Delivery settings (demo 97t-adm2-delivery.js /admin/delivery/settings): its cards, first the
 // holiday mode (`delivery.holiday`, Blueprint B1.14) — the break's first and last day, the notice on the shop and the
 // checkout's "ships from …" during the break. Other cards of the demo's page join with their PRs.
+// S08 · PR 176 follow-up 370 — the courier cards (`delivery.courier.*`, CN-018: settings inside their section): reading
+// the couriers (tracking), booking (the gift's lead days and note, the note's language, the item names, how many a
+// press books), the courier by cost (PR 178) and the couriers' own status calls (follow-up 372). Each keeps its
+// registry default; nothing here moves money, changes a price, a delivery charge or Cash on Delivery.
+// Follow-up 431: the couriers' own area lists (`delivery.courier.zoneSync`, PR 554), until now only shown.
+// Follow-up 462: under "More options", the packing step's cards (`fulfilment.packing.*`, PR 182/183, follow-up 434) —
+// the piece check, the packing photo, the parcel's weight, the packing lists and a defective or missing piece — until
+// now only shown as chips on Orders › Packing & print › Pack.
 //
 //   GET  /api/admin/delivery/settings   the page's cards with their versions (`delivery.read`)
 //   PUT  /api/admin/delivery/settings   {key, value, version} one card saved whole; a card changed by someone else in
@@ -11,13 +19,13 @@
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { districtPromiseSchema, holidaySchema, stickerLatinSchema, storeTarget, voiceAddressSchema } from '@extas/settings';
+import { courierBookingSchema, courierSelectionSchema, courierTrackingSchema, courierWebhooksSchema, courierZoneSyncSchema, districtPromiseSchema, holidaySchema, packingCheckSchema, packingIssuesSchema, packingPhotoSchema, packingQueueSchema, packingWeightSchema, stickerLatinSchema, storeTarget, voiceAddressSchema } from '@extas/settings';
 import type { ZodType } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
 /** The keys this page saves (one card each). */
-export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin', 'delivery.promise.districts', 'checkout.voice'] as const;
+export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin', 'delivery.promise.districts', 'checkout.voice', 'delivery.courier.tracking', 'delivery.courier.booking', 'delivery.courier.selection', 'delivery.courier.webhooks', 'delivery.courier.zoneSync', 'fulfilment.packing.check', 'fulfilment.packing.photo', 'fulfilment.packing.weight', 'fulfilment.packing.queue', 'fulfilment.packing.issues'] as const;
 export type DeliverySettingKey = (typeof DELIVERY_SETTING_KEYS)[number];
 
 /** Each card's schema, its line in the settings change log and its audit action. */
@@ -27,6 +35,19 @@ const CARDS: Record<DeliverySettingKey, { schema: ZodType<Record<string, unknown
   'delivery.promise.districts': { schema: districtPromiseSchema, reason: 'Delivery › Delivery settings › Delivery promise per district', action: 'delivery.promise.districts.save' },
   // CN-020 (4): the checkout address box's mic (the address the rider needs, said aloud)
   'checkout.voice': { schema: voiceAddressSchema, reason: 'Delivery › Delivery settings › Voice address at checkout', action: 'checkout.voice.save' },
+  // follow-up 370: the courier cards
+  'delivery.courier.tracking': { schema: courierTrackingSchema, reason: 'Delivery › Delivery settings › Reading the couriers', action: 'delivery.courier.tracking.save' },
+  'delivery.courier.booking': { schema: courierBookingSchema as unknown as ZodType<Record<string, unknown>>, reason: 'Delivery › Delivery settings › Booking with the courier', action: 'delivery.courier.booking.save' },
+  'delivery.courier.selection': { schema: courierSelectionSchema, reason: 'Delivery › Delivery settings › The courier by cost', action: 'delivery.courier.selection.save' },
+  'delivery.courier.webhooks': { schema: courierWebhooksSchema, reason: "Delivery › Delivery settings › The couriers' own status calls", action: 'delivery.courier.webhooks.save' },
+  // follow-up 431
+  'delivery.courier.zoneSync': { schema: courierZoneSyncSchema, reason: "Delivery › Delivery settings › The couriers' area lists", action: 'delivery.courier.zoneSync.save' },
+  // follow-up 462: the packing step's cards, under More options
+  'fulfilment.packing.check': { schema: packingCheckSchema, reason: 'Delivery › Delivery settings › More options › Checking the pieces', action: 'fulfilment.packing.check.save' },
+  'fulfilment.packing.photo': { schema: packingPhotoSchema, reason: 'Delivery › Delivery settings › More options › The packing photo', action: 'fulfilment.packing.photo.save' },
+  'fulfilment.packing.weight': { schema: packingWeightSchema, reason: "Delivery › Delivery settings › More options › The parcel's weight", action: 'fulfilment.packing.weight.save' },
+  'fulfilment.packing.queue': { schema: packingQueueSchema, reason: 'Delivery › Delivery settings › More options › The packing lists', action: 'fulfilment.packing.queue.save' },
+  'fulfilment.packing.issues': { schema: packingIssuesSchema, reason: 'Delivery › Delivery settings › More options › A defective or missing piece', action: 'fulfilment.packing.issues.save' },
 };
 
 /** A district of the gazetteer, for the promise card's picker (its code is what a row names). */

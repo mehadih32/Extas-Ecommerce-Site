@@ -153,6 +153,131 @@
       "maxKb": "Largest recording taken (KB)",
       "maxPerHour": "Recordings one browser may send an hour",
       "maxPerHourHelp": "Stops one browser filling the storage."
+<<<<<<< HEAD
+=======
+    },
+    "courier": {
+      "heading": "Couriers",
+      "tracking": {
+        "h": "Reading the couriers",
+        "d": "The shop asks each courier about the parcels it holds, on its own, and the order follows its parcel (in transit, delivered, returned). A person can always press \"Read now\" on a parcel.",
+        "enabled": "Read the couriers on their own",
+        "enabledHelp": "Off: nothing is read unless a person presses \"Read now\", and orders do not move by themselves.",
+        "everyMinutes": "Minutes between two reads of a parcel",
+        "everyMinutesHelp": "5 to 1,440. A courier that calls the shop itself (below) is read less often than this anyway.",
+        "batch": "Parcels read in one run",
+        "batchHelp": "1 to 2,000. The rest are read on the next run."
+      },
+      "booking": {
+        "h": "Booking with the courier",
+        "d": "What goes to the courier when a person books a parcel on Orders › Packing & print. Booking is always a person's press, never automatic.",
+        "giftLeadDays": "Earliest booking of a gift: days before its day",
+        "giftLeadDaysHelp": "0 to 30. 0: a gift is booked on its \"deliver on or after\" day, not before.",
+        "giftNote": "Gift note to the courier",
+        "giftNoteHelp": "Up to 200 letters. {sender}, {date} and {note} are filled in from the order.",
+        "noteLang": "Language of the note to the courier",
+        "itemNames": "Send the pieces' names to the courier",
+        "itemNamesHelp": "Off: the courier is told only how many pieces are in the parcel.",
+        "maxPerRun": "Most parcels one \"Book all\" press books",
+        "maxPerRunHelp": "1 to 500. The oldest ready orders go first; press again for the rest."
+      },
+      "selection": {
+        "h": "The courier by cost",
+        "d": "While on, \"Book courier\" offers the courier with the lowest cost for this parcel first (from the courier rates on Money › Costs & fees), and lists every courier with its cost. The customer's delivery charge never changes.",
+        "enabled": "Offer the cheapest courier first",
+        "enabledHelp": "Off as it ships. With no rates entered, no courier has a cost and the choice stays the team's.",
+        "codFee": "Count the courier's Cash on Delivery fee in the cost",
+        "codFeeHelp": "Only for the comparison between couriers; nothing is charged."
+      },
+      "webhooks": {
+        "h": "The couriers' own status calls",
+        "d": "Steadfast and Pathao can call the shop the moment a parcel moves, so the order moves at once. The address and the token are on Settings › Keys & connections, on each courier's row; the hourly read above stays the fallback.",
+        "enabled": "Take the couriers' calls",
+        "enabledHelp": "Off as it ships. Turn it on once the courier's webhook page has the shop's address.",
+        "maxBodyKb": "Largest call taken (KB)",
+        "maxBodyKbHelp": "1 to 1,024. A bigger call is refused without being read."
+      },
+      "zoneSync": {
+        "h": "The couriers' area lists",
+        "d": "Couriers like Pathao book only with their own city, zone and area numbers. The shop reads each courier's list and pairs it with its own areas, so a booking never fails on \"unknown area\". \"Read the list now\" is on Delivery › Couriers.",
+        "enabled": "Read the lists on their own",
+        "enabledHelp": "Off: a list is read only when a person presses \"Read the list now\".",
+        "everyDays": "Days between two readings of a list",
+        "callsPerRun": "Courier calls in one reading",
+        "callsPerRunHelp": "10 to 5,000. A long list is read in parts; the next part goes on next time.",
+        "areas": "Read the areas too (the third level)",
+        "areasHelp": "Off: only cities and zones are read.",
+        "autoMatch": "Pair a place whose name is exactly one of the shop's areas",
+        "autoMatchHelp": "Off: every pair is made by a person on the courier's page.",
+        "unmapped": "A parcel to an area with no pair",
+        "unmappedHelp": "A courier that needs its own numbers always waits for a pair.",
+        "rules": {
+          "whenRequired": "Waits only for a courier that needs its numbers",
+          "always": "Waits for at least the city with every courier that takes numbers"
+        }
+      }
+    },
+    "packing": {
+      "more": "More options · Packing",
+      "moreNote": "How the packing table works (Orders › Packing & print › Pack). Each is the owner's choice; a card saved here applies to the next order at the table.",
+      "check": {
+        "h": "Checking the pieces",
+        "d": "How each piece is checked before \"Mark packed\".",
+        "mode": "How a piece is checked",
+        "modeHelp": "Scan: the SKU scanned must match a line of the order. Tick: one tick per line, for a shop that packs without a scanner.",
+        "modes": {
+          "scan": "Scan the SKU",
+          "tick": "Tick each line"
+        },
+        "allowTyped": "Let the packer type the SKU",
+        "allowTypedHelp": "With Scan: when the scanner is off, the SKU can be typed instead."
+      },
+      "photo": {
+        "h": "The packing photo",
+        "d": "A photo of the open parcel before it is closed, kept as proof (CN-014c). Off as shipped.",
+        "enabled": "Ask for a packing photo",
+        "enabledHelp": "Off: no photo is asked for.",
+        "mode": "How it is asked",
+        "modeHelp": "Required: \"Mark packed\" and the courier booking wait for the photos (the owner can waive it for one order, with a reason). Reminder: the screen asks, nothing waits.",
+        "modes": {
+          "required": "Required",
+          "reminder": "A reminder only"
+        },
+        "minPhotos": "Photos per parcel",
+        "keepDays": "Days each photo is kept",
+        "keepDaysHelp": "1 to 3,650. Then the photo is archived, never shown on the order again."
+      },
+      "weight": {
+        "h": "The parcel's weight",
+        "d": "The scale's reading against the pieces' own weights. Off as shipped.",
+        "enabled": "Check the parcel's weight",
+        "enabledHelp": "Off: no weight is asked for or checked.",
+        "gapPercent": "Flag when off by more than (%)",
+        "gapGrams": "… and by more than (grams)",
+        "gapHelp": "A reading is flagged only when it is off by more than both. \"Mark packed\" then asks to weigh again or confirm.",
+        "requireReading": "A reading is needed before \"Mark packed\""
+      },
+      "queue": {
+        "h": "The packing lists",
+        "d": "What the Pick, Pack, Ready and Handed over steps list.",
+        "doneDays": "Days handed-over orders stay on \"Handed over\"",
+        "doneDaysHelp": "0 to 30. 0: only today's.",
+        "listMax": "Orders one step lists at most",
+        "listMaxHelp": "10 to 500."
+      },
+      "issues": {
+        "h": "A defective or missing piece",
+        "d": "What \"Report defect / out of stock\" at the table does. Nothing is decided by itself: a person picks the way out on the card.",
+        "holdOrder": "Hold the order while a card is open",
+        "holdOrderHelp": "Off: the order stays where it is; the card still stops \"Mark packed\".",
+        "damagedReasonKey": "Hold reason for a defective piece",
+        "missingReasonKey": "Hold reason for a missing piece",
+        "editReasonKey": "Edit reason for a swap or \"send the rest\"",
+        "decideWithinHours": "Mark a card late after (hours)",
+        "decideWithinHoursHelp": "0: never marked late.",
+        "missing": "{key} (no longer on the list)"
+      }
+>>>>>>> 0830c352 (PR 182: follow-up — the packing step's settings get their editor: Delivery › Delivery settings › More options · Packing, five cards for fulfilment.packing.* (follow-up 462))
     }
   }
 }
