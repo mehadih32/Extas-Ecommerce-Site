@@ -99,7 +99,8 @@
         "punycode": "disguised letters in the address",
         "login": "a hidden address after “@”",
         "broken": "not a real address"
-      }
+      },
+      "failed": "Could not be copied from the channel; ask the customer to send it again"
     },
     "compose": {
       "label": "Write",
@@ -601,6 +602,20 @@
           "order": "Order page",
           "other": "Other pages"
         }
+      },
+      "fileCopy": {
+        "h": "Copy customers' files",
+        "d": "A photo, video, voice note or document a customer sends on Messenger or WhatsApp is copied to the shop's own storage right after it arrives. Meta deletes its own copy after a while.",
+        "enabled": "Copy the files",
+        "enabledHelp": "Off: the file shows \"Copying the file…\" and is not kept. A channel still on its practice setting gives a sample picture.",
+        "maxMb": "Largest file (MB)",
+        "perRun": "Files per turn",
+        "photoDays": "Keep photos (days)",
+        "keepHelp": "How long our copy is kept; the file gets that end date. Removing old copies is a separate step.",
+        "videoDays": "Keep videos (days)",
+        "otherDays": "Keep voice notes and documents (days)",
+        "giveUpHours": "Give up after (hours)",
+        "giveUpHelp": "A file the channel still does not give after this long is marked \"could not be copied\"."
       }
     },
     "person": {

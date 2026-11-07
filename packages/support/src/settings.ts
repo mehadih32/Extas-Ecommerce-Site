@@ -15,17 +15,19 @@
 // opens (`contact.messenger`, owner data, empty as it ships). The Page is kept as its bare name (null = not set); its
 // card edits it as `{ page }`, where any address of the Page may be typed ('' = not set).
 import { createHash } from 'node:crypto';
-import { callMeSchema, registry, storeTarget, supportAttachmentsSchema, supportCartSchema, supportCatalogueSchema, supportChannelsSchema, supportContextSchema, supportDraftKeywordsSchema, supportDraftsSchema, supportDraftWordsSchema, supportBlockListSchema, supportAppSchema, supportDeskHoursSchema, supportEscalationSchema, supportLinkSafetySchema, supportMessengerButtonSchema, messengerPageOf, supportFollowUpSchema, supportFollowUpWordsSchema, supportIdentitySchema, supportPrivacySchema, supportInboxSchema, supportLiveChatSchema, supportTicketsSchema, type Key, type Value } from '@extas/settings';
+import { callMeSchema, registry, storeTarget, supportAttachmentsSchema, supportFileCopySchema, supportCartSchema, supportCatalogueSchema, supportChannelsSchema, supportContextSchema, supportDraftKeywordsSchema, supportDraftsSchema, supportDraftWordsSchema, supportBlockListSchema, supportAppSchema, supportDeskHoursSchema, supportEscalationSchema, supportLinkSafetySchema, supportMessengerButtonSchema, messengerPageOf, supportFollowUpSchema, supportFollowUpWordsSchema, supportIdentitySchema, supportPrivacySchema, supportInboxSchema, supportLiveChatSchema, supportTicketsSchema, type Key, type Value } from '@extas/settings';
 import { z } from 'zod';
 import { allow, logChange, parse, setting, SupportError, type SettingsWriter, type SupportDeps, type Who } from './context';
 
 /** The keys Support settings edits, each one card. */
-export const SUPPORT_SETTING_KEYS = ['support.inbox', 'support.attachments', 'support.channels', 'support.liveChat', 'checkout.callMe', 'support.identity', 'support.context', 'support.catalogue', 'support.cart', 'support.tickets', 'support.drafts', 'support.draftWords', 'support.draftKeywords', 'support.followUp', 'support.followUpWords', 'support.privacy', 'support.blockList', 'support.app', 'support.deskHours', 'support.escalation', 'support.linkSafety', 'support.messengerButton', 'contact.messenger'] as const satisfies readonly Key[];
+export const SUPPORT_SETTING_KEYS = ['support.inbox', 'support.attachments', 'support.channels', 'support.liveChat', 'checkout.callMe', 'support.identity', 'support.context', 'support.catalogue', 'support.cart', 'support.tickets', 'support.drafts', 'support.draftWords', 'support.draftKeywords', 'support.followUp', 'support.followUpWords', 'support.privacy', 'support.blockList', 'support.app', 'support.deskHours', 'support.escalation', 'support.linkSafety', 'support.messengerButton', 'contact.messenger', 'support.fileCopy'] as const satisfies readonly Key[];
 export type SupportSettingKey = (typeof SUPPORT_SETTING_KEYS)[number];
 
 const SCHEMAS = {
   'support.inbox': supportInboxSchema,
   'support.attachments': supportAttachmentsSchema,
+  // follow-up 505: a customer's channel files copied to our storage
+  'support.fileCopy': supportFileCopySchema,
   'support.channels': supportChannelsSchema,
   'support.liveChat': supportLiveChatSchema,
   // CN-020 (3): "Call me" at checkout — its call-backs land in this inbox
@@ -87,7 +89,7 @@ async function card<K extends SupportSettingKey>(deps: Pick<SupportDeps, 'settin
 }
 
 async function viewOf(deps: Pick<SupportDeps, 'settings'>, storeId: number): Promise<SupportSettingsView> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, u, v, w, x, y] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, u, v, w, x, y, z2] = await Promise.all([
     card(deps, storeId, 'support.inbox'),
     card(deps, storeId, 'support.attachments'),
     card(deps, storeId, 'support.channels'),
@@ -111,8 +113,9 @@ async function viewOf(deps: Pick<SupportDeps, 'settings'>, storeId: number): Pro
     card(deps, storeId, 'support.linkSafety'),
     card(deps, storeId, 'support.messengerButton'),
     card(deps, storeId, 'contact.messenger'),
+    card(deps, storeId, 'support.fileCopy'),
   ]);
-  return { 'support.inbox': a, 'support.attachments': b, 'support.channels': c, 'support.liveChat': d, 'checkout.callMe': e, 'support.identity': f, 'support.context': g, 'support.catalogue': h, 'support.cart': i, 'support.tickets': j, 'support.drafts': k, 'support.draftWords': l, 'support.draftKeywords': m, 'support.followUp': n, 'support.followUpWords': o, 'support.privacy': p, 'support.blockList': q, 'support.app': r, 'support.deskHours': u, 'support.escalation': v, 'support.linkSafety': w, 'support.messengerButton': x, 'contact.messenger': y };
+  return { 'support.inbox': a, 'support.attachments': b, 'support.channels': c, 'support.liveChat': d, 'checkout.callMe': e, 'support.identity': f, 'support.context': g, 'support.catalogue': h, 'support.cart': i, 'support.tickets': j, 'support.drafts': k, 'support.draftWords': l, 'support.draftKeywords': m, 'support.followUp': n, 'support.followUpWords': o, 'support.privacy': p, 'support.blockList': q, 'support.app': r, 'support.deskHours': u, 'support.escalation': v, 'support.linkSafety': w, 'support.messengerButton': x, 'contact.messenger': y, 'support.fileCopy': z2 };
 }
 
 /** Every card's data (`support.read`). */

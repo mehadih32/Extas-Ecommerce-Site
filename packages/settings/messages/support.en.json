@@ -18,6 +18,10 @@
     "liveChat": {
       "label": "Live chat on the shop",
       "help": "The chat button on the shop's pages: a visitor writes straight from the site and the team answers from the inbox. Off as it ships. \"Check for answers every\": seconds between an open chat's checks. \"Longest message\": characters one message may have. \"Messages a minute\": how many one visitor may send in a minute. \"Keep a chat for\": days a visitor's chat stays his on that browser."
+    },
+    "fileCopy": {
+      "label": "Copy customers' channel files",
+      "help": "Off as it ships: a photo, video, voice note or document a customer sends on Messenger or WhatsApp shows \"Copying the file…\" and is not kept, and Meta deletes its own copy after a while. On: the shop copies each one to its own storage right after it arrives. \"Largest file\" in megabytes; \"Per turn\": files copied at a time. \"Keep photos / videos / other files\": days our copy is kept (it gets that end date). \"Give up after\": hours after which a file the channel still does not give is marked \"could not be copied\"."
     }
   }
 }

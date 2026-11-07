@@ -9,6 +9,7 @@
 import { MESSENGER_SIGNATURE_HEADER } from '@extas/adapters';
 import { adminDeps } from '@/lib/admin-auth';
 import { readCapped } from '@/lib/erp-webhook';
+import { copyChannelFilesSoon } from '@/lib/support-file-copy';
 import { messengerWebhookMaxBytes, receiveMessengerWebhook, supportConnections, verifyMessengerWebhook, type MessengerWebhookDeps } from '@/lib/support-connect';
 import { supportPushWiring } from '@/lib/support-push';
 
@@ -16,7 +17,8 @@ export const dynamic = 'force-dynamic';
 
 async function depsFor(deps: NonNullable<ReturnType<typeof adminDeps>>): Promise<MessengerWebhookDeps> {
   // PR 435: a message wakes the support app's devices (support.app off as it ships)
-  return { db: deps.db, settings: deps.resolver, connections: await supportConnections(deps), now: deps.now, push: supportPushWiring(deps) };
+  // follow-up 505: the customers' files are copied after the answer has gone back to Meta (support.fileCopy)
+  return { db: deps.db, settings: deps.resolver, connections: await supportConnections(deps), now: deps.now, push: supportPushWiring(deps), afterFiles: (storeId) => copyChannelFilesSoon(deps, storeId, () => supportConnections(deps)) };
 }
 
 const answer = (status: number, body: Record<string, unknown>) => Response.json(body, { status, headers: { 'cache-control': 'no-store' } });

@@ -71,6 +71,8 @@ export * from './inbox';
 export * from './actions';
 export * from './settings';
 export * from './connectors';
+// Follow-up 505 (PR 425, 426): a customer's channel file copied to our storage (file-copy.ts).
+export * from './file-copy';
 export * from './livechat';
 // CN-020 (3) — "Call me" at checkout: the call-back lands in the inbox.
 export * from './callback';
