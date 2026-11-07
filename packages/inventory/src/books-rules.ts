@@ -356,12 +356,45 @@ export interface BooksCardInput {
   fixedCosts: { month: string; inMonths: readonly string[]; waitingSend: number };
   today: string;
   waitingCheckWarnDays: number;
+  /** Follow-up 569: summaries (their days) and fixed-cost months that have waited for the ERP more than a day. */
+  waitedLong?: WaitedLong;
+}
+
+export interface WaitedLong {
+  days: string[];
+  months: string[];
+}
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Follow-up 569: what has waited for the ERP more than a day — a summary (its latest version) not taken by the ERP a
+ * day after it was built (waiting, trying again or refused; never one that only waits for the practice ERP's key), and
+ * a month's latest fixed costs not taken a day after they were saved. The nightly smoke run reads it on the Daily
+ * summary page, so a stuck send is found the next morning. Days and months oldest first.
+ */
+export function waitedLong(i: {
+  now: Date;
+  summaries: readonly { date: string; state: string; builtAt: Date; waitsForKey: boolean }[];
+  months: readonly { month: string; createdAt: Date; accepted: boolean }[];
+}): WaitedLong {
+  const before = i.now.getTime() - DAY_MS;
+  return {
+    days: i.summaries
+      .filter((s) => s.state !== 'ACCEPTED' && !s.waitsForKey && s.builtAt.getTime() < before)
+      .map((s) => s.date)
+      .sort(),
+    months: i.months
+      .filter((m) => !m.accepted && m.createdAt.getTime() < before)
+      .map((m) => m.month)
+      .sort(),
+  };
 }
 
 /** The six checks in their order with their letter (A–F), for the screens. */
 export const BOOKS_CHECK_ORDER: readonly { check: BooksCheck; letter: string }[] = BOOKS_CHECKS.map((check) => ({ check, letter: BOOKS_CHECK_LETTER[check] }));
 
-export type NeedKind = 'DIFFERENCES' | 'TIE_BROKEN' | 'SUMMARY_REFUSED' | 'SUMMARY_MISSING' | 'SUMMARY_INCOMPLETE' | 'FIXED_COSTS_MISSING' | 'WAITING_CHECK_OLD';
+export type NeedKind = 'DIFFERENCES' | 'TIE_BROKEN' | 'SUMMARY_REFUSED' | 'SUMMARY_MISSING' | 'SUMMARY_INCOMPLETE' | 'FIXED_COSTS_MISSING' | 'WAITING_CHECK_OLD' | 'WAITED_LONG';
 
 export interface NeedRow {
   kind: NeedKind;
@@ -404,6 +437,8 @@ export function booksCard(i: BooksCardInput): BooksCard {
     if (i.summaries.incompleteDays.length) needs.push({ kind: 'SUMMARY_INCOMPLETE', vars: { n: i.summaries.incompleteDays.length, first: i.summaries.incompleteDays[0]!.date } });
     if (!i.fixedCosts.inMonths.includes(i.fixedCosts.month)) needs.push({ kind: 'FIXED_COSTS_MISSING', vars: { month: i.fixedCosts.month } });
     if (old) needs.push({ kind: 'WAITING_CHECK_OLD', vars: { pieces: i.waitingCheck.pieces, days: ageDays! } });
+    const w = i.waitedLong;
+    if (w && (w.days.length || w.months.length)) needs.push({ kind: 'WAITED_LONG', vars: { days: w.days.length, months: w.months.length, first: w.days[0] ?? w.months[0]! } });
   }
   return {
     state: !i.linked ? 'NOT_LINKED' : i.lastRun ? 'RAN' : 'NOT_RUN',

@@ -11,7 +11,7 @@ import { BOOKS_CHECKS, BOOKS_RESULTS, minorOf, type BooksCheck, type BooksDiffer
 import { nowOf, setting, type InventoryDeps, type Who } from './context';
 import { InventoryError } from './errors';
 import { isV6 } from './erp-model';
-import { addDays, booksCard, daysFrom, type BooksCard, type BooksCardInput } from './books-rules';
+import { addDays, booksCard, daysFrom, waitedLong, type BooksCard, type BooksCardInput, type WaitedLong } from './books-rules';
 import { latestVersions, localNow, openLinkOf, summaryLog } from './books-summary';
 
 const dayText = (d: Date) => d.toISOString().slice(0, 10);
@@ -40,6 +40,10 @@ export interface BooksSummaryStatus {
   lastRunAt: Date | null;
   summaries: BooksCardInput['summaries'];
   fixedCosts: BooksCardInput['fixedCosts'];
+  /** Follow-up 569: what has waited for the ERP more than a day (also a "Needs you now" row). */
+  waitedLong: WaitedLong;
+  /** Follow-up 569: match runs of the open link, any state (0 = the card may say "not run yet"). */
+  matchRuns: number;
 }
 
 /** The Books status card of the store (`books.read`). */
@@ -70,12 +74,12 @@ export async function booksSummaryStatus(deps: InventoryDeps, who: Who): Promise
     today: local.day,
     waitingCheckWarnDays: warnDays,
   };
-  if (!link) return { card: booksCard(empty), startDay: null, today: local.day, lastRunAt: null, summaries: empty.summaries, fixedCosts: empty.fixedCosts };
+  if (!link) return { card: booksCard(empty), startDay: null, today: local.day, lastRunAt: null, summaries: empty.summaries, fixedCosts: empty.fixedCosts, waitedLong: { days: [], months: [] }, matchRuns: 0 };
 
   const linkRow = await deps.db.erpStoreLink.findUniqueOrThrow({ where: { id: link.id }, select: { createdAt: true } });
   const startDay = link.startDay ?? localNow(linkRow.createdAt, timeZone).day;
   const open = { linkId: link.id, storeId, status: { in: ['PENDING' as const, 'MISMATCH' as const] } };
-  const [run, close, diffs, ties, waiting, account, log, fixed, fixedSends] = await Promise.all([
+  const [run, close, diffs, ties, waiting, account, log, fixed, fixedSends, matchRuns] = await Promise.all([
     deps.db.booksMatchRun.findFirst({ where: { linkId: link.id, storeId, status: { not: 'RUNNING' } }, orderBy: { startedAt: 'desc' }, select: { finishedAt: true, status: true, checks: true } }),
     deps.db.booksDayClose.findFirst({ where: { linkId: link.id, storeId }, orderBy: [{ date: 'desc' }, { version: 'desc' }], select: { date: true, result: true, tieRemainderMinor: true } }),
     deps.db.booksDifference.groupBy({ by: ['kind'], where: open, _count: { _all: true } }),
@@ -83,8 +87,9 @@ export async function booksSummaryStatus(deps: InventoryDeps, who: Who): Promise
     deps.db.erpPipelinePiece.aggregate({ where: { linkId: link.id, storeId, state: 'WAITING_CHECK' }, _sum: { buyingPriceMinor: true }, _count: { _all: true }, _min: { stateDate: true } }),
     deps.db.erpAccountState.findUnique({ where: { linkId: link.id }, select: { exchangesAtRiskMinor: true } }),
     summaryLog(deps, who, { days: Math.max(gapDays, resendDays) + 1 }),
-    deps.db.erpFixedCostMonth.findMany({ where: { linkId: link.id, storeId }, orderBy: [{ month: 'asc' }, { version: 'desc' }], select: { id: true, month: true } }),
+    deps.db.erpFixedCostMonth.findMany({ where: { linkId: link.id, storeId }, orderBy: [{ month: 'asc' }, { version: 'desc' }], select: { id: true, month: true, createdAt: true } }),
     deps.db.erpBooksSend.findMany({ where: { linkId: link.id, storeId, kind: 'FIXED_COSTS', accepted: true }, select: { refId: true } }),
+    deps.db.booksMatchRun.count({ where: { linkId: link.id, storeId } }),
   ]);
 
   // Days since the link started (within the look-back) that have no summary yet: the day before yesterday and older
@@ -94,8 +99,18 @@ export async function booksSummaryStatus(deps: InventoryDeps, who: Who): Promise
   const missingDays = daysFrom([startDay, addDays(local.day, -gapDays)].sort().at(-1)!, addDays(local.day, -2)).filter((d) => !have.has(d));
   const openFrom = addDays(local.day, -resendDays);
   const latestFixed = new Map<string, string>();
-  for (const f of fixed) if (!latestFixed.has(dayText(f.month).slice(0, 7))) latestFixed.set(dayText(f.month).slice(0, 7), f.id);
+  const latestFixedAt = new Map<string, Date>();
+  for (const f of fixed)
+    if (!latestFixed.has(dayText(f.month).slice(0, 7))) {
+      latestFixed.set(dayText(f.month).slice(0, 7), f.id);
+      latestFixedAt.set(dayText(f.month).slice(0, 7), f.createdAt);
+    }
   const acceptedFixed = new Set(fixedSends.map((s) => s.refId));
+  const waited = waitedLong({
+    now: nowOf(deps),
+    summaries: log,
+    months: [...latestFixed].map(([month, id]) => ({ month, createdAt: latestFixedAt.get(month)!, accepted: acceptedFixed.has(id) })),
+  });
 
   const input: BooksCardInput = {
     ...empty,
@@ -114,6 +129,7 @@ export async function booksSummaryStatus(deps: InventoryDeps, who: Who): Promise
       missingDays,
     },
     fixedCosts: { month, inMonths: [...latestFixed.keys()], waitingSend: [...latestFixed.values()].filter((id) => !acceptedFixed.has(id)).length },
+    waitedLong: waited,
   };
-  return { card: booksCard(input), startDay, today: local.day, lastRunAt: run?.finishedAt ?? null, summaries: input.summaries, fixedCosts: input.fixedCosts };
+  return { card: booksCard(input), startDay, today: local.day, lastRunAt: run?.finishedAt ?? null, summaries: input.summaries, fixedCosts: input.fixedCosts, waitedLong: waited, matchRuns };
 }

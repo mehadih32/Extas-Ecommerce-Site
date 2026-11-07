@@ -47,7 +47,8 @@
       "SUMMARY_MISSING": "{n} days have no summary yet, from {first}",
       "SUMMARY_INCOMPLETE": "{n} days still have figures not in yet, from {first}",
       "FIXED_COSTS_MISSING": "The fixed costs of {month} are not in yet",
-      "WAITING_CHECK_OLD": "{pieces} returned pieces have waited {days} days for the owner's check in the ERP"
+      "WAITING_CHECK_OLD": "{pieces} returned pieces have waited {days} days for the owner's check in the ERP",
+      "WAITED_LONG": "The ERP has not taken {days} daily summaries and {months} months of fixed costs for more than a day; the shop keeps sending them"
     },
     "kind": {
       "MISSING_EVENT": "an ERP row the shop lacks",

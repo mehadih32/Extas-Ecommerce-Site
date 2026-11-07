@@ -40,6 +40,21 @@ it('R2 ops M2 (PR 402): a check with `host` runs only on that kind of host; the 
   for (const c of config.checks) if (c.host !== undefined) expect(['staging', 'extra'], c.what).toContain(c.host);
 });
 
+it('follow-up 569: a `nightlyOnly` check never runs after a deploy (it would roll the deploy back), only on the other runs', () => {
+  expect(checkApplies({ pr: 1, nightlyOnly: true }, 'staging', { afterDeploy: true })).toBe(false);
+  expect(checkApplies({ pr: 1, nightlyOnly: true }, 'staging', { afterDeploy: false })).toBe(true);
+  expect(checkApplies({ pr: 1, nightlyOnly: true }, 'staging')).toBe(true);
+  expect(checkApplies({ pr: 1 }, 'staging', { afterDeploy: true })).toBe(true);
+  expect(checkApplies({ pr: 1, nightlyOnly: true, host: 'extra' }, 'staging', { afterDeploy: false })).toBe(false);
+  const config = JSON.parse(readFileSync(new URL('../docs/qa/smoke.json', import.meta.url), 'utf8'));
+  const books = config.checks.filter((c) => c.pr === 617 && c.nightlyOnly);
+  expect(books.map((c) => [c.page, c.attribute, c.equals])).toEqual([
+    ['/admin/money/books/daily', 'data-waited-long', 'no'],
+    ['/admin/money/books/daily', 'data-card-run', 'ok'],
+  ]);
+  for (const c of config.checks) if (c.nightlyOnly !== undefined) expect(c.nightlyOnly, c.what).toBe(true);
+});
+
 it('every configured check names its PR and is a page check or a request check', () => {
   const config = JSON.parse(readFileSync(new URL('../docs/qa/smoke.json', import.meta.url), 'utf8'));
   expect(config.checks.length).toBeGreaterThan(0);

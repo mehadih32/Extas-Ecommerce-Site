@@ -47,7 +47,8 @@
       "SUMMARY_MISSING": "{n} দিনের হিসাব এখনো বানানো হয়নি, {first} থেকে",
       "SUMMARY_INCOMPLETE": "{n} দিনের কিছু অঙ্ক এখনো আসেনি, {first} থেকে",
       "FIXED_COSTS_MISSING": "{month} মাসের স্থির খরচ এখনো দেওয়া হয়নি",
-      "WAITING_CHECK_OLD": "{pieces}টা ফেরত পিস ERP-তে মালিকের চেকের জন্য {days} দিন ধরে অপেক্ষায়"
+      "WAITING_CHECK_OLD": "{pieces}টা ফেরত পিস ERP-তে মালিকের চেকের জন্য {days} দিন ধরে অপেক্ষায়",
+      "WAITED_LONG": "{days}টা দৈনিক হিসাব আর {months} মাসের স্থির খরচ এক দিনের বেশি ধরে ERP নেয়নি; দোকান পাঠাতেই থাকে"
     },
     "kind": {
       "MISSING_EVENT": "ERP-তে আছে, দোকানে নেই",
