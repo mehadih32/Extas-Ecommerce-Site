@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState, type ReactNode } from 'react';
 import { call } from '@/components/admin/api';
 import { showToast } from '@/components/admin/lumen/Toast';
-import { fulError } from '@/lib/admin-fulfil/words';
+import { fulError, type FulSource } from '@/lib/admin-fulfil/words';
 import { t, type Dict } from '@/lib/i18n';
 
 export interface ActProps {
@@ -29,9 +29,11 @@ export interface ActProps {
   done?: (answer: Record<string, unknown>) => string | null;
   /** Opens this address after it worked (e.g. a PDF of what was just made). */
   openAfter?: (answer: Record<string, unknown>) => string | null;
+  /** Follow-up 465: the screen it is on, for its own refusal words (`ful.err.<source>.<code>` first). */
+  errSource?: FulSource;
 }
 
-export function Act({ dict, url, method = 'POST', body, label, busyLabel, ask, note, tone = '', size = 'sm', testId, done, openAfter }: ActProps) {
+export function Act({ dict, url, method = 'POST', body, label, busyLabel, ask, note, tone = '', size = 'sm', testId, done, openAfter, errSource }: ActProps) {
   const router = useRouter();
   const id = useId();
   const [busy, setBusy] = useState(false);
@@ -53,7 +55,7 @@ export function Act({ dict, url, method = 'POST', body, label, busyLabel, ask, n
     const a = await call(method, url, { ...(body ?? {}), ...(note ? { [note.field]: text.trim() } : {}) });
     setBusy(false);
     if (!a.data.ok) {
-      setMsg({ ok: false, text: a.status === 0 ? fulError(dict, 'network') : fulError(dict, a.data.error, (a.data.details ?? []).join(', ')) });
+      setMsg({ ok: false, text: a.status === 0 ? fulError(dict, 'network') : fulError(dict, a.data.error, (a.data.details ?? []).join(', '), errSource) });
       return;
     }
     setOpen(false);

@@ -69,7 +69,7 @@ export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers
     const a = await call('POST', '/api/admin/delivery/bookings', { courierAccountId, orderIds: toBook.map((r) => r.orderId) });
     setBusy(false);
     if (!a.data.ok) {
-      setMsg({ ok: false, text: a.status === 0 ? fulError(dict, 'network') : fulError(dict, a.data.error, ((a.data.details as string[] | undefined) ?? []).join(', ')) });
+      setMsg({ ok: false, text: a.status === 0 ? fulError(dict, 'network') : fulError(dict, a.data.error, ((a.data.details as string[] | undefined) ?? []).join(', '), 'pack') });
       return;
     }
     const results = (a.data.results as { orderId?: string; number?: string; outcome?: string; code?: string | null }[] | undefined) ?? [];

@@ -13,7 +13,13 @@
       "unauthorized": "You are signed out. Sign in again.",
       "NOT_PRINTABLE": "Some stickers cannot be printed now: {fields}. Untick them, or re-book the parcel first.",
       "popup": "The PDF is ready but the browser blocked the new tab. It was downloaded instead.",
-      "REASON_REQUIRED": "These stickers were printed before: say why they are printed again.",
+      "REASON_REQUIRED": "A reason is needed: pick one or write it, then try again.",
+      "print": {
+        "REASON_REQUIRED": "These stickers were printed before: say why they are printed again."
+      },
+      "pack": {
+        "REASON_REQUIRED": "This step needs a reason: write it in the box, or decide it on the order's page."
+      },
       "NOTHING_TO_HAND_OVER": "Nothing is ready to hand over to this courier: {fields}. Print the stickers first, or re-book a parcel that changed.",
       "ALREADY_HANDED_OVER": "This batch was marked handed over already. Reload the page.",
       "NOT_PACKING": "This order is not being picked or packed now. Reload the page.",

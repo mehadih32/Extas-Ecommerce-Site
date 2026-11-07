@@ -18,7 +18,7 @@ export function PickTick({ dict, lineKey, state, label, sub, words, canTick }: {
     setErr(null);
     const a = await call('POST', '/api/admin/packing/picking/tick', { key: lineKey, ticked: state !== 'done' });
     setBusy(false);
-    if (!a.data.ok) return setErr(a.status === 0 ? fulError(dict, 'network') : fulError(dict, a.data.error as string | undefined, ((a.data.details as string[] | undefined) ?? []).join(', ')));
+    if (!a.data.ok) return setErr(a.status === 0 ? fulError(dict, 'network') : fulError(dict, a.data.error as string | undefined, ((a.data.details as string[] | undefined) ?? []).join(', '), 'pack'));
     router.refresh();
   };
   return (
