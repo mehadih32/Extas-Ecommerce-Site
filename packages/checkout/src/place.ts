@@ -757,6 +757,8 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
   }
   /** PR 560: the order whose advance this payment completed (the order service moves it back to the queue). */
   let met: string | null = null;
+  /** Follow-up 320: the order whose payment this answer completed. */
+  let paidOrder: string | null = null;
   const result = await deps.db.$transaction(async (tx): Promise<PayActionResult> => {
     const mine = await ownOrder(tx, storeId, req.visitorId, d.number);
     await tx.$queryRaw`SELECT 1 FROM "Order" WHERE "id" = ${mine.id}::uuid FOR UPDATE`;
@@ -776,6 +778,7 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
       if (!open) throw new CheckoutError('CART_NOT_OPEN', 'this payment is closed; try again makes a new one', ['action']);
       const r = await answer('PAID');
       if (r.advanceMet) met = o.id;
+      if (r.changed) paidOrder = o.id;
       return { number: d.number, status: 'PAID', next: 'thanks' };
     }
     if (d.action === 'fail') {
@@ -803,6 +806,8 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
   }, TX);
   // PR 560: an advance paid in full puts the order back in the queue (never fails the customer's payment answer)
   if (met && deps.advancePaid) await deps.advancePaid(storeId, met).catch((e: unknown) => console.warn(`advance paid: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`));
+  // follow-up 320: a prepaid order nothing flagged may confirm by itself now (the owner's switch; never fails the answer)
+  if (paidOrder && deps.paid) await deps.paid(storeId, paidOrder).catch((e: unknown) => console.warn(`after paid: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`));
   return result;
 }
 

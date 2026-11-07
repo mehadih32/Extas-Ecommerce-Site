@@ -40,6 +40,11 @@ export function checkoutDeps(): CheckoutDeps | null {
       const p = await shopPaymentsDeps();
       await p?.orders?.advancePaid?.(storeId, orderId, { actorId: null, source: 'checkout' });
     },
+    // follow-up 320: the payment page's money came in — a prepaid order nothing flagged may confirm by itself (off)
+    paid: async (storeId, orderId) => {
+      const p = await shopPaymentsDeps();
+      await p?.orders?.paid?.(storeId, orderId, { actorId: null, source: 'checkout' });
+    },
   };
 }
 

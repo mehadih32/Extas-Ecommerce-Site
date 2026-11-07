@@ -19,7 +19,7 @@
 import { createHash } from 'node:crypto';
 import { createMockGateway, gatewayProviderOf, paymentAdapters, type CallbackRead, type Connections, type GatewayOutcome, type PaymentGateway } from '@extas/adapters';
 import { Prisma } from '@extas/db/client';
-import { allow, nowOf, setting, TX, UUID, type GatewayResolver, type PaymentsDeps, type Who } from './context';
+import { afterPaid, allow, nowOf, setting, TX, UUID, type GatewayResolver, type PaymentsDeps, type Who } from './context';
 import { PaymentsError } from './errors';
 import { applyOutcome, type OutcomeBy, type OutcomeResult } from './outcome';
 import { FAILURE_CODES } from './pure';
@@ -143,6 +143,8 @@ async function applyGateway(deps: PaymentsDeps, storeId: number, paymentId: stri
     TX,
   );
   if (r.advanceMet && r.orderId) await deps.orders?.advancePaid?.(storeId, r.orderId, { actorId: null, source: by.source });
+  // follow-up 320: a prepaid order nothing flagged may confirm by itself now (the owner's switch; it only confirms)
+  if (r.changed && r.status === 'PAID' && r.orderId) await afterPaid(deps.orders, storeId, r.orderId, { actorId: null, source: by.source });
   return r;
 }
 

@@ -15,7 +15,7 @@
 import { Prisma } from '@extas/db/client';
 import { MANUAL_PAYMENT_METHODS } from '@extas/settings';
 import { z } from 'zod';
-import { allow, KEY, nowOf, parse, setting, TX, UUID, type PaymentsDeps, type Who } from './context';
+import { afterPaid, allow, KEY, nowOf, parse, setting, TX, UUID, type PaymentsDeps, type Who } from './context';
 import { PaymentsError } from './errors';
 import { applyOutcome } from './outcome';
 import { codToCollect, dueOf, PAYMENT_EVENTS, paymentPill, type CodStage, type MismatchReason, type PaymentPill } from './pure';
@@ -153,6 +153,8 @@ export async function recordPayment(deps: PaymentsDeps, who: Who, orderId: strin
     throw e;
   }
   if (out.advanceMet) await deps.orders?.advancePaid?.(storeId, orderId, { actorId: who.actor.staffUserId, source: 'admin' });
+  // follow-up 320: a prepaid order nothing flagged may confirm by itself now (the owner's switch; it only confirms)
+  if (!out.replay) await afterPaid(deps.orders, storeId, orderId, { actorId: who.actor.staffUserId, source: 'admin' });
   return out;
 }
 

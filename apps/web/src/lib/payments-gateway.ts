@@ -4,7 +4,7 @@
 // that moves an order whose advance is now paid), and our callback address for a provider on the host the customer
 // uses. The admin API (payments-api.ts) and the checkout's payment route use these.
 import { createConnections, paymentAdapters, type Connections } from '@extas/adapters';
-import { keptDeliveryCharge, recordAdvance } from '@extas/orders';
+import { keptDeliveryCharge, recordAdvance, selfConfirmPrepaid } from '@extas/orders';
 import { noteStatementCharges } from '@extas/shipping';
 import { connectionGateways, type GatewayResolver, type PaymentsDeps } from '@extas/payments';
 import { adminDeps, type AdminDeps } from './admin-auth';
@@ -48,6 +48,10 @@ export async function paymentsServiceDeps(deps: AdminDeps): Promise<PaymentsDeps
       async advancePaid(storeId, orderId, by) {
         const od = { db: deps.db, settings: deps.resolver, now: deps.now, inventory: await inventoryDeps(deps) };
         await recordAdvance(od, { storeId, orderId }, { actorType: by.actorId ? 'STAFF' : 'SYSTEM', actorId: by.actorId, source: by.source });
+      },
+      // follow-up 320: a prepaid order nothing flagged confirms by itself once paid (the owner's switch, off; confirm only)
+      async paid(storeId, orderId) {
+        await selfConfirmPrepaid({ db: deps.db, settings: deps.resolver, now: deps.now }, { storeId, orderId });
       },
     },
     // PR 564: a statement's charges go to the charge mismatch log (record only, off until the owner's switch)

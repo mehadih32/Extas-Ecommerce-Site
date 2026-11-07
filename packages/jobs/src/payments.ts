@@ -5,7 +5,7 @@
 // the run key, so a slot planned on many ticks is one run; the sweep itself is safe to run twice (the outcome writer
 // changes a payment once).
 import type { PaymentsDeps } from '@extas/payments';
-import { recordAdvance } from '@extas/orders';
+import { recordAdvance, selfConfirmPrepaid } from '@extas/orders';
 import type { JobDeps } from './context';
 import { runKey, slotOf } from './keys';
 import type { Planner } from './worker';
@@ -25,6 +25,10 @@ export function paymentsDeps(deps: JobDeps): PaymentsDeps | null {
       // an advance paid in full moves the order through the one order service
       async advancePaid(storeId, orderId, by) {
         await recordAdvance({ db: deps.db, settings: deps.settings, now: deps.now, inventory: deps.inventory }, { storeId, orderId }, { actorType: 'SYSTEM', actorId: null, source: by.source });
+      },
+      // follow-up 320: money the sweep found for a prepaid order nothing flagged — it may confirm by itself (off)
+      async paid(storeId, orderId) {
+        await selfConfirmPrepaid({ db: deps.db, settings: deps.settings, now: deps.now }, { storeId, orderId });
       },
     },
   };

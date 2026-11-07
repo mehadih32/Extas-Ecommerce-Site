@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { checkoutQuote } from '@extas/checkout';
 import { setUpCheckout, type CheckoutFixture } from '@extas/checkout/testing';
-import { checkoutFlag, recordAdvance, systemBy } from '@extas/orders';
+import { checkoutFlag, recordAdvance, selfConfirmPrepaid, systemBy } from '@extas/orders';
 import { BAG_COOKIE, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { callMeHandler, draftHandler, paymentHandler, phoneRiskHandler, voiceHandler, placeHandler, quoteHandler, transitAnswerHandler, transitHandler, type CheckoutApiDeps } from './checkout-api';
 import { ATTRIBUTION_COOKIE, encodeTouch, touchOf } from '../tracking/attribution';
@@ -145,6 +145,34 @@ describe.skipIf(!HAS_TEST_DB)('the checkout order API on PostgreSQL (S04, PR 125
     expect(await act('approve')).toMatchObject({ body: { status: 'PAID' } });
     expect(await read(await paymentHandler(req('/api/checkout/payments', { number, action: 'approve' }), deps()))).toMatchObject({ status: 404 });
     expect(await f.t.prisma.order.count({ where: { visitorId: p.visitorId } })).toBe(1);
+  });
+
+  it('follow-up 320 (PR 541): a prepaid order nothing flagged confirms by itself once the payment page pays it — only with the switch on', async () => {
+    const od = () => ({ db: f.t.prisma, settings: f.deps().settings });
+    const wired = (): CheckoutApiDeps => ({ ...deps(), checkout: { ...f.deps(), paid: async (storeId, orderId) => void (await selfConfirmPrepaid(od(), { storeId, orderId })) } });
+    const payOne = async (name: string, size: string, phone: string) => {
+      // its own colour and phone: no other test's stock, and no duplicate of another test's order
+      const bag = await f.bag(name, [{ variantId: f.variant('oxford-cotton-shirt', 'white', size).id }]);
+      const cookie = `${BAG_COOKIE}=${bag.visitorId}`;
+      const payment = { method: 'card', option: 'visa' };
+      const q = await read(await quoteHandler(req('/api/checkout/quote', { lang: 'en', address: { line: FORM.address }, payment }, { cookie }), deps()));
+      const p = { cookie, order: { idempotencyKey: randomUUID(), lang: 'en', form: { ...FORM, phone }, payment, fingerprint: (q.body.view as { fingerprint: string }).fingerprint } };
+      const placed = await read(await placeHandler(req('/api/checkout/orders', p.order, { cookie: p.cookie }), wired()));
+      const number = placed.body.number as string;
+      expect((await f.t.prisma.order.findFirstOrThrow({ where: { number, storeId: f.S } })).riskSection).toBe('prepaid');
+      expect(await read(await paymentHandler(req('/api/checkout/payments', { number, action: 'approve', lang: 'en' }, { cookie: p.cookie }), wired()))).toMatchObject({ body: { status: 'PAID' } });
+      return f.t.prisma.order.findFirstOrThrow({ where: { number, storeId: f.S }, select: { status: true, paidMinor: true, totalMinor: true } });
+    };
+    // off as shipped: it waits in To confirm › Prepaid for the tap
+    expect(await payOne('api-selfconfirm-off', 'M', '01700000321')).toMatchObject({ status: 'PLACED' });
+    f.overrides.set('orders.prepaid.selfConfirm', { enabled: true });
+    try {
+      const o = await payOne('api-selfconfirm-on', 'L', '01700000322');
+      expect(o.status).toBe('CONFIRMED');
+      expect(o.paidMinor).toBe(o.totalMinor);
+    } finally {
+      f.overrides.delete('orders.prepaid.selfConfirm');
+    }
   });
 
   it('follow-up 50: with a real gateway connected the test page cannot mark an order paid (409 TEST_PAYMENT_OFF)', async () => {

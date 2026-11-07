@@ -88,6 +88,8 @@ export * from './address-facts';
 export * from './risk';
 export * from './risk-panel';
 export * from './sections';
+// S05 · PR 541 follow-up 320: a prepaid order nothing flagged confirms by itself once paid (`orders.prepaid.selfConfirm`, off).
+export * from './prepaid-confirm';
 export * from './identity';
 export * from './identity-graph';
 export * from './duplicate-rules';
