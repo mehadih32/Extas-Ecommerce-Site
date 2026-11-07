@@ -39,6 +39,7 @@
 //   AdminIpAllowlistEntry                                                       — admin access (B6.5)
 //   IdempotencyKey, ScheduledJob, WorkerHeartbeat                               — system jobs and the worker (PR 6)
 //   GeoArea                                                                     — the national gazetteer, shared reference data (PR 549)
+//   PracticeParcel                                                              — the practice courier's parcels, MOCK mode only (PR 176)
 //   Warehouse, InventoryLocation, StockLevel, LowStockAlert, StockAudit, StockAuditLine, LocalStockIntake
 //                                                                               — one shared stock pool for all stores (A4.4)
 //   AiAgent, AiProvider, AiModel, AiJobType, AiModelPreset, DataClassRoute, AgentPermission, AiSkill, AiSkillVersion,
@@ -4492,6 +4493,28 @@ model Shipment {
   @@unique([courierAccountId, consignmentId])
   @@index([storeId, status, bookedAt])
   @@index([orderId])
+}
+
+/// Follow-up 375 (PR 176): a practice courier's parcel (MOCK mode only), so the web app and the worker play the same
+/// scripted life on staging: what the shop sent, its scenario and how many steps it has reached. Never a real parcel;
+/// no money. One row per practice provider and consignment id (the practice ids come from the shop's reference).
+/// @stage S08 · PR 176 — follow-up 375.
+/// @scope installation — the practice courier's own side (like a courier's own system), keyed by provider and consignment id.
+model PracticeParcel {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  provider      String
+  consignmentId String
+  trackingCode  String
+  merchantRef   String
+  /// The parcel as the shop sent it (receiver, amount to collect, pieces): practice data on staging.
+  parcel        Json
+  scenario      String
+  reached       Int
+  bookedAt      DateTime @db.Timestamptz(3)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([provider, consignmentId])
 }
 
 enum ShipmentStatus {

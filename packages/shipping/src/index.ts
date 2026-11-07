@@ -58,11 +58,15 @@
 // their promise now (performance.ts, performance-pure.ts); the RTO cost book's groups by district, campaign, product,
 // courier and reason behind the owner's switch (rto.ts `rtoReport`). Records only.
 //
+// Follow-up 375: the practice courier's parcels live in the database (practice-store.ts), set by `courierApi` whenever a
+// courier is on its practice world, so the web app and the worker play the same life on staging.
+//
 // No money moves here: COD, refunds and returns wait for their own PRs and the owner.
 export * from './context';
 export * from './errors';
 export * from './pure';
 export * from './accounts';
+export * from './practice-store';
 export * from './events';
 export * from './parcels';
 export * from './rto';

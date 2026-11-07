@@ -156,4 +156,29 @@ describe.skipIf(!HAS_TEST_DB)('PR 177 · Pathao beside Steadfast (PostgreSQL)', 
     expect(await code(close(c.parcel.id, { outcome: 'notBooked' }))).toBe('LOOKUP_AVAILABLE');
     expect(await retryBooking(f.shippingDeps(), f.shipper, c.parcel.id)).toMatchObject({ outcome: 'booked', data: { recovered: true } });
   });
+
+  it('follow-up 375: a practice parcel lives in the database — a process that never booked it (the worker) plays the same life', async () => {
+    const o = await confirmed('pt-two-processes');
+    const number = (await db().order.findUniqueOrThrow({ where: { id: o.orderId } })).number;
+    pt.plan(`${number}-1`, 'refused');
+    await book(pathao, [o.orderId]);
+    const p = await parcelOf(o.orderId);
+    expect(await db().practiceParcel.findUniqueOrThrow({ where: { provider_consignmentId: { provider: PATHAO_PROVIDER, consignmentId: p.consignmentId! } } })).toMatchObject({ merchantRef: `${number}-1`, scenario: 'refused', reached: 1 });
+    // the worker's memory: empty (another process); it reads the parcel from the database and moves it on
+    pt.reset();
+    f.clock.now = new Date(f.clock.now.getTime() + 61 * 60_000);
+    expect((await trackParcels(f.shippingDeps(), f.S)).failed).toBe(0);
+    expect((await db().shipment.findUniqueOrThrow({ where: { id: p.id } })).status).toBe('PICKED_UP');
+    expect((await db().practiceParcel.findFirstOrThrow({ where: { consignmentId: p.consignmentId! } })).reached).toBe(2);
+    // and the web app, with its own empty memory, carries on from there
+    pt.reset();
+    for (let i = 0; i < 6; i++) {
+      f.clock.now = new Date(f.clock.now.getTime() + 61 * 60_000);
+      await trackParcels(f.shippingDeps(), f.S);
+      pt.reset();
+    }
+    expect((await db().shipment.findUniqueOrThrow({ where: { id: p.id } })).status).toBe('RETURNED');
+    // never a real parcel: only practice (MOCK) parcels are kept
+    expect(await db().practiceParcel.count({ where: { consignmentId: { not: { startsWith: 'MOCK-' } } } })).toBe(0);
+  });
 });
