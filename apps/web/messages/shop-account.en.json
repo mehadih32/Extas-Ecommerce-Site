@@ -459,6 +459,7 @@
       "weight": "Your weight (kg)",
       "photo": "Add a photo (optional)",
       "photoReward": "Approved photo reviews get {amount} in your wallet",
+      "photoRewardShort": "{amount} for an approved photo review",
       "body": "What should other buyers know?",
       "submit": "Submit review",
       "sending": "Sending…",
