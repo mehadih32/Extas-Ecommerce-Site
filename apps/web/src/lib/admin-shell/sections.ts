@@ -126,7 +126,14 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
       { id: 'charts', guide: 'size-charts', pages: [{ href: '/admin/size-charts', perm: 'catalogue.read', keys: ['sizeCharts'] }] },
       // S14 · PR 295: Reviews (PRD-07) — the review manager behind the Day-3 review request
-      { id: 'reviews', pages: [{ href: '/admin/products/reviews', perm: 'reviews.read', keys: ['productReviews'] }] },
+      {
+        id: 'reviews',
+        pages: [
+          { href: '/admin/products/reviews', perm: 'reviews.read', keys: ['productReviews'] },
+          // PR 66 follow-up 184: the customers' product questions — answer, publish, hide, archive
+          { href: '/admin/products/questions', perm: 'reviews.read', keys: ['productQuestions'] },
+        ],
+      },
       {
         id: 'import',
         more: true,

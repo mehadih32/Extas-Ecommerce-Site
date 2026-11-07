@@ -99,5 +99,56 @@
         "other": "Could not save. Try again."
       }
     }
+  },
+  "revq": {
+    "title": "Questions",
+    "sub": "What customers asked about a product. Nothing shows on the shop until you answer it and publish it.",
+    "readOnly": "You can read questions here; answering or publishing needs the \"Check reviews\" permission.",
+    "kpi": {
+      "unanswered": "Not answered",
+      "unansweredNote": "waiting for your answer",
+      "open": "To answer",
+      "openNote": "not on the shop yet",
+      "published": "Published",
+      "publishedNote": "on the product pages"
+    },
+    "views": "Which questions",
+    "view": {
+      "open": "To answer",
+      "published": "Published",
+      "hidden": "Hidden",
+      "archived": "Archived"
+    },
+    "state": {
+      "PENDING": "Waiting",
+      "APPROVED": "Published",
+      "HIDDEN": "Hidden",
+      "REJECTED": "Hidden",
+      "ARCHIVED": "Archived"
+    },
+    "noAnswer": "No answer yet",
+    "fromAccount": "From an account",
+    "fromGuest": "Without an account",
+    "answer": "The shop's answer",
+    "answerPh": "Write a short, true answer the customer can read on the product page",
+    "answeredAt": "Answered {date}",
+    "act": {
+      "answerPublish": "Answer and publish",
+      "answerSave": "Save answer",
+      "update": "Save the new answer",
+      "publish": "Publish",
+      "hide": "Hide",
+      "restore": "Back to the queue",
+      "archive": "Archive",
+      "unarchive": "Bring back",
+      "saved": "Saved.",
+      "failed": "Could not save ({code})."
+    },
+    "empty": {
+      "open": "No question is waiting. When a customer asks one on a product page, it comes here first.",
+      "published": "No published answer yet.",
+      "hidden": "No hidden question.",
+      "archived": "Nothing archived."
+    }
   }
 }

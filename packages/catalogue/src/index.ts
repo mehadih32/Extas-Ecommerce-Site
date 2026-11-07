@@ -39,6 +39,8 @@ export * from './size-training';
 export * from './size-advice';
 // PR 65 product reviews: the customer's own, the shop's check, the photo reward and the fit signals PR 59 reads.
 export * from './reviews';
+// PR 66 follow-up 184: product questions — the staff's answer and check (publish, hide, archive, bring back).
+export * from './questions';
 export * from './collections';
 export * from './csv';
 export * from './catalogue-csv';
