@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { setUpCustomers, type CustomersFixture } from '@extas/customers/testing';
+import { sampleCatalogue } from '@extas/seed';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
@@ -82,8 +83,11 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
   });
 
   it('suggestions, a merge done once with its key, refused for a reader, and a split with its reason', async () => {
+    // follow-up 478: the sample customer's own "Same person?" pair and merged profile are in the store too
+    const sampleProfiles = (merged: boolean) => f.t.prisma.customer.count({ where: { storeId: f.S, phone: { in: (sampleCatalogue.otherProfiles ?? []).filter((p) => p.merged === merged).map((p) => p.phone) } } });
+    const [samplePairs, sampleMerges] = await Promise.all([sampleProfiles(false), sampleProfiles(true)]);
     const s = await api('GET', 'merge-suggestions', { cookie: reader });
-    expect(s.body).toMatchObject({ ok: true, enabled: true, total: 1 });
+    expect(s.body).toMatchObject({ ok: true, enabled: true, total: 1 + samplePairs });
     const input = { survivorId: a, mergedId: b, signals: ['email'] };
     expect((await api('POST', 'merge', { cookie: reader, body: input })).status).toBe(403);
     const m = await api('POST', 'merge', { body: input, key: 'cus-api-284-1' });
@@ -91,7 +95,7 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect((await api('POST', 'merge', { body: input, key: 'cus-api-284-1' })).body.result).toMatchObject({ id: m.body.result.id, replay: true });
     expect((await api('POST', 'merge', { body: { survivorId: b, mergedId: a } })).body).toMatchObject({ ok: false, error: 'ALREADY_MERGED' });
     expect((await api('GET', b)).body.customer).toMatchObject({ id: a, redirectedFrom: b });
-    expect((await api('GET', 'merges')).body.rows).toHaveLength(1);
+    expect((await api('GET', 'merges')).body.rows).toHaveLength(1 + sampleMerges);
     expect((await api('POST', `merges/${m.body.result.id}/undo`, { body: {} })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
     expect((await api('POST', `merges/${m.body.result.id}/undo`, { body: { note: 'two brothers' } })).status).toBe(200);
     expect((await api('GET', `merge-preview?a=${a}&b=${b}`)).body.pair).toMatchObject({ survivor: { id: a }, merged: { id: b } });

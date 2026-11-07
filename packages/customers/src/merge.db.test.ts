@@ -44,6 +44,9 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('customer merges on Postgr
 
   beforeAll(async () => {
     f = await setUpCustomers('customers-merge');
+    // follow-up 478: the sample seed's own "Same person?" pair (its second profile shares the sample e-mail) is the seed's;
+    // these tests count only their own pairs
+    await f.t.prisma.customer.updateMany({ where: { storeId: f.S, phone: { startsWith: '+88010' }, mergedIntoId: null, email: { not: null } }, data: { email: null } });
     // the same e-mail (a has more orders, so it stays)
     ids.a = await f.profile({ phone: N.a, name: 'Rahim', email: 'Rahim@Example.com' });
     ids.b = await f.profile({ phone: N.b, name: 'Rahim U', email: 'rahim@example.com ' });

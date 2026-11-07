@@ -306,7 +306,8 @@ export default async function CustomerPage({ params, searchParams }: { params: P
         </div>
         );
       })}
-      <Link className="a2-xs a2-mt6 a2-blk" href="/admin/customers/review?view=done">
+      {/* follow-up 478: a whole 44 px tap row (the device gate measures it once a profile is merged) */}
+      <Link className="a2-xs a2-mt6" style={{ display: 'flex', alignItems: 'center', minHeight: 44 }} href="/admin/customers/review?view=done">
         {t(d, 'cus.profile.profiles.review')}
       </Link>
     </Card>
