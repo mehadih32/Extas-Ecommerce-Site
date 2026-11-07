@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
+import { createFirstOwner, defaultSecurityPolicy, ensureCheckAccount, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { journeysRunInput, keepRun, smokeRunInput } from '@extas/jobs';
@@ -13,7 +13,7 @@ import { messages, prismaBackend, registry, SettingsResolver, syncSettings } fro
 import { createVault } from '@extas/vault';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
-import { HISTORY_PAGE_SIZE, type HistoryRunView, type HistoryView } from './history';
+import { HISTORY_PAGE_SIZE, historyView, type HistoryRunView, type HistoryView } from './history';
 import { historyHandler } from './history-api';
 
 const HOST = 'admin.example.test';
@@ -95,6 +95,16 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Site health › Run history on Postgr
     writeFileSync(join(slot, 'rows.json'), JSON.stringify(smokeRows(['/checkout'])));
     expect((await list()).v).toMatchObject({ kept: 1, caughtUp: 0 });
     expect(await t.prisma.siteAuditFinding.count()).toBe(1);
+  });
+
+  it('follow-up 621: the read-only check account (the smoke test) keeps nothing from the server files on a read', async () => {
+    const slot = join(dir, 'smoke-runs', 'scheduled');
+    writeFileSync(join(slot, 'result.json'), JSON.stringify(smokeResult('2026-10-30 03:30', ['/checkout', '/about'])));
+    writeFileSync(join(slot, 'rows.json'), JSON.stringify(smokeRows(['/checkout', '/about'])));
+    const check = await ensureCheckAccount(t.prisma, deps.vault!, { email: 'check@example.test', displayName: 'Site check' });
+    const v = await historyView({ ...deps, stateDir: dir }, { actor: { staffUserId: check.staffUserId }, ctx: {} }, {});
+    expect(v).toMatchObject({ caughtUp: 0, kept: 1 });
+    expect(await t.prisma.siteAuditRun.count()).toBe(1);
   });
 
   it('catches up from the server files: the newest smoke runs and the kept journeys summaries', async () => {

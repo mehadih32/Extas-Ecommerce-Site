@@ -8,7 +8,7 @@
 // that tool failed in a row.
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { requirePermission, type Actor, type RequestContext } from '@extas/auth';
+import { isCheckAccount, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { summariseRun, type RunSummary } from './run-summary';
 import { FINDING_SEVERITIES, journeysRunInput, keepRun, RUN_TOOLS, smokeRunInput, type FindingSeverity, type RunInput, type RunTool } from '@extas/jobs';
@@ -155,7 +155,10 @@ export async function historyView(deps: HistoryDeps, who: HistoryWho, opts: { to
   await requirePermission(deps.db, who.actor, 'health.read', { storeId: S });
   const now = deps.now?.() ?? new Date();
   const dir = deps.stateDir === undefined ? process.env.EXTAS_STATE_DIR || null : deps.stateDir;
-  const caughtUp = await catchUp(deps.db, await keptFiles(dir));
+  // ~~const caughtUp = await catchUp(deps.db, await keptFiles(dir));~~ — follow-up 621 (B6.6): the read-only check account
+  // (the smoke test) keeps no runs on a read; the server's own import and the next person's visit keep them.
+  const readOnly = Boolean(who.actor.staffUserId && (await isCheckAccount(deps.db, who.actor.staffUserId)));
+  const caughtUp = readOnly ? 0 : await catchUp(deps.db, await keptFiles(dir));
   const tool: HistoryTool = (RUN_TOOLS as readonly string[]).includes(String(opts.tool)) ? (opts.tool as RunTool) : 'all';
   const result: HistoryResult = opts.result === 'failed' ? 'failed' : 'all';
   const where = { storeId: S, ...(tool === 'all' ? {} : { trigger: { startsWith: `${tool}:` } }), ...(result === 'failed' ? { status: 'FAILED' as const } : {}) };

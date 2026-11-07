@@ -4,7 +4,7 @@
 // re-test outcome is recorded only after an approval; an approved new skill stays switched off; undecided proposals
 // expire; the "Needs you now" row counts what waits; every step is audited and nothing is deleted.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
+import { createFirstOwner, defaultSecurityPolicy, ensureCheckAccount, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { keepRun, smokeRunInput } from '@extas/jobs';
@@ -13,7 +13,7 @@ import { createVault } from '@extas/vault';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
 import { countQueues } from '../admin-shell/queues';
-import { expireProposals, FixGateError, requireApprovedFix, type FixesView } from './fixes';
+import { expireProposals, FixGateError, fixesView, requireApprovedFix, type FixesView } from './fixes';
 import { fixesHandler } from './fixes-api';
 
 const HOST = 'admin.example.test';
@@ -213,6 +213,11 @@ describe.skipIf(!HAS_TEST_DB)('the approval gate for agent fixes and new skills 
     expect((await t.prisma.aiApprovalRequest.findUniqueOrThrow({ where: { id: p.a.id } })).expiresAt!.toISOString()).toBe(new Date(now.getTime() + 3 * 86_400_000).toISOString());
     // four days on (moved on the proposal, not the clock, so the sign-in stays fresh)
     await t.prisma.aiApprovalRequest.update({ where: { id: p.a.id }, data: { expiresAt: new Date(now.getTime() - 86_400_000) } });
+    // follow-up 621: the read-only check account (the smoke test) opens the page: it shows no expired row and writes nothing
+    const check = await ensureCheckAccount(t.prisma, deps.vault!, { email: 'check@example.test', displayName: 'Site check' });
+    const seen = await fixesView(deps, { actor: { staffUserId: check.staffUserId }, ctx: {} });
+    expect(seen.rows.some((r) => r.id === p.a.id)).toBe(false);
+    expect(await t.prisma.aiApprovalRequest.findUniqueOrThrow({ where: { id: p.a.id } })).toMatchObject({ status: 'PENDING' });
     const { a } = await send('GET');
     expect(a.view.rows.some((r) => r.id === p.a.id)).toBe(false);
     expect(await t.prisma.aiApprovalRequest.findUniqueOrThrow({ where: { id: p.a.id } })).toMatchObject({ status: 'EXPIRED' });
