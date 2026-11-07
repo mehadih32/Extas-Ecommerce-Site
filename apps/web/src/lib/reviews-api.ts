@@ -9,6 +9,8 @@
 //   POST  /api/admin/reviews                 the shop's own review {productId|comboId, rating, …} · reviews.write
 //   POST  /api/admin/reviews/:id/moderate    {action: approve|hide|reject|restore, reason?} · reviews.moderate
 //   POST  /api/admin/reviews/:id/verified    {verified: true|false} · reviews.moderate
+//   POST  /api/admin/reviews/import          {csv, dryRun} the shop's older reviews from a file · reviews.write
+//                                            (follow-up 232: every row checked, each imported review PENDING)
 //   POST  /api/admin/reviews/:id/reply       {reply: string|null} · reviews.moderate (follow-up 233: the shop's
 //                                            public reply; shown on the product page only while `pdp.reviewReply`)
 //
@@ -86,6 +88,10 @@ export function reviewsHandler(request: Request, deps: AdminDeps | null, path: s
     }
     if (method(request) !== 'POST') return notAllowed();
     return handle(request, deps, 'reviews.write', async (c) => ({ review: await cat.addStaffReview(c.deps, c.who, await body(request)) }));
+  }
+  if (id === 'import' && path.length === 1) {
+    if (method(request) !== 'POST') return notAllowed();
+    return handle(request, deps, 'reviews.write', async (c) => ({ result: await cat.importReviews(c.deps, c.who, await body(request)) }));
   }
   if (!isUuid(id)) return Promise.resolve(fail(404, 'NOT_FOUND', ['id']));
   if (!action) {
