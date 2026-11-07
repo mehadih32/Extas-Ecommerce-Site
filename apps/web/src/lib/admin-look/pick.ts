@@ -6,6 +6,7 @@
 // CN-026 (b): where the guide opens (`admin.guideOpens`) follows the same idea: the person's own choice while
 // `perPerson` is on, else the team's. No React and no database here: the pages, the API and the tests share it.
 import { z } from 'zod';
+import { readRecent } from '../admin-shell/shortcuts';
 import { cleanTheme, type ThemePrefs } from './theme';
 
 export type GuideDesktop = 'panel' | 'popup' | 'page';
@@ -20,6 +21,8 @@ export interface LookPrefs {
   theme?: ThemePrefs;
   /** PR 626 (CN-036): when they last pressed "Mark all read" in the notifications panel (ISO time). */
   seen?: string;
+  /** PR 12 follow-up 209: the admin pages they opened last, newest first (`admin.shell.recentPages`). */
+  recent?: string[];
 }
 
 /** PR 625 (CN-036): one person's theme choices as stored (theme.ts). */
@@ -35,6 +38,7 @@ const prefsSchema = z.object({
   guide: z.enum(['panel', 'popup', 'page']).optional(),
   theme: themePrefsSchema.optional().catch(undefined),
   seen: z.iso.datetime().optional().catch(undefined),
+  recent: z.unknown().optional(),
 });
 
 /** The stored JSON as prefs (anything unreadable becomes "no choice"). */
@@ -42,7 +46,8 @@ export function readPrefs(raw: unknown): LookPrefs {
   const p = prefsSchema.safeParse(raw ?? {});
   if (!p.success) return { look: {} };
   const theme = cleanTheme(p.data.theme);
-  return { look: { ...(p.data.look ?? {}) }, ...(p.data.guide ? { guide: p.data.guide } : {}), ...(theme ? { theme } : {}), ...(p.data.seen ? { seen: p.data.seen } : {}) };
+  const recent = readRecent(p.data.recent);
+  return { look: { ...(p.data.look ?? {}) }, ...(p.data.guide ? { guide: p.data.guide } : {}), ...(theme ? { theme } : {}), ...(p.data.seen ? { seen: p.data.seen } : {}), ...(recent.length ? { recent } : {}) };
 }
 
 /** The prefs with one page's design set (a key) or cleared (null = follow the team). */
@@ -59,6 +64,7 @@ export function withGuide(prefs: LookPrefs, guide: GuideDesktop | null): LookPre
   if (guide) out.guide = guide;
   if (prefs.theme) out.theme = { ...prefs.theme };
   if (prefs.seen) out.seen = prefs.seen;
+  if (prefs.recent) out.recent = [...prefs.recent];
   return out;
 }
 

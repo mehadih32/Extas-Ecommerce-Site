@@ -161,6 +161,24 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
     expect((await lookHandler(call({ scope: 'team', seen: at }, owner), catalog, deps)).status).toBe(400);
   });
 
+  it('PR 12 follow-up 209: a page opened goes first in the person’s recent pages, only while the setting shows some', async () => {
+    const owners = await t.prisma.staffUser.findFirst({ where: { email: 'owner@example.com' }, select: { id: true } });
+    const off = await lookHandler(call({ scope: 'me', recent: '/admin/orders' }, staff), catalog, deps);
+    expect(off.status).toBe(403);
+    expect(await off.json()).toMatchObject({ error: 'RECENT_OFF' });
+    const shell = (await deps.resolver.value('admin.shell', scope)) as { badgeCacheSeconds: number; searchPerGroup: number; searchMinChars: number; recentPages: number; keyJumps: boolean };
+    await deps.resolver.set('admin.shell', { ...shell, recentPages: 3 }, storeTarget(MOTHER_STORE_ID), { actorId: owners!.id, reason: 'test: recent pages' });
+    expect((await lookHandler(call({ scope: 'me', recent: '/admin/orders' }, staff), catalog, deps)).status).toBe(200);
+    expect((await lookHandler(call({ scope: 'me', recent: '/admin/products' }, staff), catalog, deps)).status).toBe(200);
+    expect((await lookHandler(call({ scope: 'me', recent: '/admin/orders' }, staff), catalog, deps)).status).toBe(200);
+    const prefs = readPrefs((await t.prisma.staffUser.findUnique({ where: { id: staffId }, select: { adminPrefs: true } }))?.adminPrefs);
+    expect(prefs.recent).toEqual(['/admin/orders', '/admin/products']);
+    expect(prefs.seen).toBe('2026-11-06T09:30:00.000Z');
+    for (const bad of ['/admin/orders?view=late', '/admin/login', 'https://x.example/admin', 7]) expect((await lookHandler(call({ scope: 'me', recent: bad }, staff), catalog, deps)).status).toBe(400);
+    expect((await lookHandler(call({ scope: 'team', recent: '/admin/orders' }, owner), catalog, deps)).status).toBe(400);
+    await deps.resolver.set('admin.shell', shell, storeTarget(MOTHER_STORE_ID), { actorId: owners!.id, reason: 'test: back' });
+  });
+
   it('the Dashboard loader reads every part on an empty shop: zeros and empty lists, never a sample', async () => {
     const s = (await deps.resolver.value('admin.dashboardDesigns', scope)) as DashDesignSettings;
     const now = new Date();

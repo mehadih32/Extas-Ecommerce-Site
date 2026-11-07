@@ -46,6 +46,8 @@ export interface ShellModel {
   notesSeenAt?: string | null;
   /** PR 627 (CN-036): the shared patterns' numbers (`admin.patterns`): Undo seconds, "Show more" step. */
   patterns?: { undoSeconds: number; pageStep: number };
+  /** PR 12 follow-up 209 (`admin.shell`): the palette's recent pages (how many; 0 = off) and the "g" key jumps. */
+  shortcuts?: { recentPages: number; keyJumps: boolean };
 }
 
 /** One waiting list in the "To do" drawer. */

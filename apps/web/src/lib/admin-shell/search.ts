@@ -9,6 +9,8 @@
 //     with `orders.read`, or the invoice with `orders.invoice` only;
 //   - Customers: name or phone (`orders.read` or `orders.invoice`) — opens their latest order the same way;
 //   - Actions (">"): only those the person may do; Help ("?"): the guide of each section they can see.
+// PR 12 follow-up 209: the empty box lists first the pages this person opened last (`recent`, newest first, at most
+// `admin.shell.recentPages`), each only while they may still open it, under its own name and section.
 // "#" jumps to an order (number, phone, name or tracking number) from the first character. Bengali digits count as digits. Store-aware: one store's records only.
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { connectionCatalogue } from '@extas/adapters';
@@ -23,7 +25,7 @@ import { latinDigits, phoneNormalizeBD } from '../phone-bd';
 import type { ShellIconName } from './icons';
 import { guideOf, sectionHome, sectionVisible, SHELL_SECTIONS, visiblePages, visibleTabs, type ShellTab, type ShellViewer } from './sections';
 
-export type SearchGroupId = 'jump' | 'pages' | 'settings' | 'products' | 'orders' | 'customers' | 'actions' | 'help';
+export type SearchGroupId = 'recent' | 'jump' | 'pages' | 'settings' | 'products' | 'orders' | 'customers' | 'actions' | 'help';
 
 export interface SearchItem {
   label: string;
@@ -51,6 +53,8 @@ export interface SearchContext {
   lang: AdminLang;
   viewer: ShellViewer;
   limits: SearchLimits;
+  /** PR 12 follow-up 209: the person's last-opened admin pages, newest first, already cut to `admin.shell.recentPages`. */
+  recent?: readonly string[];
 }
 
 interface Entry {
@@ -147,6 +151,29 @@ function helpEntries(v: ShellViewer): Entry[] {
 const allowed = (e: Entry, v: ShellViewer) => !e.perm || v.owner || v.perms.has(e.perm);
 const has = (v: ShellViewer, k: PermissionKey) => v.owner || v.perms.has(k);
 const matches = (e: Entry, q: string) => e.words.some((w) => fold(w).includes(q));
+
+/** PR 12 follow-up 209: the recent pages the person may still open, as palette items (a section home by its name). */
+export function recentItems(recent: readonly string[], v: ShellViewer, lang: AdminLang): SearchItem[] {
+  if (!recent.length) return [];
+  const byHref = new Map<string, SearchItem>();
+  for (const e of pageEntries(v)) {
+    if (!allowed(e, v)) continue;
+    const it = e.item(lang);
+    if (it.href && !byHref.has(it.href)) byHref.set(it.href, it);
+  }
+  const d = adminDicts[lang];
+  for (const s of SHELL_SECTIONS) {
+    if (!sectionVisible(s, v)) continue;
+    // A section's own address (the Dashboard's "/admin") opens its home, as the menu does.
+    const home = sectionHome(s, v);
+    const it: SearchItem = { label: t(d, `shell.sec.${s.id}`), sub: t(d, 'shell.palette.section'), href: home, icon: s.icon };
+    for (const at of [home, s.base]) if (!byHref.has(at)) byHref.set(at, it);
+  }
+  return recent.flatMap((href) => {
+    const it = byHref.get(href);
+    return it ? [{ ...it, icon: 'clock' as const }] : [];
+  });
+}
 
 /** The query's mode (">" actions, "#" orders, "?" help) and its words, Bengali digits as digits. */
 export function parseQuery(raw: string): { mode: '' | '>' | '#' | '?'; q: string; digits: string } {
@@ -245,11 +272,12 @@ export async function adminSearch(ctx: SearchContext, raw: string): Promise<Sear
   const out: SearchGroup[] = [];
   const add = (id: SearchGroupId, items: SearchItem[]) => {
     // The empty box's "Jump to" lists every section the person may open; a search keeps each group short.
-    if (items.length) out.push({ id, label: t(d, `shell.palette.groups.${id}`), items: id === 'jump' ? items : items.slice(0, ctx.limits.perGroup) });
+    if (items.length) out.push({ id, label: t(d, `shell.palette.groups.${id}`), items: id === 'jump' || id === 'recent' ? items : items.slice(0, ctx.limits.perGroup) });
   };
   const pick = (entries: Entry[]) => entries.filter((e) => allowed(e, v) && (!q || matches(e, q))).map((e) => e.item(ctx.lang));
 
   if (!q && !mode) {
+    if (ctx.recent?.length) add('recent', recentItems(ctx.recent, v, ctx.lang));
     add(
       'jump',
       SHELL_SECTIONS.filter((s) => sectionVisible(s, v)).map((s) => ({ label: t(d, `shell.sec.${s.id}`), sub: s.group === 'bottom' ? undefined : t(d, `shell.groups.${s.group}`), href: sectionHome(s, v), icon: s.icon })),

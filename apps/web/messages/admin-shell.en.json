@@ -269,11 +269,13 @@
       "move": "move",
       "open": "open",
       "hint": "> actions · # order · ? help · Bengali words work",
+      "jumps": "g then a letter: g d {dashboard} · g o {orders}",
       "none": "No match. Try an order number, a phone, or a word like “stock”.",
       "error": "Search could not run. Try again.",
       "section": "Section",
       "guide": "{section} — guide (Bengali)",
       "groups": {
+        "recent": "Recent",
         "jump": "Jump to",
         "pages": "Pages",
         "settings": "Settings",
