@@ -1,7 +1,8 @@
 // PR 12 — the shell's admin API (GET only; nothing here changes anything):
 //   GET /api/admin/shell/badges      the sidebar badges: waiting work per section, only what the person may open
 //   GET /api/admin/dashboard/queues  "Needs you now": each waiting list with its count, oldest age and link (dashboard.read)
-//   GET /api/admin/search?q=         the command palette (lib/admin-shell/search.ts)
+//   GET /api/admin/search?q=         the command palette (lib/admin-shell/search.ts); the empty box also lists the
+//                                    person's recent pages while `admin.shell.recentPages` shows some (follow-up 209)
 //   GET /api/admin/notifications     the person's own notifications (PR 380: new-device staff sign-ins for security.read;
 //                                    PR 431: their late support chats)
 //   GET /api/admin/help/<slug>       one admin guide, parsed (lib/admin-shell/guide.ts)
@@ -14,6 +15,7 @@ import { isOwner, permissionsFor, type PermissionKey } from '@extas/auth';
 import { adminDeps, errorResponse, fail, guardAdmin, json, readCookie, type AdminDeps, type Guarded } from '../admin-auth';
 import { ADMIN_LANG_COOKIE, adminLocale, pickAdminLang, type AdminLang } from '../admin-i18n';
 import { loginNotes } from '../admin-security/login-notes';
+import { readPrefs } from '../admin-look/pick';
 import { lateChatNotes } from '../admin-support/late-notes';
 import { seasonalNotes } from '../marketing/seasonal-notes';
 import { guideDir, readGuide, readPageGuide } from './guide';
@@ -40,7 +42,14 @@ async function shellCall(request: Request, deps: AdminDeps | null, permission?: 
 }
 
 const shellSettings = async (deps: AdminDeps) =>
-  (await deps.resolver.value('admin.shell', { storeId: MOTHER_STORE_ID })) as { badgeCacheSeconds: number; searchPerGroup: number; searchMinChars: number };
+  (await deps.resolver.value('admin.shell', { storeId: MOTHER_STORE_ID })) as { badgeCacheSeconds: number; searchPerGroup: number; searchMinChars: number; recentPages?: number };
+
+/** PR 12 follow-up 209: the person's last-opened pages for the empty palette, while `admin.shell.recentPages` shows some. */
+async function recentOf(c: ShellCall, max: number, q: string): Promise<string[]> {
+  if (max <= 0 || q.trim()) return [];
+  const row = await c.deps.db.staffUser.findUnique({ where: { id: c.g.actor.staffUserId as string }, select: { adminPrefs: true } }).catch(() => null);
+  return (readPrefs(row?.adminPrefs).recent ?? []).slice(0, max);
+}
 
 const queuesFor = async (c: ShellCall) => {
   const s = await shellSettings(c.deps);
@@ -83,7 +92,8 @@ export async function searchHandler(request: Request, deps: AdminDeps | null = a
   try {
     const q = new URL(request.url).searchParams.get('q') ?? '';
     const [s, lang] = await Promise.all([shellSettings(c.deps), langOf(request, c.deps)]);
-    const groups = await adminSearch({ db: c.deps.db, storeId: MOTHER_STORE_ID, lang, viewer: c.viewer, limits: { perGroup: s.searchPerGroup, minChars: s.searchMinChars } }, q);
+    const recent = await recentOf(c, s.recentPages ?? 0, q);
+    const groups = await adminSearch({ db: c.deps.db, storeId: MOTHER_STORE_ID, lang, viewer: c.viewer, limits: { perGroup: s.searchPerGroup, minChars: s.searchMinChars }, recent }, q);
     return json({ ok: true, q, groups });
   } catch (e) {
     return errorResponse(e);

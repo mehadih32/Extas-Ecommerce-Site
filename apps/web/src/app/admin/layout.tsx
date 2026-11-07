@@ -60,7 +60,7 @@ async function shellModel(theme: AdminTheme, notesSeenAt: string | null): Promis
   const s = await shellSession();
   if (s.kind !== 'ok') return null;
   const view = await adminView(s.deps);
-  const shell = (await s.deps.resolver.value('admin.shell', { storeId: MOTHER_STORE_ID }).catch(() => null)) as { badgeCacheSeconds: number } | null;
+  const shell = (await s.deps.resolver.value('admin.shell', { storeId: MOTHER_STORE_ID }).catch(() => null)) as { badgeCacheSeconds: number; recentPages?: number; keyJumps?: boolean } | null;
   const seconds = shell?.badgeCacheSeconds ?? 0;
   const viewer = { perms: s.perms, owner: s.owner, hidden: s.hidden };
   const scope = { storeId: MOTHER_STORE_ID };
@@ -92,6 +92,7 @@ async function shellModel(theme: AdminTheme, notesSeenAt: string | null): Promis
     aiShown: !s.hidden.has('ai') && aiCenterShown(s.hidden, (await s.deps.resolver.value('ai.enabled', scope).catch(() => false)) === true),
     notesSeenAt,
     patterns,
+    shortcuts: { recentPages: shell?.recentPages ?? 0, keyJumps: shell?.keyJumps === true },
   };
 }
 

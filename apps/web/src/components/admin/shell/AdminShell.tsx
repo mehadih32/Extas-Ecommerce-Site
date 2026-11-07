@@ -22,6 +22,8 @@
 // (GET /api/admin/shell/badges). The sign-in page has no shell.
 // PR 627 (CN-036): the shell provides the shared Lumen patterns' words and numbers (LumenProvider) and mounts the one
 // toast (ToastHost; any admin screen calls showToast).
+// PR 12 follow-up 209: while `admin.shell.recentPages` shows some, each admin page opened is kept on the person's account
+// for the palette's "Recent"; while `admin.shell.keyJumps` is on, "g" then a letter opens a section (g d, g o …).
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type CSSProperties, type ReactNode } from 'react';
@@ -30,6 +32,7 @@ import { DEFAULT_THEME, themeAttrs, themeOnRoot, themeStyle, type ThemeMode } fr
 import { resolveGuideMode } from '@/lib/admin-shell/help-pages';
 import { lumenNav } from '@/lib/admin-shell/lumen-nav';
 import { RAIL_COOKIE, viewerOf, type ShellModel, type TodoItem } from '@/lib/admin-shell/model';
+import { jumpStep, recentPath } from '@/lib/admin-shell/shortcuts';
 import { locate, sectionHome, sectionVisible, SHELL_SECTIONS, visiblePages, visibleTabs, type ShellSection } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 import { ChartTips } from '../look/ChartTips';
@@ -121,6 +124,18 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const theme = useMemo(() => ({ ...(model.theme ?? DEFAULT_THEME), mode }), [model.theme, mode]);
   useEffect(() => themeOnRoot(theme), [theme]);
 
+  // PR 12 follow-up 209: the page just opened goes first in the person's recent pages (a page or a section's own address).
+  const recentOn = (model.shortcuts?.recentPages ?? 0) > 0;
+  const keyJumps = model.shortcuts?.keyJumps === true;
+  const gAt = useRef<number | null>(null);
+  useEffect(() => {
+    if (!recentOn) return;
+    const path = recentPath(pathname);
+    const place = path ? locate(path) : null;
+    if (!path || !place || (place.page?.href !== path && place.section.base !== path)) return;
+    void saveMine({ recent: path });
+  }, [pathname, recentOn]);
+
   const remember = () => {
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   };
@@ -182,6 +197,18 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
       const el = ev.target as HTMLElement | null;
       const typing = typingIn(el);
       const overlay = !!document.querySelector('.a2-ov, .a2-drw, .lm-notif');
+      // PR 12 follow-up 209: "g" then a letter opens a section the person may open (never while typing or in a dialog).
+      if (keyJumps && !typing && !overlay && !ev.ctrlKey && !ev.metaKey && !ev.altKey && ev.key.length === 1) {
+        const step = jumpStep(gAt.current, ev.key, Date.now());
+        gAt.current = step.pending;
+        const to = step.section ? SHELL_SECTIONS.find((x) => x.id === step.section && sectionVisible(x, viewer)) : undefined;
+        if (to) {
+          ev.preventDefault();
+          router.push(sectionHome(to, viewer));
+          return;
+        }
+        if (step.pending !== null) return;
+      }
       if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'k' || ev.key === 'K')) {
         ev.preventDefault();
         openPal();
@@ -210,7 +237,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
       window.removeEventListener(TODO_EVENT, openTodoNow);
       window.removeEventListener(GUIDE_EVENT, onGuide);
     };
-  }, [openPal, openTodoNow]);
+  }, [openPal, openTodoNow, keyJumps, router, viewer]);
 
   // A click outside an open menu closes it.
   useEffect(() => {
@@ -547,6 +574,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
       {pal ? (
         <Palette
           dict={d}
+          keyJumps={keyJumps}
           onGuide={(g) => setGuide(g)}
           onClose={() => {
             setPal(false);

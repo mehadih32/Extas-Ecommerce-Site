@@ -8,7 +8,8 @@ describe('admin shell settings (v33)', () => {
   it('every key is in the registry at version 33, private, never owner data', () => {
     for (const [key, spec] of Object.entries(adminShellSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(33);
+      // PR 12 follow-up 209 moved admin.shell to v263 (recent pages, key jumps); the others stay at 33.
+      expect(spec.version, key).toBe(key === 'admin.shell' ? 263 : 33);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.isPublic, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
@@ -21,6 +22,16 @@ describe('admin shell settings (v33)', () => {
     expect(adminStartPagesSchema.safeParse({ 'order-desk': 'orders', packer: 'products' }).success).toBe(true);
     expect(adminStartPagesSchema.safeParse({ 'order-desk': 'nowhere' }).success).toBe(false);
     expect(adminStartPagesSchema.safeParse({ 'Order Desk': 'orders' }).success).toBe(false);
+  });
+
+  it('PR 12 follow-up 209: recent pages and key jumps are off as they ship, and a value saved before reads as off', () => {
+    const s = adminShellSettings['admin.shell'];
+    expect(s.default.recentPages).toBe(0);
+    expect(s.default.keyJumps).toBe(false);
+    expect(s.since).toBe(33);
+    expect(adminShellSchema.parse({ badgeCacheSeconds: 30, searchPerGroup: 5, searchMinChars: 2 })).toEqual({ badgeCacheSeconds: 30, searchPerGroup: 5, searchMinChars: 2, recentPages: 0, keyJumps: false });
+    expect(adminShellSchema.safeParse({ ...s.default, recentPages: 11 }).success).toBe(false);
+    expect(adminShellSchema.safeParse({ ...s.default, recentPages: 10, keyJumps: true }).success).toBe(true);
   });
 
   it('PR 12: badge cache, search limits and the Dashboard choices stay in their ranges', () => {

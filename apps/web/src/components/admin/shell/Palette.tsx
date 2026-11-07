@@ -2,6 +2,7 @@
 // PR 12 — SH-02, the command palette (demo a2PalOpen): Ctrl/⌘ K, "/" or a tap on search. What is typed goes to
 // GET /api/admin/search (pages, settings, products, orders, customers, actions, help — only what the person may open);
 // ↑ ↓ move, Enter opens, Esc closes. "> " actions, "# " order numbers, "? " help; Bengali words and digits work.
+// PR 12 follow-up 209: the empty box's "Recent" group comes from the server; with the key jumps on, the foot names them.
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { SearchGroup, SearchItem } from '@/lib/admin-shell/search';
@@ -11,7 +12,7 @@ import { ShellIcon } from './ShellIcon';
 
 const WAIT_MS = 120;
 
-export function Palette({ dict, onClose, onGuide }: { dict: Dict; onClose(): void; onGuide(g: GuideRequest): void }) {
+export function Palette({ dict, onClose, onGuide, keyJumps = false }: { dict: Dict; onClose(): void; onGuide(g: GuideRequest): void; keyJumps?: boolean }) {
   const tt = (k: string) => t(dict, `shell.palette.${k}`);
   const router = useRouter();
   const [q, setQ] = useState('');
@@ -138,6 +139,11 @@ export function Palette({ dict, onClose, onGuide }: { dict: Dict; onClose(): voi
             <kbd>↵</kbd> {tt('open')}
           </span>
           <span className="a2-hide-ph">{tt('hint')}</span>
+          {keyJumps ? (
+            <span className="a2-hide-ph" data-testid="a2-palette-jumps">
+              {t(dict, 'shell.palette.jumps', { dashboard: t(dict, 'shell.sec.dashboard'), orders: t(dict, 'shell.sec.orders') })}
+            </span>
+          ) : null}
         </div>
       </div>
     </div>

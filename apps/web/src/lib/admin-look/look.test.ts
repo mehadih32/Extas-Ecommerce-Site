@@ -38,6 +38,12 @@ describe('the person’s own choices (StaffUser.adminPrefs)', () => {
     expect(readPrefs({ look: { dashboard: 'cc' } })).toEqual({ look: {} });
     expect(readPrefs({ guide: 'window' })).toEqual({ look: {} });
   });
+  it('PR 12 follow-up 209: keeps the recent pages through other choices and drops broken ones', () => {
+    expect(readPrefs({ recent: ['/admin/orders', '/admin/login', 'x', '/admin/orders'] })).toEqual({ look: {}, recent: ['/admin/orders'] });
+    expect(readPrefs({ recent: 'x' })).toEqual({ look: {} });
+    expect(withGuide({ look: {}, recent: ['/admin/orders'] }, 'page')).toEqual({ look: {}, guide: 'page', recent: ['/admin/orders'] });
+    expect(withLook({ look: {}, recent: ['/admin/orders'] }, 'dashboard', 'C').recent).toEqual(['/admin/orders']);
+  });
   it('sets and clears a page’s design and the guide', () => {
     const p = withLook({ look: { orders: 'A' } }, 'dashboard', 'C');
     expect(p.look).toEqual({ orders: 'A', dashboard: 'C' });

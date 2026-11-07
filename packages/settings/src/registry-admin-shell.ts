@@ -4,12 +4,16 @@
 // - `admin.startPages`: the page each role opens on after sign-in (§19.5, R3). Empty = every role starts on the
 //   Dashboard. A role whose start section it cannot open also lands on the Dashboard.
 // - `admin.shell`: how fresh the sidebar badges are (seconds of cache) and the search palette's limits.
+//   PR 12 follow-up 209 (registry v263): `recentPages` — the empty palette lists the pages this person opened last
+//   (kept on their own staff account, StaffUser.adminPrefs; 0 = off, as it ships) — and `keyJumps`: "g" then a
+//   letter opens a section ("g d" the Dashboard, "g o" Orders), off as it ships. A value saved before reads as off.
 // - `admin.dashboard`: the Dashboard's date choices (days) and the hours the greeting changes.
 // Nothing here changes money or any order: it is how the admin looks and where it opens.
 import { z } from 'zod';
 import { setting } from './define';
 
 const V = 33;
+const V209 = 263;
 
 /** The 14 sidebar entries of the new admin (decision D8), in the sidebar's order. */
 export const ADMIN_SECTIONS = [
@@ -45,6 +49,10 @@ export const adminShellSchema = z
     searchPerGroup: z.int().min(1).max(20),
     /** Records (products, orders, customers) are searched from this many typed characters. */
     searchMinChars: z.int().min(1).max(6),
+    /** PR 12 follow-up 209: how many of the person's last-opened pages the empty palette lists (0 = none). */
+    recentPages: z.int().min(0).max(10).default(0),
+    /** PR 12 follow-up 209: "g" then a letter opens a section (lib/admin-shell/shortcuts.ts JUMP_KEYS). */
+    keyJumps: z.boolean().default(false),
   })
   .strict();
 
@@ -76,10 +84,12 @@ export const adminShellSettings = {
   'admin.shell': setting({
     ...json,
     schema: adminShellSchema,
-    default: { badgeCacheSeconds: 30, searchPerGroup: 5, searchMinChars: 2 },
+    default: { badgeCacheSeconds: 30, searchPerGroup: 5, searchMinChars: 2, recentPages: 0, keyJumps: false },
     labelKey: 'admin.shell.label',
     helpKey: 'admin.shell.help',
     sortOrder: 20,
+    version: V209,
+    since: V,
   }),
   'admin.dashboard': setting({
     ...json,
