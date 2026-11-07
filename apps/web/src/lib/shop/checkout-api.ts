@@ -325,7 +325,8 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
       // PR 592: the house ad this browser clicked last within the credit days gets the order (`blog.houseAds`; never fails it)
       await creditAdOrder(deps.checkout.db, deps.checkout.settings, { storeId: deps.storeId, orderId: r.orderId, cookie: clickCookieOf(request) });
       // PR 257: the purchase goes to the ad platforms from the server while tracking is on (quiet, never stops the order)
-      await trackPurchase(request, { storeId: deps.storeId, orderId: r.orderId });
+      // follow-up 605: here only for cash on delivery with nothing to pay first; a prepaid or advance order goes once paid
+      await trackPurchase(request, { storeId: deps.storeId, orderId: r.orderId, at: 'placed' });
     }
     const lang = langOf(b.lang);
     const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });

@@ -107,12 +107,24 @@ export async function trackAddToBag(request: Request, o: { storeId: number; line
 }
 
 /** The checkout: an order was placed (a replay is never counted again: the event id is the order's number). */
-export async function trackPurchase(request: Request, o: { storeId: number; orderId: string }, deps: TrackingDeps | null = trackingDeps()): Promise<void> {
+/**
+ * Follow-up 605: when the purchase goes. At placement (`at: 'placed'`) only for cash on delivery with nothing to pay
+ * first; a prepaid order, or one that must pay an advance, goes from the payment outcome once it is PAID (`at: 'paid'`,
+ * the gateway's callback), so an order that is never paid never reaches the ad platforms as a purchase. The event id is
+ * the order's, so a repeated callback counts once.
+ */
+export const purchaseNow = (at: 'placed' | 'paid', order: { paymentMethod: string | null; advanceRequirement: string }): boolean =>
+  at === 'paid' || ((order.paymentMethod === null || order.paymentMethod === 'COD') && order.advanceRequirement === 'NONE');
+
+// ~~export async function trackPurchase(request, o: { storeId; orderId }, deps)~~ follow-up 605: `at` (placement by default)
+export async function trackPurchase(request: Request, o: { storeId: number; orderId: string; at?: 'placed' | 'paid' }, deps: TrackingDeps | null = trackingDeps()): Promise<void> {
   try {
     if (!deps || !(await on(deps, o.storeId, 'purchase'))) return;
     const order = await deps.db.order.findFirst({
       where: { id: o.orderId, storeId: o.storeId },
       select: {
+        paymentMethod: true,
+        advanceRequirement: true,
         number: true,
         totalMinor: true,
         currency: true,
@@ -123,7 +135,7 @@ export async function trackPurchase(request: Request, o: { storeId: number; orde
         items: { where: { status: 'ACTIVE' }, select: { productId: true, sku: true, productName: true, colourName: true, sizeLabel: true, quantity: true, unitPriceMinor: true } },
       },
     });
-    if (!order) return;
+    if (!order || !purchaseNow(o.at ?? 'placed', order)) return;
     // the order's own lines as sold (their names and prices then); the category from the product
     const pids = [...new Set(order.items.map((i) => i.productId).filter((x): x is string => !!x))];
     const cats = new Map((pids.length ? await deps.db.product.findMany({ where: { storeId: o.storeId, id: { in: pids } }, select: { id: true, category: { select: { nameEn: true } } } }) : []).map((p) => [p.id, p.category?.nameEn ?? null]));
