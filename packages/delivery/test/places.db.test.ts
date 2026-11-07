@@ -6,7 +6,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Actor } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { addPlace, forgetGazetteer, importGazetteer, listBands, loadBandMap, mergePlace, placeDetail, renamePlace, searchPlaces, setAreaBand, setPlaceAliases, updateBand, type Who } from '../src';
+import { addPlace, forgetGazetteer, importGazetteer, listBands, loadBandMap, mergePlace, placeDetail, renamePlace, searchPlaces, setAreaBand, setPlaceAliases, unmergePlace, updateBand, type Who } from '../src';
 import { sampleGazetteerRows } from '../src/sample';
 import { codeOf, setUp, type Fixture } from './fixture';
 
@@ -149,5 +149,47 @@ describe.skipIf(!HAS_TEST_DB)('the owner\'s area admin on PostgreSQL (PR 502)', 
     expect((await geo(mawna)).nameEn).toBe('Mawna Bazar');
     expect((await geo(mawna)).aliases).toContain('Mawna');
     expect((await geo(other)).archivedAt).not.toBeNull();
+  });
+
+  it('follow-up 417: a merge is undone from the place it went into — names, spellings, places, addresses and the list come back; once; audited', async () => {
+    const kapasia = await f.area('bd.dhaka.gazipur.kapasia');
+    const kaliganj = await f.area('bd.dhaka.gazipur.kaliganj');
+    const child = (await f.t.prisma.geoArea.findFirstOrThrow({ where: { code: { startsWith: 'bd.dhaka.gazipur.kapasia.' }, parentId: kaliganj }, select: { id: true } })).id;
+    const addr = await f.t.prisma.customerAddress.findFirst({ where: { areaId: kaliganj }, select: { id: true } });
+    const record = await f.t.prisma.geoMergeRecord.findFirstOrThrow({ where: { fromId: kapasia } });
+    expect(record).toMatchObject({ intoId: kaliganj, storeId: f.A, undoneAt: null });
+    expect(record.addedAliases).toEqual(expect.arrayContaining(['Kapasia', 'কাপাসিয়া']));
+    const before = await placeDetail(f.deps(), who(viewer), kaliganj);
+    expect(before.merges[0]).toMatchObject({ fromId: kapasia, fromNameEn: 'Kapasia', undoable: true, undoneAt: null });
+
+    expect(await codeOf(unmergePlace(f.deps(), who(viewer), kapasia))).toBe('FORBIDDEN');
+    expect(await codeOf(unmergePlace(f.deps(), who(lister), kaliganj))).toBe('CANNOT_UNDO'); // not a merged place
+    const u = await unmergePlace(f.deps(), who(lister), kapasia);
+    expect(u.restoredChildren).toBe(13);
+    expect(u.place).toMatchObject({ id: kapasia, aliases: expect.arrayContaining(['kapashia']) });
+    expect(u.into.aliases).not.toEqual(expect.arrayContaining(['Kapasia']));
+    expect(u.into.aliases).not.toContain('কাপাসিয়া');
+    expect(await f.t.prisma.geoArea.findUniqueOrThrow({ where: { id: kapasia }, select: { archivedAt: true, mergedIntoId: true } })).toEqual({ archivedAt: null, mergedIntoId: null });
+    expect(await geo(child)).toMatchObject({ parentId: kapasia });
+    expect((await geo(child)).ancestorIds.at(-1)).toBe(kapasia);
+    if (addr && record.addressIds.includes(addr.id)) expect((await f.t.prisma.customerAddress.findUniqueOrThrow({ where: { id: addr.id }, select: { areaId: true } })).areaId).toBe(kapasia);
+    expect(u.restoredAddresses).toBe(record.addressIds.length);
+    // the owner's list: Kapasia's row is back; Kaliganj's own row (live before the merge) stays as it is
+    expect(await f.t.prisma.areaBand.findFirst({ where: { areaId: kapasia }, select: { archivedAt: true } })).toMatchObject({ archivedAt: null });
+    expect(await f.t.prisma.areaBand.findFirst({ where: { areaId: kaliganj }, select: { archivedAt: true } })).toMatchObject({ archivedAt: null });
+    expect((await searchPlaces(f.deps(), who(viewer), 'kapasia')).map((p) => p.id)).toContain(kapasia);
+    expect(await f.t.prisma.auditLog.count({ where: { entityId: kapasia, action: 'delivery.place.unmerge' } })).toBe(1);
+    expect(await f.t.prisma.auditLog.count({ where: { entityId: kaliganj, action: 'delivery.place.unmergeFrom' } })).toBe(1);
+    // once: the record is marked, never deleted; the history says so
+    expect(await codeOf(unmergePlace(f.deps(), who(lister), kapasia))).toBe('CANNOT_UNDO');
+    expect((await placeDetail(f.deps(), who(viewer), kaliganj)).merges[0]).toMatchObject({ fromId: kapasia, undoable: false, undoneAt: expect.any(Date) });
+    // a later import does not merge it again
+    await importGazetteer(f.t.prisma, sampleGazetteerRows(), { source: 'sample' });
+    forgetGazetteer();
+    expect((await geo(kapasia)).archivedAt).toBeNull();
+    // a merge from before the record was kept cannot be undone
+    const old = (await f.t.prisma.geoArea.findFirstOrThrow({ where: { mergedIntoId: { not: null }, archivedAt: { not: null } }, select: { id: true } })).id;
+    const why = await unmergePlace(f.deps(), who(lister), old).then(() => null, (e: { code: string; details: string[] }) => e);
+    expect(why).toMatchObject({ code: 'CANNOT_UNDO', details: ['noRecord'] });
   });
 });

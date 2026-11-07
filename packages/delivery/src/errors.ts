@@ -18,7 +18,10 @@ export type DeliveryErrorCode =
   /** PR 502: only two places of the same level are merged (two spellings of one place). */
   | 'LEVEL_MISMATCH'
   /** PR 502: the two places sit in different bands on the owner's list; move one first, then merge. */
-  | 'BAND_CONFLICT';
+  | 'BAND_CONFLICT'
+  /** Follow-up 417: this merge cannot be undone (details: why — no record, undone already, the place it went into or its
+   *  old parent is no longer in the list). */
+  | 'CANNOT_UNDO';
 
 export class DeliveryError extends Error {
   readonly code: DeliveryErrorCode;
@@ -42,6 +45,7 @@ export class DeliveryError extends Error {
       case 'DUPLICATE_PLACE':
       case 'LEVEL_MISMATCH':
       case 'BAND_CONFLICT':
+      case 'CANNOT_UNDO':
         return 409;
       case 'RATE_LIMITED':
         return 429;

@@ -111,7 +111,8 @@
     "badCod": "Type the cash-on-delivery limit as a number, or leave it empty.",
     "DUPLICATE_PLACE": "A place of that name is already there. Open that one instead, or pick another name.",
     "LEVEL_MISMATCH": "Only two places of the same kind merge (an area into an area, an upazila into an upazila).",
-    "BAND_CONFLICT": "These two places sit in different bands on your list. Move one first, then merge."
+    "BAND_CONFLICT": "These two places sit in different bands on your list. Move one first, then merge.",
+    "CANNOT_UNDO": "This merge cannot be undone now ({fields}). Reload the page."
   },
   "fields": {
     "chargeMinor": "the charge",
@@ -127,7 +128,12 @@
     "aliases": "the spellings",
     "parentId": "the place it sits in",
     "intoId": "the place to merge into",
-    "level": "the kind of place"
+    "level": "the kind of place",
+    "notMerged": "it is not merged",
+    "noRecord": "it was merged before undo was kept",
+    "undone": "it was undone already",
+    "intoGone": "the place it went into is no longer in the list",
+    "parentGone": "the place it sat in is no longer in the list"
   },
   "try": {
     "title": "Try an address",
@@ -178,7 +184,14 @@
     "mergeFind": "Find the place to keep",
     "mergeInto": "Merge into {name}",
     "merged": "{from} merged into {into}",
-    "mergeSameKind": "Only places of the same kind are shown."
+    "mergeSameKind": "Only places of the same kind are shown.",
+    "history": "Merged into this place",
+    "historyHelp": "Places you merged into this one. Undo brings a place back with its own names; the spellings it gave this place come off, and the places inside it and the saved customer addresses that moved go back. Placed orders keep what they had.",
+    "historyLine": "{name} · {day} · {places} places and {addresses} addresses moved",
+    "historyUndone": "undone",
+    "undo": "Undo the merge",
+    "undoSure": "Press again to undo",
+    "undone": "{name} is back as its own place"
   },
   "add": {
     "title": "Add a place",

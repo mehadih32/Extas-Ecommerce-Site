@@ -10,7 +10,7 @@ import { sampleGazetteerRows } from '@extas/delivery/sample';
 import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
-import { areaHandler, areasHandler, bandHandler, bandsHandler, placeHandler, placeMergeHandler, placesHandler } from './delivery-api';
+import { areaHandler, areasHandler, bandHandler, bandsHandler, placeHandler, placeMergeHandler, placesHandler, placeUnmergeHandler } from './delivery-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -128,5 +128,13 @@ describe.skipIf(!HAS_TEST_DB)('delivery admin API on PostgreSQL', () => {
     expect(merged).toMatchObject({ status: 200, body: { merge: { mergedId: twin.body.place.id, into: { aliases: ['Nolkhola Bazar'] } } } });
     expect(await t.prisma.geoArea.findUniqueOrThrow({ where: { id: twin.body.place.id }, select: { archivedAt: true } })).toMatchObject({ archivedAt: expect.any(Date) });
     expect(await t.prisma.auditLog.count({ where: { action: { startsWith: 'delivery.place.' } } })).toBe(6);
+    // follow-up 417: the merge is listed on the place it went into, and undone from there once
+    const into = await read(await placeHandler(call('GET', url(added.body.place.id), { cookie: owner }), deps, added.body.place.id));
+    expect(into.body.place.merges[0]).toMatchObject({ fromId: twin.body.place.id, undoable: true });
+    expect((await placeUnmergeHandler(call('GET', url(twin.body.place.id, '/unmerge')), deps, twin.body.place.id)).status).toBe(405);
+    expect((await read(await placeUnmergeHandler(call('POST', url('nope', '/unmerge'), { cookie: owner }), deps, 'nope'))).status).toBe(400);
+    const undone = await read(await placeUnmergeHandler(call('POST', url(twin.body.place.id, '/unmerge'), { cookie: owner }), deps, twin.body.place.id));
+    expect(undone).toMatchObject({ status: 200, body: { unmerge: { place: { nameEn: 'Nolkhola Bazar' }, into: { aliases: [] } } } });
+    expect((await read(await placeUnmergeHandler(call('POST', url(twin.body.place.id, '/unmerge'), { cookie: owner }), deps, twin.body.place.id))).body.error).toBe('CANNOT_UNDO');
   });
 });
