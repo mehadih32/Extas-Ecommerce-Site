@@ -9844,6 +9844,7 @@
     "date": "2026-10-24",
     "note": "the four-layer cache (new `@extas/cache`; registry v53 `registry-cache.ts`; no migration): the browser keeps hashed files a year; Cloudflare files, and category and product pages only with `cache.pages.cdn` (off); the server page cache for category and product pages (`cache.pages` {server on, cdn off, 5 / 5 minutes}); Redis carries the clear to every process; stock shown kept `cache.stockDisplaySeconds` 15 s while the bag and the checkout read live stock; `cache.tuning` {1000 pages, repeat 2 s, stats 7 days}. A price or stock change clears that product, its categories and Cloudflare at once; a setting clears every page; a new product its categories (and the sitemap tag); bag, checkout, account, admin and API never cached (proxy headers, Caddy `cache_headers`, `/api/internal/*` 404 from outside). Cloudflare purge adapter on its mock until the owner's token passes (Keys & connections); admin Settings › System › Cache (`/admin/settings/system/cache`, permission `system.cache`): the layers, hit counts, the times, \"Clear all\" with a confirmation and a reason (audited); the deploy clears the new app's cache (CACHE_HOOK_TOKEN, best effort); guide `cache.md`",
     "github": [
+     "#95, 7 Nov",
      "#72, 31 Oct",
      "#45, 24 Oct"
     ]
