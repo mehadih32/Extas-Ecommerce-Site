@@ -153,6 +153,8 @@ import adminServerEn from '../../../messages/admin-server.en.json';
 import adminServerBn from '../../../messages/admin-server.bn.json';
 import adminShellEn from '../../../messages/admin-shell.en.json';
 import adminShellBn from '../../../messages/admin-shell.bn.json';
+import adminShellSettingsEn from '../../../messages/admin-shell-settings.en.json';
+import adminShellSettingsBn from '../../../messages/admin-shell-settings.bn.json';
 import adminShimmerEn from '../../../messages/admin-shimmer.en.json';
 import adminShimmerBn from '../../../messages/admin-shimmer.bn.json';
 import adminSizechartsEn from '../../../messages/admin-sizecharts.en.json';
@@ -266,6 +268,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-seo': { en: adminSeoEn, bn: adminSeoBn },
   'admin-server': { en: adminServerEn, bn: adminServerBn },
   'admin-shell': { en: adminShellEn, bn: adminShellBn },
+  'admin-shell-settings': { en: adminShellSettingsEn, bn: adminShellSettingsBn },
   'admin-shimmer': { en: adminShimmerEn, bn: adminShimmerBn },
   'admin-sizecharts': { en: adminSizechartsEn, bn: adminSizechartsBn },
   'admin-stock': { en: adminStockEn, bn: adminStockBn },

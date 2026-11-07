@@ -167,6 +167,7 @@
     { "id": "settings/backups", "route": "/admin/settings/system/backups" },
     { "id": "settings/go-live", "route": "/admin/settings/system/go-live" },
     { "id": "settings/shimmer", "route": "/admin/settings/shimmer" },
+    { "id": "settings/shell", "route": "/admin/settings/shell" },
     { "id": "settings/look", "route": "/admin/settings/look" },
     { "id": "help/manual", "route": "/admin/help" },
     { "id": "help/site-manual", "route": "/admin/help/manual" },
