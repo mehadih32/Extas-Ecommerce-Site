@@ -15,7 +15,7 @@
 import type { PrismaClient } from '@extas/db/client';
 import type { PermissionKey } from '@extas/auth';
 import { workerStatus } from '@extas/jobs';
-import { erpHoldNotice, heldTooLong } from '@extas/inventory';
+import { erpHoldNotice, heldTooLong, keptAtSwitchTooLong } from '@extas/inventory';
 import { orderQueueCounts } from '@extas/orders';
 import type { AdminSectionId } from '@extas/settings';
 import type { ShellIconName } from './icons';
@@ -23,7 +23,7 @@ import type { ShellViewer } from './sections';
 import type { TodoGroup } from './todo';
 import { waitingProposals } from '../admin-health/fixes';
 
-export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersTwoSizes' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'erpHeldLong' | 'agentFixes' | 'supportWaiting' | 'supportLate';
+export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersTwoSizes' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'erpHeldLong' | 'erpKeptAtSwitch' | 'agentFixes' | 'supportWaiting' | 'supportLate';
 
 export interface QueueDef {
   id: QueueId;
@@ -53,6 +53,8 @@ export const QUEUES: readonly QueueDef[] = [
   { id: 'erpFailed', perm: 'inventory.read', href: '/admin/stock#st-docs', section: 'products', tone: 'bad', icon: 'sync', badge: false, group: 'stock' },
   // follow-up 539: documents the ERP keeps refusing for now, past `erp.orders.heldAlertAfterHours` (none while that is empty)
   { id: 'erpHeldLong', perm: 'inventory.read', href: '/admin/stock#st-docs', section: 'products', tone: 'warn', icon: 'clock', badge: false, group: 'stock' },
+  // follow-up 578: v5 orders kept at the switch, still waiting for a person more than a day later (ERP link page)
+  { id: 'erpKeptAtSwitch', perm: 'vault.read', href: '/admin/settings/erp-link', section: 'settings', tone: 'warn', icon: 'clock', badge: false, group: 'stock' },
   { id: 'erpHold', perm: 'erp.account.read', href: '/admin/money/books', section: 'money', tone: 'bad', icon: 'alert', badge: false, group: 'urgent' },
   { id: 'booksDifferences', perm: 'books.read', href: '/admin/money/books/differences', section: 'money', tone: 'bad', icon: 'wallet', badge: false, group: 'money' },
   // follow-up 509: customers waiting for an answer (the Support badge, longest first) and chats past their timer (PR 431)
@@ -89,7 +91,7 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
   const now = (deps.now ?? (() => new Date()))();
   const waitingWhere = { storeId, status: 'OPEN', waitingSince: { not: null }, contact: { blockedAt: null } };
   const lateWhere = { storeId, status: 'OPEN', slaDueAt: { lt: now }, contact: { blockedAt: null } };
-  const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold, heldLong, fixes, waitN, waitOld, lateN, lateOld] = await Promise.all([
+  const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold, heldLong, keptLong, fixes, waitN, waitOld, lateN, lateOld] = await Promise.all([
     orderQueueCounts(db, storeId, ['toConfirm', 'prepaid', 'awaitingAdvance', 'twoSizes', 'inReview', 'cancelRequests', 'cancelPending']),
     db.publishQueueItem.count({ where: { storeId, status: 'OPEN' } }),
     db.publishQueueItem.findFirst({ where: { storeId, status: 'OPEN' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
@@ -106,6 +108,7 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     // v6 only (null on v5 or with no ERP link); a hold is one row, counted from when it began
     erpHoldNotice({ db, settings: deps.settings as Parameters<typeof erpHoldNotice>[0]['settings'], now: deps.now }, storeId),
     heldTooLong({ db, settings: deps.settings as Parameters<typeof heldTooLong>[0]['settings'], now: deps.now }, storeId),
+    keptAtSwitchTooLong(db, storeId, now),
     // PR 420: proposals waiting on the owner (this store's fixes and the shared skills), oldest first
     waitingProposals(db, storeId, now),
     db.conversation.count({ where: waitingWhere }),
@@ -128,6 +131,7 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     { id: 'countsReview', n: reviewN, oldest: iso(reviewOld?.updatedAt) },
     { id: 'erpFailed', n: erpN, oldest: iso(erpOld?.createdAt) },
     { id: 'erpHeldLong', n: heldLong?.count ?? 0, oldest: heldLong?.since ?? null },
+    { id: 'erpKeptAtSwitch', n: keptLong.count, oldest: keptLong.since },
     { id: 'erpHold', n: hold?.onHold ? 1 : 0, oldest: hold?.onHold ? (hold.heldAt ?? null) : null },
     { id: 'booksDifferences', n: booksN, oldest: iso(booksOld?.firstSeenAt) },
     { id: 'jobsDead', n: jobs.failedCounts.dead, oldest: dead[0] ?? null },
