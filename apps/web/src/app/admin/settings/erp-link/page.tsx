@@ -371,6 +371,48 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
         )}
       </section>
 
+      {/* Follow-up 577: the store's latest switch runs of every link (dry runs, the switch, new links), each with its report. */}
+      <section className="a2-card a2-mt12" data-testid="erp-link-runs" aria-labelledby="erp-link-runs-h">
+        <h2 className="a2-h4" id="erp-link-runs-h">
+          {e('runs.title')}
+        </h2>
+        <p className="a2-cs">{e('runs.sub', { n: n(s.switchOver.runs.length) })}</p>
+        {s.switchOver.runs.length ? (
+          <ul className="a2-stack a2-mt12" data-testid="erp-link-run-list">
+            {s.switchOver.runs.map((r) => {
+              const facts = [
+                r.report.switchDate ? e('runs.fact.switchDate', { day: day(r.report.switchDate) }) : '',
+                r.report.mode ? e(`switch.mode.${r.report.mode === 'fresh-start' ? 'fresh-start' : 'erp-list'}`) : '',
+                r.report.openingBalanceMinor != null ? e('runs.fact.opening', { amount: m(r.report.openingBalanceMinor) }) : '',
+                r.report.orders != null ? e('runs.fact.orders', { n: n(r.report.orders) }) : '',
+                r.report.queuedV5 ? e('runs.fact.queued', { n: n(r.report.queuedV5) }) : '',
+                r.report.steps != null ? e('runs.fact.steps', { n: n(r.report.steps) }) : '',
+                r.report.reason ? t(d, `erpLink.newLink.reasons.${r.report.reason}`) : '',
+                r.report.note ?? '',
+              ].filter(Boolean);
+              return (
+                <li key={r.id ?? `${r.kind}-${String(r.createdAt)}`} className="a2-sm" data-testid="erp-link-run" data-kind={r.kind} data-ok={r.ok ? 'yes' : 'no'}>
+                  <div className="a2-between" style={{ gap: 8, flexWrap: 'wrap' }}>
+                    <b>
+                      {e(`runs.kind.${r.kind}`)}
+                      {r.epoch != null ? ` · ${e('runs.epoch', { n: n(r.epoch) })}` : ''}
+                    </b>
+                    <span className={`a2-pill ${r.ok ? 'ok' : 'warn'}`}>{r.ok ? e('runs.ok') : e('runs.blocked', { n: n(r.blockers.length) })}</span>
+                  </div>
+                  <p className="a2-xs a2-mute">{at(r.createdAt)}</p>
+                  {facts.length ? <p className="a2-xs">{facts.join(' · ')}</p> : null}
+                  {!r.ok && r.blockers.length ? <p className="a2-xs">{r.blockers.map((b) => t(d, `erpLink.blocker.${b}`)).join(' · ')}</p> : null}
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="a2-sm a2-mute a2-mt6" data-testid="erp-link-runs-none">
+            {e('runs.none')}
+          </p>
+        )}
+      </section>
+
       <div className="a2-mt12">
         <ErpCalls dict={d} initial={v.erpCalls} canWrite={canWrite} locale={view.locale} timeZone={view.timeZone} storeId={storeId} look="a2" />
       </div>

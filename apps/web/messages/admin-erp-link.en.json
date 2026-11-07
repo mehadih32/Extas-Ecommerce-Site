@@ -189,6 +189,26 @@
       "removeSend": "Yes, remove it",
       "removeWarn": "The key is switched off (kept in the vault history). The check goes back to waiting.",
       "removed": "Removed. The check is waiting for a key again."
+    },
+    "runs": {
+      "title": "Switch runs",
+      "sub": "The latest {n} runs of this store, newest first: every dry run, the switch and every new link, with what each found. Nothing here can be changed.",
+      "none": "No run yet. A dry run shows here once it is pressed.",
+      "ok": "Clean",
+      "blocked": "{n} to fix first",
+      "epoch": "link {n}",
+      "kind": {
+        "DRY_RUN": "Dry run",
+        "SWITCH": "Switch",
+        "NEW_LINK": "New link"
+      },
+      "fact": {
+        "switchDate": "switch date {day}",
+        "opening": "opening balance {amount}",
+        "orders": "{n} open orders",
+        "queued": "{n} waiting v5 orders",
+        "steps": "{n} steps done"
+      }
     }
   }
 }

@@ -698,7 +698,46 @@ export interface ErpLinkPage {
   };
   balance: { shopMinor: number | null; erpMinor: number | null; checkedAt: Date | null; onHold: boolean };
   books: { lastClose: { date: string; result: string } | null; openDifferences: number };
-  switchOver: { lastDryRun: (SwitchRunView & { plan: unknown }) | null; lastSwitch: SwitchRunView | null; dryRunMaxHours: number; mode: ErpSwitchMode };
+  switchOver: { lastDryRun: (SwitchRunView & { plan: unknown }) | null; lastSwitch: SwitchRunView | null; dryRunMaxHours: number; mode: ErpSwitchMode; runs: SwitchRunRow[] };
+}
+
+/** Follow-up 577: what a switch run's report says, in a few facts for the list (every field may be missing). */
+export interface SwitchRunReport {
+  switchDate: string | null;
+  mode: string | null;
+  openingBalanceMinor: number | null;
+  orders: number | null;
+  queuedV5: number | null;
+  steps: number | null;
+  reason: string | null;
+  note: string | null;
+  epoch: number | null;
+}
+
+/** Follow-up 577: one switch run (dry run, switch or new link) of the store, with its link's epoch and its report. */
+export type SwitchRunRow = SwitchRunView & { epoch: number | null; report: SwitchRunReport };
+
+/**
+ * Follow-up 577: a run's stored report read into its facts: a dry run keeps the plan, a switch `{ plan, steps }`, a new
+ * link `{ reason, note, epoch }`. Anything of another shape is left out (null), never guessed.
+ */
+export function switchRunReport(raw: unknown): SwitchRunReport {
+  const o = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+  const plan = o.plan && typeof o.plan === 'object' ? (o.plan as Record<string, unknown>) : o;
+  const str = (v: unknown) => (typeof v === 'string' && v ? v : null);
+  const int = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  const queued = plan.queuedV5 && typeof plan.queuedV5 === 'object' ? int((plan.queuedV5 as { count?: unknown }).count) : null;
+  return {
+    switchDate: str(plan.switchDate),
+    mode: str(plan.mode),
+    openingBalanceMinor: int(plan.openingBalanceMinor),
+    orders: Array.isArray(plan.orders) ? plan.orders.length : null,
+    queuedV5: queued,
+    steps: o.steps && typeof o.steps === 'object' ? Object.keys(o.steps as object).length : null,
+    reason: str(o.reason),
+    note: str(o.note),
+    epoch: int(o.epoch),
+  };
 }
 
 const FINAL_EXCHANGE = ['SETTLED', 'BILLED', 'CREDITED', 'CANCELLED'];
@@ -749,8 +788,11 @@ export async function erpLinkState(deps: InventoryDeps, who: Who): Promise<ErpLi
     queues: { ordersWaiting: waiting, ordersHeld: held, ordersFailed: failedN, heldAtSwitch, exchangesOpen: 0, summariesWaiting: 0 },
     balance: { shopMinor: null, erpMinor: null, checkedAt: null, onHold: false },
     books: { lastClose: null, openDifferences: 0 },
-    switchOver: { lastDryRun: null, lastSwitch: null, dryRunMaxHours: maxHours, mode },
+    switchOver: { lastDryRun: null, lastSwitch: null, dryRunMaxHours: maxHours, mode, runs: [] },
   };
+  // Follow-up 577: the store's latest switch runs of every link (dry runs, the switch, new links), newest first.
+  const runs = await db.erpSwitchRun.findMany({ where: { storeId }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: shown, include: { link: { select: { epoch: true } } } });
+  state.switchOver.runs = runs.map((r) => ({ ...runView(r), epoch: r.link?.epoch ?? null, report: switchRunReport(r.report) }));
   if (!l) return state;
   const linkId = l.id;
   const sendLast = async (kind: 'DAILY_SUMMARY' | 'FIXED_COSTS') => (await db.erpBooksSend.aggregate({ where: { linkId, storeId, kind, accepted: true }, _max: { sentAt: true } }))._max.sentAt;
