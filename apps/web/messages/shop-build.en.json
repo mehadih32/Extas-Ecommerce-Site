@@ -91,6 +91,12 @@
       "sub": "Any {list} pieces",
       "or": " or ",
       "more": "Build your own"
+    },
+    "entry": {
+      "eyebrow": "Mix & match",
+      "homeText": "Mix styles and colours — the set price shows before you order.",
+      "start": "Start building",
+      "line": "Build your own set"
     }
   }
 }

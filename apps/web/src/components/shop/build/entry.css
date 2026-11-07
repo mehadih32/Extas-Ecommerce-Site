@@ -1,0 +1,17 @@
+/* Follow-up 242 — the set builder's entries on the home page and the category page (demo 20-home diy, 21-category
+   cat-bn), scoped to the shop wrapper. One card, the button stays on the first line's right on every width. */
+.shop .bs-entry { display: flex; align-items: center; gap: 12px; padding: 12px 14px; color: var(--ink) !important; text-decoration: none; min-height: 44px; }
+.shop .bs-entry .ic { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--brand); flex-shrink: 0; }
+.shop .bs-entry .grow { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.shop .bs-entry .grow > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shop .bs-entry-t { font-size: 16px; }
+.shop .bs-entry-go { flex-shrink: 0; white-space: nowrap; }
+.shop .bs-entry-cat { margin: 0 0 12px; }
+/* a phone: the whole card is the link — the button word steps down to the arrow (AUTO ADJUST), the home row's lead goes */
+.shop .bs-entry > .bs-entry-arr { flex-shrink: 0; }
+@media (max-width: 479px) { .shop .bs-entry-home .grow > .muted:last-child, .shop .bs-entry .bs-entry-go { display: none; } }
+@media (min-width: 480px) { .shop .bs-entry-home > .bs-entry-arr { display: none; } }
+.shop.shop[data-theme="festive"] .bs-entry .ic { color: var(--gold); }
+/* the set prices step down to the smallest set on a narrow phone (one line, never cut; DG 320 px) */
+.shop .bs-entry-ps { display: none; }
+@media (max-width: 479px) { .shop .bs-entry-p .bs-entry-pf { display: none; } .shop .bs-entry-p .bs-entry-ps { display: inline; } }

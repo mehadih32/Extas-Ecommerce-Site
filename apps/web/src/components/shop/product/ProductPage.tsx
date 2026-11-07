@@ -62,6 +62,7 @@ import { breadcrumbLd, faqLd, largestUrl, productLd } from '@/lib/shop/structure
 import { setCardGroups } from '@/lib/shop/combo';
 import { AddedPanel } from '../bag/AddedPanel';
 import { SetOffer } from '../combo/SetCards';
+import { buildEntryFor, PdpBuildLine } from '../build/BuildEntry';
 import { CardDeskMount } from '../CardDeskMount';
 import '../bag/bag.css';
 import { HeartButton } from '../HeartButton';
@@ -426,7 +427,8 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   };
   // ---- PR 102 · the sets this product is in, on sale now (one line each, above the buttons) ----
   const offerSet = set['combos.pdpOffer'];
-  const offer = offerSet.on && m.onSale ? await setCardGroups(c, { productId: data.id }) : null;
+  // follow-up 242 · the set builder's line, only where the builder offers this product (`combos.builder.places`, off)
+  const [offer, buildLine] = await Promise.all([offerSet.on && m.onSale ? setCardGroups(c, { productId: data.id }) : null, m.onSale ? buildEntryFor(c, 'product', [data.id]) : null]);
   const [head, last] = nameParts(m.name);
   const cat = data.category;
   // the added-to-bag panel (S04 · PR 106) for `?added=<line>`; closing it returns to this same address without it
@@ -610,6 +612,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
                 </div>
               ) : null}
               {offer ? <SetOffer c={c} groups={offer.groups.slice(0, offerSet.max)} all={offer} /> : null}
+              <PdpBuildLine c={c} entry={buildLine} />
               <PdpBuy links={links} />
               <PdpTrust items={trust} />
               {!m.onSale ? (

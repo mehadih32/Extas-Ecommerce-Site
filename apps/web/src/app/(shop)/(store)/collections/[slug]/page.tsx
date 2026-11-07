@@ -29,6 +29,7 @@ import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
 import { CardDeskMount } from '@/components/shop/CardDeskMount';
 import { CatFaq, CatSeoText } from '@/components/shop/category/CatInfo';
 import { CatListing, type ListingRow } from '@/components/shop/category/CatListing';
+import { buildEntryFor, CategoryBuildBanner } from '@/components/shop/build/BuildEntry';
 import { CatResting } from '@/components/shop/category/CatResting';
 import { SeasonalPage } from '@/components/shop/seasonal/SeasonalPage';
 import { JsonLd } from '@/components/shop/JsonLd';
@@ -275,8 +276,12 @@ export default async function CategoryPage(props: Props) {
   ) : null;
 
   // S02 · PR 76: the sections in the owner's order and on his screens (Website › Page layouts, `layout.category`)
+  // follow-up 242 · the set builder's banner above the products it offers here (`combos.builder.places`, off)
+  const buildBanner = await buildEntryFor(c, 'category', rows.map((r) => r.card.id));
   const listing = (
-    <CatListing
+    <>
+      <CategoryBuildBanner c={c} entry={buildBanner} />
+      <CatListing
         c={c}
         scope={slug}
         rows={rows}
@@ -289,6 +294,7 @@ export default async function CategoryPage(props: Props) {
         waName={name}
         after={(shown) => ldOf(shown, faqItems)}
       />
+    </>
   );
   const parts: Record<CategorySectionId, ReactNode> = { head: hd, listing, info, related: more };
   // ~~shownSections('category', set['layout.category'])~~ PR 595: this category's own order while it has one, with the

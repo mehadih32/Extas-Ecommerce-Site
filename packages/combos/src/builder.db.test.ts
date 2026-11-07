@@ -8,7 +8,7 @@ import { createTestDatabase, HAS_TEST_DB, type TestDatabase } from '@extas/auth/
 import { seedSample } from '@extas/seed';
 import { registry, type Key, type Value } from '@extas/settings';
 import { contentColumns, quoteCart, ruleContentSchema } from '@extas/rules';
-import { addBuiltSetToBag, builderAdmin, setBuilder, setBuilderOptions } from './builder';
+import { addBuiltSetToBag, builderAdmin, builderOfferFor, setBuilder, setBuilderOptions } from './builder';
 import type { CombosDeps, SettingsReader, Who } from './context';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -123,6 +123,17 @@ describe.skipIf(!HAS_TEST_DB)('the set builder on PostgreSQL (S03 · PR 98, 100)
     expect((await setBuilder(deps(), { storeId: S })).groups).toEqual([]);
     overrides.set('combos.builder', { ...OPEN, maxStyles: 1 });
     expect((await setBuilder(deps(), { storeId: S })).groups[0]!.products).toHaveLength(1);
+    overrides.set('combos.builder', OPEN);
+  });
+
+  it('follow-up 242: names the groups a given product can go into, and none for a product outside them or while closed', async () => {
+    const tee = await t.prisma.product.findFirstOrThrow({ where: { storeId: S, category: { slug: 'tshirts' } }, select: { id: true } });
+    const offer = await builderOfferFor(deps(), S, [polos[0]!, tee.id]);
+    expect(offer).toEqual([{ key: 'test-any-polos', tiers: expect.any(Array), products: [polos[0]] }]);
+    expect(await builderOfferFor(deps(), S, [tee.id])).toEqual([]);
+    expect(await builderOfferFor(deps(), S, [])).toEqual([]);
+    overrides.set('combos.builder', { ...OPEN, entries: false });
+    expect(await builderOfferFor(deps(), S, [polos[0]!])).toEqual([]);
     overrides.set('combos.builder', OPEN);
   });
 
