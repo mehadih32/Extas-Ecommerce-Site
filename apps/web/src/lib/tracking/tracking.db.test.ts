@@ -16,7 +16,7 @@ import type { AdminDeps } from '../admin-auth';
 import { BAG_COOKIE } from '../shop/bag-model';
 import { trackingHandler, type TrackingOverview } from './admin';
 import { recordEvent, sendEvents, trackingSweepHook, type TrackingDeps } from './service';
-import { trackAddToBag, trackHandler, trackPurchase } from './shop';
+import { catchUpPaidPurchases, trackAddToBag, trackHandler, trackPaidPurchase, trackPurchase } from './shop';
 import { ATTRIBUTION_COOKIE, encodeTouch, touchOf } from './attribution';
 
 const HOST = 'admin.example.test';
@@ -253,11 +253,11 @@ describe.skipIf(!HAS_TEST_DB)('server-side event tracking on PostgreSQL (PR 257)
       expect((await call({ 'x-extas-cache-hook': 'x'.repeat(40) })).status).toBe(404);
       // a fresh event rests first (the shop's own send is on its way)
       let res = await call({ 'x-extas-cache-hook': token });
-      expect([res.status, await res.json()]).toEqual([200, { ok: true, events: 0, failed: 0 }]);
+      expect([res.status, await res.json()]).toEqual([200, { ok: true, events: 0, failed: 0, purchases: 0 }]);
       await t.prisma.$executeRaw`UPDATE "TrackedEvent" SET "updatedAt" = now() - interval '5 minutes' WHERE "id" = ${r.id!}::uuid`;
       mockAdOutbox.clear();
       res = await call({ 'x-extas-cache-hook': token });
-      expect([res.status, await res.json()]).toEqual([200, { ok: true, events: 1, failed: 0 }]);
+      expect([res.status, await res.json()]).toEqual([200, { ok: true, events: 1, failed: 0, purchases: 0 }]);
       expect((await t.prisma.trackedEvent.findUniqueOrThrow({ where: { id: r.id! } })).pending).toBe(false);
       expect(mockAdOutbox.all().flatMap((m) => m.eventIds)).toContain('sweep-0001');
     } finally {
@@ -279,5 +279,50 @@ describe.skipIf(!HAS_TEST_DB)('server-side event tracking on PostgreSQL (PR 257)
     const paidReq = req('/api/payments/callback/bkash', 'GET');
     for (const o of [prepaid, advance, prepaid]) await trackPurchase(paidReq, { storeId: S, orderId: o.id, at: 'paid' }, deps);
     expect((await purchases()).map((e) => e.eventId).sort()).toEqual(['purchase-P605-adv', 'purchase-P605-bkash', 'purchase-P605-cod']);
+  });
+
+  it('follow-up 605 gap: a payment paid without the gateway’s return (the sweep found it, a person recorded it) sends the purchase once', async () => {
+    const token = 'k'.repeat(40);
+    const saved = process.env.CACHE_HOOK_TOKEN;
+    process.env.CACHE_HOOK_TOKEN = token;
+    const made = (n: string, paymentMethod: 'COD' | 'BKASH', advanceRequirement: 'NONE' | 'DELIVERY_CHARGE') =>
+      t.prisma.order.create({ data: { storeId: S, number: `G605-${n}`, source: 'WEBSITE', currency: 'BDT', subtotalMinor: 120_000, deliveryChargeMinor: 8_000, totalMinor: 128_000, idempotencyKey: `g605-${n}`, status: 'PLACED', placedAt: new Date(), paymentMethod, advanceRequirement } });
+    const pay = (orderId: string, n: string, status: 'PAID' | 'PENDING', paidAt: Date | null) =>
+      t.prisma.payment.create({ data: { storeId: S, orderId, method: 'BKASH', purpose: 'ORDER', status, amountMinor: 128_000, currency: 'BDT', idempotencyKey: `g605-pay-${n}`, paidAt, statusAt: paidAt ?? new Date() } });
+    const hourAgo = new Date(Date.now() - 3_600_000);
+    const swept = await made('swept', 'BKASH', 'NONE');
+    await pay(swept.id, 'swept', 'PAID', hourAgo);
+    const advance = await made('adv', 'COD', 'DELIVERY_CHARGE');
+    await pay(advance.id, 'adv', 'PAID', new Date());
+    const old = await made('old', 'BKASH', 'NONE');
+    await pay(old.id, 'old', 'PAID', new Date(Date.now() - 100 * 3_600_000)); // past the 48 hours the platforms are sent
+    const cod = await made('cod', 'COD', 'NONE');
+    await pay(cod.id, 'cod', 'PAID', new Date()); // its purchase goes at placement, never from here
+    const waiting = await made('wait', 'BKASH', 'NONE');
+    await pay(waiting.id, 'wait', 'PENDING', null);
+    const ids = [swept.id, advance.id, old.id, cod.id, waiting.id];
+    // the advance order's callback already sent its purchase: never a second one
+    await trackPurchase(req('/api/payments/callback/bkash', 'GET'), { storeId: S, orderId: advance.id, at: 'paid' }, deps);
+    const purchases = () => t.prisma.trackedEvent.findMany({ where: { name: 'purchase', orderId: { in: ids } }, select: { eventId: true, occurredAt: true, url: true } });
+    expect((await purchases()).map((e) => e.eventId)).toEqual(['purchase-G605-adv']);
+    try {
+      const call = () => trackingSweepHook(new Request(`https://${HOST}/api/internal/tracking/sweep`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-extas-cache-hook': token }, body: JSON.stringify({ storeId: S }) }), deps, catchUpPaidPurchases);
+      expect(await (await call()).json()).toMatchObject({ ok: true, purchases: 1 });
+      expect(await (await call()).json()).toMatchObject({ ok: true, purchases: 0 });
+    } finally {
+      if (saved === undefined) delete process.env.CACHE_HOOK_TOKEN;
+      else process.env.CACHE_HOOK_TOKEN = saved;
+    }
+    const got = await purchases();
+    expect(got.map((e) => e.eventId).sort()).toEqual(['purchase-G605-adv', 'purchase-G605-swept']);
+    const sweptRow = got.find((e) => e.eventId === 'purchase-G605-swept')!;
+    expect([sweptRow.occurredAt.toISOString(), sweptRow.url]).toEqual([hourAgo.toISOString(), null]);
+    expect(await catchUpPaidPurchases(deps, S)).toBe(0);
+    // a person recorded a payment: the purchase goes at once (no shopper's request), once
+    const recorded = await made('rec', 'BKASH', 'NONE');
+    await pay(recorded.id, 'rec', 'PAID', new Date());
+    for (let i = 0; i < 2; i++) await trackPaidPurchase({ storeId: S, orderId: recorded.id }, deps);
+    expect(await t.prisma.trackedEvent.count({ where: { eventId: 'purchase-G605-rec' } })).toBe(1);
+    expect(await catchUpPaidPurchases(deps, S)).toBe(0);
   });
 });

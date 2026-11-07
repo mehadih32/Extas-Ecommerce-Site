@@ -120,42 +120,111 @@ export const purchaseNow = (at: 'placed' | 'paid', order: { paymentMethod: strin
 export async function trackPurchase(request: Request, o: { storeId: number; orderId: string; at?: 'placed' | 'paid' }, deps: TrackingDeps | null = trackingDeps()): Promise<void> {
   try {
     if (!deps || !(await on(deps, o.storeId, 'purchase'))) return;
-    const order = await deps.db.order.findFirst({
-      where: { id: o.orderId, storeId: o.storeId },
-      select: {
-        paymentMethod: true,
-        advanceRequirement: true,
-        number: true,
-        totalMinor: true,
-        currency: true,
-        phone: true,
-        email: true,
-        isGift: true,
-        customerId: true,
-        items: { where: { status: 'ACTIVE' }, select: { productId: true, sku: true, productName: true, colourName: true, sizeLabel: true, quantity: true, unitPriceMinor: true } },
-      },
-    });
-    if (!order || !purchaseNow(o.at ?? 'placed', order)) return;
-    // the order's own lines as sold (their names and prices then); the category from the product
-    const pids = [...new Set(order.items.map((i) => i.productId).filter((x): x is string => !!x))];
-    const cats = new Map((pids.length ? await deps.db.product.findMany({ where: { storeId: o.storeId, id: { in: pids } }, select: { id: true, category: { select: { nameEn: true } } } }) : []).map((p) => [p.id, p.category?.nameEn ?? null]));
-    const items: StoredItem[] = order.items.map((i) => ({ id: i.productId ?? i.sku, sku: i.sku, name: i.productName, category: i.productId ? (cats.get(i.productId) ?? null) : null, colour: i.colourName, size: i.sizeLabel, quantity: i.quantity, priceMinor: i.unitPriceMinor }));
-    // a gift's phone and e-mail are the receiver's: never sent as the buyer
-    const contact = order.isGift ? {} : { phone: order.phone, email: order.email };
-    await recordEvent(deps, {
-      storeId: o.storeId,
-      name: 'purchase',
-      eventId: `purchase-${order.number.replace(/[^A-Za-z0-9_.:-]/g, '-')}`,
-      url: pageOf(request),
-      items,
-      valueMinor: order.totalMinor,
-      currency: order.currency,
-      orderId: o.orderId,
-      shopper: await shopperOf(deps, request, o.storeId, { customerId: order.customerId, ...contact }),
-    });
+    await purchaseOf(deps, request, o);
   } catch (e) {
     quiet('purchase', e);
   }
+}
+
+/** The purchase event of one order (`purchase-<number>`, so it counts once whichever path records it first). */
+export const purchaseEventId = (number: string): string => `purchase-${number.replace(/[^A-Za-z0-9_.:-]/g, '-')}`;
+
+/**
+ * The purchase of one order. `request`: the shopper's own (the checkout, the gateway's return to the shop) — his bag
+ * id, browser and the platforms' cookies; null: a payment no shopper's request carries (the open-payment sweep found it
+ * paid, or a person recorded it), so only the order's own customer and contact go. False when it is not recorded now.
+ */
+async function purchaseOf(deps: TrackingDeps, request: Request | null, o: { storeId: number; orderId: string; at?: 'placed' | 'paid'; occurredAt?: Date }): Promise<boolean> {
+  const order = await deps.db.order.findFirst({
+    where: { id: o.orderId, storeId: o.storeId },
+    select: {
+      paymentMethod: true,
+      advanceRequirement: true,
+      number: true,
+      totalMinor: true,
+      currency: true,
+      phone: true,
+      email: true,
+      isGift: true,
+      customerId: true,
+      items: { where: { status: 'ACTIVE' }, select: { productId: true, sku: true, productName: true, colourName: true, sizeLabel: true, quantity: true, unitPriceMinor: true } },
+    },
+  });
+  if (!order || !purchaseNow(o.at ?? 'placed', order)) return false;
+  // the order's own lines as sold (their names and prices then); the category from the product
+  const pids = [...new Set(order.items.map((i) => i.productId).filter((x): x is string => !!x))];
+  const cats = new Map((pids.length ? await deps.db.product.findMany({ where: { storeId: o.storeId, id: { in: pids } }, select: { id: true, category: { select: { nameEn: true } } } }) : []).map((p) => [p.id, p.category?.nameEn ?? null]));
+  const items: StoredItem[] = order.items.map((i) => ({ id: i.productId ?? i.sku, sku: i.sku, name: i.productName, category: i.productId ? (cats.get(i.productId) ?? null) : null, colour: i.colourName, size: i.sizeLabel, quantity: i.quantity, priceMinor: i.unitPriceMinor }));
+  // a gift's phone and e-mail are the receiver's: never sent as the buyer
+  const contact = order.isGift ? {} : { phone: order.phone, email: order.email };
+  const recorded = await recordEvent(deps, {
+    storeId: o.storeId,
+    name: 'purchase',
+    // ~~eventId: `purchase-${order.number.replace(/[^A-Za-z0-9_.:-]/g, '-')}`~~ the same id, named once (purchaseEventId)
+    eventId: purchaseEventId(order.number),
+    url: request ? pageOf(request) : null,
+    items,
+    valueMinor: order.totalMinor,
+    currency: order.currency,
+    orderId: o.orderId,
+    shopper: request ? await shopperOf(deps, request, o.storeId, { customerId: order.customerId, ...contact }) : { customerId: order.customerId, ...contact },
+    ...(o.occurredAt ? { occurredAt: o.occurredAt } : {}),
+  });
+  return recorded.recorded;
+}
+
+/**
+ * Follow-up 605 gap (lane A, 7 Nov): a payment made PAID without the gateway's return to the shop — a person recorded it
+ * (Payments › Record a payment) — sends the order's purchase at once, as the callback does (`at: 'paid'`, the same event
+ * id, so it counts once). Quiet: it never fails the recording. Nothing here moves money.
+ */
+export async function trackPaidPurchase(o: { storeId: number; orderId: string }, deps: TrackingDeps | null = trackingDeps()): Promise<void> {
+  try {
+    if (!deps || !(await on(deps, o.storeId, 'purchase'))) return;
+    await purchaseOf(deps, null, { ...o, at: 'paid' });
+  } catch (e) {
+    quiet('paid purchase', e);
+  }
+}
+
+/** The most orders one catch-up turn reads (a batch guard, not a business number). */
+const CATCH_UP_BATCH = 200; // hardcode-ok: a batch-size guard
+
+/**
+ * Follow-up 605 gap: the hourly tracking sweep (follow-up 602) first records the purchase of every order of the store
+ * whose purchase goes at payment (prepaid, or an advance to pay first; `purchaseNow`) and whose payment became PAID
+ * within `ads.deliveredPurchase.lookbackHours` (the platforms take events up to seven days old) with no purchase event
+ * yet — a payment the open-payment sweep found paid in the worker, one a person recorded, or a callback whose own send
+ * was lost. Each goes with its payment's time and the order's own customer and contact (no shopper's request), under the
+ * gateway callback's event id, so it counts once. Returns how many it recorded.
+ */
+export async function catchUpPaidPurchases(deps: TrackingDeps, storeId: number): Promise<number> {
+  if (!(await on(deps, storeId, 'purchase'))) return 0;
+  const { lookbackHours } = await deps.resolver.value('ads.deliveredPurchase', { storeId });
+  const since = new Date((deps.now?.() ?? new Date()).getTime() - lookbackHours * 3_600_000);
+  const paid = await deps.db.payment.findMany({
+    where: { storeId, status: 'PAID', orderId: { not: null }, OR: [{ paidAt: { gte: since } }, { paidAt: null, statusAt: { gte: since } }] },
+    orderBy: [{ paidAt: 'asc' }],
+    take: CATCH_UP_BATCH,
+    select: { orderId: true, paidAt: true, statusAt: true, order: { select: { number: true, paymentMethod: true, advanceRequirement: true } } },
+  });
+  const first = new Map<string, { number: string; at: Date | null }>();
+  for (const p of paid) {
+    if (!p.orderId || !p.order || first.has(p.orderId) || purchaseNow('placed', p.order)) continue;
+    first.set(p.orderId, { number: p.order.number, at: p.paidAt ?? p.statusAt });
+  }
+  if (!first.size) return 0;
+  const have = new Set((await deps.db.trackedEvent.findMany({ where: { storeId, eventId: { in: [...first.values()].map((x) => purchaseEventId(x.number)) } }, select: { eventId: true } })).map((r) => r.eventId));
+  let n = 0;
+  for (const [orderId, x] of first) {
+    if (have.has(purchaseEventId(x.number))) continue;
+    try {
+      if (await purchaseOf(deps, null, { storeId, orderId, at: 'paid', ...(x.at ? { occurredAt: x.at } : {}) })) n++;
+    } catch (e) {
+      quiet('purchase catch-up', e);
+    }
+  }
+  return n;
 }
 
 /** The product page's facts: one piece at its lowest live price. */
