@@ -1,0 +1,65 @@
+{
+  "ss": {
+    "metaTitle": "Start & search · Admin",
+    "title": "Start & search",
+    "sub": "Where each role opens after sign-in, how the search box and the badges behave, and the Dashboard's date choices.",
+    "readOnly": "You can look at these settings. Changing them needs the settings.write permission.",
+    "helpers": "Search box helpers",
+    "helpersSub": "Two small helpers for people who use the admin all day. Both are off until you turn them on.",
+    "recent": "Recent pages in the search box",
+    "recentText": "The empty search box lists the pages this person opened last, for them only.",
+    "recentCount": "How many pages",
+    "recentHint": "From 1 to 10.",
+    "unitPages": "pages",
+    "keys": "Key jumps (g then a letter)",
+    "keysText": "On a computer, press g and then a letter to open a section: g d opens the Dashboard, g o opens Orders. Typing inside a box is never taken as a jump.",
+    "start": {
+      "h": "Start page per role",
+      "d": "The section a person opens on after sign-in, by their role. A role on the Dashboard opens the Dashboard. A person whose role cannot open the chosen section also lands on the Dashboard.",
+      "none": "No roles yet. Roles are made in Team & roles.",
+      "dashboard": "Dashboard"
+    },
+    "search": {
+      "h": "Search box and badges",
+      "d": "How fresh the counts on the sidebar are, and how the search box answers.",
+      "badgeCacheSeconds": "Count the sidebar badges again after (seconds)",
+      "badgeCacheSecondsHelp": "0 counts on every page. A bigger number is lighter on the server; the badge can be that many seconds old.",
+      "searchPerGroup": "Results per group in the search box",
+      "searchPerGroupHelp": "Pages, settings, products, orders and customers each show up to this many.",
+      "searchMinChars": "Search products, orders and customers from (letters typed)",
+      "searchMinCharsHelp": "Pages and settings are found from the first letter."
+    },
+    "dash": {
+      "h": "Dashboard",
+      "d": "The date choices above the money tiles, the hours the greeting changes and the small line inside each tile.",
+      "ranges": "Date choices (days)",
+      "rangesHelp": "1 = today. The first choice opens. Up to 5, each once.",
+      "days": "Days",
+      "add": "Add a date choice",
+      "remove": "Remove",
+      "empty": "No date choice. Add at least one.",
+      "afternoonHour": "\"Good afternoon\" from (hour, 0–23)",
+      "eveningHour": "\"Good evening\" from (hour, 0–23)",
+      "eveningHourHelp": "Must be later than the afternoon hour. The store's own time zone.",
+      "sparkDays": "Days in each tile's small line",
+      "sparkDaysHelp": "From 2 to 90, ending today."
+    },
+    "on": "On",
+    "off": "Off",
+    "onCount": "On · {n} pages",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "discard": "Discard changes",
+    "unsaved": "Some changes are not saved yet.",
+    "pairHelp": "Fill in both languages.",
+    "err": {
+      "STALE": "Someone else saved this card just now. It is shown again; make your change again.",
+      "INVALID_INPUT": "Please check: {fields}.",
+      "forbidden": "You may not change these settings.",
+      "unauthorized": "Please sign in again.",
+      "network": "No connection. Try again.",
+      "other": "It could not be saved. Try again."
+    }
+  }
+}

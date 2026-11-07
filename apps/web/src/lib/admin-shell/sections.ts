@@ -500,6 +500,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
       // S02 · PR 598 — Settings › More › Shimmer: every shimmer's switch, speed and strength (demo 89t-shimmer.js).
       { id: 'shimmer', more: true, guide: 'settings', pages: [{ href: '/admin/settings/shimmer', perm: 'settings.read', keys: ['settingsShimmer'] }] },
+      // PR 495 (12) follow-up 205 — Settings › More › Start & search: start page per role, the search box, the Dashboard.
+      { id: 'shell', more: true, guide: 'settings', pages: [{ href: '/admin/settings/shell', perm: 'settings.read', keys: ['settingsShell'] }] },
       // PR 12 (CN-025): Settings → Admin look (the page designs, where the guide opens).
       { id: 'look', guide: 'admin-look', pages: [{ href: '/admin/settings/look', perm: 'settings.read', keys: ['adminLook'] }] },
     ],

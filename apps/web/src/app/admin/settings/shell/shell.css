@@ -1,0 +1,8 @@
+/* PR 495 (12) follow-up 205 — Settings › More › Start & search in the Lumen look (--lm-* tokens only, light and dark):
+   the helpers card holding the two switch cards, then the three settings cards. */
+[data-lm-look] .ssx-page { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+[data-lm-look] .ssx-helpers { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+[data-lm-look] .ssx-helpers > .lm-sub { margin: 0; color: var(--lm-ink2); }
+[data-lm-look] .ssx-ro { color: var(--lm-ink2); }
+[data-lm-look] .ssx-ro-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+[data-lm-look] .ssx-ro-list > li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; min-height: var(--lm-tap); align-items: center; color: var(--lm-ink); overflow-wrap: anywhere; }
