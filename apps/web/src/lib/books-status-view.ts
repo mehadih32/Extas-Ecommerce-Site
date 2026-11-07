@@ -28,7 +28,8 @@ const STATUS = z.looseObject({
   lastRun: z
     .looseObject({ id: z.string(), trigger: z.string(), status: z.string(), from: z.string(), through: z.string(), differences: count, startedAt: z.string(), finishedAt: z.string().nullable(), error: z.string().nullable() })
     .nullable(),
-  closesChain: z.looseObject({ ok: z.boolean(), days: count, periods: count }),
+  // follow-up 558: forks = places where two closes follow the same earlier close; why / at = the first break found
+  closesChain: z.looseObject({ ok: z.boolean(), days: count, periods: count, forks: count.optional(), why: z.string().optional(), at: z.string().nullable().optional() }),
 });
 
 export type BooksStatusView = z.infer<typeof STATUS>;

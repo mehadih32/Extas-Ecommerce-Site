@@ -107,13 +107,34 @@ export interface ErpAccountEntryInput {
   paymentRef?: string | null;
   source: ErpEntrySource;
   reverses?: string | null;
+  /** Follow-up 558: what the hash covers (1 = the fields above only, rows written before; 2 = also the three below). */
+  hashVersion?: number;
+  /** The ledger row of the ERP event it came from (ErpEvent.id). Hashed from version 2. */
+  erpEventRowId?: string | null;
+  /** The shop adjustment it came from (BooksAdjustment.id). Hashed from version 2. */
+  adjustmentId?: string | null;
+  /** Who wrote it. Hashed from version 2. */
+  createdById?: string | null;
 }
 
 const HASHED: readonly (keyof ErpAccountEntryInput)[] = ['seq', 'kind', 'eventId', 'businessDate', 'amountMinor', 'externalOrderId', 'lineId', 'returnListId', 'consignmentId', 'exchangeId', 'paymentRef', 'source', 'reverses'];
+/** Follow-up 558: version 2 also covers where the entry came from and who wrote it. */
+const HASHED_V2: readonly (keyof ErpAccountEntryInput)[] = [...HASHED, 'erpEventRowId', 'adjustmentId', 'createdById'];
 
-/** The entry as one stable line of text (fixed field order, empty parts as null). */
+/** The hash version new entries are written with. Older rows keep the version they were written with (never re-hashed). */
+export const ENTRY_HASH_VERSION = 2;
+/** The hash versions a chain may hold. */
+export const ENTRY_HASH_VERSIONS: readonly number[] = [1, 2];
+
+/**
+ * The entry as one stable line of text (fixed field order, empty parts as null). Version 1 (no `hashVersion`) is the
+ * first form, unchanged; version 2 starts with the version itself, so a row moved back to version 1 no longer matches.
+ */
 export function canonicalEntry(e: ErpAccountEntryInput): string {
-  return JSON.stringify(HASHED.map((k) => e[k] ?? null));
+  const v = e.hashVersion ?? 1;
+  if (v === 1) return JSON.stringify(HASHED.map((k) => e[k] ?? null));
+  if (v === 2) return JSON.stringify([2, ...HASHED_V2.map((k) => e[k] ?? null)]);
+  throw new RangeError(`unknown entry hash version ${v}`);
 }
 
 /** The entry's hash, chained to the one before it (`prevHash` null for the first entry of a link). SHA-256, hex. */
@@ -125,17 +146,25 @@ export function chainHash(prevHash: string | null, e: ErpAccountEntryInput): str
  * Checks a link's entries in `seq` order: 1, 2, 3 … with no gap, each hash right and chained to the one before. Returns
  * the first entry that breaks the chain (HISTORY_CHANGED), or null when the chain holds.
  */
-export function brokenLink(entries: readonly (ErpAccountEntryInput & { prevHash: string | null; hash: string })[]): { seq: number; why: 'GAP' | 'PREV_HASH' | 'HASH' } | null {
+export function brokenLink(entries: readonly (ErpAccountEntryInput & { prevHash: string | null; hash: string })[]): { seq: number; why: ChainBreak } | null {
   let prev: string | null = null;
+  let version = 1;
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i]!;
     if (e.seq !== i + 1) return { seq: e.seq, why: 'GAP' };
     if ((e.prevHash ?? null) !== prev) return { seq: e.seq, why: 'PREV_HASH' };
+    // Follow-up 558: a known version, never lower than the entry before it (new rows are written with the newest one).
+    const v = e.hashVersion ?? 1;
+    if (!ENTRY_HASH_VERSIONS.includes(v) || v < version) return { seq: e.seq, why: 'VERSION' };
+    version = v;
     if (chainHash(prev, e) !== e.hash) return { seq: e.seq, why: 'HASH' };
     prev = e.hash;
   }
   return null;
 }
+
+/** Why a chain breaks at an entry: a missing seq, a wrong previous hash, an unknown or lowered hash version, a changed row. */
+export type ChainBreak = 'GAP' | 'PREV_HASH' | 'VERSION' | 'HASH';
 
 /** Balance = the sum of every entry (§3.1). Exact: throws when the sum leaves the safe integer range. */
 export function balanceOf(entries: readonly Pick<ErpAccountEntryInput, 'amountMinor'>[]): number {

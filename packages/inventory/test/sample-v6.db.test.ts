@@ -61,7 +61,7 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('PR 621 · the CI sample s
     const closes = await t.prisma.booksDayClose.findMany({ where: { linkId: link.id }, orderBy: { date: 'asc' } });
     expect(closes.length).toBe(sampleErpV6.switchDaysAgo);
     expect(closes.at(-1)!.date.toISOString().slice(0, 10)).toBe(addDay(today, -1));
-    expect(await verifyCloseChain(t.prisma, link.id)).toEqual({ ok: true, rows: closes.length });
+    expect(await verifyCloseChain(t.prisma, link.id)).toEqual({ ok: true, rows: closes.length, forks: 0 });
     // the differences of one day: an order's bill a paisa off (adjustable) and the broken tie
     const diffs = (await t.prisma.booksDifference.findMany({ where: { linkId: link.id } })).sort((a, b) => a.check.localeCompare(b.check));
     expect(diffs.map((d) => [d.check, d.kind, d.status])).toEqual([

@@ -82,6 +82,11 @@ export default async function BooksMatchPage({ searchParams }: { searchParams: S
           {status.closesChain.ok ? t(d, 'bk.match.chainOk', { n: n(status.closesChain.days) }) : t(d, 'bk.match.chainBroken')}
         </span>
       </div>
+      {status.closesChain.forks ? (
+        <p className="a2-note bad" role="alert" data-testid="books-closes-fork">
+          {t(d, 'bk.match.chainFork', { n: n(status.closesChain.forks), day: status.closesChain.at ? day(status.closesChain.at) : '—' })}
+        </p>
+      ) : null}
       {status.partialChecks.length ? <p className="a2-xs a2-mute a2-mt6">{t(d, 'bk.match.partly', { checks: status.partialChecks.map((c) => t(d, `bk.check.${c}`)).join(', ') })}</p> : null}
       {canRun ? (
         <div className="a2-mt6">
