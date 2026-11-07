@@ -23,3 +23,7 @@
 .adm2 .rev-reply-shown{border-left:3px solid var(--lm-pri);padding:4px 0 4px 10px}
 .adm2 .rev-reply{display:flex;flex-direction:column;gap:8px;padding-top:8px;border-top:1px solid var(--ln2)}
 .adm2 .rev-reply textarea{width:100%;min-height:88px}
+/* PR 65 follow-up 232 — Import older reviews: the file box and the rows with a problem. */
+.adm2 .rev-imp{display:flex;flex-direction:column;gap:8px}
+.adm2 .rev-imp code{overflow-wrap:anywhere}
+.adm2 .rev-imp-bad{margin:6px 0 0;padding-left:18px;max-height:320px;overflow:auto}

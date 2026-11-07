@@ -114,6 +114,29 @@
         "show": "Show the shop's replies on the product page",
         "showHelp": "Off as shipped: replies are kept here but not shown on the shop."
       }
+    },
+    "imp": {
+      "h": "Import older reviews",
+      "d": "A CSV file saved from a sheet, one review per row. Every row is checked first; imported reviews wait in To check like any other — nothing is published by the import, and none is marked a verified buyer.",
+      "file": "The file (CSV)",
+      "check": "Check the file",
+      "go": "Import {n} reviews",
+      "checked": "{file}: {ready} rows are ready, {bad} have a problem. Nothing is saved yet.",
+      "done": "{n} reviews imported — they wait in To check.",
+      "ignored": "Columns not read: {cols}",
+      "line": "Row {line}",
+      "more": "and {n} more rows with a problem",
+      "failed": "Could not read the file ({code}).",
+      "p": {
+        "NO_PRODUCT": "no product",
+        "PRODUCT_UNKNOWN": "product not found (use its link or a SKU)",
+        "RATING": "stars must be 1 to 5",
+        "NO_WORDS": "no words",
+        "TOO_LONG": "a cell is too long",
+        "DATE": "the day is not a real past day (YYYY-MM-DD)",
+        "DUPLICATE": "already imported"
+      },
+      "cols": "product, rating, name, title, body, written, size, colour"
     }
   },
   "revq": {

@@ -5,10 +5,11 @@
 // published average, and the requests that went after delivery with how many were answered (`reviews.requests`).
 // Reading needs `reviews.read`; Publish · Hide · Refuse · Back to the queue · the verified mark need `reviews.moderate`
 // (ReviewActions; the API checks again). Publishing a photo review pays the owner's photo reward only while he has
-// switched it on with his own amount (PR 65). Nothing is deleted. Adding the shop's own review and importing a file stay
-// on the reviews API until their forms are built.
+// switched it on with his own amount (PR 65). Nothing is deleted. Adding the shop's own review stays
+// on the reviews API until its form is built; importing a file has its card (follow-up 232).
 // Follow-up 233: each card shows the shop's public reply and (with `reviews.moderate`) a box to write, change or take it
 // off; More options gets "The shop's reply" (`pdp.reviewReply`, off: replies are kept but not shown on the shop).
+// Follow-up 232: More options › "Import older reviews" (reviews.write): a CSV checked row by row, imported PENDING.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -17,6 +18,7 @@ import * as cat from '@extas/catalogue';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { formatNumber, nameIn } from '@/components/admin/products/model';
 import { ReviewActions } from '@/components/admin/reviews/ReviewActions';
+import { ReviewImport } from '@/components/admin/reviews/ReviewImport';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ResponsiveImage } from '@/components/media/ResponsiveImage';
@@ -238,6 +240,11 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
         <div className="a2-mt12">
           <FieldsCard url="/api/admin/review-settings" screen={{ key: replyCard.key, value: replyCard.value, version: replyCard.version }} fields={replyFields} texts={replyTexts} canEdit={canModerate} testId="review-reply-card" />
         </div>
+        {c.can('reviews.write') ? (
+          <div className="a2-mt12">
+            <ReviewImport dict={d} />
+          </div>
+        ) : null}
       </details>
     </div>
   );
