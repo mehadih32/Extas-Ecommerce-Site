@@ -50,6 +50,7 @@
 //   POST  /api/admin/delivery/checks/:id/resolve           {outcome: DELIVERED | CHARGE_PAID_RETURN | RETURNED, refusalKey?, note?}
 //                                                          what really happened, through the order service (delivery.outcomes)
 // PR 526 — why a parcel came back:
+//   POST  /api/admin/delivery/parcels/:id/back             follow-up 450: a returning parcel is back at the shop (delivery.outcomes)
 //   POST  /api/admin/delivery/parcels/:id/return-reason    {reasonKey, note?} a reason from the owner's orders.refusal.reasons
 //                                                          and the rider's words, on the parcel's return record (delivery.outcomes)
 // PR 178 — the courier by the real cost of the parcel (off until `delivery.courier.selection` is on; the shop's cost only,
@@ -175,6 +176,11 @@ export async function parcelsRoute(request: Request, deps: AdminDeps | null, pat
   if (action === 'return-reason') {
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'delivery.outcomes', async (x) => ({ result: await sh.recordReturnReason(x.deps, x.who, id, await body(request)) }));
+  }
+  // follow-up 450: a returning parcel is back in the shop's hands; the order follows
+  if (action === 'back') {
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'delivery.outcomes', async (x) => ({ result: await sh.markBackAtShop(x.deps, x.who, id) }));
   }
   if (action === 'retry') {
     if (m !== 'POST') return notAllowed();

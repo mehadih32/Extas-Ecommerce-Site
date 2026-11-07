@@ -866,7 +866,8 @@
       "codStale": "{courier} will collect {booked}, but the order now owes {due}. The sticker will not print until the parcel is booked again.",
       "receiverStale": "The receiver {courier} has is not the order’s receiver any more. The sticker will not print until the parcel is booked again.",
       "bookingLost": "{courier} did not answer when this order was booked (reference {ref}). Press Try again: it asks {courier} first, so the parcel is never booked twice.",
-      "bookingLostPanel": "{courier} did not answer when this order was booked, and {courier} cannot be asked by our reference. Look for reference {ref} in the {courier} panel, then say what you found."
+      "bookingLostPanel": "{courier} did not answer when this order was booked, and {courier} cannot be asked by our reference. Look for reference {ref} in the {courier} panel, then say what you found.",
+      "backAtShop": "{courier} says the parcel is on its way back. When it is in your hands, press Back at the shop: the order then shows returned and its return opens."
     },
     "items": {
       "title": "Items",
@@ -1709,6 +1710,16 @@
         },
         "ok": "Book again",
         "done": "Order #{n}: closed and booked again"
+      }
+    },
+    "backAtShop": {
+      "label": "Back at the shop",
+      "title": "Is order #{n}'s parcel back at the shop?",
+      "ok": "Yes, it is back",
+      "done": "Order #{n}: parcel back at the shop",
+      "eff": {
+        "returned": "The parcel is marked returned (your name and the time in the audit log); the order moves to returned.",
+        "return": "The courier's return of this parcel opens, so the hand-back list and the reports expect it."
       }
     }
   }

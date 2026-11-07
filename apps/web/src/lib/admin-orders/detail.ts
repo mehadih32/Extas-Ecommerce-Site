@@ -427,6 +427,32 @@ export function returnReasonSpecs(view: AdminView, shipmentId: string, number: s
 }
 
 /**
+ * Follow-up 450 (PR 184, 189): "Back at the shop" on a parcel the courier says is on its way back (Steadfast never says
+ * "returned"): the parcel becomes returned and the order follows, the courier's return opened (`delivery.outcomes`).
+ * Nothing moves money.
+ */
+export function backAtShopSpecs(view: AdminView, shipmentId: string, number: string, perms: ReadonlySet<string>): CommandSpec[] {
+  if (!perms.has('delivery.outcomes')) return [];
+  const d = view.dict;
+  const tt = (k: string) => t(d, `orders.backAtShop.${k}`, { n: number });
+  return [
+    {
+      id: 'back-at-shop',
+      label: tt('label'),
+      tone: 'pri',
+      url: `/api/admin/delivery/parcels/${shipmentId}/back`,
+      version: null,
+      title: tt('title'),
+      effects: [tt('eff.returned'), tt('eff.return'), t(d, 'orders.check.eff.noMoney')],
+      fields: [],
+      ok: tt('ok'),
+      okTone: 'pri',
+      done: tt('done'),
+    },
+  ];
+}
+
+/**
  * Gate F-004 (follow-up of PR 176): "Re-book the courier" on a parcel whose amount or receiver went stale after booking
  * (`delivery.book`). The person says how the old consignment was cancelled with the courier; the old parcel is closed and
  * the order booked again at the amount due now. Nothing moves money; the order itself is not cancelled.
@@ -1029,6 +1055,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   }
   const holdProp = o.flags.includes(od.HOLD_PROPOSED_FLAG) ? await od.holdProposalOf(deps, who.storeId, o.id) : null;
   if (holdProp) bands.push({ id: 'holdProposed', kind: 'stale', text: t(d, 'orders.band.holdProposed', { rule: t(d, `orders.ev.gateRule.${holdProp.rule}`), reason: holdName.get(holdProp.reasonKey) ?? holdProp.reasonKey }), specs: holdProposalSpecs(view, o.id, o.number, perms) });
+  // follow-up 450: the courier says the parcel is on its way back; a person says when it is in the shop's hands
+  if (ship?.status === 'RETURNING' && o.status !== 'RETURNED') {
+    bands.push({ id: 'backAtShop', kind: 'stale', text: t(d, 'orders.band.backAtShop', { courier: x?.shipment?.courierName ?? t(d, 'orders.courier.theCourier') }), specs: backAtShopSpecs(view, ship.id, o.number, perms) });
+  }
   if (back && !back.reasonKey) {
     const asked = returnReasonSpecs(view, back.shipmentId, o.number, perms, reasons, back.riderNote);
     if (asked.length) bands.push({ id: 'returnReason', kind: 'stale', text: t(d, 'orders.band.returnReason', { courier: x?.shipment?.courierName ?? t(d, 'orders.courier.theCourier') }), specs: asked });
