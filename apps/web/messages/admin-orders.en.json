@@ -641,6 +641,7 @@
     "tot": {
       "subtotal": "Items",
       "discount": "Discount",
+      "floorHeld": "Offer stopped at the lowest price (held back)",
       "delivery": "Delivery",
       "free": "Free",
       "wallet": "From the wallet",

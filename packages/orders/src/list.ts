@@ -314,6 +314,8 @@ export async function getOrder(deps: OrdersDeps, who: Who, orderId: string): Pro
       chargeFixed: true,
       subtotalMinor: true,
       discountMinor: true,
+      // follow-up 521: the offers held back at the price floor
+      floorHeldMinor: true,
       deliveryChargeMinor: true,
       walletAppliedMinor: true,
       totalMinor: true,

@@ -528,6 +528,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           chargeFixed: q.charge.state === 'free' || q.charge.state === 'charge',
           subtotalMinor: q.bag.summary.subtotalMinor,
           discountMinor,
+          // follow-up 521: what the offers held back at the price floor (display only; null when nothing was held)
+          floorHeldMinor: q.bag.summary.floorHeldMinor ?? null,
           deliveryChargeMinor: t.deliveryMinor ?? 0,
           walletAppliedMinor: t.walletMinor,
           totalMinor: t.totalMinor,

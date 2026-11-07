@@ -116,6 +116,11 @@ export interface BagSummary {
   /** What the customer pays for the items (delivery is added at checkout when it is not free). */
   totalMinor: number;
   youSaveMinor: number;
+  /**
+   * Follow-up 521 (PR 609): what the offers held back at the price floor (an offer stops at a line's lowest price;
+   * `CartQuote.floorHeld`), minor units; absent when nothing was held. The order keeps it (Order.floorHeldMinor).
+   */
+  floorHeldMinor?: number;
 }
 
 export interface FreeDelivery {
@@ -352,6 +357,9 @@ export async function bagView(
     totalMinor: subtotalMinor - offMinor,
     youSaveMinor: offMinor + setSaving,
   };
+  // follow-up 521: the offers' amount held back at the floor (shown on the order, never charged or refunded)
+  const heldMinor = quote.floorHeld.reduce((s, h) => s + h.heldMinor, 0);
+  if (heldMinor > 0) summary.floorHeldMinor = heldMinor;
 
   // ---- the code box (PR 112) ----
   let moreMinor: number | null = null;

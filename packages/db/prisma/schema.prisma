@@ -2952,6 +2952,9 @@ model Order {
   chargeFixed              Boolean            @default(false)
   subtotalMinor            Int
   discountMinor            Int                @default(0)
+  /// Follow-up 521 (PR 609): what the offers held back at the price floor when the order was placed (an offer stops at a
+  /// line's lowest price), minor units; null when nothing was held or the order is older (0178). Display only.
+  floorHeldMinor           Int?
   deliveryChargeMinor      Int                @default(0)
   walletAppliedMinor       Int                @default(0)
   totalMinor               Int

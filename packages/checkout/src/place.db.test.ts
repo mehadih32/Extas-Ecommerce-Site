@@ -12,7 +12,7 @@ import { registry } from '@extas/settings';
 import { noteHold, openErpLink, sweepReservations, type InventoryDeps } from '@extas/inventory';
 import { captureDraft, checkoutPaused, payAction, payView, placeOrder, type PlaceInput } from './place';
 import { checkoutQuote, viewOf, type CheckoutRequest } from './quote';
-import { createRule, publishRule, saveDraft } from '@extas/rules';
+import { bustAll, createRule, publishRule, saveDraft } from '@extas/rules';
 import { orderReceipt, receiptEta, receiptPromise } from './receipt';
 import { setUpCheckout, type CheckoutFixture } from './testing';
 
@@ -157,6 +157,29 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
       expect(await f.t.prisma.coupon.findFirstOrThrow({ where: { storeId: f.S, code: 'TEST-FREE' }, select: { usedCount: true } })).toEqual({ usedCount: 1 });
       const b = await shown('code-free-b', { code: 'test-free', phone: '01800000271' });
       expect(b.q.bag.code).toMatchObject({ state: 'refused', reason: 'USED_UP' });
+    });
+
+    it('follow-up 521: an offer stopped at the price floor — the order keeps what it held back; an order with none keeps null', async () => {
+      const plain = await orderOf((await (await shown('floor-none', { phone: '01800000520' })).place()).orderId);
+      expect(plain.floorHeldMinor).toBeNull();
+      const v = shirt();
+      await f.coupon('TEST-FLOOR', 10_000);
+      // bought from the ERP a little under the price; with a 10% lowest margin the offer can take less than 100 taka
+      await f.t.prisma.productVariant.update({ where: { id: v.id }, data: { shopPriceMinor: Math.floor((v.priceMinor! * 85) / 100) } });
+      set({ 'catalogue.floor.minMarginPercent': 10 });
+      bustAll();
+      try {
+        const a = await shown('floor-held', { code: 'test-floor', phone: '01800000521' });
+        const off = a.q.bag.summary.offers.find((o) => o.code)?.amountMinor ?? 0;
+        expect(a.q.bag.summary.floorHeldMinor).toBe(10_000 - off);
+        expect(off).toBeLessThan(10_000);
+        const o = await orderOf((await a.place()).orderId);
+        expect([o.floorHeldMinor, o.discountMinor]).toEqual([10_000 - off, off]);
+      } finally {
+        f.overrides.delete('catalogue.floor.minMarginPercent');
+        await f.t.prisma.productVariant.update({ where: { id: v.id }, data: { shopPriceMinor: null } });
+        bustAll();
+      }
     });
 
     it('a code with one use in all: the first order redeems it; the next is refused with the checkout as it is now', async () => {
