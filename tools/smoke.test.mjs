@@ -104,6 +104,28 @@ it('review R3 (admin M2): every static admin page is opened by the smoke test, o
   }
 });
 
+/** Follow-up 611: shop pages the smoke test does not open on their own, each with why. */
+const SHOP_SKIP = {};
+
+it('follow-up 611: every static shop page is opened by the smoke test (listed or discovered), or is on the skip list with a reason', async () => {
+  const { readdirSync } = await import('node:fs');
+  const config = JSON.parse(readFileSync(new URL('../docs/qa/smoke.json', import.meta.url), 'utf8'));
+  const listed = new Set([...config.storefront, ...config.discover.map((d) => d.from)].map((p) => p.split('?')[0]));
+  const root = new URL('../apps/web/src/app/', import.meta.url);
+  const pages = readdirSync(root, { recursive: true })
+    .map((f) => String(f).split(/[\\/]/).join('/'))
+    .filter((f) => /(^|\/)page\.tsx$/.test(f) && !f.includes('[') && !/^(admin|api)\//.test(f))
+    .map((f) => `/${f.replace(/(^|\/)page\.tsx$/, '')}`.replace(/\/\([^)]*\)/g, '').replace(/(.)\/$/, '$1') || '/');
+  expect(pages.length).toBeGreaterThan(10);
+  for (const p of pages) expect(listed.has(p) || p in SHOP_SKIP, `${p} is in neither docs/qa/smoke.json storefront nor SHOP_SKIP`).toBe(true);
+  // a page that may answer 404 when its switch is off is opened, but on the mayBeOff list (it never rolls a deploy back)
+  for (const p of ['/bulk-order', '/bag/try']) expect(config.mayBeOff.paths).toContain(p);
+  for (const [p, why] of Object.entries(SHOP_SKIP)) {
+    expect(pages, p).toContain(p);
+    expect(String(why).length, p).toBeGreaterThan(10);
+  }
+});
+
 it('PR 155: Sales and Ordered value each show once, with a label and a figure, and never as the same figure', () => {
   const sel = ['[data-testid=cb-kpi-ordered]', '[data-testid=cb-kpi-sales]'];
   const ok = [[{ label: 'Ordered value', value: '৳0' }], [{ label: 'Sales (delivered)', value: '৳0' }]];
