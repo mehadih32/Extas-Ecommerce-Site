@@ -74,13 +74,34 @@ function measurePage(sel) {
     const lh = parseFloat(getComputedStyle(el).lineHeight) || parseFloat(getComputedStyle(el).fontSize) * 1.3;
     if (el.getBoundingClientRect().height > lh * 1.8) wrapped += 1;
   }
+  // Follow-up 354 (PR 576): one rule with the device gate — a tap target is measured by the area that really takes the
+  // tap (elementFromPoint from its centre outwards, so a 34 px swatch with a 44 px tap layer passes), not by its box.
+  // Measured in place (no scrolling: the first-screen and layout figures above must stay as they were); a target off
+  // screen keeps its box.
+  const hitSize = (el, r) => {
+    const owns = (x, y) => {
+      if (x < 0 || y < 0 || x >= window.innerWidth || y >= vh) return false;
+      const h = document.elementFromPoint(x, y);
+      return !!h && (h === el || el.contains(h));
+    };
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    if (!owns(cx, cy)) return { w: r.width, h: r.height };
+    const reach = (dx, dy) => {
+      let n = 0;
+      while (n < 64 && owns(cx + dx * (n + 1), cy + dy * (n + 1))) n++;
+      return n;
+    };
+    return { w: Math.max(r.width, reach(-1, 0) + reach(1, 0) + 1), h: Math.max(r.height, reach(0, -1) + reach(0, 1) + 1) };
+  };
   let small = 0;
   for (const el of main.querySelectorAll('button, select, input:not([type=hidden]), [role=radio], summary')) {
     if (!shown(el) || el.closest('[aria-hidden="true"]') || el.closest('details:not([open]) > :not(summary)')) continue;
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) continue;
     const min = el.classList.contains('link') ? 32 : 44; // the device gate's own minimums (docs/qa/device-gate.json)
-    if (Math.min(r.width, r.height) + 0.5 < min) small += 1;
+    const hit = hitSize(el, r);
+    if (Math.min(hit.w, hit.h) + 0.5 < min) small += 1;
   }
   const first = (sel.first ?? []).map((group) => group.some((s) => (s.startsWith('~') ? started(document.querySelector(s.slice(1))) : visible(document.querySelector(s)))));
   const cards = [...document.querySelectorAll(sel.cards ?? '[data-x-none]')];
@@ -506,7 +527,7 @@ export function report(result, meta) {
     '- An agent, not people: the 5-second "what do you pay?" test and a tap test with real shoppers are still to do.',
     '- Chromium only (no WebKit here); the sample catalogue, not the owner\'s.',
     '- A bag template without a size in the bag counts the "Change size or colour" journey (pair page on the set\'s picks, its size, Update) instead of playing it.',
-    "- Tap targets are counted at 44 px by their box: the current pair page's 34 px colour swatches count as small here, while the device gate's hit-area rule passes them (follow-up).",
+    "- Tap targets are counted at 44 px by the area that really takes the tap (the device gate's own rule, follow-up 354), measured where they sit on the screen; a target off screen is counted by its box.",
     '',
   ];
   return lines.join('\n');
