@@ -15,6 +15,7 @@
 import { constants, createHash, createPrivateKey, createPublicKey, createSign, privateDecrypt, publicEncrypt, randomBytes, type KeyObject } from 'node:crypto';
 import { z } from 'zod';
 import { AdapterError, defineAdapter, requireSecret } from '../define';
+import { API_TAKA, majorToMinor, minorToMajorText } from '../money';
 import type { FetchLike } from '../erp/http-client';
 import { checkCallbackSignature, PaymentGatewayError, signedCallbackUrl, type CallbackClaim, type GatewayOutcome, type PaymentGateway } from './contract';
 import { createMockGateway } from './mock';
@@ -50,7 +51,8 @@ const BDT_NUMERIC = '050';
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 /** Minor units as Nagad's amount text (taka with two decimals). */
-export const nagadAmount = (minor: number): string => (minor / 100).toFixed(2);
+// ~~export const nagadAmount = (minor: number): string => (minor / 100).toFixed(2);~~ follow-up 606: the currency's digits
+export const nagadAmount = (minor: number): string => minorToMajorText(minor, API_TAKA);
 
 /** Nagad's order id for a payment: 20 letters and digits from its idempotency key (the same key, the same order). */
 export const nagadOrderId = (idempotencyKey: string): string => `EX${createHash('sha256').update(idempotencyKey).digest('hex').slice(0, 18).toUpperCase()}`;
@@ -89,11 +91,8 @@ const stateOf = (status: unknown): GatewayOutcome['state'] => {
   }
 };
 
-const minorOf = (v: unknown): number | null => {
-  if (typeof v !== 'string' && typeof v !== 'number') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.round(n * 100) : null;
-};
+// ~~Math.round(n * 100)~~ follow-up 606: the currency's digits
+const minorOf = (v: unknown): number | null => majorToMinor(v, API_TAKA);
 
 export function createNagadGateway(o: NagadOptions): PaymentGateway {
   const base = o.baseUrl.replace(/\/+$/, '');

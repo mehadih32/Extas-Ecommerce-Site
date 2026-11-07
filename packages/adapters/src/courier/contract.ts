@@ -10,6 +10,7 @@
 //   it did not). The mocks report none (SIM-F-027: sample courier terms must never look like the shop's real costs).
 // - Booking is idempotent by the shop's reference (`merchantRef`): after a timeout the service asks `findByRef` before
 //   trying again, so one parcel is never booked twice (§7.7).
+import { API_TAKA, majorToMinor } from '../money';
 
 /** The shop's parcel states a courier can report (a subset of Prisma's `ShipmentStatus`). */
 export const COURIER_STATES = [
@@ -192,6 +193,7 @@ export function mapStatus(table: StatusTable, raw: string | null | undefined): {
 
 /** Taka (a courier's API amount, possibly a string or a decimal) → minor units; null when it is not a number. */
 export function takaToMinor(v: unknown): number | null {
-  const n = typeof v === 'string' ? Number(v.trim()) : typeof v === 'number' ? v : NaN;
-  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
+  // ~~return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;~~ follow-up 606: the currency's digits
+  const minor = majorToMinor(v, API_TAKA);
+  return minor !== null && minor >= 0 ? minor : null;
 }
