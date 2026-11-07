@@ -2,7 +2,8 @@
 // customer whose order it is (any device) or the browser that placed it; anyone else is asked to log in.
 // PR 135 — its tracking: the steps, the late flag, the courier, the welcome panel after "Track your order" on the
 // thank-you page (`?from=thanks`), and the exact amount for the rider when the owner turns it on.
-// PR 184: the courier's news line, when the owner turns it on (`account.track.courier`).
+// PR 184: the courier's news line, when the owner turns it on (`account.track.courier`); follow-up 303: the same switch
+// adds the courier's own steps to "What happened".
 // PR 136: the invoice row with "Get invoice" (follow-up 147), while the owner keeps invoices on (`account.invoice`).
 // PR 65: "Rate & review" under each line of a delivered order, for the customer whose account it is; what he writes
 // waits for the shop's check (`reviews.submit`, `reviews.photoReward`).
@@ -42,7 +43,7 @@ export default async function Order({ params, searchParams }: { params: Promise<
   if (!receipt) return <OrderPrompt c={c} number={number} signedIn={signedIn} />;
   const [review, extras, eta, promise, look] = await Promise.all([
     orderReviewBox(c, receipt.number),
-    orderExtras(c, receipt.number, receipt.status, { timeline: track['account.history'].timeline }),
+    orderExtras(c, receipt.number, receipt.status, { timeline: track['account.history'].timeline, courier: track['account.track.courier'] }),
     currentEta(c, receipt.number),
     currentPromise(c, receipt.number),
     thanksLook(c.storeId, receipt),

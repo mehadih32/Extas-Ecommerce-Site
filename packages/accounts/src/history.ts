@@ -3,7 +3,7 @@
 import type { Prisma } from '@extas/db/client';
 import { checkStoreId, setting, type AccountsDeps } from './context';
 import { cardsOf, orderWhere, type OrderCard } from './dashboard';
-import { LIFE_EVENT_TYPES, lifecycleOf, ORDER_SHOWS, SHOW_STATES, showOf, type LifeEventRow, type LifeStep, type OrderShow } from './lifecycle';
+import { LIFE_EVENT_TYPES, lifecycleOf, ORDER_SHOWS, parcelStepsOf, SHOW_STATES, showOf, type LifeEventRow, type LifeStep, type OrderShow } from './lifecycle';
 import type { OrderState } from './pure';
 
 export interface OrderHistory {
@@ -60,21 +60,34 @@ const LIFE_SELECT = {
  * null, like a missing order). The added, removed and resized pieces are named as the order stored them; follow-up 300:
  * on the Bengali page (`lang` 'bn') with the product's and the colour's Bengali names where the catalogue has them (the
  * size from the SKU the row names, so a resized line still reads its old size), else the stored English words.
+ * Follow-up 303: `courier` (the page's `account.track.courier`) adds the courier's own steps of his parcels (never an
+ * exchange's own parcel); off, the parcels are not read at all.
  */
 export async function orderLifecycle(
   deps: AccountsDeps,
-  input: { storeId: number; number: string; customerId: string | null; visitorId: string | null; lang?: 'en' | 'bn' },
+  input: { storeId: number; number: string; customerId: string | null; visitorId: string | null; lang?: 'en' | 'bn'; courier?: { enabled: boolean; exceptions: boolean } },
 ): Promise<LifeStep[] | null> {
   checkStoreId(input.storeId);
   const o = await deps.db.order.findUnique({ where: { storeId_number: { storeId: input.storeId, number: input.number } }, select: LIFE_SELECT });
   const his = !!o && o.status !== 'DRAFT' && !o.archivedAt && ((!!input.customerId && o.customerId === input.customerId) || (!!input.visitorId && o.visitorId === input.visitorId));
   if (!o || !his) return null;
-  const rows = await deps.db.orderEvent.findMany({
-    where: { storeId: input.storeId, orderId: o.id, type: { in: [...LIFE_EVENT_TYPES] } },
-    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-    take: 200,
-    select: { type: true, actorType: true, createdAt: true, data: true },
-  });
+  const courier = input.courier?.enabled ? input.courier : null;
+  const [rows, parcels] = await Promise.all([
+    deps.db.orderEvent.findMany({
+      where: { storeId: input.storeId, orderId: o.id, type: { in: [...LIFE_EVENT_TYPES] } },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      take: 200,
+      select: { type: true, actorType: true, createdAt: true, data: true },
+    }),
+    courier
+      ? deps.db.shipment.findMany({
+          where: { storeId: input.storeId, orderId: o.id, isExchangeLeg: false },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+          take: 10,
+          select: { status: true, bookedAt: true, events: { orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }], take: 100, select: { status: true, occurredAt: true } } },
+        })
+      : [],
+  ]);
   // the pieces an add-on row or its removal names (the row keeps the line's id)
   const itemIds = [
     ...new Set(
@@ -94,7 +107,8 @@ export async function orderLifecycle(
     const line = typeof itemId === 'string' ? (bn?.item(itemId, null) ?? labelOf.get(itemId) ?? null) : null;
     return { type: r.type, actorType: r.actorType, at: r.createdAt, data: bn && r.type === 'order.edit' ? bn.edit(r.data) : r.data, line };
   });
-  return lifecycleOf({ status: o.status as OrderState, times: o }, events);
+  const parcel = courier ? parcelStepsOf(parcels.map((p) => ({ status: p.status, bookedAt: p.bookedAt, events: p.events.map((e) => ({ status: e.status, at: e.occurredAt })) })), courier) : [];
+  return lifecycleOf({ status: o.status as OrderState, times: o }, events, parcel);
 }
 
 const rec = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
