@@ -10,6 +10,7 @@
 //    hook (closed by Caddy from outside, plus a token) and the browser's own policy reports (they change nothing).
 // 2. Requests a minute per address, per kind (sign-in, checkout, other shop changes, reports, webhooks). In `observe`
 //    (the default) an address over its limit is only logged; in `enforce` it is told to try again when its minute ends.
+//    Follow-up 598: a browser report (bucket `report`) over its limit is dropped quietly in `observe` too.
 //    Counted per server copy (Cloudflare's rules, PR 386, are the shared layer in front). The admin's own calls are
 //    never counted: they need a signed-in staff member with 2FA when the owner requires it.
 import type { CspMode, RateBucket, RateLimitMode, RatePerMinute } from '@extas/settings';
@@ -179,8 +180,12 @@ export function apiGate(
     c.logged(key);
     (opts.log ?? console.warn)(`rate-limit (${policy.rate.mode}): ${bucket} over ${limit}/min from address ${addressTag(ip)}`);
   }
-  if (policy.rate.mode === 'observe') return { kind: 'pass' };
+  // ~~if (policy.rate.mode === 'observe') return { kind: 'pass' }; if (bucket === 'report') return { kind: 'drop' };~~
+  // Follow-up 598: a browser report over its limit is dropped in observe too, so `/api/problems` and the other report
+  // routes cannot be flooded into the database while the limits only watch; nobody sees a refusal (204), and the
+  // limit itself is the owner's setting (`security.rateLimit.perMinute.report`).
   if (bucket === 'report') return { kind: 'drop' };
+  if (policy.rate.mode === 'observe') return { kind: 'pass' };
   return { kind: 'refuse', status: 429, error: 'RATE_LIMITED', retryAfterSeconds: Math.max(1, Math.ceil((resetAt - now) / 1000)) };
 }
 

@@ -71,6 +71,7 @@ describe('request kinds', () => {
 describe('per-address limits', () => {
   const ok = { 'sec-fetch-site': 'same-origin' };
 
+  // ~~it('observe (the default) only logs once a minute per address, never refuses'~~ follow-up 598: never refuses a change
   it('observe (the default) only logs once a minute per address, never refuses', () => {
     const counter = new RateCounter();
     const lines: string[] = [];
@@ -81,6 +82,23 @@ describe('per-address limits', () => {
     expect(lines[0]).toContain('signIn over 2/min');
     expect(lines[0]).not.toContain('203.0.113.7'); // a tag, never the address
     expect(lines[0]).toContain(addressTag('203.0.113.7'));
+  });
+
+  it('follow-up 598: a browser report over its limit is dropped in observe too (a flood is never stored); a change still passes', () => {
+    const counter = new RateCounter();
+    const lines: string[] = [];
+    const p = policy('observe', { report: 2, shopWrite: 1 });
+    const send = (path: string) => apiGate(req('POST', path, ok), { policy: p, now: 7_000, counter, log: (l) => lines.push(l) });
+    expect(send('/api/problems').kind).toBe('pass');
+    expect(send('/api/shop/vitals').kind).toBe('pass');
+    expect(send('/api/problems')).toEqual({ kind: 'drop' });
+    expect(send('/api/shop/track')).toEqual({ kind: 'drop' });
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain('rate-limit (observe): report over 2/min');
+    const bag = () => apiGate(req('POST', '/api/bag/lines', ok), { policy: p, now: 7_000, counter, log: () => {} });
+    expect([bag().kind, bag().kind]).toEqual(['pass', 'pass']);
+    // a new minute takes reports again
+    expect(apiGate(req('POST', '/api/problems', ok), { policy: p, now: 70_000, counter, log: () => {} }).kind).toBe('pass');
   });
 
   it('enforce refuses over the limit with the seconds left in the minute, and resumes when the minute ends', () => {
