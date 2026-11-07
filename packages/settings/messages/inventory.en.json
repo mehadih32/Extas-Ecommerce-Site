@@ -100,6 +100,10 @@
       "relaySeconds": {
         "label": "Send waiting documents every (seconds)",
         "help": "How often the shop sends orders and other documents that are waiting for the ERP."
+      },
+      "gift": {
+        "label": "Send a gift's receipt details to the ERP",
+        "help": "A gift order also carries who it is from, the gift note, the day it is delivered on or after and whether the receiver's invoice hides prices. The sender's own phone or e-mail is never sent. Off until your ERP reads these details."
       }
     }
   },
