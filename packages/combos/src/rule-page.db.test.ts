@@ -85,6 +85,24 @@ describe.skipIf(!HAS_TEST_DB)('a rule`s own page on PostgreSQL (S03 · PR 572)',
     await expect(addSetToBag(deps(), { storeId: S, cartId, slug: b!.slug, choices: choicesOf(b), replaceGroupKey: 'set-none' })).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 
+  it('follow-up 351 (PR 574): B3\'s "Add 1 more" — the 3-piece set takes the pair\'s place in the bag, not the end', async () => {
+    const two = (await rulePage(deps(), S, { key: 'sample-polo-pairs' }))!;
+    const three = (await rulePage(deps(), S, { key: 'sample-polo-trios' }))!;
+    const sizeIn = (page: typeof two, productId: string) => page.products.find((x) => x.id === productId)!.sizes[1]!.id;
+    const choicesOf = (page: typeof two, x: (typeof two.pairs)[number]) => x.slots.map((s) => ({ colourId: s.colourId, sizeId: sizeIn(page, s.productId) }));
+    const [pair, after] = filterPairs(two.pairs, NO_FILTER).slice(2);
+    const trio = filterPairs(three.pairs, NO_FILTER)[0]!;
+    const cartId = (await t.prisma.cart.create({ data: { storeId: S, visitorId: 'rule-page-add-one-more' }, select: { id: true } })).id;
+    const a = await addSetToBag(deps(), { storeId: S, cartId, slug: pair!.slug, choices: choicesOf(two, pair!), addKey: 'one-more-test-0001' });
+    const b = await addSetToBag(deps(), { storeId: S, cartId, slug: after!.slug, choices: choicesOf(two, after!), addKey: 'one-more-test-0002' });
+    const c = await addSetToBag(deps(), { storeId: S, cartId, slug: trio.slug, choices: choicesOf(three, trio), addKey: 'one-more-test-0003', replaceGroupKey: a.groupKey });
+    expect(c.added).toBe(true);
+    const live = await t.prisma.cartItem.findMany({ where: { cartId, removedAt: null }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { comboGroupKey: true } });
+    // the trio first, where the pair was, in its own slot order; the set added after it stays after it
+    expect(live.map((l) => l.comboGroupKey)).toEqual([c.groupKey, c.groupKey, c.groupKey, b.groupKey, b.groupKey]);
+    expect((await bagSets(deps(), { storeId: S, cartId })).map((x) => x.groupKey)).toEqual([c.groupKey, b.groupKey]);
+  });
+
   it('PR 574: a set in the bag keeps its slot order, its rule and its look; one piece changes size in place', async () => {
     const p = (await rulePage(deps(), S, { key: 'sample-hoodie-trousers' }))!;
     const pair = filterPairs(p.pairs, NO_FILTER)[0]!;
