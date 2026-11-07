@@ -133,6 +133,7 @@ import { adminTodaySettings } from './registry-admin-today';
 import { erpReplaySettings } from './registry-erp-replay';
 import { erpHeldSettings } from './registry-erp-held';
 import { healthReopenSettings } from './registry-health-reopen';
+import { loginNetworkSettings } from './registry-login-network';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
@@ -1518,6 +1519,8 @@ export const registry = {
   ...erpHeldSettings,
   // ---- Follow-up 596 (PR 423) · a fixed customer problem that comes back opens again, off (registry-health-reopen.ts, version 270). ----
   ...healthReopenSettings,
+  // ---- Follow-up 609 (PR 15, 380) · the admin sign-in pause counted per network, off (registry-login-network.ts, version 271). ----
+  ...loginNetworkSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

@@ -98,6 +98,8 @@ export default async function SecurityPage() {
     n('maxHours', 'security.staffSessionMaxHours'),
     n('maxAttempts', 'security.loginMaxAttempts'),
     n('lockoutMinutes', 'security.loginLockoutMinutes'),
+    { kind: 'switch', path: 'byNetwork', label: s('signIn.byNetwork'), help: s('signIn.byNetworkHelp') },
+    n('emailCeiling', 'security.loginLockoutByNetwork', 'emailCeiling'),
     { kind: 'switch', path: 'loginAlerts', label: s('signIn.loginAlerts'), help: s('signIn.loginAlertsHelp') },
     n('noteDays', 'security.newLoginNoteDays'),
   ];

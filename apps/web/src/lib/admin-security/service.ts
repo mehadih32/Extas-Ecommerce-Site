@@ -27,6 +27,8 @@ export const SECURITY_CARDS = {
     maxHours: { key: 'security.staffSessionMaxHours' },
     maxAttempts: { key: 'security.loginMaxAttempts' },
     lockoutMinutes: { key: 'security.loginLockoutMinutes' },
+    byNetwork: { key: 'security.loginLockoutByNetwork', sub: 'enabled' },
+    emailCeiling: { key: 'security.loginLockoutByNetwork', sub: 'emailCeiling' },
     loginAlerts: { key: 'security.staffLoginAlerts' },
     noteDays: { key: 'security.newLoginNoteDays' },
   },

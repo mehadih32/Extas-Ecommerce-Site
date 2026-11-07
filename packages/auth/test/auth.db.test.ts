@@ -140,6 +140,26 @@ describe.skipIf(!HAS_TEST_DB)('auth on PostgreSQL (PR 15, 16, 495)', () => {
     session(await loginStaff(deps(), { email: 'owner@example.com', password: OWNER_PW }, CTX));
   });
 
+  it('follow-up 609: with the network count on, wrong tries from one network pause only that network; the e-mail ceiling pauses every network', async () => {
+    advance(1_000);
+    const email = 'owner@example.com';
+    const d = { ...deps(), policy: { ...policy, loginLockoutByNetwork: { enabled: true, emailCeiling: 8 } } };
+    const far = { ...CTX, ip: '203.0.113.50' };
+    const nextDoor = { ...CTX, ip: '203.0.113.77' }; // the same /24
+    for (let i = 0; i < policy.loginMaxAttempts; i++) await loginStaff(d, { email, password: `x-${i}` }, i % 2 ? far : nextDoor);
+    expect((await loginStaff(d, { email, password: OWNER_PW }, far)).kind).toBe('locked');
+    // as shipped (off) the same tries pause the e-mail for everyone
+    expect((await loginStaff(deps(), { email, password: OWNER_PW }, CTX)).kind).toBe('locked');
+    // with it on, the owner at his own address still signs in
+    session(await loginStaff(d, { email, password: OWNER_PW }, CTX));
+    advance(1_000);
+    // many networks, each under the count: the e-mail's own ceiling pauses every network
+    for (let i = 0; i < 8; i++) await loginStaff(d, { email, password: 'y' }, { ...CTX, ip: `198.51.${i}.9` });
+    expect((await loginStaff(d, { email, password: OWNER_PW }, CTX)).kind).toBe('locked');
+    advance(policy.loginLockoutMinutes * 60_000 + 1_000);
+    session(await loginStaff(d, { email, password: OWNER_PW }, CTX));
+  });
+
   it('sessions end when idle too long, when too old, on logout and on "log out everywhere"', async () => {
     const d = deps();
     const a = session(await loginStaff(d, { email: 'owner@example.com', password: OWNER_PW }, CTX));

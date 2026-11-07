@@ -14,7 +14,7 @@
 import type { PrismaClient } from '@extas/db/client';
 import type { StaffSession, StaffUser } from './db-types';
 import type { Vault } from '@extas/vault';
-import { audit, clip, securityEvent, type RequestContext } from './audit';
+import { audit, clip, networkOf, securityEvent, type RequestContext } from './audit';
 import { AuthError } from './errors';
 import { assertStaffPassword, burnPasswordCheck, hashPassword, needsRehash, verifyPassword } from './password';
 import type { SecurityPolicy } from './policy';
@@ -52,13 +52,32 @@ export type LoginResult =
 
 const clock = (deps: StaffAuthDeps) => (deps.now ? deps.now() : new Date());
 
-/** When the account is waiting after too many wrong tries, the moment it accepts tries again; else null. */
-export async function lockedUntil(deps: StaffAuthDeps, email: string): Promise<Date | null> {
+/**
+ * When the account is waiting after too many wrong tries, the moment it accepts tries again; else null.
+ * Follow-up 609: with `security.loginLockoutByNetwork` on and the address of the try known (`ip`), the count is per
+ * network (`networkOf`), and the e-mail's own ceiling (`emailCeiling`) still pauses every network.
+ */
+export async function lockedUntil(deps: StaffAuthDeps, email: string, ip?: string | null): Promise<Date | null> {
   const { db, policy } = deps;
   const now = clock(deps);
   const windowStart = new Date(now.getTime() - policy.loginLockoutMinutes * MINUTE);
   const lastGood = await db.staffLoginEvent.findFirst({ where: { email, success: true }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } });
   const since = lastGood && lastGood.createdAt > windowStart ? lastGood.createdAt : windowStart;
+  const byNetwork = policy.loginLockoutByNetwork;
+  if (byNetwork?.enabled && ip !== undefined) {
+    const ceiling = Math.max(byNetwork.emailCeiling, policy.loginMaxAttempts);
+    const all = await db.staffLoginEvent.findMany({
+      where: { email, success: false, createdAt: { gt: since }, NOT: { reason: 'locked' } },
+      orderBy: { createdAt: 'desc' },
+      take: ceiling,
+      select: { createdAt: true, ip: true },
+    });
+    if (all.length >= ceiling) return new Date(all[ceiling - 1]!.createdAt.getTime() + policy.loginLockoutMinutes * MINUTE);
+    const network = networkOf(ip);
+    const mine = all.filter((f) => networkOf(f.ip) === network);
+    if (mine.length < policy.loginMaxAttempts) return null;
+    return new Date(mine[policy.loginMaxAttempts - 1]!.createdAt.getTime() + policy.loginLockoutMinutes * MINUTE);
+  }
   const failures = await db.staffLoginEvent.findMany({
     where: { email, success: false, createdAt: { gt: since }, NOT: { reason: 'locked' } },
     orderBy: { createdAt: 'desc' },
@@ -105,7 +124,7 @@ export async function loginStaff(deps: StaffAuthDeps, input: { email: string; pa
   const now = clock(deps);
   if (!email || email.length > 254 || !password) return { kind: 'invalid' };
 
-  const retryAt = await lockedUntil(deps, email);
+  const retryAt = await lockedUntil(deps, email, ctx.ip ?? null);
   if (retryAt && retryAt > now) {
     await loginEvent(db, { email, success: false, reason: 'locked' }, ctx, now);
     return { kind: 'locked', retryAt };
@@ -170,7 +189,7 @@ export async function verifyStaffTwoFactor(deps: StaffAuthDeps, input: { challen
   const pending = await db.staffSession.findUnique({ where: { tokenHash: pendingHash(input.challenge) }, include: { staffUser: true } });
   if (!pending || pending.revokedAt || pending.expiresAt <= now || pending.staffUser.status !== 'ACTIVE') return { kind: 'invalid' };
   const staff = pending.staffUser;
-  const retryAt = await lockedUntil(deps, staff.email);
+  const retryAt = await lockedUntil(deps, staff.email, ctx.ip ?? null);
   if (retryAt && retryAt > now) {
     await loginEvent(db, { email: staff.email, staffUserId: staff.id, success: false, reason: 'locked' }, ctx, now);
     return { kind: 'locked', retryAt };

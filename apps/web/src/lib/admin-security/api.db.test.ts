@@ -111,6 +111,17 @@ describe.skipIf(!HAS_TEST_DB)('Settings › Sign-in & security on PostgreSQL (PR
     expect(await t.prisma.auditLog.count({ where: { action: 'security.settings.save' } })).toBe(1);
   });
 
+  it('follow-up 609: the network count is two fields of one setting on the sign-in card, off as shipped', async () => {
+    const { a } = await get(owner);
+    expect(a.cards.signIn!.value).toMatchObject({ byNetwork: false, emailCeiling: 50 });
+    const ok = await put(owner, { key: 'signIn', value: { byNetwork: true, emailCeiling: 20 }, version: a.cards.signIn!.version });
+    expect(ok.status).toBe(200);
+    expect(await deps.resolver.value('security.loginLockoutByNetwork')).toEqual({ enabled: true, emailCeiling: 20 });
+    expect((await put(owner, { key: 'signIn', value: { emailCeiling: 2 } })).status).toBe(400);
+    expect((await put(owner, { key: 'signIn', value: { byNetwork: false } })).status).toBe(200);
+    expect(await deps.resolver.value('security.loginLockoutByNetwork')).toEqual({ enabled: false, emailCeiling: 20 });
+  });
+
   it('the address list: not without your own address; once on, sign-in and admin calls from elsewhere are refused', async () => {
     const away = await put(owner, { key: 'allowlist', value: { enabled: true, entries: [AWAY] } });
     expect(away.status).toBe(400);
