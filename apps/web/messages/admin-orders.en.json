@@ -279,6 +279,16 @@
         "NOT_FOUND": "not found",
         "network": "no connection",
         "other": "did not work"
+      },
+      "more": {
+        "export": "Export",
+        "exportAria": "Export the {n} ticked orders as a spreadsheet (CSV)",
+        "invoices": "Print invoices",
+        "invoicesAria": "Print the invoices of the {n} ticked orders as one PDF",
+        "fileFailed": "Could not make the file. Try again.",
+        "fileNoRight": "You do not have the right to do this.",
+        "fileDone": "{n} orders in the file",
+        "popup": "The PDF was downloaded (the browser blocked a new tab)"
       }
     },
     "detail": {

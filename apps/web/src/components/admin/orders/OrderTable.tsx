@@ -8,6 +8,7 @@
 // (content-visibility, shell.css). The owner's page size (orders.list.pageSize) is untouched.
 import type { BulkCommand } from '@/lib/admin-orders/bulk';
 import type { Chip, OrderRowView } from '@/lib/admin-orders/list';
+import type { BulkFile } from '@/lib/admin-orders/bulk-files';
 import type { FieldOption } from '@/lib/admin-orders/spec';
 import { t, type Dict } from '@/lib/i18n';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -32,6 +33,8 @@ export function Chips({ chips, empty }: { chips: readonly Chip[]; empty?: string
 export interface BulkSetup {
   commands: BulkCommand[];
   holdOptions: FieldOption[];
+  /** Follow-up 222: Export and Print invoices, by the person's keys. */
+  files?: BulkFile[];
 }
 
 export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRowView[]; bulk: BulkSetup | null }) {

@@ -8,13 +8,14 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useRef, useState, type ChangeEvent, type MouseEvent, type ReactNode } from 'react';
 import type { BulkCommand, BulkRow } from '@/lib/admin-orders/bulk';
 import { ROW_CONTROLS, isPlainClick, pick, rowTap } from '@/lib/admin-orders/row-pick';
+import type { BulkFile } from '@/lib/admin-orders/bulk-files';
 import type { FieldOption } from '@/lib/admin-orders/spec';
 import type { Dict } from '@/lib/i18n';
 import { BulkBar } from './BulkBar';
 
 export type PickRow = BulkRow & { href: string };
 
-export function OrderPicker({ dict, rows, bulk, children }: { dict: Dict; rows: PickRow[]; bulk: { commands: BulkCommand[]; holdOptions: FieldOption[] } | null; children: ReactNode }) {
+export function OrderPicker({ dict, rows, bulk, children }: { dict: Dict; rows: PickRow[]; bulk: { commands: BulkCommand[]; holdOptions: FieldOption[]; files?: BulkFile[] } | null; children: ReactNode }) {
   const router = useRouter();
   const box = useRef<HTMLDivElement>(null);
   const [sel, setSel] = useState<ReadonlySet<string>>(new Set());
@@ -58,7 +59,7 @@ export function OrderPicker({ dict, rows, bulk, children }: { dict: Dict; rows: 
       <div ref={box} className="a2-tblw" onClick={onClick} onChange={onChange}>
         {children}
       </div>
-      {bulk && chosen.length ? <BulkBar dict={dict} rows={chosen} commands={bulk.commands} holdOptions={bulk.holdOptions} onClear={clear} /> : null}
+      {bulk && chosen.length ? <BulkBar dict={dict} rows={chosen} commands={bulk.commands} holdOptions={bulk.holdOptions} files={bulk.files} onClear={clear} /> : null}
     </>
   );
 }
