@@ -3,7 +3,8 @@
 // the admin API and reloads the page's data (with an optional question first and an optional note field), a form that
 // adds a courier account, and the courier-place picker of a courier's page. Every refusal is shown in words from the
 // page's messages (`ful.err.<code>`), never the server's own wording. PR 633 (CN-036): the words after a command worked
-// are the admin's one toast (showToast, read out by screen readers); a refusal stays beside its button.
+// are the admin's one toast (showToast, read out by screen readers); a refusal stays beside its button. Follow-up 370:
+// a courier account's "Rename" (the name on the screen only; the courier's keys and parcels stay as they are).
 import { useRouter } from 'next/navigation';
 import { useId, useState, type ReactNode } from 'react';
 import { call } from '@/components/admin/api';
@@ -27,13 +28,15 @@ export interface ActProps {
   testId?: string;
   /** Words shown after it worked, from the answer (else the page just reloads). */
   done?: (answer: Record<string, unknown>) => string | null;
+  /** Follow-up 370: fixed words shown after it worked (a server page cannot pass `done`, a function). */
+  doneText?: string;
   /** Opens this address after it worked (e.g. a PDF of what was just made). */
   openAfter?: (answer: Record<string, unknown>) => string | null;
   /** Follow-up 465: the screen it is on, for its own refusal words (`ful.err.<source>.<code>` first). */
   errSource?: FulSource;
 }
 
-export function Act({ dict, url, method = 'POST', body, label, busyLabel, ask, note, tone = '', size = 'sm', testId, done, openAfter, errSource }: ActProps) {
+export function Act({ dict, url, method = 'POST', body, label, busyLabel, ask, note, tone = '', size = 'sm', testId, done, doneText, openAfter, errSource }: ActProps) {
   const router = useRouter();
   const id = useId();
   const [busy, setBusy] = useState(false);
@@ -60,7 +63,7 @@ export function Act({ dict, url, method = 'POST', body, label, busyLabel, ask, n
     }
     setOpen(false);
     setText('');
-    const words = done?.(a.data) ?? null;
+    const words = done?.(a.data) ?? doneText ?? null;
     if (words) showToast({ text: words, tone: 'ok' });
     const href = openAfter?.(a.data) ?? null;
     if (href) window.open(href, '_blank', 'noopener');
@@ -153,6 +156,62 @@ export function AddCourier({ dict, providers }: { dict: Dict; providers: { key: 
       <input id={`${id}-n`} className="a2-inp" style={{ flex: '1 1 180px', width: 'auto' }} value={name} maxLength={60} placeholder={t(dict, 'ful.couriers.addNamePh')} onChange={(e) => setName(e.target.value)} required />
       <button type="submit" className="a2-btn pri" disabled={busy || !name.trim()}>
         {t(dict, 'ful.couriers.addGo')}
+      </button>
+      {err ? (
+        <span className="a2-xs" role="alert" style={{ color: 'var(--bad)', flexBasis: '100%' }}>
+          {err}
+        </span>
+      ) : null}
+    </form>
+  );
+}
+
+/** Follow-up 370: "Rename" opens the name in place; Save sends it (PATCH), Cancel or Esc closes it unchanged. */
+export function CourierRename({ dict, courierId, name }: { dict: Dict; courierId: string; name: string }) {
+  const router = useRouter();
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState(name);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const close = () => {
+    setOpen(false);
+    setText(name);
+    setErr(null);
+  };
+  const go = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const next = text.trim();
+    if (!next || next === name) return close();
+    setBusy(true);
+    setErr(null);
+    const a = await call('PATCH', `/api/admin/delivery/couriers/${courierId}`, { name: next });
+    setBusy(false);
+    if (!a.data.ok) {
+      setErr(a.status === 0 ? fulError(dict, 'network') : fulError(dict, a.data.error, (a.data.details ?? []).join(', ')));
+      return;
+    }
+    setOpen(false);
+    showToast({ text: t(dict, 'ful.couriers.renamed'), tone: 'ok' });
+    router.refresh();
+  };
+  if (!open)
+    return (
+      <button type="button" className="a2-btn sm ghost" onClick={() => setOpen(true)} data-testid="courier-rename">
+        {t(dict, 'ful.couriers.rename')}
+      </button>
+    );
+  return (
+    <form className="a2-fbar" onSubmit={go} onKeyDown={(e) => e.key === 'Escape' && close()} data-testid="courier-rename-form" style={{ marginBottom: 0, flexBasis: '100%' }}>
+      <label className="a2-sr" htmlFor={`${id}-n`}>
+        {t(dict, 'ful.couriers.renameLabel')}
+      </label>
+      <input id={`${id}-n`} className="a2-inp" style={{ flex: '1 1 160px', width: 'auto', minWidth: 0 }} value={text} maxLength={60} autoFocus onChange={(e) => setText(e.target.value)} required />
+      <button type="submit" className="a2-btn sm pri" disabled={busy || !text.trim()}>
+        {t(dict, 'ful.couriers.renameSave')}
+      </button>
+      <button type="button" className="a2-btn sm ghost" onClick={close} disabled={busy}>
+        {t(dict, 'ful.cancel')}
       </button>
       {err ? (
         <span className="a2-xs" role="alert" style={{ color: 'var(--bad)', flexBasis: '100%' }}>

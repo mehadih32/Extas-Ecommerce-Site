@@ -61,6 +61,15 @@ describe.skipIf(!HAS_TEST_DB)('PR 175 · the courier framework (PostgreSQL)', ()
     expect((await listCouriers(d, f.looker, { includeArchived: true })).couriers.map((c) => c.id)).toContain(added.id);
     expect(await db().courierAccount.count({ where: { id: added.id } })).toBe(1);
     expect(await db().auditLog.count({ where: { entityId: added.id, action: { in: ['courier.add', 'courier.update'] } } })).toBe(2);
+    // follow-up 370: renamed and brought back from Archived (switched off), each audited; archiving again keeps its date
+    expect(gone.archivedAt).toBeInstanceOf(Date);
+    await expect(updateCourier(d, f.shipper, added.id, { name: 'Practice main' })).resolves.toMatchObject({ name: 'Practice main', archived: true });
+    const back = await updateCourier(d, f.shipper, added.id, { archived: false });
+    expect(back).toMatchObject({ archived: false, archivedAt: null, enabled: false, name: 'Practice main' });
+    await expect(updateCourier(d, f.looker, added.id, { name: 'Nope' })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    const again = await updateCourier(d, f.shipper, added.id, { archived: true });
+    await expect(updateCourier(d, f.shipper, added.id, { archived: true })).resolves.toMatchObject({ archivedAt: again.archivedAt });
+    expect(await db().auditLog.count({ where: { entityId: added.id, action: 'courier.update' } })).toBe(5);
     // a connection keyed and tested shows its mode (the account follows its provider's connection)
     await db().integration.create({ data: { kind: 'COURIER', provider: MOCK_COURIER_PROVIDER, name: 'practice', mode: 'SANDBOX', enabled: true, storeId: f.S } });
     expect((await listCouriers(d, f.looker)).couriers.find((c) => c.id === courierId)?.mode).toBe('SANDBOX');

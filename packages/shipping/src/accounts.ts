@@ -19,6 +19,8 @@ export interface CourierAccountView {
   name: string;
   enabled: boolean;
   archived: boolean;
+  /** Follow-up 370: when it was archived (null: in use). */
+  archivedAt: Date | null;
   /** MOCK until the courier's keys are entered and tested; never "live" by assumption. */
   mode: Mode;
   createdAt: Date;
@@ -41,6 +43,7 @@ const view = (r: Row, modes: Map<string, Mode>): CourierAccountView => ({
   name: r.name,
   enabled: r.enabled,
   archived: r.archivedAt !== null,
+  archivedAt: r.archivedAt,
   mode: modes.get(r.providerKey) ?? 'MOCK',
   createdAt: r.createdAt,
 });
