@@ -98,6 +98,15 @@
   "outcomes": {
     "title": "What the flagged customers did",
     "text": "How many paid the advance and how many walked away, per layer:",
-    "link": "Reports › Flag outcomes"
+    "link": "Reports › Flag outcomes",
+    "perLayer": "Each layer in the last {days} days:",
+    "layer": "Layer",
+    "asked": "Asked",
+    "paid": "Paid",
+    "walked": "Walked away",
+    "lost": "{p} % lost",
+    "warn": "Loses many",
+    "none": "No layer asked anyone in the last {days} days.",
+    "off": "Switch the report on in Reports › Flag outcomes to see each layer here."
   }
 }

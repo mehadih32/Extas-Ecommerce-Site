@@ -3,6 +3,9 @@
 // with no earlier parameter — the one switch (`checkout.advance`, off), the layers (what counts as a flag, what each
 // asks for) and the most layers under "More options". Seeing needs `risk.rules.read`; saving `risk.rules.write`.
 // S06 · PR 562: a note linking Reports › Flag outcomes (what the flagged customers did, per layer).
+// Follow-up 403: with `risk.report` and the report on (`risk.flagReport`), the note shows each layer's outcome of the
+// report's days — asked, paid, walked away (left the checkout or cancelled unpaid) and the share lost, a layer that
+// loses many pointed out. Reads only: no layer, price or COD changes here.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -62,6 +65,9 @@ export default async function CheckoutAdvancePage() {
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `advance.${k}`, vars);
   const canWrite = access.guard.permissions?.has('risk.rules.write') ?? false;
   const live = list.layers.filter((l) => l.enabled).length;
+  const canReport = access.guard.permissions?.has('risk.report') ?? false;
+  const report = canReport ? await od.flagReport({ db: access.deps.db, settings: access.deps.resolver, now: access.deps.now }, who).catch(() => null) : null;
+  const num = (x: number) => new Intl.NumberFormat(view.locale).format(x);
 
   return (
     <div className="a2-z" data-testid="advance-page" data-lm-ready="">
@@ -98,6 +104,43 @@ export default async function CheckoutAdvancePage() {
           <Link href={FLAGS} className="adv-out-link">
             {c('outcomes.link')}
           </Link>
+          {report && !report.enabled ? <p className="a2-xs a2-mute" data-testid="advance-outcomes-off">{c('outcomes.off')}</p> : null}
+          {report?.enabled && !report.checkout.length ? <p className="a2-xs a2-mute" data-testid="advance-outcomes-none">{c('outcomes.none', { days: num(report.days) })}</p> : null}
+          {report?.enabled && report.checkout.length ? (
+            <div className="a2-mt6" data-testid="advance-outcomes-layers">
+              <p className="a2-xs a2-mute">{c('outcomes.perLayer', { days: num(report.days) })}</p>
+              <div className="a2-tblw a2-mt6">
+                <table className="a2-tbl">
+                  <thead>
+                    <tr>
+                      <th>{c('outcomes.layer')}</th>
+                      <th className="r">{c('outcomes.asked')}</th>
+                      <th className="r">{c('outcomes.paid')}</th>
+                      <th className="r">{c('outcomes.walked')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {report.checkout.map((l) => (
+                      <tr key={l.key} data-testid="advance-outcome-row">
+                        <td className="a2-tdh">
+                          <b>{l.name ?? l.key}</b> {l.warn ? <span className="a2-pill bad">{c('outcomes.warn')}</span> : null}
+                        </td>
+                        <td className="r" data-l={c('outcomes.asked')}>
+                          <b className="a2-num">{num(l.flagged)}</b>
+                        </td>
+                        <td className="r" data-l={c('outcomes.paid')}>
+                          <span className="a2-num">{num(l.paid)}</span>
+                        </td>
+                        <td className="r" data-l={c('outcomes.walked')}>
+                          <span className="a2-num">{num(l.walked + l.left)}</span> <span className="a2-xs a2-mute">{c('outcomes.lost', { p: num(Math.round(l.lostShare * 100)) })}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
 
