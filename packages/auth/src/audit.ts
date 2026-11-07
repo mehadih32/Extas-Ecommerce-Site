@@ -51,7 +51,29 @@ export async function audit(db: Db, actor: Actor, entry: AuditEntry, ctx: Reques
   });
 }
 
-/** A security event for the alerting PRs (Telegram, PR 9) to send on. */
+/**
+ * Follow-up 586 (PR 382): an internet address as its short mark (FNV-1a, eight hex characters) — the same mark the
+ * security page, the bot notes and the rate limits show (apps/web lib/security/edge-gate.ts `addressTag`). Security
+ * events are append-only and kept for ever, so they keep this mark, never the address itself.
+ */
+export function addressMark(ip: string | null | undefined): string | null {
+  if (ip == null) return null;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < ip.length; i++) {
+    h ^= ip.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+/** Follow-up 586: a security event's details with `ip` swapped for its mark (`address`); every other field kept. */
+export function withAddressMark(details: Record<string, unknown>): Record<string, unknown> {
+  if (!('ip' in details)) return details;
+  const { ip, ...rest } = details;
+  return { ...rest, address: addressMark(typeof ip === 'string' ? ip : null) };
+}
+
+/** A security event for the alerting PRs (Telegram, PR 9) to send on; an address is kept as its mark (follow-up 586). */
 export async function securityEvent(
   db: Db,
   kind: string,
@@ -59,5 +81,5 @@ export async function securityEvent(
   details: Record<string, unknown>,
   storeId: number | null = null,
 ): Promise<void> {
-  await db.securityEvent.create({ data: { kind, severity, details: json(details), storeId } });
+  await db.securityEvent.create({ data: { kind, severity, details: json(withAddressMark(details)), storeId } });
 }

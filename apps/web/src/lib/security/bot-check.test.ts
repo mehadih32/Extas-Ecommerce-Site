@@ -2,6 +2,7 @@
 // security log (no address, a tag); off writes nothing; a failing write never stops the sign-in or the order.
 import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
+import { addressMark } from '@extas/auth';
 import { addressTag } from './edge-gate';
 import { botSettings, noteBotSignals, readSignals, scoreSignals } from './bot-check';
 import { humanSignals, watchHumanInput } from './human-signals';
@@ -79,4 +80,8 @@ describe('human signals (the page side)', () => {
     const s = humanSignals();
     expect(s).toMatchObject({ ms: 0, inputs: 0 });
   });
+});
+
+it('follow-up 586: the address mark kept in security events is the edge gate`s address tag', () => {
+  for (const ip of ['203.0.113.9', '2001:db8::1', 'unknown', '']) expect(addressMark(ip)).toBe(addressTag(ip));
 });

@@ -3,6 +3,7 @@
 // latest delivered order, or any order not cancelled or returned; never an erased customer's; never an "address
 // unclear" order's. Look-ups count distinct numbers per IP, storing a hash of the number, never the number.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { addressMark } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { BACKFILL_LOOKUP_EVENT, heldAddress } from '../src';
 import { setUp, type Fixture } from './fixture';
@@ -66,9 +67,12 @@ describe.skipIf(!HAS_TEST_DB)('the held address for a number on PostgreSQL (PR 5
     expect(await heldAddress(f.deps(), f.A, '01912000562', { orders: 'delivered', ip })).toBeNull();
     expect(await heldAddress(f.deps(), f.A, SAVED, { orders: 'off', ip })).not.toBeNull();
     expect(await heldAddress(f.deps(), f.A, '01912000562', { orders: 'delivered', ip: '198.51.100.62' })).toBeNull(); // unknown anyway
-    const rows = await f.t.prisma.securityEvent.findMany({ where: { kind: BACKFILL_LOOKUP_EVENT, details: { path: ['ip'], equals: ip } } });
+    // ~~const rows = await f.t.prisma.securityEvent.findMany({ where: { kind: BACKFILL_LOOKUP_EVENT, details: { path: ['ip'], equals: ip } } });~~
+    // Follow-up 586: counted by the address's mark; the address itself is never stored.
+    const rows = await f.t.prisma.securityEvent.findMany({ where: { kind: BACKFILL_LOOKUP_EVENT, details: { path: ['address'], equals: addressMark(ip)! } } });
     expect(rows).toHaveLength(2);
     expect(JSON.stringify(rows.map((r) => r.details))).not.toMatch(/12000561/);
+    expect(JSON.stringify(rows.map((r) => r.details))).not.toContain(ip);
     f.overrides.delete('delivery.phoneFirst.rateLimit');
   });
 });

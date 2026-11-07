@@ -22,6 +22,7 @@
 // still wins (that notice comes first). Taking the line out puts a line on the earlier order's timeline
 // (`order.exchangeIntent`, with the size he wants) so the team and the rider know an exchange may be asked at the door;
 // nothing on the order itself changes. The earlier size shows only when that order is tied to this browser or account.
+import { addressMark } from '@extas/auth';
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { phoneNormalizeBD } from '@extas/delivery';
@@ -99,10 +100,11 @@ const SAME_FIRING_MS = 3_600_000; // hardcode-ok: technical de-duplication windo
 async function withinLimit(deps: OrdersDeps, storeId: number, ip: string | null): Promise<boolean> {
   const [limit, windowSeconds] = await Promise.all([setting(deps, storeId, 'delivery.phoneFirst.rateLimit'), setting(deps, storeId, 'delivery.phoneFirst.rateWindowSeconds')]);
   const now = nowOf(deps);
-  const key = ip ?? 'unknown';
-  await deps.db.securityEvent.create({ data: { storeId, kind: TRANSIT_LOOKUP_EVENT, severity: 'info', details: { ip: key }, createdAt: now } });
+  // Follow-up 586: counted by the address's mark; the address itself is never kept.
+  const key = addressMark(ip ?? 'unknown')!;
+  await deps.db.securityEvent.create({ data: { storeId, kind: TRANSIT_LOOKUP_EVENT, severity: 'info', details: { address: key }, createdAt: now } });
   const since = new Date(now.getTime() - windowSeconds * 1000);
-  const n = await deps.db.securityEvent.count({ where: { storeId, kind: TRANSIT_LOOKUP_EVENT, createdAt: { gt: since }, details: { path: ['ip'], equals: key } } });
+  const n = await deps.db.securityEvent.count({ where: { storeId, kind: TRANSIT_LOOKUP_EVENT, createdAt: { gt: since }, details: { path: ['address'], equals: key } } });
   return n <= limit;
 }
 

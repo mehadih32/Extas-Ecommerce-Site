@@ -9,6 +9,7 @@
 // - Wrong passwords pause the number (PR 15's lockout, `security.*`); codes have their own limits (codes.ts).
 import { createHash } from 'node:crypto';
 import {
+  addressMark,
   authenticateCustomer,
   changeCustomerPassword,
   checkCustomerPassword,
@@ -83,7 +84,7 @@ export async function signInWithCode(
   await rememberDevice(deps, input.storeId, proven.customerId, input.deviceToken);
   // A proven number ends any wrong-password pause on it (PR 15 counts from the last `customer.login.ok`).
   await deps.db.securityEvent.create({
-    data: { storeId: input.storeId, kind: 'customer.login.ok', severity: 'info', details: { phone: proven.phone, ip: ctx.ip?.slice(0, 64) ?? null, customerId: proven.customerId, method: 'code' }, createdAt: nowOf(deps) },
+    data: { storeId: input.storeId, kind: 'customer.login.ok', severity: 'info', details: { phone: proven.phone, address: addressMark(ctx.ip?.slice(0, 64) ?? null), customerId: proven.customerId, method: 'code' }, createdAt: nowOf(deps) },
   });
   return { token: s.token, expiresAt: s.expiresAt, sessionId: s.sessionId, customerId: proven.customerId };
 }

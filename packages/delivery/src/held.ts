@@ -8,6 +8,7 @@
 //   delivery.phoneFirst.rateWindowSeconds), as distinct numbers: asking about the same number again is free, a new
 //   number past the limit gets nothing (and the customer is simply asked, as without the backfill). The SecurityEvent
 //   keeps the IP and a hash of the number, never the number.
+import { addressMark } from '@extas/auth';
 import { createHash } from 'node:crypto';
 import type { DeliveryDeps } from './context';
 import { phoneNormalizeBD } from './phone';
@@ -31,17 +32,18 @@ const hashOf = (e164: string) => createHash('sha256').update(e164).digest('hex')
 async function allowLookup(deps: DeliveryDeps, storeId: number, ip: string | null, e164: string): Promise<boolean> {
   const [limit, windowSeconds] = await Promise.all([deps.settings.value('delivery.phoneFirst.rateLimit'), deps.settings.value('delivery.phoneFirst.rateWindowSeconds')]);
   const now = clock(deps);
-  const at = ip ?? 'unknown';
+  // Follow-up 586: counted by the address's mark; the address itself is never kept.
+  const at = addressMark(ip ?? 'unknown')!;
   const key = hashOf(e164);
   const rows = await deps.db.securityEvent.findMany({
-    where: { kind: BACKFILL_LOOKUP_EVENT, createdAt: { gt: new Date(now.getTime() - windowSeconds * 1000) }, details: { path: ['ip'], equals: at } },
+    where: { kind: BACKFILL_LOOKUP_EVENT, createdAt: { gt: new Date(now.getTime() - windowSeconds * 1000) }, details: { path: ['address'], equals: at } },
     select: { details: true },
     take: limit + 1,
   });
   const keys = new Set(rows.map((r) => (r.details as { key?: unknown } | null)?.key));
   if (keys.has(key)) return true;
   if (keys.size >= limit) return false;
-  await deps.db.securityEvent.create({ data: { storeId, kind: BACKFILL_LOOKUP_EVENT, severity: 'info', details: { ip: at, key }, createdAt: now } });
+  await deps.db.securityEvent.create({ data: { storeId, kind: BACKFILL_LOOKUP_EVENT, severity: 'info', details: { address: at, key }, createdAt: now } });
   return true;
 }
 
