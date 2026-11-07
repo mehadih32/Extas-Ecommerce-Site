@@ -478,7 +478,7 @@
 .adm2 .a2-tbl tr:last-child td{border-bottom:0}
 .adm2 .a2-tbl tbody tr{cursor:pointer}
 .adm2 .a2-tbl tbody tr:hover td{background:#FCFBF8}
-.adm2 .a2-tbl tbody tr.sel td{background:var(--g0)}
+.adm2 .a2-tbl tbody tr.sel td,.adm2 .a2-tbl tbody tr:has(>td>.a2-chkw>.a2-chk:checked) td{background:var(--g0)}
 .adm2 .a2-tbl .r{text-align:right}.adm2 .a2-tbl .c{text-align:center}
 .adm2 .a2-tbl .w0{width:1%;white-space:nowrap}
 .adm2 .a2-tbl td.a2-tdm{max-width:260px}
@@ -533,8 +533,10 @@
 .adm2 .a2-tbl,.adm2 .a2-tbl tbody{display:block}
 .adm2 .a2-tbl thead{display:none}
 .adm2 .a2-tbl tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 12px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--sh);position:relative}
-.adm2 .a2-tbl tbody tr:hover td,.adm2 .a2-tbl tbody tr.sel td{background:none}
-.adm2 .a2-tbl tbody tr.sel{border-color:var(--g6);background:var(--g0)}
+.adm2 .a2-tbl tbody tr:hover td,.adm2 .a2-tbl tbody tr.sel td,.adm2 .a2-tbl tbody tr:has(>td>.a2-chkw>.a2-chk:checked) td{background:none}
+.adm2 .a2-tbl tbody tr.sel,.adm2 .a2-tbl tbody tr:has(>td>.a2-chkw>.a2-chk:checked){border-color:var(--g6);background:var(--g0)}
+/* follow-up 223: an order card off screen skips layout and paint until it scrolls near (its height kept once drawn) */
+.adm2 [data-testid=orders-table] tbody tr{content-visibility:auto;contain-intrinsic-size:auto 160px}
 .adm2 .a2-tbl td{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0;border:0;min-width:0;text-align:left!important;max-width:none!important}
 .adm2 .a2-tbl td[data-l]::before{content:attr(data-l);font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
 .adm2 .a2-tbl td.a2-tdh{grid-column:1/-1;padding-right:34px}
