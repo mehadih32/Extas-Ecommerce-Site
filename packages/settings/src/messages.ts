@@ -241,6 +241,8 @@ import eyePartsEn from '../messages/eye-parts.en.json';
 import eyePartsBn from '../messages/eye-parts.bn.json';
 import prepaidConfirmEn from '../messages/prepaid-confirm.en.json';
 import prepaidConfirmBn from '../messages/prepaid-confirm.bn.json';
+import looksFoldEn from '../messages/looks-fold.en.json';
+import looksFoldBn from '../messages/looks-fold.bn.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -376,6 +378,9 @@ messages.bn = mergeMessages(messages.bn, eyePartsBn);
 // S05 · PR 541 follow-up 320 (registry v266): prepaid orders confirm by themselves once paid (registry-prepaid-confirm.ts).
 messages.en = mergeMessages(messages.en, prepaidConfirmEn);
 messages.bn = mergeMessages(messages.bn, prepaidConfirmBn);
+// S14 · PR 286 follow-up 477 (registry v267): repeated opens fold into one line on "Who looked" (registry-looks-fold.ts).
+messages.en = mergeMessages(messages.en, looksFoldEn);
+messages.bn = mergeMessages(messages.bn, looksFoldBn);
 // S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
 messages.en = mergeMessages(messages.en, financeEn);
 messages.bn = mergeMessages(messages.bn, financeBn);

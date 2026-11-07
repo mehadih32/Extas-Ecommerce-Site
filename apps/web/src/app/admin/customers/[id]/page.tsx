@@ -552,7 +552,11 @@ export default async function CustomerPage({ params, searchParams }: { params: P
                 <ShellIcon name={LOOK_ICON[l.action] ?? 'eye'} size={16} />
                 <div className="a2-prt">
                   <b>{lookWord(d, l.action)}</b>
-                  <span>{t(d, 'cus.profile.looks.line', { by: l.by ?? t(d, 'cus.profile.looks.system'), at: stamp.format(l.at) })}</span>
+                  <span>
+                    {l.count > 1
+                      ? t(d, 'cus.profile.looks.lineMany', { by: l.by ?? t(d, 'cus.profile.looks.system'), n: formatNumber(l.count, view.locale), from: stamp.format(l.from), at: stamp.format(l.at) })
+                      : t(d, 'cus.profile.looks.line', { by: l.by ?? t(d, 'cus.profile.looks.system'), at: stamp.format(l.at) })}
+                  </span>
                 </div>
               </div>
             ))

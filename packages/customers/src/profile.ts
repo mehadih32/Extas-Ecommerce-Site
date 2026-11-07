@@ -127,6 +127,6 @@ export async function customerLooks(deps: CustomersDeps, who: Who, id: string): 
   await allow(deps, who, 'customers.read');
   await requirePermission(deps.db, who.actor, 'audit.read', { storeId: who.storeId });
   const f = await personOf(deps, who, id);
-  const { accessLogShown } = await setting(deps, who.storeId, 'customers.profile');
-  return accessLogOf(deps.db, who.storeId, profilesOf(f).map((p) => p.id), accessLogShown);
+  const [{ accessLogShown }, fold] = await Promise.all([setting(deps, who.storeId, 'customers.profile'), setting(deps, who.storeId, 'customers.looksFold')]);
+  return accessLogOf(deps.db, who.storeId, profilesOf(f).map((p) => p.id), accessLogShown, fold.enabled ? fold.minutes : null);
 }

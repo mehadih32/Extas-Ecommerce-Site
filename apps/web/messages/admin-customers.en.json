@@ -259,6 +259,7 @@
         "title": "Who looked at this customer",
         "none": "Nobody yet.",
         "line": "{by} · {at}",
+        "lineMany": "{by} · {n} times, {from} to {at}",
         "action": {
           "open": "opened the page",
           "copy": "copied the number",
@@ -693,6 +694,12 @@
         "sub": "Off as shipped. When on, people who hold \"Import old customers\" can bring in the old shop's order list on Customers › More › Import old customers: a preview first, then history only — nothing here is overwritten, no order is made and no message is sent.",
         "enabled": "Allow the import",
         "maxRows": "Most rows in one file (1–50000)"
+      },
+      "looksFold": {
+        "title": "Who looked: repeated opens",
+        "sub": "Off as shipped. When on, the same person opening a customer's page again within these minutes shows as one line with a count on \"Who looked at this customer\". The log keeps every open; a copy or a call of the number is always its own line.",
+        "enabled": "Fold repeated opens into one line",
+        "minutes": "Minutes between opens (1–120)"
       },
       "history": {
         "title": "Order history in My account",

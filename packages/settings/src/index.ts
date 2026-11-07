@@ -213,6 +213,8 @@ export * from './registry-festive-cutoff';
 export * from './registry-eye-parts';
 // S05 · PR 541 follow-up 320 — prepaid orders that nothing flagged confirm by themselves once paid (registry-prepaid-confirm.ts, version 266).
 export * from './registry-prepaid-confirm';
+// S14 · PR 286 follow-up 477 — repeated opens of a customer's page fold into one line with a count (registry-looks-fold.ts, version 267).
+export * from './registry-looks-fold';
 // S13 · PR 282 — the marketing calendar: the switch and how many days one view shows (registry-marketing-calendar.ts, version 217).
 export * from './registry-marketing-calendar';
 // S13 · PR 283 — the marketing report: the switch, the longest period and a message send's result days (registry-marketing-report.ts, version 218).
