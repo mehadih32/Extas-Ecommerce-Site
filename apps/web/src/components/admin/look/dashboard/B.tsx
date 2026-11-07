@@ -52,6 +52,8 @@ const NEED_ICON: Record<string, ShellIconName> = {
   jobsDead: 'alert',
   agentFixes: 'shield',
   handoverWaiting: 'truck',
+  packingCards: 'alert',
+  packingCardsLate: 'clock',
 };
 
 function moneyFormat(f: Fmt): CountFormat {
