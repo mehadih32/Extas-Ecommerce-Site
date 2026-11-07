@@ -6477,8 +6477,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "import from the ERP by style code (CN-028, `erp.model` v6 only; no migration: the 0049 columns): `/admin/products/erp-import` (Products › more, `catalogue.import`) previews a style read with the store's own ERP key (CN-029 §16) and makes every SKU a draft grouped into one product (`COLOUR_MISSING` / `NOTHING_TO_IMPORT` refused; on the practice ERP it only previews); B grade as its own listing with `catalogue.bGrade.listing` (off) and the name suffix `catalogue.bGrade.nameSuffix` (registry v65). The ERP's shop price is the buying price (`shopPriceMinor`, never shown to customers), kept from the import, `variant.changed` and `shop-price.changed`; a change is flagged in \"Buying prices that changed\" (seen / all seen), never a change to a selling price. The selling-price floor (`catalogue.floor.minMarginPercent`, owner data, empty = off): a variant or combo set price below buying price + margin is refused (`BELOW_FLOOR`), the CSV preview shows it as an issue, and in the bag, checkout and product page every discount, coupon and set tier stops at the floor (`Quote.floorHeld`). Store A's import, prices and floor never touch store B (tests). qa-gate (30 Oct): a v5 store is refused (`ERP_V5`); at switch-over a style's SKUs already in one product without a style code adopt that product (shown in the preview), SKUs spread over other products (`SKU_IN_OTHER_PRODUCT`) or rows the catalogue cannot take (`ROW_NOT_ACCEPTED`) are listed and refused before any write, and sizes, products, variants, grades and buying prices are written in one transaction (a failure half-way leaves nothing); a re-import never turns a variant back on; a late, older `shop-price.changed` is ignored (`OLDER`) with the variant's row locked; the list length is `catalogue.shopPrice.changesShown`; **follow-ups (7 Nov, #93; follow-ups 521 part, 528, 529):** the rules simulator prices with the selling-price floor and says how often an offer stopped at it; \"Buying prices that changed\" names the fixed-price sets now below the floor; the offer editor says beforehand that a discount stops at the floor — display only, nothing changes a price",
+    "note": "import from the ERP by style code (CN-028, `erp.model` v6 only; no migration: the 0049 columns): `/admin/products/erp-import` (Products › more, `catalogue.import`) previews a style read with the store's own ERP key (CN-029 §16) and makes every SKU a draft grouped into one product (`COLOUR_MISSING` / `NOTHING_TO_IMPORT` refused; on the practice ERP it only previews); B grade as its own listing with `catalogue.bGrade.listing` (off) and the name suffix `catalogue.bGrade.nameSuffix` (registry v65). The ERP's shop price is the buying price (`shopPriceMinor`, never shown to customers), kept from the import, `variant.changed` and `shop-price.changed`; a change is flagged in \"Buying prices that changed\" (seen / all seen), never a change to a selling price. The selling-price floor (`catalogue.floor.minMarginPercent`, owner data, empty = off): a variant or combo set price below buying price + margin is refused (`BELOW_FLOOR`), the CSV preview shows it as an issue, and in the bag, checkout and product page every discount, coupon and set tier stops at the floor (`Quote.floorHeld`). Store A's import, prices and floor never touch store B (tests). qa-gate (30 Oct): a v5 store is refused (`ERP_V5`); at switch-over a style's SKUs already in one product without a style code adopt that product (shown in the preview), SKUs spread over other products (`SKU_IN_OTHER_PRODUCT`) or rows the catalogue cannot take (`ROW_NOT_ACCEPTED`) are listed and refused before any write, and sizes, products, variants, grades and buying prices are written in one transaction (a failure half-way leaves nothing); a re-import never turns a variant back on; a late, older `shop-price.changed` is ignored (`OLDER`) with the variant's row locked; the list length is `catalogue.shopPrice.changesShown`; **follow-ups (7 Nov, #93; follow-ups 521 part, 528, 529):** the rules simulator prices with the selling-price floor and says how often an offer stopped at it; \"Buying prices that changed\" names the fixed-price sets now below the floor; the offer editor says beforehand that a discount stops at the floor — display only, nothing changes a price; **follow-up (7 Nov, #96; follow-up 521, the order half):** the order keeps what its offers held back at the price floor (Order.floorHeldMinor, migration `0178_order_floor_held`) and the admin order page says \"Offer stopped at the lowest price (held back)\" with the amount; display only",
     "github": [
+     "#96, 7 Nov",
      "#93, 7 Nov",
      "#57, 30 Oct"
     ]
@@ -6507,7 +6508,8 @@
      "ERP_V5",
      "SKU_IN_OTHER_PRODUCT",
      "ROW_NOT_ACCEPTED",
-     "OLDER"
+     "OLDER",
+     "0178_order_floor_held"
     ],
     "tests": [
      "Store A's import, prices and floor never touch store B (tests)"
@@ -6617,8 +6619,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-22",
-    "note": "home page `/` and `/bn` from demo V12.1 (`20-home.js`): sections in the owner's order (`home.sections`, the ten of `HOME_SECTIONS`; PR 595 edits the same list), hero text panel (`home.hero`: words, 1–3 buttons with the demo's looks incl. the v3 sets tint, promise lines only when COD / exchange are on, desktop shift), category tiles (`home.categories`), \"New in\" cards (`home.newIn`), reviews row (`home.reviews`, approved only, average over all approved), soft row edges (`home.rowFade`); product card (photo or garment drawing, badge, heart saved in the browser, struck price only by the PR 38 rule); sections with no true content yet draw nothing; the taka sign in a 2.5 KB swap face; fix: the desktop row folded every category into More (PR 85 tap layers). Tests: home model, garment drawing, settings, catalogue reads on PostgreSQL; screenshots `docs/qa/screenshots/pr-41/` 23 Oct (CN-017): the hero's default words carry no count, season or year (~~\"Winter 2026 · 39 new styles\"~~ → \"New in · Find your style\"), \"Fresh styles this week\" → \"Our newest styles\", Shop now → New in (`home.hero` v17); `copy-claims.test.ts` keeps the shop dictionary and every setting default free of number and \"this week\" claims. 23 Oct (follow-ups 21, 36): desktop cards (mouse at 1024 px and up, or keyboard focus) show the back view and Quick add with the size buttons (`card.desk` {altView, quickAdd}, on; `GET /api/shop/card/<id>`), the bag's own `<AddToBag>` and added panel on the home, category and product pages; the home page's cards use the category page's fits (`CARD_FIT`); **follow-up (7 Nov, #93; follow-up 118):** the search results page draws the category cards' computer back view and Quick add and the added-to-bag panel (closing back to the same search); still noindex",
+    "note": "home page `/` and `/bn` from demo V12.1 (`20-home.js`): sections in the owner's order (`home.sections`, the ten of `HOME_SECTIONS`; PR 595 edits the same list), hero text panel (`home.hero`: words, 1–3 buttons with the demo's looks incl. the v3 sets tint, promise lines only when COD / exchange are on, desktop shift), category tiles (`home.categories`), \"New in\" cards (`home.newIn`), reviews row (`home.reviews`, approved only, average over all approved), soft row edges (`home.rowFade`); product card (photo or garment drawing, badge, heart saved in the browser, struck price only by the PR 38 rule); sections with no true content yet draw nothing; the taka sign in a 2.5 KB swap face; fix: the desktop row folded every category into More (PR 85 tap layers). Tests: home model, garment drawing, settings, catalogue reads on PostgreSQL; screenshots `docs/qa/screenshots/pr-41/` 23 Oct (CN-017): the hero's default words carry no count, season or year (~~\"Winter 2026 · 39 new styles\"~~ → \"New in · Find your style\"), \"Fresh styles this week\" → \"Our newest styles\", Shop now → New in (`home.hero` v17); `copy-claims.test.ts` keeps the shop dictionary and every setting default free of number and \"this week\" claims. 23 Oct (follow-ups 21, 36): desktop cards (mouse at 1024 px and up, or keyboard focus) show the back view and Quick add with the size buttons (`card.desk` {altView, quickAdd}, on; `GET /api/shop/card/<id>`), the bag's own `<AddToBag>` and added panel on the home, category and product pages; the home page's cards use the category page's fits (`CARD_FIT`); **follow-up (7 Nov, #93; follow-up 118):** the search results page draws the category cards' computer back view and Quick add and the added-to-bag panel (closing back to the same search); still noindex; **follow-up (7 Nov, #96; follow-up 113):** Quick add on a card marks \"Your size\" and a card add keeps the usual size, under the product page's own switch",
     "github": [
+     "#96, 7 Nov",
      "#93, 7 Nov",
      "#33, 23 Oct",
      "#25, 23 Oct",
@@ -7468,8 +7471,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "size pills on one row that fill the width from S to 4XL (grid of N equal columns), tap selects and never adds, out in this colour crossed out, sold out in every colour crossed out and never hidden (SIM-F-035 acceptance test; `soldOutEverywhere` cross / hide), the chosen size's measurement line, \"please choose a size\" only after a buy button without a size; \"tell me when it is back\" on a crossed-out size or an off-sale product into the PR 36 back-in-stock list, off until PR 71 sends the alert (`pdp.size.notifyBack`); `pdp.size`. 23 Oct (follow-up 62, SIM-F-047): the owner's word under each size box (`pdp.sizeWords`, owner data, empty = off; Bengali pages or both) and \"Your size\" on the size this browser last put in the bag, tops and bottoms apart, with the colours that have it when sold out here (`pdp.usualSize`, off; 180 days; optional preselect); **follow-up (7 Nov, #93; follow-up 114):** a long word under a size button steps down to 9 px (phone) / 11 px (computer), then takes two lines, never \"…\"",
+    "note": "size pills on one row that fill the width from S to 4XL (grid of N equal columns), tap selects and never adds, out in this colour crossed out, sold out in every colour crossed out and never hidden (SIM-F-035 acceptance test; `soldOutEverywhere` cross / hide), the chosen size's measurement line, \"please choose a size\" only after a buy button without a size; \"tell me when it is back\" on a crossed-out size or an off-sale product into the PR 36 back-in-stock list, off until PR 71 sends the alert (`pdp.size.notifyBack`); `pdp.size`. 23 Oct (follow-up 62, SIM-F-047): the owner's word under each size box (`pdp.sizeWords`, owner data, empty = off; Bengali pages or both) and \"Your size\" on the size this browser last put in the bag, tops and bottoms apart, with the colours that have it when sold out here (`pdp.usualSize`, off; 180 days; optional preselect); **follow-up (7 Nov, #93; follow-up 114):** a long word under a size button steps down to 9 px (phone) / 11 px (computer), then takes two lines, never \"…\"; **follow-up (7 Nov, #96; follow-up 112):** \"Your size\" also reads a signed-in buyer's own orders: the newest size per tops and bottoms joins the browser's kept size, the newer wins",
     "github": [
+     "#96, 7 Nov",
      "#93, 7 Nov",
      "#33, 23 Oct",
      "#27, 23 Oct"
@@ -7932,8 +7936,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "product reviews on the product page (`pdp.reviews`, registry v35, on: up to 3, photo reviews first, the summary box, the rating line under the title, the buyer's height · weight · \"bought L\" line, the verified-buyer tag, his photo, \"Questions?\"; one sliding row on the shared slider engine with its own tested mouse, touch and keyboard pause and resume) and the whole journey behind it (SIM-F-008 acceptance test: review submitted → in the shop → approved → on the page → wallet credited). Only a buyer writes one, from My account, about a line of his own **delivered** order (`reviews.submit`: `onlyDelivered` on, `withinDays` 90, `bodyMax` 1200, his fit, height, weight and one photo up to 8 MB); every review is saved **PENDING** and nothing of it is shown anywhere — not on the page, not in the average, not in the search-engine rating — until staff approve it through the admin API `/api/admin/reviews` (permissions `reviews.read`, `reviews.moderate`, `reviews.write`; approve · hide · reject · restore, the verified mark, the shop's own reviews, `reviews.moderation`: `oneReviewPerLine` on, `verifyFromOrder` on); the photo-review perk is a setting **off with no amount** (`reviews.photoReward`: `minRating` 4, `onePerOrder` on) and, once the owner switches it on with his own figure, it pays one CREDIT in the existing wallet ledger at approval only, keyed by the review so it can never pay twice (CLAUDE.md rule 6, CN-018); PR 59's size learning now reads the approved fit words (`approvedFitSignals`); customer photo uploads go through the library (`uploadCustomerImage`, folder `review-photos`); migration `0021_reviews` (additive); sample reviews in the sample seed and a delivered sample order (TRY-65) for the gate; no admin screen (the moderation queue is follow-up 230 on the new admin shell); **follow-ups (7 Nov, #94; follow-ups 238, 237):** \"Rate & review\" on delivered order cards in My account and on a delivered order's thank-you page while the shop takes reviews; the photo reward's figure beside it by the form's own rule (`showOnForm`)",
+    "note": "product reviews on the product page (`pdp.reviews`, registry v35, on: up to 3, photo reviews first, the summary box, the rating line under the title, the buyer's height · weight · \"bought L\" line, the verified-buyer tag, his photo, \"Questions?\"; one sliding row on the shared slider engine with its own tested mouse, touch and keyboard pause and resume) and the whole journey behind it (SIM-F-008 acceptance test: review submitted → in the shop → approved → on the page → wallet credited). Only a buyer writes one, from My account, about a line of his own **delivered** order (`reviews.submit`: `onlyDelivered` on, `withinDays` 90, `bodyMax` 1200, his fit, height, weight and one photo up to 8 MB); every review is saved **PENDING** and nothing of it is shown anywhere — not on the page, not in the average, not in the search-engine rating — until staff approve it through the admin API `/api/admin/reviews` (permissions `reviews.read`, `reviews.moderate`, `reviews.write`; approve · hide · reject · restore, the verified mark, the shop's own reviews, `reviews.moderation`: `oneReviewPerLine` on, `verifyFromOrder` on); the photo-review perk is a setting **off with no amount** (`reviews.photoReward`: `minRating` 4, `onePerOrder` on) and, once the owner switches it on with his own figure, it pays one CREDIT in the existing wallet ledger at approval only, keyed by the review so it can never pay twice (CLAUDE.md rule 6, CN-018); PR 59's size learning now reads the approved fit words (`approvedFitSignals`); customer photo uploads go through the library (`uploadCustomerImage`, folder `review-photos`); migration `0021_reviews` (additive); sample reviews in the sample seed and a delivered sample order (TRY-65) for the gate; no admin screen (the moderation queue is follow-up 230 on the new admin shell); **follow-ups (7 Nov, #94; follow-ups 238, 237):** \"Rate & review\" on delivered order cards in My account and on a delivered order's thank-you page while the shop takes reviews; the photo reward's figure beside it by the form's own rule (`showOnForm`); **follow-ups (7 Nov, #96; follow-ups 233, 232):** the shop's public reply under a review (written on Products › Reviews, shown on the product page behind its own switch, registry v281, off); Products › Reviews › Import older reviews — a CSV checked row by row, every imported review waits in To check",
     "github": [
+     "#96, 7 Nov",
      "#94, 7 Nov",
      "#35, 24 Oct"
     ]
@@ -8010,20 +8015,23 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "\"Questions & answers\" under the product page (`pdp.qa`, registry v31, on: the newest answered question open in its own box with \"Answered by the <shop> team · <date>\", the rest folded in native `<details>` — 3 shown, then \"See all questions · N more\", at most 12 — and \"Not answered here?\" with the WhatsApp button and the shop's hours): only `ProductQuestion` rows that are APPROVED, answered and not archived (no schema change, the S00 table already has its moderation state); no question ever made up; none answered = only the WhatsApp ask, no WhatsApp number = no block. Server-drawn, no script. Sample questions (each says \"Sample\") in the sample seed; the asking form and the staff's answer screen are follow-ups 183, 184",
+    "note": "\"Questions & answers\" under the product page (`pdp.qa`, registry v31, on: the newest answered question open in its own box with \"Answered by the <shop> team · <date>\", the rest folded in native `<details>` — 3 shown, then \"See all questions · N more\", at most 12 — and \"Not answered here?\" with the WhatsApp button and the shop's hours): only `ProductQuestion` rows that are APPROVED, answered and not archived (no schema change, the S00 table already has its moderation state); no question ever made up; none answered = only the WhatsApp ask, no WhatsApp number = no block. Server-drawn, no script. Sample questions (each says \"Sample\") in the sample seed; the asking form and the staff's answer screen are follow-ups 183, 184; **follow-ups (7 Nov, #96; follow-ups 184, 183):** Products › Reviews › Questions (answer, publish, hide, archive, bring back); \"Ask a question\" on the product page while `pdp.qaAsk.on` (registry v280, off; migration `0183_product_question_from_hash`) — a question shows only once answered and published",
     "github": [
+     "#96, 7 Nov",
      "#34, 23 Oct"
     ]
    },
    "builtFacts": {
     "routes": [],
     "settings": [
-     "pdp.qa"
+     "pdp.qa",
+     "pdp.qaAsk.on"
     ],
     "code": [],
     "names": [
      "<details>",
-     "ProductQuestion"
+     "ProductQuestion",
+     "0183_product_question_from_hash"
     ],
     "tests": []
    },
@@ -8293,6 +8301,7 @@
     "date": "2026-10-23",
     "note": "storefront search: the header icon and the phone menu's \"Search\" open the demo's window (phone) or the panel under the header (computer, D-014) with live suggestions — help pages, categories, products, \"See all N results\" (`GET /search/suggest`); one index across products, categories and help pages (follow-up 73: \"delivery\", \"exchange\", Bengali words; a \"Coming soon\" page is never offered); prefix, typo and synonym matching with Bengali keywords (`search.words`, sample lists); Meilisearch when its URL and key are set and its index is current, otherwise PostgreSQL (`@extas/search`); indexing by the worker's `search.index` job, one per catalogue version (idempotent); only live, sellable products; SIM-F-035 test (a size sold out in every colour is crossed out, never hidden); settings registry v24 (`registry-search.ts`); screenshots `docs/qa/screenshots/pr-72/`",
     "github": [
+     "#96, 7 Nov",
      "#94, 7 Nov",
      "#93, 7 Nov",
      "#79, 1 Nov",
@@ -8318,7 +8327,8 @@
     ],
     "names": [
      "isGeneral",
-     "aria-activedescendant"
+     "aria-activedescendant",
+     "0176_search_term"
     ],
     "tests": [
      "SIM-F-035 test (a size sold out in every colour is crossed out, never hidden)",
@@ -8353,7 +8363,7 @@
      "sortKey": 33120,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 1 Nov (go-live gate live run 3; #79):** a misspelt general word (\"shrit\", one slip from \"shirt\"; `search.match.oneTypoAt`) is dropped on the Meilisearch retry too, by `match.ts` `isGeneral`, the rule the PostgreSQL path already drops by, so \"pollo shrit\" finds the polo (the gate-c360 live run of 1 Nov 22:20 found nothing on all six screens); test `search.db.test.ts` (\"classic shrit\" on the fake Meilisearch and on PostgreSQL); **follow-up (7 Nov, #93; follow-up 106):** ↑ / ↓ move through the search suggestions (`aria-activedescendant`), Enter opens the highlighted one; **follow-up (7 Nov, #94; follow-up 104):** a test-server fill (`/api/shop/try-delivery`, 404 on the live shop) gives the sample shop a delivery rule, and the device gate measures search's delivery answer and /help/delivery with it in both languages"
+     "text": "**Updated 1 Nov (go-live gate live run 3; #79):** a misspelt general word (\"shrit\", one slip from \"shirt\"; `search.match.oneTypoAt`) is dropped on the Meilisearch retry too, by `match.ts` `isGeneral`, the rule the PostgreSQL path already drops by, so \"pollo shrit\" finds the polo (the gate-c360 live run of 1 Nov 22:20 found nothing on all six screens); test `search.db.test.ts` (\"classic shrit\" on the fake Meilisearch and on PostgreSQL); **follow-up (7 Nov, #93; follow-up 106):** ↑ / ↓ move through the search suggestions (`aria-activedescendant`), Enter opens the highlighted one; **follow-up (7 Nov, #94; follow-up 104):** a test-server fill (`/api/shop/try-delivery`, 404 on the live shop) gives the sample shop a delivery rule, and the device gate measures search's delivery answer and /help/delivery with it in both languages; **follow-ups (7 Nov, #96; follow-ups 100, 101):** Reports › Searches — what shoppers search for and the words that found nothing, counted per day while the owner keeps it on (registry v282, off; migration `0176_search_term`); popular search words from real searches fill the empty search box's chips behind their own switch (registry v283, off)"
     }
    ],
    "mentions": [
@@ -9844,6 +9854,7 @@
     "date": "2026-10-24",
     "note": "the four-layer cache (new `@extas/cache`; registry v53 `registry-cache.ts`; no migration): the browser keeps hashed files a year; Cloudflare files, and category and product pages only with `cache.pages.cdn` (off); the server page cache for category and product pages (`cache.pages` {server on, cdn off, 5 / 5 minutes}); Redis carries the clear to every process; stock shown kept `cache.stockDisplaySeconds` 15 s while the bag and the checkout read live stock; `cache.tuning` {1000 pages, repeat 2 s, stats 7 days}. A price or stock change clears that product, its categories and Cloudflare at once; a setting clears every page; a new product its categories (and the sitemap tag); bag, checkout, account, admin and API never cached (proxy headers, Caddy `cache_headers`, `/api/internal/*` 404 from outside). Cloudflare purge adapter on its mock until the owner's token passes (Keys & connections); admin Settings › System › Cache (`/admin/settings/system/cache`, permission `system.cache`): the layers, hit counts, the times, \"Clear all\" with a confirmation and a reason (audited); the deploy clears the new app's cache (CACHE_HOOK_TOKEN, best effort); guide `cache.md`",
     "github": [
+     "#96, 7 Nov",
      "#95, 7 Nov",
      "#72, 31 Oct",
      "#45, 24 Oct"
@@ -9893,7 +9904,7 @@
      "sortKey": 44640,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 31 Oct (review round 2):** a host behind the preview password never lets Cloudflare keep a page: the Caddyfile's `gated_cache` (the staging block and a locked extra host) sends `Cache-Control: private, no-store` and CDN no-store on every answer but Next's hashed files, whatever `cache.pages.cdn` says; an opened main domain keeps the app's own headers (#72)"
+     "text": "**Updated 31 Oct (review round 2):** a host behind the preview password never lets Cloudflare keep a page: the Caddyfile's `gated_cache` (the staging block and a locked extra host) sends `Cache-Control: private, no-store` and CDN no-store on every answer but Next's hashed files, whatever `cache.pages.cdn` says; an opened main domain keeps the app's own headers (#72); **follow-up (7 Nov, #96; follow-up 400):** the Server page's \"Cache today\" card — each layer's reuse, hits, misses and entries kept, Cloudflare's mode and the last clear (read only)"
     }
    ],
    "mentions": [
@@ -10078,8 +10089,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "combo page `/combo/<link>` and `/bn/combo/<link>` from demo V12.2 (`40-combo.js`), template C1 (one card per piece; `combos.page.layout` = C1, registry v30 `registry-combo-pages.ts`): crumbs (phone \"Sets\" to the sets below, computer \"Combos\"), title with the picked colours, the price box from `@extas/combos` only (set price, separately, the saving, each piece's regular price on a computer, \"applies automatically in the bag\" when auto-apply is on), the rules card (size exchange, delivery, Cash on Delivery, each only when its rule is on; the whole-set exchange line off until the owner says so), set summary, \"Add set to Bag\" / \"Order Now\" (`POST /api/bag/sets`, one tap one add), \"Ask about this set on WhatsApp\" only with the shop's number (`combos.page.parts`), the phone's bar; phone toast with \"View bag\" (pausing on touch, mouse and keyboard separately), computer opens the added panel; an ended combo keeps its page with \"Buy them separately\" and the sets on sale; view and colour-pick counts (`POST /api/shop/combo`); bag and offer-slot links now open `/combo/<link>`; noindex unless featured. Device gate 0 fails on the new pages, seeded Lighthouse TBT median 18–82 ms; **follow-up (7 Nov, #93; follow-up 176):** a combo whose link changes keeps its old link as a permanent forward (Redirect source `combo-slug`, same transaction, no chains)",
+    "note": "combo page `/combo/<link>` and `/bn/combo/<link>` from demo V12.2 (`40-combo.js`), template C1 (one card per piece; `combos.page.layout` = C1, registry v30 `registry-combo-pages.ts`): crumbs (phone \"Sets\" to the sets below, computer \"Combos\"), title with the picked colours, the price box from `@extas/combos` only (set price, separately, the saving, each piece's regular price on a computer, \"applies automatically in the bag\" when auto-apply is on), the rules card (size exchange, delivery, Cash on Delivery, each only when its rule is on; the whole-set exchange line off until the owner says so), set summary, \"Add set to Bag\" / \"Order Now\" (`POST /api/bag/sets`, one tap one add), \"Ask about this set on WhatsApp\" only with the shop's number (`combos.page.parts`), the phone's bar; phone toast with \"View bag\" (pausing on touch, mouse and keyboard separately), computer opens the added panel; an ended combo keeps its page with \"Buy them separately\" and the sets on sale; view and colour-pick counts (`POST /api/shop/combo`); bag and offer-slot links now open `/combo/<link>`; noindex unless featured. Device gate 0 fails on the new pages, seeded Lighthouse TBT median 18–82 ms; **follow-up (7 Nov, #93; follow-up 176):** a combo whose link changes keeps its old link as a permanent forward (Redirect source `combo-slug`, same transaction, no chains); **follow-up (7 Nov, #96; follow-up 172):** the set page's rules card reads the delivery bands and the payment methods the checkout offers now (display only)",
     "github": [
+     "#96, 7 Nov",
      "#93, 7 Nov",
      "#34, 23 Oct"
     ]
@@ -10609,8 +10621,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "the set builder page `/combos/build-your-own` (and `/<rule key>`, `/bn/…`) from demo V12.2 `41-set.js`: tier cards (on, next, dimmed), the set's slots with remove, a card per style (picture tap front → back → detail, colours, sizes, its own price, Add), the summary beside on a computer and the bar at the bottom of a phone, the status and next-tier nudge from the combos quote, the struck regular price only behind `rules.discount.showWasPrice` (CN-009); a tab per group; the \"taking a break\" page with the ready-made sets while off; \"Build your own\" row on `/combos` and the link under \"More sets\" (follow-up 174); the test server's preview `?try=1`",
+    "note": "the set builder page `/combos/build-your-own` (and `/<rule key>`, `/bn/…`) from demo V12.2 `41-set.js`: tier cards (on, next, dimmed), the set's slots with remove, a card per style (picture tap front → back → detail, colours, sizes, its own price, Add), the summary beside on a computer and the bar at the bottom of a phone, the status and next-tier nudge from the combos quote, the struck regular price only behind `rules.discount.showWasPrice` (CN-009); a tab per group; the \"taking a break\" page with the ready-made sets while off; \"Build your own\" row on `/combos` and the link under \"More sets\" (follow-up 174); the test server's preview `?try=1`; **follow-ups (7 Nov, #96; follow-ups 241, 242):** the set builder rings each style card's usual size and, with the owner's \"choose it for them\", picks it in advance; its other entries — a home page row, a category banner and a product page line, each its own switch (registry v284 `combos.builder.places`, off), only where the builder offers the product",
     "github": [
+     "#96, 7 Nov",
      "#36, 24 Oct"
     ]
    },
@@ -10622,7 +10635,8 @@
      "/combos"
     ],
     "settings": [
-     "rules.discount.showWasPrice"
+     "rules.discount.showWasPrice",
+     "combos.builder.places"
     ],
     "code": [
      "41-set.js"
@@ -10953,8 +10967,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "combo category page templates L1–L5 on each auto colour-pair rule's own page `/combos/<rule key>` (+ `/bn/…`), the rule's list template else `combos.template.list` (L1): L1 pair grid (offer strip, 2 / 3 piece switch, \"Has:\" colour chips, \"My size\", order, count, \"See all\", pick-your-own card, singles), L2 style cards, L3 hub on the rule's season, L4 big cards with \"Size for both\" and \"Add both to bag\" in the list, L5 2 or 3 pieces first; filters in the link (filtered pages noindex); an off, ended or future rule keeps its page with a note and the sets on sale; `rulePage` + pure `rule-page-model` in `@extas/combos`; settings registry v39 `combos.list` (seeAllOver 15, firstShown 8, bigListShown 6, builderCard on), `combos.template.preview` (on, `?tpl=` preview, noindex); follow-up 173 done",
+    "note": "combo category page templates L1–L5 on each auto colour-pair rule's own page `/combos/<rule key>` (+ `/bn/…`), the rule's list template else `combos.template.list` (L1): L1 pair grid (offer strip, 2 / 3 piece switch, \"Has:\" colour chips, \"My size\", order, count, \"See all\", pick-your-own card, singles), L2 style cards, L3 hub on the rule's season, L4 big cards with \"Size for both\" and \"Add both to bag\" in the list, L5 2 or 3 pieces first; filters in the link (filtered pages noindex); an off, ended or future rule keeps its page with a note and the sets on sale; `rulePage` + pure `rule-page-model` in `@extas/combos`; settings registry v39 `combos.list` (seeAllOver 15, firstShown 8, bigListShown 6, builderCard on), `combos.template.preview` (on, `?tpl=` preview, noindex); follow-up 173 done; **follow-up (7 Nov, #96; follow-up 357):** a combo rule's own page, when indexed, carries its trail and the list of its pairs as JSON-LD (BreadcrumbList, ItemList), each behind its `seo.structuredData` part",
     "github": [
+     "#96, 7 Nov",
      "#41, 24 Oct"
     ]
    },
@@ -10966,7 +10981,8 @@
     "settings": [
      "combos.template.list",
      "combos.list",
-     "combos.template.preview"
+     "combos.template.preview",
+     "seo.structuredData"
     ],
     "code": [
      "@extas/combos"
@@ -13039,8 +13055,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "the checkout fills itself (`checkout.autofill`): a signed-in customer's name, number and default address or his last order's (`account` on); the browser's own autofill read on the first touch (C6.4); this browser's memory of the last order only when the owner sets `browserDays` (0 = off)",
+    "note": "the checkout fills itself (`checkout.autofill`): a signed-in customer's name, number and default address or his last order's (`account` on); the browser's own autofill read on the first touch (C6.4); this browser's memory of the last order only when the owner sets `browserDays` (0 = off); **follow-up (7 Nov, #96; follow-up 148):** Settings › Policies › Privacy names what the checkout keeps now, with a suggested line for the owner's notice",
     "github": [
+     "#96, 7 Nov",
      "#34, 23 Oct"
     ]
    },
@@ -13081,8 +13098,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "the Parameter for Checkout panel, its own panel (Orders › Risk rules › Checkout advance, `/admin/orders/risk-rules/checkout`, a \"More\" tab of Orders; `risk.rules.read` / `risk.rules.write`): the one switch `checkout.advance` {enabled: off, maxLayers 5 (3/5/10)} (registry v53); layers as rows (what counts as a flag: a score at least, a band, a signal, any one; none never flags; what each asks: nothing, the delivery charge, a part 1–99 %, the full amount); tried in order, the first switched-on match wins; the whole panel saved at once with its version, a confirmation to switch on, one audit row; a layer left out is archived, never deleted; migration `0036_checkout_advance` (additive: PART_AMOUNT, PART_ADVANCE, `partPercent`, list index); `GET/PUT /api/admin/risk/checkout-layers`; guide `checkout-advance.md`",
+    "note": "the Parameter for Checkout panel, its own panel (Orders › Risk rules › Checkout advance, `/admin/orders/risk-rules/checkout`, a \"More\" tab of Orders; `risk.rules.read` / `risk.rules.write`): the one switch `checkout.advance` {enabled: off, maxLayers 5 (3/5/10)} (registry v53); layers as rows (what counts as a flag: a score at least, a band, a signal, any one; none never flags; what each asks: nothing, the delivery charge, a part 1–99 %, the full amount); tried in order, the first switched-on match wins; the whole panel saved at once with its version, a confirmation to switch on, one audit row; a layer left out is archived, never deleted; migration `0036_checkout_advance` (additive: PART_AMOUNT, PART_ADVANCE, `partPercent`, list index); `GET/PUT /api/admin/risk/checkout-layers`; guide `checkout-advance.md`; **follow-up (7 Nov, #96; follow-up 403):** the checkout advance page shows, per layer, how many were asked, paid and walked away, with the lost share (display only)",
     "github": [
+     "#96, 7 Nov",
      "#45, 24 Oct"
     ]
    },
@@ -13408,8 +13426,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "gift mode (`checkout.gift`, off; advance required, full / fixed / percent, note 200, date 30 days, hide prices ticked): \"Send as a gift\" under the bag's Checkout; `/checkout?gift=1` with the sender's name and any-country phone or e-mail, the gift note, \"deliver on or after\"; the receiver is the order's name, phone and address; full advance = no COD, part = flag GIFT_ADVANCE, `advanceRequiredMinor` and a call task (S07 hook); no receiver account; invoice hides prices; `deliveryTarget` for the sticker and booking (SIM-F-007 test); migration `0020_gift_mode`; **follow-ups (7 Nov, #94; follow-ups 210, 214 part):** \"Send as a gift\" on the product page (the chosen piece into the bag, the checkout opened as a gift, while `checkout.gift` is on); the gift on the admin order screen and its receipt fields in the ERP order document behind `erp.push.gift` (registry v264, off; never the sender's contact)",
+    "note": "gift mode (`checkout.gift`, off; advance required, full / fixed / percent, note 200, date 30 days, hide prices ticked): \"Send as a gift\" under the bag's Checkout; `/checkout?gift=1` with the sender's name and any-country phone or e-mail, the gift note, \"deliver on or after\"; the receiver is the order's name, phone and address; full advance = no COD, part = flag GIFT_ADVANCE, `advanceRequiredMinor` and a call task (S07 hook); no receiver account; invoice hides prices; `deliveryTarget` for the sticker and booking (SIM-F-007 test); migration `0020_gift_mode`; **follow-ups (7 Nov, #94; follow-ups 210, 214 part):** \"Send as a gift\" on the product page (the chosen piece into the bag, the checkout opened as a gift, while `checkout.gift` is on); the gift on the admin order screen and its receipt fields in the ERP order document behind `erp.push.gift` (registry v264, off; never the sender's contact); **follow-up (7 Nov, #96; follow-up 219):** a test server's gift trial reaches the checkout's own requests (the requote and the placement read gift mode for that browser), so staging places the gift order the page showed; the live shop is unchanged",
     "github": [
+     "#96, 7 Nov",
      "#94, 7 Nov",
      "#35, 24 Oct"
     ]
@@ -13429,7 +13448,8 @@
      "0020_gift_mode"
     ],
     "tests": [
-     "`deliveryTarget` for the sticker and booking (SIM-F-007 test)"
+     "`deliveryTarget` for the sticker and booking (SIM-F-007 test)",
+     "follow-up 219):** a test server's gift trial reaches the checkout's own requests (the requote and the placement read gift mode for that browser), so staging places the gift order the page showed"
     ]
    },
    "updates": [
@@ -13692,8 +13712,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "the admin order list on the new shell (`/admin/orders`, `orders.read`, demo V12.3 ORD-01): the order service's own views as chips with their counts (all, to confirm, awaiting advance, on hold, cancel requests, cancel pending courier, duplicate review, open, finished), search and the status / payment method / channel filters in the address, the four separate status chips (order, courier, payment, return or refund) with the courier column and the flags, Orders today for those with `metrics.read`, a table on a computer and one card per order on a phone, tick boxes for the bulk bar; `@extas/orders` gained the `toConfirm` view, the payment and channel filters, each row's courier / pieces / return-refund facts (`listExtras`) and a view's oldest order (`viewOldest`); **follow-up (7 Nov, #93; follow-up 224):** orders awaiting their advance are a \"Needs you now\" row and count in the Orders badge",
+    "note": "the admin order list on the new shell (`/admin/orders`, `orders.read`, demo V12.3 ORD-01): the order service's own views as chips with their counts (all, to confirm, awaiting advance, on hold, cancel requests, cancel pending courier, duplicate review, open, finished), search and the status / payment method / channel filters in the address, the four separate status chips (order, courier, payment, return or refund) with the courier column and the flags, Orders today for those with `metrics.read`, a table on a computer and one card per order on a phone, tick boxes for the bulk bar; `@extas/orders` gained the `toConfirm` view, the payment and channel filters, each row's courier / pieces / return-refund facts (`listExtras`) and a view's oldest order (`viewOldest`); **follow-up (7 Nov, #93; follow-up 224):** orders awaiting their advance are a \"Needs you now\" row and count in the Orders badge; **follow-up (7 Nov, #96; follow-up 223):** a cheap order row — the server draws the list's rows with no per-row handler, hook or prefetching link, one listener (OrderPicker) reads taps and ticks, off-screen phone cards skip layout",
     "github": [
+     "#96, 7 Nov",
      "#93, 7 Nov",
      "#35, 24 Oct"
     ]
@@ -14313,8 +14334,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "the whole order history in My account (`account.history`, registry v44, on: `filters`, `timeline`; no migration): every order of the customer, newest first, `account.lists.orders` (20) a page with Newer / Older (`?page=`), the groups All · On the way · Delivered · Cancelled & returned as chips with their counts once he has more than a page (`?show=`), and on `/account/orders/<n>` \"What happened\", folded shut: placed, confirmed, packed, with the courier, delivered, returned or cancelled with their stored times, and what he or the shop changed (which fields, a size from → to, a piece added or taken out, the two-size answer, a cancel asked or kept) — never a note, flag, hold, check, name or old value; `@extas/accounts` `orderHistory`, `orderLifecycle`, `lifecycleOf`; with follow-ups 260 and 261 (the edit and two-size cards, commits under PR 143 and 146); **follow-ups (7 Nov, #93; follow-ups 300–302):** \"What happened\" names the pieces in Bengali on the Bengali page; a test-server fill gives the sample customer two pages of orders so the device gate measures the pager; `account.history` is a card on Customers › Customer settings",
+    "note": "the whole order history in My account (`account.history`, registry v44, on: `filters`, `timeline`; no migration): every order of the customer, newest first, `account.lists.orders` (20) a page with Newer / Older (`?page=`), the groups All · On the way · Delivered · Cancelled & returned as chips with their counts once he has more than a page (`?show=`), and on `/account/orders/<n>` \"What happened\", folded shut: placed, confirmed, packed, with the courier, delivered, returned or cancelled with their stored times, and what he or the shop changed (which fields, a size from → to, a piece added or taken out, the two-size answer, a cancel asked or kept) — never a note, flag, hold, check, name or old value; `@extas/accounts` `orderHistory`, `orderLifecycle`, `lifecycleOf`; with follow-ups 260 and 261 (the edit and two-size cards, commits under PR 143 and 146); **follow-ups (7 Nov, #93; follow-ups 300–302):** \"What happened\" names the pieces in Bengali on the Bengali page; a test-server fill gives the sample customer two pages of orders so the device gate measures the pager; `account.history` is a card on Customers › Customer settings; **follow-up (7 Nov, #96; follow-up 303):** \"What happened\" adds the courier's own steps of his parcel (booked, out for delivery, a failed try, the return on its way) while the courier's news is on",
     "github": [
+     "#96, 7 Nov",
      "#93, 7 Nov",
      "#37, 24 Oct"
     ]
@@ -14422,8 +14444,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "bulk status change on the order list: Confirm, Hold (reason from the owner's list) and Release, each only with its key; the bar says how many orders each would run on and why the others are skipped (the order machine's own plan: a status, a cancel request, an open review …), the dialog repeats it with \"what will happen\", then each order runs through the order service in turn with its own Idempotency-Key and the version it was ticked at, and the dialog lists what was not done and why (a STALE order links back to itself)",
+    "note": "bulk status change on the order list: Confirm, Hold (reason from the owner's list) and Release, each only with its key; the bar says how many orders each would run on and why the others are skipped (the order machine's own plan: a status, a cancel request, an open review …), the dialog repeats it with \"what will happen\", then each order runs through the order service in turn with its own Idempotency-Key and the version it was ticked at, and the dialog lists what was not done and why (a STALE order links back to itself); **follow-up (7 Nov, #96; follow-up 222, part 1):** the bulk bar's files — Export (CSV) and Print invoices (one PDF) for the ticked orders, through their existing routes and keys; Tag and Book courier are left",
     "github": [
+     "#96, 7 Nov",
      "#35, 24 Oct"
     ]
    },
@@ -14563,8 +14586,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "one KPI definition (CN-022, owner 23 Oct): `@extas/metrics` — Sales = DELIVERED orders on the delivered day, Ordered value = every placed order (not DRAFT) on the placed day, archived in neither, shop days in `store.timeZone`; `kpi`, `kpiByDay`, `kpiByZone`, `kpiByPaymentMethod`, `lines`/`linesBoth`; the combo report (PR 104) and the rename before/after report (PR 590) moved onto it, \"Ordered value\" and \"Sales (delivered)\" side by side; guard test fails on any ad-hoc money sum or `mv_` read outside the package; smoke `figures` check on `/admin/combos?tab=report`; dashboard tiles and the order-analytics screen are follow-ups 90–91. 23 Oct (follow-ups 92, 93): migration `0012_kpi_report_views` — `mv_kpi_daily` and `mv_kpi_lines_monthly` count exactly like the package (both bases, shop days in `store.timeZone`), refreshed by `extas_refresh_kpi_views()` (the app role may run it), read only through `@extas/metrics` (`kpiByDayFromView`, `linesByMonthFromView`, live answer when the zone differs); the four PR 603 `mv_` views are kept and marked superseded; index `idx_order_sales_delivered` on Order (storeId, status, deliveredAt). 23 Oct (follow-up 90, PR 12 shell): the Dashboard's two money tiles, Delivered sales (provisional) and Ordered value (final), today / 7 / 30 days through `kpi` / `kpiByDay`, permission `metrics.read`, `admin.dashboard.ranges` / `sparkDays`, smoke `figures` on `/admin?home=1`",
+    "note": "one KPI definition (CN-022, owner 23 Oct): `@extas/metrics` — Sales = DELIVERED orders on the delivered day, Ordered value = every placed order (not DRAFT) on the placed day, archived in neither, shop days in `store.timeZone`; `kpi`, `kpiByDay`, `kpiByZone`, `kpiByPaymentMethod`, `lines`/`linesBoth`; the combo report (PR 104) and the rename before/after report (PR 590) moved onto it, \"Ordered value\" and \"Sales (delivered)\" side by side; guard test fails on any ad-hoc money sum or `mv_` read outside the package; smoke `figures` check on `/admin/combos?tab=report`; dashboard tiles and the order-analytics screen are follow-ups 90–91. 23 Oct (follow-ups 92, 93): migration `0012_kpi_report_views` — `mv_kpi_daily` and `mv_kpi_lines_monthly` count exactly like the package (both bases, shop days in `store.timeZone`), refreshed by `extas_refresh_kpi_views()` (the app role may run it), read only through `@extas/metrics` (`kpiByDayFromView`, `linesByMonthFromView`, live answer when the zone differs); the four PR 603 `mv_` views are kept and marked superseded; index `idx_order_sales_delivered` on Order (storeId, status, deliveredAt). 23 Oct (follow-up 90, PR 12 shell): the Dashboard's two money tiles, Delivered sales (provisional) and Ordered value (final), today / 7 / 30 days through `kpi` / `kpiByDay`, permission `metrics.read`, `admin.dashboard.ranges` / `sparkDays`, smoke `figures` on `/admin?home=1`; **follow-up (7 Nov, #96; follow-up 91):** Reports › Orders — Ordered value and Sales by day, by delivery zone and by payment method, on the one KPI definition",
     "github": [
+     "#96, 7 Nov",
      "#35, 24 Oct",
      "#31, 23 Oct",
      "#29, 23 Oct"
@@ -14769,8 +14793,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "orders to the ERP v6 (v6 stores only; v5 unchanged): one `lineId` per piece with quantity 1 (follow-up 491), `customerPrice` in whole taka (the order's discount spread by value, a combo's remainder on its last piece: 1600 over 3 → 533, 533, 534), `deliveryCharge`, `advancePaid` (online + wallet), `grade`; ErpOrder / ErpOrderLine rows kept with the order (line ids stable across revisions); the answer's `erpTotal`, each line's `shopPrice` and `fromReturnStock` stored. A 409 the ERP keeps against its key is HELD with its reason and goes again by itself with a new key round (migration `0053_erp_orders_v6`: `ErpPush.keyRound`, `heldReason`): `ACCOUNT_ON_HOLD` pauses checkout (`erp.hold.pauseCheckout`, on; `PAUSED`, the bag kept) until `account.released` or the account check; `INSUFFICIENT_STOCK` when the ERP has the stock; `NO_SHOP_PRICE` stops that SKU (`shopPriceMissingAt`) until the ERP takes it; an order cancelled before the ERP had it is never sent. `order.line.short` / `filled` handled; the order page's ERP card shows \"From ERP return stock\" and the admin decides a short line (WAIT, REPLACE, CANCEL; `orders.lines`, audited). Follow-up 490: the order check (`inventory.erp.checkOrders`, every `erp.account.checkMinutes`) reads the account and the ERP's own copy of open orders, so a lost line webhook or answer is caught up. Registry v66 (`erp.orders.*`). Store isolation tested. 31 Oct (CN-033, built, CN-031 lane A; not counted again): `erp.orders.bGradeOpen` (v72, off): while off a B-grade piece is not sold on a v6 store, no B-grade REPLACE is asked for, and a `422` naming `bGradeSkus` holds the order as `B_GRADE_CLOSED` with an admin message (woken once when the switch goes on); the practice ERP answers the same 422; the acceptance check sends a B-grade line only while open; **follow-ups (7 Nov, #93; follow-ups 532, 539 part b):** `shop-price.changed` lets the SKU sell again and sends the orders held for its price at once; orders the ERP keeps refusing raise one alert after the owner's hours (registry v239 `erp.orders.heldAlertAfterHours`, empty = off)",
+    "note": "orders to the ERP v6 (v6 stores only; v5 unchanged): one `lineId` per piece with quantity 1 (follow-up 491), `customerPrice` in whole taka (the order's discount spread by value, a combo's remainder on its last piece: 1600 over 3 → 533, 533, 534), `deliveryCharge`, `advancePaid` (online + wallet), `grade`; ErpOrder / ErpOrderLine rows kept with the order (line ids stable across revisions); the answer's `erpTotal`, each line's `shopPrice` and `fromReturnStock` stored. A 409 the ERP keeps against its key is HELD with its reason and goes again by itself with a new key round (migration `0053_erp_orders_v6`: `ErpPush.keyRound`, `heldReason`): `ACCOUNT_ON_HOLD` pauses checkout (`erp.hold.pauseCheckout`, on; `PAUSED`, the bag kept) until `account.released` or the account check; `INSUFFICIENT_STOCK` when the ERP has the stock; `NO_SHOP_PRICE` stops that SKU (`shopPriceMissingAt`) until the ERP takes it; an order cancelled before the ERP had it is never sent. `order.line.short` / `filled` handled; the order page's ERP card shows \"From ERP return stock\" and the admin decides a short line (WAIT, REPLACE, CANCEL; `orders.lines`, audited). Follow-up 490: the order check (`inventory.erp.checkOrders`, every `erp.account.checkMinutes`) reads the account and the ERP's own copy of open orders, so a lost line webhook or answer is caught up. Registry v66 (`erp.orders.*`). Store isolation tested. 31 Oct (CN-033, built, CN-031 lane A; not counted again): `erp.orders.bGradeOpen` (v72, off): while off a B-grade piece is not sold on a v6 store, no B-grade REPLACE is asked for, and a `422` naming `bGradeSkus` holds the order as `B_GRADE_CLOSED` with an admin message (woken once when the switch goes on); the practice ERP answers the same 422; the acceptance check sends a B-grade line only while open; **follow-ups (7 Nov, #93; follow-ups 532, 539 part b):** `shop-price.changed` lets the SKU sell again and sends the orders held for its price at once; orders the ERP keeps refusing raise one alert after the owner's hours (registry v239 `erp.orders.heldAlertAfterHours`, empty = off); **follow-up (7 Nov, #96; follow-up 534):** ErpOrder.orderId → Order and ErpOrderLine.orderItemId → OrderItem are foreign keys (migration `0177_erp_order_foreign_keys`, added NOT VALID, validated when every old row names a real order or line)",
     "github": [
+     "#96, 7 Nov",
      "#93, 7 Nov",
      "#69, 31 Oct",
      "#61, 31 Oct",
@@ -14814,7 +14839,8 @@
      "422",
      "bGradeSkus",
      "B_GRADE_CLOSED",
-     "shop-price.changed"
+     "shop-price.changed",
+     "0177_erp_order_foreign_keys"
     ],
     "tests": [
      "Store isolation tested"
@@ -14992,8 +15018,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "IP, device and GPS (registry v46): `risk.capture` (IP on, the shop's own random device id on — HttpOnly cookie `__Host-extas_dev`, the location button on, 3 decimals, 20 s wait, kept 180 days, purge every 60 min); the checkout keeps them with `piiExpiresAt`; \"Share my location for the rider\" under the address (asks only after the tap, 44 px, never on a gift); signals `deviceMatch` (+20, 90 days) and `ipPhones` (+15, 3 numbers in 24 h), both off; worker job `orders.pii.purge` (queue `privacy`) clears the four fields after the days, nothing else; no migration",
+    "note": "IP, device and GPS (registry v46): `risk.capture` (IP on, the shop's own random device id on — HttpOnly cookie `__Host-extas_dev`, the location button on, 3 decimals, 20 s wait, kept 180 days, purge every 60 min); the checkout keeps them with `piiExpiresAt`; \"Share my location for the rider\" under the address (asks only after the tap, 44 px, never on a gift); signals `deviceMatch` (+20, 90 days) and `ipPhones` (+15, 3 numbers in 24 h), both off; worker job `orders.pii.purge` (queue `privacy`) clears the four fields after the days, nothing else; no migration; **follow-up (7 Nov, #96; follow-up 324):** the location a customer shared for the rider — a map link on the order page and the point on the courier sticker, while the order keeps it (registry v268 `orders.sharedLocation`, both off)",
     "github": [
+     "#96, 7 Nov",
      "#40, 24 Oct"
     ]
    },
@@ -15001,7 +15028,8 @@
     "routes": [],
     "settings": [
      "risk.capture",
-     "orders.pii.purge"
+     "orders.pii.purge",
+     "orders.sharedLocation"
     ],
     "code": [],
     "names": [
@@ -15307,8 +15335,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "zone, charge and area admin on the new shell (`/admin/delivery/zones`, demo V12.3): the three band cards with the COD limit per band (`codLimitMinor`, empty = none), the sub-area band's own switch (its `enabled`, off: its list entries are ignored and those places go by the map, never offered at checkout; folded modes need no own charge); Areas: open a place, rename (the old name kept as a spelling), alternate spellings (40 at most), move between bands or back to the map, add an owner-made place under a parent, merge a duplicate of the same level (the source archived, never deleted; names become spellings, children and saved addresses move, past orders unchanged; refusals DUPLICATE_PLACE, LEVEL_MISMATCH, BAND_CONFLICT); the importer keeps owner names and spellings and never revives a merged place; `POST /api/admin/delivery/places`, `GET/PATCH /api/admin/delivery/places/:id`, `POST …/places/:id/merge` (`delivery.areas`); guide `pages/delivery/zones.md`; owner charges stay empty; no setting, no migration; **follow-up (7 Nov, #94; follow-up 416):** the owner's names and merges of a place are columns on GeoArea (migration `0165_geo_owner_columns`, additive, filled from his audit rows), set with each change and read by the import",
+    "note": "zone, charge and area admin on the new shell (`/admin/delivery/zones`, demo V12.3): the three band cards with the COD limit per band (`codLimitMinor`, empty = none), the sub-area band's own switch (its `enabled`, off: its list entries are ignored and those places go by the map, never offered at checkout; folded modes need no own charge); Areas: open a place, rename (the old name kept as a spelling), alternate spellings (40 at most), move between bands or back to the map, add an owner-made place under a parent, merge a duplicate of the same level (the source archived, never deleted; names become spellings, children and saved addresses move, past orders unchanged; refusals DUPLICATE_PLACE, LEVEL_MISMATCH, BAND_CONFLICT); the importer keeps owner names and spellings and never revives a merged place; `POST /api/admin/delivery/places`, `GET/PATCH /api/admin/delivery/places/:id`, `POST …/places/:id/merge` (`delivery.areas`); guide `pages/delivery/zones.md`; owner charges stay empty; no setting, no migration; **follow-up (7 Nov, #94; follow-up 416):** the owner's names and merges of a place are columns on GeoArea (migration `0165_geo_owner_columns`, additive, filled from his audit rows), set with each change and read by the import; **follow-ups (7 Nov, #96; follow-ups 417, 415):** a merge of two places keeps a record of what it moved and can be undone from the place's history, audited (migration `0166_geo_merge_records`); a merged place lends its courier zone pair to the place it went into until the merge is undone",
     "github": [
+     "#96, 7 Nov",
      "#94, 7 Nov",
      "#46, 24 Oct"
     ]
@@ -15329,7 +15358,8 @@
     "names": [
      "codLimitMinor",
      "enabled",
-     "0165_geo_owner_columns"
+     "0165_geo_owner_columns",
+     "0166_geo_merge_records"
     ],
     "tests": []
    },
@@ -17207,20 +17237,23 @@
     "date": "2026-10-24",
     "note": "Steadfast behind the adapter (keys `steadfast.apiKey`, `steadfast.secretKey`; practice until the Test passes): booking always a staff action through `bookWith` and the `readyToBook` view — never a cancelled, held, unconfirmed or in-review order (SIM-F-002, SIM-F-014, follow-up 322); the parcel to `deliveryTarget()` with the gift line, held until its booking day (SIM-F-007, follow-up 212's booking part); COD = the live amount due, every edit refused after booking (SIM-F-004); the pieces' weight, unknown never guessed (SIM-F-029); a refusal = BOOKING_FAILED (ready again), a lost answer recovered by reference before booking again; consignment id and tracking code; status polling (`courier.track` job, queue `courier`) with Steadfast's exceptions (SIM-F-017); settings `delivery.courier.booking`, `delivery.courier.tracking` (v50); `/api/admin/delivery/bookings`, `parcels/:id/retry`, `parcels/:id/track`",
     "github": [
+     "#96, 7 Nov",
      "#73, 1 Nov",
      "#42, 24 Oct"
     ]
    },
    "builtFacts": {
     "routes": [
-     "/api/admin/delivery/bookings"
+     "/api/admin/delivery/bookings",
+     "/api/courier/<courier>/webhook"
     ],
     "settings": [
      "steadfast.apiKey",
      "steadfast.secretKey",
      "courier.track",
      "delivery.courier.booking",
-     "delivery.courier.tracking"
+     "delivery.courier.tracking",
+     "delivery.courier.webhooks"
     ],
     "code": [
      "parcels/:id/retry",
@@ -17230,7 +17263,8 @@
      "bookWith",
      "readyToBook",
      "deliveryTarget()",
-     "courier"
+     "courier",
+     "0167_practice_parcels"
     ],
     "tests": [
      "practice until the Test passes): booking always a staff action through `bookWith` and the `readyToBook` view — never a cancelled, held, unconfirmed or in-review order (SIM-F-002, SIM-F-014, follow-up 322)"
@@ -17249,7 +17283,7 @@
      "sortKey": 34560,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 1 Nov (go-live gate SIM-F-004; #73):** a parcel whose amount went stale after booking shows a red line and \"Re-book with the courier\" (the old consignment is cancelled at the courier by hand, its reference recorded)"
+     "text": "**Updated 1 Nov (go-live gate SIM-F-004; #73):** a parcel whose amount went stale after booking shows a red line and \"Re-book with the courier\" (the old consignment is cancelled at the courier by hand, its reference recorded); **follow-ups (7 Nov, #96; follow-ups 375, 372):** the practice courier's parcels live in the database, so the web app and the worker play the same life on staging (migration `0167_practice_parcels`); Steadfast's and Pathao's own status calls (POST `/api/courier/<courier>/webhook`, the token or secret typed into Keys & connections, every refusal one 401) go into the same applyEvents as a read, kept once, and the hourly read becomes the fallback (`delivery.courier.webhooks`, registry v269, off = 404; the preview gate lets exactly these two POSTs through, gate v7)"
     }
    ],
    "mentions": [],
@@ -17281,8 +17315,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "Pathao, the second courier behind the same adapter (keys `pathao.clientId/clientSecret/username/password`, config `storeId`; Sandbox → Pathao's sandbox, Live → Pathao; practice until the Test passes): token auth, zone ids from the area mapping, weight in kg, Pathao's own fee as the courier's charge, change-only status, its exceptions (Delivery_Failed, On_Hold = a failed try; SIM-F-017); capability `weightRequired`: a parcel without a weight is never sent to it (`NO_WEIGHT`, SIM-F-029); no lookup by reference, so a lost answer is never booked again by guess",
+    "note": "Pathao, the second courier behind the same adapter (keys `pathao.clientId/clientSecret/username/password`, config `storeId`; Sandbox → Pathao's sandbox, Live → Pathao; practice until the Test passes): token auth, zone ids from the area mapping, weight in kg, Pathao's own fee as the courier's charge, change-only status, its exceptions (Delivery_Failed, On_Hold = a failed try; SIM-F-017); capability `weightRequired`: a parcel without a weight is never sent to it (`NO_WEIGHT`, SIM-F-029); no lookup by reference, so a lost answer is never booked again by guess; **follow-up (7 Nov, #96; follow-up 373):** a booking whose answer was lost on Pathao is closed from the panel (\"the courier has it\" or \"not booked: book again\"), audited",
     "github": [
+     "#96, 7 Nov",
      "#42, 24 Oct"
     ]
    },
@@ -17399,6 +17434,7 @@
     "date": "2026-10-24",
     "note": "the courier sticker (new package `@extas/documents`: a PDF writer with each page one greyscale picture at the printer's dpi so Bengali prints right, Code 128, Pango-shaped layout, 4-up A4): the consignment id as a barcode with the tracking code, the receiver (a gift's receiver, sender and day; SIM-F-007), the live amount to collect or \"collect nothing\", the exact-amount line (CN-014 idea 10, off), every piece in a box (no prices), REPRINT n, too many pieces → smaller type then 2/2; refused as a whole when a parcel is not booked, picked up, its COD is not the live due or its receiver changed (SIM-F-004); `delivery.sticker.layout` (100x150 mm, 203 dpi, en), `delivery.sticker.exactAmount` (off); permission `fulfilment.print`; Orders → Packing & print → Print run; follow-up 376 (ids)",
     "github": [
+     "#96, 7 Nov",
      "#73, 1 Nov",
      "#48, 25 Oct"
     ]
@@ -17444,7 +17480,7 @@
      "sortKey": 34560,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 1 Nov (go-live gate SIM-F-048; #73):** the sticker prints a Bengali address again in Latin letters with its English area and district (`delivery.sticker.latin`, off)"
+     "text": "**Updated 1 Nov (go-live gate SIM-F-048; #73):** the sticker prints a Bengali address again in Latin letters with its English area and district (`delivery.sticker.latin`, off); **follow-up (7 Nov, #96; follow-up 435):** the orders list's Documents column (sticker, invoice, picking list, handover sheet; B1.3) and a line under the table counting them"
     }
    ],
    "mentions": [],
@@ -17476,8 +17512,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "the print queue and the handover sheet: every press one PrintJob (the parcels, who, when), a repeat press with the same key one print (replay), a reprint the same parcel with its reason (`delivery.sticker.queue`: reason asked on, 20 recent prints), \"Recent prints\" on the print page; the rider's handover sheet per courier (one open batch under a row lock, A4 PDF on the letterhead, ticks, COD total, signatures; `delivery.handover.sheet`: A4, 150 dpi, en, receiver name and signatures on, pack on handover on) and \"Handed over\" (every order HANDED_OVER through the order service, audited; `ALREADY_HANDED_OVER` second time); permission `fulfilment.handover`, the packing pages on `fulfilment.read`; Orders → Packing & print → Handover; **follow-up (7 Nov, #94; follow-up 465):** \"A reason is needed\" says what to do on the screen it shows on (a reprint's reason, a refusal reason)",
+    "note": "the print queue and the handover sheet: every press one PrintJob (the parcels, who, when), a repeat press with the same key one print (replay), a reprint the same parcel with its reason (`delivery.sticker.queue`: reason asked on, 20 recent prints), \"Recent prints\" on the print page; the rider's handover sheet per courier (one open batch under a row lock, A4 PDF on the letterhead, ticks, COD total, signatures; `delivery.handover.sheet`: A4, 150 dpi, en, receiver name and signatures on, pack on handover on) and \"Handed over\" (every order HANDED_OVER through the order service, audited; `ALREADY_HANDED_OVER` second time); permission `fulfilment.handover`, the packing pages on `fulfilment.read`; Orders → Packing & print → Handover; **follow-up (7 Nov, #94; follow-up 465):** \"A reason is needed\" says what to do on the screen it shows on (a reprint's reason, a refusal reason); **follow-ups (7 Nov, #96; follow-ups 436, 437):** a \"Needs you now\" line for printed parcels waiting for the rider's handover; each handed-over sheet checked against the courier's own pick-up on the handover history (registry v275, off)",
     "github": [
+     "#96, 7 Nov",
      "#94, 7 Nov",
      "#48, 25 Oct"
     ]
@@ -17526,8 +17563,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "the daily consolidated picking list (B1.6/B1.7): every order still with us and not with the courier however many days (approved not booked, or booked \"In Review\"), a date range only narrows; held and problem orders (on hold, a cancel asked, in review, COD or receiver changed after booking) listed apart and never counted; category → style → colour → size, most pieces first, a tick box per size, SHORT n against the shop's stock; the summary line (orders and pieces apart, line items, categories, shortages, held); printing keeps the PickingList with one print job; `delivery.picking.list` (A4, 150 dpi, en, mark shortages on); Orders → Packing & print → Picking list",
+    "note": "the daily consolidated picking list (B1.6/B1.7): every order still with us and not with the courier however many days (approved not booked, or booked \"In Review\"), a date range only narrows; held and problem orders (on hold, a cancel asked, in review, COD or receiver changed after booking) listed apart and never counted; category → style → colour → size, most pieces first, a tick box per size, SHORT n against the shop's stock; the summary line (orders and pieces apart, line items, categories, shortages, held); printing keeps the PickingList with one print job; `delivery.picking.list` (A4, 150 dpi, en, mark shortages on); Orders → Packing & print → Picking list; **follow-up (7 Nov, #96; follow-up 439):** the print run filters by courier and category, ticks parcels, prints the ticked ones and the picking list for these orders",
     "github": [
+     "#96, 7 Nov",
      "#48, 25 Oct"
     ]
    },
@@ -17650,8 +17688,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-29",
-    "note": "a defect or missing piece at packing (answers 41, 42; SIM-F-006): \"Report defect / out of stock\" on a line opens a packing card (DAMAGED / NOT_FOUND; the stock sync's SHORTAGE card shows the same way), and with `fulfilment.packing.issues` (v59: hold on, reasons defective-item / waiting-stock, 48 hours to decide, edit reason customer-asked) the order is held with it, from confirmed or from picking (the order machine now holds from PROCESSING and releases back to it); any open card stops packing and booking; a person decides each card through the order service — found / fine (a shortage card needs `inventory.audit`), another size or colour at the same price (`orders.edit`), send the rest (`orders.edit`; a paid order gets a REQUESTED refund, PR 172's flow), cancel as out of stock (`orders.cancel`) — and \"Call the customer\" leaves one PACKING_ISSUE call task; never cancelled or refunded by itself, a card past the hours only marked late; the last decided card releases the hold; a booked parcel is not edited (BOOKED); `POST /api/admin/packing/orders/{id}/issue`, `…/issues/{issueId}/resolve`, `…/call` (`fulfilment.pack`)",
+    "note": "a defect or missing piece at packing (answers 41, 42; SIM-F-006): \"Report defect / out of stock\" on a line opens a packing card (DAMAGED / NOT_FOUND; the stock sync's SHORTAGE card shows the same way), and with `fulfilment.packing.issues` (v59: hold on, reasons defective-item / waiting-stock, 48 hours to decide, edit reason customer-asked) the order is held with it, from confirmed or from picking (the order machine now holds from PROCESSING and releases back to it); any open card stops packing and booking; a person decides each card through the order service — found / fine (a shortage card needs `inventory.audit`), another size or colour at the same price (`orders.edit`), send the rest (`orders.edit`; a paid order gets a REQUESTED refund, PR 172's flow), cancel as out of stock (`orders.cancel`) — and \"Call the customer\" leaves one PACKING_ISSUE call task; never cancelled or refunded by itself, a card past the hours only marked late; the last decided card releases the hold; a booked parcel is not edited (BOOKED); `POST /api/admin/packing/orders/{id}/issue`, `…/issues/{issueId}/resolve`, `…/call` (`fulfilment.pack`); **follow-ups (7 Nov, #96; follow-ups 469 order page, 468 Needs you now):** an open packing card shows on the order page with its pieces and the way to the packing screen; open packing cards and late ones are \"Needs you now\" lines on the Dashboard and in the To do drawer",
     "github": [
+     "#96, 7 Nov",
      "#51, 30 Oct"
     ]
    },
@@ -17712,8 +17751,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "tracking status sync (no migration; registry v58 `registry-courier-sync.ts`): every courier read moves the order through the one order service — picked up → in transit (the new `courierPickedUp` step, also from confirmed / packed), delivered, partly delivered once the kept pieces are named, returned; never while on hold or a cancel waits (caught up on the next run); the courier's \"out for delivery\" once per trip on the timeline (follow-ups 371, 283); the parcel list's `view=late` (SIM-F-018); the order page's courier card (now, problem with its reason, picked, delivered, returned, last read); the customer's order page news line (out for delivery, try failed, address, checking) behind `account.track.courier` (off; problems shown when on), en/bn, phone and desktop",
+    "note": "tracking status sync (no migration; registry v58 `registry-courier-sync.ts`): every courier read moves the order through the one order service — picked up → in transit (the new `courierPickedUp` step, also from confirmed / packed), delivered, partly delivered once the kept pieces are named, returned; never while on hold or a cancel waits (caught up on the next run); the courier's \"out for delivery\" once per trip on the timeline (follow-ups 371, 283); the parcel list's `view=late` (SIM-F-018); the order page's courier card (now, problem with its reason, picked, delivered, returned, last read); the customer's order page news line (out for delivery, try failed, address, checking) behind `account.track.courier` (off; problems shown when on), en/bn, phone and desktop; **follow-up (7 Nov, #96; follow-up 450):** \"Back at the shop\" on a returning parcel's order page records the return (Steadfast never says returned) and the order follows, audited; nothing moves money",
     "github": [
+     "#96, 7 Nov",
      "#49, 25 Oct"
     ]
    },
@@ -18893,8 +18933,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "exchange through the ERP (CN-028; extends PR 185–190): on `erp.model` v6 the approval goes through the ERP — only within `policy.exchange.windowHours` of the courier's \"delivered\"; the replaced lines of the old order marked; a live ERP stock check first, regular orders first (`exchange.erp.keepForOrders`): short stock leaves the exchange waiting with the admin told, retried hourly with a new idempotency key; `POST /orders` with `exchange.ofExternalOrderId`, a clear note and per-line `replacesLineId`, the new order `<old>-X<n>`; a dearer piece paid by the customer when `exchange.passPriceRiseToCustomer` is on, no money ever goes back; the original sale stands. The hourly job reads `GET /exchanges` (the 4-day watch; settled, billed, credited or cancelled close the shop exchange); the Exchanges tab shows the exchanges at risk from `GET /exchanges?status=pending`; a late old piece marked once by `POST /exchanges/{id}/late-return`. v5 unchanged. 31 Oct (CN-033, built, CN-031 lane A; not counted again): a refused exchange parcel puts the new piece on `WAITING_RETURN` (no delivery day): billed `DEADLINE_PASSED` the night after, `NEW_PIECE_DECLINED` when declined, credited `LATE_RETURN` when back late and approved; the practice ERP's old \"cancelled, no bill\" behind its switch `refusedExchange=cancel`; the risk list and the Exchanges tab say \"New piece not back (parcel refused)\"; acceptance check `exchanges.refused` (PR 621) changed in the same commit; **follow-up (7 Nov, #93; follow-up 541):** an exchange's replacing piece goes to the ERP with its own grade (a B-grade SKU as B)",
+    "note": "exchange through the ERP (CN-028; extends PR 185–190): on `erp.model` v6 the approval goes through the ERP — only within `policy.exchange.windowHours` of the courier's \"delivered\"; the replaced lines of the old order marked; a live ERP stock check first, regular orders first (`exchange.erp.keepForOrders`): short stock leaves the exchange waiting with the admin told, retried hourly with a new idempotency key; `POST /orders` with `exchange.ofExternalOrderId`, a clear note and per-line `replacesLineId`, the new order `<old>-X<n>`; a dearer piece paid by the customer when `exchange.passPriceRiseToCustomer` is on, no money ever goes back; the original sale stands. The hourly job reads `GET /exchanges` (the 4-day watch; settled, billed, credited or cancelled close the shop exchange); the Exchanges tab shows the exchanges at risk from `GET /exchanges?status=pending`; a late old piece marked once by `POST /exchanges/{id}/late-return`. v5 unchanged. 31 Oct (CN-033, built, CN-031 lane A; not counted again): a refused exchange parcel puts the new piece on `WAITING_RETURN` (no delivery day): billed `DEADLINE_PASSED` the night after, `NEW_PIECE_DECLINED` when declined, credited `LATE_RETURN` when back late and approved; the practice ERP's old \"cancelled, no bill\" behind its switch `refusedExchange=cancel`; the risk list and the Exchanges tab say \"New piece not back (parcel refused)\"; acceptance check `exchanges.refused` (PR 621) changed in the same commit; **follow-up (7 Nov, #93; follow-up 541):** an exchange's replacing piece goes to the ERP with its own grade (a B-grade SKU as B); **follow-up (7 Nov, #96; follow-up 546):** an approved exchange that could not reach the ERP is sent again by the returns turn (`exchange.erp.retryUnreachable`, registry v272, off); Orders › Returns › ERP returns gets the \"Exchange settings\" card (settings.write, audited)",
     "github": [
+     "#96, 7 Nov",
      "#93, 7 Nov",
      "#69, 31 Oct",
      "#61, 31 Oct",
@@ -18909,7 +18950,8 @@
      "exchange.erp.keepForOrders",
      "exchange.ofExternalOrderId",
      "exchange.passPriceRiseToCustomer",
-     "exchanges.refused"
+     "exchanges.refused",
+     "exchange.erp.retryUnreachable"
     ],
     "code": [
      "POST /orders",
@@ -23185,6 +23227,7 @@
     "date": "2026-10-31",
     "note": "server-side event tracking (CN-031 lane B; C6.2, §13 R9; migration `0067_tracked_events`; settings v85 `registry-tracking.ts` `ads.tracking`, off as shipped; permissions `ads.tracking.read`, `ads.tracking.manage`): a product page seen and the checkout opened (same-site beacon `/api/shop/track`, the proxy's report bucket), an item put in the bag and an order placed (event id `purchase-<number>`, never twice on a replay); prices, value, category, colour and size read on the server, never from the browser; every hook quiet. `TrackedEvent`: one row per event id per store with the delivery state per platform. Only hashes leave (the visitor/customer id; the order's phone and e-mail only while matching is on, a gift's receiver never); no name, address or IP. Meta Conversions API, GA4 Measurement Protocol and TikTok Events API adapters as Keys & connections rows, on the mock until a key passes its Test; failed sends tried again up to the owner's number. Marketing › Tracking (`/admin/marketing/tracking`): connections, 7/30-day counts, sent per event × platform, \"Send waiting now\", \"Send test event\", the newest events, the settings card; audited. Guide `pages/marketing/tracking.md`",
     "github": [
+     "#96, 7 Nov",
      "#94, 7 Nov",
      "#75, 1 Nov",
      "#70, 31 Oct"
@@ -23228,7 +23271,7 @@
      "sortKey": 44640,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** UTM tags and fbclid / gclid / ttclid kept in the first-party cookie `__Host-extas_src` and written on the order (`utmSource`, `utmMedium`, `utmCampaign`, `adPlatform`); a click's fbc when the pixel left none; setting `ads.attribution` (v230, on as shipped): days a visit counts, latest or first visit; card on Marketing › Tracking, audited `ads.tracking.attribution`.; **follow-ups (7 Nov, #94; follow-ups 602, 605):** the worker sweeps tracked events still waiting once an hour (`tracking.sweep`, only while tracking is on) and a real event never goes to a platform unticked since it was recorded; the purchase event goes at placement only for cash on delivery with nothing to pay first, else from the gateway callback that makes the order PAID, once"
+     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** UTM tags and fbclid / gclid / ttclid kept in the first-party cookie `__Host-extas_src` and written on the order (`utmSource`, `utmMedium`, `utmCampaign`, `adPlatform`); a click's fbc when the pixel left none; setting `ads.attribution` (v230, on as shipped): days a visit counts, latest or first visit; card on Marketing › Tracking, audited `ads.tracking.attribution`.; **follow-ups (7 Nov, #94; follow-ups 602, 605):** the worker sweeps tracked events still waiting once an hour (`tracking.sweep`, only while tracking is on) and a real event never goes to a platform unticked since it was recorded; the purchase event goes at placement only for cash on delivery with nothing to pay first, else from the gateway callback that makes the order PAID, once; **follow-up (7 Nov, #96; follow-up 723):** a payment made PAID without the gateway's return (recorded by a person, or found by the open-payment sweep) also sends the order's purchase event, once under the callback's own event id; nothing moves money"
     }
    ],
    "mentions": [],
@@ -24327,19 +24370,22 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "seasonal homepage switching, scheduled (After launch, batch 10; `marketing.seasonalHome` v215, off; migration `0160_seasonal_home`): Marketing › Seasonal home (`/admin/marketing/seasonal`) — the home page saved as a named look (LayoutSnapshot scope `home`), its sections, hero lines and hero collection changed, scheduled for a window on the shop's clock (no overlaps); inside the window the home page draws with the look (each value re-checked), after it or \"Stop\" the owner's own home settings, never written; stopped windows kept, looks set aside, never deleted; **follow-ups (6 Nov, #92; follow-ups 650–652):** a note in the admin's bell when a seasonal home window starts and when it ends or is stopped (registry v249 `marketing.seasonalHome.notes`, off, 7 days); adding a window and setting a look aside run in one transaction under a per-store lock (no overlap from two saves at once); Launch default never lists, restores or renames a home look (pinned by a db test)",
+    "note": "seasonal homepage switching, scheduled (After launch, batch 10; `marketing.seasonalHome` v215, off; migration `0160_seasonal_home`): Marketing › Seasonal home (`/admin/marketing/seasonal`) — the home page saved as a named look (LayoutSnapshot scope `home`), its sections, hero lines and hero collection changed, scheduled for a window on the shop's clock (no overlaps); inside the window the home page draws with the look (each value re-checked), after it or \"Stop\" the owner's own home settings, never written; stopped windows kept, looks set aside, never deleted; **follow-ups (6 Nov, #92; follow-ups 650–652):** a note in the admin's bell when a seasonal home window starts and when it ends or is stopped (registry v249 `marketing.seasonalHome.notes`, off, 7 days); adding a window and setting a look aside run in one transaction under a per-store lock (no overlap from two saves at once); Launch default never lists, restores or renames a home look (pinned by a db test); **follow-ups (7 Nov, #96; follow-ups 648, 649):** a saved seasonal look can be previewed on the home page before its window (`/?seasonal-look=<look>`, signed-in staff with `marketing.campaigns.read` only; a customer gets the usual page); a look brings only what its editor changes, the rest stays the owner's own settings",
     "github": [
+     "#96, 7 Nov",
      "#92, 6 Nov",
      "#84, 6 Nov"
     ]
    },
    "builtFacts": {
     "routes": [
-     "/admin/marketing/seasonal"
+     "/admin/marketing/seasonal",
+     "/?seasonal-look=<look>"
     ],
     "settings": [
      "marketing.seasonalHome",
-     "marketing.seasonalHome.notes"
+     "marketing.seasonalHome.notes",
+     "marketing.campaigns.read"
     ],
     "code": [],
     "names": [
@@ -24760,8 +24806,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-29",
-    "note": "the customer model, the merge rules and the single view by phone (new package `@extas/customers`; migration `0047_customer_merge` additive: `Customer.mergedIntoId` / `mergedAt` with an index, `CustomerMerge` with `MERGED` / `NOT_SAME`, the rules that matched, the note, who, the Idempotency-Key and the undo; registry v60 `registry-customers.ts`): a merge only points the joining profile at the one that stays (one level, nothing moves, nothing is deleted), refused when either is erased, archived, already merged or has merged profiles of its own; \"not the same person\" keeps a pair from being suggested again; a split (or a \"not the same\" taken back) needs a note and is audited. Suggestions from `customers.merge` {suggest on, signals e-mail · WhatsApp number is the other's phone · name + address · the same identity on an order (all on), 20 a page, note required off}. The single view by phone: every profile and every number of the person, order counts and lifetime value from `@extas/metrics` (`customerKpis`: Sales = delivered only beside Ordered value, CN-022; refusals without the shop's own mistakes), any written form of a number finds him (`customerByPhone`). Phone masked without `customers.phone` (`customers.phoneMask` {first 3, last 3}); every open and every copy or call written to \"Who looked at this customer\" first (Note 24.1). Permissions `customers.read`, `customers.phone`, `customers.merge`. Customers → To review (`/admin/customers/review`, demo V12.4 CUS-05): the \"Same person?\" pairs side by side, Merge / Not the same person, the decisions with Split; API under `/api/admin/customers`; **follow-up (7 Nov, #94; follow-up 478):** the sample seed gives the sample customer a \"Same person?\" pair and a merged profile, so the smoke test and the device gate see both",
+    "note": "the customer model, the merge rules and the single view by phone (new package `@extas/customers`; migration `0047_customer_merge` additive: `Customer.mergedIntoId` / `mergedAt` with an index, `CustomerMerge` with `MERGED` / `NOT_SAME`, the rules that matched, the note, who, the Idempotency-Key and the undo; registry v60 `registry-customers.ts`): a merge only points the joining profile at the one that stays (one level, nothing moves, nothing is deleted), refused when either is erased, archived, already merged or has merged profiles of its own; \"not the same person\" keeps a pair from being suggested again; a split (or a \"not the same\" taken back) needs a note and is audited. Suggestions from `customers.merge` {suggest on, signals e-mail · WhatsApp number is the other's phone · name + address · the same identity on an order (all on), 20 a page, note required off}. The single view by phone: every profile and every number of the person, order counts and lifetime value from `@extas/metrics` (`customerKpis`: Sales = delivered only beside Ordered value, CN-022; refusals without the shop's own mistakes), any written form of a number finds him (`customerByPhone`). Phone masked without `customers.phone` (`customers.phoneMask` {first 3, last 3}); every open and every copy or call written to \"Who looked at this customer\" first (Note 24.1). Permissions `customers.read`, `customers.phone`, `customers.merge`. Customers → To review (`/admin/customers/review`, demo V12.4 CUS-05): the \"Same person?\" pairs side by side, Merge / Not the same person, the decisions with Split; API under `/api/admin/customers`; **follow-up (7 Nov, #94; follow-up 478):** the sample seed gives the sample customer a \"Same person?\" pair and a merged profile, so the smoke test and the device gate see both; **follow-up (7 Nov, #96; follow-up 471):** Customer settings gets cards for the merge rules, the phone mask, the customer list and one customer's page",
     "github": [
+     "#96, 7 Nov",
      "#94, 7 Nov",
      "#51, 30 Oct"
     ]
@@ -28876,8 +28923,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "Retail's ERP account ledger (`ErpAccountEntry` append-only and hash-chained, one entry per ERP event per store link; bill at `erpTotal` once per order; return credit, exchange extra / adjustment / bill / credit, payment, switch transfer, opening balance once; a correction = REVERSAL + new effect, `reversedBy` respected; balance = the ERP's with zero tolerance), the pipeline stock from the shop's own records (`ErpPipelinePiece` / `ErpPipelineMove`, any past day), \"paid to ERP\" only recorded (`erp.payments.record`, reversal by a new record, matched by amount, reference and `books.payments.matchDays`), job `inventory.books.checkAccount` every `erp.account.checkMinutes` with the `GET /account` catch-up of lost payments and the hold (follow-up 490), Money → Books → ERP account (`/admin/money/books`); registry v68; CN-029 Phase 1 (Gyani); **follow-up (7 Nov, #93; follow-up 559, part a):** a pipeline move locks its piece (`FOR UPDATE`) and re-reads its state, so two runs at once never write a stale move",
+    "note": "Retail's ERP account ledger (`ErpAccountEntry` append-only and hash-chained, one entry per ERP event per store link; bill at `erpTotal` once per order; return credit, exchange extra / adjustment / bill / credit, payment, switch transfer, opening balance once; a correction = REVERSAL + new effect, `reversedBy` respected; balance = the ERP's with zero tolerance), the pipeline stock from the shop's own records (`ErpPipelinePiece` / `ErpPipelineMove`, any past day), \"paid to ERP\" only recorded (`erp.payments.record`, reversal by a new record, matched by amount, reference and `books.payments.matchDays`), job `inventory.books.checkAccount` every `erp.account.checkMinutes` with the `GET /account` catch-up of lost payments and the hold (follow-up 490), Money → Books → ERP account (`/admin/money/books`); registry v68; CN-029 Phase 1 (Gyani); **follow-up (7 Nov, #93; follow-up 559, part a):** a pipeline move locks its piece (`FOR UPDATE`) and re-reads its state, so two runs at once never write a stale move; **follow-up (7 Nov, #96; follow-up 552):** the hand-back desk ticks which pieces were in the courier's bag (ErpReturnListParcel.receivedLineIds, migration `0179_handback_received_lines`), and the books' pipeline moves only the ticked pieces; none ticked keeps the old rule; record only",
     "github": [
+     "#96, 7 Nov",
      "#93, 7 Nov",
      "#60, 31 Oct",
      "#56, 30 Oct"
@@ -28902,7 +28950,8 @@
      "reversedBy",
      "ErpPipelinePiece",
      "ErpPipelineMove",
-     "FOR UPDATE"
+     "FOR UPDATE",
+     "0179_handback_received_lines"
     ],
     "tests": []
    },
@@ -28933,6 +28982,7 @@
     "date": "2026-10-30",
     "note": "The books match engine: checks A–F per store link with zero tolerance (account rows by group, the tie formula, returns, the stored summary, fixed costs, billed orders), job `inventory.books.close` once a night after `books.close.runAt` (looked for every `books.close.checkMinutes`, `books.recheck.days` closed days again), an append-only hash-chained day close per day (a new version when it moves, HISTORY_CHANGED for a matched day), weeks and the lifetime check from the day closes, the month close only when every day matched (`books.close.requireMatched`) or with the owner's override (PIN, reason, kept), re-open as a new version, the year sign-off; a difference fixed only by a reversal plus a new entry (`books.adjust`, the owner's PIN, a reason, the ERP's matching row; PRIOR_PERIOD in a closed month); the owner's books PIN (scrypt hash only, never logged, lock after `books.pin.maxAttempts`); Money → Books → Match, Differences, Closes and the Needs-you-now row; migration `0055_books_pin`; registry v68; CN-029 Phase 1 (Gyani)",
     "github": [
+     "#96, 7 Nov",
      "#61, 31 Oct",
      "#60, 31 Oct",
      "#56, 30 Oct"
@@ -28980,8 +29030,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "daily summary to the ERP (CN-029 Phase 1): each shop day from the shop's own records on the delivery-day basis, every line from its one source (§3.3), unknown lines in `incomplete`, the exact minor lines kept beside the whole-taka body (`minorLines`, migration 0056; PR 616's tie reads them); append-only versions, sent at `erp.summary.sendAt` and retried until accepted (a 4xx refusal waits for a person), a late fact re-sent within `books.resend.days` (never a closed month), `summary.missing` answered at once, the hourly check against the ERP's stored copy; per store and per link, v5 builds nothing; the Books status card and **Money → Daily summary** (`/admin/money/books/daily`); registry v69; **follow-ups (7 Nov, #93; follow-ups 566, 568):** a day on the Daily summary page opens that day's lines with their sources (the match page's day explain); on the practice ERP without its data a day says \"Waiting for the ERP key\"; **follow-up (7 Nov, #94; follow-up 569):** the nightly smoke checks that no daily summary or month waited for the ERP more than a day, and \"not run yet\" only before the first match run",
+    "note": "daily summary to the ERP (CN-029 Phase 1): each shop day from the shop's own records on the delivery-day basis, every line from its one source (§3.3), unknown lines in `incomplete`, the exact minor lines kept beside the whole-taka body (`minorLines`, migration 0056; PR 616's tie reads them); append-only versions, sent at `erp.summary.sendAt` and retried until accepted (a 4xx refusal waits for a person), a late fact re-sent within `books.resend.days` (never a closed month), `summary.missing` answered at once, the hourly check against the ERP's stored copy; per store and per link, v5 builds nothing; the Books status card and **Money → Daily summary** (`/admin/money/books/daily`); registry v69; **follow-ups (7 Nov, #93; follow-ups 566, 568):** a day on the Daily summary page opens that day's lines with their sources (the match page's day explain); on the practice ERP without its data a day says \"Waiting for the ERP key\"; **follow-up (7 Nov, #94; follow-up 569):** the nightly smoke checks that no daily summary or month waited for the ERP more than a day, and \"not run yet\" only before the first match run; **follow-up (7 Nov, #96; follow-up 563, parts b and c):** the daily summary's pieces handed back are net of a piece put back with the courier the same day, and a test holds that a later courier result moves the delivery charge to its own day; part a stays open (a design decision)",
     "github": [
+     "#96, 7 Nov",
      "#94, 7 Nov",
      "#93, 7 Nov",
      "#60, 31 Oct",
@@ -29002,7 +29053,9 @@
      "incomplete",
      "minorLines"
     ],
-    "tests": []
+    "tests": [
+     "follow-up 563, parts b and c):** the daily summary's pieces handed back are net of a piece put back with the courier the same day, and a test holds that a later courier result moves the delivery charge to its own day"
+    ]
    },
    "updates": [],
    "mentions": [
@@ -29031,8 +29084,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "fixed costs and the extra cost lines (CN-029 Phase 1): **Money → Costs** (`/admin/money/costs`, `fixedcosts.write`): a month's salary, rent, utilities and other, empty as shipped, each change an append-only version sent by `PUT /fixed-costs/{month}` and checked against `GET /fixed-costs`, shown by day with the ERP's spread (exact to the paisa, remainder on the last day), never in `costs.other`; daily cost lines (packaging, accessories, payment and COD fees, courier, ads, other) for today or an open day, reversed by a negative entry, the day re-sent; capped by `books.costs.maxLineMinor` / `maxMonthMinor`; **follow-up (7 Nov, #94; follow-up 567):** the daily cost lines get their own permission (`costlines.write`), so staff can enter packaging without setting salaries",
+    "note": "fixed costs and the extra cost lines (CN-029 Phase 1): **Money → Costs** (`/admin/money/costs`, `fixedcosts.write`): a month's salary, rent, utilities and other, empty as shipped, each change an append-only version sent by `PUT /fixed-costs/{month}` and checked against `GET /fixed-costs`, shown by day with the ERP's spread (exact to the paisa, remainder on the last day), never in `costs.other`; daily cost lines (packaging, accessories, payment and COD fees, courier, ads, other) for today or an open day, reversed by a negative entry, the day re-sent; capped by `books.costs.maxLineMinor` / `maxMonthMinor`; **follow-up (7 Nov, #94; follow-up 567):** the daily cost lines get their own permission (`costlines.write`), so staff can enter packaging without setting salaries; **follow-up (7 Nov, #96; follow-up 565):** an imported courier COD statement or gateway statement writes its charges or fees as one cost entry on the DELIVERY or PAYMENT_FEES line (`books.costs.fromStatements`, registry v274, both off; record only, never failing the import); the \"Costs from statements\" card on Money › Costs",
     "github": [
+     "#96, 7 Nov",
      "#94, 7 Nov",
      "#57, 30 Oct"
     ]
@@ -29045,7 +29099,8 @@
      "fixedcosts.write",
      "costs.other",
      "books.costs.maxLineMinor",
-     "costlines.write"
+     "costlines.write",
+     "books.costs.fromStatements"
     ],
     "code": [
      "PUT /fixed-costs/{month}",
@@ -33793,6 +33848,7 @@
     "date": "2026-10-30",
     "note": "the support core (new package `@extas/support`; migration `0050_invoice_support` additive: Conversation subject, order, last direction and preview, waiting since, assigned at; Message sender name, request key, fail reason, unique per external id and per press; MessageAttachment file name, type, size, source; `ConversationEvent` the who-did-what log, append-only at the database; settings registry v63 `registry-support.ts`, group `support`): one conversation per person per channel with its messages in order — the customer's, the shop's replies with the sender's name kept as it was, internal notes the customer never sees — and their files (image, video, PDF, checked by their contents, kept in our storage); OPEN / WAITING / SOLVED, a solved one reopens when the customer writes; take, let go, give to someone who may reply; a reply sent twice is one message, a stale screen is refused (`STALE`). Channels plug in later (PR 426): a channel kind and an adapter (`SupportChannelAdapter`), inbound through `receiveMessage`; with none connected a reply is kept as NOT_SENT (`CHANNEL_NOT_CONNECTED`). Support → Inbox (`/admin/support`: views open, waiting, mine, not taken, solved, all; search; channel), one conversation (`/admin/support/c/[id]`: thread, reply / note box with files, status, owner, customer and order, the log) and Support settings (`/admin/support/settings`): `support.inbox` (50 a page, 2000 characters, take on reply off, waiting after a reply on), `support.attachments` under More options (on, 4 a message, 10 MB, image / video / PDF); a customer's number is masked by `customers.phoneMask` (PR 284), whole only with `customers.phone`. Permissions `support.read`, `support.reply`, `support.assign`, `support.settings`. The sample seed gains a sample live-chat channel with three conversations",
     "github": [
+     "#96, 7 Nov",
      "#93, 7 Nov",
      "#75, 1 Nov",
      "#54, 30 Oct"
@@ -33812,7 +33868,8 @@
      "support.read",
      "support.reply",
      "support.assign",
-     "support.settings"
+     "support.settings",
+     "support.fileCopy"
     ],
     "code": [
      "@extas/support",
@@ -33843,7 +33900,7 @@
      "sortKey": 43200,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** the inbox search reads Bengali digits and drops +880 / 880 / 00880 and the leading 0 (`inboxPhoneDigits`).; **follow-ups (7 Nov, #93; follow-ups 504, 506, 507, 509):** chat files (the support folder) never show in the media library or the picture pickers and are never orphans; the customer card beside a conversation shows his exchanges and the team's notes (customers.read); a chat's subject and its order link can be edited, each logged; Support in \"Needs you now\" and the sidebar badge (customers waiting, longest first, and late chats)"
+     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** the inbox search reads Bengali digits and drops +880 / 880 / 00880 and the leading 0 (`inboxPhoneDigits`).; **follow-ups (7 Nov, #93; follow-ups 504, 506, 507, 509):** chat files (the support folder) never show in the media library or the picture pickers and are never orphans; the customer card beside a conversation shows his exchanges and the team's notes (customers.read); a chat's subject and its order link can be edited, each logged; Support in \"Needs you now\" and the sidebar badge (customers waiting, longest first, and late chats); **follow-ups (7 Nov, #96; follow-up 505, both parts):** the media download adapters behind an SSRF guard (https only, never the server, a private network or the metadata address, checked on every forwarding; a key never follows to another host; a mock until the key); a customer's Messenger or WhatsApp file copied to the shop's storage after the webhook (`support.fileCopy`, registry v273, off) with its keeping date by kind"
     }
    ],
    "mentions": [
