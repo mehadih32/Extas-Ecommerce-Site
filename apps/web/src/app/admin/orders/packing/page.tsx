@@ -332,11 +332,11 @@ export default async function PackPage({ searchParams }: Props) {
                           {order.parcel ? <p className="a2-xs a2-mt6">{t(d, 'ful.pack.card.booked')}</p> : null}
                           {canPack ? (
                             <div className="a2-gap8 a2-mt6" style={{ alignItems: 'flex-start' }}>
-                              {i.kind !== 'SHORTAGE' || can('inventory.audit') ? <Act dict={fd} url={`${base}/resolve`} body={{ decision: 'STOCK_FOUND' }} label={t(d, i.kind === 'DAMAGED' ? 'ful.pack.card.fine' : 'ful.pack.card.found')} ask={t(d, 'ful.pack.card.foundAsk')} testId="pack-card-found" /> : null}
+                              {i.kind !== 'SHORTAGE' || can('inventory.audit') ? <Act dict={fd} errSource="pack" url={`${base}/resolve`} body={{ decision: 'STOCK_FOUND' }} label={t(d, i.kind === 'DAMAGED' ? 'ful.pack.card.fine' : 'ful.pack.card.found')} ask={t(d, 'ful.pack.card.foundAsk')} testId="pack-card-found" /> : null}
                               {swaps.length && !order.parcel ? <SwapPick dict={fd} orderId={order.orderId} issueId={i.id} swaps={swaps} /> : null}
-                              {choice && choice.removeRefusal === null && !order.parcel ? <Act dict={fd} url={`${base}/resolve`} body={{ decision: 'SHIP_REST' }} label={t(d, 'ful.pack.card.rest')} ask={t(d, 'ful.pack.card.restAsk')} testId="pack-card-rest" /> : null}
-                              <Act dict={fd} url={`${base}/call`} label={t(d, 'ful.pack.card.call')} tone="ghost" testId="pack-card-call" />
-                              {can('orders.cancel') && !order.parcel ? <Act dict={fd} url={`${base}/resolve`} body={{ decision: 'CANCEL_ORDER' }} label={t(d, 'ful.pack.card.cancel')} note={{ field: 'note', label: t(d, 'ful.pack.card.cancelWhy') }} tone="bad" testId="pack-card-cancel" /> : null}
+                              {choice && choice.removeRefusal === null && !order.parcel ? <Act dict={fd} errSource="pack" url={`${base}/resolve`} body={{ decision: 'SHIP_REST' }} label={t(d, 'ful.pack.card.rest')} ask={t(d, 'ful.pack.card.restAsk')} testId="pack-card-rest" /> : null}
+                              <Act dict={fd} errSource="pack" url={`${base}/call`} label={t(d, 'ful.pack.card.call')} tone="ghost" testId="pack-card-call" />
+                              {can('orders.cancel') && !order.parcel ? <Act dict={fd} errSource="pack" url={`${base}/resolve`} body={{ decision: 'CANCEL_ORDER' }} label={t(d, 'ful.pack.card.cancel')} note={{ field: 'note', label: t(d, 'ful.pack.card.cancelWhy') }} tone="bad" testId="pack-card-cancel" /> : null}
                             </div>
                           ) : null}
                         </div>
@@ -393,7 +393,7 @@ export default async function PackPage({ searchParams }: Props) {
                 ) : null}
                 {order.photo.state === 'missing' && can('fulfilment.photoWaive') ? (
                   <div className="a2-mt6">
-                    <Act dict={fd} url={`/api/admin/packing/orders/${order.orderId}/waive`} label={t(d, 'ful.pack.waive')} note={{ field: 'reason', label: t(d, 'ful.pack.waiveReason') }} tone="ghost" testId="pack-waive" />
+                    <Act dict={fd} errSource="pack" url={`/api/admin/packing/orders/${order.orderId}/waive`} label={t(d, 'ful.pack.waive')} note={{ field: 'reason', label: t(d, 'ful.pack.waiveReason') }} tone="ghost" testId="pack-waive" />
                   </div>
                 ) : null}
                 <div className="a2-kv2" style={{ marginTop: 12 }} data-testid="pack-kv">
@@ -428,7 +428,7 @@ export default async function PackPage({ searchParams }: Props) {
               </section>
               <div className="a2-card tight" data-testid="pack-actions">
                 <div className="a2-gap8" style={{ alignItems: 'flex-start' }}>
-                  {order.status === 'CONFIRMED' && canPack ? <Act dict={fd} url={`/api/admin/packing/orders/${order.orderId}/start`} label={t(d, 'ful.pack.start')} tone="pri" size="" testId="pack-start" /> : null}
+                  {order.status === 'CONFIRMED' && canPack ? <Act dict={fd} errSource="pack" url={`/api/admin/packing/orders/${order.orderId}/start`} label={t(d, 'ful.pack.start')} tone="pri" size="" testId="pack-start" /> : null}
                   {checking && canPack ? <PackButton dict={fd} orderId={order.orderId} disabled={shut} weight={{ enabled: order.weight.enabled, required: weightCfg.requireReading }} primary={order.status === 'PROCESSING'} /> : null}
                   {order.status === 'PACKED' && !order.parcel && can('delivery.book') ? (
                     couriers.length ? (

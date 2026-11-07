@@ -34,7 +34,7 @@ function Said({ msg }: { msg: Msg }) {
   );
 }
 
-const refusal = (dict: Dict, status: number, data: { error?: string; details?: string[] }) => (status === 0 ? fulError(dict, 'network') : fulError(dict, data.error, (data.details ?? []).join(', ')));
+const refusal = (dict: Dict, status: number, data: { error?: string; details?: string[] }) => (status === 0 ? fulError(dict, 'network') : fulError(dict, data.error, (data.details ?? []).join(', '), 'pack'));
 
 /** The scan box: Enter (what a scanner sends) checks a scanned code; "Check" a typed SKU, when the owner allows it. */
 export function ScanBox({ dict, orderId, allowTyped }: { dict: Dict; orderId: string; allowTyped: boolean }) {
@@ -309,7 +309,7 @@ export function StartAll({ dict, count }: { dict: Dict; count: number }) {
     }
     const started = Array.isArray(a.data.started) ? a.data.started.length : 0;
     const skipped = Array.isArray(a.data.skipped) ? (a.data.skipped as { orderNumber?: string; reason?: string }[]) : [];
-    const left = skipped.map((s) => `${s.orderNumber ?? ''} (${fulError(dict, s.reason)})`);
+    const left = skipped.map((s) => `${s.orderNumber ?? ''} (${fulError(dict, s.reason, '', 'pack')})`);
     setMsg({ ok: true, text: left.length ? t(dict, 'ful.pack.startAllSome', { n: String(started), left: left.join(', ') }) : t(dict, 'ful.pack.startAllDone', { n: String(started) }) });
     router.refresh();
   };

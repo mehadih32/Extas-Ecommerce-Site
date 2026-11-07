@@ -29,3 +29,20 @@ describe('the fulfilment words (PR 554)', () => {
     expect(PAIR_ARCHIVE_REASONS).toEqual(['courierDropped', 'staff']);
   });
 });
+
+describe('follow-up 465 · a refusal in the words of the screen it came from', () => {
+  it('REASON_REQUIRED: the sticker screen asks why it is printed again, the packing screen asks for the step\'s reason, elsewhere a plain "reason needed"', () => {
+    for (const d of [bn, en] as Dict[]) {
+      const print = fulError(d, 'REASON_REQUIRED', '', 'print');
+      const pack = fulError(d, 'REASON_REQUIRED', '', 'pack');
+      const plain = fulError(d, 'REASON_REQUIRED');
+      expect(new Set([print, pack, plain]).size).toBe(3);
+      for (const w of [print, pack, plain]) expect(w).not.toBe(t(d, 'ful.err.default'));
+      // a code the screen has no own words for falls back to the shared ones
+      expect(fulError(d, 'STALE', '', 'pack')).toBe(fulError(d, 'STALE'));
+      expect(fulError(d, 'SOMETHING_NEW', '', 'print')).toBe(t(d, 'ful.err.default'));
+    }
+    expect(fulError(en as Dict, 'REASON_REQUIRED', '', 'print')).toMatch(/printed again/);
+    expect(fulError(en as Dict, 'REASON_REQUIRED', '', 'pack')).not.toMatch(/sticker|printed/i);
+  });
+});

@@ -89,7 +89,7 @@ export function PdfButton({ dict, url, method = 'POST', body, label, busyLabel, 
       }
       const refused = data.data?.refused;
       const fields = refused?.length ? refused.map((r) => `${r.orderNumber ?? ''} (${t(dict, `ful.sticker.problem.${r.problem ?? ''}`)})`).join(', ') : (data.details ?? []).join(', ');
-      setMsg({ ok: false, text: fulError(dict, data.error, fields) });
+      setMsg({ ok: false, text: fulError(dict, data.error, fields, 'print') });
       if (refresh && refused?.length) router.refresh();
     } catch {
       tab?.close();
