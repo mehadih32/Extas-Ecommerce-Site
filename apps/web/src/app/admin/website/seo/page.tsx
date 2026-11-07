@@ -4,11 +4,12 @@
 // (PR 221); which data for search engines (structured data) the pages carry (PR 222); the pages that stay when a
 // product or collection cannot be bought (PR 527, "Pages that stay"); the sitemaps (PR 228); robots.txt and the AI
 // robots (PR 229); the photo descriptions (PR 232); Search Console and Bing (PR 233); real visitors' speed (PR 234);
-// the language pairs (PR 236, hreflang).
+// the language pairs (PR 236, hreflang). Follow-up 599: the "Bengali ready" figure opens Website › SEO › Bengali pages.
 // Seeing needs `seo.read` (the
 // read-only check account has it); saving needs `seo.manage`.
 // Guide: docs/admin-guide/pages/website/seo.md.
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MOTHER_STORE_ID } from "@extas/db/client";
 import { namingTokens, SEO_ALT_TEXT_LIMITS, SEO_ANSWER_PACK_LIMITS, SEO_INTERNAL_LINKS_LIMITS, SEO_VERIFICATION_LIMITS, SEO_VITALS_LIMITS, SEO_PAGE_TYPES, SEO_ROBOTS_LIMITS, SEO_SITEMAP_LIMITS, SEO_TEMPLATE_PAGES, SEO_TEMPLATE_TOKENS } from "@extas/settings";
@@ -137,6 +138,10 @@ export default async function SeoPage() {
           <div className="a2-kf">
             <span className="a2-kn">{c("kpi.bengaliSub")}</span>
           </div>
+          {/* follow-up 599: the figure opens the page where Bengali pages are marked ready */}
+          <Link className="a2-btn sm a2-mt6" href="/admin/website/seo/bengali" data-testid="seo-kpi-bengali-open">
+            {c("kpi.bengaliOpen")}
+          </Link>
         </div>
       </div>
 

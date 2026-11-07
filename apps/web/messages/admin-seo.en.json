@@ -17,7 +17,8 @@
     "none": "—",
     "bengali": "Bengali pages ready",
     "bengaliOff": "Bengali is off",
-    "bengaliSub": "only ready pages are listed in Bengali"
+    "bengaliSub": "only ready pages are listed in Bengali",
+    "bengaliOpen": "Bengali pages"
   },
   "safe": {
     "title": "The preview is never listed.",
