@@ -136,7 +136,9 @@ export function platformCookies(read: (name: string) => string | null): Pick<AdU
 
 // --- the delivery state, per platform ------------------------------------------------------------------------------
 
-export type DeliveryState = 'waiting' | 'sent' | 'mock' | 'failed';
+// ~~export type DeliveryState = 'waiting' | 'sent' | 'mock' | 'failed';~~ follow-up 602: `unticked` — the owner unticked
+// the platform before the event went, so it never goes there (only a real event; an admin's test event still goes)
+export type DeliveryState = 'waiting' | 'sent' | 'mock' | 'failed' | 'unticked';
 export interface Delivery {
   state: DeliveryState;
   attempts: number;
@@ -153,6 +155,9 @@ export function afterSend(prev: Delivery | undefined, r: { ok: true; mode: 'MOCK
   if (r.ok) return { state: r.mode === 'MOCK' ? 'mock' : 'sent', attempts, at: at.toISOString() };
   return { state: 'failed', attempts, at: at.toISOString(), error: r.error.slice(0, ERROR_MAX) };
 }
+
+/** Follow-up 602: a platform the owner unticked before the event went there: never sent, its tries kept. */
+export const untickedNow = (prev: Delivery | undefined, at: Date): Delivery => ({ state: 'unticked', attempts: prev?.attempts ?? 0, at: at.toISOString() });
 
 /** Whether a platform still waits: never tried, or failed with attempts left. */
 export const stillWaiting = (d: Delivery | undefined, maxAttempts: number): boolean => !!d && (d.state === 'waiting' || (d.state === 'failed' && d.attempts < maxAttempts));

@@ -14,6 +14,9 @@
 // - PR 532: the deep feed's steps (shipped, returned, qualified; lib/tracking/feed.ts) are recorded here as well; at the
 //   send a generous platform takes the qualified sale as its purchase, and every order event carries the courier
 //   outcome and the visitor's intent while the feed enriches (feed-extras.ts). Never personal data in either.
+// - Follow-up 602: the background worker sweeps the events still waiting once an hour (`trackingSweepHook`), so a
+//   failed send no longer waits for the store's next event; and a real event never goes to a platform the owner
+//   unticked after it was recorded (its delivery says `unticked`).
 import { randomUUID } from 'node:crypto';
 import { after } from 'next/server';
 import { AD_PLATFORM_CONNECTION, AD_WITHDRAWS, adEventAdapters, createConnections, type AdEventSender, type AdPlatform, type AdUser, type Connections } from '@extas/adapters';
@@ -21,9 +24,10 @@ import { Prisma, type PrismaClient } from '@extas/db/client';
 import { tickedPlatforms, type ConversionFeedSettings, type TrackingSettings } from '@extas/settings';
 import type { Vault } from '@extas/vault';
 import { adminDeps } from '../admin-auth';
+import { internalCaller } from '../marketing/audience-push';
 import type { AppResolver } from '../settings';
 import { extraFor, feedExtras, storedParts, type Extra, type ExtraParts } from './feed-extras';
-import { adNameOf, afterSend, generousOn, hashEmail, hashId, hashPhone, isFeedStep, isOrderStep, records, recordsFeed, recordsStep, stillWaiting, toAdEvent, valueOf, waitingFor, withoutContact, EVENT_ID, type AnyTrackingEvent, type Deliveries, type StoredItem } from './model';
+import { adNameOf, afterSend, generousOn, hashEmail, hashId, hashPhone, isFeedStep, isOrderStep, records, recordsFeed, recordsStep, stillWaiting, toAdEvent, untickedNow, valueOf, waitingFor, withoutContact, EVENT_ID, type AnyTrackingEvent, type Deliveries, type StoredItem } from './model';
 
 export interface TrackingDeps {
   db: PrismaClient;
@@ -165,6 +169,28 @@ async function connectionsOf(deps: TrackingDeps): Promise<Connections> {
   return createConnections({ db: deps.db, vault: deps.vault ?? { get: async () => null }, adapters: adEventAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
 }
 
+/**
+ * Follow-up 602: /api/internal/tracking/sweep — POST {storeId} from the background worker (packages/jobs
+ * tracking-sweep.ts, once an hour while tracking is on) with the server's internal token; without it "not found".
+ * Sends that store's events that rested past the resting time, as the shop's own send does after each new event.
+ */
+export async function trackingSweepHook(request: Request, deps: TrackingDeps | null = trackingDeps()): Promise<Response> {
+  const notFound = () => Response.json({ ok: false, error: 'not-found' }, { status: 404 });
+  if (request.method.toUpperCase() !== 'POST' || !internalCaller(request)) return notFound();
+  if (!deps) return Response.json({ ok: false, error: 'database-not-configured' }, { status: 503 });
+  let storeId = 0;
+  try {
+    const b = (await request.json()) as { storeId?: unknown };
+    storeId = Number.isInteger(b.storeId) && (b.storeId as number) > 0 ? (b.storeId as number) : 0;
+  } catch {
+    /* no body: refused below */
+  }
+  if (!storeId) return Response.json({ ok: false, error: 'INVALID_INPUT' }, { status: 400 });
+  const out = await sendEvents(deps, { storeId, limit: SEND_BATCH, idleMs: RETRY_AFTER_MS });
+  const failed = Object.values(out.platforms).reduce((n, p) => n + (p?.failed ?? 0), 0);
+  return Response.json({ ok: true, events: out.events, failed });
+}
+
 export interface SendOutcome {
   /** Per platform: how many went to the platform, to its mock, or failed (with the last error). */
   platforms: Partial<Record<AdPlatform, { sent: number; mock: number; failed: number; error?: string; mode?: string }>>;
@@ -185,13 +211,17 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
   const out: SendOutcome = { platforms: {}, events: 0 };
   if (!rows.length) return out;
   const maxOf = new Map<number, number>();
+  // follow-up 602: the platforms each store ticks now (a real event never goes to one unticked since it was recorded)
+  const tickedOf = new Map<number, Set<AdPlatform>>();
   // PR 258: what a purchase means for each store, read at the send (a change applies to what still waits)
   const meansOf = new Map<number, 'placed' | 'delivered'>();
   // PR 532: each store's generous platforms and its deep feed (read at the send, like what a purchase means)
   const generousOf = new Map<number, Set<AdPlatform>>();
   const feedOf = new Map<number, ConversionFeedSettings>();
   for (const sid of new Set(rows.map((r) => r.storeId))) {
-    maxOf.set(sid, (await deps.resolver.value('ads.tracking', { storeId: sid })).maxAttempts);
+    const tracking = await deps.resolver.value('ads.tracking', { storeId: sid });
+    maxOf.set(sid, tracking.maxAttempts);
+    tickedOf.set(sid, new Set(tickedPlatforms(tracking)));
     const dp = await deps.resolver.value('ads.deliveredPurchase', { storeId: sid });
     meansOf.set(sid, dp.on ? dp.purchaseMeans : 'placed');
     const feed = await deps.resolver.value('ads.conversionFeed', { storeId: sid });
@@ -250,7 +280,10 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
   const now = nowOf(deps);
 
   for (const platform of Object.keys(AD_PLATFORM_CONNECTION) as AdPlatform[]) {
-    const due = mine.filter((r) => stillWaiting(next.get(r.id)?.[platform], maxOf.get(r.storeId) ?? 1));
+    // ~~const due = mine.filter((r) => stillWaiting(next.get(r.id)?.[platform], maxOf.get(r.storeId) ?? 1));~~
+    const waits = mine.filter((r) => stillWaiting(next.get(r.id)?.[platform], maxOf.get(r.storeId) ?? 1));
+    for (const r of waits.filter((x) => !x.test && !tickedOf.get(x.storeId)?.has(platform))) next.get(r.id)![platform] = untickedNow(next.get(r.id)![platform], now);
+    const due = waits.filter((r) => r.test || tickedOf.get(r.storeId)?.has(platform));
     if (!due.length) continue;
     const tally = (out.platforms[platform] ??= { sent: 0, mock: 0, failed: 0 });
     for (const sid of new Set(due.map((r) => r.storeId))) {

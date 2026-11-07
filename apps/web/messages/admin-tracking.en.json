@@ -59,7 +59,8 @@
       "sent": "sent",
       "mock": "practice",
       "failed": "failed",
-      "waiting": "waiting"
+      "waiting": "waiting",
+      "unticked": "not sent (unticked)"
     },
     "cellNone": "—",
     "waitingH": "Waiting to be sent",

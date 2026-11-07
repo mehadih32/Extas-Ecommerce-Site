@@ -7,7 +7,7 @@
 .adm2 .trk-st{white-space:nowrap}
 .adm2 .trk-st.sent{color:var(--g)}
 .adm2 .trk-st.failed{color:var(--bad)}
-.adm2 .trk-st.waiting,.adm2 .trk-st.mock{color:var(--mute)}
+.adm2 .trk-st.waiting,.adm2 .trk-st.mock,.adm2 .trk-st.unticked{color:var(--mute)}
 .adm2 .trk-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
 .adm2 .trk-two > .a2-sc{margin:0}
 .adm2 .trk-act{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-top:10px}

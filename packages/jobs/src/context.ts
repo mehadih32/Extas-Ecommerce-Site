@@ -3,6 +3,7 @@
 import type { Connections, TelegramLink } from '@extas/adapters';
 import type { AudienceRefreshAnswer } from './audience-refresh';
 import type { AdSpendImportAnswer } from './ad-spend-import';
+import type { TrackingSweepAnswer } from './tracking-sweep';
 import type { PrismaClient } from '@extas/db/client';
 import type { InventoryDeps, SettingsReader } from '@extas/inventory';
 import type { MessagesDeps } from '@extas/messages';
@@ -40,6 +41,8 @@ export interface JobDeps {
   telegram?: TelegramLink;
   /** PR 265: the web app's daily ad spend import (inside the server, with the internal token), or none — none planned. */
   adSpend?: { import(storeId: number): Promise<AdSpendImportAnswer> };
+  /** Follow-up 602: the web app's sweep of tracked events still waiting (inside the server, with the internal token), or none — none planned. */
+  tracking?: { sweep(storeId: number): Promise<TrackingSweepAnswer> };
   /** Clock, for tests. */
   now?: () => Date;
 }
