@@ -130,12 +130,20 @@ export async function addSetToBag(deps: CombosDeps, input: AddSetInput): Promise
     const groupKey = groupKeyOf(d.addKey);
     const unit = new Map(c.variants.map((v) => [v.id, v.priceMinor!]));
     const at = nowOf(deps);
-    if (d.replaceGroupKey) await tx.cartItem.updateMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.replaceGroupKey, removedAt: null }, data: { removedAt: at } });
+    // Follow-up 351 (PR 574): a replacement (B3's "Add 1 more", a pair page's colour change while editing) takes the old
+    // set's place in the bag — the bag reads its lines by `createdAt`, so the new lines start at the old set's first line
+    // (the place) instead of now (the end). Its add is still counted now (recordSetAdded).
+    let placeAt = at;
+    if (d.replaceGroupKey) {
+      const old = await tx.cartItem.findFirst({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.replaceGroupKey, removedAt: null }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { createdAt: true } });
+      if (old) placeAt = old.createdAt;
+      await tx.cartItem.updateMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: d.replaceGroupKey, removedAt: null }, data: { removedAt: at } });
+    }
     // PR 574 · each line a millisecond after the one before, so reading the set by `createdAt` keeps its slot order
     // (the bag's B2 size change sends its choices in that order)
     for (const [i, variantId] of picks.variants.entries()) {
       await tx.cartItem.create({
-        data: { storeId: d.storeId, cartId: d.cartId, variantId, quantity: 1, unitPriceMinor: unit.get(variantId)!, comboId: c.view.id, comboGroupKey: groupKey, setPriceMinor: picks.payMinor, source: d.source ?? SET_SOURCE, createdAt: new Date(at.getTime() + i) },
+        data: { storeId: d.storeId, cartId: d.cartId, variantId, quantity: 1, unitPriceMinor: unit.get(variantId)!, comboId: c.view.id, comboGroupKey: groupKey, setPriceMinor: picks.payMinor, source: d.source ?? SET_SOURCE, createdAt: new Date(placeAt.getTime() + i) },
       });
     }
     await tx.cart.update({ where: { id: d.cartId }, data: { lastActivityAt: at } });
