@@ -100,3 +100,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-07 02:52 | `6309ce1b7e77` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-07 05:59 | `8fa0474cd6c2` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-07 09:07 | `296dbff5a19e` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-07 11:41 | `31c029996b47` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (/admin/products: console error: Access to script at 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' from origin 'https://new.extas.com.bd' has been blocked by CORS policy: Request (/admin/login?next=%2Fadmin%2Fproducts) (phone); /admin/products: r), so the previous version was put back automatically. The fix comes before any new work. |
