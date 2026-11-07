@@ -10,7 +10,7 @@ describe('reviews and size-advice settings (v35)', () => {
   it('every key is in the registry at version 35, never owner data, labelled in English and Bengali, its default valid', () => {
     for (const [key, spec] of Object.entries(reviewSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(key === 'reviews.requests' ? 196 : 35); // PR 295 added its key at v196
+      expect(spec.version, key).toBe(key === 'reviews.requests' ? 196 : key === 'pdp.reviewReply' ? 281 : 35); // PR 295 added its key at v196, follow-up 233 at v281
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

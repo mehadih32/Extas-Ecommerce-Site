@@ -29,6 +29,8 @@ export interface PdpReviewRow {
   photo: ImageSource | null;
   /** PR 223: the day it was published (YYYY-MM-DD), for search engines; absent where nobody needs it. */
   publishedAt?: string | null;
+  /** Follow-up 233: the shop's public reply, drawn only while `pdp.reviewReply.show`. */
+  reply?: string | null;
 }
 
 export interface PdpReviewsView {

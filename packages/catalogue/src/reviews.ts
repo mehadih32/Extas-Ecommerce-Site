@@ -133,6 +133,8 @@ export interface ReviewRecord {
   publishedAt: string | null;
   moderatedAt: string | null;
   hiddenReason: string | null;
+  /** Follow-up 233: the shop's public reply under the review ("<shop> team: …"), shown only while `pdp.reviewReply`. */
+  reply: string | null;
   reward: { amountMinor: number; walletEntryId: string | null; at: string } | null;
   photos: ReviewPhoto[];
   archivedAt: string | null;
@@ -168,6 +170,7 @@ const SELECT = {
   publishedAt: true,
   moderatedAt: true,
   hiddenReason: true,
+  reply: true,
   rewardAmountMinor: true,
   rewardWalletEntryId: true,
   rewardedAt: true,
@@ -198,6 +201,7 @@ type Row = {
   publishedAt: Date | null;
   moderatedAt: Date | null;
   hiddenReason: string | null;
+  reply: string | null;
   rewardAmountMinor: number | null;
   rewardWalletEntryId: string | null;
   rewardedAt: Date | null;
@@ -234,6 +238,7 @@ function view(r: Row): ReviewRecord {
     publishedAt: iso(r.publishedAt),
     moderatedAt: iso(r.moderatedAt),
     hiddenReason: r.hiddenReason,
+    reply: r.reply,
     reward: r.rewardedAt ? { amountMinor: r.rewardAmountMinor ?? 0, walletEntryId: r.rewardWalletEntryId, at: r.rewardedAt.toISOString() } : null,
     photos: r.media.map((m) => ({ assetId: m.assetId, sortOrder: m.sortOrder })),
     archivedAt: iso(r.archivedAt),
@@ -544,6 +549,35 @@ async function payPhotoReward(
     select: { id: true },
   });
   return { amountMinor: input.amountMinor, walletEntryId: entry.id };
+}
+
+/** Follow-up 233: how long the shop's public reply may be. */
+export const REPLY_MAX = 1000;
+
+export const replySchema = z
+  .object({
+    /** The reply's words; null (or empty) takes the reply off the review. */
+    reply: text(REPLY_MAX).nullable(),
+  })
+  .strict();
+
+/**
+ * Follow-up 233 — the shop's public reply under a review (`reviews.moderate`): written, changed or taken off, each
+ * audited with the words before. It shows on the product page only while the owner has `pdp.reviewReply` on, and only
+ * under a published review. An archived review takes no reply.
+ */
+export async function replyToReview(deps: CatalogueDeps, who: Who, id: string, input: unknown): Promise<ReviewRecord> {
+  await allow(deps, who, 'reviews.moderate');
+  const d = parse(replySchema, input, 'reply');
+  const words = d.reply && d.reply.trim() ? d.reply.trim() : null;
+  const before = found(await deps.db.review.findFirst({ where: { id, storeId: who.storeId }, select: SELECT }), 'review') as unknown as Row;
+  if (before.archivedAt) throw new CatalogueError('CONFLICT', 'this review is archived');
+  const after = await deps.db.$transaction(async (tx) => {
+    const row = await tx.review.update({ where: { id: before.id }, data: { reply: words, repliedById: words ? who.actor.staffUserId : null }, select: SELECT });
+    await logChange(tx, who, words ? 'reviews.reply' : 'reviews.replyOff', 'Review', before.id, { reply: before.reply }, { reply: words });
+    return row as unknown as Row;
+  });
+  return view(after);
 }
 
 /** PR 65 — the verified-buyer mark by hand, when the shop has seen the order itself (`reviews.moderate`). */

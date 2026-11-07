@@ -915,3 +915,6 @@
 .shop .pdp-page #pdp-qa .pdp-qa-area { width: 100%; min-height: 96px; resize: vertical; font-size: 16px; }
 .shop .pdp-page #pdp-qa .pdp-qa-count { align-self: flex-end; }
 .shop .pdp-page #pdp-qa .pdp-qa-said a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; }
+/* PR 65 follow-up 233 — the shop's public reply under a review (only while pdp.reviewReply.show). */
+.shop .pdp-page .pdp-rev-reply { margin-top: 10px; padding: 10px 12px; border-left: 3px solid var(--brand); background: var(--surface2); border-radius: 8px; }
+.shop .pdp-page .pdp-rev-reply p { margin: 4px 0 0; line-height: 1.5; white-space: pre-line; }

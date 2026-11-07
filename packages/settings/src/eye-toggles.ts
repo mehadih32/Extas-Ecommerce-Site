@@ -203,6 +203,7 @@ export const NOT_EYE: Readonly<Record<string, NotEyeReason>> = {
   'search.panel:desktopPanel': 'behaviour', // a panel under the header or the phone's window
   'layout.sideCanvas:': 'own-page', // the side canvas: its own page, switched on only after the owner approves its map (PR 596)
   'shop.pageEdit:': 'own-page', // the owner's on-page edit mode: its own page, Website › More › On-page edit (PR 600)
+  'pdp.reviewReply:': 'own-page', // the shop's reply under a review: its own card on Products › Reviews (follow-up 233)
   'pdp.qaAsk:': 'own-page', // "Ask a question": its own card on Products › Reviews › Questions (follow-up 183)
 };
 

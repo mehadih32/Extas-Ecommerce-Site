@@ -16,6 +16,7 @@ import {
   listReviews,
   moderateReview,
   reviewChance,
+  replyToReview,
   reviewDesk,
   setReviewVerified,
   submitCustomerReview,
@@ -352,5 +353,20 @@ describe.skipIf(!HAS_TEST_DB)('product reviews on PostgreSQL (PR 65)', () => {
     const published = await t.prisma.review.aggregate({ where: { storeId: A, status: 'APPROVED', archivedAt: null }, _avg: { rating: true }, _count: { _all: true } });
     expect(after.published).toBe(published._count._all);
     expect(after.average).toBe(published._avg.rating === null ? null : Math.round(published._avg.rating * 10) / 10);
+  });
+
+  it('follow-up 233: the shop writes, changes and takes off its public reply; moderators only; audited with the words before', async () => {
+    const r = await addStaffReview(deps(), as(moderator), { productId: ids.product, rating: 4, body: 'Sample: good, a little long.' });
+    expect(await code(replyToReview(deps(), as(writer), r.id, { reply: 'Thank you!' }))).toBe('FORBIDDEN');
+    expect(await code(replyToReview(deps(), as(moderator, B), r.id, { reply: 'Thank you!' }))).toBe('FORBIDDEN');
+    expect(await code(replyToReview(deps(), as(moderator), r.id, { reply: 'x'.repeat(1001) }))).toBe('INVALID_INPUT');
+    expect((await replyToReview(deps(), as(moderator), r.id, { reply: '  Thank you — the M runs a little long.  ' })).reply).toBe('Thank you — the M runs a little long.');
+    expect((await replyToReview(deps(), as(moderator), r.id, { reply: 'Thank you!' })).reply).toBe('Thank you!');
+    const off = await replyToReview(deps(), as(moderator), r.id, { reply: null });
+    expect(off.reply).toBeNull();
+    expect((await t.prisma.review.findUniqueOrThrow({ where: { id: r.id } })).repliedById).toBeNull();
+    const log = await t.prisma.auditLog.findMany({ where: { entityType: 'Review', entityId: r.id, action: { in: ['reviews.reply', 'reviews.replyOff'] } }, orderBy: { createdAt: 'asc' }, select: { action: true, before: true } });
+    expect(log.map((x) => x.action)).toEqual(['reviews.reply', 'reviews.reply', 'reviews.replyOff']);
+    expect(log[2]!.before).toEqual({ reply: 'Thank you!' });
   });
 });
