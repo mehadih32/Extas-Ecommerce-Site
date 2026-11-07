@@ -1323,7 +1323,7 @@ for a in "$@"; do
 done
 cp "$envf" "$FAKE_SEEN"
 [ -z "${FAKE_EXIT:-}" ] || exit "$FAKE_EXIT"   # killed by the time limit before it wrote anything
-printf '{"state":"RAN","passed":%s,"failed":%s,"skipped":0,"unreachable":false,"keyRefused":false}\n' "$FAKE_PASSED" "$FAKE_FAILED" > "$out/report.json"
+printf '{"state":"RAN","passed":%s,"failed":%s,"skipped":0,"unreachable":false,"keyRefused":false,"writes":true}\n' "$FAKE_PASSED" "$FAKE_FAILED" > "$out/report.json"
 echo "# ERP acceptance" > "$out/README.md"
 [ "$FAKE_FAILED" = 0 ]
 STUB
@@ -1332,6 +1332,7 @@ ea() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" ERP_ACCEPTANCE_IMAGE_
   "$@" bash ../deploy/erp-acceptance.sh "$T/out"; }
 rc=0; ea FAKE_PASSED=21 FAKE_FAILED=0 >/dev/null || rc=$?
 check "erp acceptance: a passing run exits 0 and records it" "$rc:$(jq -c '{exit,state,passed,failed}' "$T/root/state/erp-acceptance.json")" '0:{"exit":0,"state":"RAN","passed":21,"failed":0}'
+check "erp acceptance: follow-up 576: whether it ran with writes goes to the state file (the go-live row reads it)" "$(jq -c '.writes' "$T/root/state/erp-acceptance.json")" "true"
 check "erp acceptance: only the direct database address (as DATABASE_URL) and the vault key go in" \
   "$(sort "$T/seen.env" | tr '\n' ' ')" "DATABASE_URL=postgresql://u:dbpw@h/d VAULT_MASTER_KEY=vk "
 check "erp acceptance: the live version's migrate image runs it" "$(grep -c 'extas-migrate:aaa sh -c cd /repo/packages/jobs' "$T/docker.log")" "1"

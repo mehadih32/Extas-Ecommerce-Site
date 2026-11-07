@@ -77,7 +77,7 @@ if [ "$rc" = 124 ]; then
 fi
 cp -r "$work/out/." "$OUT/"
 if [ -f "$OUT/report.json" ]; then
-  jq --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson rc "$rc" '{at: $at, exit: $rc, state, passed, failed, skipped, unreachable, keyRefused}' "$OUT/report.json" > "$STATE/erp-acceptance.json"
+  jq --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson rc "$rc" '{at: $at, exit: $rc, state, passed, failed, skipped, unreachable, keyRefused, writes}' "$OUT/report.json" > "$STATE/erp-acceptance.json"
 else
   log "FAIL: the run wrote no report (exit $rc)"
   rc=1

@@ -91,6 +91,17 @@ async function paymentsNow(deps: Deps) {
   return { testOn, practice };
 }
 
+/** Follow-up 576 (PR 621): the stores going live whose ERP model is v6 (names only). */
+async function erpV6StoresNow(deps: Deps): Promise<string[]> {
+  const stores = await deps.db.store.findMany({
+    where: { archivedAt: null, OR: [{ isPrimary: true }, { status: { in: ['LIVE', 'PAUSED'] } }] },
+    select: { id: true, name: true },
+    orderBy: { id: 'asc' },
+  });
+  const models = await Promise.all(stores.map((s) => deps.resolver.value('erp.model', { storeId: s.id })));
+  return stores.filter((_, i) => models[i] === 'v6').map((s) => s.name);
+}
+
 /** Review R1 (security M2): the request limits' mode and the staff members who can change anything without two steps. */
 async function securityNow(deps: Deps) {
   const [rateLimitMode, twoFactorRequired, staff] = await Promise.all([
@@ -126,7 +137,7 @@ export function evidenceNow(state: Pick<RuntimeState, 'simulation' | 'acceptance
 export async function goLiveNow(deps: Deps) {
   const [state, checks, signoff] = await Promise.all([runtimeState(), deps.resolver.value('golive.checks'), deps.resolver.value('golive.signoff')]);
   const [wanted, seo] = await Promise.all([deps.resolver.value('golive.connections'), deps.resolver.value('seo.indexing', { storeId: MOTHER_STORE_ID })]); // the mother store's value, as Website → SEO saves it
-  const [gate, domains, ownerData, on, payments, security] = await Promise.all([
+  const [gate, domains, ownerData, on, payments, security, v6Stores] = await Promise.all([
     backupGateNow(deps, state),
     deps.db.storeDomain.findMany({ where: { isPrimaryHost: true, archivedAt: null }, select: { hostname: true } }),
     ownerDataNow(deps),
@@ -137,6 +148,7 @@ export async function goLiveNow(deps: Deps) {
     }),
     paymentsNow(deps),
     securityNow(deps),
+    erpV6StoresNow(deps),
   ]);
   const result = goLiveChecks({
     now: deps.now ? deps.now() : new Date(),
@@ -154,6 +166,7 @@ export async function goLiveNow(deps: Deps) {
     payments,
     security,
     evidence: evidenceNow(state),
+    erp: { v6Stores, report: state.erpAcceptance },
   });
   const ids = [...new Set(result.items.map((i) => i.by).filter((v): v is string => Boolean(v)))];
   const people = ids.length

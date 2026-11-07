@@ -27,6 +27,7 @@ function ctx(over: Partial<GoLiveContext> = {}): GoLiveContext {
     connections: { kinds: ['PAYMENT', 'COURIER', 'SMS'], on: [{ kind: 'PAYMENT', provider: 'bkash', mode: 'LIVE', lastTestOk: true }, { kind: 'COURIER', provider: 'steadfast', mode: 'LIVE', lastTestOk: true }, { kind: 'SMS', provider: 'bulkSmsBd', mode: 'LIVE', lastTestOk: true }] },
     payments: { testOn: [], practice: [] },
     security: { rateLimitMode: 'enforce', twoFactorRequired: false, withoutTwoFactor: 0 },
+    erp: { v6Stores: [], report: null },
     ...over,
   };
 }
@@ -124,6 +125,26 @@ describe('go-live checklist (PR 393)', () => {
     expect(open(ctx({ payments: undefined }))).toEqual(['testPayments']);
     expect(open(ctx({ payments: { testOn: ['Main'], practice: [] } }))).toEqual(['testPayments']);
     expect(goLiveChecks(ctx({ payments: { testOn: [], practice: ['Main: nagad', 'Main: online'] } })).items.find((i) => i.key === 'testPayments')).toMatchObject({ ok: false, vars: { stores: '—', methods: 'Main: nagad, Main: online' } });
+  });
+
+  it('follow-up 576 (PR 621): a store on the v6 ERP needs a green acceptance run against the demo ERP with writes, fresh, before go-live', () => {
+    const green = { at: ago(300), exit: 0, state: 'RAN' as const, passed: 21, failed: 0, skipped: 2, unreachable: false, keyRefused: false, writes: true };
+    const row = (erp: GoLiveContext['erp']) => goLiveChecks(ctx({ erp })).items.find((i) => i.key === 'erpAcceptance')!;
+    expect(GO_LIVE.find((i) => i.key === 'erpAcceptance')).toMatchObject({ pr: 621, kind: 'auto', when: 'before' });
+    // No store on the v6 ERP: nothing to prove, the row is done (and says why).
+    expect(row({ v6Stores: [], report: null })).toMatchObject({ ok: true, vars: { stores: '—', state: 'notUsed' } });
+    expect(row(undefined)).toMatchObject({ ok: true });
+    expect(row({ v6Stores: ['Main'], report: green })).toMatchObject({ ok: true, at: green.at, vars: { stores: 'Main', passed: 21, failed: 0, writes: 'on', state: 'RAN' } });
+    expect(open(ctx({ erp: { v6Stores: ['Main'], report: null } }))).toEqual(['erpAcceptance']);
+    expect(row({ v6Stores: ['Main'], report: { ...green, writes: false } })).toMatchObject({ ok: false, vars: { writes: 'off' } });
+    expect(row({ v6Stores: ['Main'], report: { ...green, failed: 1 } }).ok).toBe(false);
+    expect(row({ v6Stores: ['Main'], report: { ...green, unreachable: true } }).ok).toBe(false);
+    expect(row({ v6Stores: ['Main'], report: { ...green, keyRefused: true } }).ok).toBe(false);
+    expect(row({ v6Stores: ['Main'], report: { ...green, passed: 0 } }).ok).toBe(false);
+    expect(row({ v6Stores: ['Main'], report: { state: 'WAITING_FOR_KEY', at: ago(10) } })).toMatchObject({ ok: false, vars: { state: 'WAITING_FOR_KEY' } });
+    // Older than the smoke test's freshness (`golive.checks.smokeHours`, both nightly runs): not green any more.
+    expect(row({ v6Stores: ['Main'], report: { ...green, at: ago(37 * 60) } }).ok).toBe(false);
+    expect(goLiveChecks(ctx({ erp: { v6Stores: ['Main'], report: { ...green, failed: 2 } } })).ready).toBe(false);
   });
 
   it('review R1 (security M2): the request limits enforce, and every staff member who can change things signs in with two steps', () => {

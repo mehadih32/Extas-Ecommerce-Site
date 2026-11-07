@@ -72,7 +72,10 @@ describe.skipIf(!HAS_TEST_DB)('go-live checklist API on PostgreSQL (PR 393, 397,
   it('a new installation: nothing is ready; the owner data of the mother store is named, the draft store is not asked', async () => {
     const r = await get();
     expect(r.status).toBe(200);
-    expect(r.body.items.every((i) => !i.ok)).toBe(true);
+    // ~~expect(r.body.items.every((i) => !i.ok)).toBe(true);~~
+    // Follow-up 576: the ERP acceptance row is done where no store uses the v6 ERP (a new installation is on v5).
+    expect(r.body.items.filter((i) => i.key !== 'erpAcceptance').every((i) => !i.ok)).toBe(true);
+    expect(item(r.body.items, 'erpAcceptance')).toMatchObject({ ok: true, vars: { stores: '—', state: 'notUsed' } });
     expect(item(r.body.items, 'ownerData').vars).toEqual({
       stores: 1,
       missing: 'Sample store A: contact.phone, contact.address, legal.registeredName, legal.tradeLicence, delivery band',
