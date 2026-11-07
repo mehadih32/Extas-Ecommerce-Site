@@ -23,6 +23,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { formatVital } from '@/lib/seo/vitals';
 import { labReport, vitalsReport } from '@/lib/seo/vitals-data';
 import { readPageSettings } from '@/lib/shop/context';
+import { edgeUploadMaxBytes, uploadLimitProblems } from '@/lib/upload-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +47,12 @@ export default async function ServerPage() {
   const s = await workerStatus({ db: access.deps.db, settings: access.deps.resolver, now: access.deps.now });
   const { 'seo.vitals': vitalsSet } = await readPageSettings(['seo.vitals'] as const, MOTHER_STORE_ID);
   const [vitals, lab] = await Promise.all([vitalsReport(access.deps.db, MOTHER_STORE_ID, vitalsSet), labReport(access.deps.db, MOTHER_STORE_ID, vitalsSet)]);
+  // Follow-up 618: an upload size setting above the server's own upload limit (Caddy answers 413 before the app).
+  const [mediaMaxBytes, attachments] = await Promise.all([
+    access.deps.resolver.value('media.upload.maxBytes'),
+    access.deps.resolver.value('support.attachments', { storeId: MOTHER_STORE_ID }),
+  ]);
+  const uploadProblems = uploadLimitProblems({ mediaMaxBytes, supportMaxMb: attachments.enabled ? attachments.maxMb : null }, edgeUploadMaxBytes());
   const d = view.dict;
   const now = new Date(s.checkedAt);
   const num = (n: number) => formatNumber(n, view.locale);
@@ -69,6 +76,18 @@ export default async function ServerPage() {
           <div>{t(d, `server.verdict.${s.state}.text`, { seconds: num(s.staleAfterSeconds) })}</div>
         </div>
       </div>
+      {uploadProblems.length ? (
+        <div className="ad-note ad-note-top st-verdict lv-failing" role="status" data-testid="server-upload-limit">
+          <span className="ad-dot warn" />
+          <div>
+            <b>{t(d, 'server.upload.title')}</b>
+            {uploadProblems.map((p) => (
+              <div key={p.key}>{t(d, `server.upload.${p.key === 'media.upload.maxBytes' ? 'media' : 'support'}`, { set: num(p.settingMb), edge: num(p.edgeMb) })}</div>
+            ))}
+            <div className="ad-mini">{t(d, 'server.upload.fix', { edge: num(uploadProblems[0]!.edgeMb) })}</div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="pa-kpis">
         <div className="pa-kpi">

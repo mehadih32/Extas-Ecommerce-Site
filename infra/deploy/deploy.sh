@@ -25,6 +25,8 @@ REPO="$(cd "$HERE/../.." && pwd)"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../config/server.conf
 . "$CONF"
+# Follow-up 618: app.yml passes Caddy's upload limit to the app (EXTAS_UPLOAD_MAX_MB); compose reads it from here.
+export CADDY_UPLOAD_MAX_MB
 R="$EXTAS_ROOT"; STATE="$R/state"; SEC="$R/config/secrets"; SITES="$R/config/caddy/sites"
 APP_PORT="${APP_PORT:-3000}"
 
