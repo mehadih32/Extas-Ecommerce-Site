@@ -57,6 +57,8 @@ const KEYS = [
   'shell.footer',
   'language.bengali.enabled',
   'language.bengali.readyPages',
+  // follow-up 599: the language switch knows when a page's Bengali twin would send the visitor back
+  'language.bengali.gate',
   'language.bengali.digits',
   'language.labels',
   'slider.engine',
