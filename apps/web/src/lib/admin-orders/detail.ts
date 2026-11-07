@@ -166,6 +166,8 @@ interface OrderFields {
   addressUnclear: boolean | null;
   subtotalMinor: number;
   discountMinor: number;
+  /** Follow-up 521: what the offers held back at the price floor (null: nothing, or an order from before). */
+  floorHeldMinor: number | null;
   deliveryChargeMinor: number;
   walletAppliedMinor: number;
   totalMinor: number;
@@ -938,6 +940,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const totals: Row2[] = [
     { label: t(d, 'orders.tot.subtotal'), value: m(o.subtotalMinor) },
     ...(o.discountMinor ? [{ label: t(d, 'orders.tot.discount'), value: `− ${m(o.discountMinor)}` }] : []),
+    // follow-up 521: an offer stopped at the lowest price — the smaller discount is never a surprise (display only)
+    ...(o.floorHeldMinor ? [{ label: t(d, 'orders.tot.floorHeld'), value: m(o.floorHeldMinor) }] : []),
     { label: t(d, 'orders.tot.delivery'), value: o.deliveryChargeMinor ? m(o.deliveryChargeMinor) : t(d, 'orders.tot.free') },
     ...(o.walletAppliedMinor ? [{ label: t(d, 'orders.tot.wallet'), value: `− ${m(o.walletAppliedMinor)}` }] : []),
     { label: t(d, 'orders.tot.total'), value: m(o.totalMinor), strong: true },
