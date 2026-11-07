@@ -6464,8 +6464,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "import from the ERP by style code (CN-028, `erp.model` v6 only; no migration: the 0049 columns): `/admin/products/erp-import` (Products › more, `catalogue.import`) previews a style read with the store's own ERP key (CN-029 §16) and makes every SKU a draft grouped into one product (`COLOUR_MISSING` / `NOTHING_TO_IMPORT` refused; on the practice ERP it only previews); B grade as its own listing with `catalogue.bGrade.listing` (off) and the name suffix `catalogue.bGrade.nameSuffix` (registry v65). The ERP's shop price is the buying price (`shopPriceMinor`, never shown to customers), kept from the import, `variant.changed` and `shop-price.changed`; a change is flagged in \"Buying prices that changed\" (seen / all seen), never a change to a selling price. The selling-price floor (`catalogue.floor.minMarginPercent`, owner data, empty = off): a variant or combo set price below buying price + margin is refused (`BELOW_FLOOR`), the CSV preview shows it as an issue, and in the bag, checkout and product page every discount, coupon and set tier stops at the floor (`Quote.floorHeld`). Store A's import, prices and floor never touch store B (tests). qa-gate (30 Oct): a v5 store is refused (`ERP_V5`); at switch-over a style's SKUs already in one product without a style code adopt that product (shown in the preview), SKUs spread over other products (`SKU_IN_OTHER_PRODUCT`) or rows the catalogue cannot take (`ROW_NOT_ACCEPTED`) are listed and refused before any write, and sizes, products, variants, grades and buying prices are written in one transaction (a failure half-way leaves nothing); a re-import never turns a variant back on; a late, older `shop-price.changed` is ignored (`OLDER`) with the variant's row locked; the list length is `catalogue.shopPrice.changesShown`",
+    "note": "import from the ERP by style code (CN-028, `erp.model` v6 only; no migration: the 0049 columns): `/admin/products/erp-import` (Products › more, `catalogue.import`) previews a style read with the store's own ERP key (CN-029 §16) and makes every SKU a draft grouped into one product (`COLOUR_MISSING` / `NOTHING_TO_IMPORT` refused; on the practice ERP it only previews); B grade as its own listing with `catalogue.bGrade.listing` (off) and the name suffix `catalogue.bGrade.nameSuffix` (registry v65). The ERP's shop price is the buying price (`shopPriceMinor`, never shown to customers), kept from the import, `variant.changed` and `shop-price.changed`; a change is flagged in \"Buying prices that changed\" (seen / all seen), never a change to a selling price. The selling-price floor (`catalogue.floor.minMarginPercent`, owner data, empty = off): a variant or combo set price below buying price + margin is refused (`BELOW_FLOOR`), the CSV preview shows it as an issue, and in the bag, checkout and product page every discount, coupon and set tier stops at the floor (`Quote.floorHeld`). Store A's import, prices and floor never touch store B (tests). qa-gate (30 Oct): a v5 store is refused (`ERP_V5`); at switch-over a style's SKUs already in one product without a style code adopt that product (shown in the preview), SKUs spread over other products (`SKU_IN_OTHER_PRODUCT`) or rows the catalogue cannot take (`ROW_NOT_ACCEPTED`) are listed and refused before any write, and sizes, products, variants, grades and buying prices are written in one transaction (a failure half-way leaves nothing); a re-import never turns a variant back on; a late, older `shop-price.changed` is ignored (`OLDER`) with the variant's row locked; the list length is `catalogue.shopPrice.changesShown`; **follow-ups (7 Nov, #93; follow-ups 521 part, 528, 529):** the rules simulator prices with the selling-price floor and says how often an offer stopped at it; \"Buying prices that changed\" names the fixed-price sets now below the floor; the offer editor says beforehand that a discount stops at the floor — display only, nothing changes a price",
     "github": [
+     "#93, 7 Nov",
      "#57, 30 Oct"
     ]
    },
@@ -6526,6 +6527,7 @@
     "date": "2026-10-22",
     "note": "store shell from demo V12.1 + V12.2 (CN-008, CN-012): announcement bar, header with icons in the owner's order, phone menu, bottom bar, footer (phone bands with the V12.2 social row incl. WhatsApp; desktop: owner's reference layout `deskStyle` ref with link icons `deskIcons`, WhatsApp and Hotline boxes, social tiles; classic kept), slim checkout header and empty checkout `/checkout`, shop 404; desktop row arrangements (`shell.desktopNav.layout`: catsMore default with 4 main categories, all, shop, priority) and menus (`megaStyle`: drop with flyouts default, panel kept); Journal off the desktop row, highlighted in the footer (H3); the Join form on the one BD phone cleaner `apps/web/src/lib/phone-bd.ts` (H14/K10) waits for the sign-up list (`requires: signupList`, PR 123 / 298; CN-017: it kept nothing); the shell's measured fits run after the first paint, a part per task (TBT); `/` is the store, `/status` the progress page, every storefront route not built yet shows \"Coming soon\" in the shell (CN-010, `COMING_SOON` in the routing table); screenshots `docs/qa/screenshots/pr-40/` ·",
     "github": [
+     "#93, 7 Nov",
      "#91, 6 Nov",
      "#84, 6 Nov",
      "#33, 23 Oct",
@@ -6602,8 +6604,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-22",
-    "note": "home page `/` and `/bn` from demo V12.1 (`20-home.js`): sections in the owner's order (`home.sections`, the ten of `HOME_SECTIONS`; PR 595 edits the same list), hero text panel (`home.hero`: words, 1–3 buttons with the demo's looks incl. the v3 sets tint, promise lines only when COD / exchange are on, desktop shift), category tiles (`home.categories`), \"New in\" cards (`home.newIn`), reviews row (`home.reviews`, approved only, average over all approved), soft row edges (`home.rowFade`); product card (photo or garment drawing, badge, heart saved in the browser, struck price only by the PR 38 rule); sections with no true content yet draw nothing; the taka sign in a 2.5 KB swap face; fix: the desktop row folded every category into More (PR 85 tap layers). Tests: home model, garment drawing, settings, catalogue reads on PostgreSQL; screenshots `docs/qa/screenshots/pr-41/` 23 Oct (CN-017): the hero's default words carry no count, season or year (~~\"Winter 2026 · 39 new styles\"~~ → \"New in · Find your style\"), \"Fresh styles this week\" → \"Our newest styles\", Shop now → New in (`home.hero` v17); `copy-claims.test.ts` keeps the shop dictionary and every setting default free of number and \"this week\" claims. 23 Oct (follow-ups 21, 36): desktop cards (mouse at 1024 px and up, or keyboard focus) show the back view and Quick add with the size buttons (`card.desk` {altView, quickAdd}, on; `GET /api/shop/card/<id>`), the bag's own `<AddToBag>` and added panel on the home, category and product pages; the home page's cards use the category page's fits (`CARD_FIT`)",
+    "note": "home page `/` and `/bn` from demo V12.1 (`20-home.js`): sections in the owner's order (`home.sections`, the ten of `HOME_SECTIONS`; PR 595 edits the same list), hero text panel (`home.hero`: words, 1–3 buttons with the demo's looks incl. the v3 sets tint, promise lines only when COD / exchange are on, desktop shift), category tiles (`home.categories`), \"New in\" cards (`home.newIn`), reviews row (`home.reviews`, approved only, average over all approved), soft row edges (`home.rowFade`); product card (photo or garment drawing, badge, heart saved in the browser, struck price only by the PR 38 rule); sections with no true content yet draw nothing; the taka sign in a 2.5 KB swap face; fix: the desktop row folded every category into More (PR 85 tap layers). Tests: home model, garment drawing, settings, catalogue reads on PostgreSQL; screenshots `docs/qa/screenshots/pr-41/` 23 Oct (CN-017): the hero's default words carry no count, season or year (~~\"Winter 2026 · 39 new styles\"~~ → \"New in · Find your style\"), \"Fresh styles this week\" → \"Our newest styles\", Shop now → New in (`home.hero` v17); `copy-claims.test.ts` keeps the shop dictionary and every setting default free of number and \"this week\" claims. 23 Oct (follow-ups 21, 36): desktop cards (mouse at 1024 px and up, or keyboard focus) show the back view and Quick add with the size buttons (`card.desk` {altView, quickAdd}, on; `GET /api/shop/card/<id>`), the bag's own `<AddToBag>` and added panel on the home, category and product pages; the home page's cards use the category page's fits (`CARD_FIT`); **follow-up (7 Nov, #93; follow-up 118):** the search results page draws the category cards' computer back view and Quick add and the added-to-bag panel (closing back to the same search); still noindex",
     "github": [
+     "#93, 7 Nov",
      "#33, 23 Oct",
      "#25, 23 Oct",
      "#23, 23 Oct"
@@ -6744,8 +6747,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-22",
-    "note": "hero slider (`home.heroSlides`): 14 pictures by default, taken in turns from every visible category (at most 2 each), or a campaign collection inside its dates (CN-012 part 1); in stock only; the photo of that colour or the drawing, a tap opens the product on that colour (`?color=`); name-and-price pins that fit themselves (floor 9 px phone / 11 px desktop, the name never cut), a solid card on desktop (V12.2); glide 20 px/s, one arrow tap = one picture in 380 ms (`stepRow`), the mouse on an arrow rests the row, keyboard focus in the box is the keyboard pause, desktop Tab order = pictures in view (`bindRowControls`); desktop fade 140 / 80 px and the soft wash; phone arrows as a switch (off, §58.11); the fits follow the width only and bind after the first paint (TBT). Tests: picking, arrows on a fake clock, settings, hero reads on PostgreSQL; device gate 0/217; screenshots `docs/qa/screenshots/pr-43/`",
+    "note": "hero slider (`home.heroSlides`): 14 pictures by default, taken in turns from every visible category (at most 2 each), or a campaign collection inside its dates (CN-012 part 1); in stock only; the photo of that colour or the drawing, a tap opens the product on that colour (`?color=`); name-and-price pins that fit themselves (floor 9 px phone / 11 px desktop, the name never cut), a solid card on desktop (V12.2); glide 20 px/s, one arrow tap = one picture in 380 ms (`stepRow`), the mouse on an arrow rests the row, keyboard focus in the box is the keyboard pause, desktop Tab order = pictures in view (`bindRowControls`); desktop fade 140 / 80 px and the soft wash; phone arrows as a switch (off, §58.11); the fits follow the width only and bind after the first paint (TBT). Tests: picking, arrows on a fake clock, settings, hero reads on PostgreSQL; device gate 0/217; screenshots `docs/qa/screenshots/pr-43/`; **follow-up (7 Nov, #93; follow-up 46):** the slider marks itself fitted (`data-hero-fit`) and the device gate measures the hero pins only after that mark",
     "github": [
+     "#93, 7 Nov",
      "#23, 23 Oct"
     ]
    },
@@ -6760,7 +6764,8 @@
     "names": [
      "?color=",
      "stepRow",
-     "bindRowControls"
+     "bindRowControls",
+     "data-hero-fit"
     ],
     "tests": [
      "Tests: picking, arrows on a fake clock, settings, hero reads on PostgreSQL"
@@ -7104,8 +7109,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "product page template T1 at `/p/<product>` and `/p/<product>/<colour>` (+ `/bn/…`; the prefix is `naming.productPathPrefix`): phone = photos, buy column, rules and details, the buy bar held at the bottom (`pdp.buy.phoneBar`); computer = photos left, sticky buy column right, details under the photos, the slim bar under the header once the buttons have scrolled away (`desktopBar`); title with the heart, breadcrumb on a computer; \"Add to Bag\" is the bag's `<AddToBag>` and the added-to-bag panel `<AddedPanel>` opens through `?added=<line>` (follow-up 38), \"Order Now\" adds and goes to checkout, \"Call to order\" off (SIM-F-046); a product off sale keeps its page, all sold out (PR 36); settings registry v19 (`pdp.*`, 12 keys, no admin screen, CN-019); the slim bar drawn above the footer; an older status line taken away when the added panel opens; smoke test finds product pages from New in; device gate and seeded Lighthouse on the sample polo, chinos and socks; screenshots `docs/qa/screenshots/pr-49/`",
+    "note": "product page template T1 at `/p/<product>` and `/p/<product>/<colour>` (+ `/bn/…`; the prefix is `naming.productPathPrefix`): phone = photos, buy column, rules and details, the buy bar held at the bottom (`pdp.buy.phoneBar`); computer = photos left, sticky buy column right, details under the photos, the slim bar under the header once the buttons have scrolled away (`desktopBar`); title with the heart, breadcrumb on a computer; \"Add to Bag\" is the bag's `<AddToBag>` and the added-to-bag panel `<AddedPanel>` opens through `?added=<line>` (follow-up 38), \"Order Now\" adds and goes to checkout, \"Call to order\" off (SIM-F-046); a product off sale keeps its page, all sold out (PR 36); settings registry v19 (`pdp.*`, 12 keys, no admin screen, CN-019); the slim bar drawn above the footer; an older status line taken away when the added panel opens; smoke test finds product pages from New in; device gate and seeded Lighthouse on the sample polo, chinos and socks; screenshots `docs/qa/screenshots/pr-49/`; **follow-up (7 Nov, #93; follow-up 66, part):** the computer's slim buy bar shows the product's rating (approved reviews) beside free delivery and COD; the delivery days stay open",
     "github": [
+     "#93, 7 Nov",
      "#27, 23 Oct"
     ]
    },
@@ -7449,8 +7455,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "size pills on one row that fill the width from S to 4XL (grid of N equal columns), tap selects and never adds, out in this colour crossed out, sold out in every colour crossed out and never hidden (SIM-F-035 acceptance test; `soldOutEverywhere` cross / hide), the chosen size's measurement line, \"please choose a size\" only after a buy button without a size; \"tell me when it is back\" on a crossed-out size or an off-sale product into the PR 36 back-in-stock list, off until PR 71 sends the alert (`pdp.size.notifyBack`); `pdp.size`. 23 Oct (follow-up 62, SIM-F-047): the owner's word under each size box (`pdp.sizeWords`, owner data, empty = off; Bengali pages or both) and \"Your size\" on the size this browser last put in the bag, tops and bottoms apart, with the colours that have it when sold out here (`pdp.usualSize`, off; 180 days; optional preselect)",
+    "note": "size pills on one row that fill the width from S to 4XL (grid of N equal columns), tap selects and never adds, out in this colour crossed out, sold out in every colour crossed out and never hidden (SIM-F-035 acceptance test; `soldOutEverywhere` cross / hide), the chosen size's measurement line, \"please choose a size\" only after a buy button without a size; \"tell me when it is back\" on a crossed-out size or an off-sale product into the PR 36 back-in-stock list, off until PR 71 sends the alert (`pdp.size.notifyBack`); `pdp.size`. 23 Oct (follow-up 62, SIM-F-047): the owner's word under each size box (`pdp.sizeWords`, owner data, empty = off; Bengali pages or both) and \"Your size\" on the size this browser last put in the bag, tops and bottoms apart, with the colours that have it when sold out here (`pdp.usualSize`, off; 180 days; optional preselect); **follow-up (7 Nov, #93; follow-up 114):** a long word under a size button steps down to 9 px (phone) / 11 px (computer), then takes two lines, never \"…\"",
     "github": [
+     "#93, 7 Nov",
      "#33, 23 Oct",
      "#27, 23 Oct"
     ]
@@ -8271,6 +8278,7 @@
     "date": "2026-10-23",
     "note": "storefront search: the header icon and the phone menu's \"Search\" open the demo's window (phone) or the panel under the header (computer, D-014) with live suggestions — help pages, categories, products, \"See all N results\" (`GET /search/suggest`); one index across products, categories and help pages (follow-up 73: \"delivery\", \"exchange\", Bengali words; a \"Coming soon\" page is never offered); prefix, typo and synonym matching with Bengali keywords (`search.words`, sample lists); Meilisearch when its URL and key are set and its index is current, otherwise PostgreSQL (`@extas/search`); indexing by the worker's `search.index` job, one per catalogue version (idempotent); only live, sellable products; SIM-F-035 test (a size sold out in every colour is crossed out, never hidden); settings registry v24 (`registry-search.ts`); screenshots `docs/qa/screenshots/pr-72/`",
     "github": [
+     "#93, 7 Nov",
      "#79, 1 Nov",
      "#32, 23 Oct"
     ]
@@ -8291,7 +8299,8 @@
      "search.db.test.ts"
     ],
     "names": [
-     "isGeneral"
+     "isGeneral",
+     "aria-activedescendant"
     ],
     "tests": [
      "SIM-F-035 test (a size sold out in every colour is crossed out, never hidden)",
@@ -8325,7 +8334,7 @@
      "sortKey": 33120,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 1 Nov (go-live gate live run 3; #79):** a misspelt general word (\"shrit\", one slip from \"shirt\"; `search.match.oneTypoAt`) is dropped on the Meilisearch retry too, by `match.ts` `isGeneral`, the rule the PostgreSQL path already drops by, so \"pollo shrit\" finds the polo (the gate-c360 live run of 1 Nov 22:20 found nothing on all six screens); test `search.db.test.ts` (\"classic shrit\" on the fake Meilisearch and on PostgreSQL)"
+     "text": "**Updated 1 Nov (go-live gate live run 3; #79):** a misspelt general word (\"shrit\", one slip from \"shirt\"; `search.match.oneTypoAt`) is dropped on the Meilisearch retry too, by `match.ts` `isGeneral`, the rule the PostgreSQL path already drops by, so \"pollo shrit\" finds the polo (the gate-c360 live run of 1 Nov 22:20 found nothing on all six screens); test `search.db.test.ts` (\"classic shrit\" on the fake Meilisearch and on PostgreSQL); **follow-up (7 Nov, #93; follow-up 106):** ↑ / ↓ move through the search suggestions (`aria-activedescendant`), Enter opens the highlighted one"
     }
    ],
    "mentions": [
@@ -8706,8 +8715,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "field-level show and hide — the eye-toggle system, with its defaults (After launch, Lane B, batch 13; no registry version, no migration): `packages/settings/src/eye-toggles.ts` lists 104 eye-toggles in 11 places (header, footer, home, product cards, category, product page, reviews, bag, checkout and thank-you, my account, search), each pointing at the yes/no value inside the setting the shop already reads, so its default is that setting's registry default; readEye / writeEye change one value and keep the rest; guard `eyeToggleProblems`: every yes/no value of the shop page settings is an eye-toggle or named in NOT_EYE with its reason; **follow-up (6 Nov, #92; follow-up 680):** D4.1's \"account.* On\" checked against the registry: every account block it names ships On; the offer banner and the profile photo (later feature switches) stay off, written beside the list and pinned by a test",
+    "note": "field-level show and hide — the eye-toggle system, with its defaults (After launch, Lane B, batch 13; no registry version, no migration): `packages/settings/src/eye-toggles.ts` lists 104 eye-toggles in 11 places (header, footer, home, product cards, category, product page, reviews, bag, checkout and thank-you, my account, search), each pointing at the yes/no value inside the setting the shop already reads, so its default is that setting's registry default; readEye / writeEye change one value and keep the rest; guard `eyeToggleProblems`: every yes/no value of the shop page settings is an eye-toggle or named in NOT_EYE with its reason; **follow-up (6 Nov, #92; follow-up 680):** D4.1's \"account.* On\" checked against the registry: every account block it names ships On; the offer banner and the profile photo (later feature switches) stay off, written beside the list and pinned by a test; **follow-up (7 Nov, #93; follow-up 679):** the demo's eye-toggle parts the shop did not draw yet, each behind its own switch (registry v265, off as shipped, the set line on as before): \"Ordered before? Log in\", the door note (owner's words only, a card on Eye toggles), the checkout help strip on the computer, \"Send my bag on WhatsApp\" (a preview and a wa.me link, nothing sent by itself), the thank-you page's \"You may also like\" row, the bag's set line",
     "github": [
+     "#93, 7 Nov",
      "#92, 6 Nov",
      "#87, 6 Nov"
     ]
@@ -8975,8 +8985,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-22",
-    "note": "storefront side of mobile hardening (the CI device gate itself is the infra agent's PR 85 commit): storefront pages in `lighthouserc.json`, so the device gate and the Lighthouse budget both cover them; invisible 44 × 44 tap layers (logo, language pill, \"see all\", desktop row on touch, header icons under 375 px, the V12.2 phone social tiles, the 404 category chips) with the demo's drawn sizes unchanged; finger-sized footer rows on touch screens of desktop width; the floating WhatsApp button's missing styles; zoom tests (pinch zoom allowed, touch-action) — device gate 0 fails in 217 storefront checks. 23 Oct (audit follow-up): the CI device gate signs in on the sample data (postgres service, a gate owner with a generated password) and checks the admin controls that only show with data (`.pa-x`, `.pa-col`, `.pa-kind`, `.sc-item`, `a.st-name`) at 44 × 44; 0 fails in 620 checks; when the gate fails, CI prints and keeps the app's log; **follow-up (6 Nov, #92):** a local gate run at 127.0.0.1 runs the shop's scripts (`allowedDevOrigins`, dev only), and a page whose scripts never ran is reported as NO-SCRIPTS instead of cut text (the phone footer \"cut-off\" was a dev server that never hydrated)",
+    "note": "storefront side of mobile hardening (the CI device gate itself is the infra agent's PR 85 commit): storefront pages in `lighthouserc.json`, so the device gate and the Lighthouse budget both cover them; invisible 44 × 44 tap layers (logo, language pill, \"see all\", desktop row on touch, header icons under 375 px, the V12.2 phone social tiles, the 404 category chips) with the demo's drawn sizes unchanged; finger-sized footer rows on touch screens of desktop width; the floating WhatsApp button's missing styles; zoom tests (pinch zoom allowed, touch-action) — device gate 0 fails in 217 storefront checks. 23 Oct (audit follow-up): the CI device gate signs in on the sample data (postgres service, a gate owner with a generated password) and checks the admin controls that only show with data (`.pa-x`, `.pa-col`, `.pa-kind`, `.sc-item`, `a.st-name`) at 44 × 44; 0 fails in 620 checks; when the gate fails, CI prints and keeps the app's log; **follow-up (6 Nov, #92):** a local gate run at 127.0.0.1 runs the shop's scripts (`allowedDevOrigins`, dev only), and a page whose scripts never ran is reported as NO-SCRIPTS instead of cut text (the phone footer \"cut-off\" was a dev server that never hydrated); **follow-up (7 Nov, #93; follow-up 111):** a test-server fill draws a long sample slogan (`/api/shop/try-slogan`, 404 on the live shop) and the device gate measures the header slogan and the footer wrap with it on /, /bn and a category",
     "github": [
+     "#93, 7 Nov",
      "#92, 6 Nov",
      "#37, 24 Oct",
      "#25, 23 Oct",
@@ -8986,7 +8997,9 @@
     ]
    },
    "builtFacts": {
-    "routes": [],
+    "routes": [
+     "/api/shop/try-slogan"
+    ],
     "settings": [],
     "code": [
      "lighthouserc.json"
@@ -9003,7 +9016,8 @@
      "storefront side of mobile hardening (the CI device gate itself is the infra agent's PR 85 commit): storefront pages in `lighthouserc.json`, so the device gate and the Lighthouse budget both cover them",
      "zoom tests (pinch zoom allowed, touch-action) — device gate 0 fails in 217 storefront checks",
      "23 Oct (audit follow-up): the CI device gate signs in on the sample data (postgres service, a gate owner with a generated password) and checks the admin controls that only show with data (`.pa-x`, `.pa-col`, `.pa-kind`, `.sc-item`, `a.st-name`) at 44 × 44",
-     "when the gate fails, CI prints and keeps the app's log"
+     "when the gate fails, CI prints and keeps the app's log",
+     "follow-up 111):** a test-server fill draws a long sample slogan (`/api/shop/try-slogan`, 404 on the live shop) and the device gate measures the header slogan and the footer wrap with it on /, /bn and a category"
     ]
    },
    "updates": [],
@@ -10044,8 +10058,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "combo page `/combo/<link>` and `/bn/combo/<link>` from demo V12.2 (`40-combo.js`), template C1 (one card per piece; `combos.page.layout` = C1, registry v30 `registry-combo-pages.ts`): crumbs (phone \"Sets\" to the sets below, computer \"Combos\"), title with the picked colours, the price box from `@extas/combos` only (set price, separately, the saving, each piece's regular price on a computer, \"applies automatically in the bag\" when auto-apply is on), the rules card (size exchange, delivery, Cash on Delivery, each only when its rule is on; the whole-set exchange line off until the owner says so), set summary, \"Add set to Bag\" / \"Order Now\" (`POST /api/bag/sets`, one tap one add), \"Ask about this set on WhatsApp\" only with the shop's number (`combos.page.parts`), the phone's bar; phone toast with \"View bag\" (pausing on touch, mouse and keyboard separately), computer opens the added panel; an ended combo keeps its page with \"Buy them separately\" and the sets on sale; view and colour-pick counts (`POST /api/shop/combo`); bag and offer-slot links now open `/combo/<link>`; noindex unless featured. Device gate 0 fails on the new pages, seeded Lighthouse TBT median 18–82 ms",
+    "note": "combo page `/combo/<link>` and `/bn/combo/<link>` from demo V12.2 (`40-combo.js`), template C1 (one card per piece; `combos.page.layout` = C1, registry v30 `registry-combo-pages.ts`): crumbs (phone \"Sets\" to the sets below, computer \"Combos\"), title with the picked colours, the price box from `@extas/combos` only (set price, separately, the saving, each piece's regular price on a computer, \"applies automatically in the bag\" when auto-apply is on), the rules card (size exchange, delivery, Cash on Delivery, each only when its rule is on; the whole-set exchange line off until the owner says so), set summary, \"Add set to Bag\" / \"Order Now\" (`POST /api/bag/sets`, one tap one add), \"Ask about this set on WhatsApp\" only with the shop's number (`combos.page.parts`), the phone's bar; phone toast with \"View bag\" (pausing on touch, mouse and keyboard separately), computer opens the added panel; an ended combo keeps its page with \"Buy them separately\" and the sets on sale; view and colour-pick counts (`POST /api/shop/combo`); bag and offer-slot links now open `/combo/<link>`; noindex unless featured. Device gate 0 fails on the new pages, seeded Lighthouse TBT median 18–82 ms; **follow-up (7 Nov, #93; follow-up 176):** a combo whose link changes keeps its old link as a permanent forward (Redirect source `combo-slug`, same transaction, no chains)",
     "github": [
+     "#93, 7 Nov",
      "#34, 23 Oct"
     ]
    },
@@ -10065,7 +10080,9 @@
      "POST /api/bag/sets",
      "POST /api/shop/combo"
     ],
-    "names": [],
+    "names": [
+     "combo-slug"
+    ],
     "tests": []
    },
    "updates": [],
@@ -10434,8 +10451,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "build your own set (`@extas/combos` `builder.ts` / `builder-model.ts`, migration `0022_set_builder`, settings registry v36 `registry-set-builder.ts`): each live Smart Rules set tier rule (`setTier`, PR 212) with priced tiers is a set group; its styles are the published, priced products in the rule's scope; `checkBuild` refuses too few, too many, outside the group, no price, sold out and more than the stock (the bag counted); \"Add set to Bag\" (`POST /api/bag/built-sets`, one tap one add through `SetBuilderAdd`) puts the picks in as loose lines, so the bag's rules engine charges exactly the builder's tier price and the bag tier box, bag and checkout show the same numbers (V2.1); one owner switch `combos.builder` (off by default; rules, categories, styles, per-item price, entry points); admin API `GET/POST /api/admin/combos/builder` (`combos.read` / `combos.publish`) with adds, pieces and money per rule; the admin screen is follow-up 240",
+    "note": "build your own set (`@extas/combos` `builder.ts` / `builder-model.ts`, migration `0022_set_builder`, settings registry v36 `registry-set-builder.ts`): each live Smart Rules set tier rule (`setTier`, PR 212) with priced tiers is a set group; its styles are the published, priced products in the rule's scope; `checkBuild` refuses too few, too many, outside the group, no price, sold out and more than the stock (the bag counted); \"Add set to Bag\" (`POST /api/bag/built-sets`, one tap one add through `SetBuilderAdd`) puts the picks in as loose lines, so the bag's rules engine charges exactly the builder's tier price and the bag tier box, bag and checkout show the same numbers (V2.1); one owner switch `combos.builder` (off by default; rules, categories, styles, per-item price, entry points); admin API `GET/POST /api/admin/combos/builder` (`combos.read` / `combos.publish`) with adds, pieces and money per rule; the admin screen is follow-up 240; **follow-up (7 Nov, #93; follow-up 244):** the bag's \"Take 2 │ Take 3\" box links to its rule's own set builder page while the builder is open with that tier as a group (else the category, as before)",
     "github": [
+     "#93, 7 Nov",
      "#36, 24 Oct"
     ]
    },
@@ -11563,8 +11581,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "the two-sizes notice after a group (same product and colour in neighbouring sizes): asked once, kept on the bag (`PUT /api/bag/sizes`); \"Help me pick\" offers to keep one size; \"one is for someone else\" closes it for good. SIM-F-036 test: a family's S/M/L with that answer raises no flag (`bag.twoSizes.enabled`)",
+    "note": "the two-sizes notice after a group (same product and colour in neighbouring sizes): asked once, kept on the bag (`PUT /api/bag/sizes`); \"Help me pick\" offers to keep one size; \"one is for someone else\" closes it for good. SIM-F-036 test: a family's S/M/L with that answer raises no flag (`bag.twoSizes.enabled`); **follow-up (7 Nov, #93; follow-up 41):** \"Help me pick my size\" in the bag offers Find My Size on the product (`?finder=1`) while the finder is on",
     "github": [
+     "#93, 7 Nov",
      "#26, 23 Oct"
     ]
    },
@@ -11576,7 +11595,9 @@
     "code": [
      "PUT /api/bag/sizes"
     ],
-    "names": [],
+    "names": [
+     "?finder=1"
+    ],
     "tests": [
      "SIM-F-036 test: a family's S/M/L with that answer raises no flag (`bag.twoSizes.enabled`)"
     ]
@@ -13641,8 +13662,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "the admin order list on the new shell (`/admin/orders`, `orders.read`, demo V12.3 ORD-01): the order service's own views as chips with their counts (all, to confirm, awaiting advance, on hold, cancel requests, cancel pending courier, duplicate review, open, finished), search and the status / payment method / channel filters in the address, the four separate status chips (order, courier, payment, return or refund) with the courier column and the flags, Orders today for those with `metrics.read`, a table on a computer and one card per order on a phone, tick boxes for the bulk bar; `@extas/orders` gained the `toConfirm` view, the payment and channel filters, each row's courier / pieces / return-refund facts (`listExtras`) and a view's oldest order (`viewOldest`)",
+    "note": "the admin order list on the new shell (`/admin/orders`, `orders.read`, demo V12.3 ORD-01): the order service's own views as chips with their counts (all, to confirm, awaiting advance, on hold, cancel requests, cancel pending courier, duplicate review, open, finished), search and the status / payment method / channel filters in the address, the four separate status chips (order, courier, payment, return or refund) with the courier column and the flags, Orders today for those with `metrics.read`, a table on a computer and one card per order on a phone, tick boxes for the bulk bar; `@extas/orders` gained the `toConfirm` view, the payment and channel filters, each row's courier / pieces / return-refund facts (`listExtras`) and a view's oldest order (`viewOldest`); **follow-up (7 Nov, #93; follow-up 224):** orders awaiting their advance are a \"Needs you now\" row and count in the Orders badge",
     "github": [
+     "#93, 7 Nov",
      "#35, 24 Oct"
     ]
    },
@@ -13973,8 +13995,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "the two-size follow-up (`orders.twoSize`, **off**; commands `twoSizeCheck`, `twoSizeAnswer`): after placing, the same piece in the same colour in neighbouring sizes (the bag's grouping, a run S-M-L is one group) flags \"2 sizes — check\", asks the customer on his order page and leaves a TWO_SIZE call task; a group the customer called \"for different people\" in the bag is only a note, \"2 sizes — for someone else\" (SIM-F-036); \"only M\" takes the other sizes out through the edit (money and stock consistent, refused once booked), \"keep all\" changes nothing; the admin band's buttons, `POST /api/admin/orders/:id/two-size`, `POST /api/account/two-size` and `/two-size-answer`; WhatsApp/SMS template `order.twoSize` in the default pack, off; the shop card on `/account/orders/<n>` built 24 Oct with PR 150 (follow-up 261: \"You ordered two sizes\" with Keep all / Only S / Only M)",
+    "note": "the two-size follow-up (`orders.twoSize`, **off**; commands `twoSizeCheck`, `twoSizeAnswer`): after placing, the same piece in the same colour in neighbouring sizes (the bag's grouping, a run S-M-L is one group) flags \"2 sizes — check\", asks the customer on his order page and leaves a TWO_SIZE call task; a group the customer called \"for different people\" in the bag is only a note, \"2 sizes — for someone else\" (SIM-F-036); \"only M\" takes the other sizes out through the edit (money and stock consistent, refused once booked), \"keep all\" changes nothing; the admin band's buttons, `POST /api/admin/orders/:id/two-size`, `POST /api/account/two-size` and `/two-size-answer`; WhatsApp/SMS template `order.twoSize` in the default pack, off; the shop card on `/account/orders/<n>` built 24 Oct with PR 150 (follow-up 261: \"You ordered two sizes\" with Keep all / Only S / Only M); **follow-up (7 Nov, #93; follow-up 266):** \"2 sizes — check\" is an order-list view (`twoSizes`), a \"Needs you now\" row and part of the Orders badge",
     "github": [
+     "#93, 7 Nov",
      "#37, 24 Oct",
      "#36, 24 Oct"
     ]
@@ -13994,7 +14017,8 @@
     ],
     "names": [
      "twoSizeCheck",
-     "twoSizeAnswer"
+     "twoSizeAnswer",
+     "twoSizes"
     ],
     "tests": []
    },
@@ -14259,8 +14283,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "the whole order history in My account (`account.history`, registry v44, on: `filters`, `timeline`; no migration): every order of the customer, newest first, `account.lists.orders` (20) a page with Newer / Older (`?page=`), the groups All · On the way · Delivered · Cancelled & returned as chips with their counts once he has more than a page (`?show=`), and on `/account/orders/<n>` \"What happened\", folded shut: placed, confirmed, packed, with the courier, delivered, returned or cancelled with their stored times, and what he or the shop changed (which fields, a size from → to, a piece added or taken out, the two-size answer, a cancel asked or kept) — never a note, flag, hold, check, name or old value; `@extas/accounts` `orderHistory`, `orderLifecycle`, `lifecycleOf`; with follow-ups 260 and 261 (the edit and two-size cards, commits under PR 143 and 146)",
+    "note": "the whole order history in My account (`account.history`, registry v44, on: `filters`, `timeline`; no migration): every order of the customer, newest first, `account.lists.orders` (20) a page with Newer / Older (`?page=`), the groups All · On the way · Delivered · Cancelled & returned as chips with their counts once he has more than a page (`?show=`), and on `/account/orders/<n>` \"What happened\", folded shut: placed, confirmed, packed, with the courier, delivered, returned or cancelled with their stored times, and what he or the shop changed (which fields, a size from → to, a piece added or taken out, the two-size answer, a cancel asked or kept) — never a note, flag, hold, check, name or old value; `@extas/accounts` `orderHistory`, `orderLifecycle`, `lifecycleOf`; with follow-ups 260 and 261 (the edit and two-size cards, commits under PR 143 and 146); **follow-ups (7 Nov, #93; follow-ups 300–302):** \"What happened\" names the pieces in Bengali on the Bengali page; a test-server fill gives the sample customer two pages of orders so the device gate measures the pager; `account.history` is a card on Customers › Customer settings",
     "github": [
+     "#93, 7 Nov",
      "#37, 24 Oct"
     ]
    },
@@ -14284,7 +14309,9 @@
      "orderLifecycle",
      "lifecycleOf"
     ],
-    "tests": []
+    "tests": [
+     "a test-server fill gives the sample customer two pages of orders so the device gate measures the pager"
+    ]
    },
    "updates": [],
    "mentions": [
@@ -14410,8 +14437,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "hold with a reason key (`orders.hold.reasons`, \"other\" needs a note) visible to support, release back to where it was held from; a long hold (`orders.hold.reviewHours`, 0 = off) or an overdue advance (`orders.advance.waitHours`, SIM-F-043) only hands the order to a person, never cancels",
+    "note": "hold with a reason key (`orders.hold.reasons`, \"other\" needs a note) visible to support, release back to where it was held from; a long hold (`orders.hold.reviewHours`, 0 = off) or an overdue advance (`orders.advance.waitHours`, SIM-F-043) only hands the order to a person, never cancels; **follow-up (7 Nov, #93; follow-up 192):** the order timers (long hold, overdue advance) run on the worker once an hour per store while one is above 0 (`orders.followUps.run`; both 0 as shipped); it only raises a call task and a timeline line",
     "github": [
+     "#93, 7 Nov",
      "#35, 23 Oct"
     ]
    },
@@ -14420,7 +14448,8 @@
     "settings": [
      "orders.hold.reasons",
      "orders.hold.reviewHours",
-     "orders.advance.waitHours"
+     "orders.advance.waitHours",
+     "orders.followUps.run"
     ],
     "code": [],
     "names": [],
@@ -14643,8 +14672,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "cancellation notice (SIM-F-013): the journey's \"cancelled\" step (off by default, outside the caps, never twice) says why in plain words per cancel code (`messages.cancelNotice`, en and bn; never the team's note), sends nothing for silent reasons (fake, his number used by someone else: logged `REASON_SILENT`), and for a duplicate names the order that goes ahead with its tracking link (the review's match, else his other open order; template `order.cancelledDuplicate`); tokens `{cancelReason}`, `{keptOrderNumber}`, `{keptOrderLink}`; default pack v3; registry v45; tests on PostgreSQL",
+    "note": "cancellation notice (SIM-F-013): the journey's \"cancelled\" step (off by default, outside the caps, never twice) says why in plain words per cancel code (`messages.cancelNotice`, en and bn; never the team's note), sends nothing for silent reasons (fake, his number used by someone else: logged `REASON_SILENT`), and for a duplicate names the order that goes ahead with its tracking link (the review's match, else his other open order; template `order.cancelledDuplicate`); tokens `{cancelReason}`, `{keptOrderNumber}`, `{keptOrderLink}`; default pack v3; registry v45; tests on PostgreSQL; **follow-up (7 Nov, #93; follow-up 314):** the customer's cancelled order page says why (the cancel notice's own words) and, for a duplicate, names the order that goes ahead; read only",
     "github": [
+     "#93, 7 Nov",
      "#39, 24 Oct"
     ]
    },
@@ -14707,8 +14737,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "orders to the ERP v6 (v6 stores only; v5 unchanged): one `lineId` per piece with quantity 1 (follow-up 491), `customerPrice` in whole taka (the order's discount spread by value, a combo's remainder on its last piece: 1600 over 3 → 533, 533, 534), `deliveryCharge`, `advancePaid` (online + wallet), `grade`; ErpOrder / ErpOrderLine rows kept with the order (line ids stable across revisions); the answer's `erpTotal`, each line's `shopPrice` and `fromReturnStock` stored. A 409 the ERP keeps against its key is HELD with its reason and goes again by itself with a new key round (migration `0053_erp_orders_v6`: `ErpPush.keyRound`, `heldReason`): `ACCOUNT_ON_HOLD` pauses checkout (`erp.hold.pauseCheckout`, on; `PAUSED`, the bag kept) until `account.released` or the account check; `INSUFFICIENT_STOCK` when the ERP has the stock; `NO_SHOP_PRICE` stops that SKU (`shopPriceMissingAt`) until the ERP takes it; an order cancelled before the ERP had it is never sent. `order.line.short` / `filled` handled; the order page's ERP card shows \"From ERP return stock\" and the admin decides a short line (WAIT, REPLACE, CANCEL; `orders.lines`, audited). Follow-up 490: the order check (`inventory.erp.checkOrders`, every `erp.account.checkMinutes`) reads the account and the ERP's own copy of open orders, so a lost line webhook or answer is caught up. Registry v66 (`erp.orders.*`). Store isolation tested. 31 Oct (CN-033, built, CN-031 lane A; not counted again): `erp.orders.bGradeOpen` (v72, off): while off a B-grade piece is not sold on a v6 store, no B-grade REPLACE is asked for, and a `422` naming `bGradeSkus` holds the order as `B_GRADE_CLOSED` with an admin message (woken once when the switch goes on); the practice ERP answers the same 422; the acceptance check sends a B-grade line only while open",
+    "note": "orders to the ERP v6 (v6 stores only; v5 unchanged): one `lineId` per piece with quantity 1 (follow-up 491), `customerPrice` in whole taka (the order's discount spread by value, a combo's remainder on its last piece: 1600 over 3 → 533, 533, 534), `deliveryCharge`, `advancePaid` (online + wallet), `grade`; ErpOrder / ErpOrderLine rows kept with the order (line ids stable across revisions); the answer's `erpTotal`, each line's `shopPrice` and `fromReturnStock` stored. A 409 the ERP keeps against its key is HELD with its reason and goes again by itself with a new key round (migration `0053_erp_orders_v6`: `ErpPush.keyRound`, `heldReason`): `ACCOUNT_ON_HOLD` pauses checkout (`erp.hold.pauseCheckout`, on; `PAUSED`, the bag kept) until `account.released` or the account check; `INSUFFICIENT_STOCK` when the ERP has the stock; `NO_SHOP_PRICE` stops that SKU (`shopPriceMissingAt`) until the ERP takes it; an order cancelled before the ERP had it is never sent. `order.line.short` / `filled` handled; the order page's ERP card shows \"From ERP return stock\" and the admin decides a short line (WAIT, REPLACE, CANCEL; `orders.lines`, audited). Follow-up 490: the order check (`inventory.erp.checkOrders`, every `erp.account.checkMinutes`) reads the account and the ERP's own copy of open orders, so a lost line webhook or answer is caught up. Registry v66 (`erp.orders.*`). Store isolation tested. 31 Oct (CN-033, built, CN-031 lane A; not counted again): `erp.orders.bGradeOpen` (v72, off): while off a B-grade piece is not sold on a v6 store, no B-grade REPLACE is asked for, and a `422` naming `bGradeSkus` holds the order as `B_GRADE_CLOSED` with an admin message (woken once when the switch goes on); the practice ERP answers the same 422; the acceptance check sends a B-grade line only while open; **follow-ups (7 Nov, #93; follow-ups 532, 539 part b):** `shop-price.changed` lets the SKU sell again and sends the orders held for its price at once; orders the ERP keeps refusing raise one alert after the owner's hours (registry v239 `erp.orders.heldAlertAfterHours`, empty = off)",
     "github": [
+     "#93, 7 Nov",
      "#69, 31 Oct",
      "#61, 31 Oct",
      "#59, 30 Oct",
@@ -14726,7 +14757,8 @@
      "inventory.erp.checkOrders",
      "erp.account.checkMinutes",
      "erp.orders.*",
-     "erp.orders.bGradeOpen"
+     "erp.orders.bGradeOpen",
+     "erp.orders.heldAlertAfterHours"
     ],
     "code": [],
     "names": [
@@ -14749,7 +14781,8 @@
      "filled",
      "422",
      "bGradeSkus",
-     "B_GRADE_CLOSED"
+     "B_GRADE_CLOSED",
+     "shop-price.changed"
     ],
     "tests": [
      "Store isolation tested"
@@ -18509,8 +18542,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "return-reason capture (SIM-F-038; no migration; `orders.refusal.reasons` v58 adds \"didn't like it\" and \"ordered by mistake\" beside size, not as in the picture and the rest, the owner's list): the courier's note on a door outcome kept as the rider's note (ShipmentEvent.riderNote, follow-up 345); a person records the reason with the rider's words (`POST /api/admin/delivery/parcels/:id/return-reason`, `delivery.outcomes`) on the parcel's one ReturnRecord (refused at the door or charge-paid), the timeline (`return.reason`) and the phone history (PR 521's `refusalKeys`); the order page's \"Why it came back\" row and band; `@extas/metrics` `returnReasons` by reason and kind, store-wide or per customer; nothing moves money",
+    "note": "return-reason capture (SIM-F-038; no migration; `orders.refusal.reasons` v58 adds \"didn't like it\" and \"ordered by mistake\" beside size, not as in the picture and the rest, the owner's list): the courier's note on a door outcome kept as the rider's note (ShipmentEvent.riderNote, follow-up 345); a person records the reason with the rider's words (`POST /api/admin/delivery/parcels/:id/return-reason`, `delivery.outcomes`) on the parcel's one ReturnRecord (refused at the door or charge-paid), the timeline (`return.reason`) and the phone history (PR 521's `refusalKeys`); the order page's \"Why it came back\" row and band; `@extas/metrics` `returnReasons` by reason and kind, store-wide or per customer; nothing moves money; **follow-up (7 Nov, #93; follow-up 458):** the order page's Hold and Cancel reasons start on an empty \"Pick a reason\" and a reason is required",
     "github": [
+     "#93, 7 Nov",
      "#49, 25 Oct"
     ]
    },
@@ -18635,8 +18669,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "the shipment at pickup and every delivery result (v6 only): `POST /shipments` when the courier confirms pickup (never at booking: that is when the ERP bills; `billedAt` kept); every courier result (DELIVERED, PARTIAL, RETURNED) by `PUT /orders/{id}/delivery` with what was collected, once per result; a \"Delivered\" a PR 525 check holds waits, and the resolved truth goes; the order page's **Partial delivery** box (kept lines, amount paid, discount promised by phone, phone-confirmed, note; `delivery.outcomes`), required when the courier says partial, sent again when changed, closed once the parcel is handed back; the ERP's identification colour (green, yellow, orange) on the order page; delivery charge and underpaid amounts stay in Retail's books. Exchange legs left to PR 614 (the same functions take the exchange's ErpOrder). The tracking run catches up any parcel whose facts did not reach the ERP",
+    "note": "the shipment at pickup and every delivery result (v6 only): `POST /shipments` when the courier confirms pickup (never at booking: that is when the ERP bills; `billedAt` kept); every courier result (DELIVERED, PARTIAL, RETURNED) by `PUT /orders/{id}/delivery` with what was collected, once per result; a \"Delivered\" a PR 525 check holds waits, and the resolved truth goes; the order page's **Partial delivery** box (kept lines, amount paid, discount promised by phone, phone-confirmed, note; `delivery.outcomes`), required when the courier says partial, sent again when changed, closed once the parcel is handed back; the ERP's identification colour (green, yellow, orange) on the order page; delivery charge and underpaid amounts stay in Retail's books. Exchange legs left to PR 614 (the same functions take the exchange's ErpOrder). The tracking run catches up any parcel whose facts did not reach the ERP; **follow-up (7 Nov, #93; follow-up 537):** the Partial delivery box starts from the shop's door record (kept pieces, amount collected) until it is saved; read side only, it never writes the COD record",
     "github": [
+     "#93, 7 Nov",
      "#60, 31 Oct",
      "#56, 30 Oct",
      "#55, 30 Oct"
@@ -18820,8 +18855,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "exchange through the ERP (CN-028; extends PR 185–190): on `erp.model` v6 the approval goes through the ERP — only within `policy.exchange.windowHours` of the courier's \"delivered\"; the replaced lines of the old order marked; a live ERP stock check first, regular orders first (`exchange.erp.keepForOrders`): short stock leaves the exchange waiting with the admin told, retried hourly with a new idempotency key; `POST /orders` with `exchange.ofExternalOrderId`, a clear note and per-line `replacesLineId`, the new order `<old>-X<n>`; a dearer piece paid by the customer when `exchange.passPriceRiseToCustomer` is on, no money ever goes back; the original sale stands. The hourly job reads `GET /exchanges` (the 4-day watch; settled, billed, credited or cancelled close the shop exchange); the Exchanges tab shows the exchanges at risk from `GET /exchanges?status=pending`; a late old piece marked once by `POST /exchanges/{id}/late-return`. v5 unchanged. 31 Oct (CN-033, built, CN-031 lane A; not counted again): a refused exchange parcel puts the new piece on `WAITING_RETURN` (no delivery day): billed `DEADLINE_PASSED` the night after, `NEW_PIECE_DECLINED` when declined, credited `LATE_RETURN` when back late and approved; the practice ERP's old \"cancelled, no bill\" behind its switch `refusedExchange=cancel`; the risk list and the Exchanges tab say \"New piece not back (parcel refused)\"; acceptance check `exchanges.refused` (PR 621) changed in the same commit",
+    "note": "exchange through the ERP (CN-028; extends PR 185–190): on `erp.model` v6 the approval goes through the ERP — only within `policy.exchange.windowHours` of the courier's \"delivered\"; the replaced lines of the old order marked; a live ERP stock check first, regular orders first (`exchange.erp.keepForOrders`): short stock leaves the exchange waiting with the admin told, retried hourly with a new idempotency key; `POST /orders` with `exchange.ofExternalOrderId`, a clear note and per-line `replacesLineId`, the new order `<old>-X<n>`; a dearer piece paid by the customer when `exchange.passPriceRiseToCustomer` is on, no money ever goes back; the original sale stands. The hourly job reads `GET /exchanges` (the 4-day watch; settled, billed, credited or cancelled close the shop exchange); the Exchanges tab shows the exchanges at risk from `GET /exchanges?status=pending`; a late old piece marked once by `POST /exchanges/{id}/late-return`. v5 unchanged. 31 Oct (CN-033, built, CN-031 lane A; not counted again): a refused exchange parcel puts the new piece on `WAITING_RETURN` (no delivery day): billed `DEADLINE_PASSED` the night after, `NEW_PIECE_DECLINED` when declined, credited `LATE_RETURN` when back late and approved; the practice ERP's old \"cancelled, no bill\" behind its switch `refusedExchange=cancel`; the risk list and the Exchanges tab say \"New piece not back (parcel refused)\"; acceptance check `exchanges.refused` (PR 621) changed in the same commit; **follow-up (7 Nov, #93; follow-up 541):** an exchange's replacing piece goes to the ERP with its own grade (a B-grade SKU as B)",
     "github": [
+     "#93, 7 Nov",
      "#69, 31 Oct",
      "#61, 31 Oct",
      "#56, 30 Oct"
@@ -24292,8 +24328,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "festive cut-off banners and the delivery promise (After launch, batch 10; `marketing.festiveCutoff` v216, off; home, product, checkout ticked; no migration): the festive Smart Rules' \"order by …\" words on the home page (with a clock), under the product's stock line and at checkout and the thank-you page, where a band past its time shows the \"after\" words in place of the hours promise; Marketing › Festive cut-off (`/admin/marketing/festive`) lists each rule's bands and what the shop says now; no date, hour, price or charge invented; **follow-ups (6 Nov, #92; follow-ups 653–655):** the festive cut-off reaches the order's late flag (an order placed past its band's cut-off, switch on and checkout ticked, has no hours promise and is never late — so it is no longer an apology-credit candidate either, as after Eid; no money moves), the receipt's promise (no hours past the cut-off) and the bag (the rule's words under the Eid lines; the tick now reads \"Bag, checkout and thank-you page\"); off as shipped",
+    "note": "festive cut-off banners and the delivery promise (After launch, batch 10; `marketing.festiveCutoff` v216, off; home, product, checkout ticked; no migration): the festive Smart Rules' \"order by …\" words on the home page (with a clock), under the product's stock line and at checkout and the thank-you page, where a band past its time shows the \"after\" words in place of the hours promise; Marketing › Festive cut-off (`/admin/marketing/festive`) lists each rule's bands and what the shop says now; no date, hour, price or charge invented; **follow-ups (6 Nov, #92; follow-ups 653–655):** the festive cut-off reaches the order's late flag (an order placed past its band's cut-off, switch on and checkout ticked, has no hours promise and is never late — so it is no longer an apology-credit candidate either, as after Eid; no money moves), the receipt's promise (no hours past the cut-off) and the bag (the rule's words under the Eid lines; the tick now reads \"Bag, checkout and thank-you page\"); off as shipped; **follow-up (7 Nov, #93; follow-up 720):** the festive cut-off line never names another area's later time — the short words only when they name every band the line speaks for (the customer's own band when the shop knows it), else the full words, else no line; words only, no charge, rule or COD change",
     "github": [
+     "#93, 7 Nov",
      "#92, 6 Nov",
      "#84, 6 Nov"
     ]
@@ -24334,8 +24371,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "marketing calendar across ads, content and social (After launch, batch 10; `marketing.calendar` v217, off, 60 days; migration `0161_marketing_calendar`): Marketing › Calendar (`/admin/marketing/calendar`, More options) — campaigns, landing pages, ad campaigns, message sends, seasonal home windows, festive cut-offs, blog and social posts day by day on the shop's clock, lane chips and \"At a glance\" (also a card on Marketing › Campaigns); never starts, sends or changes anything; the owner's plan lines (CalendarEntry kind plan) the only writes, never deleted; **follow-ups (6 Nov, #92; follow-up 656):** a plan line may name its campaign (shown with it and linking there; no migration) and a month grid view (`?view=month`, weeks from the locale's first weekday), its words at 14 px, long names wrapping, dots on phones and 44 px links (found by the browser check)",
+    "note": "marketing calendar across ads, content and social (After launch, batch 10; `marketing.calendar` v217, off, 60 days; migration `0161_marketing_calendar`): Marketing › Calendar (`/admin/marketing/calendar`, More options) — campaigns, landing pages, ad campaigns, message sends, seasonal home windows, festive cut-offs, blog and social posts day by day on the shop's clock, lane chips and \"At a glance\" (also a card on Marketing › Campaigns); never starts, sends or changes anything; the owner's plan lines (CalendarEntry kind plan) the only writes, never deleted; **follow-ups (6 Nov, #92; follow-up 656):** a plan line may name its campaign (shown with it and linking there; no migration) and a month grid view (`?view=month`, weeks from the locale's first weekday), its words at 14 px, long names wrapping, dots on phones and 44 px links (found by the browser check); **follow-up (7 Nov, #93):** the calendar's bars view text at the Lumen card size (14 px), the last header date kept inside the bar",
     "github": [
+     "#93, 7 Nov",
      "#92, 6 Nov",
      "#84, 6 Nov"
     ]
@@ -28785,8 +28823,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "Retail's ERP account ledger (`ErpAccountEntry` append-only and hash-chained, one entry per ERP event per store link; bill at `erpTotal` once per order; return credit, exchange extra / adjustment / bill / credit, payment, switch transfer, opening balance once; a correction = REVERSAL + new effect, `reversedBy` respected; balance = the ERP's with zero tolerance), the pipeline stock from the shop's own records (`ErpPipelinePiece` / `ErpPipelineMove`, any past day), \"paid to ERP\" only recorded (`erp.payments.record`, reversal by a new record, matched by amount, reference and `books.payments.matchDays`), job `inventory.books.checkAccount` every `erp.account.checkMinutes` with the `GET /account` catch-up of lost payments and the hold (follow-up 490), Money → Books → ERP account (`/admin/money/books`); registry v68; CN-029 Phase 1 (Gyani)",
+    "note": "Retail's ERP account ledger (`ErpAccountEntry` append-only and hash-chained, one entry per ERP event per store link; bill at `erpTotal` once per order; return credit, exchange extra / adjustment / bill / credit, payment, switch transfer, opening balance once; a correction = REVERSAL + new effect, `reversedBy` respected; balance = the ERP's with zero tolerance), the pipeline stock from the shop's own records (`ErpPipelinePiece` / `ErpPipelineMove`, any past day), \"paid to ERP\" only recorded (`erp.payments.record`, reversal by a new record, matched by amount, reference and `books.payments.matchDays`), job `inventory.books.checkAccount` every `erp.account.checkMinutes` with the `GET /account` catch-up of lost payments and the hold (follow-up 490), Money → Books → ERP account (`/admin/money/books`); registry v68; CN-029 Phase 1 (Gyani); **follow-up (7 Nov, #93; follow-up 559, part a):** a pipeline move locks its piece (`FOR UPDATE`) and re-reads its state, so two runs at once never write a stale move",
     "github": [
+     "#93, 7 Nov",
      "#60, 31 Oct",
      "#56, 30 Oct"
     ]
@@ -28809,7 +28848,8 @@
      "erpTotal",
      "reversedBy",
      "ErpPipelinePiece",
-     "ErpPipelineMove"
+     "ErpPipelineMove",
+     "FOR UPDATE"
     ],
     "tests": []
    },
@@ -28887,8 +28927,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "daily summary to the ERP (CN-029 Phase 1): each shop day from the shop's own records on the delivery-day basis, every line from its one source (§3.3), unknown lines in `incomplete`, the exact minor lines kept beside the whole-taka body (`minorLines`, migration 0056; PR 616's tie reads them); append-only versions, sent at `erp.summary.sendAt` and retried until accepted (a 4xx refusal waits for a person), a late fact re-sent within `books.resend.days` (never a closed month), `summary.missing` answered at once, the hourly check against the ERP's stored copy; per store and per link, v5 builds nothing; the Books status card and **Money → Daily summary** (`/admin/money/books/daily`); registry v69",
+    "note": "daily summary to the ERP (CN-029 Phase 1): each shop day from the shop's own records on the delivery-day basis, every line from its one source (§3.3), unknown lines in `incomplete`, the exact minor lines kept beside the whole-taka body (`minorLines`, migration 0056; PR 616's tie reads them); append-only versions, sent at `erp.summary.sendAt` and retried until accepted (a 4xx refusal waits for a person), a late fact re-sent within `books.resend.days` (never a closed month), `summary.missing` answered at once, the hourly check against the ERP's stored copy; per store and per link, v5 builds nothing; the Books status card and **Money → Daily summary** (`/admin/money/books/daily`); registry v69; **follow-ups (7 Nov, #93; follow-ups 566, 568):** a day on the Daily summary page opens that day's lines with their sources (the match page's day explain); on the practice ERP without its data a day says \"Waiting for the ERP key\"",
     "github": [
+     "#93, 7 Nov",
      "#60, 31 Oct",
      "#57, 30 Oct"
     ]
@@ -30625,8 +30666,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "signed calls from the ERP to the shop (CN-028, docs/erp/site-changes-v6.md §2.7; no migration): `GET /erp-api/top-products?from&to&limit` (Sales by SKU from `@extas/metrics` `salesBySku`: pieces, net sales, profit over the cost snapshot) and `GET /erp-api/customers?page&pageSize&search` (`@extas/customers` `erpCustomerPage`: one row per person who ordered, total spent = Sales), answered live and never pushed. Signed `X-Extas-Signature` over `METHOD\\nPATH?QUERY\\nTIMESTAMP`, constant-time, refused beyond `erp.siteApi.maxAgeSeconds` (300); the store is the one whose own secret verifies (CN-029 §16: the new optional third ERP key `signingSecret`, else the webhook secret; v6 stores only; a shared secret refused). Today the key and the card are the mother store's, on Keys & connections; each store's own key and card come with its ERP link page (PR 619). Off per store (`erp.siteApi.enabled`, registry v65) until switched on on the new \"The ERP asks the shop\" card on `/admin/integrations` (`vault.write`), which shows the base URL, the latest verified calls and the refused calls summed. qa-gate (30 Oct): a call refused from the request alone (path, method, no or a malformed signature) reads no database, setting or vault; refusals are only counted (one SecurityEvent `erp.site-call.refused` summary per `erp.siteApi.refusedLogMinutes`), after `erp.siteApi.refusedPerMinute` refused calls a minute further unverified calls get 429 without a store lookup, and only a verified caller's call gets its own `erp.site-call` row (no customer data); the search length is `erp.siteApi.searchMaxChars`; the query is signed percent-encoded. The preview gate lets only these two GET paths through, matched on the raw request target case for case, as are the ERP and WhatsApp webhook exemptions (gate v5; CI runs the live gate checks on a pinned Caddy 2.10.2). After launch",
+    "note": "signed calls from the ERP to the shop (CN-028, docs/erp/site-changes-v6.md §2.7; no migration): `GET /erp-api/top-products?from&to&limit` (Sales by SKU from `@extas/metrics` `salesBySku`: pieces, net sales, profit over the cost snapshot) and `GET /erp-api/customers?page&pageSize&search` (`@extas/customers` `erpCustomerPage`: one row per person who ordered, total spent = Sales), answered live and never pushed. Signed `X-Extas-Signature` over `METHOD\\nPATH?QUERY\\nTIMESTAMP`, constant-time, refused beyond `erp.siteApi.maxAgeSeconds` (300); the store is the one whose own secret verifies (CN-029 §16: the new optional third ERP key `signingSecret`, else the webhook secret; v6 stores only; a shared secret refused). Today the key and the card are the mother store's, on Keys & connections; each store's own key and card come with its ERP link page (PR 619). Off per store (`erp.siteApi.enabled`, registry v65) until switched on on the new \"The ERP asks the shop\" card on `/admin/integrations` (`vault.write`), which shows the base URL, the latest verified calls and the refused calls summed. qa-gate (30 Oct): a call refused from the request alone (path, method, no or a malformed signature) reads no database, setting or vault; refusals are only counted (one SecurityEvent `erp.site-call.refused` summary per `erp.siteApi.refusedLogMinutes`), after `erp.siteApi.refusedPerMinute` refused calls a minute further unverified calls get 429 without a store lookup, and only a verified caller's call gets its own `erp.site-call` row (no customer data); the search length is `erp.siteApi.searchMaxChars`; the query is signed percent-encoded. The preview gate lets only these two GET paths through, matched on the raw request target case for case, as are the ERP and WhatsApp webhook exemptions (gate v5; CI runs the live gate checks on a pinned Caddy 2.10.2). After launch; **follow-up (7 Nov, #93; follow-up 526):** the ERP's signed calls can refuse a signature already answered (registry v238 `erp.siteApi.refuseReplays`, off; code REPLAYED)",
     "github": [
+     "#93, 7 Nov",
      "#60, 31 Oct",
      "#59, 30 Oct",
      "#57, 30 Oct"
@@ -30642,7 +30684,8 @@
      "vault.write",
      "erp.siteApi.refusedLogMinutes",
      "erp.siteApi.refusedPerMinute",
-     "erp.siteApi.searchMaxChars"
+     "erp.siteApi.searchMaxChars",
+     "erp.siteApi.refuseReplays"
     ],
     "code": [
      "GET /erp-api/top-products?from&to&limit",
@@ -32287,8 +32330,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "the customer invoice issued once per order and kept (migration `0050_invoice_support` additive: `GeneratedDocument` number, fingerprint, data, checked time; settings registry v63 `registry-invoice.ts`, group `orders`): one number per order for life, a new version with the same number (\"Revised n\") only when the order's content changes (lines, money, names, address) — payments, confirms and status steps never make one; the worker job `invoices.issue` (on, every 10 minutes, 200 a run, 30 days back) issues new and edited orders, an older order gets its invoice when opened or printed; the invoice shows only what the order holds (no price or total is worked out again, CN-022). Orders → Packing & print → Invoices (`/admin/orders/packing/invoices`): counts, views all / revised / waiting, search, one PDF of many on paper (A4/A5) or the thermal roll (80/58 mm), per order paper, roll or the chat picture (JPG); letterhead and column names on every page, a row never split, the courier's consignment barcode. `documents.invoice.print` (A4, roll 80 mm, 203 dpi, en, barcode on, logo on, 100 per print), `documents.invoice.image` (JPG, 1240 px, quality 85), `documents.invoice.issue`; with `account.invoice` as cards on the page. New permission `orders.invoiceSettings`; the customer's invoice shows the issued number, \"Revised n\" and the barcode",
+    "note": "the customer invoice issued once per order and kept (migration `0050_invoice_support` additive: `GeneratedDocument` number, fingerprint, data, checked time; settings registry v63 `registry-invoice.ts`, group `orders`): one number per order for life, a new version with the same number (\"Revised n\") only when the order's content changes (lines, money, names, address) — payments, confirms and status steps never make one; the worker job `invoices.issue` (on, every 10 minutes, 200 a run, 30 days back) issues new and edited orders, an older order gets its invoice when opened or printed; the invoice shows only what the order holds (no price or total is worked out again, CN-022). Orders → Packing & print → Invoices (`/admin/orders/packing/invoices`): counts, views all / revised / waiting, search, one PDF of many on paper (A4/A5) or the thermal roll (80/58 mm), per order paper, roll or the chat picture (JPG); letterhead and column names on every page, a row never split, the courier's consignment barcode. `documents.invoice.print` (A4, roll 80 mm, 203 dpi, en, barcode on, logo on, 100 per print), `documents.invoice.image` (JPG, 1240 px, quality 85), `documents.invoice.issue`; with `account.invoice` as cards on the page. New permission `orders.invoiceSettings`; the customer's invoice shows the issued number, \"Revised n\" and the barcode; **follow-ups (7 Nov, #93; follow-ups 500, 508):** \"Print invoice\" on the order page (paper, roll or the chat picture, through the Invoices page's own file route); a settings card's refused save says \"no permission\", \"not there any more\" or \"signed out\" in the admin's language",
     "github": [
+     "#93, 7 Nov",
      "#54, 30 Oct"
     ]
    },
@@ -33682,6 +33726,7 @@
     "date": "2026-10-30",
     "note": "the support core (new package `@extas/support`; migration `0050_invoice_support` additive: Conversation subject, order, last direction and preview, waiting since, assigned at; Message sender name, request key, fail reason, unique per external id and per press; MessageAttachment file name, type, size, source; `ConversationEvent` the who-did-what log, append-only at the database; settings registry v63 `registry-support.ts`, group `support`): one conversation per person per channel with its messages in order — the customer's, the shop's replies with the sender's name kept as it was, internal notes the customer never sees — and their files (image, video, PDF, checked by their contents, kept in our storage); OPEN / WAITING / SOLVED, a solved one reopens when the customer writes; take, let go, give to someone who may reply; a reply sent twice is one message, a stale screen is refused (`STALE`). Channels plug in later (PR 426): a channel kind and an adapter (`SupportChannelAdapter`), inbound through `receiveMessage`; with none connected a reply is kept as NOT_SENT (`CHANNEL_NOT_CONNECTED`). Support → Inbox (`/admin/support`: views open, waiting, mine, not taken, solved, all; search; channel), one conversation (`/admin/support/c/[id]`: thread, reply / note box with files, status, owner, customer and order, the log) and Support settings (`/admin/support/settings`): `support.inbox` (50 a page, 2000 characters, take on reply off, waiting after a reply on), `support.attachments` under More options (on, 4 a message, 10 MB, image / video / PDF); a customer's number is masked by `customers.phoneMask` (PR 284), whole only with `customers.phone`. Permissions `support.read`, `support.reply`, `support.assign`, `support.settings`. The sample seed gains a sample live-chat channel with three conversations",
     "github": [
+     "#93, 7 Nov",
      "#75, 1 Nov",
      "#54, 30 Oct"
     ]
@@ -33731,7 +33776,7 @@
      "sortKey": 43200,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** the inbox search reads Bengali digits and drops +880 / 880 / 00880 and the leading 0 (`inboxPhoneDigits`)."
+     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** the inbox search reads Bengali digits and drops +880 / 880 / 00880 and the leading 0 (`inboxPhoneDigits`).; **follow-ups (7 Nov, #93; follow-ups 504, 506, 507, 509):** chat files (the support folder) never show in the media library or the picture pickers and are never orphans; the customer card beside a conversation shows his exchanges and the team's notes (customers.read); a chat's subject and its order link can be edited, each logged; Support in \"Needs you now\" and the sidebar badge (customers waiting, longest first, and late chats)"
     }
    ],
    "mentions": [
