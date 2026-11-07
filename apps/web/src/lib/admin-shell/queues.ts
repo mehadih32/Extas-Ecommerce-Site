@@ -11,19 +11,22 @@
 // from when the hold began, until the ERP releases it; it stops new orders, so it leads the dashboard's card.
 // S21 · PR 420 (B7.3): agent fixes and new skills waiting for the owner's OK (Reports › Site health › Fixes to approve).
 // Follow-up 509 (PR 425, 431): customers waiting for the team's answer in Support (the Support badge) and late chats.
+// PR 180 follow-up 436: parcels waiting for the rider — booked, sticker printed, still with us and not handed over (an
+// open handover sheet's parcels among them), oldest by booking, on Orders › Packing & print › Handover.
 // Counts are kept for `admin.shell.badgeCacheSeconds` per store (one count for everyone; the keys filter per person).
 import type { PrismaClient } from '@extas/db/client';
 import type { PermissionKey } from '@extas/auth';
 import { workerStatus } from '@extas/jobs';
 import { erpHoldNotice, heldTooLong, keptAtSwitchTooLong } from '@extas/inventory';
 import { orderQueueCounts } from '@extas/orders';
+import { STILL_WITH_US } from '@extas/shipping';
 import type { AdminSectionId } from '@extas/settings';
 import type { ShellIconName } from './icons';
 import type { ShellViewer } from './sections';
 import type { TodoGroup } from './todo';
 import { waitingProposals } from '../admin-health/fixes';
 
-export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersTwoSizes' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'erpHeldLong' | 'erpKeptAtSwitch' | 'agentFixes' | 'supportWaiting' | 'supportLate';
+export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersTwoSizes' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'erpHeldLong' | 'erpKeptAtSwitch' | 'agentFixes' | 'supportWaiting' | 'supportLate' | 'handoverWaiting';
 
 export interface QueueDef {
   id: QueueId;
@@ -47,6 +50,8 @@ export const QUEUES: readonly QueueDef[] = [
   { id: 'ordersReview', perm: 'orders.risk.read', href: '/admin/orders?view=inReview', section: 'orders', tone: 'warn', icon: 'shield', badge: true, group: 'orders' },
   { id: 'ordersCancelRequests', perm: 'orders.confirm', href: '/admin/orders/confirm?view=cancelRequests', section: 'orders', tone: 'bad', icon: 'x', badge: false, group: 'orders' },
   { id: 'ordersCancelPending', perm: 'orders.read', href: '/admin/orders?view=cancelPending', section: 'orders', tone: 'bad', icon: 'uturn', badge: false, group: 'orders' },
+  // follow-up 436 (PR 180): printed parcels still with us, waiting for the rider's handover sheet (no badge: a line)
+  { id: 'handoverWaiting', perm: 'fulfilment.read', href: '/admin/orders/packing/handover', section: 'orders', tone: 'info', icon: 'truck', badge: false, group: 'delivery' },
   { id: 'launch', perm: 'catalogue.read', href: '/admin/products/queue', section: 'products', tone: 'info', icon: 'shirt', badge: true, group: 'products' },
   { id: 'lowStock', perm: 'inventory.read', href: '/admin/stock#st-low', section: 'products', tone: 'warn', icon: 'box', badge: false, group: 'stock' },
   { id: 'countsReview', perm: 'inventory.read', href: '/admin/stock/counts', section: 'products', tone: 'info', icon: 'check', badge: false, group: 'stock' },
@@ -91,7 +96,9 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
   const now = (deps.now ?? (() => new Date()))();
   const waitingWhere = { storeId, status: 'OPEN', waitingSince: { not: null }, contact: { blockedAt: null } };
   const lateWhere = { storeId, status: 'OPEN', slaDueAt: { lt: now }, contact: { blockedAt: null } };
-  const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold, heldLong, keptLong, fixes, waitN, waitOld, lateN, lateOld] = await Promise.all([
+  // follow-up 436: a booked parcel the courier has not picked up, its sticker printed, its order not handed over
+  const handoverWhere = { storeId, status: { in: [...STILL_WITH_US] }, consignmentId: { not: null }, labelPrintCount: { gt: 0 }, isExchangeLeg: false, order: { archivedAt: null, handedOverAt: null } };
+  const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold, heldLong, keptLong, fixes, waitN, waitOld, lateN, lateOld, handN, handOld] = await Promise.all([
     orderQueueCounts(db, storeId, ['toConfirm', 'prepaid', 'awaitingAdvance', 'twoSizes', 'inReview', 'cancelRequests', 'cancelPending']),
     db.publishQueueItem.count({ where: { storeId, status: 'OPEN' } }),
     db.publishQueueItem.findFirst({ where: { storeId, status: 'OPEN' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
@@ -115,6 +122,8 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     db.conversation.findFirst({ where: waitingWhere, orderBy: { waitingSince: 'asc' }, select: { waitingSince: true } }),
     db.conversation.count({ where: lateWhere }),
     db.conversation.findFirst({ where: lateWhere, orderBy: { waitingSince: { sort: 'asc', nulls: 'last' } }, select: { waitingSince: true, slaDueAt: true } }),
+    db.shipment.count({ where: handoverWhere }),
+    db.shipment.findFirst({ where: handoverWhere, orderBy: { bookedAt: { sort: 'asc', nulls: 'last' } }, select: { bookedAt: true, createdAt: true } }),
   ]);
   const dead = jobs.failed.filter((r) => r.status === 'DEAD_LETTERED').map((r) => r.startedAt).sort();
   const o = (id: QueueId, view: string): QueueCount => ({ id, n: orders[view]?.n ?? 0, oldest: iso(orders[view]?.oldest) });
@@ -138,6 +147,7 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     { id: 'agentFixes', n: fixes.n, oldest: iso(fixes.oldest) },
     { id: 'supportWaiting', n: waitN, oldest: iso(waitOld?.waitingSince) },
     { id: 'supportLate', n: lateN, oldest: iso(lateOld?.waitingSince ?? lateOld?.slaDueAt) },
+    { id: 'handoverWaiting', n: handN, oldest: iso(handOld?.bookedAt ?? handOld?.createdAt) },
   ];
 }
 

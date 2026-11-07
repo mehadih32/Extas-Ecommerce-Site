@@ -496,7 +496,8 @@
       "erpHold": "ERP account on hold: the ERP takes no new orders",
       "agentFixes": "Agent fixes and new skills waiting for your OK",
       "supportWaiting": "Customers waiting for an answer",
-      "supportLate": "Chats past their answer time"
+      "supportLate": "Chats past their answer time",
+      "handoverWaiting": "Parcels printed, waiting for the rider's handover"
     },
     "age": {
       "now": "just now",
