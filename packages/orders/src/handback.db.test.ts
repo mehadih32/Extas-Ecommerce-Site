@@ -187,6 +187,30 @@ describe.skipIf(!HAS_TEST_DB)('PR 612 · the hand-back desk and the return list 
     expect(await db().orderEvent.count({ where: { orderId: o.orderId, type: 'return.erpAnswered' } })).toBe(1);
   });
 
+  it('follow-up 552: the desk ticks which pieces were in the bag — only the parcel`s own pieces still on the way back, never more than counted', async () => {
+    const o = await f.shipped('hb-ticks', [{ variantId: f.v.skyM, quantity: 2 }]);
+    await f.returned(o);
+    const [a, b] = [await piece(o, `${o.ext}-1`), await piece(o, `${o.ext}-2`)];
+    const other = await f.shipped('hb-ticks-other');
+    await piece(other, `${other.ext}-1`);
+    const list = await openHandbackList(d(), f.staff, { courier: 'pathao', handedBackAt: day });
+    const scanned = await scanHandbackParcel(d(), f.staff, list.id, { code: o.consignmentId, receivedCount: 1, note: 'one piece in the bag' });
+    const p = scanned.parcels[0]!;
+    expect(p).toMatchObject({ receivedLineIds: [], bagPieces: [{ lineId: a.lineId, sku: 'SAMPLE', open: true }, { lineId: b.lineId, sku: 'SAMPLE', open: true }] });
+    expect(await code(fixHandbackParcel(d(), f.reader, list.id, p.id, { receivedLineIds: [b.lineId] }))).toBe('FORBIDDEN');
+    // another order's piece, or more pieces than counted, is refused
+    expect(await code(fixHandbackParcel(d(), f.staff, list.id, p.id, { receivedLineIds: [`${other.ext}-1`] }))).toBe('INVALID_INPUT');
+    expect(await code(fixHandbackParcel(d(), f.staff, list.id, p.id, { receivedLineIds: [a.lineId, b.lineId] }))).toBe('INVALID_INPUT');
+    const fixed = await fixHandbackParcel(d(), f.staff, list.id, p.id, { receivedLineIds: [b.lineId, b.lineId] });
+    expect(fixed.parcels[0]).toMatchObject({ receivedCount: 1, receivedLineIds: [b.lineId] });
+    expect((await db().erpReturnListParcel.findUniqueOrThrow({ where: { id: p.id } })).receivedLineIds).toEqual([b.lineId]);
+    const audit = await db().auditLog.findFirstOrThrow({ where: { action: 'returnList.corrected', entityId: p.id }, orderBy: { createdAt: 'desc' } });
+    expect(audit.after).toMatchObject({ receivedLineIds: [b.lineId] });
+    // a count fix keeps the ticks; ticking none goes back to "every returning piece"
+    expect((await fixHandbackParcel(d(), f.staff, list.id, p.id, { note: 'checked again' })).parcels[0]!.receivedLineIds).toEqual([b.lineId]);
+    expect((await fixHandbackParcel(d(), f.staff, list.id, p.id, { receivedLineIds: [] })).parcels[0]!.receivedLineIds).toEqual([]);
+  });
+
   it('CN-029 §16: store B never sees or sends store A`s parcels, and B`s own ERP does not know A`s orders', async () => {
     const o = await f.shipped('hb-iso');
     await f.returned(o);

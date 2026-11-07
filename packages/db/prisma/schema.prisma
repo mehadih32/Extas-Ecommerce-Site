@@ -5994,6 +5994,9 @@ model ErpReturnListParcel {
   returnRecordIds String[]      @default([]) @db.Uuid
   exchangeLinkId  String?       @db.Uuid
   resentInListId  String?       @db.Uuid
+  /// Follow-up 552 (migration 0179): the ERP line ids ticked on the desk as in the bag; the hand-back moves only these
+  /// pieces to WAITING_CHECK. Empty (earlier parcels, none ticked): every returning piece of the order, as before.
+  receivedLineIds String[]      @default([])
 
   @@unique([returnListId, externalOrderId])
   @@index([storeId, consignmentId])

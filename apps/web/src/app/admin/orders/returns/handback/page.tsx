@@ -84,6 +84,8 @@ export default async function HandbackPage({ searchParams }: { searchParams: Sea
     scanBtn: h('scanBtn'),
     fix: h('fix'),
     fixSave: h('fixSave'),
+    bag: h('bag'),
+    bagHint: h('bagHint'),
     cancel: t(d, 'returns.act.cancel'),
     // a missing note on the desk is about the count, not an exchange's reason
     errors: { ...errs, REASON_REQUIRED: h('noteNeeded') },
@@ -186,13 +188,20 @@ export default async function HandbackPage({ searchParams }: { searchParams: Sea
                       {[h('counted', { n: n(p.receivedCount) }), p.expectedCount !== null ? h('expected', { n: n(p.expectedCount) }) : null, p.reason ? h(`reason.${p.reason}`) : null, dt.format(new Date(p.scannedAt))].filter(Boolean).join(' · ')}
                     </div>
                     {p.note ? <div className="a2-xs a2-mute a2-mt6">{p.note}</div> : null}
+                    {p.receivedLineIds.length ? (
+                      <div className="a2-xs a2-mt6" data-testid="handback-in-bag">
+                        {h('inBag', { list: p.receivedLineIds.map((x) => `${p.bagPieces.find((b) => b.lineId === x)?.sku ?? ''} · ${x}`.replace(/^ · /, '')).join(', ') })}
+                      </div>
+                    ) : chosen.status === 'OPEN' && p.bagPieces.some((b) => b.open) ? (
+                      <div className="a2-xs a2-mute a2-mt6">{h('bagNone')}</div>
+                    ) : null}
                     <div className="a2-gap8 a2-mt6">
                       {p.unexpected ? <span className="a2-pill line">{h('unexpectedTag')}</span> : null}
                       {p.exchange ? <span className="a2-pill info">{h('exchangeTag')}</span> : null}
                       {p.countDiffers ? <span className="a2-pill bad">{h('claim')}</span> : null}
                       {p.resentInListId ? <span className="a2-pill line">{h('resent')}</span> : null}
                     </div>
-                    {chosen.status === 'OPEN' && canDesk ? <HandbackFixForm listId={chosen.id} parcelId={p.id} count={p.receivedCount} note={p.note} texts={texts} /> : null}
+                    {chosen.status === 'OPEN' && canDesk ? <HandbackFixForm listId={chosen.id} parcelId={p.id} count={p.receivedCount} note={p.note} pieces={p.bagPieces} ticked={p.receivedLineIds} texts={texts} /> : null}
                   </div>
                 ))
               ) : (

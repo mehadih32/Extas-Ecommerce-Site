@@ -7,7 +7,7 @@
 //     PARTIAL: the pieces kept are the ERP's identification (`answer.keptLines`, GREEN / YELLOW), else the admin's
 //     `keptLineIds`; the courier's latest result counts (a correction moves the pieces again) until the piece is handed
 //     back or checked.
-//   hand-back (PR 612, a list sent)    → WAITING_CHECK  cause `handback:<ErpReturnListParcel.id>`
+//   hand-back (PR 612, a list sent)    → WAITING_CHECK  cause `handback:<ErpReturnListParcel.id>` (the pieces ticked as in the bag when any, follow-up 552)
 //   `return.piece.decided` (PR 608)    → APPROVED / DECLINED      cause the eventId (a correction moves it again; an
 //                                         original already undone, `reversedBy`, is skipped)
 //   `return.parcel.resolved` RESOLVED  → the pieces that did not come back were kept: DELIVERED     cause the eventId
@@ -137,17 +137,23 @@ async function deliveryMoves(deps: InventoryDeps, link: BooksLink, timeZone: str
   return n;
 }
 
-/** Phase 3: a parcel on a return list handed back to the ERP (sent or accepted) puts its returning pieces on WAITING_CHECK. */
+/**
+ * Phase 3: a parcel on a return list handed back to the ERP (sent or accepted) puts its returning pieces on
+ * WAITING_CHECK. Follow-up 552: when the desk ticked which pieces were in the bag (`receivedLineIds`), only those; none
+ * ticked (and every parcel before the ticks), every returning piece of the order.
+ */
 async function handbackMoves(deps: InventoryDeps, link: BooksLink): Promise<number> {
-  const parcels = await deps.db.$queryRaw<{ id: string; externalOrderId: string; handedBackAt: Date }[]>`
-    SELECT pc."id", pc."externalOrderId", l."handedBackAt" FROM "ErpReturnListParcel" pc JOIN "ErpReturnList" l ON l."id" = pc."returnListId"
+  const parcels = await deps.db.$queryRaw<{ id: string; externalOrderId: string; handedBackAt: Date; receivedLineIds: string[] | null }[]>`
+    SELECT pc."id", pc."externalOrderId", l."handedBackAt", pc."receivedLineIds" FROM "ErpReturnListParcel" pc JOIN "ErpReturnList" l ON l."id" = pc."returnListId"
     WHERE l."linkId" = ${link.id}::uuid AND l."storeId" = ${link.storeId} AND l."status" IN ('SENT', 'ACCEPTED') AND COALESCE(pc."result", '') <> 'REFUSED'
-      AND EXISTS (SELECT 1 FROM "ErpPipelinePiece" p WHERE p."linkId" = l."linkId" AND p."externalOrderId" = pc."externalOrderId" AND p."state" IN ('BILLED', 'RETURNING'))
+      AND EXISTS (SELECT 1 FROM "ErpPipelinePiece" p WHERE p."linkId" = l."linkId" AND p."externalOrderId" = pc."externalOrderId" AND p."state" IN ('BILLED', 'RETURNING')
+        AND (COALESCE(cardinality(pc."receivedLineIds"), 0) = 0 OR p."lineId" = ANY(pc."receivedLineIds")))
     ORDER BY l."handedBackAt" ASC, pc."id" ASC`;
   let n = 0;
   for (const pc of parcels) {
     n += await deps.db.$transaction(async (tx) => {
-      const pieces = await tx.erpPipelinePiece.findMany({ where: { linkId: link.id, externalOrderId: pc.externalOrderId, exchangeId: null, state: { in: ['BILLED', 'RETURNING'] } }, select: PIECE_SELECT });
+      const ticked = pc.receivedLineIds ?? [];
+      const pieces = await tx.erpPipelinePiece.findMany({ where: { linkId: link.id, externalOrderId: pc.externalOrderId, exchangeId: null, state: { in: ['BILLED', 'RETURNING'] }, ...(ticked.length ? { lineId: { in: ticked } } : {}) }, select: PIECE_SELECT });
       let moved = 0;
       for (const p of pieces) if (await movePiece(tx, p, 'WAITING_CHECK', dayText(pc.handedBackAt), PIPELINE_CAUSE.handback(pc.id))) moved++;
       return moved;
