@@ -355,3 +355,14 @@ describe('PR 557 · the earlier order\'s exchange-on-arrival line', () => {
     }
   });
 });
+
+describe('follow-up 326: the order page names the review like the list', () => {
+  it('a possible duplicate first, then the risk section, else a plain review', async () => {
+    const { detailReview } = await import('./detail');
+    const dup = { status: 'OPEN', risk: false, section: 'duplicate' };
+    const risk = { status: 'OPEN', risk: true, section: 'identity' };
+    expect(detailReview([risk, dup])).toEqual({ kind: 'duplicate' });
+    expect(detailReview([risk, { ...dup, status: 'APPROVED' }])).toEqual({ kind: 'risk', section: 'identity' });
+    expect(detailReview([])).toEqual({ kind: 'other' });
+  });
+});

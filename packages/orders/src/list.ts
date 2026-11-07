@@ -17,7 +17,7 @@ import { notesOf, type OrderNoteView } from './notes';
 import { allowedCommands, customerCancelMode, deliveryTarget, dueOf, FINAL_STATES, OPEN_STATES, paymentPill, type DeliveryTarget, type OrderCommand, type OrderState, type PaymentPill } from './pure';
 import { orderSearchWhere } from './search';
 import { TWO_SIZE_FLAGS } from './two-size';
-import { reviewKindOf, type StoredRuleHit } from './duplicates';
+import { DUPLICATE_SECTION, reviewKindOf, type StoredRuleHit } from './duplicates';
 import { factsOf, machineOf, MACHINE_SELECT, NOT_BOOKED_SHIPMENT } from './service';
 
 export const ORDER_VIEWS = ['all', 'open', 'new', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'readyToBook', 'twoSizes', 'finished'] as const;
@@ -125,6 +125,8 @@ export interface OrderRow {
   cancelPending: boolean;
   customerWantsChange: boolean;
   inReview: boolean;
+  /** Follow-up 326: what the open review is (a possible duplicate, or a risk section's review with its section); null: none. */
+  review: OrderReview | null;
   flags: string[];
   internalFlags: string[];
   orderGroupId: string | null;
@@ -167,6 +169,27 @@ async function refundedOf(deps: OrdersDeps, storeId: number, orderIds: string[])
   if (!orderIds.length) return new Map();
   const rows = await deps.db.refund.groupBy({ by: ['orderId'], where: { storeId, orderId: { in: orderIds }, status: 'COMPLETED' }, _sum: { amountMinor: true } });
   return new Map(rows.map((r) => [r.orderId, r._sum.amountMinor ?? 0]));
+}
+
+/** Follow-up 326: what an order's open review is — PR 145's duplicate review, or PR 541's risk review of a section. */
+export type OrderReview = { kind: 'duplicate' } | { kind: 'risk'; section: string | null } | { kind: 'other' };
+
+/**
+ * Follow-up 326: the open review of each of these orders (a duplicate review first when both are open, then a risk
+ * section's, then any other). Read from the review's own summary, as the review queue does.
+ */
+export async function openReviewKinds(deps: Pick<OrdersDeps, 'db'>, storeId: number, orderIds: readonly string[]): Promise<Map<string, OrderReview>> {
+  const out = new Map<string, OrderReview>();
+  if (!orderIds.length) return out;
+  const rows = await deps.db.fraudAlert.findMany({ where: { storeId, status: 'OPEN', orderId: { in: [...orderIds] } }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { orderId: true, summary: true } });
+  const rank = (r: OrderReview) => (r.kind === 'duplicate' ? 0 : r.kind === 'risk' ? 1 : 2);
+  for (const a of rows) {
+    const k = reviewKindOf(a.summary);
+    const r: OrderReview = k.risk ? { kind: 'risk', section: k.section } : k.section === DUPLICATE_SECTION ? { kind: 'duplicate' } : { kind: 'other' };
+    const had = out.get(a.orderId);
+    if (!had || rank(r) < rank(had)) out.set(a.orderId, r);
+  }
+  return out;
 }
 
 export async function openReviewIds(deps: OrdersDeps, storeId: number): Promise<string[]> {
@@ -212,6 +235,7 @@ export async function listOrders(deps: OrdersDeps, who: Who, query: unknown = {}
   const page = found.slice(0, take);
   const refunded = await refundedOf(deps, who.storeId, page.map((o) => o.id));
   const inReview = new Set(reviews);
+  const kinds = await openReviewKinds(deps, who.storeId, page.filter((o) => inReview.has(o.id)).map((o) => o.id));
   const rows = page.map((o): OrderRow => ({
     id: o.id,
     number: o.number,
@@ -233,6 +257,7 @@ export async function listOrders(deps: OrdersDeps, who: Who, query: unknown = {}
     cancelPending: o.cancelPending,
     customerWantsChange: o.customerWantsChange,
     inReview: inReview.has(o.id),
+    review: kinds.get(o.id) ?? (inReview.has(o.id) ? { kind: 'other' } : null),
     flags: o.flags,
     internalFlags: o.internalFlags,
     orderGroupId: o.orderGroupId,

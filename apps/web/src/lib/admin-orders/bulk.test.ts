@@ -7,7 +7,7 @@ import en from '../../../messages/admin-orders.en.json';
 import { t, type Dict } from '../i18n';
 import { BULK_COMMANDS, BULK_PERM, BULK_WHY, bulkBody, bulkPlan, runBulk, whyText, type BulkRow } from './bulk';
 import type { CommandAnswer } from './commands';
-import type { BulkFacts } from './list';
+import { reviewLabel, type BulkFacts } from './list';
 
 const facts = (over: Partial<BulkFacts> = {}): BulkFacts => ({ status: 'PLACED', version: 1, cancelRequested: false, cancelPending: false, inReview: false, booked: false, ...over });
 const row = (n: number, over: Partial<BulkFacts> = {}): BulkRow => ({ id: `id-${n}`, number: `EX-${n}`, facts: facts(over) });
@@ -84,5 +84,33 @@ describe('the words', () => {
     expect(whyText({ failed: 'SOMETHING_NEW' }).key).toBe('orders.bulk.why.other');
     expect(whyText({ status: 'CONFIRMED' }).key).toBe('orders.st.CONFIRMED');
     expect(whyText({ code: 'IN_REVIEW' }).key).toBe('orders.bulk.why.IN_REVIEW');
+  });
+});
+
+describe('follow-up 326 · an "in review" skip and chip say what the review is', () => {
+  it('a duplicate and each risk section are their own reason; an unknown review keeps the plain words', () => {
+    const rows = [row(1, { inReview: true, review: { kind: 'duplicate' } }), row(2, { inReview: true, review: { kind: 'risk', section: 'high' } }), row(3, { inReview: true, review: { kind: 'risk', section: 'high' } }), row(4, { inReview: true, review: { kind: 'other' } }), row(5, { inReview: true })];
+    expect(bulkPlan('confirm', rows).reasons).toEqual([
+      { why: { code: 'IN_REVIEW', review: { kind: 'duplicate' } }, n: 1 },
+      { why: { code: 'IN_REVIEW', review: { kind: 'risk', section: 'high' } }, n: 2 },
+      { why: { code: 'IN_REVIEW' }, n: 2 },
+    ]);
+    expect(whyText({ code: 'IN_REVIEW', review: { kind: 'duplicate' } })).toEqual({ key: 'orders.bulk.why.IN_REVIEW_duplicate' });
+    expect(whyText({ code: 'IN_REVIEW', review: { kind: 'risk', section: 'identity' } })).toEqual({ key: 'orders.bulk.why.IN_REVIEW_risk', sectionKey: 'orders.section.identity' });
+    for (const d of [en, bn] as Dict[]) {
+      expect(t(d, 'orders.bulk.why.IN_REVIEW_duplicate')).not.toBe('orders.bulk.why.IN_REVIEW_duplicate');
+      expect(t(d, 'orders.bulk.why.IN_REVIEW_risk', { section: t(d, 'orders.section.high') })).not.toMatch(/\{section\}|orders\./);
+    }
+    expect(t(en as Dict, 'orders.bulk.why.IN_REVIEW_risk', { section: t(en as Dict, 'orders.section.high') })).toBe('in review (High risk)');
+  });
+
+  it('the list chip: "In review: possible duplicate", "In review: <section>", else "In review"', () => {
+    const d = en as Dict;
+    expect(reviewLabel(d, { kind: 'duplicate' })).toBe('In review: possible duplicate');
+    expect(reviewLabel(d, { kind: 'risk', section: 'identity' })).toBe('In review: New identity');
+    expect(reviewLabel(d, { kind: 'risk', section: null })).toBe('In review');
+    expect(reviewLabel(d, { kind: 'other' })).toBe('In review');
+    expect(reviewLabel(d, null)).toBe('In review');
+    expect(reviewLabel(bn as Dict, { kind: 'risk', section: 'high' })).toBe('যাচাইয়ে: বেশি ঝুঁকি');
   });
 });

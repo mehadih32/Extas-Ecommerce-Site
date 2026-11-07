@@ -203,6 +203,8 @@
     "flag": {
       "cancelRequest": "বাতিলের অনুরোধ",
       "inReview": "যাচাইয়ে",
+      "inReviewDuplicate": "যাচাইয়ে: সম্ভবত ডুপ্লিকেট",
+      "inReviewRisk": "যাচাইয়ে: {section}",
       "hold": "হোল্ড: {reason}",
       "wantsChange": "বদল চায়",
       "merged": "এক পার্সেল",
@@ -260,6 +262,8 @@
       "why": {
         "CANCEL_REQUESTED": "কাস্টমার বাতিল চেয়েছে",
         "IN_REVIEW": "যাচাইয়ে (ডুপ্লিকেট বা ঝুঁকি)",
+        "IN_REVIEW_duplicate": "যাচাইয়ে (সম্ভবত ডুপ্লিকেট)",
+        "IN_REVIEW_risk": "যাচাইয়ে ({section})",
         "CANCEL_PENDING": "বাতিল কুরিয়ারের উত্তরের অপেক্ষায়",
         "BOOKED": "কুরিয়ার বুক হয়েছে",
         "NOT_BOOKED": "কুরিয়ার বুক হয়নি",

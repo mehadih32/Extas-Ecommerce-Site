@@ -24,7 +24,7 @@ export interface BulkBarProps {
 
 const words = (d: Dict, w: SkipWhy | { failed: string }) => {
   const k = whyText(w);
-  return t(d, k.key);
+  return k.sectionKey ? t(d, k.key, { section: t(d, k.sectionKey) }) : t(d, k.key);
 };
 
 function BulkDialog({ dict: d, command: c, rows, holdOptions, onClose }: { dict: Dict; command: BulkCommand; rows: BulkBarProps['rows']; holdOptions: FieldOption[]; onClose(done: boolean): void }) {

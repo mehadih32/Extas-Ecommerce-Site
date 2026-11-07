@@ -203,6 +203,8 @@
     "flag": {
       "cancelRequest": "Cancel request",
       "inReview": "In review",
+      "inReviewDuplicate": "In review: possible duplicate",
+      "inReviewRisk": "In review: {section}",
       "hold": "On hold: {reason}",
       "wantsChange": "Wants a change",
       "merged": "One parcel",
@@ -260,6 +262,8 @@
       "why": {
         "CANCEL_REQUESTED": "customer asked to cancel",
         "IN_REVIEW": "in review (duplicate or risk)",
+        "IN_REVIEW_duplicate": "in review (possible duplicate)",
+        "IN_REVIEW_risk": "in review ({section})",
         "CANCEL_PENDING": "cancel waiting for the courier",
         "BOOKED": "courier booked",
         "NOT_BOOKED": "no courier booked",

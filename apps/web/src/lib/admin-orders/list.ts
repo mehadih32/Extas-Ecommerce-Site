@@ -61,6 +61,8 @@ export interface BulkFacts {
   cancelRequested: boolean;
   cancelPending: boolean;
   inReview: boolean;
+  /** Follow-up 326: what the open review is (the bulk bar names a duplicate or the risk section on its skip reason). */
+  review?: od.OrderReview | null;
   booked: boolean;
 }
 
@@ -131,12 +133,20 @@ export function statusChips(view: AdminView, o: { status: OrderState; cancelPend
   return out;
 }
 
+/** Follow-up 326: the "In review" words for what the review is (a duplicate, a risk section's), else the plain words. */
+export function reviewLabel(d: AdminView['dict'], review: od.OrderReview | null | undefined): string {
+  if (review?.kind === 'duplicate') return t(d, 'orders.flag.inReviewDuplicate');
+  if (review?.kind === 'risk' && review.section) return t(d, 'orders.flag.inReviewRisk', { section: t(d, `orders.section.${review.section}`) });
+  return t(d, 'orders.flag.inReview');
+}
+
 /** The flags column: what the team should notice (a cancel request, a review, a hold's reason, the channel, the team's own flags). */
 export function flagChips(view: AdminView, r: od.OrderRow, labels: ListLabels): Chip[] {
   const d = view.dict;
   const out: Chip[] = [];
   if (r.cancelRequested) out.push({ label: t(d, 'orders.flag.cancelRequest'), tone: 'bad' });
-  if (r.inReview) out.push({ label: t(d, 'orders.flag.inReview'), tone: 'warn' });
+  // follow-up 326: the chip names what the review is — a possible duplicate, or the risk section that opened it
+  if (r.inReview) out.push({ label: reviewLabel(d, r.review), tone: 'warn' });
   if (r.status === 'ON_HOLD' && r.holdReasonCode) out.push({ label: t(d, 'orders.flag.hold', { reason: labels.holdReasons.get(r.holdReasonCode) ?? r.holdReasonCode }), tone: 'mute' });
   if (r.customerWantsChange) out.push({ label: t(d, 'orders.flag.wantsChange'), tone: 'warn' });
   // PR 146 (demo 02-core.js): the same piece in two sizes — to ask, or the family's "for someone else" (SIM-F-036)
@@ -215,6 +225,7 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
         cancelRequested: r.cancelRequested,
         cancelPending: r.cancelPending,
         inReview: r.inReview,
+        review: r.review ?? null,
         booked: !!x?.shipment && !UNBOOKED_SHIPMENT.has(x.shipment.status),
       },
     };

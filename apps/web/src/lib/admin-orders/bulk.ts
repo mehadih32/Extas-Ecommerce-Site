@@ -24,7 +24,9 @@ export interface BulkRow {
 export const machineOf = (f: BulkFacts): MachineOrder => ({ status: f.status, booked: f.booked, cancelPending: f.cancelPending, cancelRequested: f.cancelRequested, inReview: f.inReview, holdFromStatus: null, paidMinor: 0, advanceRequiredMinor: null });
 
 /** Why an order is skipped: the machine's refusal, or (not possible from its status) the status itself. */
-export type SkipWhy = { code: Exclude<RefusalCode, 'ILLEGAL_TRANSITION'> } | { status: BulkFacts['status'] };
+export type SkipWhy = { code: Exclude<RefusalCode, 'ILLEGAL_TRANSITION'>; review?: ReviewOf } | { status: BulkFacts['status'] };
+/** Follow-up 326: an "in review" skip names what the review is: a duplicate, or the risk section that opened it. */
+export type ReviewOf = { kind: 'duplicate' } | { kind: 'risk'; section: string };
 
 export interface BulkPlan {
   run: BulkRow[];
@@ -33,7 +35,11 @@ export interface BulkPlan {
   reasons: { why: SkipWhy; n: number }[];
 }
 
-const whyKey = (w: SkipWhy) => ('code' in w ? `code:${w.code}` : `status:${w.status}`);
+const whyKey = (w: SkipWhy) => ('code' in w ? `code:${w.code}${w.review ? `:${w.review.kind}${w.review.kind === 'risk' ? `:${w.review.section}` : ''}` : ''}` : `status:${w.status}`);
+
+/** Follow-up 326: the review a row's facts name, for an "in review" skip (none: the plain words). */
+const reviewOf = (f: BulkFacts): ReviewOf | undefined =>
+  f.review?.kind === 'duplicate' ? { kind: 'duplicate' } : f.review?.kind === 'risk' && f.review.section ? { kind: 'risk', section: f.review.section } : undefined;
 
 /** Which ticked orders the command runs on, and why the rest are skipped. */
 export function bulkPlan(c: BulkCommand, rows: readonly BulkRow[]): BulkPlan {
@@ -46,7 +52,8 @@ export function bulkPlan(c: BulkCommand, rows: readonly BulkRow[]): BulkPlan {
       run.push(row);
       continue;
     }
-    const why: SkipWhy = p.code === 'ILLEGAL_TRANSITION' ? { status: row.facts.status } : { code: p.code };
+    const review = p.code === 'IN_REVIEW' ? reviewOf(row.facts) : undefined;
+    const why: SkipWhy = p.code === 'ILLEGAL_TRANSITION' ? { status: row.facts.status } : review ? { code: p.code, review } : { code: p.code };
     skipped.push({ row, why });
     const k = whyKey(why);
     const had = count.get(k);
@@ -87,8 +94,10 @@ export async function runBulk(c: BulkCommand, rows: readonly BulkRow[], fields: 
 }
 
 /** The message key of a skip reason or a failed order's code (`orders.bulk.why.*`; a status uses its own name). */
-export function whyText(w: SkipWhy | { failed: string }): { key: string; status?: string } {
+export function whyText(w: SkipWhy | { failed: string }): { key: string; status?: string; sectionKey?: string } {
   if ('status' in w) return { key: `orders.st.${w.status}` };
+  // follow-up 326: what the review is
+  if ('code' in w && w.code === 'IN_REVIEW' && w.review) return w.review.kind === 'duplicate' ? { key: 'orders.bulk.why.IN_REVIEW_duplicate' } : { key: 'orders.bulk.why.IN_REVIEW_risk', sectionKey: `orders.section.${w.review.section}` };
   const code = 'code' in w ? w.code : w.failed;
   return { key: (BULK_WHY as readonly string[]).includes(code) ? `orders.bulk.why.${code}` : 'orders.bulk.why.other' };
 }

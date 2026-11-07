@@ -122,6 +122,7 @@ describe('the row’s chips', () => {
     riskScore: null,
     riskBand: null,
     riskSection: null,
+    review: null,
   };
 
   it('four separate statuses: order, courier, payment, and return/refund only when there is one', () => {

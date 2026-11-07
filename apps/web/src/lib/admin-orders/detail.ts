@@ -805,6 +805,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     riskScore: ox.riskScore ?? null,
     riskBand: ox.riskBand ?? null,
     riskSection: ox.riskSection ?? null,
+    // follow-up 326: the same review kind the list shows (a possible duplicate first, then the risk section)
+    review: o.inReview ? detailReview(detail.reviews) : null,
   };
   const chips = statusChips(view, row, x);
   const flags = flagChips(view, row, { holdReasons: holdName, flags: new Map(reasons.flags.map((f) => [f.key, nameOf(view, f)])) });
@@ -1044,3 +1046,11 @@ async function voiceOf(deps: od.OrdersDeps, who: od.Who, view: AdminView, o: { i
   };
 }
 
+/** Follow-up 326: what the order's open review is, ranked like the list (duplicate, then risk, then other). */
+export function detailReview(reviews: readonly { status: string; risk: boolean; section: string }[]): od.OrderReview {
+  const open = reviews.filter((r) => r.status === 'OPEN');
+  if (open.some((r) => !r.risk && r.section === od.DUPLICATE_SECTION)) return { kind: 'duplicate' };
+  const risk = open.find((r) => r.risk);
+  if (risk) return { kind: 'risk', section: risk.section || null };
+  return { kind: 'other' };
+}
