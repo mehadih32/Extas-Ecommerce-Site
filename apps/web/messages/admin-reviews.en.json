@@ -149,6 +149,20 @@
       "published": "No published answer yet.",
       "hidden": "No hidden question.",
       "archived": "Nothing archived."
+    },
+    "set": {
+      "h": "Ask a question",
+      "d": "A small \"Ask a question\" box under Questions & answers on the product page. Questions wait here and show only after you answer and publish them.",
+      "on": "Customers can ask on the product page",
+      "onHelp": "Off as shipped. While off, only the WhatsApp ask shows.",
+      "who": "Who may ask",
+      "whoHelp": "Signed-in customers only is safest; anyone lets a guest ask too (his address, hashed, counts his day's limit).",
+      "who_signedIn": "Signed-in customers only",
+      "who_anyone": "Anyone",
+      "maxChars": "Longest question (letters)",
+      "maxCharsHelp": "40 to 1000.",
+      "perDay": "Questions per person per day",
+      "perDayHelp": "Counted over the last 24 hours; 1 to 50."
     }
   }
 }

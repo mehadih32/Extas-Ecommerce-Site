@@ -2279,8 +2279,12 @@ model ProductQuestion {
   archivedAt   DateTime?    @db.Timestamptz(3)
   createdAt    DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime     @updatedAt @db.Timestamptz(3)
+  /// PR 66 follow-up 183 — a guest's address, hashed, only to count a day's limit of questions (null when signed in).
+  fromHash     String?
 
   @@index([storeId, productId, status])
+  @@index([fromHash, createdAt])
+  @@index([customerId, createdAt])
 }
 
 /// @stage S02 · PR 71 — a wishlist entry (customer or anonymous visitor), with the optional alert.

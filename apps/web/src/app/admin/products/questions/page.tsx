@@ -3,6 +3,7 @@
 // when it came and the shop's answer box. A question reaches the product page only once it is answered and published
 // (lib/shop/pdp-qa-load reads APPROVED, answered, not archived). Reading needs `reviews.read`; answering and the moves
 // need `reviews.moderate` (QuestionActions; the API checks again). Nothing is deleted: Archive keeps the row.
+// Follow-up 183: More options holds the "Ask a question" card (`pdp.qaAsk`, off as shipped) on /api/admin/review-settings.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -11,14 +12,17 @@ import * as cat from '@extas/catalogue';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { formatNumber, nameIn } from '@/components/admin/products/model';
 import { QuestionActions } from '@/components/admin/reviews/QuestionActions';
+import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { catalogueAccess, one, productHref } from '@/lib/admin-products';
 import { withReviews } from '@/lib/admin-reviews/i18n';
+import { reviewSettingCards } from '@/lib/review-settings-api';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
+import '../../settings-cards.css';
 import '../reviews/reviews.css';
 
 export const dynamic = 'force-dynamic';
@@ -61,7 +65,26 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Se
   const rawCursor = one(sp.cursor);
   const cursor = rawCursor && UUID.test(rawCursor) ? rawCursor : undefined;
   const canModerate = c.can('reviews.moderate');
-  const list = await cat.listQuestions(c.deps, c.who, { view: tab, ...(cursor ? { cursor } : {}) });
+  const [list, cards] = await Promise.all([cat.listQuestions(c.deps, c.who, { view: tab, ...(cursor ? { cursor } : {}) }), reviewSettingCards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx })]);
+  const card = cards['pdp.qaAsk'];
+  const cardTexts: FieldsCardTexts = {
+    h: t(d, 'revq.set.h'),
+    d: t(d, 'revq.set.d'),
+    save: t(d, 'rev.set.save'),
+    saving: t(d, 'rev.set.saving'),
+    saved: t(d, 'rev.set.saved'),
+    discard: t(d, 'rev.set.discard'),
+    unsaved: t(d, 'rev.set.unsaved'),
+    readOnly: t(d, 'rev.set.readOnly'),
+    pairHelp: '',
+    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'forbidden', 'unauthorized', 'network', 'other'].map((k) => [k, t(d, `rev.set.err.${k}`)])),
+  };
+  const fields: FieldsCardField[] = [
+    { kind: 'switch', path: 'on', label: t(d, 'revq.set.on'), help: t(d, 'revq.set.onHelp') },
+    { kind: 'select', path: 'who', label: t(d, 'revq.set.who'), help: t(d, 'revq.set.whoHelp'), options: ['signedIn', 'anyone'].map((v) => ({ value: v, label: t(d, `revq.set.who_${v}`) })) },
+    { kind: 'number', path: 'maxChars', label: t(d, 'revq.set.maxChars'), help: t(d, 'revq.set.maxCharsHelp'), min: 40, max: 1000 },
+    { kind: 'number', path: 'perDay', label: t(d, 'revq.set.perDay'), help: t(d, 'revq.set.perDayHelp'), min: 1, max: 50 },
+  ];
   const productIds = [...new Set(list.questions.map((q) => q.productId))];
   const products = productIds.length ? await c.deps.db.product.findMany({ where: { storeId: c.storeId, id: { in: productIds } }, select: { id: true, nameEn: true, nameBn: true } }) : [];
   const productName = new Map(products.map((p) => [p.id, nameIn(view.lang, p)]));
@@ -143,6 +166,12 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Se
           <p className="a2-sm a2-mute">{t(d, `revq.empty.${tab}`)}</p>
         </section>
       )}
+      <details className="a2-mt12 a2-more-opts" data-testid="question-more-opts">
+        <summary className="a2-sm a2-b">{t(d, 'rev.set.more')}</summary>
+        <div className="a2-mt12">
+          <FieldsCard url="/api/admin/review-settings" screen={{ key: card.key, value: card.value, version: card.version }} fields={fields} texts={cardTexts} canEdit={canModerate} testId="question-ask-card" />
+        </div>
+      </details>
     </div>
   );
 }

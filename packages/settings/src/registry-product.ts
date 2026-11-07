@@ -17,6 +17,8 @@ import { categorySlugSchema } from './registry-storefront';
 const V = 19;
 /** PR 66 (the questions block) and PR 86 (the sweeps of the rest of the shop). */
 const V31 = 31;
+/** PR 66 follow-up 183: "Ask a question" on the product page (registry v280). */
+const V280 = 280;
 
 const uniqueIds = <T extends { id: string }>(list: T[]) => new Set(list.map((x) => x.id)).size === list.length;
 const UNIQUE = { message: 'every id must be unique' };
@@ -208,6 +210,25 @@ export const pdpSweepSchema = z
 
 /** PR 66 — "Questions & answers" under the product page (demo pdp_qaSection, R14 14.14). Only questions the shop has
  * answered and approved are shown; none is ever made up. */
+/** PR 66 follow-up 183 — who may ask a question on the product page. */
+export const PDP_QA_ASK_WHO = ['signedIn', 'anyone'] as const;
+
+/**
+ * PR 66 follow-up 183 — "Ask a question" on the product page: the customer's question is stored waiting
+ * (Products › Reviews › Questions) and never shown before the team answers and publishes it. Off as shipped.
+ */
+export const pdpQaAskSchema = z
+  .object({
+    on: z.boolean(),
+    /** `signedIn`: only a signed-in customer; `anyone`: a guest too (his address, hashed, counts the day's limit). */
+    who: z.enum(PDP_QA_ASK_WHO),
+    /** The longest question, in characters. */
+    maxChars: z.int().min(40).max(1000),
+    /** How many questions one person may send in a day (the last 24 hours). */
+    perDay: z.int().min(1).max(50),
+  })
+  .strict();
+
 export const pdpQaSchema = z
   .object({
     on: z.boolean(),
@@ -351,6 +372,16 @@ export const productSettings = {
     helpKey: 'pdp.qa.help',
     sortOrder: 130,
   }),
+  'pdp.qaAsk': setting({
+    ...json,
+    isPublic: false,
+    version: V280,
+    schema: pdpQaAskSchema,
+    default: { on: false, who: 'signedIn', maxChars: 300, perDay: 3 }, // hardcode-ok: off as shipped; the owner's numbers
+    labelKey: 'pdp.qaAsk.label',
+    helpKey: 'pdp.qaAsk.help',
+    sortOrder: 131,
+  }),
 };
 
 export type PdpPageSettings = z.output<typeof pdpPageSchema>;
@@ -366,3 +397,4 @@ export type PdpDetailsSettings = z.output<typeof pdpDetailsSchema>;
 export type PdpBuySettings = z.output<typeof pdpBuySchema>;
 export type PdpSweepSettings = z.output<typeof pdpSweepSchema>;
 export type PdpQaSettings = z.output<typeof pdpQaSchema>;
+export type PdpQaAskSettings = z.output<typeof pdpQaAskSchema>;
