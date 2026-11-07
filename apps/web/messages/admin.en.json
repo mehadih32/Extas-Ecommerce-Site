@@ -150,7 +150,8 @@
     "healthFixes": "Fixes to approve",
     "aiAudit": "Checklist audit",
     "supportAnalytics": "Support analytics",
-    "reportsSearches": "Searches report"
+    "reportsSearches": "Searches report",
+    "reportsOrders": "Orders report"
   },
   "login": {
     "metaTitle": "Admin sign-in",

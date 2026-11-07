@@ -1,0 +1,57 @@
+{
+  "ordRep": {
+    "metaTitle": "Orders report",
+    "title": "Orders",
+    "sub": "Ordered value (on the day an order was placed) and Sales (on the day it was delivered), day by day, by delivery zone and by payment method.",
+    "period": {
+      "label": "Period",
+      "d": "{n} days"
+    },
+    "range": "{from} – {to}",
+    "kpi": {
+      "ordered": "Ordered value",
+      "orderedNote": "Orders placed: {n}",
+      "sales": "Sales",
+      "salesNote": "Orders delivered: {n}",
+      "avg": "Average order",
+      "avgNote": "Ordered value ÷ orders placed"
+    },
+    "day": {
+      "title": "Day by day",
+      "sub": "The days of the period with an order placed or delivered, the newest first."
+    },
+    "zone": {
+      "title": "By delivery zone",
+      "sub": "The order’s delivery zone; “Not settled” is an order whose address was not read into a zone.",
+      "none": "Not settled"
+    },
+    "pay": {
+      "title": "By payment method",
+      "sub": "How the order is paid; “Not recorded” is an order with no method yet.",
+      "none": "Not recorded"
+    },
+    "col": {
+      "day": "Day",
+      "zone": "Zone",
+      "method": "Payment method",
+      "placed": "Placed",
+      "ordered": "Ordered value",
+      "delivered": "Delivered",
+      "sales": "Sales"
+    },
+    "empty": "No order in this period.",
+    "note": "Sales count delivered orders on their delivery day, so a day can show Sales without orders placed. Figures are the shop’s own order totals; nothing here changes an order or a price.",
+    "method": {
+      "COD": "COD",
+      "BKASH": "bKash",
+      "NAGAD": "Nagad",
+      "CARD": "Card",
+      "CASH": "Cash",
+      "WALLET": "Wallet",
+      "BANK_TRANSFER": "Bank transfer",
+      "ROCKET": "Rocket",
+      "UPAY": "Upay",
+      "ONLINE": "Online"
+    }
+  }
+}
