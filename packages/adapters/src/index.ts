@@ -31,6 +31,7 @@ export * from './storage';
 // PR 194, 497, 498 — the ERP adapters (the generic contract, the shop's own ERP, the practice ERP behind MOCK).
 export * from './erp';
 export * from './page-reader';
+export * from './media-download';
 // PR 130 — the SMS sender: the mock until the gateway's key arrives; PR 291 the real gateway (BulkSMSBD, sms/).
 export * from './sms';
 // PR 148 — the WhatsApp and e-mail senders of the order journey: mocks until their keys arrive (like the SMS sender);

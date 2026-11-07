@@ -20,7 +20,8 @@ export interface DirectReaderOptions {
 
 const HTML = /^(text\/html|application\/xhtml\+xml)\b/i;
 
-function guardedLookup(allow: (ip: string) => boolean): LookupFunction {
+/** A DNS lookup that refuses any name with an address `allow` says no to (shared with the media download, follow-up 505). */
+export function guardedLookup(allow: (ip: string) => boolean): LookupFunction {
   return (hostname, options, callback) => {
     dnsLookup(hostname, { ...options, all: true }, (err, addresses) => {
       if (err) return callback(err, '', 4);
