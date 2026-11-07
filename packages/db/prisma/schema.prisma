@@ -3397,6 +3397,13 @@ model GeoArea {
   lat             Decimal?  @db.Decimal(9, 6)
   lng             Decimal?  @db.Decimal(9, 6)
   archivedAt      DateTime? @db.Timestamptz(3)
+  /// Follow-up 416 (PR 502): when the owner last set this place's names or spellings (a rename, his spellings, or a
+  /// place merged into it); an import then keeps his names and only adds the file's spellings.
+  ownerNamedAt    DateTime? @db.Timestamptz(3)
+  /// Follow-up 416 (PR 502): the place the owner merged this one into (it stays archived; an import never brings it back).
+  mergedIntoId    String?   @db.Uuid
+  mergedInto      GeoArea?  @relation("GeoMerge", fields: [mergedIntoId], references: [id])
+  mergedFrom      GeoArea[] @relation("GeoMerge")
   createdAt       DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime  @updatedAt @db.Timestamptz(3)
 

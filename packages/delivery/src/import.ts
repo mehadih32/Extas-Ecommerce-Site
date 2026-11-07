@@ -6,13 +6,14 @@
 // - Rows without a code (made some other way) are never touched.
 // - PR 502: the owner's word wins. A place he renamed or re-spelled keeps his names; the file's spellings (and a new
 //   file name) only join its spellings. A place he merged into another is never brought back, and the places the file
-//   puts under it go under the place it was merged into. (The owner's changes are read from their audit rows.)
+//   puts under it go under the place it was merged into. (Follow-up 416: the owner's changes are read from the place's own
+//   columns, `ownerNamedAt` and `mergedIntoId`, which places-admin.ts sets; migration 0165 filled them from the audit rows.)
 // - One audit row per run that changed something, with the counts (never the file itself).
 // `ancestorIds` holds the chain above a place from the top down (division first), for subtree queries.
 import { Prisma, type PrismaClient } from '@extas/db/client';
 import { audit, SYSTEM, type Actor, type RequestContext } from '@extas/auth';
 import { parentsFirst, type GazetteerRow } from './csv';
-import { cleanAliases, OWNER_NAMED_ACTIONS, PLACE_ACTIONS } from './places-admin';
+import { cleanAliases } from './places-admin';
 
 export interface ImportOptions {
   /** Where the list came from (`sample`, a file name); kept in the audit row, read back by `lastImportSource`. */
@@ -91,15 +92,12 @@ function differs(e: Existing, d: ReturnType<typeof data>): boolean {
 
 /** The places whose names the owner set, and the places he merged (each with the place it went into). */
 async function ownerChanges(tx: Prisma.TransactionClient): Promise<{ named: Set<string>; merged: Map<string, { id: string; ancestorIds: string[] }> }> {
-  const rows = await tx.auditLog.findMany({ where: { entityType: 'GeoArea', action: { in: [...OWNER_NAMED_ACTIONS, PLACE_ACTIONS.merge] } }, select: { entityId: true, action: true, after: true }, orderBy: { createdAt: 'asc' } });
+  const rows = await tx.geoArea.findMany({ where: { OR: [{ ownerNamedAt: { not: null } }, { mergedIntoId: { not: null } }] }, select: { id: true, ownerNamedAt: true, mergedIntoId: true } });
   const named = new Set<string>();
   const intoOf = new Map<string, string>();
   for (const r of rows) {
-    if (!r.entityId) continue;
-    if (r.action === PLACE_ACTIONS.merge) {
-      const to = (r.after as { mergedIntoId?: unknown } | null)?.mergedIntoId;
-      if (typeof to === 'string') intoOf.set(r.entityId, to);
-    } else named.add(r.entityId);
+    if (r.mergedIntoId) intoOf.set(r.id, r.mergedIntoId);
+    if (r.ownerNamedAt) named.add(r.id);
   }
   // a chain of merges ends at the place that is still there
   const end = (id: string) => {
