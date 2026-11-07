@@ -300,6 +300,24 @@ describe.skipIf(!HAS_TEST_DB)('PR 619 on PostgreSQL: the switch-over to the ERP 
     expect(writes.filter((w) => w.key === 'erp.model' && w.storeId === f.storeA)).toHaveLength(1);
   });
 
+  it('follow-up 577: the ERP link page lists the store`s latest switch runs of every link, newest first, each with its report', async () => {
+    const state = await erpLinkState(deps(), f.who(keysPerson, f.storeA));
+    const runs = state.switchOver.runs;
+    expect(runs.slice(0, 3).map((r) => r.kind)).toEqual(['SWITCH', 'DRY_RUN', 'NEW_LINK']);
+    expect(new Set(runs.map((r) => r.epoch))).toEqual(new Set([1, 2]));
+    expect(runs.every((r, i) => i === 0 || r.createdAt <= runs[i - 1]!.createdAt)).toBe(true);
+    expect(runs[0]!.report).toMatchObject({ switchDate: '2026-11-05', openingBalanceMinor: 500_000 });
+    expect(runs[2]!).toMatchObject({ epoch: 1, report: { reason: 'OPENING_WRONG', epoch: 1 } }); // the new link run sits on the link it ended
+    const all = await f.t.prisma.erpSwitchRun.count({ where: { storeId: f.storeA } });
+    expect(runs).toHaveLength(Math.min(all, 20));
+    // As many as `erp.link.listShown`; store B's runs never on store A's page.
+    f.overrides.set('erp.link.listShown', 2);
+    expect((await erpLinkState(deps(), f.who(keysPerson, f.storeA))).switchOver.runs.map((r) => r.kind)).toEqual(['SWITCH', 'DRY_RUN']);
+    f.overrides.delete('erp.link.listShown');
+    const bIds = new Set((await f.t.prisma.erpSwitchRun.findMany({ where: { storeId: f.storeB }, select: { id: true } })).map((r) => r.id));
+    expect(runs.some((r) => bIds.has(r.id!))).toBe(false);
+  });
+
   it('a switch date of a store is its own: store B`s day close and summaries start on its own date', async () => {
     const b = await f.t.prisma.erpStoreLink.findFirstOrThrow({ where: { storeId: f.storeB, endedAt: null } });
     expect(b.switchDate?.toISOString().slice(0, 10)).toBe('2026-11-07');
