@@ -397,19 +397,20 @@ export function deliveryCheckSpecs(view: AdminView, checkId: string, number: str
  * PR 526: "Why it came back" on a parcel that came back — a reason from the owner's list and the rider's words (started
  * from the courier's note), on its own key (`delivery.outcomes`). Nothing moves money.
  */
-export function returnReasonSpecs(view: AdminView, shipmentId: string, number: string, perms: ReadonlySet<string>, reasons: od.ReasonLists, riderNote: string | null): CommandSpec[] {
+export function returnReasonSpecs(view: AdminView, shipmentId: string, number: string, perms: ReadonlySet<string>, reasons: od.ReasonLists, riderNote: string | null, change = false): CommandSpec[] {
   if (!perms.has('delivery.outcomes') || !reasons.refusal.length) return [];
   const d = view.dict;
   const tt = (k: string) => t(d, `orders.retReason.${k}`, { n: number });
   return [
     {
-      id: 'return-reason',
-      label: tt('label'),
-      tone: 'pri',
+      // follow-up 456: once a reason is recorded, "Change the reason" (the same route replaces it; both are in the audit log)
+      id: change ? 'return-reason-change' : 'return-reason',
+      label: tt(change ? 'change' : 'label'),
+      tone: change ? '' : 'pri',
       url: `/api/admin/delivery/parcels/${shipmentId}/return-reason`,
       version: null,
-      title: tt('title'),
-      effects: [tt('eff.saved'), t(d, 'orders.check.eff.noMoney')],
+      title: tt(change ? 'changeTitle' : 'title'),
+      effects: [tt('eff.saved'), ...(change ? [tt('eff.replaced')] : []), t(d, 'orders.check.eff.noMoney')],
       fields: [
         // starts on "pick one", so a reason is always a person's choice, never the list's first line
         { name: 'reasonKey', kind: 'select', label: t(d, 'orders.dlg.reason'), required: true, options: [{ value: '', label: t(d, 'orders.dlg.pickReason') }, ...reasons.refusal.map((r) => ({ value: r.key, label: nameOf(view, r), ...(r.noteRequired ? { noteRequired: true } : {}) }))] },
@@ -1021,7 +1022,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     timeline,
     bands,
     primary: specs.primary,
-    more: specs.more,
+    // follow-up 456: a parcel whose reason is recorded offers "Change the reason" (a person picks again)
+    more: back?.reasonKey ? [...specs.more, ...returnReasonSpecs(view, back.shipmentId, o.number, perms, reasons, back.riderNote, true)] : specs.more,
     canNote,
     invoice: perms.has('orders.invoice') ? invoiceHref(o.number) : null,
     invoicePrint: perms.has('orders.invoice') ? { orderId: o.id, number: o.number } : null,
