@@ -265,4 +265,19 @@ describe.skipIf(!HAS_TEST_DB)('server-side event tracking on PostgreSQL (PR 257)
       else process.env.CACHE_HOOK_TOKEN = saved;
     }
   });
+  it('follow-up 605: the purchase goes at placement only for cash on delivery with nothing to pay first; a prepaid or advance order goes once paid', async () => {
+    const made = (n: string, paymentMethod: 'COD' | 'BKASH', advanceRequirement: 'NONE' | 'DELIVERY_CHARGE') =>
+      t.prisma.order.create({ data: { storeId: S, number: `P605-${n}`, source: 'WEBSITE', currency: 'BDT', subtotalMinor: 120_000, deliveryChargeMinor: 8_000, totalMinor: 128_000, idempotencyKey: `p605-${n}`, status: 'PLACED', placedAt: new Date(), paymentMethod, advanceRequirement } });
+    const cod = await made('cod', 'COD', 'NONE');
+    const prepaid = await made('bkash', 'BKASH', 'NONE');
+    const advance = await made('adv', 'COD', 'DELIVERY_CHARGE');
+    const placedReq = req('/api/checkout/orders', 'POST');
+    for (const o of [cod, prepaid, advance]) await trackPurchase(placedReq, { storeId: S, orderId: o.id, at: 'placed' }, deps);
+    const purchases = () => t.prisma.trackedEvent.findMany({ where: { name: 'purchase', orderId: { in: [cod.id, prepaid.id, advance.id] } }, select: { eventId: true } });
+    expect((await purchases()).map((e) => e.eventId)).toEqual(['purchase-P605-cod']);
+    // the gateway said paid (the callback): now it goes, once, however many times the callback comes
+    const paidReq = req('/api/payments/callback/bkash', 'GET');
+    for (const o of [prepaid, advance, prepaid]) await trackPurchase(paidReq, { storeId: S, orderId: o.id, at: 'paid' }, deps);
+    expect((await purchases()).map((e) => e.eventId).sort()).toEqual(['purchase-P605-adv', 'purchase-P605-bkash', 'purchase-P605-cod']);
+  });
 });

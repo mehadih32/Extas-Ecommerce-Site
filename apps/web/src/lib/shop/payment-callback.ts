@@ -4,9 +4,11 @@
 // (@extas/payments `receiveCallback`; a repeat is one payment, a forged one is stored and never processed). The
 // browser then goes on: the thank-you page once paid, the payment page otherwise (it shows "failed, try again" or
 // "still waiting"). A callback that proves nothing gets a plain 400. PR 542: an advance's pay link goes back to its own
-// page (`/pay/<token>`).
+// page (`/pay/<token>`). Follow-up 605: the callback that makes a payment PAID sends the order's purchase to the ad
+// platforms (lib/tracking/shop.ts `trackPurchase` at 'paid'; quiet, once per order, never holds the customer up).
 import type { PaymentsDeps } from '@extas/payments';
 import { linkTokenOf, receiveCallback } from '@extas/payments';
+import { trackPurchase } from '../tracking/shop';
 import { callbackNext, langOf } from './checkout-api';
 import { hrefIn } from './lang';
 import { ROUTES } from './routes';
@@ -35,7 +37,13 @@ async function paramsOf(request: Request): Promise<Record<string, string>> {
 
 const noStore = { 'cache-control': 'no-store' };
 
-export async function paymentCallbackHandler(request: Request, provider: string, deps: PaymentsDeps | null): Promise<Response> {
+// ~~export async function paymentCallbackHandler(request, provider, deps)~~ follow-up 605: `track` (tests pass their own)
+export async function paymentCallbackHandler(
+  request: Request,
+  provider: string,
+  deps: PaymentsDeps | null,
+  track: (o: { storeId: number; orderId: string }) => Promise<void> = (o) => trackPurchase(request, { ...o, at: 'paid' }),
+): Promise<Response> {
   const m = request.method.toUpperCase();
   if (m !== 'GET' && m !== 'POST') return Response.json({ ok: false, code: 'METHOD' }, { status: 405, headers: noStore });
   if (!deps) return Response.json({ ok: false, code: 'UNAVAILABLE' }, { status: 503, headers: noStore });
@@ -43,6 +51,15 @@ export async function paymentCallbackHandler(request: Request, provider: string,
   try {
     const r = await receiveCallback(deps, { provider, params });
     if (r.code === 'INVALID' || !r.number) return Response.json({ ok: false, code: 'INVALID' }, { status: 400, headers: noStore });
+    // follow-up 605: the purchase, from the callback that made the payment PAID (a repeat is DUPLICATE: not again)
+    if (r.code === 'PROCESSED' && r.status === 'PAID' && r.paymentId) {
+      try {
+        const paid = await deps.db.payment.findUnique({ where: { id: r.paymentId }, select: { storeId: true, orderId: true } });
+        if (paid?.orderId) await track({ storeId: paid.storeId, orderId: paid.orderId });
+      } catch (e) {
+        console.warn(`[payment callback] the purchase event was not recorded (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+      }
+    }
     // PR 542: an advance paid through its pay link goes back to that link's page (it says paid, failed or waiting)
     const token = r.paymentId ? await linkTokenOf(deps, r.paymentId) : null;
     const to = new URL(token ? hrefIn(langOf(params.lang), ROUTES.payLink(token)) : callbackNext(langOf(params.lang), r.status, r.number), request.url);

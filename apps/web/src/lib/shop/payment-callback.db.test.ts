@@ -35,6 +35,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 170 · Pay through a gateway and its callback 
       body: JSON.stringify(body),
     });
   const read = async (r: Response) => ({ status: r.status, body: (await r.json()) as Record<string, unknown> });
+  // follow-up 605: the purchase for the ad platforms goes from the callback that made the payment PAID
+  const track = vi.fn(async (_o: { storeId: number; orderId: string }) => {});
   const back = (params: Record<string, string>, method: 'GET' | 'POST' = 'GET') => {
     const u = new URL(CALLBACK);
     if (method === 'GET') for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
@@ -42,6 +44,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 170 · Pay through a gateway and its callback 
       new Request(u, method === 'GET' ? {} : { method, headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(params).toString() }),
       'visa',
       pay(),
+      track,
     );
   };
 
@@ -100,6 +103,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 170 · Pay through a gateway and its callback 
       { status: 'PAID', attempt: 2 },
     ]);
     expect(await f.t.prisma.order.count({ where: { visitorId: bag.visitorId } })).toBe(1);
+    const orderId = (await f.t.prisma.order.findFirstOrThrow({ where: { number } })).id;
+    expect(track.mock.calls).toEqual([[{ storeId: f.S, orderId }]]); // once: not on the failure, not on the repeat
     expect(await f.t.prisma.webhookEvent.count({ where: { source: 'payment-visa', signatureValid: false } })).toBe(1);
   });
 
