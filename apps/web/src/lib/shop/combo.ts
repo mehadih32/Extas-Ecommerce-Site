@@ -8,7 +8,8 @@ import { findBag } from '@extas/cart';
 import { CombosError, SET_WORDS, setCards, setPage, type SetCardsQuery, type SetPage } from '@extas/combos';
 import { groupCards, initialPicks, type SetCard, type SetCardRule } from '@extas/combos/page-model';
 import { getPrisma } from '@extas/db/client';
-import { settingsTimeoutMs, withTimeout } from '../settings';
+import { imageSources, type ImageSource } from '@extas/media';
+import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import { bagSettings, cartDeps, visitorId } from './bag';
 import { cardsByIds, type ShopCard } from './catalogue';
 import { readPageSettings, type ShopContext } from './context';
@@ -18,7 +19,7 @@ import { hrefIn } from './lang';
 import { productData, type ProductData } from './product';
 import { toModel } from './product-view';
 import { ROUTES } from './routes';
-import { stepLabels, viewShots, type ComboEnv, type ComboPiece, type HubGroup } from './combo-model';
+import { stepLabels, viewShots, type ComboEnv, type ComboPiece, type HubGroup, type SetPhoto } from './combo-model';
 import { NO_COLOUR } from './product-model';
 
 export const COMBO_PAGE_KEYS = ['combos.page.layout', 'combos.page.popularPairs', 'combos.page.parts', 'combos.page.moreSets', 'pdp.gallery'] as const;
@@ -89,6 +90,15 @@ function piecesOf(c: ShopContext, page: SetPage, data: Map<string, ProductData>,
   return raw.map((p, i) => ({ ...p, label: labels[i]! }));
 }
 
+/** PR 93 follow-up 171: the set photo the owner made (PR 575), with the set's own colours it shows; null without one. */
+async function setPhotoOf(storeId: number, s: SetPage['summary']): Promise<SetPhoto | null> {
+  const resolver = settingsResolver();
+  if (!s.photoAssetId || !resolver) return null;
+  const found = await imageSources({ db: getPrisma(), settings: resolver }, storeId, [s.photoAssetId]).catch(() => new Map<string, ImageSource>());
+  const image = found.get(s.photoAssetId);
+  return image ? { image, colours: s.pieces.map((p) => p.defaultColourId) } : null;
+}
+
 /** One combo's page by its link: null without a database (or when it is slow), `missing` when there is no such combo. */
 export async function comboPage(c: ShopContext, slug: string, from: string | null): Promise<ComboPageResult | null> {
   const deps = cartDeps();
@@ -111,6 +121,7 @@ export async function comboPage(c: ShopContext, slug: string, from: string | nul
         const data = new Map(read.filter((d): d is ProductData => d !== null).map((d) => [d.id, d]));
         const pieces = piecesOf(c, page, data, set['pdp.gallery'].drawingViews);
         const s = page.summary;
+        const setPhoto = await setPhotoOf(c.storeId, s);
         const first = s.price;
         const parts = set['combos.page.parts'];
         const env: ComboEnv = {
@@ -142,6 +153,7 @@ export async function comboPage(c: ShopContext, slug: string, from: string | nul
           store: c.storeName,
           parts: { summary: parts.summary, whatsapp: parts.whatsapp, itemPrices: parts.itemPrices },
           lowStockAt: bag['bag.lowStockAt'],
+          setPhoto,
         };
         return { kind: 'page', page, env, set, data };
       })(),

@@ -1,8 +1,9 @@
 "use client";
 // PR 93 — the combo page's gallery (demo cb_gallery): the set picture of the picked colours, a tab per piece with
 // its colour, and the views of the chosen piece (front, back, detail, true colour), each its own photo or else the
-// drawing of that view; and the colour names under the title.
-import { COMBO_VIEWS, colourNames, savePct } from "@/lib/shop/combo-model";
+// drawing of that view; and the colour names under the title. Follow-up 171: the owner's set photo (PR 575) while the
+// picked colours are exactly its own, else the pieces side by side.
+import { COMBO_VIEWS, colourNames, savePct, setPhotoFor } from "@/lib/shop/combo-model";
 import { Icon } from "../Icon";
 import { ShotPicture } from "../product/ShotPicture";
 import { Dots, shotOf } from "./ComboBits";
@@ -37,6 +38,7 @@ export function ComboGallery() {
     ui.view === "set" ? (
       <SetPicture
         parts={parts}
+        photo={setPhotoFor(env.setPhoto, ui.st.colours)}
         lang={env.lang}
         alt={setAlt}
         sizes="(min-width: 1024px) 50vw, 100vw"

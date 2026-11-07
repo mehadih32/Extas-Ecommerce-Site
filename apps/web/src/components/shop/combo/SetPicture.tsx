@@ -1,7 +1,8 @@
 // PR 91, 93, 103 — a set's pictures. `SetPicture` (demo 02-core.js setImg): the pieces side by side, each the owner's
 // front photo of the colour picked, else the garment drawing in that colour on its own tint — so the picture changes
 // with every colour tapped. `HubPicture` (demo ca_setPhoto, card layout): the pieces laid over each other on the house
-// background, for the sets landing page. No hooks: the server and the combo page's client part draw them the same way.
+// background, for the sets landing page. PR 93 follow-up 171: `photo` — the set photo the owner made (PR 575) — fills
+// the picture instead while the picked colours are exactly its own (setPhotoFor). No hooks: the server and the combo page's client part draw them the same way.
 import type { ImageSource } from '@extas/media';
 import type { ReactNode } from 'react';
 import { ResponsiveImage, altFor } from '@/components/media/ResponsiveImage';
@@ -31,6 +32,7 @@ export function SetPicture({
   sizes,
   slot = 'card',
   children,
+  photo = null,
 }: {
   parts: readonly SetPart[];
   lang: ShopLang;
@@ -39,7 +41,15 @@ export function SetPicture({
   sizes: string;
   slot?: string;
   children?: ReactNode;
+  photo?: ImageSource | null;
 }) {
+  if (photo)
+    return (
+      <div className={`pimg ${ratio} cb-setpic cb-setphoto`} role="img" aria-label={alt} data-testid="cb-setphoto">
+        <ResponsiveImage image={photo} slot={slot} sizes={sizes} alt={alt} />
+        {children}
+      </div>
+    );
   return (
     <div className={`pimg ${ratio} cb-setpic`} role="img" aria-label={alt}>
       {parts.map((p, i) => (

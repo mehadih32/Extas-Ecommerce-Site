@@ -3,6 +3,7 @@
 // variants, the price table, the words in the page's language) and the small pure rules the pages draw with — which
 // picture each gallery view shows, the WhatsApp question, the landing page's rows (demo ca_L3, D-038 packing) and the
 // product page's set offer line. No server imports; the picking rules themselves are @extas/combos/page-model.
+import type { ImageSource } from '@extas/media';
 import type { PickState, PriceCell, SetCard, SetCardRule, SetSlot, VariantStock } from '@extas/combos/page-model';
 import type { PdpShot } from './product-model';
 import type { GarmentView } from './garment-art';
@@ -77,6 +78,22 @@ export interface ComboEnv {
   parts: { summary: boolean; whatsapp: boolean; itemPrices: boolean };
   /** "Only N left" from this many down (`bag.lowStockAt`). */
   lowStockAt: number;
+  /**
+   * PR 93 follow-up 171: the set photo the owner made (PR 575, "Make set photo") and the colour of each piece it shows
+   * (the set's own colours, as the photo is made from them); null when none was made.
+   */
+  setPhoto?: SetPhoto | null;
+}
+
+export interface SetPhoto {
+  image: ImageSource;
+  colours: (string | null)[];
+}
+
+/** PR 93 follow-up 171: the set photo while every piece wears the colour it was made in, else null (the pieces side by side). */
+export function setPhotoFor(photo: SetPhoto | null | undefined, picked: readonly (string | null)[]): ImageSource | null {
+  if (!photo || photo.colours.length !== picked.length) return null;
+  return photo.colours.every((c, i) => c === picked[i]) ? photo.image : null;
 }
 
 /** A word of the page (`combo.<key>`), its {slots} filled. */
