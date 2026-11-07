@@ -3,6 +3,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createVault } from '@extas/vault';
 import {
+  addressMark,
   assignRole,
   authenticateCustomer,
   authenticateStaff,
@@ -119,6 +120,10 @@ describe.skipIf(!HAS_TEST_DB)('auth on PostgreSQL (PR 15, 16, 495)', () => {
     expect(kinds).toContain('staff.login.newDevice');
     session(await loginStaff(deps(), { email: 'owner@example.com', password: OWNER_PW }, CTX));
     expect((await t.prisma.securityEvent.findMany({ where: { kind: 'staff.login' } })).length).toBe(1);
+    // Follow-up 586: the event keeps the address's mark (as the security page shows it), never the address itself.
+    const events = await t.prisma.securityEvent.findMany({ where: { kind: { in: ['staff.login', 'staff.login.newDevice'] } } });
+    for (const e of events) expect(e.details).toMatchObject({ address: addressMark(CTX.ip!) });
+    expect(JSON.stringify(events.map((e) => e.details))).not.toContain(CTX.ip!);
   });
 
   it('a wrong password and an unknown e-mail look the same; too many wrong tries pause the login, then it works again', async () => {

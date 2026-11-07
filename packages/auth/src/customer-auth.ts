@@ -10,7 +10,7 @@
 // staff apply. Sessions last `customerSessionDays` (a store setting) from the login.
 import type { PrismaClient } from '@extas/db/client';
 import type { Customer, CustomerSession } from './db-types';
-import { audit, clip, securityEvent, type RequestContext } from './audit';
+import { audit, clip, securityEvent, withAddressMark, type RequestContext } from './audit';
 import { AuthError } from './errors';
 import { assertCustomerPassword, burnPasswordCheck, hashPassword, needsRehash, verifyPassword } from './password';
 import type { SecurityPolicy } from './policy';
@@ -87,7 +87,7 @@ async function customerLockedUntil(deps: CustomerAuthDeps, storeId: number, phon
 }
 
 async function event(deps: CustomerAuthDeps, storeId: number, kind: string, details: Record<string, unknown>) {
-  await deps.db.securityEvent.create({ data: { storeId, kind, severity: 'info', details: details as object, createdAt: clock(deps) } });
+  await deps.db.securityEvent.create({ data: { storeId, kind, severity: 'info', details: withAddressMark(details) as object, createdAt: clock(deps) } });
 }
 
 export type CustomerPasswordResult =

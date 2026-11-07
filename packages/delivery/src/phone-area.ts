@@ -8,7 +8,7 @@
 //   number); past delivery.phoneFirst.rateLimit in delivery.phoneFirst.rateWindowSeconds it is refused.
 // - savedAddressesFor: the full saved addresses, only with proof checked here on the server — a live session of
 //   that customer in that store, or an ADDRESS_REVEAL code he has just confirmed for that number.
-import type { CustomerAuth } from '@extas/auth';
+import { addressMark, type CustomerAuth } from '@extas/auth';
 import { placeView, type PlaceView } from './bands-admin';
 import { assertStore, loadBandMap, type DeliveryDeps } from './context';
 import { DeliveryError } from './errors';
@@ -31,14 +31,15 @@ export interface PhoneAreaView {
 
 const clock = (deps: DeliveryDeps) => (deps.now ? deps.now() : new Date());
 
-/** Counts this look-up against its IP; refuses with RATE_LIMITED past the limit. Stores the IP only. */
+/** Counts this look-up against its IP; refuses with RATE_LIMITED past the limit. Stores the IP's mark only. */
 async function countLookup(deps: DeliveryDeps, storeId: number, ip: string | null): Promise<void> {
   const [limit, windowSeconds] = await Promise.all([deps.settings.value('delivery.phoneFirst.rateLimit'), deps.settings.value('delivery.phoneFirst.rateWindowSeconds')]);
   const now = clock(deps);
-  const key = ip ?? 'unknown';
-  await deps.db.securityEvent.create({ data: { storeId, kind: PHONE_LOOKUP_EVENT, severity: 'info', details: { ip: key }, createdAt: now } });
+  // Follow-up 586: counted by the address's mark; the address itself is never kept.
+  const key = addressMark(ip ?? 'unknown')!;
+  await deps.db.securityEvent.create({ data: { storeId, kind: PHONE_LOOKUP_EVENT, severity: 'info', details: { address: key }, createdAt: now } });
   const since = new Date(now.getTime() - windowSeconds * 1000);
-  const n = await deps.db.securityEvent.count({ where: { kind: PHONE_LOOKUP_EVENT, createdAt: { gt: since }, details: { path: ['ip'], equals: key } } });
+  const n = await deps.db.securityEvent.count({ where: { kind: PHONE_LOOKUP_EVENT, createdAt: { gt: since }, details: { path: ['address'], equals: key } } });
   if (n > limit) throw new DeliveryError('RATE_LIMITED', 'too many phone look-ups', [String(windowSeconds)]);
 }
 

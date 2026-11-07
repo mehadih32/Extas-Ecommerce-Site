@@ -8,6 +8,7 @@
 //
 // Each look-up counts against its IP with phone-first's own limit (PR 555); past it the check asks nobody. A source with a
 // fresh answer for the number is not asked again.
+import { addressMark } from '@extas/auth';
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { phoneNormalizeBD } from '@extas/delivery';
@@ -47,10 +48,11 @@ export interface PhoneRiskRun {
 async function withinLimit(deps: OrdersDeps, storeId: number, ip: string | null): Promise<boolean> {
   const [limit, windowSeconds] = await Promise.all([setting(deps, storeId, 'delivery.phoneFirst.rateLimit'), setting(deps, storeId, 'delivery.phoneFirst.rateWindowSeconds')]);
   const now = nowOf(deps);
-  const key = ip ?? 'unknown';
-  await deps.db.securityEvent.create({ data: { storeId, kind: PHONE_RISK_LOOKUP_EVENT, severity: 'info', details: { ip: key }, createdAt: now } });
+  // Follow-up 586: counted by the address's mark; the address itself is never kept.
+  const key = addressMark(ip ?? 'unknown')!;
+  await deps.db.securityEvent.create({ data: { storeId, kind: PHONE_RISK_LOOKUP_EVENT, severity: 'info', details: { address: key }, createdAt: now } });
   const since = new Date(now.getTime() - windowSeconds * 1000);
-  const n = await deps.db.securityEvent.count({ where: { storeId, kind: PHONE_RISK_LOOKUP_EVENT, createdAt: { gt: since }, details: { path: ['ip'], equals: key } } });
+  const n = await deps.db.securityEvent.count({ where: { storeId, kind: PHONE_RISK_LOOKUP_EVENT, createdAt: { gt: since }, details: { path: ['address'], equals: key } } });
   return n <= limit;
 }
 
