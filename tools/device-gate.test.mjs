@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { boxChecks, deviceList, filledPlan, firstScreenFor, heroSettled, langCookieOf, markdownReport, navWordsSqueezed, openedPlan, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
+import { boxChecks, deviceList, filledPlan, firstScreenFor, heroSettled, langCookieOf, markdownReport, navWordsSqueezed, openedPlan, phoneBarOutside, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -256,5 +256,23 @@ describe('PR 40 follow-up · a computer nav item is never narrower than its word
     const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
     expect(rules.boxes['/admin/messages/journey'].inside).toContain('[data-testid="journey-channels"] .a2-pill');
     expect(rules.signedIn.urls).toContain('/admin/messages/journey');
+  });
+});
+
+describe('PR 626 follow-up · the phone bottom bar', () => {
+  const page = (bar) => ({
+    querySelector: (sel) => (sel === '[data-testid="lm-bar"]' && bar ? { getBoundingClientRect: () => ({ left: bar.l, right: bar.r, width: bar.r - bar.l, height: bar.h ?? 64 }) } : null),
+    defaultView: { getComputedStyle: () => ({ contain: bar?.contain ?? '' }) },
+  });
+  it('passes a bar inside the phone that clips what it holds, and a page without one or with it hidden', () => {
+    expect(phoneBarOutside(320, page({ l: 10, r: 310, contain: 'layout paint' }))).toEqual([]);
+    expect(phoneBarOutside(320, page({ l: 10, r: 310.4, contain: 'strict' }))).toEqual([]);
+    expect(phoneBarOutside(320, page(null))).toEqual([]);
+    expect(phoneBarOutside(1366, page({ l: 0, r: 0, h: 0 }))).toEqual([]);
+  });
+  it('fails a bar past the phone\'s edge (the 320 px phone with the Orders badge) and one that lets its contents out', () => {
+    expect(phoneBarOutside(320, page({ l: 10, r: 331, contain: 'layout paint' }))).toEqual([{ k: 'PHONE-BAR-OUTSIDE', d: 'the bar spans 10–331 px on a 320 px phone' }]);
+    expect(phoneBarOutside(320, page({ l: 10, r: 310, contain: 'none' }))).toEqual([{ k: 'PHONE-BAR-OUTSIDE', d: 'it does not clip what it holds (contain: none)' }]);
+    expect(phoneBarOutside(320, page({ l: 10, r: 310, contain: 'layout' }))[0].k).toBe('PHONE-BAR-OUTSIDE');
   });
 });

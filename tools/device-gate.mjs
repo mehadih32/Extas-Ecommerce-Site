@@ -9,10 +9,12 @@
 //   - NAV-WORDS-SQUEEZED: a computer nav item is never narrower than its words (PR 40 follow-up: a long slogan);
 //   - TAP-TOO-SMALL (touch sizes): every tap target at least 44 × 44 (inline text links at least 32 tall), measured as
 //     the area that really takes the tap (elementFromPoint), so invisible padding counts;
-//   - INPUT-FONT-UNDER-16 (touch sizes): every form field at least 16 px (no iPhone zoom on focus).
+//   - INPUT-FONT-UNDER-16 (touch sizes): every form field at least 16 px (no iPhone zoom on focus);
 //   - PAST-THE-EDGE / OWN-TAP-UNDER-44 (follow-up of PR 505): on the pages device-gate.json `boxes` names, the listed
 //     parts end inside the screen and hold their own content (a nowrap pill clipped by an admin scroller is not caught by
 //     STICKS-OUT-RIGHT), and the listed tap boxes are 44 × 44 themselves (touch sizes);
+//   - PHONE-BAR-OUTSIDE (PR 626 follow-up): the admin's phone bottom bar lies inside the phone and clips what it holds
+//     (its sections and waiting badges scroll inside it), so a badge can never widen the page.
 // The rules are data in docs/qa/device-gate.json. Pass = 0 fails. One Chromium, several pages in parallel.
 // Signed in (--email + --password-file, follow-up 5): the admin pages are opened with a session on a database seeded
 // with the sample catalogue, so controls that only show with data are measured too (device-gate.json `signedIn`);
@@ -419,6 +421,7 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
       issues.push(...(await page.evaluate(navWordsSqueezed)));
       const boxes = rules.boxes?.[new URL(url).pathname];
       if (boxes) issues.push(...(await page.evaluate(boxChecks, { inside: boxes.inside ?? [], tap44: boxes.tap44 ?? [], min: rules.tapMinPx, taps: rules.tapGroups.includes(device.group) })));
+      issues.push(...(await page.evaluate(phoneBarOutside, device.w)));
       issues.push(...(await page.evaluate(appChecks, {
         inputFont: rules.inputFontGroups.includes(device.group),
         taps: rules.tapGroups.includes(device.group),
@@ -501,6 +504,21 @@ export function boxChecks({ inside = [], tap44 = [], min = 44, taps = true }, do
       }
   if (small.length) out.push({ k: 'OWN-TAP-UNDER-44', d: small.slice(0, 4).join(', ') + (small.length > 4 ? ` (+${small.length - 4})` : '') });
   return out;
+}
+
+// PR 626 follow-up (7 Nov): the admin's phone bottom bar ([data-testid=lm-bar], fixed at the foot of a phone) must lie
+// inside the phone, and must clip what it holds — its sections scroll inside it, so a waiting badge or an icon past its
+// edge never makes the page wider (it ran 11 px past a 320 px phone with the Orders badge showing). A hidden bar (tablet,
+// computer) passes. Runs in the page (Playwright), alone: `devW` is the phone's width.
+export function phoneBarOutside(devW, doc = globalThis.document) {
+  const bar = doc.querySelector('[data-testid="lm-bar"]');
+  const r = bar?.getBoundingClientRect();
+  if (!r || !r.width || !r.height) return [];
+  const out = [];
+  if (r.left < -0.5 || r.right > devW + 0.5) out.push(`the bar spans ${Math.round(r.left)}–${Math.round(r.right)} px on a ${devW} px phone`);
+  const contain = doc.defaultView?.getComputedStyle(bar).contain ?? '';
+  if (!/\b(paint|strict|content)\b/.test(contain)) out.push(`it does not clip what it holds (contain: ${contain || 'none'})`);
+  return out.length ? [{ k: 'PHONE-BAR-OUTSIDE', d: out.join('; ') }] : [];
 }
 
 export function scriptsVerdict(shop, mark) {
