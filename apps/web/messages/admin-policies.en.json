@@ -36,7 +36,12 @@
       "live": "Live",
       "methods": "Ways to pay the checkout offers now (the page lists exactly these)",
       "noMethods": "None open: switch a payment method on and connect its gateway, or the page says \"Coming soon\".",
-      "m": {"cod": "Cash on Delivery", "mobile": "Mobile banking", "card": "Card & bank", "online": "Pay online"},
+      "m": {
+        "cod": "Cash on Delivery",
+        "mobile": "Mobile banking",
+        "card": "Card & bank",
+        "online": "Pay online"
+      },
       "notLive": "Not live",
       "gone": "Rule not found",
       "open": "Open on the shop",
@@ -60,10 +65,19 @@
       "d_none": "None",
       "d_contact": "Contact details",
       "d_legal": "Legal details",
-      "title": { "en": "Title (English)", "bn": "Title (Bengali)" },
+      "title": {
+        "en": "Title (English)",
+        "bn": "Title (Bengali)"
+      },
       "titleHelp": "Empty: the shop's own title for this page.",
-      "lede": { "en": "Line under the title (English)", "bn": "Line under the title (Bengali)" },
-      "body": { "en": "Your words (English)", "bn": "Your words (Bengali)" },
+      "lede": {
+        "en": "Line under the title (English)",
+        "bn": "Line under the title (Bengali)"
+      },
+      "body": {
+        "en": "Your words (English)",
+        "bn": "Your words (Bengali)"
+      },
       "bodyHelp": "An empty line starts a new paragraph, \"## \" a heading, \"- \" a list line. Quote a rule's number as {exchange.windowHours}: see the list below."
     },
     "form": {
@@ -104,6 +118,27 @@
     "discard": "Discard",
     "unsaved": "Not saved yet",
     "readOnly": "You can see these pages; changing them needs the settings permission.",
-    "pairHelp": "Write both languages, or leave both empty."
+    "pairHelp": "Write both languages, or leave both empty.",
+    "privacy": {
+      "h": "What your privacy notice should say",
+      "d": "The checkout keeps these now. The words are yours — copy a suggested line into the page text below (both languages) or write your own.",
+      "none": "Nothing to add: the checkout keeps nothing beyond the order while these switches are off.",
+      "browser": "This browser keeps the last checkout’s details",
+      "capture": "Unfinished checkouts are kept for the team",
+      "days": "{n} days",
+      "suggest": "Suggested line",
+      "sEn": "English",
+      "sBn": "Bangla",
+      "line": {
+        "browser": {
+          "en": "To save you typing, this browser may remember your last checkout details (name, phone and address) for {n} days. They stay on your device, and you can clear them in your browser.",
+          "bn": "আবার লিখতে যেন না হয়, এই ব্রাউজার আপনার শেষ চেকআউটের তথ্য (নাম, ফোন, ঠিকানা) {n} দিন মনে রাখতে পারে। এগুলো আপনার ডিভাইসেই থাকে, ব্রাউজার থেকে মুছে ফেলতে পারেন।"
+        },
+        "capture": {
+          "en": "If you start a checkout and leave before ordering, we keep what you typed for {n} days so our team can help you finish it, then it is removed.",
+          "bn": "অর্ডার না করে চেকআউট ছেড়ে গেলে, আপনি যা লিখেছিলেন তা আমরা {n} দিন রাখি যেন আমাদের টিম অর্ডার শেষ করতে সাহায্য করতে পারে; তারপর তা সরিয়ে ফেলা হয়।"
+        }
+      }
+    }
   }
 }
