@@ -7,11 +7,13 @@
 import * as od from '@extas/orders';
 import { ORDER_STATES, type OrderState } from '@extas/orders/pure';
 import { RISK_SECTIONS } from '@extas/settings';
+import { documentsOf, type PackDocs } from '@extas/shipping';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import type { AdminView } from '../admin-page';
 import { ageOf } from '../admin-shell/dashboard';
 import type { ShellIconName } from '../admin-shell/icons';
 import type { FieldOption } from './spec';
+import { docChips, docsSummaryLine } from './docs';
 import { t } from '../i18n';
 import { phoneNormalizeBD } from '../phone-bd';
 import { LIST_PAGES, ORDER_TONE, orderHref, PAY_TONE, RET_TONE, SECTION_TONE, SHIP_TONE, UNBOOKED_SHIPMENT, type ListPageId, type ListQuery, type Tone } from './model';
@@ -83,6 +85,8 @@ export interface OrderRowView {
   flags: Chip[];
   /** PR 541 (follow-up 295): the band with the score ("High · 72") and the section it was placed in (clear: none). */
   risk: { band: Chip | null; section: Chip | null };
+  /** Follow-up 435: the documents the order already has (sticker, invoice, picking list, handover sheet). */
+  docs: Chip[];
   facts: BulkFacts;
 }
 
@@ -95,6 +99,8 @@ export interface OrderListData {
   holdOptions: FieldOption[];
   /** PR 541: the owner's risk bands, for the list's risk filter. */
   bands: FieldOption[];
+  /** Follow-up 435: how many orders on this page have each document (null: none has any). */
+  docsLine: string | null;
 }
 
 /** PR 541: a row's band with its score, in the owner's words and colour, and its section (none while clear). */
@@ -192,7 +198,13 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
     ...(query.sort ? { sort: query.sort } : {}),
     ...(query.cursor ? { cursor: query.cursor } : {}),
   });
-  const [extras, reasons, riskBands] = await Promise.all([od.listExtras(deps, who, list.rows.map((r) => r.id)), od.reasonLists(deps, who.storeId), od.setting(deps, who.storeId, 'risk.bands')]);
+  const ids = list.rows.map((r) => r.id);
+  const [extras, reasons, riskBands, kept] = await Promise.all([od.listExtras(deps, who, ids), od.reasonLists(deps, who.storeId), od.setting(deps, who.storeId, 'risk.bands'), documentsOf(deps.db, who.storeId, ids)]);
+  // follow-up 435: the sticker is the newest booking's (a cancelled booking's prints are history, not this parcel's)
+  const docsOf = (id: string): PackDocs => {
+    const s = extras[id]?.shipment;
+    return { ...(kept.get(id) ?? { invoice: null, picking: 0, handover: 'none' as const }), sticker: s && !UNBOOKED_SHIPMENT.has(s.status) ? s.labelPrintCount : 0 };
+  };
   const name = (x: { en: string; bn: string }) => (view.lang === 'bn' ? x.bn || x.en : x.en);
   const labels: ListLabels = { holdReasons: new Map(reasons.hold.map((r) => [r.key, name(r)])), flags: new Map(reasons.flags.map((f) => [f.key, name(f)])) };
   const now = (deps.now ?? (() => new Date()))();
@@ -219,6 +231,7 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
       courier: x?.shipment && !UNBOOKED_SHIPMENT.has(x.shipment.status) ? { name: x.shipment.courierName, tracking: x.shipment.trackingCode } : null,
       flags,
       risk: riskChips(view, r, riskBands),
+      docs: docChips(view, docsOf(r.id)),
       facts: {
         status: r.status,
         version: r.version,
@@ -232,5 +245,5 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
   });
   const holdOptions = reasons.hold.map((r) => ({ value: r.key, label: name(r), ...(r.noteRequired ? { noteRequired: true } : {}) }));
   const bands = riskBands.map((b) => ({ value: b.key, label: name(b) }));
-  return { query, rows, counts: list.counts, next: list.next, holdOptions, bands };
+  return { query, rows, counts: list.counts, next: list.next, holdOptions, bands, docsLine: docsSummaryLine(view, ids.map(docsOf)) };
 }

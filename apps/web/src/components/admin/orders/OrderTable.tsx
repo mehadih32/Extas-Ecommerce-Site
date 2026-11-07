@@ -1,6 +1,7 @@
 // PR 140 — the order list's table (demo V12.3 a2List, 97r ORD-01): one row per order with the four separate status
 // chips, the courier and the flags; a table on a computer, one card per order on a phone (shell.css). A tap on a row
-// opens the order; the order number is its link for the keyboard and screen readers. The tick boxes select orders for
+// opens the order; the order number is its link for the keyboard and screen readers. Follow-up 435: the Documents
+// column (sticker, invoice, picking list, handover sheet; B1.3). The tick boxes select orders for
 // the bulk bar (PR 152, BulkBar.tsx); the selection is this page's only (a new page or view starts empty).
 // Follow-up 223: a cheap row. The table is drawn by the server: no row carries a React handler, a hook or a prefetching
 // Link (the order number is a plain link the picker routes), and the tick boxes are the browser's own. OrderPicker.tsx
@@ -67,6 +68,7 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
             <th>{col('status')}</th>
             <th>{col('risk')}</th>
             <th>{col('courier')}</th>
+            <th>{col('docs')}</th>
             <th>{col('flags')}</th>
           </tr>
         </thead>
@@ -125,6 +127,9 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
                   ) : (
                     <span className="a2-faint">{dash}</span>
                   )}
+                </td>
+                <td data-l={col('docs')} data-testid="order-docs">
+                  <Chips chips={r.docs} empty={dash} />
                 </td>
                 <td className="a2-tdx" data-l={col('flags')}>
                   <Chips chips={r.flags} empty={dash} />

@@ -27,6 +27,7 @@ const row = (id: string, n: string): OrderRowView => ({
   chips: [{ label: 'New', tone: 'b' as never }],
   courier: null,
   flags: [],
+  docs: [],
   risk: { band: null, section: null },
   facts: { status: 'PENDING' } as never,
 });

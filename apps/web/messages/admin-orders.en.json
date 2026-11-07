@@ -72,7 +72,8 @@
         "status": "Status",
         "courier": "Courier",
         "flags": "Flags",
-        "risk": "Risk"
+        "risk": "Risk",
+        "docs": "Documents"
       },
       "empty": {
         "title": "Nothing matches",
@@ -89,7 +90,28 @@
       "section": "Section",
       "sort": "Order",
       "sortNew": "Newest first",
-      "sortRisk": "Highest risk first"
+      "sortRisk": "Highest risk first",
+      "docs": {
+        "sticker": "Sticker",
+        "stickerAgain": "Sticker ×{n}",
+        "invoice": "Invoice",
+        "invoiceRevised": "Invoice (revised {n})",
+        "picking": "Picking list",
+        "pickingAgain": "Picking list ×{n}",
+        "handover": {
+          "printed": "On a handover sheet",
+          "handed": "Handed over"
+        },
+        "sum": {
+          "line": "Documents on this page: {list}",
+          "sticker": "{n} with a sticker",
+          "stickerAgain": "{n} printed again",
+          "invoice": "{n} with an invoice",
+          "picking": "{n} on a picking list",
+          "sheet": "{n} on a handover sheet",
+          "handed": "{n} handed over"
+        }
+      }
     },
     "kpi": {
       "today": "Orders today",

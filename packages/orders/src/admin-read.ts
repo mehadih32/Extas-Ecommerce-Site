@@ -22,6 +22,8 @@ export interface RowShipment {
   status: string;
   trackingCode: string | null;
   courierName: string;
+  /** Follow-up 435: how often this booking's sticker was printed (0: never). */
+  labelPrintCount: number;
 }
 
 export interface RowExtras {
@@ -41,7 +43,7 @@ export async function listExtras(deps: OrdersDeps, who: Who, orderIds: readonly 
   if (!ids.length) return {};
   const where = { storeId: who.storeId, orderId: { in: ids } };
   const [shipments, returns, refunds, items] = await Promise.all([
-    deps.db.shipment.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { orderId: true, status: true, trackingCode: true, courierAccount: { select: { name: true } } } }),
+    deps.db.shipment.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { orderId: true, status: true, trackingCode: true, labelPrintCount: true, courierAccount: { select: { name: true } } } }),
     deps.db.returnRecord.findMany({ where, select: { orderId: true, receivedAt: true } }),
     deps.db.refund.findMany({ where, select: { orderId: true, status: true } }),
     deps.db.orderItem.findMany({ where: { ...where, status: 'ACTIVE' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { orderId: true, productName: true, quantity: true } }),
@@ -54,7 +56,7 @@ export async function listExtras(deps: OrdersDeps, who: Who, orderIds: readonly 
       units: mine.reduce((n, x) => n + x.quantity, 0),
       firstItem: mine[0]?.productName ?? null,
       lines: mine.length,
-      shipment: s ? { status: s.status, trackingCode: s.trackingCode, courierName: s.courierAccount.name } : null,
+      shipment: s ? { status: s.status, trackingCode: s.trackingCode, courierName: s.courierAccount.name, labelPrintCount: s.labelPrintCount } : null,
       returnRefund: returnRefundState(
         returns.filter((r) => r.orderId === id),
         refunds.filter((r) => r.orderId === id),
