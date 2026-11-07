@@ -61,7 +61,8 @@ const versionOf = (v: unknown): string => createHash('sha256').update(JSON.strin
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 
 export type Counts = Record<DeliveryState, number>;
-const zero = (): Counts => ({ sent: 0, mock: 0, failed: 0, waiting: 0 });
+// follow-up 602: `unticked` too
+const zero = (): Counts => ({ sent: 0, mock: 0, failed: 0, waiting: 0, unticked: 0 });
 
 export interface PlatformLink {
   platform: AdPlatform;

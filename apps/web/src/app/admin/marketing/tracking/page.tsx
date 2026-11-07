@@ -36,7 +36,8 @@ const HERE = '/admin/marketing/tracking';
 const API = '/api/admin/marketing/tracking';
 const KEYS_PAGE = '/admin/integrations';
 const KEY = 'adsTracking';
-const STATES: readonly DeliveryState[] = ['sent', 'mock', 'failed', 'waiting'];
+// follow-up 602: `unticked` (the platform was unticked before the event went)
+const STATES: readonly DeliveryState[] = ['sent', 'mock', 'failed', 'waiting', 'unticked'];
 
 function withScreen(view: AdminView): AdminView {
   return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };

@@ -32,6 +32,7 @@ import { ORDER_FOLLOW_UPS_JOB, ORDER_FOLLOW_UPS_QUEUE, runOrderFollowUps } from 
 import { GRADES_JOB, GRADES_QUEUE, runGradesJob } from './grades';
 import { AUDIENCE_REFRESH_JOB, AUDIENCE_REFRESH_QUEUE, runAudienceRefresh, type AudienceRefreshPayload } from './audience-refresh';
 import { AD_SPEND_IMPORT_JOB, AD_SPEND_IMPORT_QUEUE, runAdSpendImport, type AdSpendImportPayload } from './ad-spend-import';
+import { runTrackingSweep, TRACKING_SWEEP_JOB, TRACKING_SWEEP_QUEUE, type TrackingSweepPayload } from './tracking-sweep';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
 export type JobOutcome = { ok: true; stats: Record<string, unknown> } | { ok: false; error: string; stats: Record<string, unknown> };
@@ -428,6 +429,23 @@ const adSpendImportJob: JobDefinition<AdSpendImportPayload> = {
   run: async (deps, p) => ({ ok: true, stats: compactStats(await runAdSpendImport(deps, p)) }),
 };
 
+/**
+ * Follow-up 602 (PR 257) — one store's sweep of tracked events still waiting, for one UTC hour (tracking-sweep.ts;
+ * planned only while tracking is on and an event waits). Safe to run twice: each row is claimed before it is sent.
+ */
+const trackingSweepJob: JobDefinition<TrackingSweepPayload> = {
+  key: TRACKING_SWEEP_JOB,
+  queue: TRACKING_SWEEP_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown; hour?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${TRACKING_SWEEP_JOB}: storeId must be a positive integer`);
+    if (typeof p.hour !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}$/.test(p.hour)) throw new Error(`${TRACKING_SWEEP_JOB}: hour must be YYYY-MM-DDTHH`);
+    return { storeId: p.storeId as number, hour: p.hour };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runTrackingSweep(deps, p)) }),
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -447,6 +465,7 @@ const definitions: JobDefinition<never>[] = [
   supportEscalateJob as unknown as JobDefinition<never>,
   adSpendImportJob as unknown as JobDefinition<never>,
   orderFollowUpsJob as unknown as JobDefinition<never>,
+  trackingSweepJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

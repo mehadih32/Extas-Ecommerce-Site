@@ -15,7 +15,7 @@ import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHa
 import type { AdminDeps } from '../admin-auth';
 import { BAG_COOKIE } from '../shop/bag-model';
 import { trackingHandler, type TrackingOverview } from './admin';
-import { recordEvent, sendEvents, type TrackingDeps } from './service';
+import { recordEvent, sendEvents, trackingSweepHook, type TrackingDeps } from './service';
 import { trackAddToBag, trackHandler, trackPurchase } from './shop';
 import { ATTRIBUTION_COOKIE, encodeTouch, touchOf } from './attribution';
 
@@ -220,5 +220,49 @@ describe.skipIf(!HAS_TEST_DB)('server-side event tracking on PostgreSQL (PR 257)
     const sent = await api('POST', { action: 'send' });
     expect(sent.a.outcome).toMatchObject({ events: 0 });
     expect(sent.a.overview.waiting).toBe(0);
+  });
+  it('follow-up 602: an event waiting for a platform the owner unticked since is not sent there; a test event still is', async () => {
+    const v = await deps.resolver.value('ads.tracking', { storeId: S });
+    await deps.resolver.set('ads.tracking', { ...v, platforms: { meta: true, google: true, tiktok: false } }, storeTarget(S), { actorId: null, reason: 'test' });
+    const r = await recordEvent(deps, { storeId: S, name: 'view', eventId: 'untick-0001', url: null, items: [], shopper: {}, sendLater: true });
+    const test = await recordEvent(deps, { storeId: S, name: 'view', eventId: 'untick-test-1', url: null, items: [], shopper: {}, test: true, platforms: ['google'], sendLater: true });
+    await deps.resolver.set('ads.tracking', { ...v, platforms: { meta: true, google: false, tiktok: false } }, storeTarget(S), { actorId: null, reason: 'test' });
+    mockAdOutbox.clear();
+    await sendEvents(deps, { ids: [r.id!, test.id!] });
+    const row = await t.prisma.trackedEvent.findUniqueOrThrow({ where: { id: r.id! } });
+    expect(row.deliveries).toMatchObject({ meta: { state: 'mock', attempts: 1 }, google: { state: 'unticked', attempts: 0 } });
+    expect(row.pending).toBe(false);
+    expect((await t.prisma.trackedEvent.findUniqueOrThrow({ where: { id: test.id! } })).deliveries).toMatchObject({ google: { state: 'mock' } });
+    expect(mockAdOutbox.all().map((m) => [m.platform, m.eventIds, m.test])).toEqual([
+      ['meta', ['untick-0001'], false],
+      ['google', ['untick-test-1'], true],
+    ]);
+    const o = (await api('GET')).a.overview;
+    expect(o.table.view!.google).toMatchObject({ unticked: 1 });
+    await deps.resolver.set('ads.tracking', v, storeTarget(S), { actorId: null, reason: 'test' });
+  });
+
+  it('follow-up 602: the worker’s sweep sends the store’s events that rested, only with the internal token', async () => {
+    const token = 'k'.repeat(40);
+    const saved = process.env.CACHE_HOOK_TOKEN;
+    process.env.CACHE_HOOK_TOKEN = token;
+    try {
+      const r = await recordEvent(deps, { storeId: S, name: 'view', eventId: 'sweep-0001', url: null, items: [], shopper: {}, sendLater: true });
+      const call = (hdr: Record<string, string>) => trackingSweepHook(new Request(`https://${HOST}/api/internal/tracking/sweep`, { method: 'POST', headers: { 'content-type': 'application/json', ...hdr }, body: JSON.stringify({ storeId: S }) }), deps);
+      expect((await call({})).status).toBe(404);
+      expect((await call({ 'x-extas-cache-hook': 'x'.repeat(40) })).status).toBe(404);
+      // a fresh event rests first (the shop's own send is on its way)
+      let res = await call({ 'x-extas-cache-hook': token });
+      expect([res.status, await res.json()]).toEqual([200, { ok: true, events: 0, failed: 0 }]);
+      await t.prisma.$executeRaw`UPDATE "TrackedEvent" SET "updatedAt" = now() - interval '5 minutes' WHERE "id" = ${r.id!}::uuid`;
+      mockAdOutbox.clear();
+      res = await call({ 'x-extas-cache-hook': token });
+      expect([res.status, await res.json()]).toEqual([200, { ok: true, events: 1, failed: 0 }]);
+      expect((await t.prisma.trackedEvent.findUniqueOrThrow({ where: { id: r.id! } })).pending).toBe(false);
+      expect(mockAdOutbox.all().flatMap((m) => m.eventIds)).toContain('sweep-0001');
+    } finally {
+      if (saved === undefined) delete process.env.CACHE_HOOK_TOKEN;
+      else process.env.CACHE_HOOK_TOKEN = saved;
+    }
   });
 });
