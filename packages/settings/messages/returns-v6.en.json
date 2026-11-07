@@ -42,6 +42,10 @@
       "keepForOrders": {
         "label": "Pieces kept for regular orders",
         "help": "Regular orders come first: an exchange waits when it would leave fewer than this many pieces of the new size free in the ERP. 1 means an exchange never takes the last piece."
+      },
+      "retryUnreachable": {
+        "label": "Send again by itself when the ERP could not be reached",
+        "help": "Off as it ships: an approved exchange that could not reach the ERP waits until a person presses \"Send to the ERP again\". On: the shop tries it again by itself once this many minutes passed since the last try, and keeps trying at that pace until the ERP answers. The ERP never takes it twice. A refused exchange is never sent again by itself."
       }
     }
   }

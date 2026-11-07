@@ -134,6 +134,7 @@ import { erpReplaySettings } from './registry-erp-replay';
 import { erpHeldSettings } from './registry-erp-held';
 import { healthReopenSettings } from './registry-health-reopen';
 import { loginNetworkSettings } from './registry-login-network';
+import { exchangeRetrySettings } from './registry-exchange-retry';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
@@ -1530,6 +1531,8 @@ export const registry = {
   ...healthReopenSettings,
   // ---- Follow-up 609 (PR 15, 380) · the admin sign-in pause counted per network, off (registry-login-network.ts, version 271). ----
   ...loginNetworkSettings,
+  // ---- Follow-up 546 (PR 614) · an exchange send that found the ERP unreachable is tried again by the returns turn, off (registry-exchange-retry.ts, version 272). ----
+  ...exchangeRetrySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

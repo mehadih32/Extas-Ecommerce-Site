@@ -205,4 +205,24 @@ describe.skipIf(!HAS_TEST_DB)('returns admin API on PostgreSQL (S08)', () => {
     expect((await api('GET', `refused/${e.id}/decide`)).status).toBe(405);
     expect((await api('POST', 'refused/not-a-uuid/decide', { body: {} })).status).toBe(404);
   });
+
+  it('follow-up 546: the Exchange settings card is read (returns.view) and saved whole (settings.write, audited); an older screen is STALE, a number out of range is refused', async () => {
+    expect((await api('GET', 'erp/settings', { cookie: reader })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
+    const read = await api('GET', 'erp/settings');
+    expect(read.body).toMatchObject({ ok: true, cards: { exchange: { key: 'exchange', value: { keepForOrders: 1, retryUnreachable: false, retryAfterMinutes: 30 } } } });
+    const version = read.body.cards.exchange.version as string;
+    const value = { keepForOrders: 2, retryUnreachable: true, retryAfterMinutes: 45 };
+    expect((await api('PUT', 'erp/settings', { body: { key: 'exchange', value, version: 'old' } })).body).toMatchObject({ ok: false, error: 'STALE' });
+    expect((await api('PUT', 'erp/settings', { body: { key: 'exchange', value: { ...value, retryAfterMinutes: 2 }, version } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['retryAfterMinutes'] });
+    expect((await api('PUT', 'erp/settings', { body: { key: 'other', value, version } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    const saved = await api('PUT', 'erp/settings', { body: { key: 'exchange', value, version } });
+    expect(saved.body).toMatchObject({ ok: true, cards: { exchange: { value } } });
+    expect(await deps.resolver.value('exchange.erp.retryUnreachable', { storeId: f.S })).toEqual({ enabled: true, afterMinutes: 45 });
+    expect(await deps.resolver.value('exchange.erp.keepForOrders', { storeId: f.S })).toBe(2);
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'exchange.erp.settings.save', entityId: 'exchange.erp' } })).toBe(1);
+    // the same values again: nothing written, nothing audited
+    expect((await api('PUT', 'erp/settings', { body: { key: 'exchange', value, version: saved.body.cards.exchange.version } })).body).toMatchObject({ ok: true });
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'exchange.erp.settings.save' } })).toBe(1);
+    expect((await api('POST', 'erp/settings', { body: {} })).status).toBe(405);
+  });
 });

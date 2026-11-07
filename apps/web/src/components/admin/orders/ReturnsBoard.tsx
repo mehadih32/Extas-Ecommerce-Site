@@ -239,7 +239,7 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
           {st.needsResend ? (
             <div className="a2-note warn" data-testid="exchange-erp-resend">
               <ShellIcon name="alert" size={15} />
-              <span>{r(d, 'erpx.resend')}</span>
+              <span>{st.retryMinutes ? r(d, 'erpx.resendAuto', { n: formatNumber(st.retryMinutes, view.locale) }) : r(d, 'erpx.resend')}</span>
             </div>
           ) : null}
           {st.lastRefusal && !st.waitingStock && !st.erpExchangeId && !st.needsResend ? <div className="a2-xs rt-bad a2-mt6">{r(d, 'erpx.refused', { code: r(d, `erp.reason.${st.lastRefusal}`).startsWith('returns.') ? st.lastRefusal : r(d, `erp.reason.${st.lastRefusal}`) })}</div> : null}

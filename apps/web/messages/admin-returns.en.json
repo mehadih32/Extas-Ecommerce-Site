@@ -537,6 +537,31 @@
       "stale": "The ERP could not be asked; this is the last known list.",
       "total": "Total at risk",
       "lateTag": "Late return marked"
+    },
+    "exSet": {
+      "h": "Exchange settings",
+      "d": "How exchanges go to the ERP. Changed here, for this store only.",
+      "keep": "Pieces kept for regular orders",
+      "keepHelp": "An exchange waits when it would leave fewer than this many pieces of the new size free in the ERP. 1 means an exchange never takes the last piece; 0 means it may.",
+      "retry": "Send again by itself when the ERP could not be reached",
+      "retryHelp": "Off: a person presses \"Send to the ERP again\" on the exchange. On: the shop sends it again by itself. The ERP never takes it twice, and a refused exchange is never sent again by itself.",
+      "after": "Minutes between tries",
+      "afterHelp": "How long after the last try the shop sends it again (5 to 1440).",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "readOnly": "You can see these settings but not change them.",
+      "err": {
+        "STALE": "Someone changed these settings meanwhile. The page now shows their values; check them and save again.",
+        "INVALID_INPUT": "A number is outside its range.",
+        "FORBIDDEN": "You are not allowed to change these settings.",
+        "forbidden": "You are not allowed to change these settings.",
+        "unauthorized": "Please sign in again.",
+        "network": "No connection. Nothing was saved; try again.",
+        "other": "It could not be saved. Try again."
+      }
     }
   },
   "erpx": {
@@ -559,6 +584,7 @@
     "window": "Exchange window",
     "windowLeft": "{n} h of {total} h left · ends {at}",
     "windowClosed": "Closed: the {total} h ended {at}. It cannot be approved now.",
-    "windowUnknown": "Not started: the courier's \"delivered\" is not in yet."
+    "windowUnknown": "Not started: the courier's \"delivered\" is not in yet.",
+    "resendAuto": "The ERP could not be reached, so nothing was sent yet. The shop sends it again by itself every {n} minutes until the ERP answers; you can also press \"Send to the ERP again\" now."
   }
 }

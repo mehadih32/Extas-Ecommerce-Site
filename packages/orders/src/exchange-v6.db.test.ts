@@ -302,6 +302,58 @@ describe.skipIf(!HAS_TEST_DB)('PR 614 · an exchange through the ERP (PostgreSQL
     expect((await db().exchange.findUniqueOrThrow({ where: { id: exchangeId } })).status).toBe('APPROVED');
   });
 
+  it('follow-up 546: an approval that found the ERP unreachable waits for a person while the switch is off; on, the returns turn sends it again after the back-off, with its same key', async () => {
+    const { exchangeId } = await opened('xv-unreached');
+    const real = globalThis.fetch;
+    const keys: string[] = [];
+    let down = true;
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (/\/orders$/.test(new URL(url).pathname) && (init?.method ?? 'GET').toUpperCase() === 'POST') {
+        keys.push(new Headers(init?.headers).get('idempotency-key') ?? '');
+        if (down) return new Response(JSON.stringify({ error: { code: 'UNAVAILABLE', message: 'down for a moment' } }), { status: 503, headers: { 'content-type': 'application/json' } });
+      }
+      return real(input, init);
+    }) as typeof fetch;
+    const start = f.clock.now;
+    try {
+      expect(await code(approveExchangeV6(d(), f.staff, exchangeId))).toBe('ERP_UNAVAILABLE');
+      const tries = keys.length;
+      expect(tries).toBeGreaterThan(0);
+      expect(await exchangeErpState(d(), f.staff, exchangeId)).toMatchObject({ needsResend: true, retryMinutes: null, waitingStock: false });
+      // off (as shipped): the returns turn leaves it for a person, however long it waits
+      f.clock.now = new Date(start.getTime() + 2 * HOUR);
+      expect((await runErpReturns(d(), f.S)).exchanges).toMatchObject({ sent: 0, waiting: 0 });
+      expect(keys.length).toBe(tries);
+      // on: not before the back-off from the last try …
+      f.perStore.set(`exchange.erp.retryUnreachable@${f.S}`, { enabled: true, afterMinutes: 30 });
+      await db().erpExchangeLink.updateMany({ where: { exchangeId }, data: { lastTriedAt: new Date(f.clock.now.getTime() - 10 * 60_000) } });
+      expect(await exchangeErpState(d(), f.staff, exchangeId)).toMatchObject({ needsResend: true, retryMinutes: 30 });
+      expect((await runErpReturns(d(), f.S)).exchanges).toMatchObject({ sent: 0, waiting: 0 });
+      expect(keys.length).toBe(tries);
+      // … then tried; still down: its clock moves on and it waits again
+      f.clock.now = new Date(f.clock.now.getTime() + 21 * 60_000);
+      expect((await runErpReturns(d(), f.S)).exchanges).toMatchObject({ sent: 0, waiting: 1 });
+      expect(keys.length).toBeGreaterThan(tries);
+      expect((await db().erpExchangeLink.findFirstOrThrow({ where: { exchangeId } })).lastTriedAt).toEqual(f.clock.now);
+      const after = keys.length;
+      expect((await runErpReturns(d(), f.S)).exchanges).toMatchObject({ sent: 0, waiting: 0 });
+      expect(keys.length).toBe(after);
+      // the ERP is back: the next turn after the back-off sends it, the same key every time
+      down = false;
+      f.clock.now = new Date(f.clock.now.getTime() + 31 * 60_000);
+      expect((await runErpReturns(d(), f.S)).exchanges).toMatchObject({ sent: 1, waiting: 0 });
+    } finally {
+      globalThis.fetch = real;
+      f.perStore.delete(`exchange.erp.retryUnreachable@${f.S}`);
+      // the clock is never moved back: the ERP's exchange list is read from its last change on (see above)
+    }
+    expect(new Set(keys)).toEqual(new Set([`exchange:${exchangeId}:a1`]));
+    expect(await db().erpExchangeLink.findFirstOrThrow({ where: { exchangeId } })).toMatchObject({ erpStatus: 'WAITING_DELIVERY', lastRefusal: null });
+    expect(await exchangeErpState(d(), f.staff, exchangeId)).toMatchObject({ needsResend: false, retryMinutes: null });
+    expect((await db().exchange.findUniqueOrThrow({ where: { id: exchangeId } })).status).toBe('APPROVED');
+  });
+
   it('a dearer piece: the customer pays the difference when the owner passes it on, otherwise the shop absorbs it; never a credit', async () => {
     for (const pass of [true, false]) {
       const { exchangeId } = await opened(`xv-rise-${pass}`);

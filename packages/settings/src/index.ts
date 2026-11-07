@@ -40,6 +40,7 @@ export * from './registry-erp-replay';
 export * from './registry-erp-held';
 export * from './registry-health-reopen';
 export * from './registry-login-network';
+export * from './registry-exchange-retry';
 export * from './registry-admin-shell';
 export { messages, lookup, pair, type MessageTree, type SettingsMessages, type LabelPair } from './messages';
 export * from './registry-orders';
