@@ -130,5 +130,23 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('the customer journey on P
     expect(saved.values['account.reorder']).toMatchObject({ enabled: true, words: { button: { en: 'Order again' } } });
     expect(await p.auditLog.count({ where: { action: 'customer.settings.save', entityId: 'account.reorder' } })).toBe(1);
   });
-});
 
+  it('follow-up 471: the merge rules, the phone mask, the list and one customer\'s page are on the same page — the VIP spend kept', async () => {
+    const deps = () => ({ ...f.customersDeps(), settings: { ...f.customersDeps().settings, set: async (key: string, value: unknown) => void f.overrides.set(key, value) } });
+    const screen = await crmSettingsScreen(deps(), f.viewer);
+    expect(screen.values['customers.phoneMask']).toMatchObject({ first: 3, last: 3 });
+    expect(screen.values['customers.merge']).toMatchObject({ suggest: true, noteRequired: false });
+    const role = await createRole(f.t.prisma, SYSTEM, { key: 'j471-settings', nameEn: 'crm', nameBn: 'crm', permissions: ['customers.read', 'customers.settings'] });
+    const u = await f.t.prisma.staffUser.create({ data: { email: 'j471s@example.com', displayName: 'CRM', passwordHash: 'not-a-login' } });
+    await f.t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: f.S } });
+    const owner = { actor: { staffUserId: u.id }, storeId: f.S };
+    await expect(saveCrmSetting(deps(), owner, { key: 'customers.phoneMask', value: { first: 6, last: 3 } })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    await expect(saveCrmSetting(deps(), owner, { key: 'customers.merge', value: { ...screen.values['customers.merge'], signals: ['email', 'email'] } })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    const list = { ...screen.values['customers.list'], vipMinSalesMinor: 500_000 };
+    f.overrides.set('customers.list', list);
+    const saved = await saveCrmSetting(deps(), owner, { key: 'customers.list', value: { ...list, pageSize: 25 } });
+    expect(saved.values['customers.list']).toMatchObject({ pageSize: 25, vipMinSalesMinor: 500_000 });
+    f.overrides.delete('customers.list');
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'customer.settings.save', entityId: 'customers.list' } })).toBe(1);
+  });
+});

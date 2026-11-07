@@ -706,6 +706,40 @@
         "sub": "What a customer sees of his own orders. On as it ships. Only his orders, never your team's notes, flags, holds or names.",
         "filters": "Group chips on My orders (All, On the way, Delivered, Cancelled & returned) once his orders fill more than one page",
         "timeline": "\"What happened\" on each order's page (placed, confirmed, packed, with the courier, delivered, and every change)"
+      },
+      "merge": {
+        "title": "Same person? (merging profiles)",
+        "sub": "Suggests two profiles that look like one customer, for a person to merge or keep apart. Nothing merges by itself.",
+        "suggest": "Suggest pairs that look like the same person",
+        "signals": "Match by",
+        "opt": {
+          "email": "The same e-mail",
+          "whatsapp": "The same WhatsApp number",
+          "nameAddress": "The same name and address",
+          "identity": "The same identity (device or payment)"
+        },
+        "perPage": "Pairs shown at a time (1–200)",
+        "noteRequired": "A note is needed to merge (a split always needs one)"
+      },
+      "phoneMask": {
+        "title": "Phone numbers shown masked",
+        "sub": "Where a number is shown masked (01712-345678 → 017•••••678), how many digits stay visible at the start and the end.",
+        "first": "Digits shown at the start (0–5)",
+        "last": "Digits shown at the end (0–5)"
+      },
+      "list": {
+        "title": "Customer list",
+        "sub": "How many customers the list shows a page and how its views count. The VIP view keeps its own spend line.",
+        "pageSize": "Customers per page (10–100)",
+        "returningMinOrders": "Orders that make a customer \"Returning\" (2–50)",
+        "atRiskDays": "Days without an order before a customer is \"At risk\" (7–3650)"
+      },
+      "profile": {
+        "title": "One customer's page",
+        "sub": "How many rows each list on a customer's page shows.",
+        "ordersPerPage": "Orders per page (5–100)",
+        "listsPerPage": "Rows per list (3–50)",
+        "accessLogShown": "Lines of \"Who looked at this customer\" (0–100)"
       }
     },
     "auto": {

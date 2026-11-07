@@ -4,12 +4,14 @@
 // (`account.reorder`) with how many orders came from it in the last 30 days, above the cards. Seeing needs `customers.read`;
 // saving needs `customers.settings`, which the API checks again (schema-checked, audited). PR 534: the "Customer grading"
 // card picks its "good customer from" grade among the owner's own grades, which the grades card under it keeps.
+// Follow-up 471 (PR 284–286): the merge rules, the phone mask, the customer list and one customer's page get their cards
+// here too (they were settings-API only); the VIP spend of the list stays under the settings API (it can be "none").
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { JOURNEY_KINDS } from '@extas/customers/pure';
-import { REORDER_STATES, REORDER_WORDS, REORDER_WORDS_MAX } from '@extas/settings';
+import { MERGE_SIGNALS, REORDER_STATES, REORDER_WORDS, REORDER_WORDS_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { CrmSettingCard, type CrmField } from '@/components/admin/customers/CrmSettingCard';
 import { formatNumber } from '@/components/admin/products/model';
@@ -149,6 +151,46 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
     fields: [
       { name: 'enabled', kind: 'bool' },
       { name: 'minutes', kind: 'int' },
+    ],
+  },
+  {
+    // follow-up 471 (PR 284) — "Same person?": whether pairs are suggested, by which matches, how many at a time
+    key: 'customers.merge',
+    card: 'merge',
+    fields: [
+      { name: 'suggest', kind: 'bool' },
+      { name: 'signals', kind: 'multi', options: MERGE_SIGNALS },
+      { name: 'perPage', kind: 'int' },
+      { name: 'noteRequired', kind: 'bool' },
+    ],
+  },
+  {
+    // follow-up 471 (PR 284) — the digits of a phone number shown before and after the dots
+    key: 'customers.phoneMask',
+    card: 'phoneMask',
+    fields: [
+      { name: 'first', kind: 'int' },
+      { name: 'last', kind: 'int' },
+    ],
+  },
+  {
+    // follow-up 471 (PR 285) — the customer list and its views
+    key: 'customers.list',
+    card: 'list',
+    fields: [
+      { name: 'pageSize', kind: 'int' },
+      { name: 'returningMinOrders', kind: 'int' },
+      { name: 'atRiskDays', kind: 'int' },
+    ],
+  },
+  {
+    // follow-up 471 (PR 286) — one customer's page: rows per list
+    key: 'customers.profile',
+    card: 'profile',
+    fields: [
+      { name: 'ordersPerPage', kind: 'int' },
+      { name: 'listsPerPage', kind: 'int' },
+      { name: 'accessLogShown', kind: 'int' },
     ],
   },
 ];
