@@ -13,7 +13,7 @@
     "rateLimit": {
       "mode": {
         "label": "Request limits per address",
-        "help": "Counts how many requests one internet address sends each minute. Observe (the default) only writes a log line when an address goes over; Enforce asks it to try again in a minute; Off counts nothing. Many phones share one mobile-network address, so the limits are generous. Browser reports over the limit (page speed, problem reports) are dropped quietly, never shown as an error."
+        "help": "Counts how many requests one internet address sends each minute. Observe (the default) only writes a log line when an address goes over; Enforce asks it to try again in a minute; Off counts nothing. Many phones share one mobile-network address, so the limits are generous. Browser reports over the limit (page speed, problem reports) are dropped quietly, never shown as an error. Over the limit, browser reports are dropped in Observe too, so nobody can fill the database with them; a person's own requests are never refused in Observe."
       },
       "perMinute": {
         "label": "Requests a minute for one address",
