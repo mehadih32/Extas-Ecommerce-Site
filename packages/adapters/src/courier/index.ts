@@ -12,6 +12,8 @@ export * from './practice';
 export * from './mock-places';
 export * from './steadfast';
 export * from './pathao';
+// follow-up 372: the couriers' own status calls (webhooks), read into the same events a poll gives
+export * from './webhook';
 
 /** Every courier adapter, for the shipping service's connection layer (each on its practice world until keyed). */
 export const courierAdapters = [mockCourierAdapter, steadfastAdapter, pathaoAdapter] as const;

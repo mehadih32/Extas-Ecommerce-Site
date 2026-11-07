@@ -131,10 +131,10 @@ describe('Steadfast (PR 176)', () => {
   });
 
   it('Keys & connections: two keys, an optional https address; practice until they pass', () => {
-    expect(steadfastAdapter).toMatchObject({ kind: 'COURIER', provider: 'steadfast', modes: ['SANDBOX', 'LIVE'], secrets: ['apiKey', 'secretKey'] });
+    expect(steadfastAdapter).toMatchObject({ kind: 'COURIER', provider: 'steadfast', modes: ['SANDBOX', 'LIVE'], secrets: ['apiKey', 'secretKey', 'webhookToken'] });
     expect(STEADFAST_DEFAULT_BASE_URL.startsWith('https://')).toBe(true);
     expect(steadfastAdapter.configSchema.safeParse({ baseUrl: 'http://plain.example.test' }).success).toBe(false);
     expect(steadfastAdapter.configSchema.safeParse({}).success).toBe(true);
-    expect(connectionCatalogue.find((c) => c.provider === 'steadfast')).toMatchObject({ kind: 'COURIER', secrets: [{ field: 'apiKey' }, { field: 'secretKey' }] });
+    expect(connectionCatalogue.find((c) => c.provider === 'steadfast')).toMatchObject({ kind: 'COURIER', secrets: [{ field: 'apiKey' }, { field: 'secretKey' }, { field: 'webhookToken', optional: true }] });
   });
 });

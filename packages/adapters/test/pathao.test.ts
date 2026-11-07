@@ -191,11 +191,11 @@ describe('Pathao (PR 177)', () => {
   });
 
   it('Keys & connections: four keys and the Pathao store; Sandbox talks to Pathao\'s sandbox, Live to Pathao; one more courier, nothing else changes', async () => {
-    expect(pathaoAdapter).toMatchObject({ kind: 'COURIER', provider: 'pathao', modes: ['SANDBOX', 'LIVE'], secrets: ['clientId', 'clientSecret', 'username', 'password'] });
+    expect(pathaoAdapter).toMatchObject({ kind: 'COURIER', provider: 'pathao', modes: ['SANDBOX', 'LIVE'], secrets: ['clientId', 'clientSecret', 'username', 'password', 'webhookSecret'] });
     expect(pathaoAdapter.configSchema.safeParse({}).success).toBe(false);
     expect(pathaoAdapter.configSchema.safeParse({ storeId: 'main' }).success).toBe(false);
     expect(pathaoAdapter.configSchema.safeParse({ storeId: '149', baseUrl: 'http://plain.example.test' }).success).toBe(false);
-    expect(connectionCatalogue.find((c) => c.provider === 'pathao')).toMatchObject({ kind: 'COURIER', secrets: [{ field: 'clientId' }, { field: 'clientSecret' }, { field: 'username' }, { field: 'password' }], config: [{ field: 'storeId' }, { field: 'baseUrl', optional: true }] });
+    expect(connectionCatalogue.find((c) => c.provider === 'pathao')).toMatchObject({ kind: 'COURIER', secrets: [{ field: 'clientId' }, { field: 'clientSecret' }, { field: 'username' }, { field: 'password' }, { field: 'webhookSecret', optional: true }], config: [{ field: 'storeId' }, { field: 'baseUrl', optional: true }, { field: 'webhookReply', optional: true }] });
     expect(courierAdapters.map((a) => a.provider)).toEqual(['mockCourier', 'steadfast', 'pathao']);
     expect(keyedCourierAdapters.map((a) => a.provider)).toEqual(['steadfast', 'pathao']);
     expect([PATHAO_LIVE_BASE_URL, PATHAO_SANDBOX_BASE_URL].every((u) => u.startsWith('https://'))).toBe(true);

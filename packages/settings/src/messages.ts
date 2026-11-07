@@ -245,6 +245,8 @@ import looksFoldEn from '../messages/looks-fold.en.json';
 import looksFoldBn from '../messages/looks-fold.bn.json';
 import sharedLocationEn from '../messages/shared-location.en.json';
 import sharedLocationBn from '../messages/shared-location.bn.json';
+import courierWebhooksEn from '../messages/courier-webhooks.en.json';
+import courierWebhooksBn from '../messages/courier-webhooks.bn.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -386,6 +388,9 @@ messages.bn = mergeMessages(messages.bn, looksFoldBn);
 // S06 · PR 159 follow-up 324 (registry v268): where the team uses a shared location (registry-shared-location.ts).
 messages.en = mergeMessages(messages.en, sharedLocationEn);
 messages.bn = mergeMessages(messages.bn, sharedLocationBn);
+// S08 · PR 176/177 follow-up 372 (registry v269): the couriers' own status calls (registry-courier-webhooks.ts).
+messages.en = mergeMessages(messages.en, courierWebhooksEn);
+messages.bn = mergeMessages(messages.bn, courierWebhooksBn);
 // S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
 messages.en = mergeMessages(messages.en, financeEn);
 messages.bn = mergeMessages(messages.bn, financeBn);

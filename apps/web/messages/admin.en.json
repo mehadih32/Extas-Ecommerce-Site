@@ -394,6 +394,7 @@
       "fields": {
         "apiKey": "API key (Steadfast merchant panel → API)",
         "secretKey": "Secret key (same page)",
+        "webhookToken": "Webhook auth token — optional (the token you set on Steadfast's webhook page; the address is /api/courier/steadfast/webhook)",
         "baseUrl": "Address — only for a test server"
       }
     },
@@ -406,6 +407,8 @@
         "username": "Merchant login e-mail",
         "password": "Merchant login password",
         "storeId": "Pathao store ID the parcels go out from (merchant panel → Stores)",
+        "webhookSecret": "Webhook secret — optional (the secret you set on Pathao's webhook page; the address is /api/courier/pathao/webhook)",
+        "webhookReply": "Webhook set-up reply — optional (the value Pathao's webhook page asks the shop to send back)",
         "baseUrl": "Address — only for a test server"
       }
     },

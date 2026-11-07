@@ -20,6 +20,9 @@
 # store has them switched on (`erp.siteApi.enabled`, off by default) and every call without a good signature.
 # PR 426: Facebook Messenger's webhook passes the same way as WhatsApp's, GET (the handshake, the verify token from the
 # vault) and POST (signed with the Page's app secret; refused while none is in the vault) on /api/messenger/webhook only.
+# Follow-up 372: the couriers' status calls pass the same way, POST only, on exactly /api/courier/steadfast/webhook and
+# /api/courier/pathao/webhook. Each carries the token or secret the owner typed into Keys & connections; the app
+# refuses every call while `delivery.courier.webhooks` is off (as shipped) and every call without a good one.
 # qa-gate (30 Oct): Caddy's `path` matcher ignores case and compares the decoded, cleaned path, while the app routes on
 # the raw one: `/ERP-API/CUSTOMER%53` or `/x%2f..%2ferp-api%2fcustomers` matched the exemption and reached the app (its
 # not-found page) with no login. Every exemption therefore matches the raw request target as it arrived
@@ -38,6 +41,7 @@ exempt POST '/api/erp/webhook'
 exempt 'GET POST' '/api/whatsapp/webhook'
 exempt 'GET POST' '/api/messenger/webhook'
 exempt GET '/erp-api/(top-products|customers)'
+exempt POST '/api/courier/(steadfast|pathao)/webhook'
 printf '}\n'
 printf 'route @preview_needed {\n\tbasic_auth {\n\t\t%s %s\n\t}\n' "$user" "$hash"
 printf '\theader Set-Cookie "extas_preview=%s; Path=/; Max-Age=%s; Secure; HttpOnly; SameSite=Lax"\n}\n' "$token" "$((days * 86400))"

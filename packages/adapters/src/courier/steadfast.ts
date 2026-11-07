@@ -215,7 +215,9 @@ export const steadfastAdapter = defineAdapter<CourierApi, SteadfastConfig>({
   kind: 'COURIER',
   provider: STEADFAST_PROVIDER,
   modes: ['SANDBOX', 'LIVE'],
-  secrets: ['apiKey', 'secretKey'],
+  // follow-up 372: `webhookToken` (optional) is the auth token the owner sets on Steadfast's webhook page; only the
+  // shop's webhook reads it (courier/webhook.ts), never a booking
+  secrets: ['apiKey', 'secretKey', 'webhookToken'],
   configSchema: steadfastConfig,
   async create(ctx) {
     const [apiKey, secretKey] = await Promise.all([requireSecret(ctx, 'apiKey'), requireSecret(ctx, 'secretKey')]);

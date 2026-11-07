@@ -219,6 +219,8 @@ export * from './registry-prepaid-confirm';
 export * from './registry-looks-fold';
 // S06 · PR 159 follow-up 324 — where the team uses a shared location: the order page's map link, the sticker (registry-shared-location.ts, version 268).
 export * from './registry-shared-location';
+// S08 · PR 176/177 follow-up 372 — the couriers' own status calls (webhooks), off (registry-courier-webhooks.ts, version 269).
+export * from './registry-courier-webhooks';
 // S13 · PR 282 — the marketing calendar: the switch and how many days one view shows (registry-marketing-calendar.ts, version 217).
 export * from './registry-marketing-calendar';
 // S13 · PR 283 — the marketing report: the switch, the longest period and a message send's result days (registry-marketing-report.ts, version 218).

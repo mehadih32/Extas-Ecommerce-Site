@@ -102,7 +102,8 @@ export async function applyEventsIn(tx: Tx, ref: { storeId: number; shipmentId: 
   }
   if (next.codCollectedMinor !== current.codCollectedMinor) data.codCollectedMinor = next.codCollectedMinor;
   if (next.chargeMinor !== current.chargeMinor) data.chargeMinor = next.chargeMinor;
-  if (source === 'poll') data.lastTrackedAt = opts.now;
+  // follow-up 372: a parcel its courier just told the shop about (a webhook) counts as read now: the hourly read is the fallback
+  if (source === 'poll' || source === 'webhook') data.lastTrackedAt = opts.now;
   if (Object.keys(data).length) await tx.shipment.update({ where: { id: ref.shipmentId }, data });
   return { shipmentId: ref.shipmentId, added, unmapped: events.filter((e) => !e.status).length, from: current.status, status: next.status, changed: next.status !== current.status };
 }

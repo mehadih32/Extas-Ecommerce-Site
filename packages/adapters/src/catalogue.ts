@@ -223,7 +223,8 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     kind: 'COURIER',
     provider: 'steadfast',
     adapter: true,
-    secrets: [{ field: 'apiKey' }, { field: 'secretKey' }],
+    // follow-up 372: the webhook's auth token (optional: without it Steadfast's calls are refused and polling reads)
+    secrets: [{ field: 'apiKey' }, { field: 'secretKey' }, { field: 'webhookToken', optional: true }],
     config: [{ field: 'baseUrl', optional: true }],
     exclusive: false,
     targetMode: 'LIVE',
@@ -235,8 +236,9 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     kind: 'COURIER',
     provider: 'pathao',
     adapter: true,
-    secrets: [{ field: 'clientId' }, { field: 'clientSecret' }, { field: 'username' }, { field: 'password' }],
-    config: [{ field: 'storeId' }, { field: 'baseUrl', optional: true }],
+    // follow-up 372: the webhook's secret and its set-up reply (both optional: without them polling reads)
+    secrets: [{ field: 'clientId' }, { field: 'clientSecret' }, { field: 'username' }, { field: 'password' }, { field: 'webhookSecret', optional: true }],
+    config: [{ field: 'storeId' }, { field: 'baseUrl', optional: true }, { field: 'webhookReply', optional: true }],
     exclusive: false,
     targetMode: 'LIVE',
   },
