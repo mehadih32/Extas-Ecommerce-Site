@@ -22,6 +22,7 @@ import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Wh
 import { ShippingError } from './errors';
 import { printFacts, inPrintOrder, PRINT_PARCEL_SELECT, type PrintParcelRow } from './fulfil';
 import { bookedReceiver, handoverProblem, STILL_WITH_US, type HandoverProblem } from './fulfil-pure';
+import { checkBatches, type BatchCheck, type CheckBatch } from './handover-check';
 
 const ordersDeps = (deps: ShippingDeps): OrdersDeps => ({ db: deps.db, settings: deps.settings, now: deps.now });
 
@@ -269,6 +270,11 @@ export interface HandedBatch {
   /** Orders on the sheet that were left out when it was marked (changed since it was printed). */
   leftOut: number;
   printCount: number;
+  /**
+   * Follow-up 437: the courier's pick-up against this sheet (`fulfilment.handover.reconcile`) — parcels on it the courier
+   * never picked up, and parcels it picked up near that time that were on no sheet. Null while off or too early.
+   */
+  check: BatchCheck | null;
 }
 
 /** PR 406 — one courier's handed-over batches in the owner's last days, latest first, with the period's totals. */
@@ -287,6 +293,35 @@ function wentLines(data: SheetData & { handedOver?: string[]; skipped?: unknown[
   return (data.lines ?? []).filter((l) => went.has(l.orderNumber));
 }
 
+/**
+ * Follow-up 437 — the courier's pick-up checked against the shown batches (pure part: handover-check.ts). Empty while
+ * `fulfilment.handover.reconcile` is off. Reads the parcels on the sheets and the courier's pick-ups around them only.
+ */
+async function batchChecks(deps: ShippingDeps, storeId: number, rows: readonly { id: string; handedOverAt: Date | null; data: unknown; courierAccount: { id: string } }[], since: Date): Promise<Map<string, BatchCheck | null>> {
+  const out = new Map<string, BatchCheck | null>();
+  const cfg = await setting(deps, storeId, 'fulfilment.handover.reconcile');
+  if (!cfg.enabled || !rows.length) return out;
+  const win = cfg.windowHours * 3_600_000;
+  const from = new Date(since.getTime() - win);
+  const courierIds = [...new Set(rows.map((r) => r.courierAccount.id))];
+  // every handed-over sheet of these couriers that a pick-up in the window could belong to (older ones too)
+  const older = await deps.db.handoverBatch.findMany({ where: { storeId, courierAccountId: { in: courierIds }, handedOverAt: { gte: from } }, select: { courierAccountId: true, data: true } });
+  const allWent = new Map<string, Set<string>>(courierIds.map((c) => [c, new Set<string>()]));
+  for (const b of older) for (const l of wentLines((b.data ?? {}) as unknown as SheetData)) allWent.get(b.courierAccountId)?.add(l.shipmentId);
+  const shown: (CheckBatch & { courierId: string })[] = rows.map((r) => ({ batchId: r.id, handedOverAt: r.handedOverAt!, courierId: r.courierAccount.id, went: wentLines((r.data ?? {}) as SheetData).map((l) => l.shipmentId) }));
+  const onSheets = [...new Set(shown.flatMap((b) => b.went))];
+  const parcels = await deps.db.shipment.findMany({
+    where: { storeId, OR: [{ id: { in: onSheets } }, { courierAccountId: { in: courierIds }, pickedAt: { gte: from, lte: new Date(nowOf(deps).getTime() + win) } }] },
+    select: { id: true, orderId: true, status: true, pickedAt: true, courierAccountId: true, order: { select: { number: true } } },
+  });
+  for (const c of courierIds) {
+    const mine = parcels.filter((p) => p.courierAccountId === c).map((p) => ({ shipmentId: p.id, orderId: p.orderId, orderNumber: p.order.number, status: p.status, pickedAt: p.pickedAt }));
+    const r = checkBatches(shown.filter((b) => b.courierId === c), mine, allWent.get(c) ?? new Set(), cfg, nowOf(deps));
+    for (const [k, v] of r) out.set(k, v);
+  }
+  return out;
+}
+
 /** PR 406 — the batches handed over per courier in the last `fulfilment.handover.history.days` (`fulfilment.read`). */
 export async function handoverHistory(deps: ShippingDeps, who: Who): Promise<HandedCourier[]> {
   await allow(deps, who, 'fulfilment.read');
@@ -297,6 +332,7 @@ export async function handoverHistory(deps: ShippingDeps, who: Who): Promise<Han
     orderBy: { handedOverAt: 'desc' },
     select: { id: true, handedOverAt: true, receivedBy: true, handedOverById: true, printCount: true, data: true, courierAccount: { select: { id: true, name: true } } },
   });
+  const checks = await batchChecks(deps, who.storeId, rows, since);
   const staffIds = [...new Set(rows.map((r) => r.handedOverById).filter((x): x is string => !!x))];
   const staff = staffIds.length ? await deps.db.staffUser.findMany({ where: { id: { in: staffIds } }, select: { id: true, displayName: true } }) : [];
   const nameOf = new Map(staff.map((x) => [x.id, x.displayName]));
@@ -321,6 +357,7 @@ export async function handoverHistory(deps: ShippingDeps, who: Who): Promise<Han
       collectMinor: collect,
       leftOut: Array.isArray(data.skipped) ? data.skipped.length : 0,
       printCount: r.printCount,
+      check: checks.get(r.id) ?? null,
     });
   }
   return [...out.values()].sort((a, b) => a.courierName.localeCompare(b.courierName));

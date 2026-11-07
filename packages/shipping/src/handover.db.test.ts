@@ -200,4 +200,32 @@ describe.skipIf(!HAS_TEST_DB)('PR 180 · the print queue and the handover sheet 
     expect((await refusal(copyHandover(f.shippingDeps(), f.looker, { batchId: sheet.batchId }))).code).toBe('FORBIDDEN');
     expect((await refusal(copyHandover(f.shippingDeps(), f.shipper, { batchId: '00000000-0000-7000-8000-000000000406' }))).code).toBe('NOT_FOUND');
   });
+  it('follow-up 437: off as shipped; after the hours, a parcel on the sheet never picked up and a pick-up on no sheet are named', async () => {
+    const fourth = await f.courier(STEADFAST_PROVIDER, 'Steadfast check');
+    const a = await booked('hc-a', fourth);
+    const b = await booked('hc-b', fourth);
+    const c = await booked('hc-c', fourth);
+    await print([a.shipmentId, b.shipmentId]);
+    const sheet = await printHandover(f.shippingDeps(), f.shipper, { courierAccountId: fourth });
+    expect(sheet.lines.map((l) => l.orderNumber).sort()).toEqual([a.number, b.number].sort());
+    await completeHandover(f.shippingDeps(), f.shipper, { batchId: sheet.batchId, receivedBy: 'Rider Karim' });
+    // the courier scans a (on the sheet) and c (never on a sheet); b stays with us
+    const picked = new Date(f.clock.now.getTime() + 3_600_000);
+    await db().shipment.updateMany({ where: { id: { in: [a.shipmentId, c.shipmentId] } }, data: { status: 'IN_TRANSIT', pickedAt: picked } });
+    const batch = async () => (await handoverHistory(f.shippingDeps(), f.shipper)).find((x) => x.courierAccountId === fourth)!.batches[0]!;
+    expect((await batch()).check).toBeNull();
+    f.overrides.set('fulfilment.handover.reconcile', { enabled: true, afterHours: 12, windowHours: 24 });
+    try {
+      expect((await batch()).check).toBeNull(); // too early
+      f.clock.now = new Date(f.clock.now.getTime() + 13 * 3_600_000);
+      expect((await batch()).check).toEqual({
+        notPicked: [{ shipmentId: b.shipmentId, orderId: b.orderId, orderNumber: b.number }],
+        offSheet: [{ shipmentId: c.shipmentId, orderId: c.orderId, orderNumber: c.number }],
+      });
+      // read only: nothing about the parcels or the orders changed
+      expect((await db().shipment.findUniqueOrThrow({ where: { id: b.shipmentId } })).status).toBe(b.shipment.status);
+    } finally {
+      f.overrides.delete('fulfilment.handover.reconcile');
+    }
+  });
 });
