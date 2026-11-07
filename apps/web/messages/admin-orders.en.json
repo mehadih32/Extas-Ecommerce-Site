@@ -1520,6 +1520,8 @@
     },
     "retReason": {
       "label": "Why it came back",
+      "change": "Change the reason",
+      "changeTitle": "Change why order #{n} came back",
       "title": "Why did order #{n} come back?",
       "note": "Rider's note (optional)",
       "noteNeeded": "Rider's note",
@@ -1527,7 +1529,8 @@
       "ok": "Save the reason",
       "done": "Reason saved for order #{n}",
       "eff": {
-        "saved": "The reason and the rider's note are kept on the return, the timeline and the customer's history."
+        "saved": "The reason and the rider's note are kept on the return, the timeline and the customer's history.",
+        "replaced": "The new reason replaces the one recorded; both stay in the audit log with who and when."
       }
     },
     "rebook": {

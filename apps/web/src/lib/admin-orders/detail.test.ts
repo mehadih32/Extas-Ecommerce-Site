@@ -168,7 +168,16 @@ describe('which buttons an order shows', () => {
       expect(s!.fields[0]).toMatchObject({ name: 'reasonKey', required: true, options: [{ value: '' }, { value: 'did-not-like', label: lang === 'en' ? "Didn't like it" : 'পছন্দ হয়নি' }, { value: 'other', noteRequired: true }] });
       expect(s!.fields[1]).toMatchObject({ name: 'note', noteFor: 'reasonKey', value: 'refused at the door' });
       for (const w of [s!.label, s!.title, s!.ok, s!.done, ...s!.effects]) expect(w, lang).not.toMatch(/orders\.(retReason|check)\./);
+      // follow-up 456: once a reason is recorded, "Change the reason" — the same route, a person picks again
+      const [c, ...more] = returnReasonSpecs(view(lang), ID, 'EX-1', new Set(['delivery.outcomes']), back, 'refused at the door', true);
+      expect(more).toEqual([]);
+      expect(c).toMatchObject({ id: 'return-reason-change', url: `/api/admin/delivery/parcels/${ID}/return-reason`, version: null });
+      expect(c!.fields[0]).toMatchObject({ name: 'reasonKey', required: true, options: [{ value: '' }, { value: 'did-not-like' }, { value: 'other' }] });
+      expect(c!.label).not.toBe(s!.label);
+      expect(c!.effects).toHaveLength(s!.effects.length + 1);
+      for (const w of [c!.label, c!.title, ...c!.effects]) expect(w, lang).not.toMatch(/orders\.(retReason|check)\./);
     }
+    expect(returnReasonSpecs(view('en'), ID, 'EX-1', new Set(['delivery.parcels']), back, null, true)).toEqual([]);
   });
 
   it('gate F-004 · re-book a stale parcel: behind delivery.book, says how the old one was cancelled, moves no money', () => {
