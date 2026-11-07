@@ -6,6 +6,7 @@ import { bagView, emptyBag, findBag, type BagView, type CartDeps } from '@extas/
 import { getPrisma } from '@extas/db/client';
 import { registry, type Key, type Value } from '@extas/settings';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
+import { signedIn } from './account';
 import { BAG_COOKIE } from './bag-model';
 import type { ShopContext } from './context';
 
@@ -83,7 +84,12 @@ export async function currentBag(c: Pick<ShopContext, 'storeId' | 'lang'>): Prom
     return await withTimeout(
       (async () => {
         const cartId = await findBag(deps, { storeId: c.storeId, visitorId: visitor });
-        return cartId ? bagView(deps, { storeId: c.storeId, cartId, lang: c.lang }) : emptyBag();
+        // ~~return cartId ? bagView(deps, { storeId: c.storeId, cartId, lang: c.lang }) : emptyBag();~~
+        // Follow-up 631 (PR 271–273): the signed-in customer goes along, so his own invite code is not shown as applied
+        // and a members-only coupon does not ask a signed-in member to log in (checkout already knew him).
+        if (!cartId) return emptyBag();
+        const me = await signedIn();
+        return bagView(deps, { storeId: c.storeId, cartId, lang: c.lang, customerId: me?.customer.id ?? null });
       })(),
       settingsTimeoutMs() * 4,
     );
