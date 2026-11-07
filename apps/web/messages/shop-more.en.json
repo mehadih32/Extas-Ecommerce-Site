@@ -128,7 +128,22 @@
     "askEmpty": "Have a question about this item? Ask us on WhatsApp.",
     "askEmptyHours": "Have a question about this item? Ask us on WhatsApp — {hours}.",
     "ask": "Ask on WhatsApp",
-    "waMessage": "Hi {store}, I have a question about {name}"
+    "waMessage": "Hi {store}, I have a question about {name}",
+    "form": {
+      "open": "Ask a question",
+      "label": "Your question about this item",
+      "send": "Send question",
+      "sending": "Sending…",
+      "note": "Our team answers it here. It shows on this page only after we answer it; your name is never shown.",
+      "thanks": "Thank you — your question reached our team. The answer shows here once it is ready.",
+      "again": "You already sent this question — our team has it.",
+      "signIn": "Sign in to ask a question",
+      "limit": "You have reached the limit of questions for now. Please try again later.",
+      "invalid": "Write your question, up to {n} letters.",
+      "closed": "Questions are closed here just now.",
+      "failed": "Could not send. Please try again.",
+      "chars": "{n} / {max}"
+    }
   },
   "celebrate": {
     "text": "Thank you!"

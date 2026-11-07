@@ -4,7 +4,7 @@ import { registry } from '../src/registry';
 import { pdpGallerySchema, pdpQaSchema, pdpRulesSchema, pdpStockSchema, pdpTrustSchema, productSettings } from '../src/registry-product';
 
 /** Keys added after the first product page batch, with the registry version they came in. */
-const LATER: Readonly<Record<string, number>> = { 'pdp.qa': 31 };
+const LATER: Readonly<Record<string, number>> = { 'pdp.qa': 31, 'pdp.qaAsk': 280 };
 
 describe('product page settings (v19)', () => {
   it('every product page key is in the registry at version 19 (later ones at theirs), public, never owner data', () => {

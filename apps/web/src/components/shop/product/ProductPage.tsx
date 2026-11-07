@@ -115,6 +115,8 @@ const KEYS = [
   'pdp.buy',
   'pdp.sweep',
   'pdp.qa',
+  // follow-up 183: "Ask a question" under the block (off as shipped)
+  'pdp.qaAsk',
   // PR 65: the reviews block under the page, and the rating line under the title
   'pdp.reviews',
   'pdp.fit',
@@ -486,7 +488,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
         />
       ) : null,
     reviews: () => <PdpReviews c={c} set={revSet} data={reviewData} name={m.name} qa={set['pdp.qa'].on} />,
-    questions: () => <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} />,
+    questions: () => <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} ask={set['pdp.qaAsk']} />,
     // PR 624: the Messenger button under the questions (nothing while it is off)
     messenger: () => (
       <div className="container pdp-ms">

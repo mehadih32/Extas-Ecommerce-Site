@@ -908,3 +908,10 @@
 /* S11 · PR 225: a closed accordion's and rule's words stay in the HTML, only hidden (never loaded on a tap) */
 .shop .pdp-acc-b[hidden],
 .shop .pdp-rule-open[hidden] { display: none; }
+/* PR 66 follow-up 183 — "Ask a question" under Questions & answers (only while pdp.qaAsk is on). */
+.shop .pdp-page #pdp-qa .pdp-qa-askbtn { min-height: 46px; }
+.shop .pdp-page #pdp-qa .pdp-qa-askf { display: flex; flex-direction: column; gap: 8px; }
+.shop .pdp-page #pdp-qa .pdp-qa-askf p { margin: 0; }
+.shop .pdp-page #pdp-qa .pdp-qa-area { width: 100%; min-height: 96px; resize: vertical; font-size: 16px; }
+.shop .pdp-page #pdp-qa .pdp-qa-count { align-self: flex-end; }
+.shop .pdp-page #pdp-qa .pdp-qa-said a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; }
