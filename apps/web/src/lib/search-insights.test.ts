@@ -1,6 +1,7 @@
 // PR 72 follow-up 100 — the words a search is counted under, and the report's periods.
 import { describe, expect, it } from 'vitest';
 import { fromDay, periodsOf, termOf } from './search-insights';
+import { popularWordsOf } from './shop/search-model';
 
 describe('search words (follow-up 100)', () => {
   it('folds case and spaces, and cuts at 40 characters', () => {
@@ -22,5 +23,10 @@ describe('search words (follow-up 100)', () => {
     expect(periodsOf(365)).toEqual([7, 30, 90, 365]);
     expect(fromDay('2026-11-07', 7)).toBe('2026-11-01');
     expect(fromDay('2026-03-01', 1)).toBe('2026-03-01');
+  });
+  it('follow-up 101: the owner list of popular words wins; while empty, the words from real searches', () => {
+    expect(popularWordsOf({ popular: ['polo'] }, ['kabli'])).toEqual(['polo']);
+    expect(popularWordsOf({ popular: [' '] }, ['kabli'])).toEqual(['kabli']);
+    expect(popularWordsOf({ popular: [] }, null)).toEqual([]);
   });
 });

@@ -58,6 +58,18 @@
         "network": "No connection. Try again.",
         "other": "Could not save. Try again."
       }
+    },
+    "pop": {
+      "h": "Popular words from real searches",
+      "d": "While you have chosen no popular words of your own, the empty search box shows the words searched most that found products. Needs \"Count searches\" on.",
+      "on": "Show popular words from real searches",
+      "onHelp": "Off as shipped. Your own list, when you write one, always wins.",
+      "days": "From the last (days)",
+      "daysHelp": "7 to 90.",
+      "min": "Searched at least (times)",
+      "minHelp": "A word found fewer times is not shown (1 to 100).",
+      "max": "At most (words)",
+      "maxHelp": "1 to 12."
     }
   }
 }

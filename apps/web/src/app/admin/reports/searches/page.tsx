@@ -3,6 +3,7 @@
 // the words that found no product (what customers look for that the shop lacks) and the most searched words. Words
 // and counts only (lib/search-insights; never who searched). Off as shipped: More options holds the card
 // (`search.insights`, /api/admin/search-insights). Seeing needs `reports.read`; the card's save `settings.write`.
+// Follow-up 101: More options also holds "Popular words from real searches" (`search.popular`, off).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -19,7 +20,7 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { periodsOf, searchReport, type SearchWord } from '@/lib/search-insights';
-import { insightsCard } from '@/lib/search-insights-api';
+import { insightsCards } from '@/lib/search-insights-api';
 import { searchHref } from '@/lib/shop/search-model';
 import { todayIn } from '@/lib/shop/theme';
 import bn from '../../../../../messages/admin-searches.bn.json';
@@ -56,7 +57,9 @@ export default async function SearchesReportPage({ searchParams }: { searchParam
       </div>
     );
   const s = (k: string, v?: Record<string, string | number>) => t(d, `srch.${k}`, v);
-  const card = await insightsCard(access.deps);
+  const cards = await insightsCards(access.deps);
+  const card = cards['search.insights'];
+  const pop = cards['search.popular'];
   const set = card.value;
   const periods = periodsOf(set.days);
   const asked = Number(sp.days);
@@ -92,6 +95,13 @@ export default async function SearchesReportPage({ searchParams }: { searchParam
     { kind: 'switch', path: 'keep', label: s('set.keep'), help: s('set.keepHelp') },
     { kind: 'number', path: 'days', label: s('set.days'), help: s('set.daysHelp'), min: 7, max: 365 },
     { kind: 'number', path: 'rows', label: s('set.rows'), help: s('set.rowsHelp'), min: 5, max: 200 },
+  ];
+  // follow-up 101: the empty search box's popular words from these counts, while the owner's own list is empty
+  const popFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'on', label: s('pop.on'), help: s('pop.onHelp') },
+    { kind: 'number', path: 'days', label: s('pop.days'), help: s('pop.daysHelp'), min: 7, max: 90 },
+    { kind: 'number', path: 'min', label: s('pop.min'), help: s('pop.minHelp'), min: 1, max: 100 },
+    { kind: 'number', path: 'max', label: s('pop.max'), help: s('pop.maxHelp'), min: 1, max: 12 },
   ];
   const table = (rows: readonly SearchWord[], first: 'searches' | 'empty', testId: string) => (
     <div className="a2-tblw">
@@ -173,6 +183,7 @@ export default async function SearchesReportPage({ searchParams }: { searchParam
         <summary className="a2-sm a2-b">{s('set.more')}</summary>
         <div className="a2-mt12">
           <FieldsCard url="/api/admin/search-insights" screen={{ key: card.key, value: card.value, version: card.version }} fields={fields} texts={texts} canEdit={canEdit} testId="search-insights-card" />
+          <FieldsCard url="/api/admin/search-insights" screen={{ key: pop.key, value: pop.value, version: pop.version }} fields={popFields} texts={{ ...texts, h: s('pop.h'), d: s('pop.d') }} canEdit={canEdit} testId="search-popular-card" />
         </div>
       </details>
     </div>

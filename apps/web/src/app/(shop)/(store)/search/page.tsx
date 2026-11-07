@@ -29,8 +29,8 @@ import { waHref } from '@/lib/shop/links';
 import { shopMetadata } from '@/lib/shop/meta';
 import { ROUTES } from '@/lib/shop/routes';
 import { runSearch } from '@/lib/shop/search';
-import { recordSearch } from '@/lib/search-insights';
-import { queryFrom, searchChips, searchHref, searchPanelProps, type SearchChip } from '@/lib/shop/search-model';
+import { popularFromSearches, recordSearch } from '@/lib/search-insights';
+import { popularWordsOf, queryFrom, searchChips, searchHref, searchPanelProps, type SearchChip } from '@/lib/shop/search-model';
 import { categoryName } from '@/lib/shop/shell-model';
 import '../collections/[slug]/category.css';
 import '@/components/shop/search/search.css';
@@ -100,8 +100,9 @@ export default async function SearchPage(props: Props) {
     : [];
   const closeHref = closeHrefOf(hrefIn(c.lang, ROUTES.search), sp);
   const plural = (count: number, one: string, many: string) => (count === 1 ? t(one) : t(many, { n: c.num(count) }));
-  const panel = searchPanelProps(c, set['search.panel']);
-  const chips = searchChips(c.lang, set['search.panel'].popular, c.cats);
+  const searched = await popularFromSearches(c.storeId);
+  const panel = searchPanelProps(c, set['search.panel'], searched);
+  const chips = searchChips(c.lang, popularWordsOf(set['search.panel'], searched), c.cats);
 
   // ---- the header: breadcrumb, title, what was found, the box ----
   const helpWhat = out.helpCount ? plural(out.helpCount, 'search.helpOne', 'search.helpMany') : null;

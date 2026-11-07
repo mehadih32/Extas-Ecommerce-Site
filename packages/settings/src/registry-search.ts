@@ -146,6 +146,23 @@ export const searchInsightsSchema = z
 
 export type SearchInsightsSettings = z.output<typeof searchInsightsSchema>;
 
+/**
+ * PR 72 follow-up 101 — the popular words under an empty search box from real searches: while on, and while the
+ * owner's own list (`search.panel` popular) is empty, the words searched most in the last `days` days that found
+ * products (at least `min` times) are shown, at most `max`. Needs the counting of `search.insights` (follow-up 100).
+ * Off as shipped (CN-018): nothing he did not choose is called popular until he switches it on.
+ */
+export const searchPopularSchema = z
+  .object({
+    on: z.boolean(),
+    days: z.int().min(7).max(90),
+    min: z.int().min(1).max(100),
+    max: z.int().min(1).max(12),
+  })
+  .strict();
+
+export type SearchPopularSettings = z.output<typeof searchPopularSchema>;
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: true, version: V } as const;
 
 /** The demo's help-page words (07-help-search.js HELP_INDEX), grouped by the help page that answers them now. */
@@ -313,6 +330,17 @@ export const searchSettings = {
     labelKey: 'search.insights.label',
     helpKey: 'search.insights.help',
     sortOrder: 70,
+  }),
+  'search.popular': setting({
+    ...json,
+    version: 283,
+    isPublic: false,
+    group: 'search',
+    schema: searchPopularSchema,
+    default: { on: false, days: 30, min: 3, max: 6 },
+    labelKey: 'search.popular.label',
+    helpKey: 'search.popular.help',
+    sortOrder: 80,
   }),
 };
 

@@ -5,6 +5,9 @@
 // catalogue could not answer (slow, down) is not counted. The report sums the days of a period: the most searched
 // words, and the words that found nothing — what customers look for that the shop lacks. Nothing is ever deleted.
 // The settings card's API is lib/search-insights-api.ts.
+// Follow-up 101: `search.popular` (off) fills the empty-box popular words from these counts while the owner's own
+// list is empty — the words searched most that found products (`popularFromSearches`).
+import { cache } from 'react';
 import { getPrisma, type PrismaClient } from '@extas/db/client';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from './settings';
 import { todayIn } from './shop/theme';
@@ -103,3 +106,36 @@ export async function searchReport(db: Db, storeId: number, input: { today: stri
   const row = (r: { term: string; _sum: { searches: number | null; emptySearches: number | null } }): SearchWord => ({ term: r.term, searches: r._sum.searches ?? 0, empty: r._sum.emptySearches ?? 0 });
   return { from, to: input.today, searches: sums._sum.searches ?? 0, empty: sums._sum.emptySearches ?? 0, words, top: top.map(row), missing: missing.map(row) };
 }
+
+/**
+ * Follow-up 101 — the words searched most in the last `days` days that found products (searches less the ones that
+ * found nothing), each at least `min` times, most first, at most `max`.
+ */
+export async function foundWords(db: Db, storeId: number, input: { today: string; days: number; min: number; max: number }): Promise<string[]> {
+  const where = { storeId, day: { gte: new Date(`${fromDay(input.today, input.days)}T00:00:00Z`), lte: new Date(`${input.today}T00:00:00Z`) } };
+  const rows = await db.searchTerm.groupBy({ by: ['term'], where, _sum: { searches: true, emptySearches: true } });
+  return rows
+    .map((r) => ({ term: r.term, found: (r._sum.searches ?? 0) - (r._sum.emptySearches ?? 0) }))
+    .filter((r) => r.found >= input.min)
+    .sort((a, b) => b.found - a.found || a.term.localeCompare(b.term))
+    .slice(0, input.max)
+    .map((r) => r.term);
+}
+
+/** The shop's popular words from real searches, or null while `search.insights`' popular switch is off (once per request). */
+export const popularFromSearches = cache(async (storeId: number): Promise<string[] | null> => {
+  const resolver = settingsResolver();
+  if (!resolver) return null;
+  try {
+    return await withTimeout(
+      (async () => {
+        const [set, tz] = await Promise.all([resolver.value('search.popular', { storeId }), resolver.value('store.timeZone', { storeId })]);
+        if (!set.on) return null;
+        return foundWords(getPrisma(), storeId, { today: todayIn(tz), days: set.days, min: set.min, max: set.max });
+      })(),
+      settingsTimeoutMs(),
+    );
+  } catch {
+    return null;
+  }
+});

@@ -20,6 +20,7 @@ import { badgeCount, COUNT_COOKIE } from '@/lib/shop/bag-model';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { fabClass, fabPage, fabShows } from '@/lib/shop/fab';
 import { waHref } from '@/lib/shop/links';
+import { popularFromSearches } from '@/lib/search-insights';
 import { searchPanelProps } from '@/lib/shop/search-model';
 import { shopPayOffer } from '@/lib/shop/pay-offer';
 import { payMarks } from '@/lib/shop/shell-model';
@@ -30,7 +31,7 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
   // switches it on, the kinds of page he ticked show it (never the home page, the product page or the bag by default:
   // C3, §49.4, demo FAB_PAGES).
   // ~~C3: off the home page and the bag, every other page has it whenever the number is set~~
-  const [more, offer] = await Promise.all([readPageSettings(['shell.fab', 'shell.menuSubs', 'search.panel', 'support.liveChat'] as const, c.storeId), shopPayOffer(c.storeId)]);
+  const [more, offer, searched] = await Promise.all([readPageSettings(['shell.fab', 'shell.menuSubs', 'search.panel', 'support.liveChat'] as const, c.storeId), shopPayOffer(c.storeId), popularFromSearches(c.storeId)]);
   // PR 40 follow-up (6 Nov): the footer's payment marks are the methods the checkout offers now, never more
   const pay = payMarks(c.s['shell.footer'], c.flags, offer);
   const fabSet = more['shell.fab'];
@@ -64,7 +65,7 @@ export default async function StoreLayout({ children }: Readonly<{ children: Rea
       {chat.enabled ? <LiveChat texts={chatTexts()} side={fab && fabSet.side !== 'left' ? 'left' : 'right'} pollSeconds={chat.pollSeconds} maxChars={chat.maxChars} /> : null}
       {c.s['support.messengerButton'].enabled && c.s['support.messengerButton'].countTaps ? <SupportTaps productPrefix={c.s['naming.productPathPrefix']} /> : null}
       <ShellEffects />
-      <SearchPanel {...searchPanelProps(c, more['search.panel'])} />
+      <SearchPanel {...searchPanelProps(c, more['search.panel'], searched)} />
     </>
   );
 }
