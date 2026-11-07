@@ -20,6 +20,8 @@ import { plural } from '@/lib/shop/bag-model';
 import { hrefIn } from '@/lib/shop/lang';
 import { reorderViewOf, type ReorderView } from '@/lib/shop/reorder-view';
 import { ROUTES } from '@/lib/shop/routes';
+import type { SizeCard } from '@/lib/shop/size-card';
+import { SIZE_GUIDE_ACT } from '@/lib/shop/size-guide-link';
 import { POINTS_REASONS, type MyPoints } from '@extas/customers';
 import { Icon } from '../Icon';
 import { RedeemPoints } from './RedeemPoints';
@@ -244,8 +246,60 @@ export async function OrdersTab({ c, history: h, filters }: { c: ShopContext; hi
   );
 }
 
-/** For you: his offers (the owner's own, PR 132), then the newest styles (`account.lists.newIn`; 0 = off). */
-export function ForYouTab({ c, newIn, offers = null }: { c: ShopContext; newIn: ShopCard[]; offers?: ReactNode }) {
+/**
+ * Follow-up 144 (demo 60-account.js acc_sizeCard): "Your size" — tops and trousers (waist) from the kept height and
+ * weight, with both; "Edit" / "Find my size" opens the size guide window (a link to the size guide page without script).
+ */
+function SizeCardView({ c, size }: { c: ShopContext; size: SizeCard }) {
+  const t = c.t;
+  const k = size.kept;
+  const v = (x: string | null) => x ?? t('account.foryou.size.empty');
+  return (
+    <section className="card p20" aria-labelledby="fy-s" data-testid="acc-size">
+      <div className="row between top" style={{ gap: 12 }}>
+        <div>
+          <h2 className="h2" id="fy-s">
+            {t('account.foryou.size.title')}
+          </h2>
+          <div className="xs muted" style={{ marginTop: 2 }}>
+            {t('account.foryou.size.sub')}
+          </div>
+        </div>
+        <a className="btn btn-sm btn-ghost acc-size-btn" href={hrefIn(c.lang, ROUTES.help('size-guide'))} data-act={SIZE_GUIDE_ACT} data-testid="acc-size-edit">
+          <Icon name={k ? 'edit' : 'ruler'} size={15} />
+          {t(k ? 'account.foryou.size.edit' : 'account.foryou.size.find')}
+        </a>
+      </div>
+      {k ? (
+        <div className="acc-sizebox mt16">
+          <div>
+            <div className="xs muted">{t('account.foryou.size.tops')}</div>
+            <div className="v">{v(k.top)}</div>
+          </div>
+          <div>
+            <div className="xs muted">{t('account.foryou.size.bottoms')}</div>
+            <div className="v">{v(k.bottom)}</div>
+          </div>
+          <div>
+            <div className="xs muted">{t('account.foryou.size.height')}</div>
+            <div className="v">{t('account.foryou.size.heightFmt', { ft: c.num(k.ft), in: c.num(k.inch) })}</div>
+          </div>
+          <div>
+            <div className="xs muted">{t('account.foryou.size.weight')}</div>
+            <div className="v">{t('account.foryou.size.weightFmt', { n: c.num(k.kg) })}</div>
+          </div>
+        </div>
+      ) : (
+        <p className="small text2" style={{ margin: '12px 0 0' }}>
+          {t('account.foryou.size.none')}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** For you: his offers (the owner's own, PR 132), "Your size" (follow-up 144), then the newest styles (`account.lists.newIn`; 0 = off). */
+export function ForYouTab({ c, newIn, offers = null, size = null }: { c: ShopContext; newIn: ShopCard[]; offers?: ReactNode; size?: SizeCard | null }) {
   const t = c.t;
   return (
     <div className="stack s24" data-testid="acc-foryou">
@@ -261,6 +315,7 @@ export function ForYouTab({ c, newIn, offers = null }: { c: ShopContext; newIn: 
           </div>
         )}
       </section>
+      {size ? <SizeCardView c={c} size={size} /> : null}
       {newIn.length ? (
         <section aria-labelledby="fy-n">
           <div className="sec-hd">

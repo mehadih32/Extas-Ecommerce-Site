@@ -46,9 +46,15 @@
     },
     {
       "$comment": "PR 131 — the other sections of My account, signed in the same way: For you, Rewards, Wallet, Profile (its forms) and the Wishlist inside the frame.",
-      "paths": ["/account/foryou", "/account/rewards", "/account/wallet", "/bn/account/wallet", "/account/profile", "/bn/account/profile", "/account/wishlist"],
+      "paths": ["/account/rewards", "/account/wallet", "/bn/account/wallet", "/account/profile", "/bn/account/profile", "/account/wishlist"],
       "fill": "/api/account/try",
       "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-home\"]"]
+    },
+    {
+      "$comment": "Follow-up 144 — For you with the \"Your size\" card (the sample charts; nothing kept on the gate's phone: \"Find my size\", which opens the size guide window).",
+      "paths": ["/account/foryou", "/bn/account/foryou"],
+      "fill": "/api/account/try",
+      "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-size\"]", "[data-testid=\"acc-size-edit\"]"]
     },
     {
       "$comment": "PR 134 — the sample account's own order page (TRY-131, made by the same fill): its lines, the money and how it is paid; PR 135 its tracking steps.",
