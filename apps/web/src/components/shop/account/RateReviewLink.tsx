@@ -3,7 +3,7 @@
 // and on its thank-you page, not only on the order's own page. It asks the review state (POST /api/account/review-state,
 // the same answer the order page's form reads) after the first paint and shows the link only while he may still review
 // a line of that order; anything else (signed out, reviews off, too late, all reviewed, an error) shows nothing. The
-// link opens the order's page, where the form is.
+// link opens the order's page, where the form is. Follow-up 237: `extra` is the photo reward's figure, a small line under it.
 import { useEffect, useState } from 'react';
 import { afterPaint } from '@/lib/shop/later';
 import { reviewLeft } from '@/lib/shop/review-link';
@@ -27,11 +27,20 @@ export function RateReviewLink({ number, href, label, aria, extra = null, classN
     };
   }, [number]);
   if (!show) return null;
-  return (
+  const link = (
     <a className={className} href={href} aria-label={aria} data-testid={testId}>
       <Icon name="star" size={15} />
       {label}
-      {extra ? <span className="xs muted rr-extra">{extra}</span> : null}
     </a>
+  );
+  if (!extra) return link;
+  // follow-up 237: the photo reward's figure as a small line under the link (never inside the button)
+  return (
+    <span className="rr-wrap" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+      {link}
+      <span className="xs muted" data-testid={`${testId}-reward`}>
+        {extra}
+      </span>
+    </span>
   );
 }

@@ -25,7 +25,7 @@
     },
     "photoReward": {
       "label": "Photo review reward",
-      "help": "Off, with no amount. Switch it on and type your own figure to pay a customer for an approved review that carries his own photo. The money goes to his wallet as one entry, only when a member of staff approves that review, and only once for that review — never automatically, never twice. \"Smallest stars\" is the lowest rating that earns it, and \"One per order\" keeps it to one reward however many lines of that order are reviewed. While it is off, the review form says nothing about a reward."
+      "help": "Off, with no amount. Switch it on and type your own figure to pay a customer for an approved review that carries his own photo. The money goes to his wallet as one entry, only when a member of staff approves that review, and only once for that review — never automatically, never twice. \"Smallest stars\" is the lowest rating that earns it, and \"One per order\" keeps it to one reward however many lines of that order are reviewed. While it is off, the review form says nothing about a reward. While it is on with an amount and saying it is allowed, the figure is said on the review form, beside \"Rate & review\" on a delivered order's card in My orders and on its thank-you page."
     },
     "requests": {
       "label": "Review requests",

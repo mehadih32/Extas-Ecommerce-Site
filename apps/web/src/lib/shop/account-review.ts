@@ -9,6 +9,7 @@ import { reviewChance, type ReviewState } from '@extas/catalogue';
 import { accountDeps, signedIn } from './account';
 import type { ShopContext } from './context';
 import { readPageSettings } from './context';
+import { shownPhotoReward } from './review-link';
 import { settingsTimeoutMs, withTimeout } from '../settings';
 
 export interface OrderReviewBox {
@@ -22,7 +23,7 @@ export interface OrderReviewBox {
   bodyMax: number;
   photos: boolean;
   photoMaxMb: number;
-  /** What an approved photo review is worth here, in poisha (null: the owner has not switched the perk on). */
+  /** What an approved photo review is worth here, in poisha (null: the perk is off, has no amount, or is not to be said). */
   rewardMinor: number | null;
 }
 
@@ -49,7 +50,8 @@ export async function orderReviewBox(c: Pick<ShopContext, 'storeId'>, orderNumbe
           bodyMax: submit.bodyMax,
           photos: submit.photos.enabled,
           photoMaxMb: submit.photos.maxMb,
-          rewardMinor: reward.enabled && reward.amountMinor && reward.amountMinor > 0 ? reward.amountMinor : null,
+          // follow-up 237: said only while the owner lets it be said (`showOnForm`), the same rule as the cards' line
+          rewardMinor: shownPhotoReward(reward),
         };
       })(),
       settingsTimeoutMs() * 3,

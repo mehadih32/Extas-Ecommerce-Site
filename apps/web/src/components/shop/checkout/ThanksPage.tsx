@@ -114,6 +114,7 @@ export async function ThanksPage({
   eta = [],
   upsell = null,
   reviewOn = false,
+  photoRewardMinor = null,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -131,6 +132,8 @@ export async function ThanksPage({
   eta?: string[];
   /** Follow-up 238: the shop takes reviews (`reviews.submit`); a delivered order then offers "Rate & review". */
   reviewOn?: boolean;
+  /** Follow-up 237: what an approved photo review is worth, while it may be said (lib/shop/review-link shownPhotoReward). */
+  photoRewardMinor?: number | null;
 }) {
   const words = checkoutWords(c);
   const w = (k: string, vars: Record<string, string> = {}) => fill(words[k] ?? k, vars);
@@ -302,7 +305,7 @@ export async function ThanksPage({
       </div>
       {reviewOn && askReview(r.status) ? (
         <div className="ty-rate">
-          <RateReviewLink number={r.number} href={hrefIn(c.lang, ROUTES.order(r.number))} label={c.t('account.review.cta')} testId="ty-rate-review" />
+          <RateReviewLink number={r.number} href={hrefIn(c.lang, ROUTES.order(r.number))} label={c.t('account.review.cta')} extra={photoRewardMinor === null ? null : c.t('account.review.photoRewardShort', { amount: m(photoRewardMinor) })} testId="ty-rate-review" />
         </div>
       ) : null}
       <div style={{ borderTop: '1px solid var(--line2)', marginTop: 6, paddingTop: 8 }}>

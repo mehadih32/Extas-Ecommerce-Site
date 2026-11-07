@@ -26,7 +26,7 @@ import { RedeemPoints } from './RedeemPoints';
 import { ProductCard } from '../ProductCard';
 import { nameOf, Thumb } from '../bag/BagLines';
 import { BuyAgain } from './BuyAgain';
-import { askReview } from '@/lib/shop/review-link';
+import { askReview, shownPhotoReward } from '@/lib/shop/review-link';
 import { RateReviewLink } from './RateReviewLink';
 
 /** The four pictures of the parcel's journey after "Placed" (demo note 44): a tick, the box, the courier, at the door. */
@@ -82,7 +82,7 @@ export function TrackFlow({ c, o }: { c: ShopContext; o: OrderCard }) {
   );
 }
 
-function OrderCardView({ c, o, cards, invoice, reorder, reviewOn = false }: { c: ShopContext; o: OrderCard; cards: Map<string, ShopCard>; invoice: boolean; reorder: ReorderView | null; reviewOn?: boolean }) {
+function OrderCardView({ c, o, cards, invoice, reorder, reviewOn = false, reward = null }: { c: ShopContext; o: OrderCard; cards: Map<string, ShopCard>; invoice: boolean; reorder: ReorderView | null; reviewOn?: boolean; reward?: string | null }) {
   const t = c.t;
   const href = hrefIn(c.lang, ROUTES.order(o.number));
   return (
@@ -131,7 +131,7 @@ function OrderCardView({ c, o, cards, invoice, reorder, reviewOn = false }: { c:
           <Icon name="right" size={15} />
         </a>
         {reorder?.inList && reorder.offered(o.status) ? <BuyAgain number={o.number} words={reorder.words} lang={c.lang} bagHref={hrefIn(c.lang, ROUTES.bag)} compact /> : null}
-        {reviewOn && askReview(o.status) ? <RateReviewLink number={o.number} href={href} label={t('account.review.cta')} aria={t('account.review.ctaName', { number: o.number })} testId="acc-rate-review" /> : null}
+        {reviewOn && askReview(o.status) ? <RateReviewLink number={o.number} href={href} label={t('account.review.cta')} aria={t('account.review.ctaName', { number: o.number })} extra={reward} testId="acc-rate-review" /> : null}
       </div>
     </article>
   );
@@ -193,12 +193,15 @@ export async function OrdersTab({ c, history: h, filters }: { c: ShopContext; hi
   const ids = [...new Set(orders.flatMap((o) => o.lines.flatMap((l) => (l.productId ? [l.productId] : []))))];
   const [cards, more] = await Promise.all([
     ids.length ? cardsByIds(c.storeId, ids) : Promise.resolve(new Map<string, ShopCard>()),
-    readPageSettings(['account.invoice', 'account.reorder', 'reviews.submit'] as const, c.storeId),
+    readPageSettings(['account.invoice', 'account.reorder', 'reviews.submit', 'reviews.photoReward'] as const, c.storeId),
   ]);
   const invoice = more['account.invoice'].enabled;
   // PR 622 (CN-034): "Buy again" on the cards too, while the owner offers it there
   const reorder = more['account.reorder'].enabled ? reorderViewOf(c, more['account.reorder']) : null;
   const chips = filters && (h.counts.all > h.perPage || h.show !== 'all');
+  // follow-up 237: the photo reward beside "Rate & review", by the review form's own rule
+  const rewardMinor = shownPhotoReward(more['reviews.photoReward']);
+  const reward = rewardMinor === null ? null : t('account.review.photoRewardShort', { amount: c.money(rewardMinor) });
   return (
     <section aria-labelledby="ao-h" data-testid="acc-orders" data-show={h.show} data-page={h.page}>
       <div className="sec-hd">
@@ -211,7 +214,7 @@ export async function OrdersTab({ c, history: h, filters }: { c: ShopContext; hi
       {orders.length ? (
         <div className="stack s12">
           {orders.map((o) => (
-            <OrderCardView key={o.number} c={c} o={o} cards={cards} invoice={invoice} reorder={reorder} reviewOn={more['reviews.submit'].enabled} />
+            <OrderCardView key={o.number} c={c} o={o} cards={cards} invoice={invoice} reorder={reorder} reviewOn={more['reviews.submit'].enabled} reward={reward} />
           ))}
         </div>
       ) : h.counts.all > 0 ? (

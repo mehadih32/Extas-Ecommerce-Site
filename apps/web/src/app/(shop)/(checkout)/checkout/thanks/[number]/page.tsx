@@ -17,6 +17,7 @@ import { bagPickCards } from '@/lib/shop/catalogue';
 import { reassurance } from '@/lib/shop/bag-model';
 import { readPageSettings, shopContext } from '@/lib/shop/context';
 import { shopMetadata } from '@/lib/shop/meta';
+import { shownPhotoReward } from '@/lib/shop/review-link';
 import { thanksLook } from '@/lib/shop/thanks-look';
 import { orderSharedIds } from '@/lib/tracking/shared-ids';
 
@@ -33,7 +34,7 @@ export default async function Thanks({ params, searchParams }: { params: Promise
   const [r, s, more] = await Promise.all([
     currentReceipt(c, decodeURIComponent(number)),
     checkoutSettings(c.storeId),
-    readPageSettings(['thanks.page', 'account.invoice', 'thanks.celebrate', 'thanks.upsell', 'bag.upsell.reasons', 'bag.trust.securePayment', 'bag.upsell.originalLine', 'reviews.submit'], c.storeId),
+    readPageSettings(['thanks.page', 'account.invoice', 'thanks.celebrate', 'thanks.upsell', 'bag.upsell.reasons', 'bag.trust.securePayment', 'bag.upsell.originalLine', 'reviews.submit', 'reviews.photoReward'], c.storeId),
   ]);
   if (!r) return <ThanksNotFound c={c} />;
   const ups = more['thanks.upsell'];
@@ -47,7 +48,7 @@ export default async function Thanks({ params, searchParams }: { params: Promise
   const plan = celebrationFor(cel, c.today, r.number, typeof q === 'string' ? q : null, cel.text?.[c.lang] || c.t('celebrate.text'));
   return (
     <>
-      <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} accountCard={s['account.thanksCard.enabled']} invoice={more['account.invoice'].enabled} look={look} eta={eta} upsell={upsell} reviewOn={more['reviews.submit'].enabled} />
+      <ThanksPage c={c} r={r} waOn={s['checkout.help.enabled']} more={more['thanks.page']} tryOn={s['checkout.tryOn.enabled']} accountCard={s['account.thanksCard.enabled']} invoice={more['account.invoice'].enabled} look={look} eta={eta} upsell={upsell} reviewOn={more['reviews.submit'].enabled} photoRewardMinor={shownPhotoReward(more['reviews.photoReward'])} />
       {plan ? <Celebrate plan={plan} /> : null}
       <SharedEventIds ids={ids} />
     </>
