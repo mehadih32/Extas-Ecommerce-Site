@@ -867,6 +867,8 @@
       "receiverStale": "The receiver {courier} has is not the order’s receiver any more. The sticker will not print until the parcel is booked again.",
       "bookingLost": "{courier} did not answer when this order was booked (reference {ref}). Press Try again: it asks {courier} first, so the parcel is never booked twice.",
       "bookingLostPanel": "{courier} did not answer when this order was booked, and {courier} cannot be asked by our reference. Look for reference {ref} in the {courier} panel, then say what you found.",
+      "packingCard": "{n} open packing card ({kinds}) on {pieces}. Booking waits until a person decides it on the packing screen.",
+      "packingCardNoPiece": "{n} open packing card ({kinds}). Booking waits until a person decides it on the packing screen.",
       "backAtShop": "{courier} says the parcel is on its way back. When it is in your hands, press Back at the shop: the order then shows returned and its return opens."
     },
     "items": {
@@ -1710,6 +1712,14 @@
         },
         "ok": "Book again",
         "done": "Order #{n}: closed and booked again"
+      }
+    },
+    "packingCard": {
+      "open": "Open on packing",
+      "kind": {
+        "SHORTAGE": "stock shortage",
+        "DAMAGED": "damaged piece",
+        "NOT_FOUND": "piece not found"
       }
     },
     "backAtShop": {
