@@ -72,6 +72,24 @@ describe('PR 160 · the risk card', () => {
     expect(b.rescore).toBeNull();
   });
 
+  it('follow-up 296: the number`s last orders, each linked, with its state and total; a refusal the shop caused marked "our fault"', () => {
+    const recent = [
+      { id: '01a16af2-30f0-7462-aab8-719bb3ce51b2', number: 'EX-0998', status: 'RETURNED' as const, placedAt: new Date('2026-10-20T06:00:00Z'), totalMinor: 150_000, refusalKey: 'late', ourFault: true, cancelCode: null },
+      { id: '01a16af2-30f0-7462-aab8-719bb3ce51b3', number: 'EX-0990', status: 'DELIVERED' as const, placedAt: new Date('2026-10-10T06:00:00Z'), totalMinor: 90_000, refusalKey: null, ourFault: false, cancelCode: null },
+    ];
+    const p = panel({ phone: { ...panel().phone, recent } });
+    const v = riskCardView(view('en'), p, ORDER, new Set(['orders.risk.read']))!;
+    expect(v.recentTitle).toBe('Last orders from this number');
+    expect(v.history.recent.map((h) => [h.number, h.href, h.tone, h.ourFault])).toEqual([
+      ['EX-0998', '/admin/orders/01a16af2-30f0-7462-aab8-719bb3ce51b2', expect.any(String), 'Our fault · not counted'],
+      ['EX-0990', '/admin/orders/01a16af2-30f0-7462-aab8-719bb3ce51b3', expect.any(String), null],
+    ]);
+    expect(v.history.recent[0]!.total).toMatch(/1,500/);
+    const b = riskCardView(view('bn'), p, ORDER, new Set(['orders.risk.read']))!;
+    expect(b.history.recent[0]!.ourFault).toBe('আমাদের দোষ · গোনা হয়নি');
+    expect(riskCardView(view('en'), panel(), ORDER, new Set(['orders.risk.read']))!.history.recent).toEqual([]);
+  });
+
   it('hidden when the owner hides it, or never scored while the model is off; "not scored" while it is on', () => {
     expect(riskCardView(view('en'), panel({ showOnOrder: false }), ORDER, new Set())).toBeNull();
     expect(riskCardView(view('en'), panel({ enabled: false, current: null }), ORDER, new Set())).toBeNull();

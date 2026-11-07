@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deviceList, filledPlan, firstScreenFor, heroSettled, langCookieOf, markdownReport, navWordsSqueezed, openedPlan, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
+import { boxChecks, deviceList, filledPlan, firstScreenFor, heroSettled, langCookieOf, markdownReport, navWordsSqueezed, openedPlan, phoneBarOutside, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -103,7 +103,7 @@ describe('device gate', () => {
 
   it('follow-up 75 · plans the phone menu opened with its sub-categories, on phones and tablets only', () => {
     const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
-    const plan = openedPlan('http://h:1', rules.opened);
+    const plan = openedPlan('http://h:1', rules.opened).filter((p) => p.clicks[0] === 'button[data-act="open-menu"]');
     expect(plan.map((p) => p.url)).toEqual(['http://h:1/?gate=opened', 'http://h:1/bn?gate=opened']);
     expect(plan.every((p) => p.signedOut && p.clicks[0] === 'button[data-act="open-menu"]' && p.clicks.includes('[data-testid="mn-acc"]'))).toBe(true);
     expect(plan[0].groups).toEqual(['phone', 'tablet']);
@@ -112,6 +112,20 @@ describe('device gate', () => {
     expect(openedPlan('http://h:1', undefined)).toEqual([]);
     expect(openedPlan('http://h:1', [{ paths: ['/'] }])).toEqual([]);
     expect(openedPlan('http://h:1', { paths: ['/x'], clicks: ['b'] })).toEqual([{ url: 'http://h:1/x?gate=opened', signedOut: true, expect: [], clicks: ['b'] }]);
+  });
+
+  it('follow-up 155 · plans the size guide window opened from the footer and from its page, every width, waiting for its data', () => {
+    const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
+    const plan = openedPlan('http://h:1', rules.opened).filter((p) => p.expect.includes('[data-testid="size-guide-modal"]'));
+    expect(plan.map((p) => p.url)).toEqual([
+      'http://h:1/collections/polos?gate=opened',
+      'http://h:1/bn/collections/polos?gate=opened',
+      'http://h:1/help/size-guide?gate=opened',
+      'http://h:1/bn/help/size-guide?gate=opened',
+    ]);
+    expect(plan.every((p) => !p.groups && !p.maxWidth)).toBe(true);
+    expect(new Set(openedPlan('http://h:1', rules.opened).map((p) => p.url)).size).toBe(openedPlan('http://h:1', rules.opened).length);
+    expect(rules.openWaitMs).toBeGreaterThan(rules.settleMs);
   });
 
   it('qa-gate I1 (PR 621) · plans the admin forms opened in place, signed in, once per admin language', () => {
@@ -227,5 +241,38 @@ describe('PR 40 follow-up · a computer nav item is never narrower than its word
   it('fails an item squeezed under its words, passes whole ones, hidden ones and a pixel of rounding', () => {
     expect(navWordsSqueezed(doc([item('New in', 42, 41.5), item('Polos', 45, 45.8), item('More', 0, 30), item('Sets', 32, 40, true)]))).toEqual([]);
     expect(navWordsSqueezed(doc([item('T-Shirts', 32, 52), item('Shirts', 37, 37)]))).toEqual([{ k: 'NAV-WORDS-SQUEEZED', d: 'T-Shirts 32<52' }]);
+  });
+
+  it('follow-up of PR 505 · boxes: a listed part past the screen or wider than its box, and a listed tap box under 44 px', () => {
+    const el = (right, w, h, sw = w) => ({ getBoundingClientRect: () => ({ right, width: w, height: h }), scrollWidth: sw, clientWidth: w });
+    const doc = (map) => ({ querySelectorAll: (sel) => map[sel] ?? [] });
+    const d = doc({ '.pill': [el(300, 280, 20), el(360, 344, 20), el(0, 0, 0)], '.wide': [el(200, 100, 20, 140)], '.tick': [el(40, 44, 44), el(30, 18, 18)] });
+    expect(boxChecks({ inside: ['.pill', '.wide'], tap44: ['.tick'] }, d, 320)).toEqual([
+      { k: 'PAST-THE-EDGE', d: '.pill 360>320, .wide 200>320' },
+      { k: 'OWN-TAP-UNDER-44', d: '.tick 18×18' },
+    ]);
+    // a desktop size checks no taps; a page that keeps its parts whole passes
+    expect(boxChecks({ inside: ['.pill'], tap44: ['.tick'], taps: false }, doc({ '.pill': [el(300, 280, 20)], '.tick': [el(30, 18, 18)] }), 320)).toEqual([]);
+    const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
+    expect(rules.boxes['/admin/messages/journey'].inside).toContain('[data-testid="journey-channels"] .a2-pill');
+    expect(rules.signedIn.urls).toContain('/admin/messages/journey');
+  });
+});
+
+describe('PR 626 follow-up · the phone bottom bar', () => {
+  const page = (bar) => ({
+    querySelector: (sel) => (sel === '[data-testid="lm-bar"]' && bar ? { getBoundingClientRect: () => ({ left: bar.l, right: bar.r, width: bar.r - bar.l, height: bar.h ?? 64 }) } : null),
+    defaultView: { getComputedStyle: () => ({ contain: bar?.contain ?? '' }) },
+  });
+  it('passes a bar inside the phone that clips what it holds, and a page without one or with it hidden', () => {
+    expect(phoneBarOutside(320, page({ l: 10, r: 310, contain: 'layout paint' }))).toEqual([]);
+    expect(phoneBarOutside(320, page({ l: 10, r: 310.4, contain: 'strict' }))).toEqual([]);
+    expect(phoneBarOutside(320, page(null))).toEqual([]);
+    expect(phoneBarOutside(1366, page({ l: 0, r: 0, h: 0 }))).toEqual([]);
+  });
+  it('fails a bar past the phone\'s edge (the 320 px phone with the Orders badge) and one that lets its contents out', () => {
+    expect(phoneBarOutside(320, page({ l: 10, r: 331, contain: 'layout paint' }))).toEqual([{ k: 'PHONE-BAR-OUTSIDE', d: 'the bar spans 10–331 px on a 320 px phone' }]);
+    expect(phoneBarOutside(320, page({ l: 10, r: 310, contain: 'none' }))).toEqual([{ k: 'PHONE-BAR-OUTSIDE', d: 'it does not clip what it holds (contain: none)' }]);
+    expect(phoneBarOutside(320, page({ l: 10, r: 310, contain: 'layout' }))[0].k).toBe('PHONE-BAR-OUTSIDE');
   });
 });

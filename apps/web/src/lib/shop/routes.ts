@@ -78,11 +78,12 @@ export const BUILT_INSIDE: readonly string[] = [
   ROUTES.wishlist, // PR 71 — ~~the rest of /account waits for the customer accounts~~ (PR 131 built them)
   ROUTES.login, // PR 130 — the login page (app/(shop)/(store)/account/login)
   ROUTES.orders, // PR 131 — My orders (app/(shop)/(store)/account/orders); ~~each order's page comes with PR 134~~ (built)
-  // PR 75 — the help pages (app/(shop)/(store)/help/[slug]); ~~"Ways to pay"~~ (built: PR 247), "Careers" and the size guide are still to come.
+  // PR 75 — the help pages (app/(shop)/(store)/help/[slug]); ~~"Ways to pay"~~ (built: PR 247), "Careers" ~~and the size guide~~ (built: follow-up 155, help/size-guide) is still to come.
   // A built help page with nothing true to say yet still says "Coming soon" itself.
   ROUTES.combos, // PR 103 — the sets landing page (app/(shop)/(store)/combos); ~~each rule's own list (PR 572) is still to come~~ built: combos/[rule]; ~~the set builder (PR 98)~~ built below
   ROUTES.buildSet, // PR 98, 100 — the set builder (app/(shop)/(store)/combos/build-your-own/[[...group]]), its group pages have their own route too
   ...['faq', 'delivery', 'exchange', 'privacy', 'terms', 'story', 'contact', 'payment'].map(ROUTES.help),
+  ROUTES.help('size-guide'), // follow-up 155 — the size guide page (app/(shop)/(store)/help/size-guide)
 ];
 
 /** Which coming page an address belongs to, or null (then it is not a shop page at all). */

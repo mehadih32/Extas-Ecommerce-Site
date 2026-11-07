@@ -159,7 +159,21 @@
       "offersTitle": "Offers for you",
       "none": "No personal offers right now.",
       "newIn": "New in",
-      "seeAll": "See all"
+      "seeAll": "See all",
+      "size": {
+        "title": "Your size",
+        "sub": "We pre-select it and show “Your size in stock”. You can always pick another size.",
+        "edit": "Edit",
+        "find": "Find my size",
+        "none": "Not saved yet. Tell us your height and weight and we'll work out your size.",
+        "tops": "Tops",
+        "bottoms": "Trousers (waist)",
+        "height": "Height",
+        "weight": "Weight",
+        "heightFmt": "{ft} ft {in} in",
+        "weightFmt": "{n} kg",
+        "empty": "—"
+      }
     },
     "invite": {
       "title": "Invite a friend",

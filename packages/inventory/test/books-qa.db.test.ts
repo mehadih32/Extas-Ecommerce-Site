@@ -493,4 +493,58 @@ describe.skipIf(!HAS_TEST_DB)('PR 615 / 616 qa-gate on PostgreSQL', () => {
     at('2027-07-02T04:00:00Z');
     await expect(signOffYear(f.deps(), f.who(accounts, f.storeA), { year: 2026, pin: PIN })).rejects.toMatchObject({ code: 'NOT_MATCHED' });
   });
+
+  it('follow-up 559 (c): the re-opened month with its PRIOR_PERIOD correction closes again as a new version (with the owner`s decision: the day keeps its paisa, the correction lives in January); once every month of the year is closed the year is signed off, once', async () => {
+    at('2027-07-02T05:00:00Z');
+    for (const m of ['2027-01', '2027-02', '2027-03', '2027-04', '2027-05', '2027-06']) await costs(f.storeA, m);
+    at('2027-07-02T20:00:00Z');
+    const run = await runBooksMatch(f.deps(), { storeId: f.storeA, from: '2026-11-01' });
+    expect(run).toMatchObject({ status: 'ok', through: '2027-07-02' });
+    // November 20 still carries the late paisa in its own day: the PRIOR_PERIOD correction is dated 20 January (the
+    // closed month was never rewritten), so the re-opened month does not close by itself.
+    expect(run.days.filter((x) => x.date < '2027-07-01' && !x.matched).map((x) => x.date)).toEqual(['2026-11-20']);
+    const link = await f.linkOf(f.storeA);
+    const prior = await f.t.prisma.booksAdjustment.findMany({ where: { linkId: link.id, kind: 'PRIOR_PERIOD' } });
+    expect(prior.map((a) => a.date.toISOString().slice(0, 10))).toEqual(['2027-01-20']);
+    const refused = closeMonth(f.deps(), f.who(accounts, f.storeA), { month: '2026-11', pin: PIN });
+    await expect(refused).rejects.toMatchObject({ code: 'NOT_MATCHED', details: ['2026-11-20'] });
+    // A year with November open is refused; the other months close without an override (December was closed before).
+    await expect(signOffYear(f.deps(), f.who(accounts, f.storeA), { year: 2026, pin: PIN })).rejects.toMatchObject({ code: 'NOT_MATCHED', details: ['2026-11', '2027-01', '2027-02', '2027-03', '2027-04', '2027-05', '2027-06'] });
+    await expect(closeMonth(f.deps(), f.who(accounts, f.storeA), { month: '2026-12', pin: PIN })).rejects.toMatchObject({ code: 'ALREADY' });
+    for (const m of ['2027-01', '2027-02', '2027-03', '2027-04', '2027-05', '2027-06']) await expect(closeMonth(f.deps(), f.who(accounts, f.storeA), { month: m, pin: PIN })).resolves.toMatchObject({ level: 'MONTH', version: 1, override: false });
+    // The re-close: a third version, a close again (not a re-opening), with the owner's reason; what was left open in the
+    // month is kept on it as overridden.
+    const again = await closeMonth(f.deps(), f.who(accounts, f.storeA), { month: '2026-11', pin: PIN, overrideReason: 'The late paisa of 20 November is put right in January.' });
+    expect(again).toMatchObject({ level: 'MONTH', version: 3, reopens: null, override: true, result: 'MISMATCH', totalDays: 29, matchedDays: 28 });
+    const third = await f.t.prisma.booksPeriodClose.findUniqueOrThrow({ where: { id: again.id } });
+    expect((third.figures as { unmatchedDays?: string[]; overriddenDifferences?: number }).unmatchedDays).toEqual(['2026-11-20']);
+    expect((third.figures as { overriddenDifferences?: number }).overriddenDifferences).toBeGreaterThan(0);
+    expect(await f.t.prisma.booksDifference.count({ where: { linkId: link.id, date: { gte: day('2026-11-01'), lte: day('2026-11-30') }, status: { in: ['PENDING', 'MISMATCH'] } } })).toBe(0);
+    const versions = await f.t.prisma.booksPeriodClose.findMany({ where: { linkId: link.id, level: 'MONTH', periodStart: day('2026-11-01') }, orderBy: { version: 'asc' } });
+    expect(versions.map((v) => [v.version, v.reopens, v.override])).toEqual([
+      [1, null, false],
+      [2, 1, false],
+      [3, null, true],
+    ]);
+
+    // The year: every month of it with books is closed — signed off once, naming each month and the one closed by decision.
+    const year = await signOffYear(f.deps(), f.who(accounts, f.storeA), { year: 2026, pin: PIN });
+    expect(year).toMatchObject({ level: 'YEAR', start: '2026-07-01', end: '2027-06-30', version: 1, override: true, result: 'MISMATCH', pinVerified: true });
+    const y = await f.t.prisma.booksPeriodClose.findUniqueOrThrow({ where: { id: year.id } });
+    const fig = y.figures as { months: { month: string; version: number; override: boolean }[]; monthsOverridden: string[] };
+    expect(fig.months.map((m) => [m.month, m.version])).toEqual([
+      ['2026-11', 3],
+      ['2026-12', 1],
+      ['2027-01', 1],
+      ['2027-02', 1],
+      ['2027-03', 1],
+      ['2027-04', 1],
+      ['2027-05', 1],
+      ['2027-06', 1],
+    ]);
+    expect(fig.monthsOverridden).toEqual(['2026-11']);
+    expect(y.totalDays).toBe(29 + 31 + 31 + 28 + 31 + 30 + 31 + 30);
+    expect(await f.t.prisma.auditLog.count({ where: { action: 'books.close.year', entityId: year.id } })).toBe(1);
+    await expect(signOffYear(f.deps(), f.who(accounts, f.storeA), { year: 2026, pin: PIN })).rejects.toMatchObject({ code: 'ALREADY' });
+  });
 });

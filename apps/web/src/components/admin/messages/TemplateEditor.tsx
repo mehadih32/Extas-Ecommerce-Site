@@ -4,10 +4,15 @@
 // `render` (@extas/messages/pure), so the preview says exactly what a customer would get, or why nothing would go. Save
 // sends the words with the template's version (a stale page is said so); Reset puts the default words back. The API
 // checks everything again. A person without `messages.templates.write` sees it locked. TemplateAdd adds a missing one.
+// Follow-up 483: a saved WhatsApp text that is not approved or waiting (an edit resets its approval) can be sent for
+// approval again right here ("Send for approval", the same route as Channels & limits › WhatsApp templates), once
+// its words are saved and WhatsApp would not refuse them (`canSubmit`: the provider takes templates and the person
+// holds `messages.channels.write`; the API checks again).
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { BLOCKING_PROBLEMS, previewTemplate, templateProblems, waBodyProblems, type MessageChannel, type SampleSettings } from '@extas/messages/pure';
 import { label, msgError } from '@/lib/admin-messages/i18n';
+import { waSubmittable } from '@/lib/admin-messages/templates-view';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
@@ -72,7 +77,7 @@ function Words({ dict, channel, locale, body, subject, sample, hasHost }: { dict
   );
 }
 
-export function TemplateEditor({ dict, row, sample, hasHost, canEdit }: { dict: Dict; row: EditorRow; sample: SampleSettings; hasHost: boolean; canEdit: boolean }) {
+export function TemplateEditor({ dict, row, sample, hasHost, canEdit, canSubmit = false }: { dict: Dict; row: EditorRow; sample: SampleSettings; hasHost: boolean; canEdit: boolean; canSubmit?: boolean }) {
   const id = useId();
   const router = useRouter();
   const [body, setBody] = useState(row.body);
@@ -101,6 +106,12 @@ export function TemplateEditor({ dict, row, sample, hasHost, canEdit }: { dict: 
     void send(`${URL}/${row.id}/reset`, 'POST', { version: row.version }, x('resetDone'));
   };
   const state = row.providerStatus ?? 'none';
+  // follow-up 483: send the saved words for WhatsApp's approval again
+  const submittable = waSubmittable({ canSubmit, channel: row.channel, dirty, status: row.providerStatus, problems: row.channel === 'WHATSAPP' ? waBodyProblems(row.body) : [] });
+  const submit = () => {
+    if (!window.confirm(t(dict, 'msg.wa.submitAsk'))) return;
+    void send(`/api/admin/messages/whatsapp/templates/${row.id}/submit`, 'POST', {}, t(dict, 'msg.wa.submitted'));
+  };
 
   return (
     <div className="a2-stack" style={{ gap: 6, minWidth: 0 }} data-testid="tpl-editor" data-channel={row.channel} data-locale={row.locale}>
@@ -130,6 +141,11 @@ export function TemplateEditor({ dict, row, sample, hasHost, canEdit }: { dict: 
         {canEdit && dirty ? (
           <button type="button" className="a2-btn sm" disabled={busy} onClick={() => (setBody(row.body), setSubject(row.subject ?? ''), setSaid(null))}>
             {t(dict, 'msg.discard')}
+          </button>
+        ) : null}
+        {submittable ? (
+          <button type="button" className="a2-btn sm" disabled={busy} onClick={submit} data-testid="tpl-wa-submit">
+            {busy ? t(dict, 'msg.wa.submitting') : t(dict, 'msg.wa.submit')}
           </button>
         ) : null}
         {canEdit && row.edited ? (

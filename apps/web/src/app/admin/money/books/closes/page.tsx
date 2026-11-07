@@ -107,6 +107,14 @@ export default async function BooksClosesPage({ searchParams }: { searchParams: 
                         <span className={`a2-pill ${st === 'closed' ? 'ok' : st === 'override' ? 'gold' : st === 'ended' ? 'bad' : 'line'}`} style={{ whiteSpace: 'normal' }}>{t(d, `bk.close.state.${st}`)}</span>
                         {x.closed && x.overrideReason ? <div className="a2-xs a2-mute a2-mt6">{x.overrideReason}</div> : null}
                         {x.closedAt ? <div className="a2-xs a2-mute">{at(x.closedAt)}</div> : null}
+                        {x.waitingReturns ? (
+                          <div className="a2-xs a2-mt6" data-testid="books-month-waiting">
+                            <Link href={ctx.href(`${HERE}?month=${x.month}`)} className="a2-lnk">
+                              {t(d, 'bk.close.waitingNow', { n: n(x.waitingReturns) })}
+                            </Link>
+                          </div>
+                        ) : null}
+                        {x.closed && x.waitingAtClose ? <div className="a2-xs a2-mute">{t(d, 'bk.close.waitingAtClose', { n: n(x.waitingAtClose) })}</div> : null}
                       </td>
                       <td data-l={t(d, 'bk.close.col.days')}>{x.totalDays ? t(d, 'bk.match.kpi.daysSub', { n: n(x.matchedDays), total: n(x.totalDays) }) : '—'}</td>
                       <td data-l={t(d, 'bk.close.col.action')}>
@@ -172,6 +180,36 @@ export default async function BooksClosesPage({ searchParams }: { searchParams: 
               </li>
             ))}
           </ul>
+        </section>
+      ) : null}
+
+      {view.waiting ? (
+        <section className="a2-card tight a2-mt12" data-testid="books-month-waiting-list">
+          <b className="a2-sm">{t(d, 'bk.close.waitingTitle')}</b>
+          {view.waiting.length ? (
+            <>
+              <p className="a2-xs a2-mute a2-mt6">{t(d, 'bk.close.waitingSub')}</p>
+              <ul className="a2-stack a2-mt6">
+                {view.waiting.map((w) => (
+                  <li key={w.pieceId} className="a2-between a2-sm" style={{ gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ overflowWrap: 'anywhere' }}>
+                      {w.orderId ? (
+                        <Link className="a2-lnk a2-b" href={`/admin/orders/${w.orderId}`}>
+                          {w.externalOrderId}
+                        </Link>
+                      ) : (
+                        <b>{w.externalOrderId}</b>
+                      )}{' '}
+                      · {w.sku}
+                    </span>
+                    <span className="a2-xs a2-mute">{t(d, 'bk.close.waitingSince', { day: day(w.since) })}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="a2-xs a2-mute a2-mt6">{t(d, 'bk.close.waitingNone')}</p>
+          )}
         </section>
       ) : null}
 

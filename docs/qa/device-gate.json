@@ -1,11 +1,16 @@
 {
-  "$comment": "PR 85 — the app's device gate (tools/device-gate.mjs), Blueprint Appendix C1/C2 and D1.4. Sizes: phones in devices.json, tablets in device-matrix.js (TABLETS), desktop in devices-desktop.json. URLs: lighthouserc.json (ci.collect.url). The rules below are the locked mobile-hardening minimums; 0 fails is the pass mark.",
+  "$comment": "PR 85 — the app's device gate (tools/device-gate.mjs), Blueprint Appendix C1/C2 and D1.4. Sizes: phones in devices.json, tablets in device-matrix.js (TABLETS), desktop in devices-desktop.json. URLs: lighthouserc.json (ci.collect.url). The rules below are the locked mobile-hardening minimums; 0 fails is the pass mark. `openWaitMs` (follow-up 155): how long a press of an `opened` plan may take to bring what it opens (a window that fetches its data), before the next press and the `expect` check.",
   "tapMinPx": 44,
   "inlineLinkMinPx": 32,
   "inputMinFontPx": 16,
   "tapGroups": ["phone", "tablet"],
   "inputFontGroups": ["phone", "tablet"],
   "settleMs": 400,
+  "boxes": {
+    "$comment": "Follow-up of PR 505 — parts a page must keep whole on every size (tools/device-gate.mjs boxChecks): `inside` ends inside the screen and holds its own content (PAST-THE-EDGE: an admin scroller clips what sticks out, so STICKS-OUT-RIGHT does not see it), `tap44` is a 44 × 44 tap box itself on touch sizes (OWN-TAP-UNDER-44). The Order journey at 320 px: the channel-mode pills ran 40 px past the screen and the e-mail tick was an 18 px box.",
+    "/admin/messages/journey": { "inside": ["[data-testid=\"journey-channels\"] .a2-pill"], "tap44": ["[data-testid=\"js-email-box\"]"] }
+  },
+  "openWaitMs": 5000,
   "concurrency": 8,
   "firstScreen": {
     "$comment": "PR 53 (Blueprint D2, follow-up 60) — the first-screen budget. On every product page (pathPattern) on a phone, the size row and the measurement line (`blocks`) end above the top of the buy bar (`bar`) on the first screen, as it opens and again after the first size that can be chosen (`tap`) is tapped: FIRST-SCREEN. On a desktop the Add to Bag and Order Now buttons (`buy`) end above the fold: BUY-BELOW-FOLD. `slackPx` is rounding. On a phone the check waits for the budget's mark (`ready`, at most `readyMs`); a page where it never appears fails. Product pages come from signedIn.urls and the `discover` entries that open a category and take its first products, so every garment kind is measured.",
@@ -41,9 +46,15 @@
     },
     {
       "$comment": "PR 131 — the other sections of My account, signed in the same way: For you, Rewards, Wallet, Profile (its forms) and the Wishlist inside the frame.",
-      "paths": ["/account/foryou", "/account/rewards", "/account/wallet", "/bn/account/wallet", "/account/profile", "/bn/account/profile", "/account/wishlist"],
+      "paths": ["/account/rewards", "/account/wallet", "/bn/account/wallet", "/account/profile", "/bn/account/profile", "/account/wishlist"],
       "fill": "/api/account/try",
       "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-home\"]"]
+    },
+    {
+      "$comment": "Follow-up 144 — For you with the \"Your size\" card (the sample charts; nothing kept on the gate's phone: \"Find my size\", which opens the size guide window).",
+      "paths": ["/account/foryou", "/bn/account/foryou"],
+      "fill": "/api/account/try",
+      "expect": ["[data-testid=\"account-page\"]", "[data-testid=\"acc-size\"]", "[data-testid=\"acc-size-edit\"]"]
     },
     {
       "$comment": "PR 134 — the sample account's own order page (TRY-131, made by the same fill): its lines, the money and how it is paid; PR 135 its tracking steps.",
@@ -252,6 +263,17 @@
       "groups": ["phone", "tablet"],
       "maxWidth": 1023,
       "expect": ["[data-testid=\"mn-sub\"]"]
+    },
+    {
+      "$comment": "Follow-up 155 (PR 58, 75) — the size guide window open: from the footer's \"Size guide\" on a category page, then a category chosen (the sample polos), so the steppers and Show my size are measured; and from the size guide page's own button. Every width.",
+      "paths": ["/collections/polos", "/bn/collections/polos"],
+      "clicks": ["footer a[data-act=\"size-guide\"]:visible", "[data-testid=\"sg-cats\"] .sg-cat"],
+      "expect": ["[data-testid=\"size-guide-modal\"]", "[data-testid=\"sg-show\"]"]
+    },
+    {
+      "paths": ["/help/size-guide", "/bn/help/size-guide"],
+      "clicks": ["[data-testid=\"sg-open\"]"],
+      "expect": ["[data-testid=\"size-guide-modal\"]", "[data-testid=\"sg-cats\"]"]
     }
   ],
   "signedIn": {
@@ -290,7 +312,9 @@
       "/combo/sample-polo-pairs~essential-pique-polo~navy-black?tpl=current",
       "/combos/build-your-own",
       "/combos/build-your-own?try=1",
-      "/bn/combos/build-your-own?try=1"
+      "/bn/combos/build-your-own?try=1",
+      "/help/size-guide",
+      "/bn/help/size-guide"
     ],
     "urls": [
       "/admin",
@@ -451,7 +475,10 @@
       "/combos/build-your-own",
       "/combos/build-your-own?try=1",
       "/bn/combos/build-your-own?try=1",
+      "/help/size-guide",
+      "/bn/help/size-guide",
       "/admin/delivery/couriers",
+      "/admin/delivery/couriers?archived=1",
       "/admin/orders/packing/print",
       "/admin/orders/packing/handover",
       "/admin/orders/returns/handback",
@@ -559,6 +586,7 @@
       "/admin/orders/returns/erp": ["[data-testid=\"erp-returns-page\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing/print": ["[data-testid=\"print-run\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
       "/admin/delivery/couriers": ["[data-testid=\"couriers\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/delivery/couriers?archived=1": ["[data-testid=\"couriers\"][data-view=\"archived\"][data-lm-ready]", "[data-testid=\"couriers-in-use\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin?home=1": ["[data-testid=\"dash-kpi-sales\"]", "[data-testid=\"dash-kpi-ordered\"]", "[data-testid=\"dash-pipe\"]", "[data-testid=\"dash-problems\"]", "[data-testid=\"a2-shell\"]", "[data-testid=\"a3-todo\"]", "[data-design=\"B\"][data-lm-ready]", "[data-testid=\"dash-needs\"]", "[data-testid=\"dash-feed\"]"],
       "/admin?home=1&design=A": ["[data-design=\"A\"]", "[data-testid=\"dash-kpi-sales\"]", "[data-testid=\"dash-pipe\"]"],
       "/admin?home=1&view=money": ["[data-view=\"money\"]", "[data-testid=\"dash-soon-S13\"]", "[data-testid=\"dash-soon-S08\"]"],
@@ -651,6 +679,8 @@
       "/combo/sample-polo-pairs~essential-pique-polo~navy-black?tpl=current": ["[data-testid=\"combo-page\"]", "[data-testid=\"ca-tplbar\"]"],
       "/combos/build-your-own": ["[data-testid=\"build-off\"]", "[data-testid=\"cb-more\"]"],
       "/combos/build-your-own?try=1": ["[data-testid=\"bs-tiers\"]", "[data-testid=\"bs-slot-empty\"]", "[data-testid=\"bs-card\"]", "[data-testid=\"bs-add\"]", "[data-testid=\"bs-bag\"]", "[data-testid=\"bs-mbar\"]"],
+      "/help/size-guide": ["[data-testid=\"sg-open\"]", "[data-testid=\"sg-table\"]"],
+      "/bn/help/size-guide": ["[data-testid=\"sg-open\"]", "[data-testid=\"sg-table\"]"],
       "/bn/combos/build-your-own?try=1": ["[data-testid=\"bs-tiers\"]", "[data-testid=\"bs-card\"]", "[data-testid=\"bs-add\"]", "[data-testid=\"bs-mbar\"]"],
       "/?try=flash": ["[data-testid=\"hm-flash\"]", "[data-testid=\"hm-flash-clock\"]", ".hm-flash-hd .tag.sale", "#hm-flash1 .pcard-w", "#hm-flash2 .pcard-w"],
       "/bn?try=flash": ["[data-testid=\"hm-flash\"]", "[data-testid=\"hm-flash-clock\"]", ".hm-flash-hd .tag.sale", "#hm-flash1 .pcard-w", "#hm-flash2 .pcard-w"],

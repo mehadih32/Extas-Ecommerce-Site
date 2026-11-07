@@ -2,7 +2,7 @@
 // lowest and highest, in stock only with a piece to sell, and never a rating.
 import type { ImageSource } from '@extas/media';
 import { describe, expect, it } from 'vitest';
-import { articleLd, breadcrumbLd, faqLd, itemListLd, largestUrl, ldJson, majorPrice, organizationLd, productLd, reviewsPart, setInStock, setLd, websiteLd, type LdArticle, type LdProduct, type LdReviews, type LdSet, type LdShop } from './structured-data';
+import { articleLd, offerTerms, breadcrumbLd, faqLd, itemListLd, largestUrl, ldJson, majorPrice, organizationLd, productLd, reviewsPart, setInStock, setLd, websiteLd, type LdArticle, type LdProduct, type LdReviews, type LdSet, type LdShop } from './structured-data';
 
 const origin = new URL('https://shop.example.test');
 const base: LdProduct = {
@@ -100,6 +100,61 @@ describe('structured data', () => {
   });
 
   const shop: LdShop = { name: 'Sample Shop', href: '/', lang: 'en', logo: '/media/logo.png', phone: '+8801700000222', email: 'help@example.test', sameAs: ['https://social.example.test/sample', 'http://insecure.example.test'], languages: ['en', 'bn'] };
+
+  it('follow-up 515: the offer carries the exchange window and free delivery only as the page states them', () => {
+    const offer = (p: Partial<LdProduct>) => productLd(origin, { ...base, ...p })!.offers as Record<string, unknown>;
+    expect(offer({}).hasMerchantReturnPolicy).toBeUndefined();
+    expect(offer({}).shippingDetails).toBeUndefined();
+    expect(offer({ returns: { hours: 72, exchangeOnly: true, country: 'BD' } }).hasMerchantReturnPolicy).toEqual({
+      '@type': 'MerchantReturnPolicy',
+      applicableCountry: 'BD',
+      returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+      merchantReturnDays: 3,
+      refundType: 'https://schema.org/ExchangeRefund',
+    });
+    // a window in part of a day counts as the whole day; returns too: no exchange-only refund type
+    expect(offerTerms({ currency: 'BDT', returns: { hours: 30, exchangeOnly: false, country: 'BD' } }).hasMerchantReturnPolicy).toMatchObject({ merchantReturnDays: 2 });
+    expect(offerTerms({ currency: 'BDT', returns: { hours: 30, exchangeOnly: false, country: 'BD' } }).hasMerchantReturnPolicy).not.toHaveProperty('refundType');
+    expect(offerTerms({ currency: 'BDT', returns: { hours: 0, exchangeOnly: true, country: 'BD' } })).toEqual({});
+    expect(offerTerms({ currency: 'BDT', returns: { hours: 72, exchangeOnly: true, country: 'bd' } })).toEqual({});
+    const priced = offer({ variants: [{ priceMinor: 85000, stock: 1 }, { priceMinor: 95000, stock: 1 }], freeShipping: { country: 'BD' } });
+    expect(priced['@type']).toBe('AggregateOffer');
+    expect(priced.shippingDetails).toEqual({ '@type': 'OfferShippingDetails', shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'BDT' }, shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'BD' } });
+  });
+
+  it('follow-up 514: colours and sizes as a ProductGroup with one Product per variant (Google`s variant markup), only as the page draws them', () => {
+    const v = (sku: string, colour: string | null, size: string | null, priceMinor: number | null, stock: number, wasMinor: number | null = null) => ({ sku, colour, size, priceMinor, stock, wasMinor, href: `/p/sample-polo?${colour ? `color=${colour.toLowerCase()}&` : ''}size=${size}`, images: colour ? [`/media/${colour.toLowerCase()}.jpg`] : [] });
+    const group = { id: 'prod-1', variants: [v('POLO-NAVY-M', 'Navy', 'M', 85000, 3, 100000), v('POLO-NAVY-L', 'Navy', 'L', 85000, 0), v('POLO-RED-M', 'Red', 'M', 90000, 1), v('POLO-RED-XL', 'Red', 'XL', null, 4)] };
+    const g = productLd(origin, { ...base, group, wasPrice: true, returns: { hours: 72, exchangeOnly: true, country: 'BD' } })!;
+    expect(g).toMatchObject({ '@context': 'https://schema.org', '@type': 'ProductGroup', name: 'Sample polo', url: 'https://shop.example.test/p/sample-polo', productGroupID: 'prod-1', variesBy: ['https://schema.org/color', 'https://schema.org/size'], brand: { '@type': 'Brand', name: 'Sample store' }, category: 'Polos' });
+    expect(g).not.toHaveProperty('offers');
+    const kids = g.hasVariant as Record<string, unknown>[];
+    // a variant without a price is not one the page sells: left out
+    expect(kids.map((k) => k.sku)).toEqual(['POLO-NAVY-M', 'POLO-NAVY-L', 'POLO-RED-M']);
+    expect(kids[0]).toMatchObject({ '@type': 'Product', name: 'Sample polo · Navy · M', color: 'Navy', size: 'M', image: ['https://shop.example.test/media/navy.jpg'] });
+    expect(kids[0]!.offers).toMatchObject({ '@type': 'Offer', url: 'https://shop.example.test/p/sample-polo?color=navy&size=M', price: '850.00', priceCurrency: 'BDT', availability: 'https://schema.org/InStock', hasMerchantReturnPolicy: { merchantReturnDays: 3 } });
+    // the struck price only beside the variant the page shows it on
+    expect((kids[0]!.offers as Record<string, unknown>).priceSpecification).toBeDefined();
+    expect((kids[2]!.offers as Record<string, unknown>).priceSpecification).toBeUndefined();
+    expect((kids[1]!.offers as Record<string, unknown>).availability).toBe('https://schema.org/OutOfStock');
+    expect(productLd(origin, { ...base, group, wasPrice: false })!.hasVariant).toSatisfy((x: Record<string, Record<string, unknown>>[]) => x.every((k) => !k.offers!.priceSpecification));
+    // off sale: every variant out of stock, archived for good: discontinued
+    expect((productLd(origin, { ...base, group, onSale: false, retired: true })!.hasVariant as Record<string, Record<string, unknown>>[]).map((k) => k.offers!.availability)).toEqual(Array(3).fill('https://schema.org/Discontinued'));
+    // one colour only: varies by size alone, no colour on the variants is invented
+    const sizes = productLd(origin, { ...base, group: { id: 'prod-2', variants: [v('S-M', null, 'M', 85000, 1), v('S-L', null, 'L', 85000, 1)] } })!;
+    expect(sizes.variesBy).toEqual(['https://schema.org/size']);
+    expect((sizes.hasVariant as Record<string, unknown>[])[0]).not.toHaveProperty('color');
+    expect((sizes.hasVariant as Record<string, unknown>[])[0]).not.toHaveProperty('image');
+    // one priced variant, a missing SKU or nothing that varies: the plain Product as before
+    expect(productLd(origin, { ...base, group: { id: 'x', variants: [v('ONE', 'Navy', 'M', 85000, 1), v('TWO', 'Navy', 'L', null, 1)] } })!['@type']).toBe('Product');
+    expect(productLd(origin, { ...base, group: { id: 'x', variants: [v('', 'Navy', 'M', 85000, 1), v('TWO', 'Navy', 'L', 85000, 1)] } })!['@type']).toBe('Product');
+    expect(productLd(origin, { ...base, group: { id: 'x', variants: [v('A', 'Navy', 'M', 85000, 1), v('B', 'Navy', 'M', 85000, 1)] } })!['@type']).toBe('Product');
+    expect(productLd(origin, { ...base, group: null })!['@type']).toBe('Product');
+    // the rating sits on the group
+    const rated = productLd(origin, { ...base, group, reviews: { average: 4.5, total: 2, reviews: [] } })!;
+    expect(rated.aggregateRating).toMatchObject({ ratingValue: '4.5', reviewCount: 2 });
+    expect(ldJson(g)).not.toContain('</');
+  });
 
   it('PR 222: the shop on its home page, with only what the owner filled in', () => {
     expect(organizationLd(origin, shop)).toEqual({

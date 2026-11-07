@@ -155,7 +155,10 @@
   .lm-shell .lm-ct { padding: 6px 16px 112px; }
   .adm2.lm-shell :is(.a2-h1, .a3-ph2 h1) { font-size: var(--lm-fs-h1-phone); }
   .adm2.lm-shell .a2-tabs { margin: 0 0 14px; padding: 4px; }
-  .lm-shell .lm-bar { display: flex; position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; background: var(--lm-sf); border-radius: var(--lm-r-panel); box-shadow: var(--lm-sh2); padding: 6px; gap: 2px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+  /* PR 626 follow-up (7 Nov): the bar is a sealed box. Its sections scroll inside it and everything it holds (icons,
+     words, the waiting badges) is clipped to it (contain: layout paint), so nothing in it can widen the page: the device
+     gate saw it 11 px past a 320 px phone with the Orders badge showing. Its PHONE-BAR-OUTSIDE check holds it there. */
+  .lm-shell .lm-bar { display: flex; position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; background: var(--lm-sf); border-radius: var(--lm-r-panel); box-shadow: var(--lm-sh2); padding: 6px; gap: 2px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; contain: layout paint; max-width: calc(100vw - 20px); box-sizing: border-box; }
   .lm-shell .lm-bar::-webkit-scrollbar { display: none; }
   .lm-shell .lm-bar a { flex: none; min-width: 68px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px; border-radius: var(--lm-r-box); color: var(--lm-ink2); font-size: 0.75rem; font-weight: 700; position: relative; white-space: nowrap; }
   .lm-shell .lm-bar a.on { background: var(--lm-acbg); color: var(--lm-ac-ink); }

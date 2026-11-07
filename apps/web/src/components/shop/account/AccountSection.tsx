@@ -6,6 +6,7 @@
 // S18 · PR 623: Profile's "Your data" card (a copy or erasure of his data) while `privacy.customerRequests` is on.
 // S13 · PR 273: For you's "Invite a friend" card (his invite code) while the referral programme runs.
 // S05 · PR 150: My orders is the whole history — a page of one group at a time, from the address's `show` and `page`.
+import { cookies } from 'next/headers';
 import type { ReactNode } from 'react';
 import { isOrderShow, liveOffers, offerBanner, orderHistory, pageOf, profileView, walletView } from '@extas/accounts';
 import type { AccountTab } from '@extas/settings';
@@ -27,6 +28,9 @@ import { OfferBanner, OfferCards } from './OfferBanner';
 import { BirthdayForm, DetailsForm, PasswordForm, Preferences } from './ProfileForms';
 import { PrivacyCard } from './PrivacyCard';
 import { shopNotFound } from '@/lib/shop/not-found';
+import { FIT_COOKIE } from '@/lib/shop/pdp-finder';
+import { sizeCard } from '@/lib/shop/size-card';
+import { sizeGuideData } from '@/lib/shop/size-guide';
 
 export async function AccountSection({ tab, query = {} }: { tab: Exclude<AccountTab, 'wishlist'>; query?: { show?: unknown; page?: unknown } }) {
   const c = await shopContext();
@@ -56,10 +60,14 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
       break;
     }
     case 'foryou': {
-      const [offers, newIn] = await Promise.all([
+      const [offers, newIn, guide, jar] = await Promise.all([
         s['account.offerBanner'].enabled ? liveOffers(deps, who) : Promise.resolve([]),
         s['account.lists'].newIn > 0 ? newestCards(c.storeId, s['account.lists'].newIn, 'newest') : Promise.resolve([]),
+        // follow-up 144: "Your size" from this phone's kept height and weight on the shop's own charts
+        sizeGuideData(c.storeId, c.lang),
+        cookies(),
       ]);
+      const size = guide ? sizeCard(jar.get(FIT_COOKIE)?.value, guide.finder, guide.entries) : null;
       // S13 · PR 273: his invite code while the referral programme runs (signed in only: this page is)
       const invite = await myInvite({ db: deps.db, settings: deps.settings }, who).catch(() => null);
       let card: ReactNode = null;
@@ -73,7 +81,7 @@ export async function AccountSection({ tab, query = {} }: { tab: Exclude<Account
       body = (
         <>
           {card}
-          <ForYouTab c={c} newIn={newIn} offers={offers.length ? <OfferCards c={c} offers={offers} /> : null} />
+          <ForYouTab c={c} newIn={newIn} offers={offers.length ? <OfferCards c={c} offers={offers} /> : null} size={size} />
         </>
       );
       break;

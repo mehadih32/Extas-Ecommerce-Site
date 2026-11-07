@@ -5,6 +5,9 @@
 // without it, when the owner hides the card (`risk.score.showOnOrder`), or for an order never scored while the model is
 // off. "Score again" (a new dated score, `orders.risk.decide`) is the only button. The score only informs. PR 161: the
 // level's steps (watch, hold, call) and the advance it proposes, as a line under the heading.
+// Follow-up 296: under the number's history line, its last orders (as many as `risk.history` reads, at most five), each
+// linked, a refusal the shop caused marked "our fault · not counted".
+import Link from 'next/link';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { orderRisk } from '@extas/orders';
 import { adminDeps } from '@/lib/admin-auth';
@@ -86,6 +89,26 @@ export async function RiskPanel({ order, view: given }: { order: { id: string; n
         <span>{v.history.label}</span>
         <span>{v.history.line}</span>
       </div>
+      {v.history.recent.length ? (
+        <div className="a2-ohist a2-mt12" data-testid="risk-recent">
+          <div className="a2-xs a2-mute a2-b">{v.recentTitle}</div>
+          {v.history.recent.map((h) => (
+            <Link key={h.href} className="a2-prow" href={h.href}>
+              <div className="a2-prt">
+                <b>{h.number}</b>
+                <span>{h.placed}</span>
+                {h.ourFault ? (
+                  <span className="a2-xs a2-mute" data-testid="risk-our-fault">
+                    {h.ourFault}
+                  </span>
+                ) : null}
+              </div>
+              <span className={`a2-pill ${h.tone}`}>{h.status}</span>
+              <span className="a2-prs">{h.total}</span>
+            </Link>
+          ))}
+        </div>
+      ) : null}
       {v.earlier ? (
         <div className="a2-mt12" data-testid="risk-earlier">
           <div className="a2-xs a2-mute a2-b">{v.earlier.title}</div>

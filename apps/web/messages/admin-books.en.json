@@ -332,7 +332,7 @@
       "close": "Close the month",
       "closeBusy": "Closing …",
       "closeSend": "Close the month",
-      "closeWarn": "Closes only if every day matched and the fixed costs are in. Otherwise write a reason: the month is then closed with your decision, and it says so on every report.",
+      "closeWarn": "Closes only if every day matched and the fixed costs are in. Otherwise write a reason: the month is then closed with your decision, and it says so on every report. Returned pieces not checked yet do not stop it; the close lists them as waiting.",
       "overrideReason": "Reason, only to close with differences",
       "closeDone": "The month is closed.",
       "reopen": "Open again",
@@ -351,7 +351,13 @@
       "weeks": "Weeks (built from the days)",
       "lifetime": "Since the switch: ours {ours}, the ERP {erp}",
       "none": "No month yet",
-      "noneSub": "The first month appears with the first day of the books."
+      "noneSub": "The first month appears with the first day of the books.",
+      "waitingNow": "{n} returned pieces still wait for a check",
+      "waitingAtClose": "The close listed {n} as waiting",
+      "waitingTitle": "Returned pieces still waiting for a check",
+      "waitingSub": "Handed back in this month, not approved or declined yet. They do not stop the close: the close lists them as waiting.",
+      "waitingSince": "handed back {day}",
+      "waitingNone": "Every piece returned in this month is checked."
     }
   }
 }

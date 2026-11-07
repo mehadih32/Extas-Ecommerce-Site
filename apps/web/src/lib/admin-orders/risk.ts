@@ -10,6 +10,7 @@ import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import type { AdminView } from '../admin-page';
 import { t } from '../i18n';
 import { commandUrl } from './commands';
+import { ORDER_TONE, orderHref, type Tone } from './model';
 import type { CommandSpec } from './spec';
 
 export interface RiskRow {
@@ -30,7 +31,10 @@ export interface RiskCardView {
   when: string | null;
   rulesChanged: string | null;
   earlier: { title: string; rows: string[] } | null;
-  history: { label: string; line: string };
+  /** Follow-up 296: the number's last orders (risk.history), each linked; a refusal the shop caused is marked "our fault". */
+  history: { label: string; line: string; recent: { number: string; href: string; status: string; tone: Tone; total: string; placed: string; ourFault: string | null }[] };
+  /** Follow-up 296: the heading over `history.recent`. */
+  recentTitle: string;
   informs: string;
   rescore: CommandSpec | null;
   /** PR 161: "Level High · held · confirmation call in the queue" and the advance it proposes (a person sends it). */
@@ -149,7 +153,20 @@ export function riskCardView(view: AdminView, p: RiskPanel, o: { id: string; num
     earlier: p.earlier.length
       ? { title: t(d, 'orders.risk.earlier'), rows: p.earlier.map((e) => t(d, 'orders.risk.earlierRow', { score: e.score, band: bandName(view, e.band), at: dt.format(new Date(e.at)), why: t(d, `orders.risk.afterShort.${e.after}`) })) }
       : null,
-    history: { label: t(d, 'orders.risk.hist.label', { phone: p.phone.phone ?? t(d, 'orders.list.none') }), line: historyLine(view, p.phone.summary) },
+    history: {
+      label: t(d, 'orders.risk.hist.label', { phone: p.phone.phone ?? t(d, 'orders.list.none') }),
+      line: historyLine(view, p.phone.summary),
+      recent: p.phone.recent.map((h) => ({
+        number: h.number,
+        href: orderHref(h.id),
+        status: t(d, `orders.st.${h.status}`),
+        tone: ORDER_TONE[h.status],
+        total: formatMoney(h.totalMinor, moneyOf(o.currency, view.locale)),
+        placed: dt.format(new Date(h.placedAt)),
+        ourFault: h.ourFault ? t(d, 'orders.risk.hist.ourFaultMark') : null,
+      })),
+    },
+    recentTitle: t(d, 'orders.risk.hist.recent'),
     informs: t(d, p.levelsOn ? 'orders.risk.informsLevels' : 'orders.risk.informs'),
     rescore,
     level: p.level

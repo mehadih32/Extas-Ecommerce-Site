@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { JourneyConfig, TemplateGroup } from '@extas/messages';
 import { DEFAULT_JOURNEY } from '@extas/settings';
 import { journeyChanges, journeyDraft, stepOf, clock } from './journey-draft';
-import { groupTemplates, openGroup } from './templates-view';
+import { groupTemplates, openGroup, waSubmittable } from './templates-view';
 
 const g = (key: string, uses: string[]): TemplateGroup => ({ key, name: key, uses: uses.map((use) => ({ use, channels: ['SMS'], on: true })), rows: [], missing: [], problems: 0, edited: false });
 
@@ -62,5 +62,21 @@ describe('PR 505 · the Order journey form', () => {
       amountLine: { en: 'Pay {amount}.', bn: '{amount} দিন।' },
       selfConfirm: { newCustomersOnly: false, waitHours: 0, confirmOnYes: true, countsAsTheOneWhatsApp: false },
     });
+  });
+});
+
+describe('waSubmittable (follow-up 483)', () => {
+  const base = { canSubmit: true, channel: 'WHATSAPP', dirty: false, status: null, problems: [] as string[] };
+  it('offers Send for approval for a saved WhatsApp text not yet sent or turned down', () => {
+    expect(waSubmittable(base)).toBe(true);
+    expect(waSubmittable({ ...base, status: 'REJECTED' })).toBe(true);
+  });
+  it('not while approved or waiting, unsaved, refused words, another channel, or without the right', () => {
+    expect(waSubmittable({ ...base, status: 'APPROVED' })).toBe(false);
+    expect(waSubmittable({ ...base, status: 'PENDING' })).toBe(false);
+    expect(waSubmittable({ ...base, dirty: true })).toBe(false);
+    expect(waSubmittable({ ...base, problems: ['edgeVariable'] })).toBe(false);
+    expect(waSubmittable({ ...base, channel: 'SMS' })).toBe(false);
+    expect(waSubmittable({ ...base, canSubmit: false })).toBe(false);
   });
 });

@@ -931,7 +931,9 @@
         "cancelled": "{n} cancelled",
         "returns": "{n} returned after delivery",
         "inTransit": "{n} on the way",
-        "noAnswer": "{n} calls not answered"
+        "noAnswer": "{n} calls not answered",
+        "recent": "Last orders from this number",
+        "ourFaultMark": "Our fault · not counted"
       },
       "sig": {
         "refusals": "Refused parcels before",

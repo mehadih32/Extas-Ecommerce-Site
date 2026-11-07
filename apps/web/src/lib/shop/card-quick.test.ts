@@ -18,10 +18,10 @@ const base = {
     { key: 'l', label: 'L' },
   ],
   variants: [
-    { id: 'n-s', colour: 'navy', size: 's', stock: 2, priceMinor: 100, wasMinor: null },
-    { id: 'n-m', colour: 'navy', size: 'm', stock: 0, priceMinor: 100, wasMinor: null },
-    { id: 'n-l', colour: 'navy', size: 'l', stock: 4, priceMinor: null, wasMinor: null },
-    { id: 'w-m', colour: 'white', size: 'm', stock: 1, priceMinor: 100, wasMinor: null },
+    { id: 'n-s', sku: 'SKU-n-s', colour: 'navy', size: 's', stock: 2, priceMinor: 100, wasMinor: null },
+    { id: 'n-m', sku: 'SKU-n-m', colour: 'navy', size: 'm', stock: 0, priceMinor: 100, wasMinor: null },
+    { id: 'n-l', sku: 'SKU-n-l', colour: 'navy', size: 'l', stock: 4, priceMinor: null, wasMinor: null },
+    { id: 'w-m', sku: 'SKU-w-m', colour: 'white', size: 'm', stock: 1, priceMinor: 100, wasMinor: null },
   ],
   media: [] as { id: string; colour: string | null; role: string; photo: ImageSource | null }[],
 };

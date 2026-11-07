@@ -142,6 +142,31 @@ export async function dayStates(db: Db, link: Pick<BooksLink, 'id'>, from: strin
 
 const numberOr = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
+/** A returned piece still waiting for its check (spec §4.4): handed back in the period, neither approved nor declined yet. */
+export interface WaitingReturn {
+  pieceId: string;
+  /** The shop's order, when the piece is linked to one (the page links it). */
+  orderId: string | null;
+  externalOrderId: string;
+  sku: string;
+  /** The business day it was handed back (reached WAITING_CHECK). */
+  since: string;
+}
+
+/**
+ * Follow-up 559 (b): the pieces handed back between `from` and `to` (store business days) that are still WAITING_CHECK —
+ * a month is closed with these listed as waiting (§4.4: "every returned piece of that month is checked or listed as
+ * waiting"); a piece checked later leaves the list, the close keeps what it listed.
+ */
+export async function waitingReturnsOf(db: Db, link: Pick<BooksLink, 'id'>, from: string | null, to: string | null): Promise<WaitingReturn[]> {
+  const rows = await db.erpPipelinePiece.findMany({
+    where: { linkId: link.id, state: 'WAITING_CHECK', ...(from || to ? { stateDate: { ...(from ? { gte: dateOfDay(from) } : {}), ...(to ? { lte: dateOfDay(to) } : {}) } } : {}) },
+    select: { id: true, orderId: true, externalOrderId: true, sku: true, stateDate: true },
+    orderBy: [{ stateDate: 'asc' }, { externalOrderId: 'asc' }, { lineId: 'asc' }],
+  });
+  return rows.map((r) => ({ pieceId: r.id, orderId: r.orderId, externalOrderId: r.externalOrderId, sku: r.sku, since: dayText(r.stateDate) }));
+}
+
 const latestMonth = (db: Db, linkId: string, start: string) => db.booksPeriodClose.findFirst({ where: { linkId, level: 'MONTH', periodStart: dateOfDay(start) }, orderBy: { version: 'desc' } });
 
 /** A month is closed when its newest row is a close (not a re-opening). */
@@ -193,6 +218,8 @@ export async function closeMonth(deps: InventoryDeps, who: Who, input: CloseMont
     const fixedCostsMissing = !shopCosts;
     if ((fixedCostsMissing || costsOpen > 0) && !override) throw new BooksError('FIXED_COSTS_MISSING', "the month's fixed costs are not in (or differ from the ERP's)", [d.month]);
     const left = override ? await tx.booksDifference.updateMany({ where: { linkId: link.id, date: { gte: dateOfDay(start), lte: dateOfDay(end) }, status: { in: ['PENDING', 'MISMATCH'] } }, data: { status: 'OVERRIDDEN' } }) : { count: 0 };
+    // §4.4: the month's returned pieces not checked yet do not stop the close; they are listed on it as waiting.
+    const waiting = await waitingReturnsOf(tx, link, from, end);
     const results = days.map((x) => x.result ?? 'MISMATCH');
     const result: BooksResult = unmatched.length || fixedCostsMissing || costsOpen ? 'MISMATCH' : results.includes('PARTIAL') ? 'PARTIAL' : 'MATCHED';
     const figures = {
@@ -202,6 +229,8 @@ export async function closeMonth(deps: InventoryDeps, who: Who, input: CloseMont
       fixedCostsDiffer: costsOpen > 0,
       fixedCostsVersion: shopCosts?.version ?? null,
       overriddenDifferences: left.count,
+      waitingReturns: waiting.length,
+      waitingPieces: waiting.map(({ pieceId, externalOrderId, sku, since }) => ({ pieceId, externalOrderId, sku, since })),
     };
     const r = await writePeriodClose(tx, link, {
       level: 'MONTH',
@@ -218,7 +247,7 @@ export async function closeMonth(deps: InventoryDeps, who: Who, input: CloseMont
       pinVerified: true,
       closedById,
     });
-    await logChange(tx, who, { action: override ? 'books.close.month.override' : 'books.close.month', entityType: 'BooksPeriodClose', entityId: r.id, before: null, after: { month: d.month, version: r.version, result, unmatchedDays: unmatched, fixedCostsMissing, reason: override }, storeId: who.storeId });
+    await logChange(tx, who, { action: override ? 'books.close.month.override' : 'books.close.month', entityType: 'BooksPeriodClose', entityId: r.id, before: null, after: { month: d.month, version: r.version, result, unmatchedDays: unmatched, fixedCostsMissing, waitingReturns: waiting.length, reason: override }, storeId: who.storeId });
     return r;
   }, TX);
   return periodView(row);
@@ -325,6 +354,10 @@ export interface MonthState {
   matchedDays: number;
   totalDays: number;
   closedAt: string | null;
+  /** Follow-up 559 (b): the month's returned pieces still waiting for a check now. */
+  waitingReturns: number;
+  /** How many the newest close listed as waiting (null: not closed, or closed before the list was kept). */
+  waitingAtClose: number | null;
 }
 
 export interface BooksClosesView {
@@ -338,13 +371,15 @@ export interface BooksClosesView {
   lifetime: (PeriodCloseView & { erpClosingMinor: number | null }) | null;
   /** The days of one month (when asked for): the latest close of each and whether it matched. */
   days: { date: string; version: number | null; result: BooksResult | null; matched: boolean; open: number }[] | null;
+  /** The asked month's returned pieces still waiting for a check (follow-up 559 b), oldest first; null without a month. */
+  waiting: WaitingReturn[] | null;
 }
 
 /** Every month of the books with its state, the years, the latest weeks and the lifetime check (`books.read`). */
 export async function booksCloses(deps: InventoryDeps, who: Who, q: { month?: string | null } = {}): Promise<BooksClosesView> {
   await allowBooks(deps, who, 'books.read');
   const pinSet = await booksPinSet(deps);
-  const empty: BooksClosesView = { model: 'v6', pinSet, today: null, months: [], years: [], weeks: [], lifetime: null, days: null };
+  const empty: BooksClosesView = { model: 'v6', pinSet, today: null, months: [], years: [], weeks: [], lifetime: null, days: null, waiting: null };
   if (!(await isV6(deps, who.storeId))) return { ...empty, model: 'v5' };
   const link = await storeErpLink(deps.db, who.storeId);
   if (!link) return empty;
@@ -354,6 +389,7 @@ export async function booksCloses(deps: InventoryDeps, who: Who, q: { month?: st
   const rules = await rulesOf(deps, who.storeId);
   const rows = await deps.db.booksPeriodClose.findMany({ where: { linkId: link.id }, orderBy: [{ periodStart: 'asc' }, { version: 'asc' }] });
   const months: MonthState[] = [];
+  const waitingNow = first ? await waitingReturnsOf(deps.db, link, first, null) : [];
   if (first) {
     for (let m = first.slice(0, 7); `${m}-01` <= today; m = addDay(periodOf(`${m}-01`, 'MONTH', rules).end, 1).slice(0, 7)) {
       const p = periodOf(`${m}-01`, 'MONTH', rules);
@@ -373,6 +409,8 @@ export async function booksCloses(deps: InventoryDeps, who: Who, q: { month?: st
         matchedDays: lastClose?.matchedDays ?? 0,
         totalDays: lastClose?.totalDays ?? 0,
         closedAt: isClosed(last) ? last!.createdAt.toISOString() : null,
+        waitingReturns: waitingNow.filter((w) => w.since >= p.start && w.since <= p.end).length,
+        waitingAtClose: isClosed(last) ? numberOr((last!.figures as { waitingReturns?: unknown } | null)?.waitingReturns) : null,
       });
     }
   }
@@ -384,11 +422,13 @@ export async function booksCloses(deps: InventoryDeps, who: Who, q: { month?: st
   const pageSize = await setting(deps, who.storeId, 'books.ledger.pageSize');
   const lifetime = rows.filter((r) => r.level === 'LIFETIME').sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()).at(-1);
   let days: BooksClosesView['days'] = null;
+  let waiting: BooksClosesView['waiting'] = null;
   if (q.month && monthSchema.safeParse(q.month).success && first) {
     const p = periodOf(`${q.month}-01`, 'MONTH', rules);
+    waiting = waitingNow.filter((w) => w.since >= p.start && w.since <= p.end);
     const from = first > p.start ? first : p.start;
     const to = p.end < today ? p.end : addDay(today, -1);
     days = from <= to ? (await dayStates(deps.db, link, from, to)).map(({ date, version, result, matched, open }) => ({ date, version, result, matched, open })) : [];
   }
-  return { model: 'v6', pinSet, today, months: months.reverse(), years: newest('YEAR').reverse(), weeks: newest('WEEK').reverse().slice(0, pageSize), lifetime: lifetime ? { ...periodView(lifetime), erpClosingMinor: numberOr((lifetime.figures as { erpClosingMinor?: unknown } | null)?.erpClosingMinor) } : null, days };
+  return { model: 'v6', pinSet, today, months: months.reverse(), years: newest('YEAR').reverse(), weeks: newest('WEEK').reverse().slice(0, pageSize), lifetime: lifetime ? { ...periodView(lifetime), erpClosingMinor: numberOr((lifetime.figures as { erpClosingMinor?: unknown } | null)?.erpClosingMinor) } : null, days, waiting };
 }

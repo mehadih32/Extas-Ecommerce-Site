@@ -20,3 +20,7 @@
 }
 /* PR 639 (CN-036): the phone preview shows the buyer's phone, which stays light: a light island in dark mode */
 .adm2 .a2-z .a2-phone.lm-island{background:var(--lm-sf2);border-radius:26px}
+/* Follow-up of PR 505 (320 px): a channel's mode pill ("WhatsApp · Practice (nothing leaves the server)") wraps inside
+   the screen instead of running past it (the gate's `boxes` check, device-gate.json) */
+.adm2 .a2-jch{min-width:0;max-width:100%}
+.adm2 .a2-jch .a2-pill{white-space:normal;border-radius:12px;max-width:100%;min-width:0;overflow-wrap:anywhere;text-align:left}

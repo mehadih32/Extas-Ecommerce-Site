@@ -248,7 +248,14 @@ export default async function PackPage({ searchParams }: Props) {
             </span>
           ) : null}
         </div>
-        <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.pack.settingsNote')}</p>
+        <p className="a2-xs a2-mute a2-mt6">
+          {t(d, 'ful.pack.settingsNote')}{' '}
+          {can('delivery.read') ? (
+            <Link className="a2-lnk" href="/admin/delivery/settings#packing" data-testid="pack-settings-open">
+              {t(d, 'ful.pack.settingsOpen')}
+            </Link>
+          ) : null}
+        </p>
       </section>
       <div className="a2-row a2-r12" style={{ alignItems: 'start' }}>
         <div className="a2-q" data-testid="pack-queue">

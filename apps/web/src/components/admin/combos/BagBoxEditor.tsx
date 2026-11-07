@@ -27,7 +27,9 @@ export interface BoxRule {
   tiers: { quantity: number; price: string | null }[];
 }
 
-export function BagBoxEditor(p: { box: BagBox; version: string; rules: BoxRule[]; rulesHref: string; canEdit: boolean; lang: 'en' | 'bn'; w: Dict }) {
+export function BagBoxEditor(p: { box: BagBox; version: string; rules: BoxRule[]; rulesHref: string; canEdit: boolean; lang: 'en' | 'bn'; w: Dict; locale?: string }) {
+  // a37 browser check (follow-up 697): a tier's count in the admin's own digits, like the prices and counts beside it
+  const nf = (n: number) => (p.locale ? n.toLocaleString(p.locale) : String(n));
   const router = useRouter();
   const uid = useId();
   const g = (k: string): string => {
@@ -52,7 +54,7 @@ export function BagBoxEditor(p: { box: BagBox; version: string; rules: BoxRule[]
   const previewRows = preview ? preview.tiers.filter((t) => t.quantity >= 2 && t.price !== null).slice(0, box.max) : [];
   const rowText = (key: string, n: number) => {
     const w = wordsOf(key, n);
-    return (p.lang === 'bn' && w.bn.trim()) || w.en.trim() || w.bn.trim() || g('pv.row').replace('{n}', String(n));
+    return (p.lang === 'bn' && w.bn.trim()) || w.en.trim() || w.bn.trim() || g('pv.row').replace('{n}', nf(n));
   };
 
   const save = async () => {
@@ -103,7 +105,7 @@ export function BagBoxEditor(p: { box: BagBox; version: string; rules: BoxRule[]
             <select id={`${uid}-max`} className="lm-inp" value={box.max} disabled={!p.canEdit} onChange={(e) => setBox({ ...box, max: Number(e.target.value) })} data-testid="bb-max">
               {Array.from({ length: MAX_TIERS }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>
-                  {n}
+                  {nf(n)}
                 </option>
               ))}
             </select>
@@ -135,7 +137,7 @@ export function BagBoxEditor(p: { box: BagBox; version: string; rules: BoxRule[]
                   <span className="bbx-tiers">
                     {r.tiers.map((t) => (
                       <span key={t.quantity} className="bbx-tier">
-                        {g('tier').replace('{n}', String(t.quantity))} · {t.price ?? g('notOffered')}
+                        {g('tier').replace('{n}', nf(t.quantity))} · {t.price ?? g('notOffered')}
                       </span>
                     ))}
                   </span>
@@ -154,11 +156,11 @@ export function BagBoxEditor(p: { box: BagBox; version: string; rules: BoxRule[]
                   <p className="lm-hint">{g('wordsHint')}</p>
                   {r.tiers.slice(0, MAX_TIERS).map((t) => (
                     <fieldset key={t.quantity} className="bbx-words">
-                      <legend>{g('tier').replace('{n}', String(t.quantity))}</legend>
+                      <legend>{g('tier').replace('{n}', nf(t.quantity))}</legend>
                       {(['en', 'bn'] as const).map((l) => (
                         <div className="lm-fl" key={l}>
                           <label htmlFor={`${uid}-${r.key}-${t.quantity}-${l}`}>{g(`f.${l}`)}</label>
-                          <input id={`${uid}-${r.key}-${t.quantity}-${l}`} className="lm-inp" lang={l} maxLength={WORDS_MAX} placeholder={g('pv.row').replace('{n}', String(t.quantity))} value={wordsOf(r.key, t.quantity)[l]} onChange={(e) => setWords(r.key, t.quantity, l, e.target.value)} />
+                          <input id={`${uid}-${r.key}-${t.quantity}-${l}`} className="lm-inp" lang={l} maxLength={WORDS_MAX} placeholder={g('pv.row').replace('{n}', nf(t.quantity))} value={wordsOf(r.key, t.quantity)[l]} onChange={(e) => setWords(r.key, t.quantity, l, e.target.value)} />
                         </div>
                       ))}
                     </fieldset>

@@ -58,6 +58,14 @@ export const structuredDataSchema = z
     // S12 · PR 249 (registry v229): off as shipped; a value saved before it existed reads it as off.
     /** BlogPosting on a journal article: its headline, description, dates, language, topic and honest byline, all as the page shows them. */
     article: z.boolean().default(false),
+    // Follow-up 515 (PR 222, registry v285): off as shipped; a value saved before they existed reads them as off.
+    /** The offer's return policy: the exchange window the product page's promise row says (a size swap only, or returns too). */
+    returns: z.boolean().default(false),
+    /** The offer's free delivery, only when the product page promises it for the product bought alone; never an area's charge. */
+    shipping: z.boolean().default(false),
+    // Follow-up 514 (PR 222, registry v287): off as shipped; a value saved before it existed reads it as off.
+    /** A product sold in more than one colour or size as a ProductGroup: one Product per variant with its SKU, colour, size, photo and own offer. */
+    variants: z.boolean().default(false),
   })
   .strict();
 
@@ -150,10 +158,13 @@ export const storefrontFuSettings = {
     ...json,
     group: 'naming',
     schema: structuredDataSchema,
-    default: { breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false, faq: false, article: false },
+    default: { breadcrumbs: true, itemList: true, product: true, organization: true, website: true, combo: true, wasPrice: true, reviews: false, faq: false, article: false, returns: false, shipping: false, variants: false },
     // PR 222 added the home page, set page and struck-price parts (registry v64); PR 223 the reviews part (v205);
-    // PR 224 the FAQ part (v206); PR 249 the journal article part (v229)
-    version: 229,
+    // PR 224 the FAQ part (v206); PR 249 the journal article part (v229); follow-up 515 the return policy and free
+    // delivery parts (v285); follow-up 514 the variants part (v287)
+    // ~~version: 229,~~
+    // ~~version: 285,~~
+    version: 287,
     labelKey: 'seo.structuredData.label',
     helpKey: 'seo.structuredData.help',
     sortOrder: 900,

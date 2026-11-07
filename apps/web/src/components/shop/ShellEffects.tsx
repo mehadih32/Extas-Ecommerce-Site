@@ -12,9 +12,11 @@
 //   · the page's bottom room is the height of the bar pinned to the bottom, measured (L15: the wrapper's padding)
 //   · the footer columns step their type down instead of cutting a word (L05)
 //   · the hero pictures' pins keep the whole name and the price (PR 43, HERO_PIN_FIT)
+//   · follow-up 155: a "Size guide" link opens the size guide window, fetched only on that press (size-guide/open)
 import { useEffect } from 'react';
 import { HERO_PIN_FIT, SIZE_WORD_FIT, fitAll, type FitRule } from '@/lib/shop/fit';
 import { series, type Cancel } from '@/lib/shop/later';
+import { sizeGuidePress } from '@/lib/shop/size-guide-link';
 
 const FOOTER_FIT: FitRule[] = [{ sel: '.ftr-s3 .ftr-cols', min: 11, collapse: true }];
 const DESK = '(min-width:1024px)';
@@ -300,6 +302,22 @@ export function ShellEffects() {
       ro?.disconnect();
       fonts?.removeEventListener?.('loadingdone', onFonts);
     };
+  }, []);
+  // follow-up 155: one listener for every "Size guide" link; the window and its data come only with the first press
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const a = sizeGuidePress(e);
+      if (!a) return;
+      e.preventDefault();
+      import('./size-guide/open')
+        .then((m) => m.openSizeGuide(a))
+        .then((shown) => {
+          if (!shown) window.location.assign(a.href);
+        })
+        .catch(() => window.location.assign(a.href));
+    };
+    document.addEventListener('click', onClick);
+    return () => document.removeEventListener('click', onClick);
   }, []);
   return null;
 }

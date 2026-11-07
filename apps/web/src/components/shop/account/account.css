@@ -369,3 +369,9 @@
 .shop .ord-look .ty-look select.input { min-height: 44px; padding: 8px 10px !important; font-size: 16px !important; }
 .shop .ord-look .ty-look .link { min-height: 44px; display: inline-flex; align-items: center; }
 .shop .ord-look .btn-sm { min-height: 44px; font-size: 14px; font-weight: 700; }
+/* Follow-up 144 — "Your size" in For you (demo 60-account.js .acc-sizebox) */
+.shop .acc-sizebox { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.shop .acc-sizebox > div { background: var(--bg); border-radius: var(--radius); padding: 12px 14px; min-width: 0; }
+.shop .acc-sizebox .v { font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1.3; overflow-wrap: anywhere; }
+@media (min-width: 768px) { .shop .acc-sizebox { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.shop .acc-size-btn { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; text-decoration: none; }

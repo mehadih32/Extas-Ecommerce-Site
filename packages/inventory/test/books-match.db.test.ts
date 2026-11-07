@@ -374,4 +374,31 @@ describe.skipIf(!HAS_TEST_DB)('PR 616 on PostgreSQL: the books match engine', ()
     await unlocked(`DELETE FROM "BooksDayClose" WHERE "id" = '${oldRow.id}'`);
     expect(await verifyCloseChain(f.t.prisma, link.id)).toEqual({ ok: true, rows: closes.length, forks: 0 });
   });
+
+  it('follow-up 559 (b): a month closes with its returned pieces not checked yet listed as waiting; the closes page counts them per month and lists the asked month`s', async () => {
+    const link = await f.linkOf(f.storeA);
+    const piece = (lineId: string, state: 'WAITING_CHECK' | 'APPROVED', stateDate: string) => ({ storeId: f.storeA, linkId: link.id, externalOrderId: 'WEB-559', lineId, sku: `SKU-${lineId}`, buyingPriceMinor: 50000, state, billedOn: day('2026-11-10'), stateDate: day(stateDate) });
+    // Handed back in November: two still wait, one is decided; one handed back in December belongs to December.
+    await f.t.prisma.erpPipelinePiece.createMany({ data: [piece('559-2', 'WAITING_CHECK', '2026-11-25'), piece('559-1', 'WAITING_CHECK', '2026-11-20'), piece('559-3', 'APPROVED', '2026-11-21'), piece('559-4', 'WAITING_CHECK', '2026-12-01')] });
+    const closer = await f.staff(['books.read', 'books.close'], f.storeA, 'closer559');
+    const before = await booksCloses(f.deps(), f.who(closer, f.storeA), { month: '2026-11' });
+    expect(before.months.find((m) => m.month === '2026-11')).toMatchObject({ closed: false, waitingReturns: 2, waitingAtClose: null });
+    expect(before.months.find((m) => m.month === '2026-12')).toMatchObject({ waitingReturns: 1 });
+    expect(before.waiting!.map((w) => [w.externalOrderId, w.sku, w.since])).toEqual([
+      ['WEB-559', 'SKU-559-1', '2026-11-20'],
+      ['WEB-559', 'SKU-559-2', '2026-11-25'],
+    ]);
+    expect((await booksCloses(f.deps(), f.who(closer, f.storeA))).waiting).toBeNull();
+    // Waiting pieces never stop the close: they are listed on it (the month was opened again above; it closes again).
+    const closed = await closeMonth(f.deps(), f.who(closer, f.storeA), { month: '2026-11', pin: PIN, overrideReason: 'Closing again after the ERP correction is in.' });
+    const row = await f.t.prisma.booksPeriodClose.findUniqueOrThrow({ where: { id: closed.id } });
+    expect(row.figures).toMatchObject({ waitingReturns: 2, waitingPieces: [{ sku: 'SKU-559-1', since: '2026-11-20' }, { sku: 'SKU-559-2', since: '2026-11-25' }] });
+    const log = await f.t.prisma.auditLog.findFirstOrThrow({ where: { entityId: closed.id } });
+    expect(log.after).toMatchObject({ waitingReturns: 2 });
+    // One is checked afterwards: the month shows one still waiting now, and the two its close listed.
+    await f.t.prisma.erpPipelinePiece.updateMany({ where: { linkId: link.id, lineId: '559-1' }, data: { state: 'APPROVED', stateDate: day('2026-12-02') } });
+    const after = await booksCloses(f.deps(), f.who(closer, f.storeA), { month: '2026-11' });
+    expect(after.months.find((m) => m.month === '2026-11')).toMatchObject({ closed: true, waitingReturns: 1, waitingAtClose: 2 });
+    expect(after.waiting!.map((w) => w.sku)).toEqual(['SKU-559-2']);
+  });
 });

@@ -80,7 +80,7 @@ export default async function BagBoxPage() {
         {g('note')}
       </p>
       {!canEdit ? <p className="lm-sub">{g('readOnly')}</p> : null}
-      <BagBoxEditor key={bv.version} box={bv.box} version={bv.version} rules={rules} rulesHref={ADMIN_PAGES.find((p) => p.key === 'rules')!.href} canEdit={canEdit} lang={bnLang ? 'bn' : 'en'} w={((d.bb as Dict) ?? {}) as never} />
+      <BagBoxEditor key={bv.version} box={bv.box} version={bv.version} rules={rules} rulesHref={ADMIN_PAGES.find((p) => p.key === 'rules')!.href} canEdit={canEdit} lang={bnLang ? 'bn' : 'en'} locale={view.locale} w={((d.bb as Dict) ?? {}) as never} />
     </div>
   );
 }

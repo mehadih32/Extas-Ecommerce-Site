@@ -113,4 +113,52 @@ describe.skipIf(!HAS_TEST_DB)('Delivery settings API on PostgreSQL (PR 193 holid
     expect(await deps.resolver.value('delivery.promise.districts', { storeId: MOTHER_STORE_ID })).toEqual({ enabled: true, rows: [{ district: code, hoursMin: 72, hoursMax: 120 }] });
     expect(await t.prisma.auditLog.count({ where: { action: 'delivery.promise.districts.save' } })).toBe(1);
   });
+
+  it('follow-up 370: the courier cards keep their registry defaults; the owner saves one whole, audited; a number out of range is refused', async () => {
+    const cards = (await api('GET', { cookie: reader })).body.cards!;
+    expect(cards['delivery.courier.tracking']!.value).toEqual({ enabled: true, everyMinutes: 60, batch: 200 });
+    expect(cards['delivery.courier.selection']!.value).toEqual({ enabled: false, codFee: true });
+    expect(cards['delivery.courier.webhooks']!.value).toEqual({ enabled: false, maxBodyKb: 64 });
+    expect(cards['delivery.courier.booking']!.value).toMatchObject({ giftLeadDays: 0, noteLang: 'en', itemNames: true, maxPerRun: 100 });
+    const card = cards['delivery.courier.tracking']!;
+    expect((await api('PUT', { cookie: reader, body: { key: card.key, value: { ...card.value, everyMinutes: 30 }, version: card.version } })).status).toBe(403);
+    expect((await api('PUT', { cookie: owner, body: { key: card.key, value: { ...card.value, everyMinutes: 2 }, version: card.version } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['everyMinutes'] });
+    const ok = await api('PUT', { cookie: owner, body: { key: card.key, value: { ...card.value, everyMinutes: 30 }, version: card.version } });
+    expect(ok.status).toBe(200);
+    expect(await deps.resolver.value('delivery.courier.tracking', { storeId: MOTHER_STORE_ID })).toEqual({ enabled: true, everyMinutes: 30, batch: 200 });
+    expect(await t.prisma.auditLog.count({ where: { action: 'delivery.courier.tracking.save' } })).toBe(1);
+    const booking = ok.body.cards!['delivery.courier.booking']!;
+    const half = await api('PUT', { cookie: owner, body: { key: booking.key, value: { ...booking.value, giftNote: { en: 'Gift on {date}', bn: '' } }, version: booking.version } });
+    expect(half.status).toBe(400);
+    expect((await api('PUT', { cookie: owner, body: { key: booking.key, value: { ...booking.value, maxPerRun: 20 }, version: booking.version } })).status).toBe(200);
+    expect(await deps.resolver.value('delivery.courier.booking', { storeId: MOTHER_STORE_ID })).toMatchObject({ maxPerRun: 20 });
+  });
+
+  it('follow-up 462: the packing step\'s five cards keep their registry defaults and save whole, audited; a bad value is refused', async () => {
+    const cards = (await api('GET', { cookie: reader })).body.cards!;
+    expect(cards['fulfilment.packing.check']!.value).toEqual({ mode: 'scan', allowTyped: true });
+    expect(cards['fulfilment.packing.photo']!.value).toMatchObject({ enabled: false, mode: 'required' });
+    expect(cards['fulfilment.packing.weight']!.value).toMatchObject({ enabled: false, requireReading: false });
+    expect(cards['fulfilment.packing.queue']!.value).toEqual({ doneDays: 1, listMax: 200 });
+    expect(cards['fulfilment.packing.issues']!.value).toMatchObject({ holdOrder: true, decideWithinHours: 48 });
+    const photo = cards['fulfilment.packing.photo']!;
+    expect((await api('PUT', { cookie: reader, body: { key: photo.key, value: { ...photo.value, enabled: true }, version: photo.version } })).status).toBe(403);
+    expect((await api('PUT', { cookie: owner, body: { key: photo.key, value: { ...photo.value, minPhotos: 11 }, version: photo.version } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['minPhotos'] });
+    expect((await api('PUT', { cookie: owner, body: { key: photo.key, value: { ...photo.value, enabled: true, mode: 'reminder' }, version: photo.version } })).status).toBe(200);
+    expect(await deps.resolver.value('fulfilment.packing.photo', { storeId: MOTHER_STORE_ID })).toMatchObject({ enabled: true, mode: 'reminder' });
+    const check = cards['fulfilment.packing.check']!;
+    expect((await api('PUT', { cookie: owner, body: { key: check.key, value: { ...check.value, mode: 'type' }, version: check.version } })).status).toBe(400);
+    expect((await api('PUT', { cookie: owner, body: { key: check.key, value: { mode: 'tick', allowTyped: false }, version: check.version } })).status).toBe(200);
+    expect(await deps.resolver.value('fulfilment.packing.check', { storeId: MOTHER_STORE_ID })).toEqual({ mode: 'tick', allowTyped: false });
+    expect(await t.prisma.auditLog.count({ where: { action: { in: ['fulfilment.packing.photo.save', 'fulfilment.packing.check.save'] } } })).toBe(2);
+  });
+
+  it('follow-up 431: the couriers\' area lists card keeps its default and saves whole', async () => {
+    const card = (await api('GET', { cookie: owner })).body.cards!['delivery.courier.zoneSync']!;
+    expect(card.value).toEqual({ enabled: true, everyDays: 7, callsPerRun: 600, areas: true, autoMatch: true, unmapped: 'whenRequired' });
+    expect((await api('PUT', { cookie: owner, body: { key: card.key, value: { ...card.value, unmapped: 'never' }, version: card.version } })).status).toBe(400);
+    expect((await api('PUT', { cookie: owner, body: { key: card.key, value: { ...card.value, everyDays: 14 }, version: card.version } })).status).toBe(200);
+    expect(await deps.resolver.value('delivery.courier.zoneSync', { storeId: MOTHER_STORE_ID })).toMatchObject({ everyDays: 14 });
+    expect(await t.prisma.auditLog.count({ where: { action: 'delivery.courier.zoneSync.save' } })).toBe(1);
+  });
 });
