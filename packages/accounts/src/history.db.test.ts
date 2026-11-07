@@ -74,6 +74,34 @@ describe.skipIf(!HAS_TEST_DB)('PR 150 · the whole order history', () => {
     expect(await orderLifecycle(f.deps(), { storeId: f.B, number: 'H-LIFE', customerId: me.id, visitorId: null })).toBeNull();
     expect(await orderLifecycle(f.deps(), { storeId: f.A, number: 'NO-SUCH', customerId: me.id, visitorId: null })).toBeNull();
   });
+  it('follow-up 303: with the courier\'s news on, his parcel\'s own steps; never an exchange\'s parcel, and nothing read while it is off', async () => {
+    const db = f.t.prisma;
+    const o = await f.order({ customerId: me.id, number: 'H-303', status: 'IN_TRANSIT', placedAt: new Date('2026-10-24T06:00:00Z'), times: { handedOverAt: new Date('2026-10-24T11:00:00Z') } });
+    const courier = await db.courierAccount.create({ data: { storeId: f.A, providerKey: 'mock', name: 'Test courier 303', enabled: true } });
+    const ship = (key: string, exchange: boolean) =>
+      db.shipment.create({ data: { storeId: f.A, orderId: o.id, courierAccountId: courier.id, status: 'OUT_FOR_DELIVERY', bookedAt: new Date('2026-10-24T10:00:00Z'), idempotencyKey: key, isExchangeLeg: exchange } });
+    const s = await ship('h303-a', false);
+    const x = await ship('h303-x', true);
+    for (const [sh, status, at, note] of [
+      [s, 'IN_TRANSIT', '2026-10-24T12:00:00Z', null],
+      [s, 'OUT_FOR_DELIVERY', '2026-10-25T08:00:00Z', 'rider: gate locked'],
+      [s, 'ATTEMPT_FAILED', '2026-10-25T13:00:00Z', 'rider: customer did not pick up'],
+      [x, 'OUT_FOR_DELIVERY', '2026-10-25T09:00:00Z', null],
+    ] as const)
+      await db.shipmentEvent.create({ data: { storeId: f.A, shipmentId: sh.id, status, occurredAt: new Date(at), riderNote: note } });
+    const of = (courierRule?: { enabled: boolean; exceptions: boolean }) => orderLifecycle(f.deps(), { storeId: f.A, number: 'H-303', customerId: me.id, visitorId: null, courier: courierRule });
+    expect((await of({ enabled: true, exceptions: true }))?.map((r) => [r.kind, r.at])).toEqual([
+      ['placed', '2026-10-24T06:00:00.000Z'],
+      ['courierBooked', '2026-10-24T10:00:00.000Z'],
+      ['courier', '2026-10-24T11:00:00.000Z'],
+      ['outForDelivery', '2026-10-25T08:00:00.000Z'],
+      ['tryFailed', '2026-10-25T13:00:00.000Z'],
+    ]);
+    expect(JSON.stringify(await of({ enabled: true, exceptions: true }))).not.toMatch(/rider|gate/);
+    expect((await of({ enabled: true, exceptions: false }))?.map((r) => r.kind)).toEqual(['placed', 'courierBooked', 'courier', 'outForDelivery']);
+    expect((await of({ enabled: false, exceptions: true }))?.map((r) => r.kind)).toEqual(['placed', 'courier']);
+    expect((await of())?.map((r) => r.kind)).toEqual(['placed', 'courier']);
+  });
   it('follow-up 300: on the Bengali page the pieces in "What happened" carry the product and colour names in Bengali', async () => {
     const db = f.t.prisma;
     const navy = await db.colour.create({ data: { storeId: f.A, key: 'navy-300', nameEn: 'Navy', nameBn: 'নেভি', hex: '#1F2A44' } });

@@ -7,6 +7,10 @@
 //   order service's timeline rows that are about him or his parcel — his edits and the team's, a piece added or taken
 //   out, his two-size answer, his cancel request and its answer, the advance. Never the team's internal rows (notes,
 //   flags, holds, duplicate and risk checks), never a staff member's name, never a note the team wrote.
+// - Follow-up 303: with the courier's news on (`account.track.courier`, off as shipped), the courier's own steps the
+//   shipping side records (ShipmentEvent): booked, out for delivery, a delivery try that failed (with `exceptions`
+//   only, as PR 184's line), the return on its way. Never the rider's note, the courier's raw words, a lost or damaged
+//   parcel (PR 184 never calls a parcel lost to him), nor an exchange's own parcels (his exchange card tells those).
 import type { OrderState, OrderTimes } from './pure';
 
 /** PR 150 — the groups My orders can show ("all" is every placed order). */
@@ -48,7 +52,11 @@ export type LifeKind =
   | 'cancelAsked'
   | 'cancelKept'
   | 'packed'
+  | 'courierBooked'
   | 'courier'
+  | 'outForDelivery'
+  | 'tryFailed'
+  | 'returning'
   | 'delivered'
   | 'partDelivered'
   | 'returned'
@@ -102,25 +110,74 @@ const rec = (v: unknown): Record<string, unknown> => (v && typeof v === 'object'
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v : null);
 const byOf = (actorType: string): 'you' | 'shop' => (actorType === 'CUSTOMER' ? 'you' : 'shop');
 
-/** The order of rows that happened in the same second (a step before what it caused). */
-const RANK: Readonly<Record<LifeKind, number>> = {
-  placed: 0,
-  advanceWait: 1,
-  advancePaid: 2,
-  confirmed: 3,
-  edited: 4,
-  added: 4,
-  removed: 4,
-  sizeAnswered: 4,
-  cancelAsked: 5,
-  cancelKept: 6,
-  packed: 7,
-  courier: 8,
-  delivered: 9,
-  partDelivered: 9,
-  returned: 10,
-  cancelled: 11,
+/** The order of rows that happened in the same second (a step before what it caused); kinds in one group share a place. */
+const SAME_SECOND: readonly (readonly LifeKind[])[] = [
+  ['placed'],
+  ['advanceWait'],
+  ['advancePaid'],
+  ['confirmed'],
+  ['edited', 'added', 'removed', 'sizeAnswered'],
+  ['cancelAsked'],
+  ['cancelKept'],
+  ['packed'],
+  ['courierBooked'],
+  ['courier'],
+  ['outForDelivery'],
+  ['tryFailed'],
+  ['returning'],
+  ['delivered', 'partDelivered'],
+  ['returned'],
+  ['cancelled'],
+];
+const RANK = Object.fromEntries(SAME_SECOND.flatMap((g, i) => g.map((k) => [k, i]))) as Readonly<Record<LifeKind, number>>;
+
+/** Follow-up 303 — one of the order's parcels as "What happened" reads it (never an exchange's own parcel). */
+export interface LifeParcelRow {
+  status: string;
+  bookedAt: Date | string | null;
+  /** The courier's recorded steps of this parcel, every status, any order (`ShipmentEvent.status` and `occurredAt`). */
+  events: readonly { status: string; at: Date | string }[];
+}
+
+/** The courier's own steps "What happened" may show (`exceptions` adds the failed tries); any other status between
+ * two of them (picked up, in transit) makes the next one its own row. */
+const PARCEL_KIND: Readonly<Record<string, { kind: LifeKind; problem: boolean }>> = {
+  OUT_FOR_DELIVERY: { kind: 'outForDelivery', problem: false },
+  ATTEMPT_FAILED: { kind: 'tryFailed', problem: true },
+  ADDRESS_PROBLEM: { kind: 'tryFailed', problem: true },
+  RETURNING: { kind: 'returning', problem: false },
 };
+
+/** A booking that never left: still being booked, held for review, failed or cancelled (he never hears of it). */
+const NOT_A_BOOKING = new Set(['BOOKING', 'IN_REVIEW', 'BOOKING_FAILED', 'CANCELLED', 'CANCEL_REQUESTED']);
+
+/**
+ * Follow-up 303 — the courier's steps of his parcels, oldest first: each parcel's booking, then its recorded steps the
+ * customer may see. One courier status said twice in a row (a poll and the webhook of one step) is one row; the return
+ * on its way is said once a parcel. Nothing when the owner keeps the courier's news off.
+ */
+export function parcelStepsOf(parcels: readonly LifeParcelRow[], rule: { enabled: boolean; exceptions: boolean }): LifeStep[] {
+  if (!rule.enabled) return [];
+  const out: LifeStep[] = [];
+  for (const p of parcels) {
+    if (p.bookedAt && !NOT_A_BOOKING.has(p.status)) out.push({ at: iso(p.bookedAt), kind: 'courierBooked', by: null });
+    let last: LifeKind | null = null;
+    let returning = false;
+    for (const e of [...p.events].sort((a, b) => iso(a.at).localeCompare(iso(b.at)))) {
+      const k = PARCEL_KIND[e.status];
+      if (!k) {
+        last = null;
+        continue;
+      }
+      if (k.kind === last) continue;
+      last = k.kind;
+      if ((k.problem && !rule.exceptions) || (k.kind === 'returning' && returning)) continue;
+      if (k.kind === 'returning') returning = true;
+      out.push({ at: iso(e.at), kind: k.kind, by: null });
+    }
+  }
+  return out;
+}
 
 /** An edit row as his page tells it (null: nothing in it he would recognise). */
 function editStep(e: LifeEventRow): LifeStep | null {
@@ -138,10 +195,11 @@ function editStep(e: LifeEventRow): LifeStep | null {
 
 /**
  * The order's life, oldest first: its stored step times, and the timeline rows that are his to see. A cancelled order
- * says who cancelled it (he did, or the shop), never the team's reason code.
+ * says who cancelled it (he did, or the shop), never the team's reason code. `parcel` adds the courier's own steps
+ * (follow-up 303, `parcelStepsOf`).
  */
-export function lifecycleOf(o: { status: OrderState; times: OrderTimes }, events: readonly LifeEventRow[]): LifeStep[] {
-  const out: LifeStep[] = [];
+export function lifecycleOf(o: { status: OrderState; times: OrderTimes }, events: readonly LifeEventRow[], parcel: readonly LifeStep[] = []): LifeStep[] {
+  const out: LifeStep[] = [...parcel];
   const t = o.times;
   const step = (kind: LifeKind, at: Date | string | null | undefined, by: LifeStep['by'] = null) => {
     if (at) out.push({ at: iso(at), kind, by });

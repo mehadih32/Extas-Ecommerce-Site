@@ -3,7 +3,8 @@
 // - follow-up 260 (PR 143): the customer's own edit — what he may change now, or why not (`orders.edit.customer`, off
 //   by default: no card at all while it is off, and none on a cancelled or returned order);
 // - follow-up 261 (PR 146): the two-size question still open on it (`orders.twoSize`, off by default);
-// - S05 · PR 150: "What happened" — the order's life as he may see it (`account.history.timeline`);
+// - S05 · PR 150: "What happened" — the order's life as he may see it (`account.history.timeline`); follow-up 303: with
+//   the courier's own steps of his parcel while the courier's news is on (`account.track.courier`, off as shipped);
 // - Gate F-041 (PR 172 follow-up): the refunds on it and where each stands (always, when there is one: it is his money);
 // - S08 · PR 186: the exchange part — which pieces he may still exchange (the buttons under each line) and his exchanges
 //   on this order (`orders.exchange.account`, off by default; his account only, never a guest's browser).
@@ -59,7 +60,7 @@ async function part<T>(what: string, run: () => Promise<T>): Promise<T | null> {
   }
 }
 
-export async function orderExtras(c: Pick<ShopContext, 'storeId' | 'lang'>, number: string, status: string, opts: { timeline: boolean }): Promise<OrderExtras> {
+export async function orderExtras(c: Pick<ShopContext, 'storeId' | 'lang'>, number: string, status: string, opts: { timeline: boolean; courier?: { enabled: boolean; exceptions: boolean } }): Promise<OrderExtras> {
   const deps = accountDeps();
   if (!deps) return NONE;
   const [me, visitor, trial] = await Promise.all([signedIn(), visitorId(), tryCardsOn()]);
@@ -81,7 +82,7 @@ export async function orderExtras(c: Pick<ShopContext, 'storeId' | 'lang'>, numb
           return st.mode === 'none' ? null : { mode: st.mode, reasons: st.reasons };
         }),
     ENDED.has(status) ? null : part('two-size question', async () => customerTwoSizeState(od, who, number)),
-    opts.timeline ? part('timeline', () => orderLifecycle(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId, lang: c.lang === 'bn' ? 'bn' : 'en' })) : null,
+    opts.timeline ? part('timeline', () => orderLifecycle(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId, lang: c.lang === 'bn' ? 'bn' : 'en', ...(opts.courier ? { courier: opts.courier } : {}) })) : null,
     part('refunds', () => orderRefunds(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId })),
     who.customerId ? part('exchange part', () => customerExchangeState(od, { ...who, visitorId: null }, number)) : null,
     status === 'CANCELLED' ? part('cancel note', () => orderCancelNote(deps, { storeId: c.storeId, number, customerId: who.customerId, visitorId: who.visitorId, lang: c.lang === 'bn' ? 'bn' : 'en' })) : null,

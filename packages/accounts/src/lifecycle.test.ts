@@ -1,7 +1,7 @@
 // S05 · PR 150 — an order's life as the customer may see it: the stored steps, his and the team's changes, never the
 // team's own rows; and the groups of My orders.
 import { describe, expect, it } from 'vitest';
-import { isOrderShow, lifecycleOf, pageOf, showOf, type LifeEventRow } from './lifecycle';
+import { isOrderShow, lifecycleOf, pageOf, parcelStepsOf, showOf, type LifeEventRow } from './lifecycle';
 
 const T = { placedAt: '2026-10-20T06:00:00Z', confirmedAt: '2026-10-20T08:00:00Z', packedAt: '2026-10-21T06:00:00Z', handedOverAt: '2026-10-21T10:00:00Z' };
 const ev = (type: string, at: string, data: unknown = {}, actorType = 'STAFF', line: string | null = null): LifeEventRow => ({ type, at, data, actorType, line });
@@ -92,5 +92,38 @@ describe('PR 150 · what happened to an order', () => {
   it('the advance: waiting for it, then received', () => {
     const life = lifecycleOf({ status: 'CONFIRMED', times: { placedAt: T.placedAt, confirmedAt: T.confirmedAt } }, [ev('order.awaitAdvance', '2026-10-20T06:00:00Z', {}, 'SYSTEM'), ev('order.recordAdvance', '2026-10-20T07:00:00Z')]);
     expect(life.map((s) => s.kind)).toEqual(['placed', 'advanceWait', 'advancePaid', 'confirmed']);
+  });
+});
+
+describe('follow-up 303 · the courier\'s own steps in "What happened"', () => {
+  const at = (h: number) => new Date(Date.UTC(2026, 9, 21, h)).toISOString();
+  const parcel = (status: string, events: [string, number][], bookedAt: string | null = at(9)) => ({ status, bookedAt, events: events.map(([s, h]) => ({ status: s, at: at(h) })) });
+  const on = { enabled: true, exceptions: true };
+
+  it('booked, out for delivery, a failed try and the return on its way, oldest first, among the order\'s own steps', () => {
+    const steps = parcelStepsOf([parcel('RETURNING', [['RETURNING', 20], ['PENDING_PICKUP', 9], ['OUT_FOR_DELIVERY', 12], ['ATTEMPT_FAILED', 14], ['IN_TRANSIT', 15], ['OUT_FOR_DELIVERY', 16], ['RETURNING', 21]])], on);
+    expect(steps.map((s) => [s.kind, s.at])).toEqual([
+      ['courierBooked', at(9)],
+      ['outForDelivery', at(12)],
+      ['tryFailed', at(14)],
+      ['outForDelivery', at(16)],
+      ['returning', at(20)],
+    ]);
+    expect(steps.every((s) => s.by === null)).toBe(true);
+    const life = lifecycleOf({ status: 'IN_TRANSIT', times: T }, [], steps);
+    expect(life.map((s) => s.kind)).toEqual(['placed', 'confirmed', 'packed', 'courierBooked', 'courier', 'outForDelivery', 'tryFailed', 'outForDelivery', 'returning']);
+  });
+
+  it('one step said twice in a row is one row; without `exceptions` no failed try, and the next try is still its own row', () => {
+    const p = parcel('OUT_FOR_DELIVERY', [['OUT_FOR_DELIVERY', 12], ['OUT_FOR_DELIVERY', 12], ['ATTEMPT_FAILED', 14], ['OUT_FOR_DELIVERY', 16]]);
+    expect(parcelStepsOf([p], on).map((s) => s.kind)).toEqual(['courierBooked', 'outForDelivery', 'tryFailed', 'outForDelivery']);
+    expect(parcelStepsOf([p], { enabled: true, exceptions: false }).map((s) => s.kind)).toEqual(['courierBooked', 'outForDelivery', 'outForDelivery']);
+  });
+
+  it('never a lost or damaged parcel, a booking that never left, or anything while the courier\'s news is off', () => {
+    expect(parcelStepsOf([parcel('LOST', [['OUT_FOR_DELIVERY', 12], ['LOST', 13], ['DAMAGED', 14]])], on).map((s) => s.kind)).toEqual(['courierBooked', 'outForDelivery']);
+    for (const st of ['BOOKING', 'IN_REVIEW', 'BOOKING_FAILED', 'CANCELLED', 'CANCEL_REQUESTED']) expect(parcelStepsOf([parcel(st, [])], on), st).toEqual([]);
+    expect(parcelStepsOf([parcel('PENDING_PICKUP', [], null)], on)).toEqual([]);
+    expect(parcelStepsOf([parcel('RETURNING', [['OUT_FOR_DELIVERY', 12], ['RETURNING', 20]])], { enabled: false, exceptions: true })).toEqual([]);
   });
 });
