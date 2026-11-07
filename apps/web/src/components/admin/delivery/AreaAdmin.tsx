@@ -5,7 +5,8 @@
 // spelling unless unticked), edit its other spellings, move it to a band or back to the map, merge it into another
 // spelling of the same place (archived, never deleted). "Add a place" puts a place the list lacks inside another one.
 // Below, the owner's list: the exception to the map, with "Take off" (archived) and "Put back". Changing needs
-// `delivery.areas`; the server checks it again.
+// `delivery.areas`; the server checks it again. Follow-up 417: a place's drawer lists the places merged into it, each
+// with "Undo the merge" (two presses): the merged place comes back with its own names and what the merge moved goes back.
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import type { ListedPlace, PlaceAnswer, PlaceDetail } from '@extas/delivery';
@@ -238,6 +239,7 @@ function PlaceDrawer({ d, lang, id, bands, canEdit, onClose, onChanged }: { d: D
   const [band, setBand] = useState('');
   const [targets, setTargets] = useState<PlaceAnswer[] | null>(null);
   const [into, setInto] = useState<PlaceAnswer | null>(null);
+  const [undoing, setUndoing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<Said>(null);
 
@@ -290,6 +292,19 @@ function PlaceDrawer({ d, lang, id, bands, canEdit, onClose, onChanged }: { d: D
     );
   const merge = async (target: PlaceAnswer) => {
     if (await run(() => call('POST', `${url}/merge`, { intoId: target.id }), () => t(d, 'delivery.place.merged', { from: name, into: nameOf(lang, target) }), false)) onClose();
+  };
+
+  // follow-up 417: undo a merge into this place (the drawer then shows this place without the spellings it was given)
+  const unmerge = async (fromId: string, fromName: string) => {
+    setUndoing(null);
+    await run(
+      async () => {
+        const a = await call('POST', `/api/admin/delivery/places/${encodeURIComponent(fromId)}/unmerge`, {});
+        if (a.status !== 200) return a;
+        return call('GET', url);
+      },
+      () => t(d, 'delivery.place.undone', { name: fromName }),
+    );
   };
 
   const listedLive = p?.listed && !p.listed.archived ? p.listed.bandId : '';
@@ -367,6 +382,33 @@ function PlaceDrawer({ d, lang, id, bands, canEdit, onClose, onChanged }: { d: D
               ) : null}
             </div>
           </div>
+          {p.merges.length ? (
+            <div className="dz-sec" data-testid="dz-merges">
+              <h3 className="a2-h4">{t(d, 'delivery.place.history')}</h3>
+              <p className="a2-xs a2-mute">{t(d, 'delivery.place.historyHelp')}</p>
+              <ul className="dz-list">
+                {p.merges.map((m) => {
+                  const from = lang === 'bn' && m.fromNameBn ? m.fromNameBn : m.fromNameEn;
+                  return (
+                    <li key={m.recordId} className="dz-li" data-testid="dz-merge-row">
+                      <div className="dz-main">
+                        <b>{from}</b>
+                        <div className="a2-xs a2-mute">
+                          {t(d, 'delivery.place.historyLine', { name: from, day: String(m.at).slice(0, 10), places: String(m.children), addresses: String(m.addresses) })}
+                          {m.undoneAt ? `${t(d, 'delivery.sep')}${t(d, 'delivery.place.historyUndone')}` : ''}
+                        </div>
+                      </div>
+                      {canEdit && m.undoable ? (
+                        <button type="button" className={`a2-btn${undoing === m.recordId ? ' badf' : ''}`} disabled={busy} onClick={() => (undoing === m.recordId ? void unmerge(m.fromId, from) : setUndoing(m.recordId))} data-testid="dz-unmerge">
+                          {t(d, undoing === m.recordId ? 'delivery.place.undoSure' : 'delivery.place.undo')}
+                        </button>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
           {canEdit ? (
             <div className="dz-sec">
               <h3 className="a2-h4">{t(d, 'delivery.place.merge')}</h3>

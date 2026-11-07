@@ -14,6 +14,7 @@
 //   GET    /api/admin/delivery/places/:id          PR 502: one place — its names, spellings, what is under it, its band
 //   PATCH  /api/admin/delivery/places/:id          PR 502: {nameEn?, nameBn?, keepOld?} rename · {aliases} the spellings
 //   POST   /api/admin/delivery/places/:id/merge    PR 502: {intoId} merge into another place (archived, never deleted)
+//   POST   /api/admin/delivery/places/:id/unmerge  follow-up 417: undo the latest merge of this (merged) place
 //   POST   /api/admin/delivery/resolve             {line, savedAreaId?, confirmed?} "Try an address": what checkout does
 //   POST   /api/delivery/resolve                   the same read for the checkout (public: same-site, size-capped, reads
 //                                                  only the gazetteer and the bands — never a customer)
@@ -118,6 +119,13 @@ export function placeMergeHandler(request: Request, deps: AdminDeps | null, area
   if (method(request) !== 'POST') return notAllowed();
   if (!isUuid(areaId)) return badId('areaId');
   return handle(request, deps, 'delivery.areas', async (c) => ({ merge: await del.mergePlace(c.deps, c.who, areaId, await body(request)) }));
+}
+
+/** Follow-up 417 — undo a merge: the merged place comes back, what the merge moved goes back (audited). */
+export function placeUnmergeHandler(request: Request, deps: AdminDeps | null, areaId: string): Promise<Response> {
+  if (method(request) !== 'POST') return notAllowed();
+  if (!isUuid(areaId)) return badId('areaId');
+  return handle(request, deps, 'delivery.areas', async (c) => ({ unmerge: await del.unmergePlace(c.deps, c.who, areaId) }));
 }
 
 export function tryAddressHandler(request: Request, deps: AdminDeps | null): Promise<Response> {

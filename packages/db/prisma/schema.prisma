@@ -231,6 +231,7 @@ model Store {
   gatewayStatements       GatewayStatement[]
   gatewayStatementLines   GatewayStatementLine[]
   courierAccounts         CourierAccount[]
+  geoMergeRecords         GeoMergeRecord[]
   courierRateCards        CourierRateCard[]
   shipments               Shipment[]
   shipmentEvents          ShipmentEvent[]
@@ -3441,6 +3442,38 @@ model GeoArea {
   @@index([level, nameEn])
   @@index([aliases], type: Gin)
   @@index([postcodes], type: Gin)
+}
+
+/// Follow-up 417 (PR 502): one merge of a place into another, with what the merge moved, so the owner can undo it from
+/// the place's history (Delivery › Zones & charges). Written in the same transaction as the merge; an undo marks it
+/// (`undoneAt`), never deletes it. Merges made before this record existed have none and cannot be undone.
+/// @stage S06 · PR 502 — follow-up 417.
+model GeoMergeRecord {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  /// The store that acted (the owner's list rows it changed are this store's).
+  storeId        Int
+  store          Store     @relation(fields: [storeId], references: [id])
+  /// The place merged (archived) and the place it went into.
+  fromId         String    @db.Uuid
+  intoId         String    @db.Uuid
+  /// The spellings and postcodes the merge added to the place that stays (an undo takes only these off again).
+  addedAliases   String[]
+  addedPostcodes String[]
+  /// The places moved from under the merged one: [{id, parentId, ancestorIds, toParentId, toAncestorIds}].
+  children       Json
+  /// The saved customer addresses that moved to the place that stays.
+  addressIds     String[]  @db.Uuid
+  /// The owner's list rows: {fromRowId, intoRowId, intoWas: none|archived|live, intoBandId, intoArchivedAt}.
+  bands          Json
+  actorId        String?   @db.Uuid
+  mergedAt       DateTime  @default(now()) @db.Timestamptz(3)
+  undoneAt       DateTime? @db.Timestamptz(3)
+  undoneById     String?   @db.Uuid
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([fromId, mergedAt])
+  @@index([intoId, mergedAt])
 }
 
 enum GeoLevel {
