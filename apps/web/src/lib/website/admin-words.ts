@@ -141,6 +141,8 @@ import adminReviewsEn from '../../../messages/admin-reviews.en.json';
 import adminReviewsBn from '../../../messages/admin-reviews.bn.json';
 import adminRulesEn from '../../../messages/admin-rules.en.json';
 import adminRulesBn from '../../../messages/admin-rules.bn.json';
+import adminSearchesEn from '../../../messages/admin-searches.en.json';
+import adminSearchesBn from '../../../messages/admin-searches.bn.json';
 import adminSeasonalEn from '../../../messages/admin-seasonal.en.json';
 import adminSeasonalBn from '../../../messages/admin-seasonal.bn.json';
 import adminSeasonalHomeEn from '../../../messages/admin-seasonal-home.en.json';
@@ -262,6 +264,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-returns': { en: adminReturnsEn, bn: adminReturnsBn },
   'admin-reviews': { en: adminReviewsEn, bn: adminReviewsBn },
   'admin-rules': { en: adminRulesEn, bn: adminRulesBn },
+  'admin-searches': { en: adminSearchesEn, bn: adminSearchesBn },
   'admin-seasonal': { en: adminSeasonalEn, bn: adminSeasonalBn },
   'admin-seasonal-home': { en: adminSeasonalHomeEn, bn: adminSeasonalHomeBn },
   'admin-security': { en: adminSecurityEn, bn: adminSecurityBn },

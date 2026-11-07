@@ -10,7 +10,9 @@
 // Follow-up 118: the cards get the category page's back view and Quick add on a computer (CardDeskMount) and the
 // added-to-bag panel it opens (AddedSlot, `?added=`), on the results and on the nothing-found picks alike. No
 // ItemList JSON-LD: the page is noindex.
+// PR 72 follow-up 100: each search's words are counted for Reports › Searches while `search.insights` is on (off).
 import type { Metadata } from 'next';
+import { after } from 'next/server';
 import { cache } from 'react';
 import { AddedSlot, closeHrefOf } from '@/components/shop/bag/AddedSlot';
 import { CardDeskMount } from '@/components/shop/CardDeskMount';
@@ -27,6 +29,7 @@ import { waHref } from '@/lib/shop/links';
 import { shopMetadata } from '@/lib/shop/meta';
 import { ROUTES } from '@/lib/shop/routes';
 import { runSearch } from '@/lib/shop/search';
+import { recordSearch } from '@/lib/search-insights';
 import { queryFrom, searchChips, searchHref, searchPanelProps, type SearchChip } from '@/lib/shop/search-model';
 import { categoryName } from '@/lib/shop/shell-model';
 import '../collections/[slug]/category.css';
@@ -86,6 +89,9 @@ export default async function SearchPage(props: Props) {
     res.categories > 0 ? categoriesByIds(c.storeId, out.categories.slice(0, res.categories)) : [],
   ]);
   const unavailable = out.unavailable || Boolean(listing?.unavailable);
+  // follow-up 100: the words counted for Reports › Searches, after the page is sent (only while the owner keeps them;
+  // a search the catalogue could not answer is not counted)
+  if (q && !unavailable) after(() => recordSearch(c.storeId, q, out.products.length > 0));
   const rows: ListingRow[] = listing
     ? placeSoldOut(
         listing.items.map((item, i) => ({ card: listing.cards[i]!, item, inStock: item.inStock })),

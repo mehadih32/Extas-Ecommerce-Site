@@ -129,6 +129,23 @@ export const searchResultsSchema = z
   })
   .strict();
 
+/**
+ * PR 72 follow-up 100 — what shoppers search for (Reports › Searches): each results-page search's words counted per day,
+ * and how often nothing was found, so the owner sees what customers look for that the shop lacks. Words only: never who
+ * searched; words that look like a phone number or an e-mail are never kept. Off as shipped (CN-018). `days`: the
+ * longest period the report offers (the rows stay; nothing is deleted).
+ */
+export const searchInsightsSchema = z
+  .object({
+    keep: z.boolean(),
+    days: z.int().min(7).max(365),
+    /** The most words each list of the report shows. */
+    rows: z.int().min(5).max(200),
+  })
+  .strict();
+
+export type SearchInsightsSettings = z.output<typeof searchInsightsSchema>;
+
 const json = { scope: 'store', valueType: 'JSON', isOwnerData: false, isPublic: true, version: V } as const;
 
 /** The demo's help-page words (07-help-search.js HELP_INDEX), grouped by the help page that answers them now. */
@@ -285,6 +302,17 @@ export const searchSettings = {
     labelKey: 'search.results.label',
     helpKey: 'search.results.help',
     sortOrder: 60,
+  }),
+  'search.insights': setting({
+    ...json,
+    version: 282,
+    isPublic: false,
+    group: 'search',
+    schema: searchInsightsSchema,
+    default: { keep: false, days: 90, rows: 50 },
+    labelKey: 'search.insights.label',
+    helpKey: 'search.insights.help',
+    sortOrder: 70,
   }),
 };
 

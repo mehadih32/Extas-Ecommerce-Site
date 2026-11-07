@@ -205,6 +205,7 @@ export const NOT_EYE: Readonly<Record<string, NotEyeReason>> = {
   'shop.pageEdit:': 'own-page', // the owner's on-page edit mode: its own page, Website › More › On-page edit (PR 600)
   'pdp.reviewReply:': 'own-page', // the shop's reply under a review: its own card on Products › Reviews (follow-up 233)
   'pdp.qaAsk:': 'own-page', // "Ask a question": its own card on Products › Reviews › Questions (follow-up 183)
+  'search.insights:': 'own-page', // what shoppers search for: its own card on Reports › Searches (follow-up 100)
 };
 
 /** The settings groups whose every yes/no value must be an eye-toggle or in NOT_EYE. */

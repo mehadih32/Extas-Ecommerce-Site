@@ -1,0 +1,63 @@
+{
+  "srch": {
+    "metaTitle": "Searches",
+    "title": "Searches",
+    "sub": "What shoppers search for on the shop, and what found nothing — words only, never who searched.",
+    "off": "Off: searches are not counted. Switch \"Count what shoppers search for\" on under More options, and the words start to appear here from the next search.",
+    "period": {
+      "label": "Period",
+      "d": "{n} days"
+    },
+    "range": "{from} – {to}",
+    "kpi": {
+      "searches": "Searches",
+      "searchesNote": "On the results page",
+      "empty": "Found nothing",
+      "emptyNote": "{pct} of searches",
+      "words": "Different words",
+      "wordsNote": "Searched at least once"
+    },
+    "missing": {
+      "title": "Found nothing",
+      "sub": "Words shoppers looked for that found no product: a style to stock, or a word to add to the search words.",
+      "none": "No search found nothing in this period."
+    },
+    "top": {
+      "title": "Most searched",
+      "sub": "The words searched most in this period.",
+      "none": "No search counted in this period yet."
+    },
+    "col": {
+      "word": "Word",
+      "searches": "Searches",
+      "empty": "Found nothing"
+    },
+    "open": "Search it on the shop",
+    "note": "A word is lower-cased and cut at 40 characters. Words that look like a phone number, an order number or an e-mail are never kept. Nothing is deleted.",
+    "set": {
+      "more": "More options",
+      "h": "Count what shoppers search for",
+      "d": "Each search on the results page adds one to its words for the day; words only.",
+      "keep": "Count searches",
+      "keepHelp": "Off as shipped. While off, nothing is counted.",
+      "days": "Longest period (days)",
+      "daysHelp": "The longest period this report offers (7 to 365).",
+      "rows": "Words per list",
+      "rowsHelp": "How many words each list shows (5 to 200).",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Unsaved changes",
+      "readOnly": "You can see this card; changing it needs \"Change settings\".",
+      "err": {
+        "STALE": "Someone else changed this card. It has been read again.",
+        "INVALID_INPUT": "A value is out of range.",
+        "forbidden": "You may not change this.",
+        "unauthorized": "Sign in again.",
+        "network": "No connection. Try again.",
+        "other": "Could not save. Try again."
+      }
+    }
+  }
+}
