@@ -149,7 +149,8 @@
     "healthHistory": "পরীক্ষার ইতিহাস",
     "healthFixes": "অনুমতির অপেক্ষায়",
     "aiAudit": "চেকলিস্ট অডিট",
-    "supportAnalytics": "সাপোর্টের হিসাব"
+    "supportAnalytics": "সাপোর্টের হিসাব",
+    "reportsSearches": "সার্চ রিপোর্ট"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

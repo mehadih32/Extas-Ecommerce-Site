@@ -157,6 +157,7 @@
     { "id": "orders/calls", "route": "/admin/orders/confirm/calls" },
     { "id": "reports/delivery", "route": "/admin/reports/delivery" },
     { "id": "reports/customers", "route": "/admin/reports/customers" },
+    { "id": "reports/searches", "route": "/admin/reports/searches" },
     { "id": "settings/store", "route": "/admin/settings/store" },
     { "id": "settings/policies", "route": "/admin/settings/policies" },
     { "id": "settings/keys", "route": "/admin/integrations" },

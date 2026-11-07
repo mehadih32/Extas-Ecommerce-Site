@@ -149,7 +149,8 @@
     "healthHistory": "Run history",
     "healthFixes": "Fixes to approve",
     "aiAudit": "Checklist audit",
-    "supportAnalytics": "Support analytics"
+    "supportAnalytics": "Support analytics",
+    "reportsSearches": "Searches report"
   },
   "login": {
     "metaTitle": "Admin sign-in",

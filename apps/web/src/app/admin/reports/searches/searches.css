@@ -1,0 +1,2 @@
+/* PR 72 follow-up 100 — Reports › Searches: a word opens its search on the shop; a full tap target on a phone. */
+.adm2 .srch-w { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; color: inherit; overflow-wrap: anywhere; }

@@ -26,6 +26,10 @@
     "results": {
       "label": "Search results page",
       "help": "The results page has the category page's filters and sort. On top: help answers and matching categories. When nothing is found it says so honestly, offers the nearest known word, shows what part of the words finds, the newest styles, the categories and a WhatsApp button."
+    },
+    "insights": {
+      "label": "What shoppers search for",
+      "help": "Counts the words shoppers search on the results page, per day, and how often nothing was found — shown on Reports › Searches. Words only: never who searched, and a word that looks like a phone number or an e-mail is never kept. Off until you switch it on. The longest period the report offers, and how many words each list shows."
     }
   }
 }

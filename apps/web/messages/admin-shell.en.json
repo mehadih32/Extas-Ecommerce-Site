@@ -66,7 +66,8 @@
         "customers": "Customers",
         "team": "Team",
         "areas": "Sales by area",
-        "experiments": "Experiments"
+        "experiments": "Experiments",
+        "searches": "Searches"
       },
       "settings": {
         "store": "Store details",

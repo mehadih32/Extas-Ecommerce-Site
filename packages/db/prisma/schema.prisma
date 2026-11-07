@@ -178,6 +178,7 @@ model Store {
   sizeAdviceModels        SizeAdviceModel[]
   sizeRecommendations     SizeRecommendation[]
   searchSynonyms          SearchSynonym[]
+  searchTerms             SearchTerm[]
   cachePurgeLogs          CachePurgeLog[]
   combos                  Combo[]
   comboItems              ComboItem[]
@@ -2354,6 +2355,26 @@ model SearchSynonym {
   archivedAt DateTime? @db.Timestamptz(3)
   createdAt  DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+}
+
+/// @stage S02 · PR 72 follow-up 100 — the words shoppers searched, counted per day (`search.insights`, off as shipped):
+/// how often, and how often nothing was found. Words only — never who searched, no customer, visitor or address.
+model SearchTerm {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  storeId       Int
+  store         Store    @relation(fields: [storeId], references: [id])
+  /// The day in the store's time zone.
+  day           DateTime @db.Date
+  /// Lower-cased, spaces folded, at most 40 characters.
+  term          String
+  searches      Int      @default(0)
+  /// Searches of this word that found no product.
+  emptySearches Int      @default(0)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, day, term])
+  @@index([storeId, day])
 }
 
 /// @stage S02 · PR 602 — every cache purge (price, stock, setting, new product, "Clear all cache").

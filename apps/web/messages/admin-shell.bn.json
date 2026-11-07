@@ -66,7 +66,8 @@
         "customers": "কাস্টমার",
         "team": "টিম",
         "areas": "এলাকা ধরে বিক্রি",
-        "experiments": "পরীক্ষা (A/B)"
+        "experiments": "পরীক্ষা (A/B)",
+        "searches": "সার্চ"
       },
       "settings": {
         "store": "দোকানের তথ্য",
