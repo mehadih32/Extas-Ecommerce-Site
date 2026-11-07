@@ -2,7 +2,8 @@
 // the landing page's rows and their desktop packing (D-038).
 import { describe, expect, it } from 'vitest';
 import type { SetCard, SetCardRule } from '@extas/combos/page-model';
-import { colourNames, hubRails, hubSeasons, packRails, savePct, stepLabels, viewShots, wordOf, type HubGroup } from './combo-model';
+import type { ImageSource } from '@extas/media';
+import { colourNames, hubRails, hubSeasons, packRails, savePct, setPhotoFor, stepLabels, viewShots, wordOf, type HubGroup } from './combo-model';
 import type { PdpShot } from './product-model';
 
 const photo = { src: 'x', srcset: [], width: 1, height: 1, alt: null } as unknown as PdpShot['photo'];
@@ -107,5 +108,22 @@ describe('D-038 · on a computer the rows share lines of four columns', () => {
   it('five or more cards take the whole line and scroll', () => {
     const [a] = packRails([{ key: 'a', count: 7 }]);
     expect(a).toMatchObject({ n: 4, span: 4, many: true });
+  });
+});
+
+describe('PR 93 follow-up 171 · the composed set photo (PR 575) shows only for exactly its colours', () => {
+  const image = { id: 'a1', width: 1600, height: 2000, renditions: [] } as unknown as ImageSource;
+  const photo = { image, colours: ['navy', 'khaki'] };
+  it('shows the set photo while every piece wears the colour it was made in', () => {
+    expect(setPhotoFor(photo, ['navy', 'khaki'])).toBe(image);
+  });
+  it('else the pieces side by side as before (another colour, a piece not picked yet, or no photo)', () => {
+    expect(setPhotoFor(photo, ['navy', 'white'])).toBeNull();
+    expect(setPhotoFor(photo, ['navy', null])).toBeNull();
+    expect(setPhotoFor(photo, ['navy'])).toBeNull();
+    // a piece without colours (null) matches its own null
+    expect(setPhotoFor({ image, colours: ['navy', null] }, ['navy', null])).toBe(image);
+    expect(setPhotoFor(null, ['navy', 'khaki'])).toBeNull();
+    expect(setPhotoFor(undefined, ['navy', 'khaki'])).toBeNull();
   });
 });
