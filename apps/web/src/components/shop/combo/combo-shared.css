@@ -369,6 +369,9 @@
 .shop .seg { display: inline-flex; border: 1px solid var(--input); border-radius: 20px; padding: 2px; background: var(--surface); }
 .shop .seg button { border: none; background: transparent; padding: 6px 12px; border-radius: 18px; font-size: 12.5px; font-weight: 600; cursor: pointer; color: var(--text2); }
 .shop .seg button.on { background: var(--brand); color: var(--brand-ink); }
+@media (min-width: 768px) {
+  .shop .modal.wide { max-width: 860px; }
+}
 .shop .modal-bd { padding: 18px 20px 22px; }
 .shop .mbar { position: sticky; bottom: 0px; background: var(--surface); border-top: 1px solid var(--line); padding: 10px 16px 12px; z-index: 30; }
 @media (min-width: 1024px) {
@@ -442,4 +445,30 @@
 @keyframes ctaSheenBg {0% { background-position: -80% 0px; } 15% { background-position: 180% 0px; } 100% { background-position: 180% 0px; }}
 .shop #pdp-sizes { scroll-margin-top: 84px; }
 .shop .size-pill.out:not([disabled]) { cursor: pointer; }
+.shop .pdp-step { display: inline-flex; align-items: center; border: 1px solid var(--input); border-radius: var(--radius); background: var(--surface); }
+.shop .pdp-step button { width: 44px; height: 44px; border: none; background: none; cursor: pointer; color: var(--ink); display: flex; align-items: center; justify-content: center; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.shop .pdp-step button:hover { background: var(--line2); }
+.shop .pdp-step button[aria-disabled="true"] { color: var(--muted); cursor: default; }
+.shop .pdp-step output { min-width: 62px; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+.shop .pdp-res { border: 1px solid var(--brand-line); background: var(--brand-tint); border-radius: var(--card-radius); padding: 18px; }
+.shop .pdp-res-size { font-family: var(--font-display); font-weight: 800; font-size: 52px; line-height: 1; color: var(--brand); }
+.shop.shop[data-theme="festive"] .pdp-res-size { color: var(--gold); }
+.shop .pdp-why { list-style: none; padding: 0px; margin: 14px 0px 0px; display: flex; flex-direction: column; gap: 10px; }
+.shop .pdp-why li { display: flex; gap: 10px; font-size: 13.5px; line-height: 1.45; }
+.shop .pdp-why li svg { flex-shrink: 0; color: var(--brand); margin-top: 2px; }
 .shop .warnbox { background: var(--warn-bg); color: var(--warn); border-radius: var(--radius); }
+.shop .modal.pdp-sheet { max-height: 96vh; }
+.shop .modal.pdp-sheet .modal-bd { padding: 22px 22px 26px; font-size: 15.5px; }
+.shop .modal.pdp-sheet .modal-hd .h3 { font-size: 21px !important; }
+.shop .modal.pdp-sheet .small { font-size: 15px; line-height: 1.55; }
+.shop .modal.pdp-sheet .xs { font-size: 13.5px; line-height: 1.5; }
+.shop .modal.pdp-sheet .label { font-size: 14.5px; font-weight: 750; margin-bottom: 6px; }
+.shop .modal.pdp-sheet .pdp-step button { width: 52px; height: 52px; }
+.shop .modal.pdp-sheet .pdp-step output { min-width: 78px; font-size: 20px; }
+.shop .modal.pdp-sheet .pdp-res { padding: 22px; }
+.shop .modal.pdp-sheet .pdp-res-size { font-size: 62px; }
+.shop .modal.pdp-sheet .pdp-why li { font-size: 15px; line-height: 1.55; }
+.shop .modal.pdp-sheet .btn { min-height: 54px; font-size: 16.5px; }
+@media (min-width: 768px) {
+  .shop .modal.pdp-sheet { max-width: 640px; }
+}

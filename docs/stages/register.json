@@ -4252,8 +4252,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "Lumen shell (CN-036, Lane A foundation, Launch row; batch 12; no setting, no migration): floating sidebar in the groups Daily, Grow, Business, System with the current section's submenu as an accordion and an icons-only collapse (cookie), glass top bar with search, To do, guide, EN or বাং and the moon (light/dark per person), the bell's notifications panel with \"Mark all read\" (replaces the old drawer), the phone bottom bar; the AI Center section shows only while S15 is open by PR 652's switch `stages.closedShown` and `ai.enabled` is on (one source of truth, folded in on integration); pages not yet moved stay light islands in dark until their section PR (631–648); device gate 0 fails light and dark; **follow-up (6 Nov, #87):** a long sidebar label wraps to a second line (token `--lm-lh-tight`) instead of being cut off — batch 12's push CI failed the device gate on iPad Pro 12.9 portrait (1024 px, Bengali \"সাহায্য আর অগ্রগতি\", TEXT-CUT-OFF)",
+    "note": "Lumen shell (CN-036, Lane A foundation, Launch row; batch 12; no setting, no migration): floating sidebar in the groups Daily, Grow, Business, System with the current section's submenu as an accordion and an icons-only collapse (cookie), glass top bar with search, To do, guide, EN or বাং and the moon (light/dark per person), the bell's notifications panel with \"Mark all read\" (replaces the old drawer), the phone bottom bar; the AI Center section shows only while S15 is open by PR 652's switch `stages.closedShown` and `ai.enabled` is on (one source of truth, folded in on integration); pages not yet moved stay light islands in dark until their section PR (631–648); device gate 0 fails light and dark; **follow-up (6 Nov, #87):** a long sidebar label wraps to a second line (token `--lm-lh-tight`) instead of being cut off — batch 12's push CI failed the device gate on iPad Pro 12.9 portrait (1024 px, Bengali \"সাহায্য আর অগ্রগতি\", TEXT-CUT-OFF); **CN-037 go-live MUST fix (7 Nov, #97):** the admin phone bottom bar is a sealed box that clips what it holds, so a waiting badge never runs it past a 320 px phone — device gate's new PHONE-BAR-OUTSIDE check",
     "github": [
+     "#97, 7 Nov",
      "#87, 6 Nov",
      "#86, 6 Nov"
     ]
@@ -7572,13 +7573,16 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "Find My Size (`pdp.finder`): height and weight give a size from the product's own S01 chart and its ease (`easeInch` per chart, else `catalogue.sizeCharts.defaultEaseInch`), with the reasons in plain English and Bengali (what the chest or waist needs, the room this fit gives, the length for the height); no chart it can read, no finder. The card under the sizes (T1, T2), the popup with hold-to-repeat steppers, \"Between sizes? Take XL\", stock in this colour; the answer kept on the phone (365 days, a cookie) so the size opens chosen and tagged \"Your size\"; \"Not sure? Find my size\" in the size chart; `?finder=1`. Every rule a setting. PR 59's data hook: `POST`/`PATCH /api/size-finder` keeps each answer (body, size, reasons; no name, no phone), worked out again on the server. SIM-F-012 acceptance test (`answerSizeText`, `@extas/catalogue/size-finder`)",
+    "note": "Find My Size (`pdp.finder`): height and weight give a size from the product's own S01 chart and its ease (`easeInch` per chart, else `catalogue.sizeCharts.defaultEaseInch`), with the reasons in plain English and Bengali (what the chest or waist needs, the room this fit gives, the length for the height); no chart it can read, no finder. The card under the sizes (T1, T2), the popup with hold-to-repeat steppers, \"Between sizes? Take XL\", stock in this colour; the answer kept on the phone (365 days, a cookie) so the size opens chosen and tagged \"Your size\"; \"Not sure? Find my size\" in the size chart; `?finder=1`. Every rule a setting. PR 59's data hook: `POST`/`PATCH /api/size-finder` keeps each answer (body, size, reasons; no name, no phone), worked out again on the server. SIM-F-012 acceptance test (`answerSizeText`, `@extas/catalogue/size-finder`); **follow-up (7 Nov, #97; follow-up 155):** the site-wide size guide window from the footer's \"Size guide\" (any page) and the size guide page `/help/size-guide` with every category's chart — pick the item, height and weight steppers, the size with the reasons, \"Between sizes? Take XL\", saved as the top/bottom size; the height and weight go in the same `extas_fit` cookie the product page reads",
     "github": [
+     "#97, 7 Nov",
      "#34, 23 Oct"
     ]
    },
    "builtFacts": {
-    "routes": [],
+    "routes": [
+     "/help/size-guide"
+    ],
     "settings": [
      "pdp.finder",
      "catalogue.sizeCharts.defaultEaseInch"
@@ -7591,7 +7595,8 @@
      "easeInch",
      "?finder=1",
      "POST",
-     "answerSizeText"
+     "answerSizeText",
+     "extas_fit"
     ],
     "tests": [
      "SIM-F-012 acceptance test (`answerSizeText`, `@extas/catalogue/size-finder`)"
@@ -9647,8 +9652,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "site builder, the two V2.1 items only (After launch, Lane B, batch 14; registry v246 `shop.shimmer`, v247 `bag.tiers.rules`; no migration): Settings › More › Shimmer (`/admin/settings/shimmer`, Lumen): speed and strength of each of the 14 shimmers and the four factors (empty = as designed, none with reduced motion, Add to Bag off as designed), audited `settings.shimmer.save`; Products › Combos › Bag tier box (`/admin/combos/bag-box`, Lumen): the box's switch, days, 1–4 tiers, which set-tier rules show and their words per tier, phone and computer preview — prices only read from Smart Rules, never written; audited `combos.bagbox.save`. The rest of 598 (menus, header, footer, content pages, theme, draft/publish) stays paused",
+    "note": "site builder, the two V2.1 items only (After launch, Lane B, batch 14; registry v246 `shop.shimmer`, v247 `bag.tiers.rules`; no migration): Settings › More › Shimmer (`/admin/settings/shimmer`, Lumen): speed and strength of each of the 14 shimmers and the four factors (empty = as designed, none with reduced motion, Add to Bag off as designed), audited `settings.shimmer.save`; Products › Combos › Bag tier box (`/admin/combos/bag-box`, Lumen): the box's switch, days, 1–4 tiers, which set-tier rules show and their words per tier, phone and computer preview — prices only read from Smart Rules, never written; audited `combos.bagbox.save`. The rest of 598 (menus, header, footer, content pages, theme, draft/publish) stays paused; **follow-up (7 Nov, #97; follow-up 697):** the Bag tier box checked in a real browser with a set-tier rule — the tier words save in both languages and come back after a reload with the box's switch, the taps are 44 px; a Bengali tier count written in Western digits beside the Bengali price is now in the admin's own digits, like the price and the product count",
     "github": [
+     "#97, 7 Nov",
      "#89, 6 Nov"
     ]
    },
@@ -12750,8 +12756,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "My account `/account` (+ `/bn/…`, noindex) from demo V12.2: header with orders, wallet and saved, the sections the owner shows (`account.tabs`), order cards with the parcel's journey as stored (CN-022), For you, Rewards, Wallet ledger, the wishlist inside, Profile with up to `account.addresses.max` 3 addresses, password and SMS/WhatsApp consent rows; `account.lists`",
+    "note": "My account `/account` (+ `/bn/…`, noindex) from demo V12.2: header with orders, wallet and saved, the sections the owner shows (`account.tabs`), order cards with the parcel's journey as stored (CN-022), For you, Rewards, Wallet ledger, the wishlist inside, Profile with up to `account.addresses.max` 3 addresses, password and SMS/WhatsApp consent rows; `account.lists`; **follow-up (7 Nov, #97; follow-up 144):** My account › For you shows a \"Your size\" card (tops and trousers size from the kept height and weight, Edit/Find my size opens the size guide window)",
     "github": [
+     "#97, 7 Nov",
      "#34, 23 Oct"
     ]
    },
@@ -15066,8 +15073,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "risk panel: `orderRisk` (orders.risk.read) reads only what was stored — each signal with its weight and values, the band as named then, when and why, earlier scores, rules changed since, the number's history; `GET /api/admin/orders/:id/risk`, `POST /api/admin/orders/:id/risk/assess` \"score again\" (orders.risk.decide, RISK_OFF while off); a read-only \"Risk\" card on `/admin/orders/<id>` (demo V12.3) and its timeline line; guide `docs/admin-guide/orders.md`",
+    "note": "risk panel: `orderRisk` (orders.risk.read) reads only what was stored — each signal with its weight and values, the band as named then, when and why, earlier scores, rules changed since, the number's history; `GET /api/admin/orders/:id/risk`, `POST /api/admin/orders/:id/risk/assess` \"score again\" (orders.risk.decide, RISK_OFF while off); a read-only \"Risk\" card on `/admin/orders/<id>` (demo V12.3) and its timeline line; guide `docs/admin-guide/orders.md`; **follow-up (7 Nov, #97; follow-up 296):** the risk card lists the number's last orders, each linked, with its state, date and total, and a refusal the shop caused marked \"Our fault · not counted\"",
     "github": [
+     "#97, 7 Nov",
      "#38, 24 Oct"
     ]
    },
@@ -15456,8 +15464,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "duplicate & re-order rules engine (registry v48 `risk.duplicateRules`, master off): A same items again (cancel, 5 days, 60), B different items (warn, 1 day, 50), C a parcel with the courier (hold, 5 days), D an alike address under a new phone (off, 365 days, 70), E another size (off), H a blocked number, account, identity or address (off, read only, 70), I bulk-looking from 10 pieces (off) — each with its own switch, window, confidence and proposal, no block action; cancel or hold opens the PR 145 review (with `proposedAction` and `confidence`), warn and allow a timeline note; a person decides (A's cancel is a proposal); off = the PR 145 look-back; the same customer through the identity (519); no migration",
+    "note": "duplicate & re-order rules engine (registry v48 `risk.duplicateRules`, master off): A same items again (cancel, 5 days, 60), B different items (warn, 1 day, 50), C a parcel with the courier (hold, 5 days), D an alike address under a new phone (off, 365 days, 70), E another size (off), H a blocked number, account, identity or address (off, read only, 70), I bulk-looking from 10 pieces (off) — each with its own switch, window, confidence and proposal, no block action; cancel or hold opens the PR 145 review (with `proposedAction` and `confidence`), warn and allow a timeline note; a person decides (A's cancel is a proposal); off = the PR 145 look-back; the same customer through the identity (519); no migration; **follow-up (7 Nov, #97; follow-up 342):** duplicate rule H also reads the blocklist (RiskBlock listings not undone, by number or identity), not only the old BLOCKED entries",
     "github": [
+     "#97, 7 Nov",
      "#42, 24 Oct"
     ]
    },
@@ -17171,8 +17180,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "courier adapter framework (`@extas/adapters` courier/, new `@extas/shipping`, migration `0033_courier` additive, registry v50): one `CourierApi` (book, findByRef, track, health) with the shop's states and the exception states with reasons — a failed try, an address problem, lost, damaged (SIM-F-017); unknown courier words kept raw and flagged; the practice courier (deterministic `MOCK-` ids, scripted lives in each courier's words, planned failures and timeouts, never any money); courier accounts (practice until keyed, archived never deleted); events stored once per courier event id, state from the newest understood event, out-of-order safe; staff-recorded exceptions (audited); parcel list and detail; the RTO cost book from the shop's own returned parcels only — both courier legs, packaging, handling, ad share from `delivery.courier.rtoCost` (owner figures empty), a missing part named never zero, practice parcels never real cost (SIM-F-027); permissions `delivery.parcels/book/exceptions/couriers`; `/api/admin/delivery/couriers`, `parcels`, `rto-cost`",
+    "note": "courier adapter framework (`@extas/adapters` courier/, new `@extas/shipping`, migration `0033_courier` additive, registry v50): one `CourierApi` (book, findByRef, track, health) with the shop's states and the exception states with reasons — a failed try, an address problem, lost, damaged (SIM-F-017); unknown courier words kept raw and flagged; the practice courier (deterministic `MOCK-` ids, scripted lives in each courier's words, planned failures and timeouts, never any money); courier accounts (practice until keyed, archived never deleted); events stored once per courier event id, state from the newest understood event, out-of-order safe; staff-recorded exceptions (audited); parcel list and detail; the RTO cost book from the shop's own returned parcels only — both courier legs, packaging, handling, ad share from `delivery.courier.rtoCost` (owner figures empty), a missing part named never zero, practice parcels never real cost (SIM-F-027); permissions `delivery.parcels/book/exceptions/couriers`; `/api/admin/delivery/couriers`, `parcels`, `rto-cost`; **follow-up (7 Nov, #97; follow-up 370):** Delivery › Couriers: rename a courier account and archive it (switched off, never deleted), the Archived list with Bring back",
     "github": [
+     "#97, 7 Nov",
      "#42, 24 Oct"
     ]
    },
@@ -17608,8 +17618,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-29",
-    "note": "the packing screen (Orders › Packing & print › Pack, `/admin/orders/packing`; migration `0046_packing` additive: PackingScan append-only, PackingPhoto, PackingCheck; settings registry v59 `registry-fulfilment.ts`): four steps pick → pack → ready for courier → handed over with their counts, one filter for every list and \"Start picking for all\" (never a cancelled, archived, in-review or cancel-asked order; SIM-F-002); every piece scanned (SKU or barcode), typed or ticked (`fulfilment.packing.check` scan, typed on), a code not on the order or a line already checked refused; \"Mark packed\" through the order service under the order's lock only when every line is checked, no packing card is open, the owner's photo is there (`fulfilment.packing.photo` off; required, 1 photo, 30 days, then archived by the job `packing.photos.expire`; SIM-F-010: booking refused too, `PHOTO_REQUIRED`; the owner's waiver with a reason, `fulfilment.photoWaive`) and the weight is near the pieces' weight (`fulfilment.packing.weight` off, 15 % and 100 g; follow-up 434); `fulfilment.packing.queue` (1 day done, 200 a list); book from the screen, then the handover — `delivery.handover.sheet.packOnHandover` now off, so an unpacked parcel is not handed over (follow-up 433); permissions `fulfilment.pack`, `fulfilment.photoWaive`; no customer name, phone or address on the screen",
+    "note": "the packing screen (Orders › Packing & print › Pack, `/admin/orders/packing`; migration `0046_packing` additive: PackingScan append-only, PackingPhoto, PackingCheck; settings registry v59 `registry-fulfilment.ts`): four steps pick → pack → ready for courier → handed over with their counts, one filter for every list and \"Start picking for all\" (never a cancelled, archived, in-review or cancel-asked order; SIM-F-002); every piece scanned (SKU or barcode), typed or ticked (`fulfilment.packing.check` scan, typed on), a code not on the order or a line already checked refused; \"Mark packed\" through the order service under the order's lock only when every line is checked, no packing card is open, the owner's photo is there (`fulfilment.packing.photo` off; required, 1 photo, 30 days, then archived by the job `packing.photos.expire`; SIM-F-010: booking refused too, `PHOTO_REQUIRED`; the owner's waiver with a reason, `fulfilment.photoWaive`) and the weight is near the pieces' weight (`fulfilment.packing.weight` off, 15 % and 100 g; follow-up 434); `fulfilment.packing.queue` (1 day done, 200 a list); book from the screen, then the handover — `delivery.handover.sheet.packOnHandover` now off, so an unpacked parcel is not handed over (follow-up 433); permissions `fulfilment.pack`, `fulfilment.photoWaive`; no customer name, phone or address on the screen; **follow-up (7 Nov, #97; follow-up 462):** the packing step's settings get their editor — Delivery › Delivery settings › More options · Packing, five cards for `fulfilment.packing.*`",
     "github": [
+     "#97, 7 Nov",
      "#51, 30 Oct"
     ]
    },
@@ -17625,7 +17636,8 @@
      "fulfilment.packing.weight",
      "fulfilment.packing.queue",
      "delivery.handover.sheet.packOnHandover",
-     "fulfilment.pack"
+     "fulfilment.pack",
+     "fulfilment.packing.*"
     ],
     "code": [
      "registry-fulfilment.ts"
@@ -20842,8 +20854,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-29",
-    "note": "structured data (follow-up 61's Product, Offer, BreadcrumbList and ItemList, now with follow-up 110): Organization on the home page (the shop's name, `brand.logo`, phone, e-mail and https social pages, only what is filled in; nothing without a real name) and WebSite; a set page as a Product with one Offer at the set price the page shows, in stock only while every piece can be sold, its pieces' photos, with its breadcrumb; the struck price (StrikethroughPrice) beside a single Offer only where the page shows it; `seo.structuredData` (v64) gains organization, website, combo and wasPrice, all on (old values read as on); never a rating before real reviews (PR 223); the Data for search engines card on Website › SEO",
+    "note": "structured data (follow-up 61's Product, Offer, BreadcrumbList and ItemList, now with follow-up 110): Organization on the home page (the shop's name, `brand.logo`, phone, e-mail and https social pages, only what is filled in; nothing without a real name) and WebSite; a set page as a Product with one Offer at the set price the page shows, in stock only while every piece can be sold, its pieces' photos, with its breadcrumb; the struck price (StrikethroughPrice) beside a single Offer only where the page shows it; `seo.structuredData` (v64) gains organization, website, combo and wasPrice, all on (old values read as on); never a rating before real reviews (PR 223); the Data for search engines card on Website › SEO; **follow-up (7 Nov, #97; follow-up 514):** a product sold in more than one colour or size can be sent to search engines as Google's variant markup — a ProductGroup (one Product per priced colour and size the page draws, with its SKU, colour, size, photo, price, struck price, stock and address; the group says what it varies by); the plain Product stays without two differing variants or one without a SKU; a new switch under Data for search engines, off as shipped (`seo.structuredData.variants`); no client code on the product page",
     "github": [
+     "#97, 7 Nov",
      "#52, 30 Oct",
      "#33, 23 Oct"
     ]
@@ -20852,7 +20865,8 @@
     "routes": [],
     "settings": [
      "brand.logo",
-     "seo.structuredData"
+     "seo.structuredData",
+     "seo.structuredData.variants"
     ],
     "code": [],
     "names": [],
@@ -22779,8 +22793,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "seasonal pages come back by themselves each year, then rest again (After launch, Lane C, batch 14; registry v251 `marketing.seasonalReturn` {off, 14 days before, 2 days after, the owner's dates}; no migration — the tick lives in `Page.recurrence`): Marketing › Landing pages › Seasonal pages › Each year (`/admin/marketing/landing/seasonal/yearly`, Lumen): the counts, one card per seasonal page with its \"comes back each year\" tick, the occasions' dates (this year's for Eid or Puja, every year for a season), the switch card; the shop shows a ticked, taken-down page live only inside its window while the switch is on, its resting page says when it is back; switch off or untick takes every returned page back at once; nothing written on a page's state; audited",
+    "note": "seasonal pages come back by themselves each year, then rest again (After launch, Lane C, batch 14; registry v251 `marketing.seasonalReturn` {off, 14 days before, 2 days after, the owner's dates}; no migration — the tick lives in `Page.recurrence`): Marketing › Landing pages › Seasonal pages › Each year (`/admin/marketing/landing/seasonal/yearly`, Lumen): the counts, one card per seasonal page with its \"comes back each year\" tick, the occasions' dates (this year's for Eid or Puja, every year for a season), the switch card; the shop shows a ticked, taken-down page live only inside its window while the switch is on, its resting page says when it is back; switch off or untick takes every returned page back at once; nothing written on a page's state; audited; **follow-up (7 Nov, #97; follow-up 699, the Each year half):** checked in a real browser (two sample seasonal pages, one put away and one live) — the \"comes back each year\" tick saves and stays after a reload, an occasion's dates are added and saved and come back; a half-replaced Bengali word in the \"not ready\" note is fixed, with a test keeping that broken form out of every Bengali words file",
     "github": [
+     "#97, 7 Nov",
      "#89, 6 Nov"
     ]
    },
@@ -22795,7 +22810,9 @@
     "names": [
      "Page.recurrence"
     ],
-    "tests": []
+    "tests": [
+     "a half-replaced Bengali word in the \"not ready\" note is fixed, with a test keeping that broken form out of every Bengali words file"
+    ]
    },
    "updates": [],
    "mentions": [],
@@ -25955,6 +25972,7 @@
     "date": "2026-10-30",
     "note": "notification template editor (Launch row 47, SIM-F-001, SIM-F-025, SIM-F-031): `/admin/messages/templates` (every SMS, WhatsApp and e-mail template, English and Bengali side by side with the live preview on a cash, prepaid and part-paid sample order, where each is used, Save over the version, Reset to default, a missing language added) and `/admin/messages/journey` (which event sends which message); the auto-reply `messages.autoReply` (registry v61, off; once in 24 hours per number, never to a stopped number); permissions `messages.templates.read/write`; default pack `reply.received`",
     "github": [
+     "#97, 7 Nov",
      "#73, 1 Nov",
      "#57, 30 Oct",
      "#51, 30 Oct"
@@ -25975,7 +25993,8 @@
     ],
     "names": [
      "Order.lang",
-     "0083"
+     "0083",
+     "boxes"
     ],
     "tests": []
    },
@@ -26027,7 +26046,7 @@
      "sortKey": 43200,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 1 Nov (go-live gate SIM-F-031, F-025/F-047; #73):** the thank-you page says \"Order placed\" until the shop confirms; `Order.lang` (migration `0083`) and `messages.language` \"customer\" (now the default) send each order's messages in the language it was placed in"
+     "text": "**Updated 1 Nov (go-live gate SIM-F-031, F-025/F-047; #73):** the thank-you page says \"Order placed\" until the shop confirms; `Order.lang` (migration `0083`) and `messages.language` \"customer\" (now the default) send each order's messages in the language it was placed in **CN-037 go-live MUST fix (7 Nov, #97):** `/admin/messages/journey` at 320 px — the channel-mode pills now wrap inside the screen and the \"Also by e-mail\" tick is a full 44 px tap box; device gate's new `boxes` check keeps both. **follow-up (7 Nov, #97; follow-up 483):** a saved WhatsApp text goes for approval again from its template editor — \"Send for approval\" on Messages › Templates"
     }
    ],
    "mentions": [],
@@ -28980,8 +28999,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "The books match engine: checks A–F per store link with zero tolerance (account rows by group, the tie formula, returns, the stored summary, fixed costs, billed orders), job `inventory.books.close` once a night after `books.close.runAt` (looked for every `books.close.checkMinutes`, `books.recheck.days` closed days again), an append-only hash-chained day close per day (a new version when it moves, HISTORY_CHANGED for a matched day), weeks and the lifetime check from the day closes, the month close only when every day matched (`books.close.requireMatched`) or with the owner's override (PIN, reason, kept), re-open as a new version, the year sign-off; a difference fixed only by a reversal plus a new entry (`books.adjust`, the owner's PIN, a reason, the ERP's matching row; PRIOR_PERIOD in a closed month); the owner's books PIN (scrypt hash only, never logged, lock after `books.pin.maxAttempts`); Money → Books → Match, Differences, Closes and the Needs-you-now row; migration `0055_books_pin`; registry v68; CN-029 Phase 1 (Gyani)",
+    "note": "The books match engine: checks A–F per store link with zero tolerance (account rows by group, the tie formula, returns, the stored summary, fixed costs, billed orders), job `inventory.books.close` once a night after `books.close.runAt` (looked for every `books.close.checkMinutes`, `books.recheck.days` closed days again), an append-only hash-chained day close per day (a new version when it moves, HISTORY_CHANGED for a matched day), weeks and the lifetime check from the day closes, the month close only when every day matched (`books.close.requireMatched`) or with the owner's override (PIN, reason, kept), re-open as a new version, the year sign-off; a difference fixed only by a reversal plus a new entry (`books.adjust`, the owner's PIN, a reason, the ERP's matching row; PRIOR_PERIOD in a closed month); the owner's books PIN (scrypt hash only, never logged, lock after `books.pin.maxAttempts`); Money → Books → Match, Differences, Closes and the Needs-you-now row; migration `0055_books_pin`; registry v68; CN-029 Phase 1 (Gyani);",
     "github": [
+     "#97, 7 Nov",
      "#96, 7 Nov",
      "#61, 31 Oct",
      "#60, 31 Oct",
@@ -28997,15 +29017,32 @@
      "books.recheck.days",
      "books.close.requireMatched",
      "books.adjust",
-     "books.pin.maxAttempts"
+     "books.pin.maxAttempts",
+     "books.run.staleMinutes"
     ],
     "code": [],
     "names": [
-     "0055_books_pin"
+     "0055_books_pin",
+     "A:closing",
+     "?storeId=",
+     "0186_hash_version",
+     "closeMonth",
+     "waitingReturns",
+     "waitingPieces"
     ],
-    "tests": []
+    "tests": [
+     "follow-up 559 c):** the year sign-off and the re-opened month end to end on PostgreSQL — a re-opened month whose late paisa was put right in a later month closes again as a new version with the owner's reason, the other months close without an override, a year with a month still open is refused naming every open month, and once every month is closed the year is signed off once (test only)"
+    ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "30 Oct",
+     "sortKey": 43200,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 30 Oct (qa-gate):** HISTORY_CHANGED only when a matched day's own money moves (in the close's locked transaction; a later matched run clears it); a run re-closes every day whose books moved since its close; one run at a time per link (`books.run.staleMinutes`); closes, re-openings and the year sign-off decide under the link's lock; two corrections of one difference at once book once (unique per difference); the ERP's row must belong to the difference; the PIN's tries are reserved in the database before the hash; one BILL per order (partial unique index); `A:closing` compares each day's closing balances; ERP amounts read exactly; \"paid to ERP\" request key (follow-up 551); the books pages take `?storeId=`.; **follow-up (7 Nov, #96; follow-up 558):** the books' hash chains are versioned — new ledger entries, day closes and period closes are written with hashVersion 2 covering the columns version 1 left out (migration `0186_hash_version`; old rows keep 1, nothing re-hashed); **follow-up (7 Nov, #97; follow-up 559 b):** a month closes with its returned pieces not checked yet listed as waiting — `closeMonth` keeps `waitingReturns` and `waitingPieces` in the close's figures and the audit, the closes page shows per month how many wait and how many the close listed, and the asked month lists each piece with its order and hand-back day; **follow-up (7 Nov, #97; follow-up 559 c):** the year sign-off and the re-opened month end to end on PostgreSQL — a re-opened month whose late paisa was put right in a later month closes again as a new version with the owner's reason, the other months close without an override, a year with a month still open is refused naming every open month, and once every month is closed the year is signed off once (test only)"
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "প্রতি রাতে দোকানের খাতা ERP-র খাতার সাথে দিন ধরে মেলানো হয়, এক পয়সাও ছাড় নেই; গরমিল ঠিক হয় শুধু উল্টো এন্ট্রি আর নতুন এন্ট্রি দিয়ে, মালিকের PIN দিয়ে; সব দিন মিললে তবেই মাস বন্ধ, নাহলে মালিকের কারণসহ সিদ্ধান্তে",
