@@ -9,13 +9,15 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from '../Icon';
 import { whenIdle } from '@/lib/shop/later';
+import { measureText } from '@/lib/shop/pdp-size';
+import { PdpChartText } from './PdpChartText';
 import { usePdp } from './PdpRoot';
 
 const loadSheet = () => import('./PdpChartSheet');
 const ChartSheet = lazy(() => loadSheet().then((x) => ({ default: x.ChartSheet })));
 
 export function PdpChart() {
-  const { m, w } = usePdp();
+  const { m, w, unit, num } = usePdp();
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLButtonElement | null>(null);
   const close = useCallback(() => setOpen(false), []);
@@ -32,6 +34,16 @@ export function PdpChart() {
           <Icon name="right" size={14} />
         </span>
       </button>
+      {/* follow-up 633: the chart's words in the first HTML, hidden (Blueprint C4.2) */}
+      <PdpChartText
+        name={m.chart.name}
+        sizeCol={w('chart.sizeCol')}
+        cols={m.chart.fields.map((f) => f.label)}
+        rows={m.chart.rows.map((r) => ({
+          size: m.sizes.find((s) => s.key === r.size)?.label ?? r.size,
+          values: (unit === 'cm' ? r.cm : r.inch).map((v) => (v == null ? '' : w(unit === 'cm' ? 'cm' : 'inch', { v: num(measureText(v)) }))),
+        }))}
+      />
       {open ? (
         <Suspense fallback={null}>
           <ChartSheet onClose={close} opener={btn} />
