@@ -1606,6 +1606,19 @@
         "back": "Its pieces go back to stock.",
         "less": "The amount due at the door goes down by {amount}."
       }
+    },
+    "gift": {
+      "title": "Gift",
+      "sub": "The name, phone and address above are the receiver's. The sender's contact is for updates only.",
+      "from": "From",
+      "contact": "Sender's contact",
+      "note": "Gift note",
+      "after": "Deliver",
+      "afterDay": "on or after {day}",
+      "asap": "as soon as it can",
+      "invoice": "Receiver's invoice",
+      "hidden": "prices hidden",
+      "shown": "prices shown"
     }
   }
 }

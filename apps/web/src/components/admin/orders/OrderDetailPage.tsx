@@ -173,6 +173,14 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
         </div>
       ) : null}
     </Card>,
+    // PR 605 follow-up 214: a gift order's own card after the customer (the receiver)
+    ...(o.gift
+      ? [
+          <Card key="gift" testId="order-gift" title={t(d, 'orders.gift.title')} sub={t(d, 'orders.gift.sub')}>
+            <Kv rows={o.gift} />
+          </Card>,
+        ]
+      : []),
     <Card key="courier" testId="order-courier" title={t(d, 'orders.courier.title')} right={<Chips chips={[o.courier.chip]} />}>
       <Kv rows={o.courier.rows} />
     </Card>,

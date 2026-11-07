@@ -24,6 +24,7 @@ import { blocklistSummary } from './blocklist-card';
 import { refuserSummary } from './refusers-card';
 import { levelSummary, riskSummary } from './risk';
 import { advanceBand, advanceSpecs, advanceSummary } from './advance';
+import { giftRows } from './gift-card';
 import { lineSpecs } from './lines';
 
 /** The key each command asks for (the admin API's own, lib/orders-api.ts). */
@@ -126,6 +127,8 @@ export interface OrderDetailView {
   units: string;
   totals: Row2[];
   customer: Row2[];
+  /** PR 605 follow-up 214: the gift (from, the sender's contact, note, deliver on or after, prices on the receiver's invoice); null: not a gift. */
+  gift: Row2[] | null;
   history: { line: string; recent: { number: string; href: string; status: string; tone: Tone; total: string; placed: string }[] };
   courier: { chip: Chip; rows: Row2[] };
   money: { chip: Chip; rows: { title: string; sub: string; at: string; tone: Tone }[]; empty: string };
@@ -1004,6 +1007,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     units: t(d, units === 1 ? 'orders.list.pc' : 'orders.list.pcs', { n: n(units) }),
     totals,
     customer,
+    gift: giftRows(view, detail.delivery.gift),
     history: {
       line: histLine,
       recent: history.recent.map((h) => ({ number: h.number, href: orderHref(h.id), status: t(d, `orders.st.${h.status}`), tone: ORDER_TONE[h.status], total: formatMoney(h.totalMinor, moneyOf(h.currency, view.locale)), placed: dt.format(h.placedAt) })),

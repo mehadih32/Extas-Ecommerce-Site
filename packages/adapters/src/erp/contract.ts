@@ -6,7 +6,7 @@
 // variants and stock; the company is decided by the key on the ERP side, never sent by the shop; stock comes per SKU
 // per ERP warehouse. Business documents (PR 199, 200) go out through `push`, each with its Idempotency-Key.
 import { AdapterError } from '../define';
-import type { ErpDailySummary, ErpDeliveryResult, ErpFixedCosts, ErpGrade, ErpLateReturn, ErpLineDecision, ErpReturnList, ErpSalesOrderV6, ErpShipmentV6, ErpV6Reads } from './v6';
+import type { ErpOrderGift, ErpDailySummary, ErpDeliveryResult, ErpFixedCosts, ErpGrade, ErpLateReturn, ErpLineDecision, ErpReturnList, ErpSalesOrderV6, ErpShipmentV6, ErpV6Reads } from './v6';
 
 /** Who the key belongs to, from the ERP's `/health`. */
 export interface ErpHealth {
@@ -109,6 +109,8 @@ export interface ErpSalesOrder {
   codAmount: string;
   paymentMethod: string;
   note: string | null;
+  /** PR 605 follow-up 214: only on a gift order, only while `erp.push.gift` is on. */
+  gift?: ErpOrderGift;
 }
 
 /**

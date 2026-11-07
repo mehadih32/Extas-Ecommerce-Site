@@ -21,6 +21,7 @@ import { dictionarySchema } from './schemas';
 const V = 10;
 const V11 = 11;
 const V22 = 22;
+const V214 = 264;
 
 /** A variant's ERP SKU as a settings key. */
 const skuKeySchema = z.string().trim().min(1).max(64);
@@ -511,6 +512,20 @@ export const inventorySettings = {
     isOwnerData: false,
     sortOrder: 240,
     version: V11,
+  }),
+  // PR 605 follow-up 214 (registry v264): a gift order's receipt fields (from, note, deliver on or after, prices hidden)
+  // go in the order document to the ERP. Off as shipped: the ERP gets them only once it reads them.
+  'erp.push.gift': setting({
+    schema: z.boolean(),
+    default: false,
+    scope: 'store',
+    valueType: 'BOOLEAN',
+    group: 'erp',
+    labelKey: 'erp.push.gift.label',
+    helpKey: 'erp.push.gift.help',
+    isOwnerData: false,
+    sortOrder: 245,
+    version: V214,
   }),
   // ---- PR 202 · low-stock alerts, raised once on the shared number (A4.4) ----
   'inventory.lowStock.enabled': setting({

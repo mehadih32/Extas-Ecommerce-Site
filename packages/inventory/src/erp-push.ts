@@ -49,7 +49,7 @@
 // carries the order's amounts for the ERP's books; payments are their own document (S07).
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { ERP_ORDER_CHANNEL, ERP_ORDER_CONFIRMED, ERP_ORDER_STATUSES, ERP_RETURN_QC_GOOD, toErpError, type ErpDocument, type ErpDocumentType } from '@extas/adapters';
+import { ERP_ORDER_CHANNEL, ERP_ORDER_CONFIRMED, ERP_ORDER_STATUSES, ERP_RETURN_QC_GOOD, toErpError, type ErpDocument, type ErpDocumentType, type ErpOrderGift } from '@extas/adapters';
 import type { Prisma } from '@extas/db/client';
 import { allow, logChange, nowOf, parse, setting, TX, type Db, type InventoryDeps, type Tx, type Who } from './context';
 import { InventoryError } from './errors';
@@ -225,6 +225,32 @@ async function enqueue(deps: InventoryDeps, storeId: number, referenceId: string
   }
 }
 
+/** The order's gift fields (Order columns of PR 605). */
+export interface GiftOrderRow {
+  isGift: boolean;
+  giftSenderName: string | null;
+  giftNote: string | null;
+  giftDeliverAfter: Date | null;
+  giftHidePrices: boolean;
+}
+
+/**
+ * PR 605 follow-up 214 — a gift order's receipt fields as the ERP document carries them (null: not a gift). Never the
+ * sender's own contact: that is only for the order's updates (CN-020 (2)).
+ */
+export function erpGiftOf(o: GiftOrderRow): ErpOrderGift | null {
+  if (!o.isGift) return null;
+  return { fromName: o.giftSenderName?.trim() || null, note: o.giftNote?.trim() || null, deliverAfter: o.giftDeliverAfter ? o.giftDeliverAfter.toISOString().slice(0, 10) : null, hidePrices: o.giftHidePrices };
+}
+
+/** The order document with its gift fields, while the store sends them (`erp.push.gift`, off as shipped). */
+async function withGift(deps: InventoryDeps, db: Tx | InventoryDeps['db'], storeId: number, orderId: string, doc: ErpDocument): Promise<ErpDocument> {
+  if (doc.type !== 'order.create' || !(await setting(deps, storeId, 'erp.push.gift'))) return doc;
+  const row = await db.order.findFirst({ where: { id: orderId, storeId }, select: { isGift: true, giftSenderName: true, giftNote: true, giftDeliverAfter: true, giftHidePrices: true } });
+  const gift = row ? erpGiftOf(row) : null;
+  return gift ? { ...doc, body: { ...doc.body, gift } } : doc;
+}
+
 /** Queues the confirmed order's SalesOrder (PR 199). Pass `tx` to save it with the order. */
 export async function enqueueOrderPush(deps: InventoryDeps, input: OrderPushInput, opts: { tx?: Tx } = {}): Promise<EnqueueResult> {
   const d = parse(orderPushInput, input, 'order document');
@@ -264,6 +290,7 @@ export async function enqueueOrderPush(deps: InventoryDeps, input: OrderPushInpu
           },
           digits,
         )
+          .then((doc) => withGift(deps, db, d.storeId, d.orderId, doc))
           .then((doc) => enqueue(deps, d.storeId, d.orderId, key, doc, db))
           // qa-gate: revision n replaces every older revision still HELD or waiting (kept FAILED, never sent).
           .then(async (r) => {
@@ -273,7 +300,7 @@ export async function enqueueOrderPush(deps: InventoryDeps, input: OrderPushInpu
       return opts.tx ? write(opts.tx) : deps.db.$transaction(write, TX);
     }
   }
-  const doc = salesOrderDocument(d, currencyDigits(store.currency));
+  const doc = await withGift(deps, opts.tx ?? deps.db, d.storeId, d.orderId, salesOrderDocument(d, currencyDigits(store.currency)));
   return enqueue(deps, d.storeId, d.orderId, key, doc, opts.tx);
 }
 

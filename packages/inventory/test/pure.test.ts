@@ -25,6 +25,7 @@ import {
   pushBackoffMs,
   pushKey,
   salesOrderDocument,
+  erpGiftOf,
   sellableUnits,
   sharedSellable,
   orderPushInput,
@@ -109,8 +110,10 @@ describe('S09 settings', () => {
   });
   it('every S09 key is at registry version 10, (PR 197–207) 11 or (PR 196 webhooks) 22, and its default passes its own schema', () => {
     for (const [key, s] of Object.entries(inventorySettings)) {
-      // review R2 (M1): the unpaid order's hold limit came later (registry version 121)
-      expect(key === 'inventory.reservation.unpaidHoldHours' ? [121] : [10, 11, 22], key).toContain(s.version);
+      // review R2 (M1): the unpaid order's hold limit came later (registry version 121); PR 605 follow-up 214 the gift's
+      // receipt fields to the ERP (registry version 264, off)
+      const later: Record<string, number[]> = { 'inventory.reservation.unpaidHoldHours': [121], 'erp.push.gift': [264] };
+      expect(later[key] ?? [10, 11, 22], key).toContain(s.version);
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
     }
     expect(inventorySettings['inventory.reservation.holdMinutes'].version).toBe(11);
@@ -217,6 +220,13 @@ describe('PR 199/200 · the order document', () => {
     expect(canonical(salesOrderDocument(input, 2))).toBe(canonical(doc));
     expect(() => assertNoJournal(doc)).not.toThrow();
     expect(() => assertNoJournal({ ...doc, body: { ...(doc as { body: object }).body, journalLines: [] } } as never)).toThrow(/journal/);
+  });
+  it('PR 605 follow-up 214: a gift order carries from, note, deliver on or after and the invoice rule, never the sender contact', () => {
+    const row = { isGift: true, giftSenderName: ' Sample sender ', giftNote: 'Happy Eid', giftDeliverAfter: new Date('2026-11-20T00:00:00Z'), giftHidePrices: true };
+    expect(erpGiftOf(row)).toEqual({ fromName: 'Sample sender', note: 'Happy Eid', deliverAfter: '2026-11-20', hidePrices: true });
+    expect(erpGiftOf({ ...row, giftSenderName: null, giftNote: '  ', giftDeliverAfter: null, giftHidePrices: false })).toEqual({ fromName: null, note: null, deliverAfter: null, hidePrices: false });
+    expect(erpGiftOf({ ...row, isGift: false })).toBeNull();
+    expect(JSON.stringify(erpGiftOf(row))).not.toMatch(/contact/i);
   });
   it('the idempotency key names the order and what is done to it — never a time', () => {
     const id = '0192f0a0-0000-7000-8000-000000000001';

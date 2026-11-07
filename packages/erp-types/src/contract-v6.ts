@@ -52,6 +52,20 @@ export interface ErpExchangeRef {
 }
 
 /** A v6 SalesOrder (`POST /orders`, §2.3, §2.5.1, §2.10.2). */
+/**
+ * PR 605 follow-up 214 — a gift order's receipt fields, sent only while the store's `erp.push.gift` is on (off as
+ * shipped, so an ERP that does not read them yet never sees them): who it is from, the gift note, the day the courier
+ * delivers on or after (YYYY-MM-DD, null: as soon as it can), and whether the receiver's invoice hides prices. The
+ * sender's own contact is never sent (it is for the order's updates only). The receiver stays `customerName`,
+ * `customerPhone` and `shippingAddress`.
+ */
+export interface ErpOrderGift {
+  fromName: string | null;
+  note: string | null;
+  deliverAfter: string | null;
+  hidePrices: boolean;
+}
+
 export interface ErpSalesOrderV6 {
   channel: 'WEBSITE';
   status: 'CONFIRMED';
@@ -67,6 +81,8 @@ export interface ErpSalesOrderV6 {
   /** bKash or another advance the customer paid, whole taka. */
   advancePaid: number;
   exchange?: ErpExchangeRef;
+  /** PR 605 follow-up 214: only on a gift order, only while `erp.push.gift` is on. */
+  gift?: ErpOrderGift;
 }
 
 /** `POST /shipments` (§2.3): from v6 it also bills the order. Sent when the courier confirms pickup (RETAIL-ERP-MODEL §13.1). */

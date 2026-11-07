@@ -7,6 +7,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { checkoutQuote, orderReceipt } from '@extas/checkout';
 import { HAS_TEST_DB } from '@extas/auth/testing';
+import { enqueueOrderPush, type InventoryDeps } from '@extas/inventory';
 import { getOrder } from './index';
 import { setUpOrders, TEST_FORM, type OrdersFixture } from './testing';
 
@@ -78,7 +79,21 @@ describe.skipIf(!HAS_TEST_DB)('PR 605 · gift mode (PostgreSQL)', () => {
       // the thank-you page thanks the sender; the invoice hides the prices
       const r = await orderReceipt(f.deps(), { storeId: f.S, visitorId: o.visitorId, number: o.number });
       expect(r).toMatchObject({ firstName: 'Rafiq', name: TEST_FORM.name, gift: { senderName: 'Rafiq Sender', note: 'Happy Eid!', deliverAfter: '2026-11-02', hidePrices: true } });
+
+      // follow-up 214: the order document to the ERP carries the gift's receipt fields only while `erp.push.gift` is on,
+      // and never the sender's own contact
+      const push = (revision: number) =>
+        enqueueOrderPush({ db: db(), settings: f.deps().settings } as unknown as InventoryDeps, { storeId: f.S, orderId: o.orderId, externalOrderId: o.number, customerName: TEST_FORM.name, customerPhone: '+8801700006050', shippingAddress: RECEIVER.address, paymentMethod: 'BKASH', items: [{ sku: 'SAMPLE-GIFT', quantity: 1, unitPriceMinor: 100 }], revision });
+      const bodyOf = async () => ((await db().erpPush.findFirstOrThrow({ where: { referenceId: o.orderId, documentType: 'order.create' }, orderBy: { createdAt: 'desc' } })).requestBody as { body: Record<string, unknown> }).body;
+      await push(90);
+      expect(await bodyOf()).not.toHaveProperty('gift');
+      f.overrides.set('erp.push.gift', true);
+      await push(91);
+      const sent = await bodyOf();
+      expect(sent.gift).toEqual({ fromName: 'Rafiq Sender', note: 'Happy Eid!', deliverAfter: '2026-11-02', hidePrices: true });
+      expect(JSON.stringify(sent)).not.toContain('+447700900123');
     } finally {
+      f.overrides.delete('erp.push.gift');
       f.overrides.delete('checkout.gift');
     }
   });
