@@ -59,6 +59,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 351 · the money report to the owner on Postgr
     expect(mine(a)).toHaveLength(1);
     expect(mine(a)[0]).toMatchObject({ name: MONEY_REPORT_JOB, queue: 'reports', payload: { storeId: S, period: 'D:2026-11-07' } });
     expect(mine(b)[0]!.key).toBe(mine(a)[0]!.key);
+    // the next day is a new run (its key names the period; a key without it ran once and was skipped ever after)
+    const next = new Date(dhaka('22:00').getTime() + 86_400_000);
+    expect(mine(await moneyReportPlanner(deps(next), next))[0]!.key).not.toBe(mine(a)[0]!.key);
   });
 
   it("sends the day's Profit & loss to the owner's Telegram; delivered Sales first, Ordered value beside it", async () => {

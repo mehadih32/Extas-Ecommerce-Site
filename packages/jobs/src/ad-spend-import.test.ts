@@ -35,6 +35,8 @@ describe('PR 265 · ad spend import', () => {
     const runs = await adSpendImportPlanner(depsWith(on, hook), dhaka('09:00'));
     expect(runs).toEqual([expect.objectContaining({ name: AD_SPEND_IMPORT_JOB, queue: 'reports', payload: { storeId: 1, day: '2026-11-01' } })]);
     expect((await adSpendImportPlanner(depsWith(on, hook), dhaka('10:00')))[0]!.key).toBe(runs[0]!.key);
+    // the next store day is a new run (its key names the day; a key without it ran once and was skipped ever after)
+    expect((await adSpendImportPlanner(depsWith(on, hook), new Date('2026-11-02T09:00:00+06:00')))[0]!.key).not.toBe(runs[0]!.key);
     expect(await adSpendImportPlanner(depsWith(on), dhaka('09:00'))).toEqual([]);
     expect(await adSpendImportPlanner(depsWith({ ...on, on: false }, hook), dhaka('09:00'))).toEqual([]);
     expect(() => jobDefinition(AD_SPEND_IMPORT_JOB)?.parse({ storeId: 0, day: '2026-11-01' })).toThrow();

@@ -7,7 +7,7 @@
 import { sendOwnerAlert } from '@extas/adapters';
 import { moneyReportDue, moneyReportText, profitReport } from '@extas/inventory';
 import { nowOf, type JobDeps } from './context';
-import { runKey } from './keys';
+import { runKey, textSlot } from './keys';
 import type { Planner } from './worker';
 
 export const MONEY_REPORT_JOB = 'money.report.send';
@@ -29,7 +29,8 @@ export const moneyReportPlanner: Planner = async (deps, now) => {
     const due = moneyReportDue(now, tz, s);
     if (!due) continue;
     const payload = { storeId: st.id, period: due.key };
-    out.push({ queue: MONEY_REPORT_QUEUE, name: MONEY_REPORT_JOB, payload, key: runKey(MONEY_REPORT_JOB, payload, 0) });
+    // ~~key: runKey(MONEY_REPORT_JOB, payload, 0)~~ fix: slot 0 made every later period the same run as the first (skipped ever after)
+    out.push({ queue: MONEY_REPORT_QUEUE, name: MONEY_REPORT_JOB, payload, key: runKey(MONEY_REPORT_JOB, payload, textSlot(due.key)) });
   }
   return out;
 };

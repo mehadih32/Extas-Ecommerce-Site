@@ -37,6 +37,8 @@ describe('PR 264 · audience refresh', () => {
     expect(runs).toHaveLength(1);
     expect(runs[0]).toMatchObject({ name: AUDIENCE_REFRESH_JOB, payload: { storeId: 1, day: '2026-11-01' } });
     expect((await audienceRefreshPlanner(depsWith({ on: true, hour: 6 }, hook), dhaka('09:30')))[0]!.key).toBe(runs[0]!.key);
+    // the next store day is a new run (its key names the day; a key without it ran once and was skipped ever after)
+    expect((await audienceRefreshPlanner(depsWith({ on: true, hour: 6 }, hook), new Date('2026-11-02T09:00:00+06:00')))[0]!.key).not.toBe(runs[0]!.key);
     expect(await audienceRefreshPlanner(depsWith({ on: true, hour: 6 }), dhaka('09:00'))).toEqual([]);
     expect(await audienceRefreshPlanner(depsWith({ on: false, hour: 6 }, hook), dhaka('09:00'))).toEqual([]);
     expect(jobDefinition(AUDIENCE_REFRESH_JOB)?.parse({ storeId: 1, day: '2026-11-01' })).toEqual({ storeId: 1, day: '2026-11-01' });
