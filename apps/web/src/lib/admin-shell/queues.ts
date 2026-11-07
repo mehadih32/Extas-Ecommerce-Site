@@ -13,6 +13,8 @@
 // Follow-up 509 (PR 425, 431): customers waiting for the team's answer in Support (the Support badge) and late chats.
 // PR 180 follow-up 436: parcels waiting for the rider — booked, sticker printed, still with us and not handed over (an
 // open handover sheet's parcels among them), oldest by booking, on Orders › Packing & print › Handover.
+// PR 183 follow-up 468: open packing cards (a damaged or missing piece, a stock shortage) and those past the owner's
+// `fulfilment.packing.issues.decideWithinHours`, oldest first, on Orders › Packing & print; never an archived order's.
 // Counts are kept for `admin.shell.badgeCacheSeconds` per store (one count for everyone; the keys filter per person).
 import type { PrismaClient } from '@extas/db/client';
 import type { PermissionKey } from '@extas/auth';
@@ -26,7 +28,7 @@ import type { ShellViewer } from './sections';
 import type { TodoGroup } from './todo';
 import { waitingProposals } from '../admin-health/fixes';
 
-export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersTwoSizes' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'erpHeldLong' | 'erpKeptAtSwitch' | 'agentFixes' | 'supportWaiting' | 'supportLate' | 'handoverWaiting';
+export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersTwoSizes' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'erpHeldLong' | 'erpKeptAtSwitch' | 'agentFixes' | 'supportWaiting' | 'supportLate' | 'handoverWaiting' | 'packingCards' | 'packingCardsLate';
 
 export interface QueueDef {
   id: QueueId;
@@ -52,6 +54,9 @@ export const QUEUES: readonly QueueDef[] = [
   { id: 'ordersCancelPending', perm: 'orders.read', href: '/admin/orders?view=cancelPending', section: 'orders', tone: 'bad', icon: 'uturn', badge: false, group: 'orders' },
   // follow-up 436 (PR 180): printed parcels still with us, waiting for the rider's handover sheet (no badge: a line)
   { id: 'handoverWaiting', perm: 'fulfilment.read', href: '/admin/orders/packing/handover', section: 'orders', tone: 'info', icon: 'truck', badge: false, group: 'delivery' },
+  // follow-up 468 (PR 183): open packing cards, and those past the hours to decide (lines, no badge)
+  { id: 'packingCardsLate', perm: 'fulfilment.read', href: '/admin/orders/packing', section: 'orders', tone: 'bad', icon: 'clock', badge: false, group: 'orders' },
+  { id: 'packingCards', perm: 'fulfilment.read', href: '/admin/orders/packing', section: 'orders', tone: 'warn', icon: 'alert', badge: false, group: 'orders' },
   { id: 'launch', perm: 'catalogue.read', href: '/admin/products/queue', section: 'products', tone: 'info', icon: 'shirt', badge: true, group: 'products' },
   { id: 'lowStock', perm: 'inventory.read', href: '/admin/stock#st-low', section: 'products', tone: 'warn', icon: 'box', badge: false, group: 'stock' },
   { id: 'countsReview', perm: 'inventory.read', href: '/admin/stock/counts', section: 'products', tone: 'info', icon: 'check', badge: false, group: 'stock' },
@@ -98,6 +103,13 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
   const lateWhere = { storeId, status: 'OPEN', slaDueAt: { lt: now }, contact: { blockedAt: null } };
   // follow-up 436: a booked parcel the courier has not picked up, its sticker printed, its order not handed over
   const handoverWhere = { storeId, status: { in: [...STILL_WITH_US] }, consignmentId: { not: null }, labelPrintCount: { gt: 0 }, isExchangeLeg: false, order: { archivedAt: null, handedOverAt: null } };
+  // follow-up 468: an open packing card of an order still in the shop's list; late = older than the owner's hours to decide
+  const issues = (await deps.settings.value('fulfilment.packing.issues', { storeId }).catch(() => null)) as { decideWithinHours?: number } | null;
+  const open = await db.packingIssue.findMany({ where: { storeId, resolvedAt: null }, select: { orderId: true, createdAt: true }, orderBy: { createdAt: 'asc' } });
+  const kept = new Set(open.length ? (await db.order.findMany({ where: { storeId, archivedAt: null, id: { in: [...new Set(open.map((c) => c.orderId))] } }, select: { id: true } })).map((o) => o.id) : []);
+  const cards = open.filter((c) => kept.has(c.orderId));
+  const lateBefore = now.getTime() - (issues?.decideWithinHours ?? 0) * 3_600_000;
+  const lateCards = cards.filter((c) => c.createdAt.getTime() < lateBefore);
   const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold, heldLong, keptLong, fixes, waitN, waitOld, lateN, lateOld, handN, handOld] = await Promise.all([
     orderQueueCounts(db, storeId, ['toConfirm', 'prepaid', 'awaitingAdvance', 'twoSizes', 'inReview', 'cancelRequests', 'cancelPending']),
     db.publishQueueItem.count({ where: { storeId, status: 'OPEN' } }),
@@ -148,6 +160,8 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     { id: 'supportWaiting', n: waitN, oldest: iso(waitOld?.waitingSince) },
     { id: 'supportLate', n: lateN, oldest: iso(lateOld?.waitingSince ?? lateOld?.slaDueAt) },
     { id: 'handoverWaiting', n: handN, oldest: iso(handOld?.bookedAt ?? handOld?.createdAt) },
+    { id: 'packingCardsLate', n: lateCards.length, oldest: iso(lateCards[0]?.createdAt) },
+    { id: 'packingCards', n: cards.length, oldest: iso(cards[0]?.createdAt) },
   ];
 }
 

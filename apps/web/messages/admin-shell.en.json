@@ -497,7 +497,9 @@
       "agentFixes": "Agent fixes and new skills waiting for your OK",
       "supportWaiting": "Customers waiting for an answer",
       "supportLate": "Chats past their answer time",
-      "handoverWaiting": "Parcels printed, waiting for the rider's handover"
+      "handoverWaiting": "Parcels printed, waiting for the rider's handover",
+      "packingCards": "Packing cards open, waiting for a person to decide",
+      "packingCardsLate": "Packing cards past the hours to decide"
     },
     "age": {
       "now": "just now",
