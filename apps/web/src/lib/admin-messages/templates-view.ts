@@ -22,3 +22,12 @@ export function openGroup(g: GroupedTemplates, key: string | null | undefined): 
   const all = [...g.journey, ...g.other, ...g.unused];
   return all.find((x) => x.key === key) ?? all[0] ?? null;
 }
+
+/**
+ * Follow-up 483: whether the editor offers "Send for approval" for this text — a WhatsApp text whose saved words
+ * (nothing unsaved) are not approved or waiting and that WhatsApp would not refuse (`problems`, from `waBodyProblems`),
+ * when the provider takes templates and the person may change channels (`canSubmit`). The API checks it all again.
+ */
+export function waSubmittable(o: { canSubmit: boolean; channel: string; dirty: boolean; status: string | null; problems: readonly string[] }): boolean {
+  return o.canSubmit && o.channel === 'WHATSAPP' && !o.dirty && o.status !== 'APPROVED' && o.status !== 'PENDING' && o.problems.length === 0;
+}

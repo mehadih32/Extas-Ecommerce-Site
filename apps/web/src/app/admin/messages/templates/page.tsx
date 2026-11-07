@@ -5,7 +5,8 @@
 // English and Bengali side by side with a live preview on the sample order (cash on delivery, prepaid, part-paid; the
 // engine's own rules, so a paid customer is never asked for money and an empty link is never promised), Save, Reset to
 // default, and a missing language added. Below, the auto-reply (off). Seeing needs `messages.templates.read`, changing
-// `messages.templates.write` (the API checks it again). Nothing on this page sends a message.
+// `messages.templates.write` (the API checks it again). Nothing on this page sends a message. A saved WhatsApp text not yet
+// approved (or turned down) can be sent for approval again from its editor (follow-up 483).
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -53,11 +54,16 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Pr
       </div>
     );
   const who: ms.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
-  const screen = await ms.templatesScreen(await messagesDeps(access.deps), who);
+  const mdeps = await messagesDeps(access.deps);
+  const screen = await ms.templatesScreen(mdeps, who);
   const md: Dict = { msg: d.msg as Dict };
   const x = (k: string, v: Record<string, string> = {}) => t(d, `msg.tpl.${k}`, v);
   const grouped = groupTemplates(screen.groups, JOURNEY_STEPS);
   const open = openGroup(grouped, asked);
+  // follow-up 483: a WhatsApp text can go for approval again from its editor, when the provider can take it and the
+  // person may change channels (the submit route checks `messages.channels.write` again)
+  const wa = open?.rows.some((r) => r.channel === 'WHATSAPP') ? await ms.waTemplatesScreen(mdeps, who).catch(() => null) : null;
+  const waSubmit = !!wa && wa.canSync && wa.perms.write;
   const can = screen.perms.write;
   // a template's name on the list: the step (or other message) that sends it, else its own name; its own name too when
   // that step sends more than one template (the stop and the start answer, the answers to 1 / 2 / 3)
@@ -163,6 +169,7 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Pr
                           sample={screen.sample}
                           hasHost={screen.hasHost}
                           canEdit={can}
+                          canSubmit={row.channel === 'WHATSAPP' && waSubmit}
                         />
                       );
                     if (miss) return <TemplateAdd key={`${c}-${l}`} dict={md} tplKey={open.key} channel={c} locale={l} draft={miss.draft} sample={screen.sample} hasHost={screen.hasHost} canEdit={can} langName={langName(l)} channelName={label(d, 'channel', c)} />;
