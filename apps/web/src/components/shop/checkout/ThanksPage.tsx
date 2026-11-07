@@ -217,6 +217,12 @@ export async function ThanksPage({
         </span>
         <div>
           <div className="h3">{w('ty.codTitle', { amount: m(pay.dueMinor) })}</div>
+          {/* follow-up 407 (PR 560): what was paid ahead, beside what is left for the door */}
+          {pay.aheadMinor ? (
+            <div className="small bold" style={{ marginTop: 2 }} data-testid="ty-ahead">
+              {w('ty.codAhead', { amount: m(pay.aheadMinor) })}
+            </div>
+          ) : null}
           <div className="small text2" style={{ marginTop: 2 }}>
             {w('ty.codNote')}
             {r.chargeFixed ? null : ` ${w('ty.codCall')}`}

@@ -356,6 +356,7 @@
       "copy": "Copy",
       "copied": "Order number {number} copied",
       "codTitle": "Cash on Delivery · Total due {amount}",
+      "codAhead": "{amount} already paid ahead",
       "codNote": "Pay the delivery person when you receive your order.",
       "codCall": "The delivery charge is added after our call.",
       "paidTitle": "Paid {amount} by {method}",

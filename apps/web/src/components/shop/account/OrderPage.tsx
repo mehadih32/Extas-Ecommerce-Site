@@ -282,6 +282,12 @@ export async function OrderPage({
         <div className="xs muted" style={{ marginTop: 2 }}>
           {view.track.done ? t('account.order.codDone') : t('account.order.codDue', { amount: m(pay.dueMinor) })}
         </div>
+        {/* follow-up 407 (PR 560): what was paid ahead, beside what is left for the door */}
+        {pay.aheadMinor ? (
+          <div className="xs muted" style={{ marginTop: 2 }} data-testid="order-ahead">
+            {t('account.order.codAhead', { amount: m(pay.aheadMinor) })}
+          </div>
+        ) : null}
       </>
     ) : pay.kind === 'paid' ? (
       <div className="row between">
