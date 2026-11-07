@@ -174,7 +174,9 @@ async function connectionsOf(deps: TrackingDeps): Promise<Connections> {
  * tracking-sweep.ts, once an hour while tracking is on) with the server's internal token; without it "not found".
  * Sends that store's events that rested past the resting time, as the shop's own send does after each new event.
  */
-export async function trackingSweepHook(request: Request, deps: TrackingDeps | null = trackingDeps()): Promise<Response> {
+// ~~export async function trackingSweepHook(request, deps)~~ follow-up 605 gap: `catchUp` (the route passes the paid
+// purchases' catch-up, lib/tracking/shop.ts catchUpPaidPurchases) runs first, then the send
+export async function trackingSweepHook(request: Request, deps: TrackingDeps | null = trackingDeps(), catchUp?: (deps: TrackingDeps, storeId: number) => Promise<number>): Promise<Response> {
   const notFound = () => Response.json({ ok: false, error: 'not-found' }, { status: 404 });
   if (request.method.toUpperCase() !== 'POST' || !internalCaller(request)) return notFound();
   if (!deps) return Response.json({ ok: false, error: 'database-not-configured' }, { status: 503 });
@@ -186,9 +188,17 @@ export async function trackingSweepHook(request: Request, deps: TrackingDeps | n
     /* no body: refused below */
   }
   if (!storeId) return Response.json({ ok: false, error: 'INVALID_INPUT' }, { status: 400 });
+  let purchases = 0;
+  if (catchUp) {
+    try {
+      purchases = await catchUp(deps, storeId);
+    } catch (e) {
+      console.warn(`tracking: the paid purchases' catch-up failed (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
+    }
+  }
   const out = await sendEvents(deps, { storeId, limit: SEND_BATCH, idleMs: RETRY_AFTER_MS });
   const failed = Object.values(out.platforms).reduce((n, p) => n + (p?.failed ?? 0), 0);
-  return Response.json({ ok: true, events: out.events, failed });
+  return Response.json({ ok: true, events: out.events, failed, purchases });
 }
 
 export interface SendOutcome {

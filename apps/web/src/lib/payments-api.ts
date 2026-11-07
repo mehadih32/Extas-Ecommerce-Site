@@ -62,6 +62,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as pay from '@extas/payments';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { paymentsServiceDeps } from './payments-gateway';
+import { trackPaidPurchase } from './tracking/shop';
 
 interface Ctx {
   deps: pay.PaymentsDeps;
@@ -241,7 +242,20 @@ export async function paymentsRoute(request: Request, deps: AdminDeps | null, pa
     });
   }
   if (m !== 'POST') return c === 'payments' || c === 'door' || c === 'apology' || c === 'refunds' || c === 'advance' ? notAllowed() : notFound();
-  if (c === 'payments') return handle(request, deps, 'payments.record', async (x) => ({ result: await pay.recordPayment(x.deps, x.who, b, await body(request), { idempotencyKey: x.key }) }), 201);
+  // ~~({ result: await pay.recordPayment(…) })~~ follow-up 605 gap: a payment a person records sends the order's purchase
+  // event (once, the gateway callback's event id; quiet — it never fails the recording; nothing here moves money)
+  if (c === 'payments')
+    return handle(
+      request,
+      deps,
+      'payments.record',
+      async (x) => {
+        const result = await pay.recordPayment(x.deps, x.who, b, await body(request), { idempotencyKey: x.key });
+        if (!result.replay) await trackPaidPurchase({ storeId: x.who.storeId, orderId: result.orderId });
+        return { result };
+      },
+      201,
+    );
   if (c === 'door') return handle(request, deps, 'payments.door', async (x) => ({ result: await pay.recordDoorOutcome(x.deps, x.who, b, await body(request), { idempotencyKey: x.key }) }), 201);
   if (c === 'apology') return handle(request, deps, 'payments.apology', async (x) => ({ result: await pay.giveApology(x.deps, x.who, b, await body(request)) }), 201);
   if (c === 'refunds') return handle(request, deps, 'payments.refunds.request', async (x) => ({ refund: (await pay.requestRefund(x.deps, x.who, b, await body(request), { idempotencyKey: x.key })).refund }), 201);

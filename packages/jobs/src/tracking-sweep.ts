@@ -37,7 +37,30 @@ export interface TrackingSweepAnswer {
 /** The sweep's hour of a moment (UTC). */
 export const trackingSweepHour = (now: Date): string => now.toISOString().slice(0, 13);
 
-/** Each live store with tracking on and a real event waiting past the resting time: one run an hour. Nothing without the hook. */
+/** The most paid orders the planner looks at for a missing purchase (a batch guard, not a business number). */
+const PAID_LOOKED_AT = 50; // hardcode-ok: a batch-size guard
+
+/**
+ * Follow-up 605 gap: an order whose purchase goes at payment (prepaid, or an advance first) paid within
+ * `ads.deliveredPurchase.lookbackHours` with no purchase event yet — a payment the open-payment sweep found paid, or one
+ * a person recorded. The run's web side records it (lib/tracking/shop.ts catchUpPaidPurchases) before it sends.
+ */
+async function purchaseMissing(deps: JobDeps, storeId: number, now: Date): Promise<boolean> {
+  const { lookbackHours } = await deps.settings.value('ads.deliveredPurchase', { storeId });
+  const paid = await deps.db.payment.findMany({
+    where: { storeId, status: 'PAID', paidAt: { gte: new Date(now.getTime() - lookbackHours * HOUR_MS) }, order: { OR: [{ paymentMethod: { not: 'COD' } }, { advanceRequirement: { not: 'NONE' } }] } },
+    orderBy: { paidAt: 'desc' },
+    take: PAID_LOOKED_AT,
+    select: { orderId: true },
+  });
+  const ids = [...new Set(paid.map((p) => p.orderId).filter((x): x is string => !!x))];
+  if (!ids.length) return false;
+  const have = await deps.db.trackedEvent.count({ where: { storeId, name: 'purchase', orderId: { in: ids } } });
+  return have < ids.length;
+}
+
+/** Each live store with tracking on and a real event waiting past the resting time (follow-up 605 gap: or a paid order's
+ *  purchase not recorded yet): one run an hour. Nothing without the hook. */
 export const trackingSweepPlanner: Planner = async (deps, now) => {
   if (!deps.tracking) return [];
   const stores = await deps.db.store.findMany({ where: { status: { not: 'ARCHIVED' }, archivedAt: null }, select: { id: true }, orderBy: { id: 'asc' } });
@@ -46,7 +69,8 @@ export const trackingSweepPlanner: Planner = async (deps, now) => {
     const s = await deps.settings.value('ads.tracking', { storeId: st.id });
     if (!s.on) continue;
     const waiting = await deps.db.trackedEvent.count({ where: { storeId: st.id, pending: true, test: false, updatedAt: { lt: new Date(now.getTime() - RESTED_MS) } } });
-    if (!waiting) continue;
+    // ~~if (!waiting) continue;~~ follow-up 605 gap: also a run while a paid order's purchase is still unrecorded
+    if (!waiting && !(s.events.purchase && (await purchaseMissing(deps, st.id, now)))) continue;
     const payload = { storeId: st.id, hour: trackingSweepHour(now) };
     out.push({ queue: TRACKING_SWEEP_QUEUE, name: TRACKING_SWEEP_JOB, payload, key: runKey(TRACKING_SWEEP_JOB, payload, slotOf(now.getTime(), HOUR_MS)) });
   }

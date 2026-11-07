@@ -10,16 +10,18 @@ import { runTrackingSweep, TRACKING_SWEEP_JOB, trackingSweepHookFromEnv, trackin
 const TOKEN = 't'.repeat(40);
 const at = (iso: string) => new Date(iso);
 
-function depsWith(on: boolean, waiting: number, hook?: JobDeps['tracking'], now = at('2026-11-07T09:20:00Z')): { deps: JobDeps; count: ReturnType<typeof vi.fn> } {
+function depsWith(on: boolean, waiting: number, hook?: JobDeps['tracking'], now = at('2026-11-07T09:20:00Z'), paid: { orderId: string }[] = [], purchases = 0): { deps: JobDeps; count: ReturnType<typeof vi.fn>; payments: ReturnType<typeof vi.fn> } {
   const values: Record<string, unknown> = { 'ads.tracking': { ...registry['ads.tracking'].default, on } };
-  const count = vi.fn(async () => waiting);
+  // follow-up 605 gap: the first count is the waiting events, a later one the purchases already recorded
+  const count = vi.fn(async (q: { where: { name?: string } }) => (q.where.name === 'purchase' ? purchases : waiting));
+  const payments = vi.fn(async () => paid);
   const deps = {
-    db: { store: { findMany: async () => [{ id: 1 }] }, trackedEvent: { count } },
+    db: { store: { findMany: async () => [{ id: 1 }] }, trackedEvent: { count }, payment: { findMany: payments } },
     settings: { value: async (k: string) => (k in values ? values[k] : (registry as Record<string, { default: unknown }>)[k]!.default) },
     tracking: hook,
     now: () => now,
   } as unknown as JobDeps;
-  return { deps, count };
+  return { deps, count, payments };
 }
 
 describe('follow-up 602 · tracked events sweep', () => {
@@ -64,5 +66,19 @@ describe('follow-up 602 · tracked events sweep', () => {
     expect(url).toBe('http://app-green:3000/api/internal/tracking/sweep');
     expect((init.headers as Record<string, string>)['x-extas-cache-hook']).toBe(TOKEN);
     expect(JSON.parse(String(init.body))).toEqual({ storeId: 1 });
+  });
+
+  it('follow-up 605 gap: a run too while a prepaid or advance order paid within the look-back has no purchase recorded', async () => {
+    const hook = { sweep: vi.fn() };
+    const now = at('2026-11-07T09:20:00Z');
+    const one = depsWith(true, 0, hook, now, [{ orderId: 'a' }, { orderId: 'b' }], 1);
+    expect(await trackingSweepPlanner(one.deps, now)).toHaveLength(1);
+    const where = (one.payments.mock.calls[0] as unknown as [{ where: { status: string; paidAt: { gte: Date }; order: unknown } }])[0].where;
+    expect(where.status).toBe('PAID');
+    expect(now.getTime() - where.paidAt.gte.getTime()).toBe(registry['ads.deliveredPurchase'].default.lookbackHours * 3_600_000);
+    expect(where.order).toEqual({ OR: [{ paymentMethod: { not: 'COD' } }, { advanceRequirement: { not: 'NONE' } }] });
+    expect(await trackingSweepPlanner(depsWith(true, 0, hook, now, [{ orderId: 'a' }, { orderId: 'b' }], 2).deps, now)).toEqual([]);
+    expect(await trackingSweepPlanner(depsWith(true, 0, hook, now, [], 0).deps, now)).toEqual([]);
+    expect(await trackingSweepPlanner(depsWith(false, 0, hook, now, [{ orderId: 'a' }], 0).deps, now)).toEqual([]);
   });
 });
