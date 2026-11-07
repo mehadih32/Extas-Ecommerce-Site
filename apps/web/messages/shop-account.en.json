@@ -312,6 +312,7 @@
       "total": "Total",
       "payment": "Payment",
       "codDue": "Pay {amount} in cash when it arrives",
+      "codAhead": "{amount} already paid ahead",
       "codDone": "Paid in cash on delivery",
       "paid": "Paid",
       "due": "{amount} still to pay",

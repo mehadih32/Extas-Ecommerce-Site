@@ -61,8 +61,11 @@ export interface ReceiptTimes {
 }
 
 export type ReceiptPay =
-  /** Cash on Delivery: this much to the rider. */
-  | { kind: 'cod'; dueMinor: number }
+  /**
+   * Cash on Delivery: this much to the rider. Follow-up 407 (PR 560): `aheadMinor`, only when part of it was paid ahead
+   * (an advance on the payment page), so the page says "paid ৳X ahead" beside what is left for the door.
+   */
+  | { kind: 'cod'; dueMinor: number; aheadMinor?: number }
   /** Nothing left to pay (the wallet paid it all, or the payment went through). */
   | { kind: 'paid'; paidMinor: number; method: PaymentMethod | null; provider: string | null; mock: boolean }
   /** A prepaid order still waiting for its payment ("Pay now"). */
@@ -171,7 +174,7 @@ export async function orderReceipt(
   const last = o.payments[0] ?? null;
   const pay: ReceiptPay =
     o.paymentMethod === 'COD'
-      ? { kind: 'cod', dueMinor: o.codAmountMinor }
+      ? { kind: 'cod', dueMinor: o.codAmountMinor, ...(o.paidMinor > 0 ? { aheadMinor: o.paidMinor } : {}) }
       : due === 0
         ? { kind: 'paid', paidMinor: o.paidMinor, method: o.paymentMethod, provider: last?.provider ?? null, mock: last?.providerTrxId?.startsWith(`${MOCK_PROVIDER}-`) ?? false }
         : last?.status === 'FAILED' || last?.status === 'CANCELLED'

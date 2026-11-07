@@ -721,6 +721,12 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
         pay: { kind: 'cod', dueMinor: s.q.totals.dueMinor },
       });
       expect(rc!.lines).toMatchObject([{ nameEn: s.q.bag.items[0]!.nameEn, quantity: 1, amountMinor: s.q.bag.items[0]!.lineMinor, colour: { key: 'sky' }, size: 'M' }]);
+      expect(rc!.pay).not.toHaveProperty('aheadMinor');
+      // follow-up 407 (PR 560): a part paid ahead (an advance) is named beside what is left for the door
+      const before = await f.t.prisma.order.findUniqueOrThrow({ where: { id: r.orderId }, select: { paidMinor: true, codAmountMinor: true } });
+      await f.t.prisma.order.update({ where: { id: r.orderId }, data: { paidMinor: 8_000, codAmountMinor: before.codAmountMinor - 8_000 } });
+      expect((await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: r.number }))!.pay).toEqual({ kind: 'cod', dueMinor: s.q.totals.dueMinor - 8_000, aheadMinor: 8_000 });
+      await f.t.prisma.order.update({ where: { id: r.orderId }, data: before });
       expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: 'test-visitor-other-0000000000', number: r.number })).toBeNull();
       expect(await orderReceipt(f.deps(), { storeId: f.S, visitorId: s.visitorId, number: 'NO-SUCH' })).toBeNull();
       // PR 136: the invoice's line facts are the stored ones (unit price, saving, SKU), never worked out again
