@@ -10,7 +10,13 @@
 // the owner one Telegram line (Keys & connections; the practice copy until the bot is connected): when the problem is
 // Urgent, or when it hit many visitors within a few minutes. A problem claims its line on `alertedAt`, so it sends at
 // most one within the hours set, however many servers or reports arrive at once. An alert never stops a report.
+//
+// Follow-up 596: a problem marked Fixed that is reported again is flagged "came back" (lib/admin-problems/service.ts).
+// With `health.problems.reopen` on (off as it ships), once it has that many new records that arrived more than the
+// grace minutes after it was marked fixed, `keepRecord` puts it back to New by itself, claimed on its status time so
+// two servers open it once, audited as health.problem.reopen with the fix note it had.
 import { createConnections, sendOwnerAlert, telegramAdapters } from '@extas/adapters';
+import { audit, SYSTEM } from '@extas/auth';
 import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
 import type { HealthProblemsSettings } from '@extas/settings';
 import type { Vault } from '@extas/vault';
@@ -177,7 +183,30 @@ export async function keepRecord(deps: ProblemDeps, cfg: Pick<HealthProblemsSett
       where: { id: problem.id },
       data: { severity },
     });
+  if (problem.status === 'FIXED' && problem.statusAt) await reopenWhenBack(deps, { id: problem.id, storeId: r.storeId, statusAt: problem.statusAt, statusNote: problem.statusNote }, r.now);
   await alertOwner(deps, { id: problem.id, storeId: r.storeId, kind: r.kind, step: r.step, path: r.path, severity, visitors, now: r.now });
+}
+
+/** Follow-up 596: a fixed problem back with enough new records after the grace minutes is New again (`health.problems.reopen`). */
+async function reopenWhenBack(deps: ProblemDeps, p: { id: string; storeId: number; statusAt: Date; statusNote: string | null }, now: Date): Promise<void> {
+  const rule = await deps.resolver.value('health.problems.reopen', { storeId: p.storeId });
+  if (!rule.enabled) return;
+  const since = new Date(p.statusAt.getTime() + rule.graceMinutes * MINUTE_MS);
+  const records = await deps.db.problemRecord.count({ where: { problemId: p.id, createdAt: { gt: since } } });
+  if (records < rule.records) return;
+  const claimed = await deps.db.customerProblem.updateMany({
+    where: { id: p.id, status: 'FIXED', statusAt: p.statusAt },
+    data: { status: 'NEW', statusNote: null, statusById: null, statusAt: now },
+  });
+  if (claimed.count === 0) return;
+  await audit(deps.db, SYSTEM, {
+    storeId: p.storeId,
+    action: 'health.problem.reopen',
+    entityType: 'CustomerProblem',
+    entityId: p.id,
+    before: { status: 'FIXED', note: p.statusNote, at: p.statusAt.toISOString() },
+    after: { status: 'NEW', records, graceMinutes: rule.graceMinutes },
+  });
 }
 
 const visitorsSince = async (db: PrismaClient, problemId: string, since: Date): Promise<number> =>
@@ -243,6 +272,9 @@ async function telegramLine(deps: ProblemDeps, text: string): Promise<void> {
   await sendOwnerAlert(c, text);
 }
 
+/** What keepRecord reads back (follow-up 596: the status, for the re-open rule). */
+const PROBLEM_FACTS = { id: true, severity: true, status: true, statusAt: true, statusNote: true } as const;
+
 /** The problem for this cause, made when it is new; its count and last time moved on. */
 async function problemFor(
   db: PrismaClient,
@@ -275,7 +307,7 @@ async function problemFor(
         firstSeenAt: p.now,
         lastSeenAt: p.now,
       },
-      select: { id: true, severity: true },
+      select: PROBLEM_FACTS,
     });
   } catch (e) {
     // two first reports at once: the other made it; count this one on it
@@ -283,7 +315,7 @@ async function problemFor(
       return db.customerProblem.update({
         where,
         data: bump,
-        select: { id: true, severity: true },
+        select: PROBLEM_FACTS,
       });
     throw e;
   }

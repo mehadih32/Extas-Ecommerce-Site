@@ -432,7 +432,7 @@ describe.skipIf(!HAS_TEST_DB)('Customer problems on PostgreSQL (PR 423)', () => 
     expect((await list()).a.view.enabled).toBe(false);
   });
 
-  const putCard = async (key: 'problems' | 'alerts', patch: Record<string, unknown>, cookie = owner) => {
+  const putCard = async (key: 'problems' | 'alerts' | 'reopen', patch: Record<string, unknown>, cookie = owner) => {
     const card = (await list()).a.view.cards[key];
     return problemsListHandler(
       call('PUT', {
@@ -515,5 +515,31 @@ describe.skipIf(!HAS_TEST_DB)('Customer problems on PostgreSQL (PR 423)', () => 
     shift += 7 * 3_600_000;
     await broken(placeCall());
     expect(sent).toHaveLength(n + 1);
+  });
+  it('follow-up 596: a fixed problem that comes back is opened again by itself only with the rule on, and audited', async () => {
+    const p = await t.prisma.customerProblem.findFirstOrThrow({ where: { kind: 'script_error' } });
+    expect(p.status).toBe('FIXED'); // came back once above with the rule off: flagged, still fixed
+    expect((await list()).a.view.cards.reopen.value).toEqual({ enabled: false, records: 3, graceMinutes: 60 });
+    expect((await putCard('reopen', { enabled: true }, fixer)).status).toBe(403);
+    expect((await putCard('reopen', { records: 0 })).status).toBe(400);
+    // within the grace minutes after the fix nothing counts (an old open page may still report)
+    expect((await putCard('reopen', { enabled: true, records: 2 })).status).toBe(200);
+    expect(await t.prisma.auditLog.count({ where: { action: 'health.problems.reopen.save' } })).toBe(1);
+    const back = (v: string) => report({ v, p: '/p/red-polo', r: [{ k: 'script_error', d: 'Cannot read 5 of undefined for 01700000000 e@f.com' }] });
+    await back('tab-back-0001');
+    expect((await t.prisma.customerProblem.findUniqueOrThrow({ where: { id: p.id } })).status).toBe('FIXED');
+    expect((await putCard('reopen', { graceMinutes: 0 })).status).toBe(200);
+    await back('tab-back-0002');
+    const again = await t.prisma.customerProblem.findUniqueOrThrow({ where: { id: p.id } });
+    expect(again).toMatchObject({ status: 'NEW', statusNote: null, statusById: null });
+    expect((await one(p.id)).a.detail.row.back).toBe(false);
+    const rows = await t.prisma.auditLog.findMany({ where: { action: 'health.problem.reopen', entityId: p.id } });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ actorType: 'SYSTEM', before: { status: 'FIXED', note: 'Guarded the empty size list' }, after: { status: 'NEW' } });
+    expect((rows[0]!.after as { records: number }).records).toBeGreaterThanOrEqual(2);
+    // an open problem is never touched again by the rule
+    await back('tab-back-0003');
+    expect(await t.prisma.auditLog.count({ where: { action: 'health.problem.reopen' } })).toBe(1);
+    expect((await putCard('reopen', { enabled: false })).status).toBe(200);
   });
 });

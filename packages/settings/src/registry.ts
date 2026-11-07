@@ -132,6 +132,7 @@ import { adminPatternsSettings } from './registry-admin-patterns';
 import { adminTodaySettings } from './registry-admin-today';
 import { erpReplaySettings } from './registry-erp-replay';
 import { erpHeldSettings } from './registry-erp-held';
+import { healthReopenSettings } from './registry-health-reopen';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
@@ -1515,6 +1516,8 @@ export const registry = {
   ...erpReplaySettings,
   // ---- Follow-up 539 (PR 610) · an alert for documents the ERP keeps refusing, off (registry-erp-held.ts, version 239). ----
   ...erpHeldSettings,
+  // ---- Follow-up 596 (PR 423) · a fixed customer problem that comes back opens again, off (registry-health-reopen.ts, version 270). ----
+  ...healthReopenSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
