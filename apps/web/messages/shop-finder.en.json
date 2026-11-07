@@ -80,5 +80,20 @@
       "measuresOf": "Measurements · {size}",
       "choose": "Choose a size to see its measurements."
     }
+  },
+  "sizeGuide": {
+    "title": "Size guide",
+    "lede": "Tell us your height and weight and we will match you to the right size for any item — or read the measurements below.",
+    "find": "Find my size",
+    "pick": "What are you buying? Then tell us your height and weight (kg) — we match you to that size chart.",
+    "back": "Change item",
+    "yourSize": "Your size · {name}",
+    "savedTop": "For {height} · {weight} · saved as your top size",
+    "savedBottom": "For {height} · {weight} · saved as your bottom size",
+    "notSaved": "For {height} · {weight}",
+    "between": "Between sizes or like it roomy? Take **{size}**.",
+    "shop": "Shop {name} in {size}",
+    "tableOf": "{chart} · inches",
+    "size": "Size"
   }
 }

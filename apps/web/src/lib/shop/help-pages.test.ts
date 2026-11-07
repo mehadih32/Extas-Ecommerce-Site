@@ -103,17 +103,17 @@ describe('a help page', () => {
     ]);
   });
 
-  it('the eight pages have their route (Ways to pay since PR 247); Careers and the size guide are still coming', () => {
+  it('the eight pages have their route (Ways to pay since PR 247); Careers is still coming, the size guide has its own page', () => {
     expect(HELP_SLUGS).toContain('payment');
     for (const s of HELP_SLUGS) {
       expect(isHelpSlug(s)).toBe(true);
       expect(BUILT_INSIDE).toContain(`/help/${s}`);
       expect(comingSoon(`/help/${s}`, '/p/')).toBeNull();
     }
-    for (const s of ['careers', 'size-guide']) {
-      expect(isHelpSlug(s)).toBe(false);
-      expect(comingSoon(`/help/${s}`, '/p/')).toBe('help');
-    }
+    for (const s of ['careers', 'size-guide']) expect(isHelpSlug(s)).toBe(false);
+    expect(comingSoon('/help/careers', '/p/')).toBe('help');
+    // follow-up 155: app/(shop)/(store)/help/size-guide (it says "Coming soon" itself while no category has a chart)
+    expect(comingSoon('/help/size-guide', '/p/')).toBeNull();
   });
 });
 

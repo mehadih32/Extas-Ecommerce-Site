@@ -372,6 +372,8 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
     // follow-up 75: open what the plan names (the phone menu, a category's sub-categories) before measuring
     for (const sel of opts.clicks ?? []) {
       const el = page.locator(sel).first();
+      // follow-up 155: what a press opens may come with a fetch (the size guide window): wait up to `openWaitMs` for it
+      if (rules.openWaitMs) await el.waitFor({ state: 'visible', timeout: rules.openWaitMs }).catch(() => undefined);
       if (!(await el.count())) {
         issues.push({ k: 'CONTROL-MISSING', d: `${sel} not on the page to open (seeded data missing?)` });
         break;
@@ -380,6 +382,7 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
       await page.waitForTimeout(rules.settleMs);
     }
     for (const sel of opts.expect ?? []) {
+      if (opts.clicks?.length && rules.openWaitMs) await page.waitForSelector(sel, { state: 'attached', timeout: rules.openWaitMs }).catch(() => undefined);
       if (!(await page.$(sel))) issues.push({ k: 'CONTROL-MISSING', d: `${sel} not on the page (seeded data missing?)` });
     }
     // PR 53: the first screen as it opens, then again after a size is chosen (the line under the sizes fills in).

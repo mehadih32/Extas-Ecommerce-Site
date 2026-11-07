@@ -1,0 +1,60 @@
+/* Follow-up 155 (PR 58, 75) — the size guide window (demo 10-size-guide.js, css .sg-cats / .sg-cat) and the size guide
+   page's tables (D-018 .sg-d-tbl). The window wears the product page's finder look (pdp.css .pdp-step / .pdp-res /
+   .pdp-sheet), repeated here under .sg-win because the window opens on pages that do not load pdp.css. */
+.shop .sg-win .pdp-step { display: inline-flex; align-items: center; border: 1px solid var(--input); border-radius: var(--radius); background: var(--surface); }
+.shop .sg-win .pdp-step button { width: 52px; height: 52px; border: none; background: none; cursor: pointer; color: var(--ink); display: flex; align-items: center; justify-content: center; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.shop .sg-win .pdp-step button:hover { background: var(--line2); }
+.shop .sg-win .pdp-step button[aria-disabled="true"] { color: var(--muted); cursor: default; }
+.shop .sg-win .pdp-step output { min-width: 78px; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+.shop .sg-win .pdp-res { border: 1px solid var(--brand-line); background: var(--brand-tint); border-radius: var(--card-radius); padding: 22px; }
+.shop .sg-win .pdp-res-size { font-family: var(--font-display); font-weight: 800; font-size: 62px; line-height: 1; color: var(--brand); }
+.shop.shop[data-theme="festive"] .sg-win .pdp-res-size { color: var(--gold); }
+.shop .sg-win .pdp-why { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-direction: column; gap: 10px; }
+.shop .sg-win .pdp-why li { display: flex; gap: 10px; font-size: 15px; line-height: 1.55; }
+.shop .sg-win .pdp-why li svg { flex-shrink: 0; color: var(--brand); margin-top: 2px; }
+.shop .modal.sg-win { max-height: 96vh; }
+.shop .modal.sg-win .modal-bd { padding: 22px 22px 26px; font-size: 15.5px; }
+.shop .modal.sg-win .modal-hd .h3 { font-size: 21px !important; }
+.shop .modal.sg-win .small { font-size: 15px; line-height: 1.55; }
+.shop .modal.sg-win .xs { font-size: 13.5px; line-height: 1.5; }
+.shop .modal.sg-win .label { font-size: 14.5px; font-weight: 750; margin-bottom: 6px; }
+.shop .modal.sg-win .btn { min-height: 54px; font-size: 16.5px; }
+@media (min-width: 768px) { .shop .modal.sg-win { max-width: 640px; } }
+@media (max-width: 359px) {
+  .shop .modal.sg-win .modal-bd { padding: 18px 16px 22px; }
+  .shop .sg-win .pdp-step button { width: 44px; height: 44px; }
+  .shop .sg-win .pdp-step output { min-width: 64px; font-size: 18px; }
+  .shop .sg-win .pdp-res-size { font-size: 52px; }
+}
+
+.shop .sg-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.shop .sg-cat { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 10px 14px; border: 1px solid var(--input); border-radius: var(--radius); background: var(--surface); color: var(--ink); font: inherit; font-weight: 650; font-size: 15px; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.shop .sg-cat:hover { border-color: var(--brand); }
+.shop .sg-cat svg { flex-shrink: 0; color: var(--brand); }
+.shop .sg-cat:focus-visible, .shop .sg-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.shop .sg-steps { display: flex; flex-direction: column; gap: 16px; }
+.shop .sg-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.shop .sg-go { margin-top: 24px; }
+.shop .sg-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.shop .sg-link { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0; border: none; background: none; color: var(--brand); font: inherit; font-weight: 650; cursor: pointer; }
+.shop .sg-tip { background: var(--bg); border-radius: var(--radius); padding: 16px; }
+.shop .sg-acts { display: flex; flex-wrap: wrap; gap: 10px; }
+.shop .sg-acts .btn { flex: 1 1 auto; }
+.shop .sg-acts .btn-primary { flex-grow: 2; text-align: center; }
+
+/* the size guide page (/help/size-guide): the button, then each category's chart */
+.shop .sg-page .sg-open { display: inline-flex; align-items: center; gap: 8px; margin: 4px 0 20px; text-decoration: none; }
+.shop .sg-tables { display: grid; gap: 16px; }
+@media (min-width: 1024px) { .shop .pg.sg-page { max-width: 1120px; } .shop .sg-tables { grid-template-columns: 1fr 1fr; } }
+.shop .sg-page .sg-tbl { padding: 16px; min-width: 0; }
+.shop .sg-tbl-hd { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+.shop .sg-page .sg-tbl h2 { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
+.shop .sg-tbl h2 svg { color: var(--brand); }
+.shop .sg-tbl h2 a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; color: inherit; text-decoration: none; }
+.shop .sg-tbl h2 a:hover { color: var(--brand); text-decoration: underline; }
+.shop .sg-scroll { overflow-x: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
+.shop .sg-scroll table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.shop .sg-scroll th, .shop .sg-scroll td { padding: 9px 8px; text-align: center; border-bottom: 1px solid var(--line2); white-space: nowrap; }
+.shop .sg-scroll thead th { font-size: 12.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.shop .sg-scroll tbody th { font-family: var(--font-display); font-weight: 800; color: var(--ink); text-align: left; }
+.shop .sg-scroll tbody tr:last-child > * { border-bottom: 0; }

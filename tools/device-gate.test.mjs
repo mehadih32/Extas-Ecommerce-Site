@@ -103,7 +103,7 @@ describe('device gate', () => {
 
   it('follow-up 75 · plans the phone menu opened with its sub-categories, on phones and tablets only', () => {
     const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
-    const plan = openedPlan('http://h:1', rules.opened);
+    const plan = openedPlan('http://h:1', rules.opened).filter((p) => p.clicks[0] === 'button[data-act="open-menu"]');
     expect(plan.map((p) => p.url)).toEqual(['http://h:1/?gate=opened', 'http://h:1/bn?gate=opened']);
     expect(plan.every((p) => p.signedOut && p.clicks[0] === 'button[data-act="open-menu"]' && p.clicks.includes('[data-testid="mn-acc"]'))).toBe(true);
     expect(plan[0].groups).toEqual(['phone', 'tablet']);
@@ -112,6 +112,20 @@ describe('device gate', () => {
     expect(openedPlan('http://h:1', undefined)).toEqual([]);
     expect(openedPlan('http://h:1', [{ paths: ['/'] }])).toEqual([]);
     expect(openedPlan('http://h:1', { paths: ['/x'], clicks: ['b'] })).toEqual([{ url: 'http://h:1/x?gate=opened', signedOut: true, expect: [], clicks: ['b'] }]);
+  });
+
+  it('follow-up 155 · plans the size guide window opened from the footer and from its page, every width, waiting for its data', () => {
+    const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
+    const plan = openedPlan('http://h:1', rules.opened).filter((p) => p.expect.includes('[data-testid="size-guide-modal"]'));
+    expect(plan.map((p) => p.url)).toEqual([
+      'http://h:1/collections/polos?gate=opened',
+      'http://h:1/bn/collections/polos?gate=opened',
+      'http://h:1/help/size-guide?gate=opened',
+      'http://h:1/bn/help/size-guide?gate=opened',
+    ]);
+    expect(plan.every((p) => !p.groups && !p.maxWidth)).toBe(true);
+    expect(new Set(openedPlan('http://h:1', rules.opened).map((p) => p.url)).size).toBe(openedPlan('http://h:1', rules.opened).length);
+    expect(rules.openWaitMs).toBeGreaterThan(rules.settleMs);
   });
 
   it('qa-gate I1 (PR 621) · plans the admin forms opened in place, signed in, once per admin language', () => {
