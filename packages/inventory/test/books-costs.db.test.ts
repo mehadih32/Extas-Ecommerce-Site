@@ -3,7 +3,7 @@
 // is the practice ERP behind LIVE connections (its fetch replaces the network); every key is made up here and every
 // amount is a test value — the real fixed costs are owner data and ship empty.
 //   Stores A and B are on v6 (switch date 1 Nov 2026), each with its own key and ERP company; store C is still on v5.
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { allAdapters, createConnections, mockErp } from '@extas/adapters';
 import { createRole, SYSTEM, syncAuth, type Actor } from '@extas/auth';
@@ -15,6 +15,7 @@ import {
   costEntries,
   fixedCostsView,
   openErpLink,
+  recordStatementCost,
   reverseCostEntry,
   setFixedCosts,
   summaryCheck,
@@ -330,6 +331,50 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 618 on PostgreSQL: fixed costs and t
     expect(await t.prisma.auditLog.count({ where: { entityId: { in: [e.id, rev.id] }, actorId: clerk.staffUserId } })).toBe(2);
     // The month's numbers stay the owner's: store B still holds only the owner's version.
     expect((await months(B, '2026-11')).map((m) => m.salaryMinor)).toEqual([100n]);
+  });
+
+  it('follow-up 565: an imported statement writes its courier charges or gateway fees as one cost line, only while its switch is on', async () => {
+    const w = { actor: owner, storeId: B };
+    const settlement = randomUUID();
+    const courier = { kind: 'COURIER_SETTLEMENT' as const, statementId: settlement, reference: 'STM-0001', amountMinor: 48_000 };
+    // Off as shipped: nothing is written.
+    expect(await recordStatementCost(deps(), w, courier)).toEqual({ status: 'OFF' });
+    expect(await t.prisma.costEntry.count({ where: { storeId: B, refId: settlement } })).toBe(0);
+    overrides.set(`books.costs.fromStatements@${B}`, { courierCharges: true, gatewayFees: false });
+    try {
+      const r = await recordStatementCost(deps(), w, courier);
+      expect(r.status).toBe('WRITTEN');
+      const row = await t.prisma.costEntry.findUniqueOrThrow({ where: { id: r.id! } });
+      const today = new Date(clock.getTime() + 6 * 3_600_000).toISOString().slice(0, 10);
+      expect([row.summaryLine, row.amountMinor, row.module, row.refType, row.refId, row.detail, row.costDate?.toISOString().slice(0, 10)]).toEqual(['DELIVERY', 48_000, 'payments', 'courier.settlement', settlement, 'STM-0001', today]);
+      // One entry per statement, ever.
+      expect(await recordStatementCost(deps(), w, courier)).toEqual({ status: 'ALREADY', id: r.id });
+      // It shows among the day's costs as from a statement, and is put right at its source, not reversed here.
+      const listed = (await costEntries(deps(), { actor: viewer, storeId: B })).rows.find((x) => x.id === r.id)!;
+      expect([listed.line, listed.manual, listed.canReverse]).toEqual(['DELIVERY', false, false]);
+      expect(await code(reverseCostEntry(deps(), w, r.id!, { reason: 'wrong' }))).toBe('CONFLICT');
+      expect(await t.prisma.auditLog.count({ where: { action: 'books.costLine.statement', entityId: r.id! } })).toBe(1);
+      // The gateway part is still off; nothing to count is no entry; a v5 store has no books.
+      expect(await recordStatementCost(deps(), w, { kind: 'GATEWAY_STATEMENT', statementId: randomUUID(), reference: 'BK-1', amountMinor: 2_750 })).toEqual({ status: 'OFF' });
+      overrides.set(`books.costs.fromStatements@${B}`, { courierCharges: true, gatewayFees: true });
+      expect(await recordStatementCost(deps(), w, { ...courier, statementId: randomUUID(), amountMinor: 0 })).toEqual({ status: 'NONE' });
+      overrides.set(`books.costs.fromStatements@${C}`, { courierCharges: true, gatewayFees: true });
+      expect(await recordStatementCost(deps(), { actor: SYSTEM, storeId: C }, { ...courier, statementId: randomUUID() })).toEqual({ status: 'NOT_LINKED' });
+      // Above the line cap: not written (a person enters it by hand), kept in the audit log.
+      overrides.set(`books.costs.maxLineMinor@${B}`, 1_000);
+      const big = randomUUID();
+      expect(await recordStatementCost(deps(), w, { kind: 'GATEWAY_STATEMENT', statementId: big, reference: 'BK-2', amountMinor: 5_000 })).toEqual({ status: 'TOO_BIG' });
+      expect(await t.prisma.costEntry.count({ where: { storeId: B, refId: big } })).toBe(0);
+      expect(await t.prisma.auditLog.count({ where: { action: 'books.costLine.statementSkipped', entityId: big } })).toBe(1);
+      overrides.delete(`books.costs.maxLineMinor@${B}`);
+      const fee = await recordStatementCost(deps(), w, { kind: 'GATEWAY_STATEMENT', statementId: big, reference: 'BK-2', amountMinor: 5_000 });
+      expect(fee.status).toBe('WRITTEN');
+      expect((await t.prisma.costEntry.findUniqueOrThrow({ where: { id: fee.id! } })).summaryLine).toBe('PAYMENT_FEES');
+    } finally {
+      overrides.delete(`books.costs.fromStatements@${B}`);
+      overrides.delete(`books.costs.fromStatements@${C}`);
+      overrides.delete(`books.costs.maxLineMinor@${B}`);
+    }
   });
 
   it('a closed month takes no new fixed costs and no new cost entries', async () => {

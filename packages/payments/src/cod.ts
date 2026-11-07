@@ -468,6 +468,8 @@ export async function importSettlement(deps: PaymentsDeps, who: Who, input: unkn
     }, TX);
     // PR 564: a record only, after the statement is stored; it never fails the import
     if (charged.length && deps.courier?.statementCharges) await deps.courier.statementCharges(storeId, charged).catch(() => null);
+    // follow-up 565: the charges it deducted as the day's courier cost (the books' switch decides; never fails the import)
+    if (charges > 0 && deps.books?.statementCost) await deps.books.statementCost(who, { kind: 'COURIER_SETTLEMENT', statementId: id, reference: d.reference, amountMinor: charges }).catch(() => null);
     return summary(deps.db, id, false);
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {

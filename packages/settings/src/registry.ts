@@ -135,6 +135,7 @@ import { erpHeldSettings } from './registry-erp-held';
 import { healthReopenSettings } from './registry-health-reopen';
 import { loginNetworkSettings } from './registry-login-network';
 import { exchangeRetrySettings } from './registry-exchange-retry';
+import { statementCostsSettings } from './registry-books-statement-costs';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
@@ -1536,6 +1537,8 @@ export const registry = {
   ...exchangeRetrySettings,
   // ---- Follow-up 505 (PR 425, 426) · a customer's Messenger or WhatsApp file copied to our storage behind the SSRF guard, off (registry-support-file-copy.ts, version 273). ----
   ...supportFileCopySettings,
+  // ---- Follow-up 565 (PR 618, 166, 174) · the courier's charges and the gateways' fees from their imported statements as cost lines, off (registry-books-statement-costs.ts, version 274). ----
+  ...statementCostsSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

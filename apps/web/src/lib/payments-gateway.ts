@@ -4,6 +4,7 @@
 // that moves an order whose advance is now paid), and our callback address for a provider on the host the customer
 // uses. The admin API (payments-api.ts) and the checkout's payment route use these.
 import { createConnections, paymentAdapters, type Connections } from '@extas/adapters';
+import { recordStatementCost } from '@extas/inventory';
 import { keptDeliveryCharge, recordAdvance, selfConfirmPrepaid } from '@extas/orders';
 import { noteStatementCharges } from '@extas/shipping';
 import { connectionGateways, type GatewayResolver, type PaymentsDeps } from '@extas/payments';
@@ -56,6 +57,8 @@ export async function paymentsServiceDeps(deps: AdminDeps): Promise<PaymentsDeps
     },
     // PR 564: a statement's charges go to the charge mismatch log (record only, off until the owner's switch)
     courier: { statementCharges: (storeId, lines) => noteStatementCharges({ db: deps.db, settings: deps.resolver, now: deps.now }, storeId, lines) },
+    // follow-up 565: an imported statement's courier charges or gateway fees as the day's cost line (only while the books' switch is on)
+    books: { statementCost: async (who, cost) => recordStatementCost(await inventoryDeps(deps), who, cost) },
     // CN-018 (4): a split flexible set's kept part under the free-delivery limit owes the band charge (only while the owner's switch is on)
     door: { keptChargeMinor: (storeId, orderId, kept) => keptDeliveryCharge({ db: deps.db, settings: deps.resolver, now: deps.now }, storeId, orderId, kept) },
   };

@@ -222,6 +222,8 @@ export async function importGatewayStatement(deps: PaymentsDeps, who: Who, input
       await auditMoney(tx, who, 'gateway.statement.import', 'GatewayStatement', s.id, undefined, { provider: d.provider, reference: d.reference, lines: lines.length, totalMinor: total, feesMinor: fees, fileHash });
       return s.id;
     }, TX);
+    // follow-up 565: the gateway's fees as the day's payment-fee cost (the books' switch decides; never fails the import)
+    if (fees > 0 && deps.books?.statementCost) await deps.books.statementCost(who, { kind: 'GATEWAY_STATEMENT', statementId: id, reference: d.reference ?? null, amountMinor: fees }).catch(() => null);
     return statementSummary(deps, storeId, id, false);
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {

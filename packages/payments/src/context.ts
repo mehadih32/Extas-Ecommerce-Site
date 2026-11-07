@@ -48,6 +48,15 @@ export interface CourierChargeHooks {
   statementCharges?(storeId: number, lines: { shipmentId: string; chargeMinor: number | null }[]): Promise<unknown>;
 }
 
+/** Follow-up 565 — what the books do with an imported statement's charges or fees (a cost line of the ERP summary). */
+export interface BooksCostHooks {
+  /**
+   * Called after a statement is stored (never for the same file again), with the courier's deducted charges or the
+   * gateway's fees in all; a record only, it never fails the import (the books' own switch decides whether it counts).
+   */
+  statementCost?(who: Who, cost: { kind: 'COURIER_SETTLEMENT' | 'GATEWAY_STATEMENT'; statementId: string; reference: string | null; amountMinor: number }): Promise<unknown>;
+}
+
 /** CN-018 (4): what the order side knows about a partial delivery's kept part (follow-up 330). */
 export interface DoorHooks {
   /**
@@ -69,6 +78,8 @@ export interface PaymentsDeps {
   gateways?: GatewayResolver;
   /** CN-018 (4): the kept part's delivery charge (none: a split never adds a delivery charge). */
   door?: DoorHooks;
+  /** Follow-up 565: the books' cost line from an imported statement (none: the statement's charges stay on its lines). */
+  books?: BooksCostHooks;
 }
 
 /** A staff member (or the system, `staffUserId: null`) acting in one store. */

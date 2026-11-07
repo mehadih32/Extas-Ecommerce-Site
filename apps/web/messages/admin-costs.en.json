@@ -104,6 +104,29 @@
       "WAITING": "Waiting to send",
       "RETRYING": "Trying again",
       "REFUSED": "Refused by the ERP"
+    },
+    "fromStatements": {
+      "h": "Costs from statements",
+      "d": "The courier's charges and the gateways' fees written by the statements you import, so nobody types them. Off: enter them by hand on the Courier and Payment and COD fees lines.",
+      "courier": "Courier charges from the COD statement",
+      "courierHelp": "When a courier's COD statement is imported (Money › COD), the charges it deducted become one Courier cost on the day of the import. Stop entering the courier's charges by hand when this is on, or they count twice.",
+      "gateway": "Gateway fees from the gateway statement",
+      "gatewayHelp": "When a gateway's statement (bKash, Nagad, card) is imported, its fees become one Payment and COD fees cost on the day of the import. Stop entering those fees by hand when this is on, or they count twice.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "readOnly": "You can see these settings. Changing them needs the \"Set fixed costs\" permission.",
+      "err": {
+        "STALE": "Someone changed these settings meanwhile. The page now shows their values; check them and save again.",
+        "INVALID_INPUT": "Something is not filled in right.",
+        "FORBIDDEN": "You are not allowed to change these settings.",
+        "forbidden": "You are not allowed to change these settings.",
+        "unauthorized": "Please sign in again.",
+        "network": "No connection. Nothing was saved; try again.",
+        "other": "It could not be saved. Try again."
+      }
     }
   }
 }

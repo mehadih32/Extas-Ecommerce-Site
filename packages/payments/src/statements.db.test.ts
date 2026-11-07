@@ -55,7 +55,13 @@ describe.skipIf(!HAS_TEST_DB)('PR 174 · gateway statements and the reconciliati
   it('imports once per file and reference; every line matched or given its reason; a match RECONCILED with its fee', async () => {
     expect(await code(importGatewayStatement(f.deps(), f.viewer, input))).toBe('FORBIDDEN');
     expect(await code(importGatewayStatement(f.deps(), f.staff, { ...input, csv: 'amount\n1' }))).toBe('INVALID_INPUT');
-    const s = await importGatewayStatement(f.deps(), f.staff, input);
+    // follow-up 565: the gateway's fees go to the books once, as the statement's cost (never on a replay); a failing hook never fails the import
+    const costs: unknown[] = [];
+    const hooked = f.deps({ books: { statementCost: async (who, c) => void costs.push({ storeId: who.storeId, ...c }) } });
+    const s = await importGatewayStatement(hooked, f.staff, input);
+    expect(costs).toEqual([{ storeId: f.staff.storeId, kind: 'GATEWAY_STATEMENT', statementId: s.statementId, reference: 'BK-2026-10', amountMinor: 2_750 }]);
+    expect(await importGatewayStatement(hooked, f.staff, input)).toMatchObject({ replay: true });
+    expect(costs).toHaveLength(1);
     expect(s).toMatchObject({ provider: 'bkash', reference: 'BK-2026-10', totalMinor: 100_000 + 49_000 + 30_000 + 9_900 + 100_000, feesMinor: 2_750, matched: 2, mismatched: 5, replay: false });
     expect(s.lines.map((l) => [l.trxId, l.kind, l.matchStatus, l.reasonCode])).toEqual([
       ['TRXA1', 'PAYMENT', 'MATCHED', null],
