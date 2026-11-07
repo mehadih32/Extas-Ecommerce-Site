@@ -28,6 +28,7 @@ import { body, errorResponse, fail, isUuid, json, readCookie, sameOrigin } from 
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
 import { trackAddToBag } from '../tracking/shop';
 import { BN_PREFIX } from './lang';
+import { BOT } from '../experiments/edge';
 
 /** The largest request body the bag takes (a code, an id, a number). */
 export const BAG_BODY_MAX = 2_048;
@@ -331,6 +332,14 @@ export async function tryFillHandler(request: Request, deps: BagApiDeps | null):
 /** PR 275 — the follow-up link's code (CheckoutDraft.restoreCode): URL-safe, never long. */
 const RESTORE_CODE = /^[A-Za-z0-9_-]{8,40}$/;
 
+/** Follow-up 641: a robot fetching a link (a chat app's preview, a crawler), not a person's browser. */
+export function isLinkRobot(ua: string | null | undefined): boolean {
+  const u = ua ?? '';
+  if (!u.trim()) return true;
+  if (/^Mozilla\//.test(u) && /whatsapp|FBAN|FBAV|FB_IAB|Instagram|Messenger/i.test(u) && !/facebookexternalhit/i.test(u)) return false;
+  return BOT.test(u);
+}
+
 /**
  * GET /api/bag/back/<code> — PR 275: the link in an unfinished checkout's follow-up (PR 276: or in a signed-in customer's
  * left-bag recovery message, Cart.restoreCode). Puts that checkout's bag (every
@@ -349,6 +358,10 @@ export async function bagBackHandler(request: Request, deps: BagApiDeps | null, 
     return new Response(null, { status: 303, headers });
   };
   if (!deps || !RESTORE_CODE.test(code)) return go();
+  // Follow-up 641 (PR 275, 276): a chat app's link preview robot opening the link makes no bag and keeps no code (it
+  // only follows to /bag); the customer's own tap does. An app's own browser (Mozilla/… with WhatsApp, Facebook or
+  // Instagram in it) is a person, not the robot.
+  if (isLinkRobot(request.headers.get('user-agent'))) return go();
   try {
     const d = await deps.cart.db.checkoutDraft.findFirst({ where: { storeId: deps.storeId, restoreCode: code }, select: { id: true, cartId: true, convertedOrderId: true } });
     // PR 276: or a signed-in customer's left bag (its recovery message's link), while that bag is still open
