@@ -149,8 +149,10 @@ export async function setUpBooks(label: string): Promise<BooksFixture> {
     async shopOrder(storeId, ext, pieces, billedAt) {
       const link = await linkOf(storeId);
       const total = pieces.reduce((s, p) => s + p.shopPrice * 100, 0);
+      // ~~orderId: randomUUID()~~ follow-up 534: ErpOrder.orderId is a foreign key — a sample shop order of its own
+      const shop = await t.prisma.order.create({ data: { storeId, number: `FX-${ext}-${randomUUID().slice(0, 8)}`, source: 'WEBSITE', currency: 'BDT', subtotalMinor: total, deliveryChargeMinor: 0, totalMinor: total, idempotencyKey: `fx-${randomUUID()}`, status: 'PLACED', placedAt: clock.now } });
       const o = await t.prisma.erpOrder.create({
-        data: { storeId, linkId: link.id, orderId: randomUUID(), externalOrderId: ext, erpTotalMinor: BigInt(total), acceptedAt: clock.now, consignmentId: `C-${ext}`, courier: 'PATHAO', pickedUpAt: billedAt, shipmentSentAt: billedAt, billedAt },
+        data: { storeId, linkId: link.id, orderId: shop.id, externalOrderId: ext, erpTotalMinor: BigInt(total), acceptedAt: clock.now, consignmentId: `C-${ext}`, courier: 'PATHAO', pickedUpAt: billedAt, shipmentSentAt: billedAt, billedAt },
       });
       for (const p of pieces) {
         await t.prisma.erpOrderLine.create({ data: { storeId, erpOrderId: o.id, lineId: p.lineId, sku: p.sku, customerPriceMinor: p.shopPrice * 150, shopPriceMinor: p.shopPrice * 100 } });

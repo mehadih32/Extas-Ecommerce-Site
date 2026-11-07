@@ -76,7 +76,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   };
   let n = 0;
   /** A confirmed order as the order service queues it (its order items have their own ids). */
-  const order = (storeId: number, lines: { sku: string; quantity?: number; unit: number; total?: number; combo?: string }[], extra: Partial<OrderPushInput> = {}) => {
+  // ~~const order = (storeId, lines, extra) => {…}~~ follow-up 534: ErpOrder.orderId and ErpOrderLine.orderItemId are
+  // foreign keys, so the sample order and its lines are written first (async)
+  const order = async (storeId: number, lines: { sku: string; quantity?: number; unit: number; total?: number; combo?: string }[], extra: Partial<OrderPushInput> = {}) => {
     n++;
     const orderId = randomUUID();
     const input: OrderPushInput = {
@@ -98,7 +100,10 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
       shippingFeeMinor: 6_000,
       ...extra,
     };
-    return { orderId, ext: input.externalOrderId, input };
+    const total = input.items.reduce((a, i) => a + (i.lineTotalMinor ?? 0), 0);
+    await t.prisma.order.create({ data: { id: input.orderId, storeId, number: `${input.externalOrderId}-${input.orderId.slice(0, 8)}`, source: 'WEBSITE', currency: 'BDT', subtotalMinor: total, deliveryChargeMinor: 0, totalMinor: total, idempotencyKey: `fx-${input.orderId}`, status: 'CONFIRMED', placedAt: clock } });
+    for (const i of input.items) await t.prisma.orderItem.create({ data: { id: i.orderItemId, storeId, orderId: input.orderId, sku: i.sku, productName: 'Sample polo', quantity: i.quantity, unitPriceMinor: i.unitPriceMinor, lineTotalMinor: i.lineTotalMinor ?? 0 } });
+    return { orderId: input.orderId, ext: input.externalOrderId, input };
   };
   const pushOf = (storeId: number, referenceId: string, documentType = 'order.create') => t.prisma.erpPush.findFirstOrThrow({ where: { storeId, referenceId, documentType }, orderBy: { createdAt: 'desc' } });
 
@@ -148,7 +153,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   });
 
   it('v5 is unchanged: the same order goes as one line per SKU with its quantity, and no ErpOrder rows are written', async () => {
-    const o = order(storeA, [{ sku: 'POLO-NAVY-M', quantity: 2, unit: 650 }]);
+    const o = await order(storeA, [{ sku: 'POLO-NAVY-M', quantity: 2, unit: 650 }]);
     await enqueueOrderPush(deps(), o.input);
     const row = await pushOf(storeA, o.orderId);
     const items = (row.requestBody as { body: { items: Record<string, unknown>[] } }).body.items;
@@ -164,7 +169,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   it('PR 610: a v6 order is one line per piece (quantity 1, its own lineId) priced in whole taka, with delivery charge and advance', async () => {
     overrides.set(`erp.model@${storeA}`, 'v6');
     overrides.set(`erp.model@${storeB}`, 'v6');
-    const o = order(storeA, [{ sku: 'POLO-NAVY-M', quantity: 2, unit: 650 }, { sku: 'POLO-NAVY-L', unit: 700, total: 533.33, combo: 'set' }, { sku: 'POLO-BLACK-XL', unit: 650, total: 533.33, combo: 'set' }, { sku: 'POLO-NAVY-M', unit: 650, total: 533.34, combo: 'set' }], { orderDiscountMinor: 0, advancePaidMinor: 50_000 });
+    const o = await order(storeA, [{ sku: 'POLO-NAVY-M', quantity: 2, unit: 650 }, { sku: 'POLO-NAVY-L', unit: 700, total: 533.33, combo: 'set' }, { sku: 'POLO-BLACK-XL', unit: 650, total: 533.33, combo: 'set' }, { sku: 'POLO-NAVY-M', unit: 650, total: 533.34, combo: 'set' }], { orderDiscountMinor: 0, advancePaidMinor: 50_000 });
     a1 = { orderId: o.orderId, ext: o.ext };
     await enqueueOrderPush(deps(), o.input);
     const row = await pushOf(storeA, o.orderId);
@@ -213,8 +218,10 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
     const eo = (await erpOrderOf(t.prisma, { storeId: storeA, orderId: a1.orderId }))!;
     const before = await erpOrderLinesOf(t.prisma, eo.id);
     const items = before.filter((l) => l.piece === 1 && l.lineId !== `${a1.ext}-5`).map((l) => ({ orderItemId: l.orderItemId!, sku: l.sku, quantity: 1, unitPriceMinor: 65_000, lineTotalMinor: 65_000 }));
+    // follow-up 534: the new piece's shop line exists first (ErpOrderLine.orderItemId is a foreign key)
+    const added = await t.prisma.orderItem.create({ data: { storeId: storeA, orderId: a1.orderId, sku: 'POLO-NAVY-L', productName: 'Sample polo', quantity: 1, unitPriceMinor: 70_000, lineTotalMinor: 70_000 } });
     const doc = await t.prisma.$transaction((tx) =>
-      v6OrderDocument(tx, link.id, { storeId: storeA, orderId: a1.orderId, externalOrderId: a1.ext, customerName: 'S', customerPhone: '01700000000', shippingAddress: 'S', paymentMethod: 'COD', note: null, items: [...items, { orderItemId: randomUUID(), sku: 'POLO-NAVY-L', quantity: 1, unitPriceMinor: 70_000, lineTotalMinor: 70_000 }], orderDiscountMinor: 0, deliveryChargeMinor: 0, advancePaidMinor: 0 }, 2),
+      v6OrderDocument(tx, link.id, { storeId: storeA, orderId: a1.orderId, externalOrderId: a1.ext, customerName: 'S', customerPhone: '01700000000', shippingAddress: 'S', paymentMethod: 'COD', note: null, items: [...items, { orderItemId: added.id, sku: 'POLO-NAVY-L', quantity: 1, unitPriceMinor: 70_000, lineTotalMinor: 70_000 }], orderDiscountMinor: 0, deliveryChargeMinor: 0, advancePaidMinor: 0 }, 2),
     );
     const ids = (doc as { body: { items: { lineId: string }[] } }).body.items.map((i) => i.lineId);
     expect(ids).toEqual([`${a1.ext}-1`, `${a1.ext}-3`, `${a1.ext}-4`, `${a1.ext}-6`]);
@@ -227,7 +234,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
 
   it('PR 610: 409 ACCOUNT_ON_HOLD — the order waits HELD, checkout pauses (v6 store only, while the setting is on), and goes again on account.released with a new key', async () => {
     world.v6().hold('PAYMENT_OVERDUE');
-    const o = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
+    const o = await order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
     await enqueueOrderPush(deps(), o.input);
     expect(await relayErpPushes(deps(), { storeId: storeA })).toMatchObject({ held: 1, sent: 0, failed: 0 });
     let row = await pushOf(storeA, o.orderId);
@@ -265,7 +272,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
 
   it('PR 610: 409 INSUFFICIENT_STOCK — HELD; the order check sends it again (a new key) once the ERP has the stock', async () => {
     world.setStock('POLO-BLACK-XL', 'SAMPLE-WH-1', { onHand: 0 });
-    const o = order(storeA, [{ sku: 'POLO-BLACK-XL', quantity: 2, unit: 650 }]);
+    const o = await order(storeA, [{ sku: 'POLO-BLACK-XL', quantity: 2, unit: 650 }]);
     await enqueueOrderPush(deps(), o.input);
     expect((await relayErpPushes(deps(), { storeId: storeA })).held).toBe(1);
     const eo = (await erpOrderOf(t.prisma, { storeId: storeA, orderId: o.orderId }))!;
@@ -281,13 +288,13 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
 
   it('PR 610 (qa-gate): a HELD order that staff changed since — the old revision never goes out again and never rolls the ERP order back', async () => {
     world.setStock('POLO-BLACK-XL', 'SAMPLE-WH-1', { onHand: 0 });
-    const o = order(storeA, [{ sku: 'POLO-BLACK-XL', quantity: 2, unit: 650 }]);
+    const o = await order(storeA, [{ sku: 'POLO-BLACK-XL', quantity: 2, unit: 650 }]);
     await enqueueOrderPush(deps(), o.input);
     expect((await relayErpPushes(deps(), { storeId: storeA })).held).toBe(1);
     const r0 = await pushOf(storeA, o.orderId);
     expect([r0.status, r0.heldReason]).toEqual(['HELD', 'INSUFFICIENT_STOCK']);
     // Staff change the order to a SKU the ERP has (the order page's "send again"): revision 1, which the ERP takes.
-    const r1 = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
+    const r1 = await order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
     await enqueueOrderPush(deps(), { ...r1.input, orderId: o.orderId, externalOrderId: o.ext, revision: 1 });
     // The old revision is kept, never deleted: FAILED, superseded by the new one.
     const old = await t.prisma.erpPush.findUniqueOrThrow({ where: { id: r0.id } });
@@ -315,7 +322,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   });
 
   it('PR 610: 409 NO_SHOP_PRICE — HELD, and that SKU stops selling until the ERP takes it', async () => {
-    const o = order(storeA, [{ sku: 'TEE-NAVY-M', unit: 900 }]);
+    const o = await order(storeA, [{ sku: 'TEE-NAVY-M', unit: 900 }]);
     await enqueueOrderPush(deps(), o.input);
     expect((await relayErpPushes(deps(), { storeId: storeA })).held).toBe(1);
     expect((await pushOf(storeA, o.orderId)).heldReason).toBe('NO_SHOP_PRICE');
@@ -334,7 +341,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   it('Follow-up 532: shop-price.changed lets the SKU sell again and sends the order held for its price at once (no wait)', async () => {
     world.setShopPrice('TEE-NAVY-M', null);
     world.v6().takeEvents();
-    const o = order(storeA, [{ sku: 'TEE-NAVY-M', unit: 900 }]);
+    const o = await order(storeA, [{ sku: 'TEE-NAVY-M', unit: 900 }]);
     await enqueueOrderPush(deps(), o.input);
     expect((await relayErpPushes(deps(), { storeId: storeA })).held).toBe(1);
     expect((await pushOf(storeA, o.orderId)).heldReason).toBe('NO_SHOP_PRICE');
@@ -358,7 +365,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   it('Follow-up 539 (b): an order the ERP keeps refusing raises one alert after the owner\'s hours (off when empty); it keeps being asked', async () => {
     world.setShopPrice('TEE-NAVY-M', null);
     world.v6().takeEvents();
-    const o = order(storeA, [{ sku: 'TEE-NAVY-M', unit: 900 }]);
+    const o = await order(storeA, [{ sku: 'TEE-NAVY-M', unit: 900 }]);
     await enqueueOrderPush(deps(), o.input);
     expect((await relayErpPushes(deps(), { storeId: storeA })).held).toBe(1);
     // The row's queue time is the database's own clock; put it on the test's clock.
@@ -396,8 +403,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
     world.setStock('TEE-NAVY-S', 'SAMPLE-WH-1', { onHand: 4 });
     const loc = await t.prisma.inventoryLocation.findFirstOrThrow({ where: { warehouse: { code: 'WH-A' } }, orderBy: { createdAt: 'asc' }, select: { id: true } });
     await t.prisma.stockLevel.create({ data: { variantId: v.id, locationId: loc.id, onHand: 4, available: 4, erpUpdatedAt: clock } });
-    const o = order(storeA, [{ sku: 'TEE-NAVY-S', unit: 900 }]);
-    await t.prisma.order.create({ data: { id: o.orderId, storeId: storeA, number: o.ext, source: 'WEBSITE', currency: 'BDT', status: 'CONFIRMED', subtotalMinor: 90_000, totalMinor: 90_000, paymentMethod: 'COD', idempotencyKey: `nsp-${o.orderId}` } });
+    const o = await order(storeA, [{ sku: 'TEE-NAVY-S', unit: 900 }]);
+    // ~~order.create({ id: o.orderId, … })~~ follow-up 534: the fixture writes the order now; it gets this test's facts
+    await t.prisma.order.update({ where: { id: o.orderId }, data: { number: o.ext, status: 'CONFIRMED', subtotalMinor: 90_000, totalMinor: 90_000, paymentMethod: 'COD' } });
     await enqueueOrderPush(deps(), o.input);
     expect((await relayErpPushes(deps(), { storeId: storeA })).held).toBe(1);
     const cart = async () => (await t.prisma.cart.create({ data: { storeId: storeA, visitorId: `sample-${randomUUID()}`, lastActivityAt: clock } })).id;
@@ -438,7 +446,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
       await expect(decideErpLine(deps(), { actor: SYSTEM, storeId: storeA }, { orderId: randomUUID(), lineId: 'SAMPLE-1-1', action: 'REPLACE', ...input })).rejects.toMatchObject({ code: 'B_GRADE_CLOSED', details: [input.sku] });
     }
     // An order with a B-grade piece that was already in a bag: the ERP answers 422 naming it; it waits HELD with the reason.
-    const o = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }, { sku: 'TEE-NAVY-XL-B', unit: 450 }]);
+    const o = await order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }, { sku: 'TEE-NAVY-XL-B', unit: 450 }]);
     await enqueueOrderPush(deps(), o.input);
     expect(await relayErpPushes(deps(), { storeId: storeA })).toMatchObject({ held: 1, failed: 0 });
     const row = await pushOf(storeA, o.orderId);
@@ -465,7 +473,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   it('PR 610: a piece from Return stock is marked; it fails the packing check → order.line.short; the shipment waits HELD (LINE_WAITING)', async () => {
     world.setVariant({ sku: 'POLO-GREY-M', styleCode: 'POLO', styleName: 'Sample polo', color: 'GREY', size: 'M', shopPrice: 600, grade: 'A' });
     world.setStock('POLO-GREY-M', 'SAMPLE-WH-1', { onHand: 0, returnStock: 1 });
-    const o = order(storeA, [{ sku: 'POLO-GREY-M', unit: 800 }, { sku: 'POLO-NAVY-M', unit: 650 }]);
+    const o = await order(storeA, [{ sku: 'POLO-GREY-M', unit: 800 }, { sku: 'POLO-NAVY-M', unit: 650 }]);
     short = { orderId: o.orderId, ext: o.ext };
     await enqueueOrderPush(deps(), o.input);
     expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(1);
@@ -505,7 +513,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   it('Follow-up 490: a lost order.line.short webhook is caught up from GET /orders/{id} by the order check', async () => {
     world.setVariant({ sku: 'POLO-OLIVE-M', styleCode: 'POLO', styleName: 'Sample polo', color: 'OLIVE', size: 'M', shopPrice: 600, grade: 'A' });
     world.setStock('POLO-OLIVE-M', 'SAMPLE-WH-1', { onHand: 0, returnStock: 1 });
-    const o = order(storeA, [{ sku: 'POLO-OLIVE-M', unit: 800 }]);
+    const o = await order(storeA, [{ sku: 'POLO-OLIVE-M', unit: 800 }]);
     await enqueueOrderPush(deps(), o.input);
     await relayErpPushes(deps(), { storeId: storeA });
     world.v6().failPackingCheck(o.ext, `${o.ext}-1`);
@@ -553,7 +561,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   });
 
   it('PR 611 (qa-gate): a parcel re-booked after pickup sends no second shipment; an answer without billedAt leaves the bill date empty and flagged until the ERP gives it', async () => {
-    const o = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
+    const o = await order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
     await enqueueOrderPush(deps(), o.input);
     expect((await relayErpPushes(deps(), { storeId: storeA })).sent).toBe(1);
     const first = (await enqueueErpShipment(deps(), { storeId: storeA, orderId: o.orderId, courier: 'PATHAO', consignmentId: 'C-RB-1', chargeMinor: 6_000, pickedUpAt: clock }))!;
@@ -584,7 +592,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   });
 
   it('CN-029 §16: one store never touches the other — the same order number in store B is its own order, lines and hold', async () => {
-    const ob = order(storeB, [{ sku: 'POLO-NAVY-M', unit: 650 }], { externalOrderId: a1.ext });
+    const ob = await order(storeB, [{ sku: 'POLO-NAVY-M', unit: 650 }], { externalOrderId: a1.ext });
     await enqueueOrderPush(deps(), ob.input);
     expect((await relayErpPushes(deps(), { storeId: storeB })).sent).toBe(1);
     const eb = (await erpOrderOf(t.prisma, { storeId: storeB, orderId: ob.orderId }))!;
@@ -710,13 +718,13 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
     overrides.set('erp.push.batchSize', 3);
     try {
       // Three orders the ERP refuses as wrong (400): FAILED. Each already has its shipment waiting behind it.
-      const refused = [order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]), order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]), order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }])];
+      const refused = [await order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]), await order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]), await order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }])];
       for (const o of refused) await enqueueOrderPush(deps(), o.input);
       for (const o of refused) await enqueueErpShipment(deps(), { storeId: storeA, orderId: o.orderId, courier: 'PATHAO', consignmentId: `C-${o.ext}`, chargeMinor: 6_000, pickedUpAt: clock });
       world.failNext({ path: '/orders', status: 400, times: 3 });
       expect(await relayErpPushes(deps(), { storeId: storeA })).toMatchObject({ failed: 3, sent: 0 });
       // A new order after them still goes: the three shipments never hold the batch.
-      const fresh = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
+      const fresh = await order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
       await enqueueOrderPush(deps(), fresh.input);
       const r1 = await relayErpPushes(deps(), { storeId: storeA });
       const r2 = await relayErpPushes(deps(), { storeId: storeA });
@@ -739,7 +747,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
       // order goes, then goes right after it.
       world.v6().hold('PAYMENT_OVERDUE');
       world.v6().takeEvents();
-      const held = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
+      const held = await order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
       await enqueueOrderPush(deps(), held.input);
       expect(await relayErpPushes(deps(), { storeId: storeA })).toMatchObject({ held: 1 });
       await enqueueErpShipment(deps(), { storeId: storeA, orderId: held.orderId, courier: 'PATHAO', consignmentId: `C-${held.ext}`, chargeMinor: 6_000, pickedUpAt: clock });
@@ -760,7 +768,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
   });
 
   it('p3 review round 2: a new revision of an order the ERP refused brings back the follow-ups it ended, and each goes once', async () => {
-    const o = order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
+    const o = await order(storeA, [{ sku: 'POLO-NAVY-M', unit: 650 }]);
     await enqueueOrderPush(deps(), o.input);
     await enqueueErpShipment(deps(), { storeId: storeA, orderId: o.orderId, courier: 'PATHAO', consignmentId: `C-${o.ext}`, chargeMinor: 6_000, pickedUpAt: clock });
     world.failNext({ path: '/orders', status: 400, times: 1 });
@@ -777,7 +785,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 610, 611 on PostgreSQL: orders, shipments and 
     // Staff correct the order (revision 1) and the ERP takes it: the shipment it ended is back, on the next round.
     const shipCalls = () => world.calls.filter((c) => c.method === 'POST' && c.path.includes('/shipments')).length;
     const before = shipCalls();
-    const r1 = order(storeA, [{ sku: 'POLO-NAVY-M', quantity: 2, unit: 650 }]);
+    const r1 = await order(storeA, [{ sku: 'POLO-NAVY-M', quantity: 2, unit: 650 }]);
     await enqueueOrderPush(deps(), { ...r1.input, orderId: o.orderId, externalOrderId: o.ext, revision: 1 });
     await relayErpPushes(deps(), { storeId: storeA });
     expect((await pushOf(storeA, o.orderId)).status).toBe('SENT');

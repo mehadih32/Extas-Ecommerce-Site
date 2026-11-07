@@ -263,6 +263,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 621 · ERP v6 acceptance drills of the books (
     at('2026-11-12T04:00:00Z');
     erpA().hold('PAYMENT_OVERDUE');
     const orderId = randomUUID();
+    // follow-up 534: ErpOrder.orderId and ErpOrderLine.orderItemId are foreign keys — the shop's order and line first
+    await f.t.prisma.order.create({ data: { id: orderId, storeId: A(), number: 'WEB-A9', source: 'WEBSITE', currency: 'BDT', status: 'CONFIRMED', subtotalMinor: 79_000, totalMinor: 85_000, paymentMethod: 'COD', idempotencyKey: `acc-${orderId}` } });
+    const item = await f.t.prisma.orderItem.create({ data: { storeId: A(), orderId, sku: 'TEE-WHITE-M', productName: 'Sample tee', quantity: 1, unitPriceMinor: 79_000, lineTotalMinor: 79_000 } });
     await enqueueOrderPush(f.deps(), {
       storeId: A(),
       orderId,
@@ -271,7 +274,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 621 · ERP v6 acceptance drills of the books (
       customerPhone: '01700000000',
       shippingAddress: 'Sample address',
       paymentMethod: 'COD',
-      items: [{ sku: 'TEE-WHITE-M', quantity: 1, unitPriceMinor: 79_000, orderItemId: randomUUID(), lineTotalMinor: 79_000 }],
+      items: [{ sku: 'TEE-WHITE-M', quantity: 1, unitPriceMinor: 79_000, orderItemId: item.id, lineTotalMinor: 79_000 }],
       shippingFeeMinor: 6_000,
     });
     expect(await relayErpPushes(f.deps(), { storeId: A() })).toMatchObject({ held: 1, sent: 0, failed: 0 });

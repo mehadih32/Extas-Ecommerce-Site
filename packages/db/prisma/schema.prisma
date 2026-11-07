@@ -3051,6 +3051,8 @@ model Order {
   shipments Shipment[]
   /// PR 407: the order's issued documents (its invoice, one row per version).
   documents GeneratedDocument[]
+  /// Follow-up 534 (PR 610/614): the order as each ERP link has it (ErpOrder.orderId, a foreign key since 0177).
+  erpOrders ErpOrder[]
 
   @@unique([storeId, number])
   @@unique([storeId, idempotencyKey])
@@ -3137,6 +3139,8 @@ model OrderItem {
   addedVia       String?
   createdAt      DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime        @updatedAt @db.Timestamptz(3)
+  /// Follow-up 534 (PR 610/614): the ERP's pieces of this line (ErpOrderLine.orderItemId, a foreign key since 0177).
+  erpOrderLines  ErpOrderLine[]
 
   @@index([orderId])
   @@index([storeId, productId, createdAt])
@@ -5579,6 +5583,8 @@ model ErpOrder {
   link            ErpStoreLink @relation(fields: [linkId, storeId], references: [id, storeId])
   /// The shop's order (Order.id) and its number as the ERP knows it.
   orderId         String       @db.Uuid
+  /// Follow-up 534: a foreign key since 0177 (left out of 0053 until PR 614 settled the exchange orders' shape).
+  order           Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
   externalOrderId String
   erpOrderId      String?
   /// An exchange order names the order it exchanges (PR 614); it is not a sale.
@@ -5622,6 +5628,8 @@ model ErpOrderLine {
   erpOrder           ErpOrder       @relation(fields: [erpOrderId], references: [id])
   /// The shop's order line this piece belongs to, and which piece of it (1 … quantity).
   orderItemId        String?        @db.Uuid
+  /// Follow-up 534: a foreign key since 0177 (null: a piece with no shop line, as before).
+  orderItem          OrderItem?     @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
   piece              Int            @default(1)
   lineId             String
   sku                String
