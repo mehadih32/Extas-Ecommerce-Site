@@ -69,6 +69,8 @@ export const pathaoCapabilities: CourierCapabilities = {
   weightRequired: true,
   declaredValue: false,
   cancel: false,
+  // follow-up 373: no lookup by the shop's reference (a lost answer is closed by staff from the Pathao panel)
+  lookupByRef: false,
 };
 
 /** How the practice Pathao says each step, in Pathao's own words (lost, damaged: words it has none for). */

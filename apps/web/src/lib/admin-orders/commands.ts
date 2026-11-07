@@ -78,6 +78,10 @@ export const KNOWN_ERRORS = [
   'NOT_COD',
   'ADD_ON_LIMIT',
   'ADD_ON_ONLY',
+  // follow-up 373: a lost booking closed already, a courier that can be asked instead, a consignment id taken
+  'NOT_RETRYABLE',
+  'LOOKUP_AVAILABLE',
+  'DUPLICATE',
   'FORBIDDEN',
   'UNAUTHENTICATED',
   'network',

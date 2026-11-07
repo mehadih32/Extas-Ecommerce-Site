@@ -128,6 +128,11 @@ describe.skipIf(!HAS_TEST_DB)('courier admin API on PostgreSQL (S08 · PR 175)',
     expect(await parcels('POST', [shipmentId, 'track'])).toMatchObject({ status: 200, body: { result: { from: 'IN_REVIEW', status: 'IN_TRANSIT' } } });
     expect(await parcels('POST', [shipmentId, 'retry'])).toMatchObject({ status: 409, body: { error: 'NOT_RETRYABLE', data: { status: 'IN_TRANSIT' } } });
     expect((await parcels('GET', [shipmentId, 'track'])).status).toBe(405);
+    // follow-up 373: closing from the courier's panel is for a lost answer only, behind delivery.book
+    expect(await parcels('POST', [shipmentId, 'close'], { body: { outcome: 'notBooked' } })).toMatchObject({ status: 409, body: { error: 'NOT_RETRYABLE' } });
+    expect(await parcels('POST', [shipmentId, 'close'], { body: { outcome: 'maybe' } })).toMatchObject({ status: 400, body: { error: 'INVALID_INPUT' } });
+    expect((await parcels('POST', [shipmentId, 'close'], { body: { outcome: 'notBooked' }, cookie: reader })).status).toBe(403);
+    expect((await parcels('GET', [shipmentId, 'close'])).status).toBe(405);
     // PR 184: the late view is a view like the others
     expect(await parcels('GET', [], { qs: '?view=late' })).toMatchObject({ status: 200, body: { ok: true, counts: { late: 0 } } });
   });

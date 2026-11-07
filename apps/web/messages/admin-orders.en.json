@@ -398,7 +398,10 @@
       "COD_LIMIT": "The amount due would pass the Cash on Delivery limit of this delivery area.",
       "NOT_COD": "Lines are added or taken out on Cash on Delivery orders only.",
       "ADD_ON_LIMIT": "This piece is already on the order as an added line.",
-      "ADD_ON_ONLY": "Only a line added after the order was placed is taken out here. Use \"Edit items & address\" for the others."
+      "ADD_ON_ONLY": "Only a line added after the order was placed is taken out here. Use \"Edit items & address\" for the others.",
+      "NOT_RETRYABLE": "This booking was closed or tried again already, or the order has a newer booking. Read the page again.",
+      "LOOKUP_AVAILABLE": "This courier can be asked by our reference: press Try again instead.",
+      "DUPLICATE": "Another parcel has this consignment id already. Check the number in the courier panel."
     },
     "cmd": {
       "confirm": {
@@ -844,7 +847,8 @@
       },
       "shipment_rebook": "Parcel booked again (its amount or receiver had changed)",
       "order_exchangeIntent": "At checkout: may exchange on arrival",
-      "exchangeIntent": "Started another order in size {size}, took it out to exchange this parcel on arrival instead"
+      "exchangeIntent": "Started another order in size {size}, took it out to exchange this parcel on arrival instead",
+      "shipment_bookingClosed": "Courier booking closed from the courier's panel"
     },
     "band": {
       "newCustomer": "A new customer — no earlier order anywhere in the shop. Call once before confirming; nothing is held or asked in advance.",
@@ -860,7 +864,9 @@
       "blockProposal": "This number has {n} rejections ({refused} refused at the door, {declined} cancelled) and is proposed for the blocklist. A person decides; the order goes on as usual.",
       "holdProposed": "The engine wants to hold this order ({rule}: {reason}). Nothing was held: you decide.",
       "codStale": "{courier} will collect {booked}, but the order now owes {due}. The sticker will not print until the parcel is booked again.",
-      "receiverStale": "The receiver {courier} has is not the order’s receiver any more. The sticker will not print until the parcel is booked again."
+      "receiverStale": "The receiver {courier} has is not the order’s receiver any more. The sticker will not print until the parcel is booked again.",
+      "bookingLost": "{courier} did not answer when this order was booked (reference {ref}). Press Try again: it asks {courier} first, so the parcel is never booked twice.",
+      "bookingLostPanel": "{courier} did not answer when this order was booked, and {courier} cannot be asked by our reference. Look for reference {ref} in the {courier} panel, then say what you found."
     },
     "items": {
       "title": "Items",
@@ -1666,6 +1672,44 @@
       "invoice": "Receiver's invoice",
       "hidden": "prices hidden",
       "shown": "prices shown"
+    },
+    "lost": {
+      "eff": {
+        "noMoney": "No money moves, and the order itself does not change."
+      },
+      "retry": {
+        "label": "Try again",
+        "title": "Try booking order #{n} again with {courier}",
+        "eff": {
+          "ask": "{courier} is asked first whether it has reference {ref}. If it has, the booking is completed with its consignment id.",
+          "again": "If it has nothing, the order is booked again with {courier} as a new try."
+        },
+        "ok": "Try again",
+        "done": "Order #{n}: tried again"
+      },
+      "has": {
+        "label": "The courier has it",
+        "title": "{courier} has order #{n}",
+        "eff": {
+          "check": "Only if you found reference {ref} in the {courier} panel.",
+          "done": "The parcel is completed here with that consignment id. Nothing is sent to {courier} again, and the sticker can print."
+        },
+        "consignment": "Consignment id, as the {courier} panel shows it",
+        "tracking": "Tracking code, if the panel shows a different one (optional)",
+        "ok": "Save",
+        "done": "Order #{n}: booking completed"
+      },
+      "not": {
+        "label": "Not booked: book again",
+        "title": "{courier} does not have order #{n}",
+        "eff": {
+          "check": "Only if reference {ref} is not in the {courier} panel.",
+          "closed": "The lost booking is closed as failed here.",
+          "again": "The order is booked again with {courier} as a new try. If {courier} does not take it, the order waits in Ready to book."
+        },
+        "ok": "Book again",
+        "done": "Order #{n}: closed and booked again"
+      }
     }
   }
 }

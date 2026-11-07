@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { mockCourierWorld, PATHAO_PROVIDER, STEADFAST_PROVIDER } from '@extas/adapters';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { confirmOrder } from '@extas/orders';
-import { bookOrders, listCouriers, recordException, trackParcels } from './index';
+import { bookOrders, closeLostBooking, listCouriers, lostBookingOf, recordException, retryBooking, trackParcels } from './index';
 import { setUpShipping, type ShippingFixture } from './testing';
 
 describe.skipIf(!HAS_TEST_DB)('PR 177 · Pathao beside Steadfast (PostgreSQL)', () => {
@@ -25,6 +25,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 177 · Pathao beside Steadfast (PostgreSQL)', 
   };
   const book = (courierAccountId: string, orderIds: string[]) => bookOrders(f.shippingDeps(), f.shipper, { courierAccountId, orderIds });
   const parcelOf = async (orderId: string) => db().shipment.findFirstOrThrow({ where: { orderId }, orderBy: { attempt: 'desc' } });
+  const code = async (p: Promise<unknown>) => p.then(() => 'ok', (e: { code?: string }) => e.code ?? String(e));
 
   beforeAll(async () => {
     f = await setUpShipping('shipping_pathao');
@@ -105,5 +106,54 @@ describe.skipIf(!HAS_TEST_DB)('PR 177 · Pathao beside Steadfast (PostgreSQL)', 
     await book(pathao, [q.orderId]);
     const lost = await parcelOf(q.orderId);
     expect(await recordException(f.shippingDeps(), f.shipper, lost.id, { status: 'LOST', reasonKey: 'lostInTransit', note: 'no scan for nine days' })).toMatchObject({ status: 'LOST', changed: true });
+  });
+
+  it('follow-up 373: a lost answer on Pathao is never booked again by guess; a person closes it from the Pathao panel, audited, never twice', async () => {
+    const lostOn = async (courierAccountId: string, name: string) => {
+      const o = await confirmed(name, [{ variantId: f.v.skyM }]);
+      (courierAccountId === pathao ? pt : sf).failNext('timeout');
+      expect((await book(courierAccountId, [o.orderId])).results[0]).toMatchObject({ outcome: 'unknown', code: 'NO_ANSWER' });
+      return { ...o, parcel: await parcelOf(o.orderId) };
+    };
+    const close = (id: string, input: unknown, who = f.shipper) => closeLostBooking(f.shippingDeps(), who, id, input);
+
+    // "the courier has it": the person read its consignment id in the Pathao panel
+    const a = await lostOn(pathao, 'pt-lost-has');
+    const lost = await lostBookingOf(db(), f.S, a.orderId);
+    expect(lost).toMatchObject({ shipmentId: a.parcel.id, courierAccountId: pathao, courierName: 'Pathao main', merchantRef: a.parcel.merchantRef, lookup: false });
+    expect(await code(retryBooking(f.shippingDeps(), f.shipper, a.parcel.id))).toBe('NOT_RETRYABLE');
+    expect(await code(close(a.parcel.id, { outcome: 'notBooked' }, f.looker))).toBe('FORBIDDEN');
+    expect(await code(close(a.parcel.id, { outcome: 'courierHasIt' }))).toBe('INVALID_INPUT');
+    expect(await code(close(a.parcel.id, { outcome: 'courierHasIt', consignmentId: 'bad id!' }))).toBe('INVALID_INPUT');
+    const inPanel = pt.booked().find((p) => p.parcel.merchantRef === a.parcel.merchantRef)!.consignmentId;
+    expect(await close(a.parcel.id, { outcome: 'courierHasIt', consignmentId: inPanel, note: 'seen in the panel' })).toMatchObject({ outcome: 'courierHasIt', consignmentId: inPanel, booking: null });
+    expect(await parcelOf(a.orderId)).toMatchObject({ id: a.parcel.id, status: 'PENDING_PICKUP', consignmentId: inPanel, bookingError: null });
+    expect(await db().shipment.count({ where: { orderId: a.orderId } })).toBe(1);
+    expect(await db().orderEvent.findFirstOrThrow({ where: { orderId: a.orderId, type: 'shipment.bookingClosed' } })).toMatchObject({ message: 'seen in the panel', actorId: f.staffId });
+    expect(await db().auditLog.count({ where: { entityId: a.parcel.id, action: 'shipment.lostClosed' } })).toBe(1);
+    expect(await lostBookingOf(db(), f.S, a.orderId)).toBeNull();
+    // closed once: a second press (or a late Try again) changes nothing
+    expect(await code(close(a.parcel.id, { outcome: 'notBooked' }))).toBe('NOT_RETRYABLE');
+
+    // a consignment id another parcel has is refused
+    const b = await lostOn(pathao, 'pt-lost-dup');
+    expect(await code(close(b.parcel.id, { outcome: 'courierHasIt', consignmentId: inPanel }))).toBe('DUPLICATE');
+
+    // "not booked: book again": closed as failed, then booked again with Pathao as a new try
+    const r = await close(b.parcel.id, { outcome: 'notBooked' });
+    expect(r).toMatchObject({ outcome: 'notBooked', consignmentId: null, booking: { outcome: 'booked' } });
+    const tries = await db().shipment.findMany({ where: { orderId: b.orderId }, orderBy: { attempt: 'asc' } });
+    expect(tries.map((t) => [t.attempt, t.status])).toEqual([
+      [1, 'BOOKING_FAILED'],
+      [2, 'PENDING_PICKUP'],
+    ]);
+    expect(tries[0]!.bookingError).toContain("courier's panel");
+    expect(await db().auditLog.count({ where: { entityId: b.parcel.id, action: 'shipment.lostClosed' } })).toBe(1);
+
+    // a courier that can be asked by reference (Steadfast) is tried again, never closed by hand
+    const c = await lostOn(steadfast, 'sf-lost');
+    expect((await lostBookingOf(db(), f.S, c.orderId))?.lookup).toBe(true);
+    expect(await code(close(c.parcel.id, { outcome: 'notBooked' }))).toBe('LOOKUP_AVAILABLE');
+    expect(await retryBooking(f.shippingDeps(), f.shipper, c.parcel.id)).toMatchObject({ outcome: 'booked', data: { recovered: true } });
   });
 });

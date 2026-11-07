@@ -7,7 +7,7 @@
 import type { PermissionKey } from '@extas/auth';
 import type { CallOutcomes } from '@extas/settings';
 import * as od from '@extas/orders';
-import { openCheckOf, returnReasonOf, staleParcelOf, type StaleParcel } from '@extas/shipping';
+import { lostBookingOf, openCheckOf, returnReasonOf, staleParcelOf, type LostBooking, type StaleParcel } from '@extas/shipping';
 import { targetOf, type OrderCommand, type OrderState } from '@extas/orders/pure';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import type { AdminView } from '../admin-page';
@@ -456,6 +456,54 @@ export function rebookSpecs(view: AdminView, stale: StaleParcel, number: string,
   ];
 }
 
+/**
+ * Follow-up 373 (PR 177): a booking whose answer was lost (`delivery.book`). A courier that can be asked by the shop's
+ * reference gets "Try again" (it asks first, never books twice); one that cannot (Pathao) gets the two closes a person
+ * makes from the courier's own panel: "The courier has it" (its consignment id) or "Not booked: book again". Audited.
+ */
+export function lostBookingSpecs(view: AdminView, lost: LostBooking, number: string, perms: ReadonlySet<string>): CommandSpec[] {
+  if (!perms.has('delivery.book')) return [];
+  const d = view.dict;
+  const tt = (k: string) => t(d, `orders.lost.${k}`, { n: number, courier: lost.courierName, ref: lost.merchantRef ?? '' });
+  const note = { name: 'note', kind: 'textarea' as const, label: t(d, 'orders.dlg.noteOptional'), maxLength: 500 };
+  const base = `/api/admin/delivery/parcels/${lost.shipmentId}`;
+  if (lost.lookup)
+    return [{ id: 'lost-retry', label: tt('retry.label'), tone: 'pri', url: `${base}/retry`, version: null, title: tt('retry.title'), effects: [tt('retry.eff.ask'), tt('retry.eff.again'), tt('eff.noMoney')], fields: [], ok: tt('retry.ok'), okTone: 'pri', done: tt('retry.done') }];
+  return [
+    {
+      id: 'lost-has',
+      label: tt('has.label'),
+      tone: 'pri',
+      url: `${base}/close`,
+      version: null,
+      fixed: { outcome: 'courierHasIt' },
+      title: tt('has.title'),
+      effects: [tt('has.eff.check'), tt('has.eff.done'), tt('eff.noMoney')],
+      fields: [
+        { name: 'consignmentId', kind: 'text', label: tt('has.consignment'), required: true, maxLength: 80 },
+        { name: 'trackingCode', kind: 'text', label: tt('has.tracking'), maxLength: 80 },
+        note,
+      ],
+      ok: tt('has.ok'),
+      okTone: 'pri',
+      done: tt('has.done'),
+    },
+    {
+      id: 'lost-not',
+      label: tt('not.label'),
+      url: `${base}/close`,
+      version: null,
+      fixed: { outcome: 'notBooked' },
+      title: tt('not.title'),
+      effects: [tt('not.eff.check'), tt('not.eff.closed'), tt('not.eff.again'), tt('eff.noMoney')],
+      fields: [note],
+      ok: tt('not.ok'),
+      okTone: 'pri',
+      done: tt('not.done'),
+    },
+  ];
+}
+
 export function reviewSpecs(view: AdminView, alertId: string, number: string, matched: { id: string; number: string }[], perms: ReadonlySet<string>, reasons: od.ReasonLists, paid: string | null, risk = false): CommandSpec[] {
   if (!perms.has('orders.risk.decide')) return [];
   const d = view.dict;
@@ -769,6 +817,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const mates = o.orderGroupId ? await od.parcelMates(deps, who.storeId, o.id) : null;
   // gate F-004: a booked parcel still with us whose amount or receiver no longer matches the order
   const stale = o.booked ? await staleParcelOf(deps.db, who.storeId, o.id) : null;
+  // follow-up 373: the latest booking got no answer (Try again, or — no lookup by reference — closed from the courier's panel)
+  const lost = await lostBookingOf(deps.db, who.storeId, o.id);
   // PR 521: each review explained (a reading aid: if one cannot be read, the card still shows everything else)
   const explained = perms.has('orders.risk.read')
     ? await Promise.all(detail.reviews.map((r) => od.alertSummary(deps, who, r.id).catch(() => null)))
@@ -987,7 +1037,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     const courierName = x?.shipment?.courierName ?? t(d, 'orders.courier.theCourier');
     bands.push({ id: 'parcelStale', kind: 'bad', text: t(d, `orders.band.${stale.why === 'COD_CHANGED' ? 'codStale' : 'receiverStale'}`, { courier: courierName, booked: m(stale.bookedCodMinor), due: m(stale.dueMinor) }), specs: rebookSpecs(view, stale, o.number, courierName, m(stale.dueMinor), perms) });
   }
-  if (o.booked && !o.cancelPending && od.OPEN_STATES.includes(o.status)) bands.push({ id: 'locked', kind: 'locked', text: t(d, 'orders.band.locked', { courier: x?.shipment?.courierName ?? '', tracking: ship?.trackingCode ?? '' }), specs: [] });
+  if (lost) bands.push({ id: 'bookingLost', kind: 'bad', text: t(d, lost.lookup ? 'orders.band.bookingLost' : 'orders.band.bookingLostPanel', { courier: lost.courierName, ref: lost.merchantRef ?? '' }), specs: lostBookingSpecs(view, lost, o.number, perms) });
+  if (!lost && o.booked && !o.cancelPending && od.OPEN_STATES.includes(o.status)) bands.push({ id: 'locked', kind: 'locked', text: t(d, 'orders.band.locked', { courier: x?.shipment?.courierName ?? '', tracking: ship?.trackingCode ?? '' }), specs: [] });
 
   return {
     id: o.id,

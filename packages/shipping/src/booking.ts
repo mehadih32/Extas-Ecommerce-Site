@@ -31,9 +31,13 @@
 // the courier for that reference (`findByRef`) and only books again when the courier has nothing (§7.7: never twice).
 // PR 177: the second courier (Pathao) books through the same code; a courier that charges by weight never gets a parcel
 // without one (NO_WEIGHT), and one that cannot be asked by reference is never booked again by guess.
+// Follow-up 373: such a lost answer (`lostBookingOf`, the courier's `lookupByRef: false`) is closed by a person who looked
+// in the courier's own panel (`closeLostBooking`): "the courier has it" with its consignment id (the parcel is completed
+// with it, never booked twice) or "not booked: book again" (closed as failed, then booked again with the same courier).
+// Audited, on the order's timeline, with who said it and their note.
 // No money moves here.
 import { z } from 'zod';
-import type { CourierApi, CourierParcel, Mode } from '@extas/adapters';
+import { courierCapabilitiesOf, type CourierApi, type CourierParcel, type Mode } from '@extas/adapters';
 import type { Prisma } from '@extas/db/client';
 import { assertBookable, isInventoryError } from '@extas/inventory';
 import { bookWith, DELIVERY_TARGET_SELECT, deliveryTarget, dueOf, isOrdersError, openReviewIds, staffBy, viewWhere, type OrdersDeps } from '@extas/orders';
@@ -327,10 +331,17 @@ async function send(deps: ShippingDeps, who: Who, courier: Courier, shipmentId: 
   return { orderId: s.orderId, number: s.order.number, outcome: 'failed', code: 'COURIER_REFUSED', shipmentId, consignmentId: null, error: answer.error };
 }
 
+/** Follow-up 373: inside the transaction, the parcel is still a lost answer (no one closed it a moment ago), else nothing is written. */
+async function stillLost(tx: Tx, shipmentId: string): Promise<void> {
+  const n = await tx.shipment.updateMany({ where: { id: shipmentId, status: 'BOOKING', bookingError: { not: null } }, data: { bookingError: null } });
+  if (!n.count) throw new ShippingError('NOT_RETRYABLE', 'this booking was closed a moment ago', ['shipmentId'], { status: 'CLOSED' });
+}
+
 /** The courier took it: its ids, the booking time and its first state, stored as the parcel's first event. */
-async function complete(deps: ShippingDeps, who: Who, shipmentId: string, a: { consignmentId: string | null; trackingCode: string | null; status: string | null; rawStatus: string | null; chargeMinor: number | null }): Promise<void> {
+async function complete(deps: ShippingDeps, who: Who, shipmentId: string, a: { consignmentId: string | null; trackingCode: string | null; status: string | null; rawStatus: string | null; chargeMinor: number | null }, also?: { lost: true; write: (tx: Tx) => Promise<void> }): Promise<void> {
   const now = nowOf(deps);
   await deps.db.$transaction(async (tx) => {
+    if (also) await stillLost(tx, shipmentId);
     const s = await tx.shipment.update({
       where: { id: shipmentId },
       data: { consignmentId: a.consignmentId, trackingCode: a.trackingCode, bookedAt: now, bookingError: null, ...(a.chargeMinor !== null ? { chargeMinor: a.chargeMinor } : {}) },
@@ -340,6 +351,7 @@ async function complete(deps: ShippingDeps, who: Who, shipmentId: string, a: { c
     const status = (a.status ?? 'PENDING_PICKUP') as Parameters<typeof applyEventsIn>[2][number]['status'];
     await applyEventsIn(tx, { storeId: who.storeId, shipmentId }, [{ providerEventId: `booking:${a.consignmentId ?? s.merchantRef}`, status, rawStatus: a.rawStatus ?? 'booked', occurredAt: now, note: null, reasonKey: null, codCollectedMinor: null, chargeMinor: null }], 'booking', { now, actorId: who.actor.staffUserId });
     await logChange(tx, who, 'shipment.booked', 'Shipment', shipmentId, null, { consignmentId: a.consignmentId, status });
+    if (also) await also.write(tx);
   }, TX);
   // PR 564: the courier's charge at booking may show it read another band — recorded only, never in the way of a booking
   if (a.chargeMinor !== null) await noteCourierCharge(deps, { storeId: who.storeId, shipmentId }, 'booking').catch(() => null);
@@ -387,6 +399,94 @@ export async function retryBooking(deps: ShippingDeps, who: Who, shipmentId: str
     await fail(deps, who, s.id, s.bookingError!);
   }
   return bookOne(deps, who, { id: account.id, ...conn }, s.orderId);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Follow-up 373 (PR 177): a lost answer on a courier that cannot be asked by reference, closed from its panel
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** An order's latest parcel whose booking got no answer (a timeout or a 5xx), waiting for "Try again" or a person. */
+export interface LostBooking {
+  shipmentId: string;
+  courierAccountId: string;
+  courierName: string;
+  /** The shop's reference the courier was sent (what to look for in its panel). */
+  merchantRef: string | null;
+  error: string;
+  since: Date;
+  /** The courier can be asked by reference ("Try again" asks it); false: a person closes it from the courier's panel. */
+  lookup: boolean;
+}
+
+/** The order's lost booking, when its latest parcel is one (or null). */
+export async function lostBookingOf(db: ShippingDeps['db'], storeId: number, orderId: string): Promise<LostBooking | null> {
+  const s = await db.shipment.findFirst({
+    where: { storeId, orderId },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    select: { id: true, status: true, bookingError: true, merchantRef: true, createdAt: true, courierAccount: { select: { id: true, name: true, providerKey: true } } },
+  });
+  if (!s || s.status !== 'BOOKING' || s.bookingError === null) return null;
+  return { shipmentId: s.id, courierAccountId: s.courierAccount.id, courierName: s.courierAccount.name, merchantRef: s.merchantRef, error: s.bookingError, since: s.createdAt, lookup: courierCapabilitiesOf(s.courierAccount.providerKey)?.lookupByRef !== false };
+}
+
+const note = z.string().trim().max(500).optional();
+export const closeLostInput = z.discriminatedUnion('outcome', [
+  z
+    .object({
+      /** The person found the parcel in the courier's panel. */
+      outcome: z.literal('courierHasIt'),
+      consignmentId: z.string().trim().min(1).max(80).regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/, 'letters, digits, dot, dash or underscore'),
+      trackingCode: z.string().trim().max(80).optional(),
+      note,
+    })
+    .strict(),
+  /** The person looked and the courier has no such parcel: closed as failed, then booked again with the same courier. */
+  z.object({ outcome: z.literal('notBooked'), note }).strict(),
+]);
+
+export interface CloseLostResult {
+  outcome: 'courierHasIt' | 'notBooked';
+  shipmentId: string;
+  consignmentId: string | null;
+  /** "Not booked": the new booking (booked, or why not; the order then waits in Ready to book). */
+  booking: BookingOutcome | null;
+}
+
+/** Follow-up 373: a person closes a lost booking from what the courier's own panel shows. Audited; never booked twice. */
+export async function closeLostBooking(deps: ShippingDeps, who: Who, shipmentId: string, input: unknown): Promise<CloseLostResult> {
+  await allow(deps, who, 'delivery.book');
+  const d = parse(closeLostInput, input, 'closing a lost booking');
+  const s = await deps.db.shipment.findFirst({ where: { id: shipmentId, storeId: who.storeId }, select: { id: true, orderId: true, status: true, bookingError: true, merchantRef: true, courierAccountId: true, createdAt: true, courierAccount: { select: { providerKey: true } } } });
+  if (!s) throw new ShippingError('NOT_FOUND', 'no such parcel', ['shipmentId']);
+  if (s.status !== 'BOOKING' || s.bookingError === null) throw new ShippingError('NOT_RETRYABLE', 'only a booking without an answer is closed from the panel', ['shipmentId'], { status: s.status });
+  const newer = await deps.db.shipment.count({ where: { storeId: who.storeId, orderId: s.orderId, createdAt: { gt: s.createdAt } } });
+  if (newer) throw new ShippingError('NOT_RETRYABLE', 'the order has a newer booking', ['shipmentId'], { status: s.status });
+  if (courierCapabilitiesOf(s.courierAccount.providerKey)?.lookupByRef !== false) throw new ShippingError('LOOKUP_AVAILABLE', 'this courier can be asked by the shop reference: press Try again', ['shipmentId']);
+  const said = { outcome: d.outcome, merchantRef: s.merchantRef, lostAnswer: s.bookingError, note: d.note || null };
+  const record = async (tx: Tx, consignmentId: string | null) => {
+    await tx.orderEvent.create({ data: { storeId: who.storeId, orderId: s.orderId, type: 'shipment.bookingClosed', message: d.note || null, data: { shipmentId: s.id, ...said, consignmentId }, actorType: who.actor.staffUserId ? 'STAFF' : 'SYSTEM', actorId: who.actor.staffUserId, source: 'admin' } });
+    await logChange(tx, who, 'shipment.lostClosed', 'Shipment', s.id, { status: 'BOOKING', bookingError: s.bookingError }, { ...said, consignmentId });
+  };
+  if (d.outcome === 'courierHasIt') {
+    const taken = await deps.db.shipment.findFirst({ where: { storeId: who.storeId, courierAccountId: s.courierAccountId, consignmentId: d.consignmentId, id: { not: s.id } }, select: { id: true } });
+    if (taken) throw new ShippingError('DUPLICATE', 'another parcel has this consignment id already', ['consignmentId']);
+    await complete(deps, who, s.id, { consignmentId: d.consignmentId, trackingCode: d.trackingCode || null, status: null, rawStatus: null, chargeMinor: null }, { lost: true, write: (tx) => record(tx, d.consignmentId) });
+    return { outcome: d.outcome, shipmentId: s.id, consignmentId: d.consignmentId, booking: null };
+  }
+  await deps.db.$transaction(async (tx) => {
+    await stillLost(tx, s.id);
+    await fail(deps, who, s.id, `not booked: checked in the courier's panel (${s.bookingError})`, tx);
+    await record(tx, null);
+  }, TX);
+  try {
+    const account = await bookableCourier(deps.db, who.storeId, s.courierAccountId);
+    const conn = await courierApi(deps, who.storeId, account.providerKey);
+    return { outcome: d.outcome, shipmentId: s.id, consignmentId: null, booking: await bookOne(deps, who, { id: account.id, ...conn }, s.orderId) };
+  } catch (e) {
+    // closed all the same: the courier switched off meanwhile — the order waits in Ready to book with the reason
+    if (isShippingError(e)) return { outcome: d.outcome, shipmentId: s.id, consignmentId: null, booking: skipped(s.orderId, null, e.code) };
+    throw e;
+  }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
