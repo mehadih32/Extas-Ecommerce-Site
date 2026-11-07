@@ -5,12 +5,16 @@
 // (front → back → detail) and never leaves the page (R16). A piece is removed with the cross on its slot; a full set
 // is swapped by removing one first. Every set price is @extas/combos' (`checkBuild` → `tierQuote`, the bag's own
 // grouping); "Add set to Bag" sends the picks with one key per tap and the server checks and prices them again.
+// Follow-up 241 (`pdp.usualSize`): after the first paint each card's usual size (this browser's, joined with a
+// signed-in buyer's own orders) is ringed and read out, and chosen in advance when the owner's `preselect` is on and
+// it is in stock in the card's colour; a size already chosen by hand is never changed.
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { addProblem, checkBuild } from '@extas/combos/pure';
-import { buildWord, cardPrice, colourOpen, firstColour, headline, nextView, sizeless, statusOf, variantOf, type BuildCard, type BuildEnv, type BuildView } from '@/lib/shop/build-model';
+import { buildWord, cardPrice, colourOpen, firstColour, headline, nextView, sizeless, statusOf, usualOfCards, variantOf, type BuildCard, type BuildEnv, type BuildView } from '@/lib/shop/build-model';
 import { formatMoney, toBnDigits } from '@/lib/shop/lang';
 import { NO_COLOUR } from '@/lib/shop/product-model';
+import { joinKept, loadUsual } from '@/lib/shop/usual-size';
 import { Icon } from '../Icon';
 import { ShotPicture } from '../product/ShotPicture';
 import { showToast } from '../toast';
@@ -42,6 +46,27 @@ export function BuildRoot({ env, foot }: { env: BuildEnv; foot: ReactNode }) {
   const [cards, setCards] = useState<Record<string, CardUi>>(() => Object.fromEntries(env.cards.map((c) => [c.id, { colour: firstColour(c), size: null, err: '', view: 'front' as BuildView }])));
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
+  const [usual, setUsual] = useState<Record<string, string>>({});
+  // follow-up 241: read after the first paint (it lives in this browser), never on the server
+  useEffect(() => {
+    const u = env.usual;
+    if (!u) return;
+    const t = window.setTimeout(() => {
+      const found = usualOfCards(env.cards, joinKept(loadUsual(), u.account), u, Date.now());
+      setUsual(found);
+      if (!u.preselect) return;
+      setCards((all) => {
+        const next = { ...all };
+        for (const card of env.cards) {
+          const id = found[card.id];
+          const cu = next[card.id];
+          if (id && cu && cu.size === null && (variantOf(card, cu.colour, id)?.sellable ?? 0) > 0) next[card.id] = { ...cu, size: id };
+        }
+        return next;
+      });
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [env.usual, env.cards]);
   const num = useCallback((x: number) => (env.bnDigits ? toBnDigits(String(x)) : String(x)), [env.bnDigits]);
   const money = useCallback((minor: number) => formatMoney(minor, env.currency, env.lang, env.bnDigits), [env.currency, env.lang, env.bnDigits]);
   const w = useCallback((key: string, vars?: Record<string, string | number>) => buildWord(env.words, key, vars), [env.words]);
@@ -233,14 +258,16 @@ export function BuildRoot({ env, foot }: { env: BuildEnv; foot: ReactNode }) {
                 {c.sizes.map((s) => {
                   const out = (variantOf(c, cu.colour, s.id)?.sellable ?? 0) <= 0;
                   const on = cu.size === s.id;
+                  const mine = usual[c.id] === s.id;
+                  const label = out ? w('card.sizeOut', { size: s.label }) : w('card.sizeAria', { size: s.label });
                   return (
                     <button
                       key={s.id}
                       type="button"
-                      className={`size-pill bs-pill${on ? ' on' : ''}${out ? ' out' : ''}`}
+                      className={`size-pill bs-pill${on ? ' on' : ''}${out ? ' out' : ''}${mine ? ' is-usual' : ''}`}
                       onClick={() => setCard(c.id, { size: s.id, err: '' })}
                       aria-pressed={on}
-                      aria-label={out ? w('card.sizeOut', { size: s.label }) : w('card.sizeAria', { size: s.label })}
+                      aria-label={mine && env.usual ? env.usual.aria.replace('{label}', label) : label}
                       disabled={out}
                     >
                       {s.label}

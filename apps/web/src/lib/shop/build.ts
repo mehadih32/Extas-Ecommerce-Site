@@ -4,9 +4,12 @@
 // Without a database (CI, `next build`) or when it is slow, the page has no groups (it says the builder is taking a
 // break). A test server (EXTAS_SHOP_TEST_PAGES=1) may ask for the preview (`?try=1`): the page as it will look once
 // switched on, with the draft set tier rules too — never on the live shop.
+import { cookies } from 'next/headers';
 import { findBag } from '@extas/cart';
 import { builderOffer, setBuilder, type BuilderGroup, type SetBuilder } from '@extas/combos';
 import { settingsTimeoutMs, withTimeout } from '../settings';
+import { CUSTOMER_COOKIE, signedIn } from './account';
+import { accountUsual } from './account-size';
 import { cartDeps, visitorId } from './bag';
 import { testPagesOn } from './bag-api';
 import { readPageSettings, type ShopContext } from './context';
@@ -47,18 +50,31 @@ async function cardsOf(c: ShopContext, group: BuilderGroup, drawingViews: Parame
       name: inLang(c.lang, p.nameEn, p.nameBn),
       garment: d?.garment ?? null,
       colours,
-      sizes: [...p.sizes].sort((a, b) => a.order - b.order).map((s) => ({ id: s.id, label: s.label })),
+      sizes: [...p.sizes].sort((a, b) => a.order - b.order).map((s) => ({ id: s.id, key: s.key, label: s.label })),
       variants: p.variants,
       shots: Object.fromEntries((colours.length ? colours : [{ id: NO_COLOUR, key: NO_COLOUR }]).map((col) => [col.id, pick(viewShots(col.key, m?.shots[col.key] ?? m?.shots[NO_COLOUR] ?? []))])),
     };
   });
 }
 
+/** Follow-up 241: the usual size on the style cards while `pdp.usualSize` is on, with a signed-in buyer's own orders. */
+async function usualOf(
+  c: ShopContext,
+  set: { 'pdp.usualSize': { on: boolean; preselect: boolean; days: number }; 'catalogue.sizeCharts.diagramFor': Record<string, string> },
+): Promise<BuildEnv['usual']> {
+  const u = set['pdp.usualSize'];
+  if (!u.on) return null;
+  const diagramFor = set['catalogue.sizeCharts.diagramFor'];
+  const me = (await cookies()).get(CUSTOMER_COOKIE) ? await signedIn() : null;
+  const account = me ? await accountUsual(c.storeId, me.customer.id, diagramFor, u.days) : null;
+  return { preselect: u.preselect, days: u.days, diagramFor, account, aria: c.t('usualSize.aria') };
+}
+
 /** The builder page: its groups, the one shown (`asked` by its rule key, else the first) and the client part's data. */
 export async function buildPage(c: ShopContext, asked: string | null, preview: boolean): Promise<BuildPageResult | null> {
   const deps = cartDeps();
   if (!deps) return null;
-  const [set, visitor] = await Promise.all([readPageSettings(['pdp.gallery'] as const, c.storeId), visitorId()]);
+  const [set, visitor] = await Promise.all([readPageSettings(['pdp.gallery', 'pdp.usualSize', 'catalogue.sizeCharts.diagramFor'] as const, c.storeId), visitorId()]);
   try {
     return await withTimeout(
       (async (): Promise<BuildPageResult> => {
@@ -80,6 +96,7 @@ export async function buildPage(c: ShopContext, asked: string | null, preview: b
           showWas: builder.showWas,
           words: buildWords(c),
           hrefs: { bag: hrefIn(c.lang, ROUTES.bag) },
+          usual: await usualOf(c, set),
         };
         return { builder, group, asked, env };
       })(),

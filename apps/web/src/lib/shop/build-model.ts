@@ -4,6 +4,7 @@
 import type { BuildVariant, PricedTier, TierQuote } from '@extas/combos/pure';
 import type { ShopLang } from './lang';
 import { ROUTES } from './routes';
+import { readUsual, sizeGroupOf } from './usual-size';
 import type { PdpShot } from './product-model';
 
 export const BUILD_VIEWS = ['front', 'back', 'detail'] as const;
@@ -21,7 +22,8 @@ export interface BuildCard {
   name: string;
   garment: string | null;
   colours: BuildColour[];
-  sizes: { id: string; label: string }[];
+  /** Follow-up 241: with each size's key (the usual size is kept by key, usual-size.ts). */
+  sizes: { id: string; key: string; label: string }[];
   variants: BuildVariant[];
   /** Each colour's picture per view (by colour id, '*' for a product without colours). */
   shots: Record<string, Record<BuildView, PdpShot>>;
@@ -45,6 +47,27 @@ export interface BuildEnv {
   /** Every `build.*` word in the page's language, {slots} left open. */
   words: Record<string, string>;
   hrefs: { bag: string };
+  /**
+   * Follow-up 241 (`pdp.usualSize`, null: off): each style card's usual size is marked, and chosen in advance when
+   * `preselect` is on and it is in stock in the card's colour. `account`: a signed-in buyer's own orders (account-size.ts).
+   */
+  usual: { preselect: boolean; days: number; diagramFor: Readonly<Record<string, string>>; account: string | null; aria: string } | null;
+}
+
+/**
+ * Follow-up 241: each card's usual size (by size id) from the kept sizes (the browser's joined with the account's),
+ * tops and bottoms apart; a card without sizes, or whose kept size it does not have, gets none.
+ */
+export function usualOfCards(cards: readonly BuildCard[], kept: string | null, u: Pick<NonNullable<BuildEnv['usual']>, 'days' | 'diagramFor'>, now: number): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!kept) return out;
+  for (const c of cards) {
+    if (c.sizes.length < 2) continue;
+    const key = readUsual(kept, sizeGroupOf(c.garment, u.diagramFor), u.days, now, c.sizes.map((s) => s.key));
+    const id = key ? c.sizes.find((s) => s.key === key)?.id : undefined;
+    if (id) out[c.id] = id;
+  }
+  return out;
 }
 
 type W = (key: string, vars?: Record<string, string | number>) => string;
