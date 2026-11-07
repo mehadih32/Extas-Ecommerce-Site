@@ -14,7 +14,7 @@
 // Settings are read when the worker starts and again on every tick, so a changed interval applies without a restart
 // (the queue options — concurrency, lock — apply at the next start).
 import { writeFile } from 'node:fs/promises';
-import { Queue, UnrecoverableError, Worker, type Job } from 'bullmq';
+import { DelayedError, Queue, UnrecoverableError, Worker, type Job } from 'bullmq';
 import { Redis } from 'ioredis';
 import { retryDelayMs, retryPolicyOf, type RetryPolicy } from './backoff';
 import { JOBS, type JobDefinition } from './catalogue';
@@ -122,9 +122,19 @@ export async function startWorker(opts: WorkerOptions): Promise<RunningWorker> {
   // The first beat comes before any job is taken, so a RUNNING row always has a live worker behind it.
   await doBeat();
 
-  const processor = async (job: Job) => {
+  const processor = async (job: Job, token?: string) => {
     const def = jobDefinition(job.name);
-    if (!def) throw new UnrecoverableError(`no job called "${job.name}"`);
+    // ~~if (!def) throw new UnrecoverableError(`no job called "${job.name}"`);~~
+    // Follow-up 613: a job this worker does not know may be one a newer worker does (a rollback, or the blue/green
+    // overlap): it goes back on the queue after the retry wait for another worker to take, and only after
+    // `jobs.retry.maxAttempts` takings is it given up (the queue's failed set), so a mistyped name never loops for ever.
+    if (!def) {
+      const taken = job.attemptsStarted ?? job.attemptsMade + 1;
+      if (taken >= cfg.policy.maxAttempts || !token) throw new UnrecoverableError(`no job called "${job.name}"`);
+      log(`no job called "${job.name}" here (${taken}/${cfg.policy.maxAttempts}): back on the queue for another worker`);
+      await job.moveToDelayed(Date.now() + retryDelayMs(taken, cfg.policy), token);
+      throw new DelayedError();
+    }
     active++;
     try {
       const r = await runAttempt(deps, {

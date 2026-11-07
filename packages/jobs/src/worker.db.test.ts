@@ -12,6 +12,7 @@
 // - PR 196: a verified ERP webhook stored by the receiver is planned by the leader and applied once.
 import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { Queue } from 'bullmq';
 import { Redis } from 'ioredis';
 import { allAdapters, createConnections, ERP_SIGNATURE_HEADER, ERP_TIMESTAMP_HEADER, mockErp, signedErpWebhook } from '@extas/adapters';
 import { SYSTEM, syncAuth } from '@extas/auth';
@@ -327,6 +328,33 @@ describe.skipIf(!HAS_TEST_DB)('PR 6 on PostgreSQL: job runs, idempotency, heartb
       expect(b.isLeader()).toBe(true);
       expect((await t.prisma.workerHeartbeat.findUniqueOrThrow({ where: { workerKey: a.identity.workerKey } })).stoppedAt).not.toBeNull();
       await b.stop();
+    });
+
+    it('follow-up 613: a job an older worker does not know goes back on the queue for a newer worker, and a name nobody knows is given up after the tries', async () => {
+      const ran: string[] = [];
+      const known: JobDefinition<object> = { key: 'test.known', queue: 'test-u', parse: () => ({}), storeOf: () => null, run: async () => (ran.push('known'), { ok: true, stats: {} }) };
+      const added: JobDefinition<object> = { key: 'test.added', queue: 'test-u', parse: () => ({}), storeOf: () => null, run: async () => (ran.push('added'), { ok: true, stats: {} }) };
+      const older = await startWorker({ deps: live(), redisUrl: REDIS_URL, prefix, jobs: new Map([[known.key, known as JobDefinition<unknown>]]), log: quiet });
+      workers.push(older);
+      const redis = new Redis(REDIS_URL, { maxRetriesPerRequest: null });
+      const queue = new Queue('test-u', { connection: redis, prefix });
+      await older.enqueue({ queue: 'test-u', name: 'test.added', payload: {}, key: 'test.added/-/1' });
+      await until('the unknown job to wait on the queue', async () => (await queue.getJobState('test.added/-/1')) === 'delayed');
+      expect(await t.prisma.jobRun.count({ where: { idempotencyKey: 'test.added/-/1' } })).toBe(0);
+      await older.stop();
+      const newer = await startWorker({ deps: live(), redisUrl: REDIS_URL, prefix, jobs: new Map([[known.key, known], [added.key, added]] as [string, JobDefinition<unknown>][]), log: quiet });
+      workers.push(newer);
+      await until('the newer worker to run it', async () => (await t.prisma.jobRun.count({ where: { idempotencyKey: 'test.added/-/1', status: 'SUCCEEDED' } })) === 1);
+      expect(ran).toEqual(['added']);
+      // a name no worker knows: taken jobs.retry.maxAttempts times, then in the failed set, never again
+      await newer.enqueue({ queue: 'test-u', name: 'test.mistyped', payload: {}, key: 'test.mistyped/-/1' });
+      await until('the mistyped job to be given up', async () => (await queue.getJobState('test.mistyped/-/1')) === 'failed');
+      const job = await queue.getJob('test.mistyped/-/1');
+      expect(job?.attemptsStarted).toBe(3);
+      expect(job?.failedReason).toMatch(/no job called "test.mistyped"/);
+      await newer.stop();
+      await queue.close();
+      await redis.quit();
     });
 
     it('the leader plans the scheduled jobs once per slot', async () => {
