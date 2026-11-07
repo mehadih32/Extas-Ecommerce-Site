@@ -108,7 +108,13 @@ describe.skipIf(!HAS_TEST_DB)('PR 275 · the follow-up of an unfinished checkout
     at(T + 61 * MIN + 23 * 60 * MIN);
     await runMessages(deps(), f.S);
     expect((await draft(a.id)).followUpCount).toBe(1);
+    // follow-up 643: a code switched on but not his to use (members only, he is a guest) is no offer
+    await f.coupon('MEMB275', 5_000, { audience: 'MEMBERS' });
+    f.overrides.set('orders.followUp', { ...ON, offer: { enabled: true, afterHours: 24, couponCode: 'memb275' } });
     at(T + 61 * MIN + 25 * 60 * MIN);
+    await runMessages(deps(), f.S);
+    expect((await draft(a.id)).followUpCount).toBe(1);
+    f.overrides.set('orders.followUp', { ...ON, offer: { enabled: true, afterHours: 24, couponCode: 'back275' } });
     await runMessages(deps(), f.S);
     expect((await draft(a.id)).followUpCount).toBe(2);
     const sent = outbox.filter((m) => m.to === e164(PHONE.a));
