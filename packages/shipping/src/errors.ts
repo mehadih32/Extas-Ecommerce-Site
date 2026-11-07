@@ -63,6 +63,8 @@ export type ShippingErrorCode =
   | 'ISSUE_DECIDED'
   /** Gate F-004: the parcel still matches its order, or has left us, so there is nothing to re-book. */
   | 'NOT_STALE'
+  /** Follow-up 373: this courier can be asked by the shop's reference, so its lost answer is tried again, not closed by hand. */
+  | 'LOOKUP_AVAILABLE'
   /** Gate F-004: a re-booking waits — a cancel is waiting for the courier's answer. */
   | 'CANCEL_PENDING'
   /** Gate F-004: a re-booking waits — the customer asked to cancel. */

@@ -75,6 +75,12 @@ export interface CourierCapabilities {
   declaredValue: boolean;
   /** A booking can be cancelled through the API (otherwise staff phone the courier: D5). */
   cancel: boolean;
+  /**
+   * Follow-up 373 (PR 177): the courier can be asked whether it has a parcel by the shop's reference (`findByRef`).
+   * Left out: it can. `false` (Pathao): a booking whose answer was lost is never booked again by guess; staff look in the
+   * courier's own panel and close it from there ("the courier has it: its consignment id", or "not booked: book again").
+   */
+  lookupByRef?: boolean;
 }
 
 /** The parcel as the shop books it. Amounts in minor units (paisa); the adapter converts to the courier's own. */

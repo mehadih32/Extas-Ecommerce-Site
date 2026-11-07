@@ -12,10 +12,14 @@
 //
 // What the mock never does: invent money. It reports no charge and no collected amount, so a practice parcel can never
 // be read as the shop's real courier cost (SIM-F-027). Tests and the staging check steer it through `mockCourierWorld`.
+//
+// Follow-up 373: a courier without a lookup by reference (`capabilities.lookupByRef: false`, Pathao) refuses `findByRef`
+// on its practice world too, so staging plays the same "check the courier's panel" path as the real one.
 import { createHash } from 'node:crypto';
 import type { BookResult, CourierApi, CourierCapabilities, CourierEvent, CourierParcel, CourierPlace, CourierPlaceLevel, CourierState, StatusTable } from './contract';
 import { mapStatus } from './contract';
 import { practicePlaces, type MockPlaceRow } from './mock-places';
+import { AdapterError } from '../define';
 
 /** A scripted parcel life. `delivered` is the default; the others are the simulation's exceptions. */
 export const MOCK_SCENARIOS = ['delivered', 'review', 'failedAttempt', 'addressProblem', 'lost', 'damaged', 'partial', 'refused'] as const;
@@ -195,6 +199,8 @@ export function createMockCourier(provider: string, vocab: MockVocabulary, capab
       return { ok: true, consignmentId, trackingCode: p.trackingCode, status: mapStatus(vocab.table, first).status, rawStatus: first, chargeMinor: null };
     },
     async findByRef(merchantRef) {
+      // follow-up 373: a practice courier that cannot be asked by reference says so, like the real one
+      if (capabilities.lookupByRef === false) throw new AdapterError(`practice ${provider}: no lookup by the shop reference; check the courier's panel`);
       const p = s.parcels.get(idOf(merchantRef));
       if (!p) return null;
       const raw = vocab.say(stepAt(p, p.reached - 1));

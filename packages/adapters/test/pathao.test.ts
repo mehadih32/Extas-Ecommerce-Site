@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   connectionCatalogue,
   courierAdapters,
+  courierCapabilitiesOf,
   createPathaoClient,
   keyedCourierAdapters,
   mapStatus,
@@ -150,6 +151,22 @@ describe('Pathao (PR 177)', () => {
       ['GET', '/aladdin/api/v1/zones/52/area-list'],
     ]);
     await expect(api.places!('zone', null)).rejects.toThrow(/parent/);
+  });
+
+  it('follow-up 373: Pathao says it has no lookup by reference; its practice world refuses one too (Steadfast\'s answers)', async () => {
+    expect(courierCapabilitiesOf('pathao')?.lookupByRef).toBe(false);
+    expect(courierCapabilitiesOf('steadfast')?.lookupByRef).toBeUndefined();
+    expect(courierCapabilitiesOf('mockCourier')).not.toBeNull();
+    expect(courierCapabilitiesOf('nobody')).toBeNull();
+    expect(courierCapabilitiesOf('toString')).toBeNull();
+    const world = mockCourierWorld('pathao');
+    world.reset();
+    const pt = await pathaoAdapter.mock!({} as never);
+    expect(await pt.book(parcel)).toMatchObject({ ok: true });
+    await expect(pt.findByRef(parcel.merchantRef)).rejects.toThrow(/panel/);
+    const sf = await courierAdapters.find((a) => a.provider === 'steadfast')!.mock!({} as never);
+    expect(await sf.findByRef('EX-NOT-BOOKED-1')).toBeNull();
+    world.reset();
   });
 
   it('PR 554: the practice Pathao has the practice place list; the world can drop, add and fail a read', async () => {

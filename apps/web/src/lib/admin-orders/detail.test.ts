@@ -13,7 +13,7 @@ import type { AdminView } from '../admin-page';
 import { t, type Dict } from '../i18n';
 import { COMMAND_PATHS, KNOWN_ERRORS, commandUrl, errorKey, newKey, refundRequestsOf, send } from './commands';
 import { editBody } from '../orders-api';
-import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, exchangeIntentLine, rebookSpecs, returnReasonSpecs, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
+import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, exchangeIntentLine, lostBookingSpecs, rebookSpecs, returnReasonSpecs, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
 import { flagChips } from './list';
 import { INVOICE_PRINT_URL, invoiceHref, invoicePrints } from './model';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec } from './spec';
@@ -192,6 +192,34 @@ describe('which buttons an order shows', () => {
       expect(s!.effects.join(' ')).toContain('MOCK-SF-1');
       expect(s!.effects.join(' ')).toContain('৳1,950');
       for (const w of [s!.label, s!.title, s!.ok, s!.done, ...s!.effects, ...s!.fields.map((f) => f.label)]) expect(w, lang).not.toMatch(/orders\.rebook\./);
+    }
+  });
+});
+
+describe('follow-up 373 · a booking whose answer was lost', () => {
+  const lost = (lookup: boolean) => ({ shipmentId: ID, courierAccountId: ID, courierName: 'Pathao', merchantRef: 'EX-1-1', error: 'timeout', since: new Date(0), lookup });
+
+  it('a courier that can be asked gets Try again; Pathao gets the two closes from its panel; behind delivery.book; words in both languages', () => {
+    expect(lostBookingSpecs(view('en'), lost(false), 'EX-1', new Set(['delivery.parcels']))).toEqual([]);
+    for (const lang of ['en', 'bn'] as const) {
+      const [retry, ...none] = lostBookingSpecs(view(lang), lost(true), 'EX-1', new Set(['delivery.book']));
+      expect(none).toEqual([]);
+      expect(retry).toMatchObject({ id: 'lost-retry', url: `/api/admin/delivery/parcels/${ID}/retry`, fields: [], version: null });
+      const [has, not, ...rest] = lostBookingSpecs(view(lang), lost(false), 'EX-1', new Set(['delivery.book']));
+      expect(rest).toEqual([]);
+      expect(has).toMatchObject({ id: 'lost-has', url: `/api/admin/delivery/parcels/${ID}/close`, fixed: { outcome: 'courierHasIt' } });
+      expect(has!.fields.map((f) => [f.name, !!f.required])).toEqual([
+        ['consignmentId', true],
+        ['trackingCode', false],
+        ['note', false],
+      ]);
+      expect(not).toMatchObject({ id: 'lost-not', fixed: { outcome: 'notBooked' } });
+      expect(not!.fields.map((f) => f.name)).toEqual(['note']);
+      expect(bodyOf(has!, { consignmentId: ' DL1 ', trackingCode: '', note: '' })).toEqual({ outcome: 'courierHasIt', consignmentId: 'DL1' });
+      for (const s of [retry!, has!, not!]) {
+        expect(s.effects.join(' '), lang).toContain('EX-1-1');
+        for (const w of [s.label, s.title, s.ok, s.done, ...s.effects, ...s.fields.map((f) => f.label)]) expect(w, lang).not.toMatch(/orders\.(lost|dlg)\./);
+      }
     }
   });
 });

@@ -25,6 +25,9 @@
 //                                                          with the reason (IN_REVIEW, BOOKED, GIFT_DATE …) (delivery.book)
 //   POST  /api/admin/delivery/parcels/:id/retry            a failed booking, or one without an answer: asks the courier
 //                                                          for the shop's reference first, never books twice (delivery.book)
+//   POST  /api/admin/delivery/parcels/:id/close            follow-up 373: {outcome: courierHasIt, consignmentId, trackingCode?,
+//                                                          note?} | {outcome: notBooked, note?} a lost answer on a courier
+//                                                          without lookup by reference, closed from its panel (delivery.book)
 //   POST  /api/admin/delivery/parcels/:id/track            reads the parcel from its courier now (delivery.parcels)
 //   POST  /api/admin/delivery/parcels/:id/rebook           gate F-004: {cancelledVia: panel|phone, courierRef?, note?} a
 //                                                          parcel whose amount or receiver went stale, cancelled with the
@@ -176,6 +179,10 @@ export async function parcelsRoute(request: Request, deps: AdminDeps | null, pat
   if (action === 'retry') {
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'delivery.book', async (x) => ({ result: await sh.retryBooking(x.deps, x.who, id) }));
+  }
+  if (action === 'close') {
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'delivery.book', async (x) => ({ result: await sh.closeLostBooking(x.deps, x.who, id, await body(request)) }));
   }
   if (action === 'rebook') {
     if (m !== 'POST') return notAllowed();
