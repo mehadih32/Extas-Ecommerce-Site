@@ -1297,6 +1297,17 @@ check "deploy order (M2): the same commit, no live version or a short one deploy
 check "deploy order (M2): deploy.yml asks after ci, and a skipped run builds, deploys and reports nothing" \
   "$(grep -c 'bash infra/deploy/deploy-order.sh "$SHA" "$live" >> "$GITHUB_OUTPUT"' "$W/deploy.yml"):$(grep -c "steps.order.outputs.skip != 'true'" "$W/deploy.yml")" "1:7"
 rm -rf "$T"
+# Follow-up 619: a commit ahead of the live one that changes only infra/config/** is left to server setup (no deploy).
+T="$(mktemp -d)"; mkdir -p "$T/bin"
+printf '#!/usr/bin/env bash\nprintf %%s "$FAKE_BODY"\n' > "$T/bin/curl"; chmod +x "$T/bin/curl"
+ordb() { PATH="$T/bin:$PATH" API=https://api.example.test/repos/o/r GH_TOKEN=t FAKE_BODY="$1" bash ../deploy/deploy-order.sh "$Bc" "$A" 2>/dev/null; }
+conf='{"status":"ahead","files":[{"filename":"infra/config/server.conf"}]}'
+mixed='{"status":"ahead","files":[{"filename":"infra/config/server.conf"},{"filename":"apps/web/src/app/page.tsx"}]}'
+many="{\"status\":\"ahead\",\"files\":[$(for _ in $(seq 300); do printf '{"filename":"infra/config/x"},'; done | sed 's/,$//')]}"
+check "deploy order (619): only infra/config changed → skipped; with an app file, with no file list or with 300 files → deployed" \
+  "$(ordb "$conf"):$(ordb "$mixed"):$(ordb '{"status":"ahead"}'):$(ordb "$many"):$(ordb '{"status":"diverged","files":[{"filename":"infra/config/server.conf"}]}')" \
+  "skip=true:skip=false:skip=false:skip=false:skip=false"
+rm -rf "$T"
 
 # PR 621 (CN-029): erp-acceptance.sh runs the acceptance CLI in the migrate image with only the database address (the
 # app role's once the app runs as extas_app, else the direct one, as DATABASE_URL — qa-gate N5) and the vault key, in a
