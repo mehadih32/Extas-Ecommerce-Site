@@ -80,4 +80,30 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('one customer\'s page on P
     expect(await customerLooks(d, f.manager, a)).toEqual([]);
     f.overrides.delete('customers.profile');
   });
+
+  it('follow-up 477: with the fold on, repeated opens by the same person are one line with a count; the log keeps every open', async () => {
+    const d = f.customersDeps();
+    const rows = () => f.t.prisma.customerAccessLog.count({ where: { customerId: { in: [a, b] } } });
+    await customerView(d, f.viewer, a);
+    await customerView(d, f.viewer, a);
+    await customerView(d, f.viewer, b);
+    const logged = await rows();
+    const plain = await customerLooks(d, f.manager, a);
+    expect(plain.slice(0, 3).map((l) => [l.action, l.count])).toEqual([
+      ['profile.open', 1],
+      ['profile.open', 1],
+      ['profile.open', 1],
+    ]);
+    f.overrides.set('customers.looksFold', { enabled: true, minutes: 5 });
+    const folded = await customerLooks(d, f.manager, a);
+    // the three new opens are one line; the copy between them and the reader's earlier open keeps both apart
+    expect(folded.map((l) => [l.action, l.by, l.count])).toEqual([
+      ['profile.open', 'Customer Reader', 3],
+      ['phone.copy', 'Customers Staff', 1],
+      ['profile.open', 'Customer Reader', 1],
+    ]);
+    expect(folded[0]!.from.getTime()).toBeLessThanOrEqual(folded[0]!.at.getTime());
+    expect(await rows()).toBe(logged);
+    f.overrides.delete('customers.looksFold');
+  });
 });

@@ -1,0 +1,8 @@
+{
+  "customers": {
+    "looksFold": {
+      "label": "Fold repeated page opens in \"Who looked at this customer\"",
+      "help": "When on, the same person opening a customer's page again within these minutes shows as one line with a count. The log keeps every open; copies and calls of the number are always their own line."
+    }
+  }
+}

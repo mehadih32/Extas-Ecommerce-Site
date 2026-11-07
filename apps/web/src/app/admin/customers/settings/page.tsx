@@ -142,6 +142,15 @@ const CARDS: { key: cu.CrmPageSetting; card: string; fields: readonly CrmField[]
       { name: 'maxRows', kind: 'int' },
     ],
   },
+  {
+    // follow-up 477 (PR 286) — "Who looked at this customer": repeated opens by one person within the minutes as one line
+    key: 'customers.looksFold',
+    card: 'looksFold',
+    fields: [
+      { name: 'enabled', kind: 'bool' },
+      { name: 'minutes', kind: 'int' },
+    ],
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {

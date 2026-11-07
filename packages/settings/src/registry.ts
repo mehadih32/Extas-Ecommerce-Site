@@ -138,6 +138,7 @@ import { seasonalHomeSettings } from './registry-seasonal-home';
 import { festiveCutoffSettings } from './registry-festive-cutoff';
 import { eyePartSettings } from './registry-eye-parts';
 import { prepaidConfirmSettings } from './registry-prepaid-confirm';
+import { looksFoldSettings } from './registry-looks-fold';
 import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
 import { layoutSettings } from './registry-layouts';
@@ -1459,6 +1460,8 @@ export const registry = {
   ...eyePartSettings,
   // S05 · PR 541 follow-up 320 (v266): prepaid orders that nothing flagged confirm by themselves once paid (off)
   ...prepaidConfirmSettings,
+  // S14 · PR 286 follow-up 477 (v267): repeated opens on "Who looked at this customer" fold into one line (off)
+  ...looksFoldSettings,
   ...marketingCalendarSettings,
   ...marketingReportSettings,
   // S02 · PR 76 · the page builder: the category page's sections (registry-layouts.ts, version 240).
