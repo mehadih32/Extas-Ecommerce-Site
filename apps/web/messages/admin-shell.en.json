@@ -67,7 +67,8 @@
         "team": "Team",
         "areas": "Sales by area",
         "experiments": "Experiments",
-        "searches": "Searches"
+        "searches": "Searches",
+        "orders": "Orders"
       },
       "settings": {
         "store": "Store details",

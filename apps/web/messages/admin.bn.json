@@ -150,7 +150,8 @@
     "healthFixes": "অনুমতির অপেক্ষায়",
     "aiAudit": "চেকলিস্ট অডিট",
     "supportAnalytics": "সাপোর্টের হিসাব",
-    "reportsSearches": "সার্চ রিপোর্ট"
+    "reportsSearches": "সার্চ রিপোর্ট",
+    "reportsOrders": "অর্ডার রিপোর্ট"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

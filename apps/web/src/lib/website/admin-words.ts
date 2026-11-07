@@ -109,6 +109,8 @@ import adminMonthEndEn from '../../../messages/admin-month-end.en.json';
 import adminMonthEndBn from '../../../messages/admin-month-end.bn.json';
 import adminOrderProfitEn from '../../../messages/admin-order-profit.en.json';
 import adminOrderProfitBn from '../../../messages/admin-order-profit.bn.json';
+import adminOrderReportEn from '../../../messages/admin-order-report.en.json';
+import adminOrderReportBn from '../../../messages/admin-order-report.bn.json';
 import adminOrdersEn from '../../../messages/admin-orders.en.json';
 import adminOrdersBn from '../../../messages/admin-orders.bn.json';
 import adminOutreachEn from '../../../messages/admin-outreach.en.json';
@@ -248,6 +250,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-money': { en: adminMoneyEn, bn: adminMoneyBn },
   'admin-month-end': { en: adminMonthEndEn, bn: adminMonthEndBn },
   'admin-order-profit': { en: adminOrderProfitEn, bn: adminOrderProfitBn },
+  'admin-order-report': { en: adminOrderReportEn, bn: adminOrderReportBn },
   'admin-orders': { en: adminOrdersEn, bn: adminOrdersBn },
   'admin-outreach': { en: adminOutreachEn, bn: adminOutreachBn },
   'admin-pageedit': { en: adminPageeditEn, bn: adminPageeditBn },
