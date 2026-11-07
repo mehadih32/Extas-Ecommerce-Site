@@ -165,7 +165,7 @@
     "desc": "What Google reads beside each page, always from what the page itself shows (structured data).",
     "part": {
       "breadcrumbs": "The trail (Home › Category › Product)",
-      "itemList": "The list of products on a category page",
+      "itemList": "The list of products on a category page, and of the pairs on a combo rule's page",
       "product": "A product with its price and stock",
       "wasPrice": "The struck price, where the page shows one",
       "combo": "A set with its set price and stock",
