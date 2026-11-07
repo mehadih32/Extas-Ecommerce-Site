@@ -95,6 +95,32 @@ describe.skipIf(!HAS_TEST_DB)('PR 181 · the daily picking list (PostgreSQL)', (
     expect(l.summary.held).toBe(l.held.length);
   });
 
+  it('follow-up 439: the list for chosen orders only — the same rules, narrowed; a chosen order the courier has never enters; the print keeps how many were chosen', async () => {
+    const a = await confirmed('pk-chosen-a');
+    const b = await booked('pk-chosen-b');
+    const other = await confirmed('pk-not-chosen');
+    const gone = await booked('pk-chosen-gone');
+    await db().shipment.update({ where: { id: gone.shipment.id }, data: { status: 'PICKED_UP' } });
+
+    const all = await list();
+    expect(all.chosen).toBeNull();
+    expect(all.orderIds).toEqual(expect.arrayContaining([a.orderId, b.orderId, other.orderId]));
+
+    const some = await list({ orderIds: [a.orderId, b.orderId, gone.orderId, a.orderId] });
+    expect(some.chosen).toBe(3);
+    expect([...some.orderIds].sort()).toEqual([a.orderId, b.orderId].sort());
+    const items = await db().orderItem.findMany({ where: { orderId: { in: some.orderIds }, status: 'ACTIVE' } });
+    expect(some.summary).toMatchObject({ orders: 2, pieces: items.reduce((s, i) => s + i.quantity, 0) });
+
+    const printed = await printPicking(f.shippingDeps(), f.shipper, { orderIds: [a.orderId] });
+    expect(printed.orderIds).toEqual([a.orderId]);
+    const kept = await db().pickingList.findUniqueOrThrow({ where: { id: printed.listId } });
+    expect(kept.summary).toMatchObject({ chosen: 1 });
+    // an empty or a malformed choice is refused, never "every order"
+    expect(await refusal(list({ orderIds: [] }))).toBe('INVALID_INPUT');
+    expect(await refusal(list({ orderIds: ['not-an-id'] }))).toBe('INVALID_INPUT');
+  });
+
   it('marks a size short of the shop\'s stock, unless the owner turns it off', async () => {
     const l = await list();
     const rows = l.groups.flatMap((g) => g.styles.flatMap((s) => s.colours.flatMap((c) => c.sizes)));

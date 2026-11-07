@@ -2,7 +2,8 @@
 // the owner's list settings (`delivery.picking.list`: paper, printer dots, language, shortages), the shop's letterhead,
 // and the list's own words in the language the owner chose (messages/admin-fulfil.<lang>.json `ful.picking.sheet`),
 // drawn by @extas/documents' paper list: the summary line at the top, then category → style → colour → size rows, a
-// tick box on every size row, SHORT in a black box where the stock is short, the held orders at the end.
+// tick box on every size row, SHORT in a black box where the stock is short, the held orders at the end. Follow-up 439:
+// a list for orders chosen on the print run says how many were chosen.
 import { listPdf, PAPER_MM, sharpText, type ListDocument, type ListRow, type TextEngine } from '@extas/documents';
 import type { PickingListSettings } from '@extas/settings';
 import type { PickingList } from '@extas/shipping';
@@ -39,7 +40,8 @@ export function pickingDocument(list: PickingList, cfg: PickingListSettings, hea
       }
     }
   }
-  const range = list.range.from || list.range.to ? w('range', { from: list.range.from ?? '…', to: list.range.to ?? '…' }) : w('allDays');
+  // follow-up 439: a list for chosen orders says so instead of "every order"
+  const range = list.chosen ? w('chosen', { n: list.chosen }) : list.range.from || list.range.to ? w('range', { from: list.range.from ?? '…', to: list.range.to ?? '…' }) : w('allDays');
   const [widthMm, heightMm] = PAPER_MM[cfg.paper];
   return {
     widthMm,
