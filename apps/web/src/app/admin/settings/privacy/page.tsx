@@ -6,11 +6,13 @@
 // are never removed on their own, only the IP and the location go after the days, removing details is by hand. Seeing needs `security.read`; saving the card `security.write`; requests
 // `customers.privacy` (the API checks again). S18 · PR 623: the card for customers' own requests from their account
 // (`privacy.customerRequests`, off) under the first card; the list says each request's kind and who filed it.
+// Follow-up 324: the card for where the team uses the location a customer shared for the rider (`orders.sharedLocation`,
+// both parts off): a map link on the order page, the point on the courier sticker, and the map address.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, PRIVACY_REQUEST_WORDS_MAX, privacyCustomerRequestsSchema, registry } from '@extas/settings';
+import { PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, PRIVACY_REQUEST_WORDS_MAX, privacyCustomerRequestsSchema, registry, SHARED_LOCATION_LINK_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PrivacyRequests } from '@/components/admin/settings/PrivacyRequests';
@@ -103,6 +105,12 @@ export default async function PrivacyPage() {
     { kind: 'number', path: 'copyDays', label: s('cust.copyDays'), help: s('cust.copyDaysHelp'), min: copyDays.minValue ?? 1, max: copyDays.maxValue ?? Number.MAX_SAFE_INTEGER },
     ...PRIVACY_REQUEST_WORDS.map((w): FieldsCardField => ({ kind: 'pair', path: w, label: { en: s('cust.inEn', { label: s(`cust.w.${w}`) }), bn: s('cust.inBn', { label: s(`cust.w.${w}`) }) }, max: PRIVACY_REQUEST_WORDS_MAX, rows: w === 'notice' ? 4 : undefined })),
   ];
+  const loc: FieldsCardField[] = [
+    { kind: 'switch', path: 'orderPage', label: s('loc.orderPage'), help: s('loc.orderPageHelp') },
+    { kind: 'switch', path: 'sticker', label: s('loc.sticker'), help: s('loc.stickerHelp') },
+    { kind: 'text', path: 'mapLink', label: s('loc.mapLink'), help: s('loc.mapLinkHelp'), max: SHARED_LOCATION_LINK_MAX },
+  ];
+  const lcard = v.cards.location;
   const card = v.cards.keep;
   const ccard = v.cards.customer;
   const on = card.value.erasureRequests === true;
@@ -158,6 +166,8 @@ export default async function PrivacyPage() {
         </div>
       )}
       <FieldsCard url={API} screen={{ key: ccard.key, value: ccard.value, version: ccard.version }} fields={cust} texts={{ ...texts, h: s('cust.h'), d: s('cust.d') }} canEdit={canEdit} testId="privacy-customer" />
+
+      <FieldsCard url={API} screen={{ key: lcard.key, value: lcard.value, version: lcard.version }} fields={loc} texts={{ ...texts, h: s('loc.h'), d: s('loc.d') }} canEdit={canEdit} testId="privacy-location" />
 
       <section className="a2-card a2-mt12" data-testid="privacy-kept">
         <div className="a2-ch">

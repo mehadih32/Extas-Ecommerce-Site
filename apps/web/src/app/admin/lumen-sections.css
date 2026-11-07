@@ -197,6 +197,8 @@
 /* follow-up 500: the order page's "Print invoice" menu — paper, roll and picture one under another, each a full tap */
 [data-lm-look] [data-lm-ready] .oi-print { display: flex; flex-direction: column; gap: 4px; min-width: 200px; }
 [data-lm-look] [data-lm-ready] .oi-print .a2-btn { width: 100%; justify-content: flex-start; min-height: var(--lm-tap); }
+/* follow-up 324: the order page's shared-location map link is a full tap row */
+[data-lm-look] [data-lm-ready] .a2-ovoice .a2-oloc { min-height: var(--lm-tap); }
 /* the invoice preview is paper: a light island in dark mode too, its words in the island's own ink */
 [data-lm-look] [data-lm-ready] .inv-preview { color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] .inv-preview .a2-mute { color: var(--lm-ink2); }

@@ -6,12 +6,14 @@
 // `security.read`, saving the card `security.write`. The mother store's values (the shop the admin runs).
 // S18 · PR 623: the card for customers' own requests (`privacy.customerRequests`, off; saved whole like the first
 // card), each request's kind (erasure or copy) and source (staff or the customer), and "Approve copy" for a copy request.
+// Follow-up 324: the card for where the team uses the location a customer shared for the rider (`orders.sharedLocation`,
+// both parts off; saved whole like the others): the order page's map link, the sticker, and the map address.
 import { createHash } from 'node:crypto';
 import { audit, isOwner, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { approveCopy, carryOutErasure, cancelErasure, listErasureRequests, requestErasure, type ErasureRow } from '@extas/customers';
 import { phoneForms } from '@extas/orders';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, privacyCustomerRequestsSchema, registry, storeTarget, type PrivacyCustomerRequestsSettings } from '@extas/settings';
+import { PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, privacyCustomerRequestsSchema, registry, storeTarget, type PrivacyCustomerRequestsSettings, type SharedLocationSettings } from '@extas/settings';
 import { z } from 'zod';
 import type { AppResolver } from '../settings';
 
@@ -64,6 +66,19 @@ async function customerCard(deps: PrivacyDeps): Promise<CustomerCard> {
   return { key: 'customer', value: customerCardOf(v), byDefault: customerCardOf(registry['privacy.customerRequests'].default), version: versionOf(v) };
 }
 
+/** Follow-up 324 — where the team uses a shared location (`orders.sharedLocation`), as the setting is. */
+export interface LocationCard {
+  key: 'location';
+  value: SharedLocationSettings;
+  byDefault: SharedLocationSettings;
+  version: string;
+}
+
+async function locationCard(deps: PrivacyDeps): Promise<LocationCard> {
+  const v = await deps.resolver.value('orders.sharedLocation', { storeId: S });
+  return { key: 'location', value: v, byDefault: registry['orders.sharedLocation'].default, version: versionOf(v) };
+}
+
 export interface PrivacyRequestRow extends Omit<ErasureRow, 'customerId'> {
   customerId: string;
   /** The person's name while not erased; the last three digits of his number. */
@@ -72,7 +87,7 @@ export interface PrivacyRequestRow extends Omit<ErasureRow, 'customerId'> {
 }
 
 export interface PrivacyView {
-  cards: { keep: KeepCard; customer: CustomerCard };
+  cards: { keep: KeepCard; customer: CustomerCard; location: LocationCard };
   purge: { lastRun: { status: string; at: string } | null; holding: number; overdue: number };
   /** null: the person may not see the requests (`customers.privacy`). */
   requests: PrivacyRequestRow[] | null;
@@ -113,7 +128,7 @@ const whoIn = (who: PrivacyWho) => ({ actor: who.actor, storeId: S, ctx: who.ctx
 export async function privacyView(deps: PrivacyDeps, who: PrivacyWho): Promise<PrivacyView> {
   const held = await requirePermission(deps.db, who.actor, 'security.read', { storeId: S });
   const now = deps.now?.() ?? new Date();
-  const [keep, customer] = await Promise.all([keepCard(deps), customerCard(deps)]);
+  const [keep, customer, location] = await Promise.all([keepCard(deps), customerCard(deps), locationCard(deps)]);
   const days = keep.value.retentionDays as number;
   const [last, holding, overdue] = await Promise.all([
     deps.db.jobRun.findFirst({ where: { jobKey: PURGE_JOB, storeId: S, status: { not: 'RUNNING' } }, orderBy: { startedAt: 'desc' }, select: { status: true, finishedAt: true, startedAt: true } }),
@@ -135,7 +150,7 @@ export async function privacyView(deps: PrivacyDeps, who: PrivacyWho): Promise<P
     });
   }
   return {
-    cards: { keep, customer },
+    cards: { keep, customer, location },
     purge: { lastRun: last ? { status: last.status, at: (last.finishedAt ?? last.startedAt).toISOString() } : null, holding, overdue },
     requests,
     canRequest,
@@ -149,6 +164,7 @@ const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 
 export async function saveKeepCard(deps: PrivacyDeps, who: PrivacyWho, input: unknown): Promise<PrivacyView> {
   await requirePermission(deps.db, who.actor, 'security.write', { storeId: S });
   if (isObj(input) && input.key === 'customer') return saveCustomerCard(deps, who, input);
+  if (isObj(input) && input.key === 'location') return saveLocationCard(deps, who, input);
   if (!isObj(input) || input.key !== 'keep' || !isObj(input.value)) throw new PrivacyPageError('INVALID_INPUT', 400, ['key', 'value']);
   const sent = input.value;
   const unknownFields = Object.keys(sent).filter((k) => !(k in KEEP_FIELDS));
@@ -183,6 +199,18 @@ async function saveCustomerCard(deps: PrivacyDeps, who: PrivacyWho, input: Recor
   const was = await deps.resolver.value('privacy.customerRequests', { storeId: S });
   await deps.resolver.set('privacy.customerRequests', parsed.data, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: 'Settings › Privacy & data' });
   await audit(deps.db, who.actor, { storeId: S, action: 'privacy.settings.save', entityType: 'Setting', entityId: 'privacy.customerRequests', before: was, after: parsed.data }, who.ctx);
+  return privacyView(deps, who);
+}
+
+/** Follow-up 324 — saves the shared-location card whole (`security.write`); a stale version is refused with the fresh one. */
+async function saveLocationCard(deps: PrivacyDeps, who: PrivacyWho, input: Record<string, unknown>): Promise<PrivacyView> {
+  const parsed = registry['orders.sharedLocation'].schema.safeParse(input.value);
+  if (!parsed.success) throw new PrivacyPageError('INVALID_INPUT', 400, [...new Set(parsed.error.issues.map((i) => i.path.join('.') || 'value'))]);
+  const before = await locationCard(deps);
+  if (input.version !== undefined && input.version !== before.version) throw new PrivacyPageError('STALE', 409, ['version'], { version: before.version });
+  if (versionOf(parsed.data) === before.version) return privacyView(deps, who);
+  await deps.resolver.set('orders.sharedLocation', parsed.data, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: 'Settings › Privacy & data' });
+  await audit(deps.db, who.actor, { storeId: S, action: 'privacy.settings.save', entityType: 'Setting', entityId: 'orders.sharedLocation', before: before.value, after: parsed.data }, who.ctx);
   return privacyView(deps, who);
 }
 

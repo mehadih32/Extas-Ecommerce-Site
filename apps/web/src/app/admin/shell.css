@@ -578,6 +578,8 @@
 /* CN-020 (4): the address the customer spoke at checkout, under his details (words, how sure, the recording). */
 .adm2 .a2-ovoice{margin-top:12px;border-top:1px solid var(--ln2);padding-top:10px;display:grid;gap:6px}
 .adm2 .a2-ovoice-play{width:100%;max-width:420px;min-height:44px}
+/* follow-up 324: the shared location's map link — a full tap row, the point never cut */
+.adm2 .a2-oloc{min-height:44px;justify-self:start;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .adm2 .a2-mt12{margin-top:12px}
 .adm2 .a2-blk{display:block}
 .adm2 .a2-oflags{margin:0 0 14px}

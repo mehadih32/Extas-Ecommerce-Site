@@ -217,6 +217,8 @@ export * from './registry-eye-parts';
 export * from './registry-prepaid-confirm';
 // S14 · PR 286 follow-up 477 — repeated opens of a customer's page fold into one line with a count (registry-looks-fold.ts, version 267).
 export * from './registry-looks-fold';
+// S06 · PR 159 follow-up 324 — where the team uses a shared location: the order page's map link, the sticker (registry-shared-location.ts, version 268).
+export * from './registry-shared-location';
 // S13 · PR 282 — the marketing calendar: the switch and how many days one view shows (registry-marketing-calendar.ts, version 217).
 export * from './registry-marketing-calendar';
 // S13 · PR 283 — the marketing report: the switch, the longest period and a message send's result days (registry-marketing-report.ts, version 218).

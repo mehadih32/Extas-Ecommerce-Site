@@ -243,6 +243,8 @@ import prepaidConfirmEn from '../messages/prepaid-confirm.en.json';
 import prepaidConfirmBn from '../messages/prepaid-confirm.bn.json';
 import looksFoldEn from '../messages/looks-fold.en.json';
 import looksFoldBn from '../messages/looks-fold.bn.json';
+import sharedLocationEn from '../messages/shared-location.en.json';
+import sharedLocationBn from '../messages/shared-location.bn.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -381,6 +383,9 @@ messages.bn = mergeMessages(messages.bn, prepaidConfirmBn);
 // S14 · PR 286 follow-up 477 (registry v267): repeated opens fold into one line on "Who looked" (registry-looks-fold.ts).
 messages.en = mergeMessages(messages.en, looksFoldEn);
 messages.bn = mergeMessages(messages.bn, looksFoldBn);
+// S06 · PR 159 follow-up 324 (registry v268): where the team uses a shared location (registry-shared-location.ts).
+messages.en = mergeMessages(messages.en, sharedLocationEn);
+messages.bn = mergeMessages(messages.bn, sharedLocationBn);
 // S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
 messages.en = mergeMessages(messages.en, financeEn);
 messages.bn = mergeMessages(messages.bn, financeBn);

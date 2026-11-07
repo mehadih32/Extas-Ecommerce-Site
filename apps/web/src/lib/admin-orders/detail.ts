@@ -147,6 +147,9 @@ export interface OrderDetailView {
   noteUrl: string;
   /** CN-020 (4): the address the customer spoke at checkout (null: typed). `audio`: the recording to play, if kept. */
   voice: { words: string; sure: string; low: boolean; audio: string | null } | null;
+  /** Follow-up 324: the location the customer shared for the rider, as a map link, while the order keeps it and the
+   *  owner shows it here (`orders.sharedLocation.orderPage`, off). */
+  location: { text: string; href: string } | null;
 }
 
 interface OrderFields {
@@ -1030,6 +1033,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     noteMax,
     noteUrl: commandUrl(o.id, 'notes'),
     voice: await voiceOf(deps, who, view, o),
+    location: await od.orderPageLocation(deps, who.storeId, o.id).then((p) => (p ? { text: p.text, href: p.href } : null)),
   };
 }
 

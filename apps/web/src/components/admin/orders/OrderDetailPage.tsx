@@ -141,6 +141,16 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
     </Card>,
     <Card key="customer" testId="order-customer" title={t(d, 'orders.cust.title')}>
       <Kv rows={o.customer} />
+      {o.location ? (
+        // follow-up 324: the point the customer shared for the rider, opened on the owner's map (a new tab)
+        <div className="a2-ovoice" data-testid="order-location">
+          <div className="a2-xs a2-mute a2-b">{t(d, 'orders.cust.locationTitle')}</div>
+          <a className="a2-btn a2-oloc" href={o.location.href} target="_blank" rel="noopener noreferrer" data-testid="order-location-map">
+            <ShellIcon name="ext" size={15} />
+            <span>{t(d, 'orders.cust.location', { point: o.location.text })}</span>
+          </a>
+        </div>
+      ) : null}
       {o.voice ? (
         <div className="a2-ovoice" data-testid="order-voice">
           <div className="a2-xs a2-mute a2-b">

@@ -141,6 +141,7 @@ import { festiveCutoffSettings } from './registry-festive-cutoff';
 import { eyePartSettings } from './registry-eye-parts';
 import { prepaidConfirmSettings } from './registry-prepaid-confirm';
 import { looksFoldSettings } from './registry-looks-fold';
+import { sharedLocationSettings } from './registry-shared-location';
 import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
 import { layoutSettings } from './registry-layouts';
@@ -1464,6 +1465,8 @@ export const registry = {
   ...prepaidConfirmSettings,
   // S14 · PR 286 follow-up 477 (v267): repeated opens on "Who looked at this customer" fold into one line (off)
   ...looksFoldSettings,
+  // S06 · PR 159 follow-up 324 (v268): the shared location on the order page and the sticker (both off)
+  ...sharedLocationSettings,
   ...marketingCalendarSettings,
   ...marketingReportSettings,
   // S02 · PR 76 · the page builder: the category page's sections (registry-layouts.ts, version 240).

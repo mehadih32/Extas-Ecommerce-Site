@@ -638,7 +638,9 @@
       "check": "Check",
       "unclear": "The address is not clear — check it on the call",
       "note": "Customer's note",
-      "history": "History"
+      "history": "History",
+      "location": "{point} · Open the map",
+      "locationTitle": "Location the customer shared for the rider"
     },
     "courier": {
       "title": "Courier",

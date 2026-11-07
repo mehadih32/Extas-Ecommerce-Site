@@ -2,7 +2,8 @@
 // with customers.privacy); the card saves the keeping period and the erasure switch (security.write); a request is filed
 // by the customer's number and carried out by the owner with the word of either admin language. A throwaway database
 // (skipped without TEST_DATABASE_ADMIN_URL). Made-up test values. PR 623: the customers' requests card saves whole
-// (security.write); a customer's copy request shows its kind and source and is approved, never erased.
+// (security.write); a customer's copy request shows its kind and source and is approved, never erased. Follow-up 324: the
+// shared-location card (both parts off) saves whole with security.write; a map link without {lat}/{lng} is refused.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -36,7 +37,7 @@ const cookiesOf = (res: Response) =>
 interface Answer {
   ok: boolean;
   error?: string;
-  cards: { keep: { value: Record<string, unknown>; version: string }; customer: { value: Record<string, unknown>; version: string } };
+  cards: { keep: { value: Record<string, unknown>; version: string }; customer: { value: Record<string, unknown>; version: string }; location: { value: Record<string, unknown>; version: string } };
   view: { purge: { lastRun: unknown; holding: number; overdue: number }; requests: { id: string; status: string; name: string | null; phoneEnd: string | null; kind: string; source: string }[] | null; canErase: boolean };
 }
 
@@ -125,5 +126,16 @@ describe.skipIf(!HAS_TEST_DB)('Settings › Privacy & data on PostgreSQL (PR 382
     const ok = await send('POST', owner, { action: 'approve', requestId: request.id });
     expect(ok.a.view.requests!.find((r) => r.id === request.id)).toMatchObject({ status: 'READY' });
     expect(await t.prisma.customer.count({ where: { id: c.id, erasedAt: null } })).toBe(1);
+  });
+  it('follow-up 324: the shared-location card — off as shipped, saved whole by the owner, a bad map link refused', async () => {
+    const g = await send('GET', watcher);
+    expect(g.a.cards.location.value).toMatchObject({ orderPage: false, sticker: false });
+    expect((await send('PUT', watcher, { key: 'location', value: { ...g.a.cards.location.value, orderPage: true } })).status).toBe(403);
+    expect((await send('PUT', owner, { key: 'location', value: { ...g.a.cards.location.value, mapLink: 'https://maps.example.org/?q=here' } })).status).toBe(400);
+    const saved = await send('PUT', owner, { key: 'location', value: { orderPage: true, sticker: false, mapLink: 'https://maps.example.org/?q={lat},{lng}' }, version: g.a.cards.location.version });
+    expect(saved.status).toBe(200);
+    expect(await deps.resolver.value('orders.sharedLocation', { storeId: MOTHER_STORE_ID })).toEqual({ orderPage: true, sticker: false, mapLink: 'https://maps.example.org/?q={lat},{lng}' });
+    expect((await send('PUT', owner, { key: 'location', value: saved.a.cards.location.value, version: g.a.cards.location.version })).status).toBe(409);
+    expect(await t.prisma.auditLog.count({ where: { action: 'privacy.settings.save', entityId: 'orders.sharedLocation' } })).toBe(1);
   });
 });
