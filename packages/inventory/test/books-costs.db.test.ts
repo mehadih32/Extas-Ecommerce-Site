@@ -55,6 +55,8 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 618 on PostgreSQL: fixed costs and t
   const links: Record<number, string> = {};
   let viewer: Actor;
   let owner: Actor;
+  /** Follow-up 567: daily cost lines only (`costlines.write`), never the month's fixed costs. */
+  let clerk: Actor;
   const sys = (storeId: number): Who => ({ actor: SYSTEM, storeId });
   const code = async (p: Promise<unknown>) => p.then(() => 'OK', (e: { code?: string }) => e.code ?? String(e));
   const months = (storeId: number, month: string) => t.prisma.erpFixedCostMonth.findMany({ where: { storeId, month: day(`${month}-01`) }, orderBy: { version: 'asc' } });
@@ -91,7 +93,7 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 618 on PostgreSQL: fixed costs and t
         await t.prisma.erpStoreLink.update({ where: { id: links[store] }, data: { switchDate: day('2026-11-01') } });
       }
     }
-    const staff = async (email: string, perms: ('books.read' | 'fixedcosts.write')[]) => {
+    const staff = async (email: string, perms: ('books.read' | 'fixedcosts.write' | 'costlines.write')[]) => {
       const role = await createRole(t.prisma, SYSTEM, { key: email.split('@')[0]!, nameEn: email, nameBn: email, permissions: perms });
       const u = await t.prisma.staffUser.create({ data: { email, displayName: email, passwordHash: 'not-a-login' } });
       await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: null } });
@@ -99,6 +101,7 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 618 on PostgreSQL: fixed costs and t
     };
     viewer = await staff('books-viewer@example.com', ['books.read']);
     owner = await staff('books-owner@example.com', ['books.read', 'fixedcosts.write']);
+    clerk = await staff('books-clerk@example.com', ['books.read', 'costlines.write']);
   });
   afterAll(async () => {
     globalThis.fetch = realFetch;
@@ -307,6 +310,18 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 618 on PostgreSQL: fixed costs and t
     const b = await addCostEntry(deps(), { actor: owner, storeId: B }, { line: 'OTHER', day: '2026-11-20', amountMinor: 300, requestKey: 'req-0001-sample' });
     expect(b.repeated).toBe(false);
     expect(b.id).not.toBe(first.id);
+  });
+
+  it('follow-up 567: `costlines.write` enters and reverses a daily cost line but never sets the fixed costs or the never-lines', async () => {
+    const w = { actor: clerk, storeId: B };
+    expect(await code(setFixedCosts(deps(), w, { month: '2026-11', salaryMinor: 999, rentMinor: 0, utilitiesMinor: 0, otherMinor: 0 }))).toBe('FORBIDDEN');
+    const e = await addCostEntry(deps(), w, { line: 'PACKAGING', day: '2026-11-20', amountMinor: 1_200, note: 'poly bags' });
+    expect(e.repeated).toBe(false);
+    const rev = await reverseCostEntry(deps(), w, e.id, { reason: 'typed on the wrong day' });
+    expect(await t.prisma.costEntry.findUniqueOrThrow({ where: { id: rev.id }, select: { amountMinor: true, refId: true } })).toEqual({ amountMinor: -1_200, refId: e.id });
+    expect(await t.prisma.auditLog.count({ where: { entityId: { in: [e.id, rev.id] }, actorId: clerk.staffUserId } })).toBe(2);
+    // The month's numbers stay the owner's: store B still holds only the owner's version.
+    expect((await months(B, '2026-11')).map((m) => m.salaryMinor)).toEqual([100n]);
   });
 
   it('a closed month takes no new fixed costs and no new cost entries', async () => {

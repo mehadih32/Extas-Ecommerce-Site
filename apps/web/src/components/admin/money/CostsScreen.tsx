@@ -35,6 +35,8 @@ export interface CostsScreenProps {
   lines: readonly Line[];
   openFrom: string;
   canEdit: boolean;
+  /** Follow-up 567: may enter and reverse the daily cost lines (`costlines.write`, or `canEdit`). */
+  canEnterLines?: boolean;
 }
 
 /** A new request key for one cost entry (kept until the entry is written). */
@@ -61,6 +63,9 @@ export function CostsScreen(p: CostsScreenProps) {
   };
   const linked = p.fixed.linked;
   const off = !p.canEdit || !linked;
+  const canLines = p.canEdit || p.canEnterLines === true;
+  /** The daily cost line form and its reversals (follow-up 567: `costlines.write` is enough). */
+  const offLines = !canLines || !linked;
   /** A typed amount in minor units; null = empty; undefined = not an amount. */
   const typed = (text: string): number | null | undefined => (text.trim() ? (typedMinor(text, p.money.digits) ?? undefined) : null);
 
@@ -176,10 +181,15 @@ export function CostsScreen(p: CostsScreenProps) {
           <ShellIcon name="info" size={15} />
           <span>{c('notLinked')}</span>
         </div>
-      ) : !p.canEdit ? (
+      ) : !canLines ? (
         <div className="a2-note" data-testid="costs-read-only">
           <ShellIcon name="lock" size={15} />
           <span>{c('readOnly')}</span>
+        </div>
+      ) : !p.canEdit ? (
+        <div className="a2-note" data-testid="costs-fixed-locked">
+          <ShellIcon name="lock" size={15} />
+          <span>{c('fixedLocked')}</span>
         </div>
       ) : null}
       <section className="a2-card" data-testid="fc-card" aria-labelledby={`${id}-fh`}>
@@ -296,7 +306,7 @@ export function CostsScreen(p: CostsScreenProps) {
                   <label className="a2-lbl" htmlFor={`${id}-line`}>
                     {c('lines.line')}
                   </label>
-                  <select id={`${id}-line`} className="a2-sel" value={line} disabled={off || eBusy} onChange={(e) => setLine(e.target.value as Line)} data-testid="cl-line">
+                  <select id={`${id}-line`} className="a2-sel" value={line} disabled={offLines || eBusy} onChange={(e) => setLine(e.target.value as Line)} data-testid="cl-line">
                     {p.lines.map((l) => (
                       <option key={l} value={l}>
                         {c(`line.${l}`)}
@@ -308,24 +318,24 @@ export function CostsScreen(p: CostsScreenProps) {
                   <label className="a2-lbl" htmlFor={`${id}-day`}>
                     {c('lines.day')}
                   </label>
-                  <input id={`${id}-day`} type="date" className="a2-inp" min={p.openFrom} max={p.fixed.today} value={eDay} disabled={off || eBusy} onChange={(e) => setEDay(e.target.value)} data-testid="cl-day" />
+                  <input id={`${id}-day`} type="date" className="a2-inp" min={p.openFrom} max={p.fixed.today} value={eDay} disabled={offLines || eBusy} onChange={(e) => setEDay(e.target.value)} data-testid="cl-day" />
                 </div>
                 <div className="a2-fld">
                   <label className="a2-lbl" htmlFor={`${id}-amount`}>
                     {c('lines.amount')} ({p.money.currency})
                   </label>
-                  <input id={`${id}-amount`} className="a2-inp" inputMode="decimal" autoComplete="off" value={amount} disabled={off || eBusy} onChange={(e) => setAmount(e.target.value)} data-testid="cl-amount" />
+                  <input id={`${id}-amount`} className="a2-inp" inputMode="decimal" autoComplete="off" value={amount} disabled={offLines || eBusy} onChange={(e) => setAmount(e.target.value)} data-testid="cl-amount" />
                 </div>
                 <div className="a2-fld">
                   <label className="a2-lbl" htmlFor={`${id}-enote`}>
                     {c('lines.note')}
                   </label>
-                  <input id={`${id}-enote`} className="a2-inp" maxLength={500} value={eNote} disabled={off || eBusy} onChange={(e) => setENote(e.target.value)} data-testid="cl-note" />
+                  <input id={`${id}-enote`} className="a2-inp" maxLength={500} value={eNote} disabled={offLines || eBusy} onChange={(e) => setENote(e.target.value)} data-testid="cl-note" />
                 </div>
               </div>
               <p className="a2-xs a2-mute">{c('lines.openDays', { from: day(p.openFrom), to: day(p.fixed.today) })}</p>
               <div className="ct-actions">
-                <button type="button" className="a2-btn pri" disabled={off || eBusy} onClick={addEntry} data-testid="cl-add">
+                <button type="button" className="a2-btn pri" disabled={offLines || eBusy} onClick={addEntry} data-testid="cl-add">
                   {eBusy ? c('lines.adding') : c('lines.add')}
                 </button>
               </div>
@@ -366,7 +376,7 @@ export function CostsScreen(p: CostsScreenProps) {
                           {e.reverses ? <span className="a2-pill line">{c('lines.reversal')}</span> : e.reversedBy ? <span className="a2-pill line">{c('lines.reversed')}</span> : !e.manual ? <span className="a2-pill line">{c('lines.fromStatement')}</span> : null}
                         </td>
                         <td>
-                          {e.canReverse && p.canEdit ? (
+                          {e.canReverse && canLines ? (
                             undo?.id === e.id ? (
                               <div className="ct-undo">
                                 <input className="a2-inp" aria-label={c('lines.reason')} placeholder={c('lines.reason')} maxLength={500} value={undo.reason} disabled={eBusy} onChange={(ev) => setUndo({ id: e.id, reason: ev.target.value })} data-testid="cl-reason" />

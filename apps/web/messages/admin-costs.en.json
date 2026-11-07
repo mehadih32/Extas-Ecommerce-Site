@@ -4,7 +4,8 @@
     "title": "Costs",
     "sub": "The month's fixed costs and the daily cost lines the shop sends the ERP with its daily summary.",
     "notLinked": "Costs go to the ERP from the day this store switches to the new ERP contract (v6). Until then nothing here can be entered or sent.",
-    "readOnly": "You can see the costs. Entering them needs the \"Set fixed costs\" permission.",
+    "readOnly": "You can see the costs. Entering them needs the \"Set fixed costs\" or the \"Enter daily cost lines\" permission.",
+    "fixedLocked": "You can enter and reverse the daily cost lines. The month's fixed costs and the lines this shop never has need the \"Set fixed costs\" permission.",
     "fixed": {
       "title": "Fixed costs",
       "sub": "Salary, rent, utilities and other costs of a whole month. The ERP spreads them over the days of the month, exact to the paisa, with the remainder on the last day. They never go into a day's other costs.",

@@ -356,6 +356,9 @@ export const PERMISSIONS = {
   'erp.account.read': { group: 'books' },
   'erp.payments.record': { group: 'books' },
   'fixedcosts.write': { group: 'books' },
+  // Follow-up 567 (PR 618): enter and reverse a cost on a day's summary line (packaging, accessories, fees, courier,
+  // ads, other) on Money → Costs without the month's fixed costs; `fixedcosts.write` still covers both.
+  'costlines.write': { group: 'books' },
   // S16 · PR 343, 345 (BACKEND-ARCHITECTURE §5 MNY-06) — the cost ledger and the costs & fees inputs: record a top-up of
   // a prepaid balance (SMS credit) the shop already paid for, set its low mark, and (PR 345) the costs & fees figures.
   // Records only: nothing here pays anyone or moves money.

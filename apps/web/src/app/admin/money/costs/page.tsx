@@ -3,7 +3,7 @@
 // version on each change, sent by `PUT /fixed-costs/{month}`, shown spread by day with the ERP's rule) and enters the
 // daily cost lines (packaging, accessories, payment and COD fees, courier, ads, other) that feed each day's summary; a
 // wrong cost is reversed, never edited. The amounts are owner data: the page ships empty and asks for no number. Seeing
-// it needs `books.read`; writing needs `fixedcosts.write`. Before the store's switch-over to contract v6 it says so and
+// it needs `books.read`; writing needs `fixedcosts.write` (the daily cost lines alone: `costlines.write`, follow-up 567). Before the store's switch-over to contract v6 it says so and
 // takes nothing. Nothing here moves money. Words: messages/admin-costs.*.json (`moneyCosts.*`).
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -55,13 +55,14 @@ export default async function CostsPage() {
   const at = { storeId: MOTHER_STORE_ID };
   const [screen, currency, resendDays] = await Promise.all([costsScreen(idep, who), access.deps.resolver.value('store.currency', at), access.deps.resolver.value('books.resend.days', at)]);
   const canEdit = access.guard.permissions?.has('fixedcosts.write') ?? false;
+  const canEnterLines = canEdit || (access.guard.permissions?.has('costlines.write') ?? false);
   const today = screen.fixed.today;
   const openFrom = [screen.fixed.startDay ?? today, inv.addDays(today, -resendDays)].sort().at(-1)!;
   return (
     <div className="a2-z" data-testid="costs-page" data-lm-ready="" data-linked={screen.fixed.linked ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyCosts.title')} sub={t(view.dict, 'moneyCosts.sub')} />
       <SectionTabs view={view} current={KEY} />
-      <CostsScreen dict={view.dict} locale={view.locale} money={moneyOf(currency, view.locale)} fixed={screen.fixed} entries={screen.entries.rows} entriesMore={screen.entries.more} entriesLimit={screen.entries.limit} noCostLines={screen.noCostLines} lines={inv.COST_LINE_ORDER} openFrom={openFrom} canEdit={canEdit} />
+      <CostsScreen dict={view.dict} locale={view.locale} money={moneyOf(currency, view.locale)} fixed={screen.fixed} entries={screen.entries.rows} entriesMore={screen.entries.more} entriesLimit={screen.entries.limit} noCostLines={screen.noCostLines} lines={inv.COST_LINE_ORDER} openFrom={openFrom} canEdit={canEdit} canEnterLines={canEnterLines} />
     </div>
   );
 }
