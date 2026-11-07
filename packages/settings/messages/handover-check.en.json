@@ -1,0 +1,10 @@
+{
+  "fulfilment": {
+    "handover": {
+      "reconcile": {
+        "label": "Check the courier's pick-up against each handed-over sheet",
+        "help": "Off as shipped. Once a sheet has been with the courier for the hours set, its row in Handed over names any parcel on it the courier never picked up, and any parcel the courier picked up near that time that was on no sheet. Read only: a person phones the courier."
+      }
+    }
+  }
+}

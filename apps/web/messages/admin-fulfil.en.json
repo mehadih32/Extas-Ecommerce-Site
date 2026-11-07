@@ -346,6 +346,15 @@
           "daysHelp": "1 to 90 days.",
           "perCourier": "Sheets per courier",
           "perCourierHelp": "1 to 50. The totals still count every sheet in those days."
+        },
+        "reconcile": {
+          "h": "Check the pick-up against the sheet",
+          "d": "Once a sheet has been with the courier for the hours below, its row above names any parcel on it the courier never picked up, and any parcel the courier picked up near that time that was on no sheet. Read only: phone the courier.",
+          "enabled": "Check each handed-over sheet",
+          "afterHours": "Check after (hours)",
+          "afterHoursHelp": "1 to 168 hours after the hand-over.",
+          "windowHours": "Pick-ups near the hand-over (hours)",
+          "windowHoursHelp": "1 to 168. A pick-up this close to a hand-over, on no sheet, is named on that sheet."
         }
       },
       "history": {
@@ -364,7 +373,14 @@
         "copying": "Making the copy…",
         "more": "Showing the latest {n}. Raise \"Sheets per courier\" to see more.",
         "empty": "Nothing handed over in the last {days} days.",
-        "nobody": "—"
+        "nobody": "—",
+        "check": {
+          "notPicked": "{n} not picked up by the courier",
+          "offSheet": "{n} picked up, on no sheet",
+          "ok": "Pick-up matches the sheet",
+          "notPickedList": "On the sheet, not picked up: {orders}",
+          "offSheetList": "Picked up, on no sheet: {orders}"
+        }
       }
     },
     "picking": {

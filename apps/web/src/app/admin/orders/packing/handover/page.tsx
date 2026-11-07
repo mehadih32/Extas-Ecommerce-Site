@@ -10,8 +10,12 @@
 // `fulfilment.printSettings`), and below the couriers a "Handed over" history per courier — each sheet's time, rider,
 // who marked it, the parcels that went and the amount to collect, with "Print copy" (a COPY of that sheet). How far
 // back and how many per courier are the second card (`fulfilment.handover.history`).
+// Follow-up 437: with `fulfilment.handover.reconcile` on (a third card; off as shipped), a sheet past the owner's hours
+// says under its parcels how many on it the courier never picked up and how many it picked up that were on no sheet,
+// with their order numbers in a line under the row. Read only.
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Fragment } from 'react';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { LIST_DPIS, LIST_PAPERS } from '@extas/settings';
@@ -69,6 +73,7 @@ export default async function HandoverPage() {
   const canHand = access.guard.permissions?.has('fulfilment.handover') ?? false;
   const canSettings = access.guard.permissions?.has('fulfilment.printSettings') ?? false;
   const history = cards['fulfilment.handover.history'].value as { days: number; perCourier: number };
+  const cols = canHand ? 6 : 5;
   const fd: Dict = { ful: d.ful as Dict };
   const n = (x: number) => formatNumber(x, view.locale);
   const m = (minor: number, cur: string) => formatMoney(minor, moneyOf(cur, view.locale));
@@ -102,6 +107,12 @@ export default async function HandoverPage() {
     { kind: 'number', path: 'days', label: hs('history.days'), help: hs('history.daysHelp'), min: 1, max: 90 },
     { kind: 'number', path: 'perCourier', label: hs('history.perCourier'), help: hs('history.perCourierHelp'), min: 1, max: 50 },
   ];
+  const reconcileFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: hs('reconcile.enabled') },
+    { kind: 'number', path: 'afterHours', label: hs('reconcile.afterHours'), help: hs('reconcile.afterHoursHelp'), min: 1, max: 168 },
+    { kind: 'number', path: 'windowHours', label: hs('reconcile.windowHours'), help: hs('reconcile.windowHoursHelp'), min: 1, max: 168 },
+  ];
+  const orderList = (lines: { orderNumber: string }[]) => lines.map((l) => l.orderNumber).join(', ');
 
   return (
     <div className="a2-z" data-testid="handover-page" data-lm-ready="">
@@ -207,7 +218,8 @@ export default async function HandoverPage() {
                   </thead>
                   <tbody>
                     {c.batches.map((b) => (
-                      <tr key={b.batchId} data-testid="handover-history-row">
+                      <Fragment key={b.batchId}>
+                        <tr data-testid="handover-history-row">
                         <td className="a2-tdh">
                           <b>{printedAt(b.handedOverAt, view.timeZone)}</b>
                         </td>
@@ -216,6 +228,9 @@ export default async function HandoverPage() {
                         <td className="r" data-l={t(d, 'ful.handover.history.col.parcels')}>
                           <b className="a2-num">{n(b.parcels)}</b>
                           {b.leftOut ? <span className="a2-xs a2-mute"> · {t(d, 'ful.handover.history.leftOut', { n: n(b.leftOut) })}</span> : null}
+                          {b.check && !b.check.notPicked.length && !b.check.offSheet.length ? <span className="a2-xs a2-mute" data-testid="handover-check-ok"> · {t(d, 'ful.handover.history.check.ok')}</span> : null}
+                          {b.check?.notPicked.length ? <span className="a2-xs" style={{ color: 'var(--bad)' }} data-testid="handover-check-not-picked"> · {t(d, 'ful.handover.history.check.notPicked', { n: n(b.check.notPicked.length) })}</span> : null}
+                          {b.check?.offSheet.length ? <span className="a2-xs" style={{ color: 'var(--bad)' }} data-testid="handover-check-off-sheet"> · {t(d, 'ful.handover.history.check.offSheet', { n: n(b.check.offSheet.length) })}</span> : null}
                         </td>
                         <td className="r" data-l={t(d, 'ful.handover.history.col.collect')}>
                           <span className="a2-num">{m(b.collectMinor, c.currency || currency)}</span>
@@ -225,7 +240,16 @@ export default async function HandoverPage() {
                             <PdfButton dict={fd} url={`${API}/copy`} body={{ batchId: b.batchId }} label={t(d, 'ful.handover.history.copy')} busyLabel={t(d, 'ful.handover.history.copying')} tone="ghost" testId="handover-copy" fileName="handover-sheet-copy.pdf" />
                           </td>
                         ) : null}
-                      </tr>
+                        </tr>
+                        {b.check && (b.check.notPicked.length || b.check.offSheet.length) ? (
+                          <tr data-testid="handover-check-row">
+                            <td colSpan={cols} className="a2-xs">
+                              {b.check.notPicked.length ? <p>{t(d, 'ful.handover.history.check.notPickedList', { orders: orderList(b.check.notPicked) })}</p> : null}
+                              {b.check.offSheet.length ? <p>{t(d, 'ful.handover.history.check.offSheetList', { orders: orderList(b.check.offSheet) })}</p> : null}
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>
@@ -241,6 +265,7 @@ export default async function HandoverPage() {
       </section>
       <FieldsCard url={SETTINGS} screen={cards['delivery.handover.sheet']} fields={sheetFields} texts={texts('sheet')} canEdit={canSettings} testId="handover-settings" />
       <FieldsCard url={SETTINGS} screen={cards['fulfilment.handover.history']} fields={historyFields} texts={texts('history')} canEdit={canSettings} testId="handover-history-settings" />
+      <FieldsCard url={SETTINGS} screen={cards['fulfilment.handover.reconcile']} fields={reconcileFields} texts={texts('reconcile')} canEdit={canSettings} testId="handover-reconcile-settings" />
     </div>
   );
 }

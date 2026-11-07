@@ -81,6 +81,8 @@ export * from './fulfil';
 // CN-018 (4) — the parcel's Fixed sets for the sticker and the booking note.
 export * from './set-line';
 export * from './handover';
+// Follow-up 437: the courier's pick-up checked against the handed-over sheets (pure).
+export * from './handover-check';
 export * from './picking-pure';
 export * from './picking';
 export * from './sync';
