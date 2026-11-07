@@ -5,7 +5,7 @@
 // - `booksStatus` → BooksStatus: model, link, balanceMinor (shop ledger), erpBalanceMinor / waitingCheckMinor /
 //   exchangesAtRiskMinor (the ERP's, as last read), open {total, byClass, byCheck} (open differences), matchedDays /
 //   totalDays (each day's latest close), partialChecks (checks v6 can only partly make on the latest closed day),
-//   monthsClosed, lastRun, closesChain {ok, days, periods}.
+//   monthsClosed, lastRun, closesChain {ok, days, periods, forks, why?, at?} (follow-up 558: a forked chain is counted and named).
 // - `explainDay` → DayExplain: a day's latest close opened to its row groups (shop entries and ERP rows), the tie's
 //   parts, the checks, the pipeline, its differences and every version of the day.
 // - `booksDifferences` → a page of BooksDifferenceRow (one store, one link; `adjustable` says if a correction applies).
@@ -16,7 +16,7 @@ import { logChange, parse, setting, type InventoryDeps, type Who } from './conte
 import { BooksError } from './books-errors';
 import { isAdjustable } from './books-adjust';
 import { booksPinSet } from './books-close';
-import { runBooksMatch, verifyCloseChain, type BooksRunResult } from './books-match';
+import { runBooksMatch, verifyCloseChain, type BooksRunResult, type CloseChainBreak } from './books-match';
 import { allowBooks, booksLinkFor, dateOfDay, dayText, daySchema, ledgerBalance, storeErpLink, type BooksLink } from './erp-account';
 import { isV6 } from './erp-model';
 
@@ -43,14 +43,15 @@ export interface BooksStatus {
   partialChecks: BooksCheck[];
   monthsClosed: number;
   lastRun: { id: string; trigger: string; status: string; from: string; through: string; differences: number; startedAt: string; finishedAt: string | null; error: string | null } | null;
-  closesChain: { ok: boolean; days: number; periods: number };
+  /** Follow-up 558: forks = places where two closes follow the same earlier one (day and period chains); why/at = the first break found. */
+  closesChain: { ok: boolean; days: number; periods: number; forks: number; why?: CloseChainBreak; at?: string | null };
 }
 
 /** The books at a glance (`books.read`). In v5, or before the link opens, the numbers are empty. */
 export async function booksStatus(deps: InventoryDeps, who: Who): Promise<BooksStatus> {
   await allowBooks(deps, who, 'books.read');
   const { model, link } = await linkOrNull(deps, who.storeId);
-  const blank: BooksStatus = { model, link: null, balanceMinor: null, erpBalanceMinor: null, waitingCheckMinor: null, exchangesAtRiskMinor: null, open: { total: 0, byClass: {}, byCheck: {} }, matchedDays: 0, totalDays: 0, partialChecks: [], monthsClosed: 0, lastRun: null, closesChain: { ok: true, days: 0, periods: 0 } };
+  const blank: BooksStatus = { model, link: null, balanceMinor: null, erpBalanceMinor: null, waitingCheckMinor: null, exchangesAtRiskMinor: null, open: { total: 0, byClass: {}, byCheck: {} }, matchedDays: 0, totalDays: 0, partialChecks: [], monthsClosed: 0, lastRun: null, closesChain: { ok: true, days: 0, periods: 0, forks: 0 } };
   if (!link) return blank;
   const [balance, state, open, latest, monthRows, run, dayChain, periodChain] = await Promise.all([
     ledgerBalance(deps.db, link),
@@ -88,7 +89,13 @@ export async function booksStatus(deps: InventoryDeps, who: Who): Promise<BooksS
     partialChecks: checks,
     monthsClosed: monthRows.filter((m) => m.reopens == null).length,
     lastRun: run ? { id: run.id, trigger: run.trigger, status: run.status, from: dayText(run.fromDate), through: dayText(run.toDate), differences: run.differences, startedAt: run.startedAt.toISOString(), finishedAt: iso(run.finishedAt), error: run.error } : null,
-    closesChain: { ok: dayChain.ok && periodChain.ok, days: dayChain.rows, periods: periodChain.rows },
+    closesChain: {
+      ok: dayChain.ok && periodChain.ok,
+      days: dayChain.rows,
+      periods: periodChain.rows,
+      forks: dayChain.forks + periodChain.forks,
+      ...(dayChain.ok ? (periodChain.ok ? {} : { why: periodChain.why, at: periodChain.at ?? null }) : { why: dayChain.why, at: dayChain.at ?? null }),
+    },
   };
 }
 

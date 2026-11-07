@@ -411,25 +411,59 @@ async function chainHead(tx: Tx, table: 'BooksDayClose' | 'BooksPeriodClose', li
 /** Locks the link row (FOR UPDATE): every write of the books takes it first (erp-account.ts `lockLink`). */
 export const lockBooksLink = (tx: Tx, link: Pick<BooksLink, 'id' | 'storeId'>): Promise<void> => lockLink(tx, link);
 
-/** Walks a link's chain of day closes from its first row: every hash right, one unbroken list. */
-export async function verifyCloseChain(db: Db, linkId: string, table: 'BooksDayClose' | 'BooksPeriodClose' = 'BooksDayClose'): Promise<{ ok: boolean; rows: number }> {
-  const rows = (table === 'BooksDayClose' ? await db.booksDayClose.findMany({ where: { linkId } }) : await db.booksPeriodClose.findMany({ where: { linkId } })) as { prevHash: string | null; hash: string }[];
-  const next = new Map<string | null, { prevHash: string | null; hash: string }[]>();
-  for (const r of rows) next.set(r.prevHash, [...(next.get(r.prevHash) ?? []), r]);
-  let cur: string | null = null;
-  let seen = 0;
-  for (;;) {
-    const n: { prevHash: string | null; hash: string }[] = next.get(cur) ?? [];
-    if (n.length > 1) return { ok: false, rows: rows.length };
-    if (!n.length) break;
-    const row: { prevHash: string | null; hash: string } = n[0]!;
-    const body = closeCanonical(row as unknown as CloseHashable);
-    if (sha(`${cur ?? ''}\n${body}`) !== row.hash) return { ok: false, rows: rows.length };
-    cur = row.hash;
-    seen++;
-  }
-  return { ok: seen === rows.length, rows: rows.length };
+/** The hash version new closes are written with; older rows keep theirs (never re-hashed). */
+export const CLOSE_HASH_VERSION = 2;
+/** The hash versions a chain of closes may hold. */
+export const CLOSE_HASH_VERSIONS: readonly number[] = [1, 2];
+
+/** Why a chain of closes does not hold (follow-up 558): two rows on the same previous one, a changed row, a lowered or unknown hash version, rows off the chain. */
+export type CloseChainBreak = 'FORK' | 'HASH' | 'VERSION' | 'ORPHAN';
+
+export interface CloseChainCheck {
+  ok: boolean;
+  rows: number;
+  /** Places where two or more closes name the same previous close (a forked chain); 0 when it is one line. */
+  forks: number;
+  /** The first thing found wrong, walking from the first close. */
+  why?: CloseChainBreak;
+  /** The day (or period start) of the close where it was found. */
+  at?: string | null;
 }
+
+/**
+ * Walks a link's chain of day closes (or period closes) from its first row: every hash right, one unbroken list.
+ * Follow-up 558: a fork (two rows naming the same previous hash) is counted and named, never passed over; each row is
+ * checked with the hash version it was written with, and a version never goes down along the chain.
+ */
+export async function verifyCloseChain(db: Db, linkId: string, table: 'BooksDayClose' | 'BooksPeriodClose' = 'BooksDayClose'): Promise<CloseChainCheck> {
+  type Row = CloseHashable & { prevHash: string | null; hash: string };
+  const rows = (table === 'BooksDayClose' ? await db.booksDayClose.findMany({ where: { linkId } }) : await db.booksPeriodClose.findMany({ where: { linkId } })) as unknown as Row[];
+  const next = new Map<string | null, Row[]>();
+  for (const r of rows) next.set(r.prevHash, [...(next.get(r.prevHash) ?? []), r]);
+  let forks = 0;
+  for (const n of next.values()) if (n.length > 1) forks++;
+  const dayOf = (r: CloseHashable) => (r.date ? dayText(r.date) : r.periodStart ? dayText(r.periodStart) : null);
+  const out = (why: CloseChainBreak | undefined, r?: CloseHashable): CloseChainCheck => (why ? { ok: false, rows: rows.length, forks, why, at: r ? dayOf(r) : null } : { ok: true, rows: rows.length, forks });
+  let cur: string | null = null;
+  let version = 1;
+  const seen = new Set<CloseHashable>();
+  for (;;) {
+    const n: Row[] = next.get(cur) ?? [];
+    if (n.length > 1) return out('FORK', n[0]);
+    if (!n.length) break;
+    const row: Row = n[0]!;
+    const v = row.hashVersion ?? 1;
+    if (!CLOSE_HASH_VERSIONS.includes(v) || v < version) return out('VERSION', row);
+    version = v;
+    if (sha(`${cur ?? ''}\n${closeCanonical(row)}`) !== row.hash) return out('HASH', row);
+    cur = row.hash;
+    seen.add(row);
+  }
+  if (seen.size !== rows.length) return out('ORPHAN', rows.find((r) => !seen.has(r)));
+  return out(undefined);
+}
+
+type Big = bigint | number | null | undefined;
 
 interface CloseHashable {
   linkId: string;
@@ -444,11 +478,39 @@ interface CloseHashable {
   figures: unknown;
   override?: boolean;
   reopens?: number | null;
+  /** Follow-up 558: 1 (or absent) = the columns above only; 2 = every column of the row below as well. */
+  hashVersion?: number;
+  // a day close (version 2)
+  runId?: string | null;
+  erpClosingBalanceMinor?: Big;
+  goodsMinor?: Big;
+  returnLossesMinor?: Big;
+  pipelineStartMinor?: Big;
+  pipelineEndMinor?: Big;
+  switchTransferMinor?: Big;
+  paymentsMinor?: Big;
+  tieRemainderMinor?: Big;
+  waitingCheckMinor?: Big;
+  exchangesAtRiskMinor?: Big;
+  // a period close (version 2)
+  matchedDays?: number;
+  totalDays?: number;
+  overrideReason?: string | null;
+  pinVerified?: boolean;
+  // both (version 2)
+  closedById?: string | null;
 }
 
-/** What a close's hash covers: the link, the day or period, the version, the result, both balances and every figure. */
+const bigText = (v: Big) => (v == null ? null : String(v));
+
+/**
+ * What a close's hash covers. Version 1: the link, the day or period, the version, the result, both balances and every
+ * figure. Version 2 (follow-up 558) adds the version itself and every other column of the row: a day close's ERP
+ * closing balance, goods, losses, pipeline, switch transfer, payments, tie remainder, waiting check, exchanges at risk,
+ * run and closer; a period close's day counts, override reason, PIN mark and closer.
+ */
 export function closeCanonical(r: CloseHashable): string {
-  return canonical({
+  const v1 = {
     linkId: r.linkId,
     date: r.date ? dayText(r.date) : null,
     level: r.level ?? null,
@@ -461,6 +523,30 @@ export function closeCanonical(r: CloseHashable): string {
     figures: r.figures,
     override: r.override ?? false,
     reopens: r.reopens ?? null,
+  };
+  const hv = r.hashVersion ?? 1;
+  if (hv === 1) return canonical(v1);
+  if (hv !== 2) throw new RangeError(`unknown close hash version ${hv}`);
+  const period = r.level != null;
+  return canonical({
+    ...v1,
+    hashVersion: 2,
+    closedById: r.closedById ?? null,
+    ...(period
+      ? { matchedDays: r.matchedDays ?? null, totalDays: r.totalDays ?? null, overrideReason: r.overrideReason ?? null, pinVerified: r.pinVerified ?? false }
+      : {
+          runId: r.runId ?? null,
+          erpClosing: bigText(r.erpClosingBalanceMinor),
+          goods: bigText(r.goodsMinor),
+          returnLosses: bigText(r.returnLossesMinor),
+          pipelineStart: bigText(r.pipelineStartMinor),
+          pipelineEnd: bigText(r.pipelineEndMinor),
+          switchTransfer: bigText(r.switchTransferMinor ?? 0),
+          payments: bigText(r.paymentsMinor),
+          tieRemainder: bigText(r.tieRemainderMinor),
+          waitingCheck: bigText(r.waitingCheckMinor ?? 0),
+          exchangesAtRisk: bigText(r.exchangesAtRiskMinor ?? 0),
+        }),
   });
 }
 
@@ -486,6 +572,12 @@ export async function writePeriodClose(
     figures: p.figures,
     override: p.override ?? false,
     reopens: p.reopens ?? null,
+    matchedDays: p.matchedDays,
+    totalDays: p.totalDays,
+    overrideReason: p.overrideReason ?? null,
+    pinVerified: p.pinVerified ?? false,
+    closedById: p.closedById ?? null,
+    hashVersion: CLOSE_HASH_VERSION,
   };
   const hash = sha(`${prevHash ?? ''}\n${closeCanonical(row)}`);
   return tx.booksPeriodClose.create({
@@ -493,11 +585,6 @@ export async function writePeriodClose(
       ...row,
       storeId: link.storeId,
       figures: p.figures as Prisma.InputJsonValue,
-      matchedDays: p.matchedDays,
-      totalDays: p.totalDays,
-      overrideReason: p.overrideReason ?? null,
-      pinVerified: p.pinVerified ?? false,
-      closedById: p.closedById ?? null,
       prevHash,
       hash,
     },
@@ -1105,6 +1192,20 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
           openingBalanceMinor: BigInt(bal.startMinor),
           closingBalanceMinor: BigInt(bal.endMinor),
           figures: { ...figures, digest, read: { ...readMark, seen: seen.get(d) ?? null } },
+          // follow-up 558: every column below is inside the version 2 hash
+          runId: run.id,
+          erpClosingBalanceMinor: BigInt(erpRunning),
+          goodsMinor: BigInt(goods),
+          returnLossesMinor: BigInt(losses),
+          pipelineStartMinor: BigInt(parts.pipelineStartMinor),
+          pipelineEndMinor: BigInt(pipelineEnd.totalMinor),
+          switchTransferMinor: BigInt(parts.switchTransferMinor),
+          paymentsMinor: BigInt(parts.paymentsMinor),
+          tieRemainderMinor: BigInt(remainder),
+          waitingCheckMinor: BigInt(pipelineEnd.waitingCheckMinor),
+          exchangesAtRiskMinor: 0n,
+          closedById: input.startedById ?? null,
+          hashVersion: CLOSE_HASH_VERSION,
         };
         const hash = sha(`${prevHash ?? ''}\n${closeCanonical(row)}`);
         await tx.booksDayClose.create({
@@ -1112,19 +1213,8 @@ export async function runBooksMatch(deps: InventoryDeps, input: BooksRunInput): 
             ...row,
             figures: row.figures as unknown as Prisma.InputJsonValue,
             storeId: link.storeId,
-            runId: run.id,
-            erpClosingBalanceMinor: BigInt(erpRunning),
-            goodsMinor: BigInt(goods),
-            returnLossesMinor: BigInt(losses),
-            pipelineStartMinor: BigInt(parts.pipelineStartMinor),
-            pipelineEndMinor: BigInt(pipelineEnd.totalMinor),
-            switchTransferMinor: BigInt(parts.switchTransferMinor),
-            paymentsMinor: BigInt(parts.paymentsMinor),
-            tieRemainderMinor: BigInt(remainder),
-            waitingCheckMinor: BigInt(pipelineEnd.waitingCheckMinor),
             prevHash,
             hash,
-            closedById: input.startedById ?? null,
           },
         });
         // A day that had matched and whose own money moved since: the history changed (it blocks the month close until

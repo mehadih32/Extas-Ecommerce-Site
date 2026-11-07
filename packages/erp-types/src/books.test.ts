@@ -11,6 +11,7 @@ import {
   brokenLink,
   canMove,
   chainHash,
+  ENTRY_HASH_VERSION,
   COST_LINE_PATH,
   COST_SUMMARY_LINES,
   ENTRY_SIGN,
@@ -100,6 +101,22 @@ describe('the ERP account ledger (PR 615, §3.1)', () => {
     expect(brokenLink(rows.map((r) => (r.seq === 2 ? { ...r, amountMinor: -2000 } : r)))).toEqual({ seq: 2, why: 'HASH' });
     expect(brokenLink([rows[0]!, rows[2]!])).toEqual({ seq: 3, why: 'GAP' });
     expect(brokenLink([rows[0]!, { ...rows[1]!, prevHash: null }, rows[2]!])).toEqual({ seq: 2, why: 'PREV_HASH' });
+  });
+
+  it('follow-up 558: version 2 also hashes where an entry came from and who wrote it; old rows keep version 1; a version never goes down', () => {
+    const v2 = (e: ErpAccountEntryInput): ErpAccountEntryInput => ({ ...e, hashVersion: ENTRY_HASH_VERSION, erpEventRowId: 'row-1', adjustmentId: null, createdById: 'staff-1' });
+    // Two rows written before (version 1, hashes unchanged), then new rows with version 2 on the same chain.
+    const rows = chain([entry(1, 'BILL', 'ship:C-1', 65000), entry(2, 'PAYMENT', 'evt_pay', -20000), v2(entry(3, 'BILL', 'ship:C-2', 70000)), v2(entry(4, 'BILL', 'ship:C-3', 1000))]);
+    expect(rows[0]!.hash).toBe(chain([entry(1, 'BILL', 'ship:C-1', 65000)])[0]!.hash);
+    expect(brokenLink(rows)).toBeNull();
+    // Version 1 never saw these fields; version 2 does.
+    expect(brokenLink(rows.map((r) => (r.seq === 1 ? { ...r, createdById: 'someone' } : r)))).toBeNull();
+    expect(brokenLink(rows.map((r) => (r.seq === 3 ? { ...r, createdById: 'someone' } : r)))).toEqual({ seq: 3, why: 'HASH' });
+    expect(brokenLink(rows.map((r) => (r.seq === 3 ? { ...r, erpEventRowId: null } : r)))).toEqual({ seq: 3, why: 'HASH' });
+    // Moving a version 2 row back to version 1 does not hide a change: its hash no longer matches, and a lower version after a higher one is named.
+    expect(brokenLink(rows.map((r) => (r.seq === 3 ? { ...r, hashVersion: 1 } : r)))).toEqual({ seq: 3, why: 'HASH' });
+    expect(brokenLink(rows.map((r) => (r.seq === 4 ? { ...r, hashVersion: 1 } : r)))).toEqual({ seq: 4, why: 'VERSION' });
+    expect(brokenLink(rows.map((r) => (r.seq === 4 ? { ...r, hashVersion: 9 } : r)))).toEqual({ seq: 4, why: 'VERSION' });
   });
 });
 

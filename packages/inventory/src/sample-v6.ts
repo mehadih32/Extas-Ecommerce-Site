@@ -21,7 +21,7 @@ import { storeDate } from './erp-events-pull';
 import { openErpLink } from './erp-link';
 import { setErpMode } from './erp-mode';
 import { noteHold } from './erp-orders-v6';
-import { closeCanonical, writePeriodClose } from './books-match';
+import { CLOSE_HASH_VERSION, closeCanonical, writePeriodClose } from './books-match';
 
 const id = z.string().min(1).max(120);
 const sampleSchema = z
@@ -123,9 +123,9 @@ export async function seedSampleErpV6(deps: InventoryDeps, o: { setStoreSetting:
     const result: BooksResult = bad ? 'MISMATCH' : 'PARTIAL';
     const erpClosing = bal.endMinor - (day >= badDay ? off : 0);
     const figures = { checks, groups, tie, erp: { startMinor: bal.startMinor, closingMinor: erpClosing }, pipeline: { startMinor: 0, endMinor: 0, waitingCheckMinor: 0, pieces: 0 }, digest: sha(day) };
-    const row = { linkId: link.id, date: at(day), version: 1, result, openingBalanceMinor: BigInt(bal.startMinor), closingBalanceMinor: BigInt(bal.endMinor), figures };
+    const row = { linkId: link.id, date: at(day), version: 1, result, openingBalanceMinor: BigInt(bal.startMinor), closingBalanceMinor: BigInt(bal.endMinor), figures, runId: run.id, erpClosingBalanceMinor: BigInt(erpClosing), goodsMinor: 0n, returnLossesMinor: 0n, pipelineStartMinor: 0n, pipelineEndMinor: 0n, paymentsMinor: 0n, tieRemainderMinor: BigInt(tie.remainderMinor), closedById: null, hashVersion: CLOSE_HASH_VERSION };
     const hash: string = sha(`${prev ?? ''}\n${closeCanonical(row)}`);
-    await db.booksDayClose.create({ data: { ...row, storeId: store.id, runId: run.id, erpClosingBalanceMinor: BigInt(erpClosing), goodsMinor: 0n, returnLossesMinor: 0n, pipelineStartMinor: 0n, pipelineEndMinor: 0n, paymentsMinor: 0n, tieRemainderMinor: BigInt(tie.remainderMinor), prevHash: prev, hash } });
+    await db.booksDayClose.create({ data: { ...row, storeId: store.id, prevHash: prev, hash } });
     prev = hash;
     days++;
   }

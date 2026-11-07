@@ -5776,6 +5776,8 @@ model ErpAccountEntry {
   adjustmentId    String?             @db.Uuid
   prevHash        String?
   hash            String
+  /// What the hash covers: 1 = the first columns (rows written before follow-up 558), 2 = every column (migration 0186).
+  hashVersion     Int                 @default(1)
   createdById     String?             @db.Uuid
   createdAt       DateTime            @default(now()) @db.Timestamptz(3)
 
@@ -6265,6 +6267,8 @@ model BooksDayClose {
   figures                Json
   prevHash               String?
   hash                   String
+  /// What the hash covers: 1 = the first columns (rows written before follow-up 558), 2 = every column (migration 0186).
+  hashVersion            Int          @default(1)
   closedById             String?      @db.Uuid
   createdAt              DateTime     @default(now()) @db.Timestamptz(3)
 
@@ -6300,6 +6304,8 @@ model BooksPeriodClose {
   closedById          String?          @db.Uuid
   prevHash            String?
   hash                String
+  /// What the hash covers: 1 = the first columns (rows written before follow-up 558), 2 = every column (migration 0186).
+  hashVersion         Int              @default(1)
   createdAt           DateTime         @default(now()) @db.Timestamptz(3)
 
   @@unique([linkId, level, periodStart, version])

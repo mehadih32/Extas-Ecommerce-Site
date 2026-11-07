@@ -8,6 +8,7 @@
 // - the PIN is never stored or logged in plain text, and wrong tries lock it for a while;
 // - ledgers, day closes and match results are per store and per link: store A never reads or writes store B's.
 // In v5 nothing here runs.
+import { createHash } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { hashPassword } from '@extas/auth';
@@ -15,6 +16,8 @@ import {
   adjustDifference,
   balanceOn,
   booksCloses,
+  CLOSE_HASH_VERSION,
+  closeCanonical,
   booksDifferences,
   booksStatus,
   checkErpAccount,
@@ -29,6 +32,7 @@ import {
   setBooksPin,
   signOffYear,
   verifyAccountChain,
+  verifyCloseChain,
 } from '../src';
 import { day, setUpBooks, type BooksFixture } from './books-fixture';
 
@@ -318,5 +322,56 @@ describe.skipIf(!HAS_TEST_DB)('PR 616 on PostgreSQL: the books match engine', ()
     expect(await bills()).toHaveLength(1);
     await runBooksMatch(f.deps(), { storeId: f.storeB, through: '2026-12-03' });
     expect(await f.t.prisma.booksDifference.count({ where: { linkId: link.id, date: day('2026-12-03'), check: 'ORDERS', status: { in: ['PENDING', 'MISMATCH'] } } })).toBe(0);
+  });
+  it('follow-up 558: new entries and closes hash every column (version 2); a changed column, a lowered version and a forked chain are each named', async () => {
+    const link = await f.linkOf(f.storeB);
+    const sha = (x: string) => createHash('sha256').update(x).digest('hex');
+    // Everything written by this suite is version 2, and the chains hold.
+    expect(new Set((await f.t.prisma.erpAccountEntry.findMany({ where: { linkId: link.id }, select: { hashVersion: true } })).map((e) => e.hashVersion))).toEqual(new Set([2]));
+    const closes = await f.t.prisma.booksDayClose.findMany({ where: { linkId: link.id } });
+    expect(closes.length).toBeGreaterThan(0);
+    expect(new Set(closes.map((c) => c.hashVersion))).toEqual(new Set([2]));
+    expect(await verifyAccountChain(f.t.prisma, link.id)).toMatchObject({ ok: true });
+    expect(await verifyCloseChain(f.t.prisma, link.id)).toEqual({ ok: true, rows: closes.length, forks: 0 });
+    const head = closes.find((c) => !closes.some((n) => n.prevHash === c.hash))!;
+    const headDay = head.date.toISOString().slice(0, 10);
+    const unlocked = async (sql: string) => {
+      await f.t.prisma.$executeRawUnsafe('ALTER TABLE "BooksDayClose" DISABLE TRIGGER "BooksDayClose_append_only"');
+      try {
+        await f.t.prisma.$executeRawUnsafe(sql);
+      } finally {
+        await f.t.prisma.$executeRawUnsafe('ALTER TABLE "BooksDayClose" ENABLE TRIGGER "BooksDayClose_append_only"');
+      }
+    };
+    // A column version 1 left out (goods) changed behind the shop's back: the chain names the day.
+    await unlocked(`UPDATE "BooksDayClose" SET "goodsMinor" = "goodsMinor" + 1 WHERE "id" = '${head.id}'`);
+    expect(await verifyCloseChain(f.t.prisma, link.id)).toMatchObject({ ok: false, why: 'HASH', at: headDay, forks: 0 });
+    await unlocked(`UPDATE "BooksDayClose" SET "goodsMinor" = "goodsMinor" - 1 WHERE "id" = '${head.id}'`);
+    expect(await verifyCloseChain(f.t.prisma, link.id)).toMatchObject({ ok: true });
+    await unlocked(`UPDATE "BooksDayClose" SET "hashVersion" = 1 WHERE "id" = '${head.id}'`);
+    // Moved back to version 1 to hide the new columns: after version 2 rows a lower version is named (and its version-1
+    // hash is not the one kept either).
+    expect(await verifyCloseChain(f.t.prisma, link.id)).toMatchObject({ ok: false, why: 'VERSION', at: headDay });
+    expect(sha(`${head.prevHash ?? ''}\n${closeCanonical({ ...head, hashVersion: 1 } as never)}`)).not.toBe(head.hash);
+    await unlocked(`UPDATE "BooksDayClose" SET "hashVersion" = 2 WHERE "id" = '${head.id}'`);
+    expect(await verifyCloseChain(f.t.prisma, link.id)).toMatchObject({ ok: true });
+
+    // Two closes on the same previous close (a fork): counted, named, and the status card says so.
+    const twin = { ...head, id: undefined, version: head.version + 50, figures: { ...(head.figures as object), twin: true }, createdAt: undefined };
+    const twinHash = sha(`${head.prevHash ?? ''}\n${closeCanonical(twin as never)}`);
+    const { id: _id, createdAt: _c, ...data } = twin;
+    const made = await f.t.prisma.booksDayClose.create({ data: { ...data, figures: data.figures as never, hash: twinHash, hashVersion: CLOSE_HASH_VERSION } });
+    const forked = await verifyCloseChain(f.t.prisma, link.id);
+    expect(forked).toMatchObject({ ok: false, why: 'FORK', forks: 1, rows: closes.length + 1, at: headDay });
+    expect((await booksStatus(f.deps(), f.who(owner, f.storeB))).closesChain).toMatchObject({ ok: false, forks: 1, why: 'FORK', at: headDay });
+    await unlocked(`DELETE FROM "BooksDayClose" WHERE "id" = '${made.id}'`);
+
+    // A version 1 row after version 2 rows (written by hand, its own hash right): a version never goes down.
+    const old = { ...head, id: undefined, createdAt: undefined, version: head.version + 51, prevHash: head.hash, hashVersion: 1 };
+    const { id: _i2, createdAt: _c2, ...oldData } = old;
+    const oldRow = await f.t.prisma.booksDayClose.create({ data: { ...oldData, figures: oldData.figures as never, hash: sha(`${head.hash}\n${closeCanonical(old as never)}`) } });
+    expect(await verifyCloseChain(f.t.prisma, link.id)).toMatchObject({ ok: false, why: 'VERSION', at: headDay });
+    await unlocked(`DELETE FROM "BooksDayClose" WHERE "id" = '${oldRow.id}'`);
+    expect(await verifyCloseChain(f.t.prisma, link.id)).toEqual({ ok: true, rows: closes.length, forks: 0 });
   });
 });

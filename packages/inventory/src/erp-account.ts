@@ -26,7 +26,7 @@
 // never hold or show store B's entries (CN-029 §16).
 import { Prisma } from '@extas/db/client';
 import { requirePermission, type PermissionKey } from '@extas/auth';
-import { brokenLink, chainHash, ENTRY_SIGN, entryKey, entryKindOfEvent, minorOf, signIsRight, type ErpAccountEntryInput, type ErpAccountEntryKind, type ErpEntrySource } from '@extas/erp-types';
+import { brokenLink, chainHash, ENTRY_HASH_VERSION, ENTRY_SIGN, entryKey, entryKindOfEvent, minorOf, signIsRight, type ChainBreak, type ErpAccountEntryInput, type ErpAccountEntryKind, type ErpEntrySource } from '@extas/erp-types';
 import { z } from 'zod';
 import { logChange, nowOf, parse, setting, TX, type Db, type InventoryDeps, type Tx, type Who } from './context';
 import { BooksError } from './books-errors';
@@ -166,6 +166,10 @@ export function entryInputOf(r: AccountEntryRow): ErpAccountEntryInput & { prevH
     paymentRef: r.paymentRef,
     source: r.source,
     reverses: r.reverses,
+    hashVersion: r.hashVersion,
+    erpEventRowId: r.erpEventRowId,
+    adjustmentId: r.adjustmentId,
+    createdById: r.createdById,
     prevHash: r.prevHash,
     hash: r.hash,
   };
@@ -221,6 +225,11 @@ export async function appendAccountEntries(tx: Tx, link: Pick<BooksLink, 'id' | 
       paymentRef: d.paymentRef ?? null,
       source: d.source,
       reverses: d.reverses ?? null,
+      // Follow-up 558: new entries hash every column (version 2); older rows keep the version they were written with.
+      hashVersion: ENTRY_HASH_VERSION,
+      erpEventRowId: d.erpEventRowId ?? null,
+      adjustmentId: d.adjustmentId ?? null,
+      createdById: d.createdById ?? null,
     };
     const hash = chainHash(prevHash, input);
     const row = await tx.erpAccountEntry.create({
@@ -240,11 +249,12 @@ export async function appendAccountEntries(tx: Tx, link: Pick<BooksLink, 'id' | 
         paymentRef: input.paymentRef,
         source: d.source,
         reverses: input.reverses,
-        erpEventRowId: d.erpEventRowId ?? null,
-        adjustmentId: d.adjustmentId ?? null,
+        erpEventRowId: input.erpEventRowId,
+        adjustmentId: input.adjustmentId,
         prevHash,
         hash,
-        createdById: d.createdById ?? null,
+        hashVersion: ENTRY_HASH_VERSION,
+        createdById: input.createdById,
       },
     });
     prevHash = hash;
@@ -254,7 +264,7 @@ export async function appendAccountEntries(tx: Tx, link: Pick<BooksLink, 'id' | 
 }
 
 /** Walks a link's chain: 1, 2, 3 … with no gap, every hash right. The first entry that breaks it is named. */
-export async function verifyAccountChain(db: Db, linkId: string): Promise<{ ok: true; entries: number } | { ok: false; seq: number; why: 'GAP' | 'PREV_HASH' | 'HASH'; entries: number }> {
+export async function verifyAccountChain(db: Db, linkId: string): Promise<{ ok: true; entries: number } | { ok: false; seq: number; why: ChainBreak; entries: number }> {
   const rows = await db.erpAccountEntry.findMany({ where: { linkId }, orderBy: { seq: 'asc' } });
   const broken = brokenLink(rows.map(entryInputOf));
   return broken ? { ok: false, seq: broken.seq, why: broken.why, entries: rows.length } : { ok: true, entries: rows.length };

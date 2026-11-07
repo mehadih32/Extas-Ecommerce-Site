@@ -205,6 +205,7 @@
       },
       "chainOk": "Closes intact · {n} days",
       "chainBroken": "A close was changed outside the shop. Tell the developer at once.",
+      "chainFork": "Two closes follow the same earlier close ({n}, first on {day}): the chain forked. Tell the developer at once.",
       "partly": "Partly checked (the ERP does not give this yet): {checks}",
       "run": "Check now",
       "runBusy": "Checking …",
