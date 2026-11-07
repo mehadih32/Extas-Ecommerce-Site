@@ -48,6 +48,9 @@ export function parseListQuery(search: Search): ListQuery {
 /** Anything in the link beyond the page itself (such a page is not indexed). */
 export const isFiltered = (q: ListQuery) => q.has.length > 0 || q.size !== null || q.sort !== 'best' || q.all || q.style !== null || q.tier !== null || q.tpl !== null;
 
+/** Follow-up 357: the page that carries JSON-LD — the indexed one (unfiltered, on sale) with at least one pair. */
+export const ruleLdShown = (page: { onSale: boolean; pairs: readonly unknown[] }, q: ListQuery) => page.onSale && page.pairs.length > 0 && !isFiltered(q);
+
 /** The page's link with these changes (empty values dropped; a changed filter starts the list from the top again). */
 export function listHref(base: string, q: ListQuery, patch: Partial<ListQuery>): string {
   const n = { ...q, ...patch };

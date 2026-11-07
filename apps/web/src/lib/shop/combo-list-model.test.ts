@@ -1,6 +1,6 @@
 // PR 572 — a rule's own page link: what it says, the links that change one choice, a card's size words.
 import { describe, expect, it } from 'vitest';
-import { cardSizeWords, isFiltered, listHref, pairTitle, parseListQuery, toggleHas } from './combo-list-model';
+import { cardSizeWords, isFiltered, listHref, pairTitle, parseListQuery, ruleLdShown, toggleHas } from './combo-list-model';
 
 const t = (key: string, vars?: Record<string, string | number>) => `${key}${vars ? JSON.stringify(vars) : ''}`;
 const size = (key: string, ok = true) => ({ key, label: key, ok, sets: 1, out: [] });
@@ -39,5 +39,16 @@ describe('cardSizeWords', () => {
   });
   it('names a pair by its colours', () => {
     expect(pairTitle({ pieces: [{ productId: 'p', colourId: 'a' }, { productId: 'p', colourId: 'b' }] }, (id) => id.toUpperCase())).toBe('A + B');
+  });
+});
+
+describe('ruleLdShown (follow-up 357)', () => {
+  it('only the indexed page with pairs carries JSON-LD', () => {
+    const on = { onSale: true, pairs: [{}] };
+    expect(ruleLdShown(on, parseListQuery({}))).toBe(true);
+    expect(ruleLdShown(on, parseListQuery({ has: 'black' }))).toBe(false);
+    expect(ruleLdShown(on, parseListQuery({ tpl: 'L2' }))).toBe(false);
+    expect(ruleLdShown({ onSale: false, pairs: [{}] }, parseListQuery({}))).toBe(false);
+    expect(ruleLdShown({ onSale: true, pairs: [] }, parseListQuery({}))).toBe(false);
   });
 });

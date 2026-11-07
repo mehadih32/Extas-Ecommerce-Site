@@ -11,6 +11,8 @@
 // Every filter is part of the link (shareable, works without script); such a page is not indexed. A rule that is
 // switched off, ended or not started yet keeps its page: it says so in Bengali and English and shows the combos on
 // sale now. Every price is the one @extas/combos gave the pair (CN-009: a struck price only behind the owner's switch).
+// Follow-up 357: the page search engines index (unfiltered, on sale, with pairs) also carries its trail and the list of
+// its pairs as JSON-LD (BreadcrumbList, ItemList), each behind its own `seo.structuredData` part; drawn on the server.
 import type { Metadata } from 'next';
 import { cache, type ReactNode } from 'react';
 import { filterColours, filterPairs, offerNumbers, pricesVary, shownCount, styleGroups, type ListPair, type ListPiece } from '@extas/combos/rule-page-model';
@@ -20,14 +22,16 @@ import { bagSettings } from '@/lib/shop/bag';
 import { buildEntry } from '@/lib/shop/build';
 import { photoFor, productName } from '@/lib/shop/catalogue';
 import { setCardGroups, cardView } from '@/lib/shop/combo';
-import { cardSizeWords, isFiltered, listHref, pairTitle, parseListQuery, toggleHas, type ListQuery, type Search } from '@/lib/shop/combo-list-model';
+import { cardSizeWords, isFiltered, listHref, pairTitle, parseListQuery, ruleLdShown, toggleHas, type ListQuery, type Search } from '@/lib/shop/combo-list-model';
 import { LIST_TEMPLATES, listTemplateOf, readListSettings, ruleData, type ListSettings, type ListTemplate, type RuleData } from '@/lib/shop/combo-list';
-import { shopContext, type ShopContext } from '@/lib/shop/context';
+import { readPageSettings, shopContext, type ShopContext } from '@/lib/shop/context';
 import { productPath } from '@/lib/shop/home-model';
 import { hrefIn } from '@/lib/shop/lang';
-import { shopMetadata } from '@/lib/shop/meta';
+import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
+import { breadcrumbLd, itemListLd } from '@/lib/shop/structured-data';
 import { ROUTES } from '@/lib/shop/routes';
 import { Icon } from '../Icon';
+import { JsonLd } from '../JsonLd';
 import { HubBody } from './CombosHub';
 import { L4Pick, ListSort, type L4Size } from './RuleListClient';
 import { HubCard } from './SetCards';
@@ -606,6 +610,31 @@ function Crumbs({ c, title }: { c: ShopContext; title: string }) {
   );
 }
 
+const LD_KEYS = ['seo.structuredData'] as const;
+
+/** Follow-up 357: the trail the page shows (Home / Combos / the rule) and every pair on sale, for search engines. */
+async function RuleLd({ w, title, base }: { w: Draw; title: string; base: string }) {
+  const { c, d } = w;
+  const [set, origin] = await Promise.all([readPageSettings(LD_KEYS, c.storeId), shopOrigin(c.storeId)]);
+  const sd = set['seo.structuredData'];
+  if (!origin || !(sd.breadcrumbs || sd.itemList)) return null;
+  const name = c.t('ctpl.list.title', { title });
+  return (
+    <JsonLd
+      data={[
+        sd.breadcrumbs
+          ? breadcrumbLd(origin, [
+              { name: c.t('pdp.home'), href: hrefIn(c.lang, ROUTES.home) },
+              { name: c.t('combo.hub.title'), href: hrefIn(c.lang, ROUTES.combos) },
+              { name: title, href: base },
+            ])
+          : null,
+        sd.itemList ? itemListLd(origin, name, d.page.pairs.map((p) => ({ name: pairTitle(p, (id) => w.colour(id)?.name ?? ''), href: hrefIn(c.lang, ROUTES.combo(p.slug)) }))) : null,
+      ]}
+    />
+  );
+}
+
 /** A rule that is not on sale now (demo ca_endedHTML): it says so, in Bengali and English, and shows the combos on sale. */
 async function Ended({ c, d, title }: { c: ShopContext; d: RuleData; title: string }) {
   const r = d.page.rule;
@@ -658,6 +687,7 @@ export async function RuleList({ ruleKey, search }: { ruleKey: string; search: S
   return (
     <div className={`container ca-page ca-list ca-${tpl}`} data-testid="ca-list" data-tpl={tpl} data-rule={d.page.rule.key}>
       <Crumbs c={c} title={title} />
+      {ruleLdShown(d.page, q) ? <RuleLd w={w} title={title} base={base} /> : null}
       {!d.page.onSale ? (
         <Ended c={c} d={d} title={title} />
       ) : (
