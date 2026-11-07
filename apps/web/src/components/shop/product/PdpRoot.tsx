@@ -24,7 +24,7 @@ import { colourHref } from '@/lib/shop/pdp-colour';
 import { FIT_COOKIE, fitCookieValue, sizeFor, type FitBody } from '@/lib/shop/pdp-finder';
 import { COLOUR_QUERY } from '@/lib/shop/routes';
 import { digitsOf, fillWords, keepSize, stockOf, type PdpChoice, type PdpModel } from '@/lib/shop/product-model';
-import { keepUsual, loadUsual, readUsual, saveUsual, type SizeGroup } from '@/lib/shop/usual-size';
+import { joinKept, keepUsual, loadUsual, readUsual, saveUsual, type SizeGroup } from '@/lib/shop/usual-size';
 import { afterPaint } from '@/lib/shop/later';
 import { BAG_ADDED_EVENT } from '../bag/AddToBag';
 
@@ -42,7 +42,7 @@ export interface PdpClientSettings {
   /** Follow-up 62 · the owner's word under each size box on this page, by size key (empty: none). */
   sizeWords: Record<string, string>;
   /** Follow-up 62 · "Your size" (`pdp.usualSize`), with the product's group; null = off. */
-  usual: { preselect: boolean; days: number; group: SizeGroup } | null;
+  usual: { preselect: boolean; days: number; group: SizeGroup; /** follow-up 112: his own orders' kept sizes (null: none, a guest) */ account: string | null } | null;
 }
 
 export interface PdpEnv {
@@ -114,7 +114,7 @@ export function PdpRoot({ env, initial, children }: { env: PdpEnv; initial: PdpC
     if (!usual) return;
     const sizes = m.sizes.map((x) => x.key);
     const stop = afterPaint(() => {
-      const size = readUsual(loadUsual(), usual.group, usual.days, Date.now(), sizes);
+      const size = readUsual(joinKept(loadUsual(), usual.account), usual.group, usual.days, Date.now(), sizes);
       setUsualSize(size);
       if (size && usual.preselect && sizes.length > 1) setChoice((c) => (c.size === null && stockOf(m, c.colour, size) > 0 ? { ...c, size } : c));
     });

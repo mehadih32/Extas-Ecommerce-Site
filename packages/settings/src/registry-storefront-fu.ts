@@ -81,7 +81,8 @@ export const pdpSizeWordsSchema = z
 /**
  * "My usual size": the size this browser last put in the bag (tops and bottoms apart) gets a "Your size" tag on the
  * product page, and when it is sold out in the colour shown, the colours that have it are named. `preselect` also
- * chooses it when it is in stock. Remembered for `days`. Off: the demo draws it from the account's size (PR 58).
+ * chooses it when it is in stock. Remembered for `days`. Follow-up 112: a signed-in buyer's own orders join it (the
+ * newer size wins); a kept Find My Size answer (PR 58) still comes first.
  */
 export const pdpUsualSizeSchema = z
   .object({

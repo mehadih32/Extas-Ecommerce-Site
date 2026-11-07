@@ -18,7 +18,7 @@
     },
     "usualSize": {
       "label": "\"Your size\" on the size row",
-      "help": "The size a shopper last put in the bag on this phone or computer (tops and bottoms apart) gets a \"Your size\" tag on the next product page. When it is sold out in the colour shown, the colours that have it are named. \"Choose it for them\" also picks it when it is in stock. Remembered for the number of days set. Kept only in the shopper's own browser."
+      "help": "The size a shopper last put in the bag on this phone or computer (tops and bottoms apart) gets a \"Your size\" tag on the next product page. When it is sold out in the colour shown, the colours that have it are named. \"Choose it for them\" also picks it when it is in stock. Remembered for the number of days set. Kept in the shopper's own browser; a signed-in shopper's own orders count too (cancelled and returned orders left out), and the newer of the two wins."
     }
   },
   "thanks": {
