@@ -87,6 +87,8 @@ export interface MessengerWebhookDeps {
   now?: () => Date;
   /** PR 435: the support app's push wiring (a new message wakes its devices). */
   push?: sp.SupportPushWiring;
+  /** Follow-up 505: told which store took messages with files (the app copies them after its answer). */
+  afterFiles?: (storeId: number) => void;
 }
 
 export type MessengerWebhookCode = 'OK' | 'NOT_CONNECTED' | 'TOO_LARGE' | 'BAD_SIGNATURE' | 'BAD_JSON';
@@ -117,6 +119,7 @@ export async function receiveMessengerWebhook(deps: MessengerWebhookDeps, req: {
   }
   const items: sp.ChannelInbound[] = parseMessengerWebhook(body).map((m) => ({ channelExternalId: m.pageId, from: m.from, messageId: m.messageId, text: m.text, files: m.files.map((f) => ({ kind: f.kind, sourceUrl: f.url })), at: m.at }));
   const result = await sp.receiveFromChannel({ db: deps.db, settings: deps.settings, now: deps.now, push: deps.push }, match.storeId, 'messenger', items);
+  if (result.received && items.some((m) => m.files.length)) deps.afterFiles?.(match.storeId);
   return { status: 200, code: 'OK', result };
 }
 

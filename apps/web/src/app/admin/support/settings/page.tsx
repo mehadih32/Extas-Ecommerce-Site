@@ -98,6 +98,16 @@ export default async function SupportSettingsPage() {
     { kind: 'number', path: 'maxMb', label: s('attachments.maxMb'), min: 1, max: 50 },
     { kind: 'checks', path: 'kinds', label: s('attachments.kinds'), options: (['image', 'video', 'pdf'] as const).map((k) => ({ value: k, label: s(`attachments.kind.${k}`) })) },
   ];
+  // follow-up 505: a customer's Messenger or WhatsApp file copied to our storage (off as shipped)
+  const fileCopy: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: s('fileCopy.enabled'), help: s('fileCopy.enabledHelp') },
+    { kind: 'number', path: 'maxMb', label: s('fileCopy.maxMb'), min: 1, max: 100 },
+    { kind: 'number', path: 'perRun', label: s('fileCopy.perRun'), min: 1, max: 200 },
+    { kind: 'number', path: 'photoDays', label: s('fileCopy.photoDays'), help: s('fileCopy.keepHelp'), min: 1, max: 3650 },
+    { kind: 'number', path: 'videoDays', label: s('fileCopy.videoDays'), min: 1, max: 3650 },
+    { kind: 'number', path: 'otherDays', label: s('fileCopy.otherDays'), min: 1, max: 3650 },
+    { kind: 'number', path: 'giveUpHours', label: s('fileCopy.giveUpHours'), help: s('fileCopy.giveUpHelp'), min: 1, max: 720 },
+  ];
   const liveChat: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: s('liveChat.enabled'), help: s('liveChat.enabledHelp') },
     { kind: 'number', path: 'maxChars', label: s('liveChat.maxChars'), min: 50, max: 4000 },
@@ -306,6 +316,7 @@ export default async function SupportSettingsPage() {
         <summary className="a2-h4">{s('more')}</summary>
         <p className="a2-xs a2-mute a2-mt6">{s('moreSub')}</p>
         <FieldsCard url={API} screen={screen('support.attachments')} fields={attachments} texts={texts('attachments')} canEdit={canEdit} testId="support-set-attachments" />
+        <FieldsCard url={API} screen={screen('support.fileCopy')} fields={fileCopy} texts={texts('fileCopy')} canEdit={canEdit} testId="support-set-file-copy" />
         <FieldsCard url={API} screen={screen('support.channels')} fields={windowFields} texts={texts('window')} canEdit={canEdit} testId="support-set-window" />
         <FieldsCard url={API} screen={screen('support.draftWords')} fields={draftWords} texts={texts('draftWords')} canEdit={canEdit} testId="support-set-draft-words" />
         <FieldsCard url={API} screen={screen('support.draftKeywords')} fields={draftKeywords} texts={texts('draftKeywords')} canEdit={canEdit} testId="support-set-draft-keywords" />

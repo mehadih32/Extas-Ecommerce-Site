@@ -55,8 +55,9 @@ export const EVENT_KINDS = [
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
-/** A file's state: PENDING while a channel's copy waits to be saved to our storage (B4.8), STORED once we have it. */
-export const FILE_STATES = ['PENDING', 'STORED'] as const;
+/** A file's state: PENDING while a channel's copy waits to be saved to our storage (B4.8), STORED once we have it,
+ *  FAILED when the channel never gave it (follow-up 505: too big, refused for good, or not given in time). */
+export const FILE_STATES = ['PENDING', 'STORED', 'FAILED'] as const;
 
 /** The first words of a message for the list: spaces folded, cut at `max` characters with "…". */
 export function previewOf(text: string | null | undefined, max: number): string | null {

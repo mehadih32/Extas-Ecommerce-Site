@@ -7,12 +7,14 @@
 // A body over `messages.whatsapp.webhookMaxBodyKb` is refused before it is read. Answers: `{ ok, code }`.
 // PR 426: a verified post's customer messages go on to the Support inbox too, to the store's WhatsApp channel with that
 // phone number id (lib/support-connect; a number not added in Support, or switched off, takes nothing).
+// Follow-up 505: their files are then copied to our storage after the answer (lib/support-file-copy, support.fileCopy).
 import { createConnections, messageAdapters, WHATSAPP_SIGNATURE_HEADER, type Connections } from '@extas/adapters';
 import { receiveWhatsAppWebhook, sendersFrom, verifyWhatsAppWebhook, whatsappWebhookMaxBytes, type WhatsAppWebhookDeps } from '@extas/messages';
 import * as sp from '@extas/support';
 import { adminDeps } from '@/lib/admin-auth';
 import { readCapped } from '@/lib/erp-webhook';
-import { whatsappToSupport } from '@/lib/support-connect';
+import { supportConnections, whatsappToSupport } from '@/lib/support-connect';
+import { copyChannelFilesSoon } from '@/lib/support-file-copy';
 import { supportPushWiring } from '@/lib/support-push';
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +38,12 @@ async function depsFor(deps: NonNullable<ReturnType<typeof adminDeps>>): Promise
     connections: hit.connections,
     now: deps.now,
     // PR 435: the message wakes the support app's devices (support.app off as it ships)
-    onInbound: (storeId, inbound) => sp.receiveFromChannel({ db: deps.db, settings: deps.resolver, now: deps.now, push: supportPushWiring(deps) }, storeId, 'whatsapp', whatsappToSupport(inbound)),
+    onInbound: async (storeId, inbound) => {
+      const r = await sp.receiveFromChannel({ db: deps.db, settings: deps.resolver, now: deps.now, push: supportPushWiring(deps) }, storeId, 'whatsapp', whatsappToSupport(inbound));
+      // follow-up 505: the customers' files are copied after the answer has gone back to Meta (support.fileCopy)
+      if (r.received && inbound.some((m) => m.files?.length)) copyChannelFilesSoon(deps, storeId, () => supportConnections(deps));
+      return r;
+    },
   };
 }
 

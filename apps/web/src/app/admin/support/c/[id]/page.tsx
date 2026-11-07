@@ -239,7 +239,12 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
                 {m.files.length ? (
                   <div className="sp-files">
                     {m.files.map((f) =>
-                      !f.ready ? (
+                      !f.ready && f.status === 'FAILED' ? (
+                        <span key={f.id} className="sp-file" data-testid="support-file-failed">
+                          <ShellIcon name="alert" size={13} />
+                          <span>{f.fileName ? `${f.fileName} · ${t(d, 'sup.msg.failed')}` : t(d, 'sup.msg.failed')}</span>
+                        </span>
+                      ) : !f.ready ? (
                         <span key={f.id} className="sp-file" data-testid="support-file-pending">
                           <ShellIcon name="clock" size={13} />
                           <span>{f.fileName ?? t(d, 'sup.msg.pending')}</span>

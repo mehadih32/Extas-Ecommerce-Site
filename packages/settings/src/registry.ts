@@ -135,6 +135,7 @@ import { erpHeldSettings } from './registry-erp-held';
 import { healthReopenSettings } from './registry-health-reopen';
 import { loginNetworkSettings } from './registry-login-network';
 import { exchangeRetrySettings } from './registry-exchange-retry';
+import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
@@ -1533,6 +1534,8 @@ export const registry = {
   ...loginNetworkSettings,
   // ---- Follow-up 546 (PR 614) · an exchange send that found the ERP unreachable is tried again by the returns turn, off (registry-exchange-retry.ts, version 272). ----
   ...exchangeRetrySettings,
+  // ---- Follow-up 505 (PR 425, 426) · a customer's Messenger or WhatsApp file copied to our storage behind the SSRF guard, off (registry-support-file-copy.ts, version 273). ----
+  ...supportFileCopySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
