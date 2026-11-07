@@ -16,3 +16,6 @@
 .adm2 .rev-link{margin-top:4px;align-self:flex-start;display:inline-flex;align-items:center}
 .adm2 .rev-more{align-self:center;display:inline-flex;align-items:center}
 .adm2 details.a2-more-opts>summary{cursor:pointer;color:var(--ink2);list-style-position:inside;padding:12px 0;line-height:20px}
+/* PR 66 follow-up 184 — Products › Reviews › Questions: the answer box above the buttons. */
+.adm2 .revq-acts{display:flex;flex-direction:column;gap:8px}
+.adm2 .revq-acts textarea{width:100%;min-height:88px}
