@@ -427,7 +427,8 @@
         "page": "{n}/{of}",
         "empty": "Nothing to pick",
         "shelf": "Shelf {code}",
-        "noShelf": "No shelf set"
+        "noShelf": "No shelf set",
+        "chosen": "Only the {n} orders chosen on the print run"
       },
       "tick": {
         "done": "Pulled — tap to take the mark back",
@@ -715,6 +716,29 @@
           "showShop": "Shop's name and phone at the top",
           "maxPerPdf": "Stickers per print"
         }
+      },
+      "filter": {
+        "title": "Show only",
+        "courier": "Courier",
+        "allCouriers": "Every courier",
+        "category": "Category",
+        "allCategories": "Every category",
+        "go": "Show",
+        "clear": "Show all",
+        "showing": "Showing {n} of {all} parcels. The print button above, the ticks and the picking list act on these only.",
+        "showingAll": "Showing every parcel waiting ({n}).",
+        "none": "No parcel waiting matches this courier and category. Press \"Show all\"."
+      },
+      "tick": {
+        "one": "Tick {n}",
+        "all": "Tick every parcel shown",
+        "count": "{n} ticked",
+        "none": "Nothing ticked: the picking list takes every order shown.",
+        "print": "Print the ticked · {n}",
+        "picking": "Picking list for these orders · {n}",
+        "pickingTicked": "Picking list for the ticked orders · {n}",
+        "note": "The picking list here is the same list as on the Picking list page, for these orders only: an order the courier already has, or one on hold or in review, is never counted.",
+        "tooMany": "Too many orders for one picking list (at most {max}). Show fewer first."
       }
     },
     "check": {

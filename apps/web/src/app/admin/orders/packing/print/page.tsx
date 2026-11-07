@@ -18,6 +18,11 @@
 // the size for the owner's printer, its dots, the sticker's language, type size, the shop's line, how many per print).
 // Saving them needs `fulfilment.printSettings`; a print with invoices needs `orders.invoice` too. A row's own Print /
 // Reprint is always its sticker.
+//
+// Follow-up 439 (PR 179, 181): the run filtered by courier and by category (?courier=, ?cat=; only what the run holds
+// counts), "Showing n of m"; the main press then prints only the parcels shown. A tick on each parcel and a bar: print
+// the ticked ones, and "picking list for these orders" — the picking list for the orders behind the ticked parcels, or
+// behind every parcel shown when none is ticked (the same list and rules, narrowed to those orders).
 import type { Metadata } from 'next';
 import '../../../settings-cards.css';
 import '../packing.css';
@@ -27,6 +32,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PrintCheck } from '@/components/admin/fulfil/PrintCheck';
+import { PrintTick, PrintTickAll, PrintTickBar, PrintTicks } from '@/components/admin/fulfil/PrintTicks';
 import { PdfButton } from '@/components/admin/fulfil/Print';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PRINT_RUN_INVOICE_LAYOUTS, PRINT_RUN_WHATS, STICKER_DPIS, STICKER_SIZES } from '@extas/settings';
@@ -34,6 +40,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatNumber } from '@/components/admin/products/model';
 import { printedAt } from '@/lib/admin-fulfil/handover';
+import { filterPrintRows, printFilterChoices, printFilterOf } from '@/lib/admin-fulfil/print-filter';
 import { adminDeps } from '@/lib/admin-auth';
 import { withFulfil } from '@/lib/admin-fulfil/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -56,9 +63,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'ful.packing.printTitle')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-export default async function PrintRunPage() {
+type Search = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function PrintRunPage({ searchParams }: { searchParams: Search }) {
   const deps = adminDeps();
-  const [plain, access] = await Promise.all([adminView(deps), pageAccess('fulfilment.read', deps, MOTHER_STORE_ID)]);
+  const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('fulfilment.read', deps, MOTHER_STORE_ID), searchParams]);
   const view = withFulfil(plain);
   const d = view.dict;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
@@ -91,7 +100,12 @@ export default async function PrintRunPage() {
   const n = (x: number) => formatNumber(x, view.locale);
   // the main press: new stickers (and their invoices), or — invoices only — every parcel that can print; one print
   // takes as many as the sticker's and (with invoices) the invoice's "per print" allow
-  const fresh = run.rows.filter((r) => !r.problem && (what === 'invoice' || r.printCount === 0));
+  // follow-up 439: the run's filter (courier, category); everything below acts on the parcels shown
+  const choices = printFilterChoices(run.rows);
+  const filter = printFilterOf(sp, run.rows);
+  const filtered = Boolean(filter.courier || filter.category);
+  const rows = filterPrintRows(run.rows, filter);
+  const fresh = rows.filter((r) => !r.problem && (what === 'invoice' || r.printCount === 0));
   const perPress = withInvoice ? Math.min(run.maxPerPdf, invoicePrint.maxPerPdf) : run.maxPerPdf;
   const batch = fresh.slice(0, perPress);
   const printed = run.rows.filter((r) => r.printCount > 0).length;
@@ -102,7 +116,7 @@ export default async function PrintRunPage() {
   const catName = (c: sh.PrintRunRow['category']) => (c.en ? (view.lang === 'bn' && c.bn) || c.en : t(d, 'ful.printRun.noCategory'));
   const piecesOf = (r: sh.PrintRunRow) => r.items.map((i) => [i.name, i.colour, i.size].filter(Boolean).join(' · ') + (i.quantity > 1 ? ` ×${n(i.quantity)}` : '')).join(', ');
   const groupSize = new Map<string, number>();
-  for (const r of run.rows) groupSize.set(r.category.en, (groupSize.get(r.category.en) ?? 0) + 1);
+  for (const r of rows) groupSize.set(r.category.en, (groupSize.get(r.category.en) ?? 0) + 1);
 
   // ---- the settings cards (CN-018: on the page where they are used); words here, values from the API ----
   const ps = (k: string, vars: Record<string, string> = {}) => t(d, `ful.printRun.set.${k}`, vars);
@@ -194,11 +208,55 @@ export default async function PrintRunPage() {
       </p>
       {later ? <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.packing.more', { n: n(later), max: n(perPress) })}</p> : null}
       {run.rows.length ? (
+        <form className="a2-card tight pf-form a2-mt12" method="get" action={HERE} role="search" aria-label={t(d, 'ful.printRun.filter.title')} data-testid="print-filter">
+          <label className="a2-xs">
+            {t(d, 'ful.printRun.filter.courier')}
+            <select className="a2-sel" name="courier" defaultValue={filter.courier ?? ''} data-testid="print-filter-courier">
+              <option value="">{t(d, 'ful.printRun.filter.allCouriers')}</option>
+              {choices.couriers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="a2-xs">
+            {t(d, 'ful.printRun.filter.category')}
+            <select className="a2-sel" name="cat" defaultValue={filter.category ?? ''} data-testid="print-filter-category">
+              <option value="">{t(d, 'ful.printRun.filter.allCategories')}</option>
+              {choices.categories.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {catName(c)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className="a2-btn" data-testid="print-filter-go">
+            {t(d, 'ful.printRun.filter.go')}
+          </button>
+          {filtered ? (
+            <Link className="a2-btn ghost" href={HERE} data-testid="print-filter-clear">
+              {t(d, 'ful.printRun.filter.clear')}
+            </Link>
+          ) : null}
+          <p className="a2-xs a2-mute pf-note" data-testid="print-filter-showing">
+            {t(d, filtered ? 'ful.printRun.filter.showing' : 'ful.printRun.filter.showingAll', { n: n(rows.length), all: n(run.rows.length) })}
+          </p>
+        </form>
+      ) : null}
+      {rows.length ? (
+        <PrintTicks dict={fd} rows={rows.map((r) => ({ shipmentId: r.shipmentId, orderId: r.orderId, orderNumber: r.orderNumber, printable: !r.problem }))}>
+        <PrintTickBar canPrint={canPrint} blocked={blocked} maxOrders={sh.PICKING_ORDERS_MAX} stickerFile={what === 'invoice' ? 'invoices.pdf' : 'stickers.pdf'} />
         <div className="a2-tblw a2-mt12" data-testid="print-list">
           <table className="a2-tbl">
             <thead>
               <tr>
-                <th>{t(d, 'ful.packing.col.order')}</th>
+                <th>
+                  <span className="pt-head">
+                    <PrintTickAll />
+                    {t(d, 'ful.packing.col.order')}
+                  </span>
+                </th>
                 <th>{t(d, 'ful.printRun.col.items')}</th>
                 <th>{t(d, 'ful.packing.col.courier')}</th>
                 <th>{t(d, 'ful.packing.col.consignment')}</th>
@@ -208,8 +266,8 @@ export default async function PrintRunPage() {
               </tr>
             </thead>
             <tbody>
-              {run.rows.map((r, i) => [
-                i === 0 || run.rows[i - 1]!.category.en !== r.category.en ? (
+              {rows.map((r, i) => [
+                i === 0 || rows[i - 1]!.category.en !== r.category.en ? (
                   <tr key={`g-${r.shipmentId}`} className="pr-group" data-testid="print-group">
                     <td colSpan={7}>
                       <b>{catName(r.category)}</b> <span className="a2-xs a2-mute">{t(d, 'ful.printRun.groupCount', { n: n(groupSize.get(r.category.en) ?? 0) })}</span>
@@ -218,11 +276,14 @@ export default async function PrintRunPage() {
                 ) : null,
                 <tr key={r.shipmentId} data-testid="print-row">
                   <td className="a2-tdh">
-                    <div className="a2-cell">
-                      <b>
-                        <Link className="a2-lnk" href={`/admin/orders/${r.orderId}`}>{r.orderNumber}</Link>
-                      </b>
-                      {r.problem ? <span style={{ color: 'var(--bad)' }}>{t(d, `ful.sticker.problem.${r.problem}`)}</span> : null}
+                    <div className="pt-row">
+                      <PrintTick shipmentId={r.shipmentId} orderNumber={r.orderNumber} />
+                      <div className="a2-cell">
+                        <b>
+                          <Link className="a2-lnk" href={`/admin/orders/${r.orderId}`}>{r.orderNumber}</Link>
+                        </b>
+                        {r.problem ? <span style={{ color: 'var(--bad)' }}>{t(d, `ful.sticker.problem.${r.problem}`)}</span> : null}
+                      </div>
                     </div>
                   </td>
                   <td data-l={t(d, 'ful.printRun.col.items')} data-testid="print-items">
@@ -250,6 +311,11 @@ export default async function PrintRunPage() {
             </tbody>
           </table>
         </div>
+        </PrintTicks>
+      ) : filtered ? (
+        <p className="a2-card tight a2-mt12 a2-xs" data-testid="print-filter-none">
+          {t(d, 'ful.printRun.filter.none')}
+        </p>
       ) : (
         <div className="a2-state a2-mt12" data-testid="print-empty">
           <div className="a2-sti">

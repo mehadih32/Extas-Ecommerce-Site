@@ -16,6 +16,8 @@
 //   audited; it never touches stock, a product or an order.
 // - Printing it keeps the list (PickingList: its orders and summary) and one print job. Nothing else changes. No
 //   customer's details anywhere: order numbers and pieces only.
+// - Follow-up 439: the list for some orders only (`orderIds`, from the print run's filter or ticks): the same rules,
+//   narrowed to those orders — a chosen order that is dispatched, held or in review is never counted.
 import { z } from 'zod';
 import { DELIVERY_TARGET_SELECT, deliveryTarget, openReviewIds, type OrdersDeps } from '@extas/orders';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Who } from './context';
@@ -27,8 +29,11 @@ import { localDay } from './pure';
 const ordersDeps = (deps: ShippingDeps): OrdersDeps => ({ db: deps.db, settings: deps.settings, now: deps.now });
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+/** Follow-up 439: at most this many chosen orders in one list (one print run's page). */
+export const PICKING_ORDERS_MAX = 1000; // hardcode-ok: an input bound, not a business number
+
 const rangeInput = z
-  .object({ from: day.nullish(), to: day.nullish() })
+  .object({ from: day.nullish(), to: day.nullish(), orderIds: z.array(z.uuid()).min(1).max(PICKING_ORDERS_MAX).optional() })
   .strict()
   .refine((r) => !r.from || !r.to || r.from <= r.to, { message: 'the first day comes after the last', path: ['to'] });
 
@@ -63,6 +68,8 @@ export interface PickingList {
   held: PickingHeldOrder[];
   orderIds: string[];
   range: { from: string | null; to: string | null };
+  /** Follow-up 439: the list was made for these chosen orders only (how many were chosen), or for every order (null). */
+  chosen: number | null;
   shortagesMarked: boolean;
   /** PR 412: how the groups are made — by category, or by shelf (a group's `category` is then the shelf's code, '' none). */
   sort: 'category' | 'bin';
@@ -80,8 +87,9 @@ async function build(deps: ShippingDeps, who: Who, range: z.output<typeof rangeI
   const storeId = who.storeId;
   const [cfg, timeZone, reviews, sortCfg] = await Promise.all([setting(deps, storeId, 'delivery.picking.list'), setting(deps, storeId, 'store.timeZone'), openReviewIds(ordersDeps(deps), storeId), setting(deps, storeId, 'fulfilment.picking.sort')]);
   const inReview = new Set(reviews);
+  const only = range.orderIds?.length ? [...new Set(range.orderIds)] : null;
   const orders = await deps.db.order.findMany({
-    where: { storeId, archivedAt: null, handedOverAt: null, status: { in: [...PICKING_FROM, 'ON_HOLD'] } },
+    where: { storeId, archivedAt: null, handedOverAt: null, status: { in: [...PICKING_FROM, 'ON_HOLD'] }, ...(only ? { id: { in: only } } : {}) },
     orderBy: { placedAt: 'asc' },
     select: {
       id: true,
@@ -171,6 +179,7 @@ async function build(deps: ShippingDeps, who: Who, range: z.output<typeof rangeI
     held,
     orderIds: taken.map((o) => o.id),
     range: { from, to },
+    chosen: only ? only.length : null,
     shortagesMarked: cfg.markShortages,
     sort: byShelf ? 'bin' : 'category',
     shelves: [...new Map(lines.filter((l) => productIds.includes(l.styleKey)).map((l) => [l.styleKey, l.style])).entries()]
@@ -215,11 +224,11 @@ export async function printPicking(deps: ShippingDeps, who: Who, input: unknown 
   const at = nowOf(deps);
   const kept = await deps.db.$transaction(async (tx) => {
     const row = await tx.pickingList.create({
-      data: { storeId: who.storeId, orderIds: list.orderIds, summary: { ...list.summary, heldOrders: list.held, range: list.range } as unknown as object, generatedById: who.actor.staffUserId },
+      data: { storeId: who.storeId, orderIds: list.orderIds, summary: { ...list.summary, heldOrders: list.held, range: list.range, chosen: list.chosen } as unknown as object, generatedById: who.actor.staffUserId },
       select: { id: true },
     });
     await tx.printJob.create({ data: { storeId: who.storeId, kind: 'PICKING_LIST', orderIds: list.orderIds, status: 'SUCCEEDED', printedAt: at, actorId: who.actor.staffUserId, data: { listId: row.id, pieces: list.summary.pieces } } });
-    await logChange(tx, who, 'picking.print', 'PickingList', row.id, null, { orders: list.summary.orders, pieces: list.summary.pieces, held: list.summary.held });
+    await logChange(tx, who, 'picking.print', 'PickingList', row.id, null, { orders: list.summary.orders, pieces: list.summary.pieces, held: list.summary.held, chosen: list.chosen });
     return row;
   }, TX);
   return { ...list, listId: kept.id, printedAt: at.toISOString() };
@@ -235,7 +244,7 @@ const tickInput = z.object({ key: z.string().min(1).max(400), ticked: z.boolean(
 export async function tickPickLine(deps: ShippingDeps, who: Who, input: unknown): Promise<PickingList> {
   await allow(deps, who, 'fulfilment.pack');
   const d = parse(tickInput, input, 'picking tick');
-  const list = await build(deps, who, { from: null, to: null });
+  const list = await build(deps, who, { from: null, to: null, orderIds: undefined });
   const line = list.groups.flatMap((g) => g.styles.flatMap((st) => st.colours.flatMap((c) => c.sizes))).find((z) => z.key === d.key);
   if (!line) throw new ShippingError('NOT_FOUND', 'this line is no longer on the picking list', [d.key]);
   await deps.db.$transaction(async (tx) => {

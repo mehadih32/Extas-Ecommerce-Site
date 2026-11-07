@@ -27,6 +27,7 @@ const list = (over: Partial<PickingList> = {}): PickingList => ({
   held: [{ orderId: 'o9', orderNumber: 'EX-1009', reason: 'ON_HOLD', pieces: 2 }],
   orderIds: ['o1', 'o2'],
   range: { from: null, to: null },
+  chosen: null,
   shortagesMarked: true,
   sort: 'category',
   shelves: [],
@@ -60,6 +61,11 @@ describe('PR 181 · the picking list document', () => {
     expect(doc.summary).toContain('কম স্টক দেখানো বন্ধ');
     expect(doc.rows[0]!.cells[0]).toBe('পোলো');
     expect(doc.after).toEqual([]);
+  });
+
+  it('follow-up 439: a list for orders chosen on the print run says how many, in its language', () => {
+    expect(pickingDocument(list({ chosen: 3 }), CFG, HEAD, 'Asia/Dhaka', AT).summary.at(-1)).toBe('Only the 3 orders chosen on the print run');
+    expect(pickingDocument(list({ chosen: 3 }), { ...CFG, lang: 'bn' }, HEAD, 'Asia/Dhaka', AT).summary.at(-1)).toBe('শুধু প্রিন্ট পাতায় বাছাই করা 3টা অর্ডার');
   });
 
   it('PR 412: read shelf by shelf, the headings are the shelves ("No shelf set" last) and the summary keeps its categories', () => {
