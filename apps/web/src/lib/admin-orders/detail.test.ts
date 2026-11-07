@@ -13,7 +13,7 @@ import type { AdminView } from '../admin-page';
 import { t, type Dict } from '../i18n';
 import { COMMAND_PATHS, KNOWN_ERRORS, commandUrl, errorKey, newKey, refundRequestsOf, send } from './commands';
 import { editBody } from '../orders-api';
-import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, exchangeIntentLine, lostBookingSpecs, rebookSpecs, returnReasonSpecs, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
+import { COMMAND_PERM, DO_PERM, commandSpecs, deliveryCheckSpecs, editSummary, exchangeIntentLine, lostBookingSpecs, packingCardBand, rebookSpecs, returnReasonSpecs, reviewSpecs, twoSizeSpecs, twoSizeSummary, type EditStart } from './detail';
 import { flagChips } from './list';
 import { INVOICE_PRINT_URL, invoiceHref, invoicePrints } from './model';
 import { bodyOf, missingOf, noteNeeded, startOf, type CommandSpec } from './spec';
@@ -401,5 +401,25 @@ describe('follow-up 326: the order page names the review like the list', () => {
     expect(detailReview([risk, dup])).toEqual({ kind: 'duplicate' });
     expect(detailReview([risk, { ...dup, status: 'APPROVED' }])).toEqual({ kind: 'risk', section: 'identity' });
     expect(detailReview([])).toEqual({ kind: 'other' });
+  });
+});
+
+describe('follow-up 469 · an open packing card on the order page', () => {
+  const ITEM = '01a16af2-30f0-7462-aab8-719bb3ce51b2';
+  const name = (id: string) => (id === ITEM ? 'Tee · M · Black' : undefined);
+  it('a shortage after packing: one band with the kind, the piece and the way to the packing screen', () => {
+    const b = packingCardBand(view('en'), { id: ID, status: 'PACKED', holdFromStatus: null }, [{ kind: 'SHORTAGE', orderItemId: ITEM }], name, new Set(['fulfilment.read']));
+    expect(b).toMatchObject({ id: 'packingCard', kind: 'bad', specs: [], link: { href: `/admin/orders/packing?step=ready&id=${ID}` } });
+    expect(b!.text).toContain('stock shortage');
+    expect(b!.text).toContain('Tee · M · Black');
+    expect(b!.link!.label).not.toMatch(/^orders\./);
+    const bnBand = packingCardBand(view('bn'), { id: ID, status: 'ON_HOLD', holdFromStatus: 'PROCESSING' }, [{ kind: 'DAMAGED', orderItemId: 'x' }], name, new Set(['fulfilment.read']));
+    expect(bnBand!.text).not.toMatch(/orders\./);
+    expect(bnBand!.link!.href).toContain('step=pack');
+  });
+  it('no card, no band; no packing access or no packing step, no link', () => {
+    expect(packingCardBand(view('en'), { id: ID, status: 'PACKED', holdFromStatus: null }, [], name, new Set())).toBeNull();
+    expect(packingCardBand(view('en'), { id: ID, status: 'PACKED', holdFromStatus: null }, [{ kind: 'NOT_FOUND', orderItemId: ITEM }], name, new Set())!.link).toBeUndefined();
+    expect(packingCardBand(view('en'), { id: ID, status: 'SHIPPED', holdFromStatus: null }, [{ kind: 'SHORTAGE', orderItemId: ITEM }], name, new Set(['fulfilment.read']))!.link).toBeUndefined();
   });
 });

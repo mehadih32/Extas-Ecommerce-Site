@@ -296,6 +296,13 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
               <Buttons specs={b.specs} size="sm" open={open} />
             </span>
           ) : null}
+          {b.link ? (
+            <span className="a2-gap8 a2-bandr">
+              <Link className="a2-btn sm" href={b.link.href} data-testid={`band-${b.id}-link`}>
+                {b.link.label}
+              </Link>
+            </span>
+          ) : null}
         </div>
       ))}
       {o.flags.length ? (

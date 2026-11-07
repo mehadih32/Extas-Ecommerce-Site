@@ -7,7 +7,7 @@
 import type { PermissionKey } from '@extas/auth';
 import type { CallOutcomes } from '@extas/settings';
 import * as od from '@extas/orders';
-import { lostBookingOf, openCheckOf, returnReasonOf, staleParcelOf, type LostBooking, type StaleParcel } from '@extas/shipping';
+import { lostBookingOf, openCheckOf, openIssuesOf, returnReasonOf, staleParcelOf, stepOf, type LostBooking, type StaleParcel } from '@extas/shipping';
 import { targetOf, type OrderCommand, type OrderState } from '@extas/orders/pure';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import type { AdminView } from '../admin-page';
@@ -135,7 +135,8 @@ export interface OrderDetailView {
   reviews: ReviewCard[];
   notes: { id: string; body: string; who: string; at: string; archiveUrl: string | null }[];
   timeline: TimelineItem[];
-  bands: { kind: 'stale' | 'locked' | 'bad' | 'off'; text: string; specs: CommandSpec[]; id: string }[];
+  /** Follow-up 469: `link` opens another screen where the band is decided (a packing card on the packing screen). */
+  bands: { kind: 'stale' | 'locked' | 'bad' | 'off'; text: string; specs: CommandSpec[]; id: string; link?: { href: string; label: string } }[];
   primary: CommandSpec[];
   more: CommandSpec[];
   canNote: boolean;
@@ -431,6 +432,26 @@ export function returnReasonSpecs(view: AdminView, shipmentId: string, number: s
  * "returned"): the parcel becomes returned and the order follows, the courier's return opened (`delivery.outcomes`).
  * Nothing moves money.
  */
+/**
+ * Follow-up 469: an order's open packing cards as one band (the kinds and the pieces), with the way to the packing
+ * screen where a person decides them, while the order is at a packing step (a card raised after packing or booking).
+ */
+export function packingCardBand(
+  view: AdminView,
+  o: { id: string; status: string; holdFromStatus: string | null },
+  cards: readonly { kind: string; orderItemId: string }[],
+  lineName: (orderItemId: string) => string | undefined,
+  perms: ReadonlySet<string>,
+): OrderDetailView['bands'][number] | null {
+  if (!cards.length) return null;
+  const d = view.dict;
+  const kinds = [...new Set(cards.map((c) => c.kind))].map((k) => t(d, `orders.packingCard.kind.${k}`)).join(', ');
+  const pieces = [...new Set(cards.map((c) => lineName(c.orderItemId)).filter((x): x is string => !!x))].join(', ');
+  const step = stepOf(o.status, o.holdFromStatus);
+  const link = step && perms.has('fulfilment.read') ? { href: `/admin/orders/packing?step=${step}&id=${o.id}`, label: t(d, 'orders.packingCard.open') } : undefined;
+  return { id: 'packingCard', kind: 'bad', text: t(d, pieces ? 'orders.band.packingCard' : 'orders.band.packingCardNoPiece', { n: String(cards.length), kinds, pieces }), specs: [], ...(link ? { link } : {}) };
+}
+
 export function backAtShopSpecs(view: AdminView, shipmentId: string, number: string, perms: ReadonlySet<string>): CommandSpec[] {
   if (!perms.has('delivery.outcomes')) return [];
   const d = view.dict;
@@ -1055,6 +1076,12 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   }
   const holdProp = o.flags.includes(od.HOLD_PROPOSED_FLAG) ? await od.holdProposalOf(deps, who.storeId, o.id) : null;
   if (holdProp) bands.push({ id: 'holdProposed', kind: 'stale', text: t(d, 'orders.band.holdProposed', { rule: t(d, `orders.ev.gateRule.${holdProp.rule}`), reason: holdName.get(holdProp.reasonKey) ?? holdProp.reasonKey }), specs: holdProposalSpecs(view, o.id, o.number, perms) });
+  // follow-up 469: an open packing card (a shortage after packing or booking stops the booking) shows here too
+  const cardBand = packingCardBand(view, { id: o.id, status: o.status, holdFromStatus: o.holdFromStatus ?? null }, await openIssuesOf(deps, who.storeId, o.id), (itemId) => {
+    const i = detail.items.find((x) => x.id === itemId);
+    return i ? [i.productName, i.sizeLabel, i.colourName].filter(Boolean).join(' · ') : undefined;
+  }, perms);
+  if (cardBand) bands.push(cardBand);
   // follow-up 450: the courier says the parcel is on its way back; a person says when it is in the shop's hands
   if (ship?.status === 'RETURNING' && o.status !== 'RETURNED') {
     bands.push({ id: 'backAtShop', kind: 'stale', text: t(d, 'orders.band.backAtShop', { courier: x?.shipment?.courierName ?? t(d, 'orders.courier.theCourier') }), specs: backAtShopSpecs(view, ship.id, o.number, perms) });

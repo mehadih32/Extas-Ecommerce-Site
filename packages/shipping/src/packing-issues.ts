@@ -175,3 +175,11 @@ export async function callAboutIssue(deps: ShippingDeps, who: Who, orderId: stri
     return { callTaskId: t.id, created: true };
   }, TX);
 }
+
+/**
+ * Follow-up 469: an order's open packing cards (a shortage the stock sync raised after packing or booking, a damaged or
+ * missing piece), oldest first, so the order page can show them where the packing screen is not open.
+ */
+export async function openIssuesOf(deps: Pick<ShippingDeps, 'db'>, storeId: number, orderId: string) {
+  return deps.db.packingIssue.findMany({ where: { storeId, orderId, resolvedAt: null }, select: { id: true, kind: true, orderItemId: true, createdAt: true }, orderBy: { createdAt: 'asc' } });
+}

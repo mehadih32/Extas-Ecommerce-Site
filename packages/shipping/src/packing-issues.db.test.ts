@@ -11,7 +11,7 @@ import { createRole, SYSTEM } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { evaluateShortages } from '@extas/inventory';
 import { confirmOrder } from '@extas/orders';
-import { bookOrders, callAboutIssue, checkPiece, markPacked, packingOrder, packingQueue, reportIssue, resolveIssue, startPicking } from './index';
+import { bookOrders, callAboutIssue, checkPiece, markPacked, openIssuesOf, packingOrder, packingQueue, reportIssue, resolveIssue, startPicking } from './index';
 import { setUpShipping, type ShippingFixture } from './testing';
 import type { Who } from './context';
 
@@ -156,6 +156,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 183 · defective or out of stock at packing (P
     expect(await refusal(markPacked(d(), packer, o.orderId))).toBe('PACKING_ISSUE_OPEN');
     const booked = await bookOrders(d(), f.shipper, { courierAccountId: courierId, orderIds: [o.orderId] });
     expect(booked.results[0]).toMatchObject({ outcome: 'skipped', code: 'SHORTAGE_OPEN' });
+    // follow-up 469: the order page reads the same open card
+    expect(await openIssuesOf(d(), f.S, o.orderId)).toEqual([expect.objectContaining({ kind: 'SHORTAGE', orderItemId: line.id })]);
     // "the stock was there" on a shortage card is a stock difference: the stock count permission decides it
     const card = await db().packingIssue.findFirstOrThrow({ where: { orderId: o.orderId, kind: 'SHORTAGE' } });
     expect(await refusal(resolveIssue(d(), packer, o.orderId, card.id, { decision: 'STOCK_FOUND' }))).toBe('FORBIDDEN');
