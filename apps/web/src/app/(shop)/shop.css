@@ -837,6 +837,8 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa-s .pcard-qa-b { min-width: 32px; width: auto; height: 30px; padding: 0px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink); cursor: pointer; flex: 0 0 auto; } }
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa-s .pcard-qa-b:hover { border-color: var(--ink); background: var(--ink); color: var(--surface); } }
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa-s .pcard-qa-b:disabled { opacity: 0.5; cursor: progress; } }
+/* follow-up 113: the usual size on Quick add — a ring, no extra word (AUTO ADJUST) */
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa-s .pcard-qa-b.is-usual { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 700; } }
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa.qa-tight { padding: 0px 6px; gap: 4px; } }
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa.qa-tight .pcard-qa-l { display: none; } }
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .shop .pcard-qa.qa-tight .pcard-qa-s { margin-left: 0px; flex: 1 1 0%; justify-content: space-between; } }

@@ -37,6 +37,13 @@ describe('the card`s quick view (follow-up 21)', () => {
     expect(quickOf({ ...base, state: 'ghost' }, 'navy').sizes).toEqual([]);
   });
 
+  it('follow-up 113: says when the product has one size only, so a card add of it is never kept as the usual size', () => {
+    expect(quickOf(base, 'navy').oneSize).toBe(false);
+    // only one size in stock is still a product with sizes
+    expect(quickOf(base, 'white').oneSize).toBe(false);
+    expect(quickOf({ ...base, sizes: [{ key: 'free', label: 'Free size' }] }, 'navy').oneSize).toBe(true);
+  });
+
   it('the back photo of the colour, else the product`s; the drawing`s back only for a card that is a drawing', () => {
     expect(quickOf(base, 'navy')).toMatchObject({ back: null, drawBack: true, garment: 'polo', hex: '#1F2A44' });
     const shared = { ...base, media: [{ id: 'b', colour: null, role: 'BACK', photo: img('shared-back') }] };

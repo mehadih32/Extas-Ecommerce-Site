@@ -25,6 +25,8 @@ export interface QuickCard {
   drawBack: boolean;
   garment: string | null;
   hex: string;
+  /** Follow-up 113: the product has one size only (socks, a belt): a card add of it is never kept as the usual size. */
+  oneSize: boolean;
 }
 
 type Facts = Pick<ProductData, 'state' | 'colours' | 'sizes' | 'variants' | 'media' | 'garment'>;
@@ -44,7 +46,7 @@ export function quickOf(d: Facts, colour: string | null): QuickCard {
   const back = ofColour.find((m) => m.role === 'BACK' && m.colour === key) ?? ofColour.find((m) => m.role === 'BACK' && m.colour === null) ?? null;
   // the card shows the colour's front photo (else the product's); with none it is the drawing (catalogue.ts photoFor)
   const front = ofColour.some((m) => m.role === 'FRONT');
-  return { colour: key ?? NO_COLOUR, sizes, back: back?.photo ?? null, drawBack: !front && !back && !!d.garment, garment: d.garment, hex: c?.hex ?? '' };
+  return { colour: key ?? NO_COLOUR, sizes, back: back?.photo ?? null, drawBack: !front && !back && !!d.garment, garment: d.garment, hex: c?.hex ?? '', oneSize: d.sizes.length < 2 };
 }
 
 /** The quick view of a published product's card, or null (no such product, no database, or the read failed). */
