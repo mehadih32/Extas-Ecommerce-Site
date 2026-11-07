@@ -22,6 +22,7 @@
 // (ids and names in Pathao's words); reading it books nothing.
 import { z } from 'zod';
 import { AdapterError, defineAdapter, requireSecret } from '../define';
+import { API_TAKA, minorToMajor } from '../money';
 import { takaToMinor, type BookResult, type CourierApi, type CourierCapabilities, type CourierParcel, type CourierPlace, type CourierPlaceLevel, type StatusTable } from './contract';
 import { createMockCourier, type MockVocabulary } from './mock';
 
@@ -228,7 +229,8 @@ export function createPathaoClient(opts: ClientOptions): CourierApi {
           special_instruction: p.note ?? undefined,
           item_quantity: p.itemCount,
           item_weight: Math.max(PATHAO_MIN_KG, p.weightGrams / 1000),
-          amount_to_collect: p.codMinor / 100,
+          // ~~amount_to_collect: p.codMinor / 100,~~ follow-up 606: the currency's digits
+          amount_to_collect: minorToMajor(p.codMinor, API_TAKA),
           item_description: p.description ?? undefined,
         });
         const d = r.data;

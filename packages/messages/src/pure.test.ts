@@ -267,3 +267,12 @@ describe('PR 148 follow-up · the refund, exchange, failed-try and late notices 
     expect(render(ex, null, base)).toEqual({ ok: false, reason: 'NO_EVENT', field: 'exchangeOrderNumber' });
   });
 });
+
+// Follow-up 606: a message's amount takes the currency's own fraction digits (one helper), never a written-in hundred
+describe('formatAmount and the currency (follow-up 606)', () => {
+  it("uses the currency's fraction digits", () => {
+    expect(formatAmount(125_050, 'BDT')).toBe('৳1,250.50');
+    expect(formatAmount(125_000, 'BDT')).toBe('৳1,250');
+    expect(formatAmount(1_250, 'JPY')).toBe('¥1,250');
+  });
+});

@@ -16,6 +16,7 @@
 // last one (the shop sends it in `lastRawStatus`).
 import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
+import { API_TAKA, minorToMajor } from '../money';
 import { type BookResult, type CourierApi, type CourierCapabilities, type CourierParcel, type StatusTable } from './contract';
 import { createMockCourier, type MockVocabulary } from './mock';
 
@@ -157,7 +158,8 @@ export function createSteadfastClient(opts: ClientOptions): CourierApi {
           recipient_name: p.receiver.name.slice(0, 100),
           recipient_phone: p.receiver.phone,
           recipient_address: p.receiver.address.slice(0, 250),
-          cod_amount: p.codMinor / 100,
+          // ~~cod_amount: p.codMinor / 100,~~ follow-up 606: the currency's digits
+          cod_amount: minorToMajor(p.codMinor, API_TAKA),
           note: p.note ?? undefined,
           item_description: p.description ?? undefined,
           total_lot: p.itemCount,

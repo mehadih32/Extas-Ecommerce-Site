@@ -23,6 +23,8 @@ import { speechAdapters } from './speech';
 import { webPushAdapters } from './web-push';
 
 export * from './define';
+// Follow-up 606: minor units and an API's amount by the currency's fraction digits
+export * from './money';
 export * from './connections';
 export * from './catalogue';
 export * from './storage';

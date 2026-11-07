@@ -12,6 +12,7 @@
 // - Every failure is a PaymentGatewayError with a stable code; a key is never put into a message, a URL or a log.
 import { z } from 'zod';
 import { AdapterError, defineAdapter, requireSecret } from '../define';
+import { API_TAKA, majorToMinor, minorToMajorText } from '../money';
 import type { FetchLike } from '../erp/http-client';
 import { checkCallbackSignature, PaymentGatewayError, signedCallbackUrl, type CallbackClaim, type GatewayOutcome, type PaymentGateway } from './contract';
 import { createMockGateway } from './mock';
@@ -41,12 +42,10 @@ const TOKEN_EARLY_MS = 60_000;
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 /** Minor units as bKash's amount text (taka with two decimals). */
-export const bkashAmount = (minor: number): string => (minor / 100).toFixed(2);
-const minorOf = (v: unknown): number | null => {
-  if (typeof v !== 'string' && typeof v !== 'number') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.round(n * 100) : null;
-};
+// ~~export const bkashAmount = (minor: number): string => (minor / 100).toFixed(2);~~ follow-up 606: the currency's digits
+export const bkashAmount = (minor: number): string => minorToMajorText(minor, API_TAKA);
+// ~~Math.round(n * 100)~~ follow-up 606
+const minorOf = (v: unknown): number | null => majorToMinor(v, API_TAKA);
 
 const stateOf = (transactionStatus: unknown): GatewayOutcome['state'] => {
   switch (String(transactionStatus ?? '').toLowerCase()) {

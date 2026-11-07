@@ -16,6 +16,7 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import { AdapterError, defineAdapter, requireSecret } from '../define';
+import { API_TAKA, majorToMinor, minorToMajorText } from '../money';
 import type { FetchLike } from '../erp/http-client';
 import { checkCallbackSignature, PaymentGatewayError, signedCallbackUrl, type CallbackClaim, type GatewayOutcome, type PaymentGateway } from './contract';
 import { createMockGateway } from './mock';
@@ -41,15 +42,13 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 const TRAN = /^EX[0-9A-F]{28}$/;
 
 /** Minor units as SSLCommerz's amount text (taka with two decimals). */
-export const sslcommerzAmount = (minor: number): string => (minor / 100).toFixed(2);
+// ~~export const sslcommerzAmount = (minor: number): string => (minor / 100).toFixed(2);~~ follow-up 606: the currency's digits
+export const sslcommerzAmount = (minor: number): string => minorToMajorText(minor, API_TAKA);
 /** Our transaction id at SSLCommerz for a payment: 30 letters and digits from its idempotency key. */
 export const sslcommerzTranId = (idempotencyKey: string): string => `EX${createHash('sha256').update(idempotencyKey).digest('hex').slice(0, 28).toUpperCase()}`;
 
-const minorOf = (v: unknown): number | null => {
-  if (typeof v !== 'string' && typeof v !== 'number') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.round(n * 100) : null;
-};
+// ~~Math.round(n * 100)~~ follow-up 606: the currency's digits
+const minorOf = (v: unknown): number | null => majorToMinor(v, API_TAKA);
 
 const stateOf = (status: unknown): GatewayOutcome['state'] => {
   switch (String(status ?? '').toUpperCase()) {

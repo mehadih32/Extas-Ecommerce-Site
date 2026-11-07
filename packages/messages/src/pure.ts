@@ -7,6 +7,8 @@
 // PR 542: an advance request from the order is its own message (`advanceRequest`), with `{advanceAmount}` and `{payLink}`.
 // PR 148 follow-up (SIM-F-052/F-053): the refund paid (`{refundAmount}`), the exchange approved (`{exchangeOrderNumber}`,
 // `{exchangeAmountLine}`), a failed delivery try and the late apology start their own notices.
+// follow-up 606: the browser-safe money helper only (this module is read by admin screens in the browser)
+import { currencyDigits, minorToMajor } from '@extas/adapters/money';
 import { phoneNormalizeBD } from '@extas/delivery/phone';
 import type { Journey, JourneyStep, JourneyStepConfig, MessageChannel } from '@extas/settings';
 
@@ -238,13 +240,16 @@ export const NEVER_QUIET: ReadonlySet<string> = new Set(['placed', 'selfConfirm'
 
 /** Money as a message writes it: the currency's symbol tight to the amount, grouping commas, Western digits. */
 export function formatAmount(minor: number, currency: string): string {
-  const major = minor / 100;
+  // ~~const major = minor / 100; … minimumFractionDigits: Number.isInteger(major) ? 0 : 2, maximumFractionDigits: 2~~
+  // follow-up 606: the currency's own fraction digits (one helper)
+  const digits = currencyDigits(currency);
+  const major = minorToMajor(minor, currency);
   return new Intl.NumberFormat('en', {
     style: 'currency',
     currency,
     currencyDisplay: 'narrowSymbol',
-    minimumFractionDigits: Number.isInteger(major) ? 0 : 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: Number.isInteger(major) ? 0 : digits,
+    maximumFractionDigits: digits,
   }).format(major);
 }
 

@@ -49,7 +49,7 @@
 // carries the order's amounts for the ERP's books; payments are their own document (S07).
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { ERP_ORDER_CHANNEL, ERP_ORDER_CONFIRMED, ERP_ORDER_STATUSES, ERP_RETURN_QC_GOOD, toErpError, type ErpDocument, type ErpDocumentType, type ErpOrderGift } from '@extas/adapters';
+import { currencyDigits, ERP_ORDER_CHANNEL, ERP_ORDER_CONFIRMED, ERP_ORDER_STATUSES, ERP_RETURN_QC_GOOD, toErpError, type ErpDocument, type ErpDocumentType, type ErpOrderGift } from '@extas/adapters';
 import type { Prisma } from '@extas/db/client';
 import { allow, logChange, nowOf, parse, setting, TX, type Db, type InventoryDeps, type Tx, type Who } from './context';
 import { InventoryError } from './errors';
@@ -137,9 +137,9 @@ export function minorToDecimal(minor: number, fractionDigits: number): string {
   return `${neg ? '-' : ''}${s.slice(0, -fractionDigits)}.${s.slice(-fractionDigits)}`;
 }
 
-export function currencyDigits(currency: string): number {
-  return new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions().maximumFractionDigits ?? 0;
-}
+// ~~export function currencyDigits(currency) { return new Intl.NumberFormat(…).resolvedOptions().maximumFractionDigits ?? 0; }~~
+// follow-up 606: one helper for every package (@extas/adapters money.ts; 2 for a code Intl does not know)
+export { currencyDigits };
 
 /** The SalesOrder document (contract `POST /orders`). Pure: the same input always gives the same document. */
 export function salesOrderDocument(d: z.output<typeof orderPushInput>, fractionDigits: number): ErpDocument {
