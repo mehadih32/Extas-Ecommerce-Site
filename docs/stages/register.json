@@ -2297,6 +2297,7 @@
     "date": "2026-10-20",
     "note": "Docker + Compose, boot order NVMe → data disk → Docker; zero-downtime blue/green app deploy with automatic rollback (`infra/deploy/deploy.sh`, `deploy.yml`); first deploy on the VM 20 Oct 03:03, 6 replicas. 20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop; a failure after a deploy rolls back by itself; report in `docs/reports/smoke/latest/`. 23 Oct: the nightly run checks out the live commit's checks (`last-good-deploy.json`), so a check merged before its deploy can't fail the live version",
     "github": [
+     "#94, 7 Nov",
      "#91, 6 Nov",
      "#72, 31 Oct",
      "#71, 31 Oct",
@@ -2334,13 +2335,15 @@
      "SMOKE_PRIVATE_OUT",
      "extas-vm-deploy-",
      "extas-vm-setup-<run id>",
-     "DEPLOY_WARM_SECONDS"
+     "DEPLOY_WARM_SECONDS",
+     "mayBeOff"
     ],
     "tests": [
      "20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop",
      "admin smoke pictures go only to the server's root-only `<EXTAS_ROOT>/private/smoke-admin` (`SMOKE_PRIVATE_OUT`), never Git (ci fails on one",
      "the smoke test opens four more admin pages (Website › SEO › Redirects & 404 and Collection pages, Orders › Returns › Receive & QC, Products › New product) (#72)",
-     "follow-up 691):** the deploy warms every web replica of the new version before traffic moves — `tools/warm.mjs` opens each smoke page once, signed out, inside each new replica (`DEPLOY_WARM_SECONDS` 240 in server.conf) and logs the slowest pages, so the first visitors and the smoke test no longer pay each page's first load"
+     "follow-up 691):** the deploy warms every web replica of the new version before traffic moves — `tools/warm.mjs` opens each smoke page once, signed out, inside each new replica (`DEPLOY_WARM_SECONDS` 240 in server.conf) and logs the slowest pages, so the first visitors and the smoke test no longer pay each page's first load",
+     "follow-up 611, the rest):** the smoke test opens My orders, the bulk-order page and the bag's test page in both languages (the two a switch or the server closes answer 404 on the `mayBeOff` list), and a test fails when a static shop page is neither opened nor skipped with a reason"
     ]
    },
    "updates": [
@@ -2398,7 +2401,7 @@
      "sortKey": 44640,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 31 Oct (review round 2):** `deploy.yml` and `server-setup.yml` use one concurrency group per run (`extas-vm-deploy-` / `extas-vm-setup-<run id>`), so a newer commit's waiting deploy or a waiting rollback is never cancelled (the one runner still runs one job at a time and `deploy-order.sh` skips an older commit); the smoke test opens four more admin pages (Website › SEO › Redirects & 404 and Collection pages, Orders › Returns › Receive & QC, Products › New product) (#72); **follow-up (6 Nov, #91; follow-up 691):** the deploy warms every web replica of the new version before traffic moves — `tools/warm.mjs` opens each smoke page once, signed out, inside each new replica (`DEPLOY_WARM_SECONDS` 240 in server.conf) and logs the slowest pages, so the first visitors and the smoke test no longer pay each page's first load"
+     "text": "**Updated 31 Oct (review round 2):** `deploy.yml` and `server-setup.yml` use one concurrency group per run (`extas-vm-deploy-` / `extas-vm-setup-<run id>`), so a newer commit's waiting deploy or a waiting rollback is never cancelled (the one runner still runs one job at a time and `deploy-order.sh` skips an older commit); the smoke test opens four more admin pages (Website › SEO › Redirects & 404 and Collection pages, Orders › Returns › Receive & QC, Products › New product) (#72); **follow-up (6 Nov, #91; follow-up 691):** the deploy warms every web replica of the new version before traffic moves — `tools/warm.mjs` opens each smoke page once, signed out, inside each new replica (`DEPLOY_WARM_SECONDS` 240 in server.conf) and logs the slowest pages, so the first visitors and the smoke test no longer pay each page's first load; **follow-up (7 Nov, #94; follow-up 611, the rest):** the smoke test opens My orders, the bulk-order page and the bag's test page in both languages (the two a switch or the server closes answer 404 on the `mayBeOff` list), and a test fails when a static shop page is neither opened nor skipped with a reason"
     }
    ],
    "mentions": [
@@ -2492,6 +2495,7 @@
     "date": "2026-10-20",
     "note": "Redis split: LRU cache (NVMe) + no-eviction queue store (AOF, data disk). 23 Oct (CN-022): the background worker `@extas/jobs` (merged, deploys with the next code deploy): BullMQ on the queue store, one scheduler leader (Redis lock), a `JobRun` row per attempt with retries, backoff and the dead letter, run-level idempotency (a finished run is skipped, a dead worker's run is closed as `WORKER_LOST`), a heartbeat per worker (`WorkerHeartbeat`, migration `0008_worker`); the six inventory jobs run on it; a `worker` service in each colour (`infra/stack/app.yml`, from the migrate image, 0 replicas when the image or the queue URL is missing); the admin Server page `/admin/server` (`system.read`) shows the worker and failed jobs; settings `jobs.*` (registry v22); smoke check on the heartbeat. 23 Oct (follow-up 82, merged, deploys with the next code deploy): the deploy record keeps the worker image beside the web image (`worker_image`, `previous_worker`), a rollback starts the previous good version's worker from it, and the image clean-up never removes an image a record still needs (`infra/deploy/images.sh`, tested with a full fake rollback)",
     "github": [
+     "#94, 7 Nov",
      "#71, 31 Oct",
      "#31, 23 Oct",
      "#29, 23 Oct",
@@ -2505,7 +2509,8 @@
     "settings": [
      "system.read",
      "jobs.*",
-     "jobs.attemptTimeoutSeconds"
+     "jobs.attemptTimeoutSeconds",
+     "jobs.retry.maxAttempts"
     ],
     "code": [
      "@extas/jobs",
@@ -2520,7 +2525,8 @@
      "worker",
      "worker_image",
      "previous_worker",
-     "TIMED_OUT"
+     "TIMED_OUT",
+     "textSlot"
     ],
     "tests": [
      "23 Oct (follow-up 82, merged, deploys with the next code deploy): the deploy record keeps the worker image beside the web image (`worker_image`, `previous_worker`), a rollback starts the previous good version's worker from it, and the image clean-up never removes an image a record still needs (`infra/deploy/images.sh`, tested with a full fake rollback) **Updated 31 Oct (review round 1):** one try of a job is raced against `jobs.attemptTimeoutSeconds` (registry v86, 1800, 0 = no limit): past it the try fails `TIMED_OUT` and the normal retry runs"
@@ -2553,7 +2559,7 @@
      "sortKey": 44640,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 31 Oct (review round 1):** one try of a job is raced against `jobs.attemptTimeoutSeconds` (registry v86, 1800, 0 = no limit): past it the try fails `TIMED_OUT` and the normal retry runs; a late finish never rewrites the row (#71)"
+     "text": "**Updated 31 Oct (review round 1):** one try of a job is raced against `jobs.attemptTimeoutSeconds` (registry v86, 1800, 0 = no limit): past it the try fails `TIMED_OUT` and the normal retry runs; a late finish never rewrites the row (#71); **fix and follow-up (7 Nov, #94; follow-ups 722, 613):** the daily audience refresh, ad spend import and money report put their day in the run key (`textSlot`) — with slot 0 every day after the first was skipped by the run guard; a worker that does not know a job's name puts it back on the queue after the retry wait and gives it up only after `jobs.retry.maxAttempts` takings"
     }
    ],
    "mentions": [
@@ -3114,6 +3120,7 @@
     "date": "2026-10-20",
     "note": "pnpm workspace, Next.js 16 App Router + TypeScript strict + Tailwind 4; Bengali status page at `/status`.",
     "github": [
+     "#94, 7 Nov",
      "#72, 31 Oct",
      "#64, 31 Oct",
      "#47, 24 Oct",
@@ -3185,7 +3192,7 @@
      "sortKey": 44640,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 31 Oct (review round 2):** `/status` and the health detail (the commit, the blue/green colour) only on the preview host (`system.stagingHost`, decided on the request's Host header, never X-Forwarded-Host) and the server's own internal addresses; a store's own domain or any other public host gets 404 on `/status` and a bare `{\"ok\":true}` from `/api/health` (`apps/web/src/lib/status-host.ts`) (#72)"
+     "text": "**Updated 31 Oct (review round 2):** `/status` and the health detail (the commit, the blue/green colour) only on the preview host (`system.stagingHost`, decided on the request's Host header, never X-Forwarded-Host) and the server's own internal addresses; a store's own domain or any other public host gets 404 on `/status` and a bare `{\"ok\":true}` from `/api/health` (`apps/web/src/lib/status-host.ts`) (#72); **follow-up (7 Nov, #94; follow-up 209):** the palette's recent pages per person and the \"g d / g o\" key jumps (registry v263 `admin.shell`: recentPages 0 = off, keyJumps off)"
     },
     {
      "date": "",
@@ -3329,8 +3336,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "`packages/auth`: staff login (e-mail + password, scrypt hash, wrong-try pause, login alerts), customer password login per store; opaque session tokens stored hashed in httpOnly `__Host-` cookies, idle and total time limits, device list, \"log out everywhere\"; 2FA by authenticator app (seed in the vault, owner setting, default off); every rule a `security.*` setting; first owner set up on the server (`auth create-owner`), no owner data in the repo. SMS code on a new device comes with PR 130. 20 Oct (owner 15:26): `auth reset-owner` + `owner-reset.yml`, a new first password from the server when the owner cannot sign in",
+    "note": "`packages/auth`: staff login (e-mail + password, scrypt hash, wrong-try pause, login alerts), customer password login per store; opaque session tokens stored hashed in httpOnly `__Host-` cookies, idle and total time limits, device list, \"log out everywhere\"; 2FA by authenticator app (seed in the vault, owner setting, default off); every rule a `security.*` setting; first owner set up on the server (`auth create-owner`), no owner data in the repo. SMS code on a new device comes with PR 130. 20 Oct (owner 15:26): `auth reset-owner` + `owner-reset.yml`, a new first password from the server when the owner cannot sign in; **follow-up (7 Nov, #94; follow-up 609):** with `security.loginLockoutByNetwork` on (registry v271, off), wrong admin passwords pause the e-mail only for the network they came from (IPv4 /24, IPv6 /48) and a higher per-e-mail ceiling still pauses it everywhere",
     "github": [
+     "#94, 7 Nov",
      "#19, 20 Oct",
      "#18, 20 Oct",
      "#9 (commit `fa6b77e`), 20 Oct 05:09 (Dhaka)"
@@ -3339,7 +3347,8 @@
    "builtFacts": {
     "routes": [],
     "settings": [
-     "security.*"
+     "security.*",
+     "security.loginLockoutByNetwork"
     ],
     "code": [
      "packages/auth",
@@ -3801,8 +3810,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "role builder: permission catalogue in code, roles as data; seeded owner role always holds every permission and cannot be archived or stripped; nobody grants more than they hold; the last owner cannot be paused or removed; roles archived, never deleted; admin API under `/api/admin/roles`, `/staff`, `/permissions` (screens come with the admin shell). 23 Oct (PR 12 shell): role start pages as a setting, `admin.startPages` (empty: everyone starts on the Dashboard); the menu's Dashboard always opens it",
+    "note": "role builder: permission catalogue in code, roles as data; seeded owner role always holds every permission and cannot be archived or stripped; nobody grants more than they hold; the last owner cannot be paused or removed; roles archived, never deleted; admin API under `/api/admin/roles`, `/staff`, `/permissions` (screens come with the admin shell). 23 Oct (PR 12 shell): role start pages as a setting, `admin.startPages` (empty: everyone starts on the Dashboard); the menu's Dashboard always opens it; **follow-up (7 Nov, #94; follow-up 205):** Settings › More › Start & search (`/admin/settings/shell`): the start page per role, search and badges, the Dashboard cards and the palette's two helpers; `settings.read` to see, `settings.write` to save, audited",
     "github": [
+     "#94, 7 Nov",
      "#35, 24 Oct",
      "#9 (commit `fa6b77e`), 20 Oct 05:09 (Dhaka)"
     ]
@@ -3811,10 +3821,13 @@
     "routes": [
      "/api/admin/roles",
      "/staff",
-     "/permissions"
+     "/permissions",
+     "/admin/settings/shell"
     ],
     "settings": [
-     "admin.startPages"
+     "admin.startPages",
+     "settings.read",
+     "settings.write"
     ],
     "code": [],
     "names": [],
@@ -7919,8 +7932,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "product reviews on the product page (`pdp.reviews`, registry v35, on: up to 3, photo reviews first, the summary box, the rating line under the title, the buyer's height · weight · \"bought L\" line, the verified-buyer tag, his photo, \"Questions?\"; one sliding row on the shared slider engine with its own tested mouse, touch and keyboard pause and resume) and the whole journey behind it (SIM-F-008 acceptance test: review submitted → in the shop → approved → on the page → wallet credited). Only a buyer writes one, from My account, about a line of his own **delivered** order (`reviews.submit`: `onlyDelivered` on, `withinDays` 90, `bodyMax` 1200, his fit, height, weight and one photo up to 8 MB); every review is saved **PENDING** and nothing of it is shown anywhere — not on the page, not in the average, not in the search-engine rating — until staff approve it through the admin API `/api/admin/reviews` (permissions `reviews.read`, `reviews.moderate`, `reviews.write`; approve · hide · reject · restore, the verified mark, the shop's own reviews, `reviews.moderation`: `oneReviewPerLine` on, `verifyFromOrder` on); the photo-review perk is a setting **off with no amount** (`reviews.photoReward`: `minRating` 4, `onePerOrder` on) and, once the owner switches it on with his own figure, it pays one CREDIT in the existing wallet ledger at approval only, keyed by the review so it can never pay twice (CLAUDE.md rule 6, CN-018); PR 59's size learning now reads the approved fit words (`approvedFitSignals`); customer photo uploads go through the library (`uploadCustomerImage`, folder `review-photos`); migration `0021_reviews` (additive); sample reviews in the sample seed and a delivered sample order (TRY-65) for the gate; no admin screen (the moderation queue is follow-up 230 on the new admin shell)",
+    "note": "product reviews on the product page (`pdp.reviews`, registry v35, on: up to 3, photo reviews first, the summary box, the rating line under the title, the buyer's height · weight · \"bought L\" line, the verified-buyer tag, his photo, \"Questions?\"; one sliding row on the shared slider engine with its own tested mouse, touch and keyboard pause and resume) and the whole journey behind it (SIM-F-008 acceptance test: review submitted → in the shop → approved → on the page → wallet credited). Only a buyer writes one, from My account, about a line of his own **delivered** order (`reviews.submit`: `onlyDelivered` on, `withinDays` 90, `bodyMax` 1200, his fit, height, weight and one photo up to 8 MB); every review is saved **PENDING** and nothing of it is shown anywhere — not on the page, not in the average, not in the search-engine rating — until staff approve it through the admin API `/api/admin/reviews` (permissions `reviews.read`, `reviews.moderate`, `reviews.write`; approve · hide · reject · restore, the verified mark, the shop's own reviews, `reviews.moderation`: `oneReviewPerLine` on, `verifyFromOrder` on); the photo-review perk is a setting **off with no amount** (`reviews.photoReward`: `minRating` 4, `onePerOrder` on) and, once the owner switches it on with his own figure, it pays one CREDIT in the existing wallet ledger at approval only, keyed by the review so it can never pay twice (CLAUDE.md rule 6, CN-018); PR 59's size learning now reads the approved fit words (`approvedFitSignals`); customer photo uploads go through the library (`uploadCustomerImage`, folder `review-photos`); migration `0021_reviews` (additive); sample reviews in the sample seed and a delivered sample order (TRY-65) for the gate; no admin screen (the moderation queue is follow-up 230 on the new admin shell); **follow-ups (7 Nov, #94; follow-ups 238, 237):** \"Rate & review\" on delivered order cards in My account and on a delivered order's thank-you page while the shop takes reviews; the photo reward's figure beside it by the form's own rule (`showOnForm`)",
     "github": [
+     "#94, 7 Nov",
      "#35, 24 Oct"
     ]
    },
@@ -7949,7 +7963,8 @@
      "approvedFitSignals",
      "uploadCustomerImage",
      "review-photos",
-     "0021_reviews"
+     "0021_reviews",
+     "showOnForm"
     ],
     "tests": [
      "one sliding row on the shared slider engine with its own tested mouse, touch and keyboard pause and resume) and the whole journey behind it (SIM-F-008 acceptance test: review submitted → in the shop → approved → on the page → wallet credited)"
@@ -8278,13 +8293,16 @@
     "date": "2026-10-23",
     "note": "storefront search: the header icon and the phone menu's \"Search\" open the demo's window (phone) or the panel under the header (computer, D-014) with live suggestions — help pages, categories, products, \"See all N results\" (`GET /search/suggest`); one index across products, categories and help pages (follow-up 73: \"delivery\", \"exchange\", Bengali words; a \"Coming soon\" page is never offered); prefix, typo and synonym matching with Bengali keywords (`search.words`, sample lists); Meilisearch when its URL and key are set and its index is current, otherwise PostgreSQL (`@extas/search`); indexing by the worker's `search.index` job, one per catalogue version (idempotent); only live, sellable products; SIM-F-035 test (a size sold out in every colour is crossed out, never hidden); settings registry v24 (`registry-search.ts`); screenshots `docs/qa/screenshots/pr-72/`",
     "github": [
+     "#94, 7 Nov",
      "#93, 7 Nov",
      "#79, 1 Nov",
      "#32, 23 Oct"
     ]
    },
    "builtFacts": {
-    "routes": [],
+    "routes": [
+     "/api/shop/try-delivery"
+    ],
     "settings": [
      "search.words",
      "search.index",
@@ -8304,7 +8322,8 @@
     ],
     "tests": [
      "SIM-F-035 test (a size sold out in every colour is crossed out, never hidden)",
-     "test `search.db.test.ts` (\"classic shrit\" on the fake Meilisearch and on PostgreSQL)"
+     "test `search.db.test.ts` (\"classic shrit\" on the fake Meilisearch and on PostgreSQL)",
+     "follow-up 104):** a test-server fill (`/api/shop/try-delivery`, 404 on the live shop) gives the sample shop a delivery rule, and the device gate measures search's delivery answer and /help/delivery with it in both languages"
     ]
    },
    "updates": [
@@ -8334,7 +8353,7 @@
      "sortKey": 33120,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 1 Nov (go-live gate live run 3; #79):** a misspelt general word (\"shrit\", one slip from \"shirt\"; `search.match.oneTypoAt`) is dropped on the Meilisearch retry too, by `match.ts` `isGeneral`, the rule the PostgreSQL path already drops by, so \"pollo shrit\" finds the polo (the gate-c360 live run of 1 Nov 22:20 found nothing on all six screens); test `search.db.test.ts` (\"classic shrit\" on the fake Meilisearch and on PostgreSQL); **follow-up (7 Nov, #93; follow-up 106):** ↑ / ↓ move through the search suggestions (`aria-activedescendant`), Enter opens the highlighted one"
+     "text": "**Updated 1 Nov (go-live gate live run 3; #79):** a misspelt general word (\"shrit\", one slip from \"shirt\"; `search.match.oneTypoAt`) is dropped on the Meilisearch retry too, by `match.ts` `isGeneral`, the rule the PostgreSQL path already drops by, so \"pollo shrit\" finds the polo (the gate-c360 live run of 1 Nov 22:20 found nothing on all six screens); test `search.db.test.ts` (\"classic shrit\" on the fake Meilisearch and on PostgreSQL); **follow-up (7 Nov, #93; follow-up 106):** ↑ / ↓ move through the search suggestions (`aria-activedescendant`), Enter opens the highlighted one; **follow-up (7 Nov, #94; follow-up 104):** a test-server fill (`/api/shop/try-delivery`, 404 on the live shop) gives the sample shop a delivery rule, and the device gate measures search's delivery answer and /help/delivery with it in both languages"
     }
    ],
    "mentions": [
@@ -10171,8 +10190,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "combo gallery (`ComboGallery.tsx`): the set picture of the picked colours (each piece's photo in its colour, else its drawing), a tab per piece with its colour dot, and the chosen piece's views — front, back, detail, true colour — each its own photo or the drawing of that view; a colour pick changes the picture at once",
+    "note": "combo gallery (`ComboGallery.tsx`): the set picture of the picked colours (each piece's photo in its colour, else its drawing), a tab per piece with its colour dot, and the chosen piece's views — front, back, detail, true colour — each its own photo or the drawing of that view; a colour pick changes the picture at once; **follow-up (7 Nov, #94; follow-up 171):** the combo page's set picture is the owner's set photo (PR 575) while the picked colours are exactly its own, else the pieces side by side",
     "github": [
+     "#94, 7 Nov",
      "#34, 23 Oct"
     ]
    },
@@ -10186,7 +10206,9 @@
     "tests": []
    },
    "updates": [],
-   "mentions": [],
+   "mentions": [
+    575
+   ],
    "blueprint": [
     {
      "section": "D8. Combos — the biggest-selling section (V2 · S03 · PR 89–104, 571–576)",
@@ -11075,8 +11097,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "combo in the bag, templates B1–B5 (`combos.template.bag` default **current** = the PR 108 set line, ~~B5~~): B1 grouped card with each piece's picture, B2 sizes changed in the bag (`PATCH /api/bag/sets`, re-checked and re-priced), B3 B2 + \"Add 1 more → 3 for ৳…\" (the 3-piece set takes the pair's place, lines archived), B4 each piece's own price + one \"Combo discount\" line, B5 one compact row per set from `combos.bag.compactFrom` (3) sets opening to B2; `bagSets` gives the rule and the resolved look; `BagSetView` pieces carry colour, size, own price, stock and sizes; `?btpl=` preview; test servers `POST /api/bag/try?sets=N`",
+    "note": "combo in the bag, templates B1–B5 (`combos.template.bag` default **current** = the PR 108 set line, ~~B5~~): B1 grouped card with each piece's picture, B2 sizes changed in the bag (`PATCH /api/bag/sets`, re-checked and re-priced), B3 B2 + \"Add 1 more → 3 for ৳…\" (the 3-piece set takes the pair's place, lines archived), B4 each piece's own price + one \"Combo discount\" line, B5 one compact row per set from `combos.bag.compactFrom` (3) sets opening to B2; `bagSets` gives the rule and the resolved look; `BagSetView` pieces carry colour, size, own price, stock and sizes; `?btpl=` preview; test servers `POST /api/bag/try?sets=N`; **follow-up (7 Nov, #94; follow-up 351):** a replaced set keeps its place in the bag",
     "github": [
+     "#94, 7 Nov",
      "#41, 24 Oct"
     ]
    },
@@ -11206,8 +11229,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "combo template test matrix and 100-point ranking (QA tool, no admin screen): `tools/combo-matrix.mjs` plays every product, category and bag template on the sample sets (pair, pack, top + bottom, mixed) at 360, 393, 430 and 1280 px through the `?tpl=` / `?btpl=` previews, `tools/combo-ranking.mjs` scores taps to bag, first-screen completeness, words, layout faults, tap targets, money against the current look (a different total knocks a template out); config `docs/qa/combo-matrix.json`, results `docs/qa/combo-ranking/latest.json`, report `docs/qa/COMBO-TEMPLATE-MATRIX.md` (Bengali summary first); nothing switched",
+    "note": "combo template test matrix and 100-point ranking (QA tool, no admin screen): `tools/combo-matrix.mjs` plays every product, category and bag template on the sample sets (pair, pack, top + bottom, mixed) at 360, 393, 430 and 1280 px through the `?tpl=` / `?btpl=` previews, `tools/combo-ranking.mjs` scores taps to bag, first-screen completeness, words, layout faults, tap targets, money against the current look (a different total knocks a template out); config `docs/qa/combo-matrix.json`, results `docs/qa/combo-ranking/latest.json`, report `docs/qa/COMBO-TEMPLATE-MATRIX.md` (Bengali summary first); nothing switched; **follow-up (7 Nov, #94; follow-up 354):** the combo matrix measures tap size by hit area, the device gate's one rule",
     "github": [
+     "#94, 7 Nov",
      "#41, 24 Oct"
     ]
    },
@@ -12482,8 +12506,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "\"Add to this parcel\" (`orders.addOn`, off): a real `isAddOn` order line before booking, priced as its product page, held from stock, the money moving by exactly that line; refused once booked (SIM-F-004 test); staff `POST /api/admin/orders/:id/lines` (+ `/remove`, permission `orders.lines`); customer `POST /api/account/parcel`, `/parcel-add`, `/parcel-remove`; ERP gets a new revision",
+    "note": "\"Add to this parcel\" (`orders.addOn`, off): a real `isAddOn` order line before booking, priced as its product page, held from stock, the money moving by exactly that line; refused once booked (SIM-F-004 test); staff `POST /api/admin/orders/:id/lines` (+ `/remove`, permission `orders.lines`); customer `POST /api/account/parcel`, `/parcel-add`, `/parcel-remove`; ERP gets a new revision; **follow-up (7 Nov, #94; follow-up 215):** \"Add a line\" (a SKU and how many, a COD order before booking, `orders.lines`) and \"Remove\" (an added line kept, struck through) on the admin order screen, on the existing lines commands",
     "github": [
+     "#94, 7 Nov",
      "#35, 24 Oct"
     ]
    },
@@ -12541,8 +12566,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "\"Complete your look\" on the thank-you page (`thanks.look`, off, max 3): only pieces a running combo pairs with the order (@extas/combos `lookFor`), their live price, Add / Remove through PR 127; hidden when there is nothing honest to show; test servers `POST /api/shop/try-look` (smoke: 404 on the deployed shop)",
+    "note": "\"Complete your look\" on the thank-you page (`thanks.look`, off, max 3): only pieces a running combo pairs with the order (@extas/combos `lookFor`), their live price, Add / Remove through PR 127; hidden when there is nothing honest to show; test servers `POST /api/shop/try-look` (smoke: 404 on the deployed shop); **follow-up (7 Nov, #94; follow-up 217):** \"Complete your look\" on the order's page in My account too while its add-on window is open (the same `thanks.look` switch and the same Add)",
     "github": [
+     "#94, 7 Nov",
      "#35, 24 Oct"
     ]
    },
@@ -13103,8 +13129,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "the advance-payment checkout mode (SIM-F-016 acceptance test passes): only while `checkout.advance` is on, only once the customer has filled everything in (a name, a real mobile number, a settled address), only where Cash on Delivery would show, not a gift and with a prepaid method open: the owner's layers look at the same risk model before the order exists (@extas/orders `checkoutFlag`); flagged, the same page swaps the payment section (codOff ADVANCE, bKash, Nagad and card, one neutral line in en/bn, never a score, a band or a layer name); a part or the delivery charge ahead is a COD order priced as COD with that much paid now (no prepaid reward), the full amount ahead an ordinary prepaid order (purposes ADVANCE_DELIVERY_CHARGE, PART_ADVANCE, FULL_ADVANCE); the order waits in AWAITING_ADVANCE (`askCheckoutAdvance`), the paid advance brings it back (`recordAdvance`), the flag event kept (ASKED); nothing blocks, cancels or reprices",
+    "note": "the advance-payment checkout mode (SIM-F-016 acceptance test passes): only while `checkout.advance` is on, only once the customer has filled everything in (a name, a real mobile number, a settled address), only where Cash on Delivery would show, not a gift and with a prepaid method open: the owner's layers look at the same risk model before the order exists (@extas/orders `checkoutFlag`); flagged, the same page swaps the payment section (codOff ADVANCE, bKash, Nagad and card, one neutral line in en/bn, never a score, a band or a layer name); a part or the delivery charge ahead is a COD order priced as COD with that much paid now (no prepaid reward), the full amount ahead an ordinary prepaid order (purposes ADVANCE_DELIVERY_CHARGE, PART_ADVANCE, FULL_ADVANCE); the order waits in AWAITING_ADVANCE (`askCheckoutAdvance`), the paid advance brings it back (`recordAdvance`), the flag event kept (ASKED); nothing blocks, cancels or reprices; **follow-up (7 Nov, #94; follow-up 407):** the thank-you page and his order page say what he already paid ahead on a COD order (display only)",
     "github": [
+     "#94, 7 Nov",
      "#45, 24 Oct"
     ]
    },
@@ -13380,8 +13407,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-23",
-    "note": "gift mode (`checkout.gift`, off; advance required, full / fixed / percent, note 200, date 30 days, hide prices ticked): \"Send as a gift\" under the bag's Checkout; `/checkout?gift=1` with the sender's name and any-country phone or e-mail, the gift note, \"deliver on or after\"; the receiver is the order's name, phone and address; full advance = no COD, part = flag GIFT_ADVANCE, `advanceRequiredMinor` and a call task (S07 hook); no receiver account; invoice hides prices; `deliveryTarget` for the sticker and booking (SIM-F-007 test); migration `0020_gift_mode`",
+    "note": "gift mode (`checkout.gift`, off; advance required, full / fixed / percent, note 200, date 30 days, hide prices ticked): \"Send as a gift\" under the bag's Checkout; `/checkout?gift=1` with the sender's name and any-country phone or e-mail, the gift note, \"deliver on or after\"; the receiver is the order's name, phone and address; full advance = no COD, part = flag GIFT_ADVANCE, `advanceRequiredMinor` and a call task (S07 hook); no receiver account; invoice hides prices; `deliveryTarget` for the sticker and booking (SIM-F-007 test); migration `0020_gift_mode`; **follow-ups (7 Nov, #94; follow-ups 210, 214 part):** \"Send as a gift\" on the product page (the chosen piece into the bag, the checkout opened as a gift, while `checkout.gift` is on); the gift on the admin order screen and its receipt fields in the ERP order document behind `erp.push.gift` (registry v264, off; never the sender's contact)",
     "github": [
+     "#94, 7 Nov",
      "#35, 24 Oct"
     ]
    },
@@ -13390,7 +13418,8 @@
      "/checkout?gift=1"
     ],
     "settings": [
-     "checkout.gift"
+     "checkout.gift",
+     "erp.push.gift"
     ],
     "code": [],
     "names": [
@@ -14613,8 +14642,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "risk-sectioned order list (registry v46): `risk.sections` (on; waits for a person: re-order, new identity, high; bands high / medium; signals recentOrder + inTransit, identityMatch, deviceMatch, ipPhones) — each new order placed once in one section with its timeline note (duplicate, re-order, new identity, high, watch, prepaid, clear; command `riskSection`, status untouched), a strong section opens a risk review (FraudAlert kind `risk`); decisions approve / hold (a reason) / ask (RISK_CHECK call task) / one parcel / decline (RISK_DECLINED, never a block); SIM-F-014 machine command `book` refused IN_REVIEW, `bookWith`, view `readyToBook`; SIM-F-015 signals `identityMatch` (name + alike address, another number, the refusal named) and `orderPieces` (both off); SIM-F-020 `toConfirm` COD only, view `prepaid`, Dashboard row \"Prepaid orders to confirm\"; follow-up 295: risk column, band / section filters, \"highest risk first\" sort on `/admin/orders`; \"Risk review · <section>\" card on the order page; no migration",
+    "note": "risk-sectioned order list (registry v46): `risk.sections` (on; waits for a person: re-order, new identity, high; bands high / medium; signals recentOrder + inTransit, identityMatch, deviceMatch, ipPhones) — each new order placed once in one section with its timeline note (duplicate, re-order, new identity, high, watch, prepaid, clear; command `riskSection`, status untouched), a strong section opens a risk review (FraudAlert kind `risk`); decisions approve / hold (a reason) / ask (RISK_CHECK call task) / one parcel / decline (RISK_DECLINED, never a block); SIM-F-014 machine command `book` refused IN_REVIEW, `bookWith`, view `readyToBook`; SIM-F-015 signals `identityMatch` (name + alike address, another number, the refusal named) and `orderPieces` (both off); SIM-F-020 `toConfirm` COD only, view `prepaid`, Dashboard row \"Prepaid orders to confirm\"; follow-up 295: risk column, band / section filters, \"highest risk first\" sort on `/admin/orders`; \"Risk review · <section>\" card on the order page; no migration; **follow-ups (7 Nov, #94; follow-ups 320, 326):** a paid prepaid order nothing flagged confirms by itself (`orders.prepaid.selfConfirm`, registry v266, off; it only confirms); the list, the order page and the bulk skip name what the review is",
     "github": [
+     "#94, 7 Nov",
      "#40, 24 Oct"
     ]
    },
@@ -14623,7 +14653,8 @@
      "/admin/orders"
     ],
     "settings": [
-     "risk.sections"
+     "risk.sections",
+     "orders.prepaid.selfConfirm"
     ],
     "code": [],
     "names": [
@@ -15275,8 +15306,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "zone, charge and area admin on the new shell (`/admin/delivery/zones`, demo V12.3): the three band cards with the COD limit per band (`codLimitMinor`, empty = none), the sub-area band's own switch (its `enabled`, off: its list entries are ignored and those places go by the map, never offered at checkout; folded modes need no own charge); Areas: open a place, rename (the old name kept as a spelling), alternate spellings (40 at most), move between bands or back to the map, add an owner-made place under a parent, merge a duplicate of the same level (the source archived, never deleted; names become spellings, children and saved addresses move, past orders unchanged; refusals DUPLICATE_PLACE, LEVEL_MISMATCH, BAND_CONFLICT); the importer keeps owner names and spellings and never revives a merged place; `POST /api/admin/delivery/places`, `GET/PATCH /api/admin/delivery/places/:id`, `POST …/places/:id/merge` (`delivery.areas`); guide `pages/delivery/zones.md`; owner charges stay empty; no setting, no migration",
+    "note": "zone, charge and area admin on the new shell (`/admin/delivery/zones`, demo V12.3): the three band cards with the COD limit per band (`codLimitMinor`, empty = none), the sub-area band's own switch (its `enabled`, off: its list entries are ignored and those places go by the map, never offered at checkout; folded modes need no own charge); Areas: open a place, rename (the old name kept as a spelling), alternate spellings (40 at most), move between bands or back to the map, add an owner-made place under a parent, merge a duplicate of the same level (the source archived, never deleted; names become spellings, children and saved addresses move, past orders unchanged; refusals DUPLICATE_PLACE, LEVEL_MISMATCH, BAND_CONFLICT); the importer keeps owner names and spellings and never revives a merged place; `POST /api/admin/delivery/places`, `GET/PATCH /api/admin/delivery/places/:id`, `POST …/places/:id/merge` (`delivery.areas`); guide `pages/delivery/zones.md`; owner charges stay empty; no setting, no migration; **follow-up (7 Nov, #94; follow-up 416):** the owner's names and merges of a place are columns on GeoArea (migration `0165_geo_owner_columns`, additive, filled from his audit rows), set with each change and read by the import",
     "github": [
+     "#94, 7 Nov",
      "#46, 24 Oct"
     ]
    },
@@ -15295,7 +15327,8 @@
     ],
     "names": [
      "codLimitMinor",
-     "enabled"
+     "enabled",
+     "0165_geo_owner_columns"
     ],
     "tests": []
    },
@@ -16689,8 +16722,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "the payment gateway contract in `@extas/adapters` (initiate, read the callback, confirm, query; one interface for bKash, Nagad and card) with the practice gateway; bKash tokenized checkout (grant, create, execute, status) behind it, sandbox and live, keys only in Keys & connections (App key, App secret, username, password, the bKash address); on the practice gateway until the keys pass the Test button (A1.3); guide `docs/admin-guide/integrations.md`",
+    "note": "the payment gateway contract in `@extas/adapters` (initiate, read the callback, confirm, query; one interface for bKash, Nagad and card) with the practice gateway; bKash tokenized checkout (grant, create, execute, status) behind it, sandbox and live, keys only in Keys & connections (App key, App secret, username, password, the bKash address); on the practice gateway until the keys pass the Test button (A1.3); guide `docs/admin-guide/integrations.md`; **follow-up (7 Nov, #94; follow-up 606):** the Pathao, Steadfast, bKash, Nagad and SSLCommerz adapters and the messages turn minor units into amounts with the currency's own fraction digits (`@extas/adapters/money`), never a written-in hundred; taka amounts unchanged",
     "github": [
+     "#94, 7 Nov",
      "#41, 24 Oct"
     ]
    },
@@ -16699,7 +16733,8 @@
     "settings": [],
     "code": [
      "@extas/adapters",
-     "docs/admin-guide/integrations.md"
+     "docs/admin-guide/integrations.md",
+     "@extas/adapters/money"
     ],
     "names": [],
     "tests": [
@@ -17440,8 +17475,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "the print queue and the handover sheet: every press one PrintJob (the parcels, who, when), a repeat press with the same key one print (replay), a reprint the same parcel with its reason (`delivery.sticker.queue`: reason asked on, 20 recent prints), \"Recent prints\" on the print page; the rider's handover sheet per courier (one open batch under a row lock, A4 PDF on the letterhead, ticks, COD total, signatures; `delivery.handover.sheet`: A4, 150 dpi, en, receiver name and signatures on, pack on handover on) and \"Handed over\" (every order HANDED_OVER through the order service, audited; `ALREADY_HANDED_OVER` second time); permission `fulfilment.handover`, the packing pages on `fulfilment.read`; Orders → Packing & print → Handover",
+    "note": "the print queue and the handover sheet: every press one PrintJob (the parcels, who, when), a repeat press with the same key one print (replay), a reprint the same parcel with its reason (`delivery.sticker.queue`: reason asked on, 20 recent prints), \"Recent prints\" on the print page; the rider's handover sheet per courier (one open batch under a row lock, A4 PDF on the letterhead, ticks, COD total, signatures; `delivery.handover.sheet`: A4, 150 dpi, en, receiver name and signatures on, pack on handover on) and \"Handed over\" (every order HANDED_OVER through the order service, audited; `ALREADY_HANDED_OVER` second time); permission `fulfilment.handover`, the packing pages on `fulfilment.read`; Orders → Packing & print → Handover; **follow-up (7 Nov, #94; follow-up 465):** \"A reason is needed\" says what to do on the screen it shows on (a reprint's reason, a refusal reason)",
     "github": [
+     "#94, 7 Nov",
      "#48, 25 Oct"
     ]
    },
@@ -18542,8 +18578,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-24",
-    "note": "return-reason capture (SIM-F-038; no migration; `orders.refusal.reasons` v58 adds \"didn't like it\" and \"ordered by mistake\" beside size, not as in the picture and the rest, the owner's list): the courier's note on a door outcome kept as the rider's note (ShipmentEvent.riderNote, follow-up 345); a person records the reason with the rider's words (`POST /api/admin/delivery/parcels/:id/return-reason`, `delivery.outcomes`) on the parcel's one ReturnRecord (refused at the door or charge-paid), the timeline (`return.reason`) and the phone history (PR 521's `refusalKeys`); the order page's \"Why it came back\" row and band; `@extas/metrics` `returnReasons` by reason and kind, store-wide or per customer; nothing moves money; **follow-up (7 Nov, #93; follow-up 458):** the order page's Hold and Cancel reasons start on an empty \"Pick a reason\" and a reason is required",
+    "note": "return-reason capture (SIM-F-038; no migration; `orders.refusal.reasons` v58 adds \"didn't like it\" and \"ordered by mistake\" beside size, not as in the picture and the rest, the owner's list): the courier's note on a door outcome kept as the rider's note (ShipmentEvent.riderNote, follow-up 345); a person records the reason with the rider's words (`POST /api/admin/delivery/parcels/:id/return-reason`, `delivery.outcomes`) on the parcel's one ReturnRecord (refused at the door or charge-paid), the timeline (`return.reason`) and the phone history (PR 521's `refusalKeys`); the order page's \"Why it came back\" row and band; `@extas/metrics` `returnReasons` by reason and kind, store-wide or per customer; nothing moves money; **follow-up (7 Nov, #93; follow-up 458):** the order page's Hold and Cancel reasons start on an empty \"Pick a reason\" and a reason is required; **follow-up (7 Nov, #94; follow-up 456):** \"Change the reason\" on a returned parcel whose reason is already recorded (the same route, logged)",
     "github": [
+     "#94, 7 Nov",
      "#93, 7 Nov",
      "#49, 25 Oct"
     ]
@@ -20916,8 +20953,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "product page content architecture (After launch, batch 8; no setting): Fabric & care, Size & fit, Description and the delivery, exchange and returns rules in the HTML from the first response, only hidden while closed (C4.2)",
+    "note": "product page content architecture (After launch, batch 8; no setting): Fabric & care, Size & fit, Description and the delivery, exchange and returns rules in the HTML from the first response, only hidden while closed (C4.2); **follow-up (7 Nov, #94; follow-up 633):** the size chart's sizes and measurements are in the product page's first HTML, hidden like the other folded words; the chart window still loads on its own",
     "github": [
+     "#94, 7 Nov",
      "#82, 6 Nov"
     ]
    },
@@ -21358,8 +21396,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-31",
-    "note": "Core Web Vitals from real visitors and the monthly 4G lab (CN-031 lane A; migration `0066_web_vitals`: `WebVitalDay`, no DELETE for the app role; settings v72 `seo.vitals`: collect on, share 100, 28 days, targets from PR 10): shop pages report LCP, CLS, INP, TTFB and FCP to `/api/shop/vitals` (always 204); only daily bucket counts per metric, kind of page and phone/desktop are kept, never a visitor, address or time. Website › SEO \"Real visitors' speed\" card (75th percentile against the targets, phone LCP per kind of page, the newest lab run); a speed section on the Server page. `vitals-monthly.yml` runs `infra/deploy/vitals-lab.sh` → `tools/vitals-lab.mjs` on the VM (home, a category and a product page on a phone over slow 4G, the admin on desktop as the check account) into `state/vitals-lab.json`, each run kept once in `SpeedMeasurement` (source lab)",
+    "note": "Core Web Vitals from real visitors and the monthly 4G lab (CN-031 lane A; migration `0066_web_vitals`: `WebVitalDay`, no DELETE for the app role; settings v72 `seo.vitals`: collect on, share 100, 28 days, targets from PR 10): shop pages report LCP, CLS, INP, TTFB and FCP to `/api/shop/vitals` (always 204); only daily bucket counts per metric, kind of page and phone/desktop are kept, never a visitor, address or time. Website › SEO \"Real visitors' speed\" card (75th percentile against the targets, phone LCP per kind of page, the newest lab run); a speed section on the Server page. `vitals-monthly.yml` runs `infra/deploy/vitals-lab.sh` → `tools/vitals-lab.mjs` on the VM (home, a category and a product page on a phone over slow 4G, the admin on desktop as the check account) into `state/vitals-lab.json`, each run kept once in `SpeedMeasurement` (source lab); **follow-up (7 Nov, #94; follow-up 590):** the shop's own test browsers (smoke, journeys, monthly lab) send a check header; their speed readings are counted apart, never in the visitors' figures",
     "github": [
+     "#94, 7 Nov",
      "#70, 31 Oct"
     ]
    },
@@ -21381,7 +21420,9 @@
      "WebVitalDay",
      "SpeedMeasurement"
     ],
-    "tests": []
+    "tests": [
+     "follow-up 590):** the shop's own test browsers (smoke, journeys, monthly lab) send a check header"
+    ]
    },
    "updates": [
     {
@@ -21779,8 +21820,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-31",
-    "note": "Bengali translation gate (CN-031 lane B; settings v84 `registry-bengali.ts` `language.bengali.gate`; no migration): Website › SEO › Bengali pages (`/admin/website/seo/bengali`): every page that could be listed with whether its main content has Bengali text and whether it is marked ready; coverage %, waiting-for-check and missing counts, coverage by kind, filters, pages of 50; \"Mark ready\" per page or for a page of the list and \"Not ready\" (`seo.manage`, version-checked, audited `seo.bengali.ready`), only with Bengali text; nothing marked or unmarked by itself (a ready page that loses its Bengali is flagged, a gone page's mark listed as left over). `language.bengali.readyPages` still drives hreflang, robots and the sitemap under the same page keys. A not-ready Bengali page is `unlisted` as shipped, or `english` (the proxy sends it to its English twin with an uncached 307; bag, checkout, account and search never move), audited `seo.bengali.gate`. Guide `pages/website/seo-bengali.md`",
+    "note": "Bengali translation gate (CN-031 lane B; settings v84 `registry-bengali.ts` `language.bengali.gate`; no migration): Website › SEO › Bengali pages (`/admin/website/seo/bengali`): every page that could be listed with whether its main content has Bengali text and whether it is marked ready; coverage %, waiting-for-check and missing counts, coverage by kind, filters, pages of 50; \"Mark ready\" per page or for a page of the list and \"Not ready\" (`seo.manage`, version-checked, audited `seo.bengali.ready`), only with Bengali text; nothing marked or unmarked by itself (a ready page that loses its Bengali is flagged, a gone page's mark listed as left over). `language.bengali.readyPages` still drives hreflang, robots and the sitemap under the same page keys. A not-ready Bengali page is `unlisted` as shipped, or `english` (the proxy sends it to its English twin with an uncached 307; bag, checkout, account and search never move), audited `seo.bengali.gate`. Guide `pages/website/seo-bengali.md`; **follow-up (7 Nov, #94; follow-up 599):** while the Bengali gate sends visitors to English, a not-ready page's language switch marks Bengali \"coming soon\"; the \"Bengali pages ready\" figure opens Website › SEO › Bengali pages",
     "github": [
+     "#94, 7 Nov",
      "#70, 31 Oct"
     ]
    },
@@ -23142,6 +23184,7 @@
     "date": "2026-10-31",
     "note": "server-side event tracking (CN-031 lane B; C6.2, §13 R9; migration `0067_tracked_events`; settings v85 `registry-tracking.ts` `ads.tracking`, off as shipped; permissions `ads.tracking.read`, `ads.tracking.manage`): a product page seen and the checkout opened (same-site beacon `/api/shop/track`, the proxy's report bucket), an item put in the bag and an order placed (event id `purchase-<number>`, never twice on a replay); prices, value, category, colour and size read on the server, never from the browser; every hook quiet. `TrackedEvent`: one row per event id per store with the delivery state per platform. Only hashes leave (the visitor/customer id; the order's phone and e-mail only while matching is on, a gift's receiver never); no name, address or IP. Meta Conversions API, GA4 Measurement Protocol and TikTok Events API adapters as Keys & connections rows, on the mock until a key passes its Test; failed sends tried again up to the owner's number. Marketing › Tracking (`/admin/marketing/tracking`): connections, 7/30-day counts, sent per event × platform, \"Send waiting now\", \"Send test event\", the newest events, the settings card; audited. Guide `pages/marketing/tracking.md`",
     "github": [
+     "#94, 7 Nov",
      "#75, 1 Nov",
      "#70, 31 Oct"
     ]
@@ -23156,7 +23199,8 @@
      "ads.tracking.read",
      "ads.tracking.manage",
      "ads.attribution",
-     "ads.tracking.attribution"
+     "ads.tracking.attribution",
+     "tracking.sweep"
     ],
     "code": [
      "registry-tracking.ts",
@@ -23183,7 +23227,7 @@
      "sortKey": 44640,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** UTM tags and fbclid / gclid / ttclid kept in the first-party cookie `__Host-extas_src` and written on the order (`utmSource`, `utmMedium`, `utmCampaign`, `adPlatform`); a click's fbc when the pixel left none; setting `ads.attribution` (v230, on as shipped): days a visit counts, latest or first visit; card on Marketing › Tracking, audited `ads.tracking.attribution`."
+     "text": "**Updated 1 Nov (go-live gate customer 360°; #75):** UTM tags and fbclid / gclid / ttclid kept in the first-party cookie `__Host-extas_src` and written on the order (`utmSource`, `utmMedium`, `utmCampaign`, `adPlatform`); a click's fbc when the pixel left none; setting `ads.attribution` (v230, on as shipped): days a visit counts, latest or first visit; card on Marketing › Tracking, audited `ads.tracking.attribution`.; **follow-ups (7 Nov, #94; follow-ups 602, 605):** the worker sweeps tracked events still waiting once an hour (`tracking.sweep`, only while tracking is on) and a real event never goes to a platform unticked since it was recorded; the purchase event goes at placement only for cash on delivery with nothing to pay first, else from the gateway callback that makes the order PAID, once"
     }
    ],
    "mentions": [],
@@ -23951,8 +23995,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "referral programme (After launch, batch 8; `referrals.programme` v178, off, no rule, no reward; migration `0124_referral_uses`): the invite code on My account › For you (Copy, Share on WhatsApp) for signed-in customers; a friend's first order gets the owner's chosen Smart Rule; a number that ordered before and the own code refused in words; one use per order; Marketing › Referrals (`/admin/marketing/referrals`): codes, friends' orders, delivered, \"Give reward\" into the sharer's wallet (REFERRAL entry) once after a confirm with the wallet permission, up to the owner's most per customer",
+    "note": "referral programme (After launch, batch 8; `referrals.programme` v178, off, no rule, no reward; migration `0124_referral_uses`): the invite code on My account › For you (Copy, Share on WhatsApp) for signed-in customers; a friend's first order gets the owner's chosen Smart Rule; a number that ordered before and the own code refused in words; one use per order; Marketing › Referrals (`/admin/marketing/referrals`): codes, friends' orders, delivered, \"Give reward\" into the sharer's wallet (REFERRAL entry) once after a confirm with the wallet permission, up to the owner's most per customer; **follow-up (7 Nov, #94; follow-up 631):** the bag a page draws is read for the signed-in customer (his own invite code no longer shows as applied; a members-only coupon no longer asks a signed-in member to log in)",
     "github": [
+     "#94, 7 Nov",
      "#82, 6 Nov"
     ]
    },
@@ -24053,8 +24098,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-06",
-    "note": "incomplete-order follow-up, capped at two messages (After launch, batch 9; `orders.followUp` v210, off; the offer needs a live code picked with `rules.approve`; migration `0126_checkout_follow_up_link`): one reminder about an hour later by WhatsApp or SMS on a way he said yes to offers on, with a link that puts his exact bag back (`/api/bag/back/<code>`), then one offer, then nothing; never after an order, a stop, \"handled\" or past the catch-up hours; 4 templates per language and channel; Orders › Incomplete's follow-up card and counts",
+    "note": "incomplete-order follow-up, capped at two messages (After launch, batch 9; `orders.followUp` v210, off; the offer needs a live code picked with `rules.approve`; migration `0126_checkout_follow_up_link`): one reminder about an hour later by WhatsApp or SMS on a way he said yes to offers on, with a link that puts his exact bag back (`/api/bag/back/<code>`), then one offer, then nothing; never after an order, a stop, \"handled\" or past the catch-up hours; 4 templates per language and channel; Orders › Incomplete's follow-up card and counts; **follow-ups (7 Nov, #94; follow-ups 641, 643):** a chat app's link preview robot on the bag-back link is sent on without a bag being made; the unfinished checkout's offer is queued and sent only while the rules engine says its code is usable now",
     "github": [
+     "#94, 7 Nov",
      "#83, 6 Nov"
     ]
    },
@@ -24713,8 +24759,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-29",
-    "note": "the customer model, the merge rules and the single view by phone (new package `@extas/customers`; migration `0047_customer_merge` additive: `Customer.mergedIntoId` / `mergedAt` with an index, `CustomerMerge` with `MERGED` / `NOT_SAME`, the rules that matched, the note, who, the Idempotency-Key and the undo; registry v60 `registry-customers.ts`): a merge only points the joining profile at the one that stays (one level, nothing moves, nothing is deleted), refused when either is erased, archived, already merged or has merged profiles of its own; \"not the same person\" keeps a pair from being suggested again; a split (or a \"not the same\" taken back) needs a note and is audited. Suggestions from `customers.merge` {suggest on, signals e-mail · WhatsApp number is the other's phone · name + address · the same identity on an order (all on), 20 a page, note required off}. The single view by phone: every profile and every number of the person, order counts and lifetime value from `@extas/metrics` (`customerKpis`: Sales = delivered only beside Ordered value, CN-022; refusals without the shop's own mistakes), any written form of a number finds him (`customerByPhone`). Phone masked without `customers.phone` (`customers.phoneMask` {first 3, last 3}); every open and every copy or call written to \"Who looked at this customer\" first (Note 24.1). Permissions `customers.read`, `customers.phone`, `customers.merge`. Customers → To review (`/admin/customers/review`, demo V12.4 CUS-05): the \"Same person?\" pairs side by side, Merge / Not the same person, the decisions with Split; API under `/api/admin/customers`",
+    "note": "the customer model, the merge rules and the single view by phone (new package `@extas/customers`; migration `0047_customer_merge` additive: `Customer.mergedIntoId` / `mergedAt` with an index, `CustomerMerge` with `MERGED` / `NOT_SAME`, the rules that matched, the note, who, the Idempotency-Key and the undo; registry v60 `registry-customers.ts`): a merge only points the joining profile at the one that stays (one level, nothing moves, nothing is deleted), refused when either is erased, archived, already merged or has merged profiles of its own; \"not the same person\" keeps a pair from being suggested again; a split (or a \"not the same\" taken back) needs a note and is audited. Suggestions from `customers.merge` {suggest on, signals e-mail · WhatsApp number is the other's phone · name + address · the same identity on an order (all on), 20 a page, note required off}. The single view by phone: every profile and every number of the person, order counts and lifetime value from `@extas/metrics` (`customerKpis`: Sales = delivered only beside Ordered value, CN-022; refusals without the shop's own mistakes), any written form of a number finds him (`customerByPhone`). Phone masked without `customers.phone` (`customers.phoneMask` {first 3, last 3}); every open and every copy or call written to \"Who looked at this customer\" first (Note 24.1). Permissions `customers.read`, `customers.phone`, `customers.merge`. Customers → To review (`/admin/customers/review`, demo V12.4 CUS-05): the \"Same person?\" pairs side by side, Merge / Not the same person, the decisions with Split; API under `/api/admin/customers`; **follow-up (7 Nov, #94; follow-up 478):** the sample seed gives the sample customer a \"Same person?\" pair and a merged profile, so the smoke test and the device gate see both",
     "github": [
+     "#94, 7 Nov",
      "#51, 30 Oct"
     ]
    },
@@ -24744,7 +24791,9 @@
      "customerKpis",
      "customerByPhone"
     ],
-    "tests": []
+    "tests": [
+     "follow-up 478):** the sample seed gives the sample customer a \"Same person?\" pair and a merged profile, so the smoke test and the device gate see both"
+    ]
    },
    "updates": [],
    "mentions": [],
@@ -24776,8 +24825,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-29",
-    "note": "Customers → All customers (`/admin/customers`, demo V12.4 CUS-01), the section's front page: four numbers (customers, returning, at risk, refused before), the views all · new · returning · VIP · at risk · refused before · exchanged · no offers with their counts, search by name, e-mail or at least 4 digits of a number in any form, the first-source filter and five sorts, one row per person (a merged profile's orders on his row) with Sales (delivered only) and Ordered value under it, true-delivery rate, refusals not the shop's fault, last order and offers; a table on a desktop, one card per person on a phone; `customers.list` {50 a page, returning from 2 orders, at risk after 60 days, VIP figure empty = no VIP view, CN-018}; `customerOrdersSql` in `@extas/metrics`; `GET /api/admin/customers`; no export (PR 299)",
+    "note": "Customers → All customers (`/admin/customers`, demo V12.4 CUS-01), the section's front page: four numbers (customers, returning, at risk, refused before), the views all · new · returning · VIP · at risk · refused before · exchanged · no offers with their counts, search by name, e-mail or at least 4 digits of a number in any form, the first-source filter and five sorts, one row per person (a merged profile's orders on his row) with Sales (delivered only) and Ordered value under it, true-delivery rate, refusals not the shop's fault, last order and offers; a table on a desktop, one card per person on a phone; `customers.list` {50 a page, returning from 2 orders, at risk after 60 days, VIP figure empty = no VIP view, CN-018}; `customerOrdersSql` in `@extas/metrics`; `GET /api/admin/customers`; no export (PR 299); **follow-up (7 Nov, #94; follow-up 473):** a district filter on the Customers list, from each person's latest order's place",
     "github": [
+     "#94, 7 Nov",
      "#51, 30 Oct"
     ]
    },
@@ -24829,8 +24879,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-29",
-    "note": "one customer's page (`/admin/customers/<id>`, demo V12.4 CUS-02): Overview (orders, Sales delivered only, Ordered value, refusals, what his orders came to, his numbers with Copy and Call — each logged before it happens, his profiles, his latest orders), Orders (every profile and number, newest first, a page at a time; a gift sent to his number is not his), Exchanges, Support (conversations and tickets, empty until S22); side cards for offers consent, the wallets (`payments.view`) and \"Who looked at this customer\" (`audit.read`); a merged profile's address opens the survivor's page; \"Merge with…\" finds the other profile by phone and opens both in To review (`customers.merge`). `customers.profile` {20 orders a page, 10 exchanges / support lines, 10 lines of \"Who looked\", 0 hides the card}; `GET /api/admin/customers/<id>/orders`, `/exchanges`, `/support`, `/looks`; list rows, To review cards and the command palette open the page. Nothing moves money, changes COD or blocks anyone",
+    "note": "one customer's page (`/admin/customers/<id>`, demo V12.4 CUS-02): Overview (orders, Sales delivered only, Ordered value, refusals, what his orders came to, his numbers with Copy and Call — each logged before it happens, his profiles, his latest orders), Orders (every profile and number, newest first, a page at a time; a gift sent to his number is not his), Exchanges, Support (conversations and tickets, empty until S22); side cards for offers consent, the wallets (`payments.view`) and \"Who looked at this customer\" (`audit.read`); a merged profile's address opens the survivor's page; \"Merge with…\" finds the other profile by phone and opens both in To review (`customers.merge`). `customers.profile` {20 orders a page, 10 exchanges / support lines, 10 lines of \"Who looked\", 0 hides the card}; `GET /api/admin/customers/<id>/orders`, `/exchanges`, `/support`, `/looks`; list rows, To review cards and the command palette open the page. Nothing moves money, changes COD or blocks anyone; **follow-up (7 Nov, #94; follow-up 477):** \"Who looked at this customer\" folds repeated opens by one person into one line with a count (`customers.looksFold`, registry v267, off)",
     "github": [
+     "#94, 7 Nov",
      "#51, 30 Oct"
     ]
    },
@@ -24845,7 +24896,8 @@
      "payments.view",
      "audit.read",
      "customers.merge",
-     "customers.profile"
+     "customers.profile",
+     "customers.looksFold"
     ],
     "code": [
      "GET /api/admin/customers/<id>/orders"
@@ -28927,8 +28979,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "daily summary to the ERP (CN-029 Phase 1): each shop day from the shop's own records on the delivery-day basis, every line from its one source (§3.3), unknown lines in `incomplete`, the exact minor lines kept beside the whole-taka body (`minorLines`, migration 0056; PR 616's tie reads them); append-only versions, sent at `erp.summary.sendAt` and retried until accepted (a 4xx refusal waits for a person), a late fact re-sent within `books.resend.days` (never a closed month), `summary.missing` answered at once, the hourly check against the ERP's stored copy; per store and per link, v5 builds nothing; the Books status card and **Money → Daily summary** (`/admin/money/books/daily`); registry v69; **follow-ups (7 Nov, #93; follow-ups 566, 568):** a day on the Daily summary page opens that day's lines with their sources (the match page's day explain); on the practice ERP without its data a day says \"Waiting for the ERP key\"",
+    "note": "daily summary to the ERP (CN-029 Phase 1): each shop day from the shop's own records on the delivery-day basis, every line from its one source (§3.3), unknown lines in `incomplete`, the exact minor lines kept beside the whole-taka body (`minorLines`, migration 0056; PR 616's tie reads them); append-only versions, sent at `erp.summary.sendAt` and retried until accepted (a 4xx refusal waits for a person), a late fact re-sent within `books.resend.days` (never a closed month), `summary.missing` answered at once, the hourly check against the ERP's stored copy; per store and per link, v5 builds nothing; the Books status card and **Money → Daily summary** (`/admin/money/books/daily`); registry v69; **follow-ups (7 Nov, #93; follow-ups 566, 568):** a day on the Daily summary page opens that day's lines with their sources (the match page's day explain); on the practice ERP without its data a day says \"Waiting for the ERP key\"; **follow-up (7 Nov, #94; follow-up 569):** the nightly smoke checks that no daily summary or month waited for the ERP more than a day, and \"not run yet\" only before the first match run",
     "github": [
+     "#94, 7 Nov",
      "#93, 7 Nov",
      "#60, 31 Oct",
      "#57, 30 Oct"
@@ -28977,8 +29030,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "fixed costs and the extra cost lines (CN-029 Phase 1): **Money → Costs** (`/admin/money/costs`, `fixedcosts.write`): a month's salary, rent, utilities and other, empty as shipped, each change an append-only version sent by `PUT /fixed-costs/{month}` and checked against `GET /fixed-costs`, shown by day with the ERP's spread (exact to the paisa, remainder on the last day), never in `costs.other`; daily cost lines (packaging, accessories, payment and COD fees, courier, ads, other) for today or an open day, reversed by a negative entry, the day re-sent; capped by `books.costs.maxLineMinor` / `maxMonthMinor`",
+    "note": "fixed costs and the extra cost lines (CN-029 Phase 1): **Money → Costs** (`/admin/money/costs`, `fixedcosts.write`): a month's salary, rent, utilities and other, empty as shipped, each change an append-only version sent by `PUT /fixed-costs/{month}` and checked against `GET /fixed-costs`, shown by day with the ERP's spread (exact to the paisa, remainder on the last day), never in `costs.other`; daily cost lines (packaging, accessories, payment and COD fees, courier, ads, other) for today or an open day, reversed by a negative entry, the day re-sent; capped by `books.costs.maxLineMinor` / `maxMonthMinor`; **follow-up (7 Nov, #94; follow-up 567):** the daily cost lines get their own permission (`costlines.write`), so staff can enter packaging without setting salaries",
     "github": [
+     "#94, 7 Nov",
      "#57, 30 Oct"
     ]
    },
@@ -28989,7 +29043,8 @@
     "settings": [
      "fixedcosts.write",
      "costs.other",
-     "books.costs.maxLineMinor"
+     "books.costs.maxLineMinor",
+     "costlines.write"
     ],
     "code": [
      "PUT /fixed-costs/{month}",
@@ -29890,6 +29945,7 @@
     "date": "2026-10-31",
     "note": "security headers, CSP, CSRF and rate limits end to end (CN-031 lane B; settings v73 `registry-web-security.ts`): one cross-site check in front of every API call in the proxy (`lib/security/same-origin.ts`; only signed webhooks, gateway callbacks, the ERP's signed calls, the internal deploy hook and policy reports pass without it, each with its own proof tested), per-address request limits per kind (sign-in, checkout, shop changes, reports, webhooks; observe as shipped, enforce answers 429 with Retry-After; admin calls never counted), Content-Security-Policy on every shop and admin page from settings (report-only as shipped; `/api/security/csp-report` keeps only path and origin); Caddy `geolocation=(self)` (the checkout's location share had been switched off), the short policy always on, `X-Permitted-Cross-Domain-Policies none`; the Next proxy body limit raised to 200 MB for media uploads (each route keeps its own limit); a route-review test keeps every door listed. 31 Oct (follow-up, CN-031 lane B): the report-only CSP logged \"script-src stopped eval\" on /admin/rules, /admin/combos and /combos/build-your-own — Zod 4's one-time `new Function` probe; `apps/web/src/instrumentation-client.ts` sets Zod jitless before hydration (same answers, no eval), a test beside it; Chromium: no `new Function` on those pages, console clean at 4 widths, so the CSP can be enforced",
     "github": [
+     "#94, 7 Nov",
      "#85, 6 Nov",
      "#72, 31 Oct",
      "#69, 31 Oct",
@@ -29908,7 +29964,8 @@
      "registry-web-security.ts",
      "lib/security/same-origin.ts",
      "apps/web/src/instrumentation-client.ts",
-     "store-settings.yml"
+     "store-settings.yml",
+     "lib/read-capped.ts"
     ],
     "names": [
      "geolocation=(self)",
@@ -29917,7 +29974,8 @@
      "CADDY_BODY_MAX_MB",
      "CADDY_UPLOAD_MAX_MB",
      "body_limits",
-     "enforce"
+     "enforce",
+     "EXTAS_UPLOAD_MAX_MB"
     ],
     "tests": [
      "only signed webhooks, gateway callbacks, the ERP's signed calls, the internal deploy hook and policy reports pass without it, each with its own proof tested), per-address request limits per kind (sign-in, checkout, shop changes, reports, webhooks",
@@ -29932,7 +29990,7 @@
      "sortKey": 44640,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
-     "text": "**Updated 31 Oct (review round 2):** Caddy answers 413 to a request body above server.conf `CADDY_BODY_MAX_MB` (25) and, on the admin's file uploads, `CADDY_UPLOAD_MAX_MB` (30), before Next's proxy holds it in memory (`body_limits`, imported by every public host) (#72) · **6 Nov (batch 11, #85, CN-036):** in `enforce` a browser report over its limit (`/api/shop/vitals`, `/api/problems`, the CSP report, `/api/shop/track`) is answered 204 and dropped quietly, so the smoke test's speed beacons from the server's one address and phones sharing one mobile address never count as failed requests; sign-in, checkout, shop changes and webhooks keep 429 with Retry-After. Enforce itself is switched on through `store-settings.yml` after this is deployed (the owner's CN-036 OK)"
+     "text": "**Updated 31 Oct (review round 2):** Caddy answers 413 to a request body above server.conf `CADDY_BODY_MAX_MB` (25) and, on the admin's file uploads, `CADDY_UPLOAD_MAX_MB` (30), before Next's proxy holds it in memory (`body_limits`, imported by every public host) (#72) · **6 Nov (batch 11, #85, CN-036):** in `enforce` a browser report over its limit (`/api/shop/vitals`, `/api/problems`, the CSP report, `/api/shop/track`) is answered 204 and dropped quietly, so the smoke test's speed beacons from the server's one address and phones sharing one mobile address never count as failed requests; sign-in, checkout, shop changes and webhooks keep 429 with Retry-After. Enforce itself is switched on through `store-settings.yml` after this is deployed (the owner's CN-036 OK); **follow-ups (7 Nov, #94; follow-ups 607, 618):** the speed readings and every admin JSON body are read only up to their cap (`lib/read-capped.ts`); the server passes Caddy's upload limit to the app (`EXTAS_UPLOAD_MAX_MB`) and the Server page warns when a file size setting is above it"
     },
     {
      "date": "",
@@ -30160,8 +30218,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-31",
-    "note": "privacy and data (CN-031 lane B; §5 SET-08d, CUS-07; settings v79 `registry-privacy.ts`; permission `customers.privacy`): Settings › Privacy & data (`/admin/settings/privacy`): how long orders keep the internet address, device and shared location (`risk.capture`, PR 159) and how often the clean-up runs, its last run, how many orders still hold those facts and how many are past the period, a link to Messages › Consent; customers' erasure requests behind `privacy.erasureRequests` (off): a request changes nothing; only the owner carries one out with the word typed (ERASE / মুছুন), never while an order is on its way; every profile of the person loses name, numbers, e-mail, birthday and addresses, orders keep money, lines and history without contact details and device facts, the sign-in is closed; message log, consent, security log, fraud, money and stock records stay; audited. Guide `pages/settings/privacy.md`; checked at 390/768/1366/1920 px",
+    "note": "privacy and data (CN-031 lane B; §5 SET-08d, CUS-07; settings v79 `registry-privacy.ts`; permission `customers.privacy`): Settings › Privacy & data (`/admin/settings/privacy`): how long orders keep the internet address, device and shared location (`risk.capture`, PR 159) and how often the clean-up runs, its last run, how many orders still hold those facts and how many are past the period, a link to Messages › Consent; customers' erasure requests behind `privacy.erasureRequests` (off): a request changes nothing; only the owner carries one out with the word typed (ERASE / মুছুন), never while an order is on its way; every profile of the person loses name, numbers, e-mail, birthday and addresses, orders keep money, lines and history without contact details and device facts, the sign-in is closed; message log, consent, security log, fraud, money and stock records stay; audited. Guide `pages/settings/privacy.md`; checked at 390/768/1366/1920 px; **follow-up (7 Nov, #94; follow-up 586):** security events keep an internet address only as its short mark, never the address itself (new rows; old rows untouched)",
     "github": [
+     "#94, 7 Nov",
      "#69, 31 Oct"
     ]
    },
@@ -31679,8 +31738,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-31",
-    "note": "the main domain's preview password and `noindex` are its own switch, off until go-live day (review round 1, ops B1): the staging host has its own Caddy block with the preview gate and `noindex`, always; the extra hosts (`EXTAS_EXTRA_HOSTS`) get `sites/hosts.caddy` (`infra/stack/caddy/hosts-block.sh`, written by server setup only when there are extra hosts), locked the same way until server.conf `EXTAS_MAIN_OPEN=\"yes\"`; it ships `\"no\"`: flipping it is the owner's go-live day step (BLOCKED 25, runbook step 4), never the build's. CI validates both cases; `infra/tests/run.sh` runs the real Caddyfile and checks staging stays 401 + `noindex` while the main domain is open. The shared access log keeps no query string, no `/pay/<token>` and no Referer (security m5)",
+    "note": "the main domain's preview password and `noindex` are its own switch, off until go-live day (review round 1, ops B1): the staging host has its own Caddy block with the preview gate and `noindex`, always; the extra hosts (`EXTAS_EXTRA_HOSTS`) get `sites/hosts.caddy` (`infra/stack/caddy/hosts-block.sh`, written by server setup only when there are extra hosts), locked the same way until server.conf `EXTAS_MAIN_OPEN=\"yes\"`; it ships `\"no\"`: flipping it is the owner's go-live day step (BLOCKED 25, runbook step 4), never the build's. CI validates both cases; `infra/tests/run.sh` runs the real Caddyfile and checks staging stays 401 + `noindex` while the main domain is open. The shared access log keeps no query string, no `/pay/<token>` and no Referer (security m5); **follow-up (7 Nov, #94; follow-up 619):** a commit that changes only `infra/config/**` since the live version is left to server setup and not deployed",
     "github": [
+     "#94, 7 Nov",
      "#71, 31 Oct"
     ]
    },
@@ -31692,7 +31752,8 @@
     "code": [
      "sites/hosts.caddy",
      "infra/stack/caddy/hosts-block.sh",
-     "infra/tests/run.sh"
+     "infra/tests/run.sh",
+     "infra/config/**"
     ],
     "names": [
      "noindex",
@@ -31923,8 +31984,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "switch-over to the ERP model and the per-store ERP link (CN-028, CN-029 Phase 2; migration `0057_erp_switchover`, settings v70 `registry-switchover.ts`): **Settings → ERP link** (`/admin/settings/erp-link?storeId=`, `vault.read` per store): the store's own keys form (API key, webhook secret, signing secret in the vault under the store id only; Keys & connections with `?storeId=`; store A's key never reads or writes store B, tested), what was synced each way, the last summary the ERP accepted, the queues (orders waiting/held/failed, v5 orders kept at the switch, open exchanges, summaries waiting), the balance owed by both books, the books match state and the ERP-calls card moved here (follow-up 524; the per-store signing secret signs v6 calls). The switch: the date from the ERP's `GET /switch-over`, a dry run first (changes nothing but its report, counts for `erp.switchOver.dryRunMaxHours`), then the owner alone with his books PIN and the date typed back: the moved old orders and the opening balance booked once at the buying price, the OUT orders billed and in the pipeline, the month before backfilled from `GET /cost-of-goods`, customer payments, returns and ad spend never sent again, `erp.model` v5 → v6 with `ownerApproved`, the four `returns.legacy.*` switches OFF for that store (never deleted, follow-up 545), a waiting v5 order re-sent as v6 or held (follow-up 530), a wrong opening balance put right by a new link epoch (follow-up 555), a handover revokes the store's keys (follow-up 556). Nobody's store is switched by the build.. 31 Oct (CN-033, built, CN-031 lane A; not counted again): `erp.switchOver.mode` per store (v72) — `fresh-start` as shipped (asks the ERP only who it is; the dry run's day, or a date a stopped switch kept, typed back with the PIN after a clean dry run; no moved orders, opening balance 0, no transfer, no backfill), `erp-list` the earlier way; the way is in the dry run's fingerprint; set on Settings → ERP link before the switch only; the acceptance suite marks `switchOver.read` and `costOfGoods.read` \"not built in the ERP\" on a fresh start and never calls them",
+    "note": "switch-over to the ERP model and the per-store ERP link (CN-028, CN-029 Phase 2; migration `0057_erp_switchover`, settings v70 `registry-switchover.ts`): **Settings → ERP link** (`/admin/settings/erp-link?storeId=`, `vault.read` per store): the store's own keys form (API key, webhook secret, signing secret in the vault under the store id only; Keys & connections with `?storeId=`; store A's key never reads or writes store B, tested), what was synced each way, the last summary the ERP accepted, the queues (orders waiting/held/failed, v5 orders kept at the switch, open exchanges, summaries waiting), the balance owed by both books, the books match state and the ERP-calls card moved here (follow-up 524; the per-store signing secret signs v6 calls). The switch: the date from the ERP's `GET /switch-over`, a dry run first (changes nothing but its report, counts for `erp.switchOver.dryRunMaxHours`), then the owner alone with his books PIN and the date typed back: the moved old orders and the opening balance booked once at the buying price, the OUT orders billed and in the pipeline, the month before backfilled from `GET /cost-of-goods`, customer payments, returns and ad spend never sent again, `erp.model` v5 → v6 with `ownerApproved`, the four `returns.legacy.*` switches OFF for that store (never deleted, follow-up 545), a waiting v5 order re-sent as v6 or held (follow-up 530), a wrong opening balance put right by a new link epoch (follow-up 555), a handover revokes the store's keys (follow-up 556). Nobody's store is switched by the build.. 31 Oct (CN-033, built, CN-031 lane A; not counted again): `erp.switchOver.mode` per store (v72) — `fresh-start` as shipped (asks the ERP only who it is; the dry run's day, or a date a stopped switch kept, typed back with the PIN after a clean dry run; no moved orders, opening balance 0, no transfer, no backfill), `erp-list` the earlier way; the way is in the dry run's fingerprint; set on Settings → ERP link before the switch only; the acceptance suite marks `switchOver.read` and `costOfGoods.read` \"not built in the ERP\" on a fresh start and never calls them; **follow-ups (7 Nov, #94; follow-ups 577, 578):** the ERP link page lists the store's latest switch runs with their reports; a v5 order kept at the switch longer than a day is a \"Needs you now\" row",
     "github": [
+     "#94, 7 Nov",
      "#69, 31 Oct",
      "#61, 31 Oct",
      "#58, 30 Oct"
@@ -31999,8 +32061,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-30",
-    "note": "ERP v6 acceptance suite (a go-live gate; settings v70 `erp.acceptance.*`): `runErpAcceptance` (@extas/adapters, 21 checks of `docs/erp/site-changes-v6.md` §4: contract, catalogue, orders, deliveries, return lists, checks, Return stock, exchanges, summaries, fixed costs, account, the retired v5 calls, switch-over, cost of goods, signed site calls) on the practice ERP in CI with its own actions driven; the books drills on PostgreSQL (switch day, same webhook twice, lost webhook, reversal before its original, wrong amount, hold → checkout pause → resume, a two-day outage, a closed day that moves, an exchange never returned, a month that must not close, the tie formula per day/week/month/year/life, store isolation) and the 72-hour exchange rule. Against the demo ERP every night (`erp-acceptance.yml`) and before every release (`deploy.yml` → `deploy.sh`, ~~before the migration~~ after the migration and before the new colour starts, qa-gate 30 Oct) on the runner (`infra/deploy/erp-acceptance.sh`): read-only unless `erp.acceptance.demoWrites`; \"waiting for the demo key\" (nothing called, nothing failed) until the owner types it on the ERP link page's demo-key card (vault, installation-wide); an unreachable demo ERP or a refused key is reported, not failed; on the demo ERP a time-out, network error, 5xx, 429 or 404 in any check is SKIP and `unreachable` (only a wrong figure or a broken answer fails), a run past the time limit is \"not finished\" and one that cannot read the shop's database is \"not run\" (reported, exit 0); a failed check stops the release before the switch. Report in `docs/reports/erp-acceptance/latest/`.",
+    "note": "ERP v6 acceptance suite (a go-live gate; settings v70 `erp.acceptance.*`): `runErpAcceptance` (@extas/adapters, 21 checks of `docs/erp/site-changes-v6.md` §4: contract, catalogue, orders, deliveries, return lists, checks, Return stock, exchanges, summaries, fixed costs, account, the retired v5 calls, switch-over, cost of goods, signed site calls) on the practice ERP in CI with its own actions driven; the books drills on PostgreSQL (switch day, same webhook twice, lost webhook, reversal before its original, wrong amount, hold → checkout pause → resume, a two-day outage, a closed day that moves, an exchange never returned, a month that must not close, the tie formula per day/week/month/year/life, store isolation) and the 72-hour exchange rule. Against the demo ERP every night (`erp-acceptance.yml`) and before every release (`deploy.yml` → `deploy.sh`, ~~before the migration~~ after the migration and before the new colour starts, qa-gate 30 Oct) on the runner (`infra/deploy/erp-acceptance.sh`): read-only unless `erp.acceptance.demoWrites`; \"waiting for the demo key\" (nothing called, nothing failed) until the owner types it on the ERP link page's demo-key card (vault, installation-wide); an unreachable demo ERP or a refused key is reported, not failed; on the demo ERP a time-out, network error, 5xx, 429 or 404 in any check is SKIP and `unreachable` (only a wrong figure or a broken answer fails), a run past the time limit is \"not finished\" and one that cannot read the shop's database is \"not run\" (reported, exit 0); a failed check stops the release before the switch. Report in `docs/reports/erp-acceptance/latest/`.; **follow-ups (7 Nov, #94; follow-ups 575, 576):** /status shows the last ERP acceptance run against the demo ERP; the go-live checklist needs it green, with writes, for a v6 store before the main domain is switched",
     "github": [
+     "#94, 7 Nov",
      "#61, 31 Oct",
      "#60, 31 Oct",
      "#58, 30 Oct"
@@ -33223,8 +33286,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-01",
-    "note": "the site auditor's sandbox (After launch, batch 4; B6.6): the check account keeps only read permissions, every admin write from its session is refused with 403 `READ_ONLY_ACCOUNT`, the smoke, journeys and lab browsers get no database network",
+    "note": "the site auditor's sandbox (After launch, batch 4; B6.6): the check account keeps only read permissions, every admin write from its session is refused with 403 `READ_ONLY_ACCOUNT`, the smoke, journeys and lab browsers get no database network; **follow-up (7 Nov, #94; follow-up 621):** Run history's catch-up and the fix gate's expiry no longer write when the read-only check account opens those pages",
     "github": [
+     "#94, 7 Nov",
      "#73, 1 Nov"
     ]
    },
@@ -33340,8 +33404,9 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-31",
-    "note": "Site health › Customer problems with the privacy-safe recorder (CN-015, CN-031 lane B; migration `0065_customer_problems`: `CustomerProblem` one per cause, append-only `ProblemRecord`; settings v83 `health.problems`, on as shipped; permissions `health.problems.manage`, `health.problems.approve`): a small probe in the shop layout reports script errors, failed or slow calls to the shop's server, failed or slow pages, a form field refused again and again, rage clicks and broken pictures (the #64 \"Start fresh\" screen reports itself the same way); anonymous by construction (masked page patterns, scrubbed messages, device and browser families only, a random per-tab id), admin pages never recorded. `POST /api/problems`: same-site only, size-capped, rate bucket `report`, always 204. A break on the bag or checkout, or one that hit `urgentVisitors` in a day, is Urgent and never downgraded by itself. Reports › Site health › Customer problems (today, yesterday, 7 days, all, a day in the shop's time zone; two-week bars, short glitches apart, the recorder card) and one problem's page (devices, browsers, networks, last reports, status with a note); audited; nothing blocks anyone or changes the shop. The hub's Customer problems line is live. Guides `pages/reports/health-problems.md`, `health-problem.md`; browser-checked at 390/768/1366/1920 px",
+    "note": "Site health › Customer problems with the privacy-safe recorder (CN-015, CN-031 lane B; migration `0065_customer_problems`: `CustomerProblem` one per cause, append-only `ProblemRecord`; settings v83 `health.problems`, on as shipped; permissions `health.problems.manage`, `health.problems.approve`): a small probe in the shop layout reports script errors, failed or slow calls to the shop's server, failed or slow pages, a form field refused again and again, rage clicks and broken pictures (the #64 \"Start fresh\" screen reports itself the same way); anonymous by construction (masked page patterns, scrubbed messages, device and browser families only, a random per-tab id), admin pages never recorded. `POST /api/problems`: same-site only, size-capped, rate bucket `report`, always 204. A break on the bag or checkout, or one that hit `urgentVisitors` in a day, is Urgent and never downgraded by itself. Reports › Site health › Customer problems (today, yesterday, 7 days, all, a day in the shop's time zone; two-week bars, short glitches apart, the recorder card) and one problem's page (devices, browsers, networks, last reports, status with a note); audited; nothing blocks anyone or changes the shop. The hub's Customer problems line is live. Guides `pages/reports/health-problems.md`, `health-problem.md`; browser-checked at 390/768/1366/1920 px; **follow-ups (7 Nov, #94; follow-ups 596, 598):** a fixed problem that comes back can open again by itself (`health.problems.reopen`, registry v270, off; audited); browser reports over their per-address limit are dropped in observe mode too",
     "github": [
+     "#94, 7 Nov",
      "#70, 31 Oct"
     ]
    },
@@ -33350,7 +33415,8 @@
     "settings": [
      "health.problems",
      "health.problems.manage",
-     "health.problems.approve"
+     "health.problems.approve",
+     "health.problems.reopen"
     ],
     "code": [
      "POST /api/problems",
