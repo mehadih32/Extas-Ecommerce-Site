@@ -171,6 +171,14 @@ describe.skipIf(!HAS_TEST_DB)('order admin API on PostgreSQL (S05)', () => {
     expect((await api('GET', [o.orderId])).body.money.totalMinor).toBe(before.body.money.totalMinor);
     expect((await api('POST', [o.orderId, 'lines', 'x', 'remove'], { body: {} })).status).toBe(404);
     expect((await api('POST', [o.orderId, 'lines', line.id], { body: {} })).status).toBe(404);
+    // follow-up 215: the screen's dialog sends the SKU the customer read out and how many as text; a removed line stays
+    expect((await f.t.prisma.orderItem.findUnique({ where: { id: line.id }, select: { status: true } }))?.status).toBe('REMOVED');
+    const sku = (await f.t.prisma.productVariant.findUniqueOrThrow({ where: { id: f.v.linenM }, select: { sku: true } })).sku;
+    const bySku = await api('POST', [o.orderId, 'lines'], { body: { sku: ` ${sku.toLowerCase()} `, quantity: '2' } });
+    expect(bySku.body.result).toMatchObject({ command: 'addLine' });
+    expect((await api('GET', [o.orderId])).body.items.find((i: { isAddOn: boolean; status: string }) => i.isAddOn && i.status === 'ACTIVE')).toMatchObject({ sku, quantity: 2 });
+    expect((await api('POST', [o.orderId, 'lines'], { body: { sku: 'NO-SUCH-SKU', quantity: '1' } })).body).toMatchObject({ ok: false, error: 'NOT_SELLABLE' });
+    expect((await api('POST', [o.orderId, 'lines'], { body: { sku, quantity: 'two' } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
   });
 
   it("the customer's own cancel through the account API (his browser's order only)", async () => {

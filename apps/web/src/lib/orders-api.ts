@@ -37,7 +37,7 @@
 //   POST  /api/admin/orders/:id/notes                         {body, isInternal?} (orders.notes)
 //   POST  /api/admin/orders/:id/notes/:noteId/archive         (orders.notes)
 //   POST  /api/admin/orders/:id/flags                         {flags, version?} (orders.notes)
-//   POST  /api/admin/orders/:id/lines                         {variantId, quantity?, version?} PR 127: a line added
+//   POST  /api/admin/orders/:id/lines                         {variantId | sku, quantity?, version?} PR 127: a line added
 //                                                             before booking, priced as its product page (orders.lines)
 //   POST  /api/admin/orders/:id/lines/:lineId/remove          {version?} an added line taken out again (orders.lines)
 //   POST  /api/admin/orders/:id/edit                          PR 142: {reasonKey, channel?, note?, customerName?, phone?,
@@ -74,6 +74,7 @@ import { decideErpLine, erpOrderView } from '@extas/inventory';
 import * as od from '@extas/orders';
 import { partialBoxView, savePartialDelivery } from '@extas/shipping';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
+import { addLineBody } from './admin-orders/lines';
 import { inventoryDeps } from './inventory-api';
 import { shippingFail } from './shipping-api';
 import { mediaDeps } from './media';
@@ -159,6 +160,19 @@ async function command(request: Request, opts: od.CommandOptions): Promise<{ inp
   const { version, ...input } = await body(request);
   if (version !== undefined && !(typeof version === 'number' && Number.isInteger(version) && version >= 0)) throw new od.OrdersError('INVALID_INPUT', 'the version is not valid', ['version']);
   return { input, opts: { ...opts, version: version as number | undefined } };
+}
+
+/**
+ * PR 127 follow-up 215 — the team's "Add a line" dialog sends the piece's SKU (what the customer read out) and how many
+ * as text; the service takes the piece's id and a whole number. An unknown SKU is "this piece cannot be ordered".
+ */
+async function lineInput(x: Ctx, input: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const b = addLineBody(input);
+  if (b.quantity !== undefined && !Number.isInteger(b.quantity)) throw new od.OrdersError('INVALID_INPUT', 'how many is a whole number', ['quantity']);
+  if (!b.sku) return { ...(b.variantId !== null ? { variantId: b.variantId } : {}), ...(b.quantity !== undefined ? { quantity: b.quantity } : {}) };
+  const v = await x.deps.db.productVariant.findFirst({ where: { storeId: x.who.storeId, archivedAt: null, sku: { equals: b.sku, mode: 'insensitive' } }, select: { id: true } });
+  if (!v) throw new od.OrdersError('NOT_SELLABLE', 'no piece has this SKU', ['sku']);
+  return { variantId: v.id, ...(b.quantity !== undefined ? { quantity: b.quantity } : {}) };
 }
 
 const query = (url: URL, keys: string[]) => Object.fromEntries(keys.flatMap((k) => (url.searchParams.has(k) ? [[k, url.searchParams.get(k)!]] : [])));
@@ -359,7 +373,7 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
       });
     }
     case 'lines':
-      if (one) return run('orders.lines', (x, i, o) => od.addLine(x.deps, x.who, id, i, o));
+      if (one) return run('orders.lines', async (x, i, o) => od.addLine(x.deps, x.who, id, await lineInput(x, i), o));
       if (path.length !== 4 || e !== 'remove') return notFound();
       if (!isUuid(c)) return Promise.resolve(fail(404, 'NOT_FOUND', ['lineId']));
       return run('orders.lines', (x, _i, o) => od.removeLine(x.deps, x.who, id, c, o));

@@ -72,6 +72,12 @@ export const KNOWN_ERRORS = [
   // gate F-004: a re-booking of a parcel that still matches its order, or a courier switched off
   'NOT_STALE',
   'COURIER_OFF',
+  // PR 127 follow-up 215: "Add a line" / "Remove" refusals
+  'NOT_SELLABLE',
+  'COD_LIMIT',
+  'NOT_COD',
+  'ADD_ON_LIMIT',
+  'ADD_ON_ONLY',
   'FORBIDDEN',
   'UNAUTHENTICATED',
   'network',
