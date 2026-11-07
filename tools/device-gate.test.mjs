@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deviceList, filledPlan, firstScreenFor, heroSettled, langCookieOf, markdownReport, navWordsSqueezed, openedPlan, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
+import { boxChecks, deviceList, filledPlan, firstScreenFor, heroSettled, langCookieOf, markdownReport, navWordsSqueezed, openedPlan, pickLinks, scriptsVerdict, shardOf, signedInPlan, signedOpenedPlan, urlList } from './device-gate.mjs';
 
 // The browser part runs in CI's device-gate job (Playwright + Chromium); these are the pure parts.
 const matrix = {
@@ -241,5 +241,20 @@ describe('PR 40 follow-up · a computer nav item is never narrower than its word
   it('fails an item squeezed under its words, passes whole ones, hidden ones and a pixel of rounding', () => {
     expect(navWordsSqueezed(doc([item('New in', 42, 41.5), item('Polos', 45, 45.8), item('More', 0, 30), item('Sets', 32, 40, true)]))).toEqual([]);
     expect(navWordsSqueezed(doc([item('T-Shirts', 32, 52), item('Shirts', 37, 37)]))).toEqual([{ k: 'NAV-WORDS-SQUEEZED', d: 'T-Shirts 32<52' }]);
+  });
+
+  it('follow-up of PR 505 · boxes: a listed part past the screen or wider than its box, and a listed tap box under 44 px', () => {
+    const el = (right, w, h, sw = w) => ({ getBoundingClientRect: () => ({ right, width: w, height: h }), scrollWidth: sw, clientWidth: w });
+    const doc = (map) => ({ querySelectorAll: (sel) => map[sel] ?? [] });
+    const d = doc({ '.pill': [el(300, 280, 20), el(360, 344, 20), el(0, 0, 0)], '.wide': [el(200, 100, 20, 140)], '.tick': [el(40, 44, 44), el(30, 18, 18)] });
+    expect(boxChecks({ inside: ['.pill', '.wide'], tap44: ['.tick'] }, d, 320)).toEqual([
+      { k: 'PAST-THE-EDGE', d: '.pill 360>320, .wide 200>320' },
+      { k: 'OWN-TAP-UNDER-44', d: '.tick 18×18' },
+    ]);
+    // a desktop size checks no taps; a page that keeps its parts whole passes
+    expect(boxChecks({ inside: ['.pill'], tap44: ['.tick'], taps: false }, doc({ '.pill': [el(300, 280, 20)], '.tick': [el(30, 18, 18)] }), 320)).toEqual([]);
+    const rules = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../docs/qa/device-gate.json'), 'utf8'));
+    expect(rules.boxes['/admin/messages/journey'].inside).toContain('[data-testid="journey-channels"] .a2-pill');
+    expect(rules.signedIn.urls).toContain('/admin/messages/journey');
   });
 });

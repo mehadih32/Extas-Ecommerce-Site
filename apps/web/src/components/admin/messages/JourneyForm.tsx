@@ -203,7 +203,10 @@ export function JourneyForm({ dict, screen, steps, templateKeys }: { dict: Dict;
             </div>
             {step.channel !== 'EMAIL' ? (
               <label className="a2-chkl a2-mt6">
-                <input type="checkbox" className="a2-chk" checked={step.email} disabled={off} onChange={(e) => editStep({ email: e.target.checked })} data-testid="js-email" />
+                {/* follow-up: the box itself is the 44 px tap on a phone (a2-chkw), not only its label row */}
+                <span className="a2-chkw" data-testid="js-email-box">
+                  <input type="checkbox" className="a2-chk" checked={step.email} disabled={off} onChange={(e) => editStep({ email: e.target.checked })} data-testid="js-email" />
+                </span>
                 <span>{x('alsoEmail')}</span>
               </label>
             ) : null}

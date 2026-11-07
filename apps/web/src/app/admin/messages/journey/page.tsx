@@ -76,7 +76,7 @@ export default async function JourneyPage() {
           </span>
         </div>
       ) : null}
-      <div className="a2-gap8 a2-mt12" data-testid="journey-channels">
+      <div className="a2-gap8 a2-mt12 a2-jch" data-testid="journey-channels">
         {screen.channels.map((c) => (
           <span key={c.channel} className={`a2-pill ${MODE_TONE[c.mode ?? ''] ?? 'line'}`} data-channel={c.channel}>
             {label(d, 'channel', c.channel)} · {label(d, 'mode', c.mode ?? 'none')}

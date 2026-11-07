@@ -10,6 +10,9 @@
 //   - TAP-TOO-SMALL (touch sizes): every tap target at least 44 × 44 (inline text links at least 32 tall), measured as
 //     the area that really takes the tap (elementFromPoint), so invisible padding counts;
 //   - INPUT-FONT-UNDER-16 (touch sizes): every form field at least 16 px (no iPhone zoom on focus).
+//   - PAST-THE-EDGE / OWN-TAP-UNDER-44 (follow-up of PR 505): on the pages device-gate.json `boxes` names, the listed
+//     parts end inside the screen and hold their own content (a nowrap pill clipped by an admin scroller is not caught by
+//     STICKS-OUT-RIGHT), and the listed tap boxes are 44 × 44 themselves (touch sizes);
 // The rules are data in docs/qa/device-gate.json. Pass = 0 fails. One Chromium, several pages in parallel.
 // Signed in (--email + --password-file, follow-up 5): the admin pages are opened with a session on a database seeded
 // with the sample catalogue, so controls that only show with data are measured too (device-gate.json `signedIn`);
@@ -414,6 +417,8 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
       // Layout first, taps last: the tap probe scrolls the page.
       issues.push(...(await page.evaluate(matrix.pageChecks, device.w)).issues);
       issues.push(...(await page.evaluate(navWordsSqueezed)));
+      const boxes = rules.boxes?.[new URL(url).pathname];
+      if (boxes) issues.push(...(await page.evaluate(boxChecks, { inside: boxes.inside ?? [], tap44: boxes.tap44 ?? [], min: rules.tapMinPx, taps: rules.tapGroups.includes(device.group) })));
       issues.push(...(await page.evaluate(appChecks, {
         inputFont: rules.inputFontGroups.includes(device.group),
         taps: rules.tapGroups.includes(device.group),
@@ -467,6 +472,35 @@ export function navWordsSqueezed(doc = globalThis.document) {
     if (w > box.width + 1) out.push(`${a.textContent.trim().slice(0, 24)} ${Math.round(box.width)}<${Math.round(w)}`);
   }
   return out.length ? [{ k: 'NAV-WORDS-SQUEEZED', d: out.slice(0, 5).join(', ') + (out.length > 5 ? ` (+${out.length - 5})` : '') }] : [];
+}
+
+/**
+ * Follow-up of PR 505 (the Order journey at 320 px): the parts a page lists in device-gate.json `boxes` — `inside`: each
+ * visible one ends inside the screen and is not wider than its content allows (scrollWidth); `tap44`: each visible one
+ * is at least `min` px each way itself (touch sizes). Runs in the page (Playwright), alone.
+ */
+export function boxChecks({ inside = [], tap44 = [], min = 44, taps = true }, doc = globalThis.document, view = globalThis.innerWidth) {
+  const out = [];
+  const shown = (e) => {
+    const r = e.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 ? r : null;
+  };
+  const past = [];
+  for (const sel of inside)
+    for (const e of doc.querySelectorAll(sel)) {
+      const r = shown(e);
+      if (r && (r.right > view + 1 || e.scrollWidth > e.clientWidth + 1)) past.push(`${sel} ${Math.round(r.right)}>${view}`);
+    }
+  if (past.length) out.push({ k: 'PAST-THE-EDGE', d: past.slice(0, 4).join(', ') + (past.length > 4 ? ` (+${past.length - 4})` : '') });
+  const small = [];
+  if (taps)
+    for (const sel of tap44)
+      for (const e of doc.querySelectorAll(sel)) {
+        const r = shown(e);
+        if (r && (r.width < min - 0.5 || r.height < min - 0.5)) small.push(`${sel} ${Math.round(r.width)}×${Math.round(r.height)}`);
+      }
+  if (small.length) out.push({ k: 'OWN-TAP-UNDER-44', d: small.slice(0, 4).join(', ') + (small.length > 4 ? ` (+${small.length - 4})` : '') });
+  return out;
 }
 
 export function scriptsVerdict(shop, mark) {

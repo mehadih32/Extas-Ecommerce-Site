@@ -6,6 +6,10 @@
   "tapGroups": ["phone", "tablet"],
   "inputFontGroups": ["phone", "tablet"],
   "settleMs": 400,
+  "boxes": {
+    "$comment": "Follow-up of PR 505 — parts a page must keep whole on every size (tools/device-gate.mjs boxChecks): `inside` ends inside the screen and holds its own content (PAST-THE-EDGE: an admin scroller clips what sticks out, so STICKS-OUT-RIGHT does not see it), `tap44` is a 44 × 44 tap box itself on touch sizes (OWN-TAP-UNDER-44). The Order journey at 320 px: the channel-mode pills ran 40 px past the screen and the e-mail tick was an 18 px box.",
+    "/admin/messages/journey": { "inside": ["[data-testid=\"journey-channels\"] .a2-pill"], "tap44": ["[data-testid=\"js-email-box\"]"] }
+  },
   "openWaitMs": 5000,
   "concurrency": 8,
   "firstScreen": {
