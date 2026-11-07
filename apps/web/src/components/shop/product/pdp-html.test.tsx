@@ -3,6 +3,7 @@
 // hidden while closed, so a search engine reads them; nothing is loaded on a tap.
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { PdpChartText } from './PdpChartText';
 import { PdpDetails } from './PdpDetails';
 import { PdpRules } from './PdpRules';
 
@@ -40,5 +41,14 @@ describe('PR 225 · folded product words are in the HTML', () => {
     expect(html.match(/class="pdp-rule-open small"[^>]*hidden=""/g)).toHaveLength(2);
     // none open: no visible rule box
     expect(html).not.toContain('data-testid="rule-open"');
+  });
+
+  it('follow-up 633: the size chart`s sizes and measurements are in the page, hidden; no rows, nothing', () => {
+    const html = renderToStaticMarkup(
+      <PdpChartText name="Sample polo chart" sizeCol="Size" cols={['Chest', 'Length']} rows={[{ size: 'M', values: ['40 in', '28 in'] }, { size: 'L', values: ['42 in', ''] }]} />,
+    );
+    expect(html).toMatch(/^<div hidden="" data-testid="pdp-chart-text">/);
+    for (const w of ['Sample polo chart', 'Chest', 'Length', '>M<', '40 in', '28 in', '>L<', '42 in']) expect(html).toContain(w);
+    expect(renderToStaticMarkup(<PdpChartText name="x" sizeCol="Size" cols={[]} rows={[]} />)).toBe('');
   });
 });
