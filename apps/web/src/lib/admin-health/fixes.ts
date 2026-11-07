@@ -12,7 +12,7 @@
 // Undecided proposals expire after `health.fixGate.expireDays` (0 = never). Nothing here deletes a row, moves money or
 // blocks anyone; every step is audited.
 import { createHash } from 'node:crypto';
-import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
+import { audit, isCheckAccount, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type Prisma, type PrismaClient } from '@extas/db/client';
 import { healthFixGateSchema, INSTALLATION, type HealthFixGateSettings } from '@extas/settings';
 import type { AppResolver } from '../settings';
@@ -296,7 +296,10 @@ export interface FixesView {
 export async function fixesView(deps: FixesDeps, who: FixesWho, opts: { show?: string | null } = {}): Promise<FixesView> {
   const held = await requirePermission(deps.db, who.actor, 'health.read', { storeId: S });
   const now = deps.now?.() ?? new Date();
-  await expireProposals(deps.db, now);
+  // ~~await expireProposals(deps.db, now);~~ — follow-up 621 (B6.6): the read-only check account (the smoke test) writes
+  // nothing, not even on a read; the lists leave expired proposals out anyway (`pending`), and the next person or
+  // decision expires them.
+  if (!(who.actor.staffUserId && (await isCheckAccount(deps.db, who.actor.staffUserId)))) await expireProposals(deps.db, now);
   const show: FixShow = opts.show === 'decided' ? 'decided' : 'waiting';
   const kinds = { in: [...GATE_KINDS] };
   const [g, reqs, waitingFixes, waitingSkills, approvedRecent] = await Promise.all([
