@@ -2,7 +2,7 @@
 
 **সারকথা:** 18টা পরীক্ষার 14টা পাস, 4টা বাদ, কোনো ফেল নেই। সব টেস্ট অর্ডার বাতিল আর টেস্ট পণ্য আর্কাইভ করা হয়েছে।
 
-- Run: 2026-11-06 22:13 (Asia/Dhaka) · version `4689df67c695` · host: the preview host of the server's settings · scenarios asked: all
+- Run: 2026-11-07 18:56 (Asia/Dhaka) · version `eea92e3c11d1` · host: the preview host of the server's settings · scenarios asked: all
 - Result: **PASS** — 14 passed, 0 failed, 4 skipped, 24 test orders placed.
 - Providers: every payment, courier, message and ERP connection is on its mock; nothing left the server.
 - Payments: the mock bKash page — the run's own grant: its browser only, on the preview host, closed at the end; cash on delivery — on (the owner's setting). No real payment key, price, discount or COD amount is touched.
@@ -12,24 +12,24 @@
 
 | # | Scenario | Device | Network | Addresses | Result | Orders | Timings (load · product · add · checkout · submit) | Why |
 |---|---|---|---|---|---|---|---|---|
-| 1 | One item, cash on delivery, phone on 4G | Mid Android (393×873) | 4G | dhk-dhanmondi | ✅ PASS | 1144 | 1.2 s · 0.8 s · 0.2 s · 1.2 s · 1.3 s |  |
-| 2 | Three items, low-end Android on slow 3G | Low-end Android (360×640, 4× slower CPU) | Slow 3G | sub-tongi | ✅ PASS | 1145 | 11 s · 12 s · 2.1 s · 13 s · 14 s |  |
-| 3 | Eight different items on a desktop | Desktop 1366×768 | Wifi | out-chattogram | ✅ PASS | 1146 | 0.7 s · 0.3 s · 0.1 s · 0.4 s · 0.7 s |  |
-| 4 | The same item twice, and the last pieces of its stock | iPhone SE (375×667) | Fast 3G | out-rajshahi | ✅ PASS | 1147 | 3.2 s · 3.4 s · 0.6 s · 3.5 s · 4.2 s |  |
+| 1 | One item, cash on delivery, phone on 4G | Mid Android (393×873) | 4G | dhk-dhanmondi | ✅ PASS | 1253 | 0.8 s · 0.8 s · 0.2 s · 1.1 s · 1.3 s |  |
+| 2 | Three items, low-end Android on slow 3G | Low-end Android (360×640, 4× slower CPU) | Slow 3G | sub-tongi | ✅ PASS | 1254 | 11 s · 12 s · 2.1 s · 13 s · 14 s |  |
+| 3 | Eight different items on a desktop | Desktop 1366×768 | Wifi | out-chattogram | ✅ PASS | 1255 | 0.3 s · 0.3 s · 0.1 s · 0.4 s · 0.7 s |  |
+| 4 | The same item twice, and the last pieces of its stock | iPhone SE (375×667) | Fast 3G | out-rajshahi | ✅ PASS | 1256 | 3.1 s · 3.3 s · 0.6 s · 3.5 s · 4.2 s |  |
 | 5 | Mock bKash, paid ahead (gate check 1) | Mid Android (393×873) | 4G | — | ⏭️ SKIP | — | — | skip paid ahead: bKash is not offered at the checkout (Payments › mobile wallets) |
 | 6 | Mock bKash fails, then the retry (gate check 21) | iPhone 13/14 (390×844) | 4G | — | ⏭️ SKIP | — | — | skip fail then retry: bKash is not offered at the checkout (Payments › mobile wallets) |
-| 7 | One customer, eight orders in a month, three cancelled | Low-end Android (360×640, 4× slower CPU) | 4G | dhk-mirpur, out-khulna, sub-fatullah, out-barishal, out-sylhet, out-rangpur, dhk-gulshan, out-mymensingh | ✅ PASS | 1148, 1149, 1150, 1151, 1152, 1153, 1154, 1155 | 1.0 s · 1.0 s · 0.3 s · 1.4 s · 1.6 s |  |
-| 8 | The Bengali checkout (/bn), Bengali digits in the phone | Mid Android (393×873) | Fast 3G | out-bogura-bn | ✅ PASS | 1156 | 3.3 s · 3.4 s · 0.7 s · 4.0 s · 4.7 s |  |
-| 9 | A wrong phone number and a missing address first, then corrected | iPhone 13/14 (390×844) | 4G | out-coxs-bazar | ✅ PASS | 1157 | 1.0 s · 0.8 s · 0.2 s · 1.1 s · 1.3 s |  |
-| 10 | Double-tap on Confirm, a reload mid-checkout and Back after it | Mid Android (393×873) | 4G | dhk-uttara | ✅ PASS | 1158 | 0.8 s · 0.8 s · 0.2 s · 1.2 s · 1.4 s |  |
-| 11 | The network drops while the order is sent, then he presses again | Mid Android (393×873) | Fast 3G | out-cumilla | ✅ PASS | 1159 | 3.2 s · 3.4 s · 0.6 s · 3.6 s · 4.3 s |  |
-| 12 | A guest order, then signed in with the sign-in code (mock SMS) | iPhone 13/14 (390×844) | Wifi | dhk-mohammadpur-bn, out-jashore | ✅ PASS | 1160, 1161 | 0.3 s · 0.8 s · 0.2 s · 0.6 s · 1.1 s |  |
-| 13 | Delivery inside Dhaka, a Dhaka suburb and outside Dhaka, with the owner's charges | Tablet (820×1180) | 4G | dhk-motijheel-mixed, sub-savar, out-kushtia | ✅ PASS | 1162, 1163, 1164 | 0.8 s · 0.8 s · 0.2 s · 1.1 s · 1.4 s | skip dhaka charge: no delivery band is switched on yet (the owner's delivery charges): only the address round trip is checked; skip suburb charge: no delivery band is switched on yet (the owner's delivery charges): only the address round trip is checked; skip outside charge: no delivery band is switched on yet (the owner's delivery charges): only the address round trip is checked |
+| 7 | One customer, eight orders in a month, three cancelled | Low-end Android (360×640, 4× slower CPU) | 4G | dhk-mirpur, out-khulna, sub-fatullah, out-barishal, out-sylhet, out-rangpur, dhk-gulshan, out-mymensingh | ✅ PASS | 1257, 1258, 1259, 1260, 1261, 1262, 1263, 1264 | 0.9 s · 0.9 s · 0.3 s · 1.3 s · 1.4 s |  |
+| 8 | The Bengali checkout (/bn), Bengali digits in the phone | Mid Android (393×873) | Fast 3G | out-bogura-bn | ✅ PASS | 1265 | 3.1 s · 3.4 s · 0.7 s · 4.0 s · 4.7 s |  |
+| 9 | A wrong phone number and a missing address first, then corrected | iPhone 13/14 (390×844) | 4G | out-coxs-bazar | ✅ PASS | 1266 | 0.8 s · 0.8 s · 0.2 s · 1.1 s · 1.3 s |  |
+| 10 | Double-tap on Confirm, a reload mid-checkout and Back after it | Mid Android (393×873) | 4G | dhk-uttara | ✅ PASS | 1267 | 0.8 s · 0.8 s · 0.2 s · 1.1 s · 1.4 s |  |
+| 11 | The network drops while the order is sent, then he presses again | Mid Android (393×873) | Fast 3G | out-cumilla | ✅ PASS | 1268 | 3.2 s · 3.4 s · 0.6 s · 3.6 s · 4.3 s |  |
+| 12 | A guest order, then signed in with the sign-in code (mock SMS) | iPhone 13/14 (390×844) | Wifi | dhk-mohammadpur-bn, out-jashore | ✅ PASS | 1269, 1270 | 0.4 s · 0.4 s · 0.1 s · 0.3 s · 0.7 s |  |
+| 13 | Delivery inside Dhaka, a Dhaka suburb and outside Dhaka, with the owner's charges | Tablet (820×1180) | 4G | dhk-motijheel-mixed, sub-savar, out-kushtia | ✅ PASS | 1271, 1272, 1273 | 0.8 s · 0.8 s · 0.2 s · 1.1 s · 1.3 s | skip dhaka charge: no delivery band is switched on yet (the owner's delivery charges): only the address round trip is checked; skip suburb charge: no delivery band is switched on yet (the owner's delivery charges): only the address round trip is checked; skip outside charge: no delivery band is switched on yet (the owner's delivery charges): only the address round trip is checked |
 | 14 | A coupon the owner made (only one with no use limit; none is ever made) | Desktop 1920×1080 | Wifi | — | ⏭️ SKIP | — | — | skip coupon: the owner has no open coupon without a use limit: none is made by the run |
-| 15 | The admin adds a piece, records a payment and re-books (gate check 4) | Mid Android (393×873) | 4G | dhk-banani-long | ✅ PASS | 1165 | 0.8 s · 0.8 s · 0.2 s · 1.2 s · 1.3 s | skip re-booked at the new amount: recording payments by hand is off (owner's setting payments.manual) |
+| 15 | The admin adds a piece, records a payment and re-books (gate check 4) | Mid Android (393×873) | 4G | dhk-banani-long | ✅ PASS | 1274 | 1.4 s · 1.2 s · 0.2 s · 1.2 s · 1.5 s | skip re-booked at the new amount: recording payments by hand is off (owner's setting payments.manual) |
 | 16 | Partial delivery, a return and an exchange (on the mocks) | Mid Android (393×873) | 4G | — | ⏭️ SKIP | — | — | skip partial, return, exchange: each needs a delivered parcel: on the preview site that would count as a real sale and move the courier's cash, so it is proved on the practice courier in CI (packages/payments and packages/orders return, exchange and partial-delivery database tests) and not here |
-| 17 | Two shoppers race for the last piece | Mid Android (393×873) | Wifi | dhk-khilgaon-pasted | ✅ PASS | 1166 | — |  |
-| 18 | A 2.1 kg parcel, the courier's statement with a planted mismatch, and a gift (gate checks 24, 23, 7) | Desktop 1366×768 | 4G | out-patuakhali-mixed | ✅ PASS | 1167 | 0.9 s · 0.8 s · 0.2 s · 1.1 s · 1.3 s |  |
+| 17 | Two shoppers race for the last piece | Mid Android (393×873) | Wifi | dhk-badda | ✅ PASS | 1275 | — |  |
+| 18 | A 2.1 kg parcel, the courier's statement with a planted mismatch, and a gift (gate checks 24, 23, 7) | Desktop 1366×768 | 4G | out-patuakhali-mixed | ✅ PASS | 1276 | 0.8 s · 1.1 s · 0.3 s · 1.1 s · 1.5 s |  |
 
 ## The six gate checks that need an order (GATE-phase2 plan rows 1, 4, 7, 21, 23, 24)
 
@@ -47,11 +47,11 @@
 | Network | Screen | Orders | First load | Product page | Add to bag | Checkout open | Submit → thank-you |
 |---|---|---|---|---|---|---|---|
 | Slow 3G | phone | 1 | 11 s | 12 s | 2.1 s | 13 s | 14 s |
-| Fast 3G | phone | 3 | 3.2 s | 3.4 s | 0.6 s | 3.6 s | 4.3 s |
-| 4G | desktop | 1 | 0.9 s | 0.8 s | 0.2 s | 1.1 s | 1.3 s |
-| 4G | phone | 6 | 0.8 s | 0.8 s | 0.2 s | 1.2 s | 1.3 s |
-| Wifi | desktop | 1 | 0.7 s | 0.3 s | 0.1 s | 0.4 s | 0.7 s |
-| Wifi | phone | 1 | 0.3 s | 0.8 s | 0.2 s | 0.6 s | 1.1 s |
+| Fast 3G | phone | 3 | 3.1 s | 3.4 s | 0.6 s | 3.6 s | 4.3 s |
+| 4G | desktop | 1 | 0.8 s | 1.1 s | 0.3 s | 1.1 s | 1.5 s |
+| 4G | phone | 6 | 0.8 s | 0.8 s | 0.2 s | 1.1 s | 1.3 s |
+| Wifi | desktop | 1 | 0.3 s | 0.3 s | 0.1 s | 0.4 s | 0.7 s |
+| Wifi | phone | 1 | 0.4 s | 0.4 s | 0.1 s | 0.3 s | 0.7 s |
 
 ## Addresses: typed → stored → admin → courier → sticker
 
@@ -59,39 +59,39 @@ Every order used its own address. A row fails when a word, a digit or the phone 
 
 | Order | Address (test data) | Quirk | Phone typed as | Stored | Admin | Courier | Sticker | Place | Band · charge | Result | Differences |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 1144 | dhk-dhanmondi |  | bengali | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
-| 1145 | sub-tongi |  | plus880 | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1146 | out-chattogram |  | 880 | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1147 | out-rajshahi |  | spaced | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1148 | dhk-mirpur |  | local | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
-| 1149 | out-khulna |  | bengali | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1150 | sub-fatullah |  | plus880 | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1151 | out-barishal |  | 880 | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1152 | out-sylhet |  | spaced | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1153 | out-rangpur |  | local | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1154 | dhk-gulshan |  | bengali | ✓ | ✓ | skip | skip | OK | dhaka-city · 0 | ✅ PASS |  |
-| 1155 | out-mymensingh |  | plus880 | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1156 | out-bogura-bn | bengali | bengali | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1157 | out-coxs-bazar |  | spaced | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1158 | dhk-uttara |  | local | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
-| 1159 | out-cumilla |  | bengali | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1160 | dhk-mohammadpur-bn | bengali | plus880 | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
-| 1161 | out-jashore |  | 880 | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1162 | dhk-motijheel-mixed | mixed | spaced | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
-| 1163 | sub-savar |  | local | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1164 | out-kushtia |  | bengali | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
-| 1165 | dhk-banani-long | long | plus880 | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
-| 1166 | dhk-khilgaon-pasted | pasted | 880 | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
-| 1167 | out-patuakhali-mixed | mixed | local | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1253 | dhk-dhanmondi |  | bengali | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
+| 1254 | sub-tongi |  | plus880 | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1255 | out-chattogram |  | 880 | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1256 | out-rajshahi |  | spaced | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1257 | dhk-mirpur |  | local | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
+| 1258 | out-khulna |  | bengali | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1259 | sub-fatullah |  | plus880 | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1260 | out-barishal |  | 880 | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1261 | out-sylhet |  | spaced | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1262 | out-rangpur |  | local | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1263 | dhk-gulshan |  | bengali | ✓ | ✓ | skip | skip | OK | dhaka-city · 0 | ✅ PASS |  |
+| 1264 | out-mymensingh |  | plus880 | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1265 | out-bogura-bn | bengali | bengali | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1266 | out-coxs-bazar |  | spaced | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1267 | dhk-uttara |  | local | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
+| 1268 | out-cumilla |  | bengali | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1269 | dhk-mohammadpur-bn | bengali | plus880 | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
+| 1270 | out-jashore |  | 880 | ✓ | ✓ | skip | skip | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1271 | dhk-motijheel-mixed | mixed | spaced | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
+| 1272 | sub-savar |  | local | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1273 | out-kushtia |  | bengali | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
+| 1274 | dhk-banani-long | long | plus880 | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
+| 1275 | dhk-badda |  | spaced | ✓ | ✓ | ✓ | ✓ | OK | dhaka-city · 0 | ✅ PASS |  |
+| 1276 | out-patuakhali-mixed | mixed | local | ✓ | ✓ | ✓ | ✓ | OK | outside-dhaka · 0 | ✅ PASS |  |
 
 Coverage: 8 divisions (barishal, chattogram, dhaka, khulna, mymensingh, rajshahi, rangpur, sylhet); 13 districts outside Dhaka.
 
 ## Clean-up (nothing deleted)
 
-- Test orders cancelled through the normal cancel path: 21 now, 146 were already closed.
+- Test orders cancelled through the normal cancel path: 21 now, 255 were already closed.
 - Test products archived: 3; their colours, sizes and stock shelf: 10. The test courier account the run added is archived.
 - Sales (delivered only): no test order counts as a sale (0 test orders counted as sales, 0 test pieces in sales by SKU (delivered only)).
-- Marked as tests: 153 of 167 test orders carry an internal "GATE TEST" note (the order flags take only the owner's own list)
+- Marked as tests: 261 of 276 test orders carry an internal "GATE TEST" note (the order flags take only the owner's own list)
 - Refund requests the cancels recorded for the mock-paid test orders: 10 (requests only, no money moved; the mock never took any). The owner may close them on Money › Refunds.
 - the shop's web processes told to drop the pages of 3 test product(s) and every category list (cache bus)
 

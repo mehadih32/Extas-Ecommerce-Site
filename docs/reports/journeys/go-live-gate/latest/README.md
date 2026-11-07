@@ -1,6 +1,6 @@
 # Journeys — PASS
 
-2026-11-06 22:12 (Asia/Dhaka) · https://new.extas.com.bd · run now · 4689df67c695 · group go-live-gate
+2026-11-07 18:55 (Asia/Dhaka) · https://new.extas.com.bd · run now · eea92e3c11d1 · group go-live-gate
 
 4 journeys (journey × screen), 0 failed; 60 steps, 4 skipped.
 

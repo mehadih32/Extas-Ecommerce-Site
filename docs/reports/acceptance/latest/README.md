@@ -6,12 +6,12 @@
 - টেস্ট অর্ডার সব বাতিল আর টেস্ট পণ্য আর্কাইভ করা হয়; কিছু মোছা হয় না, কোনো টাকা নড়ে না, আসল কাস্টমারকে কোনো মেসেজ যায় না।
 - ফলাফলটা Go-live পাতায় "acceptance" লাইনের পাশে দেখা যাবে। docs/golive/ACCEPTANCE.md-এর যে লাইনগুলো মানুষকে দেখতে হয়, সেগুলো দেখে নিশ্চিত করা (Confirm) একজন মানুষের কাজ — এই রান নিজে কিছু নিশ্চিত করে না।
 
-- Run: 2026-11-06 21:59 (Asia/Dhaka) · version `4689df67c695` · host: the preview host of the server's settings
+- Run: 2026-11-07 18:46 (Asia/Dhaka) · version `eea92e3c11d1` · host: the preview host of the server's settings
 - Result: **PASS** — 4 of 4 parts passed.
 
 | # | Part | Result | What it found | Its own report |
 |---|---|---|---|---|
-| 1 | Smoke test: every built page, signed out and as the admin, phone and desktop | ✅ PASS | 480 page views, 0 failed | [docs/reports/smoke/latest/](../../../../docs/reports/smoke/latest/README.md) |
+| 1 | Smoke test: every built page, signed out and as the admin, phone and desktop | ✅ PASS | 546 page views, 0 failed | [docs/reports/smoke/latest/](../../../../docs/reports/smoke/latest/README.md) |
 | 2 | Go-live gate journeys (journeys group go-live-gate: orders and changes nothing) | ✅ PASS | 4 journeys, 60 steps: 0 failed, 4 skipped | [docs/reports/journeys/go-live-gate/latest/](../../../../docs/reports/journeys/go-live-gate/latest/README.md) |
 | 3 | Go-live test orders: 18 scenarios on the mocks, every order cancelled after | ✅ PASS | 18 scenarios: 14 passed, 0 failed, 4 skipped; 24 test orders, clean-up done | [docs/reports/gate-orders/latest/](../../../../docs/reports/gate-orders/latest/README.md) |
 | 4 | Customer 360°: one test customer's whole life cycle | ✅ PASS | 150 steps: 122 pass, 0 fail, 28 skip | [docs/reports/gate-c360/latest/](../../../../docs/reports/gate-c360/latest/README.md) |

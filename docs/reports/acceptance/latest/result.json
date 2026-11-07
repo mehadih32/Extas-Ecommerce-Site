@@ -1,8 +1,8 @@
 {
   "kind": "acceptance",
-  "at": "2026-11-06 21:59 (Asia/Dhaka)",
-  "iso": "2026-11-06T21:59:43+06:00",
-  "sha": "4689df67c695",
+  "at": "2026-11-07 18:46 (Asia/Dhaka)",
+  "iso": "2026-11-07T18:46:01+06:00",
+  "sha": "eea92e3c11d1",
   "ok": true,
   "passed": 4,
   "total": 4,
@@ -12,8 +12,8 @@
       "ran": true,
       "ok": true,
       "exit": 0,
-      "line": "480 page views, 0 failed",
-      "at": "2026-11-06 21:59 (Asia/Dhaka)"
+      "line": "546 page views, 0 failed",
+      "at": "2026-11-07 18:46 (Asia/Dhaka)"
     },
     {
       "key": "journeys",
@@ -21,7 +21,7 @@
       "ok": true,
       "exit": 0,
       "line": "4 journeys, 60 steps: 0 failed, 4 skipped",
-      "at": "2026-11-06 22:12 (Asia/Dhaka)"
+      "at": "2026-11-07 18:55 (Asia/Dhaka)"
     },
     {
       "key": "gate-orders",
@@ -29,7 +29,7 @@
       "ok": true,
       "exit": 0,
       "line": "18 scenarios: 14 passed, 0 failed, 4 skipped; 24 test orders, clean-up done",
-      "at": "2026-11-06 22:13 (Asia/Dhaka)"
+      "at": "2026-11-07 18:56 (Asia/Dhaka)"
     },
     {
       "key": "gate-c360",
@@ -37,7 +37,7 @@
       "ok": true,
       "exit": 0,
       "line": "150 steps: 122 pass, 0 fail, 28 skip",
-      "at": "2026-11-06 22:20 (Asia/Dhaka)"
+      "at": "2026-11-07 19:03 (Asia/Dhaka)"
     }
   ]
 }
