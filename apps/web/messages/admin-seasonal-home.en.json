@@ -49,7 +49,9 @@
       "collNone": "the categories in turns (as usual)",
       "edit": "Change this look",
       "archive": "Set aside",
-      "restore": "Bring back"
+      "restore": "Bring back",
+      "preview": "Preview on the home page",
+      "previewHelp": "Opens the home page with this look in a new tab. Only signed-in staff see it; customers keep the usual home page until the look’s window starts."
     },
     "save": {
       "h": "Save the home page as it is now",

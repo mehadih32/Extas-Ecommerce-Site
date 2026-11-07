@@ -500,6 +500,7 @@
   "home": {
     "shopByCategory": "Shop by category",
     "shopAll": "Shop all",
+    "seasonalPreview": "Preview of the seasonal look “{look}”. Only signed-in staff see this; customers see the usual home page until its window starts.",
     "hero": {
       "eyebrow": "New in",
       "title": "Find your style",

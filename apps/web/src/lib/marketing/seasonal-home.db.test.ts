@@ -13,7 +13,7 @@ import { HOME_SECTIONS, messages, prismaBackend, registry, SettingsResolver, syn
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
 import { defaultShopSettings, type ShopContext } from '../shop/context';
-import { seasonalHome } from '../shop/seasonal-home';
+import { previewLookFor, seasonalHome } from '../shop/seasonal-home';
 import { seasonalHomeHandler, type SeasonalHomeOverview } from './seasonal-home';
 import { seasonalNotes } from './seasonal-notes';
 import { notificationsHandler } from '../admin-shell/api';
@@ -223,5 +223,22 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Seasonal home on PostgreSQL (PR 280
       const b = await bell(who);
       expect(Array.isArray(b.items)).toBe(true);
     }
+  });
+
+  it('follow-up 648: a saved look previews for signed-in staff who may see it, before its window and with the switch off; nobody else', async () => {
+    const look = await t.prisma.layoutSnapshot.findUniqueOrThrow({ where: { id: ids.winter } });
+    const g = (await api('GET')).a;
+    await api('PUT', { key: 'seasonalHome', value: { enabled: false }, version: g.card.version });
+    const ask = (cookie?: string, id = ids.winter) => previewLookFor(admin, req('GET', { path: '/', ...(cookie ? { cookie } : {}) }), S, id!);
+    for (const who of [owner, desk]) expect(await ask(who)).toMatchObject({ name: look.name, look: { 'home.sections': expect.any(Array) } });
+    expect(await ask()).toBeNull();
+    expect(await ask('__Host-admin_sid=not-a-session')).toBeNull();
+    const aside = await t.prisma.layoutSnapshot.create({ data: { storeId: S, name: 'Old Puja', payload: look.payload as object, archivedAt: new Date(now) } });
+    expect(await ask(owner, aside.id)).toBeNull();
+    expect(await ask(owner, '00000000-0000-7000-8000-000000000000')).toBeNull();
+    // a preview reads only: nothing is written, nothing audited
+    const audits = await t.prisma.auditLog.count();
+    await ask(owner);
+    expect(await t.prisma.auditLog.count()).toBe(audits);
   });
 });

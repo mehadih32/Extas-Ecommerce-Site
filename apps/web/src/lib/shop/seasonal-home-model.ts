@@ -33,6 +33,19 @@ export function lookOf(payload: unknown): HomeLook {
   return out as HomeLook;
 }
 
+/** Follow-up 648: the home page's preview parameter (`?seasonal-look=<look id>`). */
+export const PREVIEW_PARAM = 'seasonal-look';
+const LOOK_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The look id asked for in the preview parameter (the first value when repeated), or null when it is not a look id. */
+export function previewLookId(raw: unknown): string | null {
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  return typeof v === 'string' && LOOK_ID_RE.test(v) ? v.toLowerCase() : null;
+}
+
+/** Follow-up 648: the home page's address that previews a look (`/` or `/bn`, the shop's language prefix given). */
+export const previewHref = (home: string, lookId: string): string => `${home}?${PREVIEW_PARAM}=${encodeURIComponent(lookId)}`;
+
 /** A look's payload as it is saved. */
 export const lookPayload = (look: HomeLook): { scope: typeof HOME_LOOK_SCOPE; settings: HomeLook } => ({ scope: HOME_LOOK_SCOPE, settings: look });
 

@@ -16,6 +16,8 @@
 // cut-off is on with the home page ticked (off as shipped: nothing drawn, the phone gate's page unchanged).
 // S13 · PR 280: while a seasonal window is live (Marketing › Seasonal home, off as shipped), its look's home settings
 // (sections, hero, the hero's pictures, the rows) stand in for the owner's own; after the window, his own again.
+// Follow-up 648: `?seasonal-look=<look>` previews a saved look before its window, only for signed-in staff who may see
+// Seasonal home (lib/shop/seasonal-home seasonalPreview), with a note on top; a customer gets the usual home page.
 // S02 · PR 76: the owner arranges the sections on Website › Page layouts; a section may keep to phones or to computers
 // (LayoutPart: a wrapper the style sheet hides; none when it shows on both, so the page is the same as before).
 // S02 · PR 595: the owner's own sections (`layout.blocks`: banner, offer strip, product row or grid, sets, tiles, reviews,
@@ -49,7 +51,9 @@ import { shopLd } from '@/lib/seo/shop-ld';
 import { shopMetadata, shopOrigin } from '@/lib/shop/meta';
 import { hrefIn } from '@/lib/shop/lang';
 import { homeReviews } from '@/lib/shop/reviews';
-import { seasonalHome } from '@/lib/shop/seasonal-home';
+import { seasonalHome, seasonalPreview } from '@/lib/shop/seasonal-home';
+import { PREVIEW_PARAM } from '@/lib/shop/seasonal-home-model';
+import { Icon } from '@/components/shop/Icon';
 
 export async function generateMetadata(): Promise<Metadata> {
   // PR 221: the home page's search title and description (`seo.titles.home`; the shop's name until the owner writes more)
@@ -71,7 +75,9 @@ type Search = Record<string, string | string[] | undefined>;
 
 export default async function Home(props: { searchParams: Promise<Search> }) {
   const [own, search] = await Promise.all([shopContext(), props.searchParams]);
-  const c = await seasonalHome(own);
+  // ~~const c = await seasonalHome(own);~~ follow-up 648: a staff member's preview of a saved look comes first
+  const preview = search[PREVIEW_PARAM] ? await seasonalPreview(own, search[PREVIEW_PARAM]) : null;
+  const c = preview ? preview.c : await seasonalHome(own);
   // ~~homeSectionsOn(c.s['home.sections'])~~ PR 76: the shown sections with their screens
   const shown = shownSections<HomeSectionId>('home', c.s['home.sections']);
   const on = shown.map((x) => x.id);
@@ -127,6 +133,15 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
     const k = [after('new-in'), after('categories')].find((x) => x >= 0);
     body.splice(k === undefined ? body.length : k + 1, 0, <HomeBuildRow key="build" c={c} entry={build} />);
   }
+  if (preview)
+    body.unshift(
+      <div key="seasonal-preview" className="container">
+        <div className="tint hm-festive" role="note" data-testid="home-seasonal-preview">
+          <Icon name="clock" size={22} />
+          <p className="small grow">{c.t('home.seasonalPreview', { look: preview.name })}</p>
+        </div>
+      </div>,
+    );
   // follow-up 21: the cards' back view and Quick add (computer with a mouse), and the added-to-bag panel it opens
   const desk = (
     <>

@@ -2,7 +2,7 @@
 // state at a moment, the live window, the overlap rule, and the shop's clock both ways (Asia/Dhaka, UTC+6).
 import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
-import { liveWindow, lookOf, lookPayload, overlaps, utcToWall, wallToUtc, windowState, withLook } from './seasonal-home-model';
+import { liveWindow, lookOf, lookPayload, overlaps, previewHref, previewLookId, utcToWall, wallToUtc, windowState, withLook } from './seasonal-home-model';
 
 const at = (iso: string) => new Date(iso);
 
@@ -40,5 +40,15 @@ describe('seasonal home model (PR 280)', () => {
     expect(wallToUtc('', 'Asia/Dhaka')).toBeNull();
     expect(wallToUtc(null, 'Asia/Dhaka')).toBeNull();
     for (const v of ['2027-02-30T10:00', '2027-03-09 18:30', '2027-03-09T24:00', '2027-03-09T10:60', 'soon', 5]) expect(wallToUtc(v, 'Asia/Dhaka')).toBeUndefined();
+  });
+
+  it('follow-up 648: the preview parameter takes a look id only (the first when repeated), and the link names it', () => {
+    const id = '0190c2a4-7b1e-7c3d-8e4f-5a6b7c8d9e0f';
+    expect(previewLookId(id)).toBe(id);
+    expect(previewLookId(id.toUpperCase())).toBe(id);
+    expect(previewLookId([id, 'x'])).toBe(id);
+    for (const v of [undefined, '', 'eid-2027', `${id}x`, "1' or 1=1", 5, ['x', id]]) expect(previewLookId(v)).toBeNull();
+    expect(previewHref('/', id)).toBe(`/?seasonal-look=${id}`);
+    expect(previewHref('/bn', id)).toBe(`/bn?seasonal-look=${id}`);
   });
 });
