@@ -6,6 +6,9 @@
 // (memory per service, disks, the NVMe unit, cache, alerts: PR 423, 601, 603, 604, 9) join this page with their PRs.
 // S11 · PR 234: real visitors' speed (the 75th percentile on a phone against PR 10's targets) and the newest monthly lab
 // run, in four numbers; the full card and its settings are on Website › SEO.
+// PR 602 follow-up 400: the cache's layers today — the page cache's and the stock numbers' hits and misses (shared over
+// Redis, or this process's own), how many each keeps now, Cloudflare's mode and the last clear; the times and "Clear
+// all" stay on Settings › System › Cache. A read that fails leaves the card saying so; the page still opens.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -23,6 +26,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { formatVital } from '@/lib/seo/vitals';
 import { labReport, vitalsReport } from '@/lib/seo/vitals-data';
 import { readPageSettings } from '@/lib/shop/context';
+import { serverCacheCard } from '@/lib/admin-server/cache-card';
 import { edgeUploadMaxBytes, uploadLimitProblems } from '@/lib/upload-limit';
 
 export const dynamic = 'force-dynamic';
@@ -46,7 +50,11 @@ export default async function ServerPage() {
 
   const s = await workerStatus({ db: access.deps.db, settings: access.deps.resolver, now: access.deps.now });
   const { 'seo.vitals': vitalsSet } = await readPageSettings(['seo.vitals'] as const, MOTHER_STORE_ID);
-  const [vitals, lab] = await Promise.all([vitalsReport(access.deps.db, MOTHER_STORE_ID, vitalsSet), labReport(access.deps.db, MOTHER_STORE_ID, vitalsSet)]);
+  const [vitals, lab, cache] = await Promise.all([
+    vitalsReport(access.deps.db, MOTHER_STORE_ID, vitalsSet),
+    labReport(access.deps.db, MOTHER_STORE_ID, vitalsSet),
+    serverCacheCard({ actor: access.guard.actor, storeId: MOTHER_STORE_ID }),
+  ]);
   // Follow-up 618: an upload size setting above the server's own upload limit (Caddy answers 413 before the app).
   const [mediaMaxBytes, attachments] = await Promise.all([
     access.deps.resolver.value('media.upload.maxBytes'),
@@ -216,6 +224,36 @@ export default async function ServerPage() {
         </div>
         <p className="pa-empty">
           <Link href="/admin/website/seo#a2s-seovt" className="sv-more">{t(d, 'server.speed.more')}</Link>
+        </p>
+      </section>
+
+      <section className="ad-card st-card" aria-labelledby="sv-cache" data-testid="server-cache" data-cache={cache ? (cache.shared ? 'shared' : 'process') : 'none'}>
+        <h2 id="sv-cache">{t(d, 'server.cache.title')}</h2>
+        <p className="ad-sub">{t(d, cache?.shared ? 'server.cache.subShared' : 'server.cache.subHere')}</p>
+        {cache ? (
+          <div className="pa-kpis">
+            {cache.layers.map((l) => (
+              <div key={l.layer} className="pa-kpi" data-layer={l.layer}>
+                <div className="pa-kpi-v">{l.percent == null ? '—' : t(d, 'server.cache.pct', { n: num(l.percent) })}</div>
+                <div className="pa-kpi-l">{t(d, `server.cache.layer.${l.layer}`)}</div>
+                <div className="pa-kpi-s">{t(d, 'server.cache.counts', { hits: num(l.hits), misses: num(l.misses), kept: num(l.kept) })}</div>
+              </div>
+            ))}
+            <div className="pa-kpi" data-cdn={cache.cdn ?? 'none'}>
+              <div className="pa-kpi-v st-kpi-t">{t(d, `server.cache.cdn.${cache.cdn ?? 'none'}`)}</div>
+              <div className="pa-kpi-l">{t(d, 'server.cache.cdnLabel')}</div>
+              <div className="pa-kpi-s">{t(d, cache.cdnPages ? 'server.cache.cdnPages' : 'server.cache.cdnFiles')}</div>
+            </div>
+            <div className="pa-kpi">
+              <div className="pa-kpi-v st-kpi-t">{cache.lastCleared ? when(cache.lastCleared) : t(d, 'server.cache.never')}</div>
+              <div className="pa-kpi-l">{t(d, 'server.cache.last')}</div>
+            </div>
+          </div>
+        ) : (
+          <p className="pa-empty">{t(d, 'server.cache.unavailable')}</p>
+        )}
+        <p className="pa-empty">
+          <Link href="/admin/settings/system/cache" className="sv-more">{t(d, 'server.cache.more')}</Link>
         </p>
       </section>
 

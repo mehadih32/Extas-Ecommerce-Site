@@ -102,7 +102,7 @@
       "secondsAgo": "{n} seconds ago",
       "minutesAgo": "{n} minutes ago"
     },
-    "note": "This page only shows; it changes nothing. Memory, disks, cache and alerts come to this page with their own steps.",
+    "note": "This page only shows; it changes nothing. Memory, disks and alerts come to this page with their own steps.",
     "errors": {
       "WORKER_LOST": "The worker stopped in the middle of this job; it runs again.",
       "STALLED": "The job got stuck too many times and was given up."
@@ -119,6 +119,30 @@
       "labNone": "Not yet",
       "labWhen": "Runs on the 2nd of each month",
       "more": "Every number, the targets and the settings: Website › SEO › Real visitors' speed"
+    },
+    "cache": {
+      "title": "Cache today",
+      "subShared": "Every copy of the shop counted together (Redis), since midnight in the shop's time zone.",
+      "subHere": "This server process only (Redis is not connected), since it started.",
+      "pct": "{n}% reused",
+      "counts": "{hits} reused · {misses} built · {kept} kept now",
+      "layer": {
+        "page": "Page cache",
+        "stock": "Stock numbers"
+      },
+      "cdnLabel": "Cloudflare",
+      "cdn": {
+        "none": "Not connected",
+        "MOCK": "Practice",
+        "SANDBOX": "Sandbox",
+        "LIVE": "Live"
+      },
+      "cdnPages": "keeps pages",
+      "cdnFiles": "files only (pages are not kept)",
+      "last": "Last cleared",
+      "never": "Not yet",
+      "unavailable": "The cache's figures cannot be read now. The shop is not affected.",
+      "more": "Times and \"Clear all\": Settings › System › Cache"
     },
     "upload": {
       "title": "An upload size setting is above the server's own limit",
