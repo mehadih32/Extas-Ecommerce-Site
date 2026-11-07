@@ -33,7 +33,9 @@ describe.skipIf(!HAS_DB)('sample seed on PostgreSQL', () => {
       Colour: sampleCatalogue.colours.length,
       Size: sampleCatalogue.sizes.length,
       SizeChart: sampleCatalogue.sizeCharts.length,
-      Customer: 1,
+      // follow-up 478: the sample customer and his other profiles (one merged into him, with its merge decision)
+      Customer: 1 + (sampleCatalogue.otherProfiles?.length ?? 0),
+      CustomerMerge: sampleCatalogue.otherProfiles?.filter((p) => p.merged).length ?? 0,
       Order: 1,
       OrderItem: sampleCatalogue.order.items.length,
       ProductQuestion: sampleCatalogue.questions?.length ?? 0,
@@ -59,6 +61,16 @@ describe.skipIf(!HAS_DB)('sample seed on PostgreSQL', () => {
     expect(first.messages.find((m) => m.isInternalNote)).toMatchObject({ status: null, direction: 'NOTE' });
     expect(first.messages.find((m) => m.direction === 'OUT')).toMatchObject({ status: 'NOT_SENT', failReason: 'CHANNEL_NOT_CONNECTED' });
     expect(first.events.map((e) => e.kind)).toEqual(['RECEIVED', 'REPLIED', 'STATUS', 'NOTED', 'RECEIVED']);
+
+    // follow-up 478: a "Same person?" pair (same e-mail, not merged) and a profile merged into him, as a person's merge leaves it
+    for (const p of sampleCatalogue.otherProfiles ?? []) {
+      const row = await db.prisma.customer.findUniqueOrThrow({ where: { storeId_phone: { storeId, phone: p.phone } } });
+      expect(row).toMatchObject({ name: p.name, email: p.email, mergedIntoId: p.merged ? customer.id : null });
+      expect(!!row.mergedAt).toBe(p.merged);
+      const merges = await db.prisma.customerMerge.findMany({ where: { storeId, mergedId: row.id } });
+      expect(merges.map((m) => [m.decision, m.survivorId, m.undoneAt])).toEqual(p.merged ? [['MERGED', customer.id, null]] : []);
+    }
+    expect(customer.mergedIntoId).toBeNull();
 
     // The first store of an installation is the mother store (A4.5).
     expect(await db.prisma.store.findUniqueOrThrow({ where: { id: storeId } })).toMatchObject({ slug: 'sample', isPrimary: true, status: 'LIVE' });

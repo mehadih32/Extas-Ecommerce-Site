@@ -182,6 +182,17 @@ describe('owner-data check (PR 509)', () => {
     expect(rules({ sample })).toEqual(expect.arrayContaining(['sample-unmarked', 'sample-phone', 'sample-email', 'sample-phone-bd']));
   });
 
+  it("follow-up 478: the sample customer's other profiles are plainly sample data too", () => {
+    expect(sampleCatalogue.otherProfiles?.some((p) => p.email === sampleCatalogue.customer.email && !p.merged)).toBe(true);
+    expect(sampleCatalogue.otherProfiles?.some((p) => p.merged)).toBe(true);
+    const sample = clone(sampleCatalogue);
+    sample.otherProfiles![0]!.name = 'Rahim (office)';
+    sample.otherProfiles![0]!.phone = '+8801812345679';
+    sample.otherProfiles![0]!.email = 'rahim@mail.example.bd';
+    const found = rules({ sample });
+    expect(found).toEqual(expect.arrayContaining(['sample-unmarked', 'sample-phone', 'sample-email']));
+  });
+
   it('PR 66: a sample question that does not say "Sample" fails', () => {
     const sample = clone(sampleCatalogue);
     expect(rules({ sample })).not.toContain('sample-unmarked');

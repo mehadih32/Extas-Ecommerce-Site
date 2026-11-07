@@ -1,5 +1,6 @@
 // PR 14 — the sample catalogue: a sample store with the approved demo's categories, colours, sizes, products, variants,
-// stock, size charts, one demo order, a few answered questions (PR 66) and a few approved reviews (PR 65), so every
+// stock, size charts, one demo order, a few answered questions (PR 66), a few approved reviews (PR 65) and (follow-up
+// 478) the sample customer's other profiles — a "Same person?" pair and a merged one —, so every
 // demo screen can be built and tested against real rows.
 //
 // SAMPLE DATA ONLY (CLAUDE.md rule 4, PR 509). The store, brand, customer and order are made up and carry the sample
@@ -104,6 +105,15 @@ const sampleSchema = z
       )
       .min(1),
     customer: z.object({ name: text(80), phone: z.string().regex(/^\+[1-9]\d{7,14}$/), email: z.email() }).strict(),
+    /**
+     * Follow-up 478 (PR 284–286): more profiles of the sample customer, so Customers › To review shows a "Same person?" pair
+     * (the same e-mail, not merged) and his page shows a merged profile on its Profiles card. A merged one is left exactly
+     * as a person's merge leaves it: it names him as its survivor, with a MERGED decision a person can undo.
+     */
+    otherProfiles: z
+      .array(z.object({ name: text(80), phone: z.string().regex(/^\+[1-9]\d{7,14}$/), email: z.email(), merged: z.boolean() }).strict())
+      .max(5)
+      .optional(),
     order: z
       .object({
         number: text(40),
@@ -280,6 +290,7 @@ export const SAMPLE_TABLES = [
   'InventoryLocation',
   'StockLevel',
   'Customer',
+  'CustomerMerge',
   'Order',
   'OrderItem',
   'OrderEvent',
@@ -685,6 +696,19 @@ async function seedSampleTx(
       select: { id: true },
     });
     made('Customer');
+  }
+  // follow-up 478: his other profiles (a "Same person?" pair, and one merged into him with its decision)
+  for (const p of s.otherProfiles ?? []) {
+    if (await tx.customer.findUnique({ where: { storeId_phone: { storeId, phone: p.phone } }, select: { id: true } })) continue;
+    const other = await tx.customer.create({
+      data: { storeId, phone: p.phone, name: p.name, email: p.email, firstSource: s.order.source, createdAt: placedAt, ...(p.merged ? { mergedIntoId: customer.id, mergedAt: placedAt } : {}) },
+      select: { id: true },
+    });
+    made('Customer');
+    if (p.merged) {
+      await tx.customerMerge.create({ data: { storeId, decision: 'MERGED', survivorId: customer.id, mergedId: other.id, signals: ['manual'], note: `${s.marker} merge`, createdAt: placedAt } });
+      made('CustomerMerge');
+    }
   }
   const order = await tx.order.findUnique({ where: { storeId_number: { storeId, number: s.order.number } }, select: { id: true } });
   if (!order) {

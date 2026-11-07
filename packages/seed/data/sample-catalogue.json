@@ -846,6 +846,10 @@
     "phone": "+8801000000001",
     "email": "sample.customer@example.com"
   },
+  "otherProfiles": [
+    { "name": "Sample Customer (office)", "phone": "+8801000000002", "email": "sample.customer@example.com", "merged": false },
+    { "name": "Sample Customer (old number)", "phone": "+8801000000003", "email": "sample.customer.old@example.com", "merged": true }
+  ],
   "order": {
     "number": "SAMPLE-0001",
     "idempotencyKey": "sample-order-0001",

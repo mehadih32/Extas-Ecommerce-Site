@@ -160,6 +160,12 @@ export function checkOwnerData(input: CheckInput): Finding[] {
   if (!SAMPLE_EMAIL.test(input.sample.customer.email)) {
     add('sample-email', 'sample customer.email (Customer)', 'a sample e-mail must be on example.com');
   }
+  // follow-up 478: the sample customer's other profiles, the same way
+  for (const [i, p] of (input.sample.otherProfiles ?? []).entries()) {
+    marked(`otherProfiles[${i}].name (Customer)`, p.name);
+    if (!SAMPLE_PHONE.test(p.phone)) add('sample-phone', `sample otherProfiles[${i}].phone (Customer)`, 'a sample phone must be in the unallocated +88010 range');
+    if (!SAMPLE_EMAIL.test(p.email)) add('sample-email', `sample otherProfiles[${i}].email (Customer)`, 'a sample e-mail must be on example.com');
+  }
   if (input.pack.key === SAMPLE_PACK_KEY) add('pack-key', 'default pack key', `"${SAMPLE_PACK_KEY}" is reserved for the sample seed`);
 
   return findings;
