@@ -7,7 +7,9 @@
 //   places under it move under the other one, and saved customer addresses follow it; placed orders keep the place they
 //   had. A place the owner adds has no importer code, so an import never touches it (import.ts).
 // - The owner's word wins over a later import: a renamed or re-spelled place keeps the owner's names (the file's new
-//   spelling only joins its spellings) and a merged place is never brought back (import.ts reads these audit rows).
+//   spelling only joins its spellings) and a merged place is never brought back. Follow-up 416: both are columns on the
+//   place (`ownerNamedAt`, `mergedIntoId`, set in the same transaction as the change and its audit row), which import.ts
+//   reads; the audit rows stay the record of who did what.
 // - A rename keeps the old name as a spelling unless the owner says not to, so old addresses still find the place.
 // - The area list is installation-wide (GeoArea has no store); the permission is checked in the store that acts.
 import { z } from 'zod';
@@ -18,7 +20,8 @@ import { GEO_LEVELS, type GeoLevelName } from './gazetteer';
 import { forgetGazetteer } from './load';
 import { nameKey } from './text';
 
-/** The audit actions an import reads back: the owner's names and spellings win; a merged place stays merged. */
+/** The audit actions of the owner's place changes: the names and spellings win; a merged place stays merged (since
+ * follow-up 416 the import reads the place's columns; migration 0165 filled them from rows with these actions). */
 export const PLACE_ACTIONS = { add: 'delivery.place.add', rename: 'delivery.place.rename', aliases: 'delivery.place.aliases', merge: 'delivery.place.merge', mergedInto: 'delivery.place.mergeInto' } as const;
 export const OWNER_NAMED_ACTIONS: readonly string[] = [PLACE_ACTIONS.rename, PLACE_ACTIONS.aliases, PLACE_ACTIONS.mergedInto];
 
@@ -116,7 +119,7 @@ export async function renamePlace(deps: DeliveryDeps, who: Who, areaId: string, 
   const aliases = cleanAliases([...before.aliases, ...old], [nameEn, nameBn]);
   await after(
     deps.db.$transaction(async (tx) => {
-      const row = await tx.geoArea.update({ where: { id: areaId }, data: { nameEn, nameBn, aliases }, select: PLACE_SELECT });
+      const row = await tx.geoArea.update({ where: { id: areaId }, data: { nameEn, nameBn, aliases, ownerNamedAt: nowOf(deps) }, select: PLACE_SELECT });
       await logChange(tx, who, PLACE_ACTIONS.rename, 'GeoArea', areaId, pick(before), pick(row));
     }),
   );
@@ -136,7 +139,7 @@ export async function setPlaceAliases(deps: DeliveryDeps, who: Who, areaId: stri
   if (aliases.length === before.aliases.length && aliases.every((a, i) => a === before.aliases[i])) return placeDetail(deps, who, areaId);
   await after(
     deps.db.$transaction(async (tx) => {
-      const row = await tx.geoArea.update({ where: { id: areaId }, data: { aliases }, select: PLACE_SELECT });
+      const row = await tx.geoArea.update({ where: { id: areaId }, data: { aliases, ownerNamedAt: nowOf(deps) }, select: PLACE_SELECT });
       await logChange(tx, who, PLACE_ACTIONS.aliases, 'GeoArea', areaId, pick(before), pick(row));
     }),
   );
@@ -232,7 +235,7 @@ export async function mergePlace(deps: DeliveryDeps, who: Who, areaId: string, i
       // the names of the merged place become spellings of the one that stays
       const aliases = cleanAliases([...into.aliases, from.nameEn, ...(from.nameBn ? [from.nameBn] : []), ...from.aliases], [into.nameEn, into.nameBn]).slice(0, ALIASES_MAX);
       const postcodes = [...new Set([...into.postcodes, ...from.postcodes])];
-      const kept = await tx.geoArea.update({ where: { id: into.id }, data: { aliases, postcodes }, select: PLACE_SELECT });
+      const kept = await tx.geoArea.update({ where: { id: into.id }, data: { aliases, postcodes, ownerNamedAt: now }, select: PLACE_SELECT });
       // the places under it move under the place that stays (their chains follow)
       const below = await tx.geoArea.findMany({ where: { ancestorIds: { has: from.id } }, select: { id: true, parentId: true, ancestorIds: true } });
       const base = [...into.ancestorIds, into.id];
@@ -248,7 +251,7 @@ export async function mergePlace(deps: DeliveryDeps, who: Who, areaId: string, i
         await tx.areaBand.update({ where: { id: fromRow.id }, data: { archivedAt: now } });
       }
       const moved = await tx.customerAddress.updateMany({ where: { areaId: from.id }, data: { areaId: into.id } });
-      const gone = await tx.geoArea.update({ where: { id: from.id }, data: { archivedAt: now }, select: PLACE_SELECT });
+      const gone = await tx.geoArea.update({ where: { id: from.id }, data: { archivedAt: now, mergedIntoId: into.id }, select: PLACE_SELECT });
       await logChange(tx, who, PLACE_ACTIONS.merge, 'GeoArea', from.id, pick(from), { ...pick(gone), mergedIntoId: into.id, movedChildren, movedAddresses: moved.count, listedBand: fromRow?.bandId ?? null });
       await logChange(tx, who, PLACE_ACTIONS.mergedInto, 'GeoArea', into.id, pick(into), { ...pick(kept), mergedFromId: from.id });
       return { movedChildren, movedAddresses: moved.count };

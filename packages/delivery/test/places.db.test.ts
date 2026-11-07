@@ -124,4 +124,30 @@ describe.skipIf(!HAS_TEST_DB)('the owner\'s area admin on PostgreSQL (PR 502)', 
     const again = await importGazetteer(f.t.prisma, sampleGazetteerRows(), { source: 'sample' });
     expect(again.updated + again.restored + again.created).toBe(0);
   });
+
+  it('follow-up 416: the owner\'s names and merges are columns on the place, and the import reads them there', async () => {
+    const kapasia = await f.area('bd.dhaka.gazipur.kapasia');
+    const kaliganj = await f.area('bd.dhaka.gazipur.kaliganj');
+    const kaliakair = await f.area('bd.dhaka.gazipur.kaliakair');
+    const tongi = await f.area('bd.dhaka.gazipur.gazipur-sadar.tongi');
+    const cols = (id: string) => f.t.prisma.geoArea.findUniqueOrThrow({ where: { id }, select: { ownerNamedAt: true, mergedIntoId: true } });
+    expect(await cols(kaliakair)).toMatchObject({ ownerNamedAt: expect.any(Date), mergedIntoId: null }); // renamed
+    expect(await cols(tongi)).toMatchObject({ ownerNamedAt: expect.any(Date), mergedIntoId: null }); // its spellings
+    expect(await cols(kaliganj)).toMatchObject({ ownerNamedAt: expect.any(Date), mergedIntoId: null }); // a place merged into it
+    expect(await cols(kapasia)).toMatchObject({ mergedIntoId: kaliganj });
+    // a place the owner never touched has neither
+    expect(await cols(await f.area('bd.dhaka.gazipur.sreepur.mawna'))).toEqual({ ownerNamedAt: null, mergedIntoId: null });
+    // the import reads the columns, not the audit log: a place marked only by its columns (no audit row) is treated the same
+    const mawna = await f.area('bd.dhaka.gazipur.sreepur.mawna');
+    const sreepur = await f.area('bd.dhaka.gazipur.sreepur');
+    const other = (await f.t.prisma.geoArea.findFirstOrThrow({ where: { code: { startsWith: 'bd.dhaka.gazipur.kaliganj.' }, archivedAt: null }, select: { id: true } })).id;
+    await f.t.prisma.geoArea.update({ where: { id: mawna }, data: { nameEn: 'Mawna Bazar', ownerNamedAt: new Date() } });
+    await f.t.prisma.geoArea.update({ where: { id: other }, data: { archivedAt: new Date(), mergedIntoId: sreepur } });
+    expect(await f.t.prisma.auditLog.count({ where: { entityId: { in: [mawna, other] } } })).toBe(0);
+    await importGazetteer(f.t.prisma, sampleGazetteerRows(), { source: 'sample' });
+    forgetGazetteer();
+    expect((await geo(mawna)).nameEn).toBe('Mawna Bazar');
+    expect((await geo(mawna)).aliases).toContain('Mawna');
+    expect((await geo(other)).archivedAt).not.toBeNull();
+  });
 });
