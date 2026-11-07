@@ -16,6 +16,7 @@
 // cut-off is on with the home page ticked (off as shipped: nothing drawn, the phone gate's page unchanged).
 // S13 · PR 280: while a seasonal window is live (Marketing › Seasonal home, off as shipped), its look's home settings
 // (sections, hero, the hero's pictures, the rows) stand in for the owner's own; after the window, his own again.
+// Follow-up 649: only its sections, hero lines and hero collection; the hero buttons, promise lines and rows stay his own.
 // Follow-up 648: `?seasonal-look=<look>` previews a saved look before its window, only for signed-in staff who may see
 // Seasonal home (lib/shop/seasonal-home seasonalPreview), with a note on top; a customer gets the usual home page.
 // S02 · PR 76: the owner arranges the sections on Website › Page layouts; a section may keep to phones or to computers
