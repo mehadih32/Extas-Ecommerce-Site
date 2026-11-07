@@ -12,12 +12,16 @@
 // - AUTO ADJUST (never two lines): the label and every size; then no label and slimmer buttons; then the sizes that
 //   fit and "+n" to the product page.
 // - A sliding row's copy (aria-hidden) gets the back view only: no buttons inside a hidden copy.
+// - Follow-up 113 (`pdp.usualSize`, off): the size this browser keeps as his usual one (usual-size.ts, tops and
+//   bottoms apart) is marked on the card's size buttons ("Your size", read out too), and a card add of a product with
+//   more than one size is kept as the usual size, as the product page's own add is.
 import type { CardDeskSettings } from '@extas/settings';
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { QuickCard } from '@/lib/shop/card-quick';
 import { formatNumber, type ShopLang } from '@/lib/shop/lang';
-import { AddToBag, type AddWords } from './bag/AddToBag';
+import { keepUsual, loadUsual, readUsual, saveUsual, sizeGroupOf } from '@/lib/shop/usual-size';
+import { AddToBag, BAG_ADDED_EVENT, type AddWords } from './bag/AddToBag';
 import { ProductPicture } from './ProductPicture';
 
 export interface QuickWords {
@@ -30,6 +34,15 @@ export interface QuickWords {
   /** "{n}" */
   more: string;
   bag: Omit<AddWords, 'label'>;
+}
+
+/** Follow-up 113: "Your size" on the cards while `pdp.usualSize` is on (null: off). */
+export interface CardUsual {
+  days: number;
+  /** `catalogue.sizeCharts.diagramFor`: which garment types are bottoms. */
+  diagramFor: Readonly<Record<string, string>>;
+  /** "{label}, your size" (the mark itself is the button's ring, AUTO ADJUST: no extra word on the row). */
+  aria: string;
 }
 
 interface Live {
@@ -46,10 +59,27 @@ const DESK = '(min-width: 1024px)';
 const MOUSE = '(hover: hover) and (pointer: fine)';
 const fill = (s: string, vars: Record<string, string>) => s.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m);
 
-function QuickRow({ live, words, behaviour, bagHref, num }: { live: Live; words: QuickWords; behaviour: 'sheet' | 'toast' | 'page'; bagHref: string; num: (n: number) => string }) {
+function QuickRow({ live, words, behaviour, bagHref, num, usual }: { live: Live; words: QuickWords; behaviour: 'sheet' | 'toast' | 'page'; bagHref: string; num: (n: number) => string; usual: CardUsual | null }) {
   const row = useRef<HTMLSpanElement>(null);
   const [hidden, setHidden] = useState(0);
   const sizes = live.card.sizes;
+  const group = usual ? sizeGroupOf(live.card.garment, usual.diagramFor) : null;
+  // drawn only after the mouse or focus reached the card, so reading this browser's storage here never meets the server
+  const [kept, setKept] = useState<string | null>(() =>
+    usual && group && !live.card.oneSize ? readUsual(loadUsual(), group, usual.days, Date.now(), sizes.map((x) => x.key)) : null,
+  );
+  useEffect(() => {
+    if (!usual || !group || live.card.oneSize) return;
+    const onAdded = (e: Event) => {
+      const id = (e as CustomEvent<{ variantId?: string }>).detail?.variantId;
+      const s = sizes.find((x) => x.variantId === id);
+      if (!s) return;
+      saveUsual(keepUsual(loadUsual(), group, s.key, Date.now()));
+      setKept(s.key);
+    };
+    window.addEventListener(BAG_ADDED_EVENT, onAdded);
+    return () => window.removeEventListener(BAG_ADDED_EVENT, onAdded);
+  }, [usual, group, sizes, live.card.oneSize]);
   // AUTO ADJUST: measured on the real words once drawn (the panel is laid out while it is still invisible)
   useLayoutEffect(() => {
     const qa = live.qa;
@@ -78,9 +108,9 @@ function QuickRow({ live, words, behaviour, bagHref, num }: { live: Live; words:
             behaviour={behaviour}
             bagHref={bagHref}
             words={{ ...words.bag, label: s.label }}
-            ariaLabel={fill(words.add, { size: s.label })}
+            ariaLabel={usual && kept === s.key ? fill(usual.aria, { label: fill(words.add, { size: s.label }) }) : fill(words.add, { size: s.label })}
             source="card"
-            className="pcard-qa-b"
+            className={usual && kept === s.key ? 'pcard-qa-b is-usual' : 'pcard-qa-b'}
             testId="qa-add"
           />
         ))}
@@ -102,6 +132,7 @@ export function CardDesk({
   lang,
   sizes,
   bnDigits,
+  usual = null,
 }: {
   set: CardDeskSettings;
   words: QuickWords;
@@ -111,6 +142,7 @@ export function CardDesk({
   /** The card photo's `sizes` (ProductCard's CARD_SIZES). */
   sizes: string;
   bnDigits: boolean;
+  usual?: CardUsual | null;
 }) {
   const [live, setLive] = useState<Live[]>([]);
   const num = (n: number) => formatNumber(n, lang, bnDigits);
@@ -215,7 +247,7 @@ export function CardDesk({
                   l.alt,
                 )
               : null}
-            {l.qa ? createPortal(<QuickRow live={l} words={words} behaviour={behaviour} bagHref={bagHref} num={num} />, l.qa) : null}
+            {l.qa ? createPortal(<QuickRow live={l} words={words} behaviour={behaviour} bagHref={bagHref} num={num} usual={usual} />, l.qa) : null}
           </Fragment>
         ))}
     </>
