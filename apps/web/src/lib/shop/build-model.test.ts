@@ -2,7 +2,7 @@
 // from @extas/combos' quote, each card's colour and price, the shop's words and the picture's turn. Made-up values.
 import { describe, expect, it } from 'vitest';
 import { tierQuote, type BuildVariant } from '@extas/combos/pure';
-import { builderGroupPath, buildWord, cardPrice, firstColour, headline, nextView, statusOf, tabLine } from './build-model';
+import { builderGroupPath, buildWord, cardPrice, firstColour, headline, nextView, statusOf, tabLine, usualOfCards } from './build-model';
 
 const words: Record<string, string> = {
   headFirst: 'Any {n} for {price}',
@@ -74,5 +74,27 @@ describe('follow-up 244 · the bag tier box opens its own builder page', () => {
     expect(builderGroupPath({ ...offer, open: false }, 'polo-sets')).toBeNull();
     expect(builderGroupPath(offer, 'shirt-sets')).toBeNull();
     expect(builderGroupPath(null, 'polo-sets')).toBeNull();
+  });
+});
+
+describe('follow-up 241: the usual size on the builder cards', () => {
+  const NOW = Date.parse('2026-11-07T10:00:00Z');
+  const card = (id: string, garment: string, keys: string[]) => ({
+    id,
+    name: id,
+    garment,
+    colours: [],
+    sizes: keys.map((k) => ({ id: `${id}-${k}`, key: k, label: k.toUpperCase() })),
+    variants: [],
+    shots: {},
+  });
+  const u = { days: 30, diagramFor: { trouser: 'bottom' } };
+  const kept = JSON.stringify({ top: { size: 'l', at: NOW - 86_400_000 }, bottom: { size: '32', at: NOW - 86_400_000 } });
+
+  it('gives each card its group`s kept size by id, and none where the card lacks it or has one size only', () => {
+    const cards = [card('polo', 'polo', ['m', 'l']), card('pant', 'trouser', ['30', '32']), card('tee', 'tee', ['s', 'm']), card('sock', 'sock', ['l'])];
+    expect(usualOfCards(cards, kept, u, NOW)).toEqual({ polo: 'polo-l', pant: 'pant-32' });
+    expect(usualOfCards(cards, null, u, NOW)).toEqual({});
+    expect(usualOfCards(cards, kept, { ...u, days: 0.5 }, NOW)).toEqual({});
   });
 });
