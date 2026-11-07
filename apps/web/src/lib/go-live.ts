@@ -13,7 +13,7 @@
 // domain) or done soon after go-live (`after`: the owner's own set-up from the admin, shown yellow until done), each with
 // its reason in the page's words (`item.<key>.why`).
 import { certCovers } from '@extas/adapters';
-import type { Health, OriginCert, ServerSetup, Smoke } from './status';
+import type { ErpAcceptance, Health, OriginCert, ServerSetup, Smoke } from './status';
 
 export type GoLiveKind = 'auto' | 'signoff' | 'owner';
 /** CN-035: needed before go-live (holds back the switch), or soon after go-live (never holds it back). */
@@ -57,6 +57,11 @@ export interface GoLiveContext {
    * it never confirms the row: only a person does.
    */
   evidence?: Partial<Record<string, GoLiveEvidence | null>>;
+  /**
+   * Follow-up 576 (PR 621): the stores going live on the v6 ERP (`erp.model`), and the last ERP acceptance run against
+   * the demo ERP (state/erp-acceptance.json, infra/deploy/erp-acceptance.sh).
+   */
+  erp?: { v6Stores: readonly string[]; report: ErpAcceptance | null };
 }
 
 /** CN-036: an automatic run shown beside a sign-off row (its result, when, and numbers for the row's words). */
@@ -285,6 +290,23 @@ export const GO_LIVE: readonly GoLiveItem[] = [
       ok: Boolean(x) && (x?.twoFactorRequired === true || x?.withoutTwoFactor === 0),
       vars: { without: x?.withoutTwoFactor ?? 0, required: x?.twoFactorRequired ? 'on' : 'off' },
     }),
+  },
+  // Follow-up 576 (PR 621, S19 PR 587): a store that goes live on the v6 ERP needs the acceptance run against the demo
+  // ERP green, with writes (`erp.acceptance.demoWrites`), every check reached, and as fresh as the smoke test
+  // (`golive.checks.smokeHours`: both run every night). No store on v6: nothing to prove. It only reports.
+  {
+    key: 'erpAcceptance',
+    pr: 621,
+    kind: 'auto',
+    when: 'before',
+    check: ({ erp, now, checks }) => {
+      const r = erp?.report ?? null;
+      const stores = erp?.v6Stores ?? [];
+      const vars = { stores: stores.join(', ') || '—', passed: r?.passed ?? 0, failed: r?.failed ?? 0, writes: r?.writes === true ? 'on' : 'off', state: stores.length ? (r?.state ?? 'none') : 'notUsed' };
+      if (!stores.length) return { ok: true, vars };
+      const green = r?.state === 'RAN' && r.writes === true && (r.failed ?? 0) === 0 && (r.passed ?? 0) > 0 && !r.unreachable && !r.keyRefused;
+      return { ok: green && within(r?.at, now, checks.smokeHours * HOUR_MINUTES), at: r?.at, vars };
+    },
   },
   { key: 'runbook', pr: 398, kind: 'signoff', when: 'before' },
   { key: 'qaGate', pr: 393, kind: 'signoff', when: 'before' },

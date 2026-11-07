@@ -65,6 +65,8 @@ export type ErpAcceptance = {
   skipped?: number;
   unreachable?: boolean;
   keyRefused?: boolean;
+  /** Follow-up 576: the run wrote to the demo ERP (`erp.acceptance.demoWrites`). */
+  writes?: boolean;
 };
 
 /** The status page's line for the last ERP acceptance run: a word key in messages/status.*.json, its numbers, a tone. */

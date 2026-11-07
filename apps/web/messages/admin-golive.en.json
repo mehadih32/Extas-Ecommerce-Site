@@ -123,6 +123,12 @@
       "how": "The device gate at 0 failures on phones, tablets and desktop, the journeys and the Lighthouse budget pass in CI for the build on staging; the screenshots were looked at.",
       "why": "Needed: every page works on phones, tablets and desktops."
     },
+    "erpAcceptance": {
+      "title": "ERP acceptance green against the demo ERP, with writes",
+      "ok": "Stores on the v6 ERP: {stores} (none: not needed). Last demo run with writes: {passed} checks passed.",
+      "how": "Stores on the v6 ERP: {stores}. The nightly ERP acceptance run against the demo ERP must pass every check with writes on (the setting \"Let the acceptance check write to the demo ERP\", `erp.acceptance.demoWrites`, switched on only once agreed with the ERP team) within the smoke test's hours. Last run: {state}, {passed} passed, {failed} failed, writes {writes}. See docs/reports/erp-acceptance/latest.",
+      "why": "Needed when a store uses the v6 ERP: the shop and the ERP agree on orders, stock and the books before real orders."
+    },
     "acceptance": {
       "title": "Staging acceptance list walked through",
       "how": "Every line of docs/golive/ACCEPTANCE.md checked on the staging site as a customer and as admin.",
