@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-07 18:46 (Asia/Dhaka)
+# Smoke test · 2026-11-07 20:09 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (546টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (548টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `eea92e3c11d1` · acceptance · result **PASS** (546 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `0c9db8d8f511` · after deploy · result **PASS** (548 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -80,14 +80,15 @@ Site: https://new.extas.com.bd · commit `eea92e3c11d1` · acceptance · result 
 | `/admin/messages/journey` | phone | 200 | `/admin/messages/journey` | ok | — |
 | `/admin/money/books` | phone | 200 | `/admin/money/books` | ok | — |
 | `/admin/orders` | phone | 200 | `/admin/orders` | ok | — |
-| `/admin/orders/01a1b609-7e14-7aa0-a54a-4f96176655ca` | phone | 200 | `/admin/orders/01a1b609-7e14-7aa0-a54a-4f96176655ca` | ok | — |
-| `/admin/orders/01a1b609-ff78-7453-928c-1cc42fa785cc` | phone | 200 | `/admin/orders/01a1b609-ff78-7453-928c-1cc42fa785cc` | ok | — |
-| `/admin/orders/01a1b60a-2683-79f3-8e23-089e899a92b3` | phone | 200 | `/admin/orders/01a1b60a-2683-79f3-8e23-089e899a92b3` | ok | — |
-| `/admin/orders/01a1b60a-40f2-70c2-8ecd-7966ea64b410` | phone | 200 | `/admin/orders/01a1b60a-40f2-70c2-8ecd-7966ea64b410` | ok | — |
-| `/admin/orders/01a1b60a-9a6b-7be3-82bb-d2df3dd9a78d` | phone | 200 | `/admin/orders/01a1b60a-9a6b-7be3-82bb-d2df3dd9a78d` | ok | — |
-| `/admin/orders/01a1b60a-c032-7182-b281-f500d9f04672` | phone | 200 | `/admin/orders/01a1b60a-c032-7182-b281-f500d9f04672` | ok | — |
+| `/admin/orders/01a1b619-a337-7c01-9eaa-09cb06c25dc8` | phone | 200 | `/admin/orders/01a1b619-a337-7c01-9eaa-09cb06c25dc8` | ok | — |
+| `/admin/orders/01a1b619-b844-76b2-b122-9f6f560694d5` | phone | 200 | `/admin/orders/01a1b619-b844-76b2-b122-9f6f560694d5` | ok | — |
+| `/admin/orders/01a1b619-cf91-7f72-95cc-2d512de5c9a4` | phone | 200 | `/admin/orders/01a1b619-cf91-7f72-95cc-2d512de5c9a4` | ok | — |
+| `/admin/orders/01a1b619-ee19-7c31-ab2c-9515eb6a99e2` | phone | 200 | `/admin/orders/01a1b619-ee19-7c31-ab2c-9515eb6a99e2` | ok | — |
+| `/admin/orders/01a1b61a-0a1f-7fb1-873f-3b01facffb59` | phone | 200 | `/admin/orders/01a1b61a-0a1f-7fb1-873f-3b01facffb59` | ok | — |
+| `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/orders/confirm` | phone | 200 | `/admin/orders/confirm` | ok | — |
 | `/admin/products` | phone | 200 | `/admin/products` | ok | — |
+| `/admin/products/01a19735-03ad-7431-881f-74ad7c9a2e98` | phone | 200 | `/admin/products/01a19735-03ad-7431-881f-74ad7c9a2e98` | ok | — |
 | `/admin/products/queue` | phone | 200 | `/admin/products/queue` | ok | — |
 | `/admin/reports/health` | phone | 200 | `/admin/reports/health` | ok | — |
 | `/admin/rules` | phone | 200 | `/admin/rules` | ok | — |
@@ -272,11 +273,11 @@ Site: https://new.extas.com.bd · commit `eea92e3c11d1` · acceptance · result 
 | `/admin/website/blog/pipeline` | phone | 200 | `/admin/website/blog/pipeline` | ok | — |
 | `/admin/marketing/geo-guide` | phone | 200 | `/admin/marketing/geo-guide` | ok | — |
 | `/admin/marketing/merchant-feed` | phone | 200 | `/admin/marketing/merchant-feed` | ok | — |
-| `/admin/orders/01a1b60a-c032-7182-b281-f500d9f04672` | phone | 200 | `/admin/orders/01a1b60a-c032-7182-b281-f500d9f04672` | ok | — |
-| `/admin/customers/01a1b60a-c02e-7250-988b-f99fee3a143f` | phone | 200 | `/admin/customers/01a1b60a-c02e-7250-988b-f99fee3a143f` | ok | — |
+| `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
+| `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | phone | 200 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | ok | — |
-| `/admin/reports/health/history/01a1b5fe-f3a5-77b1-bae0-2e4d5ba1b6b4` | phone | 200 | `/admin/reports/health/history/01a1b5fe-f3a5-77b1-bae0-2e4d5ba1b6b4` | ok | — |
-| `/admin/customers/01a1b60a-c02e-7250-988b-f99fee3a143f?tab=wallet` | phone | 200 | `/admin/customers/01a1b60a-c02e-7250-988b-f99fee3a143f` | ok | — |
+| `/admin/reports/health/history/01a1b614-215e-76a0-8106-b0af49dfcf08` | phone | 200 | `/admin/reports/health/history/01a1b614-215e-76a0-8106-b0af49dfcf08` | ok | — |
+| `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -353,14 +354,15 @@ Site: https://new.extas.com.bd · commit `eea92e3c11d1` · acceptance · result 
 | `/admin/messages/journey` | desktop | 200 | `/admin/messages/journey` | ok | — |
 | `/admin/money/books` | desktop | 200 | `/admin/money/books` | ok | — |
 | `/admin/orders` | desktop | 200 | `/admin/orders` | ok | — |
-| `/admin/orders/01a1b609-7e14-7aa0-a54a-4f96176655ca` | desktop | 200 | `/admin/orders/01a1b609-7e14-7aa0-a54a-4f96176655ca` | ok | — |
-| `/admin/orders/01a1b609-ff78-7453-928c-1cc42fa785cc` | desktop | 200 | `/admin/orders/01a1b609-ff78-7453-928c-1cc42fa785cc` | ok | — |
-| `/admin/orders/01a1b60a-2683-79f3-8e23-089e899a92b3` | desktop | 200 | `/admin/orders/01a1b60a-2683-79f3-8e23-089e899a92b3` | ok | — |
-| `/admin/orders/01a1b60a-40f2-70c2-8ecd-7966ea64b410` | desktop | 200 | `/admin/orders/01a1b60a-40f2-70c2-8ecd-7966ea64b410` | ok | — |
-| `/admin/orders/01a1b60a-9a6b-7be3-82bb-d2df3dd9a78d` | desktop | 200 | `/admin/orders/01a1b60a-9a6b-7be3-82bb-d2df3dd9a78d` | ok | — |
-| `/admin/orders/01a1b60a-c032-7182-b281-f500d9f04672` | desktop | 200 | `/admin/orders/01a1b60a-c032-7182-b281-f500d9f04672` | ok | — |
+| `/admin/orders/01a1b619-a337-7c01-9eaa-09cb06c25dc8` | desktop | 200 | `/admin/orders/01a1b619-a337-7c01-9eaa-09cb06c25dc8` | ok | — |
+| `/admin/orders/01a1b619-b844-76b2-b122-9f6f560694d5` | desktop | 200 | `/admin/orders/01a1b619-b844-76b2-b122-9f6f560694d5` | ok | — |
+| `/admin/orders/01a1b619-cf91-7f72-95cc-2d512de5c9a4` | desktop | 200 | `/admin/orders/01a1b619-cf91-7f72-95cc-2d512de5c9a4` | ok | — |
+| `/admin/orders/01a1b619-ee19-7c31-ab2c-9515eb6a99e2` | desktop | 200 | `/admin/orders/01a1b619-ee19-7c31-ab2c-9515eb6a99e2` | ok | — |
+| `/admin/orders/01a1b61a-0a1f-7fb1-873f-3b01facffb59` | desktop | 200 | `/admin/orders/01a1b61a-0a1f-7fb1-873f-3b01facffb59` | ok | — |
+| `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/orders/confirm` | desktop | 200 | `/admin/orders/confirm` | ok | — |
 | `/admin/products` | desktop | 200 | `/admin/products` | ok | — |
+| `/admin/products/01a19735-03ad-7431-881f-74ad7c9a2e98` | desktop | 200 | `/admin/products/01a19735-03ad-7431-881f-74ad7c9a2e98` | ok | — |
 | `/admin/products/queue` | desktop | 200 | `/admin/products/queue` | ok | — |
 | `/admin/reports/health` | desktop | 200 | `/admin/reports/health` | ok | — |
 | `/admin/rules` | desktop | 200 | `/admin/rules` | ok | — |
@@ -545,11 +547,11 @@ Site: https://new.extas.com.bd · commit `eea92e3c11d1` · acceptance · result 
 | `/admin/website/blog/pipeline` | desktop | 200 | `/admin/website/blog/pipeline` | ok | — |
 | `/admin/marketing/geo-guide` | desktop | 200 | `/admin/marketing/geo-guide` | ok | — |
 | `/admin/marketing/merchant-feed` | desktop | 200 | `/admin/marketing/merchant-feed` | ok | — |
-| `/admin/orders/01a1b60a-c032-7182-b281-f500d9f04672` | desktop | 200 | `/admin/orders/01a1b60a-c032-7182-b281-f500d9f04672` | ok | — |
-| `/admin/customers/01a1b60a-c02e-7250-988b-f99fee3a143f` | desktop | 200 | `/admin/customers/01a1b60a-c02e-7250-988b-f99fee3a143f` | ok | — |
+| `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
+| `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | desktop | 200 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | ok | — |
-| `/admin/reports/health/history/01a1b5fe-f3a5-77b1-bae0-2e4d5ba1b6b4` | desktop | 200 | `/admin/reports/health/history/01a1b5fe-f3a5-77b1-bae0-2e4d5ba1b6b4` | ok | — |
-| `/admin/customers/01a1b60a-c02e-7250-988b-f99fee3a143f?tab=wallet` | desktop | 200 | `/admin/customers/01a1b60a-c02e-7250-988b-f99fee3a143f` | ok | — |
+| `/admin/reports/health/history/01a1b614-215e-76a0-8106-b0af49dfcf08` | desktop | 200 | `/admin/reports/health/history/01a1b614-215e-76a0-8106-b0af49dfcf08` | ok | — |
+| `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
