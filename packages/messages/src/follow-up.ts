@@ -13,7 +13,7 @@
 // price or COD, or blocks anyone; the offer is the owner's own code, used only after he switched it on.
 import { randomBytes } from 'node:crypto';
 import { FOLLOW_UP_CEILING, FOLLOW_UP_STEPS, type FollowUpSettings, type MessageChannel } from '@extas/settings';
-import { followedSince } from './cart-recovery';
+import { followedSince, usableOffer } from './cart-recovery';
 import { offerConsent } from './consent';
 import { setting, TX, nowOf, type MessagesDeps } from './context';
 import { orderedSince } from './engine';
@@ -75,13 +75,18 @@ export async function planFollowUps(deps: MessagesDeps, storeId: number): Promis
     select: { id: true, phone: true, customerId: true, cartId: true, lastStep: true, lastActivityAt: true, followUpCount: true, restoreCode: true, createdAt: true, data: true },
   });
   if (!drafts.length) return out;
-  const coupon = cfg.offer.enabled && cfg.offer.couponCode.trim() ? await deps.db.coupon.findFirst({ where: { storeId, code: { equals: cfg.offer.couponCode.trim(), mode: 'insensitive' }, enabled: true }, select: { id: true } }) : null;
+  // ~~const coupon = cfg.offer.enabled && cfg.offer.couponCode.trim() ? await deps.db.coupon.findFirst({ … enabled: true }) : null;~~
+  // Follow-up 643: the offer's code is checked per checkout by the rules engine (its dates, its uses, his cap, who it is
+  // for, its rule live), like the left bag's (PR 276 `usableOffer`), not only that the code is switched on.
+  const offerOn = cfg.offer.enabled && Boolean(cfg.offer.couponCode.trim());
   const firsts = await deps.db.recoveryMessage.findMany({ where: { storeId, kind: FOLLOW_UP_KIND, attempt: 1, checkoutDraftId: { in: drafts.map((d) => d.id) } }, select: { checkoutDraftId: true, sentAt: true, channel: true } });
   const firstOf = new Map(firsts.map((f) => [f.checkoutDraftId, f]));
   for (const d of drafts) {
     const first = firstOf.get(d.id) ?? null;
     const attempt = followUpDue(cfg, d, first?.sentAt ?? null, now);
     if (!attempt || !d.phone) continue;
+    // ~~if (attempt === 2 && !coupon) continue;~~
+    const coupon = attempt === 2 && offerOn ? await usableOffer(deps.db, storeId, cfg.offer.couponCode, { phone: d.phone, customerId: d.customerId }, now) : null;
     if (attempt === 2 && !coupon) continue;
     if (await orderedSince(deps, storeId, d.phone, d.createdAt)) continue;
     // PR 276: one ladder per number, whichever it was (an unfinished checkout's, or a left bag's)

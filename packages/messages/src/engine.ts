@@ -706,8 +706,11 @@ async function sendFollowUp(deps: MessagesDeps, c: RunContext, row: Row, opts: S
   }
   const refused = await offerConsent(deps.db, c.storeId, { channel, phone: d.phone, customerId: d.customerId, tick: { value: followUpTick(d.data, channel), at: d.lastActivityAt } });
   if (refused) return skip(refused);
-  const coupon = rm.offerCouponId ? await deps.db.coupon.findFirst({ where: { id: rm.offerCouponId, storeId: c.storeId, enabled: true }, select: { code: true } }) : null;
-  if (rm.offerCouponId && !coupon) return skip('OFFER_GONE');
+  // ~~const coupon = rm.offerCouponId ? await deps.db.coupon.findFirst({ where: { id: rm.offerCouponId, storeId: c.storeId, enabled: true }, select: { code: true } }) : null;~~
+  // Follow-up 643: the code still usable by him as it goes (the rules engine's check), like the left bag's offer.
+  const offered = rm.offerCouponId ? await deps.db.coupon.findFirst({ where: { id: rm.offerCouponId, storeId: c.storeId }, select: { code: true } }) : null;
+  const coupon = offered ? await usableOffer(deps.db, c.storeId, offered.code, { phone: d.phone, customerId: d.customerId }, c.now) : null;
+  if (rm.offerCouponId && (!coupon || coupon.id !== rm.offerCouponId)) return skip('OFFER_GONE');
   const pieces = d.cartId ? ((await deps.db.cartItem.aggregate({ where: { storeId: c.storeId, cartId: d.cartId, removedAt: null, savedForLater: false }, _sum: { quantity: true } }))._sum.quantity ?? 0) : 0;
   if (pieces <= 0) return skip('EMPTY_BAG');
   return bagMessage(deps, c, row, opts, { templates: FOLLOW_UP_TEMPLATES, name: d.name, pieces, restoreCode: d.restoreCode, offerCode: coupon?.code ?? null, recoveryId: rm.id });
