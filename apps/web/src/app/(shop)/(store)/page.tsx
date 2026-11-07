@@ -39,6 +39,7 @@ import { shopContext, type ShopContext } from '@/lib/shop/context';
 import { homeFlash } from '@/lib/shop/flash';
 import { heroSlidePicks, type HeroPick } from '@/lib/shop/home-model';
 import { shownSections } from '@/lib/shop/layouts';
+import { buildEntryFor, HomeBuildRow } from '@/components/shop/build/BuildEntry';
 import { blockContent, blocksOf, pageItems } from '@/lib/shop/blocks';
 import { PageBlock } from '@/components/shop/blocks/PageBlock';
 import { SideCanvas } from '@/components/shop/side/SideCanvas';
@@ -83,7 +84,7 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
     .catch(() => []);
   // PR 595: the owner's own sections live today (`layout.blocks`), placed among the page's own, and what they show
   const items = pageItems('home', c.s['home.sections'], blocksOf(c.s['layout.blocks'], 'home'), c.today);
-  const [slides, leads, cards, reviews, flash, got, side] = await Promise.all([
+  const [slides, leads, cards, reviews, flash, got, side, build] = await Promise.all([
     want('hero') ? heroPicks(c) : Promise.resolve([]),
     want('categories') ? categoryLeads(c.storeId, c.cats.map((k) => k.slug)) : Promise.resolve({}),
     want('new-in') ? newestCards(c.storeId, newIn.count, newIn.order) : Promise.resolve([]),
@@ -92,6 +93,8 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
     blockContent(c, items),
     // PR 596: the side canvas's zones for the home page (none while it is off, as shipped)
     sideItems(c, 'home', null),
+    // follow-up 242: the set builder's row (`combos.builder.places` home, off as shipped)
+    buildEntryFor(c, 'home'),
   ]);
   const ld = <JsonLd data={await ldBlocks} />;
   const draw: Partial<Record<HomeSectionId, () => ReactNode>> = {
@@ -118,6 +121,12 @@ export default async function Home(props: { searchParams: Promise<Search> }) {
   const eta = <EtaBanner c={c} testId="home-eta" wrap="container sh-etawrap" />;
   const at = items.findIndex((it) => it.kind === 'sec' && it.row.id === 'hero') + 1;
   const body = [...sections.slice(0, at), <Fragment key="eta">{eta}</Fragment>, ...sections.slice(at)];
+  // follow-up 242: the builder's row under New in (else under the categories, else at the end)
+  if (build) {
+    const after = (id: string) => body.findIndex((n) => (n as { key?: string | null }).key === id);
+    const k = [after('new-in'), after('categories')].find((x) => x >= 0);
+    body.splice(k === undefined ? body.length : k + 1, 0, <HomeBuildRow key="build" c={c} entry={build} />);
+  }
   // follow-up 21: the cards' back view and Quick add (computer with a mouse), and the added-to-bag panel it opens
   const desk = (
     <>

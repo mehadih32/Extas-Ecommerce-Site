@@ -4,13 +4,14 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { setBuilderSchema, setBuilderSettings } from '../src/registry-set-builder';
+import { setBuilderPlacesSchema, setBuilderSchema, setBuilderSettings } from '../src/registry-set-builder';
 
 describe('set builder settings (v36)', () => {
   it('every key is in the registry at version 36, public, not owner data, with both labels', () => {
     for (const [key, spec] of Object.entries(setBuilderSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(36);
+      // follow-up 242: the builder's places came later (v284)
+      expect(spec.version, key).toBe(key === 'combos.builder.places' ? 284 : 36);
       expect(spec.isPublic, key).toBe(true);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.group, key).toBe('combos');
@@ -24,6 +25,12 @@ describe('set builder settings (v36)', () => {
 
   it('ships off, offering every live set tier rule in every category once it is on', () => {
     expect(setBuilderSettings['combos.builder'].default).toEqual({ on: false, rules: [], categories: [], maxStyles: 24, perItem: true, entries: true });
+  });
+
+  it('follow-up 242: the entries on the home page, a category page and a product page are each off as shipped', () => {
+    expect(setBuilderSettings['combos.builder.places'].default).toEqual({ home: false, category: false, product: false });
+    expect(setBuilderPlacesSchema.safeParse({ home: true, category: false, product: false }).success).toBe(true);
+    expect(setBuilderPlacesSchema.safeParse({ home: true, category: false }).success).toBe(false);
   });
 
   it('refuses what is not a setting of the builder (a price, a bad key, a category by name, no styles)', () => {

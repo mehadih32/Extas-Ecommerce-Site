@@ -35,6 +35,23 @@ export const setBuilderSchema = z
   .strict();
 export type SetBuilderSettings = z.infer<typeof setBuilderSchema>;
 
+/**
+ * Follow-up 242 (registry v284; demo 20-home diy row, 21-category cat-bn banner, 30-product "Build your own set" line):
+ * the builder's entries on other pages, each off as shipped and shown only while the builder and its `entries` are on.
+ * `category` and `product` show only where the builder really offers the product (its rules, scope and categories).
+ */
+export const setBuilderPlacesSchema = z
+  .object({
+    /** A "Build your own set" row on the home page (under New in, or under the categories). */
+    home: z.boolean(),
+    /** A banner above a category page's products when the builder offers some of them. */
+    category: z.boolean(),
+    /** One line on the product page when the product can go into a built set. */
+    product: z.boolean(),
+  })
+  .strict();
+export type SetBuilderPlaces = z.infer<typeof setBuilderPlacesSchema>;
+
 const base = { scope: 'store', isOwnerData: false, isPublic: true, group: 'combos', version: V } as const;
 
 export const setBuilderSettings = {
@@ -46,5 +63,15 @@ export const setBuilderSettings = {
     labelKey: 'combos.builder.label',
     helpKey: 'combos.builder.help',
     sortOrder: 260,
+  }),
+  'combos.builder.places': setting({
+    ...base,
+    version: 284,
+    schema: setBuilderPlacesSchema,
+    default: { home: false, category: false, product: false },
+    valueType: 'JSON',
+    labelKey: 'combos.builder.places.label',
+    helpKey: 'combos.builder.places.help',
+    sortOrder: 261,
   }),
 };

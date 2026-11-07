@@ -147,6 +147,29 @@ export async function builderOffer(deps: CombosDeps, storeId: number): Promise<{
   return { open: rules.length > 0, groups: rules.map((r) => ({ key: r.rule.key, tiers: r.tiers })) };
 }
 
+/**
+ * Follow-up 242: the builder's groups that offer at least one of these products (a product page's own product, the
+ * cards a category page shows): the same rules, rule scope and builder categories as the page itself, so an entry
+ * never names a set the product cannot go into. Closed builder or entries off: none. At most SCAN_LIMIT products.
+ */
+export async function builderOfferFor(deps: CombosDeps, storeId: number, productIds: readonly string[]): Promise<{ key: string; tiers: PricedTier[]; products: string[] }[]> {
+  checkStoreId(storeId);
+  const ids = [...new Set(productIds)].slice(0, SCAN_LIMIT);
+  if (!ids.length) return [];
+  const s = await setting(deps, storeId, 'combos.builder');
+  if (!s.on || !s.entries) return [];
+  const rules = await builderRules(deps, deps.db, storeId, s, false);
+  if (!rules.length) return [];
+  const scope = await scopeFacts(deps.db, storeId, ids, await categoryParents(deps.db, storeId));
+  return rules.flatMap(({ rule, tiers }) => {
+    const products = ids.filter((id) => {
+      const f = scope.get(id);
+      return !!f && inScope(rule.scope, f) && inCategories(s, f.categoryIds);
+    });
+    return products.length ? [{ key: rule.key, tiers, products }] : [];
+  });
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // "Add set to Bag"
 // ---------------------------------------------------------------------------------------------------------------
