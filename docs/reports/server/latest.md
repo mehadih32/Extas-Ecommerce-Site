@@ -1,6 +1,6 @@
-# Server report — 2026-11-07 11:05 +06
+# Server report — 2026-11-07 12:13 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `31c029996b475703d368c51c7e90303f7364ff29`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `6851b276b4feb06c4ecd10db788acb1217f4ceda`. Overall: **PASS**.
 
 ## Machine
 
@@ -48,7 +48,7 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
 | PR 4 · Docker | OK | Docker version 29.9.3, compose 5.7.0; logs rotated; build cache ≤ 40 GB; starts after NVMe + data disk |
-| PR 4 · OS disk | OK | / 5% used, 118 GB free (a deploy needs 15); containerd store: on its own volume (50G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
+| PR 4 · OS disk | OK | / 5% used, 118 GB free (a deploy needs 15); containerd store: on its own volume (52G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
 | PR 620 · client address | INFO | Cloudflare's ranges written for Caddy; checked live after the reload |
 | PR 620 · client address | OK | live: CF-Connecting-IP believed from Cloudflare's ranges only (trusted_proxies in Caddy's running configuration) |
@@ -61,7 +61,7 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · restore test | OK | base 20261107-0230, 401 tables restored (live has 401); photos: the archive holds no photo yet; docs: docs-20261107-0230.tar.gz back with README, blueprint and register, COMMIT 09b0afdba8ae matches |
-| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: none |
+| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: রাতের পেজ-পরীক্ষা ব্যর্থ: /admin/products: console error: Access to script at 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' from origin 'https://new.extas.com.bd' has been blocked by CORS policy: Request (/admin/login?next=%2Fadmin%2Fproducts) (phone); /admin/products: r |
 | PR 392 · vault keys for the server | INFO | every 2 min: ok — unchanged |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
 | public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
@@ -75,7 +75,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (50G used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (52G used on it) |
 | `/var/lib/docker` | 0.0 GB | own volume here (167M used on it) |
 | `/home/ghrunner/actions-runner` | 2.7 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 1.3 GB |  |
@@ -112,7 +112,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (50G used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (52G used on it) |
 | `/var/lib/docker` | 0.0 GB | own volume here (167M used on it) |
 | `/home/ghrunner/actions-runner` | 2.7 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 1.3 GB |  |
