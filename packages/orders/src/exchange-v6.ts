@@ -150,7 +150,7 @@ export async function approveExchangeV6(deps: OrdersDeps, who: Who, id: string, 
     const again = e instanceof OrdersError && e.code === 'EXCHANGE_STATE' ? await sentResult(deps, who.storeId, path.linkId, id) : null;
     if (again) return again;
     // the ERP could not be reached: nothing went; the case card says a person sends it again (the background turn
-    // retries only an exchange waiting for stock)
+    // retries only an exchange waiting for stock — follow-up 546: and this one too while `exchange.erp.retryUnreachable` is on)
     if (e instanceof OrdersError && e.code === 'ERP_UNAVAILABLE') {
       await deps.db.erpExchangeLink.updateMany({ where: { id: linkRowId, storeId: who.storeId, erpExchangeId: null, finishedAt: null, OR: [{ erpStatus: null }, { erpStatus: { not: WAITING_STOCK } }] }, data: { lastTriedAt: nowOf(deps), lastRefusal: 'ERP_UNAVAILABLE' } });
     }
@@ -534,20 +534,36 @@ async function placed(deps: OrdersDeps, by: By, storeId: number, linkRowId: stri
   return { exchangeId: out.ex.id, status: 'SENT', erpExchangeId: answer.exchangeId, newExternalOrderId: out.link.newExternalOrderId!, newOrderId: out.newOrderId, newOrderNumber: out.number, shortSkus: [], customerPaysMinor: Number(out.link.customerPaysMinor), confirmed, attempts: attempt };
 }
 
-/** The background turn: every exchange of the store waiting for the ERP's stock is tried again (oldest first). */
+/**
+ * The background turn: every exchange of the store waiting for the ERP's stock is tried again (oldest first). Follow-up
+ * 546: with `exchange.erp.retryUnreachable` on, an approved send whose last try found the ERP unreachable (the case
+ * card's "send again") is tried again too, once `afterMinutes` passed since that try, with its same key; a failed try
+ * moves its clock on. Off (as shipped), a person sends it again.
+ */
 export async function retryWaitingExchanges(deps: OrdersDeps, storeId: number): Promise<{ sent: number; waiting: number; refused: number }> {
   const out = { sent: 0, waiting: 0, refused: 0 };
-  const rows = await deps.db.erpExchangeLink.findMany({ where: { storeId, erpStatus: WAITING_STOCK, erpExchangeId: null, finishedAt: null }, orderBy: { approvedAt: 'asc' }, select: { id: true } });
+  const stock = await deps.db.erpExchangeLink.findMany({ where: { storeId, erpStatus: WAITING_STOCK, erpExchangeId: null, finishedAt: null }, orderBy: { approvedAt: 'asc' }, select: { id: true } });
+  const retry = await setting(deps, storeId, 'exchange.erp.retryUnreachable');
+  const unreached = retry.enabled
+    ? await deps.db.erpExchangeLink.findMany({
+        where: { storeId, erpExchangeId: null, finishedAt: null, lastRefusal: { not: null }, lastTriedAt: { lte: new Date(nowOf(deps).getTime() - retry.afterMinutes * 60_000) }, OR: [{ erpStatus: null }, { erpStatus: { not: WAITING_STOCK } }] },
+        orderBy: { approvedAt: 'asc' },
+        select: { id: true },
+      })
+    : [];
   const by = systemBy('erp-returns');
-  for (const r of rows) {
+  for (const r of [...stock.map((x) => ({ ...x, unreached: false })), ...unreached.map((x) => ({ ...x, unreached: true }))]) {
     try {
       const res = await sendPlanned(deps, by, storeId, r.id);
       if (res.status === 'SENT') out.sent++;
       else out.waiting++;
     } catch (e) {
       if (e instanceof OrdersError && (e.code === 'ERP_UNAVAILABLE' || e.code === 'ERP_REFUSED' || e.code === 'EXCHANGE_STATE')) {
-        if (e.code === 'ERP_UNAVAILABLE') out.waiting++;
-        else out.refused++;
+        if (e.code === 'ERP_UNAVAILABLE') {
+          out.waiting++;
+          // the next try waits `afterMinutes` from this one (the same mark a person's failed approval leaves)
+          if (r.unreached) await deps.db.erpExchangeLink.updateMany({ where: { id: r.id, storeId, erpExchangeId: null, finishedAt: null, OR: [{ erpStatus: null }, { erpStatus: { not: WAITING_STOCK } }] }, data: { lastTriedAt: nowOf(deps), lastRefusal: 'ERP_UNAVAILABLE' } });
+        } else out.refused++;
         continue;
       }
       throw e;
@@ -774,6 +790,8 @@ export interface ExchangeErpState {
   waitingStock: boolean;
   /** Not sent, not waiting for stock, the last try failed (the ERP could not be reached): a person sends it again. */
   needsResend: boolean;
+  /** Follow-up 546: while `exchange.erp.retryUnreachable` is on, the minutes after which the shop sends it again by itself (else null). */
+  retryMinutes: number | null;
   shortSkus: { sku: string; wanted: number; available: number }[];
   lastRefusal: string | null;
   erpExchangeId: string | null;
@@ -800,10 +818,13 @@ export async function exchangeErpState(deps: OrdersDeps, who: Who, exchangeId: s
   const deadline = l.deadline ? ymd(l.deadline) : null;
   const details = (l.lastRefusalDetails ?? {}) as { shortSkus?: ExchangeErpState['shortSkus'] };
   const waitingStock = l.erpStatus === WAITING_STOCK && !l.finishedAt;
+  const needsResend = !l.erpExchangeId && !l.finishedAt && !waitingStock && !!l.lastRefusal;
+  const retry = needsResend ? await setting(deps, who.storeId, 'exchange.erp.retryUnreachable') : null;
   return {
     status: l.erpStatus,
     waitingStock,
-    needsResend: !l.erpExchangeId && !l.finishedAt && !waitingStock && !!l.lastRefusal,
+    needsResend,
+    retryMinutes: retry?.enabled ? retry.afterMinutes : null,
     shortSkus: waitingStock ? (details.shortSkus ?? []) : [],
     lastRefusal: l.lastRefusal,
     erpExchangeId: l.erpExchangeId,

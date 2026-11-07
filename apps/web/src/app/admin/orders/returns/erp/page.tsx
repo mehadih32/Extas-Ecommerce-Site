@@ -10,6 +10,8 @@
 // PR 614: on the Exchanges tab, the exchanges at risk read now from the ERP (`GET /exchanges?status=pending`): the old
 // piece not back and checked yet, the 4-day watch (late ones marked), the value billed to us if it never comes back.
 // On v5 the page says the old Receive & QC is still used. Needs `returns.view`; the order service checks it again.
+// Follow-up 546: the "Exchange settings" card (`exchange.erp.*`: the pieces kept for regular orders, the retry of a send
+// that found the ERP unreachable) on both models, saved whole to /api/admin/returns/erp/settings (`settings.write`).
 // Words: messages/admin-returns.*.json (`returns.erp.*`).
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -21,18 +23,21 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { ErpComparePull } from '@/components/admin/orders/ErpReturns';
 import { readDeps } from '@/components/admin/orders/OrderListPage';
 import { actionTexts } from '@/components/admin/orders/ReturnsBoard';
+import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
+import { exchangeCard } from '@/lib/admin-returns/exchange-settings';
 import { RETURNS_HREF } from '@/lib/admin-returns/model';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../../messages/admin-returns.bn.json';
 import en from '../../../../../../messages/admin-returns.en.json';
 import '../../../settings/settings.css';
+import '../../../settings-cards.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,11 +83,12 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
   const who: od.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const rd = readDeps(access.deps);
   const at = { storeId: MOTHER_STORE_ID };
-  const [overview, currency, runAt, months] = await Promise.all([
+  const [overview, currency, runAt, months, exCard] = await Promise.all([
     od.returnsErpOverview(rd, who, { tab }),
     access.deps.resolver.value('store.currency', at),
     access.deps.resolver.value('returns.compare.runAt', at),
     access.deps.resolver.value('returns.losses.months', at),
+    exchangeCard(access.deps, MOTHER_STORE_ID),
   ]);
   const live = overview.model === 'v6' && overview.linked;
   const [losses, claims, timeline, watch] = live
@@ -105,6 +111,26 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
   const countdown = (r: { daysLeft: number | null; dueOn: string | null }) =>
     r.daysLeft === null ? null : r.daysLeft > 0 ? e('daysLeft', { n: n(r.daysLeft) }) : r.daysLeft === 0 ? e('dueToday') : e('overdue', { n: n(-r.daysLeft) });
   const countTone = (r: { daysLeft: number | null }) => (r.daysLeft === null ? '' : r.daysLeft < 0 ? 'bad' : r.daysLeft <= 2 ? 'warn' : 'line');
+
+  const xs = (key: string) => e(`exSet.${key}`);
+  const exTexts: FieldsCardTexts = {
+    h: xs('h'),
+    d: xs('d'),
+    save: xs('save'),
+    saving: xs('saving'),
+    saved: xs('saved'),
+    discard: xs('discard'),
+    unsaved: xs('unsaved'),
+    readOnly: xs('readOnly'),
+    pairHelp: '',
+    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'FORBIDDEN', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, xs(`err.${c}`)])),
+  };
+  const exFields: FieldsCardField[] = [
+    { kind: 'number', path: 'keepForOrders', label: xs('keep'), help: xs('keepHelp'), min: 0, max: 100 },
+    { kind: 'switch', path: 'retryUnreachable', label: xs('retry'), help: xs('retryHelp') },
+    { kind: 'number', path: 'retryAfterMinutes', label: xs('after'), help: xs('afterHelp'), min: 5, max: 1440 },
+  ];
+  const exSettings = <FieldsCard url="/api/admin/returns/erp/settings" screen={{ key: exCard.key, value: exCard.value, version: exCard.version }} fields={exFields} texts={exTexts} canEdit={access.guard.permissions?.has('settings.write') ?? false} testId="erp-returns-exchange-settings" />;
 
   const head = (
     <PageHead
@@ -131,6 +157,7 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
             <span>{overview.model === 'v5' ? e('v5') : e('noLink')}</span>
           </div>
         </section>
+        <div className="a2-mt12">{exSettings}</div>
       </div>
     );
 
@@ -443,6 +470,8 @@ export default async function ErpReturnsPage({ searchParams }: { searchParams: S
               </div>
             ) : null}
           </section>
+
+          {exSettings}
 
           <section className="a2-card">
             <details className="a2-more-opts" data-testid="erp-returns-more">

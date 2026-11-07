@@ -24,9 +24,13 @@
 //   GET   /api/admin/returns/erp/compare                             the last compare with the ERP
 //   POST  /api/admin/returns/erp/compare                             {date?} pull from the ERP again and compare again
 //   GET   /api/admin/returns/erp/watch                               PR 614: the exchanges at risk (`GET /exchanges?status=pending`)
+//   GET   /api/admin/returns/erp/settings                            follow-up 546: the Exchange settings card (`exchange.erp.*`)
+//   PUT   /api/admin/returns/erp/settings                            {key: 'exchange', value, version} (`settings.write`
+//                                                                    too, audited; STALE when read before another save)
 // All need `returns.view`. A difference is fixed by pulling again, never by editing a number (there is no route for it).
 import * as od from '@extas/orders';
 import { body, fail, isUuid, type AdminDeps } from './admin-auth';
+import { exchangeSettingsRoute } from './admin-returns/exchange-settings';
 import { handle } from './orders-api';
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
@@ -85,6 +89,7 @@ async function erpRoute(request: Request, deps: AdminDeps | null, path: string[]
     if (m === 'GET') return handle(request, deps, 'returns.view', async (x) => ({ compare: await od.latestReturnsCompare(x.deps, x.who) }));
     return notAllowed();
   }
+  if (a === 'settings') return exchangeSettingsRoute(request, deps);
   if (m !== 'GET') return notAllowed();
   switch (a ?? '') {
     case '':
