@@ -218,7 +218,8 @@ async function ruleFacts(deps: OrdersDeps, storeId: number, orderId: string, rc:
     addresses = rows.map((x) => ({ orderId: x.id, number: x.number, status: x.status as OrderState, placedAt: x.placedAt, similarity: sim.get(x.id) ?? 0 }));
   }
 
-  // H: the block register's BLOCKED entries this order matches (a read only: nothing here blocks anyone)
+  // H: the block register's BLOCKED entries and the blocklist's listings this order matches (a read only: nothing here
+  // blocks anyone)
   const blocked: BlockedMatch[] = [];
   if (r.H.enabled) {
     const by: Prisma.BlockEntryWhereInput[] = [];
@@ -227,6 +228,13 @@ async function ruleFacts(deps: OrdersDeps, storeId: number, orderId: string, rc:
     if (cluster) by.push({ identityClusterId: cluster.clusterId });
     const direct = by.length ? await deps.db.blockEntry.findMany({ where: { storeId, status: 'BLOCKED', OR: by }, select: { id: true, phone: true, customerId: true, blockedAt: true } }) : [];
     for (const e of direct) blocked.push({ entryId: e.id, how: e.phone && forms.includes(e.phone) ? 'phone' : o.customerId && e.customerId === o.customerId ? 'customer' : 'identity', blockedAt: e.blockedAt });
+    // follow-up 342: the blocklist itself (PR 162 RiskBlock; PR 523's proposals fill it once a person confirms) — each
+    // listing not undone whose number is this order's, or whose identity is this order's (with the graph on)
+    const listedBy: Prisma.RiskBlockWhereInput[] = [];
+    if (forms.length) listedBy.push({ phone: { in: forms } });
+    if (cluster) listedBy.push({ clusterId: cluster.clusterId });
+    const listed = listedBy.length ? await deps.db.riskBlock.findMany({ where: { storeId, undoneAt: null, OR: listedBy }, select: { id: true, phone: true, blockedAt: true } }) : [];
+    for (const l of listed) blocked.push({ entryId: l.id, how: forms.includes(l.phone) ? 'phone' : 'identity', blockedAt: l.blockedAt });
     const address = o.shippingAddressText?.trim();
     if (address) {
       const floor = Math.max(0.3, r.H.minConfidence / 100);

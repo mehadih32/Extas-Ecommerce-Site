@@ -144,6 +144,21 @@ describe.skipIf(!HAS_TEST_DB)('PR 520 · the duplicate & re-order rules (Postgre
     expect(await db().order.findUniqueOrThrow({ where: { id: a.orderId } })).toMatchObject({ status: 'PLACED' });
   });
 
+  it('H (follow-up 342): a number on the blocklist (RiskBlock) proposes hold; an undone listing does not', async () => {
+    rulesOn({ H: { enabled: true } });
+    const p = phone();
+    const listed = await db().riskBlock.create({ data: { storeId: f.S, phone: p, reason: 'refused 4 parcels', blockedAt: f.clock.now } });
+    const a = await f.place('h-l-a', { phone: p });
+    const r = await screen(a.orderId);
+    expect(r.rules).toEqual([expect.objectContaining({ rule: 'H', action: 'hold', confidence: 100, blocked: [listed.id], values: expect.objectContaining({ how: 'phone' }) })]);
+    const q = phone();
+    await db().riskBlock.create({ data: { storeId: f.S, phone: q, reason: 'test', blockedAt: f.clock.now, undoneAt: f.clock.now, undoReason: 'paid in full' } });
+    const b = await f.place('h-l-b', { phone: q });
+    expect((await screen(b.orderId)).rules.filter((h) => h.rule === 'H')).toEqual([]);
+    // the listing is only read
+    expect(await db().riskBlock.findUniqueOrThrow({ where: { id: listed.id } })).toMatchObject({ undoneAt: null });
+  });
+
   it('I: a bulk-looking order (the owner\'s pieces) warns', async () => {
     rulesOn({ I: { enabled: true } });
     const big = await f.place('i-a', { phone: phone(), lines: [{ variantId: f.v.teeM, quantity: 10 }] });
