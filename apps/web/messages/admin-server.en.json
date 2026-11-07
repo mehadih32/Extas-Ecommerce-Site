@@ -119,6 +119,12 @@
       "labNone": "Not yet",
       "labWhen": "Runs on the 2nd of each month",
       "more": "Every number, the targets and the settings: Website › SEO › Real visitors' speed"
+    },
+    "upload": {
+      "title": "An upload size setting is above the server's own limit",
+      "media": "Media library and photos: the setting allows {set} MB, the server takes {edge} MB. A bigger file is refused by the server with no message from the shop.",
+      "support": "Support files: the setting allows {set} MB, the server takes {edge} MB.",
+      "fix": "Lower the setting to {edge} MB or less, or ask for the server's upload limit to be raised (server.conf CADDY_UPLOAD_MAX_MB)."
     }
   }
 }

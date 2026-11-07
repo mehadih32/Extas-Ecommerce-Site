@@ -14,6 +14,9 @@ services:
       EXTAS_TIMEZONE: ${EXTAS_TIMEZONE}
       # PR 594 (CN-011): README.md + docs/ of the deployed commit, copied by infra/deploy/docs-sync.sh (read-only)
       EXTAS_DOCS_DIR: /docs/current
+      # Follow-up 618: Caddy's upload limit (server.conf CADDY_UPLOAD_MAX_MB), so the Server page can name an upload size
+      # setting above it (apps/web src/lib/upload-limit.ts)
+      EXTAS_UPLOAD_MAX_MB: ${CADDY_UPLOAD_MAX_MB:-30}
       NODE_OPTIONS: --max-old-space-size=${APP_NODE_HEAP_MB}
     deploy:
       replicas: ${APP_REPLICAS}
