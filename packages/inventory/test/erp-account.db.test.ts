@@ -304,4 +304,29 @@ describe.skipIf(!HAS_TEST_DB)('PR 615 on PostgreSQL: the ERP account ledger and 
     expect(ov).toMatchObject({ model: 'v6', balanceMinor: await erpBalance(f.storeA), chain: { ok: true } });
     expect(BooksError).toBeTypeOf('function');
   });
+
+  it('follow-up 552: a hand-back moves only the pieces the desk ticked as in the bag; none ticked, every returning piece', async () => {
+    const link = await f.linkOf(f.storeA);
+    const billedAt = new Date('2026-11-10T06:00:00Z');
+    const states = async (ext: string) => Object.fromEntries((await f.t.prisma.erpPipelinePiece.findMany({ where: { linkId: link.id, externalOrderId: ext } })).map((p) => [p.lineId, p.state]));
+    for (const ext of ['WEB-120', 'WEB-121']) {
+      await f.shopOrder(f.storeA, ext, [{ lineId: `${ext}-1`, sku: 'POLO-NAVY-M', shopPrice: 650 }, { lineId: `${ext}-2`, sku: 'POLO-NAVY-L', shopPrice: 700 }], billedAt);
+      await f.shopDelivery(f.storeA, ext, 'RETURNED', new Date('2026-11-11T08:00:00Z'));
+    }
+    await syncErpAccount(f.deps(), { storeId: f.storeA });
+    expect(await states('WEB-120')).toEqual({ 'WEB-120-1': 'RETURNING', 'WEB-120-2': 'RETURNING' });
+    const waitingBefore = (await pipelineOn(f.t.prisma, link.id, '2026-11-12')).waitingCheckMinor;
+    // one piece came back in WEB-120's bag (the other is still with the courier); WEB-121's bag was not ticked
+    await f.shopHandBack(f.storeA, 'RL-120', '2026-11-12', [{ ext: 'WEB-120', received: 1, ticked: ['WEB-120-2'] }, { ext: 'WEB-121', received: 2 }]);
+    await syncErpAccount(f.deps(), { storeId: f.storeA });
+    expect(await states('WEB-120')).toEqual({ 'WEB-120-1': 'RETURNING', 'WEB-120-2': 'WAITING_CHECK' });
+    expect(await states('WEB-121')).toEqual({ 'WEB-121-1': 'WAITING_CHECK', 'WEB-121-2': 'WAITING_CHECK' });
+    expect((await pipelineOn(f.t.prisma, link.id, '2026-11-12')).waitingCheckMinor).toBe(waitingBefore + 70000 + 65000 + 70000);
+    // a second run moves nothing again; the piece still with the courier waits for its own hand-back
+    await syncErpAccount(f.deps(), { storeId: f.storeA });
+    expect(await states('WEB-120')).toEqual({ 'WEB-120-1': 'RETURNING', 'WEB-120-2': 'WAITING_CHECK' });
+    await f.shopHandBack(f.storeA, 'RL-121', '2026-11-13', [{ ext: 'WEB-120', received: 1, ticked: ['WEB-120-1'] }]);
+    await syncErpAccount(f.deps(), { storeId: f.storeA });
+    expect(await states('WEB-120')).toEqual({ 'WEB-120-1': 'WAITING_CHECK', 'WEB-120-2': 'WAITING_CHECK' });
+  });
 });

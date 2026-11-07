@@ -349,7 +349,11 @@
     "error": "Last try: {text}",
     "tries": "{n} tries",
     "never": "Nothing here moves money. The owner decides every returned piece in the ERP.",
-    "erpLink": "ERP returns"
+    "erpLink": "ERP returns",
+    "bag": "Pieces in the bag",
+    "bagHint": "Tick each piece that came back in this bag. Ticked none: every piece of the order still on its way back counts as handed back.",
+    "inBag": "In the bag: {list}",
+    "bagNone": "Pieces not ticked: every returning piece counts"
   },
   "erp": {
     "metaTitle": "ERP returns",

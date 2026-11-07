@@ -37,7 +37,7 @@ export interface BooksFixture {
   /** Shop side, as PR 611 writes it: a courier result. */
   shopDelivery: (storeId: number, ext: string, outcome: 'DELIVERED' | 'PARTIAL' | 'RETURNED', at: Date, opts?: { kept?: string[]; answerKept?: string[]; identification?: string }) => Promise<string>;
   /** Shop side, as PR 612 writes it: a return list with one parcel per order. */
-  shopHandBack: (storeId: number, returnListId: string, handedBackAt: string, parcels: { ext: string; received: number; result?: string }[]) => Promise<void>;
+  shopHandBack: (storeId: number, returnListId: string, handedBackAt: string, parcels: { ext: string; received: number; result?: string; ticked?: string[] }[]) => Promise<void>;
   /** A staff member holding exactly these permissions in a store (or every store). */
   staff: (perms: string[], storeId: number | null, label: string) => Promise<Actor>;
   /** An owner (the seeded owner role, every store). */
@@ -181,7 +181,7 @@ export async function setUpBooks(label: string): Promise<BooksFixture> {
       const link = await linkOf(storeId);
       const list = await t.prisma.erpReturnList.create({ data: { storeId, linkId: link.id, returnListId, courier: 'PATHAO', handedBackAt: date(handedBackAt), status: 'ACCEPTED', sentAt: clock.now } });
       for (const p of parcels) {
-        await t.prisma.erpReturnListParcel.create({ data: { storeId, returnListId: list.id, externalOrderId: p.ext, consignmentId: `C-${p.ext}`, receivedCount: p.received, result: p.result ?? 'IN_RETURN_STOCK' } });
+        await t.prisma.erpReturnListParcel.create({ data: { storeId, returnListId: list.id, externalOrderId: p.ext, consignmentId: `C-${p.ext}`, receivedCount: p.received, result: p.result ?? 'IN_RETURN_STOCK', receivedLineIds: p.ticked ?? [] } });
       }
     },
     async staff(perms, storeId, label) {

@@ -15,6 +15,8 @@
 // - The shop's return record of a parcel is RECEIVED when scanned and CLOSED once the ERP took the parcel (Return stock
 //   or Hold); a refused one stays RECEIVED until it is sent again.
 // - A list waits as SENT (and is sent again by the job) while the ERP cannot be reached: nothing is lost.
+// - Follow-up 552: while the list is open the desk ticks which of the order's pieces were in the bag (the ERP line ids,
+//   `receivedLineIds`); the books move only those to WAITING_CHECK at the hand-back. None ticked: every returning piece.
 // Never here: money, a refund, a price or COD (CLAUDE.md rule 6). CN-029 §16: every row is the store's own, on its own
 // ERP link, and goes only with its own key.
 import { z } from 'zod';
@@ -73,6 +75,12 @@ export interface HandbackParcelView {
   result: string | null;
   reason: string | null;
   pieces: { lineId: string; sku: string }[];
+  /**
+   * Follow-up 552: the order's pieces on the store's ERP link that this parcel can carry (`open`: still billed or on its
+   * way back, so it can be ticked), and the ones ticked as in the bag. Empty when the books know no piece of the order.
+   */
+  bagPieces: { lineId: string; sku: string; open: boolean }[];
+  receivedLineIds: string[];
   countDiffers: boolean;
   claimStartedAt: string | null;
   /** Sent again on this list after a refusal. */
@@ -110,6 +118,7 @@ async function listRow(db: Db, storeId: number, id: string) {
 async function viewOf(db: Db, l: NonNullable<ListRow>): Promise<HandbackListView> {
   const orderIds = [...new Set(l.parcels.map((p) => p.orderId).filter((x): x is string => !!x))];
   const orders = new Map((await db.order.findMany({ where: { id: { in: orderIds } }, select: { id: true, number: true } })).map((o) => [o.id, o.number]));
+  const bag = await bagPiecesOf(db, l.storeId, l.linkId, l.parcels.map((p) => p.externalOrderId));
   const parcels = l.parcels.map(
     (p): HandbackParcelView => ({
       id: p.id,
@@ -126,6 +135,8 @@ async function viewOf(db: Db, l: NonNullable<ListRow>): Promise<HandbackListView
       result: p.result,
       reason: p.reason,
       pieces: Array.isArray(p.answerPieces) ? (p.answerPieces as { lineId: string; sku: string }[]) : [],
+      bagPieces: bag.get(p.externalOrderId) ?? [],
+      receivedLineIds: p.receivedLineIds,
       countDiffers: p.countDiffers,
       claimStartedAt: p.claimStartedAt?.toISOString() ?? null,
       resentInListId: p.resentInListId,
@@ -148,6 +159,16 @@ async function viewOf(db: Db, l: NonNullable<ListRow>): Promise<HandbackListView
     refusedOpen: l.parcels.filter((p) => p.result === 'REFUSED' && !p.resentInListId).length,
     parcels,
   };
+}
+
+/** Pieces a parcel can carry back, per ERP order: the books' pipeline rows on the link, never an exchange's own. */
+const OPEN_BAG_STATES = ['BILLED', 'RETURNING'];
+async function bagPiecesOf(db: Db, storeId: number, linkId: string, externalOrderIds: string[]): Promise<Map<string, HandbackParcelView['bagPieces']>> {
+  const out = new Map<string, HandbackParcelView['bagPieces']>();
+  if (!externalOrderIds.length) return out;
+  const rows = await db.erpPipelinePiece.findMany({ where: { storeId, linkId, externalOrderId: { in: [...new Set(externalOrderIds)] }, exchangeId: null }, orderBy: { lineId: 'asc' }, select: { externalOrderId: true, lineId: true, sku: true, state: true } });
+  for (const r of rows) out.set(r.externalOrderId, [...(out.get(r.externalOrderId) ?? []), { lineId: r.lineId, sku: r.sku, open: OPEN_BAG_STATES.includes(r.state) }]);
+  return out;
 }
 
 async function lockList(tx: Tx, storeId: number, id: string) {
@@ -309,10 +330,20 @@ export async function scanHandbackParcel(deps: OrdersDeps, who: Who, listId: str
 }
 
 export const handbackFixInput = z
-  .object({ receivedCount: z.int().min(0).max(100).optional(), note: z.string().trim().max(300).optional(), photoAssetId: z.uuid().optional() })
+  .object({
+    receivedCount: z.int().min(0).max(100).optional(),
+    note: z.string().trim().max(300).optional(),
+    photoAssetId: z.uuid().optional(),
+    /** Follow-up 552: the ERP line ids of the pieces that were in the bag (empty: none ticked, every returning piece). */
+    receivedLineIds: z.array(z.string().trim().min(1).max(100)).max(100).optional(),
+  })
   .strict();
 
-/** Corrects a parcel's count, note or photo while its list is still open (a counted-again parcel). Needs `returns.handback`. */
+/**
+ * Corrects a parcel's count, note or photo while its list is still open (a counted-again parcel), and (follow-up 552)
+ * ticks which of the order's pieces were in the bag: each one a piece of this parcel's order still billed or on its way
+ * back, never more than the pieces counted. Needs `returns.handback`.
+ */
 export async function fixHandbackParcel(deps: OrdersDeps, who: Who, listId: string, parcelId: string, input: unknown): Promise<HandbackListView> {
   await allowOne(deps, who, ['returns.handback']);
   const d = parse(handbackFixInput, input, 'parcel');
@@ -325,10 +356,17 @@ export async function fixHandbackParcel(deps: OrdersDeps, who: Who, listId: stri
     const count = d.receivedCount ?? p.receivedCount;
     const note = d.note ?? p.note;
     if ((p.unexpected || (p.expectedCount !== null && count !== p.expectedCount)) && !note) throw new OrdersError('REASON_REQUIRED', 'the count is not what is expected: write a short note', ['note']);
-    await tx.erpReturnListParcel.update({ where: { id: p.id }, data: { receivedCount: count, note, ...(d.photoAssetId ? { photoAssetId: d.photoAssetId } : {}) } });
-    const before = { receivedCount: p.receivedCount, note: p.note };
-    if (p.orderId) await eventRow(tx, by, { storeId: who.storeId, orderId: p.orderId, type: 'return.handbackCorrected', message: note, data: { returnListId: l.returnListId, before, counted: count } });
-    await auditRow(tx, by, { storeId: who.storeId, action: 'returnList.corrected', entityType: 'ErpReturnListParcel', entityId: p.id, before, after: { receivedCount: count, note } });
+    const ticked = d.receivedLineIds ? [...new Set(d.receivedLineIds)].sort() : p.receivedLineIds;
+    if (d.receivedLineIds) {
+      const open = new Set(((await bagPiecesOf(tx, who.storeId, l.linkId, [p.externalOrderId])).get(p.externalOrderId) ?? []).filter((x) => x.open || p.receivedLineIds.includes(x.lineId)).map((x) => x.lineId));
+      const strange = ticked.filter((x) => !open.has(x));
+      if (strange.length) throw new OrdersError('INVALID_INPUT', 'a ticked piece is not one this parcel can carry back', strange.map((x) => `receivedLineIds: ${x}`));
+    }
+    if (ticked.length > count) throw new OrdersError('INVALID_INPUT', 'more pieces ticked than counted', ['receivedLineIds: more than receivedCount']);
+    await tx.erpReturnListParcel.update({ where: { id: p.id }, data: { receivedCount: count, note, receivedLineIds: ticked, ...(d.photoAssetId ? { photoAssetId: d.photoAssetId } : {}) } });
+    const before = { receivedCount: p.receivedCount, note: p.note, receivedLineIds: p.receivedLineIds };
+    if (p.orderId) await eventRow(tx, by, { storeId: who.storeId, orderId: p.orderId, type: 'return.handbackCorrected', message: note, data: { returnListId: l.returnListId, before, counted: count, receivedLineIds: ticked } });
+    await auditRow(tx, by, { storeId: who.storeId, action: 'returnList.corrected', entityType: 'ErpReturnListParcel', entityId: p.id, before, after: { receivedCount: count, note, receivedLineIds: ticked } });
   }, TX);
   return (await handbackList(deps, who, listId))!;
 }

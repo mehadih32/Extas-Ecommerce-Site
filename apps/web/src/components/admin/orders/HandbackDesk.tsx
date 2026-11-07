@@ -2,7 +2,8 @@
 // CN-028 · PR 612 — the hand-back desk in the browser (/admin/orders/returns/handback): start a list for a courier and
 // day, scan each parcel (a scanner types the consignment and Enter; typing works too) with the pieces counted, a short
 // note and, when the owner asks for one, a photo of the sealed bag; correct a parcel while the list is open; close and
-// send, send again, or put the refused parcels on a new list. Every refusal is said in words from the page's messages;
+// send, send again, or put the refused parcels on a new list. Follow-up 552: the correction also ticks which of the
+// order's pieces were in the bag (only those then count as handed back in the books). Every refusal is said in words from the page's messages;
 // after each step the page is read again from the server (lib/returns-erp-api.ts → @extas/orders handback.ts).
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState } from 'react';
@@ -25,6 +26,8 @@ export interface HandbackTexts {
   scanBtn: string;
   fix: string;
   fixSave: string;
+  bag: string;
+  bagHint: string;
   cancel: string;
   errors: Record<string, string>;
 }
@@ -191,13 +194,16 @@ export function HandbackScanForm({ listId, photoRequired, texts }: { listId: str
   );
 }
 
-/** Correct a parcel's count and note while the list is open. */
-export function HandbackFixForm({ listId, parcelId, count, note, texts }: { listId: string; parcelId: string; count: number; note: string | null; texts: HandbackTexts }) {
+/** Correct a parcel's count and note while the list is open, and tick the pieces that were in the bag (follow-up 552). */
+export function HandbackFixForm({ listId, parcelId, count, note, pieces = [], ticked = [], texts }: { listId: string; parcelId: string; count: number; note: string | null; pieces?: { lineId: string; sku: string; open: boolean }[]; ticked?: string[]; texts: HandbackTexts }) {
   const router = useRouter();
   const id = useId();
   const [open, setOpen] = useState(false);
   const [n, setN] = useState(String(count));
   const [text, setText] = useState(note ?? '');
+  const [bag, setBag] = useState<string[]>(ticked);
+  const choices = pieces.filter((p) => p.open || ticked.includes(p.lineId));
+  const tick = (lineId: string, on: boolean) => setBag(on ? [...bag.filter((x) => x !== lineId), lineId] : bag.filter((x) => x !== lineId));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   if (!open)
@@ -209,7 +215,7 @@ export function HandbackFixForm({ listId, parcelId, count, note, texts }: { list
   const go = async () => {
     setBusy(true);
     setErr('');
-    const a = await call('POST', `${API}/lists/${listId}/parcels/${parcelId}/fix`, { receivedCount: Number(n), ...(text.trim() ? { note: text.trim() } : {}) });
+    const a = await call('POST', `${API}/lists/${listId}/parcels/${parcelId}/fix`, { receivedCount: Number(n), ...(text.trim() ? { note: text.trim() } : {}), ...(choices.length ? { receivedLineIds: bag } : {}) });
     setBusy(false);
     if (!a.data.ok) return setErr(errorOf(a, texts));
     setOpen(false);
@@ -231,6 +237,21 @@ export function HandbackFixForm({ listId, parcelId, count, note, texts }: { list
           <input id={`${id}-t`} className="a2-inp" maxLength={300} value={text} onChange={(e) => setText(e.target.value)} />
         </div>
       </div>
+      {choices.length ? (
+        <fieldset className="rt-bag" data-testid="handback-bag">
+          <legend className="a2-lbl">{texts.bag}</legend>
+          <p className="a2-xs a2-mute">{texts.bagHint}</p>
+          {choices.map((p) => (
+            <label key={p.lineId} className="a2-chkl">
+              <input type="checkbox" className="a2-chk" checked={bag.includes(p.lineId)} onChange={(e) => tick(p.lineId, e.target.checked)} data-testid="handback-bag-piece" />
+              <span>
+                <span className="a2-mono">{p.sku}</span>
+                <span className="a2-mute">{` · ${p.lineId}`}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
       <Problem text={err} />
       <div className="a2-cmds">
         <button type="button" className="a2-btn pri" disabled={busy} onClick={go}>
