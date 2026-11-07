@@ -24,6 +24,12 @@ describe('the Customers list address (PR 285)', () => {
     expect(parseCustomerQuery({ segment: 'everyone' })).toEqual({});
     expect(customersHref({ segment: seg }, { view: 'new' })).toBe(`/admin/customers?view=new&segment=${seg}`);
   });
+  it('follow-up 473: keeps a district id, never anything else in its place', () => {
+    const dist = '01963f6e-2222-7000-8000-000000000473';
+    expect(parseCustomerQuery({ district: dist })).toEqual({ district: dist });
+    expect(parseCustomerQuery({ district: 'Bogura' })).toEqual({});
+    expect(customersHref({ district: dist, source: 'WEBSITE' }, { page: 2 })).toBe(`/admin/customers?source=WEBSITE&page=2&district=${dist}`);
+  });
   it('a share is a whole percent, or nothing when there is nothing to share', () => {
     expect(share(1, 3)).toBe(33);
     expect(share(0, 0)).toBeNull();

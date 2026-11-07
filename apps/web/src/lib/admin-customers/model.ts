@@ -1,4 +1,4 @@
-// S14 · PR 285 — the Customers list's address (`/admin/customers?view=&q=&source=&sort=&page=`), read from the page's
+// S14 · PR 285 — the Customers list's address (`/admin/customers?view=&q=&source=&sort=&page=&segment=&district=`), read from the page's
 // search params and written back for every link, so a link opens the same list. No database, no React (the page, the
 // filters and the tests share it).
 import { CUSTOMER_SORTS, CUSTOMER_VIEWS, type CustomerSort, type CustomerView } from '@extas/customers/pure';
@@ -13,6 +13,8 @@ export interface CustomerQuery {
   page?: number;
   /** PR 287: a saved segment's id. */
   segment?: string;
+  /** Follow-up 473: a district's id (the person's latest order with a resolved place is in it). */
+  district?: string;
 }
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)?.trim() ?? '';
@@ -29,6 +31,7 @@ export function parseCustomerQuery(sp: Record<string, string | string[] | undefi
     ...((CUSTOMER_SORTS as readonly string[]).includes(sort) && sort !== 'last' ? { sort: sort as CustomerSort } : {}),
     ...(Number.isInteger(page) && page > 1 ? { page } : {}),
     ...(/^[0-9a-f-]{36}$/i.test(one(sp.segment)) ? { segment: one(sp.segment) } : {}),
+    ...(/^[0-9a-f-]{36}$/i.test(one(sp.district)) ? { district: one(sp.district) } : {}),
   };
 }
 
@@ -42,6 +45,7 @@ export function customersHref(q: CustomerQuery, change: Partial<Record<keyof Cus
   if (m.sort && m.sort !== 'last') sp.set('sort', m.sort);
   if (m.page && m.page > 1) sp.set('page', String(m.page));
   if (m.segment) sp.set('segment', m.segment);
+  if (m.district) sp.set('district', m.district);
   const s = sp.toString();
   return s ? `${CUSTOMERS_BASE}?${s}` : CUSTOMERS_BASE;
 }

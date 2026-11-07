@@ -121,7 +121,7 @@ async function exportCsv(request: Request, deps: AdminDeps | null): Promise<Resp
 }
 
 /** The list's query parameters (anything else is ignored). */
-const LIST_PARAMS = ['view', 'q', 'source', 'sort', 'page', 'segment'] as const;
+const LIST_PARAMS = ['view', 'q', 'source', 'sort', 'page', 'segment', 'district'] as const;
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 const notFound = () => Promise.resolve(fail(404, 'not-found'));

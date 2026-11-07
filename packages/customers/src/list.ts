@@ -7,7 +7,8 @@
 // or above the owner's own figure; hidden while it is empty, CN-018) · At risk (had a delivery, no order for the owner's
 // number of days) · Refused before · Exchanged · No offers (neither SMS nor WhatsApp marketing consent). Each view has
 // its count. Search by name, e-mail or any of his numbers (4 digits or more, however written); filter by where he first
-// came from; sort by last order, newest profile, spend, orders or name. A page is the owner's page size, then "More".
+// came from or (follow-up 473) by the district of his latest order with a resolved place; sort by last order, newest
+// profile, spend, orders or name. A page is the owner's page size, then "More".
 //
 // PR 534: while the owner's grading is on, each row carries the grade and verified mark its own counts earn.
 //
@@ -41,6 +42,8 @@ export const listInput = z
     page: z.coerce.number().int().min(1).max(10_000).optional(),
     /** PR 287: only the people of this saved segment (an archived, unreadable or other store's segment: nobody). */
     segment: z.string().trim().max(40).optional(),
+    /** Follow-up 473: only the people whose latest order with a resolved place is in this district (a GeoArea id). */
+    district: z.union([z.literal(''), z.string().uuid()]).optional(),
   })
   .strict();
 export type ListInput = z.input<typeof listInput>;
@@ -73,14 +76,32 @@ export interface CustomerList {
   counts: Partial<Record<CustomerView, number>>;
   views: CustomerView[];
   /** The query as read (defaults filled in). */
-  query: { view: CustomerView; q: string; source: string; sort: CustomerSort; page: number; segment: string };
+  query: { view: CustomerView; q: string; source: string; sort: CustomerSort; page: number; segment: string; district: string };
   /** PR 287: the saved segment the list is narrowed to (null: none, or it is not one this store keeps live). */
   segment: { id: string; name: string } | null;
   pageSize: number;
   hasMore: boolean;
   /** Where people first came from, for the filter. */
   sources: string[];
+  /** Follow-up 473: the districts the store's orders reached, for the district filter. */
+  districts: District[];
   viewer: Viewer;
+}
+
+/** Follow-up 473: a district of the filter, named in both languages. */
+export interface District {
+  id: string;
+  nameEn: string;
+  nameBn: string | null;
+}
+
+/** Follow-up 473: SQL on the profile `r` — his latest order with a resolved place is in district `d` (the place, or under it). */
+export function districtSql(d: string): Prisma.Sql {
+  if (!d) return Prisma.empty;
+  return Prisma.sql`AND (
+      SELECT (a."id" = ${d}::uuid OR ${d}::uuid = ANY(a."ancestorIds"))
+      FROM own JOIN "Order" o ON o."id" = own."id" AND o."archivedAt" IS NULL JOIN "GeoArea" a ON a."id" = o."areaId"
+      WHERE own.k = r."id"::text ORDER BY o."placedAt" DESC, o."id" DESC LIMIT 1) IS TRUE`;
 }
 
 export interface PeopleRow {
@@ -114,10 +135,11 @@ export async function listSql(deps: CustomersDeps, S: number, d: z.output<typeof
   const sort: CustomerSort = d.sort ?? 'last';
   const q = d.q ?? '';
   const source = d.source ?? '';
+  const district = d.district ?? '';
   const riskSince = new Date(nowOf(deps).getTime() - rules.atRiskDays * DAY_MS);
   const ourFault = [...hist.ourFault];
 
-  const base = peopleBaseSql(S, ourFault, Prisma.sql`${searchSql(S, q)} ${source ? Prisma.sql`AND r."firstSource" = ${source}` : Prisma.empty}`);
+  const base = peopleBaseSql(S, ourFault, Prisma.sql`${searchSql(S, q)} ${source ? Prisma.sql`AND r."firstSource" = ${source}` : Prisma.empty} ${districtSql(district)}`);
   const segmentId = d.segment ?? '';
   const seg = segmentId ? await segmentOf(deps, S, segmentId) : null;
   const segSql = segmentId ? (seg?.sql ?? Prisma.sql`FALSE`) : Prisma.sql`TRUE`;
@@ -129,7 +151,7 @@ export async function listSql(deps: CustomersDeps, S: number, d: z.output<typeof
     orders: Prisma.sql`b.orders DESC, b.last_at DESC NULLS LAST`,
     name: Prisma.sql`lower(COALESCE(b."name", '')) ASC`,
   }[sort];
-  return { rules, views, view, sort, q, source, segmentId, seg, base, viewSql, order };
+  return { rules, views, view, sort, q, source, district, segmentId, seg, base, viewSql, order };
 }
 
 /** The list of people, a page at a time (see the file header). */
@@ -137,16 +159,19 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
   const viewer = await allow(deps, who, 'customers.read');
   const d = parse(listInput, input, 'list');
   const S = who.storeId;
-  const [{ rules, views, view, sort, q, source, segmentId, seg, base, viewSql, order }, mask, grading] = await Promise.all([listSql(deps, S, d), maskOf(deps, S), gradingOf(deps, S)]);
+  const [{ rules, views, view, sort, q, source, district, segmentId, seg, base, viewSql, order }, mask, grading] = await Promise.all([listSql(deps, S, d), maskOf(deps, S), gradingOf(deps, S)]);
   const page = d.page ?? 1;
 
-  const [rows, countRows, sourceRows] = await Promise.all([
+  const [rows, countRows, sourceRows, districtRows] = await Promise.all([
     deps.db.$queryRaw<PeopleRow[]>`${base} SELECT b.* FROM base b WHERE ${viewSql(view)} ORDER BY ${order}, b."id" LIMIT ${rules.pageSize + 1} OFFSET ${(page - 1) * rules.pageSize}`,
     deps.db.$queryRaw<Record<string, bigint>[]>`${base} SELECT ${Prisma.join(
       views.map((v) => Prisma.sql`count(*) FILTER (WHERE ${viewSql(v)}) AS ${Prisma.raw(`"${v}"`)}`),
       ', ',
     )} FROM base b`,
     deps.db.$queryRaw<{ s: string }[]>`SELECT DISTINCT c."firstSource" AS s FROM "Customer" c WHERE c."storeId" = ${S} AND c."mergedIntoId" IS NULL AND c."erasedAt" IS NULL AND c."firstSource" IS NOT NULL ORDER BY 1`,
+    deps.db.$queryRaw<District[]>`SELECT DISTINCT d."id"::text AS "id", d."nameEn", d."nameBn" FROM "Order" o JOIN "GeoArea" a ON a."id" = o."areaId"
+      JOIN "GeoArea" d ON d."level"::text = 'DISTRICT' AND (d."id" = a."id" OR d."id" = ANY(a."ancestorIds"))
+      WHERE o."storeId" = ${S} AND o."archivedAt" IS NULL ORDER BY d."nameEn", 1`,
   ]);
   const c = countRows[0] ?? {};
   return {
@@ -171,11 +196,12 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
     })),
     counts: Object.fromEntries(views.map((v) => [v, num(c[v])])),
     views,
-    query: { view, q, source, sort, page, segment: segmentId },
+    query: { view, q, source, sort, page, segment: segmentId, district },
     segment: seg ? { id: seg.id, name: seg.name } : null,
     pageSize: rules.pageSize,
     hasMore: rows.length > rules.pageSize,
     sources: sourceRows.map((r) => r.s),
+    districts: districtRows.map((r) => ({ id: r.id, nameEn: r.nameEn, nameBn: r.nameBn })),
     viewer,
   };
 }

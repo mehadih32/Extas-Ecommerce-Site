@@ -156,8 +156,12 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
-  const filtered = !!(query.q || query.source);
+  const filtered = !!(query.q || query.source || query.district);
   const sourceSel: FilterSelect = { name: 'source', label: t(d, 'cus.list.source'), any: t(d, 'cus.list.anySource'), value: query.source ?? '', options: data.sources.map((s) => ({ value: s, label: sourceLabel(view, s) })) };
+  // follow-up 473: the district of each person's latest order with a resolved place (only the districts orders reached)
+  const districtSel: FilterSelect | null = data.districts.length
+    ? { name: 'district', label: t(d, 'cus.list.district'), any: t(d, 'cus.list.anyDistrict'), value: query.district ?? '', options: data.districts.map((x) => ({ value: x.id, label: view.lang === 'bn' && x.nameBn ? x.nameBn : x.nameEn })) }
+    : null;
   const sortSel: FilterSelect = {
     name: 'sort',
     label: t(d, 'cus.list.sort'),
@@ -193,7 +197,7 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
         {data.views.map((v) => {
           const on = v === current;
           return (
-            <Link key={v} className={`a2-view${on ? ' on' : ''}`} href={customersHref({ q: query.q, source: query.source, sort: query.sort, segment: query.segment }, { view: v })} aria-current={on ? 'page' : undefined} scroll={false} data-view={v}>
+            <Link key={v} className={`a2-view${on ? ' on' : ''}`} href={customersHref({ q: query.q, source: query.source, district: query.district, sort: query.sort, segment: query.segment }, { view: v })} aria-current={on ? 'page' : undefined} scroll={false} data-view={v}>
               {t(d, `cus.list.view.${v}`)}
               <span className="a2-cnt">{n(data.counts[v] ?? 0)}</span>
             </Link>
@@ -217,11 +221,11 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
         search={t(d, 'cus.list.search')}
         go={t(d, 'cus.list.searchGo')}
         aria={t(d, 'cus.list.filtersAria')}
-        selects={[sourceSel, sortSel]}
+        selects={districtSel ? [sourceSel, districtSel, sortSel] : [sourceSel, sortSel]}
         keep={{ segment: query.segment ?? '' }}
         clear={filtered || query.sort ? { href: customersHref({ view: query.view, segment: query.segment }), label: t(d, 'cus.list.clear') } : null}
       />
-      {exportLimits && data.rows.length ? <CustomerExport dict={{ cus: d.cus as Dict }} query={{ view: data.query.view, q: data.query.q, source: data.query.source, sort: query.sort, segment: data.query.segment }} limits={exportLimits} /> : null}
+      {exportLimits && data.rows.length ? <CustomerExport dict={{ cus: d.cus as Dict }} query={{ view: data.query.view, q: data.query.q, source: data.query.source, district: data.query.district, sort: query.sort, segment: data.query.segment }} limits={exportLimits} /> : null}
       {data.rows.length ? (
         <>
           <CustomerTable view={view} rows={data.rows} money={money} when={when} hrefOf={hrefOf} />

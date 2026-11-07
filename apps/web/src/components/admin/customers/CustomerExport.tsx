@@ -16,6 +16,7 @@ export interface ExportQuery {
   source?: string;
   sort?: string;
   segment?: string;
+  district?: string;
 }
 
 /** `limits`: the reason's shortest and longest (the service's own, @extas/customers EXPORT_REASON). */

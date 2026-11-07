@@ -124,6 +124,8 @@
       "filtersAria": "Search and filter customers",
       "source": "First came from",
       "anySource": "Any source",
+      "district": "District (latest order)",
+      "anyDistrict": "Any district",
       "sort": "Sort",
       "sortLast": "Last order first",
       "sortNew": "Newest customer first",
