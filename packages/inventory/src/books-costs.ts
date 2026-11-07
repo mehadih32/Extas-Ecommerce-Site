@@ -351,6 +351,70 @@ export async function reverseCostEntry(deps: InventoryDeps, who: Who, entryId: s
   return { id, resummarised: await resummarise(deps, t, day, localNow(nowOf(deps), t.timeZone).day) };
 }
 
+// ---- follow-up 565: the cost lines a statement writes ------------------------------------------------------------------
+
+/** The statements that write a cost line, with the line and the `refType` their entry points with. */
+export const STATEMENT_COST_KINDS = {
+  COURIER_SETTLEMENT: { line: 'DELIVERY', refType: 'courier.settlement', part: 'courierCharges' },
+  GATEWAY_STATEMENT: { line: 'PAYMENT_FEES', refType: 'gateway.statement', part: 'gatewayFees' },
+} as const satisfies Record<string, { line: CostSummaryLine; refType: string; part: 'courierCharges' | 'gatewayFees' }>;
+export type StatementCostKind = keyof typeof STATEMENT_COST_KINDS;
+
+export interface StatementCostInput {
+  kind: StatementCostKind;
+  /** CourierSettlement.id or GatewayStatement.id: one entry per statement, ever. */
+  statementId: string;
+  /** The statement's own reference, kept as the entry's note. */
+  reference: string | null;
+  /** The charges the courier deducted, or the gateway's fees, in minor units. */
+  amountMinor: number;
+}
+
+export type StatementCostStatus = 'WRITTEN' | 'OFF' | 'NONE' | 'NOT_LINKED' | 'ALREADY' | 'TOO_BIG' | 'DAY_CLOSED';
+
+/**
+ * Follow-up 565 — after a courier's COD statement or a gateway's statement is imported (payments `importSettlement`,
+ * `importGatewayStatement`), its charges or fees become one cost entry on the summary's DELIVERY or PAYMENT_FEES line,
+ * on the store's today, while that part of `books.costs.fromStatements` is on (off as shipped). One entry per
+ * statement (`refType` + `refId`), never edited; it is not reversed on Money › Costs (put right at its source). Skipped,
+ * never failing the import: the switch off, nothing to count, no books link yet (v5, before the switch-over), above
+ * `books.costs.maxLineMinor` (kept in the audit log for a person to enter by hand), or the day not open. A record of
+ * the shop's own costs: nothing is paid or moved.
+ */
+export async function recordStatementCost(deps: InventoryDeps, who: Who, raw: StatementCostInput): Promise<{ status: StatementCostStatus; id?: string }> {
+  const storeId = storeOf(who);
+  const kind = STATEMENT_COST_KINDS[raw.kind];
+  if (!kind || !z.uuid().safeParse(raw.statementId).success) throw new InventoryError('INVALID_INPUT', 'a statement cost needs its statement', ['statementId']);
+  if (!(await setting(deps, storeId, 'books.costs.fromStatements'))[kind.part]) return { status: 'OFF' };
+  if (!Number.isSafeInteger(raw.amountMinor) || raw.amountMinor <= 0) return { status: 'NONE' };
+  const t = await booksTarget(deps, storeId);
+  if (!t) return { status: 'NOT_LINKED' };
+  const { maxLine } = await capsOf(deps, storeId);
+  const note = raw.reference ? raw.reference.slice(0, 500) : null;
+  return deps.db.$transaction(async (tx) => {
+    await lockLink(tx, t.link);
+    const done = await tx.costEntry.findFirst({ where: { storeId, refType: kind.refType, refId: raw.statementId }, select: { id: true } });
+    if (done) return { status: 'ALREADY' as const, id: done.id };
+    if (raw.amountMinor > Math.min(ENTRY_MAX, maxLine)) {
+      await logChange(tx, who, { action: 'books.costLine.statementSkipped', entityType: kind.refType, entityId: raw.statementId, before: null, after: { line: kind.line, amountMinor: raw.amountMinor, why: 'TOO_BIG' }, storeId });
+      return { status: 'TOO_BIG' as const };
+    }
+    const day = localNow(nowOf(deps), t.timeZone).day;
+    try {
+      await dayAllowed(deps, tx, t, day);
+    } catch (e) {
+      if (e instanceof InventoryError) return { status: 'DAY_CLOSED' as const };
+      throw e;
+    }
+    const row = await tx.costEntry.create({
+      data: { storeId, service: 'books.costLine', module: 'payments', amountMinor: raw.amountMinor, currency: t.currency, refType: kind.refType, refId: raw.statementId, detail: note, source: 'statement', occurredAt: nowOf(deps), summaryLine: kind.line, costDate: asDate(day) },
+      select: { id: true },
+    });
+    await logChange(tx, who, { action: 'books.costLine.statement', entityType: 'CostEntry', entityId: row.id, before: null, after: { line: kind.line, day, amountMinor: raw.amountMinor, statement: raw.statementId, reference: note }, storeId });
+    return { status: 'WRITTEN' as const, id: row.id };
+  }, TX);
+}
+
 export interface CostEntriesResult {
   /** The latest `limit` entries of the span at most, newest day first. */
   rows: CostEntryRow[];

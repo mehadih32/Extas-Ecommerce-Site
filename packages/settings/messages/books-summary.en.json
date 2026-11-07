@@ -38,6 +38,10 @@
       "listLimit": {
         "label": "Cost entries listed at once",
         "help": "How many cost entries Money → Costs shows at once, newest first. The page says when there are more."
+      },
+      "fromStatements": {
+        "label": "Costs from the imported statements",
+        "help": "Courier charges: a courier's COD statement, once imported, writes the charges it deducted as one Courier cost on the day of the import. Gateway fees: a gateway's statement writes its fees as one Payment and COD fees cost. Turn one on only when nobody enters the same costs by hand any more, or they count twice."
       }
     }
   }

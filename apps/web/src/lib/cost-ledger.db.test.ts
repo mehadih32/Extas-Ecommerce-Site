@@ -11,6 +11,7 @@ import { createVault } from '@extas/vault';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from './admin-api';
 import { costLedger, costLedgerRoute } from './cost-ledger';
+import { statementCostsHandler } from './costs-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -134,5 +135,21 @@ describe.skipIf(!HAS_TEST_DB)('cost ledger on PostgreSQL (PR 343)', () => {
     expect(lines.at(-1)).toBe('total,,195,BDT,3');
     expect((await route('POST', 'report', { cookie: owner, body: {} })).status).toBe(405);
     expect((await route('GET', 'report', { query: '&from=2026-10-01&to=2026-10-31' })).status).toBe(401);
+  });
+
+  it('follow-up 565: the "Costs from statements" card is read (books.read) and saved whole (fixedcosts.write, audited); an older screen is STALE', async () => {
+    const card = (method: string, opts: { body?: unknown; cookie?: string } = {}) => statementCostsHandler(call(method, `/api/admin/costs/statements?storeId=${A}`, opts), deps).then(async (r) => ({ status: r.status, body: (await r.json()) as { ok: boolean; error?: string; cards?: { statements: { value: unknown; version: string } } } }));
+    const read = await card('GET', { cookie: reader });
+    expect(read.body).toMatchObject({ ok: true, cards: { statements: { value: { courierCharges: false, gatewayFees: false } } } });
+    const version = read.body.cards!.statements.version;
+    const value = { courierCharges: true, gatewayFees: false };
+    expect((await card('PUT', { cookie: reader, body: { key: 'statements', value, version } })).body).toMatchObject({ ok: false, error: 'FORBIDDEN' });
+    expect((await card('PUT', { cookie: owner, body: { key: 'statements', value, version: 'old' } })).body).toMatchObject({ ok: false, error: 'STALE' });
+    expect((await card('PUT', { cookie: owner, body: { key: 'statements', value: { courierCharges: 'yes' }, version } })).body).toMatchObject({ ok: false, error: 'INVALID_INPUT' });
+    expect((await card('PUT', { cookie: owner, body: { key: 'statements', value, version } })).body).toMatchObject({ ok: true, cards: { statements: { value } } });
+    expect(await deps.resolver.value('books.costs.fromStatements', { storeId: A })).toEqual(value);
+    expect(await deps.resolver.value('books.costs.fromStatements', { storeId: B })).toEqual({ courierCharges: false, gatewayFees: false });
+    expect(await t.prisma.auditLog.count({ where: { action: 'books.statementCosts' } })).toBe(1);
+    expect((await card('POST', { cookie: owner, body: {} })).status).toBe(405);
   });
 });

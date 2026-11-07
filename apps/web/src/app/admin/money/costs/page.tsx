@@ -17,12 +17,15 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { costsScreen } from '@/lib/costs-api';
+import { costsScreen, statementCostsCard } from '@/lib/costs-api';
+import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { inventoryDeps } from '@/lib/inventory-api';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-costs.bn.json';
 import en from '../../../../../messages/admin-costs.en.json';
 import '../money.css';
+import '../../settings/settings.css';
+import '../../settings-cards.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,16 +56,37 @@ export default async function CostsPage() {
   const who: inv.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const idep = await inventoryDeps(access.deps);
   const at = { storeId: MOTHER_STORE_ID };
-  const [screen, currency, resendDays] = await Promise.all([costsScreen(idep, who), access.deps.resolver.value('store.currency', at), access.deps.resolver.value('books.resend.days', at)]);
+  const [screen, currency, resendDays, stCard] = await Promise.all([costsScreen(idep, who), access.deps.resolver.value('store.currency', at), access.deps.resolver.value('books.resend.days', at), statementCostsCard(access.deps, MOTHER_STORE_ID)]);
   const canEdit = access.guard.permissions?.has('fixedcosts.write') ?? false;
   const canEnterLines = canEdit || (access.guard.permissions?.has('costlines.write') ?? false);
   const today = screen.fixed.today;
   const openFrom = [screen.fixed.startDay ?? today, inv.addDays(today, -resendDays)].sort().at(-1)!;
+  // follow-up 565: the courier charges and gateway fees written by the imported statements (books.costs.fromStatements)
+  const st = (key: string) => t(view.dict, `moneyCosts.fromStatements.${key}`);
+  const stTexts: FieldsCardTexts = {
+    h: st('h'),
+    d: st('d'),
+    save: st('save'),
+    saving: st('saving'),
+    saved: st('saved'),
+    discard: st('discard'),
+    unsaved: st('unsaved'),
+    readOnly: st('readOnly'),
+    pairHelp: '',
+    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'FORBIDDEN', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, st(`err.${c}`)])),
+  };
+  const stFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'courierCharges', label: st('courier'), help: st('courierHelp') },
+    { kind: 'switch', path: 'gatewayFees', label: st('gateway'), help: st('gatewayHelp') },
+  ];
   return (
     <div className="a2-z" data-testid="costs-page" data-lm-ready="" data-linked={screen.fixed.linked ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyCosts.title')} sub={t(view.dict, 'moneyCosts.sub')} />
       <SectionTabs view={view} current={KEY} />
       <CostsScreen dict={view.dict} locale={view.locale} money={moneyOf(currency, view.locale)} fixed={screen.fixed} entries={screen.entries.rows} entriesMore={screen.entries.more} entriesLimit={screen.entries.limit} noCostLines={screen.noCostLines} lines={inv.COST_LINE_ORDER} openFrom={openFrom} canEdit={canEdit} canEnterLines={canEnterLines} />
+      <div className="a2-mt12">
+        <FieldsCard url="/api/admin/costs/statements" screen={{ key: stCard.key, value: { ...stCard.value }, version: stCard.version }} fields={stFields} texts={stTexts} canEdit={canEdit} testId="costs-from-statements" />
+      </div>
     </div>
   );
 }
