@@ -389,7 +389,7 @@ PY
     echo "$(post /api/x b05) $(post /api/x b15) $(post /api/x b15 chunked) $(post /api/admin/media b15) $(post /api/admin/support/t1/files b15 chunked) $(post /api/admin/media b25) | $(cc "staging.test:$port" /products/x) | $(cc "main.test:$port" /products/x) | $(cc "staging.test:$port" /_next/static/a.js)"
     kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
   }
-  gated='cache-control: private, no-store;cdn-cache-control: no-store;cloudflare-cdn-cache-control: no-store;'
+  gated='cache-control: private, no-store, no-transform;cdn-cache-control: no-store;cloudflare-cdn-cache-control: no-store;'
   public='cache-control: public, max-age=600;cdn-cache-control: public, max-age=600;'
   hashed='cache-control: public, max-age=600;cdn-cache-control: public, max-age=31536000, immutable;'
   check "body limit (caddy, R2 m1): 413 above the limit with or without a length; the admin uploads have their own" \
@@ -1378,7 +1378,7 @@ miss=""; for p in /bag /checkout /account /bn/bag /bn/checkout /bn/account /admi
   grep -q " $p" <<<"$never" || miss="$miss $p"; done
 check "caddy cache: bag, checkout, account, admin and the API are never kept" "${miss:-none}" "none"
 check "caddy cache: never kept means no-store for the browser and Cloudflare" \
-  "$(awk '/^\(cache_headers\) \{$/{f=1} f&&/^\}$/{f=0} f' "$CF" | grep -c 'Cache-Control "private, no-store"'):$(awk '/^\(cache_headers\) \{$/{f=1} f&&/^\}$/{f=0} f' "$CF" | grep -c '	CDN-Cache-Control "no-store"')" "1:1"
+  "$(awk '/^\(cache_headers\) \{$/{f=1} f&&/^\}$/{f=0} f' "$CF" | grep -c 'Cache-Control "private, no-store, no-transform"'):$(awk '/^\(cache_headers\) \{$/{f=1} f&&/^\}$/{f=0} f' "$CF" | grep -c '	CDN-Cache-Control "no-store"')" "1:1"
 # R2 security review (m3): a gated host (staging, a locked extra host) never lets Cloudflare keep a page; the open main
 # domain keeps the app's own cache headers (the live check is with the real Caddy above).
 check "caddy cache (R2 m3): the staging block and a locked extra host import gated_cache; an open one does not" \
