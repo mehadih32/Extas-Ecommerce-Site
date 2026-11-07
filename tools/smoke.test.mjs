@@ -2,7 +2,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { adminLinks, adminPaths, visitLine, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, rowsFile, shotDir, totpCode, withQuery } from './smoke.mjs';
+import { CHECK_HEADERS, adminLinks, checkContext, adminPaths, visitLine, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, rowsFile, shotDir, totpCode, withQuery } from './smoke.mjs';
 
 it('PR 6: an extra check passes on the expected value or answer, and says what it saw otherwise', () => {
   const page = { pr: 6, what: 'worker fresh', page: '/admin/server', selector: '[data-worker-state]', attribute: 'data-worker-state', equals: 'ok' };
@@ -225,4 +225,26 @@ it('writes a progress line every 50 page views and a slow page at once, with wha
     'smoke: slow /admin/orders (desktop) 15.4 s; still open: /a, /b, /c, /d',
   ]);
   expect(visitLine(8, '/x', 'phone', 8_000, [], 0)).toEqual(['smoke: slow /x (phone) 8.0 s']);
+});
+
+// Follow-up 590 (PR 234): every test browser (smoke test, saved journeys, the monthly lab) says so with the header the
+// shop's speed endpoint knows, so its page loads are only counted apart, never in the real visitors' figures.
+it('the test browsers mark every request with the check header the vitals endpoint reads', async () => {
+  const app = readFileSync(new URL('../apps/web/src/lib/seo/vitals-data.ts', import.meta.url), 'utf8');
+  const name = /export const CHECK_HEADER = '([^']+)'/.exec(app)?.[1];
+  expect(name).toBeTruthy();
+  expect(Object.keys(CHECK_HEADERS)).toEqual([name]);
+  const seen = [];
+  const browser = { newContext: async (o) => (seen.push(o), 'ctx') };
+  expect(await checkContext(browser, { viewport: { width: 390, height: 844 }, extraHTTPHeaders: { a: 'b' } })).toBe('ctx');
+  await checkContext(browser);
+  expect(seen).toEqual([
+    { viewport: { width: 390, height: 844 }, extraHTTPHeaders: { a: 'b', [name]: '1' } },
+    { extraHTTPHeaders: { [name]: '1' } },
+  ]);
+  for (const tool of ['smoke.mjs', 'journeys.mjs', 'vitals-lab.mjs']) {
+    const src = readFileSync(new URL(`./${tool}`, import.meta.url), 'utf8');
+    // only checkContext itself opens a plain context
+    expect([tool, src.match(/browser\.newContext\(/g)?.length ?? 0]).toEqual([tool, tool === 'smoke.mjs' ? 1 : 0]);
+  }
 });

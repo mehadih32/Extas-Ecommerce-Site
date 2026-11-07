@@ -12,7 +12,7 @@ import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } 
 import { disconnectPrisma, MOTHER_STORE_ID } from '@extas/db/client';
 import { messages, registry, storeTarget, syncSettings } from '@extas/settings';
 import { settingsResolver } from '../settings';
-import { labReport, recordVital, vitalsHandler, vitalsReport } from './vitals-data';
+import { CHECK_HEADER, labReport, recordVital, vitalsHandler, vitalsReport } from './vitals-data';
 
 const S = MOTHER_STORE_ID;
 const SET = registry['seo.vitals'].default;
@@ -71,10 +71,17 @@ describe.skipIf(!HAS_TEST_DB)("real visitors' speed on PostgreSQL (PR 234)", () 
     }
     // the shop's own test browsers (smoke test, journeys, the monthly lab run) are not real visitors
     expect((await post({ m: 'CLS', v: 0.04, p: '/', d: 'desktop' }, 'Mozilla/5.0 (X11; Linux x86_64) HeadlessChrome/140.0 Safari/537.36')).status).toBe(204);
-    expect((await rows()).map((r) => `${r.metric}/${r.pageKind}/${r.device}/${r.count}`).sort()).toEqual(['CLS/home/desktop/1', 'INP/category/phone/1']);
+    // ~~expect((await rows()).map((r) => `${r.metric}/${r.pageKind}/${r.device}/${r.count}`).sort()).toEqual(['CLS/home/desktop/1', 'INP/category/phone/1']);~~
+    // follow-up 590: they are counted under device "test" (counts only), never in the phone or desktop figures; a test
+    // browser whose agent looks real says so with the check header (the smoke test, the journeys and the lab send it)
+    const marked = (body: unknown) =>
+      vitalsHandler(new Request('https://shop.example.test/api/shop/vitals', { method: 'POST', headers: { 'content-type': 'application/json', 'user-agent': 'Mozilla/5.0 (Linux; Android 14) Chrome/130.0 Mobile Safari/537.36', [CHECK_HEADER]: '1' }, body: JSON.stringify(body) }));
+    expect((await marked({ m: 'LCP', v: 1500, p: '/', d: 'phone' })).status).toBe(204);
+    expect((await rows()).map((r) => `${r.metric}/${r.pageKind}/${r.device}/${r.count}`).sort()).toEqual(['CLS/home/desktop/1', 'CLS/home/test/1', 'INP/category/phone/1', 'LCP/home/test/1']);
     await settingsResolver()!.set('seo.vitals', { ...SET, collect: false }, storeTarget(S), { actorId: null, reason: 'test' });
     expect((await post({ m: 'LCP', v: 900, p: '/', d: 'phone' })).status).toBe(204);
-    expect(await t.prisma.webVitalDay.count({ where: { storeId: S, metric: 'LCP' } })).toBe(0);
+    // ~~expect(await t.prisma.webVitalDay.count({ where: { storeId: S, metric: 'LCP' } })).toBe(0);~~ the test browser's LCP above stays apart
+    expect(await t.prisma.webVitalDay.count({ where: { storeId: S, metric: 'LCP', device: { not: 'test' } } })).toBe(0);
     await settingsResolver()!.set('seo.vitals', SET, storeTarget(S), { actorId: null, reason: 'test' });
   });
 
@@ -98,6 +105,14 @@ describe.skipIf(!HAS_TEST_DB)("real visitors' speed on PostgreSQL (PR 234)", () 
     ]);
     const short = await vitalsReport(t.prisma, S, { ...SET, days: 7 }, '2026-11-06');
     expect(short.total).toBe(2);
+    expect(r.testReadings).toBe(0);
+    // follow-up 590: the test browsers' readings are only counted, apart
+    await recordVital(t.prisma, S, { metric: 'LCP', value: 9000, path: '/', device: 'test' }, 'products', '2026-10-31');
+    await recordVital(t.prisma, S, { metric: 'CLS', value: 0.5, path: '/', device: 'test' }, 'products', '2026-10-31');
+    const withTests = await vitalsReport(t.prisma, S, SET, '2026-10-31');
+    expect(withTests).toMatchObject({ total: 5, testReadings: 2 });
+    expect(withTests.overall.LCP.phone).toEqual(r.overall.LCP.phone);
+    expect(withTests.lcpByKind).toEqual(r.lcpByKind);
   });
 
   it('shows the newest monthly lab run, judged against the targets, and keeps it once', async () => {

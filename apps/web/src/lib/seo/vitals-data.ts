@@ -1,7 +1,9 @@
 // S11 · PR 234 — Core Web Vitals on the database and the server's state folder:
 // - POST /api/shop/vitals (public): one reading from a real visitor's page, counted in its day's bucket (WebVitalDay),
-//   never who sent it. Only while `seo.vitals.collect` is on; a reading that is not real, or comes from the shop's own
-//   test browsers (they would skew the real visitors' figures), is dropped quietly (204).
+//   never who sent it. Only while `seo.vitals.collect` is on; a reading that is not real is dropped quietly (204).
+//   ~~A reading from the shop's own test browsers is dropped quietly.~~ Follow-up 590: the shop's own test browsers (the
+//   smoke test, the saved journeys, the monthly lab run) are counted apart under the device "test" (counts only), never
+//   in the phone or desktop figures; they are known by their agent or by the check header they send (CHECK_HEADER).
 // - `vitalsReport`: the 75th percentile of the last `seo.vitals.days` days, per metric, on a phone and on a desktop, and
 //   per kind of page, against the targets.
 // - `labReport`: the monthly lab run (infra/deploy/vitals-lab.sh writes state/vitals-lab.json); each new run is kept in
@@ -24,12 +26,20 @@ const MAX_BODY = 1024;
 const MAX_PATH = 512;
 /** The shop's own test browsers (the smoke test, the saved journeys, the monthly lab run) are not real visitors. */
 const TEST_BROWSER = /HeadlessChrome|Playwright/i;
+/** Follow-up 590: the header every test browser sends (tools/smoke.mjs CHECK_HEADERS), whatever its agent says. */
+export const CHECK_HEADER = 'x-extas-check';
+/** Follow-up 590: where a test browser's readings are counted (only counted: no figure reads this device). */
+export const TEST_DEVICE = 'test';
+
+/** A request from one of the shop's own test browsers. */
+export const isTestBrowser = (headers: Headers): boolean => TEST_BROWSER.test(headers.get('user-agent') ?? '') || headers.has(CHECK_HEADER);
 
 export interface VitalReading {
   metric: VitalMetric;
   value: number;
   path: string;
-  device: Device;
+  /** phone or desktop as the page said; `test` for the shop's own test browsers (follow-up 590). */
+  device: Device | typeof TEST_DEVICE;
 }
 
 /** A reading as the page sends it (`{m, v, p, d}`), or null. */
@@ -59,12 +69,14 @@ export async function recordVital(db: PrismaClient, storeId: number, r: VitalRea
 export async function vitalsHandler(request: Request): Promise<Response> {
   const none = () => new Response(null, { status: 204 });
   if (!process.env.DATABASE_URL) return none();
-  if (TEST_BROWSER.test(request.headers.get('user-agent') ?? '')) return none();
+  // ~~if (TEST_BROWSER.test(request.headers.get('user-agent') ?? '')) return none();~~ follow-up 590: counted apart below
+  const test = isTestBrowser(request.headers);
   try {
     const text = await request.text();
     if (text.length > MAX_BODY) return none();
-    const r = readingOf(JSON.parse(text));
-    if (!r) return none();
+    const read = readingOf(JSON.parse(text));
+    if (!read) return none();
+    const r: VitalReading = test ? { ...read, device: TEST_DEVICE } : read;
     const storeId = shopStoreId();
     const { 'seo.vitals': set, 'naming.productPathPrefix': prefix } = await readPageSettings(['seo.vitals', 'naming.productPathPrefix'] as const, storeId);
     if (!set.collect) return none();
@@ -91,7 +103,10 @@ export interface VitalsReport {
   overall: Record<VitalMetric, Record<Device, VitalCell>>;
   /** LCP on a phone per kind of page (the kinds with readings). */
   lcpByKind: { kind: PageKind; cell: VitalCell }[];
+  /** Real visitors' page loads (their LCP readings). */
   total: number;
+  /** Follow-up 590: readings of every metric from the shop's own test browsers in the span, counted only. */
+  testReadings: number;
 }
 
 const cellOf = (metric: VitalMetric, counts: number[], target: number | null): VitalCell => {
@@ -110,8 +125,11 @@ export async function vitalsReport(db: PrismaClient, storeId: number, set: SeoVi
     VITAL_METRICS.map((m) => [m, Object.fromEntries(DEVICES.map((d) => [d, cellOf(m, sum((r) => r.metric === m && r.device === d), targetOf(m, set.targets))]))]),
   ) as VitalsReport['overall'];
   const lcpByKind = PAGE_KINDS.map((kind) => ({ kind, cell: cellOf('LCP', sum((r) => r.metric === 'LCP' && r.device === 'phone' && r.pageKind === kind), set.targets.lcpMs) })).filter((x) => x.cell.count > 0);
-  const total = rows.filter((r) => r.metric === 'LCP').reduce((a, r) => a + r.buckets.reduce((x, y) => x + (y ?? 0), 0), 0);
-  return { days: set.days, from: from.toISOString().slice(0, 10), to: today, overall, lcpByKind, total };
+  const readings = (r: (typeof rows)[number]) => r.buckets.reduce((x, y) => x + (y ?? 0), 0);
+  // ~~const total = rows.filter((r) => r.metric === 'LCP').reduce((a, r) => a + readings(r), 0);~~ follow-up 590: real visitors only
+  const total = rows.filter((r) => r.metric === 'LCP' && r.device !== TEST_DEVICE).reduce((a, r) => a + readings(r), 0);
+  const testReadings = rows.filter((r) => r.device === TEST_DEVICE).reduce((a, r) => a + readings(r), 0);
+  return { days: set.days, from: from.toISOString().slice(0, 10), to: today, overall, lcpByKind, total, testReadings };
 }
 
 /** state/vitals-lab.json as the monthly run writes it. */

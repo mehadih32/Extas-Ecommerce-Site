@@ -8,7 +8,7 @@
 // Run on the VM by infra/deploy/vitals-lab.sh (vitals-monthly.yml), which keeps the result as state/vitals-lab.json.
 import { writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { previewCookie, signIn } from "./smoke.mjs";
+import { checkContext, previewCookie, signIn } from "./smoke.mjs";
 
 const require = createRequire(import.meta.url);
 
@@ -47,7 +47,7 @@ export function pageNumbers(seen, bytes) {
 }
 
 async function measure(browser, base, url, { profile, storageState }) {
-  const ctx = await browser.newContext({
+  const ctx = await checkContext(browser, {
     viewport: { width: profile?.width ?? 1366, height: profile?.height ?? 900 },
     isMobile: !!profile,
     hasTouch: !!profile,
@@ -99,7 +99,7 @@ export async function runLab({ base, httpCredentials = null, creds = null, chrom
       pages.push({ path: product, kind: "product", status: m.status, lcpMs: m.lcpMs, cls: m.cls, ttfbMs: m.ttfbMs, kb: m.kb, loadMs: m.loadMs });
     }
     if (creds?.email) {
-      const ctx = await browser.newContext(storageState ? { storageState } : {});
+      const ctx = await checkContext(browser, storageState ? { storageState } : {});
       await signIn(await ctx.newPage(), base, creds);
       const signedIn = await ctx.storageState();
       await ctx.close();
