@@ -8,7 +8,8 @@
 //                        account's EXCHANGE_EXTRA and EXCHANGE_ADJUSTMENT entries (and their reversals) of that day
 //   costs.returnLosses   moves into (+) and out of (−) DECLINED that day, plus EXCHANGE_BILL and EXCHANGE_CREDIT entries
 //                        (a shop correction of an exchange group counts as the kind it corrects, PR 616 money review)
-//   returns              moves into WAITING_CHECK that day (pieces handed back), RETURN_CREDIT entries (approved
+//   returns              moves into WAITING_CHECK that day (pieces handed back; net of a piece put back with the courier
+//                        the same day, WAITING_CHECK → DELIVERED, follow-up 563), RETURN_CREDIT entries (approved
 //                        credit), and the WAITING_CHECK value at the end of the day — information only, never a cost
 //   costs.packaging …    CostEntry rows (`summaryLine`, `costDate` or the local day of `occurredAt`) and RetailExpense
 //   costs.other          rows of a head with a `summaryLine`, in the store's currency; fixed costs are never here
@@ -135,7 +136,12 @@ export async function dayFigures(db: Db, q: { storeId: number; linkId: string; d
     db.$queryRaw<{ goods: bigint; declined: bigint; handed: bigint }[]>`
       SELECT COALESCE(sum(CASE WHEN m."toState" = 'DELIVERED' THEN m."buyingPriceMinor" WHEN m."fromState" = 'DELIVERED' THEN -m."buyingPriceMinor" ELSE 0 END), 0)::bigint AS "goods",
              COALESCE(sum(CASE WHEN m."toState" = 'DECLINED' THEN m."buyingPriceMinor" WHEN m."fromState" = 'DECLINED' THEN -m."buyingPriceMinor" ELSE 0 END), 0)::bigint AS "declined",
-             count(*) FILTER (WHERE m."toState" = 'WAITING_CHECK')::bigint AS "handed"
+             -- follow-up 563 (b): a piece handed back and put back with the courier the same day (WAITING_CHECK →
+             -- DELIVERED: the owner's tick says it never came back) is no piece handed back that day
+             (count(*) FILTER (WHERE m."toState" = 'WAITING_CHECK')
+              - count(*) FILTER (WHERE m."fromState" = 'WAITING_CHECK' AND m."toState" = 'DELIVERED' AND EXISTS (
+                  SELECT 1 FROM "ErpPipelineMove" i
+                  WHERE i."pieceId" = m."pieceId" AND i."businessDate" = m."businessDate" AND i."toState" = 'WAITING_CHECK' AND i."fromState" IS DISTINCT FROM i."toState")))::bigint AS "handed"
       FROM "ErpPipelineMove" m
       WHERE m."linkId" = ${linkId}::uuid AND m."storeId" = ${storeId} AND m."businessDate" = ${day}::date AND m."toState" IS DISTINCT FROM m."fromState"`,
     db.$queryRaw<{ value: bigint }[]>`

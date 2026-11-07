@@ -400,6 +400,33 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 617 on PostgreSQL: the daily summary
     expect((await summaryLog(deps(), { actor: SYSTEM, storeId: A }, { days: 1 })).map((r) => r.date)).toEqual(['2026-11-08']);
   });
 
+  it('follow-up 563: a piece handed back and put back with the courier the same day is no hand-back; a later courier result moves the delivery charge to its day (a new version on both days)', async () => {
+    // (b) Store B, 5 Nov: one piece handed back and kept (1), one handed back and put back with the courier the same day
+    // (WAITING_CHECK → DELIVERED: never came back, 0), and one handed back on 4 Nov and put back on 5 Nov (counted on 4 Nov).
+    await piece(B, 'B563-1', 'B563-1-1', 30_000, [[null, 'BILLED', '2026-11-04'], ['BILLED', 'WAITING_CHECK', '2026-11-05']]);
+    await piece(B, 'B563-2', 'B563-2-1', 30_000, [[null, 'BILLED', '2026-11-04'], ['BILLED', 'WAITING_CHECK', '2026-11-05'], ['WAITING_CHECK', 'DELIVERED', '2026-11-05']]);
+    await piece(B, 'B563-3', 'B563-3-1', 30_000, [[null, 'BILLED', '2026-11-03'], ['BILLED', 'WAITING_CHECK', '2026-11-04'], ['WAITING_CHECK', 'DELIVERED', '2026-11-05']]);
+    // (c) An order delivered on 6 Nov (its delivery charge on that day) …
+    const o = await order(B, { placed: at('2026-11-05', 10), delivery: 6_000, lines: [{ unit: 80_000 }] });
+    const eo = await t.prisma.erpOrder.create({ data: { storeId: B, linkId: links[B]!, orderId: o.order.id, externalOrderId: 'B563-9', erpTotalMinor: 60_000n } });
+    await t.prisma.erpDeliveryResult.create({ data: { storeId: B, erpOrderId: eo.id, outcome: 'DELIVERED', courier: 'PATHAO', collectedMinor: 86_000n, at: at('2026-11-06', 15) } });
+    clock = at('2026-11-08', 0, 31);
+    await summaryTick(deps(), B);
+    await summaryCheck(deps(), B); // the days built earlier in this file are built again with the new facts
+    const latest = async (ymd: string) => (await versions(B, ymd)).at(-1)!;
+    const body = async (ymd: string) => (await latest(ymd)).body as { returns: { handedBackPieces: number }; income: { deliveryCharges: number } };
+    expect((await body('2026-11-05')).returns.handedBackPieces).toBe(1);
+    expect((await body('2026-11-04')).returns.handedBackPieces).toBe(1);
+    expect((await body('2026-11-06')).income.deliveryCharges).toBe(60);
+    expect((await body('2026-11-07')).income.deliveryCharges).toBe(0);
+    // … then the courier corrects it: delivered on 7 Nov. The charge moves with it, and both days get a new version.
+    await t.prisma.erpDeliveryResult.create({ data: { storeId: B, erpOrderId: eo.id, outcome: 'DELIVERED', courier: 'PATHAO', collectedMinor: 86_000n, at: at('2026-11-07', 11) } });
+    clock = at('2026-11-08', 2);
+    await summaryCheck(deps(), B);
+    expect([(await latest('2026-11-06')).reason, (await body('2026-11-06')).income.deliveryCharges]).toEqual(['LATE_FACT', 0]);
+    expect([(await latest('2026-11-07')).reason, (await body('2026-11-07')).income.deliveryCharges]).toEqual(['LATE_FACT', 60]);
+  });
+
   it('a closed month is never sent again: a late fact on it makes no new version', async () => {
     await t.prisma.booksPeriodClose.create({ data: { storeId: A, linkId: links[A]!, level: 'MONTH', periodStart: day('2026-11-01'), periodEnd: day('2026-11-30'), version: 1, result: 'MATCHED', openingBalanceMinor: 0n, closingBalanceMinor: 0n, matchedDays: 30, totalDays: 30, figures: {}, hash: 'test' } });
     await cost(A, 'OTHER', '2026-11-02', 10_000);
