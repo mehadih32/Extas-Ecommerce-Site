@@ -545,6 +545,24 @@
 .adm2 .a2-tbl td.a2-tdx{display:none}
 .adm2 .a2-tbl td.a2-tdc{position:absolute;right:12px;top:12px}
 .adm2 .a2-tbl td.a2-tdc::before{display:none}
+}
+/* follow-up (7 Nov, CN-037): the order table's 8 columns (follow-up 435's Documents column among them) need more
+   width than an iPad or Android tablet gives a browser tab at 768-1199px; the device gate caught it as
+   PAGE-WIDER-THAN-PHONE (layout up to 1075px on a 1024px tablet). The phone's own card rows (same rules, scoped to
+   this one table) already fit any width, so they take over here too instead of the table. */
+@media (min-width:768px) and (max-width:1199px){
+.adm2 [data-testid=orders-table],.adm2 [data-testid=orders-table] tbody{display:block}
+.adm2 [data-testid=orders-table] thead{display:none}
+.adm2 [data-testid=orders-table] tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 12px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--sh);position:relative}
+.adm2 [data-testid=orders-table] td{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0;border:0;min-width:0;text-align:left!important;max-width:none!important}
+.adm2 [data-testid=orders-table] td[data-l]::before{content:attr(data-l);font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+.adm2 [data-testid=orders-table] td.a2-tdh{grid-column:1/-1;padding-right:34px}
+.adm2 [data-testid=orders-table] td.a2-tdh::before{display:none}
+.adm2 [data-testid=orders-table] td.a2-tdw{grid-column:1/-1}
+.adm2 [data-testid=orders-table] td.a2-tdc{position:absolute;right:12px;top:12px}
+.adm2 [data-testid=orders-table] td.a2-tdc::before{display:none}
+}
+@media (max-width:767px){
 /* qa-gate F1 (PR 616): a books form opened in a row card (Books › Differences › "Put right") takes the cell's whole
    width, and its long buttons wrap instead of pushing the page wider than the phone. */
 .adm2 .a2-tbl td .a2-bkf{align-self:stretch;min-width:0;max-width:100%}
