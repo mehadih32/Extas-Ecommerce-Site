@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-07 12:42 (Asia/Dhaka)
+# Smoke test · 2026-11-07 18:18 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (534টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (546টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `6851b276b4fe` · after deploy · result **PASS** (534 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `eea92e3c11d1` · after deploy · result **PASS** (546 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -36,6 +36,8 @@ Site: https://new.extas.com.bd · commit `6851b276b4fe` · after deploy · resul
 | `/help/story` | phone | 200 | `/help/story` | ok | [picture](help-story-phone.jpg) |
 | `/help/contact` | phone | 200 | `/help/contact` | ok | [picture](help-contact-phone.jpg) |
 | `/bn/help/contact` | phone | 200 | `/bn/help/contact` | ok | [picture](bn-help-contact-phone.jpg) |
+| `/help/size-guide` | phone | 200 | `/help/size-guide` | ok | [picture](help-size-guide-phone.jpg) |
+| `/bn/help/size-guide` | phone | 200 | `/bn/help/size-guide` | ok | [picture](bn-help-size-guide-phone.jpg) |
 | `/search` | phone | 200 | `/search` | ok | [picture](search-phone.jpg) |
 | `/bn/search` | phone | 200 | `/bn/search` | ok | [picture](bn-search-phone.jpg) |
 | `/search?q=polo` | phone | 200 | `/search` | ok | [picture](search-q-polo-phone.jpg) |
@@ -120,6 +122,7 @@ Site: https://new.extas.com.bd · commit `6851b276b4fe` · after deploy · resul
 | `/admin/ai` | phone | 200 | `/admin/ai` | ok | — |
 | `/admin/settings` | phone | 200 | `/admin/settings` | ok | — |
 | `/admin/delivery/couriers` | phone | 200 | `/admin/delivery/couriers` | ok | — |
+| `/admin/delivery/couriers?archived=1` | phone | 200 | `/admin/delivery/couriers` | ok | — |
 | `/admin/orders/packing/print` | phone | 200 | `/admin/orders/packing/print` | ok | — |
 | `/admin/orders/packing/handover` | phone | 200 | `/admin/orders/packing/handover` | ok | — |
 | `/admin/orders/packing/picking` | phone | 200 | `/admin/orders/packing/picking` | ok | — |
@@ -243,6 +246,9 @@ Site: https://new.extas.com.bd · commit `6851b276b4fe` · after deploy · resul
 | `/admin/orders?source=SUPPORT` | phone | 200 | `/admin/orders` | ok | — |
 | `/admin/products/reviews` | phone | 200 | `/admin/products/reviews` | ok | — |
 | `/admin/products/reviews?view=photo` | phone | 200 | `/admin/products/reviews` | ok | — |
+| `/admin/products/questions` | phone | 200 | `/admin/products/questions` | ok | — |
+| `/admin/reports/searches` | phone | 200 | `/admin/reports/searches` | ok | — |
+| `/admin/reports/orders` | phone | 200 | `/admin/reports/orders` | ok | — |
 | `/admin/customers/loyalty` | phone | 200 | `/admin/customers/loyalty` | ok | — |
 | `/admin/messages/campaigns` | phone | 200 | `/admin/messages/campaigns` | ok | — |
 | `/admin/marketing/audiences` | phone | 200 | `/admin/marketing/audiences` | ok | — |
@@ -269,7 +275,7 @@ Site: https://new.extas.com.bd · commit `6851b276b4fe` · after deploy · resul
 | `/admin/orders/01a1b2ad-d2ee-71a3-ab85-a3982e7586f9` | phone | 200 | `/admin/orders/01a1b2ad-d2ee-71a3-ab85-a3982e7586f9` | ok | — |
 | `/admin/customers/01a1b2ad-d2eb-7e13-acce-dfb8d34069df` | phone | 200 | `/admin/customers/01a1b2ad-d2eb-7e13-acce-dfb8d34069df` | ok | — |
 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | phone | 200 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | ok | — |
-| `/admin/reports/health/history/01a1b485-f1fb-7300-af34-4d0258116104` | phone | 200 | `/admin/reports/health/history/01a1b485-f1fb-7300-af34-4d0258116104` | ok | — |
+| `/admin/reports/health/history/01a1b4c6-c6d9-7b71-a005-6c375cc50338` | phone | 200 | `/admin/reports/health/history/01a1b4c6-c6d9-7b71-a005-6c375cc50338` | ok | — |
 | `/admin/customers/01a1b2ad-d2eb-7e13-acce-dfb8d34069df?tab=wallet` | phone | 200 | `/admin/customers/01a1b2ad-d2eb-7e13-acce-dfb8d34069df` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -303,6 +309,8 @@ Site: https://new.extas.com.bd · commit `6851b276b4fe` · after deploy · resul
 | `/help/story` | desktop | 200 | `/help/story` | ok | [picture](help-story-desktop.jpg) |
 | `/help/contact` | desktop | 200 | `/help/contact` | ok | [picture](help-contact-desktop.jpg) |
 | `/bn/help/contact` | desktop | 200 | `/bn/help/contact` | ok | [picture](bn-help-contact-desktop.jpg) |
+| `/help/size-guide` | desktop | 200 | `/help/size-guide` | ok | [picture](help-size-guide-desktop.jpg) |
+| `/bn/help/size-guide` | desktop | 200 | `/bn/help/size-guide` | ok | [picture](bn-help-size-guide-desktop.jpg) |
 | `/search` | desktop | 200 | `/search` | ok | [picture](search-desktop.jpg) |
 | `/bn/search` | desktop | 200 | `/bn/search` | ok | [picture](bn-search-desktop.jpg) |
 | `/search?q=polo` | desktop | 200 | `/search` | ok | [picture](search-q-polo-desktop.jpg) |
@@ -387,6 +395,7 @@ Site: https://new.extas.com.bd · commit `6851b276b4fe` · after deploy · resul
 | `/admin/ai` | desktop | 200 | `/admin/ai` | ok | — |
 | `/admin/settings` | desktop | 200 | `/admin/settings` | ok | — |
 | `/admin/delivery/couriers` | desktop | 200 | `/admin/delivery/couriers` | ok | — |
+| `/admin/delivery/couriers?archived=1` | desktop | 200 | `/admin/delivery/couriers` | ok | — |
 | `/admin/orders/packing/print` | desktop | 200 | `/admin/orders/packing/print` | ok | — |
 | `/admin/orders/packing/handover` | desktop | 200 | `/admin/orders/packing/handover` | ok | — |
 | `/admin/orders/packing/picking` | desktop | 200 | `/admin/orders/packing/picking` | ok | — |
@@ -510,6 +519,9 @@ Site: https://new.extas.com.bd · commit `6851b276b4fe` · after deploy · resul
 | `/admin/orders?source=SUPPORT` | desktop | 200 | `/admin/orders` | ok | — |
 | `/admin/products/reviews` | desktop | 200 | `/admin/products/reviews` | ok | — |
 | `/admin/products/reviews?view=photo` | desktop | 200 | `/admin/products/reviews` | ok | — |
+| `/admin/products/questions` | desktop | 200 | `/admin/products/questions` | ok | — |
+| `/admin/reports/searches` | desktop | 200 | `/admin/reports/searches` | ok | — |
+| `/admin/reports/orders` | desktop | 200 | `/admin/reports/orders` | ok | — |
 | `/admin/customers/loyalty` | desktop | 200 | `/admin/customers/loyalty` | ok | — |
 | `/admin/messages/campaigns` | desktop | 200 | `/admin/messages/campaigns` | ok | — |
 | `/admin/marketing/audiences` | desktop | 200 | `/admin/marketing/audiences` | ok | — |
@@ -536,7 +548,7 @@ Site: https://new.extas.com.bd · commit `6851b276b4fe` · after deploy · resul
 | `/admin/orders/01a1b2ad-d2ee-71a3-ab85-a3982e7586f9` | desktop | 200 | `/admin/orders/01a1b2ad-d2ee-71a3-ab85-a3982e7586f9` | ok | — |
 | `/admin/customers/01a1b2ad-d2eb-7e13-acce-dfb8d34069df` | desktop | 200 | `/admin/customers/01a1b2ad-d2eb-7e13-acce-dfb8d34069df` | ok | — |
 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | desktop | 200 | `/admin/reports/health/problems/01a19736-6e8e-7b80-86b7-22cbef71bfa5` | ok | — |
-| `/admin/reports/health/history/01a1b485-f1fb-7300-af34-4d0258116104` | desktop | 200 | `/admin/reports/health/history/01a1b485-f1fb-7300-af34-4d0258116104` | ok | — |
+| `/admin/reports/health/history/01a1b4c6-c6d9-7b71-a005-6c375cc50338` | desktop | 200 | `/admin/reports/health/history/01a1b4c6-c6d9-7b71-a005-6c375cc50338` | ok | — |
 | `/admin/customers/01a1b2ad-d2eb-7e13-acce-dfb8d34069df?tab=wallet` | desktop | 200 | `/admin/customers/01a1b2ad-d2eb-7e13-acce-dfb8d34069df` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
