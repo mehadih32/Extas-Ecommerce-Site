@@ -54,6 +54,38 @@ export type SimulationRun = { at?: string; iso?: string; sha?: string; ok?: bool
 // PR 393 follow-up (CN-036): the last acceptance run (infra/deploy/acceptance.sh, acceptance.yml): its parts' results.
 export type AcceptanceRun = { at?: string; atText?: string; sha?: string; ok?: boolean; passed?: number; total?: number; parts?: { key: string; ok: boolean; line: string }[] };
 
+// Follow-up 575 (PR 621): the last ERP acceptance run against the demo ERP (infra/deploy/erp-acceptance.sh, nightly and
+// before every release): its state and counts only, never a key or an address.
+export type ErpAcceptance = {
+  at?: string;
+  exit?: number;
+  state?: 'RAN' | 'NOT_RUN' | 'WAITING_FOR_KEY' | 'NOT_FINISHED' | 'NOT_IN_VERSION';
+  passed?: number;
+  failed?: number;
+  skipped?: number;
+  unreachable?: boolean;
+  keyRefused?: boolean;
+};
+
+/** The status page's line for the last ERP acceptance run: a word key in messages/status.*.json, its numbers, a tone. */
+export function erpAcceptanceLine(a: ErpAcceptance | null): { key: string; vars: Record<string, number>; tone: 'ok' | 'bad' | 'warn' | 'soft' } {
+  switch (a?.state) {
+    case 'RAN':
+      if (a.keyRefused) return { key: 'erpKeyRefused', vars: {}, tone: 'warn' };
+      if (a.unreachable) return { key: 'erpUnreachable', vars: {}, tone: 'warn' };
+      if ((a.failed ?? 0) > 0) return { key: 'erpFail', vars: { failed: a.failed ?? 0, passed: a.passed ?? 0 }, tone: 'bad' };
+      return { key: 'erpOk', vars: { passed: a.passed ?? 0, skipped: a.skipped ?? 0 }, tone: 'ok' };
+    case 'WAITING_FOR_KEY':
+      return { key: 'erpWaitingKey', vars: {}, tone: 'soft' };
+    case 'NOT_RUN':
+      return { key: 'erpNotRun', vars: {}, tone: 'warn' };
+    case 'NOT_FINISHED':
+      return { key: 'erpNotFinished', vars: {}, tone: 'bad' };
+    default:
+      return { key: 'erpNone', vars: {}, tone: 'soft' };
+  }
+}
+
 export const buildStatus = generated as BuildStatus;
 
 // Runtime state written on the server (deploy.yml, extas-monitor, extas-backup, smoke.sh), mounted read-only at
@@ -71,7 +103,7 @@ async function readJson<T>(name: string): Promise<T | null> {
 export type RuntimeState = Awaited<ReturnType<typeof runtimeState>>;
 
 export async function runtimeState() {
-  const [deploy, health, local, blob, drive, smoke, restoreTest, drill, staging, production, serverSetup, originCert, simulation, acceptance] = await Promise.all([
+  const [deploy, health, local, blob, drive, smoke, restoreTest, drill, staging, production, serverSetup, originCert, simulation, acceptance, erpAcceptance] = await Promise.all([
     readJson<Deploy>('last-good-deploy.json'),
     readJson<Health>('health.json'),
     readJson<Backup>('backup-daily-local.json'),
@@ -86,6 +118,7 @@ export async function runtimeState() {
     readJson<OriginCert>('origin-cert.json'),
     readJson<SimulationRun>('simulation.json'),
     readJson<AcceptanceRun>('acceptance.json'),
+    readJson<ErpAcceptance>('erp-acceptance.json'),
   ]);
-  return { deploy, health, backups: { local, blob, drive }, smoke, restoreTest, drill, restore: { staging, production }, serverSetup, originCert, simulation, acceptance };
+  return { deploy, health, backups: { local, blob, drive }, smoke, restoreTest, drill, restore: { staging, production }, serverSetup, originCert, simulation, acceptance, erpAcceptance };
 }
