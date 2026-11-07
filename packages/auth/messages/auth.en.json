@@ -285,6 +285,9 @@
     "fixedcosts": {
       "write": "Set a month’s fixed costs (salary, rent, utilities, other)"
     },
+    "costlines": {
+      "write": "Enter or reverse a day’s cost on a cost line (packaging, accessories, fees, courier, ads, other); never the month’s fixed costs"
+    },
     "costs": {
       "write": "Record a prepaid top-up (SMS credit) and its low mark; set the costs & fees figures"
     },

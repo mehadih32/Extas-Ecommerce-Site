@@ -11,15 +11,17 @@
 //   POST  /api/admin/costs/cost-entries/:id/reverse      {reason} reverse a cost entered here (a negative entry)
 //   PUT   /api/admin/costs/no-cost-lines                 {value} the cost lines this store never has
 //                                                        (`erp.summary.noCostLines`)
-// The writes need `fixedcosts.write`.
+// The writes need `fixedcosts.write`; a cost entry and its reversal take `costlines.write` too (follow-up 567).
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { audit } from '@extas/auth';
+import { audit, requireAnyPermission } from '@extas/auth';
 import * as inv from '@extas/inventory';
 import { registry, SettingsError, storeTarget } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
 
 type CostsPerm = 'books.read' | 'fixedcosts.write';
+/** Follow-up 567: either of these enters or reverses a day's cost line. */
+const LINE_PERMS = inv.COST_LINE_PERMISSIONS;
 
 interface Ctx {
   deps: inv.InventoryDeps;
@@ -34,13 +36,14 @@ function storeIdOf(url: URL): number | null {
   return Number.isInteger(n) && n >= 1 ? n : null;
 }
 
-async function handle(request: Request, deps: AdminDeps | null, permission: CostsPerm, fn: (c: Ctx) => Promise<Record<string, unknown> | Response>, status = 200): Promise<Response> {
+async function handle(request: Request, deps: AdminDeps | null, permission: CostsPerm | typeof LINE_PERMS, fn: (c: Ctx) => Promise<Record<string, unknown> | Response>, status = 200): Promise<Response> {
   const url = new URL(request.url);
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
-  const g = await guardAdmin(request, deps, { permission, storeId });
+  const g = await guardAdmin(request, deps, typeof permission === 'string' ? { permission, storeId } : { storeId });
   if (g instanceof Response) return g;
   try {
+    if (typeof permission !== 'string') await requireAnyPermission(deps!.db, g.actor, permission, { storeId });
     const out = await fn({ deps: await inventoryDeps(deps!), admin: deps!, who: { actor: g.actor, storeId, ctx: g.ctx }, url });
     return out instanceof Response ? out : json({ ok: true, ...out }, { status });
   } catch (e) {
@@ -70,13 +73,13 @@ export function fixedCostsHandler(request: Request, deps: AdminDeps | null): Pro
 
 export function costEntriesHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
   if (method(request) !== 'POST') return notAllowed();
-  return handle(request, deps, 'fixedcosts.write', async (c) => ({ result: await inv.addCostEntry(c.deps, c.who, await body(request)) }), 201);
+  return handle(request, deps, LINE_PERMS, async (c) => ({ result: await inv.addCostEntry(c.deps, c.who, await body(request)) }), 201);
 }
 
 export function reverseCostEntryHandler(request: Request, deps: AdminDeps | null, id: string): Promise<Response> {
   if (method(request) !== 'POST') return notAllowed();
   if (!isUuid(id)) return Promise.resolve(fail(400, 'INVALID_INPUT', ['id']));
-  return handle(request, deps, 'fixedcosts.write', async (c) => ({ result: await inv.reverseCostEntry(c.deps, c.who, id, await body(request)) }), 201);
+  return handle(request, deps, LINE_PERMS, async (c) => ({ result: await inv.reverseCostEntry(c.deps, c.who, id, await body(request)) }), 201);
 }
 
 /** "More options": the cost lines this store never has (a store setting, logged in the settings history and the audit log). */

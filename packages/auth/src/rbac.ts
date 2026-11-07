@@ -52,6 +52,13 @@ export async function requirePermission(db: Db, actor: Actor, permission: Permis
   return held;
 }
 
+/** Throws FORBIDDEN unless the actor holds at least one of the permissions in that scope (follow-up 567). */
+export async function requireAnyPermission(db: Db, actor: Actor, permissions: readonly PermissionKey[], scope: Scope = {}): Promise<Set<PermissionKey>> {
+  const held = await actorPermissions(db, actor, scope);
+  if (!permissions.some((p) => held.has(p))) throw new AuthError('FORBIDDEN', `needs one of the permissions ${permissions.map((p) => `"${p}"`).join(', ')}`);
+  return held;
+}
+
 /** Nobody hands out more than they hold: every permission in `wanted` must be in `held`. */
 export function assertNoEscalation(held: Set<PermissionKey>, wanted: Iterable<string>): void {
   const missing = [...wanted].filter((k) => !isPermissionKey(k) || !held.has(k));

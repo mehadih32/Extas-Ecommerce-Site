@@ -26,7 +26,7 @@
 // Per store and per link (§16): everything reads and writes only the acting store's rows and its own open link. Nothing
 // here moves money: these are the shop's own cost figures for the ERP's reports.
 import { z } from 'zod';
-import { requirePermission } from '@extas/auth';
+import { requireAnyPermission, requirePermission, type PermissionKey } from '@extas/auth';
 import { COST_SUMMARY_LINES, ERP_FIXED_COST_LINES, minorOf, type CostSummaryLine } from '@extas/erp-types';
 import { logChange, nowOf, parse, setting, TX, type Db, type InventoryDeps, type Who } from './context';
 import { InventoryError } from './errors';
@@ -290,14 +290,17 @@ async function dayAllowed(deps: InventoryDeps, db: Db, t: BooksTarget, day: stri
   return { today };
 }
 
+/** Follow-up 567: a day's cost line takes its own permission, so staff can enter packaging without the salaries. */
+export const COST_LINE_PERMISSIONS: readonly PermissionKey[] = ['costlines.write', 'fixedcosts.write'];
+
 /**
- * Enters one cost on a summary line for a day (`fixedcosts.write`); 0 means "none that day". With the form's
+ * Enters one cost on a summary line for a day (`costlines.write` or `fixedcosts.write`, follow-up 567); 0 means "none that day". With the form's
  * `requestKey`, a second call with the same key (a double tap, a retry after a lost answer) answers the entry already
  * written (`repeated`) and writes nothing.
  */
 export async function addCostEntry(deps: InventoryDeps, who: Who, raw: unknown): Promise<{ id: string; resummarised: boolean; repeated: boolean }> {
   const storeId = storeOf(who);
-  await requirePermission(deps.db, who.actor, 'fixedcosts.write', { storeId });
+  await requireAnyPermission(deps.db, who.actor, COST_LINE_PERMISSIONS, { storeId });
   const input = parse(entryInputOf((await capsOf(deps, storeId)).maxLine), raw, 'cost entry');
   const t = await writeTarget(deps, storeId);
   let today = '';
@@ -318,10 +321,10 @@ export async function addCostEntry(deps: InventoryDeps, who: Who, raw: unknown):
   return { ...out, resummarised: out.repeated ? false : await resummarise(deps, t, input.day, today) };
 }
 
-/** Reverses a cost entered here (`fixedcosts.write`): a negative entry that points at it, with a reason. Never twice. */
+/** Reverses a cost entered here (`costlines.write` or `fixedcosts.write`): a negative entry that points at it, with a reason. Never twice. */
 export async function reverseCostEntry(deps: InventoryDeps, who: Who, entryId: string, raw: unknown): Promise<{ id: string; resummarised: boolean }> {
   const storeId = storeOf(who);
-  await requirePermission(deps.db, who.actor, 'fixedcosts.write', { storeId });
+  await requireAnyPermission(deps.db, who.actor, COST_LINE_PERMISSIONS, { storeId });
   const reason = typeof (raw as { reason?: unknown })?.reason === 'string' ? (raw as { reason: string }).reason.trim().slice(0, 500) : '';
   if (!reason) throw new InventoryError('REASON_REQUIRED', 'say why the cost is reversed', ['reason']);
   if (!z.uuid().safeParse(entryId).success) throw new InventoryError('NOT_FOUND', 'no such cost entry');
