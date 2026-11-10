@@ -110,6 +110,10 @@ export async function setUpBooks(label: string): Promise<BooksFixture> {
   const linkOf = async (storeId: number) => {
     const integ = await t.prisma.integration.findFirstOrThrow({ where: { storeId, kind: 'ERP' }, select: { id: true } });
     const l = await openErpLink(t.prisma, storeId, integ.id);
+    // `openErpLink` leaves `createdAt` at the real database now(), never the fixture's own clock; `booksTarget`'s
+    // `startDay` fallback (no `switchDate`) reads it, so the link's own open day must stay fixed and well before
+    // every date a test moves the fixture clock to, not the day this suite happens to run on.
+    await t.prisma.erpStoreLink.update({ where: { id: l.id }, data: { createdAt: new Date('2020-01-01T00:00:00Z') } });
     return { id: l.id, storeId: l.storeId };
   };
   const tz = 'Asia/Dhaka';
