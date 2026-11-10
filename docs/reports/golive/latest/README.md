@@ -2,7 +2,7 @@
 
 **সারকথা:** চালুর আগে দরকারি 17টার 15টা হয়ে গেছে, 2টা বাকি। রিডাইরেক্ট: 45টা পুরনো লিংক (এখনো বন্ধ — চালুর দিনে চালু হবে)। সাইটম্যাপ: 4টা ঠিকানা, 0টা সমস্যা। ডোমেইন বদলের মহড়া (শুধু কপিতে): ঠিক আছে। কিছুই বদলানো হয়নি।
 
-- Run: 2026-11-11 05:17 (Asia/Dhaka) · version `9f0aecac5be7` · host: the staging host only (read-only check account) · result **READY except the owner's steps**
+- Run: 2026-11-11 05:26 (Asia/Dhaka) · version `9f0aecac5be7` · host: the staging host only (read-only check account) · result **READY except the owner's steps**
 - Nothing was changed: no setting, no sign-off, no server file. The main domain was never asked.
 
 ## Needed before go-live (15/17 done)
@@ -15,7 +15,7 @@
 | ✅ | Every server item of A2.9 in place (`server`) | 394 | auto | steps: 26 · fail: 0 · warn: 0 · failed: — |
 | ✅ | Cloudflare Origin certificate on the server (`originCert`) | 397 | auto | names: *.extas.com.bd, extas.com.bd · days: 5474 · missing: — · error: — |
 | ✅ | Cloudflare SSL/TLS mode is Full (strict) (`sslStrict`) | 397 | signoff | — |
-| ❌ | Main domain open to search engines (`indexing`) | 401 | auto | hosts: — · on: off |
+| ❌ | Main domain open to search engines (`indexing`) | 401 | auto | hosts: — · on: on |
 | ✅ | Search Console on the main domain, sitemap sent (`searchConsole`) | 401 | signoff | — |
 | ✅ | Test payments off, every online method on a real gateway (`testPayments`) | 400 | auto | stores: — · methods: — |
 | ✅ | Request limits enforce (`rateLimit`) | 393 | auto | mode: enforce |

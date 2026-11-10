@@ -1,5 +1,5 @@
 {
-  "at": "2026-11-11 05:17 (Asia/Dhaka)",
+  "at": "2026-11-11 05:26 (Asia/Dhaka)",
   "sha": "9f0aecac5be7",
   "ok": true,
   "problems": [],
@@ -24,7 +24,7 @@
         "kind": "auto",
         "when": "before",
         "ok": true,
-        "at": "2026-11-11T05:17:32+06:00",
+        "at": "2026-11-11T05:26:29+06:00",
         "title": "The server's health check is clean",
         "vars": {
           "problems": 0
@@ -92,7 +92,7 @@
         "title": "Main domain open to search engines",
         "vars": {
           "hosts": "—",
-          "on": "off"
+          "on": "on"
         }
       },
       {
