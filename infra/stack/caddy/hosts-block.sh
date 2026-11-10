@@ -29,6 +29,13 @@ if [ "$open" != yes ]; then
   printf '\theader X-Robots-Tag "noindex, nofollow"\n'
   printf '\trespond /robots.txt "User-agent: *\nDisallow: /\n" 200\n'
   printf '\timport /etc/caddy/sites/auth.caddy\n'
+else
+  # Follow-up 726 (go-live day): the open main domain keeps the app's own Cache-Control (public pages may still be
+  # kept at Cloudflare's edge once the owner turns cache.pages.cdn on), but it adds "no-transform" on every response
+  # so Cloudflare never rewrites the page and injects its own beacon script — the same failure as follow-up 725
+  # (batch 18 rollback, 7 Nov), this time on the live domain. "+Cache-Control" adds a header line instead of
+  # replacing the app's own; Cloudflare and browsers read repeated Cache-Control lines as one comma-joined value.
+  printf '\theader +Cache-Control "no-transform"\n'
 fi
 printf '\timport /etc/caddy/sites/upstream.caddy\n'
 printf '}\n'

@@ -393,7 +393,9 @@ PY
     kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
   }
   gated='cache-control: private, no-store, no-transform;cdn-cache-control: no-store;cloudflare-cdn-cache-control: no-store;'
-  public='cache-control: public, max-age=600;cdn-cache-control: public, max-age=600;'
+  # Follow-up 726: the open host's own "no-transform" (sorted before the app's "cache-control: public, …" line) rides
+  # alongside the app's own headers, so Cloudflare still never rewrites the page even though it may still keep it.
+  public='cache-control: no-transform;cache-control: public, max-age=600;cdn-cache-control: public, max-age=600;'
   hashed='cache-control: public, max-age=600;cdn-cache-control: public, max-age=31536000, immutable;'
   check "body limit (caddy, R2 m1): 413 above the limit with or without a length; the admin uploads have their own" \
     "$(edge_case no | cut -d'|' -f1)" "200 413 413 200 200 413 "
@@ -1386,6 +1388,12 @@ check "caddy cache: never kept means no-store for the browser and Cloudflare" \
 # domain keeps the app's own cache headers (the live check is with the real Caddy above).
 check "caddy cache (R2 m3): the staging block and a locked extra host import gated_cache; an open one does not" \
   "$(awk '/^\{\$EXTAS_STAGING_HOST\} \{$/{f=1} f&&/^\}$/{f=0} f' "$CF" | grep -c '^	import gated_cache$'):$(bash ../stack/caddy/hosts-block.sh no a.test | grep -c '	import gated_cache'):$(bash ../stack/caddy/hosts-block.sh yes a.test | grep -c 'gated_cache' || true)" "1:1:0"
+# Follow-up 726 (go-live day): the open host keeps the app's own caching (no gated_cache, checked above) but still
+# adds "no-transform" of its own, so Cloudflare never rewrites the live page (follow-up 725's beacon-injection
+# rollback, this time on the main domain); the locked host already gets it from gated_cache's own Cache-Control line
+# (checked above), so it needs no extra header here.
+check "caddy cache (follow-up 726): the open host adds its own no-transform header" \
+  "$(bash ../stack/caddy/hosts-block.sh yes a.test | grep -c '^	header +Cache-Control "no-transform"$')" "1"
 check "caddy cache: hashed files keep a year at Cloudflare" "$(grep -c '@hashed_files CDN-Cache-Control "public, max-age=31536000, immutable"' "$CF")" "1"
 check "caddy cache: the internal addresses answer 404 from outside" "$(grep -c '^	respond @internal 404$' "$CF")" "1"
 check "setup: the cache hook token is made on the server" "$(grep -c 'gen_secret "$s/app.env" CACHE_HOOK_TOKEN 48' ../server/steps/09-stack.sh)" "1"
