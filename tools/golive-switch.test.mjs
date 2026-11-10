@@ -48,9 +48,9 @@ describe('golive-switch (PR 587)', () => {
     expect(main(['--domain', 'shop.example.test', '--conf', f, '--confirm', confirmPhrase('shop.example.test')], () => {})).toBe(0);
     expect(readFileSync(f, 'utf8')).toContain('EXTAS_MAIN_OPEN="yes"');
   });
-  it('the shipped server.conf stays locked and the dry run changes nothing', () => {
+  it('the shipped server.conf is this repo\'s own go-live state (PR 587, CN-039), and a dry run still changes nothing on disk', () => {
     const shipped = readFileSync(DEFAULT_CONF, 'utf8');
-    expect(shipped).toMatch(/^EXTAS_MAIN_OPEN="no"/m);
+    expect(shipped).toMatch(/^EXTAS_MAIN_OPEN="yes"/m);
     expect(parseArgs(['--domain', 'shop.example.test']).confirm).toBeNull();
     expect(switchConf(shipped, 'shop.example.test').changes.length).toBeGreaterThan(0);
   });
