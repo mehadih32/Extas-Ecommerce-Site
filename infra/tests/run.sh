@@ -292,9 +292,10 @@ check "body limit (R2 m1): a limit that is not a whole number of MB from 1 to 10
 check "caddy (a): server setup copies the Caddyfile in place and never by rsync" "$(grep -c -- "--exclude /caddy/Caddyfile" ../server/steps/09-stack.sh):$(grep -c 'caddyfile_copy_inplace "$STACK_DIR_REPO/caddy/Caddyfile" "$EXTAS_ROOT/stack/caddy/Caddyfile"' ../server/steps/09-stack.sh):$(grep -c 'caddy reload.*|| true' ../server/steps/09-stack.sh):$(grep -c 'caddy_apply || caddy_rc=' ../server/steps/09-stack.sh)" "1:1:0:1"
 # S19 · PR 403: the staging host and the extra hosts (the main domain) are two site blocks. The staging block always has
 # the preview gate and noindex; the extra hosts' block (sites/hosts.caddy, hosts-block.sh) is locked the same way until
-# server.conf EXTAS_MAIN_OPEN="yes", which ships "no" (opening it is the owner's go-live day step, BLOCKED 25).
+# server.conf EXTAS_MAIN_OPEN="yes" (opening it was the owner's go-live day step, BLOCKED 25 — done, PR 587, CN-039,
+# 11 Nov 2026: this repo's own server.conf now ships open on purpose, the live state of extas.com.bd).
 HB=../stack/caddy/hosts-block.sh
-check "main domain (403): ships locked" "$(bash -c '. ../config/server.conf; echo "$EXTAS_MAIN_OPEN"')" "no"
+check "main domain (403): ships open (go-live, PR 587)" "$(bash -c '. ../config/server.conf; echo "$EXTAS_MAIN_OPEN"')" "yes"
 check "main domain (403): the staging block always imports the gate and noindex, the extra hosts only their own file" \
   "$(awk '/^\{\$EXTAS_STAGING_HOST\} \{$/{f=1} f&&/^\}$/{f=0} f' ../stack/caddy/Caddyfile | grep -cE 'import /etc/caddy/sites/(noindex|auth)\.caddy'):$(grep -c 'EXTAS_EXTRA_HOSTS}' ../stack/caddy/Caddyfile)" "2:0"
 lk="$(bash "$HB" no shop.example.test www.example.test)"; op="$(bash "$HB" yes shop.example.test www.example.test)"; od="$(bash "$HB" maybe shop.example.test)"
@@ -538,7 +539,10 @@ rm -rf "$T"
 # container in a root-only file that is gone afterwards, writes state/smoke.json for the status page and passes the
 # browser's exit code on. Docker is a stand-in that plays both containers.
 T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/root/config/secrets" "$T/root/state"
-{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+# The M7 scenarios below build up from a locked, no-extra-host baseline on purpose (no main domain, then a locked
+# extra host, then an open one); override server.conf's own live EXTAS_EXTRA_HOSTS/EXTAS_MAIN_OPEN (go-live, PR 587)
+# so this fixture's starting point stays fixed regardless of this repo's current go-live state.
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_EXTRA_HOSTS=""\nEXTAS_MAIN_OPEN="no"\n' "$T/root"; } > "$T/conf"
 printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nVAULT_MASTER_KEY=vk\nOTHER=x\n' > "$T/root/config/secrets/app.env"
 printf 'STAGING_PASSWORD=stagepw\n' > "$T/root/config/secrets/staging.env"
 echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
