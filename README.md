@@ -358,7 +358,7 @@ committed server reports. Guide: [docs/admin-guide/server.md](docs/admin-guide/s
 ├── pnpm-workspace.yaml       workspace = apps/* + packages/*
 ├── lighthouserc.json         the Lighthouse speed budget and the pages it measures
 ├── .github/
-│   ├── workflows/            ci.yml · nightly.yml · deploy.yml · smoke.yml · server-setup.yml · owner-*.yml · store-settings.yml
+│   ├── workflows/            ci.yml · nightly.yml · deploy.yml · smoke.yml · server-setup.yml · owner-*.yml · store-settings.yml · golive-check.yml · golive-domain.yml
 │   ├── actions/              CI's shared steps: pnpm-install · playwright · seeded-app
 │   └── pull_request_template.md
 ├── .claude/agents/           build-agent roles: stage-builder, qa-gate, infra-prohori

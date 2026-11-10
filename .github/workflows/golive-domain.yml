@@ -1,0 +1,48 @@
+# S19 · PR 362 follow-up (go-live day) — the application-data half of the main-domain switch: the main domain
+# registered as the mother store's primary StoreDomain row (RUNBOOK.md §0; S17's own Stores page, PR 362, stays
+# closed, CN-039 — this is the one row a single-store launch needs, never the whole admin page). Runs ON the VM
+# through the self-hosted runner (CN-003), in the same shape as store-settings.yml: the live migrate image, straight
+# to PostgreSQL, nothing written without the typed confirmation. The Caddy half is tools/golive-switch.mjs.
+name: golive-domain
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: "The main domain (e.g. extas.com.bd)"
+        required: true
+      confirm:
+        description: 'Type exactly: GO LIVE <domain>'
+        required: true
+
+# R1 ops review (M1) convention (as store-settings.yml): no concurrency group, so a run by hand is never cancelled by
+# another run; the VM's single runner takes one job at a time.
+
+permissions:
+  contents: read
+
+jobs:
+  set:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 10
+    steps:
+      - name: Register the main domain as the primary StoreDomain
+        env:
+          DOMAIN: ${{ inputs.domain }}
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          set -euo pipefail
+          . /etc/extas/server.conf
+          SEC="$EXTAS_ROOT/config/secrets"
+          MIGRATE="$(sudo jq -r '.migrate // empty' "$EXTAS_ROOT/state/last-good-deploy.json")"
+          if [ -z "$MIGRATE" ] || ! sudo docker image inspect "$MIGRATE" >/dev/null 2>&1; then
+            MIGRATE="$(sudo docker images --format '{{.Repository}}:{{.Tag}}' extas-migrate | head -n 1 || true)"
+          fi
+          [ -n "$MIGRATE" ] || { echo "no migrate image yet — deploy first"; exit 1; }
+          echo "using $MIGRATE"
+          envf="$(sudo mktemp "$SEC/.domain.XXXXXX")"
+          trap 'sudo rm -f "$envf"' EXIT
+          sudo sh -c "grep -E '^DATABASE_DIRECT_URL=' '$SEC/app.env' > '$envf'"
+          sudo docker run --rm --name "extas-primary-domain-$$" --network extas --env-file "$envf" \
+            -e "DOMAIN=$DOMAIN" -e "CONFIRM=$CONFIRM" "$MIGRATE" \
+            sh -c 'cd /repo/packages/db && exec ./node_modules/.bin/tsx src/cli-primary-domain.ts --domain "$DOMAIN" --confirm "$CONFIRM"'
