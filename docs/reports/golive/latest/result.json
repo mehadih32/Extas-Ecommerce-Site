@@ -1,7 +1,7 @@
 {
-  "at": "2026-11-07 19:11 (Asia/Dhaka)",
-  "sha": "eea92e3c11d1",
-  "ok": false,
+  "at": "2026-11-11 01:51 (Asia/Dhaka)",
+  "sha": "0c9db8d8f511",
+  "ok": true,
   "problems": [],
   "goLive": {
     "rows": [
@@ -11,7 +11,7 @@
         "kind": "auto",
         "when": "before",
         "ok": true,
-        "at": "2026-11-07T18:46:03+06:00",
+        "at": "2026-11-10T09:41:03+06:00",
         "title": "Every page opens (smoke test)",
         "vars": {
           "pages": 546,
@@ -24,7 +24,7 @@
         "kind": "auto",
         "when": "before",
         "ok": true,
-        "at": "2026-11-07T19:11:21+06:00",
+        "at": "2026-11-11T01:51:21+06:00",
         "title": "The server's health check is clean",
         "vars": {
           "problems": 0
@@ -62,12 +62,12 @@
         "pr": 397,
         "kind": "auto",
         "when": "before",
-        "ok": false,
-        "at": "2026-11-07T15:46:58+06:00",
+        "ok": true,
+        "at": "2026-11-11T01:20:31+06:00",
         "title": "Cloudflare Origin certificate on the server",
         "vars": {
-          "names": "—",
-          "days": 0,
+          "names": "*.extas.com.bd, extas.com.bd",
+          "days": 5474,
           "missing": "—",
           "error": "—"
         }
@@ -77,8 +77,8 @@
         "pr": 397,
         "kind": "signoff",
         "when": "before",
-        "ok": false,
-        "at": null,
+        "ok": true,
+        "at": "2026-11-10T19:24:45.640Z",
         "title": "Cloudflare SSL/TLS mode is Full (strict)",
         "vars": {}
       },
@@ -100,8 +100,8 @@
         "pr": 401,
         "kind": "signoff",
         "when": "before",
-        "ok": false,
-        "at": null,
+        "ok": true,
+        "at": "2026-11-10T19:35:01.431Z",
         "title": "Search Console on the main domain, sitemap sent",
         "vars": {}
       },
@@ -164,8 +164,8 @@
         "pr": 398,
         "kind": "signoff",
         "when": "before",
-        "ok": false,
-        "at": null,
+        "ok": true,
+        "at": "2026-11-10T19:28:22.759Z",
         "title": "Go-live runbook read, rollback rehearsed",
         "vars": {}
       },
@@ -174,8 +174,8 @@
         "pr": 393,
         "kind": "signoff",
         "when": "before",
-        "ok": false,
-        "at": null,
+        "ok": true,
+        "at": "2026-11-10T19:28:26.672Z",
         "title": "QA gate green (Blueprint Appendix C)",
         "vars": {}
       },
@@ -184,8 +184,8 @@
         "pr": 393,
         "kind": "signoff",
         "when": "before",
-        "ok": false,
-        "at": null,
+        "ok": true,
+        "at": "2026-11-10T19:28:33.970Z",
         "title": "Staging acceptance list walked through",
         "vars": {},
         "evidence": {
@@ -198,8 +198,8 @@
         "pr": 393,
         "kind": "signoff",
         "when": "before",
-        "ok": false,
-        "at": null,
+        "ok": true,
+        "at": "2026-11-10T19:28:36.045Z",
         "title": "Real iPhone and real Android",
         "vars": {}
       },
@@ -208,8 +208,8 @@
         "pr": 393,
         "kind": "signoff",
         "when": "before",
-        "ok": false,
-        "at": null,
+        "ok": true,
+        "at": "2026-11-10T19:28:39.860Z",
         "title": "The real-life journey simulation passed on staging",
         "vars": {},
         "evidence": {
@@ -282,23 +282,15 @@
         "pr": 381,
         "kind": "signoff",
         "when": "after",
-        "ok": false,
-        "at": null,
+        "ok": true,
+        "at": "2026-11-10T19:35:08.368Z",
         "title": "Outside security review",
         "vars": {}
       }
     ],
     "blockers": [
-      "originCert",
-      "sslStrict",
       "indexing",
-      "searchConsole",
-      "staffTwoFactor",
-      "runbook",
-      "qaGate",
-      "acceptance",
-      "realPhones",
-      "simulation"
+      "staffTwoFactor"
     ]
   },
   "redirects": {
@@ -319,7 +311,7 @@
     "problems": []
   },
   "switch": {
-    "ok": false,
-    "detail": "no main domain given (workflow input `domain`): the dry run needs the name the owner will switch"
+    "ok": true,
+    "detail": "the live Caddy configuration with extas.com.bd www.extas.com.bd OPEN (no preview password, no noindex) validates; the staging host's own block keeps both (checked in a copy, nothing applied)"
   }
 }

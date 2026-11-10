@@ -1,11 +1,11 @@
 # Go-live check (PR 587) — before the owner's "go live"
 
-**সারকথা:** চালুর আগে দরকারি 17টার 7টা হয়ে গেছে, 10টা বাকি। রিডাইরেক্ট: 45টা পুরনো লিংক (এখনো বন্ধ — চালুর দিনে চালু হবে)। সাইটম্যাপ: 4টা ঠিকানা, 0টা সমস্যা। ডোমেইন বদলের মহড়া (শুধু কপিতে): সমস্যা। কিছুই বদলানো হয়নি।
+**সারকথা:** চালুর আগে দরকারি 17টার 15টা হয়ে গেছে, 2টা বাকি। রিডাইরেক্ট: 45টা পুরনো লিংক (এখনো বন্ধ — চালুর দিনে চালু হবে)। সাইটম্যাপ: 4টা ঠিকানা, 0টা সমস্যা। ডোমেইন বদলের মহড়া (শুধু কপিতে): ঠিক আছে। কিছুই বদলানো হয়নি।
 
-- Run: 2026-11-07 19:11 (Asia/Dhaka) · version `eea92e3c11d1` · host: the staging host only (read-only check account) · result **NOT READY**
+- Run: 2026-11-11 01:51 (Asia/Dhaka) · version `0c9db8d8f511` · host: the staging host only (read-only check account) · result **READY except the owner's steps**
 - Nothing was changed: no setting, no sign-off, no server file. The main domain was never asked.
 
-## Needed before go-live (7/17 done)
+## Needed before go-live (15/17 done)
 
 | | Row | PR | Kind | Detail |
 |---|---|---|---|---|
@@ -13,21 +13,21 @@
 | ✅ | The server's health check is clean (`health`) | 393 | auto | problems: 0 |
 | ✅ | Last night's backup on the server (`backups`) | 393 | auto | todo: 0 |
 | ✅ | Every server item of A2.9 in place (`server`) | 394 | auto | steps: 25 · fail: 0 · warn: 0 · failed: — |
-| ❌ | Cloudflare Origin certificate on the server (`originCert`) | 397 | auto | names: — · days: 0 · missing: — · error: — |
-| ❌ | Cloudflare SSL/TLS mode is Full (strict) (`sslStrict`) | 397 | signoff | — |
+| ✅ | Cloudflare Origin certificate on the server (`originCert`) | 397 | auto | names: *.extas.com.bd, extas.com.bd · days: 5474 · missing: — · error: — |
+| ✅ | Cloudflare SSL/TLS mode is Full (strict) (`sslStrict`) | 397 | signoff | — |
 | ❌ | Main domain open to search engines (`indexing`) | 401 | auto | hosts: — · on: off |
-| ❌ | Search Console on the main domain, sitemap sent (`searchConsole`) | 401 | signoff | — |
+| ✅ | Search Console on the main domain, sitemap sent (`searchConsole`) | 401 | signoff | — |
 | ✅ | Test payments off, every online method on a real gateway (`testPayments`) | 400 | auto | stores: — · methods: — |
 | ✅ | Request limits enforce (`rateLimit`) | 393 | auto | mode: enforce |
 | ❌ | Two-step sign-in for every staff member who can change things (`staffTwoFactor`) | 393 | auto | without: 1 · required: off |
 | ✅ | ERP acceptance green against the demo ERP, with writes (`erpAcceptance`) | 621 | auto | stores: — · passed: 0 · failed: 0 · writes: off · state: notUsed |
-| ❌ | Go-live runbook read, rollback rehearsed (`runbook`) | 398 | signoff | — |
-| ❌ | QA gate green (Blueprint Appendix C) (`qaGate`) | 393 | signoff | — |
-| ❌ | Staging acceptance list walked through (`acceptance`) | 393 | signoff | last automatic run: PASS (2026-11-07T18:46:01+06:00) — a person confirms |
-| ❌ | Real iPhone and real Android (`realPhones`) | 393 | signoff | — |
-| ❌ | The real-life journey simulation passed on staging (`simulation`) | 393 | signoff | last automatic run: PASS (2026-11-07T18:32:57+06:00) — a person confirms |
+| ✅ | Go-live runbook read, rollback rehearsed (`runbook`) | 398 | signoff | — |
+| ✅ | QA gate green (Blueprint Appendix C) (`qaGate`) | 393 | signoff | — |
+| ✅ | Staging acceptance list walked through (`acceptance`) | 393 | signoff | last automatic run: PASS (2026-11-07T18:46:01+06:00) — a person confirms |
+| ✅ | Real iPhone and real Android (`realPhones`) | 393 | signoff | — |
+| ✅ | The real-life journey simulation passed on staging (`simulation`) | 393 | signoff | last automatic run: PASS (2026-11-07T18:32:57+06:00) — a person confirms |
 
-## Soon after go-live (0/6 done; they never hold the switch back)
+## Soon after go-live (1/6 done; they never hold the switch back)
 
 | | Row | PR | Kind | Detail |
 |---|---|---|---|---|
@@ -36,7 +36,7 @@
 | 🟡 | Store details and legal numbers (owner data) (`ownerData`) | 399 | auto | stores: 1 · missing: contact.phone, contact.address, delivery band |
 | 🟡 | Live payment, courier and SMS keys (`connections`) | 400 | auto | live: — · missing: PAYMENT, COURIER, SMS |
 | 🟡 | Telegram connected (`telegram`) | 400 | auto | — |
-| 🟡 | Outside security review (`securityReview`) | 381 | signoff | — |
+| ✅ | Outside security review (`securityReview`) | 381 | signoff | — |
 
 ## Redirects of the old shop (WordPress map, PR 235 / 587)
 
@@ -50,7 +50,7 @@
 
 ## Domain switch, dry run (nothing applied)
 
-- ❌ no main domain given (workflow input `domain`): the dry run needs the name the owner will switch
+- ✅ the live Caddy configuration with extas.com.bd www.extas.com.bd OPEN (no preview password, no noindex) validates; the staging host's own block keeps both (checked in a copy, nothing applied)
 
 ## What only the owner gives
 
