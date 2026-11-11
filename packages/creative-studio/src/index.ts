@@ -6,3 +6,4 @@
 export * from './errors';
 export * from './context';
 export * from './motion';
+export * from './video';
