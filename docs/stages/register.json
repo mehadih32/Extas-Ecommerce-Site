@@ -34719,7 +34719,7 @@
     "date": "2026-11-11",
     "note": "studio core part 1 (CN-039: S23 resumed; registry v281, group `marketing`, settings `studio.content` {dailyPosts 0, dailyReels 0, activeWeekdays []}, `studio.voice` {toneEn '', hashtagSet [], blockedWords []} and `studio.ai.captions` off — nothing is generated until the owner sets a number, CN-018; permissions `studio.read/write/generate/approve/publish`); new package `@extas/studio` on the `SocialAccount` table the schema has carried since S00's skeleton: add (one row per platform + its page/channel id, always off and needing approval), rename, switch, daily limit, archive/restore, never deleted, every change audited; no admin page yet (PR 438)",
     "github": [
-     "#98, 11 Nov"
+     "#103, 11 Nov"
     ]
    },
    "builtFacts": {
