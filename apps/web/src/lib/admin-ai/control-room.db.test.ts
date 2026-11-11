@@ -25,6 +25,11 @@
 // once, and `{monthlyCapMinor: null}` turns it off again. `checkAgentCapAlerts` (called straight, not through the
 // route, same as `ad-alerts.db.test.ts` calls `sendCostAlerts` straight) sends the owner's Telegram warning once per
 // crossing per month, deduplicated through the audit log.
+//
+// S15 · PR 310 — every agent now also carries its own fixed `dataClass` and, built from it, `effectiveProvider`/
+// `routingDowngraded`: personal/business agents never effectively use the free-capable connection (OpenRouter)
+// even when the owner picks it and it is ready — the screen routes to the cheapest ready paid connection instead
+// (or honestly to the practice writer when none is ready yet); public/draft agents may use it as picked.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -69,6 +74,9 @@ interface Agent {
   nextRunAt: string | null;
   monthlyCapMinor: number | null;
   capState: string;
+  dataClass: string;
+  effectiveProvider: string | null;
+  routingDowngraded: boolean;
 }
 interface ModelOption {
   provider: string | null;
@@ -386,5 +394,37 @@ describe.skipIf(!HAS_TEST_DB)('AI › Control room on PostgreSQL (PR 304)', () =
     // no cap crossed: nothing sent, nothing thrown even with no `send` override (falls back to the mock Telegram sender)
     await checkAgentCapAlerts({ db: t.prisma, vault: null, resolver: deps.resolver, now: () => now }, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: null, monthMinor: 240 }], money);
     expect(sent).toHaveLength(2);
+  });
+
+  it('every agent carries its own fixed data class (PR 310)', async () => {
+    const { a } = await ask('GET', reader);
+    expect(a.agents.find((x) => x.key === 'gyani')).toMatchObject({ dataClass: 'personal' });
+    expect(a.agents.find((x) => x.key === 'bhandari')).toMatchObject({ dataClass: 'personal' });
+    expect(a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ dataClass: 'personal' });
+    expect(a.agents.find((x) => x.key === 'prohori')).toMatchObject({ dataClass: 'business' });
+    expect(a.agents.find((x) => x.key === 'tirondaj')).toMatchObject({ dataClass: 'business' });
+    expect(a.agents.find((x) => x.key === 'shilpi')).toMatchObject({ dataClass: 'publicDraft' });
+    expect(a.agents.find((x) => x.key === 'doot')).toMatchObject({ dataClass: 'publicDraft' });
+  });
+
+  it('personal/business agents never effectively use a free-capable connection, even picked and ready; public/draft agents may (PR 310)', async () => {
+    await t.prisma.integration.create({
+      data: { storeId: null, kind: 'AI_PROVIDER', provider: 'openRouter', name: 'openRouter', mode: 'LIVE', enabled: true, config: { model: 'some/free-model' }, secretNames: ['apiKey'] },
+    });
+    await ask('POST', controller, { key: 'sawdagor', provider: 'openRouter' }); // personal — the pick is accepted…
+    await ask('POST', controller, { key: 'doot', provider: 'openRouter' }); // publicDraft — allowed outright
+
+    const noPaidYet = await ask('GET', reader);
+    // …but with no paid connection ready yet, sawdagor's own data class routes it to the practice writer instead.
+    expect(noPaidYet.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ selectedProvider: 'openRouter', selectedReady: true, effectiveProvider: null, routingDowngraded: true });
+    expect(noPaidYet.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: 'openRouter', selectedReady: true, effectiveProvider: 'openRouter', routingDowngraded: false });
+
+    // once a paid connection (googleAi) is ready, sawdagor's effective pick upgrades to it, never to the free one.
+    await t.prisma.integration.create({
+      data: { storeId: null, kind: 'AI_PROVIDER', provider: 'googleAi', name: 'googleAi', mode: 'LIVE', enabled: true, config: { model: 'gemini-3-flash' }, secretNames: ['apiKey'] },
+    });
+    const withPaid = await ask('GET', reader);
+    expect(withPaid.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ selectedProvider: 'openRouter', selectedReady: true, effectiveProvider: 'googleAi', routingDowngraded: true });
+    expect(withPaid.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: 'openRouter', effectiveProvider: 'openRouter', routingDowngraded: false });
   });
 });
