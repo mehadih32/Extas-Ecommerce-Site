@@ -1,0 +1,8 @@
+{
+  "photoshoot": {
+    "colourTolerance": {
+      "label": "Colour-drift tolerance",
+      "help": "How far a garment photo's measured colour may drift from the product's own colour before the prep step flags it for you (never blocks it). 0, as it ships: nothing is ever flagged until you set a number."
+    }
+  }
+}
