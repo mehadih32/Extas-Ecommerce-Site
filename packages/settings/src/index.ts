@@ -248,4 +248,6 @@ export * from './registry-experiments';
 export * from './eye-toggles';
 // S18 · PR 383 — the placeholder guard for the owner's details the shop prints (placeholder.ts).
 export * from './placeholder';
+// S23 · PR 437 — the social studio's cadence, voice and AI-caption switches, off as it ships (registry-studio.ts, version 281).
+export * from './registry-studio';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

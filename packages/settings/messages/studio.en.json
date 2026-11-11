@@ -1,0 +1,18 @@
+{
+  "studio": {
+    "content": {
+      "label": "Social posting cadence",
+      "help": "How many image posts and reels the social studio generates a day, and which weekdays it runs on (1 Monday … 7 Sunday). 0 posts and 0 reels with no weekdays, as it ships: nothing is generated until a number is set here."
+    },
+    "voice": {
+      "label": "Brand voice",
+      "help": "A short line on the shop's tone, the hashtags added to every caption, and words the studio must never use. Empty as it ships."
+    },
+    "ai": {
+      "captions": {
+        "label": "AI writes the hook and caption",
+        "help": "Off as it ships (AI stays off on the live site until you turn it on). While off, a post's caption comes from its template's own words with the product and price filled in, never from AI."
+      }
+    }
+  }
+}
