@@ -72,7 +72,15 @@
         "timeLabel": "{name}: clock time",
         "daysLabel": "{name}: which weekdays",
         "saveLabel": "Save",
-        "days": { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" },
+        "days": {
+          "0": "Sun",
+          "1": "Mon",
+          "2": "Tue",
+          "3": "Wed",
+          "4": "Thu",
+          "5": "Fri",
+          "6": "Sat"
+        },
         "always": "No time restriction — it only acts on its own triggers, any time.",
         "daily": "Daily at {time}",
         "weekly": "{days} at {time}",
@@ -111,5 +119,37 @@
         "publicDraft": { "name": "Public / draft", "rule": "Content a person reviews before it goes out (blog, SEO, social copy). A free-capable connection is allowed, with an automatic paid fallback." }
       }
     }
+  },
+  "aiCostBook": {
+    "metaTitle": "AI Cost Book",
+    "title": "AI Cost Book",
+    "sub": "What every AI job in the shop costs, and which model it uses — before any money is spent.",
+    "noRate": "No USD rate is typed yet, so costs are shown in USD. To see them in ৳, set a USD rate in Money › Costs & fees.",
+    "honestNote": "Text jobs are cheap. Image generation is far more expensive, and video assembly costs server time rather than tokens. Voice transcription is cheap too. These estimates carry a ±10–15% band for now — they tighten once real usage data arrives (a later PR).",
+    "kpis": {
+      "jobs": "Job rows",
+      "month": "This month (estimated)",
+      "top": "The 10 priciest jobs"
+    },
+    "search": {
+      "label": "Search the Cost Book",
+      "placeholder": "Search — e.g. blog, support, reel, photoshoot",
+      "none": "No job matches."
+    },
+    "col": {
+      "section": "Section",
+      "job": "Job",
+      "model": "Recommended model and why",
+      "perRun": "Estimated cost per run",
+      "perMonth": "Estimated monthly cost",
+      "runs": "Typical runs per day/month",
+      "alternatives": "Alternatives"
+    },
+    "runsLine": "~{perDay}/day · ~{perMonth}/month",
+    "recommended": "Recommended",
+    "modelSelectLabel": "Which model runs {job}",
+    "toastChanged": "Model changed",
+    "toastFailed": "Could not change the model",
+    "altNone": "No cheaper alternative yet."
   }
 }

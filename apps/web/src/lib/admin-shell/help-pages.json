@@ -160,7 +160,7 @@
     { "id": "ai/agents", "route": "/admin/agents" },
     { "id": "ai/agent-profile", "route": "/admin/agents/[key]" },
     { "id": "ai/audit", "route": "/admin/ai/audit" },
-    { "id": "ai/reports", "route": "/admin/ai/reports" },
+    { "id": "ai/cost-book", "route": "/admin/ai/cost-book" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "reports/fraud", "route": "/admin/reports/fraud" },
     { "id": "reports/stopped", "route": "/admin/reports/stopped" },
