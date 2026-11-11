@@ -150,6 +150,7 @@
     { "id": "reports/health-fixes", "route": "/admin/reports/health/fixes" },
     { "id": "ai/control", "route": "/admin/ai" },
     { "id": "ai/audit", "route": "/admin/ai/audit" },
+    { "id": "ai/cost-book", "route": "/admin/ai/cost-book" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "reports/fraud", "route": "/admin/reports/fraud" },
     { "id": "reports/stopped", "route": "/admin/reports/stopped" },

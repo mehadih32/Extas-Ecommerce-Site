@@ -152,7 +152,8 @@
       },
       "ai": {
         "control": "Control room",
-        "audit": "Checklist audit"
+        "audit": "Checklist audit",
+        "costBook": "Cost Book"
       }
     },
     "purpose": {
