@@ -21,6 +21,7 @@ import { adEventAdapters } from './ads';
 import { adsReaderAdapters } from './ads/readers';
 import { speechAdapters } from './speech';
 import { webPushAdapters } from './web-push';
+import { liveAiWriterAdapters } from './ai-writer';
 
 export * from './define';
 // Follow-up 606: minor units and an API's amount by the currency's fraction digits
@@ -56,8 +57,9 @@ export * from './google-drive';
 export * from './messenger';
 // S11 · PR 233 — Google Search Console and Bing Webmaster: the properties and the sitemap; the mock until a key is in.
 export * from './search-console';
-// S11 · PR 221 — the AI writer (search titles and descriptions): the practice writer until an AI provider is connected
-// (not in `allAdapters` until then; see ai-writer/index.ts).
+// S11 · PR 221 — the AI writer (search titles, descriptions, campaigns, articles): the practice writer until an AI
+// provider is connected. S15 · PR 306 — the live providers (Anthropic, OpenAI, Google, OpenRouter), one key + one
+// model id each, each a row in Keys & connections (see ai-writer/index.ts).
 export * from './ai-writer';
 // S13 · PR 257 — the ad platforms' server event APIs (Meta Conversions API, Google Analytics 4, TikTok Events API):
 // mocks until their keys are in and their tests pass.
@@ -85,7 +87,7 @@ export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAda
 // PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 567: the
 // courier fraud checks too. PR 291: the SMS
 // gateway too (its key and Test button); PR 292 the WhatsApp Business Platform; the mock senders are not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...fraudCheckAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters, ...adEventAdapters, ...adsReaderAdapters, ...speechAdapters, ...webPushAdapters] as const;
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...fraudCheckAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters, ...adEventAdapters, ...adsReaderAdapters, ...speechAdapters, ...webPushAdapters, ...liveAiWriterAdapters] as const;
 
 /** PR 426 — the Support inbox's channels (WhatsApp, Messenger) for `createConnections`: each falls back to its mock. */
 export const supportAdapters = [...whatsappAdapters, ...messengerAdapters] as const;

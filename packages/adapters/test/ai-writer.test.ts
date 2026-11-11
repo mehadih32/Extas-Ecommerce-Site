@@ -37,13 +37,22 @@ describe('practice AI writer (PR 221)', () => {
     await expect(w.draftSeo(input({ name: ' ' }))).rejects.toThrow();
   });
 
-  it('has no live mode, no key, and stays out of Keys & connections until a provider comes', async () => {
+  it('has no live mode, no key, and stays out of Keys & connections on its own', async () => {
     expect(mockAiWriterAdapter.modes).toEqual([]);
     expect(mockAiWriterAdapter.secrets).toEqual([]);
     expect(aiWriterAdapters).toContain(mockAiWriterAdapter);
-    expect(allAdapters.some((a) => a.kind === 'AI_PROVIDER')).toBe(false);
     await expect(mockAiWriterAdapter.create(ctx)).rejects.toThrow();
     expect(await mockAiWriterAdapter.test(await mockAiWriterAdapter.mock(ctx), ctx)).toMatchObject({ ok: true });
+  });
+
+  // S15 · PR 306 — now that a live AI provider exists, AI_PROVIDER rows do appear in Keys & connections.
+  it('S15 · PR 306: every live provider (Anthropic, OpenAI, Google, OpenRouter) is an AI_PROVIDER row with keys', () => {
+    const live = allAdapters.filter((a) => a.kind === 'AI_PROVIDER');
+    expect(live.map((a) => a.provider).sort()).toEqual(['anthropic', 'googleAi', 'openAi', 'openRouter']);
+    for (const a of live) {
+      expect(a.modes).toEqual(['LIVE']);
+      expect(a.secrets).toContain('apiKey');
+    }
   });
 });
 
