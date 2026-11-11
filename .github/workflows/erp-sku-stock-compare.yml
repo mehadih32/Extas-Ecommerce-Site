@@ -1,0 +1,56 @@
+# PR 654 (CN-044, ERP lane, task 2) — the read-only SKU/stock comparison between the shop's catalogue and the live
+# ERP's own SKU and stock data, every night ON the VM through the self-hosted runner (CN-003), with the live
+# version's migrate image (infra/deploy/erp-sku-stock-compare.sh). It uses whichever ERP connection the owner has
+# already set up per store; this workflow holds no secret of its own. A store with no ERP, or still on the practice
+# ERP, is skipped (never a failure); a real connection that cannot be reached is reported, not failed — there is
+# nothing here for a release to gate on. The report is committed to docs/reports/erp-sku-stock-compare/latest/ with
+# [skip ci] (ci.yml ignores docs/reports/erp-sku-stock-compare/).
+name: erp-sku-stock-compare
+
+on:
+  schedule:
+    - cron: "30 22 * * *"   # 04:30 in Dhaka, after the erp-acceptance run
+  workflow_dispatch:
+
+concurrency:
+  group: extas-vm-erp
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  compare:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read-only SKU/stock compare against the live ERP
+        id: run
+        continue-on-error: true
+        run: sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/erp-sku-stock-compare.sh "$RUNNER_TEMP/erp-sku-stock-compare"
+
+      - name: Commit the report
+        if: always()
+        env:
+          RESULT: ${{ steps.run.outcome }}
+        run: |
+          set -eu
+          rep="$RUNNER_TEMP/erp-sku-stock-compare"
+          [ -f "$rep/README.md" ] || { echo "no report was written (see the step above)"; exit 0; }
+          sudo chown -R "$(id -u):$(id -g)" "$rep"
+          cat "$rep/README.md"
+          git config user.name "extas-vm"
+          git config user.email "extas-vm@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            rm -rf docs/reports/erp-sku-stock-compare/latest && mkdir -p docs/reports/erp-sku-stock-compare && cp -r "$rep" docs/reports/erp-sku-stock-compare/latest
+            git add -A docs/reports/erp-sku-stock-compare/latest
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "erp sku/stock compare report: nightly ${RESULT} [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1

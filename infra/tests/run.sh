@@ -1379,6 +1379,61 @@ check "workflows: the deploy runs it after the migration, before the new colour;
 check "workflows: the nightly run holds no secret" "$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/erp-acceptance.yml)" "0"
 rm -rf "$T"
 
+# PR 654 (CN-044): erp-sku-stock-compare.sh runs the compare CLI in the migrate image with only the database address
+# (the app role's once the app runs as extas_app, else the direct one, as DATABASE_URL — qa-gate N5) and the vault
+# key, in a root-only file gone afterwards; an image without the CLI yet is "not run" (exit 0); a run past the limit
+# is "not finished" (exit 0). This check is informational only (never a go-live gate), so it never runs inside
+# deploy.sh and a comparison difference never fails the script — only a run that wrote no report at all does. Docker
+# is a stand-in.
+T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/root/config/secrets" "$T/root/state"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nDATABASE_URL=postgresql://pooled\nVAULT_MASTER_KEY=vk\nOTHER=x\n' > "$T/root/config/secrets/app.env"
+echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
+cat > "$T/bin/docker" <<'STUB'
+#!/usr/bin/env bash
+echo "docker $*" >> "$FAKE_LOG"
+case "$1" in
+  image) exit 0 ;;
+  images) echo "extas-migrate:newest"; exit 0 ;;
+esac
+if grep -q 'test -f' <<<"$*"; then [ "${FAKE_HAS_CLI:-1}" = 1 ]; exit; fi
+out=""; envf=""; prev=""
+for a in "$@"; do
+  [ "$prev" = -v ] && case "$a" in *:/out) out="${a%:/out}" ;; esac
+  [ "$prev" = --env-file ] && envf="$a"
+  prev="$a"
+done
+cp "$envf" "$FAKE_SEEN"
+[ -z "${FAKE_EXIT:-}" ] || exit "$FAKE_EXIT"   # killed by the time limit (or crashed) before it wrote anything
+echo "# ERP SKU ও স্টক তুলনা" > "$out/README.md"
+echo '{"at":"2026-11-11T00:00:00Z","stores":[]}' > "$out/report.json"
+STUB
+chmod +x "$T/bin/docker"
+sc() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" ERP_ACCEPTANCE_IMAGE_UID="$(id -u)" FAKE_LOG="$T/docker.log" FAKE_SEEN="$T/seen.env" \
+  "$@" bash ../deploy/erp-sku-stock-compare.sh "$T/out"; }
+rc=0; sc >/dev/null || rc=$?
+check "erp sku/stock compare: a run exits 0 and writes the report" "$rc:$(cat "$T/out/README.md")" "0:# ERP SKU ও স্টক তুলনা"
+check "erp sku/stock compare: only the direct database address (as DATABASE_URL) and the vault key go in" \
+  "$(sort "$T/seen.env" | tr '\n' ' ')" "DATABASE_URL=postgresql://u:dbpw@h/d VAULT_MASTER_KEY=vk "
+check "erp sku/stock compare: the live version's migrate image runs it" "$(grep -c 'extas-migrate:aaa sh -c cd /repo/packages/jobs' "$T/docker.log")" "1"
+check "erp sku/stock compare: the secrets file is gone" "$(find "$T/root/config/secrets" -name '.erp-sku-stock-compare.*' | wc -l | tr -d ' ')" "0"
+rc=0; sc FAKE_HAS_CLI=0 >/dev/null || rc=$?
+check "erp sku/stock compare: a version without it yet is not run, not failed" "$rc:$(jq -r '.state' "$T/out/report.json")" "0:NOT_IN_VERSION"
+rm -rf "$T/out"
+rc=0; sc FAKE_EXIT=124 >/dev/null || rc=$?
+check "erp sku/stock compare: a run past the time limit is not finished, not failed" \
+  "$rc:$(jq -r '.state' "$T/out/report.json"):$(grep -c 'Not finished' "$T/out/README.md")" "0:NOT_FINISHED:1"
+rc=0; sc FAKE_EXIT=3 >/dev/null || rc=$?
+check "erp sku/stock compare: a run that stops without any report still fails" "$rc" "1"
+printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nDATABASE_URL=postgresql://extas_app:apppw@pgb/d?pgbouncer=true\nVAULT_MASTER_KEY=vk\n' > "$T/root/config/secrets/app.env"
+rc=0; sc >/dev/null || rc=$?
+check "erp sku/stock compare: once the app runs as extas_app, that role's address goes in, never the owner's (qa-gate N5)" \
+  "$rc:$(sort "$T/seen.env" | tr '\n' ' ')" "0:DATABASE_URL=postgresql://extas_app:apppw@pgb/d?pgbouncer=true VAULT_MASTER_KEY=vk "
+check "workflows: it never runs inside deploy.sh (informational only, never a go-live gate)" "$(grep -c 'erp-sku-stock-compare' ../deploy/deploy.sh)" "0"
+check "workflows: ci ignores its reports" "$(grep -c 'docs/reports/erp-sku-stock-compare/\*\*' ../../.github/workflows/ci.yml)" "1"
+check "workflows: the nightly run holds no secret" "$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/erp-sku-stock-compare.yml)" "0"
+rm -rf "$T"
+
 # PR 602: Caddy's cache rules — the never-kept pages (both languages), the hashed files, the internal addresses closed.
 CF=../stack/caddy/Caddyfile
 check "caddy cache: the site imports the cache rules" "$(grep -c '^	import cache_headers$' "$CF")" "1"
