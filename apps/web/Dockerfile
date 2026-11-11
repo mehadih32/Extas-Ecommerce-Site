@@ -46,6 +46,7 @@ COPY packages/customers/package.json packages/customers/
 COPY packages/erp-types/package.json packages/erp-types/
 COPY packages/support/package.json packages/support/
 COPY packages/studio/package.json packages/studio/
+COPY packages/photoshoot/package.json packages/photoshoot/
 # @extas/db generates the Prisma client on install, so its schema and CLI wrapper come in with the manifests.
 COPY packages/db/package.json packages/db/
 COPY packages/db/scripts packages/db/scripts

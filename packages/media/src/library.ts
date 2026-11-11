@@ -351,8 +351,11 @@ const KINDS = ['IMAGE', 'VIDEO', 'AUDIO', 'PDF', 'DOCUMENT', 'OTHER'] as const;
  * the team's chat files. The library and every picture picker leave them out; a search asks for one by name to see it.
  * S23 · PR 438: `studio` holds the social & content studio's own brand assets (logo, overlay frame, intro/outro,
  * royalty-free track, `@extas/studio`'s `assets.ts`) — never a product photo, and a product photo never lands here.
+ * S24 · PR 445: `photoshoot` holds the model library's own reference photos (per angle) and a model's rights/consent
+ * document (`@extas/photoshoot`'s `models.ts`) — a real person's photo and consent paperwork never show as a
+ * product picture, and a product photo never lands here.
  */
-export const PRIVATE_MEDIA_FOLDERS: readonly string[] = ['support', 'studio'];
+export const PRIVATE_MEDIA_FOLDERS: readonly string[] = ['support', 'studio', 'photoshoot'];
 
 /** The where-part that leaves the private folders out (a file with no folder stays in). */
 export const publicMediaWhere = (): Prisma.MediaAssetWhereInput => ({ OR: [{ folder: null }, { folder: { notIn: [...PRIVATE_MEDIA_FOLDERS] } }] });
