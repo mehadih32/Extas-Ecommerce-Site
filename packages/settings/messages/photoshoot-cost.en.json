@@ -1,0 +1,10 @@
+{
+  "studio": {
+    "photoshoot": {
+      "rates": {
+        "label": "Photoshoot per-image rate",
+        "help": "What one approved photoshoot image costs from each connected provider (FASHN, Fitroom), at its baseline and premium tier, in paisa. 0 for a provider/tier means you haven't set it yet — the cost estimate shown before a batch runs then shows as unknown rather than a guessed number."
+      }
+    }
+  }
+}

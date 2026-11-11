@@ -1,7 +1,7 @@
-// S24 · PR 449 (Blueprint C7.17) — the photoshoot provider adapters: the practice provider, FASHN AI, Fitroom. Each
-// is one adapter of kind AI_PROVIDER answering `PhotoshootProviderApi` (contract.ts), listed here and, once keyed,
-// in `allAdapters` and the Keys & connections catalogue. Part 1 only wires `health()` (the Test button); PR 450
-// adds the job methods (estimate, generate, status, fetch) every one of them will answer, for `@extas/photoshoot`'s
+// S24 · PR 449/450 (Blueprint C7.17) — the photoshoot provider adapters: the practice provider, FASHN AI, Fitroom.
+// Each is one adapter of kind AI_PROVIDER answering `PhotoshootProviderApi` (contract.ts), listed here and, once
+// keyed, in `allAdapters` and the Keys & connections catalogue. PR 449 wired `health()` (the Test button); PR 450
+// adds the job methods every one of them now answers — estimate, generate, status, fetch — for `@extas/photoshoot`'s
 // job orchestration (PR 451–452) to call.
 import type { PhotoshootProviderCapabilities } from './contract';
 import { MOCK_PHOTOSHOOT_PROVIDER, mockPhotoshootCapabilities, mockPhotoshootProviderAdapter } from './mock';
