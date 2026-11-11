@@ -405,6 +405,53 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S15 · PR 306 (C1.5) — the AI 360 Control Room's multi-provider adapter: "two or three providers behind one
+  // interface, so the owner can switch on price or quality without a rebuild" — several may be on at once (like the
+  // payment gateways above), each with its own key and the model id the owner's key may use. Free-model qualification
+  // (PR 580) and per-agent/per-job model choice (PR 307) come later; today every connected provider writes the same
+  // way (the AI writer, ai-writer/).
+  {
+    id: 'anthropic',
+    kind: 'AI_PROVIDER',
+    provider: 'anthropic',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }],
+    config: [{ field: 'model' }, { field: 'baseUrl', optional: true }, { field: 'apiVersion', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  {
+    id: 'openAi',
+    kind: 'AI_PROVIDER',
+    provider: 'openAi',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }],
+    config: [{ field: 'model' }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  {
+    id: 'googleAi',
+    kind: 'AI_PROVIDER',
+    provider: 'googleAi',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }],
+    config: [{ field: 'model' }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  // Free / OpenRouter-style models are a hard no in production until PR 580 qualifies one (Blueprint C1.5 V2); the
+  // connection itself is still useful for paid models behind OpenRouter's one key.
+  {
+    id: 'openRouter',
+    kind: 'AI_PROVIDER',
+    provider: 'openRouter',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }],
+    config: [{ field: 'model' }, { field: 'baseUrl', optional: true }, { field: 'appUrl', optional: true }, { field: 'appName', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
 ];
 
 export function findConnection(id: string): ConnectionDeclaration | undefined {
