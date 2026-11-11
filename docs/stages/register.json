@@ -1549,7 +1549,7 @@
    "done": 4,
    "state": "In progress",
    "parked": false,
-   "registerStatus": "locked; reopened (owner, 11 Nov; CN-039) — building — 1/7; half-built parts stay hidden behind stages.closedShown until the stage finishes",
+   "registerStatus": "locked; reopened (owner, 11 Nov; CN-039) — building — 4/7; half-built parts stay hidden behind stages.closedShown until the stage finishes",
    "intro": "",
    "bn": {
     "name": "সোশ্যাল আর কনটেন্ট স্টুডিও",
@@ -34976,7 +34976,7 @@
     "date": "2026-11-11",
     "note": "publishing adapters, part 1 — Facebook Page, Instagram feed/reel/story (Blueprint C5.1, C5.5 point 3; two new `META`-kind Keys & connections rows, `facebookPagePublish`/`instagramPublish`, each the mock until a Page access token — Instagram also its linked Business Account id — is entered and the Test (reading the Page/account) passes; `@extas/adapters/social-publish`): Facebook's single call `POST /{pageId}/photos`; Instagram's two-step container flow (`/media` then `/media_publish`, no polling — a photo needs none). `@extas/studio/publish.ts`'s `queueSocialPost` (`studio.generate`, plus `studio.publish` when the chosen account runs free) turns a `SUCCEEDED` render job into a `SocialPost`, `PENDING_APPROVAL` by default (CLAUDE.md rule 6) or `PUBLISHING` once the owner has set that account free; `runSocialPost` (`studio.publish`) is the explicit second step that actually calls the adapter, the same queue/run shape as PR 439's render job. Today's honest scope, unchanged from PR 439: every post is the render job's own single preview photo; a real reel/Story/carousel waits for the real compositor. `NOT_SUPPORTED` refuses a TikTok/YouTube account (PR 441). Admin page gains a fifth section, \"পোস্ট\" (`StudioPostForm`; a \"এখন পোস্ট করুন\" button once a post is `PUBLISHING`). 4 new adapter-package tests + 5 new studio-package real-PostgreSQL tests + 1 new web `.db.test.ts` case (queue → free the account → run → reader/writer-without-publish denied, through the page's own API)",
     "github": [
-     "#116, 11 Nov"
+     "#119, 11 Nov"
     ]
    },
    "builtFacts": {
