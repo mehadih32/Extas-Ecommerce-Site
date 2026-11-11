@@ -268,6 +268,17 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/marketing/landing/seasonal/yearly', perm: 'marketing.landing.read', keys: ['marketingSeasonalYearly'] },
         ],
       },
+      // S23 · PR 437, 438: the social & content studio — accounts, the brand asset library and templates.
+      // S25 · PR 481 (Blueprint C8.1) adds the motion library sub-page (image-to-video jobs, reels, exports and the
+      // creative brief join as the rest of PR 482–490 build); one shared Studio tab, hidden while either
+      // `stages.closedShown.S23` or `.S25` is still off.
+      {
+        id: 'studio',
+        pages: [
+          { href: '/admin/marketing/studio', perm: 'studio.read', keys: ['marketingStudio'] },
+          { href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] },
+        ],
+      },
       // S13 · PR 273: referrals — the programme, friends' orders with their invite codes and the sharers' rewards.
       { id: 'referrals', pages: [{ href: '/admin/marketing/referrals', perm: 'marketing.campaigns.read', keys: ['marketingReferrals'] }] },
       // S13 · PR 278: YouTube — the channel, the videos with their products and tracked links, the orders they brought.
@@ -286,10 +297,6 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'geoGuide', more: true, pages: [{ href: '/admin/marketing/geo-guide', perm: 'marketing.campaigns.read', keys: ['marketingGeoGuide'] }] },
       // S13 · PR 589: the Google Merchant Center product feed — address, counts, left-out reasons, the Bangladesh test (More options).
       { id: 'merchantFeed', more: true, pages: [{ href: '/admin/marketing/merchant-feed', perm: 'marketing.campaigns.read', keys: ['marketingMerchantFeed'] }] },
-      // S25 · PR 481 (Blueprint C8.1) — Studio: the motion library (image-to-video jobs, reels, exports and the
-      // creative brief join as the rest of PR 482–490 build; hidden by `stages.closedShown.S25` until the stage is
-      // finished, CN-036/CN-039).
-      { id: 'studio', pages: [{ href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] }] },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,
