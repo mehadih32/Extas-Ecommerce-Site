@@ -153,7 +153,8 @@
       "ai": {
         "control": "কন্ট্রোল রুম",
         "audit": "চেকলিস্ট অডিট",
-        "costBook": "কস্ট বুক"
+        "costBook": "কস্ট বুক",
+        "permissions": "পারমিশন"
       }
     },
     "purpose": {

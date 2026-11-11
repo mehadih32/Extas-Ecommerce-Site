@@ -228,5 +228,27 @@
       "note": "Note: {note}",
       "expiredAt": "expired {when}"
     }
+  },
+  "aiPermissions": {
+    "metaTitle": "AI Permission matrix",
+    "title": "Permission matrix",
+    "sub": "What each agent may decide alone, must only propose, or may not touch at all.",
+    "intro": "No agent can decide anything alone until you widen a cell below from \"Must ask first\" — that is the safe starting point for every agent and every resource.",
+    "level": {
+      "alone": "Decide alone",
+      "propose": "Must ask first",
+      "none": "May not touch"
+    },
+    "levelHint": {
+      "alone": "Acts on its own, no approval needed.",
+      "propose": "May only ask — lands in Approvals for your decision.",
+      "none": "May not touch this at all, not even to ask."
+    },
+    "defaultBadge": "Default",
+    "readOnly": "You can see the matrix but not change it.",
+    "selectLabel": "{resource} — {name}",
+    "toastChanged": "Saved",
+    "toastFailed": "Could not save this change",
+    "needPermission": "\"AI control\" is needed to change this matrix."
   }
 }
