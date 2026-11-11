@@ -81,6 +81,7 @@ export * from './publish-queue';
 export * from './sync-health';
 export * from './resync';
 export * from './movements';
+export * from './erp-catalogue-compare';
 export * from './jobs';
 export * from './webhook';
 // PR 612–614 (CN-029 Phase 1): returns and exchanges with the store's own ERP in contract v6.
