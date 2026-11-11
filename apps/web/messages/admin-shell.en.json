@@ -154,7 +154,8 @@
       "ai": {
         "control": "Control room",
         "audit": "Checklist audit",
-        "costBook": "Cost Book"
+        "costBook": "Cost Book",
+        "permissions": "Permissions"
       }
     },
     "purpose": {
