@@ -28,6 +28,7 @@ COPY packages/catalogue/package.json packages/catalogue/
 COPY packages/inventory/package.json packages/inventory/
 COPY packages/rules/package.json packages/rules/
 COPY packages/combos/package.json packages/combos/
+COPY packages/creative-studio/package.json packages/creative-studio/
 COPY packages/cart/package.json packages/cart/
 COPY packages/checkout/package.json packages/checkout/
 COPY packages/accounts/package.json packages/accounts/
