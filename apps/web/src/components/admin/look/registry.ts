@@ -7,9 +7,13 @@
 // `standard` is the design a team sees until the owner picks one in Settings → Admin look (`admin.look.pages`). For launch
 // (CN-027) every page has one design: the Dashboard its V12.4 default (A, "Calm overview"), Orders and Products their
 // built page. The other V12.4 designs come after launch (PROGRESS.md follow-ups 380–389).
+// After launch (CN-044, the ERP lane's third task, PR 655): Dashboard's "Classic cards" (the demo's own letter for it
+// is A, the V12.3 page; here it is C, our next free key, since B is Lumen's "Today", PR 631/CN-036). The demo's
+// command-center design (Dashboard), and Orders'/Products' own B and C, stay open (follow-ups 380–382).
 import { classicDesign } from './classic';
 import { dashboardA } from './dashboard/A';
 import { dashboardB } from './dashboard/B';
+import { dashboardC } from './dashboard/C';
 import type { LookPage } from './types';
 
 export const LOOK_PAGES: readonly LookPage[] = [
@@ -23,6 +27,7 @@ export const LOOK_PAGES: readonly LookPage[] = [
     designs: [
       dashboardA,
       dashboardB,
+      dashboardC,
       // admin:design dashboard
     ],
   },
