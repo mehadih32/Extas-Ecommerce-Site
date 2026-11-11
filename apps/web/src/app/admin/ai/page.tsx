@@ -1,15 +1,21 @@
 // S15 · PR 304 (C1.1, C1.2; AIC-01 Control room, Blueprint C1.2; demo 97y-adm2-ai.js) — AI › Control room at
-// `/admin/ai` (Lumen, `data-lm-ready`): the AI 360 home screen. The master-switch banner (`ai.enabled`, read only —
-// turning it on and "keep running with the master off" are PR 305), four tiles (agents running now, today's cost,
-// this month's cost, the monthly cap), and a card per fixed agent with its status, what it last did and its own
-// pause button (`ai.control`). Nothing here is invented: with no AI provider wired yet (PR 306) and no job run, the
-// cost is honestly 0 and "last activity" is honestly empty. Seeing the page needs `ai.read`.
+// `/admin/ai` (Lumen, `data-lm-ready`): the AI 360 home screen. Four tiles (agents running now, today's cost, this
+// month's cost, the monthly cap), and a card per fixed agent with its status, what it last did and its own pause
+// button (`ai.control`). Nothing here is invented: with no AI provider wired yet (PR 306) and no job run, the cost
+// is honestly 0 and "last activity" is honestly empty. Seeing the page needs `ai.read`.
+//
+// S15 · PR 305 (C1.3) — the master-switch banner now turns `ai.enabled` on or off itself (MasterSwitch, `ai.control`,
+// AIC-01's own big switch), with a money-safety note while no monthly cap is set yet. Each agent card also carries
+// "keep running even when AI is off" (KeepOnSwitch, `AiAgent.keepOnWhenMasterOff`) — a property of every agent, not
+// a special case — and the status pill says so when that is why an agent is working while the master is off.
 // Guide: docs/admin-guide/pages/ai/control.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { AgentSwitch } from '@/components/admin/ai/AgentSwitch';
+import { KeepOnSwitch } from '@/components/admin/ai/KeepOnSwitch';
+import { MasterSwitch } from '@/components/admin/ai/MasterSwitch';
 import type { CountFormat } from '@/lib/admin-lumen/model';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -69,21 +75,36 @@ export default async function AiControlRoomPage() {
     { key: 'cap', label: c('tiles.cap'), value: o.monthlyCapMinor ?? 0, shown: o.monthlyCapMinor === null ? c('tiles.capNone') : amount(o.monthlyCapMinor), format: fmt, word: o.monthlyCapMinor === null, icon: 'shield' },
   ];
 
-  const statusOf = (a: (typeof agents)[number]) => (a.workingNow ? { tone: 'ok', text: c('agents.statusWorking') } : a.enabled ? { tone: 'line', text: c('agents.statusPaused') } : { tone: 'line', text: c('agents.statusOff') });
+  const statusOf = (a: (typeof agents)[number]) => {
+    if (a.workingNow) return { tone: 'ok', text: !o.masterOn && a.keepOnWhenMasterOff ? c('agents.statusWorkingKeptOn') : c('agents.statusWorking') };
+    return a.enabled ? { tone: 'line', text: c('agents.statusPaused') } : { tone: 'line', text: c('agents.statusOff') };
+  };
 
   return (
     <div className="a2-z ai-page" data-testid="ai-control" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
 
-      {!o.masterOn ? (
-        <div className="a2-note" data-testid="ai-master-off">
-          <ShellIcon name="info" size={15} />
-          <span>
-            <b>{c('offTitle')}</b> — {c('offBody')}
-          </span>
+      <section className="a2-card tight ai-master" data-testid="ai-master" data-on={o.masterOn ? 'yes' : 'no'}>
+        <div className="ai-mh">
+          <div className="ai-mht">
+            <span className="a2-xs a2-mute a2-b">{c('master.label')}</span>
+            <h2 className="a2-h3 ai-mt">{o.masterOn ? c('master.onTitle') : c('master.offTitle')}</h2>
+            <p className="a2-sm a2-mute">{o.masterOn ? c('master.onBody', { n: formatNumber(o.runningNow, view.locale) }) : c('master.offBody')}</p>
+          </div>
+          {canControl ? (
+            <MasterSwitch on={o.masterOn} label={c('master.switchLabel')} onText={c('master.toastOn')} offText={c('master.toastOff')} failedText={c('master.toastFailed')} />
+          ) : (
+            <span className="a2-pill line">{c('master.ownerOnly')}</span>
+          )}
         </div>
-      ) : null}
+        {o.monthlyCapMinor === null ? (
+          <div className="a2-note warn" data-testid="ai-master-nocap">
+            <ShellIcon name="alert" size={15} />
+            <span>{c('master.capWarn')}</span>
+          </div>
+        ) : null}
+      </section>
 
       <div className="a2-mt12 ai-tiles">
         <SummaryTiles tiles={tiles} label={c('tiles.label')} testId="ai-tiles" />
@@ -123,6 +144,16 @@ export default async function AiControlRoomPage() {
                   <span>
                     {c('agents.month')}: {amount(a.monthMinor)}
                   </span>
+                </div>
+                <div className="ai-keep">
+                  {canControl ? (
+                    <>
+                      <KeepOnSwitch agentKey={a.key} on={a.keepOnWhenMasterOff} label={c('agents.keepOn.switchLabel', { name: view.lang === 'bn' ? a.nameBn : a.nameEn })} onText={c('agents.keepOn.toastOn', { name: view.lang === 'bn' ? a.nameBn : a.nameEn })} offText={c('agents.keepOn.toastOff', { name: view.lang === 'bn' ? a.nameBn : a.nameEn })} failedText={c('agents.keepOn.toastFailed', { name: view.lang === 'bn' ? a.nameBn : a.nameEn })} />
+                      <span className="a2-xs a2-mute">{c('agents.keepOn.label')}</span>
+                    </>
+                  ) : a.keepOnWhenMasterOff ? (
+                    <span className="a2-pill line">{c('agents.keepOn.pillOn')}</span>
+                  ) : null}
                 </div>
               </article>
             );

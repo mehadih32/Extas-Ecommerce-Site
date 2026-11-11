@@ -572,6 +572,45 @@
         "apiKey": "API key (Google Cloud → Credentials)",
         "lang": "Test-এর ভাষা, যেমন bn-BD — না দিলেও চলে"
       }
+    },
+    "anthropic": {
+      "name": "Anthropic (AI 360)",
+      "desc": "AI 360-এর লেখা বানায় — SEO শিরোনাম ও বিবরণ, অফার মেসেজ, আর্টিকেলের প্রথম খসড়া। key ও model না দেওয়া এবং test পাস না করা পর্যন্ত শুধু অনুশীলনের লেখা হয়। একসাথে কয়েকটি AI provider চালু রাখা যায়।",
+      "fields": {
+        "model": "আপনার key যে model চালাতে পারবে, তার ID (Anthropic-এর নিজের model তালিকা থেকে — এখনো চলছে কিনা দেখে নিন)",
+        "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য",
+        "apiVersion": "API version header — Anthropic নিজে সরে যেতে বললে তখনই দিন",
+        "apiKey": "API key (console.anthropic.com → API Keys)"
+      }
+    },
+    "openAi": {
+      "name": "OpenAI (AI 360)",
+      "desc": "AI 360-এর লেখা বানায় — SEO শিরোনাম ও বিবরণ, অফার মেসেজ, আর্টিকেলের প্রথম খসড়া। key ও model না দেওয়া এবং test পাস না করা পর্যন্ত শুধু অনুশীলনের লেখা হয়। একসাথে কয়েকটি AI provider চালু রাখা যায়।",
+      "fields": {
+        "model": "আপনার key যে model চালাতে পারবে, তার ID (OpenAI-এর নিজের model তালিকা থেকে — এখনো চলছে কিনা দেখে নিন)",
+        "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য",
+        "apiKey": "API key (platform.openai.com → API keys)"
+      }
+    },
+    "googleAi": {
+      "name": "Google AI (AI 360)",
+      "desc": "AI 360-এর লেখা বানায় — SEO শিরোনাম ও বিবরণ, অফার মেসেজ, আর্টিকেলের প্রথম খসড়া। key ও model না দেওয়া এবং test পাস না করা পর্যন্ত শুধু অনুশীলনের লেখা হয়। একসাথে কয়েকটি AI provider চালু রাখা যায়।",
+      "fields": {
+        "model": "আপনার key যে model চালাতে পারবে, তার ID (Google-এর নিজের model তালিকা থেকে — এখনো চলছে কিনা দেখে নিন)",
+        "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য",
+        "apiKey": "API key (Google AI Studio / Google Cloud → Credentials)"
+      }
+    },
+    "openRouter": {
+      "name": "OpenRouter (AI 360)",
+      "desc": "একটি key দিয়ে অনেক কোম্পানির পেইড model, AI 360-এর লেখার জন্য। পরের একটি যাচাই পাস না করা পর্যন্ত কোনো ফ্রি model লাইভে ব্যবহার হয় না। key ও model না দেওয়া এবং test পাস না করা পর্যন্ত শুধু অনুশীলনের লেখা হয়।",
+      "fields": {
+        "model": "আপনার key যে model চালাতে পারবে, তার ID (OpenRouter-এর নিজের model তালিকা থেকে — এখনো চলছে কিনা দেখে নিন)",
+        "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য",
+        "appUrl": "আপনার সাইটের ঠিকানা — না দিলেও চলে, OpenRouter আপনার ব্যবহারের সাথে এটি দেখায়",
+        "appName": "আপনার দোকানের নাম — না দিলেও চলে, OpenRouter আপনার ব্যবহারের সাথে এটি দেখায়",
+        "apiKey": "API key (openrouter.ai → Keys)"
+      }
     }
   },
   "errors": {
