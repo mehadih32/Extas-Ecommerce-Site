@@ -33,7 +33,8 @@
     "ads": "Ads and tracking",
     "reports": "Reports",
     "marketing": "Marketing",
-    "blog": "Blog and journal"
+    "blog": "Blog and journal",
+    "ai": "AI 360 Control Room"
   },
   "permissions": {
     "settings": {
@@ -356,6 +357,10 @@
       "read": "See the journal's articles, categories and authors (Website → Blog & journal)",
       "write": "Write and edit articles, send them through the review steps, and add, change or put away categories and authors (nothing is deleted)",
       "publish": "Publish, schedule or take down an article, and switch the journal on or off on the shop"
+    },
+    "ai": {
+      "read": "See the AI Center: every agent, what it did last and what it cost (no customer's details beyond what the agent itself worked on)",
+      "control": "Pause or resume one AI agent, and its switches, monthly cap and schedule — never money, refunds, prices, COD, ad budgets, blocking or deleting on its own"
     }
   },
   "totp": {

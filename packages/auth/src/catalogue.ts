@@ -448,6 +448,12 @@ export const PERMISSIONS = {
   // or reject such an increase (`marketing.ads.approve`, the owner). Nothing raises spend without that approval.
   'marketing.ads.control': { group: 'marketing' },
   'marketing.ads.approve': { group: 'marketing' },
+  // S15 · PR 304, 305 (C1.1, C1.2) — AI › Control room: see every agent, what it did last and its cost (`ai.read`);
+  // pause or resume one agent, one tap (`ai.control`, reversible, audited). Turning AI on at all, and the agent's
+  // monthly cap or schedule, stay inside `ai.control` too; moving money, refunds, prices, COD, ad budgets, blocking
+  // or deleting always needs their own existing permission on top (CLAUDE.md rule 6) — this key alone never does them.
+  'ai.read': { group: 'ai' },
+  'ai.control': { group: 'ai' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
