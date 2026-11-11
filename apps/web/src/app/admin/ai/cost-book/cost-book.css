@@ -1,5 +1,5 @@
-/* S15 · PR 312 — AI › Cost Book (/admin/ai/cost-book). Uses the shared --lm- and a2- theme tokens, so it needs no
-   colour literal of its own (the hardcode guard checks CSS files too). */
+/* S15 · PR 312, 313 — AI › Cost Book (/admin/ai/cost-book). Uses the shared --lm- and a2- theme tokens, so it needs
+   no colour literal of its own (the hardcode guard checks CSS files too). */
 .adm2 .cb-note {
   display: flex;
   gap: 8px;
@@ -33,6 +33,10 @@
   max-width: 100%;
 }
 .adm2 .cb-sel-cost {
+  overflow-wrap: anywhere;
+}
+.adm2 .cb-actual {
+  min-width: 180px;
   overflow-wrap: anywhere;
 }
 .adm2 .cb-alts {
