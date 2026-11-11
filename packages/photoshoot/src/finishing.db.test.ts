@@ -1,13 +1,14 @@
-// S24 · PR 455 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): recording a finishing step
+// S24 · PR 455–456 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): recording a finishing step
 // through PR 444's `recordGeneratedAsset` chokepoint, tracing back to the real original (never the candidate),
-// the "no double charging" reuse guard, and permission checks.
+// the "no double charging" reuse guard, permission checks, and (PR 456) the three later steps plus the full
+// five-step pipeline run end to end.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import { finishingCandidateId, findExistingFinishingOutput, FINISHING_TAG, recordFinishingStepOutput } from './finishing';
+import { completedFinishingSteps, finishingCandidateId, findExistingFinishingOutput, FINISHING_STEPS, FINISHING_TAG, isFinishingComplete, recordFinishingStepOutput } from './finishing';
 import type { PhotoshootDeps, Who } from './context';
 
-describe.skipIf(!HAS_TEST_DB)('PR 455 · finishing pass, part 1 — upscale, artifact repair (PostgreSQL)', () => {
+describe.skipIf(!HAS_TEST_DB)('PR 455/456 · finishing pass (PostgreSQL)', () => {
   let t: TestDatabase;
   let S: number;
   let other: number;
@@ -118,5 +119,31 @@ describe.skipIf(!HAS_TEST_DB)('PR 455 · finishing pass, part 1 — upscale, art
     const first = await recordFinishingStepOutput(d, writer, { candidateAssetId: candidate.id, step: 'upscale', storageKey: 'test/reuse.jpg', storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 1, checksumSha256: '9'.repeat(64) });
     const found = await findExistingFinishingOutput(d, reader, candidate.id, 'upscale');
     expect(found?.id).toBe(first.id);
+  });
+
+  it('PR 456: runs contactShadow, colourGrade and sharpen too, each traced back to the real original', async () => {
+    const d = deps();
+    const flat = await makeOriginal('primary_garment');
+    const candidate = await makeCandidate(flat.id);
+    for (const step of ['contactShadow', 'colourGrade', 'sharpen'] as const) {
+      const out = await recordFinishingStepOutput(d, writer, { candidateAssetId: candidate.id, step, storageKey: `test/${step}.jpg`, storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 1, checksumSha256: crypto.randomUUID().replace(/-/g, '').padEnd(64, '0') });
+      expect(out.step).toBe(step);
+      expect(out.sourceAssetId).toBe(flat.id);
+      expect(out.tags).toContain(`finishing:${step}`);
+    }
+  });
+
+  it('PR 456: the full five-step pipeline, run end to end, is complete only once every step is recorded', async () => {
+    const d = deps();
+    const flat = await makeOriginal('primary_garment');
+    const candidate = await makeCandidate(flat.id);
+    let completed: (typeof FINISHING_STEPS)[number][] = [];
+    for (const step of FINISHING_STEPS) {
+      expect(isFinishingComplete({ assetId: candidate.id, completedSteps: completed })).toBe(false);
+      const out = await recordFinishingStepOutput(d, writer, { candidateAssetId: candidate.id, step, storageKey: `test/pipeline-${step}.jpg`, storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 1, checksumSha256: crypto.randomUUID().replace(/-/g, '').padEnd(64, '0') });
+      completed = completedFinishingSteps(out.tags).length ? [...completed, step] : completed;
+    }
+    expect(isFinishingComplete({ assetId: candidate.id, completedSteps: completed })).toBe(true);
+    expect(completed).toEqual([...FINISHING_STEPS]);
   });
 });
