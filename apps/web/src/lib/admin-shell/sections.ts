@@ -493,6 +493,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S15 · PR 312 (C2.1, C2.2) — Cost Book: every AI job, its recommended model and why, its estimated cost, and
       // a model selector right in the row (owner only).
       { id: 'costBook', guide: 'ai', pages: [{ href: '/admin/ai/cost-book', perm: 'ai.read', keys: ['aiCostBook'] }] },
+      // S15 · PR 317 (C3.2) — Approvals: the single queue for everything an agent wants to do but may not do alone
+      // (money, refunds, COD, prices, discounts, ad budget, blocking, deletion, skills, fixes), cleared in one pass.
+      { id: 'approvals', guide: 'ai', pages: [{ href: '/admin/ai/approvals', perm: 'ai.read', keys: ['aiApprovals'] }] },
     ],
     ownerOnly: true,
     guide: 'ai',
