@@ -7,7 +7,10 @@ import { getPrisma, type Prisma } from '@extas/db/client';
 import { wasPriceFor, type WasPriceSource } from '@extas/catalogue';
 import { imageSources, type ImageSource } from '@extas/media';
 import type { HomeFlashSale } from '@extas/settings';
+import type { OverlayBadge } from '@extas/creative-studio';
+import { activeOverlayFor } from '@extas/creative-studio';
 import { cachedCategoryPage } from '../cache';
+import { liveCampaignOverlays } from './campaign-overlay';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import type { SizeMeta } from './category-filter';
 import type { CatItem } from './category-model';
@@ -40,6 +43,8 @@ export interface ShopCard {
   photos: Record<string, ImageSource>;
   inStock: boolean;
   sortRank: number;
+  /** S25 · PR 489: the live campaign overlay for this card (Blueprint C8.3) — drawn on top, never stored on the photo. */
+  overlay: OverlayBadge | null;
 }
 
 export const productName = (p: Pick<ShopCard, 'nameEn' | 'nameBn'>, lang: ShopLang) => (lang === 'bn' && p.nameBn) || p.nameEn;
@@ -165,6 +170,8 @@ async function toCards(storeId: number, rows: Row[], withPhotos = true, trial?: 
     select: { productId: true, tag: { select: { name: true } } },
   });
   const photos = withPhotos ? await photoMap(storeId, rows) : new Map<string, Record<string, ImageSource>>();
+  // S25 · PR 489: one batched read of every live overlay, matched per row (never stored on the product, read fresh).
+  const overlays = await liveCampaignOverlays(storeId);
   return rows.map((p) => {
     const v = cheapest.get(p.id) ?? null;
     const was = v
@@ -194,6 +201,7 @@ async function toCards(storeId: number, rows: Row[], withPhotos = true, trial?: 
       photos: photos.get(p.id) ?? {},
       inStock: p.inStock,
       sortRank: p.sortRank,
+      overlay: activeOverlayFor(overlays, { slug: p.slug, categorySlug: p.category?.slug ?? null }),
     };
   });
 }

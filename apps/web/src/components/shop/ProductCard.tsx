@@ -41,6 +41,11 @@ export function ProductCard({ card, c, priority = false, colour: pick, copy = fa
           priority={priority}
         >
           {badge ? <span className={`badge-img${badge.sale ? ' sale' : ''}`}>{badge.text}</span> : null}
+          {card.overlay ? (
+            <span className={`pcard-ov ${card.overlay.templateKey === 'bottomStrip' ? 'strip' : 'chip'}`} style={{ background: card.overlay.accent }} data-testid="card-overlay">
+              {c.lang === 'bn' ? card.overlay.labelBn : card.overlay.labelEn}
+            </span>
+          ) : null}
           <HeartButton
             id={card.id}
             tabIndex={copy ? -1 : undefined}

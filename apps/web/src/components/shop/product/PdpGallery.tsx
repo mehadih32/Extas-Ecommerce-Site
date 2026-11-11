@@ -11,6 +11,7 @@
 // `vertical`), or down its side (`pdp.templates.t3.deskThumbs`).
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import type { PdpTemplate, PdpTemplatesSettings } from '@extas/settings';
+import type { OverlayBadge } from '@extas/creative-studio';
 import { Icon } from '../Icon';
 import { whenIdle } from '@/lib/shop/later';
 import { nearestTile, stepTo, thumbsShown } from '@/lib/shop/pdp-gallery';
@@ -31,12 +32,16 @@ export interface GalleryBadge {
 
 export function PdpGallery({
   badge,
+  overlay = null,
   lang,
   template = 'T1',
   t2,
   t3,
 }: {
   badge: GalleryBadge | null;
+  /** S25 · PR 489 (Blueprint C8.3) — the live campaign overlay, drawn as its own small corner/strip marker; it never
+   * replaces or moves the sale badge, and it never touches the price. */
+  overlay?: OverlayBadge | null;
   lang: 'en' | 'bn';
   template?: PdpTemplate;
   t2?: PdpTemplatesSettings['t2'];
@@ -171,6 +176,11 @@ export function PdpGallery({
                 priority={i === 0}
               />
               {i === 0 && badge && set.gallery.badge ? <span className={`badge-img${badge.sale ? ' sale' : ''}`}>{badge.text}</span> : null}
+              {i === 0 && overlay ? (
+                <span className={`pcard-ov ${overlay.templateKey === 'bottomStrip' ? 'strip' : 'chip'}`} style={{ background: overlay.accent }} data-testid="pdp-overlay">
+                  {lang === 'bn' ? overlay.labelBn : overlay.labelEn}
+                </span>
+              ) : null}
               {i === 0 && lowText ? (
                 <span className="pdp-chip-img low" data-testid="low-chip">
                   <Icon name="clock" size={14} />

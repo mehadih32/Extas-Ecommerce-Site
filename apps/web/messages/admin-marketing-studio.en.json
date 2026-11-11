@@ -149,6 +149,55 @@
         "restore": "Bring back",
         "archive": "Set aside"
       }
+    },
+    "overlay": {
+      "metaTitle": "Campaign overlays — Marketing",
+      "title": "Campaign overlays",
+      "sub": "A small label drawn on top of the product card, the listing and the product page while a campaign is running — a corner ribbon, a bottom strip, a badge or a struck-price flag. It is never saved onto the photo and it never changes the price; it appears when you turn it on and disappears the moment you turn it off or its window ends.",
+      "listH": "Overlays",
+      "newH": "Add an overlay",
+      "newD": "Pick a look, write the words in both languages and a colour, choose what it reaches (every product, named products, or a category), and an optional start and end. It starts switched off — turn it on once you have checked it.",
+      "campaign": "Campaign (optional)",
+      "noCampaign": "No campaign",
+      "templateLabel": "Look",
+      "template": {
+        "cornerRibbon": "Corner ribbon",
+        "bottomStrip": "Bottom strip",
+        "struckPrice": "Struck-price flag",
+        "badge": "Badge"
+      },
+      "labelEn": "Words (English)",
+      "labelBn": "Words (Bengali)",
+      "accent": "Colour",
+      "reach": "Reach",
+      "reachAll": "Every product",
+      "reachProducts": "Named products",
+      "reachCategories": "A category",
+      "slugsHelp": "Comma-separated, by their own address slug (e.g. polo-navy, polo-white or polos, formal-shirts).",
+      "startsAt": "Starts (optional)",
+      "endsAt": "Ends (optional)",
+      "add": "Add",
+      "adding": "Adding…",
+      "added": "Overlay added — it is off until you turn it on.",
+      "enable": "Turn on",
+      "disable": "Turn off",
+      "archive": "Archive",
+      "restore": "Restore",
+      "confirmArchive": "Archive this overlay? Nothing is deleted — restore it any time.",
+      "yes": "Yes, archive",
+      "cancel": "Cancel",
+      "archived": "Archived",
+      "enabled": "On",
+      "disabled": "Off",
+      "empty": "No overlays yet.",
+      "err": {
+        "INVALID_INPUT": "Check what you typed.",
+        "CONFLICT": "That is already used.",
+        "NOT_FOUND": "Not found — the page may need a refresh.",
+        "WINDOW_INVALID": "The end must not be before the start.",
+        "network": "Could not reach the server.",
+        "other": "Something went wrong."
+      }
     }
   }
 }
