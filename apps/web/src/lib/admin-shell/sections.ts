@@ -517,6 +517,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S15 · PR 317 (C3.2) — Approvals: the single queue for everything an agent wants to do but may not do alone
       // (money, refunds, COD, prices, discounts, ad budget, blocking, deletion, skills, fixes), cleared in one pass.
       { id: 'approvals', guide: 'ai', pages: [{ href: '/admin/ai/approvals', perm: 'ai.read', keys: ['aiApprovals'] }] },
+      // S15 · PR 318 (C3.2) — Permissions: the permission matrix — per agent, what it may decide alone, must only
+      // propose, or may not touch at all, over orders/stock/prices/courier/money/customer data/code (owner only).
+      { id: 'permissions', guide: 'ai', pages: [{ href: '/admin/ai/permissions', perm: 'ai.read', keys: ['aiPermissions'] }] },
     ],
     ownerOnly: true,
     guide: 'ai',
