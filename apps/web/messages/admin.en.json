@@ -572,6 +572,45 @@
         "apiKey": "API key (Google Cloud → Credentials)",
         "lang": "Language for the Test, e.g. bn-BD — optional"
       }
+    },
+    "anthropic": {
+      "name": "Anthropic (AI 360)",
+      "desc": "Writes AI 360's drafts — SEO titles and descriptions, offer messages, article first drafts. Practice text only until the key and model are in and the test passes. Several AI providers may be connected at once.",
+      "fields": {
+        "model": "Model ID your key may use (from Anthropic's own model list — check it is current)",
+        "baseUrl": "Address — only for a test server",
+        "apiVersion": "API version header — only if Anthropic asks you to move off the default",
+        "apiKey": "API key (console.anthropic.com → API Keys)"
+      }
+    },
+    "openAi": {
+      "name": "OpenAI (AI 360)",
+      "desc": "Writes AI 360's drafts — SEO titles and descriptions, offer messages, article first drafts. Practice text only until the key and model are in and the test passes. Several AI providers may be connected at once.",
+      "fields": {
+        "model": "Model ID your key may use (from OpenAI's own model list — check it is current)",
+        "baseUrl": "Address — only for a test server",
+        "apiKey": "API key (platform.openai.com → API keys)"
+      }
+    },
+    "googleAi": {
+      "name": "Google AI (AI 360)",
+      "desc": "Writes AI 360's drafts — SEO titles and descriptions, offer messages, article first drafts. Practice text only until the key and model are in and the test passes. Several AI providers may be connected at once.",
+      "fields": {
+        "model": "Model ID your key may use (from Google's own model list — check it is current)",
+        "baseUrl": "Address — only for a test server",
+        "apiKey": "API key (Google AI Studio / Google Cloud → Credentials)"
+      }
+    },
+    "openRouter": {
+      "name": "OpenRouter (AI 360)",
+      "desc": "One key to many companies' paid models, for AI 360's drafts. Free models are never used live until a later check passes them. Practice text only until the key and model are in and the test passes.",
+      "fields": {
+        "model": "Model ID your key may use (from OpenRouter's own model list — check it is current)",
+        "baseUrl": "Address — only for a test server",
+        "appUrl": "Your site's address — optional, OpenRouter shows it with your usage",
+        "appName": "Your shop's name — optional, OpenRouter shows it with your usage",
+        "apiKey": "API key (openrouter.ai → Keys)"
+      }
     }
   },
   "errors": {
