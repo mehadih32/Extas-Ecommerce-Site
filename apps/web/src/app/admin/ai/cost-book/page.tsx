@@ -18,6 +18,10 @@ import { redirect } from "next/navigation";
 import { MOTHER_STORE_ID } from "@extas/db/client";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import {
+  CostBookCalculator,
+  type CalcJobOption,
+} from "@/components/admin/ai/CostBookCalculator";
+import {
   CostBookModelSelect,
   type CostBookModelOption,
 } from "@/components/admin/ai/CostBookModelSelect";
@@ -387,6 +391,55 @@ export default async function AiCostBookPage() {
           ))}
         </ol>
       </section>
+
+      {canControl ? (
+        <CostBookCalculator
+          jobs={o.jobs.map(
+            (job): CalcJobOption => ({
+              key: job.key,
+              name: nameOf(job),
+              sectionName: sectionNameOf(job.section),
+              models: job.choices.map((ch) => ({
+                modelKey: ch.modelKey,
+                label: `${ch.providerName} ${ch.displayName}`,
+                isRecommended: ch.isRecommended,
+              })),
+            }),
+          )}
+          money={amount}
+          lang={view.lang}
+          labels={{
+            title: c("calc.title"),
+            jobLabel: c("calc.jobLabel"),
+            quantityLabel: c("calc.quantityLabel"),
+            scaleLabel: c("calc.scaleLabel"),
+            scaleHint: c("calc.scaleHint"),
+            modelLabel: c("calc.modelLabel"),
+            modelAuto: c("calc.modelAuto"),
+            addLine: c("calc.addLine"),
+            removeLine: c("calc.removeLine"),
+            calculate: c("calc.calculate"),
+            calculating: c("calc.calculating"),
+            total: c("calc.total"),
+            altLabel: c("calc.altLabel"),
+            saveLabel: c("calc.saveLabel"),
+            savePlaceholder: c("calc.savePlaceholder"),
+            saveButton: c("calc.saveButton"),
+            saved: c("calc.saved"),
+            failed: c("calc.failed"),
+            invalid: c("calc.invalid"),
+          }}
+        />
+      ) : (
+        <div
+          className="a2-note cb-note a2-mt12"
+          role="note"
+          data-testid="cb-calc-locked"
+        >
+          <ShellIcon name="info" size={15} />
+          <span>{c("calc.needPermission")}</span>
+        </div>
+      )}
     </div>
   );
 }
