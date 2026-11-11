@@ -46,6 +46,7 @@ const m: PdpModel = {
   shots: {},
   chart: null,
   onSale: true,
+  overlay: null,
 };
 
 describe('PR 49 · the product address', () => {
@@ -162,6 +163,7 @@ describe('PR 49 · the client model', () => {
     ruleTexts: async () => [],
     templateKey: null,
     categoryChain: [],
+    overlay: null,
   };
   const words = { money: (n: number) => `Tk ${n}`, off: (p: number) => `-${p}%`, save: (a: string) => `Save ${a}` };
   const views = productSettings['pdp.gallery'].default.drawingViews;
