@@ -70,6 +70,9 @@ importers:
       '@extas/payments':
         specifier: workspace:*
         version: link:../../packages/payments
+      '@extas/photoshoot':
+        specifier: workspace:*
+        version: link:../../packages/photoshoot
       '@extas/rules':
         specifier: workspace:*
         version: link:../../packages/rules
@@ -1045,6 +1048,40 @@ importers:
       '@extas/metrics':
         specifier: workspace:*
         version: link:../metrics
+      '@extas/settings':
+        specifier: workspace:*
+        version: link:../settings
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@eslint/js':
+        specifier: 9.39.5
+        version: 9.39.5
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      eslint:
+        specifier: 9.39.5
+        version: 9.39.5(jiti@2.7.0)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: 8.72.0
+        version: 8.72.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
+
+  packages/photoshoot:
+    dependencies:
+      '@extas/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@extas/db':
+        specifier: workspace:*
+        version: link:../db
       '@extas/settings':
         specifier: workspace:*
         version: link:../settings
