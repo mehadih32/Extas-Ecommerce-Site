@@ -448,6 +448,13 @@ export const PERMISSIONS = {
   // or reject such an increase (`marketing.ads.approve`, the owner). Nothing raises spend without that approval.
   'marketing.ads.control': { group: 'marketing' },
   'marketing.ads.approve': { group: 'marketing' },
+  // S25 · PR 481–490 (Blueprint C8) — Marketing › Studio: the motion library, the image-to-video jobs, reels, campaign
+  // creative exports and the creative brief (`marketing.studio.read`); create, edit, generate and assemble them
+  // (`marketing.studio.write`); approve a generated output, choose a creative direction, or send an export to a
+  // connected ad account (`marketing.studio.approve`). Nothing here publishes, schedules or spends without this.
+  'marketing.studio.read': { group: 'marketing' },
+  'marketing.studio.write': { group: 'marketing' },
+  'marketing.studio.approve': { group: 'marketing' },
   // S23 · PR 437 (Blueprint C5, MKT-06 "Studio hub") — the social & content studio: see its accounts, assets,
   // templates and posts (`studio.read`); manage accounts, brand assets and templates (`studio.write`); run a
   // generate job, which may spend on AI captions once the owner turns that on (`studio.generate`); approve or

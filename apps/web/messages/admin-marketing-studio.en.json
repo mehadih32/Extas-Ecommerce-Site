@@ -1,0 +1,46 @@
+{
+  "studio": {
+    "metaTitle": "Studio — Marketing",
+    "motion": {
+      "title": "Motion library",
+      "sub": "A short catalogue of motions — jogging, turning, sitting at a café — that the image-to-video engine turns an approved still into. Edit, rename, archive or add your own; nothing here generates anything yet.",
+      "listH": "Actions",
+      "newH": "Add an action",
+      "newD": "A short key, a name in both languages, a motion hint for its category, and whether it is a group clip (cut together from separate clips, never one generated crowd shot).",
+      "name": "Name (English)",
+      "nameBn": "Name (Bengali)",
+      "garmentHint": "Garment hint",
+      "descriptionEn": "Description (English)",
+      "descriptionBn": "Description (Bengali)",
+      "groupClip": "Group clip (two or three models together)",
+      "add": "Add",
+      "adding": "Adding…",
+      "added": "Action added.",
+      "archive": "Archive",
+      "restore": "Restore",
+      "confirmArchive": "Archive this action? Nothing is deleted — restore it any time.",
+      "yes": "Yes, archive",
+      "cancel": "Cancel",
+      "archived": "Archived",
+      "shared": "Starting set",
+      "own": "Your own",
+      "empty": "No actions yet.",
+      "hint": {
+        "tracksuit": "Tracksuit",
+        "polo": "Polo",
+        "formalShirt": "Formal shirt",
+        "panjabi": "Panjabi",
+        "footwear": "Footwear",
+        "bag": "Bag",
+        "other": "Other"
+      },
+      "err": {
+        "INVALID_INPUT": "Check what you typed.",
+        "CONFLICT": "That key is already used.",
+        "NOT_FOUND": "Not found — the page may need a refresh.",
+        "network": "Could not reach the server.",
+        "other": "Something went wrong."
+      }
+    }
+  }
+}
