@@ -162,15 +162,15 @@ describe('the look registry', () => {
       }
     }
   });
-  it('has the V12.4 Dashboard (A) and the Lumen Today (B, the standard since PR 631), drawing only loader parts', () => {
+  it('has the V12.4 Dashboard (A), the Lumen Today (B, the standard since PR 631) and the Command center (D, PR 658), drawing only loader parts', () => {
     const d = lookPage('dashboard')!;
-    expect(d.designs.map((x) => x.key)).toEqual(['A', 'B']);
+    expect(d.designs.map((x) => x.key)).toEqual(['A', 'B', 'D']);
     expect(d.standard).toBe('B');
     for (const x of d.designs) {
       expect(x.Render).toBeTypeOf('function');
       for (const part of x.parts) expect(DASH_PARTS).toContain(part);
     }
-    expect(lookCatalog()).toMatchObject({ dashboard: ['A', 'B'], orders: ['A'], products: ['A'] });
+    expect(lookCatalog()).toMatchObject({ dashboard: ['A', 'B', 'D'], orders: ['A'], products: ['A'] });
     expect(previewHref(d, 'A')).toBe('/admin?home=1&design=A');
     expect(previewHref(lookPage('orders')!, 'A')).toBe('/admin/orders?design=A');
   });

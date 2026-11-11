@@ -17,7 +17,10 @@ import { chartWindow, shiftDay, type DashRange } from './range';
 
 // PR 631 (CN-036): 'feed' (the newest orders, Lumen Today's live feed) and 'goal' (this month's Sales against the
 // monthly goal of `admin.today`, read only while the goal is on).
-export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal'] as const;
+// PR 658 (CN-025/CN-027 follow-up 380, second half; CN-044, ERP lane): 'funnel' (orders placed in the selected
+// period and how far each one got, from the four stage timestamps already on Order) and 'hours' (the last
+// `admin.dashboardDesigns.courierDays` days of orders by weekday and 2-hour slot, for the Command center design).
+export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'funnel', 'hours'] as const;
 export type DashPart = (typeof DASH_PARTS)[number];
 
 /** The keys a part needs (any one of them); the owner holds every key. */
@@ -31,6 +34,8 @@ export const PART_KEYS: Readonly<Record<DashPart, readonly string[]>> = {
   offSite: ['system.read'],
   feed: ['orders.read'],
   goal: ['metrics.read'],
+  funnel: ['orders.read'],
+  hours: ['orders.read'],
 };
 
 export const mayRead = (part: DashPart, v: ShellViewer) => v.owner || PART_KEYS[part].length === 0 || PART_KEYS[part].some((k) => v.perms.has(k));
@@ -147,6 +152,21 @@ export interface FeedRow {
   placedAt: string;
 }
 
+/** PR 658: orders placed in the selected period and how far each one got (the demo's "order funnel"). */
+export interface DashFunnel {
+  placed: number;
+  confirmed: number;
+  packed: number;
+  withCourier: number;
+  delivered: number;
+}
+
+/** PR 658: the last `days` shop days of orders by weekday (0 = Sunday, matching `Fmt.weekday`) and 2-hour slot. */
+export interface DashHours {
+  days: number;
+  cells: readonly (readonly number[])[];
+}
+
 /** PR 631: this month's Sales (delivered orders only, M1) against the monthly goal. */
 export interface DashGoal {
   goalMinor: number;
@@ -175,6 +195,8 @@ export interface DashboardData {
   offSite: ('blob' | 'drive')[] | null;
   feed: FeedRow[] | null;
   goal: DashGoal | null;
+  funnel: DashFunnel | null;
+  hours: DashHours | null;
 }
 
 const OPEN = {
@@ -492,11 +514,50 @@ async function goal(c: DashCtx): Promise<DashGoal | null> {
   return { goalMinor: g.amountMinor, salesMinor: k.sales.itemsMinor, from, to, daysLeft };
 }
 
+/** PR 658: every order placed in the selected period, and how many of them ever reached each later stage — a
+ * timestamp set by the order's own flow and kept even if the order was later cancelled or returned, so this counts
+ * "ever got this far", not "is currently at this stage" (that is `stages()`, a live snapshot of open orders only). */
+async function funnel(c: DashCtx): Promise<DashFunnel> {
+  const { db, storeId } = c;
+  const { from, to } = period(c, c.range.from, c.range.to);
+  const base = { storeId, archivedAt: null, placedAt: { gte: from, lt: to } };
+  const [placed, confirmed, packed, withCourier, delivered] = await Promise.all([
+    db.order.count({ where: base }),
+    db.order.count({ where: { ...base, confirmedAt: { not: null } } }),
+    db.order.count({ where: { ...base, packedAt: { not: null } } }),
+    db.order.count({ where: { ...base, handedOverAt: { not: null } } }),
+    db.order.count({ where: { ...base, status: { in: [...KEPT_ST] } } }),
+  ]);
+  return { placed, confirmed, packed, withCourier, delivered };
+}
+
+/** PR 658: when customers order, over the last `admin.dashboardDesigns.courierDays` shop days (a fixed, settings-
+ * driven window of its own — this pattern is about habits, not the date-range picker). */
+async function hours(c: DashCtx): Promise<DashHours> {
+  const { db, storeId, timeZone, now } = c;
+  const days = c.s.courierDays;
+  const since = new Date(now.getTime() - days * DAY);
+  const rows = await db.$queryRaw<{ wd: number; slot: number; n: number }[]>(Prisma.sql`
+    SELECT extract(dow from o."placedAt" AT TIME ZONE ${timeZone})::int AS wd,
+           (extract(hour from o."placedAt" AT TIME ZONE ${timeZone})::int / 2)::int AS slot,
+           count(*)::int AS n
+    FROM "Order" o
+    WHERE o."storeId" = ${storeId} AND o."archivedAt" IS NULL AND o."placedAt" >= ${since}
+    GROUP BY 1, 2`);
+  const cells: number[][] = Array.from({ length: 7 }, () => Array<number>(12).fill(0));
+  for (const r of rows) {
+    const wd = Number(r.wd);
+    const slot = Number(r.slot);
+    if (cells[wd] && slot >= 0 && slot < 12) cells[wd]![slot] = Number(r.n);
+  }
+  return { days, cells };
+}
+
 export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Promise<DashboardData> {
   const parts = new Set(wanted.filter((p) => mayRead(p, c.viewer)));
   const chart = chartWindow(c.range, c.s.chartMinDays);
   const on = <T>(p: DashPart, f: () => Promise<T>): Promise<T | null> => (parts.has(p) ? f() : Promise.resolve(null));
-  const [m, st, dl, tp, ls, qs, off, fd, gl] = await Promise.all([
+  const [m, st, dl, tp, ls, qs, off, fd, gl, fn, hr] = await Promise.all([
     on('money', () => money(c, chart)),
     on('stages', () => stages(c)),
     on('delivery', () => delivery(c)),
@@ -506,6 +567,8 @@ export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Pr
     on('offSite', () => offSite(c)),
     on('feed', () => feed(c)),
     on('goal', () => goal(c)),
+    on('funnel', () => funnel(c)),
+    on('hours', () => hours(c)),
   ]);
-  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off, feed: fd, goal: gl };
+  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off, feed: fd, goal: gl, funnel: fn, hours: hr };
 }
