@@ -16,7 +16,7 @@ export interface AiAgentDef {
   isChief: boolean;
 }
 
-export const AI_AGENTS: readonly AiAgentDef[] = [
+export const AI_AGENTS = [
   { key: 'gyani', code: 'A360-01', nameEn: 'Gyani', nameBn: 'জ্ঞানী', role: 'Chief agent: investigates any "why", names the responsible agent, assigns the fix and reports back. Fraud, Smart Rules, AI 360, finance, support, studio, video.', emoji: '🧠', isChief: true },
   { key: 'prohori', code: 'A360-02', nameEn: 'Prohori', nameBn: 'প্রহরী', role: 'Server, settings framework, security, deploy, backup, site health & audit.', emoji: '🛡️', isChief: false },
   { key: 'bhandari', code: 'A360-03', nameEn: 'Bhandari', nameBn: 'ভান্ডারী', role: 'Catalogue and images, courier, returns and exchange, ERP sync, documents.', emoji: '📦', isChief: false },
@@ -24,7 +24,7 @@ export const AI_AGENTS: readonly AiAgentDef[] = [
   { key: 'shilpi', code: 'A360-05', nameEn: 'Shilpi', nameBn: 'শিল্পী', role: 'Senior UI/UX. Every customer-facing surface, phone first; reviews what Sawdagor builds.', emoji: '🎨', isChief: false },
   { key: 'doot', code: 'A360-06', nameEn: 'Doot', nameBn: 'দূত', role: 'SEO, content, non-paid marketing, CRM, social, and the analytics that feed them.', emoji: '📣', isChief: false },
   { key: 'tirondaj', code: 'A360-07', nameEn: 'Tirondaj', nameBn: 'তীরন্দাজ', role: "Paid ads only — Google, Meta, TikTok — inside the owner's guardrails; asks before spending more.", emoji: '🏹', isChief: false },
-] as const;
+] as const satisfies readonly AiAgentDef[];
 
 export type AiAgentKey = (typeof AI_AGENTS)[number]['key'];
 
