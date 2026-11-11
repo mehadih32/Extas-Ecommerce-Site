@@ -45,8 +45,8 @@
     "hub": {
       "metaTitle": "Studio · Marketing",
       "title": "Studio",
-      "sub": "Your social accounts, your brand asset library and your post templates — the studio's own building blocks.",
-      "note": "Nothing here posts to a real account, renders a video or spends anything. A new account always starts off and needing approval.",
+      "sub": "Your social accounts, your brand asset library, your post templates and what you've generated from them.",
+      "note": "Nothing here posts to a real account or spends anything. A generated post is a preview only today (your product's own existing photo) — the real compositor and real posting come in later PRs. A new account always starts off and needing approval.",
       "f": {
         "platform": "Platform",
         "externalId": "Page/channel id",
@@ -54,7 +54,10 @@
         "kind": "Kind",
         "dailyLimit": "Daily limit",
         "spec": "Template shape",
-        "assetId": "File"
+        "assetId": "File",
+        "templateId": "Template",
+        "productIds": "Products",
+        "caption": "Caption"
       },
       "err": {
         "INVALID_INPUT": "Check the fields: {fields}.",
@@ -62,6 +65,8 @@
         "STALE": "Someone changed this just now — the page is refreshing.",
         "ALREADY_ADDED": "This account is added already.",
         "TEMPLATE_ARCHIVED": "Restore the template before changing it.",
+        "NO_PRODUCTS": "Pick at least one product to feature.",
+        "WRONG_STATE": "This job already ran — refresh the page.",
         "TOO_LARGE": "The file is larger than the upload limit.",
         "NOT_AN_IMAGE": "That file is not a picture.",
         "TYPE_NOT_ALLOWED": "That kind of file is not accepted.",
@@ -119,7 +124,7 @@
       },
       "templates": {
         "h": "Templates",
-        "d": "The shape a post will take once the video assembly engine fills it with your own photos (coming in a later PR).",
+        "d": "The shape a post takes once the render engine below fills it with your own photos.",
         "empty": "No template yet.",
         "addH": "Add a template",
         "namePh": "A name for you to recognise it by",
@@ -148,6 +153,31 @@
         "needMedia": "Uploading needs Media library access as well — ask the owner or a manager.",
         "restore": "Bring back",
         "archive": "Set aside"
+      },
+      "renders": {
+        "h": "Generated content",
+        "d": "Pick a template and the products to feature; queue it, then generate it. Today's result is a preview only — your product's own existing photo, not yet a real composite. Real video/image composition and posting come in later PRs.",
+        "empty": "No render job queued yet.",
+        "addH": "Generate something",
+        "noTemplates": "Add a template above first.",
+        "template": "Template",
+        "products": "Products",
+        "productsPh": "Product id, product id, …",
+        "productsHelp": "Paste one or more product ids, separated by commas. A product picker is coming in a later refinement.",
+        "caption": "Caption (optional)",
+        "captionPh": "Your own words — nothing here writes this for you yet",
+        "queue": "Queue it",
+        "queued": "Queued",
+        "run": "Generate it",
+        "ran": "Generated",
+        "status": {
+          "QUEUED": "Waiting to generate",
+          "RUNNING": "Generating…",
+          "SUCCEEDED": "Preview ready",
+          "FAILED": "Could not generate",
+          "CANCELLED": "Cancelled"
+        },
+        "noPhoto": "None of this job's products has a live photo yet."
       }
     }
   }

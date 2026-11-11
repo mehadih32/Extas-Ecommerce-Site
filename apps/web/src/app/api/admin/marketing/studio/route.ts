@@ -1,5 +1,5 @@
-// S23 · PR 437, 438 — Marketing › Studio: GET the page (`studio.read`); POST an account/template/asset action
-// (`studio.write`) (lib/marketing/studio.ts).
+// S23 · PR 437–439 — Marketing › Studio: GET the page (`studio.read`); POST an account/template/asset action
+// (`studio.write`) or a render job action (`studio.generate`) (lib/marketing/studio.ts).
 import { adminDeps } from '@/lib/admin-auth';
 import { studioHandler } from '@/lib/marketing/studio';
 

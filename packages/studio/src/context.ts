@@ -1,7 +1,8 @@
 // S23 · PR 437 (Blueprint C5 · Social & content studio) — what the studio core gets: the database and the settings
 // (through the two-tier resolver, PR 492). Every staff action checks its permission in the store it touches (B6.5)
-// and scopes every row by `storeId` (A4.1). Nothing here posts to a real account, schedules a send or spends
-// anything; that is PR 439–442, each behind its own permission and the owner's settings.
+// and scopes every row by `storeId` (A4.1). Nothing here posts to a real account or spends anything; PR 439 only
+// assembles a render plan (its output is today's own existing product photos), and posting/scheduling is PR 440–442,
+// each behind its own permission and the owner's settings.
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { audit, can, requirePermission, type Actor, type PermissionKey, type RequestContext } from '@extas/auth';
 import type { Key, storeTarget, Value } from '@extas/settings';

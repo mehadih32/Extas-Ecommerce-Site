@@ -1,9 +1,11 @@
-// S23 · PR 437, 438 (Blueprint C5 · Social & content studio) — Marketing › Studio at /admin/marketing/studio: the
+// S23 · PR 437–439 (Blueprint C5 · Social & content studio) — Marketing › Studio at /admin/marketing/studio: the
 // social accounts (PR 437: add, rename, switch, approval, daily limit, archive/restore), the brand asset library
-// and the templates (PR 438: add, update, archive/restore). The video assembly engine, the publishing adapters, the
-// calendar/approval queue and the comment/DM ingestion (PR 439–443) join this page as they are built. Seeing needs
-// `studio.read`; changing needs `studio.write` (the API checks again). Hidden from the menu by
-// `stages.closedShown.S23` until the stage is finished (CN-036/CN-039), but this address works once you have it.
+// and the templates (PR 438: add, update, archive/restore), and render jobs (PR 439: queue a template + products,
+// generate a preview — see render.ts for the honest scope). The publishing adapters, the calendar/approval queue
+// and the comment/DM ingestion (PR 440–443) join this page as they are built. Seeing needs `studio.read`; managing
+// accounts/templates/assets needs `studio.write`; queueing/generating a render job needs `studio.generate` (the API
+// checks every permission again). Hidden from the menu by `stages.closedShown.S23` until the stage is finished
+// (CN-036/CN-039), but this address works once you have it.
 // lib/marketing/studio.ts. Guide: docs/admin-guide/pages/marketing/studio.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -11,7 +13,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { BRAND_ASSET_KINDS, STUDIO_PLATFORMS, TEMPLATE_ASPECT_RATIOS, TEMPLATE_KINDS } from '@extas/studio';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { altFor, ResponsiveImage } from '@/components/media/ResponsiveImage';
-import { StudioAccountForm, StudioAccountLimit, StudioAct, StudioAssetKind, StudioAssetUpload, StudioTemplateForm, type StudioFormTexts } from '@/components/admin/marketing/StudioForms';
+import { StudioAccountForm, StudioAccountLimit, StudioAct, StudioAssetKind, StudioAssetUpload, StudioRenderForm, StudioTemplateForm, type StudioFormTexts } from '@/components/admin/marketing/StudioForms';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -56,14 +58,16 @@ export default async function StudioPage() {
   const canWrite = access.guard.permissions?.has('studio.write') ?? false;
   // Uploading to the brand asset library also needs the Media library's own permission, re-checked by /api/admin/media.
   const canUploadMedia = access.guard.permissions?.has('media.upload') ?? false;
+  const canGenerate = access.guard.permissions?.has('studio.generate') ?? false;
   const g = (k: string, vars?: Record<string, string | number>) => t(d, `studio.hub.${k}`, vars);
-  const errKeys = ['INVALID_INPUT', 'NOT_FOUND', 'STALE', 'ALREADY_ADDED', 'TEMPLATE_ARCHIVED', 'TOO_LARGE', 'NOT_AN_IMAGE', 'TYPE_NOT_ALLOWED', 'STILL_IN_USE', 'forbidden', 'unauthorized', 'network', 'other'];
+  const errKeys = ['INVALID_INPUT', 'NOT_FOUND', 'STALE', 'ALREADY_ADDED', 'TEMPLATE_ARCHIVED', 'NO_PRODUCTS', 'WRONG_STATE', 'TOO_LARGE', 'NOT_AN_IMAGE', 'TYPE_NOT_ALLOWED', 'STILL_IN_USE', 'forbidden', 'unauthorized', 'network', 'other'];
   const err = Object.fromEntries(errKeys.map((k) => [k, g(`err.${k}`)]));
-  const texts: StudioFormTexts = { err, fields: Object.fromEntries(['platform', 'externalId', 'name', 'kind', 'dailyLimit', 'spec', 'assetId'].map((k) => [k, g(`f.${k}`)])) };
+  const texts: StudioFormTexts = { err, fields: Object.fromEntries(['platform', 'externalId', 'name', 'kind', 'dailyLimit', 'spec', 'assetId', 'templateId', 'productIds', 'caption'].map((k) => [k, g(`f.${k}`)])) };
   const platforms = STUDIO_PLATFORMS.map((p) => ({ id: p, label: g(`platforms.${p}`) }));
   const kinds = TEMPLATE_KINDS.map((k) => ({ id: k, label: g(`templateKinds.${k}`) }));
   const assetKinds = BRAND_ASSET_KINDS.map((k) => ({ id: k, label: g(`assetKinds.${k}`) }));
   const liveAccounts = o.accounts.filter((a) => !a.archived);
+  const liveTemplates = o.templates.filter((tp) => !tp.archived).map((tp) => ({ id: tp.id, label: `${tp.name} (${g(`templateKinds.${tp.kind}`)})` }));
 
   return (
     <div className="a2-z" data-testid="studio-page" data-lm-ready="">
@@ -194,6 +198,61 @@ export default async function StudioPage() {
           <details className="a2-mt12 a2-more-opts" data-testid="st-add-asset" open={!o.assets.length}>
             <summary className="a2-sm a2-b">{g('assets.addH')}</summary>
             <StudioAssetUpload texts={texts} kinds={assetKinds} canUpload={canUploadMedia} w={{ file: g('assets.file'), kind: g('f.kind'), add: g('assets.add'), added: g('assets.added'), needMedia: g('assets.needMedia') }} />
+          </details>
+        ) : null}
+      </section>
+
+      <section className="a2-sc a2-mt12" aria-labelledby="st-rnd-h" data-testid="st-renders">
+        <h2 className="a2-h3" id="st-rnd-h">
+          {g('renders.h')}
+        </h2>
+        <p className="a2-sm a2-mute">{g('renders.d')}</p>
+        {o.renders.length ? (
+          <ul className="adp-rules">
+            {o.renders.map((r) => {
+              const img = r.outputAssetId ? o.images[r.outputAssetId] : undefined;
+              return (
+                <li key={r.id} className="adp-rule" data-testid="st-render">
+                  {img ? (
+                    <span style={{ display: 'inline-block', width: 72 }}>
+                      <ResponsiveImage image={img} slot="thumb" sizes="72px" alt={altFor(img, view.lang, r.caption ?? '')} />
+                    </span>
+                  ) : null}
+                  <p className="a2-sm adp-sub">
+                    {r.kind ? g(`templateKinds.${r.kind}`) : r.id} <span className={`a2-pill ${r.status === 'SUCCEEDED' ? 'ok' : r.status === 'FAILED' ? 'warn' : 'line'}`}>{g(`renders.status.${r.status}`)}</span>
+                  </p>
+                  {r.caption ? <p className="a2-sm a2-mute">{r.caption}</p> : null}
+                  {r.status === 'FAILED' ? <p className="a2-sm a2-mute">{g('renders.noPhoto')}</p> : null}
+                  {canGenerate && r.status === 'QUEUED' ? (
+                    <span className="a2-gap8 yt-mt8">
+                      <StudioAct texts={texts} body={{ action: 'render.run', id: r.id }} label={g('renders.run')} testId="st-render-run" done={g('renders.ran')} />
+                    </span>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="a2-sm a2-mute yt-mt8">{g('renders.empty')}</p>
+        )}
+        {canGenerate ? (
+          <details className="a2-mt12 a2-more-opts" data-testid="st-add-render" open={!o.renders.length}>
+            <summary className="a2-sm a2-b">{g('renders.addH')}</summary>
+            <StudioRenderForm
+              texts={texts}
+              templates={liveTemplates}
+              w={{
+                template: g('f.templateId'),
+                noTemplates: g('renders.noTemplates'),
+                products: g('f.productIds'),
+                productsPh: g('renders.productsPh'),
+                productsHelp: g('renders.productsHelp'),
+                caption: g('f.caption'),
+                captionPh: g('renders.captionPh'),
+                queue: g('renders.queue'),
+                queued: g('renders.queued'),
+              }}
+            />
           </details>
         ) : null}
       </section>

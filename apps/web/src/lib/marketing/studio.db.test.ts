@@ -1,7 +1,8 @@
-// S23 · PR 437, 438 — Marketing › Studio on a real PostgreSQL: the whole page (accounts, templates, brand assets);
-// seeing needs `studio.read`, changing needs `studio.write`; a brand asset's archive/restore also needs
-// `media.manage`, uploading one needs `media.upload` (checked by the shared `/api/admin/media`, not exercised
-// here). A throwaway database (skipped without TEST_DATABASE_ADMIN_URL). Sample values only.
+// S23 · PR 437–439 — Marketing › Studio on a real PostgreSQL: the whole page (accounts, templates, brand assets,
+// render jobs); seeing needs `studio.read`, changing accounts/templates/assets needs `studio.write`, queueing or
+// running a render job needs `studio.generate`; a brand asset's archive/restore also needs `media.manage`,
+// uploading one needs `media.upload` (checked by the shared `/api/admin/media`, not exercised here). A throwaway
+// database (skipped without TEST_DATABASE_ADMIN_URL). Sample values only.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -66,17 +67,17 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Studio on PostgreSQL (PR 437, 438)'
       // Must not contain the account's own email local part (policy issue "contains-email", password.ts).
       return cookiesOf(await passwordHandler(req('POST', { path: '/api/admin/auth/password', cookie: once, body: { current: 'first password from the owner', next: 'a sentence this account alone chose as its own' } }), admin));
     };
-    writer = await makeStaff('w438', ['studio.read', 'studio.write', 'media.manage']);
+    writer = await makeStaff('w438', ['studio.read', 'studio.write', 'studio.generate', 'media.manage']);
     reader = await makeStaff('r438', ['studio.read']);
   });
   afterAll(async () => {
     await t?.drop();
   });
 
-  it('GET answers accounts, templates and brand assets together; a reader cannot write', async () => {
+  it('GET answers accounts, templates, brand assets and render jobs together; a reader cannot write', async () => {
     const g = await api('GET', undefined, reader);
     expect(g.status).toBe(200);
-    expect(g.a).toMatchObject({ ok: true, accounts: [], templates: [], assets: [], canWrite: false });
+    expect(g.a).toMatchObject({ ok: true, accounts: [], templates: [], assets: [], renders: [], canWrite: false });
     const denied = await api('POST', { action: 'account.add', platform: 'facebook', externalId: 'p-1', name: 'Page' }, reader);
     expect(denied.status).toBe(403);
   });
@@ -112,5 +113,29 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Studio on PostgreSQL (PR 437, 438)'
     expect(bad.status).toBe(400);
     const empty = await api('POST', { action: 'account.add', platform: 'facebook', externalId: '', name: '' }, writer);
     expect(empty.status).toBe(400);
+  });
+
+  it('queues and runs a render job through the page’s own API; a reader cannot generate', async () => {
+    const tpl = await api('POST', { action: 'template.add', kind: 'image', name: 'Square poster', spec: { aspectRatio: '1:1', brandAssetIds: [] } }, writer);
+    const templateId = (tpl.a as { id: string }).id;
+    const product = await t.prisma.product.create({ data: { storeId: S, slug: 'studio-render-1', nameEn: 'Studio Render Tee' } });
+    const asset = await t.prisma.mediaAsset.create({ data: { storeId: S, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: `products/${S}/studio-render-1.jpg`, mimeType: 'image/jpeg', bytes: 400n, checksumSha256: 'srend'.padEnd(64, '0'), isOriginal: true } });
+    await t.prisma.productMedia.create({ data: { storeId: S, productId: product.id, assetId: asset.id, role: 'FRONT', isPrimary: true } });
+
+    const deniedQueue = await api('POST', { action: 'render.queue', templateId, productIds: [product.id] }, reader);
+    expect(deniedQueue.status).toBe(403);
+
+    const queued = await api('POST', { action: 'render.queue', templateId, productIds: [product.id], caption: 'Studio render' }, writer);
+    expect(queued.status).toBe(200);
+    expect(queued.a).toMatchObject({ ok: true, status: 'QUEUED', kind: 'image' });
+    const jobId = (queued.a as { id: string }).id;
+
+    const ran = await api('POST', { action: 'render.run', id: jobId }, writer);
+    expect(ran.status).toBe(200);
+    expect(ran.a).toMatchObject({ ok: true, status: 'SUCCEEDED', outputAssetId: asset.id });
+
+    const g = await api('GET', undefined, writer);
+    expect((g.a.renders as { id: string }[]).some((r) => r.id === jobId)).toBe(true);
+    expect(g.a.images as Record<string, unknown>).toHaveProperty(asset.id);
   });
 });
