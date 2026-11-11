@@ -79,6 +79,13 @@ describe('closed stages hidden by a switch (PR 652)', () => {
     expect(closedStageOfPart('ai')).toBe('S15');
     expect(closedStageOfPart('assistant')).toBe('S15');
     expect(closedStageOfPart('orders')).toBeNull();
-    for (const s of CLOSED_STAGES) for (const id of [...CLOSED_STAGE_PARTS[s].sections, ...CLOSED_STAGE_PARTS[s].tabs]) expect(closedStageOfPart(id)).toBe(s);
+    // A part shared by two stages (the Studio tab under Marketing, built by S23's PR 437/438 and extended by
+    // S25's PR 481) resolves to whichever stage CLOSED_STAGES lists first — the function names one reason, not
+    // every one — so the loop checks the first-matching stage instead of assuming each id is one stage's alone.
+    for (const s of CLOSED_STAGES)
+      for (const id of [...CLOSED_STAGE_PARTS[s].sections, ...CLOSED_STAGE_PARTS[s].tabs]) {
+        const first = CLOSED_STAGES.find((o) => CLOSED_STAGE_PARTS[o].sections.includes(id) || CLOSED_STAGE_PARTS[o].tabs.includes(id));
+        expect(closedStageOfPart(id)).toBe(first);
+      }
   });
 });

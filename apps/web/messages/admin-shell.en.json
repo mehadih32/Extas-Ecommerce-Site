@@ -55,8 +55,7 @@
         "calendar": "Calendar",
         "report": "Report",
         "geoGuide": "Where to advertise",
-        "merchantFeed": "Merchant feed",
-        "studio": "Studio"
+        "merchantFeed": "Merchant feed"
       },
       "reports": {
         "health": "Site health",
