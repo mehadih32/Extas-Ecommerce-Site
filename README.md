@@ -3648,7 +3648,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #98 | PR [437](docs/stages/S23.md#pr-437) | 11 Nov | S23 reopened (CN-039): the social & content studio's core — social accounts (add/rename/switch/daily-limit/archive, never deleted, always off and needing approval), package `@extas/studio`, settings registry v281. |
+| #103 | PR [437](docs/stages/S23.md#pr-437) | 11 Nov | S23 reopened (CN-039): the social & content studio's core — social accounts (add/rename/switch/daily-limit/archive, never deleted, always off and needing approval), package `@extas/studio`, settings registry v281. |
 | #97 | PR [505](docs/stages/S14.md#pr-505) | 7 Nov | CN-037 go-live MUST fix: the messages journey page's channel-mode pills wrap inside 320 px and the "Also by e-mail" tick is a full 44 px tap box. |
 | #97 | PR [626](docs/stages/S00.md#pr-626) | 7 Nov | CN-037 go-live MUST fix: the admin phone bottom bar is a sealed box that clips what it holds, so a waiting badge never runs it past a 320 px phone. |
 | #97 | PR [616](docs/stages/S16.md#pr-616) | 7 Nov | Follow-up: a month closes with its returned pieces not checked yet listed as waiting. |
