@@ -13,3 +13,4 @@ export * from './jobs';
 export * from './spendCap';
 export * from './outputs';
 export * from './detailRegions';
+export * from './finishing';
