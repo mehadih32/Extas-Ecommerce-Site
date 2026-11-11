@@ -11,7 +11,10 @@
 //   the round assistant button (not built yet: `assistant`, read by the shell when it is built);
 // - S17: only the launch slice PR 362 is built (the Cloudflare cache rule and extra host names, server side, in use by
 //   the live shop): no page to hide;
-// - S23, S24, S25, S26, S27: nothing built.
+// - S23 (CN-039, reopened 11 Nov 2026): the Studio tab under Marketing (`marketing.studio`, PR 437, 438: accounts,
+//   the brand asset library and templates) and its pages as PR 439–443 add them. The whole tab stays hidden until
+//   the stage is finished and gated (`stages.closedShown.S23`).
+// - S24, S25, S26, S27: nothing built.
 import type { AdminDeps } from '../admin-auth';
 import { CLOSED_STAGES, CLOSED_STAGES_SHOWN_DEFAULT, type ClosedStage, type ClosedStagesShown } from '@extas/settings';
 
@@ -31,7 +34,7 @@ const NONE: StageParts = { sections: [], tabs: [], widgets: [], shop: [] };
 export const CLOSED_STAGE_PARTS: Readonly<Record<ClosedStage, StageParts>> = {
   S15: { ...NONE, sections: ['ai'], widgets: ['assistant'] },
   S17: NONE,
-  S23: NONE,
+  S23: { ...NONE, tabs: ['marketing.studio'] },
   S24: NONE,
   S25: NONE,
   S26: NONE,

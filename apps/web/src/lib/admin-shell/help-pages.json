@@ -72,6 +72,7 @@
     { "id": "marketing/ad-growth", "route": "/admin/marketing/ad-platforms/growth" },
     { "id": "marketing/ad-briefs", "route": "/admin/marketing/ad-platforms/briefs" },
     { "id": "marketing/ad-campaigns", "route": "/admin/marketing/ad-platforms/campaigns" },
+    { "id": "marketing/studio", "route": "/admin/marketing/studio" },
     { "id": "marketing/referrals", "route": "/admin/marketing/referrals" },
     { "id": "marketing/youtube", "route": "/admin/marketing/youtube" },
     { "id": "marketing/outreach", "route": "/admin/marketing/outreach" },
