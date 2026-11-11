@@ -666,6 +666,13 @@ jobs:
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: pnpm --filter @extas/studio test
+      # S24 · PR 444 — the photoshoot studio's asset-model guarantee: an original can be role-tagged (front/back/
+      # detail/…) but no other field of it ever changes; a generated image is always its own row, pointing back at a
+      # real photo, never at another generated one; reader-vs-writer-vs-generate permission checks. Throwaway database.
+      - name: Photoshoot studio tests on PostgreSQL (S24 · PR 444)
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+        run: pnpm --filter @extas/photoshoot test
       # S06 · PR 549–553, 555 — the delivery-zone engine: the gazetteer importer (re-runs change nothing, nothing is
       # deleted), the band map, the resolver, the autocomplete, the charge accuracy suite and phone-first recognition.
       - name: Delivery-zone engine on PostgreSQL (S06 · PR 549–553, 555)
