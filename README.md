@@ -3635,7 +3635,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #103 | PR [304](docs/stages/S15.md#pr-304) | 11 Nov | S15 reopened (CN-039): AI 360 home screen — the seven fixed agents, master-switch-aware status, cost from `AiUsageLedger`, last activity from `AiDiaryEntry`, a pause/resume switch (`ai.control`, audited). AI › Control room (`/admin/ai`), hidden behind `stages.closedShown` until the stage finishes. |
+| #104 | PR [304](docs/stages/S15.md#pr-304) | 11 Nov | S15 reopened (CN-039): AI 360 home screen — the seven fixed agents, master-switch-aware status, cost from `AiUsageLedger`, last activity from `AiDiaryEntry`, a pause/resume switch (`ai.control`, audited). AI › Control room (`/admin/ai`), hidden behind `stages.closedShown` until the stage finishes. |
 | #97 | PR [505](docs/stages/S14.md#pr-505) | 7 Nov | CN-037 go-live MUST fix: the messages journey page's channel-mode pills wrap inside 320 px and the "Also by e-mail" tick is a full 44 px tap box. |
 | #97 | PR [626](docs/stages/S00.md#pr-626) | 7 Nov | CN-037 go-live MUST fix: the admin phone bottom bar is a sealed box that clips what it holds, so a waiting badge never runs it past a 320 px phone. |
 | #97 | PR [616](docs/stages/S16.md#pr-616) | 7 Nov | Follow-up: a month closes with its returned pieces not checked yet listed as waiting. |
