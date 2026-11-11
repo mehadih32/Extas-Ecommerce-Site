@@ -77,5 +77,11 @@
       "label": "Creative briefs for ads",
       "help": "Off as it ships. On, Marketing › Ad platforms › Creative briefs writes a brief for the studio from a product and, if you pick one, a platform campaign: the offer, the formats, a hook in Bengali and English, what the picture shows, the landing page and what the ads optimise for. You correct the words and send it to the studio. A brief never changes a price, a budget or a campaign."
     }
+  },
+  "studio": {
+    "video": {
+      "label": "Image-to-video clips (Studio)",
+      "help": "Off as it ships. On, Marketing › Studio › Videos can turn an already-approved product still into a short clip. Nothing is generated unless you turn this on. The cost per second is 0 (not set) until you type your own rate here — until then a clip's cost shows as \"not set\" rather than a guessed number."
+    }
   }
 }
