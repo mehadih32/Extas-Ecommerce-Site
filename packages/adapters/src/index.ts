@@ -61,6 +61,9 @@ export * from './search-console';
 // provider is connected. S15 · PR 306 — the live providers (Anthropic, OpenAI, Google, OpenRouter), one key + one
 // model id each, each a row in Keys & connections (see ai-writer/index.ts).
 export * from './ai-writer';
+// S25 · PR 482 (Blueprint C7.17, C8.1) — the image-to-video provider: the honest-preview mock until a real video
+// provider is connected (not in `allAdapters` until then, same as the AI writer above before its own PR 306).
+export * from './video';
 // S13 · PR 257 — the ad platforms' server event APIs (Meta Conversions API, Google Analytics 4, TikTok Events API):
 // mocks until their keys are in and their tests pass.
 export * from './ads';
