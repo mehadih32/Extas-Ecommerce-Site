@@ -478,6 +478,26 @@
         "baseUrl": "Address — only for a test server"
       }
     },
+    "facebookPagePublish": {
+      "name": "Facebook Page posting (Studio)",
+      "desc": "Lets the content studio post straight to the Page's feed. Mock until the keys are in and the test (reading the Page) passes: nothing is posted before that. Today's posts are always a single photo (the studio's real video assembler is a later PR).",
+      "fields": {
+        "pageAccessToken": "Page access token (Meta app → Messenger → API settings; a long-lived Page token)",
+        "pageId": "Page ID (the Page → About → Page transparency, or Meta app → Messenger)",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
+    "instagramPublish": {
+      "name": "Instagram posting (Studio)",
+      "desc": "Lets the content studio post to the linked Instagram Business account's feed. Mock until the keys are in and the test (reading the account) passes: nothing is posted before that. Today's posts are always a single photo (the studio's real video assembler is a later PR).",
+      "fields": {
+        "pageAccessToken": "Page access token (the same Page token as Facebook Page posting, above)",
+        "igUserId": "Instagram Business Account ID (Meta app → the linked Page → Instagram accounts)",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
     "googleSearchConsole": {
       "name": "Google Search Console",
       "desc": "Lists the shop's properties and hands Google the sitemap (Website → SEO). Until the key is in and the test passes, nothing is sent",
