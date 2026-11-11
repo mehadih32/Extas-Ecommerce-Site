@@ -9,10 +9,14 @@
 // S15 · PR 307 — the same POST also takes {key, provider: string | null} (one agent's model pick; `null` is the
 // practice writer), `ai.control`, audited, refused (422 PROVIDER_NOT_READY) for a connection that is not keyed and
 // Tested yet.
+//
+// S15 · PR 308 — the same POST also takes {key, schedule: {mode, time?, days?} | null} (one agent's own schedule;
+// `null` resets to "always"), `ai.control`, audited, refused (422 INVALID_SCHEDULE) for a bad shape.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { controlRoomView, isAiError, setAgentEnabled, setAgentKeepOn, setMasterEnabled } from './control-room';
 import { setAgentModelProvider } from './model-picks';
+import { setAgentSchedule } from './schedule';
 
 export async function controlRoomHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
   const method = request.method.toUpperCase();
@@ -42,6 +46,12 @@ export async function controlRoomHandler(request: Request, deps: AdminDeps | nul
       if (!key) return json({ ok: false, error: 'INVALID_INPUT', details: ['key'] }, { status: 400 });
       if (input.provider !== null && typeof input.provider !== 'string') return json({ ok: false, error: 'INVALID_INPUT', details: ['provider'] }, { status: 400 });
       await setAgentModelProvider(d, who, key, input.provider);
+      return withScreen();
+    }
+
+    if (input.schedule !== undefined) {
+      if (!key) return json({ ok: false, error: 'INVALID_INPUT', details: ['key'] }, { status: 400 });
+      await setAgentSchedule(d, who, key, input.schedule);
       return withScreen();
     }
 

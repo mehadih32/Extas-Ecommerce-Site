@@ -15,6 +15,12 @@
 // S15 · PR 307 (C1.5) — each agent's own model pick, from `./model-picks.ts`: `modelOptions`/`recommendedProvider`
 // on the screen (the same four PR 306 connections for every agent) and `selectedProvider`/`selectedReady` per
 // agent, so the page never needs a second fetch to show the picker, the "Recommended" badge or the fallback note.
+//
+// S15 · PR 308 (C1.6) — each agent's own schedule, from `./schedule.ts`: `schedule` (always/daily/weekly,
+// `AiAgent.schedule`, `null` read as "always") and `nextRunAt` (the next moment a time-based schedule fires, in the
+// store's own time zone — `null` for "always", since there is no time-based run to preview). No job runner reads
+// this yet; it is a preview only, the same honest-but-inert shape PR 305's pause switch and PR 307's model pick had
+// before any AI key existed.
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { dayStart, ymdIn } from '@extas/metrics';
@@ -23,6 +29,7 @@ import type { AppResolver } from '../settings';
 import { AI_AGENTS, isAiAgentKey, type AiAgentKey } from './agents';
 import { AiError, isAiError } from './errors';
 import { listWriterOptions, recommendedWriterOf, isWriterProvider, type WriterOption, type WriterProvider } from './model-picks';
+import { nextRunAt, normalizeStoredSchedule, type AgentSchedule } from './schedule';
 
 export { AiError, isAiError };
 
@@ -52,6 +59,11 @@ export interface ControlRoomAgent {
   /** False when `selectedProvider` is set but that connection is no longer keyed and Tested — quietly on the
    * practice writer until the owner re-Tests it or picks again. */
   selectedReady: boolean;
+  /** The owner's own schedule (PR 308); `null` stored is read as "always". */
+  schedule: AgentSchedule;
+  /** The next moment a `daily`/`weekly` schedule fires, ISO, in no particular time zone of its own (compute the
+   * display in the store's); `null` for "always" — there is nothing time-based to preview. */
+  nextRunAt: string | null;
 }
 
 export interface ControlRoomView {
@@ -121,6 +133,8 @@ export async function controlRoomView(deps: ControlRoomDeps, storeId: number): P
   const agents: ControlRoomAgent[] = rows.filter((r): r is typeof r & { key: AiAgentKey } => isAiAgentKey(r.key)).map((r) => {
     const selectedProvider: WriterProvider | null = r.selectedProvider && isWriterProvider(r.selectedProvider) ? r.selectedProvider : null;
     const selectedOpt = modelOptions.find((o) => o.provider === selectedProvider);
+    const schedule = normalizeStoredSchedule(r.schedule);
+    const nextRun = nextRunAt(schedule, now, timeZone);
     return {
       key: r.key,
       nameEn: r.nameEn,
@@ -136,6 +150,8 @@ export async function controlRoomView(deps: ControlRoomDeps, storeId: number): P
       monthMinor: monthMap.get(r.id) ?? 0,
       selectedProvider,
       selectedReady: Boolean(selectedProvider === null || selectedOpt?.ready),
+      schedule,
+      nextRunAt: nextRun ? nextRun.toISOString() : null,
     };
   });
   const todayMinor = agents.reduce((s, a) => s + a.todayMinor, 0);

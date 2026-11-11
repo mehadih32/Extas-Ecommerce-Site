@@ -107,3 +107,31 @@
 .adm2 .ai-model-note {
   overflow-wrap: anywhere;
 }
+/* S15 · PR 308 — one agent's schedule row. Same instinct as PR 307: the shared .a2-sel/.a2-btn sizing is reused
+   as is, never shrunk by a component-level override (PR 305's device-gate bug, again). */
+.adm2 .ai-sched-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.adm2 .ai-sched {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.adm2 .ai-schedmode,
+.adm2 .ai-schedtime {
+  max-width: 100%;
+}
+.adm2 .ai-schedddays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.adm2 .ai-schedday {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}

@@ -14,6 +14,11 @@
 // marks Claude's own pick (the first ready provider, Anthropic first); the note beside the select always explains
 // the effect — matches the recommendation, or honestly says cost/quality comparisons wait for the AI Cost Book
 // (PR 312) — never a number this page has not actually measured.
+//
+// S15 · PR 308 (C1.6) — each card also carries its own schedule (ScheduleEditor, `AiAgent.schedule`): always (the
+// default — no time restriction) or a daily/weekly clock time, with a plain preview of when it would next fire.
+// Nothing runs on it yet (no job runner reads a schedule); it is honestly a preview, same as a pause switch or a
+// model pick before any AI key existed.
 // Guide: docs/admin-guide/pages/ai/control.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -23,6 +28,7 @@ import { AgentSwitch } from '@/components/admin/ai/AgentSwitch';
 import { KeepOnSwitch } from '@/components/admin/ai/KeepOnSwitch';
 import { MasterSwitch } from '@/components/admin/ai/MasterSwitch';
 import { ModelPickSelect, type ModelPickOption } from '@/components/admin/ai/ModelPickSelect';
+import { ScheduleEditor, type ScheduleDraft } from '@/components/admin/ai/ScheduleEditor';
 import type { CountFormat } from '@/lib/admin-lumen/model';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -99,6 +105,18 @@ export default async function AiControlRoomPage() {
     if (a.selectedProvider !== null && !a.selectedReady) return c('agents.model.noteFallback', { provider: providerLabel(a.selectedProvider), name });
     return a.selectedProvider === o.recommendedProvider ? c('agents.model.noteSame') : c('agents.model.noteChanged');
   };
+
+  // S15 · PR 308 — the schedule's own plain-text line (always / daily / weekly) and, separately, the next-run
+  // preview; both honest, never claiming a job runner that does not exist yet.
+  const dayLabels = [0, 1, 2, 3, 4, 5, 6].map((i) => c(`agents.schedule.days.${i}`));
+  const modeLabels = { always: c('agents.schedule.mode.always'), daily: c('agents.schedule.mode.daily'), weekly: c('agents.schedule.mode.weekly') };
+  const scheduleTextOf = (s: (typeof agents)[number]['schedule']) => {
+    if (s.mode === 'always') return c('agents.schedule.always');
+    if (s.mode === 'daily') return c('agents.schedule.daily', { time: s.time ?? '' });
+    const days = (s.days ?? []).map((d) => dayLabels[d]).join(', ');
+    return c('agents.schedule.weekly', { days, time: s.time ?? '' });
+  };
+  const scheduleDraftOf = (s: (typeof agents)[number]['schedule']): ScheduleDraft => ({ mode: s.mode, time: s.time, days: s.days });
 
   return (
     <div className="a2-z ai-page" data-testid="ai-control" data-lm-ready="">
@@ -193,6 +211,27 @@ export default async function AiControlRoomPage() {
                   )}
                   {a.selectedProvider === o.recommendedProvider ? <span className="a2-pill line">{c('agents.model.recommendedBadge')}</span> : null}
                   <span className="a2-xs a2-mute ai-model-note">{modelNoteOf(a, name)}</span>
+                </div>
+                <div className="ai-sched-wrap" data-testid={`ai-agent-schedule-row-${a.key}`}>
+                  <span className="a2-xs a2-mute">{c('agents.schedule.label')}</span>
+                  {canControl ? (
+                    <ScheduleEditor
+                      agentKey={a.key}
+                      value={scheduleDraftOf(a.schedule)}
+                      dayLabels={dayLabels}
+                      modeLabels={modeLabels}
+                      selectLabel={c('agents.schedule.selectLabel', { name })}
+                      timeLabel={c('agents.schedule.timeLabel', { name })}
+                      daysLabel={c('agents.schedule.daysLabel', { name })}
+                      saveLabel={c('agents.schedule.saveLabel')}
+                      savedText={c('agents.schedule.toastChanged', { name })}
+                      failedText={c('agents.schedule.toastFailed', { name })}
+                      invalidText={c('agents.schedule.toastInvalid')}
+                    />
+                  ) : (
+                    <span className="a2-xs">{scheduleTextOf(a.schedule)}</span>
+                  )}
+                  <span className="a2-xs a2-mute">{a.nextRunAt ? c('agents.schedule.nextRun', { when: dateTime(a.nextRunAt, view.locale, view.timeZone) }) : c('agents.schedule.nextRunNone')}</span>
                 </div>
               </article>
             );
