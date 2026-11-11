@@ -2,5 +2,5 @@
 
 **সারকথা:** ডেমো ERP-এর চাবির অপেক্ষায়। মালিক সেটিংস → ERP সংযোগ পাতায় ডেমো দোকানের চাবি দিলে প্রতি রাতে আর প্রতিটা রিলিজের আগে এই পরীক্ষা চলবে।
 
-- 2026-11-11T10:54:22.156Z: waiting for the demo key. Nothing was called; nothing failed.
+- 2026-11-11T12:22:50.113Z: waiting for the demo key. Nothing was called; nothing failed.
 - The practice ERP runs every check in CI (packages/adapters/test/erp-acceptance.test.ts, the books drills).
