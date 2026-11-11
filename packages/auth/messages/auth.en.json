@@ -370,6 +370,13 @@
       "approve": "Approve or reject a post waiting in the studio's approval queue",
       "publish": "Let a post go out on its own, with no approval wait, where its platform and account both allow it"
     },
+    "photoshoot": {
+      "read": "See the Virtual Photoshoot Studio: the model library, reference tags, shot plans, generation jobs and the review queue",
+      "write": "Manage the model library, tag an uploaded photo's reference role, and edit a shot plan",
+      "generate": "Run a generation job (spends from the AI usage ledger within its cap)",
+      "approve": "Approve, reject or ask for a regenerate in the review queue — mandatory before anything publishes",
+      "publish": "Publish an approved image to the product gallery"
+    },
     "ai": {
       "read": "See the AI Center: every agent, what it did last and what it cost (no customer's details beyond what the agent itself worked on)",
       "control": "Pause or resume one AI agent, and its switches, monthly cap and schedule — never money, refunds, prices, COD, ad budgets, blocking or deleting on its own"

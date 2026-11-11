@@ -466,6 +466,21 @@ export const PERMISSIONS = {
   'studio.generate': { group: 'marketing' },
   'studio.approve': { group: 'marketing' },
   'studio.publish': { group: 'marketing' },
+  // S24 · PR 444 (Blueprint C7, Virtual Photoshoot Studio) — the model library, reference role tags, shot plans,
+  // generation jobs and the review queue: see them (`photoshoot.read`); manage the model library, tag an uploaded
+  // photo's reference role and edit a shot plan (`photoshoot.write`); run a generation job, which spends from the AI
+  // usage ledger within its cap (`photoshoot.generate`); approve, reject or ask for a regenerate in the review
+  // queue — mandatory before anything publishes, C7.6 (`photoshoot.approve`); publish an approved image to the
+  // product gallery (`photoshoot.publish`). None of these ever changes a price, stock level or an order.
+  //
+  // Carried forward into this branch by PR 451 (it combines the 444–448 and 449–450 lineages, which until now
+  // never shared a branch): PR 444 added these five keys only in its own line, never in PR 449/450's, since those
+  // two built straight off `main` for the unrelated adapters package and had no need of them.
+  'photoshoot.read': { group: 'marketing' },
+  'photoshoot.write': { group: 'marketing' },
+  'photoshoot.generate': { group: 'marketing' },
+  'photoshoot.approve': { group: 'marketing' },
+  'photoshoot.publish': { group: 'marketing' },
   // S15 · PR 304, 305 (C1.1, C1.2) — AI › Control room: see every agent, what it did last and its cost (`ai.read`);
   // pause or resume one agent, one tap (`ai.control`, reversible, audited). Turning AI on at all, and the agent's
   // monthly cap or schedule, stay inside `ai.control` too; moving money, refunds, prices, COD, ad budgets, blocking

@@ -138,9 +138,12 @@ import closedStagesEn from '../messages/closed-stages.en.json';
 // S23 · PR 437 (registry v281): the social studio's cadence, voice and AI-caption switches.
 import studioBn from '../messages/studio.bn.json';
 import studioEn from '../messages/studio.en.json';
-// S24 · PR 450 (registry v288): the photoshoot provider adapters' per-image rate.
+// S24 · PR 450 (registry v289): the photoshoot provider adapters' per-image rate.
 import photoshootCostBn from '../messages/photoshoot-cost.bn.json';
 import photoshootCostEn from '../messages/photoshoot-cost.en.json';
+// S24 · PR 447 (registry v288): the garment-prep/standardisation colour-drift tolerance.
+import photoshootBn from '../messages/photoshoot.bn.json';
+import photoshootEn from '../messages/photoshoot.en.json';
 import blogCommentsBn from '../messages/blog-comments.bn.json';
 import blogCommentsEn from '../messages/blog-comments.en.json';
 import blogImagesBn from '../messages/blog-images.bn.json';
@@ -442,9 +445,12 @@ messages.bn = mergeMessages(messages.bn, privacyCustomerBn);
 // S23 · PR 437 (registry v281): the studio's cadence, voice and AI-caption switches.
 messages.en = mergeMessages(messages.en, studioEn);
 messages.bn = mergeMessages(messages.bn, studioBn);
-// S24 · PR 450 (registry v288): the photoshoot provider adapters' per-image rate.
+// S24 · PR 450 (registry v289): the photoshoot provider adapters' per-image rate.
 messages.en = mergeMessages(messages.en, photoshootCostEn);
 messages.bn = mergeMessages(messages.bn, photoshootCostBn);
+// S24 · PR 447 (registry v288): the garment-prep/standardisation colour-drift tolerance.
+messages.en = mergeMessages(messages.en, photoshootEn);
+messages.bn = mergeMessages(messages.bn, photoshootBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

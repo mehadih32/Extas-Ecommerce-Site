@@ -9,7 +9,7 @@
 // variable. The client is created on first use, so importing this package never opens a connection.
 import { PrismaClient } from '@prisma/client';
 
-export { Prisma, PrismaClient } from '@prisma/client';
+export { Prisma, PrismaClient, StudioJobStatus } from '@prisma/client';
 export type { AdapterMode, IntegrationKind, StorageProvider } from '@prisma/client';
 
 const holder = globalThis as unknown as { __extasPrisma?: PrismaClient };

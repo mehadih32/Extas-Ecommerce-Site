@@ -5,10 +5,16 @@
 // (`photoshootEstimateFromRate`, @extas/adapters). The hard spend cap, the AI Cost Book rows and the Photoshoot
 // agent's monthly cap (C7.20) are a later PR (S24 item 16, the cost ledger) — this is only the rate its arithmetic
 // reads; nothing here spends, generates or caps anything by itself.
+//
+// Version note (PR 451, carrying PR 447 forward into the same branch): PR 450 was first filed at v288 from its own
+// branch's view of main; PR 444–448's own `registry-photoshoot.ts` (the garment-prep colour tolerance) independently
+// took v288 too, from ITS branch's view. Combining both still-open branches in this one PR, as the register's
+// "build cumulative, FIX lane resolves overlap at merge time" pattern expects, bumped this file to v289 so the two
+// never collide inside this branch; the FIX lane does the same renumbering (or picks one) when it actually merges.
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 288;
+const V = 289;
 
 const providerTierRateSchema = z
   .object({
