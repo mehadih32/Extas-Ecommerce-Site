@@ -416,11 +416,17 @@ export async function categoryData(
 ): Promise<CategoryData | undefined> {
   if (!process.env.DATABASE_URL) return newIn.slug === slug ? EMPTY_CATEGORY(null) : undefined;
   try {
-    // PR 602: kept by the server for `cache.pages.categoryMinutes`; any product on it, or any category change, clears it
-    return await withTimeout(
+    // PR 602: kept by the server for `cache.pages.categoryMinutes`; any product on it, or any category change, clears it.
+    // PR 489 (follow-up): the overlay baked into that cached snapshot is stale for up to categoryMinutes, unlike the PDP
+    // (product.ts's `overlay is read fresh every time`) — re-applied here, on every read, the same way cachedStock's
+    // value is laid fresh over the PDP's cached variants, so turning an overlay on/off shows at once on category pages too.
+    const data = await withTimeout(
       cachedCategoryPage(storeId, `${slug}:${JSON.stringify(newIn)}`, () => readCategory(storeId, slug, newIn, now)),
       settingsTimeoutMs() * 3,
     );
+    if (!data || !data.cards.length) return data;
+    const overlays = await liveCampaignOverlays(storeId);
+    return { ...data, cards: data.cards.map((c) => ({ ...c, overlay: activeOverlayFor(overlays, { slug: c.slug, categorySlug: c.categorySlug }) })) };
   } catch (e) {
     console.warn(`shop: category page unavailable (${e instanceof Error ? e.message.split('\n')[0] : String(e)})`);
     return { ...EMPTY_CATEGORY(null), unavailable: true };
