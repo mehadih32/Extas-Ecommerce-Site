@@ -452,6 +452,29 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S24 · PR 449 (C7.17) — the Virtual Photoshoot Studio's own provider adapter, same shape as the couriers and the
+  // AI writer above: two providers behind one interface (several may be on at once), so the owner can switch on
+  // price or quality without a rebuild. Neither is the AI writer's own provider list (those stay text-only, C7.17).
+  {
+    id: 'fashn',
+    kind: 'AI_PROVIDER',
+    provider: 'fashn',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }],
+    config: [{ field: 'tier', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  {
+    id: 'fitroom',
+    kind: 'AI_PROVIDER',
+    provider: 'fitroom',
+    adapter: true,
+    secrets: [{ field: 'apiKey' }],
+    config: [{ field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
 ];
 
 export function findConnection(id: string): ConnectionDeclaration | undefined {
