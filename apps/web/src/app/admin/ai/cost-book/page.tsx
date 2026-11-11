@@ -8,6 +8,10 @@
 // shown only once 5 real runs exist, so a single stray run never reads as "the real cost". Cost is shown in the
 // store's own currency once the owner has typed a USD rate (Money › Costs & fees, PR 345/266); until then it is
 // shown honestly in USD, with a plain note why.
+// PR 314 adds two more C2.3 pieces: three one-click presets (Economy/Balanced/Premium, `ai.control`, one combined
+// audit entry) that set every job's own model at once, each card already showing its own hypothetical monthly
+// total and how many jobs would move to a smaller or larger model before it is applied; and a "what if" slider per
+// section that recomputes the monthly total live, entirely in the browser (`CostBookWhatIf`) — it saves nothing.
 // Guide: docs/admin-guide/pages/ai/cost-book.md.
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -17,7 +21,9 @@ import {
   CostBookModelSelect,
   type CostBookModelOption,
 } from "@/components/admin/ai/CostBookModelSelect";
+import { CostBookPresetButton } from "@/components/admin/ai/CostBookPresetButton";
 import { CostBookSearch } from "@/components/admin/ai/CostBookSearch";
+import { CostBookWhatIf } from "@/components/admin/ai/CostBookWhatIf";
 import { ShellIcon } from "@/components/admin/shell/ShellIcon";
 import {
   PageHead,
@@ -191,6 +197,51 @@ export default async function AiCostBookPage() {
         </div>
       </div>
 
+      <section
+        className="a2-sc a2-mt12 cb-presets"
+        aria-labelledby="cb-presets-h"
+        data-testid="cb-presets"
+      >
+        <h2 className="a2-h3" id="cb-presets-h">
+          {c("presets.title")}
+        </h2>
+        <div className="cb-presets-grid">
+          {o.presets.map((p) => {
+            const name = view.lang === "bn" ? p.nameBn : p.nameEn;
+            return (
+              <div
+                key={p.key}
+                className="a2-card cb-preset-card"
+                data-testid={`cb-preset-card-${p.key}`}
+              >
+                <div className="n">{name}</div>
+                <div className="cb-preset-total">
+                  {amount(p.totalPerMonthStoreMinor, p.totalPerMonthUsdMinor)}
+                  /mo
+                </div>
+                <div className="a2-xs a2-mute">
+                  {p.changedJobs > 0
+                    ? c("presets.changed", {
+                        n: num(p.changedJobs),
+                        smaller: num(p.movedToSmaller),
+                        larger: num(p.movedToLarger),
+                      })
+                    : c("presets.noChange")}
+                </div>
+                {canControl ? (
+                  <CostBookPresetButton
+                    preset={p.key}
+                    label={c("presets.apply", { preset: name })}
+                    changedText={c("presets.toastChanged", { preset: name })}
+                    failedText={c("presets.toastFailed")}
+                  />
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       <div className="a2-mt12">
         <CostBookSearch
           label={c("search.label")}
@@ -303,6 +354,21 @@ export default async function AiCostBookPage() {
           {c("search.none")}
         </p>
       </div>
+
+      <CostBookWhatIf
+        jobs={o.jobs.map((j) => ({
+          section: j.section,
+          perMonthUsdMinor: j.perMonthUsdMinor,
+          perMonthStoreMinor: j.perMonthStoreMinor,
+        }))}
+        sections={o.sections.map((s) => ({
+          id: s.id,
+          name: view.lang === "bn" ? s.nameBn : s.nameEn,
+        }))}
+        money={amount}
+        title={c("whatIf.title")}
+        resetText={c("whatIf.reset")}
+      />
 
       <section
         className="a2-sc a2-mt12 cb-top"

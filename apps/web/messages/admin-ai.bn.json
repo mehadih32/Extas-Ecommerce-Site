@@ -164,6 +164,18 @@
   "actualRuns": "{runs}টা সত্যিকার রান, প্রতি রানে {perRun}",
   "actualAbove": "অনুমানের চেয়ে {pct}% বেশি",
   "actualBelow": "অনুমানের চেয়ে {pct}% কম",
-  "actualSame": "অনুমানের সমান"
+  "actualSame": "অনুমানের সমান",
+  "presets": {
+    "title": "এক-চাপের প্রিসেট",
+    "apply": "{preset} বাছুন",
+    "changed": "{n}টা কাজের মডেল বদলাবে ({smaller}টা ছোট মডেলে, {larger}টা বড় মডেলে)",
+    "noChange": "সব কাজেই এখন এটাই বাছাই করা আছে।",
+    "toastChanged": "{preset} চালু হয়েছে",
+    "toastFailed": "প্রিসেট চালু করা গেল না"
+  },
+  "whatIf": {
+    "title": "যদি এমন হতো…",
+    "reset": "১×-তে ফিরিয়ে দিন"
+  }
   }
 }

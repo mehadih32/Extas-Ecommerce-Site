@@ -22,8 +22,16 @@
 // changes a model automatically. Shown only once `MIN_ACTUAL_SAMPLES` real runs exist, so a single stray run never
 // reads as "the real cost" — the ±10–15% band narrows only once enough of them do.
 //
-// Out of this PR's scope, each its own register PR: the what-if slider and Economy/Balanced/Premium presets (314),
-// the free-form cost calculator reachable from Telegram (316).
+// PR 314 (Blueprint C2.3's "what if" slider and one-click presets): `PRESET_KEYS`/`presetModelFor` pick Economy
+// (the cheapest same-kind model for each job), Balanced (Claude's own recommendation — unchanged) and Premium (the
+// costliest same-kind model), so Economy ≤ Balanced ≤ Premium for every job by construction. `costBookView` shows
+// each preset's own hypothetical monthly total and how many jobs would change (and in which direction — a tier
+// shift, since no quality score exists yet; that is PR 580) before the owner applies one; `applyPreset` then
+// writes every changed job's `selectedModelId` in one transaction, one combined audit entry. The slider itself
+// ("if I post 3 times a day instead of 1") is pure per-section arithmetic on numbers the page already has, so it
+// lives client-side only (`cost-book-whatif.ts`) — never a server round trip while it is being dragged.
+//
+// Out of this PR's scope, its own register PR: the free-form cost calculator reachable from Telegram (316).
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import type { PrismaClient } from '@extas/db/client';
 import { ymdIn } from '@extas/metrics';
@@ -316,6 +324,51 @@ export function actualOf(runs: number, totalCostUsdMicros: bigint, estimatePerRu
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// One-click presets (PR 314, Blueprint C2.3) — pure math; `applyPreset` below is the only DB-writing part.
+// ---------------------------------------------------------------------------------------------------------------
+
+export const PRESET_KEYS = ['economy', 'balanced', 'premium'] as const;
+export type PresetKey = (typeof PRESET_KEYS)[number];
+
+export const PRESET_NAMES: Record<PresetKey, { en: string; bn: string }> = {
+  economy: { en: 'Economy', bn: 'সাশ্রয়ী' },
+  balanced: { en: 'Balanced', bn: 'ভারসাম্যপূর্ণ' },
+  premium: { en: 'Premium', bn: 'প্রিমিয়াম' },
+};
+
+export function isPresetKey(value: string): value is PresetKey {
+  return (PRESET_KEYS as readonly string[]).includes(value);
+}
+
+/** Which model one preset picks for one job. Balanced keeps Claude's own per-job recommendation (already the
+ * tier-appropriate pick, C2.2); Economy is the cheapest model of the job's own kind; Premium is the costliest —
+ * so Economy ≤ Balanced ≤ Premium for every job, by construction, never by lowering a job below its own kind. */
+export function presetModelFor(job: JobCatalogEntry, preset: PresetKey): string {
+  if (preset === 'balanced') return job.recommendedModelKey;
+  const ranked = MODEL_CATALOG.filter((m) => m.kind === job.usage.kind)
+    .map((m) => ({ modelKey: m.modelKey, tier: m.tier, cost: estimateMicrosFor(job.usage, m) }))
+    .sort((a, b) => a.cost - b.cost);
+  const pick = preset === 'economy' ? ranked[0]! : ranked[ranked.length - 1]!;
+  return pick.modelKey;
+}
+
+const TIER_RANK: Record<ModelCatalogEntry['tier'], number> = { small: 0, mid: 1, large: 2 };
+
+export interface PresetSummary {
+  key: PresetKey;
+  nameEn: string;
+  nameBn: string;
+  totalPerMonthUsdMinor: number;
+  totalPerMonthStoreMinor: number | null;
+  /** How many of the 65 jobs would change model if this preset were applied now. */
+  changedJobs: number;
+  /** Of those changes, how many move to a cheaper/smaller tier model, and how many to a pricier/larger one — the
+   * honest stand-in for "what quality changes" (C2.3) until a measured quality score exists (PR 580). */
+  movedToSmaller: number;
+  movedToLarger: number;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // DB: seeding (idempotent, like `ensureAgentRows`) and the assembled screen.
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -422,6 +475,8 @@ export interface CostBookView {
   totalPerMonthStoreMinor: number | null;
   /** The ten priciest jobs by their monthly estimate (C2.3 — "always visible, because that is where savings are"). */
   topExpensive: CostBookJobRow[];
+  /** Economy / Balanced / Premium, each with its own hypothetical monthly total if applied now (PR 314, C2.3). */
+  presets: PresetSummary[];
 }
 
 /** Every job's real spend over `ACTUAL_WINDOW_DAYS`, by `AiUsageLedger.jobTypeKey` — one query for the whole book,
@@ -505,6 +560,29 @@ export async function costBookView(deps: CostBookDeps, storeId: number): Promise
   const totalPerMonthStoreMinor = hasUsdRate ? jobs.reduce((s, j) => s + (j.perMonthStoreMinor ?? 0), 0) : null;
   const topExpensive = [...jobs].sort((a, b) => b.perMonthUsdMinor - a.perMonthUsdMinor).slice(0, 10);
 
+  const jobByKey = new Map(jobs.map((j) => [j.key, j]));
+  const presets: PresetSummary[] = PRESET_KEYS.map((preset) => {
+    let totalMicros = 0;
+    let changedJobs = 0;
+    let movedToSmaller = 0;
+    let movedToLarger = 0;
+    for (const j of JOB_CATALOG) {
+      const targetKey = presetModelFor(j, preset);
+      const target = modelOf(targetKey);
+      totalMicros += monthlyMicrosFor(estimateMicrosFor(j.usage, target), j.typicalRunsPerDay);
+      const currentKey = jobByKey.get(j.key)?.selectedModelKey ?? j.recommendedModelKey;
+      if (currentKey === targetKey) continue;
+      changedJobs += 1;
+      const currentTier = TIER_RANK[modelOf(currentKey).tier];
+      const targetTier = TIER_RANK[target.tier];
+      if (targetTier < currentTier) movedToSmaller += 1;
+      else if (targetTier > currentTier) movedToLarger += 1;
+    }
+    const totalPerMonthUsdMinor = microsToUsdMinor(totalMicros);
+    const priced = pricer(totalPerMonthUsdMinor, 'USD', day);
+    return { key: preset, nameEn: PRESET_NAMES[preset].en, nameBn: PRESET_NAMES[preset].bn, totalPerMonthUsdMinor, totalPerMonthStoreMinor: priced?.storeMinor ?? null, changedJobs, movedToSmaller, movedToLarger };
+  });
+
   return {
     at: now.toISOString(),
     currency,
@@ -514,6 +592,7 @@ export async function costBookView(deps: CostBookDeps, storeId: number): Promise
     totalPerMonthUsdMinor,
     totalPerMonthStoreMinor,
     topExpensive,
+    presets,
   };
 }
 
@@ -535,6 +614,35 @@ export async function setJobSelectedModel(deps: Pick<CostBookDeps, 'db'>, who: {
     if (row.selectedModelId === target.id) return;
     await tx.aiJobType.update({ where: { key: jobKey }, data: { selectedModelId: modelKey === null ? null : target.id } });
     await audit(tx, who.actor, { action: 'ai.costBook.model', entityType: 'AiJobType', entityId: row.id, before: { selectedModelId: row.selectedModelId }, after: { selectedModelId: modelKey === null ? null : target.id } }, who.ctx ?? {});
+  });
+}
+
+/** Applies one preset to every job at once (Blueprint C2.3's one-click presets): writes each job whose target
+ * model differs from its current one, in a single transaction, and records one combined audit entry (never one
+ * per job) — a no-op audit-wise when nothing actually changes. */
+export async function applyPreset(deps: Pick<CostBookDeps, 'db'>, who: { actor: Actor; ctx?: RequestContext }, preset: PresetKey): Promise<{ changed: number }> {
+  if (!isPresetKey(preset)) throw new AiError(422, 'UNKNOWN_PRESET', ['preset']);
+  await ensureCostBookSeeded(deps.db);
+  return deps.db.$transaction(async (tx) => {
+    const models = await tx.aiModel.findMany({ where: { archivedAt: null } });
+    const modelIdByKey = new Map(models.map((m) => [m.modelKey, m.id]));
+    const rows = await tx.aiJobType.findMany({ where: { archivedAt: null } });
+    const rowByKey = new Map(rows.map((r) => [r.key, r]));
+    const before: Record<string, string | null> = {};
+    const after: Record<string, string | null> = {};
+    let changed = 0;
+    for (const j of JOB_CATALOG) {
+      const row = rowByKey.get(j.key);
+      if (!row) continue;
+      const targetId = modelIdByKey.get(presetModelFor(j, preset));
+      if (!targetId || row.selectedModelId === targetId) continue;
+      before[j.key] = row.selectedModelId;
+      after[j.key] = targetId;
+      await tx.aiJobType.update({ where: { key: j.key }, data: { selectedModelId: targetId } });
+      changed += 1;
+    }
+    if (changed > 0) await audit(tx, who.actor, { action: 'ai.costBook.presetApplied', entityType: 'AiModelPreset', entityId: preset, before, after }, who.ctx ?? {});
+    return { changed };
   });
 }
 
