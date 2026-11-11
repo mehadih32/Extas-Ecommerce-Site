@@ -1,19 +1,26 @@
-// S24 · PR 451 (Blueprint C7.5 step 7, C7.6) — job orchestration, part 1: the queue row itself, its state machine,
-// and request idempotency ("no double charging" — the DB's own `@@unique([storeId, idempotencyKey])` on
-// `PhotoshootJob` is the real guarantee; `computeIdempotencyKey` only derives the key a resend reproduces exactly).
+// S24 · PR 451, 452 (Blueprint C7.5 step 7, C7.6, C7.20) — job orchestration: the queue row itself, its state
+// machine, request idempotency ("no double charging" — the DB's own `@@unique([storeId, idempotencyKey])` on
+// `PhotoshootJob` is the real guarantee; `computeIdempotencyKey` only derives the key a resend reproduces exactly),
+// per-view retry with a new seed, concurrency limiting and the Photoshoot agent's monthly spend cap.
 //
 // C7.6's own words for the flow this state machine encodes: "draft → queued → processing → review_required →
 // approved → published, plus rejected, failed, cancelled." `JOB_TRANSITIONS` is that graph; `isValidJobTransition`
 // is a pure check against it so nothing — staff action or job runner — can skip a step.
 //
-// Deliberately NOT in this PR (PR 452 and later): actually calling a provider adapter's `generate`/`status`/`fetch`
-// (PR 449–450, `@extas/adapters`'s `photoshoot-provider`), retrying a failed job with a new seed (C7.5 step 7),
-// concurrency limiting across a store's queue, and the monthly spend cap (C7.20). `createOrReuseJob` here only
-// opens the queue row in `DRAFT` and queues it; nothing in this file ever reaches the network or spends money.
-import { createHash } from 'node:crypto';
+// PR 451 built the graph, idempotency and the plain `createOrReuseJob`/`transitionJob` primitives, deliberately
+// without retrying with a new seed, concurrency limiting or the spend cap. PR 452 (this file, now) adds exactly
+// those three, at the two edges that matter: `FAILED -> QUEUED` always draws a fresh seed (`nextDifferentSeed`,
+// `retryFailedJob`), and `QUEUED -> PROCESSING` — the moment a job is about to actually spend by calling a
+// provider adapter's `generate` (PR 449–450) — is gated by `startProcessing`, which checks this store's own
+// `studio.photoshoot.maxConcurrentJobs` and the Photoshoot agent's monthly cap (`spendCap.ts`, mirroring PR 309's
+// C1.6 arithmetic) before letting the move happen. Still deliberately NOT here: actually calling the provider
+// adapter itself (that stays the runner's own job, whichever PR wires a BullMQ worker onto this queue), best-of-2
+// (PR 453) and the cost ledger's reuse rules (S24 item 16).
+import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import type { StudioJobStatus } from '@extas/db/client';
 import { allow, checkStoreId, logChange, nowOf, parse, PhotoshootError, type PhotoshootDeps, type PhotoshootPermission, type Who } from './context';
+import { photoshootAgentCapCheck } from './spendCap';
 
 /** The DB's own `StudioJobStatus` enum values, carried here as a plain union so callers need no Prisma import. */
 export type JobStatus = keyof typeof StudioJobStatusEnumValues;
@@ -220,11 +227,28 @@ export async function createOrReuseJob(deps: PhotoshootDeps, who: Who, input: un
 }
 
 /**
+ * A seed string different from `previous` (C7.5 step 7: "retried with a different seed on failure" — a retry that
+ * reused the exact same seed could reproduce the exact same failure). `deps.randomSeed` lets a test make this
+ * deterministic; real callers get 64 bits of crypto randomness. Bounded to 8 tries, generous for odds this long;
+ * never loops forever even if a stub RNG is badly misused.
+ */
+export function nextDifferentSeed(deps: Pick<PhotoshootDeps, 'randomSeed'>, previous: string | null): string {
+  const draw = deps.randomSeed ?? (() => randomBytes(8).toString('hex'));
+  for (let i = 0; i < 8; i++) {
+    const candidate = draw();
+    if (candidate !== previous) return candidate;
+  }
+  throw new PhotoshootError('INVALID_INPUT', 'could not draw a new seed different from the last one', ['seed']);
+}
+
+/**
  * Moves a job along `JOB_TRANSITIONS`. Scoped by store; throws `NOT_FOUND` outside it. Throws `INVALID_INPUT`
  * (never silently clamped) on any move the graph does not list — a stale screen retrying an already-approved job,
  * or a worker reporting `PROCESSING` on a job staff already cancelled, both land here rather than corrupting the
  * row. Audited on every successful move. `opts.errorMessage` is recorded only on a move into `FAILED`; a later
- * retry (`FAILED -> QUEUED`) clears it, since the row is trying again, not still broken.
+ * retry (`FAILED -> QUEUED`) clears it and draws a new seed (C7.5 step 7), since the row is trying again, not still
+ * broken — true for every caller of this edge, not only `retryFailedJob` (PR 452), so the "different seed" promise
+ * can never be skipped by calling the lower-level primitive directly.
  */
 export async function transitionJob(deps: PhotoshootDeps, who: Who, jobId: string, to: JobStatus, opts?: { errorMessage?: string }): Promise<JobRow> {
   checkStoreId(who.storeId);
@@ -235,6 +259,7 @@ export async function transitionJob(deps: PhotoshootDeps, who: Who, jobId: strin
   if (!isValidJobTransition(from, to)) throw new PhotoshootError('INVALID_INPUT', `cannot move a photoshoot job from ${from} to ${to}`, ['status']);
   await allow(deps, who, TRANSITION_PERMISSION[to]);
   const now = nowOf(deps);
+  const isRetry = to === 'QUEUED' && from === 'FAILED';
   const row = await deps.db.photoshootJob.update({
     where: { id: jobId },
     data: {
@@ -242,11 +267,66 @@ export async function transitionJob(deps: PhotoshootDeps, who: Who, jobId: strin
       ...(to === 'PROCESSING' && !before.startedAt ? { startedAt: now } : {}),
       ...(JOB_TERMINAL_STATUSES.includes(to) || to === 'FAILED' ? { finishedAt: now } : {}),
       ...(to === 'FAILED' ? { error: opts?.errorMessage ?? before.error ?? null } : {}),
-      ...(to === 'QUEUED' && from === 'FAILED' ? { error: null, finishedAt: null, attempt: { increment: 1 } } : {}),
+      ...(isRetry ? { error: null, finishedAt: null, attempt: { increment: 1 }, seed: nextDifferentSeed(deps, before.seed) } : {}),
     },
   });
   await logChange(deps.db, who, { action: 'photoshoot.job.transition', entityType: 'PhotoshootJob', entityId: row.id, before: { status: from }, after: { status: row.status } });
   return toJobRow(row);
+}
+
+/**
+ * The named, documented retry entry point (PR 452, C7.5 step 7): "retry only the failed or rejected view, never
+ * the whole product" — this moves exactly one job, by its own id, back to `QUEUED` with a fresh seed; the product
+ * and every other angle's job are untouched. A thin, clearly-named wrapper over `transitionJob`'s own `FAILED ->
+ * QUEUED` edge (which already carries the real seed/attempt/error-clearing logic); kept separate so the admin and
+ * runner code has an obvious, self-explaining call to make rather than reaching for the generic primitive.
+ */
+export async function retryFailedJob(deps: PhotoshootDeps, who: Who, jobId: string): Promise<JobRow> {
+  return transitionJob(deps, who, jobId, 'QUEUED');
+}
+
+/** How many of this store's photoshoot jobs are right now `PROCESSING` — a provider actually running. */
+async function countProcessingJobs(deps: Pick<PhotoshootDeps, 'db'>, storeId: number): Promise<number> {
+  return deps.db.photoshootJob.count({ where: { storeId, status: 'PROCESSING' } });
+}
+
+/**
+ * The gated entry into `PROCESSING` (PR 452, C7.5 step 7 "retried..."/C7.20) — the one moment a job is actually
+ * about to spend money by calling a provider adapter's `generate` (PR 449–450; the call itself is not made here,
+ * only gated for). The runner must call this, not the raw `transitionJob('PROCESSING')` primitive, to get both
+ * checks:
+ *
+ *  - **Concurrency** — this store's own `studio.photoshoot.maxConcurrentJobs` (0 = unlimited, as it ships). At the
+ *    limit the job is refused with `CONCURRENCY_LIMIT` and stays exactly `QUEUED`; nothing is lost, the runner
+ *    simply tries again later (ordinary backpressure, not a failure).
+ *  - **The Photoshoot agent's monthly spend cap** (C7.20, same arithmetic as PR 309's generic per-agent cap,
+ *    `spendCap.ts`). "None"/"ok"/"warned" all let the job start; "paused" (the cap already reached) refuses it
+ *    with `SPEND_CAP_REACHED` and the job again stays `QUEUED` — "new generations pause, already-approved output
+ *    stays live, the shop is unaffected." Honestly a no-op (never blocks) until a later PR seeds the `AiAgent` row
+ *    keyed `photoshoot` and something actually writes its `AiUsageLedger` spend.
+ *
+ * Both checks are read-then-decide, not a row lock: a short race between two runner ticks landing on the same
+ * store is the same ordinary queuing race `createOrReuseJob`'s idempotency key already tolerates elsewhere, and
+ * costs at most one job slightly over a soft limit, never a double charge (the job's own row still gates the
+ * provider call it is about to make).
+ */
+export async function startProcessing(deps: PhotoshootDeps, who: Who, jobId: string): Promise<JobRow> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.generate');
+  const before = await deps.db.photoshootJob.findFirst({ where: { id: jobId, storeId: who.storeId } });
+  if (!before) throw new PhotoshootError('NOT_FOUND', 'no such photoshoot job in this store');
+  if (before.status !== 'QUEUED') throw new PhotoshootError('INVALID_INPUT', `cannot start processing a photoshoot job that is ${before.status}, not QUEUED`, ['status']);
+
+  const maxConcurrent = deps.settings ? await deps.settings.value('studio.photoshoot.maxConcurrentJobs', { storeId: who.storeId }) : 0;
+  if (maxConcurrent > 0) {
+    const processing = await countProcessingJobs(deps, who.storeId);
+    if (processing >= maxConcurrent) throw new PhotoshootError('CONCURRENCY_LIMIT', `${processing} photoshoot job(s) already processing, at this store's own limit of ${maxConcurrent}`, []);
+  }
+
+  const cap = await photoshootAgentCapCheck(deps.db, nowOf(deps));
+  if (cap.state === 'paused') throw new PhotoshootError('SPEND_CAP_REACHED', "the Photoshoot agent's monthly spend cap is reached; new generations pause until it resets or the owner raises it", []);
+
+  return transitionJob(deps, who, jobId, 'PROCESSING');
 }
 
 /** One job by id, scoped by store (`photoshoot.read`). */

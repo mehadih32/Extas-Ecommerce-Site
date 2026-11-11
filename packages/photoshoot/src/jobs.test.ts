@@ -1,6 +1,6 @@
 // S24 · PR 451 — pure tests: the idempotency fingerprint and the C7.6 job state machine, no database involved.
 import { describe, expect, it } from 'vitest';
-import { computeIdempotencyKey, isTerminalJobStatus, isValidJobTransition, JOB_STATUSES, JOB_TERMINAL_STATUSES, JOB_TRANSITIONS } from './jobs';
+import { computeIdempotencyKey, isTerminalJobStatus, isValidJobTransition, JOB_STATUSES, JOB_TERMINAL_STATUSES, JOB_TRANSITIONS, nextDifferentSeed } from './jobs';
 
 describe('computeIdempotencyKey', () => {
   const base = { productId: 'p1', angle: 'front', tier: 'baseline', inputAssetIds: ['a1', 'a2'] };
@@ -87,6 +87,35 @@ describe('JOB_TRANSITIONS / isValidJobTransition', () => {
     expect(isValidJobTransition('PROCESSING', 'CANCELLED')).toBe(true);
     expect(isValidJobTransition('REVIEW_REQUIRED', 'CANCELLED')).toBe(false);
     expect(isValidJobTransition('APPROVED', 'CANCELLED')).toBe(false);
+  });
+});
+
+describe('nextDifferentSeed (PR 452, C7.5 step 7 — "retried with a different seed on failure")', () => {
+  it('draws from the injected RNG', () => {
+    expect(nextDifferentSeed({ randomSeed: () => 'abc' }, null)).toBe('abc');
+  });
+
+  it('is never the same as the previous seed, even when the RNG first repeats it', () => {
+    const draws = ['same', 'same', 'different'];
+    let i = 0;
+    const seed = nextDifferentSeed({ randomSeed: () => draws[i++]! }, 'same');
+    expect(seed).toBe('different');
+    expect(i).toBe(3);
+  });
+
+  it('a previous seed of null is also "different" from anything drawn', () => {
+    expect(nextDifferentSeed({ randomSeed: () => 'x' }, null)).toBe('x');
+  });
+
+  it('gives up rather than looping forever against a stuck RNG', () => {
+    expect(() => nextDifferentSeed({ randomSeed: () => 'stuck' }, 'stuck')).toThrow();
+  });
+
+  it('with no injected RNG, draws real crypto randomness, different every time', () => {
+    const a = nextDifferentSeed({}, null);
+    const b = nextDifferentSeed({}, a);
+    expect(a).not.toBe(b);
+    expect(a).toMatch(/^[0-9a-f]{16}$/);
   });
 });
 

@@ -144,6 +144,9 @@ import photoshootCostEn from '../messages/photoshoot-cost.en.json';
 // S24 · PR 447 (registry v288): the garment-prep/standardisation colour-drift tolerance.
 import photoshootBn from '../messages/photoshoot.bn.json';
 import photoshootEn from '../messages/photoshoot.en.json';
+// S24 · PR 452 (registry v290): the photoshoot queue's own concurrency limit.
+import photoshootQueueBn from '../messages/photoshoot-queue.bn.json';
+import photoshootQueueEn from '../messages/photoshoot-queue.en.json';
 import blogCommentsBn from '../messages/blog-comments.bn.json';
 import blogCommentsEn from '../messages/blog-comments.en.json';
 import blogImagesBn from '../messages/blog-images.bn.json';
@@ -451,6 +454,9 @@ messages.bn = mergeMessages(messages.bn, photoshootCostBn);
 // S24 · PR 447 (registry v288): the garment-prep/standardisation colour-drift tolerance.
 messages.en = mergeMessages(messages.en, photoshootEn);
 messages.bn = mergeMessages(messages.bn, photoshootBn);
+// S24 · PR 452 (registry v290): the photoshoot queue's own concurrency limit.
+messages.en = mergeMessages(messages.en, photoshootQueueEn);
+messages.bn = mergeMessages(messages.bn, photoshootQueueBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

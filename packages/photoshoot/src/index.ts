@@ -10,3 +10,4 @@ export * from './ghostMannequin';
 export * from './garmentPrep';
 export * from './referenceAnalysis';
 export * from './jobs';
+export * from './spendCap';

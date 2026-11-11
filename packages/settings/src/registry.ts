@@ -139,6 +139,7 @@ import { statementCostsSettings } from './registry-books-statement-costs';
 import { studioSettings } from './registry-studio';
 import { photoshootSettings } from './registry-photoshoot';
 import { photoshootCostSettings } from './registry-photoshoot-cost';
+import { photoshootQueueSettings } from './registry-photoshoot-queue';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
@@ -1548,6 +1549,8 @@ export const registry = {
   ...photoshootSettings,
   // ---- S24 · PR 450 · the photoshoot provider adapters' per-image rate, 0/not set by default (registry-photoshoot-cost.ts, version 289). ----
   ...photoshootCostSettings,
+  // ---- S24 · PR 452 · the photoshoot queue's own concurrency limit, 0/unlimited by default (registry-photoshoot-queue.ts, version 290). ----
+  ...photoshootQueueSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
