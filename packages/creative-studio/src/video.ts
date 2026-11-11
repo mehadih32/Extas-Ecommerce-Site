@@ -1,16 +1,26 @@
 // S25 · PR 482 (Blueprint C8.1, C8.2) — the image-to-video engine, part 1: the provider adapter's contract (see
 // `@extas/adapters`'s `video/index.ts`) and a VideoJob's request/estimate step. The clip's first frame is the
 // product's own live, primary photo — never an uploaded or arbitrary asset id — so a job can never move from a still
-// nobody has approved for sale. Nothing here calls the provider or produces a clip yet: that is PR 483 (job
-// orchestration — queue, run, retry) and PR 484 (best-of-2, scoring, review/approve). While `studio.video.enabled` is
-// off (CN-018: off by default, the owner's own switch) every request is refused with `OFF`.
+// nobody has approved for sale. While `studio.video.enabled` is off (CN-018: off by default, the owner's own switch)
+// every request is refused with `OFF`.
+//
+// S25 · PR 483 (Blueprint C8.2) — part 2: job orchestration. A requested job sits `DRAFT`; `queueVideoJob` moves it
+// to `QUEUED` (`marketing.studio.write`); `runVideoJob` picks up a `QUEUED` job, calls the provider once and lands
+// on `REVIEW_REQUIRED` (a person reviews before it is ever published — PR 484 adds best-of-2 and that review/approve
+// step) or `FAILED`. `retryVideoJob` moves a `FAILED` job back to `QUEUED` with one more attempt, up to
+// `MAX_ATTEMPTS` (`CAP_REACHED` past that — the same honest "no more automatic tries" shape PR 309's spend cap uses
+// for money, here for attempts). Every move is `WRONG_STATE` from anywhere else, so a finished or running job is
+// never silently redone.
 import { z } from 'zod';
 import type { PrismaClient } from '@extas/db/client';
 import { audit } from '@extas/auth';
-import type { VideoAspect, VideoEstimate, VideoProvider } from '@extas/adapters';
+import type { VideoAspect, VideoClipResult, VideoEstimate, VideoProvider } from '@extas/adapters';
 import { VIDEO_ASPECTS } from '@extas/adapters';
 import { StudioError } from './errors';
 import type { StudioDeps, Who } from './context';
+
+/** A technical bound on retries, not a business number (CN-018 is about policy, not this guard). */
+export const MAX_ATTEMPTS = 3;
 
 /** Blueprint C8.1: clips run 4–8 seconds. */
 export const VIDEO_DURATION_MIN = 4;
@@ -36,6 +46,7 @@ export interface VideoJobView {
   durationSec: number | null;
   status: string;
   provider: string | null;
+  attempt: number;
   estimateMinor: number | null;
   outputAssetId: string | null;
   createdAt: string;
@@ -51,6 +62,7 @@ type Row = {
   durationSec: number | null;
   status: string;
   provider: string | null;
+  attempt: number;
   estimateMinor: number | null;
   outputAssetId: string | null;
   createdAt: Date;
@@ -67,6 +79,7 @@ function view(r: Row): VideoJobView {
     durationSec: r.durationSec,
     status: r.status,
     provider: r.provider,
+    attempt: r.attempt,
     estimateMinor: r.estimateMinor,
     outputAssetId: r.outputAssetId,
     createdAt: r.createdAt.toISOString(),
@@ -153,5 +166,59 @@ export async function requestVideoJob(deps: StudioDeps, who: Who, provider: Vide
     },
   });
   await audit(deps.db, who.actor, { storeId: who.storeId, action: 'studio.video.request', entityType: 'VideoJob', entityId: row.id, after: { productId: d.productId, aspect: d.aspect, durationSec: d.durationSec, estimateMinor: estimate.costMinor } }, who.ctx);
+  return view(row);
+}
+
+async function findOwnJob(db: PrismaClient, storeId: number, jobId: string) {
+  const job = await db.videoJob.findFirst({ where: { id: jobId, storeId } });
+  if (!job) throw new StudioError('NOT_FOUND', 'no such video job', ['jobId']);
+  return job;
+}
+
+/** Moves a requested job from `DRAFT` to `QUEUED` (`marketing.studio.write`, checked by the caller). */
+export async function queueVideoJob(deps: StudioDeps, who: Who, jobId: string): Promise<VideoJobView> {
+  const job = await findOwnJob(deps.db, who.storeId, jobId);
+  if (job.status !== 'DRAFT') throw new StudioError('WRONG_STATE', 'only a waiting clip can be queued', ['status']);
+  const row = await deps.db.videoJob.update({ where: { id: job.id }, data: { status: 'QUEUED' } });
+  await audit(deps.db, who.actor, { storeId: who.storeId, action: 'studio.video.queue', entityType: 'VideoJob', entityId: job.id, before: { status: job.status }, after: { status: row.status } }, who.ctx);
+  return view(row);
+}
+
+/**
+ * Runs one `QUEUED` job (`marketing.studio.write`, checked by the caller): calls the provider's `createClip` once
+ * and lands on `REVIEW_REQUIRED` (a person reviews before anything is published — PR 484) or `FAILED`. Never throws
+ * past a provider refusal; the job's own status carries the outcome, the audit log carries the reason.
+ */
+export async function runVideoJob(deps: StudioDeps, who: Who, provider: VideoProvider, jobId: string): Promise<VideoJobView> {
+  const job = await findOwnJob(deps.db, who.storeId, jobId);
+  if (job.status !== 'QUEUED') throw new StudioError('WRONG_STATE', 'only a queued clip can be run', ['status']);
+  await deps.db.videoJob.update({ where: { id: job.id }, data: { status: 'PROCESSING' } });
+
+  let result: VideoClipResult | null = null;
+  let failure: string | null = null;
+  try {
+    result = await provider.createClip({ sourceAssetId: job.sourceAssetId, durationSec: job.durationSec ?? VIDEO_DURATION_MIN, aspect: (job.aspect as VideoAspect) ?? '9:16' });
+  } catch (e) {
+    failure = e instanceof Error ? e.message : 'the video provider refused this clip';
+  }
+
+  const row =
+    result && result.status === 'SUCCEEDED'
+      ? await deps.db.videoJob.update({ where: { id: job.id }, data: { status: 'REVIEW_REQUIRED', providerJobId: result.providerJobId, outputAssetId: result.outputAssetId ?? null, actualMinor: job.estimateMinor } })
+      : await deps.db.videoJob.update({ where: { id: job.id }, data: { status: 'FAILED', providerJobId: result?.providerJobId ?? job.providerJobId } });
+  await audit(deps.db, who.actor, { storeId: who.storeId, action: 'studio.video.run', entityType: 'VideoJob', entityId: job.id, before: { status: job.status, attempt: job.attempt }, after: { status: row.status, reason: failure ?? (result?.status === 'FAILED' ? 'the provider could not finish this clip' : undefined) } }, who.ctx);
+  return view(row);
+}
+
+/**
+ * Moves a `FAILED` job back to `QUEUED` with one more attempt (`marketing.studio.write`). Refuses with `CAP_REACHED`
+ * once `attempt` has already reached `MAX_ATTEMPTS` — nothing retries itself forever.
+ */
+export async function retryVideoJob(deps: StudioDeps, who: Who, jobId: string): Promise<VideoJobView> {
+  const job = await findOwnJob(deps.db, who.storeId, jobId);
+  if (job.status !== 'FAILED') throw new StudioError('WRONG_STATE', 'only a failed clip can be retried', ['status']);
+  if (job.attempt >= MAX_ATTEMPTS) throw new StudioError('CAP_REACHED', 'this clip has already been tried its limit of times', ['attempt']);
+  const row = await deps.db.videoJob.update({ where: { id: job.id }, data: { status: 'QUEUED', attempt: job.attempt + 1 } });
+  await audit(deps.db, who.actor, { storeId: who.storeId, action: 'studio.video.retry', entityType: 'VideoJob', entityId: job.id, before: { status: job.status, attempt: job.attempt }, after: { status: row.status, attempt: row.attempt } }, who.ctx);
   return view(row);
 }
