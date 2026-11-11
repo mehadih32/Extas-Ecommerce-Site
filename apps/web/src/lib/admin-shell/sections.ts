@@ -277,6 +277,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         pages: [
           { href: '/admin/marketing/studio', perm: 'studio.read', keys: ['marketingStudio'] },
           { href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] },
+          { href: '/admin/marketing/studio/videos', perm: 'marketing.studio.read', keys: ['marketingStudioVideos'] },
         ],
       },
       // S13 · PR 273: referrals — the programme, friends' orders with their invite codes and the sharers' rewards.
