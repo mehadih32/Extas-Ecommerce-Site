@@ -12,3 +12,4 @@ export * from './referenceAnalysis';
 export * from './jobs';
 export * from './spendCap';
 export * from './outputs';
+export * from './detailRegions';
