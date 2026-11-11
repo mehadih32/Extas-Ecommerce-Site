@@ -114,3 +114,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-11 15:41 | `e79be568b0b9` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-11 16:06 | `241884ef1cee` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-11 16:21 | `9cb88432c0ae` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 17:04 | `6c6be43bdd42` | deploy | OK | ok | OK, smoke OK | — |

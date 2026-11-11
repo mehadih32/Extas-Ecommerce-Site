@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-11 16:10 (Asia/Dhaka)
+# Smoke test · 2026-11-11 16:55 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (548টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (550টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `9cb88432c0ae` · after deploy · result **PASS** (548 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `6c6be43bdd42` · after deploy · result **PASS** (550 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -222,6 +222,7 @@ Site: https://new.extas.com.bd · commit `9cb88432c0ae` · after deploy · resul
 | `/admin/marketing/ad-platforms/growth` | phone | 200 | `/admin/marketing/ad-platforms/growth` | ok | — |
 | `/admin/marketing/ad-platforms/briefs` | phone | 200 | `/admin/marketing/ad-platforms/briefs` | ok | — |
 | `/admin/marketing/ad-platforms/campaigns` | phone | 200 | `/admin/marketing/ad-platforms/campaigns` | ok | — |
+| `/admin/marketing/studio` | phone | 200 | `/admin/marketing/studio` | ok | — |
 | `/admin/marketing/studio/motion` | phone | 200 | `/admin/marketing/studio/motion` | ok | — |
 | `/admin/website/words` | phone | 200 | `/admin/website/words` | ok | — |
 | `/admin/website/eye-toggles` | phone | 200 | `/admin/website/eye-toggles` | ok | — |
@@ -276,7 +277,7 @@ Site: https://new.extas.com.bd · commit `9cb88432c0ae` · after deploy · resul
 | `/admin/marketing/merchant-feed` | phone | 200 | `/admin/marketing/merchant-feed` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1ca13-1e8e-7cb3-8bf4-b02dd4b6d3f8` | phone | 200 | `/admin/reports/health/history/01a1ca13-1e8e-7cb3-8bf4-b02dd4b6d3f8` | ok | — |
+| `/admin/reports/health/history/01a1ca20-b7d6-7213-ab8e-d2c2e41470c1` | phone | 200 | `/admin/reports/health/history/01a1ca20-b7d6-7213-ab8e-d2c2e41470c1` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -496,6 +497,7 @@ Site: https://new.extas.com.bd · commit `9cb88432c0ae` · after deploy · resul
 | `/admin/marketing/ad-platforms/growth` | desktop | 200 | `/admin/marketing/ad-platforms/growth` | ok | — |
 | `/admin/marketing/ad-platforms/briefs` | desktop | 200 | `/admin/marketing/ad-platforms/briefs` | ok | — |
 | `/admin/marketing/ad-platforms/campaigns` | desktop | 200 | `/admin/marketing/ad-platforms/campaigns` | ok | — |
+| `/admin/marketing/studio` | desktop | 200 | `/admin/marketing/studio` | ok | — |
 | `/admin/marketing/studio/motion` | desktop | 200 | `/admin/marketing/studio/motion` | ok | — |
 | `/admin/website/words` | desktop | 200 | `/admin/website/words` | ok | — |
 | `/admin/website/eye-toggles` | desktop | 200 | `/admin/website/eye-toggles` | ok | — |
@@ -550,7 +552,7 @@ Site: https://new.extas.com.bd · commit `9cb88432c0ae` · after deploy · resul
 | `/admin/marketing/merchant-feed` | desktop | 200 | `/admin/marketing/merchant-feed` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1ca13-1e8e-7cb3-8bf4-b02dd4b6d3f8` | desktop | 200 | `/admin/reports/health/history/01a1ca13-1e8e-7cb3-8bf4-b02dd4b6d3f8` | ok | — |
+| `/admin/reports/health/history/01a1ca20-b7d6-7213-ab8e-d2c2e41470c1` | desktop | 200 | `/admin/reports/health/history/01a1ca20-b7d6-7213-ab8e-d2c2e41470c1` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
