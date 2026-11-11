@@ -11,6 +11,8 @@ import adminAdPlatformsEn from '../../../messages/admin-ad-platforms.en.json';
 import adminAdPlatformsBn from '../../../messages/admin-ad-platforms.bn.json';
 import adminAdvanceEn from '../../../messages/admin-advance.en.json';
 import adminAdvanceBn from '../../../messages/admin-advance.bn.json';
+import adminAiEn from '../../../messages/admin-ai.en.json';
+import adminAiBn from '../../../messages/admin-ai.bn.json';
 import adminAreasEn from '../../../messages/admin-areas.en.json';
 import adminAreasBn from '../../../messages/admin-areas.bn.json';
 import adminAudiencesEn from '../../../messages/admin-audiences.en.json';
@@ -197,6 +199,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin': { en: adminEn, bn: adminBn },
   'admin-ad-platforms': { en: adminAdPlatformsEn, bn: adminAdPlatformsBn },
   'admin-advance': { en: adminAdvanceEn, bn: adminAdvanceBn },
+  'admin-ai': { en: adminAiEn, bn: adminAiBn },
   'admin-areas': { en: adminAreasEn, bn: adminAreasBn },
   'admin-audiences': { en: adminAudiencesEn, bn: adminAudiencesBn },
   'admin-backups': { en: adminBackupsEn, bn: adminBackupsBn },

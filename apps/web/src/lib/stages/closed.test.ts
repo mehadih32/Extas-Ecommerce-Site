@@ -55,7 +55,8 @@ describe('closed stages hidden by a switch (PR 652)', () => {
       expect(hrefs, q).not.toContain('/admin/ai');
     }
     // the switch on brings it back into the search
-    expect(await search(OWNER(hiddenAdminParts(ALL_SHOWN)), 'audit')).toContain(aiHrefs[0]);
+    const auditHref = aiHrefs.find((h) => h.endsWith('/audit'))!;
+    expect(await search(OWNER(hiddenAdminParts(ALL_SHOWN)), 'audit')).toContain(auditHref);
   });
 
   it('keeps a hidden shop address out of the sitemap and robots\' open list, in both languages', () => {
