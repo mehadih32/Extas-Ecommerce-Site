@@ -15,6 +15,9 @@
 /* ---------- head: the action at the right; full width on a phone (demo zs-hd) ---------- */
 .pa-hd { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; justify-content: space-between; }
 .pa-hd-text { min-width: 0; flex: 1 1 420px; }
+/* PR 657 (CN-025): the "+ Add product" button and the "···" admin-look menu, side by side; the button still fills a
+   phone's width (the .pa-hd-btn class selector below reaches it at any nesting depth). */
+.pa-hd-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 @media (max-width: 599px) { .pa-hd > .ad-btn, .pa-hd-btn { width: 100%; } }
 .ad a.pa-back { display: inline-flex; align-items: center; gap: 4px; margin-bottom: 10px; font-size: var(--ad-fs-small); font-weight: 600; color: var(--ad-brand); min-height: var(--ad-tap); }
 .ad a.pa-back span, .ad a.pa-back:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -229,3 +232,11 @@
 .pa-pick-row input { width: 18px; height: 18px; accent-color: var(--ad-brand); margin: 0; flex-shrink: 0; }
 .pa-back-in { display: flex; gap: 6px; align-items: center; margin: 4px 0 0; font-size: var(--ad-fs-small); font-weight: 700; color: var(--ad-brand-dark); }
 .pa-back-in svg { color: var(--ad-brand); }
+
+/* PR 657 (CN-025, follow-up 382) — design C "Command view": the same rows, a little tighter (CSS only, never a
+   smaller tap target: .pa-pick, .pa-act and every link or checkbox keep their own min-height elsewhere). */
+.a3-pdense .pa-row { padding: 7px 0; }
+.a3-pdense .pa-nm { line-height: 20px; }
+.a3-pdense .pa-meta { margin-top: 2px; }
+.a3-pdense .pa-health { margin-top: 3px; }
+
