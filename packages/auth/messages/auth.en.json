@@ -356,6 +356,13 @@
       "read": "See the journal's articles, categories and authors (Website → Blog & journal)",
       "write": "Write and edit articles, send them through the review steps, and add, change or put away categories and authors (nothing is deleted)",
       "publish": "Publish, schedule or take down an article, and switch the journal on or off on the shop"
+    },
+    "studio": {
+      "read": "See the social & content studio: its accounts, brand assets, templates, calendar and queued posts",
+      "write": "Add or change a social account, a brand asset or a template",
+      "generate": "Run a generate job (assembles a post; may spend on AI captions once the owner turns that on)",
+      "approve": "Approve or reject a post waiting in the studio's approval queue",
+      "publish": "Let a post go out on its own, with no approval wait, where its platform and account both allow it"
     }
   },
   "totp": {

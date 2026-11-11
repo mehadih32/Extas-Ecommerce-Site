@@ -448,6 +448,17 @@ export const PERMISSIONS = {
   // or reject such an increase (`marketing.ads.approve`, the owner). Nothing raises spend without that approval.
   'marketing.ads.control': { group: 'marketing' },
   'marketing.ads.approve': { group: 'marketing' },
+  // S23 · PR 437 (Blueprint C5, MKT-06 "Studio hub") — the social & content studio: see its accounts, assets,
+  // templates and posts (`studio.read`); manage accounts, brand assets and templates (`studio.write`); run a
+  // generate job, which may spend on AI captions once the owner turns that on (`studio.generate`); approve or
+  // reject a post waiting in the queue (`studio.approve`); let a post publish itself without waiting for approval,
+  // where its platform and account are both set to run free (`studio.publish`). Nothing posts to a real account or
+  // spends anything without these.
+  'studio.read': { group: 'marketing' },
+  'studio.write': { group: 'marketing' },
+  'studio.generate': { group: 'marketing' },
+  'studio.approve': { group: 'marketing' },
+  'studio.publish': { group: 'marketing' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
