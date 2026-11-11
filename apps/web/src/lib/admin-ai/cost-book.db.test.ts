@@ -3,8 +3,12 @@
 // recommended model, searchable by English or Bengali name; `ai.read` opens it, `ai.control` alone changes one
 // job's own model (reversible, audited, a double tap writes once); an unknown job or model is refused; a model of
 // the wrong kind (an image model for a text job) is refused; with no USD rate typed yet (PR 345/266) every cost is
-// honestly shown in USD only (`hasUsdRate: false`), never an invented taka figure. A throwaway database (skipped
-// without TEST_DATABASE_ADMIN_URL, like every other `.db.test.ts`).
+// honestly shown in USD only (`hasUsdRate: false`), never an invented taka figure.
+// S15 · PR 313 — the same page's own "actual" column, read from `AiUsageLedger.jobTypeKey`: null until a job has
+// `MIN_ACTUAL_SAMPLES` real runs inside the trailing `ACTUAL_WINDOW_DAYS`, a run outside that window is ignored, and
+// once real data exists it is also persisted to `AiJobType.actualPerRunMicros` (so a report elsewhere can read it
+// without recomputing). A throwaway database (skipped without TEST_DATABASE_ADMIN_URL, like every other
+// `.db.test.ts`).
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from "@extas/auth";
 import {
@@ -30,7 +34,7 @@ import {
   staffRolesHandler,
 } from "../admin-api";
 import type { AdminDeps } from "../admin-auth";
-import { JOB_CATALOG } from "./cost-book";
+import { ACTUAL_WINDOW_DAYS, JOB_CATALOG, MIN_ACTUAL_SAMPLES } from "./cost-book";
 import { costBookHandler } from "./cost-book-api";
 
 const HOST = "admin.example.test";
@@ -66,12 +70,20 @@ interface Choice {
   perMonthUsdMinor: number;
   perRunStoreMinor: number | null;
 }
+interface Actual {
+  runs: number;
+  perRunUsdMinor: number;
+  perMonthUsdMinor: number;
+  perRunStoreMinor: number | null;
+  deviationPct: number | null;
+}
 interface Job {
   key: string;
   section: string;
   selectedModelKey: string;
   recommendedModelKey: string;
   choices: Choice[];
+  actual: Actual | null;
 }
 interface Answer {
   ok: boolean;
@@ -325,6 +337,48 @@ describe.skipIf(!HAS_TEST_DB)("AI › Cost Book on PostgreSQL (PR 312)", () => {
       expect(
         j.choices.find((c) => c.isRecommended)!.perRunStoreMinor,
       ).not.toBeNull();
+  });
+
+  it("stays null with no real usage; ignores old runs; fills in once MIN_ACTUAL_SAMPLES recent runs exist; persists it", async () => {
+    const before = await ask("GET", reader);
+    expect(before.a.jobs.find((j) => j.key === "seoBlogArticle")?.actual).toBeNull();
+
+    // A handful of real runs, but one short of the threshold — still honestly null.
+    await t.prisma.aiUsageLedger.createMany({
+      data: Array.from({ length: MIN_ACTUAL_SAMPLES - 1 }, (_, i) => ({
+        jobTypeKey: "seoBlogArticle",
+        providerKey: "mock",
+        modelKey: "mock",
+        idempotencyKey: `seo-short-${i}`,
+        costUsdMicros: 1_000_000n,
+        costMinor: 100,
+        createdAt: new Date("2026-11-05T10:00:00Z"), // inside the window
+      })),
+    });
+    const short = await ask("GET", reader);
+    expect(short.a.jobs.find((j) => j.key === "seoBlogArticle")?.actual).toBeNull();
+
+    // One more real run inside the window reaches the threshold; an older run, outside ACTUAL_WINDOW_DAYS, is ignored.
+    const outside = new Date(now.getTime() - (ACTUAL_WINDOW_DAYS + 5) * 24 * 60 * 60 * 1000);
+    await t.prisma.aiUsageLedger.createMany({
+      data: [
+        { jobTypeKey: "seoBlogArticle", providerKey: "mock", modelKey: "mock", idempotencyKey: "seo-reaches-threshold", costUsdMicros: 1_000_000n, costMinor: 100, createdAt: new Date("2026-11-05T11:00:00Z") },
+        { jobTypeKey: "seoBlogArticle", providerKey: "mock", modelKey: "mock", idempotencyKey: "seo-too-old", costUsdMicros: 999_000_000n, costMinor: 99_900, createdAt: outside },
+      ],
+    });
+    const { a } = await ask("GET", reader);
+    const job = a.jobs.find((j) => j.key === "seoBlogArticle")!;
+    expect(job.actual).not.toBeNull();
+    expect(job.actual!.runs).toBe(MIN_ACTUAL_SAMPLES); // the too-old run never counts
+    expect(job.actual!.perRunUsdMinor).toBe(100); // 1,000,000 micros/run => 100 USD-minor/run
+    expect(job.actual!.perMonthUsdMinor).toBe(500); // the window's own total: 5 runs * 100
+
+    // Persisted onto AiJobType.actualPerRunMicros, so a report elsewhere can read it without recomputing.
+    const row = await t.prisma.aiJobType.findUniqueOrThrow({ where: { key: "seoBlogArticle" } });
+    expect(row.actualPerRunMicros).toBe(1_000_000n);
+
+    // A job with no ledger rows at all stays honestly null, never an invented figure.
+    expect(a.jobs.find((j) => j.key === "seoMetaTags")?.actual).toBeNull();
   });
 
   it("finds a job by search across the whole catalogue, in English or Bengali (C2.1)", () => {

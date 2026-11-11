@@ -9,14 +9,21 @@
 // is his.
 //
 // Honest and inert like every AI 360 screen before an AI key exists: no job has run yet, so every number here is an
-// *estimate* (C2.4's ±10–15% band note), never an "actual" — `AiJobType.actualPerRunMicros` stays untouched (that
-// self-correction loop is PR 313). Cost is priced in USD (how every AI vendor bills) and shown in the store's own
-// currency through the owner's own USD rate (`ExchangeRate`, PR 345/266, `pricerFor`) — with no rate typed yet, the
-// page honestly shows the USD figure with a note, never an invented taka amount.
+// *estimate* (C2.4's ±10–15% band note) until real usage exists. Cost is priced in USD (how every AI vendor bills)
+// and shown in the store's own currency through the owner's own USD rate (`ExchangeRate`, PR 345/266, `pricerFor`) —
+// with no rate typed yet, the page honestly shows the USD figure with a note, never an invented taka amount.
 //
-// Out of this PR's scope, each its own register PR: estimate-vs-actual (313), the what-if slider and Economy/
-// Balanced/Premium presets (314), the shared usage ledger (315, already built — PR 309's spend cap reads it), the
-// free-form cost calculator reachable from Telegram (316).
+// PR 313 (Blueprint C2.3 "what makes it self-correcting"): a second, independent "Actual" figure sits beside every
+// estimate — each job's own real cost over the last `ACTUAL_WINDOW_DAYS`, read from `AiUsageLedger.jobTypeKey`
+// (PR 315's ledger; its writer is still no job dispatcher — honestly null until one exists, exactly as
+// `spend-cap.ts` already says of the same table) and persisted into `AiJobType.actualPerRunMicros` (already in the
+// S00 schema, tagged for this PR, additive, unused until now) so a report elsewhere can read it without recomputing.
+// It never overwrites the estimate or the owner's own model pick — the owner reads both and decides; nothing here
+// changes a model automatically. Shown only once `MIN_ACTUAL_SAMPLES` real runs exist, so a single stray run never
+// reads as "the real cost" — the ±10–15% band narrows only once enough of them do.
+//
+// Out of this PR's scope, each its own register PR: the what-if slider and Economy/Balanced/Premium presets (314),
+// the free-form cost calculator reachable from Telegram (316).
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import type { PrismaClient } from '@extas/db/client';
 import { ymdIn } from '@extas/metrics';
@@ -277,6 +284,38 @@ export function searchJobs(jobs: readonly JobCatalogEntry[], query: string): Job
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// Estimate vs actual (PR 313, Blueprint C2.3) — pure math; the DB read/aggregate lives beside `costBookView` below.
+// ---------------------------------------------------------------------------------------------------------------
+
+/** The rolling window a job's "actual" figure is measured over — the same length as the book's own monthly
+ * estimate, so the two numbers answer the same question ("what does a month of this job cost"). */
+export const ACTUAL_WINDOW_DAYS = 30; // hardcode-ok: the measurement window, matched to the book's own month length — not a charge, limit or threshold
+/** How many real runs make an average worth showing as "the actual cost" rather than one stray run's own price. */
+export const MIN_ACTUAL_SAMPLES = 5; // hardcode-ok: a statistical-confidence read, not a charge, limit or threshold
+
+export interface JobActualStat {
+  runs: number;
+  perRunUsdMinor: number;
+  perMonthUsdMinor: number;
+  perRunStoreMinor: number | null;
+  perMonthStoreMinor: number | null;
+  /** How far the actual average sits from the estimate, in whole percent (positive: actual cost more). */
+  deviationPct: number | null;
+}
+
+/** `null` until `runs` reaches `MIN_ACTUAL_SAMPLES` (C2.4 — no claim of accuracy before enough real data exists). */
+export function actualOf(runs: number, totalCostUsdMicros: bigint, estimatePerRunUsdMinor: number, pricer: Pricer, day: string): JobActualStat | null {
+  if (runs < MIN_ACTUAL_SAMPLES) return null;
+  const totalMicros = Number(totalCostUsdMicros);
+  const perRunUsdMinor = microsToUsdMinor(totalMicros / runs);
+  const perMonthUsdMinor = microsToUsdMinor(totalMicros); // the window IS the month (`ACTUAL_WINDOW_DAYS` = `DAYS_PER_MONTH`)
+  const runPriced = pricer(perRunUsdMinor, 'USD', day);
+  const monthPriced = pricer(perMonthUsdMinor, 'USD', day);
+  const deviationPct = estimatePerRunUsdMinor > 0 ? Math.round(((perRunUsdMinor - estimatePerRunUsdMinor) / estimatePerRunUsdMinor) * 100) : null;
+  return { runs, perRunUsdMinor, perMonthUsdMinor, perRunStoreMinor: runPriced?.storeMinor ?? null, perMonthStoreMinor: monthPriced?.storeMinor ?? null, deviationPct };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // DB: seeding (idempotent, like `ensureAgentRows`) and the assembled screen.
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -369,6 +408,8 @@ export interface CostBookJobRow {
   perMonthUsdMinor: number;
   perRunStoreMinor: number | null;
   perMonthStoreMinor: number | null;
+  /** `null` until `MIN_ACTUAL_SAMPLES` real runs exist for this job (PR 313, C2.3). */
+  actual: JobActualStat | null;
 }
 
 export interface CostBookView {
@@ -381,6 +422,18 @@ export interface CostBookView {
   totalPerMonthStoreMinor: number | null;
   /** The ten priciest jobs by their monthly estimate (C2.3 — "always visible, because that is where savings are"). */
   topExpensive: CostBookJobRow[];
+}
+
+/** Every job's real spend over `ACTUAL_WINDOW_DAYS`, by `AiUsageLedger.jobTypeKey` — one query for the whole book,
+ * not one per job. Honestly empty until a job dispatcher writes real ledger rows (none does yet). */
+async function actualAggregatesSince(db: Pick<PrismaClient, 'aiUsageLedger'>, since: Date): Promise<Map<string, { runs: number; totalCostUsdMicros: bigint }>> {
+  const rows = await db.aiUsageLedger.groupBy({ by: ['jobTypeKey'], where: { jobTypeKey: { not: null }, createdAt: { gte: since } }, _sum: { costUsdMicros: true }, _count: { _all: true } });
+  const map = new Map<string, { runs: number; totalCostUsdMicros: bigint }>();
+  for (const r of rows) {
+    if (!r.jobTypeKey) continue;
+    map.set(r.jobTypeKey, { runs: r._count._all, totalCostUsdMicros: r._sum.costUsdMicros ?? 0n });
+  }
+  return map;
 }
 
 function choiceOf(usage: JobUsage, model: ModelCatalogEntry, recommendedModelKey: string, runsPerDay: number, pricer: Pricer, day: string): CostBookModelChoice {
@@ -408,7 +461,10 @@ export async function costBookView(deps: CostBookDeps, storeId: number): Promise
   const day = ymdIn(now, timeZone);
   const modelById = new Map(models.map((m) => [m.id, m]));
   const rowByKey = new Map(rows.map((r) => [r.key, r]));
+  const since = new Date(now.getTime() - ACTUAL_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+  const actualAgg = await actualAggregatesSince(deps.db, since);
 
+  const toPersist: { key: string; actualPerRunMicros: number | null }[] = [];
   const jobs: CostBookJobRow[] = JOB_CATALOG.map((j) => {
     const row = rowByKey.get(j.key);
     const selectedModel = row?.selectedModelId ? modelById.get(row.selectedModelId) : null;
@@ -416,6 +472,11 @@ export async function costBookView(deps: CostBookDeps, storeId: number): Promise
     const candidates = [modelOf(j.recommendedModelKey), ...alternativesFor(j.usage, j.recommendedModelKey, 6)];
     const choices = candidates.map((m) => choiceOf(j.usage, m, j.recommendedModelKey, j.typicalRunsPerDay, pricer, day));
     const selected = choices.find((c) => c.modelKey === selectedModelKey) ?? choices[0]!;
+    const agg = actualAgg.get(j.key);
+    const actual = agg ? actualOf(agg.runs, agg.totalCostUsdMicros, selected.perRunUsdMinor, pricer, day) : null;
+    const actualPerRunMicros = actual ? Math.round(actual.perRunUsdMinor * 10_000) : null;
+    const current = row?.actualPerRunMicros != null ? Number(row.actualPerRunMicros) : null;
+    if (current !== actualPerRunMicros) toPersist.push({ key: j.key, actualPerRunMicros });
     return {
       key: j.key,
       section: j.section,
@@ -432,8 +493,12 @@ export async function costBookView(deps: CostBookDeps, storeId: number): Promise
       perMonthUsdMinor: selected.perMonthUsdMinor,
       perRunStoreMinor: selected.perRunStoreMinor,
       perMonthStoreMinor: selected.perMonthStoreMinor,
+      actual,
     };
   });
+  if (toPersist.length > 0) {
+    await Promise.all(toPersist.map((p) => deps.db.aiJobType.update({ where: { key: p.key }, data: { actualPerRunMicros: p.actualPerRunMicros == null ? null : BigInt(p.actualPerRunMicros) } })));
+  }
 
   const hasUsdRate = jobs.length > 0 && jobs.every((j) => j.perMonthStoreMinor !== null);
   const totalPerMonthUsdMinor = jobs.reduce((s, j) => s + j.perMonthUsdMinor, 0);
