@@ -9,7 +9,9 @@ import { getPrisma, type Prisma } from '@extas/db/client';
 import { activeSizeEase, bothUnits, ghostState, groupKey, productFitKey, readMeta, readRows, sortRows, wasPriceFor, type GhostReason } from '@extas/catalogue';
 import { bGradeClosed, sellableUnits } from '@extas/inventory';
 import { imageSources, type ImageSource } from '@extas/media';
+import type { OverlayBadge } from '@extas/creative-studio';
 import { cachedProductPage, cachedStock } from '../cache';
+import { overlayForTarget } from './campaign-overlay';
 import { placeTexts } from '../rules-public';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import { priceRules, sourceOf } from './catalogue';
@@ -76,6 +78,8 @@ export interface ProductData {
   /** PR 52: the template chosen for this product at upload, and its categories nearest first (for theirs). */
   templateKey: string | null;
   categoryChain: TemplateCategory[];
+  /** S25 · PR 489: the live campaign overlay for this product, read fresh on every visit (never behind the page cache, so turning one on or off shows at once). */
+  overlay: OverlayBadge | null;
 }
 
 const productSelect = {
@@ -149,8 +153,9 @@ export async function productData(storeId: number, slug: string, now = new Date(
         const data = await cachedProductPage(storeId, slug, () => readProduct(storeId, slug, now));
         if (!data) return null;
         const stock = await cachedStock(storeId, data.id, () => liveStock(storeId, data.id));
-        // a kept page is shared by every visitor: the stock goes on a copy
-        return { ...data, variants: data.variants.map((v) => ({ ...v, stock: stock.get(v.id) ?? v.stock })) };
+        // a kept page is shared by every visitor: the stock goes on a copy; the overlay is read fresh every time
+        const overlay = await overlayForTarget(storeId, { slug: data.slug, categorySlug: data.category?.slug ?? null }, now);
+        return { ...data, variants: data.variants.map((v) => ({ ...v, stock: stock.get(v.id) ?? v.stock })), overlay };
       })(),
       settingsTimeoutMs() * 3,
     );
@@ -347,5 +352,7 @@ async function readProduct(storeId: number, slug: string, now: Date): Promise<Pr
     ruleTexts: (lang) => placeTexts({ storeId, placement: 'product', locale: lang, productId: p.id }),
     templateKey: p.templateKey,
     categoryChain,
+    // Read fresh in `productData`, below (never behind the page cache) — this placeholder is always overwritten.
+    overlay: null,
   };
 }

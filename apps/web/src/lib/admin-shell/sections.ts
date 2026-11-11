@@ -270,13 +270,16 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
       // S23 · PR 437, 438: the social & content studio — accounts, the brand asset library and templates.
       // S25 · PR 481 (Blueprint C8.1) adds the motion library sub-page (image-to-video jobs, reels, exports and the
-      // creative brief join as the rest of PR 482–490 build); one shared Studio tab, hidden while either
-      // `stages.closedShown.S23` or `.S25` is still off.
+      // creative brief join as the rest of PR 482–490 build).
+      // S25 · PR 489 (Blueprint C8.3) adds campaign overlays: a page-level, time-bound decoration on the product
+      // card, listing and product page — never stored on the photo, never touching a price.
+      // One shared Studio tab, hidden while `stages.closedShown.S23` or `.S25` is still off.
       {
         id: 'studio',
         pages: [
           { href: '/admin/marketing/studio', perm: 'studio.read', keys: ['marketingStudio'] },
           { href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] },
+          { href: '/admin/marketing/studio/overlay', perm: 'marketing.studio.read', keys: ['marketingStudioOverlay'] },
         ],
       },
       // S13 · PR 273: referrals — the programme, friends' orders with their invite codes and the sharers' rewards.
