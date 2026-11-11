@@ -21,15 +21,24 @@
 // store's own time zone — `null` for "always", since there is no time-based run to preview). No job runner reads
 // this yet; it is a preview only, the same honest-but-inert shape PR 305's pause switch and PR 307's model pick had
 // before any AI key existed.
+//
+// S15 · PR 309 (C1.6) — each agent's own monthly spend cap, from `./spend-cap.ts`: `monthlyCapMinor`/`capState`
+// (none/ok/warned/paused, compared honestly against `monthMinor`, already summed above). Every read of this screen
+// also runs `checkAgentCapAlerts`, which sends the owner's Telegram warning the moment any agent's spend crosses
+// 80%/100% of its own cap — deduplicated through the audit log, so a crossing is announced once per month, never
+// once per page view; a Telegram hiccup never breaks the screen (it is swallowed inside that function).
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { dayStart, ymdIn } from '@extas/metrics';
 import { INSTALLATION } from '@extas/settings';
+import type { Vault } from '@extas/vault';
+import { moneyOf } from '@/components/admin/products/model';
 import type { AppResolver } from '../settings';
 import { AI_AGENTS, isAiAgentKey, type AiAgentKey } from './agents';
 import { AiError, isAiError } from './errors';
 import { listWriterOptions, recommendedWriterOf, isWriterProvider, type WriterOption, type WriterProvider } from './model-picks';
 import { nextRunAt, normalizeStoredSchedule, type AgentSchedule } from './schedule';
+import { agentCapState, checkAgentCapAlerts, type AgentCapState } from './spend-cap';
 
 export { AiError, isAiError };
 
@@ -37,6 +46,9 @@ export interface ControlRoomDeps {
   db: PrismaClient;
   resolver: Pick<AppResolver, 'value' | 'set'>;
   now?: () => Date;
+  /** Only for sending the owner's Telegram cap alert (PR 309); absent/null is read as "no vault yet" — the alert
+   * then simply uses the mock Telegram sender, the same as everywhere else that fact matters. */
+  vault?: Vault | null;
 }
 
 export interface ControlRoomAgent {
@@ -64,6 +76,10 @@ export interface ControlRoomAgent {
   /** The next moment a `daily`/`weekly` schedule fires, ISO, in no particular time zone of its own (compute the
    * display in the store's); `null` for "always" — there is nothing time-based to preview. */
   nextRunAt: string | null;
+  /** The owner's own monthly spend cap (PR 309); `null` is "no cap" — off, the default. */
+  monthlyCapMinor: number | null;
+  /** none (no cap set) / ok / warned (80%+) / paused (100%+, honestly against `monthMinor` above). */
+  capState: AgentCapState;
 }
 
 export interface ControlRoomView {
@@ -130,11 +146,14 @@ export async function controlRoomView(deps: ControlRoomDeps, storeId: number): P
   const lastActivity = new Map<string, { summaryBn: string; at: string }>();
   for (const d of diaries) if (!lastActivity.has(d.agentId)) lastActivity.set(d.agentId, { summaryBn: d.summaryBn, at: d.createdAt.toISOString() });
 
+  const capAgents: { id: string; nameBn: string; monthlyCapMinor: number | null; monthMinor: number }[] = [];
   const agents: ControlRoomAgent[] = rows.filter((r): r is typeof r & { key: AiAgentKey } => isAiAgentKey(r.key)).map((r) => {
     const selectedProvider: WriterProvider | null = r.selectedProvider && isWriterProvider(r.selectedProvider) ? r.selectedProvider : null;
     const selectedOpt = modelOptions.find((o) => o.provider === selectedProvider);
     const schedule = normalizeStoredSchedule(r.schedule);
     const nextRun = nextRunAt(schedule, now, timeZone);
+    const monthMinorOf = monthMap.get(r.id) ?? 0;
+    capAgents.push({ id: r.id, nameBn: r.nameBn ?? r.nameEn, monthlyCapMinor: r.monthlyCapMinor, monthMinor: monthMinorOf });
     return {
       key: r.key,
       nameEn: r.nameEn,
@@ -147,16 +166,20 @@ export async function controlRoomView(deps: ControlRoomDeps, storeId: number): P
       workingNow: (masterOn || r.keepOnWhenMasterOff) && r.enabled,
       lastActivity: lastActivity.get(r.id) ?? null,
       todayMinor: todayMap.get(r.id) ?? 0,
-      monthMinor: monthMap.get(r.id) ?? 0,
+      monthMinor: monthMinorOf,
       selectedProvider,
       selectedReady: Boolean(selectedProvider === null || selectedOpt?.ready),
       schedule,
       nextRunAt: nextRun ? nextRun.toISOString() : null,
+      monthlyCapMinor: r.monthlyCapMinor,
+      capState: agentCapState(monthMinorOf, r.monthlyCapMinor),
     };
   });
   const todayMinor = agents.reduce((s, a) => s + a.todayMinor, 0);
   const monthMinor = agents.reduce((s, a) => s + a.monthMinor, 0);
   const runningNow = agents.filter((a) => a.workingNow).length;
+
+  await checkAgentCapAlerts({ db: deps.db, vault: deps.vault ?? null, resolver: deps.resolver, now: () => now }, capAgents, moneyOf(currency, 'bn-BD'));
 
   return {
     view: { at: now.toISOString(), masterOn, monthlyCapMinor: capMinor, currency, todayMinor, monthMinor, runningNow, agentCount: agents.length, modelOptions, recommendedProvider },
