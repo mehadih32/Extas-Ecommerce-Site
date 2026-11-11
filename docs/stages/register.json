@@ -3120,6 +3120,7 @@
     "date": "2026-10-20",
     "note": "pnpm workspace, Next.js 16 App Router + TypeScript strict + Tailwind 4; Bengali status page at `/status`.",
     "github": [
+     "#123, 11 Nov",
      "#94, 7 Nov",
      "#72, 31 Oct",
      "#64, 31 Oct",
@@ -3137,7 +3138,13 @@
      "/admin/delivery/zones",
      "/admin/help",
      "/admin/settings/look",
-     "/api/health"
+     "/api/health",
+     "/sw.js",
+     "/service-worker.js",
+     "/OneSignalSDKWorker.js",
+     "/firebase-messaging-sw.js",
+     "/reset",
+     "/admin/login"
     ],
     "settings": [
      "dashboard.read",
@@ -3149,12 +3156,19 @@
     "code": [
      "#/admin",
      "PUT /api/admin/look",
-     "apps/web/src/lib/status-host.ts"
+     "apps/web/src/lib/status-host.ts",
+     "proxy.ts",
+     "global-error.tsx"
     ],
     "names": [
      "pnpm admin:design",
      "0042_admin_prefs",
-     "{\"ok\":true}"
+     "{\"ok\":true}",
+     "wordpress_*",
+     "wp-settings-*",
+     "wp_woocommerce_session_*",
+     "woocommerce_*",
+     "Clear-Site-Data: \"cache\",\"cookies\",\"storage\""
     ],
     "tests": []
    },
@@ -3188,11 +3202,25 @@
      "text": "**PR 12 (S00, the app and the admin shell)** — Updated 31 Oct 2026 (CN-032): the browser's own translation is off site-wide; `app/global-error.tsx` replaces a blank page, clears this site's cache and stored values once by itself and reloads, then offers Start fresh and Try again; `/fresh-start` (`/api/fresh-start`, POST, soft or full) clears only this site's data in this browser, keeping the preview gate's cookie."
     },
     {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
+     "text": "**PR 12 (S00, the app and the admin shell)** — Updated 11 Nov 2026 (CN-043): `proxy.ts` expires old WordPress/WooCommerce cookies on every visit; a self-unregistering service worker answers at the old plugin paths; `/reset` is a public, script-free page (`Clear-Site-Data` incl. cookies, 1-second refresh to `/admin/login`, noindex) for a browser whose saved state keeps our own JS from loading at all; `global-error.tsx` also links to it."
+    },
+    {
      "date": "31 Oct",
      "sortKey": 44640,
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 2):** `/status` and the health detail (the commit, the blue/green colour) only on the preview host (`system.stagingHost`, decided on the request's Host header, never X-Forwarded-Host) and the server's own internal addresses; a store's own domain or any other public host gets 404 on `/status` and a bare `{\"ok\":true}` from `/api/health` (`apps/web/src/lib/status-host.ts`) (#72); **follow-up (7 Nov, #94; follow-up 209):** the palette's recent pages per person and the \"g d / g o\" key jumps (registry v263 `admin.shell`: recentPages 0 = off, keyJumps off)"
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 11 Nov 2026 (CN-043):** a browser that still carries the old WordPress/WooCommerce shop's cookies, cache or a registered service worker from before go-live can no longer keep the admin blank: `proxy.ts` expires any `wordpress_*`/`wp-settings-*`/`wp_woocommerce_session_*`/`woocommerce_*` cookie on every visit (name-matched only, never our own cookies); a self-unregistering, cache-clearing service worker answers at the old plugin paths (`/sw.js`, `/service-worker.js`, `/OneSignalSDKWorker.js`, `/firebase-messaging-sw.js`); and the public, script-free `/reset` page (`Clear-Site-Data: \"cache\",\"cookies\",\"storage\"`, 1-second refresh to `/admin/login`, noindex) gives the owner one link that works even when his saved browser state keeps our own JS from ever loading. `global-error.tsx` also links to `/reset` as a \"Fix this browser\" fallback alongside Start fresh."
     },
     {
      "date": "",
