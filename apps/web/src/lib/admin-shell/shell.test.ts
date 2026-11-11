@@ -113,7 +113,8 @@ describe('the 14 sections', () => {
     // PR 285: the Customers section's front page is All customers
     // ~~expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);~~
     // PR 342: /admin/money is Money → Overview now, so Money has no placeholder left.
-    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'reports', 'ai', 'settings']);
+    // PR 304: /admin/ai (Control room) is now a real page, so AI Center has no placeholder left either.
+    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'reports', 'settings']);
     expect(sectionHome(sectionById('customers')!, viewer(['customers.read']))).toBe('/admin/customers');
   });
 
