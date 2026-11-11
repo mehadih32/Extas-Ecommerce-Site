@@ -1019,7 +1019,7 @@ the server.*
 | S20 | Fulfilment & documents | 9 | 404–412 | locked |
 | S21 | Site Health & Audit | 14 | 413–424, 570, 594 | locked |
 | S22 | Support (all-in-one) | 14 | 425–436, 538, 624 | locked; **624 filed 1 Nov** |
-| S23 | Social & content studio | 7 | 437–443 | locked; **reopened (owner, 11 Nov; CN-039) — building** — 1/7; half-built parts stay hidden behind `stages.closedShown` until the stage finishes |
+| S23 | Social & content studio | 7 | 437–443 | locked; **reopened (owner, 11 Nov; CN-039) — building** — 4/7; half-built parts stay hidden behind `stages.closedShown` until the stage finishes |
 | S24 | Virtual Photoshoot Studio | 38 | 444–480, 539 | locked; **reopened (owner, 11 Nov; CN-039)** — half-built parts stay hidden behind `stages.closedShown` until the stage finishes |
 | S25 | Video & Campaign Creative Studio | 10 | 481–490 | locked; **reopened (owner, 11 Nov; CN-039) — building** — 1/10; half-built parts stay hidden behind `stages.closedShown` until the stage finishes |
 | S26 | Installation, documentation & distribution | 6 | 513–518 | **parked** — handover pack; **Closed (owner, 6 Nov; CN-036)** |
