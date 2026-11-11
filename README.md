@@ -3711,7 +3711,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
-| #NNN | PR [439](docs/stages/S23.md#pr-439) | 11 Nov | S23: the video assembly engine (`render.ts`) — a template + chosen products queue a render job; today's honest output is a preview (the product's own lead photo), never a fabricated file, until the server has a real compositor. Admin page gains "Generated content". |
+| #115 | PR [439](docs/stages/S23.md#pr-439) | 11 Nov | S23: the video assembly engine (`render.ts`) — a template + chosen products queue a render job; today's honest output is a preview (the product's own lead photo), never a fabricated file, until the server has a real compositor. Admin page gains "Generated content". |
 | #108 | PR [438](docs/stages/S23.md#pr-438) | 11 Nov | S23: the studio's first admin page (`/admin/marketing/studio`) — PR [437](docs/stages/S23.md#pr-437)'s accounts, plus templates (`StudioTemplate`, versioned, never deleted) and a brand asset library reusing the shared Media library under a new private `studio` folder. |
 | #113 | PR [306](docs/stages/S15.md#pr-306) | 11 Nov | AI 360's writer gets its first four live providers — Anthropic, OpenAI, Google and OpenRouter, each one key + one model id in Keys & connections, falling back to practice text until a connection's test passes. |
 | #109 | PR [305](docs/stages/S15.md#pr-305) | 11 Nov | AI › Control room's banner now flips the business-wide `ai.enabled` master switch itself (one tap, Undo, a money-safety note while no cap is set), and each agent card gets its own "keep running even when AI is off" switch (`AiAgent.keepOnWhenMasterOff`). |
