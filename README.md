@@ -3738,6 +3738,8 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #132 | PR [655](docs/stages/S00.md#pr-655) | 11 Nov | Dashboard design "Classic cards" (CN-044, ERP lane, task 3, follow-up 380's first half): headline KPI cards, the delivered-sales trend and a "Needs you now" list of every waiting queue, reusing the same loader parts and settings as the other designs — no new setting or migration. |
+| #132 | PR [654](docs/stages/S09.md#pr-654) | 11 Nov | Read-only SKU/stock comparison between the shop's catalogue and the live ERP (CN-044, ERP lane, task 2): a Bengali report, on demand and nightly, of SKUs missing on either side and stock that differs — every ERP call a GET, nothing pushed, nothing in the shop's own numbers changes. |
 | #125 | PR [309](docs/stages/S15.md#pr-309) | 11 Nov | Each AI 360 agent gets its own monthly spend cap — a status pill (none/ok/warned/paused) and this month's spend against it; crossing 80% or 100% sends the owner's Telegram warning in Bengali, once per crossing per month, real and live. |
 | #122 | PR [308](docs/stages/S15.md#pr-308) | 11 Nov | Each AI 360 agent gets its own schedule — always, daily at a clock time, or weekly on chosen weekdays — with a plain next-run preview; no job runner reads it yet, so it is honestly a preview only. |
 | #115 | PR [439](docs/stages/S23.md#pr-439) | 11 Nov | S23: the video assembly engine (`render.ts`) — a template + chosen products queue a render job; today's honest output is a preview (the product's own lead photo), never a fabricated file, until the server has a real compositor. Admin page gains "Generated content". |
