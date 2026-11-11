@@ -11,3 +11,4 @@ export * from './garmentPrep';
 export * from './referenceAnalysis';
 export * from './jobs';
 export * from './spendCap';
+export * from './outputs';

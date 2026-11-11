@@ -140,6 +140,7 @@ import { studioSettings } from './registry-studio';
 import { photoshootSettings } from './registry-photoshoot';
 import { photoshootCostSettings } from './registry-photoshoot-cost';
 import { photoshootQueueSettings } from './registry-photoshoot-queue';
+import { photoshootQualitySettings } from './registry-photoshoot-quality';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
@@ -1551,6 +1552,8 @@ export const registry = {
   ...photoshootCostSettings,
   // ---- S24 · PR 452 · the photoshoot queue's own concurrency limit, 0/unlimited by default (registry-photoshoot-queue.ts, version 290). ----
   ...photoshootQueueSettings,
+  // ---- S24 · PR 453 · the photoshoot best-of-2 quality cut-off, 0/never-auto-rejects by default (registry-photoshoot-quality.ts, version 291). ----
+  ...photoshootQualitySettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
