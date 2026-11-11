@@ -8,6 +8,12 @@
 // AIC-01's own big switch), with a money-safety note while no monthly cap is set yet. Each agent card also carries
 // "keep running even when AI is off" (KeepOnSwitch, `AiAgent.keepOnWhenMasterOff`) — a property of every agent, not
 // a special case — and the status pill says so when that is why an agent is working while the master is off.
+//
+// S15 · PR 307 (C1.5) — each card also carries its own model pick (ModelPickSelect, `AiAgent.selectedProvider`):
+// the practice writer plus the four PR 306 connections, an un-Tested one shown but disabled. A "Recommended" pill
+// marks Claude's own pick (the first ready provider, Anthropic first); the note beside the select always explains
+// the effect — matches the recommendation, or honestly says cost/quality comparisons wait for the AI Cost Book
+// (PR 312) — never a number this page has not actually measured.
 // Guide: docs/admin-guide/pages/ai/control.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -16,6 +22,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { AgentSwitch } from '@/components/admin/ai/AgentSwitch';
 import { KeepOnSwitch } from '@/components/admin/ai/KeepOnSwitch';
 import { MasterSwitch } from '@/components/admin/ai/MasterSwitch';
+import { ModelPickSelect, type ModelPickOption } from '@/components/admin/ai/ModelPickSelect';
 import type { CountFormat } from '@/lib/admin-lumen/model';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -80,6 +87,19 @@ export default async function AiControlRoomPage() {
     return a.enabled ? { tone: 'line', text: c('agents.statusPaused') } : { tone: 'line', text: c('agents.statusOff') };
   };
 
+  // S15 · PR 307 — one shared option list (the practice writer plus the four PR 306 connections) for every agent's
+  // picker; an un-Tested connection stays listed, disabled, labelled as not ready.
+  const providerLabel = (p: string | null) => (p === null ? c('agents.model.practice') : c(`agents.model.providers.${p}`));
+  const modelOptions: ModelPickOption[] = o.modelOptions.map((opt) => ({
+    value: opt.provider,
+    ready: opt.ready,
+    label: opt.ready ? providerLabel(opt.provider) : c('agents.model.notReady', { provider: providerLabel(opt.provider) }),
+  }));
+  const modelNoteOf = (a: (typeof agents)[number], name: string) => {
+    if (a.selectedProvider !== null && !a.selectedReady) return c('agents.model.noteFallback', { provider: providerLabel(a.selectedProvider), name });
+    return a.selectedProvider === o.recommendedProvider ? c('agents.model.noteSame') : c('agents.model.noteChanged');
+  };
+
   return (
     <div className="a2-z ai-page" data-testid="ai-control" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
@@ -119,6 +139,7 @@ export default async function AiControlRoomPage() {
         <div className="ai-grid">
           {agents.map((a) => {
             const st = statusOf(a);
+            const name = view.lang === 'bn' ? a.nameBn : a.nameEn;
             return (
               <article key={a.key} className="a2-card tight ai-ac" data-testid={`ai-agent-${a.key}`} data-working={a.workingNow ? 'yes' : 'no'}>
                 <div className="ai-ach">
@@ -154,6 +175,24 @@ export default async function AiControlRoomPage() {
                   ) : a.keepOnWhenMasterOff ? (
                     <span className="a2-pill line">{c('agents.keepOn.pillOn')}</span>
                   ) : null}
+                </div>
+                <div className="ai-model" data-testid={`ai-agent-model-row-${a.key}`}>
+                  <span className="a2-xs a2-mute">{c('agents.model.label')}</span>
+                  {canControl ? (
+                    <ModelPickSelect
+                      agentKey={a.key}
+                      selected={a.selectedProvider}
+                      options={modelOptions}
+                      label={c('agents.model.selectLabel', { name })}
+                      changedText={c('agents.model.toastChanged', { name })}
+                      failedText={c('agents.model.toastFailed', { name })}
+                      notReadyText={c('agents.model.toastNotReady')}
+                    />
+                  ) : (
+                    <span className="a2-xs">{providerLabel(a.selectedProvider)}</span>
+                  )}
+                  {a.selectedProvider === o.recommendedProvider ? <span className="a2-pill line">{c('agents.model.recommendedBadge')}</span> : null}
+                  <span className="a2-xs a2-mute ai-model-note">{modelNoteOf(a, name)}</span>
                 </div>
               </article>
             );

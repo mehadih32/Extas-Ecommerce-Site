@@ -93,3 +93,17 @@
   gap: 14px;
   flex-wrap: wrap;
 }
+/* S15 · PR 307 — one agent's model pick row. The select keeps the shared .a2-sel sizing (no width/height override
+   here — PR 305's device-gate fix was exactly a per-component override shrinking a shared control, so this stays
+   away from that mistake); only layout belongs to this file. */
+.adm2 .ai-model {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.adm2 .ai-modelsel {
+  max-width: 100%;
+}
+.adm2 .ai-model-note {
+  overflow-wrap: anywhere;
+}

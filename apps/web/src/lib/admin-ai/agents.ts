@@ -1,9 +1,10 @@
 // S15 · PR 304, 577, 581 (A4.3, C1.1, C10) — the seven fixed EXTAS agents, as code: who they are and what each is
 // for (docs/agents/<name>.md). Like the permission catalogue (packages/auth/src/catalogue.ts), this is structural
 // identity, never an owner's own text or number, so it ships the same on every installation (CLAUDE.md rule 4).
-// Whether an agent runs, its monthly cap and its schedule are the owner's own choice, kept on its AiAgent row (PR
-// 305, 308, 309) — off and empty until he sets them. Tirondaj is the seventh, ads-only agent (PR 581). Gyani is the
-// chief (`isChief`, PR 583); the reporting chain itself (`AiAgent.reportsToId`) is wired by PR 583, not here.
+// Whether an agent runs, its monthly cap, its schedule and its model pick are the owner's own choice, kept on its
+// AiAgent row (PR 305, 307, 308, 309) — off, empty or the practice writer until he sets them. Tirondaj is the
+// seventh, ads-only agent (PR 581). Gyani is the chief (`isChief`, PR 583); the reporting chain itself
+// (`AiAgent.reportsToId`) is wired by PR 583, not here.
 export interface AiAgentDef {
   key: string;
   /** Employee code (docs/agents/<name>.md), e.g. A360-01. */

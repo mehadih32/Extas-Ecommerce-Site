@@ -5,9 +5,14 @@
 // {key, keepOnWhenMasterOff: boolean} (one agent's "keep running even with the master off"), both `ai.control`,
 // both audited, both a no-op on a double tap. Every shape ends by handing back the fresh screen, so the page never
 // needs a second GET after a tap.
+//
+// S15 · PR 307 — the same POST also takes {key, provider: string | null} (one agent's model pick; `null` is the
+// practice writer), `ai.control`, audited, refused (422 PROVIDER_NOT_READY) for a connection that is not keyed and
+// Tested yet.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { controlRoomView, isAiError, setAgentEnabled, setAgentKeepOn, setMasterEnabled } from './control-room';
+import { setAgentModelProvider } from './model-picks';
 
 export async function controlRoomHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
   const method = request.method.toUpperCase();
@@ -30,6 +35,13 @@ export async function controlRoomHandler(request: Request, deps: AdminDeps | nul
     if (typeof input.keepOnWhenMasterOff === 'boolean') {
       if (!key) return json({ ok: false, error: 'INVALID_INPUT', details: ['key'] }, { status: 400 });
       await setAgentKeepOn(d, who, key, input.keepOnWhenMasterOff);
+      return withScreen();
+    }
+
+    if (input.provider !== undefined) {
+      if (!key) return json({ ok: false, error: 'INVALID_INPUT', details: ['key'] }, { status: 400 });
+      if (input.provider !== null && typeof input.provider !== 'string') return json({ ok: false, error: 'INVALID_INPUT', details: ['provider'] }, { status: 400 });
+      await setAgentModelProvider(d, who, key, input.provider);
       return withScreen();
     }
 
