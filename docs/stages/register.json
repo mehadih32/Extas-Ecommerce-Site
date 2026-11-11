@@ -19822,27 +19822,46 @@
     "state": "merged",
     "built": true,
     "date": "2026-10-20",
-    "note": "generic ERP adapter on `@extas/adapters` (kind ERP, mock / sandbox / live, keys from the vault): one contract (`erp/contract.ts`: health, variants, stock, stock for one SKU; stable error codes AUTH, RATE_LIMITED, SERVER, TIMEOUT, NETWORK, …), an HTTP client for `docs/ERP-API-CONTRACT.md` (Bearer key, timeout, Retry-After, rows checked one by one), webhook signature check (HMAC-SHA256 of the raw body, age limit); `extasErp` adapter with a practice ERP (sample companies and warehouses, stock per SKU, switchable failures for tests); \"Our ERP\" on Keys & connections (address, key, webhook secret); a second ERP is one more adapter",
+    "note": "generic ERP adapter on `@extas/adapters` (kind ERP, mock / sandbox / live, keys from the vault): one contract (`erp/contract.ts`: health, variants, stock, stock for one SKU; stable error codes AUTH, RATE_LIMITED, SERVER, TIMEOUT, NETWORK, …), an HTTP client for `docs/ERP-API-CONTRACT.md` (Bearer key, timeout, Retry-After, rows checked one by one), webhook signature check (HMAC-SHA256 of the raw body, age limit); `extasErp` adapter with a practice ERP (sample companies and warehouses, stock per SKU, switchable failures for tests); \"Our ERP\" on Keys & connections (address, key, webhook secret); a second ERP is one more adapter.",
     "github": [
      "#15 (commit `4563976`), 20 Oct 09:15 (Dhaka)"
     ]
    },
    "builtFacts": {
-    "routes": [],
+    "routes": [
+     "/health"
+    ],
     "settings": [],
     "code": [
      "@extas/adapters",
      "erp/contract.ts",
-     "docs/ERP-API-CONTRACT.md"
+     "docs/ERP-API-CONTRACT.md",
+     "http-client.ts"
     ],
     "names": [
-     "extasErp"
+     "extasErp",
+     "healthSchema",
+     "{companyName, integrationName, companyId, warehouseId}",
+     "{ok, company:{name}, integration:{id,name,platform,warehouseId}, serverTime}",
+     "BAD_RESPONSE",
+     "ErpHealth",
+     "companyId"
     ],
     "tests": [
-     "`extasErp` adapter with a practice ERP (sample companies and warehouses, stock per SKU, switchable failures for tests)"
+     "`extasErp` adapter with a practice ERP (sample companies and warehouses, stock per SKU, switchable failures for tests)",
+     "unit tests cover both shapes",
+     "a read-only GET-only Test against the live ERP with the vault's shop key (never logged) proved the fix resolves the real health check, not just the mock fixture"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "20 Oct",
+     "sortKey": 28800,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 11 Nov 2026 (CN-044, ERP lane):** `healthSchema` in `http-client.ts` only accepted the practice ERP's flat `/health` shape (`{companyName, integrationName, companyId, warehouseId}`); the real ERP answers nested (`{ok, company:{name}, integration:{id,name,platform,warehouseId}, serverTime}`), so \"Our ERP\" on Keys & connections read `BAD_RESPONSE` against a working real ERP. `healthSchema` now accepts either shape and maps both to the same `ErpHealth` (nested answers report no `companyId`, as the real ERP does not send one); unit tests cover both shapes; a read-only GET-only Test against the live ERP with the vault's shop key (never logged) proved the fix resolves the real health check, not just the mock fixture."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "যেকোনো ERP-এর জন্য এক নিয়মের সংযোগ, সাথে একটা প্র্যাকটিস ERP।",
