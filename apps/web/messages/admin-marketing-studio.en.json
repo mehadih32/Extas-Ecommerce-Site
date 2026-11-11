@@ -41,6 +41,114 @@
         "network": "Could not reach the server.",
         "other": "Something went wrong."
       }
+    },
+    "hub": {
+      "metaTitle": "Studio · Marketing",
+      "title": "Studio",
+      "sub": "Your social accounts, your brand asset library and your post templates — the studio's own building blocks.",
+      "note": "Nothing here posts to a real account, renders a video or spends anything. A new account always starts off and needing approval.",
+      "f": {
+        "platform": "Platform",
+        "externalId": "Page/channel id",
+        "name": "Name",
+        "kind": "Kind",
+        "dailyLimit": "Daily limit",
+        "spec": "Template shape",
+        "assetId": "File"
+      },
+      "err": {
+        "INVALID_INPUT": "Check the fields: {fields}.",
+        "NOT_FOUND": "Not found — it may have been changed by someone else just now.",
+        "STALE": "Someone changed this just now — the page is refreshing.",
+        "ALREADY_ADDED": "This account is added already.",
+        "TEMPLATE_ARCHIVED": "Restore the template before changing it.",
+        "TOO_LARGE": "The file is larger than the upload limit.",
+        "NOT_AN_IMAGE": "That file is not a picture.",
+        "TYPE_NOT_ALLOWED": "That kind of file is not accepted.",
+        "STILL_IN_USE": "This file is still used by a template — take it off first.",
+        "forbidden": "You don't have the permission for that.",
+        "unauthorized": "Sign in again to continue.",
+        "network": "Could not reach the server — check your connection.",
+        "other": "Something went wrong — try again."
+      },
+      "platforms": {
+        "facebook": "Facebook Page",
+        "instagram": "Instagram",
+        "tiktok": "TikTok",
+        "youtube": "YouTube"
+      },
+      "templateKinds": {
+        "image": "Image post",
+        "story": "Story",
+        "reel": "Reel",
+        "short": "Short"
+      },
+      "assetKinds": {
+        "logo": "Logo",
+        "overlay": "Overlay",
+        "frame": "Brand frame",
+        "intro": "Intro",
+        "outro": "Outro",
+        "track": "Royalty-free track"
+      },
+      "accounts": {
+        "h": "Social accounts",
+        "d": "One row per platform page/channel. A new one is always off and needs your approval before anything from it goes out.",
+        "empty": "No account added yet.",
+        "addH": "Add an account",
+        "externalIdPh": "The page or channel's own id",
+        "namePh": "A name for you to recognise it by",
+        "add": "Add account",
+        "added": "Account added — switched off and needing approval",
+        "archived": "Set aside",
+        "on": "On",
+        "off": "Off",
+        "needsApproval": "Needs approval",
+        "free": "Runs free",
+        "noLimit": "No daily limit",
+        "limit": "Daily limit: {n}",
+        "turnOff": "Turn off",
+        "turnOn": "Turn on",
+        "letRunFree": "Let it run free",
+        "askApproval": "Ask for approval again",
+        "limitPh": "No limit",
+        "limitSave": "Save",
+        "saved": "Saved",
+        "restore": "Bring back",
+        "archive": "Set aside"
+      },
+      "templates": {
+        "h": "Templates",
+        "d": "The shape a post will take once the video assembly engine fills it with your own photos (coming in a later PR).",
+        "empty": "No template yet.",
+        "addH": "Add a template",
+        "namePh": "A name for you to recognise it by",
+        "aspectRatio": "Aspect ratio",
+        "duration": "Length (seconds)",
+        "notes": "Notes",
+        "notesPh": "Anything worth remembering about this template",
+        "add": "Add template",
+        "added": "Template added",
+        "archived": "Set aside",
+        "seconds": "{n}s",
+        "version": "version {n}",
+        "restore": "Bring back",
+        "archive": "Set aside"
+      },
+      "assets": {
+        "h": "Brand asset library",
+        "d": "Your logo, overlay frame, intro/outro and royalty-free track. Kept apart from your product photos — never shown as one.",
+        "empty": "No brand asset uploaded yet.",
+        "addH": "Add a brand asset",
+        "archived": "Set aside",
+        "noKind": "— not named yet —",
+        "file": "File",
+        "add": "Upload",
+        "added": "Uploaded",
+        "needMedia": "Uploading needs Media library access as well — ask the owner or a manager.",
+        "restore": "Bring back",
+        "archive": "Set aside"
+      }
     }
   }
 }

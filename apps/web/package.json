@@ -35,6 +35,7 @@
     "@extas/search": "workspace:*",
     "@extas/settings": "workspace:*",
     "@extas/shipping": "workspace:*",
+    "@extas/studio": "workspace:*",
     "@extas/support": "workspace:*",
     "@extas/vault": "workspace:*",
     "next": "16.4.2",

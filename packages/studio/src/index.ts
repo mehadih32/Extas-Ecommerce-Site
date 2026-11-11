@@ -4,3 +4,5 @@
 // and its Test passes (A1.3), and nothing is published, scheduled or spent without his OK (CLAUDE.md rule 6).
 export * from './context';
 export * from './accounts';
+export * from './assets';
+export * from './templates';

@@ -268,6 +268,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/marketing/landing/seasonal/yearly', perm: 'marketing.landing.read', keys: ['marketingSeasonalYearly'] },
         ],
       },
+      // S23 · PR 437, 438: the social & content studio — accounts, the brand asset library and templates.
+      { id: 'studio', pages: [{ href: '/admin/marketing/studio', perm: 'studio.read', keys: ['marketingStudio'] }] },
       // S13 · PR 273: referrals — the programme, friends' orders with their invite codes and the sharers' rewards.
       { id: 'referrals', pages: [{ href: '/admin/marketing/referrals', perm: 'marketing.campaigns.read', keys: ['marketingReferrals'] }] },
       // S13 · PR 278: YouTube — the channel, the videos with their products and tracked links, the orders they brought.

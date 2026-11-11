@@ -17,6 +17,7 @@
   "dependencies": {
     "@extas/auth": "workspace:*",
     "@extas/db": "workspace:*",
+    "@extas/media": "workspace:*",
     "@extas/settings": "workspace:*",
     "zod": "4.6.7"
   },
