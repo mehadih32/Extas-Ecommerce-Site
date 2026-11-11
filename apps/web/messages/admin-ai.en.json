@@ -54,6 +54,7 @@
         "noteSame": "This is Claude's own recommended pick for this agent today.",
         "noteChanged": "This works too. Per-run cost and quality comparisons will show once the AI Cost Book is built (PR 312).",
         "noteFallback": "{provider} is no longer Tested, so {name} is quietly using the practice writer until it is Tested again or you pick again.",
+        "noteRouted": "{name} handles personal or business data, so a free-capable connection is never used for it — it is actually using {effective} instead.",
         "toastChanged": "{name}'s model is changed",
         "toastFailed": "Could not change {name}'s model",
         "toastNotReady": "Test that connection in Keys & connections first",
@@ -99,6 +100,16 @@
       "paused": "{name} is paused",
       "resumed": "{name} is working again",
       "failed": "Could not change {name}'s switch"
+    },
+    "routing": {
+      "title": "Which data may reach which model",
+      "sub": "Locked policy (Blueprint A5.2): personal and business data only ever reach a paid connection; only reviewed public/draft work may use a free-capable one. The owner cannot change this from here.",
+      "note": "If an agent's own model pick would break this rule, the page quietly uses a paid connection instead and says so under that agent's model.",
+      "classes": {
+        "personal": { "name": "Personal", "rule": "A customer's name, phone, address, chat or order. Paid connections only — never a free one." },
+        "business": { "name": "Business", "rule": "The shop's own sales, cost, stock or report figures. Paid connections only — a free one is not recommended." },
+        "publicDraft": { "name": "Public / draft", "rule": "Content a person reviews before it goes out (blog, SEO, social copy). A free-capable connection is allowed, with an automatic paid fallback." }
+      }
     }
   }
 }
