@@ -73,6 +73,48 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(bad.ok).toBe(false);
     expect(bad.message).toMatch(/JSON/);
   });
+
+  it('PR 311 — masks a phone number and an e-mail address out of the article prompt before the Completer ever sees it', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"excerpt": "x", "body": "y"}' }));
+    const w = liveAiWriter(complete);
+    await w.draftArticle({
+      locale: 'en',
+      title: 'Care guide',
+      query: null,
+      keywords: ['care'],
+      intent: 'howto',
+      wordCount: 400,
+      outline: [],
+      mustInclude: null,
+      links: [],
+      notes: 'Call 01712345678 or mail rahim@example.com for the full return story.',
+    });
+    expect(complete).toHaveBeenCalledTimes(1);
+    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
+    expect(sent.user).not.toContain('01712345678');
+    expect(sent.user).not.toContain('rahim@example.com');
+    expect(sent.user).toContain('[PHONE]');
+    expect(sent.user).toContain('[EMAIL]');
+  });
+
+  it('PR 311 — masks a phone number inside a campaign brief the same way', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"versions": [{"subject": "Hi", "body": "Hi {link}"}, {"subject": "Hi", "body": "Hi {link}"}]}' }));
+    const w = liveAiWriter(complete);
+    const campaign: AiCampaignInput = { channel: 'email', locale: 'en', brief: 'Call the rider on 01812345678 if the box looks damaged', voice: { greeting: '', signOff: '', style: '' }, versions: 2, words: ['link'], max: { subject: 80, body: 300 } };
+    await w.draftCampaign(campaign);
+    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
+    expect(sent.user).not.toContain('01812345678');
+    expect(sent.user).toContain('[PHONE]');
+  });
+
+  it('PR 311 — does not touch a prompt with nothing to mask', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"title": "A title", "description": "A description."}' }));
+    await liveAiWriter(complete).draftSeo(seoInput);
+    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
+    expect(sent.user).not.toContain('[PHONE]');
+    expect(sent.user).not.toContain('[EMAIL]');
+    expect(sent.user).toContain('Sample Pique Polo');
+  });
 });
 
 describe('Anthropic (PR 306)', () => {
