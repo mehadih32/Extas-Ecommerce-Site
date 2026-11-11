@@ -1,9 +1,13 @@
 # PR 17 (CN-023) — Playwright for the device gate and the end-to-end checks, outside the workspace (no lockfile change;
 # the tools find it through NODE_PATH=<prefix>/node_modules). Chromium comes from the cache (keyed on the Playwright
 # version); its system libraries are installed on every run, because a fresh runner never has them.
-# Updated 11 Nov 2026 (PR 17 follow-up): the system-library install (apt-get under the hood) retries up to 4 times
-# with 20s/60s/120s backoff, because the runner's apt mirror (azure.archive.ubuntu.com) has transient DNS outages
-# that failed this one step on otherwise-green runs; the step still fails the job once every attempt is exhausted.
+# Updated 11 Nov 2026 (PR 17 follow-up): the system-library install (apt-get under the hood) retries, with backoff,
+# because the runner's apt mirror (azure.archive.ubuntu.com) has transient DNS outages that failed this one step on
+# otherwise-green runs. A sustained outage does not make apt-get fail fast — it can hang for minutes walking every
+# mirror/component before erroring — so each attempt is capped at 120s with `timeout`, and the attempt count/backoff
+# (3 tries, 20s/60s) is sized so the whole loop's worst case (3*120s + 20s + 60s = 7 min) stays well under this
+# action's callers' job timeouts (sign-in e2e 20 min, device-gate-shard 30 min): a still-down mirror now fails the
+# step cleanly and quickly instead of running the retries into the job's own cancellation.
 name: Playwright and Chromium
 description: npm-installs playwright into a prefix, Chromium from the cache, then its system libraries
 inputs:
@@ -39,16 +43,18 @@ runs:
       env:
         PW_PREFIX: ${{ inputs.prefix }}
       run: |
-        backoffs=(20 60 120)
+        backoffs=(20 60)
         attempt=1
-        max_attempts=4
-        until "$PW_PREFIX/node_modules/.bin/playwright" install-deps chromium; do
+        max_attempts=3
+        attempt_timeout=120
+        until timeout "$attempt_timeout" "$PW_PREFIX/node_modules/.bin/playwright" install-deps chromium; do
+          status=$?
           if [ "$attempt" -ge "$max_attempts" ]; then
-            echo "install-deps chromium failed after $attempt attempts" >&2
+            echo "install-deps chromium failed after $attempt attempts (last exit $status; 124 means it hit the ${attempt_timeout}s per-attempt cap, e.g. a still-down apt mirror)" >&2
             exit 1
           fi
           wait_s="${backoffs[$((attempt - 1))]}"
-          echo "install-deps chromium failed (attempt $attempt/$max_attempts) — retrying in ${wait_s}s" >&2
+          echo "install-deps chromium failed (attempt $attempt/$max_attempts, exit $status) — retrying in ${wait_s}s" >&2
           sleep "$wait_s"
           attempt=$((attempt + 1))
         done
