@@ -19,6 +19,12 @@
 // default — no time restriction) or a daily/weekly clock time, with a plain preview of when it would next fire.
 // Nothing runs on it yet (no job runner reads a schedule); it is honestly a preview, same as a pause switch or a
 // model pick before any AI key existed.
+//
+// S15 · PR 310 (A5.2, A5.6) — a new "Which data may reach which model" card states the Locked policy itself
+// (personal and business data: paid connections only; public/draft work: a free-capable connection is allowed),
+// and each agent card's model row now also names its own data class and, only when the policy actually moved the
+// owner's pick (`routingDowngraded`), an honest note naming what runs instead and why — never a second number this
+// page has not measured, same spirit as PR 307's model note.
 // Guide: docs/admin-guide/pages/ai/control.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -37,6 +43,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { dateTime } from '@/components/admin/stock/text';
 import { adminDeps } from '@/lib/admin-auth';
 import { controlRoomView } from '@/lib/admin-ai/control-room';
+import { DATA_CLASSES } from '@/lib/admin-ai/data-classes';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -103,8 +110,12 @@ export default async function AiControlRoomPage() {
   }));
   const modelNoteOf = (a: (typeof agents)[number], name: string) => {
     if (a.selectedProvider !== null && !a.selectedReady) return c('agents.model.noteFallback', { provider: providerLabel(a.selectedProvider), name });
+    if (a.routingDowngraded) return c('agents.model.noteRouted', { name, effective: providerLabel(a.effectiveProvider) });
     return a.selectedProvider === o.recommendedProvider ? c('agents.model.noteSame') : c('agents.model.noteChanged');
   };
+  // S15 · PR 310 — each data class's own name and, in the policy card, whether a free-capable connection may ever
+  // serve it (Blueprint A5.2, Locked — never the owner's choice, so this reads the fixed catalogue, not a setting).
+  const dataClassLabel = (key: string) => c(`routing.classes.${key}.name`);
 
   // S15 · PR 308 — the schedule's own plain-text line (always / daily / weekly) and, separately, the next-run
   // preview; both honest, never claiming a job runner that does not exist yet.
@@ -196,6 +207,9 @@ export default async function AiControlRoomPage() {
                 </div>
                 <div className="ai-model" data-testid={`ai-agent-model-row-${a.key}`}>
                   <span className="a2-xs a2-mute">{c('agents.model.label')}</span>
+                  <span className="a2-pill line" data-testid={`ai-agent-dataclass-${a.key}`}>
+                    {dataClassLabel(a.dataClass)}
+                  </span>
                   {canControl ? (
                     <ModelPickSelect
                       agentKey={a.key}
@@ -237,6 +251,22 @@ export default async function AiControlRoomPage() {
             );
           })}
         </div>
+      </section>
+
+      <section className="a2-card tight ai-routing" aria-labelledby="ai-routing-h" data-testid="ai-routing">
+        <h2 className="a2-h3" id="ai-routing-h">
+          {c('routing.title')}
+        </h2>
+        <p className="a2-cs">{c('routing.sub')}</p>
+        <ul className="ai-routing-list">
+          {DATA_CLASSES.map((dc) => (
+            <li key={dc.key} className="ai-routing-row" data-testid={`ai-routing-${dc.key}`}>
+              <span className="a2-pill line">{c(`routing.classes.${dc.key}.name`)}</span>
+              <span className="a2-xs">{c(`routing.classes.${dc.key}.rule`)}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="a2-xs a2-mute">{c('routing.note')}</p>
       </section>
     </div>
   );

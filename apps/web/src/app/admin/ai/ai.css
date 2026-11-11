@@ -135,3 +135,25 @@
   gap: 4px;
   white-space: nowrap;
 }
+/* S15 · PR 310 — the "Which data may reach which model" policy card and each agent's own data-class pill, placed
+   on the existing .ai-model row (no new grid of its own) so it reads next to the model it governs. */
+.adm2 .ai-routing {
+  margin-top: 20px;
+}
+.adm2 .ai-routing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.adm2 .ai-routing-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.adm2 .ai-routing-row span.a2-xs {
+  overflow-wrap: anywhere;
+}

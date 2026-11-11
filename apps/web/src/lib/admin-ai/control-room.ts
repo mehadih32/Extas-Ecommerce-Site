@@ -21,12 +21,19 @@
 // store's own time zone — `null` for "always", since there is no time-based run to preview). No job runner reads
 // this yet; it is a preview only, the same honest-but-inert shape PR 305's pause switch and PR 307's model pick had
 // before any AI key existed.
+//
+// S15 · PR 310 (A5.2, A5.6) — each agent also carries its own `dataClass` (`./data-classes.ts`, structural, never
+// the owner's own choice) and, built from it, `effectiveProvider`/`routingDowngraded`: what will actually run once
+// the data-class policy is applied on top of the owner's model pick — never different from `selectedProvider`
+// unless that pick is OpenRouter (the one free-capable connection) on an agent whose data is personal or business,
+// in which case the page explains that it is quietly using the cheapest ready paid connection instead.
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { dayStart, ymdIn } from '@extas/metrics';
 import { INSTALLATION } from '@extas/settings';
 import type { AppResolver } from '../settings';
 import { AI_AGENTS, isAiAgentKey, type AiAgentKey } from './agents';
+import { agentDataClass, routeProvider, type DataClassKey } from './data-classes';
 import { AiError, isAiError } from './errors';
 import { listWriterOptions, recommendedWriterOf, isWriterProvider, type WriterOption, type WriterProvider } from './model-picks';
 import { nextRunAt, normalizeStoredSchedule, type AgentSchedule } from './schedule';
@@ -64,6 +71,12 @@ export interface ControlRoomAgent {
   /** The next moment a `daily`/`weekly` schedule fires, ISO, in no particular time zone of its own (compute the
    * display in the store's); `null` for "always" — there is nothing time-based to preview. */
   nextRunAt: string | null;
+  /** This agent's own data class (PR 310, structural — never the owner's choice). */
+  dataClass: DataClassKey;
+  /** What actually runs once the data-class policy (A5.2) is applied on top of `selectedProvider`. */
+  effectiveProvider: WriterProvider | null;
+  /** True once the owner's model pick was moved away from a free-capable connection by the data-class policy. */
+  routingDowngraded: boolean;
 }
 
 export interface ControlRoomView {
@@ -135,6 +148,9 @@ export async function controlRoomView(deps: ControlRoomDeps, storeId: number): P
     const selectedOpt = modelOptions.find((o) => o.provider === selectedProvider);
     const schedule = normalizeStoredSchedule(r.schedule);
     const nextRun = nextRunAt(schedule, now, timeZone);
+    const selectedReady = Boolean(selectedProvider === null || selectedOpt?.ready);
+    const dataClass = agentDataClass(r.key);
+    const routing = routeProvider(dataClass, selectedProvider, selectedReady, modelOptions);
     return {
       key: r.key,
       nameEn: r.nameEn,
@@ -149,9 +165,12 @@ export async function controlRoomView(deps: ControlRoomDeps, storeId: number): P
       todayMinor: todayMap.get(r.id) ?? 0,
       monthMinor: monthMap.get(r.id) ?? 0,
       selectedProvider,
-      selectedReady: Boolean(selectedProvider === null || selectedOpt?.ready),
+      selectedReady,
       schedule,
       nextRunAt: nextRun ? nextRun.toISOString() : null,
+      dataClass,
+      effectiveProvider: routing.effectiveProvider,
+      routingDowngraded: routing.downgraded,
     };
   });
   const todayMinor = agents.reduce((s, a) => s + a.todayMinor, 0);
