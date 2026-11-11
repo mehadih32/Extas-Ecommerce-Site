@@ -7,8 +7,11 @@
 import { z } from 'zod';
 import type { PrismaClient } from '@extas/db/client';
 import { audit } from '@extas/auth';
-import type { VideoAspect, VideoEstimate, VideoProvider } from '@extas/adapters';
-import { VIDEO_ASPECTS } from '@extas/adapters';
+// The video subpath only (not the package's full barrel): this file's barrel re-export reaches Client Components
+// (MotionLibrary.tsx imports @extas/creative-studio), so pulling in adapters/storage's Node-only Azure/S3 SDKs here
+// would break the client bundle the same way the admin VideoJobs.tsx screen had to avoid it.
+import type { VideoAspect, VideoEstimate, VideoProvider } from '@extas/adapters/video';
+import { VIDEO_ASPECTS } from '@extas/adapters/video';
 import { StudioError } from './errors';
 import type { StudioDeps, Who } from './context';
 

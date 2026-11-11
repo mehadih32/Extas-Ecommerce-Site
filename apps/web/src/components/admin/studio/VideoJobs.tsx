@@ -4,7 +4,9 @@
 // every rule again; the page is read again after a request (nothing here generates a clip yet — that is PR 483).
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { VIDEO_ASPECTS, type VideoAspect } from '@extas/adapters';
+// Narrowed to the video subpath (not the package's full barrel): a Client Component must never pull in
+// adapters/storage's Azure/S3 SDKs (Node-only) through @extas/adapters's root export.
+import { VIDEO_ASPECTS, type VideoAspect } from '@extas/adapters/video';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
 import { formatMoney, type Money } from '../products/model';
