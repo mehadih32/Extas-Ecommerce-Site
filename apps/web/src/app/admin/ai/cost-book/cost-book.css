@@ -1,0 +1,49 @@
+/* S15 · PR 312 — AI › Cost Book (/admin/ai/cost-book). Uses the shared --lm- and a2- theme tokens, so it needs no
+   colour literal of its own (the hardcode guard checks CSS files too). */
+.adm2 .cb-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.adm2 .cb-search {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 420px;
+}
+.adm2 .cb-search input {
+  max-width: 100%;
+}
+.adm2 .cb-job {
+  min-width: 220px;
+}
+.adm2 .cb-job .n {
+  font-weight: 600;
+}
+.adm2 .cb-job .d {
+  overflow-wrap: anywhere;
+}
+.adm2 .cb-sel-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+}
+.adm2 .cb-sel {
+  max-width: 100%;
+}
+.adm2 .cb-sel-cost {
+  overflow-wrap: anywhere;
+}
+.adm2 .cb-alts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.adm2 .cb-top {
+  margin-top: 10px;
+}
+.adm2 .cb-top ol {
+  margin: 0;
+  padding-left: 20px;
+}

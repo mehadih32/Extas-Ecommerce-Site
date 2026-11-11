@@ -153,9 +153,8 @@
       },
       "ai": {
         "control": "Control room",
-        "agents": "Agents",
         "audit": "Checklist audit",
-        "reports": "Agent reports"
+        "costBook": "Cost Book"
       }
     },
     "purpose": {
