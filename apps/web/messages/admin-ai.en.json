@@ -63,6 +63,23 @@
           "googleAi": "Google Gemini",
           "openRouter": "OpenRouter"
         }
+      },
+      "schedule": {
+        "label": "Schedule",
+        "mode": { "always": "Always", "daily": "Daily", "weekly": "Weekly" },
+        "selectLabel": "{name}: when its time-based work runs",
+        "timeLabel": "{name}: clock time",
+        "daysLabel": "{name}: which weekdays",
+        "saveLabel": "Save",
+        "days": { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" },
+        "always": "No time restriction — it only acts on its own triggers, any time.",
+        "daily": "Daily at {time}",
+        "weekly": "{days} at {time}",
+        "nextRun": "Next scheduled run: {when}",
+        "nextRunNone": "Nothing time-based to preview — it only acts on its own triggers.",
+        "toastChanged": "{name}'s schedule is saved",
+        "toastFailed": "Could not save {name}'s schedule",
+        "toastInvalid": "Pick a clock time (and, for Weekly, at least one day) first"
       }
     },
     "toast": {

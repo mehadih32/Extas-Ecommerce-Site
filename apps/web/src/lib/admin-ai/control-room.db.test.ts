@@ -13,6 +13,11 @@
 // option but the practice writer is "not ready" and `recommendedProvider` is null; picking an un-Tested or unknown
 // provider is refused (422); once a PR 306 connection is enabled and Tested (mode LIVE), it becomes ready, the
 // recommendation picks it up, and an agent may be pointed at it (audited `ai.agent.model`, idempotent).
+//
+// S15 · PR 308 — the same route also takes {key, schedule} (one agent's own schedule: always/daily/weekly). On a
+// fresh installation every agent reads as "always" with no next-run preview; a bad shape is refused (422
+// INVALID_SCHEDULE); a valid daily/weekly schedule's `nextRunAt` is computed in the store's own time zone, a double
+// tap writes once, and `{schedule: null}` resets to "always".
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -51,6 +56,8 @@ interface Agent {
   monthMinor: number;
   selectedProvider: string | null;
   selectedReady: boolean;
+  schedule: { mode: string; time?: string; days?: number[] };
+  nextRunAt: string | null;
 }
 interface ModelOption {
   provider: string | null;
@@ -271,5 +278,39 @@ describe.skipIf(!HAS_TEST_DB)('AI › Control room on PostgreSQL (PR 304)', () =
 
     const back = await ask('POST', controller, { key: 'doot', provider: null });
     expect(back.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: null, selectedReady: true });
+  });
+
+  it('every agent reads as "always", with nothing to preview, until the owner sets a schedule (PR 308)', async () => {
+    const { a } = await ask('GET', reader);
+    for (const ag of a.agents) expect(ag).toMatchObject({ schedule: { mode: 'always' }, nextRunAt: null });
+  });
+
+  it('a schedule is refused for an unknown agent or a bad shape; nothing changes (PR 308)', async () => {
+    expect((await ask('POST', reader, { key: 'bhandari', schedule: { mode: 'daily', time: '09:00' } })).status).toBe(403);
+    expect((await ask('POST', controller, { key: 'not-an-agent', schedule: { mode: 'daily', time: '09:00' } })).a).toMatchObject({ ok: false, error: 'NOT_FOUND' });
+    expect((await ask('POST', controller, { key: 'bhandari', schedule: { mode: 'hourly' } })).a).toMatchObject({ ok: false, error: 'INVALID_SCHEDULE' });
+    expect((await ask('POST', controller, { key: 'bhandari', schedule: { mode: 'daily', time: '9am' } })).a).toMatchObject({ ok: false, error: 'INVALID_SCHEDULE' });
+    expect((await ask('POST', controller, { key: 'bhandari', schedule: { mode: 'weekly', time: '09:00', days: [] } })).a).toMatchObject({ ok: false, error: 'INVALID_SCHEDULE' });
+    const again = await ask('GET', reader);
+    expect(again.a.agents.find((x) => x.key === 'bhandari')).toMatchObject({ schedule: { mode: 'always' } });
+  });
+
+  it('a daily schedule previews tomorrow\'s own clock time once today\'s has passed, in the store\'s own time zone; a double tap writes once (PR 308)', async () => {
+    // now = 2026-11-11T10:00:00Z = 16:00 Asia/Dhaka — today's 09:00 has already passed.
+    const auditBefore = await t.prisma.auditLog.count({ where: { action: 'ai.agent.schedule' } });
+    const set = await ask('POST', controller, { key: 'bhandari', schedule: { mode: 'daily', time: '09:00' } });
+    expect(set.status).toBe(200);
+    expect(set.a.agents.find((x) => x.key === 'bhandari')).toMatchObject({ schedule: { mode: 'daily', time: '09:00' }, nextRunAt: '2026-11-12T03:00:00.000Z' });
+    await ask('POST', controller, { key: 'bhandari', schedule: { mode: 'daily', time: '09:00' } }); // same value again
+    expect(await t.prisma.auditLog.count({ where: { action: 'ai.agent.schedule' } })).toBe(auditBefore + 1);
+  });
+
+  it("a weekly schedule previews today's own run when today matches and its time has not passed yet; resetting to null goes back to \"always\" (PR 308)", async () => {
+    // 2026-11-11 is a Wednesday (weekday 3); 20:00 Dhaka (14:00 UTC) is still ahead of now (10:00 UTC).
+    const set = await ask('POST', controller, { key: 'sawdagor', schedule: { mode: 'weekly', time: '20:00', days: [3, 1] } });
+    expect(set.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ schedule: { mode: 'weekly', time: '20:00', days: [1, 3] }, nextRunAt: '2026-11-11T14:00:00.000Z' });
+
+    const reset = await ask('POST', controller, { key: 'sawdagor', schedule: null });
+    expect(reset.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ schedule: { mode: 'always' }, nextRunAt: null });
   });
 });
