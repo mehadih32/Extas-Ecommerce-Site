@@ -107,7 +107,7 @@ export function MotionNew({ url, texts: x }: { url: string; texts: MotionTexts }
         </label>
         <input id="motion-desc-bn" className="a2-inp" value={descriptionBn} disabled={busy} onChange={(e) => setDescriptionBn(e.target.value)} data-testid="motion-desc-bn" />
       </div>
-      <label className="a2-sm adp-read">
+      <label className="a2-chkl">
         <input type="checkbox" className="a2-chk" checked={groupClip} disabled={busy} onChange={(e) => setGroupClip(e.target.checked)} data-testid="motion-group" />
         {x.groupClip}
       </label>
