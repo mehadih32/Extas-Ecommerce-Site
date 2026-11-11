@@ -1,0 +1,60 @@
+/* S15 · PR 317 — AI › Approvals (/admin/ai/approvals), Lumen look. Uses the shared --lm-*/a2-* tokens only, so the
+   hardcode guard finds no colour literal here. */
+.adm2 .ai-ap-sec {
+  margin-top: 4px;
+}
+.adm2 .ai-ap-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.adm2 .ai-ap-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.adm2 .ai-ap-pills {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.adm2 .ai-ap-title {
+  font-weight: 600;
+}
+.adm2 .ai-ap-decide {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+.adm2 .ai-ap-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 220px;
+}
+.adm2 .ai-ap-note input {
+  width: 100%;
+}
+.adm2 .ai-ap-btns {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+@media (max-width: 767px) {
+  .adm2 .ai-ap-decide {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .adm2 .ai-ap-btns {
+    justify-content: stretch;
+  }
+  .adm2 .ai-ap-btns .a2-btn {
+    flex: 1 1 0;
+  }
+}
