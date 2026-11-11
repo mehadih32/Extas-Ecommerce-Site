@@ -60,6 +60,28 @@ describe('practice ERP + HTTP client (PR 498)', () => {
     expect(w.calls.at(-1)).toMatchObject({ method: 'GET', path: '/health', companyId: 'SAMPLE-CO-2', status: 200 });
   });
 
+  it('health accepts the real ERP\'s nested shape too, mapped to the same ErpHealth (PR 498 update, CN-044)', async () => {
+    // The practice ERP answers flat (covered by the test above). The real ERP answers nested:
+    // {ok, company:{name}, integration:{id, name, platform, warehouseId}, serverTime} — this must map
+    // to the identical ErpHealth the flat shape gives, with companyId null (the real ERP's `company`
+    // carries no id).
+    const nestedBody = {
+      ok: true,
+      company: { name: 'Real company Ltd' },
+      integration: { id: 'INT-9', name: 'Real website', platform: 'woocommerce', warehouseId: 'WH-REAL-1' },
+      serverTime: T0.toISOString(),
+    };
+    const fetchNested = async () => new Response(JSON.stringify(nestedBody), { status: 200, headers: { 'content-type': 'application/json' } });
+    const api = createErpHttpClient({ baseUrl: BASE, apiKey: 'k', provider: 'extasErp', fetch: fetchNested });
+    expect(await api.health()).toEqual({ companyId: null, companyName: 'Real company Ltd', integrationName: 'Real website', warehouseId: 'WH-REAL-1' });
+  });
+
+  it('health still refuses an answer that is neither shape', async () => {
+    const fetchBroken = async () => new Response(JSON.stringify({ unrelated: true }), { status: 200, headers: { 'content-type': 'application/json' } });
+    const api = createErpHttpClient({ baseUrl: BASE, apiKey: 'k', provider: 'extasErp', fetch: fetchBroken });
+    expect(await codeOf(api.health())).toBe('BAD_RESPONSE');
+  });
+
   it('a wrong key is AUTH (not worth retrying) and the key never shows in the error', async () => {
     const w = new MockErpWorld();
     const bad = randomBytes(12).toString('hex');

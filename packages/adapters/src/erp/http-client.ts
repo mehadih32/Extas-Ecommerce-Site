@@ -68,12 +68,33 @@ const dateText = z.union([z.string(), z.date()]).transform((v, c) => {
 const decimalText = z.union([z.string().regex(/^-?\d+(\.\d+)?$/), z.number()]).transform(String);
 const optText = z.string().nullish().transform((v) => v ?? null);
 
-const healthSchema = z.object({
+// PR 498 — Updated 11 Nov 2026 (CN-044, ERP lane): the practice ERP answers `/health` flat
+// (`{companyName, integrationName, companyId, warehouseId}`), but the real ERP answers nested
+// (`{ok, company:{name}, integration:{id, name, platform, warehouseId}, serverTime}`). `healthSchema`
+// accepts either and maps both down to the same `ErpHealth`. The flat shape is the mock's and stays
+// the first branch tried; the nested shape never reports a bare `companyId` (the real ERP's `company`
+// object carries only a name), so `companyId` is null for it, exactly like any other ERP that omits it.
+const flatHealthSchema = z.object({
   companyName: z.string().min(1),
   integrationName: z.string().min(1),
   companyId: idText.nullish().transform((v) => v ?? null),
   warehouseId: idText.nullish().transform((v) => v ?? null),
 });
+const nestedHealthSchema = z
+  .object({
+    company: z.object({ name: z.string().min(1) }),
+    integration: z.object({
+      name: z.string().min(1),
+      warehouseId: idText.nullish().transform((v) => v ?? null),
+    }),
+  })
+  .transform((v) => ({
+    companyName: v.company.name,
+    integrationName: v.integration.name,
+    companyId: null as string | null,
+    warehouseId: v.integration.warehouseId,
+  }));
+const healthSchema = z.union([flatHealthSchema, nestedHealthSchema]);
 
 export const erpStockRowSchema = z.object({
   sku: z.string().trim().min(1),
