@@ -19,6 +19,10 @@
 // default — no time restriction) or a daily/weekly clock time, with a plain preview of when it would next fire.
 // Nothing runs on it yet (no job runner reads a schedule); it is honestly a preview, same as a pause switch or a
 // model pick before any AI key existed.
+//
+// S15 · PR 309 (C1.6) — each card also carries its own monthly spend cap (CapInput, `AiAgent.monthlyCapMinor`):
+// this month's spend against the cap, with a status pill (none/ok/warned/paused). Crossing 80% or 100% sends the
+// owner's Telegram warning (checkAgentCapAlerts, inside `controlRoomView` itself) — real and live, not a preview.
 // Guide: docs/admin-guide/pages/ai/control.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -29,6 +33,7 @@ import { KeepOnSwitch } from '@/components/admin/ai/KeepOnSwitch';
 import { MasterSwitch } from '@/components/admin/ai/MasterSwitch';
 import { ModelPickSelect, type ModelPickOption } from '@/components/admin/ai/ModelPickSelect';
 import { ScheduleEditor, type ScheduleDraft } from '@/components/admin/ai/ScheduleEditor';
+import { CapInput } from '@/components/admin/ai/CapInput';
 import type { CountFormat } from '@/lib/admin-lumen/model';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -75,7 +80,7 @@ export default async function AiControlRoomPage() {
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `aiControl.${k}`, vars);
   const canControl = access.guard.permissions?.has('ai.control') ?? false;
 
-  const { view: o, agents } = await controlRoomView({ db: access.deps.db, resolver: access.deps.resolver }, MOTHER_STORE_ID);
+  const { view: o, agents } = await controlRoomView({ db: access.deps.db, resolver: access.deps.resolver, vault: access.deps.vault }, MOTHER_STORE_ID);
   const money = moneyOf(o.currency, view.locale);
   const amount = (minor: number) => formatMoney(minor, money);
   const fmt: CountFormat = { kind: 'money', locale: view.locale, currency: o.currency, digits: money.digits };
@@ -117,6 +122,9 @@ export default async function AiControlRoomPage() {
     return c('agents.schedule.weekly', { days, time: s.time ?? '' });
   };
   const scheduleDraftOf = (s: (typeof agents)[number]['schedule']): ScheduleDraft => ({ mode: s.mode, time: s.time, days: s.days });
+
+  // S15 · PR 309 — the cap's own status pill: a tone per state, text from the dict, never invented here.
+  const capToneOf = (state: (typeof agents)[number]['capState']) => (state === 'paused' ? 'bad' : state === 'warned' ? 'warn' : state === 'ok' ? 'ok' : 'line');
 
   return (
     <div className="a2-z ai-page" data-testid="ai-control" data-lm-ready="">
@@ -232,6 +240,16 @@ export default async function AiControlRoomPage() {
                     <span className="a2-xs">{scheduleTextOf(a.schedule)}</span>
                   )}
                   <span className="a2-xs a2-mute">{a.nextRunAt ? c('agents.schedule.nextRun', { when: dateTime(a.nextRunAt, view.locale, view.timeZone) }) : c('agents.schedule.nextRunNone')}</span>
+                </div>
+                <div className="ai-cap-wrap" data-testid={`ai-agent-cap-row-${a.key}`}>
+                  <span className="a2-xs a2-mute">{c('agents.cap.label')}</span>
+                  {canControl ? (
+                    <CapInput agentKey={a.key} capMinor={a.monthlyCapMinor} money={money} label={c('agents.cap.inputLabel', { name })} saveLabel={c('agents.cap.saveLabel')} savedText={c('agents.cap.toastChanged', { name })} failedText={c('agents.cap.toastFailed', { name })} invalidText={c('agents.cap.toastInvalid')} />
+                  ) : (
+                    <span className="a2-xs">{a.monthlyCapMinor === null ? c('agents.cap.none') : amount(a.monthlyCapMinor)}</span>
+                  )}
+                  <span className={`a2-pill ${capToneOf(a.capState)}`}>{c(`agents.cap.${a.capState}`)}</span>
+                  {a.capState !== 'none' ? <span className="a2-xs a2-mute">{c('agents.cap.spentOfCap', { spent: amount(a.monthMinor), cap: amount(a.monthlyCapMinor ?? 0) })}</span> : null}
                 </div>
               </article>
             );

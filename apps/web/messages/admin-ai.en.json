@@ -80,6 +80,19 @@
         "toastChanged": "{name}'s schedule is saved",
         "toastFailed": "Could not save {name}'s schedule",
         "toastInvalid": "Pick a clock time (and, for Weekly, at least one day) first"
+      },
+      "cap": {
+        "label": "Monthly spend cap",
+        "inputLabel": "{name}: monthly spend cap",
+        "saveLabel": "Save",
+        "none": "No cap set",
+        "ok": "Within cap",
+        "warned": "80% of cap reached — owner warned",
+        "paused": "Cap reached — new generations paused",
+        "spentOfCap": "{spent} of {cap} this month",
+        "toastChanged": "{name}'s monthly spend cap is saved",
+        "toastFailed": "Could not save {name}'s spend cap",
+        "toastInvalid": "Enter a whole amount above zero, or leave it empty for no cap"
       }
     },
     "toast": {
