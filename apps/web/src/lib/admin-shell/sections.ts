@@ -289,7 +289,15 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S25 · PR 481 (Blueprint C8.1) — Studio: the motion library (image-to-video jobs, reels, exports and the
       // creative brief join as the rest of PR 482–490 build; hidden by `stages.closedShown.S25` until the stage is
       // finished, CN-036/CN-039).
-      { id: 'studio', pages: [{ href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] }] },
+      // S25 · PR 489 (Blueprint C8.3) — Campaign overlays: a page-level, time-bound decoration on the product card,
+      // listing and product page — never stored on the photo, never touching a price.
+      {
+        id: 'studio',
+        pages: [
+          { href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] },
+          { href: '/admin/marketing/studio/overlay', perm: 'marketing.studio.read', keys: ['marketingStudioOverlay'] },
+        ],
+      },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,
