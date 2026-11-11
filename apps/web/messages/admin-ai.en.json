@@ -3,8 +3,19 @@
     "metaTitle": "AI Center",
     "title": "AI Center",
     "sub": "Every AI agent: what it is doing, what it cost, what it decided.",
-    "offTitle": "AI is off",
-    "offBody": "Off on a new installation until the owner turns it on. With AI off nothing is sent to any AI company, and every AI feature falls back to its rule or saved template — the shop keeps running as normal.",
+    "master": {
+      "label": "MASTER SWITCH",
+      "onTitle": "AI is on",
+      "onBody": "{n} agent(s) are working inside their caps and limits.",
+      "offTitle": "AI is off",
+      "offBody": "Off until it is turned on. With AI off nothing is sent to any AI company, and every AI feature falls back to its rule or saved template — the shop keeps running as normal.",
+      "switchLabel": "AI master switch: on or off",
+      "ownerOnly": "Owner only",
+      "capWarn": "No monthly spend cap is set yet. Set one in AI costs so spending can never run away.",
+      "toastOn": "AI is on",
+      "toastOff": "AI is off — the shop keeps running on rules and templates",
+      "toastFailed": "Could not change the AI master switch"
+    },
     "tiles": {
       "label": "Today at a glance",
       "running": "Running now",
@@ -16,15 +27,24 @@
     },
     "agents": {
       "title": "Agents",
-      "sub": "Each agent's own switch; the master switch above decides whether any of them may actually work.",
+      "sub": "Each agent's own switch; the master switch above decides whether any of them may actually work — unless an agent is kept on.",
       "statusWorking": "Working",
+      "statusWorkingKeptOn": "Working — kept on while AI is off",
       "statusPaused": "Paused — AI is off",
       "statusOff": "Off",
       "lastNone": "No activity yet",
       "today": "Today",
       "month": "This month",
       "switchLabel": "{name}: on or off",
-      "readOnly": "You can see the agents; pausing or resuming one needs the AI control permission."
+      "readOnly": "You can see the agents; pausing or resuming one needs the AI control permission.",
+      "keepOn": {
+        "label": "Keep on even when AI is off",
+        "switchLabel": "Keep {name} on even when AI is off",
+        "pillOn": "Kept on even when AI is off",
+        "toastOn": "{name} will keep working even when AI is off",
+        "toastOff": "{name} now pauses with the master switch",
+        "toastFailed": "Could not change {name}'s keep-on setting"
+      }
     },
     "toast": {
       "paused": "{name} is paused",

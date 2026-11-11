@@ -1,5 +1,44 @@
 /* S15 · PR 304 — AI › Control room (/admin/ai), in the Lumen look. Uses the shared --lm-* theme tokens, so it needs
    no colour literal of its own (the hardcode guard checks CSS files too). */
+/* S15 · PR 305 — the master-switch banner and each card's "keep on when AI is off" row. */
+.adm2 .ai-master {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.adm2 .ai-mh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.adm2 .ai-mht {
+  min-width: 0;
+}
+.adm2 .ai-mt {
+  margin: 2px 0;
+}
+.adm2 .ai-keep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.adm2 .ai-keepsw {
+  width: 40px;
+}
+.adm2 .ai-keepsw span {
+  width: 32px;
+  height: 20px;
+}
+.adm2 .ai-keepsw span::after {
+  width: 14px;
+  height: 14px;
+}
+.adm2 .ai-keepsw.on span::after {
+  transform: translateX(12px);
+}
 .adm2 .ai-tiles {
   margin-top: 12px;
 }

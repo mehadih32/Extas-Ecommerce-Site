@@ -3,6 +3,11 @@
 // agent (reversible, audited, a double tap writes once); an unknown agent key or a missing field is refused; costs
 // are summed from AiUsageLedger inside the store's own day and month, never a later or earlier one. A throwaway
 // database (skipped without TEST_DATABASE_ADMIN_URL, like every other `.db.test.ts`).
+//
+// S15 · PR 305 — the same route also flips the business-wide master switch ({master}, `ai.control`, a SettingChange
+// not a second AuditLog) and one agent's "keep running even with the master off" ({key, keepOnWhenMasterOff},
+// `ai.control`, audited); both are a no-op on a double tap, and `workingNow` is true whenever an agent is on AND
+// (the master is on OR it is kept on).
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -34,6 +39,7 @@ const cookiesOf = (res: Response) =>
 interface Agent {
   key: string;
   enabled: boolean;
+  keepOnWhenMasterOff: boolean;
   workingNow: boolean;
   lastActivity: { summaryBn: string; at: string } | null;
   todayMinor: number;
@@ -118,7 +124,7 @@ describe.skipIf(!HAS_TEST_DB)('AI › Control room on PostgreSQL (PR 304)', () =
     const ok = await ask('POST', controller, { key: 'doot', enabled: true });
     expect(ok.status).toBe(200);
     expect(ok.a.agents.find((x) => x.key === 'doot')?.enabled).toBe(true);
-    // the master switch is still off (PR 305), so the agent is paused, not working, even though it is on
+    // the master switch is off by default, so the agent is paused, not working, even though it is on
     expect(ok.a.agents.find((x) => x.key === 'doot')?.workingNow).toBe(false);
     expect(ok.a.view.runningNow).toBe(0);
   });
@@ -140,6 +146,41 @@ describe.skipIf(!HAS_TEST_DB)('AI › Control room on PostgreSQL (PR 304)', () =
     const back = await ask('POST', controller, { key: 'gyani', enabled: false });
     expect(back.a.agents.find((x) => x.key === 'gyani')?.enabled).toBe(false);
     expect(await t.prisma.auditLog.count({ where: { action: { in: ['ai.agent.pause', 'ai.agent.resume'] } } })).toBe(countBefore + 2);
+  });
+
+  it('only ai.control can flip the business-wide master switch (PR 305); a double tap writes once', async () => {
+    expect((await ask('POST', reader, { master: true })).status).toBe(403);
+    const on = await ask('POST', controller, { master: true });
+    expect(on.status).toBe(200);
+    expect(on.a.view.masterOn).toBe(true);
+    const again = await ask('POST', controller, { master: true }); // same value again
+    expect(again.status).toBe(200);
+    expect(again.a.view.masterOn).toBe(true);
+    const off = await ask('POST', controller, { master: false });
+    expect(off.a.view.masterOn).toBe(false);
+  });
+
+  it('an agent kept on works even while the master switch is off (PR 305); an unknown key is refused; a double tap writes once', async () => {
+    expect((await ask('POST', controller, { key: 'not-an-agent', keepOnWhenMasterOff: true })).a).toMatchObject({ ok: false, error: 'NOT_FOUND' });
+    expect((await ask('POST', controller, { keepOnWhenMasterOff: true })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['key'] });
+    expect((await ask('POST', reader, { key: 'sawdagor', keepOnWhenMasterOff: true })).status).toBe(403);
+
+    await ask('POST', controller, { key: 'sawdagor', enabled: true });
+    const before = await ask('GET', reader);
+    expect(before.a.view.masterOn).toBe(false);
+    expect(before.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ keepOnWhenMasterOff: false, workingNow: false });
+
+    const kept = await ask('POST', controller, { key: 'sawdagor', keepOnWhenMasterOff: true });
+    expect(kept.a.view.masterOn).toBe(false); // the master switch itself never moves
+    expect(kept.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ keepOnWhenMasterOff: true, workingNow: true });
+
+    const auditBefore = await t.prisma.auditLog.count({ where: { action: { in: ['ai.agent.keepOn', 'ai.agent.keepOff'] } } });
+    await ask('POST', controller, { key: 'sawdagor', keepOnWhenMasterOff: true }); // same value again
+    expect(await t.prisma.auditLog.count({ where: { action: { in: ['ai.agent.keepOn', 'ai.agent.keepOff'] } } })).toBe(auditBefore);
+
+    const dropped = await ask('POST', controller, { key: 'sawdagor', keepOnWhenMasterOff: false });
+    expect(dropped.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ keepOnWhenMasterOff: false, workingNow: false });
+    expect(await t.prisma.auditLog.count({ where: { action: { in: ['ai.agent.keepOn', 'ai.agent.keepOff'] } } })).toBe(auditBefore + 1);
   });
 
   it('once the master switch is on, an enabled agent shows as working; the monthly cap is read, not invented', async () => {

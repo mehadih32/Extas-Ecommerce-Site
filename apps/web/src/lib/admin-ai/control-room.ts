@@ -2,11 +2,19 @@
 // whether it is on, what it did last, and today's and this month's cost (AiUsageLedger). Nothing here invents a
 // number: with no AI provider wired yet (PR 306) and no job run, the cost is honestly 0 and "last activity" is
 // honestly empty. A pause button per agent (C1.2) is `ai.control`; it never deletes an agent and never changes what
-// it may decide (the permission matrix is PR 318). The business-wide master switch (`ai.enabled`, PR 508) is read
-// here only — turning it on or off, and "keep running with the master off", are PR 305.
+// it may decide (the permission matrix is PR 318).
+//
+// S15 · PR 305 (C1.3) — the business-wide master switch (`ai.enabled`, the setting itself from PR 508) is turned on
+// or off from this same screen (`setMasterEnabled`, `ai.control`, audited as a SettingChange — the one source of
+// truth every other installation-scope switch already uses). Per-agent "keep running even with the master off"
+// (`AiAgent.keepOnWhenMasterOff`, confirmed for the Photoshoot agent in C1.3 but, as the owner said, "as with any
+// agent") is `setAgentKeepOn`, audited the same way as pause/resume. `workingNow` is true only once an agent is on
+// AND (the master switch is on OR that agent is kept on) — the one formula the page, the job runner and every test
+// read.
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { dayStart, ymdIn } from '@extas/metrics';
+import { INSTALLATION } from '@extas/settings';
 import type { AppResolver } from '../settings';
 import { AI_AGENTS, isAiAgentKey, type AiAgentKey } from './agents';
 
@@ -28,7 +36,7 @@ export function isAiError(e: unknown): e is AiError {
 
 export interface ControlRoomDeps {
   db: PrismaClient;
-  resolver: Pick<AppResolver, 'value'>;
+  resolver: Pick<AppResolver, 'value' | 'set'>;
   now?: () => Date;
 }
 
@@ -40,7 +48,9 @@ export interface ControlRoomAgent {
   emoji: string;
   isChief: boolean;
   enabled: boolean;
-  /** Only true once the master switch (PR 305) and this agent's own switch are both on. */
+  /** "Keep running even when the AI master switch is off" (C1.3) — the owner's own choice per agent. */
+  keepOnWhenMasterOff: boolean;
+  /** True once this agent is on AND (the master switch is on OR it is kept on). */
   workingNow: boolean;
   lastActivity: { summaryBn: string; at: string } | null;
   todayMinor: number;
@@ -113,7 +123,8 @@ export async function controlRoomView(deps: ControlRoomDeps, storeId: number): P
     emoji: r.emoji ?? '',
     isChief: r.isChief,
     enabled: r.enabled,
-    workingNow: masterOn && r.enabled,
+    keepOnWhenMasterOff: r.keepOnWhenMasterOff,
+    workingNow: (masterOn || r.keepOnWhenMasterOff) && r.enabled,
     lastActivity: lastActivity.get(r.id) ?? null,
     todayMinor: todayMap.get(r.id) ?? 0,
     monthMinor: monthMap.get(r.id) ?? 0,
@@ -137,5 +148,34 @@ export async function setAgentEnabled(deps: Pick<ControlRoomDeps, 'db'>, who: { 
     if (row.enabled === enabled) return;
     await tx.aiAgent.update({ where: { key }, data: { enabled } });
     await audit(tx, who.actor, { action: enabled ? 'ai.agent.resume' : 'ai.agent.pause', entityType: 'AiAgent', entityId: row.id, before: { enabled: row.enabled }, after: { enabled } }, who.ctx ?? {});
+  });
+}
+
+/**
+ * The business-wide master switch (C1.3). `ai.enabled` is an installation-scope setting (PR 508), so turning it on
+ * or off writes through the one settings resolver, the same as every other admin switch — its own SettingChange row
+ * is the audit trail, with no second log. A no-op when it already is what was asked, so a double tap writes once.
+ */
+export async function setMasterEnabled(deps: Pick<ControlRoomDeps, 'resolver'>, who: { actor: Actor; ctx?: RequestContext }, enabled: boolean, storeId: number): Promise<void> {
+  const current = await deps.resolver.value('ai.enabled', { storeId });
+  if (current === enabled) return;
+  await deps.resolver.set('ai.enabled', enabled, INSTALLATION, {
+    actorId: who.actor.staffUserId ?? null,
+    reason: enabled ? 'AI › Control room: master switch on' : 'AI › Control room: master switch off',
+  });
+}
+
+/**
+ * "Keep this agent running even when the AI master switch is off" (C1.3) — a property of every agent, not a special
+ * case for Photoshoot. A no-op when it already is what was asked, so a double tap writes once.
+ */
+export async function setAgentKeepOn(deps: Pick<ControlRoomDeps, 'db'>, who: { actor: Actor; ctx?: RequestContext }, key: string, keepOn: boolean): Promise<void> {
+  if (!isAiAgentKey(key)) throw new AiError(404, 'NOT_FOUND', ['key']);
+  await deps.db.$transaction(async (tx: Prisma.TransactionClient) => {
+    const row = await tx.aiAgent.findUnique({ where: { key } });
+    if (!row || row.archivedAt) throw new AiError(404, 'NOT_FOUND', ['key']);
+    if (row.keepOnWhenMasterOff === keepOn) return;
+    await tx.aiAgent.update({ where: { key }, data: { keepOnWhenMasterOff: keepOn } });
+    await audit(tx, who.actor, { action: keepOn ? 'ai.agent.keepOn' : 'ai.agent.keepOff', entityType: 'AiAgent', entityId: row.id, before: { keepOnWhenMasterOff: row.keepOnWhenMasterOff }, after: { keepOnWhenMasterOff: keepOn } }, who.ctx ?? {});
   });
 }
