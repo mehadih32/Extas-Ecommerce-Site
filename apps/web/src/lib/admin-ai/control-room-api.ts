@@ -12,18 +12,22 @@
 //
 // S15 · PR 308 — the same POST also takes {key, schedule: {mode, time?, days?} | null} (one agent's own schedule;
 // `null` resets to "always"), `ai.control`, audited, refused (422 INVALID_SCHEDULE) for a bad shape.
+//
+// S15 · PR 309 — the same POST also takes {key, monthlyCapMinor: number | null} (one agent's own monthly spend
+// cap; `null` turns it off), `ai.control`, audited (`ai.agent.cap`), refused (422 INVALID_CAP) for a bad value.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { controlRoomView, isAiError, setAgentEnabled, setAgentKeepOn, setMasterEnabled } from './control-room';
 import { setAgentModelProvider } from './model-picks';
 import { setAgentSchedule } from './schedule';
+import { setAgentMonthlyCap } from './spend-cap';
 
 export async function controlRoomHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
   const method = request.method.toUpperCase();
   if (method !== 'GET' && method !== 'POST') return fail(405, 'method-not-allowed');
   const g = await guardAdmin(request, deps, { permission: method === 'GET' ? 'ai.read' : 'ai.control', storeId: MOTHER_STORE_ID });
   if (g instanceof Response) return g;
-  const d = { db: deps!.db, resolver: deps!.resolver, now: deps!.now };
+  const d = { db: deps!.db, resolver: deps!.resolver, now: deps!.now, vault: deps!.vault };
   const withScreen = async () => json({ ok: true, ...(await controlRoomView(d, MOTHER_STORE_ID)) });
   try {
     if (method === 'GET') return withScreen();
@@ -52,6 +56,12 @@ export async function controlRoomHandler(request: Request, deps: AdminDeps | nul
     if (input.schedule !== undefined) {
       if (!key) return json({ ok: false, error: 'INVALID_INPUT', details: ['key'] }, { status: 400 });
       await setAgentSchedule(d, who, key, input.schedule);
+      return withScreen();
+    }
+
+    if (input.monthlyCapMinor !== undefined) {
+      if (!key) return json({ ok: false, error: 'INVALID_INPUT', details: ['key'] }, { status: 400 });
+      await setAgentMonthlyCap(d, who, key, input.monthlyCapMinor);
       return withScreen();
     }
 

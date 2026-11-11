@@ -19,6 +19,13 @@
 // INVALID_SCHEDULE); a valid daily/weekly schedule's `nextRunAt` is computed in the store's own time zone, a double
 // tap writes once, and `{schedule: null}` resets to "always".
 //
+// S15 · PR 309 — the same route also takes {key, monthlyCapMinor} (one agent's own monthly spend cap). On a fresh
+// installation every agent reads no cap (capState "none"); a bad value is refused (422 INVALID_CAP); a cap honestly
+// moves ok → warned (80%+) → paused (100%+) as this month's real AiUsageLedger spend crosses it, a double tap writes
+// once, and `{monthlyCapMinor: null}` turns it off again. `checkAgentCapAlerts` (called straight, not through the
+// route, same as `ad-alerts.db.test.ts` calls `sendCostAlerts` straight) sends the owner's Telegram warning once per
+// crossing per month, deduplicated through the audit log.
+//
 // S15 · PR 310 — every agent now also carries its own fixed `dataClass` and, built from it, `effectiveProvider`/
 // `routingDowngraded`: personal/business agents never effectively use the free-capable connection (OpenRouter)
 // even when the owner picks it and it is ready — the screen routes to the cheapest ready paid connection instead
@@ -29,9 +36,11 @@ import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } 
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { INSTALLATION, messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import { createVault } from '@extas/vault';
+import { moneyOf } from '@/components/admin/products/model';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
 import { controlRoomHandler } from './control-room-api';
+import { checkAgentCapAlerts } from './spend-cap';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -63,6 +72,8 @@ interface Agent {
   selectedReady: boolean;
   schedule: { mode: string; time?: string; days?: number[] };
   nextRunAt: string | null;
+  monthlyCapMinor: number | null;
+  capState: string;
   dataClass: string;
   effectiveProvider: string | null;
   routingDowngraded: boolean;
@@ -320,6 +331,69 @@ describe.skipIf(!HAS_TEST_DB)('AI › Control room on PostgreSQL (PR 304)', () =
 
     const reset = await ask('POST', controller, { key: 'sawdagor', schedule: null });
     expect(reset.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ schedule: { mode: 'always' }, nextRunAt: null });
+  });
+
+  it('every agent reads no cap set, capState "none", until the owner sets one (PR 309)', async () => {
+    const { a } = await ask('GET', reader);
+    for (const ag of a.agents) expect(ag).toMatchObject({ monthlyCapMinor: null, capState: 'none' });
+  });
+
+  it('a cap is refused for an unknown agent or a bad value; nothing changes (PR 309)', async () => {
+    expect((await ask('POST', reader, { key: 'doot', monthlyCapMinor: 50_00 })).status).toBe(403);
+    expect((await ask('POST', controller, { key: 'not-an-agent', monthlyCapMinor: 50_00 })).a).toMatchObject({ ok: false, error: 'NOT_FOUND' });
+    expect((await ask('POST', controller, { key: 'doot', monthlyCapMinor: 0 })).a).toMatchObject({ ok: false, error: 'INVALID_CAP' });
+    expect((await ask('POST', controller, { key: 'doot', monthlyCapMinor: -1 })).a).toMatchObject({ ok: false, error: 'INVALID_CAP' });
+    expect((await ask('POST', controller, { key: 'doot', monthlyCapMinor: 1.5 })).a).toMatchObject({ ok: false, error: 'INVALID_CAP' });
+    expect((await ask('POST', controller, { key: 'doot', monthlyCapMinor: '500' })).a).toMatchObject({ ok: false, error: 'INVALID_CAP' });
+    const again = await ask('GET', reader);
+    expect(again.a.agents.find((x) => x.key === 'doot')?.monthlyCapMinor).toBeNull();
+  });
+
+  it('a cap honestly moves ok → warned (80%+) → paused (100%+) as this month\'s real spend crosses it (PR 309); a double tap writes once; null turns it off', async () => {
+    // 'doot' already has monthMinor = 240 from the earlier cost-summing test.
+    const auditBefore = await t.prisma.auditLog.count({ where: { action: 'ai.agent.cap' } });
+    const ok = await ask('POST', controller, { key: 'doot', monthlyCapMinor: 400 }); // 240*5=1200 < 400*4=1600
+    expect(ok.a.agents.find((x) => x.key === 'doot')).toMatchObject({ monthlyCapMinor: 400, capState: 'ok' });
+    await ask('POST', controller, { key: 'doot', monthlyCapMinor: 400 }); // same value again
+    expect(await t.prisma.auditLog.count({ where: { action: 'ai.agent.cap' } })).toBe(auditBefore + 1);
+
+    const warned = await ask('POST', controller, { key: 'doot', monthlyCapMinor: 300 }); // 240*5=1200 == 300*4=1200
+    expect(warned.a.agents.find((x) => x.key === 'doot')).toMatchObject({ monthlyCapMinor: 300, capState: 'warned' });
+
+    const paused = await ask('POST', controller, { key: 'doot', monthlyCapMinor: 240 }); // spent >= cap
+    expect(paused.a.agents.find((x) => x.key === 'doot')).toMatchObject({ monthlyCapMinor: 240, capState: 'paused' });
+
+    const off = await ask('POST', controller, { key: 'doot', monthlyCapMinor: null });
+    expect(off.a.agents.find((x) => x.key === 'doot')).toMatchObject({ monthlyCapMinor: null, capState: 'none' });
+    expect(await t.prisma.auditLog.count({ where: { action: 'ai.agent.cap' } })).toBe(auditBefore + 4);
+  });
+
+  it("checkAgentCapAlerts sends the owner's Telegram warning once per crossing per month, deduplicated through the audit log (PR 309)", async () => {
+    // 'tirondaj' never had a cap crossed by an earlier test in this file (unlike 'doot'), so its dedupe state here
+    // starts clean — the synthetic monthMinor/monthlyCapMinor below are checkAgentCapAlerts's own inputs, not read
+    // from the stored row, so what 'tirondaj' actually holds in the database does not matter.
+    const tirondaj = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'tirondaj' } });
+    const money = moneyOf('BDT', 'bn-BD');
+    const sent: string[] = [];
+    const send = async (x: string) => void sent.push(x);
+    const capDeps = { db: t.prisma, vault: null, resolver: deps.resolver, now: () => now, send };
+
+    // 240 of a 300 cap: crossed into "warned" — sent once, not again on a second read.
+    await checkAgentCapAlerts(capDeps, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: 300, monthMinor: 240 }], money);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toContain(tirondaj.nameBn ?? tirondaj.nameEn);
+    await checkAgentCapAlerts(capDeps, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: 300, monthMinor: 240 }], money);
+    expect(sent).toHaveLength(1); // same crossing this month: not sent again
+
+    // crossing into "paused" is a different action, so it sends once more.
+    await checkAgentCapAlerts(capDeps, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: 240, monthMinor: 240 }], money);
+    expect(sent).toHaveLength(2);
+    await checkAgentCapAlerts(capDeps, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: 240, monthMinor: 240 }], money);
+    expect(sent).toHaveLength(2); // still deduplicated
+
+    // no cap crossed: nothing sent, nothing thrown even with no `send` override (falls back to the mock Telegram sender)
+    await checkAgentCapAlerts({ db: t.prisma, vault: null, resolver: deps.resolver, now: () => now }, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: null, monthMinor: 240 }], money);
+    expect(sent).toHaveLength(2);
   });
 
   it('every agent carries its own fixed data class (PR 310)', async () => {

@@ -135,6 +135,22 @@
   gap: 4px;
   white-space: nowrap;
 }
+/* S15 · PR 309 — one agent's monthly spend cap row. Same instinct as PR 307/308: the shared .a2-sel/.a2-btn sizing
+   is reused as is, never shrunk by a component-level override (PR 305's device-gate bug, again). */
+.adm2 .ai-cap-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.adm2 .ai-cap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.adm2 .ai-capin {
+  max-width: 120px;
+}
 /* S15 · PR 310 — the "Which data may reach which model" policy card and each agent's own data-class pill, placed
    on the existing .ai-model row (no new grid of its own) so it reads next to the model it governs. */
 .adm2 .ai-routing {
