@@ -7,8 +7,12 @@
 // S15 · PR 313 — the same page's own "actual" column, read from `AiUsageLedger.jobTypeKey`: null until a job has
 // `MIN_ACTUAL_SAMPLES` real runs inside the trailing `ACTUAL_WINDOW_DAYS`, a run outside that window is ignored, and
 // once real data exists it is also persisted to `AiJobType.actualPerRunMicros` (so a report elsewhere can read it
-// without recomputing). A throwaway database (skipped without TEST_DATABASE_ADMIN_URL, like every other
-// `.db.test.ts`).
+// without recomputing).
+// S15 · PR 314 — the same page's own presets: each of Economy/Balanced/Premium shows its own hypothetical monthly
+// total and how many jobs would change before it is applied (`ai.read` alone sees this preview); applying one
+// (`ai.control`) writes every changed job's `selectedModelId` in one transaction and one combined audit entry,
+// never one per job; applying the same preset twice in a row changes nothing the second time. A throwaway database
+// (skipped without TEST_DATABASE_ADMIN_URL, like every other `.db.test.ts`).
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from "@extas/auth";
 import {
@@ -34,7 +38,7 @@ import {
   staffRolesHandler,
 } from "../admin-api";
 import type { AdminDeps } from "../admin-auth";
-import { ACTUAL_WINDOW_DAYS, JOB_CATALOG, MIN_ACTUAL_SAMPLES } from "./cost-book";
+import { ACTUAL_WINDOW_DAYS, JOB_CATALOG, MIN_ACTUAL_SAMPLES, presetModelFor } from "./cost-book";
 import { costBookHandler } from "./cost-book-api";
 
 const HOST = "admin.example.test";
@@ -85,6 +89,13 @@ interface Job {
   choices: Choice[];
   actual: Actual | null;
 }
+interface Preset {
+  key: "economy" | "balanced" | "premium";
+  totalPerMonthUsdMinor: number;
+  changedJobs: number;
+  movedToSmaller: number;
+  movedToLarger: number;
+}
 interface Answer {
   ok: boolean;
   error?: string;
@@ -95,6 +106,7 @@ interface Answer {
   totalPerMonthUsdMinor: number;
   totalPerMonthStoreMinor: number | null;
   topExpensive: Job[];
+  presets: Preset[];
 }
 
 describe.skipIf(!HAS_TEST_DB)("AI › Cost Book on PostgreSQL (PR 312)", () => {
@@ -379,6 +391,56 @@ describe.skipIf(!HAS_TEST_DB)("AI › Cost Book on PostgreSQL (PR 312)", () => {
 
     // A job with no ledger rows at all stays honestly null, never an invented figure.
     expect(a.jobs.find((j) => j.key === "seoMetaTags")?.actual).toBeNull();
+  });
+
+  it("shows all three presets' own preview before anything is applied: Economy ≤ Balanced ≤ Premium, each priced", async () => {
+    const { a } = await ask("GET", reader);
+    expect(a.presets.map((p) => p.key)).toEqual(["economy", "balanced", "premium"]);
+    const [economy, balanced, premium] = a.presets;
+    expect(economy!.totalPerMonthUsdMinor).toBeLessThanOrEqual(balanced!.totalPerMonthUsdMinor);
+    expect(balanced!.totalPerMonthUsdMinor).toBeLessThanOrEqual(premium!.totalPerMonthUsdMinor);
+    // every job started on its own recommendation, i.e. already "balanced" — so Balanced previews zero change,
+    // apart from the one job an earlier test in this file switched to claude-haiku and reset back to claude-sonnet.
+    expect(balanced!.changedJobs).toBe(0);
+    expect(economy!.changedJobs).toBeGreaterThan(0);
+    expect(premium!.changedJobs).toBeGreaterThan(0);
+  });
+
+  it("only ai.control applies a preset; applying writes every changed job in one transaction, one audit entry, and a repeat changes nothing", async () => {
+    expect(
+      (await ask("POST", reader, { preset: "economy" })).status,
+    ).toBe(403);
+
+    const auditBefore = await t.prisma.auditLog.count({
+      where: { action: "ai.costBook.presetApplied" },
+    });
+    const applied = await ask("POST", controller, { preset: "economy" });
+    expect(applied.status).toBe(200);
+    const afterPreset = applied.a.presets.find((p) => p.key === "economy")!;
+    expect(afterPreset.changedJobs).toBe(0); // the preview now matches the state it just caused
+    for (const j of applied.a.jobs) {
+      expect(j.selectedModelKey).toBe(presetModelFor(JOB_CATALOG.find((x) => x.key === j.key)!, "economy"));
+    }
+    expect(
+      await t.prisma.auditLog.count({ where: { action: "ai.costBook.presetApplied" } }),
+    ).toBe(auditBefore + 1);
+
+    // applying the very same preset again writes no new audit entry — nothing actually changed the second time.
+    await ask("POST", controller, { preset: "economy" });
+    expect(
+      await t.prisma.auditLog.count({ where: { action: "ai.costBook.presetApplied" } }),
+    ).toBe(auditBefore + 1);
+
+    // Balanced returns every job to Claude's own recommendation, undoing Economy.
+    const backToBalanced = await ask("POST", controller, { preset: "balanced" });
+    for (const j of backToBalanced.a.jobs) {
+      expect(j.selectedModelKey).toBe(j.recommendedModelKey);
+    }
+  });
+
+  it("an unknown preset name is refused, and changes nothing", async () => {
+    const { a } = await ask("POST", controller, { preset: "deluxe" });
+    expect(a).toMatchObject({ ok: false, error: "UNKNOWN_PRESET" });
   });
 
   it("finds a job by search across the whole catalogue, in English or Bengali (C2.1)", () => {

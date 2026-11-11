@@ -156,6 +156,18 @@
   "actualRuns": "{runs} real runs, {perRun}/run",
   "actualAbove": "{pct}% more than the estimate",
   "actualBelow": "{pct}% less than the estimate",
-  "actualSame": "matches the estimate"
+  "actualSame": "matches the estimate",
+  "presets": {
+    "title": "One-click presets",
+    "apply": "Use {preset}",
+    "changed": "{n} jobs would change model ({smaller} to a smaller model, {larger} to a larger one)",
+    "noChange": "Already the current pick for every job.",
+    "toastChanged": "{preset} applied",
+    "toastFailed": "Could not apply the preset"
+  },
+  "whatIf": {
+    "title": "What if…",
+    "reset": "Reset to 1×"
+  }
   }
 }

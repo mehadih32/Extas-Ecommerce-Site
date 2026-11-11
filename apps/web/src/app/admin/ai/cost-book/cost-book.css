@@ -1,5 +1,5 @@
-/* S15 · PR 312, 313 — AI › Cost Book (/admin/ai/cost-book). Uses the shared --lm- and a2- theme tokens, so it needs
-   no colour literal of its own (the hardcode guard checks CSS files too). */
+/* S15 · PR 312, 313, 314 — AI › Cost Book (/admin/ai/cost-book). Uses the shared --lm- and a2- theme tokens, so it
+   needs no colour literal of its own (the hardcode guard checks CSS files too). */
 .adm2 .cb-note {
   display: flex;
   gap: 8px;
@@ -50,4 +50,47 @@
 .adm2 .cb-top ol {
   margin: 0;
   padding-left: 20px;
+}
+.adm2 .cb-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+.adm2 .cb-preset-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.adm2 .cb-preset-card .n {
+  font-weight: 600;
+}
+.adm2 .cb-preset-total {
+  font-weight: 600;
+}
+.adm2 .cb-preset-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+.adm2 .cb-whatif-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.adm2 .cb-whatif-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 160px) 1fr 48px;
+  align-items: center;
+  gap: 8px;
+}
+.adm2 .cb-whatif-total {
+  font-weight: 600;
+  font-size: 1.1em;
+}
+.adm2 .cb-whatif-x {
+  text-align: right;
+}
+.adm2 .cb-whatif-reset {
+  margin-top: 8px;
 }
