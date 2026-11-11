@@ -168,6 +168,28 @@
   "whatIf": {
     "title": "What if…",
     "reset": "Reset to 1×"
+  },
+  "calc": {
+    "title": "Calculator — describe a piece of work",
+    "jobLabel": "Job",
+    "quantityLabel": "How many runs",
+    "scaleLabel": "Size ×",
+    "scaleHint": "Bigger or smaller than the job's usual run, e.g. a longer article. Leave blank for 1×.",
+    "modelLabel": "Model",
+    "modelAuto": "Recommended",
+    "addLine": "+ Add another job",
+    "removeLine": "Remove",
+    "calculate": "Calculate",
+    "calculating": "Calculating…",
+    "total": "Total",
+    "altLabel": "Other models",
+    "saveLabel": "Save this estimate as",
+    "savePlaceholder": "e.g. \"10 blog posts with images, November\"",
+    "saveButton": "Save as plan",
+    "saved": "Saved",
+    "failed": "Could not calculate this",
+    "invalid": "Fill in a job and a whole number of runs for every line",
+    "needPermission": "\"AI control\" is needed to use the calculator."
   }
   }
 }

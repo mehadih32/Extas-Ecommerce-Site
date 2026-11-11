@@ -1,4 +1,4 @@
-/* S15 · PR 312, 313, 314 — AI › Cost Book (/admin/ai/cost-book). Uses the shared --lm- and a2- theme tokens, so it
+/* S15 · PR 312, 313, 314, 316 — AI › Cost Book (/admin/ai/cost-book). Uses the shared --lm- and a2- theme tokens, so it
    needs no colour literal of its own (the hardcode guard checks CSS files too). */
 .adm2 .cb-note {
   display: flex;
@@ -93,4 +93,50 @@
 }
 .adm2 .cb-whatif-reset {
   margin-top: 8px;
+}
+.adm2 .cb-calc-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.adm2 .cb-calc-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+.adm2 .cb-calc-f {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.adm2 .cb-calc-f-sm {
+  flex: 0 1 100px;
+}
+.adm2 .cb-calc-f select,
+.adm2 .cb-calc-f input {
+  max-width: 100%;
+}
+.adm2 .cb-calc-rm {
+  flex: 0 0 auto;
+}
+.adm2 .cb-calc-row {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ln2);
+}
+.adm2 .cb-calc-row .n {
+  font-weight: 600;
+}
+.adm2 .cb-calc-total {
+  margin-top: 8px;
+  font-size: 1.1em;
+}
+.adm2 .cb-calc-save {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
 }
