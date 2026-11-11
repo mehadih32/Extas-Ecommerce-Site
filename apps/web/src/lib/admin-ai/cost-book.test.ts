@@ -5,6 +5,9 @@
 // S15 · PR 313 — `actualOf`'s own pure math: null below `MIN_ACTUAL_SAMPLES` real runs, the right average and
 // deviation once there are enough (the DB wiring — reading `AiUsageLedger`, persisting `actualPerRunMicros` — is
 // `cost-book.db.test.ts`, the same split `control-room.ts`/`control-room.db.test.ts` already use).
+// S15 · PR 314 — `presetModelFor`'s own pure math: Balanced never touches the recommendation, Economy is always
+// the job's own cheapest same-kind model, Premium the costliest, so Economy ≤ Balanced ≤ Premium for every job by
+// construction (`applyPreset`'s DB wiring is `cost-book.db.test.ts`).
 import { describe, expect, it } from "vitest";
 import {
   actualOf,
@@ -13,12 +16,15 @@ import {
   COST_BOOK_SECTIONS,
   estimateMicrosFor,
   isModelKey,
+  isPresetKey,
   JOB_CATALOG,
   MIN_ACTUAL_SAMPLES,
   modelOf,
   MODEL_CATALOG,
   microsToUsdMinor,
   monthlyMicrosFor,
+  presetModelFor,
+  PRESET_KEYS,
   searchJobs,
 } from "./cost-book";
 
@@ -204,5 +210,46 @@ describe("actualOf — estimate vs actual (PR 313, C2.3)", () => {
 
   it("the measurement window is the same length as the book's own monthly estimate (C2.2/C2.3 answer the same question)", () => {
     expect(ACTUAL_WINDOW_DAYS).toBe(30);
+  });
+});
+
+describe("presetModelFor — Economy/Balanced/Premium (PR 314, C2.3)", () => {
+  it("isPresetKey recognises the three presets and rejects anything else", () => {
+    expect(PRESET_KEYS).toEqual(["economy", "balanced", "premium"]);
+    for (const p of PRESET_KEYS) expect(isPresetKey(p)).toBe(true);
+    expect(isPresetKey("deluxe")).toBe(false);
+  });
+
+  it("Balanced always keeps the job's own recommendation, untouched", () => {
+    for (const j of JOB_CATALOG) {
+      expect(presetModelFor(j, "balanced")).toBe(j.recommendedModelKey);
+    }
+  });
+
+  it("for every job, Economy's own cost is never more than Balanced's, and Premium's is never less", () => {
+    for (const j of JOB_CATALOG) {
+      const eco = estimateMicrosFor(j.usage, modelOf(presetModelFor(j, "economy")));
+      const bal = estimateMicrosFor(j.usage, modelOf(presetModelFor(j, "balanced")));
+      const prem = estimateMicrosFor(j.usage, modelOf(presetModelFor(j, "premium")));
+      expect(eco).toBeLessThanOrEqual(bal);
+      expect(bal).toBeLessThanOrEqual(prem);
+    }
+  });
+
+  it("never picks a model of the wrong kind (an image/video job never lands on a text model, and back)", () => {
+    for (const j of JOB_CATALOG) {
+      for (const p of PRESET_KEYS) {
+        expect(modelOf(presetModelFor(j, p)).kind).toBe(j.usage.kind);
+      }
+    }
+  });
+
+  it("across the whole catalogue, Economy's total is cheaper than Premium's (real variety, not a tie everywhere)", () => {
+    const totalFor = (preset: (typeof PRESET_KEYS)[number]) =>
+      JOB_CATALOG.reduce(
+        (s, j) => s + estimateMicrosFor(j.usage, modelOf(presetModelFor(j, preset))) * j.typicalRunsPerDay,
+        0,
+      );
+    expect(totalFor("economy")).toBeLessThan(totalFor("premium"));
   });
 });
