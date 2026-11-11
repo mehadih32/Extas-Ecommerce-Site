@@ -11,28 +11,20 @@
 // agent") is `setAgentKeepOn`, audited the same way as pause/resume. `workingNow` is true only once an agent is on
 // AND (the master switch is on OR that agent is kept on) — the one formula the page, the job runner and every test
 // read.
+//
+// S15 · PR 307 (C1.5) — each agent's own model pick, from `./model-picks.ts`: `modelOptions`/`recommendedProvider`
+// on the screen (the same four PR 306 connections for every agent) and `selectedProvider`/`selectedReady` per
+// agent, so the page never needs a second fetch to show the picker, the "Recommended" badge or the fallback note.
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { dayStart, ymdIn } from '@extas/metrics';
 import { INSTALLATION } from '@extas/settings';
 import type { AppResolver } from '../settings';
 import { AI_AGENTS, isAiAgentKey, type AiAgentKey } from './agents';
+import { AiError, isAiError } from './errors';
+import { listWriterOptions, recommendedWriterOf, isWriterProvider, type WriterOption, type WriterProvider } from './model-picks';
 
-export class AiError extends Error {
-  readonly status: number;
-  readonly code: string;
-  readonly details: string[];
-  constructor(status: number, code: string, details: string[] = []) {
-    super(code);
-    this.status = status;
-    this.code = code;
-    this.details = details;
-  }
-}
-
-export function isAiError(e: unknown): e is AiError {
-  return e instanceof AiError;
-}
+export { AiError, isAiError };
 
 export interface ControlRoomDeps {
   db: PrismaClient;
@@ -55,6 +47,11 @@ export interface ControlRoomAgent {
   lastActivity: { summaryBn: string; at: string } | null;
   todayMinor: number;
   monthMinor: number;
+  /** The owner's own model pick (PR 307); `null` is the practice writer. */
+  selectedProvider: WriterProvider | null;
+  /** False when `selectedProvider` is set but that connection is no longer keyed and Tested — quietly on the
+   * practice writer until the owner re-Tests it or picks again. */
+  selectedReady: boolean;
 }
 
 export interface ControlRoomView {
@@ -66,6 +63,10 @@ export interface ControlRoomView {
   monthMinor: number;
   runningNow: number;
   agentCount: number;
+  /** Every writer option today (PR 307): the practice writer plus the four PR 306 connections, ready or not. */
+  modelOptions: WriterOption[];
+  /** Claude's own pick — the first ready provider in `WRITER_PROVIDERS` order, or `null` until any is Tested. */
+  recommendedProvider: WriterProvider | null;
 }
 
 export interface ControlRoomScreen {
@@ -96,13 +97,15 @@ function periodStarts(now: Date, timeZone: string): { today: Date; month: Date }
 export async function controlRoomView(deps: ControlRoomDeps, storeId: number): Promise<ControlRoomScreen> {
   const now = deps.now?.() ?? new Date();
   await ensureAgentRows(deps.db);
-  const [masterOn, capMinor, currency, timeZone, rows] = await Promise.all([
+  const [masterOn, capMinor, currency, timeZone, rows, modelOptions] = await Promise.all([
     deps.resolver.value('ai.enabled', { storeId }),
     deps.resolver.value('ai.monthlyCapMinor', { storeId }),
     deps.resolver.value('store.currency', { storeId }),
     deps.resolver.value('store.timeZone', { storeId }),
     deps.db.aiAgent.findMany({ where: { archivedAt: null }, orderBy: { createdAt: 'asc' } }),
+    listWriterOptions(deps.db),
   ]);
+  const recommendedProvider = recommendedWriterOf(modelOptions);
   const { today, month } = periodStarts(now, timeZone);
   const ids = rows.map((r) => r.id);
   const [todayByAgent, monthByAgent, diaries] = await Promise.all([
@@ -115,26 +118,32 @@ export async function controlRoomView(deps: ControlRoomDeps, storeId: number): P
   const lastActivity = new Map<string, { summaryBn: string; at: string }>();
   for (const d of diaries) if (!lastActivity.has(d.agentId)) lastActivity.set(d.agentId, { summaryBn: d.summaryBn, at: d.createdAt.toISOString() });
 
-  const agents: ControlRoomAgent[] = rows.filter((r): r is typeof r & { key: AiAgentKey } => isAiAgentKey(r.key)).map((r) => ({
-    key: r.key,
-    nameEn: r.nameEn,
-    nameBn: r.nameBn ?? r.nameEn,
-    role: r.role,
-    emoji: r.emoji ?? '',
-    isChief: r.isChief,
-    enabled: r.enabled,
-    keepOnWhenMasterOff: r.keepOnWhenMasterOff,
-    workingNow: (masterOn || r.keepOnWhenMasterOff) && r.enabled,
-    lastActivity: lastActivity.get(r.id) ?? null,
-    todayMinor: todayMap.get(r.id) ?? 0,
-    monthMinor: monthMap.get(r.id) ?? 0,
-  }));
+  const agents: ControlRoomAgent[] = rows.filter((r): r is typeof r & { key: AiAgentKey } => isAiAgentKey(r.key)).map((r) => {
+    const selectedProvider: WriterProvider | null = r.selectedProvider && isWriterProvider(r.selectedProvider) ? r.selectedProvider : null;
+    const selectedOpt = modelOptions.find((o) => o.provider === selectedProvider);
+    return {
+      key: r.key,
+      nameEn: r.nameEn,
+      nameBn: r.nameBn ?? r.nameEn,
+      role: r.role,
+      emoji: r.emoji ?? '',
+      isChief: r.isChief,
+      enabled: r.enabled,
+      keepOnWhenMasterOff: r.keepOnWhenMasterOff,
+      workingNow: (masterOn || r.keepOnWhenMasterOff) && r.enabled,
+      lastActivity: lastActivity.get(r.id) ?? null,
+      todayMinor: todayMap.get(r.id) ?? 0,
+      monthMinor: monthMap.get(r.id) ?? 0,
+      selectedProvider,
+      selectedReady: Boolean(selectedProvider === null || selectedOpt?.ready),
+    };
+  });
   const todayMinor = agents.reduce((s, a) => s + a.todayMinor, 0);
   const monthMinor = agents.reduce((s, a) => s + a.monthMinor, 0);
   const runningNow = agents.filter((a) => a.workingNow).length;
 
   return {
-    view: { at: now.toISOString(), masterOn, monthlyCapMinor: capMinor, currency, todayMinor, monthMinor, runningNow, agentCount: agents.length },
+    view: { at: now.toISOString(), masterOn, monthlyCapMinor: capMinor, currency, todayMinor, monthMinor, runningNow, agentCount: agents.length, modelOptions, recommendedProvider },
     agents,
   };
 }

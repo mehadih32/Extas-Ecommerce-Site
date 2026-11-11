@@ -44,6 +44,25 @@
         "toastOn": "{name} will keep working even when AI is off",
         "toastOff": "{name} now pauses with the master switch",
         "toastFailed": "Could not change {name}'s keep-on setting"
+      },
+      "model": {
+        "label": "Model",
+        "practice": "Practice writer (no key yet)",
+        "notReady": "{provider} — not Tested yet",
+        "recommendedBadge": "Recommended",
+        "selectLabel": "{name}: which model writes for it",
+        "noteSame": "This is Claude's own recommended pick for this agent today.",
+        "noteChanged": "This works too. Per-run cost and quality comparisons will show once the AI Cost Book is built (PR 312).",
+        "noteFallback": "{provider} is no longer Tested, so {name} is quietly using the practice writer until it is Tested again or you pick again.",
+        "toastChanged": "{name}'s model is changed",
+        "toastFailed": "Could not change {name}'s model",
+        "toastNotReady": "Test that connection in Keys & connections first",
+        "providers": {
+          "anthropic": "Anthropic Claude",
+          "openAi": "OpenAI",
+          "googleAi": "Google Gemini",
+          "openRouter": "OpenRouter"
+        }
       }
     },
     "toast": {
