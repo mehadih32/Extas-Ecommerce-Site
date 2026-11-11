@@ -3762,6 +3762,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #142 | PR [440](docs/stages/S23.md#pr-440), [441](docs/stages/S23.md#pr-441) | 11 Nov | S23: publishing adapters, part 1 and 2 — Facebook Page and Instagram (photo-only, honest preview), queue/approve/publish flow in `@extas/studio/publish.ts`; TikTok draft/direct publishing; an honest real-connection-but-always-refuse YouTube adapter (no photo-as-video fabrication). |
 | pending | PR [310](docs/stages/S15.md#pr-310) | 11 Nov | The Locked A5.2 data-class routing policy, in code — personal/business work never effectively reaches a free-capable connection even when picked, public/draft work may; a policy card and a data-class pill on each agent's model row, read-only. |
 | #125 | PR [309](docs/stages/S15.md#pr-309) | 11 Nov | Each AI 360 agent gets its own monthly spend cap — a status pill (none/ok/warned/paused) and this month's spend against it; crossing 80% or 100% sends the owner's Telegram warning in Bengali, once per crossing per month, real and live. |
 | #122 | PR [308](docs/stages/S15.md#pr-308) | 11 Nov | Each AI 360 agent gets its own schedule — always, daily at a clock time, or weekly on chosen weekdays — with a plain next-run preview; no job runner reads it yet, so it is honestly a preview only. |
