@@ -6,3 +6,4 @@ export * from './context';
 export * from './accounts';
 export * from './assets';
 export * from './templates';
+export * from './render';

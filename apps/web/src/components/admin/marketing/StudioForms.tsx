@@ -302,6 +302,85 @@ export function StudioAssetKind({ texts, assetId, kind, kinds, clearLabel }: { t
   );
 }
 
+export interface RenderFormWords {
+  template: string;
+  noTemplates: string;
+  products: string;
+  productsPh: string;
+  productsHelp: string;
+  caption: string;
+  captionPh: string;
+  queue: string;
+  queued: string;
+}
+
+/** Queues a render job (PR 439): a template, a comma-separated list of product ids, and an optional caption. */
+export function StudioRenderForm({ texts, templates, w }: { texts: StudioFormTexts; templates: { id: string; label: string }[]; w: RenderFormWords }) {
+  const uid = useId();
+  const router = useRouter();
+  const [templateId, setTemplateId] = useState(templates[0]?.id ?? '');
+  const [products, setProducts] = useState('');
+  const [caption, setCaption] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<Msg>(null);
+  if (!templates.length) return <p className="a2-sm a2-mute" data-testid="st-render-no-template">{w.noTemplates}</p>;
+  return (
+    <div className="mail-form" data-testid="st-render-form">
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-t`}>
+          {w.template}
+        </label>
+        <select id={`${uid}-t`} className="a2-inp" value={templateId} onChange={(e) => setTemplateId(e.target.value)} data-testid="st-render-template">
+          {templates.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-p`}>
+          {w.products}
+        </label>
+        <input id={`${uid}-p`} className="a2-inp" value={products} placeholder={w.productsPh} onChange={(e) => setProducts(e.target.value)} data-testid="st-render-products" />
+        <p className="a2-xs a2-mute">{w.productsHelp}</p>
+      </div>
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-c`}>
+          {w.caption}
+        </label>
+        <textarea id={`${uid}-c`} className="a2-inp" rows={3} maxLength={2200} value={caption} placeholder={w.captionPh} onChange={(e) => setCaption(e.target.value)} data-testid="st-render-caption" />
+      </div>
+      <span>
+        <button
+          type="button"
+          className="a2-btn pri"
+          disabled={busy || !templateId}
+          data-testid="st-render-queue"
+          onClick={async () => {
+            setBusy(true);
+            setMsg(null);
+            const productIds = products
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean);
+            const r = await post(texts, { action: 'render.queue', templateId, productIds, ...(caption.trim() ? { caption: caption.trim() } : {}) });
+            setBusy(false);
+            if (!r.ok) return setMsg({ ok: false, text: r.text });
+            showToast({ text: w.queued, tone: 'ok' });
+            setProducts('');
+            setCaption('');
+            router.refresh();
+          }}
+        >
+          {w.queue}
+        </button>
+      </span>
+      <Note msg={msg} testId="st-render-msg" />
+    </div>
+  );
+}
+
 export interface AssetUploadWords {
   file: string;
   kind: string;
