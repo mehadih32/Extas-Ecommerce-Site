@@ -444,13 +444,30 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 617 on PostgreSQL: the daily summary
     expect(moves.map((m) => [m.fromState, m.toState])).toEqual([['BILLED', 'RETURNING'], ['RETURNING', 'WAITING_CHECK']]);
     // A stale read asking for a move the piece can no longer make (WAITING_CHECK → RETURNING) does nothing.
     expect(await t.prisma.$transaction((tx) => movePiece(tx, { ...stale }, 'RETURNING', '2026-10-04', 'test:559:c'))).toBe(false);
-    // Two runs at once on a fresh piece: one move each, in turn, every fromState true.
+    // Two runs at once on a fresh piece: one move each, in turn, every fromState true. RETURNING and WAITING_CHECK are
+    // both valid straight from BILLED, but only one order of them chains (RETURNING → WAITING_CHECK; the reverse is
+    // the "can no longer make it" case just above), so a genuine Promise.all race between the two is decided by which
+    // transaction's row lock Postgres happens to grant first — flaky by construction, not by the production code. The
+    // second run's transaction is opened only once the first has already made its move and is still holding the row
+    // locked (uncommitted), so Postgres itself — never timing — forces the second's `SELECT ... FOR UPDATE` to queue
+    // behind the first and then read exactly what it left, proving the lock truly serializes the two without ever
+    // handing back a stale state.
     const q = await piece(A, 'B559-2', 'B559-2-1', 50_000, [[null, 'BILLED', '2026-10-01']]);
     const fresh = { id: q.id, storeId: q.storeId, linkId: q.linkId, lineId: q.lineId, state: 'BILLED' as const, buyingPriceMinor: q.buyingPriceMinor };
-    const both = await Promise.all([
-      t.prisma.$transaction((tx) => movePiece(tx, { ...fresh }, 'RETURNING', '2026-10-02', 'test:559:d')),
-      t.prisma.$transaction((tx) => movePiece(tx, { ...fresh }, 'WAITING_CHECK', '2026-10-02', 'test:559:e')),
-    ]);
+    let releaseFirst!: () => void;
+    const holdFirst = new Promise<void>((resolve) => { releaseFirst = resolve; });
+    let firstMoved!: () => void;
+    const firstReady = new Promise<void>((resolve) => { firstMoved = resolve; });
+    const first = t.prisma.$transaction(async (tx) => {
+      const ok = await movePiece(tx, { ...fresh }, 'RETURNING', '2026-10-02', 'test:559:d');
+      firstMoved();
+      await holdFirst; // keep the row's lock held until the second run below has had to queue behind it
+      return ok;
+    });
+    await firstReady;
+    const second = t.prisma.$transaction((tx) => movePiece(tx, { ...fresh }, 'WAITING_CHECK', '2026-10-02', 'test:559:e'));
+    releaseFirst();
+    const both = await Promise.all([first, second]);
     expect(both).toEqual([true, true]);
     const qm = await t.prisma.erpPipelineMove.findMany({ where: { pieceId: q.id, cause: { startsWith: 'test:559' } }, orderBy: { createdAt: 'asc' } });
     expect(qm.length).toBe(2);
