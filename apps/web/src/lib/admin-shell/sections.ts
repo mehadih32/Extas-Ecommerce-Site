@@ -286,6 +286,10 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'geoGuide', more: true, pages: [{ href: '/admin/marketing/geo-guide', perm: 'marketing.campaigns.read', keys: ['marketingGeoGuide'] }] },
       // S13 · PR 589: the Google Merchant Center product feed — address, counts, left-out reasons, the Bangladesh test (More options).
       { id: 'merchantFeed', more: true, pages: [{ href: '/admin/marketing/merchant-feed', perm: 'marketing.campaigns.read', keys: ['marketingMerchantFeed'] }] },
+      // S25 · PR 481 (Blueprint C8.1) — Studio: the motion library (image-to-video jobs, reels, exports and the
+      // creative brief join as the rest of PR 482–490 build; hidden by `stages.closedShown.S25` until the stage is
+      // finished, CN-036/CN-039).
+      { id: 'studio', pages: [{ href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] }] },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,

@@ -23,6 +23,8 @@ import { isCombosError } from '@extas/combos';
 import { isDeliveryError } from '@extas/delivery';
 import { isBooksError, isInventoryError } from '@extas/inventory';
 import { isRulesError } from '@extas/rules';
+// S25 · PR 481 — the Studio's own refusals (Marketing › Studio).
+import { isStudioError } from '@extas/creative-studio';
 import { createVault, type Vault } from '@extas/vault';
 import { addressRefused } from './admin-security/access';
 import { sameOriginRequest } from './security/same-origin';
@@ -80,6 +82,7 @@ export function errorResponse(e: unknown): Response {
   if (isRulesError(e)) return fail(e.status, e.code, e.details);
   if (isCombosError(e)) return fail(e.status, e.code, e.details);
   if (isDeliveryError(e)) return fail(e.status, e.code, e.details);
+  if (isStudioError(e)) return fail(e.status, e.code, e.details);
   console.warn(`admin api: ${(e instanceof Error ? e.message : String(e)).split('\n').filter(Boolean).slice(-1)[0] ?? 'unknown error'}`);
   return fail(500, 'server-error');
 }

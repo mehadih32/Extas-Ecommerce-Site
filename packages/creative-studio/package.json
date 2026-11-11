@@ -1,0 +1,33 @@
+{
+  "name": "@extas/creative-studio",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "S25 · Video & Campaign Creative Studio (PR 481–490): the action/motion library (PR 481), the image-to-video engine with its provider adapter and best-of-2 (PR 482–484), reel assembly with music, text, logo and aspect variants (PR 485–486), campaign creative export in every platform size (PR 487–488), the page-level time-bound campaign overlay (PR 489) and the creative brief with its three-direction grooming flow (PR 490). Every clip is image-to-video from an already-approved still, never text-to-video (Blueprint C8.1); every generation is priced and logged to the shared AI usage ledger before it runs.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@extas/adapters": "workspace:*",
+    "@extas/auth": "workspace:*",
+    "@extas/db": "workspace:*",
+    "@extas/media": "workspace:*",
+    "@extas/settings": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "3.2.7"
+  }
+}
