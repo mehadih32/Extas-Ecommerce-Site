@@ -125,7 +125,7 @@
     "title": "AI Cost Book",
     "sub": "What every AI job in the shop costs, and which model it uses — before any money is spent.",
     "noRate": "No USD rate is typed yet, so costs are shown in USD. To see them in ৳, set a USD rate in Money › Costs & fees.",
-    "honestNote": "Text jobs are cheap. Image generation is far more expensive, and video assembly costs server time rather than tokens. Voice transcription is cheap too. These estimates carry a ±10–15% band for now — they tighten once real usage data arrives (a later PR).",
+    "honestNote": "Text jobs are cheap. Image generation is far more expensive, and video assembly costs server time rather than tokens. Voice transcription is cheap too. These estimates carry a ±10–15% band for now. Once a job has 5 real runs, its own Actual column shows what it really cost, so the estimate is checked against reality instead of staying a guess.",
     "kpis": {
       "jobs": "Job rows",
       "month": "This month (estimated)",
@@ -143,13 +143,19 @@
       "perRun": "Estimated cost per run",
       "perMonth": "Estimated monthly cost",
       "runs": "Typical runs per day/month",
-      "alternatives": "Alternatives"
+      "alternatives": "Alternatives",
+      "actual": "Actual (last 30 days)"
     },
     "runsLine": "~{perDay}/day · ~{perMonth}/month",
     "recommended": "Recommended",
     "modelSelectLabel": "Which model runs {job}",
     "toastChanged": "Model changed",
     "toastFailed": "Could not change the model",
-    "altNone": "No cheaper alternative yet."
+    "altNone": "No cheaper alternative yet.",
+  "actualNone": "No real data yet — shown once {min} real runs exist.",
+  "actualRuns": "{runs} real runs, {perRun}/run",
+  "actualAbove": "{pct}% more than the estimate",
+  "actualBelow": "{pct}% less than the estimate",
+  "actualSame": "matches the estimate"
   }
 }

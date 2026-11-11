@@ -2,19 +2,27 @@
 // "realistically 60–90 job types"), the cost math (text/image/video, never mixing kinds), alternatives are the
 // same kind only and cheapest first, and search finds a job by its English or Bengali name, its section or its
 // description.
+// S15 · PR 313 — `actualOf`'s own pure math: null below `MIN_ACTUAL_SAMPLES` real runs, the right average and
+// deviation once there are enough (the DB wiring — reading `AiUsageLedger`, persisting `actualPerRunMicros` — is
+// `cost-book.db.test.ts`, the same split `control-room.ts`/`control-room.db.test.ts` already use).
 import { describe, expect, it } from "vitest";
 import {
+  actualOf,
+  ACTUAL_WINDOW_DAYS,
   alternativesFor,
   COST_BOOK_SECTIONS,
   estimateMicrosFor,
   isModelKey,
   JOB_CATALOG,
+  MIN_ACTUAL_SAMPLES,
   modelOf,
   MODEL_CATALOG,
   microsToUsdMinor,
   monthlyMicrosFor,
   searchJobs,
 } from "./cost-book";
+
+const stubPricer = (minor: number) => ({ storeMinor: minor * 100, exchangeRateId: "rate-1" });
 
 describe("AI Cost Book catalogue (PR 312)", () => {
   it("has between 60 and 90 job types, each a unique key in a known section", () => {
@@ -163,5 +171,38 @@ describe("search (PR 312)", () => {
 
   it("a query matching nothing returns an empty list, not every job", () => {
     expect(searchJobs(JOB_CATALOG, "xyz-nothing-like-this")).toHaveLength(0);
+  });
+});
+
+describe("actualOf — estimate vs actual (PR 313, C2.3)", () => {
+  it("stays null below MIN_ACTUAL_SAMPLES real runs, however cheap or expensive they were", () => {
+    expect(MIN_ACTUAL_SAMPLES).toBeGreaterThan(0);
+    expect(actualOf(MIN_ACTUAL_SAMPLES - 1, 1_000_000n, 100, stubPricer, "2026-11-11")).toBeNull();
+    expect(actualOf(0, 0n, 100, stubPricer, "2026-11-11")).toBeNull();
+  });
+
+  it("once enough runs exist, averages the real spend and compares it with the estimate", () => {
+    // 10 runs totalling 5,000,000 micros USD => 500,000 micros/run => 50 USD-minor/run (microsToUsdMinor divides by 10,000).
+    const a = actualOf(10, 5_000_000n, 40, stubPricer, "2026-11-11");
+    expect(a).not.toBeNull();
+    expect(a!.runs).toBe(10);
+    expect(a!.perRunUsdMinor).toBe(50);
+    expect(a!.perMonthUsdMinor).toBe(500); // the whole window's own total, not re-multiplied by anything
+    expect(a!.deviationPct).toBe(25); // (50 - 40) / 40 = +25%
+    expect(a!.perRunStoreMinor).toBe(5000); // stubPricer: minor * 100
+  });
+
+  it("reads as cheaper than the estimate with a negative deviation, and as matching it at 0%", () => {
+    const cheaper = actualOf(MIN_ACTUAL_SAMPLES, 400_000n, 100, stubPricer, "2026-11-11"); // 5 runs * 80,000 micros = 8 USD-minor/run
+    expect(cheaper!.perRunUsdMinor).toBe(8);
+    expect(cheaper!.deviationPct).toBe(-92);
+
+    const same = actualOf(MIN_ACTUAL_SAMPLES, 5_000_000n, 100, stubPricer, "2026-11-11"); // 5 runs * 1,000,000 micros = 100 USD-minor/run
+    expect(same!.perRunUsdMinor).toBe(100);
+    expect(same!.deviationPct).toBe(0);
+  });
+
+  it("the measurement window is the same length as the book's own monthly estimate (C2.2/C2.3 answer the same question)", () => {
+    expect(ACTUAL_WINDOW_DAYS).toBe(30);
   });
 });
