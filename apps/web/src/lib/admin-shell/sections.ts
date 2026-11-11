@@ -491,6 +491,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'control', guide: 'ai', pages: [{ href: '/admin/ai', perm: 'ai.read', keys: ['aiControl'] }] },
       // S21 · PR 570 — B7.3 / AIC-05 Checklist audit: the e-commerce checklist in the backend and its runner (owner only).
       { id: 'audit', guide: 'ai', pages: [{ href: '/admin/ai/audit', perm: 'health.read', keys: ['aiAudit'] }] },
+      // S15 · PR 312 (C2.1, C2.2) — Cost Book: every AI job, its recommended model and why, its estimated cost, and
+      // a model selector right in the row (owner only).
+      { id: 'costBook', guide: 'ai', pages: [{ href: '/admin/ai/cost-book', perm: 'ai.read', keys: ['aiCostBook'] }] },
     ],
     ownerOnly: true,
     guide: 'ai',
