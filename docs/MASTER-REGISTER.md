@@ -1249,6 +1249,12 @@ built handover-ready from day one.
 |---:|---|
 | 603 | **Database performance pack (owner server spec, 19 Oct 23:33).** Built with the schema (PR 13). **Required indexes:** category page (category + store + in-stock + sort, one index); SKU and variant by colour and size; order by phone (runs on every order for the fraud engine); fuzzy name/address with **`pg_trgm`** (the fraud/duplicate engine, PR 519); customer order history; style hierarchy for profit (Polo → brand polo → solid polo, PR 536); order list filters (date, status, courier, store). **Slow query log** for anything over 100 ms, target under 50 ms for a normal query, and an admin **"slowest queries"** page (PR 423). **Reports** (profit, ads, dashboard charts) run on **materialized views** refreshed on a schedule, or on a low-priority report pool, so they never slow the shop. Site search stays on Meilisearch (PR 72). Pre-launch required — nothing deferred. |
 
+### S00 addition — Dashboard design "Classic cards" (11 Nov 2026; CN-025/CN-027 follow-up 380, first half; CN-044, ERP lane)
+
+| PR | What it does |
+|---:|---|
+| 655 | **Dashboard design "Classic cards"** (`components/admin/look/dashboard/C.tsx`; no setting, no migration): the demo's own letter for this design is A (the V12.3 dashboard, 97q-adm2-dash.js) — here it is the next free key, **C**, since **B** is already the Lumen "Today" design (PR 631, CN-036); nothing renamed or deleted, only added, per CN-025's own rule. Headline KPI cards (delivered sales, orders, delivery success, returned parcels), the delivered-sales trend against the period before with ordered value drawn beside it, "Needs you now" (every waiting list this person may open, from `data.queues`), orders by stage, top products and delivery success by courier. Reads no loader part design A does not already read (`money`, `stages`, `delivery`, `top`, `queues`, `offSite`) and draws with the same `admin.dashboardDesigns` numbers — no new setting, no new migration, picked the same way as any other design (Settings → Admin look, the "…" menu, `?design=C`). The demo's command-center design (follow-up 380's second half) and Orders'/Products' own B and C designs (follow-ups 381, 382) stay open. |
+
 ## S01 · Catalog, media & images — PR 19–39
 
 | PR | What it does |
@@ -1727,6 +1733,12 @@ the no-ERP stock module yet. That module is parked as **S27**.
 | 497 | **ERP mode switch** — EXTAS ERP · another ERP · no ERP. Address and keys from settings. **Updated 20 Oct 02:25 (owner, CN-005): the ERP-side API is built in the owner's ERP project against `docs/ERP-API-CONTRACT.md`; this adapter is built against the same contract and runs on a mock until the owner enters the ERP address, key and secret.** |
 | 498 | **Generic ERP adapter interface** — one contract with mock, sandbox and live modes, so a second ERP is a new adapter and not a rewrite |
 | 499 | **ERP-absent guard** — every path that depends on the ERP has a defined behaviour when none is connected, proven by tests. This is what keeps the seam open. |
+
+### S09 addition — read-only SKU/stock comparison (11 Nov 2026; CN-044, ERP lane)
+
+| PR | What it does |
+|---:|---|
+| 654 | **Read-only SKU/stock comparison between the shop's catalogue and the live ERP** (CN-044, ERP lane, task 2; `@extas/inventory` `erp-catalogue-compare.ts`; no setting, no migration): reuses PR 207's already-shipped, read-only `reconcileWithErp` for stock differences (MISSING_IN_SHOP/MISSING_IN_ERP/ON_HAND_DIFFERS/RESERVED_DIFFERS) and adds a catalogue-level compare (`compareVariants`, from the same GET-only `variants` page PR 609's import already reads): a SKU the ERP has that the shop does not, one the shop has that the ERP no longer lists, and an active ERP SKU with no shop price yet. `tsx packages/jobs/src/erp-sku-stock-compare-cli.ts` runs it for every store with an ERP (skipping a store with none or still on the practice ERP), on demand and nightly (`.github/workflows/erp-sku-stock-compare.yml`, `infra/deploy/erp-sku-stock-compare.sh`, the self-hosted runner, CN-003), never wired into `deploy.yml` (informational only, never a go-live gate). Report in Bengali first at `docs/reports/erp-sku-stock-compare/latest/`. Strictly read-only: every ERP call is a GET; the only write anywhere is `reconcileWithErp`'s own ErpSyncRun audit row, exactly what the already-shipped hourly job writes today — nothing is pushed to the ERP and nothing in the shop's own stock or price numbers changes. |
 
 ## S10 · Smart Rules — PR 208–219
 
