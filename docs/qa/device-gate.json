@@ -352,6 +352,7 @@
       "/admin/reports/health/speed",
       "/admin/reports/health/smoke",
       "/admin/reports/health/history",
+      "/admin/ai",
       "/admin/ai/audit",
       "/admin/money/refunds",
       "/admin/money/refunds?view=all",

@@ -1,0 +1,59 @@
+/* S15 · PR 304 — AI › Control room (/admin/ai), in the Lumen look. Uses the shared --lm-* theme tokens, so it needs
+   no colour literal of its own (the hardcode guard checks CSS files too). */
+.adm2 .ai-tiles {
+  margin-top: 12px;
+}
+.adm2 .ai-agents {
+  margin-top: 20px;
+}
+.adm2 .ai-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.adm2 .ai-ac {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.adm2 .ai-ach {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.adm2 .ai-av {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--g1);
+  font-size: 18px;
+}
+.adm2 .ai-acn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.adm2 .ai-acn b {
+  overflow-wrap: anywhere;
+}
+.adm2 .ai-acs {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.adm2 .ai-acs span.a2-xs {
+  overflow-wrap: anywhere;
+}
+.adm2 .ai-acf {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}

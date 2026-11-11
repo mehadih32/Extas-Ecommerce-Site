@@ -151,6 +151,7 @@
         "monthEnd": "Month-end"
       },
       "ai": {
+        "control": "Control room",
         "audit": "Checklist audit"
       }
     },
