@@ -53,6 +53,7 @@
         "name": "Name",
         "kind": "Kind",
         "dailyLimit": "Daily limit",
+        "directPostApproved": "Direct posting",
         "spec": "Template shape",
         "assetId": "File",
         "templateId": "Template",
@@ -125,7 +126,11 @@
         "limitSave": "Save",
         "saved": "Saved",
         "restore": "Bring back",
-        "archive": "Set aside"
+        "archive": "Set aside",
+        "draftOnly": "TikTok: lands in drafts only — someone taps publish in the app",
+        "directApproved": "TikTok: posts straight to the feed (app audit approval on file)",
+        "switchToDraft": "Switch back to drafts only",
+        "switchToDirect": "Allow direct posting (app audit approved)"
       },
       "templates": {
         "h": "Templates",
