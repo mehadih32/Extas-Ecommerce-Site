@@ -63,7 +63,8 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Studio on PostgreSQL (PR 437, 438)'
       const staffId = ((await made.json()) as { staff: { id: string } }).staff.id;
       await staffRolesHandler(req('POST', { path: `/api/admin/staff/${staffId}/roles`, cookie: owner, body: { action: 'assign', roleId, storeId: S } }), admin, staffId);
       const once = cookiesOf(await loginHandler(req('POST', { path: '/api/admin/auth/login', body: { email: `${key}@example.com`, password: 'first password from the owner' } }), admin));
-      return cookiesOf(await passwordHandler(req('POST', { path: '/api/admin/auth/password', cookie: once, body: { current: 'first password from the owner', next: `my own words for ${key}` } }), admin));
+      // Must not contain the account's own email local part (policy issue "contains-email", password.ts).
+      return cookiesOf(await passwordHandler(req('POST', { path: '/api/admin/auth/password', cookie: once, body: { current: 'first password from the owner', next: 'a sentence this account alone chose as its own' } }), admin));
     };
     writer = await makeStaff('w438', ['studio.read', 'studio.write', 'media.manage']);
     reader = await makeStaff('r438', ['studio.read']);

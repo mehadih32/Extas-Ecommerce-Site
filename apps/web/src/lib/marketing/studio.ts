@@ -65,7 +65,7 @@ async function studioAction(deps: AdminDeps, media: MediaDeps | null, who: Who, 
   const sd = studioDeps(deps);
   if (action.startsWith('account.')) return saveStudioAccount(sd, who, { ...b, action: action.slice('account.'.length) });
   if (action.startsWith('template.')) return saveStudioTemplate(sd, who, { ...b, action: action.slice('template.'.length) });
-  if (action === 'asset.kind') return setBrandAssetKind(sd, who, b);
+  if (action === 'asset.kind') return setBrandAssetKind(sd, who, { assetId: b.assetId, kind: b.kind });
   if (action === 'asset.archive' || action === 'asset.restore') {
     if (!media) return Promise.reject(new MediaError('INVALID_INPUT', 'media storage is not configured'));
     const assetId = typeof b.assetId === 'string' ? b.assetId : '';
