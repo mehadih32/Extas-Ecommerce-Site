@@ -349,6 +349,32 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S23 · PR 440 — the content studio's own Facebook Page post (Marketing › Studio): the Page's long-lived access
+  // token and its id. The mock serves until the Test (reading the Page) passes; may run alongside Meta Ads/
+  // Messenger above (another provider of the same kind, each its own key).
+  {
+    id: 'facebookPagePublish',
+    kind: 'META',
+    provider: 'facebookPagePublish',
+    adapter: true,
+    secrets: [{ field: 'pageAccessToken' }],
+    config: [{ field: 'pageId' }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  // S23 · PR 440 — the content studio's own Instagram post (Marketing › Studio): the same kind of Page access token
+  // (a Business account linked to the Page) plus that Instagram account's id. The mock serves until the Test
+  // (reading the account) passes.
+  {
+    id: 'instagramPublish',
+    kind: 'META',
+    provider: 'instagramPublish',
+    adapter: true,
+    secrets: [{ field: 'pageAccessToken' }],
+    config: [{ field: 'igUserId' }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   // S13 · PR 259: Meta's Marketing API, read only (the ad account, its campaigns and ad sets for Marketing › Ad
   // platforms); the mock is a practice account until the token is in and the test (reading the account) passes.
   {
