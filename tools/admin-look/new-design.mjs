@@ -22,6 +22,46 @@ const KEY = /^[A-Z]$/;
 
 /** The pages whose route draws its designs through the registry, and the start a new design gets. */
 export const STARTS = {
+  orders: (ident, key, name) => `// PR 656 (CN-025) — Orders design ${key}, "${name.en}". Made with \`pnpm admin:design orders ${key}\`
+// (docs/admin-guide/HOW-TO-ADD-A-DESIGN.md). Load the same \`OrderListData\` design A reads (\`loadOrderList\`,
+// \`@/lib/admin-orders/list\`) — never a second figure or a guess — and draw it with the shared pieces
+// (OrderFilters, OrderTable, ViewChips, EmptyList, Kpis — all exported from OrderListPage.tsx).
+import { EmptyList, Kpis, ordersDict, readDeps } from '@/components/admin/orders/OrderListPage';
+import { OrderTable } from '@/components/admin/orders/OrderTable';
+import { PageHead, SectionTabs } from '@/components/admin/shell/ShellParts';
+import { loadOrderList } from '@/lib/admin-orders/list';
+import { listHref, type ListPageId } from '@/lib/admin-orders/model';
+import { locateKey } from '@/lib/admin-shell/sections';
+import { t } from '@/lib/i18n';
+import { LookMenu } from '../LookMenu';
+import { LookThumb } from '../thumbs';
+import type { LookDesign } from '../types';
+import type { OrdersDesignProps } from './common';
+
+async function Orders${key}(p: OrdersDesignProps) {
+  const { view, a, query, now, menu } = p;
+  const d = view.dict;
+  const page: ListPageId = 'all';
+  const data = await loadOrderList(readDeps(a.deps), a.who, view, page, query);
+  return (
+    <div className="a2-z" data-testid="orders-list" data-design="${key}" data-lm-ready="">
+      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={<LookMenu {...menu} />} />
+      <SectionTabs view={view} current="orders" />
+      <Kpis view={view} a={a} counts={data.counts} now={now} />
+      {data.rows.length ? <OrderTable dict={ordersDict(view)} rows={data.rows} bulk={null} /> : <EmptyList view={view} filtered={false} clear={listHref(page, { view: query.view })} all={query.view === 'all'} />}
+    </div>
+  );
+}
+
+export const ${ident}: LookDesign<OrdersDesignProps, 'list'> = {
+  key: '${key}',
+  name: { en: ${JSON.stringify(name.en)}, bn: ${JSON.stringify(name.bn)} },
+  desc: { en: ${JSON.stringify(name.en)}, bn: ${JSON.stringify(name.bn)} },
+  parts: ['list'],
+  Render: Orders${key},
+  Thumb: () => <LookThumb page="orders" id="${key}" />,
+};
+`,
   dashboard: (ident, key, name) => `// PR 12 (CN-025) — Dashboard design ${key}, "${name.en}". Made with \`pnpm admin:design dashboard ${key}\`
 // (docs/admin-guide/HOW-TO-ADD-A-DESIGN.md). Draw the page from \`p.data\`: the loader reads only the parts listed below
 // (lib/admin-look/dashboard-data.ts DASH_PARTS), and only those the person may see. Words come from the admin
