@@ -644,6 +644,11 @@
       "none": "Nothing is going wrong right now",
       "later": "Customer problems from {a} and {b} join this card when they are built."
     },
+    "need": {
+      "title": "Needs you now",
+      "sub": "{n} lists need you · tap one to open it",
+      "none": "Nothing waiting. Well done."
+    },
     "viewAria": "Dashboard view",
     "viewOverview": "Overview",
     "viewMoney": "Money & marketing",
