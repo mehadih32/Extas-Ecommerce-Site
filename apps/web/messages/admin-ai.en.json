@@ -191,5 +191,42 @@
     "invalid": "Fill in a job and a whole number of runs for every line",
     "needPermission": "\"AI control\" is needed to use the calculator."
   }
+  },
+  "aiApprovals": {
+    "metaTitle": "AI Approvals",
+    "title": "Approvals",
+    "sub": "Everything an AI agent wants to do but may not do alone, in one queue — clear it in one pass.",
+    "pending": {
+      "label": "Waiting",
+      "empty": "Nothing is waiting — no agent can act on its own yet.",
+      "kind": "Kind",
+      "agent": "Agent",
+      "noAgent": "No agent — raised directly",
+      "requested": "Requested {when}",
+      "expires": "Expires {when}",
+      "noteLabel": "Note (optional)",
+      "notePlaceholder": "Why — for the record",
+      "approve": "Approve",
+      "reject": "Reject",
+      "toastApproved": "Approved",
+      "toastRejected": "Rejected",
+      "toastFailed": "Could not save this decision",
+      "toastAlready": "Someone already decided this one — the list below has been refreshed",
+      "needPermission": "You don't have permission to decide this one. You can still see the queue."
+    },
+    "decided": {
+      "label": "Decision history",
+      "sub": "The most recent {n} decided, expired or cancelled requests — the rest stay in the database, just not shown here.",
+      "empty": "Nothing decided yet.",
+      "status": {
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "EXPIRED": "Expired",
+        "CANCELLED": "Cancelled"
+      },
+      "decidedBy": "by {name}, {when}",
+      "note": "Note: {note}",
+      "expiredAt": "expired {when}"
+    }
   }
 }
