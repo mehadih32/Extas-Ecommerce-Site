@@ -3,9 +3,11 @@
 // could run (Support, Orders, Marketing, Social, SEO & blog, Site audit, Reports, Admin helpers, Studio), each row
 // with what it does, Claude's own recommended model and why, an estimated cost per run and per month, the same job
 // on other companies' models, and a model selector that changes the row's own model immediately (`ai.control`).
-// Nothing has run yet (no job runner reads this), so every number is honestly an estimate — never an "actual"
-// (that self-correction loop is PR 313). Cost is shown in the store's own currency once the owner has typed a USD
-// rate (Money › Costs & fees, PR 345/266); until then it is shown honestly in USD, with a plain note why.
+// Beside every estimate sits its own Actual column (PR 313, Blueprint C2.3): the job's real cost over the last 30
+// days, read from the usage ledger — honestly blank until a job dispatcher writes real rows (none does yet) and
+// shown only once 5 real runs exist, so a single stray run never reads as "the real cost". Cost is shown in the
+// store's own currency once the owner has typed a USD rate (Money › Costs & fees, PR 345/266); until then it is
+// shown honestly in USD, with a plain note why.
 // Guide: docs/admin-guide/pages/ai/cost-book.md.
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -28,7 +30,7 @@ import {
   moneyOf,
 } from "@/components/admin/products/model";
 import { adminDeps } from "@/lib/admin-auth";
-import { costBookView } from "@/lib/admin-ai/cost-book";
+import { costBookView, MIN_ACTUAL_SAMPLES } from "@/lib/admin-ai/cost-book";
 import { ADMIN_LOGIN } from "@/lib/admin-nav";
 import { adminView, pageAccess, type AdminView } from "@/lib/admin-page";
 import { locateKey } from "@/lib/admin-shell/sections";
@@ -127,6 +129,17 @@ export default async function AiCostBookPage() {
       )
       .join(" · ");
   };
+  const actualOf = (job: (typeof o.jobs)[number]) => {
+    const a = job.actual;
+    if (!a) return c("actualNone", { min: MIN_ACTUAL_SAMPLES });
+    const dev =
+      a.deviationPct === null || a.deviationPct === 0
+        ? c("actualSame")
+        : c(a.deviationPct > 0 ? "actualAbove" : "actualBelow", {
+            pct: Math.abs(a.deviationPct),
+          });
+    return `${c("actualRuns", { runs: num(a.runs), perRun: amount(a.perRunStoreMinor, a.perRunUsdMinor) })} — ${dev}`;
+  };
 
   return (
     <div
@@ -198,6 +211,7 @@ export default async function AiCostBookPage() {
               <th>{c("col.perRun")}</th>
               <th>{c("col.perMonth")}</th>
               <th>{c("col.runs")}</th>
+              <th>{c("col.actual")}</th>
               <th>{c("col.alternatives")}</th>
             </tr>
           </thead>
@@ -266,6 +280,13 @@ export default async function AiCostBookPage() {
                       perDay: num(job.typicalRunsPerDay),
                       perMonth: num(job.typicalRunsPerDay * 30),
                     })}
+                  </td>
+                  <td
+                    className="cb-actual a2-xs"
+                    data-l={c("col.actual")}
+                    data-has-actual={job.actual ? "yes" : "no"}
+                  >
+                    {actualOf(job)}
                   </td>
                   <td
                     className="cb-alts a2-xs a2-mute"
