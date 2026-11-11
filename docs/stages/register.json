@@ -5321,7 +5321,9 @@
     "built": true,
     "date": "2026-11-11",
     "note": "Dashboard design \"Classic cards\" (CN-025/CN-027 follow-up 380, first half; CN-044, ERP lane, task 3; `components/admin/look/dashboard/C.tsx`; no setting, no migration): the demo's own letter for this design is A (the V12.3 dashboard, 97q-adm2-dash.js) — here it is the next free key, **C**, since **B** is already the Lumen \"Today\" design (PR 631, CN-036); nothing renamed or deleted, only added, per CN-025's own rule. Headline KPI cards (delivered sales, orders, delivery success, returned parcels), the delivered-sales trend against the period before with ordered value drawn beside it, \"Needs you now\" (every waiting list this person may open, from `data.queues`), orders by stage, top products and delivery success by courier. Reads no loader part design A does not already read (`money`, `stages`, `delivery`, `top`, `queues`, `offSite`) and draws with the same `admin.dashboardDesigns` numbers — no new setting, no new migration, picked the same way as any other design (Settings → Admin look, the \"…\" menu, `?design=C`). New wording `dsh.need.*` (title/sub/none) in `admin-shell.en/bn.json`; guides `docs/admin-guide/dashboard.md` and `pages/dashboard/home.md` updated. `look.test.ts` updated for the registry's new 3rd Dashboard key (22/22 green); `apps/web` `tsc`/`eslint` clean on every touched file; `hardcode-guard` 0/3165 files; `admin-guide-check` clean. The demo's command-center design (follow-up 380's second half) and Orders'/Products' own B and C designs (follow-ups 381, 382) stay open",
-    "github": []
+    "github": [
+     "#132, 11 Nov"
+    ]
    },
    "builtFacts": {
     "routes": [],
@@ -20117,7 +20119,9 @@
     "built": true,
     "date": "2026-11-11",
     "note": "read-only SKU/stock comparison between the shop's catalogue and the live ERP (CN-044, ERP lane, task 2; `@extas/inventory` `erp-catalogue-compare.ts`; no setting, no migration): reuses PR 207's already-shipped, read-only `reconcileWithErp` for stock differences (MISSING_IN_SHOP/MISSING_IN_ERP/ON_HAND_DIFFERS/RESERVED_DIFFERS) and adds a catalogue-level compare (`compareVariants`, from the same GET-only `variants` page PR 609's import already reads): a SKU the ERP has that the shop does not, one the shop has that the ERP no longer lists, and an active ERP SKU with no shop price yet. `tsx packages/jobs/src/erp-sku-stock-compare-cli.ts` runs it for every store with an ERP (skipping a store with none or still on the practice ERP), on demand and nightly (`.github/workflows/erp-sku-stock-compare.yml`, `infra/deploy/erp-sku-stock-compare.sh`, the self-hosted runner, CN-003), never wired into `deploy.yml` (informational only, never a go-live gate). Report in Bengali first at `docs/reports/erp-sku-stock-compare/latest/`. Strictly read-only: every ERP call is a GET; the only write anywhere is `reconcileWithErp`'s own ErpSyncRun audit row, exactly what the already-shipped hourly job writes today — nothing is pushed to the ERP and nothing in the shop's own stock or price numbers changes. 5 new unit tests (`compareVariants` and the Bengali report page) plus 8 new infra tests for the script; package `tsc` and `eslint` clean",
-    "github": []
+    "github": [
+     "#132, 11 Nov"
+    ]
    },
    "builtFacts": {
     "routes": [],
