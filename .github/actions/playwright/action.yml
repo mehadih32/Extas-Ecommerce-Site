@@ -1,6 +1,9 @@
 # PR 17 (CN-023) — Playwright for the device gate and the end-to-end checks, outside the workspace (no lockfile change;
 # the tools find it through NODE_PATH=<prefix>/node_modules). Chromium comes from the cache (keyed on the Playwright
 # version); its system libraries are installed on every run, because a fresh runner never has them.
+# Updated 11 Nov 2026 (PR 17 follow-up): the system-library install (apt-get under the hood) retries up to 4 times
+# with 20s/60s/120s backoff, because the runner's apt mirror (azure.archive.ubuntu.com) has transient DNS outages
+# that failed this one step on otherwise-green runs; the step still fails the job once every attempt is exhausted.
 name: Playwright and Chromium
 description: npm-installs playwright into a prefix, Chromium from the cache, then its system libraries
 inputs:
@@ -35,4 +38,17 @@ runs:
       shell: bash
       env:
         PW_PREFIX: ${{ inputs.prefix }}
-      run: '"$PW_PREFIX/node_modules/.bin/playwright" install-deps chromium'
+      run: |
+        backoffs=(20 60 120)
+        attempt=1
+        max_attempts=4
+        until "$PW_PREFIX/node_modules/.bin/playwright" install-deps chromium; do
+          if [ "$attempt" -ge "$max_attempts" ]; then
+            echo "install-deps chromium failed after $attempt attempts" >&2
+            exit 1
+          fi
+          wait_s="${backoffs[$((attempt - 1))]}"
+          echo "install-deps chromium failed (attempt $attempt/$max_attempts) — retrying in ${wait_s}s" >&2
+          sleep "$wait_s"
+          attempt=$((attempt + 1))
+        done
