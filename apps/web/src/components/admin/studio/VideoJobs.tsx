@@ -1,9 +1,12 @@
 'use client';
 // S25 · PR 482 — Marketing › Studio › Videos: price a clip before asking for it, then request it. POST
 // {action: 'estimate' | 'request', input} on /api/admin/marketing/studio/videos. The API checks the permission and
-// every rule again; the page is read again after a request (nothing here generates a clip yet — that is PR 483).
+// every rule again; the page is read again after a request.
+// S25 · PR 483 — `VideoJobActions` moves a requested job through the pipeline from the job list: {action: 'queue' |
+// 'run' | 'retry', jobId}. A job lands on REVIEW_REQUIRED or FAILED; approving/rejecting from there is PR 484.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { MAX_ATTEMPTS } from '@extas/creative-studio';
 // Narrowed to the video subpath (not the package's full barrel): a Client Component must never pull in
 // adapters/storage's Azure/S3 SDKs (Node-only) through @extas/adapters's root export.
 import { VIDEO_ASPECTS, type VideoAspect } from '@extas/adapters/video';
@@ -28,6 +31,13 @@ export interface VideoTexts {
   requesting: string;
   requested: string;
   costUnset: string;
+  queueIt: string;
+  queuing: string;
+  runIt: string;
+  running: string;
+  retryIt: string;
+  retrying: string;
+  attemptOf: string;
   money: Money;
   noProducts: string;
   err: Record<string, string>;
@@ -156,4 +166,67 @@ export function VideoRequestForm({ url, products, texts: x }: { url: string; pro
       </div>
     </div>
   );
+}
+
+/** One job's own next move — queue a DRAFT, run a QUEUED, or retry a FAILED one — read again after each move. */
+export function VideoJobActions({ url, jobId, status, attempt, texts: x }: { url: string; jobId: string; status: string; attempt: number; texts: VideoTexts }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState<'queue' | 'run' | 'retry' | null>(null);
+  const [out, setOut] = useState<Out>(null);
+
+  async function act(action: 'queue' | 'run' | 'retry') {
+    setBusy(action);
+    setOut(null);
+    const a = await call('POST', url, { action, jobId });
+    setBusy(null);
+    if (a.status !== 200) return setOut({ text: errText(a, x.err), bad: true });
+    router.refresh();
+  }
+
+  if (status === 'DRAFT')
+    return (
+      <span className="adp-read">
+        <button type="button" className="a2-btn sm" disabled={busy !== null} onClick={() => void act('queue')} data-testid="video-queue">
+          {busy === 'queue' ? x.queuing : x.queueIt}
+        </button>
+        {out ? (
+          <span className={`a2-sm${out.bad ? ' adp-bad' : ''}`} role="status" aria-live="polite">
+            {out.text}
+          </span>
+        ) : null}
+      </span>
+    );
+
+  if (status === 'QUEUED')
+    return (
+      <span className="adp-read">
+        <button type="button" className="a2-btn sm" disabled={busy !== null} onClick={() => void act('run')} data-testid="video-run">
+          {busy === 'run' ? x.running : x.runIt}
+        </button>
+        {out ? (
+          <span className={`a2-sm${out.bad ? ' adp-bad' : ''}`} role="status" aria-live="polite">
+            {out.text}
+          </span>
+        ) : null}
+      </span>
+    );
+
+  if (status === 'FAILED')
+    return (
+      <span className="adp-read">
+        <span className="a2-sm a2-mute">{x.attemptOf.replace('{n}', String(attempt)).replace('{max}', String(MAX_ATTEMPTS))}</span>
+        {attempt < MAX_ATTEMPTS ? (
+          <button type="button" className="a2-btn sm" disabled={busy !== null} onClick={() => void act('retry')} data-testid="video-retry">
+            {busy === 'retry' ? x.retrying : x.retryIt}
+          </button>
+        ) : null}
+        {out ? (
+          <span className={`a2-sm${out.bad ? ' adp-bad' : ''}`} role="status" aria-live="polite">
+            {out.text}
+          </span>
+        ) : null}
+      </span>
+    );
+
+  return null;
 }

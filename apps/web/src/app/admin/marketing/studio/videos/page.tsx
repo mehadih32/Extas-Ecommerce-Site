@@ -2,13 +2,15 @@
 // /api/admin/marketing/studio/videos (lib/studio/video-admin.ts). Seeing needs `marketing.studio.read`; pricing and
 // requesting a clip needs `marketing.studio.write`. The whole Studio tab stays hidden by `stages.closedShown.S25`
 // until the stage is finished (CN-036/CN-039). Guide: docs/admin-guide/pages/marketing/studio-videos.md.
+// S25 · PR 483 — each job row also carries its own next move (queue/run/retry, `VideoJobActions`); a job that has
+// moved on to REVIEW_REQUIRED or further has no button here (PR 484 adds the review/approve step).
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { VIDEO_ASPECTS, type VideoAspect } from '@extas/adapters';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
-import { VideoRequestForm, type VideoTexts } from '@/components/admin/studio/VideoJobs';
+import { VideoJobActions, VideoRequestForm, type VideoTexts } from '@/components/admin/studio/VideoJobs';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -50,7 +52,7 @@ export default async function VideoJobsPage() {
     );
   const g = (k: string) => t(d, `studio.videos.${k}`);
   const canWrite = access.guard.permissions?.has('marketing.studio.write') ?? false;
-  const errs = Object.fromEntries(['INVALID_INPUT', 'OFF', 'SOURCE_INVALID', 'NOT_FOUND', 'network', 'other'].map((k) => [k, g(`err.${k}`)]));
+  const errs = Object.fromEntries(['INVALID_INPUT', 'OFF', 'SOURCE_INVALID', 'WRONG_STATE', 'CAP_REACHED', 'NOT_FOUND', 'network', 'other'].map((k) => [k, g(`err.${k}`)]));
   const aspectName = Object.fromEntries(VIDEO_ASPECTS.map((a) => [a, g(`aspect.${a.replace(':', '')}`)])) as Record<VideoAspect, string>;
   const [currency, { jobs, videoEnabled, products }] = await Promise.all([access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }), videosOverview(access.deps, { db: access.deps.db, settings: access.deps.resolver })]);
   const money = moneyOf(currency, view.locale);
@@ -65,6 +67,13 @@ export default async function VideoJobsPage() {
     requesting: g('requesting'),
     requested: g('requested'),
     costUnset: g('costUnset'),
+    queueIt: g('queueIt'),
+    queuing: g('queuing'),
+    runIt: g('runIt'),
+    running: g('running'),
+    retryIt: g('retryIt'),
+    retrying: g('retrying'),
+    attemptOf: g('attemptOf'),
     money,
     noProducts: g('noProducts'),
     err: errs,
@@ -98,6 +107,7 @@ export default async function VideoJobsPage() {
                 <p className="a2-sm a2-mute">
                   {j.durationSec ?? '—'}s · {j.estimateMinor == null ? g('costUnset') : formatMoney(j.estimateMinor, money)}
                 </p>
+                {canWrite ? <VideoJobActions url={API} jobId={j.id} status={j.status} attempt={j.attempt} texts={texts} /> : null}
               </li>
             ))}
           </ul>
