@@ -33,7 +33,8 @@
     "ads": "Ads and tracking",
     "reports": "Reports",
     "marketing": "Marketing",
-    "blog": "Blog and journal"
+    "blog": "Blog and journal",
+    "ai": "AI 360 Control Room"
   },
   "permissions": {
     "settings": {
@@ -363,6 +364,10 @@
       "generate": "Run a generate job (assembles a post; may spend on AI captions once the owner turns that on)",
       "approve": "Approve or reject a post waiting in the studio's approval queue",
       "publish": "Let a post go out on its own, with no approval wait, where its platform and account both allow it"
+    },
+    "ai": {
+      "read": "See the AI Center: every agent, what it did last and what it cost (no customer's details beyond what the agent itself worked on)",
+      "control": "Pause or resume one AI agent, and its switches, monthly cap and schedule — never money, refunds, prices, COD, ad budgets, blocking or deleting on its own"
     }
   },
   "totp": {
