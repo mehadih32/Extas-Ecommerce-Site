@@ -8,6 +8,11 @@
 // not a second AuditLog) and one agent's "keep running even with the master off" ({key, keepOnWhenMasterOff},
 // `ai.control`, audited); both are a no-op on a double tap, and `workingNow` is true whenever an agent is on AND
 // (the master is on OR it is kept on).
+//
+// S15 · PR 307 — the same route also takes {key, provider} (one agent's model pick). On a fresh installation every
+// option but the practice writer is "not ready" and `recommendedProvider` is null; picking an un-Tested or unknown
+// provider is refused (422); once a PR 306 connection is enabled and Tested (mode LIVE), it becomes ready, the
+// recommendation picks it up, and an agent may be pointed at it (audited `ai.agent.model`, idempotent).
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -44,6 +49,13 @@ interface Agent {
   lastActivity: { summaryBn: string; at: string } | null;
   todayMinor: number;
   monthMinor: number;
+  selectedProvider: string | null;
+  selectedReady: boolean;
+}
+interface ModelOption {
+  provider: string | null;
+  modelId: string | null;
+  ready: boolean;
 }
 interface View {
   masterOn: boolean;
@@ -52,6 +64,8 @@ interface View {
   monthMinor: number;
   runningNow: number;
   agentCount: number;
+  modelOptions: ModelOption[];
+  recommendedProvider: string | null;
 }
 interface Answer {
   ok: boolean;
@@ -213,5 +227,49 @@ describe.skipIf(!HAS_TEST_DB)('AI › Control room on PostgreSQL (PR 304)', () =
     expect(d.lastActivity).toMatchObject({ summaryBn: 'পরীক্ষার কাজ' });
     expect(a.view.todayMinor).toBe(150);
     expect(a.view.monthMinor).toBe(240);
+  });
+
+  it('model options (PR 307): the practice writer plus four not-ready providers until one is keyed and Tested', async () => {
+    const { a } = await ask('GET', reader);
+    expect(a.view.recommendedProvider).toBeNull();
+    expect(a.view.modelOptions).toHaveLength(5);
+    expect(a.view.modelOptions.find((o) => o.provider === null)).toMatchObject({ ready: true, modelId: null });
+    for (const p of ['anthropic', 'openAi', 'googleAi', 'openRouter']) {
+      expect(a.view.modelOptions.find((o) => o.provider === p)).toMatchObject({ ready: false, modelId: null });
+    }
+    for (const ag of a.agents) expect(ag).toMatchObject({ selectedProvider: null, selectedReady: true });
+  });
+
+  it('a model pick is refused for an unknown agent, an unknown provider, or a provider not yet Tested (PR 307)', async () => {
+    expect((await ask('POST', reader, { key: 'doot', provider: 'anthropic' })).status).toBe(403);
+    expect((await ask('POST', controller, { key: 'not-an-agent', provider: 'anthropic' })).a).toMatchObject({ ok: false, error: 'NOT_FOUND' });
+    expect((await ask('POST', controller, { key: 'doot', provider: 'not-a-provider' })).a).toMatchObject({ ok: false, error: 'UNKNOWN_PROVIDER' });
+    expect((await ask('POST', controller, { key: 'doot', provider: 'anthropic' })).a).toMatchObject({ ok: false, error: 'PROVIDER_NOT_READY' });
+    const again = await ask('GET', reader);
+    expect(again.a.agents.find((x) => x.key === 'doot')?.selectedProvider).toBeNull();
+  });
+
+  it('once a provider is enabled and Tested it becomes ready, is recommended, and an agent can be pointed at it (PR 307); a double tap writes once; falling back is honest', async () => {
+    await t.prisma.integration.create({
+      data: { storeId: null, kind: 'AI_PROVIDER', provider: 'anthropic', name: 'anthropic', mode: 'LIVE', enabled: true, config: { model: 'claude-sonnet-5' }, secretNames: ['apiKey'] },
+    });
+    const ready = await ask('GET', reader);
+    expect(ready.a.view.recommendedProvider).toBe('anthropic');
+    expect(ready.a.view.modelOptions.find((o) => o.provider === 'anthropic')).toMatchObject({ ready: true, modelId: 'claude-sonnet-5' });
+
+    const auditBefore = await t.prisma.auditLog.count({ where: { action: 'ai.agent.model' } });
+    const picked = await ask('POST', controller, { key: 'doot', provider: 'anthropic' });
+    expect(picked.status).toBe(200);
+    expect(picked.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: 'anthropic', selectedReady: true });
+    await ask('POST', controller, { key: 'doot', provider: 'anthropic' }); // same value again
+    expect(await t.prisma.auditLog.count({ where: { action: 'ai.agent.model' } })).toBe(auditBefore + 1);
+
+    // the connection goes dark again (disabled) — the stored pick stays, but it is honestly no longer ready
+    await t.prisma.integration.updateMany({ where: { kind: 'AI_PROVIDER', provider: 'anthropic' }, data: { enabled: false } });
+    const fallen = await ask('GET', reader);
+    expect(fallen.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: 'anthropic', selectedReady: false });
+
+    const back = await ask('POST', controller, { key: 'doot', provider: null });
+    expect(back.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: null, selectedReady: true });
   });
 });
