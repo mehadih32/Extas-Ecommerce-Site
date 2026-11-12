@@ -520,6 +520,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S15 · PR 318 (C3.2) — Permissions: the permission matrix — per agent, what it may decide alone, must only
       // propose, or may not touch at all, over orders/stock/prices/courier/money/customer data/code (owner only).
       { id: 'permissions', guide: 'ai', pages: [{ href: '/admin/ai/permissions', perm: 'ai.read', keys: ['aiPermissions'] }] },
+      // S15 · PR 319 (C1.7) — AI diary: a plain-Bengali line per agent per action, what it did, why, and what it
+      // changed — not a technical log (owner only).
+      { id: 'diary', guide: 'ai', pages: [{ href: '/admin/ai/diary', perm: 'ai.read', keys: ['aiDiary'] }] },
     ],
     ownerOnly: true,
     guide: 'ai',
