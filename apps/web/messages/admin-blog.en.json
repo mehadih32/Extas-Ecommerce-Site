@@ -194,7 +194,8 @@
       "bioBn": "About (Bengali)",
       "reviewer": "Checked-by line (only a real person's name)",
       "aiPill": "AI author",
-      "personPill": "Person"
+      "personPill": "Person",
+      "agentKeyTip": "AI 360 agent code"
     },
     "err": {
       "STALE": "Someone changed this meanwhile; the page shows the latest now. Make your change again.",
@@ -279,8 +280,17 @@
       "p2": "Normal",
       "p3": "Later",
       "isPillar": "This is the cluster's pillar article",
+      "section": "Section",
+      "pillarNone": "No section",
+      "pillarCare": "Care & washing",
+      "pillarStyle": "Styling",
+      "pillarFabric": "Fabrics",
+      "pillarFit": "Fit & size",
+      "pillarSeason": "Occasions & seasons",
+      "pillarBrand": "Product & brand",
       "author": "Writer",
       "authorNone": "Choose later",
+      "authorAuto": "The section's own author under Doot writes it",
       "addTopic": "Add the topic",
       "addAnyway": "Add anyway",
       "alikeNear": "A little alike ({n}%): {title}",
