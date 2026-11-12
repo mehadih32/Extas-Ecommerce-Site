@@ -4,12 +4,17 @@
 // which enforces its own `health.fixes.approve` and its own "nobody decides their own proposal" rule; every other
 // kind needs `ai.control`, checked here, then decided by this file's own `decideApproval`. Either way the response
 // hands back the fresh queue, the same convention `control-room-api.ts`/`cost-book-api.ts` already use.
+//
+// PR 323: an `ai.skill` row rejected with a reason also becomes the agent's own training example
+// (`training.ts`'s own header comment explains why that one moment is the real "correction") — never a second
+// decision path, only a record of what `decideProposal` already decided.
 import { requirePermission } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from '../admin-auth';
-import { decideProposal, GATE_KINDS, isFixGateError } from '../admin-health/fixes';
+import { decideProposal, GATE_KINDS, isFixGateError, SKILL_KIND } from '../admin-health/fixes';
 import { isAiError } from './errors';
 import { approvalsView, decideApproval, type ApprovalRow } from './approvals';
+import { recordSkillCorrection } from './training';
 
 const rowAnswer = (r: ApprovalRow) => ({
   id: r.id,
@@ -51,12 +56,16 @@ export async function approvalsHandler(request: Request, deps: AdminDeps | null)
     if (input.note !== undefined && input.note !== null && typeof input.note !== 'string') return json({ ok: false, error: 'INVALID_INPUT', details: ['note'] }, { status: 400 });
     const note = (input.note as string | null | undefined) ?? null;
 
-    const row = await d.db.aiApprovalRequest.findUnique({ where: { id: input.id }, select: { kind: true } });
+    const row = await d.db.aiApprovalRequest.findUnique({ where: { id: input.id }, select: { kind: true, refId: true, agentKey: true, payload: true } });
     if (!row) return json({ ok: false, error: 'NOT_FOUND', details: ['id'] }, { status: 404 });
 
     if ((GATE_KINDS as readonly string[]).includes(row.kind)) {
       // PR 420's own queue: its own permission, its own side effects (a SiteAuditFinding/AiSkill row moves too).
-      await decideProposal(d, { actor: g.actor, ctx: g.ctx }, { id: input.id, decision: input.decision, reason: note });
+      const decided = await decideProposal(d, { actor: g.actor, ctx: g.ctx }, { id: input.id, decision: input.decision, reason: note });
+      // PR 323: a rejected skill, with a reason, becomes a training example — see training.ts's own header.
+      if (row.kind === SKILL_KIND && decided.status === 'REJECTED' && note && row.refId) {
+        await recordSkillCorrection({ db: d.db }, { actor: g.actor, ctx: g.ctx }, { skillId: row.refId, agentKey: row.agentKey, payload: row.payload, reason: note });
+      }
     } else {
       await requirePermission(d.db, g.actor, 'ai.control', { storeId: MOTHER_STORE_ID });
       await decideApproval(d, { actor: g.actor, ctx: g.ctx }, input.id, input.decision, note);
