@@ -1,13 +1,22 @@
 {
-  "at": "2026-11-12 20:25 (Asia/Dhaka)",
+  "at": "2026-11-12 22:10 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "97c648bfa222",
-  "kind": "nightly",
-  "rolledBack": false,
-  "ok": true,
-  "pages": 566,
+  "sha": "de583f5687e9",
+  "kind": "after deploy",
+  "rolledBack": true,
+  "ok": false,
+  "pages": 565,
   "failed": 0,
-  "problems": [],
+  "problems": [
+    "check (PR 643): Money › Books (the ERP account) draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 643): Money › Daily books draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 643): Money › Books match draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 643): Money › Books differences draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 643): Money › Books closes draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 643): Money › Month end draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 644): Reports › Team draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded.",
+    "check (PR 644): Reports › Delivery & RTO draws in the Lumen look and follows dark mode (CN-036): page.waitForSelector: Timeout 15000ms exceeded."
+  ],
   "database": {
     "appendOnly": "ok: 36 tables append-only",
     "appRole": "extas_app"
