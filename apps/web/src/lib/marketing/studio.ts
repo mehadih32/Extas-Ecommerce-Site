@@ -12,23 +12,31 @@
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { imageSources, mediaHttpStatus, mediaUrl, MediaError, type ImageSource, type MediaDeps } from '@extas/media';
 import {
+  decideSocialPost,
   holds,
   isStudioError,
+  publishDuePosts,
   queueSocialPost,
   queueSocialRender,
+  rescheduleSocialPost,
   runSocialPost,
   runSocialRenderJob,
+  saveScheduleRule,
   saveStudioAccount,
   saveStudioTemplate,
+  scheduleRules,
   setBrandAssetArchived,
   setBrandAssetKind,
   studioAccounts,
   studioBrandAssets,
+  studioCalendar,
   studioPublisher,
   studioRenderJobs,
   studioSocialPosts,
   studioTemplates,
+  type CalendarDay,
   type PublishDeps,
+  type ScheduleRuleRow,
   type SocialPostRow,
   type SocialRenderJobRow,
   type StudioAccountRow,
@@ -48,10 +56,25 @@ export interface StudioOverview {
   assets: StudioAssetRow[];
   renders: SocialRenderJobRow[];
   posts: SocialPostRow[];
+  /** PR 442: the next two weeks of the content calendar (today's own calendar day through +13), store-timezone days. */
+  calendar: CalendarDay[];
+  /** PR 442: the store's auto-schedule rules. */
+  scheduleRules: ScheduleRuleRow[];
   /** One `ImageSource` per asset that has a picture ready, for `<ResponsiveImage>` (the same the product gallery uses). */
   images: Record<string, ImageSource>;
   canWrite: boolean;
   canPublish: boolean;
+  /** PR 442: may approve/reject a post waiting in the queue. */
+  canApprove: boolean;
+}
+
+/** Today's own calendar day through 13 days ahead, as YYYY-MM-DD — a plain UTC-date window; `studioCalendar` itself
+ * buckets every post by the store's own time zone, so this window only has to be wide enough to cover it. */
+function calendarWindow(): { from: string; to: string } {
+  const today = new Date();
+  const from = today.toISOString().slice(0, 10);
+  const to = new Date(today.getTime() + 13 * 86_400_000).toISOString().slice(0, 10);
+  return { from, to };
 }
 
 function studioDeps(deps: AdminDeps): StudioDeps {
@@ -82,17 +105,21 @@ function publishDeps(deps: AdminDeps, request: Request): PublishDeps {
 /** The whole page: accounts, templates, brand assets, render jobs and posts, with a thumbnail for each ready image. */
 export async function studioOverview(deps: AdminDeps, who: Who): Promise<StudioOverview> {
   const sd = studioDeps(deps);
-  const [{ rows: accounts, canWrite }, { rows: templates }, assets, renders, posts, canPublish] = await Promise.all([
+  const { from, to } = calendarWindow();
+  const [{ rows: accounts, canWrite }, { rows: templates }, assets, renders, posts, rules, calendar, canPublish, canApprove] = await Promise.all([
     studioAccounts(sd, who),
     studioTemplates(sd, who),
     studioBrandAssets(sd, who),
     studioRenderJobs(sd, who),
     studioSocialPosts(sd, who),
+    scheduleRules(sd, who),
+    studioCalendar(sd, who, { from, to }),
     holds(sd, who, 'studio.publish'),
+    holds(sd, who, 'studio.approve'),
   ]);
   const imageIds = [...assets.filter((a) => a.mimeType.startsWith('image/')).map((a) => a.id), ...renders.flatMap((r) => (r.outputAssetId ? [r.outputAssetId] : []))];
   const images = imageIds.length ? Object.fromEntries(await imageSources({ db: deps.db, settings: deps.resolver }, who.storeId, imageIds)) : {};
-  return { accounts, templates, assets, renders, posts, images, canWrite, canPublish };
+  return { accounts, templates, assets, renders, posts, calendar, scheduleRules: rules, images, canWrite, canPublish, canApprove };
 }
 
 const answer = (e: unknown): Response => {
@@ -104,11 +131,15 @@ const answer = (e: unknown): Response => {
 /**
  * POST {action}: `account.*` (PR 437: add, rename, switch, requireApproval, dailyLimit, archive) ·
  * `template.*` (add, update, archive) · `asset.kind` {assetId, kind} · `asset.archive`/`asset.restore` {assetId,
- * archived, reason?} (every one of these needs `studio.write`) · `render.queue` {templateId, productIds, caption?}
- * and `render.run` {id} (PR 439) · `post.queue` {renderJobId, accountId, caption?} and `post.run` {id} (PR 440) —
- * all four of these need `studio.generate`; `post.run`, and a `post.queue` whose account runs free, also need
- * `studio.publish` (checked inside `@extas/studio`'s own `publish.ts`). The asset, render and post actions
- * re-check inside `@extas/studio`'s own functions.
+ * archived, reason?} · `rule.*` (PR 442: add, edit, switch, archive — the auto-schedule rules) (every one of these
+ * needs `studio.write`) · `render.queue` {templateId, productIds, caption?}
+ * and `render.run` {id} (PR 439) · `post.queue` {renderJobId, accountId, caption?, scheduledAt?} and `post.run` {id}
+ * (PR 440) · `post.reschedule` {id, scheduledAt} (PR 442)—
+ * all five of these need `studio.generate`; `post.run`, and a `post.queue` whose account runs free, also need
+ * `studio.publish` (checked inside `@extas/studio`'s own `publish.ts`) · `post.decide` {id, decision} (PR 442,
+ * the approval queue) needs `studio.approve` · `schedule.runDue` {} (PR 442, "run due posts now") needs
+ * `studio.publish`. The asset, render, post, decide, reschedule, run-due and rule actions re-check inside
+ * `@extas/studio`'s own functions.
  */
 async function studioAction(deps: AdminDeps, media: MediaDeps | null, request: Request, who: Who, b: Record<string, unknown>): Promise<unknown> {
   const action = typeof b.action === 'string' ? b.action : '';
@@ -116,6 +147,7 @@ async function studioAction(deps: AdminDeps, media: MediaDeps | null, request: R
   if (action.startsWith('account.')) return saveStudioAccount(sd, who, { ...b, action: action.slice('account.'.length) });
   if (action.startsWith('template.')) return saveStudioTemplate(sd, who, { ...b, action: action.slice('template.'.length) });
   if (action === 'asset.kind') return setBrandAssetKind(sd, who, { assetId: b.assetId, kind: b.kind });
+  if (action.startsWith('rule.')) return saveScheduleRule(sd, who, { ...b, action: action.slice('rule.'.length) });
   if (action === 'asset.archive' || action === 'asset.restore') {
     if (!media) return Promise.reject(new MediaError('INVALID_INPUT', 'media storage is not configured'));
     const assetId = typeof b.assetId === 'string' ? b.assetId : '';
@@ -127,16 +159,31 @@ async function studioAction(deps: AdminDeps, media: MediaDeps | null, request: R
     const id = typeof b.id === 'string' ? b.id : '';
     return runSocialRenderJob(sd, who, id);
   }
-  if (action === 'post.queue') return queueSocialPost(publishDeps(deps, request), who, { renderJobId: b.renderJobId, accountId: b.accountId, caption: b.caption });
+  if (action === 'post.queue') return queueSocialPost(publishDeps(deps, request), who, { renderJobId: b.renderJobId, accountId: b.accountId, caption: b.caption, scheduledAt: b.scheduledAt });
   if (action === 'post.run') {
     const id = typeof b.id === 'string' ? b.id : '';
     return runSocialPost(publishDeps(deps, request), who, id);
   }
+  if (action === 'post.reschedule') return rescheduleSocialPost(sd, who, { id: b.id, scheduledAt: b.scheduledAt ?? null });
+  if (action === 'post.decide') return decideSocialPost(sd, who, { id: b.id, decision: b.decision });
+  if (action === 'schedule.runDue') return publishDuePosts(publishDeps(deps, request), who);
   return Promise.reject(new MediaError('INVALID_INPUT', 'unknown action'));
 }
 
-/** `render.*`/`post.*` need `studio.generate` (its own function also asks `studio.publish` when a post runs); every other POST action needs `studio.write` (CLAUDE.md rule 6: nobody who can only generate a draft can also touch accounts or templates). */
-const postPermission = (action: unknown): 'studio.generate' | 'studio.write' => (typeof action === 'string' && (action.startsWith('render.') || action.startsWith('post.')) ? 'studio.generate' : 'studio.write');
+/**
+ * `render.*`/`post.queue`/`post.run`/`post.reschedule` need `studio.generate` (its own function also asks
+ * `studio.publish` when a post runs); `post.decide` (PR 442, the approval queue) needs `studio.approve`;
+ * `schedule.runDue` (PR 442) needs `studio.publish` outright, since it sends posts itself; every other POST action
+ * (accounts, templates, assets, auto-schedule rules) needs `studio.write` (CLAUDE.md rule 6: nobody who can only
+ * generate a draft can also touch accounts or templates).
+ */
+const postPermission = (action: unknown): 'studio.generate' | 'studio.write' | 'studio.approve' | 'studio.publish' => {
+  if (typeof action !== 'string') return 'studio.write';
+  if (action === 'post.decide') return 'studio.approve';
+  if (action === 'schedule.runDue') return 'studio.publish';
+  if (action.startsWith('render.') || action.startsWith('post.')) return 'studio.generate';
+  return 'studio.write';
+};
 
 /**
  * /api/admin/marketing/studio — GET the page (`studio.read`); POST an account/template/asset action (`studio.write`)
