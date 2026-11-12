@@ -10,6 +10,8 @@ import {
   type AiArticleInput,
   type AiCampaignDraft,
   type AiCampaignInput,
+  type AiFraudReviewDraft,
+  type AiFraudReviewInput,
   type AiProductDescriptionDraft,
   type AiProductDescriptionInput,
   type AiSeoDraft,
@@ -231,5 +233,39 @@ const sizeAdviceAnswer = z.object({ body: z.string() });
 export function parseSizeAdviceJson(text: string, input: AiSizeAdviceInput, usage?: { inputTokens: number; outputTokens: number }): AiSizeAdviceDraft {
   const parsed = sizeAdviceAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a size explanation');
+  return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 329 — the fraud review agent's own job: one plain paragraph on why a review alert fired, never a decision
+// ---------------------------------------------------------------------------------------------------------------------
+
+const FRAUD_RULE =
+  'Write only from the reasons, matches and history given. Never invent a reason, a signal, an order or a number that is not listed. Never propose, recommend or hint at a decision — not to approve, cancel, hold, block, merge or anything else; a person decides that, not you. Only explain, in plain words, why this order was raised for a person to review.';
+
+export function fraudReviewPrompt(input: AiFraudReviewInput): Prompt {
+  const f = input.facts;
+  const sections = [
+    f.severity ? `severity: ${f.severity}` : null,
+    f.why.length ? `why it was raised:\n${f.why.map((w) => `- ${w}`).join('\n')}` : null,
+    f.matches.length ? `orders it matched:\n${f.matches.map((w) => `- ${w}`).join('\n')}` : null,
+    f.history.length ? `this customer's history:\n${f.history.map((w) => `- ${w}`).join('\n')}` : null,
+  ]
+    .filter((s): s is string => Boolean(s))
+    .join('\n\n');
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  const kind = f.kind === 'risk' ? 'risk review' : 'possible-duplicate review';
+  return {
+    system: `${SYSTEM_RULE} ${FRAUD_RULE}`,
+    user: `A Bangladeshi menswear shop's order system raised a ${kind} on one order. Write one short, plain paragraph, in ${lang}, explaining why — for a staff member who is about to read the order and decide. Never suggest what they should decide.\n\n${sections}\n\nAt most ${input.max.body} characters.\n\nReply as {"body": "..."}.`,
+    maxTokens: 400,
+  };
+}
+
+const fraudReviewAnswer = z.object({ body: z.string() });
+
+export function parseFraudReviewJson(text: string, input: AiFraudReviewInput, usage?: { inputTokens: number; outputTokens: number }): AiFraudReviewDraft {
+  const parsed = fraudReviewAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a review explanation');
   return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
 }

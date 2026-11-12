@@ -1,4 +1,4 @@
-/* S15 · PR 317 — AI › Approvals (/admin/ai/approvals), Lumen look. Uses the shared --lm-*/a2-* tokens only, so the
+/* S15 · PR 317 — AI › Approvals (/admin/ai/approvals), Lumen look. Uses the shared --lm-* and a2-* tokens only, so the
    hardcode guard finds no colour literal here. */
 .adm2 .ai-ap-sec {
   margin-top: 4px;
