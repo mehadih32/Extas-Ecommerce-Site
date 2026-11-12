@@ -250,5 +250,24 @@
     "toastChanged": "Saved",
     "toastFailed": "Could not save this change",
     "needPermission": "\"AI control\" is needed to change this matrix."
+  },
+  "aiDiary": {
+    "metaTitle": "AI diary",
+    "title": "AI diary",
+    "sub": "What each agent did, why, and what it changed — in plain Bengali, never a technical log.",
+    "empty": "Nothing yet — no agent has written to the diary.",
+    "windowNote": "The last {days} days, newest first.",
+    "filter": {
+      "agentAll": "All agents",
+      "agentLabel": "Agent",
+      "daysLabel": "Window",
+      "days7": "7 days",
+      "days14": "14 days",
+      "days30": "30 days"
+    },
+    "entry": {
+      "wholeSystem": "Whole system",
+      "ref": "About: {type} #{id}"
+    }
   }
 }
