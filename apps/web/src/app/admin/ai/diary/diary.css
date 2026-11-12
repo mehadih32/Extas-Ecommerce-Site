@@ -1,0 +1,30 @@
+/* S15 · PR 319 — AI › Diary (/admin/ai/diary), Lumen look. Uses the shared --lm-*/a2-* tokens only, so the
+   hardcode guard finds no colour literal here. A flat, newest-first list of cards — never a wide table. */
+.adm2 .ai-dy-fbar {
+  flex-wrap: wrap;
+}
+.adm2 .ai-dy-sec {
+  margin-top: 4px;
+}
+.adm2 .ai-dy-rows {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.adm2 .ai-dy-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.adm2 .ai-dy-pills {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.adm2 .ai-dy-text {
+  line-height: 1.5;
+}

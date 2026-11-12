@@ -154,7 +154,9 @@
         "control": "Control room",
         "audit": "Checklist audit",
         "costBook": "Cost Book",
-        "permissions": "Permissions"
+        "approvals": "Approvals",
+        "permissions": "Permissions",
+        "diary": "Diary"
       }
     },
     "purpose": {
