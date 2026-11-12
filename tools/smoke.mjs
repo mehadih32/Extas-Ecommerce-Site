@@ -786,18 +786,42 @@ async function main() {
     : undefined;
   const out = process.env.SMOKE_OUT || null;
   const privateOut = process.env.SMOKE_PRIVATE_OUT || null;
-  const result = await runSmoke({
-    base,
-    creds,
-    httpCredentials,
-    out,
-    privateOut,
-    chromiumPath: process.env.CHROMIUM_PATH,
-    // R2 ops review (M2): staging (the preview host, the default) or extra (the main domain, infra/deploy/smoke.sh)
-    hostKind: process.env.SMOKE_HOST_KIND === "extra" ? "extra" : "staging",
-    // Follow-up 569: the run after a deploy (it rolls back on failure) leaves the `nightlyOnly` checks out.
-    afterDeploy: process.env.SMOKE_ROLLS_BACK === "1",
-  });
+  // CN-046 (12 Nov 2026, deploy run 43227644499): `signIn()` throwing "still on the sign-in page after
+  // signing in" (a real, correctly-detected problem) escaped uncaught past this point, through runSmoke's
+  // try/finally (which only closes the browser) and all the way to `main().then(..., onError)` below — so
+  // result.json/README.md/rows.json were never written for a run that HAD found a real problem. smoke.sh then
+  // saw no result.json and fell back to its own generic "did not finish (exit N)" message, and
+  // infra/deploy/deploy.sh's automatic rollback (triggered correctly because the step still exited nonzero)
+  // had nothing informative to go on either. A crash during the run must never skip the write-out step: it is
+  // recorded as a normal, structured failure (ok:false, with the crash's own message as a problem) so every
+  // downstream reader (smoke_keep, run_history, the deploy report, a human) sees exactly what went wrong,
+  // whether the run finished cleanly or blew up partway through.
+  let result;
+  try {
+    result = await runSmoke({
+      base,
+      creds,
+      httpCredentials,
+      out,
+      privateOut,
+      chromiumPath: process.env.CHROMIUM_PATH,
+      // R2 ops review (M2): staging (the preview host, the default) or extra (the main domain, infra/deploy/smoke.sh)
+      hostKind: process.env.SMOKE_HOST_KIND === "extra" ? "extra" : "staging",
+      // Follow-up 569: the run after a deploy (it rolls back on failure) leaves the `nightlyOnly` checks out.
+      afterDeploy: process.env.SMOKE_ROLLS_BACK === "1",
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error(`smoke: the run crashed before it finished — ${message}`);
+    result = {
+      ok: false,
+      pages: 0,
+      failed: 0,
+      problems: [`the smoke run crashed before it finished: ${message}`],
+      rows: [],
+      shots: [],
+    };
+  }
   for (const r of result.rows)
     console.log(
       `${r.ok ? "ok  " : "FAIL"} ${r.screen.padEnd(7)} ${r.path} → ${r.landed} (${r.status})`,
