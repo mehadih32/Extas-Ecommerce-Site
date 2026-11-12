@@ -153,7 +153,8 @@
       "ai": {
         "control": "Control room",
         "agents": "Agents",
-        "audit": "Checklist audit"
+        "audit": "Checklist audit",
+        "reports": "Agent reports"
       }
     },
     "purpose": {
@@ -184,7 +185,7 @@
       "website": "Site builder · Page layouts · Blog · Words · More: Eye toggles, Launch default, Effects",
       "money": "Profit & loss · COD reconciliation · Payments & refunds · Expenses & salaries · Month-end close · Costs & fees",
       "reports": "Overview · Sales · Products · Customers · Delivery · More: Marketing, Experiments, Scheduled reports, Funnels",
-      "ai": "Control room · Approvals · Agents · Skills · Audit · Costs · More: Models, Routing, Diary, Media, Memory",
+      "ai": "Control room · Approvals · Agents · Skills · Audit · Agent reports · Costs · More: Models, Routing, Diary, Media, Memory",
       "settings": "Settings home · Store details · Checkout & payments · Policies & texts · Team & roles · More: ERP connection, Stores, System",
       "help": "What's new · Build progress · Reported problems · Blueprint & files · More: Smoke runs"
     },
