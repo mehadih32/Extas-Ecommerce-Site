@@ -2332,7 +2332,12 @@
      "<EXTAS_ROOT>/private/smoke-admin",
      "server-setup.yml",
      "deploy-order.sh",
-     "tools/warm.mjs"
+     "tools/warm.mjs",
+     "tools/smoke.mjs",
+     "state/deploys/",
+     "disk-tidy.sh",
+     "deploy.sh",
+     "infra/tests/run.sh"
     ],
     "names": [
      "OSDISK_RESET_MAX_PCT",
@@ -2341,14 +2346,19 @@
      "extas-vm-deploy-",
      "extas-vm-setup-<run id>",
      "DEPLOY_WARM_SECONDS",
-     "mayBeOff"
+     "mayBeOff",
+     "ok:false",
+     "deploy.sh rollback",
+     "images.sh rollback_history",
+     "DEPLOY_KEEP_GOOD_GENERATIONS"
     ],
     "tests": [
      "20 Oct (CN-016): smoke test after every deploy and every night (`infra/deploy/smoke.sh`, `smoke.yml`), every built page signed out and as a read-only check account, phone and desktop",
      "admin smoke pictures go only to the server's root-only `<EXTAS_ROOT>/private/smoke-admin` (`SMOKE_PRIVATE_OUT`), never Git (ci fails on one",
      "the smoke test opens four more admin pages (Website › SEO › Redirects & 404 and Collection pages, Orders › Returns › Receive & QC, Products › New product) (#72)",
      "follow-up 691):** the deploy warms every web replica of the new version before traffic moves — `tools/warm.mjs` opens each smoke page once, signed out, inside each new replica (`DEPLOY_WARM_SECONDS` 240 in server.conf) and logs the slowest pages, so the first visitors and the smoke test no longer pay each page's first load",
-     "follow-up 611, the rest):** the smoke test opens My orders, the bulk-order page and the bag's test page in both languages (the two a switch or the server closes answer 404 on the `mayBeOff` list), and a test fails when a static shop page is neither opened nor skipped with a reason"
+     "follow-up 611, the rest):** the smoke test opens My orders, the bulk-order page and the bag's test page in both languages (the two a switch or the server closes answer 404 on the `mayBeOff` list), and a test fails when a static shop page is neither opened nor skipped with a reason **Updated 12 Nov 2026 (CN-046, urgent, owner 21:51 Dhaka — deploy run 43227644499 crashed instead of failing cleanly, and its rollback also failed, leaving the untested new version live unnoticed):** a crash inside the smoke test (`tools/smoke.mjs`, an uncaught sign-in error) is now always caught and written out as a normal `ok:false` result with its own message, never a silent skip past the write-out step that left smoke.sh with nothing but a generic \"did not finish\"",
+     "8 new `infra/tests/run.sh` checks prove both failure modes restore the right version, or say plainly when none can be restored (follow-up 730)"
     ]
    },
    "updates": [
@@ -2407,6 +2417,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 31 Oct (review round 2):** `deploy.yml` and `server-setup.yml` use one concurrency group per run (`extas-vm-deploy-` / `extas-vm-setup-<run id>`), so a newer commit's waiting deploy or a waiting rollback is never cancelled (the one runner still runs one job at a time and `deploy-order.sh` skips an older commit); the smoke test opens four more admin pages (Website › SEO › Redirects & 404 and Collection pages, Orders › Returns › Receive & QC, Products › New product) (#72); **follow-up (6 Nov, #91; follow-up 691):** the deploy warms every web replica of the new version before traffic moves — `tools/warm.mjs` opens each smoke page once, signed out, inside each new replica (`DEPLOY_WARM_SECONDS` 240 in server.conf) and logs the slowest pages, so the first visitors and the smoke test no longer pay each page's first load; **follow-up (7 Nov, #94; follow-up 611, the rest):** the smoke test opens My orders, the bulk-order page and the bag's test page in both languages (the two a switch or the server closes answer 404 on the `mayBeOff` list), and a test fails when a static shop page is neither opened nor skipped with a reason"
+    },
+    {
+     "date": "31 Oct 21:51",
+     "sortKey": 45951,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 12 Nov 2026 (CN-046, urgent, owner 21:51 Dhaka — deploy run 43227644499 crashed instead of failing cleanly, and its rollback also failed, leaving the untested new version live unnoticed):** a crash inside the smoke test (`tools/smoke.mjs`, an uncaught sign-in error) is now always caught and written out as a normal `ok:false` result with its own message, never a silent skip past the write-out step that left smoke.sh with nothing but a generic \"did not finish\"; `deploy.sh rollback` no longer gives up when the one immediately-previous image is gone — it falls back through every earlier successful deploy it still has a record of (`images.sh rollback_history`, `state/deploys/`), and `disk-tidy.sh` now protects the newest `DEPLOY_KEEP_GOOD_GENERATIONS` (2) good versions, not just one; and when a rollback fails outright the deploy report always says, in bold and by commit, which version (old or new) is the one actually live — from a fresh health check taken right after the failed rollback (`deploy.yml`'s \"Confirm what is live\" step) when there is one, else from `deploy.sh`'s own guarantee that a failed rollback never changes what was live. 8 new `infra/tests/run.sh` checks prove both failure modes restore the right version, or say plainly when none can be restored (follow-up 730)"
     }
    ],
    "mentions": [
@@ -2414,7 +2431,7 @@
     601
    ],
    "blueprint": [],
-   "bn": "Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে \"লগইন → অ্যাডমিন খোলে\" পরীক্ষা চলে। প্রতি ডিপ্লয়ের পর আর প্রতি রাতে সব পাতা ফোন ও কম্পিউটারে খুলে দেখা হয়; সমস্যা পেলে সাইট নিজে আগের ভালো ভার্সনে ফেরে।",
+   "bn": "Docker বসানো; নতুন ভার্সন সাইট বন্ধ না করে চালু হয়, সমস্যা হলে নিজে আগেরটায় ফেরে। প্রতি ডিপ্লয়ের আগে \"লগইন → অ্যাডমিন খোলে\" পরীক্ষা চলে। প্রতি ডিপ্লয়ের পর আর প্রতি রাতে সব পাতা ফোন ও কম্পিউটারে খুলে দেখা হয়; সমস্যা পেলে সাইট নিজে আগের ভালো ভার্সনে ফেরে। ১২ নভেম্বর (CN-046): স্মোক টেস্ট ক্র্যাশ করলেও তা ঠিকভাবে ধরা পড়ে এখন; আগের ভার্সন না পেলে আরও পেছনের ভালো ভার্সনে ফেরে, আর কোনোটাই না পেলে কোন ভার্সন লাইভ আছে রিপোর্টে স্পষ্ট লেখা থাকে।",
    "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S0A.md#pr-4"

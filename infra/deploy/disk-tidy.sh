@@ -24,7 +24,20 @@ tidy_docker() {
   local keep_web="${DEPLOY_KEEP_WEB_IMAGES:-5}" keep_mig="${DEPLOY_KEEP_MIGRATE_IMAGES:-3}" cache="${DOCKER_BUILD_CACHE_KEEP_GB:-40}"
   command -v docker >/dev/null 2>&1 || return 0
   needed="$(mktemp)"
-  needed_images "$state/last-good-deploy.json" "$state/last-deploy.json" > "$needed"
+  # CN-046 (12 Nov 2026): last-good-deploy.json/last-deploy.json between them name only the live version and ONE
+  # rollback target. Also protect the newest DEPLOY_KEEP_GOOD_GENERATIONS successful (non-rollback) deploys' own
+  # images straight from the history record() always writes to "$state/deploys/" — a wider safety margin, so an
+  # automatic rollback still has somewhere to fall back to (images.sh rollback_history) even when the single usual
+  # target is gone for some unrelated reason.
+  local keep_good="${DEPLOY_KEEP_GOOD_GENERATIONS:-2}" extra="" gf n=0
+  for gf in $(ls -1 "$state/deploys"/*.json 2>/dev/null | sort -r); do
+    [ "$(jq -r '.result // empty' "$gf" 2>/dev/null || true)" = ok ] || continue
+    [ "$(jq -r '.kind // "deploy"' "$gf" 2>/dev/null || true)" != rollback ] || continue
+    extra="$extra $gf"; n=$((n + 1))
+    [ "$n" -lt "$keep_good" ] || break
+  done
+  # shellcheck disable=SC2086 # $extra is a list of file paths built one `mktemp`-safe word at a time, never quoted input
+  needed_images "$state/last-good-deploy.json" "$state/last-deploy.json" $extra > "$needed"
   docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-web | images_to_remove "$keep_web" "$needed" \
     | xargs -r docker rmi >/dev/null 2>&1 || true
   docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' extas-migrate | images_to_remove "$keep_mig" "$needed" \

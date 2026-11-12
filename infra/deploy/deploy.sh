@@ -212,10 +212,32 @@ if [ "${1:-}" = rollback ]; then
   if [ "$(jq -r '.kind // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)" = rollback ]; then
     die "the live version was itself put back by a rollback; the version before it is the one that failed, so there is nothing safe to go back to (deploy a fix instead)"
   fi
+  LIVE_IMAGE="$(jq -r '.image // empty' "$STATE/last-good-deploy.json" 2>/dev/null || true)"
   read -r IMAGE ROLLBACK_WORKER < <(rollback_target "$STATE/last-good-deploy.json") || true
-  [ -n "${IMAGE:-}" ] || die "no previous image to roll back to"
+  # CN-046 (12 Nov 2026, deploy run 43227644499): the usual target (the one immediately-previous image) can be gone
+  # from this server for reasons that have nothing to do with whether it was a good version — the automatic rollback
+  # used to just die right here, leaving the untested, smoke-failed new version live with nothing restored. Now it
+  # keeps trying older good versions, newest first, until it finds one still on this server (images.sh
+  # rollback_history reads the same per-attempt history record() has always written to $STATE/deploys/).
+  ROLLBACK_SKIPPED=0
+  if [ -n "${IMAGE:-}" ] && ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+    log "the usual rollback target ($IMAGE) is not on this server any more — trying older good versions"
+    IMAGE=""; ROLLBACK_WORKER=""
+    while read -r cand_web cand_worker; do
+      [ -n "$cand_web" ] || continue
+      if docker image inspect "$cand_web" >/dev/null 2>&1; then
+        IMAGE="$cand_web"; ROLLBACK_WORKER="$cand_worker"; break
+      fi
+      ROLLBACK_SKIPPED=$((ROLLBACK_SKIPPED + 1))
+    done < <(rollback_history "$STATE/deploys" "$LIVE_IMAGE")
+  fi
+  [ -n "${IMAGE:-}" ] || die "no previous image to roll back to — the usual target and every earlier good version this server still has a record of are all gone; the live, untested version stays live"
   PREV_IMAGE=""; PREV_WORKER_IMAGE=""
-  log "rollback to $IMAGE (worker: $ROLLBACK_WORKER)"
+  if [ "$ROLLBACK_SKIPPED" -gt 0 ]; then
+    log "rollback to $IMAGE (worker: $ROLLBACK_WORKER) — $ROLLBACK_SKIPPED newer good version(s) were no longer on this server"
+  else
+    log "rollback to $IMAGE (worker: $ROLLBACK_WORKER)"
+  fi
 else
   IMAGE="${1:?usage: deploy.sh <image> <migrate-image> | rollback}"
   MIGRATE_IMAGE="${2:?usage: deploy.sh <image> <migrate-image> | rollback}"
