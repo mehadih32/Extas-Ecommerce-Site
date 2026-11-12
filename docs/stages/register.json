@@ -28144,7 +28144,10 @@
      "ai.control"
     ],
     "code": [
-     "docs/admin-guide/pages/ai/reports.md"
+     "docs/admin-guide/pages/ai/reports.md",
+     "appraisal-api.ts",
+     "admin-auth.ts",
+     "appraisal.db.test.ts"
     ],
     "names": [
      "AiAppraisal",
@@ -28152,11 +28155,32 @@
      "bug_self",
      "bug_owner",
      "reward",
-     "AiUsageLedger"
+     "AiUsageLedger",
+     "generateAppraisal",
+     "appraisalHistory",
+     "{ db: deps!.db }",
+     "now",
+     "AdminDeps",
+     "guardAdmin",
+     "db",
+     "main",
+     "fix-appraisal-now-dependency",
+     "now: deps!.now"
     ],
-    "tests": []
+    "tests": [
+     "**Updated 12 Nov 2026 (CI triage, found while rebasing PR 579/149, independently of the coordinator's own report of this bug on #174/#181's branches):** `appraisal-api.ts`'s handler built its `generateAppraisal`/`appraisalHistory` deps object as `{ db: deps!.db }` only, silently dropping the `now` field `AdminDeps` already carries (every other handler in this folder forwards it, e.g",
+     "`guardAdmin`'s own return in `admin-auth.ts`) — so a generated report always used the real wall clock, never a test's (or a future real need's) injected one, failing `appraisal.db.test.ts`'s KPI assertion in the `db` CI job on every PR that merges current `main`, regardless of that PR's own diff"
+    ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "12 Oct",
+     "sortKey": 17280,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 12 Nov 2026 (CI triage, found while rebasing PR 579/149, independently of the coordinator's own report of this bug on #174/#181's branches):** `appraisal-api.ts`'s handler built its `generateAppraisal`/`appraisalHistory` deps object as `{ db: deps!.db }` only, silently dropping the `now` field `AdminDeps` already carries (every other handler in this folder forwards it, e.g. `guardAdmin`'s own return in `admin-auth.ts`) — so a generated report always used the real wall clock, never a test's (or a future real need's) injected one, failing `appraisal.db.test.ts`'s KPI assertion in the `db` CI job on every PR that merges current `main`, regardless of that PR's own diff. Fixed on `main` directly (branch `fix-appraisal-now-dependency`): `now: deps!.now` added to the one line."
+    }
+   ],
    "mentions": [
     577,
     303,
