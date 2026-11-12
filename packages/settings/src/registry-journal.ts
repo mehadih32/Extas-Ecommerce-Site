@@ -38,8 +38,14 @@
 //          `search` (the journal's own search box and results page, never listed by search engines) and `rss` (the
 //          journal's RSS feed at /journal/rss.xml and /bn/journal/rss.xml, the newest `rssItems` articles). Each is off
 //          as it ships, and a value saved before they existed reads them off.
+//   v288 · PR 529 `blog.sourceWriter` — the source-link research writer (S12 answer 12): give it a link to an article
+//          anywhere in the world; it reads the page through the page reader connection (PR 33, shared with "Import
+//          from a link"), researches the topic from the page's own words and writes an original piece in the chosen
+//          language. Off as it ships, and it also needs AI for the whole shop (`ai.enabled`); until an AI provider's
+//          key is entered the practice writer serves, honestly marked. At most `dailyMax` drafts in a day.
 import { z } from 'zod';
 import { setting } from './define';
+import { hostNameSchema } from './registry-catalogue-tools';
 
 const V242 = 223;
 const V244 = 224;
@@ -49,6 +55,7 @@ const V243 = 226;
 const V245 = 227;
 const V250 = 233;
 const V592F = 257;
+const V529 = 288;
 
 const wpm = z.int().min(60).max(400);
 const note = z.string().trim().max(200);
@@ -222,6 +229,34 @@ export const aiDraftSettings = {
     isPublic: false,
     sortOrder: 50,
     version: V243,
+  }),
+};
+
+export const blogSourceWriterSchema = z
+  .object({
+    /** The blog board offers "Write from a link". */
+    enabled: z.boolean(),
+    /** The most source-link drafts in a day (the last 24 hours). */
+    dailyMax: z.int().min(1).max(50),
+    /** Sites the link may come from; empty = any site (the page-fetch limits are `catalogue.linkImport`'s own, shared with "Import from a link"). */
+    allowedHosts: z.array(hostNameSchema).max(200).refine((l) => new Set(l).size === l.length, { message: 'each host once' }),
+  })
+  .strict();
+export type BlogSourceWriterSettings = z.output<typeof blogSourceWriterSchema>;
+
+export const sourceWriterSettings = {
+  'blog.sourceWriter': setting({
+    scope: 'store',
+    schema: blogSourceWriterSchema,
+    default: { enabled: false, dailyMax: 6, allowedHosts: [] },
+    valueType: 'JSON',
+    group: 'blog',
+    labelKey: 'blog.sourceWriter.label',
+    helpKey: 'blog.sourceWriter.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 55,
+    version: V529,
   }),
 };
 

@@ -124,7 +124,7 @@ import { adsGrowthSettings } from './registry-ads-growth';
 import { adsBriefSettings } from './registry-ads-brief';
 import { couponDistributionSettings } from './registry-coupons-distribution';
 import { referralSettings } from './registry-referrals';
-import { aiDraftSettings, approvalSettings, briefSettings, clusterSettings, journalSettings, performanceSettings, scheduleSettings } from './registry-journal';
+import { aiDraftSettings, approvalSettings, briefSettings, clusterSettings, journalSettings, performanceSettings, scheduleSettings, sourceWriterSettings } from './registry-journal';
 import { seasonalSettings } from './registry-seasonal';
 import { seasonalReturnSettings } from './registry-seasonal-return';
 import { adminThemeSettings } from './registry-admin-theme';
@@ -1505,6 +1505,8 @@ export const registry = {
   ...scheduleSettings,
   // PR 250 · the content performance report (registry-journal.ts, version 233).
   ...performanceSettings,
+  // PR 529 · the source-link research writer (registry-journal.ts, version 288).
+  ...sourceWriterSettings,
   // PR 251 · comments on articles, off = the journal runs without comments (registry-blog-comments.ts, version 250).
   ...blogCommentSettings,
   // PR 547 · the journal articles' main photo, own pictures only, off (registry-blog-images.ts, version 252).
