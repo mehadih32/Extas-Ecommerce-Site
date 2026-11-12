@@ -2,16 +2,17 @@
   "shell": {
     "admin": "Admin",
     "sec": {
-      "dashboard": "Today",
+      "dashboard": "Home",
       "orders": "Orders",
       "products": "Products",
       "customers": "Customers",
-      "delivery": "Delivery",
+      "delivery": "Couriers",
       "messages": "Messages",
-      "support": "Support",
+      "support": "Inbox",
+      "rules": "Rules",
       "marketing": "Marketing",
       "website": "Website",
-      "money": "Money",
+      "money": "Finance",
       "reports": "Reports",
       "ai": "AI Center",
       "settings": "Settings",
@@ -40,8 +41,8 @@
         "settings": "Delivery settings"
       },
       "marketing": {
-        "rules": "Smart Rules",
         "campaigns": "Campaigns",
+        "messages": "Message campaigns",
         "audiences": "Audiences",
         "adPlatforms": "Ad platforms",
         "tracking": "Tracking",
@@ -136,6 +137,9 @@
         "app": "Support app",
         "analytics": "Analytics"
       },
+      "rules": {
+        "all": "All rules"
+      },
       "money": {
         "books": "Books",
         "overview": "Overview",
@@ -171,8 +175,9 @@
       "customers": "Everyone who bought or asked, their orders, notes and consent.",
       "delivery": "Couriers, parcels, zones and delivery charges.",
       "messages": "Every message the shop sends: the order journey, campaigns, templates and the log.",
-      "support": "Answer every customer on every channel; money complaints with proof.",
-      "marketing": "Ads, offers, coupons, rules and landing pages; budget raises need the owner.",
+      "support": "Answer every customer on every channel (the Inbox); money complaints with proof.",
+      "rules": "Your shop rules in one place: what the shop does by itself, what customers are told, and the Eid dates.",
+      "marketing": "Ads, campaigns, message campaigns, audiences, landing pages and where to advertise; budget raises need the owner.",
       "website": "Menus, pages, blog and how the shop looks.",
       "money": "Profit and loss, COD, payments, refunds and the month-end close.",
       "reports": "Sales, delivery, product and customer reports from the same definitions, and the site's health.",
@@ -186,9 +191,10 @@
       "products": "Reviews · Collections · More: Bulk CSV, Naming & links, Media library, Colour library, Catalogue setup",
       "customers": "All customers · Segments · Loyalty & wallet · To review · More: Import legacy customers, Consent & data",
       "delivery": "Overview · Ready to book · In transit · Returned & refused · Couriers · More: Charge mismatch log, Delivery settings",
-      "messages": "Order journey · Campaigns · Templates · Message log · Channels & limits",
+      "messages": "Moved: these pages are in Marketing › Message campaigns.",
       "support": "Inbox · Rider issues · Claims & credits · Saved replies · Support settings",
-      "marketing": "Campaigns & ads · Coupons & offers · Landing pages · Creative studio · More: Market intel, YouTube",
+      "rules": "All rules · Notices · Eid dates",
+      "marketing": "Ad campaigns · Message campaigns · Audiences · Landing pages · Creative studio · More: Market intel, YouTube",
       "website": "Site builder · Page layouts · Blog · Words · More: Eye toggles, Launch default, Effects",
       "money": "Profit & loss · COD reconciliation · Payments & refunds · Expenses & salaries · Month-end close · Costs & fees",
       "reports": "Overview · Sales · Products · Customers · Delivery · More: Marketing, Experiments, Scheduled reports, Funnels",
@@ -201,12 +207,13 @@
       "orders": "order invoice cod confirm",
       "products": "catalogue product item shirt polo launch publish",
       "customers": "customer buyer people",
-      "delivery": "courier parcel zone area charge shipping",
+      "delivery": "courier couriers parcel zone area charge shipping delivery",
       "messages": "sms whatsapp email message template campaign",
       "support": "chat inbox complaint help desk",
-      "marketing": "ads coupon offer rule notice popup campaign",
+      "rules": "rule rules smart notice popup eid auto confirm",
+      "marketing": "ads campaign audience landing sms whatsapp email message template",
       "website": "site page menu blog seo theme",
-      "money": "finance profit cod refund payment",
+      "money": "finance money profit cod refund payment",
       "reports": "report analytics health server worker jobs delivery rto courier late",
       "ai": "ai agent automation",
       "settings": "setting keys connections integrations vault api erp link switch-over",
@@ -228,7 +235,8 @@
       "collapseShort": "Collapse",
       "todo": "To do",
       "waitingIn": "{section}, {n} waiting",
-      "pagesOf": "Show the pages of {section}"
+      "pagesOf": "Show the pages of {section}",
+      "waitingInOrders": "{section}, {n} in Processing"
     },
     "top": {
       "search": "Search pages, settings, orders, products, customers…",

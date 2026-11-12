@@ -144,7 +144,7 @@
    "stages": [
     "S28"
    ],
-   "done": 0,
+   "done": 1,
    "total": 49,
    "parkedTotal": 0,
    "why": "After launch; the owner-approved prototype is the admin UI truth; S15, S24, S25 untouched (CN-047)",
@@ -1777,8 +1777,8 @@
    "wave": "9",
    "range": "659–707",
    "total": 49,
-   "done": 0,
-   "state": "Not started",
+   "done": 1,
+   "state": "In progress",
    "parked": false,
    "registerStatus": "locked; filed 13 Nov 2026 (CN-048) — the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look",
    "intro": "Filed 13 Nov 2026 (CN-048). The owner-approved admin prototype v5 (`docs/demo/admin-proto-v5/`) becomes the real admin: mostly re-arranging screens to the prototype's menu and wiring the backend that is already built. Lumen stays the look. Backend that exists (courier booking and stickers, merge rules, incomplete-order capture, coupons, claims, size charts, exchanges, Customer 360, refunds and wallet, Calls to make, Rider issues, notices) is re-used. Full check: `docs/demo/admin-proto-v5/GAP-MAP.md`. Every new number or switch is a backend setting, off by default; every integration runs on a mock until the owner types the key.",
@@ -41918,13 +41918,34 @@
    "owner": "",
    "demo": null,
    "status": {
-    "state": "Filed",
-    "built": false,
-    "date": "",
-    "note": "",
+    "state": "merged",
+    "built": true,
+    "date": "2026-11-13",
+    "note": "Admin shell alignment (CN-048; no migration, no new permission; `admin.startPages` accepts the new `rules` section): the left menu as the prototype's `A.NAV` inside the Lumen look — Daily = Home, Orders, Couriers, Products, Customers, Inbox, Rules; Grow = Marketing, Website; Business = Finance, Reports; System = AI Center, Settings, Help. Renames by label only (ids, routes and permissions unchanged): Today to Home, Delivery to Couriers, Support to Inbox, Money to Finance. **Rules is its own section** (`rules`, tab All rules: `/admin/rules`, `/notices`, `/eid`; its guide pages moved to `docs/admin-guide/pages/rules/`). **Messages is folded into Marketing › Message campaigns** (all 8 pages and addresses unchanged; the `messages` section id stays as a `folded` entry with no menu item, so saved settings and its manual chapter live on). A click on the open section's name folds or opens its pages (a double-click folds once); the Orders badge reads \"in Processing\"; icons: Home, Inbox and a new Rules glyph. Bottom bar stays the superset (the prototype's 5-item bar is a phone subset). 3 new test cases, admin guide updated.",
     "github": []
    },
-   "builtFacts": null,
+   "builtFacts": {
+    "routes": [
+     "/admin/rules",
+     "/notices",
+     "/eid"
+    ],
+    "settings": [
+     "admin.startPages"
+    ],
+    "code": [
+     "docs/admin-guide/pages/rules/"
+    ],
+    "names": [
+     "rules",
+     "A.NAV",
+     "messages",
+     "folded"
+    ],
+    "tests": [
+     "3 new test cases, admin guide updated"
+    ]
+   },
    "updates": [],
    "mentions": [],
    "blueprint": [],

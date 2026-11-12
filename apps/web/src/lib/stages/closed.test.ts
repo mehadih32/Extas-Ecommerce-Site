@@ -35,7 +35,7 @@ describe('closed stages hidden by a switch (PR 652)', () => {
     expect(sectionVisible(ai, OWNER(hidden))).toBe(false);
     expect(sectionVisible(ai, OWNER(hiddenAdminParts(ALL_SHOWN)))).toBe(true);
     // every other section is untouched
-    const open = SHELL_SECTIONS.filter((s) => s.id !== 'ai');
+    const open = SHELL_SECTIONS.filter((s) => s.id !== 'ai' && !s.folded); // PR 659: a folded section has no menu entry
     expect(open.every((s) => sectionVisible(s, OWNER(hidden)))).toBe(true);
   });
 
