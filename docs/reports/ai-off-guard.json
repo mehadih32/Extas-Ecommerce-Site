@@ -1,9 +1,9 @@
 {
-  "at": "2026-11-12T04:52:45.883Z",
+  "at": "2026-11-12T08:59:24.177Z",
   "n": 7,
   "ok": 7,
-  "totalJobCount": 66,
-  "coveredJobCount": 28,
+  "totalJobCount": 67,
+  "coveredJobCount": 29,
   "checks": [
     {
       "id": "support",
@@ -105,6 +105,7 @@
         "reportsAnomalyFlag",
         "reportsForecastNote",
         "reportsCompetitorScan",
+        "reportsCompetitorJourneyStep",
         "reportsStockAlert",
         "reportsExecSummary"
       ],

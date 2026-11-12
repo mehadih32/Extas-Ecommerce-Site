@@ -416,3 +416,27 @@ describe('practice guide Q&A answer (PR 334)', () => {
     await expect(w.draftGuideQaAnswer(qa({ facts: { pageTitle: 'Low stock', guideText: 'text', question: ' ' } }))).rejects.toThrow();
   });
 });
+
+describe('practice competitor journey step (PR 335)', () => {
+  const step = (over: Partial<import('../src').AiCompetitorStepInput> = {}): import('../src').AiCompetitorStepInput => ({
+    locale: 'en',
+    facts: { stepLabel: 'Product', url: 'https://example.com/p/1', pageTitle: 'Sample Polo', pageText: 'A product page with sizes S, M, L and a "free delivery over X" bar.' },
+    max: { body: 300 },
+    ...over,
+  });
+
+  it('writes only from the step label, title and how much page text it was given — never a price or layout detail it was not told', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftCompetitorStep(step());
+    expect(d.practice).toBe(true);
+    expect(d.body).toContain('Product');
+    expect(d.body).toContain('Sample Polo');
+  });
+
+  it('cuts to the store limit and refuses a draft with no page text', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftCompetitorStep(step({ max: { body: 10 } }));
+    expect([...d.body].length).toBeLessThanOrEqual(10);
+    await expect(w.draftCompetitorStep(step({ facts: { stepLabel: 'Product', url: 'https://example.com/p/1', pageText: ' ' } }))).rejects.toThrow();
+  });
+});

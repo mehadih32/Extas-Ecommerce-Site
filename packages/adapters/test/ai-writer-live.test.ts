@@ -233,6 +233,24 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d.usage).toBeUndefined();
   });
 
+  // S15 · PR 335 — draftCompetitorStep: one grounded observation on one already-read step of a competitor's own
+  // page, never a price or a decision, carrying the provider's own usage through the same generic plumbing.
+  it("draftCompetitorStep writes an observation grounded in the step's own page text, practice: false, carrying the provider's own usage", async () => {
+    const complete = vi.fn(async () => ({ text: '{"body": "Sizes are chosen as a row of buttons; a free-delivery bar sits above the add-to-cart button."}', usage: { inputTokens: 500, outputTokens: 40 } }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftCompetitorStep({ locale: 'en', facts: { stepLabel: 'Product', url: 'https://example.com/p/1', pageTitle: 'Sample Polo', pageText: 'size buttons, free delivery bar, add to cart' }, max: { body: 300 } });
+    expect(d).toEqual({ body: 'Sizes are chosen as a row of buttons; a free-delivery bar sits above the add-to-cart button.', practice: false, usage: { inputTokens: 500, outputTokens: 40 } });
+  });
+
+  it('draftCompetitorStep throws cleanly when the model answers with no body, and carries no usage when the provider reported none', async () => {
+    const facts = { stepLabel: 'Product', url: 'https://example.com/p/1', pageText: 'page text' };
+    const w = liveAiWriter(async () => ({ text: '{"notBody": "x"}' }));
+    await expect(w.draftCompetitorStep({ locale: 'en', facts, max: { body: 300 } })).rejects.toThrow('describe this step');
+    const w2 = liveAiWriter(async () => ({ text: '{"body": "ok"}' }));
+    const d = await w2.draftCompetitorStep({ locale: 'en', facts, max: { body: 300 } });
+    expect(d.usage).toBeUndefined();
+  });
+
   // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
   // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
   // ledger exactly like support's and the product content agent's.
