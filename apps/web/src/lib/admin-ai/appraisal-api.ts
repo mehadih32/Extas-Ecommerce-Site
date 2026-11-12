@@ -12,7 +12,10 @@ export async function appraisalHandler(request: Request, deps: AdminDeps | null)
   if (method !== 'GET' && method !== 'POST') return fail(405, 'method-not-allowed');
   const g = await guardAdmin(request, deps, { permission: method === 'GET' ? 'ai.read' : 'ai.control', storeId: MOTHER_STORE_ID });
   if (g instanceof Response) return g;
-  const d = { db: deps!.db };
+  // FIX (12 Nov, CI triage): `now` was silently dropped here, so a generated report always used the real wall
+  // clock even when a test (or a future real clock-injection need) supplied its own — `deps.now` is forwarded
+  // the same way `guardAdmin`'s own return already does (admin-auth.ts).
+  const d = { db: deps!.db, now: deps!.now };
   try {
     if (method === 'GET') {
       const url = new URL(request.url);
