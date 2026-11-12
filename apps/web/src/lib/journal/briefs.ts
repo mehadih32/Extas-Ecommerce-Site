@@ -19,7 +19,7 @@ import { audit, can } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { blogAiDraftSchema, blogBriefSchema, storeTarget, type BlogAiDraftSettings, type BlogBriefSettings } from '@extas/settings';
 import { body, fail, guardAdmin, isUuid, json, type AdminDeps } from '../admin-auth';
-import { BODY_MAX, EXCERPT_MAX, issuesOf } from './model';
+import { BODY_MAX, EXCERPT_MAX, issuesOf, readingMinutes, wordCount } from './model';
 import { JournalError, LIST_MAX, answer, versionOf, type JournalWho } from './journal';
 import { saveTopic, topicAction } from './clusters';
 import bnWords from '../../../messages/admin-blog.bn.json';
@@ -245,7 +245,7 @@ export function articleWriter(deps: Pick<AdminDeps, 'db' | 'resolver' | 'vault'>
 export async function draftFromBrief(db: Db, resolver: Resolver, who: JournalWho, id: string, input: unknown, writer: ArticleWriter, now: Date = new Date(), storeId: number = S): Promise<{ postId: string; practice: boolean }> {
   const o = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
   if (o.action !== 'draft') throw new JournalError('INVALID_INPUT', 400, ['action']);
-  const [aiOn, set, used, b] = await Promise.all([resolver.value('ai.enabled', { storeId }), resolver.value('blog.aiDraft', { storeId }), aiUsed(db, now, storeId), db.blogBrief.findFirst({ where: { id, storeId } })]);
+  const [aiOn, set, journalSet, used, b] = await Promise.all([resolver.value('ai.enabled', { storeId }), resolver.value('blog.aiDraft', { storeId }), resolver.value('blog.journal', { storeId }), aiUsed(db, now, storeId), db.blogBrief.findFirst({ where: { id, storeId } })]);
   if (!b) throw new JournalError('NOT_FOUND', 404);
   if (b.updatedAt.toISOString() !== o.version) throw new JournalError('STALE', 409);
   const topic = b.topicId ? await db.blogTopic.findFirst({ where: { id: b.topicId, storeId } }) : null;
@@ -269,7 +269,8 @@ export async function draftFromBrief(db: Db, resolver: Resolver, who: JournalWho
   if (!postId) throw new JournalError('WRONG_STATE', 409);
   const words = (view.language === 'bn' ? bnWords : enWords).jr.br.ai;
   const body = (draft.practice ? `> note: ${words.practiceBox}\n\n${draft.body}` : draft.body).slice(0, BODY_MAX);
-  await db.blogPost.update({ where: { id: postId }, data: { body, excerpt: draft.excerpt.slice(0, EXCERPT_MAX) || null, aiAssisted: true } });
+  const count = wordCount(body);
+  await db.blogPost.update({ where: { id: postId }, data: { body, excerpt: draft.excerpt.slice(0, EXCERPT_MAX) || null, aiAssisted: true, wordCount: count, readingMinutes: readingMinutes(count, view.language, journalSet) } });
   await audit(db, who.actor, { storeId, action: 'blog.brief.aiDraft', entityType: 'BlogBrief', entityId: b.id, after: { postId, provider: link.provider, mode: link.mode, practice: draft.practice, language: view.language } }, who.ctx);
   return { postId, practice: draft.practice };
 }

@@ -95,6 +95,11 @@ export default async function BlogBoardPage(props: Props) {
               {s('shelves')}
             </Link>
             {canWrite ? (
+              <Link className="a2-btn" href={`${HERE}/source`} data-testid="jr-source-link">
+                {s('src.title')}
+              </Link>
+            ) : null}
+            {canWrite ? (
               <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="jr-create">
                 {s('create')}
               </Link>
