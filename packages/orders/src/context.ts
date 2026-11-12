@@ -52,6 +52,9 @@ export const ORDER_PERMISSIONS = [
   'orders.edit',
   'orders.export',
   'orders.exportPersonal',
+  // S28 · PR 664: price adjust on an open order, and the owner's answer above the asker's limit
+  'orders.priceAdjust',
+  'orders.priceApprove',
   // S06 · PR 544: the risk rules list and its switches
   'risk.rules.read',
   'risk.rules.write',
