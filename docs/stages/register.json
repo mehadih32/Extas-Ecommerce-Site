@@ -3644,7 +3644,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "89-admin-system.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/settings",
     "text": "89-admin-system.js (#/admin/settings)"
    },
@@ -3704,7 +3704,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "89-admin-system.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/settings",
     "text": "89-admin-system.js (#/admin/settings)"
    },
@@ -4074,7 +4074,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "89-admin-system.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/settings",
     "text": "89-admin-system.js (#/admin/settings)"
    },
@@ -4123,7 +4123,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "89-admin-system.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/settings",
     "text": "89-admin-system.js (#/admin/settings)"
    },
@@ -5620,7 +5620,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products)"
    },
@@ -5672,7 +5672,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products)"
    },
@@ -5720,7 +5720,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products)"
    },
@@ -5780,7 +5780,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products) · V2.1 final · 20 Oct: demo #/admin/images (sample data)"
    },
@@ -5871,7 +5871,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products)"
    },
@@ -5917,7 +5917,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products) · V2.1 final · 20 Oct: demo #/admin/images (sample data)"
    },
@@ -5998,7 +5998,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products)"
    },
@@ -6050,7 +6050,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products)"
    },
@@ -6098,7 +6098,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products)"
    },
@@ -6148,7 +6148,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products)"
    },
@@ -6198,7 +6198,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products)"
    },
@@ -6721,7 +6721,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "95-admin-naming.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/naming",
     "text": "95-admin-naming.js (#/admin/naming)"
    },
@@ -8505,7 +8505,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "02-core.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "",
     "text": "02-core.js (fab.whatsapp off)"
    },
@@ -9597,7 +9597,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "98a-admin-lang.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin",
     "text": "98a-admin-lang.js (#/admin) · V2.1 final · 20 Oct: English mode 0 Bengali on 206 admin routes; documents shown as written"
    },
@@ -9682,7 +9682,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "96c-layout-builder.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/layout",
     "text": "96c-layout-builder.js (#/admin/layout)"
    },
@@ -9756,7 +9756,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "96c-layout-builder.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/side-canvas",
     "text": "96c-layout-builder.js (#/admin/side-canvas)"
    },
@@ -9862,7 +9862,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "96c-layout-builder.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/layout",
     "text": "96c-layout-builder.js (#/admin/layout)"
    },
@@ -9949,7 +9949,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "96d-site-builder.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/site",
     "text": "96d-site-builder.js (#/admin/site) · V2.1 final · 20 Oct: Shimmer control (14 + master) and bag tier box built (89t-shimmer.js, 89u-bag-offers.js)"
    },
@@ -10041,7 +10041,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "96d-site-builder.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/manual",
     "text": "96d-site-builder.js (#/admin/manual)"
    },
@@ -10319,7 +10319,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "90-admin-catalog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/products",
     "text": "90-admin-catalog.js (#/admin/products)"
    },
@@ -11189,7 +11189,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "42-combo-auto.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/combos",
     "text": "42-combo-auto.js (#/combos)"
    },
@@ -11270,7 +11270,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "42-combo-auto.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/combos",
     "text": "42-combo-auto.js (#/combos)"
    },
@@ -11344,7 +11344,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "42-combo-auto.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/combos",
     "text": "42-combo-auto.js (#/combos)"
    },
@@ -11417,7 +11417,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "42-combo-auto.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/combos",
     "text": "42-combo-auto.js (#/combos)"
    },
@@ -11491,7 +11491,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "42-combo-auto.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/combos",
     "text": "42-combo-auto.js (#/combos)"
    },
@@ -13518,7 +13518,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -14462,7 +14462,7 @@
    "owner": "Sawdagor",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -16302,7 +16302,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -17477,7 +17477,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -17542,7 +17542,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -17622,7 +17622,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -17681,7 +17681,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -17739,7 +17739,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -17819,7 +17819,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -17870,7 +17870,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -17915,7 +17915,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -17997,7 +17997,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18060,7 +18060,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18125,7 +18125,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18211,7 +18211,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18288,7 +18288,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18376,7 +18376,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18452,7 +18452,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18531,7 +18531,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18623,7 +18623,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18691,7 +18691,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18775,7 +18775,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18853,7 +18853,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -18928,7 +18928,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -19007,7 +19007,7 @@
    "owner": "Bhandari",
    "demo": {
     "file": "92-admin-couriers.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/couriers",
     "text": "92-admin-couriers.js (#/admin/couriers)"
    },
@@ -21093,7 +21093,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21166,7 +21166,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21226,7 +21226,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21289,7 +21289,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21333,7 +21333,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21382,7 +21382,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21425,7 +21425,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21470,7 +21470,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21521,7 +21521,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21574,7 +21574,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21619,7 +21619,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21665,7 +21665,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21711,7 +21711,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21761,7 +21761,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21825,7 +21825,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog) · V2.1 final · 20 Oct: demo #/admin/speed (sample data)"
    },
@@ -21913,7 +21913,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -21991,7 +21991,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -22047,7 +22047,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -22095,7 +22095,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -22311,7 +22311,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22362,7 +22362,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22408,7 +22408,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22461,7 +22461,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22510,7 +22510,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22558,7 +22558,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22616,7 +22616,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22662,7 +22662,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22714,7 +22714,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22764,7 +22764,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22810,7 +22810,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22861,7 +22861,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22915,7 +22915,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -22970,7 +22970,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -23020,7 +23020,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -23070,7 +23070,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -23126,7 +23126,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -23165,7 +23165,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -23272,7 +23272,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -23339,7 +23339,7 @@
    "owner": "Doot",
    "demo": {
     "file": "73-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/journal",
     "text": "73-blog.js (#/journal)"
    },
@@ -23409,7 +23409,7 @@
    "owner": "Doot",
    "demo": {
     "file": "94-admin-blog.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/blog",
     "text": "94-admin-blog.js (#/admin/blog)"
    },
@@ -23562,7 +23562,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -23614,7 +23614,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -23692,7 +23692,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -23741,7 +23741,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -23791,7 +23791,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -23838,7 +23838,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -23885,7 +23885,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -23932,7 +23932,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -23980,7 +23980,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -24028,7 +24028,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -24076,7 +24076,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -24122,7 +24122,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -24190,7 +24190,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -24238,7 +24238,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -24286,7 +24286,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -24672,7 +24672,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -24904,7 +24904,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -24955,7 +24955,7 @@
    "owner": "Tirondaj, Doot",
    "demo": {
     "file": "93-admin-ads.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ads",
     "text": "93-admin-ads.js (#/admin/ads)"
    },
@@ -25195,7 +25195,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25262,7 +25262,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25316,7 +25316,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25372,7 +25372,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25423,7 +25423,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25473,7 +25473,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25551,7 +25551,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25602,7 +25602,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25657,7 +25657,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25746,7 +25746,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25802,7 +25802,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25846,7 +25846,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25923,7 +25923,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -25989,7 +25989,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26035,7 +26035,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26087,7 +26087,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26133,7 +26133,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26200,7 +26200,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26246,7 +26246,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26293,7 +26293,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26342,7 +26342,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26450,7 +26450,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26494,7 +26494,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26540,7 +26540,7 @@
    "owner": "Doot",
    "demo": {
     "file": "91-admin-crm.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/customers",
     "text": "91-admin-crm.js (#/admin/customers)"
    },
@@ -26877,7 +26877,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -26948,7 +26948,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -27054,7 +27054,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -27093,7 +27093,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -27132,7 +27132,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -27995,7 +27995,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -28029,7 +28029,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -28124,7 +28124,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -28192,7 +28192,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -28238,7 +28238,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -28285,7 +28285,7 @@
    "owner": "Tirondaj, Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/ai?tab=models",
     "text": "89b-admin-agents.js (#/admin/ai?tab=models)"
    },
@@ -28376,7 +28376,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/agents",
     "text": "89b-admin-agents.js (#/admin/agents)"
    },
@@ -28421,7 +28421,7 @@
    "owner": "Gyani",
    "demo": {
     "file": "89b-admin-agents.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/agents",
     "text": "89b-admin-agents.js (#/admin/agents)"
    },
@@ -31859,7 +31859,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "89-admin-system.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/backup",
     "text": "89-admin-system.js (#/admin/backup) · V2.1 final · 20 Oct: demo #/admin/backup shows Blob + Drive (sample data)"
    },
@@ -31961,7 +31961,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "89-admin-system.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/backup",
     "text": "89-admin-system.js (#/admin/backup)"
    },
@@ -32524,7 +32524,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "89-admin-system.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/backup",
     "text": "89-admin-system.js (#/admin/backup) · V2.1 final · 20 Oct: demo #/admin/backup shows Blob + Drive (sample data)"
    },
@@ -32634,7 +32634,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "95-admin-naming.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/naming",
     "text": "95-admin-naming.js (#/admin/naming)"
    },
@@ -33959,7 +33959,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "89-admin-system.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/audit",
     "text": "89-admin-system.js (#/admin/audit)"
    },
@@ -34130,7 +34130,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "89-admin-system.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/health",
     "text": "89-admin-system.js (#/admin/health) · V2.1 final · 20 Oct: demo #/admin/server (sample data)"
    },
@@ -34280,7 +34280,7 @@
    "owner": "Prohori",
    "demo": {
     "file": "89-admin-system.js",
-    "fileExists": true,
+    "fileExists": false,
     "route": "#/admin/audit",
     "text": "89-admin-system.js (#/admin/audit) · V2.1 final · 20 Oct: timing items L32/L33 (TA-2: 0 fail)"
    },
