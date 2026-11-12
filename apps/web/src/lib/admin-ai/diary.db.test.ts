@@ -10,6 +10,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
+import { reportCouldNotDo } from './bugbox';
 import { diaryHandler } from './diary-api';
 import { diaryView, DIARY_DEFAULT_DAYS, recordDiaryEntry, type DiaryDeps } from './diary';
 import { isAiError } from './errors';
@@ -125,5 +126,14 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the diary writer and its read screen on
     const wide = await diaryHandler(call('GET', '/api/admin/ai/diary?days=30', { cookie: reader }), adminDeps);
     const wideBody = (await wide.json()) as { entries: unknown[] };
     expect(wideBody.entries.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('GET also carries the bug box half of the same screen (PR 320), filtered the same way', async () => {
+    await reportCouldNotDo({ db: t.prisma, now: deps.now }, { storeId: S, agentKey: 'bhandari', title: 'Could not match 1 RedX parcel', why: 'RedX sent a tracking number we do not have' });
+    const res = await diaryHandler(call('GET', '/api/admin/ai/diary?agent=bhandari', { cookie: reader }), adminDeps);
+    const body = (await res.json()) as { ok: boolean; bugReports: { agentKey: string; title: string }[] };
+    expect(body.ok).toBe(true);
+    expect(body.bugReports.some((r) => r.title.includes('RedX'))).toBe(true);
+    expect(body.bugReports.every((r) => r.agentKey === 'bhandari')).toBe(true);
   });
 });

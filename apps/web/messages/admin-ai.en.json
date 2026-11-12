@@ -268,6 +268,17 @@
     "entry": {
       "wholeSystem": "Whole system",
       "ref": "About: {type} #{id}"
+    },
+    "view": {
+      "label": "Show",
+      "all": "Everything",
+      "did": "What they did",
+      "bug": "Bug box — could not do",
+      "doneTag": "Done",
+      "couldNotTag": "Could not do"
+    },
+    "bug": {
+      "why": "Why: {why}"
     }
   }
 }
