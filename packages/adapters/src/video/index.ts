@@ -10,6 +10,13 @@
 // as the output, clearly marked `practice: true` (the same honest-preview rule PR 439/440 set for S23's render
 // engine), so the rest of the pipeline (job orchestration PR 483, best-of-2 and review PR 484) can be built and
 // tested end to end today. A later PR adds the real LIVE adapter here without touching the package above it.
+//
+// S25 · PR 484 (Blueprint C8.2) — best-of-2: `VideoEstimateInput.passes` lets a quote (and, at `@extas/creative-
+// studio`'s job-orchestration layer, the provider call itself) count more than one generated pass, since a real
+// provider may price several passes beyond simple multiplication rather than faking it by stretching `durationSec`.
+// `VideoClipResult.score` is the optional hook a real provider uses to say which of two passes is the better one;
+// the mock never sets it (it has no real quality signal to offer), so best-of-2 against the mock keeps the first
+// pass that succeeds — still never inventing a winner.
 import { z } from 'zod';
 import { AdapterError, defineAdapter } from '../define';
 
@@ -21,6 +28,9 @@ export interface VideoEstimateInput {
   aspect: VideoAspect;
   /** The owner's own rate (`studio.video.costPerSecondMinor`), in poysha/paisa (minor units); 0 = not set yet. */
   ratePerSecondMinor: number;
+  /** How many independent passes this job generates — 1 (default when left out) for a single pass, 2 for best-of-2
+   * (Blueprint C8.2: generate twice, keep the better one). */
+  passes?: number;
 }
 
 export interface VideoEstimate {
@@ -43,6 +53,8 @@ export interface VideoClipResult {
   outputAssetId?: string;
   /** True for the mock's honest preview (the source still, not a generated clip). */
   practice: boolean;
+  /** A real provider's own quality score for best-of-2 (higher is better); the mock never sets one. */
+  score?: number;
 }
 
 export interface VideoProvider {
@@ -51,10 +63,12 @@ export interface VideoProvider {
   createClip(input: VideoClipInput): Promise<VideoClipResult>;
 }
 
-/** Pure: the mock's and, later, any LIVE provider's shared arithmetic — a rate of 0 means "not set yet". */
+/** Pure: the mock's and, later, any LIVE provider's shared arithmetic — a rate of 0 means "not set yet". `passes`
+ * (default 1) multiplies the cost: best-of-2 (`passes: 2`) always costs twice a single pass (Blueprint C8.2). */
 export function estimateFromRate(input: VideoEstimateInput): VideoEstimate {
-  if (!(input.ratePerSecondMinor > 0) || !(input.durationSec > 0)) return { costMinor: null, currency: 'BDT' };
-  return { costMinor: Math.round(input.ratePerSecondMinor * input.durationSec), currency: 'BDT' };
+  const passes = input.passes ?? 1;
+  if (!(input.ratePerSecondMinor > 0) || !(input.durationSec > 0) || !(passes > 0)) return { costMinor: null, currency: 'BDT' };
+  return { costMinor: Math.round(input.ratePerSecondMinor * input.durationSec * passes), currency: 'BDT' };
 }
 
 export const mockVideoProviderAdapter = defineAdapter<VideoProvider, Record<string, never>>({
