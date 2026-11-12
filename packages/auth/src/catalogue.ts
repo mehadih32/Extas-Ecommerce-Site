@@ -472,6 +472,10 @@ export const PERMISSIONS = {
   // usage ledger within its cap (`photoshoot.generate`); approve, reject or ask for a regenerate in the review
   // queue — mandatory before anything publishes, C7.6 (`photoshoot.approve`); publish an approved image to the
   // product gallery (`photoshoot.publish`). None of these ever changes a price, stock level or an order.
+  //
+  // Carried forward into this branch by PR 451 (it combines the 444–448 and 449–450 lineages, which until now
+  // never shared a branch): PR 444 added these five keys only in its own line, never in PR 449/450's, since those
+  // two built straight off `main` for the unrelated adapters package and had no need of them.
   'photoshoot.read': { group: 'marketing' },
   'photoshoot.write': { group: 'marketing' },
   'photoshoot.generate': { group: 'marketing' },

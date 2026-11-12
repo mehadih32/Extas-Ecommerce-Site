@@ -138,11 +138,37 @@ import closedStagesEn from '../messages/closed-stages.en.json';
 // S23 · PR 437 (registry v281): the social studio's cadence, voice and AI-caption switches.
 import studioBn from '../messages/studio.bn.json';
 import studioEn from '../messages/studio.en.json';
-import photoshootBn from '../messages/photoshoot.bn.json';
-import photoshootEn from '../messages/photoshoot.en.json';
 // S24 · PR 450 (registry v289): the photoshoot provider adapters' per-image rate.
 import photoshootCostBn from '../messages/photoshoot-cost.bn.json';
 import photoshootCostEn from '../messages/photoshoot-cost.en.json';
+// S24 · PR 447 (registry v288): the garment-prep/standardisation colour-drift tolerance.
+import photoshootBn from '../messages/photoshoot.bn.json';
+import photoshootEn from '../messages/photoshoot.en.json';
+// S24 · PR 452 (registry v300): the photoshoot queue's own concurrency limit.
+import photoshootQueueBn from '../messages/photoshoot-queue.bn.json';
+import photoshootQueueEn from '../messages/photoshoot-queue.en.json';
+// S24 · PR 453 (registry v301): the photoshoot best-of-2 quality cut-off.
+import photoshootQualityBn from '../messages/photoshoot-quality.bn.json';
+import photoshootQualityEn from '../messages/photoshoot-quality.en.json';
+// S24 · PR 462 (registry v302): the on-model-vs-flat-lay live pilot's own cohort.
+import photoshootPilotBn from '../messages/photoshoot-pilot.bn.json';
+import photoshootPilotEn from '../messages/photoshoot-pilot.en.json';
+// S24 · PR 470 (registry v303): the category recipe framework's own owner-editable overrides.
+import photoshootRecipesBn from '../messages/photoshoot-recipes.bn.json';
+import photoshootRecipesEn from '../messages/photoshoot-recipes.en.json';
+// S24 · PR 474 (registry v304): ladies/kids/part-model library assignments, styling guideline, kids-model gate.
+import photoshootModelLibraryBn from '../messages/photoshoot-model-library.bn.json';
+import photoshootModelLibraryEn from '../messages/photoshoot-model-library.en.json';
+import photoshootComboGiftSetBn from '../messages/photoshoot-combo-gift-set.bn.json';
+import photoshootComboGiftSetEn from '../messages/photoshoot-combo-gift-set.en.json';
+import photoshootSceneLibraryBn from '../messages/photoshoot-scene-library.bn.json';
+import photoshootSceneLibraryEn from '../messages/photoshoot-scene-library.en.json';
+import photoshootCoupleCompositionBn from '../messages/photoshoot-couple-composition.bn.json';
+import photoshootCoupleCompositionEn from '../messages/photoshoot-couple-composition.en.json';
+import photoshootOccasionSceneBn from '../messages/photoshoot-occasion-scene.bn.json';
+import photoshootOccasionSceneEn from '../messages/photoshoot-occasion-scene.en.json';
+import photoshootStyleReferenceBn from '../messages/photoshoot-style-reference.bn.json';
+import photoshootStyleReferenceEn from '../messages/photoshoot-style-reference.en.json';
 import blogCommentsBn from '../messages/blog-comments.bn.json';
 import blogCommentsEn from '../messages/blog-comments.en.json';
 import blogImagesBn from '../messages/blog-images.bn.json';
@@ -455,6 +481,36 @@ messages.bn = mergeMessages(messages.bn, photoshootBn);
 // S24 · PR 450 (registry v289): the photoshoot provider adapters' per-image rate.
 messages.en = mergeMessages(messages.en, photoshootCostEn);
 messages.bn = mergeMessages(messages.bn, photoshootCostBn);
+// S24 · PR 452 (registry v300): the photoshoot queue's own concurrency limit.
+messages.en = mergeMessages(messages.en, photoshootQueueEn);
+messages.bn = mergeMessages(messages.bn, photoshootQueueBn);
+// S24 · PR 453 (registry v301): the photoshoot best-of-2 quality cut-off.
+messages.en = mergeMessages(messages.en, photoshootQualityEn);
+messages.bn = mergeMessages(messages.bn, photoshootQualityBn);
+// S24 · PR 462 (registry v302): the on-model-vs-flat-lay live pilot's own cohort.
+messages.en = mergeMessages(messages.en, photoshootPilotEn);
+messages.bn = mergeMessages(messages.bn, photoshootPilotBn);
+// S24 · PR 470 (registry v303): the category recipe framework's own owner-editable overrides.
+messages.en = mergeMessages(messages.en, photoshootRecipesEn);
+messages.bn = mergeMessages(messages.bn, photoshootRecipesBn);
+// S24 · PR 474 (registry v304): ladies/kids/part-model library assignments, styling guideline, kids-model gate.
+messages.en = mergeMessages(messages.en, photoshootModelLibraryEn);
+messages.bn = mergeMessages(messages.bn, photoshootModelLibraryBn);
+
+messages.en = mergeMessages(messages.en, photoshootComboGiftSetEn);
+messages.bn = mergeMessages(messages.bn, photoshootComboGiftSetBn);
+// S24 · PR 476 (registry v306): the scene library's own feature switch and default background preset.
+messages.en = mergeMessages(messages.en, photoshootSceneLibraryEn);
+messages.bn = mergeMessages(messages.bn, photoshootSceneLibraryBn);
+// S24 · PR 479 (registry v307): the unisex/couple composition engine's own feature switch.
+messages.en = mergeMessages(messages.en, photoshootCoupleCompositionEn);
+messages.bn = mergeMessages(messages.bn, photoshootCoupleCompositionBn);
+// S24 · PR 480 (registry v308): the occasion-scene suggester's own feature switch.
+messages.en = mergeMessages(messages.en, photoshootOccasionSceneEn);
+messages.bn = mergeMessages(messages.bn, photoshootOccasionSceneBn);
+// S24 · PR 539 (registry v309): the style/pose reference's own feature switch.
+messages.en = mergeMessages(messages.en, photoshootStyleReferenceEn);
+messages.bn = mergeMessages(messages.bn, photoshootStyleReferenceBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

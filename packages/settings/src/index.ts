@@ -252,6 +252,18 @@ export * from './placeholder';
 export * from './registry-studio';
 // S24 · PR 447 — the garment-prep/standardisation colour-drift tolerance, off (0) as it ships (registry-photoshoot.ts, version 288).
 export * from './registry-photoshoot';
+// S24 · PR 450 — the photoshoot provider adapters' per-image rate, 0/not set by default (registry-photoshoot-cost.ts, version 289).
+export * from './registry-photoshoot-cost';
+// S24 · PR 462 — the on-model-vs-flat-lay live pilot's own cohort, empty/off by default (registry-photoshoot-pilot.ts, version 302).
+export * from './registry-photoshoot-pilot';
+// S24 · PR 470 — the category recipe framework's own owner-editable overrides, empty/off by default (registry-photoshoot-recipes.ts, version 303).
+export * from './registry-photoshoot-recipes';
+// S24 · PR 474 — ladies/kids/part-model library assignments, styling guideline and the kids-model gate, all empty/off by default (registry-photoshoot-model-library.ts, version 304).
+export * from './registry-photoshoot-model-library';
+// S24 · PR 475 — the combo/gift-set composition studio's own feature switch and default layout, off/flat-lay by default (registry-photoshoot-combo-gift-set.ts, version 305).
+export * from './registry-photoshoot-combo-gift-set';
+// S24 · PR 476 — the scene library's own feature switch and default preset, off/studio-grey by default (registry-photoshoot-scene-library.ts, version 306).
+export * from './registry-photoshoot-scene-library';
 // S13 · PR 548 — market and competitor intelligence, proposals only (registry-ads-intel.ts, version 291).
 export * from './registry-ads-intel';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

@@ -142,6 +142,16 @@ import { photoshootSettings } from './registry-photoshoot';
 import { studioVideoSettings } from './registry-creative-studio-video';
 import { studioCreativeBriefSettings } from './registry-creative-studio-brief';
 import { photoshootCostSettings } from './registry-photoshoot-cost';
+import { photoshootQueueSettings } from './registry-photoshoot-queue';
+import { photoshootQualitySettings } from './registry-photoshoot-quality';
+import { photoshootPilotSettings } from './registry-photoshoot-pilot';
+import { photoshootRecipeSettings } from './registry-photoshoot-recipes';
+import { photoshootModelLibrarySettings } from './registry-photoshoot-model-library';
+import { photoshootComboGiftSetSettings } from './registry-photoshoot-combo-gift-set';
+import { photoshootSceneLibrarySettings } from './registry-photoshoot-scene-library';
+import { photoshootCoupleCompositionSettings } from './registry-photoshoot-couple-composition';
+import { photoshootOccasionSceneSettings } from './registry-photoshoot-occasion-scene';
+import { photoshootStyleReferenceSettings } from './registry-photoshoot-style-reference';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
@@ -1555,6 +1565,26 @@ export const registry = {
   ...studioVideoSettings,
   // ---- S24 · PR 450 · the photoshoot provider adapters' per-image rate, 0/not set by default (registry-photoshoot-cost.ts, version 289). ----
   ...photoshootCostSettings,
+  // ---- S24 · PR 452 · the photoshoot queue's own concurrency limit, 0/unlimited by default (registry-photoshoot-queue.ts, version 300). ----
+  ...photoshootQueueSettings,
+  // ---- S24 · PR 453 · the photoshoot best-of-2 quality cut-off, 0/never-auto-rejects by default (registry-photoshoot-quality.ts, version 301). ----
+  ...photoshootQualitySettings,
+  // ---- S24 · PR 462 · the on-model-vs-flat-lay live pilot's own cohort, empty/off by default (registry-photoshoot-pilot.ts, version 302). ----
+  ...photoshootPilotSettings,
+  // ---- S24 · PR 470 · the category recipe framework's own owner-editable overrides, empty/off by default (registry-photoshoot-recipes.ts, version 303). ----
+  ...photoshootRecipeSettings,
+  // ---- S24 · PR 474 · ladies/kids/part-model library assignments, styling guideline and kids-model gate, all empty/off by default (registry-photoshoot-model-library.ts, version 304). ----
+  ...photoshootModelLibrarySettings,
+  // ---- S24 · PR 475 · the combo/gift-set composition studio's own feature switch and default layout, off/flat-lay by default (registry-photoshoot-combo-gift-set.ts, version 305). ----
+  ...photoshootComboGiftSetSettings,
+  // ---- S24 · PR 476 · the scene library's own feature switch and default preset, off/studio-grey by default (registry-photoshoot-scene-library.ts, version 306). ----
+  ...photoshootSceneLibrarySettings,
+  // ---- S24 · PR 479 · the unisex/couple composition engine's own feature switch, off by default (registry-photoshoot-couple-composition.ts, version 307). ----
+  ...photoshootCoupleCompositionSettings,
+  // ---- S24 · PR 480 · the occasion-scene suggester's own feature switch, off by default (registry-photoshoot-occasion-scene.ts, version 308). ----
+  ...photoshootOccasionSceneSettings,
+  // ---- S24 · PR 539 · the style/pose reference's own feature switch, off by default (registry-photoshoot-style-reference.ts, version 309). ----
+  ...photoshootStyleReferenceSettings,
   // ---- S25 · PR 490 (Blueprint C8.4) · the creative brief's master switch, off (registry-creative-studio-brief.ts, version 290). ----
   ...studioCreativeBriefSettings,
   // ---- S13 · PR 548 · market and competitor intelligence: change alerts, off (registry-ads-intel.ts, version 291). ----
