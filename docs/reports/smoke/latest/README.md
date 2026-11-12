@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-12 12:42 (Asia/Dhaka)
+# Smoke test · 2026-11-12 14:08 (Asia/Dhaka)
 
 > **বাংলায়:** 18টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
 
-Site: https://new.extas.com.bd · commit `06ffb720de42` · after deploy · result **FAIL** (558 page views, 18 failed)
+Site: https://new.extas.com.bd · commit `2b603268446c` · after deploy · result **FAIL** (562 page views, 18 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -112,6 +112,8 @@ Site: https://new.extas.com.bd · commit `06ffb720de42` · after deploy · resul
 | `/admin/server` | phone | 200 | `/admin/server` | ok | — |
 | `/admin/integrations` | phone | 200 | `/admin/integrations` | ok | — |
 | `/admin/settings/look` | phone | 200 | `/admin/settings/look` | ok | — |
+| `/admin/orders?design=B` | phone | 200 | `/admin/orders` | ok | — |
+| `/admin/orders?design=C` | phone | 200 | `/admin/orders` | ok | — |
 | `/admin/orders/digest` | phone | 200 | `/admin/orders/digest` | ok | — |
 | `/admin/orders/incomplete` | phone | 200 | `/admin/orders/incomplete` | ok | — |
 | `/admin/orders/confirm/calls` | phone | 200 | `/admin/orders/confirm/calls` | ok | — |
@@ -281,7 +283,7 @@ Site: https://new.extas.com.bd · commit `06ffb720de42` · after deploy · resul
 | `/admin/marketing/merchant-feed` | phone | 200 | `/admin/marketing/merchant-feed` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1ce7b-459c-72c0-bbcb-fbfeed271c0f` | phone | 200 | `/admin/reports/health/history/01a1ce7b-459c-72c0-bbcb-fbfeed271c0f` | ok | — |
+| `/admin/reports/health/history/01a1cec3-7ddd-7ca2-9e68-adc3262a430a` | phone | 200 | `/admin/reports/health/history/01a1cec3-7ddd-7ca2-9e68-adc3262a430a` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -391,6 +393,8 @@ Site: https://new.extas.com.bd · commit `06ffb720de42` · after deploy · resul
 | `/admin/server` | desktop | 200 | `/admin/server` | ok | — |
 | `/admin/integrations` | desktop | 200 | `/admin/integrations` | ok | — |
 | `/admin/settings/look` | desktop | 200 | `/admin/settings/look` | ok | — |
+| `/admin/orders?design=B` | desktop | 200 | `/admin/orders` | ok | — |
+| `/admin/orders?design=C` | desktop | 200 | `/admin/orders` | ok | — |
 | `/admin/orders/digest` | desktop | 200 | `/admin/orders/digest` | ok | — |
 | `/admin/orders/incomplete` | desktop | 200 | `/admin/orders/incomplete` | ok | — |
 | `/admin/orders/confirm/calls` | desktop | 200 | `/admin/orders/confirm/calls` | ok | — |
@@ -560,7 +564,7 @@ Site: https://new.extas.com.bd · commit `06ffb720de42` · after deploy · resul
 | `/admin/marketing/merchant-feed` | desktop | 200 | `/admin/marketing/merchant-feed` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1ce7b-459c-72c0-bbcb-fbfeed271c0f` | desktop | 200 | `/admin/reports/health/history/01a1ce7b-459c-72c0-bbcb-fbfeed271c0f` | ok | — |
+| `/admin/reports/health/history/01a1cec3-7ddd-7ca2-9e68-adc3262a430a` | desktop | 200 | `/admin/reports/health/history/01a1cec3-7ddd-7ca2-9e68-adc3262a430a` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
