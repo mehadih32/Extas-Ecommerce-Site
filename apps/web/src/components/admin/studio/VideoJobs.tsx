@@ -3,7 +3,8 @@
 // {action: 'estimate' | 'request', input} on /api/admin/marketing/studio/videos. The API checks the permission and
 // every rule again; the page is read again after a request.
 // S25 · PR 483 — `VideoJobActions` moves a requested job through the pipeline from the job list: {action: 'queue' |
-// 'run' | 'retry', jobId}. A job lands on REVIEW_REQUIRED or FAILED; approving/rejecting from there is PR 484.
+// 'run' | 'retry', jobId}. A job lands on REVIEW_REQUIRED or FAILED.
+// S25 · PR 484 — a job on REVIEW_REQUIRED gets its own Approve / Reject here: {action: 'approve' | 'reject', jobId}.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { MAX_ATTEMPTS } from '@extas/creative-studio';
@@ -38,6 +39,11 @@ export interface VideoTexts {
   retryIt: string;
   retrying: string;
   attemptOf: string;
+  approveIt: string;
+  approving: string;
+  rejectIt: string;
+  rejecting: string;
+  awaitingReview: string;
   money: Money;
   noProducts: string;
   err: Record<string, string>;
@@ -171,10 +177,10 @@ export function VideoRequestForm({ url, products, texts: x }: { url: string; pro
 /** One job's own next move — queue a DRAFT, run a QUEUED, or retry a FAILED one — read again after each move. */
 export function VideoJobActions({ url, jobId, status, attempt, texts: x }: { url: string; jobId: string; status: string; attempt: number; texts: VideoTexts }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<'queue' | 'run' | 'retry' | null>(null);
+  const [busy, setBusy] = useState<'queue' | 'run' | 'retry' | 'approve' | 'reject' | null>(null);
   const [out, setOut] = useState<Out>(null);
 
-  async function act(action: 'queue' | 'run' | 'retry') {
+  async function act(action: 'queue' | 'run' | 'retry' | 'approve' | 'reject') {
     setBusy(action);
     setOut(null);
     const a = await call('POST', url, { action, jobId });
@@ -202,6 +208,24 @@ export function VideoJobActions({ url, jobId, status, attempt, texts: x }: { url
       <span className="adp-read">
         <button type="button" className="a2-btn sm" disabled={busy !== null} onClick={() => void act('run')} data-testid="video-run">
           {busy === 'run' ? x.running : x.runIt}
+        </button>
+        {out ? (
+          <span className={`a2-sm${out.bad ? ' adp-bad' : ''}`} role="status" aria-live="polite">
+            {out.text}
+          </span>
+        ) : null}
+      </span>
+    );
+
+  if (status === 'REVIEW_REQUIRED')
+    return (
+      <span className="adp-read">
+        <span className="a2-sm a2-mute">{x.awaitingReview}</span>
+        <button type="button" className="a2-btn sm pri" disabled={busy !== null} onClick={() => void act('approve')} data-testid="video-approve">
+          {busy === 'approve' ? x.approving : x.approveIt}
+        </button>
+        <button type="button" className="a2-btn sm" disabled={busy !== null} onClick={() => void act('reject')} data-testid="video-reject">
+          {busy === 'reject' ? x.rejecting : x.rejectIt}
         </button>
         {out ? (
           <span className={`a2-sm${out.bad ? ' adp-bad' : ''}`} role="status" aria-live="polite">

@@ -2,13 +2,15 @@
 // Off while `studio.video.enabled` is off; the clip's source is always the product's own live primary photo, never an
 // arbitrary asset; the same request twice returns the same job (idempotent), never a duplicate.
 // S25 · PR 483: the orchestration that follows a request — queue, run (success and failure), retry up to the cap.
+// S25 · PR 484: best-of-2 (always two passes while `studio.video.bestOfTwo` is on, billed for both either way) and
+// the review/approve step from `REVIEW_REQUIRED`.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { estimateFromRate, type VideoProvider } from '@extas/adapters';
+import { estimateFromRate, type VideoClipResult, type VideoProvider } from '@extas/adapters';
 import { createRole, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { registry, type Key, type Value } from '@extas/settings';
-import { estimateVideoJob, MAX_ATTEMPTS, primaryProductAsset, queueVideoJob, requestVideoJob, retryVideoJob, runVideoJob, StudioError, type StudioDeps, type Who } from './index';
+import { approveVideoJob, BEST_OF_PASSES, estimateVideoJob, MAX_ATTEMPTS, primaryProductAsset, queueVideoJob, rejectVideoJob, requestVideoJob, retryVideoJob, runVideoJob, StudioError, type StudioDeps, type Who } from './index';
 
 const mockProvider: VideoProvider = {
   async estimate(input) {
@@ -27,6 +29,36 @@ const failingProvider: VideoProvider = {
     throw new Error('the vendor refused this job');
   },
 };
+
+/** Fails its first call, then succeeds — best-of-2's own resilience: one bad pass does not fail the whole run. */
+function firstFailsProvider(): VideoProvider {
+  let calls = 0;
+  return {
+    async estimate(input) {
+      return estimateFromRate(input);
+    },
+    async createClip(input) {
+      calls++;
+      if (calls === 1) throw new Error('the vendor refused the first pass');
+      return { providerJobId: `mock-${input.sourceAssetId}-pass${calls}`, status: 'SUCCEEDED', outputAssetId: input.sourceAssetId, practice: true };
+    },
+  };
+}
+
+/** Two passes, each a different score, so best-of-2's selection is actually exercised (never a coin flip). */
+function scoredProvider(scores: number[]): VideoProvider {
+  let calls = 0;
+  return {
+    async estimate(input) {
+      return estimateFromRate(input);
+    },
+    async createClip(input): Promise<VideoClipResult> {
+      const score = scores[calls] ?? 0;
+      calls++;
+      return { providerJobId: `mock-${input.sourceAssetId}-score${score}`, status: 'SUCCEEDED', outputAssetId: input.sourceAssetId, practice: true, score };
+    },
+  };
+}
 
 describe.skipIf(!HAS_TEST_DB)('PR 482 · request a video clip job (PostgreSQL)', () => {
   let t: TestDatabase;
@@ -179,5 +211,84 @@ describe.skipIf(!HAS_TEST_DB)('PR 482 · request a video clip job (PostgreSQL)',
     const { productId } = await productWithPhoto();
     const job = await requestVideoJob(deps(), writer, mockProvider, { productId, aspect: '9:16', durationSec: 6 });
     await expect(retryVideoJob(deps(), writer, job.id)).rejects.toMatchObject({ code: 'WRONG_STATE' });
+  });
+
+  it('best-of-2 off (the default): the estimate and request stay single-pass priced', async () => {
+    overrides = { 'studio.video': { enabled: true, costPerSecondMinor: 150, bestOfTwo: false } };
+    const { productId } = await productWithPhoto();
+    expect(await estimateVideoJob(deps(), mockProvider, S, { productId, aspect: '9:16', durationSec: 8 })).toEqual({ costMinor: 1200, currency: 'BDT' });
+    const job = await requestVideoJob(deps(), writer, mockProvider, { productId, aspect: '9:16', durationSec: 8 });
+    expect(job.estimateMinor).toBe(1200);
+  });
+
+  it('best-of-2 on: the estimate and request are already doubled (Blueprint C8.2), before anything runs', async () => {
+    overrides = { 'studio.video': { enabled: true, costPerSecondMinor: 150, bestOfTwo: true } };
+    const { productId } = await productWithPhoto();
+    expect(await estimateVideoJob(deps(), mockProvider, S, { productId, aspect: '9:16', durationSec: 8 })).toEqual({ costMinor: 2400, currency: 'BDT' });
+    const job = await requestVideoJob(deps(), writer, mockProvider, { productId, aspect: '9:16', durationSec: 8 });
+    expect(job.estimateMinor).toBe(2400);
+  });
+
+  it('best-of-2 on: a run calls the provider twice even when the first pass fails, and still lands on REVIEW_REQUIRED', async () => {
+    overrides = { 'studio.video': { enabled: true, costPerSecondMinor: 150, bestOfTwo: true } };
+    const { productId, assetId } = await productWithPhoto();
+    const job = await requestVideoJob(deps(), writer, mockProvider, { productId, aspect: '9:16', durationSec: 8 });
+    await queueVideoJob(deps(), writer, job.id);
+    const ran = await runVideoJob(deps(), writer, firstFailsProvider(), job.id);
+    expect(ran.status).toBe('REVIEW_REQUIRED');
+    expect(ran.outputAssetId).toBe(assetId);
+    expect(ran.actualMinor).toBe(2400); // billed for both passes, not just the one that succeeded
+  });
+
+  it('best-of-2 on: a run keeps the higher-scored pass, never a coin flip', async () => {
+    overrides = { 'studio.video': { enabled: true, costPerSecondMinor: 0, bestOfTwo: true } };
+    const { productId } = await productWithPhoto();
+    const job = await requestVideoJob(deps(), writer, mockProvider, { productId, aspect: '9:16', durationSec: 6 });
+    await queueVideoJob(deps(), writer, job.id);
+    const low = await runVideoJob(deps(), writer, scoredProvider([1, 9]), job.id);
+    expect(low.providerJobId).toMatch(/score9$/);
+
+    const job2 = await requestVideoJob(deps(), writer, mockProvider, { productId, actionId: null, aspect: '1:1', durationSec: 6 });
+    await queueVideoJob(deps(), writer, job2.id);
+    const high = await runVideoJob(deps(), writer, scoredProvider([9, 1]), job2.id);
+    expect(high.providerJobId).toMatch(/score9$/);
+  });
+
+  it('best-of-2 on: lands on FAILED, never REVIEW_REQUIRED, only when every pass fails', async () => {
+    overrides = { 'studio.video': { enabled: true, costPerSecondMinor: 0, bestOfTwo: true } };
+    const { productId } = await productWithPhoto();
+    const job = await requestVideoJob(deps(), writer, failingProvider, { productId, aspect: '9:16', durationSec: 6 });
+    await queueVideoJob(deps(), writer, job.id);
+    const failed = await runVideoJob(deps(), writer, failingProvider, job.id);
+    expect(failed.status).toBe('FAILED');
+  });
+
+  it('BEST_OF_PASSES is exactly 2 (Blueprint C8.2: best-of-2, not best-of-N)', () => {
+    expect(BEST_OF_PASSES).toBe(2);
+  });
+
+  it('approves a REVIEW_REQUIRED job, refuses from anywhere else (WRONG_STATE)', async () => {
+    overrides = { 'studio.video': { enabled: true, costPerSecondMinor: 0 } };
+    const { productId } = await productWithPhoto();
+    const job = await requestVideoJob(deps(), writer, mockProvider, { productId, aspect: '9:16', durationSec: 6 });
+    await expect(approveVideoJob(deps(), writer, job.id)).rejects.toMatchObject({ code: 'WRONG_STATE' });
+    await queueVideoJob(deps(), writer, job.id);
+    const ran = await runVideoJob(deps(), writer, mockProvider, job.id);
+    expect(ran.status).toBe('REVIEW_REQUIRED');
+    const approved = await approveVideoJob(deps(), writer, job.id);
+    expect(approved.status).toBe('APPROVED');
+    await expect(approveVideoJob(deps(), writer, job.id)).rejects.toMatchObject({ code: 'WRONG_STATE' });
+    await expect(approveVideoJob(deps(), writer, randomUUID())).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('rejects a REVIEW_REQUIRED job, refuses from anywhere else (WRONG_STATE)', async () => {
+    overrides = { 'studio.video': { enabled: true, costPerSecondMinor: 0 } };
+    const { productId } = await productWithPhoto();
+    const job = await requestVideoJob(deps(), writer, mockProvider, { productId, aspect: '9:16', durationSec: 6 });
+    await queueVideoJob(deps(), writer, job.id);
+    await runVideoJob(deps(), writer, mockProvider, job.id);
+    const rejected = await rejectVideoJob(deps(), writer, job.id);
+    expect(rejected.status).toBe('REJECTED');
+    await expect(rejectVideoJob(deps(), writer, job.id)).rejects.toMatchObject({ code: 'WRONG_STATE' });
   });
 });

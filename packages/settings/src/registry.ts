@@ -1551,7 +1551,7 @@ export const registry = {
   ...studioSettings,
   // ---- S24 · PR 447 · the garment-prep/standardisation colour-drift tolerance, off (registry-photoshoot.ts, version 292). ----
   ...photoshootSettings,
-  // ---- S25 · PR 482 (Blueprint C8.1, C8.2) · the image-to-video engine's master switch and its cost-per-second rate, off / 0 (registry-creative-studio-video.ts, version 282). ----
+  // ---- S25 · PR 482 (Blueprint C8.1, C8.2) · the image-to-video engine's master switch and its cost-per-second rate, off / 0; PR 484 adds best-of-2, off (registry-creative-studio-video.ts, version 289 — 288 already taken by registry-photoshoot.ts's PR 447, merged first). ----
   ...studioVideoSettings,
   // ---- S24 · PR 450 · the photoshoot provider adapters' per-image rate, 0/not set by default (registry-photoshoot-cost.ts, version 289). ----
   ...photoshootCostSettings,

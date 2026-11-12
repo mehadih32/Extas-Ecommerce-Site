@@ -6,10 +6,16 @@
 //   CN-018: a cost rate is a number the owner decides, never one this build invents — while it is 0 the engine shows
 //   the clip's cost as "not set" rather than guessing (Blueprint C8.2's $/s figures are vendor research, not a
 //   default to ship).
+//
+// S25 · PR 484 (Blueprint C8.2, CN-018) adds `studio.video.bestOfTwo`: an off-by-default yes/no perk (CN-018 — the
+// owner decides only whether the system exists, never a number). On, every run generates the clip twice and keeps
+// the better pass, at exactly twice the cost (C8.2's "$0.70 single pass, $1.40 two-pass best-of-2" shape); off, a
+// run stays the single pass PR 483 shipped. Nothing changes for a store that never turns it on.
 import { z } from 'zod';
 import { setting } from './define';
 
 const V282 = 282;
+const V288 = 288;
 /** A generous ceiling on the owner's own rate — a technical bound, not a business number. */
 export const VIDEO_RATE_MAX_MINOR = 100_000; // hardcode-ok: guards the input field, never a price
 
@@ -19,6 +25,8 @@ export const studioVideoSchema = z
     enabled: z.boolean(),
     /** Poysha per second of generated clip; 0 = not set yet (no cost is invented). */
     costPerSecondMinor: z.number().int().min(0).max(VIDEO_RATE_MAX_MINOR),
+    /** Off as shipped (CN-018): on, a run always generates two passes and keeps the better one, at double the cost. */
+    bestOfTwo: z.boolean(),
   })
   .strict();
 export type StudioVideoSettings = z.output<typeof studioVideoSchema>;
@@ -27,8 +35,8 @@ export const studioVideoSettings = {
   'studio.video': setting({
     scope: 'store',
     schema: studioVideoSchema,
-    // hardcode-ok: off, no rate set — the owner turns this on and types his own rate when he is ready
-    default: { enabled: false, costPerSecondMinor: 0 },
+    // hardcode-ok: off, no rate set, best-of-2 off — the owner turns these on himself when he is ready
+    default: { enabled: false, costPerSecondMinor: 0, bestOfTwo: false },
     valueType: 'JSON',
     group: 'marketing',
     labelKey: 'studio.video.label',
@@ -36,6 +44,7 @@ export const studioVideoSettings = {
     isOwnerData: false,
     isPublic: false,
     sortOrder: 24,
-    version: V282,
+    version: V288,
+    since: V282,
   }),
 };

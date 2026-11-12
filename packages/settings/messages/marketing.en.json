@@ -81,7 +81,7 @@
   "studio": {
     "video": {
       "label": "Image-to-video clips (Studio)",
-      "help": "Off as it ships. On, Marketing › Studio › Videos can turn an already-approved product still into a short clip. Nothing is generated unless you turn this on. The cost per second is 0 (not set) until you type your own rate here — until then a clip's cost shows as \"not set\" rather than a guessed number."
+      "help": "Off as it ships. On, Marketing › Studio › Videos can turn an already-approved product still into a short clip. Nothing is generated unless you turn this on. The cost per second is 0 (not set) until you type your own rate here — until then a clip's cost shows as \"not set\" rather than a guessed number. Best-of-2 is off as it ships: turn it on and every clip is generated twice and the better pass is kept, at exactly double the cost."
     },
     "creativeBrief": {
       "label": "Creative brief (Studio)",
