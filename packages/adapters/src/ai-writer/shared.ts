@@ -22,6 +22,10 @@ export interface AiSeoDraft {
   description: string;
   /** True for the mock's practice text. */
   practice: boolean;
+  /** S15 · PR 327 — real token counts from the provider's own answer, when it reported them (the same convention
+   * PR 325's `AiSupportReplyDraft` and PR 326's `AiProductDescriptionDraft` already use) — absent for the mock, and
+   * for a provider whose response carried none. */
+  usage?: { inputTokens: number; outputTokens: number };
 }
 
 /** PR 293 — the channel of an offer message. */
