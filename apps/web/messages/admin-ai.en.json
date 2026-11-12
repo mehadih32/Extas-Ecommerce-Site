@@ -129,7 +129,15 @@
       "pass": "Pass",
       "fail": "Fail",
       "notAvailable": "Not available yet — no deploy has copied a result here.",
-      "note": "This is a static scan of the source code, the same method as the hardcode guard, so it has no \"Run\" button: it runs by itself in CI on every change, never live on this page."
+      "note": "This is a static scan of the source code, the same method as the hardcode guard, so it has no \"Run\" button: it runs by itself in CI on every change, never live on this page.",
+      "journeyBadge": "Whole-shop journey",
+      "journeyTitle": "Proof: the shop works with AI off",
+      "journeyPassed": "{ok}/{n} whole-shop journey steps pass with AI off",
+      "journeyNote": "The master switch is {master} and the monthly spend cap is {cap} — the three safety pillars named together: the master switch, the spend cap, and this proof.",
+      "journeyMasterOn": "on",
+      "journeyMasterOff": "off",
+      "journeyCapNone": "not set yet",
+      "journeyCapSet": "set"
     }
   },
   "aiCostBook": {

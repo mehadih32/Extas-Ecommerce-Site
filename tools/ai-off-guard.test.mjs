@@ -83,4 +83,35 @@ describe('runGuard', () => {
     expect(result.ok).toBe(0);
     expect(result.coveredJobCount).toBe(0);
   });
+
+  // PR 506: a `journey: true` check proves a step of the ordinary customer journey has no AI job on its path at all
+  // — it claims no JOB_CATALOG coverage on purpose, so it must pass on its proofs alone, never penalised as "stale".
+  const journeyCfg = {
+    jobCatalog: CFG_CATALOG,
+    checks: [
+      { id: 'journeyOk', nameEn: 'J', nameBn: 'জ', fallbackEn: 'f', fallbackBn: 'ফ', journey: true, jobKeys: [], proofs: [{ file: 'good.ts', mustInclude: ['present'] }] },
+      { id: 'journeyBroken', nameEn: 'J2', nameBn: 'জ২', fallbackEn: 'f', fallbackBn: 'ফ', journey: true, jobKeys: [], proofs: [{ file: 'good.ts', mustInclude: ['absent'] }] },
+      { id: 'notJourney', nameEn: 'N', nameBn: 'ন', fallbackEn: 'f', fallbackBn: 'ফ', jobKeyPrefixes: ['a'], proofs: [{ file: 'good.ts', mustInclude: ['present'] }] },
+    ],
+  };
+  it('a journey check with zero job keys passes on its proofs alone, never flagged as stale', () => {
+    const result = runGuard({ cfg: journeyCfg, readFile, catalogText: SAMPLE, now: () => new Date() });
+    const byId = Object.fromEntries(result.checks.map((c) => [c.id, c]));
+    expect(byId.journeyOk.pass).toBe(true);
+    expect(byId.journeyOk.journey).toBe(true);
+    expect(byId.journeyOk.reasons).toEqual([]);
+    expect(byId.notJourney.journey).toBe(false);
+  });
+  it('a journey check still fails honestly when its proof is missing, same as any other check', () => {
+    const result = runGuard({ cfg: journeyCfg, readFile, catalogText: SAMPLE, now: () => new Date() });
+    const byId = Object.fromEntries(result.checks.map((c) => [c.id, c]));
+    expect(byId.journeyBroken.pass).toBe(false);
+    expect(byId.journeyBroken.reasons).toEqual(['good.ts: missing "absent"']);
+  });
+  it('journeyN/journeyOk count only the journey-tagged checks, never the rest', () => {
+    const result = runGuard({ cfg: journeyCfg, readFile, catalogText: SAMPLE, now: () => new Date() });
+    expect(result.journeyN).toBe(2);
+    expect(result.journeyOk).toBe(1); // journeyOk passes, journeyBroken fails, notJourney is not counted either way
+    expect(result.n).toBe(3);
+  });
 });

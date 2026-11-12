@@ -233,3 +233,14 @@
 .adm2 .ai-offtest-fallback {
   display: block;
 }
+/* S15 · PR 506 — the "whole-shop journey" badge on a journey-tagged row, and the summary block tying the three
+   safety pillars (master switch, spend cap, this proof) together, below the check list. */
+.adm2 .ai-offtest-journey {
+  margin-left: 8px;
+  font-size: 11px;
+}
+.adm2 .ai-offtest-journey-summary {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ln2);
+}

@@ -10,6 +10,10 @@
 // "ok/n checks passed, covering `coveredJobCount` of `totalJobCount` AI jobs" — the rest of the catalogue is real,
 // open follow-up work, never silently claimed as covered.
 //
+// PR 506 extends this with "journey" checks (see `runGuard`'s own comment): the ordinary customer journey (a COD
+// order, a size exchange, confirming an order and printing its invoice, the size finder and delivery band) has no
+// AI job on its critical path at all — not merely a fallback, but a complete absence of dependency.
+//
 // The rules live in tools/ai-off-guard.json (rules as data, like hardcode-guard.json). This script:
 //   node tools/ai-off-guard.mjs            scans, writes docs/reports/ai-off-guard.json, exit 1 on any failed check
 //   node tools/ai-off-guard.mjs --check    scans, fails if the committed report is stale (never writes)
@@ -79,20 +83,33 @@ export function checkProofs(check, readFile) {
 }
 
 /** The whole scan, pure given its inputs: never the system clock except for the report's own `at` (a fact about
- * when the scan ran, not a number the scan invents). */
+ * when the scan ran, not a number the scan invents).
+ *
+ * PR 506 (Blueprint C1.4; `docs/agents/AGENT-PROTOCOL.md` "the whole site works with AI off (PR 506)", named beside
+ * the master switch, PR 305, and the per-agent spend cap, PR 309, as the third safety pillar) adds a second KIND of
+ * check, `journey: true`: it proves a step of the *ordinary customer journey* (placing a Cash-on-Delivery order, a
+ * size exchange, confirming an order and printing its invoice, the size finder and the delivery band it prices with)
+ * never touches an AI job at all — these steps predate AI entirely and stay exactly as they are with the master
+ * switch off. Such a check claims no `JOB_CATALOG` coverage on purpose (an empty `jobKeys`/`jobKeyPrefixes`, same as
+ * every other check), so it is never penalised as "stale" for matching zero jobs, and passes on its proofs alone —
+ * the same honest, no-invented-pass-count method `checkProofs` already uses for every other check. A `journey` check
+ * whose proofs fail still fails exactly like any other. */
 export function runGuard({ cfg, readFile, catalogText, now = () => new Date() }) {
   const catalog = parseJobCatalog(catalogText, cfg.jobCatalog);
   const covered = new Set();
   const checks = cfg.checks.map((check) => {
+    const journey = check.journey === true;
     const keys = coveredKeys(check, catalog);
     const reasons = checkProofs(check, readFile);
-    const pass = reasons.length === 0 && keys.length > 0;
-    if (!pass && keys.length === 0) reasons.push('no JOB_CATALOG entry matches this check any more — it is stale');
+    const pass = reasons.length === 0 && (journey || keys.length > 0);
+    if (!pass && !journey && keys.length === 0) reasons.push('no JOB_CATALOG entry matches this check any more — it is stale');
     if (pass) for (const k of keys) covered.add(k);
-    return { id: check.id, nameEn: check.nameEn, nameBn: check.nameBn, fallbackEn: check.fallbackEn, fallbackBn: check.fallbackBn, pass, jobKeys: keys, reasons };
+    return { id: check.id, nameEn: check.nameEn, nameBn: check.nameBn, fallbackEn: check.fallbackEn, fallbackBn: check.fallbackBn, journey, pass, jobKeys: keys, reasons };
   });
   const ok = checks.filter((c) => c.pass).length;
-  return { at: now().toISOString(), n: checks.length, ok, totalJobCount: catalog.length, coveredJobCount: covered.size, checks };
+  const journeyChecks = checks.filter((c) => c.journey);
+  const journeyOk = journeyChecks.filter((c) => c.pass).length;
+  return { at: now().toISOString(), n: checks.length, ok, totalJobCount: catalog.length, coveredJobCount: covered.size, journeyN: journeyChecks.length, journeyOk, checks };
 }
 
 function realReadFile(rel) {
@@ -108,7 +125,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const line = `${c.pass ? 'PASS' : 'FAIL'} ${c.id} (${c.jobKeys.length} job${c.jobKeys.length === 1 ? '' : 's'})`;
     console.log(c.reasons.length ? `${line} — ${c.reasons.join('; ')}` : line);
   }
-  console.log(`ai-off guard: ${result.ok}/${result.n} checks passed, covering ${result.coveredJobCount}/${result.totalJobCount} AI jobs`);
+  console.log(`ai-off guard: ${result.ok}/${result.n} checks passed, covering ${result.coveredJobCount}/${result.totalJobCount} AI jobs (${result.journeyOk}/${result.journeyN} whole-shop journey steps)`);
 
   const checkOnly = process.argv.includes('--check');
   const reportFile = join(root, REPORT_PATH);
