@@ -1,0 +1,11 @@
+{
+  "groups": {
+    "analytics": "Analytics"
+  },
+  "analytics": {
+    "events": {
+      "label": "Site-wide event capture",
+      "help": "Records what shoppers do — pages seen, searches, WhatsApp taps, bag changes, purchases and more — in the shop's own database, so the Analytics section can show what is working and what is not. Nothing here depends on an outside service or a connection key. On as it ships; turning it off stops new events from being recorded (nothing already saved is removed, CLAUDE.md rule 3)."
+    }
+  }
+}
