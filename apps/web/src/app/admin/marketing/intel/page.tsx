@@ -113,7 +113,7 @@ export default async function IntelPage() {
           </section>
         </div>
         <div className="in-stack">
-          <IntelLinksCard words={d} links={r.links} linksMax={r.linksMax} canWrite={canWrite} ago={ago} />
+          <IntelLinksCard words={d} links={r.links.map((row) => ({ ...row, agoText: row.lastRunAt ? ago(row.lastRunAt) : '' }))} linksMax={r.linksMax} canWrite={canWrite} />
           {canWrite ? (
             <SettingCards
               save={{ method: 'PUT', url: '/api/admin/marketing/intel' }}

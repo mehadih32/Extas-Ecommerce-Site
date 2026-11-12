@@ -14,7 +14,7 @@ import { showToast } from '../lumen/Toast';
 const API = '/api/admin/marketing/intel';
 const URL_MAX = 2000;
 
-export function IntelLinksCard(p: { words: Dict; links: readonly CompetitorRow[]; linksMax: number; canWrite: boolean; ago: (iso: string | null) => string }) {
+export function IntelLinksCard(p: { words: Dict; links: readonly (CompetitorRow & { agoText: string })[]; linksMax: number; canWrite: boolean }) {
   const id = useId();
   const router = useRouter();
   const l = (k: string, vars?: Record<string, string | number>) => t(p.words, `in.${k}`, vars);
@@ -57,7 +57,7 @@ export function IntelLinksCard(p: { words: Dict; links: readonly CompetitorRow[]
                 <b>{r.name}</b>
                 <span>{r.lastRunAt ? l('matched', { n: r.matched }) : l('neverRead')}{r.change && r.change !== 'none' && r.change !== 'first' ? ` · ${l(`chg_${r.change}`)}` : ''}</span>
               </div>
-              <span className="a2-pru">{r.lastRunAt ? p.ago(r.lastRunAt) : ''}</span>
+              <span className="a2-pru">{r.agoText}</span>
               {p.canWrite ? (
                 <div className="in-acts">
                   {r.archived ? (
