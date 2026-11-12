@@ -197,6 +197,24 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d.usage).toBeUndefined();
   });
 
+  // S15 · PR 333 — draftStockAlertNote: one grounded line on why a single SKU's own open low-stock alert is worth a
+  // look, never a reorder decision, carrying the provider's own usage through the same generic `complete()` plumbing.
+  it('draftStockAlertNote writes from the SKU\'s own already-computed numbers, practice: false, carrying the provider\'s own usage', async () => {
+    const complete = vi.fn(async () => ({ text: '{"body": "Only 2 left against a threshold of 5, and it has sat low for 3 days."}', usage: { inputTokens: 40, outputTokens: 18 } }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftStockAlertNote({ locale: 'en', facts: { productName: 'Sample Pique Polo', sku: 'SPP-NVY-M', colour: 'Navy', size: 'M', available: 2, threshold: 5, sinceDays: 3 }, max: { body: 150 } });
+    expect(d).toEqual({ body: 'Only 2 left against a threshold of 5, and it has sat low for 3 days.', practice: false, usage: { inputTokens: 40, outputTokens: 18 } });
+  });
+
+  it('draftStockAlertNote throws cleanly when the model answers with no body, and carries no usage when the provider reported none', async () => {
+    const facts = { productName: 'Sample Pique Polo', sku: 'SPP-M', available: 0, threshold: 5, sinceDays: 1 };
+    const w = liveAiWriter(async () => ({ text: '{"notBody": "x"}' }));
+    await expect(w.draftStockAlertNote({ locale: 'en', facts, max: { body: 150 } })).rejects.toThrow('alert line');
+    const w2 = liveAiWriter(async () => ({ text: '{"body": "ok"}' }));
+    const d = await w2.draftStockAlertNote({ locale: 'en', facts, max: { body: 150 } });
+    expect(d.usage).toBeUndefined();
+  });
+
   // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
   // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
   // ledger exactly like support's and the product content agent's.

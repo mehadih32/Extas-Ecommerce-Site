@@ -355,3 +355,40 @@ describe('practice studio detail note (PR 332)', () => {
     await expect(w.draftStudioDetailNote(studio({ facts: { name: ' ' } }))).rejects.toThrow();
   });
 });
+
+describe('practice stock alert note (PR 333)', () => {
+  const stock = (over: Partial<import('../src').AiStockAlertInput> = {}): import('../src').AiStockAlertInput => ({
+    locale: 'en',
+    facts: { productName: 'Sample Pique Polo', sku: 'SPP-NVY-M', colour: 'Navy', size: 'M', available: 2, threshold: 5, sinceDays: 3 },
+    max: { body: 150 },
+    ...over,
+  });
+
+  it('writes from the SKU\'s own already-computed numbers it was given', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftStockAlertNote(stock());
+    expect(d.practice).toBe(true);
+    expect(d.body).toContain('Sample Pique Polo');
+    expect(d.body).toContain('SPP-NVY-M');
+    expect(d.body).toContain('Navy / M');
+    expect(d.body).toContain('2 left');
+    expect(d.body).toContain('threshold 5');
+    expect(d.body).toContain('3 days');
+  });
+
+  it('writes with no colour/size section when the SKU has neither', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftStockAlertNote(stock({ facts: { productName: 'Sample Pique Polo', sku: 'SPP-M', available: 0, threshold: 5, sinceDays: 1 } }));
+    expect(d.body).not.toContain('(');
+    expect(d.body).toContain('1 day');
+    expect(d.body).not.toContain('1 days');
+  });
+
+  it('cuts to the store limit and refuses a draft with no product name or SKU', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftStockAlertNote(stock({ max: { body: 10 } }));
+    expect([...d.body].length).toBeLessThanOrEqual(10);
+    await expect(w.draftStockAlertNote(stock({ facts: { productName: ' ', sku: 'SPP-M', available: 0, threshold: 5, sinceDays: 1 } }))).rejects.toThrow();
+    await expect(w.draftStockAlertNote(stock({ facts: { productName: 'Sample Pique Polo', sku: ' ', available: 0, threshold: 5, sinceDays: 1 } }))).rejects.toThrow();
+  });
+});
