@@ -23,8 +23,8 @@
 // `REVIEW_REQUIRED`, which (PR 452) is exactly the state `retryFailedJob` already knows how to retry, with a fresh
 // seed, on the owner's or the runner's own next attempt.
 import { z } from 'zod';
-import { allow, checkStoreId, logChange, parse, PhotoshootError, type PhotoshootDeps, type Who } from './context';
-import { transitionJob, type JobRow } from './jobs';
+import { allow, checkStoreId, logChange, nowOf, parse, PhotoshootError, type PhotoshootDeps, type Who } from './context';
+import { transitionJob, type JobRow, type JobStatus } from './jobs';
 
 /** C7.5 step 9's own six dimensions, each 0 (worst) – 1 (best) toward the concern named — see the file header for
  * the direction convention `colourDifference`/`handFingerArtefacts` take. */
@@ -202,4 +202,97 @@ export async function getOutputsForJob(deps: Pick<PhotoshootDeps, 'db'>, who: Wh
   await allow(deps, who, 'photoshoot.read');
   const rows = await deps.db.photoshootOutput.findMany({ where: { jobId, storeId: who.storeId }, orderBy: { candidateIndex: 'asc' } });
   return rows.map(toOutputRow);
+}
+
+// --- PR 458 (Blueprint C7.5 step 10, C7.16 "Review and approval UI with side-by-side and reasons") ---------------
+//
+// Everything above this point is PR 453's own automatic scoring; nothing in it ever writes `APPROVED`/`REJECTED`.
+// This is the one place the owner's own review decision — on the single `PENDING` output a job carries once it
+// reaches `REVIEW_REQUIRED` — is ever recorded, growing this file in place rather than duplicating it (the same
+// pattern PR 452 used on `jobs.ts`, PR 456 on `finishing.ts`).
+
+const toJobRowLocal = (r: { status: string } & Omit<JobRow, 'status'>): JobRow => ({ ...r, status: r.status as JobStatus });
+
+export const decideOutputReviewInput = z
+  .object({
+    decision: z.enum(['approve', 'reject']),
+    reason: z.string().trim().min(1).max(500).optional(),
+  })
+  .strict()
+  .refine((d) => d.decision !== 'reject' || Boolean(d.reason), { message: 'a rejection needs a reason', path: ['reason'] });
+
+export interface DecideReviewResult {
+  output: OutputRow;
+  job: JobRow;
+}
+
+/**
+ * The owner's own decision on a `PENDING` output (C7.5 step 10: "the owner sees generated vs original side by
+ * side and approves, rejects..."; C7.16: "with reasons on rejection"). Requires `photoshoot.approve` — the same
+ * permission `transitionJob` already requires for the job's own `APPROVED`/`REJECTED` edges, called right after
+ * so the output row and its job always move together, never one without the other. Refuses a decision on
+ * anything that is not `PENDING`: `NOT_SELECTED`/`AUTO_REJECTED` were never shown to a human to decide on, and an
+ * already-`APPROVED`/`REJECTED` row has already been decided — never a silent overwrite of a past decision. A
+ * rejection with no reason is refused outright by the input schema itself, before any row is touched.
+ *
+ * Deliberately NOT here: "regenerate" (C7.16's separate third choice at review time) — `JOB_TRANSITIONS` has no
+ * `REVIEW_REQUIRED -> QUEUED` edge yet, only the existing `FAILED -> QUEUED` retry (PR 452); wiring a genuine
+ * regenerate-from-review action is a later PR's own honest scope, the same shape every prior S24 piece left for
+ * its own unbuilt neighbour.
+ */
+export async function decideOutputReview(deps: PhotoshootDeps, who: Who, outputId: string, input: unknown): Promise<DecideReviewResult> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.approve');
+  const d = parse(decideOutputReviewInput, input, 'review decision');
+
+  const output = await deps.db.photoshootOutput.findFirst({ where: { id: outputId, storeId: who.storeId } });
+  if (!output) throw new PhotoshootError('NOT_FOUND', 'no such photoshoot output in this store');
+  if (output.reviewStatus !== 'PENDING') throw new PhotoshootError('INVALID_INPUT', `this output is ${output.reviewStatus}, not awaiting review`, ['reviewStatus']);
+
+  const nextStatus: OutputReviewStatus = d.decision === 'approve' ? 'APPROVED' : 'REJECTED';
+  const updated = await deps.db.photoshootOutput.update({
+    where: { id: output.id },
+    data: {
+      reviewStatus: nextStatus,
+      rejectReason: d.decision === 'reject' ? (d.reason ?? null) : null,
+      reviewedById: who.actor.staffUserId ?? null,
+      reviewedAt: nowOf(deps),
+    },
+  });
+  await logChange(deps.db, who, {
+    action: 'photoshoot.output.review',
+    entityType: 'PhotoshootOutput',
+    entityId: output.id,
+    before: { reviewStatus: output.reviewStatus },
+    after: { reviewStatus: nextStatus, rejectReason: updated.rejectReason },
+  });
+
+  const job = await transitionJob(deps, who, output.jobId, nextStatus);
+  return { output: toOutputRow(updated), job };
+}
+
+export interface ReviewQueueRow {
+  job: JobRow;
+  output: OutputRow;
+}
+
+/**
+ * The review queue (`photoshoot.read`): every job waiting on a human (`REVIEW_REQUIRED`) with the one `PENDING`
+ * output it carries, oldest-waiting first. `recordScoredOutputs` guarantees a job reaches `REVIEW_REQUIRED` with
+ * exactly one `PENDING` output, so this never needs to choose among several; a job missing its output row (should
+ * never happen) is simply left out rather than shown broken.
+ */
+export async function listReviewQueue(deps: Pick<PhotoshootDeps, 'db'>, who: Who): Promise<ReviewQueueRow[]> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.read');
+  const jobs = await deps.db.photoshootJob.findMany({ where: { storeId: who.storeId, status: 'REVIEW_REQUIRED' }, orderBy: { createdAt: 'asc' } });
+  if (!jobs.length) return [];
+  const outputs = await deps.db.photoshootOutput.findMany({ where: { storeId: who.storeId, jobId: { in: jobs.map((j) => j.id) }, reviewStatus: 'PENDING' } });
+  const outputByJob = new Map(outputs.map((o) => [o.jobId, o]));
+  const rows: ReviewQueueRow[] = [];
+  for (const j of jobs) {
+    const o = outputByJob.get(j.id);
+    if (o) rows.push({ job: toJobRowLocal(j), output: toOutputRow(o) });
+  }
+  return rows;
 }

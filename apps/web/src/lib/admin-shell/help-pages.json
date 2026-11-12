@@ -75,6 +75,8 @@
     { "id": "marketing/studio", "route": "/admin/marketing/studio" },
     { "id": "marketing/studio-motion", "route": "/admin/marketing/studio/motion" },
     { "id": "marketing/photoshoot-editor", "route": "/admin/marketing/photoshoot/editor/[assetId]" },
+    { "id": "marketing/photoshoot-reviews", "route": "/admin/marketing/photoshoot/review" },
+    { "id": "marketing/photoshoot-review", "route": "/admin/marketing/photoshoot/review/[jobId]" },
     { "id": "marketing/referrals", "route": "/admin/marketing/referrals" },
     { "id": "marketing/youtube", "route": "/admin/marketing/youtube" },
     { "id": "marketing/outreach", "route": "/admin/marketing/outreach" },
