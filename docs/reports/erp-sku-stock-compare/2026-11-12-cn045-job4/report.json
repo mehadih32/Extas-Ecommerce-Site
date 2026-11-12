@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-11-12T07:21:24Z",
+  "job": "CN-045 job 4 (ERP lane verification, read-only)",
+  "healthShapeFix": {
+    "registerPr": 498,
+    "status": "fixed-and-unit-tested",
+    "file": "packages/adapters/src/erp/http-client.ts",
+    "test": "packages/adapters/test/erp.test.ts",
+    "liveConfirmation": "not yet possible — server image predates this fix (see deploy below)",
+    "noPathFromSandbox": "no SSH or vault access from this session to the live ERP or its key (CN-003); the real Test button cannot be pressed headlessly from here"
+  },
+  "skuStockCompare": {
+    "registerPr": [654, 655],
+    "workflow": "erp-sku-stock-compare.yml",
+    "runUrl": "https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/43174629668",
+    "runConclusion": "success",
+    "state": "NOT_IN_VERSION",
+    "message": "the version in extas-migrate:cf8a3f814775 has no SKU/stock compare yet: nothing run, nothing failed",
+    "readOnly": true,
+    "writesMade": "none (the tool's own ErpSyncRun audit row would be its only write, and it never ran)"
+  },
+  "rootCause": {
+    "liveImage": "extas-migrate:cf8a3f814775 (commit cf8a3f81, PR 657)",
+    "mergeCommitNotYetDeployed": "2b603268 (PR 654, 655)",
+    "lastDeployAttempt": {
+      "runUrl": "https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/43169263398",
+      "commit": "06ffb720de42 (CN-043)",
+      "conclusion": "failure",
+      "reason": "post-deploy smoke test failed; auto-rolled back per CN-016"
+    },
+    "ciForMergeCommit": {
+      "runUrl": "https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/43169592458",
+      "headSha": "2b603268446cf09c1ddc949b4d025ccc8b9f1cc5",
+      "statusAtCheckTime": "queued/in-progress (13 of ~22 jobs not completed: device-gate x4, lighthouse x10)"
+    }
+  },
+  "defectFound": false,
+  "blockedMdEntryAdded": false,
+  "recommendation": "re-run erp-sku-stock-compare.yml (or wait for its 04:30 Dhaka nightly schedule) once a deploy past 2b603268 succeeds; deploy.yml auto-triggers on that CI run's success, no manual action needed",
+  "hardLimitsRespected": {
+    "noPostOrPatchToErp": true,
+    "noOrderStockOrMoneyRecordTouched": true,
+    "v6SwitchAttempted": false,
+    "vaultKeyReadOrLogged": false
+  }
+}

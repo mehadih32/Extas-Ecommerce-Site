@@ -171,7 +171,7 @@ export function ChannelsCard({ rows: first, canEdit, texts: x }: Readonly<{ rows
                 {x.addKind}
               </label>
               <select id="sup-ch-kind" className="a2-sel" value={draft.kind} onChange={(e) => setDraft({ ...draft, kind: e.target.value })}>
-                {(['messenger', 'whatsapp'] as const).map((k) => (
+                {(['messenger', 'whatsapp', 'instagram'] as const).map((k) => (
                   <option key={k} value={k}>
                     {kindName(k)}
                   </option>

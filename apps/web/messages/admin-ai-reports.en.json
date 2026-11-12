@@ -1,0 +1,43 @@
+{
+  "aiReports": {
+    "metaTitle": "Agent reports",
+    "title": "Agent reports",
+    "sub": "Daily, weekly, monthly and yearly reports per agent, generated from its own work log — what it did, the bugs it found itself versus the ones the owner found, rewards, and cost.",
+    "agent": "Agent",
+    "period": {
+      "label": "Period",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "generate": "Generate now",
+    "generating": "Generating…",
+    "generated": "Generated.",
+    "noneYet": "No report generated yet for this period. Press \"Generate now\".",
+    "kpi": {
+      "tasksDone": "Tasks done",
+      "bugsSelfFound": "Bugs it found itself",
+      "bugsOwnerFound": "Bugs the owner found",
+      "rewards": "Rewards",
+      "costMinor": "Cost",
+      "firstTimeRightRate": "First-time-right rate",
+      "none": "—"
+    },
+    "report": {
+      "title": "Report",
+      "generatedAt": "Generated {at}"
+    },
+    "history": {
+      "title": "Earlier reports",
+      "sub": "The last 12 of this period, newest first.",
+      "col": { "period": "Window", "rate": "First-time-right", "tasks": "Tasks", "generated": "Generated" },
+      "empty": "No earlier reports yet."
+    },
+    "err": {
+      "network": "Could not reach the server. Try again.",
+      "other": "Something went wrong."
+    },
+    "note": "On demand only, for now. Scheduled sends to Telegram and e-mail, and the full yearly appraisal's competency ratings and curriculum levels, are a later report on this same table."
+  }
+}

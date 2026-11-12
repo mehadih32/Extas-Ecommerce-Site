@@ -104,7 +104,7 @@ export default async function StatusPage() {
         ) : (
           <ol className="mt-2 list-decimal space-y-2 ps-5">
             {s.waiting.map((w) => (
-              <li key={w.n}>
+              <li key={w.n} className="break-words">
                 <span className="font-semibold">{w.what}</span>
                 {w.why ? (
                   <span className="block text-sm text-ink-soft">{w.why}</span>
@@ -125,7 +125,7 @@ export default async function StatusPage() {
           ) : (
             <ul className="mt-2 list-disc space-y-1 ps-5 text-bad">
               {problems.map((p) => (
-                <li key={p}>{p}</li>
+                <li key={p} className="break-words">{p}</li>
               ))}
             </ul>
           )}

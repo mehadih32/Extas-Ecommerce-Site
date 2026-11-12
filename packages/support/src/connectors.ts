@@ -17,9 +17,13 @@ import type { ChannelSendResult, SupportChannelAdapter } from './channels';
 import { allow, logChange, nowOf, parse, setting, SupportError, type SupportDeps, type Who } from './context';
 import { receiveMessage } from './inbound';
 
-/** The channels Meta carries, with their reply window. */
+/** The channels Meta carries, with their reply window (a sender adapter exists for each — `supportChannelAdapters`). */
 export const META_CHANNEL_KINDS = ['messenger', 'whatsapp'] as const;
 export type MetaChannelKind = (typeof META_CHANNEL_KINDS)[number];
+
+/** S23 · PR 443: kinds the owner can add in Support settings besides the two above — comments/DMs only, no reply
+ *  adapter yet (a reply made from here stays NOT_SENT · CHANNEL_NOT_CONNECTED, channels.ts's own honest fallback). */
+export const ADDABLE_CHANNEL_KINDS = [...META_CHANNEL_KINDS, 'instagram'] as const;
 
 /** The live chat's one channel per store (its id on the site). */
 export const LIVE_CHAT_EXTERNAL_ID = 'site';
@@ -180,7 +184,7 @@ export async function supportChannels(deps: Pick<SupportDeps, 'db' | 'settings'>
 const idOf = z.string().trim().regex(/^\d{5,30}$/, { message: 'digits only (the id from the Meta app)' });
 
 export const saveChannelInput = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('add'), kind: z.enum(META_CHANNEL_KINDS), externalId: idOf, name: z.string().trim().min(1).max(80) }).strict(),
+  z.object({ action: z.literal('add'), kind: z.enum(ADDABLE_CHANNEL_KINDS), externalId: idOf, name: z.string().trim().min(1).max(80) }).strict(),
   z.object({ action: z.literal('rename'), id: z.uuid(), name: z.string().trim().min(1).max(80), version: z.string().max(40).optional() }).strict(),
   z.object({ action: z.literal('switch'), id: z.uuid(), enabled: z.boolean(), version: z.string().max(40).optional() }).strict(),
   z.object({ action: z.literal('archive'), id: z.uuid(), archived: z.boolean(), version: z.string().max(40).optional() }).strict(),

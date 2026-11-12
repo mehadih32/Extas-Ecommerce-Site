@@ -8,7 +8,23 @@ import { OWN_TOP_SEGMENTS, unknownAddress, unknownAddressNow } from './unknown-a
 
 const APP = join(__dirname, '..', '..', 'app');
 /** The shop's own non-shop paths the proxy never sees (lib/shop/lang NOT_SHOP) or that are files, not pages. */
-const NOT_PROXIED = ['admin', 'api', 'erp-api', 'status', 'media', 'sitemaps', 'llms.txt', 'robots.txt', 'sitemap.xml', 'favicon.ico'];
+const NOT_PROXIED = [
+  'admin',
+  'api',
+  'erp-api',
+  'status',
+  'media',
+  'sitemaps',
+  'llms.txt',
+  'robots.txt',
+  'sitemap.xml',
+  'favicon.ico',
+  'reset',
+  'sw.js',
+  'service-worker.js',
+  'OneSignalSDKWorker.js',
+  'firebase-messaging-sw.js',
+];
 
 const folders = (dir: string) => readdirSync(dir).filter((n) => statSync(join(dir, n)).isDirectory());
 /** A folder that is part of the address (not a route group, not a dynamic segment). */
