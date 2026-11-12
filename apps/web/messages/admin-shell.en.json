@@ -96,9 +96,10 @@
       },
       "orders": {
         "all": "All orders",
-        "confirm": "To confirm",
+        "confirm": "Processing",
         "riskrules": "Risk rules",
-        "packing": "Packing & print",
+        "packing": "To ship",
+        "courier": "With courier",
         "returns": "Returns & exchanges",
         "digest": "Today's digest",
         "incomplete": "Incomplete orders"
@@ -187,7 +188,7 @@
     },
     "plan": {
       "dashboard": "Delivered-sales trend · Orders by stage · Top products · Delivery success by courier · Customize cards",
-      "orders": "All orders · To confirm · Risk review · Packing & print · Returns & exchanges · More: Risk rules, Create order, Bulk & corporate, Order settings",
+      "orders": "All orders · Processing · To ship · With courier · Returns & exchanges · Incomplete orders · More: Today's digest, Risk rules",
       "products": "Reviews · Collections · More: Bulk CSV, Naming & links, Media library, Colour library, Catalogue setup",
       "customers": "All customers · Segments · Loyalty & wallet · To review · More: Import legacy customers, Consent & data",
       "delivery": "Overview · Ready to book · In transit · Returned & refused · Couriers · More: Charge mismatch log, Delivery settings",

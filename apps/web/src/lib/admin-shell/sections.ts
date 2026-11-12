@@ -63,21 +63,13 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'orders',
     tabs: [
       { id: 'all', pages: [{ href: '/admin/orders', perm: 'orders.read', keys: ['orders', 'order'] }] },
+      // PR 660 (CN-048): this tab is "Processing" in the menu — the call queue and its calls, now over the Processing view (address unchanged)
       // S06 · PR 545: Calls to make — the call tasks the shop's steps left (a new customer among them), worked by a person
       { id: 'confirm', pages: [
         { href: '/admin/orders/confirm', perm: 'orders.confirm', keys: ['ordersConfirm'] },
         { href: '/admin/orders/confirm/calls', perm: 'orders.confirm', keys: ['ordersCalls'] },
       ] },
-      // S06 · PR 540: Today's digest — what came in, what the engine saw, and what waits for a person's OK (the gate's card)
-      { id: 'digest', more: true, pages: [{ href: '/admin/orders/digest', perm: 'orders.read', keys: ['ordersDigest'] }] },
-      // S13 · PR 274: Incomplete — typed at checkout and left without ordering (All orders links it as a saved view)
-      { id: 'incomplete', more: true, pages: [{ href: '/admin/orders/incomplete', perm: 'orders.read', keys: ['ordersIncomplete'] }] },
-      // S06 · PR 161: ORD-06 Risk rules (its Levels section first; the matrix and the rule switches join with their PRs);
-      // S04 · PR 558: its Checkout advance panel (the Parameter for Checkout) is the tab's second page
-      { id: 'riskrules', more: true, pages: [
-        { href: '/admin/orders/risk-rules', perm: 'risk.rules.read', keys: ['riskRules'] },
-        { href: '/admin/orders/risk-rules/checkout', perm: 'risk.rules.read', keys: ['checkoutAdvance'] },
-      ] },
+      // PR 660 (CN-048): this tab is "To ship" in the menu (pack, print, picking list, invoices); the rider's handover is the With courier tab
       // S08 · PR 179–181: Packing & print (ORD-04) — the print run of courier stickers, the daily picking list and the
       // rider's handover. PR 182: Pack (pick, pack and hand over on one screen) is the tab's first page; S20 · PR 407: the invoices.
       {
@@ -86,11 +78,12 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/orders/packing', perm: 'fulfilment.read', keys: ['packingPack'] },
           { href: '/admin/orders/packing/print', perm: 'fulfilment.read', keys: ['packingPrint'] },
           { href: '/admin/orders/packing/picking', perm: 'fulfilment.read', keys: ['packingPicking'] },
-          { href: '/admin/orders/packing/handover', perm: 'fulfilment.read', keys: ['packingHandover'] },
           // S20 · PR 407: the customers' invoices — the list, printing (paper, roll, chat picture) and the invoice's settings
           { href: '/admin/orders/packing/invoices', perm: 'fulfilment.read', keys: ['packingInvoices'] },
         ],
       },
+      // PR 660 (CN-048): With courier — the rider's handover and the day-end check (PR 667 adds the live courier status and the stuck-parcel alert).
+      { id: 'courier', pages: [{ href: '/admin/orders/packing/handover', perm: 'fulfilment.read', keys: ['packingHandover'] }] },
       // S08 · PR 185, 187, 191: Returns & exchanges (the board, a case, starting an exchange) and Receive & QC.
       {
         id: 'returns',
@@ -106,6 +99,16 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/orders/returns/erp', perm: 'returns.view', keys: ['ordersReturnsErp'] },
         ],
       },
+      // S13 · PR 274: Incomplete — typed at checkout and left without ordering (All orders links it as a saved view)
+      { id: 'incomplete', pages: [{ href: '/admin/orders/incomplete', perm: 'orders.read', keys: ['ordersIncomplete'] }] },
+      // S06 · PR 540: Today's digest — what came in, what the engine saw, and what waits for a person's OK (the gate's card)
+      { id: 'digest', more: true, pages: [{ href: '/admin/orders/digest', perm: 'orders.read', keys: ['ordersDigest'] }] },
+      // S06 · PR 161: ORD-06 Risk rules (its Levels section first; the matrix and the rule switches join with their PRs);
+      // S04 · PR 558: its Checkout advance panel (the Parameter for Checkout) is the tab's second page
+      { id: 'riskrules', more: true, pages: [
+        { href: '/admin/orders/risk-rules', perm: 'risk.rules.read', keys: ['riskRules'] },
+        { href: '/admin/orders/risk-rules/checkout', perm: 'risk.rules.read', keys: ['checkoutAdvance'] },
+      ] },
     ],
   },
   {

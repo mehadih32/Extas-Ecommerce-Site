@@ -5,6 +5,7 @@
 import Link from 'next/link';
 import { EmptyList, Kpis, ordersDict, readDeps, filterSelects } from '@/components/admin/orders/OrderListPage';
 import { OrderFilters } from '@/components/admin/orders/OrderFilters';
+import { CancelledSummary } from '@/components/admin/orders/CancelledSummary';
 import { OrderTable } from '@/components/admin/orders/OrderTable';
 import { PageHead, SectionTabs } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
@@ -42,7 +43,7 @@ async function OrdersC(p: OrdersDesignProps) {
   const d = view.dict;
   const page: ListPageId = 'all';
   const data = await loadOrderList(readDeps(a.deps), a.who, view, page, query);
-  const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section);
+  const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section || query.from || query.to);
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   const files = bulkFilesFor(a.perms);
   const shown = formatNumber(data.rows.length, view.locale);
@@ -64,6 +65,7 @@ async function OrdersC(p: OrdersDesignProps) {
         selects={filterSelects(view, query, data.bands)}
         clear={filtered || query.sort ? { href: listHref(page, { view: query.view }), label: t(d, 'orders.list.clear') } : null}
       />
+      <CancelledSummary view={view} a={a} query={query} />
       {data.rows.length ? (
         <>
           <div className="a3-odense">
