@@ -150,6 +150,17 @@ describe('shared live AiWriter (PR 306)', () => {
   });
 });
 
+// PR 311 applies to the PR 325 support-reply draft too: it goes through the same masking `send`, so a phone
+// number in the customer's question never leaves the server.
+describe('PR 311 masking covers the support reply (PR 325)', () => {
+  it('draftSupportReply never hands a phone number to the Completer', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"body": "Hello, we are on it."}' }));
+    const w = liveAiWriter(complete);
+    await w.draftSupportReply({ locale: 'en', question: 'call me on 01712345678', facts: { intent: 'status' }, ruleBasedBody: 'Hi, ring 01712345678.', max: { body: 300 } });
+    for (const call of complete.mock.calls) expect((call[0] as { user: string }).user).not.toContain('01712345678');
+  });
+});
+
 describe('Anthropic (PR 306)', () => {
   it('sends the Messages API shape and reads its text content back', async () => {
     const calls: { url: string; init: RequestInit }[] = [];
