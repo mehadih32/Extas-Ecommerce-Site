@@ -106,6 +106,18 @@ describe('shared live AiWriter (PR 306)', () => {
     const d = await w2.draftProductDescription({ locale: 'en', facts: { name: 'Sample Tee' }, max: { body: 100 } });
     expect(d.usage).toBeUndefined();
   });
+
+  // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
+  // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
+  // ledger exactly like support's and the product content agent's.
+  it('draftSeo carries the provider\'s own usage when it reports one, and none when it does not', async () => {
+    const complete = vi.fn(async () => ({ text: '{"title": "Sample Pique Polo | Sample Brand", "description": "A classic polo."}', usage: { inputTokens: 64, outputTokens: 11 } }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftSeo(seoInput);
+    expect(d).toEqual({ title: 'Sample Pique Polo | Sample Brand', description: 'A classic polo.', practice: false, usage: { inputTokens: 64, outputTokens: 11 } });
+    const w2 = liveAiWriter(async () => ({ text: '{"title": "x", "description": "y"}' }));
+    expect((await w2.draftSeo(seoInput)).usage).toBeUndefined();
+  });
 });
 
 describe('Anthropic (PR 306)', () => {
