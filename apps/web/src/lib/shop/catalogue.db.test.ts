@@ -7,7 +7,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { disconnectPrisma } from '@extas/db/client';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import { categoryLeads, heroCategoryCards, heroCollectionCards, newestCards } from './catalogue';
+import { categoryData, categoryLeads, heroCategoryCards, heroCollectionCards, newestCards } from './catalogue';
 import { homeReviews } from './reviews';
 
 describe.skipIf(!HAS_TEST_DB)('the home page catalogue reads on PostgreSQL', () => {
@@ -113,6 +113,17 @@ describe.skipIf(!HAS_TEST_DB)('the home page catalogue reads on PostgreSQL', () 
     const leads = await categoryLeads(store, ['polos', 'hidden']);
     expect(Object.keys(leads)).toEqual(['polos']);
     expect(leads.polos!.slug).toBe('new-polo');
+  });
+
+  it('PR 489 (follow-up): a category page carries a live overlay fresh on every read, the same as the PDP, not baked into the categoryMinutes page cache', async () => {
+    const card = () => categoryData(store, 'knit-polos', { ratings: false }).then((d) => d!.cards.find((c) => c.slug === 'new-polo')!);
+    expect((await card()).overlay).toBeNull();
+    const overlay = await t.prisma.campaignOverlay.create({
+      data: { storeId: store, templateKey: 'badge', design: { labelEn: 'Sale', labelBn: 'সেল', accent: '#C81E3A' }, appliesTo: { kind: 'products', slugs: ['new-polo'] }, enabled: true },
+    });
+    expect((await card()).overlay).toMatchObject({ labelEn: 'Sale' });
+    await t.prisma.campaignOverlay.update({ where: { id: overlay.id }, data: { enabled: false } });
+    expect((await card()).overlay).toBeNull();
   });
 
   it('reviews: approved ones of live products; the average counts all of them whatever the star filter', async () => {

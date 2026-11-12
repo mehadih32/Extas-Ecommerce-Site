@@ -21,9 +21,13 @@
 // own words (the title, the search phrase, the outline as headings, the facts, the shop links, the note) into the
 // editor's writing format and says it is practice text; a live provider gets the same input. The draft is an article in
 // writing: a person still edits it and it passes the three review steps before anyone can publish it.
+//
+// S15 · PR 311 — the masking layer (masking.ts): `liveAiWriter` already runs every prompt through it, and
+// `maskKnownIdentity` is exported ready for a future job that holds a real customer record.
 export * from './shared';
 export * from './mock';
 export * from './prompts';
+export * from './masking';
 export * from './live';
 export * from './openai-compatible';
 export * from './anthropic';

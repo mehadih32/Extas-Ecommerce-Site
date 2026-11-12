@@ -4,6 +4,7 @@
 // here reads the database or the settings; product.ts builds the model, the components draw it. Client-safe: no server
 // imports, only types from the media package.
 import type { ImageSource } from '@extas/media';
+import type { OverlayBadge } from '@extas/creative-studio';
 import type { GarmentView } from './garment-art';
 
 /** What one photo shows (ProductMedia.role), or a view of the drawing while the colour has no photo. */
@@ -82,6 +83,8 @@ export interface PdpModel {
   chart: PdpChart | null;
   /** The product is on sale (published, not archived). A ghost page shows everything sold out. */
   onSale: boolean;
+  /** S25 · PR 489: the live campaign overlay for this product (Blueprint C8.3) — drawn on top, never stored on the photo. */
+  overlay: OverlayBadge | null;
 }
 
 export interface PdpChoice {
