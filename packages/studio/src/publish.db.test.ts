@@ -1,6 +1,8 @@
-// S23 · PR 440 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): queueing and running a post from a
-// finished render job onto a Facebook or Instagram account. The adapter here is a stand-in (no real network), the
-// same shape `PublisherResolver` gives — `runtime.ts`'s own wiring is exercised by the web app's own tests.
+// S23 · PR 440–442 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): queueing and running a post from
+// a finished render job onto a Facebook or Instagram account, and (PR 442) the approval queue, the calendar's
+// reschedule, the per-platform daily limit and `publishDuePosts`. The adapter here is a stand-in (no real
+// network), the same shape `PublisherResolver` gives — `runtime.ts`'s own wiring is exercised by the web app's own
+// tests.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -8,7 +10,7 @@ import type { SocialPublishResult } from '@extas/adapters';
 import { registry, type Key, type Value } from '@extas/settings';
 import { saveStudioAccount } from './accounts';
 import type { StudioDeps, Who } from './context';
-import { queueSocialPost, runSocialPost, studioSocialPosts, type PublishDeps } from './index';
+import { decideSocialPost, publishDuePosts, queueSocialPost, rescheduleSocialPost, runSocialPost, studioCalendar, studioSocialPosts, type PublishDeps } from './index';
 import { queueSocialRender, runSocialRenderJob } from './render';
 import { saveStudioTemplate } from './templates';
 
@@ -223,5 +225,177 @@ describe.skipIf(!HAS_TEST_DB)('PR 441 · TikTok draft + direct posting (PostgreS
   it('`directPostApproved` means nothing on a non-TikTok account and is refused', async () => {
     const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'facebook', externalId: 'fb-441-1', name: 'Not TikTok' });
     await expect(saveStudioAccount(sd(), who, { action: 'directPostApproved', id: acc.id, directPostApproved: true, version: acc.version })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+  });
+});
+
+describe.skipIf(!HAS_TEST_DB)('PR 442 · approval queue, calendar and per-platform limits (PostgreSQL)', () => {
+  let t: TestDatabase;
+  let S: number;
+  let who: Who;
+  let approver: Who;
+  const settings = {
+    async value<K extends Key>(key: K): Promise<Value<K>> {
+      return registry[key].default as Value<K>;
+    },
+  };
+  const sd = (): StudioDeps => ({ db: t.prisma, settings });
+  let lastSent: { imageUrl: string; caption: string } | null = null;
+  const pd = (): PublishDeps => ({
+    ...sd(),
+    publisher: { async resolve() { return { api: { async publishPhoto(post) { lastSent = post; return { ok: true, externalPostId: 'ext-442' }; } }, mode: 'MOCK' }; } },
+    async publicUrlOf(assetId) { return assetId ? `https://shop.example.test/media/${assetId}.jpg` : null; },
+  });
+
+  const makeProduct = (slug: string, nameEn: string) => t.prisma.product.create({ data: { storeId: S, slug, nameEn } });
+  const giveCoverPhoto = async (productId: string) => {
+    const asset = await t.prisma.mediaAsset.create({ data: { storeId: S, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: `products/${S}/${productId.slice(0, 8)}.jpg`, mimeType: 'image/jpeg', bytes: 500n, checksumSha256: productId.slice(0, 8).padEnd(64, '0'), isOriginal: true } });
+    await t.prisma.productMedia.create({ data: { storeId: S, productId, assetId: asset.id, role: 'FRONT', isPrimary: true } });
+    return asset.id;
+  };
+  const finishedRenderJob = async (caption?: string) => {
+    const tpl = await saveStudioTemplate(sd(), who, { action: 'add', kind: 'image', name: `442 poster ${Date.now()}-${Math.random()}`, spec: { aspectRatio: '1:1', brandAssetIds: [] } });
+    const product = await makeProduct(`442-post-${Date.now()}-${Math.round(Math.random() * 1e6)}`, '442 Tee');
+    await giveCoverPhoto(product.id);
+    const job = await queueSocialRender(sd(), who, { templateId: tpl.id, productIds: [product.id], ...(caption ? { caption } : {}) });
+    return runSocialRenderJob(sd(), who, job.id);
+  };
+  const future = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
+
+  beforeAll(async () => {
+    t = await createTestDatabase('studio_calendar_approval');
+    [S] = await seedSampleStores(t.prisma);
+    await syncAuth(t.prisma);
+    const staff = async (key: string, perms: ('studio.read' | 'studio.write' | 'studio.generate' | 'studio.approve' | 'studio.publish')[]) => {
+      const role = await createRole(t.prisma, SYSTEM, { key, nameEn: key, nameBn: key, permissions: perms });
+      const u = await t.prisma.staffUser.create({ data: { email: `${key}@example.com`, displayName: key, passwordHash: 'not-a-login' } });
+      await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: S } });
+      return { actor: { staffUserId: u.id }, storeId: S };
+    };
+    who = await staff('t442-queue', ['studio.read', 'studio.write', 'studio.generate', 'studio.publish']);
+    approver = await staff('t442-approve', ['studio.read', 'studio.approve']);
+  });
+
+  afterAll(async () => t.drop());
+
+  it('queuing to an account that still needs approval makes an AiApprovalRequest row, carried on the post', async () => {
+    const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'facebook', externalId: 'fb-442-1', name: 'Approval Page' });
+    await saveStudioAccount(sd(), who, { action: 'switch', id: acc.id, enabled: true, version: acc.version });
+    const job = await finishedRenderJob('Needs an OK');
+    const posted = await queueSocialPost(pd(), who, { renderJobId: job.id, accountId: acc.id });
+    expect(posted.status).toBe('PENDING_APPROVAL');
+    expect(posted.approvalRequestId).not.toBeNull();
+    const ar = await t.prisma.aiApprovalRequest.findUnique({ where: { id: posted.approvalRequestId! } });
+    expect(ar).toMatchObject({ status: 'PENDING', kind: 'studio.post', agentKey: 'doot', refType: 'SocialPost', refId: posted.id });
+  });
+
+  it('approving a pending post moves it to PUBLISHING (no time chosen) and marks the approval request APPROVED; only `studio.approve` may decide', async () => {
+    const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'facebook', externalId: 'fb-442-2', name: 'Approve Me' });
+    await saveStudioAccount(sd(), who, { action: 'switch', id: acc.id, enabled: true, version: acc.version });
+    const job = await finishedRenderJob('Approve please');
+    const posted = await queueSocialPost(pd(), who, { renderJobId: job.id, accountId: acc.id });
+
+    await expect(decideSocialPost(sd(), who, { id: posted.id, decision: 'approve' })).rejects.toThrow(); // who only holds generate/publish, not approve
+
+    const approved = await decideSocialPost(sd(), approver, { id: posted.id, decision: 'approve' });
+    expect(approved.status).toBe('PUBLISHING');
+    const ar = await t.prisma.aiApprovalRequest.findUnique({ where: { id: posted.approvalRequestId! } });
+    expect(ar?.status).toBe('APPROVED');
+    await expect(decideSocialPost(sd(), approver, { id: posted.id, decision: 'approve' })).rejects.toMatchObject({ code: 'WRONG_STATE' });
+  });
+
+  it('a future `scheduledAt` at queue time keeps a post PENDING_APPROVAL until approved, then SCHEDULED; rejecting is final', async () => {
+    const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'facebook', externalId: 'fb-442-3', name: 'Scheduled Page' });
+    await saveStudioAccount(sd(), who, { action: 'switch', id: acc.id, enabled: true, version: acc.version });
+    const job = await finishedRenderJob('Later today');
+    const at = future(5);
+    const posted = await queueSocialPost(pd(), who, { renderJobId: job.id, accountId: acc.id, scheduledAt: at });
+    expect(posted.status).toBe('PENDING_APPROVAL');
+    expect(posted.scheduledAt).toBe(new Date(at).toISOString());
+
+    const approved = await decideSocialPost(sd(), approver, { id: posted.id, decision: 'approve' });
+    expect(approved.status).toBe('SCHEDULED');
+
+    const job2 = await finishedRenderJob('Rejected one');
+    const posted2 = await queueSocialPost(pd(), who, { renderJobId: job2.id, accountId: acc.id });
+    const rejected = await decideSocialPost(sd(), approver, { id: posted2.id, decision: 'reject' });
+    expect(rejected.status).toBe('REJECTED');
+    const ar2 = await t.prisma.aiApprovalRequest.findUnique({ where: { id: posted2.approvalRequestId! } });
+    expect(ar2?.status).toBe('REJECTED');
+  });
+
+  it('an account running free with a future time queues SCHEDULED directly, shows in the calendar, and can be rescheduled', async () => {
+    const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'facebook', externalId: 'fb-442-4', name: 'Free Scheduled' });
+    const enabled = await saveStudioAccount(sd(), who, { action: 'switch', id: acc.id, enabled: true, version: acc.version });
+    const free = await saveStudioAccount(sd(), who, { action: 'requireApproval', id: acc.id, requireApproval: false, version: enabled.version });
+    const job = await finishedRenderJob('Calendar post');
+    const at = future(30);
+    const posted = await queueSocialPost(pd(), who, { renderJobId: job.id, accountId: free.id, scheduledAt: at });
+    expect(posted.status).toBe('SCHEDULED');
+
+    // generously wide so the store's own time zone (Asia/Dhaka, UTC+6) landing a day either side of the UTC slice
+    // below can never miss it
+    const from = new Date(Date.now() - 2 * 86_400_000).toISOString().slice(0, 10);
+    const to = new Date(Date.now() + 5 * 86_400_000).toISOString().slice(0, 10);
+    const cal = await studioCalendar(sd(), who, { from, to });
+    const found = cal.flatMap((d) => d.posts).find((p) => p.id === posted.id);
+    expect(found?.status).toBe('SCHEDULED');
+
+    const newAt = future(36);
+    const moved = await rescheduleSocialPost(sd(), who, { id: posted.id, scheduledAt: newAt });
+    expect(moved.scheduledAt).toBe(new Date(newAt).toISOString());
+    expect(moved.status).toBe('SCHEDULED');
+
+    const backToNow = await rescheduleSocialPost(sd(), who, { id: posted.id, scheduledAt: null });
+    expect(backToNow.status).toBe('PUBLISHING');
+    expect(backToNow.scheduledAt).toBeNull();
+    await expect(rescheduleSocialPost(sd(), who, { id: posted.id, scheduledAt: future(2) })).rejects.toMatchObject({ code: 'WRONG_STATE' });
+  });
+
+  it('a `dailyLimit` of 1 refuses a second post the same day on the same account, approving or queuing free', async () => {
+    const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'facebook', externalId: 'fb-442-5', name: 'One A Day' });
+    const enabled = await saveStudioAccount(sd(), who, { action: 'switch', id: acc.id, enabled: true, version: acc.version });
+    const free = await saveStudioAccount(sd(), who, { action: 'requireApproval', id: acc.id, requireApproval: false, version: enabled.version });
+    const limited = await saveStudioAccount(sd(), who, { action: 'dailyLimit', id: acc.id, dailyLimit: 1, version: free.version });
+
+    const job1 = await finishedRenderJob('First today');
+    const first = await queueSocialPost(pd(), who, { renderJobId: job1.id, accountId: limited.id });
+    expect(first.status).toBe('PUBLISHING');
+
+    const job2 = await finishedRenderJob('Second today');
+    await expect(queueSocialPost(pd(), who, { renderJobId: job2.id, accountId: limited.id })).rejects.toMatchObject({ code: 'DAILY_LIMIT' });
+
+    // the same limit is enforced on the approval path, not only on a free-running queue
+    const needsApproval = await saveStudioAccount(sd(), who, { action: 'requireApproval', id: acc.id, requireApproval: true, version: limited.version });
+    const job3 = await finishedRenderJob('Third today');
+    const pending = await queueSocialPost(pd(), who, { renderJobId: job3.id, accountId: needsApproval.id });
+    expect(pending.status).toBe('PENDING_APPROVAL'); // queuing itself is never blocked by the limit, only sending
+    await expect(decideSocialPost(sd(), approver, { id: pending.id, decision: 'approve' })).rejects.toMatchObject({ code: 'DAILY_LIMIT' });
+  });
+
+  it('`publishDuePosts` sends every SCHEDULED post whose time has come, and only that, safely twice', async () => {
+    const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'facebook', externalId: 'fb-442-6', name: 'Due Now' });
+    const enabled = await saveStudioAccount(sd(), who, { action: 'switch', id: acc.id, enabled: true, version: acc.version });
+    const free = await saveStudioAccount(sd(), who, { action: 'requireApproval', id: acc.id, requireApproval: false, version: enabled.version });
+
+    const jobDue = await finishedRenderJob('Due now');
+    const due = await queueSocialPost(pd(), who, { renderJobId: jobDue.id, accountId: free.id, scheduledAt: new Date(Date.now() + 500).toISOString() }); // ~0.5s out
+    const jobLater = await finishedRenderJob('Later');
+    const later = await queueSocialPost(pd(), who, { renderJobId: jobLater.id, accountId: free.id, scheduledAt: future(48) });
+    expect(due.status).toBe('SCHEDULED');
+    expect(later.status).toBe('SCHEDULED');
+
+    await new Promise((r) => setTimeout(r, 1100)); // let the "due" one's moment actually pass
+    lastSent = null;
+    const result = await publishDuePosts(pd(), who);
+    expect(result.ran).toBe(1);
+    expect(result.succeeded).toBe(1);
+    expect(lastSent).toMatchObject({ caption: 'Due now' });
+
+    const still = await studioSocialPosts(sd(), who);
+    expect(still.find((p) => p.id === due.id)?.status).toBe('SUCCEEDED');
+    expect(still.find((p) => p.id === later.id)?.status).toBe('SCHEDULED');
+
+    const again = await publishDuePosts(pd(), who);
+    expect(again.ran).toBe(0); // safe to run twice — nothing newly due
   });
 });

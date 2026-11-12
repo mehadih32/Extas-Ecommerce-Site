@@ -17,7 +17,21 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { BRAND_ASSET_KINDS, PUBLISHABLE_PLATFORMS, STUDIO_PLATFORMS, TEMPLATE_ASPECT_RATIOS, TEMPLATE_KINDS } from '@extas/studio';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { altFor, ResponsiveImage } from '@/components/media/ResponsiveImage';
-import { StudioAccountForm, StudioAccountLimit, StudioAct, StudioAssetKind, StudioAssetUpload, StudioPostForm, StudioRenderForm, StudioTemplateForm, type StudioFormTexts } from '@/components/admin/marketing/StudioForms';
+import {
+  StudioAccountForm,
+  StudioAccountLimit,
+  StudioAct,
+  StudioAssetKind,
+  StudioAssetUpload,
+  StudioDecide,
+  StudioPostForm,
+  StudioRenderForm,
+  StudioReschedule,
+  StudioScheduleRuleControls,
+  StudioScheduleRuleForm,
+  StudioTemplateForm,
+  type StudioFormTexts,
+} from '@/components/admin/marketing/StudioForms';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -64,10 +78,11 @@ export default async function StudioPage() {
   const canUploadMedia = access.guard.permissions?.has('media.upload') ?? false;
   const canGenerate = access.guard.permissions?.has('studio.generate') ?? false;
   const canPublish = access.guard.permissions?.has('studio.publish') ?? false;
+  const canApprove = access.guard.permissions?.has('studio.approve') ?? false;
   const g = (k: string, vars?: Record<string, string | number>) => t(d, `studio.hub.${k}`, vars);
-  const errKeys = ['INVALID_INPUT', 'NOT_FOUND', 'STALE', 'ALREADY_ADDED', 'TEMPLATE_ARCHIVED', 'NO_PRODUCTS', 'WRONG_STATE', 'ACCOUNT_OFF', 'NOT_SUPPORTED', 'EMPTY', 'TOO_LARGE', 'NOT_AN_IMAGE', 'TYPE_NOT_ALLOWED', 'STILL_IN_USE', 'forbidden', 'unauthorized', 'network', 'other'];
+  const errKeys = ['INVALID_INPUT', 'NOT_FOUND', 'STALE', 'ALREADY_ADDED', 'TEMPLATE_ARCHIVED', 'NO_PRODUCTS', 'WRONG_STATE', 'ACCOUNT_OFF', 'NOT_SUPPORTED', 'DAILY_LIMIT', 'EMPTY', 'TOO_LARGE', 'NOT_AN_IMAGE', 'TYPE_NOT_ALLOWED', 'STILL_IN_USE', 'forbidden', 'unauthorized', 'network', 'other'];
   const err = Object.fromEntries(errKeys.map((k) => [k, g(`err.${k}`)]));
-  const texts: StudioFormTexts = { err, fields: Object.fromEntries(['platform', 'externalId', 'name', 'kind', 'dailyLimit', 'directPostApproved', 'spec', 'assetId', 'templateId', 'productIds', 'caption', 'renderJobId', 'accountId'].map((k) => [k, g(`f.${k}`)])) };
+  const texts: StudioFormTexts = { err, fields: Object.fromEntries(['platform', 'externalId', 'name', 'kind', 'dailyLimit', 'directPostApproved', 'spec', 'assetId', 'templateId', 'productIds', 'caption', 'renderJobId', 'accountId', 'scheduledAt'].map((k) => [k, g(`f.${k}`)])) };
   const platforms = STUDIO_PLATFORMS.map((p) => ({ id: p, label: g(`platforms.${p}`) }));
   const kinds = TEMPLATE_KINDS.map((k) => ({ id: k, label: g(`templateKinds.${k}`) }));
   const assetKinds = BRAND_ASSET_KINDS.map((k) => ({ id: k, label: g(`assetKinds.${k}`) }));
@@ -75,6 +90,12 @@ export default async function StudioPage() {
   const liveTemplates = o.templates.filter((tp) => !tp.archived).map((tp) => ({ id: tp.id, label: `${tp.name} (${g(`templateKinds.${tp.kind}`)})` }));
   const postableAccounts = liveAccounts.filter((a) => a.enabled && (PUBLISHABLE_PLATFORMS as readonly string[]).includes(a.platform)).map((a) => ({ id: a.id, label: `${a.name} (${g(`platforms.${a.platform}`)})` }));
   const postableRenders = o.renders.filter((r) => r.status === 'SUCCEEDED').map((r) => ({ id: r.id, label: r.caption ? r.caption.slice(0, 60) : (r.kind ? g(`templateKinds.${r.kind}`) : r.id) }));
+  // PR 442: a rule may pin itself to any live account (not only a publishable one yet — the dispatcher that would
+  // need that does not exist; see schedule.ts's own honest-scope header).
+  const ruleAccounts = liveAccounts.map((a) => ({ id: a.id, label: `${a.name} (${g(`platforms.${a.platform}`)})` }));
+  const weekdayLabels = [0, 1, 2, 3, 4, 5, 6].map((n) => g(`rules.weekday${n}`));
+  const dateFmt = (iso: string) =>
+    new Date(iso).toLocaleString(view.lang === 'bn' ? 'bn-BD' : 'en-US', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 
   return (
     <div className="a2-z" data-testid="studio-page" data-lm-ready="">
@@ -280,23 +301,40 @@ export default async function StudioPage() {
             {o.posts.map((p) => (
               <li key={p.id} className="adp-rule" data-testid="st-post">
                 <p className="a2-sm adp-sub">
-                  {g(`platforms.${p.platform}`)} <span className={`a2-pill ${p.status === 'SUCCEEDED' ? 'ok' : p.status === 'FAILED' ? 'warn' : 'line'}`}>{g(`posts.status.${p.status}`)}</span>
+                  {g(`platforms.${p.platform}`)}{' '}
+                  <span className={`a2-pill ${p.status === 'SUCCEEDED' ? 'ok' : p.status === 'FAILED' || p.status === 'REJECTED' ? 'warn' : 'line'}`}>{g(`posts.status.${p.status}`)}</span>
                 </p>
                 {p.caption ? <p className="a2-sm a2-mute">{p.caption}</p> : null}
                 {p.status === 'FAILED' && p.error ? <p className="a2-sm a2-mute">{p.error}</p> : null}
                 {p.status === 'SUCCEEDED' ? <p className="a2-sm a2-mute">{g('posts.posted')}</p> : null}
+                {p.scheduledAt && (p.status === 'SCHEDULED' || p.status === 'PENDING_APPROVAL') ? <p className="a2-sm a2-mute">{g('posts.scheduledFor', { at: dateFmt(p.scheduledAt) })}</p> : null}
                 {canPublish && p.status === 'PUBLISHING' ? (
                   <span className="a2-gap8 yt-mt8">
                     <StudioAct texts={texts} body={{ action: 'post.run', id: p.id }} label={g('posts.run')} testId="st-post-run" done={g('posts.ran')} />
                   </span>
                 ) : null}
                 {p.status === 'PENDING_APPROVAL' ? <p className="a2-sm a2-mute">{g('posts.waitingApproval')}</p> : null}
+                {canApprove && p.status === 'PENDING_APPROVAL' ? (
+                  <span className="yt-mt8">
+                    <StudioDecide texts={texts} id={p.id} w={{ approve: g('posts.decide.approve'), reject: g('posts.decide.reject'), done: g('posts.decide.done') }} />
+                  </span>
+                ) : null}
+                {canGenerate && (p.status === 'PENDING_APPROVAL' || p.status === 'SCHEDULED') ? (
+                  <span className="yt-mt8">
+                    <StudioReschedule texts={texts} id={p.id} scheduledAt={p.scheduledAt} w={{ label: g('posts.reschedule.label'), save: g('posts.reschedule.save'), clear: g('posts.reschedule.clear'), saved: g('posts.reschedule.saved') }} />
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>
         ) : (
           <p className="a2-sm a2-mute yt-mt8">{g('posts.empty')}</p>
         )}
+        {canPublish ? (
+          <p className="yt-mt8">
+            <StudioAct texts={texts} body={{ action: 'schedule.runDue' }} label={g('runDue.button')} testId="st-run-due" done={g('runDue.done')} />
+          </p>
+        ) : null}
         {canGenerate ? (
           <details className="a2-mt12 a2-more-opts" data-testid="st-add-post" open={!o.posts.length}>
             <summary className="a2-sm a2-b">{g('posts.addH')}</summary>
@@ -312,8 +350,88 @@ export default async function StudioPage() {
                 caption: g('f.caption'),
                 captionPh: g('posts.captionPh'),
                 captionHelp: g('posts.captionHelp'),
+                scheduledAt: g('posts.scheduledAt'),
+                scheduledAtHelp: g('posts.scheduledAtHelp'),
                 queue: g('posts.queue'),
                 queued: g('posts.queued'),
+              }}
+            />
+          </details>
+        ) : null}
+      </section>
+
+      <section className="a2-sc a2-mt12" aria-labelledby="st-cal-h" data-testid="st-calendar">
+        <h2 className="a2-h3" id="st-cal-h">
+          {g('calendar.h')}
+        </h2>
+        <p className="a2-sm a2-mute">{g('calendar.d')}</p>
+        {o.calendar.length ? (
+          <ul className="adp-rules">
+            {o.calendar.map((day) => (
+              <li key={day.date} className="adp-rule" data-testid="st-calendar-day">
+                <p className="a2-sm adp-sub">{day.date}</p>
+                {day.posts.length ? (
+                  <ul>
+                    {day.posts.map((p) => (
+                      <li key={p.id} className="a2-sm a2-mute">
+                        {g(`platforms.${p.platform}`)} · {g(`posts.status.${p.status}`)}
+                        {p.caption ? ` — ${p.caption.slice(0, 60)}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="a2-sm a2-mute">{g('calendar.dayEmpty')}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="a2-sm a2-mute yt-mt8">{g('calendar.empty')}</p>
+        )}
+      </section>
+
+      <section className="a2-sc a2-mt12" aria-labelledby="st-rules-h" data-testid="st-rules">
+        <h2 className="a2-h3" id="st-rules-h">
+          {g('rules.h')}
+        </h2>
+        <p className="a2-sm a2-mute">{g('rules.d')}</p>
+        {o.scheduleRules.length ? (
+          <ul className="adp-rules">
+            {o.scheduleRules.map((r) => (
+              <li key={r.id} className="adp-rule" data-testid="st-rule">
+                <p className="a2-sm adp-sub">
+                  {r.archived ? <span className="a2-pill line">{g('rules.archived')}</span> : <span className={`a2-pill ${r.enabled ? 'ok' : 'line'}`}>{g(r.enabled ? 'rules.on' : 'rules.off')}</span>}
+                </p>
+                <p className="a2-sm a2-mute">
+                  {g('rules.postsPerDay')}: {r.cadence.postsPerDay} · {g('rules.reelsPerDay')}: {r.cadence.reelsPerDay}
+                </p>
+                {r.cadence.activeWeekdays.length ? <p className="a2-sm a2-mute">{r.cadence.activeWeekdays.map((wd) => weekdayLabels[wd]).join(', ')}</p> : null}
+                <p className="a2-sm a2-mute">{r.nextActiveDay ? g('rules.nextActiveDay', { date: r.nextActiveDay }) : g('rules.noNextActiveDay')}</p>
+                {canWrite ? <StudioScheduleRuleControls texts={texts} id={r.id} version={r.version} enabled={r.enabled} archived={r.archived} w={{ turnOn: g('rules.turnOn'), turnOff: g('rules.turnOff'), archive: g('rules.archive'), restore: g('rules.restore'), saved: g('rules.saved') }} /> : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="a2-sm a2-mute yt-mt8">{g('rules.empty')}</p>
+        )}
+        {canWrite ? (
+          <details className="a2-mt12 a2-more-opts" data-testid="st-add-rule" open={!o.scheduleRules.length}>
+            <summary className="a2-sm a2-b">{g('rules.addH')}</summary>
+            <StudioScheduleRuleForm
+              texts={texts}
+              accounts={ruleAccounts}
+              w={{
+                account: g('rules.account'),
+                anyAccount: g('rules.anyAccount'),
+                postsPerDay: g('rules.postsPerDay'),
+                reelsPerDay: g('rules.reelsPerDay'),
+                weekdays: g('rules.weekdays'),
+                weekdayLabels,
+                categoryIds: g('rules.categoryIds'),
+                categoryIdsPh: g('rules.categoryIdsPh'),
+                categoryIdsHelp: g('rules.categoryIdsHelp'),
+                add: g('rules.add'),
+                added: g('rules.added'),
               }}
             />
           </details>
