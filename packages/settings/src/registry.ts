@@ -98,6 +98,7 @@ import { blogImageSettings } from './registry-blog-images';
 import { houseAdSettings } from './registry-house-ads';
 import { blogPipelineSettings } from './registry-blog-pipeline';
 import { geoGuideSettings } from './registry-geo-guide';
+import { adsIntelSettings } from './registry-ads-intel';
 import { merchantFeedSettings } from './registry-merchant-feed';
 import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
@@ -1545,6 +1546,8 @@ export const registry = {
   ...studioSettings,
   // ---- S25 · PR 482 (Blueprint C8.1, C8.2) · the image-to-video engine's master switch and its cost-per-second rate, off / 0 (registry-creative-studio-video.ts, version 282). ----
   ...studioVideoSettings,
+  // ---- S13 · PR 548 · market and competitor intelligence: change alerts, off (registry-ads-intel.ts, version 290). ----
+  ...adsIntelSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

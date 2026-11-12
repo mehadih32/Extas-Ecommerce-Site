@@ -250,4 +250,6 @@ export * from './eye-toggles';
 export * from './placeholder';
 // S23 · PR 437 — the social studio's cadence, voice and AI-caption switches, off as it ships (registry-studio.ts, version 281).
 export * from './registry-studio';
+// S13 · PR 548 — market and competitor intelligence, proposals only (registry-ads-intel.ts, version 290).
+export * from './registry-ads-intel';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

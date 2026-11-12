@@ -120,6 +120,7 @@
     { "id": "website/blog-pipeline", "route": "/admin/website/blog/pipeline" },
     { "id": "marketing/geo-guide", "route": "/admin/marketing/geo-guide" },
     { "id": "marketing/merchant-feed", "route": "/admin/marketing/merchant-feed" },
+    { "id": "marketing/intel", "route": "/admin/marketing/intel" },
     { "id": "money/overview", "route": "/admin/money" },
     { "id": "money/refunds", "route": "/admin/money/refunds" },
     { "id": "money/cost-ledger", "route": "/admin/money/cost-ledger" },
