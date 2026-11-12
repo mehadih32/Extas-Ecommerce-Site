@@ -76,7 +76,7 @@ export function Field({ f, value, set, missing, id, label }: { f: FieldSpec; val
       ) : f.kind === 'textarea' ? (
         <textarea id={id} className="a2-ta" rows={2} value={String(value)} placeholder={f.placeholder} maxLength={f.maxLength} onChange={(e) => set(e.target.value)} {...err} />
       ) : (
-        <input id={id} className="a2-inp" value={String(value)} placeholder={f.placeholder} maxLength={f.maxLength} onChange={(e) => set(e.target.value)} {...err} />
+        <input id={id} className="a2-inp" value={String(value)} placeholder={f.placeholder} maxLength={f.maxLength} onChange={(e) => set(e.target.value)} {...(f.secret ? { type: 'password', inputMode: 'numeric' as const, autoComplete: 'off' } : {})} {...err} />
       )}
     </div>
   );
