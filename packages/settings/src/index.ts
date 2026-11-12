@@ -256,4 +256,6 @@ export * from './registry-photoshoot';
 export * from './registry-photoshoot-cost';
 // S24 · PR 462 — the on-model-vs-flat-lay live pilot's own cohort, empty/off by default (registry-photoshoot-pilot.ts, version 292).
 export * from './registry-photoshoot-pilot';
+// S24 · PR 470 — the category recipe framework's own owner-editable overrides, empty/off by default (registry-photoshoot-recipes.ts, version 293).
+export * from './registry-photoshoot-recipes';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

@@ -142,6 +142,7 @@ import { photoshootCostSettings } from './registry-photoshoot-cost';
 import { photoshootQueueSettings } from './registry-photoshoot-queue';
 import { photoshootQualitySettings } from './registry-photoshoot-quality';
 import { photoshootPilotSettings } from './registry-photoshoot-pilot';
+import { photoshootRecipeSettings } from './registry-photoshoot-recipes';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
@@ -1557,6 +1558,8 @@ export const registry = {
   ...photoshootQualitySettings,
   // ---- S24 · PR 462 · the on-model-vs-flat-lay live pilot's own cohort, empty/off by default (registry-photoshoot-pilot.ts, version 292). ----
   ...photoshootPilotSettings,
+  // ---- S24 · PR 470 · the category recipe framework's own owner-editable overrides, empty/off by default (registry-photoshoot-recipes.ts, version 293). ----
+  ...photoshootRecipeSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

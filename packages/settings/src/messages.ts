@@ -153,6 +153,9 @@ import photoshootQualityEn from '../messages/photoshoot-quality.en.json';
 // S24 · PR 462 (registry v292): the on-model-vs-flat-lay live pilot's own cohort.
 import photoshootPilotBn from '../messages/photoshoot-pilot.bn.json';
 import photoshootPilotEn from '../messages/photoshoot-pilot.en.json';
+// S24 · PR 470 (registry v293): the category recipe framework's own owner-editable overrides.
+import photoshootRecipesBn from '../messages/photoshoot-recipes.bn.json';
+import photoshootRecipesEn from '../messages/photoshoot-recipes.en.json';
 import blogCommentsBn from '../messages/blog-comments.bn.json';
 import blogCommentsEn from '../messages/blog-comments.en.json';
 import blogImagesBn from '../messages/blog-images.bn.json';
@@ -469,6 +472,9 @@ messages.bn = mergeMessages(messages.bn, photoshootQualityBn);
 // S24 · PR 462 (registry v292): the on-model-vs-flat-lay live pilot's own cohort.
 messages.en = mergeMessages(messages.en, photoshootPilotEn);
 messages.bn = mergeMessages(messages.bn, photoshootPilotBn);
+// S24 · PR 470 (registry v293): the category recipe framework's own owner-editable overrides.
+messages.en = mergeMessages(messages.en, photoshootRecipesEn);
+messages.bn = mergeMessages(messages.bn, photoshootRecipesBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {
