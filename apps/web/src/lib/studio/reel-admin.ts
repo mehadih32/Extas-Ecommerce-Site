@@ -2,11 +2,13 @@
 // handful of already-APPROVED clips (PR 484's review/approve step), an optional music track, text/logo overlay
 // choices and the output shapes to cut it for. GET lists built reels and the pickable approved clips
 // (`marketing.studio.read`); POST {action: 'build', input} builds one, or {action: 'archive' | 'restore', reelId}
-// sets a still-DRAFT reel aside or brings it back (`marketing.studio.write`). Nothing is composited yet — that is
-// PR 486.
+// sets a still-DRAFT reel aside or brings it back (`marketing.studio.write`).
+//
+// S25 · PR 486 — {action: 'assemble', reelId} (`marketing.studio.write`) assembles a DRAFT reel: the honest-preview
+// compositor, never a real stitch — see `@extas/creative-studio`'s `reel.ts` header comment.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import type { Actor, RequestContext } from '@extas/auth';
-import { approvedClipsForReel, buildReel, listReels, setReelArchived, StudioError, type ReelView, type StudioDeps } from '@extas/creative-studio';
+import { approvedClipsForReel, assembleReel, buildReel, listReels, setReelArchived, StudioError, type ReelView, type StudioDeps } from '@extas/creative-studio';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 
 const S = MOTHER_STORE_ID;
@@ -24,8 +26,8 @@ export async function reelsOverview(deps: AdminDeps, sd: StudioDeps): Promise<Re
 const isUuidLike = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v);
 
 /**
- * /api/admin/marketing/studio/reels — GET the overview (`marketing.studio.read`); POST {action: 'build', input} or
- * {action: 'archive' | 'restore', reelId} (`marketing.studio.write`).
+ * /api/admin/marketing/studio/reels — GET the overview (`marketing.studio.read`); POST {action: 'build', input},
+ * {action: 'assemble', reelId} or {action: 'archive' | 'restore', reelId} (`marketing.studio.write`).
  */
 export async function reelsHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
   const method = request.method.toUpperCase();
@@ -39,6 +41,10 @@ export async function reelsHandler(request: Request, deps: AdminDeps | null): Pr
   try {
     if (method === 'GET') return json({ ok: true, ...(await reelsOverview(deps!, sd)) });
     if (b.action === 'build') return json({ ok: true, reel: await buildReel(sd, who, b.input) });
+    if (b.action === 'assemble') {
+      if (!isUuidLike(b.reelId)) throw new StudioError('INVALID_INPUT', 'a reel id is needed', ['reelId']);
+      return json({ ok: true, reel: await assembleReel(sd, who, b.reelId) });
+    }
     if (b.action === 'archive' || b.action === 'restore') {
       if (!isUuidLike(b.reelId)) throw new StudioError('INVALID_INPUT', 'a reel id is needed', ['reelId']);
       return json({ ok: true, reel: await setReelArchived(sd, who, b.reelId, b.action === 'archive') });

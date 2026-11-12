@@ -3,6 +3,9 @@
 // music track, text/logo overlay choices and the output shapes to cut it for. POST {action: 'build', input} on
 // /api/admin/marketing/studio/reels. The API checks the permission and every rule again; the page is read again
 // after a build. Setting a DRAFT reel aside or back is {action: 'archive' | 'restore', reelId}.
+//
+// S25 · PR 486 — {action: 'assemble', reelId} fills in the honest-preview output, one per shape; `ReelAssemble` is
+// the button for a reel still waiting (or one that failed and can be tried again).
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { VIDEO_ASPECTS, type VideoAspect } from '@extas/adapters/video';
@@ -30,6 +33,10 @@ export interface ReelTexts {
   build: string;
   building: string;
   built: string;
+  assemble: string;
+  assembling: string;
+  assembled: string;
+  assembleNote: string;
   archive: string;
   archiving: string;
   restore: string;
@@ -133,6 +140,35 @@ export function ReelBuilder({ url, approvedClips, texts: x }: { url: string; app
         ) : null}
       </div>
     </div>
+  );
+}
+
+/** Assembles a DRAFT (or previously FAILED) reel — the honest-preview compositor, one output per shape, never a
+ * real stitched video yet (no encoder in the stack). */
+export function ReelAssemble({ url, reelId, texts: x }: { url: string; reelId: string; texts: ReelTexts }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [out, setOut] = useState<Out>(null);
+  async function go() {
+    setBusy(true);
+    setOut(null);
+    const a = await call('POST', url, { action: 'assemble', reelId });
+    setBusy(false);
+    if (a.status !== 200) return setOut({ text: errText(a, x.err), bad: true });
+    showToast({ text: x.assembled, tone: 'ok' });
+    router.refresh();
+  }
+  return (
+    <span className="adp-read">
+      <button type="button" className="a2-btn pri sm" disabled={busy} onClick={() => void go()} data-testid="reel-assemble">
+        {busy ? x.assembling : x.assemble}
+      </button>
+      {out ? (
+        <span className={`a2-sm${out.bad ? ' adp-bad' : ''}`} role="status" aria-live="polite" data-testid="reel-assemble-out">
+          {out.text}
+        </span>
+      ) : null}
+    </span>
   );
 }
 
