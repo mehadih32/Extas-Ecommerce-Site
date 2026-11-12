@@ -127,6 +127,7 @@
     "marketingLandingTemplates": "Landing page templates",
     "marketingStudio": "Studio",
     "marketingStudioMotion": "Motion library",
+    "marketingStudioModels": "Model library",
     "marketingStudioVideos": "Videos",
     "marketingSeasonal": "Seasonal pages",
     "marketingSeasonalPage": "Seasonal page editor",
@@ -637,6 +638,23 @@
         "appUrl": "Your site's address — optional, OpenRouter shows it with your usage",
         "appName": "Your shop's name — optional, OpenRouter shows it with your usage",
         "apiKey": "API key (openrouter.ai → Keys)"
+      }
+    },
+    "fashn": {
+      "name": "FASHN AI (Photoshoot Studio)",
+      "desc": "Puts the garment on a fixed model photo (virtual try-on) for the Photoshoot Studio. Practice images only until the key is in and the test passes. Several providers may be connected at once, so quality or price can be compared.",
+      "fields": {
+        "tier": "Tier — tryon-v1.6 (baseline) or tryon-max (premium, up to 4K) — optional, baseline if left blank",
+        "baseUrl": "Address — only for a test server",
+        "apiKey": "API key (FASHN's developer dashboard)"
+      }
+    },
+    "fitroom": {
+      "name": "Fitroom (Photoshoot Studio)",
+      "desc": "A second virtual try-on provider for the Photoshoot Studio, to compare against FASHN on price or quality. Practice images only until the key is in and the test passes.",
+      "fields": {
+        "baseUrl": "Address — only for a test server",
+        "apiKey": "API key (Fitroom's developer dashboard)"
       }
     }
   },

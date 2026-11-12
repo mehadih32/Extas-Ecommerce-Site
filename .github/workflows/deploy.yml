@@ -149,6 +149,15 @@ jobs:
           sudo cp /srv/extas/state/last-deploy.json "$RUNNER_TEMP/deploy-record.json" 2>/dev/null || true
           sudo env EXTAS_DEPLOY_RUN_ID="$GITHUB_RUN_ID" bash infra/deploy/deploy.sh rollback
 
+      # CN-046 (12 Nov 2026, deploy run 43227644499): whatever the step above just reported, check again, directly,
+      # what is actually answering — so if the rollback step itself also fails, the report below never has to guess
+      # (or trust a message alone) which version is live; it reads this fresh answer. always(): runs whether the
+      # rollback above succeeded or failed.
+      - name: Confirm what is live after a failed smoke test
+        if: always() && steps.smoke.outcome == 'failure'
+        continue-on-error: true
+        run: sudo bash infra/deploy/deploy.sh public-health | tee "$RUNNER_TEMP/post-rollback-health.json"
+
       - name: What happened
         if: always() && steps.order.outputs.skip != 'true'
         run: sudo cat /srv/extas/state/last-deploy.json 2>/dev/null || true
@@ -178,7 +187,7 @@ jobs:
           rec=(); [ -f "$RUNNER_TEMP/deploy-record.json" ] && rec=(DEPLOY_JSON="$RUNNER_TEMP/deploy-record.json")
           sudo env SHA="$SHA" RUN_ID="$GITHUB_RUN_ID" RUN_URL="$RUN_URL" ROLLBACK="$ROLLBACK" CHECKOUT="$CHECKOUT" \
             DISK="${DISK:-}" DISK_JSON="$RUNNER_TEMP/disk.json" BUILD="${BUILD:-skipped}" DEPLOY="${DEPLOY:-skipped}" DOCS="${DOCS:-}" HEALTH_JSON="$RUNNER_TEMP/health.json" \
-            SMOKE="${SMOKE:-}" SMOKE_ROLLBACK="${SMOKE_ROLLBACK:-}" "${rec[@]}" \
+            SMOKE="${SMOKE:-}" SMOKE_ROLLBACK="${SMOKE_ROLLBACK:-}" POST_ROLLBACK_JSON="$RUNNER_TEMP/post-rollback-health.json" "${rec[@]}" \
             bash infra/deploy/deploy-report.sh "$out"
           smoke="$RUNNER_TEMP/smoke"; [ -f "$smoke/README.md" ] && sudo chown -R "$(id -u):$(id -g)" "$smoke"
           acc="$RUNNER_TEMP/erp-acceptance"; [ -f "$acc/README.md" ] && sudo chown -R "$(id -u):$(id -g)" "$acc"

@@ -27,6 +27,27 @@ rollback_target() {
   printf '%s %s\n' "$web" "$(worker_image_of "$web" "$worker")"
 }
 
+# CN-046 (12 Nov 2026, deploy run 43227644499): a rollback that only ever tries the ONE immediately-previous image
+# has no fallback at all when that single image is gone (a prior interrupted run, a manual clean-up, disk pressure,
+# the local NVMe being raw on every boot per PR 601 — whatever the reason, the automatic rollback used to just die,
+# leaving the untested new version live with nothing restored). Every past successful, non-rollback deploy still has
+# its own record in <deploys dir> (deploy.sh's record(), one file per attempt); this walks them newest first so
+# deploy.sh's rollback can keep trying older-but-still-present good versions instead of giving up after one.
+#   rollback_history <deploys dir> <the image currently live>   → "<web image> <worker image>" per line, newest first
+rollback_history() {
+  local dir="$1" live="${2:-}" f web worker
+  [ -d "$dir" ] || return 0
+  for f in $(ls -1 "$dir"/*.json 2>/dev/null | sort -r); do
+    [ "$(jq -r '.result // empty' "$f" 2>/dev/null || true)" = ok ] || continue
+    # R1 ops review (M3), same rule as rollback_target: the version a rollback itself left is the broken one.
+    [ "$(jq -r '.kind // "deploy"' "$f" 2>/dev/null || true)" != rollback ] || continue
+    web="$(jq -r '.image // empty' "$f" 2>/dev/null || true)"
+    [ -n "$web" ] && [ "$web" != "$live" ] || continue
+    worker="$(worker_image_of "$web" "$(jq -r '.worker_image // empty' "$f" 2>/dev/null || true)")"
+    printf '%s %s\n' "$web" "$worker"
+  done | awk '!seen[$1]++'
+}
+
 # Every image the records still need (the live version and its rollback target, web and worker), one per line.
 #   needed_images <deploy record>...
 needed_images() {

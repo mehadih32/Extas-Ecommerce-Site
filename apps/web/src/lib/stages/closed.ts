@@ -16,7 +16,10 @@
 //   the stage is finished and gated (`stages.closedShown.S23`).
 // - S25 (CN-039, reopened 11 Nov 2026): the Studio tab under Marketing (`marketing.studio`, PR 481) and its pages as
 //   PR 482–490 add them. The whole tab stays hidden until the stage is finished and gated (`stages.closedShown.S25`).
-// - S24, S26, S27: nothing built.
+// - S24 (CN-039, reopened 11 Nov 2026): the same shared Studio tab under Marketing (`marketing.studio`, PR 445's
+//   model library) and its pages as PR 446–480 add them. The whole tab stays hidden until S23, S24 and S25 are all
+//   finished and gated (`stages.closedShown.S24`), same shared-infra reasoning as S23/S25 above.
+// - S26, S27: nothing built.
 import type { AdminDeps } from '../admin-auth';
 import { CLOSED_STAGES, CLOSED_STAGES_SHOWN_DEFAULT, type ClosedStage, type ClosedStagesShown } from '@extas/settings';
 
@@ -37,7 +40,7 @@ export const CLOSED_STAGE_PARTS: Readonly<Record<ClosedStage, StageParts>> = {
   S15: { ...NONE, sections: ['ai'], widgets: ['assistant'] },
   S17: NONE,
   S23: { ...NONE, tabs: ['marketing.studio'] },
-  S24: NONE,
+  S24: { ...NONE, tabs: ['marketing.studio'] },
   S25: { ...NONE, tabs: ['marketing.studio'] },
   S26: NONE,
   S27: NONE,

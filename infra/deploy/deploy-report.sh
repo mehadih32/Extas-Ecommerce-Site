@@ -14,7 +14,12 @@
 # outcome, PR 594) with DOCS_JSON (default $EXTAS_ROOT/state/docs-latest.json, used only when it is this commit's);
 # SMOKE and SMOKE_ROLLBACK (the smoke test's and its rollback's outcomes, CN-016) with SMOKE_JSON (default
 # $EXTAS_ROOT/state/smoke.json, smoke.sh's result); DISK (the main-disk check's outcome, PR 4 follow-up 31 Oct) with
-# DISK_JSON (disk-tidy.sh's numbers).
+# DISK_JSON (disk-tidy.sh's numbers). POST_ROLLBACK_JSON (CN-046, 12 Nov 2026): deploy.sh public-health's line, taken
+# again right after a failed smoke test's rollback attempt (success or failure) — a fresh, direct check of what is
+# actually answering on the staging host, so when the rollback step itself also fails the report never has to guess
+# which version (the old one or the untested new one) ended up live; it says so in one unmissable line, from this
+# check when it is there, else from deploy.sh's own guarantee that a failed rollback always leaves whatever was live
+# when it started (the new, untested version) exactly as it was.
 set -euo pipefail
 OUT="${1:?usage: deploy-report.sh <out-dir>}"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
@@ -108,7 +113,21 @@ case "${SMOKE:-}" in
       failed="The new version went live, but the smoke test found a problem (${p:-see the run log}), so the previous version was put back automatically. The fix comes before any new work."
     else
       result="FAILED, ROLLBACK FAILED"
-      failed="The smoke test found a problem (${p:-see the run log}) and putting the previous version back failed too (see the run log)."
+      # CN-046: never leave it to the reader to guess which version is live. deploy.sh's own rule is that a failed
+      # rollback always leaves whatever was already live (the new, untested version) exactly as it was — that is
+      # true whether it died before touching anything or had to give the traffic back after a failed switch check.
+      # A fresh check right after the attempt (POST_ROLLBACK_JSON) confirms it directly when it is there; either
+      # way the line below says plainly which one it is, in bold, on its own.
+      live_now="**the NEW version just deployed, commit \`$short\`, is the one still live** on $HOST (putting the old one back failed too)"
+      if [ -n "${POST_ROLLBACK_JSON:-}" ] && [ -s "${POST_ROLLBACK_JSON:-/nonexistent}" ] && jq -e . "$POST_ROLLBACK_JSON" >/dev/null 2>&1; then
+        pc="$(clean "$(jq -r '.commit // ""' "$POST_ROLLBACK_JSON")")"
+        if [ -n "$pc" ] && [ "${pc:0:12}" != "$short" ]; then
+          live_now="**the OLD version, commit \`${pc:0:12}\`, is the one live** on $HOST (checked again right after the failed rollback step — it answered as the old version even though the step itself reported failure)"
+        elif [ -n "$pc" ]; then
+          live_now="**the NEW version just deployed, commit \`$short\`, is the one still live** on $HOST (checked again right after the failed rollback step; putting the old one back failed too)"
+        fi
+      fi
+      failed="The smoke test found a problem (${p:-see the run log}). $live_now. See the run log for why the rollback itself failed."
     fi ;;
 esac
 

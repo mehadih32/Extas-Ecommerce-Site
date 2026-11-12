@@ -210,6 +210,72 @@
         "restore": "Bring back",
         "archive": "Set aside"
       },
+      "models": {
+        "metaTitle": "Model library — Studio",
+        "title": "Model library",
+        "sub": "Your own human models for on-model photos: a name, build details, their own reference photos per angle, and their rights/consent record. Nothing here generates an image yet — that starts at a later PR, and it will refuse to run without a valid, unexpired consent record on file.",
+        "name": "Name",
+        "gender": "Gender",
+        "ageGroup": "Age group",
+        "kind": "Kind",
+        "heightCm": "Height (cm)",
+        "sizeWorn": "Size worn",
+        "shared": "Shared with every store",
+        "add": "Add model",
+        "adding": "Adding…",
+        "added": "Model added.",
+        "archive": "Archive",
+        "restore": "Restore",
+        "confirmArchive": "Archive this model? Nothing is deleted — restore it any time.",
+        "yes": "Yes, archive",
+        "cancel": "Cancel",
+        "archived": "Archived",
+        "own": "Your own",
+        "empty": "No model in the library yet.",
+        "kinds": {
+          "full_body": "Full body",
+          "part": "Part model (hands, feet, …)"
+        },
+        "angles": {
+          "front": "Front",
+          "three_quarter": "Three-quarter",
+          "side": "Side",
+          "back": "Back",
+          "walking": "Walking",
+          "seated": "Seated"
+        },
+        "asset": {
+          "h": "Reference photos",
+          "assetId": "File id (from the Media library)",
+          "angle": "Angle",
+          "add": "Link photo",
+          "added": "Linked.",
+          "remove": "Unlink",
+          "empty": "No reference photo linked yet."
+        },
+        "consent": {
+          "h": "Rights / consent",
+          "scope": "What the consent covers",
+          "grantedAt": "Granted on",
+          "expiresAt": "Expires on (optional)",
+          "documentAssetId": "Signed document's file id (optional)",
+          "add": "Record consent",
+          "added": "Recorded.",
+          "empty": "No consent record on file yet — generation will refuse to run for this model.",
+          "valid": "Valid",
+          "expired": "Expired",
+          "neverExpires": "Never expires"
+        },
+        "err": {
+          "INVALID_INPUT": "Check the fields: {fields}.",
+          "NOT_FOUND": "Not found — it may have been changed by someone else just now.",
+          "SOURCE_INVALID": "That file id was not found in this store, or is itself an AI-generated image.",
+          "forbidden": "You don't have the permission for that.",
+          "unauthorized": "Sign in again to continue.",
+          "network": "Could not reach the server — check your connection.",
+          "other": "Something went wrong — try again."
+        }
+      },
       "renders": {
         "h": "Generated content",
         "d": "Pick a template and the products to feature; queue it, then generate it. Today's result is a preview only — your product's own existing photo, not yet a real composite. Real video/image composition and posting come in later PRs.",

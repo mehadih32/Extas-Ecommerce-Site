@@ -70,6 +70,9 @@ importers:
       '@extas/payments':
         specifier: workspace:*
         version: link:../../packages/payments
+      '@extas/photoshoot':
+        specifier: workspace:*
+        version: link:../../packages/photoshoot
       '@extas/rules':
         specifier: workspace:*
         version: link:../../packages/rules
