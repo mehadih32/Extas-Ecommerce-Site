@@ -1,16 +1,13 @@
 {
-  "at": "2026-11-12 18:54 (Asia/Dhaka)",
+  "at": "2026-11-12 20:25 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "4893f4decdfb",
-  "kind": "after deploy",
-  "rolledBack": true,
-  "ok": false,
+  "sha": "97c648bfa222",
+  "kind": "nightly",
+  "rolledBack": false,
+  "ok": true,
   "pages": 566,
   "failed": 0,
-  "problems": [
-    "/reset: answered 401 with no cookie at all, expected 200 (no auth)",
-    "/reset: no Clear-Site-Data \"cookies\" header (got \"\")"
-  ],
+  "problems": [],
   "database": {
     "appendOnly": "ok: 36 tables append-only",
     "appRole": "extas_app"

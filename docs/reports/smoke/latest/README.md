@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-12 18:54 (Asia/Dhaka)
+# Smoke test · 2026-11-12 20:25 (Asia/Dhaka)
 
-> **বাংলায়:** 0টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (566টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `4893f4decdfb` · after deploy · result **FAIL** (566 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `97c648bfa222` · nightly · result **PASS** (566 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -285,7 +285,7 @@ Site: https://new.extas.com.bd · commit `4893f4decdfb` · after deploy · resul
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | phone | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
-| `/admin/reports/health/history/01a1cf9c-42df-74b1-8c0b-65cad6647c8d` | phone | 200 | `/admin/reports/health/history/01a1cf9c-42df-74b1-8c0b-65cad6647c8d` | ok | — |
+| `/admin/reports/health/history/01a1cfdc-04f8-75d3-a735-4b86239313f0` | phone | 200 | `/admin/reports/health/history/01a1cfdc-04f8-75d3-a735-4b86239313f0` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -568,14 +568,9 @@ Site: https://new.extas.com.bd · commit `4893f4decdfb` · after deploy · resul
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | desktop | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
-| `/admin/reports/health/history/01a1cf9c-42df-74b1-8c0b-65cad6647c8d` | desktop | 200 | `/admin/reports/health/history/01a1cf9c-42df-74b1-8c0b-65cad6647c8d` | ok | — |
+| `/admin/reports/health/history/01a1cfdc-04f8-75d3-a735-4b86239313f0` | desktop | 200 | `/admin/reports/health/history/01a1cfdc-04f8-75d3-a735-4b86239313f0` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
-
-Other problems:
-
-- /reset: answered 401 with no cookie at all, expected 200 (no auth)
-- /reset: no Clear-Site-Data "cookies" header (got "")
 
 Database (PR 139): ok: 36 tables append-only; the app connects as extas_app.
