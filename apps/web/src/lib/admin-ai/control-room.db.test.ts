@@ -1,0 +1,430 @@
+// S15 · PR 304 — AI › Control room on PostgreSQL (/api/admin/ai): the seven fixed agents appear once, off, with no
+// cost and no activity until something real happens; `ai.read` opens it, `ai.control` alone pauses or resumes one
+// agent (reversible, audited, a double tap writes once); an unknown agent key or a missing field is refused; costs
+// are summed from AiUsageLedger inside the store's own day and month, never a later or earlier one. A throwaway
+// database (skipped without TEST_DATABASE_ADMIN_URL, like every other `.db.test.ts`).
+//
+// S15 · PR 305 — the same route also flips the business-wide master switch ({master}, `ai.control`, a SettingChange
+// not a second AuditLog) and one agent's "keep running even with the master off" ({key, keepOnWhenMasterOff},
+// `ai.control`, audited); both are a no-op on a double tap, and `workingNow` is true whenever an agent is on AND
+// (the master is on OR it is kept on).
+//
+// S15 · PR 307 — the same route also takes {key, provider} (one agent's model pick). On a fresh installation every
+// option but the practice writer is "not ready" and `recommendedProvider` is null; picking an un-Tested or unknown
+// provider is refused (422); once a PR 306 connection is enabled and Tested (mode LIVE), it becomes ready, the
+// recommendation picks it up, and an agent may be pointed at it (audited `ai.agent.model`, idempotent).
+//
+// S15 · PR 308 — the same route also takes {key, schedule} (one agent's own schedule: always/daily/weekly). On a
+// fresh installation every agent reads as "always" with no next-run preview; a bad shape is refused (422
+// INVALID_SCHEDULE); a valid daily/weekly schedule's `nextRunAt` is computed in the store's own time zone, a double
+// tap writes once, and `{schedule: null}` resets to "always".
+//
+// S15 · PR 309 — the same route also takes {key, monthlyCapMinor} (one agent's own monthly spend cap). On a fresh
+// installation every agent reads no cap (capState "none"); a bad value is refused (422 INVALID_CAP); a cap honestly
+// moves ok → warned (80%+) → paused (100%+) as this month's real AiUsageLedger spend crosses it, a double tap writes
+// once, and `{monthlyCapMinor: null}` turns it off again. `checkAgentCapAlerts` (called straight, not through the
+// route, same as `ad-alerts.db.test.ts` calls `sendCostAlerts` straight) sends the owner's Telegram warning once per
+// crossing per month, deduplicated through the audit log.
+//
+// S15 · PR 310 — every agent now also carries its own fixed `dataClass` and, built from it, `effectiveProvider`/
+// `routingDowngraded`: personal/business agents never effectively use the free-capable connection (OpenRouter)
+// even when the owner picks it and it is ready — the screen routes to the cheapest ready paid connection instead
+// (or honestly to the practice writer when none is ready yet); public/draft agents may use it as picked.
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
+import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
+import { MOTHER_STORE_ID } from '@extas/db/client';
+import { INSTALLATION, messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
+import { createVault } from '@extas/vault';
+import { moneyOf } from '@/components/admin/products/model';
+import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
+import type { AdminDeps } from '../admin-auth';
+import { controlRoomHandler } from './control-room-api';
+import { checkAgentCapAlerts } from './spend-cap';
+
+const HOST = 'admin.example.test';
+const OWNER_PW = 'a long sentence for the tests';
+
+function call(method: string, opts: { body?: unknown; cookie?: string } = {}) {
+  const headers: Record<string, string> = { host: HOST, 'user-agent': 'SampleBrowser/1.0', 'x-forwarded-for': '192.0.2.44' };
+  if (method !== 'GET') headers.origin = `https://${HOST}`;
+  if (opts.cookie) headers.cookie = opts.cookie;
+  if (opts.body !== undefined) headers['content-type'] = 'application/json';
+  return new Request(`https://${HOST}/api/admin/ai`, { method, headers, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) });
+}
+
+const cookiesOf = (res: Response) =>
+  res.headers
+    .getSetCookie()
+    .map((c) => c.split(';')[0] ?? '')
+    .filter((c) => c && !c.endsWith('='))
+    .join('; ');
+
+interface Agent {
+  key: string;
+  enabled: boolean;
+  keepOnWhenMasterOff: boolean;
+  workingNow: boolean;
+  lastActivity: { summaryBn: string; at: string } | null;
+  todayMinor: number;
+  monthMinor: number;
+  selectedProvider: string | null;
+  selectedReady: boolean;
+  schedule: { mode: string; time?: string; days?: number[] };
+  nextRunAt: string | null;
+  monthlyCapMinor: number | null;
+  capState: string;
+  dataClass: string;
+  effectiveProvider: string | null;
+  routingDowngraded: boolean;
+}
+interface ModelOption {
+  provider: string | null;
+  modelId: string | null;
+  ready: boolean;
+}
+interface View {
+  masterOn: boolean;
+  monthlyCapMinor: number | null;
+  todayMinor: number;
+  monthMinor: number;
+  runningNow: number;
+  agentCount: number;
+  modelOptions: ModelOption[];
+  recommendedProvider: string | null;
+}
+interface Answer {
+  ok: boolean;
+  error?: string;
+  details?: string[];
+  view: View;
+  agents: Agent[];
+}
+
+describe.skipIf(!HAS_TEST_DB)('AI › Control room on PostgreSQL (PR 304)', () => {
+  let t: TestDatabase;
+  let deps: AdminDeps;
+  let owner = '';
+  let reader = '';
+  let controller = '';
+  const now = new Date('2026-11-11T10:00:00Z'); // 2026-11-11 16:00 Asia/Dhaka
+
+  const staff = async (email: string, perms: string[]) => {
+    const role = await rolesHandler(call('POST', { cookie: owner, body: { nameEn: email, nameBn: email, permissions: perms } } as never), deps);
+    const roleId = ((await role.json()) as { role: { id: string } }).role.id;
+    const made = await staffHandler(call('POST', { cookie: owner, body: { email, displayName: email, password: 'first password from the owner' } } as never), deps);
+    const staffId = ((await made.json()) as { staff: { id: string } }).staff.id;
+    await staffRolesHandler(call('POST', { cookie: owner, body: { action: 'assign', roleId, storeId: MOTHER_STORE_ID } } as never), deps, staffId);
+    const first = cookiesOf(await loginHandler(call('POST', { body: { email, password: 'first password from the owner' } }), deps));
+    return cookiesOf(await passwordHandler(call('POST', { cookie: first, body: { current: 'first password from the owner', next: 'my own words for this job' } }), deps));
+  };
+  const ask = async (method: string, cookie: string, body?: unknown) => {
+    const res = await controlRoomHandler(call(method, { cookie, body }), deps);
+    return { status: res.status, a: (await res.json()) as Answer };
+  };
+
+  beforeAll(async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    t = await createTestDatabase('web');
+    await seedSampleStores(t.prisma);
+    await syncAuth(t.prisma);
+    await syncSettings(t.prisma, { registry, messages });
+    await createFirstOwner(t.prisma, defaultSecurityPolicy(), { email: 'owner@example.com', displayName: 'Sample owner', password: OWNER_PW, passwordChosenByOwner: true });
+    deps = { db: t.prisma, resolver: new SettingsResolver(prismaBackend(t.prisma), registry), vault: createVault(t.prisma, 'test-master-key-'.padEnd(64, 'k')), now: () => now };
+    owner = cookiesOf(await loginHandler(call('POST', { body: { email: 'owner@example.com', password: OWNER_PW } }), deps));
+    reader = await staff('reader@example.com', ['ai.read']);
+    controller = await staff('controller@example.com', ['ai.read', 'ai.control']);
+  });
+  afterAll(async () => {
+    vi.restoreAllMocks();
+    await t?.drop();
+  });
+
+  it('the seven fixed agents, off, with no activity and no cost on a fresh installation', async () => {
+    const { status, a } = await ask('GET', reader);
+    expect(status).toBe(200);
+    expect(a.view).toMatchObject({ masterOn: false, monthlyCapMinor: null, todayMinor: 0, monthMinor: 0, runningNow: 0, agentCount: 7 });
+    expect(a.agents).toHaveLength(7);
+    expect(new Set(a.agents.map((x) => x.key))).toEqual(new Set(['gyani', 'prohori', 'bhandari', 'sawdagor', 'shilpi', 'doot', 'tirondaj']));
+    for (const ag of a.agents) {
+      expect(ag.enabled).toBe(false);
+      expect(ag.workingNow).toBe(false);
+      expect(ag.lastActivity).toBeNull();
+      expect(ag.todayMinor).toBe(0);
+      expect(ag.monthMinor).toBe(0);
+    }
+    // reading again is unchanged — the identity rows are not re-created on every read
+    const again = (await ask('GET', reader)).a;
+    expect(again.agents).toHaveLength(7);
+  });
+
+  it('only ai.read opens it; only ai.control pauses or resumes an agent', async () => {
+    expect((await ask('GET', 'bad=cookie')).status).toBe(401);
+    expect((await ask('POST', reader, { key: 'doot', enabled: true })).status).toBe(403);
+    const ok = await ask('POST', controller, { key: 'doot', enabled: true });
+    expect(ok.status).toBe(200);
+    expect(ok.a.agents.find((x) => x.key === 'doot')?.enabled).toBe(true);
+    // the master switch is off by default, so the agent is paused, not working, even though it is on
+    expect(ok.a.agents.find((x) => x.key === 'doot')?.workingNow).toBe(false);
+    expect(ok.a.view.runningNow).toBe(0);
+  });
+
+  it('an unknown agent key or a missing field is refused; nothing changes', async () => {
+    const before = await t.prisma.aiAgent.count({ where: { enabled: true } });
+    expect((await ask('POST', controller, { key: 'not-an-agent', enabled: true })).a).toMatchObject({ ok: false, error: 'NOT_FOUND' });
+    expect((await ask('POST', controller, { enabled: true })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['key'] });
+    expect((await ask('POST', controller, { key: 'doot' })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['enabled'] });
+    expect(await t.prisma.aiAgent.count({ where: { enabled: true } })).toBe(before);
+  });
+
+  it('a double tap writes once (idempotent); each real change is audited', async () => {
+    const countBefore = await t.prisma.auditLog.count({ where: { action: { in: ['ai.agent.pause', 'ai.agent.resume'] } } });
+    await ask('POST', controller, { key: 'gyani', enabled: true });
+    await ask('POST', controller, { key: 'gyani', enabled: true }); // same value again
+    const afterSame = await t.prisma.auditLog.count({ where: { action: { in: ['ai.agent.pause', 'ai.agent.resume'] } } });
+    expect(afterSame).toBe(countBefore + 1);
+    const back = await ask('POST', controller, { key: 'gyani', enabled: false });
+    expect(back.a.agents.find((x) => x.key === 'gyani')?.enabled).toBe(false);
+    expect(await t.prisma.auditLog.count({ where: { action: { in: ['ai.agent.pause', 'ai.agent.resume'] } } })).toBe(countBefore + 2);
+  });
+
+  it('only ai.control can flip the business-wide master switch (PR 305); a double tap writes once', async () => {
+    expect((await ask('POST', reader, { master: true })).status).toBe(403);
+    const on = await ask('POST', controller, { master: true });
+    expect(on.status).toBe(200);
+    expect(on.a.view.masterOn).toBe(true);
+    const again = await ask('POST', controller, { master: true }); // same value again
+    expect(again.status).toBe(200);
+    expect(again.a.view.masterOn).toBe(true);
+    const off = await ask('POST', controller, { master: false });
+    expect(off.a.view.masterOn).toBe(false);
+  });
+
+  it('an agent kept on works even while the master switch is off (PR 305); an unknown key is refused; a double tap writes once', async () => {
+    expect((await ask('POST', controller, { key: 'not-an-agent', keepOnWhenMasterOff: true })).a).toMatchObject({ ok: false, error: 'NOT_FOUND' });
+    expect((await ask('POST', controller, { keepOnWhenMasterOff: true })).a).toMatchObject({ ok: false, error: 'INVALID_INPUT', details: ['key'] });
+    expect((await ask('POST', reader, { key: 'sawdagor', keepOnWhenMasterOff: true })).status).toBe(403);
+
+    await ask('POST', controller, { key: 'sawdagor', enabled: true });
+    const before = await ask('GET', reader);
+    expect(before.a.view.masterOn).toBe(false);
+    expect(before.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ keepOnWhenMasterOff: false, workingNow: false });
+
+    const kept = await ask('POST', controller, { key: 'sawdagor', keepOnWhenMasterOff: true });
+    expect(kept.a.view.masterOn).toBe(false); // the master switch itself never moves
+    expect(kept.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ keepOnWhenMasterOff: true, workingNow: true });
+
+    const auditBefore = await t.prisma.auditLog.count({ where: { action: { in: ['ai.agent.keepOn', 'ai.agent.keepOff'] } } });
+    await ask('POST', controller, { key: 'sawdagor', keepOnWhenMasterOff: true }); // same value again
+    expect(await t.prisma.auditLog.count({ where: { action: { in: ['ai.agent.keepOn', 'ai.agent.keepOff'] } } })).toBe(auditBefore);
+
+    const dropped = await ask('POST', controller, { key: 'sawdagor', keepOnWhenMasterOff: false });
+    expect(dropped.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ keepOnWhenMasterOff: false, workingNow: false });
+    expect(await t.prisma.auditLog.count({ where: { action: { in: ['ai.agent.keepOn', 'ai.agent.keepOff'] } } })).toBe(auditBefore + 1);
+  });
+
+  it('once the master switch is on, an enabled agent shows as working; the monthly cap is read, not invented', async () => {
+    await deps.resolver.set('ai.enabled', true, INSTALLATION, {});
+    await deps.resolver.set('ai.monthlyCapMinor', 500_00, INSTALLATION, { ownerApproved: true });
+    await ask('POST', controller, { key: 'bhandari', enabled: true });
+    const { a } = await ask('GET', reader);
+    expect(a.view.masterOn).toBe(true);
+    expect(a.view.monthlyCapMinor).toBe(500_00);
+    expect(a.agents.find((x) => x.key === 'bhandari')?.workingNow).toBe(true);
+    // 'doot' was also left on by an earlier test in this file (shared state, like audit.db.test.ts); both now work
+    expect(a.view.runningNow).toBe(a.agents.filter((x) => x.enabled).length);
+    expect(a.view.runningNow).toBeGreaterThanOrEqual(1);
+  });
+
+  it("sums today's and this month's cost from AiUsageLedger, in the store's own day — never an earlier or later one", async () => {
+    const doot = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'doot' } });
+    await t.prisma.aiUsageLedger.createMany({
+      data: [
+        { agentId: doot.id, storeId: MOTHER_STORE_ID, providerKey: 'mock', modelKey: 'mock', idempotencyKey: 'u1', costUsdMicros: 1n, costMinor: 150, createdAt: now }, // today
+        { agentId: doot.id, storeId: MOTHER_STORE_ID, providerKey: 'mock', modelKey: 'mock', idempotencyKey: 'u2', costUsdMicros: 1n, costMinor: 90, createdAt: new Date('2026-11-05T10:00:00Z') }, // earlier this month
+        { agentId: doot.id, storeId: MOTHER_STORE_ID, providerKey: 'mock', modelKey: 'mock', idempotencyKey: 'u3', costUsdMicros: 1n, costMinor: 777, createdAt: new Date('2026-10-20T10:00:00Z') }, // last month: excluded
+      ],
+    });
+    await t.prisma.aiDiaryEntry.create({ data: { agentId: doot.id, storeId: MOTHER_STORE_ID, date: new Date('2026-11-11T00:00:00Z'), summaryBn: 'পরীক্ষার কাজ' } });
+    const { a } = await ask('GET', reader);
+    const d = a.agents.find((x) => x.key === 'doot')!;
+    expect(d.todayMinor).toBe(150);
+    expect(d.monthMinor).toBe(240);
+    expect(d.lastActivity).toMatchObject({ summaryBn: 'পরীক্ষার কাজ' });
+    expect(a.view.todayMinor).toBe(150);
+    expect(a.view.monthMinor).toBe(240);
+  });
+
+  it('model options (PR 307): the practice writer plus four not-ready providers until one is keyed and Tested', async () => {
+    const { a } = await ask('GET', reader);
+    expect(a.view.recommendedProvider).toBeNull();
+    expect(a.view.modelOptions).toHaveLength(5);
+    expect(a.view.modelOptions.find((o) => o.provider === null)).toMatchObject({ ready: true, modelId: null });
+    for (const p of ['anthropic', 'openAi', 'googleAi', 'openRouter']) {
+      expect(a.view.modelOptions.find((o) => o.provider === p)).toMatchObject({ ready: false, modelId: null });
+    }
+    for (const ag of a.agents) expect(ag).toMatchObject({ selectedProvider: null, selectedReady: true });
+  });
+
+  it('a model pick is refused for an unknown agent, an unknown provider, or a provider not yet Tested (PR 307)', async () => {
+    expect((await ask('POST', reader, { key: 'doot', provider: 'anthropic' })).status).toBe(403);
+    expect((await ask('POST', controller, { key: 'not-an-agent', provider: 'anthropic' })).a).toMatchObject({ ok: false, error: 'NOT_FOUND' });
+    expect((await ask('POST', controller, { key: 'doot', provider: 'not-a-provider' })).a).toMatchObject({ ok: false, error: 'UNKNOWN_PROVIDER' });
+    expect((await ask('POST', controller, { key: 'doot', provider: 'anthropic' })).a).toMatchObject({ ok: false, error: 'PROVIDER_NOT_READY' });
+    const again = await ask('GET', reader);
+    expect(again.a.agents.find((x) => x.key === 'doot')?.selectedProvider).toBeNull();
+  });
+
+  it('once a provider is enabled and Tested it becomes ready, is recommended, and an agent can be pointed at it (PR 307); a double tap writes once; falling back is honest', async () => {
+    await t.prisma.integration.create({
+      data: { storeId: null, kind: 'AI_PROVIDER', provider: 'anthropic', name: 'anthropic', mode: 'LIVE', enabled: true, config: { model: 'claude-sonnet-5' }, secretNames: ['apiKey'] },
+    });
+    const ready = await ask('GET', reader);
+    expect(ready.a.view.recommendedProvider).toBe('anthropic');
+    expect(ready.a.view.modelOptions.find((o) => o.provider === 'anthropic')).toMatchObject({ ready: true, modelId: 'claude-sonnet-5' });
+
+    const auditBefore = await t.prisma.auditLog.count({ where: { action: 'ai.agent.model' } });
+    const picked = await ask('POST', controller, { key: 'doot', provider: 'anthropic' });
+    expect(picked.status).toBe(200);
+    expect(picked.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: 'anthropic', selectedReady: true });
+    await ask('POST', controller, { key: 'doot', provider: 'anthropic' }); // same value again
+    expect(await t.prisma.auditLog.count({ where: { action: 'ai.agent.model' } })).toBe(auditBefore + 1);
+
+    // the connection goes dark again (disabled) — the stored pick stays, but it is honestly no longer ready
+    await t.prisma.integration.updateMany({ where: { kind: 'AI_PROVIDER', provider: 'anthropic' }, data: { enabled: false } });
+    const fallen = await ask('GET', reader);
+    expect(fallen.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: 'anthropic', selectedReady: false });
+
+    const back = await ask('POST', controller, { key: 'doot', provider: null });
+    expect(back.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: null, selectedReady: true });
+  });
+
+  it('every agent reads as "always", with nothing to preview, until the owner sets a schedule (PR 308)', async () => {
+    const { a } = await ask('GET', reader);
+    for (const ag of a.agents) expect(ag).toMatchObject({ schedule: { mode: 'always' }, nextRunAt: null });
+  });
+
+  it('a schedule is refused for an unknown agent or a bad shape; nothing changes (PR 308)', async () => {
+    expect((await ask('POST', reader, { key: 'bhandari', schedule: { mode: 'daily', time: '09:00' } })).status).toBe(403);
+    expect((await ask('POST', controller, { key: 'not-an-agent', schedule: { mode: 'daily', time: '09:00' } })).a).toMatchObject({ ok: false, error: 'NOT_FOUND' });
+    expect((await ask('POST', controller, { key: 'bhandari', schedule: { mode: 'hourly' } })).a).toMatchObject({ ok: false, error: 'INVALID_SCHEDULE' });
+    expect((await ask('POST', controller, { key: 'bhandari', schedule: { mode: 'daily', time: '9am' } })).a).toMatchObject({ ok: false, error: 'INVALID_SCHEDULE' });
+    expect((await ask('POST', controller, { key: 'bhandari', schedule: { mode: 'weekly', time: '09:00', days: [] } })).a).toMatchObject({ ok: false, error: 'INVALID_SCHEDULE' });
+    const again = await ask('GET', reader);
+    expect(again.a.agents.find((x) => x.key === 'bhandari')).toMatchObject({ schedule: { mode: 'always' } });
+  });
+
+  it('a daily schedule previews tomorrow\'s own clock time once today\'s has passed, in the store\'s own time zone; a double tap writes once (PR 308)', async () => {
+    // now = 2026-11-11T10:00:00Z = 16:00 Asia/Dhaka — today's 09:00 has already passed.
+    const auditBefore = await t.prisma.auditLog.count({ where: { action: 'ai.agent.schedule' } });
+    const set = await ask('POST', controller, { key: 'bhandari', schedule: { mode: 'daily', time: '09:00' } });
+    expect(set.status).toBe(200);
+    expect(set.a.agents.find((x) => x.key === 'bhandari')).toMatchObject({ schedule: { mode: 'daily', time: '09:00' }, nextRunAt: '2026-11-12T03:00:00.000Z' });
+    await ask('POST', controller, { key: 'bhandari', schedule: { mode: 'daily', time: '09:00' } }); // same value again
+    expect(await t.prisma.auditLog.count({ where: { action: 'ai.agent.schedule' } })).toBe(auditBefore + 1);
+  });
+
+  it("a weekly schedule previews today's own run when today matches and its time has not passed yet; resetting to null goes back to \"always\" (PR 308)", async () => {
+    // 2026-11-11 is a Wednesday (weekday 3); 20:00 Dhaka (14:00 UTC) is still ahead of now (10:00 UTC).
+    const set = await ask('POST', controller, { key: 'sawdagor', schedule: { mode: 'weekly', time: '20:00', days: [3, 1] } });
+    expect(set.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ schedule: { mode: 'weekly', time: '20:00', days: [1, 3] }, nextRunAt: '2026-11-11T14:00:00.000Z' });
+
+    const reset = await ask('POST', controller, { key: 'sawdagor', schedule: null });
+    expect(reset.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ schedule: { mode: 'always' }, nextRunAt: null });
+  });
+
+  it('every agent reads no cap set, capState "none", until the owner sets one (PR 309)', async () => {
+    const { a } = await ask('GET', reader);
+    for (const ag of a.agents) expect(ag).toMatchObject({ monthlyCapMinor: null, capState: 'none' });
+  });
+
+  it('a cap is refused for an unknown agent or a bad value; nothing changes (PR 309)', async () => {
+    expect((await ask('POST', reader, { key: 'doot', monthlyCapMinor: 50_00 })).status).toBe(403);
+    expect((await ask('POST', controller, { key: 'not-an-agent', monthlyCapMinor: 50_00 })).a).toMatchObject({ ok: false, error: 'NOT_FOUND' });
+    expect((await ask('POST', controller, { key: 'doot', monthlyCapMinor: 0 })).a).toMatchObject({ ok: false, error: 'INVALID_CAP' });
+    expect((await ask('POST', controller, { key: 'doot', monthlyCapMinor: -1 })).a).toMatchObject({ ok: false, error: 'INVALID_CAP' });
+    expect((await ask('POST', controller, { key: 'doot', monthlyCapMinor: 1.5 })).a).toMatchObject({ ok: false, error: 'INVALID_CAP' });
+    expect((await ask('POST', controller, { key: 'doot', monthlyCapMinor: '500' })).a).toMatchObject({ ok: false, error: 'INVALID_CAP' });
+    const again = await ask('GET', reader);
+    expect(again.a.agents.find((x) => x.key === 'doot')?.monthlyCapMinor).toBeNull();
+  });
+
+  it('a cap honestly moves ok → warned (80%+) → paused (100%+) as this month\'s real spend crosses it (PR 309); a double tap writes once; null turns it off', async () => {
+    // 'doot' already has monthMinor = 240 from the earlier cost-summing test.
+    const auditBefore = await t.prisma.auditLog.count({ where: { action: 'ai.agent.cap' } });
+    const ok = await ask('POST', controller, { key: 'doot', monthlyCapMinor: 400 }); // 240*5=1200 < 400*4=1600
+    expect(ok.a.agents.find((x) => x.key === 'doot')).toMatchObject({ monthlyCapMinor: 400, capState: 'ok' });
+    await ask('POST', controller, { key: 'doot', monthlyCapMinor: 400 }); // same value again
+    expect(await t.prisma.auditLog.count({ where: { action: 'ai.agent.cap' } })).toBe(auditBefore + 1);
+
+    const warned = await ask('POST', controller, { key: 'doot', monthlyCapMinor: 300 }); // 240*5=1200 == 300*4=1200
+    expect(warned.a.agents.find((x) => x.key === 'doot')).toMatchObject({ monthlyCapMinor: 300, capState: 'warned' });
+
+    const paused = await ask('POST', controller, { key: 'doot', monthlyCapMinor: 240 }); // spent >= cap
+    expect(paused.a.agents.find((x) => x.key === 'doot')).toMatchObject({ monthlyCapMinor: 240, capState: 'paused' });
+
+    const off = await ask('POST', controller, { key: 'doot', monthlyCapMinor: null });
+    expect(off.a.agents.find((x) => x.key === 'doot')).toMatchObject({ monthlyCapMinor: null, capState: 'none' });
+    expect(await t.prisma.auditLog.count({ where: { action: 'ai.agent.cap' } })).toBe(auditBefore + 4);
+  });
+
+  it("checkAgentCapAlerts sends the owner's Telegram warning once per crossing per month, deduplicated through the audit log (PR 309)", async () => {
+    // 'tirondaj' never had a cap crossed by an earlier test in this file (unlike 'doot'), so its dedupe state here
+    // starts clean — the synthetic monthMinor/monthlyCapMinor below are checkAgentCapAlerts's own inputs, not read
+    // from the stored row, so what 'tirondaj' actually holds in the database does not matter.
+    const tirondaj = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'tirondaj' } });
+    const money = moneyOf('BDT', 'bn-BD');
+    const sent: string[] = [];
+    const send = async (x: string) => void sent.push(x);
+    const capDeps = { db: t.prisma, vault: null, resolver: deps.resolver, now: () => now, send };
+
+    // 240 of a 300 cap: crossed into "warned" — sent once, not again on a second read.
+    await checkAgentCapAlerts(capDeps, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: 300, monthMinor: 240 }], money);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toContain(tirondaj.nameBn ?? tirondaj.nameEn);
+    await checkAgentCapAlerts(capDeps, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: 300, monthMinor: 240 }], money);
+    expect(sent).toHaveLength(1); // same crossing this month: not sent again
+
+    // crossing into "paused" is a different action, so it sends once more.
+    await checkAgentCapAlerts(capDeps, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: 240, monthMinor: 240 }], money);
+    expect(sent).toHaveLength(2);
+    await checkAgentCapAlerts(capDeps, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: 240, monthMinor: 240 }], money);
+    expect(sent).toHaveLength(2); // still deduplicated
+
+    // no cap crossed: nothing sent, nothing thrown even with no `send` override (falls back to the mock Telegram sender)
+    await checkAgentCapAlerts({ db: t.prisma, vault: null, resolver: deps.resolver, now: () => now }, [{ id: tirondaj.id, nameBn: tirondaj.nameBn ?? tirondaj.nameEn, monthlyCapMinor: null, monthMinor: 240 }], money);
+    expect(sent).toHaveLength(2);
+  });
+
+  it('every agent carries its own fixed data class (PR 310)', async () => {
+    const { a } = await ask('GET', reader);
+    expect(a.agents.find((x) => x.key === 'gyani')).toMatchObject({ dataClass: 'personal' });
+    expect(a.agents.find((x) => x.key === 'bhandari')).toMatchObject({ dataClass: 'personal' });
+    expect(a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ dataClass: 'personal' });
+    expect(a.agents.find((x) => x.key === 'prohori')).toMatchObject({ dataClass: 'business' });
+    expect(a.agents.find((x) => x.key === 'tirondaj')).toMatchObject({ dataClass: 'business' });
+    expect(a.agents.find((x) => x.key === 'shilpi')).toMatchObject({ dataClass: 'publicDraft' });
+    expect(a.agents.find((x) => x.key === 'doot')).toMatchObject({ dataClass: 'publicDraft' });
+  });
+
+  it('personal/business agents never effectively use a free-capable connection, even picked and ready; public/draft agents may (PR 310)', async () => {
+    await t.prisma.integration.create({
+      data: { storeId: null, kind: 'AI_PROVIDER', provider: 'openRouter', name: 'openRouter', mode: 'LIVE', enabled: true, config: { model: 'some/free-model' }, secretNames: ['apiKey'] },
+    });
+    await ask('POST', controller, { key: 'sawdagor', provider: 'openRouter' }); // personal — the pick is accepted…
+    await ask('POST', controller, { key: 'doot', provider: 'openRouter' }); // publicDraft — allowed outright
+
+    const noPaidYet = await ask('GET', reader);
+    // …but with no paid connection ready yet, sawdagor's own data class routes it to the practice writer instead.
+    expect(noPaidYet.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ selectedProvider: 'openRouter', selectedReady: true, effectiveProvider: null, routingDowngraded: true });
+    expect(noPaidYet.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: 'openRouter', selectedReady: true, effectiveProvider: 'openRouter', routingDowngraded: false });
+
+    // once a paid connection (googleAi) is ready, sawdagor's effective pick upgrades to it, never to the free one.
+    await t.prisma.integration.create({
+      data: { storeId: null, kind: 'AI_PROVIDER', provider: 'googleAi', name: 'googleAi', mode: 'LIVE', enabled: true, config: { model: 'gemini-3-flash' }, secretNames: ['apiKey'] },
+    });
+    const withPaid = await ask('GET', reader);
+    expect(withPaid.a.agents.find((x) => x.key === 'sawdagor')).toMatchObject({ selectedProvider: 'openRouter', selectedReady: true, effectiveProvider: 'googleAi', routingDowngraded: true });
+    expect(withPaid.a.agents.find((x) => x.key === 'doot')).toMatchObject({ selectedProvider: 'openRouter', effectiveProvider: 'openRouter', routingDowngraded: false });
+  });
+});

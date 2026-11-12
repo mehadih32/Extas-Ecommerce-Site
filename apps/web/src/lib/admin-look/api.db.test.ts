@@ -78,7 +78,7 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
       [{ scope: 'all', page: 'dashboard', design: 'C' }, 'scope'],
       [{ scope: 'me', page: 'nowhere', design: 'A' }, 'page'],
       [{ scope: 'me', page: 'dashboard', design: 'Z' }, 'design'],
-      [{ scope: 'me', page: 'orders', design: 'B' }, 'design'],
+      [{ scope: 'me', page: 'orders', design: 'Z' }, 'design'],
       [{ scope: 'me', guide: 'window' }, 'guide'],
     ] as const) {
       const res = await lookHandler(call(body, staff), catalog, deps);

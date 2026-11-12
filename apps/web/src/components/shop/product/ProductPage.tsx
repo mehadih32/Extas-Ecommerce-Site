@@ -562,7 +562,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
             style={tpl === 'T2' ? ({ '--pdp-t2buy': `${t2.deskBuyPx}px` } as React.CSSProperties) : undefined}
           >
             <div className="pdp-g">
-              <PdpGallery badge={badge} lang={lang} template={tpl} t2={t2} t3={t3} />
+              <PdpGallery badge={badge} overlay={m.overlay} lang={lang} template={tpl} t2={t2} t3={t3} />
             </div>
             <div className="pdp-b sticky-d" id="pdp-buy">
               <div className="pdp-sec pdp-head">

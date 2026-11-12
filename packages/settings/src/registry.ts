@@ -136,6 +136,8 @@ import { healthReopenSettings } from './registry-health-reopen';
 import { loginNetworkSettings } from './registry-login-network';
 import { exchangeRetrySettings } from './registry-exchange-retry';
 import { statementCostsSettings } from './registry-books-statement-costs';
+import { studioSettings } from './registry-studio';
+import { studioVideoSettings } from './registry-creative-studio-video';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
@@ -1539,6 +1541,10 @@ export const registry = {
   ...supportFileCopySettings,
   // ---- Follow-up 565 (PR 618, 166, 174) · the courier's charges and the gateways' fees from their imported statements as cost lines, off (registry-books-statement-costs.ts, version 274). ----
   ...statementCostsSettings,
+  // ---- S23 · PR 437 · the social studio's cadence, voice and AI-caption switches, off (registry-studio.ts, version 281). ----
+  ...studioSettings,
+  // ---- S25 · PR 482 (Blueprint C8.1, C8.2) · the image-to-video engine's master switch and its cost-per-second rate, off / 0 (registry-creative-studio-video.ts, version 282). ----
+  ...studioVideoSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

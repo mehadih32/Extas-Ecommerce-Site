@@ -107,3 +107,30 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-11 05:06 | `9f0aecac5be7` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-11 06:38 | `d44bd21d9cd4` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-11 08:17 | `02cc3dc299e6` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 11:35 | `9bee2a78f296` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 13:23 | `c4c5684ec6ec` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 13:53 | `9319a32019e9` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 15:25 | `12601a857588` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 15:41 | `e79be568b0b9` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 16:06 | `241884ef1cee` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 16:21 | `9cb88432c0ae` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 17:04 | `6c6be43bdd42` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 18:35 | `20557205b6e3` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 19:23 | `36f7bb8a61f1` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 20:04 | `3fd44094b510` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-11 20:27 | `cd3ba4215231` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-12 01:39 | `4936ab43faa0` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-12 01:51 | `119ddc1cd1a1` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-12 06:19 | `e9af24fbfe34` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-12 09:06 | `6ddfcb1156cd` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-12 10:06 | `3ca6be71ede6` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-12 11:49 | `7e3970b8f2d9` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-12 12:39 | `cf8a3f814775` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-12 12:52 | `06ffb720de42` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (signed out, /admin/products did not go to the sign-in page (/admin/products); /admin/products: request 401: /admin/products (phone); /admin/products: console error: Failed to load resource: the server responded with a status of 401 () (/admin/products) (phone)), so the previous version was put back automatically. The fix comes before any new work. |
+| 2026-11-12 13:58 | `fe844b912975` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (signed out, /admin/products did not go to the sign-in page (/admin/products); /admin/products: request 401: /admin/products (phone); /admin/products: console error: Failed to load resource: the server responded with a status of 401 () (/admin/products) (phone)), so the previous version was put back automatically. The fix comes before any new work. |
+| 2026-11-12 14:18 | `2b603268446c` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (signed out, /admin/products did not go to the sign-in page (/admin/products); /admin/products: request 401: /admin/products (phone); /admin/products: console error: Failed to load resource: the server responded with a status of 401 () (/admin/products) (phone)), so the previous version was put back automatically. The fix comes before any new work. |
+| 2026-11-12 14:51 | `92e30bf1d8b9` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (signed out, /admin/products did not go to the sign-in page (/admin/products); /admin/products: request 401: /admin/products (phone); /admin/products: console error: Failed to load resource: the server responded with a status of 401 () (/admin/products) (phone)), so the previous version was put back automatically. The fix comes before any new work. |
+| 2026-11-12 17:55 | `e7df4d0529b1` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (/reset: answered 401 with no cookie at all, expected 200 (no auth); /reset: no Clear-Site-Data "cookies" header (got "")), so the previous version was put back automatically. The fix comes before any new work. |
+| 2026-11-12 19:05 | `4893f4decdfb` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (/reset: answered 401 with no cookie at all, expected 200 (no auth); /reset: no Clear-Site-Data "cookies" header (got "")), so the previous version was put back automatically. The fix comes before any new work. |
+| 2026-11-12 19:36 | `97c648bfa222` | deploy | FAILED, ROLLBACK FAILED | ok | OK, smoke FAILED | The smoke test found a problem (the smoke test did not finish (exit 1)) and putting the previous version back failed too (see the run log). |
+| 2026-11-12 19:53 | `97c648bfa222` | deploy | FAILED | ok | OK | The deploy stopped: new version did not become healthy; live version unchanged. |

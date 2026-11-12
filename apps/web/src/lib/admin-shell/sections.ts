@@ -268,6 +268,21 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/marketing/landing/seasonal/yearly', perm: 'marketing.landing.read', keys: ['marketingSeasonalYearly'] },
         ],
       },
+      // S23 · PR 437, 438: the social & content studio — accounts, the brand asset library and templates.
+      // S25 · PR 481 (Blueprint C8.1) adds the motion library sub-page (image-to-video jobs, reels, exports and the
+      // creative brief join as the rest of PR 482–490 build).
+      // S25 · PR 489 (Blueprint C8.3) adds campaign overlays: a page-level, time-bound decoration on the product
+      // card, listing and product page — never stored on the photo, never touching a price.
+      // One shared Studio tab, hidden while `stages.closedShown.S23` or `.S25` is still off.
+      {
+        id: 'studio',
+        pages: [
+          { href: '/admin/marketing/studio', perm: 'studio.read', keys: ['marketingStudio'] },
+          { href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] },
+          { href: '/admin/marketing/studio/videos', perm: 'marketing.studio.read', keys: ['marketingStudioVideos'] },
+          { href: '/admin/marketing/studio/overlay', perm: 'marketing.studio.read', keys: ['marketingStudioOverlay'] },
+        ],
+      },
       // S13 · PR 273: referrals — the programme, friends' orders with their invite codes and the sharers' rewards.
       { id: 'referrals', pages: [{ href: '/admin/marketing/referrals', perm: 'marketing.campaigns.read', keys: ['marketingReferrals'] }] },
       // S13 · PR 278: YouTube — the channel, the videos with their products and tracked links, the orders they brought.
@@ -473,8 +488,17 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     icon: 'spark',
     group: 'business',
     base: '/admin/ai',
-    // S21 · PR 570 — B7.3 / AIC-05 Checklist audit: the e-commerce checklist in the backend and its runner (owner only).
-    tabs: [{ id: 'audit', guide: 'ai', pages: [{ href: '/admin/ai/audit', perm: 'health.read', keys: ['aiAudit'] }] }],
+    tabs: [
+      // S15 · PR 304 (C1.1, C1.2; AIC-01) — Control room: every agent, what it did last, today's and this month's
+      // cost, and a pause button per agent (the master switch itself joins with PR 305).
+      { id: 'control', guide: 'ai', pages: [{ href: '/admin/ai', perm: 'ai.read', keys: ['aiControl'] }] },
+      // S15 · PR 577 (C10.4) — Agents: the team grid and each fixed agent's own 360° profile.
+      { id: 'agents', guide: 'ai', pages: [{ href: '/admin/agents', perm: 'ai.read', keys: ['aiAgents'] }] },
+      // S21 · PR 570 — B7.3 / AIC-05 Checklist audit: the e-commerce checklist in the backend and its runner (owner only).
+      { id: 'audit', guide: 'ai', pages: [{ href: '/admin/ai/audit', perm: 'health.read', keys: ['aiAudit'] }] },
+      // S15 · PR 578 (C10.4) — Agent reports: daily/weekly/monthly/yearly reports per agent, on demand.
+      { id: 'reports', guide: 'ai', pages: [{ href: '/admin/ai/reports', perm: 'ai.read', keys: ['aiReports'] }] },
+    ],
     ownerOnly: true,
     guide: 'ai',
   },

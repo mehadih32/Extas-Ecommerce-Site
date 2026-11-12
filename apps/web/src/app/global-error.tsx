@@ -58,6 +58,13 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
               <button type="button" className="ge-btn" onClick={() => reset()} lang="bn">
                 {t(bn, 'retry')}
               </button>
+              {/* CN-043 — when "Start fresh" itself cannot run (an old service worker or cache kept it from loading),
+                  this plain link still works: /reset carries no script of its own, so it must stay a real <a>, not
+                  next/link (which needs the very router that may have failed to load here). */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+              <a href="/reset" className="ge-btn" lang="bn">
+                {t(bn, 'fixBrowser')}
+              </a>
             </div>
           )}
           {detail ? (

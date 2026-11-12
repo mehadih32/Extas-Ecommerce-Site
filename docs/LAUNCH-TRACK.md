@@ -655,7 +655,7 @@ Built automatically right after the Launch list, in the existing order: E3 waves
 | 257 | 479 | S24 | Unisex / couple composition | to build |
 | 258 | 480 | S24 | Occasion scene suggester with previews and approval | to build |
 | 259 | 539 | S24 | S24 addition — virtual photoshoot scope (C7) | to build |
-| 260 | 481 | S25 | Action / motion library | to build |
+| 260 | 481 | S25 | Action / motion library | built |
 | 261 | 482 | S25 | Image-to-video engine with provider adapter and best-of-2 — part 1 | to build |
 | 262 | 483 | S25 | Image-to-video engine — part 2 | to build |
 | 263 | 484 | S25 | Image-to-video engine — part 3 | to build |
@@ -732,7 +732,7 @@ Built automatically right after the Launch list, in the existing order: E3 waves
 | 2 | S12 content and blog (finished) | 14 |
 | 3 | S13 marketing and ads (finished) | 9 |
 | 4 | S15 AI control room | 48 |
-| 5 | S25 video and campaign studio | 10 |
+| 5 | S25 video and campaign studio (reopened, CN-039) | 9 |
 | 6 | S24 virtual photoshoot studio (the very last) | 38 |
 
 **Closed until the owner says so:** S17 multi-store, S23 social studio, S26 and S27 (handover pack), and the parked admin looks 649–651. Built parts stay; half-built S17, S23 and unfinished S12 parts are hidden from menu, sitemap, search and robots by PR 652's switch. Open follow-ups in `PROGRESS.md` keep the CN-016 rule.

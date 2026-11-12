@@ -135,6 +135,9 @@ import webSecurityBn from '../messages/web-security.bn.json';
 import webSecurityEn from '../messages/web-security.en.json';
 import closedStagesBn from '../messages/closed-stages.bn.json';
 import closedStagesEn from '../messages/closed-stages.en.json';
+// S23 · PR 437 (registry v281): the social studio's cadence, voice and AI-caption switches.
+import studioBn from '../messages/studio.bn.json';
+import studioEn from '../messages/studio.en.json';
 import blogCommentsBn from '../messages/blog-comments.bn.json';
 import blogCommentsEn from '../messages/blog-comments.en.json';
 import blogImagesBn from '../messages/blog-images.bn.json';
@@ -433,6 +436,9 @@ messages.en = mergeMessages(messages.en, accountReorderEn);
 messages.bn = mergeMessages(messages.bn, accountReorderBn);
 messages.en = mergeMessages(messages.en, privacyCustomerEn);
 messages.bn = mergeMessages(messages.bn, privacyCustomerBn);
+// S23 · PR 437 (registry v281): the studio's cadence, voice and AI-caption switches.
+messages.en = mergeMessages(messages.en, studioEn);
+messages.bn = mergeMessages(messages.bn, studioBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

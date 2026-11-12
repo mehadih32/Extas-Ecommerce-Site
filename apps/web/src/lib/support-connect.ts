@@ -7,15 +7,24 @@
 //   channel with that Page id (@extas/support receiveFromChannel). A Page not added in Support, or switched off, takes
 //   nothing. A body over `support.channels.webhookMaxBodyKb` is refused before it is read.
 //   WhatsApp: the messages of a verified post go to the store's channel with that phone number id the same way.
+//   Facebook comments (PR 443): the same signature check, its own Keys & connections row (`facebookPageComments`,
+//   a Page's public comments), into the SAME `messenger`-kind channel as that Page's DMs (receiveSocialEngagement).
+//   Instagram (PR 443): its own row (`instagramEngagement`) and its own channel kind, `instagram` — comments and
+//   Direct messages together, each comment marked as public (SOCIAL_COMMENT_MARK) so nobody mistakes it for private.
 // Nothing here sends anything by itself, moves money, changes an order, or blocks anyone.
 import {
   createConnections,
+  FACEBOOK_COMMENTS_PROVIDER,
+  INSTAGRAM_ENGAGEMENT_PROVIDER,
   MESSENGER_PAGE_PROVIDER,
+  parseFacebookCommentsWebhook,
+  parseInstagramWebhook,
   parseMessengerWebhook,
   supportAdapters,
   verifyWhatsAppSignature,
   whatsappMediaUrl,
   type Connections,
+  type EngagementInbound,
   type MessengerSender,
   type WhatsAppInbound,
   type WhatsAppSender,
@@ -93,12 +102,17 @@ export interface MessengerWebhookDeps {
 
 export type MessengerWebhookCode = 'OK' | 'NOT_CONNECTED' | 'TOO_LARGE' | 'BAD_SIGNATURE' | 'BAD_JSON';
 
+/** One key of every switched-on connection of a kind+provider (a store's own, else the shared one), with its store. */
+async function providerSecretsOf(deps: MessengerWebhookDeps, kind: 'MESSENGER' | 'META', provider: string, field: 'appSecret' | 'verifyToken'): Promise<{ value: string; storeId: number }[]> {
+  const rows = await deps.db.integration.findMany({ where: { kind, provider, enabled: true, archivedAt: null }, select: { storeId: true } });
+  const stores = [...new Set(rows.map((r) => r.storeId))];
+  const found = await Promise.all(stores.map((s) => deps.connections.secretOf(kind, field, { storeId: s, provider })));
+  return found.flatMap((f) => (f ? [{ value: f.value, storeId: f.storeId ?? MOTHER_STORE_ID }] : []));
+}
+
 /** One key of every Messenger Page connection switched on (a store's own, else the shared one), with its store. */
 async function secretsOf(deps: MessengerWebhookDeps, field: 'appSecret' | 'verifyToken'): Promise<{ value: string; storeId: number }[]> {
-  const rows = await deps.db.integration.findMany({ where: { kind: 'MESSENGER', provider: MESSENGER_PAGE_PROVIDER, enabled: true, archivedAt: null }, select: { storeId: true } });
-  const stores = [...new Set(rows.map((r) => r.storeId))];
-  const found = await Promise.all(stores.map((s) => deps.connections.secretOf('MESSENGER', field, { storeId: s, provider: MESSENGER_PAGE_PROVIDER })));
-  return found.flatMap((f) => (f ? [{ value: f.value, storeId: f.storeId ?? MOTHER_STORE_ID }] : []));
+  return providerSecretsOf(deps, 'MESSENGER', MESSENGER_PAGE_PROVIDER, field);
 }
 
 /** The largest body the webhook reads (the mother store's setting: one address serves every store). */
@@ -129,5 +143,76 @@ const same = (a: string, b: string): boolean => timingSafeEqual(createHash('sha2
 export async function verifyMessengerWebhook(deps: MessengerWebhookDeps, q: { mode: string | null; token: string | null; challenge: string | null }): Promise<{ status: number; body: string }> {
   if (q.mode !== 'subscribe' || !q.token || !q.challenge) return { status: 403, body: 'FORBIDDEN' };
   const tokens = await secretsOf(deps, 'verifyToken');
+  return tokens.some((t) => same(t.value, q.token!)) ? { status: 200, body: q.challenge.slice(0, 200) } : { status: 403, body: 'FORBIDDEN' };
+}
+
+// ---------------------------------------------------------------------------------------------- Facebook comments
+
+/** A Facebook/Instagram engagement item as the inbox takes it (`sp.SocialEngagementInbound`, PR 443). */
+function engagementToSupport(items: readonly EngagementInbound[]): sp.SocialEngagementInbound[] {
+  return items.map((m) => ({
+    channelExternalId: m.rootId,
+    from: m.from,
+    ...(m.name ? { name: m.name } : {}),
+    messageId: m.messageId,
+    text: m.text,
+    files: m.files.map((f) => ({ kind: f.kind, sourceUrl: f.url })),
+    at: m.at,
+    isPublicComment: m.isPublicComment,
+  }));
+}
+
+/** The largest body the webhook reads (PR 443 shares Support's own body-size setting with Messenger). */
+export const socialEngagementWebhookMaxBytes = messengerWebhookMaxBytes;
+
+/** A POST from Meta: the Page's own public comments, routed into the SAME `messenger`-kind channel as its DMs. */
+export async function receiveFacebookCommentsWebhook(deps: MessengerWebhookDeps, req: { rawBody: string; signature: string | null }): Promise<{ status: number; code: MessengerWebhookCode; result?: sp.SocialEngagementReceiveResult }> {
+  if (Buffer.byteLength(req.rawBody, 'utf8') > (await socialEngagementWebhookMaxBytes(deps.settings))) return { status: 413, code: 'TOO_LARGE' };
+  const secrets = await providerSecretsOf(deps, 'META', FACEBOOK_COMMENTS_PROVIDER, 'appSecret');
+  if (!secrets.length) return { status: 503, code: 'NOT_CONNECTED' };
+  const match = secrets.find((s) => verifyWhatsAppSignature(req.rawBody, req.signature, s.value));
+  if (!match) return { status: 401, code: 'BAD_SIGNATURE' };
+  let body: unknown;
+  try {
+    body = JSON.parse(req.rawBody);
+  } catch {
+    return { status: 400, code: 'BAD_JSON' };
+  }
+  const items = engagementToSupport(parseFacebookCommentsWebhook(body));
+  const result = await sp.receiveSocialEngagement({ db: deps.db, settings: deps.settings, now: deps.now, push: deps.push }, match.storeId, 'messenger', items);
+  return { status: 200, code: 'OK', result };
+}
+
+/** Meta's GET handshake for the Facebook comments subscription. */
+export async function verifyFacebookCommentsWebhook(deps: MessengerWebhookDeps, q: { mode: string | null; token: string | null; challenge: string | null }): Promise<{ status: number; body: string }> {
+  if (q.mode !== 'subscribe' || !q.token || !q.challenge) return { status: 403, body: 'FORBIDDEN' };
+  const tokens = await providerSecretsOf(deps, 'META', FACEBOOK_COMMENTS_PROVIDER, 'verifyToken');
+  return tokens.some((t) => same(t.value, q.token!)) ? { status: 200, body: q.challenge.slice(0, 200) } : { status: 403, body: 'FORBIDDEN' };
+}
+
+// -------------------------------------------------------------------------------------------------------- Instagram
+
+/** A POST from Meta: the Instagram Business account's comments and Direct messages, into its own `instagram` channel. */
+export async function receiveInstagramWebhook(deps: MessengerWebhookDeps, req: { rawBody: string; signature: string | null }): Promise<{ status: number; code: MessengerWebhookCode; result?: sp.SocialEngagementReceiveResult }> {
+  if (Buffer.byteLength(req.rawBody, 'utf8') > (await socialEngagementWebhookMaxBytes(deps.settings))) return { status: 413, code: 'TOO_LARGE' };
+  const secrets = await providerSecretsOf(deps, 'META', INSTAGRAM_ENGAGEMENT_PROVIDER, 'appSecret');
+  if (!secrets.length) return { status: 503, code: 'NOT_CONNECTED' };
+  const match = secrets.find((s) => verifyWhatsAppSignature(req.rawBody, req.signature, s.value));
+  if (!match) return { status: 401, code: 'BAD_SIGNATURE' };
+  let body: unknown;
+  try {
+    body = JSON.parse(req.rawBody);
+  } catch {
+    return { status: 400, code: 'BAD_JSON' };
+  }
+  const items = engagementToSupport(parseInstagramWebhook(body));
+  const result = await sp.receiveSocialEngagement({ db: deps.db, settings: deps.settings, now: deps.now, push: deps.push }, match.storeId, 'instagram', items);
+  return { status: 200, code: 'OK', result };
+}
+
+/** Meta's GET handshake for the Instagram subscription. */
+export async function verifyInstagramWebhook(deps: MessengerWebhookDeps, q: { mode: string | null; token: string | null; challenge: string | null }): Promise<{ status: number; body: string }> {
+  if (q.mode !== 'subscribe' || !q.token || !q.challenge) return { status: 403, body: 'FORBIDDEN' };
+  const tokens = await providerSecretsOf(deps, 'META', INSTAGRAM_ENGAGEMENT_PROVIDER, 'verifyToken');
   return tokens.some((t) => same(t.value, q.token!)) ? { status: 200, body: q.challenge.slice(0, 200) } : { status: 403, body: 'FORBIDDEN' };
 }

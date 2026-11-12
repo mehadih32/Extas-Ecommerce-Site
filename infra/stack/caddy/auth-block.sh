@@ -23,12 +23,19 @@
 # Follow-up 372: the couriers' status calls pass the same way, POST only, on exactly /api/courier/steadfast/webhook and
 # /api/courier/pathao/webhook. Each carries the token or secret the owner typed into Keys & connections; the app
 # refuses every call while `delivery.courier.webhooks` is off (as shipped) and every call without a good one.
+# CN-045 (12 Nov, owner, a failed deploy): /reset and the four self-unregistering service-worker routes (CN-043) pass
+# the same way, GET only. Their whole point is to recover a browser that cannot reach our app at all — one whose
+# stale WordPress service worker answers from its own cache before our JS ever loads, or one that lost even the
+# preview cookie — so asking it for the preview password first would defeat them. None of the four routes reads
+# a cookie or any other input; /reset reads nothing either and only ever answers the same fixed page.
 # qa-gate (30 Oct): Caddy's `path` matcher ignores case and compares the decoded, cleaned path, while the app routes on
 # the raw one: `/ERP-API/CUSTOMER%53` or `/x%2f..%2ferp-api%2fcustomers` matched the exemption and reached the app (its
 # not-found page) with no login. Every exemption therefore matches the raw request target as it arrived
 # ({http.request.orig_uri}: the path exactly as sent, then any query), case for case, by one anchored pattern of its
 # exact path: an encoded letter or slash, a dot segment, a double or trailing slash, other capitals, HEAD or any other
-# method all stay behind the gate. `[?]` keeps the patterns free of backslashes.
+# method all stay behind the gate. `[?]` and, for the service-worker routes' literal dot, `[.]` keep every pattern
+# free of backslashes — a CEL string literal has no `\.` escape, so a backslash-dot here would fail to parse and
+# Caddy would never start (qa-gate, 12 Nov, caught in CI: every check got connection-refused, not 401/200).
 set -euo pipefail
 tag="${1:?}"; user="${2:?}"; hash="${3:?}"; token="${4:?}"; days="${5:?}"
 [[ "$token" =~ ^[0-9a-f]{32,128}$ ]] || { echo "auth-block: the cookie token must be hex" >&2; exit 2; }
@@ -42,6 +49,11 @@ exempt 'GET POST' '/api/whatsapp/webhook'
 exempt 'GET POST' '/api/messenger/webhook'
 exempt GET '/erp-api/(top-products|customers)'
 exempt POST '/api/courier/(steadfast|pathao)/webhook'
+exempt GET '/reset'
+exempt GET '/sw[.]js'
+exempt GET '/service-worker[.]js'
+exempt GET '/OneSignalSDKWorker[.]js'
+exempt GET '/firebase-messaging-sw[.]js'
 printf '}\n'
 printf 'route @preview_needed {\n\tbasic_auth {\n\t\t%s %s\n\t}\n' "$user" "$hash"
 printf '\theader Set-Cookie "extas_preview=%s; Path=/; Max-Age=%s; Secure; HttpOnly; SameSite=Lax"\n}\n' "$token" "$((days * 86400))"

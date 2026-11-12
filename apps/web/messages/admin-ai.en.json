@@ -1,0 +1,115 @@
+{
+  "aiControl": {
+    "metaTitle": "AI Center",
+    "title": "AI Center",
+    "sub": "Every AI agent: what it is doing, what it cost, what it decided.",
+    "master": {
+      "label": "MASTER SWITCH",
+      "onTitle": "AI is on",
+      "onBody": "{n} agent(s) are working inside their caps and limits.",
+      "offTitle": "AI is off",
+      "offBody": "Off until it is turned on. With AI off nothing is sent to any AI company, and every AI feature falls back to its rule or saved template — the shop keeps running as normal.",
+      "switchLabel": "AI master switch: on or off",
+      "ownerOnly": "Owner only",
+      "capWarn": "No monthly spend cap is set yet. Set one in AI costs so spending can never run away.",
+      "toastOn": "AI is on",
+      "toastOff": "AI is off — the shop keeps running on rules and templates",
+      "toastFailed": "Could not change the AI master switch"
+    },
+    "tiles": {
+      "label": "Today at a glance",
+      "running": "Running now",
+      "runningOf": "of {n} agents",
+      "today": "Today's cost",
+      "month": "This month",
+      "cap": "Monthly cap",
+      "capNone": "Not set"
+    },
+    "agents": {
+      "title": "Agents",
+      "sub": "Each agent's own switch; the master switch above decides whether any of them may actually work — unless an agent is kept on.",
+      "statusWorking": "Working",
+      "statusWorkingKeptOn": "Working — kept on while AI is off",
+      "statusPaused": "Paused — AI is off",
+      "statusOff": "Off",
+      "lastNone": "No activity yet",
+      "today": "Today",
+      "month": "This month",
+      "switchLabel": "{name}: on or off",
+      "readOnly": "You can see the agents; pausing or resuming one needs the AI control permission.",
+      "keepOn": {
+        "label": "Keep on even when AI is off",
+        "switchLabel": "Keep {name} on even when AI is off",
+        "pillOn": "Kept on even when AI is off",
+        "toastOn": "{name} will keep working even when AI is off",
+        "toastOff": "{name} now pauses with the master switch",
+        "toastFailed": "Could not change {name}'s keep-on setting"
+      },
+      "model": {
+        "label": "Model",
+        "practice": "Practice writer (no key yet)",
+        "notReady": "{provider} — not Tested yet",
+        "recommendedBadge": "Recommended",
+        "selectLabel": "{name}: which model writes for it",
+        "noteSame": "This is Claude's own recommended pick for this agent today.",
+        "noteChanged": "This works too. Per-run cost and quality comparisons will show once the AI Cost Book is built (PR 312).",
+        "noteFallback": "{provider} is no longer Tested, so {name} is quietly using the practice writer until it is Tested again or you pick again.",
+        "noteRouted": "{name} handles personal or business data, so a free-capable connection is never used for it — it is actually using {effective} instead.",
+        "toastChanged": "{name}'s model is changed",
+        "toastFailed": "Could not change {name}'s model",
+        "toastNotReady": "Test that connection in Keys & connections first",
+        "providers": {
+          "anthropic": "Anthropic Claude",
+          "openAi": "OpenAI",
+          "googleAi": "Google Gemini",
+          "openRouter": "OpenRouter"
+        }
+      },
+      "schedule": {
+        "label": "Schedule",
+        "mode": { "always": "Always", "daily": "Daily", "weekly": "Weekly" },
+        "selectLabel": "{name}: when its time-based work runs",
+        "timeLabel": "{name}: clock time",
+        "daysLabel": "{name}: which weekdays",
+        "saveLabel": "Save",
+        "days": { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" },
+        "always": "No time restriction — it only acts on its own triggers, any time.",
+        "daily": "Daily at {time}",
+        "weekly": "{days} at {time}",
+        "nextRun": "Next scheduled run: {when}",
+        "nextRunNone": "Nothing time-based to preview — it only acts on its own triggers.",
+        "toastChanged": "{name}'s schedule is saved",
+        "toastFailed": "Could not save {name}'s schedule",
+        "toastInvalid": "Pick a clock time (and, for Weekly, at least one day) first"
+      },
+      "cap": {
+        "label": "Monthly spend cap",
+        "inputLabel": "{name}: monthly spend cap",
+        "saveLabel": "Save",
+        "none": "No cap set",
+        "ok": "Within cap",
+        "warned": "80% of cap reached — owner warned",
+        "paused": "Cap reached — new generations paused",
+        "spentOfCap": "{spent} of {cap} this month",
+        "toastChanged": "{name}'s monthly spend cap is saved",
+        "toastFailed": "Could not save {name}'s spend cap",
+        "toastInvalid": "Enter a whole amount above zero, or leave it empty for no cap"
+      }
+    },
+    "toast": {
+      "paused": "{name} is paused",
+      "resumed": "{name} is working again",
+      "failed": "Could not change {name}'s switch"
+    },
+    "routing": {
+      "title": "Which data may reach which model",
+      "sub": "Locked policy (Blueprint A5.2): personal and business data only ever reach a paid connection; only reviewed public/draft work may use a free-capable one. The owner cannot change this from here.",
+      "note": "If an agent's own model pick would break this rule, the page quietly uses a paid connection instead and says so under that agent's model.",
+      "classes": {
+        "personal": { "name": "Personal", "rule": "A customer's name, phone, address, chat or order. Paid connections only — never a free one." },
+        "business": { "name": "Business", "rule": "The shop's own sales, cost, stock or report figures. Paid connections only — a free one is not recommended." },
+        "publicDraft": { "name": "Public / draft", "rule": "Content a person reviews before it goes out (blog, SEO, social copy). A free-capable connection is allowed, with an automatic paid fallback." }
+      }
+    }
+  }
+}

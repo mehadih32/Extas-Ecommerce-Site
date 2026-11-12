@@ -18,6 +18,7 @@ const card = (id: string, colours: string[], priceMinor: number | null = 150000)
   photos: {},
   inStock: true,
   sortRank: 0,
+  overlay: null,
 });
 const ids = (picks: ReturnType<typeof heroSlidePicks>) => picks.map((p) => `${p.card.id}/${p.colour?.key ?? '-'}`);
 

@@ -23,6 +23,7 @@ on:
       - "docs/reports/smoke/**"
       - "docs/reports/journeys/**"
       - "docs/reports/erp-acceptance/**"
+      - "docs/reports/erp-sku-stock-compare/**"
       - "docs/reports/gate-orders/**"
       - "docs/reports/gate-c360/**"
       - "docs/reports/golive/**"
@@ -116,7 +117,7 @@ jobs:
           rm -rf /tmp/sites/tls.caddy /tmp/sites/origin
       - name: Deploy script and app compose are valid
         run: |
-          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/pg-exec.sh infra/deploy/caddy-live.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/manual-md.sh infra/deploy/smoke.sh infra/deploy/smoke-lib.sh infra/deploy/journeys.sh infra/deploy/journeys-lib.sh infra/deploy/vitals-lab.sh infra/deploy/speed-lib.sh infra/deploy/erp-acceptance.sh infra/deploy/disk-tidy.sh infra/deploy/gate-orders.sh infra/deploy/gate-c360.sh infra/deploy/acceptance.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
+          shellcheck -x -S warning infra/deploy/deploy.sh infra/deploy/images.sh infra/deploy/app-role.sh infra/deploy/pg-exec.sh infra/deploy/caddy-live.sh infra/deploy/deploy-report.sh infra/deploy/docs-sync.sh infra/deploy/manual-md.sh infra/deploy/smoke.sh infra/deploy/smoke-lib.sh infra/deploy/journeys.sh infra/deploy/journeys-lib.sh infra/deploy/vitals-lab.sh infra/deploy/speed-lib.sh infra/deploy/erp-acceptance.sh infra/deploy/erp-sku-stock-compare.sh infra/deploy/disk-tidy.sh infra/deploy/gate-orders.sh infra/deploy/gate-c360.sh infra/deploy/acceptance.sh tools/admin-login-e2e.sh tools/admin-session-e2e.sh
           # PR 620 · round 3: the upstream both ways — as before (Caddy without trusted_proxies) and with Caddy's own
           # client address (header_up, only when the live configuration trusts Cloudflare alone).
           for mode in "" client-ip; do
@@ -658,6 +659,20 @@ jobs:
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
         run: pnpm --filter @extas/search test
+      # S23 · PR 437 — the social & content studio's core: social accounts (add one row per platform + page/channel
+      # id, always off and needing approval; rename, switch, daily limit, archive/restore; never deleted; every
+      # change audited), reader-vs-writer-vs-no-permission, stale save and unknown id refused. Throwaway database.
+      - name: Studio tests on PostgreSQL (S23 · PR 437)
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+        run: pnpm --filter @extas/studio test
+      # S24 · PR 444 — the photoshoot studio's asset-model guarantee: an original can be role-tagged (front/back/
+      # detail/…) but no other field of it ever changes; a generated image is always its own row, pointing back at a
+      # real photo, never at another generated one; reader-vs-writer-vs-generate permission checks. Throwaway database.
+      - name: Photoshoot studio tests on PostgreSQL (S24 · PR 444)
+        env:
+          TEST_DATABASE_ADMIN_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+        run: pnpm --filter @extas/photoshoot test
       # S06 · PR 549–553, 555 — the delivery-zone engine: the gazetteer importer (re-runs change nothing, nothing is
       # deleted), the band map, the resolver, the autocomplete, the charge accuracy suite and phone-first recognition.
       - name: Delivery-zone engine on PostgreSQL (S06 · PR 549–553, 555)

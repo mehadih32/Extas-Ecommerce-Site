@@ -2,7 +2,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { CHECK_HEADERS, adminLinks, checkContext, adminPaths, visitLine, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, rowsFile, shotDir, totpCode, withQuery } from './smoke.mjs';
+import { CHECK_HEADERS, adminLinks, checkContext, adminPaths, visitLine, checkApplies, checkProblem, discovered, figureProblems, markBoxes, pageProblems, readMarks, reportMarkdown, requestCounts, resetPageProblems, rowsFile, shotDir, totpCode, withQuery } from './smoke.mjs';
 
 it('PR 6: an extra check passes on the expected value or answer, and says what it saw otherwise', () => {
   const page = { pr: 6, what: 'worker fresh', page: '/admin/server', selector: '[data-worker-state]', attribute: 'data-worker-state', equals: 'ok' };
@@ -269,4 +269,23 @@ it('the test browsers mark every request with the check header the vitals endpoi
     // only checkContext itself opens a plain context
     expect([tool, src.match(/browser\.newContext\(/g)?.length ?? 0]).toEqual([tool, tool === 'smoke.mjs' ? 1 : 0]);
   }
+});
+
+// CN-045 (12 Nov, qa-gate): Playwright's `response.headers()` convenience object silently drops Clear-Site-Data even
+// when the browser received it — a mocked response proves `resetPageProblems` reads it with `headerValue()` instead,
+// which a real Chromium run was confirmed (outside this test) to always see correctly.
+function fakeBrowser(response, bodyText = '') {
+  const page = { goto: async () => response, innerText: async () => bodyText };
+  const ctx = { newPage: async () => page, close: async () => {} };
+  return { newContext: async () => ctx };
+}
+
+it('/reset is fine when the header is there, even though headers() alone would miss it', async () => {
+  const response = { status: () => 200, headers: () => ({}), headerValue: async (name) => (name === 'clear-site-data' ? '"cache", "cookies", "storage"' : null) };
+  expect(await resetPageProblems(fakeBrowser(response), 'http://x')).toEqual([]);
+});
+
+it('/reset without the header is a problem', async () => {
+  const response = { status: () => 200, headers: () => ({}), headerValue: async () => null };
+  expect(await resetPageProblems(fakeBrowser(response), 'http://x')).toEqual(['/reset: no Clear-Site-Data "cookies" header (got "")']);
 });

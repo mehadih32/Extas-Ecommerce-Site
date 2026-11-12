@@ -1,0 +1,216 @@
+// S15 · PR 306 (C1.5) — the four live AI writer adapters (Anthropic, OpenAI, Google, OpenRouter): each turns one
+// provider's HTTP answer into the same `AiWriter` contract the mock already answers, through the shared
+// prompt-and-parse layer (prompts.ts, live.ts). No real network call: `fetch` is replaced in every test.
+import { describe, expect, it, vi } from 'vitest';
+import {
+  ANTHROPIC_DEFAULT_API_VERSION,
+  anthropicAiWriterAdapter,
+  anthropicCompleter,
+  googleAiCompleter,
+  googleAiWriterAdapter,
+  liveAiWriter,
+  openAiAiWriterAdapter,
+  openAiCompatibleCompleter,
+  openRouterAiWriterAdapter,
+  openRouterAttributionHeaders,
+  testLiveAiWriter,
+  type AiCampaignInput,
+  type AiSeoInput,
+} from '../src';
+
+const ctx = (model = 'test-model') => ({ mode: 'LIVE' as const, config: { model }, storeId: 1, secret: async () => 'secret-key' });
+
+const seoInput: AiSeoInput = { subject: 'product', locale: 'en', facts: { name: 'Sample Pique Polo', brand: 'Sample Brand' }, max: { title: 60, description: 155 } };
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
+}
+
+describe('shared live AiWriter (PR 306)', () => {
+  it('turns a Completer into draftSeo, draftCampaign and draftArticle, each practice: false', async () => {
+    const complete = vi.fn(async ({ user }: { user: string }) => ({
+      text: user.includes('versions')
+        ? '```json\n{"versions": [{"subject": "Winter polos", "body": "New winter polos. {link}"}, {"subject": "Sale", "body": "Ten colours. {link}"}]}\n```'
+        : user.includes('journal article')
+          ? '{"excerpt": "Why polo collars curl", "body": "## Why it happens\\nFabric relaxes."}'
+          : '{"title": "Sample Pique Polo | Sample Brand", "description": "A classic polo."}',
+    }));
+    const w = liveAiWriter(complete);
+
+    const seo = await w.draftSeo(seoInput);
+    expect(seo).toEqual({ title: 'Sample Pique Polo | Sample Brand', description: 'A classic polo.', practice: false });
+
+    const campaign: AiCampaignInput = { channel: 'email', locale: 'en', brief: 'Winter polos', voice: { greeting: 'Dear', signOff: 'Team', style: '' }, versions: 2, words: ['link'], max: { subject: 80, body: 300 } };
+    const camp = await w.draftCampaign(campaign);
+    expect(camp.practice).toBe(false);
+    expect(camp.versions).toHaveLength(2);
+    expect(camp.versions[0]!.body).toContain('{link}');
+
+    const article = await w.draftArticle({ locale: 'en', title: 'Why polo collars curl', query: null, keywords: ['polo collar'], intent: 'howto', wordCount: 400, outline: ['Why it happens'], mustInclude: null, links: [], notes: null });
+    expect(article).toEqual({ excerpt: 'Why polo collars curl', body: '## Why it happens\nFabric relaxes.', practice: false });
+
+    expect(complete).toHaveBeenCalledTimes(3);
+  });
+
+  it('drops any {brace} the model used that was not on the allowed word list', async () => {
+    const complete = vi.fn(async () => ({ text: '{"versions": [{"body": "Hi {customerName}, see {secretWord} now {link}"}, {"body": "Second {link}"}]}' }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftCampaign({ channel: 'sms', locale: 'en', brief: 'x', voice: { greeting: '', signOff: '', style: '' }, versions: 2, words: ['customerName', 'link'], max: { subject: 0, body: 200 } });
+    expect(d.versions[0]!.body).toBe('Hi {customerName}, see  now {link}');
+  });
+
+  it('throws when the model answers with no JSON, or with the wrong shape', async () => {
+    const w = liveAiWriter(async () => ({ text: 'Sure, here is a title: Great Polo' }));
+    await expect(w.draftSeo(seoInput)).rejects.toThrow('JSON');
+    const w2 = liveAiWriter(async () => ({ text: '{"onlyTitle": "x"}' }));
+    await expect(w2.draftSeo(seoInput)).rejects.toThrow('title');
+  });
+
+  it('testLiveAiWriter reports ok on a real-shaped answer and fails cleanly otherwise', async () => {
+    const ok = await testLiveAiWriter(liveAiWriter(async () => ({ text: '{"title": "A title", "description": "A description."}' })));
+    expect(ok).toMatchObject({ ok: true });
+    const bad = await testLiveAiWriter(liveAiWriter(async () => ({ text: 'not json' })));
+    expect(bad.ok).toBe(false);
+    expect(bad.message).toMatch(/JSON/);
+  });
+
+  it('PR 311 — masks a phone number and an e-mail address out of the article prompt before the Completer ever sees it', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"excerpt": "x", "body": "y"}' }));
+    const w = liveAiWriter(complete);
+    await w.draftArticle({
+      locale: 'en',
+      title: 'Care guide',
+      query: null,
+      keywords: ['care'],
+      intent: 'howto',
+      wordCount: 400,
+      outline: [],
+      mustInclude: null,
+      links: [],
+      notes: 'Call 01712345678 or mail rahim@example.com for the full return story.',
+    });
+    expect(complete).toHaveBeenCalledTimes(1);
+    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
+    expect(sent.user).not.toContain('01712345678');
+    expect(sent.user).not.toContain('rahim@example.com');
+    expect(sent.user).toContain('[PHONE]');
+    expect(sent.user).toContain('[EMAIL]');
+  });
+
+  it('PR 311 — masks a phone number inside a campaign brief the same way', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"versions": [{"subject": "Hi", "body": "Hi {link}"}, {"subject": "Hi", "body": "Hi {link}"}]}' }));
+    const w = liveAiWriter(complete);
+    const campaign: AiCampaignInput = { channel: 'email', locale: 'en', brief: 'Call the rider on 01812345678 if the box looks damaged', voice: { greeting: '', signOff: '', style: '' }, versions: 2, words: ['link'], max: { subject: 80, body: 300 } };
+    await w.draftCampaign(campaign);
+    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
+    expect(sent.user).not.toContain('01812345678');
+    expect(sent.user).toContain('[PHONE]');
+  });
+
+  it('PR 311 — does not touch a prompt with nothing to mask', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"title": "A title", "description": "A description."}' }));
+    await liveAiWriter(complete).draftSeo(seoInput);
+    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
+    expect(sent.user).not.toContain('[PHONE]');
+    expect(sent.user).not.toContain('[EMAIL]');
+    expect(sent.user).toContain('Sample Pique Polo');
+  });
+});
+
+describe('Anthropic (PR 306)', () => {
+  it('sends the Messages API shape and reads its text content back', async () => {
+    const calls: { url: string; init: RequestInit }[] = [];
+    const doFetch = vi.fn(async (url: string, init: RequestInit) => {
+      calls.push({ url, init });
+      return jsonResponse({ content: [{ type: 'text', text: '{"title": "A title", "description": "A description."}' }] });
+    });
+    const complete = anthropicCompleter('sk-ant-secret', 'claude-x', 'https://api.anthropic.com', undefined, doFetch as unknown as typeof fetch);
+    const r = await complete({ system: 'rules', user: 'write it', maxTokens: 100 });
+    expect(r.text).toContain('A title');
+    expect(calls[0]!.url).toBe('https://api.anthropic.com/v1/messages');
+    const headers = calls[0]!.init.headers as Record<string, string>;
+    expect(headers['x-api-key']).toBe('sk-ant-secret');
+    expect(headers['anthropic-version']).toBe(ANTHROPIC_DEFAULT_API_VERSION);
+    const body = JSON.parse(calls[0]!.init.body as string);
+    expect(body).toMatchObject({ model: 'claude-x', max_tokens: 100, system: 'rules' });
+  });
+
+  it('uses the owner\'s own api version override when one is set', async () => {
+    const doFetch = vi.fn(async (_url: string, init: RequestInit) => {
+      expect((init.headers as Record<string, string>)['anthropic-version']).toBe('2099-01-01');
+      return jsonResponse({ content: [{ type: 'text', text: '{"title": "x", "description": "y"}' }] });
+    });
+    const complete = anthropicCompleter('sk-ant-secret', 'claude-x', 'https://api.anthropic.com', '2099-01-01', doFetch as unknown as typeof fetch);
+    await complete({ system: '', user: 'x', maxTokens: 10 });
+    expect(doFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws without a key, exposes the key in no error, and is a LIVE-only AI_PROVIDER adapter', async () => {
+    expect(anthropicAiWriterAdapter.kind).toBe('AI_PROVIDER');
+    expect(anthropicAiWriterAdapter.modes).toEqual(['LIVE']);
+    expect(anthropicAiWriterAdapter.secrets).toEqual(['apiKey']);
+    await expect(anthropicAiWriterAdapter.create({ ...ctx(), secret: async () => null })).rejects.toThrow('key');
+  });
+
+  it('refuses and never repeats the key when Anthropic answers with an error', async () => {
+    const doFetch = vi.fn(async () => jsonResponse({ error: { message: 'bad request' } }, 400));
+    const complete = anthropicCompleter('sk-ant-secret', 'claude-x', 'https://api.anthropic.com', undefined, doFetch as unknown as typeof fetch);
+    await expect(complete({ system: '', user: 'x', maxTokens: 10 })).rejects.toThrow('400');
+  });
+});
+
+describe('OpenAI-compatible (OpenAI, OpenRouter) (PR 306)', () => {
+  it('sends the Chat Completions shape and reads the message content back', async () => {
+    const doFetch = vi.fn(async (_url: string, _init?: RequestInit) => jsonResponse({ choices: [{ message: { content: '{"title": "x", "description": "y"}' } }] }));
+    const complete = openAiCompatibleCompleter({ apiKey: 'sk-secret', model: 'gpt-x', baseUrl: 'https://api.openai.com/v1', fetch: doFetch as unknown as typeof fetch });
+    const r = await complete({ system: 's', user: 'u', maxTokens: 50 });
+    expect(r.text).toContain('"title"');
+    const [url, init] = doFetch.mock.calls[0]!;
+    expect(url).toBe('https://api.openai.com/v1/chat/completions');
+    expect((init!.headers as Record<string, string>).authorization).toBe('Bearer sk-secret');
+  });
+
+  it('builds OpenRouter\'s optional attribution headers only from what the owner filled in', () => {
+    expect(openRouterAttributionHeaders({ appUrl: 'https://shop.example.com', appName: 'EXTAS' })).toEqual({ 'HTTP-Referer': 'https://shop.example.com', 'X-Title': 'EXTAS' });
+    expect(openRouterAttributionHeaders({})).toEqual({});
+  });
+
+  it('throws when the service refuses', async () => {
+    const doFetch = vi.fn(async () => jsonResponse({ error: { message: 'no credit' } }, 402));
+    const complete = openAiCompatibleCompleter({ apiKey: 'sk-secret', model: 'gpt-x', baseUrl: 'https://api.openai.com/v1', fetch: doFetch as unknown as typeof fetch });
+    await expect(complete({ system: '', user: 'x', maxTokens: 10 })).rejects.toThrow('402');
+  });
+
+  it('openAi and openRouter are both AI_PROVIDER LIVE adapters needing an apiKey', () => {
+    for (const a of [openAiAiWriterAdapter, openRouterAiWriterAdapter]) {
+      expect(a.kind).toBe('AI_PROVIDER');
+      expect(a.modes).toEqual(['LIVE']);
+      expect(a.secrets).toEqual(['apiKey']);
+    }
+  });
+});
+
+describe('Google AI (Gemini) (PR 306)', () => {
+  it('sends generateContent\'s shape and reads the candidate text back', async () => {
+    const doFetch = vi.fn(async (_url: string, _init?: RequestInit) => jsonResponse({ candidates: [{ content: { parts: [{ text: '{"title": "x", "description": "y"}' }] } }] }));
+    const complete = googleAiCompleter('secret-key', 'gemini-x', 'https://generativelanguage.googleapis.com/v1beta', doFetch as unknown as typeof fetch);
+    const r = await complete({ system: 's', user: 'u', maxTokens: 50 });
+    expect(r.text).toContain('"title"');
+    const [url, init] = doFetch.mock.calls[0]!;
+    expect(url).toBe('https://generativelanguage.googleapis.com/v1beta/models/gemini-x:generateContent');
+    expect(url).not.toContain('secret-key');
+    expect((init!.headers as Record<string, string>)['x-goog-api-key']).toBe('secret-key');
+  });
+
+  it('throws when Google answers with no candidates', async () => {
+    const doFetch = vi.fn(async () => jsonResponse({ candidates: [] }));
+    const complete = googleAiCompleter('k', 'gemini-x', 'https://generativelanguage.googleapis.com/v1beta', doFetch as unknown as typeof fetch);
+    await expect(complete({ system: '', user: 'x', maxTokens: 10 })).rejects.toThrow('no text');
+  });
+
+  it('is an AI_PROVIDER LIVE adapter needing an apiKey', () => {
+    expect(googleAiWriterAdapter.kind).toBe('AI_PROVIDER');
+    expect(googleAiWriterAdapter.modes).toEqual(['LIVE']);
+    expect(googleAiWriterAdapter.secrets).toEqual(['apiKey']);
+  });
+});

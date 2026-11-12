@@ -104,3 +104,5 @@ export * from './escalation-pure';
 export * from './escalation';
 // PR 624: taps on the shop's support buttons, counted
 export * from './taps';
+// S23 · PR 443: Facebook Page comments and Instagram comments + Direct messages into the inbox (receiveSocialEngagement).
+export * from './social-engagement';

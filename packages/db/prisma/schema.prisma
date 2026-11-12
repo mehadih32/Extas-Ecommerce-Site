@@ -8385,8 +8385,10 @@ model CustomerErasureRequest {
 // and cost attribution (A4.3). AI is additive: every agent has a non-AI fallback (C1.4).
 // =====================================================================================================================
 
-/// @stage S15 · PR 305, 577, 581, 583, 593 — an agent (the seven fixed agents, the five blog authors, engine agents such
-/// as Photoshoot). Owner-editable profile; keep-on works with the master switch off (C1.3).
+/// @stage S15 · PR 305, 307, 577, 581, 583, 593 — an agent (the seven fixed agents, the five blog authors, engine
+/// agents such as Photoshoot). Owner-editable profile; keep-on works with the master switch off (C1.3).
+/// `selectedProvider` is the owner's own model pick (PR 307): one of the AI_PROVIDER connections PR 306 wired
+/// (`null` = the practice writer). It names no AiModel row — that per-model price table is PR 312/580's job.
 /// @scope installation — the shared AI 360 control room (A4.3).
 model AiAgent {
   id                  String    @id @default(uuid(7)) @db.Uuid
@@ -8409,6 +8411,9 @@ model AiAgent {
   verified            Boolean   @default(false)
   monthlyCapMinor     Int?
   schedule            Json?
+  /// One of the AI_PROVIDER connections' `provider` keys (PR 306: anthropic/openAi/googleAi/openRouter), or `null`
+  /// for the practice writer. PR 307.
+  selectedProvider    String?
   archivedAt          DateTime? @db.Timestamptz(3)
   createdAt           DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt           DateTime  @updatedAt @db.Timestamptz(3)

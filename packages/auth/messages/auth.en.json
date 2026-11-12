@@ -33,7 +33,8 @@
     "ads": "Ads and tracking",
     "reports": "Reports",
     "marketing": "Marketing",
-    "blog": "Blog and journal"
+    "blog": "Blog and journal",
+    "ai": "AI 360 Control Room"
   },
   "permissions": {
     "settings": {
@@ -350,12 +351,35 @@
       "ads": {
         "control": "Pause a platform campaign or lower its daily budget (after a confirm), and ask to start one again or raise its budget",
         "approve": "Approve or reject starting an ad campaign again or raising its budget (the owner)"
+      },
+      "studio": {
+        "read": "See Marketing › Studio: the motion library, image-to-video jobs, reels, campaign creative exports and the creative brief",
+        "write": "Add or edit motion actions, start and assemble video jobs and reels, and draft a creative brief",
+        "approve": "Approve a generated clip or reel, choose a creative direction, and send a creative export to a connected ad account or download it"
       }
     },
     "blog": {
       "read": "See the journal's articles, categories and authors (Website → Blog & journal)",
       "write": "Write and edit articles, send them through the review steps, and add, change or put away categories and authors (nothing is deleted)",
       "publish": "Publish, schedule or take down an article, and switch the journal on or off on the shop"
+    },
+    "studio": {
+      "read": "See the social & content studio: its accounts, brand assets, templates, calendar and queued posts",
+      "write": "Add or change a social account, a brand asset or a template",
+      "generate": "Run a generate job (assembles a post; may spend on AI captions once the owner turns that on)",
+      "approve": "Approve or reject a post waiting in the studio's approval queue",
+      "publish": "Let a post go out on its own, with no approval wait, where its platform and account both allow it"
+    },
+    "photoshoot": {
+      "read": "See the Virtual Photoshoot Studio: the model library, reference tags, shot plans, generation jobs and the review queue",
+      "write": "Manage the model library, tag an uploaded photo's reference role, and edit a shot plan",
+      "generate": "Run a generation job (spends from the AI usage ledger within its cap)",
+      "approve": "Approve, reject or ask for a regenerate in the review queue — mandatory before anything publishes",
+      "publish": "Publish an approved image to the product gallery"
+    },
+    "ai": {
+      "read": "See the AI Center: every agent, what it did last and what it cost (no customer's details beyond what the agent itself worked on)",
+      "control": "Pause or resume one AI agent, and its switches, monthly cap and schedule — never money, refunds, prices, COD, ad budgets, blocking or deleting on its own"
     }
   },
   "totp": {
