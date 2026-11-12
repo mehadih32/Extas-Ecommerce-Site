@@ -75,6 +75,7 @@
     { "id": "marketing/studio", "route": "/admin/marketing/studio" },
     { "id": "marketing/studio-motion", "route": "/admin/marketing/studio/motion" },
     { "id": "marketing/studio-videos", "route": "/admin/marketing/studio/videos" },
+    { "id": "marketing/studio-briefs", "route": "/admin/marketing/studio/briefs" },
     { "id": "marketing/referrals", "route": "/admin/marketing/referrals" },
     { "id": "marketing/youtube", "route": "/admin/marketing/youtube" },
     { "id": "marketing/outreach", "route": "/admin/marketing/outreach" },

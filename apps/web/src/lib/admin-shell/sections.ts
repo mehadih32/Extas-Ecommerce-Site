@@ -278,6 +278,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/marketing/studio', perm: 'studio.read', keys: ['marketingStudio'] },
           { href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] },
           { href: '/admin/marketing/studio/videos', perm: 'marketing.studio.read', keys: ['marketingStudioVideos'] },
+          // S25 · PR 490: the creative brief — a few short questions, then three proposed directions to pick from.
+          { href: '/admin/marketing/studio/briefs', perm: 'marketing.studio.read', keys: ['marketingStudioBriefs'] },
         ],
       },
       // S13 · PR 273: referrals — the programme, friends' orders with their invite codes and the sharers' rewards.

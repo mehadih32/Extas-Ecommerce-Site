@@ -138,6 +138,7 @@ import { exchangeRetrySettings } from './registry-exchange-retry';
 import { statementCostsSettings } from './registry-books-statement-costs';
 import { studioSettings } from './registry-studio';
 import { studioVideoSettings } from './registry-creative-studio-video';
+import { studioCreativeBriefSettings } from './registry-creative-studio-brief';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
@@ -1545,6 +1546,8 @@ export const registry = {
   ...studioSettings,
   // ---- S25 · PR 482 (Blueprint C8.1, C8.2) · the image-to-video engine's master switch and its cost-per-second rate, off / 0 (registry-creative-studio-video.ts, version 282). ----
   ...studioVideoSettings,
+  // ---- S25 · PR 490 (Blueprint C8.4) · the creative brief's master switch, off (registry-creative-studio-brief.ts, version 290). ----
+  ...studioCreativeBriefSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

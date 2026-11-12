@@ -82,6 +82,10 @@
     "video": {
       "label": "Image-to-video clips (Studio)",
       "help": "Off as it ships. On, Marketing › Studio › Videos can turn an already-approved product still into a short clip. Nothing is generated unless you turn this on. The cost per second is 0 (not set) until you type your own rate here — until then a clip's cost shows as \"not set\" rather than a guessed number."
+    },
+    "creativeBrief": {
+      "label": "Creative brief (Studio)",
+      "help": "Off as it ships. On, Marketing › Studio › Creative brief can ask a few short questions about a campaign (what it is for, who it should reach, the offer and for how long) and propose three ready-made directions to choose from. Nothing is asked or proposed unless you turn this on; nothing is produced from a direction until it is chosen."
     }
   }
 }
