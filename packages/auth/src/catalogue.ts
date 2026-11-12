@@ -428,6 +428,10 @@ export const PERMISSIONS = {
   // price, a discount, COD or a delivery charge; keeping B also needs the Website permission of what B changes.
   'reports.experiments.read': { group: 'reports' },
   'reports.experiments.write': { group: 'reports' },
+  // S15 · PR 337 (Blueprint B8.4) — Reports → Competitor Teardown: add, edit, archive and restore a saved
+  // competitor page and run its recheck by hand (`reports.competitors.write`); seeing the saved list and its
+  // reports is already covered by `reports.read`. Never places a real order, never a price or policy decision.
+  'reports.competitors.write': { group: 'reports' },
   // S13 · PR 254 (Blueprint MKT-05) — Marketing › Landing pages: see the pages and the orders each brought
   // (`marketing.landing.read`); create, edit, publish, take down and archive them (`marketing.landing.write`). A page shows
   // the product's own live prices; nothing here changes a price, a discount or an order.
