@@ -67,6 +67,11 @@ export const PHOTOSHOOT_ERROR_CODES = [
   // studio output (perfume, watch glass, sunglass lens) with no real, on-file reflective_reference phone photo
   // — "never invent" the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE and NO_WORN_ACCESSORY_REFERENCE do.
   'NO_REFLECTIVE_REFERENCE',
+  // PR 475 / C7.22 item 32 hard rule: composing a combo/gift-set studio image with a named piece that has no real,
+  // on-file photo actually linked (ProductMedia) to that exact product in this store — "never invent" a piece's
+  // own likeness, the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE, NO_WORN_ACCESSORY_REFERENCE and
+  // NO_REFLECTIVE_REFERENCE already do for their own engines.
+  'NO_PIECE_REFERENCE',
 ] as const;
 export type PhotoshootErrorCode = (typeof PHOTOSHOOT_ERROR_CODES)[number];
 
@@ -89,7 +94,8 @@ export class PhotoshootError extends Error {
       this.code === 'NO_FOOTWEAR_REFERENCE' ||
       this.code === 'NO_WORN_ACCESSORY_REFERENCE' ||
       this.code === 'DETAIL_REPROJECTION_REQUIRED' ||
-      this.code === 'NO_REFLECTIVE_REFERENCE'
+      this.code === 'NO_REFLECTIVE_REFERENCE' ||
+      this.code === 'NO_PIECE_REFERENCE'
     )
       return 403;
     if (this.code === 'CONCURRENCY_LIMIT' || this.code === 'SPEND_CAP_REACHED') return 429;

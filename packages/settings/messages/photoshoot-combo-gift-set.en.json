@@ -1,0 +1,14 @@
+{
+  "studio": {
+    "photoshoot": {
+      "comboGiftSetEnabled": {
+        "label": "Studio — combo and gift-set composition",
+        "help": "Off by default. Turn this on to let the studio compose one staged photo from several already-photographed pieces of a combo or gift set. Each piece still needs its own real photo already on the product first — nothing is ever invented."
+      },
+      "comboGiftSetDefaultLayout": {
+        "label": "Studio — combo/gift-set default layout",
+        "help": "Which arrangement a new combo or gift-set composition starts with: grouped flat-lay, grouped standing, or a boxed gift look. You can still change it for any one composition."
+      }
+    }
+  }
+}

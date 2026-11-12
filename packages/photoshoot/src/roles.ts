@@ -36,11 +36,21 @@ export const ASSET_ROLES = [
    * own "never invent" gate ever accepts as a source — a genuinely new photographic need, the same reasoning that
    * justified `worn_reference` above rather than reusing `front_reference` for it. */
   'reflective_reference',
+  /** S24 · PR 475 (C7.22 item 32): a finished image showing several pieces of a combo or gift set composed
+   * together in one staged frame. Never a reference for anything else — no family's own recipe or engine is ever
+   * built FROM a combo composition the way a footwear angle or a worn-accessory view can be — so this is the one
+   * other role, besides `primary_garment`, that `REFERENCE_ROLES` below excludes. It is also never one product's
+   * own view: unlike every reference role above, a row carrying it may trace back (`sourceAssetId`) to only ONE
+   * of its several real pieces (`comboGiftSetStudio.ts`'s own documented limit of PR 444's single-source model),
+   * with the rest of the group recorded as tags, never pretended to be a second role on the same row. */
+  'combo_gift_set_composition',
 ] as const;
 export type AssetRole = (typeof ASSET_ROLES)[number];
 
-/** The reference roles a real photo of the garment can carry (every role except the generated-output's own). */
-export const REFERENCE_ROLES = ASSET_ROLES.filter((r) => r !== 'primary_garment') as readonly AssetRole[];
+/** The reference roles a real photo of the garment can carry — every role except `primary_garment` (the garment's
+ * own plain photo, not a reference to anything) and PR 475's own `combo_gift_set_composition` (always a finished
+ * group output, never a reference any further generation is built from). */
+export const REFERENCE_ROLES = ASSET_ROLES.filter((r) => r !== 'primary_garment' && r !== 'combo_gift_set_composition') as readonly AssetRole[];
 
 export const isAssetRole = (v: unknown): v is AssetRole => typeof v === 'string' && (ASSET_ROLES as readonly string[]).includes(v);
 

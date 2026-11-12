@@ -19,11 +19,15 @@ describe('ASSET_ROLES', () => {
     // perfume bottle, watch glass or sunglass lens; C7.12's own "these are not generated" rule accepts no other
     // source.
     expect((ASSET_ROLES as readonly string[]).includes('reflective_reference')).toBe(true);
+    // S24 · PR 475 (C7.22 item 32): the combo/gift-set composition studio's own finished-group-image role —
+    // never a reference for any further generation.
+    expect((ASSET_ROLES as readonly string[]).includes('combo_gift_set_composition')).toBe(true);
   });
 
-  it('REFERENCE_ROLES excludes primary_garment only', () => {
+  it('REFERENCE_ROLES excludes primary_garment and combo_gift_set_composition only', () => {
     expect(REFERENCE_ROLES.includes('primary_garment' as never)).toBe(false);
-    expect(REFERENCE_ROLES.length).toBe(ASSET_ROLES.length - 1);
+    expect(REFERENCE_ROLES.includes('combo_gift_set_composition' as never)).toBe(false);
+    expect(REFERENCE_ROLES.length).toBe(ASSET_ROLES.length - 2);
   });
 });
 
