@@ -262,6 +262,8 @@ export const APPEND_ONLY_OPEN: Readonly<Record<string, string>> = {
   PrRegisterUpdate: 'the reader marks an update as seen (seenAt)',
   StaffLoginEvent: PERSONAL,
   AbAssignment: PERSONAL,
+  // S24 · PR 462: the on-model-vs-flat-lay live pilot's own visitor bucketing (C7.19) — same shape as AbAssignment.
+  PhotoshootStyleTrial: PERSONAL,
   SizeRecommendation: PERSONAL,
   RiskAssessment: PERSONAL,
   CouponRedemption: PERSONAL,

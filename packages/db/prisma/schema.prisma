@@ -447,6 +447,7 @@ model Store {
   detailRegions           DetailRegion[]
   colourVerifications     ColourVerification[]
   studioPilotRuns         StudioPilotRun[]
+  photoshootStyleTrials   PhotoshootStyleTrial[]
   motionActions           MotionAction[]
   videoJobs               VideoJob[]
   reels                   Reel[]
@@ -10724,6 +10725,30 @@ model StudioPilotRun {
   costPerApprovedMinor Int?
   metrics              Json
   createdAt            DateTime @default(now()) @db.Timestamptz(3)
+}
+
+/// @stage S24 · PR 462 (C7.19 "A/B test on-model vs flat-lay on the live site") — the live pilot's own visitor
+/// bucketing: which gallery style (ON_MODEL or FLAT_LAY) one visitor was shown for one pilot product, kept once and
+/// never re-bucketed, so later add-to-bag/order/return activity can be read back against it. Not anticipated by the
+/// S00 schema skeleton the way `StudioPilotRun` above was for this same PR's own metrics half — a genuinely new
+/// table (migration 0188), scoped tight to this one pilot rather than reused from the generic storefront `AbTest`/
+/// `AbAssignment` pair (S02, PR 83): that engine's own `variants`/`goalEvent` shape is fixed to word/eye-toggle
+/// changes and a single addToBag-or-order goal, and the owner's Reports › Experiments screen lists every `AbTest`
+/// row as one of those — writing a row here in a different shape would show up there, broken.
+/// @append-only
+model PhotoshootStyleTrial {
+  id        String           @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store            @relation(fields: [storeId], references: [id])
+  productId String           @db.Uuid
+  visitorId String
+  /// Only ON_MODEL or FLAT_LAY is ever written (app-level, @extas/photoshoot's `styleAbTest.ts`); the enum is
+  /// reused as-is from `ProductMediaRole` rather than inventing a parallel vocabulary for the same two photo kinds.
+  variant   ProductMediaRole
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
+
+  @@unique([storeId, productId, visitorId])
+  @@index([storeId, productId])
 }
 
 /// @stage S24 · PR 460; C1.5 — a recommendation note shown when the owner changes a setting away from the default.
