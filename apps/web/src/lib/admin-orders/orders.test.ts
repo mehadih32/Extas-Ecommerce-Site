@@ -23,6 +23,7 @@ import { signalDetail } from './risk';
 import { filterSelects } from '@/components/admin/orders/OrderListPage';
 import { RISK_SECTIONS } from '@extas/settings';
 import { LIST_PAGES, ORDER_TONE, PAY_TONE, SHIP_TONE, latinDigits, listHref } from './model';
+import { dayOf, presetOf, presetRange, validDay } from './range';
 
 function keys(d: Dict, prefix = ''): string[] {
   return Object.entries(d).flatMap(([k, v]) => (typeof v === 'string' ? [prefix + k] : keys(v, `${prefix}${k}.`)));
@@ -71,7 +72,9 @@ describe('the list address', () => {
     const bad = parseListQuery('all', { view: 'secret', status: 'DRAFT', payment: 'GOLD', source: 'x', cursor: 'not-a-uuid', q: 'x'.repeat(200) });
     expect(bad).toMatchObject({ view: 'all', status: undefined, payment: undefined, source: undefined, cursor: undefined });
     expect(bad.q).toHaveLength(80);
-    expect(parseListQuery('confirm', { view: 'all' }).view).toBe('toConfirm');
+    // PR 660: the Processing tab opens on the Processing view (a view, never an order status)
+    expect(parseListQuery('confirm', { view: 'all' }).view).toBe('processing');
+    expect(parseListQuery('confirm', { view: 'toConfirm' }).view).toBe('toConfirm');
     expect(FILTER_STATES).not.toContain('DRAFT');
     // PR 541 (follow-up 295): a band key, a section and the risk sort are read; anything else is dropped
     expect(parseListQuery('all', { risk: 'high', section: 'identity', sort: 'risk' })).toMatchObject({ risk: 'high', section: 'identity', sort: 'risk' });
@@ -84,7 +87,7 @@ describe('the list address', () => {
     expect(listHref('all', { view: 'all' })).toBe('/admin/orders');
     expect(listHref('all', { view: 'all', q: 'QA-1', cursor: UUID }, { view: 'onHold' })).toBe('/admin/orders?view=onHold&q=QA-1');
     expect(listHref('all', { view: 'onHold', payment: 'COD' }, { cursor: UUID })).toBe(`/admin/orders?view=onHold&payment=COD&cursor=${UUID}`);
-    expect(listHref('confirm', { view: 'toConfirm' })).toBe('/admin/orders/confirm');
+    expect(listHref('confirm', { view: 'processing' })).toBe('/admin/orders/confirm');
     const q = parseListQuery('all', Object.fromEntries(new URL(`http://x${listHref('all', { view: 'cancelPending', status: 'HANDED_OVER', source: 'WEBSITE' })}`).searchParams));
     expect(q).toMatchObject({ view: 'cancelPending', status: 'HANDED_OVER', source: 'WEBSITE' });
   });
@@ -157,10 +160,10 @@ describe('the row’s chips', () => {
 
   it('PR 541: the list filters carry the owner’s bands, the sections and the sort; the timeline says why a section was given', () => {
     const sels = filterSelects(view('en'), { view: 'all', risk: 'high' }, [{ value: 'high', label: 'High' }]);
-    expect(sels.map((s) => s.name)).toEqual(['status', 'payment', 'source', 'risk', 'section', 'sort']);
+    expect(sels.map((s) => s.name)).toEqual(['range', 'status', 'payment', 'source', 'risk', 'section', 'sort']);
     expect(sels.find((s) => s.name === 'risk')).toMatchObject({ value: 'high', options: [{ value: 'high', label: 'High' }] });
     expect(sels.find((s) => s.name === 'section')!.options.map((o) => o.value)).toEqual([...RISK_SECTIONS]);
-    expect(sels.find((s) => s.name === 'sort')!.options).toEqual([{ value: 'risk', label: 'Highest risk first' }]);
+    expect(sels.find((s) => s.name === 'sort')!.options).toEqual([{ value: 'risk', label: 'Lowest courier score first (highest risk)' }]);
     expect(sectionSummary(view('en'), { section: 'high', previous: 'watch', because: ['refusals'], review: true })).toBe('High risk · because: ' + t(adminDicts.en, 'orders.risk.sig.refusals') + ' · waits for a person · was Watch');
     expect(sectionSummary(view('en'), {})).toBeNull();
     expect(signalDetail(view('en'), { key: 'orderPieces', weight: 15, values: { pieces: 6, atLeast: 4 } } as never, 'BDT')).toBe('6 pieces (from 4)');
@@ -185,5 +188,63 @@ describe('the row’s chips', () => {
   it('the phone is said back the way the team reads it', () => {
     expect(phoneText('+8801712345678')).toBe('01712-345678');
     expect(phoneText(null)).toBe('');
+  });
+});
+
+describe('PR 660 · the date bar and the new views of the order lists', () => {
+  it('the address carries the days; a preset (range=from..to) is read as the two days; anything that is not a real day is dropped', () => {
+    expect(parseListQuery('all', { from: '2026-11-01', to: '2026-11-13' })).toMatchObject({ from: '2026-11-01', to: '2026-11-13' });
+    expect(parseListQuery('all', { range: '2026-11-07..2026-11-13' })).toMatchObject({ from: '2026-11-07', to: '2026-11-13' });
+    const none = parseListQuery('all', { from: '2026-02-30', to: '13-11-2026', range: 'x..y' });
+    expect(none.from).toBeUndefined();
+    expect(none.to).toBeUndefined();
+    expect(listHref('all', { view: 'all', from: '2026-11-01', to: '2026-11-13' })).toBe('/admin/orders?from=2026-11-01&to=2026-11-13');
+  });
+
+  it('the presets count the store\'s own days: Today, Yesterday, Last 7 days, This month, Last month', () => {
+    const today = '2026-11-13';
+    expect(presetRange('today', today)).toEqual({ from: '2026-11-13', to: '2026-11-13' });
+    expect(presetRange('yesterday', today)).toEqual({ from: '2026-11-12', to: '2026-11-12' });
+    expect(presetRange('days7', today)).toEqual({ from: '2026-11-07', to: '2026-11-13' });
+    expect(presetRange('month', today)).toEqual({ from: '2026-11-01', to: '2026-11-13' });
+    expect(presetRange('lastMonth', today)).toEqual({ from: '2026-10-01', to: '2026-10-31' });
+    // across a year end and a leap day
+    expect(presetRange('lastMonth', '2026-01-05')).toEqual({ from: '2025-12-01', to: '2025-12-31' });
+    expect(presetRange('lastMonth', '2024-03-10')).toEqual({ from: '2024-02-01', to: '2024-02-29' });
+    expect(presetRange('days7', '2026-01-03')).toEqual({ from: '2025-12-28', to: '2026-01-03' });
+    expect(presetOf('2026-11-07', '2026-11-13', today)).toBe('days7');
+    expect(presetOf('2026-11-08', '2026-11-13', today)).toBe('');
+    expect(presetOf(undefined, undefined, today)).toBe('');
+  });
+
+  it('the store\'s day of a moment follows its time zone (00:30 in Dhaka is still the day before in UTC)', () => {
+    const at = new Date('2026-11-12T18:30:00Z');
+    expect(dayOf(at, 'Asia/Dhaka')).toBe('2026-11-13');
+    expect(dayOf(at, 'UTC')).toBe('2026-11-12');
+    expect(validDay('2026-02-29')).toBeUndefined();
+    expect(validDay('2024-02-29')).toBe('2024-02-29');
+  });
+
+  it('Processing and Cancelled are views the order service has, on All orders; Processing is the first chip of its tab', () => {
+    expect(LIST_PAGES.all.views).toEqual(expect.arrayContaining(['processing', 'cancelled']));
+    expect(LIST_PAGES.confirm.views[0]).toBe('processing');
+    for (const p of Object.values(LIST_PAGES)) for (const v of p.views) expect(od.ORDER_VIEWS).toContain(v);
+    expect(Object.keys(ORDER_TONE)).not.toContain('PROCESSING_VIEW');
+  });
+
+  it('the Cancelled card reads the summary in the owner\'s words and lists nothing for an empty range', async () => {
+    const { cancelledCard, cancelledFileRequest } = await import('./cancelled');
+    const view = { dict: en as unknown as Dict, lang: 'en', locale: 'en-GB', timeZone: 'Asia/Dhaka' } as never;
+    const full = cancelledCard(view, { count: 3, totalMinor: 450_000, currency: 'BDT', byReason: [{ code: 'OUT_OF_STOCK', count: 2 }, { code: 'none', count: 1 }], byStage: [{ stage: 'PLACED', count: 2 }, { stage: 'unknown', count: 1 }], byActor: [{ actor: 'STAFF', count: 3 }] }, new Map([['OUT_OF_STOCK', 'Out of stock']]));
+    expect(full.tiles.map((x) => x.key)).toEqual(['count', 'money']);
+    expect(full.tiles[0]!.value).toBe('3');
+    expect(full.groups.map((g) => g.key)).toEqual(['reasons', 'stages', 'who']);
+    expect(full.groups[0]!.rows.map((r) => r.label)).toEqual(['Out of stock', 'No reason given']);
+    expect(full.groups[1]!.rows.map((r) => r.label)).toEqual([t(en as unknown as Dict, 'orders.st.PLACED'), 'Not recorded']);
+    expect(full.empty).toBeNull();
+    const none = cancelledCard(view, { count: 0, totalMinor: 0, currency: null, byReason: [], byStage: [], byActor: [] }, new Map());
+    expect(none.groups).toEqual([]);
+    expect(none.empty).toBeTruthy();
+    expect(cancelledFileRequest('2026-11-01', undefined, '2026-11-13')).toEqual({ url: '/api/admin/orders/export', body: { view: 'cancelled', from: '2026-11-01' }, fileName: 'cancelled-orders-2026-11-13.csv' });
   });
 });
