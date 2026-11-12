@@ -101,6 +101,38 @@ export const ${ident}: LookDesign<DashProps, DashPart> = {
   Thumb: () => <LookThumb page="dashboard" id="${key}" />,
 };
 `,
+  products: (ident, key, name) => `// PR 657 (CN-025) — Products design ${key}, "${name.en}". Made with \`pnpm admin:design products ${key}\`
+// (docs/admin-guide/HOW-TO-ADD-A-DESIGN.md). Draw the page from the one loader (\`loadProductList\`, \`@/lib/admin-
+// products\`) and reuse \`ProductsHeader\`/\`ProductListBody\` (components/admin/products/ProductListPage.tsx) for the
+// tiles, search, chips, table and bulk bar — add your own chrome around them; CN-044: read-only, never a write.
+import { ProductsHeader, ProductListBody } from '@/components/admin/products/ProductListPage';
+import { loadProductList } from '@/lib/admin-products';
+import { LookThumb } from '../thumbs';
+import type { LookDesign } from '../types';
+import type { ProductsDesignProps } from './common';
+
+async function Products${key}(p: ProductsDesignProps) {
+  const { view, c, query, menu } = p;
+  const data = await loadProductList(c, view.locale, query);
+  const canWrite = c.can('catalogue.write');
+  const canPublish = c.can('catalogue.publish');
+  return (
+    <div className="a2-z" data-testid="products-list" data-design="${key}" data-lm-ready="">
+      <ProductsHeader view={view} canWrite={canWrite} menu={menu} />
+      <ProductListBody view={view} query={query} data={data} canWrite={canWrite} canPublish={canPublish} />
+    </div>
+  );
+}
+
+export const ${ident}: LookDesign<ProductsDesignProps, 'list'> = {
+  key: '${key}',
+  name: { en: ${JSON.stringify(name.en)}, bn: ${JSON.stringify(name.bn)} },
+  desc: { en: ${JSON.stringify(name.en)}, bn: ${JSON.stringify(name.bn)} },
+  parts: ['list'],
+  Render: Products${key},
+  Thumb: () => <LookThumb page="products" id="${key}" />,
+};
+`,
 };
 
 const camel = (page) => page.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());

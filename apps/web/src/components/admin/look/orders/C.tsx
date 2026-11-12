@@ -27,7 +27,7 @@ function FlowStrip({ p, counts }: { p: OrdersDesignProps; counts: Record<string,
       {FLOW_VIEWS.map((v) => {
         const on = query.view === v;
         return (
-          <Link key={v} className={`a3-fstep${on ? ' on' : ''}`} href={listHref('all', { view: query.view }, { view: v })} aria-current={on ? 'page' : undefined} scroll={false} data-testid={`orders-flow-${v}`}>
+          <Link key={v} className={`a3-ofstep${on ? ' on' : ''}`} href={listHref('all', { view: query.view }, { view: v })} aria-current={on ? 'page' : undefined} scroll={false} data-testid={`orders-flow-${v}`}>
             <span>{t(d, `orders.view.${v}`)}</span>
             <b className="a3-num">{formatNumber(counts[v] ?? 0, view.locale)}</b>
           </Link>

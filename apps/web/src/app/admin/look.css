@@ -550,16 +550,40 @@
 .adm2 .a3-ofold[open]>summary{border-bottom:1px solid var(--ln)}
 .adm2 .a3-ofold .a2-fbar{padding:14px 16px;margin:0}
 
-/* PR 657 (CN-025, follow-up 381) — Orders design C "Command view": the flow strip and the denser table. */
+/* PR 656 (CN-025, follow-up 381) — Orders design C "Command view": the flow strip and the denser table. Its flow-step
+   class is "a3-ofstep" (not "a3-fstep"), since Products' own design C (PR 657, below) already uses that name for an
+   unrelated layout — same page, same CSS file, two different rule sets, so the names must not collide. */
 .adm2 .a3-oflow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
-.adm2 .a3-fstep{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:var(--a3r);background:var(--sf);border:1px solid var(--ln);box-shadow:var(--a3sh);text-decoration:none;color:inherit;min-width:0}
-.adm2 .a3-fstep span{font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.adm2 .a3-fstep b{font-size:22px;line-height:1.15}
-.adm2 .a3-fstep.on{box-shadow:inset 0 0 0 2px var(--a3-c1)}
+.adm2 .a3-ofstep{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:var(--a3r);background:var(--sf);border:1px solid var(--ln);box-shadow:var(--a3sh);text-decoration:none;color:inherit;min-width:0}
+.adm2 .a3-ofstep span{font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm2 .a3-ofstep b{font-size:22px;line-height:1.15}
+.adm2 .a3-ofstep.on{box-shadow:inset 0 0 0 2px var(--a3-c1)}
 .adm2 .a3-odense .a2-tbl tbody tr{line-height:1.2}
 .adm2 .a3-odense .a2-tbl td,.adm2 .a3-odense .a2-tbl th{padding:6px 10px}
 @media (max-width:899px){.adm2 .a3-oflow{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:1023px),(hover:none),(pointer:coarse),(any-pointer:coarse){
   .adm2 .a3-ofold>summary{min-height:44px}
+  .adm2 .a3-ofstep{min-height:44px}
+}
+
+/* PR 657 (CN-025, CN-044 ERP lane, follow-up 382) — Products designs B "Focus view" and C "Command view": the hero
+   card over the "ready to publish" queue, and the flow strip of the catalogue's own counts. Both read `.a3-card`,
+   `.a3-btn`, `.a3-pill` etc. already defined above; only their own layout is new. */
+.adm2 .a3-phero{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;flex-wrap:wrap;margin-bottom:16px}
+.adm2 .a3-phn{font-size:40px;font-weight:650;letter-spacing:-.02em;line-height:1.1;display:block;margin:4px 0}
+.adm2 .a3-pflow{display:flex;gap:0;margin-bottom:16px;overflow-x:auto}
+.adm2 .a3-fstep{flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-right:1px solid var(--ln2);color:inherit;transition:background-color .12s}
+.adm2 .a3-fstep:last-child{border-right:0}
+.adm2 .a3-fstep:hover{background:var(--lm-hover)}
+.adm2 .a3-fstep b{font-size:24px;font-weight:650;letter-spacing:-.02em}
+.adm2 .a3-fstep span{font-size:12.5px;color:var(--mute)}
+@media (max-width:767px){
+  .adm2 .a3-phero{padding:16px 16px 14px}
+  .adm2 .a3-phn{font-size:32px}
+  .adm2 .a3-pflow{flex-wrap:wrap}
+  .adm2 .a3-fstep{min-width:45%;border-right:0;border-bottom:1px solid var(--ln2)}
+  .adm2 .a3-fstep:nth-child(2n){border-right:0}
+}
+@media (max-width:1023px),(hover:none),(pointer:coarse),(any-pointer:coarse){
   .adm2 .a3-fstep{min-height:44px}
 }
