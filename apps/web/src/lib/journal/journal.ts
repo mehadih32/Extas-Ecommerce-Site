@@ -20,6 +20,7 @@ import { MOTHER_STORE_ID, Prisma, type PrismaClient } from '@extas/db/client';
 import { blogJournalSchema, storeTarget, type BlogJournalSettings } from '@extas/settings';
 import { createHash } from 'node:crypto';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from '../admin-auth';
+import { AUTHOR_TEAM } from './authors-model';
 import {
   ACTION_PERMISSION,
   BLOG_ACTIONS,
@@ -461,6 +462,8 @@ export interface AuthorView {
   slug: string;
   displayName: string;
   isAiAuthor: boolean;
+  /** PR 593: the AI 360 agent code (A360-08…12) of a seeded author team member; null for every other author. */
+  agentKey: string | null;
   bioEn: string | null;
   bioBn: string | null;
   reviewerLine: string | null;
@@ -475,8 +478,21 @@ export async function journalCategories(db: Db, storeId: number = S): Promise<Ca
 }
 
 export async function journalAuthors(db: Db, storeId: number = S): Promise<AuthorView[]> {
+  await ensureAuthorTeam(db, storeId);
   const rows = await db.blogAuthor.findMany({ where: { storeId }, orderBy: { displayName: 'asc' }, include: { _count: { select: { posts: true } } } });
-  return rows.map((a) => ({ id: a.id, slug: a.slug, displayName: a.displayName, isAiAuthor: a.isAiAuthor, bioEn: a.bioEn, bioBn: a.bioBn, reviewerLine: a.reviewerLine, archived: !!a.archivedAt, posts: a._count.posts, version: a.updatedAt.toISOString() }));
+  return rows.map((a) => ({ id: a.id, slug: a.slug, displayName: a.displayName, isAiAuthor: a.isAiAuthor, agentKey: a.agentKey, bioEn: a.bioEn, bioBn: a.bioBn, reviewerLine: a.reviewerLine, archived: !!a.archivedAt, posts: a._count.posts, version: a.updatedAt.toISOString() }));
+}
+
+/**
+ * PR 593: the five AI author sub-agents under Doot (Suta, Jotno, Rong, Ritu, Bazar — A360-08…12), seeded once by
+ * slug the first time anyone reads the author shelf or the topic plan. Never touches a row that already exists
+ * (the owner's own edits to a name, bio or photo always stand), and nothing here is ever deleted.
+ */
+export async function ensureAuthorTeam(db: Db, storeId: number = S): Promise<void> {
+  await db.blogAuthor.createMany({
+    data: AUTHOR_TEAM.map((a) => ({ storeId, slug: a.slug, displayName: a.displayName, agentKey: a.agentKey, isAiAuthor: true, bioEn: a.bioEn, bioBn: a.bioBn })),
+    skipDuplicates: true,
+  });
 }
 
 /** Create (id null) or save a category: two levels at most, never its own main category. */
