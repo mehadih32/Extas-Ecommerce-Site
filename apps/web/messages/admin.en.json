@@ -508,6 +508,43 @@
         "baseUrl": "Address — only for a test server"
       }
     },
+    "facebookPagePublish": {
+      "name": "Facebook Page posting (Studio)",
+      "desc": "Lets the content studio post straight to the Page's feed. Mock until the keys are in and the test (reading the Page) passes: nothing is posted before that. Today's posts are always a single photo (the studio's real video assembler is a later PR).",
+      "fields": {
+        "pageAccessToken": "Page access token (Meta app → Messenger → API settings; a long-lived Page token)",
+        "pageId": "Page ID (the Page → About → Page transparency, or Meta app → Messenger)",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
+    "instagramPublish": {
+      "name": "Instagram posting (Studio)",
+      "desc": "Lets the content studio post to the linked Instagram Business account's feed. Mock until the keys are in and the test (reading the account) passes: nothing is posted before that. Today's posts are always a single photo (the studio's real video assembler is a later PR).",
+      "fields": {
+        "pageAccessToken": "Page access token (the same Page token as Facebook Page posting, above)",
+        "igUserId": "Instagram Business Account ID (Meta app → the linked Page → Instagram accounts)",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
+    "tiktokPublish": {
+      "name": "TikTok posting (Studio)",
+      "desc": "Lets the content studio post to this TikTok account, as a photo post — drafts only until the account's own \"direct posting\" switch is on (Marketing › Studio), which needs TikTok's app audit approval first. Mock until the key is in and the test (reading the account) passes: nothing is posted before that. Today's posts are always a single photo (the studio's real video assembler is a later PR).",
+      "fields": {
+        "accessToken": "Access token (TikTok for Developers → your app → Content Posting API, with video.publish/video.upload scope)",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
+    "youtubePublish": {
+      "name": "YouTube channel (Studio)",
+      "desc": "Connects the content studio to this YouTube channel so the Test can prove the key works. It does not post yet: YouTube's upload API needs a real video file, and the studio only makes a preview photo today — posting stays off for YouTube until the real video engine exists (a later PR); nothing is invented in its place.",
+      "fields": {
+        "accessToken": "Access token (Google Cloud → YouTube Data API v3, with the youtube.upload scope)",
+        "channelId": "Channel ID (YouTube Studio → Settings → Channel → Advanced settings)",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
     "googleSearchConsole": {
       "name": "Google Search Console",
       "desc": "Lists the shop's properties and hands Google the sitemap (Website → SEO). Until the key is in and the test passes, nothing is sent",
