@@ -240,14 +240,20 @@ export function reprojectedCandidateId(tags: readonly string[]): string | null {
  * is already generic over the type name. `cap`/`sunglasses`/`watch`/`bag` (S24 · PR 471) are the same choice for
  * the worn-accessory engine's own four families — singular here (matching `footwear`'s own convention), never the
  * plural `caps`/`sunglasses`/`watches`/`bags` keys `recipes.ts`'s own, coarser `CATEGORY_RECIPES` uses: the two
- * vocabularies are deliberately separate (one recipe row can, and here does, point at several finer types). */
-export const DETAIL_FINDER_GARMENT_TYPES = ['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi', 'footwear', 'cap', 'sunglasses', 'watch', 'bag'] as const;
+ * vocabularies are deliberately separate (one recipe row can, and here does, point at several finer types).
+ * `top_bottom_set` (S24 · PR 477) is the same choice again for C7.13's own tracksuit/top-bottom set family —
+ * named `top_bottom_set`, never the bare `set`, because `set`/`combo` already names a broader commerce concept
+ * elsewhere in this codebase (`ComboType`, `comboId`, `comboGiftSetStudio.ts`'s own `combo`/`gift_set` kinds);
+ * this checklist is scoped to exactly `setTryOnStudio.ts`'s own two-garment TOP_BOTTOM family, never a 3-piece
+ * gift set or a colour pair. */
+export const DETAIL_FINDER_GARMENT_TYPES = ['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi', 'footwear', 'cap', 'sunglasses', 'watch', 'bag', 'top_bottom_set'] as const;
 export type DetailFinderGarmentType = (typeof DETAIL_FINDER_GARMENT_TYPES)[number];
 
 /** C7.10's own checklist of likely detail points per garment type — a fixed data-model vocabulary, never an owner
  * setting. `label` here (denim/chino's woven label) is a different value from `DETAIL_REGION_KINDS`'s own
  * `'label'` above: the `finder:` namespace below keeps the two from ever colliding in storage. `footwear`'s own
- * four points, and `cap`/`sunglasses`/`watch`/`bag`'s own (S24 · PR 471), are C7.12's recipe table, verbatim. */
+ * four points, `cap`/`sunglasses`/`watch`/`bag`'s own (S24 · PR 471) and `top_bottom_set`'s own (S24 · PR 477) are
+ * C7.12/C7.13's own recipe tables, verbatim. */
 export const DETAIL_FINDER_CHECKLIST: Record<DetailFinderGarmentType, readonly string[]> = {
   polo: ['side_tape', 'side_vent', 'collar_tape', 'placket_and_buttons', 'cuff', 'chest_logo'],
   shirt: ['collar', 'cuff', 'button', 'pocket', 'yoke', 'stitch_density'],
@@ -259,6 +265,7 @@ export const DETAIL_FINDER_CHECKLIST: Record<DetailFinderGarmentType, readonly s
   sunglasses: ['hinge', 'temple_logo', 'lens', 'nose_pad'],
   watch: ['dial', 'crown', 'bracelet_links', 'clasp', 'caseback'],
   bag: ['handle', 'zip_pull', 'lining', 'logo_plate', 'feet'],
+  top_bottom_set: ['hood_and_drawcord', 'cuff_and_hem_rib', 'zip_pull_and_puller_branding', 'side_stripe_or_tape', 'pocket', 'ankle_rib', 'waistband_drawcord', 'fleece_inside_texture'],
 };
 
 export const DETAIL_FINDER_KIND_PREFIX = 'finder:';

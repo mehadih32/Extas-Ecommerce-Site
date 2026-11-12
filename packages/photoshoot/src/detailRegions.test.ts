@@ -106,7 +106,7 @@ describe('PR 454 · reprojectedCandidateId', () => {
 
 describe('PR 463 · DETAIL_FINDER_CHECKLIST', () => {
   it('is C7.10’s own fixed list, one entry per named garment type', () => {
-    expect(DETAIL_FINDER_GARMENT_TYPES).toEqual(['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi', 'footwear', 'cap', 'sunglasses', 'watch', 'bag']);
+    expect(DETAIL_FINDER_GARMENT_TYPES).toEqual(['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi', 'footwear', 'cap', 'sunglasses', 'watch', 'bag', 'top_bottom_set']);
     expect(DETAIL_FINDER_CHECKLIST.polo).toEqual(['side_tape', 'side_vent', 'collar_tape', 'placket_and_buttons', 'cuff', 'chest_logo']);
     expect(DETAIL_FINDER_CHECKLIST.panjabi).toEqual(['neck_embroidery', 'button_placket', 'side_slit']);
   });
@@ -159,6 +159,25 @@ describe('PR 471 · DETAIL_FINDER_CHECKLIST.cap / sunglasses / watch / bag (C7.1
     const kind = detailFinderKind('watch', 'caseback');
     expect(kind).toBe('finder:watch:caseback');
     expect(parseDetailFinderKind(kind)).toEqual({ garmentType: 'watch', point: 'caseback' });
+  });
+});
+
+describe('PR 477 · DETAIL_FINDER_CHECKLIST.top_bottom_set (C7.13)', () => {
+  it('is C7.13’s own recipe-table checklist, verbatim', () => {
+    expect(DETAIL_FINDER_CHECKLIST.top_bottom_set).toEqual(['hood_and_drawcord', 'cuff_and_hem_rib', 'zip_pull_and_puller_branding', 'side_stripe_or_tape', 'pocket', 'ankle_rib', 'waistband_drawcord', 'fleece_inside_texture']);
+  });
+
+  it('isDetailFinderPoint keeps the set’s own points separate from every other garment type’s', () => {
+    expect(isDetailFinderPoint('top_bottom_set', 'hood_and_drawcord')).toBe(true);
+    expect(isDetailFinderPoint('top_bottom_set', 'fleece_inside_texture')).toBe(true);
+    expect(isDetailFinderPoint('top_bottom_set', 'chest_logo')).toBe(false);
+    expect(isDetailFinderPoint('hoodie', 'hood_and_drawcord')).toBe(false);
+  });
+
+  it('detailFinderKind/parseDetailFinderKind round-trips the set the same as any garment type', () => {
+    const kind = detailFinderKind('top_bottom_set', 'waistband_drawcord');
+    expect(kind).toBe('finder:top_bottom_set:waistband_drawcord');
+    expect(parseDetailFinderKind(kind)).toEqual({ garmentType: 'top_bottom_set', point: 'waistband_drawcord' });
   });
 });
 
