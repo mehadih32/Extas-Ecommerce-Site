@@ -523,6 +523,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S15 · PR 319 (C1.7) — AI diary: a plain-Bengali line per agent per action, what it did, why, and what it
       // changed — not a technical log (owner only).
       { id: 'diary', guide: 'ai', pages: [{ href: '/admin/ai/diary', perm: 'ai.read', keys: ['aiDiary'] }] },
+      // S15 · PR 321 (C1.7 "Skill library") — every AiSkill as a card: name, agent, version, status, on/off; the
+      // owner's own "Import a skill" and one-click rollback (owner only).
+      { id: 'skills', guide: 'ai', pages: [{ href: '/admin/ai/skills', perm: 'ai.read', keys: ['aiSkills'] }] },
     ],
     ownerOnly: true,
     guide: 'ai',
