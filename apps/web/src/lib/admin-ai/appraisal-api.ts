@@ -12,7 +12,7 @@ export async function appraisalHandler(request: Request, deps: AdminDeps | null)
   if (method !== 'GET' && method !== 'POST') return fail(405, 'method-not-allowed');
   const g = await guardAdmin(request, deps, { permission: method === 'GET' ? 'ai.read' : 'ai.control', storeId: MOTHER_STORE_ID });
   if (g instanceof Response) return g;
-  const d = { db: deps!.db };
+  const d = { db: deps!.db, now: deps!.now };
   try {
     if (method === 'GET') {
       const url = new URL(request.url);
