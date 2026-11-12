@@ -1,0 +1,10 @@
+{
+  "studio": {
+    "photoshoot": {
+      "occasionSceneSuggesterEnabled": {
+        "label": "Studio — occasion scene suggester",
+        "help": "Off by default. Turn this on so the studio proposes three named scene options (such as a winter morning or an Eid evening), picked from the product's category and the calendar, before any scene is generated. A demo frame is always shown first, and nothing is saved to the scene library until it is approved."
+      }
+    }
+  }
+}
