@@ -3,8 +3,15 @@
 // music, text and the logo" Blueprint C8.1 describes — plus the set of output shapes (aspect variants) it should be
 // cut for. Nothing is composited here yet: `buildReel` only gathers and validates the inputs and leaves the row
 // `DRAFT`. `CLIPS_NOT_READY` refuses any clip that is not `APPROVED` — a reel can never be built from a clip nobody
-// has reviewed. Actually assembling the reel (the honest-preview compositor, the same "no real encoder yet, so the
-// output is a real already-existing asset, never fabricated footage" rule PR 439/482 set) is PR 486, part 2.
+// has reviewed.
+//
+// S25 · PR 486 (Blueprint C8.1, C8.6 item 6) — reel assembly, part 2, the actual compositor. No real video encoder
+// is in the stack today (the same honest gap PR 439 — `packages/studio/src/render.ts` — and PR 482's mock provider
+// both note), so `assembleReel` does not stitch clips, lay in music or bake the overlay into pixels: it fills
+// `Reel.outputAssetIds`, one per chosen aspect, with the **first clip's own real, already-approved output asset**
+// (`VideoJob.outputAssetId`), reused for every shape — a real, already-existing file, never fabricated footage or a
+// pretend per-shape crop. The row moves `DRAFT` → `ASSEMBLED` (or `FAILED` when no chosen clip has a usable output
+// yet). The real compositor swaps in here later without touching `buildReel`, the queue, or anything upstream.
 import { z } from 'zod';
 import { Prisma, type PrismaClient } from '@extas/db/client';
 import { audit } from '@extas/auth';
@@ -159,5 +166,67 @@ export async function setReelArchived(deps: StudioDeps, who: Who, reelId: string
   if (archived && reel.status !== 'DRAFT') throw new StudioError('WRONG_STATE', 'only a reel still waiting to be assembled can be set aside', ['status']);
   const row = await deps.db.reel.update({ where: { id: reel.id }, data: { archivedAt: archived ? (deps.now?.() ?? new Date()) : null } });
   await audit(deps.db, who.actor, { storeId: who.storeId, action: archived ? 'studio.reel.archive' : 'studio.reel.restore', entityType: 'Reel', entityId: reel.id, before: { archivedAt: reel.archivedAt }, after: { archivedAt: row.archivedAt } }, who.ctx);
+  return view(row);
+}
+
+/**
+ * Assembles a `DRAFT` (or previously `FAILED`) reel (`marketing.studio.write`, checked by the caller) — part 2 of
+ * Blueprint C8.6 item 5/6. Re-checks every named clip is still of this store and still `APPROVED` (the same
+ * `NOT_FOUND`/`CLIPS_NOT_READY` `buildReel` uses — a clip's review can never be assumed still good just because it
+ * was good when the reel was drafted) and, when music was chosen, that it is still a real audio asset of this store
+ * (`NOT_FOUND`/`SOURCE_INVALID`, mirroring `buildReel`'s own check). Refuses a reel that was set aside (`WRONG_STATE`
+ * — bring it back first) or that is already `ASSEMBLED` (`WRONG_STATE` — never redone silently). A `FAILED` reel
+ * (no clip had a usable output yet) may be tried again with no attempt cap — this reads data, it never spends
+ * money or calls a provider, so there is nothing to bound the way `retryVideoJob`'s `MAX_ATTEMPTS` bounds a paid run.
+ *
+ * No real compositor exists yet (this file's header comment): the clips are never actually stitched, the music is
+ * never actually laid in, and the overlay is never actually baked into pixels. The honest preview is the first
+ * clip's own `outputAssetId` — a real file a person has already reviewed and approved — reused for every chosen
+ * aspect (`outputAssetIds`), since there is no encoder yet to crop a distinct file per shape. `SOURCE_INVALID` when
+ * none of the chosen clips has a usable output yet (nothing to preview from); the row lands `FAILED` with the
+ * reason in the audit log rather than throwing past a provider-side gap that was not the caller's fault.
+ */
+export async function assembleReel(deps: StudioDeps, who: Who, reelId: string): Promise<ReelView> {
+  const reel = await deps.db.reel.findFirst({ where: { id: reelId, storeId: who.storeId } });
+  if (!reel) throw new StudioError('NOT_FOUND', 'no such reel', ['reelId']);
+  if (reel.archivedAt) throw new StudioError('WRONG_STATE', 'bring this reel back before assembling it', ['archivedAt']);
+  if (reel.status !== 'DRAFT' && reel.status !== 'FAILED') throw new StudioError('WRONG_STATE', 'only a reel waiting to be assembled, or one that failed to, can be assembled', ['status']);
+
+  const clips = await deps.db.videoJob.findMany({ where: { id: { in: reel.clipJobIds }, storeId: who.storeId } });
+  const byId = new Map(clips.map((c) => [c.id, c]));
+  const missing = reel.clipJobIds.filter((id) => !byId.has(id));
+  if (missing.length) throw new StudioError('NOT_FOUND', 'a clip in this reel is not in this store', missing);
+  const notApproved = reel.clipJobIds.filter((id) => byId.get(id)!.status !== 'APPROVED');
+  if (notApproved.length) throw new StudioError('CLIPS_NOT_READY', 'every clip must still be approved before this reel can be assembled', notApproved);
+
+  if (reel.musicAssetId) {
+    const music = await deps.db.mediaAsset.findFirst({ where: { id: reel.musicAssetId, storeId: who.storeId, archivedAt: null } });
+    if (!music) throw new StudioError('NOT_FOUND', 'no such music file', ['musicAssetId']);
+    if (music.kind !== 'AUDIO') throw new StudioError('SOURCE_INVALID', 'the chosen file is not an audio track', ['musicAssetId']);
+  }
+
+  // The honest preview source: the first clip (in the reel's own order) that already has a real output asset.
+  const previewAssetId = reel.clipJobIds.map((id) => byId.get(id)!.outputAssetId).find((a): a is string => Boolean(a)) ?? null;
+  const aspects = reel.aspects as VideoAspect[];
+
+  if (!previewAssetId) {
+    const row = await deps.db.reel.update({ where: { id: reel.id }, data: { status: 'FAILED' } });
+    await audit(
+      deps.db,
+      who.actor,
+      { storeId: who.storeId, action: 'studio.reel.assemble', entityType: 'Reel', entityId: reel.id, before: { status: reel.status }, after: { status: row.status, reason: 'none of this reel’s clips has a finished output yet' } },
+      who.ctx,
+    );
+    return view(row);
+  }
+
+  const outputAssetIds = aspects.map(() => previewAssetId);
+  const row = await deps.db.reel.update({ where: { id: reel.id }, data: { status: 'ASSEMBLED', outputAssetIds } });
+  await audit(
+    deps.db,
+    who.actor,
+    { storeId: who.storeId, action: 'studio.reel.assemble', entityType: 'Reel', entityId: reel.id, before: { status: reel.status }, after: { status: row.status, outputAssetIds, previewOnly: true } },
+    who.ctx,
+  );
   return view(row);
 }

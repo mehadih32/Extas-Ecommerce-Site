@@ -1,15 +1,15 @@
-// S25 · PR 485 (Blueprint C8.1, C8.6 item 5) — Marketing › Studio › Reels at /admin/marketing/studio/reels, on
-// /api/admin/marketing/studio/reels (lib/studio/reel-admin.ts). Seeing needs `marketing.studio.read`; building a
-// reel or setting one aside needs `marketing.studio.write`. The whole Studio tab stays hidden by
+// S25 · PR 485/486 (Blueprint C8.1, C8.6 item 5/6) — Marketing › Studio › Reels at /admin/marketing/studio/reels, on
+// /api/admin/marketing/studio/reels (lib/studio/reel-admin.ts). Seeing needs `marketing.studio.read`; building,
+// assembling or setting a reel aside needs `marketing.studio.write`. The whole Studio tab stays hidden by
 // `stages.closedShown.S25` until the stage is finished (CN-036/CN-039). Guide:
-// docs/admin-guide/pages/marketing/studio-reels.md. Assembling a built reel (the honest-preview compositor, one
-// output per chosen shape) is PR 486.
+// docs/admin-guide/pages/marketing/studio-reels.md. Assembling (PR 486) fills a preview output, one per chosen
+// shape — no real compositor exists yet, so nothing is actually stitched, mixed or baked in.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { VIDEO_ASPECTS, type VideoAspect } from '@extas/adapters/video';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { ReelArchive, ReelBuilder, type ReelTexts } from '@/components/admin/studio/ReelBuilder';
+import { ReelArchive, ReelAssemble, ReelBuilder, type ReelTexts } from '@/components/admin/studio/ReelBuilder';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -69,6 +69,10 @@ export default async function ReelsPage() {
     build: g('build'),
     building: g('building'),
     built: g('built'),
+    assemble: g('assemble'),
+    assembling: g('assembling'),
+    assembled: g('assembled'),
+    assembleNote: g('assembleNote'),
     archive: g('archive'),
     archiving: g('archiving'),
     restore: g('restore'),
@@ -97,7 +101,17 @@ export default async function ReelsPage() {
                 <p className="a2-sm a2-mute">
                   {r.clipJobIds.length} {g('clipsCount')} · {r.aspects.map((a) => aspectName[a]).join(', ')}
                 </p>
-                {canWrite && r.status === 'DRAFT' ? <ReelArchive url={API} reelId={r.id} texts={texts} /> : null}
+                {r.status === 'ASSEMBLED' ? (
+                  <p className="a2-sm a2-mute" data-testid="reel-outputs">
+                    {g('assembleNote')}
+                  </p>
+                ) : null}
+                {canWrite && (r.status === 'DRAFT' || r.status === 'FAILED') ? (
+                  <>
+                    <ReelAssemble url={API} reelId={r.id} texts={texts} />
+                    {r.status === 'DRAFT' ? <ReelArchive url={API} reelId={r.id} texts={texts} /> : null}
+                  </>
+                ) : null}
               </li>
             ))}
           </ul>
