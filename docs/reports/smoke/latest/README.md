@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-12 12:30 (Asia/Dhaka)
+# Smoke test · 2026-11-12 12:42 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (556টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** 18টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
 
-Site: https://new.extas.com.bd · commit `cf8a3f814775` · after deploy · result **PASS** (556 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `06ffb720de42` · after deploy · result **FAIL** (558 page views, 18 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -57,21 +57,22 @@ Site: https://new.extas.com.bd · commit `cf8a3f814775` · after deploy · resul
 | `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
 | `/fresh-start` | phone | 200 | `/fresh-start` | ok | [picture](fresh-start-phone.jpg) |
 | `/bn/fresh-start` | phone | 200 | `/bn/fresh-start` | ok | [picture](bn-fresh-start-phone.jpg) |
-| `/account/orders/0/invoice` | phone | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-phone.jpg) |
-| `/bn/account/orders/0/invoice` | phone | 200 | `/bn/account/orders/0/invoice` | ok | [picture](bn-account-orders-0-invoice-phone.jpg) |
-| `/pay/0` | phone | 200 | `/pay/0` | ok | [picture](pay-0-phone.jpg) |
-| `/bn/pay/0` | phone | 200 | `/bn/pay/0` | ok | [picture](bn-pay-0-phone.jpg) |
-| `/email/unsubscribe/00000000-0000-7000-8000-000000000000` | phone | 200 | `/email/unsubscribe/00000000-0000-7000-8000-000000000000` | ok | [picture](email-unsubscribe-00000000-0000-7000-8000-000000000000-phone.jpg) |
-| `/sitemap.xml` | phone | 200 | `/sitemap.xml` | ok | [picture](sitemap-xml-phone.jpg) |
-| `/sitemaps/pages-1.xml` | phone | 200 | `/sitemaps/pages-1.xml` | ok | [picture](sitemaps-pages-1-xml-phone.jpg) |
-| `/sitemaps/collections-1.xml` | phone | 200 | `/sitemaps/collections-1.xml` | ok | [picture](sitemaps-collections-1-xml-phone.jpg) |
-| `/account/wallet` | phone | 200 | `/account/wallet` | ok | [picture](account-wallet-phone.jpg) |
-| `/bn/account/wallet` | phone | 200 | `/bn/account/wallet` | ok | [picture](bn-account-wallet-phone.jpg) |
-| `/account/orders` | phone | 200 | `/account/orders` | ok | [picture](account-orders-phone.jpg) |
-| `/bn/account/orders` | phone | 200 | `/bn/account/orders` | ok | [picture](bn-account-orders-phone.jpg) |
-| `/bulk-order` | phone | 404 | `/bulk-order` | ok | [picture](bulk-order-phone.jpg) |
-| `/bn/bulk-order` | phone | 404 | `/bn/bulk-order` | ok | [picture](bn-bulk-order-phone.jpg) |
-| `/bag/try` | phone | 404 | `/bag/try` | ok | [picture](bag-try-phone.jpg) |
+| `/reset` | phone | 200 | `/reset` | ok | [picture](reset-phone.jpg) |
+| `/account/orders/0/invoice` | phone | 401 | `/account/orders/0/invoice` | **FAIL**: /account/orders/0/invoice: request 401: /account/orders/0/invoice; /account/orders/0/invoice: console error: Failed to load resource: the server responded with a status of 401 () (/account/orders/0/invoice) | [picture](account-orders-0-invoice-phone.jpg) |
+| `/bn/account/orders/0/invoice` | phone | 401 | `/bn/account/orders/0/invoice` | **FAIL**: /bn/account/orders/0/invoice: request 401: /bn/account/orders/0/invoice; /bn/account/orders/0/invoice: console error: Failed to load resource: the server responded with a status of 401 () (/bn/account/orders/0/invoice) | [picture](bn-account-orders-0-invoice-phone.jpg) |
+| `/pay/0` | phone | 401 | `/pay/0` | **FAIL**: /pay/0: request 401: /pay/0; /pay/0: console error: Failed to load resource: the server responded with a status of 401 () (/pay/0) | [picture](pay-0-phone.jpg) |
+| `/bn/pay/0` | phone | 401 | `/bn/pay/0` | **FAIL**: /bn/pay/0: request 401: /bn/pay/0; /bn/pay/0: console error: Failed to load resource: the server responded with a status of 401 () (/bn/pay/0) | [picture](bn-pay-0-phone.jpg) |
+| `/email/unsubscribe/00000000-0000-7000-8000-000000000000` | phone | 401 | `/email/unsubscribe/00000000-0000-7000-8000-000000000000` | **FAIL**: /email/unsubscribe/00000000-0000-7000-8000-000000000000: request 401: /email/unsubscribe/00000000-0000-7000-8000-000000000000; /email/unsubscribe/00000000-0000-7000-8000-000000000000: console error: Failed to load resource: the server responded with a status of 401 () (/email/unsubscribe/00000000-0000-7000-8000-000000000000) | [picture](email-unsubscribe-00000000-0000-7000-8000-000000000000-phone.jpg) |
+| `/sitemap.xml` | phone | 401 | `/sitemap.xml` | ok | [picture](sitemap-xml-phone.jpg) |
+| `/sitemaps/pages-1.xml` | phone | 401 | `/sitemaps/pages-1.xml` | ok | [picture](sitemaps-pages-1-xml-phone.jpg) |
+| `/sitemaps/collections-1.xml` | phone | 401 | `/sitemaps/collections-1.xml` | ok | [picture](sitemaps-collections-1-xml-phone.jpg) |
+| `/account/wallet` | phone | 401 | `/account/wallet` | **FAIL**: /account/wallet: request 401: /account/wallet; /account/wallet: console error: Failed to load resource: the server responded with a status of 401 () (/account/wallet) | [picture](account-wallet-phone.jpg) |
+| `/bn/account/wallet` | phone | 401 | `/bn/account/wallet` | **FAIL**: /bn/account/wallet: request 401: /bn/account/wallet; /bn/account/wallet: console error: Failed to load resource: the server responded with a status of 401 () (/bn/account/wallet) | [picture](bn-account-wallet-phone.jpg) |
+| `/account/orders` | phone | 401 | `/account/orders` | **FAIL**: /account/orders: request 401: /account/orders; /account/orders: console error: Failed to load resource: the server responded with a status of 401 () (/account/orders) | [picture](account-orders-phone.jpg) |
+| `/bn/account/orders` | phone | 401 | `/bn/account/orders` | **FAIL**: /bn/account/orders: request 401: /bn/account/orders; /bn/account/orders: console error: Failed to load resource: the server responded with a status of 401 () (/bn/account/orders) | [picture](bn-account-orders-phone.jpg) |
+| `/bulk-order` | phone | 401 | `/bulk-order` | ok | [picture](bulk-order-phone.jpg) |
+| `/bn/bulk-order` | phone | 401 | `/bn/bulk-order` | ok | [picture](bn-bulk-order-phone.jpg) |
+| `/bag/try` | phone | 401 | `/bag/try` | ok | [picture](bag-try-phone.jpg) |
 | `/admin` | phone | 200 | `/admin` | ok | — |
 | `/admin/customers` | phone | 200 | `/admin/customers` | ok | — |
 | `/admin/delivery` | phone | 200 | `/admin/delivery/zones` | ok | — |
@@ -280,7 +281,7 @@ Site: https://new.extas.com.bd · commit `cf8a3f814775` · after deploy · resul
 | `/admin/marketing/merchant-feed` | phone | 200 | `/admin/marketing/merchant-feed` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1ce4e-3131-7143-a0c9-87f4ae87407b` | phone | 200 | `/admin/reports/health/history/01a1ce4e-3131-7143-a0c9-87f4ae87407b` | ok | — |
+| `/admin/reports/health/history/01a1ce7b-459c-72c0-bbcb-fbfeed271c0f` | phone | 200 | `/admin/reports/health/history/01a1ce7b-459c-72c0-bbcb-fbfeed271c0f` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -335,21 +336,22 @@ Site: https://new.extas.com.bd · commit `cf8a3f814775` · after deploy · resul
 | `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
 | `/fresh-start` | desktop | 200 | `/fresh-start` | ok | [picture](fresh-start-desktop.jpg) |
 | `/bn/fresh-start` | desktop | 200 | `/bn/fresh-start` | ok | [picture](bn-fresh-start-desktop.jpg) |
-| `/account/orders/0/invoice` | desktop | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-desktop.jpg) |
-| `/bn/account/orders/0/invoice` | desktop | 200 | `/bn/account/orders/0/invoice` | ok | [picture](bn-account-orders-0-invoice-desktop.jpg) |
-| `/pay/0` | desktop | 200 | `/pay/0` | ok | [picture](pay-0-desktop.jpg) |
-| `/bn/pay/0` | desktop | 200 | `/bn/pay/0` | ok | [picture](bn-pay-0-desktop.jpg) |
-| `/email/unsubscribe/00000000-0000-7000-8000-000000000000` | desktop | 200 | `/email/unsubscribe/00000000-0000-7000-8000-000000000000` | ok | [picture](email-unsubscribe-00000000-0000-7000-8000-000000000000-desktop.jpg) |
-| `/sitemap.xml` | desktop | 200 | `/sitemap.xml` | ok | [picture](sitemap-xml-desktop.jpg) |
-| `/sitemaps/pages-1.xml` | desktop | 200 | `/sitemaps/pages-1.xml` | ok | [picture](sitemaps-pages-1-xml-desktop.jpg) |
-| `/sitemaps/collections-1.xml` | desktop | 200 | `/sitemaps/collections-1.xml` | ok | [picture](sitemaps-collections-1-xml-desktop.jpg) |
-| `/account/wallet` | desktop | 200 | `/account/wallet` | ok | [picture](account-wallet-desktop.jpg) |
-| `/bn/account/wallet` | desktop | 200 | `/bn/account/wallet` | ok | [picture](bn-account-wallet-desktop.jpg) |
-| `/account/orders` | desktop | 200 | `/account/orders` | ok | [picture](account-orders-desktop.jpg) |
-| `/bn/account/orders` | desktop | 200 | `/bn/account/orders` | ok | [picture](bn-account-orders-desktop.jpg) |
-| `/bulk-order` | desktop | 404 | `/bulk-order` | ok | [picture](bulk-order-desktop.jpg) |
-| `/bn/bulk-order` | desktop | 404 | `/bn/bulk-order` | ok | [picture](bn-bulk-order-desktop.jpg) |
-| `/bag/try` | desktop | 404 | `/bag/try` | ok | [picture](bag-try-desktop.jpg) |
+| `/reset` | desktop | 200 | `/reset` | ok | [picture](reset-desktop.jpg) |
+| `/account/orders/0/invoice` | desktop | 401 | `/account/orders/0/invoice` | **FAIL**: /account/orders/0/invoice: request 401: /account/orders/0/invoice; /account/orders/0/invoice: console error: Failed to load resource: the server responded with a status of 401 () (/account/orders/0/invoice) | [picture](account-orders-0-invoice-desktop.jpg) |
+| `/bn/account/orders/0/invoice` | desktop | 401 | `/bn/account/orders/0/invoice` | **FAIL**: /bn/account/orders/0/invoice: request 401: /bn/account/orders/0/invoice; /bn/account/orders/0/invoice: console error: Failed to load resource: the server responded with a status of 401 () (/bn/account/orders/0/invoice) | [picture](bn-account-orders-0-invoice-desktop.jpg) |
+| `/pay/0` | desktop | 401 | `/pay/0` | **FAIL**: /pay/0: request 401: /pay/0; /pay/0: console error: Failed to load resource: the server responded with a status of 401 () (/pay/0) | [picture](pay-0-desktop.jpg) |
+| `/bn/pay/0` | desktop | 401 | `/bn/pay/0` | **FAIL**: /bn/pay/0: request 401: /bn/pay/0; /bn/pay/0: console error: Failed to load resource: the server responded with a status of 401 () (/bn/pay/0) | [picture](bn-pay-0-desktop.jpg) |
+| `/email/unsubscribe/00000000-0000-7000-8000-000000000000` | desktop | 401 | `/email/unsubscribe/00000000-0000-7000-8000-000000000000` | **FAIL**: /email/unsubscribe/00000000-0000-7000-8000-000000000000: request 401: /email/unsubscribe/00000000-0000-7000-8000-000000000000; /email/unsubscribe/00000000-0000-7000-8000-000000000000: console error: Failed to load resource: the server responded with a status of 401 () (/email/unsubscribe/00000000-0000-7000-8000-000000000000) | [picture](email-unsubscribe-00000000-0000-7000-8000-000000000000-desktop.jpg) |
+| `/sitemap.xml` | desktop | 401 | `/sitemap.xml` | ok | [picture](sitemap-xml-desktop.jpg) |
+| `/sitemaps/pages-1.xml` | desktop | 401 | `/sitemaps/pages-1.xml` | ok | [picture](sitemaps-pages-1-xml-desktop.jpg) |
+| `/sitemaps/collections-1.xml` | desktop | 401 | `/sitemaps/collections-1.xml` | ok | [picture](sitemaps-collections-1-xml-desktop.jpg) |
+| `/account/wallet` | desktop | 401 | `/account/wallet` | **FAIL**: /account/wallet: request 401: /account/wallet; /account/wallet: console error: Failed to load resource: the server responded with a status of 401 () (/account/wallet) | [picture](account-wallet-desktop.jpg) |
+| `/bn/account/wallet` | desktop | 401 | `/bn/account/wallet` | **FAIL**: /bn/account/wallet: request 401: /bn/account/wallet; /bn/account/wallet: console error: Failed to load resource: the server responded with a status of 401 () (/bn/account/wallet) | [picture](bn-account-wallet-desktop.jpg) |
+| `/account/orders` | desktop | 401 | `/account/orders` | **FAIL**: /account/orders: request 401: /account/orders; /account/orders: console error: Failed to load resource: the server responded with a status of 401 () (/account/orders) | [picture](account-orders-desktop.jpg) |
+| `/bn/account/orders` | desktop | 401 | `/bn/account/orders` | **FAIL**: /bn/account/orders: request 401: /bn/account/orders; /bn/account/orders: console error: Failed to load resource: the server responded with a status of 401 () (/bn/account/orders) | [picture](bn-account-orders-desktop.jpg) |
+| `/bulk-order` | desktop | 401 | `/bulk-order` | ok | [picture](bulk-order-desktop.jpg) |
+| `/bn/bulk-order` | desktop | 401 | `/bn/bulk-order` | ok | [picture](bn-bulk-order-desktop.jpg) |
+| `/bag/try` | desktop | 401 | `/bag/try` | ok | [picture](bag-try-desktop.jpg) |
 | `/admin` | desktop | 200 | `/admin` | ok | — |
 | `/admin/customers` | desktop | 200 | `/admin/customers` | ok | — |
 | `/admin/delivery` | desktop | 200 | `/admin/delivery/zones` | ok | — |
@@ -558,9 +560,18 @@ Site: https://new.extas.com.bd · commit `cf8a3f814775` · after deploy · resul
 | `/admin/marketing/merchant-feed` | desktop | 200 | `/admin/marketing/merchant-feed` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1ce4e-3131-7143-a0c9-87f4ae87407b` | desktop | 200 | `/admin/reports/health/history/01a1ce4e-3131-7143-a0c9-87f4ae87407b` | ok | — |
+| `/admin/reports/health/history/01a1ce7b-459c-72c0-bbcb-fbfeed271c0f` | desktop | 200 | `/admin/reports/health/history/01a1ce7b-459c-72c0-bbcb-fbfeed271c0f` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
+
+Other problems:
+
+- signed out, /admin/products did not go to the sign-in page (/admin/products)
+- /admin/products: request 401: /admin/products (phone)
+- /admin/products: console error: Failed to load resource: the server responded with a status of 401 () (/admin/products) (phone)
+- signed out, /admin/products did not go to the sign-in page (/admin/products)
+- /admin/products: request 401: /admin/products (desktop)
+- /admin/products: console error: Failed to load resource: the server responded with a status of 401 () (/admin/products) (desktop)
 
 Database (PR 139): ok: 36 tables append-only; the app connects as extas_app.
