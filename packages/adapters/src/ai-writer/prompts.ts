@@ -14,6 +14,8 @@ import {
   type AiProductDescriptionInput,
   type AiSeoDraft,
   type AiSeoInput,
+  type AiSizeAdviceDraft,
+  type AiSizeAdviceInput,
   type AiSupportReplyDraft,
   type AiSupportReplyInput,
 } from './shared';
@@ -189,5 +191,45 @@ const productDescriptionAnswer = z.object({ body: z.string() });
 export function parseProductDescriptionJson(text: string, input: AiProductDescriptionInput, usage?: { inputTokens: number; outputTokens: number }): AiProductDescriptionDraft {
   const parsed = productDescriptionAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a description');
+  return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 328 — the size advice agent's own job: one warm sentence on why Find My Size gave that size
+// ---------------------------------------------------------------------------------------------------------------------
+
+const SIZE_RULE = 'Write only from the measurements given. Never invent a measurement, a body signal or a reason that is not listed; never suggest a different size than sizeLabel, and never ask the shopper a question.';
+
+export function sizeAdvicePrompt(input: AiSizeAdviceInput): Prompt {
+  const f = input.facts;
+  const facts = Object.entries({
+    recommendedSize: f.sizeLabel,
+    nextSizeUp: f.nextSizeLabel,
+    measure: f.fieldLabel,
+    thatSizesMeasureInches: f.valueInch,
+    neededInches: f.needInch,
+    bodyEstimateInches: f.bodyInch,
+    easeAddedInches: f.easeInch,
+    sizeCoversTheNeed: f.covered ? 'yes' : 'no (this is the largest size, it may still feel close)',
+    garmentType: f.garment,
+    heightInches: f.heightIn,
+    weightKg: f.weightKg,
+  })
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${k}: ${v}`)
+    .join('\n');
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  return {
+    system: `${SYSTEM_RULE} ${SIZE_RULE}`,
+    user: `A Bangladeshi menswear shop's Find My Size tool already worked out a shopper's size from the measurements below. Write one short, warm sentence, in ${lang}, explaining why that size fits — plain enough for someone who does not know sewing terms.\n\nMeasurements:\n${facts}\n\nAt most ${input.max.body} characters.\n\nReply as {"body": "..."}.`,
+    maxTokens: 300,
+  };
+}
+
+const sizeAdviceAnswer = z.object({ body: z.string() });
+
+export function parseSizeAdviceJson(text: string, input: AiSizeAdviceInput, usage?: { inputTokens: number; outputTokens: number }): AiSizeAdviceDraft {
+  const parsed = sizeAdviceAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a size explanation');
   return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
 }

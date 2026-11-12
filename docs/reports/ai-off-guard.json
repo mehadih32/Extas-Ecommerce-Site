@@ -1,9 +1,9 @@
 {
-  "at": "2026-11-12T02:24:56.863Z",
+  "at": "2026-11-12T04:52:45.883Z",
   "n": 7,
   "ok": 7,
-  "totalJobCount": 65,
-  "coveredJobCount": 27,
+  "totalJobCount": 66,
+  "coveredJobCount": 28,
   "checks": [
     {
       "id": "support",
@@ -19,7 +19,8 @@
         "supportSentiment",
         "supportTranscribeVoice",
         "supportTranslate",
-        "supportEscalationNote"
+        "supportEscalationNote",
+        "supportSizeAdvice"
       ],
       "reasons": []
     },

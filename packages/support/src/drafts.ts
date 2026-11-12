@@ -17,6 +17,13 @@
 // call right now, and masks the customer's own words first (A5.1-A5.4); this file knows none of that and never
 // calls an AI provider itself. Any failure, timeout or absence of `opts.aiReply` leaves `filled` exactly as it was
 // — AI is additive here exactly as everywhere else (C1.4).
+//
+// S15 · PR 328 — a second, independent AI slot for a size question specifically: `opts.sizeAdvice`, called only
+// once `opts.sizeFor` above already found a size, with the same product and measures. It may only add one short
+// sentence explaining *why* that size (the chart's own measure, how much room it gives) — never a new fact, never
+// a different size. Its own answer is folded into `filled` before `opts.aiReply` ever runs, so the two AI jobs
+// compose the way every AI step here does: each strictly additive on top of what the step before it already
+// decided. `null` or a thrown error leaves `filled` exactly as it was.
 export interface SupportReplyFacts {
   intent: DraftIntent;
   complaint: DraftComplaint | null;
@@ -63,6 +70,11 @@ export interface SupportDraft {
 export interface DraftOptions {
   /** Find My Size on one product for these measures (null: no chart, or the chart cannot answer). */
   sizeFor?: (productId: string, body: { heightIn: number; weightKg: number }) => Promise<string | null>;
+  /** S15 · PR 328 — EXTAS AI's own grounded explanation of the size `sizeFor` just gave (the chart's own measure,
+   * how much room it gives) — never the size itself, and never called unless `sizeFor` already found one. `lang`
+   * is this same draft's own reply language, decided below. `null` or a thrown error leaves the plain "your size
+   * is X" line unchanged. Omitted entirely while the caller has no AI 360 wiring to offer. */
+  sizeAdvice?: (productId: string, body: { heightIn: number; weightKg: number }, lang: 'en' | 'bn') => Promise<string | null>;
   /** S15 · PR 325 — EXTAS AI's own rephrasing of the rule-based draft, grounded only in `SupportReplyFacts`; `null`
    * or a thrown error both leave the rule-based `filled` text exactly as it was. Omitted entirely while the caller
    * has no AI 360 wiring to offer (e.g. a test that does not pass one). */
@@ -111,10 +123,14 @@ export async function supportDraft(deps: Pick<SupportDeps, 'db' | 'settings' | '
 
   // a size question: Find My Size on the product last sent in this chat
   let size: string | null = null;
+  let sizeProductId: string | null = null;
   const body = kind.intent === 'size' ? bodyIn(question) : null;
   if (body && opts.sizeFor) {
     const shared = await deps.db.supportProductShare.findFirst({ where: { storeId, conversationId: c.id }, orderBy: { createdAt: 'desc' }, select: { productId: true } });
-    if (shared) size = await opts.sizeFor(shared.productId, body);
+    if (shared) {
+      sizeProductId = shared.productId;
+      size = await opts.sizeFor(shared.productId, body);
+    }
   }
 
   const key = draftTextKey(kind, { order: order ? { status: order.status, parcel: !!parcel } : null, late: !!lateLine, size });
@@ -126,9 +142,22 @@ export async function supportDraft(deps: Pick<SupportDeps, 'db' | 'settings' | '
   const filled = fillDraft(texts[key][lang], { hello, name, number: order?.number, courier: parcel?.courierAccount.name, tracking: parcel?.trackingCode, size, days });
   const handover = cfg.handover.includes(kind.intent) ? (kind.intent === 'bulk' ? 'owner' : 'person') : false;
 
+  // S15 · PR 328 — EXTAS AI's own grounded explanation of the size just given, folded into the rule-based text
+  // before PR 325's own general rephrase (below) ever sees it, so that rephrase's own "floor" already carries it.
+  // Never thrown out of this function: `filled` alone is already a complete, correct answer.
+  let withAdvice = filled;
+  if (size && body && sizeProductId && opts.sizeAdvice) {
+    try {
+      const advice = (await opts.sizeAdvice(sizeProductId, body, lang))?.trim();
+      if (advice) withAdvice = `${filled} ${advice}`;
+    } catch {
+      // additive (C1.4): any failure leaves `filled` exactly as it was
+    }
+  }
+
   // S15 · PR 325 — EXTAS AI's own rephrasing, grounded only in the facts just decided above. Never thrown out of
-  // this function: the rule-based `filled` text is always a complete, correct answer on its own.
-  let replyBody = filled;
+  // this function: the rule-based `withAdvice` text is always a complete, correct answer on its own.
+  let replyBody = withAdvice;
   let aiUsed = false;
   if (opts.aiReply) {
     try {
@@ -137,7 +166,7 @@ export async function supportDraft(deps: Pick<SupportDeps, 'db' | 'settings' | '
         complaint: kind.complaint,
         question,
         lang,
-        ruleBasedBody: filled,
+        ruleBasedBody: withAdvice,
         order: order ? { number: order.number, status: order.status, late: !!lateLine } : null,
         size,
         customerName: name,

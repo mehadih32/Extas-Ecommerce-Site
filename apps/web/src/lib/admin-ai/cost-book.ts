@@ -158,6 +158,9 @@ export const JOB_CATALOG: readonly JobCatalogEntry[] = [
   textJob('supportTranscribeVoice', 'support', 'Transcribe one voice note', 'একটা ভয়েস নোট লেখায় রূপান্তর', 'Turns a customer voice message into text (vendor bills per audio minute; approximated here as text tokens until a per-minute price field exists).', 'gyani', 600, 600, TEXT_SMALL, 'Voice transcription is cheap — the smallest model is enough.', 10),
   textJob('supportTranslate', 'support', 'Translate one support message', 'একটা সাপোর্ট বার্তা অনুবাদ', 'Bengali ↔ English, so no message goes unanswered for want of a language.', 'gyani', 300, 300, TEXT_SMALL, SMALL_NOTE, 10),
   textJob('supportEscalationNote', 'support', 'Write one escalation note', 'মানুষ কর্মীর জন্য একটা হস্তান্তর নোট', 'A short brief for the human agent taking over a hard case.', 'gyani', 400, 250, TEXT_MID, MID_NOTE, 5),
+  // PR 328 — Find My Size's own rule engine (PR 58) already decides the size; this job only explains why, in a
+  // chat reply, from that engine's own measurements — never a second, independent guess at a size.
+  textJob('supportSizeAdvice', 'support', 'Explain one size recommendation', 'একটা সাইজ সাজেশনের কারণ ব্যাখ্যা', "Turns Find My Size's own rule-based reasoning into one warm sentence for a support chat reply — the size itself is always the rule engine's, never this job's.", 'gyani', 300, 150, TEXT_SMALL, 'A small, cheap model — one short sentence from a handful of numbers the rule engine already decided, not real reasoning.', 15),
 
   // Orders — sawdagor's storefront/order logic, except fraud (gyani's own remit).
   textJob('orderAddressParse', 'orders', 'Parse one address', 'একটা ঠিকানা আলাদা করা', 'Splits a free-text address into district, upazila/thana and street.', 'sawdagor', 100, 60, TEXT_SMALL, SMALL_NOTE, 50),
