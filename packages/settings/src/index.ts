@@ -254,4 +254,6 @@ export * from './registry-studio';
 export * from './registry-photoshoot';
 // S24 · PR 450 — the photoshoot provider adapters' per-image rate, 0/not set by default (registry-photoshoot-cost.ts, version 289).
 export * from './registry-photoshoot-cost';
+// S24 · PR 462 — the on-model-vs-flat-lay live pilot's own cohort, empty/off by default (registry-photoshoot-pilot.ts, version 292).
+export * from './registry-photoshoot-pilot';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

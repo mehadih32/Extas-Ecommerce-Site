@@ -15,3 +15,5 @@ export * from './outputs';
 export * from './detailRegions';
 export * from './finishing';
 export * from './imageEdits';
+export * from './pilotMetrics';
+export * from './styleAbTest';

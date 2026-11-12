@@ -141,6 +141,7 @@ import { photoshootSettings } from './registry-photoshoot';
 import { photoshootCostSettings } from './registry-photoshoot-cost';
 import { photoshootQueueSettings } from './registry-photoshoot-queue';
 import { photoshootQualitySettings } from './registry-photoshoot-quality';
+import { photoshootPilotSettings } from './registry-photoshoot-pilot';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
@@ -1554,6 +1555,8 @@ export const registry = {
   ...photoshootQueueSettings,
   // ---- S24 · PR 453 · the photoshoot best-of-2 quality cut-off, 0/never-auto-rejects by default (registry-photoshoot-quality.ts, version 291). ----
   ...photoshootQualitySettings,
+  // ---- S24 · PR 462 · the on-model-vs-flat-lay live pilot's own cohort, empty/off by default (registry-photoshoot-pilot.ts, version 292). ----
+  ...photoshootPilotSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
