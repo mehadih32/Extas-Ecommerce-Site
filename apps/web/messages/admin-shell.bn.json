@@ -155,7 +155,9 @@
         "control": "কন্ট্রোল রুম",
         "audit": "চেকলিস্ট অডিট",
         "costBook": "কস্ট বুক",
-        "permissions": "পারমিশন"
+        "approvals": "অনুমোদন",
+        "permissions": "পারমিশন",
+        "diary": "ডায়েরি"
       }
     },
     "purpose": {
