@@ -28,8 +28,8 @@ export function liveAiWriter(complete: Completer): AiWriter {
   return {
     async draftSeo(input: AiSeoInput): Promise<AiSeoDraft> {
       const { system, user, maxTokens } = seoPrompt(input);
-      const { text } = await complete({ system, user, maxTokens });
-      return parseSeoJson(text, input);
+      const { text, usage } = await complete({ system, user, maxTokens });
+      return parseSeoJson(text, input, usage);
     },
     async draftCampaign(input: AiCampaignInput): Promise<AiCampaignDraft> {
       const { system, user, maxTokens } = campaignPrompt(input);

@@ -60,10 +60,10 @@ export function seoPrompt(input: AiSeoInput): Prompt {
 
 const seoAnswer = z.object({ title: z.string(), description: z.string() });
 
-export function parseSeoJson(text: string, input: AiSeoInput): AiSeoDraft {
+export function parseSeoJson(text: string, input: AiSeoInput, usage?: { inputTokens: number; outputTokens: number }): AiSeoDraft {
   const parsed = seoAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success) throw new AdapterError('the model did not answer with a title and a description');
-  return { title: cutTo(parsed.data.title, input.max.title), description: cutTo(parsed.data.description, input.max.description), practice: false };
+  return { title: cutTo(parsed.data.title, input.max.title), description: cutTo(parsed.data.description, input.max.description), practice: false, ...(usage ? { usage } : {}) };
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
