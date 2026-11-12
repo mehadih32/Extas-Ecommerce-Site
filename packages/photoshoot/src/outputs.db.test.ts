@@ -1,7 +1,10 @@
-// S24 · PR 453/458 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): PR 453's `recordScoredOutputs`
+// S24 · PR 453/458/459 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): PR 453's `recordScoredOutputs`
 // against the actual `PhotoshootOutput` table, the quality-threshold setting and the job's own move to
 // REVIEW_REQUIRED/FAILED; PR 458 grows the same file in place with the owner's own review decision
-// (`decideOutputReview`) and the review queue (`listReviewQueue`).
+// (`decideOutputReview`) and the review queue (`listReviewQueue`); PR 459 grows it again with the cost ledger
+// write (C7.6 "no double charging") that `recordScoredOutputs` now makes once scoring is in — the real
+// `CostEntry` row and the job's own `actualMinor`, trued up against the real candidate count rather than the
+// job's open-time estimate.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -16,7 +19,13 @@ function fakeSettings(qualityThresholdPercent: number): SettingsReader {
   return { value: async () => qualityThresholdPercent as never };
 }
 
-describe.skipIf(!HAS_TEST_DB)('PR 453/458 · best-of-2, automatic scoring and the review decision (PostgreSQL)', () => {
+/** A rate-table stand-in for `studio.photoshoot.rates` — same minimal shape `jobs.db.test.ts`'s own `fakeRates`
+ * uses, ignoring the key it is asked for since this suite only ever reads the one setting. */
+function fakeRates(rates: { fashn?: { baseline: number; premium: number }; fitroom?: { baseline: number; premium: number } }): SettingsReader {
+  return { value: async () => rates as never };
+}
+
+describe.skipIf(!HAS_TEST_DB)('PR 453/458/459 · best-of-2, automatic scoring, the review decision and the cost ledger (PostgreSQL)', () => {
   let t: TestDatabase;
   let S: number;
   let other: number;
@@ -50,6 +59,14 @@ describe.skipIf(!HAS_TEST_DB)('PR 453/458 · best-of-2, automatic scoring and th
   async function makeProcessingJob(who: Who = generator) {
     const p = await t.prisma.product.create({ data: { storeId: who.storeId, slug: `test-453-${crypto.randomUUID()}`, nameEn: 'Test product' } });
     const { job } = await createOrReuseJob(deps(), who, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [crypto.randomUUID()] });
+    return transitionJob(deps(), who, job.id, 'PROCESSING');
+  }
+
+  /** PR 459: the same flow, but the job names a `provider` (and, through `tier`, how many images a pass
+   * draws) — the shape `recordScoredOutputs`'s own cost-ledger write needs a rate to look up. */
+  async function makeProcessingJobWithProvider(provider: 'fashn' | 'fitroom' | 'mockPhotoshoot', tier: 'baseline' | 'premium' = 'baseline', who: Who = generator) {
+    const p = await t.prisma.product.create({ data: { storeId: who.storeId, slug: `test-459-${crypto.randomUUID()}`, nameEn: 'Test product' } });
+    const { job } = await createOrReuseJob(deps(), who, { productId: p.id, angle: 'front', tier, inputAssetIds: [crypto.randomUUID()], provider });
     return transitionJob(deps(), who, job.id, 'PROCESSING');
   }
 
@@ -224,5 +241,78 @@ describe.skipIf(!HAS_TEST_DB)('PR 453/458 · best-of-2, automatic scoring and th
     await decideOutputReview(d, approver, queue[0]!.output.id, { decision: 'approve' });
     const after = (await listReviewQueue(d, reader)).filter((r) => !beforeIds.has(r.job.id));
     expect(after.map((r) => r.job.id)).toEqual([job2.id]);
+  });
+
+  // --- PR 459: the cost ledger write (C7.6 "no double charging") ----------------------------------------------
+
+  async function costEntriesFor(jobId: string) {
+    return t.prisma.costEntry.findMany({ where: { storeId: S, refType: 'photoshoot_job', refId: jobId } });
+  }
+
+  it('a job with a known provider and a set rate writes exactly one CostEntry row, and trues up the job\'s actualMinor', async () => {
+    const settings = fakeRates({ fashn: { baseline: 10000, premium: 20000 } });
+    const d = deps(settings);
+    const job = await makeProcessingJobWithProvider('fashn', 'baseline');
+    const asset = await makeGeneratedAsset();
+    const result = await recordScoredOutputs(d, generator, job.id, { candidates: [{ assetId: asset.id, scores: perfect }] });
+    const entries = await costEntriesFor(job.id);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.amountMinor).toBe(10000); // 1 candidate at the baseline rate
+    expect(entries[0]!.currency).toBe('BDT');
+    expect(entries[0]!.detail).toBe('fashn · baseline · 1 image');
+    const refetched = await getOutputsForJob(d, generator, job.id);
+    expect(refetched).toHaveLength(1);
+    expect(result.job.status).toBe('REVIEW_REQUIRED');
+  });
+
+  it('best-of-2 (two candidates) costs double a baseline single pass, at the same per-image rate', async () => {
+    const settings = fakeRates({ fashn: { baseline: 10000, premium: 20000 } });
+    const d = deps(settings);
+    const job = await makeProcessingJobWithProvider('fashn', 'premium');
+    const good = await makeGeneratedAsset();
+    const bad = await makeGeneratedAsset();
+    await recordScoredOutputs(d, generator, job.id, {
+      candidates: [
+        { assetId: bad.id, scores: worst },
+        { assetId: good.id, scores: perfect },
+      ],
+    });
+    const entries = await costEntriesFor(job.id);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.amountMinor).toBe(40000); // 2 candidates at the premium rate (20000 each)
+    expect(entries[0]!.detail).toBe('fashn · premium · 2 images');
+  });
+
+  it('writes no CostEntry, and leaves actualMinor null, for the free practice provider', async () => {
+    const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 } }));
+    const job = await makeProcessingJobWithProvider('mockPhotoshoot', 'baseline');
+    const asset = await makeGeneratedAsset();
+    await recordScoredOutputs(d, generator, job.id, { candidates: [{ assetId: asset.id, scores: perfect }] });
+    expect(await costEntriesFor(job.id)).toHaveLength(0);
+  });
+
+  it('writes no CostEntry for a job that never named a provider at all', async () => {
+    const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 } }));
+    const job = await makeProcessingJob();
+    const asset = await makeGeneratedAsset();
+    await recordScoredOutputs(d, generator, job.id, { candidates: [{ assetId: asset.id, scores: perfect }] });
+    expect(await costEntriesFor(job.id)).toHaveLength(0);
+  });
+
+  it('writes no CostEntry when the owner has not set a rate yet (0, CN-018) — never an invented number', async () => {
+    const d = deps(fakeRates({ fitroom: { baseline: 0, premium: 0 } }));
+    const job = await makeProcessingJobWithProvider('fitroom', 'baseline');
+    const asset = await makeGeneratedAsset();
+    await recordScoredOutputs(d, generator, job.id, { candidates: [{ assetId: asset.id, scores: perfect }] });
+    expect(await costEntriesFor(job.id)).toHaveLength(0);
+  });
+
+  it('never double-writes the ledger — the PROCESSING-only precondition that blocks a repeat report also blocks a repeat charge', async () => {
+    const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 } }));
+    const job = await makeProcessingJobWithProvider('fashn', 'baseline');
+    const asset = await makeGeneratedAsset();
+    await recordScoredOutputs(d, generator, job.id, { candidates: [{ assetId: asset.id, scores: perfect }] });
+    await expect(recordScoredOutputs(d, generator, job.id, { candidates: [{ assetId: asset.id, scores: perfect }] })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    expect(await costEntriesFor(job.id)).toHaveLength(1); // still just the one entry
   });
 });

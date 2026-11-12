@@ -1,11 +1,18 @@
-// S24 · PR 451, 452 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): `createOrReuseJob` and
+// S24 · PR 451, 452, 459 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): `createOrReuseJob` and
 // `transitionJob` against the actual `PhotoshootJob` table and its `@@unique([storeId, idempotencyKey])` constraint
-// (PR 451), plus `retryFailedJob`'s new seed and `startProcessing`'s concurrency/spend-cap gates (PR 452).
+// (PR 451), plus `retryFailedJob`'s new seed and `startProcessing`'s concurrency/spend-cap gates (PR 452), plus
+// the estimate and the C7.6 reuse rule a named `provider` now unlocks (PR 459).
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { createOrReuseJob, getJob, listJobsForProduct, retryFailedJob, startProcessing, transitionJob } from './jobs';
 import type { PhotoshootDeps, SettingsReader, Who } from './context';
+
+/** A rate-table stand-in for `studio.photoshoot.rates`, ignoring the key it is asked for — the same minimal
+ * shape `fakeSettings` above uses for its own one setting. */
+function fakeRates(rates: { fashn?: { baseline: number; premium: number }; fitroom?: { baseline: number; premium: number } }): SettingsReader {
+  return { value: async () => rates as never };
+}
 
 /** A minimal stand-in for the resolver, for the one setting `startProcessing` reads. */
 function fakeSettings(maxConcurrentJobs: number): SettingsReader {
@@ -242,5 +249,144 @@ describe.skipIf(!HAS_TEST_DB)('PR 452 · per-view retry, concurrency limiting, s
     await expect(startProcessing(d, generator, pausedJob.id)).rejects.toMatchObject({ code: 'SPEND_CAP_REACHED' });
     const stillQueued = await getJob(d, generator, pausedJob.id);
     expect(stillQueued.status).toBe('QUEUED');
+  });
+});
+
+describe.skipIf(!HAS_TEST_DB)('PR 459 · estimate and the C7.6 reuse rule (PostgreSQL)', () => {
+  let t: TestDatabase;
+  let S: number;
+  let generator: Who;
+  let approver: Who;
+  const deps = (settings?: SettingsReader): PhotoshootDeps => ({ db: t.prisma, settings });
+
+  beforeAll(async () => {
+    t = await createTestDatabase('photoshoot_jobs_459');
+    [S] = await seedSampleStores(t.prisma);
+    await syncAuth(t.prisma);
+    const staff = async (key: string, perms: ('photoshoot.read' | 'photoshoot.write' | 'photoshoot.generate' | 'photoshoot.approve')[]) => {
+      const role = await createRole(t.prisma, SYSTEM, { key, nameEn: key, nameBn: key, permissions: perms });
+      const u = await t.prisma.staffUser.create({ data: { email: `${key}@example.com`, displayName: key, passwordHash: 'not-a-login' } });
+      await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: S } });
+      return { actor: { staffUserId: u.id }, storeId: S };
+    };
+    generator = await staff('t459-generator', ['photoshoot.read', 'photoshoot.write', 'photoshoot.generate']);
+    approver = await staff('t459-approver', ['photoshoot.read', 'photoshoot.approve']);
+  });
+
+  afterAll(async () => t.drop());
+
+  async function makeProduct() {
+    return t.prisma.product.create({ data: { storeId: S, slug: `test-459-${crypto.randomUUID()}`, nameEn: 'Test product' } });
+  }
+
+  it('without a provider, nothing changes from before this PR: no estimate, no reuse hash, no provider on the row', async () => {
+    const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 } }));
+    const p = await makeProduct();
+    const { job } = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'premium', inputAssetIds: [crypto.randomUUID()] });
+    expect(job.provider).toBeNull();
+    expect(job.estimateMinor).toBeNull();
+  });
+
+  it('with a provider but no settings reader, the estimate is null — never an invented number (CN-018)', async () => {
+    const d = deps();
+    const p = await makeProduct();
+    const { job } = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [crypto.randomUUID()], provider: 'fashn' });
+    expect(job.provider).toBe('fashn');
+    expect(job.estimateMinor).toBeNull();
+  });
+
+  it('with a provider and a set rate, the estimate is the rate times the tier\'s own image count (baseline=1, premium=best-of-2=2)', async () => {
+    const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 } }));
+    const p1 = await makeProduct();
+    const baseline = await createOrReuseJob(d, generator, { productId: p1.id, angle: 'front', tier: 'baseline', inputAssetIds: [crypto.randomUUID()], provider: 'fashn' });
+    expect(baseline.job.estimateMinor).toBe(10000);
+    const p2 = await makeProduct();
+    const premium = await createOrReuseJob(d, generator, { productId: p2.id, angle: 'front', tier: 'premium', inputAssetIds: [crypto.randomUUID()], provider: 'fashn' });
+    expect(premium.job.estimateMinor).toBe(40000); // 20000 * 2
+  });
+
+  it('the practice provider never carries an estimate, no matter the rate table', async () => {
+    const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 } }));
+    const p = await makeProduct();
+    const { job } = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'premium', inputAssetIds: [crypto.randomUUID()], provider: 'mockPhotoshoot' });
+    expect(job.estimateMinor).toBeNull();
+  });
+
+  it('an unset rate (0, as it ships) still answers a null estimate', async () => {
+    const d = deps(fakeRates({ fitroom: { baseline: 0, premium: 0 } }));
+    const p = await makeProduct();
+    const { job } = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [crypto.randomUUID()], provider: 'fitroom' });
+    expect(job.estimateMinor).toBeNull();
+  });
+
+  it('C7.6 reuse rule: an already-APPROVED job with the same product/model/settings/provider wins outright — nothing new opens, nothing re-estimated', async () => {
+    const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 } }));
+    const p = await makeProduct();
+    const assetId = crypto.randomUUID();
+    const opened = await createOrReuseJob(d, generator, { productId: p.id, modelId: 'model-1', angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
+    expect(opened.reused).toBe(false);
+    await transitionJob(d, generator, opened.job.id, 'PROCESSING');
+    await transitionJob(d, generator, opened.job.id, 'REVIEW_REQUIRED');
+    const approved = await transitionJob(d, approver, opened.job.id, 'APPROVED');
+    expect(approved.status).toBe('APPROVED');
+
+    // a later, otherwise-fresh request for the exact same product/model/settings/provider — a different asset
+    // list order, even, still matches (the reuse hash sorts it) — must find the approved job, never spend again
+    const again = await createOrReuseJob(d, generator, { productId: p.id, modelId: 'model-1', angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
+    expect(again.reused).toBe(true);
+    expect(again.reusedApproval).toBe(true);
+    expect(again.job.id).toBe(opened.job.id);
+    const onlyOne = await listJobsForProduct(d, generator, p.id);
+    expect(onlyOne).toHaveLength(1); // no second row was ever created
+  });
+
+  it('reuse also finds a PUBLISHED job, not only an APPROVED one', async () => {
+    const d = deps();
+    const p = await makeProduct();
+    const assetId = crypto.randomUUID();
+    const opened = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fitroom' });
+    await transitionJob(d, generator, opened.job.id, 'PROCESSING');
+    await transitionJob(d, generator, opened.job.id, 'REVIEW_REQUIRED');
+    await transitionJob(d, approver, opened.job.id, 'APPROVED');
+    const published = await t.prisma.photoshootJob.update({ where: { id: opened.job.id }, data: { status: 'PUBLISHED' } });
+    expect(published.status).toBe('PUBLISHED');
+    const again = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fitroom' });
+    expect(again.reusedApproval).toBe(true);
+    expect(again.job.id).toBe(opened.job.id);
+  });
+
+  it('the reuse rule does NOT fire when the model (or any other setting, or the provider) changed — a fresh job opens instead', async () => {
+    const d = deps();
+    const p = await makeProduct();
+    const assetId = crypto.randomUUID();
+    const opened = await createOrReuseJob(d, generator, { productId: p.id, modelId: 'model-A', angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
+    await transitionJob(d, generator, opened.job.id, 'PROCESSING');
+    await transitionJob(d, generator, opened.job.id, 'REVIEW_REQUIRED');
+    await transitionJob(d, approver, opened.job.id, 'APPROVED');
+
+    const differentModel = await createOrReuseJob(d, generator, { productId: p.id, modelId: 'model-B', angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
+    expect(differentModel.reusedApproval).toBeFalsy();
+    expect(differentModel.job.id).not.toBe(opened.job.id);
+
+    const differentProvider = await createOrReuseJob(d, generator, { productId: p.id, modelId: 'model-A', angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fitroom' });
+    expect(differentProvider.reusedApproval).toBeFalsy();
+    expect(differentProvider.job.id).not.toBe(opened.job.id);
+  });
+
+  it('two requests that differ only by provider never collide on the plain exact-repeat idempotency check either', async () => {
+    const d = deps();
+    const p = await makeProduct();
+    const assetId = crypto.randomUUID();
+    const a = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
+    const b = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fitroom' });
+    expect(a.job.id).not.toBe(b.job.id);
+    expect(a.reused).toBe(false);
+    expect(b.reused).toBe(false);
+  });
+
+  it('refuses an unknown provider', async () => {
+    const d = deps();
+    const p = await makeProduct();
+    await expect(createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [crypto.randomUUID()], provider: 'openai' })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
   });
 });
