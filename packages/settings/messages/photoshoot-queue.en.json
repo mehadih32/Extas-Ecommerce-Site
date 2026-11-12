@@ -1,0 +1,10 @@
+{
+  "studio": {
+    "photoshoot": {
+      "maxConcurrentJobs": {
+        "label": "Photoshoot — jobs running at once",
+        "help": "How many photoshoot jobs may be actually processing (a provider running, spending money) at the same time. 0, as it ships: no limit. Extra requests simply wait their turn in the queue — nothing is lost or cancelled."
+      }
+    }
+  }
+}

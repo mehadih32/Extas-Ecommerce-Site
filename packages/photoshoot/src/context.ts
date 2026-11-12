@@ -26,6 +26,9 @@ export interface PhotoshootDeps {
   db: PrismaClient;
   settings?: SettingsReader;
   now?: () => Date;
+  /** PR 452: the per-view retry's "a new seed" (C7.5 step 7). Injectable so a test can make the "different from
+   * last time" guarantee deterministic; real callers get a crypto-random one (see `jobs.ts`'s `generateSeed`). */
+  randomSeed?: () => string;
 }
 
 export const nowOf = (deps: Pick<PhotoshootDeps, 'now'>): Date => deps.now?.() ?? new Date();
@@ -45,6 +48,10 @@ export const PHOTOSHOOT_ERROR_CODES = [
   'ORIGINAL_IMMUTABLE',
   // PR 444 / C7.6 hard rule: generating a back view with no real back_reference asset on file
   'NO_BACK_REFERENCE',
+  // PR 452: the store's own `studio.photoshoot.maxConcurrentJobs` is already reached — the job stays QUEUED, not failed
+  'CONCURRENCY_LIMIT',
+  // PR 452 (C7.20): the Photoshoot agent's own monthly spend cap is reached — new generations pause, the job stays QUEUED
+  'SPEND_CAP_REACHED',
 ] as const;
 export type PhotoshootErrorCode = (typeof PHOTOSHOOT_ERROR_CODES)[number];
 
@@ -62,6 +69,7 @@ export class PhotoshootError extends Error {
     if (this.code === 'NOT_FOUND') return 404;
     if (this.code === 'STALE') return 409;
     if (this.code === 'ORIGINAL_IMMUTABLE' || this.code === 'NO_BACK_REFERENCE') return 403;
+    if (this.code === 'CONCURRENCY_LIMIT' || this.code === 'SPEND_CAP_REACHED') return 429;
     return 400;
   }
 }
