@@ -5,7 +5,7 @@
 // real writer otherwise; the day's number blocks further drafts; an unreadable page and a writer that does not
 // answer each give their own error. Every value is made up.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createFirstOwner, createRole, defaultSecurityPolicy, syncAuth, SYSTEM, type Actor } from '@extas/auth';
+import { createFirstOwner, createRole, defaultSecurityPolicy, hashPassword, syncAuth, SYSTEM, type Actor } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { INSTALLATION, prismaBackend, registry, SettingsResolver, syncSettings, messages } from '@extas/settings';
@@ -53,7 +53,9 @@ describe.skipIf(!HAS_TEST_DB)('Website › Blog & journal › Write from a link 
     deps = { db: t.prisma, resolver: new SettingsResolver(prismaBackend(t.prisma), registry), vault: null };
     owner = cookiesOf(await loginHandler(call('POST', '/api/admin/auth/login', undefined, { email: 'owner@example.com', password: OWNER_PW }), deps));
     const role = await createRole(t.prisma, SYSTEM, { key: 'sl-reader', nameEn: 'sl-reader', nameBn: 'sl-reader', permissions: ['blog.read'] });
-    const u = await t.prisma.staffUser.create({ data: { email: 'reader@example.com', displayName: 'reader', passwordHash: 'not-a-login' } });
+    // a real password hash: unlike the direct-actor "writer" fixtures other journal db-tests use, this role is
+    // checked over HTTP (through guardAdmin's own permission gate), so it must actually be able to log in.
+    const u = await t.prisma.staffUser.create({ data: { email: 'reader@example.com', displayName: 'reader', passwordHash: await hashPassword(OWNER_PW), passwordSetAt: new Date() } });
     await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: S } });
     looker = cookiesOf(await loginHandler(call('POST', '/api/admin/auth/login', undefined, { email: 'reader@example.com', password: OWNER_PW }), deps));
   });
