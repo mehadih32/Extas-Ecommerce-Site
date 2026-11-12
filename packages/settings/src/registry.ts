@@ -137,6 +137,7 @@ import { loginNetworkSettings } from './registry-login-network';
 import { exchangeRetrySettings } from './registry-exchange-retry';
 import { statementCostsSettings } from './registry-books-statement-costs';
 import { studioSettings } from './registry-studio';
+import { photoshootSettings } from './registry-photoshoot';
 import { studioVideoSettings } from './registry-creative-studio-video';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
@@ -1543,6 +1544,8 @@ export const registry = {
   ...statementCostsSettings,
   // ---- S23 · PR 437 · the social studio's cadence, voice and AI-caption switches, off (registry-studio.ts, version 281). ----
   ...studioSettings,
+  // ---- S24 · PR 447 · the garment-prep/standardisation colour-drift tolerance, off (registry-photoshoot.ts, version 288). ----
+  ...photoshootSettings,
   // ---- S25 · PR 482 (Blueprint C8.1, C8.2) · the image-to-video engine's master switch and its cost-per-second rate, off / 0 (registry-creative-studio-video.ts, version 282). ----
   ...studioVideoSettings,
 } satisfies RegistryShape;
