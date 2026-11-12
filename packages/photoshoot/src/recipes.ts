@@ -13,7 +13,12 @@
 // set for the seven AI 360 sub-jobs. `detailFinderGarmentTypes` below is that pointer, empty for every family
 // nobody has wired a real checklist for yet.
 //
-// Part 2 (PR 470) adds the owner's own "(defaults, all editable)" override on top of this pure catalogue.
+// Part 2 (PR 470) adds the owner's own "(defaults, all editable)" override on top of this pure catalogue, read
+// through the new `studio.photoshoot.recipeOverrides` setting (`@extas/settings`'s own
+// `registry-photoshoot-recipes.ts`) — ships empty, so every family uses this file's own defaults until the owner
+// changes one.
+import type { PhotoshootDeps } from './context';
+import { setting } from './context';
 export const RECIPE_ENGINES = ['ghost_mannequin', 'on_model', 'product_only', 'real_flat'] as const;
 export type RecipeEngine = (typeof RECIPE_ENGINES)[number];
 export const isRecipeEngine = (v: unknown): v is RecipeEngine => typeof v === 'string' && (RECIPE_ENGINES as readonly string[]).includes(v);
@@ -72,4 +77,37 @@ export function categoryRecipe(key: CategoryRecipeKey): CategoryRecipeDef {
   const found = CATEGORY_RECIPES.find((r) => r.key === key);
   if (!found) throw new Error(`unknown category recipe key: ${key}`);
   return found;
+}
+
+/** The owner's own override of one family's recipe — every field optional (`registry-photoshoot-recipes.ts`'s
+ * own `PhotoshootRecipeOverride`, mirrored here rather than imported, since this package's own types must stand
+ * on their own regardless of the setting's exact storage shape). */
+export interface CategoryRecipeOverrideInput {
+  engines?: readonly RecipeEngine[];
+  angleCount?: string;
+  detailPoints?: readonly string[];
+  modelLibrary?: RecipeModelLibrary | null;
+}
+
+/** Merges the owner's own override onto a recipe's defaults — pure, no database. A field the owner never set
+ * (`undefined`) keeps the default; `modelLibrary: null` is itself a real choice (turn the model off for this
+ * family) and is kept apart from "not set" by checking for `undefined` explicitly, never `??`. */
+export function applyCategoryRecipeOverride(base: CategoryRecipeDef, override?: CategoryRecipeOverrideInput): CategoryRecipeDef {
+  if (!override) return base;
+  return {
+    ...base,
+    engines: override.engines ?? base.engines,
+    angleCount: override.angleCount ?? base.angleCount,
+    detailPoints: override.detailPoints ?? base.detailPoints,
+    modelLibrary: override.modelLibrary !== undefined ? override.modelLibrary : base.modelLibrary,
+  };
+}
+
+/** The real recipe a store actually uses today for one family — PR 469's own default, with whatever the owner
+ * has overridden in `studio.photoshoot.recipeOverrides` (empty, as it ships) applied on top. */
+export async function effectiveCategoryRecipe(deps: Required<Pick<PhotoshootDeps, 'settings'>>, storeId: number, key: CategoryRecipeKey): Promise<CategoryRecipeDef> {
+  const base = categoryRecipe(key);
+  const overrides = await setting(deps, storeId, 'studio.photoshoot.recipeOverrides');
+  const own = (overrides as Record<string, CategoryRecipeOverrideInput | undefined>)[key];
+  return applyCategoryRecipeOverride(base, own);
 }

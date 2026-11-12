@@ -1,7 +1,11 @@
-// S24 · PR 469 — pure tests for the general category/recipe catalogue: no database needed.
+// S24 · PR 469/470 — pure tests for the general category/recipe catalogue and its owner-editable override: no
+// database needed (the override-reading `effectiveCategoryRecipe` is exercised here with a tiny fake
+// `SettingsReader`, never a real one).
+import { PHOTOSHOOT_RECIPE_KEYS } from '@extas/settings';
 import { describe, expect, it } from 'vitest';
+import type { SettingsReader } from './context';
 import { DETAIL_FINDER_GARMENT_TYPES } from './detailRegions';
-import { CATEGORY_RECIPES, RECIPE_ENGINES, RECIPE_MODEL_LIBRARIES, categoryRecipe, isCategoryRecipeKey, isRecipeEngine, isRecipeModelLibrary } from './recipes';
+import { applyCategoryRecipeOverride, CATEGORY_RECIPES, categoryRecipe, effectiveCategoryRecipe, isCategoryRecipeKey, isRecipeEngine, isRecipeModelLibrary, RECIPE_ENGINES, RECIPE_MODEL_LIBRARIES } from './recipes';
 
 describe('CATEGORY_RECIPES', () => {
   it("is C7.12's own 13 recipes, verbatim and in its own order", () => {
@@ -78,5 +82,62 @@ describe('isCategoryRecipeKey / categoryRecipe', () => {
   it('looks a real one up by key; throws on an unknown one', () => {
     expect(categoryRecipe('watches').nameEn).toBe('Watches');
     expect(() => categoryRecipe('nope' as never)).toThrow(/unknown category recipe key/);
+  });
+});
+
+describe('@extas/settings keeps the same 13 keys — the two lists can never drift apart silently', () => {
+  it('names exactly the same 13 keys, in the same order, as CATEGORY_RECIPES', () => {
+    expect(PHOTOSHOOT_RECIPE_KEYS).toEqual(CATEGORY_RECIPES.map((r) => r.key));
+  });
+});
+
+describe('applyCategoryRecipeOverride', () => {
+  it('returns the base recipe untouched when there is no override', () => {
+    const base = categoryRecipe('footwear');
+    expect(applyCategoryRecipeOverride(base)).toBe(base);
+  });
+
+  it('overrides only the fields the owner actually set, keeping every other default', () => {
+    const base = categoryRecipe('footwear');
+    const result = applyCategoryRecipeOverride(base, { angleCount: '8 (adds a strap close-up)' });
+    expect(result.angleCount).toBe('8 (adds a strap close-up)');
+    expect(result.engines).toBe(base.engines);
+    expect(result.detailPoints).toBe(base.detailPoints);
+    expect(result.modelLibrary).toBe(base.modelLibrary);
+  });
+
+  it('a `modelLibrary: null` override is itself a real choice — turning the model off — never confused with "not set"', () => {
+    const base = categoryRecipe('caps');
+    expect(base.modelLibrary).toBe('men');
+    expect(applyCategoryRecipeOverride(base, { modelLibrary: null }).modelLibrary).toBeNull();
+    expect(applyCategoryRecipeOverride(base, {}).modelLibrary).toBe('men');
+  });
+
+  it('overrides engines and detail points together', () => {
+    const base = categoryRecipe('watches');
+    const result = applyCategoryRecipeOverride(base, { engines: ['product_only'], detailPoints: ['dial', 'crown'] });
+    expect(result.engines).toEqual(['product_only']);
+    expect(result.detailPoints).toEqual(['dial', 'crown']);
+  });
+});
+
+describe('effectiveCategoryRecipe', () => {
+  function fakeSettings(overrides: Record<string, unknown>): SettingsReader {
+    return {
+      value: async (key: string) => (key === 'studio.photoshoot.recipeOverrides' ? overrides : undefined) as never,
+    };
+  }
+
+  it('is the plain default when the store has overridden nothing', async () => {
+    const result = await effectiveCategoryRecipe({ settings: fakeSettings({}) }, 1, 'footwear');
+    expect(result).toEqual(categoryRecipe('footwear'));
+  });
+
+  it('applies only this family\'s own override, leaving every other family alone', async () => {
+    const overrides = { footwear: { angleCount: '8' }, watches: { modelLibrary: null } };
+    const footwear = await effectiveCategoryRecipe({ settings: fakeSettings(overrides) }, 1, 'footwear');
+    expect(footwear.angleCount).toBe('8');
+    const bags = await effectiveCategoryRecipe({ settings: fakeSettings(overrides) }, 1, 'bags');
+    expect(bags).toEqual(categoryRecipe('bags'));
   });
 });
