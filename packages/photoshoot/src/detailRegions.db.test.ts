@@ -11,11 +11,14 @@ import {
   addDetailFocusRegion,
   approveDetailRegion,
   confirmDetailFocusRegion,
+  DETAIL_FOCUS_CROP_TAG,
   DETAIL_REPROJECTION_TAG,
+  detailFocusCropRegionId,
   listDetailFocusRegionsForProduct,
   listDetailRegionsForProduct,
   planDetailReprojection,
   proposeDetailFocusRegion,
+  recordDetailFocusCropOutput,
   recordDetailRegion,
   recordDetailReprojectionOutput,
   removeDetailFocusRegion,
@@ -340,5 +343,57 @@ describe.skipIf(!HAS_TEST_DB)('PR 463 · Detail Finder focus regions (PostgreSQL
     const rows = await listDetailFocusRegionsForProduct(d, reader, productId);
     expect(rows.every((r) => r.garmentType && r.point)).toBe(true);
     expect(rows.some((r) => r.point === 'cuff')).toBe(true);
+  });
+
+  it('PR 464 · records a focus-crop output on a confirmed region sitting on a real flat-lay, tracing to that same real original', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    const region = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'polo', point: 'chest_logo', bbox });
+    await confirmDetailFocusRegion(d, approver, region.id);
+
+    const out = await recordDetailFocusCropOutput(d, generator, { regionId: region.id, storageKey: 'test/crop.jpg', storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 400, checksumSha256: 'c'.repeat(64) });
+    expect(out.sourceAssetId).toBe(flatLay.id);
+    expect(out.isAiGenerated).toBe(true);
+    expect(out.tags).toContain(DETAIL_FOCUS_CROP_TAG);
+    expect(detailFocusCropRegionId(out.tags)).toBe(region.id);
+  });
+
+  it('PR 464 · on a region sitting on a generated on-model render, traces past the render to ITS own real original — never the render itself', async () => {
+    const d = deps();
+    const onModel = await makeOnModelRender();
+    const original = await t.prisma.mediaAsset.findUniqueOrThrow({ where: { id: onModel.sourceAssetId! } });
+    const region = await proposeDetailFocusRegion(d, generator, { productId, assetId: onModel.id, garmentType: 'polo', point: 'side_tape', bbox });
+    await confirmDetailFocusRegion(d, approver, region.id);
+
+    const out = await recordDetailFocusCropOutput(d, generator, { regionId: region.id, storageKey: 'test/crop2.jpg', storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 400, checksumSha256: 'd'.repeat(64) });
+    expect(out.sourceAssetId).toBe(original.id);
+    expect(out.sourceAssetId).not.toBe(onModel.id);
+  });
+
+  it('PR 464 · refuses a crop from an unconfirmed or a removed region', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    const proposed = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'shirt', point: 'pocket', bbox });
+    await expect(recordDetailFocusCropOutput(d, generator, { regionId: proposed.id, storageKey: 'x', storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 1, checksumSha256: 'e'.repeat(64) })).rejects.toMatchObject({ code: 'SOURCE_INVALID' });
+
+    const removed = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'shirt', point: 'yoke', bbox });
+    await removeDetailFocusRegion(d, writer, removed.id);
+    await expect(recordDetailFocusCropOutput(d, generator, { regionId: removed.id, storageKey: 'x', storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 1, checksumSha256: 'f'.repeat(64) })).rejects.toMatchObject({ code: 'SOURCE_INVALID' });
+  });
+
+  it('PR 464 · refuses an unknown region, and a PR 454 region (not one of this PR’s own rows)', async () => {
+    const d = deps();
+    await expect(recordDetailFocusCropOutput(d, generator, { regionId: '00000000-0000-0000-0000-000000000000', storageKey: 'x', storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 1, checksumSha256: 'a'.repeat(64) })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    const flatLay = await makeFlatLay();
+    const pr454Region = await recordDetailRegion(d, writer, { productId, assetId: flatLay.id, kind: 'logo', bbox });
+    await expect(recordDetailFocusCropOutput(d, generator, { regionId: pr454Region.id, storageKey: 'x', storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 1, checksumSha256: 'b'.repeat(64) })).rejects.toMatchObject({ code: 'SOURCE_INVALID' });
+  });
+
+  it('PR 464 · a generator without photoshoot.generate is refused outright', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    const region = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'hoodie', point: 'zip_pull', bbox });
+    await confirmDetailFocusRegion(d, approver, region.id);
+    await expect(recordDetailFocusCropOutput(d, reader, { regionId: region.id, storageKey: 'x', storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 1, checksumSha256: 'c'.repeat(64) })).rejects.toThrow();
   });
 });
