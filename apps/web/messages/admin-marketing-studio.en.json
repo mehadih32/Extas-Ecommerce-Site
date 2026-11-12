@@ -98,6 +98,65 @@
         "other": "Something went wrong."
       }
     },
+    "briefs": {
+      "metaTitle": "Creative brief — Studio",
+      "title": "Creative brief",
+      "sub": "A few short questions about a campaign, then three ready-made directions to choose from. Nothing is produced until you have seen a direction you like — ask to see the three again as many times as you want.",
+      "offNotice": "Off today. Turn on \"Creative brief\" in Settings before answering one.",
+      "listH": "Briefs",
+      "empty": "No brief started yet.",
+      "newH": "Start a brief",
+      "newD": "What this campaign is for, who it should reach, the offer and for how long — and, if you like, which products.",
+      "newDOff": "Turn the switch on in Settings first.",
+      "purpose": "What is this campaign for",
+      "audience": "Who should it reach",
+      "offer": "What is the offer",
+      "durationDays": "For how many days",
+      "products": "Which products (optional)",
+      "noProducts": "No product yet — add one in Products first.",
+      "campaign": "Campaign (optional)",
+      "noCampaign": "No campaign — answered ahead of one",
+      "draftIt": "Save this brief",
+      "drafting": "Saving…",
+      "proposeIt": "Propose three directions",
+      "proposing": "Proposing…",
+      "askForMore": "Show me the three again",
+      "chooseIt": "Choose this direction",
+      "choosing": "Choosing…",
+      "archiveIt": "Set aside",
+      "archiving": "Setting aside…",
+      "archived": "Set aside.",
+      "rowSummary": "{offer} · {durationDays} day(s)",
+      "directions": {
+        "urgency": {
+          "name": "Urgency — dark background, big timer, strong red",
+          "rationale": "{offer}, only {durationDays} day(s) left — built to feel urgent"
+        },
+        "festive": {
+          "name": "Festive — warm light, gold accents",
+          "rationale": "{offer} for {audience} — a warm, festive feel"
+        },
+        "clean_premium": {
+          "name": "Clean premium — product led, small offer tag",
+          "rationale": "{purpose}, a clean look with {offer} shown as a small tag"
+        }
+      },
+      "chosenDirection": "Chosen: {name}",
+      "status": {
+        "DRAFTING": "Answering",
+        "PROPOSED": "Three directions ready",
+        "CHOSEN": "Direction chosen",
+        "ARCHIVED": "Set aside"
+      },
+      "err": {
+        "INVALID_INPUT": "Check what you typed.",
+        "OFF": "The creative brief is off — turn it on in Settings first.",
+        "NOT_FOUND": "Not found — the page may need a refresh.",
+        "WRONG_STATE": "This brief has already moved on — the page may need a refresh.",
+        "network": "Could not reach the server.",
+        "other": "Something went wrong."
+      }
+    },
     "hub": {
       "metaTitle": "Studio · Marketing",
       "title": "Studio",
