@@ -98,6 +98,65 @@
         "other": "Something went wrong."
       }
     },
+    "briefs": {
+      "metaTitle": "Creative brief — Studio",
+      "title": "Creative brief",
+      "sub": "A few short questions about a campaign, then three ready-made directions to choose from. Nothing is produced until you have seen a direction you like — ask to see the three again as many times as you want.",
+      "offNotice": "Off today. Turn on \"Creative brief\" in Settings before answering one.",
+      "listH": "Briefs",
+      "empty": "No brief started yet.",
+      "newH": "Start a brief",
+      "newD": "What this campaign is for, who it should reach, the offer and for how long — and, if you like, which products.",
+      "newDOff": "Turn the switch on in Settings first.",
+      "purpose": "What is this campaign for",
+      "audience": "Who should it reach",
+      "offer": "What is the offer",
+      "durationDays": "For how many days",
+      "products": "Which products (optional)",
+      "noProducts": "No product yet — add one in Products first.",
+      "campaign": "Campaign (optional)",
+      "noCampaign": "No campaign — answered ahead of one",
+      "draftIt": "Save this brief",
+      "drafting": "Saving…",
+      "proposeIt": "Propose three directions",
+      "proposing": "Proposing…",
+      "askForMore": "Show me the three again",
+      "chooseIt": "Choose this direction",
+      "choosing": "Choosing…",
+      "archiveIt": "Set aside",
+      "archiving": "Setting aside…",
+      "archived": "Set aside.",
+      "rowSummary": "{offer} · {durationDays} day(s)",
+      "directions": {
+        "urgency": {
+          "name": "Urgency — dark background, big timer, strong red",
+          "rationale": "{offer}, only {durationDays} day(s) left — built to feel urgent"
+        },
+        "festive": {
+          "name": "Festive — warm light, gold accents",
+          "rationale": "{offer} for {audience} — a warm, festive feel"
+        },
+        "clean_premium": {
+          "name": "Clean premium — product led, small offer tag",
+          "rationale": "{purpose}, a clean look with {offer} shown as a small tag"
+        }
+      },
+      "chosenDirection": "Chosen: {name}",
+      "status": {
+        "DRAFTING": "Answering",
+        "PROPOSED": "Three directions ready",
+        "CHOSEN": "Direction chosen",
+        "ARCHIVED": "Set aside"
+      },
+      "err": {
+        "INVALID_INPUT": "Check what you typed.",
+        "OFF": "The creative brief is off — turn it on in Settings first.",
+        "NOT_FOUND": "Not found — the page may need a refresh.",
+        "WRONG_STATE": "This brief has already moved on — the page may need a refresh.",
+        "network": "Could not reach the server.",
+        "other": "Something went wrong."
+      }
+    },
     "hub": {
       "metaTitle": "Studio · Marketing",
       "title": "Studio",
@@ -109,11 +168,14 @@
         "name": "Name",
         "kind": "Kind",
         "dailyLimit": "Daily limit",
+        "directPostApproved": "Direct posting",
         "spec": "Template shape",
         "assetId": "File",
         "templateId": "Template",
         "productIds": "Products",
-        "caption": "Caption"
+        "caption": "Caption",
+        "renderJobId": "Generated content",
+        "accountId": "Account"
       },
       "err": {
         "INVALID_INPUT": "Check the fields: {fields}.",
@@ -123,6 +185,9 @@
         "TEMPLATE_ARCHIVED": "Restore the template before changing it.",
         "NO_PRODUCTS": "Pick at least one product to feature.",
         "WRONG_STATE": "This job already ran — refresh the page.",
+        "ACCOUNT_OFF": "This account is archived or switched off.",
+        "NOT_SUPPORTED": "This platform cannot be posted to yet.",
+        "EMPTY": "Write a caption before posting.",
         "TOO_LARGE": "The file is larger than the upload limit.",
         "NOT_AN_IMAGE": "That file is not a picture.",
         "TYPE_NOT_ALLOWED": "That kind of file is not accepted.",
@@ -176,7 +241,11 @@
         "limitSave": "Save",
         "saved": "Saved",
         "restore": "Bring back",
-        "archive": "Set aside"
+        "archive": "Set aside",
+        "draftOnly": "TikTok: lands in drafts only — someone taps publish in the app",
+        "directApproved": "TikTok: posts straight to the feed (app audit approval on file)",
+        "switchToDraft": "Switch back to drafts only",
+        "switchToDirect": "Allow direct posting (app audit approved)"
       },
       "templates": {
         "h": "Templates",
@@ -300,6 +369,28 @@
           "CANCELLED": "Cancelled"
         },
         "noPhoto": "None of this job's products has a live photo yet."
+      },
+      "posts": {
+        "h": "Posts",
+        "d": "Turn a finished preview into a post on a Facebook or Instagram account. A new account always needs your approval first, so queuing one here only waits — nothing reaches the real account until that account is set to run free and you press \"Post now\".",
+        "empty": "No post queued yet.",
+        "addH": "Post something",
+        "noRenderJobs": "Generate something above first (it must finish before it can be posted).",
+        "noAccounts": "Add and switch on a Facebook or Instagram account above first.",
+        "captionPh": "Leave empty to use the generated content's own caption",
+        "captionHelp": "Only Facebook and Instagram can be posted to today; TikTok and YouTube follow in a later PR.",
+        "queue": "Queue it",
+        "queued": "Queued",
+        "run": "Post now",
+        "ran": "Posted",
+        "status": {
+          "PENDING_APPROVAL": "Waiting for approval",
+          "PUBLISHING": "Ready to post",
+          "SUCCEEDED": "Posted",
+          "FAILED": "Could not post"
+        },
+        "waitingApproval": "This account needs approval before anything from it goes out.",
+        "posted": "Posted to the real account."
       }
     },
     "overlay": {

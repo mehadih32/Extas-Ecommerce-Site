@@ -101,13 +101,19 @@ describe.skipIf(!HAS_TEST_DB)('Website › Blog & journal on PostgreSQL (PR 239)
     expect((await shelf('categories', 'POST', null, { slug: 'care', nameEn: 'Again' })).j.error).toBe('SLUG_TAKEN');
     const careRow = wash.j.categories.find((c: any) => c.id === careId);
     expect((await shelf('categories', 'POST', careId, { action: 'archive', version: careRow.version })).j.error).toBe('HAS_CHILDREN');
+    // PR 593: saveAuthor's own response also seeds the five-member AI team (`journalAuthors` → `ensureAuthorTeam`),
+    // alphabetically ahead of 'Suta' (Bazar, Jotno, Ritu, Rong), so this test's own author is never index [0] —
+    // found by its slug instead, same as every other author lookup below.
+    const bySlug = (rows: any[]) => rows.find((x: any) => x.slug === 'suta');
     const a = await shelf('authors', 'POST', null, { slug: 'suta', displayName: 'Suta', isAiAuthor: true, bioEn: 'Care and washing.' });
-    authorId = a.j.authors[0].id;
-    const off = await shelf('authors', 'POST', authorId, { action: 'archive', version: a.j.authors[0].version });
-    expect(off.j.authors[0].archived).toBe(true);
-    const back = await shelf('authors', 'POST', authorId, { action: 'restore', version: off.j.authors[0].version });
-    expect(back.j.authors[0].archived).toBe(false);
-    expect(await t.prisma.blogAuthor.count()).toBe(1);
+    const created = bySlug(a.j.authors);
+    authorId = created.id;
+    const off = await shelf('authors', 'POST', authorId, { action: 'archive', version: created.version });
+    expect(bySlug(off.j.authors).archived).toBe(true);
+    const back = await shelf('authors', 'POST', authorId, { action: 'restore', version: bySlug(off.j.authors).version });
+    expect(bySlug(back.j.authors).archived).toBe(false);
+    // PR 593's team (4 more besides the shared 'suta' slug, skipped as a duplicate) now seeds on every shelf read.
+    expect(await t.prisma.blogAuthor.count()).toBe(5);
   });
 
   let postId = '';

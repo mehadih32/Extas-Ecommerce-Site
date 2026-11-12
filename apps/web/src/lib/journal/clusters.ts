@@ -16,7 +16,8 @@ import { blogApprovalSchema, blogClustersSchema, storeTarget, type BlogApprovalS
 import { body, fail, guardAdmin, isUuid, json, type AdminDeps } from '../admin-auth';
 import { ROUTES } from '../shop/routes';
 import { COLUMN_OF, isLive, issuesOf, slugify, type BlogColumn, type BlogState } from './model';
-import { JournalError, LIST_MAX, PICK_MAX, answer, versionOf, type JournalWho } from './journal';
+import { authorForPillar, pickReviewer } from './authors-model';
+import { JournalError, LIST_MAX, PICK_MAX, answer, ensureAuthorTeam, versionOf, type JournalWho } from './journal';
 import {
   TOPIC_ACTIONS,
   TOPIC_PERMISSION,
@@ -59,6 +60,8 @@ export interface PlanTopic {
   isPillar: boolean;
   status: string;
   clusterId: string | null;
+  /** PR 593: the section it belongs to; when the author is one of the five under Doot, this is how it was chosen. */
+  pillar: string | null;
   authorId: string | null;
   postId: string | null;
   postColumn: BlogColumn | null;
@@ -142,6 +145,7 @@ export async function clusterPlan(db: Db, resolver: Resolver, now: Date = new Da
       isPillar: t.isPillar,
       status: t.status,
       clusterId: t.clusterId,
+      pillar: t.pillar,
       authorId: t.authorId,
       postId: t.postId,
       postColumn: post ? COLUMN_OF[post.status as BlogState] : null,
@@ -286,6 +290,13 @@ export async function saveTopic(db: Db, resolver: Resolver, who: JournalWho, id:
   if (id && !before) throw new JournalError('NOT_FOUND', 404);
   if (before && before.updatedAt.toISOString() !== d.version) throw new JournalError('STALE', 409);
   if (before && (before.archivedAt || before.postId)) throw new JournalError('WRONG_STATE', 409);
+  // PR 593: a new topic with a section and no author by hand gets the matching one of the five under Doot.
+  let autoAuthorId = d.authorId;
+  if (!before && !d.authorId && d.pillar) {
+    await ensureAuthorTeam(db, storeId);
+    const ai = await db.blogAuthor.findMany({ where: { storeId, archivedAt: null, isAiAuthor: true }, orderBy: { agentKey: 'asc' }, select: { id: true, agentKey: true } });
+    autoAuthorId = authorForPillar(d.pillar, ai);
+  }
   let level: AlikeLevel = 'none';
   if (!before) {
     const [rules, posts, topics] = await Promise.all([
@@ -297,7 +308,7 @@ export async function saveTopic(db: Db, resolver: Resolver, who: JournalWho, id:
     level = alikeLevel(a, rules);
     if (level === 'warn' && !d.force) throw new JournalError('ALIKE', 409, [a!.title]);
   }
-  const fields = { title: d.title, query: d.query, locale: d.locale, clusterId: d.clusterId, priority: d.priority, isPillar: d.isPillar, authorId: d.authorId, keywords: d.query ? [d.query] : [] };
+  const fields = { title: d.title, query: d.query, locale: d.locale, clusterId: d.clusterId, priority: d.priority, isPillar: d.isPillar, pillar: d.pillar, authorId: autoAuthorId, keywords: d.query ? [d.query] : [] };
   let saved;
   let auto = false;
   if (before) saved = await db.blogTopic.update({ where: { id: before.id }, data: fields });
@@ -350,8 +361,17 @@ export async function topicAction(db: Db, who: JournalWho, id: string, input: un
       const taken = new Set((await tx.blogPost.findMany({ where: { storeId, locale, slug: { startsWith: base } }, select: { slug: true } })).map((p) => p.slug));
       let slug = base;
       for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
+      // PR 593: when its writer is one of the five AI authors, another of them proofreads — never itself — picked
+      // by whoever is carrying the fewest open reviews right now, so the load stays even over time.
+      let reviewerAuthorId: string | null = null;
+      const writer = t.authorId ? await tx.blogAuthor.findFirst({ where: { id: t.authorId, storeId }, select: { isAiAuthor: true } }) : null;
+      if (writer?.isAiAuthor) {
+        const ai = await tx.blogAuthor.findMany({ where: { storeId, archivedAt: null, isAiAuthor: true }, orderBy: { agentKey: 'asc' }, select: { id: true, agentKey: true } });
+        const loads = await Promise.all(ai.filter((a) => a.id !== t.authorId).map(async (a) => [a.id, await tx.blogPost.count({ where: { storeId, archivedAt: null, reviewerAuthorId: a.id } })] as const));
+        reviewerAuthorId = pickReviewer(ai, t.authorId, new Map(loads));
+      }
       const post = await tx.blogPost.create({
-        data: { storeId, status: 'DRAFT', locale, slug, title: t.title, focusKeyword: brief?.query ?? brief?.keywords[0] ?? t.query, categoryId: cluster?.categoryId ?? null, authorId: t.authorId, clusterId: cluster?.id ?? null, topicId: t.id, writerStaffId: who.actor.staffUserId, sourceUrls: [], productIds: [] },
+        data: { storeId, status: 'DRAFT', locale, slug, title: t.title, focusKeyword: brief?.query ?? brief?.keywords[0] ?? t.query, categoryId: cluster?.categoryId ?? null, authorId: t.authorId, reviewerAuthorId, clusterId: cluster?.id ?? null, topicId: t.id, writerStaffId: who.actor.staffUserId, sourceUrls: [], productIds: [] },
         select: { id: true },
       });
       postId = post.id;

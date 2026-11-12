@@ -1,5 +1,5 @@
 // S24 · PR 447 (Blueprint C7.5 step 6 · Virtual Photoshoot Studio) — the garment-prep/standardisation step's own
-// switch (registry version 288). Labels: messages/photoshoot.<lang>.json (group `marketing`).
+// switch (registry version 292). Labels: messages/photoshoot.<lang>.json (group `marketing`).
 //
 // - `photoshoot.colourTolerance`: how far a garment photo's measured colour may drift from the ERP colour's own
 //   reference hex (via the grey card / colour checker in the frame, C7.4) before the prep step flags it for the
@@ -8,7 +8,7 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 288;
+const V = 292;
 
 /** 0 = never flag a drift (as it ships); otherwise the greatest allowed distance, 1–442 (ceil(sqrt(3×255²)), the full sRGB range). */
 export const photoshootColourToleranceSchema = z.number().int().min(0).max(442);

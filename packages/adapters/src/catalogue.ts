@@ -379,6 +379,60 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S23 · PR 440 — the content studio's own Facebook Page post (Marketing › Studio): the Page's long-lived access
+  // token and its id. The mock serves until the Test (reading the Page) passes; may run alongside Meta Ads/
+  // Messenger above (another provider of the same kind, each its own key).
+  {
+    id: 'facebookPagePublish',
+    kind: 'META',
+    provider: 'facebookPagePublish',
+    adapter: true,
+    secrets: [{ field: 'pageAccessToken' }],
+    config: [{ field: 'pageId' }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  // S23 · PR 440 — the content studio's own Instagram post (Marketing › Studio): the same kind of Page access token
+  // (a Business account linked to the Page) plus that Instagram account's id. The mock serves until the Test
+  // (reading the account) passes.
+  {
+    id: 'instagramPublish',
+    kind: 'META',
+    provider: 'instagramPublish',
+    adapter: true,
+    secrets: [{ field: 'pageAccessToken' }],
+    config: [{ field: 'igUserId' }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  // S23 · PR 441 — the content studio's own TikTok post (Marketing › Studio): a TikTok Content Posting API access
+  // token (the Business account that was granted `video.publish`/`video.upload` scope). The mock serves until the
+  // Test (reading the account) passes; may run alongside TikTok Ads/Events above (another provider of the same
+  // kind, each its own key). Draft vs direct posting is the account's own `directPostApproved` switch, not a key.
+  {
+    id: 'tiktokPublish',
+    kind: 'TIKTOK',
+    provider: 'tiktokPublish',
+    adapter: true,
+    secrets: [{ field: 'accessToken' }],
+    config: [{ field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  // S23 · PR 441 — the content studio's own YouTube channel connection (Marketing › Studio): a Data API access
+  // token for the channel and its id. The mock serves until the Test (reading the channel) passes — but posting
+  // itself always refuses (MOCK and LIVE alike): YouTube takes a real video, which the studio does not make yet
+  // (see packages/adapters/src/social-publish/index.ts's header note).
+  {
+    id: 'youtubePublish',
+    kind: 'YOUTUBE',
+    provider: 'youtubePublish',
+    adapter: true,
+    secrets: [{ field: 'accessToken' }],
+    config: [{ field: 'channelId' }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   // S13 · PR 259: Meta's Marketing API, read only (the ad account, its campaigns and ad sets for Marketing › Ad
   // platforms); the mock is a practice account until the token is in and the test (reading the account) passes.
   {

@@ -163,6 +163,12 @@ export function JournalShelf(p: { kind: Kind; words: Dict; rows: Row[]; canWrite
               <div className="jr-row">
                 <div>
                   <b>{label(r)}</b> <span className="a2-mono a2-xs a2-mute">{r.slug}</span>
+                  {!isCat && (r as AuthorView).agentKey ? (
+                    <span className="a2-mono a2-xs a2-mute" title={c('sh.agentKeyTip')}>
+                      {' '}
+                      · {(r as AuthorView).agentKey}
+                    </span>
+                  ) : null}
                   <div className="a2-xs a2-mute">
                     {!isCat ? <span className="a2-pill">{(r as AuthorView).isAiAuthor ? c('sh.aiPill') : c('sh.personPill')}</span> : null} {c('sh.posts', { n: r.posts })}
                     {r.archived ? ` · ${c('sh.archived')}` : ''}

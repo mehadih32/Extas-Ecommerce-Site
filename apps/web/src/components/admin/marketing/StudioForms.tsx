@@ -1,9 +1,11 @@
 'use client';
-// S23 · PR 437, 438 — Marketing › Studio's small forms: social accounts (add, rename, switch, approval, daily
-// limit, archive/restore), templates (add, update, archive/restore) and brand assets (set a kind, archive/restore;
+// S23 · PR 437–440 — Marketing › Studio's small forms: social accounts (add, rename, switch, approval, daily
+// limit, archive/restore), templates (add, update, archive/restore), brand assets (set a kind, archive/restore;
 // uploading a file goes straight to the shared Media library, `/api/admin/media`, with `folder: 'studio'`, which
-// needs `media.upload` on top of this page's own `studio.write`). The API checks every permission again; nothing
-// here posts to a real social account, renders a video or spends anything.
+// needs `media.upload` on top of this page's own `studio.write`), a render job (PR 439) and now a post from a
+// finished render job onto a Facebook or Instagram account (PR 440, `StudioPostForm`). The API checks every
+// permission again; a post only reaches a real account once its account runs free and the "Post now" button is
+// pressed (`post.run`) — queuing one here never sends anything by itself.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { showToast } from '../lumen/Toast';
@@ -377,6 +379,88 @@ export function StudioRenderForm({ texts, templates, w }: { texts: StudioFormTex
         </button>
       </span>
       <Note msg={msg} testId="st-render-msg" />
+    </div>
+  );
+}
+
+export interface PostFormWords {
+  renderJob: string;
+  noRenderJobs: string;
+  account: string;
+  noAccounts: string;
+  caption: string;
+  captionPh: string;
+  captionHelp: string;
+  queue: string;
+  queued: string;
+}
+
+/** Queues a post from a finished render job onto one account (PR 440): the render job, the account, an optional
+ * caption override (the render job's own caption is used when this is left empty). */
+export function StudioPostForm({ texts, renders, accounts, w }: { texts: StudioFormTexts; renders: { id: string; label: string }[]; accounts: { id: string; label: string }[]; w: PostFormWords }) {
+  const uid = useId();
+  const router = useRouter();
+  const [renderJobId, setRenderJobId] = useState(renders[0]?.id ?? '');
+  const [accountId, setAccountId] = useState(accounts[0]?.id ?? '');
+  const [caption, setCaption] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<Msg>(null);
+  if (!renders.length) return <p className="a2-sm a2-mute" data-testid="st-post-no-render">{w.noRenderJobs}</p>;
+  if (!accounts.length) return <p className="a2-sm a2-mute" data-testid="st-post-no-account">{w.noAccounts}</p>;
+  return (
+    <div className="mail-form" data-testid="st-post-form">
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-r`}>
+          {w.renderJob}
+        </label>
+        <select id={`${uid}-r`} className="a2-inp" value={renderJobId} onChange={(e) => setRenderJobId(e.target.value)} data-testid="st-post-render">
+          {renders.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-a`}>
+          {w.account}
+        </label>
+        <select id={`${uid}-a`} className="a2-inp" value={accountId} onChange={(e) => setAccountId(e.target.value)} data-testid="st-post-account">
+          {accounts.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-c`}>
+          {w.caption}
+        </label>
+        <textarea id={`${uid}-c`} className="a2-inp" rows={3} maxLength={2200} value={caption} placeholder={w.captionPh} onChange={(e) => setCaption(e.target.value)} data-testid="st-post-caption" />
+        <p className="a2-xs a2-mute">{w.captionHelp}</p>
+      </div>
+      <span>
+        <button
+          type="button"
+          className="a2-btn pri"
+          disabled={busy || !renderJobId || !accountId}
+          data-testid="st-post-queue"
+          onClick={async () => {
+            setBusy(true);
+            setMsg(null);
+            const r = await post(texts, { action: 'post.queue', renderJobId, accountId, ...(caption.trim() ? { caption: caption.trim() } : {}) });
+            setBusy(false);
+            if (!r.ok) return setMsg({ ok: false, text: r.text });
+            showToast({ text: w.queued, tone: 'ok' });
+            setCaption('');
+            router.refresh();
+          }}
+        >
+          {w.queue}
+        </button>
+      </span>
+      <Note msg={msg} testId="st-post-msg" />
     </div>
   );
 }
