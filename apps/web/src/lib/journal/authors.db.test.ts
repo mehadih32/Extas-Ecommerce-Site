@@ -16,7 +16,7 @@ const ctx = { ip: '192.0.2.70', userAgent: 'SampleBrowser/1.0' };
 
 describe.skipIf(!HAS_TEST_DB)('Website › Blog & journal › the author team under Doot on PostgreSQL (PR 593)', () => {
   let t: TestDatabase;
-  let resolver: SettingsResolver;
+  let resolver: SettingsResolver<typeof registry>;
   let owner: Actor;
   const S = MOTHER_STORE_ID;
 
