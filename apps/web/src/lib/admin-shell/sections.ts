@@ -496,6 +496,10 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'searches', more: true, guide: 'analytics', pages: [{ href: '/admin/reports/searches', perm: 'reports.read', keys: ['reportsSearches'] }] },
       // S02 · PR 83 — REP-08 Experiments: A/B tests of the shop's words and shown or hidden parts, with how sure each result is.
       { id: 'experiments', more: true, guide: 'analytics', pages: [{ href: '/admin/reports/experiments', perm: 'reports.experiments.read', keys: ['reportsExperiments', 'reportsExperiment'] }] },
+      // S15 · PR 340 (Blueprint D5.2 "a funnel per product"; REP-10) — Funnels: per-step visitor counts and the
+      // conversion from one step to the next, read from the PR 338/339 event and funnel layer. Seeing only
+      // (`reports.read`); creating the one-click "shop funnel" default needs `reports.analytics.write`.
+      { id: 'funnels', more: true, guide: 'analytics', pages: [{ href: '/admin/reports/funnels', perm: 'reports.read', keys: ['reportsFunnels'] }] },
     ],
   },
   {
