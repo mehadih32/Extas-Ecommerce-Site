@@ -21,6 +21,7 @@ import { z } from 'zod';
 import type { StudioJobStatus } from '@extas/db/client';
 import { allow, checkStoreId, logChange, nowOf, parse, PhotoshootError, type PhotoshootDeps, type PhotoshootPermission, type Who } from './context';
 import { computeReuseHash, estimateGenerationCostMinor, imageCountForTier, isPhotoshootProvider, type PhotoshootProviderKey } from './costLedger';
+import { photoshootRecommendationNote } from './recommendation';
 import { photoshootAgentCapCheck } from './spendCap';
 
 /** The DB's own `StudioJobStatus` enum values, carried here as a plain union so callers need no Prisma import. */
@@ -214,6 +215,12 @@ export interface CreateOrReuseJobResult {
    * product/model/settings/provider fingerprint (C7.6's own reuse rule) — never set for the plain "exact repeat
    * of an in-flight request" reuse PR 451 already had. */
   reusedApproval?: boolean;
+  /** PR 460's own "recommendation note" (C7.20) — an honest, plain-words note on the caller's own `provider`
+   * choice, never overriding it: `null` whenever there is nothing worth saying (the practice provider, nothing
+   * reused, no provider named at all, or the choice already matches the system's own suggestion). Computed
+   * fresh from the same `rates` read as `estimateMinor`, so a store with no `settings` reader simply gets
+   * `null` here too. */
+  recommendationNote: string | null;
 }
 
 /**
@@ -241,6 +248,11 @@ export async function createOrReuseJob(deps: PhotoshootDeps, who: Who, input: un
   if (!product) throw new PhotoshootError('SOURCE_INVALID', 'no such product in this store', ['productId']);
 
   const provider = d.provider as PhotoshootProviderKey | null | undefined;
+  const tier = d.tier as JobTier;
+  // PR 460: read once, up front, so the recommendation note (never persisted — always computed fresh) is on
+  // every return path below, not only the "a new row was actually created" one.
+  const rates = provider && deps.settings ? await deps.settings.value('studio.photoshoot.rates', { storeId: who.storeId }) : null;
+  const recommendationNote = provider && rates ? photoshootRecommendationNote({ provider, tier, rates }) : null;
   const reuseHash = provider
     ? computeReuseHash({
         productId: d.productId,
@@ -257,15 +269,13 @@ export async function createOrReuseJob(deps: PhotoshootDeps, who: Who, input: un
     : null;
   if (reuseHash) {
     const approved = await deps.db.photoshootJob.findFirst({ where: { storeId: who.storeId, reuseHash, status: { in: ['APPROVED', 'PUBLISHED'] } }, orderBy: { createdAt: 'desc' } });
-    if (approved) return { job: toJobRow(approved), reused: true, reusedApproval: true };
+    if (approved) return { job: toJobRow(approved), reused: true, reusedApproval: true, recommendationNote };
   }
 
   const idempotencyKey = computeIdempotencyKey(d);
   const existing = await deps.db.photoshootJob.findFirst({ where: { storeId: who.storeId, idempotencyKey } });
-  if (existing) return { job: toJobRow(existing), reused: true };
+  if (existing) return { job: toJobRow(existing), reused: true, recommendationNote };
 
-  const tier = d.tier as JobTier;
-  const rates = provider && deps.settings ? await deps.settings.value('studio.photoshoot.rates', { storeId: who.storeId }) : null;
   const estimateMinor = provider && rates ? estimateGenerationCostMinor({ provider, tier, imageCount: imageCountForTier(tier), rates }) : null;
   const created = await deps.db.photoshootJob.create({
     data: {
@@ -289,7 +299,7 @@ export async function createOrReuseJob(deps: PhotoshootDeps, who: Who, input: un
   });
   await logChange(deps.db, who, { action: 'photoshoot.job.create', entityType: 'PhotoshootJob', entityId: created.id, before: null, after: { productId: created.productId, angle: created.angle, tier: created.tier, status: created.status, provider: created.provider, estimateMinor: created.estimateMinor } });
   const queued = await transitionJob(deps, who, created.id, 'QUEUED');
-  return { job: queued, reused: false };
+  return { job: queued, reused: false, recommendationNote };
 }
 
 /**

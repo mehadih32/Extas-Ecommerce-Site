@@ -1,7 +1,8 @@
-// S24 · PR 451, 452, 459 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): `createOrReuseJob` and
-// `transitionJob` against the actual `PhotoshootJob` table and its `@@unique([storeId, idempotencyKey])` constraint
-// (PR 451), plus `retryFailedJob`'s new seed and `startProcessing`'s concurrency/spend-cap gates (PR 452), plus
-// the estimate and the C7.6 reuse rule a named `provider` now unlocks (PR 459).
+// S24 · PR 451, 452, 459, 460 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): `createOrReuseJob`
+// and `transitionJob` against the actual `PhotoshootJob` table and its `@@unique([storeId, idempotencyKey])`
+// constraint (PR 451), plus `retryFailedJob`'s new seed and `startProcessing`'s concurrency/spend-cap gates (PR
+// 452), plus the estimate and the C7.6 reuse rule a named `provider` now unlocks (PR 459), plus the honest
+// recommendation note on the owner's own provider choice (PR 460).
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -388,5 +389,47 @@ describe.skipIf(!HAS_TEST_DB)('PR 459 · estimate and the C7.6 reuse rule (Postg
     const d = deps();
     const p = await makeProduct();
     await expect(createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [crypto.randomUUID()], provider: 'openai' })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+  });
+
+  // --- PR 460: the recommendation note (C7.20) on `createOrReuseJob`'s own result -------------------------------
+
+  it('is null without a provider, without a rates reader, or when the choice already matches the system\'s own suggestion', async () => {
+    const noSettings = deps();
+    const p1 = await makeProduct();
+    expect((await createOrReuseJob(noSettings, generator, { productId: p1.id, angle: 'front', tier: 'baseline', inputAssetIds: [crypto.randomUUID()] })).recommendationNote).toBeNull();
+
+    const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 } }));
+    const p2 = await makeProduct();
+    expect((await createOrReuseJob(d, generator, { productId: p2.id, angle: 'front', tier: 'baseline', inputAssetIds: [crypto.randomUUID()] })).recommendationNote).toBeNull(); // no provider named
+
+    const p3 = await makeProduct();
+    expect((await createOrReuseJob(d, generator, { productId: p3.id, angle: 'front', tier: 'baseline', inputAssetIds: [crypto.randomUUID()], provider: 'fashn' })).recommendationNote).toBeNull(); // fashn IS the suggestion here
+  });
+
+  it('names an honest cost delta, never a quality claim, when the owner picks the non-suggested rated provider', async () => {
+    const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 }, fitroom: { baseline: 8000, premium: 16000 } }));
+    const p = await makeProduct();
+    const { recommendationNote } = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [crypto.randomUUID()], provider: 'fitroom' });
+    expect(recommendationNote).toMatch(/fitroom/);
+    expect(recommendationNote).toMatch(/2000 paisa less/);
+    expect(recommendationNote).toMatch(/quality is not compared here/);
+  });
+
+  it('also comes back on a reused row (both the exact-repeat and the APPROVED/PUBLISHED reuse rule), not only a freshly created one', async () => {
+    const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 }, fitroom: { baseline: 8000, premium: 16000 } }));
+    const p = await makeProduct();
+    const assetId = crypto.randomUUID();
+    const first = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fitroom' });
+    expect(first.recommendationNote).toMatch(/paisa/);
+    const repeat = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fitroom' });
+    expect(repeat.reused).toBe(true);
+    expect(repeat.recommendationNote).toMatch(/paisa/);
+
+    await transitionJob(d, generator, first.job.id, 'PROCESSING');
+    await transitionJob(d, generator, first.job.id, 'REVIEW_REQUIRED');
+    await transitionJob(d, approver, first.job.id, 'APPROVED');
+    const viaReuseRule = await createOrReuseJob(d, generator, { productId: p.id, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fitroom' });
+    expect(viaReuseRule.reusedApproval).toBe(true);
+    expect(viaReuseRule.recommendationNote).toMatch(/paisa/);
   });
 });
