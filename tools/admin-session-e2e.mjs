@@ -123,6 +123,37 @@ async function run() {
     watchPage(page, base, ignore, () => step, problems, secrets);
     const check = async (status) => problems.push(...pageProblems(step, status, await page.innerText("body")));
 
+    step = "0 legacy browser state (CN-043)";
+    // The owner's old everyday browser, which used the WordPress shop that ran on this domain before go-live, still
+    // carries its cookies, a registered service worker and cached files when it first opens the admin. Simulate that:
+    // a WooCommerce-style cookie, a large stored value, a cache entry and a service worker registration (at one of
+    // our own legacy stand-in paths, apps/web/src/app/sw.js) — then the admin sign-in must still load.
+    await page.goto(`${base}/`);
+    await page.evaluate(() => {
+      document.cookie = "woocommerce_cart_hash=legacy; path=/";
+      document.cookie = "wp-settings-1=legacy; path=/";
+      try {
+        window.localStorage.setItem("legacy-wp-blob", "x".repeat(200_000));
+      } catch {
+        /* a browser that refuses storage is still fine to test against */
+      }
+    });
+    await page.evaluate(async () => {
+      try {
+        const c = await caches.open("old-wp-cache");
+        await c.put("/old-wp-asset.css", new Response("body{color:red}"));
+      } catch {
+        /* no Cache Storage in this context: the rest of the check still holds */
+      }
+      try {
+        await navigator.serviceWorker.register("/sw.js");
+        await navigator.serviceWorker.ready;
+      } catch {
+        /* no service-worker support in this context: the rest of the check still holds */
+      }
+    });
+    console.log(`ok   ${step}`);
+
     step = "1 open the sign-in page";
     let r = await page.goto(`${base}${LOGIN}`);
     await page.waitForSelector("#ad-email", { timeout: 20_000 });
@@ -223,6 +254,40 @@ async function run() {
     } finally {
       await replay.close();
     }
+
+    step = "7 /reset clears the legacy browser state (CN-043)";
+    r = await page.goto(`${base}/reset`);
+    await check(r?.status() ?? 0);
+    const afterReset = await page.evaluate(async () => ({
+      cookies: document.cookie,
+      storageLen: (() => {
+        try {
+          return window.localStorage.length;
+        } catch {
+          return 0;
+        }
+      })(),
+      caches: await (async () => {
+        try {
+          return (await caches.keys()).length;
+        } catch {
+          return 0;
+        }
+      })(),
+      registrations: await (async () => {
+        try {
+          return (await navigator.serviceWorker.getRegistrations()).length;
+        } catch {
+          return 0;
+        }
+      })(),
+    }));
+    if (/woocommerce_|wp-settings-/.test(afterReset.cookies)) problems.push(`${step}: a legacy cookie is still set after /reset`);
+    if (afterReset.storageLen > 0) problems.push(`${step}: localStorage still has ${afterReset.storageLen} key(s) after /reset`);
+    if (afterReset.caches > 0) problems.push(`${step}: ${afterReset.caches} cache(s) remain after /reset`);
+    if (afterReset.registrations > 0) problems.push(`${step}: ${afterReset.registrations} service worker registration(s) remain after /reset`);
+    await page.waitForURL((u) => onLogin(u.href), { timeout: 10_000 }).catch(() => problems.push(`${step}: did not reach the admin sign-in after /reset's own refresh`));
+    console.log(`ok   ${step} → ${here(page)}`);
   } catch (e) {
     problems.push(`${step}: ${scrub(e instanceof Error ? e.message : String(e), secrets).split("\n")[0]}`);
   } finally {

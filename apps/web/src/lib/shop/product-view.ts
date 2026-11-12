@@ -52,5 +52,6 @@ export function toModel(d: ProductData, lang: ShopLang, drawingViews: readonly G
     ),
     chart: d.chart[lang],
     onSale: d.state === 'live',
+    overlay: d.overlay,
   };
 }

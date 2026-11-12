@@ -466,6 +466,36 @@ async function visit(page, base, ignore, path, screen, dirs, before) {
 }
 
 /**
+ * CN-045 (12 Nov, owner, a failed deploy): /reset's own `Clear-Site-Data: "cookies"` (CN-043) must never run inside
+ * the shared guest session the storefront loop uses — on the always-gated staging host it would throw away that
+ * session's own extas_preview cookie and 401 every page checked after it, the signed-out admin check included (this
+ * is exactly what rolled back commit 06ffb720de42). It gets a fresh, throwaway context of its own instead, with no
+ * cookie at all, so the same run also proves the owner's "no auth" ask: a browser holding nothing still reaches it
+ * (infra/stack/caddy/auth-block.sh exempts it, the same way the webhook paths are exempted).
+ */
+export async function resetPageProblems(browser, base) {
+  const problems = [];
+  const ctx = await checkContext(browser, {});
+  try {
+    const page = await ctx.newPage();
+    const r = await page.goto(`${base}/reset`, { waitUntil: "load" });
+    const status = r?.status() ?? 0;
+    if (status !== 200) problems.push(`/reset: answered ${status} with no cookie at all, expected 200 (no auth)`);
+    // CN-045 (12 Nov, qa-gate): Playwright's own `response.headers()` convenience object silently drops
+    // Clear-Site-Data — Chromium treats it specially and it is missing from that dictionary even though the browser
+    // received and acted on it. `headerValue()` reads the raw response header list instead and sees it correctly.
+    const header = (r && (await r.headerValue("clear-site-data"))) ?? "";
+    if (!/"cookies"/.test(header)) problems.push(`/reset: no Clear-Site-Data "cookies" header (got ${JSON.stringify(header)})`);
+    problems.push(...pageProblems("/reset", status, await page.innerText("body").catch(() => "")));
+  } catch (e) {
+    problems.push(`/reset: ${e instanceof Error ? e.message : String(e)}`);
+  } finally {
+    await ctx.close();
+  }
+  return problems;
+}
+
+/**
  * Answers the preview login once and returns the browser state holding its cookie, or null when none was set.
  * PR 234: the monthly lab run passes the preview login the same way.
  */
@@ -513,6 +543,8 @@ export async function runSmoke(opts) {
       problems.push(
         "the preview login did not give the extas_preview cookie: every request would ask for it again",
       );
+    // CN-045: checked once, in its own throwaway context, never inside a session any other check reuses.
+    problems.push(...(await resetPageProblems(browser, opts.base)));
     let signedIn = null;
     for (const vp of config.viewports) {
       const screen = {
@@ -549,24 +581,20 @@ export async function runSmoke(opts) {
         for (const path of discovered(hrefs, d.take))
           rows.push(await withPair(await visit(gp, opts.base, ignore, path, vp.name, opts)));
       }
-      // Signed out, an admin page sends you to the sign-in page (never an error).
-      const out = await visit(
-        gp,
-        opts.base,
-        ignore,
-        "/admin/products",
-        vp.name,
-        null,
-      );
-      if (!out.landed.startsWith("/admin/login"))
+      // Signed out, an admin page sends you to the sign-in page (never an error). CN-045: checked on two different
+      // admin pages, not just one, since the bug that rolled back 06ffb720de42 was never this redirect itself.
+      for (const adminPath of ["/admin/products", "/admin/orders"]) {
+        const out = await visit(gp, opts.base, ignore, adminPath, vp.name, null);
+        if (!out.landed.startsWith("/admin/login"))
+          problems.push(
+            `signed out, ${adminPath} did not go to the sign-in page (${out.landed})`,
+          );
         problems.push(
-          `signed out, /admin/products did not go to the sign-in page (${out.landed})`,
+          ...out.problems
+            .filter((p) => !p.endsWith("sent back to the sign-in page"))
+            .map((p) => `${p} (${vp.name})`),
         );
-      problems.push(
-        ...out.problems
-          .filter((p) => !p.endsWith("sent back to the sign-in page"))
-          .map((p) => `${p} (${vp.name})`),
-      );
+      }
       await guest.close();
       // As admin: the sign-in itself once (a two-step code is good only once), then its session on every screen.
       const state = signedIn ?? preview;
@@ -758,18 +786,42 @@ async function main() {
     : undefined;
   const out = process.env.SMOKE_OUT || null;
   const privateOut = process.env.SMOKE_PRIVATE_OUT || null;
-  const result = await runSmoke({
-    base,
-    creds,
-    httpCredentials,
-    out,
-    privateOut,
-    chromiumPath: process.env.CHROMIUM_PATH,
-    // R2 ops review (M2): staging (the preview host, the default) or extra (the main domain, infra/deploy/smoke.sh)
-    hostKind: process.env.SMOKE_HOST_KIND === "extra" ? "extra" : "staging",
-    // Follow-up 569: the run after a deploy (it rolls back on failure) leaves the `nightlyOnly` checks out.
-    afterDeploy: process.env.SMOKE_ROLLS_BACK === "1",
-  });
+  // CN-046 (12 Nov 2026, deploy run 43227644499): `signIn()` throwing "still on the sign-in page after
+  // signing in" (a real, correctly-detected problem) escaped uncaught past this point, through runSmoke's
+  // try/finally (which only closes the browser) and all the way to `main().then(..., onError)` below — so
+  // result.json/README.md/rows.json were never written for a run that HAD found a real problem. smoke.sh then
+  // saw no result.json and fell back to its own generic "did not finish (exit N)" message, and
+  // infra/deploy/deploy.sh's automatic rollback (triggered correctly because the step still exited nonzero)
+  // had nothing informative to go on either. A crash during the run must never skip the write-out step: it is
+  // recorded as a normal, structured failure (ok:false, with the crash's own message as a problem) so every
+  // downstream reader (smoke_keep, run_history, the deploy report, a human) sees exactly what went wrong,
+  // whether the run finished cleanly or blew up partway through.
+  let result;
+  try {
+    result = await runSmoke({
+      base,
+      creds,
+      httpCredentials,
+      out,
+      privateOut,
+      chromiumPath: process.env.CHROMIUM_PATH,
+      // R2 ops review (M2): staging (the preview host, the default) or extra (the main domain, infra/deploy/smoke.sh)
+      hostKind: process.env.SMOKE_HOST_KIND === "extra" ? "extra" : "staging",
+      // Follow-up 569: the run after a deploy (it rolls back on failure) leaves the `nightlyOnly` checks out.
+      afterDeploy: process.env.SMOKE_ROLLS_BACK === "1",
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error(`smoke: the run crashed before it finished — ${message}`);
+    result = {
+      ok: false,
+      pages: 0,
+      failed: 0,
+      problems: [`the smoke run crashed before it finished: ${message}`],
+      rows: [],
+      shots: [],
+    };
+  }
   for (const r of result.rows)
     console.log(
       `${r.ok ? "ok  " : "FAIL"} ${r.screen.padEnd(7)} ${r.path} → ${r.landed} (${r.status})`,

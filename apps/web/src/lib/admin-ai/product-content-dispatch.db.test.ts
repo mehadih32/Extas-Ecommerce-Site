@@ -3,6 +3,7 @@
 // the product content API route (PR 326's own "Write with AI" button) calls it — never on a plain page view. No
 // real network call: the global `fetch` is replaced for the one test that reaches a live provider.
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
@@ -13,7 +14,6 @@ import { setAgentMonthlyCap } from './spend-cap';
 
 const S = MOTHER_STORE_ID;
 const NOW = new Date('2026-11-12T10:00:00Z');
-const OWNER = { staffUserId: 'system' } as never;
 const PRODUCT_ID = 'p-326-sample';
 
 const facts = (over: Partial<ProductDescriptionFacts> = {}): ProductDescriptionFacts => ({
@@ -31,13 +31,17 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the product content job dispatcher on P
   let t: TestDatabase;
   let deps: ProductContentAiDeps;
   let resolver: SettingsResolver<typeof registry>;
+  let OWNER: { staffUserId: string };
 
   beforeAll(async () => {
     t = await createTestDatabase('web');
     await seedSampleStores(t.prisma);
+    await syncAuth(t.prisma);
     await syncSettings(t.prisma, { registry, messages });
     await ensureAgentRows(t.prisma);
     await t.prisma.exchangeRate.create({ data: { storeId: S, baseCurrency: 'USD', quoteCurrency: 'BDT', rate: '119.5', effectiveFrom: new Date('2026-01-01T00:00:00Z') } });
+    const owned = await createFirstOwner(t.prisma, defaultSecurityPolicy(), { email: 'owner@example.com', displayName: 'Sample owner', password: 'a long sentence for the tests', passwordChosenByOwner: true });
+    OWNER = { staffUserId: owned.id };
     resolver = new SettingsResolver(prismaBackend(t.prisma), registry);
     deps = { db: t.prisma, resolver, vault: { get: async () => 'sk-test-key' }, now: () => NOW };
   });
@@ -94,7 +98,7 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the product content job dispatcher on P
   it('Doot\'s own monthly cap stops a real call before it is made, once this month\'s spend has already crossed it', async () => {
     const agent = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'doot' } });
     await t.prisma.aiUsageLedger.create({
-      data: { storeId: S, agentId: agent.id, jobTypeKey: 'mktProductDescription', providerKey: 'anthropic', modelKey: 'claude-sonnet', idempotencyKey: 'p-326-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000 },
+      data: { storeId: S, agentId: agent.id, jobTypeKey: 'mktProductDescription', providerKey: 'anthropic', modelKey: 'claude-sonnet', idempotencyKey: 'p-326-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000, createdAt: NOW },
     });
     await setAgentMonthlyCap(deps, { actor: OWNER }, 'doot', 1); // any cap at all — 1000 already spent this month is already over it
     const fetchMock = vi.fn();

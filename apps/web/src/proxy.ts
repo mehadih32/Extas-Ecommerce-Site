@@ -30,10 +30,14 @@
 // its own, not a product address, not "Coming soon") answers HTTP 404 from here, and the request carries this
 // process's mark in NOT_FOUND_HEADER, so the catch-all page draws the shop's not-found page on the server (Next draws a
 // page's own notFound() only in the browser). A browser's own copy of the header is always dropped.
+// CN-043 (11 Nov 2026, owner) — on every answer, also expire any old WordPress/WooCommerce cookie the browser still
+// carries from the shop that used to run on this same domain before go-live (lib/legacy-browser.ts). Name-matched
+// only, so this never touches our own cookies; every branch below (the shop's and the admin's alike) goes through it.
 import { NextResponse, type NextRequest } from 'next/server';
 import { shopCacheHeaders } from './lib/cache-policy';
 import { AB_PREVIEW_COOKIE, AB_PREVIEW_HEADER, AB_PREVIEW_PARAM, AB_VISITOR_HEADER, BOT, newVisitorId, previewCookie, previewOf, visitorIdOf } from './lib/experiments/edge';
 import { liveTests, showing } from './lib/experiments/live';
+import { expireLegacyCookies, legacyCookieNames, registrableDomain } from './lib/legacy-browser';
 import { apiGate, pageCspHeader } from './lib/security/edge-gate';
 import { bengaliGateSends } from './lib/seo/bengali-gate';
 import { lowerCaseTarget } from './lib/seo/indexing';
@@ -56,6 +60,15 @@ function withCacheHeaders(res: NextResponse, req: NextRequest): NextResponse {
   const h = shopCacheHeaders(req.nextUrl.pathname, req.cookies.getAll().map((c) => c.name));
   if (h['cache-control']) res.headers.set('cache-control', h['cache-control']);
   res.headers.set('cdn-cache-control', h['cdn-cache-control']);
+  return res;
+}
+
+/** CN-043: expires any old WordPress/WooCommerce cookie this browser still carries, by name only. */
+function withLegacyCookieCleanup(res: NextResponse, req: NextRequest): NextResponse {
+  const names = legacyCookieNames(req.headers.get('cookie'));
+  if (!names.length) return res;
+  const domain = registrableDomain(req.headers.get('host'));
+  for (const line of expireLegacyCookies(names, domain)) res.headers.append('set-cookie', line);
   return res;
 }
 
@@ -127,28 +140,28 @@ function withAb(res: NextResponse, ab: { cookie: string | null; noStore: boolean
 
 export async function proxy(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
-  if (pathname.startsWith('/api/') || pathname.startsWith('/erp-api/')) return gateApi(req);
-  if (!isShopPath(pathname)) return withPageCsp(NextResponse.next());
+  if (pathname.startsWith('/api/') || pathname.startsWith('/erp-api/')) return withLegacyCookieCleanup(gateApi(req), req);
+  if (!isShopPath(pathname)) return withLegacyCookieCleanup(withPageCsp(NextResponse.next()), req);
   const lower = lowerCaseTarget(pathname);
   if (lower) {
     const url = req.nextUrl.clone();
     url.pathname = lower;
-    return NextResponse.redirect(url, PERMANENT);
+    return withLegacyCookieCleanup(NextResponse.redirect(url, PERMANENT), req);
   }
   if (req.method === 'GET' || req.method === 'HEAD') {
     const fwd = forwardOf(await redirectTable(shopStoreId()), pathname, req.nextUrl.search);
     if (fwd) {
       countRedirectHit(fwd.id);
-      return NextResponse.redirect(new URL(fwd.location, req.nextUrl), fwd.status);
+      return withLegacyCookieCleanup(NextResponse.redirect(new URL(fwd.location, req.nextUrl), fwd.status), req);
     }
   }
   const { lang, path } = requestLang(pathname, req.headers);
-  if (!isShopPath(path)) return NextResponse.next(); // /bn/admin is not the admin
+  if (!isShopPath(path)) return withLegacyCookieCleanup(NextResponse.next(), req); // /bn/admin is not the admin
   // PR 588: a Bengali page not marked ready goes to its English twin while the owner chose so (temporary, never cached)
   if (lang === 'bn' && (req.method === 'GET' || req.method === 'HEAD') && (await bengaliGateSends(shopStoreId(), path))) {
     const res = NextResponse.redirect(new URL(`${path}${req.nextUrl.search}`, req.nextUrl), TEMPORARY);
     res.headers.set('cache-control', 'no-store');
-    return res;
+    return withLegacyCookieCleanup(res, req);
   }
   const h = new Headers(req.headers);
   h.set(LANG_HEADER, lang);
@@ -167,9 +180,9 @@ export async function proxy(req: NextRequest) {
     h.set(REWRITE_MARK_HEADER, rewriteMark());
     const url = req.nextUrl.clone();
     url.pathname = path;
-    return withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h }, status }), req)), ab), req);
+    return withLegacyCookieCleanup(await withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h }, status }), req)), ab), req), req);
   }
-  return withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.next({ request: { headers: h }, status }), req)), ab), req);
+  return withLegacyCookieCleanup(await withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.next({ request: { headers: h }, status }), req)), ab), req), req);
 }
 
 export const config = {

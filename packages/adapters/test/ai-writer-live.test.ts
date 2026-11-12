@@ -107,6 +107,48 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d.usage).toBeUndefined();
   });
 
+  it('PR 311 — masks a phone number and an e-mail address out of the article prompt before the Completer ever sees it', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"excerpt": "x", "body": "y"}' }));
+    const w = liveAiWriter(complete);
+    await w.draftArticle({
+      locale: 'en',
+      title: 'Care guide',
+      query: null,
+      keywords: ['care'],
+      intent: 'howto',
+      wordCount: 400,
+      outline: [],
+      mustInclude: null,
+      links: [],
+      notes: 'Call 01712345678 or mail rahim@example.com for the full return story.',
+    });
+    expect(complete).toHaveBeenCalledTimes(1);
+    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
+    expect(sent.user).not.toContain('01712345678');
+    expect(sent.user).not.toContain('rahim@example.com');
+    expect(sent.user).toContain('[PHONE]');
+    expect(sent.user).toContain('[EMAIL]');
+  });
+
+  it('PR 311 — masks a phone number inside a campaign brief the same way', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"versions": [{"subject": "Hi", "body": "Hi {link}"}, {"subject": "Hi", "body": "Hi {link}"}]}' }));
+    const w = liveAiWriter(complete);
+    const campaign: AiCampaignInput = { channel: 'email', locale: 'en', brief: 'Call the rider on 01812345678 if the box looks damaged', voice: { greeting: '', signOff: '', style: '' }, versions: 2, words: ['link'], max: { subject: 80, body: 300 } };
+    await w.draftCampaign(campaign);
+    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
+    expect(sent.user).not.toContain('01812345678');
+    expect(sent.user).toContain('[PHONE]');
+  });
+
+  it('PR 311 — does not touch a prompt with nothing to mask', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"title": "A title", "description": "A description."}' }));
+    await liveAiWriter(complete).draftSeo(seoInput);
+    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
+    expect(sent.user).not.toContain('[PHONE]');
+    expect(sent.user).not.toContain('[EMAIL]');
+    expect(sent.user).toContain('Sample Pique Polo');
+  });
+
   // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
   // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
   // ledger exactly like support's and the product content agent's.
@@ -117,6 +159,18 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d).toEqual({ title: 'Sample Pique Polo | Sample Brand', description: 'A classic polo.', practice: false, usage: { inputTokens: 64, outputTokens: 11 } });
     const w2 = liveAiWriter(async () => ({ text: '{"title": "x", "description": "y"}' }));
     expect((await w2.draftSeo(seoInput)).usage).toBeUndefined();
+  });
+});
+
+// PR 311 applies to the PR 325/326 drafts too: the support reply and the product description go through the same
+// masking `send`, so a phone number in the customer's question or a product note never leaves the server.
+describe('PR 311 masking covers the support reply and the product description', () => {
+  it('draftSupportReply and draftProductDescription never hand a phone number to the Completer', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"body": "Hello, we are on it."}' }));
+    const w = liveAiWriter(complete);
+    await w.draftSupportReply({ locale: 'en', question: 'call me on 01712345678', facts: { intent: 'status' }, ruleBasedBody: 'Hi, ring 01712345678.', max: { body: 300 } });
+    await w.draftProductDescription({ locale: 'en', facts: { name: 'Sample Tee', fabric: 'ask 01712345678' }, max: { body: 300 } });
+    for (const call of complete.mock.calls) expect((call[0] as { user: string }).user).not.toContain('01712345678');
   });
 });
 

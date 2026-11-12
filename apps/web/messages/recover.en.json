@@ -9,5 +9,6 @@
   "pageBody": "If a page of this site will not open in this browser, or goes blank, press the button. Only this site's saved data in this browser is cleared: your other sites, passwords and tabs stay as they are.",
   "working": "Clearing…",
   "done": "Done. Opening the site again…",
-  "failed": "Could not clear it. Please try again."
+  "failed": "Could not clear it. Please try again.",
+  "fixBrowser": "Fix this browser"
 }

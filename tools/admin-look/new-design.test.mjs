@@ -9,29 +9,57 @@ const real = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '.
 
 describe('pnpm admin:design (PR 12, CN-025)', () => {
   it('adds one module and one registry line for a new Dashboard design', () => {
-    const plan = planDesign({ registry: real, page: 'dashboard', key: 'D', en: 'Focus', bn: 'ফোকাস' });
-    expect(plan.file.path).toBe(`${LOOK_DIR}/dashboard/D.tsx`);
+    const plan = planDesign({ registry: real, page: 'dashboard', key: 'E', en: 'Focus', bn: 'ফোকাস' });
+    expect(plan.file.path).toBe(`${LOOK_DIR}/dashboard/E.tsx`);
     const added = plan.registry.split('\n').filter((l) => !real.split('\n').includes(l));
-    expect(added).toEqual(["import { dashboardD } from './dashboard/D';", '      dashboardD,']);
+    expect(added).toEqual(["import { dashboardE } from './dashboard/E';", '      dashboardE,']);
     // The line sits in the Dashboard's list, right before its marker.
     const lines = plan.registry.split('\n');
-    expect(lines[lines.indexOf('      // admin:design dashboard') - 1]).toBe('      dashboardD,');
-    expect(plan.file.text).toContain("key: 'D'");
+    expect(lines[lines.indexOf('      // admin:design dashboard') - 1]).toBe('      dashboardE,');
+    expect(plan.file.text).toContain("key: 'E'");
     expect(plan.file.text).toContain('name: { en: "Focus", bn: "ফোকাস" }');
-    expect(plan.file.text).toContain('export const dashboardD: LookDesign<DashProps, DashPart>');
+    expect(plan.file.text).toContain('export const dashboardE: LookDesign<DashProps, DashPart>');
     // The start keeps the page's contract: the one KPI pair, the shared header.
     expect(plan.file.text).toContain('testId="dash-kpi-sales"');
     expect(plan.file.text).toContain('testId="dash-kpi-ordered"');
     expect(plan.file.text).toContain('<DashHead p={p} />');
   });
 
-  it('refuses a key the page has, a bad key, an unknown page, a page not drawn through the registry, an existing file', () => {
+  it('adds one module and one registry line for a new Products design (PR 657, follow-up 382)', () => {
+    const plan = planDesign({ registry: real, page: 'products', key: 'D', en: 'Bare rows', bn: 'খালি সারি' });
+    expect(plan.file.path).toBe(`${LOOK_DIR}/products/D.tsx`);
+    const added = plan.registry.split('\n').filter((l) => !real.split('\n').includes(l));
+    expect(added).toEqual(["import { productsD } from './products/D';", '      productsD,']);
+    const lines = plan.registry.split('\n');
+    expect(lines[lines.indexOf('      // admin:design products') - 1]).toBe('      productsD,');
+    expect(plan.file.text).toContain("key: 'D'");
+    expect(plan.file.text).toContain('export const productsD: LookDesign<ProductsDesignProps');
+    expect(plan.file.text).toContain('loadProductList');
+    expect(plan.file.text).toContain('<ProductsHeader');
+    expect(plan.file.text).toContain('<ProductListBody');
+  });
+
+  it('refuses a key the page has, a bad key, an unknown page, an existing file', () => {
     expect(() => planDesign({ registry: real, page: 'dashboard', key: 'A' })).toThrow(/already has a design A/);
     expect(() => planDesign({ registry: real, page: 'dashboard', key: 'b' })).toThrow(/not a design key/);
     expect(() => planDesign({ registry: real, page: 'Dash', key: 'D' })).toThrow(/not a page id/);
     expect(() => planDesign({ registry: real, page: 'nowhere', key: 'D' })).toThrow(/no page "nowhere"/);
-    expect(() => planDesign({ registry: real, page: 'orders', key: 'B' })).toThrow(/does not draw its designs through the registry yet/);
-    expect(() => planDesign({ registry: real, page: 'dashboard', key: 'D', has: () => true })).toThrow(/exists already/);
+    // PR 656 (follow-up 381) and PR 657 (follow-up 382): Orders and Products now both draw through the registry,
+    // so a page registered but not yet wired through STARTS no longer has a real example to refuse against here.
+    expect(() => planDesign({ registry: real, page: 'products', key: 'B' })).toThrow(/already has a design B/);
+    expect(() => planDesign({ registry: real, page: 'dashboard', key: 'E', has: () => true })).toThrow(/exists already/);
+  });
+
+  it('adds one module and one registry line for a new Orders design (PR 656, follow-up 381)', () => {
+    const plan = planDesign({ registry: real, page: 'orders', key: 'D', en: 'Focus', bn: 'ফোকাস' });
+    expect(plan.file.path).toBe(`${LOOK_DIR}/orders/D.tsx`);
+    const added = plan.registry.split('\n').filter((l) => !real.split('\n').includes(l));
+    expect(added).toEqual(["import { ordersD } from './orders/D';", '      ordersD,']);
+    const lines = plan.registry.split('\n');
+    expect(lines[lines.indexOf('      // admin:design orders') - 1]).toBe('      ordersD,');
+    expect(plan.file.text).toContain("key: 'D'");
+    expect(plan.file.text).toContain('export const ordersD: LookDesign<OrdersDesignProps');
+    expect(plan.file.text).toContain('loadOrderList');
   });
 
   it('writes both files, and a second run for the same key is refused', () => {

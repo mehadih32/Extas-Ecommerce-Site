@@ -1,4 +1,4 @@
-/* S15 · PR 319 — AI › Diary (/admin/ai/diary), Lumen look. Uses the shared --lm-*/a2-* tokens only, so the
+/* S15 · PR 319 — AI › Diary (/admin/ai/diary), Lumen look. Uses the shared --lm-* and a2-* tokens only, so the
    hardcode guard finds no colour literal here. A flat, newest-first list of cards — never a wide table. */
 .adm2 .ai-dy-fbar {
   flex-wrap: wrap;

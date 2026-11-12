@@ -4,6 +4,7 @@
 // through an HTTP route (there is none; AI 360's own job dispatcher has never had one). No real network call: the
 // global `fetch` is replaced for the one test that reaches a live provider.
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { INSTALLATION, messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
@@ -15,7 +16,6 @@ import { supportAiReplyOption, type SupportAiDeps } from './support-dispatch';
 
 const S = MOTHER_STORE_ID;
 const NOW = new Date('2026-11-11T10:00:00Z');
-const OWNER = { staffUserId: 'system' } as never;
 const CONVO_ID = 'c-325-sample';
 
 const facts = (over: Partial<SupportReplyFacts> = {}): SupportReplyFacts => ({
@@ -34,13 +34,17 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the support reply job dispatcher on Pos
   let t: TestDatabase;
   let deps: SupportAiDeps;
   let resolver: SettingsResolver<typeof registry>;
+  let OWNER: { staffUserId: string };
 
   beforeAll(async () => {
     t = await createTestDatabase('web');
     await seedSampleStores(t.prisma);
+    await syncAuth(t.prisma);
     await syncSettings(t.prisma, { registry, messages });
     await ensureAgentRows(t.prisma);
     await t.prisma.exchangeRate.create({ data: { storeId: S, baseCurrency: 'USD', quoteCurrency: 'BDT', rate: '119.5', effectiveFrom: new Date('2026-01-01T00:00:00Z') } });
+    const owned = await createFirstOwner(t.prisma, defaultSecurityPolicy(), { email: 'owner@example.com', displayName: 'Sample owner', password: 'a long sentence for the tests', passwordChosenByOwner: true });
+    OWNER = { staffUserId: owned.id };
     resolver = new SettingsResolver(prismaBackend(t.prisma), registry);
     deps = { db: t.prisma, resolver, vault: { get: async () => 'sk-test-key' }, now: () => NOW };
   });
@@ -103,7 +107,7 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the support reply job dispatcher on Pos
   it('the agent\'s own monthly cap stops a real call before it is made, once this month\'s spend has already crossed it', async () => {
     const agent = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'gyani' } });
     await t.prisma.aiUsageLedger.create({
-      data: { storeId: S, agentId: agent.id, jobTypeKey: 'supportReply', providerKey: 'anthropic', modelKey: 'claude-sonnet', idempotencyKey: 'c-325-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000 },
+      data: { storeId: S, agentId: agent.id, jobTypeKey: 'supportReply', providerKey: 'anthropic', modelKey: 'claude-sonnet', idempotencyKey: 'c-325-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000, createdAt: NOW },
     });
     await setAgentMonthlyCap(deps, { actor: OWNER }, 'gyani', 1); // any cap at all — 1000 already spent this month is already over it
     const fetchMock = vi.fn();

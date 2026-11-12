@@ -1,6 +1,6 @@
-# Server report — 2026-11-11 04:28 +06
+# Server report — 2026-11-13 00:41 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `9f0aecac5be726887fcd185fdb7cf57fa26c584b`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `b6553166bde7967eca763052aacd1bc8850d9e77`. Overall: **PASS**.
 
 ## Machine
 
@@ -47,8 +47,8 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 | PR 3 · data disk | OK | /dev/nvme0n2 → VG extas: 8 volumes + 16 GB swap mounted, 97.97g free for growth |
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
-| PR 4 · Docker | OK | Docker version 29.9.3, compose 5.7.0; logs rotated; build cache ≤ 40 GB; starts after NVMe + data disk |
-| PR 4 · OS disk | OK | / 5% used, 118 GB free (a deploy needs 15); containerd store: on its own volume (51G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
+| PR 4 · Docker | OK | Docker version 29.9.3, compose 5.7.1; logs rotated; build cache ≤ 40 GB; starts after NVMe + data disk |
+| PR 4 · OS disk | OK | / 5% used, 118 GB free (a deploy needs 15); containerd store: on its own volume (24G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
 | PR 620 · client address | INFO | Cloudflare's ranges written for Caddy; checked live after the reload |
 | PR 403 · main domain | INFO | open: extas.com.bd www.extas.com.bd without the preview password and noindex; new.extas.com.bd stays locked |
@@ -58,11 +58,11 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 | PR 6 · Redis | OK | cache (LRU, NVMe) + queue (no eviction, AOF on data disk) |
 | PR 7 · Caddy | OK | new.extas.com.bd, auto HTTPS, HTTP/3, password + noindex |
 | stack health | INFO | caddy:healthy meilisearch:healthy pgbouncer:healthy postgres:healthy redis-cache:healthy redis-queue:healthy  |
-| PR 8 · backup (data disk) | OK | 33M base + dump; photos: 0 new or changed since the full archive of 20261108-0230; docs of 0c9db8d8f511; 98% of the backup disk free; daily at 02:30, WAL every minute |
+| PR 8 · backup (data disk) | OK | 35M base + dump; photos: 0 new or changed since the full archive of 20261108-0230; docs of 119ddc1cd1a1; 98% of the backup disk free; daily at 02:30, WAL every minute |
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
-| PR 8 · restore test | OK | base 20261111-0230, 404 tables restored (live has 404); photos: the archive holds no photo yet; docs: docs-20261111-0230.tar.gz back with README, blueprint and register, COMMIT 0c9db8d8f511 matches |
-| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: none |
+| PR 8 · restore test | OK | base 20261112-0230, 404 tables restored (live has 404); photos: the archive holds no photo yet; docs: docs-20261112-0230.tar.gz back with README, blueprint and register, COMMIT 119ddc1cd1a1 matches |
+| PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: রাতের পেজ-পরীক্ষা ব্যর্থ: /admin/marketing/campaigns: answered 500 (desktop); /admin/marketing/campaigns: request 500: /admin/marketing/campaigns (desktop); /admin/marketing/campaigns: console error: Failed to load resource: the server responded with a status of 500 () (/admin/marketing/campaigns) (desktop) |
 | PR 392 · vault keys for the server | INFO | every 2 min: ok — unchanged |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
 | public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
@@ -71,21 +71,21 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 
 ```
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/root       123G  5.6G  118G   5% /
+/dev/root       123G  5.7G  118G   5% /
 ```
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (51G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (162M used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (24G used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (153M used on it) |
 | `/home/ghrunner/actions-runner` | 2.7 GB |  |
-| `/home/ghrunner/actions-runner/_work` | 1.3 GB |  |
+| `/home/ghrunner/actions-runner/_work` | 1.4 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
 | `/home` | 2.7 GB |  |
 | `/root` | 0.0 GB |  |
 | `/var/log` | 0.3 GB |  |
 | `/var/log/journal` | 0.1 GB |  |
-| `/var/cache` | 0.2 GB |  |
+| `/var/cache` | 0.1 GB |  |
 | `/var/tmp` | 0.0 GB |  |
 | `/tmp` | 0.0 GB |  |
 
@@ -96,7 +96,7 @@ Largest folders on the OS disk:
 - `/home/ghrunner/actions-runner` 2.7 GB
 - `/usr` 2.1 GB
 - `/usr/lib` 1.2 GB
-- `/var` 0.7 GB
+- `/var` 0.8 GB
 - `/usr/bin` 0.4 GB
 - `/usr/lib/x86_64-linux-gnu` 0.4 GB
 - `/var/lib` 0.3 GB
@@ -108,15 +108,15 @@ Docker image store: overlayfs (driver-type=io.containerd.snapshotter.v1 ); Docke
 
 ```
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/root       123G  5.5G  118G   5% /
+/dev/root       123G  5.6G  118G   5% /
 ```
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (51G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (162M used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (24G used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (153M used on it) |
 | `/home/ghrunner/actions-runner` | 2.7 GB |  |
-| `/home/ghrunner/actions-runner/_work` | 1.3 GB |  |
+| `/home/ghrunner/actions-runner/_work` | 1.4 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
 | `/home` | 2.7 GB |  |
 | `/root` | 0.0 GB |  |
@@ -133,7 +133,7 @@ Largest folders on the OS disk:
 - `/home/ghrunner/actions-runner` 2.7 GB
 - `/usr` 2.1 GB
 - `/usr/lib` 1.2 GB
-- `/var` 0.6 GB
+- `/var` 0.7 GB
 - `/usr/bin` 0.4 GB
 - `/usr/lib/x86_64-linux-gnu` 0.4 GB
 - `/var/lib` 0.3 GB

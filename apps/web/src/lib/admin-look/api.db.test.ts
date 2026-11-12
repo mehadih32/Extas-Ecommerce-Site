@@ -78,7 +78,7 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
       [{ scope: 'all', page: 'dashboard', design: 'C' }, 'scope'],
       [{ scope: 'me', page: 'nowhere', design: 'A' }, 'page'],
       [{ scope: 'me', page: 'dashboard', design: 'Z' }, 'design'],
-      [{ scope: 'me', page: 'orders', design: 'B' }, 'design'],
+      [{ scope: 'me', page: 'orders', design: 'Z' }, 'design'],
       [{ scope: 'me', guide: 'window' }, 'guide'],
     ] as const) {
       const res = await lookHandler(call(body, staff), catalog, deps);
@@ -197,6 +197,9 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
     // PR 631: the live feed lists nothing on an empty shop; the goal ring is not read while the goal is off (as shipped)
     expect(all.feed).toEqual([]);
     expect(all.goal).toBeNull();
+    // PR 658: the order funnel and the hours heat map are honest zeros on an empty shop, never a sample.
+    expect(all.funnel).toMatchObject({ placed: 0, confirmed: 0, packed: 0, withCourier: 0, delivered: 0 });
+    expect(all.hours?.cells.every((row) => row.every((n) => n === 0))).toBe(true);
     const goal = await loadDashboard({ ...ctx, today: { liveRows: 0, goal: { on: true, amountMinor: 5_000_000 } }, viewer: { perms: new Set(), owner: true } }, ['goal', 'feed']);
     expect(goal.goal).toMatchObject({ goalMinor: 5_000_000, salesMinor: 0, to: today });
     expect(goal.feed).toBeNull();
@@ -209,6 +212,8 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
     expect(desk.stages).not.toBeNull();
     expect(desk.goal).toBeNull();
     expect(desk.feed).toEqual([]);
-    expect([...desk.parts].sort()).toEqual(['delivery', 'feed', 'queues', 'stages']);
+    // PR 658 gated `funnel` and `hours` on the same `orders.read` permission as `stages`/`feed`/`delivery`,
+    // so this viewer (orders.read only) correctly gets both too — this assertion was never updated for them.
+    expect([...desk.parts].sort()).toEqual(['delivery', 'feed', 'funnel', 'hours', 'queues', 'stages']);
   });
 });

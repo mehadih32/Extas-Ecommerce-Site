@@ -195,15 +195,17 @@ check "gate: a token that is not hex is refused" "$(bash "$AB" "# fp" extas H 'x
 # PR 620: and the ERP's two signed GET calls (/erp-api/top-products, /erp-api/customers), as a third.
 # PR 426: and the Messenger webhook (GET handshake, signed POST) on its one path, as a fourth.
 # Follow-up 372: and the couriers' status calls (POST, the typed-in token or secret) on their two paths, as a fifth.
+# CN-045 (12 Nov, owner, a failed deploy): and /reset and the four self-unregistering service-worker routes (CN-043),
+# GET only, as a sixth through tenth — a browser that cannot reach the app at all must still reach these.
 # qa-gate (30 Oct): each one matches the raw request target ({http.request.orig_uri}), case for case, anchored on its
 # exact path; never Caddy's `path` matcher, which ignores case and decodes and cleans the path first.
 x() { printf '\tnot {\n\t\tmethod %s\n\t\texpression `{http.request.orig_uri}.matches(\x27^%s([?].*)?$\x27)`\n\t}' "$1" "$2"; }
-want_ex="$(x POST /api/erp/webhook; echo; x 'GET POST' /api/whatsapp/webhook; echo; x 'GET POST' /api/messenger/webhook; echo; x GET '/erp-api/(top-products|customers)'; echo; x POST '/api/courier/(steadfast|pathao)/webhook')"
-check "gate: the ERP, WhatsApp, Messenger and courier webhooks and the ERP's calls are the only exemptions" "$(grep -c 'not {' <<<"$blk"):$(grep -c 'method ' <<<"$blk"):$(grep -c 'expression ' <<<"$blk"):$(grep -c 'path ' <<<"$blk")" "5:5:5:0"
-check "gate: the exemptions match the raw target, never a cleaned path" "$(grep -c '{http.request.orig_uri}.matches(.^/' <<<"$blk"):$(grep -cE '\b(path|path_regexp|http\.request\.uri\.path)\b' <<<"$blk")" "5:0"
+want_ex="$(x POST /api/erp/webhook; echo; x 'GET POST' /api/whatsapp/webhook; echo; x 'GET POST' /api/messenger/webhook; echo; x GET '/erp-api/(top-products|customers)'; echo; x POST '/api/courier/(steadfast|pathao)/webhook'; echo; x GET '/reset'; echo; x GET '/sw[.]js'; echo; x GET '/service-worker[.]js'; echo; x GET '/OneSignalSDKWorker[.]js'; echo; x GET '/firebase-messaging-sw[.]js')"
+check "gate: the ERP, WhatsApp, Messenger and courier webhooks, the ERP's calls, reset and the service workers are the only exemptions" "$(grep -c 'not {' <<<"$blk"):$(grep -c 'method ' <<<"$blk"):$(grep -c 'expression ' <<<"$blk"):$(grep -c 'path ' <<<"$blk")" "10:10:10:0"
+check "gate: the exemptions match the raw target, never a cleaned path" "$(grep -c '{http.request.orig_uri}.matches(.^/' <<<"$blk"):$(grep -cE '\b(path|path_regexp|http\.request\.uri\.path)\b' <<<"$blk")" "10:0"
 check "gate: the exemption blocks, word for word" "$(sed -n '/^\tnot {$/,/^\t}$/p' <<<"$blk")" "$want_ex"
-check "gate: cookie test and exemptions in one matcher" "$(sed -n '/^@preview_needed {$/,/^}$/p' <<<"$blk" | grep -c $'^\tnot ')" "6"
-check "gate: the server re-writes an older gate (fingerprint v7)" "$(grep -c '# preview gate v7 for' ../server/steps/09-stack.sh)" "1"
+check "gate: cookie test and exemptions in one matcher" "$(sed -n '/^@preview_needed {$/,/^}$/p' <<<"$blk" | grep -c $'^\tnot ')" "11"
+check "gate: the server re-writes an older gate (fingerprint v8)" "$(grep -c '# preview gate v8 for' ../server/steps/09-stack.sh)" "1"
 # With a Caddy binary (CADDY_BIN, or caddy on PATH), the gate runs for real: the webhook POST reaches the app with no
 # login and no cookie, and nothing else does. CI downloads the release that matches the server's image (IMG_CADDY) and
 # runs this part; anywhere else it runs when a Caddy is installed.
@@ -234,6 +236,10 @@ if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
   check "gate (caddy): the exact ERP calls with any query still pass" "$(code "$u/erp-api/customers"):$(code "$u/erp-api/top-products"):$(code "$u/erp-api/customers?search=a%2Fb&page=2")" "200:200:200"
   check "gate (caddy): no other spelling of the ERP webhook passes" "$(code -X POST "$u/API/ERP/WEBHOOK"):$(code -X POST "$u/api/erp/webhoo%6b"):$(code -X POST --path-as-is "$u/x%2f..%2fapi%2ferp%2fwebhook"):$(code -X POST "$u/api/erp/webhook/"):$(code -X POST "$u/api%2ferp%2fwebhook")" "401:401:401:401:401"
   check "gate (caddy): no other spelling of the WhatsApp webhook passes" "$(code "$u/API/WHATSAPP/WEBHOOK"):$(code -X POST "$u/api/whatsapp/webhoo%6b"):$(code --path-as-is "$u/x%2f..%2fapi%2fwhatsapp%2fwebhook"):$(code -I "$u/api/whatsapp/webhook")" "401:401:401:401"
+  # CN-045: /reset and the four service-worker routes pass with no login at all (not even a cookie) — a browser that
+  # cannot reach the app, or lost its preview cookie along with everything else, must still reach them.
+  check "gate (caddy): /reset and the service-worker routes pass with no login" "$(code "$u/reset"):$(code "$u/sw.js"):$(code "$u/service-worker.js"):$(code "$u/OneSignalSDKWorker.js"):$(code "$u/firebase-messaging-sw.js")" "200:200:200:200:200"
+  check "gate (caddy): their other methods and spellings still ask" "$(code -X POST "$u/reset"):$(code -X PUT "$u/sw.js"):$(code "$u/RESET"):$(code "$u/SW.JS"):$(code "$u/reset/"):$(code "$u/reset/x")" "401:401:401:401:401:401"
   kill "$cpid" 2>/dev/null || true; wait "$cpid" 2>/dev/null || true
   rm -rf "$T"
 elif [ -n "${CI:-}" ]; then
@@ -530,6 +536,20 @@ rep RUN_ID=44 DEPLOY=success SMOKE=failure SMOKE_ROLLBACK=success SMOKE_JSON="$T
 check "report: a failed smoke test rolled back, in words" "$(grep -c 'FAILED, ROLLED BACK' "$T/out/deploy-latest.md"):$(grep -c 'previous version was put back' "$T/out/deploy-latest.md"):$(grep -c 'owner@example' "$T/out/deploy-latest.md")" "1:1:0"
 rep RUN_ID=44 DEPLOY=success SMOKE=failure SMOKE_ROLLBACK=failure SMOKE_JSON="$T/smoke.json"
 check "report: a failed rollback says so" "$(grep -c 'FAILED, ROLLBACK FAILED' "$T/out/deploy-latest.md")" "1"
+# CN-046 (12 Nov 2026, deploy run 43227644499): "putting the previous version back failed too" used to stop there —
+# never saying which version a reader on new.extas.com.bd was actually looking at. Now it always says, in bold, on
+# its own: by deploy.sh's own guarantee (a failed rollback never changes what was live) when there is no fresh check,
+# or from the fresh check itself (POST_ROLLBACK_JSON, taken again right after the failed rollback step) when there is.
+check "report (CN-046): no fresh check — says plainly the NEW version is still live, by name" \
+  "$(grep -c 'the NEW version just deployed, commit `999988887777`, is the one still live' "$T/out/deploy-latest.md")" "1"
+echo '{"url":"u","code":200,"ok":true,"commit":"999988887777aaaa","color":"blue"}' > "$T/post.json"
+rep RUN_ID=44 DEPLOY=success SMOKE=failure SMOKE_ROLLBACK=failure SMOKE_JSON="$T/smoke.json" POST_ROLLBACK_JSON="$T/post.json"
+check "report (CN-046): a fresh check confirming the new version — says so, checked just now" \
+  "$(grep -c 'the NEW version just deployed, commit `999988887777`, is the one still live' "$T/out/deploy-latest.md"):$(grep -c 'checked again right after the failed rollback step' "$T/out/deploy-latest.md")" "1:1"
+echo '{"url":"u","code":200,"ok":true,"commit":"111122223333dddd","color":"green"}' > "$T/post.json"
+rep RUN_ID=44 DEPLOY=success SMOKE=failure SMOKE_ROLLBACK=failure SMOKE_JSON="$T/smoke.json" POST_ROLLBACK_JSON="$T/post.json"
+check "report (CN-046): a fresh check answering as the OLD version — says the old one is live, not the new" \
+  "$(grep -c 'the OLD version, commit `111122223333`, is the one live' "$T/out/deploy-latest.md"):$(grep -c 'NEW version just deployed' "$T/out/deploy-latest.md")" "1:0"
 check "report: the history keeps seven columns" "$(tr -cd '|' < "$T/out/deploy-history.line" | wc -c)" "8"
 rep RUN_ID=44 DEPLOY=success
 check "report: no smoke line when it did not run" "$(grep -c 'Smoke test' "$T/out/deploy-latest.md")" "0"
@@ -567,6 +587,11 @@ if grep -q check-account <<<"$*"; then
 fi
 # PR 419: the run history import (and its probe) in the migrate image
 grep -q run-history-cli <<<"$*" && exit 0
+# CN-046 (12 Nov 2026, deploy run 43227644499): the browser crashing partway through — exiting nonzero with no
+# result.json at all, not a clean "found a problem" — is exactly what happened in the real incident (an uncaught
+# exception in tools/smoke.mjs, since fixed there too). Proves smoke.sh's own fallback still turns that into a
+# normal, exit-1 failure that says so, never a silent pass and never an unexplained crash of smoke.sh itself.
+[ "${FAKE_CRASH:-}" != 1 ] || exit 1
 cp "$envf" "$FAKE_SEEN"
 printf '{"at":"x","sha":"s","ok":%s,"pages":4,"failed":%s,"problems":%s}\n' "$FAKE_OK" "$FAKE_FAILED" "$FAKE_PROBLEMS" > "$out/result.json"
 echo "# r" > "$out/README.md"
@@ -624,6 +649,12 @@ check "smoke (M7): the first-week watch asks for the main domain; a run by hand 
 echo '{"migrate":"extas-migrate:gone"}' > "$T/root/state/last-good-deploy.json"; : > "$T/docker.log"
 sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null
 check "smoke: a missing migrate image falls back to the newest" "$(grep -c 'run .*extas-migrate:newest sh -c .*check-account' "$T/docker.log")" "1"
+echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
+rc=0; sm FAKE_CRASH=1 >/dev/null 2>&1 || rc=$?
+check "smoke (CN-046): a crash with no result.json is still a clean exit-1 failure that says so, never a silent pass" \
+  "$rc:$(jq -c '{ok,problems}' "$T/root/state/smoke.json")" '1:{"ok":false,"problems":["the smoke test did not finish (exit 1)"]}'
+check "smoke (CN-046): deploy.yml's rollback, live-check and fail-build steps all key off this step's own outcome, never result.json existing" \
+  "$(grep -c "steps.smoke.outcome == 'failure'" ../../.github/workflows/deploy.yml)" "3"
 rm -rf "$T"
 
 # Monthly speed lab (S11 · PR 234): vitals-lab.sh makes the check account the same way as smoke.sh, hands the browser
@@ -1267,6 +1298,31 @@ check "rollback: no image a record needs is removed" "$(grep -c '^RMI' "$T/docke
 rc=0; FAKE_IMAGES="extas-web:new extas-web:old extas-migrate:new" dep rollback || rc=$?
 check "rollback: a worker image that is gone runs 0 copies and says why" "$rc:$(jq -r .worker "$T/root/state/last-deploy.json"):$(jq -r .worker_image "$T/root/state/last-deploy.json")" \
   "0:off: image extas-migrate:oldw is not on this server:"
+# CN-046 (12 Nov 2026, deploy run 43227644499): a real incident — the ERP-shaped crash, "smoke crashes" below — ended
+# with the automatic rollback dying because the ONE image it ever tries (the immediately-previous one) was no longer
+# on the server, leaving the untested new version live with nothing restored. A rollback now keeps trying older good
+# versions it still has a record of (images.sh rollback_history, deploy.sh's own per-attempt history under
+# state/deploys/) before it gives up — proven here with a history three versions deep and the newest two missing.
+: > "$T/docker.log"; cp "$T/good.json" "$T/root/state/last-good-deploy.json"
+mkdir -p "$T/root/state/deploys"; rm -f "$T/root/state/deploys"/*.json
+echo '{"result":"ok","kind":"deploy","image":"extas-web:ancient","worker_image":"extas-migrate:ancientw"}' > "$T/root/state/deploys/20261101-000000.json"
+echo '{"result":"fail","kind":"deploy","image":"extas-web:badbuild"}' > "$T/root/state/deploys/20261103-000000.json"
+echo '{"result":"ok","kind":"deploy","image":"extas-web:old","worker_image":"extas-migrate:oldw"}' > "$T/root/state/deploys/20261105-000000.json"
+echo '{"result":"ok","kind":"deploy","image":"extas-web:new","worker_image":"extas-migrate:new"}' > "$T/root/state/deploys/20261110-000000.json"
+depout() { PATH="$T/bin:$PATH" FAKE_LOG="$T/docker.log" EXTAS_CONFIG_FILE="$T/conf" DEPLOY_DRAIN_SECONDS=0 bash ../deploy/deploy.sh "$@" 2>&1; }
+rc=0; out="$(FAKE_IMAGES="extas-web:new extas-web:ancient extas-migrate:new extas-migrate:ancientw" depout rollback)" || rc=$?
+check "rollback (CN-046): the usual target is gone, so it falls back two generations to one still on the server" \
+  "$rc:$(jq -r '.result, .image, .worker_image, .kind' "$T/root/state/last-deploy.json" | paste -sd'|')" "0:ok|extas-web:ancient|extas-migrate:ancientw|rollback"
+check "rollback (CN-046): it says in the log that it had to go further back, and how far" \
+  "$(grep -c 'usual rollback target.*is not on this server any more' <<<"$out"):$(grep -c '1 newer good version(s) were no longer on this server' <<<"$out")" "1:1"
+check "rollback (CN-046): a failed build in the history is never offered as a target" "$(grep -c 'extas-web:badbuild' "$T/docker.log")" "0"
+: > "$T/docker.log"; cp "$T/good.json" "$T/root/state/last-good-deploy.json"
+rc=0; out="$(FAKE_IMAGES="extas-web:new extas-migrate:new" depout rollback)" || rc=$?
+check "rollback (CN-046): the usual target AND every earlier good version are gone — dies clearly, touches nothing" \
+  "$rc:$(jq -r .result "$T/root/state/last-deploy.json"):$(grep -c '^COMPOSE' "$T/docker.log" || true):$(grep -c '^RMI' "$T/docker.log" || true)" "1:fail:0:0"
+check "rollback (CN-046): the record says plainly the live, untested version was never touched" \
+  "$(jq -r .detail "$T/root/state/last-deploy.json" | grep -c 'every earlier good version'):$(jq -r .detail "$T/root/state/last-deploy.json" | grep -c 'live version unchanged')" "1:1"
+rm -f "$T/root/state/deploys"/*.json
 # PR 602: after the switch the deploy asks the new colour to clear every cache layer once — inside the Docker network,
 # with the server's own token, and never failing the deploy. Without the token (setup not re-run) it only says so.
 check "cache hook: no token, no call" "$(grep -c 'cache/deployed' "$T/docker.log" || true)" "0"
@@ -1377,6 +1433,61 @@ check "erp acceptance: once the app runs as extas_app, that role's address goes 
 check "workflows: the deploy runs it after the migration, before the new colour; ci ignores its reports" \
   "$(awk '/^  if ! migrate_db "\$MIGRATE_IMAGE"/{m=NR} /erp-acceptance.sh" "\$ERP_ACCEPTANCE_OUT"/{a=NR} /^if ! app "\$NEW" up/{u=NR} END{print (m && a && u && m<a && a<u) ? "between" : "wrong"}' ../deploy/deploy.sh):$(grep -c 'ERP_ACCEPTANCE_OUT="$RUNNER_TEMP/erp-acceptance" ERP_ACCEPTANCE_TIMEOUT_MIN=8 bash infra/deploy/deploy.sh "extas-web' ../../.github/workflows/deploy.yml):$(grep -c 'bash infra/deploy/erp-acceptance.sh' ../../.github/workflows/deploy.yml):$(grep -c 'docs/reports/erp-acceptance/\*\*' ../../.github/workflows/ci.yml)" "between:1:0:1"
 check "workflows: the nightly run holds no secret" "$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/erp-acceptance.yml)" "0"
+rm -rf "$T"
+
+# PR 654 (CN-044): erp-sku-stock-compare.sh runs the compare CLI in the migrate image with only the database address
+# (the app role's once the app runs as extas_app, else the direct one, as DATABASE_URL — qa-gate N5) and the vault
+# key, in a root-only file gone afterwards; an image without the CLI yet is "not run" (exit 0); a run past the limit
+# is "not finished" (exit 0). This check is informational only (never a go-live gate), so it never runs inside
+# deploy.sh and a comparison difference never fails the script — only a run that wrote no report at all does. Docker
+# is a stand-in.
+T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/root/config/secrets" "$T/root/state"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nDATABASE_URL=postgresql://pooled\nVAULT_MASTER_KEY=vk\nOTHER=x\n' > "$T/root/config/secrets/app.env"
+echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
+cat > "$T/bin/docker" <<'STUB'
+#!/usr/bin/env bash
+echo "docker $*" >> "$FAKE_LOG"
+case "$1" in
+  image) exit 0 ;;
+  images) echo "extas-migrate:newest"; exit 0 ;;
+esac
+if grep -q 'test -f' <<<"$*"; then [ "${FAKE_HAS_CLI:-1}" = 1 ]; exit; fi
+out=""; envf=""; prev=""
+for a in "$@"; do
+  [ "$prev" = -v ] && case "$a" in *:/out) out="${a%:/out}" ;; esac
+  [ "$prev" = --env-file ] && envf="$a"
+  prev="$a"
+done
+cp "$envf" "$FAKE_SEEN"
+[ -z "${FAKE_EXIT:-}" ] || exit "$FAKE_EXIT"   # killed by the time limit (or crashed) before it wrote anything
+echo "# ERP SKU ও স্টক তুলনা" > "$out/README.md"
+echo '{"at":"2026-11-11T00:00:00Z","stores":[]}' > "$out/report.json"
+STUB
+chmod +x "$T/bin/docker"
+sc() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" ERP_ACCEPTANCE_IMAGE_UID="$(id -u)" FAKE_LOG="$T/docker.log" FAKE_SEEN="$T/seen.env" \
+  "$@" bash ../deploy/erp-sku-stock-compare.sh "$T/out"; }
+rc=0; sc >/dev/null || rc=$?
+check "erp sku/stock compare: a run exits 0 and writes the report" "$rc:$(cat "$T/out/README.md")" "0:# ERP SKU ও স্টক তুলনা"
+check "erp sku/stock compare: only the direct database address (as DATABASE_URL) and the vault key go in" \
+  "$(sort "$T/seen.env" | tr '\n' ' ')" "DATABASE_URL=postgresql://u:dbpw@h/d VAULT_MASTER_KEY=vk "
+check "erp sku/stock compare: the live version's migrate image runs it" "$(grep -c 'extas-migrate:aaa sh -c cd /repo/packages/jobs' "$T/docker.log")" "1"
+check "erp sku/stock compare: the secrets file is gone" "$(find "$T/root/config/secrets" -name '.erp-sku-stock-compare.*' | wc -l | tr -d ' ')" "0"
+rc=0; sc FAKE_HAS_CLI=0 >/dev/null || rc=$?
+check "erp sku/stock compare: a version without it yet is not run, not failed" "$rc:$(jq -r '.state' "$T/out/report.json")" "0:NOT_IN_VERSION"
+rm -rf "$T/out"
+rc=0; sc FAKE_EXIT=124 >/dev/null || rc=$?
+check "erp sku/stock compare: a run past the time limit is not finished, not failed" \
+  "$rc:$(jq -r '.state' "$T/out/report.json"):$(grep -c 'Not finished' "$T/out/README.md")" "0:NOT_FINISHED:1"
+rc=0; sc FAKE_EXIT=3 >/dev/null || rc=$?
+check "erp sku/stock compare: a run that stops without any report still fails" "$rc" "1"
+printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nDATABASE_URL=postgresql://extas_app:apppw@pgb/d?pgbouncer=true\nVAULT_MASTER_KEY=vk\n' > "$T/root/config/secrets/app.env"
+rc=0; sc >/dev/null || rc=$?
+check "erp sku/stock compare: once the app runs as extas_app, that role's address goes in, never the owner's (qa-gate N5)" \
+  "$rc:$(sort "$T/seen.env" | tr '\n' ' ')" "0:DATABASE_URL=postgresql://extas_app:apppw@pgb/d?pgbouncer=true VAULT_MASTER_KEY=vk "
+check "workflows: it never runs inside deploy.sh (informational only, never a go-live gate)" "$(grep -c 'erp-sku-stock-compare' ../deploy/deploy.sh)" "0"
+check "workflows: ci ignores its reports" "$(grep -c 'docs/reports/erp-sku-stock-compare/\*\*' ../../.github/workflows/ci.yml)" "1"
+check "workflows: the nightly run holds no secret" "$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/erp-sku-stock-compare.yml)" "0"
 rm -rf "$T"
 
 # PR 602: Caddy's cache rules — the never-kept pages (both languages), the hashed files, the internal addresses closed.
