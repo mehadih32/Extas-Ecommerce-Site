@@ -205,3 +205,31 @@
 .adm2 .ai-sbx-row:last-child {
   border-bottom: none;
 }
+/* S15 · PR 324 — the "AI-off test" card: a real, already-computed check per row (never a live run), its own
+   fallback line under the name, a pass/fail pill on the right — same shape as .ai-sbx-row above. */
+.adm2 .ai-offtest {
+  margin-top: 16px;
+}
+.adm2 .ai-offtest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.adm2 .ai-offtest-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ln2);
+}
+.adm2 .ai-offtest-row:last-child {
+  border-bottom: none;
+}
+.adm2 .ai-offtest-fallback {
+  display: block;
+}

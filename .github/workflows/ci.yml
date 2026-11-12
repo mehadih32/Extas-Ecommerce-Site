@@ -221,6 +221,11 @@ jobs:
       - uses: ./.github/actions/pnpm-install
       - name: Hardcode guard (PR 494)
         run: node tools/hardcode-guard.mjs
+      # PR 324 (C1.4) — a deterministic static scan (same method as the hardcode guard) proving a first set of
+      # AI-driven features keeps a real, already-merged rule/template fallback when AI is off; `--check` also fails
+      # when the committed docs/reports/ai-off-guard.json no longer matches a fresh scan of the code.
+      - name: AI-off guard (PR 324)
+        run: node tools/ai-off-guard.mjs --check
       # Review R1 (security M1, PR 4): admin smoke pictures carry customers' data and stay on the server; none may be
       # in Git (deploy.yml and smoke.yml commit only the storefront pictures).
       - name: No admin smoke pictures in Git
