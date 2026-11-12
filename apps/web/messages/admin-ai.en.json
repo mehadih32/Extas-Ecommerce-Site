@@ -280,5 +280,66 @@
     "bug": {
       "why": "Why: {why}"
     }
+  },
+  "aiSkills": {
+    "metaTitle": "AI skills",
+    "title": "Skills",
+    "sub": "What the agents know how to do. A new or imported skill needs the owner's approval before it runs.",
+    "import": "Import a skill",
+    "needPermission": "You can see the skill library, but importing, rolling back or switching a skill needs permission.",
+    "empty": "No skills yet — import one, or wait for an agent's own proposal from Site health.",
+    "dialog": {
+      "title": "Import a skill",
+      "nameLabel": "Skill name",
+      "namePlaceholder": "e.g. Eid size reminder message draft",
+      "agentLabel": "Agent",
+      "cancel": "Cancel",
+      "ok": "Import",
+      "working": "Importing…",
+      "close": "Close",
+      "effect1": "The skill is added, waiting for approval",
+      "effect2": "It goes to Approvals — it only runs once a person approves it",
+      "toastOk": "Imported — waiting for approval",
+      "toastFailed": "Could not import this skill",
+      "err": {
+        "INVALID_INPUT": "Check the skill name",
+        "UNKNOWN_AGENT": "Pick a real agent",
+        "BUSY": "Try the import again",
+        "other": "Could not import this skill"
+      }
+    },
+    "col": {
+      "skill": "Skill",
+      "version": "Version",
+      "status": "Status",
+      "updated": "Updated",
+      "action": ""
+    },
+    "older": "{n} older",
+    "status": {
+      "proposed": "Waiting approval",
+      "approvedOn": "Active",
+      "approvedOff": "Approved · off",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    },
+    "rollback": {
+      "button": "Roll back to v{version}",
+      "dialogTitle": "Roll back this skill?",
+      "effect": "v{from} stays in history; v{to} becomes the current version",
+      "cancel": "Cancel",
+      "ok": "Roll back",
+      "working": "Rolling back…",
+      "close": "Close",
+      "toastOk": "Rolled back",
+      "toastFailed": "Could not roll this skill back"
+    },
+    "enable": {
+      "onLabel": "On",
+      "offLabel": "Off",
+      "toastOn": "Switched on",
+      "toastOff": "Switched off",
+      "toastFailed": "Could not change this switch"
+    }
   }
 }

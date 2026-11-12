@@ -379,7 +379,10 @@
     },
     "ai": {
       "read": "See the AI Center: every agent, what it did last and what it cost (no customer's details beyond what the agent itself worked on)",
-      "control": "Pause or resume one AI agent, and its switches, monthly cap and schedule — never money, refunds, prices, COD, ad budgets, blocking or deleting on its own"
+      "control": "Pause or resume one AI agent, and its switches, monthly cap and schedule — never money, refunds, prices, COD, ad budgets, blocking or deleting on its own",
+      "skills": {
+        "write": "Import a skill, roll one back, or switch an approved one on or off, from AI › Skills"
+      }
     }
   },
   "totp": {

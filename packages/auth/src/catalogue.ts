@@ -483,6 +483,10 @@ export const PERMISSIONS = {
   // or deleting always needs their own existing permission on top (CLAUDE.md rule 6) — this key alone never does them.
   'ai.read': { group: 'ai' },
   'ai.control': { group: 'ai' },
+  // S15 · PR 321 (C1.7 "Skill library") — importing a skill, rolling one back, and switching an approved one
+  // on or off, all from AI › Skills. Deciding the resulting approval request stays `health.fixes.approve`
+  // (fixes.ts's own single decision path for every AiSkill proposal) — this key never grants that.
+  'ai.skills.write': { group: 'ai' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
