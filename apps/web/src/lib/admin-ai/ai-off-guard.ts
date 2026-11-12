@@ -23,6 +23,10 @@ export interface AiOffCheckResult {
   nameBn: string;
   fallbackEn: string;
   fallbackBn: string;
+  /** PR 506: true when this check proves a step of the ordinary customer journey has no AI job on its path at all
+   * (not merely a fallback for one) — the master switch (PR 305), the spend cap (PR 309) and this proof are the
+   * three safety pillars `docs/agents/AGENT-PROTOCOL.md` names. */
+  journey: boolean;
   pass: boolean;
   jobKeys: readonly string[];
   reasons: readonly string[];
@@ -34,6 +38,10 @@ export interface AiOffGuardReport {
   ok: number;
   totalJobCount: number;
   coveredJobCount: number;
+  /** PR 506: how many of `checks` are `journey: true`, and how many of those passed — never derived in the UI from
+   * the full list, since the scan itself is the only honest source of this count. */
+  journeyN: number;
+  journeyOk: number;
   checks: readonly AiOffCheckResult[];
 }
 
@@ -53,7 +61,7 @@ export function aiOffGuardReportFile(env: NodeJS.ProcessEnv = process.env, cwd: 
 function isAiOffGuardReport(value: unknown): value is AiOffGuardReport {
   if (!value || typeof value !== 'object') return false;
   const r = value as Record<string, unknown>;
-  return typeof r.at === 'string' && typeof r.n === 'number' && typeof r.ok === 'number' && typeof r.totalJobCount === 'number' && typeof r.coveredJobCount === 'number' && Array.isArray(r.checks);
+  return typeof r.at === 'string' && typeof r.n === 'number' && typeof r.ok === 'number' && typeof r.totalJobCount === 'number' && typeof r.coveredJobCount === 'number' && typeof r.journeyN === 'number' && typeof r.journeyOk === 'number' && Array.isArray(r.checks);
 }
 
 /** Honest absence (`null`), never an invented report: no file yet (a fresh installation, or docs not deployed yet)

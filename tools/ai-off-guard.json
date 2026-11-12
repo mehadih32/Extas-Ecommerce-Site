@@ -11,6 +11,7 @@
       "nameBn": "সাপোর্টের উত্তর",
       "fallbackEn": "Rule-based draft answers: keyword rules decide the intent and fill the words — no AI call",
       "fallbackBn": "নিয়মভিত্তিক খসড়া উত্তর: কীওয়ার্ড নিয়মে বোঝা যায় কী চাওয়া হচ্ছে, AI ছাড়াই শব্দ বসে",
+      "journey": true,
       "jobKeyPrefixes": ["support"],
       "proofs": [
         {
@@ -25,6 +26,7 @@
       "nameBn": "প্রতারণার ঝুঁকি বিচার",
       "fallbackEn": "The risk score is one pure, deterministic function of the order's own facts and the owner's settings — never an AI call",
       "fallbackBn": "ঝুঁকির স্কোর অর্ডারের নিজের তথ্য আর মালিকের সেটিংস থেকে একটা স্থির নিয়মে বের হয় — AI ছাড়াই",
+      "journey": true,
       "jobKeys": ["orderFraudJudge"],
       "proofs": [
         {
@@ -100,6 +102,74 @@
         {
           "file": "packages/jobs/src/money-report.ts",
           "mustInclude": ["moneyReportText", "Read-only: nothing moves money"]
+        }
+      ]
+    },
+    {
+      "id": "checkoutCod",
+      "nameEn": "Placing a Cash-on-Delivery order",
+      "nameBn": "ক্যাশ অন ডেলিভারিতে অর্ডার করা",
+      "fallbackEn": "Not a fallback — there is no AI anywhere on this path: the order is priced and placed by the same quote/placement rules it always has been",
+      "fallbackBn": "এটা কোনো বিকল্প নয় — এই পথে কোথাও AI নেই: অর্ডারের দাম আর বসানো সবসময়ের একই কোট/প্লেসমেন্ট নিয়মে হয়",
+      "journey": true,
+      "jobKeys": [],
+      "proofs": [
+        {
+          "file": "packages/checkout/src/place.ts",
+          "mustInclude": ["placing the order", "idempotent"]
+        }
+      ]
+    },
+    {
+      "id": "sizeExchange",
+      "nameEn": "A returning customer's size exchange",
+      "nameBn": "ফেরতের কাস্টমারের সাইজ বদল",
+      "fallbackEn": "Not a fallback — the exchange tiers, window and money box are one deterministic engine with no AI step",
+      "fallbackBn": "এটা কোনো বিকল্প নয় — বদলের স্তর, সময়সীমা আর টাকার হিসাব একটাই স্থির নিয়মে চলে, কোথাও AI নেই",
+      "journey": true,
+      "jobKeys": [],
+      "proofs": [
+        {
+          "file": "packages/orders/src/exchange-pure.ts",
+          "mustInclude": ["the exchange engine without a database", "the rule is written once and tested on every edge"]
+        }
+      ]
+    },
+    {
+      "id": "orderConfirmInvoice",
+      "nameEn": "Confirming an order and printing its invoice",
+      "nameBn": "অর্ডার নিশ্চিত করা আর ইনভয়েস ছাপানো",
+      "fallbackEn": "Not a fallback — confirming an order is a plain status command and the invoice copies figures already on the order, neither ever calls AI",
+      "fallbackBn": "এটা কোনো বিকল্প নয় — অর্ডার নিশ্চিত করা সাদাসিধা একটা অবস্থা-বদল আর ইনভয়েস অর্ডারে থাকা সংখ্যাই কপি করে, দুটোই কখনো AI ডাকে না",
+      "journey": true,
+      "jobKeys": [],
+      "proofs": [
+        {
+          "file": "packages/orders/src/commands.ts",
+          "mustInclude": ["PLACED → CONFIRMED"]
+        },
+        {
+          "file": "packages/orders/src/invoice.ts",
+          "mustInclude": ["Nothing here moves money or works a figure out", "every amount is copied from the order as stored"]
+        }
+      ]
+    },
+    {
+      "id": "journeyRules",
+      "nameEn": "Size finder and the delivery band it prices with",
+      "nameBn": "সাইজ ফাইন্ডার আর তার সাথে দাম করা ডেলিভারি ব্যান্ড",
+      "fallbackEn": "Not a fallback — Find My Size is rule-based by design (\"works with AI off\") and the delivery band's charge is always the owner's own figure for that band, never guessed",
+      "fallbackBn": "এটা কোনো বিকল্প নয় — Find My Size শুরু থেকেই নিয়মভিত্তিক (\"AI বন্ধ থাকলেও কাজ করে\") আর ডেলিভারি ব্যান্ডের খরচ সবসময় মালিকের নিজের বসানো অঙ্ক, কখনো আন্দাজ না",
+      "journey": true,
+      "jobKeys": [],
+      "proofs": [
+        {
+          "file": "packages/catalogue/src/size-finder.ts",
+          "mustInclude": ["rule-based (Blueprint D3.8", "works with AI off", "Pure: no database, no settings reader"]
+        },
+        {
+          "file": "packages/checkout/src/quote.ts",
+          "mustInclude": ["never a figure from the", "never guessed for"]
         }
       ]
     }
