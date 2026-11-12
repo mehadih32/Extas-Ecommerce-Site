@@ -15,6 +15,27 @@
 // Instagram: Meta's two-step container flow — `POST /{igUserId}/media` (image_url + caption) to get a creation id,
 // then `POST /{igUserId}/media_publish` with that id. No polling: a single photo needs none (only video processing
 // does), so this still finishes in one request pair.
+//
+// S23 · PR 441 (Blueprint C5.1, C5.3, C5.5 point 3 "… TikTok draft + direct, YouTube (part 2)") adds the other two
+// adapters:
+//
+// TikTok (kind `TIKTOK`, same bucket `tiktokAds`/`tiktokEvents` already use): the Content Posting API's photo mode
+// (`POST /v2/post/publish/content/init/`, `media_type: 'PHOTO'`, `source_info.source: 'PULL_FROM_URL'`) — real and
+// documented, and the only honest way to send the studio's single preview photo at all (TikTok's video endpoint
+// needs an actual video file this studio does not have). Blueprint C5.1's semi-automatic rule is carried by the
+// account's own `directPostApproved` flag (PR 437's schema field, PR 441 wires its toggle): `false` (every new
+// account's default) sends `post_mode: 'MEDIA_UPLOAD'`, Blueprint's "push a video into the account's drafts" —
+// `privacy_level: 'SELF_ONLY'`, nobody sees it until a person opens the TikTok app and taps publish by hand; once
+// the owner has TikTok's app audit approval and has switched the account, `post_mode: 'DIRECT_POST'` posts straight
+// to the feed. No polling (the same one-shot shape as Facebook/Instagram above) — TikTok's own async processing
+// status is a later refinement, not a gate on "did the studio hand it over".
+//
+// YouTube (kind `YOUTUBE`): the real connection exists — `channel()` below reads the signed-in channel through the
+// Data API's `channels?mine=true`, so the owner can connect a channel and pass its Test today — but `publishPhoto`
+// always refuses, in both MOCK and LIVE: YouTube's upload API takes an actual video file, never a photo, and
+// fabricating one (a 1-frame "video" from the still) would be exactly what CLAUDE.md's honesty rule forbids. The
+// refusal names why so the owner never wonders if his key is wrong. `queueSocialPost` (publish.ts) gives the same
+// reason before a post is even made, so a YouTube account never sits in `PUBLISHING` waiting to fail.
 import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
 import { META_DEFAULT_API_VERSION, META_DEFAULT_BASE_URL } from '../ads';
@@ -40,6 +61,8 @@ export interface SocialPhotoPost {
   /** A public https address the platform itself fetches the photo from (CLAUDE.md: never a file this adapter reads). */
   imageUrl: string;
   caption: string;
+  /** TikTok only (PR 441): the account's own `directPostApproved` flag — draft (`false`, the default) or direct. */
+  directPostApproved?: boolean;
 }
 
 export type SocialPublishResult = { ok: true; externalPostId: string } | { ok: false; error: string };
@@ -139,6 +162,102 @@ export function createInstagramPublisher(opts: { baseUrl: string; apiVersion: st
   };
 }
 
+export const TIKTOK_PUBLISH_PROVIDER = 'tiktokPublish';
+export const YOUTUBE_PUBLISH_PROVIDER = 'youtubePublish';
+
+const TIKTOK_DEFAULT_BASE_URL = 'https://open.tiktokapis.com';
+const YOUTUBE_DEFAULT_BASE_URL = 'https://www.googleapis.com';
+
+export const tiktokPublishConfig = z.object({
+  baseUrl: z.url({ protocol: /^https$/, message: 'not an https address' }).max(500).optional(),
+});
+export type TiktokPublishConfig = z.output<typeof tiktokPublishConfig>;
+
+export const youtubePublishConfig = z.object({
+  channelId: z.string().trim().min(5).max(60),
+  baseUrl: z.url({ protocol: /^https$/, message: 'not an https address' }).max(500).optional(),
+});
+export type YoutubePublishConfig = z.output<typeof youtubePublishConfig>;
+
+/** TikTok's error codes worth a plain word (the rest fall back to TikTok's own message, trimmed). */
+const TIKTOK_PUBLISH_CODES: Readonly<Record<string, string>> = {
+  access_token_invalid: 'the TikTok access token has expired or is not valid',
+  scope_not_authorized: 'this app is not approved for that action yet',
+  scope_permission_missing: 'this app is not approved for that action yet',
+  rate_limit_exceeded: 'TikTok asked us to slow down; try again shortly',
+  spam_risk_too_many_posts: 'TikTok paused posting for this account for a while (its own spam check)',
+  spam_risk_user_banned_from_posting: 'TikTok has suspended posting for this account',
+  privacy_level_option_mismatch: 'the privacy level is not one this account may use',
+  url_ownership_unverified: 'this shop’s address is not verified with TikTok yet',
+};
+
+/** The TikTok Content Posting client (LIVE; a test server through `baseUrl`). Photo mode only — see the header note. */
+export function createTiktokPublisher(opts: { baseUrl: string; accessToken: string; fetch?: Fetch }): SocialPublisher & { user(): Promise<{ displayName: string }> } {
+  const doFetch = opts.fetch ?? fetch;
+  const base = opts.baseUrl.replace(/\/+$/, '');
+  return {
+    async publishPhoto(post) {
+      const direct = post.directPostApproved === true;
+      let res: Response;
+      try {
+        res = await doFetch(`${base}/v2/post/publish/content/init/`, {
+          method: 'POST',
+          headers: { authorization: `Bearer ${opts.accessToken}`, 'content-type': 'application/json; charset=UTF-8' },
+          body: JSON.stringify({
+            post_info: { title: post.caption, privacy_level: direct ? 'PUBLIC_TO_EVERYONE' : 'SELF_ONLY' },
+            source_info: { source: 'PULL_FROM_URL', photo_cover_index: 0, photo_images: [post.imageUrl] },
+            post_mode: direct ? 'DIRECT_POST' : 'MEDIA_UPLOAD',
+            media_type: 'PHOTO',
+          }),
+        });
+      } catch (e) {
+        return { ok: false, error: `TikTok did not answer (${e instanceof Error ? e.message.slice(0, 80) : 'network'})` };
+      }
+      const raw = await res.text();
+      const body = (() => {
+        try {
+          return raw ? (JSON.parse(raw) as { data?: { publish_id?: string }; error?: { code?: string; message?: string } }) : null;
+        } catch {
+          return null;
+        }
+      })();
+      const code = body?.error?.code;
+      const publishId = body?.data?.publish_id;
+      if (res.status < 300 && code === 'ok' && typeof publishId === 'string') return { ok: true, externalPostId: publishId };
+      if (code) return { ok: false, error: `${code}: ${TIKTOK_PUBLISH_CODES[code] ?? (body?.error?.message ?? 'refused').slice(0, 120)}` };
+      return { ok: false, error: `HTTP ${res.status}: the answer was not understood` };
+    },
+    async user() {
+      const res = await doFetch(`${base}/v2/user/info/?fields=display_name`, { headers: { authorization: `Bearer ${opts.accessToken}` } });
+      const body = (await res.json().catch(() => null)) as { data?: { user?: { display_name?: string } }; error?: { code?: string; message?: string } } | null;
+      const name = body?.data?.user?.display_name;
+      if (res.status >= 300 || body?.error?.code !== 'ok' || !name) throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
+      return { displayName: name };
+    },
+  };
+}
+
+/** The honest reason YouTube refuses every photo (MOCK and LIVE alike) until a real video exists — see the header note. */
+const YOUTUBE_NEEDS_VIDEO = 'YouTube only takes a real video; the studio makes a preview photo until the video engine is built';
+
+/** The YouTube Data API client (LIVE; a test server through `baseUrl`). `channel()` is real; `publishPhoto` always refuses. */
+export function createYoutubePublisher(opts: { baseUrl: string; accessToken: string; channelId: string; fetch?: Fetch }): SocialPublisher & { channel(): Promise<{ title: string }> } {
+  const doFetch = opts.fetch ?? fetch;
+  return {
+    async publishPhoto() {
+      return { ok: false, error: YOUTUBE_NEEDS_VIDEO };
+    },
+    async channel() {
+      const base = opts.baseUrl.replace(/\/+$/, '');
+      const res = await doFetch(`${base}/youtube/v3/channels?part=snippet&id=${encodeURIComponent(opts.channelId)}`, { headers: { authorization: `Bearer ${opts.accessToken}` } });
+      const body = (await res.json().catch(() => null)) as { items?: { snippet?: { title?: string } }[]; error?: { message?: string } } | null;
+      const title = body?.items?.[0]?.snippet?.title;
+      if (res.status >= 300 || !title) throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
+      return { title };
+    },
+  };
+}
+
 export interface MockSocialPost extends SocialPhotoPost {
   provider: string;
   externalPostId: string;
@@ -221,4 +340,52 @@ export const instagramPublishAdapter = defineAdapter<SocialPublisher, InstagramP
   },
 });
 
-export const socialPublishAdapters = [facebookPagePublishAdapter, instagramPublishAdapter] as const;
+export const tiktokPublishAdapter = defineAdapter<SocialPublisher, TiktokPublishConfig>({
+  kind: 'TIKTOK',
+  provider: TIKTOK_PUBLISH_PROVIDER,
+  modes: ['LIVE'],
+  secrets: ['accessToken'],
+  configSchema: tiktokPublishConfig,
+  async create(ctx) {
+    return createTiktokPublisher({
+      baseUrl: ctx.config.baseUrl ?? TIKTOK_DEFAULT_BASE_URL,
+      accessToken: await requireSecret(ctx, 'accessToken'),
+    });
+  },
+  async mock() {
+    return mockPublisher(TIKTOK_PUBLISH_PROVIDER);
+  },
+  async test(api, ctx) {
+    if (ctx.mode === 'MOCK') return { ok: true, message: 'mock TikTok: nothing leaves the server' };
+    const u = await (api as ReturnType<typeof createTiktokPublisher>).user?.();
+    if (!u) return { ok: false, message: 'no user in the answer' };
+    return { ok: true, message: `connected; ${u.displayName}` };
+  },
+});
+
+export const youtubePublishAdapter = defineAdapter<SocialPublisher, YoutubePublishConfig>({
+  kind: 'YOUTUBE',
+  provider: YOUTUBE_PUBLISH_PROVIDER,
+  modes: ['LIVE'],
+  secrets: ['accessToken'],
+  configSchema: youtubePublishConfig,
+  async create(ctx) {
+    return createYoutubePublisher({
+      baseUrl: ctx.config.baseUrl ?? YOUTUBE_DEFAULT_BASE_URL,
+      accessToken: await requireSecret(ctx, 'accessToken'),
+      channelId: ctx.config.channelId,
+    });
+  },
+  async mock() {
+    // Honest even in practice mode (header note): the limitation is the media type, not a missing key.
+    return { async publishPhoto() { return { ok: false, error: YOUTUBE_NEEDS_VIDEO }; } };
+  },
+  async test(api, ctx) {
+    if (ctx.mode === 'MOCK') return { ok: true, message: 'mock YouTube: nothing leaves the server' };
+    const c = await (api as ReturnType<typeof createYoutubePublisher>).channel?.();
+    if (!c) return { ok: false, message: 'no channel in the answer' };
+    return { ok: true, message: `connected; ${c.title}` };
+  },
+});
+
+export const socialPublishAdapters = [facebookPagePublishAdapter, instagramPublishAdapter, tiktokPublishAdapter, youtubePublishAdapter] as const;
