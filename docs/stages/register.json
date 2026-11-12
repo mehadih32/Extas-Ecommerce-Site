@@ -3148,7 +3148,9 @@
      "/OneSignalSDKWorker.js",
      "/firebase-messaging-sw.js",
      "/reset",
-     "/admin/login"
+     "/admin/login",
+     "/admin/products",
+     "/admin/orders"
     ],
     "settings": [
      "dashboard.read",
@@ -3162,7 +3164,11 @@
      "PUT /api/admin/look",
      "apps/web/src/lib/status-host.ts",
      "proxy.ts",
-     "global-error.tsx"
+     "global-error.tsx",
+     "docs/qa/smoke.json",
+     "tools/smoke.mjs",
+     "infra/stack/caddy/auth-block.sh",
+     "infra/tests/run.sh"
     ],
     "names": [
      "pnpm admin:design",
@@ -3172,9 +3178,14 @@
      "wp-settings-*",
      "wp_woocommerce_session_*",
      "woocommerce_*",
-     "Clear-Site-Data: \"cache\",\"cookies\",\"storage\""
+     "Clear-Site-Data: \"cache\",\"cookies\",\"storage\"",
+     "Clear-Site-Data: \"cookies\"",
+     "extas_preview"
     ],
-    "tests": []
+    "tests": [
+     "**Updated 12 Nov 2026 (CN-045, a failed deploy rolled back by itself):** CN-043's own commit put `/reset` in the smoke test's shared signed-out session (`docs/qa/smoke.json`), so on the always-gated staging host its `Clear-Site-Data: \"cookies\"` threw away that session's own `extas_preview` cookie and 401'd every later check — the signed-out `/admin/products` redirect check included, which is exactly what rolled the deploy back (never a real auth bug in `proxy.ts`)",
+     "`/reset` and the four service-worker routes are exempted from the staging host's preview password (`infra/stack/caddy/auth-block.sh`, GET only, same pattern as the webhook exemptions), so a browser with none of our cookies at all still reaches them — the owner's own \"no auth\" ask, and `infra/tests/run.sh` checks it live with a real Caddy binary"
+    ]
    },
    "updates": [
     {
@@ -3213,6 +3224,13 @@
      "text": "**PR 12 (S00, the app and the admin shell)** — Updated 11 Nov 2026 (CN-043): `proxy.ts` expires old WordPress/WooCommerce cookies on every visit; a self-unregistering service worker answers at the old plugin paths; `/reset` is a public, script-free page (`Clear-Site-Data` incl. cookies, 1-second refresh to `/admin/login`, noindex) for a browser whose saved state keeps our own JS from loading at all; `global-error.tsx` also links to it."
     },
     {
+     "date": "25 Oct",
+     "sortKey": 36000,
+     "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
+     "text": "**PR 12 (S00, the app and the admin shell)** — Updated 12 Nov 2026 (CN-045, a failed deploy rolled back by itself): CN-043's own `/reset` entry in `docs/qa/smoke.json`'s shared signed-out session, on the always-gated staging host, threw away that session's `extas_preview` cookie and 401'd the signed-out admin redirect check right after it — the real cause of commit 06ffb720de42's rollback, never a `proxy.ts` auth bug. Fixed in `tools/smoke.mjs` (`/reset` gets its own throwaway browser context; the signed-out check now covers `/admin/products` and `/admin/orders`) and `infra/stack/caddy/auth-block.sh` (`/reset` and the four service-worker routes exempted from the preview password, GET only, so a browser with no cookie at all still reaches them)."
+    },
+    {
      "date": "31 Oct",
      "sortKey": 44640,
      "source": "Build status",
@@ -3225,6 +3243,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 11 Nov 2026 (CN-043):** a browser that still carries the old WordPress/WooCommerce shop's cookies, cache or a registered service worker from before go-live can no longer keep the admin blank: `proxy.ts` expires any `wordpress_*`/`wp-settings-*`/`wp_woocommerce_session_*`/`woocommerce_*` cookie on every visit (name-matched only, never our own cookies); a self-unregistering, cache-clearing service worker answers at the old plugin paths (`/sw.js`, `/service-worker.js`, `/OneSignalSDKWorker.js`, `/firebase-messaging-sw.js`); and the public, script-free `/reset` page (`Clear-Site-Data: \"cache\",\"cookies\",\"storage\"`, 1-second refresh to `/admin/login`, noindex) gives the owner one link that works even when his saved browser state keeps our own JS from ever loading. `global-error.tsx` also links to `/reset` as a \"Fix this browser\" fallback alongside Start fresh."
+    },
+    {
+     "date": "31 Oct",
+     "sortKey": 44640,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 12 Nov 2026 (CN-045, a failed deploy rolled back by itself):** CN-043's own commit put `/reset` in the smoke test's shared signed-out session (`docs/qa/smoke.json`), so on the always-gated staging host its `Clear-Site-Data: \"cookies\"` threw away that session's own `extas_preview` cookie and 401'd every later check — the signed-out `/admin/products` redirect check included, which is exactly what rolled the deploy back (never a real auth bug in `proxy.ts`). Fixed: `/reset` now runs in its own throwaway browser context in `tools/smoke.mjs`, never the shared one; the signed-out admin redirect check now covers `/admin/products` and `/admin/orders`; `/reset` and the four service-worker routes are exempted from the staging host's preview password (`infra/stack/caddy/auth-block.sh`, GET only, same pattern as the webhook exemptions), so a browser with none of our cookies at all still reaches them — the owner's own \"no auth\" ask, and `infra/tests/run.sh` checks it live with a real Caddy binary."
     },
     {
      "date": "",

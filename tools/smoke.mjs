@@ -466,6 +466,33 @@ async function visit(page, base, ignore, path, screen, dirs, before) {
 }
 
 /**
+ * CN-045 (12 Nov, owner, a failed deploy): /reset's own `Clear-Site-Data: "cookies"` (CN-043) must never run inside
+ * the shared guest session the storefront loop uses — on the always-gated staging host it would throw away that
+ * session's own extas_preview cookie and 401 every page checked after it, the signed-out admin check included (this
+ * is exactly what rolled back commit 06ffb720de42). It gets a fresh, throwaway context of its own instead, with no
+ * cookie at all, so the same run also proves the owner's "no auth" ask: a browser holding nothing still reaches it
+ * (infra/stack/caddy/auth-block.sh exempts it, the same way the webhook paths are exempted).
+ */
+async function resetPageProblems(browser, base) {
+  const problems = [];
+  const ctx = await checkContext(browser, {});
+  try {
+    const page = await ctx.newPage();
+    const r = await page.goto(`${base}/reset`, { waitUntil: "load" });
+    const status = r?.status() ?? 0;
+    if (status !== 200) problems.push(`/reset: answered ${status} with no cookie at all, expected 200 (no auth)`);
+    const header = r?.headers()["clear-site-data"] ?? "";
+    if (!/"cookies"/.test(header)) problems.push(`/reset: no Clear-Site-Data "cookies" header (got ${JSON.stringify(header)})`);
+    problems.push(...pageProblems("/reset", status, await page.innerText("body").catch(() => "")));
+  } catch (e) {
+    problems.push(`/reset: ${e instanceof Error ? e.message : String(e)}`);
+  } finally {
+    await ctx.close();
+  }
+  return problems;
+}
+
+/**
  * Answers the preview login once and returns the browser state holding its cookie, or null when none was set.
  * PR 234: the monthly lab run passes the preview login the same way.
  */
@@ -513,6 +540,8 @@ export async function runSmoke(opts) {
       problems.push(
         "the preview login did not give the extas_preview cookie: every request would ask for it again",
       );
+    // CN-045: checked once, in its own throwaway context, never inside a session any other check reuses.
+    problems.push(...(await resetPageProblems(browser, opts.base)));
     let signedIn = null;
     for (const vp of config.viewports) {
       const screen = {
@@ -549,24 +578,20 @@ export async function runSmoke(opts) {
         for (const path of discovered(hrefs, d.take))
           rows.push(await withPair(await visit(gp, opts.base, ignore, path, vp.name, opts)));
       }
-      // Signed out, an admin page sends you to the sign-in page (never an error).
-      const out = await visit(
-        gp,
-        opts.base,
-        ignore,
-        "/admin/products",
-        vp.name,
-        null,
-      );
-      if (!out.landed.startsWith("/admin/login"))
+      // Signed out, an admin page sends you to the sign-in page (never an error). CN-045: checked on two different
+      // admin pages, not just one, since the bug that rolled back 06ffb720de42 was never this redirect itself.
+      for (const adminPath of ["/admin/products", "/admin/orders"]) {
+        const out = await visit(gp, opts.base, ignore, adminPath, vp.name, null);
+        if (!out.landed.startsWith("/admin/login"))
+          problems.push(
+            `signed out, ${adminPath} did not go to the sign-in page (${out.landed})`,
+          );
         problems.push(
-          `signed out, /admin/products did not go to the sign-in page (${out.landed})`,
+          ...out.problems
+            .filter((p) => !p.endsWith("sent back to the sign-in page"))
+            .map((p) => `${p} (${vp.name})`),
         );
-      problems.push(
-        ...out.problems
-          .filter((p) => !p.endsWith("sent back to the sign-in page"))
-          .map((p) => `${p} (${vp.name})`),
-      );
+      }
       await guest.close();
       // As admin: the sign-in itself once (a two-step code is good only once), then its session on every screen.
       const state = signedIn ?? preview;
