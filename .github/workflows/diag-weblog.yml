@@ -24,11 +24,12 @@ jobs:
           echo "live color: $color"
           sudo env EXTAS_COLOR="$color" APP_IMAGE="diag-readonly" EXTAS_ROOT="$R" \
             EXTAS_NVME_MOUNT="${EXTAS_NVME_MOUNT:-}" CADDY_UPLOAD_MAX_MB="${CADDY_UPLOAD_MAX_MB:-25}" \
+            EXTAS_TIMEZONE="${EXTAS_TIMEZONE:-UTC}" WORKER_IMAGE="diag-readonly" WORKER_REPLICAS="0" \
             docker compose -p "extas-app-$color" -f "$GITHUB_WORKSPACE/infra/stack/app.yml" \
               --env-file "$R/config/profile.env" logs web --no-color --since 4h \
             > /tmp/diag-weblog.txt 2>&1 || true
           echo "--- total lines: $(wc -l < /tmp/diag-weblog.txt) ---"
           echo "--- filtered: admin api / error / exception ---"
           grep -iE "admin api:|unhandled|exception|prismaclient|TypeError|ReferenceError|at Object|server-error" /tmp/diag-weblog.txt | tail -200 || true
-          echo "--- raw tail (last 120 lines) ---"
-          tail -n 120 /tmp/diag-weblog.txt
+          echo "--- raw tail (last 150 lines) ---"
+          tail -n 150 /tmp/diag-weblog.txt
