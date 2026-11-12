@@ -14,3 +14,4 @@ export * from './spendCap';
 export * from './outputs';
 export * from './detailRegions';
 export * from './finishing';
+export * from './imageEdits';

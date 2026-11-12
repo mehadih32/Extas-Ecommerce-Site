@@ -1,0 +1,57 @@
+{
+  "photoshootEditor": {
+    "metaTitle": "Photo editor · Marketing",
+    "title": "Photo editor",
+    "sub": "Crop, straighten, brightness and contrast, remove a small spot, or ask for finishing to run again.",
+    "notFound": "This picture was not found.",
+    "kinds": {
+      "crop": "Crop",
+      "straighten": "Straighten",
+      "brightnessContrast": "Brightness/contrast",
+      "spotRemoval": "Spot removal",
+      "runFinishingAgain": "Run finishing again"
+    },
+    "history": {
+      "h": "Past edits",
+      "d": "Every editing session saved for this picture, most recent first. Nothing here changes the picture yet — the actual crop/rotate/brightness and the finishing re-run are done by a later step.",
+      "empty": "No edits yet.",
+      "by": "by a staff member"
+    },
+    "form": {
+      "preview": "Preview",
+      "noPicture": "No picture ready for this image yet.",
+      "crop": "Crop",
+      "cropX": "Left (%)",
+      "cropY": "Top (%)",
+      "cropWidth": "Width (%)",
+      "cropHeight": "Height (%)",
+      "straighten": "Straighten (degrees, -45 to 45)",
+      "straightenHelp": "Negative tilts left, positive tilts right.",
+      "tone": "Brightness / contrast",
+      "brightness": "Brightness (-100 to 100)",
+      "contrast": "Contrast (-100 to 100)",
+      "spots": "Spot removal",
+      "spotX": "Left (%)",
+      "spotY": "Top (%)",
+      "spotAdd": "Add a point",
+      "spotEmpty": "No spots marked yet.",
+      "spotRemove": "Remove",
+      "rerun": "Run finishing again",
+      "rerunHint": "The finishing pass (upscale, repair, shadow, colour grade, sharpen) will run again on this picture once it is picked up.",
+      "rerunNotGenerated": "Only offered on a picture the Studio itself generated — never on a real original.",
+      "save": "Save this edit",
+      "saving": "Saving…",
+      "saved": "Edit saved.",
+      "nothingToSave": "Change something first — nothing to save yet.",
+      "err": {
+        "INVALID_INPUT": "Check what you typed.",
+        "SOURCE_INVALID": "This edit cannot be saved for this picture.",
+        "NOT_FOUND": "Not found — the page may need a refresh.",
+        "forbidden": "You do not have permission for this.",
+        "unauthorized": "Please sign in again.",
+        "network": "Could not reach the server.",
+        "other": "Something went wrong."
+      }
+    }
+  }
+}
