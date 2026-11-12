@@ -142,6 +142,24 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d.usage).toBeUndefined();
   });
 
+  // S15 · PR 330 — draftApprovalExplainNote: one plain paragraph explaining an approval-queue item, never a
+  // decision, carrying the provider's own usage through the same generic `complete()` plumbing PR 325 built.
+  it('draftApprovalExplainNote writes from the item\'s own already-decided title and reasons, practice: false, carrying the provider\'s own usage', async () => {
+    const complete = vi.fn(async () => ({ text: '{"body": "The system is asking because this campaign has been spending with no delivered order."}', usage: { inputTokens: 60, outputTokens: 18 } }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftApprovalExplainNote({ locale: 'en', facts: { title: 'Pause Winter Polos: campaign spent ৳1,200 with no delivered order', why: ['spent ৳1,200 over 3 Oct–9 Oct with 0 delivered orders'] }, max: { body: 250 } });
+    expect(d).toEqual({ body: 'The system is asking because this campaign has been spending with no delivered order.', practice: false, usage: { inputTokens: 60, outputTokens: 18 } });
+  });
+
+  it('draftApprovalExplainNote throws cleanly when the model answers with no body, and carries no usage when the provider reported none', async () => {
+    const facts = { title: 'Pause Winter Polos', why: [] as string[] };
+    const w = liveAiWriter(async () => ({ text: '{"notBody": "x"}' }));
+    await expect(w.draftApprovalExplainNote({ locale: 'en', facts, max: { body: 250 } })).rejects.toThrow('approval explanation');
+    const w2 = liveAiWriter(async () => ({ text: '{"body": "ok"}' }));
+    const d = await w2.draftApprovalExplainNote({ locale: 'en', facts, max: { body: 250 } });
+    expect(d.usage).toBeUndefined();
+  });
+
   // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
   // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
   // ledger exactly like support's and the product content agent's.

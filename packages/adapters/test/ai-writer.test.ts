@@ -262,3 +262,35 @@ describe('practice fraud review note (PR 329)', () => {
     await expect(w.draftFraudReviewNote(review({ facts: { kind: 'duplicate', why: [], matches: [], history: [] } }))).rejects.toThrow();
   });
 });
+
+// S15 · PR 330 — the practice approval-explain note: only the already-decided title and reasons it was given, joined
+// in one plain sentence, marked practice — never a decision word.
+describe('practice approval-explain note (PR 330)', () => {
+  const approval = (over: Partial<import('../src').AiApprovalExplainInput> = {}): import('../src').AiApprovalExplainInput => ({
+    locale: 'en',
+    facts: { title: 'Pause Winter Polos: campaign spent ৳1,200 with no delivered order', why: ['spent ৳1,200 over 3 Oct–9 Oct with 0 delivered orders'] },
+    max: { body: 240 },
+    ...over,
+  });
+
+  it('writes a paragraph from the title and reasons it was given', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftApprovalExplainNote(approval());
+    expect(d.practice).toBe(true);
+    expect(d.body).toContain('Pause Winter Polos');
+    expect(d.body).toContain('0 delivered orders');
+  });
+
+  it('writes from the title alone when there is no extra reason', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftApprovalExplainNote(approval({ facts: { title: 'Pause Winter Polos', why: [] } }));
+    expect(d.body).toBe('Pause Winter Polos');
+  });
+
+  it('cuts to the store limit and refuses a draft with no title', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftApprovalExplainNote(approval({ max: { body: 10 } }));
+    expect([...d.body].length).toBeLessThanOrEqual(10);
+    await expect(w.draftApprovalExplainNote(approval({ facts: { title: ' ', why: [] } }))).rejects.toThrow();
+  });
+});
