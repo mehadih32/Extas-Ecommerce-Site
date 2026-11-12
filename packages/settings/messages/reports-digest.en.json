@@ -1,0 +1,25 @@
+{
+  "groups": {
+    "reports": "Reports"
+  },
+  "reports": {
+    "digest": {
+      "telegramOn": {
+        "label": "Send the weekly/monthly digest to Telegram",
+        "help": "Once a channel is on, the owner (or a staff member with the right permission) can send that period's digest with Reports › Funnels' \"Run now\" — totals for every tracked event and each saved funnel, this period against the one before it. Off as it ships; no automatic schedule is wired yet, the same gap the ad cost alerts (Marketing › Ad platforms) already ship with — only a manual run, nothing timed, until a shared report scheduler exists."
+      },
+      "emailOn": {
+        "label": "Send the weekly/monthly digest by e-mail",
+        "help": "Needs the owner's e-mail address below; the e-mail channel sends nothing while that is empty, even with this on."
+      },
+      "ownerEmail": {
+        "label": "Owner's e-mail address",
+        "help": "Where the digest e-mail goes. Empty until the owner types it (never shipped from one installation to another, CLAUDE.md rule 4)."
+      },
+      "lang": {
+        "label": "Digest language",
+        "help": "The language of both the Telegram message and the e-mail."
+      }
+    }
+  }
+}

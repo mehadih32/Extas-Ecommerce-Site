@@ -252,4 +252,6 @@ export * from './placeholder';
 export * from './registry-studio';
 // S15 · PR 338 (Blueprint D5) — the site-wide analytics event layer's master switch, on as it ships (registry-analytics.ts, version 288).
 export * from './registry-analytics';
+// S15 · PR 341 (Blueprint D5.3) — weekly/monthly digests to Telegram and e-mail, off as it ships (registry-reports-digest.ts, version 289).
+export * from './registry-reports-digest';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

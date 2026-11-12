@@ -140,6 +140,8 @@ import studioBn from '../messages/studio.bn.json';
 import studioEn from '../messages/studio.en.json';
 import analyticsBn from '../messages/analytics.bn.json';
 import analyticsEn from '../messages/analytics.en.json';
+import reportsDigestBn from '../messages/reports-digest.bn.json';
+import reportsDigestEn from '../messages/reports-digest.en.json';
 import blogCommentsBn from '../messages/blog-comments.bn.json';
 import blogCommentsEn from '../messages/blog-comments.en.json';
 import blogImagesBn from '../messages/blog-images.bn.json';
@@ -449,6 +451,9 @@ messages.bn = mergeMessages(messages.bn, studioBn);
 // S15 · PR 338 (registry v288): the site-wide analytics event layer's master switch.
 messages.en = mergeMessages(messages.en, analyticsEn);
 messages.bn = mergeMessages(messages.bn, analyticsBn);
+// S15 · PR 341 (registry v289): weekly/monthly digests to Telegram and e-mail.
+messages.en = mergeMessages(messages.en, reportsDigestEn);
+messages.bn = mergeMessages(messages.bn, reportsDigestBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {
