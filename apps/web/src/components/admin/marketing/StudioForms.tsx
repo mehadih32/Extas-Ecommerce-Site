@@ -1,11 +1,14 @@
 'use client';
-// S23 · PR 437–440 — Marketing › Studio's small forms: social accounts (add, rename, switch, approval, daily
+// S23 · PR 437–442 — Marketing › Studio's small forms: social accounts (add, rename, switch, approval, daily
 // limit, archive/restore), templates (add, update, archive/restore), brand assets (set a kind, archive/restore;
 // uploading a file goes straight to the shared Media library, `/api/admin/media`, with `folder: 'studio'`, which
-// needs `media.upload` on top of this page's own `studio.write`), a render job (PR 439) and now a post from a
-// finished render job onto a Facebook or Instagram account (PR 440, `StudioPostForm`). The API checks every
-// permission again; a post only reaches a real account once its account runs free and the "Post now" button is
-// pressed (`post.run`) — queuing one here never sends anything by itself.
+// needs `media.upload` on top of this page's own `studio.write`), a render job (PR 439) and a post from a
+// finished render job onto a Facebook, Instagram or TikTok account (PR 440/441, `StudioPostForm`, with an optional
+// hold-until time for the calendar). The API checks every permission again; a post only reaches a real account
+// once its account runs free and the "Post now" button is pressed (`post.run`) — queuing one here never sends
+// anything by itself. PR 442 adds the approval queue (`StudioDecide` — approve/reject a post waiting for a
+// person), the calendar's own reschedule control (`StudioReschedule`) and the auto-schedule rules (add/edit, a
+// cadence of posts+reels a day on chosen weekdays — `StudioScheduleRuleForm`/`StudioScheduleRuleControls`).
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { showToast } from '../lumen/Toast';
@@ -391,18 +394,22 @@ export interface PostFormWords {
   caption: string;
   captionPh: string;
   captionHelp: string;
+  scheduledAt: string;
+  scheduledAtHelp: string;
   queue: string;
   queued: string;
 }
 
 /** Queues a post from a finished render job onto one account (PR 440): the render job, the account, an optional
- * caption override (the render job's own caption is used when this is left empty). */
+ * caption override (the render job's own caption is used when this is left empty), and an optional future time to
+ * hold it for (PR 442's calendar) — left blank, it runs the moment it is cleared, same as before PR 442. */
 export function StudioPostForm({ texts, renders, accounts, w }: { texts: StudioFormTexts; renders: { id: string; label: string }[]; accounts: { id: string; label: string }[]; w: PostFormWords }) {
   const uid = useId();
   const router = useRouter();
   const [renderJobId, setRenderJobId] = useState(renders[0]?.id ?? '');
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? '');
   const [caption, setCaption] = useState('');
+  const [scheduledAt, setScheduledAt] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
   if (!renders.length) return <p className="a2-sm a2-mute" data-testid="st-post-no-render">{w.noRenderJobs}</p>;
@@ -440,6 +447,13 @@ export function StudioPostForm({ texts, renders, accounts, w }: { texts: StudioF
         <textarea id={`${uid}-c`} className="a2-inp" rows={3} maxLength={2200} value={caption} placeholder={w.captionPh} onChange={(e) => setCaption(e.target.value)} data-testid="st-post-caption" />
         <p className="a2-xs a2-mute">{w.captionHelp}</p>
       </div>
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-s`}>
+          {w.scheduledAt}
+        </label>
+        <input id={`${uid}-s`} className="a2-inp" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} data-testid="st-post-scheduled" />
+        <p className="a2-xs a2-mute">{w.scheduledAtHelp}</p>
+      </div>
       <span>
         <button
           type="button"
@@ -449,11 +463,13 @@ export function StudioPostForm({ texts, renders, accounts, w }: { texts: StudioF
           onClick={async () => {
             setBusy(true);
             setMsg(null);
-            const r = await post(texts, { action: 'post.queue', renderJobId, accountId, ...(caption.trim() ? { caption: caption.trim() } : {}) });
+            const iso = scheduledAt ? new Date(scheduledAt).toISOString() : undefined;
+            const r = await post(texts, { action: 'post.queue', renderJobId, accountId, ...(caption.trim() ? { caption: caption.trim() } : {}), ...(iso ? { scheduledAt: iso } : {}) });
             setBusy(false);
             if (!r.ok) return setMsg({ ok: false, text: r.text });
             showToast({ text: w.queued, tone: 'ok' });
             setCaption('');
+            setScheduledAt('');
             router.refresh();
           }}
         >
@@ -462,6 +478,204 @@ export function StudioPostForm({ texts, renders, accounts, w }: { texts: StudioF
       </span>
       <Note msg={msg} testId="st-post-msg" />
     </div>
+  );
+}
+
+/** Approves or rejects one post waiting in the queue (PR 442, `studio.approve`): approving moves it to `SCHEDULED`
+ * (if it has a time) or `PUBLISHING`; rejecting is final, kept for the record. */
+export function StudioDecide({ texts, id, w }: { texts: StudioFormTexts; id: string; w: { approve: string; reject: string; done: string } }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState<'approve' | 'reject' | null>(null);
+  const [msg, setMsg] = useState<Msg>(null);
+  const decide = async (decision: 'approve' | 'reject') => {
+    setBusy(decision);
+    setMsg(null);
+    const r = await post(texts, { action: 'post.decide', id, decision });
+    setBusy(null);
+    if (!r.ok) return setMsg({ ok: false, text: r.text });
+    showToast({ text: w.done, tone: 'ok' });
+    router.refresh();
+  };
+  return (
+    <span className="a2-gap8" data-testid="st-post-decide">
+      <button type="button" className="a2-btn pri" disabled={busy !== null} data-testid="st-post-approve" onClick={() => decide('approve')}>
+        {w.approve}
+      </button>
+      <button type="button" className="a2-btn" disabled={busy !== null} data-testid="st-post-reject" onClick={() => decide('reject')}>
+        {w.reject}
+      </button>
+      <Note msg={msg} testId="st-post-decide-msg" />
+    </span>
+  );
+}
+
+/** Moves a post not yet sent (`PENDING_APPROVAL`/`SCHEDULED`) to a new time, or clears it to run the moment it is
+ * next cleared/run (PR 442, `studio.generate`). */
+export function StudioReschedule({ texts, id, scheduledAt, w }: { texts: StudioFormTexts; id: string; scheduledAt: string | null; w: { label: string; save: string; clear: string; saved: string } }) {
+  const router = useRouter();
+  const toLocal = (iso: string | null) => (iso ? new Date(iso).toISOString().slice(0, 16) : '');
+  const [value, setValue] = useState(toLocal(scheduledAt));
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<Msg>(null);
+  const save = async (next: string) => {
+    setBusy(true);
+    setMsg(null);
+    const r = await post(texts, { action: 'post.reschedule', id, scheduledAt: next ? new Date(next).toISOString() : null });
+    setBusy(false);
+    if (!r.ok) return setMsg({ ok: false, text: r.text });
+    showToast({ text: w.saved, tone: 'ok' });
+    router.refresh();
+  };
+  return (
+    <span className="a2-gap8" data-testid="st-post-reschedule">
+      <input className="a2-inp" type="datetime-local" value={value} disabled={busy} onChange={(e) => setValue(e.target.value)} data-testid="st-post-reschedule-input" />
+      <button type="button" className="a2-btn" disabled={busy || !value} data-testid="st-post-reschedule-save" onClick={() => save(value)}>
+        {w.save}
+      </button>
+      {scheduledAt ? (
+        <button
+          type="button"
+          className="a2-btn"
+          disabled={busy}
+          data-testid="st-post-reschedule-clear"
+          onClick={() => {
+            setValue('');
+            void save('');
+          }}
+        >
+          {w.clear}
+        </button>
+      ) : null}
+      <Note msg={msg} testId="st-post-reschedule-msg" />
+    </span>
+  );
+}
+
+export interface ScheduleRuleFormWords {
+  account: string;
+  anyAccount: string;
+  postsPerDay: string;
+  reelsPerDay: string;
+  weekdays: string;
+  weekdayLabels: string[];
+  categoryIds: string;
+  categoryIdsPh: string;
+  categoryIdsHelp: string;
+  add: string;
+  added: string;
+}
+
+function WeekdayPicker({ active, onChange, labels, testId }: { active: number[]; onChange: (next: number[]) => void; labels: string[]; testId: string }) {
+  return (
+    <span className="a2-gap8" data-testid={testId}>
+      {labels.map((label, day) => {
+        const on = active.includes(day);
+        return (
+          <label key={day} className="a2-sm">
+            <input
+              type="checkbox"
+              checked={on}
+              data-testid={`${testId}-${day}`}
+              onChange={() => onChange(on ? active.filter((d) => d !== day) : [...active, day].sort((a, b) => a - b))}
+            />{' '}
+            {label}
+          </label>
+        );
+      })}
+    </span>
+  );
+}
+
+/** Adds an auto-schedule rule (PR 442): a cadence (posts and reels a day), which weekdays it runs on, which
+ * categories it draws from, and optionally one account. Always off until switched on by hand — see schedule.ts's
+ * own honest-scope header for why this previews a next active day rather than dispatching anything by itself. */
+export function StudioScheduleRuleForm({ texts, accounts, w }: { texts: StudioFormTexts; accounts: { id: string; label: string }[]; w: ScheduleRuleFormWords }) {
+  const uid = useId();
+  const router = useRouter();
+  const [accountId, setAccountId] = useState('');
+  const [postsPerDay, setPostsPerDay] = useState('1');
+  const [reelsPerDay, setReelsPerDay] = useState('0');
+  const [weekdays, setWeekdays] = useState<number[]>([]);
+  const [categoryIds, setCategoryIds] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<Msg>(null);
+  return (
+    <div className="mail-form" data-testid="st-rule-form">
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-a`}>
+          {w.account}
+        </label>
+        <select id={`${uid}-a`} className="a2-inp" value={accountId} onChange={(e) => setAccountId(e.target.value)} data-testid="st-rule-account">
+          <option value="">{w.anyAccount}</option>
+          {accounts.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-p`}>
+          {w.postsPerDay}
+        </label>
+        <input id={`${uid}-p`} className="a2-inp" inputMode="numeric" value={postsPerDay} maxLength={2} onChange={(e) => setPostsPerDay(e.target.value.replace(/[^0-9]/g, ''))} data-testid="st-rule-posts" />
+      </div>
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-r`}>
+          {w.reelsPerDay}
+        </label>
+        <input id={`${uid}-r`} className="a2-inp" inputMode="numeric" value={reelsPerDay} maxLength={2} onChange={(e) => setReelsPerDay(e.target.value.replace(/[^0-9]/g, ''))} data-testid="st-rule-reels" />
+      </div>
+      <div className="a2-fld">
+        <span className="a2-lbl">{w.weekdays}</span>
+        <WeekdayPicker active={weekdays} onChange={setWeekdays} labels={w.weekdayLabels} testId="st-rule-weekdays" />
+      </div>
+      <div className="a2-fld">
+        <label className="a2-lbl" htmlFor={`${uid}-c`}>
+          {w.categoryIds}
+        </label>
+        <input id={`${uid}-c`} className="a2-inp" value={categoryIds} placeholder={w.categoryIdsPh} onChange={(e) => setCategoryIds(e.target.value)} data-testid="st-rule-categories" />
+        <p className="a2-xs a2-mute">{w.categoryIdsHelp}</p>
+      </div>
+      <span>
+        <button
+          type="button"
+          className="a2-btn pri"
+          disabled={busy}
+          data-testid="st-rule-add"
+          onClick={async () => {
+            setBusy(true);
+            setMsg(null);
+            const ids = categoryIds
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean);
+            const cadence = { postsPerDay: Number(postsPerDay) || 0, reelsPerDay: Number(reelsPerDay) || 0, activeWeekdays: weekdays };
+            const r = await post(texts, { action: 'rule.add', accountId: accountId || undefined, cadence, categoryIds: ids });
+            setBusy(false);
+            if (!r.ok) return setMsg({ ok: false, text: r.text });
+            showToast({ text: w.added, tone: 'ok' });
+            setCategoryIds('');
+            setWeekdays([]);
+            router.refresh();
+          }}
+        >
+          {w.add}
+        </button>
+      </span>
+      <Note msg={msg} testId="st-rule-msg" />
+    </div>
+  );
+}
+
+/** One existing rule's own on/off and archive/restore switches (PR 442) — editing its cadence/weekdays happens by
+ * archiving and adding a fresh one for now, the same pattern an account's platform/externalId already follows. */
+export function StudioScheduleRuleControls({ texts, id, version, enabled, archived, w }: { texts: StudioFormTexts; id: string; version: string; enabled: boolean; archived: boolean; w: { turnOn: string; turnOff: string; archive: string; restore: string; saved: string } }) {
+  return (
+    <span className="a2-gap8 yt-mt8" data-testid="st-rule-controls">
+      {!archived ? <StudioAct texts={texts} body={{ action: 'rule.switch', id, enabled: !enabled, version }} label={enabled ? w.turnOff : w.turnOn} testId="st-rule-switch" done={w.saved} /> : null}
+      <StudioAct texts={texts} body={{ action: 'rule.archive', id, archived: !archived, version }} label={archived ? w.restore : w.archive} testId="st-rule-archive" done={w.saved} />
+    </span>
   );
 }
 
